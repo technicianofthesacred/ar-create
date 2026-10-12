@@ -1,0 +1,8 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {loadConfig} from '../config.mjs';
+const temporary=()=>fs.mkdtempSync(path.join(os.tmpdir(),'ar-config-'));
+test('requires owned explicit data and excludes the installed port',()=>{assert.throws(()=>loadConfig({}),/explicit absolute/);const dir=temporary();try{assert.throws(()=>loadConfig({AR_CREATE_DATA_DIR:dir,AR_CREATE_PORT:'8841'}),/distinct/);const result=loadConfig({AR_CREATE_DATA_DIR:dir});assert.equal(result.port,8854);assert.equal(result.studyOriginalRoots,null);assert.deepEqual(result.tools,{python:null,ytDlp:null,firecrawl:null,codex:null});}finally{fs.rmSync(dir,{recursive:true,force:true});}});
+test('refuses symlinked data home',()=>{const dir=temporary();try{fs.symlinkSync(dir,path.join(dir,'link'));assert.throws(()=>loadConfig({AR_CREATE_DATA_DIR:path.join(dir,'link')}),/real directory/);}finally{fs.rmSync(dir,{recursive:true,force:true});}});
+
+test('refuses private data inside the package checkout',()=>{assert.throws(()=>loadConfig({AR_CREATE_DATA_DIR:path.resolve(import.meta.dirname,'../user-data')}),/outside/);});
+
+test('refuses a symlinked ancestor that resolves inside the checkout',()=>{const dir=temporary();try{fs.symlinkSync(path.resolve(import.meta.dirname,'..'),path.join(dir,'parent'));assert.throws(()=>loadConfig({AR_CREATE_DATA_DIR:path.join(dir,'parent/not-created-by-private-config')}),/outside/);assert.equal(fs.existsSync(path.resolve(import.meta.dirname,'../not-created-by-private-config')),false);}finally{fs.rmSync(dir,{recursive:true,force:true});}});

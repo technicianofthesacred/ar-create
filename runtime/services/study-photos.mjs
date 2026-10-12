@@ -1,0 +1,66 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+export const PHOTO_LIMIT=20*1024*1024;
+const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+const hash=x=>createHash('sha256').update(x).digest('hex');
+const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
+function image(bytes,name){
+ if(typeof name!=='string'||!name||name.includes('\\')||name.startsWith('.')||/[\x00-\x1f\x7f]/.test(name))fail('Use a plain photograph filename.');if(name.includes('/')||name.length>240)fail('Use a plain photograph filename.');
+ if(!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>PHOTO_LIMIT)fail('Photographs must be under 20 MB.',413);
+ const ext=path.extname(name).toLowerCase();
+ const jpeg=['.jpg','.jpeg'].includes(ext)&&bytes.length>3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+ const png=ext==='.png'&&bytes.length>=24&&bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&bytes.toString('ascii',12,16)==='IHDR';
+ const webp=ext==='.webp'&&bytes.length>=16&&bytes.toString('ascii',0,4)==='RIFF'&&bytes.toString('ascii',8,12)==='WEBP';
+ if(!jpeg&&!png&&!webp)fail('Add a JPEG, PNG or WebP photograph with matching image bytes.',415);
+ return jpeg?'image/jpeg':png?'image/png':'image/webp';
+}
+const text=(value,label,max)=>{if(typeof value!=='string'||value.length>max||/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(value))fail(label+' is too long or contains control characters.');return value;};
+// This service receives stable study binding IDs; it never discovers by title or active piece.
+export function createStudyPhotos({dataDir,library,resolveBinding,runtime}){
+ if(typeof resolveBinding!=='function')throw Error('A trusted persisted study binding resolver is required.');
+ const {atomicWrite,readJson,ensurePrivateDirectory}=runtime||{};
+ if(![atomicWrite,readJson,ensurePrivateDirectory].every(fn=>typeof fn==='function'))throw Error('Existing runtime file helpers are required.');
+ async function authorize(input){fileFor(input);const bound=await resolveBinding(input.projectId);if(!bound||bound.projectId!==input.projectId||bound.documentId!==input.documentId)fail('Unknown or mismatched persisted study binding.',403);}
+ const dir=ensurePrivateDirectory(dataDir,'study-photos');let queue=Promise.resolve();
+ const serial=fn=>{const op=queue.then(fn);queue=op.catch(()=>{});return op;};
+ function fileFor({projectId,documentId}){if(!uuid.test(projectId||'')||!uuid.test(documentId||''))fail('A bound project and document are required.');return path.join(dir,hash(projectId)+'.json');}
+ function load(input){const file=fileFor(input),record=readJson(file,null);if(record&&record.documentId!==input.documentId)fail('The project document binding changed.',409);return {file,record};}
+ function persist(file,record){atomicWrite(file,JSON.stringify(record,null,2)+'\n');}
+ async function owned(sourceId){const {file,source}=await library.blob(sourceId);if(source.rootId!=='library'||source.writable!==true)fail('Choose an owned library photograph. Connected originals remain unchanged.',403);const stat=fs.lstatSync(file);if(stat.size>PHOTO_LIMIT)fail('Photograph exceeds 20 MB.',413);const bytes=fs.readFileSync(file);return {...source,mimeType:image(bytes,path.basename(file)),sha256:hash(bytes)};}
+ async function ensure(input){await authorize(input);let {file,record}=load(input);if(!record){const tree=await library.tree(),saved=await library.saveCollection({name:'Study photographs',sourceIds:[],expectedRevision:tree.revision});record={schema:'ar-create.study-photos.v1',projectId:input.projectId,documentId:input.documentId,collectionId:saved.collection.id,revision:0,photos:[]};persist(file,record);}return {file,record};}
+ async function view(record){const tree=await library.tree(),collection=tree.collections.find(c=>c.id===record.collectionId);if(!collection)fail('The bound photo collection is missing; its binding is preserved.',409);const photos=[];for(const row of record.photos){try{const source=await owned(row.sourceId);photos.push({...row,name:path.basename(source.rel_path),url:'/api/sources/blob?id='+encodeURIComponent(row.sourceId),mimeType:source.mimeType,missing:false});}catch(error){photos.push({...row,missing:true,error:error.message});}}return {...record,photos,collectionName:collection.name};}
+ function revision(record,input){if(input.expectedRevision!==record.revision)fail('Photographs changed. Refresh before saving.',409);}
+ return {
+  list:input=>serial(async()=>view((await ensure(input)).record)),
+  available:input=>serial(async()=>{await authorize(input);load(input);const tree=await library.tree();return {collections:tree.collections.map(c=>({id:c.id,name:c.name,sourceIds:c.sourceIds})),photos:tree.sources.filter(s=>s.rootId==='library'&&/\.(jpe?g|png|webp)$/i.test(s.rel_path)).map(s=>({sourceId:s.id,name:path.basename(s.rel_path),url:'/api/sources/blob?id='+encodeURIComponent(s.id)}))};}),
+  add:input=>serial(async()=>{const {file,record}=await ensure(input);revision(record,input);if(record.photos.length>=200)fail('This collection holds at most 200 photographs.',413);let source;
+   if(input.sourceId)source=await owned(input.sourceId);
+   else{if(typeof input.base64!=='string'||input.base64.length>Math.ceil(PHOTO_LIMIT/3)*4||! /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(input.base64))fail('Invalid or oversized image bytes.',413);const bytes=Buffer.from(input.base64,'base64');image(bytes,input.name);source=await library.retainAlbumPhoto({folder:'Projects/'+record.projectId+'/Photos',name:input.name,bytes,provenance:{kind:'study-photo-upload',projectId:record.projectId,documentId:record.documentId}});}
+   if(record.photos.some(p=>p.sourceId===source.id))return view(record);
+   const tree=await library.tree(),collection=tree.collections.find(c=>c.id===record.collectionId);if(!collection)fail('Bound photo collection missing.',409);await library.saveCollection({id:collection.id,name:collection.name,sourceIds:[...new Set([...collection.sourceIds,source.id])],expectedRevision:tree.revision});record.photos.push({sourceId:source.id,selected:true,caption:'',credit:''});record.revision++;persist(file,record);return view(record);
+  }),
+  update:input=>serial(async()=>{const {file,record}=await ensure(input);revision(record,input);const row=record.photos.find(p=>p.sourceId===input.sourceId);if(!row)fail('Photograph is not in this project.',404);if(typeof input.selected!=='boolean')fail('Selection must be explicit.');row.selected=input.selected;row.caption=text(input.caption,'Caption',2000);row.credit=text(input.credit,'Credit',300);record.revision++;persist(file,record);return view(record);})
+ };
+}
+// Insert only these route entries into the existing authenticated local API table.
+export function studyPhotoRoutes(service,url){const binding={projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')};return {
+ '/api/study/photos':{GET:()=>service.list(binding)},
+ '/api/study/photos/available':{GET:()=>service.available(binding)},
+ '/api/study/photos/add':{POST:input=>service.add(input)},
+ '/api/study/photos/update':{POST:input=>service.update(input)}
+};}
+// Read the existing study-bindings registry without selecting/switching a piece.
+// Authority is a ready persisted binding AND the exact recorded live piece/document.
+export function createPersistedStudyPhotoBindingResolver({dataDir,store,runtime}){
+ const {readJson,ensurePrivateDirectory}=runtime;
+ return async projectId=>{
+  if(!uuid.test(projectId||''))return null;
+  const dir=ensurePrivateDirectory(dataDir,'study-project-bindings');
+  const matches=fs.readdirSync(dir).filter(name=>/^[a-f0-9]{64}\.json$/.test(name)).map(name=>readJson(path.join(dir,name),null)).filter(row=>row?.schema==='ar-create.study-binding.v1'&&row.status==='ready'&&row.projectId===projectId);
+  if(matches.length!==1)return null;
+  const bound=matches[0],{pieces}=await store.listPieces();
+  const piece=pieces.find(row=>row.id===bound.projectId&&row.documentId===bound.documentId);
+  return piece?{projectId:bound.projectId,documentId:bound.documentId}:null;
+ };
+}

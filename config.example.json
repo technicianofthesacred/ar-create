@@ -1,0 +1,11 @@
+{
+  "dataDir": "",
+  "port": 8854,
+  "syntheticFixtures": false,
+  "studyOriginalRoots": null,
+  "sourceRoots": [],
+  "transcriptionRuntime": null,
+  "originalReaderBaseUrl": null,
+  "editorialSkills": [],
+  "tools": {"python": null, "ytDlp": null, "firecrawl": null, "codex": null}
+}

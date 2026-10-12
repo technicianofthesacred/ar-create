@@ -1,0 +1,1479 @@
+{
+  "canvas-B01-h1-blend": {
+    "name": "H1 Blend",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/B01-h1-blend.dc.html",
+    "originalId": "B01",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -52px; top: 0px; width: 623px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 520,
+        "boxHeight": 1350,
+        "imageWidth": 623,
+        "imageHeight": 1350,
+        "left": -52,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 520px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"623\" data-ig-img-height=\"1350\" data-ig-box-width=\"520\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 90px 80px 80px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 36px\" data-text-zone=\"\">\n<div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 150px; letter-spacing: 0.06em; color: #8e6d2e\"></div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-B02-chapter-blend": {
+    "name": "Chapter Blend",
+    "group": "Brand & seals",
+    "photos": 0,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/B02-chapter-blend.dc.html",
+    "originalId": "B02",
+    "textParts": 2,
+    "photoStyles": [],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 90px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 36px; text-align: center\" data-text-zone=\"\">\n<div lang=\"zh-Hant\" style=\"font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 320px; line-height: 1; color: #8e6d2e\">壹</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"width: 120px; border-top: 1px solid #3a3530\"></div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>"
+  },
+  "canvas-B03-seal-blend": {
+    "name": "Seal Blend",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/B03-seal-blend.dc.html",
+    "originalId": "B03",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -199px; width: 1080px; height: 2343px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 2343,
+        "left": 0,
+        "top": -199
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"2343\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"20\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; right: 80px; top: 80px; width: 104px; padding: 18px 0; background: #8e6d2e; display: flex; justify-content: center\"><div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 800; font-size: 54px; letter-spacing: 0.1em; color: #f3eada\">佳家嘉</div></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 520px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.88) 65%)\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-B04-pillar-seal-blend": {
+    "name": "Pillar Seal Blend",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/B04-pillar-seal-blend.dc.html",
+    "originalId": "B04",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -501px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -501,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"38\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; top: 72px; display: flex; align-items: center; gap: 20px\"><div style=\"width: 88px; height: 88px; background: #8e6d2e; display: flex; align-items: center; justify-content: center\"><div lang=\"zh-Hant\" style=\"font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 800; font-size: 60px; line-height: 1; color: #f3eada\">嘉</div></div><div style=\"font-family: Caudex, Georgia, serif; font-size: 26px; letter-spacing: 0.16em; color: #f3eada\">CELEBRATION</div></div>\n<div style=\"position: absolute; left: 160px; right: 160px; bottom: 90px; background: #1a1714; padding: 48px 56px 44px; box-sizing: border-box; text-align: center\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-B05-trio-blend": {
+    "name": "Trio Blend",
+    "group": "Brand & seals",
+    "photos": 3,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/B05-trio-blend.dc.html",
+    "originalId": "B05",
+    "textParts": 4,
+    "photoStyles": [],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column; isolation: isolate\">\n<div style=\"height: 100%; padding: 96px 72px 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 40px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e\">JIĀ</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"display: flex; gap: 24px\"><div style=\"flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"position: relative; width: 100%; \">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center;background-image:__IG_BG_0__;background-size:cover;background-position:50% 50%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"0\" data-ig-background=\"0\">佳</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">佳</div>\n</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 24px; letter-spacing: 0.16em; color: #8e6d2e\">EXCELLENCE</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #443a2c; text-align: center;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div></div><div style=\"flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"position: relative; width: 100%; \">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center;background-image:__IG_BG_1__;background-size:400% auto;background-position:50% 4%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"1\" data-ig-background=\"1\">家</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">家</div>\n</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 24px; letter-spacing: 0.16em; color: #8e6d2e\">HOME</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #443a2c; text-align: center;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"2\" data-base-font-size=\"42\">__IG_TEXT_2__</div></div><div style=\"flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"position: relative; width: 100%; \">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center;background-image:__IG_BG_2__;background-size:cover;background-position:50% 85%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"2\" data-ig-background=\"2\">嘉</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">嘉</div>\n</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 24px; letter-spacing: 0.16em; color: #8e6d2e\">CELEBRATION</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #443a2c; text-align: center;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"3\" data-base-font-size=\"42\">__IG_TEXT_3__</div></div></div>\n<div style=\"flex-grow: 1\"></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; align-self: flex-start;filter:brightness(0)\">\n</div>\n</div>"
+  },
+  "canvas-C01-h1-teajia-dark": {
+    "name": "H1 Teajia Dark",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/C01-h1-teajia-dark.dc.html",
+    "originalId": "C01",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -52px; top: 0px; width: 623px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 520,
+        "boxHeight": 1350,
+        "imageWidth": 623,
+        "imageHeight": 1350,
+        "left": -52,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 520px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"623\" data-ig-img-height=\"1350\" data-ig-box-width=\"520\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; background: #2a2622; padding: 90px 80px 80px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 36px\" data-text-zone=\"\">\n<div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 150px; letter-spacing: 0.06em; color: #a8874d\"></div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8d806b;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-C02-h4-teajia-dark": {
+    "name": "H4 Teajia Dark",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/C02-h4-teajia-dark.dc.html",
+    "originalId": "C02",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -350px; width: 968px; height: 1721px; max-width: none; display: block",
+        "boxWidth": 968,
+        "boxHeight": 960,
+        "imageWidth": 968,
+        "imageHeight": 1721,
+        "left": 0,
+        "top": -350
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #2a2622; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 56px 56px 60px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px\">\n<div style=\"width: 968px; height: 960px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"968\" data-ig-img-height=\"1721\" data-ig-box-width=\"968\" data-ig-box-height=\"960\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 24px; display: flex; flex-direction: column; justify-content: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 54px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"54\">__IG_TEXT_0__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-C03-h9-teajia-dark": {
+    "name": "H9 Teajia Dark",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/C03-h9-teajia-dark.dc.html",
+    "originalId": "C03",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -576px; width: 1080px; height: 2343px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 2343,
+        "left": 0,
+        "top": -576
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"2343\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"58\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 160px; right: 160px; bottom: 90px; background: #2a2622; padding: 52px 56px 48px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 28px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 101px; height: 40px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>"
+  },
+  "canvas-C04-cover-teajia-dark": {
+    "name": "Cover Teajia Dark",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "cover",
+      "hook"
+    ],
+    "sourceFile": "reference/instagram-original/C04-cover-teajia-dark.dc.html",
+    "originalId": "C04",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -137px; width: 1080px; height: 1571px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1571,
+        "left": 0,
+        "top": -137
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1571\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; right: 72px; bottom: 72px; background: #2a2622; padding: 52px 56px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<div style=\"display: flex; justify-content: space-between; align-items: center\"><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div>\n<div style=\"height: 6px\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 68px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"68\">__IG_TEXT_0__</div>\n<div style=\"font-size: 32px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"32\">__IG_CREDIT__</div>\n</div>\n</div>"
+  },
+  "canvas-C05-close-teajia-dark": {
+    "name": "Close Teajia Dark",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "close"
+    ],
+    "sourceFile": "reference/instagram-original/C05-close-teajia-dark.dc.html",
+    "originalId": "C05",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -528px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -528,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"40\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; right: 72px; bottom: 72px; background: #2a2622; padding: 56px 60px 52px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 68px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"68\">__IG_TEXT_0__</div>\n<div style=\"font-size: 32px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"32\">__IG_CREDIT__</div>\n<div style=\"display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #3a3530; padding-top: 26px\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 31px\"><span style=\"color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\"></span></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 106px; height: 42px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>\n</div>"
+  },
+  "canvas-C06-jia-teajia-dark": {
+    "name": "Jia Teajia Dark",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/C06-jia-teajia-dark.dc.html",
+    "originalId": "C06",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -501px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -501,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column; isolation: isolate\">\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; overflow: hidden; filter: grayscale(1) contrast(0.8) brightness(1.05)\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"38\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; background: #8e6d2e; mix-blend-mode: multiply; opacity: 0.7\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; background: #1a1714; mix-blend-mode: multiply; display: flex; justify-content: center; padding-top: 50px; box-sizing: border-box\"><div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 920px; line-height: 1; color: #ffffff\">家</div></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px; display: flex; flex-direction: column; gap: 14px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 44px; line-height: 1.12;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"44\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-C07-h2-teajia-light": {
+    "name": "H2 Teajia Light",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/C07-h2-teajia-light.dc.html",
+    "originalId": "C07",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -256px; top: 0px; width: 929px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 360,
+        "boxHeight": 1350,
+        "imageWidth": 929,
+        "imageHeight": 1350,
+        "left": -256,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 360px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"929\" data-ig-img-height=\"1350\" data-ig-box-width=\"360\" data-ig-box-height=\"1350\" data-ig-origin-x=\"45\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 90px 90px 80px 72px; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px\" data-text-zone=\"\">\n<div style=\"display: flex; gap: 36px; align-items: flex-start\"><div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 110px; letter-spacing: 0.06em; color: #8e6d2e\"></div><div style=\"padding-top: 8px\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 60px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"60\">__IG_TEXT_0__</div>\n<div style=\"font-size: 36px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"border-top: 1px solid #d5c8b4; padding-top: 26px; font-family: Caudex, Georgia, serif; font-size: 27px; line-height: 1.4;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"27\"><span style=\"color: #8e6d2e\"></span></div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-C08-close-teajia-light": {
+    "name": "Close Teajia Light",
+    "group": "Teajia covers & closes",
+    "photos": 3,
+    "roles": [
+      "close"
+    ],
+    "sourceFile": "reference/instagram-original/C08-close-teajia-light.dc.html",
+    "originalId": "C08",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -46px; width: 290px; height: 516px; max-width: none; display: block",
+        "boxWidth": 290,
+        "boxHeight": 400,
+        "imageWidth": 290,
+        "imageHeight": 516,
+        "left": 0,
+        "top": -46
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -53px; width: 290px; height: 516px; max-width: none; display: block",
+        "boxWidth": 290,
+        "boxHeight": 400,
+        "imageWidth": 290,
+        "imageHeight": 516,
+        "left": 0,
+        "top": -53
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -32px; width: 290px; height: 629px; max-width: none; display: block",
+        "boxWidth": 290,
+        "boxHeight": 400,
+        "imageWidth": 290,
+        "imageHeight": 629,
+        "left": 0,
+        "top": -32
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 48px\" data-text-zone=\"\">\n<div style=\"display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px\">\n<div style=\"width: 290px; height: 400px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"290\" data-ig-img-height=\"516\" data-ig-box-width=\"290\" data-ig-box-height=\"400\" data-ig-origin-x=\"50\" data-ig-origin-y=\"40\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 290px; height: 400px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"290\" data-ig-img-height=\"516\" data-ig-box-width=\"290\" data-ig-box-height=\"400\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div><div style=\"width: 290px; height: 400px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"290\" data-ig-img-height=\"629\" data-ig-box-width=\"290\" data-ig-box-height=\"400\" data-ig-origin-x=\"50\" data-ig-origin-y=\"14\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div>\n</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 72px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"72\">__IG_TEXT_0__</div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #d5c8b4; padding-top: 28px\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px\"><span style=\"color: #443a2c;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</span></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 116px; height: 46px; object-fit: contain; display: block; flex-shrink: 0; align-self: center;filter:brightness(0)\">\n</div>\n</div>\n</div>"
+  },
+  "canvas-F01-full-quote": {
+    "name": "Full Quote",
+    "group": "Full-photo frames",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/F01-full-quote.dc.html",
+    "originalId": "F01",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -262px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -262
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 520px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.88) 65%)\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px; display: flex; flex-direction: column; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n</div>"
+  },
+  "canvas-F02-full-vertical": {
+    "name": "Full Vertical",
+    "group": "Full-photo frames",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/F02-full-vertical.dc.html",
+    "originalId": "F02",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -228px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -228
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"40\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 560px; background: linear-gradient(rgba(26,23,20,0.88) 35%, rgba(26,23,20,0))\"></div>\n<div style=\"position: absolute; left: 90px; right: 200px; top: 96px; display: flex; flex-direction: column; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 60px; line-height: 1.1; line-height: 1.04;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"60\">__IG_TEXT_0__</div>\n</div>\n<div lang=\"zh-Hant\" style=\"position: absolute; right: 80px; top: 96px; writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 800; font-size: 76px; letter-spacing: 0.12em; color: #f3eada\"></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 200px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.6) 65%)\"></div>\n<div style=\"position: absolute; left: 90px; bottom: 64px\"><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; flex-shrink: 0; align-self: flex-start\"></div>\n</div>"
+  },
+  "canvas-F03-full-pure": {
+    "name": "Full Pure",
+    "group": "Full-photo frames",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/F03-full-pure.dc.html",
+    "originalId": "F03",
+    "textParts": 0,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -88px; width: 1080px; height: 1546px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1546,
+        "left": 0,
+        "top": -88
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1546\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"45\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 240px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.75) 65%)\"></div>\n<div style=\"position: absolute; left: 0; bottom: 60px; width: 1080px; display: flex; justify-content: center\"><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 116px; height: 46px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\"></div>\n</div>"
+  },
+  "canvas-F04-full-line": {
+    "name": "Full Line",
+    "group": "Full-photo frames",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/F04-full-line.dc.html",
+    "originalId": "F04",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -137px; width: 1080px; height: 1571px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1571,
+        "left": 0,
+        "top": -137
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1571\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 420px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.9) 65%)\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 80px; border-top: 1px solid rgba(243,234,218,0.5); padding-top: 26px; display: flex; justify-content: space-between; align-items: baseline\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 26px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"26\">__IG_LABEL__</div>\n</div>\n</div>"
+  },
+  "canvas-F05-full-seal": {
+    "name": "Full Seal",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/F05-full-seal.dc.html",
+    "originalId": "F05",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -199px; width: 1080px; height: 2343px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 2343,
+        "left": 0,
+        "top": -199
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"2343\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"20\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; right: 80px; top: 80px; width: 104px; padding: 18px 0; background: #a8874d; display: flex; justify-content: center\"><div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 800; font-size: 54px; letter-spacing: 0.1em; color: #1a1714\">佳家嘉</div></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 520px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.88) 65%)\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-F06-full-strip": {
+    "name": "Full Strip",
+    "group": "Full-photo frames",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/F06-full-strip.dc.html",
+    "originalId": "F06",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -428px; top: 0px; width: 2151px; height: 1210px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1210,
+        "imageWidth": 2151,
+        "imageHeight": 1210,
+        "left": -428,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1210px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2151\" data-ig-img-height=\"1210\" data-ig-box-width=\"1080\" data-ig-box-height=\"1210\" data-ig-origin-x=\"40\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 72px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 32px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 36px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"42\">__IG_TEXT_0__</div><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 91px; height: 36px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>"
+  },
+  "canvas-J01-jia-fill": {
+    "name": "Jia Fill",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/J01-jia-fill.dc.html",
+    "originalId": "J01",
+    "textParts": 1,
+    "photoStyles": [],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column; isolation: isolate\">\n<div style=\"height: 100%; padding: 64px 72px 72px; box-sizing: border-box; display: flex; flex-direction: column\">\n<div style=\"position: relative; width: 100%; height: 920px;\">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 880px; line-height: 1; text-align: center;background-image:__IG_BG_0__;background-size:260% auto;background-position:50% 4%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"0\" data-ig-background=\"0\">家</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 880px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">家</div>\n</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"display: flex; flex-direction: column; gap: 14px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 44px; line-height: 1.12;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"44\">__IG_TEXT_0__</div></div>\n</div>\n</div>"
+  },
+  "canvas-J02-jia-knockout-black": {
+    "name": "Jia Knockout Black",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/J02-jia-knockout-black.dc.html",
+    "originalId": "J02",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -285px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -285
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column; isolation: isolate\">\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; overflow: hidden; filter: grayscale(1) contrast(0.8) brightness(1.05)\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; background: #8e6d2e; mix-blend-mode: multiply; opacity: 0.75\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; background: #1a1714; mix-blend-mode: multiply; display: flex; justify-content: center; padding-top: 50px; box-sizing: border-box\"><div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 920px; line-height: 1; color: #ffffff\">佳</div></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px; display: flex; flex-direction: column; gap: 14px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 44px; line-height: 1.12;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"44\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-J03-jia-knockout-white": {
+    "name": "Jia Knockout White",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/J03-jia-knockout-white.dc.html",
+    "originalId": "J03",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -342px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -342
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column; isolation: isolate\">\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; overflow: hidden; filter: grayscale(1) contrast(0.8) brightness(1.05)\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"60\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; background: #d5c8b4; mix-blend-mode: multiply; opacity: 0.6\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 1350px; background: #ffffff; mix-blend-mode: screen; display: flex; justify-content: center; padding-top: 50px; box-sizing: border-box\"><div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 920px; line-height: 1; color: #000000\">嘉</div></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px; display: flex; flex-direction: column; gap: 14px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 44px; line-height: 1.12;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"44\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-J04-jia-trio": {
+    "name": "Jia Trio",
+    "group": "Brand & seals",
+    "photos": 3,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/J04-jia-trio.dc.html",
+    "originalId": "J04",
+    "textParts": 4,
+    "photoStyles": [],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column; isolation: isolate\">\n<div style=\"height: 100%; padding: 96px 72px 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 40px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e\">JIĀ</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"display: flex; gap: 24px\"><div style=\"flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"position: relative; width: 100%; \">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center;background-image:__IG_BG_0__;background-size:cover;background-position:50% 50%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"0\" data-ig-background=\"0\">佳</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">佳</div>\n</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 24px; letter-spacing: 0.16em; color: #8e6d2e\">EXCELLENCE</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #443a2c; text-align: center;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div></div><div style=\"flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"position: relative; width: 100%; \">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center;background-image:__IG_BG_1__;background-size:400% auto;background-position:50% 4%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"1\" data-ig-background=\"1\">家</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">家</div>\n</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 24px; letter-spacing: 0.16em; color: #8e6d2e\">HOME</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #443a2c; text-align: center;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"2\" data-base-font-size=\"42\">__IG_TEXT_2__</div></div><div style=\"flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"position: relative; width: 100%; \">\n<div lang=\"zh-Hant\" style=\"font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center;background-image:__IG_BG_2__;background-size:cover;background-position:50% 85%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:grayscale(1) contrast(0.82) brightness(1.04)\" data-slot=\"2\" data-ig-background=\"2\">嘉</div>\n<div lang=\"zh-Hant\" aria-hidden=\"true\" style=\"position: absolute; left: 0; top: 0; width: 100%; font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 290px; line-height: 1; text-align: center; color: #d5c8b4; mix-blend-mode: multiply; opacity: 0.55\">嘉</div>\n</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 24px; letter-spacing: 0.16em; color: #8e6d2e\">CELEBRATION</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #443a2c; text-align: center;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"3\" data-base-font-size=\"42\">__IG_TEXT_3__</div></div></div>\n<div style=\"flex-grow: 1\"></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; align-self: flex-start;filter:brightness(0)\">\n</div>\n</div>"
+  },
+  "canvas-J05-jia-outline": {
+    "name": "Jia Outline",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/J05-jia-outline.dc.html",
+    "originalId": "J05",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -342px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -342
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"60\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div lang=\"zh-Hant\" style=\"position: absolute; right: -60px; top: 20px; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 800; font-size: 820px; line-height: 1; color: transparent; -webkit-text-stroke: 3px rgba(243,234,218,0.85)\">佳</div>\n<div style=\"position: absolute; left: 72px; right: 72px; bottom: 72px; background: #2a2622; padding: 44px 52px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n<div style=\"font-size: 30px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n</div>"
+  },
+  "canvas-J06-jia-seal": {
+    "name": "Jia Seal",
+    "group": "Brand & seals",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/J06-jia-seal.dc.html",
+    "originalId": "J06",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -501px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -501,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; position: absolute; left: 0; top: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"38\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; top: 72px; display: flex; align-items: center; gap: 20px\"><div style=\"width: 88px; height: 88px; background: #a8874d; display: flex; align-items: center; justify-content: center\"><div lang=\"zh-Hant\" style=\"font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 800; font-size: 60px; line-height: 1; color: #1a1714\">嘉</div></div><div style=\"font-family: Caudex, Georgia, serif; font-size: 26px; letter-spacing: 0.16em; color: #f3eada\">CELEBRATION</div></div>\n<div style=\"position: absolute; left: 160px; right: 160px; bottom: 90px; background: #2a2622; padding: 48px 56px 44px; box-sizing: border-box; text-align: center\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div></div>\n</div>"
+  },
+  "canvas-M01-triptych": {
+    "name": "Triptych",
+    "group": "Multi-photo compositions",
+    "photos": 3,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M01-triptych.dc.html",
+    "originalId": "M01",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -117px; top: 0px; width: 580px; height: 1030px; max-width: none; display: block",
+        "boxWidth": 355,
+        "boxHeight": 1030,
+        "imageWidth": 580,
+        "imageHeight": 1030,
+        "left": -117,
+        "top": 0
+      },
+      {
+        "style": "position: absolute; left: -160px; top: 0px; width: 709px; height: 1030px; max-width: none; display: block",
+        "boxWidth": 354,
+        "boxHeight": 1030,
+        "imageWidth": 709,
+        "imageHeight": 1030,
+        "left": -160,
+        "top": 0
+      },
+      {
+        "style": "position: absolute; left: -219px; top: 0px; width: 720px; height: 1030px; max-width: none; display: block",
+        "boxWidth": 355,
+        "boxHeight": 1030,
+        "imageWidth": 720,
+        "imageHeight": 1030,
+        "left": -219,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; gap: 8px\"><div style=\"width: 355px; height: 1030px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"580\" data-ig-img-height=\"1030\" data-ig-box-width=\"355\" data-ig-box-height=\"1030\" data-ig-origin-x=\"52\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 354px; height: 1030px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"709\" data-ig-img-height=\"1030\" data-ig-box-width=\"354\" data-ig-box-height=\"1030\" data-ig-origin-x=\"45\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div><div style=\"width: 355px; height: 1030px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"720\" data-ig-img-height=\"1030\" data-ig-box-width=\"355\" data-ig-box-height=\"1030\" data-ig-origin-x=\"60\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div></div>\n<div style=\"flex-grow: 1; padding: 0 80px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 40px\">\n<div style=\"display: flex; flex-direction: column; gap: 14px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>"
+  },
+  "canvas-M03-grid-box": {
+    "name": "Grid Box",
+    "group": "Multi-photo compositions",
+    "photos": 4,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M03-grid-box.dc.html",
+    "originalId": "M03",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -113px; width: 536px; height: 953px; max-width: none; display: block",
+        "boxWidth": 536,
+        "boxHeight": 671,
+        "imageWidth": 536,
+        "imageHeight": 953,
+        "left": 0,
+        "top": -113
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -130px; width: 536px; height: 953px; max-width: none; display: block",
+        "boxWidth": 536,
+        "boxHeight": 671,
+        "imageWidth": 536,
+        "imageHeight": 953,
+        "left": 0,
+        "top": -130
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -69px; width: 536px; height: 1163px; max-width: none; display: block",
+        "boxWidth": 536,
+        "boxHeight": 671,
+        "imageWidth": 536,
+        "imageHeight": 1163,
+        "left": 0,
+        "top": -69
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -169px; width: 536px; height: 953px; max-width: none; display: block",
+        "boxWidth": 536,
+        "boxHeight": 671,
+        "imageWidth": 536,
+        "imageHeight": 953,
+        "left": 0,
+        "top": -169
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; height: 100%\">\n<div style=\"width: 536px; height: 671px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"536\" data-ig-img-height=\"953\" data-ig-box-width=\"536\" data-ig-box-height=\"671\" data-ig-origin-x=\"50\" data-ig-origin-y=\"40\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 536px; height: 671px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"536\" data-ig-img-height=\"953\" data-ig-box-width=\"536\" data-ig-box-height=\"671\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div><div style=\"width: 536px; height: 671px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"536\" data-ig-img-height=\"1163\" data-ig-box-width=\"536\" data-ig-box-height=\"671\" data-ig-origin-x=\"50\" data-ig-origin-y=\"14\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div><div style=\"width: 536px; height: 671px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"3\" data-ig-photo=\"3\" data-ig-img-width=\"536\" data-ig-img-height=\"953\" data-ig-box-width=\"536\" data-ig-box-height=\"671\" data-ig-origin-x=\"50\" data-ig-origin-y=\"60\"><img src=\"__IG_PHOTO_3__\" alt=\"\" style=\"__IG_STYLE_3__\"></div>\n</div>\n<div style=\"position: absolute; left: 240px; top: 395px; width: 600px; height: 560px; background: #1a1714; box-sizing: border-box; padding: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 24px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 62px; line-height: 1.1; line-height: 1.04;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"62\">__IG_TEXT_0__</div>\n<div style=\"font-size: 30px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n<div style=\"height: 8px\"></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>"
+  },
+  "canvas-M04-big-small": {
+    "name": "Big Small",
+    "group": "Multi-photo compositions",
+    "photos": 2,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M04-big-small.dc.html",
+    "originalId": "M04",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -506px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 820,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -506
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -62px; width: 300px; height: 534px; max-width: none; display: block",
+        "boxWidth": 300,
+        "boxHeight": 410,
+        "imageWidth": 300,
+        "imageHeight": 534,
+        "left": 0,
+        "top": -62
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 820px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"820\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 56px 80px 64px; box-sizing: border-box; display: flex; gap: 48px; align-items: stretch\">\n<div style=\"width: 300px; height: 410px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"300\" data-ig-img-height=\"534\" data-ig-box-width=\"300\" data-ig-box-height=\"410\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div>\n<div style=\"display: flex; flex-direction: column; justify-content: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n<div style=\"font-size: 36px; line-height: 1.4; color: #f3eada;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-M05-picture-in-picture": {
+    "name": "Picture In Picture",
+    "group": "Multi-photo compositions",
+    "photos": 2,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M05-picture-in-picture.dc.html",
+    "originalId": "M05",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -285px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -285
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -109px; width: 380px; height: 676px; max-width: none; display: block",
+        "boxWidth": 380,
+        "boxHeight": 500,
+        "imageWidth": 380,
+        "imageHeight": 676,
+        "left": 0,
+        "top": -109
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; top: 72px; width: 600px; background: #2a2622; padding: 44px 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n<div style=\"position: absolute; right: 72px; bottom: 72px; background: #e6dbcc; padding: 16px\"><div style=\"width: 380px; height: 500px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"380\" data-ig-img-height=\"676\" data-ig-box-width=\"380\" data-ig-box-height=\"500\" data-ig-origin-x=\"50\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div></div>\n</div>"
+  },
+  "canvas-M07-contrast": {
+    "name": "Contrast",
+    "group": "Multi-photo compositions",
+    "photos": 2,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M07-contrast.dc.html",
+    "originalId": "M07",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -48px; width: 1080px; height: 608px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 520,
+        "imageWidth": 1080,
+        "imageHeight": 608,
+        "left": 0,
+        "top": -48
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -44px; width: 1080px; height: 608px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 520,
+        "imageWidth": 1080,
+        "imageHeight": 608,
+        "left": 0,
+        "top": -44
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 520px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"608\" data-ig-box-width=\"1080\" data-ig-box-height=\"520\" data-ig-origin-x=\"50\" data-ig-origin-y=\"55\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 80px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 14px\" data-text-zone=\"\">\n<div style=\"display: flex; justify-content: space-between\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 56px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"56\">__IG_TEXT_0__</div>\n<div style=\"display: flex; justify-content: flex-end\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\"></div></div>\n</div>\n<div style=\"width: 1080px; height: 520px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"1080\" data-ig-img-height=\"608\" data-ig-box-width=\"1080\" data-ig-box-height=\"520\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div>\n</div>"
+  },
+  "canvas-M09-gallery-mat": {
+    "name": "Gallery Mat",
+    "group": "Multi-photo compositions",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M09-gallery-mat.dc.html",
+    "originalId": "M09",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -292px; width: 968px; height: 1721px; max-width: none; display: block",
+        "boxWidth": 968,
+        "boxHeight": 990,
+        "imageWidth": 968,
+        "imageHeight": 1721,
+        "left": 0,
+        "top": -292
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 56px 56px 0; box-sizing: border-box; display: flex; flex-direction: column\">\n<div style=\"width: 968px; height: 990px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"968\" data-ig-img-height=\"1721\" data-ig-box-width=\"968\" data-ig-box-height=\"990\" data-ig-origin-x=\"50\" data-ig-origin-y=\"40\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 8px; display: flex; flex-direction: column; justify-content: center; gap: 12px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div>\n<div style=\"font-size: 32px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-M10-detail-crops": {
+    "name": "Detail Crops",
+    "group": "Multi-photo compositions",
+    "photos": 3,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M10-detail-crops.dc.html",
+    "originalId": "M10",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -80px; top: 0px; width: 760px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 600,
+        "boxHeight": 1350,
+        "imageWidth": 760,
+        "imageHeight": 1350,
+        "left": -80,
+        "top": 0
+      },
+      {
+        "style": "position: absolute; left: -420px; top: -1640px; width: 1300px; height: 2310px; display: block",
+        "boxWidth": 376,
+        "boxHeight": 376,
+        "imageWidth": 1300,
+        "imageHeight": 2310,
+        "left": -420,
+        "top": -1640
+      },
+      {
+        "style": "position: absolute; left: -250px; top: -860px; width: 1300px; height: 2310px; display: block",
+        "boxWidth": 376,
+        "boxHeight": 376,
+        "imageWidth": 1300,
+        "imageHeight": 2310,
+        "left": -250,
+        "top": -860
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 600px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"760\" data-ig-img-height=\"1350\" data-ig-box-width=\"600\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 72px 56px 72px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px\" data-text-zone=\"\">\n<div style=\"width: 376px; height: 376px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"1300\" data-ig-img-height=\"2310\" data-ig-box-width=\"376\" data-ig-box-height=\"376\" data-ig-origin-x=\"45\" data-ig-origin-y=\"85\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div>\n<div style=\"width: 376px; height: 376px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"1300\" data-ig-img-height=\"2310\" data-ig-box-width=\"376\" data-ig-box-height=\"376\" data-ig-origin-x=\"27\" data-ig-origin-y=\"44\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 46px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"46\">__IG_TEXT_0__</div>\n<div style=\"font-size: 28px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-M11-quote-strip": {
+    "name": "Quote Strip",
+    "group": "Multi-photo compositions",
+    "photos": 4,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M11-quote-strip.dc.html",
+    "originalId": "M11",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -25px; width: 222px; height: 482px; max-width: none; display: block",
+        "boxWidth": 222,
+        "boxHeight": 300,
+        "imageWidth": 222,
+        "imageHeight": 482,
+        "left": 0,
+        "top": -25
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -59px; width: 222px; height: 395px; max-width: none; display: block",
+        "boxWidth": 222,
+        "boxHeight": 300,
+        "imageWidth": 222,
+        "imageHeight": 395,
+        "left": 0,
+        "top": -59
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -48px; width: 222px; height: 395px; max-width: none; display: block",
+        "boxWidth": 222,
+        "boxHeight": 300,
+        "imageWidth": 222,
+        "imageHeight": 395,
+        "left": 0,
+        "top": -48
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -44px; width: 222px; height: 395px; max-width: none; display: block",
+        "boxWidth": 222,
+        "boxHeight": 300,
+        "imageWidth": 222,
+        "imageHeight": 395,
+        "left": 0,
+        "top": -44
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 90px 80px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1; line-height: 1.06;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n<div style=\"height: 40px\"></div>\n<div style=\"display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px\">\n<div style=\"width: 222px; height: 300px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"222\" data-ig-img-height=\"482\" data-ig-box-width=\"222\" data-ig-box-height=\"300\" data-ig-origin-x=\"50\" data-ig-origin-y=\"14\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 222px; height: 300px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"222\" data-ig-img-height=\"395\" data-ig-box-width=\"222\" data-ig-box-height=\"300\" data-ig-origin-x=\"50\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div><div style=\"width: 222px; height: 300px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"222\" data-ig-img-height=\"395\" data-ig-box-width=\"222\" data-ig-box-height=\"300\" data-ig-origin-x=\"50\" data-ig-origin-y=\"51\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div><div style=\"width: 222px; height: 300px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"3\" data-ig-photo=\"3\" data-ig-img-width=\"222\" data-ig-img-height=\"395\" data-ig-box-width=\"222\" data-ig-box-height=\"300\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_3__\" alt=\"\" style=\"__IG_STYLE_3__\"></div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-M12-chapter": {
+    "name": "Chapter",
+    "group": "Chapters & numbers",
+    "photos": 0,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M12-chapter.dc.html",
+    "originalId": "M12",
+    "textParts": 2,
+    "photoStyles": [],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 90px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 36px; text-align: center\" data-text-zone=\"\">\n<div lang=\"zh-Hant\" style=\"font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 320px; line-height: 1; color: #a8874d\">壹</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"width: 120px; border-top: 1px solid #3a3530\"></div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>"
+  },
+  "canvas-M14-big-number": {
+    "name": "Big Number",
+    "group": "Chapters & numbers",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M14-big-number.dc.html",
+    "originalId": "M14",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -150px; top: 0px; width: 760px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 460,
+        "boxHeight": 1350,
+        "imageWidth": 760,
+        "imageHeight": 1350,
+        "left": -150,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"flex-grow: 1; padding: 90px 56px 80px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 260px; line-height: 0.9; color: #a8874d\"></div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 48px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"48\">__IG_TEXT_0__</div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #f3eada;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n<div style=\"width: 460px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"760\" data-ig-img-height=\"1350\" data-ig-box-width=\"460\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n</div>\n</div>"
+  },
+  "canvas-M15-four-frames-white": {
+    "name": "Four Frames White",
+    "group": "Multi-photo compositions",
+    "photos": 4,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/M15-four-frames-white.dc.html",
+    "originalId": "M15",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -152px; width: 462px; height: 820px; max-width: none; display: block",
+        "boxWidth": 461,
+        "boxHeight": 440,
+        "imageWidth": 462,
+        "imageHeight": 820,
+        "left": 0,
+        "top": -152
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -143px; width: 462px; height: 671px; max-width: none; display: block",
+        "boxWidth": 461,
+        "boxHeight": 440,
+        "imageWidth": 462,
+        "imageHeight": 671,
+        "left": 0,
+        "top": -143
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -175px; width: 462px; height: 820px; max-width: none; display: block",
+        "boxWidth": 461,
+        "boxHeight": 440,
+        "imageWidth": 462,
+        "imageHeight": 820,
+        "left": 0,
+        "top": -175
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -78px; width: 462px; height: 1000px; max-width: none; display: block",
+        "boxWidth": 461,
+        "boxHeight": 440,
+        "imageWidth": 462,
+        "imageHeight": 1000,
+        "left": 0,
+        "top": -78
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 72px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px\">\n<div style=\"display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px\">\n<div style=\"width: 461px; height: 440px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"462\" data-ig-img-height=\"820\" data-ig-box-width=\"461\" data-ig-box-height=\"440\" data-ig-origin-x=\"0\" data-ig-origin-y=\"40\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 461px; height: 440px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"462\" data-ig-img-height=\"671\" data-ig-box-width=\"461\" data-ig-box-height=\"440\" data-ig-origin-x=\"0\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div><div style=\"width: 461px; height: 440px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"462\" data-ig-img-height=\"820\" data-ig-box-width=\"461\" data-ig-box-height=\"440\" data-ig-origin-x=\"0\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div><div style=\"width: 461px; height: 440px; overflow: hidden; position: relative; flex-shrink: 0; \" data-slot=\"3\" data-ig-photo=\"3\" data-ig-img-width=\"462\" data-ig-img-height=\"1000\" data-ig-box-width=\"461\" data-ig-box-height=\"440\" data-ig-origin-x=\"0\" data-ig-origin-y=\"14\"><img src=\"__IG_PHOTO_3__\" alt=\"\" style=\"__IG_STYLE_3__\"></div>\n</div>\n<div style=\"flex-grow: 1; display: flex; align-items: center; justify-content: space-between; gap: 32px; padding-top: 16px\">\n<div style=\"display: flex; flex-direction: column; gap: 10px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 28px; color: #8e6d2e\"></div></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 116px; height: 46px; object-fit: contain; display: block; flex-shrink: 0; align-self: center;filter:brightness(0)\">\n</div>\n</div>\n</div>"
+  },
+  "canvas-N01-scroll-white": {
+    "name": "Scroll White",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N01-scroll-white.dc.html",
+    "originalId": "N01",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -120px; top: 0px; width: 760px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 520,
+        "boxHeight": 1350,
+        "imageWidth": 760,
+        "imageHeight": 1350,
+        "left": -120,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 520px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"760\" data-ig-img-height=\"1350\" data-ig-box-width=\"520\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 90px 80px 80px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 36px\" data-text-zone=\"\">\n<div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 150px; letter-spacing: 0.06em; color: #8e6d2e\"></div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 54px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"54\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #443a2c;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-N02-scroll-right": {
+    "name": "Scroll Right",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N02-scroll-right.dc.html",
+    "originalId": "N02",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -120px; top: 0px; width: 760px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 520,
+        "boxHeight": 1350,
+        "imageWidth": 760,
+        "imageHeight": 1350,
+        "left": -120,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"flex-grow: 1; padding: 90px 64px 80px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 60px; line-height: 1.1; line-height: 1.06;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"60\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n<div style=\"width: 520px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"760\" data-ig-img-height=\"1350\" data-ig-box-width=\"520\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n</div>\n</div>"
+  },
+  "canvas-N03-long-black": {
+    "name": "Long Black",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N03-long-black.dc.html",
+    "originalId": "N03",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -218px; top: 0px; width: 760px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 340,
+        "boxHeight": 1350,
+        "imageWidth": 760,
+        "imageHeight": 1350,
+        "left": -218,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 340px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"760\" data-ig-img-height=\"1350\" data-ig-box-width=\"340\" data-ig-box-height=\"1350\" data-ig-origin-x=\"52\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 90px 90px 80px 72px; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px\" data-text-zone=\"\">\n<div style=\"display: flex; gap: 36px; align-items: flex-start\"><div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 110px; letter-spacing: 0.06em; color: #a8874d\"></div><div style=\"padding-top: 8px\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 56px; line-height: 1.1; line-height: 1.06;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"56\">__IG_TEXT_0__</div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #ede4d4;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"border-top: 1px solid #3a3530; padding-top: 26px; font-family: Caudex, Georgia, serif; font-size: 27px;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"27\"><span style=\"color: #a8874d\"></span></div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-N04-plate-white-big": {
+    "name": "Plate White Big",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N04-plate-white-big.dc.html",
+    "originalId": "N04",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -278px; width: 968px; height: 1408px; max-width: none; display: block",
+        "boxWidth": 968,
+        "boxHeight": 960,
+        "imageWidth": 968,
+        "imageHeight": 1408,
+        "left": 0,
+        "top": -278
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 56px 56px 60px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px\">\n<div style=\"width: 968px; height: 960px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"968\" data-ig-img-height=\"1408\" data-ig-box-width=\"968\" data-ig-box-height=\"960\" data-ig-origin-x=\"50\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 56px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"56\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-N05-landscape-plate": {
+    "name": "Landscape Plate",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N05-landscape-plate.dc.html",
+    "originalId": "N05",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: 0px; width: 969px; height: 546px; max-width: none; display: block",
+        "boxWidth": 968,
+        "boxHeight": 545,
+        "imageWidth": 969,
+        "imageHeight": 546,
+        "left": 0,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 90px 56px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 48px\">\n<div style=\"padding: 0 24px\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div>\n<div style=\"padding: 0 24px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 60px; line-height: 1.1; line-height: 1.06;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"60\">__IG_TEXT_0__</div></div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"width: 968px; height: 545px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"969\" data-ig-img-height=\"546\" data-ig-box-width=\"968\" data-ig-box-height=\"545\" data-ig-origin-x=\"0\" data-ig-origin-y=\"0\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"padding: 0 24px\" data-text-zone=\"\"><div style=\"font-size: 30px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div></div>\n</div>\n</div>"
+  },
+  "canvas-N06-box-top-black": {
+    "name": "Box Top Black",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N06-box-top-black.dc.html",
+    "originalId": "N06",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -21px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -21
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"4\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; right: 72px; top: 72px; background: #2a2622; padding: 48px 56px 44px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n</div>"
+  },
+  "canvas-N07-box-top-white": {
+    "name": "Box Top White",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N07-box-top-white.dc.html",
+    "originalId": "N07",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -88px; width: 1080px; height: 1546px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1546,
+        "left": 0,
+        "top": -88
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1546\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"45\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; right: 72px; top: 72px; width: 560px; background: #e6dbcc; padding: 44px 48px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n</div>\n</div>"
+  },
+  "canvas-N08-band-bottom": {
+    "name": "Band Bottom",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N08-band-bottom.dc.html",
+    "originalId": "N08",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -320px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1030,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -320
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1030px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1030\" data-ig-origin-x=\"50\" data-ig-origin-y=\"36\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 90px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 50px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"50\">__IG_TEXT_0__</div>\n</div>\n</div>"
+  },
+  "canvas-N09-diptych": {
+    "name": "Diptych",
+    "group": "Multi-photo compositions",
+    "photos": 2,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N09-diptych.dc.html",
+    "originalId": "N09",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -16px; top: 0px; width: 569px; height: 1010px; max-width: none; display: block",
+        "boxWidth": 536,
+        "boxHeight": 1010,
+        "imageWidth": 569,
+        "imageHeight": 1010,
+        "left": -16,
+        "top": 0
+      },
+      {
+        "style": "position: absolute; left: -16px; top: 0px; width: 569px; height: 1010px; max-width: none; display: block",
+        "boxWidth": 536,
+        "boxHeight": 1010,
+        "imageWidth": 569,
+        "imageHeight": 1010,
+        "left": -16,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; gap: 8px\"><div style=\"width: 536px; height: 1010px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"569\" data-ig-img-height=\"1010\" data-ig-box-width=\"536\" data-ig-box-height=\"1010\" data-ig-origin-x=\"48\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 536px; height: 1010px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"569\" data-ig-img-height=\"1010\" data-ig-box-width=\"536\" data-ig-box-height=\"1010\" data-ig-origin-x=\"48\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div></div>\n<div style=\"flex-grow: 1; padding: 0 90px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 14px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 54px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"54\">__IG_TEXT_0__</div>\n<div style=\"display: flex; align-items: baseline; gap: 24px\" data-text-zone=\"\"><div style=\"font-size: 34px; line-height: 1.4; color: #f3eada;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div></div>\n</div>\n</div>"
+  },
+  "canvas-N12-solar-term": {
+    "name": "Solar Term",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/N12-solar-term.dc.html",
+    "originalId": "N12",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -296px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -296
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"52\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 560px; background: linear-gradient(rgba(26,23,20,0.9) 40%, rgba(26,23,20,0))\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; top: 104px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"display: flex; align-items: baseline; gap: 28px\" data-text-zone=\"\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 76px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"76\">__IG_TEXT_0__</div><div lang=\"zh-Hant\" style=\"font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 70px; color: #f3eada\"></div></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #f3eada;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 220px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.85) 60%)\"></div>\n<div style=\"position: absolute; left: 0; bottom: 60px; width: 1080px; display: flex; justify-content: center\"><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 116px; height: 46px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\"></div>\n</div>"
+  },
+  "canvas-N13-cover-box": {
+    "name": "Cover Box",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "cover",
+      "hook"
+    ],
+    "sourceFile": "reference/instagram-original/N13-cover-box.dc.html",
+    "originalId": "N13",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -137px; width: 1080px; height: 1571px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1571,
+        "left": 0,
+        "top": -137
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1571\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"62\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; right: 72px; bottom: 72px; background: #2a2622; padding: 52px 56px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<div style=\"display: flex; justify-content: space-between; align-items: center\"><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 111px; height: 44px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div>\n<div style=\"height: 6px\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 68px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"68\">__IG_TEXT_0__</div>\n<div style=\"font-size: 32px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"32\">__IG_CREDIT__</div>\n</div>\n</div>"
+  },
+  "canvas-N14-close-white": {
+    "name": "Close White",
+    "group": "Teajia covers & closes",
+    "photos": 3,
+    "roles": [
+      "close"
+    ],
+    "sourceFile": "reference/instagram-original/N14-close-white.dc.html",
+    "originalId": "N14",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -46px; width: 290px; height: 516px; max-width: none; display: block",
+        "boxWidth": 290,
+        "boxHeight": 400,
+        "imageWidth": 290,
+        "imageHeight": 516,
+        "left": 0,
+        "top": -46
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -53px; width: 290px; height: 516px; max-width: none; display: block",
+        "boxWidth": 290,
+        "boxHeight": 400,
+        "imageWidth": 290,
+        "imageHeight": 516,
+        "left": 0,
+        "top": -53
+      },
+      {
+        "style": "position: absolute; left: 0px; top: -32px; width: 290px; height: 629px; max-width: none; display: block",
+        "boxWidth": 290,
+        "boxHeight": 400,
+        "imageWidth": 290,
+        "imageHeight": 629,
+        "left": 0,
+        "top": -32
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 90px; box-sizing: border-box; display: flex; flex-direction: column; gap: 48px\" data-text-zone=\"\">\n<div style=\"display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px\">\n<div style=\"width: 290px; height: 400px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"290\" data-ig-img-height=\"516\" data-ig-box-width=\"290\" data-ig-box-height=\"400\" data-ig-origin-x=\"50\" data-ig-origin-y=\"40\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div><div style=\"width: 290px; height: 400px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"1\" data-ig-photo=\"1\" data-ig-img-width=\"290\" data-ig-img-height=\"516\" data-ig-box-width=\"290\" data-ig-box-height=\"400\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_1__\" alt=\"\" style=\"__IG_STYLE_1__\"></div><div style=\"width: 290px; height: 400px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"2\" data-ig-photo=\"2\" data-ig-img-width=\"290\" data-ig-img-height=\"629\" data-ig-box-width=\"290\" data-ig-box-height=\"400\" data-ig-origin-x=\"50\" data-ig-origin-y=\"14\"><img src=\"__IG_PHOTO_2__\" alt=\"\" style=\"__IG_STYLE_2__\"></div>\n</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 72px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"72\">__IG_TEXT_0__</div>\n<div style=\"font-size: 34px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #d5c8b4; padding-top: 28px\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px\"><span style=\"color: #443a2c;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</span></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 116px; height: 46px; object-fit: contain; display: block; flex-shrink: 0; align-self: center;filter:brightness(0)\">\n</div>\n</div>\n</div>"
+  },
+  "canvas-N15-close-split": {
+    "name": "Close Split",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "close"
+    ],
+    "sourceFile": "reference/instagram-original/N15-close-split.dc.html",
+    "originalId": "N15",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -632px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 540,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -632,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"flex-grow: 1; padding: 90px 64px 80px 80px; box-sizing: border-box; display: flex; flex-direction: column; gap: 26px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1; line-height: 1.02;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"font-size: 32px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"32\">__IG_CREDIT__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; line-height: 1.5\"><br><span style=\"color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\"></span></div>\n<div style=\"height: 12px\"></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 116px; height: 46px; object-fit: contain; display: block; flex-shrink: 0; align-self: flex-start\">\n</div>\n<div style=\"width: 540px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"540\" data-ig-box-height=\"1350\" data-ig-origin-x=\"34\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n</div>\n</div>"
+  },
+  "canvas-P02-scroll-wide": {
+    "name": "Scroll Wide",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/P02-scroll-wide.dc.html",
+    "originalId": "P02",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -256px; top: 0px; width: 929px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 360,
+        "boxHeight": 1350,
+        "imageWidth": 929,
+        "imageHeight": 1350,
+        "left": -256,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"display: flex; height: 100%\">\n<div style=\"width: 360px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"929\" data-ig-img-height=\"1350\" data-ig-box-width=\"360\" data-ig-box-height=\"1350\" data-ig-origin-x=\"45\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 90px 90px 80px 72px; box-sizing: border-box; display: flex; flex-direction: column; gap: 32px\" data-text-zone=\"\">\n<div style=\"display: flex; gap: 36px; align-items: flex-start\"><div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 110px; letter-spacing: 0.06em; color: #8e6d2e\"></div><div style=\"padding-top: 8px\"><div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div></div></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 60px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"60\">__IG_TEXT_0__</div>\n<div style=\"font-size: 36px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #8e6d2e;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n<div style=\"flex-grow: 1\"></div>\n<div style=\"border-top: 1px solid #d5c8b4; padding-top: 26px; font-family: Caudex, Georgia, serif; font-size: 27px; line-height: 1.4;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"27\"><span style=\"color: #8e6d2e\"></span></div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-P03-scroll-photo-top": {
+    "name": "Scroll Photo Top",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/P03-scroll-photo-top.dc.html",
+    "originalId": "P03",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -661px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 780,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -661
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 780px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"780\" data-ig-origin-x=\"50\" data-ig-origin-y=\"58\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 64px 80px 72px; box-sizing: border-box; display: flex; gap: 56px\">\n<div style=\"flex-grow: 1; display: flex; flex-direction: column; gap: 24px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 56px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"56\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"31\">__IG_CREDIT__</div>\n</div>\n<div lang=\"zh-Hant\" style=\"writing-mode: vertical-rl; font-family: 'Shippori Mincho', 'Noto Serif TC', serif; font-weight: 700; font-size: 56px; letter-spacing: 0.06em; color: #a8874d\"></div>\n</div>\n</div>"
+  },
+  "canvas-P04-plate-black": {
+    "name": "Plate Black",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/P04-plate-black.dc.html",
+    "originalId": "P04",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -350px; width: 968px; height: 1721px; max-width: none; display: block",
+        "boxWidth": 968,
+        "boxHeight": 960,
+        "imageWidth": 968,
+        "imageHeight": 1721,
+        "left": 0,
+        "top": -350
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"height: 100%; padding: 56px 56px 60px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px\">\n<div style=\"width: 968px; height: 960px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"968\" data-ig-img-height=\"1721\" data-ig-box-width=\"968\" data-ig-box-height=\"960\" data-ig-origin-x=\"50\" data-ig-origin-y=\"46\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 24px; display: flex; flex-direction: column; justify-content: center; gap: 18px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 54px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"54\">__IG_TEXT_0__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"30\">__IG_CREDIT__</div>\n</div>\n</div>\n</div>"
+  },
+  "canvas-P05-plate-white": {
+    "name": "Plate White",
+    "group": "Scrolls, plates & story",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/P05-plate-white.dc.html",
+    "originalId": "P05",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -204px; width: 1080px; height: 1546px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1060,
+        "imageWidth": 1080,
+        "imageHeight": 1546,
+        "left": 0,
+        "top": -204
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #f4ece0; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1060px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1546\" data-ig-box-width=\"1080\" data-ig-box-height=\"1060\" data-ig-origin-x=\"50\" data-ig-origin-y=\"42\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"flex-grow: 1; padding: 0 80px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 10px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div>\n<div style=\"font-size: 31px; line-height: 1.4; color: #443a2c;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>"
+  },
+  "canvas-P06-night": {
+    "name": "Night",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "cover",
+      "hook"
+    ],
+    "sourceFile": "reference/instagram-original/P06-night.dc.html",
+    "originalId": "P06",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -217px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -217
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"38\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 700px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.92) 60%)\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; bottom: 90px; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 126px; height: 50px; object-fit: contain; display: block; flex-shrink: 0; align-self: flex-start\">\n<div style=\"height: 8px\"></div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 64px; line-height: 1.1; line-height: 1.05;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"64\">__IG_TEXT_0__</div>\n<div style=\"font-size: 40px; line-height: 1.4; color: #f3eada;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n</div>"
+  },
+  "canvas-P07-soft": {
+    "name": "Soft",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "cover",
+      "hook"
+    ],
+    "sourceFile": "reference/instagram-original/P07-soft.dc.html",
+    "originalId": "P07",
+    "textParts": 2,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -314px; width: 1080px; height: 1920px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 1920,
+        "left": 0,
+        "top": -314
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"1920\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"55\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 0; top: 0; width: 1080px; height: 620px; background: linear-gradient(rgba(26,23,20,0.9) 40%, rgba(26,23,20,0))\"></div>\n<div style=\"position: absolute; left: 90px; right: 90px; top: 104px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 76px; line-height: 1.1; line-height: 1.04;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"76\">__IG_TEXT_0__</div>\n<div style=\"font-size: 36px; line-height: 1.4; color: #f3eada;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"1\" data-base-font-size=\"42\">__IG_TEXT_1__</div>\n</div>\n<div style=\"position: absolute; left: 0; bottom: 0; width: 1080px; height: 240px; background: linear-gradient(rgba(26,23,20,0), rgba(26,23,20,0.85) 60%)\"></div>\n<div style=\"position: absolute; left: 0; bottom: 60px; width: 1080px; display: flex; justify-content: center\"><img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 121px; height: 48px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\"></div>\n</div>"
+  },
+  "canvas-P08-box-white": {
+    "name": "Box White",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/P08-box-white.dc.html",
+    "originalId": "P08",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -633px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -633,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #18130e; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"48\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; bottom: 72px; width: 660px; background: #e6dbcc; padding: 48px 52px 44px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 54px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"54\">__IG_TEXT_0__</div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 101px; height: 40px; object-fit: contain; display: block; flex-shrink: 0; align-self: flex-start;filter:brightness(0)\">\n</div>\n</div>"
+  },
+  "canvas-P09-box-black": {
+    "name": "Box Black",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "inner"
+    ],
+    "sourceFile": "reference/instagram-original/P09-box-black.dc.html",
+    "originalId": "P09",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: 0px; top: -576px; width: 1080px; height: 2343px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 1080,
+        "imageHeight": 2343,
+        "left": 0,
+        "top": -576
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"1080\" data-ig-img-height=\"2343\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"50\" data-ig-origin-y=\"58\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 160px; right: 160px; bottom: 90px; background: #2a2622; padding: 52px 56px 48px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 28px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 52px; line-height: 1.1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"52\">__IG_TEXT_0__</div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 101px; height: 40px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>"
+  },
+  "canvas-P10-full-story": {
+    "name": "Full Story",
+    "group": "Teajia covers & closes",
+    "photos": 1,
+    "roles": [
+      "close"
+    ],
+    "sourceFile": "reference/instagram-original/P10-full-story.dc.html",
+    "originalId": "P10",
+    "textParts": 1,
+    "photoStyles": [
+      {
+        "style": "position: absolute; left: -528px; top: 0px; width: 2399px; height: 1350px; max-width: none; display: block",
+        "boxWidth": 1080,
+        "boxHeight": 1350,
+        "imageWidth": 2399,
+        "imageHeight": 1350,
+        "left": -528,
+        "top": 0
+      }
+    ],
+    "html": "<div style=\"width: 1080px; height: 1350px; box-sizing: border-box; background: #1a1714; color: #f3eada; font-family: 'EB Garamond', Georgia, serif; position: relative; overflow: hidden; display: flex; flex-direction: column\">\n<div style=\"width: 1080px; height: 1350px; overflow: hidden; position: relative; flex-shrink: 0\" data-slot=\"0\" data-ig-photo=\"0\" data-ig-img-width=\"2399\" data-ig-img-height=\"1350\" data-ig-box-width=\"1080\" data-ig-box-height=\"1350\" data-ig-origin-x=\"40\" data-ig-origin-y=\"50\"><img src=\"__IG_PHOTO_0__\" alt=\"\" style=\"__IG_STYLE_0__\"></div>\n<div style=\"position: absolute; left: 72px; right: 72px; bottom: 72px; background: #2a2622; padding: 56px 60px 52px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px\" data-text-zone=\"\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 30px; letter-spacing: 0.16em; color: #a8874d;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\">__IG_LABEL__</div>\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 68px; line-height: 1.1; line-height: 1;white-space:pre-wrap\" data-edit=\"text\" data-text-part=\"0\" data-base-font-size=\"68\">__IG_TEXT_0__</div>\n<div style=\"font-size: 32px; line-height: 1.4; color: #cdc0a8;white-space:pre-wrap\" data-edit=\"credit\" data-base-font-size=\"32\">__IG_CREDIT__</div>\n<div style=\"display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #3a3530; padding-top: 26px\">\n<div style=\"font-family: Caudex, Georgia, serif; font-size: 31px\"><span style=\"color: #cdc0a8;white-space:pre-wrap\" data-edit=\"label\" data-base-font-size=\"30\"></span></div>\n<img src=\"__IG_LOGO__\" alt=\"teajiā\" style=\"width: 106px; height: 42px; object-fit: contain; display: block; flex-shrink: 0; align-self: center\">\n</div>\n</div>\n</div>"
+  }
+}
