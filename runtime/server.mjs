@@ -8,6 +8,7 @@ import {createStudyBindings} from './services/study-bindings.mjs';
 import {createStudyAI} from './services/study-ai.mjs';
 import {createStudyEditorialPlanContext} from './services/study-editorial-plan-context.mjs';
 import {createStudyFirstFlowPlanContext} from './services/study-first-flow-plan-context.mjs';
+import {createStudyProjectMaterialContext} from './services/study-project-material-context.mjs';
 import {createStudyOriginals} from './services/study-originals.mjs';
 import {createStudyDraftCopies} from './services/study-draft-copies.mjs';
 import * as studyPhotoFiles from './services/files.mjs';
@@ -181,7 +182,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyResearchChoices=studyDrafts?createStudyResearchChoices({dataDir,originals:studyOriginals,drafts:studyDrafts}):null;
   const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices}):null;
   const studyPlanContext=studyDrafts?createStudyFirstFlowPlanContext({dataDir,savedPlan:studyEditorialPlan,firstFlow}):null;
-  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext}):null;
+  const studyProjectMaterial=studyDrafts?createStudyProjectMaterialContext({dataDir,firstFlow}):null;
+  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial}):null;
   const draftCall=async fn=>{if(!studyDrafts)throw new StateError('Current manuscript originals are not configured.',503);try{return await fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const originalRead=fn=>{if(!studyOriginals)throw new StateError('Current original records are not configured; retained snapshots remain available.',503);try{return fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const researchAction=fn=>input=>{if(!researchEnabled)throw new StateError('Fresh research is being validated. Existing story records are ready to read.',503);return fn(input);};
@@ -360,6 +362,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
 
         '/api/first-flow/select': {POST:input=>studyBindings.select(input)},
         '/api/first-flow': {GET:async()=>({...await firstFlow.get({projectId:url.searchParams.get('projectId')||store.get().project.id}),researchAvailable:researchEnabled})},
+        '/api/first-flow/source-review': {POST:input=>firstFlow.reviewSources(input)},
         '/api/first-flow/attach': {POST:input=>firstFlow.attach(input)},
         '/api/first-flow/prepare': {POST:researchAction(input=>firstFlow.prepare(input))},
         '/api/first-flow/run': {POST:researchAction(input=>firstFlow.run(input))},

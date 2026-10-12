@@ -59,8 +59,8 @@
     },
     {
       "path": "runtime/server.mjs",
-      "sourceSha256": "ac89a3b0ce8aa8c1ac80753660304f13f6f7d1368cf562ba02866b45c89baec4",
-      "candidateSha256": "32e435795207e4b2cd41cacb04621f56ebe37bcc14ff931da143f251d6facf22",
+      "sourceSha256": "78c7c9a713dcc34e426bcb65017de308c5697b56848d4ef3f97d09deaf1ffe6c",
+      "candidateSha256": "ada113ef3fb5a1d6dd1363710e2dce2caec51a7f1dd9e8ef5a9ec4a1561c1cb9",
       "adapted": true
     },
     {
@@ -173,8 +173,8 @@
     },
     {
       "path": "runtime/services/first-flow.mjs",
-      "sourceSha256": "20b2141bb8dcd38a9e651dcefd9746d0d13aa4d6cff9be25d56ab7d5cc591e50",
-      "candidateSha256": "36c21df0e88a4023c762f28ccbf9788c97ef2043bfefa97a129bc1420e41aab8",
+      "sourceSha256": "6bd4900269b5f2be426502326f4f16f833071e371a345285761dd873b9d4ed82",
+      "candidateSha256": "34620af7bc8e5c47f0b2eb2f08a78e8345e760999d727b8a7a755d5eea0c9b3d",
       "adapted": true
     },
     {
@@ -215,8 +215,8 @@
     },
     {
       "path": "runtime/services/library.mjs",
-      "sourceSha256": "9ecb324e669ec808c8d9733a6d0afee82c3c3a1bcd8590755f0cbc5a59477cc3",
-      "candidateSha256": "9ecb324e669ec808c8d9733a6d0afee82c3c3a1bcd8590755f0cbc5a59477cc3",
+      "sourceSha256": "a90daf5796a6a981eb315de404826fd27c46b04afbe6c447b308ca50dcafc247",
+      "candidateSha256": "a90daf5796a6a981eb315de404826fd27c46b04afbe6c447b308ca50dcafc247",
       "adapted": false
     },
     {
@@ -737,8 +737,8 @@
     },
     {
       "path": "public/document-study/index.html",
-      "sourceSha256": "d4bf65307f26e06e05573ff665de75282fc121181ecb9b5f3e3ca6259caaac0d",
-      "candidateSha256": "891f72e4a10d4a2fdecc75cccc80d6164c777b57de0eac56fe72362d654ddab0",
+      "sourceSha256": "45f0a29e45fcd2977da3cac7dbf6e7161ad846a33abf0161fc6e20591d2b4fa5",
+      "candidateSha256": "34bd589091e9db128449ff4b8984c172fb3759b56c98b91af84b4160340fd319",
       "adapted": true
     },
     {
@@ -755,8 +755,8 @@
     },
     {
       "path": "public/document-study/stage-flow.js",
-      "sourceSha256": "98438a0ef61874ff730628279288fd75003054356413cad3904fdc2fbee5467a",
-      "candidateSha256": "98438a0ef61874ff730628279288fd75003054356413cad3904fdc2fbee5467a",
+      "sourceSha256": "874fc96bbc43aed727b431bd8c3f5bed1b268532b48391bd4b63991f036a3552",
+      "candidateSha256": "874fc96bbc43aed727b431bd8c3f5bed1b268532b48391bd4b63991f036a3552",
       "adapted": false
     },
     {
@@ -767,8 +767,8 @@
     },
     {
       "path": "public/document-study/draft-flow.js",
-      "sourceSha256": "185e7f4832f20c4f0fa921e41a2b3849872aaa51c488b658a738fc283d1a9f5b",
-      "candidateSha256": "185e7f4832f20c4f0fa921e41a2b3849872aaa51c488b658a738fc283d1a9f5b",
+      "sourceSha256": "34a35fd748eb79e8691d73f57b6c19ac18e7bfcd3410b6b56679780285fcf327",
+      "candidateSha256": "34a35fd748eb79e8691d73f57b6c19ac18e7bfcd3410b6b56679780285fcf327",
       "adapted": false
     },
     {
@@ -797,8 +797,8 @@
     },
     {
       "path": "public/document-study/research-standard.js",
-      "sourceSha256": "90e34c01092a3e0b4c55433213f5ef3694f148a909d3edf8c758f197a9c9d5d7",
-      "candidateSha256": "90e34c01092a3e0b4c55433213f5ef3694f148a909d3edf8c758f197a9c9d5d7",
+      "sourceSha256": "13e6f71d16842b536b68743aaa92028f806ccc6f910ad10850725b77c07f99cb",
+      "candidateSha256": "13e6f71d16842b536b68743aaa92028f806ccc6f910ad10850725b77c07f99cb",
       "adapted": false
     },
     {
@@ -809,8 +809,8 @@
     },
     {
       "path": "public/document-study/research-standard-adapter.js",
-      "sourceSha256": "4a7208d77c8e7ca8fbf558a24dcc0b1ca01ed933bdeb90be7bee36b287a0f255",
-      "candidateSha256": "4a7208d77c8e7ca8fbf558a24dcc0b1ca01ed933bdeb90be7bee36b287a0f255",
+      "sourceSha256": "bd98758f1fd9e086d045b475e34a148449a2c02f687096729380709663efe7d1",
+      "candidateSha256": "bd98758f1fd9e086d045b475e34a148449a2c02f687096729380709663efe7d1",
       "adapted": false
     },
     {
@@ -827,8 +827,8 @@
     },
     {
       "path": "public/document-study/human-direction.js",
-      "sourceSha256": "aef1a3cf6931babb0bb85194eb00822d0e8c0f9c4af277cb01eb9f8e60a8fa18",
-      "candidateSha256": "aef1a3cf6931babb0bb85194eb00822d0e8c0f9c4af277cb01eb9f8e60a8fa18",
+      "sourceSha256": "dd2de59cf4cd662bb45c28ae939d2cecb35279439d408ffa7b9984ce3f96a420",
+      "candidateSha256": "dd2de59cf4cd662bb45c28ae939d2cecb35279439d408ffa7b9984ce3f96a420",
       "adapted": false
     },
     {
@@ -965,14 +965,14 @@
     },
     {
       "path": "runtime/services/study-ai.mjs",
-      "sourceSha256": "ce44e8d2dacbf2d3dc1d72128dde365aa9bd1ccf8770389a6d699208d46d2d44",
-      "candidateSha256": "ce44e8d2dacbf2d3dc1d72128dde365aa9bd1ccf8770389a6d699208d46d2d44",
+      "sourceSha256": "d3c955bc144791462a6dad6ad409369abca2ab86671e7643ae570b1382f0ca48",
+      "candidateSha256": "d3c955bc144791462a6dad6ad409369abca2ab86671e7643ae570b1382f0ca48",
       "adapted": false
     },
     {
       "path": "runtime/services/study-mcp-bridge.mjs",
-      "sourceSha256": "1445d62f6c21b959197085e0e3ab282e883e3b941b4e7b3f0e1fc3cacb57066a",
-      "candidateSha256": "1445d62f6c21b959197085e0e3ab282e883e3b941b4e7b3f0e1fc3cacb57066a",
+      "sourceSha256": "fa26d984772bf62fa493c6245ebcf746b4d2e87ae829c4f123209c9dc7d554b6",
+      "candidateSha256": "fa26d984772bf62fa493c6245ebcf746b4d2e87ae829c4f123209c9dc7d554b6",
       "adapted": false
     },
     {
@@ -995,8 +995,8 @@
     },
     {
       "path": "mcp/study/server.mjs",
-      "sourceSha256": "83a17defb4ba672072492b9e43447485ae88b7d58ddc66685ab2b4fbddfc5043",
-      "candidateSha256": "83a17defb4ba672072492b9e43447485ae88b7d58ddc66685ab2b4fbddfc5043",
+      "sourceSha256": "70b4b27502962be7f4e84eda2e2c3ed096d788b0c37cdb02ce8b3beabfe5dd9e",
+      "candidateSha256": "70b4b27502962be7f4e84eda2e2c3ed096d788b0c37cdb02ce8b3beabfe5dd9e",
       "adapted": false
     },
     {
@@ -1016,6 +1016,61 @@
       "sourceSha256": "0d0be34757135961544fa5993df7560bc4ce17dd2d5d64c07c883e40dc96e59b",
       "candidateSha256": "9847d29918274c8fd8e306c29253933a7afe0dd7a651a2978ad01e2e1cd761a8",
       "adapted": true
+    },
+    {
+      "path": "runtime/services/study-project-material-context.mjs",
+      "sourceSha256": "0764cc327295ddf1567979b06b381aabc918551fda1cc39fc514d10ff99d494c",
+      "candidateSha256": "0764cc327295ddf1567979b06b381aabc918551fda1cc39fc514d10ff99d494c",
+      "adapted": false
+    },
+    {
+      "path": "runtime/services/material-request-seam.test.mjs",
+      "sourceSha256": "11cc69bfeecb0a17348abdcd4dec2155b722f493624ba0b40567da9123add6fd",
+      "candidateSha256": "11cc69bfeecb0a17348abdcd4dec2155b722f493624ba0b40567da9123add6fd",
+      "adapted": false
+    },
+    {
+      "path": "public/document-study/source-continuation.js",
+      "sourceSha256": "7d1226c68a6d7d9c40ee21c1b59ecc83bb43045857308166d512c9607443670c",
+      "candidateSha256": "7d1226c68a6d7d9c40ee21c1b59ecc83bb43045857308166d512c9607443670c",
+      "adapted": false
+    },
+    {
+      "path": "public/document-study/source-continuation.css",
+      "sourceSha256": "64732d791ebb09e7a60de1df4ce37099c8463753644ad49c6ad48372f4bf9295",
+      "candidateSha256": "64732d791ebb09e7a60de1df4ce37099c8463753644ad49c6ad48372f4bf9295",
+      "adapted": false
+    },
+    {
+      "path": "tests/source-continuation.test.mjs",
+      "sourceSha256": "96da62fbc767d8f3c92376cc4212c09dddbaa505e1e5db839833d70bf3728e4a",
+      "candidateSha256": "8648bb5d9bec3937f866568aa239718cc11dab689a00cd63d43769085b3cbe5b",
+      "adapted": true
+    },
+    {
+      "path": "tests/human-direction-ui.test.mjs",
+      "sourceSha256": "0b8b32025514a139ed33c42e4a0afc57a9142fcc0650e7c0e1044fc2763a60c0",
+      "candidateSha256": "dbb4dd9cfac3d367ac7d1d08fb7e44bceae1c260ee824eaf3092f39d3cc252a2",
+      "adapted": true
+    },
+    {
+      "path": "tests/research-standard-adapter.test.mjs",
+      "sourceSha256": "4ab93812c661734511b9d84ce5973a01b86999a3f89e75af91f309636cbc5c26",
+      "candidateSha256": "6353a9bc1660efe566ad3757cf141cbc55a29c667a8e934c1599ae2db04b1fc9",
+      "adapted": true
+    },
+    {
+      "path": "tests/research-standard-ui.test.mjs",
+      "sourceSha256": "4baf65b3328ab9fb6aefebe789231c5fabeace43d662d225ba41eca5419da031",
+      "candidateSha256": "e9ee95df81b7c04d9a4ed5904e14a75ec307be9fdde6e187d560c2f6356b2b9a",
+      "adapted": true
+    },
+    {
+      "path": "runtime/recording-workshop-fixture.mjs",
+      "sourceSha256": "c4ca05e67c93218859843d6543cb9c9f9bf72c171f9d63dceaa33731b0b78833",
+      "candidateSha256": "c4ca05e67c93218859843d6543cb9c9f9bf72c171f9d63dceaa33731b0b78833",
+      "adapted": false,
+      "review": "Synthetic tones/captions generated only in disposable test data; no real recording bytes"
     }
   ],
   "excluded": [
@@ -1109,6 +1164,10 @@
     {
       "path": "tests/study-ai-delta.test.mjs",
       "candidateSha256": "9d16f76e5ec37bc48d02c28ffdc8739c0eea878260b1e4ba9eeef49c1e028095"
+    },
+    {
+      "path": "CLAUDE-DEVELOPMENT.md",
+      "candidateSha256": "a6db59e2b288b1fbd904320494c62bb54f6464d265e90c862fe1824665bc4b69"
     }
   ],
   "dependencyRepair": {
@@ -1128,6 +1187,12 @@
       "name": "Study AI continuity checkpoint 13 October 2026",
       "manifestSha256": "ee74e9ceb26fcc9c62064052e9ae75365f72ed65d51292e23487c0d22418ff1b",
       "files": 24,
+      "dependencyOverlayRetained": "dc537b6b"
+    },
+    {
+      "name": "Source direction native request checkpoint 13 October 2026",
+      "manifestSha256": "81aae338ce3908c4914b5f51fb64698b87c2b80d902feb66dffc4da27ba8fb35",
+      "files": 20,
       "dependencyOverlayRetained": "dc537b6b"
     }
   ]

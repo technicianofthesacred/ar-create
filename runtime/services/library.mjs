@@ -234,7 +234,15 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured);folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),
     // Existing indexed identity + current physical bytes; no scan, index save or extraction.
-    snapshot: id => serial(async()=>{const source=sourceById(id),file=checkedFile(source);return {...publicSource(source),path:file,hash:await streamHash(file)};}),
+    snapshot: (id,{includeBody=false}={}) => serial(async()=>{
+      const source=sourceById(id),file=checkedFile(source),stat=regular(file);
+      if(!includeBody)return {...publicSource(source),path:file,hash:await streamHash(file)};
+      let raw=null,text=null;const readable=TEXT.has(path.extname(file).toLowerCase())&&stat.size<=MAX_BODY_BYTES;
+      if(readable){raw=new TextDecoder('utf-8',{fatal:true}).decode(fs.readFileSync(file));text=splitFrontmatter(raw).body;}
+      const hash=raw===null?await streamHash(file):digest(raw),transcript=recordingSourceSnapshot?.({...source,path:file,hash});
+      if(fileStamp(regular(file))!==fileStamp(stat))throw new StateError('Source changed during read-only snapshot.',409);
+      return {...publicSource(source),path:file,hash,raw,text,body:text,...(transcript?.managed?{transcriptState:{managed:true,...transcript}}:{})};
+    }),
     tree: () => serial(refresh), read: (id,options) => serial(() => read(id,options)),
     blob: (id, original = false) => serial(async () => { refresh(); const source = original ? index.sources.find(s => s.id === id) : sourceById(id); if (!source) throw new StateError('Source was not found.', 404); let file; if (original) { if (!source.originalFile) throw new StateError('This connected file remains at its original location.', 404); file = resolveInside(path.join(dataDir, 'source-originals'), path.basename(source.originalFile)); regular(file); } else { file = checkedFile(source); if (!source.hash) {source.hash=await streamHash(file);source.hashStatus='verified';if(source.pipelineStates)source.pipelineStates.retention.hash=source.hash;persist();} } return { file, source: publicSource(source) }; }),
     folder: input => serial(() => { makeFolder(input.rootId, input.folder); return refresh(); }),

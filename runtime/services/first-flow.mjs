@@ -93,6 +93,22 @@ export function createFirstFlow({dataDir,store,library,recordings,requests,execu
  const same=(a,b)=>stable(a)===stable(b);
  function savedText(projectId,relative,max=8*1024*1024){const file=resolveInside(dataDir,'first-flow/'+digest(projectId)+'/'+relative);const stat=regular(file);if(stat.size>max)fail('Saved first-flow context exceeds its bound.',413);return fs.readFileSync(file,'utf8');}
  const savedArtifact=(r,name,max)=>savedText(r.projectId,'requests/'+r.id+'/'+name,max);
+ async function materialContext(input){
+  if(!input||Object.keys(input).join('|')!=='projectId'||!uuid.test(input.projectId||''))fail('Explicit project UUID required for material context.',400);
+  if(!store.listPieces||!library.snapshot)fail('Existing read-only piece and Library authorities required.',503);
+  const {pieces}=await store.listPieces({readOnly:true}),matches=pieces?.filter(p=>p.id===input.projectId);if(matches?.length!==1)fail('Explicit owned material project is missing.',404);
+  const roomPath=resolveInside(root,digest(input.projectId),{missing:true}),file=fs.existsSync(roomPath)?resolveInside(roomPath,'flow.json',{missing:true}):null;
+  const flowRaw=file&&fs.existsSync(file)?savedText(input.projectId,'flow.json'):null,f=flowRaw?JSON.parse(flowRaw):{sourceIds:[],reviews:{},revision:0};
+  if(flowRaw&&(f.schema!=='ar-create.first-flow.v1'||f.projectId!==input.projectId||!Number.isSafeInteger(f.revision)||!Array.isArray(f.sourceIds)||new Set(f.sourceIds).size!==f.sourceIds.length))fail('Saved material membership identity changed.');
+  const records=[];
+  for(const id of f.sourceIds){
+   try{const source=await library.snapshot(id,{includeBody:true}),reviewedNow=reviewed(source,f),t=transcript(source),eligible=typeof source.text==='string'&&!!source.text.trim()&&source.cardEligibility?.eligible===true&&reviewedNow;
+    records.push({id:source.id,title:source.title||source.name,kind:t?.managed?'transcript':source.kind,sourcePath:source.path,hash:source.hash,role:'current-parent-material-source-words-not-editorial-instruction-or-verified-evidence',origin:'current-parent-library-material',eligible,review:{state:reviewedNow?'reviewed':'unreviewed',basis:t?.managed?'canonical-recording-review':'exact-first-flow-source-use-review',hash:source.hash,...(t?.managed?{transcript:structuredClone(t)}:{})},...(eligible?{raw:source.text,bodyHash:digest(source.text)}:{}),...(!eligible?{reason:'Review exact readable source or canonical transcript before selection.'}:{})});
+   }catch(error){records.push({id,origin:'current-parent-library-material',eligible:false,missing:true,reason:error.message});}
+  }
+  if(flowRaw!==null&&savedText(input.projectId,'flow.json')!==flowRaw)fail('Material membership changed during capture.');
+  const out={schema:'ar-create.first-flow-material-context.v1',projectId:input.projectId,documentId:matches[0].documentId??null,role:'attached-material-selection-not-evidence-approval',revision:f.revision,records};return {...out,hash:digest(stable(out))};
+ }
  async function context(input){
   if(!input||Object.keys(input).join('|')!=='projectId'||!uuid.test(input.projectId||''))fail('Explicit owned project UUID required for read-only first-flow context.',400);
   if(typeof store.listPieces!=='function'||typeof library.snapshot!=='function')fail('Read-only piece catalog and Library snapshot authority required.',503);
@@ -103,7 +119,7 @@ export function createFirstFlow({dataDir,store,library,recordings,requests,execu
   if(!file||!fs.existsSync(file)){const out={...envelope,available:false,reason:'No saved first-flow research for this exact project.'};return {...out,hash:digest(stable(out))};}
   const flowRaw=savedText(input.projectId,'flow.json'),f=JSON.parse(flowRaw);
   if(f.schema!=='ar-create.first-flow.v1'||f.projectId!==input.projectId||!Number.isSafeInteger(f.revision)||!Array.isArray(f.sourceIds))fail('Saved first-flow project identity or revision changed.');
-  if(!f.currentRequestId){const out={...envelope,available:false,revision:f.revision,reason:'No saved research request.'};return {...out,hash:digest(stable(out))};}
+  if(!f.currentRequestId){const out={...envelope,available:false,reason:'No saved first-flow research for this exact project.'};return {...out,hash:digest(stable(out))};}
   if(!uuid.test(f.currentRequestId))fail('Saved research request identity changed.');
   const recordRaw=savedText(input.projectId,'requests/'+f.currentRequestId+'.json'),r=JSON.parse(recordRaw);
   if(r.schema!=='ar-create.first-flow-request.v1'||r.projectId!==input.projectId||r.id!==f.currentRequestId)fail('Saved request belongs to another owned project.');
@@ -148,13 +164,23 @@ export function createFirstFlow({dataDir,store,library,recordings,requests,execu
   if(!prefix){const expected=sourceMarkdown(r,c);for(const artifact of artifacts)if(!(artifact.kind==='map'&&choice)&&artifact.hash!==digest(expected[artifact.kind.toUpperCase()+'.md']))fail('Saved research/brief/map Markdown differs from its exact verified artifact.');}
   // Detect a concurrent save rather than returning a mixed context revision.
   if(savedText(input.projectId,'flow.json')!==flowRaw||savedText(input.projectId,'requests/'+r.id+'.json')!==recordRaw)fail('Research changed during read-only capture; retry current context.');
-  const out={...envelope,available:true,revision:f.revision,requestId:r.id,requestHash:digest(recordRaw),captureHash:r.captureHash,contextHash:r.contextHash,resultHash:r.resultHash,editorialHash:r.editorialHash??null,analysisMode:prefix?'external-evidence-assessed':'source-analysis',sources:c.manifest.sources.map(s=>({id:s.id,path:s.path,hash:s.hash,body:s.body,role:'captured-source-words-not-editorial-instruction'})),artifacts,editorial,evidence,choice,choices,directionReceipts,lineDecisions,checking:r.checking||{state:'idle'},uncertainty:'Source-only facts remain unconfirmed/held or attributed quote-only. Checked verdicts are AI assessment of captured evidence, not publication approval; human editorial decisions do not verify facts.'};
+  const out={...envelope,available:true,requestId:r.id,requestHash:digest(recordRaw),captureHash:r.captureHash,contextHash:r.contextHash,resultHash:r.resultHash,editorialHash:r.editorialHash??null,analysisMode:prefix?'external-evidence-assessed':'source-analysis',sources:c.manifest.sources.map(s=>({id:s.id,path:s.path,hash:s.hash,body:s.body,role:'captured-source-words-not-editorial-instruction'})),artifacts,editorial,evidence,choice,choices,directionReceipts,lineDecisions,checking:r.checking||{state:'idle'},uncertainty:'Source-only facts remain unconfirmed/held or attributed quote-only. Checked verdicts are AI assessment of captured evidence, not publication approval; human editorial decisions do not verify facts.'};
   return {...out,hash:digest(stable(out))};
  }
  function operation(input,kind,fn){return serial(async()=>{const projectId=current(input);if(!uuid.test(input.operationId||''))fail('Operation UUID required.',400);const f=state(projectId),identity=digest(JSON.stringify({kind,input})),old=f.operations[input.operationId];if(old){if(old.hash!==identity)fail('Operation ID already belongs to another action.');return view({projectId});}await fn(f,projectId);current({projectId});f.operations[input.operationId]={hash:identity,kind,at:new Date().toISOString()};f.revision++;save(f);return view({projectId});});}
  return {
   get:input=>serial(()=>view(input)),
   context:input=>serial(()=>context(structuredClone(input))),
+  materialContext:input=>serial(()=>materialContext(structuredClone(input))),
+  reviewSources:input=>{if(!uuid.test(input?.projectId||''))fail('Explicit owned project UUID required for source review.',400);return operation(input,'source-review',async f=>{
+   if(!input||Object.keys(input).some(k=>!['projectId','operationId','sourceId','expectedHash','reviewed','humanDecision'].includes(k))||!uuid.test(input.sourceId||'')||typeof input.reviewed!=='boolean'||input.humanDecision!==true||!/^[a-f0-9]{64}$/.test(input.expectedHash||''))fail('Explicit exact source hash and human review decision required.',400);
+   if(!f.sourceIds.includes(input.sourceId))fail('Review only a source already attached to this exact project.',400);
+   const source=await library.snapshot(input.sourceId,{includeBody:true});
+   if(source.hash!==input.expectedHash)fail('Source changed since the review selection; review the exact current words.');
+   if(transcript(source)?.managed)fail('Canonical recording transcript review must use the existing recording review owner.');
+   if(typeof source.text!=='string'||!source.text.trim()||source.cardEligibility?.eligible!==true)fail('Choose readable extracted material for source-use review.',400);
+   if(input.reviewed)f.reviews[input.sourceId]=source.hash;else delete f.reviews[input.sourceId];
+  });},
   attach:input=>operation(input,'attach',async f=>{const selected=ids(input.sourceIds);for(const id of selected)await source(id);f.sourceIds=[...new Set([...f.sourceIds,...selected])];atomicWrite(paths({projectId:f.projectId}).materialIndex,'# Project materials\n\n'+(await Promise.all(f.sourceIds.map(async id=>{const s=await source(id);return `${s.title||s.name}\nSource ID: ${id}\nPath: ${s.path}\nSHA-256: ${s.hash}\n`;}))).join('\n'));}),
   prepare:input=>operation(input,'prepare',async(f,projectId)=>{
    const sourceIds=ids(input.sourceIds);if(sourceIds.some(id=>!f.sourceIds.includes(id)))fail('Attach these Library sources to this project first.');const question=text(input.question,'Research question',10*1024),reviews=input.sourceReviews||[];
