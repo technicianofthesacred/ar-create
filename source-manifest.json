@@ -1103,7 +1103,7 @@
     },
     {
       "path": "README.md",
-      "candidateSha256": "fd25f53539597979b7d2d592bebbd45ea40c4266a6abc4fe1957175cd813a8f4"
+      "candidateSha256": "7cff268536515c2a7228c22149af748fa04949efd54e0d6cc42bad02d6e954f2"
     },
     {
       "path": "config.example.json",
@@ -1167,7 +1167,7 @@
     },
     {
       "path": "CLAUDE-DEVELOPMENT.md",
-      "candidateSha256": "cf3521e7a03d17fc4109ba69504f2f3cc0974f8fa01a99fa8b143d182d140fd5"
+      "candidateSha256": "b5641a9c07094cba775cc8779b77f69f7cbec3eb204cce66c610cf2079f0c979"
     },
     {
       "path": "docs/sections/01-material.md",
@@ -1240,6 +1240,10 @@
     {
       "path": "AGENTS.md",
       "candidateSha256": "a91bc551efab7099a879765280451e282ff9111cb097191961b87e397002a60f"
+    },
+    {
+      "path": "docs/WORKSPACE.md",
+      "candidateSha256": "af4582c70660438acf004fcd5b6c405fedbcaf6bb50e2139d6b6011054882c6d"
     }
   ],
   "dependencyRepair": {

@@ -31,3 +31,5 @@ The SDK lock is preserved from its checkpoint. Its development-only @modelcontex
 Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.
 
 Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git; existing runtime/data locations were not relocated.
+
+Use the [developer workspace index](docs/WORKSPACE.md) to find code, the twelve briefs, synthetic examples, host/config boundaries and external ownership receipts.
