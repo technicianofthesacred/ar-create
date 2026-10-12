@@ -839,8 +839,8 @@
     },
     {
       "path": "public/document-study/study-photos.js",
-      "sourceSha256": "5953360933ad2b42df4333d3291614e18736d8b5eb6b9cfe44f4d95cf1eb42e9",
-      "candidateSha256": "5953360933ad2b42df4333d3291614e18736d8b5eb6b9cfe44f4d95cf1eb42e9",
+      "sourceSha256": "2711ba5917ddaad1929628601ee9db8a527c8901220d04bf441ee511ffc6f856",
+      "candidateSha256": "2711ba5917ddaad1929628601ee9db8a527c8901220d04bf441ee511ffc6f856",
       "adapted": false
     },
     {
@@ -1301,6 +1301,13 @@
       "files": 14,
       "dependencyOverlayRetained": "dc537b6b",
       "privateDerivedFindingsImported": false
+    },
+    {
+      "name": "Photos selection honesty checkpoint 13 October 2026",
+      "manifestSha256": "ae452d78e693daeef6b1131c9f4bbb7235f42917da4ad73103507a5e176c077c",
+      "files": 1,
+      "privateMediaImported": false,
+      "outputBridgeImplemented": false
     }
   ],
   "repositorySeparation": {
