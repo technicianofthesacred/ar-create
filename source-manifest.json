@@ -1099,11 +1099,11 @@
   "authored": [
     {
       "path": ".gitignore",
-      "candidateSha256": "c3c9634b41ea11290b464ea86f29191d5785f3cb633aef6af3b5374ff4fca466"
+      "candidateSha256": "73fd05d4c81fbd782f268fd99ccb3a39f294ac81a656d2e208fa38d64a86f7e2"
     },
     {
       "path": "README.md",
-      "candidateSha256": "679c3b624cdd27b6d7a7c9109df1bf14488ce8a69669da16d05f6db6956ae80a"
+      "candidateSha256": "fd25f53539597979b7d2d592bebbd45ea40c4266a6abc4fe1957175cd813a8f4"
     },
     {
       "path": "config.example.json",
@@ -1111,11 +1111,11 @@
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "83d5e1fc7556854e37f9f1b4a9237d28e7d14a41f655d4a1f3243d9b0ed6cda1"
+      "candidateSha256": "51b082e7975333c3b97e1ad5e5beff51850b5e7bfbef0a64784d62259d0c217e"
     },
     {
       "path": "package.json",
-      "candidateSha256": "72f063420a527d6064bab0f7b63214e08b8d25a9455b85d9dd36bfdbe5e36376"
+      "candidateSha256": "afd77c2c9631c2ab6829e90b4258ecc2da81c2e1aa8e6c4875d3fb8f4362813a"
     },
     {
       "path": "serve.mjs",
@@ -1123,7 +1123,7 @@
     },
     {
       "path": "scripts/check-package.mjs",
-      "candidateSha256": "aa17569f19de715b47f351456beaca0c6dd70b74e22f20a08281b9f1fe486ac2"
+      "candidateSha256": "1ffc874e1f0f138e4879c96ca917695702c47e21d0f4c085d71edc8f65049001"
     },
     {
       "path": "scripts/demo.mjs",
@@ -1139,11 +1139,11 @@
     },
     {
       "path": "runtime/scripts/build-document-study.mjs",
-      "candidateSha256": "c7e7df30af1f3a25c74cb31ef3966d66946b7221a97951b576c849a4877da06c"
+      "candidateSha256": "4a24795393f33748a0167de6ae3c52d4d2b52df1fc299e415f11db74d304cc3c"
     },
     {
       "path": "tests/config.test.mjs",
-      "candidateSha256": "d54ff3f3f2bfda70488f68f673f7ec90fff9ef86ccc682c22d942326fd1c2248"
+      "candidateSha256": "a9ca7297462f76fd7a923bda9072ae789a54c431e6f9a6be54d7f6c5299d3891"
     },
     {
       "path": "tests/package.test.mjs",
@@ -1167,7 +1167,7 @@
     },
     {
       "path": "CLAUDE-DEVELOPMENT.md",
-      "candidateSha256": "36145e604f2c6cc006be8b5a4bee33e8c34b6896a4f54ec04eca07e014aff79e"
+      "candidateSha256": "cf3521e7a03d17fc4109ba69504f2f3cc0974f8fa01a99fa8b143d182d140fd5"
     },
     {
       "path": "docs/sections/01-material.md",
@@ -1220,6 +1220,26 @@
     {
       "path": "docs/sections/README.md",
       "candidateSha256": "f2180b81152c064acadc11acc98f6561aeb36273414d0e2c12275c3ede437a9a"
+    },
+    {
+      "path": "docs/REPOSITORY-PROVENANCE.md",
+      "candidateSha256": "74831c2cf0e8be9702dffd90a6b7a0ce87d204b7b9a4117da2017b9d6d27f05c"
+    },
+    {
+      "path": "docs/I64-INTEGRATION.md",
+      "candidateSha256": "c5feefb46b4c98a686d3fe4e65d73d3c9f7bc820e839e4dde6c2a8d7010db2ef"
+    },
+    {
+      "path": "scripts/gen-capabilities-portable.ts",
+      "candidateSha256": "41e33c47d9c300b90b4d49d643bec96adfb6dff544aa2c2cf7291d589bfacafb"
+    },
+    {
+      "path": "docs/CAPABILITIES.md",
+      "candidateSha256": "90eb90480d4a88b4fbb259a95f80beddbced0c2aee92565edf9db9601be9f650"
+    },
+    {
+      "path": "AGENTS.md",
+      "candidateSha256": "a91bc551efab7099a879765280451e282ff9111cb097191961b87e397002a60f"
     }
   ],
   "dependencyRepair": {
@@ -1247,5 +1267,14 @@
       "files": 20,
       "dependencyOverlayRetained": "dc537b6b"
     }
-  ]
+  ],
+  "repositorySeparation": {
+    "originRepository": "technicianofthesacred/i64os",
+    "originCommit": "ec820f0d6c2b413127535114b734bc059582aaf5",
+    "prefix": "apps/ar-create",
+    "scopedHistoryHead": "64c898cab82e11635c3983e8ee684b6044804c90",
+    "newRepository": "technicianofthesacred/ar-create",
+    "privateDataMoved": false,
+    "i64PackagePreserved": true
+  }
 }

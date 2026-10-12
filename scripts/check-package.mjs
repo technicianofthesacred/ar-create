@@ -6,6 +6,6 @@ for(const file of [...manifest.included,...manifest.authored]){if(forbidden.test
 console.log(`Reviewed allowlist: ${manifest.included.length} imported + ${manifest.authored.length} authored source files; private/generated data excluded.`);
 
 const allowed=new Set([...manifest.included,...manifest.authored].map(row=>row.path).concat('source-manifest.json'));
-const generated=new Set(['runtime/article-codec.mjs','runtime/services/draft-correspondence.mjs','public/document-study/donor/layouts.js','public/document-study/donor/catalog-browser.js','public/document-study/donor/ig-templates.browser.js']);
-function inspect(dir,relative=''){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const name=relative?relative+'/'+entry.name:entry.name;if(entry.name==='node_modules')continue;if(entry.isDirectory())inspect(path.join(dir,entry.name),name);else if(!allowed.has(name)&&!generated.has(name))throw Error('File outside the reviewed package allowlist: '+name);}}
+const generated=new Set(['scripts/gen-capabilities.mjs','runtime/article-codec.mjs','runtime/services/draft-correspondence.mjs','public/document-study/donor/layouts.js','public/document-study/donor/catalog-browser.js','public/document-study/donor/ig-templates.browser.js']);
+function inspect(dir,relative=''){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const name=relative?relative+'/'+entry.name:entry.name;if(entry.name==='node_modules'||(!relative&&entry.name==='.git'))continue;if(entry.isDirectory())inspect(path.join(dir,entry.name),name);else if(!allowed.has(name)&&!generated.has(name))throw Error('File outside the reviewed package allowlist: '+name);}}
 inspect(root);

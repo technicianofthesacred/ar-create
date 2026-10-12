@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';import {fileURLToPath} from 'node:url';
 const packageDir=path.dirname(fileURLToPath(import.meta.url));
-const checkoutDir=path.resolve(packageDir,'../..');
+const checkoutDir=packageDir;
 const canonicalDestination=value=>{let ancestor=path.resolve(value);const suffix=[];while(!fs.existsSync(ancestor)){suffix.unshift(path.basename(ancestor));const parent=path.dirname(ancestor);if(parent===ancestor)throw Error('Data directory has no existing ancestor.');ancestor=parent;}return path.resolve(fs.realpathSync(ancestor),...suffix);};
 const insideCheckout=value=>{const relative=path.relative(checkoutDir,value);return !relative||(!relative.startsWith('..'+path.sep)&&relative!=='..'&&!path.isAbsolute(relative));};
 const optionalFile=(value,label)=>{if(value===null||value===undefined||value==='')return null;if(typeof value!=='string'||!path.isAbsolute(value))throw Error(`${label} requires an explicit absolute path.`);const stat=fs.lstatSync(value);if(stat.isSymbolicLink()||!stat.isFile())throw Error(`${label} must be an owned regular file.`);return value;};

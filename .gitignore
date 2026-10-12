@@ -27,3 +27,5 @@ public/document-study/reference-data.js
 public/document-study/donor/layouts.js
 public/document-study/donor/catalog-browser.js
 public/document-study/donor/ig-templates.browser.js
+
+scripts/gen-capabilities.mjs

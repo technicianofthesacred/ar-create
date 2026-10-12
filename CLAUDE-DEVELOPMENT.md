@@ -2,28 +2,28 @@
 
 ## Start with this checkout
 
-Repository: `technicianofthesacred/i64os`, branch `codex/ar-create-package`. AR Create lives in `apps/ar-create`, not the Teajia application. Select this private repository and branch in Claude's GitHub integration, or use your authorized local checkout. This document provides code/design context; it does not configure a provider account or share real content.
+Canonical repository: `technicianofthesacred/ar-create`, branch `main`. AR Create now has its own development home; i64 OS retains the host/launcher integration. The previous code-only package remains preserved in i64 until a separately verified transition. Select this private repository and branch in Claude's GitHub integration, or use your authorized local checkout. This document provides code/design context; it does not configure a provider account or share real content.
 
 The packaged baseline includes the completed Material, Study AI continuity, and source-review → matching direction → exact native request checkpoints. Newer live work may still be in progress; use `source-manifest.json` to identify the exact copied code and hashes. Do not copy a live application's whole folder to update it. Bring in only a reviewed stable code delta, retain the private exclusions and keep the repaired runtime dependency overlay.
 
 From the repository root, use Node 22 or newer and run these commands in order:
 
 ```sh
-npm --prefix apps/ar-create run setup
+npm run setup
 ```
 
 ```sh
-npm --prefix apps/ar-create run build
+npm run build
 ```
 
 ```sh
-npm --prefix apps/ar-create run demo
+npm run demo
 ```
 
 Open `http://127.0.0.1:8854/document-study/index.html`. Demo mode creates two invented projects in a temporary directory outside Git. If that port is already occupied, preserve the listener and use a spare candidate port:
 
 ```sh
-AR_CREATE_PORT=8859 npm --prefix apps/ar-create run demo
+AR_CREATE_PORT=8859 npm run demo
 ```
 
 The installed private editor uses port 8841. Candidate startup refuses that port. Do not replace its launcher, change the OS entrance's private home, migrate files, or activate a cutover as part of visual development.
@@ -50,7 +50,7 @@ The installed private editor uses port 8841. Candidate startup refuses that port
 | Six fixed-identity assistant tools | `mcp/study/server.mjs`, `mcp/study/README.md` |
 | Synthetic inputs and focused checks | `fixtures/`, `scripts/demo.mjs`, `tests/` |
 
-Paths in this table are relative to `apps/ar-create`. Edit maintained source, then rebuild generated correspondence, codecs and browser template wrappers with `npm run build`. Generated outputs are ignored; editing them directly loses work on rebuild.
+Paths in this table are relative to this repository root. Edit maintained source, then rebuild generated correspondence, codecs and browser template wrappers with `npm run build`. Generated outputs are ignored; editing them directly loses work on rebuild.
 
 ## Preserve while improving visuals
 
@@ -67,29 +67,29 @@ Paths in this table are relative to `apps/ar-create`. Edit maintained source, th
 For adapter/proposal/context changes:
 
 ```sh
-node --test apps/ar-create/tests/study-ai-delta.test.mjs
+node --test tests/study-ai-delta.test.mjs
 ```
 
 For source selection/review and direction continuation:
 
 ```sh
-node --test apps/ar-create/tests/source-continuation.test.mjs apps/ar-create/runtime/services/material-request-seam.test.mjs
+node --test tests/source-continuation.test.mjs runtime/services/material-request-seam.test.mjs
 ```
 
 For native persistence changes:
 
 ```sh
-node --test apps/ar-create/tests/synthetic-save.test.mjs
+node --test tests/synthetic-save.test.mjs
 ```
 
 For package/privacy/configuration changes:
 
 ```sh
-npm --prefix apps/ar-create run verify:package
+npm run verify:package
 ```
 
 ```sh
-npm --prefix apps/ar-create test
+npm test
 ```
 
 Run only affected checks while editing, then a coherent verification and native synthetic screen/file journey. A visual-only edit does not need repeated unchanged backend suites. Refresh only the reviewed manifest entries for deliberately changed source; do not drop the allowlist scan to make it pass.

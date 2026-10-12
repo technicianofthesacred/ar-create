@@ -9,4 +9,5 @@ await fs.writeFile(path.join(front,'donor/layouts.js'),'const ORIGINAL_LAYOUTS =
 await fs.writeFile(path.join(front,'donor/catalog-browser.js'),original.replace(/^import layouts .*;$/m,'const layouts = ORIGINAL_LAYOUTS;').replaceAll('export function ','function ').replace('export const originalCatalog','const originalCatalog').replace('export default originalCatalog;',''));
 const templates=await fs.readFile(path.join(front,'donor/ig-templates.js'),'utf8');
 await fs.writeFile(path.join(front,'donor/ig-templates.browser.js'),templates.replace(/^import .*originalCatalog.*;$/m,'').replace('export default IG;','window.STUDY_CATALOG = IG.T;'));
+await build({absWorkingDir:runtime,entryPoints:['../scripts/gen-capabilities-portable.ts'],outfile:'../scripts/gen-capabilities.mjs',bundle:true,format:'esm',platform:'node',target:'node22',packages:'external',logLevel:'warning'});
 console.log('Document-study runtime and template wrappers built from reviewed source.');

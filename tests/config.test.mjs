@@ -6,3 +6,5 @@ test('refuses symlinked data home',()=>{const dir=temporary();try{fs.symlinkSync
 test('refuses private data inside the package checkout',()=>{assert.throws(()=>loadConfig({AR_CREATE_DATA_DIR:path.resolve(import.meta.dirname,'../user-data')}),/outside/);});
 
 test('refuses a symlinked ancestor that resolves inside the checkout',()=>{const dir=temporary();try{fs.symlinkSync(path.resolve(import.meta.dirname,'..'),path.join(dir,'parent'));assert.throws(()=>loadConfig({AR_CREATE_DATA_DIR:path.join(dir,'parent/not-created-by-private-config')}),/outside/);assert.equal(fs.existsSync(path.resolve(import.meta.dirname,'../not-created-by-private-config')),false);}finally{fs.rmSync(dir,{recursive:true,force:true});}});
+
+test('standalone checkout allows a separate private sibling data home',()=>{const dir=temporary();try{const result=loadConfig({AR_CREATE_DATA_DIR:dir});assert.equal(result.dataDir,fs.realpathSync(dir));}finally{fs.rmSync(dir,{recursive:true,force:true});}});

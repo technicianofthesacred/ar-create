@@ -1,6 +1,6 @@
-# AR Create — code-only local candidate
+# AR Create — private code repository
 
-This package preserves Document Study as a standalone loopback companion. It is a review candidate, not the installed editor or a production deployment. The installed service on port 8841 and its data remain untouched.
+This repository is the canonical code-only AR Create development home. It preserves Document Study as a standalone loopback companion integrated with i64 OS. Repository separation is not a live runtime cutover or a production deployment. The installed service on port 8841 and its data remain untouched.
 
 Use Node 22 or newer. From this directory, run `npm run setup`, `npm run build`, then `npm test`. Dependencies have their own `runtime/package-lock.json`; they are not added to the parent i64 workspace.
 
@@ -29,3 +29,5 @@ The SDK lock is preserved from its checkpoint. Its development-only @modelcontex
 ## Living section design briefs
 
 Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.
+
+Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git; existing runtime/data locations were not relocated.
