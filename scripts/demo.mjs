@@ -1,8 +1,8 @@
 // Create disposable, fully invented source files under the OS temp directory.
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {spawn} from 'node:child_process';import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-export function syntheticHome(){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ar-create-synthetic-')),vault=path.join(dir,'sources'),files=path.join(dir,'files');fs.mkdirSync(files);const write=(relative,text)=>{const p=path.join(vault,relative);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
- write('Workflow/3-Develop/DEV - Synthetic One.md','---\ntitle: Synthetic Working Article\n---\n\nSynthetic opening paragraph. These words are invented for verification.\n\n## Synthetic section\n\nSynthetic second paragraph.\n');
+export function syntheticHome(){const dir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'ar-create-synthetic-'))),vault=path.join(dir,'sources'),files=path.join(dir,'files');fs.mkdirSync(files);const write=(relative,text)=>{const p=path.join(vault,relative);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
+ write('Workflow/3-Develop/DEV - Synthetic One.md','---\ntitle: Synthetic Working Article\n---\n\nSynthetic opening paragraph. These words are invented for verification.\n\nSynthetic middle paragraph.\n\n## Synthetic section\n\nSynthetic second paragraph.\n');
  write('Workflow/3-Develop/DEV - Synthetic Two.md','---\ntitle: Synthetic Second Article\n---\n\nA second invented article. This checks independent project identity.\n\n## Another synthetic section\n\nSynthetic final paragraph.\n');
  write('Workflow/1-Source/SRC - Synthetic One.md','Entirely invented source fixture. No recording or interview exists.\n');
  write('Workflow/1-Source/SRC - Synthetic Two.md','Entirely invented second source. No recording or interview exists.\n');

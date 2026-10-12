@@ -1,0 +1,151 @@
+import fs from 'node:fs';import path from 'node:path';import {randomUUID} from 'node:crypto';
+import {atomicWrite,digest,ensurePrivateDirectory,readJson,regular,resolveInside} from './files.mjs';
+import {capture,apply} from './draft-correspondence.mjs';
+import {proposalEditable} from './native-proposal-capability.mjs';
+const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+const fail=(message,status=409)=>{throw Object.assign(Error(message),{status});};
+const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x);
+const same=(a,b)=>stable(a)===stable(b);
+const fields=(v,allowed)=>{if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).some(k=>!allowed.includes(k)))fail('Unsupported argument fields.',400);};
+const identifier=v=>{if(!uuid.test(v||''))fail('Explicit UUID required.',400);return v;};
+function changes(baseline,replacements){
+ if(!Array.isArray(replacements)||!replacements.length||replacements.length>30)fail('Choose 1–30 supported paragraph replacements.',400);
+ const used=new Set(),ops=[],out=[];
+ for(const change of replacements){fields(change,['id','words']);const row=baseline.projection.find(p=>p.id===change.id);if(used.has(change.id))fail('Duplicate paragraph replacement.',400);used.add(change.id);
+  if(!proposalEditable(row))fail('Only supported plain paragraphs can change; protected formatting is retained.');
+  const words=change.words;if(typeof words!=='string'||!words.trim()||words.length>12000||!words.isWellFormed()||/[\r\n\x00-\x1f\[\]*_`<>=]/.test(words)||words.includes('%%'))fail('Use supported plain paragraph wording without Markdown syntax.',400);
+  let from=0;while(from<row.words.length&&from<words.length&&row.words[from]===words[from])from++;let to=row.words.length,end=words.length;while(to>from&&end>from&&row.words[to-1]===words[end-1]){to--;end--;}
+  if(row.words!==words)ops.push({kind:'text',id:row.id,from,to,insert:words.slice(from,end),seenBlockHash:row.blockHash});out.push({id:row.id,words,before:row.words});
+ }
+ if(!ops.length)fail('Proposal contains no wording change.',400);
+ const model=capture(baseline.raw,'study-validation');if(model.blocks.length!==baseline.projection.length)fail('Baseline topology changed.');for(const [i,block]of model.blocks.entries()){const row=baseline.projection[i];if(block.raw!==row.raw)fail('Baseline paragraph mapping changed.');block.id=row.id;}
+ const candidateRaw=apply(model,baseline.raw,ops).raw;
+ return {operations:ops,replacements:out,candidateRaw};
+}
+export function createStudyBridge({dataDir,drafts,binding,humanDirection,editorialPlan}){
+ identifier(binding?.bindingId);if(typeof binding.parentStudyId!=='string'||!binding.parentStudyId)fail('Explicit parent study required.',400);binding=structuredClone(binding);
+ if(humanDirection!==undefined&&typeof humanDirection?.context!=='function')fail('Supply the existing authoritative human direction service.',400);
+ if(editorialPlan!==undefined&&typeof editorialPlan?.context!=='function')fail('Supply the existing authoritative editorial plan adapter.',400);
+ const root=ensurePrivateDirectory(dataDir,'study-mcp-requests'),humanRoot=ensurePrivateDirectory(dataDir,'study-mcp-human-saves');let pending=Promise.resolve();
+ const serial=fn=>{const op=pending.then(fn);pending=op.catch(()=>{});return op;};
+ const location=id=>path.join(root,identifier(id));const current=()=>drafts.read(binding);
+ async function direction(){
+  if(!humanDirection)return undefined;
+  // Resolve the fixed owned part, without selecting it or guessing from the active piece.
+  const key='owned-draft:'+binding.bindingId,file=resolveInside(dataDir,'study-project-bindings/'+digest(key)+'.json',{missing:true}),owned=readJson(file,null);
+  if(!owned||owned.schema!=='ar-create.study-binding.v1'||owned.status!=='ready'||owned.projectKey!==key||!uuid.test(owned.projectId||'')||!uuid.test(owned.documentId||''))fail('Ready exact owned part binding required for human direction context.');
+  const captured=await humanDirection.context(owned.projectId,{documentId:owned.documentId});
+  if(captured?.schema!=='ar-create.study-human-direction-context.v1'||captured.role!=='human-authored-editorial-direction-not-evidence-or-source-quotation'||captured.projectId!==owned.projectId||captured.documentId!==owned.documentId||captured.outputId!==null||!Array.isArray(captured.records))fail('Human direction context belongs to another owned part.');
+  for(const item of captured.records){const scope=item.scope;if(item.role!==captured.role||scope?.parentStudyId!==binding.parentStudyId||!['project','part'].includes(scope.kind)||typeof item.body!=='string'||digest(item.body)!==item.hash||!Number.isSafeInteger(item.revision)||item.revision<1||typeof item.updatedAt!=='string'||scope.kind==='part'&&(scope.bindingId!==binding.bindingId||scope.projectId!==owned.projectId||scope.documentId!==owned.documentId)||scope.kind==='project'&&(scope.projectId!==scope.parentProjectId||scope.documentId!==scope.parentDocumentId))fail('Scoped human direction capture identity, revision or exact wording changed.');}
+  if(captured.hash!==digest(JSON.stringify(captured.records)))fail('Human direction authority capture hash changed.');
+  return structuredClone(captured);
+ }
+ async function directionFreshness(r){
+  const captured=r.baseline.humanDirection;
+  if(!humanDirection){if(captured!==undefined)fail('This request requires its authoritative human direction service before acceptance.');return;}
+  const latest=await direction();
+  // Old requests are usable only while they omit no human decision.
+  if(captured===undefined&&!latest.records.length)return;
+  if(captured===undefined||!same(captured,latest))fail('Applicable human direction changed: stale request; preserve candidate and human words.');
+ }
+ async function plan(){
+  if(!editorialPlan)return undefined;
+  const captured=await editorialPlan.context(binding),{hash,...payload}=captured||{};
+  if(payload.schema!=='ar-create.study-editorial-plan-context.v1'||payload.role!=='saved-editorial-plan-not-evidence-source-quotation-or-approved-prose'||!same(payload.binding,binding)||!Array.isArray(payload.records)||!Array.isArray(payload.selections)||hash!==digest(stable(payload)))fail('Editorial plan authority identity or hash changed.');
+  return structuredClone(captured);
+ }
+ async function planFreshness(r){
+  if(!editorialPlan){if(r.baseline.editorialPlan!==undefined)fail('This request requires its authoritative editorial plan adapter before acceptance.');return;}
+  if(!same(r.baseline.editorialPlan,await plan()))fail('Applicable saved research choices or plan/brief changed: stale request; preserve candidate and human words.');
+ }
+ function contractsSnapshot(){
+  const events=[];
+  for(const name of fs.readdirSync(humanRoot).filter(name=>uuid.test(name.slice(0,-5))&&name.endsWith('.json'))){const value=readJson(path.join(humanRoot,name),null);if(value?.schema!=='ar-create.study-mcp-human-contract.v1'||!same(value.binding,binding))continue;if(value.operationId!==name.slice(0,-5)||!Number.isSafeInteger(value.revision)||value.revision<1||value.input?.humanDecision!==true||digest(stable(value.input))!==value.inputHash||!['protect','release-protection','override-rejection','restore-rejection'].includes(value.input.kind))fail('Saved human proposal contract changed; preserve decision records.');events.push(value);}
+  events.sort((a,b)=>a.revision-b.revision);if(events.some((event,index)=>event.revision!==index+1))fail('Human proposal contract revision chain changed; preserve history.');
+  const protections=events.filter(e=>e.input.kind==='protect').map(e=>({id:e.operationId,role:'human-selected-exact-native-wording',author:'human',selectedFrom:'saved-native-DEV',binding,paragraphId:e.input.paragraphId,text:e.input.text,from:e.input.from,to:e.input.to,selectionBlockHash:e.input.seenBlockHash,selectedExpected:e.input.expected,reason:e.input.reason||null,createdAt:e.createdAt,active:!events.some(release=>release.input.kind==='release-protection'&&release.input.protectionId===e.operationId)}));
+  const rejections=[];
+  for(const id of fs.readdirSync(root).filter(id=>uuid.test(id))){const record=readJson(path.join(root,id,'request.json'),null);if(!same(record?.binding,binding))continue;const r=load(id),human=r.decision?.humanRejection;if(!human)continue;if(r.decision.status!=='rejected'||human.humanDecision!==true||human.role!=='human-rejection-of-ai-proposal-not-approved-prose'||human.reasonHash!==digest(human.reason||'')||!same(human.binding,binding)||typeof human.reason!=='string'||!human.reason.trim()||!same(human.replacements,r.proposal.payload.replacements)||human.replacementsHash!==digest(stable(human.replacements)))fail('Saved human rejection reason or exact rejected wording changed.');const overrides=events.filter(e=>['override-rejection','restore-rejection'].includes(e.input.kind)&&e.input.rejectedRequestId===id),latest=overrides.at(-1);rejections.push({requestId:id,role:human.role,reasonRole:'human-authored-rejection-reason',replacementsRole:'rejected-ai-proposal-wording-not-approved-prose',binding,proposalHash:r.proposal.hash,reason:human.reason,replacements:human.replacements,rejectedAt:r.decision.createdAt,retryAllowed:latest?.input.kind==='override-rejection',...(latest?{overrideOperationId:latest.operationId,overrideReason:latest.input.reason}:{})});}
+  rejections.sort((a,b)=>a.rejectedAt.localeCompare(b.rejectedAt)||a.requestId.localeCompare(b.requestId));
+  const snapshot={schema:'ar-create.study-mcp-proposal-contracts.v1',role:'explicit-human-proposal-intent-not-evidence-or-manuscript',binding,protections,rejections,events};return {...snapshot,hash:digest(stable(snapshot))};
+ }
+ function captureContracts(){const snapshot=contractsSnapshot();return snapshot.events.length||snapshot.rejections.length?snapshot:undefined;}
+ function contractFreshness(r){const now=captureContracts();if(r.baseline.humanContracts===undefined&&now===undefined)return;if(!same(r.baseline.humanContracts,now))fail('Human proposal contracts changed: stale request; preserve candidate and direct human words.');}
+ function enforceContracts(baseline,payload){
+  const snapshot=contractsSnapshot(),changed=payload.replacements.filter(row=>row.words!==row.before);
+  for(const protection of snapshot.protections.filter(p=>p.active)){const proposed=changed.find(row=>row.id===protection.paragraphId);if(!proposed)continue;const row=baseline.projection.find(row=>row.id===protection.paragraphId);if(!row||row.words.indexOf(protection.text)<0||row.words.indexOf(protection.text)!==row.words.lastIndexOf(protection.text))fail('Protected wording is missing or protection has diverged after a human edit; explicitly release or reselect protection.');if(proposed.words.indexOf(protection.text)<0||proposed.words.indexOf(protection.text)!==proposed.words.lastIndexOf(protection.text))fail('Proposal changes or drops protected exact wording; release protection explicitly first.');}
+  for(const rejection of snapshot.rejections.filter(r=>!r.retryAllowed))for(const rejected of rejection.replacements)if(changed.some(row=>row.id===rejected.id&&row.words===rejected.words))fail('Exact rejected wording cannot be proposed again without an explicit human override: '+rejection.requestId);
+ }
+ async function humanContract(args){
+  fields(args,['kind','operationId','humanDecision','expectedContractHash','expected','paragraphId','seenBlockHash','from','to','text','protectionId','rejectedRequestId','reason']);identifier(args.operationId);if(args.humanDecision!==true)fail('An explicit human decision is required for a proposal contract.',403);if(!['protect','release-protection','override-rejection','restore-rejection'].includes(args.kind))fail('Choose a supported human proposal contract.',400);
+  const allowedByKind={protect:['expected','paragraphId','seenBlockHash','from','to','text'], 'release-protection':['protectionId'], 'override-rejection':['rejectedRequestId'], 'restore-rejection':['rejectedRequestId']};fields(args,['kind','operationId','humanDecision','expectedContractHash','reason',...allowedByKind[args.kind]]);
+  if(args.reason!==undefined&&(typeof args.reason!=='string'||!args.reason.trim()||args.reason.length>4000||!args.reason.isWellFormed()))fail('Keep an explicit human reason under 4000 characters.',400);
+  const file=path.join(humanRoot,args.operationId+'.json'),prior=readJson(file,null);if(prior){if(prior.schema!=='ar-create.study-mcp-human-contract.v1'||!same(prior.binding,binding)||!same(prior.input,args))fail('Operation already has a different human contract payload.');return contractsSnapshot();}
+  const now=await current(),before=contractsSnapshot();if(args.expectedContractHash!==before.hash)fail('Human proposal contracts changed: stale human decision; refresh before applying it.');
+  if(args.kind==='protect'){
+   if(!same(args.expected,now.expected))fail('Native draft changed: stale protection selection.');const row=now.projection?.find(row=>row.id===args.paragraphId);
+   if(!proposalEditable(row)||row.blockHash!==args.seenBlockHash)fail('Protection requires the exact current supported native paragraph/hash.');
+   if(typeof args.text!=='string'||!args.text||!args.text.isWellFormed()||!Number.isInteger(args.from)||!Number.isInteger(args.to)||args.from<0||args.to<=args.from||args.to>row.words.length||row.words.slice(args.from,args.to)!==args.text||row.words.indexOf(args.text)!==args.from||row.words.lastIndexOf(args.text)!==args.from)fail('Select unambiguous exact native wording; guessed or repeated phrase selections are refused.',400);
+  }else{
+   if(!args.reason)fail('Record the human reason for releasing or reversing this contract.',400);
+   if(args.kind==='release-protection'){identifier(args.protectionId);if(!before.protections.some(p=>p.id===args.protectionId&&p.active))fail('Only an active protection of this exact part can be released.');}
+   else{identifier(args.rejectedRequestId);if(!before.rejections.some(r=>r.requestId===args.rejectedRequestId))fail('Only an explicit human rejection of this exact part can be overridden or restored.');}
+  }
+  const event={schema:'ar-create.study-mcp-human-contract.v1',role:'explicit-human-proposal-intent-not-evidence-or-manuscript',binding,operationId:args.operationId,revision:before.events.length+1,input:structuredClone(args),inputHash:digest(stable(args)),createdAt:new Date().toISOString()};write(file,event,true);return contractsSnapshot();
+ }
+ function write(file,value,exclusive=false){atomicWrite(file,JSON.stringify(value,null,2)+'\n',{exclusive});}
+ function load(id){const dir=location(id),record=readJson(path.join(dir,'request.json'),null);if(!record)fail('Unknown request not found.',404);if(record.schema!=='ar-create.study-mcp-request.v1'||!same(record.binding,binding)||record.id!==id)fail('Request belongs to another study binding.');
+  const baselineFile=path.join(dir,'baseline.json');regular(baselineFile);const raw=fs.readFileSync(baselineFile);if(digest(raw)!==record.baselineHash)fail('Captured baseline changed.');const baseline=JSON.parse(raw);if(!same(baseline.binding.id,binding.bindingId)||baseline.binding.parentStudyId!==binding.parentStudyId)fail('Captured identity changed.');if(!same(baseline.expected,record.expected))fail('Captured native expected revision changed.');
+  if(baseline.humanDirection!==undefined){if(record.humanDirectionHash!==digest(JSON.stringify(baseline.humanDirection)))fail('Captured human direction request hash changed.');}else if(record.humanDirectionHash!==undefined)fail('Human direction capture is missing from this request.');
+  if(baseline.humanContracts!==undefined){if(record.humanContractsHash!==digest(stable(baseline.humanContracts)))fail('Captured human proposal contracts hash changed.');}else if(record.humanContractsHash!==undefined)fail('Human proposal contract capture is missing.');
+  if(baseline.editorialPlan!==undefined){if(record.editorialPlanHash!==digest(stable(baseline.editorialPlan)))fail('Captured editorial plan request hash changed.');}else if(record.editorialPlanHash!==undefined)fail('Editorial plan capture is missing.');
+  let proposal=readJson(path.join(dir,'proposal.json'),null),decision=readJson(path.join(dir,'decision.json'),null);if(proposal){if(proposal.requestId!==id||digest(stable(proposal.payload))!==proposal.hash||proposal.humanDirectionHash!==record.humanDirectionHash||proposal.humanContractsHash!==record.humanContractsHash||proposal.editorialPlanHash!==record.editorialPlanHash)fail('Captured proposal changed.');}
+  if(decision&&(decision.requestId!==id||decision.proposalHash!==proposal?.hash||decision.humanDirectionHash!==record.humanDirectionHash||decision.humanContractsHash!==record.humanContractsHash||decision.editorialPlanHash!==record.editorialPlanHash))fail('Decision receipt differs from proposal.');return {dir,record,baseline,proposal,decision};
+ }
+ async function freshness(r){const now=await current();if(!same(now.expected,r.record.expected))fail('Draft changed: stale request; preserve candidate and human words.');for(const s of r.baseline.sources){const actual=now.context.records.find(x=>x.id===s.id);if(!actual||actual.copiedHash!==s.hash)fail('Selected source capture changed.');}await directionFreshness(r);await planFreshness(r);contractFreshness(r);return now;}
+ async function review(id){const r=load(id);let stale=false,reason;try{await freshness(r)}catch(error){stale=true;reason=error.message;}return {id,status:r.decision?.status??(r.proposal?'pending':'prepared'),stale,reason,expected:r.record.expected,replacements:r.proposal?.payload.replacements??[],candidateRaw:r.proposal?.payload.candidateRaw??null,...(r.baseline.humanDirection!==undefined?{humanDirection:structuredClone(r.baseline.humanDirection)}:{}),...(r.baseline.humanContracts!==undefined?{humanContracts:structuredClone(r.baseline.humanContracts)}:{}),...(r.baseline.editorialPlan!==undefined?{editorialPlan:structuredClone(r.baseline.editorialPlan)}:{}),decision:r.decision??null};}
+ async function accept(args){fields(args,['requestId','operationId','replacements']);identifier(args.operationId);const r=load(args.requestId);if(r.decision?.status==='accepted')return current();if(r.decision?.status==='rejected')fail('Request was rejected. Prepare new work.');if(!r.proposal)fail('No proposal to review.');
+  if(r.decision?.status==='committing'){
+   const inspected=await drafts.inspect({...binding,operationId:r.decision.operationId});if(inspected.receipt.state!=='committed')fail('Interrupted acceptance requires explicit journal recovery; preserve candidate.');
+   const change=inspected.receipt.changes.find(c=>c.relativePath.startsWith('Workflow/3-Develop/'));if(change?.afterHash!==r.decision.candidateHash)fail('Committed journal differs from acceptance.');
+   write(path.join(r.dir,'decision.json'),{...r.decision,status:'accepted',finishedAt:new Date().toISOString()});return current();
+  }
+  await freshness(r);const payload=args.replacements?changes(r.baseline,args.replacements):r.proposal.payload;enforceContracts(r.baseline,payload);
+  const decision={requestId:r.record.id,status:'committing',proposalHash:r.proposal.hash,operationId:args.operationId,candidateHash:digest(payload.candidateRaw),...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),expected:r.record.expected,operations:payload.operations,reviewedReplacements:payload.replacements,createdAt:new Date().toISOString()};write(path.join(r.dir,'decision.json'),decision,true);
+  const saved=await drafts.save({...binding,operationId:args.operationId,expected:r.record.expected,operations:payload.operations});
+  if(digest(saved.raw)!==decision.candidateHash)fail('Saved candidate bytes differ; inspect journal.');write(path.join(r.dir,'decision.json'),{...decision,status:'accepted',finishedAt:new Date().toISOString()});return saved;
+ }
+ return {
+  read:()=>serial(current),
+  prepare:args=>serial(async()=>{fields(args,['sourceIds']);if(!Array.isArray(args.sourceIds)||!args.sourceIds.length||args.sourceIds.length>30||new Set(args.sourceIds).size!==args.sourceIds.length)fail('Select explicit source/context records.',400);const before=await current();if(!before.readiness.ready||!before.projection)fail('Complete journal recovery before preparing.');
+   const sources=args.sourceIds.map(id=>{const r=before.context.records.find(r=>r.id===id&&!r.missing&&['source','context','research','brief','notes','map','plan'].includes(r.role));if(!r)fail('Unknown or unselected source role.',400);return {id:r.id,role:r.role,sourcePath:r.sourcePath,hash:r.copiedHash,raw:r.raw};});
+   const humanContractsCapture=captureContracts(),humanDirectionCapture=await direction(),editorialPlanCapture=await plan();
+   if(editorialPlanCapture!==undefined){if(!same(editorialPlanCapture,await plan())||!same((await current()).expected,before.expected))fail('Editorial plan or native draft changed while preparing; refresh request.');}
+   if(humanDirectionCapture!==undefined){const latest=await current();if(!same(latest.expected,before.expected))fail('Draft changed while preparing request; preserve human words.');if(!same(humanDirectionCapture,await direction()))fail('Human direction changed while preparing request; refresh before proposing.');}
+   if(!same(humanContractsCapture,captureContracts()))fail('Human proposal contracts changed while preparing; refresh the request.');
+   const id=randomUUID(),dir=ensurePrivateDirectory(root,id),baseline={binding:before.binding,raw:before.raw,projection:before.projection,sources,expected:before.expected,paths:before.paths,...(humanDirectionCapture!==undefined?{humanDirection:humanDirectionCapture}:{}),...(humanContractsCapture!==undefined?{humanContracts:humanContractsCapture}:{}),...(editorialPlanCapture!==undefined?{editorialPlan:editorialPlanCapture}:{})},raw=JSON.stringify(baseline,null,2)+'\n';atomicWrite(path.join(dir,'baseline.json'),raw,{exclusive:true});const record={schema:'ar-create.study-mcp-request.v1',id,binding,expected:before.expected,baselineHash:digest(raw),...(humanDirectionCapture!==undefined?{humanDirectionHash:digest(JSON.stringify(humanDirectionCapture))}:{}),...(humanContractsCapture!==undefined?{humanContractsHash:digest(stable(humanContractsCapture))}:{}),...(editorialPlanCapture!==undefined?{editorialPlanHash:digest(stable(editorialPlanCapture))}:{}),sourceIds:args.sourceIds,createdAt:new Date().toISOString(),modelExecuted:false};write(path.join(dir,'request.json'),record,true);return record;}),
+  context:args=>serial(async()=>{fields(args,['requestId']);const r=load(args.requestId);if(editorialPlan||r.baseline.editorialPlan!==undefined||humanDirection||r.baseline.humanDirection!==undefined||r.baseline.humanContracts!==undefined||captureContracts()!==undefined)await freshness(r);else await current();return structuredClone(r.baseline);}),
+  propose:args=>serial(async()=>{fields(args,['requestId','replacements']);const r=load(args.requestId);await freshness(r);if(r.decision)fail('Request already has a decision.');const payload=changes(r.baseline,args.replacements);enforceContracts(r.baseline,payload);const proposal={requestId:r.record.id,...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),payload,hash:digest(stable(payload)),createdAt:new Date().toISOString()};if(r.proposal){if(r.proposal.hash!==proposal.hash)fail('Proposal already exists; inspect review rather than retry different words.');}else write(path.join(r.dir,'proposal.json'),proposal,true);return review(r.record.id);}),
+  review:args=>serial(()=>{fields(args,['requestId']);return review(args.requestId);}),
+  list:()=>serial(async()=>({items:await Promise.all(fs.readdirSync(root).filter(id=>uuid.test(id)).filter(id=>same(readJson(path.join(root,id,'request.json'),null)?.binding,binding)).map(async id=>{const r=await review(id);return {id,status:r.status,stale:r.stale,createdAt:load(id).record.createdAt};}))})),
+  accept:args=>serial(()=>accept(args)),
+  contracts:()=>serial(async()=>{await current();return contractsSnapshot();}),
+  humanContract:args=>serial(()=>humanContract(structuredClone(args))),
+  reject:args=>serial(async()=>{
+   fields(args,['requestId','reason','humanDecision','expectedContractHash']);const r=load(args.requestId);if(!r.proposal||r.decision&&r.decision.status!=='rejected')fail('Only a pending proposal can be rejected.');
+   const explicit=args.reason!==undefined;if(explicit&&(args.humanDecision!==true||typeof args.reason!=='string'||!args.reason.trim()||args.reason.length>4000||!args.reason.isWellFormed()))fail('Record an explicit human rejection reason under 4000 characters.',400);
+   if(!explicit&&(args.humanDecision!==undefined||args.expectedContractHash!==undefined))fail('A human rejection contract requires an explicit reason.',400);
+   if(r.decision){if(explicit&&r.decision.humanRejection?.reason!==args.reason||!explicit&&r.decision.humanRejection)fail('Rejection already has a different human reason; use an explicit override rather than replacing it.');return review(r.record.id);}
+   if(explicit&&args.expectedContractHash!==contractsSnapshot().hash)fail('Human proposal contracts changed: refresh before rejecting with this reason.');
+   write(path.join(r.dir,'decision.json'),{requestId:r.record.id,proposalHash:r.proposal.hash,...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),status:'rejected',createdAt:new Date().toISOString(),...(explicit?{humanRejection:{humanDecision:true,role:'human-rejection-of-ai-proposal-not-approved-prose',binding,reason:args.reason,reasonHash:digest(args.reason),replacements:structuredClone(r.proposal.payload.replacements),replacementsHash:digest(stable(r.proposal.payload.replacements))}}:{})},true);return review(r.record.id);
+  }),
+  saveHuman:args=>serial(async()=>{
+   fields(args,['expected','replacements','operationId']);identifier(args.operationId);const file=path.join(humanRoot,args.operationId+'.json'),prior=readJson(file,null);
+   if(prior){if(!same(prior.binding,binding)||!same(prior.input,args))fail('Operation already has a different payload.');
+    try{const inspected=await drafts.inspect({...binding,operationId:args.operationId});if(inspected.receipt.state==='committed')return current();fail('Interrupted human save requires explicit journal recovery.');}catch(e){if(e.code!=='ENOENT')throw e;}
+   }
+   const before=await current();if(!same(before.expected,args.expected))fail('Draft changed: stale human save; keep local words.');const payload=prior?.payload??changes(before,args.replacements);
+   if(!prior)write(file,{binding,input:args,payload},true);
+   return drafts.save({...binding,operationId:args.operationId,expected:args.expected,operations:payload.operations});
+  })
+ };
+}

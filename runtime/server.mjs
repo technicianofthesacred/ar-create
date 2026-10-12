@@ -5,6 +5,9 @@ import {parseArticle} from './article-codec.mjs';
 import {createResearchAnswers} from './services/research-answer.mjs';
 import {createFirstFlow} from './services/first-flow.mjs';
 import {createStudyBindings} from './services/study-bindings.mjs';
+import {createStudyAI} from './services/study-ai.mjs';
+import {createStudyEditorialPlanContext} from './services/study-editorial-plan-context.mjs';
+import {createStudyFirstFlowPlanContext} from './services/study-first-flow-plan-context.mjs';
 import {createStudyOriginals} from './services/study-originals.mjs';
 import {createStudyDraftCopies} from './services/study-draft-copies.mjs';
 import * as studyPhotoFiles from './services/files.mjs';
@@ -176,6 +179,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
   const studyPhotos=studyOwnedPhotoBindings?createStudyPhotos({dataDir,library,runtime:studyPhotoFiles,resolveBinding:projectId=>studyOwnedPhotoBindings.resolve(projectId)}):null;
   const studyResearchChoices=studyDrafts?createStudyResearchChoices({dataDir,originals:studyOriginals,drafts:studyDrafts}):null;
+  const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices}):null;
+  const studyPlanContext=studyDrafts?createStudyFirstFlowPlanContext({dataDir,savedPlan:studyEditorialPlan,firstFlow}):null;
+  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext}):null;
   const draftCall=async fn=>{if(!studyDrafts)throw new StateError('Current manuscript originals are not configured.',503);try{return await fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const originalRead=fn=>{if(!studyOriginals)throw new StateError('Current original records are not configured; retained snapshots remain available.',503);try{return fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const researchAction=fn=>input=>{if(!researchEnabled)throw new StateError('Fresh research is being validated. Existing story records are ready to read.',503);return fn(input);};
@@ -279,6 +285,14 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (await recordings.route(request, response, url)) return;
         throw new StateError('Recording route is unavailable.', 404);
       }
+      const studyAICall=(action,input={})=>draftCall(()=>{
+        const scope={};
+        for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
+        if([...url.searchParams.keys()].some(key=>!['bindingId','parentStudyId','requestId'].includes(key))||url.searchParams.getAll('requestId').length>1)throw new StateError('Unsupported manuscript proposal query.',400);
+        if(Object.keys(input).some(key=>['bindingId','parentStudyId'].includes(key)))throw new StateError('Manuscript identity comes from the explicit route scope.',400);
+        const requestId=url.searchParams.get('requestId');if(requestId){if(input.requestId&&input.requestId!==requestId)throw new StateError('Request identity differs from its route.',409);input={...input,requestId};}
+        return studyAI.call(action,{...scope,...input});
+      });
       const routes = {
         '/api/writing-template': {GET:()=>writingTemplates.get({expectedProjectId:url.searchParams.get('expectedProjectId'),expectedDocumentId:url.searchParams.get('expectedDocumentId')})},
         '/api/writing-template/attach': {POST:input=>writingTemplates.attach(input)},
@@ -313,6 +327,16 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         '/api/terminal/sessions': { GET: () => terminal.list(), POST: input => terminal.start(input) },
         '/api/pieces': {GET:()=>store.listPieces(),POST:input=>store.createPiece(input)},
         '/api/i64os/health': {GET:()=>{if(!studyDrafts)throw new StateError('Document study is not configured.',503);return {service:'ar-create-document-study',ready:true};}},
+        '/api/study-ai/contracts': {GET:()=>studyAICall('contracts')},
+        '/api/study-ai/human-contract': {POST:input=>studyAICall('humanContract',input)},
+        '/api/study-ai/read': {GET:()=>studyAICall('read')},
+        '/api/study-ai/prepare': {POST:input=>studyAICall('prepare',input)},
+        '/api/study-ai/context': {GET:()=>studyAICall('context')},
+        '/api/study-ai/propose': {POST:input=>studyAICall('propose',input)},
+        '/api/study-ai/review': {GET:()=>studyAICall('review')},
+        '/api/study-ai/requests': {GET:()=>studyAICall('list')},
+        '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},
+        '/api/study-ai/reject': {POST:input=>studyAICall('reject',input)},
         '/api/study/human-direction': {GET:()=>draftCall(()=>studyHumanDirection.read({parentStudyId:url.searchParams.get('parentStudyId'),scope:url.searchParams.get('scope')||'project',...(url.searchParams.has('bindingId')?{bindingId:url.searchParams.get('bindingId')}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})}))},
         '/api/study/human-direction/select': {POST:input=>draftCall(()=>studyHumanDirection.select(input))},
         '/api/study/human-direction/write': {POST:input=>draftCall(()=>studyHumanDirection.write(input))},

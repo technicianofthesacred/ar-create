@@ -15,7 +15,7 @@
    const head=document.createElement('div');head.className='draft-surface-margin-head';
    const title=document.createElement('strong');title.textContent='Editorial margin';head.append(title,button('Close','close-margin'));
    const summary=document.createElement('div');summary.className='draft-surface-margin-summary';
-   const label=document.createElement('span');label.textContent='Editorial notes · AI not connected';summary.append(label,button('Review notes','open-margin'));
+   const label=document.createElement('span');label.textContent='Your editorial notes';summary.append(label,button('Review notes','open-margin'));
    margin.append(head,summary,body);
    const notes=body.querySelector('.originalNotes');if(notes){const details=document.createElement('details');details.className='draft-surface-retained-notes';const s=document.createElement('summary');s.textContent='Recorded editorial notes · '+notes.querySelectorAll('.originalNote').length;details.append(s,notes);body.append(details);}
    const hint=body.querySelector('.marginHint');if(hint)hint.textContent='Recorded notes stay attached to their passages.';

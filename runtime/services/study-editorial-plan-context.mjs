@@ -1,0 +1,45 @@
+import {digest} from './files.mjs';
+import {researchPointId} from './study-research-choices.mjs';
+const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x);
+const same=(a,b)=>stable(a)===stable(b);
+const fail=message=>{throw Object.assign(Error(message),{status:409});};
+const PARENTS={hk:'hk','ref-an-cha':'ancha','ref-collector':'collector'};
+export const EDITORIAL_PLAN_ROLE='saved-editorial-plan-not-evidence-source-quotation-or-approved-prose';
+/** Read only existing authorities. No active-project reads, saves, source analysis,
+ * guessed attribution, insertion, stage transitions, providers or new storage. */
+export function createStudyEditorialPlanContext({drafts,originals,choices}={}){
+ if(!drafts?.read||!originals?.readDraft||!choices?.read)throw TypeError('Supply existing owned drafts, original part catalog and saved research choices.');
+ return {async context(binding){
+  const draft=await drafts.read(binding),b=draft?.binding;
+  if(b?.id!==binding.bindingId||b.parentStudyId!==binding.parentStudyId||b.authority!=='owned-working-copy'||b.status!=='ready'||draft.readiness?.ready!==true||!draft.expected||!Array.isArray(draft.context?.records))fail('Exact ready owned manuscript is required for editorial context.');
+  const original=await originals.readDraft(b.originalId);
+  if(original?.id!==b.originalId||original.parentStudyKey!==b.parentStudyId||original.partKey!==b.partKey||!Array.isArray(original.records))fail('Editorial records belong to a different original part.');
+  const originalSourceRecords=original.records.filter(r=>r.role!=='draft').map(r=>{
+   if(typeof r.raw!=='string'||r.hash!==digest(r.raw))fail('Original source revision hash changed.');
+   return {id:r.id,role:r.role,sourcePath:r.path,hash:r.hash};
+  }).sort((a,b)=>a.id.localeCompare(b.id));
+  const capturedSourceRecords=draft.context.records.filter(r=>r.role!=='draft'&&!r.missing).map(r=>({id:r.id,role:r.role,sourcePath:r.sourcePath,hash:r.copiedHash})).sort((a,b)=>a.id.localeCompare(b.id));
+  if(!same(originalSourceRecords,capturedSourceRecords))fail('Original source revisions changed; refresh the exact owned capture before proposing.');
+  const records=[];
+  for(const record of draft.context.records.filter(r=>['brief','plan','map'].includes(r.role))){
+   const live=original.records.find(r=>r.id===record.id&&r.path===record.sourcePath&&r.role===record.role);
+   if(record.missing||!live||typeof record.raw!=='string'||typeof live.raw!=='string'||record.copiedHash!==digest(record.raw)||live.hash!==digest(live.raw)||record.copiedHash!==live.hash)fail('Saved original plan or brief revision changed; refresh the owned capture before proposing.');
+   records.push({id:record.id,role:EDITORIAL_PLAN_ROLE,recordKind:record.role,sourcePath:record.sourcePath,hash:record.copiedHash,body:record.raw,authority:'exact-original-part-support-capture',scope:{bindingId:b.id,parentStudyId:b.parentStudyId,originalId:b.originalId,partKey:b.partKey},interpretation:'Complete saved plan/brief/map; may describe several pieces. Only the explicitly bound part is targeted; this record is not proof of approval or factual support.'});
+  }
+  // Addition/removal of an applicable original record must also invalidate capture.
+  if(!same(records.map(r=>r.id).sort(),original.records.filter(r=>['brief','plan','map'].includes(r.role)).map(r=>r.id).sort()))fail('Original part plan/brief catalog changed; refresh the owned capture.');
+  const projectKey=PARENTS[b.parentStudyId];if(!projectKey)fail('Unsupported parent study for saved research choices.');
+  const saved=await choices.read({projectKey,parentStudyId:b.parentStudyId,bindingId:b.id});
+  if(saved?.bindingId!==b.id||saved.parentStudyId!==b.parentStudyId||saved.projectKey!==projectKey||saved.authority!=='owned-working-copy'||saved.purpose!=='editorial-plan-only'||!same(saved.expected,draft.expected)||!Array.isArray(saved.choices)||!Array.isArray(saved.sourceRecords))fail('Saved choices belong to another owned part or revision.');
+  const selections=saved.choices.map(c=>{
+   if(c.stale||c.sourceStale||c.draftStale||!same(c.expected,draft.expected)||c.sourceExpected!==saved.sourceExpected||c.pointId!==researchPointId(c.recordPath,c.originalText)||!['include','leave-out'].includes(c.decision)||typeof c.narration!=='string')fail('Saved research choice is stale or its exact identity changed; refresh the choice.');
+   const record=original.records.find(r=>r.path===c.recordPath&&r.role==='research');
+   const source=saved.sourceRecords.find(r=>r.path===c.recordPath);
+   if(!record||record.hash!==c.recordHash||digest(record.raw)!==record.hash||source?.hash!==record.hash||source.missing||!record.raw.includes(c.originalText)||record.raw.indexOf(c.originalText)!==record.raw.lastIndexOf(c.originalText))fail('Research selection must match the exact original part research record and source hash.');
+   if(c.anchorId&&!draft.projection?.some(p=>p.id===c.anchorId&&p.blockKind==='paragraph'))fail('Research placement anchor no longer belongs to the current manuscript.');
+   return {pointId:c.pointId,decision:c.decision,role:EDITORIAL_PLAN_ROLE,researchPassage:{sourceId:record.id,sourcePath:c.recordPath,sourceHash:c.recordHash,body:c.originalText,role:'selected-research-analysis-passage-not-primary-source-quotation-or-verified-fact',uncertainty:'No new verification or inferred evidence status. Preserve the full research record qualifications.'},researchRecord:{sourceId:record.id,sourceHash:record.hash,body:record.raw,role:'complete-research-analysis-with-original-qualifications-not-primary-evidence'},humanNarration:{body:c.narration,hash:digest(c.narration),role:'human-authored-proposed-narration-not-approved-manuscript'},placement:{anchorId:c.anchorId,role:'planned-paragraph-anchor-not-insertion'},operationId:c.operationId,updatedAt:c.updatedAt};
+  });
+  const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:original.contextScope??null,expected:structuredClone(draft.expected),choiceSourceExpected:saved.sourceExpected,originalSourceRecords,records,selections};
+  return {...payload,hash:digest(stable(payload))};
+ }};
+}

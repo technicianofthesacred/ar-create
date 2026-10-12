@@ -487,8 +487,11 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         return commit(next,null,{expectedArticle});
       });
     },
-    listPieces(){return serialized(async()=>{
-      await initializePieces();const pieces=[],activeFilename=path.basename(pieceFile(state.project.id));
+    listPieces(options={}){
+      if(!options||Array.isArray(options)||Object.keys(options).some(k=>k!=='readOnly')||options.readOnly!==undefined&&typeof options.readOnly!=='boolean')throw new StateError('Choose a supported piece catalog read.');
+      const queue=options.readOnly?fn=>{const operation=pending.then(async()=>{if(closed||needsRecovery||articles&&existsSync(articles.journal))throw new StateError('Piece publication requires explicit owner recovery before a read-only catalog.',409);if(articles?!(await readFile(file)).equals(knownStateBytes):JSON.stringify(JSON.parse(await readFile(file,'utf8')))!==JSON.stringify(state))throw new StateError('State changed outside its cooperating store owner.',409);return fn();});pending=operation.catch(()=>{});return operation;}:serialized;
+      return queue(async()=>{
+      if(options.readOnly)await checkPiecesDirectory();else await initializePieces();const pieces=[],activeFilename=path.basename(pieceFile(state.project.id));
       for(const filename of await readdir(piecesDir)){if(!/^[a-f0-9]{64}\.json$/.test(filename)||filename===activeFilename)continue;const record=await readPiece(undefined,path.join(piecesDir,filename));pieces.push(summary(record.project,record,false));}
       pieces.push(summary(state.project,await activeMeta(),true));pieces.sort((left,right)=>Number(right.active)-Number(left.active)||right.updatedAt.localeCompare(left.updatedAt)||left.title.localeCompare(right.title));return {pieces};
     });},

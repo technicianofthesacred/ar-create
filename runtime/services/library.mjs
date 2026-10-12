@@ -233,6 +233,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   return {
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured);folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),
+    // Existing indexed identity + current physical bytes; no scan, index save or extraction.
+    snapshot: id => serial(async()=>{const source=sourceById(id),file=checkedFile(source);return {...publicSource(source),path:file,hash:await streamHash(file)};}),
     tree: () => serial(refresh), read: (id,options) => serial(() => read(id,options)),
     blob: (id, original = false) => serial(async () => { refresh(); const source = original ? index.sources.find(s => s.id === id) : sourceById(id); if (!source) throw new StateError('Source was not found.', 404); let file; if (original) { if (!source.originalFile) throw new StateError('This connected file remains at its original location.', 404); file = resolveInside(path.join(dataDir, 'source-originals'), path.basename(source.originalFile)); regular(file); } else { file = checkedFile(source); if (!source.hash) {source.hash=await streamHash(file);source.hashStatus='verified';if(source.pipelineStates)source.pipelineStates.retention.hash=source.hash;persist();} } return { file, source: publicSource(source) }; }),
     folder: input => serial(() => { makeFolder(input.rootId, input.folder); return refresh(); }),
