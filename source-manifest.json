@@ -12,13 +12,13 @@
     {
       "path": "runtime/package-lock.json",
       "sourceSha256": "24e4e018a7984d7b70e70f8d887ce13751b6c8c1d734f3c3aa15da1d49465980",
-      "candidateSha256": "24e4e018a7984d7b70e70f8d887ce13751b6c8c1d734f3c3aa15da1d49465980",
-      "adapted": false
+      "candidateSha256": "80e6dad69aada5f8819ee83fa4f9aa9946602a4d7d1670c38b86a22e3083e31f",
+      "adapted": true
     },
     {
       "path": "runtime/package.json",
       "sourceSha256": "c1c77ce2350187736780b2a3a4d9527ba40ecc32527b2ab1291b67fc5fbf94c1",
-      "candidateSha256": "3e2d0f330f8adc50bf36b1e62618d37be3a22cc3c29a50c139df5ba31c9312ea",
+      "candidateSha256": "c53c58a0762c0e84df70a966560eb63fa9fa85f729ecd51c54f390d18e5d114f",
       "adapted": true
     },
     {
@@ -970,7 +970,7 @@
     },
     {
       "path": "README.md",
-      "candidateSha256": "07017088ae513e1639da277012569ccd47c6cd6c0d9f843b97a9fca7e541787a"
+      "candidateSha256": "18961743dcb69da9022aabc1fdac0049680847bdf37a84b21711846c4e6b2244"
     },
     {
       "path": "config.example.json",
@@ -1023,6 +1023,22 @@
     {
       "path": "tests/startup.test.mjs",
       "candidateSha256": "02fe86b1cfbc79d1087ffe8fd9a080aed09f1b6640f08dba760dd21530769c0b"
+    },
+    {
+      "path": "tests/dependency-security.test.mjs",
+      "candidateSha256": "c963b67a301ed9e8813ad8e255070a93d8808b092dd1385005642c2fbaa17500"
     }
-  ]
+  ],
+  "dependencyRepair": {
+    "base": "16dff2fa",
+    "tiptap": "3.30.5",
+    "prosemirrorView": "1.42.3",
+    "prosemirrorModel": "1.25.11",
+    "sourceCheckpointUnchanged": true,
+    "advisories": [
+      "GHSA-j95f-988m-3j2f",
+      "GHSA-c8x8-7fp4-3x9w"
+    ],
+    "residual": "Readability 0.5.0 low GHSA-3p6v-hrg8-8qj7; separate compatibility task"
+  }
 }
