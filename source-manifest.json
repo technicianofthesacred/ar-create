@@ -59,8 +59,8 @@
     },
     {
       "path": "runtime/server.mjs",
-      "sourceSha256": "78c7c9a713dcc34e426bcb65017de308c5697b56848d4ef3f97d09deaf1ffe6c",
-      "candidateSha256": "ada113ef3fb5a1d6dd1363710e2dce2caec51a7f1dd9e8ef5a9ec4a1561c1cb9",
+      "sourceSha256": "c5fbcbda8c0a0c2f4c00a9249a8b6c4b9767bcf6b29caed23ef9d0dfb83d3007",
+      "candidateSha256": "5505883a2cac39e87492893e3dd8314045d1cdfb3db3928ef65ce25c40a09e7f",
       "adapted": true
     },
     {
@@ -755,8 +755,8 @@
     },
     {
       "path": "public/document-study/stage-flow.js",
-      "sourceSha256": "874fc96bbc43aed727b431bd8c3f5bed1b268532b48391bd4b63991f036a3552",
-      "candidateSha256": "874fc96bbc43aed727b431bd8c3f5bed1b268532b48391bd4b63991f036a3552",
+      "sourceSha256": "14c15fa303d25b175b55201412f0ee0d5cec36b9c86f0ae1ce64976c8b0cd417",
+      "candidateSha256": "14c15fa303d25b175b55201412f0ee0d5cec36b9c86f0ae1ce64976c8b0cd417",
       "adapted": false
     },
     {
@@ -791,26 +791,26 @@
     },
     {
       "path": "public/document-study/draft-check-flow.js",
-      "sourceSha256": "7d997190984054035d63222f8b8a4efcf5f736c3a634db23387a24aa3ec54f6b",
-      "candidateSha256": "7d997190984054035d63222f8b8a4efcf5f736c3a634db23387a24aa3ec54f6b",
+      "sourceSha256": "aecda47d9b8a424f1df0bc1f9eb4320d147078146e1609ebd579d0f6b485113f",
+      "candidateSha256": "aecda47d9b8a424f1df0bc1f9eb4320d147078146e1609ebd579d0f6b485113f",
       "adapted": false
     },
     {
       "path": "public/document-study/research-standard.js",
-      "sourceSha256": "13e6f71d16842b536b68743aaa92028f806ccc6f910ad10850725b77c07f99cb",
-      "candidateSha256": "13e6f71d16842b536b68743aaa92028f806ccc6f910ad10850725b77c07f99cb",
+      "sourceSha256": "7eb8e05b2697a7ee2bfdfdc66ba4ed244c3dd48b33893326145bd4d892ddac0f",
+      "candidateSha256": "7eb8e05b2697a7ee2bfdfdc66ba4ed244c3dd48b33893326145bd4d892ddac0f",
       "adapted": false
     },
     {
       "path": "public/document-study/research-standard.css",
-      "sourceSha256": "71b791365d968c799ac695463e8653dae54a9e03c9ba45ebde49b42195454751",
-      "candidateSha256": "71b791365d968c799ac695463e8653dae54a9e03c9ba45ebde49b42195454751",
+      "sourceSha256": "d20cfaf3e8ba1d743e345c9c7065acc643297e77342c8ef26c06b6efc736baa4",
+      "candidateSha256": "d20cfaf3e8ba1d743e345c9c7065acc643297e77342c8ef26c06b6efc736baa4",
       "adapted": false
     },
     {
       "path": "public/document-study/research-standard-adapter.js",
-      "sourceSha256": "bd98758f1fd9e086d045b475e34a148449a2c02f687096729380709663efe7d1",
-      "candidateSha256": "bd98758f1fd9e086d045b475e34a148449a2c02f687096729380709663efe7d1",
+      "sourceSha256": "3214e0bc52baf63302caa09e7db1f368384806b01b8e36486da8d18a6937325a",
+      "candidateSha256": "3214e0bc52baf63302caa09e7db1f368384806b01b8e36486da8d18a6937325a",
       "adapted": false
     },
     {
@@ -1031,14 +1031,14 @@
     },
     {
       "path": "public/document-study/source-continuation.js",
-      "sourceSha256": "7d1226c68a6d7d9c40ee21c1b59ecc83bb43045857308166d512c9607443670c",
-      "candidateSha256": "7d1226c68a6d7d9c40ee21c1b59ecc83bb43045857308166d512c9607443670c",
+      "sourceSha256": "41ac3bffe9a1c472baf41be312d4086343d5ef522626810d5aa9e0ffb2706196",
+      "candidateSha256": "41ac3bffe9a1c472baf41be312d4086343d5ef522626810d5aa9e0ffb2706196",
       "adapted": false
     },
     {
       "path": "public/document-study/source-continuation.css",
-      "sourceSha256": "64732d791ebb09e7a60de1df4ce37099c8463753644ad49c6ad48372f4bf9295",
-      "candidateSha256": "64732d791ebb09e7a60de1df4ce37099c8463753644ad49c6ad48372f4bf9295",
+      "sourceSha256": "e3a895850bbcdd19e1a630994fec60dbb22afb4f1dbc6e20779c3d124f477d31",
+      "candidateSha256": "e3a895850bbcdd19e1a630994fec60dbb22afb4f1dbc6e20779c3d124f477d31",
       "adapted": false
     },
     {
@@ -1055,14 +1055,14 @@
     },
     {
       "path": "tests/research-standard-adapter.test.mjs",
-      "sourceSha256": "4ab93812c661734511b9d84ce5973a01b86999a3f89e75af91f309636cbc5c26",
-      "candidateSha256": "6353a9bc1660efe566ad3757cf141cbc55a29c667a8e934c1599ae2db04b1fc9",
+      "sourceSha256": "96bab410bfb4984f9ff2e0efc4d8b1b4765685c539aaf72fe2e232fc55369c5d",
+      "candidateSha256": "df04584cc7add025bc0cf041a54b54bbad00c518675c33021fb774d97d06f438",
       "adapted": true
     },
     {
       "path": "tests/research-standard-ui.test.mjs",
-      "sourceSha256": "4baf65b3328ab9fb6aefebe789231c5fabeace43d662d225ba41eca5419da031",
-      "candidateSha256": "e9ee95df81b7c04d9a4ed5904e14a75ec307be9fdde6e187d560c2f6356b2b9a",
+      "sourceSha256": "4363c8fd6eb20cd3b6cb244bbd1d26fe95f9695162a0dab0c71f9da98ab41036",
+      "candidateSha256": "1e1f76ba73cea68ff4b6381602a864a06eec5a20be01b9ca6ee2b51e7ddc5c9c",
       "adapted": true
     },
     {
@@ -1071,6 +1071,30 @@
       "candidateSha256": "c4ca05e67c93218859843d6543cb9c9f9bf72c171f9d63dceaa33731b0b78833",
       "adapted": false,
       "review": "Synthetic tones/captions generated only in disposable test data; no real recording bytes"
+    },
+    {
+      "path": "tests/study-ai-http.test.mjs",
+      "sourceSha256": "f5916dbd27d3f3a8fba1806b50652bd94dc85a5adb011b7e0ae683221687af51",
+      "candidateSha256": "496fe4da552da437ded94573faae1bacd3b954415643fc02a73493345a79272c",
+      "adapted": true
+    },
+    {
+      "path": "runtime/services/study-derived-findings.mjs",
+      "sourceSha256": "8890330dc713505226c3c69aea98ba9f7d69d7002ed0440c84427fc4c77d1c3a",
+      "candidateSha256": "8890330dc713505226c3c69aea98ba9f7d69d7002ed0440c84427fc4c77d1c3a",
+      "adapted": false
+    },
+    {
+      "path": "runtime/services/study-derived-findings.test.mjs",
+      "sourceSha256": "288d153884953dc71cced748805d74743d8c878437e787d181f96d27f745317e",
+      "candidateSha256": "288d153884953dc71cced748805d74743d8c878437e787d181f96d27f745317e",
+      "adapted": false
+    },
+    {
+      "path": "tests/draft-check-flow.test.mjs",
+      "sourceSha256": "0d56c6a2888c1940d642d7ce8d6791785acc955d3df0b45fbf1d8526e982bcc4",
+      "candidateSha256": "7bb8ff2ad07249624d6a341ecb07be41464a1436990713880f24dc215ac02719",
+      "adapted": true
     }
   ],
   "excluded": [
@@ -1103,7 +1127,7 @@
     },
     {
       "path": "README.md",
-      "candidateSha256": "7cff268536515c2a7228c22149af748fa04949efd54e0d6cc42bad02d6e954f2"
+      "candidateSha256": "9235d7d88b3ee8ad8c5fcf1e13ceb4c05319c32ab431a9b9d32a8cae68225ee7"
     },
     {
       "path": "config.example.json",
@@ -1270,6 +1294,13 @@
       "manifestSha256": "81aae338ce3908c4914b5f51fb64698b87c2b80d902feb66dffc4da27ba8fb35",
       "files": 20,
       "dependencyOverlayRetained": "dc537b6b"
+    },
+    {
+      "name": "Research presentation and Check binding checkpoint 13 October 2026",
+      "manifestSha256": "a151fbc1dc2ba82247e88cd14ac08dcd124221dbd69239d43bc5b65dc049d2bb",
+      "files": 14,
+      "dependencyOverlayRetained": "dc537b6b",
+      "privateDerivedFindingsImported": false
     }
   ],
   "repositorySeparation": {

@@ -33,3 +33,5 @@ Read the [section brief index](docs/sections/README.md) before changing a sectio
 Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git; existing runtime/data locations were not relocated.
 
 Use the [developer workspace index](docs/WORKSPACE.md) to find code, the twelve briefs, synthetic examples, host/config boundaries and external ownership receipts.
+
+Completed Research/Check checkpoint: scoped read-only derived-findings validation, approved Research presentation, retained-note disclosure and exact owned-part Check entry are included. No actual derived findings receipt is shipped; missing/stale/unverified data remains visibly unavailable. Summary/source integrity is not fresh factual verification or accepted manuscript text. Discussion with a real AI account remains unconnected.

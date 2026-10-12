@@ -25,3 +25,7 @@
 .source-continuation-reader-heading span,.source-continuation-reader details{font-size:12px;color:var(--dim)}
 .source-continuation-reader pre{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.65 Georgia,serif;margin:10px 0;max-width:75ch}
 .source-continuation-reader details{overflow-wrap:anywhere}
+
+.source-continuation-setup{margin:0 0 12px;min-width:0}.source-continuation-setup>summary{display:inline-flex;align-items:center;min-height:44px;cursor:pointer;color:var(--dim);font:14px/1.6 "Avenir Next",Avenir,"Segoe UI",sans-serif}.source-continuation-setup[open]>summary{margin-bottom:8px}
+
+.research-standard-heading>#study-source-continuation{order:3;margin-left:auto;min-width:0}.research-standard-heading .source-continuation-setup{margin:0}.research-standard-heading .source-continuation-setup[open]{flex-basis:100%;margin-left:0}.research-standard-heading:has(.source-continuation-setup[open])>#study-source-continuation{width:100%;margin-left:0}

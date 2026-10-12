@@ -9,6 +9,7 @@ import {createStudyAI} from './services/study-ai.mjs';
 import {createStudyEditorialPlanContext} from './services/study-editorial-plan-context.mjs';
 import {createStudyFirstFlowPlanContext} from './services/study-first-flow-plan-context.mjs';
 import {createStudyProjectMaterialContext} from './services/study-project-material-context.mjs';
+import {createStudyDerivedFindings} from './services/study-derived-findings.mjs';
 import {createStudyOriginals} from './services/study-originals.mjs';
 import {createStudyDraftCopies} from './services/study-draft-copies.mjs';
 import * as studyPhotoFiles from './services/files.mjs';
@@ -160,6 +161,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const albums = createICloudAlbums({ dataDir, library, ...(ingestionOptions?.albumFetch ? { fetcher: ingestionOptions.albumFetch } : {}) });
   const studyBindings=createStudyBindings({dataDir,store});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
+  const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
   const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals}):null;
   const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts}):null;
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
@@ -349,6 +351,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
         '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
         '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
+        '/api/study-research/findings': {GET:()=>draftCall(()=>studyDerivedFindings.read({projectKey:url.searchParams.get('projectKey'),parentStudyId:url.searchParams.get('parentStudyId')}))},
         '/api/study-research/choices': {GET:()=>draftCall(()=>studyResearchChoices.read({projectKey:url.searchParams.get('projectKey'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyResearchChoices.save(input))},
         '/api/study-draft/root-recovery': {GET:()=>draftCall(()=>studyDrafts.inspectRoots({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyDrafts.recoverRoots(input))},
         '/api/study-draft/catalog': {GET:()=>draftCall(()=>studyDrafts.catalog())},
