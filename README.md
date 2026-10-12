@@ -25,3 +25,7 @@ Official advisories: [Tiptap Markdown parsing](https://github.com/advisories/GHS
 The synced Study AI delta adds the separate `mcp/study` official STDIO adapter, exact human wording protections/rejection history and native proposal review. `npm run setup` installs both locks independently. The six assistant tools can read/prepare/context/propose/review/status; Apply, Reject and protection changes remain human actions in the UI. Synthetic delta checks run with `node --test tests/study-ai-delta.test.mjs` or `npm test --prefix mcp/study`. No real model or account is connected.
 
 The SDK lock is preserved from its checkpoint. Its development-only @modelcontextprotocol/client 2.0.0 reports high GHSA-6qxp-vccf-f47h (OAuth credentials routed through a server-chosen authorization server). This package smoke uses fixed loopback STDIO with no OAuth credentials, so that OAuth path is not exercised. A separate SDK-owner compatibility upgrade is required before adding OAuth/network-client usage. Runtime Tiptap/ProseMirror repair dc537b6b remains intact; SDK and runtime audits are distinct.
+
+## Living section design briefs
+
+Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.

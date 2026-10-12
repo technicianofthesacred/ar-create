@@ -120,3 +120,7 @@ Never silently let last-write-wins discard a simultaneous edit. Preserve both va
 | 11–12 Feedback / Confirmed | Retained checkpoint entrances | Full delivery/feedback/final confirmation workflow remains unfinished |
 
 Claims marked unresolved in retained research must remain recorded statements requiring evidence; source retention does not turn them into supported facts. Source additions or reviews outside a selected request must not silently enter that request or change its exact scoped intent.
+
+## Living section design briefs
+
+Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.

@@ -1103,7 +1103,7 @@
     },
     {
       "path": "README.md",
-      "candidateSha256": "d8ea609c34e7a634d6bc8b8c0cd94c49a77ef132fed3cc35def7488a29ee0d81"
+      "candidateSha256": "679c3b624cdd27b6d7a7c9109df1bf14488ce8a69669da16d05f6db6956ae80a"
     },
     {
       "path": "config.example.json",
@@ -1167,7 +1167,59 @@
     },
     {
       "path": "CLAUDE-DEVELOPMENT.md",
-      "candidateSha256": "a6db59e2b288b1fbd904320494c62bb54f6464d265e90c862fe1824665bc4b69"
+      "candidateSha256": "36145e604f2c6cc006be8b5a4bee33e8c34b6896a4f54ec04eca07e014aff79e"
+    },
+    {
+      "path": "docs/sections/01-material.md",
+      "candidateSha256": "77573430074ac9c844d21a7d554970be78e0d1d4d4d9df58d2f3960178a8f6f6"
+    },
+    {
+      "path": "docs/sections/02-transcripts.md",
+      "candidateSha256": "19a79e368705a91eee2acadcbc173e837f52dc04a27bb6100caa3d488ac39a04"
+    },
+    {
+      "path": "docs/sections/03-research.md",
+      "candidateSha256": "f0d41caf1426925db132765db912cb60472f516f6df33f42b0c6f301326bc9d5"
+    },
+    {
+      "path": "docs/sections/04-direction.md",
+      "candidateSha256": "318d663114b97ad747967f77eb5e37e8ae57ebb736c3e756b03b524ccc230488"
+    },
+    {
+      "path": "docs/sections/05-draft.md",
+      "candidateSha256": "7db66c1651903441c99a6ddc897b5470f5e0bf6c87ad7fefb93ed14e701a906d"
+    },
+    {
+      "path": "docs/sections/06-read-refine.md",
+      "candidateSha256": "b4d9385dddcdc80d99395fae284b11dbdb7a3c0614c8ca263fe17a8ed46357b1"
+    },
+    {
+      "path": "docs/sections/07-check-changes.md",
+      "candidateSha256": "2c7f17f5f43630864e0915ece4eb059e28946ccea9da27bc17b35fda107af019"
+    },
+    {
+      "path": "docs/sections/08-media.md",
+      "candidateSha256": "6934b3fdf35aef4f6a8d594bcb668ac16a1d8790a82816418ce9be3cb742c166"
+    },
+    {
+      "path": "docs/sections/09-arrange.md",
+      "candidateSha256": "3089eca44b73091d068e02ae0d871c781e81dc3d8a504734342fb946ad3a1b8f"
+    },
+    {
+      "path": "docs/sections/10-review-release.md",
+      "candidateSha256": "5ae00524d89383f3fbc541f65084155c50e540b8c5b25341ee901d930bcc4e07"
+    },
+    {
+      "path": "docs/sections/11-share-celebrate.md",
+      "candidateSha256": "6cae60b2e44532f2e6abdbf062e41549aa89667a4d152791d16a80962bbbb91e"
+    },
+    {
+      "path": "docs/sections/12-published-complete.md",
+      "candidateSha256": "6270ab24f6775aa91f5bd6e53af95accb84168f0e393cc1d57edd1846076354f"
+    },
+    {
+      "path": "docs/sections/README.md",
+      "candidateSha256": "f2180b81152c064acadc11acc98f6561aeb36273414d0e2c12275c3ede437a9a"
     }
   ],
   "dependencyRepair": {
