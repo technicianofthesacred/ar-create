@@ -2,6 +2,12 @@
 
 Read [CLAUDE-DEVELOPMENT.md](CLAUDE-DEVELOPMENT.md) for the source map, synthetic setup and preserved behavior before editing the application. Read the relevant [living section brief](docs/sections/README.md) before changing a section's intent or interaction; requirements are not implementation proof.
 
+## Human-facing work
+
+Read [docs/HUMAN-EXPERIENCE.md](docs/HUMAN-EXPERIENCE.md) before writing interface copy, presenting a result or organizing user-facing chats. Adrian returns without the history: use plain purpose/action names, show the actual preview, say what can be tried and what remains unfinished. Keep visual feedback in its working chat and send only adopted-decision/result changes directly to Delivery; Start Here is not a required relay. Technical instructions remain available to builders rather than becoming the human entry point.
+
+## Development boundaries
+
 - This is the canonical code repository. i64 OS remains the host/launcher integration; its previous package is preserved until a verified transition.
 - Keep private content/configuration outside Git and outside this checkout. Use synthetic fixtures for development. Never import live user-data, recordings, transcripts, manuscripts, photographs, source captures, saved request/decision histories, credentials, backups or private reference samples/provenance.
 - Preserve the current Document Study interface, stage-specific tools, sans-serif Draft, project/part identities, direct edits, revision guards and exact saved Undo. No editor-engine replacement or competing manuscript authority.

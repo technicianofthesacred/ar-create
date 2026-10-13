@@ -1263,11 +1263,19 @@
     },
     {
       "path": "AGENTS.md",
-      "candidateSha256": "a91bc551efab7099a879765280451e282ff9111cb097191961b87e397002a60f"
+      "candidateSha256": "5c8d02ba54df853c22c44615226621c749c9a97cd6aa722ae1a340855f1d127f"
     },
     {
       "path": "docs/WORKSPACE.md",
       "candidateSha256": "af4582c70660438acf004fcd5b6c405fedbcaf6bb50e2139d6b6011054882c6d"
+    },
+    {
+      "path": "CLAUDE.md",
+      "candidateSha256": "72e1f3b08a3d3db733cbd586751b094610f1af48577e24b60425131c0eb2cf0d"
+    },
+    {
+      "path": "docs/HUMAN-EXPERIENCE.md",
+      "candidateSha256": "fcb09bafb2c4953c86e348c1155894f9b33ba6efcd7b873fb6d4519ec651fd5a"
     }
   ],
   "dependencyRepair": {
