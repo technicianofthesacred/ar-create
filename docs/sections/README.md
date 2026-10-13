@@ -28,7 +28,7 @@ Working labels are proposed navigation wording. Preserve original twelve checkpo
 ## Shared design and data rules
 
 - Compact sans-serif, persistent project/part/output orientation, continuous editing, purposeful controls beside their content. Avoid repeated headers and horizontal page scrolling. Keep secondary paths/provenance under disclosure. AI discussion belongs beside the relevant passage, source or media item.
-- Shared origins, independently editable outputs. Article, carousel, print, WeChat article and Twitter/X post are requested expressions of a project, not five separate source imports. Never assume all five are required.
+- Shared origins, independently editable outputs. Article, carousel, script, print, WeChat article and Twitter/X post are requested expressions of a project, not separate source imports. Never assume every format is required. Source changes flag affected outputs for human review without overwriting their independently edited text; applying a resulting text change requires explicit human acceptance.
 - Preserve human experience attribution, exact phrases, corrections, chosen direction, rejection reasons, direct edits and later changes of mind. Scope each to project, part or output. Stale downstream work is identified, not silently regenerated.
 - Original files retain their identity. Transcript versions, translations, media derivatives, compositions and published editions link to their origin. Device paths are locations, not identities. Local/cloud availability is visible without dominating the workspace.
 - Material ingestion owns attachment identity. Media enriches those same assets. Arrange owns occurrences/placement and per-occurrence crop/trim; Media reads those occurrences back. Never maintain a second independent 'used' checkbox or duplicate media library.
@@ -41,6 +41,8 @@ Working labels are proposed navigation wording. Preserve original twelve checkpo
 For the scoped implementation, show actual content and useful actions; preserve save/switch/reload/Undo, original files and exact scope; distinguish earlier/read-only/current; verify empty, busy, failed, stale and unavailable states; inspect actual light/dark/narrow screens. State what's implemented, verified and missing in the delivery board, referencing proof rather than repeating whole audits.
 
 ## Decision history
+
+- 13 October: Confirmed independent article, carousel and script editing with shared sources and decisions. Changed source material must flag affected outputs for human review without overwriting existing edits, preserving editorial control. This records intended behavior, not implementation proof; detailed cross-output decision inheritance remains under discussion.
 
 - 13 October: Adrian requests a living guiding document for every section, usable as the design brief and continuously updated through conversation.
 - 13 October: Material explicitly includes active ingestion, discovery, grouping and processing; Source supports multiple transcripts; Photos broadens to photos/videos; usage and ordering flow back from Arrange; crop/adjustment is part of work; follow-up is invitation/celebration and a request for comfort/accuracy feedback; translations and platform exports are first-class expressions; completed view lists all requested outputs.

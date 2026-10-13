@@ -17,3 +17,11 @@ Immutable raw source, versioned corrected source, speaker/segment links, origina
 ## Acceptance
 
 Switch between synthetic sessions without losing edits or place; compare original/correction, save/reload and identify affected downstream work. Imported transcripts work even with no audio. Source correction is distinct from factual research and narrative rewriting.
+
+## Ingestion-first clarification — 13 October
+
+This section prepares and organizes conversations that survived the initial Material review. Bringing a conversation in does not mean it must be kept, turned into a story or preserved as a reference. The assistant does preparation and proposes classifications/groupings; Adrian reviews meaningful judgments. The working units are complete conversations and visit groups. A whole conversation/group can be attached to a project in one action. Source identity, versions and later citations are maintained by the system; manually selecting exact passages is not a required ingestion workflow. The earlier separate transcript-manager candidate was rejected for adding that complexity and is not approved for activation.
+
+## Quick-decision review — owner direction, 13 October
+
+Use compact one-column review cards grouped by recommendation: Worth keeping, Needs your judgment and Removal candidates. The default card shows the subject, a short description, one short decision reason and Keep/Remove/Read or Expand actions. Full reasons, dates, media days, companion links and provenance stay behind Why. Short chats expand in place; no passage-selection tasks return. Limit the initial visible batch to reduce scanning. Clearly distinguish earlier recommendations from human decisions and from recorded analysis checks; never infer full-read or product-check completion from an imported source or a generic confidence label. Preserve full explanations and complete dialogue. This is the isolated8927 candidate, not shared activation.

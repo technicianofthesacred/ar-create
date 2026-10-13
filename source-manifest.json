@@ -1195,11 +1195,11 @@
     },
     {
       "path": "docs/sections/01-material.md",
-      "candidateSha256": "77573430074ac9c844d21a7d554970be78e0d1d4d4d9df58d2f3960178a8f6f6"
+      "candidateSha256": "637d42a67df4f9f4fd81b858af23f81983a7cf8f7568387b92d723d350e61f18"
     },
     {
       "path": "docs/sections/02-transcripts.md",
-      "candidateSha256": "19a79e368705a91eee2acadcbc173e837f52dc04a27bb6100caa3d488ac39a04"
+      "candidateSha256": "4889ae63a4ec2860884b6a6f63a270c557ffb28a59e99936bcbf7ebeeb7792fe"
     },
     {
       "path": "docs/sections/03-research.md",
@@ -1207,7 +1207,7 @@
     },
     {
       "path": "docs/sections/04-direction.md",
-      "candidateSha256": "318d663114b97ad747967f77eb5e37e8ae57ebb736c3e756b03b524ccc230488"
+      "candidateSha256": "404d85f0efe0e7f646678fd28c7ccbb043c65959689c7f9c9cc8b927dfebcf86"
     },
     {
       "path": "docs/sections/05-draft.md",
@@ -1223,11 +1223,11 @@
     },
     {
       "path": "docs/sections/08-media.md",
-      "candidateSha256": "6934b3fdf35aef4f6a8d594bcb668ac16a1d8790a82816418ce9be3cb742c166"
+      "candidateSha256": "0d00d8711119df43ec7821e377cecf6ac390864411c2106bc6ea3ef4ad6acb64"
     },
     {
       "path": "docs/sections/09-arrange.md",
-      "candidateSha256": "3089eca44b73091d068e02ae0d871c781e81dc3d8a504734342fb946ad3a1b8f"
+      "candidateSha256": "5f06e2f0235bb6978d8fe38784e8371131619cd1c6b55ab096342da111a438e2"
     },
     {
       "path": "docs/sections/10-review-release.md",
@@ -1239,11 +1239,11 @@
     },
     {
       "path": "docs/sections/12-published-complete.md",
-      "candidateSha256": "6270ab24f6775aa91f5bd6e53af95accb84168f0e393cc1d57edd1846076354f"
+      "candidateSha256": "edbcbcd50f264aa5ae25ba0b5f2763b495c405f4fb931a6c409037a498d9d820"
     },
     {
       "path": "docs/sections/README.md",
-      "candidateSha256": "f2180b81152c064acadc11acc98f6561aeb36273414d0e2c12275c3ede437a9a"
+      "candidateSha256": "4fcc78c8c48cf781f3c07a18ae752d499c8515a1da7a7ae9e7662fc46750059e"
     },
     {
       "path": "docs/REPOSITORY-PROVENANCE.md",
