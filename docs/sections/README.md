@@ -2,6 +2,8 @@
 
 Updated 13 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
 
+Read [the product overview](../PRODUCT.md) for the shared purpose and S01–S12 / C01–C07 requirement map. This directory defines detailed intent; Delivery’s private checklist records current implementation and verification. Each assignment references both its brief and current checklist row.
+
 ## Working agreement
 
 This committed directory is the canonical developer copy of the section briefs. The manager keeps a working draft for discussion; stable intent changes are reconciled here. Each section has one authoritative developer brief here. When Adrian explains a purpose, update the relevant brief and its dated decision note; update connected briefs only where behavior crosses the boundary. Distinguish agreed intent from proposed interaction and verified implementation. Preserve a superseded decision in the change history when its meaning changes. Do not turn each conversation into a competing plan.
@@ -24,6 +26,10 @@ Design and implementation handoffs cite the brief(s), name the bounded change, a
 | 12 | [Published & complete](12-published-complete.md) | Where are all the expressions of this work, and what remains? |
 
 Working labels are proposed navigation wording. Preserve original twelve checkpoint IDs and historical meanings. Sections can be modes of one continuous workspace: Material/Transcript and Arrange/Preview need not be separate shells. Collection and media remain accessible at any time. Do not create unnecessary gates for text-only projects or outputs with no follow-up recipients.
+
+## Preserve what the author has already developed
+
+Use the existing Magazine process/commands/prompts and AR editing/recovery/portrait-template capabilities as the starting point. Before replacing a behavior, cite its existing owner/source and the concrete gap. Existing agent/file work is rendered in the interface without repeated imports or answers. Interpret workflow order as readiness for informed creative help, not a mandatory linear path or recording-first gate. New major design directions receive focused alternatives and actual visual review; chosen details are not wholesale product acceptance.
 
 ## Shared design and data rules
 

@@ -1127,7 +1127,7 @@
     },
     {
       "path": "README.md",
-      "candidateSha256": "9235d7d88b3ee8ad8c5fcf1e13ceb4c05319c32ab431a9b9d32a8cae68225ee7"
+      "candidateSha256": "b2c98fc8b137d770318dd79282d08f0493eb977fb47b20f3090eccd34e4bb6ce"
     },
     {
       "path": "config.example.json",
@@ -1191,31 +1191,31 @@
     },
     {
       "path": "CLAUDE-DEVELOPMENT.md",
-      "candidateSha256": "b5641a9c07094cba775cc8779b77f69f7cbec3eb204cce66c610cf2079f0c979"
+      "candidateSha256": "d1de152e262fe7922f812f573f9f358c0bea641b6868ff3f79f9425fecb5bb9a"
     },
     {
       "path": "docs/sections/01-material.md",
-      "candidateSha256": "637d42a67df4f9f4fd81b858af23f81983a7cf8f7568387b92d723d350e61f18"
+      "candidateSha256": "4b3503c49f37b8a1197113ee095563f3b1e0b937139a0b591953337c167cc7a0"
     },
     {
       "path": "docs/sections/02-transcripts.md",
-      "candidateSha256": "4889ae63a4ec2860884b6a6f63a270c557ffb28a59e99936bcbf7ebeeb7792fe"
+      "candidateSha256": "db5d2d1bcd386ae639b2c3e0f5a3d7b2861411a738c4e6400df220c412be6b79"
     },
     {
       "path": "docs/sections/03-research.md",
-      "candidateSha256": "f0d41caf1426925db132765db912cb60472f516f6df33f42b0c6f301326bc9d5"
+      "candidateSha256": "95b2664517187754eea2c2db2b7dda04d5067b4eca26d9007a58f4cd14e08348"
     },
     {
       "path": "docs/sections/04-direction.md",
-      "candidateSha256": "404d85f0efe0e7f646678fd28c7ccbb043c65959689c7f9c9cc8b927dfebcf86"
+      "candidateSha256": "b357a2448c3a8b36d263f68d91644b1cccc699b542f1185f5d4685df285652a5"
     },
     {
       "path": "docs/sections/05-draft.md",
-      "candidateSha256": "7db66c1651903441c99a6ddc897b5470f5e0bf6c87ad7fefb93ed14e701a906d"
+      "candidateSha256": "30d4e031800b9626b9e9c34442011380aae8f7331ef547f0d32b97428f6eeb5f"
     },
     {
       "path": "docs/sections/06-read-refine.md",
-      "candidateSha256": "b4d9385dddcdc80d99395fae284b11dbdb7a3c0614c8ca263fe17a8ed46357b1"
+      "candidateSha256": "dcc4f609a8fba33313f075b2f3e44668500dc0f1a4677602e7efe2315d7bd5e5"
     },
     {
       "path": "docs/sections/07-check-changes.md",
@@ -1223,11 +1223,11 @@
     },
     {
       "path": "docs/sections/08-media.md",
-      "candidateSha256": "0d00d8711119df43ec7821e377cecf6ac390864411c2106bc6ea3ef4ad6acb64"
+      "candidateSha256": "f88ed514fd6a3620f7952ac70051676f9fbd88a69a4b25430efd6a4dc059109c"
     },
     {
       "path": "docs/sections/09-arrange.md",
-      "candidateSha256": "5f06e2f0235bb6978d8fe38784e8371131619cd1c6b55ab096342da111a438e2"
+      "candidateSha256": "d499939a86d00dafd052bb6af79eb333de4316072b847c14550bfd210c6524cc"
     },
     {
       "path": "docs/sections/10-review-release.md",
@@ -1239,11 +1239,11 @@
     },
     {
       "path": "docs/sections/12-published-complete.md",
-      "candidateSha256": "edbcbcd50f264aa5ae25ba0b5f2763b495c405f4fb931a6c409037a498d9d820"
+      "candidateSha256": "0da6de6d28cc2fed53dbcb64a105fb6ce24a3690828aeaaaf719b398d1188bb4"
     },
     {
       "path": "docs/sections/README.md",
-      "candidateSha256": "4fcc78c8c48cf781f3c07a18ae752d499c8515a1da7a7ae9e7662fc46750059e"
+      "candidateSha256": "3434f06356ae8ccb50c2841f60802c2228e3ab3a14b71080686ee5ceeb3c4a02"
     },
     {
       "path": "docs/REPOSITORY-PROVENANCE.md",
@@ -1263,19 +1263,23 @@
     },
     {
       "path": "AGENTS.md",
-      "candidateSha256": "5c8d02ba54df853c22c44615226621c749c9a97cd6aa722ae1a340855f1d127f"
+      "candidateSha256": "85567c8dbcdaf29fb2ddfca9f9f711748f5dbd4534bbc96c0db92b964a6dcd6e"
     },
     {
       "path": "docs/WORKSPACE.md",
-      "candidateSha256": "af4582c70660438acf004fcd5b6c405fedbcaf6bb50e2139d6b6011054882c6d"
+      "candidateSha256": "2fc80a75d118b235af94445bd0cd95548f972a16cdc1f17309a7fe0c7a667c72"
     },
     {
       "path": "CLAUDE.md",
-      "candidateSha256": "72e1f3b08a3d3db733cbd586751b094610f1af48577e24b60425131c0eb2cf0d"
+      "candidateSha256": "7c32d4d9f294d12d0fef48a214827cfff7155c1816479710a0b4563350203b54"
     },
     {
       "path": "docs/HUMAN-EXPERIENCE.md",
-      "candidateSha256": "fcb09bafb2c4953c86e348c1155894f9b33ba6efcd7b873fb6d4519ec651fd5a"
+      "candidateSha256": "b8cb7daccf9740c6151d5240c547b1eb5717332bccab9602f7fab8f9a24e1ecb"
+    },
+    {
+      "path": "docs/PRODUCT.md",
+      "candidateSha256": "f62b677e63c485f8c2bb195dd6b4ce8e5c0c65957c6cb045b190e53951627e78"
     }
   ],
   "dependencyRepair": {

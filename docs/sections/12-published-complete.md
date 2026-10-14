@@ -16,6 +16,8 @@ Use a disciplined grid with stable column positions, aligned text and action sta
 
 The reviewed concept is approved only with these corrections: remove the redundant next-milestone bar and the illustrative-preview footer from the product UI. Do not copy the mockup's inconsistent status presentation, uneven action alignment or excess vertical space. The mockup is a structural reference, not pixel-level acceptance. Existing contextual editing tools and human-direction scope remain intact.
 
+Every displayed output must have a working link that opens its actual matching content: the current draft, whole carousel, script, export or delivered edition as appropriate. Make the output identity itself clickable, alongside its meaningful next action. Do not present disabled example rows or dead-end placeholders as a usable output overview. A requested output with no content yet must be clearly identified as not created and offer an honest supported creation action separately from existing outputs; never imply there is content to view. Read-only content can be valid, but it must actually open.
+
 ## Completion and history
 
 An output is finished when it reaches its intended destination, such as a published article or an approved script export for filming, with any agreed corrections or follow-up resolved. Completion is tracked independently per output and against its actual delivered edition. Paused outputs remain paused; unrequested formats create no obligations.
@@ -24,11 +26,15 @@ Published date, export date and completion date are different. Save receipts fro
 
 ## Acceptance
 
+Before presenting the overview for user review, click every displayed output link and verify that the correct project, output and edition visibly open with actual content. Check next actions as well as output-title links. Disabled example-only demonstrations do not meet this acceptance condition.
+
 Verify the overview in the actual application on wide and narrow screens: consistent row/column alignment and status vocabulary, compact vertical use, no horizontal overflow, no milestone bar or preview footer, and each next action opens the matching output and checkpoint. Preserve project/output switching, direct edits, save/reload and Undo in the existing editor. Use synthetic content; report candidate proof separately from installed behavior.
 
 Show a project with one live article, one export and one unfinished requested output; every link opens the correct edition and status survives restart. A synthetic previously published output must retain its publication and unsent-feedback distinction. Historical records can lack exact dates; display that honestly. This register is private unless a separate publishing action makes an output public.
 
 ## Decision history
+
+- 13 October: Required every listed output to be clickable and viewable. Rejected the installed read-only example rows with disabled actions as insufficient for review; the next presentation must open the actual matching content.
 
 - 13 October: Approved integration of the output overview into the existing app, preserving editor and project navigation. Require a slim, consistently aligned grid and uniform status presentation; reject disorganized action start points, the next-milestone bar and illustrative-preview footer. This resolves the earlier presentation-exploration note below; actual integration and screen verification remain required.
 

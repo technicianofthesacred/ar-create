@@ -1,5 +1,7 @@
 # Develop AR Create in Claude
 
+Read [the product requirements](docs/PRODUCT.md), the relevant section brief and the current Delivery assignment before editing. Name the requirement IDs and observable finish criterion; report candidate, installed and accepted behavior separately.
+
 ## Start with this checkout
 
 Canonical repository: `technicianofthesacred/ar-create`, branch `main`. AR Create now has its own development home; i64 OS retains the host/launcher integration. The previous code-only package remains preserved in i64 until a separately verified transition. Select this private repository and branch in Claude's GitHub integration, or use your authorized local checkout. This document provides code/design context; it does not configure a provider account or share real content.

@@ -24,6 +24,12 @@ Adrian groups sessions, combines selected resources, adds why they matter, assig
 
 Durable originals, attachment/relationship records, processing jobs and scoped human context. Section2 opens the exact recording/transcript chain; Research receives an explicit selected set, not every file in the folder. Late additions identify possibly affected work without silently rewriting it. Dragging into a group changes membership, not the physical original's location unless that move is explicit.
 
+## Effort and folder behavior
+
+The default view should explain what is present and what can happen next through the actual collection and actions. Provide friendly drag/drop from the computer and supported web inputs; show new material placed in an existing working folder through the same connections. Preserve folder/source identity rather than asking the author to copy items into a second library. A project browser communicates projects and progress; a file tree alone does not establish the purpose. AI prepares quote/source suggestions; manually extracting quotations is not an intake chore.
+
 ## Acceptance
 
 A synthetic multi-session project visibly groups multiple sessions with opening/closing context; add another resource, process it, organize it, select a subset and resume after switching stories. Interrupted imports, duplicates, unsupported types and offline originals have useful recovery. No mandatory reimport of existing material.
+
+14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.

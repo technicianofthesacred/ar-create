@@ -1,5 +1,7 @@
 # AR Create development
 
+Read [docs/PRODUCT.md](docs/PRODUCT.md) first for the product purpose, pillars and requirements map. Before each bounded task, read its section brief and Delivery’s latest checklist row/current-state; include the requirement IDs and finish criterion in the handoff. Accepted direction updates the affected brief and checklist; cross-section intent also updates PRODUCT.md. Requirements are not completion proof.
+
 Read [CLAUDE-DEVELOPMENT.md](CLAUDE-DEVELOPMENT.md) for the source map, synthetic setup and preserved behavior before editing the application. Read the relevant [living section brief](docs/sections/README.md) before changing a section's intent or interaction; requirements are not implementation proof.
 
 ## Human-facing work

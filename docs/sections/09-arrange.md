@@ -6,6 +6,10 @@ Intent: compose words and real media into the selected output, with an overview 
 
 Article: continuous document with images between whole thoughts; drag, swap, resize within existing layouts, edit captions and choose a crop/focal point. Carousel: full portrait sequence visible and editable, existing approved templates, reorder slides and edit words/media inline. Video-containing formats show supported playback/placement; unsupported targets explain export behavior rather than silently dropping video.
 
+## Preserve the established template work
+
+Use the maintained, previously developed portrait carousel/Instagram template catalog and its photo behavior, including work created through another assistant. Do not substitute newly invented cards or horizontal formats for approved portrait outputs. The entire sequence is visible for direct adjustment; review/edit/reorder must not require opening slides one by one. Distinguish a supported requested format from an aspirational video/script capability.
+
 ## Human and AI work
 
 AI proposes placements using actual content, preserving quote/thought boundaries. Adrian moves, substitutes or removes occurrences and adjusts per-output crop/rotation or supported video trim/poster. One asset may have different crops in article, print and carousel. Changes never rewrite the original file. Direct text edits remain the same manuscript authority and invalidate relevant checks.
@@ -19,3 +23,5 @@ Each placement references an asset, output, anchor/position, ordering and transf
 Consume the same selected footage and saved shot ranges from Media. An article may use a supported video placement or a deliberately chosen still; a carousel or short film uses its own arrangement/crop, while a script or shot list links scenes to the relevant source footage. Keep each output’s wording, placement and approval independent. Do not silently assign footage to an unrelated story or imply its filmed subject/location proves a written claim.
 
 Begin with the smallest supported select/play/place/save/reopen journey. Reuse the existing templates and output tools. Preserve the original, allow a proposed range to be reviewed in context and derive where-used/order from actual placements. Unsupported video export targets must be clearly identified before export; showing a poster is not proof that video export works. Whole-film timeline editing and automatic cross-tool synchronization require separately bounded work.
+
+14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.

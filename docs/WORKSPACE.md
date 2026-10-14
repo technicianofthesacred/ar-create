@@ -5,6 +5,7 @@ This standalone private repository is the canonical code/design container. Priva
 | Area | Canonical code-only location | Use |
 |---|---|---|
 | Application source | `public/document-study/`, `runtime/`, `mcp/study/` | Existing Document Study UI, file/workflow services and fixed-identity assistant adapter |
+| Product purpose and requirements | [What we are building](PRODUCT.md) | Pillars, shared acceptance, twelve-section map and direction-to-checklist update contract |
 | Living intent/design | [Section brief index](sections/README.md) | Twelve authoritative developer briefs, updated from Product Direction; not completion claims |
 | Developer setup/source map | [Claude guide](../CLAUDE-DEVELOPMENT.md) | Root-local commands, preserved behavior and focused checks |
 | Synthetic examples | `fixtures/synthetic-study-data.js`, `scripts/demo.mjs`, `tests/` | Invented projects and temporary test storage; no actual interviews/media |
@@ -22,7 +23,7 @@ Media/template experiments, source restoration, private playback/ASR tooling and
 
 ## External management and proof
 
-Product Direction owns human intent, section briefs and visual acceptance. Delivery Manager coordinates execution and owner receipts. The existing integrator alone owns live shared wiring and activation. Packaging owns code-only repository delivery.
+Product Direction owns human intent, section briefs and visual acceptance. Delivery Manager coordinates execution and owner receipts. The existing integrator alone owns live shared wiring and activation. Delivery also owns AI connection and code-only repository/release preparation, assigning bounded background helpers. Prior Internal chats are retained history, not routine owners.
 
 External manager working drafts, installed-service handoffs, private-data preservation receipts and native proof/screenshots remain outside Git. The local repository-separation receipt names their current locations for the managers; it is deliberately not committed because private operational/proof directories are not application source. Use the manager's latest receipt rather than inventing an external path or copying an archive.
 
