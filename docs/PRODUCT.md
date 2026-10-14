@@ -21,7 +21,26 @@ Projects can begin with a recording, supplied transcript, typed idea, photo, lin
 - **Make the page potent, not fragmented:** reading and editing should feel like an enhanced text document. Keep a whole passage or carousel sequence available, with relevant content scrolling naturally; avoid repeated expansion clicks, giant inline alternatives and excessive headings. Paragraphs, sections and media can move without losing associated decisions or invalidating context silently.
 - **Make guidance actionable:** voice, perspective, recipe, sources and versions should show their purpose, current choice, applicable scope and effect on the actual piece. Offer editable examples/contextual suggestions and recovery, not unexplained buttons or repeated setup forms. The author can open and edit the existing human-readable voice/expression sheet that AI uses, with one shared source rather than a separate profile. Reuse existing guidance and distinguish a pending suggestion from a change already applied.
 - **Reward useful effort through clarity:** the project browser shows one concise project title and its current step, supports new projects and filing, and follows the selected light/dark theme. Resume the author's own work; don't substitute a generic file tree. Show how a contribution changed the current work and what meaningful action is next, without invented progress or gamification.
-- **Prove the direction visually:** before a new major section direction is implemented, offer at least two focused options for the unresolved design choice. Existing chosen aspects remain respected; do not repeatedly reopen them. The current document-first foundation is an evolving direction, not blanket acceptance of every surface. Use targeted Impeccable critique when useful; verify actual screen interactions as well as file behavior.
+- **Prove the direction visually:** before implementing a consequential unresolved major-section direction, show focused alternatives for that choice. Alternatives are not a compulsory exercise for every section or each delivery. Existing chosen aspects remain respected; do not repeatedly reopen them. The current document-first foundation is an evolving direction, not blanket acceptance of every surface. Use targeted Impeccable critique when useful; verify actual screen interactions as well as file behavior.
+
+## Accepted delivery priorities — 14 October 2026
+
+The author adopted the critical recommendations: additions must make the actual conversation-to-output journey clearer, faster and more trustworthy. Treat them as priorities and constraints, not an obligation to build every possible control or make every checkpoint compulsory.
+
+1. Finish usable work from material understanding and chosen direction through reliable direct editing, media arrangement, actual output review and export. Prioritize creative decisions carrying forward, visible agent work, preserved edits and working output links.
+2. Reuse the original Magazine editorial process and approved AR capabilities while improving demonstrated interaction friction. Preserve the author's editorial decisions; legacy controls, awkward forms and conflicting storage are not automatically requirements to retain.
+3. Add refinements only where they earn their effort: concise voice guidance, contextual edit/move controls, decision-ready transcript cards, readable bilingual sources and source-linked footage selection. Build on the maintained tools and scope each delivery to a testable journey.
+4. Keep private online/offline synchronization as a separate bounded workstream. First prove reliable text access, revision conflict handling and recovery; expand device/media coverage afterward. It must not become a dependency that blocks local content production. Private hosting, credentials, transmission and external activation still need their actual authority.
+
+### Guardrails from the critical review
+
+- Incoming agent/file changes show origin, revision and what changed. Review conflicts with the current draft; never silently overwrite human work or present historical analysis as newly verified evidence.
+- Writing remains dominant. Reveal move/structural controls when useful; keep highlights and margin assistance selective, with discussion attached to its actual context. More controls are not automatically a better work surface.
+- Keep reusable voice guidance concise and distinguish general preferences from this piece's direction. Changes identify affected pending assistance; existing accepted output wording does not silently change or become uniform across every story.
+- Summary cards speed ordinary sorting, but a summary alone is insufficient grounds for destructive deletion. Provide easy access to supporting dialogue and the full conversation; preserve the scope and explicit human decision for permanent removal.
+- Bilingual turn labels follow the appropriate imported source convention and never infer real personal identity from language alone. Keep recording timing available for checking without interrupting the default read.
+- Footage suggestions preserve useful scenes and expose uncertain movement for review. Story needs guide final selection; original recordings remain intact. Existing footage review does not grant automatic trimming of all clips.
+- Design alternatives are for consequential unresolved choices. The earlier request for alternatives for every section does not require recurring design exercises after a direction is chosen. Respect accepted aspects and refine the working view with actual feedback.
 
 ### Intended private access
 
@@ -114,3 +133,5 @@ Review the selected output as a whole, open every listed result, switch projects
 - 14 October 2026: Connected the existing twelve briefs and shared creative requirements into one product entry point. Delivery retains the existing execution/proof checklist; requirements are not completion claims. No new product behavior is implemented by this documentation.
 
 - 14 October 2026: Reconciled direct human feedback with the requirements, strengthening workflow reuse, outside-agent visibility, efficient author-led editing, actionable guidance, design review, project pickup and the intended private/offline topology. Exact conversation comparisons remain private; no new capability or implementation approval is inferred.
+
+- 14 October 2026: The author adopted the critical recommendations and delivery priorities. Narrowed repetitive design-option requirements, made data/edit conflict and deletion-review safeguards explicit, and separated portable synchronization from local content-production delivery. Existing requirements remain; not every enhancement is equally urgent.

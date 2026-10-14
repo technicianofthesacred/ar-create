@@ -28,6 +28,10 @@ Durable originals, attachment/relationship records, processing jobs and scoped h
 
 The default view should explain what is present and what can happen next through the actual collection and actions. Provide friendly drag/drop from the computer and supported web inputs; show new material placed in an existing working folder through the same connections. Preserve folder/source identity rather than asking the author to copy items into a second library. A project browser communicates projects and progress; a file tree alone does not establish the purpose. AI prepares quote/source suggestions; manually extracting quotations is not an intake chore.
 
+## Decision safety
+
+Summary-based recommendations support fast sorting; they do not establish that every important passage has been inspected. Make the supporting passage and full conversation easy to reach. Permanent review-library deletion requires the explicit scoped human choice and enough evidence to review the decision; never perform it solely because a summary sounded unimportant. Reversible hiding/removal remains distinct.
+
 ## Acceptance
 
 A synthetic multi-session project visibly groups multiple sessions with opening/closing context; add another resource, process it, organize it, select a subset and resume after switching stories. Interrupted imports, duplicates, unsupported types and offline originals have useful recovery. No mandatory reimport of existing material.

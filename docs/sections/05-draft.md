@@ -18,6 +18,10 @@ The existing voice/expression sheet must be easy to open from the writing surfac
 
 Follow Magazine: chosen plan/research/context first; show brief first-person opening alternatives and capture Adrian's decision before a full new draft. Preserve his opening/closing and exact phrases. Selection-based assistance considers surrounding paragraphs; proposals remain separate until accepted. Quoted speech cannot be silently rewritten as connecting narration. Direct edits become current authority.
 
+## Keep editing dominant
+
+Keep reusable voice guidance concise, with general preferences distinct from this piece’s direction. Do not overfit all stories to a global profile. Reveal move controls and structural actions when useful; excessive handles, findings or suggestions should not compete with the text. Incoming outside-agent/file revisions show what changed and offer conflict review instead of overwriting the current draft. Existing accepted words remain authoritative until the author chooses a change.
+
 ## Result and acceptance
 
 One durable working manuscript revision with source/decision references, recoverable drafts and scoped proposal history. Save, switch, return, reload and Undo preserve words. Stale or context-invalid proposals refuse application. Existing real documents resume without a new setup ceremony. Live AI connection and arbitrary formatting support must be reported honestly.

@@ -1195,7 +1195,7 @@
     },
     {
       "path": "docs/sections/01-material.md",
-      "candidateSha256": "4b3503c49f37b8a1197113ee095563f3b1e0b937139a0b591953337c167cc7a0"
+      "candidateSha256": "07c75b5877832def1b11a2c5b2233c7f0ea6d1fe686d5e477babaa6a63c338ec"
     },
     {
       "path": "docs/sections/02-transcripts.md",
@@ -1211,7 +1211,7 @@
     },
     {
       "path": "docs/sections/05-draft.md",
-      "candidateSha256": "30d4e031800b9626b9e9c34442011380aae8f7331ef547f0d32b97428f6eeb5f"
+      "candidateSha256": "f78427f702e28f69f922efe3cc8f5d385742adf8176de7b1c3219d1d3bce6efd"
     },
     {
       "path": "docs/sections/06-read-refine.md",
@@ -1223,7 +1223,7 @@
     },
     {
       "path": "docs/sections/08-media.md",
-      "candidateSha256": "f88ed514fd6a3620f7952ac70051676f9fbd88a69a4b25430efd6a4dc059109c"
+      "candidateSha256": "3ec09c5c1b1ef6bc1c68547b600781a7b07376c702d89e5c53a90f35cd3c5896"
     },
     {
       "path": "docs/sections/09-arrange.md",
@@ -1275,11 +1275,11 @@
     },
     {
       "path": "docs/HUMAN-EXPERIENCE.md",
-      "candidateSha256": "b8cb7daccf9740c6151d5240c547b1eb5717332bccab9602f7fab8f9a24e1ecb"
+      "candidateSha256": "7646f452f410675df83f2958e3bdb54565f93409947b698b641380d6d2fc4d9d"
     },
     {
       "path": "docs/PRODUCT.md",
-      "candidateSha256": "f62b677e63c485f8c2bb195dd6b4ce8e5c0c65957c6cb045b190e53951627e78"
+      "candidateSha256": "488d75cf55eb7fdc8c0fee04ac959da1cf96794c09306c5024fb954f1f3562f9"
     }
   ],
   "dependencyRepair": {

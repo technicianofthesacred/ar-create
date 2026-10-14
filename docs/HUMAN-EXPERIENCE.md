@@ -48,6 +48,10 @@ A chat title alone is not a content library. If the person is invited to interac
 
 The person accepts scrolling through useful writing or research. Remove needless top space and repeated notices rather than compressing readable content or hiding it in many boxes. Do not make the author open every quote, slide or transcript to understand the work. Human-first purpose/actions, supported workflow order and actual visible results matter more than explaining the interface in chat. Make guidance controls contextual and meaningful, and show agent-created work without making the person repeat the same inputs.
 
+## Let additions earn their place
+
+Evaluate a refinement by whether it makes the author’s actual journey clearer, faster and more trustworthy. Preserve chosen editorial behavior without automatically copying old interface friction. Focused design alternatives resolve consequential open choices; they are not a recurring prerequisite once a direction is chosen. Reliable direct editing, visible creative decisions and actual reachable outputs take priority over adding controls or expanding synchronization. Ordinary use must not become a tour of compulsory workflow steps.
+
 ## Check changes through use
 
 Before a changed screen is called usable, open the actual view and ask: Can a returning person tell what this is, what they are looking at, what they can do, and what is still unfinished? Verify the affected action, not just labels, along with required save/switch/recovery behavior. For visual changes inspect the rendered applicable themes and widths; do not ask the person to mentally render code.

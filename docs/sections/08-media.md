@@ -14,6 +14,10 @@ Adrian chooses media, identifies people/objects, edits captions/credits/alt text
 
 Basic crop/rotation/focal-point adjustment is nondestructive. Asset defaults can help future placement, but output-specific crops belong to each occurrence in Arrange. Video playback, duration and poster selection are needed; output-specific trim/range support must be scoped before implementation, not expanded into a full video editor. Preserve originals and do not alter every use when adjusting one.
 
+## Select for this piece
+
+The story/output’s needs guide which proposed shots are selected. Preserving useful original ranges does not require presenting every range as chosen footage or retaining every proposed occurrence in the final output. Flag questionable movement and retain easy access to original context; trimming recommendations do not silently cut or delete source recordings.
+
 ## Result and acceptance
 
 Media metadata, human selections and derivatives are linked to stable asset IDs. Arrange changes immediately update used-where/order here. A swap preserves placement/caption/credit intentionally and flags any mismatch for review; Undo restores both views. Reorder a carousel and see the new order here after save/reload. Photos/videos are available at any text stage; text-only outputs remain valid.
