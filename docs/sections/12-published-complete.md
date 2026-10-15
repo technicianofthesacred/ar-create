@@ -10,6 +10,8 @@ Show remaining work by output and follow-up status alongside completed results. 
 
 ## Output overview in the existing workspace
 
+15 October clarification: this is an access, addition and editing portal across the requested outputs. It briefs the author through direct links and meaningful actions that open actual content, add material or another requested expression through the appropriate existing surface, and continue editing or review at the relevant location. Status supports these actions; a passive completion register is insufficient. Keep material addition and output creation scopes understandable without adding a competing workspace.
+
 Approved direction, 13 October: integrate a compact output overview into the existing application while preserving the current editor and project navigation. Keep requested outputs visible with their current state and one useful next action; selecting an action opens the relevant work in the existing surface. Do not replace the editor or project browser, or create a competing application shell.
 
 Use a disciplined grid with stable column positions, aligned text and action start points, consistent row geometry and compact vertical spacing. Output identity, status and next action must be findable in the same place in every row. Use a consistent status vocabulary and presentation across formats; distinguish workflow status from delivery facts such as exported or published instead of mixing unlike concepts into inconsistent labels. Keep secondary destination and edition details under disclosure when they would inflate every row. Preserve readable text and usable targets; narrow layouts must retain predictable field order and alignment without horizontal scrolling.

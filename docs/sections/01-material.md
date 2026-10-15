@@ -37,3 +37,7 @@ Summary-based recommendations support fast sorting; they do not establish that e
 A synthetic multi-session project visibly groups multiple sessions with opening/closing context; add another resource, process it, organize it, select a subset and resume after switching stories. Interrupted imports, duplicates, unsupported types and offline originals have useful recovery. No mandatory reimport of existing material.
 
 14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
+
+## Distinct Material surface — 15 October clarification
+
+Material is the collection and active entrance: show incoming/kept files, recordings, transcripts, notes, links and resource groups with Add, preview, organize, select and applicable processing actions. Its primary work is not the continuous corrected transcript displayed in Source. Selecting Review transcript opens that item's matching source/session in section 2. Unconnected tools remain visible with an honest preparation/not-connected state; an upload or click cannot stand in for a processing result.

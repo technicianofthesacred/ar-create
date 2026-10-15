@@ -1,0 +1,23 @@
+/* C05 shared Atlas longform. Fonts are the existing local AR Atlas faces.
+   Scope is actual prose nodes, never the surrounding tool/card/template layout. */
+:root{--shared-prose-font:'AR Atlas Lora',Georgia,'Times New Roman',serif;--shared-prose-heading:'AR Atlas Cormorant',Georgia,'Times New Roman',serif;--shared-prose-ink:var(--ink);--shared-prose-dim:var(--dim)}
+body .workspace .shared-prose-surface{font-family:var(--shared-prose-font)!important;font-size:18px!important;line-height:1.8!important;letter-spacing:.16px;color:var(--shared-prose-ink);max-width:680px;min-width:0;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-wrap:anywhere}
+body .workspace .shared-prose-surface:not(textarea){margin-inline:auto}
+body .workspace .shared-prose-block{font-family:var(--shared-prose-font)!important;font-size:18px!important;line-height:1.8!important;letter-spacing:.16px;color:var(--shared-prose-ink)}
+body .workspace .shared-prose-block:is(p,blockquote,ul,ol,pre){margin-block:0 1.1em}
+body .workspace .shared-prose-block li{margin-block:0 .35em}
+body .workspace .shared-prose-inline{font-family:inherit!important;font-size:inherit!important;line-height:inherit!important;letter-spacing:inherit}
+body .workspace .shared-prose-block:is(h1,h2,h3,h4,h5,h6){font-family:var(--shared-prose-heading)!important;font-weight:500!important;color:var(--shared-prose-ink);letter-spacing:.005em}
+body .workspace .shared-prose-block:is(h1,h2){font-size:30px!important;line-height:1.25!important;margin-block:1.4em .6em}
+body .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:46px!important;line-height:1.1!important;letter-spacing:.23px;margin-block:0 20px}
+body .workspace .shared-prose-block:is(h3){font-size:26px!important;line-height:1.3!important;margin-block:1.3em .6em}
+body .workspace .shared-prose-block:is(h4,h5,h6){font-size:22px!important;line-height:1.35!important;margin-block:1.2em .6em}
+body .workspace pre.shared-prose-surface,body .workspace pre.shared-prose-block{white-space:pre-wrap;word-break:normal}
+/* Transcript and authored narration fields are prose; their surrounding controls stay sans. */
+body .workspace textarea.shared-prose-surface{width:100%;box-sizing:border-box}
+body .workspace .shared-prose-surface :is(button,input,select,summary,label,figcaption,small,table,.small,.research-standard-location,.research-standard-provenance,.research-standard-plan-state){font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;letter-spacing:normal}
+@media(max-width:560px){body .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:34px!important;line-height:1.1!important}}
+/* Research's embedded planning UI keeps its original 16px sans rhythm even
+   when its prose column is Atlas. Authored narration remains explicitly 18px. */
+body .workspace .research-standard-row>.shared-prose-surface .research-standard-plan{font:16px/1.6 'Avenir Next',Avenir,'Segoe UI',sans-serif;letter-spacing:normal}
+body .workspace .research-standard-row>.shared-prose-surface .research-standard-location{font-size:16px;line-height:1.6;letter-spacing:normal}

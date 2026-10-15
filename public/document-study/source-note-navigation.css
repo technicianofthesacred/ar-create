@@ -1,0 +1,9 @@
+/* One active note and passage; retained change markup is never removed. */
+.originalNote[data-source-note-wired]{cursor:pointer}
+.originalNote[data-source-note-selected="true"]{border-left-color:var(--gold,#a78a50);box-shadow:inset 3px 0 var(--gold,#a78a50)}
+.originalNote button:focus-visible{outline:2px solid var(--gold,#a78a50);outline-offset:3px}
+#manuscript.source-note-focus .recordChange{background:transparent;color:inherit}
+#manuscript [data-source-note-active="true"]{background:#eee3c7;box-shadow:0 0 0 5px #eee3c7;border-radius:2px;scroll-margin-block:120px}
+:root[data-theme="dark"] #manuscript [data-source-note-active="true"]{background:#443b28;box-shadow:0 0 0 5px #443b28}
+.source-note-status{font:400 13px/1.5 var(--sans,sans-serif);color:var(--muted,#887e68);margin-top:8px}
+@media(prefers-reduced-motion:reduce){#manuscript [data-source-note-active]{scroll-behavior:auto}}

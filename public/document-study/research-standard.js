@@ -28,6 +28,7 @@
  }
  function retained(c,records){
   const parsed=window.ResearchStandardAdapter.parse(records,{sourceRecords:c.live.originals?.records||[]}),r=room(c.id),derived=r.findings?.available&&!r.findings.stale?r.findings.points:null;
+  r.referenceRecords=records;r.points=[];r.originalHashes=Object.fromEntries(records.map(record=>[record.path,record.hash]));
   if(!parsed.points.length&&!derived?.length)return '';
   const primary=derived?.length?derived.map(point=>({...point,derivedProvenance:{verification:r.findings.verification,summaryAuthorship:r.findings.summaryAuthorship}})):parsed.points;r.points=[...primary,...(derived?.length?parsed.points:[])];r.originalHashes=Object.fromEntries(records.map(record=>[record.path,record.hash]));if(derived)for(const point of derived)for(const source of point.sources||[])if(source.recordPath&&source.recordHash)r.originalHashes[source.recordPath]=source.recordHash;
   const status=r.findingsError||(derived?.length?'Derived summaries · no new verification':'Retained research · no new verification'),pointsHTML=points=>points.map(point=>pointHTML(point,{actions:planActions(c.id,point),sourcesOpen:r.openSources.has(point.id)})).join('');
@@ -40,6 +41,7 @@
   const speaker=q.speaker||source?.speaker||'Source speaker not recorded',location=q.time||q.scene||(typeof q.locator==='string'?q.locator:'');
   return pointHTML({id:q.id,title:q.statement,spoken:q.quote?[{quote:q.quote,speaker,location}]:[],clarity},{actions,details});
  }
- window.ResearchStandard={retained,claim,pointHTML};
+ function snapshot(id){const r=rooms.get(id);if(!r?.points?.length)return null;const sources=r.originalHashes||{},known=Object.values(sources).some(hash=>typeof hash==='string'&&hash.length);return JSON.parse(JSON.stringify({scope:{projectId:id,outputId:r.binding?.bindingId||'',revision:known?JSON.stringify({sources,expected:r.draft?.expected||null}):''},outputTitle:r.binding?.title||'Project research · no manuscript part selected',points:r.points,records:r.referenceRecords||[]}));}
+ window.ResearchStandard={retained,claim,pointHTML,snapshot};
  document.addEventListener('click',event=>{if(event.target.closest('[data-research-open-draft]')){if(window.studyDraft?.edit)window.studyDraft.edit();else setView('article');}});
 })();

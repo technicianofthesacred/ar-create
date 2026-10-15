@@ -36,7 +36,7 @@ Keep task completion, human acceptance, chat unread state and chat archival sepa
 
 A stage should show the relevant material and the tools needed to work with it. People should see their sources, words, photos and progress rather than encounter generic record placeholders or agent command instructions. Distinguish a recording, its transcripts/corrections, research, authored wording and requested output; connect them visibly without inventing missing material or progress.
 
-Keep the document-first foundation, readable sans-serif text, project navigation, compact useful controls, direct editing and appropriate margin discussion. Preserve each surface's purpose rather than imposing one layout everywhere. Put paths, provenance and technical details behind clear secondary disclosure. Avoid unnecessary top headers, repeated information and horizontal scrolling.
+Keep the document-first foundation, the accepted document typography, sans-serif controls, project navigation, direct editing and appropriate margin discussion. Preserve each surface's purpose rather than imposing one layout everywhere. Put paths, provenance and technical details behind clear secondary disclosure. Avoid unnecessary top headers, repeated information and horizontal scrolling.
 
 The person must be able to find and resume a story, identify the selected output and see what needs attention. Use human descriptions for empty, processing, failed, read-only and changed-since-review states. Explain what can be done next; do not imply AI ran, sources were verified, work was saved or an output was published without the corresponding evidence.
 
@@ -57,3 +57,9 @@ Evaluate a refinement by whether it makes the author’s actual journey clearer,
 Before a changed screen is called usable, open the actual view and ask: Can a returning person tell what this is, what they are looking at, what they can do, and what is still unfinished? Verify the affected action, not just labels, along with required save/switch/recovery behavior. For visual changes inspect the rendered applicable themes and widths; do not ask the person to mentally render code.
 
 When feedback reveals a reusable problem, update these rules or the shared collaboration playbook and relevant brief; preserve their distinct responsibilities rather than duplicating all rules everywhere. Read newer direct human instructions before implementing. This request records rules; it does not authorize an unbounded redesign or claim existing screens have been repaired.
+
+## Interface present is different from connected — 15 October clarification
+
+The author wants the whole intended workflow visible for Claude Design while unfinished connections are built in parallel. Place each already-agreed tool beside its actual work, with its inputs and review path, even if its operation is not connected yet. Clearly explain that state when the person tries it. Do not hide missing tools until implementation finishes or substitute another generic record display. Equally, do not fabricate research, findings, saved edits, delivered outputs or successful actions to fill the design. Keep existing working controls and data intact. A design-ready surface is not a claim of functional completion.
+
+Use the accepted Atlas writing typography consistently in relevant long-form source, transcript, research, context-note and manuscript views, not only Read. Keep control labels and compact metadata readable in sans serif and preserve approved platform templates. Arrange offers composition tools; Look presents the audience edition and review/export actions. Checked must explain whether checks have run, which revision they concern, and where the person can work next; an empty screen is not an acceptable interaction.

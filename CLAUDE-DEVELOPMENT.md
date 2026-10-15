@@ -36,7 +36,7 @@ The installed private editor uses port 8841. Candidate startup refuses that port
 |---|---|
 | Script/style mounting and document route | `public/document-study/index.html` |
 | Project sidebar, document interaction, twelve checkpoints and browser state | `public/document-study/study.js`, `study.css` |
-| Approved sans-serif Draft, Margin/Focus, continuous editing | `public/document-study/draft-surface.js`, `draft-surface.css` |
+| Document-first Draft, Margin/Focus, continuous editing | `public/document-study/draft-surface.js`, `draft-surface.css` |
 | Owned manuscript binding, save/recovery/Undo UI | `public/document-study/draft-flow.js`, `draft-flow.css` |
 | Material intake, source display and hidden editorial annotations | `public/document-study/material-surface.js`, `material-surface.css`, `stage-flow.js` |
 | Source choice/review, retained reads and Research → Direction → existing Draft | `public/document-study/source-continuation.js`, `source-continuation.css` |
@@ -128,3 +128,9 @@ Claims marked unresolved in retained research must remain recorded statements re
 Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.
 
 Use the [developer workspace index](docs/WORKSPACE.md) to find code, the twelve briefs, synthetic examples, host/config boundaries and external ownership receipts.
+
+## Current interface-design direction — 15 October clarification
+
+The author wants Claude Design to redesign this interface while unfinished operations are connected. First express each existing agreed function in its proper section, with the relevant inputs/actions/review and honest not-connected states. Do not wait for every backend function before preparing the interface, and do not present prototypes as successful research, saves or exports. PRODUCT and the twelve briefs govern the full intended surface; preserve the installed working connections and the sole integrator's activation ownership.
+
+Apply the accepted Atlas typography across relevant long-form source, transcript, research, note and manuscript views, including retained/read-only documents; keep controls sans serif and existing platform-template typography intact. Material collects/organizes/processes; Source reads/corrects sessions. Research includes the original learning, evidence, speaker judgment and reusable brief before Direction. Checked shows revision-bound work or a useful not-run/empty/stale state. Arrange edits composition; Look presents the audience edition and review/export. The older coverage table is a package-baseline limitation record, not permission to omit the intended UI or proof of current installed coverage.
