@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import {randomUUID,createHash} from 'node:crypto';
+import {createServer} from '../server.mjs';
+
+test('HTTP connection creates exact independent outputs and retains local write guards',async t=>{
+ const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'native-output-http-')));
+ const vault=path.join(dataDir,'original-vault'),files=path.join(dataDir,'original-files');fs.mkdirSync(vault);fs.mkdirSync(files);
+ const originals=[['Workflow/3-Develop/DEV - An Cha 1 (story).md','---\ntype: DEV\ntitle: Synthetic HTTP\n---\n\nExact original words.\n'],['Workflow/1-Source/SRC - An Cha Master (Dark Tea & Organic Farming).md','Synthetic source, not a private fixture.']];
+ for(const [rel,body]of originals){const file=path.join(vault,rel);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,body);}
+ const server=await createServer({dataDir,publicDir:path.join(dataDir,'public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files},sharedArticles:true,researchEnabled:false});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server.close(r));fs.rmSync(dataDir,{recursive:true,force:true});});
+ const base='http://127.0.0.1:'+server.address().port;
+ const get=async route=>{const r=await fetch(base+route);const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value;};
+ const post=async(route,input)=>{const r=await fetch(base+route,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(input)});const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value;};
+ const row={originalId:'ancha-1',originalHash:createHash('sha256').update(originals[0][1]).digest('hex')};
+ const native=await post('/api/study-draft/open',{originalId:row.originalId,originalHash:row.originalHash,parentStudyId:'ref-an-cha',operationId:randomUUID()});
+ await post('/api/first-flow/select',{projectKey:'ref-an-cha',title:'Synthetic parent',operationId:randomUUID()});
+ await post('/api/study/photos/select',{bindingId:native.binding.id,parentStudyId:'ref-an-cha',operationId:randomUUID()});
+ const group={rootBindingId:native.binding.id,parentStudyId:'ref-an-cha'},query=new URLSearchParams(group);
+ const empty=await get('/api/study/outputs?'+query);assert.equal(empty.outputBindings.length,0);
+ const a=await post('/api/study/outputs/create',{...group,kind:'article',sourceBindingId:native.binding.id,expectedNative:native.expected,expectedOutput:empty.expectedOutput,operationId:randomUUID()});
+ assert.equal(a.view.writingProof.bindingId,native.binding.id);
+ const b=await post('/api/study/outputs/create',{...group,kind:'article',sourceBindingId:native.binding.id,expectedNative:native.expected,expectedOutput:a.view.expectedOutput,operationId:randomUUID()});
+ assert.notEqual(b.view.writingProof.bindingId,native.binding.id);
+ const selected=await get('/api/study/outputs?'+new URLSearchParams({...group,selectedOutputId:a.view.output.id}));assert.equal(selected.writingProof.bindingId,native.binding.id);assert.equal(selected.documentId,native.binding.id);assert.equal(selected.outputs.length,2);assert.equal(selected.document.id,native.binding.id);assert.equal(selected.document.paragraphs[0].id,selected.output.manuscript[0].id);assert.equal('context' in selected.document,false);assert.equal('privateSidecar' in selected.document,false);
+ const exported=await post('/api/study/outputs/export',{...group,kind:'article',selectedOutputId:selected.output.id,expectedOutput:selected.expectedOutput,expectedNative:selected.writingProof.expected,manuscriptRevision:selected.output.manuscriptRevision,name:'synthetic.md',mimeType:'text/markdown',body:'Exact original words.\n'});
+ assert.ok(exported.artifact.url.includes('rootBindingId='));
+ const download=await fetch(base+exported.artifact.url);assert.equal(download.status,200);assert.equal(await download.text(),'Exact original words.\n');
+ const listed=await get('/api/study/outputs/exports?'+new URLSearchParams({...group,selectedOutputId:selected.output.id}));assert.equal(listed.artifacts.length,1);assert.equal(listed.artifacts[0].url,exported.artifact.url);
+ const latest=await get('/api/study/outputs?'+query);
+ const carousel=await post('/api/study/outputs/create',{...group,kind:'carousel',sourceBindingId:native.binding.id,expectedNative:native.expected,expectedOutput:latest.expectedOutput,operationId:randomUUID()});
+ const wordsOnly=await post('/api/study/outputs/save',{...group,selectedOutputId:carousel.view.output.id,expectedOutput:carousel.view.expectedOutput,operationId:randomUUID(),changes:{slides:carousel.view.output.slides.map(slide=>({...slide,template:'M12',photos:[]}))}});
+ const cv=wordsOnly.view;
+ const reviewed=await post('/api/study/outputs/review-words',{...group,selectedOutputId:cv.output.id,expectedOutput:cv.expectedOutput,expectedWords:cv.writingProof.expected,wordsHash:cv.writingProof.wordsHash,operationId:randomUUID()});
+ assert.equal(reviewed.view.output.stage,'look');
+ const png=await post('/api/study/outputs/export',{...group,kind:'carousel',selectedOutputId:cv.output.id,expectedOutput:reviewed.view.expectedOutput,outputRevision:reviewed.view.output.outputRevision});
+ const pngFile=png.export.files.find(x=>x.mimeType==='image/png');assert.ok(pngFile.url.includes('selectedOutputId='+cv.output.id));
+ const pngResponse=await fetch(base+pngFile.url);assert.equal(pngResponse.status,200);const pngBytes=Buffer.from(await pngResponse.arrayBuffer());assert.equal(pngBytes.readUInt32BE(16),1080);assert.equal(pngBytes.readUInt32BE(20),1350);
+ const wrongDownload=await fetch(base+pngFile.url.replace('selectedOutputId='+cv.output.id,'selectedOutputId='+selected.output.id));assert.equal(wrongDownload.status,404);
+ const foreign=await fetch(base+'/api/study/outputs/save',{method:'POST',headers:{Origin:'https://external.example','Content-Type':'application/json'},body:'{}'});assert.equal(foreign.status,403);
+ for(const[rel,body]of originals)assert.equal(fs.readFileSync(path.join(vault,rel),'utf8'),body);
+});

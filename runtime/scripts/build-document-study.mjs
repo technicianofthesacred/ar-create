@@ -11,3 +11,6 @@ const templates=await fs.readFile(path.join(front,'donor/ig-templates.js'),'utf8
 await fs.writeFile(path.join(front,'donor/ig-templates.browser.js'),templates.replace(/^import .*originalCatalog.*;$/m,'').replace('export default IG;','window.STUDY_CATALOG = IG.T;'));
 await build({absWorkingDir:runtime,entryPoints:['../scripts/gen-capabilities-portable.ts'],outfile:'../scripts/gen-capabilities.mjs',bundle:true,format:'esm',platform:'node',target:'node22',packages:'external',logLevel:'warning'});
 console.log('Document-study runtime and template wrappers built from reviewed source.');
+
+await import('./build-native-output-owner.mjs');
+await import('./build-study-output-canvas.mjs');

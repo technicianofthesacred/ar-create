@@ -4,6 +4,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import {constants} from 'node:fs';
 import {existsSync} from 'node:fs';
 import {createArticlePersistence,articleHash,articlePaths} from './article-persistence.mjs';
+import {outputRecordsExpected,validateOutputIndex,outputPrivatePrefix,outputOperationInputHash} from './output-records.mjs';
 import {articleCompositionIssue} from './src/workspaces/article-composition.mjs';
 
 export const MAX_BODY_BYTES = 2 * 1024 * 1024;
@@ -117,6 +118,7 @@ export function validateDocument(document, label = 'document') {
       }
     }
   }
+  if(document.nativeOutputIndex!==undefined)validateOutputIndex(document.nativeOutputIndex,document.outputs,StateError);
   const magazine=document.importedDraft?.magazineProvenance;
   if(magazine!==undefined){
     shape(magazine,['rootId','rootLabel','rootPath','relativePath','sha256','readOnly'],`${label}.importedDraft.magazineProvenance`);
@@ -326,34 +328,45 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
     if(!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0)throw new StateError('expectedRevision must be a nonnegative safe integer.');
     if(input.expectedProjectId!==state.project.id||input.expectedRevision!==state.revision)throw new StateError('Active piece changed since this page loaded. Reload the latest state before continuing.',409);
   }
-  async function commit(next,metadata=null,{pieceProjects=[],expectedArticle,expectedCarousel,decisionFile,receipt,finalCheck}={}){
+  async function commit(next,metadata=null,{pieceProjects=[],expectedArticle,expectedCarousel,decisionFile,receipt,finalCheck,extraFiles=[],extraExpectedFiles=new Map(),preserveActive=false}={}){
     validateState(next);await checkDataDirectory();await assertRegularOrMissing(file);await assertRegularOrMissing(backup);
     if(articles){
-      await initializePieces();const checked=await articles.checkArticle(state.project,expectedArticle);
-      const carouselChecks=await articles.checkCarouselWords(state.project,expectedCarousel);
+      await initializePieces();const checked=preserveActive?null:await articles.checkArticle(state.project,expectedArticle);
+      const carouselChecks=preserveActive?[]:await articles.checkCarouselWords(state.project,expectedCarousel);
       // A selected reviewed decision reconciles one file. Other outside files
       // are CAS-bound old==next journal entries, never regenerated or written.
       const retainedCarouselFiles=new Map(carouselChecks.filter(carousel=>carousel.externalEdit&&carousel.output.id!==expectedCarousel?.outputId).map(carousel=>[carousel.paths.markdown,carousel.bytes]));
-      const expectedFiles=new Map([[checked.paths.markdown,checked.expected.markdownHash],[checked.paths.companion,checked.expected.companionHash],[file,articleHash(knownStateBytes)]]);
+      const expectedFiles=new Map([[file,articleHash(knownStateBytes)],...extraExpectedFiles]);
+      if(checked){expectedFiles.set(checked.paths.markdown,checked.expected.markdownHash);expectedFiles.set(checked.paths.companion,checked.expected.companionHash);}
       for(const carousel of carouselChecks)expectedFiles.set(carousel.paths.markdown,carousel.expected.markdownHash);
       const disk=await readFile(file);if(!disk.equals(knownStateBytes))throw new StateError('State changed during article publication; existing files were preserved.',409);
-      const active=await activeMeta(),nextMeta=metadata||{createdAt:active.createdAt,updatedAt:timestamp()};
-      const projects=new Map(pieceProjects.map(entry=>[entry.project.id,entry]));projects.set(next.project.id,{project:next.project,metadata:nextMeta});
-      const files=[...retainedCarouselFiles,[backup,disk]];
+      const active=await activeMeta(),nextMeta=metadata||(preserveActive?active:{createdAt:active.createdAt,updatedAt:timestamp()});
+      const projects=new Map(pieceProjects.map(entry=>[entry.project.id,entry]));if(!preserveActive)projects.set(next.project.id,{project:next.project,metadata:nextMeta});
+      const files=[...retainedCarouselFiles,...(preserveActive?[]:[[backup,disk]]),...extraFiles];
       for(const entry of projects.values()){
         if(entry.project.id!==state.project.id){const oldPiece=await readPiece(entry.project.id).catch(error=>{if(error.status===404)return null;throw error;});if(oldPiece){const target=await articles.checkArticle(oldPiece.project);expectedFiles.set(target.paths.markdown,target.expected.markdownHash);expectedFiles.set(target.paths.companion,target.expected.companionHash);for(const carousel of await articles.checkCarouselWords(oldPiece.project))expectedFiles.set(carousel.paths.markdown,carousel.expected.markdownHash);}else{const paths=articlePaths(dataDir,entry.project);expectedFiles.set(paths.markdown,null);expectedFiles.set(paths.companion,null);}}
         for(const [destination] of articles.bundleFiles(entry.project))if(!expectedFiles.has(destination))expectedFiles.set(destination,await articles.retainedCarouselWordsHash(entry.project,destination));
         expectedFiles.set(pieceFile(entry.project.id),knownPieceBytes.get(pieceFile(entry.project.id))??null);
         files.push([pieceFile(entry.project.id),envelope(entry.project,entry.metadata).bytes],...articles.bundleFiles(entry.project).filter(([destination])=>!retainedCarouselFiles.has(destination)));}
-      files.push([file,JSON.stringify(next)]);
+      files.push([file,preserveActive?disk:JSON.stringify(next)]);
       if(decisionFile){expectedFiles.set(decisionFile,null);files.push([decisionFile,JSON.stringify(receipt)]);}
       await finalCheck?.();
-      try{await articles.publish(files,{expectedFiles});}catch(error){needsRecovery=existsSync(articles.journal)||!(await readFile(file)).equals(knownStateBytes);if(needsRecovery)recoveryFiles=files;throw error;}
-      state=next;knownStateBytes=Buffer.from(JSON.stringify(next));activeMetadata={id:state.project.id,...nextMeta};capturePublishedPieceBytes(files);notifySaved();return structuredClone(state);
+      try{await articles.publish(files,{expectedFiles});}catch(error){needsRecovery=existsSync(articles.journal)||!!(decisionFile&&existsSync(decisionFile))||!(await readFile(file)).equals(knownStateBytes);if(needsRecovery)recoveryFiles=files;throw error;}
+      state=next;knownStateBytes=preserveActive?disk:Buffer.from(JSON.stringify(next));activeMetadata={id:state.project.id,...nextMeta};capturePublishedPieceBytes(files);notifySaved();return structuredClone(state);
     }
     await atomicWrite(backup,JSON.stringify(state));await atomicWrite(file,JSON.stringify(next));state=next;
     if(metadata)activeMetadata={id:state.project.id,...metadata};else if(activeMetadata)activeMetadata={...activeMetadata,updatedAt:timestamp()};
     notifySaved();return structuredClone(state);
+  }
+  async function outputOwnedDirectory(directory){
+    await checkDataDirectory();const relative=path.relative(dataDir,directory);
+    if(relative.startsWith('..')||path.isAbsolute(relative)||relative.split(path.sep)[0]!=='native-outputs')throw new StateError('Output path is outside owned native-output storage.',403);
+    let current=dataDir;
+    for(const part of relative.split(path.sep)){current=path.join(current,part);try{await mkdir(current,{mode:0o700});}catch(error){if(error.code!=='EEXIST')throw error;}const stat=await lstat(current);if(!stat.isDirectory()||stat.isSymbolicLink())throw new StateError('Output directories must be real private directories.',403);}
+  }
+  async function outputPrivateFile(destination){
+    await outputOwnedDirectory(path.dirname(destination));
+    try{const stat=await lstat(destination);if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1)throw new StateError('Output captures require ordinary private files.',403);}catch(error){if(error.code!=='ENOENT')throw error;}
   }
   function summary(project,metadata,active){
     const paragraphs=project.document?.paragraphs||[],body=project.document?paragraphs.map(paragraph=>paragraph.text).join(' '):project.draft;
@@ -369,6 +382,61 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
     read(options={}){return serialized(async()=>{if(articles)await articles.readArticle(state.project,options);return structuredClone(state);});},
     readArticle(options={}){return serialized(async()=>{if(!articles)throw new StateError('Shared article persistence is not enabled.',409);const project=(!options.projectId||options.projectId===state.project.id)?state.project:(await readPiece(options.projectId)).project;return articles.readArticle(project,options);});},
     readCarouselWords(options={}){const captured=structuredClone(options);return serialized(async()=>{if(!articles)throw new StateError('Shared article persistence is not enabled.',409);const project=(!captured.projectId||captured.projectId===state.project.id)?state.project:(await readPiece(captured.projectId)).project;return articles.readCarouselWords(project,captured);});},
+    // Trusted in-process service boundary. No HTTP route accepts prepare or paths.
+    saveOutputRecords(input,prepare){const incoming=structuredClone(input);return serialized(async()=>{
+      let receiptFile,publicationAttempted=false;
+      try{
+        if(!articles)throw new StateError('Shared article persistence is required for output saves.',409);
+        shape(incoming,['projectId','documentId','expectedOutput','operationId','commandHash'],'output save');
+        id(incoming.projectId,'projectId');id(incoming.documentId,'documentId');
+        shape(incoming.expectedOutput,['revision','hash'],'expectedOutput');
+        if(!Number.isSafeInteger(incoming.expectedOutput.revision)||incoming.expectedOutput.revision<0||!/^[a-f0-9]{64}$/.test(incoming.expectedOutput.hash)||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(incoming.operationId))throw new StateError('Output saves require exact revision/hash and operation UUID.');
+        if(typeof incoming.commandHash!=='string'||!/^[a-f0-9]{64}$/.test(incoming.commandHash))throw new StateError('Output save requires an exact trusted command SHA-256.');
+        if(typeof prepare!=='function')throw new StateError('Output save requires a trusted preparation callback.');
+        const inputHash=outputOperationInputHash(incoming);
+        receiptFile=path.join(dataDir,'native-outputs','operations',incoming.operationId,'receipt.json');
+        await outputOwnedDirectory(path.dirname(receiptFile));await outputPrivateFile(receiptFile);
+        let prior;try{prior=JSON.parse(await readFile(receiptFile,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
+        if(prior){
+          if(prior.schema!=='ar-create.output-save-receipt.v1'||prior.operationId!==incoming.operationId||prior.inputHash!==inputHash||prior.commandHash!==incoming.commandHash||prior.projectId!==incoming.projectId||prior.documentId!==incoming.documentId)throw new StateError('Output operation already belongs to different input.',409);
+          return {receipt:prior,alreadySaved:true};
+        }
+        const active=incoming.projectId===state.project.id;
+        const record=active?null:await readPiece(incoming.projectId),project=structuredClone(active?state.project:record.project);
+        if(project.document?.id!==incoming.documentId)throw new StateError('Output save belongs to another document.',409);
+        const expected=outputRecordsExpected(project.document);
+        if(expected.revision!==incoming.expectedOutput.revision||expected.hash!==incoming.expectedOutput.hash)throw new StateError('Output records changed since inspection.',409);
+        const outputReadProject=structuredClone(project);
+        const prepared=await prepare({project:structuredClone(project),expectedOutput:structuredClone(expected),readArticle:options=>articles.readArticle(project,options),readCarouselWords:options=>articles.readCarouselWords(outputReadProject,options)});
+        shape(prepared,['outputs','nativeOutputIndex','finalCheck'],'prepared outputs',['extraFiles']);
+        if(typeof prepared.finalCheck!=='function')throw new StateError('Output save requires the native/source proof check.');
+        const outputs=structuredClone(prepared.outputs),index=structuredClone(prepared.nativeOutputIndex);
+        if(!Array.isArray(outputs)||outputs.length>100||outputs.some(output=>!output||!['article','carousel'].includes(output.kind)||typeof output.id!=='string'||!output.id.trim())||new Set(outputs.map(output=>output.id)).size!==outputs.length)throw new StateError('Output saves require unique article or carousel records.');
+        validateOutputIndex(index,outputs,StateError);
+        for(const entry of index.records)if(entry.wordOwner.kind==='carousel-words'&&(entry.wordOwner.projectId!==project.id||entry.wordOwner.documentId!==project.document.id))throw new StateError('Carousel word owner belongs to another document.',409);
+        if(index.revision!==expected.revision+1)throw new StateError('Native output index must advance exactly once.');
+        project.document.outputs=outputs;project.document.nativeOutputIndex=index;
+        validateState({revision:0,project});
+        const extraFiles=[],extraExpectedFiles=new Map(),prefix=outputPrivatePrefix(project.id,project.document.id);
+        if(prepared.extraFiles!==undefined&&!Array.isArray(prepared.extraFiles))throw new StateError('Private capture files must be an array.');
+        if((prepared.extraFiles?.length??0)>200)throw new StateError('Too many private capture files.');
+        for(const extra of prepared.extraFiles||[]){
+          shape(extra,['relativePath','contents','expectedHash'],'private capture');
+          if(typeof extra.relativePath!=='string'||!extra.relativePath.startsWith(prefix)||!new RegExp('^(captures|history)/[A-Za-z0-9_-]{1,128}\\.json$').test(extra.relativePath.slice(prefix.length)))throw new StateError('Private capture paths must remain in this document native-output namespace.',403);
+          text(extra.contents,'private capture contents');
+          if(Buffer.byteLength(extra.contents)>MAX_BODY_BYTES||extra.expectedHash!==null&&!/^[a-f0-9]{64}$/.test(extra.expectedHash))throw new StateError('Private captures require bounded bytes and an expected file hash.');
+          const destination=path.join(dataDir,extra.relativePath);
+          if(extraExpectedFiles.has(destination))throw new StateError('Private capture destinations must be unique.');
+          await outputOwnedDirectory(path.dirname(destination));await outputPrivateFile(destination);
+          extraFiles.push([destination,extra.contents]);extraExpectedFiles.set(destination,extra.expectedHash);
+        }
+        const next=active?{revision:state.revision+1,project}:structuredClone(state);
+        const receipt={schema:'ar-create.output-save-receipt.v1',operationId:incoming.operationId,inputHash,commandHash:incoming.commandHash,projectId:project.id,documentId:project.document.id,expectedOutput:incoming.expectedOutput,savedOutput:outputRecordsExpected(project.document),savedAt:timestamp(),committedRevision:next.revision};
+        publicationAttempted=true;
+        await commit(next,null,{preserveActive:!active,pieceProjects:active?[]:[{project,metadata:{createdAt:record.createdAt,updatedAt:timestamp()}}],extraFiles,extraExpectedFiles,decisionFile:receiptFile,receipt,finalCheck:async()=>{for(const [destination] of extraFiles)await outputPrivateFile(destination);await outputOwnedDirectory(path.dirname(receiptFile));await prepared.finalCheck();}});
+        return {receipt:structuredClone(receipt),alreadySaved:false};
+      }catch(error){error.outcome=publicationAttempted&&(existsSync(articles?.journal||'')||(receiptFile&&existsSync(receiptFile)))?'unknown':'not-applied';throw error;}
+    });},
     initializeFirstDraft(input){const incoming=structuredClone(input);return serialized(async()=>{
       expected(incoming);
       if(!articles)throw new StateError('Shared article persistence is required for a first draft.',409);

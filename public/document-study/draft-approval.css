@@ -1,0 +1,10 @@
+/* Controls are outside the continuous manuscript; only their space is reserved beside each native paragraph. */
+.draft-approval-layout{position:relative;display:flow-root;min-width:0}
+.draft-approval-rail{position:absolute;inset:0;pointer-events:none;min-width:0}
+.draft-mark-approvals{position:absolute;left:0;right:0;display:grid;gap:4px;min-width:0;pointer-events:auto}
+.draft-mark-approval{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-width:0;padding:0 0 4px;font-family:inherit;font-size:13px;line-height:1.5;color:var(--dim)}
+.draft-mark-preview{flex:1 1 160px;min-width:0;overflow-wrap:anywhere}
+.draft-mark-preview::before{content:'“'}
+.draft-mark-preview::after{content:'”'}
+.draft-mark-approval .draft-action{flex:0 0 auto;min-height:44px!important;max-width:100%;white-space:normal;touch-action:manipulation}
+.draft-mark-approval .draft-action:disabled{opacity:.55;cursor:default}

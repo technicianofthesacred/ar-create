@@ -1,0 +1,65 @@
+/* The live process is the workspace. Setup and transport details stay secondary. */
+.ar-terminal-room .ar-terminal-status{gap:8px 16px;align-items:center;padding:10px 24px;flex-wrap:wrap}
+.ar-terminal-room .ar-terminal-identity{display:flex;align-items:center;gap:12px;flex:1 1 180px;min-width:0;color:#ddd5c8}
+.ar-terminal-identity strong{font-weight:500;font-size:13px}
+.ar-terminal-state{display:inline-flex;align-items:center;gap:6px;color:#b8afa1;font-size:12px}
+.ar-terminal-state::before{content:'';width:6px;height:6px;background:#8f8779;border-radius:50%}
+.ar-terminal-state.is-running::before{background:#a5b694}
+.ar-terminal-room .ar-terminal-status button{margin-left:0;min-height:36px;flex:none}
+.ar-terminal-room .ar-terminal-status .ar-terminal-stop{background:transparent;border-color:#484136;color:#c5baa9}
+.ar-terminal-room .ar-terminal-settings{flex-basis:auto;min-width:0;max-width:100%;font-size:12px}
+.ar-terminal-room .ar-terminal-settings>summary{min-height:36px;padding:7px 0;color:#c5baa9;cursor:pointer}
+.ar-terminal-room .ar-terminal-settings[open]{flex-basis:100%;max-height:220px;overflow:auto}
+.ar-terminal-settings-body{padding:12px 0 4px;border-top:1px solid #38342c}
+.ar-terminal-settings-body p{color:#b8afa1;font-size:12px;line-height:1.5}
+.ar-terminal-settings-fields{display:flex;flex-wrap:wrap;gap:12px 24px}
+.ar-terminal-settings-fields label{flex:0 1 auto}
+.ar-terminal-room .ar-terminal-settings :is(input,select){min-height:36px;max-width:100%;background:#201e19;border:1px solid #484136;border-radius:4px;color:#ddd5c8;padding:6px 8px}
+.ar-terminal-session-details{display:grid;gap:5px;margin:12px 0;font-size:11px}
+.ar-terminal-session-details>div{display:flex;gap:12px;min-width:0}
+.ar-terminal-session-details dt{flex:0 0 85px;color:#b8afa1}
+.ar-terminal-session-details dd{margin:0;min-width:0;color:#c5baa9;overflow-wrap:anywhere}
+.ar-terminal-next-session{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding-block:6px}
+.ar-terminal-startup{display:flex;align-items:center;gap:16px;flex:none;padding:8px 24px;background:#24211c;border-bottom:1px solid #38342c}
+.ar-terminal-startup p{flex:1;margin:0;font-size:12px;line-height:1.5;color:#c5baa9}
+.ar-terminal-startup button{flex:none;min-height:36px}
+.ar-terminal-rest{flex:1;min-height:0;overflow:auto}
+.ar-terminal-room .ar-terminal-empty{padding:48px 32px 32px;max-width:560px;color:#c5baa9}
+.ar-terminal-empty h3{margin:0 0 8px;color:#ddd5c8;font-size:20px;font-weight:500;line-height:1.35}
+.ar-terminal-empty p{margin:0 0 22px;max-width:44ch;line-height:1.6}
+.ar-terminal-room .ar-terminal-start{min-height:42px;padding:8px 18px;background:#bfa98c;color:#1c1914;border-color:#bfa98c}
+.ar-terminal-previous{margin:0 32px 24px;border-top:1px solid #38342c;color:#c5baa9;font-size:12px}
+.ar-terminal-previous>summary{padding:14px 0;cursor:pointer;min-height:44px}
+.ar-terminal-room .ar-terminal-previous .wr-real-terminal{height:320px;min-height:240px;padding:8px 0;flex:none}
+.ar-terminal-room .ar-terminal-error{flex:none;margin:0;padding:8px 24px;color:#dbad96;font-size:12px;line-height:1.5}
+.ar-terminal-settings .ar-terminal-receipt{padding:0;max-height:none}
+
+/* Keep real PTY rows available on the 1280 × 720 working screen. */
+.ar-command-room .ar-terminal-room{overflow:hidden;min-height:0}
+.ar-command-room .ar-terminal-room>.wr-real-terminal{flex:1 1 0;min-height:244px;max-height:none;gap:8px;padding:10px 24px;overflow:hidden}
+.ar-command-room .ar-terminal-room :is(.wr-xterm-host,.wr-terminal-copy){flex:1 1 0;min-height:200px;max-height:none}
+.ar-command-room .ar-terminal-room .wr-terminal-selection{gap:8px;flex:none}
+.ar-command-room .ar-terminal-room .wr-terminal-selection button{min-height:36px;padding:6px 10px;background:transparent;color:#c5baa9;border-color:#484136}
+.ar-command-room .ar-terminal-room .wr-terminal-selection>span{display:block;flex:1;min-width:140px;font-size:11px;color:#b8afa1}
+.ar-command-room .ar-terminal-room .ar-terminal-composer{display:flex;align-items:center;gap:12px;margin:0 24px 12px;padding:8px 12px;box-shadow:none;border-radius:7px}
+.ar-command-room .ar-terminal-room .ar-terminal-composer textarea{flex:1;min-width:0;min-height:36px;height:36px;max-height:72px}
+.ar-command-room .ar-terminal-room .ar-terminal-composer>div{flex:none}
+.ar-command-room .ar-terminal-room .ar-terminal-composer>div>span{display:none}
+.ar-command-room .ar-terminal-room .ar-terminal-composer button{min-height:36px}
+@media(max-width:650px){
+ .ar-terminal-room .ar-terminal-status{padding:8px 12px;gap:8px}
+ .ar-terminal-room .ar-terminal-status button,.ar-terminal-startup button{min-height:44px}
+ .ar-terminal-startup{flex-wrap:wrap;gap:8px;padding:10px 12px}
+ .ar-terminal-startup p{flex-basis:100%}
+ .ar-terminal-room .ar-terminal-empty{padding:32px 20px 24px}
+ .ar-terminal-previous{margin-inline:20px}
+ .ar-command-room .ar-terminal-room>.wr-real-terminal{padding:8px 12px;min-height:240px}
+ .ar-command-room .ar-terminal-room .wr-terminal-selection button{min-height:44px}
+ .ar-command-room .ar-terminal-room .wr-terminal-selection>span{display:none}
+ .ar-command-room .ar-terminal-room .ar-terminal-composer{margin-inline:12px}
+}
+@media(min-width:651px) and (max-height:800px){
+ .ar-command-room .ar-terminal-room{overflow-y:auto}
+ .ar-command-room .ar-terminal-room>.wr-real-terminal{flex:1 0 244px;padding-block:6px}
+ .ar-terminal-room .ar-terminal-status{padding-block:6px}
+}

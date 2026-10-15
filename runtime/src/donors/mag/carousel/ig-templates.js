@@ -66,7 +66,7 @@ const IG = (() => {
   // Which kind of slide a role is, for picking sensible layouts.
   const kindOf = role => /^(cover|hook)$/i.test(role) ? 'cover' : /^close$/i.test(role) ? 'close' : 'inner';
   function render(id, s, ctx) { const t = T[id] || T.M12, k = kindOf(s.role);
-    const html = t.render(s, Object.assign({ logo: '' }, ctx, { cover: k === 'cover', close: k === 'close' })); return s.pillar ? html.slice(0,-6) + pillarSeal(s.pillar) + '</div>' : html; }
+    const html = t.render(s, Object.assign({ logo: '/ig-assets/teajia-wordmark.png' }, ctx, { cover: k === 'cover', close: k === 'close' })); return s.pillar ? html.slice(0,-6) + pillarSeal(s.pillar) + '</div>' : html; }
   // Layouts that suit this slide, best first: its own kind first, and ones that fit its photo count.
   function options(s) { const k = kindOf(s.role), n = (s.photos || []).filter(p => p && p.src).length;
     return Object.keys(T).filter(id => T[id].roles.includes(k) || (k !== 'inner' && T[id].roles.includes('inner') && T[id].photos > 0))

@@ -1,0 +1,58 @@
+/* Writing actions stay scoped to the article or the current passage. */
+.ar-donor-workspace .ar-writing .ar-writing-workbench{padding:12px 24px;background:var(--panel,#1c1a16)}
+.ar-donor-workspace .ar-writing .ar-workbench-row{gap:10px 16px}
+.ar-donor-workspace .ar-writing .ar-workbench-row+.ar-workbench-row{margin-top:12px;padding-top:12px}
+.ar-donor-workspace .ar-writing .ar-writing-view button{min-height:36px;padding:6px 12px}
+.ar-donor-workspace .ar-writing .ar-writing-view button[aria-pressed=true]{font-weight:550;color:#f0e8db;background:#393227}
+.ar-donor-workspace .ar-writing .ar-passage-identity{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-right:auto;min-width:0}
+.ar-donor-workspace .ar-writing .ar-passage-metrics{color:var(--ar-dim);font-size:11px;white-space:nowrap}
+.ar-donor-workspace .ar-writing .ar-passage-primary{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ar-donor-workspace .ar-writing .ar-passage-primary>button{min-height:40px;padding:8px 13px;font-size:12px;font-weight:500;border:1px solid var(--ar-line);color:var(--ar-ink);border-radius:4px}
+.ar-donor-workspace .ar-writing .ar-passage-primary>.ar-revise-action{background:#bfa98c;border-color:#bfa98c;color:#211d17}
+.ar-donor-workspace .ar-writing .ar-passage-primary>.ar-revise-action:hover{background:#d0bda3;border-color:#d0bda3}
+.ar-donor-workspace .ar-writing .ar-passage-primary>.ar-open-terminal:hover{background:var(--raised,#302b24);border-color:var(--ar-accent)}
+.ar-donor-workspace .ar-writing .ar-control-menu{position:relative;flex:none;margin:0;color:var(--ar-ink)}
+.ar-donor-workspace .ar-writing .ar-control-menu>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:8px 10px;list-style:none;cursor:pointer;font-size:12px;border-radius:4px}
+.ar-donor-workspace .ar-writing .ar-control-menu>summary::-webkit-details-marker{display:none}
+.ar-donor-workspace .ar-writing .ar-control-menu>summary:hover,.ar-donor-workspace .ar-writing .ar-control-menu[open]>summary{background:var(--raised,#302b24)}
+.ar-donor-workspace .ar-writing .ar-control-menu>summary:focus-visible{outline:2px solid var(--ar-accent);outline-offset:2px}
+.ar-donor-workspace .ar-writing .ar-control-menu[open]>summary svg{transform:rotate(180deg)}
+.ar-donor-workspace .ar-writing .ar-control-menu-items{position:absolute;z-index:7;right:0;top:calc(100% + 6px);width:276px;max-width:calc(100vw - 32px);padding:6px 14px;background:var(--panel,#201e19);border:1px solid var(--ar-line);border-radius:6px;color:var(--ar-ink)}
+.ar-donor-workspace .ar-writing .ar-control-menu-items>button{display:block;width:100%;border:0;background:none;text-align:left;border-radius:3px;padding:10px 6px 2px;min-height:32px;font-size:13px;font-weight:500;color:var(--ar-ink)}
+.ar-donor-workspace .ar-writing .ar-control-menu-items>button:hover{background:var(--raised,#302b24);color:var(--ar-accent)}
+.ar-donor-workspace .ar-writing .ar-control-menu-items>button[aria-pressed=true],.ar-donor-workspace .ar-writing .ar-control-menu-items>button[aria-expanded=true]{color:var(--ar-accent)}
+.ar-donor-workspace .ar-writing .ar-control-menu-items>p{font-size:11px;line-height:1.5;margin:2px 6px 12px;color:var(--ar-dim)}
+.ar-donor-workspace .ar-writing .ar-article-actions{margin-left:auto}
+.ar-donor-workspace .ar-writing .ar-passage-step button{display:flex;align-items:center;justify-content:center;min-height:36px;min-width:36px}
+.ar-donor-workspace .ar-command-room .ar-command-status{min-height:60px;flex-wrap:wrap;gap:10px 16px;padding:10px 24px;color:var(--ar-dim)}
+.ar-donor-workspace .ar-command-room .ar-command-status>strong{margin-right:0;font-weight:500;color:var(--ar-ink);max-width:45ch;overflow-wrap:anywhere}
+.ar-donor-workspace .ar-command-room .ar-command-status>span{font-size:12px}
+.ar-donor-workspace .ar-command-room .ar-command-status>.ar-command-excerpt{flex:1;min-width:60px;max-width:55ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ar-donor-workspace .ar-command-room .ar-command-status>small{font:11px 'Schibsted Grotesk',sans-serif;color:var(--ar-dim)}
+.ar-donor-workspace .ar-command-room .ar-command-status>.ar-article-actions{margin-left:0}
+.ar-donor-workspace .ar-command-room .ar-command-passage-controls:has(>[hidden]){display:none}
+.ar-donor-workspace .ar-command-room .ar-command-passage-controls{flex:none;padding:12px 24px;border-bottom:1px solid var(--ar-line)}
+.ar-donor-workspace .ar-command-room .ar-command-tabs{padding:6px 18px;gap:6px;border-bottom:1px solid var(--ar-line);flex-wrap:wrap}
+.ar-donor-workspace .ar-command-room .ar-command-tabs>[role=tab]{min-height:42px;padding:9px 14px;border:1px solid transparent;border-radius:4px;color:var(--ar-dim);font-weight:500;font-size:13px;background:none}
+.ar-donor-workspace .ar-command-room .ar-command-tabs>[role=tab][aria-selected=true]{background:#393227;border-color:#74634c;color:#f1e8da;font-weight:600}
+.ar-donor-workspace .ar-command-room .ar-command-tabs>[role=tab]:hover{background:#2b2720;color:#f1e8da}
+.ar-donor-workspace .ar-command-room .ar-command-tabs>span{font:11px 'Schibsted Grotesk',sans-serif;color:var(--ar-dim)}
+.ar-donor-workspace .ar-command-room .ar-reply-count{font-weight:400;color:inherit;font-size:11px}
+.ar-donor-workspace .ar-command-room .ar-passage-label{font-size:12px;color:var(--ar-dim)}
+.ar-donor-workspace .ar-writing [hidden]{display:none!important}
+@media(max-width:700px){
+ .ar-donor-workspace .ar-writing .ar-writing-workbench{padding:10px 12px}
+ .ar-donor-workspace .ar-writing .ar-workbench-row{gap:8px 10px}
+ .ar-donor-workspace .ar-writing .ar-writing-total{flex:1 1 100%;order:3;font-size:11px}
+ .ar-donor-workspace .ar-writing .ar-passage-identity{flex-basis:100%}
+ .ar-donor-workspace .ar-writing .ar-passage-primary{width:100%}
+ .ar-donor-workspace .ar-writing .ar-passage-primary>button,.ar-donor-workspace .ar-writing .ar-control-menu>summary,.ar-donor-workspace .ar-writing .ar-writing-view button,.ar-donor-workspace .ar-writing .ar-control-menu-items>button{min-height:44px}
+ .ar-donor-workspace .ar-writing .ar-passage-tools{margin-left:auto}
+ .ar-donor-workspace .ar-command-room .ar-command-status{padding:8px 12px;gap:6px 10px}
+ .ar-donor-workspace .ar-command-room .ar-command-status>strong{flex:none}
+ .ar-donor-workspace .ar-command-room .ar-command-status>.ar-command-excerpt{max-width:none}
+ .ar-donor-workspace .ar-command-room .ar-command-status>.ar-passage-tools{margin-left:auto}
+ .ar-donor-workspace .ar-command-room .ar-command-tabs{padding:6px;gap:4px}
+ .ar-donor-workspace .ar-command-room .ar-command-tabs>[role=tab]{flex:1 1 auto;min-height:44px;padding:8px 10px}
+ .ar-donor-workspace .ar-command-room .ar-command-passage-controls{padding:10px 12px}
+}

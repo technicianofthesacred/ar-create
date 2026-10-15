@@ -84,7 +84,7 @@ export function captureArticleComposition(paragraphs:Paragraph[], raw?:string):A
  const readable=(chunk:string)=>readableBlock(chunk.replaceAll('==','\u0000approval\u0000')).replaceAll('\u0000approval\u0000','==').trim();
  const consume=(chunk:string):Paragraph=>{
   const text=readable(chunk),p=paragraphs[cursor++];
-  if(!p||JSON.stringify(markdownToDoc(text))!==JSON.stringify(p.doc))fail('the DEV receipt no longer matches the accepted paragraphs. Capture layout when accepting the draft.');
+  if(!p||JSON.stringify(markdownToDoc(text,{links:true}))!==JSON.stringify(p.doc))fail('the DEV receipt no longer matches the accepted paragraphs. Capture layout when accepting the draft.');
   return p;
  };
  type Note={file:string;alt:string;words:string[];opts:Record<string,string>};

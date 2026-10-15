@@ -1,0 +1,16 @@
+/* Scroll at the writing pane's edge; keep the reading measure inside it. */
+.ar-desk-writing :is(.ar-manuscript,.ar-passage-bank){
+ color-scheme:dark;
+ scrollbar-width:thin;
+ scrollbar-color:#76664e #151412;
+ scrollbar-gutter:stable;
+}
+.ar-desk-writing :is(.ar-manuscript,.ar-passage-bank)::-webkit-scrollbar{width:8px;height:8px}
+.ar-desk-writing :is(.ar-manuscript,.ar-passage-bank)::-webkit-scrollbar-track{background:#151412}
+.ar-desk-writing :is(.ar-manuscript,.ar-passage-bank)::-webkit-scrollbar-thumb{background:#76664e;border:2px solid #151412;border-radius:8px}
+.ar-desk-writing :is(.ar-manuscript,.ar-passage-bank)::-webkit-scrollbar-thumb:hover{background:#aa9574}
+.ar-donor-workspace .ar-desk-writing .ar-manuscript{max-width:none;margin-inline:0}
+.ar-desk-writing .ar-manuscript>.ar-paragraph{max-width:740px;margin-inline:auto}
+@media(forced-colors:active){
+ .ar-desk-writing :is(.ar-manuscript,.ar-passage-bank){scrollbar-color:auto}
+}

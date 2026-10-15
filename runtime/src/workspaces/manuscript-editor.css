@@ -1,0 +1,9 @@
+.ar-continuous-editor{outline:none;min-height:32px}
+.ar-native-passage-tools:empty{display:none}
+.ar-native-passage-tools{user-select:text}
+.ar-continuous-editor .ar-paragraph[hidden],.ar-continuous-editor .ar-passage-content[hidden]{display:none}
+.ar-continuous-editor .ar-native-passage{min-height:1.6em}
+.ar-continuous-editor .ar-passage-content{min-height:0}
+/* Preserve the established manuscript measure inside the persistent host. */
+.ar-continuous-editor{max-width:756px;margin-inline:auto}
+.ar-native-passage>header{user-select:none}

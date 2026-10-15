@@ -1,5 +1,5 @@
 import {guidanceRegions} from '../../../public/lib/guidance-body.js';
-// Bounded browser adaptation of the original owned donor:
+// Bounded browser adaptation of the maintained Magazine block reader:
 // splitBlocks, plain, editable and rebuild. No original file writer or log API.
 // Added ordinary Markdown link/emphasis preservation and protected guidance
 // preamble/queue boundaries; every untouched byte and separator is retained.

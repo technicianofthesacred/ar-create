@@ -1,3 +1,4 @@
+import {exactApprovalSpans,approveExactSpan} from '../../services/draft-approval.mjs';
 import {reworkSlashes} from '../../reference/mag-edit.mjs';
 import {createHash,randomUUID} from 'node:crypto';
 import {documentParts,plain,editable,readableBlock} from '../donors/mag/markdown-blocks';
@@ -69,7 +70,7 @@ export function capture(raw:string,sourceKey:string):Snapshot{
 }
 export function projection(s:Snapshot){return s.blocks.map(b=>({id:b.id,origin:b.origin,blockHash:hash(b.raw),...inlineMap(b.raw)}));}
 type Edit={kind:'text';id:string;from:number;to:number;insert:string;seenBlockHash:string};
-type Op=Edit|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
+type Op=Edit|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
 const byteBoundary=(map:ReturnType<typeof inlineMap>,position:number,bias:'left'|'right'='right')=>{
  if(position>0&&position<map.words.length&&/[\uD800-\uDBFF]/.test(map.words[position-1])&&/[\uDC00-\uDFFF]/.test(map.words[position]))conflict('Native range divides a Unicode character.');
  if(!Number.isSafeInteger(position)||position<0||position>map.words.length)conflict('Invalid native range.');
@@ -88,7 +89,16 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[]){
  if(!Array.isArray(ops)||ops.length>1000)conflict('Bounded operation array required.');
  for(const op of ops){
   validateOperation(op);
-  if(op.kind==='text'){
+  if(op.kind==='approveMark'){
+      const b=get(op.id),beforeFrame=envelope(b.raw);
+      if(hash(b.raw)!==op.seenBlockHash)conflict('Block changed since exact human approval capture.');
+      if(!editable(b.raw))conflict('Opaque source structure requires its own decision, not prose approval.');
+      const changed=approveExactSpan(b.raw,op),afterFrame=envelope(changed);
+      if(beforeFrame.kind!==afterFrame.kind||beforeFrame.level!==afterFrame.level)conflict('Approval cannot change source words or native block kind.');
+      const beforeParts=documentParts(b.raw,false),afterParts=documentParts(changed,false);
+      if(beforeParts.prefix!==afterParts.prefix||beforeParts.parts.length!==afterParts.parts.length||JSON.stringify([...beforeParts.separators])!==JSON.stringify([...afterParts.separators]))conflict('Approval cannot change native topology.');
+      b.raw=changed;
+    }else if(op.kind==='text'){
    const b=get(op.id),m=inlineMap(b.raw);if(hash(b.raw)!==op.seenBlockHash)conflict('Block changed since native edit capture.');if(!m.safe)conflict('Unknown source syntax is read-only.');
    if(op.from>op.to||/[\r\n\u0000]/.test(op.insert)||/[\[\]*_`<>=]|%%/.test(op.insert))conflict('Use explicit structure/format operations; text insert cannot invent syntax.');
    if(m.runs.some(r=>r.locked&&(r.from<op.to&&r.to>op.from||r.from===r.to&&op.from<r.from&&op.to>r.to)))conflict('Native edit touches protected source/term/pending/note bytes.');
@@ -159,7 +169,7 @@ export function undo(current:Snapshot,currentRaw:string,inverse:any){
  return {raw,snapshot:structuredClone(inverse.before),expectedOriginalHash:current.fileHash,nextOriginalHash:inverse.before.fileHash};
 }
 function validateOperation(op:any){
- const shapes:any={text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
+ const shapes:any={approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
  if(!op||typeof op!=='object'||Array.isArray(op)||!Object.hasOwn(shapes,op.kind))conflict('Unknown document operation kind.');
  const keys=shapes[op.kind];if(Object.keys(op).some(k=>!keys.includes(k))||keys.filter((k:string)=>k!=='level').some((k:string)=>!Object.hasOwn(op,k)))conflict('Malformed document operation fields.');
  for(const key of ['id','leftId','rightId','newId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\u0000-\u001f]/.test(op[key])))conflict('Malformed stable native ID.');
@@ -169,3 +179,5 @@ function validateOperation(op:any){
  if('seenBlockHash' in op&&(typeof op.seenBlockHash!=='string'||!/^[a-f0-9]{64}$/.test(op.seenBlockHash)))conflict('Malformed seen block hash.');
  if(op.kind==='blockKind'&&(!['paragraph','heading','blockquote'].includes(op.blockKind)||op.blockKind==='heading'&&![1,2,3].includes(op.level)||op.blockKind!=='heading'&&op.level!==undefined))conflict('Unsupported native block kind or heading level.');
 }
+
+export function approvalSpans(raw:string){if(!editable(raw))return [];return exactApprovalSpans(raw).map(span=>({...span,preview:raw.slice(span.rawFrom+2,span.rawTo-2).replace(/%%rework%%[\s\S]*?%%\/rework%%|%%[\s\S]*?%%|<!--[\s\S]*?-->/g,"")}));}
