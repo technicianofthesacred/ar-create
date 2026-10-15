@@ -1146,8 +1146,8 @@
     },
     {
       "path": "public/document-study/output-overview.js",
-      "sourceSha256": "eeebe1a0b409e984b992c3c6937d16b6105a4f0b2924b937a35cb7ff3815a019",
-      "candidateSha256": "eeebe1a0b409e984b992c3c6937d16b6105a4f0b2924b937a35cb7ff3815a019",
+      "sourceSha256": "d957cdc44e56e9eb2d9050047465af3fa1297843977d00ab3d30558fb2dffab8",
+      "candidateSha256": "d957cdc44e56e9eb2d9050047465af3fa1297843977d00ab3d30558fb2dffab8",
       "adapted": false
     },
     {
@@ -2222,6 +2222,14 @@
     {
       "path": "tests/stage-work-surfaces.test.mjs",
       "candidateSha256": "6dac2b12f9421798dd7970cd5ca2017e37f744a8ec32b658538056881ef6bfd9"
+    },
+    {
+      "path": "public/document-study/output-portal-http-journey.test.mjs",
+      "candidateSha256": "9d77cf5a44e7d041421bb47d7a6a36c0b8097fb6fa5f0ba94fca404e6bbeb499"
+    },
+    {
+      "path": "public/document-study/output-portal-dispatch.test.mjs",
+      "candidateSha256": "7416b04a548a43ba077082fe10ade3804a321df290640168eb5e743fbca2b1e2"
     }
   ],
   "dependencyRepair": {
