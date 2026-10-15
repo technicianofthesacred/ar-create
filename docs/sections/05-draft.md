@@ -39,3 +39,7 @@ Acceptance: view actual installed Draft at wide/narrow widths and light/dark the
 ### Correction after actual comparison — 15 October 2026
 
 The first typography patch was rejected: it reached stage 5 but left the same writing in Read with old headings/fonts and zero paragraph spacing. Acceptance must compare actual Draft AND Read for Hong Kong and An Cha, including native protected/nested blocks, against the Atlas reference. A loaded font declaration on one view is insufficient. Use consistent body/heading roles and paragraph rhythm in every representation of the same manuscript; retain meaningful emphasis and source markup. Match the reference’s antialiased rendering as well as nominal weight, font and size. Do not generalize manuscript styling to controls or existing carousel templates.
+
+## Private draft download
+
+Let the author download the current saved working draft without silently resolving pending editorial marks. Show the file format and whether the download contains review marks. Unsaved edits require an honest save/current-file distinction; refuse stale or wrong-story download. The downloaded bytes must match the selected saved revision. Preserve source identity, history and exact saved Undo. This does not approve marked wording or complete a designed article/carousel export.

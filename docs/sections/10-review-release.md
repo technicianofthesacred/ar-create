@@ -17,3 +17,7 @@ Save review decisions, export receipts/files and actual publish status per outpu
 ## Acceptance
 
 Review article and carousel independently; update source text and see relevant translation/approval become stale; export correct files with required assets/credits. Test real platform capabilities before promising format fidelity or automated publication. All slides remain reviewable together.
+
+## Separate a working draft from an approved output
+
+A private download of the author’s current saved draft may retain unresolved review marks and editorial instructions. Label it as a draft with its actual format; verify the download against saved bytes and scope. Do not require silent acceptance of those passages merely to recover or carry the working text elsewhere. Keep designed-output review and publication protections intact. A draft Markdown download is not proof that article, carousel, translation or platform exports are approved or finished.

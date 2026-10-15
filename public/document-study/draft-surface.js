@@ -64,7 +64,7 @@
    row.querySelector('[data-draft-action="disk-undo"]')?.replaceChildren(document.createTextNode('Undo saved'));
    row.querySelector('[data-draft-action="history"]')?.replaceChildren(document.createTextNode('Revisions'));
    const lead=row.querySelector('strong');if(lead)lead.hidden=true;
-   for(const key of ['disk-undo','history']){const secondary=row.querySelector('[data-draft-action="'+key+'"]');if(secondary){body.querySelectorAll('[data-draft-action="'+key+'"]').forEach(old=>old.remove());body.append(secondary);}}const studyDetails=top?.querySelector('button[onclick="modal=\'about\';render()"]');if(studyDetails)body.append(studyDetails);
+   for(const key of ['disk-undo','history','download-markdown']){const secondary=row.querySelector('[data-draft-action="'+key+'"]');if(secondary){body.querySelectorAll('[data-draft-action="'+key+'"]').forEach(old=>old.remove());body.append(secondary);}}const studyDetails=top?.querySelector('button[onclick="modal=\'about\';render()"]');if(studyDetails)body.append(studyDetails);
    const status=row.querySelector('[data-draft-status]');if(status)status.classList.add('draft-surface-save-state');
    row.append(button('Margin','open-margin'),extra);bar.append(row);
   }
