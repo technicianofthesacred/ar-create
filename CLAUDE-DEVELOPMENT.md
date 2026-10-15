@@ -56,7 +56,7 @@ Paths in this table are relative to this repository root. Edit maintained source
 
 ## Preserve while improving visuals
 
-- Keep document-first sans-serif reading, the project sidebar, Draft Margin/Focus and direct continuous typing. Preserve the appropriate stage-specific tools; do not impose the Draft layout on every stage or add a third shell.
+- Keep document-first reading, the project sidebar, Draft Margin/Focus and direct continuous typing. The 15 October accepted Atlas typography in docs/sections/05-draft.md supersedes earlier sans-serif prose guidance; controls remain sans serif. Preserve the appropriate stage-specific tools; do not impose the Draft layout on every stage or add a third shell.
 - Keep all twelve checkpoint entrances. The visible checkpoints do not claim every creative/export/publishing interaction is complete.
 - Preserve exact human wording, original source/capture bytes, stable project/part/paragraph identities, scoped direction, independent outputs, revision checks and saved Undo. Browser-unsaved words must remain recoverable and must never be overwritten by a newer file automatically.
 - Keep source speech/evidence distinct from human direction and proposed prose. Project research and matching-part research have different scopes. Adding material never regenerates approved text.

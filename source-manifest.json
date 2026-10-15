@@ -779,14 +779,14 @@
     },
     {
       "path": "public/document-study/draft-surface.js",
-      "sourceSha256": "d54149ecb829808a336162a7612f5f83deacff3dca7827067939e01e79e1dfa2",
-      "candidateSha256": "d54149ecb829808a336162a7612f5f83deacff3dca7827067939e01e79e1dfa2",
+      "sourceSha256": "4992887f9f4e0f755c80aa2b75546ea3228e7288979bc154f49a9ca7f8a658e9",
+      "candidateSha256": "4992887f9f4e0f755c80aa2b75546ea3228e7288979bc154f49a9ca7f8a658e9",
       "adapted": false
     },
     {
       "path": "public/document-study/draft-surface.css",
-      "sourceSha256": "92a40f1aab1a523d035d413987e82bd6ccf7e97917fee8e4f85256a1e0ddd8fe",
-      "candidateSha256": "92a40f1aab1a523d035d413987e82bd6ccf7e97917fee8e4f85256a1e0ddd8fe",
+      "sourceSha256": "7d892acb30b69eb3433bc0a27f3e4622f10bb3d0e3e3f099fdbc61f0f85e198d",
+      "candidateSha256": "7d892acb30b69eb3433bc0a27f3e4622f10bb3d0e3e3f099fdbc61f0f85e198d",
       "adapted": false
     },
     {
@@ -1815,6 +1815,54 @@
       "sourceSha256": "3ad8bad581746030edcc883ee90f7970f7ca706911e5384aa4b34703b42a4a6b",
       "candidateSha256": "3ad8bad581746030edcc883ee90f7970f7ca706911e5384aa4b34703b42a4a6b",
       "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/lora-400-normal-latin-ext.woff2",
+      "sourceSha256": "55606fbc76dc232c5beb8ef584d7b4f7f76e31a9f27877112e75484356462781",
+      "candidateSha256": "55606fbc76dc232c5beb8ef584d7b4f7f76e31a9f27877112e75484356462781",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/lora-400-italic-latin.woff2",
+      "sourceSha256": "3d536d49566e82a7905c8b0096758005f6616029ac08528d1f4789c1100dff6a",
+      "candidateSha256": "3d536d49566e82a7905c8b0096758005f6616029ac08528d1f4789c1100dff6a",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/lora-400-italic-latin-ext.woff2",
+      "sourceSha256": "9568adfab37a5b030e75c6651f833406bf541ff7621ea8c6059249b39edb258c",
+      "candidateSha256": "9568adfab37a5b030e75c6651f833406bf541ff7621ea8c6059249b39edb258c",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/lora-700-normal-latin.woff2",
+      "sourceSha256": "6b102ab35aa1f2b315788bb4853434ed1e52137603bf7a3da71a682276748d45",
+      "candidateSha256": "6b102ab35aa1f2b315788bb4853434ed1e52137603bf7a3da71a682276748d45",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/lora-700-normal-latin-ext.woff2",
+      "sourceSha256": "55606fbc76dc232c5beb8ef584d7b4f7f76e31a9f27877112e75484356462781",
+      "candidateSha256": "55606fbc76dc232c5beb8ef584d7b4f7f76e31a9f27877112e75484356462781",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/cormorant-garamond-500-normal-latin.woff2",
+      "sourceSha256": "5d618c462b7a5b74f442e1548880086af71764d9cc7d35c16ab45353da934621",
+      "candidateSha256": "5d618c462b7a5b74f442e1548880086af71764d9cc7d35c16ab45353da934621",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/cormorant-garamond-500-normal-latin-ext.woff2",
+      "sourceSha256": "9dc38267bdee93a653200ef3c1e8060e3f1399073432c415c683b419d3b50464",
+      "candidateSha256": "9dc38267bdee93a653200ef3c1e8060e3f1399073432c415c683b419d3b50464",
+      "adapted": false
+    },
+    {
+      "path": "runtime/public/assets/fonts/ATLAS-FONTS-LICENSE.txt",
+      "sourceSha256": "ded2ed138ef9e66f4180c588169e518e17a56644d0e5041a6db1f873cd7810c0",
+      "candidateSha256": "ded2ed138ef9e66f4180c588169e518e17a56644d0e5041a6db1f873cd7810c0",
+      "adapted": false
     }
   ],
   "excluded": [
@@ -1911,7 +1959,7 @@
     },
     {
       "path": "CLAUDE-DEVELOPMENT.md",
-      "candidateSha256": "d1de152e262fe7922f812f573f9f358c0bea641b6868ff3f79f9425fecb5bb9a"
+      "candidateSha256": "5be22985fdee04816e1c110db03ff789982c8edfd513f9180d2f99bf796d6d36"
     },
     {
       "path": "docs/sections/01-material.md",
@@ -1931,11 +1979,11 @@
     },
     {
       "path": "docs/sections/05-draft.md",
-      "candidateSha256": "f78427f702e28f69f922efe3cc8f5d385742adf8176de7b1c3219d1d3bce6efd"
+      "candidateSha256": "702a9b1ed7731aa5e5bf4b667c320a36344e57bf29074858aa60293fe6b2ff0f"
     },
     {
       "path": "docs/sections/06-read-refine.md",
-      "candidateSha256": "dcc4f609a8fba33313f075b2f3e44668500dc0f1a4677602e7efe2315d7bd5e5"
+      "candidateSha256": "9122a7253ffde7d1c1701a490ad2b71b7d1310ed2a7ee9859b040d28038d74bf"
     },
     {
       "path": "docs/sections/07-check-changes.md",
@@ -1999,7 +2047,11 @@
     },
     {
       "path": "docs/PRODUCT.md",
-      "candidateSha256": "488d75cf55eb7fdc8c0fee04ac959da1cf96794c09306c5024fb954f1f3562f9"
+      "candidateSha256": "3c0d87128cecb65fee2e14ec5acd8fd26262c86373f98fdca0153ad42fae9013"
+    },
+    {
+      "path": "tests/prose-surface.test.mjs",
+      "candidateSha256": "be6131639b3a5d92d31271fda11e625b4e657ee63ce0d5caad5e17ab8d645f8e"
     }
   ],
   "dependencyRepair": {

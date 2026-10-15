@@ -33,7 +33,17 @@
   const context=margin.querySelector('.draft-context');if(context){const host=meta.querySelector('.draft-surface-source-body'),retained=host.querySelector(':scope>details.draft-details');host.replaceChildren(context);const file=document.querySelector('.draft-bar>details.draft-details')||retained;if(file)host.append(file);}
   const file=document.querySelector('.draft-bar>details.draft-details');if(file)meta.querySelector('.draft-surface-source-body').append(file);const tabs=document.querySelector('.draft-bar>.draft-tabs');if(tabs){paper.querySelector(':scope>.draft-tabs')?.remove();meta.after(tabs);}const first=paper.querySelector('#manuscript')?.firstElementChild;if(first?.classList.contains('draft-protected')&&/^Conversations over Tea/i.test(first.textContent.trim())){first.classList.add('draft-surface-frontmatter');let next=first.nextElementSibling;while(next&&next.classList.contains('draft-protected')&&(next.querySelector('details>summary')?.textContent==='Story credits'||next.children.length===1&&next.firstElementChild.tagName==='HR')){next.classList.add('draft-surface-frontmatter');next=next.nextElementSibling;}}
  }
+ function decorateProse(){
+  const p=current(),retained=p?.viewedStage===6&&p?.view==='record';
+  for(const words of document.querySelectorAll('#manuscript,.draft-read-words'+(retained?',.phaseReader .recordBody':''))){
+   words.classList.add('manuscript-prose');const paper=words.closest('.document,.recordPage');if(!paper)continue;paper.classList.add('prose-document');
+   const title=[...paper.children].find(el=>el.tagName==='H1'||el.tagName==='H2'),first=words.firstElementChild;
+   const duplicate=first&&/^H[1-6]$/.test(first.tagName)&&title&&first.textContent.trim()===title.textContent.trim();
+   if(first)first.classList.toggle('prose-duplicate-title',!!duplicate);
+  }
+ }
  function decorate(){
+  decorateProse();
   const enabled=active();document.body.classList.toggle('draft-surface-active',enabled);if(!enabled){delete document.body.dataset.draftFocus;return;}
   const top=document.querySelector('.workspace>.topbar');if(top&&!top.querySelector('.draft-surface-modes')){
    const modes=document.createElement('div');modes.className='draft-surface-modes';modes.setAttribute('aria-label','Writing view');
@@ -69,6 +79,6 @@
  document.addEventListener('click',event=>{const el=event.target.closest?.('[data-surface-action]');if(!el||!active())return;const action=el.dataset.surfaceAction;if(action==='mode')setMode(el.dataset.surfaceMode==='focus');else if(action==='open-margin')showMargin();else if(action==='close-margin'){revealed=false;expanded=false;marginOpen=!focus;decorateMargin();}});
  document.addEventListener('selectionchange',()=>{if(!active()||!focus)return;const selection=window.getSelection();if(selection?.isCollapsed)return;const node=selection?.anchorNode,editor=document.getElementById('manuscript');if(node&&editor?.contains(node)){revealed=true;expanded=true;decorateMargin();}});
  window.addEventListener('study-draft-change',()=>{if(active()){const status=document.querySelector('.draft-surface-save-state');if(status)status.setAttribute('role',status.getAttribute('role')||'status');}});
- let queued=false;new MutationObserver(()=>{if(queued||!active())return;queued=true;queueMicrotask(()=>{queued=false;decorate()})}).observe(app,{childList:true,subtree:true});
+ let queued=false;new MutationObserver(()=>{if(queued||(!active()&&!document.querySelector('#manuscript,.draft-read-words,.manuscript-prose')))return;queued=true;queueMicrotask(()=>{queued=false;decorate()})}).observe(app,{childList:true,subtree:true});
  decorate();
 })();

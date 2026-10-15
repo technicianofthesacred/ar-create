@@ -273,3 +273,49 @@ body.draft-surface-active .workspace .workflowStep[aria-current="step"]{backgrou
   body.draft-surface-active .rail { display: block; position: static; inset: auto; height: auto; max-height: none; box-shadow: none; }
   body.draft-surface-active .workspace .mobileProjects { display: none !important; }
 }
+
+/* S05/S06/C05 Atlas prose across actual manuscript views. */
+@font-face{font-family:'AR Atlas Lora';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Atlas Lora';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Atlas Lora';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-italic-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Atlas Lora';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-italic-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Atlas Lora';font-style:normal;font-weight:700;font-display:swap;src:url('/assets/fonts/lora-700-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Atlas Lora';font-style:normal;font-weight:700;font-display:swap;src:url('/assets/fonts/lora-700-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Atlas Cormorant';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/cormorant-garamond-500-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Atlas Cormorant';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/cormorant-garamond-500-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+/* Shared authoring and reading prose. Presentation only; native nodes/words remain intact. */
+body .workspace :is(.document,.recordPage).prose-document{--atlas-prose-font:'AR Atlas Lora',Georgia,'Times New Roman',serif;--atlas-heading-font:'AR Atlas Cormorant',Georgia,'Times New Roman',serif;--atlas-paper:rgb(34 32 28);--atlas-ink:rgb(237 228 212);--atlas-dim:#c4b9a7;background:var(--atlas-paper);color:var(--atlas-ink);box-shadow:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root[data-theme="light"] body .workspace :is(.document,.recordPage).prose-document{--atlas-paper:#fffdf7;--atlas-ink:#342d24;--atlas-dim:#6b6051}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose){font:400 18px/1.8 var(--atlas-prose-font);font-family:var(--atlas-prose-font)!important;letter-spacing:.16px;color:var(--atlas-ink);max-width:680px;margin-inline:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body .workspace :is(.document,.recordPage).prose-document>:is(h1,h2),body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) :is(h1,h2,h3,h4,h5,h6){font-family:var(--atlas-heading-font)!important;font-weight:500;color:var(--atlas-ink);letter-spacing:.005em}
+body .workspace :is(.document,.recordPage).prose-document>:is(h1,h2){font-size:46px;line-height:1.1;letter-spacing:.23px;max-width:680px;margin:0 auto 20px;text-wrap:balance;overflow-wrap:anywhere}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) :is(p,blockquote,ul,ol,figure,pre){font-size:inherit;line-height:inherit;margin:0 0 1.1em}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose)>div{margin:0 0 1.1em}
+/* Saved read copies wrap each native block; preserve rhythm across those boundaries. */
+.workspace .draft-read-words>section{margin:0 0 1.1em}
+.workspace .draft-read-words>section>:last-child,.workspace .draft-read-words>section>.draft-protected>:last-child{margin-bottom:0}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) h2{font-size:30px;line-height:1.25;margin:1.4em 0 .6em}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) h3{font-size:26px;line-height:1.3;margin:1.3em 0 .6em}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) :is(h4,h5,h6){font-size:22px;line-height:1.35;margin:1.2em 0 .6em}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) blockquote{font-family:var(--atlas-prose-font)!important;font-style:normal;color:var(--atlas-dim);padding:0;border:0}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) :is(.discussionTarget,[data-anchor-open]){color:var(--atlas-ink)}
+body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose) :is(button,input,select,textarea,summary,figcaption){font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;letter-spacing:normal}
+.workspace .manuscript-prose>.prose-duplicate-title{display:none}
+.workspace .draft-reading{max-width:840px;margin-inline:auto}
+.workspace .draft-reading>.document{padding:28px 40px}
+@media(min-width:1251px){
+ body.draft-surface-active .workspace .desk,body.draft-surface-active .workspace .draft-bar+.desk,body.draft-surface-active[data-draft-focus="true"] .workspace .desk:has(#margin.revealed){grid-template-columns:minmax(0,760px) 260px}
+ body.draft-surface-active[data-draft-focus="true"] .workspace .desk{grid-template-columns:minmax(0,760px)}
+}
+@media(max-width:560px){
+ body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-prose){font-size:18px;line-height:1.8}
+ body .workspace :is(.document,.recordPage).prose-document>:is(h1,h2){font-size:34px;line-height:1.1}
+ .workspace .draft-reading{padding:16px 12px 40px}
+ .workspace .draft-reading>.document{padding:22px 20px}
+}
+
+/* Retained article titles live inside their preserved record body. */
+body .workspace .recordBody.manuscript-prose>h1:first-child{font-size:46px;line-height:1.1;letter-spacing:.23px;margin:0 0 20px}
+.workspace .phaseReader:has(.recordBody.manuscript-prose){max-width:840px;margin-inline:auto}
+@media(max-width:560px){body .workspace .recordBody.manuscript-prose>h1:first-child{font-size:34px;line-height:1.1}}

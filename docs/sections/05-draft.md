@@ -4,7 +4,7 @@ Intent: develop the chosen piece with AI assistance while preserving Adrian's hu
 
 ## Work surface
 
-Continuous sans-serif document, direct typing, compact toolbar, visible contextual margin and optional Focus. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
+Continuous document, direct typing, compact toolbar, visible contextual margin and optional Focus. The writing typography follows the author’s 15 October Atlas reference below; navigation, controls and assistance remain sans serif. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
 
 ## Editing and useful guidance
 
@@ -27,3 +27,15 @@ Keep reusable voice guidance concise, with general preferences distinct from thi
 One durable working manuscript revision with source/decision references, recoverable drafts and scoped proposal history. Save, switch, return, reload and Undo preserve words. Stale or context-invalid proposals refuse application. Existing real documents resume without a new setup ceremony. Live AI connection and arbitrary formatting support must be reported honestly.
 
 14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
+
+## Accepted writing appearance — 15 October 2026
+
+The author selected the look of the Tea Atlas article at https://www.teajia.com/atlas/read/1906-the-book-of-tea-p11-ii-the-schools-of-tea for writing: its font, spacing and calm continuous presentation, without the printed page numbers. This is a focused refinement of the working document, not a new reader shell or editor. It supersedes the earlier blanket sans-serif requirement for prose and document headings only; keep the surrounding interface in sans serif.
+
+Observed reference: Lora regular body, 18px with 1.8 line height, approximately 1.1em paragraph separation and 680px maximum text width; Cormorant Garamond medium headings. Use responsive sizes and fitting title scale in the actual editing area, warm readable light/dark colors, and minimal framing. Preserve normal semantic emphasis and quote styles, available project navigation, compact top controls, visible AI margin/optional Focus and all working connections. Do not reproduce print pagination, page-number gutters or the reader’s large header stack. Reuse licensed local font assets and supply fallbacks so writing remains usable offline.
+
+Acceptance: view actual installed Draft at wide/narrow widths and light/dark themes; check font loading, readable line length, paragraph rhythm, protected passages, selection/caret, and margin/Focus fit. Existing saved words, project/part/output scope, save/recovery/Undo and export semantics remain unchanged. A visual preview or requirement entry alone is not installed proof.
+
+### Correction after actual comparison — 15 October 2026
+
+The first typography patch was rejected: it reached stage 5 but left the same writing in Read with old headings/fonts and zero paragraph spacing. Acceptance must compare actual Draft AND Read for Hong Kong and An Cha, including native protected/nested blocks, against the Atlas reference. A loaded font declaration on one view is insufficient. Use consistent body/heading roles and paragraph rhythm in every representation of the same manuscript; retain meaningful emphasis and source markup. Match the reference’s antialiased rendering as well as nominal weight, font and size. Do not generalize manuscript styling to controls or existing carousel templates.
