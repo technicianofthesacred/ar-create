@@ -6,3 +6,7 @@
 @media(max-width:600px){.oo-stage{padding:16px 12px 32px!important}}
 
 .oo-title{display:block;width:100%;min-height:44px;font:inherit;font-weight:inherit;text-align:left;padding:0;border:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.oo-title:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+/* Give the reused carousel a definite viewport budget in the document host. */
+#study-output-canvas .ar-composition-workbench:has(>.car-workspace){height:max(560px,calc(100dvh - 220px));min-height:0}
+#study-output-canvas .car-stage>.car-artboard-slot{align-self:start;align-items:flex-start}

@@ -12,9 +12,9 @@ export function outputMarkdown(doc:Manuscript,output:Output):string {
 export function saveDownload(filename:string,body:string,type:string){const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 export const outputFilename=(output:Output)=>((output.title||'article').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'article')+'-r'+output.manuscriptRevision;
 const blobDataUrl=(blob:Blob)=>new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('An output asset could not be read.'));reader.readAsDataURL(blob);});
-export async function outputHtml(doc:Manuscript,output:Output,{readAsset=fetch}:{readAsset?:typeof fetch}={}):Promise<string> {
+export async function outputHtml(doc:Manuscript,output:Output,{readAsset=fetch,stylesheetUrl='/assets/app.css'}:{readAsset?:typeof fetch;stylesheetUrl?:string}={}):Promise<string> {
  assertOutputEditorialReady(output,{paragraphs:doc.paragraphs,title:doc.title});
- const cssResponse=await readAsset('/assets/app.css');if(!cssResponse.ok)throw new Error('The article styles could not be included.');let css=await cssResponse.text();
+ const cssResponse=await readAsset(stylesheetUrl);if(!cssResponse.ok)throw new Error('The article styles could not be included.');let css=await cssResponse.text();
  const workingFonts=await readAsset('/assets/fonts/wordforge.css');if(!workingFonts.ok)throw new Error('The article working fonts could not be included.');css+=(await workingFonts.text()).replace(/url\(([a-z0-9]+\.woff2)\)/g,"url('/assets/fonts/$1')");
  const fontPaths=[...new Set([...css.matchAll(/url\(["']?(\/assets\/[^"')]+\.woff2)["']?\)/g)].map(m=>m[1]))];
  for(const fontPath of fontPaths){const response=await readAsset(fontPath);if(!response.ok)throw new Error('An article font could not be included.');const embedded=await blobDataUrl(await response.blob());css=css.replaceAll(fontPath,embedded);}
@@ -31,7 +31,7 @@ export async function outputHtml(doc:Manuscript,output:Output,{readAsset=fetch}:
 }
 
 export type ExportArtifact={id:string;name:string;path:string;url:string;mimeType:string;outputId:string;manuscriptRevision:number;createdAt:string;hash:string;sizeBytes:number};
-export async function persistOutputExport(api:(path:string,options?:any)=>Promise<any>,doc:Manuscript,output:Output,format:'markdown'|'html'|'json',assets:{readAsset?:typeof fetch}={}):Promise<ExportArtifact>{
+export async function persistOutputExport(api:(path:string,options?:any)=>Promise<any>,doc:Manuscript,output:Output,format:'markdown'|'html'|'json',assets:{readAsset?:typeof fetch;stylesheetUrl?:string}={}):Promise<ExportArtifact>{
  const extension=format==='markdown'?'md':format==='html'?'html':'json';
  const mimeType=format==='markdown'?'text/markdown':format==='html'?'text/html':'application/json';
  const body=format==='markdown'?outputMarkdown(doc,output):format==='html'?await outputHtml(doc,output,assets):JSON.stringify(output,null,2);

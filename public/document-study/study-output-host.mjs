@@ -17,7 +17,7 @@ export function selectedOutputChanges(before,outputs,selectedOutputId){
 }
 
 /** Scoped HTTP host, with no ambient current-piece state or fetch fallback. */
-export async function createStudyOutputHost({element,scope,selectedOutputId,request,mount,studyDraft,openCarouselWriting,photoScope,assetOrigin='http://local.invalid',onError=()=>{},onShelf=()=>{},uuid=()=>crypto.randomUUID(),rememberPending=()=>{},pendingRequest=null,getCreateSource}){
+export async function createStudyOutputHost({element,scope,selectedOutputId,request,mount,studyDraft,openCarouselWriting,photoScope,assetOrigin='http://local.invalid',onError=()=>{},onShelf=()=>{},uuid=()=>crypto.randomUUID(),rememberPending=()=>{},pendingRequest=null,getCreateSource,onSelectionChange=()=>{}}){
  if(!scope?.rootBindingId||!scope?.parentStudyId||typeof request!=='function'||typeof mount!=='function')fail('Supply exact root/parent scope, an HTTP request transport and the existing composition mount.');
  scope=clone(scope);let model,canvas,host,epoch=0,closed=false,pending=pendingRequest?clone(pendingRequest):null;
  if(pending&&!scopeEqual(pending.body,scope))fail('Pending output request belongs to another study.');
@@ -25,7 +25,7 @@ export async function createStudyOutputHost({element,scope,selectedOutputId,requ
  const call=async(path,body)=>{const response=await request(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined);const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||'The output owner refused this request.'),{status:response.status});return data;};
  function adapt(read,id){if(!scopeEqual(read.scope,scope)||read.documentId!==scope.rootBindingId||read.output?.id!==id)fail('The server returned another output or parent study.');return adaptNativeOutputRead(read,{doc:read.document,outputs:read.outputs,compositionCapabilities:{articleAI:false,carouselAI:false}});}
  async function load(id){const token=++epoch,read=await call(query('/api/study/outputs',{...scope,selectedOutputId:id}));if(closed||token!==epoch)fail('Output selection changed while reading; the current canvas is preserved.');return adapt(read,id);}
- function install(next){model=clone(next);canvas?.update(model);return clone(model);}
+ function install(next){model=clone(next);canvas?.update(model);onSelectionChange(model.selectedOutputId);return clone(model);}
  function assertInput(input){if(closed||!scopeEqual(input,scope)||input.selectedOutputId!==model.selectedOutputId||!same(input.writingProof,model.writingProof)||!same(input.expectedOutput??model.expectedOutput,model.expectedOutput))fail('Output identity or writing receipt changed; preserve the pending buffer.');}
  async function mutation(path,body){if(pending&&!same(pending.body,body))fail('An unconfirmed request is retained. Recover its exact receipt before starting another operation.');pending={path,body:clone(body)};rememberPending(clone(pending));const token=epoch;
   const result=await call(path,body);if(closed||token!==epoch)fail('Output changed while saving; its exact operation is retained for recovery.');const next=adapt(result.view,body.selectedOutputId||body.operationId);pending=null;rememberPending(null);model=clone(next);return next;

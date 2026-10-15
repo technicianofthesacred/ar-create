@@ -1104,8 +1104,8 @@
     },
     {
       "path": "public/document-study/mountStudyComposition.tsx",
-      "sourceSha256": "2cf41969ba17cdb55924b9e97bbe25c9fd0823d582ecb5b9fb319da0d9a2fc28",
-      "candidateSha256": "7017d9af2cd036f1e89c1523e18e6c0303373c27a9c90968806088ac51ebe371",
+      "sourceSha256": "deef6596954f94d6e006881574e17fe3f3dad4de12db9ebfdeb2cb6ccfa460cd",
+      "candidateSha256": "c12edff0ea0f56f28ef0eef770a027deb8aa5a1a6574070b951b2282c71c36c8",
       "adapted": true
     },
     {
@@ -1117,31 +1117,31 @@
     {
       "path": "public/document-study/native-approval-ui.test.mjs",
       "sourceSha256": "9ca3511e1f61652f5aa635eef4e075ffdf2eac553006820c3dc35635da554d30",
-      "candidateSha256": "9ca3511e1f61652f5aa635eef4e075ffdf2eac553006820c3dc35635da554d30",
-      "adapted": false
+      "candidateSha256": "209e5e3a121ceaad310b3f02bfdf35f1a2259c1da331ee92f64ec2b9a7eafa4c",
+      "adapted": true
     },
     {
       "path": "public/document-study/native-open-binding.test.mjs",
       "sourceSha256": "4a9d7531a19315a238bad137310db997f388ea263b52199588afc87484ae8c2c",
-      "candidateSha256": "4a9d7531a19315a238bad137310db997f388ea263b52199588afc87484ae8c2c",
-      "adapted": false
+      "candidateSha256": "f6e80e1f3c03d234bc784dab47d489e240c6b171b1f4efa959898b79f4850283",
+      "adapted": true
     },
     {
       "path": "public/document-study/output-connection.js",
-      "sourceSha256": "84e1e21a97dfc6abec42c1cb13c4b3430f449338b474a6544b374f6510d1f3f5",
-      "candidateSha256": "84e1e21a97dfc6abec42c1cb13c4b3430f449338b474a6544b374f6510d1f3f5",
+      "sourceSha256": "7ff21ae3f540546bf98140f52d3f477e2ba808c820be763236ab28df1e2deafd",
+      "candidateSha256": "7ff21ae3f540546bf98140f52d3f477e2ba808c820be763236ab28df1e2deafd",
       "adapted": false
     },
     {
       "path": "public/document-study/output-evidence.test.mjs",
       "sourceSha256": "6b92c3623cfd89eb7629574d418e397d4af693d4c68cb352b07528bd877ff446",
-      "candidateSha256": "6b92c3623cfd89eb7629574d418e397d4af693d4c68cb352b07528bd877ff446",
-      "adapted": false
+      "candidateSha256": "ed33b9bcfbd40c8d68f4574d610dd61eaf4c54a1c8625e65cecebebd8eeb3640",
+      "adapted": true
     },
     {
       "path": "public/document-study/output-overview.css",
-      "sourceSha256": "2bd490a1a672171819c76697ce9221f794f987d4b6b72872cce884b022f9c9d0",
-      "candidateSha256": "2bd490a1a672171819c76697ce9221f794f987d4b6b72872cce884b022f9c9d0",
+      "sourceSha256": "7277ee7fa81365d5ce009ae98c5143e07c3108eec41f8cefcd94e5d19f973bf9",
+      "candidateSha256": "7277ee7fa81365d5ce009ae98c5143e07c3108eec41f8cefcd94e5d19f973bf9",
       "adapted": false
     },
     {
@@ -1170,14 +1170,14 @@
     },
     {
       "path": "public/document-study/study-output-host.mjs",
-      "sourceSha256": "394124a7abad74a2bedc901412e99b9f92e9ba6069f2d0d284de7b4403b047f1",
-      "candidateSha256": "394124a7abad74a2bedc901412e99b9f92e9ba6069f2d0d284de7b4403b047f1",
+      "sourceSha256": "8a7b5f121822d5252779261cd3527db48f2a9fee882b4c419a130d1c2ffe5d10",
+      "candidateSha256": "8a7b5f121822d5252779261cd3527db48f2a9fee882b4c419a130d1c2ffe5d10",
       "adapted": false
     },
     {
       "path": "public/document-study/study-output-host.test.mjs",
-      "sourceSha256": "c8d3e033d0d121def56d6e69587a810c645de99be47329ab5778bf1c253d5729",
-      "candidateSha256": "c8d3e033d0d121def56d6e69587a810c645de99be47329ab5778bf1c253d5729",
+      "sourceSha256": "cf82c04762c937ad272f915b68c255585a03936e7b012eabece387c8a7215b67",
+      "candidateSha256": "cf82c04762c937ad272f915b68c255585a03936e7b012eabece387c8a7215b67",
       "adapted": false
     },
     {
@@ -1356,8 +1356,8 @@
     },
     {
       "path": "runtime/services/native-output-exports.test.mjs",
-      "sourceSha256": "5c7bb797cb9afd931cea4d1c5de0d2344eb87a237a0910c4bd2ce2f029e3f680",
-      "candidateSha256": "5c7bb797cb9afd931cea4d1c5de0d2344eb87a237a0910c4bd2ce2f029e3f680",
+      "sourceSha256": "3c6d385fd090d23b0ec9b1a8bd4644bd59bba993a9fff9e3234c1312fe42df7b",
+      "candidateSha256": "3c6d385fd090d23b0ec9b1a8bd4644bd59bba993a9fff9e3234c1312fe42df7b",
       "adapted": false
     },
     {
@@ -1386,14 +1386,14 @@
     },
     {
       "path": "runtime/services/native-output-owner.mjs",
-      "sourceSha256": "9789d1f14aec5969f030ad0de23da81581828f63ed24d2165fcdb6cb4a5a1216",
-      "candidateSha256": "9789d1f14aec5969f030ad0de23da81581828f63ed24d2165fcdb6cb4a5a1216",
+      "sourceSha256": "9702dd00b48886bc56eebafe306feb33ec9b7c0b023a2cb149886bb37fa34122",
+      "candidateSha256": "9702dd00b48886bc56eebafe306feb33ec9b7c0b023a2cb149886bb37fa34122",
       "adapted": false
     },
     {
       "path": "runtime/services/native-output-owner.test.ts",
-      "sourceSha256": "d4c84140ef7db5ef132b812ceef44e8d84c973a75add7fe991e3b84de15ee953",
-      "candidateSha256": "d4c84140ef7db5ef132b812ceef44e8d84c973a75add7fe991e3b84de15ee953",
+      "sourceSha256": "a14c41610a83815027ed19a799bb75d4b8feb41c614c73da1084a22bc69c3e29",
+      "candidateSha256": "a14c41610a83815027ed19a799bb75d4b8feb41c614c73da1084a22bc69c3e29",
       "adapted": false
     },
     {
@@ -1704,8 +1704,8 @@
     },
     {
       "path": "runtime/src/workspaces/exportOutput.tsx",
-      "sourceSha256": "3f90f8e637e97f8a8462558cda91707ca95bcdee45efc370a9ae683eea4e71d7",
-      "candidateSha256": "3f90f8e637e97f8a8462558cda91707ca95bcdee45efc370a9ae683eea4e71d7",
+      "sourceSha256": "df351c4c2970ca2542a3008f96b872eac132adaa0c1bb19f1d37bd8b0c5fd5aa",
+      "candidateSha256": "df351c4c2970ca2542a3008f96b872eac132adaa0c1bb19f1d37bd8b0c5fd5aa",
       "adapted": false
     },
     {
@@ -1802,6 +1802,18 @@
       "path": "runtime/src/workspaces/writingLocation.ts",
       "sourceSha256": "f190d11cdea4450226576586ea30baa8008eaea2a3470922c0fe82af2008a539",
       "candidateSha256": "f190d11cdea4450226576586ea30baa8008eaea2a3470922c0fe82af2008a539",
+      "adapted": false
+    },
+    {
+      "path": "public/document-study/output-connection.test.mjs",
+      "sourceSha256": "49926618030203e7dd6488850730ff0660ac06c2a481e86f92cda7d8ac614488",
+      "candidateSha256": "3e5ff4987b80aabcd4c4f254c65d3f412f3125d3a7a10689f5fe473b05408f9a",
+      "adapted": true
+    },
+    {
+      "path": "runtime/public/assets/fonts/wordforge.css",
+      "sourceSha256": "3ad8bad581746030edcc883ee90f7970f7ca706911e5384aa4b34703b42a4a6b",
+      "candidateSha256": "3ad8bad581746030edcc883ee90f7970f7ca706911e5384aa4b34703b42a4a6b",
       "adapted": false
     }
   ],
