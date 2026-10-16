@@ -101,15 +101,21 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[]){
     }else if(op.kind==='text'){
    const b=get(op.id),m=inlineMap(b.raw);if(hash(b.raw)!==op.seenBlockHash)conflict('Block changed since native edit capture.');if(!m.safe)conflict('Unknown source syntax is read-only.');
    if(op.from>op.to||/[\r\n\u0000]/.test(op.insert)||/[\[\]*_`<>=]|%%/.test(op.insert))conflict('Use explicit structure/format operations; text insert cannot invent syntax.');
-   if(m.runs.some(r=>r.locked&&(r.from<op.to&&r.to>op.from||r.from===r.to&&op.from<r.from&&op.to>r.to)))conflict('Native edit touches protected source/term/pending/note bytes.');
+   // A correction is not approval: allow a bounded ordinary-text edit inside
+   // one exact plain ==span==, retaining both delimiters and every other lock.
+   const offered=exactApprovalSpans(b.raw);
+   const pendingRun=m.runs.find(r=>r.locked&&r.from<=op.from&&r.to>=op.to&&(op.from<op.to||op.from>r.from&&op.from<r.to)&&offered.some(span=>span.rawFrom===r.rawFrom&&span.rawTo===r.rawTo)&&b.raw.slice(r.rawFrom+2,r.rawTo-2)===m.words.slice(r.from,r.to)&&!/[\r\n\[\]*_`<>=\\]|%%/.test(b.raw.slice(r.rawFrom+2,r.rawTo-2)));
+   if(m.runs.some(r=>r.locked&&r!==pendingRun&&(r.from<op.to&&r.to>op.from||r.from===r.to&&op.from<r.from&&op.to>r.to)))conflict('Native edit touches protected source/term/pending/note bytes.');
+   if(pendingRun)for(const position of [op.from,op.to])if(position>0&&position<m.words.length&&/[\uD800-\uDBFF]/.test(m.words[position-1])&&/[\uDC00-\uDFFF]/.test(m.words[position]))conflict('Native range divides a Unicode character.');
    if(op.insert===m.words.slice(op.from,op.to))continue;
    const completeRequest=m.reworks.find(r=>r.from===op.from&&r.to===op.to);
-   const a=completeRequest?.rawFrom??byteBoundary(m,op.from),z=completeRequest?.rawTo??byteBoundary(m,op.to,'left');
+   const a=pendingRun?pendingRun.rawFrom+2+op.from-pendingRun.from:completeRequest?.rawFrom??byteBoundary(m,op.from),z=pendingRun?pendingRun.rawFrom+2+op.to-pendingRun.from:completeRequest?.rawTo??byteBoundary(m,op.to,'left');
    // Only a complete request replacement may traverse its synthetic slash boundaries.
    if(!completeRequest&&z-a!==op.to-op.from)conflict('Native range crosses a formatting or request boundary; edit each text run or complete request separately.');
    let changed=b.raw.slice(0,a)+op.insert+b.raw.slice(z);
    const mapped=inlineMap(changed);
    if(!mapped.safe||mapped.blockKind!==m.blockKind||mapped.level!==m.level)conflict('Edit would create unsupported or unbalanced source syntax or change block kind.');
+   if(pendingRun&&exactApprovalSpans(changed).length!==offered.length)conflict('Pending wording correction must retain every review mark.');
    const requests=[...mapped.words.matchAll(reworkSlashes())].map(match=>({from:match.index!+match[1].length,to:match.index!+match[0].length,words:match[2]}));
    for(const request of requests.reverse()){
     if(mapped.reworks.some(r=>r.from===request.from&&r.to===request.to))continue;

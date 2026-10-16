@@ -737,8 +737,8 @@
     },
     {
       "path": "public/document-study/index.html",
-      "sourceSha256": "476c4671ca84d26ee54226cba3ad771a58b9f9a8ef00ea930d14d3c3e7fbc13e",
-      "candidateSha256": "a38dea653efc55ba9a0768a6a673ce533b2c0dcddf52edd5ce1bff6633426c48",
+      "sourceSha256": "a81aa3e59d5237a413058ff81f349a8c24517c428f19e89a4b8a40018d93c9dc",
+      "candidateSha256": "8895d95cd835e5407f4372dae74c8bccd49cbe536332b144d70e1d0b31e67a67",
       "adapted": true
     },
     {
@@ -767,8 +767,8 @@
     },
     {
       "path": "public/document-study/draft-flow.js",
-      "sourceSha256": "6b170076a76e6e7a8db67162c1935c44d543aa5f896b923f85347ad904d9a319",
-      "candidateSha256": "6b170076a76e6e7a8db67162c1935c44d543aa5f896b923f85347ad904d9a319",
+      "sourceSha256": "20e942ce8bb84db4bf51fdb22ba9475f8e28181aff23efd044770515101f591c",
+      "candidateSha256": "20e942ce8bb84db4bf51fdb22ba9475f8e28181aff23efd044770515101f591c",
       "adapted": false
     },
     {
@@ -935,8 +935,8 @@
     },
     {
       "path": "runtime/src/native/correspondence.ts",
-      "sourceSha256": "7a1d3b3d2838d57bbb65035c61bac8171edcf7345e2e531c85e07e8506bf1602",
-      "candidateSha256": "7a1d3b3d2838d57bbb65035c61bac8171edcf7345e2e531c85e07e8506bf1602",
+      "sourceSha256": "b9416361b8ee4fa8f55d4f9dd3816cc3b39dbcf3ee3bed5414b459d6605723a4",
+      "candidateSha256": "b9416361b8ee4fa8f55d4f9dd3816cc3b39dbcf3ee3bed5414b459d6605723a4",
       "adapted": false
     },
     {
@@ -1116,8 +1116,8 @@
     },
     {
       "path": "public/document-study/native-approval-ui.test.mjs",
-      "sourceSha256": "a8efed3eb15ea2f510f1007c3de1c5dd7dc1eb25d5e1259056058c42e01bc7f0",
-      "candidateSha256": "97cc8fe33982f2bee63faca3cc44aa1ee25b006abf62ba2ca14bfa1a02cf35b0",
+      "sourceSha256": "31f9ff95676f090312baa78dc764b4cf7d6d62e8c2a7e08b8c217b5146a05b7f",
+      "candidateSha256": "9d46af70844bf8241265533511b1421fc579df79d61dcd97a70e753f41552427",
       "adapted": true
     },
     {
@@ -1988,6 +1988,18 @@
       "path": "public/document-study/tangible-workspace.css",
       "sourceSha256": "12b938ded54a180461840f89d01299dc2076690b67d376d7ce338fe9f58a7720",
       "candidateSha256": "12b938ded54a180461840f89d01299dc2076690b67d376d7ce338fe9f58a7720",
+      "adapted": false
+    },
+    {
+      "path": "runtime/services/native-pending-edit.test.mjs",
+      "sourceSha256": "c35ae45509368f9d4ef25e2e55b629d054db55b46e49cabfd693e11e854a6141",
+      "candidateSha256": "c35ae45509368f9d4ef25e2e55b629d054db55b46e49cabfd693e11e854a6141",
+      "adapted": false
+    },
+    {
+      "path": "public/document-study/workspace-consistency.css",
+      "sourceSha256": "a4cc261939eeafcbd4627280bd12ebbf628a5069f32664d441ac36cc4c337292",
+      "candidateSha256": "a4cc261939eeafcbd4627280bd12ebbf628a5069f32664d441ac36cc4c337292",
       "adapted": false
     }
   ],

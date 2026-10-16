@@ -39,3 +39,21 @@ test('output continuation uses native review metadata and controls without appro
  f.w.document.querySelector('[data-output-review-return]').click();await tick();assert.equal(f.p.viewedStage,12);
  await f.close();
 });
+
+test('ordinary direct editor emits a text correction inside pending prose and retains refreshed approval metadata',async()=>{
+ const native=await import('../../runtime/services/draft-correspondence.mjs'),{digest}=await import('../../runtime/services/files.mjs');
+ const f=fixture(),raw='Before ==draft phrase== after.',snapshot=native.capture(raw,'synthetic-editor');let latest={snapshot,raw};
+ const response=()=>{const r=result(primary,latest.raw);r.expected.workflow.draft=digest(latest.raw);r.projection=native.projection(latest.snapshot).map(row=>({...row,raw:latest.snapshot.blocks.find(b=>b.id===row.id).raw}));r.approvalReview={role:'explicit-human-native-markup-decision',blocks:r.projection.map(row=>({id:row.id,seenBlockHash:row.blockHash,spans:native.approvalSpans(row.raw)})).filter(row=>row.spans.length)};return r;};
+ f.setOverride((route,body)=>{if(route.pathname.endsWith('/read'))return response();if(route.pathname.endsWith('/save')){assert.ok(body.operations.every(op=>op.kind==='text'));latest=native.apply(latest.snapshot,latest.raw,body.operations);return response();}return null;});
+ await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent});await tick();const editor=f.w.document.querySelector('#manuscript'),bold=editor.querySelector('strong');assert.equal(bold.textContent,'draft phrase');bold.firstChild.data='clear phrase';f.w.onTyping(editor);f.w.document.querySelector('[data-draft-action="save"]').click();await tick();
+ assert.equal(latest.raw,'Before ==clear phrase== after.');assert.equal(f.w.studyDraft.currentProof().dirty,false);assert.equal(f.w.studyDraft.reviewState().blocks[0].count,1);assert.equal(f.w.document.querySelectorAll('[data-draft-approve]').length,1);assert.match(f.w.document.querySelector('.draft-mark-preview').textContent,/clear phrase/);assert.equal(f.calls.filter(c=>c.path.endsWith('/save')).length,1);assert.equal(f.calls.find(c=>c.path.endsWith('/save')).body.operations[0].kind,'text');await f.close();
+});
+
+test('native quote classification matches startup metadata without relaxing real dirty wording guards',async()=>{
+ const native=await import('../../runtime/services/draft-correspondence.mjs'),f=fixture(),raw='“==pending words==”',snapshot=native.capture(raw,'synthetic-quoted');
+ const response=()=>{const r=result(primary,raw);r.projection=native.projection(snapshot).map(row=>({...row,raw:snapshot.blocks.find(b=>b.id===row.id).raw}));r.approvalReview={role:'explicit-human-native-markup-decision',blocks:r.projection.map(row=>({id:row.id,seenBlockHash:row.blockHash,spans:native.approvalSpans(row.raw)}))};return r;};f.setOverride(route=>route.pathname.endsWith('/read')?response():null);
+ await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent});await tick();assert.equal(f.disk().documents[primary].blocks[0].quote,true);
+ // Same classification performed by existing initializeWorkflow on a returning page.
+ f.p.blocks[0].quote=true;assert.equal(f.w.studyDraft.reviewState().dirty,false);assert.equal(f.calls.filter(c=>c.path.endsWith('/save')).length,0);
+ f.p.blocks[0].html=f.p.blocks[0].html.replace('pending words','changed words');assert.equal(f.w.studyDraft.reviewState().dirty,true);assert.equal(f.calls.filter(c=>c.path.endsWith('/save')).length,0);await f.close();
+});
