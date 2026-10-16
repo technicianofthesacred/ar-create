@@ -767,8 +767,8 @@
     },
     {
       "path": "public/document-study/draft-flow.js",
-      "sourceSha256": "76248124ab49500de7c6f95bf77ba5768618324078e46183a06dca71a7c0c55b",
-      "candidateSha256": "76248124ab49500de7c6f95bf77ba5768618324078e46183a06dca71a7c0c55b",
+      "sourceSha256": "6b170076a76e6e7a8db67162c1935c44d543aa5f896b923f85347ad904d9a319",
+      "candidateSha256": "6b170076a76e6e7a8db67162c1935c44d543aa5f896b923f85347ad904d9a319",
       "adapted": false
     },
     {
@@ -1116,8 +1116,8 @@
     },
     {
       "path": "public/document-study/native-approval-ui.test.mjs",
-      "sourceSha256": "9ca3511e1f61652f5aa635eef4e075ffdf2eac553006820c3dc35635da554d30",
-      "candidateSha256": "209e5e3a121ceaad310b3f02bfdf35f1a2259c1da331ee92f64ec2b9a7eafa4c",
+      "sourceSha256": "a8efed3eb15ea2f510f1007c3de1c5dd7dc1eb25d5e1259056058c42e01bc7f0",
+      "candidateSha256": "97cc8fe33982f2bee63faca3cc44aa1ee25b006abf62ba2ca14bfa1a02cf35b0",
       "adapted": true
     },
     {
@@ -1128,8 +1128,8 @@
     },
     {
       "path": "public/document-study/output-connection.js",
-      "sourceSha256": "7ff21ae3f540546bf98140f52d3f477e2ba808c820be763236ab28df1e2deafd",
-      "candidateSha256": "7ff21ae3f540546bf98140f52d3f477e2ba808c820be763236ab28df1e2deafd",
+      "sourceSha256": "aa038abbafa8a2ecb8ed2d5ed1823f9a86dadb22b5044c512612547a14544e38",
+      "candidateSha256": "aa038abbafa8a2ecb8ed2d5ed1823f9a86dadb22b5044c512612547a14544e38",
       "adapted": false
     },
     {
@@ -1806,8 +1806,8 @@
     },
     {
       "path": "public/document-study/output-connection.test.mjs",
-      "sourceSha256": "49926618030203e7dd6488850730ff0660ac06c2a481e86f92cda7d8ac614488",
-      "candidateSha256": "3e5ff4987b80aabcd4c4f254c65d3f412f3125d3a7a10689f5fe473b05408f9a",
+      "sourceSha256": "a2d6f8d5cb30572be0abbf1a6560cf235c9e9fe88213b314f76b7e89fea5a508",
+      "candidateSha256": "c4282151ac8cddd604e319bf3884fc2e6a2c6bb489c30a5edb476e9c92c4d720",
       "adapted": true
     },
     {
