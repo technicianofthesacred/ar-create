@@ -5,7 +5,7 @@
  const str=value=>typeof value==='string'?value:'';
  const arr=value=>Array.isArray(value)?value:[];
  const scope=value=>({projectId:str(value?.projectId),outputId:str(value?.outputId),revision:str(value?.revision)});
- const same=(a,b)=>!!a?.projectId&&!!a.outputId&&!!a.revision&&a.projectId===b?.projectId&&a.outputId===b?.outputId&&a.revision===b?.revision;
+ const same=(a,b)=>!!a?.projectId&&!!a.revision&&a.projectId===b?.projectId&&a.outputId===b?.outputId&&a.revision===b?.revision;
  const safeURL=value=>{try{const url=new URL(str(value));return ['https:','http:'].includes(url.protocol)&&!url.username&&!url.password?str(value):'';}catch{return '';}};
  const paragraphs=value=>str(value).split(/\n\s*\n/).filter(Boolean);
  const blocks=value=>arr(value).map(item=>typeof item==='string'?{title:'',text:item}:{title:str(item?.title),text:str(item?.text)}).filter(item=>item.title||item.text);
@@ -38,7 +38,7 @@
    revision:str(rawBrief.revision),updatedAt:str(rawBrief.updatedAt),status:str(rawBrief.status),content:str(rawBrief.content),
    sections:blocks(rawBrief.sections),updates:arr(rawBrief.updates).map(u=>({date:str(u?.date),text:str(u?.text)})).filter(u=>u.text)
   }:null;
-  return {scope:context,title:str(input?.title)||'Research',outputTitle:str(input?.outputTitle)||'Selected output',points,brief,valid:same(context,context),showContext:input?.showContext!==false};
+  return {scope:context,title:str(input?.title)||'Research',outputTitle:str(input?.outputTitle)||'Project learning',points,brief,valid:same(context,context),showContext:input?.showContext!==false};
  }
  const tools={
   discuss:{label:'Discuss this point',purpose:'Ask about this point using its exact source words, evidence limits and supplied learning.',field:'Your question'},
@@ -115,7 +115,7 @@
    if(dead)return;const root=el('section',null,'rpb');root.setAttribute('aria-label','Research points and shared brief');
    const header=el('header',null,'rpb-heading');header.append(el('p',data.title+' · '+data.outputTitle,'rpb-meta'));
    const tabs=el('nav',null,'rpb-actions');tabs.setAttribute('aria-label','Research view');for(const [id,label] of [['points','Research points'],['brief','Shared brief']]){const b=button(label,'rpbTab',id);b.setAttribute('aria-pressed',String(tab===id));tabs.append(b);}header.append(tabs);root.append(header);
-   if(!data.valid)root.append(el('p','Current project, output and source revision are required before actions can connect.','rpb-meta'));
+   if(!data.valid)root.append(el('p','Current project and source revision are required before actions can connect.','rpb-meta'));
    const body=el('div',null,tab==='points'?'rpb-layout':'rpb-brief');if(tab==='points'){
     const index=el('nav',null,'rpb-index');index.setAttribute('aria-label','Research points');data.points.forEach(point=>{const b=button(point.title,'rpbPoint',point.id);b.setAttribute('aria-current',String(point.id===selected));b.tabIndex=point.id===selected?0:-1;index.append(b);});body.append(index);const detail=el('div',null,'rpb-detail');renderPoint(detail);body.append(detail);
    }else renderBrief(body);root.append(body);
@@ -148,6 +148,8 @@
    update(next,nextCallbacks){if(dead)return;const oldScope=data.scope;captureInput();epoch++;busy=false;data=normalize(next);if(nextCallbacks!==undefined)handlers=nextCallbacks||{};if(!same(oldScope,data.scope)){drafts.clear();selected=data.points[0]?.id||'';tool='';}if(!data.points.some(p=>p.id===selected))selected=data.points[0]?.id||'';message='';render();},
    select:id=>{if(!dead)select(id,false);},
    getSelection:()=>selected,
+   getViewState:()=>{captureInput();return {scope:{...data.scope},selected,tab,tool,drafts:[...drafts]};},
+   restoreViewState(value){if(dead||!same(data.scope,scope(value?.scope))||!data.points.some(p=>p.id===value.selected))return false;selected=value.selected;tab=value.tab==='brief'?'brief':'points';tool=Object.hasOwn(tools,value.tool)?value.tool:'';drafts.clear();for(const entry of arr(value.drafts))if(Array.isArray(entry)&&typeof entry[0]==='string'&&(typeof entry[1]==='string'||entry[1]&&typeof entry[1]==='object'))drafts.set(entry[0],entry[1]);render();return true;},
    destroy(){if(dead)return;dead=true;epoch++;drafts.clear();host.removeEventListener('click',onClick);host.removeEventListener('keydown',onKey);if(mounts.get(host)===instance){mounts.delete(host);host.replaceChildren();}}
   };mounts.set(host,instance);render();return instance;
  }

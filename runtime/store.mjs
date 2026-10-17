@@ -411,7 +411,7 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         shape(prepared,['outputs','nativeOutputIndex','finalCheck'],'prepared outputs',['extraFiles']);
         if(typeof prepared.finalCheck!=='function')throw new StateError('Output save requires the native/source proof check.');
         const outputs=structuredClone(prepared.outputs),index=structuredClone(prepared.nativeOutputIndex);
-        if(!Array.isArray(outputs)||outputs.length>100||outputs.some(output=>!output||!['article','carousel'].includes(output.kind)||typeof output.id!=='string'||!output.id.trim())||new Set(outputs.map(output=>output.id)).size!==outputs.length)throw new StateError('Output saves require unique article or carousel records.');
+        if(!Array.isArray(outputs)||outputs.length>100||outputs.some(output=>!output||!['article','carousel','post','product-listing'].includes(output.kind)||typeof output.id!=='string'||!output.id.trim())||new Set(outputs.map(output=>output.id)).size!==outputs.length)throw new StateError('Output saves require unique article or carousel records.');
         validateOutputIndex(index,outputs,StateError);
         for(const entry of index.records)if(entry.wordOwner.kind==='carousel-words'&&(entry.wordOwner.projectId!==project.id||entry.wordOwner.documentId!==project.document.id))throw new StateError('Carousel word owner belongs to another document.',409);
         if(index.revision!==expected.revision+1)throw new StateError('Native output index must advance exactly once.');

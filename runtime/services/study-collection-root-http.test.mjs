@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import {randomUUID} from 'node:crypto';
+import {createServer} from '../server.mjs';
+test('HTTP new arbitrary collection binds existing parent/media owners and creates an independent Post with no Article',async t=>{
+ const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'ar-collection-http-'))),vault=path.join(dataDir,'original-vault'),files=path.join(dataDir,'original-files');fs.mkdirSync(vault);fs.mkdirSync(files);
+ const server=await createServer({dataDir,publicDir:path.join(dataDir,'public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files},sharedArticles:true,researchEnabled:false});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ t.after(async()=>{await new Promise(r=>server.close(r));fs.rmSync(dataDir,{recursive:true,force:true});});const base='http://127.0.0.1:'+server.address().port;
+ const post=async(route,input)=>{const r=await fetch(base+route,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(input)}),body=await r.json();assert.equal(r.status,200,JSON.stringify(body));return body;};
+ const input={parentStudyId:'synthetic-arbitrary-'+randomUUID(),title:'New collected ideas',operationId:randomUUID()},created=await post('/api/study-draft/create-collection',input);
+ assert.equal(created.binding.kind,'collection-root');assert.equal(created.photoBinding.bindingId,created.binding.id);assert.equal(created.photoBinding.parentStudyId,input.parentStudyId);assert.ok(created.projectBinding.projectId);assert.notEqual(created.projectBinding.projectId,created.photoBinding.projectId);
+ const group={rootBindingId:created.binding.id,parentStudyId:input.parentStudyId},query=new URLSearchParams(group),initial=await (await fetch(base+'/api/study/outputs?'+query)).json();assert.equal(initial.outputBindings.length,0);
+ const child=await post('/api/study/outputs/create',{...group,kind:'post',sourceBindingId:created.binding.id,expectedNative:created.expected,expectedOutput:initial.expectedOutput,operationId:randomUUID()});
+ assert.equal(child.view.output.kind,'post');assert.notEqual(child.view.writingProof.bindingId,created.binding.id);assert.equal(child.view.outputs.length,1);assert.equal(child.view.outputs.some(row=>row.kind==='article'),false);
+ const listing=await post('/api/study/outputs/create',{...group,kind:'product-listing',sourceBindingId:created.binding.id,expectedNative:created.expected,expectedOutput:child.view.expectedOutput,operationId:randomUUID()});assert.equal(listing.view.output.kind,'product-listing');assert.equal(listing.view.outputs.length,2);assert.equal(listing.view.outputs.some(row=>row.kind==='article'),false);
+ const again=await post('/api/study-draft/create-collection',input);assert.equal(again.binding.id,created.binding.id);assert.deepEqual(again.projectBinding,created.projectBinding);assert.deepEqual(again.photoBinding,created.photoBinding);
+ const catalogResponse=await fetch(base+'/api/study-draft/catalog'),catalog=await catalogResponse.json();assert.equal(catalogResponse.status,200,JSON.stringify(catalog));assert.deepEqual(catalog.drafts,[]);assert.equal(catalog.originalsUnavailable,undefined);assert.ok(catalog.collections.some(row=>row.bindingId===created.binding.id&&row.parentStudyId===input.parentStudyId));
+ assert.deepEqual(fs.readdirSync(vault),[]);assert.deepEqual(fs.readdirSync(files),[]);
+});

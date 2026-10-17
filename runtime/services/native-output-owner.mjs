@@ -13,8 +13,10 @@ function derivedId(op) {
   const h = hash("native-output-registration:" + op);
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
-const arrangement = (o) => o.kind === "article" ? { placements: o.placements || [], articleComposition: o.articleComposition, name: o.name } : { slides: (o.slides || []).map(({ text, credit, label, role, ...slide }) => slide), name: o.name };
-const words = (o) => o.kind === "article" ? { title: o.title, manuscript: o.manuscript } : { slides: (o.slides || []).map(({ id, role, text, credit, label }) => ({ id, role, text, credit, label: label ?? "" })), caption: o.caption ?? "" };
+const textKind = kind => ["article", "post", "product-listing"].includes(kind);
+const shortKind = kind => ["post", "product-listing"].includes(kind);
+const arrangement = (o) => textKind(o.kind) ? { placements: o.placements || [], articleComposition: o.articleComposition, name: o.name } : { slides: (o.slides || []).map(({ text, credit, label, role, ...slide }) => slide), name: o.name };
+const words = (o) => textKind(o.kind) ? { title: o.title, manuscript: o.manuscript } : { slides: (o.slides || []).map(({ id, role, text, credit, label }) => ({ id, role, text, credit, label: label ?? "" })), caption: o.caption ?? "" };
 const resetVisual = (o) => {
   delete o.articleVisualMake;
   delete o.articleVisualHistory;
@@ -54,7 +56,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     if (!r || !o) fail("Output does not belong to this exact document.");
     const p = privateRead(t, "captures", r.captureId)?.value;
     if (!p || !same(p.group, group(t.input))) fail("Output belongs to another native scope.");
-    if (p.capture.scope.projectId !== t.projectId || p.capture.scope.documentId !== t.documentId || p.capture.scope.outputId !== id || o.kind === "article" && (r.wordOwner.bindingId !== p.capture.nativeProof.bindingId || r.wordOwner.parentStudyId !== t.input.parentStudyId)) fail("Exact captured output ownership changed.");
+    if (p.capture.scope.projectId !== t.projectId || p.capture.scope.documentId !== t.documentId || p.capture.scope.outputId !== id || textKind(o.kind) && (r.wordOwner.bindingId !== p.capture.nativeProof.bindingId || r.wordOwner.parentStudyId !== t.input.parentStudyId)) fail("Exact captured output ownership changed.");
     return { record: r, output: o, private: p };
   }
   async function proofCatalogue(i, outputId) {
@@ -119,18 +121,18 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
   function validateCapture(p, o) {
     const c = mapper.reopen(JSON.stringify(p.capture));
     if (!c.ready || c.scope.outputId !== o.id) fail("Exact ready captured output identity required.");
-    if (o.kind === "article" && !same(words(o), words(c.output))) fail("Article words changed outside its canonical native owner; refresh explicitly.");
+    if (textKind(o.kind) && (o.kind!==c.output.kind||!same(words(o), words(c.output)))) fail("Article words changed outside its canonical native owner; refresh explicitly.");
     return c;
   }
   async function freshness(i, t, selected) {
     const p = await currentProof(i, selected.output.id, selected.private.capture, selected.output);
     const sourceStale=!same(p,selected.private.proof);
     let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false;
-    if(selected.output.kind==='article'){
+    if(textKind(selected.output.kind)){
       const c=validateCapture(selected.private,selected.output),s=await native.read({bindingId:selected.record.wordOwner.bindingId,parentStudyId:i.parentStudyId});
       writingProof={kind:'native',bindingId:s.binding.id,parentStudyId:s.binding.parentStudyId,expected:clone(s.expected),rawHash:hash(s.raw),capturedRawHash:c.nativeProof.rawHash};
       writingStale=writingProof.rawHash!==writingProof.capturedRawHash||!same(s.expected,c.nativeProof.expected);
-      if(mapper.freshness(c,s,p.sources,p.photos).stale)reason="This article native wording or exact source proof changed.";
+      if(mapper.freshness(c,s,p.sources,p.photos).stale)reason="This output native wording or exact source proof changed.";
     }else{
       const w=await store.readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,allowEditedMarkdown:true});
       writingProof={kind:'carousel-words',projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,expected:clone(w.expected),wordsHash:await helpers.carouselWordsHash(w.output)};
@@ -171,25 +173,27 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     let selected = action === "create" ? null : record(t, input.selectedOutputId), snapshot, binding;
     if(action === "review" && selected.output.kind !== "carousel")fail("Only an own carousel words file can be reviewed here.");
     if(action === "review" && (!input.expectedWords || typeof input.wordsHash !== "string" || !/^[a-f0-9]{64}$/.test(input.wordsHash)))fail("Exact current own carousel words proof required.");
-    if (action === "refresh" && selected.output.kind !== "article") fail("Only an article refreshes from its own native wording.");
+    if (action === "refresh" && !textKind(selected.output.kind)) fail("Only a native text output refreshes from its own wording.");
     if (action === "create") {
-      if (!["article", "carousel"].includes(input.kind)) fail("Explicit supported output kind required.");
+      if (!["article", "carousel", "post", "product-listing"].includes(input.kind)) fail("Explicit supported output kind required.");
+      if(shortKind(input.kind)){input.sourceBindingId=input.sourceBindingId||input.rootBindingId;}
       if (!input.sourceBindingId) fail("Explicit starting native binding required.");
       if (input.sourceBindingId !== input.rootBindingId && !(t.document.nativeOutputIndex?.records || []).some((r) => r.wordOwner.kind === "native" && r.wordOwner.bindingId === input.sourceBindingId && same(privateRead(t, "captures", r.captureId)?.value?.group, group(input)))) fail("Starting copy belongs to another native root/part.");
       const start = await native.read({ bindingId: input.sourceBindingId, parentStudyId: input.parentStudyId });
+      if(shortKind(input.kind)&&!input.expectedNative)input.expectedNative=clone(start.expected);
       if(!same(start.expected,input.expectedNative))fail("Exact starting native snapshot required before output registration.");
       const preflight=mapper.capture(start,{projectId:t.projectId,documentId:t.documentId,outputId:input.operationId});
-      if(!preflight.ready)fail("Native layout is held before output registration: "+preflight.held.map(x=>x.reason).join("; "));
-      if (input.kind === "article") {
-        if (input.sourceBindingId === input.rootBindingId && (!start.binding.canonicalOutputId || start.binding.canonicalOutputId === input.operationId)) snapshot = await native.registerOutput({ bindingId: input.rootBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative });
-        else snapshot = await native.fork({ sourceBindingId: input.sourceBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative });
+      if(!shortKind(input.kind)&&!preflight.ready)fail("Native layout is held before output registration: "+preflight.held.map(x=>x.reason).join("; "));
+      if (textKind(input.kind)) {
+        if (input.kind === "article" && input.sourceBindingId === input.rootBindingId && (!start.binding.canonicalOutputId || start.binding.canonicalOutputId === input.operationId)) snapshot = await native.registerOutput({ bindingId: input.rootBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative });
+        else snapshot = await native.fork({ sourceBindingId: input.sourceBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative, ...(shortKind(input.kind)?{textOutputKind:input.kind}:{}) });
       } else {
         snapshot = start;
         if (!same(snapshot.expected, input.expectedNative)) fail("Exact starting native snapshot required.");
       }
       if (input.kind === "article" && snapshot.binding.id === input.rootBindingId && !same(snapshot.expected, input.expectedNative)) fail("Registered native words changed before output publication; exact pending request preserved.");
       binding = snapshot.binding.id;
-    } else if (selected.output.kind === "article") {
+    } else if (textKind(selected.output.kind)) {
       binding = selected.record.wordOwner.bindingId;
       snapshot = await native.read({ bindingId: binding, parentStudyId: input.parentStudyId });
       if (!same(input.expectedNative, snapshot.expected)) fail("Exact own article native expected proof required.");
@@ -204,9 +208,10 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       let output, captureValue, privateValue, captureId = selected?.record.captureId;
       if (action === "create" || action === "refresh") {
         const s = lease.snapshot;
-        const basis = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id });
+        const outputKind=shortKind(action==="create"?input.kind:selected.output.kind)?(action==="create"?input.kind:selected.output.kind):undefined;
+        const basis = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id }, {outputKind});
         proofNow = scopedProof(catalogue, basis, null, { captureMappings: true });
-        captureValue = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id }, { photoBindings: proofNow.photos });
+        captureValue = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id }, { photoBindings: proofNow.photos, outputKind });
         if (!captureValue.ready) fail("Native layout is held: " + captureValue.held.map((x) => x.reason).join("; "));
         if (mapper.freshness(captureValue, s, proofNow.sources, proofNow.photos).stale) fail("Native retained source proof differs from authoritative current sources.");
         output = clone(captureValue.output);
@@ -216,9 +221,9 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
           output.adaptation = { method: "deterministic-existing-snapshotCarousel", generated: false };
         }
         if (action === "refresh") {
-          if (selected.output.kind !== "article") fail("Only an article refreshes from its own native wording.");
+          if (!textKind(selected.output.kind)) fail("Only a native text output refreshes from its own wording.");
           const previous = selected.output;
-          const old = helpers.reconcileArticleComposition(previous.articleComposition, previous.manuscript, output.manuscript, previous.placements);
+          const old = outputKind?{status:"text"}:helpers.reconcileArticleComposition(previous.articleComposition, previous.manuscript, output.manuscript, previous.placements);
           const validIds = new Set(output.manuscript.map((x) => x.id));
           const existing = new Map((previous.placements || []).filter((x) => !x.paragraphId || validIds.has(x.paragraphId)).map((x) => [x.slot, x]));
           output.placements = output.placements.map((x) => clone(existing.get(x.slot) || x));
@@ -240,7 +245,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         if (!same(proofNow, privateValue.proof)) fail("Shared proof changed; existing output preserved.");
         if (lease && mapper.freshness(captureValue, lease.snapshot, proofNow.sources, proofNow.photos).stale) fail("Article words changed; explicitly refresh its saved output.");
         if (action === "save") {
-          const allowedChanges = output.kind === "article" ? ["placements", "articleComposition", "name"] : ["slides", "caption", "name"];
+          const allowedChanges = textKind(output.kind) ? (shortKind(output.kind)?["name"]:["placements", "articleComposition", "name"]) : ["slides", "caption", "name"];
           if (!input.changes || Object.keys(input.changes).some((k) => !allowedChanges.includes(k))) fail("Article wording is immutable; only its native owner may edit it.");
           Object.assign(output, clone(input.changes));
           if (output.kind === "carousel") {
@@ -270,10 +275,11 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         privateValue = { ...clone(privateValue), proof: proofNow };
         captureId = hash(JSON.stringify(privateValue));
       }
+      if(shortKind(output.kind)&&(output.placements?.length||output.articleComposition))fail("Short outputs support text content only.");
       if (output.name !== void 0 && (typeof output.name !== "string" || output.name.length > 256)) fail("Output name must be readable text.");
       resetVisual(output);
       placements(output, proofNow);
-      const outputs = selected ? doc.outputs.map((o) => o.id === id ? output : o) : doc.outputs.concat(output), now = (/* @__PURE__ */ new Date()).toISOString(), owner = output.kind === "article" ? { kind: "native", bindingId: binding, parentStudyId: input.parentStudyId } : { kind: "carousel-words", projectId: t.projectId, documentId: t.documentId, outputId: id };
+      const outputs = selected ? doc.outputs.map((o) => o.id === id ? output : o) : doc.outputs.concat(output), now = (/* @__PURE__ */ new Date()).toISOString(), owner = textKind(output.kind) ? { kind: "native", bindingId: binding, parentStudyId: input.parentStudyId } : { kind: "carousel-words", projectId: t.projectId, documentId: t.documentId, outputId: id };
       const index = doc.nativeOutputIndex || { schema: "ar-create.native-output-index.v1", revision: 0, records: [] };
       const nextRecord = { outputId: id, wordOwner: owner, captureId, proofId: captureId, historyIds: [...selected?.record.historyIds || [], input.operationId], createdAt: selected?.record.createdAt || now, updatedAt: now };
       const history = { schema: "ar-create.native-output-command.v1", group: group(input), commandHash, outputId: id, captureId, beforeArrangement: selected ? arrangement(selected.output) : null, beforeAssets: selected?.private.proof.assets ?? null, afterHash: hash(output) };
@@ -302,7 +308,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     const captureValue = validateCapture(selected.private, selected.output);
     helpers.assertOutputEditorialReady(selected.output);
     placements(selected.output, capturedProof);
-    if (selected.output.kind === "article" && captureValue.privateSidecar.photoRequests.some((p) => !selected.output.placements.some((row) => row.slot === p.slot && row.url))) fail("Native photo layout still has unresolved owned source slots; export held.");
+    if (textKind(selected.output.kind) && captureValue.privateSidecar.photoRequests.some((p) => !selected.output.placements.some((row) => row.slot === p.slot && row.url))) fail("Native photo layout still has unresolved owned source slots; export held.");
     const run = async (lease) => {
       if (lease && mapper.freshness(captureValue, lease.snapshot, capturedProof.sources, capturedProof.photos).stale) fail("This article native wording or source proof changed; export held.");
       if (!lease) await store.readCarouselWords({ projectId: t.projectId, documentId: t.documentId, outputId: selected.output.id });
@@ -322,7 +328,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         active = false;
       }
     };
-    return selected.output.kind === "article" ? native.withSnapshotLease({ bindingId: selected.record.wordOwner.bindingId, parentStudyId: input.parentStudyId, expected: input.expectedNative }, run) : run(null);
+    return textKind(selected.output.kind) ? native.withSnapshotLease({ bindingId: selected.record.wordOwner.bindingId, parentStudyId: input.parentStudyId, expected: input.expectedNative }, run) : run(null);
   }
   return { read, create: (i) => mutate("create", i), save: (i) => mutate("save", i), reviewCarouselWords: (i) => mutate("review", i), refreshSelectedArticle: (i) => mutate("refresh", i), undo: (i) => mutate("undo", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
 }

@@ -41,7 +41,7 @@
   const speaker=q.speaker||source?.speaker||'Source speaker not recorded',location=q.time||q.scene||(typeof q.locator==='string'?q.locator:'');
   return pointHTML({id:q.id,title:q.statement,spoken:q.quote?[{quote:q.quote,speaker,location}]:[],clarity},{actions,details});
  }
- function snapshot(id){const r=rooms.get(id);if(!r?.points?.length)return null;const sources=r.originalHashes||{},known=Object.values(sources).some(hash=>typeof hash==='string'&&hash.length);return JSON.parse(JSON.stringify({scope:{projectId:id,outputId:r.binding?.bindingId||'',revision:known?JSON.stringify({sources,expected:r.draft?.expected||null}):''},outputTitle:r.binding?.title||'Project research · no manuscript part selected',points:r.points,records:r.referenceRecords||[]}));}
+ function snapshot(id){const r=rooms.get(id);if(!r?.points?.length)return null;const sources=r.originalHashes||{},known=Object.values(sources).some(hash=>typeof hash==='string'&&hash.length);return JSON.parse(JSON.stringify({scope:{projectId:id,outputId:r.binding?.bindingId||'',revision:known?JSON.stringify({sources,expected:r.draft?.expected||null}):''},outputTitle:r.binding?.title||'Project learning',points:r.points,records:r.referenceRecords||[]}));}
  window.ResearchStandard={retained,claim,pointHTML,snapshot};
  document.addEventListener('click',event=>{if(event.target.closest('[data-research-open-draft]')){if(window.studyDraft?.edit)window.studyDraft.edit();else setView('article');}});
 })();

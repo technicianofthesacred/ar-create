@@ -2,23 +2,28 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.ArResearchWorkTools=api;})(typeof window!=='undefined'?window:null,function(){
  const tools=[['learning','Learn more','History, terms, teachings and useful next questions.'],['evidence','Review evidence','Separate usable, qualified and held claims; inspect the exact supporting sources.'],['speaker','Review speaker wording','Compare suggested wording with what was said, without silently correcting a quotation.']];
  function install({document:doc,getProject,getRecords=()=>null,getResearch=()=>null}){
-  let browser=null;
+  let browser=null,browserPoint=null,storage=null;const STATE='ar-study-research-view-v1';try{storage=doc.defaultView?.localStorage;}catch{}let views={};try{views=JSON.parse(storage?.getItem(STATE)||'{}')||{};}catch{}
+  const viewKey=scope=>JSON.stringify(scope);
+  function remember(){const value=browser?.getViewState?.();if(!value)return;views[viewKey(value.scope)]={...value,openPointId:browserPoint};try{storage?.setItem(STATE,JSON.stringify(views));}catch{/* Browser memory retains the unsaved inquiry when device storage is unavailable. */}}
+  doc.addEventListener('input',event=>{if(event.target.closest?.('.research-work-panel'))remember();});
+  doc.defaultView?.addEventListener('pagehide',remember);
  function make(tag,text,cls){const el=doc.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
   function openDepth(point,panel,p){
    const api=doc.defaultView?.ArResearchPointBrowser,snapshot=getResearch(p);if(!api||!snapshot||!snapshot.points.some(n=>n.id===point.dataset.researchPoint))return false;
-   browser?.destroy();browser=null;panel.replaceChildren();
+   remember();browser?.destroy();browser=null;browserPoint=point.dataset.researchPoint;panel.replaceChildren();
    const points=snapshot.points.map(n=>({id:n.id,title:n.title,kind:n.kind,stale:n.stale,quotes:(n.spoken||[]).map(q=>({text:q.quote,speaker:q.speaker,location:q.location})),explanation:n.explanation||n.clarity?.recordedStatement||n.clarity?.supported||n.clarity?.rawNote||'',history:n.history||[],teachings:n.teachings||[],learning:n.learning||[],questions:n.questions||[],discussions:n.discussions||[],speakerIssues:n.speakerIssues||[],related:n.related||[],evidence:n.evidence||{status:'held',reason:n.clarity?.evidenceNeeded||n.clarity?.uncertain||'No independent evidence assessment is attached to this retained point.'},sources:(n.sources||[]).filter(s=>s.id||s.recordPath||s.path).map(s=>({id:s.id||s.recordPath||s.path,title:s.name||s.title||'Recorded source',target:s.recordPath||s.path||s.id,quality:s.quality||'',excerpt:s.excerpt||''}))}));
    const brief=snapshot.records.find(r=>/^BRIEF\b/i.test(r.name||r.path?.split('/').pop()||''));
-   const model={scope:snapshot.scope,title:'Develop research',outputTitle:snapshot.outputTitle,showContext:false,points,brief:brief?{scope:{...snapshot.scope,outputId:'shared'},revision:brief.hash||'',status:'Existing shared record · no new verification',updatedAt:brief.modifiedAt||brief.date||'',content:brief.raw||brief.text||''}:null};
+   const model={scope:snapshot.scope,title:'Research',outputTitle:snapshot.outputTitle,showContext:false,points,brief:brief?{scope:{...snapshot.scope,outputId:'shared'},revision:brief.hash||'',status:'Existing shared record · no new verification',updatedAt:brief.modifiedAt||brief.date||'',content:brief.raw||brief.text||''}:null};
    const matching=request=>{const now=getProject(),latest=getResearch(now);if(now?.id!==p.id||now.viewedStage!==3||!latest||JSON.stringify(latest.scope)!==JSON.stringify(request.scope))throw Error('The research context changed. Reopen this point.');const row=[...doc.querySelectorAll('[data-research-point]')].find(n=>n.dataset.researchPoint===request.pointId);if(!row)throw Error('This research point is no longer in the current view.');return {row,latest};};
    let initial=true;
    browser=api.mount(panel,model,{onSelect:request=>{const {row}=matching(request);doc.querySelectorAll('[data-research-point-active]').forEach(n=>n.removeAttribute('data-research-point-active'));row.dataset.researchPointActive='true';if(!initial)row.scrollIntoView?.({block:'start'});},onOpenSource:request=>{const {row,latest}=matching(request),actual=latest.points.find(n=>n.id===request.pointId);if(!(actual?.sources||[]).some(s=>(s.id||s.recordPath||s.path)===request.source.id))throw Error('This source is not attached to the current point.');const details=row.querySelector('[data-research-source-point]');if(!details)throw Error('The existing source reader is unavailable.');details.open=true;details.scrollIntoView?.({block:'center'});return {message:'Opened the existing context and sources for this point.'};}});
-   browser.select(point.dataset.researchPoint);initial=false;
+   const saved=views[viewKey(snapshot.scope)],restored=saved&&browser.restoreViewState?.(saved);
+   if(!restored||saved.openPointId!==point.dataset.researchPoint)browser.select(point.dataset.researchPoint);else{const selected=[...doc.querySelectorAll('[data-research-point]')].find(n=>n.dataset.researchPoint===saved.selected);if(selected)selected.dataset.researchPointActive='true';}initial=false;
    const back=make('button','Use existing point & plan controls');back.type='button';back.onclick=()=>{point.scrollIntoView?.({block:'start'});point.querySelector('[data-research-source-point]')?.setAttribute('open','');};panel.append(back);
    return true;
   }
   function decorate(){
-   const p=getProject();if(p?.viewedStage!==3){browser?.destroy();browser=null;return;}
+   const p=getProject();if(p?.viewedStage!==3){remember();browser?.destroy();browser=null;browserPoint=null;return;}
    const host=doc.querySelector('.research-standard');if(!host)return;
    host.querySelectorAll('[data-research-point]').forEach(point=>{
     if(point.querySelector('.research-work-tools'))return;
@@ -34,17 +39,18 @@
     };actions.append(button);});if(depth){details.append(panel);details.addEventListener('toggle',()=>{if(details.open&&!panel.querySelector('.rpb')){if(!openDepth(point,panel,p))panel.textContent='The current research projection is unavailable. Existing findings and sources remain readable.';}});}else details.append(actions,panel);controls.append(details);
    });
    const heading=host.querySelector('.research-standard-heading');if(heading&&!host.querySelector('[data-research-brief]')){
-    const details=make('details',null,'research-work-brief');details.dataset.researchBrief='true';details.append(make('summary','Story brief'));
+    const details=make('details',null,'research-work-brief');details.dataset.researchBrief='true';details.append(make('summary','Shared brief · optional editorial reuse'));
     const records=getRecords(p),fresh=getResearch(p)?.records,brief=(fresh?.length?fresh:records?.stages?.['3']||[]).filter(r=>/^BRIEF\b/i.test(r.name||r.path?.split('/').pop()||''));
     if(brief.length){details.append(make('p','Existing shared brief · retained record, not newly verified'));brief.forEach(r=>{const body=make('div',r.raw||r.text||'The brief is listed, but its words are unavailable in this view.','research-work-brief-prose');details.append(make('h2',r.name||'Shared story brief'),body);});}
     else details.append(make('p','No shared brief is connected in this view. Preparing or updating it through AI is not connected yet.'));
     const scope=make('details');scope.append(make('summary','What the brief carries forward'),make('p','Central line, meaningful moments, exact usable quotations, qualified additions, teaching points, held items and their reasons, and the sources used. One shared brief can support an article and a carousel, with separate writing plans.'));details.append(scope);heading.after(details);
    }
+   const saved=views[viewKey(getResearch(p)?.scope)];if(saved?.openPointId&&!browser){const point=[...host.querySelectorAll('[data-research-point]')].find(n=>n.dataset.researchPoint===saved.openPointId),details=point?.querySelector('.research-work-tools');if(details&&!details.open)details.open=true;}
   }
   let pending=false;
   const observer=doc.defaultView?.MutationObserver?new doc.defaultView.MutationObserver(()=>{if(pending)return;pending=true;Promise.resolve().then(()=>{pending=false;decorate()})}):null;
   observer?.observe(doc.getElementById('app')||doc.body,{childList:true,subtree:true});
-  return {decorate,disconnect:()=>{observer?.disconnect();browser?.destroy();browser=null}};
+  return {decorate,disconnect:()=>{remember();observer?.disconnect();browser?.destroy();browser=null}};
  }
  if(typeof document!=='undefined'&&typeof current==='function'){
   const adapter=install({document,getProject:()=>current(),getRecords:p=>typeof WORKFLOW_RECORDS==='object'?WORKFLOW_RECORDS[p.id]:null,getResearch:p=>window.ResearchStandard?.snapshot?.(p?.id)});const prior=render;render=function(){const result=prior.apply(this,arguments);adapter.decorate();return result};adapter.decorate();

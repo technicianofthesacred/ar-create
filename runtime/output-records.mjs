@@ -11,7 +11,7 @@ export function validateOutputIndex(value,outputs,StateError){
   if(!exact(record,['outputId','wordOwner','captureId','proofId','historyIds','createdAt','updatedAt'])||!['outputId','captureId','proofId'].every(key=>opaque(record[key]))||!Array.isArray(record.historyIds)||record.historyIds.length>100||!record.historyIds.every(opaque)||new Set(record.historyIds).size!==record.historyIds.length||!['createdAt','updatedAt'].every(key=>typeof record[key]==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(record[key])&&Number.isFinite(Date.parse(record[key]))))fail('Native output records contain only IDs and history dates.');
   const owner=record.wordOwner;
   if(!(exact(owner,['kind','bindingId','parentStudyId'])&&owner.kind==='native'&&opaque(owner.bindingId)&&opaque(owner.parentStudyId))&&!(exact(owner,['kind','projectId','documentId','outputId'])&&owner.kind==='carousel-words'&&['projectId','documentId','outputId'].every(key=>typeof owner[key]==='string'&&owner[key].trim())&&owner.outputId===record.outputId))fail('Output wording owner must be an explicit native or carousel pointer.');
-  if(outputs.find(output=>output.id===record.outputId)?.kind==='article'&&owner.kind!=='native')fail('Article words require a native owner.');
+  if(['article','post','product-listing'].includes(outputs.find(output=>output.id===record.outputId)?.kind)&&owner.kind!=='native')fail('Article words require a native owner.');
   if(ids.has(record.outputId)||!outputs.some(output=>output.id===record.outputId))fail('Native output pointers require unique existing outputs.');
   ids.add(record.outputId);
  }

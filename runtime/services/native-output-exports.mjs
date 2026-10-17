@@ -19,7 +19,7 @@ function createNativeOutputExports({ dataDir, store, outputs, resolveScope, libr
       return outputs.withExportSnapshot(guard(input), async ({ projectId, documentId, output, wordOwner, expectedOutput, sourceProofHash, finalCheck }) => {
         if (projectId !== s.projectId || documentId !== s.documentId) fail("Export scope changed across its snapshot lease.");
         if (!/^[a-f0-9]{64}$/.test(sourceProofHash||"")) fail("Trusted captured source proof digest required.");
-        if (output.kind !== "article" || output.id !== input.selectedOutputId || output.manuscriptRevision !== input.manuscriptRevision) fail("Exact selected article manuscript revision required.");
+        if (!["article","post","product-listing"].includes(output.kind) || output.id !== input.selectedOutputId || output.manuscriptRevision !== input.manuscriptRevision) fail("Exact selected article manuscript revision required.");
         return articles.save({ name: input.name, mimeType: input.mimeType, body: input.body, outputId: output.id, manuscriptRevision: input.manuscriptRevision }, { ...s, output, finalCheck, publicationBinding: { wordOwner, expectedOutput, ...sourceProofHash ? { sourceProofHash } : {} } });
       });
     },

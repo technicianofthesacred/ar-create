@@ -23,7 +23,14 @@ export async function createStudyOutputHost({element,scope,selectedOutputId,requ
  if(pending&&!scopeEqual(pending.body,scope))fail('Pending output request belongs to another study.');
  const query=(path,fields)=>path+'?'+new URLSearchParams(fields);
  const call=async(path,body)=>{const response=await request(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined);const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||'The output owner refused this request.'),{status:response.status});return data;};
- function adapt(read,id){if(!scopeEqual(read.scope,scope)||read.documentId!==scope.rootBindingId||read.output?.id!==id)fail('The server returned another output or parent study.');return adaptNativeOutputRead(read,{doc:read.document,outputs:read.outputs,compositionCapabilities:{articleAI:false,carouselAI:false}});}
+ function adapt(read,id){
+  if(!scopeEqual(read.scope,scope)||read.documentId!==scope.rootBindingId||read.output?.id!==id)fail('The server returned another output or parent study.');
+  if(!Array.isArray(read.outputs)||read.outputs.some(output=>!['article','carousel','post','product-listing'].includes(output.kind)))fail('Unknown output composition is unavailable; preserve its registered writing owner.');
+  if(['post','product-listing'].includes(read.output.kind))fail('This content draft uses its native Write, Read and Check modes; composition is not connected.');
+  // The composition canvas owns only visual outputs. Keep the full registry receipt for scoped writes.
+  const outputs=read.outputs.filter(output=>['article','carousel'].includes(output.kind));
+  return adaptNativeOutputRead(read,{doc:{...read.document,outputs},outputs,compositionCapabilities:{articleAI:false,carouselAI:false}});
+ }
  async function load(id){const token=++epoch,read=await call(query('/api/study/outputs',{...scope,selectedOutputId:id}));if(closed||token!==epoch)fail('Output selection changed while reading; the current canvas is preserved.');return adapt(read,id);}
  function install(next){model=clone(next);canvas?.update(model);onSelectionChange(model.selectedOutputId);return clone(model);}
  function assertInput(input){if(closed||!scopeEqual(input,scope)||input.selectedOutputId!==model.selectedOutputId||!same(input.writingProof,model.writingProof)||!same(input.expectedOutput??model.expectedOutput,model.expectedOutput))fail('Output identity or writing receipt changed; preserve the pending buffer.');}
