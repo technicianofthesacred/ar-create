@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "0e6328f67abbb4e5f714bae33a94480e0e5f76f17d0f264cb808f5164b1a7076",
+      "candidateSha256": "61a6a806b7e2b914ef8bd5ebe4ab10c559b0576f004bbd99c24403d97d71924d",
       "adapted": true
     },
     {
@@ -2004,8 +2004,8 @@
     },
     {
       "path": "public/document-study/workspace-navigation.js",
-      "sourceSha256": "b5e5bdb62122023e749e491d49108acab202fc63b8f6af18c95a6369ce7b7449",
-      "candidateSha256": "b5e5bdb62122023e749e491d49108acab202fc63b8f6af18c95a6369ce7b7449",
+      "sourceSha256": "d0ebb5aa6ec3119cfd7575c730798670284d316773c0ddd41fcafba39401403b",
+      "candidateSha256": "d0ebb5aa6ec3119cfd7575c730798670284d316773c0ddd41fcafba39401403b",
       "adapted": false
     },
     {
@@ -2016,8 +2016,8 @@
     },
     {
       "path": "public/document-study/project-library.js",
-      "sourceSha256": "d6b4f8a89f4cfe79af83704a785fc02668698ed8777c9c811e29ea11f6e69e17",
-      "candidateSha256": "d6b4f8a89f4cfe79af83704a785fc02668698ed8777c9c811e29ea11f6e69e17",
+      "sourceSha256": "9302c9522f6f6899337636421771daedbaf7177a8083f720e3bd7e776e9de018",
+      "candidateSha256": "9302c9522f6f6899337636421771daedbaf7177a8083f720e3bd7e776e9de018",
       "adapted": false
     },
     {
@@ -2308,6 +2308,18 @@
     {
       "path": "public/document-study/output-portal-dispatch.test.mjs",
       "candidateSha256": "7416b04a548a43ba077082fe10ade3804a321df290640168eb5e743fbca2b1e2"
+    },
+    {
+      "path": "public/document-study/home-tabs.js",
+      "candidateSha256": "cb78c04ef5b6b56ffe58432bcc4fddd559b9037f9a7aaf3914e42c6c3fd0315f"
+    },
+    {
+      "path": "public/document-study/home-tabs.css",
+      "candidateSha256": "6d1880928ab972dcd35b46d5d5629334893d688e2c2d0d0f617430ea3c2ea6d9"
+    },
+    {
+      "path": "public/document-study/home-tabs.test.mjs",
+      "candidateSha256": "87dcd5965673fb7ad42dc1502cb930db96330070da16d2fa80775b45caa2fadb"
     }
   ],
   "dependencyRepair": {

@@ -1,0 +1,61 @@
+/* C3 Home and tabs. Layout only; colours come from the existing theme tokens. */
+body.c3-tabs{--ht-strip:44px}
+body.c3-tabs .shell{height:calc(100dvh - var(--ht-strip))}
+body.c3-tabs.draft-surface-active .shell:has(.rail.open){height:calc(100dvh - var(--ht-strip))}
+#c3-tabstrip{position:relative;z-index:40;box-sizing:border-box;height:var(--ht-strip);display:flex;align-items:center;gap:2px;padding:0 6px;background:var(--rail,var(--bg));border-bottom:1px solid var(--line);color:var(--ink);font:13px/1.4 var(--ar-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif)}
+#c3-tabstrip button,#c3-tabstrip summary{font:inherit;color:inherit;background:none;border:0;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 8px;box-sizing:border-box}
+#c3-tabstrip summary{list-style:none}
+#c3-tabstrip summary::-webkit-details-marker{display:none}
+#c3-tabstrip button:hover,#c3-tabstrip summary:hover{background:color-mix(in srgb,var(--ink) 7%,transparent)}
+#c3-tabstrip :is(button,summary):focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+#c3-tabstrip .ht-place{width:36px;justify-content:center;padding:0;color:var(--dim)}
+#c3-tabstrip .ht-place.on{color:var(--ink);background:color-mix(in srgb,var(--warm) 18%,transparent)}
+#c3-tabstrip .ht-sep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none}
+#c3-tabstrip .ht-tabs{display:flex;align-items:stretch;gap:2px;min-width:0;flex:1 1 auto;overflow:hidden;height:100%}
+#c3-tabstrip .ht-tab{display:flex;align-items:center;min-width:0;max-width:240px;flex:0 1 220px;border-radius:6px 6px 0 0;margin-top:6px;color:var(--dim)}
+#c3-tabstrip .ht-tab.on{background:var(--bg);color:var(--ink);box-shadow:inset 0 2px 0 var(--warm),1px 0 0 var(--line),-1px 0 0 var(--line)}
+#c3-tabstrip .ht-open{flex:1 1 auto;min-width:0;justify-content:flex-start;min-height:38px}
+#c3-tabstrip .ht-open svg{flex:none}
+#c3-tabstrip .ht-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#c3-tabstrip .ht-close{flex:none;width:28px;min-height:28px;padding:0;justify-content:center;opacity:.55}
+#c3-tabstrip .ht-tab:hover .ht-close,#c3-tabstrip .ht-tab.on .ht-close,#c3-tabstrip .ht-close:focus-visible{opacity:1}
+#c3-tabstrip .ht-close svg{width:14px;height:14px}
+#c3-tabstrip details{position:relative;flex:none}
+#c3-tabstrip .ht-more summary{color:var(--dim);font-variant-numeric:tabular-nums}
+#c3-tabstrip .ht-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:50;min-width:220px;max-width:min(340px,calc(100vw - 16px));max-height:min(420px,70dvh);overflow:auto;display:flex;flex-direction:column;gap:2px;padding:6px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px #0003}
+#c3-tabstrip .ht-menu>button{justify-content:flex-start;width:100%;min-height:40px}
+#c3-tabstrip .ht-menu .ht-tab{margin:0;max-width:none;flex:none;border-radius:6px}
+#c3-tabstrip .ht-status{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);margin:0;max-width:min(560px,calc(100vw - 24px));padding:8px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);box-shadow:0 6px 20px #0002;z-index:45}
+#c3-tabstrip .ht-status[hidden]{display:none}
+/* Home: the existing project library, full screen, with the strip inside it while open. */
+#project-library.c3-home{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;padding:0;border:0;border-radius:0;box-shadow:none;background:var(--bg);flex-direction:column;overflow:hidden}
+#project-library.c3-home[open]{display:flex}
+#project-library.c3-home:not([open]){display:none}
+#project-library.c3-home .pl-filter{display:none}
+#project-library.c3-home::backdrop{background:var(--bg)}
+#project-library.c3-home #c3-tabstrip{flex:none}
+#project-library.c3-home .ht-home-body{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:232px minmax(0,1fr)}
+#project-library.c3-home .ht-facets{overflow:auto;padding:18px 12px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:18px}
+#project-library.c3-home .ht-home-main{overflow:auto;padding:18px clamp(16px,3vw,40px) 40px;min-width:0}
+#project-library.c3-home .pl-library-head h2{font-size:15px}
+#project-library.c3-home .ht-fgroup{display:flex;flex-direction:column;gap:1px}
+#project-library.c3-home .ht-fh{font-size:12px;color:var(--dim);padding:0 8px 4px}
+#project-library.c3-home .ht-facet{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:34px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+#project-library.c3-home .ht-facet span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#project-library.c3-home .ht-facet:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+#project-library.c3-home .ht-facet.on{background:color-mix(in srgb,var(--warm) 18%,transparent);font-weight:600}
+#project-library.c3-home .ht-count{color:var(--dim);font-variant-numeric:tabular-nums;font-weight:400}
+#project-library.c3-home .ht-clear{align-self:flex-start}
+#project-library.c3-home .ht-fnote{font-size:12px;color:var(--dim);margin:0;padding:0 8px}
+#project-library.c3-home .pl-results-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#project-library.c3-home .ht-views{display:inline-flex;margin-left:auto;border:1px solid var(--line);border-radius:7px;padding:2px;gap:2px}
+#project-library.c3-home .ht-view{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:0;border-radius:5px;background:none;color:var(--dim);font:inherit;cursor:pointer}
+#project-library.c3-home .ht-view.on{background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--ink)}
+#project-library.c3-home .pl-results.ht-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+#project-library.c3-home .pl-results.ht-grid .pl-library-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;align-items:start;gap:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);min-height:96px}
+#project-library.c3-home .pl-results.ht-grid .pl-library-row.is-current{border-color:var(--warm)}
+#project-library.c3-home .pl-results.ht-grid .pl-open{grid-column:1/-1;align-items:flex-start;text-align:left}
+#project-library.c3-home .pl-results.ht-grid .pl-pin{grid-column:2}
+#project-library.c3-home .pl-results.ht-grid [data-pl-file]{grid-column:3}
+@media(max-width:850px){#project-library.c3-home .ht-home-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}#project-library.c3-home .ht-facets{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:14px}#project-library.c3-home .ht-fgroup{flex-direction:row;align-items:center;gap:4px;flex:none}#project-library.c3-home .ht-fh{padding:0 4px}#project-library.c3-home .ht-facet{width:auto;flex:none;min-height:44px}#project-library.c3-home .ht-fnote{display:none}}
+@media(max-width:650px){#c3-tabstrip .ht-tab{flex-basis:160px}#c3-tabstrip .ht-place{width:40px}#project-library.c3-home .pl-results.ht-grid{grid-template-columns:1fr}}
