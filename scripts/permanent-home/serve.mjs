@@ -1,0 +1,15 @@
+import {createServer} from './runtime/server.mjs';
+import {createWorkspaceExecution} from './runtime/services/artifact-execution.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const home=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const canonical=value=>{let at=path.resolve(value);while(true){if(fs.lstatSync(at).isSymbolicLink())throw Error('Symlinked installed paths are refused.');const parent=path.dirname(at);if(parent===at)break;at=parent;}return value;};
+canonical(home);const configFile=canonical(process.env.AR_CREATE_CONFIG||path.join(home,'config/local.json'));if(!fs.statSync(configFile).isFile())throw Error('Explicit regular private config required.');
+const config=JSON.parse(fs.readFileSync(configFile,'utf8'));
+if(config.home!==home||!Number.isInteger(config.port)||config.port<1024||config.port>65535||!config.dataDir.startsWith(home+path.sep)||config.publicDir!==path.join(home,'service/public'))throw Error('Explicit permanent local service configuration required.');
+if(config.port===8841&&config.dataDir!==path.join(home,'data'))throw Error('Candidates cannot use installed port 8841.');
+canonical(config.dataDir);canonical(config.publicDir);canonical(config.relocationFile);const studyRelocation=JSON.parse(fs.readFileSync(config.relocationFile,'utf8'));
+const server=await createServer({dataDir:config.dataDir,publicDir:config.publicDir,sharedArticles:true,researchEnabled:false,studyOriginalRoots:config.studyOriginalRoots,studyRelocation,execution:createWorkspaceExecution({boundedEditorial:true})});
+server.on('error',e=>{console.error(e.code+': existing listener preserved');process.exitCode=1;});
+server.listen(config.port,'127.0.0.1',()=>console.log('AR Create listening on loopback '+config.port));

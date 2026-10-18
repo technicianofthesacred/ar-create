@@ -21,3 +21,11 @@ Review article and carousel independently; update source text and see relevant t
 ## Separate a working draft from an approved output
 
 A private download of the author’s current saved draft may retain unresolved review marks and editorial instructions. Label it as a draft with its actual format; verify the download against saved bytes and scope. Do not require silent acceptance of those passages merely to recover or carry the working text elsewhere. Keep designed-output review and publication protections intact. A draft Markdown download is not proof that article, carousel, translation or platform exports are approved or finished.
+
+## Distinct audience view — 15 October clarification
+
+Look removes composition handles and presents what this audience will receive, with the selected output/language, actual readiness issues, review decisions, translation and export actions. A direct Edit arrangement action returns to the matching composition rather than duplicating its tools here. Unconnected release/translation actions may expose their intended setup and review flow but must not claim export, approval, submission or publication. Existing real exports keep their current guards and behavior.
+
+## 16 October — Adopted return to the same audience edition
+
+Audience view shares exact selected output/edition context with Arrange and returns to that composition through existing owners. Preserve truthful current/earlier/save/readiness and delivery state, with meaningful position where supported. New navigation cannot approve wording, create a real output or export/publish automatically. Supported synthetic and actual proof must be distinguished; missing connections remain explicit.

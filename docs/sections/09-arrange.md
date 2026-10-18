@@ -25,3 +25,11 @@ Consume the same selected footage and saved shot ranges from Media. An article m
 Begin with the smallest supported select/play/place/save/reopen journey. Reuse the existing templates and output tools. Preserve the original, allow a proposed range to be reviewed in context and derive where-used/order from actual placements. Unsupported video export targets must be clearly identified before export; showing a poster is not proof that video export works. Whole-film timeline editing and automatic cross-tool synchronization require separately bounded work.
 
 14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
+
+## Distinct composition work — 15 October clarification
+
+Placed/Arrange must visibly offer composition: the selected article or whole carousel with placement, template, order, swap and per-occurrence adjustment tools. Look/Review is the audience-facing edition and readiness/export path, not the same composition screen with another heading. Switching between them preserves output identity and location; it never creates a second wording authority. Represent agreed unfinished composition tools with clearly stated connection limits rather than silently dropping them or pretending a placement was saved.
+
+## 16 October — Adopted shared composition/audience context
+
+Arrange and Audience view retain the same selected output and edition through the existing composition owner. Preserve meaningful location where supported, independent words/media placements and approval/revision/Undo guards. Persistent Outputs/selected-piece context should resume actual work; when selection is absent, expose existing outputs before proposing creation. Do not manufacture an edition, reset selection silently or introduce a replacement composition engine.

@@ -2,7 +2,7 @@
 
 Product direction starts at [What we are building](docs/PRODUCT.md): purpose, pillars, twelve section briefs and the connection to Delivery’s work checklist.
 
-This repository is the canonical code-only AR Create development home. It preserves Document Study as a standalone loopback companion integrated with i64 OS. Repository separation is not a live runtime cutover or a production deployment. The installed service on port 8841 and its data remain untouched.
+This repository is the canonical code-only AR Create development home. It preserves Document Study as a standalone loopback companion integrated with i64 OS. Source delivery is separate from runtime deployment. The sole integrator has completed the bounded permanent local relocation; this checkout does not activate it or contain its private data. See [Claude access](docs/CLAUDE-ACCESS.md).
 
 Use Node 22 or newer. From this directory, run `npm run setup`, `npm run build`, then `npm test`. Dependencies have their own `runtime/package-lock.json`; they are not added to the parent i64 workspace.
 
@@ -18,7 +18,7 @@ The maintained correspondence TypeScript, article codec, template geometry and b
 
 `source-manifest.json` records every allowed imported source and its original/candidate hash. `npm run verify:package` checks those included bytes for excluded payloads and machine paths. `workflow-records.js`, `reference-data.js`, recordings, manuscripts, photographs, source captures, real-content fixtures, saved state, credentials, backups, logs and proof screenshots are not source dependencies and are excluded.
 
-The local i64 entrance is preserved separately. This package does not change `I64OS_AR_CREATE_HOME`, move installed data, widen access, activate a cutover, publish content, or configure remote-device access. A later cutover needs preservation of current browser state, capture absolute paths, source bindings and ownership journals.
+The local i64 entrance and permanent home are owned separately. The verified 18 October relocation preserved current native/browser state and validated i64 open/return. [Permanent-home source](docs/PERMANENT-HOME.md) describes the startup-only capability and generic launcher templates; normal candidate startup still refuses8841. This source handoff performs no live cutover, public/private-content upload or remote-device setup.
 
 The initial packaging lock was preserved at commit 16dff2fa. A subsequent bounded security repair pins the matching Tiptap family to 3.30.5, ProseMirror view to 1.42.3 and its required shared model to 1.25.11. Optional Tiptap menus are pinned to the same family to avoid incompatible peers. No unrelated dependency versions changed. npm audit now reports one low finding in Readability 0.5.0; its 0.6.0 update remains a separate ingestion compatibility task. Review npm native install-script policy before optional terminal/provider/ASR use. Verification covers the local synthetic editor, not the complete creative/export suite.
 
@@ -32,7 +32,7 @@ The SDK lock is preserved from its checkpoint. Its development-only @modelcontex
 
 Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.
 
-Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git; existing runtime/data locations were not relocated.
+Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git. The installed runtime/data have moved to the separately verified permanent home; source/history extraction did not migrate originals.
 
 Use the [developer workspace index](docs/WORKSPACE.md) to find code, the twelve briefs, synthetic examples, host/config boundaries and external ownership receipts.
 

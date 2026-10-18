@@ -23,3 +23,11 @@ Saved manuscript revision, edit/request history and explicit decisions feeding C
 ## Accepted shared manuscript appearance — 15 October 2026
 
 Read uses the same Atlas typography and paragraph rhythm as Draft (see S05): locally hosted Lora body, Cormorant document headings, readable measure and warm themed colors, without printed page numbers. Preserve a visible gap between true paragraphs and meaningful hierarchy between title/section/body. The first Draft-only styling pass was rejected because Read still used sans-serif headings/body with zero paragraph spacing. Check actual screenshots of both Hong Kong and An Cha and both working/retained representations where applicable, not just CSS/font declarations or a single Draft. Wrapper sections and protected nested blocks must not collapse paragraph rhythm. Keep words, source emphasis and historical/read-only meaning intact; styling does not authorize editing source content or expanding scope into platform template redesign.
+
+## Accepted single-note passage navigation — 15 October 2026
+
+Select one existing margin note or its Show passage action to reach and highlight only its associated passage. Selecting another note clears the prior active highlight, including when several notes concern the same paragraph. Retained edit marks remain intact and become visually secondary during note focus. Native buttons support keyboard activation; on narrow screens the notes overlay yields to the selected passage. Preserve manuscript words, source/note identities, direct editing, saved Undo and project/part scope. Restore note selection only while its exact link remains valid. Missing, changed or ambiguous links explain the problem and never choose a nearby or similar passage. A paragraph-only source link must not pretend to identify an exact phrase. Requirements are separate from installed proof.
+
+## 16 October — Adopted continuous reading mode
+
+Read is a mode of the same selected output used by Write and Check. Return to its current passage/selection/position where supported; preserve notes and exact words rather than reopening a different copy. An earlier/retained edition must remain explicitly identified, with a reliable return to current work. Reading/navigation never implies approval; existing editor and recovery remain authoritative.

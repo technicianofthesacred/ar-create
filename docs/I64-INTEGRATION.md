@@ -8,9 +8,9 @@ The existing i64 rail and Writing entrance opens `/ar-create`, checks the local 
 
 The validated `i64osReturn` parameter returns only to allowed loopback i64 Writing/AR Create paths at the established ports. Preserve the editor's project/part state, browser-unsaved recovery and before-leave protections. Do not embed it by stripping origin checks or weakening the frame policy.
 
-The currently installed service on port 8841 and the previous i64 code package are unchanged. This standalone repository runs isolated synthetic candidates on a spare port and refuses 8841. The i64 private service-home configuration still points to its current owned launcher/data; repository extraction does not update that configuration.
+The 18 October bounded relocation is verified: installed runtime/dependencies/data now live at `~/Library/Application Support/i64os/ar-create`; i64 uses that guarded companion home. Controlled restart, native/browser preservation and actual open/validated return passed. This standalone repository still runs isolated synthetic candidates on a spare port and refuses8841. Source publication does not activate/reconfigure the companion. See [permanent home](PERMANENT-HOME.md).
 
-## Safe later transition
+## Preservation for any later transition
 
 1. Freeze and verify the integrator's exact current code/data identities, private configuration, capture paths, browser-local state, direction/decision records and native Undo journals. Preserve recoverable snapshots outside Git.
 2. Verify this repository's locked install/build and relevant synthetic screen/file journeys without private copies, services or providers being activated implicitly.

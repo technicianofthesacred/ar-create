@@ -43,3 +43,7 @@ The first typography patch was rejected: it reached stage 5 but left the same wr
 ## Private draft download
 
 Let the author download the current saved working draft without silently resolving pending editorial marks. Show the file format and whether the download contains review marks. Unsaved edits require an honest save/current-file distinction; refuse stale or wrong-story download. The downloaded bytes must match the selected saved revision. Preserve source identity, history and exact saved Undo. This does not approve marked wording or complete a designed article/carousel export.
+
+## 16 October — Adopted Write / Read / Check continuity
+
+Use continuous modes of the same existing selected output/editor; preserve current words and valid passage/selection/position across mode switches where supported. Retain truthful saved/unsaved/earlier identity, existing marked-word review, direct edits, versions, history and exact Undo. Keep compact selected-piece context, Outputs and a meaningful Continue entrance available without repeating setup. No new editor, duplicate manuscript authority or automatic real wording acceptance.

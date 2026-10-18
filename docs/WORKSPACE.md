@@ -1,6 +1,6 @@
 # AR Create developer workspace
 
-This standalone private repository is the canonical code/design container. Private content, the currently installed runtime and unfinished external candidates were not moved here. i64 OS remains the host integration.
+AR Create is part of the i64 OS tool family. This standalone private repository is its canonical code/design container; i64 OS provides the host integration. Private content, the installed runtime and unfinished external candidates do not belong in this checkout. The authorized permanent local service/data home is separate from the source repository.
 
 | Area | Canonical code-only location | Use |
 |---|---|---|
@@ -12,7 +12,7 @@ This standalone private repository is the canonical code/design container. Priva
 | Host-only configuration | `config.mjs`, `config.example.json`, `serve.mjs` | Explicit private roots/catalogs/tools, data outside checkout, loopback candidate ports |
 | Source freeze | `source-manifest.json` | Reviewed included files, adaptations, completed delta pins and dependency overlay |
 | Repository history | [Provenance](REPOSITORY-PROVENANCE.md) | AR Create-only history extracted from the preserved i64 package |
-| i64 connection | [Host integration](I64-INTEGRATION.md) | Existing launcher/routing boundaries and reversible future transition |
+| i64 connection | [Host integration](I64-INTEGRATION.md) | Launcher/routing boundaries; verified bounded permanent-home move; guarded launcher and preservation boundaries |
 | Generated commands | [Capability index](CAPABILITIES.md) | Regenerate with `npm run build` then `npm run capabilities`; review manifest changes |
 
 ## Held references and candidates
@@ -29,6 +29,6 @@ External manager working drafts, installed-service handoffs, private-data preser
 
 ## Current boundaries
 
-The i64 code package and prior private feature branch are preserved. The installed service on port 8841 remains in its existing home; this repository does not activate its replacement or migrate source captures/browser state/journals. Existing synthetic previews are separate and are not live-content proof.
+18 October: the author authorized the sole Build integrator to move the running service and saved work outside Codex to `~/Library/Application Support/i64os/ar-create`. The bounded move and controlled restart are verified complete, including native-state/browser preservation and i64 open/validated return; this is not full product or visual acceptance. Preserve exact installed code/data, the same localhost8841 browser origin, linked source originals and old-home rollback copies; use [the safe Claude access guide](CLAUDE-ACCESS.md) and [permanent-home source guide](PERMANENT-HOME.md) for the reproducible layout and preservation contract. The source checkout and i64 package remain separate from private runtime data. A normal checkout or visual-development task must not perform its own cutover. Existing synthetic previews are separate and are not live-content proof.
 
 Runtime dependency repair is preserved. Its low Readability residual and the separate SDK client's high OAuth residual are documented in README; this workspace does not configure accounts or perform provider execution. Secure VPS/desktop replicas, offline synchronization and phone access remain planned work. No deployment or private upload is implied by a code push.

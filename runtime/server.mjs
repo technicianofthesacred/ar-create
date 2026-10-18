@@ -134,7 +134,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, researchEnabled=true, packageView=null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, packageView=null } = {}) {
   dataDir = path.resolve(dataDir);
   const store = await createStore({ dataDir, sharedArticles, publicationFault });
   try {
@@ -164,7 +164,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyBindings=createStudyBindings({dataDir,store});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
   const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
-  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals}):null;
+  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation}):null;
   const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts}):null;
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
   const requests = createRequestPreviews({ dataDir, store, library, guidance, researchMaterial, researchAnswers:answerContext,...(studyHumanDirection?{humanDirection:studyHumanDirection}:{}) });

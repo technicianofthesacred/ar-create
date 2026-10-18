@@ -110,7 +110,7 @@ const safeUrl = (value) => {
   if (!["http:", "https:"].includes(u.protocol) || u.username || u.password || u.href.length > 4096) fail("Use a bounded HTTP URL without credentials.", 400);
   return u.href;
 };
-function createBoundProjectFolders({ dataDir, roots, ask, draft, writableWorkingRecords = false, beforeCommit, afterCommit } = {}) {
+function createBoundProjectFolders({ dataDir, roots, ask, draft, writableWorkingRecords = false, beforeCommit, afterCommit, ownedRelocation } = {}) {
   const data = directory(dataDir), configured = { media: directory(roots?.media), workflow: directory(roots?.workflow) };
   if (data.path === configured.media.path || data.path.startsWith(configured.media.path + path.sep) || data.path === configured.workflow.path || data.path.startsWith(configured.workflow.path + path.sep)) fail("Keep adapter metadata outside original roots.", 403);
   const area = path.join(data.path, "ar-project-folder-bindings");
@@ -128,7 +128,8 @@ function createBoundProjectFolders({ dataDir, roots, ask, draft, writableWorking
   function load(id) {
     const raw = bytes(projectFile(id), { optional: true });
     if (!raw) fail("Project is not bound.", 404);
-    const b = JSON.parse(raw);
+    let b = JSON.parse(raw);
+    if(ownedRelocation)b=ownedRelocation(raw,b,configured);
     if (b.projectId !== id || b.schema !== "ar-create.project-folders.v1") fail("Binding identity changed.");
     for (const key of ["media", "workflow"]) {
       if (b.roots[key].path !== configured[key].path) fail("Binding roots differ from configuration.");

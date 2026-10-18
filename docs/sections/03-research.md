@@ -2,6 +2,12 @@
 
 Intent: help Adrian deeply understand unique points from his conversations, expand his knowledge and ground the eventual content. Reuse Magazine research and Tea Atlas where connected.
 
+## 16 October — Research is independently useful learning
+
+The author wants Research to be a place to become educated and understand a topic much more deeply, rather than only preparation for writing. Content creation remains the main product context, but Research must be useful without selecting or creating an output. Preserve direct access and return-to-learning context, substantial explanations, source/evidence context, discussion, follow-up questions and the ability to add and deepen inquiry. Choosing what enters an article/carousel is a separate optional editorial action; output needs must not reduce Research to extracted facts, a brief or summary cards.
+
+Standalone potential is a future direction, not authorization for a separate product, database, backend or provider. This clarification updates accepted intent only; no new implementation is requested here. Proposed grouped navigation/unified writing modes remain unaccepted proposals. Existing scope/revision/source and human-decision protections apply to learning records as well as editorial reuse. Current output-dependent interface contracts require separately scoped reconciliation before independent-learning completion can be claimed.
+
 ## Work surface and authority
 
 Use the human-approved Research reference, exact readable layout/interactions adapted to app palette. Reference owner maintains the frozen files and exact-match comparison; a temporary port is not source authority. Findings lead the page; operational source selection stays in a compact disclosure. Each meaningful point connects what was said, speaker/time where known, evidence and uncertainty, editorial implication and optional in-context narration proposal. No invented quote to fill a template.
@@ -34,3 +40,15 @@ The author rejects a shallow summaries-only Research surface. Reuse the original
 - **Carry the result into Direction:** informed angle/title/structure choices consume the selected sources, brief and dated human decisions. Existing completed work resumes without repeated processing; new choices cannot silently rewrite current drafts or independent outputs.
 
 Place these intended interactions on the current Research surface even where backend work remains. Show retained findings and genuine current evidence, and clearly label unconnected external research, Atlas retrieval, model discussion or brief generation. No illustrative quote/finding/verdict may appear as a real result. Do not run providers or publish/send anything merely to demonstrate the interface. The design handoff can proceed with honest unconnected tools; functional proof remains a separate acceptance.
+
+## 16 October — Direct Research access within adopted grouped navigation
+
+The grouped navigator is now explicitly adopted, modified to retain Research as a first-class learning space. Develop groups Research and Direction without requiring editorial reuse or an output. Research opens and returns to its inquiry context without output selection/creation; substantial learning/evidence/discussion/additions/follow-ups remain primary. Do not let persistent selected-piece context elsewhere become a Research gate. This supersedes the earlier navigation-proposal-only status, not the independent-learning requirement.
+
+## 18 October — Research may begin from a concept
+
+For the later idea-led workflow, a personally stated concept, belief, fundamental, question or rough note is a valid research starting point. Do not require a recorded quotation or transcript before inquiry. Help the author understand implications, examine competing perspectives and find relevant earlier work or outside evidence within the permitted scope. Preserve the distinction between a personal view, a question, a claim requiring evidence and an AI suggestion. Do not invent a source, timestamp, quotation or verification result to fit the existing conversation-led presentation. Research can continue independently of output creation. Follow [the future-design brief](../PRODUCT.md#18-october--future-design-pass-and-starting-from-an-idea); this is future intent, not a new provider or installed retrieval capability.
+
+## 18 October — Research from the curated personal library
+
+Use the [curated personal library requirements](../PRODUCT.md#18-october--curated-personal-resource-library-later-design-pass) for cross-project source discovery. The author's own writing, participated conversations and explicitly marked passages carry different personal context from a saved, partly read or unread reference. Match the current question and explain source relevance; no fixed file-type hierarchy overrides an explicitly relevant passage. Keep personal relevance separate from factual support. Preserve actual page/section/speaker/time anchors, quotation/translation provenance and the author's annotation. AI-read is not personally read or endorsed. Existing source/collection/evidence mechanisms are reuse candidates; complete mixed-format readers, meaning-based retrieval and relevance tracking remain unverified future functionality. Do not change the active design pass or start a second source store.

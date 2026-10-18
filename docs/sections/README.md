@@ -33,7 +33,7 @@ Use the existing Magazine process/commands/prompts and AR editing/recovery/portr
 
 ## Shared design and data rules
 
-- Compact sans-serif, persistent project/part/output orientation, continuous editing, purposeful controls beside their content. Avoid repeated headers and horizontal page scrolling. Keep secondary paths/provenance under disclosure. AI discussion belongs beside the relevant passage, source or media item.
+- Compact sans-serif controls, shared document typography, persistent project/part/output orientation, continuous editing, purposeful controls beside their content. Avoid repeated headers and horizontal page scrolling. Keep secondary paths/provenance under disclosure. AI discussion belongs beside the relevant passage, source or media item.
 - Shared origins, independently editable outputs. Article, carousel, script, print, WeChat article and Twitter/X post are requested expressions of a project, not separate source imports. Never assume every format is required. Source changes flag affected outputs for human review without overwriting their independently edited text; applying a resulting text change requires explicit human acceptance.
 - Preserve human experience attribution, exact phrases, corrections, chosen direction, rejection reasons, direct edits and later changes of mind. Scope each to project, part or output. Stale downstream work is identified, not silently regenerated.
 - Original files retain their identity. Transcript versions, translations, media derivatives, compositions and published editions link to their origin. Device paths are locations, not identities. Local/cloud availability is visible without dominating the workspace.
@@ -56,3 +56,33 @@ For the scoped implementation, show actual content and useful actions; preserve 
 Earlier workflow contracts and stage-purpose discussions remain manager decision history outside this code-only checkout. This directory is the evolving developer brief authority; it does not copy private archives or replace verified implementation records.
 
 Research exact-match work is ongoing separately. Private reference samples, sample-host recovery bootstrap and reference outputs are not application source; never include them wholesale in shared runtime or GitHub. These briefs authorize no new service, provider setup, private-data transmission or deployment. Use synthetic verification in this checkout.
+
+## Interface coverage before connection — 15 October direct clarification
+
+Populate the existing twelve surfaces with their agreed work and tools so the author can use Claude Design while the remaining operations are connected. A represented operation must show its intended scope/input/review interaction and an honest not-connected state where applicable; no fabricated results or persistence. Keep connected operations live and preserve the current document, project navigation and editorial protections. Delivery tracks interface-present, connected and verified separately within its existing rows. The earlier manager instruction to complete all functions before design is superseded as a misinterpretation.
+
+Accepted Atlas document typography applies across relevant long-form sources, transcripts, research, notes and writing, including retained/read-only representations and nested passages. Controls/compact metadata remain sans serif; platform-template typography stays governed by its existing designs. Stage-specific purpose matters more than making every section another copy of the manuscript.
+
+## 16 October — Shared visual refinement direction
+
+The author authorized one isolated Impeccable visual-consistency candidate across S01–S12, with routine design decisions delegated. Reduce duplicate presentation and wasted space; align shared hierarchy/statuses/controls/icons/grids while retaining purpose-specific section tools, current editor/project navigation, Atlas prose, approved templates and working actions. Delivery receives the exact patch/proof; existing Build alone integrates and activates it. Requirements and isolated candidate proof are not installed or human acceptance. No parallel shared-code visual builder or backend/content migration.
+
+## 16 October — Adopted navigation and shared editing context
+
+Human-approved grouping: Material1–2, Develop3–4, Make5–9, Deliver10–12; preserve all twelve direct entrances/IDs/deep links/project rail and no new mandatory gates. Outputs and actual selected-piece/meaningful continuation context stay available. One New output entrance distinguishes supported creation from unsupported requests. Write/Read/Check reuse the same selected output and existing editor, retaining meaningful passage/selection/position where supported and honest saved/unsaved/earlier identity. Arrange/Audience retain output/edition. Research remains independent deep learning without an output prerequisite. Existing integrator alone implements; actual ordinary navigation, relevant preservation and responsive theme proof remain required. Earlier proposal-only statements for these named changes are superseded; no backend replacement/provider/private transmission or real output creation implied.
+
+## 17 October — Collection and scalable project access
+
+Adopted build: projects may collect material for a product, place, idea or experience without an article. Shared origins support independent short posts and product-listing content as well as stories/carousels/scripts. S01 owns collection/processing; S04 owns intent per requested piece; S12 owns actual output access and delivery facts. C02 requires a compact current/pinned/recent project rail and searchable All projects with filing/archive, retaining dirty buffers and exact project/part/output return. Product listings prepare content for the existing Teajia product reference; they do not duplicate commerce state or imply shop publication. Root maintains these briefs; Build owns wiring and actual acceptance proof.
+
+## 18 October — Later design pass, idea-led entry
+
+The active Claude Design work continues on its existing handoff, including its next returned version. Later collection/tea/sidebar refinements and concept brainstorming are queued for a subsequent design pass. PRODUCT records the shared intent once; S01 covers scratch notes/material/reference collection, S03 idea-led inquiry, and S04 honing ideas/titles/angles into independently edited pieces. Record requirements without starting a new competing design or implementing a new editor/store. [Future-design and idea-led workflow](../PRODUCT.md#18-october--future-design-pass-and-starting-from-an-idea).
+
+## 18 October — Full curated library and personal relevance
+
+The author explicitly expects a substantial, well-organized reusable library, despite deliberate curation. Full library search/filing/collections/filters is distinct from bounded recent/pinned sidebar access and from project-specific Material. Own writing, participated conversations, translations, reading/PDFs/ebooks and video resources share stable source references. Personal relevance, marked passage importance, actual reading coverage and factual support remain distinct. S01/S02/S03/S04 refer to the [canonical curated library brief](../PRODUCT.md#18-october--curated-personal-resource-library-later-design-pass); record this for a subsequent design pass, without restarting active Claude work or asserting all-format/global retrieval is built.
+
+## 18 October — Connected next-pass design plan
+
+[Library, ideas and tea projects](../superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md) proposes one shared connection map, focused development of each experience and a combined journey review. Primary scope is S01–S04 with existing output contracts preserved. This is future design work only; do not restart the active Claude pass or treat the plan as approved implementation.

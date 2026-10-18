@@ -41,3 +41,15 @@ Show a project with one live article, one export and one unfinished requested ou
 - 13 October: Approved integration of the output overview into the existing app, preserving editor and project navigation. Require a slim, consistently aligned grid and uniform status presentation; reject disorganized action start points, the next-milestone bar and illustrative-preview footer. This resolves the earlier presentation-exploration note below; actual integration and screen verification remain required.
 
 - 13 October: Confirmed one next action per output and completion at its intended destination, rather than completion of all twelve checkpoints. This records intended behavior; the presentation is still being explored and implementation is not asserted.
+
+## 16 October — Adopted persistent Outputs and one creation entrance
+
+Outputs is immediately available from the project context rather than requiring traversal of earlier checkpoints. Show the actual selected piece and meaningful continuation using real scope/state; never invent output identity or next-task counts. Consolidate creation into one clear New output entrance, with supported formats distinct from an honest unsupported-expression request. Preserve actual title/next-action routes, all12stage entrances, independent outputs and current/earlier edition history. This is navigation consolidation under existing owners, not new real output creation authority.
+
+## 17 October — Posts and product listings are independent outputs
+
+Adopted: the overview includes requested short posts and product-listing drafts with their own actual editable content, review status, destination and next action. A project can have these without an article. Keep source collection and output scope separate; every existing-output link opens its actual saved words. An uncreated format is a creation choice, not a fake result row.
+
+Teajia's supplied product link can be recorded as the listing destination; no price/stock/orders authority is introduced here. A saved listing, exported HTML, scheduled post and live published page are different facts. Record a published URL/date only from actual evidence or an attributed human record. Generated artwork and real product photos retain their distinction through selection and output.
+
+First acceptance: independently edit/save Post and Product listing drafts, switch project/output and reopen/reload them, verify exact text and saved Undo through existing contracts, and retain Article/Carousel exports and review guards. Preserve unfinished outputs and real editorial approvals; synthetic acceptance does not approve or publish real content. The project sidebar lists projects with bounded quick access, not every output.

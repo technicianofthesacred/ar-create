@@ -41,3 +41,23 @@ A synthetic multi-session project visibly groups multiple sessions with opening/
 ## Distinct Material surface — 15 October clarification
 
 Material is the collection and active entrance: show incoming/kept files, recordings, transcripts, notes, links and resource groups with Add, preview, organize, select and applicable processing actions. Its primary work is not the continuous corrected transcript displayed in Source. Selecting Review transcript opens that item's matching source/session in section 2. Unconnected tools remain visible with an honest preparation/not-connected state; an upload or click cannot stand in for a processing result.
+
+## 17 October — A collection can exist without a story
+
+Adopted: Material belongs to a subject/project, including a tea/product, place, idea or experience. The author can gather recordings, multiple transcripts, original photos/video, generated artwork, product documents, tasting/finding notes and research without first choosing an article. Reuse the current Add, preview, organization, processing and source connections. One item can support several outputs by reference, preserving its original identity. Do not build another asset library or imply a physical file move when changing a group.
+
+Keep original product photographs distinct from generated illustrations, and personal experience distinct from supplied product claims or outside evidence. A supplied Teajia product reference is a link, not a second stock/price record. Missing factual support stays visible. Applicable processing is offered beside actual material, not simulated merely because a file exists.
+
+The project browser must scale: bounded pinned/recent access plus the current project and a searchable All projects entrance. All projects reuses filing/archive; search and organization never discard an unsaved manuscript. A new project can begin in Material rather than manufacture a blank story. Root requirements C01–C07/S01/S04/S12; implementation and private-data transmission remain separate facts.
+
+## 18 October — Idea-led collection, future design input
+
+A project may start with a concept, belief, question or intended message and rough notes, before external material exists. Keep the scratch notes as authored project material and allow existing stories/editions, transcripts, references and new writing to be connected later without moving originals or requiring a story/output first. A material-led project and an idea-led project can grow into one another. Follow [the future-design and idea-led workflow brief](../PRODUCT.md#18-october--future-design-pass-and-starting-from-an-idea); this does not alter the Claude design pass already underway or authorize a new live surface.
+
+## 18 October — A substantial curated library across projects
+
+Material can select from a full personal library as well as accept new input. Library resources are deliberately kept own writing, conversations/transcripts, translations, reading/PDFs/ebooks and video references, not merely current-project files. Curated does not mean small: scalable search, clear filing, topic collections, type/language filters and useful saved views are required. A short recent/pinned sidebar is quick access, not the whole library. Keep one source identity across collections/projects and distinguish logical grouping from an explicit physical move. Previously curated resources do not repeat intake approval; unknown incoming material still does. Follow [the curated library brief](../PRODUCT.md#18-october--curated-personal-resource-library-later-design-pass). Future design input only; preserve the active design pass and existing source store.
+
+## 18 October — Material can follow the author's concept
+
+A project can begin with the author's own thoughts, feelings and intended meaning before any Library lookup. Material then gathers existing or new resources around that concept; a kept resource can also spark the concept in the opposite direction. Both entrances continue inside the existing AR Create project and connected Research/Direction/output tools, not a separate collection workflow. Personal expression is creative material as well as instruction and must remain accessible and versioned independently of AI summaries. See PRODUCT and the connected next-pass plan; this is not a new implementation assignment or change to the active Claude design.
