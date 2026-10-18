@@ -43,6 +43,14 @@ At the concept entry, provide a prominent continuous editable place for **the au
 
 Personal contributions have two compatible uses: original material for content and direction for how AI helps. Do not reduce them to prompts, untraceable chat context, outside evidence or automatically polished AI prose. Keep the author's exact original version alongside any proposed structure/interpretation. Respect explicit background-only or intended-for-use choices without adding a classification chore to every sentence. Carry relevant intent into tone, emphasis, selected visuals, narration and sequence as well as writing. Show what the author chose and which pieces it guides; keep later changes reversible and scoped.
 
+### App and agents are equal entrances
+
+In-app AI chat is optional. The author may develop thoughts, request relevant Library connections and organize work through an authorized agent while AR Create is closed. Opening the app shows the same saved exact human contributions, linked resources, scoped decisions and revisions without import or repeated instructions. App edits and decisions are available on the agent's next authorized read. Use the existing shared identities and maintained file/tool authority; do not create a second chat-owned project or manuscript store.
+
+Preserve both incoming agent changes and unsaved app words when they conflict, with visible recovery instead of silent replacement. Keep exact originals, decision scope/history, source attribution and independent output wording/approval. Relevant authorized contributions are recorded; arbitrary external chat history and the entire Library are not automatically ingested or sent to a provider.
+
+Later acceptance (C01/C03/C04/C06) must demonstrate agent save with app closed → same records on app open → app edit visible on next agent read, plus concurrent unsaved conflict preservation and unchanged sibling output approvals. Unconnected, delayed or unavailable paths stay honest. These are required future integration checks, not proof of existing universal sync. Keep the current Claude design brief, attachments and next returned result unchanged.
+
 ### Integration points in the current application
 
 | Existing part | Extension for this work | What remains shared and preserved |

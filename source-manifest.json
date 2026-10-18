@@ -2070,8 +2070,8 @@
     },
     {
       "path": "docs/superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md",
-      "sourceSha256": "9245cef9007880e7c4712b6e303f1852fed3cf847c8da2b506469964d22d4330",
-      "candidateSha256": "2b85db6017d3f9ba7afbbf6471d646a2d6e9269849dd3de50d1019c7e73b0c1c",
+      "sourceSha256": "90b4741cb070a13482c9cbacfecf340dc2156e71e181afc3be4991f0f12db075",
+      "candidateSha256": "27a53ba70d92d38f9f0c672e1e8332a30c9c1a55e3a7e70398ca97833ddaaa91",
       "adapted": true
     },
     {
@@ -2221,7 +2221,7 @@
     },
     {
       "path": "docs/sections/04-direction.md",
-      "candidateSha256": "08428e85ef0354a21a5c6207139be33b26aff7ab739e4826d68bbbe8fd08a637"
+      "candidateSha256": "f125740d3114c203aaa7a4fcd4be2b6c15af8d70f4887eeb45ba4536a8508fc2"
     },
     {
       "path": "docs/sections/05-draft.md",
@@ -2293,7 +2293,7 @@
     },
     {
       "path": "docs/PRODUCT.md",
-      "candidateSha256": "f96a5d5ec768f2c50c61251f63d70daa269ae3c795d028af5304b708f185b19f"
+      "candidateSha256": "6bb4fcc0ebc0fd8c13d01cf9b70013531f5729ef9086f4d89788ba28da90d515"
     },
     {
       "path": "tests/prose-surface.test.mjs",
@@ -2353,7 +2353,7 @@
     },
     {
       "path": "docs/CLAUDE-ACCESS.md",
-      "candidateSha256": "047264d6ff4fe9d821241d2ab5ba332521dc9c891697d26d143a0a857153bcc4"
+      "candidateSha256": "50412750785b1e9dfbe09fee8938c1c14f2c2dd3cd176e7889c6c968f4cf4723"
     },
     {
       "path": "docs/PERMANENT-HOME.md",
@@ -2402,6 +2402,15 @@
       "files": 1,
       "privateMediaImported": false,
       "outputBridgeImplemented": false
+    },
+    {
+      "name": "Agent and app equal-entry handoff requirements 18 October 2026",
+      "manifestSha256": "acd8c7372d7855dba884e5ed5b76e71997768c26542d7d2ee6a495b7660e4142",
+      "files": 4,
+      "docsOnly": true,
+      "runtimeChanged": false,
+      "privateContentImported": false,
+      "currentDesignPassChanged": false
     }
   ],
   "repositorySeparation": {
