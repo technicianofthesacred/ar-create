@@ -35,3 +35,6 @@ body.c3-bar-on .workspace>#work-context>#wn-message:not([hidden]){display:block;
 #c3-surface-bar .sb-sel{display:flex;flex-direction:column;gap:4px;padding:6px 10px;color:var(--dim)}
 @media(max-width:850px){#c3-surface-bar .sb-btn span,#c3-surface-bar .sb-status{display:none}#c3-surface-bar .sb-piece{max-width:120px}}
 @media(max-width:650px){#c3-surface-bar{flex-wrap:wrap;padding:6px 10px}#c3-surface-bar .sb-left{flex:1 1 100%}#c3-surface-bar .sb-right{flex:1 1 100%;justify-content:flex-end}#c3-surface-bar .sb-icon,#c3-surface-bar .sb-btn,#c3-surface-bar .sb-primary{min-height:44px}#c3-surface-bar .sb-piece-select{max-width:100%}}
+/* The direction tools strip moves into More; its panel still opens here, under the bar. */
+body.c3-bar-on .workspace #direction-writing-tools>.dwt-orientation{display:none!important}
+body.c3-bar-on .workspace #direction-writing-tools:not(:has(.dwt-panel:not([hidden]):not(:empty))){border:0!important;padding:0!important;margin:0!important;min-height:0!important}

@@ -4,7 +4,7 @@
    and repaints. The save notice and failed-save recovery (.draft-bar) are never hidden. Install last. */
 (()=>{
  if(window.surfaceBar)return;
- const ROWS=['.workspace>.topbar','.workspace>#work-context','.workspace>.workbar'];
+ const ROWS=['.workspace>.topbar','.workspace>#work-context','.workspace>.workbar','.workspace #direction-writing-tools>.dwt-orientation'];
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const I={undo:'<path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2"/>',history:'<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5v4h4"/><path d="M12 8v4.5l3 2"/>',focus:'<path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>',margin:'<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M15 4.5v15"/>',more:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chev:'<path d="m7 10 5 5 5-5"/>',outputs:'<path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12.5l8.5 4.5 8.5-4.5"/><path d="M3.5 16.5l8.5 4.5 8.5-4.5"/>',back:'<path d="M14.5 6 8.5 12l6 6"/>'};
@@ -18,7 +18,7 @@
   const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,more:[]};reals=[];
   const add=(n,slot)=>{const i=reals.push(n)-1;if(slot)out[slot]=i;return i;};
   for(const row of rows()){
-   const group={title:row.matches('#work-context')?'This piece':row.matches('.topbar')?'View':'Writing tools',items:[]};
+   const group={title:row.matches('#work-context')?'This piece':row.matches('.topbar')?'View':row.matches('.dwt-orientation')?'Direction and voice':'Writing tools',items:[]};
    for(const n of row.querySelectorAll('button,select,a.i64-return')){
     if(!visible(n)&&!n.closest('details'))continue;
     if(n.closest('details')&&n.closest('details').closest('[hidden]'))continue;

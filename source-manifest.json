@@ -2335,15 +2335,15 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "8ed56ce3b49c298961a368478332bca60212becc726bdb0131f3fee09b3fde25"
+      "candidateSha256": "2e188a48ce6f7efcd51da1cb9f9dacb26a678173a00ee3465e64f2cab56c85c7"
     },
     {
       "path": "public/document-study/surface-bar.css",
-      "candidateSha256": "f490855f254cc50714fd2b81e69bda796c71b60b61882641b74b0e02e5c746b3"
+      "candidateSha256": "ed7441efc669ac17c75cfab76ddf46e02490c56adbc4a485c641d5651c014bcf"
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
-      "candidateSha256": "41f73112cd090b593315c70a611acf62fe1f6876b120ce7fd339d17056d69d8d"
+      "candidateSha256": "55c898fbac82260ea8ff1c97b77d1443fb1eef9173fac749c8aa350634738401"
     },
     {
       "path": "public/document-study/waiting-band.js",
@@ -2395,7 +2395,7 @@
     },
     {
       "path": "public/document-study/inspector.css",
-      "candidateSha256": "7e73e5d032eafda140000af71a44b8666374fc702b7dc229100f9b419e9d00e0"
+      "candidateSha256": "38af098295bee8c91b4ff334beb7565308d9d20815591185a97b39aa9227b999"
     },
     {
       "path": "public/document-study/inspector.test.mjs",
@@ -2403,15 +2403,15 @@
     },
     {
       "path": "public/document-study/research-tab.js",
-      "candidateSha256": "9402c32b3e30f1ab0782cc8d1ee72bc42fb5b86a1df2b6bfca46fb12e778f470"
+      "candidateSha256": "c8dcd13dcf0674cfd766dec479ef647af6fe4608173988940d8fb248ad38defb"
     },
     {
       "path": "public/document-study/research-tab.css",
-      "candidateSha256": "4d3e6ba91128b66b12ad3dbad97d0730987a858b4020f9ad0c827e6ac4aba177"
+      "candidateSha256": "a16dd03e64554c654411941395753d0f7cfbf428fa2a438a962b6e0798e27841"
     },
     {
       "path": "public/document-study/research-tab.test.mjs",
-      "candidateSha256": "511a1c9f543c0c960cc62ba6332b5abeee7a36d840b9168418088ba9496b8524"
+      "candidateSha256": "22e4d04f24d9eb9234c06665425b6abe16764fbdbb3d4aba09b4aed207aeaa7d"
     }
   ],
   "dependencyRepair": {

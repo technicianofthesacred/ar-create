@@ -79,3 +79,8 @@ body.c3-research-open #c3-tabstrip [data-ht-research]{background:var(--paper);co
 #c3-research .rt-for{border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--c3-lift,var(--rail));padding:3px 10px 4px;min-height:38px;justify-content:center}
 #c3-research .rt-for:focus-within{outline:2px solid var(--warm);outline-offset:1px}
 #c3-research .rt-for select{outline:none}
+#c3-research .rt-card{position:relative;padding:0;display:block}
+#c3-research .rt-cardo{display:flex;flex-direction:column;gap:6px;width:100%;padding:12px 44px 12px 12px;border:0;border-radius:10px;background:none;text-align:left}
+#c3-research .rt-cm{position:absolute;top:8px;right:8px;width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:none;color:var(--dim)}
+#c3-research .rt-cm:hover,#c3-research .rt-cm[aria-expanded="true"]{background:var(--c3-lift,var(--rail));border-color:var(--line);color:var(--ink)}
+#c3-research .rt-cmenu{top:42px;right:8px;z-index:6}

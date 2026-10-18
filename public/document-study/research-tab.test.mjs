@@ -77,3 +77,14 @@ test('search, evidence and source filters narrow without hiding the way back',as
  const q=f.d.querySelector('[data-rt-q]');q.value='zzz';q.dispatchEvent(new f.w.Event('input',{bubbles:true}));
  assert.match(f.d.querySelector('.rt-empty h2').textContent,/No findings match/);
 });
+
+test('each card has a ⋯ menu: reader, source, decide; outside tools stay not connected',async()=>{
+ const f=fixture({findings:{hk:{available:true,points:[point('a','fact')]}}});
+ f.d.querySelector('[data-ht-research]').click();await f.settle();
+ f.d.querySelector('[data-rt-cmore="0"]').click();
+ const items=[...f.d.querySelectorAll('.rt-cmenu button')].map(b=>[b.textContent,b.disabled]);
+ assert.deepEqual(json(items),[['Open in the reader',false],['Show only Invented transcript.md',false],['Decide in Invented piece one',false],['Search outside sources · not connected',true],['Ask about this point · not connected',true]]);
+ f.d.querySelector('.rt-cmenu [data-rt-open]').click();
+ assert.ok(f.d.querySelector('.rt-drawer'));
+ assert.equal(f.d.querySelector('.rt-cmenu'),null);
+});

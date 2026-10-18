@@ -9,7 +9,7 @@
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=(d,s=18)=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const I={x:'<path d="M7 7l10 10M17 7 7 17"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',quote:'<path d="M7 11h4v6H5v-4a6 6 0 0 1 2-4.5"/><path d="M15 11h4v6h-6v-4a6 6 0 0 1 2-4.5"/>',doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>',more:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chev:'<path d="m7 10 5 5 5-5"/>'};
- let open=false,data=new Map(),loading=null,ui={forId:'',q:'',ev:'all',src:'',panel:'sources',reader:null,moreOpen:false};
+ let open=false,data=new Map(),loading=null,ui={forId:'',q:'',ev:'all',src:'',panel:'sources',reader:null,moreOpen:false,cardMenu:null};
  const connected=()=>state.projects.filter(p=>KEYS[p.id]&&!p.archived);
  const project=id=>state.projects.find(p=>p.id===id);
  async function readPiece(p){
@@ -23,7 +23,7 @@
  function points(){const ids=ui.forId?[ui.forId]:connected().map(p=>p.id);return ids.flatMap(id=>data.get(id)?.ok?data.get(id).points:[]);}
  function visible(){const q=ui.q.trim().toLocaleLowerCase();return points().filter(p=>(ui.ev==='all'||(ui.ev==='supported'?p.supported:p.uncertain))&&(!ui.src||p.sources.some(s=>s.name===ui.src))&&(!q||[p.title,p.quote,p.speaker,p.piece].join(' ').toLocaleLowerCase().includes(q)));}
  const cap=s=>String(s).charAt(0).toUpperCase()+String(s).slice(1).replace(/[-_]/g,' ');
- function card(p,i){return `<button type="button" class="rt-card ${ui.reader===i?'on':''}" data-rt-open="${i}"><span class="rt-k">${icon(I.quote,15)}<span>${esc(p.speaker||cap(p.kind))}</span></span><span class="rt-c">${esc(p.title)}</span>${p.quote?`<span class="rt-q">“${esc(p.quote)}”</span>`:''}<span class="rt-f">${p.supported?'<span class="rt-ev good">Supported</span>':''}${p.uncertain?'<span class="rt-ev warn">Uncertain</span>':''}${p.stale?'<span class="rt-ev bad">Changed since</span>':''}<span class="rt-used">${esc(p.piece)}</span></span></button>`;}
+ function card(p,i){const src=p.sources[0]?.name||'';return `<div class="rt-card ${ui.reader===i?'on':''}"><button type="button" class="rt-cardo" data-rt-open="${i}"><span class="rt-k">${icon(I.quote,15)}<span>${esc(p.speaker||cap(p.kind))}</span></span><span class="rt-c">${esc(p.title)}</span>${p.quote?`<span class="rt-q">“${esc(p.quote)}”</span>`:''}<span class="rt-f">${p.supported?'<span class="rt-ev good">Supported</span>':''}${p.uncertain?'<span class="rt-ev warn">Uncertain</span>':''}${p.stale?'<span class="rt-ev bad">Changed since</span>':''}<span class="rt-used">${esc(p.piece)}</span></span></button><button type="button" class="rt-cm" data-rt-cmore="${i}" aria-label="More for ${esc(p.title)}" aria-expanded="${ui.cardMenu===i}" title="Reader, source, decide">${icon(I.more,16)}</button>${ui.cardMenu===i?`<div class="rt-menu rt-cmenu" role="group" aria-label="More for ${esc(p.title)}"><button type="button" data-rt-open="${i}">Open in the reader</button>${src?`<button type="button" data-rt-src="${esc(src)}">Show only ${esc(src)}</button>`:''}<button type="button" data-rt-decide="${esc(p.projectId)}">Decide in ${esc(p.piece)}</button><button type="button" disabled>Search outside sources · not connected</button><button type="button" disabled>Ask about this point · not connected</button></div>`:''}</div>`;}
  function board(list){
   if(!connected().length)return `<div class="rt-empty"><h2>No research is connected for your pieces yet</h2><p>Research findings appear here for pieces with saved source analysis. Open a piece and use its Research checkpoint to learn from its material.</p></div>`;
   if(loading&&!data.size)return '<p class="rt-empty" role="status">Reading saved research…</p>';
@@ -81,7 +81,9 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
   if(open&&event.target.closest?.('#c3-tabstrip [data-ht-home],#c3-tabstrip [data-ht-tab],#c3-tabstrip [data-pl-open]'))hide();
  },true);
  document.addEventListener('click',event=>{
-  const n=event.target.closest?.('#c3-research [data-rt-open],#c3-research [data-rt-panel],#c3-research [data-rt-src],#c3-research [data-rt-ev],#c3-research [data-rt-clear],#c3-research [data-rt-close-reader],#c3-research [data-rt-more],#c3-research [data-rt-decide]');if(!n)return;
+  const n=event.target.closest?.('#c3-research [data-rt-open],#c3-research [data-rt-panel],#c3-research [data-rt-src],#c3-research [data-rt-ev],#c3-research [data-rt-clear],#c3-research [data-rt-close-reader],#c3-research [data-rt-more],#c3-research [data-rt-decide],#c3-research [data-rt-cmore]');if(!n){if(ui.cardMenu!=null&&!event.target.closest?.('#c3-research .rt-cmenu')){ui.cardMenu=null;paint();}return;}
+  if(n.dataset.rtCmore!=null){const k=Number(n.dataset.rtCmore);ui.cardMenu=ui.cardMenu===k?null:k;paint();document.querySelector('#c3-research .rt-cmenu button')?.focus();return;}
+  ui.cardMenu=null;
   if(n.dataset.rtOpen!=null){ui.reader=Number(n.dataset.rtOpen);ui.moreOpen=false;paint();document.querySelector('#c3-research .rt-drawer [data-rt-close-reader]')?.focus();return;}
   if(n.dataset.rtPanel){ui.panel=n.dataset.rtPanel;paint();return;}
   if(n.dataset.rtSrc!=null){ui.src=ui.src===n.dataset.rtSrc?'':n.dataset.rtSrc;ui.reader=null;paint();return;}
@@ -93,6 +95,6 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
  });
  document.addEventListener('input',event=>{if(!event.target.matches?.('#c3-research [data-rt-q]'))return;ui.q=event.target.value;ui.reader=null;paint();});
  document.addEventListener('change',event=>{if(!event.target.matches?.('#c3-research [data-rt-for]'))return;ui.forId=event.target.value;ui.reader=null;ui.src='';paint();});
- document.addEventListener('keydown',event=>{if(event.key!=='Escape'||!open||document.getElementById('project-library')?.open)return;event.preventDefault();event.stopImmediatePropagation();if(ui.moreOpen){ui.moreOpen=false;paint();}else if(ui.reader!=null){ui.reader=null;paint();}else hide();},true);
+ document.addEventListener('keydown',event=>{if(event.key!=='Escape'||!open||document.getElementById('project-library')?.open)return;event.preventDefault();event.stopImmediatePropagation();if(ui.cardMenu!=null){const k=ui.cardMenu;ui.cardMenu=null;paint();document.querySelector(`#c3-research [data-rt-cmore="${k}"]`)?.focus();}else if(ui.moreOpen){ui.moreOpen=false;paint();}else if(ui.reader!=null){ui.reader=null;paint();}else hide();},true);
  window.c3Research={show,hide,load,isOpen:()=>open,whenIdle:()=>loading||Promise.resolve(),points};
 })();
