@@ -738,13 +738,13 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "77075b5109860b98ac22e02596404a44637ade6e6d6966b09097c6be63a6de98",
+      "candidateSha256": "39453dfb2cf07315b990218d2c09daf5d216b705d13256b9275cf7b270d75f71",
       "adapted": true
     },
     {
       "path": "public/document-study/study.js",
       "sourceSha256": "505fd82f3a1836986e3c9ae7772f91f6e8890d8ced9d967008a5173d46feb704",
-      "candidateSha256": "c3d852be2f8835cf1ac399dc83753bcd62a4b7a2c8c19d6537c81b02a10f61cb",
+      "candidateSha256": "56cba994c5de1d6267b28fd4a272a3f562a7be1c92a2a65fa278060351c2fe7c",
       "adapted": true
     },
     {
@@ -2335,7 +2335,7 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "de6ecab76233cf7f8e30d55afc3c221819dc8a426127661c9cedd69eb11708f8"
+      "candidateSha256": "8ed56ce3b49c298961a368478332bca60212becc726bdb0131f3fee09b3fde25"
     },
     {
       "path": "public/document-study/surface-bar.css",
@@ -2356,6 +2356,38 @@
     {
       "path": "public/document-study/waiting-band.test.mjs",
       "candidateSha256": "9db68e09b604c53a4cf6e541a9c0b1496f9ebcd215b0657b6a14eb0dc33ad898"
+    },
+    {
+      "path": "public/document-study/c3-theme.css",
+      "candidateSha256": "b58cf6e043f32be88c6547c091f7c1ff06a52ddc67fa5f02625c9b3e6313b00c"
+    },
+    {
+      "path": "public/document-study/c3-theme.test.mjs",
+      "candidateSha256": "9975c36a049d97eca02b1f8fb8def2d6d174b6a0c6cc3ece3bdb4146f1381aa0"
+    },
+    {
+      "path": "runtime/public/assets/fonts/plus-jakarta-sans-400-normal-latin-ext.woff2",
+      "candidateSha256": "0303e02b53b0298fb26a0193941a2e8754f0f9a9fce50d90b178d8da3424873f"
+    },
+    {
+      "path": "runtime/public/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2",
+      "candidateSha256": "cd8db90cd950e26bc8761f65d323588bd5cd112d326d6d322bc7c8ea86771215"
+    },
+    {
+      "path": "runtime/public/assets/fonts/plus-jakarta-sans-500-normal-latin-ext.woff2",
+      "candidateSha256": "0303e02b53b0298fb26a0193941a2e8754f0f9a9fce50d90b178d8da3424873f"
+    },
+    {
+      "path": "runtime/public/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2",
+      "candidateSha256": "cd8db90cd950e26bc8761f65d323588bd5cd112d326d6d322bc7c8ea86771215"
+    },
+    {
+      "path": "runtime/public/assets/fonts/plus-jakarta-sans-600-normal-latin-ext.woff2",
+      "candidateSha256": "0303e02b53b0298fb26a0193941a2e8754f0f9a9fce50d90b178d8da3424873f"
+    },
+    {
+      "path": "runtime/public/assets/fonts/PLUS-JAKARTA-SANS-LICENSE.txt",
+      "candidateSha256": "7ecdb435d3868d8b1006d1aa064c00ad3e4eab10d0dca6b49e4a823a913540c7"
     }
   ],
   "dependencyRepair": {
