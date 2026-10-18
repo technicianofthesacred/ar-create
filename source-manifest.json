@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "1adb883b4a8f0993bedc67f5624833bb8b2759349f114944b36def1609eefb5d",
+      "candidateSha256": "77075b5109860b98ac22e02596404a44637ade6e6d6966b09097c6be63a6de98",
       "adapted": true
     },
     {
@@ -2344,6 +2344,18 @@
     {
       "path": "public/document-study/surface-bar.test.mjs",
       "candidateSha256": "41f73112cd090b593315c70a611acf62fe1f6876b120ce7fd339d17056d69d8d"
+    },
+    {
+      "path": "public/document-study/waiting-band.js",
+      "candidateSha256": "d9445ed843b26fdc9574e36c35bf3fc13bbb865c5232b4f0dbdac6867f587400"
+    },
+    {
+      "path": "public/document-study/waiting-band.css",
+      "candidateSha256": "b1bf8a52efdfd6ee7bf3cb8df355abcf73d98c93a403cb88c1a7dac9b9666a9e"
+    },
+    {
+      "path": "public/document-study/waiting-band.test.mjs",
+      "candidateSha256": "9db68e09b604c53a4cf6e541a9c0b1496f9ebcd215b0657b6a14eb0dc33ad898"
     }
   ],
   "dependencyRepair": {
