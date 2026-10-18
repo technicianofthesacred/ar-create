@@ -2311,15 +2311,15 @@
     },
     {
       "path": "public/document-study/home-tabs.js",
-      "candidateSha256": "cb78c04ef5b6b56ffe58432bcc4fddd559b9037f9a7aaf3914e42c6c3fd0315f"
+      "candidateSha256": "683f090cbb8622472949fde8142aa5c6548a514478dedb091f75b69940fe241f"
     },
     {
       "path": "public/document-study/home-tabs.css",
-      "candidateSha256": "94559390e04997c5725b61cdb76dd0229d638a9c8bda8d27bbbfd1c8bff554aa"
+      "candidateSha256": "dde9b40922655678888e057643f3cc03628a4c326f3880b233f8cc6f29c4f149"
     },
     {
       "path": "public/document-study/home-tabs.test.mjs",
-      "candidateSha256": "87dcd5965673fb7ad42dc1502cb930db96330070da16d2fa80775b45caa2fadb"
+      "candidateSha256": "683dc42dbf7c93ba44eda9622db40a71b2c3b200191946d21692d5d03770d57d"
     }
   ],
   "dependencyRepair": {

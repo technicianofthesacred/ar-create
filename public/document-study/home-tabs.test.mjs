@@ -108,11 +108,11 @@ test('Home is the existing library full screen: strip inside, facet counts, stat
  assert.match(facet('data-ht-show','active').textContent,/120/);
  assert.match(facet('data-ht-folder','Tea').textContent,/60/);
  assert.match(facet('data-ht-status-filter','Writing').textContent,/40/);
- assert.match(d.querySelector('[data-pl-count]').textContent,/120 projects/);
+ assert.match(d.querySelector('[data-pl-count]').textContent,/120 pieces/);
  await f.click('#project-library [data-ht-status-filter="Writing"]');
- assert.match(d.querySelector('[data-pl-count]').textContent,/40 projects/);
+ assert.match(d.querySelector('[data-pl-count]').textContent,/40 pieces/);
  await f.click('#project-library [data-ht-folder="Tea"]');
- assert.match(d.querySelector('[data-pl-count]').textContent,/60 projects/);
+ assert.match(d.querySelector('[data-pl-count]').textContent,/60 pieces/);
  await f.click('#project-library [data-ht-view="list"]');
  assert.equal(d.querySelector('[data-pl-results]').classList.contains('ht-grid'),false);
  assert.equal(f.w.state.projectNavigation.homeView,'list');
@@ -136,4 +136,35 @@ test('existing global hooks stay callable after install',()=>{
  const f=fixture();
  for(const name of ['switchProject','render','viewPhase','save','projectBrowser'])assert.equal(typeof f.w[name],'function',name);
  assert.equal(typeof f.w.projectLibrary.open,'function');
+});
+
+test('card ⋯ menu holds the same pin and organize buttons; grouping adds headings only',async()=>{
+ const f=fixture();
+ await f.click('[data-ht-home]');
+ const d=f.w.document.querySelector('#project-library'),row=d.querySelector('.pl-library-row');
+ const menu=row.querySelector('.ht-card-more .ht-menu');
+ assert.ok(menu.querySelector('[data-pl-pin]'),'pin is in the menu');
+ assert.ok(menu.querySelector('[data-pl-file]'),'organize is in the menu');
+ assert.equal(row.querySelectorAll('[data-pl-pin],[data-pl-file]').length,2,'not duplicated');
+ const before=d.querySelectorAll('.pl-library-row').length;
+ await f.click('#project-library [data-ht-group="status"]');
+ assert.deepEqual(JSON.parse(JSON.stringify([...d.querySelectorAll('.ht-ghead')].map(h=>h.firstChild.textContent))),['Material','Writing']);
+ assert.equal(d.querySelectorAll('.pl-library-row').length,before);
+ assert.equal(f.w.state.projectNavigation.homeGroup,'status');
+});
+
+test('All pieces finder opens a piece through the library path; theme switch only changes the theme',async()=>{
+ const f=fixture();
+ f.w.applyTheme=()=>{f.w.document.documentElement.dataset.theme=f.w.state.theme;};f.w.applyTheme();
+ const input=f.w.document.querySelector('[data-ht-find]');
+ input.value='tea 42';input.dispatchEvent(new f.w.Event('input',{bubbles:true}));
+ const hit=f.w.document.querySelector('[data-ht-find-results] [data-pl-open="p42"]');
+ assert.ok(hit);
+ hit.click();await f.idle();
+ assert.equal(f.w.current().id,'p42');
+ const before=JSON.stringify(f.w.state.projects);
+ f.w.state.theme='light';f.w.applyTheme();
+ await f.click('[data-ht-theme]');
+ assert.equal(f.w.state.theme,'dark');
+ assert.equal(JSON.stringify(f.w.state.projects),before);
 });
