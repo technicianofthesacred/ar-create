@@ -119,3 +119,4 @@ body.c3-tabs .workspace .themeSelect{display:none}
 #project-library.c3-home .ht-fh{font-size:14px;font-weight:600;color:var(--ink);padding:0 8px 6px}
 @media(max-width:650px){#c3-tabstrip .ht-switch-label{display:none}#project-library.c3-home .ht-homebar{flex-wrap:wrap}#project-library.c3-home .ht-homebar .pl-search{flex:1 1 100%}#project-library.c3-home .ht-homebar-actions{margin-left:0;width:100%}#project-library.c3-home .ht-homebar-actions button{flex:1}#project-library.c3-home .ht-seg-l{display:none}}
 #project-library.c3-home .pl-results.ht-grid .ht-cover span{font:inherit!important;color:inherit!important}
+#project-library.c3-home .pl-results.ht-grid .ht-cover span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
