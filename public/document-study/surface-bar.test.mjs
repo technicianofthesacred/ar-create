@@ -1,0 +1,78 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+const require=createRequire(new URL('../../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+const code=fs.readFileSync(new URL('./surface-bar.js',import.meta.url),'utf8');
+
+// The rows as study.js, draft-surface, workspace-navigation and i64-return leave them in Write.
+const rows=({saved='Saved on this device',revisionsDisabled=true}={})=>`<div class="shell"><main class="workspace"><header class="topbar"><button class="mobileProjects">☰</button><h1>Kiln piece</h1><button data-surface-action data-surface-mode="margin" aria-pressed="true" onclick="calls.push('margin')">Margin</button><button data-surface-action data-surface-mode="focus" aria-pressed="false" onclick="calls.push('focus')">Focus</button><select class="themeSelect"><option>System</option></select><a class="i64-return" href="http://127.0.0.1:8888/ar-create" aria-label="Return to i64 OS">i64 OS</a></header><section id="work-context"><div class="wn-identity"><strong>Clay article</strong><span>Article · English</span><select data-wn-piece aria-label="Choose piece"><option value="">Working manuscript</option><option value="o1" selected>Clay article · Article</option></select></div><div class="wn-actions"><button data-wn-outputs onclick="calls.push('outputs')">Outputs</button><details class="wn-new"><summary>New output</summary><div><button data-wn-create="article" onclick="calls.push('create-article')">Article</button><button data-wn-create="post" disabled>Post</button></div></details></div><p id="wn-message" role="status" hidden></p></section><nav class="workbar"><button hidden onclick="calls.push('hidden')">Open current working words</button><button onclick="undo()">Undo typing</button><details><summary>More</summary><button onmousedown="event.preventDefault()" onclick="openInstruction()">Discuss wording</button><button onclick="modal='history';render()">History</button><button onclick="calls.push('study')">Study details</button><button data-draft-action="revisions" ${revisionsDisabled?'disabled':''}>Revisions</button></details><span class="saved" role="status">${saved}</span></nav><section class="draft-bar"><span data-draft-status role="status">Not saved. Your words are still here.</span><button onclick="calls.push('retry')">Retry exact save</button></section><div id="manuscript" contenteditable="true">Unsaved human writing</div></main></div>`;
+function fixture(opts){
+ const dom=new JSDOM(`<div id="app">${rows(opts)}</div>`,{url:'http://localhost',runScripts:'dangerously'}),w=dom.window;
+ w.calls=[];w.modal=null;
+ w.state={project:'p1',projects:[{id:'p1',name:'Kiln piece',view:'article'}]};
+ w.current=()=>w.state.projects[0];
+ w.undo=()=>w.calls.push('undo');w.openInstruction=()=>w.calls.push('instruction');
+ w.render=()=>{w.document.getElementById('app').innerHTML=rows(opts);};
+ w.eval(code);
+ return {w,d:w.document,bar:()=>w.document.querySelector('#c3-surface-bar')};
+}
+const press=(f,sel)=>{const b=f.bar().querySelector(sel);assert.ok(b,'missing '+sel);b.click();};
+
+test('one bar at the top of the work: piece, output, status, Undo, History, Margin, Focus, Outputs, More, one primary',()=>{
+ const f=fixture(),bar=f.bar();
+ assert.equal(bar.parentElement,f.d.querySelector('.workspace'));
+ assert.equal(f.d.querySelector('.workspace').firstElementChild,bar);
+ assert.match(bar.querySelector('.sb-piece').textContent,/Kiln piece/);
+ assert.match(bar.querySelector('.sb-out').textContent,/Clay article/);
+ assert.equal(bar.querySelector('.sb-status').textContent,'Saved on this device');
+ assert.ok(bar.querySelector('[aria-label="Undo"]'));
+ assert.ok(bar.querySelector('[aria-label^="History"]'));
+ assert.equal(bar.querySelector('.sb-primary').textContent,'Discuss wording');
+ assert.equal(bar.querySelector('.sb-ret').getAttribute('href'),'http://127.0.0.1:8888/ar-create');
+ assert.equal(bar.querySelectorAll('.sb-primary').length,1);
+});
+
+test('every bar control presses the real control; nothing is reimplemented',()=>{
+ const f=fixture();
+ press(f,'[aria-label="Undo"]');
+ press(f,'.sb-primary');
+ const focus=[...f.bar().querySelectorAll('.sb-btn')].find(b=>b.textContent.includes('Focus'));focus.click();
+ const outputs=[...f.bar().querySelectorAll('.sb-btn')].find(b=>b.textContent.includes('Outputs'));outputs.click();
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['undo','instruction','focus','outputs']);
+ press(f,'[aria-label^="History"]');
+ assert.equal(f.w.modal,'history');
+ assert.ok(f.bar(),'bar rebuilt after the full render History triggers');
+});
+
+test('More lists the remaining real controls, keeps disabled ones disabled and skips hidden ones',()=>{
+ const f=fixture();
+ press(f,'[data-sb-more]');
+ const items=[...f.bar().querySelectorAll('.sb-menu .sb-item')].map(b=>[b.textContent.replace(/\s+/g,' ').trim(),b.disabled]);
+ assert.deepEqual(JSON.parse(JSON.stringify(items)),[['New output · Article',false],['New output · Post',true],['Study details',false],['Revisions',true]]);
+ assert.equal(f.bar().textContent.includes('Open current working words'),false);
+ [...f.bar().querySelectorAll('.sb-menu .sb-item')].find(b=>b.textContent.includes('Study details')).click();
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['study']);
+ assert.equal(f.bar().querySelector('.sb-menu'),null,'menu closes after choosing');
+});
+
+test('output choice goes through the real select and its change event',()=>{
+ const f=fixture();let seen=null;
+ f.d.querySelector('[data-wn-piece]').addEventListener('change',e=>{seen=e.target.value;});
+ const s=f.bar().querySelector('.sb-piece-select');
+ s.value='';s.dispatchEvent(new f.w.Event('change',{bubbles:true}));
+ assert.equal(seen,'');
+ assert.equal(f.d.querySelector('[data-wn-piece]').value,'');
+});
+
+test('the save notice and failed-save recovery are left alone; status follows the owner',async()=>{
+ const f=fixture();
+ const draft=f.d.querySelector('.draft-bar');
+ assert.equal(draft.hidden,false);
+ assert.equal(f.bar().contains(draft.querySelector('button')),false);
+ assert.equal(f.bar().textContent.includes('Retry exact save'),false,'recovery stays in its own visible notice');
+ f.d.querySelector('.workbar .saved').textContent='Save failed · words kept';
+ await new Promise(r=>setTimeout(r,0));
+ assert.equal(f.bar().querySelector('.sb-status').textContent,'Save failed · words kept');
+ assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');
+});

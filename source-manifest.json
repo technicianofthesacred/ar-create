@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "386e7e97dcb5c1309d2f2e1519b1ac6ae0c27512685cda50e15a7d6822c945fc",
+      "candidateSha256": "1adb883b4a8f0993bedc67f5624833bb8b2759349f114944b36def1609eefb5d",
       "adapted": true
     },
     {
@@ -2332,6 +2332,18 @@
     {
       "path": "public/document-study/checkpoint-rail.test.mjs",
       "candidateSha256": "50d599402bd76f850aee856bef4bd8f7adba520af8e2078736412a91b029e47c"
+    },
+    {
+      "path": "public/document-study/surface-bar.js",
+      "candidateSha256": "de6ecab76233cf7f8e30d55afc3c221819dc8a426127661c9cedd69eb11708f8"
+    },
+    {
+      "path": "public/document-study/surface-bar.css",
+      "candidateSha256": "f490855f254cc50714fd2b81e69bda796c71b60b61882641b74b0e02e5c746b3"
+    },
+    {
+      "path": "public/document-study/surface-bar.test.mjs",
+      "candidateSha256": "41f73112cd090b593315c70a611acf62fe1f6876b120ce7fd339d17056d69d8d"
     }
   ],
   "dependencyRepair": {
