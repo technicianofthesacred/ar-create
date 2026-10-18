@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+const require=createRequire(new URL('../../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+const code=fs.readFileSync(new URL('./inspector.js',import.meta.url),'utf8');
+const page=(record)=>`<main class="workspace">${record===null?'':`<div id="downstream-human-direction">${record}</div>`}<div class="desk"><article class="document" id="doc"><div id="manuscript" contenteditable="true">Unsaved human writing</div></article><aside class="margin" id="margin"><div class="discussion">Pending correction · Approve these words</div></aside></div></main>`;
+function fixture(record='Direction: open with the gate'){
+ const dom=new JSDOM(`<div id="app">${page(record)}</div>`,{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
+ w.state={project:'p1',projects:[{id:'p1',name:'Piece'}]};w.current=()=>w.state.projects[0];
+ let saves=0;w.save=()=>{saves++;};w.phases=[];w.viewPhase=n=>{w.phases.push(n);};
+ w.render=()=>{w.document.getElementById('app').innerHTML=page(record);};
+ w.eval(code);
+ return {w,d:w.document,get saves(){return saves;}};
+}
+test('tabs sit above the margin; the margin node and its notes are untouched and stay in place',()=>{
+ const f=fixture(),desk=f.d.querySelector('.desk'),margin=f.d.getElementById('margin');
+ assert.equal(f.d.getElementById('c3-insp-head').nextElementSibling,margin);
+ assert.equal(margin.parentElement,desk);
+ assert.match(margin.textContent,/Approve these words/);
+ assert.deepEqual(JSON.parse(JSON.stringify([...f.d.querySelectorAll('[data-ci-tab]')].map(b=>[b.textContent,b.getAttribute('aria-selected')]))),[['Margin','true'],['Decisions','false'],['Readiness','false']]);
+});
+test('Decisions shows the owner’s direction record (moved by id, not copied); empty record says so',()=>{
+ const f=fixture();
+ f.d.querySelector('[data-ci-tab="decisions"]').click();
+ assert.equal(f.d.querySelector('.desk').dataset.insp,'decisions');
+ assert.equal(f.d.querySelectorAll('#downstream-human-direction').length,1);
+ assert.equal(f.d.getElementById('downstream-human-direction').parentElement.id,'c3-insp-decisions');
+ const g=fixture('');
+ assert.match(g.d.querySelector('#c3-insp-decisions .ci-empty').textContent,/No saved direction/);
+});
+test('Readiness only points to where checks and export readiness really live',()=>{
+ const f=fixture();
+ f.d.querySelector('[data-ci-tab="readiness"]').click();
+ f.d.querySelector('[data-ci-go="7"]').click();
+ f.d.querySelector('[data-ci-go="10"]').click();
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.phases)),[7,10]);
+ assert.equal(f.d.querySelector('#c3-insp-readiness').textContent.includes('Ready to export'),false,'claims no readiness itself');
+});
+test('the chosen tab survives a full render; the editor is never replaced by the inspector',()=>{
+ const f=fixture();
+ f.d.querySelector('[data-ci-tab="decisions"]').click();
+ f.w.render();
+ assert.equal(f.d.querySelector('.desk').dataset.insp,'decisions');
+ assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');
+});

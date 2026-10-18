@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "39453dfb2cf07315b990218d2c09daf5d216b705d13256b9275cf7b270d75f71",
+      "candidateSha256": "01293de201d2857f346bc1fd12e61bd3fe9b2023eafef682298e2f061ad50554",
       "adapted": true
     },
     {
@@ -2388,6 +2388,30 @@
     {
       "path": "runtime/public/assets/fonts/PLUS-JAKARTA-SANS-LICENSE.txt",
       "candidateSha256": "7ecdb435d3868d8b1006d1aa064c00ad3e4eab10d0dca6b49e4a823a913540c7"
+    },
+    {
+      "path": "public/document-study/inspector.js",
+      "candidateSha256": "15cdcc2a799acc69337a7df6a4fc8104c2c0cee51e4949ba44ef283e3147bcad"
+    },
+    {
+      "path": "public/document-study/inspector.css",
+      "candidateSha256": "7e73e5d032eafda140000af71a44b8666374fc702b7dc229100f9b419e9d00e0"
+    },
+    {
+      "path": "public/document-study/inspector.test.mjs",
+      "candidateSha256": "2ebb271ea69340301b51418da8212d9cba8937137bed13ea0bc98b73eec25b0c"
+    },
+    {
+      "path": "public/document-study/research-tab.js",
+      "candidateSha256": "9402c32b3e30f1ab0782cc8d1ee72bc42fb5b86a1df2b6bfca46fb12e778f470"
+    },
+    {
+      "path": "public/document-study/research-tab.css",
+      "candidateSha256": "4d3e6ba91128b66b12ad3dbad97d0730987a858b4020f9ad0c827e6ac4aba177"
+    },
+    {
+      "path": "public/document-study/research-tab.test.mjs",
+      "candidateSha256": "511a1c9f543c0c960cc62ba6332b5abeee7a36d840b9168418088ba9496b8524"
     }
   ],
   "dependencyRepair": {

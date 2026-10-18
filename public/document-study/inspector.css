@@ -1,0 +1,21 @@
+/* C3 inspector: tabs over the right-hand column of the writing desk. The margin keeps its passage alignment. */
+.desk.c3-insp-desk{grid-template-rows:auto minmax(0,1fr)}
+.desk.c3-insp-desk>:not(#c3-insp-head):not(#margin):not(.ci-panel){grid-column:1;grid-row:1/span 2}
+.desk.c3-insp-desk>#c3-insp-head{grid-column:2;grid-row:1;display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--c3-lift,var(--rail));align-self:start;position:sticky;top:72px;z-index:5}
+.desk.c3-insp-desk>#margin,.desk.c3-insp-desk>.ci-panel{grid-column:2;grid-row:2}
+.desk.c3-insp-desk:not([data-insp="decisions"])>#c3-insp-decisions{display:none}
+.desk.c3-insp-desk:not([data-insp="readiness"])>#c3-insp-readiness{display:none}
+#c3-insp-head .ci-tab{flex:1 1 0;min-height:30px;padding:0 8px;border:0;border-radius:7px;background:none;color:var(--c3-ink2,var(--dim));font:var(--c3-t1,13px)/1.2 var(--ar-ui);cursor:pointer}
+#c3-insp-head .ci-tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--c3-line2,var(--line))}
+#c3-insp-head .ci-tab:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+.desk.c3-insp-desk>.ci-panel{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--ink);padding-top:6px}
+.desk.c3-insp-desk>.ci-panel #downstream-human-direction{margin:0;max-width:none}
+.ci-panel .ci-empty,.ci-panel .ci-lead{color:var(--dim);margin:0 0 12px}
+.ci-panel .ci-row{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.ci-panel .ci-row strong{display:block;font-weight:600}
+.ci-panel .ci-row span{color:var(--dim)}
+.ci-panel .ci-go{align-self:flex-start;min-height:36px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
+.ci-panel .ci-go:hover{border-color:var(--c3-ink2,var(--ink))}
+[data-draft-focus="true"] .desk.c3-insp-desk>#c3-insp-head,[data-draft-focus="true"] .desk.c3-insp-desk>.ci-panel{display:none}
+@media(min-width:851px){.desk.c3-insp-desk:not([data-insp="margin"])>#margin{display:none}}
+@media(max-width:850px){.desk.c3-insp-desk>#c3-insp-head{display:none}.desk.c3-insp-desk>.ci-panel{display:none}}
