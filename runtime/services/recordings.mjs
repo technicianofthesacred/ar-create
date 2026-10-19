@@ -74,7 +74,28 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
       const id = withIsolatedConfig(config, () => startLocalIntake((source.title || source.name || 'Recording').replace(/[\/\\\r\n]/g, '-').slice(0, 120), file, { defer: true }));
       links[source.id] = id; atomicWrite(linksFile, JSON.stringify(links));
     },
-    state(sourceId) { const id = links[sourceId]; if (!id) return null; const job = readJson(path.join(dir, '.transcription-jobs', `${id}.json`), null); if (!job) return null; let reviewStatus = 'unreviewed'; if (job.transcriptReady && job.output) { const resultFile = resolveInside(dir, path.relative(dir, path.join(job.output, 'transcript.json'))); const result = readJson(resultFile, null); if (result?.metadata?.review?.status === 'reviewed') {const snapshot=corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(job.output,'transcript.md')),path:path.join(job.output,'transcript.md')});if(snapshot.coherent)reviewStatus='reviewed';} } return { state: job.state, transcriptReady: Boolean(job.transcriptReady), reviewStatus }; },
+    state(sourceId) {
+      const id = links[sourceId]; if (!id) return null;
+      try {
+        if (typeof id !== 'string' || !/^[a-f0-9-]{36}$/.test(id)) throw new StateError('Unknown recording.',404);
+        const job = readJson(path.join(dir, '.transcription-jobs', `${id}.json`), null); if (!job) return null;
+        let reviewStatus = 'unreviewed';
+        if (job.transcriptReady) {
+          if (typeof job.output !== 'string' || !path.isAbsolute(job.output)) throw new StateError('Invalid recording location.');
+          const resultFile = resolveInside(dir, path.relative(dir, path.join(job.output, 'transcript.json')));
+          const result = readJson(resultFile, null);
+          if (result?.metadata?.review?.status === 'reviewed') {
+            const snapshot = corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(job.output,'transcript.md')),path:path.join(job.output,'transcript.md')});
+            if (snapshot.coherent) reviewStatus = 'reviewed';
+          }
+        }
+        return {state:job.state,transcriptReady:Boolean(job.transcriptReady),reviewStatus};
+      } catch {
+        // One unavailable job must not disable the rest of the Library. Keep
+        // the existing path guard; never infer a replacement recording root.
+        return {state:'unavailable',transcriptReady:false,reviewStatus:'unreviewed',reason:'Saved transcript location is unavailable. Reconnect the recording or recover its saved files before use.'};
+      }
+    },
     async list() {
       // Reconcile physical renames without changing the original recording job ID.
       for (const [sourceId, id] of Object.entries(links)) {

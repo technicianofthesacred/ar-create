@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import {randomUUID} from 'node:crypto';
+import {createServer} from '../server.mjs';
+test('HTTP concept and native endpoints share exact collection owners and app direction authority',async t=>{
+ const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'ar-concept-http-'))),vault=path.join(dataDir,'original-vault'),files=path.join(dataDir,'original-files');fs.mkdirSync(vault);fs.mkdirSync(files);
+ const server=await createServer({dataDir,publicDir:path.join(dataDir,'public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files},sharedArticles:true,researchEnabled:false});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server.close(r));fs.rmSync(dataDir,{recursive:true,force:true});});const base='http://127.0.0.1:'+server.address().port;
+ async function request(route,input,status=200){const r=await fetch(base+route,input?{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(input)}:{}),value=await r.json();assert.equal(r.status,status,JSON.stringify(value));return value;}
+ const input={parentStudyId:'synthetic-http-concept-'+randomUUID(),title:'Shared garden idea',operationId:randomUUID()},created=await request('/api/concepts',input),native=await request('/api/study-draft/create-collection',input);assert.equal(native.binding.id,created.bindingId);assert.ok(native.projectBinding.projectId);assert.equal(native.photoBinding.bindingId,created.bindingId);assert.equal((await request('/api/concepts')).concepts.length,1);
+ const saved=await request('/api/concept/save',{parentStudyId:created.parentStudyId,operationId:randomUUID(),expectedRevision:created.revision,expectedHash:created.hash,body:'# Exact shared author note\n\nNo prose approval is implied.\n'}),scope='?'+new URLSearchParams({parentStudyId:created.parentStudyId,scope:'project'}),app=await request('/api/study/human-direction'+scope);assert.equal(app.body,saved.body);assert.equal(app.hash,saved.hash);const appEdit=await request('/api/study/human-direction/write',{parentStudyId:created.parentStudyId,scope:'project',operationId:randomUUID(),expectedRevision:app.revision,expectedHash:app.hash,body:app.body+'An exact app edit.\n'});assert.equal((await request('/api/concept?parentStudyId='+encodeURIComponent(created.parentStudyId))).body,appEdit.body);
+ await request('/api/concept/save',{parentStudyId:created.parentStudyId,operationId:randomUUID(),expectedRevision:saved.revision,expectedHash:saved.hash,body:'Stale agent words retained in conflict history.'},409);assert.equal((await request('/api/concept?parentStudyId='+encodeURIComponent(created.parentStudyId))).body,appEdit.body);assert.equal((await request('/api/concept/sources/search',{query:'nothing'})).results.length,0);assert.equal((await request('/api/concept/capabilities')).network,false);assert.deepEqual(fs.readdirSync(vault),[]);assert.deepEqual(fs.readdirSync(files),[]);
+});

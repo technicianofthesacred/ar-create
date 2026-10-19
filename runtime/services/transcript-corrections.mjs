@@ -128,7 +128,8 @@ export function createTranscriptCorrections({dir,config,afterPublishFile=null}){
     const physical=source.path||path.join(dir,source.rel_path),output=path.dirname(physical),id=path.basename(output);
     if(!/^[a-f0-9-]{36}$/.test(id))return {managed:false};
     const job=readJson(path.join(dir,'.transcription-jobs',id+'.json'),null);
-    if(!job||path.resolve(job.output)!==path.resolve(output))return {managed:false};
+    if(!job)return {managed:false};
+    if(typeof job.output!=='string'||path.resolve(job.output)!==path.resolve(output))throw new StateError('Saved transcript location differs from its recording. Reconnect or recover the saved recording before using this transcript.',409);
     resolveInside(dir,path.relative(dir,physical));regular(physical);
     const receiptDir=path.join(output,'.corrections');
     if(fs.existsSync(path.join(receiptDir,'publication.json')))return {managed:true,coherent:false,reviewStatus:'unreviewed',jobId:id,reason:'Transcript publication requires recovery.'};

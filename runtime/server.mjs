@@ -17,6 +17,7 @@ import {createStudyDraftCopies} from './services/study-draft-copies.mjs';
 import * as studyPhotoFiles from './services/files.mjs';
 import {createStudyPhotos} from './services/study-photos.mjs';
 import {createStudyOwnedPhotoBindings} from './services/study-owned-photo-bindings.mjs';
+import {createConceptWork} from './services/concept-work.mjs';
 import {createStudyHumanDirection} from './services/study-human-direction.mjs';
 import {createStudyResearchChoices} from './services/study-research-choices.mjs';
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
@@ -182,6 +183,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const firstFlow=createFirstFlow({dataDir,store,library,recordings,requests,execution});
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts}):null;
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
+  const createStudyCollection=async input=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};};
+  const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
   const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings}):null;
   const studyOutputs=studyOutputFactory?.owner;
   const studyOutputExports=studyOutputFactory?createNativeOutputExports({dataDir,store,outputs:studyOutputs,resolveScope:studyOutputFactory.scope.resolve,library,exports,carousel}):null;
@@ -302,7 +305,14 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         const requestId=url.searchParams.get('requestId');if(requestId){if(input.requestId&&input.requestId!==requestId)throw new StateError('Request identity differs from its route.',409);input={...input,requestId};}
         return studyAI.call(action,{...scope,...input});
       });
+      const conceptCall=fn=>draftCall(()=>{if(!conceptWork)throw new StateError('Concept work requires configured collections.',503);return fn();});
       const routes = {
+        '/api/concept/capabilities': {GET:()=>conceptCall(()=>conceptWork.capabilities())},
+        '/api/concepts': {GET:()=>conceptCall(()=>conceptWork.list()),POST:input=>conceptCall(()=>conceptWork.create(input))},
+        '/api/concept': {GET:()=>conceptCall(()=>conceptWork.read({parentStudyId:url.searchParams.get('parentStudyId')}))},
+        '/api/concept/save': {POST:input=>conceptCall(()=>conceptWork.save(input))},
+        '/api/concept/source': {GET:()=>conceptCall(()=>conceptWork.source({...url.searchParams.has('parentStudyId')?{parentStudyId:url.searchParams.get('parentStudyId')}:{},sourceId:url.searchParams.get('sourceId')}))},
+        '/api/concept/sources/search': {POST:input=>conceptCall(()=>conceptWork.sourcesSearch(input))},
         '/api/writing-template': {GET:()=>writingTemplates.get({expectedProjectId:url.searchParams.get('expectedProjectId'),expectedDocumentId:url.searchParams.get('expectedDocumentId')})},
         '/api/writing-template/attach': {POST:input=>writingTemplates.attach(input)},
         '/api/writing-template/detach': {POST:input=>writingTemplates.detach(input)},
@@ -370,7 +380,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         '/api/study/outputs/export-check': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.assertExport(input);})},
         '/api/study-draft/catalog': {GET:()=>draftCall(()=>studyDrafts.catalog())},
         '/api/study-draft/read': {GET:()=>draftCall(()=>studyDrafts.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/study-draft/create-collection': {POST:input=>draftCall(async()=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};})},
+        '/api/study-draft/create-collection': {POST:input=>draftCall(()=>createStudyCollection(input))},
         '/api/study-draft/open': {POST:input=>draftCall(()=>studyDrafts.openCopy(input))},
         '/api/study-draft/save': {POST:input=>draftCall(()=>studyDrafts.save(input))},
         '/api/study-draft/undo': {POST:input=>draftCall(()=>studyDrafts.undo(input))},
