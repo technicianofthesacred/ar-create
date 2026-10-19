@@ -39,6 +39,8 @@
    if(group.items.length)out.more.push(group);
   }
   // Check: its own run button is the one primary action, as on the board.
+  // Material and Source: the lane's own add / save action is the one primary action.
+  if(out.primary==null&&(stage()===1||stage()===2)){const own=[...document.querySelectorAll(stage()===1?'.workspace [data-flow-action="files"]':'.workspace [data-flow-action="save-transcript"]')].find(visible);if(own)out.primary=reals.push(own)-1;}
   if(out.primary==null&&stage()===7){const run=document.querySelector('.workspace [data-current-check="run"]');if(visible(run)){out.primary=reals.push(run)-1;}}
   return out;
  }

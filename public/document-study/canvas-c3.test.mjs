@@ -7,6 +7,7 @@ const code=fs.readFileSync(new URL('./canvas-c3.js',import.meta.url),'utf8');
 const pages={
  5:'<main class="workspace"><div class="desk"><article class="document"><h1>Piece</h1><div id="manuscript" contenteditable="true">Unsaved human writing</div></article></div></main>',
  6:'<main class="workspace"><section class="phaseReader"><article class="recordPage"><h2>Piece</h2><div class="recordBody">Read words</div></article></section></main>',
+1:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><header class="flow-lane-head">Current material</header><div class="material-surface"><button data-flow-action="files">Add files</button></div></article></section></main>',
  7:'<main class="workspace"><div class="wn-check-layout"><section class="wn-check-manuscript"><article class="document"><h1>Piece</h1></article></section><aside class="wn-check-findings"><button data-current-check="run">Check saved draft</button></aside></div></main>'};
 function fixture(stage){
  const dom=new JSDOM(`<div id="app">${pages[stage]}</div>`,{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
@@ -40,4 +41,12 @@ test('Check with a loaded manuscript: heading above the manuscript, panel kept, 
 test('a full render is decorated again without duplicate headings',()=>{
  const f=fixture(5);f.w.render();f.w.c3Canvas.decorate();f.w.c3Canvas.decorate();
  assert.equal(f.d.querySelectorAll('.c3-ctitle').length,1);
+});
+
+test('Material gets the heading, the flattened lane and an inspector that opens on Decisions',()=>{
+ const f=fixture(1);
+ assert.match(f.d.querySelector('.phaseReader>.c3-ctitle').textContent,/01\s*Material\s*Shared by every output/);
+ assert.ok(f.d.querySelector('.phaseReader.c3-flow'));
+ assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
+ assert.ok(f.d.querySelector('[data-flow-action="files"]'),'the lane keeps its own add button');
 });

@@ -2335,7 +2335,7 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "ac24c138e69ad61cee5295f1d38e80ad651df8c8eb3c85761aa64bebb97a93b5"
+      "candidateSha256": "4358bb647b372494d68c44e985e881397eabd62dfa71b69653096c0837a6a5cd"
     },
     {
       "path": "public/document-study/surface-bar.css",
@@ -2343,7 +2343,7 @@
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
-      "candidateSha256": "c3f4240062a1d14141f32d15026e2df68e7e40237bd9f8bc48220b1efbb996b0"
+      "candidateSha256": "afafe5d75ec51ecd547da687b8d24ff3553fb5cb6cff9f40591b318f902a4b7c"
     },
     {
       "path": "public/document-study/waiting-band.js",
@@ -2415,15 +2415,15 @@
     },
     {
       "path": "public/document-study/canvas-c3.js",
-      "candidateSha256": "18108d88f3ee499fc9eeeda64d01adbeb57901bab72bf763fdb5f20d1ad7987a"
+      "candidateSha256": "6496123a91fdb40b6be531bfcc3bf4ff9216f3804a0281fffe1ce471983c7819"
     },
     {
       "path": "public/document-study/canvas-c3.css",
-      "candidateSha256": "5e5b18ae673dd000aa71fafb14fcb2455263384d88f44fc3af520ed395874328"
+      "candidateSha256": "47bb1bca63da7744bcd60700597f4d880c104c8ada45108990d5ddd292afd401"
     },
     {
       "path": "public/document-study/canvas-c3.test.mjs",
-      "candidateSha256": "406c4fd3b9813632750cac0a29be3f313ec38184723482e735fa4518cde26be9"
+      "candidateSha256": "d96856d1d51c71ba17ee435fb74d3050df6154d33be1b20844819af1c42345af"
     }
   ],
   "dependencyRepair": {

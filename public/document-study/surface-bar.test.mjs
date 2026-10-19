@@ -97,3 +97,13 @@ test('in Check, the check panel’s own run button becomes the one primary actio
  p[0].click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['run-check']);
 });
+
+test('in Material, the lane Add files button is the one primary action',()=>{
+ const f=fixture();
+ f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=1;
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="phaseReader"><button data-flow-action="files" onclick="calls.push(\'files\')">Add files</button></section>');
+ f.w.surfaceBar.build();
+ const p=f.bar().querySelectorAll('.sb-primary');
+ assert.equal(p.length,1);assert.equal(p[0].textContent,'Add files');
+ p[0].click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['files']);
+});
