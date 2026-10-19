@@ -41,7 +41,7 @@
   }
   // Check: its own run button is the one primary action, as on the board.
   // Material and Source: the lane's own add / save action is the one primary action.
-  const OWN={1:'[data-flow-action="files"]',2:'[data-flow-action="save-transcript"]',3:'[data-flow-action="analyze"]',4:'[data-direction-save]'};
+  const OWN={1:'[data-flow-action="files"]',2:'[data-flow-action="save-transcript"]',3:'[data-flow-action="analyze"]',4:'[data-direction-save]',8:'.study-photos [data-add]',9:'[data-oss-action="look"]'};
   if(out.primary==null&&OWN[stage()]){const own=[...document.querySelectorAll('.workspace '+OWN[stage()])].find(n=>visible(n)||n.closest('details'));if(own)out.primary=reals.push(own)-1;}
   if(out.primary==null&&stage()===7){const run=document.querySelector('.workspace [data-current-check="run"]');if(visible(run)){out.primary=reals.push(run)-1;}}
   return out;

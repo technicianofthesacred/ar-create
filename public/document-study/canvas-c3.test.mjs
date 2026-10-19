@@ -9,6 +9,7 @@ const pages={
  6:'<main class="workspace"><section class="phaseReader"><article class="recordPage"><h2>Piece</h2><div class="recordBody">Read words</div></article></section></main>',
 1:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><header class="flow-lane-head">Current material</header><div class="material-surface"><button data-flow-action="files">Add files</button></div></article></section></main>',
  3:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><h2>Research and understand</h2><details class="flow-details"><summary>Research sources and question</summary><button data-flow-action="analyze">Research these sources</button></details></article></section></main>',
+ 8:'<main class="workspace"><div class="historicalToolbar">Photographs</div><section class="mot-surface"><button data-mot-action="material">Add material</button></section><section class="phaseReader" id="owned-photo-stage"><section class="study-photos"><button data-add>Upload photos</button></section></section></main>',
  7:'<main class="workspace"><div class="wn-check-layout"><section class="wn-check-manuscript"><article class="document"><h1>Piece</h1></article></section><aside class="wn-check-findings"><button data-current-check="run">Check saved draft</button></aside></div></main>'};
 function fixture(stage){
  const dom=new JSDOM(`<div id="app">${pages[stage]}</div>`,{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
@@ -59,4 +60,13 @@ test('Research checkpoint: heading, Open in Research opens the Research tab, ins
  assert.equal(f.w.researchShown,1);
  assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
  assert.ok(f.d.querySelector('[data-flow-action="analyze"]'));
+});
+
+test('Media: heading after the notice line, inspector opens on Readiness, the contact sheet stays put',()=>{
+ const f=fixture(8);
+ const t=f.d.querySelector('.workspace>.c3-ws-title');
+ assert.match(t.textContent,/08\s*Media/);
+ assert.equal(t.previousElementSibling.className,'historicalToolbar');
+ assert.equal(f.d.querySelector('.workspace>#c3-read-insp [aria-selected="true"]').textContent,'Readiness');
+ assert.ok(f.d.querySelector('#owned-photo-stage [data-add]'));
 });

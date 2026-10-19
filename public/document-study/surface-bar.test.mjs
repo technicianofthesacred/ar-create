@@ -119,3 +119,11 @@ test('in Direction, Save direction is the primary and the angle tools stay on th
  press(f,'[data-sb-more]');
  assert.equal([...f.bar().querySelectorAll('.sb-gh')].some(h=>h.textContent==='Direction and voice'),false);
 });
+
+test('Media and Arrange use their own Upload photos and Audience view buttons as the primary',()=>{
+ for(const [stage,html,label,call] of [[8,'<section class="study-photos"><button data-add onclick="calls.push(\'upload\')">Upload photos</button></section>','Upload photos','upload'],[9,'<section class="oss-surface"><button data-oss-action="look" onclick="calls.push(\'look\')">Audience view</button></section>','Audience view','look']]){
+  const f=fixture();f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=stage;
+  f.d.querySelector('.workspace').insertAdjacentHTML('beforeend',html);f.w.surfaceBar.build();
+  const p=f.bar().querySelector('.sb-primary');assert.equal(p.textContent,label);p.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),[call]);
+ }
+});
