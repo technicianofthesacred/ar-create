@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "eaef7f4abc98a7b9cbc13303c486409df467f313e0fd44a211d4e9103e410a69",
+      "candidateSha256": "a8dafbb31846a0556f2a009c90a2fbd6a14a54fcfb61f49e999fffe25d27f0ca",
       "adapted": true
     },
     {
@@ -2424,6 +2424,10 @@
     {
       "path": "public/document-study/canvas-c3.test.mjs",
       "candidateSha256": "d96856d1d51c71ba17ee435fb74d3050df6154d33be1b20844819af1c42345af"
+    },
+    {
+      "path": "public/document-study/source-c3.css",
+      "candidateSha256": "2d32c55e1f5704f85d176aac676d7e8e6eb65201eb51a96b46544dff707c6afa"
     }
   ],
   "dependencyRepair": {
