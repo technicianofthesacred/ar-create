@@ -31,13 +31,15 @@
     if(n.matches('[data-surface-mode="focus"]')&&out.focus==null&&row.matches('.topbar')){add(n,'focus');continue;}
     if(/^undo\(\)/.test(on)&&out.undo==null){add(n,'undo');continue;}
     if(/modal='history'/.test(on)&&out.history==null){add(n,'history');continue;}
-    if(/openInstruction\(\)/.test(on)&&[5,6,7].includes(stage())&&out.primary==null){add(n,'primary');continue;}
+    if(/openInstruction\(\)/.test(on)&&[5,6].includes(stage())&&out.primary==null){add(n,'primary');continue;}
     if(n.matches('.mobileProjects'))continue;
     const section=n.closest('details')?.querySelector('summary')?.textContent.trim();
     group.items.push({i:add(n),section:section&&section!=='More'?section:''});
    }
    if(group.items.length)out.more.push(group);
   }
+  // Check: its own run button is the one primary action, as on the board.
+  if(out.primary==null&&stage()===7){const run=document.querySelector('.workspace [data-current-check="run"]');if(visible(run)){out.primary=reals.push(run)-1;}}
   return out;
  }
  function proxy(i,cls,inner,extra=''){const n=reals[i];if(n==null)return '';const dis=n.disabled?'disabled':'';const t=n.title||label(n);return `<button type="button" class="${cls}" data-sb="${i}" ${dis} title="${esc(t)}" ${n.getAttribute('aria-pressed')?`aria-pressed="${esc(n.getAttribute('aria-pressed'))}"`:''} ${n.getAttribute('aria-current')?'aria-current="page"':''} ${extra}>${inner}</button>`;}

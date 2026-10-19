@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "01293de201d2857f346bc1fd12e61bd3fe9b2023eafef682298e2f061ad50554",
+      "candidateSha256": "eaef7f4abc98a7b9cbc13303c486409df467f313e0fd44a211d4e9103e410a69",
       "adapted": true
     },
     {
@@ -2335,7 +2335,7 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "2e188a48ce6f7efcd51da1cb9f9dacb26a678173a00ee3465e64f2cab56c85c7"
+      "candidateSha256": "ac24c138e69ad61cee5295f1d38e80ad651df8c8eb3c85761aa64bebb97a93b5"
     },
     {
       "path": "public/document-study/surface-bar.css",
@@ -2343,7 +2343,7 @@
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
-      "candidateSha256": "55c898fbac82260ea8ff1c97b77d1443fb1eef9173fac749c8aa350634738401"
+      "candidateSha256": "c3f4240062a1d14141f32d15026e2df68e7e40237bd9f8bc48220b1efbb996b0"
     },
     {
       "path": "public/document-study/waiting-band.js",
@@ -2412,6 +2412,18 @@
     {
       "path": "public/document-study/research-tab.test.mjs",
       "candidateSha256": "22e4d04f24d9eb9234c06665425b6abe16764fbdbb3d4aba09b4aed207aeaa7d"
+    },
+    {
+      "path": "public/document-study/canvas-c3.js",
+      "candidateSha256": "18108d88f3ee499fc9eeeda64d01adbeb57901bab72bf763fdb5f20d1ad7987a"
+    },
+    {
+      "path": "public/document-study/canvas-c3.css",
+      "candidateSha256": "5e5b18ae673dd000aa71fafb14fcb2455263384d88f44fc3af520ed395874328"
+    },
+    {
+      "path": "public/document-study/canvas-c3.test.mjs",
+      "candidateSha256": "406c4fd3b9813632750cac0a29be3f313ec38184723482e735fa4518cde26be9"
     }
   ],
   "dependencyRepair": {

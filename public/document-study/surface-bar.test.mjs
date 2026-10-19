@@ -85,3 +85,15 @@ test('the direction tools move into More; choosing one presses the real button s
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['voice']);
  assert.ok(f.d.querySelector('#direction-writing-tools .dwt-panel'),'panel stays in the page');
 });
+
+test('in Check, the check panel’s own run button becomes the one primary action',()=>{
+ const f=fixture();
+ f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=7;
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<aside class="wn-check-findings"><button data-current-check="run" onclick="calls.push(\'run-check\')">Check saved draft</button></aside>');
+ f.w.surfaceBar.build();
+ const p=f.bar().querySelectorAll('.sb-primary');
+ assert.equal(p.length,1);
+ assert.equal(p[0].textContent,'Check saved draft');
+ p[0].click();
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['run-check']);
+});
