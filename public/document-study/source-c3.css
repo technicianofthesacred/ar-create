@@ -117,16 +117,16 @@ body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper .flow
 body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper textarea{font:var(--c3-t2,15px)/1.5 var(--ar-ui);border-radius:var(--c3-r,8px);border-color:var(--c3-line2,var(--line));background:var(--c3-lift,var(--rail))}
 
 /* ---------- Media and Arrange: the board's order across the workspace, inspector fixed at the right ---------- */
-body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) #app .workspace{display:flex;flex-direction:column}
-body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>*{order:5}
-body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>:is(#c3-surface-bar,.topbar,#work-context,.workbar){order:0}
-body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>.historicalToolbar{order:1}
-body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>.c3-ws-title{order:2;padding:28px 40px 0;margin:0 0 10px}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace{display:flex;flex-direction:column}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>*{order:5}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:is(#c3-surface-bar,.topbar,#work-context,.workbar){order:0}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>.historicalToolbar{order:1}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>.c3-ws-title{order:2;padding:28px 40px 0;margin:0 0 10px}
 @media(min-width:851px){
- body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>:not(#c3-surface-bar):not(#c3-read-insp){margin-right:328px}
- body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>#c3-read-insp{position:fixed;right:0;top:calc(var(--ht-strip,44px) + 60px);bottom:0;width:328px;box-sizing:border-box;overflow:auto;z-index:20;background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);padding:12px 16px 48px;display:flex;flex-direction:column;gap:12px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--ink)}
+ body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:not(#c3-surface-bar):not(#c3-read-insp){margin-right:328px}
+ body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{position:fixed;right:0;top:calc(var(--ht-strip,44px) + 60px);bottom:0;width:328px;box-sizing:border-box;overflow:auto;z-index:20;background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);padding:12px 16px 48px;display:flex;flex-direction:column;gap:12px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--ink)}
 }
-@media(max-width:850px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>#c3-read-insp{display:none}}
+@media(max-width:850px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{display:none}}
 /* Media: filter row, then the contact sheet, then the tools as one quiet row. */
 body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface{display:contents!important}
 body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-bar{order:3;padding:0 40px;margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:0;background:none}
@@ -150,5 +150,33 @@ body.c3-tabs[data-c3-stage="9"] .workspace>.oo-stage{order:4;padding:0 40px!impo
 body.c3-tabs[data-c3-stage="9"] .workspace>.oo-stage>.oo-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 body.c3-tabs[data-c3-stage="9"] .workspace>.oo-stage #study-output-notice{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
 body.c3-tabs[data-c3-stage="8"] .workspace>#owned-photo-stage :is(.photos-stage-room,.study-photos,#owned-photos-mount){margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;max-width:none!important}
-body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>:is(.phaseReader,.oo-stage,.oss-surface){max-width:none!important;margin-left:0!important}
-@media(min-width:851px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"]) .workspace>:is(.phaseReader,.oo-stage,.oss-surface){margin-right:328px!important}}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:is(.phaseReader,.oo-stage,.oss-surface){max-width:none!important;margin-left:0!important}
+@media(min-width:851px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:is(.phaseReader,.oo-stage,.oss-surface){margin-right:328px!important}}
+
+/* ---------- Audience view, Share, Outputs: flat on the page, the work first, disclosures as one quiet row ---------- */
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface{order:4;padding:0 40px 24px!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;max-width:none!important;display:flex;flex-direction:column;gap:12px}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface>.oss-heading>div{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface>.oss-heading{display:flex;justify-content:flex-start;order:9;margin:0}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface .oss-muted{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface .oss-field{font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--c3-ink2,var(--dim))}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface :is(input,textarea){font:var(--c3-t2,15px)/1.5 var(--ar-ui);border-radius:var(--c3-r,8px);border-color:var(--c3-line2,var(--line));background:var(--c3-lift,var(--rail))}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface textarea[data-oss-field="message"]{font:18px/1.7 var(--shared-prose-font,'AR Atlas Lora',Georgia,serif);min-height:180px;padding:14px 16px}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface>.oss-review-tools{display:flex;flex-wrap:wrap;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface :is(.oss-review-tools>details,>details.oss-disclosure){border:0!important;margin:0!important;padding:0!important}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>details.oss-disclosure{order:8;align-self:flex-start}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>details.oss-disclosure[open]{align-self:stretch}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface details.oss-disclosure>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;width:auto}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>.oss-tool-row{order:7}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>p.oss-muted:first-of-type{order:1}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>.oss-field-row{order:2}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>label.oss-field{order:3}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-retained{order:9;padding:14px 40px 40px;font:var(--c3-t1,13px)/1.5 var(--ar-ui)}
+body.c3-tabs[data-c3-stage="10"] .workspace>.oss-surface .oss-readiness{font:var(--c3-t1,13px)/1.5 var(--ar-ui);padding:10px 14px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--c3-lift,var(--rail))}
+body.c3-tabs[data-c3-stage="10"] .workspace>.oss-surface .oss-readiness:is([data-blocked],[data-blocked="true"]){border-color:var(--c3-bad);color:var(--c3-bad)}
+/* Outputs: the register first, Continue creating after it. */
+body.c3-tabs[data-c3-stage="12"] .workspace>:is(#output-overview,.oo-panel,section:has(.oo-panel)){order:4;padding:0 40px!important;margin:0!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="12"] .workspace .oo-panel{border:0!important;background:none!important;box-shadow:none!important;padding:0!important}
+body.c3-tabs[data-c3-stage="12"] .workspace .oo-panel>.oo-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs[data-c3-stage="12"] .workspace>.mot-surface{order:6;padding:14px 40px 40px!important;margin:14px 0 0!important;border:0!important;border-top:1px solid var(--line)!important;background:none!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="12"] .workspace>.mot-surface .mot-bar h2{font:600 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink))}
+@media(min-width:851px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace>*:not(#c3-surface-bar):not(#c3-read-insp){margin-right:328px!important;box-sizing:border-box}}

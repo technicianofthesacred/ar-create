@@ -4,7 +4,7 @@
    Install after inspector. */
 (()=>{
  if(window.c3Canvas)return;
- const LINES={1:['Material','Shared by every output of this piece'],2:['Source','Shared by every output of this piece · what was said, and its corrections'],3:['Research','What Research found that this piece can use'],4:['Direction','Your direction for this piece'],5:['Write','The same manuscript as Read and Check'],8:['Media','Photos and video from Material, with where each one is used'],9:['Arrange','Words and photos in reading order for this output'],6:['Read','The same manuscript, read as your audience will'],7:['Check','The same manuscript, checked against its saved revision']};
+ const LINES={1:['Material','Shared by every output of this piece'],2:['Source','Shared by every output of this piece · what was said, and its corrections'],3:['Research','What Research found that this piece can use'],4:['Direction','Your direction for this piece'],5:['Write','The same manuscript as Read and Check'],8:['Media','Photos and video from Material, with where each one is used'],9:['Arrange','Words and photos in reading order for this output'],10:['Audience view','What the audience receives · the same edition as Arrange'],11:['Share','A personal invitation to the people in the piece'],12:['Outputs','Every output of this piece'],6:['Read','The same manuscript, read as your audience will'],7:['Check','The same manuscript, checked against its saved revision']};
  const TABS=[['margin','Margin'],['decisions','Decisions'],['readiness','Readiness']];
  let queued=false;
  const stage=()=>{const p=current();return p.view==='record'?Number(p.viewedStage)||0:p.view==='article'?5:0;};
@@ -17,7 +17,7 @@
   const html=titleHTML(n);if(t.dataset.render!==html){t.innerHTML=html;t.dataset.render=html;}
  }
  // Each checkpoint remembers its own inspector tab; Material and Source open on Decisions, as on the board.
- const tab=()=>{const n=stage(),t=state.projectNavigation?.inspectorTabs?.[n]??(n>=1&&n<=4?null:state.projectNavigation?.inspectorTab);return TABS.some(([k])=>k===t)?t:(n>=1&&n<=4?'decisions':n===8||n===9?'readiness':'margin');};
+ const tab=()=>{const n=stage(),t=state.projectNavigation?.inspectorTabs?.[n]??(n>=1&&n<=4?null:state.projectNavigation?.inspectorTab);return TABS.some(([k])=>k===t)?t:(n>=1&&n<=4?'decisions':n>=8?'readiness':'margin');};
  function readInspector(reader,n=6){
   let side=reader.querySelector(':scope>#c3-read-insp');
   if(!side){side=document.createElement('aside');side.id='c3-read-insp';side.setAttribute('aria-label','Inspector');reader.append(side);}
@@ -35,12 +35,12 @@
   if(n===5){const doc=ws.querySelector('.desk>.document');if(doc)ensureTitle(doc,5,doc.firstChild);return;}
   const layout=n===7?ws.querySelector(':scope>.wn-check-layout'):null;
   if(layout){layout.classList.add('c3-check');const m=layout.querySelector(':scope>.wn-check-manuscript');if(m)ensureTitle(m,7,m.firstChild);if(layout.querySelector('[data-current-check="run"]')&&!document.querySelector('#c3-surface-bar .sb-primary'))window.surfaceBar?.build?.();return;}
-  if(n===8||n===9){
+  if(n>=8&&n<=12){
    let t=ws.querySelector(':scope>.c3-ctitle');
    if(!t){const after=ws.querySelector(':scope>.historicalToolbar')||ws.querySelector(':scope>#work-context');t=document.createElement('div');t.className='c3-ctitle c3-ws-title';(after?after.after(t):ws.prepend(t));}
    const html=titleHTML(n);if(t.dataset.render!==html){t.innerHTML=html;t.dataset.render=html;}
    readInspector(ws,n);
-   if(!document.querySelector('#c3-surface-bar .sb-primary')&&ws.querySelector(n===8?'.study-photos [data-add]':'[data-oss-action="look"]'))window.surfaceBar?.build?.();
+   if(!document.querySelector('#c3-surface-bar .sb-primary')&&ws.querySelector({8:'.study-photos [data-add]',9:'[data-oss-action="look"]',11:'[data-oss-action="copy"]'}[n]||':not(*)'))window.surfaceBar?.build?.();
    return;
   }
   const reader=ws.querySelector(':scope>.phaseReader');if(!reader)return;

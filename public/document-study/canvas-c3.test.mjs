@@ -10,6 +10,7 @@ const pages={
 1:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><header class="flow-lane-head">Current material</header><div class="material-surface"><button data-flow-action="files">Add files</button></div></article></section></main>',
  3:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><h2>Research and understand</h2><details class="flow-details"><summary>Research sources and question</summary><button data-flow-action="analyze">Research these sources</button></details></article></section></main>',
  8:'<main class="workspace"><div class="historicalToolbar">Photographs</div><section class="mot-surface"><button data-mot-action="material">Add material</button></section><section class="phaseReader" id="owned-photo-stage"><section class="study-photos"><button data-add>Upload photos</button></section></section></main>',
+ 11:'<main class="workspace"><div class="historicalToolbar">Read-only snapshot</div><section class="oss-surface"><header class="oss-heading"><div><h2>Share &amp; celebrate</h2></div><button data-oss-action="look">Review the piece</button></header><textarea data-oss-field="message"></textarea><button data-oss-action="copy">Copy message</button></section></main>',
  7:'<main class="workspace"><div class="wn-check-layout"><section class="wn-check-manuscript"><article class="document"><h1>Piece</h1></article></section><aside class="wn-check-findings"><button data-current-check="run">Check saved draft</button></aside></div></main>'};
 function fixture(stage){
  const dom=new JSDOM(`<div id="app">${pages[stage]}</div>`,{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
@@ -69,4 +70,12 @@ test('Media: heading after the notice line, inspector opens on Readiness, the co
  assert.equal(t.previousElementSibling.className,'historicalToolbar');
  assert.equal(f.d.querySelector('.workspace>#c3-read-insp [aria-selected="true"]').textContent,'Readiness');
  assert.ok(f.d.querySelector('#owned-photo-stage [data-add]'));
+});
+
+test('Share: heading line, inspector on Readiness, the message and Copy message stay the app own',()=>{
+ const f=fixture(11);
+ assert.match(f.d.querySelector('.workspace>.c3-ws-title').textContent,/11\s*Share\s*A personal invitation/);
+ assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Readiness');
+ assert.ok(f.d.querySelector('.oss-surface textarea[data-oss-field="message"]'));
+ assert.ok(f.builds>=1,'bar asked to pick up Copy message');
 });

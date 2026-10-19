@@ -127,3 +127,9 @@ test('Media and Arrange use their own Upload photos and Audience view buttons as
   const p=f.bar().querySelector('.sb-primary');assert.equal(p.textContent,label);p.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),[call]);
  }
 });
+
+test('Share uses its own Copy message as the primary; copying is the app own action',()=>{
+ const f=fixture();f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=11;
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="oss-surface"><button data-oss-action="copy" onclick="calls.push(\'copy\')">Copy message</button></section>');f.w.surfaceBar.build();
+ const p=f.bar().querySelector('.sb-primary');assert.equal(p.textContent,'Copy message');p.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['copy']);
+});
