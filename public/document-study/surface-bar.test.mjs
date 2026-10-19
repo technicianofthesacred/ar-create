@@ -107,3 +107,15 @@ test('in Material, the lane Add files button is the one primary action',()=>{
  assert.equal(p.length,1);assert.equal(p[0].textContent,'Add files');
  p[0].click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['files']);
 });
+
+test('in Direction, Save direction is the primary and the angle tools stay on the page, not in More',()=>{
+ const f=fixture();
+ f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=4;
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="phaseReader"><button data-direction-save onclick="calls.push(\'save-direction\')">Save direction</button></section>');
+ f.w.surfaceBar.build();
+ assert.equal(f.bar().querySelector('.sb-primary').textContent,'Save direction');
+ f.bar().querySelector('.sb-primary').click();
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['save-direction']);
+ press(f,'[data-sb-more]');
+ assert.equal([...f.bar().querySelectorAll('.sb-gh')].some(h=>h.textContent==='Direction and voice'),false);
+});

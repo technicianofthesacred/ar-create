@@ -84,3 +84,34 @@ body.c3-tabs .workspace .material-surface.sws-material{display:flex;flex-directi
 .material-surface.sws-material>.material-layout{order:5}
 .material-surface.sws-material>.material-boundary,.material-surface.sws-material>p.small{order:9;font:12px/1.5 var(--ar-ui);color:var(--dim)}
 .material-surface.sws-material .mrb-list-side,.material-surface.sws-material .mrb-collection{width:auto!important;max-width:none!important;flex:none!important;max-height:none!important}
+
+/* ---------- Research and Direction: the board's order inside the lane ---------- */
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4)>.flow-paper{display:flex;flex-direction:column;gap:14px}
+.phaseReader.c3-s3>.flow-paper>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.phaseReader.c3-s3>.flow-paper>.flow-details{order:1}
+.phaseReader.c3-s3>.flow-paper>#downstream-human-direction{order:2}
+.phaseReader.c3-s3>.flow-paper>#study-source-continuation{order:3}
+.phaseReader.c3-s4>.flow-paper>.flow-lane-head{order:1}
+.phaseReader.c3-s4>.flow-paper>h2{order:1;font:600 var(--c3-t2,15px)/1.3 var(--ar-ui)!important;margin:0!important}
+.phaseReader.c3-s4>.flow-paper>p{order:1;margin:-8px 0 0;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+.phaseReader.c3-s4>.flow-paper>.flow-directions{order:1}
+.phaseReader.c3-s4>.flow-paper>#direction-writing-tools{order:2}
+.phaseReader.c3-s4>.flow-paper>#study-source-continuation{order:3}
+.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-lane-head{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.phaseReader.c3-flow:is(.c3-s3,.c3-s4)>.flow-paper>:is(#study-source-continuation,#direction-writing-tools){padding-top:14px;border-top:1px solid var(--line)}
+/* The source settings used a typewriter face; the board uses the interface font everywhere outside prose. */
+body.c3-tabs .workspace .source-continuation :is(span,button,small,p,label,select,strong,summary,h3){font-family:var(--ar-ui)!important;letter-spacing:normal!important}
+body.c3-tabs .workspace .phaseReader.c3-flow .flow-details>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui);color:var(--c3-ink2,var(--ink));cursor:pointer}
+.c3-open-research{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:36px;margin:0 40px 6px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
+.c3-open-research:hover{border-color:var(--c3-ink2,var(--ink))}
+@media(min-width:851px){body.c3-tabs .workspace>.phaseReader.c3-flow>.c3-open-research{grid-column:1;justify-self:start}}
+body.c3-tabs .workspace>.phaseReader.c3-flow>.c3-open-research{justify-self:start;width:auto;margin:0 0 8px 40px}
+.phaseReader.c3-s4>.flow-paper{padding-top:10px!important}
+body.c3-tabs .workspace .source-continuation :is(button,select){font-size:var(--c3-t1,13px)!important;min-height:36px;padding:0 14px;border-radius:var(--c3-r,8px)}
+body.c3-tabs .workspace .source-continuation :is(p,span,small,label){font-size:var(--c3-t1,13px)!important;line-height:1.5}
+body.c3-tabs .workspace .source-continuation .source-continuation-primary:not(:disabled){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+body.c3-tabs .workspace>.phaseReader.c3-flow>button.c3-open-research:not(#c3-read-insp){justify-self:start;width:auto;max-width:none;margin:0 0 10px 40px}
+body.c3-tabs .workspace>.phaseReader.c3-flow.c3-s4 .flow-paper:not(#c3-read-insp){padding-top:14px!important}
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper :is(.flow-details p,.flow-details label,.flow-details span,.flow-details small){font-size:var(--c3-t1,13px)!important;line-height:1.5}
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper .flow-action{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;min-height:36px;padding:0 14px;border-radius:var(--c3-r,8px)}
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper textarea{font:var(--c3-t2,15px)/1.5 var(--ar-ui);border-radius:var(--c3-r,8px);border-color:var(--c3-line2,var(--line));background:var(--c3-lift,var(--rail))}

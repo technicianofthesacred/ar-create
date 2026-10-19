@@ -18,6 +18,7 @@
   const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,more:[]};reals=[];
   const add=(n,slot)=>{const i=reals.push(n)-1;if(slot)out[slot]=i;return i;};
   for(const row of rows()){
+   if(row.matches('.dwt-orientation')&&stage()!==5)continue;
    const group={title:row.matches('#work-context')?'This piece':row.matches('.topbar')?'View':row.matches('.dwt-orientation')?'Direction and voice':'Writing tools',items:[]};
    for(const n of row.querySelectorAll('button,select,a.i64-return')){
     if(!visible(n)&&!n.closest('details'))continue;
@@ -40,7 +41,8 @@
   }
   // Check: its own run button is the one primary action, as on the board.
   // Material and Source: the lane's own add / save action is the one primary action.
-  if(out.primary==null&&(stage()===1||stage()===2)){const own=[...document.querySelectorAll(stage()===1?'.workspace [data-flow-action="files"]':'.workspace [data-flow-action="save-transcript"]')].find(visible);if(own)out.primary=reals.push(own)-1;}
+  const OWN={1:'[data-flow-action="files"]',2:'[data-flow-action="save-transcript"]',3:'[data-flow-action="analyze"]',4:'[data-direction-save]'};
+  if(out.primary==null&&OWN[stage()]){const own=[...document.querySelectorAll('.workspace '+OWN[stage()])].find(n=>visible(n)||n.closest('details'));if(own)out.primary=reals.push(own)-1;}
   if(out.primary==null&&stage()===7){const run=document.querySelector('.workspace [data-current-check="run"]');if(visible(run)){out.primary=reals.push(run)-1;}}
   return out;
  }

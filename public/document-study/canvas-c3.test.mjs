@@ -8,11 +8,12 @@ const pages={
  5:'<main class="workspace"><div class="desk"><article class="document"><h1>Piece</h1><div id="manuscript" contenteditable="true">Unsaved human writing</div></article></div></main>',
  6:'<main class="workspace"><section class="phaseReader"><article class="recordPage"><h2>Piece</h2><div class="recordBody">Read words</div></article></section></main>',
 1:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><header class="flow-lane-head">Current material</header><div class="material-surface"><button data-flow-action="files">Add files</button></div></article></section></main>',
+ 3:'<main class="workspace"><section class="phaseReader flow-stage"><article class="recordPage flow-paper" id="stage-working-lane"><h2>Research and understand</h2><details class="flow-details"><summary>Research sources and question</summary><button data-flow-action="analyze">Research these sources</button></details></article></section></main>',
  7:'<main class="workspace"><div class="wn-check-layout"><section class="wn-check-manuscript"><article class="document"><h1>Piece</h1></article></section><aside class="wn-check-findings"><button data-current-check="run">Check saved draft</button></aside></div></main>'};
 function fixture(stage){
  const dom=new JSDOM(`<div id="app">${pages[stage]}</div>`,{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
  w.state={project:'p1',projects:[{id:'p1',name:'Piece',view:stage===5?'article':'record',viewedStage:stage}]};w.current=()=>w.state.projects[0];
- w.phases=[];w.viewPhase=n=>w.phases.push(n);w.save=()=>{};let builds=0;w.surfaceBar={build:()=>builds++};w.render=()=>{w.document.getElementById('app').innerHTML=pages[stage];};
+ w.phases=[];w.viewPhase=n=>w.phases.push(n);w.save=()=>{};let builds=0;w.surfaceBar={build:()=>builds++};let shown=0;w.c3Research={show:()=>shown++};Object.defineProperty(w,'researchShown',{get:()=>shown});w.render=()=>{w.document.getElementById('app').innerHTML=pages[stage];};
  w.eval(code);return {w,d:w.document,get builds(){return builds;}};
 }
 test('Write gets the board heading line inside the document, above the title; the editor is untouched',()=>{
@@ -49,4 +50,13 @@ test('Material gets the heading, the flattened lane and an inspector that opens 
  assert.ok(f.d.querySelector('.phaseReader.c3-flow'));
  assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
  assert.ok(f.d.querySelector('[data-flow-action="files"]'),'the lane keeps its own add button');
+});
+
+test('Research checkpoint: heading, Open in Research opens the Research tab, inspector on Decisions',()=>{
+ const f=fixture(3);
+ assert.match(f.d.querySelector('.phaseReader>.c3-ctitle').textContent,/03\s*Research/);
+ f.d.querySelector('.c3-open-research').click();
+ assert.equal(f.w.researchShown,1);
+ assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
+ assert.ok(f.d.querySelector('[data-flow-action="analyze"]'));
 });
