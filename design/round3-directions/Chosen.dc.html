@@ -29,7 +29,7 @@ body{margin:0}
 .proto button{min-height:26px;padding:0 8px;font-size:12px;border-color:var(--line2)}
 .proto button.on{background:var(--ink);color:var(--bg)}
 .shell{flex:1;display:flex;flex-wrap:nowrap;min-height:0}
-.side{flex:0 0 288px;max-width:288px;background:var(--lift);border-right:1px solid var(--line);padding:12px 8px 24px;display:flex;flex-direction:column;gap:2px}
+.side{flex:0 0 264px;max-width:264px;background:var(--lift);border-right:1px solid var(--line);padding:12px 8px 24px;display:flex;flex-direction:column;gap:2px}
 .side .brand{font-weight:700;padding:6px 10px 10px}
 .side h4{margin:14px 10px 4px;font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .nav{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;color:var(--dim)}
@@ -47,11 +47,23 @@ body{margin:0}
 .tabs .sep{width:1px;background:var(--line);margin:8px 6px}
 .tabs small{color:var(--dim);font-size:11px;align-self:center;margin:0 4px 0 6px}
 .content{flex:1;overflow:auto;padding:24px 28px 80px}
-.wrap2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;max-width:1120px;margin:0 auto}
+.wrap2{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:40px;max-width:1080px;margin:0 auto}
+.nonotes .wrap2{grid-template-columns:minmax(0,1fr);max-width:760px}.nonotes .wrap2>.margin{display:none}
+.app.overlayside .side{position:fixed;left:0;top:0;bottom:0;z-index:36;overflow:auto;box-shadow:18px 0 50px rgba(0,0,0,.45);max-width:300px}
+.h1.small{font-size:20px}
+.margin .seg{flex-wrap:nowrap}.margin .seg button{padding:0 6px;font-size:11.5px}
+.nextbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0 0;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--warm) 9%,var(--lift));border:1px solid color-mix(in srgb,var(--warm) 45%,var(--line))}
+.nextbar .nx{flex:1;min-width:220px;font-size:14px}.nextbar .nx b{color:var(--warm);font-weight:700;margin-right:6px}
+.choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:6px 0 28px}
+.app .choice{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border:1px solid var(--line2);background:var(--lift);border-radius:14px;padding:16px;min-height:120px}
+.app .choice:hover{border-color:var(--warm)}.choice b{font-size:16px}
+.app .choice.big{grid-column:1/-1;min-height:auto;padding:20px;border-color:var(--warm);background:color-mix(in srgb,var(--warm) 8%,var(--lift))}
+.choice .row2{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+@media (max-width:900px){.choices{grid-template-columns:minmax(0,1fr)}}
 .pagehead{max-width:1120px;margin:0 auto 6px}
 .app.noside .side{display:none}
 .menu{display:none}
-.dock{flex:0 0 360px;max-width:360px;border-left:1px solid var(--line);background:var(--lift);display:flex;flex-direction:column;min-width:0}
+.dock{flex:0 0 320px;max-width:320px;border-left:1px solid var(--line);background:var(--lift);display:flex;flex-direction:column;min-width:0}
 .dock .dh{display:flex;align-items:center;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .dock .db{padding:12px;overflow:auto;flex:1}
 .dtab{min-height:28px;font-size:12px;color:var(--dim)}.dtab.on{color:var(--ink);background:var(--paper);font-weight:600;box-shadow:0 0 0 1px var(--line2)}
@@ -169,7 +181,7 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
   <div class="brand">AR Create</div>
   <button class="nav {{navHome}}" onClick="{{goHome}}">Studio home<span class="n">{{waitCount}} waiting</span></button>
   <button class="nav {{navLib}}" onClick="{{goLibrary}}">Library<span class="n">142 kept</span></button>
-  <input class="sfilter" aria-label="Filter projects and collections" placeholder="Filter projects, pieces, collections" value="{{sideQ}}" onInput="{{onSideQ}}">
+  <input class="sfilter" aria-label="Filter projects and collections" placeholder="Filter projects and topics" value="{{sideQ}}" onInput="{{onSideQ}}">
   <sc-for list="{{tree}}" as="g" hint-placeholder-count="3">
    <button class="ghead" onClick="{{g.toggle}}" aria-expanded="{{g.openStr}}"><svg class="chev {{g.chevCls}}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4.5 2.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{g.label}}<span class="n">{{g.count}}</span></button>
    <sc-if value="{{g.open}}" hint-placeholder-val="{{true}}">
@@ -182,9 +194,9 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
       <sc-for list="{{addOther}}" as="a" hint-placeholder-count="3"><button role="menuitem" class="amr" onClick="{{a.go}}"><span class="mk {{a.mk}}" aria-hidden="true"></span>{{a.label}}<span class="meta" style="margin-left:auto">{{a.hint}}</span></button></sc-for>
      </div></sc-if>
      <sc-if value="{{pr.isOpen}}" hint-placeholder-val="{{false}}">
-      <sc-if value="{{pr.hasColls}}" hint-placeholder-val="{{false}}"><div class="kh">Collections</div></sc-if>
+      <sc-if value="{{pr.hasColls}}" hint-placeholder-val="{{false}}"><div class="kh">Topics</div></sc-if>
       <sc-for list="{{pr.colls}}" as="k" hint-placeholder-count="1"><button class="nav sub {{k.cls}}" onClick="{{k.open}}" title="{{k.tip}}"><span class="mk {{k.mk}}" aria-hidden="true"></span><span class="pt">{{k.title}}</span><sc-if value="{{k.flag}}" hint-placeholder-val="{{false}}"><span class="sd {{k.st}}" aria-label="{{k.flagLabel}}"></span></sc-if><span class="n">{{k.kind}}</span></button></sc-for>
-      <sc-if value="{{pr.hasPieces}}" hint-placeholder-val="{{false}}"><div class="kh">Pieces</div></sc-if>
+      <sc-if value="{{pr.hasPieces}}" hint-placeholder-val="{{false}}"><div class="kh">Things I’m making</div></sc-if>
       <sc-for list="{{pr.pieces}}" as="k" hint-placeholder-count="3"><button class="nav sub {{k.cls}}" onClick="{{k.open}}" title="{{k.tip}}"><span class="mk {{k.mk}}" aria-hidden="true"></span><span class="pt">{{k.title}}</span><sc-if value="{{k.flag}}" hint-placeholder-val="{{false}}"><span class="sd {{k.st}}" aria-label="{{k.flagLabel}}"></span></sc-if><span class="n">{{k.kind}}</span></button></sc-for>
      </sc-if>
     </sc-for>
@@ -199,31 +211,33 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
  <div class="main">
   <div class="head">
    <div class="t"><button class="btn" onClick="{{toggleSide}}" aria-label="Show or hide the sidebar">{{sideLabel}}</button><span class="meta">{{crumb}}</span></div>
-   <div class="t"><h1 class="h1" style="margin:4px 0 0">{{title}}</h1><sc-for list="{{titleChips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.tone}}">{{c.label}}</span></sc-for>
-    <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{inPiece}}" hint-placeholder-val="{{false}}"><button class="btn">Undo</button></sc-if><button class="btn" onClick="{{openLib}}" aria-pressed="{{libOpen}}">Library</button><button class="pri" onClick="{{primary.go}}">{{primary.label}}</button></span></div>
-   <sc-if value="{{hasConn}}" hint-placeholder-val="{{false}}"><div class="conn"><span class="meta">Connected:</span><sc-for list="{{conn}}" as="c" hint-placeholder-count="4"><button class="cchip" onClick="{{c.go}}">{{c.label}}</button></sc-for></div></sc-if>
+   <div class="t"><h1 class="h1 {{titleCls}}" style="margin:4px 0 0">{{title}}</h1><sc-for list="{{titleChips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.tone}}">{{c.label}}</span></sc-for>
+    <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{inPiece}}" hint-placeholder-val="{{false}}"><button class="btn">Undo</button><button class="btn" onClick="{{toggleAll}}" aria-pressed="{{allStr}}">{{allLabel}}</button></sc-if><button class="btn" onClick="{{openLib}}" aria-pressed="{{libOpen}}">Library</button><sc-if value="{{notInPiece}}" hint-placeholder-val="{{true}}"><button class="pri" onClick="{{primary.go}}">{{primary.label}}</button></sc-if></span></div>
+   <sc-if value="{{hasNext}}" hint-placeholder-val="{{false}}"><div class="nextbar"><span class="nx"><b>Next</b>{{nextText}}</span><button class="pri" onClick="{{nextGo}}">{{nextBtn}}</button></div></sc-if>
+   <sc-if value="{{hasConn}}" hint-placeholder-val="{{false}}"><div class="conn"><sc-if value="{{hasNotes}}" hint-placeholder-val="{{false}}"><button class="cchip" onClick="{{toggleNotes}}">{{notesLabel}}</button><span class="meta" style="margin:0 4px">·</span></sc-if><span class="meta">This piece uses:</span><sc-for list="{{conn}}" as="c" hint-placeholder-count="4"><button class="cchip" onClick="{{c.go}}">{{c.label}}</button></sc-for></div></sc-if>
    <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
    <div class="tabs" role="tablist"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="8"><sc-if value="{{t.isSep}}" hint-placeholder-val="{{false}}"><span class="sep"></span><small>{{t.label}}</small></sc-if><sc-if value="{{t.isTab}}" hint-placeholder-val="{{true}}"><button class="tab {{t.cls}}" onClick="{{t.go}}">{{t.label}}</button></sc-if></sc-for></div>
    </sc-if>
   </div>
-  <div class="content">
+  <div class="content {{notesClass}}">
 <sc-if value="{{hasRet}}" hint-placeholder-val="{{false}}"><div class="retbar"><span>You came from <b>{{retLabel}}</b>. Unsaved words there are kept.</span><button class="btn" onClick="{{goRet}}">Back to {{retShort}}</button><button onClick="{{clearRet}}" aria-label="Dismiss">Dismiss</button></div></sc-if>
 
 <!-- HOME -->
 <sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
  <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty"><b>Your studio is empty.</b><br>Start with a thought, a recording, photos or something from your Library.<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap"><button class="pri" onClick="{{goOverview}}">Write a thought</button><button class="btn">Add a recording</button><button class="btn" onClick="{{goLibrary}}">Open Library</button></div></div></sc-if>
  <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
- <div class="band"><b>Waiting on you</b><span class="grow">Paragraph 3 of the article disagrees with your transcript correction · slide 4 the same · 1 direction to choose</span><button class="btn" onClick="{{resumeWrite}}">Paragraph 3</button><button class="btn" onClick="{{goDirection}}">Choose direction</button></div>
- <h2 class="h2" style="margin-top:0">Pick up here</h2>
- <div class="note" style="padding:16px"><div class="meta">Water first › The water is half the tea · today 09:41</div><div style="font-size:18px;font-weight:600;margin:6px 0 10px">Fix “soft water” in paragraph 3, then slide 4.</div><button class="pri" onClick="{{resumeWrite}}">Continue at paragraph 3</button> <button class="btn" onClick="{{goOverview}}">Open project map</button></div>
- <h2 class="h2">Projects</h2>
- <div class="map" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
-  <button class="mc" onClick="{{goOverview}}"><b>Water first</b><span class="meta">1 collection · 4 pieces · carousel exported · article in draft</span></button>
-  <button class="mc" onClick="{{goMending}}"><b>Mending</b><span class="meta">1 collection · 1 real published story · 1 post draft</span></button>
+ <div style="max-width:980px">
+ <h2 class="h2" style="margin-top:0;font-size:20px">What do you want to do?</h2>
+ <div class="choices">
+  <button class="choice big" onClick="{{resumeWrite}}"><span class="meta">Continue where you left off · The water is half the tea · today 09:41</span><b style="font-size:20px">Fix “soft water” in paragraph 3</b><span class="meta">Your transcript correction says “hard”. Slide 4 of the carousel needs the same fix after.</span></button>
+  <div class="choice"><b>Start something new</b><span class="meta">From whatever you have. Nothing else is needed first.</span><div class="row2"><button class="btn" onClick="{{goOverview}}">A thought</button><button class="btn" onClick="{{goMaterial}}">A recording</button><button class="btn" onClick="{{goMaterial}}">Photos</button></div></div>
+  <button class="choice" onClick="{{goOutputs}}"><b>Make something from what I have</b><span class="meta">An article, carousel, post, listing or script from a project you already have.</span></button>
+  <button class="choice" onClick="{{goLibrary}}"><b>Look something up</b><span class="meta">Search everything you kept: conversations, reading, photos, your notes.</span></button>
  </div>
- <h2 class="h2">Collections</h2>
- <div class="row"><div class="grow"><b>Why water changes tea</b><div class="meta">3 sources · 2 open questions · 2 new agent sources (not adopted)</div></div><button class="btn" onClick="{{openWaterColl}}">Open</button></div>
- <div class="row"><div class="grow"><b>Keeping old things in use</b><div class="meta">Research without any piece yet · shares Water chemistry.pdf</div></div><button class="btn" onClick="{{openMendColl}}">Open</button></div>
+ <h2 class="h2">Also waiting on you</h2>
+ <div class="row"><div class="grow">Choose how “hard water” applies: article only, or the carousel too</div><button class="btn" onClick="{{goDirection}}">Choose</button></div>
+ <div class="row"><div class="grow">2 new sources were added to the topic “Why water changes tea”</div><button class="btn" onClick="{{openWaterColl}}">Look</button></div>
+ </div>
  </sc-if>
 </sc-if>
 
@@ -365,8 +379,8 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 <sc-if value="{{isLibrary}}" hint-placeholder-val="{{false}}">
  <div style="max-width:1120px;margin:0 auto">
  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><input class="search" aria-label="Search the Library" value="water"><div class="seg"><sc-for list="{{libKinds}}" as="k" hint-placeholder-count="6"><button class="{{k.cls}}" onClick="{{k.go}}">{{k.label}}</button></sc-for></div><button class="btn" style="margin-left:auto">Add to Library</button></div>
- <h2 class="h2" style="margin-top:4px">Collections</h2>
- <p class="meta" style="margin:-4px 0 10px">Inquiries you keep exploring. Items are linked into them, never copied. A collection needs no project or piece.</p>
+ <h2 class="h2" style="margin-top:4px">Topics</h2>
+ <p class="meta" style="margin:-4px 0 10px">Things you keep exploring. Items are linked into them, never copied. A topic needs no project.</p>
  <div class="map" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
   <sc-for list="{{collCards}}" as="c" hint-placeholder-count="3"><button class="mc" onClick="{{c.open}}"><b>{{c.title}}</b><span class="meta">{{c.sub}}</span><span class="meta" style="display:block;margin-top:6px;color:var(--ink)">{{c.links}}</span></button></sc-for>
  </div>
@@ -488,7 +502,7 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
-  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1'],addFor:null,addTitle:'',toast:'',open:{p0:true},grp:{pinned:true,recent:true,unfiled:true},sideQ:''};}
+  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1'],addFor:null,addTitle:'',toast:'',sideIn:false,notes:true,showAll:false,open:{p0:true},grp:{pinned:true,recent:true,unfiled:true},sideQ:''};}
   set(o){this.setState(o);}
   renderVals(){
     const s=this.state,self=this,st=s.st;
@@ -496,14 +510,14 @@ class Component extends DCLogic {
     const P3a='The spring above her garden runs through limestone, so the water is soft, and it carries the leaf’s sweetness forward.';
     const P3b='The spring above her garden runs through limestone, so the water is hard with calcium, and somehow it still carries the leaf’s sweetness forward.';
     const pieceV=['write','read','check','media','arrange','audience','share'];
-    const go=(v,extra)=>()=>{const o={view:v,returned:false};if(pieceV.indexOf(s.view)>=0&&pieceV.indexOf(v)<0){o.ret=s.view;}if(pieceV.indexOf(v)>=0&&s.ret===v){o.ret=null;o.returned=(v==='write');}self.set(Object.assign(o,extra||{}));};
+    const go=(v,extra)=>()=>{const o={view:v,returned:false,sideIn:false};if(pieceV.indexOf(s.view)>=0&&pieceV.indexOf(v)<0){o.ret=s.view;}if(pieceV.indexOf(v)>=0&&s.ret===v){o.ret=null;o.returned=(v==='write');}self.set(Object.assign(o,extra||{}));};
 
     const W_USES={
       t1240:['Spring walk 12:40 · Lin Yun','Corrected “soft” → “hard” by you, 16 Oct. Known places that use it:',[['Article · paragraph 3','flagged for review, not rewritten','write'],['Carousel · slide 4','flagged for review','arrange'],['Research · point 1','written before the correction','research']]],
       t1258:['Spring walk 12:58 · Lin Yun','“Tea is a guest in the water.” Exact words, protected everywhere they appear:',[['Article · paragraph 2','exact quote, checked on revision 8','write'],['Carousel · slide 3','exact quote','arrange'],['Concept · Water first','linked from the Library','overview'],['Direction · keep this line exactly','applies to all pieces','direction']]],
-      l1:['The Book of Tea passage','One Library item, linked twice, never copied:',[['Concept · Water first','supports','overview'],['Collection · Keeping old things in use','background','research']]],
+      l1:['The Book of Tea passage','One Library item, linked twice, never copied:',[['Concept · Water first','supports','overview'],['Topic · Keeping old things in use','background','research']]],
       l2:['Spring walk 12:58','',[['Article · paragraph 2','exact quote','write'],['Carousel · slide 3','exact quote','arrange']]],
-      l3:['Water chemistry and brewing.pdf p.14','',[['Research · point 2','qualified evidence','research'],['Collection · Keeping old things in use','background','research']]],
+      l3:['Water chemistry and brewing.pdf p.14','',[['Research · point 2','qualified evidence','research'],['Topic · Keeping old things in use','background','research']]],
       l4:['Your cabin note','',[['Research · your experience','not externally verified','research']]],
       ph0:['spring-path.jpg','Photo by you. Placed in:',[['Article · figure 1','own crop','write'],['Carousel · slide 1','own crop','arrange']]],
       ph1:['three-cups.jpg','Photo by you. Placed in:',[['Article · figure 2','own crop','write'],['Carousel · slides 2 and 5','two crops','arrange']]],
@@ -513,7 +527,7 @@ class Component extends DCLogic {
       ph5:['kettle.jpg','Not used anywhere yet.',[]],
       o1:['Spring walk','The recording feeds:',[['Research · points 1 and 4','source','research'],['Article · paragraphs 2 and 3','quote and correction flag','write'],['Carousel · slides 3 and 4','quote and correction flag','arrange'],['Script · At the spring','background','outputs']]],
       o2x:['Kitchen tasting','Typed notes:',[['Research · point 2','your tasting notes','research']]],
-      p1:['The water is half the tea','The article draws on:',[['Spring walk 12:40 and 12:58','source passages','source'],['Collection · Why water changes tea','background','research'],['4 directions','scoped to it','direction']]],
+      p1:['The water is half the tea','The article draws on:',[['Spring walk 12:40 and 12:58','source passages','source'],['Topic · Why water changes tea','background','research'],['4 directions','scoped to it','direction']]],
       p2:['Three waters, one leaf','The carousel draws on:',[['Spring walk 12:40 and 12:58','source passages','source'],['6 photos','placements','media'],['3 directions','scoped to it','direction']]],
       o6:['Your thoughts','Your own words feed:',[['Direction · kitchen table, not the lab','your angle','direction'],['Article','via that direction','write'],['Carousel','via that direction','arrange']]]
     };
@@ -542,6 +556,13 @@ class Component extends DCLogic {
     const filtered=allProj.filter(x=>(s.brand==='all'||x.brand===s.brand)&&(s.pstat==='all'||x.status===s.pstat||(s.pstat==='active'&&x.status==='waiting'))&&(!q||x.title.toLowerCase().indexOf(q)>=0));
     const projOpen=(x)=>x.id==='p0'?go('overview'):(x.id==='p1'?openColl('mend'):go('overview'));
     const projGroups=['Teajia','Art','Mandala Codes','Personal'].map(b=>{const rows=filtered.filter(x=>x.brand===b);return {label:b,n:rows.length+' project'+(rows.length===1?'':'s'),rows:rows.map(x=>({title:x.title,sub:x.coll+' collection'+(x.coll>1?'s':'')+' · '+x.pieces+' piece'+(x.pieces>1?'s':''),status:statusText[x.status],tone:statusTone[x.status],when:x.when,open:projOpen(x),pinLabel:s.pins.indexOf(x.id)>=0?'Unpin':'Pin',pin:()=>{const P=s.pins.slice();const i=P.indexOf(x.id);if(i>=0)P.splice(i,1);else P.push(x.id);self.set({pins:P});}})),show:rows.length>0};}).filter(g=>g.show);
+    const nxFor=()=>{const f4=s.corrected&&!s.slide4fixed;
+      if(['write','read','check'].indexOf(s.view)>=0){if(!s.p3done)return ['Fix “soft water” in paragraph 3. It disagrees with your correction.','Fix it',()=>self.set({editing:true,draft:s.draft||'The spring above her garden runs through limestone, so the water is soft, and it carries the leaf’s sweetness forward.'})];
+        if(f4)return ['Slide 4 of the carousel still says “soft water”.','Go to slide 4',()=>self.set({view:'arrange',sel:3})];return ['Read it through once as your audience will.','Read mode',()=>self.set({view:'read'})];}
+      if(s.view==='arrange'||s.view==='media'){if(f4)return ['Update slide 4 to say hard water, still sweet.','Update slide 4',()=>self.set({view:'arrange',sel:3,slide4fixed:true})];return ['Look at the whole carousel as your audience will.','Audience view',()=>self.set({view:'audience'})];}
+      if(s.view==='audience')return ['Export the approved edition: 8 images and the caption.','Export',()=>self.set({toast:'Prototype only: the 8 PNGs and caption would download. Exported is not published.'})];
+      if(s.view==='share')return ['Copy the message to Lin Yun and send it yourself.','Copy message',()=>self.set({toast:'Prototype only: the message would be copied. Nothing is sent.'})];
+      return null;};
     const projViews=['overview','material','source','research','direction','outputs'];
     const pieceViews=['write','read','check','media','arrange','audience','share'];
     const inPiece=pieceViews.indexOf(s.view)>=0;
@@ -608,30 +629,31 @@ class Component extends DCLogic {
     const photosRaw=[{name:'spring-path.jpg',caption:'The path to the spring',credit:'by you',uses:'Article fig. 1 · Slide 1'},{name:'three-cups.jpg',caption:'Tap, filtered, spring',credit:'by you',uses:'Article fig. 2 · Slides 2, 5'},{name:'lin-yun-hands.jpg',caption:'Pouring',credit:'by Lin Yun · permission asked',uses:'Slide 3'},{name:'limestone.jpg',caption:'White stone',credit:'by you',uses:'Slide 4'},{name:'cabin-window.jpg',caption:'Cabin kettle',credit:'by you',uses:'Selected, not placed'},{name:'kettle.jpg',caption:'No caption yet',credit:'by you',uses:'Unused'}];
     const photos=photosRaw.map((p,i)=>Object.assign({},p,{wu:openWu('ph'+i)}));
     const titleMap={projects:'All projects',library:'Library',collection:(COLL[s.coll]||COLL.water).title,home:'Studio home',overview:'Water first',material:'Water first',source:'Water first',research:'Why water changes tea',direction:'Water first',outputs:'Water first',write:'The water is half the tea',read:'The water is half the tea',check:'The water is half the tea',media:'Three waters, one leaf',arrange:'Three waters, one leaf',audience:'Three waters, one leaf',share:'The water is half the tea',real:'Porcelain and Tea',mending:'Mending'};
-    const crumbMap={projects:'Projects',library:'Everything you kept, once',collection:'Collection · an inquiry',home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Collection research · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
+    const crumbMap={projects:'Projects',library:'Everything you kept, once',collection:'Topic',home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Collection research · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
     let saveText='Saved to working file 09:41',saveTone='good';
     if(st==='unsaved'||s.dirty){saveText='Unsaved · saving ahead…';saveTone='warn';}
     if(st==='failed'){saveText='Couldn’t save to the project file. Your words are kept in this browser.';saveTone='bad';}
     if(st==='readonly'||s.view==='real'){saveText='Read-only';saveTone='warn';}
     if(s.p3done&&!s.dirty&&st==='normal'&&s.view!=='real')saveText='Saved to working file 09:52 · revision 9';
-    const prim={projects:['New project',()=>{}],library:['Add to Library',()=>{}],collection:['Write in this collection',go('overview')],home:['Continue',()=>applyStep('j3',1)],overview:['Continue writing',go('write')],material:['Add files',()=>{}],source:['Save correction',()=>self.set({corrected:true})],research:['Carry into Direction',go('direction')],direction:['Continue writing',go('write')],outputs:['New output',()=>{}],write:['Discuss wording',()=>{}],read:['Discuss wording',()=>{}],check:['Rerun checks',()=>{}],media:['Add photos',()=>{}],arrange:['Audience view',go('audience')],audience:['Export',()=>{}],share:['Copy message',()=>{}],real:['Open live page',()=>{}],mending:['Open',()=>{}]};
+    const prim={projects:['New project',()=>{}],library:['Add to Library',()=>{}],collection:['Write a thought here',go('overview')],home:['Continue',()=>applyStep('j3',1)],overview:['Continue writing',go('write')],material:['Add files',()=>{}],source:['Save correction',()=>self.set({corrected:true})],research:['Carry into Direction',go('direction')],direction:['Continue writing',go('write')],outputs:['New output',()=>{}],write:['Discuss wording',()=>{}],read:['Discuss wording',()=>{}],check:['Rerun checks',()=>{}],media:['Add photos',()=>{}],arrange:['Audience view',go('audience')],audience:['Export',()=>{}],share:['Copy message',()=>{}],real:['Open live page',()=>{}],mending:['Open',()=>{}]};
     const pr=prim[s.view]||prim.home;
     let chips=[];if(inPiece&&!carouselPiece)chips=[{label:'Article · rev '+(s.p3done?9:8),tone:''}];if(carouselPiece)chips=[{label:'Carousel · edition 15 Oct',tone:'good'}];if(s.view==='real')chips=[{label:'Published 29 Sep',tone:'good'}];
+    const nx=nxFor();
     return {
       themeClass:theme==='light'?'light':'',themeLabel:theme==='light'?'Dark':'Light',toggleTheme:()=>self.set({light:theme!=='light'}),
-      walks,states,cols,pieceNav,inPiece,showTabs:s.view!=='home'&&s.view!=='real',tabs,crumb:crumbMap[s.view]||(inPiece?'Water first › piece':''),title:titleMap[s.view],titleChips:chips,
+      walks,states,cols,pieceNav,inPiece,showTabs:s.view!=='home'&&s.view!=='real'&&(!inPiece||s.showAll),tabs,crumb:crumbMap[s.view]||(inPiece?'Water first › piece':''),title:titleMap[s.view],titleChips:chips,
       navHome:s.view==='home'?'on':'',navInq:s.view==='research'?'on':'',navProj:projViews.indexOf(s.view)>=0&&s.view!=='research'?'on':'',navReal:s.view==='real'?'on':'',navMend:'',waitCount:(s.p3done?0:1)+(flag4?1:0)+(s.adopted?0:1),
       isHome:s.view==='home',isOverview:s.view==='overview',isMaterial:s.view==='material',isSource:s.view==='source',isResearch:s.view==='research',isDirection:s.view==='direction',isWrite:isW,isMedia:s.view==='media',isArrange:s.view==='arrange',isAudience:s.view==='audience',isShare:s.view==='share',isOutputs:s.view==='outputs',isReal:s.view==='real',
       isEmpty:st==='empty',notEmpty:st!=='empty',isProcessing:st==='processing',notProcessing:st!=='processing',isFailed:st==='failed',isStale:st==='stale',isReadOnly:st==='readonly',
-      goHome:go('home'),goOverview:go('overview'),goResearch:go('research'),goDirection:go('direction'),goSource:go('source'),goMedia:go('media'),goShare:go('share'),goAudience:go('audience'),goMending:go('real'),openReal:go('real'),openCarousel:go('arrange',{sel:3}),
+      goHome:go('home'),goMaterial:go('material'),goOutputs:go('outputs'),goOverview:go('overview'),goResearch:go('research'),goDirection:go('direction'),goSource:go('source'),goMedia:go('media'),goShare:go('share'),goAudience:go('audience'),goMending:go('real'),openReal:go('real'),openCarousel:go('arrange',{sel:3}),
       resumeWrite:go('write',{insp:'margin'}),goOverviewFocusO1:go('overview',{focus:'o1'}),
       openLib:()=>self.set({libOpen:(s.libOpen&&(s.dock||'lib')==='lib')?false:true,dock:'lib'}),findLib:()=>self.set({libOpen:true,dock:'lib'}),
       addPieces:[['article','Article'],['carousel','Carousel'],['post','Post'],['listing','Listing'],['script','Script']].map(a=>({mk:a[0],label:a[1],go:()=>self.set({addFor:null,toast:'Prototype only: a new '+a[1].toLowerCase()+' would open in '+s.addTitle+', empty, with its own words, review and edition.'})})),
-      addOther:[['coll','New collection','an inquiry'],['material','Add material','files, notes, links'],['thought','Write a thought','your words']].map(a=>({mk:a[0],label:a[1],hint:a[2],go:()=>self.set({addFor:null,view:a[0]==='material'?'material':(a[0]==='thought'?'overview':'library'),toast:a[0]==='coll'?'Prototype only: a new collection would be created in '+s.addTitle+'. It can also stand on its own.':''})})),
+      addOther:[['coll','New topic','something to explore'],['material','Add material','files, notes, links'],['thought','Write a thought','your words']].map(a=>({mk:a[0],label:a[1],hint:a[2],go:()=>self.set({addFor:null,view:a[0]==='material'?'material':(a[0]==='thought'?'overview':'library'),toast:a[0]==='coll'?'Prototype only: a new collection would be created in '+s.addTitle+'. It can also stand on its own.':''})})),
       hasToast:!!s.toast,toast:s.toast,clearToast:()=>self.set({toast:''}),
       sideQ:s.sideQ,onSideQ:(e)=>self.set({sideQ:e.target.value}),clearSideQ:()=>self.set({sideQ:''}),
       tree:(()=>{const sq=(s.sideQ||'').toLowerCase();
-        const KW={article:'Article',carousel:'Carousel',coll:'Collection',listing:'Listing',script:'Script',story:'Published',post:'Post'};
+        const KW={article:'Article',carousel:'Carousel',coll:'Topic',listing:'Listing',script:'Script',story:'Published',post:'Post'};
         const kidsFor={p0:[['The water is half the tea','article',(s.p3done?'':'warn'),'today','write'],['Why water changes tea','coll','warn','2 new','cw'],['Three waters, one leaf','carousel',((s.corrected&&!s.slide4fixed)?'warn':'good'),'15 Oct','arrange'],['Spring-water tasting set','listing','','12 Oct','outputs'],['At the spring','script','','11 Oct','outputs']],
           p1:[['Porcelain and Tea','story','','29 Sep','real'],['Keeping old things in use','coll','','9 Oct','cm'],['The bowl with a gold seam','post','','8 Oct','outputs']]};
         const target=(t)=>t==='cw'?openColl('water'):(t==='cm'?openColl('mend'):go(t));
@@ -648,7 +670,7 @@ class Component extends DCLogic {
         const grp=(key,label,list,more)=>{const ps=list.map(node).filter(Boolean);const open=sq?true:s.grp[key]!==false;return {label,count:ps.length,open,openStr:open?'true':'false',chevCls:open?'open':'',projects:ps,more:more&&!sq,toggle:()=>{const G=Object.assign({},s.grp);G[key]=!open;self.set({grp:G});},show:ps.length>0||(!sq)};};
         const pinned=allProj.filter(x=>s.pins.indexOf(x.id)>=0);const recent=allProj.filter(x=>s.pins.indexOf(x.id)<0&&x.status!=='archived').slice(0,sq?60:5);
         const unfiled={id:'u0',title:'Tea water reading list',when:'2 Oct'};
-        const g=[grp('pinned','Pinned',pinned,false),grp('recent','Projects',recent,true),grp('unfiled','Collections without a project',[unfiled],false)];
+        const g=[grp('pinned','Pinned',pinned,false),grp('recent','Projects',recent,true),grp('unfiled','Topics without a project',[unfiled],false)];
         return g.filter(x=>x.projects.length>0);})(),
       treeEmpty:!!s.sideQ&&false,
       goProjects:go('projects'),isProjects:s.view==='projects',navAll:s.view==='projects'?'on':'',projCount:allProj.length,
@@ -664,8 +686,8 @@ class Component extends DCLogic {
       libKinds:[['all','All'],['conv','Conversations'],['read','Reading'],['photo','Photos'],['note','Your notes']].map(k=>({label:k[1],cls:s.libKind===k[0]?'on':'',go:()=>self.set({libKind:k[0]})})),libKindLabel:({all:'all',conv:'conversations',read:'reading',photo:'photos',note:'your notes'})[s.libKind],
       libRows:[['Spring walk','Conversation · 38 min','Why water changes tea','o1','conv','transcript kept',4],['Kitchen tasting','Conversation · notes','Why water changes tea','o2x','conv','',1],['Water chemistry and brewing.pdf','Reading · PDF','Why water changes tea · Keeping old things in use · Tea water reading list','l3','read','3 passages marked by you',3],['The Book of Tea passage','Reading · public domain','all three collections','l1','read','saved, not marked',2],['three-cups.jpg','Photo · by you','Why water changes tea','ph1','photo','',3],['Your cabin note','Your note · 2025','Why water changes tea','l4','note','',1]].filter(r=>s.libKind==='all'||r[4]===s.libKind).map(r=>({title:r[0],kind:r[1],colls:r[2],read:r[5],n:r[6],wu:openWu(r[3]),open:r[3]==='o1'?go('source'):go('research')})),
       hasRet:!!s.ret&&pieceV.indexOf(s.view)<0,retLabel:s.ret?((['media','arrange','audience'].indexOf(s.ret)>=0?'Three waters, one leaf':'The water is half the tea')+' · '+s.ret):'',retShort:s.ret?(['media','arrange','audience'].indexOf(s.ret)>=0?'the carousel':'paragraph 3'):'',goRet:()=>self.set({view:s.ret,ret:null,returned:s.ret==='write'}),clearRet:()=>self.set({ret:null}),
-      hasConn:pieceV.indexOf(s.view)>=0,conn:(['media','arrange','audience'].indexOf(s.view)>=0?[['Collection · Why water changes tea',openColl('water')],['Spring walk 12:58 (slide 3)',openWu('t1258')],['Spring walk 12:40 (slide 4)',openWu('t1240')],['6 photos',go('media')],['Direction · 3 apply',go('direction')],['Sibling · the article',go('write')],['Show on map',go('overview',{focus:'p2'})]]:[['Collection · Why water changes tea',openColl('water')],['Spring walk 12:58 (paragraph 2)',openWu('t1258')],['Spring walk 12:40 (paragraph 3)',openWu('t1240')],['2 photos',go('media')],['Direction · 4 apply',go('direction')],['Sibling · the carousel',go('arrange')],['Show on map',go('overview',{focus:'p1'})]]).map(c=>({label:c[0],go:c[1]})),
-closeLib:()=>self.set({libOpen:false}),stop:(e)=>e.stopPropagation(),libOpen:s.libOpen,libItems,dockOpen:s.libOpen,dockLib:(s.dock||'lib')==='lib',dockUses:s.dock==='uses',closeDock:()=>self.set({libOpen:false}),dockTabs:[['lib','Library'],['uses','Where used']].map(t=>({label:t[1],cls:(s.dock||'lib')===t[0]?'on':'',go:()=>self.set({dock:t[0]})})),wuTitle:wuE?wuE[0]:'Where used',wuSub:wuE?wuE[1]:'Choose “Where used” on a passage, photo, source or map card.',wuList,wuT1240:openWu('t1240'),wuT1258:openWu('t1258'),t1240:s.wu==='t1240'?'hi':'',t1258:s.wu==='t1258'?'hi':'',focusWu:()=>{if(s.focus)openWu(s.focus)();},sideClass:(s.side?'sideopen':'noside'),toggleSide:()=>self.set({side:!s.side}),sideLabel:s.side?'Hide sidebar':'Menu',
+      hasConn:pieceV.indexOf(s.view)>=0&&s.showAll,conn:(['media','arrange','audience'].indexOf(s.view)>=0?[['Topic · Why water changes tea',openColl('water')],['Spring walk 12:58 (slide 3)',openWu('t1258')],['Spring walk 12:40 (slide 4)',openWu('t1240')],['6 photos',go('media')],['Direction · 3 apply',go('direction')],['Sibling · the article',go('write')],['Show on map',go('overview',{focus:'p2'})]]:[['Topic · Why water changes tea',openColl('water')],['Spring walk 12:58 (paragraph 2)',openWu('t1258')],['Spring walk 12:40 (paragraph 3)',openWu('t1240')],['2 photos',go('media')],['Direction · 4 apply',go('direction')],['Sibling · the carousel',go('arrange')],['Show on map',go('overview',{focus:'p1'})]]).map(c=>({label:c[0],go:c[1]})),
+closeLib:()=>self.set({libOpen:false}),stop:(e)=>e.stopPropagation(),libOpen:s.libOpen,libItems,dockOpen:s.libOpen,dockLib:(s.dock||'lib')==='lib',dockUses:s.dock==='uses',closeDock:()=>self.set({libOpen:false}),dockTabs:[['lib','Library'],['uses','Where used']].map(t=>({label:t[1],cls:(s.dock||'lib')===t[0]?'on':'',go:()=>self.set({dock:t[0]})})),wuTitle:wuE?wuE[0]:'Where used',wuSub:wuE?wuE[1]:'Choose “Where used” on a passage, photo, source or map card.',wuList,wuT1240:openWu('t1240'),wuT1258:openWu('t1258'),t1240:s.wu==='t1240'?'hi':'',t1258:s.wu==='t1258'?'hi':'',focusWu:()=>{if(s.focus)openWu(s.focus)();},sideClass:(inPiece?(s.sideIn?'sideopen overlayside':'noside'):(s.side?'sideopen':'noside')),toggleSide:()=>inPiece?self.set({sideIn:!s.sideIn}):self.set({side:!s.side}),sideLabel:inPiece?(s.sideIn?'Close menu':'Menu'):(s.side?'Hide sidebar':'Menu'),notesClass:(inPiece&&!s.notes)?'nonotes':'',hasNotes:['write','read','check','arrange','audience'].indexOf(s.view)>=0,toggleNotes:()=>self.set({notes:!s.notes}),notesLabel:s.notes?'Hide notes':'Show notes',toggleAll:()=>self.set({showAll:!s.showAll}),allStr:s.showAll?'true':'false',allLabel:s.showAll?'Less':'More',notInPiece:!inPiece,titleCls:inPiece?'small':'',hasNext:inPiece&&!!nx,nextText:nx?nx[0]:'',nextBtn:nx?nx[1]:'',nextGo:nx?nx[2]:()=>{},
       thought:s.thought,onThought:(e)=>self.set({thought:e.target.value}),
       hasFocus:!!s.focus,focusTitle:s.focus?nodes[s.focus][0]:'',focusText:s.focus?(fdesc[s.focus]||'Highlighted cards are what this feeds and what feeds it. Dimmed cards are unaffected.'):'',focusOpen:()=>{if(s.focus)self.set({view:nodes[s.focus][2]});},clearFocus:()=>self.set({focus:null}),focusHint:s.focus?'':'',
       waterWord:s.corrected?'hard':'soft',fixClass:s.corrected?'fixed':'fix',corrected:s.corrected,notCorrected:!s.corrected,applyFix:()=>self.set({corrected:true}),undoFix:()=>self.set({corrected:false}),
