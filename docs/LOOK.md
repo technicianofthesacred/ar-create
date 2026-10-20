@@ -10,12 +10,12 @@ The look is a set of add-on modules loaded last in `public/document-study/index.
 |---|---|
 | `home-tabs.*` | Tab strip (Home, Research, open pieces/outputs) and Home (the project library, full screen) |
 | `checkpoint-rail.*` | Compact grouped list of the twelve checkpoints |
-| `surface-bar.*` | One bar above the work; every control presses the real one underneath |
-| `canvas-c3.*`, `source-c3.css` | Per-checkpoint heading line, grouping and the inspector column |
+| `surface-bar.*` | Option A bars: checkpoint name and every command on one top line (each presses the real control underneath); a thin location bar at the bottom (piece › output › checkpoint, Read-only, save status). Titles past about 40 characters are trimmed in the middle; hover shows all |
+| `canvas-c3.*`, `source-c3.css` | Per-checkpoint heading line, grouping and the inspector column. Write, Read and Check start with the page; owner status rows are hidden in place (`data-c3-mirrored`) and mirrored as quiet notes beside the page, never moved |
 | `inspector.*` | Margin / Decisions / Readiness tabs in Write |
-| `research-tab.*` | Research across pieces (read-only; decisions open the piece's own Research) |
+| `research-tab.*` | Research across pieces as quote cards: speaker initial, the spoken words in serif, filled evidence chips, source (read-only; decisions open the piece's own Research) |
 | `waiting-band.*` | "Waiting on you" band on Home, from recorded output statuses |
-| `empty-states.*` | What every empty step shows: the shape of what comes, the real next step, how it fills |
+| `empty-states.*` | What every empty step shows: the shape of what comes (Arrange a filmstrip of 4:5 slide slots, Audience a phone frame), the real next step, how it fills |
 | `c3-defaults.css` | Default look for any plain new button, field, disclosure or heading |
 | `c3-theme.css` | Palette, Plus Jakarta Sans (local files), scrollbars, dark default. Loaded last. |
 
@@ -26,7 +26,10 @@ The look is a set of add-on modules loaded last in `public/document-study/index.
 3. **One primary action per surface.** Mark the real button with a stable `data-*` attribute; ask the look side to add it to the bar's primary map (`OWN` in `surface-bar.js`).
 4. **Design the empty state.** If the new surface can be empty, add an entry to `STEPS` in `empty-states.js` (or tell the look side): when it is empty, what it is for, the real next action, how it fills. Never a bare "nothing here".
 5. **Keep stable hooks.** The look finds things by `id`, `data-*` and the `.workflowStep` buttons. Renaming those, or the exact text that wrapper scripts replace, silently drops the look on that surface.
-6. **Check it by eye**, dark and light, desktop and 390px phone, filled and empty.
+6. **Pages run to the bottom.** Write, Read and Check use one paper colour and the sheet fills the desk; do not add a fixed height or a coloured strip under it.
+7. **Messages go beside the page, not above it.** A new status line on Write/Read goes in the owner's row as usual; the look mirrors it into the notes column. Do not put it above the manuscript title.
+8. **Phone (≤850px):** the notes column hides and the owner rows show again in place; Home is one column; bars scroll sideways instead of wrapping.
+9. **Check it by eye**, dark and light, desktop and 390px phone, filled and empty.
 
 ## Rules the look keeps
 
