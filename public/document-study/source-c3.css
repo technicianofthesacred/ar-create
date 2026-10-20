@@ -221,3 +221,15 @@ body.c3-tabs .workspace .material-surface .c3-tool-go:hover{opacity:.9}
 body.c3-tabs .workspace .material-surface .c3-tool-go:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 body.c3-tabs .workspace :is(details.c3-tool-row,[data-material-browser-host],.material-layout).c3-arrive{box-shadow:0 0 0 2px var(--warm);transition:box-shadow .3s}
 @media(prefers-reduced-motion:reduce){body.c3-tabs .workspace .c3-arrive{transition:none}}
+/* Fields inside a tool are interface fields: the same small UI type as the rest of the tool, not manuscript type. */
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select){font:400 14px/1.5 var(--ar-ui)!important;letter-spacing:0}
+body.c3-tabs .workspace .material-surface details.c3-tool-row textarea{min-height:88px;padding:10px 12px!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input)::placeholder{font:inherit;color:var(--dim)}
+/* The explanation opens inside the row it belongs to, full width under the name: one card, not a floating bubble. */
+body.c3-tabs .workspace .material-surface .c3-tool-pop{position:static!important;grid-column:1/-1;width:auto!important;max-width:none!important;margin:12px 0 0;padding:12px 0 0!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;background:none!important;box-shadow:none!important}
+body.c3-tabs .workspace .material-surface .c3-tool-pop strong{color:var(--c3-bad)}
+body.c3-tabs .workspace .material-surface summary:has(.c3-tool-flag[data-tone="warn"]) .c3-tool-pop strong{color:var(--c3-warn)}
+body.c3-tabs .workspace .material-surface .c3-pop-now{margin-top:2px;padding-top:0;border-top:0}
+body.c3-tabs .workspace .material-surface .c3-tool-go{align-self:flex-start;min-width:min(100%,260px)}
+body.c3-tabs .workspace .material-surface details.c3-tool-row:has(.c3-tool-pop:not([hidden])){border-color:var(--c3-line2,var(--line))!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row{align-self:flex-start}
