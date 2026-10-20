@@ -59,7 +59,7 @@
    const text=s.textContent.trim(),t=TOOLS.find(([k])=>text.startsWith(k));if(!t)continue;
    const f=FLAG.find(([re])=>re.test(d.textContent)),go=f&&GO[t[0]];const reason=f?why(d,f[0]).replace(new RegExp('^'+f[1]+'\\s*·?\\s*','i'),'').replace(/^./,c=>c.toUpperCase()):'';
    s.classList.add('c3-tool');d.classList.add('c3-tool-row');
-   s.innerHTML=`<span class="c3-tool-i"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" data-c3-flag role="button" tabindex="0" aria-label="${f[1]}: what this means"></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>${f?`<span class="c3-tool-pop" role="note" hidden><strong>${f[1]}</strong>${reason?`<span class="c3-pop-why">${esc(reason)}</span>`:''}${go?`<span class="c3-pop-now">What works now</span><span class="c3-tool-go" role="button" tabindex="0" data-c3-go="${esc(t[0])}">${esc(go[0])}<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`:''}</span>`:''}`;
+   s.innerHTML=`<span class="c3-tool-i"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" data-c3-flag role="button" tabindex="0" aria-label="${f[1]}: what this means"></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>${f?`<span class="c3-tool-pop" role="note" hidden><strong>${f[1]}</strong>${reason?`<span class="c3-pop-why">${esc(reason)}</span>`:''}${go?`<span class="c3-pop-now">What works now</span><span class="c3-tool-go" role="button" tabindex="0" data-c3-now="${esc(t[0])}">${esc(go[0])}<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`:''}</span>`:''}`;
   }
  }
  // A mark on a tool's icon explains itself without opening or closing the tool; its button does the one thing that works now.
@@ -73,8 +73,8 @@
  }
  function closePops(except){for(const p of document.querySelectorAll('.c3-tool-pop:not([hidden])'))if(p!==except)p.hidden=true;}
  function handle(event){
-  const go=event.target.closest?.('[data-c3-go]');
-  if(go){event.preventDefault();event.stopPropagation();closePops();act(go.dataset.c3Go);return true;}
+  const go=event.target.closest?.("[data-c3-now]");
+  if(go){event.preventDefault();event.stopPropagation();closePops();act(go.dataset.c3Now);return true;}
   const flag=event.target.closest?.('[data-c3-flag]');
   if(flag){event.preventDefault();event.stopPropagation();const pop=flag.closest('summary')?.querySelector('.c3-tool-pop');closePops(pop);if(pop){pop.hidden=!pop.hidden;flag.setAttribute('aria-expanded',String(!pop.hidden));}return true;}
   if(event.target.closest?.('.c3-tool-pop')){event.preventDefault();event.stopPropagation();return true;}
@@ -83,7 +83,7 @@
  document.addEventListener('click',event=>{if(!handle(event))closePops();},true);
  document.addEventListener('keydown',event=>{
   if(event.key==='Escape'){closePops();return;}
-  if((event.key==='Enter'||event.key===' ')&&event.target.closest?.('[data-c3-flag],[data-c3-go]'))handle(event);
+  if((event.key==='Enter'||event.key===' ')&&event.target.closest?.("[data-c3-flag],[data-c3-now]"))handle(event);
  },true);
  function decorate(){
   const n=stage();document.body.dataset.c3Stage=String(n);
