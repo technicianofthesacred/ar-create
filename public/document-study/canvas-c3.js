@@ -59,32 +59,20 @@
    const text=s.textContent.trim(),t=TOOLS.find(([k])=>text.startsWith(k));if(!t)continue;
    const f=FLAG.find(([re])=>re.test(d.textContent)),go=f&&GO[t[0]];const reason=f?why(d,f[0]).replace(new RegExp('^'+f[1]+'\\s*·?\\s*','i'),'').replace(/^./,c=>c.toUpperCase()):'';
    s.classList.add('c3-tool');d.classList.add('c3-tool-row');
-   s.innerHTML=`<span class="c3-tool-i"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" data-c3-flag role="button" tabindex="0" aria-label="${f[1]}: what this means"></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>${f?`<span class="c3-tool-pop" role="note" hidden><strong>${f[1]}</strong>${reason?`<span class="c3-pop-why">${esc(reason)}</span>`:''}${go?`<span class="c3-pop-now">What works now</span><span class="c3-tool-go" role="button" tabindex="0" data-c3-now="${esc(t[0])}">${esc(go[0])}<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`:''}</span>`:''}`;
+   s.innerHTML=`<span class="c3-tool-i"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" title="${f[1]}"></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>`;
+   if(f){d.querySelector(':scope>.c3-tool-banner')?.remove();const b=document.createElement('div');b.className='c3-tool-banner';b.dataset.tone=f[2];b.innerHTML=`<strong title="${esc(reason)}">${f[1]}</strong>${go?`<button type="button" class="c3-tool-go" data-c3-now="${esc(t[0])}">${esc(go[0])}<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>`:''}`;s.after(b);}
   }
  }
- // A mark on a tool's icon explains itself without opening or closing the tool; its button does the one thing that works now.
+ // A tool that is not connected says so at the top of its own opened panel, with the one step that works now. explains itself without opening or closing the tool; its button does the one thing that works now.
  const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
  function bring(el,focusEl){el.scrollIntoView({block:'center',behavior:reduce()?'auto':'smooth'});el.classList.remove('c3-arrive');void el.offsetWidth;el.classList.add('c3-arrive');setTimeout(()=>el.classList.remove('c3-arrive'),1400);(focusEl||el).focus?.({preventScroll:true});}
- function act(key){
+ function act(key,from){
   const g=GO[key];if(!g)return;const [,a]=g;const ws=document.querySelector('#app .workspace');if(!ws)return;
   if(a.press){const b=ws.querySelector(a.press);if(b&&!b.disabled)b.click();return;}
   if(a.show){const el=ws.querySelector(a.show);if(el)bring(el);return;}
-  if(a.open){const row=[...ws.querySelectorAll('details.c3-tool-row')].find(d=>(d.querySelector(':scope>summary .c3-tool-t')?.title||'').startsWith(a.open));if(!row)return;row.open=true;const f=a.focus?row.querySelector(a.focus):null;for(let d=f?.parentElement?.closest('details');d&&row.contains(d);d=d.parentElement?.closest('details'))d.open=true;requestAnimationFrame(()=>bring(row,f));}
+  if(a.open){const row=[...ws.querySelectorAll('details.c3-tool-row')].find(d=>(d.querySelector(':scope>summary .c3-tool-t')?.title||'').startsWith(a.open));if(!row)return;if(from&&from!==row)from.open=false;row.open=true;const f=a.focus?row.querySelector(a.focus):null;for(let d=f?.parentElement?.closest('details');d&&row.contains(d);d=d.parentElement?.closest('details'))d.open=true;requestAnimationFrame(()=>bring(row,f));}
  }
- function closePops(except){for(const p of document.querySelectorAll('.c3-tool-pop:not([hidden])'))if(p!==except)p.hidden=true;}
- function handle(event){
-  const go=event.target.closest?.("[data-c3-now]");
-  if(go){event.preventDefault();event.stopPropagation();closePops();act(go.dataset.c3Now);return true;}
-  const flag=event.target.closest?.('[data-c3-flag]');
-  if(flag){event.preventDefault();event.stopPropagation();const pop=flag.closest('summary')?.querySelector('.c3-tool-pop');closePops(pop);if(pop){pop.hidden=!pop.hidden;flag.setAttribute('aria-expanded',String(!pop.hidden));}return true;}
-  if(event.target.closest?.('.c3-tool-pop')){event.preventDefault();event.stopPropagation();return true;}
-  return false;
- }
- document.addEventListener('click',event=>{if(!handle(event))closePops();},true);
- document.addEventListener('keydown',event=>{
-  if(event.key==='Escape'){closePops();return;}
-  if((event.key==='Enter'||event.key===' ')&&event.target.closest?.("[data-c3-flag],[data-c3-now]"))handle(event);
- },true);
+ document.addEventListener('click',event=>{const go=event.target.closest?.('[data-c3-now]');if(go){event.preventDefault();act(go.dataset.c3Now,go.closest('details.c3-tool-row'));}});
  function decorate(){
   const n=stage();document.body.dataset.c3Stage=String(n);
   if(!LINES[n])return;

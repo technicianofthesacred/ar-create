@@ -249,3 +249,20 @@ body.c3-tabs .workspace .material-surface .c3-tool-go{align-self:flex-start;min-
 body.c3-tabs .workspace .material-surface .c3-tool-go:hover{opacity:1;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:650px){body.c3-tabs .workspace .material-surface .c3-tool-pop{padding:12px 12px 14px 60px!important}}
 body.c3-tabs .workspace .material-surface .c3-tool-go{min-height:32px!important;margin:-2px 0 -6px!important}
+/* Not connected: a quiet strip at the top of the opened tool, tinted by its mark, with the one step that works now. */
+body.c3-tabs .workspace .material-surface .c3-tool-flag{cursor:default}
+body.c3-tabs .workspace .material-surface .c3-tool-flag::after{content:none}
+body.c3-tabs .workspace .material-surface .c3-tool-banner{--tone:var(--c3-bad);display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--tone) 9%,transparent);font:12.5px/1.5 var(--ar-ui);color:var(--c3-ink2,var(--ink))}
+body.c3-tabs .workspace .material-surface .c3-tool-banner[data-tone="warn"]{--tone:var(--c3-warn)}
+body.c3-tabs .workspace .material-surface .c3-tool-banner p{margin:0}
+body.c3-tabs .workspace .material-surface .c3-tool-banner strong{display:inline-flex;align-items:center;gap:6px;margin-right:4px;font-weight:600;color:var(--tone)}
+body.c3-tabs .workspace .material-surface .c3-tool-banner strong::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+body.c3-tabs .workspace .material-surface .c3-tool-banner span{color:var(--dim)}
+body.c3-tabs .workspace .material-surface .c3-tool-banner .c3-tool-go{display:inline-flex;align-items:center;gap:6px;min-height:32px;margin:-4px 0 -6px;padding:0;border:0;background:none;color:var(--warm);font:500 13px/1.4 var(--ar-ui);cursor:pointer;border-radius:4px}
+body.c3-tabs .workspace .material-surface .c3-tool-banner .c3-tool-go:hover{text-decoration:underline;text-underline-offset:3px}
+body.c3-tabs .workspace .material-surface .c3-tool-banner .c3-tool-go:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+body.c3-tabs .workspace .material-surface .c3-tool-banner{flex-direction:row!important;flex-wrap:wrap;align-items:center!important;justify-content:space-between;gap:4px 14px!important;padding:8px 12px!important;min-height:40px}
+body.c3-tabs .workspace .material-surface .c3-tool-banner strong{font:600 12.5px/1.3 var(--ar-ui)!important}
+body.c3-tabs .workspace .material-surface .c3-tool-banner .c3-tool-go{border:0!important;background:none!important;padding:0!important;box-shadow:none!important;min-height:28px!important;margin:0!important;color:var(--warm)!important;font:500 13px/1.3 var(--ar-ui)!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(p,.small,small,label,.flow-field){font-family:var(--ar-ui)!important;font-size:13.5px!important;line-height:1.5!important}
+body.c3-tabs #app #workspace .material-surface details.c3-tool-row :is(p,.small,small,label,.flow-field){font-family:var(--ar-ui)!important;font-size:13.5px!important;line-height:1.5!important}
