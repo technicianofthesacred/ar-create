@@ -44,7 +44,7 @@
 body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace>.c3-empty{order:4;padding:0 40px}
 body.c3-tabs #app .phaseReader>.c3-empty{padding:0 40px}
 body.c3-tabs #app .material-surface>.c3-empty{flex:1 1 100%}
-@media(max-width:650px){.c3-empty .ce-card-wrap{position:static;transform:none;width:auto;margin-top:-260px}.c3-empty{min-height:0}}
+@media(max-width:650px){.c3-empty .ce-shape{display:none}.c3-empty .ce-card-wrap{position:static;transform:none;width:auto;margin:0}.c3-empty{min-height:0}}
 
 /* Home and the inspector. */
 #project-library .ht-c3-empty{grid-column:1/-1;min-height:380px}
