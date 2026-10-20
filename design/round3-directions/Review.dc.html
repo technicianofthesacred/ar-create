@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AR Create — first-time review</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pg{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--lift:#191813;--line2:#423e34;--good:#8fb08a;--warn:#d9a95a;--bad:#e08a74;
+ background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+.pg *{box-sizing:border-box}
+.in{max-width:1120px;margin:0 auto;padding:48px 24px 96px}
+h1{font-size:32px;line-height:1.15;margin:0 0 10px}
+h2{font-size:21px;margin:52px 0 6px}
+h3{font-size:15px;margin:22px 0 8px}
+p{margin:0 0 12px}
+.dim{color:var(--dim)}
+.small{font-size:12.5px;color:var(--dim)}
+.lead{font-size:16px;max-width:800px}
+.box{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--lift)}
+.pick{border-color:var(--warm)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) minmax(0,1.1fr);gap:12px;padding:9px 0;border-bottom:1px solid var(--line);align-items:start}
+.tr.h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.old{color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(224,138,116,.6)}
+.new{color:var(--ink);font-weight:500}
+.ar{color:var(--warm)}
+.gl{display:grid;grid-template-columns:140px minmax(0,1.4fr) minmax(0,1fr);gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.gl.h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.st{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr);gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:4px;border:1px solid var(--warm);color:var(--warm);margin-left:6px}
+ol,ul{margin:6px 0 12px;padding-left:20px}
+li{margin:4px 0}
+.frame{border:1px dashed var(--warm);border-radius:12px;padding:14px 16px;font-size:15px;max-width:820px}
+@media (max-width:900px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}.tr,.gl,.st{grid-template-columns:minmax(0,1fr)}.tr .ar{display:none}.tr.h,.gl.h{display:none}.in{padding:32px 16px 72px}}
+</style>
+</helmet>
+<div class="pg"><div class="in">
+ <p class="small">AR Create · Chosen prototype · read cold by someone who had never seen it · 20 October</p>
+ <h1>Where a first-time user gets lost, and the fixes</h1>
+ <p class="lead">Two fresh reviewers read every word of the Chosen prototype: one for wording, one for how the parts connect and whether everything can be reached. Below: the three choices that are yours, then what I will change. Nothing is changed yet.</p>
+
+ <h2>Why you didn't know where to start</h2>
+ <ul class="lead">
+  <li>Nothing says what AR Create is for.</li>
+  <li>The biggest card says “Continue”, but a newcomer has nothing to continue.</li>
+  <li>The sidebar talks first, in words the page never explains: Pinned, Topics, Things I’m making.</li>
+  <li>The same thing has up to four names: topic, collection, inquiry and concept all appear.</li>
+  <li>Inside a piece, most of the twelve steps are hidden behind “More”, and Read and Check look identical to Write.</li>
+ </ul>
+ <h3>Proposed first line on Home, shown until you dismiss it</h3>
+ <div class="frame">AR Create turns your recordings, notes, photos and reading into articles, carousels and posts. Start with one thought. You can add the rest later.</div>
+
+ <h2>Three choices for you <span class="tag">needs you</span></h2>
+ <p class="small">My pick is outlined in gold. Say “your picks” to accept all three, or name a different one.</p>
+
+ <h3>1 · One word for each idea</h3>
+ <div class="gl h"><span>Word</span><span>What it means, in one line</span><span>Replaces</span></div>
+ <div class="gl"><b>Library</b><span>Everything you have saved: recordings, reading, photos, notes. Kept once.</span><span class="dim">kept items, linked items</span></div>
+ <div class="gl"><b>Topic</b><span>A subject you keep exploring. It gathers saved items and what you have learned. It needs no project.</span><span class="dim">collection, inquiry, topic research</span></div>
+ <div class="gl"><b>Project</b><span>One undertaking with a goal, like a visit or a launch. It holds topics and the things you make.</span><span class="dim">concept, studio project</span></div>
+ <div class="gl"><b>Piece</b><span>One thing you are making: an article, carousel, post, shop listing or video script. Each has its own words and finish.</span><span class="dim">output, thing I’m making, sibling, deliverable</span></div>
+ <div class="gl"><b>Decisions</b><span>The choices that shape your writing: the main idea, the tone, the exact quotes, and which pieces they apply to.</span><span class="dim">direction, angle, scope, applies to</span></div>
+ <div class="gl"><b>Version</b><span>A saved state you can look back at or go back to.</span><span class="dim">revision, edition, approved edition, working file</span></div>
+ <div class="gl"><b>Needs you</b><span>Something waiting for your choice or a fix.</span><span class="dim">waiting on you, flagged, finding, stale</span></div>
+ <div class="gl"><b>Where it’s used</b><span>Every place a quote, photo or saved item appears.</span><span class="dim">where used, feeds, known effects</span></div>
+ <div class="gl"><b>Claude</b><span>The assistant that prepares and suggests. You decide what to keep.</span><span class="dim">agent, “(reported)”</span></div>
+ <div class="gl"><b>Not available yet</b><span>Something this version cannot do yet, with what to do instead.</span><span class="dim">not connected, bounded, prepared, proposed</span></div>
+ <div class="grid3" style="margin-top:14px">
+  <div class="box pick"><b>For the thing you make: “Piece”</b><p class="small" style="margin:6px 0 0">Short, already in your docs, and it stops being confusing once Home defines it in one line. Lists name the kind anyway: Article, Carousel.</p></div>
+  <div class="box"><b>Or: “Work”</b><p class="small" style="margin:6px 0 0">The reviewer’s pick. Reads naturally in “Work in Water first”, but “work” is also a verb, so buttons get ambiguous.</p></div>
+  <div class="box"><b>Or: no umbrella word</b><p class="small" style="margin:6px 0 0">Always say Article, Carousel, Post. Cleanest on screen, but lists of mixed kinds need a heading.</p></div>
+ </div>
+
+ <h3>2 · The names of the twelve steps</h3>
+ <p class="small">You approved these names on 16 October. Five of them confused the reviewer. My pick: keep the agreed names and give each step a one-line description under it, so nothing you already know changes.</p>
+ <div class="st" style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim)"><span>Step</span><span>Plain alternative</span><span>One-line description I would add</span></div>
+ <div class="st"><b>Material</b><span class="dim">keep</span><span>Everything you brought in for this project.</span></div>
+ <div class="st"><b>Source</b><span>Recordings</span><span>Read and correct what was said.</span></div>
+ <div class="st"><b>Research</b><span class="dim">keep</span><span>What you have learned and how sure it is.</span></div>
+ <div class="st"><b>Direction</b><span>Decisions</span><span>What you want to say, and where it applies.</span></div>
+ <div class="st"><b>Write</b><span class="dim">keep</span><span>Write and edit.</span></div>
+ <div class="st"><b>Read</b><span class="dim">keep</span><span>Read it through as a reader would, and polish.</span></div>
+ <div class="st"><b>Check</b><span class="dim">keep</span><span>Quotes and facts checked against the recording.</span></div>
+ <div class="st"><b>Media</b><span>Photos</span><span>Your photos and video, and where each is used.</span></div>
+ <div class="st"><b>Arrange</b><span>Layout</span><span>Put words and photos in order.</span></div>
+ <div class="st"><b>Audience</b><span>Preview</span><span>See it exactly as people will.</span></div>
+ <div class="st"><b>Share</b><span>People</span><span>Thank the people in it and ask if it feels right.</span></div>
+ <div class="st"><b>Outputs</b><span>Finished</span><span>Everything you made from this project, and where it went.</span></div>
+ <div class="grid2" style="margin-top:14px">
+  <div class="box pick"><b>Keep the names, add the one-liners</b><p class="small" style="margin:6px 0 0">Nothing you already learned changes; newcomers get the meaning right where they look.</p></div>
+  <div class="box"><b>Switch to the plain alternatives</b><p class="small" style="margin:6px 0 0">Easier on day one. The docs, the current app and your habits all use the old names, so this is a bigger change.</p></div>
+ </div>
+
+ <h3>3 · How the steps show inside a piece</h3>
+ <div class="grid2">
+  <div class="box pick"><b>Always show this piece’s own steps</b><p class="small" style="margin:6px 0 0">One slim row under the title. An article shows Write, Read, Check, Photos, Share. A carousel shows Arrange, Photos, Audience, Share. The rest of the twelve stay one click away. The “uses” list stays under More.</p></div>
+  <div class="box"><b>Keep all steps behind More</b><p class="small" style="margin:6px 0 0">Calmest screen, but the reviewer found that 7 of 12 steps can only be reached through More, which is why moving around felt hidden.</p></div>
+ </div>
+
+ <h2>What I will fix, whatever you choose</h2>
+ <div class="grid2">
+  <div class="box"><h3 style="margin-top:0">How things connect</h3><ol class="small">
+   <li>Home starts with the one-line purpose and “Start something new”. “Pick up where you stopped” shows only when there is something to pick up.</li>
+   <li>Read and Check get their own screens: Read is a clean page with no side notes; Check is the list of things to fix, each one jumping to its sentence.</li>
+   <li>Opening Photos from the article stays with the article; it no longer jumps to the carousel.</li>
+   <li>The topic page and its research page become one page: what we know, the evidence, open questions, and what uses it.</li>
+   <li>Every link works both ways: a piece shows its topic, a quote shows its recording, a slide shows its photo, a decision shows the pieces it applies to.</li>
+   <li>“Library” means one thing: the page. The quick search panel becomes “Find”.</li>
+   <li>Every button says where it goes. “Choose”, “Look”, “Open”, “Carry into Direction” and “Rerun checks” get plain labels, and each “Open” opens the thing it sits next to.</li>
+   <li>Buttons that do nothing in this demo are shown as greyed out with “Not available yet”, instead of looking clickable.</li>
+  </ol></div>
+  <div class="box"><h3 style="margin-top:0">Usable by everyone</h3><ol class="small">
+   <li>Arrows and “+” in the sidebar stay faint but always visible, so they work on touch screens and with a keyboard.</li>
+   <li>Folders open from the keyboard; the slide order can be changed with keys as well as by dragging.</li>
+   <li>The marked sentence and the slides become real buttons that the keyboard and screen readers reach.</li>
+   <li>Every coloured dot also has words: “needs you”, “finished”.</li>
+   <li>All controls at least 36 pixels tall, 44 on phones; the smallest 10px text goes up to 12px.</li>
+   <li>Control outlines get stronger so buttons are visible against the dark page; dimmed map cards stay readable.</li>
+   <li>On a phone the sidebar starts closed behind a Menu button, and side notes appear under the paragraph they belong to.</li>
+   <li>Text contrast already passes everywhere: 6.4 to 1 in dark, 5.8 to 1 in light.</li>
+  </ol></div>
+ </div>
+
+ <h2>Wording, screen by screen</h2>
+ <p class="small">The most important rewrites. About 200 more small ones follow the same rules and will be applied together.</p>
+ <div class="tr h"><span>Now</span><span></span><span>Becomes</span><span>Why</span></div>
+ <div class="tr"><span class="old">Studio home</span><span class="ar">→</span><span class="new">Home</span><span class="small">Two names for one place.</span></div>
+ <div class="tr"><span class="old">Continue where you left off</span><span class="ar">→</span><span class="new">Pick up where you stopped</span><span class="small">Shown only when there is something to pick up.</span></div>
+ <div class="tr"><span class="old">Your transcript correction says “hard”.</span><span class="ar">→</span><span class="new">You changed “soft” to “hard” in the recording.</span><span class="small">Says what happened instead of assuming you remember.</span></div>
+ <div class="tr"><span class="old">Make something from what I have</span><span class="ar">→</span><span class="new">Make something</span><span class="small">Shorter; the line below explains.</span></div>
+ <div class="tr"><span class="old">Look something up · Search everything you kept</span><span class="ar">→</span><span class="new">Search your Library · Find anything you saved</span><span class="small">“Kept” is unclear.</span></div>
+ <div class="tr"><span class="old">Also waiting on you · [Choose] · [Look]</span><span class="ar">→</span><span class="new">Needs you · [Decide] · [Review them]</span><span class="small">Buttons say what they do.</span></div>
+ <div class="tr"><span class="old">2 new sources were added to the topic</span><span class="ar">→</span><span class="new">Claude added 2 reading items to “Why water changes tea”</span><span class="small">Says who did it.</span></div>
+ <div class="tr"><span class="old">Pinned · Projects · Topics without a project</span><span class="ar">→</span><span class="new">Pinned · Recent projects · Topics on their own</span><span class="small">Plainer group names.</span></div>
+ <div class="tr"><span class="old">Things I’m making</span><span class="ar">→</span><span class="new">Pieces</span><span class="small">One word, defined on Home.</span></div>
+ <div class="tr"><span class="old">More / Less</span><span class="ar">→</span><span class="new">Uses and settings</span><span class="small">Says what opens.</span></div>
+ <div class="tr"><span class="old">This piece uses: Direction · 4 apply · Sibling · the carousel</span><span class="ar">→</span><span class="new">This article draws on: 4 decisions · Made alongside: the carousel</span><span class="small">“Sibling” and “4 apply” are internal words.</span></div>
+ <div class="tr"><span class="old">Article · rev 8 · Carousel · edition 15 Oct</span><span class="ar">→</span><span class="new">Article · version 8 · Carousel · final, 15 Oct</span><span class="small">One word for versions.</span></div>
+ <div class="tr"><span class="old">Saved to working file 09:41</span><span class="ar">→</span><span class="new">Saved 09:41</span><span class="small">“Working file” means nothing to a newcomer.</span></div>
+ <div class="tr"><span class="old">Unsaved · saving ahead…</span><span class="ar">→</span><span class="new">Saving…</span><span class="small">Odd phrase.</span></div>
+ <div class="tr"><span class="old">Couldn’t save to the project file. Your words are kept in this browser.</span><span class="ar">→</span><span class="new">Couldn’t save. Your words are safe on this device. [Try again]</span><span class="small">One storage idea, not two.</span></div>
+ <div class="tr"><span class="old">Current understanding</span><span class="ar">→</span><span class="new">What we know so far</span><span class="small">Plain.</span></div>
+ <div class="tr"><span class="old">Supported · Qualified · Competing accounts</span><span class="ar">→</span><span class="new">Backed up · Backed up, with limits · Different views</span><span class="small">Research words a reader would use.</span></div>
+ <div class="tr"><span class="old">Point 1 predates your correction. Not rewritten; waiting for your review.</span><span class="ar">→</span><span class="new">This was written before you changed “soft” to “hard”. Check it still holds.</span><span class="small">Says what to do.</span></div>
+ <div class="tr"><span class="old">Linked as background, not adopted.</span><span class="ar">→</span><span class="new">Added for reference. It won’t change your writing unless you choose.</span><span class="small">The idea, without the jargon.</span></div>
+ <div class="tr"><span class="old">Carry into Direction</span><span class="ar">→</span><span class="new">Use this in my decisions</span><span class="small">Says the result.</span></div>
+ <div class="tr"><span class="old">Choose: how to handle “hard water”… Pick the scope.</span><span class="ar">→</span><span class="new">Where should “hard water” change? [Article and slide 4] [Article only] [Not now]</span><span class="small">A question with its answers.</span></div>
+ <div class="tr"><span class="old">12:40 · “soft” may be misheard</span><span class="ar">→</span><span class="new">At 12:40 the recording may say “hard”, not “soft”</span><span class="small">Full sentence.</span></div>
+ <div class="tr"><span class="old">Known effects: Article paragraph 3 · Carousel slide 4…</span><span class="ar">→</span><span class="new">This also appears in: article paragraph 3, slide 4, research point 1</span><span class="small">Plain.</span></div>
+ <div class="tr"><span class="old">Corrected by you · original kept. Flagged for review, nothing rewritten.</span><span class="ar">→</span><span class="new">Changed by you. The original is kept. Places that use it are marked; nothing was changed there.</span><span class="small">Says exactly what happened.</span></div>
+ <div class="tr"><span class="old">Margin · Decisions · Readiness · History</span><span class="ar">→</span><span class="new">Notes · Decisions · Ready? · History</span><span class="small">“Margin” is a place, not a thing.</span></div>
+ <div class="tr"><span class="old">Discuss wording · Rerun checks</span><span class="ar">→</span><span class="new">Ask about this wording · Check again</span><span class="small">Plain verbs.</span></div>
+ <div class="tr"><span class="old">Alongside the words · Live AI not connected</span><span class="ar">→</span><span class="new">Ask Claude about a sentence · Not available in the app yet; use Claude directly</span><span class="small">Says what to do instead.</span></div>
+ <div class="tr"><span class="old">Before 12 Oct: 2 versions can’t be rebuilt from receipts</span><span class="ar">→</span><span class="new">2 earlier versions from before 12 Oct can’t be shown</span><span class="small">“Receipts” is internal.</span></div>
+ <div class="tr"><span class="old">Approved edition · 15 Oct · Exported 8 PNG + caption + record. Not published.</span><span class="ar">→</span><span class="new">Final version · 15 Oct · Downloaded: 8 images and the caption. Not posted yet.</span><span class="small">What a person would say.</span></div>
+ <div class="tr"><span class="old">Prepared, not sent · Sending not connected</span><span class="ar">→</span><span class="new">Ready to send. Copy it and send it yourself.</span><span class="small">The next action, not the limitation.</span></div>
+ <div class="tr"><span class="old">Waiting · no reply is not a yes</span><span class="ar">→</span><span class="new">No reply yet</span><span class="small">Shorter.</span></div>
+ <div class="tr"><span class="old">Link to Water first · Linked to Water first ✓</span><span class="ar">→</span><span class="new">Add to Water first · Added to Water first</span><span class="small">“Link” sounds technical.</span></div>
+ <div class="tr"><span class="old">Only known links are listed. Places not yet checked are not shown as unaffected.</span><span class="ar">→</span><span class="new">These are the places we know about. It may be used somewhere else too.</span><span class="small">No double negative.</span></div>
+ <div class="tr"><span class="old">You came from … · write. Unsaved words there are kept.</span><span class="ar">→</span><span class="new">You came from the article. Nothing you typed is lost. [Back to the article]</span><span class="small">Reassures without sounding contradictory.</span></div>
+ <div class="tr"><span class="old">Prepared · Proposed · Bounded · Not connected (tags)</span><span class="ar">→</span><span class="new">Not available yet, plus what to do instead</span><span class="small">Build-status words don’t belong on screen.</span></div>
+ <div class="tr"><span class="old">Stale · Processing</span><span class="ar">→</span><span class="new">Out of date · Working on it</span><span class="small">Plain states.</span></div>
+
+ <h2>Next</h2>
+ <p class="lead">Answer the three choices (or say “your picks”). I then rebuild the Chosen prototype with all of the above in one pass, check every screen on wide and phone widths, and show you the before and after.</p>
+</div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
