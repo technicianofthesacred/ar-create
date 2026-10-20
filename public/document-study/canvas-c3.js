@@ -38,7 +38,7 @@
    const skip=new Set(acts.map(a=>(a.textContent||'').trim()));
    const text=n.matches('details')?'':([...n.childNodes].filter(c=>!(c.nodeType===1&&c.matches('details,button'))).map(c=>c.textContent).join('\n')||'').split('\n').map(t=>t.trim()).filter(t=>t&&!skip.has(t)&&!acts.some(a=>a.contains(n))).slice(0,3).join(' · ');
    const btns=acts.map(a=>{const i=mirrored.push(a)-1;return `<button type="button" class="c3-mirror-btn${a.getAttribute('aria-pressed')==='true'||a.closest('details')?.open&&a.matches('summary')?' on':''}" data-c3-mirror="${i}" ${a.disabled?'disabled':''}>${(a.textContent||'').trim().replace(/</g,'&lt;')}</button>`;}).join('');
-   rows.push(`<div class="c3-mirror-row">${text?`<span>${text.replace(/</g,'&lt;')}</span>`:''}${btns}</div>`);}
+   rows.push(`<div class="c3-mirror-row c3-mr-${n.classList[0]||'x'}">${text?`<span>${text.replace(/</g,'&lt;')}</span>`:''}${btns}</div>`);}
   let m=box.querySelector(':scope>.c3-mirror');if(!m){m=document.createElement('div');m.className='c3-mirror';box.append(m);}
   const html=rows.join('');if(m.dataset.render!==html){m.innerHTML=html;m.dataset.render=html;}
  }
