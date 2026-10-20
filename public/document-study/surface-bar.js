@@ -57,6 +57,10 @@
  // A piece whose words are still only in this browser says so in the bottom bar, with the real working-copy control.
  const localOnly=()=>document.querySelector('#app .workspace>.draft-bar .draft-copy-row [data-draft-action^="open:"]:not(:disabled)');
  document.addEventListener('click',event=>{if(event.target.closest?.('[data-cb-local]'))localOnly()?.click();});
+ // Reader's own text size for the manuscript on Write, Read and Check (A- / A+), remembered on this device only.
+ const SIZES=[.875,1,1.125,1.25,1.375];let size=1;try{const v=Number(localStorage.getItem('c3-doc-scale'));if(SIZES.includes(v))size=v}catch{}
+ const applySize=()=>document.body?.style.setProperty('--c3-doc-scale',String(size));applySize();
+ document.addEventListener('click',event=>{const b=event.target.closest?.('[data-cb-size]');if(!b)return;const i=SIZES.indexOf(size)+Number(b.dataset.cbSize);if(i<0||i>=SIZES.length)return;size=SIZES[i];try{localStorage.setItem('c3-doc-scale',String(size))}catch{}applySize();const o=document.querySelector('#c3-crumb .cb-size output');if(o)o.textContent=Math.round(size*100)+'%';const bar=document.getElementById('c3-crumb');if(bar)delete bar.dataset.render;window.surfaceBar?.build?.();});
  function crumb(slots,id,status){
   const local=localOnly();if(local)status='';
   let bar=document.getElementById('c3-crumb');
@@ -71,7 +75,8 @@
   else if(id.title)parts.push(`<span class="cb-seg cb-on" title="${esc(id.title+(id.meta?' · '+id.meta:''))}">${esc(mid(id.title))}</span>`);
   if(cp)parts.push(seg(cp.name));
   const note=noteText();
-  const html=`<div class="cb-path">${parts.join(sep)}</div><div class="cb-right">${note?`<span class="cb-note">${esc(note)}</span>`:''}${local?`<span class="cb-status" data-tone="warn" role="status" title="These words are kept only in this browser until the piece has its project file.">Only in this browser</span><button type="button" class="cb-act" data-cb-local>Save to the project</button>`:''}${status?`<span class="cb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(status)}</span>`:''}</div>`;
+  const sizing=cp&&[5,6,7].includes(cp.n)?`<span class="cb-size" role="group" aria-label="Text size"><button type="button" data-cb-size="-1" aria-label="Smaller text" ${size<=SIZES[0]?'disabled':''}>A−</button><output aria-live="polite">${Math.round(size*100)}%</output><button type="button" data-cb-size="1" aria-label="Larger text" ${size>=SIZES.at(-1)?'disabled':''}>A+</button></span>`:'';
+  const html=`<div class="cb-path">${parts.join(sep)}</div><div class="cb-right">${sizing}${note?`<span class="cb-note">${esc(note)}</span>`:''}${local?`<span class="cb-status" data-tone="warn" role="status" title="These words are kept only in this browser until the piece has its project file.">Only in this browser</span><button type="button" class="cb-act" data-cb-local>Save to the project</button>`:''}${status?`<span class="cb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(status)}</span>`:''}</div>`;
   if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
  }
  function statusText(){const s=document.querySelector('.workspace>.workbar .saved')||document.querySelector('.workspace>.topbar .status');return s?label(s):'';}

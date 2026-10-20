@@ -1,5 +1,6 @@
 /* C3 theme: the board's palette, interface font, sizes and scrollbars applied to the app's own tokens. Loaded last.
-   Manuscript typography (Atlas Lora / Cormorant) and the approved portrait templates keep their own fonts and colours. */
+   On screen, Write / Read / Check show the manuscript in Notion-style system sans (see the block near the end); slide
+   templates, portrait previews and exports keep their own fonts and colours. */
 @font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-400-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-400-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -534,3 +535,23 @@ body.c3-tabs[data-c3-stage="7"] #app #workspace .phaseReader>details.flow-retain
  body.c3-tabs #app #workspace .phaseReader.c3-read>.document.prose-document{min-height:100%!important}
 }
 @media(min-width:851px){body.c3-tabs #app #workspace>.wn-check-layout.c3-check{min-height:calc(100dvh - var(--ht-strip,44px) - 53px - var(--cb-h,28px))!important}}
+/* Manuscript on screen, Notion style (Adrian's choice, 2026-10-20): the system sans at 16px / 1.5, a 40px bold page title,
+   24px section headings, Notion's ~700px text width. On-screen Write, Read and Check only: slide templates, portrait
+   previews and exports keep their own type. --c3-doc-scale is the reader's own text size (A- / A+ in the bottom bar). */
+body.c3-tabs{--c3-doc-font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",Helvetica,Arial,sans-serif;--c3-doc-scale:1}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-family:var(--c3-doc-font)!important;font-size:calc(16px * var(--c3-doc-scale))!important;line-height:1.5!important;letter-spacing:0!important;margin:0 0 calc(10px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h1,h2,h3,h4){font-family:var(--c3-doc-font)!important;letter-spacing:-.01em!important;color:var(--ink)!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(40px * var(--c3-doc-scale))!important;font-weight:700!important;line-height:1.2!important;margin:0 0 calc(14px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(24px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(28px * var(--c3-doc-scale)) 0 calc(6px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(20px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(22px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))!important}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace :is(.desk.c3-insp-desk>.document.prose-document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-layout .wn-check-manuscript>:is(.document,.recordPage)){padding:72px max(64px,calc((100% - 708px * var(--c3-doc-scale)) / 2)) 120px!important}
+}
+/* A- / A+ : the reader's own text size, remembered on this device. */
+#c3-crumb .cb-size{display:inline-flex;align-items:center;gap:2px;margin-right:4px}
+#c3-crumb .cb-size button{min-width:24px;height:22px;padding:0 6px;border:0;border-radius:5px;background:none;color:var(--dim);font:600 12px/1 var(--ar-ui);cursor:pointer}
+#c3-crumb .cb-size button:hover:not(:disabled){background:var(--c3-sel,var(--line));color:var(--ink)}
+#c3-crumb .cb-size button:disabled{opacity:.35;cursor:default}
+#c3-crumb .cb-size output{min-width:38px;text-align:center;font:500 11.5px/1 var(--ar-ui);color:var(--dim)}
+#c3-crumb .cb-size button:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(.manuscript,.recordBody){margin-left:0!important;margin-right:0!important;max-width:none!important}

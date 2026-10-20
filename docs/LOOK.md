@@ -17,7 +17,7 @@ The look is a set of add-on modules loaded last in `public/document-study/index.
 | `waiting-band.*` | "Waiting on you" band on Home, from recorded output statuses |
 | `empty-states.*` | What every empty step shows: the shape of what comes (Arrange a filmstrip of 4:5 slide slots, Audience a phone frame), the real next step, how it fills |
 | `c3-defaults.css` | Default look for any plain new button, field, disclosure or heading |
-| `c3-theme.css` | Palette, Plus Jakarta Sans (local files), scrollbars, dark default. Loaded last. |
+| `c3-theme.css` | Palette, Plus Jakarta Sans for the interface (local files), scrollbars, dark default. Loaded last. On screen, the manuscript in Write / Read / Check uses Notion-style system sans (16px / 1.5, 40px title, 24px sections, about 700px wide) on full-width paper; the reader's own size (A− / A+ in the bottom bar, 87.5–137.5%) is kept on this device. Templates and exports keep their own type. |
 
 ## Adding a function so it looks right
 
@@ -31,7 +31,8 @@ The look is a set of add-on modules loaded last in `public/document-study/index.
 8. **Phone (≤850px):** the notes column hides and the owner rows show again in place; Home is one column; bars scroll sideways instead of wrapping.
 9. **Tools in Material and Source are rows** (`canvas-c3.js` `TOOLS`): icon, name, one-line purpose, chevron, two lines max. A new disclosure tool there gets an entry in `TOOLS`, and in `GO` if it has a "what works now" step.
 10. **Not connected says so where you hit it.** A tool whose own text says "not connected", "not saved" or "preparation only" gets a red or amber dot on its icon, and a one-line strip at the top of its opened panel with the one real step that works now. Never a floating pop-up.
-11. **Check it by eye**, dark and light, desktop and 390px phone, filled and empty.
+11. **Status lives in the bottom bar.** Save state, "Only in this browser · Save to the project" and text size sit there; panels don't repeat them.
+12. **Check it by eye**, dark and light, desktop and 390px phone, filled and empty.
 
 ## Rules the look keeps
 

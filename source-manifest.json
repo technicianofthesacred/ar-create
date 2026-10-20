@@ -2409,7 +2409,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "188c5487390eb1f8bac27658afd3cb4a56a717676075a52dee7be19fafdd93e5"
+      "candidateSha256": "3406394c4fd4b80a940b4125c698017bcbd7cd535c14a695047456c7e8ed2cb2"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -2497,7 +2497,7 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "d9e6e6290699aee60640658bd8f8b6bdc6d7fefc9633f55caec5cdf70f68f2ba"
+      "candidateSha256": "b7e57b60e2a055ccee4a1a3c9544c24b2619a89f5142305db3a3c430566fe03f"
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
@@ -2545,7 +2545,7 @@
     },
     {
       "path": "docs/LOOK.md",
-      "candidateSha256": "f0db9a8cad7ebe33bf5cf5a6bbb170ae5376e6f8d59103ca18978cd2ebaa2c53"
+      "candidateSha256": "15e9b416823cd4c137814ab41a7fc7e48f512593d0f3df623616d2ff12fff6ec"
     }
   ],
   "dependencyRepair": {
