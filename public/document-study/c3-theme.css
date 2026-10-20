@@ -288,3 +288,12 @@ body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[da
 /* The top bar names the checkpoint, so the page heading line keeps only its one-line description. */
 body.c3-crumb-on .c3-ctitle :is(.c3t-n,.c3t-name){display:none}
 body.c3-crumb-on .c3-ctitle .c3t-line{font:var(--c3-t1)/1.45 var(--ar-ui);color:var(--dim)}
+/* The page runs to the bottom of the window: the desk shows only at the top and sides. */
+@media(min-width:851px){
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>:is(.document,.recordPage),
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript>.document{min-height:calc(100dvh - var(--ht-strip,44px) - 52px - var(--cb-h,0px) - 28px)!important;margin-bottom:0!important;border-radius:6px 6px 0 0!important;padding-bottom:120px!important}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read,body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript{padding-bottom:0!important}
+}
+/* An opened earlier-draft record shows inside the page column, under the page. */
+body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-retained){max-width:760px;margin:16px auto 40px!important}
