@@ -1,0 +1,578 @@
+/* C3 theme: the board's palette, interface font, sizes and scrollbars applied to the app's own tokens. Loaded last.
+   On screen, Write / Read / Check show the manuscript in Notion-style system sans (see the block near the end); slide
+   templates, portrait previews and exports keep their own fonts and colours. */
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-400-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-400-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-500-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:600 700;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:600 700;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-600-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+/* ---------- palette (the board's .t-light / .t-dark) mapped onto the app's tokens ---------- */
+:root,:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--green:#3f6146;
+ --c3-ink2:#51564b;--c3-line2:#cfcdc3;--c3-lift:#f7f5ef;--c3-sel:#e9e4d7;--c3-good:#3f6146;--c3-warn:#94600f;--c3-bad:#a23b2a;--c3-pend:#f4e6c6;--c3-okbg:#e2ead9;--c3-sbt:rgba(122,90,48,.42);--c3-sbh:rgba(122,90,48,.7);--c3-shadow:0 18px 50px rgba(40,35,25,.18);
+ --ar-ui:'AR Plus Jakarta Sans','Plus Jakarta Sans',system-ui,-apple-system,sans-serif;--ar-ui-muted:#686c61;--ar-ui-focus:#7a5a30;--draft-active:#e9e4d7;--mrb-accent:#7a5a30;--rpb-accent:#7a5a30;--c3-t1:13px;--c3-t2:15px;--c3-r:8px}
+:root[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--green:#8fb08a;
+ --c3-ink2:#c3bdad;--c3-line2:#423e34;--c3-lift:#191813;--c3-sel:#2c2a22;--c3-good:#8fb08a;--c3-warn:#d9a95a;--c3-bad:#e08a74;--c3-pend:#423a23;--c3-okbg:#2b3326;--c3-sbt:rgba(191,169,140,.4);--c3-sbh:rgba(211,192,166,.7);--c3-shadow:0 18px 50px rgba(0,0,0,.55);
+ --ar-ui-muted:#a39e8e;--ar-ui-focus:#c9a874;--draft-active:#2c2a22;--mrb-accent:#c9a874;--rpb-accent:#c9a874}
+
+/* ---------- type and scrollbars ---------- */
+body{font-family:var(--ar-ui);-webkit-font-smoothing:antialiased;scrollbar-color:var(--c3-sbt) transparent}
+body :is(button,input,select,textarea,summary){font-family:inherit}
+*{scrollbar-width:thin;scrollbar-color:var(--c3-sbt) transparent}
+*:hover{scrollbar-color:var(--c3-sbh) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background-color:var(--c3-sbt);border-radius:10px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background-color:var(--c3-sbh)}
+:root[data-theme] :focus-visible{outline-color:var(--warm)}
+
+/* ---------- the app's older hard-coded dark greens, moved to the board's neutral selection ---------- */
+:root[data-theme="dark"] button.on{background:var(--c3-sel);border-color:var(--c3-line2);color:var(--ink)}
+:root[data-theme="dark"] button:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+:root[data-theme="dark"] .topbar,:root[data-theme="dark"] .workbar{background:var(--paper)}
+:root[data-theme="dark"] .discussion{background:var(--c3-lift);border-left-color:var(--c3-line2)}
+:root[data-theme="dark"] .discussion .head strong,:root[data-theme="dark"] .discussion .reply{color:var(--ink)}
+:root[data-theme="dark"] .discussion :is(.target,.why,label,.tag,details,.thread){color:var(--dim);border-color:var(--c3-line2)}
+:root[data-theme="dark"] .discussion textarea,:root[data-theme="dark"] .popover :is(textarea,input,select),:root[data-theme="dark"] .catalogDrawer :is(input,select){background:var(--bg);border-color:var(--c3-line2);color:var(--ink)}
+:root[data-theme="dark"] :is(.popover,.catalogDrawer){background:var(--paper);border-color:var(--c3-line2);box-shadow:var(--c3-shadow)}
+:root[data-theme="dark"] .popover p{color:var(--c3-ink2)}
+:root[data-theme="dark"] .popover .context{background:var(--c3-sel);border-color:var(--c3-line2);color:var(--ink)}
+:root[data-theme="dark"] .hovertools{background:color-mix(in srgb,var(--paper) 92%,transparent)}
+:root[data-theme="dark"] :is(.hovertools button:hover,.hovertools .sectionOn){background:var(--c3-sel);color:var(--ink)}
+:root[data-theme="dark"] .selectionTools{background:var(--paper);border-color:var(--c3-line2)}
+:root[data-theme="dark"] .margin.mobileVisible{background:var(--c3-lift);border-color:var(--c3-line2)}
+:root[data-theme="dark"] .manuscript>blockquote{color:var(--c3-ink2);border-left-color:var(--c3-line2)}
+:root[data-theme="dark"] :is(.referenceLinks a,.recordBody a,.recordPage footer a,.recordDetails a){color:var(--warm)}
+:root[data-theme="dark"] .workflowStep.isViewed{outline-color:var(--warm)}
+
+/* ---------- workspace surfaces: the board's paper canvas on a darker frame ---------- */
+body.c3-tabs .shell{background:var(--bg)}
+body.c3-tabs .workspace{background:var(--paper)}
+body.c3-tabs.draft-surface-active .workspace{background:var(--paper)}
+
+/* ---------- tab strip: folder tabs joining the paper bar below ---------- */
+#c3-tabstrip{background:var(--bg);border-bottom-color:var(--line);font:var(--c3-t1)/1.4 var(--ar-ui);align-items:flex-end;padding:0 8px;gap:2px}
+#c3-tabstrip>.ht-place,#c3-tabstrip>.ht-sep,#c3-tabstrip>details,#c3-tabstrip>.ht-theme{align-self:center}
+#c3-tabstrip .ht-place{color:var(--c3-ink2);border-radius:7px}
+#c3-tabstrip .ht-place.on{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+#c3-tabstrip .ht-sep{background:var(--c3-line2)}
+#c3-tabstrip .ht-tabs{align-items:flex-end;height:auto}
+#c3-tabstrip .ht-tab{height:38px;margin:0 0 -1px;border:1px solid transparent;border-bottom:0;border-radius:9px 9px 0 0;color:var(--c3-ink2);flex:0 1 210px;max-width:210px;font-weight:400}
+#c3-tabstrip .ht-tab:hover{background:var(--c3-lift)}
+#c3-tabstrip .ht-tab.on{background:var(--paper);border-color:var(--line);color:var(--ink);box-shadow:none;font-weight:400}
+#c3-tabstrip .ht-tab.on .ht-title{font-weight:600}
+#c3-tabstrip .ht-open{padding:0 4px 0 12px;gap:8px;min-height:36px}
+#c3-tabstrip .ht-close{color:var(--dim);opacity:1;width:28px;min-height:28px;margin-right:5px}
+#c3-tabstrip .ht-close:hover{background:var(--c3-sel);color:var(--ink)}
+#c3-tabstrip .ht-switch>summary{border-color:var(--c3-line2);background:var(--paper);color:var(--ink);font-weight:500;min-height:32px;border-radius:7px}
+#c3-tabstrip :is(.ht-more,.ht-plus)>summary{color:var(--c3-ink2)}
+#c3-tabstrip .ht-menu,#project-library.c3-home .ht-card-more .ht-menu,#c3-surface-bar .sb-menu{background:var(--paper);border-color:var(--c3-line2);border-radius:10px;box-shadow:var(--c3-shadow)}
+#c3-tabstrip .ht-find,#project-library .ht-find{background:var(--c3-lift);border-color:var(--c3-line2);border-radius:var(--c3-r);height:38px;min-height:38px}
+#c3-tabstrip .ht-find:focus-within,#project-library .ht-find:focus-within{outline:2px solid var(--warm);outline-offset:1px;border-color:var(--c3-line2)}
+
+/* ---------- Home: filters on the lift, the library on paper ---------- */
+#project-library.c3-home{background:var(--bg);font:var(--c3-t2)/1.5 var(--ar-ui)}
+#project-library.c3-home .ht-homebar{background:var(--paper);border-bottom-color:var(--line)}
+#project-library.c3-home .ht-homebar-actions button{min-height:36px;padding:0 14px;border-color:var(--c3-line2);background:var(--paper);font-size:var(--c3-t1);font-weight:500}
+#project-library.c3-home .ht-homebar-actions .ht-primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+#project-library.c3-home .ht-home-body{grid-template-columns:236px minmax(0,1fr)}
+#project-library.c3-home .ht-facets{background:var(--c3-lift);border-right-color:var(--line);padding:16px 12px 32px;gap:20px}
+#project-library.c3-home .ht-home-main{background:var(--paper);padding:20px 28px 48px}
+#project-library.c3-home .ht-fh{font-size:var(--c3-t1);font-weight:600;color:var(--dim);padding:0 8px 4px}
+#project-library.c3-home .ht-facet{min-height:34px;border-radius:7px;color:var(--c3-ink2);font-size:var(--c3-t1);gap:10px}
+#project-library.c3-home .ht-facet:hover{background:var(--paper)}
+#project-library.c3-home .ht-facet.on{background:var(--c3-sel);color:var(--ink);font-weight:600}
+#project-library.c3-home .ht-fnote{font-size:var(--c3-t1)}
+#project-library.c3-home .ht-dot{width:8px;height:8px;background:var(--c3-warn)}
+#project-library.c3-home [data-pl-count]{font-size:var(--c3-t2);font-weight:600}
+#project-library.c3-home .ht-seg-l{font-size:var(--c3-t1);color:var(--dim)}
+#project-library.c3-home .ht-seg{background:var(--c3-lift);border-color:var(--line);border-radius:9px}
+#project-library.c3-home .ht-view{min-height:30px;padding:0 12px;border-radius:7px;color:var(--c3-ink2);font-size:var(--c3-t1)}
+#project-library.c3-home .ht-view.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--c3-line2)}
+#project-library.c3-home .pl-results.ht-grid{grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:22px 18px}
+#project-library.c3-home .pl-results.ht-grid .ht-cover{height:auto;aspect-ratio:4/3;border-color:var(--line);background:var(--c3-lift);padding:14px 16px 0 38px;align-items:stretch}
+#project-library.c3-home .pl-results.ht-grid .ht-cover span{width:100%;padding:16px 16px 40px;background-color:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line);font-size:19px;line-height:1.15}
+#project-library.c3-home .pl-results.ht-grid .pl-open:hover .ht-cover,#project-library.c3-home .pl-results.ht-grid .is-current .ht-cover{border-color:var(--c3-ink2)}
+#project-library.c3-home .pl-results.ht-grid .pl-open strong{font-size:var(--c3-t2);font-weight:600;line-height:1.35}
+#project-library.c3-home .pl-open>span:not(.ht-cover){font-size:var(--c3-t1);color:var(--c3-ink2)}
+#project-library.c3-home .ht-card-more>summary{background:var(--paper);border-color:var(--line);border-radius:var(--c3-r);color:var(--c3-ink2);width:36px;height:36px}
+#project-library.c3-home .ht-card-more{top:8px;right:8px}
+
+/* ---------- checkpoint list: the board's rail ---------- */
+body.c3-rail-on .shell>.workflowNavigation.c3-rail{background:var(--c3-lift);border-right-color:var(--line);padding:10px 8px}
+.workflowNavigation.c3-rail .wn-family{border-top-color:var(--line);padding:7px 0 0;margin-top:7px}
+.workflowNavigation.c3-rail .wn-family:first-child{margin-top:0;padding-top:0}
+.workflowNavigation.c3-rail .workflowStep{min-height:35px;padding:0 10px;gap:10px;border-radius:7px;color:var(--c3-ink2);font:400 var(--c3-t1)/1.3 var(--ar-ui)}
+.workflowNavigation.c3-rail .workflowStep .cr-icon{color:var(--dim)}
+.workflowNavigation.c3-rail .workflowStep:hover{background:var(--paper);color:var(--ink)}
+.workflowNavigation.c3-rail .workflowStep[aria-current]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--c3-line2)}
+.workflowNavigation.c3-rail .workflowStep[aria-current] .cr-icon{color:var(--ink)}
+.workflowNavigation.c3-rail .cr-dot[data-state="current"]{background:var(--c3-warn)}
+.workflowNavigation.c3-rail .cr-dot[data-state="record"]{background:var(--c3-good)}
+.workflowNavigation.c3-rail .cr-dot[data-state="none"]{visibility:hidden;border:0}
+
+/* ---------- surface bar: on paper, the board's controls ---------- */
+#c3-surface-bar{background:var(--paper);border-bottom-color:var(--line);font:var(--c3-t1)/1.35 var(--ar-ui);min-height:60px}
+#c3-surface-bar .sb-out strong{font-size:var(--c3-t2)}
+#c3-surface-bar .sb-piece,#c3-surface-bar .sb-ret{color:var(--c3-ink2)}
+#c3-surface-bar :is(.sb-icon,.sb-btn){color:var(--c3-ink2);border-radius:var(--c3-r)}
+#c3-surface-bar :is(.sb-icon,.sb-btn):hover{background:var(--c3-lift);color:var(--ink)}
+#c3-surface-bar .sb-btn:is([aria-pressed=true],[aria-current]){background:var(--c3-sel);color:var(--ink)}
+#c3-surface-bar .sb-sep{background:var(--line);height:24px;margin:0 6px}
+#c3-surface-bar .sb-primary{border-radius:var(--c3-r);font-weight:500;min-height:36px;padding:0 14px}
+#c3-surface-bar .sb-status{color:var(--c3-good)}
+#c3-surface-bar .sb-status[data-tone="bad"]{color:var(--c3-bad);font-weight:600}
+#c3-surface-bar .sb-status[data-tone="warn"]{color:var(--c3-warn);font-weight:600}
+#c3-surface-bar select{background:var(--c3-lift);border-color:var(--c3-line2)}
+
+/* ---------- the manuscript sits on the page, as on the board (Atlas type and ink unchanged) ---------- */
+:root[data-theme="dark"] body .workspace :is(.document,.recordPage).prose-document{--atlas-paper:var(--paper)}
+:root[data-theme="light"] body .workspace :is(.document,.recordPage).prose-document{--atlas-paper:var(--paper)}
+/* ---------- the app's tool buttons in the board's button style ---------- */
+body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface,.draft-bar,.material-surface,.output-overview,#output-overview,.historicalToolbar,.stage-flow) :is(button:not(.workflowStep),select){font:500 var(--c3-t1)/1.3 var(--ar-ui);border-radius:var(--c3-r);border:1px solid var(--c3-line2);background:var(--paper);color:var(--ink)}
+body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface,.draft-bar,.material-surface,.output-overview,#output-overview,.historicalToolbar,.stage-flow) button:not(.workflowStep):not(:disabled):hover{border-color:var(--c3-ink2);background:var(--paper)}
+body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface,.draft-bar,.material-surface,.output-overview,#output-overview,.stage-flow) button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+/* ---------- notices: quiet lift instead of a separate block colour ---------- */
+body.c3-tabs .workspace>.draft-bar{background:var(--paper);border-color:var(--line)}
+body.c3-tabs .workspace>.direction-writing-tools,body.c3-tabs .workspace>#direction-writing-tools{background:var(--paper);border-color:var(--line)}
+
+/* ================= Polish pass (Impeccable critique, 20 Oct) ================= */
+/* Control edge: 3:1 against the surface so every button shows where it is (WCAG 1.4.11). */
+:root,:root[data-theme="light"]{--c3-edge:#8c877b;--c3-fill:color-mix(in srgb,var(--ink) 4%,var(--paper))}
+:root[data-theme="dark"]{--c3-edge:#6f695d;--c3-fill:color-mix(in srgb,var(--ink) 6%,var(--paper))}
+
+/* Fewer layers: the notice row now lives in the bar as a small label and button. */
+body.c3-bar-on #app .workspace>.historicalToolbar{display:none!important}
+#c3-surface-bar .sb-note{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;border:1px solid var(--c3-line2);color:var(--dim);font-size:12px;white-space:nowrap}
+#c3-surface-bar .sb-mode{border:1px solid var(--c3-edge)!important;color:var(--ink)!important}
+/* The draft save line under the bar: one slim row, recovery untouched. */
+body.c3-tabs #app .workspace>.draft-bar{padding:8px 40px!important;min-height:0!important;font:var(--c3-t1)/1.45 var(--ar-ui);border-bottom:1px solid var(--line)}
+body.c3-tabs #app .workspace>.draft-bar .draft-explanation{margin:0 0 6px;color:var(--dim);font-size:12px}
+
+/* One quiet heading scale for everything that is not the manuscript. */
+body.c3-tabs #app .workspace :is(h2,h3):not(.shared-prose-block):not(#manuscript *):not(.document>h1){letter-spacing:0}
+body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h2:not(.shared-prose-block){font:600 var(--c3-t2)/1.35 var(--ar-ui)!important;margin:0 0 8px!important}
+body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h3:not(.shared-prose-block){font:600 var(--c3-t1)/1.35 var(--ar-ui)!important;margin:0 0 6px!important}
+/* The manuscript title: still the Atlas face, one step smaller so the page starts sooner. */
+body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:38px!important;line-height:1.15!important;margin:0 0 12px!important}
+
+/* Buttons in three clear tiers. */
+/* Secondary: a visible edge and a faint fill, everywhere in the work area. */
+body.c3-tabs #app .workspace button:not(.workflowStep):not(.sb-icon):not(.sb-btn):not(.sb-primary):not(.ce-btn.pri):not(.ci-tab):not([class*="pri"]):not(.mrb-resource):not(.pl-open):not(.oo-title),
+#c3-read-insp .ci-go,.c3-empty .ce-btn:not(.pri),#c3-research .rt-btn:not(.pri):not(.ghost),#project-library.c3-home .ht-homebar-actions button:not(.ht-primary){border-color:var(--c3-edge)!important;background:var(--c3-fill)!important}
+body.c3-tabs #app .workspace button:not(:disabled):hover,#c3-read-insp .ci-go:hover,.c3-empty .ce-btn:hover:not(:disabled){border-color:var(--ink)!important}
+/* Primary: one per surface, the ink fill; disabled reads as disabled, never as a grey primary. */
+#c3-surface-bar .sb-primary:disabled,.c3-empty .ce-btn.pri:disabled{background:transparent!important;color:var(--dim)!important;border:1px dashed var(--c3-edge)!important;opacity:1}
+/* Tertiary: bar text actions keep ink colour with an icon, and lift on hover. */
+#c3-surface-bar .sb-btn,#c3-surface-bar .sb-icon{color:var(--ink)}
+#c3-surface-bar{border-bottom-color:var(--c3-line2)}
+/* Disclosures look pressable: a chevron and an edge. */
+body.c3-tabs #app .workspace summary{list-style:none}
+body.c3-tabs #app .workspace summary::-webkit-details-marker{display:none}
+body.c3-tabs #app .workspace details:not(.ht-card-more):not(.wn-new)>summary::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s ease-out;opacity:.7}
+body.c3-tabs #app .workspace details[open]:not(.ht-card-more):not(.wn-new)>summary::after{transform:translateY(1px) rotate(-135deg)}
+body.c3-tabs #app .workspace :is(.sws-work-tools,.mot-tool-grid,.oss-review-tools,.material-surface,.oss-surface)>details>summary,body.c3-tabs #app .workspace .material-tools>.material-note-tools>details>summary{border-color:var(--c3-edge)!important;background:var(--c3-fill)!important}
+/* Fields: a visible edge, warm focus. */
+body.c3-tabs #app .workspace :is(input:not([type=checkbox]):not([type=radio]),select,textarea):not(#manuscript){border-color:var(--c3-edge)!important}
+/* Clickable rows and cards lift on hover so the eye finds them. */
+#project-library.c3-home .pl-results.ht-grid .pl-open:hover .ht-cover,#c3-research .rt-card:hover,.material-surface.sws-material .mrb-resource:hover{border-color:var(--c3-edge)!important;background-color:var(--c3-fill)}
+
+/* Write: a paper on a desk. The page is a sheet; the desk around it is the darker ground. */
+@media(min-width:851px){
+ body.c3-tabs #app .workspace .desk.c3-insp-desk{background:var(--bg)}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document{max-width:760px!important;margin:28px auto 72px!important;padding:44px 64px 72px!important;background:var(--paper);border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22)}
+ :root[data-theme="light"] body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document{box-shadow:0 1px 2px rgba(40,35,25,.08),0 12px 32px rgba(40,35,25,.10)}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read{background:var(--bg)}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.recordPage{max-width:760px!important;margin:8px auto 72px!important;padding:44px 64px 72px!important;background:var(--paper)!important;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22)}
+}
+body.c3-tabs #manuscript{caret-color:var(--warm)}
+body.c3-tabs #app .workspace ::selection{background:color-mix(in srgb,var(--warm) 30%,transparent)}
+/* Focus: the paper alone on the desk. */
+body.c3-tabs[data-draft-focus="true"] #c3-tabstrip,body.c3-tabs[data-draft-focus="true"] .shell>.workflowNavigation.c3-rail{opacity:.25;transition:opacity .2s ease-out}
+body.c3-tabs[data-draft-focus="true"] #c3-tabstrip:hover,body.c3-tabs[data-draft-focus="true"] .shell>.workflowNavigation.c3-rail:hover{opacity:1}
+/* The keyboard hint under the page stays out of the way until you are in the page. */
+body.c3-tabs #app .workspace .docfooter{opacity:0;transition:opacity .2s ease-out}
+body.c3-tabs #app .workspace .document:focus-within .docfooter,body.c3-tabs #app .workspace .document:hover .docfooter{opacity:.8}
+
+/* Livelier where it helps: each empty step's icon carries its stage colour. */
+.c3-empty[data-stage="1"] .ce-icon,.c3-empty[data-stage="2"] .ce-icon,.c3-empty[data-stage="3"] .ce-icon,.c3-empty[data-stage="4"] .ce-icon{color:var(--warm);background:color-mix(in srgb,var(--warm) 14%,transparent)}
+.c3-empty:is([data-stage="5"],[data-stage="6"],[data-stage="7"]) .ce-icon{color:var(--c3-good);background:color-mix(in srgb,var(--c3-good) 14%,transparent)}
+.c3-empty:is([data-stage="8"],[data-stage="9"]) .ce-icon{color:var(--c3-warn);background:color-mix(in srgb,var(--c3-warn) 14%,transparent)}
+.c3-empty:is([data-stage="10"],[data-stage="11"],[data-stage="12"]) .ce-icon{color:var(--ink);background:var(--c3-sel)}
+.c3-empty .ce-shape{opacity:.6}
+/* Check's own run button stays the primary (ink fill), not a secondary. */
+body.c3-tabs #app #workspace button[data-current-check="run"]:not(:disabled){background:var(--ink)!important;border-color:var(--ink)!important;color:var(--bg)!important}
+/* Read with a working copy: the same paper on a desk; its status row sits above the sheet. */
+@media(min-width:851px){
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.document.prose-document{max-width:760px!important;width:100%;margin:8px auto 72px!important;padding:44px 64px 72px!important;background:var(--paper)!important;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22);box-sizing:border-box}
+ :root[data-theme="light"] body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>:is(.document,.recordPage){box-shadow:0 1px 2px rgba(40,35,25,.08),0 12px 32px rgba(40,35,25,.10)!important}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.draft-row{max-width:760px;width:100%;margin:6px auto 0;padding:0 4px;box-sizing:border-box;font:var(--c3-t1)/1.4 var(--ar-ui);color:var(--dim)}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.draft-details{max-width:760px;width:100%;margin:0 auto 40px;box-sizing:border-box}
+}
+
+/* ================= Write = Read = Check: same paper, starts with the page (20 Oct) ================= */
+/* The writing surface had its own greenish paper and desk; it now uses the shared palette. */
+body.c3-tabs.draft-surface-active{--bg:#141310;--rail:#191813;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--green:#8fb08a;--warm:#c9a874;--draft-active:#2c2a22;--draft-mark:color-mix(in srgb,#c9a874 22%,transparent);--draft-note:#191813}
+:root[data-theme="light"] body.c3-tabs.draft-surface-active{--bg:#efede6;--rail:#f7f5ef;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--green:#3f6146;--warm:#7a5a30;--draft-active:#e9e4d7;--draft-mark:color-mix(in srgb,#7a5a30 18%,transparent);--draft-note:#f7f5ef}
+body.c3-tabs #app .workspace>.draft-bar.c3-quiet{display:none!important}
+/* The same desk and the same first line of the page on Write, Read and Check. */
+@media(min-width:851px){
+ body.c3-tabs:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #app .workspace{background:var(--bg)}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>:is(.document,.recordPage),
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript>.document{margin-top:28px!important;padding-top:48px!important}
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript{padding:0 40px 96px!important;max-width:none!important}
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript>.document{max-width:760px;margin-left:auto!important;margin-right:auto!important;padding:48px 64px 72px!important;background:var(--paper);border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22);box-sizing:border-box}
+ body.c3-tabs[data-c3-stage="7"] #app .workspace>.wn-check-layout.c3-check{background:var(--bg)}
+ /* Write: notes on top of the right column, then the tabs, then the panel. */
+ body.c3-tabs #app .workspace .desk.c3-insp-desk{grid-template-rows:auto auto minmax(0,1fr)}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>:not(#c3-insp-head):not(#margin):not(.ci-panel):not(.c3-page-notes){grid-row:1/span 3}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.c3-page-notes{grid-column:2;grid-row:1;background:var(--c3-lift);border-left:1px solid var(--line);padding:14px 16px 4px}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>#c3-insp-head{grid-row:2;top:60px}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>:is(#margin,.ci-panel){grid-row:3}
+}
+/* The notes block: small, quiet, one place for where you are and the page's status. */
+.c3-page-notes{display:flex;flex-direction:column;gap:6px;font:var(--c3-t1)/1.45 var(--ar-ui);color:var(--dim)}
+.c3-page-notes .c3-ctitle{margin:0!important;padding:0!important;max-width:none!important}
+.c3-page-notes :is(.reference,.draft-surface-document-meta,.draft-row){margin:0!important;padding:0!important;max-width:none!important;font:12px/1.45 var(--ar-ui)!important;color:var(--dim)!important;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.c3-page-notes .draft-tabs{margin:0!important;padding:0!important;border:0!important}
+.c3-page-notes+.c3-insp-tabs,#c3-read-insp>.c3-page-notes{padding-bottom:10px;border-bottom:1px solid var(--line)}
+.wn-check-findings>.c3-page-notes{margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+/* Owner status rows stay in the page (hidden) and appear as a mirror in the notes; an opened disclosure shows in place. */
+body.c3-tabs #app .workspace [data-c3-mirrored]:not(.c3-mirror-open){display:none!important}
+.c3-mirror{display:flex;flex-direction:column;gap:6px}
+.c3-mirror-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font:12px/1.45 var(--ar-ui);color:var(--dim)}
+.c3-mirror-btn{min-height:26px;padding:0 10px;border:1px solid var(--c3-edge);border-radius:13px;background:var(--c3-fill);color:var(--ink);font:500 12px/1 var(--ar-ui);cursor:pointer}
+.c3-mirror-btn.on{background:var(--c3-sel);border-color:var(--ink)}
+.c3-mirror-btn:disabled{opacity:.45;cursor:default}
+@media(min-width:851px){
+ #app #workspace .desk.c3-insp-desk>.c3-page-notes{grid-column:2!important;grid-row:1!important;width:auto;max-width:none;margin:0;background:var(--c3-lift);border-left:1px solid var(--line);padding:14px 16px 10px;box-sizing:border-box;align-self:stretch}
+ #app #workspace .desk.c3-insp-desk>#c3-insp-head{grid-row:2}
+ #app #workspace .desk.c3-insp-desk>:is(#margin,.ci-panel){grid-row:3}
+ #app #workspace .desk.c3-insp-desk>.document.prose-document{grid-column:1!important;grid-row:1/span 3!important}
+}
+@media(max-width:850px){#app #workspace .desk.c3-insp-desk>.c3-page-notes{margin:0 0 12px}}
+body.c3-tabs #app .wn-check-findings>.c3-page-notes{padding-top:16px}
+
+/* ================= Option A: commands on top, location at the bottom (20 Oct) ================= */
+body.c3-crumb-on{--cb-h:28px}
+body.c3-tabs.c3-crumb-on .shell,body.c3-tabs.c3-crumb-on.draft-surface-active .shell:has(.rail.open){height:calc(100dvh - var(--ht-strip,44px) - var(--cb-h))}
+#c3-crumb{position:fixed;left:0;right:0;bottom:0;z-index:40;height:var(--cb-h);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 14px;box-sizing:border-box;background:var(--c3-lift);border-top:1px solid var(--line);font:12px/1 var(--ar-ui);color:var(--dim);white-space:nowrap}
+#c3-crumb .cb-path{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
+#c3-crumb .cb-seg{overflow:hidden;text-overflow:ellipsis;color:var(--dim);text-decoration:none}
+#c3-crumb .cb-piece,#c3-crumb .cb-on{color:var(--ink)}
+#c3-crumb .cb-ret:hover{color:var(--ink)}
+#c3-crumb .cb-sep{opacity:.5}
+#c3-crumb .cb-out{display:inline-flex;align-items:center;min-width:0}
+#c3-crumb .cb-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#c3-crumb .cb-select{height:22px;min-height:0!important;padding:0 22px 0 8px!important;font:12px/1 var(--ar-ui)!important;color:var(--ink)!important;background-color:transparent!important;border:1px solid var(--c3-line2)!important;border-radius:6px!important;max-width:320px}
+#c3-crumb .cb-right{display:flex;align-items:center;gap:10px;flex:none}
+#c3-crumb .cb-note{padding:2px 8px;border:1px solid var(--c3-line2);border-radius:10px}
+#c3-crumb .cb-status[data-tone="ok"]{color:var(--c3-good)}
+#c3-crumb .cb-status[data-tone="warn"]{color:var(--c3-warn);font-weight:600}
+#c3-crumb .cb-status[data-tone="bad"]{color:var(--c3-bad);font-weight:600}
+/* Top bar: one line, the checkpoint on the left. */
+#c3-surface-bar{flex-wrap:nowrap!important;min-height:52px!important;white-space:nowrap}
+#c3-surface-bar .sb-left{flex:0 1 auto}
+#c3-surface-bar .sb-cp{display:inline-flex;align-items:baseline;gap:8px}
+#c3-surface-bar .sb-cp-n{font:600 13px var(--ar-ui);color:var(--dim);font-variant-numeric:tabular-nums}
+#c3-surface-bar .sb-cp-name{font:600 15px var(--ar-ui);color:var(--ink)}
+#c3-surface-bar .sb-right{flex:0 1 auto;min-width:0;overflow:hidden}
+#c3-surface-bar .sb-status,#c3-surface-bar .sb-note{display:none!important}
+/* The bar is 52px now; sticky elements below follow. */
+body.c3-tabs #app .workspace .desk.c3-insp-desk>#c3-insp-head{top:52px!important}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{top:calc(var(--ht-strip,44px) + 52px)!important;bottom:var(--cb-h,0px)!important}
+/* Home and Research cover the location bar while open. */
+#project-library.c3-home[open]~#c3-crumb,body.c3-research-open #c3-crumb{display:none}
+@media(max-width:650px){#c3-crumb .cb-path>:not(.cb-piece):not(.cb-out):not(.cb-sep:first-of-type){display:none}}
+/* The top bar names the checkpoint, so the page heading line keeps only its one-line description. */
+body.c3-crumb-on .c3-ctitle :is(.c3t-n,.c3t-name){display:none}
+body.c3-crumb-on .c3-ctitle .c3t-line{font:var(--c3-t1)/1.45 var(--ar-ui);color:var(--dim)}
+/* The page runs to the bottom of the window: the desk shows only at the top and sides. */
+@media(min-width:851px){
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>:is(.document,.recordPage),
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript>.document{min-height:calc(100dvh - var(--ht-strip,44px) - 52px - var(--cb-h,0px) - 28px)!important;margin-bottom:0!important;border-radius:6px 6px 0 0!important;padding-bottom:120px!important}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read,body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript{padding-bottom:0!important}
+}
+/* An opened earlier-draft record shows inside the page column, under the page. */
+body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-retained){max-width:760px;margin:16px auto 40px!important}
+/* The page always reaches the bottom: same top gap everywhere, no bottom margin, and in Write it stretches
+   with its row so a taller right panel never leaves desk showing under the page. */
+@media(min-width:851px){
+ #app #workspace .desk.c3-insp-desk>.document.prose-document{align-self:stretch!important;margin:28px auto 0!important}
+ body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read>.document.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read>.recordPage.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read>.recordPage{margin:28px auto 0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document.prose-document,
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document{margin:28px auto 0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript{padding-top:0!important;padding-bottom:0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace>.wn-check-layout.c3-check{min-height:calc(100dvh - var(--ht-strip,44px) - 53px - var(--cb-h,28px))!important}
+}
+@media(min-width:851px){
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript{display:flex!important;flex-direction:column;align-self:stretch!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document{flex:1 0 auto;width:100%}
+}
+
+/* ================= Phone fixes (20 Oct) ================= */
+@media(max-width:850px){
+ /* Notes live in the right column on desktop; on a phone the owner rows show in place instead. */
+ #app #workspace .c3-page-notes{display:none!important}
+ body.c3-tabs #app #workspace [data-c3-mirrored]{display:revert!important}
+ /* Top bar: the picker above already names the checkpoint; actions keep their size and never overlap. */
+ #c3-surface-bar .sb-left{display:none}
+ #c3-surface-bar .sb-right{flex:1 1 auto;justify-content:flex-end;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+ #c3-surface-bar .sb-right>*{flex:none}
+ /* Home: one column, filters as a scrolling row above the pieces. */
+ #project-library.c3-home .ht-home-body{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)}
+ #project-library.c3-home .ht-facets{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:14px}
+ #project-library.c3-home .ht-home-main{padding:16px}
+ /* Research tab: the search takes its own full row. */
+ #c3-research .rt-bar,#c3-research .rt-bl{flex-wrap:wrap}
+ #app #workspace .reference,#app #workspace .draft-row{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+ #c3-research .rt-search{flex:1 1 100%;max-width:none;min-width:0}
+}
+
+/* Phone, one row above the work: the checkpoint picker sits in the left of the command bar instead of on its own line,
+   desktop-only layout toggles (margin, focus, keyboard hints) step aside, and the page reads at phone sizes. */
+@media(max-width:650px){
+ body.c3-rail-on #app>.shell>.workflowNavigation.c3-rail{height:0;min-height:0;padding:0;border-bottom:0;z-index:40}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{position:absolute;left:8px;top:6px;width:auto;max-width:118px;min-height:40px;padding:0 8px 0 10px;gap:6px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--c3-lift,var(--rail))}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker-count{display:none}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker strong{font:600 14px var(--ar-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ body.c3-rail-on .workflowNavigation.c3-rail.cr-open .workflowSteps[data-work-groups]{top:52px}
+ #c3-surface-bar{min-height:52px;padding:0 8px}
+ #c3-surface-bar .sb-left{display:block!important;flex:0 0 auto;width:122px}
+ #c3-surface-bar .sb-right{overflow:visible}
+ #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode),#c3-surface-bar .sb-morew>button{font-size:0;gap:0;min-width:36px;padding:0 8px;justify-content:center}
+ #c3-surface-bar .sb-mode{font-size:12.5px;padding:0 8px;white-space:nowrap}
+ #c3-surface-bar .sb-left>*{display:none}
+ #c3-surface-bar .sb-right{gap:2px}
+ #c3-surface-bar .sb-sep{display:none}
+ #c3-surface-bar :is(.sb-margin,.sb-focus){display:none}
+ #c3-surface-bar .sb-primary{font-size:13px;padding:0 12px;min-height:36px}
+ body.c3-tabs #app .workspace .docfooter{display:none}
+ body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:27px!important;line-height:1.2!important}
+ body.c3-tabs #app .workspace :is(.document,.recordPage) :is(h2,h3):not(:first-of-type){font-size:21px!important}
+ body.c3-tabs #app .workspace :is(.manuscript,.recordBody,.recordPage) p{font-size:16.5px!important;line-height:1.6!important}
+}
+@media(max-width:650px){
+ body.c3-tabs #app .c3-empty{flex-shrink:0}
+ #project-library.c3-home [data-pl-close]{white-space:nowrap;font-size:13px;padding:0 12px}
+}
+
+/* Phone, one system (≤650px). Gutter: 16px on every step, no nested desktop gutters, so a line of prose holds ~45 characters.
+   Type floor: no interface text under 12px. Bar: picker · open-words (icon) · More · primary, the same on every step;
+   Outputs lives in the picker (checkpoint 12) and the location bar, so it leaves the phone bar. */
+@media(max-width:650px){
+ body.c3-tabs{--c3-gx:16px}
+ body.c3-tabs #app .workspace :is(.c3-ctitle,#stage-working-lane,.c3-empty,.draft-bar,.sws-check-tools,.mot-bar,.mot-tool-grid,.flow-retained,.oss-surface,.mot-surface,.material-surface,.c3-page-notes){padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace :is(.c3-ctitle,[id="stage-working-lane"],.c3-empty,.oss-surface,.mot-surface,.material-surface) :is(.c3-ctitle,[id="stage-working-lane"],.c3-empty,.oss-surface,.mot-surface,.material-surface,.mot-bar,.mot-tool-grid,.flow-retained){padding-left:0!important;padding-right:0!important}
+ body.c3-tabs #app .workspace .phaseReader{padding-left:0!important;padding-right:0!important}
+ body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document,body.c3-tabs #app .workspace .recordPage{padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important;margin-left:0!important;margin-right:0!important;max-width:none!important;width:auto!important;border-left:0!important;border-right:0!important;border-radius:0!important;box-shadow:none!important}
+ body.c3-tabs #app .workspace :is(.oss-retained,.c3-open-research){margin-left:0!important;margin-right:0!important}
+ body.c3-tabs #app .workspace .c3-empty .ce-card-wrap{padding:18px 16px}
+ body.c3-tabs #app .workspace .c3-empty.ce-compact .ce-card-wrap{flex-direction:column;gap:10px}
+ body.c3-tabs #app .workspace :is(small,.small,summary,label.flow-field,.draft-action,.reference span,.reference,.docfooter span){font-size:12.5px!important;letter-spacing:0}
+ body.c3-tabs #app .workspace .reference{display:flex;flex-wrap:wrap;gap:2px 10px;text-transform:none}
+
+ #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode){display:none}
+ #c3-surface-bar .sb-mode{width:36px;min-width:36px;padding:0!important;display:grid;place-items:center}
+ #c3-surface-bar .sb-mode .sb-mode-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ #c3-surface-bar .sb-mode .sb-mode-i{display:grid}
+ #c3-surface-bar .sb-right{flex:1 1 auto;min-width:0;justify-content:flex-end;overflow:hidden}
+ #c3-surface-bar .sb-primary{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:4px}
+ #c3-surface-bar .sb-left{width:118px}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{max-width:110px}
+}
+@media(max-width:650px){
+ body.c3-tabs[data-c3-stage] #app .workspace>.mot-surface{padding-left:0!important;padding-right:0!important}
+ body.c3-tabs[data-c3-stage] #app .workspace>.mot-surface>:is(.mot-bar,.mot-context,.mot-tool-grid,.mot-status,.flow-retained,.c3-ctitle,.c3-empty){padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .phaseReader>:is(.draft-row,.draft-details,details.flow-retained,.draft-bar){padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .margin .draft-surface-margin-summary{padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .document>.reference{display:flex!important;flex-wrap:wrap;gap:2px 10px;text-transform:none!important;letter-spacing:0!important;font-size:12.5px!important}
+ body.c3-research-open .workflowNavigation.c3-rail .cr-picker,body.c3-home-open .workflowNavigation.c3-rail .cr-picker{display:none!important}
+ #c3-surface-bar .sb-mode{border-color:transparent!important;background:none!important}
+ #c3-surface-bar .sb-mode:hover{background:var(--c3-lift,var(--rail))!important}
+}
+@media(max-width:650px){
+ body.c3-tabs #app .workspace .c3-open-research{margin-left:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .document .reference{display:flex!important;flex-wrap:wrap!important;gap:2px 10px!important;text-transform:none!important;letter-spacing:0!important;font-size:12.5px!important}
+ body.c3-tabs #app .workspace .phaseReader>.draft-row{display:flex!important;flex-wrap:wrap!important;align-items:center;gap:6px 12px!important;row-gap:6px}
+ body.c3-tabs #app .workspace .phaseReader>.draft-row *{font-size:13px}
+}
+@media(max-width:650px){body.c3-tabs #app #workspace .reference[data-c3-mirrored]{display:flex!important}}
+#c3-surface-bar .sb-mode-i{display:none}
+@media(max-width:650px){body.c3-tabs #app #workspace .recordPage .material-surface{padding-left:0!important;padding-right:0!important}}
+/* Inspector tabs, style B: a quiet filled switch. No outline around the group or the chosen tab; the chosen one is a
+   slightly lifted fill. Links out of the inspector are sand text with an arrow, not boxed buttons. */
+#c3-read-insp .c3-insp-tabs,body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head{border:0!important;background:var(--c3-lift,var(--rail))!important}
+#c3-read-insp .c3-insp-tabs{padding:3px!important;border-radius:8px!important;gap:4px!important}
+body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head::before{border:0!important;background:color-mix(in srgb,var(--ink) 4%,transparent);border-radius:8px!important}
+:is(#c3-read-insp,#c3-insp-head) .ci-tab{color:var(--dim)!important;border-radius:6px!important}
+:is(#c3-read-insp,#c3-insp-head) .ci-tab:hover{color:var(--ink)!important}
+:is(#c3-read-insp,#c3-insp-head) .ci-tab[aria-selected="true"]{background:var(--c3-sel,var(--line))!important;box-shadow:none!important;color:var(--ink)!important;font-weight:500!important}
+:is(#c3-read-insp,.ci-panel) .ci-go{min-height:28px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--warm)!important;font:500 13px/1.4 var(--ar-ui)!important}
+:is(#c3-read-insp,.ci-panel) .ci-go::after{content:" →"}
+:is(#c3-read-insp,.ci-panel) .ci-go:hover{text-decoration:underline;text-underline-offset:3px}
+/* Arriving at a tool: a soft sand edge that fades, not a hard ring. Fields: one quiet sand edge on focus, not two. */
+body.c3-tabs .workspace :is(details.c3-tool-row,[data-material-browser-host],.material-layout).c3-arrive{box-shadow:none!important;animation:c3-arrive 1.6s ease-out}
+@keyframes c3-arrive{0%{border-color:color-mix(in srgb,var(--warm) 70%,var(--line))}100%{border-color:var(--c3-line2,var(--line))}}
+@media(prefers-reduced-motion:reduce){body.c3-tabs .workspace .c3-arrive{animation:none}}
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select):focus{outline:0!important;border-color:color-mix(in srgb,var(--warm) 60%,var(--c3-line2,var(--line)))!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--warm) 12%,transparent)!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select):focus-visible{outline:0!important}
+/* Write inspector (desktop): tabs on top, tab content, page info as a footer. One unbroken left edge, one 16px inset,
+   quiet controls. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk{grid-template-rows:auto minmax(0,1fr) auto!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>#c3-insp-head{grid-column:2!important;grid-row:1!important;top:52px!important;padding:10px 16px!important;border-left:1px solid var(--line)!important;border-bottom:1px solid var(--line)!important;background:var(--c3-lift,var(--rail))!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>#c3-insp-head::before{inset:10px 16px!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>:is(#margin,.ci-panel){grid-row:2!important;top:105px!important;padding:16px 16px 24px!important;border-left:1px solid var(--line)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes{grid-column:2!important;grid-row:3!important;align-self:stretch!important;margin:0!important;padding:12px 16px 16px!important;border-left:1px solid var(--line)!important;border-top:1px solid var(--line)!important;background:var(--c3-lift,var(--rail))!important;gap:6px!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-ctitle{font-size:12.5px!important;color:var(--dim)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-ctitle .c3t-n,body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-ctitle .c3t-name{display:none}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn{min-height:26px!important;padding:0 9px!important;border:0!important;border-radius:6px!important;background:var(--c3-sel,var(--line))!important;color:var(--c3-ink2,var(--ink))!important;font:500 12px/1 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn:hover{color:var(--ink)!important}
+ body.c3-tabs #app #workspace #margin strong{font:600 13px/1.4 var(--ar-ui)!important;color:var(--ink)}
+ body.c3-tabs #app #workspace #margin [data-surface-action],body.c3-tabs #app #workspace #margin button.quiet{min-height:26px!important;min-width:26px;padding:0 6px!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--dim)!important;font:500 12px/1 var(--ar-ui)!important;border-radius:6px!important}
+ body.c3-tabs #app #workspace #margin [data-surface-action]:hover,body.c3-tabs #app #workspace #margin button.quiet:hover{color:var(--ink)!important;background:var(--c3-sel,var(--line))!important}
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action]){min-height:28px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--warm)!important;font:500 13px/1.4 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action])::after{content:none!important}
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action]):hover{text-decoration:underline;text-underline-offset:3px}
+ body.c3-tabs #app #workspace #margin :is(p,.why,.draft-surface-ai-state,small,.small){font:12.5px/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action]){display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;width:auto!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes{position:sticky!important;bottom:var(--cb-h,28px);z-index:4}
+}
+/* Write footer: a small labelled list. Status in sentence case, the file line with its Source & brief link, then the
+   draft parts as quiet text links. The heading line that repeats the page's purpose is left out here. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes{padding:12px 16px 14px!important;gap:0!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes>.c3-ctitle{display:none!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror{display:flex;flex-direction:column;gap:6px}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row{display:grid!important;grid-template-columns:48px minmax(0,1fr);column-gap:10px;align-items:baseline;font:12px/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row::before{grid-column:1;grid-row:1/span 9;font:600 10.5px/1.9 var(--ar-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c3-ghost,var(--line2))}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-reference::before{content:"Status"}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta::before{content:"File"}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-tabs::before{content:"Parts"}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row>*{grid-column:2;justify-self:start}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-reference>span{text-transform:lowercase}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-reference>span::first-letter{text-transform:uppercase}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-tabs{grid-template-columns:48px auto auto 1fr}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-tabs>*{grid-column:auto;grid-row:1}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn{min-height:22px!important;padding:0!important;margin-right:12px;border:0!important;background:none!important;box-shadow:none!important;border-radius:3px!important;color:var(--c3-ink2,var(--ink))!important;font:500 12px/1.5 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn:hover{color:var(--ink)!important;text-decoration:underline;text-underline-offset:3px}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta .c3-mirror-btn{color:var(--warm)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta .c3-mirror-btn::after{content:none!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn.on{color:var(--ink)!important;font-weight:600!important}
+}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row{display:flex!important;flex-wrap:wrap;align-items:baseline;gap:0 10px!important;position:relative;padding-left:58px!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row::before{position:absolute;left:0;top:0}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row>*{margin-right:0!important}
+}
+/* Read inspector, matched to Write: tabs on top with a hairline under them, the tab's content, then page info as the
+   labelled footer at the bottom of the column. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace #c3-read-insp{padding:10px 16px 0!important}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-insp-tabs{order:1;position:static!important;margin:0!important}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-insp-body{order:2;margin:10px -16px 0!important;padding:16px 16px 24px!important;border-top:1px solid var(--line)}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-page-notes{order:3;margin:auto -16px 0!important;padding:12px 16px 14px!important;border:0!important;border-top:1px solid var(--line)!important;gap:0!important;position:sticky;bottom:var(--cb-h,28px);background:var(--c3-lift,var(--rail))}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-page-notes>.c3-ctitle{display:none!important}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-page-notes:not(:has(.c3-mirror-row)){display:none!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror{display:flex;flex-direction:column;gap:6px}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-row{display:flex!important;flex-wrap:wrap;align-items:baseline;gap:0 10px!important;position:relative;padding-left:58px!important;font:12px/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-row::before{position:absolute;left:0;top:0;font:600 10.5px/1.9 var(--ar-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c3-ghost,var(--line2));content:"Page"}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mr-draft-row::before{content:"Copy"}
+ body.c3-tabs #app #workspace #c3-read-insp :is(.c3-mr-draft-details,.c3-mr-flow-retained)::before{content:"Earlier"}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn{min-height:22px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:3px!important;color:var(--warm)!important;font:500 12px/1.5 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn::after{content:none!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn:hover{text-decoration:underline;text-underline-offset:3px}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn.on{color:var(--ink)!important;font-weight:600!important}
+}
+body.c3-tabs #app #workspace :is(#c3-read-insp,.ci-panel) .ci-go{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+/* What the editor needs, where they look for it. Save state lives in the bottom bar, so the panel footer no longer
+   repeats Status and File; it keeps the draft parts and the Source & brief link. The how-to joins the page's own hints. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-reference{display:none!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta>span{display:none!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta::before{content:"Brief"!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-tabs{order:-1}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mr-draft-row>span{display:none!important}
+}
+body.c3-tabs #app #workspace .document .docfooter{flex-wrap:wrap;gap:4px 14px}
+body.c3-tabs #app #workspace .document .docfooter::before{content:"Type straight into the page · select across paragraphs";order:-1;flex-basis:100%}
+/* The browser-only notice lives in the bottom bar; Write's own strip above the page keeps only errors or progress. */
+body.c3-tabs #app .workspace>.draft-bar :is(.draft-explanation,.draft-copy-row){display:none!important}
+#c3-crumb .cb-act{min-height:22px;padding:0 10px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c3-warn) 16%,transparent);color:var(--c3-warn);font:600 12px/1 var(--ar-ui);cursor:pointer}
+#c3-crumb .cb-act:hover{background:color-mix(in srgb,var(--c3-warn) 26%,transparent)}
+#c3-crumb .cb-act:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+/* Full-width paper: the page fills the writing column edge to edge; the text keeps a Docs-like width (about 640px). */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk{background:var(--paper)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.document.prose-document{max-width:none!important;width:100%!important;min-height:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important;align-self:stretch!important}
+ body.c3-tabs #app #workspace .phaseReader.c3-read{background:var(--paper)!important}
+ body.c3-tabs #app #workspace .phaseReader.c3-read>.recordPage{max-width:none!important;width:100%!important;min-height:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript{background:var(--paper)!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript>.recordPage{max-width:none!important;width:100%!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important}
+}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace :is(.phaseReader.c3-read,.wn-check-layout .wn-check-manuscript)>.document.prose-document{max-width:none!important;width:100%!important;min-height:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important;align-self:stretch!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript{padding:0!important}
+}
+/* Check with nothing saved yet: one ground from top to bottom, and the retained-checks link on the page's own edge. */
+body.c3-tabs[data-c3-stage="7"] #app #workspace,body.c3-tabs[data-c3-stage="7"] #app #workspace>.phaseReader{background:var(--bg)!important}
+body.c3-tabs[data-c3-stage="7"] #app #workspace>.phaseReader{min-height:100%}
+body.c3-tabs[data-c3-stage="7"] #app #workspace .phaseReader>details.flow-retained{padding:0 40px!important;margin:16px 0 40px!important}
+@media(max-width:650px){body.c3-tabs[data-c3-stage="7"] #app #workspace .phaseReader>details.flow-retained{padding:0 var(--c3-gx)!important}}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .wn-check-layout{align-items:stretch!important;min-height:calc(100dvh - var(--ht-strip,44px) - 52px - var(--cb-h,28px))}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript{display:flex!important;flex-direction:column;align-self:stretch!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript>.document.prose-document{flex:1 0 auto}
+ body.c3-tabs #app #workspace .phaseReader.c3-read{min-height:calc(100dvh - var(--ht-strip,44px) - 52px - var(--cb-h,28px))}
+ body.c3-tabs #app #workspace .phaseReader.c3-read>.document.prose-document{min-height:100%!important}
+}
+@media(min-width:851px){body.c3-tabs #app #workspace>.wn-check-layout.c3-check{min-height:calc(100dvh - var(--ht-strip,44px) - 53px - var(--cb-h,28px))!important}}
+/* Manuscript on screen, Notion style (Adrian's choice, 2026-10-20): the system sans at 16px / 1.5, a 40px bold page title,
+   24px section headings, Notion's ~700px text width. On-screen Write, Read and Check only: slide templates, portrait
+   previews and exports keep their own type. --c3-doc-scale is the reader's own text size (A- / A+ in the bottom bar). */
+body.c3-tabs{--c3-doc-font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",Helvetica,Arial,sans-serif;--c3-doc-scale:1}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-family:var(--c3-doc-font)!important;font-size:calc(16px * var(--c3-doc-scale))!important;line-height:1.5!important;letter-spacing:0!important;margin:0 0 calc(10px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h1,h2,h3,h4){font-family:var(--c3-doc-font)!important;letter-spacing:-.01em!important;color:var(--ink)!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(40px * var(--c3-doc-scale))!important;font-weight:700!important;line-height:1.2!important;margin:0 0 calc(14px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(24px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(28px * var(--c3-doc-scale)) 0 calc(6px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(20px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(22px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))!important}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace :is(.desk.c3-insp-desk>.document.prose-document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-layout .wn-check-manuscript>:is(.document,.recordPage)){padding:72px max(64px,calc((100% - 708px * var(--c3-doc-scale)) / 2)) 120px!important}
+}
+/* A- / A+ : the reader's own text size, remembered on this device. */
+#c3-crumb .cb-size{display:inline-flex;align-items:center;gap:2px;margin-right:4px}
+#c3-crumb .cb-size button{min-width:24px;height:22px;padding:0 6px;border:0;border-radius:5px;background:none;color:var(--dim);font:600 12px/1 var(--ar-ui);cursor:pointer}
+#c3-crumb .cb-size button:hover:not(:disabled){background:var(--c3-sel,var(--line));color:var(--ink)}
+#c3-crumb .cb-size button:disabled{opacity:.35;cursor:default}
+#c3-crumb .cb-size output{min-width:38px;text-align:center;font:500 11.5px/1 var(--ar-ui);color:var(--dim)}
+#c3-crumb .cb-size button:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(.manuscript,.recordBody){margin-left:0!important;margin-right:0!important;max-width:none!important}
+/* Phone writing surface: a phone-sized type scale (A- / A+ still applies), text on the one 16px gutter in Write, Read
+   and Check alike, and no status lines above the page that the bottom bar already shows. */
+@media(max-width:650px){
+ body.c3-tabs #app #workspace :is(.desk,.wn-check-layout,.phaseReader){padding-left:0!important;padding-right:0!important}
+ body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){padding:20px 16px 64px!important;margin:0!important;max-width:none!important;width:auto!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-size:calc(15px * var(--c3-doc-scale))!important;line-height:1.5!important;margin:0 0 calc(8px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(26px * var(--c3-doc-scale))!important;line-height:1.2!important;margin:0 0 calc(10px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(19px * var(--c3-doc-scale))!important;margin:calc(20px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(17px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace .document>.reference,body.c3-tabs #app #workspace .document .draft-surface-document-meta>span,body.c3-tabs #app #workspace .phaseReader>.draft-row>:not(button){display:none!important}
+ body.c3-tabs #app #workspace .document .draft-tabs .draft-action{min-height:26px!important;padding:0 10px!important;font-size:12px!important}
+ /* Bar: every control 36px tall on one centre line; icons 36px square. */
+ #c3-surface-bar{min-height:52px!important;align-items:center!important}
+ #c3-surface-bar .sb-right{align-items:center!important}
+ #c3-surface-bar .sb-right>*{height:36px!important;min-height:36px!important;align-self:center!important}
+ #c3-surface-bar :is(.sb-icon,.sb-mode,.sb-morew>button){width:36px!important;min-width:36px!important;height:36px!important;padding:0!important;display:grid!important;place-items:center!important}
+ #c3-surface-bar .sb-morew{display:flex;align-items:center}
+ #c3-surface-bar .sb-primary{height:36px!important;display:inline-flex!important;align-items:center!important}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{top:7px!important;min-height:36px!important;height:36px!important}
+}
+@media(max-width:650px){#c3-crumb .cb-size output{display:none}#c3-crumb .cb-size{gap:0;margin-right:0}}

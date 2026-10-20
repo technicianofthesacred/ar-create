@@ -1,0 +1,17 @@
+/* C3 "Waiting on you" band: the board's band, two columns of one-action rows. */
+#project-library .wb-band{border:1px solid var(--line);border-radius:12px;background:var(--c3-lift,var(--rail));padding:8px 16px 6px;margin:0 0 18px}
+#project-library .wb-head{display:flex;align-items:center;gap:10px;min-height:40px;flex-wrap:wrap}
+#project-library .wb-title{font-weight:600;font-size:var(--c3-t2,15px);color:var(--ink)}
+#project-library .wb-sub{font-size:var(--c3-t1,13px);color:var(--dim)}
+#project-library .wb-all{margin-left:auto;min-height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--c3-ink2,var(--ink));font:inherit;font-size:var(--c3-t1,13px);cursor:pointer}
+#project-library .wb-all:hover{background:var(--paper)}
+#project-library .wb-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+#project-library .wb-row{display:grid;grid-template-columns:22px minmax(0,1fr) 172px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+#project-library .wb-ic{color:var(--c3-ink2,var(--dim));display:flex}
+#project-library .wb-t{font-weight:600;font-size:var(--c3-t2,15px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+#project-library .wb-m{font-size:var(--c3-t1,13px);color:var(--dim)}
+#project-library .wb-act{width:100%;min-height:36px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:inherit;font-size:var(--c3-t1,13px);font-weight:500;cursor:pointer}
+#project-library .wb-act:hover{border-color:var(--c3-ink2,var(--ink))}
+#project-library .wb-act:disabled{opacity:.5;cursor:default}
+#project-library .wb-msg{margin:4px 0 8px;font-size:var(--c3-t1,13px);color:var(--c3-bad,var(--ink))}
+@media(max-width:850px){#project-library .wb-list{grid-template-columns:1fr}#project-library .wb-row{grid-template-columns:22px minmax(0,1fr) auto}#project-library .wb-act{width:auto;min-height:44px}}
