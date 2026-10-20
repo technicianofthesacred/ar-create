@@ -22,11 +22,13 @@
   const n=viewed(),here=buttons.find(b=>number(b)===n),name=here?.querySelector('.stepName')?.textContent||'';
   let picker=nav.querySelector(':scope>.cr-picker');
   if(!picker){picker=document.createElement('button');picker.type='button';picker.className='cr-picker';picker.setAttribute('aria-expanded','false');nav.prepend(picker);}
-  const pickerHTML=`<span class="cr-picker-text"><span class="cr-picker-count">${n?`Checkpoint ${n} of 12`:'Checkpoints'}</span><strong>${name||'Choose a checkpoint'}</strong></span><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m7 10 5 5 5-5"/></svg>`;
+  const pickerHTML=`<span class="cr-picker-text"><span class="cr-picker-count">${n?`Step ${n} of 12`:'Steps'}</span><strong>${name||'Choose a step'}</strong></span><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m7 10 5 5 5-5"/></svg>`;
   if(picker.dataset.key!==n+'|'+name){picker.innerHTML=pickerHTML;picker.dataset.key=n+'|'+name;}
-  picker.setAttribute('aria-label',`${n?`Checkpoint ${n} of 12, ${name}. `:''}Show all twelve checkpoints`);
+  picker.setAttribute('aria-label',`${n?`Step ${n} of 12, ${name}. `:''}Show all twelve steps`);
   nav.classList.add('c3-rail');
-  if(nav.parentElement!==shell||nav.nextElementSibling!==workspace)shell.insertBefore(nav,workspace);
+  // The Tree's pieces list (#c3-queue) may sit between the column and the workspace.
+  const after=nav.nextElementSibling?.id==='c3-queue'?nav.nextElementSibling.nextElementSibling:nav.nextElementSibling;
+  if(nav.parentElement!==shell||after!==workspace)shell.insertBefore(nav,shell.querySelector(':scope>#c3-queue')||workspace);
   document.body.classList.add('c3-rail-on');
  }
  document.addEventListener('click',event=>{

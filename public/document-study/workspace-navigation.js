@@ -1,7 +1,7 @@
 /* Navigation and view state only. Existing manuscript, output and research owners remain authoritative. */
 (()=>{
  if(window.workspaceNavigation)return;
- const KEY='ar-study-work-navigation-v1',families=[['Material',[1,2]],['Develop',[3,4]],['Make',[5,6,7,8,9]],['Deliver',[10,11,12]]],names=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
+ const KEY='ar-study-work-navigation-v1',families=[['Gather',[1,2]],['Develop',[3,4]],['Make',[5,6,7,8,9]],['Deliver',[10,11,12]]],names=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let saved={projects:{}},generation=0,pending=null;try{const value=JSON.parse(localStorage.getItem(KEY)||'null');if(value?.projects)saved=value;}catch{}
  const rooms=new Map(),room=id=>{if(!rooms.has(id))rooms.set(id,{data:null,loading:false,error:''});return rooms.get(id)},local=id=>{const item=saved.projects[id]||={locations:{},last:null};item.locations||={};return item;};
