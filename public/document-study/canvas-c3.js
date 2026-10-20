@@ -46,16 +46,27 @@
  // Material and Source tools: each disclosure becomes a row with an icon, what it is for (taken from its own contents)
  // and, where its own text says so, that it is not connected or not saved. The summary keeps its words and its toggle.
  const TI={pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',compass:'<circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',layers:'<path d="m12 4 8 4-8 4-8-4z"/><path d="m4 12 8 4 8-4"/><path d="m4 16 8 4 8-4"/>',mic:'<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',check:'<circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cols:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M12 4.5v15"/>',replace:'<path d="M4 7h11M4 12h7M4 17h11"/><path d="m16 14 3 3-3 3"/>',play:'<circle cx="12" cy="12" r="8.5"/><path d="m10 8.5 5 3.5-5 3.5z"/>',file:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>'};
- const TOOLS=[['Write a note','pen','A titled note in your own words'],['Paste links','link','Keep source links with this material'],['Author context','compass','Your direction for the whole piece or one part'],['Group & choose context','layers','Group whole resources for a piece'],['Record audio or use a folder','mic','For an existing recording, use Add files'],['Keep / remove review','check','Look at a resource before deciding to keep it'],['Add more material','plus','Files, notes and links'],['Compare source records','cols','Read two records side by side'],['Correct a repeated term','replace','Find a term and preview the correction'],['Recording relationship','play','Playback and timing for this source'],['Original record details','file','Where the original lives; it stays unchanged']];
- const tag=d=>/preparation only/i.test(d.textContent)?'Preparation only':/not connected/i.test(d.textContent)?'Not connected':/not saved/i.test(d.textContent)?'Not saved':'';
+ const TOOLS=[['Write a note','pen','A titled note in your own words'],['Paste links','link','Keep source links with this material'],['Author context','compass','Direction for the piece or a part'],['Group & choose context','layers','Group whole resources for a piece'],['Record audio or use a folder','mic','For a recording, use Add files'],['Keep / remove review','check','Check a resource before keeping it'],['Add more material','plus','Files, notes and links'],['Compare source records','cols','Read two records side by side'],['Correct a repeated term','replace','Find a term, preview the fix'],['Recording relationship','play','Playback and timing for this source'],['Original record details','file','Where the original lives, unchanged']];
+ const FLAG=[[/preparation only/i,'Preparation only','warn'],[/not connected/i,'Not connected','bad'],[/not saved/i,'Not saved','warn']];
+ const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ // The tool's own sentence that says why, found in its own text (never written here).
+ function why(d,re){const w=document.createTreeWalker(d,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(n.parentElement.closest('summary'))continue;const t=n.data.trim();if(re.test(t)){const ss=t.split(/(?<=\.)\s+/),i=Math.max(0,ss.findIndex(x=>re.test(x)));return ss.slice(i,ss[i].length<45?i+2:i+1).join(' ').trim();}}return '';}
  function tools(ws){
   for(const s of ws.querySelectorAll('.material-surface details>summary')){
    if(s.classList.contains('c3-tool'))continue;const d=s.parentElement;if(d.parentElement.closest('details'))continue;
    const text=s.textContent.trim(),t=TOOLS.find(([k])=>text.startsWith(k));if(!t)continue;
-   const x=tag(d);s.classList.add('c3-tool');d.classList.add('c3-tool-row');
-   s.innerHTML=`<span class="c3-tool-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg></span><span class="c3-tool-t"><span>${text.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</span>${x?`<span class="c3-tool-x">${x}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>`;
+   const f=FLAG.find(([re])=>re.test(d.textContent));const reason=f?why(d,f[0]).replace(new RegExp('^'+f[1]+'\\s*·?\\s*','i'),'').replace(/^./,c=>c.toUpperCase()):'';
+   s.classList.add('c3-tool');d.classList.add('c3-tool-row');
+   s.innerHTML=`<span class="c3-tool-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" data-c3-flag></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>${f?`<span class="c3-tool-pop" role="note" hidden><strong>${f[1]}</strong>${reason?` ${esc(reason)}`:''}</span>`:''}`;
   }
  }
+ // A mark on a tool's icon explains itself on click without opening or closing the tool.
+ document.addEventListener('click',event=>{
+  const flag=event.target.closest?.('[data-c3-flag]');
+  for(const p of document.querySelectorAll('.c3-tool-pop:not([hidden])'))if(!flag||!p.parentElement.contains(flag))p.hidden=true;
+  if(!flag)return;event.preventDefault();event.stopPropagation();
+  const pop=flag.closest('summary')?.querySelector('.c3-tool-pop');if(pop)pop.hidden=!pop.hidden;
+ },true);
  function decorate(){
   const n=stage();document.body.dataset.c3Stage=String(n);
   if(!LINES[n])return;
