@@ -297,3 +297,19 @@ body.c3-crumb-on .c3-ctitle .c3t-line{font:var(--c3-t1)/1.45 var(--ar-ui);color:
 }
 /* An opened earlier-draft record shows inside the page column, under the page. */
 body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-retained){max-width:760px;margin:16px auto 40px!important}
+/* The page always reaches the bottom: same top gap everywhere, no bottom margin, and in Write it stretches
+   with its row so a taller right panel never leaves desk showing under the page. */
+@media(min-width:851px){
+ #app #workspace .desk.c3-insp-desk>.document.prose-document{align-self:stretch!important;margin:28px auto 0!important}
+ body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read>.document.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read>.recordPage.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read>.recordPage{margin:28px auto 0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document.prose-document,
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document{margin:28px auto 0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript{padding-top:0!important;padding-bottom:0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace>.wn-check-layout.c3-check{min-height:0!important}
+}
+@media(min-width:851px){
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript{display:flex!important;flex-direction:column;align-self:stretch!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document{flex:1 0 auto;width:100%}
+}
