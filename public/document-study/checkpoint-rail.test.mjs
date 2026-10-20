@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 const require=createRequire(new URL('../../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
 const code=fs.readFileSync(new URL('./checkpoint-rail.js',import.meta.url),'utf8');
-const families=[['Material',[1,2]],['Develop',[3,4]],['Make',[5,6,7,8,9]],['Deliver',[10,11,12]]],names=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
+const families=[['Gather',[1,2]],['Develop',[3,4]],['Make',[5,6,7,8,9]],['Deliver',[10,11,12]]],names=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
 
 // The grouped bar as study.js workflowBar + its wrappers + workspace-navigation group() leave it.
 function grouped({count=12,current=6,record=[3]}={}){
@@ -34,7 +34,7 @@ test('the twelve grouped buttons move, unchanged, into a column before the works
  assert.equal(after.length,12);
  after.forEach((b,i)=>{assert.equal(b,before[i],'same button node');assert.deepEqual([b.getAttribute('onclick'),b.getAttribute('aria-label'),b.title,b.querySelector('.stepNumber').textContent],snapshot[i]);});
  assert.equal(d.querySelectorAll('.workflowStep .cr-icon').length,12);
- assert.deepEqual([...d.querySelectorAll('.wn-family')].map(f=>f.getAttribute('aria-label')),['Material','Develop','Make','Deliver']);
+ assert.deepEqual([...d.querySelectorAll('.wn-family')].map(f=>f.getAttribute('aria-label')),['Gather','Develop','Make','Deliver']);
 });
 
 test('every checkpoint still calls viewPhase(n) directly; groups are not gates',()=>{
@@ -55,7 +55,7 @@ test('state dot reads existing evidence only: current step, retained record, or 
 test('the phone picker names the viewed checkpoint and opens and closes the list',()=>{
  const {w,d}=fixture();
  const picker=d.querySelector('.cr-picker');
- assert.match(picker.textContent,/Checkpoint 5 of 12/);
+ assert.match(picker.textContent,/Step 5 of 12/);
  assert.match(picker.textContent,/Write/);
  picker.click();
  assert.ok(d.querySelector('.workflowNavigation').classList.contains('cr-open'));
