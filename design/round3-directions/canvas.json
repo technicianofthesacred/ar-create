@@ -1,1 +1,179 @@
-{"v":3,"createdOnFiles":{"v":1,"at":"2026-10-20T10:30:00Z"},"title":"AR Create — three directions","launch":{"view":"canvas"},"pages":[],"boards":{"Main.dc.html":{"x":0,"y":0,"w":1440,"h":5200,"title":"Start here — compare, recommend, maps","expand":"fill"},"Option-A-Page.dc.html":{"x":1520,"y":0,"w":1440,"h":900,"title":"A · The Page (document-first)","expand":"fill","is_interactive":true},"Option-B-Studio.dc.html":{"x":3040,"y":0,"w":1440,"h":900,"title":"B · The Studio (project-first)","expand":"fill","is_interactive":true},"Option-C-Bench.dc.html":{"x":4560,"y":0,"w":1440,"h":900,"title":"C · The Bench (creative workbench)","expand":"fill","is_interactive":true},"Chosen.dc.html":{"x":1520,"y":1340,"w":1440,"h":900,"title":"Chosen · B’s studio + A’s pages + C’s Where used","expand":"fill","is_interactive":true},"Review.dc.html":{"x":3040,"y":1340,"w":1440,"h":5600,"title":"First-time review · wording, connections, access","expand":"fill"},"Chosen-2.dc.html":{"x":1520,"y":2440,"w":1440,"h":900,"title":"Chosen 2 · work through one kind of task, sort, write","expand":"fill","is_interactive":true}},"order":["Main.dc.html","Option-A-Page.dc.html","Option-B-Studio.dc.html","Option-C-Bench.dc.html","Chosen.dc.html","Review.dc.html","Chosen-2.dc.html"],"notes":{"t1":{"x":1520,"y":-300,"text":"Three interactive directions · same invented material · press Play on each","kind":"title1","maxW":4480},"t2":{"x":1520,"y":1100,"text":"Chosen combination","kind":"title1","maxW":1440}},"designSystems":[]}
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Chosen-2.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Chosen 2 · work through one kind of task, sort, write",
+      "w": 1440,
+      "x": 1520,
+      "y": 2440
+    },
+    "Chosen.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Chosen · B’s studio + A’s pages + C’s Where used",
+      "w": 1440,
+      "x": 1520,
+      "y": 1340
+    },
+    "Layout-1-Inbox.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout 1 · Inbox: list and open item",
+      "w": 1440,
+      "x": 1520,
+      "y": 3900
+    },
+    "Layout-2-Board.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout 2 · Board: activities as a path, steps as columns",
+      "w": 1440,
+      "x": 3040,
+      "y": 3900
+    },
+    "Layout-3-Sessions.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout 3 · Sessions: project grid, then full-screen focus",
+      "w": 1440,
+      "x": 4560,
+      "y": 3900
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 5200,
+      "title": "Start here — compare, recommend, maps",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Option-A-Page.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "A · The Page (document-first)",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Option-B-Studio.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "B · The Studio (project-first)",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "Option-C-Bench.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "title": "C · The Bench (creative workbench)",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "Review.dc.html": {
+      "expand": "fill",
+      "h": 5600,
+      "title": "First-time review · wording, connections, access",
+      "w": 1440,
+      "x": 6445,
+      "y": 243
+    },
+    "Full-A-Tree.dc.html": {
+      "x": 1520,
+      "y": 5300,
+      "w": 1440,
+      "h": 900,
+      "title": "Full A · Tree: sidebar with all steps, lists, work",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Full-B-Ribbon.dc.html": {
+      "x": 3040,
+      "y": 5300,
+      "w": 1440,
+      "h": 900,
+      "title": "Full B · Ribbon: all steps across the top, full-width page",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Full-C-Focus.dc.html": {
+      "x": 4560,
+      "y": 5300,
+      "w": 1440,
+      "h": 900,
+      "title": "Full C · Focus: one Go to menu, centred page, step through",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-20T10:30:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Three interactive directions · same invented material · press Play on each",
+      "w": 240,
+      "x": 1520,
+      "y": -300
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 1440,
+      "text": "Chosen combination",
+      "w": 240,
+      "x": 1520,
+      "y": 1100
+    },
+    "t3": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Three layouts of the activity model · Gather, Develop, Make, Deliver",
+      "w": 240,
+      "x": 1520,
+      "y": 3600
+    },
+    "t4": {
+      "x": 1520,
+      "y": 5000,
+      "text": "Three full layouts · each carries every screen",
+      "kind": "title1",
+      "maxW": 4480
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Option-A-Page.dc.html",
+    "Option-B-Studio.dc.html",
+    "Option-C-Bench.dc.html",
+    "Chosen.dc.html",
+    "Review.dc.html",
+    "Chosen-2.dc.html",
+    "Layout-1-Inbox.dc.html",
+    "Layout-2-Board.dc.html",
+    "Layout-3-Sessions.dc.html",
+    "Full-A-Tree.dc.html",
+    "Full-B-Ribbon.dc.html",
+    "Full-C-Focus.dc.html"
+  ],
+  "pages": [],
+  "title": "AR Create — three directions"
+}

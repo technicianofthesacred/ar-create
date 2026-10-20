@@ -1,0 +1,12 @@
+    const queue=qList(s.view);
+    const qi=queue.findIndex(x=>x.cls.indexOf('on')>=0);
+    C.queue=queue;C.hasQueue=queue.length>0&&['home','library','topics','projects','checklist','story'].indexOf(s.view)<0;
+    C.qPos=queue.length?((qi>=0?qi+1:1)+' of '+queue.length):'';
+    C.qPrev=()=>{if(!queue.length)return;const i=qi>0?qi-1:queue.length-1;queue[i].go();};
+    C.qNext=()=>{if(!queue.length)return;const i=qi>=0&&qi<queue.length-1?qi+1:0;queue[i].go();};
+    C.stepsNav=STEPS.map(a=>({label:a[1],q:a[2],initial:a[1].charAt(0),first:go(a[3][0][0]),cls:a[3].some(x=>x[0]===s.view)?'on':'',n:a[3].reduce((t,x)=>t+waiting(x[0]),0),steps:a[3].map(x=>{const n=waiting(x[0]);return {key:x[0],label:x[1],hint:x[2],n:n,has:n>0,cls:s.view===x[0]?'on':'',cur:s.view===x[0]?'page':'false',go:go(x[0])};})}));
+    C.isPieceHead=C.inPiece;C.notPieceHead=!C.inPiece&&s.view!=='home';
+    C.panelTitle=({lib:'Library',uses:'Where it’s used',hist:'History'})[s.panel]||'';
+    C.cHome=s.view==='home'?'on':'';C.cLib=s.view==='library'?'on':'';C.cTopics=s.view==='topics'?'on':'';C.cProj=s.view==='projects'?'on':'';C.cCheck=s.view==='checklist'?'on':'';
+    C.crumb=C.inPiece?C.pieceProj+' › '+C.pieceKind:(C.actName?C.actName+' · '+C.scopeName:'');
+    C.location=C.inPiece?C.pieceProj+' › '+C.pieceTitle+' › '+C.stepName:(C.stepName+(C.actName?' · '+C.scopeName:''));

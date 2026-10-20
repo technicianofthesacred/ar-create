@@ -1,0 +1,4 @@
+<sc-if value="{{isPieceHead}}" hint-placeholder-val="{{false}}"><div class="phead"><div class="meta">{{crumb}}</div><h1 class="h1s" style="margin:2px 0 6px">{{pieceTitle}}</h1>
+ <nav class="ppath" aria-label="Steps for this piece"><sc-for list="{{piecePath}}" as="x" hint-placeholder-count="5"><button class="pp {{x.cls}}" onClick="{{x.go}}" aria-current="{{x.cur}}">{{x.label}}<small>{{x.hint}}</small></button></sc-for></nav>
+ <sc-if value="{{hasNext}}" hint-placeholder-val="{{false}}"><div class="nextbar" style="margin-top:10px"><span class="nx"><b>Next</b>{{nextText}}</span><button class="pri" onClick="{{nextGo}}">{{nextBtn}}</button></div></sc-if></div></sc-if>
+<sc-if value="{{notPieceHead}}" hint-placeholder-val="{{true}}"><div class="phead"><div class="meta">{{crumb}}</div><h1 class="h1s" style="margin:2px 0 0">{{stepName}}</h1><sc-if value="{{stepHint}}" hint-placeholder-val="{{true}}"><div class="meta">{{stepHint}}</div></sc-if></div></sc-if>

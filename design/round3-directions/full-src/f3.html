@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Full C — Focus</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+/*CSS*/
+.top{display:flex;align-items:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap}
+.brand{font-weight:700}
+.app .goto{border:1px solid var(--line2);background:var(--lift);min-width:280px;color:var(--dim)}
+.main{flex:1;display:flex;flex-direction:column;background:var(--paper)}
+.phead{padding:16px 32px 0;max-width:1080px;margin:0 auto;width:100%}
+.content{flex:1;width:100%}
+.content .pg{margin:0 auto}
+.content .retbar{max-width:1016px;margin:12px auto 0}
+.stepper{position:sticky;bottom:40px;z-index:22;display:flex;justify-content:center;pointer-events:none}
+.stepper .in{pointer-events:auto;display:flex;gap:8px;align-items:center;padding:6px;border:1px solid var(--line2);border-radius:999px;background:var(--paper);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.app .stepper button{border-radius:999px}
+.menu{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;display:flex;justify-content:center;align-items:flex-start;padding-top:8vh}
+.mbox{width:min(980px,94vw);max-height:84vh;overflow:auto;background:var(--paper);border:1px solid var(--line2);border-radius:16px;padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+.mcol{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--lift)}
+.mcol b{display:block;padding:2px 6px}
+.app .mi{display:flex;align-items:center;width:100%;min-height:36px}
+.mi .n{margin-left:auto;font-size:12px;font-weight:700;color:var(--warn)}
+.mi small{display:block;color:var(--dim);font-size:11.5px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:35;display:flex;justify-content:flex-end}
+.sheet .in{width:min(420px,100%);height:100%;overflow:auto;background:var(--lift);border-left:1px solid var(--line2);padding:16px}
+@media (max-width:900px){.mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.app .goto{min-width:0;flex:1}}
+</style>
+</helmet>
+<div class="app {{themeClass}}">
+<div class="proto" role="note"><b>PROTOTYPE · Full C · Focus</b><span>Almost no chrome. One “Go to” menu holds every step with what’s waiting; the page is centred, and a small bar steps through the queue.</span><label class="meta">State <select aria-label="Show a state" onChange="{{onState}}" value="{{st}}"><option value="normal">Normal</option><option value="empty">Empty</option><option value="unsaved">Saving</option><option value="failed">Failed save</option><option value="processing">Processing</option><option value="stale">Out of date</option><option value="readonly">Earlier version</option></select></label><button onClick="{{toggleTheme}}">{{themeLabel}}</button></div>
+<div class="top"><span class="brand">AR Create</span><button class="goto" onClick="{{openMenu}}" aria-expanded="{{menuStr}}">Go to… <span class="meta">· now: {{stepName}}</span></button><div class="scope"><label for="sc">Working on</label><select id="sc" onChange="{{onScope}}" value="{{scope}}"><sc-for list="{{scopes}}" as="o" hint-placeholder-count="5"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div><span style="margin-left:auto"></span><button class="btn" onClick="{{goHome}}">Home</button><button class="btn" onClick="{{openLib}}">Find</button><button class="btn" onClick="{{openHist}}">History</button></div>
+<div class="main">
+<!--HEAD-->
+ <div class="content">
+<!--SCREENS-->
+ </div>
+ <sc-if value="{{hasQueue}}" hint-placeholder-val="{{false}}"><div class="stepper"><div class="in"><button class="btn" onClick="{{qPrev}}">Previous</button><span class="meta">{{stepName}} · {{qPos}} · {{scopeName}}</span><button class="pri" onClick="{{qNext}}">Next</button></div></div></sc-if>
+ <footer class="foot {{footCls}}" role="status"><span>{{location}}</span><span class="st {{saveTone}}">{{saveText}}</span><sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{retry}}" style="min-height:30px">Try again</button></sc-if><span>{{textSize}}</span></footer>
+</div>
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><div class="menu" onClick="{{closeMenu}}"><div class="mbox" onClick="{{stop}}" role="dialog" aria-label="Go to">
+ <div style="display:flex;align-items:center;gap:8px"><b style="font-size:16px">Go to</b><span class="meta">· {{scopeName}}</span><button style="margin-left:auto" onClick="{{closeMenu}}">Close</button></div>
+ <div class="mgrid"><sc-for list="{{stepsNav}}" as="a" hint-placeholder-count="4"><div class="mcol"><b>{{a.label}}</b><span class="meta" style="padding:0 6px">{{a.q}}</span><sc-for list="{{a.steps}}" as="x" hint-placeholder-count="3"><button class="mi" onClick="{{x.goM}}"><span>{{x.label}}<small>{{x.hint}}</small></span><sc-if value="{{x.has}}" hint-placeholder-val="{{false}}"><span class="n">{{x.n}}</span></sc-if></button></sc-for></div></sc-for></div>
+ <div class="acts" style="margin-top:12px"><button class="btn" onClick="{{mHome}}">Home</button><button class="btn" onClick="{{mLib}}">Library</button><button class="btn" onClick="{{mTopics}}">Topics</button><button class="btn" onClick="{{mProj}}">Projects</button><button class="btn" onClick="{{mCheck}}">Everything that’s here</button></div>
+</div></div></sc-if>
+<sc-if value="{{hasPanel}}" hint-placeholder-val="{{false}}"><div class="sheet" onClick="{{closePanel}}"><aside class="in" onClick="{{stop}}" aria-label="{{panelTitle}}">
+<!--PANEL-->
+</aside></div></sc-if>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status"><span>{{toast}}</span><button class="btn" onClick="{{clearToast}}">OK</button></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={
+/*STATE*/
+      menu:false};}
+  set(o){this.setState(o);}
+  renderVals(){
+    const s=this.state,self=this;
+/*CORE*/
+/*NAV*/
+    const m=(v)=>()=>self.set({view:v,menu:false});
+    C.stepsNav=C.stepsNav.map(a=>Object.assign({},a,{steps:a.steps.map(x=>Object.assign({},x,{goM:m(x.key)}))}));
+    C.menuOpen=s.menu;C.menuStr=s.menu?'true':'false';C.openMenu=()=>self.set({menu:true});C.closeMenu=()=>self.set({menu:false});C.stop=(e)=>e.stopPropagation();
+    C.mHome=m('home');C.mLib=m('library');C.mTopics=m('topics');C.mProj=m('projects');C.mCheck=m('checklist');
+    return C;
+  }
+}
+</script>
+</body>
+</html>

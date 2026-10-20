@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Full B — Ribbon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+/*CSS*/
+.top{display:flex;align-items:center;gap:10px;padding:8px 24px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap}
+.brand{font-weight:700;margin-right:6px}
+.app .tb{color:var(--dim)}.app .tb.on{color:var(--ink);font-weight:600;background:var(--sel)}
+.ribbon{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-bottom:1px solid var(--line);background:var(--lift)}
+.grp{padding:8px 12px 10px;border-right:1px solid var(--line)}
+.grp:last-child{border-right:0}
+.grp.on{background:color-mix(in srgb,var(--warm) 7%,var(--lift))}
+.gt{display:flex;align-items:baseline;gap:6px;font-weight:700;font-size:13px;margin:0 4px 4px}
+.gt span{font-weight:400;font-size:12px;color:var(--dim)}
+.gsteps{display:flex;gap:2px;flex-wrap:wrap}
+.app .rs{min-height:32px;padding:0 10px;font-size:13px;color:var(--dim);border-radius:7px}
+.app .rs.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line2)}
+.rs .n{font-size:11px;font-weight:700;color:var(--warn);margin-left:4px}
+.main{flex:1;display:flex;flex-direction:column;background:var(--paper);min-height:0}
+.phead{padding:14px 32px 0;display:block}
+.qbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 32px 0}
+.qdrawer{border:1px solid var(--line2);border-radius:12px;background:var(--lift);margin:10px 32px 0;padding:8px;max-width:760px}
+.app .qi{display:flex;gap:10px;align-items:center;width:100%;min-height:40px}
+.app .qi.on{background:var(--sel)}.app .qi.done{opacity:.5}
+.content{flex:1;min-width:0}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--lift);border-left:1px solid var(--line2);padding:16px;overflow:auto;z-index:35;box-shadow:-18px 0 50px rgba(0,0,0,.45)}
+@media (max-width:1000px){.ribbon{grid-template-columns:repeat(2,minmax(0,1fr))}.grp{border-bottom:1px solid var(--line)}}
+@media (max-width:560px){.ribbon{grid-template-columns:minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="app {{themeClass}}">
+<div class="proto" role="note"><b>PROTOTYPE · Full B · Ribbon</b><span>No sidebar. All twelve steps sit in one ribbon across the top, grouped by activity. The page gets the full width.</span><label class="meta">State <select aria-label="Show a state" onChange="{{onState}}" value="{{st}}"><option value="normal">Normal</option><option value="empty">Empty</option><option value="unsaved">Saving</option><option value="failed">Failed save</option><option value="processing">Processing</option><option value="stale">Out of date</option><option value="readonly">Earlier version</option></select></label><button onClick="{{toggleTheme}}">{{themeLabel}}</button></div>
+<div class="top"><span class="brand">AR Create</span><button class="tb {{cHome}}" onClick="{{goHome}}">Home</button><div class="scope"><label for="sb">Working on</label><select id="sb" onChange="{{onScope}}" value="{{scope}}"><sc-for list="{{scopes}}" as="o" hint-placeholder-count="5"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div>
+ <span style="margin-left:auto"></span><button class="tb {{cLib}}" onClick="{{goLibrary}}">Library</button><button class="tb {{cTopics}}" onClick="{{goTopics}}">Topics</button><button class="tb {{cProj}}" onClick="{{goProjects}}">Projects</button><button class="btn" onClick="{{openLib}}">Find</button><button class="btn" onClick="{{openHist}}">History</button><button class="tb {{cCheck}}" onClick="{{goChecklist}}">Everything</button></div>
+<nav class="ribbon" aria-label="Activities and steps"><sc-for list="{{stepsNav}}" as="a" hint-placeholder-count="4"><div class="grp {{a.cls}}"><div class="gt">{{a.label}} <span>{{a.q}}</span></div><div class="gsteps"><sc-for list="{{a.steps}}" as="x" hint-placeholder-count="3"><button class="rs {{x.cls}}" onClick="{{x.go}}" aria-current="{{x.cur}}" title="{{x.hint}}">{{x.label}}<sc-if value="{{x.has}}" hint-placeholder-val="{{false}}"><span class="n">{{x.n}}</span></sc-if></button></sc-for></div></div></sc-for></nav>
+<div class="main">
+<!--HEAD-->
+ <sc-if value="{{hasQueue}}" hint-placeholder-val="{{false}}"><div class="qbar"><button class="btn" onClick="{{toggleQ}}" aria-expanded="{{qOpenStr}}">Up next in {{stepName}} · {{queueLen}}</button><button class="btn" onClick="{{qPrev}}">Previous</button><span class="meta">{{qPos}}</span><button class="btn" onClick="{{qNext}}">Next</button><span class="meta">{{scopeName}}</span></div>
+  <sc-if value="{{qOpen}}" hint-placeholder-val="{{false}}"><div class="qdrawer"><sc-for list="{{queue}}" as="q" hint-placeholder-count="3"><button class="qi {{q.cls}}" onClick="{{q.go}}"><b class="grow">{{q.title}}</b><span class="meta">{{q.sub}}</span><span class="meta">{{q.projName}}</span></button></sc-for></div></sc-if></sc-if>
+ <div class="content">
+<!--SCREENS-->
+ </div>
+ <footer class="foot {{footCls}}" role="status"><span>{{location}}</span><span class="st {{saveTone}}">{{saveText}}</span><sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{retry}}" style="min-height:30px">Try again</button></sc-if><span>{{textSize}}</span></footer>
+</div>
+<sc-if value="{{hasPanel}}" hint-placeholder-val="{{false}}"><aside class="sheet" aria-label="{{panelTitle}}">
+<!--PANEL-->
+</aside></sc-if>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status"><span>{{toast}}</span><button class="btn" onClick="{{clearToast}}">OK</button></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={
+/*STATE*/
+      qOpen:false};}
+  set(o){this.setState(o);}
+  renderVals(){
+    const s=this.state,self=this;
+/*CORE*/
+/*NAV*/
+    C.qOpen=s.qOpen;C.qOpenStr=s.qOpen?'true':'false';C.toggleQ=()=>self.set({qOpen:!s.qOpen});C.queueLen=C.queue.length;
+    return C;
+  }
+}
+</script>
+</body>
+</html>

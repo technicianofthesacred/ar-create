@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Full A — Tree</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+/*CSS*/
+.shell{flex:1;display:flex;min-height:0}
+.side{flex:0 0 250px;background:var(--lift);border-right:1px solid var(--line);padding:10px 8px 24px;display:flex;flex-direction:column;gap:1px}
+.app.closed .side{display:none}
+.rail{display:none;flex:0 0 52px;flex-direction:column;align-items:center;gap:4px;padding:10px 0;background:var(--lift);border-right:1px solid var(--line)}
+.app.closed .rail{display:flex}
+.app .rb{width:40px;min-height:40px;padding:0;display:flex;align-items:center;justify-content:center;color:var(--dim);font-weight:700;font-size:12px}
+.app .rb.on{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line2)}
+.brand{display:flex;align-items:center;font-weight:700;padding:4px 4px 8px 10px}
+.app .nav{display:flex;align-items:center;gap:8px;width:100%;color:var(--dim);min-height:32px;font-size:13.5px}
+.app .nav.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line2)}
+.app .nav.sub{padding-left:22px}
+.nav .n{margin-left:auto;font-size:12px;font-weight:700;color:var(--warn)}
+.ah{display:flex;align-items:baseline;gap:6px;margin:14px 10px 2px;font-size:13px;font-weight:700}
+.ah span{font-weight:400;color:var(--dim);font-size:12px}
+.sh{margin:16px 10px 4px;font-size:12px;color:var(--dim);font-weight:600}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--paper)}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 32px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.phead{padding:14px 32px 0}
+.body{flex:1;display:flex;min-height:0}
+.qcol{flex:0 0 250px;border-right:1px solid var(--line);padding:10px 0;overflow:auto}
+.app .qi{display:flex;flex-direction:column;align-items:flex-start;width:100%;border-radius:0;padding:9px 16px;border-left:3px solid transparent;min-height:auto}
+.app .qi.on{background:var(--sel);border-left-color:var(--warm)}.app .qi.done{opacity:.5}
+.qi b{font-size:13.5px}
+.content{flex:1;min-width:0;overflow:auto}
+.dock{flex:0 0 320px;border-left:1px solid var(--line);background:var(--lift);padding:14px;overflow:auto}
+@media (max-width:1180px){.dock{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);z-index:35;box-shadow:-18px 0 50px rgba(0,0,0,.45)}.qcol{flex-basis:200px}}
+@media (max-width:760px){.shell{flex-wrap:wrap}.side{flex-basis:100%}.qcol{display:none}}
+</style>
+</helmet>
+<div class="app {{themeClass}} {{sideClass}}">
+<div class="proto" role="note"><b>PROTOTYPE · Full A · Tree</b><span>A sidebar with the four activities and all their steps. Lists in the middle, work on the right.</span><label class="meta">State <select aria-label="Show a state" onChange="{{onState}}" value="{{st}}"><option value="normal">Normal</option><option value="empty">Empty</option><option value="unsaved">Saving</option><option value="failed">Failed save</option><option value="processing">Processing</option><option value="stale">Out of date</option><option value="readonly">Earlier version</option></select></label><button onClick="{{toggleTheme}}">{{themeLabel}}</button></div>
+<div class="shell">
+ <nav class="rail" aria-label="Sidebar, closed"><button class="rb" onClick="{{openSide}}" aria-label="Open sidebar">›</button><button class="rb {{cHome}}" onClick="{{goHome}}" aria-label="Home">H</button><sc-for list="{{stepsNav}}" as="a" hint-placeholder-count="4"><button class="rb {{a.cls}}" onClick="{{a.first}}" aria-label="{{a.label}}" title="{{a.label}}">{{a.initial}}</button></sc-for></nav>
+ <nav class="side" aria-label="Sidebar">
+  <div class="brand">AR Create<button style="margin-left:auto;min-height:30px;width:30px;padding:0;text-align:center;color:var(--dim)" onClick="{{closeSide}}" aria-label="Close sidebar">‹</button></div>
+  <button class="nav {{cHome}}" onClick="{{goHome}}">Home</button>
+  <sc-for list="{{stepsNav}}" as="a" hint-placeholder-count="4"><div class="ah">{{a.label}} <span>{{a.q}}</span></div>
+   <sc-for list="{{a.steps}}" as="x" hint-placeholder-count="3"><button class="nav sub {{x.cls}}" onClick="{{x.go}}" aria-current="{{x.cur}}">{{x.label}}<sc-if value="{{x.has}}" hint-placeholder-val="{{false}}"><span class="n">{{x.n}}</span></sc-if></button></sc-for></sc-for>
+  <div class="sh">Find</div>
+  <button class="nav {{cLib}}" onClick="{{goLibrary}}">Library</button><button class="nav {{cTopics}}" onClick="{{goTopics}}">Topics</button><button class="nav {{cProj}}" onClick="{{goProjects}}">Projects</button><button class="nav {{cCheck}}" onClick="{{goChecklist}}">Everything that’s here</button>
+ </nav>
+ <div class="main">
+  <div class="topbar"><div class="scope"><label for="sa">Working on</label><select id="sa" onChange="{{onScope}}" value="{{scope}}"><sc-for list="{{scopes}}" as="o" hint-placeholder-count="5"><option value="{{o.v}}">{{o.l}}</option></sc-for></select></div><span style="margin-left:auto"></span><button class="btn" onClick="{{openLib}}">Find in Library</button><button class="btn" onClick="{{openHist}}">History</button></div>
+<!--HEAD-->
+  <div class="body">
+   <sc-if value="{{hasQueue}}" hint-placeholder-val="{{false}}"><div class="qcol" role="list" aria-label="Waiting in {{stepName}}"><div class="meta" style="padding:4px 16px 6px">{{stepName}} · {{scopeName}}</div><sc-for list="{{queue}}" as="q" hint-placeholder-count="3"><button class="qi {{q.cls}}" onClick="{{q.go}}"><b>{{q.title}}</b><span class="meta">{{q.sub}}</span><span class="meta">{{q.projName}}</span></button></sc-for></div></sc-if>
+   <div class="content">
+<!--SCREENS-->
+   </div>
+   <sc-if value="{{hasPanel}}" hint-placeholder-val="{{false}}"><aside class="dock" aria-label="{{panelTitle}}">
+<!--PANEL-->
+   </aside></sc-if>
+  </div>
+  <footer class="foot {{footCls}}" role="status"><span>{{location}}</span><span class="st {{saveTone}}">{{saveText}}</span><sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{retry}}" style="min-height:30px">Try again</button></sc-if><span>{{textSize}}</span></footer>
+ </div>
+</div>
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status"><span>{{toast}}</span><button class="btn" onClick="{{clearToast}}">OK</button></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={
+/*STATE*/
+      side:true};}
+  set(o){this.setState(o);}
+  renderVals(){
+    const s=this.state,self=this;
+/*CORE*/
+/*NAV*/
+    C.sideClass=s.side?'':'closed';C.closeSide=()=>self.set({side:false});C.openSide=()=>self.set({side:true});
+    return C;
+  }
+}
+</script>
+</body>
+</html>

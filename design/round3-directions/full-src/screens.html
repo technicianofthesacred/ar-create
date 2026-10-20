@@ -1,0 +1,225 @@
+<sc-if value="{{hasRet}}" hint-placeholder-val="{{false}}"><div class="retbar"><span>You came from <b>{{retLabel}}</b>. Nothing you typed there is lost.</span><button class="btn" onClick="{{goRet}}">Back to it</button><button onClick="{{clearRet}}">Dismiss</button></div></sc-if>
+
+<!-- HOME -->
+<sc-if value="{{vHome}}" hint-placeholder-val="{{true}}">
+ <div class="pg">
+ <sc-if value="{{showIntro}}" hint-placeholder-val="{{true}}"><div class="note row"><span class="grow">AR Create turns your recordings, notes, photos and reading into articles, carousels and posts. Pick what you want to do; the switch at the top chooses everything, one project or one topic.</span><button class="btn" onClick="{{hideIntro}}">Got it</button></div></sc-if>
+ <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty"><b>Nothing here yet.</b><br>Start with one thought, a recording or photos. You can add the rest later.</div></sc-if>
+ <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
+  <button class="lead" onClick="{{resume}}"><span class="meta">Pick up where you stopped · Water first · article · today 09:41</span><b>The water is half the tea</b><span class="meta">You were checking “soft water” in paragraph 3.</span></button>
+  <h2 class="h2">Needs you</h2>
+  <sc-for list="{{needs}}" as="n" hint-placeholder-count="3"><div class="row"><span class="grow">{{n.t}}</span><button class="btn" onClick="{{n.go}}">Go</button></div></sc-for>
+  <h2 class="h2">What do you want to do? <span class="meta">· {{scopeName}}</span></h2>
+  <div class="acts4"><sc-for list="{{homeActs}}" as="a" hint-placeholder-count="4"><section class="actcard"><div><b>{{a.label}}</b> <span class="meta">{{a.q}}</span></div>
+   <sc-for list="{{a.steps}}" as="x" hint-placeholder-count="3"><button class="steprow" onClick="{{x.go}}"><span class="grow">{{x.label}}</span><sc-if value="{{x.has}}" hint-placeholder-val="{{false}}"><span class="cnt">{{x.n}}</span></sc-if></button></sc-for></section></sc-for></div>
+ </sc-if>
+ <p class="meta" style="margin-top:20px"><button class="link" onClick="{{goChecklist}}">See everything that’s in AR Create</button></p>
+ </div>
+</sc-if>
+
+<!-- MATERIAL -->
+<sc-if value="{{vMaterial}}" hint-placeholder-val="{{false}}">
+ <div class="pg wide">
+ <div class="seg" role="group" aria-label="Material"><sc-for list="{{matTabs}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" onClick="{{t.go}}" aria-pressed="{{t.pressed}}">{{t.label}}</button></sc-for></div>
+ <sc-if value="{{mAdd}}" hint-placeholder-val="{{false}}">
+  <div class="acts" style="margin:14px 0"><button class="pri" onClick="{{soon}}">Add files</button><button class="btn" onClick="{{soon}}">Write a note</button><button class="btn" onClick="{{soon}}">Add a link or album</button><button class="btn" onClick="{{soon}}">Open material folder</button></div>
+  <div class="row"><div class="grow"><b>Spring walk</b><div class="meta">Recording · 38 min · Lin Yun and you</div></div><sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><span class="chip warn">Preparing transcript · 12 of 38 min</span></sc-if><span class="chip good">Transcript ready</span></div>
+  <div class="row"><div class="grow"><b>Spring visit</b><div class="meta">iCloud shared album · 12 photos brought in · videos skipped</div></div><span class="chip">Brought in</span></div>
+  <div class="row"><div class="grow"><b>Cabin roll</b><div class="meta">Lightroom link saved; photos can’t be brought in yet</div></div><span class="later">Not available yet</span></div>
+  <sc-if value="{{isFailed}}" hint-placeholder-val="{{false}}"><div class="note bad"><b>kettle-video.mov wasn’t added.</b> It is 210 MB; picking files takes up to 64 MB. Put it in the material folder instead.</div></sc-if>
+ </sc-if>
+ <sc-if value="{{mIntake}}" hint-placeholder-val="{{false}}">
+  <div class="row" style="margin-top:10px"><span class="grow meta">Claude looked at each new item and suggests what to do, with a reason. Removing only hides it; you can bring it back.</span><button class="btn" onClick="{{acceptAll}}">Accept all suggestions</button></div>
+  <sc-for list="{{intake}}" as="k" hint-placeholder-count="5"><div class="row"><div class="grow"><b>{{k.name}}</b><div class="meta">{{k.kind}}</div><div style="margin-top:2px">{{k.why}}</div></div>
+   <sc-if value="{{k.open}}" hint-placeholder-val="{{true}}"><button class="btn" onClick="{{k.keep}}">Keep</button><button class="btn" onClick="{{k.remove}}">Remove from view</button><button class="btn" onClick="{{k.later}}">Not sure</button></sc-if>
+   <sc-if value="{{k.decided}}" hint-placeholder-val="{{false}}"><span class="chip">{{k.result}}</span><button class="link" onClick="{{k.undo}}">Undo</button></sc-if></div></sc-for>
+ </sc-if>
+ <sc-if value="{{mSort}}" hint-placeholder-val="{{false}}">
+  <div class="note row" style="margin-top:12px"><span class="grow"><b>{{sortTotal}} YouTube links</b> added this week. Claude placed most of them in topics. {{sortUnsure}} needed you. An item can sit in more than one topic.</span><span class="later">Transcripts are fetched outside the app for now</span><button class="pri" onClick="{{saveGroups}}">Save</button></div>
+  <div class="seg" role="group" aria-label="Sorting view" style="margin:8px 0 14px"><sc-for list="{{sortTabs}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" onClick="{{t.go}}" aria-pressed="{{t.pressed}}">{{t.label}}</button></sc-for></div>
+  <sc-if value="{{tabNeeds}}" hint-placeholder-val="{{true}}">
+   <sc-if value="{{hasCur}}" hint-placeholder-val="{{true}}"><div style="max-width:720px"><div class="meta">{{triPos}} of {{sortUnsure}} · Claude isn’t sure</div><div class="prog"><i style="width:{{triPct}}"></i></div>
+    <div class="fix"><div style="font-size:19px;font-weight:600">{{cur.title}}</div><div class="meta">{{cur.sub}}</div><p style="margin:8px 0 0">{{cur.why}}</p></div>
+    <div class="trib"><sc-for list="{{cur.opts}}" as="o" hint-placeholder-count="3"><button class="btn tall" onClick="{{o.go}}">{{o.label}}</button></sc-for></div>
+    <div class="acts" style="margin-top:8px"><label class="meta">Another topic <select aria-label="Another topic" onChange="{{cur.other}}" value=""><option value="">Choose…</option><sc-for list="{{groupOpts}}" as="g" hint-placeholder-count="6"><option value="{{g.k}}">{{g.label}}</option></sc-for></select></label><button class="btn" onClick="{{cur.skip}}">Skip for now</button></div>
+    <h3 class="meta" style="margin:18px 0 4px">Coming up</h3><sc-for list="{{upNext}}" as="u" hint-placeholder-count="3"><div class="row" style="padding:6px 0"><span class="grow">{{u.title}}<span class="meta" style="display:block">{{u.sub}}</span></span></div></sc-for></div></sc-if>
+   <sc-if value="{{noCur}}" hint-placeholder-val="{{false}}"><div class="empty">All placed. Check the groups, then Save.</div></sc-if>
+  </sc-if>
+  <sc-if value="{{tabGroups}}" hint-placeholder-val="{{false}}"><div class="gview">
+   <div><sc-for list="{{glist}}" as="g" hint-placeholder-count="7"><button class="gl {{g.cls}}" onClick="{{g.pick}}"><span class="grow">{{g.name}}<span class="meta" style="display:block">{{g.dest}}</span></span><b>{{g.n}}</b></button></sc-for></div>
+   <div><div class="acts" style="margin-bottom:8px"><input class="field" aria-label="Group name" value="{{gsel.name}}" onInput="{{gsel.rename}}"><select aria-label="Where this group goes" onChange="{{gsel.setDest}}" value="{{gsel.destKey}}"><option value="water">Add to topic: Why water changes tea</option><option value="new">Make it a new topic</option><option value="mend">Add to topic: Keeping old things in use</option><option value="hold">Keep in Library only</option></select></div>
+    <div class="acts" style="margin-bottom:8px"><input class="field" aria-label="Filter" placeholder="Filter by word or channel" value="{{gq}}" onInput="{{onGq}}"><button class="btn" onClick="{{selectShown}}">Select all {{gShown}}</button><sc-if value="{{hasSel}}" hint-placeholder-val="{{false}}"><label class="meta">Move {{selCount}} to <select aria-label="Move selected to" onChange="{{moveSel}}" value=""><option value="">Choose…</option><sc-for list="{{groupOpts}}" as="g" hint-placeholder-count="6"><option value="{{g.k}}">{{g.label}}</option></sc-for></select></label><button class="btn" onClick="{{makeRule}}">Make a rule</button><button class="btn" onClick="{{clearSel}}">Clear</button></sc-if></div>
+    <div class="tbl"><sc-for list="{{gitems}}" as="v" hint-placeholder-count="8"><label class="trow {{v.cls}}"><input type="checkbox" checked="{{v.checked}}" onChange="{{v.toggle}}" aria-label="Select {{v.title}}"><span class="grow">{{v.title}}</span><span class="meta">{{v.channel}}</span><span class="meta">{{v.len}}</span></label></sc-for></div>
+    <sc-if value="{{hasMore}}" hint-placeholder-val="{{false}}"><button class="btn" style="margin-top:8px" onClick="{{showMore}}">Show {{moreN}} more</button></sc-if></div></div></sc-if>
+  <sc-if value="{{tabRules}}" hint-placeholder-val="{{false}}"><sc-for list="{{rules}}" as="r" hint-placeholder-count="1"><div class="row"><span class="grow">{{r.text}}</span><button class="btn" onClick="{{r.del}}">Remove</button></div></sc-for><sc-if value="{{noRules}}" hint-placeholder-val="{{false}}"><div class="empty">No rules yet. Select items in a group and press Make a rule.</div></sc-if></sc-if>
+ </sc-if>
+ </div>
+</sc-if>
+
+<!-- SOURCE -->
+<sc-if value="{{vSource}}" hint-placeholder-val="{{false}}">
+ <div class="pg two">
+  <div>
+   <div class="meta">{{rec.proj}} · {{rec.meta}}</div>
+   <h2 class="h1s">{{rec.t}}</h2>
+   <div class="note"><b>Your opening note</b><div class="serif">{{rec.open}}</div></div>
+   <sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><div class="note warn">The transcript is being prepared: 12 of 38 minutes ready.</div></sc-if>
+   <sc-for list="{{rec.turns}}" as="t" hint-placeholder-count="5"><div class="turn {{t.cls}}"><span class="meta">{{t.t}}</span><b>{{t.who}}</b><div><span class="serif">{{t.text}}</span>
+     <sc-if value="{{t.flag}}" hint-placeholder-val="{{false}}"><div class="fix" style="margin-top:8px"><div class="meta" style="margin-bottom:6px">{{t.q}}</div><div class="acts"><button class="pri" onClick="{{t.accept}}">{{t.fix}}</button><button class="btn" onClick="{{t.keep}}">Keep as heard</button><button class="btn" onClick="{{t.listen}}">Listen</button></div></div></sc-if>
+     <sc-if value="{{t.fixed}}" hint-placeholder-val="{{false}}"><div class="meta">{{t.result}} <button class="link" onClick="{{t.undo}}">Undo</button></div></sc-if>
+     <sc-if value="{{t.hasWu}}" hint-placeholder-val="{{false}}"><button class="link" onClick="{{t.wu}}">Where it’s used</button></sc-if></div></div></sc-for>
+   <sc-if value="{{rec.hasClose}}" hint-placeholder-val="{{true}}"><div class="note" style="margin-top:12px"><b>Your closing note</b><div class="serif">{{rec.close}}</div></div></sc-if>
+   <div class="acts" style="margin-top:14px"><button class="pri" onClick="{{recNext}}">Next recording</button></div>
+  </div>
+  <aside class="side2"><div class="note"><b>Notes from this conversation</b><div class="meta" style="margin-top:4px">{{rec.notes}}</div></div><div class="note"><b>Other recordings</b><sc-for list="{{recTabs}}" as="r" hint-placeholder-count="3"><button class="nav2 {{r.cls}}" onClick="{{r.go}}">{{r.label}}</button></sc-for></div></aside>
+ </div>
+</sc-if>
+
+<!-- RESEARCH -->
+<sc-if value="{{vResearch}}" hint-placeholder-val="{{false}}">
+ <div class="pg two">
+  <article>
+   <div class="meta">Topic · {{topic.n}} saved items · used by {{topic.usedBy}}</div>
+   <h2 class="h1s">{{topic.t}}</h2>
+   <div class="note"><b>What we know so far</b><div class="serif" style="font-size:16px;margin-top:4px">{{topic.known}}</div></div>
+   <sc-if value="{{topic.isWater}}" hint-placeholder-val="{{true}}">
+    <sc-if value="{{p1Stale}}" hint-placeholder-val="{{false}}"><div class="note warn row"><span class="grow">Point 1 was written before you changed “soft” to “hard”. Check it still holds.</span><button class="btn" onClick="{{markP1}}">It still holds</button></div></sc-if>
+    <h3 class="h3">1 · Limestone makes hard water <span class="chip good">Backed up</span></h3>
+    <p class="serif">Rain picks up carbon dioxide, passes through limestone and dissolves calcium carbonate, so limestone springs usually give hard water.</p>
+    <div class="quote">The water here is {{p1Word}}, it comes through the white stone.<div class="meta">Lin Yun · Spring walk 12:40 · <button class="link" onClick="{{wuA}}">Where it’s used</button></div></div>
+    <h3 class="h3">2 · Minerals and extraction <span class="chip warn">Backed up, with limits</span></h3>
+    <p class="serif">Too few minerals and the cup goes thin; too many and it flattens. Most measured work is on black and green tea.</p>
+    <h3 class="h3">3 · Different views</h3>
+    <p class="serif">Lu Yu ranks mountain spring water first (retold in The Book of Tea). Modern guides warn very soft water under-extracts.</p>
+    <div class="note"><div class="serif">At the cabin the same leaf tasted rounder.</div><div class="meta">Your experience · not checked against outside sources</div></div>
+   </sc-if>
+   <h3 class="h3">Open questions</h3>
+   <sc-for list="{{topic.qs}}" as="q" hint-placeholder-count="2"><div class="fix {{q.cls}}"><b>{{q.t}}</b><div class="meta" style="margin:4px 0 8px">{{q.known}}</div>
+    <sc-if value="{{q.open}}" hint-placeholder-val="{{true}}"><textarea aria-label="Your answer" placeholder="Your answer, in your words. Marked as yours."></textarea><div class="acts" style="margin-top:8px"><button class="pri" onClick="{{q.save}}">Save answer</button><button class="btn" onClick="{{q.ask}}">Ask someone</button><button class="btn" onClick="{{q.leave}}">Leave it open</button><span class="later">Claude can research this outside the app for now</span></div></sc-if>
+    <sc-if value="{{q.done}}" hint-placeholder-val="{{false}}"><span class="chip">{{q.status}}</span></sc-if></div></sc-for>
+  </article>
+  <aside class="side2"><div class="note"><b>Claude added 2 sources</b><div class="meta" style="margin:4px 0 8px">Yesterday 21:14. Added for reference; they won’t change your writing unless you choose.</div><div class="acts"><button class="btn" onClick="{{soon}}">Keep</button><button class="btn" onClick="{{soon}}">Not useful</button></div></div><div class="note"><b>Other topics</b><sc-for list="{{topicTabs}}" as="r" hint-placeholder-count="4"><button class="nav2 {{r.cls}}" onClick="{{r.go}}">{{r.label}}</button></sc-for></div></aside>
+ </div>
+</sc-if>
+
+<!-- YOUR THOUGHTS -->
+<sc-if value="{{vThoughts}}" hint-placeholder-val="{{false}}">
+ <div class="pg two">
+  <div><div class="meta">Your thoughts · {{thoughtProj}}</div><h2 class="h1s">In your own words</h2>
+   <textarea class="tx serif" aria-label="Your thoughts" value="{{thought}}" onInput="{{onThought}}"></textarea><div class="meta" style="margin-top:4px">Yours, attributed to you. Your experience, not an outside fact.</div>
+   <h3 class="h3">Linked from your Library</h3>
+   <sc-for list="{{linked}}" as="l" hint-placeholder-count="3"><div class="note"><div class="serif">“{{l.text}}”</div><div class="meta">{{l.src}} · linked, not copied · <button class="link" onClick="{{l.wu}}">Where it’s used</button></div></div></sc-for>
+   <button class="btn" onClick="{{openLib}}">Find more in the Library</button>
+   <h3 class="h3">Make something from this</h3>
+   <div class="cards"><sc-for list="{{makeFrom}}" as="m" hint-placeholder-count="4"><button class="cardb" onClick="{{m.go}}"><b>{{m.t}}</b><span class="meta">{{m.kind}}</span></button></sc-for></div>
+  </div>
+  <aside class="side2"><div class="note"><b>Tentative ideas</b><div class="row"><span class="grow">Tell it from the kitchen table, not the lab.<span class="meta" style="display:block">Suggested by Claude · not adopted</span></span></div><button class="btn" onClick="{{goDirection}}">Make it a decision</button></div><div class="note"><b>Ask Claude about this</b><div class="meta">Works in Claude now; in the app later. Same notes either way.</div></div></aside>
+ </div>
+</sc-if>
+
+<!-- DIRECTION -->
+<sc-if value="{{vDirection}}" hint-placeholder-val="{{false}}">
+ <div class="pg">
+  <h2 class="h1s">Your decisions for Water first</h2>
+  <sc-if value="{{notDecided}}" hint-placeholder-val="{{true}}"><div class="fix"><b>Where should “hard water” change?</b><div class="meta" style="margin:4px 0 8px">You changed “soft” to “hard” in the recording. Pieces outside your choice keep their words.</div><div class="acts"><button class="pri" onClick="{{decA}}">Article and slide 4</button><button class="btn" onClick="{{decB}}">Article only</button></div></div></sc-if>
+  <sc-if value="{{decided}}" hint-placeholder-val="{{false}}"><div class="row"><div class="grow"><b>Say “hard water”, and keep the surprise that it still tastes sweet</b><div class="meta">Applies to: {{decided}}</div></div><button class="link" onClick="{{undoDecide}}">Undo</button></div></sc-if>
+  <div class="row"><div class="grow"><b>Tell it from the kitchen table, not the lab</b><div class="meta">Applies to: article, carousel · 15 Oct</div></div></div>
+  <div class="row"><div class="grow"><b>First person, plain, no product claims</b><div class="meta">Applies to: everything in Water first</div></div></div>
+  <div class="row"><div class="grow"><b>Keep Lin Yun’s line exactly</b><div class="meta">Applies to: everything · <button class="link" onClick="{{wuU}}">Where it’s used</button></div></div></div>
+  <h3 class="h3">Changed your mind</h3>
+  <div class="row"><div class="grow"><s>Lead with the science</s><div class="meta">Replaced 15 Oct: “Science felt like a lecture; the cabin story is the way in.”</div></div></div>
+  <div class="row"><div class="grow"><s>A taste-test listicle</s><div class="meta">Rejected 13 Oct: “Turns it into a buying guide.”</div></div></div>
+ </div>
+</sc-if>
+
+<!-- WRITE (article) -->
+<sc-if value="{{vWrite}}" hint-placeholder-val="{{false}}">
+ <div class="pg two">
+  <article class="prose">
+   <sc-if value="{{returned}}" hint-placeholder-val="{{false}}"><div class="note good">Back where you were. Nothing you typed is lost.</div></sc-if>
+   <sc-if value="{{isReadOnly}}" hint-placeholder-val="{{false}}"><div class="note warn row"><span class="grow"><b>Viewing an earlier version, 16 Oct evening.</b> Going back makes a new version; nothing in between is lost.</span><button class="btn" onClick="{{restoreOld}}">Go back to this</button><button class="btn" onClick="{{backCurrent}}">Back to current</button></div></sc-if>
+   <p>At the cabin the same leaf tasted rounder. I blamed the altitude, then the kettle, then my mood. It took a second visit to admit the obvious: the water was different.</p>
+   <div class="quote">Tea is a guest in the water. If the house is unkind, the guest leaves early.<div class="meta">Lin Yun’s exact words · Spring walk 12:58 · <button class="link" onClick="{{wuU}}">Where it’s used</button></div></div>
+   <sc-if value="{{notEditing}}" hint-placeholder-val="{{true}}"><p><button class="markbtn {{p3cls}}" onClick="{{editP3}}" aria-label="Edit paragraph 3">{{p3}}</button></p></sc-if>
+   <sc-if value="{{editing}}" hint-placeholder-val="{{false}}"><div style="margin:0 0 14px"><textarea class="tx" aria-label="Paragraph 3" value="{{draft}}" onInput="{{onDraft}}"></textarea><div class="acts" style="margin-top:6px"><button class="pri" onClick="{{saveP3}}">Done</button><button class="btn" onClick="{{cancelP3}}">Cancel</button></div></div></sc-if>
+   <p>Back in the city I tried three waters side by side: tap, filtered, and bottled spring. The leaf was the same. The tea was not.</p>
+   <h3 class="h3" style="font-size:20px">What the minerals do</h3>
+   <p>Calcium and magnesium change how quickly flavour leaves the leaf. Too little and the cup goes thin; too much and it turns flat.</p>
+  </article>
+  <aside class="side2" aria-label="Beside the article">
+   <div class="seg" role="group" aria-label="Show"><sc-for list="{{insp}}" as="t" hint-placeholder-count="4"><button class="{{t.cls}}" onClick="{{t.go}}" aria-pressed="{{t.pressed}}">{{t.label}}</button></sc-for></div>
+   <sc-if value="{{inspNotes}}" hint-placeholder-val="{{true}}">
+    <sc-if value="{{p3Wait}}" hint-placeholder-val="{{true}}"><div class="note"><b>Paragraph 3</b><div class="meta">The recording at 12:40 may say “hard”. Check it in Source first.</div></div></sc-if>
+    <sc-if value="{{p3Open}}" hint-placeholder-val="{{false}}"><div class="note warn"><b>Paragraph 3 says “soft”</b><div class="meta" style="margin:4px 0 8px">The recording now says “hard”.</div><button class="btn" onClick="{{editP3}}">Edit this sentence</button></div></sc-if>
+    <sc-if value="{{p3Done}}" hint-placeholder-val="{{false}}"><div class="note good"><b>Paragraph 3 fixed</b></div></sc-if>
+    <div class="note"><b>Ask Claude about a sentence</b><div class="meta">Select words to ask. <span class="later">In the app later; works in Claude now</span></div></div>
+   </sc-if>
+   <sc-if value="{{inspDec}}" hint-placeholder-val="{{false}}"><div class="note"><b>Your decisions for this article</b><div class="meta">Kitchen table, not the lab · first person · keep Lin Yun’s line · {{decText}}</div></div></sc-if>
+   <sc-if value="{{inspReady}}" hint-placeholder-val="{{false}}"><div class="note"><b>Ready?</b><div class="meta">{{readyText}}</div></div></sc-if>
+   <sc-if value="{{inspHist}}" hint-placeholder-val="{{false}}"><div class="note"><b>Earlier versions</b><div class="row"><span class="grow">Today 09:12 to 09:41 · 6 changes</span><button class="link" onClick="{{previewOld}}">Look</button></div><div class="row"><span class="grow">16 Oct, evening · 14 changes</span><button class="link" onClick="{{previewOld}}">Look</button></div><div class="meta">Versions from before 12 Oct can’t be shown.</div></div></sc-if>
+  </aside>
+ </div>
+</sc-if>
+
+<!-- WRITE (simple pieces) -->
+<sc-if value="{{vWriteSimple}}" hint-placeholder-val="{{false}}">
+ <div class="pg"><textarea class="tx serif" style="min-height:260px" aria-label="{{pieceTitle}}" value="{{simpleBody}}" onInput="{{onSimple}}"></textarea><div class="meta" style="margin-top:6px">Its own words. Shared origins never change these words without you.</div></div>
+</sc-if>
+
+<!-- READ -->
+<sc-if value="{{vRead}}" hint-placeholder-val="{{false}}">
+ <article class="pg prose serif readv"><p>At the cabin the same leaf tasted rounder. I blamed the altitude, then the kettle, then my mood. It took a second visit to admit the obvious: the water was different.</p><div class="quote">Tea is a guest in the water. If the house is unkind, the guest leaves early.</div><p>{{p3}}</p><p>Back in the city I tried three waters side by side: tap, filtered, and bottled spring. The leaf was the same. The tea was not.</p></article>
+</sc-if>
+
+<!-- CHECK -->
+<sc-if value="{{vCheck}}" hint-placeholder-val="{{false}}">
+ <div class="pg"><p class="meta" style="margin-top:0">Quotes and splits checked against the recordings.</p>
+  <div class="row"><div class="grow"><b>{{chk1}}</b><div class="meta">Paragraph 3</div></div><sc-if value="{{c1Open}}" hint-placeholder-val="{{false}}"><button class="pri" onClick="{{editP3}}">Fix in the article</button></sc-if><sc-if value="{{c1Ok}}" hint-placeholder-val="{{true}}"><span class="chip good">OK</span></sc-if></div>
+  <div class="row"><div class="grow"><b>Lin Yun’s quote matches the recording word for word</b><div class="meta">Paragraph 2</div></div><span class="chip good">OK</span></div>
+  <div class="row"><div class="grow"><b>“Turns flat” is only backed up for black tea</b><div class="meta">Paragraph 5 · keep it, soften it, or cut it</div></div><button class="btn" onClick="{{resume}}">Look in the article</button></div>
+  <button class="btn" style="margin-top:14px" onClick="{{checkAgain}}">Check again</button></div>
+</sc-if>
+
+<!-- MEDIA -->
+<sc-if value="{{vMedia}}" hint-placeholder-val="{{false}}">
+ <div class="pg wide"><div class="photos"><sc-for list="{{photos}}" as="p" hint-placeholder-count="6"><div class="ph"><div class="img"></div><b>{{p.cap}}</b><div class="meta">{{p.name}} · {{p.credit}}</div><div class="meta">{{p.uses}}</div><sc-if value="{{p.hasWarn}}" hint-placeholder-val="{{false}}"><span class="chip warn">{{p.warn}}</span></sc-if><div class="acts" style="margin-top:6px"><button class="btn" onClick="{{soon}}">Edit caption</button><sc-if value="{{p.hasWu}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{p.wu}}">Where it’s used</button></sc-if></div></div></sc-for></div>
+  <div class="note" style="margin-top:14px"><b>spring-walk.mov · 1:12</b> Preview only. <span class="later">Trimming not available yet</span></div></div>
+</sc-if>
+
+<!-- ARRANGE -->
+<sc-if value="{{vArrange}}" hint-placeholder-val="{{false}}">
+ <div class="pg two wide"><div><p class="meta" style="margin-top:0">All 8 slides · 1080 × 1350 · your existing templates. Drag to reorder, or select one and move it.</p><div class="slides"><sc-for list="{{slides}}" as="x" hint-placeholder-count="8"><button class="slide {{x.cls}}" draggable="true" onDragStart="{{x.dragStart}}" onDragOver="{{x.dragOver}}" onDrop="{{x.drop}}" onClick="{{x.pick}}" aria-pressed="{{x.pressed}}" aria-label="Slide {{x.n}}: {{x.text}}"><span class="meta">{{x.n}} · {{x.tpl}}</span><span class="img"></span><span class="sw">{{x.text}}</span></button></sc-for></div></div>
+ <aside class="side2"><div class="note"><b>Slide {{selSlide.n}}</b><div class="serif" style="margin:6px 0">{{selSlide.text}}</div><div class="meta" style="margin-bottom:8px">Photo: {{selSlide.photo}}</div><sc-if value="{{selSlide.flag}}" hint-placeholder-val="{{false}}"><div class="note warn">Still says “soft”. <button class="btn" onClick="{{fixSlide}}">Change to “hard water, still sweet”</button></div></sc-if><div class="acts"><button class="btn" onClick="{{moveEarlier}}">Move earlier</button><button class="btn" onClick="{{moveLater}}">Move later</button><button class="btn" onClick="{{soon}}">Template</button></div></div><div class="note"><b>Caption</b><div class="serif">Same leaf, three waters. Slide through to see what changed.</div></div></aside></div>
+</sc-if>
+
+<!-- AUDIENCE -->
+<sc-if value="{{vAudience}}" hint-placeholder-val="{{false}}">
+ <div class="pg wide">
+  <sc-if value="{{audCar}}" hint-placeholder-val="{{true}}"><div class="slides"><sc-for list="{{slides}}" as="x" hint-placeholder-count="8"><div class="slide"><span class="meta">{{x.n}} / 8</span><span class="img"></span><span class="sw">{{x.text}}</span></div></sc-for></div><div class="acts" style="margin-top:14px"><button class="pri" onClick="{{download}}">Download 8 images and the caption</button><span class="later">Chinese caption: not available yet</span><span class="later">Posting to Instagram: not available yet</span></div></sc-if>
+  <sc-if value="{{audArt}}" hint-placeholder-val="{{false}}"><article class="prose serif readv"><h2 class="h1s">The water is half the tea</h2><p>At the cabin the same leaf tasted rounder…</p></article><button class="pri" onClick="{{downloadArt}}">Download as a web page</button></sc-if>
+ </div>
+</sc-if>
+
+<!-- SHARE -->
+<sc-if value="{{vShare}}" hint-placeholder-val="{{false}}">
+ <div class="pg"><sc-for list="{{msgs}}" as="m" hint-placeholder-count="3"><div class="fix {{m.cls}}" style="border-color:var(--line2)"><div class="meta">To {{m.who}} · {{m.about}} · {{m.status}}</div><div class="serif" style="font-size:16px;margin:6px 0">{{m.text}}</div><div class="acts"><button class="btn" onClick="{{m.copy}}">Copy to send yourself</button><span class="later">Sending from the app: not available yet</span></div></div></sc-for></div>
+</sc-if>
+
+<!-- OUTPUTS -->
+<sc-if value="{{vOutputs}}" hint-placeholder-val="{{false}}">
+ <div class="pg"><sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><div class="note warn">Making the carousel images: 3 of 8.</div></sc-if>
+  <sc-for list="{{pieces}}" as="p" hint-placeholder-count="5"><div class="row"><div class="grow"><b>{{p.t}}</b><div class="meta">{{p.kind}} · {{p.proj}}</div></div><span class="chip">{{p.status}}</span><button class="btn" onClick="{{p.go}}">Open</button></div></sc-for>
+  <button class="btn" style="margin-top:14px" onClick="{{newPiece}}">New piece</button></div>
+</sc-if>
+
+<!-- MAGAZINE STORY -->
+<sc-if value="{{vStory}}" hint-placeholder-val="{{false}}">
+ <div class="pg two"><article class="prose"><div class="note"><span class="chip">Real · published</span> <span class="meta">The live story from teajia.com, read-only here.</span></div><div class="pull serif">“Nine out of ten old things are damaged. But I think these are all marks of history.”</div><p class="serif">At the base of the Wuyi Mountains, I found my way into this shop where I just loved everything. Everything was taken care of at such a high level.</p><p class="serif">Yan Jinwen mends old tea ware with lacquer. It began with tea.</p></article>
+ <aside class="side2"><div class="note"><b>Magazine steps</b><sc-for list="{{mag}}" as="m" hint-placeholder-count="8"><div class="row" style="padding:8px 0"><span class="grow"><b>{{m.t}}</b><span class="meta" style="display:block">{{m.d}}</span></span><span class="chip {{m.cls}}">{{m.state}}</span></div></sc-for></div></aside></div>
+</sc-if>
+
+<!-- LIBRARY / TOPICS / PROJECTS / CHECKLIST -->
+<sc-if value="{{vLibrary}}" hint-placeholder-val="{{false}}"><div class="pg"><input class="field" style="width:100%;margin-bottom:12px" aria-label="Search the Library" placeholder="Search everything you saved"><sc-for list="{{libRows}}" as="r" hint-placeholder-count="6"><div class="row"><div class="grow"><b>{{r.t}}</b><div class="meta">{{r.kind}} · in {{r.inn}}</div></div><sc-if value="{{r.hasWu}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{r.wu}}">Where it’s used</button></sc-if><button class="btn" onClick="{{r.open}}">Open</button></div></sc-for><p class="meta">Saved once; topics and projects link to items, nothing is copied. Search finds exact words for now.</p></div></sc-if>
+<sc-if value="{{vTopics}}" hint-placeholder-val="{{false}}"><div class="pg"><sc-for list="{{topicRows}}" as="r" hint-placeholder-count="4"><div class="row"><div class="grow"><b>{{r.t}}</b><div class="meta">{{r.sub}}</div></div><button class="btn" onClick="{{r.go}}">Open</button></div></sc-for></div></sc-if>
+<sc-if value="{{vProjects}}" hint-placeholder-val="{{false}}"><div class="pg"><input class="field" style="width:100%;margin-bottom:12px" aria-label="Search projects" placeholder="Search 48 projects" value="{{projQ}}" onInput="{{onProjQ}}"><sc-for list="{{projRows}}" as="r" hint-placeholder-count="8"><div class="row"><div class="grow"><b>{{r.t}}</b><div class="meta">{{r.sub}}</div></div><button class="btn" onClick="{{r.pin}}">{{r.pinLabel}}</button><button class="btn" onClick="{{r.go}}">Work on this</button></div></sc-for></div></sc-if>
+<sc-if value="{{vChecklist}}" hint-placeholder-val="{{false}}"><div class="pg"><p class="meta" style="margin-top:0">Every part of AR Create in this layout, and where it is. Press one to go there.</p><sc-for list="{{checklist}}" as="c" hint-placeholder-count="10"><div class="row"><span class="chip good">Here</span><div class="grow"><b>{{c.t}}</b><div class="meta">{{c.d}}</div></div><button class="btn" onClick="{{c.go}}">Go</button></div></sc-for></div></sc-if>
