@@ -576,3 +576,24 @@ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.docum
  body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{top:7px!important;min-height:36px!important;height:36px!important}
 }
 @media(max-width:650px){#c3-crumb .cb-size output{display:none}#c3-crumb .cb-size{gap:0;margin-right:0}}
+/* Check panel, matched to Write and Read: no repeated purpose line, one filled action with quiet sand links beside it,
+   review tools as hairline rows, and earlier checks as the labelled footer at the bottom of the column. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .wn-check-findings{display:flex!important;flex-direction:column;padding:16px 16px 0!important}
+ body.c3-tabs #app #workspace .wn-check-findings>.c3-page-notes{display:none!important}
+ body.c3-tabs #app #workspace .wn-check-findings .draft-check-room>.flow-row:not(.draft-check-heading){display:flex!important;flex-wrap:wrap;align-items:center;gap:8px 16px!important}
+ body.c3-tabs #app #workspace .wn-check-findings .draft-check-room>.flow-row:not(.draft-check-heading) button:not([data-current-check="run"]){min-height:28px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--warm)!important;font:500 13px/1.4 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace .wn-check-findings .draft-check-room>.flow-row:not(.draft-check-heading) button:not([data-current-check="run"]):hover{text-decoration:underline;text-underline-offset:3px}
+ body.c3-tabs #app #workspace .wn-check-findings button[data-current-check="run"]{min-height:34px!important;padding:0 14px!important;font:500 13px/1 var(--ar-ui)!important;border-radius:var(--c3-r,8px)!important}
+ body.c3-tabs #app #workspace .wn-check-findings .sws-check-tools>details.sws-tool{border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;background:none!important;margin:0!important}
+ body.c3-tabs #app #workspace .wn-check-findings .sws-check-tools>details.sws-tool>summary{min-height:40px!important;padding:0!important;border:0!important;background:none!important;font:500 13px/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink))!important}
+ body.c3-tabs #app #workspace .wn-check-findings>details.flow-retained{margin:auto -16px 0!important;padding:12px 16px 14px 74px!important;position:sticky;bottom:var(--cb-h,28px);background:var(--c3-lift,var(--rail));border-top:1px solid var(--line)}
+ body.c3-tabs #app #workspace .wn-check-findings>details.flow-retained::before{content:"Earlier";position:absolute;left:16px;top:12px;font:600 10.5px/1.9 var(--ar-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c3-ghost,var(--line2))}
+ body.c3-tabs #app #workspace .wn-check-findings>details.flow-retained>summary{font:500 12px/1.5 var(--ar-ui)!important;color:var(--warm)!important;padding:0!important;min-height:0!important}
+}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .wn-check-findings>#current-draft-check{padding-top:0!important;margin-top:0!important}
+ body.c3-tabs #app #workspace .wn-check-findings>#current-draft-check>.draft-check-room{margin-top:0!important;padding-top:0!important}
+ body.c3-tabs #app #workspace .wn-check-findings>details.flow-retained>summary{margin:0!important;display:flex!important;align-items:center;min-height:20px!important;line-height:20px!important}
+ body.c3-tabs #app #workspace .wn-check-findings>details.flow-retained::before{top:12px!important;line-height:20px!important}
+}
