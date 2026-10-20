@@ -32,7 +32,8 @@ test('Research reads saved findings only for connected pieces, through the read-
 test('no saved findings is said plainly with each piece’s reason; never filled with examples',async()=>{
  const f=fixture();
  f.d.querySelector('[data-ht-research]').click();await f.settle();
- assert.match(f.d.querySelector('.rt-empty h2').textContent,/No saved research findings yet/);
+ assert.match(f.d.querySelector('.rt-c3-empty h3').textContent,/No saved findings yet/);
+ assert.ok(f.d.querySelector('.rt-c3-empty [data-rt-decide]'),'a real next step: research a piece');
  assert.match(f.d.querySelector('.rt-note').textContent,/Invented piece one: No saved research findings/);
  assert.equal(f.d.querySelectorAll('.rt-card').length,0);
 });

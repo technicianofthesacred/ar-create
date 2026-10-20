@@ -84,3 +84,5 @@ body.c3-research-open #c3-tabstrip [data-ht-research]{background:var(--paper);co
 #c3-research .rt-cm{position:absolute;top:8px;right:8px;width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:none;color:var(--dim)}
 #c3-research .rt-cm:hover,#c3-research .rt-cm[aria-expanded="true"]{background:var(--c3-lift,var(--rail));border-color:var(--line);color:var(--ink)}
 #c3-research .rt-cmenu{top:42px;right:8px;z-index:6}
+#c3-research .rt-board>.c3-empty{flex:1 1 100%;max-width:none}
+#c3-research .c3-empty .ce-btn.pri{background:var(--ink);border-color:var(--ink);color:var(--bg)}
