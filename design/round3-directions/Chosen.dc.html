@@ -29,7 +29,7 @@ body{margin:0}
 .proto button{min-height:26px;padding:0 8px;font-size:12px;border-color:var(--line2)}
 .proto button.on{background:var(--ink);color:var(--bg)}
 .shell{flex:1;display:flex;flex-wrap:nowrap;min-height:0}
-.side{flex:1 1 240px;max-width:260px;background:var(--lift);border-right:1px solid var(--line);padding:12px 8px 24px;display:flex;flex-direction:column;gap:2px}
+.side{flex:0 0 288px;max-width:288px;background:var(--lift);border-right:1px solid var(--line);padding:12px 8px 24px;display:flex;flex-direction:column;gap:2px}
 .side .brand{font-weight:700;padding:6px 10px 10px}
 .side h4{margin:14px 10px 4px;font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .nav{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;color:var(--dim)}
@@ -68,7 +68,7 @@ body{margin:0}
 .app .ghead{display:flex;align-items:center;gap:6px;width:100%;min-height:28px;margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
 .ghead .n{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500}
 .chev{flex:none;color:var(--dim);transition:transform .15s}.chev.open{transform:rotate(90deg)}.chev.none{visibility:hidden}.chevhit{display:inline-flex;padding:4px;margin:-4px 0 -4px -4px;border-radius:4px}.chevhit:hover{background:var(--line2)}
-.nav .n{white-space:nowrap}
+.nav .n{white-space:nowrap}.nav.sub .n{font-size:10.5px}
 .prow{display:flex;align-items:center;position:relative}
 .prow .proj{flex:1;min-width:0}
 .pt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -78,6 +78,22 @@ body{margin:0}
 .mk{display:inline-block;width:8px;height:8px;flex:none}
 .mk.piece{border-radius:50%;background:var(--dim)}
 .mk.piece.warn{background:var(--warn)}.mk.piece.good{background:var(--good)}.mk.piece.real{background:var(--warm)}
+.mk.article{width:9px;height:9px;border-radius:1px;background:repeating-linear-gradient(to bottom,var(--dim) 0 1.5px,transparent 1.5px 3px)}
+.mk.carousel{width:7px;height:8px;border:1.5px solid var(--dim);border-radius:1.5px;box-shadow:2.5px -2.5px 0 -1px var(--lift),2.5px -2.5px 0 0 var(--dim)}
+.mk.listing{width:10px;height:7px;border:1.5px solid var(--dim);border-radius:1.5px 5px 5px 1.5px}
+.mk.script{width:8px;height:9px;background:var(--dim);clip-path:polygon(0 0,100% 50%,0 100%)}
+.mk.post{width:8px;height:8px;border-radius:2px;background:var(--dim)}
+.mk.story{width:8px;height:8px;border-radius:50%;background:var(--warm);box-shadow:0 0 0 2px var(--lift),0 0 0 3px var(--warm)}
+.mk.material{width:9px;height:7px;border:1.5px solid var(--dim);border-top-width:3px;border-radius:1.5px}
+.mk.thought{width:9px;height:7px;border:1.5px solid var(--dim);border-radius:5px 5px 5px 1px}
+.sd{width:6px;height:6px;border-radius:50%;flex:none;margin-left:4px}.sd.warn{background:var(--warn)}.sd.good{background:var(--good)}
+.kh{font-size:10.5px;color:var(--dim);padding:4px 0 2px 34px;letter-spacing:.03em}
+.app .padd.on{opacity:1;background:var(--sel)}
+.addmenu{margin:2px 4px 8px 22px;padding:8px;border:1px solid var(--line2);border-radius:10px;background:var(--paper);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.amh{font-size:10.5px;color:var(--dim);margin:2px 2px 4px;letter-spacing:.03em}
+.amg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;margin-bottom:6px}
+.app .amg button,.app .amr{display:flex;align-items:center;gap:7px;min-height:30px;font-size:12.5px;width:100%}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:48px;background:var(--paper);border:1px solid var(--warm);border-radius:10px;padding:10px 14px;z-index:45;box-shadow:0 18px 50px rgba(0,0,0,.45);display:flex;gap:10px;align-items:center;max-width:calc(100vw - 32px)}
 .mk.coll{border-radius:2px;border:1.5px solid var(--warm);transform:rotate(45deg);width:7px;height:7px}
 .turn.hi{background:color-mix(in srgb,var(--warm) 10%,transparent)}
 .h1{font-size:28px;font-weight:700;line-height:1.2;margin:0 0 6px}
@@ -158,16 +174,25 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
    <button class="ghead" onClick="{{g.toggle}}" aria-expanded="{{g.openStr}}"><svg class="chev {{g.chevCls}}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4.5 2.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{g.label}}<span class="n">{{g.count}}</span></button>
    <sc-if value="{{g.open}}" hint-placeholder-val="{{true}}">
     <sc-for list="{{g.projects}}" as="pr" hint-placeholder-count="2">
-     <div class="prow"><button class="nav proj {{pr.cls}}" onClick="{{pr.open}}" aria-expanded="{{pr.openStr}}"><span class="chevhit" onClick="{{pr.toggle}}"><svg class="chev {{pr.chevCls}}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4.5 2.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="pt">{{pr.title}}</span><span class="n">{{pr.when}}</span></button><button class="padd" onClick="{{pr.add}}" aria-label="New piece in {{pr.title}}">+</button></div>
+     <div class="prow"><button class="nav proj {{pr.cls}}" onClick="{{pr.open}}" aria-expanded="{{pr.openStr}}"><span class="chevhit" onClick="{{pr.toggle}}"><svg class="chev {{pr.chevCls}}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4.5 2.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="pt">{{pr.title}}</span><span class="n">{{pr.when}}</span></button><button class="padd {{pr.addCls}}" onClick="{{pr.add}}" aria-label="Add to {{pr.title}}" aria-expanded="{{pr.addingStr}}">+</button></div>
+     <sc-if value="{{pr.adding}}" hint-placeholder-val="{{false}}"><div class="addmenu" role="menu" aria-label="Add to {{pr.title}}">
+      <div class="amh">New piece in {{pr.title}}</div>
+      <div class="amg"><sc-for list="{{addPieces}}" as="a" hint-placeholder-count="5"><button role="menuitem" onClick="{{a.go}}"><span class="mk {{a.mk}}" aria-hidden="true"></span>{{a.label}}</button></sc-for></div>
+      <div class="amh">Also</div>
+      <sc-for list="{{addOther}}" as="a" hint-placeholder-count="3"><button role="menuitem" class="amr" onClick="{{a.go}}"><span class="mk {{a.mk}}" aria-hidden="true"></span>{{a.label}}<span class="meta" style="margin-left:auto">{{a.hint}}</span></button></sc-for>
+     </div></sc-if>
      <sc-if value="{{pr.isOpen}}" hint-placeholder-val="{{false}}">
-      <sc-for list="{{pr.kids}}" as="k" hint-placeholder-count="3"><button class="nav sub {{k.cls}}" onClick="{{k.open}}"><span class="mk {{k.mk}}" aria-hidden="true"></span><span class="pt">{{k.title}}</span><span class="n">{{k.when}}</span></button></sc-for>
+      <sc-if value="{{pr.hasColls}}" hint-placeholder-val="{{false}}"><div class="kh">Collections</div></sc-if>
+      <sc-for list="{{pr.colls}}" as="k" hint-placeholder-count="1"><button class="nav sub {{k.cls}}" onClick="{{k.open}}" title="{{k.tip}}"><span class="mk {{k.mk}}" aria-hidden="true"></span><span class="pt">{{k.title}}</span><sc-if value="{{k.flag}}" hint-placeholder-val="{{false}}"><span class="sd {{k.st}}" aria-label="{{k.flagLabel}}"></span></sc-if><span class="n">{{k.kind}}</span></button></sc-for>
+      <sc-if value="{{pr.hasPieces}}" hint-placeholder-val="{{false}}"><div class="kh">Pieces</div></sc-if>
+      <sc-for list="{{pr.pieces}}" as="k" hint-placeholder-count="3"><button class="nav sub {{k.cls}}" onClick="{{k.open}}" title="{{k.tip}}"><span class="mk {{k.mk}}" aria-hidden="true"></span><span class="pt">{{k.title}}</span><sc-if value="{{k.flag}}" hint-placeholder-val="{{false}}"><span class="sd {{k.st}}" aria-label="{{k.flagLabel}}"></span></sc-if><span class="n">{{k.kind}}</span></button></sc-for>
      </sc-if>
     </sc-for>
     <sc-if value="{{g.more}}" hint-placeholder-val="{{false}}"><button class="nav sub" onClick="{{goProjects}}">Show all {{projCount}} projects →</button></sc-if>
    </sc-if>
   </sc-for>
   <sc-if value="{{treeEmpty}}" hint-placeholder-val="{{false}}"><p class="meta" style="padding:0 10px">Nothing matches. <button class="link" onClick="{{clearSideQ}}">Clear</button></p></sc-if>
-  <p class="meta" style="padding:8px 10px 0;margin:0"><span class="mk piece" aria-hidden="true"></span> piece <span class="mk coll" aria-hidden="true" style="margin-left:8px"></span> collection</p>
+  
   <button class="btn" style="margin:14px 8px 0;text-align:center">New project or concept</button>
  </nav>
 
@@ -455,6 +480,7 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </div>
 
 
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status"><span>{{toast}}</span><button class="btn" onClick="{{clearToast}}">OK</button></div></sc-if>
 <sc-if value="{{walkOn}}" hint-placeholder-val="{{false}}">
  <div class="walk" role="dialog" aria-label="Walkthrough"><div class="meta">{{walkTitle}} · step {{walkStepN}} of {{walkLen}}</div><p style="margin:6px 0 10px;font-size:14px">{{walkCaption}}</p><div style="display:flex;gap:6px"><button class="btn" onClick="{{walkBack}}">Back</button><button class="pri" onClick="{{walkNext}}">{{walkNextLabel}}</button><button style="margin-left:auto" onClick="{{walkEnd}}">Close</button></div></div>
 </sc-if>
@@ -462,7 +488,7 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
-  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1'],open:{p0:true},grp:{pinned:true,recent:true,unfiled:true},sideQ:''};}
+  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1'],addFor:null,addTitle:'',toast:'',open:{p0:true},grp:{pinned:true,recent:true,unfiled:true},sideQ:''};}
   set(o){this.setState(o);}
   renderVals(){
     const s=this.state,self=this,st=s.st;
@@ -600,20 +626,25 @@ class Component extends DCLogic {
       goHome:go('home'),goOverview:go('overview'),goResearch:go('research'),goDirection:go('direction'),goSource:go('source'),goMedia:go('media'),goShare:go('share'),goAudience:go('audience'),goMending:go('real'),openReal:go('real'),openCarousel:go('arrange',{sel:3}),
       resumeWrite:go('write',{insp:'margin'}),goOverviewFocusO1:go('overview',{focus:'o1'}),
       openLib:()=>self.set({libOpen:(s.libOpen&&(s.dock||'lib')==='lib')?false:true,dock:'lib'}),findLib:()=>self.set({libOpen:true,dock:'lib'}),
+      addPieces:[['article','Article'],['carousel','Carousel'],['post','Post'],['listing','Listing'],['script','Script']].map(a=>({mk:a[0],label:a[1],go:()=>self.set({addFor:null,toast:'Prototype only: a new '+a[1].toLowerCase()+' would open in '+s.addTitle+', empty, with its own words, review and edition.'})})),
+      addOther:[['coll','New collection','an inquiry'],['material','Add material','files, notes, links'],['thought','Write a thought','your words']].map(a=>({mk:a[0],label:a[1],hint:a[2],go:()=>self.set({addFor:null,view:a[0]==='material'?'material':(a[0]==='thought'?'overview':'library'),toast:a[0]==='coll'?'Prototype only: a new collection would be created in '+s.addTitle+'. It can also stand on its own.':''})})),
+      hasToast:!!s.toast,toast:s.toast,clearToast:()=>self.set({toast:''}),
       sideQ:s.sideQ,onSideQ:(e)=>self.set({sideQ:e.target.value}),clearSideQ:()=>self.set({sideQ:''}),
       tree:(()=>{const sq=(s.sideQ||'').toLowerCase();
-        const kidsFor={p0:[['The water is half the tea','piece '+(s.p3done?'':'warn'),'today','write'],['Why water changes tea','coll','2 new','cw'],['Three waters, one leaf','piece '+((s.corrected&&!s.slide4fixed)?'warn':'good'),'15 Oct','arrange'],['Spring-water tasting set','piece','12 Oct','outputs'],['At the spring','piece','11 Oct','outputs']],
-          p1:[['Porcelain and Tea','piece real','29 Sep','real'],['Keeping old things in use','coll','9 Oct','cm'],['The bowl with a gold seam','piece','8 Oct','outputs']]};
+        const KW={article:'Article',carousel:'Carousel',coll:'Collection',listing:'Listing',script:'Script',story:'Published',post:'Post'};
+        const kidsFor={p0:[['The water is half the tea','article',(s.p3done?'':'warn'),'today','write'],['Why water changes tea','coll','warn','2 new','cw'],['Three waters, one leaf','carousel',((s.corrected&&!s.slide4fixed)?'warn':'good'),'15 Oct','arrange'],['Spring-water tasting set','listing','','12 Oct','outputs'],['At the spring','script','','11 Oct','outputs']],
+          p1:[['Porcelain and Tea','story','','29 Sep','real'],['Keeping old things in use','coll','','9 Oct','cm'],['The bowl with a gold seam','post','','8 Oct','outputs']]};
         const target=(t)=>t==='cw'?openColl('water'):(t==='cm'?openColl('mend'):go(t));
         const curKid=(t)=>(t==='write'&&isW)||(t==='arrange'&&carouselPiece)||(t==='real'&&s.view==='real')||(t==='cw'&&s.view==='collection'&&s.coll==='water')||(t==='cm'&&s.view==='collection'&&s.coll==='mend');
         const node=(x)=>{if(x.id==='u0'){if(sq&&x.title.toLowerCase().indexOf(sq)<0)return null;return {title:x.title,when:x.when,isOpen:false,openStr:'false',chevCls:'none',cls:(s.view==='collection'&&s.coll==='read')?'on':'',open:openColl('read'),toggle:(e)=>e.stopPropagation(),add:openColl('read'),kids:[]};}
-          const raw=kidsFor[x.id]||[['Collection · '+x.title,'coll',x.when,'cw'],['Draft piece','piece',x.when,'outputs']];
+          const raw=kidsFor[x.id]||[[x.title,'coll','',x.when,'cw'],['Draft · '+x.title,'article','',x.when,'outputs']];
           const match=!sq||x.title.toLowerCase().indexOf(sq)>=0;const kids=raw.filter(k=>!sq||match||k[0].toLowerCase().indexOf(sq)>=0);
           if(sq&&!match&&kids.length===0)return null;const isOpen=sq?true:!!s.open[x.id];
           return {title:x.title,when:x.when,isOpen,openStr:isOpen?'true':'false',chevCls:isOpen?'open':'',cls:(x.id==='p0'&&projViews.indexOf(s.view)>=0&&s.view!=='research'&&s.view!=='projects')?'on':'',
             open:()=>{const O=Object.assign({},s.open);O[x.id]=true;self.set({open:O});(x.id==='p1'?openColl('mend'):go('overview'))();},
-            toggle:(e)=>{e.stopPropagation();const O=Object.assign({},s.open);O[x.id]=!isOpen;self.set({open:O});},add:go('outputs'),
-            kids:kids.map(k=>({title:k[0],mk:k[1],when:k[2],open:target(k[3]),cls:curKid(k[3])?'on':''}))};};
+            toggle:(e)=>{e.stopPropagation();const O=Object.assign({},s.open);O[x.id]=!isOpen;self.set({open:O});},
+            add:()=>self.set({addFor:s.addFor===x.id?null:x.id,addTitle:x.title}),adding:s.addFor===x.id,addingStr:s.addFor===x.id?'true':'false',addCls:s.addFor===x.id?'on':'',
+            ...(()=>{const mk=(k)=>({title:k[0],mk:k[1],kind:KW[k[1]],st:k[2],flag:k[2]==='warn'||k[2]==='good',flagLabel:k[2]==='warn'?'needs you':'exported',tip:KW[k[1]]+' · '+k[3]+(k[2]==='warn'?' · needs you':''),open:target(k[4]),cls:curKid(k[4])?'on':''});const cs=kids.filter(k=>k[1]==='coll').map(mk),ps=kids.filter(k=>k[1]!=='coll').map(mk);return {colls:cs,pieces:ps,hasColls:cs.length>0,hasPieces:ps.length>0};})()};};
         const grp=(key,label,list,more)=>{const ps=list.map(node).filter(Boolean);const open=sq?true:s.grp[key]!==false;return {label,count:ps.length,open,openStr:open?'true':'false',chevCls:open?'open':'',projects:ps,more:more&&!sq,toggle:()=>{const G=Object.assign({},s.grp);G[key]=!open;self.set({grp:G});},show:ps.length>0||(!sq)};};
         const pinned=allProj.filter(x=>s.pins.indexOf(x.id)>=0);const recent=allProj.filter(x=>s.pins.indexOf(x.id)<0&&x.status!=='archived').slice(0,sq?60:5);
         const unfiled={id:'u0',title:'Tea water reading list',when:'2 Oct'};
