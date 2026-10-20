@@ -152,7 +152,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null } = {}) {
   dataDir = path.resolve(dataDir);
   const store = await createStore({ dataDir, sharedArticles, publicationFault });
   try {
@@ -235,6 +235,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
   const server = http.createServer(async (request, response) => {
+    if(packageView&&request.method==='GET'&&new URL(request.url,'http://localhost').pathname==='/document-study/package-config.js'){response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'"+(new URL(request.url,'http://localhost').pathname==='/document-study/index.html'?" 'unsafe-inline'":"")+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");

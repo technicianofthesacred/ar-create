@@ -9,7 +9,7 @@ const deferred = () => {let resolve, reject; const promise = new Promise((a,b) =
 const hash = 'a'.repeat(64);
 function setup(t, {ready, selectPhotos} = {}) {
   const dom = new JSDOM('<main id="app"><div id="work-context"></div><article id="manuscript"></article></main>', {url:'http://127.0.0.1:8857', runScripts:'outside-only'});
-  t.after(() => dom.window.close());
+  t.after(async () => {dom.window.dispatchEvent(new dom.window.Event('pagehide'));await new Promise(resolve=>setTimeout(resolve,10));dom.window.close();});
   const w=dom.window, calls={updates:[], mounts:[], releases:[], researchOpen:0, researchClose:0, requests:[], inquiryNavigate:null};
   let project={id:'invented-project-a',view:'article',viewedStage:5}, dialog=null;
   const binding={id:randomUUID(),parentStudyId:project.id}, token=randomUUID();
@@ -126,4 +126,15 @@ test('standalone inquiry opens with an unowned browser manuscript and no Project
   assert.equal(f.bridge.getContext(),null,'opening standalone learning does not prepare a Project receipt context');
   assert.equal(typeof f.calls.inquiryNavigate,'function');
   assert.equal(f.calls.requests.length,0);assert.equal(f.calls.releases.length,0);
+});
+
+test('independent inquiry retains the actual owned native part without requiring an output or Project receipt mapping',async t=>{
+ const f=setup(t);
+ await f.bridge.openContext('inquiries');
+ assert.equal(f.hooks.getDialog().section,'inquiries');
+ assert.equal(f.hooks.getDialog().captured.selectedScope.kind,'native-part');
+ assert.equal(f.calls.requests.some(r=>r.url.startsWith('/api/work-continuity/')),false,'native-part ownership is sufficient for an independent learning detour');
+ await f.w.projectLibrary.close();
+ assert.equal(f.calls.releases.length,1);assert.equal(f.calls.releases[0].bufferToken,f.token);
+ assert.ok(f.calls.requests.some(r=>r.url.startsWith('/api/study-draft/read?')),'return rechecks the maintained native owner');
 });

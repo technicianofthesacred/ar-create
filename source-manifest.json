@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "88a35ed59b864e411e2a7000a29398e4f400e087e220fc6f9e3baad538476fa7",
+      "candidateSha256": "7077f5f6937bc77b146cf9e82e436b50c0634d5dbadcc962fe115812f0400938",
       "adapted": true
     },
     {
@@ -2293,7 +2293,7 @@
     },
     {
       "path": "docs/PRODUCT.md",
-      "candidateSha256": "9bb7d65853d2582f58687bf70a56bfc866933f90ca768364d0778be57ac89a4f"
+      "candidateSha256": "013424850a3d76c9f45d33dc70ce07dd3a2091e922ff8803f85352a399355506"
     },
     {
       "path": "tests/prose-surface.test.mjs",
@@ -2353,7 +2353,7 @@
     },
     {
       "path": "docs/CLAUDE-ACCESS.md",
-      "candidateSha256": "ac00f2cb88d125f3312a9a905334485276013dccaf5e8feaa674b36304cb576c"
+      "candidateSha256": "acf94e3d67ad7d7db2710d3125378919e1f17263677fc02cd169690acc8426ee"
     },
     {
       "path": "docs/PERMANENT-HOME.md",
@@ -2585,15 +2585,15 @@
     },
     {
       "path": "docs/DESIGN-PASS-ADDITIONS.md",
-      "candidateSha256": "21fab20b25ed6d06ec576944800f893ea239b596a8719660ba4ac7b5bd50e4b7"
+      "candidateSha256": "f5c431337ef77dd503d03f8d6aebbe67bd721ff7410e0fbb2e1775da70855fb3"
     },
     {
       "path": "docs/FUNCTION-FLOW.md",
-      "candidateSha256": "e99164d2d6325b729e734cd31be47889654f222dc341f3741d210d1a2992cf5a"
+      "candidateSha256": "b0dc5a211f065bd247ff15987dbdd75e325c8f1b64ec3d095b31cfe08b88acf9"
     },
     {
       "path": "docs/FILE-CONTRACT-MAP.md",
-      "candidateSha256": "f8f767fe216adae1a2e8b6838d58e0d7913cf70e4dc20bd3180b584933031163"
+      "candidateSha256": "d2da15d86fe6a82552f69462ab0182fc59a16c09bc44892623bee10eb3ce8283"
     },
     {
       "path": "docs/CLAUDE-DESIGN-PASTE.md",
@@ -2605,7 +2605,7 @@
     },
     {
       "path": "docs/AGENT-CONNECTIONS.md",
-      "candidateSha256": "5a3555c94ab9890496222c27ea10a04b775ba57e5f34dd2c0248e403f4f1d8c5"
+      "candidateSha256": "2917d36bb3dedbc02c3614e9461ba7142a918a32b62620ac9bf6d492d37bd848"
     },
     {
       "path": "docs/LOOK.md",
@@ -2649,7 +2649,7 @@
     },
     {
       "path": "public/document-study/connected-workspace.mjs",
-      "candidateSha256": "753b69d8ede685247a4ff5dc0a330daa1c41180e502f59a150e728833a2efff7"
+      "candidateSha256": "b6f57652dfb533615fa4d299a3e48d97658fdd6de6fff050e42c549882694659"
     },
     {
       "path": "public/document-study/continuity-browser-recovery.mjs",
@@ -2677,7 +2677,7 @@
     },
     {
       "path": "public/document-study/home-tabs.test.mjs",
-      "candidateSha256": "831c6c8b4d4ecfe7015a42aa7a87a268b2fa7ea5e2ed91c55f4a52dbe8b631d8"
+      "candidateSha256": "4f713918a8a0a3cc463fd02b78e2f495609499fc434b18ef16ac40509d352d4f"
     },
     {
       "path": "public/document-study/inspector.css",
@@ -2709,7 +2709,7 @@
     },
     {
       "path": "public/document-study/surface-bar.css",
-      "candidateSha256": "13c4ab77ac79d583549528c533e6a7ee6733dac9325b0bfa6b73524e0bb6a965"
+      "candidateSha256": "d68ae7a09b70f8b6a1a6c2f4768312501512e086f4a9b5a1993263ae9002111a"
     },
     {
       "path": "public/document-study/surface-bar.js",
@@ -2757,7 +2757,7 @@
     },
     {
       "path": "runtime/services/connected-workspace-bridge.test.mjs",
-      "candidateSha256": "baabb90e6aa2dfa70278e303072e6f1bf387d251938d216ba96f55c395a44941"
+      "candidateSha256": "21324e0c77995a3cc57e826f160190f82e15de608e4c61d79cc5fa12ef8c5dc2"
     },
     {
       "path": "runtime/services/continuity-browser-recovery.test.mjs",
@@ -2785,7 +2785,7 @@
     },
     {
       "path": "docs/ROUND2-SOURCE-LOOK-STATUS.md",
-      "candidateSha256": "47d6a784e0db26bea8a871eb0c9dfb7df615d7be307332b1f23389b1a2c89527"
+      "candidateSha256": "85417526549902cdabdec5ccee0c38e048925122aeec5037bdd57806f5460309"
     }
   ],
   "dependencyRepair": {
@@ -3109,6 +3109,25 @@
         "docs/DESIGN-PASS-ADDITIONS.md"
       ],
       "note": "Current main repository entry/paste/LOOK/status and current feature-list facts. No ZIP required. Reviewed code preserved; private content and runtime activation excluded. Exact published revision is verified externally against GitHub after push."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Checked connected C3 source and visible standalone-learning entrance",
+      "files": [
+        "docs/AGENT-CONNECTIONS.md",
+        "docs/CLAUDE-ACCESS.md",
+        "docs/DESIGN-PASS-ADDITIONS.md",
+        "docs/FILE-CONTRACT-MAP.md",
+        "docs/FUNCTION-FLOW.md",
+        "docs/PRODUCT.md",
+        "docs/ROUND2-SOURCE-LOOK-STATUS.md",
+        "public/document-study/connected-workspace.mjs",
+        "public/document-study/home-tabs.test.mjs",
+        "public/document-study/surface-bar.css",
+        "runtime/server.mjs",
+        "runtime/services/connected-workspace-bridge.test.mjs"
+      ],
+      "note": "Bounded connected checkpoint installed; source-only visible C3 Learning library bridge repair not yet activated. Own final source build + actual visible-menu standalone create/save/reread/exact editor return/fullreload reopen proved;19affectedDOMchecks pass. Current repo-first entry/LOOK/private-content intent and three-option design input preserved. One-copy/history code deliberately excluded; no private data, runtime cutover or deployment by this source publication."
     }
   ],
   "repositorySeparation": {

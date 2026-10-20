@@ -4,6 +4,12 @@ Maintained 20 October 2026. Read this with the [function integration list](DESIG
 
 **Status legend:** **Working, bounded** means the recorded installed behavior has scoped verification; it does not mean every requested operation works. **Partial** means some requested connections remain. **Not connected** means the action must not be presented as having run. Dashed arrows are intended or conditional connections, not proof of implementation. Provider access, editorial approval, exporting and publication are different facts.
 
+## Current connection status — installed bounded checkpoint, 20 October
+
+Standalone Collection learning, optional source-free Project connection, scoped current understanding/typed references/direction connections and work receipts are now installed alongside C3. Synthetic native proof covers pickup fallback, source/evidence acceptance and known/unknown impact, inherited direction/local override with sibling preservation, dirty context detours, bounded preparation/recovery and whole-Carousel completion facts. Exact installed bytes and read-only Learning library→same editor/words plus usable receipt controls are separately verified. These statements supersede older candidate-only notes below for those named edges, not all product functions.
+
+Automatic one project-backed writing text at first typing, earlier-browser-text reconciliation and expanded receipt/session history remain prepared, not installed. Actual provider execution, private content-repository synchronization, device access and publication are separate. Current Open leaves earlier browser wording separate; no silent migration or overwrite is implied. See [the same integration list](DESIGN-PASS-ADDITIONS.md#installed-connected-c3-checkpoint--20-october).
+
 ## 1. Whole workspace
 
 The author can enter through personal expression, material or a conversation with an authorized agent. All twelve checkpoints stay accessible. These arrows describe useful connections, not a compulsory linear wizard.
@@ -350,7 +356,7 @@ flowchart TD
 
 [20 October direct human instruction](PRODUCT.md#20-october--design-ready-handoff-comes-first): deliver the reviewed current code-only design packet now. These diagrams and the same integration list show where every agreed function belongs, what it does and what remains unfinished. Keep prepared/unmounted and intended edges visible and truthful; the next designer need not wait for their live wiring. Preserve the current Claude build. Continue the functional goal and builder-owned native verification separately; this packet is not proof of full completion.
 
-### Connected inquiry and continuity candidate — 20 October
+### Earlier connected candidate proof — superseded by the installed status above
 
 The isolated candidate now has actual synthetic proof for source-free learning shared between agent and app, explicit Project association, exact Article/Carousel scope, prepared assignment and changed-context review with both proposed and human wording retained. Offline preparation → reload → exact-command retry preserves newer typing. Per-edition completion checks all eight actual portrait PNGs plus caption and output JSON; an attributed manual destination remains separate, and eligible Undo restores the previous completion receipt exactly.
 

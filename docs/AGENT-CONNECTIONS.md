@@ -1,6 +1,6 @@
 # Agent connections: independent learning and work receipts
 
-Integration addendum to the existing CONCEPT-AGENT guide, checked against the isolated candidate on 20 October 2026. This describes available contracts, not installation, human acceptance, provider execution or publication. Host authentication, origin checks and configuration still apply. An unavailable owner or route is a hold, not permission to invent a replacement.
+Integration addendum to the existing CONCEPT-AGENT guide, checked against the maintained source on 20 October 2026. The bounded connected routes are now installed; synthetic mutation proof and installed read-only preservation remain distinct. This is not human editorial acceptance, provider execution or publication. Host authentication, origin checks and configuration still apply. An unavailable owner or route is a hold, not permission to invent a replacement.
 
 ## Start with the actual inquiry
 
@@ -90,10 +90,15 @@ Before applying prepared work, revalidate the assignment context and actual targ
 
 ## Recovery stays subordinate to saved owners
 
-The recovery adapter is mounted in the isolated synthetic candidate through `mountContinuityBrowserRecovery`, retaining the existing host capture/restore contract and stable opaque `authorityKey` and local `viewerId`. Native browser proof covers failed-before-send → reload → exact-command retry with newer typing preserved. It is not installed in the working app; combined dirty-manuscript detours still need their final checkpoint. Its controller keeps exact pending commands and exposes explicit retry/hold/restore actions; verify combined host wiring separately. Browser recovery omits manuscript text, host buffer objects and return tokens, so it does not prove dirty native manuscript recovery after reload.
+The recovery adapter is mounted in the isolated synthetic candidate through `mountContinuityBrowserRecovery`, retaining the existing host capture/restore contract and stable opaque `authorityKey` and local `viewerId`. Native browser proof covers failed-before-send → reload → exact-command retry with newer typing preserved. The bounded adapter is installed in the working app. Synthetic dirty-manuscript detours and scope departure have their own native checkpoint; installed review verifies read-only return and actual controls, not private prose mutation. Its controller keeps exact pending commands and exposes explicit retry/hold/restore actions; verify combined host wiring separately. Browser recovery omits manuscript text, host buffer objects and return tokens, so it does not prove dirty native manuscript recovery after reload.
 
 Learning browser recovery stores bounded per-Collection draft text, its base CAS and an exact pending request. Continuity browser recovery stores bounded local form variants and exact pending metadata commands, keyed by local authority/viewer/scope. These are transient browser copies, not canonical saves, AI memory or an agent interchange store. Do not scrape/import browser recovery as authoritative learning or silently replace canonical records with it.
 
 Keep old and newer variants separate, reconcile lost acknowledgments through maintained reads, and retry only an identical pending command when its recovery flow permits. A stale/rejected command needs review and a separately authorized new operation; never silently rewrite its CAS. Saved journals and explicit owner recovery remain the authority for receipts/learning. Missing recovery access does not authorize installing providers, transmitting private material or changing the runtime home.
 
 Existing documentation checked: the frozen `CONCEPT-AGENT.md` guide and continuity recovery `HANDOFF.md`. The guide’s parent-based “collection/project” create wording must not be confused with the independent Library Collection API above. Source contracts checked: `runtime/services/inquiry-interface-routes.mjs`, `continuity-interface-routes.mjs`, `current-understanding.mjs`, `work-continuity.mjs`; `public/document-study/inquiry-workspace.mjs`, `connected-workspace.mjs`, `continuity-browser-recovery.mjs`; and the candidate server mounts. The existing CONCEPT-AGENT guide and frozen source remain unchanged.
+
+
+## Visible standalone entrance — source verification, pending activation
+
+The current source bridge exposes the same independent Learning library through C3 Open/create and Home as well as the legacy rail. It uses maintained owner flush and return guards; a visible actual native part is held/read through its native owner, without inventing a Project/output relation. The exact-source native journey saves/rereads a source-free inquiry, returns to exact editor words/binding/proof, reloads and reopens the same saved record. The bridge entrance delta is not yet live until separately activated by the sole integrator. Existing scoped output guards are not loosened.

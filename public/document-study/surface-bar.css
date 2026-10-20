@@ -38,3 +38,15 @@ body.c3-bar-on .workspace>#work-context>#wn-message:not([hidden]){display:block;
 /* The direction tools strip moves into More; its panel still opens here, under the bar. */
 body.c3-bar-on[data-c3-stage="5"] .workspace #direction-writing-tools>.dwt-orientation{display:none!important}
 body.c3-bar-on[data-c3-stage="5"] .workspace #direction-writing-tools:not(:has(.dwt-panel:not([hidden]):not(:empty))){border:0!important;padding:0!important;margin:0!important;min-height:0!important}
+
+/* Connected receipts need their own measured row: the legacy empty rows may shrink to zero. */
+body.c3-bar-on .workspace>#work-context:has(>#connected-work-receipts){flex:0 0 auto;padding:4px 20px!important;align-items:stretch}
+body.c3-bar-on #work-context>#connected-work-receipts{flex:1 1 100%;min-width:0;margin:0}
+body.c3-bar-on #connected-work-receipts>summary{display:inline-flex;align-items:center;gap:6px;padding:0 8px;cursor:pointer;list-style:none}
+body.c3-bar-on #connected-work-receipts>summary:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+body.c3-bar-on #connected-work-receipts>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
+@media(max-width:650px){body.c3-bar-on .workspace>#work-context:has(>#connected-work-receipts){padding-inline:10px!important}}
+
+/* Keep the embedded composer's own palette: C3's general button fill must not replace its dark control surface. */
+body.c3-tabs #app #study-output-canvas .ar-composition-workbench :is(button,select){background:#25211a!important;border-color:var(--cwb-line)!important}
+body.c3-tabs #app #study-output-canvas .ar-composition-workbench button:hover:not(:disabled){background:#30291f!important;border-color:#8b7657!important}

@@ -176,3 +176,27 @@ test('context detours retain their actual header/content and are never decorated
  const d=f.w.document.getElementById('project-library');assert.equal(d.dataset.plContext,'true');assert.equal(d.classList.contains('c3-home'),false);assert.equal(d.querySelector('#pl-title').textContent,'Source');assert.equal(d.querySelector('textarea'),content.querySelector('textarea'));assert.equal(d.querySelector('.ht-facets'),null);assert.notEqual(f.w.document.getElementById('c3-tabstrip').parentElement,d);
  await f.w.projectLibrary.close();await f.w.projectLibrary.open();f.w.homeTabs.paint();assert.equal(d.dataset.plContext,undefined);assert.equal(d.classList.contains('c3-home'),true);assert.ok(d.querySelector('[data-pl-search]'));
 });
+
+test('connected Learning library is present once in actual C3 Open menus after repaint and in Home, using guarded flush',async t=>{
+ const f=fixture();const w=f.w,d=w.document,opened=[],errors=[];
+ w.structuredClone=structuredClone;w.toast=value=>errors.push(value);
+ w.createInquiryInterfaceClient=()=>({});
+ w.mountInquiryWorkspace=({container})=>{opened.push(container);container.textContent='Invented independent inquiry';return {ready:Promise.resolve()};};
+ w.mountWorkContinuity=()=>({ready:Promise.resolve(),update:async()=>{}});
+ w.studyDraft={currentBinding:()=>null,currentProof:()=>null};
+ const bridge=fs.readFileSync(new URL('./connected-workspace.mjs',import.meta.url),'utf8').replace(/^import[^\n]*\n/gm,'');w.eval(bridge);
+ const settle=async()=>{await new Promise(resolve=>setTimeout(resolve,10));await f.idle();await new Promise(resolve=>setTimeout(resolve,10));};
+ const entry=()=>d.querySelector('#c3-tabstrip .ht-plus .ht-menu > [data-learning-library]');
+ assert.ok(entry(),'independent learning must be reachable in the real visible Open/create menu, not only hidden rail');
+ assert.equal(entry().type,'button');assert.equal(entry().textContent,'Learning library');
+ f.w.current().name='Renamed invented piece';w.render();await settle();
+ assert.equal(d.querySelectorAll('#c3-tabstrip .ht-plus .ht-menu > [data-learning-library]').length,1,'C3 repaint restores one entry');
+ f.fail=true;entry().click();await settle();assert.equal(opened.length,0,'failed owner flush refuses navigation');assert.ok(errors.some(x=>/Save failed/.test(x)));
+ f.fail=false;await w.projectLibrary.open();w.homeTabs.paint();await settle();
+ assert.ok(d.querySelector('#project-library.c3-home #c3-tabstrip .ht-plus .ht-menu > [data-learning-library]'),'Home uses the same real menu entry');
+ entry().closest('details').open=true;entry().click();await settle();
+ assert.equal(opened.length,1);assert.equal(d.querySelector('#project-library').dataset.plContext,'true');assert.equal(d.querySelector('#pl-title').textContent,'Learning library');
+ assert.equal(d.querySelector('#manuscript').textContent,'Unsaved human writing');
+ await w.projectLibrary.close();await settle();
+ assert.equal(d.querySelector('#project-library').open,false);assert.equal(d.querySelectorAll('#c3-tabstrip .ht-plus .ht-menu > [data-learning-library]').length,1);
+});
