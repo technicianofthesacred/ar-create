@@ -2409,7 +2409,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "969731ce13c68e9e4a9a222205c9c5764c879b4a712a2a322bcbd90664917fde"
+      "candidateSha256": "5e983c8bbad2628875c1cf4f0d6216d3ab75fea88d2b35a2800688243ad23c6c"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -2421,7 +2421,7 @@
     },
     {
       "path": "public/document-study/canvas-c3.js",
-      "candidateSha256": "a664b5a292e94412f90a50c3bf3657e09ec9e2f747eae77bed4012e1b8316a1b"
+      "candidateSha256": "7103b1c4430af9405f637e5e651447d8d484e1e6b1a90db94314d011f699fc3e"
     },
     {
       "path": "public/document-study/canvas-c3.test.mjs",
@@ -2489,7 +2489,7 @@
     },
     {
       "path": "public/document-study/source-c3.css",
-      "candidateSha256": "deb0f5d6923b150b9ce38f85a6ef2e45c01f6414584754f6aa81dc5bed10eb04"
+      "candidateSha256": "b190ee361a9998b16e418ff4c09cecc8c343082c79e3b6142dd666d2e1fed679"
     },
     {
       "path": "public/document-study/surface-bar.css",

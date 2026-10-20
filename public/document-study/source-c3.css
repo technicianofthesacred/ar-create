@@ -180,3 +180,24 @@ body.c3-tabs[data-c3-stage="12"] .workspace .oo-panel>.oo-heading{position:absol
 body.c3-tabs[data-c3-stage="12"] .workspace>.mot-surface{order:6;padding:14px 40px 40px!important;margin:14px 0 0!important;border:0!important;border-top:1px solid var(--line)!important;background:none!important;max-width:none!important}
 body.c3-tabs[data-c3-stage="12"] .workspace>.mot-surface .mot-bar h2{font:600 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink))}
 @media(min-width:851px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace>*:not(#c3-surface-bar):not(#c3-read-insp){margin-right:328px!important;box-sizing:border-box}}
+/* Material and Source tools as rows: icon, name, what it is for, chevron. Two columns on desktop, one on phone; an open
+   tool takes the full width with its fields below its row. */
+body.c3-tabs .workspace .material-surface details.c3-tool-row{flex:1 1 calc(50% - 4px)!important;min-width:0;margin:0!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--paper)!important;transition:border-color .15s}
+body.c3-tabs .workspace .material-surface details.c3-tool-row:hover{border-color:var(--c3-edge,var(--c3-line2))!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row[open]{flex-basis:100%!important;border-color:var(--c3-line2,var(--line))!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row>summary.c3-tool{display:grid!important;grid-template-columns:36px minmax(0,1fr) 16px;grid-template-rows:auto auto;column-gap:12px;row-gap:2px;align-items:center;width:100%;min-height:64px;padding:12px 14px!important;margin:0!important;border:0!important;border-radius:12px!important;background:none!important;list-style:none;cursor:pointer;text-align:left}
+body.c3-tabs .workspace .material-surface details.c3-tool-row>summary.c3-tool::-webkit-details-marker{display:none}
+body.c3-tabs .workspace .material-surface details.c3-tool-row>summary.c3-tool::after,body.c3-tabs .workspace .material-surface details.c3-tool-row>summary.c3-tool::before{content:none!important;display:none!important}
+body.c3-tabs .workspace .material-surface .c3-tool-i{grid-row:1/3;width:36px;height:36px;border-radius:9px;display:grid;place-items:center;background:var(--c3-lift,var(--rail));color:var(--warm)}
+body.c3-tabs .workspace .material-surface .c3-tool-t{grid-column:2;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;font:500 14px/1.3 var(--ar-ui);color:var(--ink);min-width:0}
+body.c3-tabs .workspace .material-surface .c3-tool-d{grid-column:2;font:12.5px/1.4 var(--ar-ui);color:var(--dim);min-width:0}
+body.c3-tabs .workspace .material-surface .c3-tool-x{display:inline-block;padding:0 7px;border:1px solid var(--line);border-radius:10px;font-size:11.5px;line-height:18px;color:var(--dim);white-space:nowrap}
+body.c3-tabs .workspace .material-surface .c3-tool-c{grid-column:3;grid-row:1/3;color:var(--dim);transition:transform .15s}
+body.c3-tabs .workspace .material-surface details.c3-tool-row[open]>summary .c3-tool-c{transform:rotate(90deg)}
+body.c3-tabs .workspace .material-surface details.c3-tool-row[open]>summary.c3-tool{border-bottom:1px solid var(--line)!important;border-radius:12px 12px 0 0!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row[open]>:not(summary){margin-left:14px!important;margin-right:14px!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row[open]>:not(summary):first-of-type,body.c3-tabs .workspace .material-surface details.c3-tool-row[open]>summary+*{margin-top:14px!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row[open]>:last-child{margin-bottom:14px!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row>summary.c3-tool:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){body.c3-tabs .workspace .material-surface .c3-tool-c{transition:none}}
+@media(max-width:650px){body.c3-tabs .workspace .material-surface details.c3-tool-row{flex-basis:100%!important}body.c3-tabs .workspace .material-surface details.c3-tool-row>summary.c3-tool{min-height:60px;padding:10px 12px!important}}

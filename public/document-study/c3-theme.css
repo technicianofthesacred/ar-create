@@ -403,3 +403,4 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
 }
 @media(max-width:650px){body.c3-tabs #app #workspace .reference[data-c3-mirrored]{display:flex!important}}
 #c3-surface-bar .sb-mode-i{display:none}
+@media(max-width:650px){body.c3-tabs #app #workspace .recordPage .material-surface{padding-left:0!important;padding-right:0!important}}
