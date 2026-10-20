@@ -28,7 +28,7 @@ body{margin:0}
 .proto .grp{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
 .proto button{min-height:26px;padding:0 8px;font-size:12px;border-color:var(--line2)}
 .proto button.on{background:var(--ink);color:var(--bg)}
-.shell{flex:1;display:flex;flex-wrap:wrap;min-height:0}
+.shell{flex:1;display:flex;flex-wrap:nowrap;min-height:0}
 .side{flex:1 1 240px;max-width:260px;background:var(--lift);border-right:1px solid var(--line);padding:12px 8px 24px;display:flex;flex-direction:column;gap:2px}
 .side .brand{font-weight:700;padding:6px 10px 10px}
 .side h4{margin:14px 10px 4px;font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
@@ -57,6 +57,13 @@ body{margin:0}
 .dtab{min-height:28px;font-size:12px;color:var(--dim)}.dtab.on{color:var(--ink);background:var(--paper);font-weight:600;box-shadow:0 0 0 1px var(--line2)}
 .ev{border-left:2px solid var(--warm);padding:4px 0 10px 10px;margin:0 0 6px 4px}.ev b{display:block}
 .wu{color:var(--warm);font-size:12px;min-height:24px;padding:0 4px;margin-left:6px}
+.conn{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0 0}
+.app .cchip{min-height:26px;font-size:12px;padding:0 9px;border:1px solid var(--line2);border-radius:20px;color:var(--ink);background:var(--lift)}
+.app .cchip:hover{border-color:var(--warm)}
+.retbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;max-width:1120px;margin:0 auto 16px;padding:8px 12px;border:1px solid var(--warm);border-radius:10px;background:color-mix(in srgb,var(--warm) 8%,var(--paper))}
+.retbar span{flex:1;min-width:200px}
+.search{font:inherit;padding:8px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--lift);color:var(--ink);min-width:220px}
+.app .mc{text-align:left}
 .turn.hi{background:color-mix(in srgb,var(--warm) 10%,transparent)}
 .h1{font-size:28px;font-weight:700;line-height:1.2;margin:0 0 6px}
 .h2{font-size:17px;font-weight:600;margin:26px 0 10px}
@@ -114,8 +121,8 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 .kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px}
 .kv span:nth-child(odd){color:var(--dim)}
 @media (max-width:1100px){.map{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap2{grid-template-columns:minmax(0,1fr)}.margin{position:static}.cgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:1100px){.dock{flex-basis:100%;max-width:none;border-left:0;border-top:1px solid var(--line)}}
-@media (max-width:760px){.menu{display:inline-flex}.app .side{display:none}.app.sideopen .side{display:flex}.side{max-width:none;border-right:0;border-bottom:1px solid var(--line)}.map{grid-template-columns:minmax(0,1fr)}.content,.head{padding-left:16px;padding-right:16px}.turn{grid-template-columns:48px minmax(0,1fr)}}
+@media (max-width:1180px){.dock{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);max-width:none;z-index:35;box-shadow:-18px 0 50px rgba(0,0,0,.45)}}
+@media (max-width:760px){.shell{flex-wrap:wrap}.menu{display:inline-flex}.app .side{display:none}.app.sideopen .side{display:flex}.side{max-width:none;border-right:0;border-bottom:1px solid var(--line)}.map{grid-template-columns:minmax(0,1fr)}.content,.head{padding-left:16px;padding-right:16px}.turn{grid-template-columns:48px minmax(0,1fr)}}
 </style>
 </helmet>
 <div class="app {{themeClass}} {{sideClass}}">
@@ -127,18 +134,22 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </div>
 <div class="shell">
  <nav class="side" aria-label="Studio">
+  <a class="nav" href="#" style="text-decoration:none;font-size:12px">← i64 OS</a>
   <div class="brand">AR Create</div>
   <button class="nav {{navHome}}" onClick="{{goHome}}">Studio home<span class="n">{{waitCount}} waiting</span></button>
-  <button class="nav" onClick="{{openLib}}">Library<span class="n">142</span></button>
-  <h4>Inquiries</h4>
-  <button class="nav {{navInq}}" onClick="{{goResearch}}"><span class="dot warn"></span>Why water changes tea<span class="n">2 new</span></button>
-  <button class="nav" onClick="{{goMending}}"><span class="dot"></span>Keeping old things in use</button>
+  <button class="nav {{navLib}}" onClick="{{goLibrary}}">Library<span class="n">142 kept</span></button>
+  <h4>Collections</h4>
+  <sc-for list="{{collNav}}" as="c" hint-placeholder-count="3"><button class="nav {{c.cls}}" onClick="{{c.open}}"><span class="dot {{c.dot}}"></span>{{c.title}}<span class="n">{{c.n}}</span></button></sc-for>
   <h4>Projects</h4>
+  <button class="nav {{navAll}}" onClick="{{goProjects}}">All projects<span class="n">{{projCount}}</span></button>
+  <h4 style="margin-top:8px">Pinned</h4>
   <button class="nav {{navProj}}" onClick="{{goOverview}}">Water first</button>
   <sc-for list="{{pieceNav}}" as="p" hint-placeholder-count="4"><button class="nav sub {{p.cls}}" onClick="{{p.open}}"><span class="dot {{p.dot}}"></span>{{p.title}}</button></sc-for>
-  <button class="nav {{navMend}}" onClick="{{goMending}}">Mending</button>
+  <button class="nav {{navMend}}" onClick="{{openMendColl}}">Mending</button>
   <button class="nav sub {{navReal}}" onClick="{{openReal}}"><span class="dot real"></span>Porcelain and Tea</button>
-  <button class="nav sub" onClick="{{goMending}}"><span class="dot"></span>The bowl with a gold seam</button>
+  <button class="nav sub" onClick="{{openMendColl}}"><span class="dot"></span>The bowl with a gold seam</button>
+  <h4 style="margin-top:8px">Recent</h4>
+  <sc-for list="{{recentNav}}" as="r" hint-placeholder-count="3"><button class="nav" onClick="{{r.open}}">{{r.title}}<span class="n">{{r.when}}</span></button></sc-for>
   <button class="btn" style="margin:14px 8px 0;text-align:center">New project or concept</button>
  </nav>
 
@@ -147,33 +158,35 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
    <div class="t"><button class="btn" onClick="{{toggleSide}}" aria-label="Show or hide the sidebar">{{sideLabel}}</button><span class="meta">{{crumb}}</span></div>
    <div class="t"><h1 class="h1" style="margin:4px 0 0">{{title}}</h1><sc-for list="{{titleChips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.tone}}">{{c.label}}</span></sc-for>
     <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{inPiece}}" hint-placeholder-val="{{false}}"><button class="btn">Undo</button></sc-if><button class="btn" onClick="{{openLib}}" aria-pressed="{{libOpen}}">Library</button><button class="pri" onClick="{{primary.go}}">{{primary.label}}</button></span></div>
+   <sc-if value="{{hasConn}}" hint-placeholder-val="{{false}}"><div class="conn"><span class="meta">Connected:</span><sc-for list="{{conn}}" as="c" hint-placeholder-count="4"><button class="cchip" onClick="{{c.go}}">{{c.label}}</button></sc-for></div></sc-if>
    <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
    <div class="tabs" role="tablist"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="8"><sc-if value="{{t.isSep}}" hint-placeholder-val="{{false}}"><span class="sep"></span><small>{{t.label}}</small></sc-if><sc-if value="{{t.isTab}}" hint-placeholder-val="{{true}}"><button class="tab {{t.cls}}" onClick="{{t.go}}">{{t.label}}</button></sc-if></sc-for></div>
    </sc-if>
   </div>
   <div class="content">
+<sc-if value="{{hasRet}}" hint-placeholder-val="{{false}}"><div class="retbar"><span>You came from <b>{{retLabel}}</b>. Unsaved words there are kept.</span><button class="btn" onClick="{{goRet}}">Back to {{retShort}}</button><button onClick="{{clearRet}}" aria-label="Dismiss">Dismiss</button></div></sc-if>
 
 <!-- HOME -->
 <sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
- <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty"><b>Your studio is empty.</b><br>Start with a thought, a recording, photos or something from your Library.<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap"><button class="pri" onClick="{{goOverview}}">Write a thought</button><button class="btn">Add a recording</button><button class="btn" onClick="{{openLib}}">Open Library</button></div></div></sc-if>
+ <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty"><b>Your studio is empty.</b><br>Start with a thought, a recording, photos or something from your Library.<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap"><button class="pri" onClick="{{goOverview}}">Write a thought</button><button class="btn">Add a recording</button><button class="btn" onClick="{{goLibrary}}">Open Library</button></div></div></sc-if>
  <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
  <div class="band"><b>Waiting on you</b><span class="grow">Paragraph 3 of the article disagrees with your transcript correction · slide 4 the same · 1 direction to choose</span><button class="btn" onClick="{{resumeWrite}}">Paragraph 3</button><button class="btn" onClick="{{goDirection}}">Choose direction</button></div>
  <h2 class="h2" style="margin-top:0">Pick up here</h2>
  <div class="note" style="padding:16px"><div class="meta">Water first › The water is half the tea · today 09:41</div><div style="font-size:18px;font-weight:600;margin:6px 0 10px">Fix “soft water” in paragraph 3, then slide 4.</div><button class="pri" onClick="{{resumeWrite}}">Continue at paragraph 3</button> <button class="btn" onClick="{{goOverview}}">Open project map</button></div>
  <h2 class="h2">Projects</h2>
  <div class="map" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
-  <button class="mc" onClick="{{goOverview}}"><b>Water first</b><span class="meta">1 inquiry · 4 pieces · carousel exported · article in draft</span></button>
-  <button class="mc" onClick="{{goMending}}"><b>Mending</b><span class="meta">1 inquiry · 1 real published story · 1 post draft</span></button>
+  <button class="mc" onClick="{{goOverview}}"><b>Water first</b><span class="meta">1 collection · 4 pieces · carousel exported · article in draft</span></button>
+  <button class="mc" onClick="{{goMending}}"><b>Mending</b><span class="meta">1 collection · 1 real published story · 1 post draft</span></button>
  </div>
- <h2 class="h2">Inquiries</h2>
- <div class="row"><div class="grow"><b>Why water changes tea</b><div class="meta">3 sources · 2 open questions · 2 new agent sources (not adopted)</div></div><button class="btn" onClick="{{goResearch}}">Open</button></div>
- <div class="row"><div class="grow"><b>Keeping old things in use</b><div class="meta">Research without any piece yet · shares Water chemistry.pdf</div></div><button class="btn" onClick="{{goMending}}">Open</button></div>
+ <h2 class="h2">Collections</h2>
+ <div class="row"><div class="grow"><b>Why water changes tea</b><div class="meta">3 sources · 2 open questions · 2 new agent sources (not adopted)</div></div><button class="btn" onClick="{{openWaterColl}}">Open</button></div>
+ <div class="row"><div class="grow"><b>Keeping old things in use</b><div class="meta">Research without any piece yet · shares Water chemistry.pdf</div></div><button class="btn" onClick="{{openMendColl}}">Open</button></div>
  </sc-if>
 </sc-if>
 
 <!-- PROJECT OVERVIEW / CONCEPT -->
 <sc-if value="{{isOverview}}" hint-placeholder-val="{{false}}">
- <div class="thoughts"><div style="display:flex;align-items:center;gap:8px"><b>Your thoughts</b><span class="meta">yours, attributed to you · 12 Oct</span><button class="link" style="margin-left:auto" onClick="{{openLib}}">Find in Library →</button></div>
+ <div class="thoughts"><div style="display:flex;align-items:center;gap:8px"><b>Your thoughts</b><span class="meta">yours, attributed to you · 12 Oct</span><button class="link" style="margin-left:auto" onClick="{{findLib}}">Find in Library →</button></div>
   <textarea class="tx serif" aria-label="Your thoughts" value="{{thought}}" onInput="{{onThought}}" style="margin-top:8px"></textarea></div>
  <p class="meta" style="margin:0 0 10px">How the project connects. Click any card to light up what it feeds and what feeds it. {{focusHint}}</p>
  <div class="map">
@@ -261,7 +274,6 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 <sc-if value="{{isWrite}}" hint-placeholder-val="{{false}}">
  <div class="wrap2"><article>
   <sc-if value="{{returned}}" hint-placeholder-val="{{false}}"><div class="note good">Back at paragraph 3. Your saved words are unchanged.</div></sc-if>
-  <h1 class="h1" style="font-size:40px;margin:8px 0 14px">The water is half the tea</h1>
   <sc-if value="{{isReadOnly}}" hint-placeholder-val="{{false}}"><div class="note warn"><b>Read-only · version from 16 Oct 18:40.</b> <button class="link">Restore as new version</button> <button class="link" onClick="{{clearState}}">Back to current</button> <span class="tag t-prop">Proposed</span></div></sc-if>
   <div class="prose">
    <p>At the cabin the same leaf tasted rounder. I blamed the altitude, then the kettle, then my mood. It took a second visit to admit the obvious: the water was different.</p>
@@ -286,6 +298,51 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
    <div class="row"><div class="grow">Today 09:12–09:41 · 6 edits</div><button class="link" onClick="{{previewOld}}">Preview</button></div>
    <div class="row"><div class="grow">16 Oct 18:02–18:40 · 14 edits</div><button class="link" onClick="{{previewOld}}">Preview</button></div>
    <div class="row"><div class="grow meta">Before 12 Oct: 2 versions can’t be rebuilt from receipts</div></div><span class="tag t-prop">Proposed</span></div></sc-if>
+ </aside></div>
+</sc-if>
+
+<!-- PROJECTS -->
+<sc-if value="{{isProjects}}" hint-placeholder-val="{{false}}">
+ <div style="max-width:1120px;margin:0 auto">
+ <p class="meta" style="margin:0 0 14px;max-width:760px">A project groups the collections and pieces for one undertaking: a visit, a product, a launch. Collections can live without a project, and a collection can serve several projects. Pinned and recent projects stay in the sidebar; everything else lives here.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><input class="search" aria-label="Search projects" placeholder="Search projects, pieces, people…" value="{{projQ}}" onInput="{{onProjQ}}">
+  <div class="seg"><sc-for list="{{brandSeg}}" as="b" hint-placeholder-count="5"><button class="{{b.cls}}" onClick="{{b.go}}">{{b.label}}</button></sc-for></div>
+  <div class="seg"><sc-for list="{{statusSeg}}" as="b" hint-placeholder-count="4"><button class="{{b.cls}}" onClick="{{b.go}}">{{b.label}}</button></sc-for></div></div>
+ <p class="meta">{{projShown}}</p>
+ <sc-for list="{{projGroups}}" as="g" hint-placeholder-count="2">
+  <h2 class="h2" style="margin-top:18px">{{g.label}} <span class="meta">{{g.n}}</span></h2>
+  <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="4"><div class="row"><div class="grow"><b>{{r.title}}</b><div class="meta">{{r.sub}}</div></div><span class="chip {{r.tone}}">{{r.status}}</span><span class="meta" style="min-width:90px">{{r.when}}</span><button class="btn" onClick="{{r.pin}}">{{r.pinLabel}}</button><button class="btn" onClick="{{r.open}}">Open</button></div></sc-for>
+ </sc-for>
+ <sc-if value="{{projNone}}" hint-placeholder-val="{{false}}"><div class="empty">No project matches “{{projQ}}”. <button class="link" onClick="{{clearProjQ}}">Clear search</button></div></sc-if>
+ <p class="meta" style="margin-top:14px">Brands are your folders. Pins and folders are kept in this browser today; moving them into the project files is prepared work.</p>
+ </div>
+</sc-if>
+
+<!-- LIBRARY -->
+<sc-if value="{{isLibrary}}" hint-placeholder-val="{{false}}">
+ <div style="max-width:1120px;margin:0 auto">
+ <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><input class="search" aria-label="Search the Library" value="water"><div class="seg"><sc-for list="{{libKinds}}" as="k" hint-placeholder-count="6"><button class="{{k.cls}}" onClick="{{k.go}}">{{k.label}}</button></sc-for></div><button class="btn" style="margin-left:auto">Add to Library</button></div>
+ <h2 class="h2" style="margin-top:4px">Collections</h2>
+ <p class="meta" style="margin:-4px 0 10px">Inquiries you keep exploring. Items are linked into them, never copied. A collection needs no project or piece.</p>
+ <div class="map" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+  <sc-for list="{{collCards}}" as="c" hint-placeholder-count="3"><button class="mc" onClick="{{c.open}}"><b>{{c.title}}</b><span class="meta">{{c.sub}}</span><span class="meta" style="display:block;margin-top:6px;color:var(--ink)">{{c.links}}</span></button></sc-for>
+ </div>
+ <h2 class="h2">Kept items · {{libKindLabel}}</h2>
+ <sc-for list="{{libRows}}" as="r" hint-placeholder-count="6"><div class="row"><div class="grow"><b>{{r.title}}</b><div class="meta">{{r.kind}} · in {{r.colls}}</div></div><span class="meta">{{r.read}}</span><button class="btn" onClick="{{r.wu}}">Used in {{r.n}}</button><button class="btn" onClick="{{r.open}}">Open</button></div></sc-for>
+ <p class="meta" style="margin-top:12px">Search is literal for now; meaning-based search is not connected. <span class="tag t-prep">Bounded</span> Saved is not the same as read: reading marks show only where you marked passages yourself.</p>
+ </div>
+</sc-if>
+<sc-if value="{{isColl}}" hint-placeholder-val="{{false}}">
+ <div class="wrap2"><article>
+  <div class="note"><b>Current understanding</b><div class="serif" style="font-size:16px;margin-top:4px">{{coll.understanding}}</div><div class="meta" style="margin-top:4px">{{coll.updated}}</div></div>
+  <h2 class="h2">Linked items · {{coll.n}}</h2>
+  <sc-for list="{{coll.items}}" as="r" hint-placeholder-count="4"><div class="row"><div class="grow"><b>{{r.title}}</b><div class="meta">{{r.kind}} · {{r.rel}}</div></div><button class="btn" onClick="{{r.wu}}">Where used</button></div></sc-for>
+  <h2 class="h2">Open questions</h2>
+  <sc-for list="{{coll.questions}}" as="q" hint-placeholder-count="2"><div class="row"><div class="grow">{{q}}</div></div></sc-for>
+ </article><aside class="margin">
+  <div class="note"><b>Connected projects and pieces</b><sc-for list="{{coll.uses}}" as="u" hint-placeholder-count="2"><div class="row"><div class="grow">{{u.label}}<div class="meta">{{u.how}}</div></div><button class="link" onClick="{{u.go}}">Open →</button></div></sc-for><sc-if value="{{coll.noUses}}" hint-placeholder-val="{{false}}"><p class="meta" style="margin:6px 0 0">No project yet. Research here stands on its own.</p><button class="btn" style="margin-top:6px">Connect to a project</button></sc-if></div>
+  <sc-if value="{{coll.hasResearch}}" hint-placeholder-val="{{false}}"><div class="note"><b>Research</b><p class="meta" style="margin:4px 0">Points, evidence and competing accounts for this collection.</p><button class="link" onClick="{{goResearch}}">Open the research page →</button></div></sc-if>
+  <div class="note"><b>Agent work</b><p class="meta" style="margin:4px 0 0">{{coll.agent}}</p></div>
  </aside></div>
 </sc-if>
 
@@ -387,21 +444,22 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
-  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null};}
+  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1']};}
   set(o){this.setState(o);}
   renderVals(){
     const s=this.state,self=this,st=s.st;
     const theme=s.light===null?(this.props.theme??'dark'):(s.light?'light':'dark');
     const P3a='The spring above her garden runs through limestone, so the water is soft, and it carries the leaf’s sweetness forward.';
     const P3b='The spring above her garden runs through limestone, so the water is hard with calcium, and somehow it still carries the leaf’s sweetness forward.';
-    const go=(v,extra)=>()=>self.set(Object.assign({view:v,returned:false},extra||{}));
+    const pieceV=['write','read','check','media','arrange','audience','share'];
+    const go=(v,extra)=>()=>{const o={view:v,returned:false};if(pieceV.indexOf(s.view)>=0&&pieceV.indexOf(v)<0){o.ret=s.view;}if(pieceV.indexOf(v)>=0&&s.ret===v){o.ret=null;o.returned=(v==='write');}self.set(Object.assign(o,extra||{}));};
 
     const W_USES={
       t1240:['Spring walk 12:40 · Lin Yun','Corrected “soft” → “hard” by you, 16 Oct. Known places that use it:',[['Article · paragraph 3','flagged for review, not rewritten','write'],['Carousel · slide 4','flagged for review','arrange'],['Research · point 1','written before the correction','research']]],
       t1258:['Spring walk 12:58 · Lin Yun','“Tea is a guest in the water.” Exact words, protected everywhere they appear:',[['Article · paragraph 2','exact quote, checked on revision 8','write'],['Carousel · slide 3','exact quote','arrange'],['Concept · Water first','linked from the Library','overview'],['Direction · keep this line exactly','applies to all pieces','direction']]],
-      l1:['The Book of Tea passage','One Library item, linked twice, never copied:',[['Concept · Water first','supports','overview'],['Inquiry · Keeping old things in use','background','research']]],
+      l1:['The Book of Tea passage','One Library item, linked twice, never copied:',[['Concept · Water first','supports','overview'],['Collection · Keeping old things in use','background','research']]],
       l2:['Spring walk 12:58','',[['Article · paragraph 2','exact quote','write'],['Carousel · slide 3','exact quote','arrange']]],
-      l3:['Water chemistry and brewing.pdf p.14','',[['Research · point 2','qualified evidence','research'],['Inquiry · Keeping old things in use','background','research']]],
+      l3:['Water chemistry and brewing.pdf p.14','',[['Research · point 2','qualified evidence','research'],['Collection · Keeping old things in use','background','research']]],
       l4:['Your cabin note','',[['Research · your experience','not externally verified','research']]],
       ph0:['spring-path.jpg','Photo by you. Placed in:',[['Article · figure 1','own crop','write'],['Carousel · slide 1','own crop','arrange']]],
       ph1:['three-cups.jpg','Photo by you. Placed in:',[['Article · figure 2','own crop','write'],['Carousel · slides 2 and 5','two crops','arrange']]],
@@ -410,12 +468,36 @@ class Component extends DCLogic {
       ph4:['cabin-window.jpg','Selected, not placed:',[['Carousel · slide 8','selected only','arrange']]],
       ph5:['kettle.jpg','Not used anywhere yet.',[]],
       o1:['Spring walk','The recording feeds:',[['Research · points 1 and 4','source','research'],['Article · paragraphs 2 and 3','quote and correction flag','write'],['Carousel · slides 3 and 4','quote and correction flag','arrange'],['Script · At the spring','background','outputs']]],
+      o2x:['Kitchen tasting','Typed notes:',[['Research · point 2','your tasting notes','research']]],
+      p1:['The water is half the tea','The article draws on:',[['Spring walk 12:40 and 12:58','source passages','source'],['Collection · Why water changes tea','background','research'],['4 directions','scoped to it','direction']]],
+      p2:['Three waters, one leaf','The carousel draws on:',[['Spring walk 12:40 and 12:58','source passages','source'],['6 photos','placements','media'],['3 directions','scoped to it','direction']]],
       o6:['Your thoughts','Your own words feed:',[['Direction · kitchen table, not the lab','your angle','direction'],['Article','via that direction','write'],['Carousel','via that direction','arrange']]]
     };
     const nodes0=(k)=>k;
     const openWu=(k)=>()=>self.set({wu:k,dock:'uses',libOpen:true});
     const wuE=s.wu&&W_USES[s.wu]?W_USES[s.wu]:(s.wu?[nodes0(s.wu),'Highlighted on the map; detailed places not recorded yet.',[]]:null);
-    const wuList=wuE?wuE[2].map(u=>({where:u[0],how:u[1],go:go(u[2])})):[];
+    const wuList=wuE?wuE[2].map(u=>({where:u[0],how:u[1],go:()=>{go(u[2])();if(typeof window!=='undefined'&&window.innerWidth<1180)self.set({libOpen:false});}})):[];
+    const COLL={
+      water:{title:'Why water changes tea',dot:'warn',n:'2 new',sub:'9 items · 2 open questions · updated 16 Oct',links:'Project Water first · 4 pieces',understanding:'Minerals change how flavour leaves the leaf. Moderate hardness tends to give body; very soft water can taste thin. How this applies to Lin Yun’s oolong is not established.',updated:'From 3 sources and your notes · 16 Oct',
+        items:[['Spring walk','conversation','supports','o1'],['Water chemistry and brewing.pdf','reading','supports, qualified','l3'],['The Book of Tea passage','reading','explores','l1'],['Your cabin note','your note','your experience','l4']],questions:['Does the spring’s hardness change by season?','Is “only to wash the cups” about taste or habit?'],
+        uses:[['Project · Water first','connected','overview'],['Article · The water is half the tea','background, not inherited','write'],['Carousel · Three waters, one leaf','background, not inherited','arrange']],research:true,agent:'Claude added 2 sources yesterday 21:14 (reported). Linked as background, not adopted.'},
+      mend:{title:'Keeping old things in use',dot:'',n:'',sub:'6 items · research only',links:'Project Mending · 2 pieces',understanding:'Repair keeps an object in daily use and carries its history forward. How repair changes the way tea tastes from an old cup is an open question.',updated:'From 2 sources and your notes · 9 Oct',
+        items:[['Porcelain and Tea','published story · real','explores','real'],['The Book of Tea passage','reading','explores','l1'],['Water chemistry and brewing.pdf','reading','background','l3']],questions:['Does an old repaired cup change the taste?'],
+        uses:[['Project · Mending','connected','real'],['Story · Porcelain and Tea','published 29 Sep','real']],research:false,agent:'No agent work recorded for this collection.'},
+      read:{title:'Tea water reading list',dot:'',n:'',sub:'4 items · no project',links:'Not connected to a project',understanding:'A reading list, nothing concluded yet.',updated:'Your list · 2 Oct',
+        items:[['The Book of Tea passage','reading','to read','l1'],['Water chemistry and brewing.pdf','reading','marked passages: 3','l3']],questions:[],uses:[],research:false,agent:'Visit tracking is not available for this collection yet.'}};
+    const openColl=(k)=>()=>{const o={view:'collection',coll:k,returned:false};if(pieceV.indexOf(s.view)>=0)o.ret=s.view;self.set(o);};
+    const PB=['Teajia','Teajia','Teajia','Art','Mandala Codes','Personal'];
+    const PN=['Water first','Mending','Night market teas','Wood-fired kiln visit','Oracle card launch','Yixing clay notes','Spring harvest diary','An Cha visit, part 1','An Cha visit, part 2','Tea teacher interview','Studio open day','Gold seam workshop','Universal Language sculptures','Collector viewing, autumn','Card 12 commentary','Hexagram reading notes','Monk in Meoli','Lu Zhaokai equipment','Taiwan tea philosopher','Smoked black tea','Cabin water tests','Gaiwan sizes guide','Shop photos, winter','Pu-erh storage','Kettle comparisons','Market stall weekend','Ceramics fair','Kiln firing log','Tea and breath','Newsletter, November','Packaging ideas','Wuyi rock teas','Matcha whisking','Sourcing trip notes','Listing rewrites','Glossary updates','Teacup collection','Porcelain repair class','Bamboo tray build','Photo walk, harbour','Festival carousel','Teaware care','Tasting journal, Oct','Oracle deck reprint','Mandala atlas','Gallery statement','Dark tea farming','Morning rituals'];
+    const PS=['active','waiting','active','active','active','archived','active','waiting','active','finished','active','finished'];
+    const brandOf=(t)=>/sculpture|collector|gallery|studio open|ceramics fair|kiln|universal/i.test(t)?'Art':(/oracle|card|hexagram|mandala/i.test(t)?'Mandala Codes':(/morning|breath|cabin|photo walk/i.test(t)?'Personal':'Teajia'));
+    const allProj=PN.map((t,i)=>({id:'p'+i,title:t,brand:brandOf(t),status:i===0?'waiting':(i===1?'active':PS[i%PS.length]),coll:i===0?1:(i===1?1:1+(i%3)),pieces:i===0?4:(i===1?2:1+(i*7%5)),when:i<3?['today','yesterday','2 days ago'][i]:((i%28)+1)+' Sep'}));
+    const statusText={active:'Active',waiting:'Waiting on you',finished:'Finished',archived:'Archived'};
+    const statusTone={active:'',waiting:'warn',finished:'good',archived:''};
+    const q=(s.projQ||'').toLowerCase();
+    const filtered=allProj.filter(x=>(s.brand==='all'||x.brand===s.brand)&&(s.pstat==='all'||x.status===s.pstat||(s.pstat==='active'&&x.status==='waiting'))&&(!q||x.title.toLowerCase().indexOf(q)>=0));
+    const projOpen=(x)=>x.id==='p0'?go('overview'):(x.id==='p1'?openColl('mend'):go('overview'));
+    const projGroups=['Teajia','Art','Mandala Codes','Personal'].map(b=>{const rows=filtered.filter(x=>x.brand===b);return {label:b,n:rows.length+' project'+(rows.length===1?'':'s'),rows:rows.map(x=>({title:x.title,sub:x.coll+' collection'+(x.coll>1?'s':'')+' · '+x.pieces+' piece'+(x.pieces>1?'s':''),status:statusText[x.status],tone:statusTone[x.status],when:x.when,open:projOpen(x),pinLabel:s.pins.indexOf(x.id)>=0?'Unpin':'Pin',pin:()=>{const P=s.pins.slice();const i=P.indexOf(x.id);if(i>=0)P.splice(i,1);else P.push(x.id);self.set({pins:P});}})),show:rows.length>0};}).filter(g=>g.show);
     const projViews=['overview','material','source','research','direction','outputs'];
     const pieceViews=['write','read','check','media','arrange','audience','share'];
     const inPiece=pieceViews.indexOf(s.view)>=0;
@@ -481,14 +563,14 @@ class Component extends DCLogic {
     const libItems=lib.map(l=>({wu:openWu(l.id),text:l.text,src:l.src,btn:s.linked.indexOf(l.id)>=0?'Linked to Water first ✓':'Link to Water first',link:()=>{const L=s.linked.slice();const i=L.indexOf(l.id);if(i>=0)L.splice(i,1);else L.push(l.id);self.set({linked:L});}}));
     const photosRaw=[{name:'spring-path.jpg',caption:'The path to the spring',credit:'by you',uses:'Article fig. 1 · Slide 1'},{name:'three-cups.jpg',caption:'Tap, filtered, spring',credit:'by you',uses:'Article fig. 2 · Slides 2, 5'},{name:'lin-yun-hands.jpg',caption:'Pouring',credit:'by Lin Yun · permission asked',uses:'Slide 3'},{name:'limestone.jpg',caption:'White stone',credit:'by you',uses:'Slide 4'},{name:'cabin-window.jpg',caption:'Cabin kettle',credit:'by you',uses:'Selected, not placed'},{name:'kettle.jpg',caption:'No caption yet',credit:'by you',uses:'Unused'}];
     const photos=photosRaw.map((p,i)=>Object.assign({},p,{wu:openWu('ph'+i)}));
-    const titleMap={home:'Studio home',overview:'Water first',material:'Water first',source:'Water first',research:'Why water changes tea',direction:'Water first',outputs:'Water first',write:'The water is half the tea',read:'The water is half the tea',check:'The water is half the tea',media:'Three waters, one leaf',arrange:'Three waters, one leaf',audience:'Three waters, one leaf',share:'The water is half the tea',real:'Porcelain and Tea',mending:'Mending'};
-    const crumbMap={home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Inquiry · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
+    const titleMap={projects:'All projects',library:'Library',collection:(COLL[s.coll]||COLL.water).title,home:'Studio home',overview:'Water first',material:'Water first',source:'Water first',research:'Why water changes tea',direction:'Water first',outputs:'Water first',write:'The water is half the tea',read:'The water is half the tea',check:'The water is half the tea',media:'Three waters, one leaf',arrange:'Three waters, one leaf',audience:'Three waters, one leaf',share:'The water is half the tea',real:'Porcelain and Tea',mending:'Mending'};
+    const crumbMap={projects:'Projects',library:'Everything you kept, once',collection:'Collection · an inquiry',home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Collection research · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
     let saveText='Saved to working file 09:41',saveTone='good';
     if(st==='unsaved'||s.dirty){saveText='Unsaved · saving ahead…';saveTone='warn';}
     if(st==='failed'){saveText='Couldn’t save to the project file. Your words are kept in this browser.';saveTone='bad';}
     if(st==='readonly'||s.view==='real'){saveText='Read-only';saveTone='warn';}
     if(s.p3done&&!s.dirty&&st==='normal'&&s.view!=='real')saveText='Saved to working file 09:52 · revision 9';
-    const prim={home:['Continue',()=>applyStep('j3',1)],overview:['Continue writing',go('write')],material:['Add files',()=>{}],source:['Save correction',()=>self.set({corrected:true})],research:['Carry into Direction',go('direction')],direction:['Continue writing',go('write')],outputs:['New output',()=>{}],write:['Discuss wording',()=>{}],read:['Discuss wording',()=>{}],check:['Rerun checks',()=>{}],media:['Add photos',()=>{}],arrange:['Audience view',go('audience')],audience:['Export',()=>{}],share:['Copy message',()=>{}],real:['Open live page',()=>{}],mending:['Open',()=>{}]};
+    const prim={projects:['New project',()=>{}],library:['Add to Library',()=>{}],collection:['Write in this collection',go('overview')],home:['Continue',()=>applyStep('j3',1)],overview:['Continue writing',go('write')],material:['Add files',()=>{}],source:['Save correction',()=>self.set({corrected:true})],research:['Carry into Direction',go('direction')],direction:['Continue writing',go('write')],outputs:['New output',()=>{}],write:['Discuss wording',()=>{}],read:['Discuss wording',()=>{}],check:['Rerun checks',()=>{}],media:['Add photos',()=>{}],arrange:['Audience view',go('audience')],audience:['Export',()=>{}],share:['Copy message',()=>{}],real:['Open live page',()=>{}],mending:['Open',()=>{}]};
     const pr=prim[s.view]||prim.home;
     let chips=[];if(inPiece&&!carouselPiece)chips=[{label:'Article · rev '+(s.p3done?9:8),tone:''}];if(carouselPiece)chips=[{label:'Carousel · edition 15 Oct',tone:'good'}];if(s.view==='real')chips=[{label:'Published 29 Sep',tone:'good'}];
     return {
@@ -499,7 +581,22 @@ class Component extends DCLogic {
       isEmpty:st==='empty',notEmpty:st!=='empty',isProcessing:st==='processing',notProcessing:st!=='processing',isFailed:st==='failed',isStale:st==='stale',isReadOnly:st==='readonly',
       goHome:go('home'),goOverview:go('overview'),goResearch:go('research'),goDirection:go('direction'),goSource:go('source'),goMedia:go('media'),goShare:go('share'),goAudience:go('audience'),goMending:go('real'),openReal:go('real'),openCarousel:go('arrange',{sel:3}),
       resumeWrite:go('write',{insp:'margin'}),goOverviewFocusO1:go('overview',{focus:'o1'}),
-      openLib:()=>self.set({libOpen:!s.libOpen,dock:'lib'}),closeLib:()=>self.set({libOpen:false}),stop:(e)=>e.stopPropagation(),libOpen:s.libOpen,libItems,dockOpen:s.libOpen,dockLib:(s.dock||'lib')==='lib',dockUses:s.dock==='uses',closeDock:()=>self.set({libOpen:false}),dockTabs:[['lib','Library'],['uses','Where used']].map(t=>({label:t[1],cls:(s.dock||'lib')===t[0]?'on':'',go:()=>self.set({dock:t[0]})})),wuTitle:wuE?wuE[0]:'Where used',wuSub:wuE?wuE[1]:'Choose “Where used” on a passage, photo, source or map card.',wuList,wuT1240:openWu('t1240'),wuT1258:openWu('t1258'),t1240:s.wu==='t1240'?'hi':'',t1258:s.wu==='t1258'?'hi':'',focusWu:()=>{if(s.focus)openWu(s.focus)();},sideClass:(s.side?'sideopen':'noside'),toggleSide:()=>self.set({side:!s.side}),sideLabel:s.side?'Hide sidebar':'Menu',
+      openLib:()=>self.set({libOpen:(s.libOpen&&(s.dock||'lib')==='lib')?false:true,dock:'lib'}),findLib:()=>self.set({libOpen:true,dock:'lib'}),
+      goProjects:go('projects'),isProjects:s.view==='projects',navAll:s.view==='projects'?'on':'',projCount:allProj.length,
+      recentNav:allProj.slice(2,5).map(x=>({title:x.title,when:x.when,open:go('overview')})),
+      projQ:s.projQ,onProjQ:(e)=>self.set({projQ:e.target.value}),clearProjQ:()=>self.set({projQ:''}),
+      brandSeg:[['all','All brands'],['Teajia','Teajia'],['Art','Art'],['Mandala Codes','Mandala Codes'],['Personal','Personal']].map(b=>({label:b[1],cls:s.brand===b[0]?'on':'',go:()=>self.set({brand:b[0]})})),
+      statusSeg:[['active','Active'],['waiting','Waiting on you'],['finished','Finished'],['archived','Archived'],['all','All']].map(b=>({label:b[1],cls:s.pstat===b[0]?'on':'',go:()=>self.set({pstat:b[0]})})),
+      projGroups,projNone:filtered.length===0,projShown:filtered.length+' of '+allProj.length+' projects',
+      goLibrary:go('library'),isLibrary:s.view==='library',isColl:s.view==='collection',navLib:s.view==='library'?'on':'',openMendColl:openColl('mend'),openWaterColl:openColl('water'),
+      collNav:['water','mend','read'].map(k=>({title:COLL[k].title,dot:COLL[k].dot,n:COLL[k].n,open:openColl(k),cls:(s.view==='collection'&&s.coll===k)||(k==='water'&&s.view==='research')?'on':''})),
+      collCards:['water','mend','read'].map(k=>({title:COLL[k].title,sub:COLL[k].sub,links:COLL[k].links,open:openColl(k)})),
+      coll:(()=>{const c=COLL[s.coll]||COLL.water;return {understanding:c.understanding,updated:c.updated,n:c.items.length,items:c.items.map(i=>({title:i[0],kind:i[1],rel:i[2],wu:openWu(i[3])})),questions:c.questions,uses:c.uses.map(u=>({label:u[0],how:u[1],go:go(u[2])})),noUses:c.uses.length===0,hasResearch:c.research,agent:c.agent};})(),
+      libKinds:[['all','All'],['conv','Conversations'],['read','Reading'],['photo','Photos'],['note','Your notes']].map(k=>({label:k[1],cls:s.libKind===k[0]?'on':'',go:()=>self.set({libKind:k[0]})})),libKindLabel:({all:'all',conv:'conversations',read:'reading',photo:'photos',note:'your notes'})[s.libKind],
+      libRows:[['Spring walk','Conversation · 38 min','Why water changes tea','o1','conv','transcript kept',4],['Kitchen tasting','Conversation · notes','Why water changes tea','o2x','conv','',1],['Water chemistry and brewing.pdf','Reading · PDF','Why water changes tea · Keeping old things in use · Tea water reading list','l3','read','3 passages marked by you',3],['The Book of Tea passage','Reading · public domain','all three collections','l1','read','saved, not marked',2],['three-cups.jpg','Photo · by you','Why water changes tea','ph1','photo','',3],['Your cabin note','Your note · 2025','Why water changes tea','l4','note','',1]].filter(r=>s.libKind==='all'||r[4]===s.libKind).map(r=>({title:r[0],kind:r[1],colls:r[2],read:r[5],n:r[6],wu:openWu(r[3]),open:r[3]==='o1'?go('source'):go('research')})),
+      hasRet:!!s.ret&&pieceV.indexOf(s.view)<0,retLabel:s.ret?((['media','arrange','audience'].indexOf(s.ret)>=0?'Three waters, one leaf':'The water is half the tea')+' · '+s.ret):'',retShort:s.ret?(['media','arrange','audience'].indexOf(s.ret)>=0?'the carousel':'paragraph 3'):'',goRet:()=>self.set({view:s.ret,ret:null,returned:s.ret==='write'}),clearRet:()=>self.set({ret:null}),
+      hasConn:pieceV.indexOf(s.view)>=0,conn:(['media','arrange','audience'].indexOf(s.view)>=0?[['Collection · Why water changes tea',openColl('water')],['Spring walk 12:58 (slide 3)',openWu('t1258')],['Spring walk 12:40 (slide 4)',openWu('t1240')],['6 photos',go('media')],['Direction · 3 apply',go('direction')],['Sibling · the article',go('write')],['Show on map',go('overview',{focus:'p2'})]]:[['Collection · Why water changes tea',openColl('water')],['Spring walk 12:58 (paragraph 2)',openWu('t1258')],['Spring walk 12:40 (paragraph 3)',openWu('t1240')],['2 photos',go('media')],['Direction · 4 apply',go('direction')],['Sibling · the carousel',go('arrange')],['Show on map',go('overview',{focus:'p1'})]]).map(c=>({label:c[0],go:c[1]})),
+closeLib:()=>self.set({libOpen:false}),stop:(e)=>e.stopPropagation(),libOpen:s.libOpen,libItems,dockOpen:s.libOpen,dockLib:(s.dock||'lib')==='lib',dockUses:s.dock==='uses',closeDock:()=>self.set({libOpen:false}),dockTabs:[['lib','Library'],['uses','Where used']].map(t=>({label:t[1],cls:(s.dock||'lib')===t[0]?'on':'',go:()=>self.set({dock:t[0]})})),wuTitle:wuE?wuE[0]:'Where used',wuSub:wuE?wuE[1]:'Choose “Where used” on a passage, photo, source or map card.',wuList,wuT1240:openWu('t1240'),wuT1258:openWu('t1258'),t1240:s.wu==='t1240'?'hi':'',t1258:s.wu==='t1258'?'hi':'',focusWu:()=>{if(s.focus)openWu(s.focus)();},sideClass:(s.side?'sideopen':'noside'),toggleSide:()=>self.set({side:!s.side}),sideLabel:s.side?'Hide sidebar':'Menu',
       thought:s.thought,onThought:(e)=>self.set({thought:e.target.value}),
       hasFocus:!!s.focus,focusTitle:s.focus?nodes[s.focus][0]:'',focusText:s.focus?(fdesc[s.focus]||'Highlighted cards are what this feeds and what feeds it. Dimmed cards are unaffected.'):'',focusOpen:()=>{if(s.focus)self.set({view:nodes[s.focus][2]});},clearFocus:()=>self.set({focus:null}),focusHint:s.focus?'':'',
       waterWord:s.corrected?'hard':'soft',fixClass:s.corrected?'fixed':'fix',corrected:s.corrected,notCorrected:!s.corrected,applyFix:()=>self.set({corrected:true}),undoFix:()=>self.set({corrected:false}),
