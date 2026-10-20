@@ -360,3 +360,46 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  body.c3-tabs #app .c3-empty{flex-shrink:0}
  #project-library.c3-home [data-pl-close]{white-space:nowrap;font-size:13px;padding:0 12px}
 }
+
+/* Phone, one system (≤650px). Gutter: 16px on every step, no nested desktop gutters, so a line of prose holds ~45 characters.
+   Type floor: no interface text under 12px. Bar: picker · open-words (icon) · More · primary, the same on every step;
+   Outputs lives in the picker (checkpoint 12) and the location bar, so it leaves the phone bar. */
+@media(max-width:650px){
+ body.c3-tabs{--c3-gx:16px}
+ body.c3-tabs #app .workspace :is(.c3-ctitle,#stage-working-lane,.c3-empty,.draft-bar,.sws-check-tools,.mot-bar,.mot-tool-grid,.flow-retained,.oss-surface,.mot-surface,.material-surface,.c3-page-notes){padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace :is(.c3-ctitle,[id="stage-working-lane"],.c3-empty,.oss-surface,.mot-surface,.material-surface) :is(.c3-ctitle,[id="stage-working-lane"],.c3-empty,.oss-surface,.mot-surface,.material-surface,.mot-bar,.mot-tool-grid,.flow-retained){padding-left:0!important;padding-right:0!important}
+ body.c3-tabs #app .workspace .phaseReader{padding-left:0!important;padding-right:0!important}
+ body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document,body.c3-tabs #app .workspace .recordPage{padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important;margin-left:0!important;margin-right:0!important;max-width:none!important;width:auto!important;border-left:0!important;border-right:0!important;border-radius:0!important;box-shadow:none!important}
+ body.c3-tabs #app .workspace :is(.oss-retained,.c3-open-research){margin-left:0!important;margin-right:0!important}
+ body.c3-tabs #app .workspace .c3-empty .ce-card-wrap{padding:18px 16px}
+ body.c3-tabs #app .workspace .c3-empty.ce-compact .ce-card-wrap{flex-direction:column;gap:10px}
+ body.c3-tabs #app .workspace :is(small,.small,summary,label.flow-field,.draft-action,.reference span,.reference,.docfooter span){font-size:12.5px!important;letter-spacing:0}
+ body.c3-tabs #app .workspace .reference{display:flex;flex-wrap:wrap;gap:2px 10px;text-transform:none}
+
+ #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode){display:none}
+ #c3-surface-bar .sb-mode{width:36px;min-width:36px;padding:0!important;display:grid;place-items:center}
+ #c3-surface-bar .sb-mode .sb-mode-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ #c3-surface-bar .sb-mode .sb-mode-i{display:grid}
+ #c3-surface-bar .sb-right{flex:1 1 auto;min-width:0;justify-content:flex-end;overflow:hidden}
+ #c3-surface-bar .sb-primary{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:4px}
+ #c3-surface-bar .sb-left{width:118px}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{max-width:110px}
+}
+@media(max-width:650px){
+ body.c3-tabs[data-c3-stage] #app .workspace>.mot-surface{padding-left:0!important;padding-right:0!important}
+ body.c3-tabs[data-c3-stage] #app .workspace>.mot-surface>:is(.mot-bar,.mot-context,.mot-tool-grid,.mot-status,.flow-retained,.c3-ctitle,.c3-empty){padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .phaseReader>:is(.draft-row,.draft-details,details.flow-retained,.draft-bar){padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .margin .draft-surface-margin-summary{padding-left:var(--c3-gx)!important;padding-right:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .document>.reference{display:flex!important;flex-wrap:wrap;gap:2px 10px;text-transform:none!important;letter-spacing:0!important;font-size:12.5px!important}
+ body.c3-research-open .workflowNavigation.c3-rail .cr-picker,body.c3-home-open .workflowNavigation.c3-rail .cr-picker{display:none!important}
+ #c3-surface-bar .sb-mode{border-color:transparent!important;background:none!important}
+ #c3-surface-bar .sb-mode:hover{background:var(--c3-lift,var(--rail))!important}
+}
+@media(max-width:650px){
+ body.c3-tabs #app .workspace .c3-open-research{margin-left:var(--c3-gx)!important}
+ body.c3-tabs #app .workspace .document .reference{display:flex!important;flex-wrap:wrap!important;gap:2px 10px!important;text-transform:none!important;letter-spacing:0!important;font-size:12.5px!important}
+ body.c3-tabs #app .workspace .phaseReader>.draft-row{display:flex!important;flex-wrap:wrap!important;align-items:center;gap:6px 12px!important;row-gap:6px}
+ body.c3-tabs #app .workspace .phaseReader>.draft-row *{font-size:13px}
+}
+@media(max-width:650px){body.c3-tabs #app #workspace .reference[data-c3-mirrored]{display:flex!important}}
+#c3-surface-bar .sb-mode-i{display:none}
