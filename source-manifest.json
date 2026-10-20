@@ -60,14 +60,14 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "7077f5f6937bc77b146cf9e82e436b50c0634d5dbadcc962fe115812f0400938",
+      "candidateSha256": "38d4bfd13bbf5fe25677a348abebe387992d5313004e73a7825afd138ef4b596",
       "adapted": true
     },
     {
       "path": "runtime/services/ar-project-folders.mjs",
       "sourceSha256": "92a578939959851abe46addbba8965d3fa48823f09bcd04b426610f107b64720",
-      "candidateSha256": "92a578939959851abe46addbba8965d3fa48823f09bcd04b426610f107b64720",
-      "adapted": false
+      "candidateSha256": "6910409f68a55af3a38582e34cc96af6936db6ce96b846fbd980a6932eaa092d",
+      "adapted": true
     },
     {
       "path": "runtime/services/article-make.mjs",
@@ -468,8 +468,8 @@
     {
       "path": "runtime/services/study-draft-copies.mjs",
       "sourceSha256": "f0d073f53a12f8afb9b90f80dc6cc66d8059cf59980b574eb7a1063ed2be19ba",
-      "candidateSha256": "f0d073f53a12f8afb9b90f80dc6cc66d8059cf59980b574eb7a1063ed2be19ba",
-      "adapted": false
+      "candidateSha256": "1c5b891478f0ba5fcd617c47f38349871d3fcbc48ea10a8aa50d04cb0f08e987",
+      "adapted": true
     },
     {
       "path": "runtime/services/study-human-direction.mjs",
@@ -768,7 +768,7 @@
     {
       "path": "public/document-study/draft-flow.js",
       "sourceSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "candidateSha256": "427842f2be866588af70741013430ac342403c21d1a7c21f737a5b5a10798b02",
+      "candidateSha256": "52d079b1e7f5f7cedfb10eb5e826057ff2527e7757b96f47a7aee2c3cdf21e23",
       "adapted": true
     },
     {
@@ -2225,7 +2225,7 @@
     },
     {
       "path": "docs/sections/05-draft.md",
-      "candidateSha256": "d728dd7b2b91e34852d47fefdcf3f34f1399580db43dd9d1b68c53f6cac62798"
+      "candidateSha256": "c1740cdb7e528d6f8f4fbeaee7cb23414f6058e7db53ac740d9c10ffc2ab979c"
     },
     {
       "path": "docs/sections/06-read-refine.md",
@@ -2353,7 +2353,7 @@
     },
     {
       "path": "docs/CLAUDE-ACCESS.md",
-      "candidateSha256": "acf94e3d67ad7d7db2710d3125378919e1f17263677fc02cd169690acc8426ee"
+      "candidateSha256": "f0e92578c5c49a4de81ec3d48653915da368b37f00964733bcc93a711c7207ff"
     },
     {
       "path": "docs/PERMANENT-HOME.md",
@@ -2585,11 +2585,11 @@
     },
     {
       "path": "docs/DESIGN-PASS-ADDITIONS.md",
-      "candidateSha256": "f5c431337ef77dd503d03f8d6aebbe67bd721ff7410e0fbb2e1775da70855fb3"
+      "candidateSha256": "6cd9b5257c1ef03db7ab92265bdc3868b1fe9f254d743b9fc69c616b0a74f89b"
     },
     {
       "path": "docs/FUNCTION-FLOW.md",
-      "candidateSha256": "b0dc5a211f065bd247ff15987dbdd75e325c8f1b64ec3d095b31cfe08b88acf9"
+      "candidateSha256": "d6a86c328870d376a43cf3ba427f9c5e5a60d3b8e7ff8a6c39c89da0098cfd91"
     },
     {
       "path": "docs/FILE-CONTRACT-MAP.md",
@@ -2597,11 +2597,11 @@
     },
     {
       "path": "docs/CLAUDE-DESIGN-PASTE.md",
-      "candidateSha256": "70a86b43a9faec7d42f1da51a1da2c3f5bee522cc5af67e8f78c6c7276dd4a60"
+      "candidateSha256": "8b7d86e1569bc3a1b2cef547924289d51ba898cc8303ba510b68dc682ac8b0da"
     },
     {
       "path": "CLAUDE-DESIGN-START.md",
-      "candidateSha256": "6072b90e3640b4a3c5e3a881d7d43961a6d0f1cd8832578959be91e85b1f975a"
+      "candidateSha256": "0bb894236d98b1b22df15997ba18207caa2309b8a126cc826c7f6ebf1bd1e287"
     },
     {
       "path": "docs/AGENT-CONNECTIONS.md",
@@ -2709,11 +2709,11 @@
     },
     {
       "path": "public/document-study/surface-bar.css",
-      "candidateSha256": "d68ae7a09b70f8b6a1a6c2f4768312501512e086f4a9b5a1993263ae9002111a"
+      "candidateSha256": "eb4e0317a48aa813697bca8a17453b88d850c296041ef880c331e9c99f77da6e"
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "d0b98113e6e73131177e0e2496a74135fc72e7a55d10b93d6bfec67980ea3a99"
+      "candidateSha256": "f68f1ea6b66fb5b9a46d81b1072775eb57f182a1346cbbc0237ec50725c43e09"
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
@@ -2785,7 +2785,19 @@
     },
     {
       "path": "docs/ROUND2-SOURCE-LOOK-STATUS.md",
-      "candidateSha256": "85417526549902cdabdec5ccee0c38e048925122aeec5037bdd57806f5460309"
+      "candidateSha256": "5e081911b4c7ea5a0ed383b6011df0261d626ffd4bdce70a7b6d428a4e5f9943"
+    },
+    {
+      "path": "runtime/services/draft-history.mjs",
+      "candidateSha256": "776566ec9bc1c3f2432154e38f9cb85806237606aeb4faf608019a281b699f36"
+    },
+    {
+      "path": "tests/one-copy-history.test.mjs",
+      "candidateSha256": "d307965cd6ab41f1013586d780828da2713f8aef474052645a90d63ee17814e2"
+    },
+    {
+      "path": "tests/one-copy-ui.test.mjs",
+      "candidateSha256": "d51bb5923400420f6ea5102cc0d9673c39a8bded744286474c589c0ca22f2568"
     }
   ],
   "dependencyRepair": {
@@ -3128,6 +3140,29 @@
         "runtime/services/connected-workspace-bridge.test.mjs"
       ],
       "note": "Bounded connected checkpoint installed; source-only visible C3 Learning library bridge repair not yet activated. Own final source build + actual visible-menu standalone create/save/reread/exact editor return/fullreload reopen proved;19affectedDOMchecks pass. Current repo-first entry/LOOK/private-content intent and three-option design input preserved. One-copy/history code deliberately excluded; no private data, runtime cutover or deployment by this source publication."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Installed combined one-copy/history and visible Library source",
+      "files": [
+        "CLAUDE-DESIGN-START.md",
+        "docs/CLAUDE-ACCESS.md",
+        "docs/CLAUDE-DESIGN-PASTE.md",
+        "docs/DESIGN-PASS-ADDITIONS.md",
+        "docs/FUNCTION-FLOW.md",
+        "docs/ROUND2-SOURCE-LOOK-STATUS.md",
+        "docs/sections/05-draft.md",
+        "public/document-study/draft-flow.js",
+        "public/document-study/surface-bar.css",
+        "public/document-study/surface-bar.js",
+        "runtime/server.mjs",
+        "runtime/services/ar-project-folders.mjs",
+        "runtime/services/draft-history.mjs",
+        "runtime/services/study-draft-copies.mjs",
+        "tests/one-copy-history.test.mjs",
+        "tests/one-copy-ui.test.mjs"
+      ],
+      "note": "Exact final combined pins52d079/38d4/1c5b89/691040/776566/f68/eb4 plus preserved bridgeb6, newer menu regressions and repo-native docs. Installed8file+4served/read-only preservation receipt distinct from own-frozen synthetic mutation/restore/Undo proof; earlier private words remain pending explicit decision. No private content, provider, publication or device sync implied."
     }
   ],
   "repositorySeparation": {

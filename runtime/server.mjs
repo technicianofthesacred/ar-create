@@ -430,6 +430,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         '/api/study-draft/create-collection': {POST:input=>draftCall(()=>createStudyCollection(input))},
         '/api/study-draft/open': {POST:input=>draftCall(()=>studyDrafts.openCopy(input))},
         '/api/study-draft/save': {POST:input=>draftCall(()=>studyDrafts.save(input))},
+        '/api/study-draft/history-preview': {POST:input=>draftCall(()=>studyDrafts.previewVersion(input))},
+        '/api/study-draft/history-restore': {POST:input=>draftCall(()=>studyDrafts.restoreVersion(input))},
         '/api/study-draft/undo': {POST:input=>draftCall(()=>studyDrafts.undo(input))},
         '/api/study-draft/inspect': {GET:()=>draftCall(()=>studyDrafts.inspect({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),operationId:url.searchParams.get('operationId')})),POST:input=>draftCall(()=>studyDrafts.inspect(input))},
         '/api/study-draft/recover': {POST:input=>draftCall(()=>studyDrafts.recover(input))},

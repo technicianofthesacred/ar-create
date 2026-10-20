@@ -1,6 +1,6 @@
 # AR Create — current C3 Round 2 repository entry
 
-20 October 2026. Use this private repository’s current `main` for the next Claude Design round; no handoff ZIP is required. The earlier8334 packet is historical. C3 is the approved visual baseline, with bounded integration repairs to preserve the maintained tools. New writing-history requirements are accepted but unfinished; they do not block this handoff.
+20 October 2026. Use this private repository’s current `main` for the next Claude Design round; no handoff ZIP is required. The earlier8334 packet is historical. C3 is the approved visual baseline, with bounded integration repairs to preserve the maintained tools. The bounded one-copy/history and connected-learning checkpoints are now installed; explicit external and unsupported limits remain in the status index.
 
 ## Start directly from the private repository
 
@@ -26,6 +26,6 @@ On the author's Mac the actual app remains `http://127.0.0.1:8841/document-study
 
 Exact personal words and source attribution, original files, stable project/part/output identities, revisions, independent approval, unsaved safety buffers, stale refusal, explicit conflict resolution and exact eligible Undo. Keep the existing editor and actual owner handlers. C3 styling and interface proposals do not save, approve, publish, generate, transmit or migrate anything. A disabled or unavailable operation must keep its actual reason.
 
-The newest [one-working-text and session-history brief](docs/sections/05-draft.md#20-october--one-working-text-and-session-history) requires automatic project-file access, save-ahead, explicit comparison of different earlier wording and existing-receipt history without a twelve-entry cap. Show intended behavior without claiming it installed: non-reconstructable older history stays an honest gap, restore is a new guarded operation, and same-owner fresh-browser proof is not device/cloud synchronization.
+The newest [one-working-text and session-history brief](docs/sections/05-draft.md#20-october--one-working-text-and-session-history) requires automatic project-file access, save-ahead, explicit comparison of different earlier wording and existing-receipt history without a twelve-entry cap. The installed bounded implementation keeps non-reconstructable older history an honest gap, restores as a new guarded operation, and does not treat same-owner fresh-browser proof as device/cloud synchronization.
 
 Return the next proposed design and changed source to the sole integrator for preservation/connection review. This handoff is design-ready; it is not a full-local-goal or publication claim.

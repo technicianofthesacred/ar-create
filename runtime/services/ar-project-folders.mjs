@@ -1,3 +1,4 @@
+import {historicalVersion} from './draft-history.mjs';
 import {capture as captureDraft,projection as projectDraft,apply as applyDraft,undo as undoDraft} from './draft-correspondence.mjs';
 import {metadata as draftMetadata,snapshot as draftSnapshot} from './draft-correspondence-metadata.mjs';
 import fs from "node:fs";
@@ -469,10 +470,11 @@ doing: AR Create explicit project action
   });}
   function metadataChange(b,before,snapshot){const after=JSON.stringify(draftMetadata(snapshot),null,2);return {area:'binding-metadata',relativePath:b.projectId+'.draft-correspondence.json',beforeHash:before===null?null:digest(before),after,afterHash:digest(after)};}
   function nativeRequest(input,kind){
-    const fields=['projectId','operationId','expected',...(kind==='draft-operations'?['operations']:kind==='draft-undo'?['undoOperationId']:kind==='draft-rebind'?['humanDecision']:[])];
+    const fields=['projectId','operationId','expected',...(kind==='draft-operations'?['operations']:kind==='draft-undo'?['undoOperationId']:kind==='draft-restore'?['restoreOperationId','restorePosition']:kind==='draft-rebind'?['humanDecision']:[])];
     if(!input||typeof input!=='object'||Object.keys(input).some(k=>!fields.includes(k))||fields.some(k=>!Object.hasOwn(input,k)))fail('Malformed native draft request; caller snapshots are refused.',400);
     if(kind==='draft-rebind'&&input.humanDecision!==true)fail('Explicit human rebind decision required.',403);
     if(kind==='draft-undo'&&!UUID.test(input.undoOperationId||''))fail('Owned operation UUID required for Undo.',400);
+    if(kind==='draft-restore'&&(!UUID.test(input.restoreOperationId||'')||!['before','after'].includes(input.restorePosition)))fail('Exact owned history version required.',400);
     return locked(()=>{
       const b=load(input.projectId),op=operationFile(b.projectId,input.operationId),requestHash=digest(stable({...input,operationId:undefined}));
       if(fs.existsSync(op)){const r=inspectOperation(input);if(r.requestHash!==requestHash||r.kind!==kind)fail('Operation ID already belongs to another action.');if(r.state!=='committed')fail('Interrupted operation needs explicit recovery.');return {operationId:r.operationId,state:'committed',replayed:true};}
@@ -488,8 +490,14 @@ doing: AR Create explicit project action
           if(s.metadataRaw===null)fail('Prepare trusted correspondence first.');
           model=draftSnapshot(s.workflow.draft,JSON.parse(workflowText(s.metadataRaw)),sourceKey(b));
           if(kind==='draft-operations')result=applyDraft(model,s.workflow.draft,input.operations);
-          else {const prior=inspectOperation({projectId:b.projectId,operationId:input.undoOperationId});if(prior.state!=='committed'||!prior.correspondenceInverse)fail('Undo requires a committed owned native operation receipt.');result=undoDraft(model,s.workflow.draft,prior.correspondenceInverse);affectedIds=prior.correspondenceAffectedIds||[];}
+          else if(kind==='draft-restore'){
+            const prior=inspectOperation({projectId:b.projectId,operationId:input.restoreOperationId});
+            if(prior.state!=='committed')fail('Only committed owned history can be restored.');
+            const {raw,model:target}=historicalVersion({receipt:prior,projectId:b.projectId,draftRelative:b.records.draft,sourceKey:model.sourceKey,position:input.restorePosition});
+            result={raw,snapshot:structuredClone(target),inverse:{schema:'mag-dev-inverse.v1',before:structuredClone(model),afterHash:target.fileHash,afterSnapshotHash:digest(JSON.stringify(target))}};
+          }else {const prior=inspectOperation({projectId:b.projectId,operationId:input.undoOperationId});if(prior.state!=='committed'||!prior.correspondenceInverse)fail('Undo requires a committed owned native operation receipt.');historicalVersion({receipt:prior,projectId:b.projectId,draftRelative:b.records.draft,sourceKey:model.sourceKey,position:'before'});result=undoDraft(model,s.workflow.draft,prior.correspondenceInverse);affectedIds=prior.correspondenceAffectedIds||[];}
         }
+        if(model&&!result.inverse&&(result.raw!==s.workflow.draft||!same(result.snapshot,model)))result.inverse={schema:'mag-dev-inverse.v1',before:structuredClone(model),afterHash:result.snapshot.fileHash,afterSnapshotHash:digest(JSON.stringify(result.snapshot))};
         const changes=[];
         if(result.raw!==s.workflow.draft){
           changes.push({relativePath:b.records.draft,beforeHash:s.workflow.hashes.draft,after:result.raw,afterHash:digest(result.raw)});
@@ -503,7 +511,7 @@ doing: AR Create explicit project action
             const before=model.blocks.find(p=>p.id===id),next=result.snapshot.blocks.find(p=>p.id===id);
             return `- passage: ${id}\n- before: ${before?oneLine(before.raw):'(new)'}\n- after: ${next?oneLine(next.raw):'(removed)'}\n`;
           }).join('');
-          const actions=kind==='draft-undo'?'undo '+input.undoOperationId:input.operations.map(op=>op.kind+':'+(op.id||[op.leftId,op.rightId].join(','))).join(' ');
+          const actions=kind==='draft-restore'?'restore '+input.restoreOperationId+' '+input.restorePosition:kind==='draft-undo'?'undo '+input.undoOperationId:input.operations.map(op=>op.kind+':'+(op.id||[op.leftId,op.rightId].join(','))).join(' ');
           const reworkRows=(result.reworks||[]).map(words=>'- rework: '+words+'\n').join('');
           const after=(s.workflow.edits||draft.editLogHeader(path.basename(b.records.draft)))+`\n## ${today}\n${entries}${reworkRows}- action: ${kind} ${input.operationId} ${actions}\n`;
           changes.push({relativePath:b.records.edits,beforeHash:s.workflow.hashes.edits,after,afterHash:digest(after)});
@@ -546,7 +554,7 @@ doing: AR Create explicit project action
     }
     return { projectId, ready: unresolved.length === 0, unresolved };
   }
-  return { bind,readDraftStatus,readDraftProjection,prepareDraftCorrespondence:input=>nativeRequest(input,'draft-prepare'),rebindDraftCorrespondence:input=>nativeRequest(input,'draft-rebind'),applyDraftOperations:input=>nativeRequest(input,'draft-operations'),undoDraftOperation:input=>nativeRequest(input,'draft-undo'), readBinding: (id) => structuredClone(load(id)), scan, add, reconnect, readWorkflow, workflowReadiness, answerQuestion: (input) => change(input, "answer"), reviseAnswer: (input) => change(input, "revise-answer"), editDraft: (input) => change(input, "edit"), inspectOperation, recoverOperation };
+  return { bind,readDraftStatus,readDraftProjection,prepareDraftCorrespondence:input=>nativeRequest(input,'draft-prepare'),rebindDraftCorrespondence:input=>nativeRequest(input,'draft-rebind'),applyDraftOperations:input=>nativeRequest(input,'draft-operations'),undoDraftOperation:input=>nativeRequest(input,'draft-undo'),restoreDraftVersion:input=>nativeRequest(input,'draft-restore'), readBinding: (id) => structuredClone(load(id)), scan, add, reconnect, readWorkflow, workflowReadiness, answerQuestion: (input) => change(input, "answer"), reviseAnswer: (input) => change(input, "revise-answer"), editDraft: (input) => change(input, "edit"), inspectOperation, recoverOperation };
 }
 export {
   createBoundProjectFolders,

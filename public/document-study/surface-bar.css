@@ -50,3 +50,10 @@ body.c3-bar-on #connected-work-receipts>div{min-width:0;max-width:100%;overflow-
 /* Keep the embedded composer's own palette: C3's general button fill must not replace its dark control surface. */
 body.c3-tabs #app #study-output-canvas .ar-composition-workbench :is(button,select){background:#25211a!important;border-color:var(--cwb-line)!important}
 body.c3-tabs #app #study-output-canvas .ar-composition-workbench button:hover:not(:disabled){background:#30291f!important;border-color:#8b7657!important}
+
+/* Native History, earlier writing and failed saves remain reachable in the compact C3 shell. */
+body.c3-tabs #app .workspace>.draft-bar:has(>.draft-inspect,>.draft-earlier,#draft-recovery:not(:empty)){display:block!important;flex:0 0 auto;min-width:0;max-width:100%}
+body.c3-tabs #app .workspace>.draft-bar>.draft-inspect{max-height:60dvh;overflow:auto;overscroll-behavior:contain}
+body.c3-tabs #app .workspace>.draft-bar .draft-row{flex-wrap:wrap;gap:8px}
+body.c3-tabs #app .workspace>.draft-bar .draft-context-words{overflow-wrap:anywhere;max-width:100%;white-space:normal}
+body.c3-tabs #app .workspace>.draft-bar :is(ins,del){overflow-wrap:anywhere}
