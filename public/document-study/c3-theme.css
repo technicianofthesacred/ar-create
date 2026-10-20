@@ -209,3 +209,47 @@ body.c3-tabs #app #workspace button[data-current-check="run"]:not(:disabled){bac
  body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.draft-row{max-width:760px;width:100%;margin:6px auto 0;padding:0 4px;box-sizing:border-box;font:var(--c3-t1)/1.4 var(--ar-ui);color:var(--dim)}
  body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.draft-details{max-width:760px;width:100%;margin:0 auto 40px;box-sizing:border-box}
 }
+
+/* ================= Write = Read = Check: same paper, starts with the page (20 Oct) ================= */
+/* The writing surface had its own greenish paper and desk; it now uses the shared palette. */
+body.c3-tabs.draft-surface-active{--bg:#141310;--rail:#191813;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--green:#8fb08a;--warm:#c9a874;--draft-active:#2c2a22;--draft-mark:color-mix(in srgb,#c9a874 22%,transparent);--draft-note:#191813}
+:root[data-theme="light"] body.c3-tabs.draft-surface-active{--bg:#efede6;--rail:#f7f5ef;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--green:#3f6146;--warm:#7a5a30;--draft-active:#e9e4d7;--draft-mark:color-mix(in srgb,#7a5a30 18%,transparent);--draft-note:#f7f5ef}
+body.c3-tabs #app .workspace>.draft-bar.c3-quiet{display:none!important}
+/* The same desk and the same first line of the page on Write, Read and Check. */
+@media(min-width:851px){
+ body.c3-tabs:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #app .workspace{background:var(--bg)}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document,
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>:is(.document,.recordPage),
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript>.document{margin-top:28px!important;padding-top:48px!important}
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript{padding:0 40px 96px!important;max-width:none!important}
+ body.c3-tabs[data-c3-stage="7"] #app .workspace .wn-check-manuscript>.document{max-width:760px;margin-left:auto!important;margin-right:auto!important;padding:48px 64px 72px!important;background:var(--paper);border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22);box-sizing:border-box}
+ body.c3-tabs[data-c3-stage="7"] #app .workspace>.wn-check-layout.c3-check{background:var(--bg)}
+ /* Write: notes on top of the right column, then the tabs, then the panel. */
+ body.c3-tabs #app .workspace .desk.c3-insp-desk{grid-template-rows:auto auto minmax(0,1fr)}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>:not(#c3-insp-head):not(#margin):not(.ci-panel):not(.c3-page-notes){grid-row:1/span 3}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.c3-page-notes{grid-column:2;grid-row:1;background:var(--c3-lift);border-left:1px solid var(--line);padding:14px 16px 4px}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>#c3-insp-head{grid-row:2;top:60px}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>:is(#margin,.ci-panel){grid-row:3}
+}
+/* The notes block: small, quiet, one place for where you are and the page's status. */
+.c3-page-notes{display:flex;flex-direction:column;gap:6px;font:var(--c3-t1)/1.45 var(--ar-ui);color:var(--dim)}
+.c3-page-notes .c3-ctitle{margin:0!important;padding:0!important;max-width:none!important}
+.c3-page-notes :is(.reference,.draft-surface-document-meta,.draft-row){margin:0!important;padding:0!important;max-width:none!important;font:12px/1.45 var(--ar-ui)!important;color:var(--dim)!important;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.c3-page-notes .draft-tabs{margin:0!important;padding:0!important;border:0!important}
+.c3-page-notes+.c3-insp-tabs,#c3-read-insp>.c3-page-notes{padding-bottom:10px;border-bottom:1px solid var(--line)}
+.wn-check-findings>.c3-page-notes{margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+/* Owner status rows stay in the page (hidden) and appear as a mirror in the notes; an opened disclosure shows in place. */
+body.c3-tabs #app .workspace [data-c3-mirrored]:not(.c3-mirror-open){display:none!important}
+.c3-mirror{display:flex;flex-direction:column;gap:6px}
+.c3-mirror-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font:12px/1.45 var(--ar-ui);color:var(--dim)}
+.c3-mirror-btn{min-height:26px;padding:0 10px;border:1px solid var(--c3-edge);border-radius:13px;background:var(--c3-fill);color:var(--ink);font:500 12px/1 var(--ar-ui);cursor:pointer}
+.c3-mirror-btn.on{background:var(--c3-sel);border-color:var(--ink)}
+.c3-mirror-btn:disabled{opacity:.45;cursor:default}
+@media(min-width:851px){
+ #app #workspace .desk.c3-insp-desk>.c3-page-notes{grid-column:2!important;grid-row:1!important;width:auto;max-width:none;margin:0;background:var(--c3-lift);border-left:1px solid var(--line);padding:14px 16px 10px;box-sizing:border-box;align-self:stretch}
+ #app #workspace .desk.c3-insp-desk>#c3-insp-head{grid-row:2}
+ #app #workspace .desk.c3-insp-desk>:is(#margin,.ci-panel){grid-row:3}
+ #app #workspace .desk.c3-insp-desk>.document.prose-document{grid-column:1!important;grid-row:1/span 3!important}
+}
+@media(max-width:850px){#app #workspace .desk.c3-insp-desk>.c3-page-notes{margin:0 0 12px}}
+body.c3-tabs #app .wn-check-findings>.c3-page-notes{padding-top:16px}

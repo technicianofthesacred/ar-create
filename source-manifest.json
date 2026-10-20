@@ -2409,7 +2409,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "9bc047aea1d3713141b9e5d6027d0c2f90c23cb0da84c5a0131dc5d3b5a191a0"
+      "candidateSha256": "4d481ec095baee7efa38556847ac478bc779dcb62fcbfbc0d102dfee3450ffe3"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -2421,11 +2421,11 @@
     },
     {
       "path": "public/document-study/canvas-c3.js",
-      "candidateSha256": "0f934d5b214361b5b2530b460aeebfdd2ce69cbfb4a64ff89c68837520435b35"
+      "candidateSha256": "bf1a587095f4420321ad192acfbeb22ff665b60a4b345bc817fd4b899da89034"
     },
     {
       "path": "public/document-study/canvas-c3.test.mjs",
-      "candidateSha256": "5747d5b993c045975ee79d5f468553f74a0a8a7fa7724299391b66956f51d4d0"
+      "candidateSha256": "036c2b6a88a2087bd70f3f10c20c015875f97b35fa0360dd74e31923d961440f"
     },
     {
       "path": "public/document-study/checkpoint-rail.css",

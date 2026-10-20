@@ -26,7 +26,8 @@ test('Write gets the board heading line inside the document, above the title; th
 });
 test('Read gets the heading and an inspector that only points to where the work happens',()=>{
  const f=fixture(6);
- assert.match(f.d.querySelector('.phaseReader>.c3-ctitle').textContent,/06\s*Read/);
+ assert.match(f.d.querySelector('#c3-read-insp>.c3-page-notes>.c3-ctitle').textContent,/06\s*Read/);
+ assert.equal(f.d.querySelector('.phaseReader').firstElementChild.className,'recordPage','Read starts with the page');
  const side=f.d.querySelector('#c3-read-insp');
  assert.ok(side);
  side.querySelector('[data-c3-go="5"]').click();
@@ -37,7 +38,8 @@ test('Read gets the heading and an inspector that only points to where the work 
 });
 test('Check with a loaded manuscript: heading above the manuscript, panel kept, bar asked to pick up the run button',()=>{
  const f=fixture(7);
- assert.match(f.d.querySelector('.wn-check-manuscript>.c3-ctitle').textContent,/07\s*Check/);
+ assert.match(f.d.querySelector('.wn-check-findings>.c3-page-notes>.c3-ctitle').textContent,/07\s*Check/);
+ assert.equal(f.d.querySelector('.wn-check-manuscript').firstElementChild.className,'document','Check starts with the page');
  assert.ok(f.d.querySelector('.wn-check-layout.c3-check .wn-check-findings [data-current-check="run"]'));
  assert.ok(f.builds>=1);
 });
