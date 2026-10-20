@@ -2585,7 +2585,7 @@
     },
     {
       "path": "docs/DESIGN-PASS-ADDITIONS.md",
-      "candidateSha256": "6cd9b5257c1ef03db7ab92265bdc3868b1fe9f254d743b9fc69c616b0a74f89b"
+      "candidateSha256": "540c93855bbef8bb0e3f7ecc26f94e4391509d49a98ce0eec14d9c42620442b5"
     },
     {
       "path": "docs/FUNCTION-FLOW.md",
@@ -3163,6 +3163,14 @@
         "tests/one-copy-ui.test.mjs"
       ],
       "note": "Exact final combined pins52d079/38d4/1c5b89/691040/776566/f68/eb4 plus preserved bridgeb6, newer menu regressions and repo-native docs. Installed8file+4served/read-only preservation receipt distinct from own-frozen synthetic mutation/restore/Undo proof; earlier private words remain pending explicit decision. No private content, provider, publication or device sync implied."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Finite final documentation coherence correction",
+      "files": [
+        "docs/DESIGN-PASS-ADDITIONS.md"
+      ],
+      "note": "Two obsolete projection/design-baseline paragraphs now explicitly historical and point to current bounded installed status; multi-workspace unsupported retained. No code, feature, build or runtime change."
     }
   ],
   "repositorySeparation": {
