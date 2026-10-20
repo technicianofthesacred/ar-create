@@ -48,6 +48,8 @@
  const TI={pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',compass:'<circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',layers:'<path d="m12 4 8 4-8 4-8-4z"/><path d="m4 12 8 4 8-4"/><path d="m4 16 8 4 8-4"/>',mic:'<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',check:'<circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cols:'<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M12 4.5v15"/>',replace:'<path d="M4 7h11M4 12h7M4 17h11"/><path d="m16 14 3 3-3 3"/>',play:'<circle cx="12" cy="12" r="8.5"/><path d="m10 8.5 5 3.5-5 3.5z"/>',file:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>'};
  const TOOLS=[['Write a note','pen','A titled note in your own words'],['Paste links','link','Keep source links with this material'],['Author context','compass','Direction for the piece or a part'],['Group & choose context','layers','Group whole resources for a piece'],['Record audio or use a folder','mic','For a recording, use Add files'],['Keep / remove review','check','Check a resource before keeping it'],['Add more material','plus','Files, notes and links'],['Compare source records','cols','Read two records side by side'],['Correct a repeated term','replace','Find a term, preview the fix'],['Recording relationship','play','Playback and timing for this source'],['Original record details','file','Where the original lives, unchanged']];
  const FLAG=[[/preparation only/i,'Preparation only','warn'],[/not connected/i,'Not connected','bad'],[/not saved/i,'Not saved','warn']];
+ // What works now, for a tool whose own text says it is not connected: one step that presses or opens a real control.
+ const GO={'Record audio or use a folder':['Add a recording file',{press:'[data-flow-action="files"]'}],'Group & choose context':['Write opening and closing notes',{open:'Author context',focus:'textarea[data-human-direction]'}],'Keep / remove review':['See your sources',{show:'[data-material-browser-host],.material-layout'}],'Compare source records':['Read two records side by side',{open:'Compare source records',focus:'[data-sws-action="versions"]'}],'Correct a repeated term':['Note the correction',{open:'Author context',focus:'textarea[data-human-direction]'}]};
  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  // The tool's own sentence that says why, found in its own text (never written here).
  function why(d,re){const w=document.createTreeWalker(d,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(n.parentElement.closest('summary'))continue;const t=n.data.trim();if(re.test(t)){const ss=t.split(/(?<=\.)\s+/),i=Math.max(0,ss.findIndex(x=>re.test(x)));return ss.slice(i,ss[i].length<45?i+2:i+1).join(' ').trim();}}return '';}
@@ -55,17 +57,33 @@
   for(const s of ws.querySelectorAll('.material-surface details>summary')){
    if(s.classList.contains('c3-tool'))continue;const d=s.parentElement;if(d.parentElement.closest('details'))continue;
    const text=s.textContent.trim(),t=TOOLS.find(([k])=>text.startsWith(k));if(!t)continue;
-   const f=FLAG.find(([re])=>re.test(d.textContent));const reason=f?why(d,f[0]).replace(new RegExp('^'+f[1]+'\\s*·?\\s*','i'),'').replace(/^./,c=>c.toUpperCase()):'';
+   const f=FLAG.find(([re])=>re.test(d.textContent)),go=f&&GO[t[0]];const reason=f?why(d,f[0]).replace(new RegExp('^'+f[1]+'\\s*·?\\s*','i'),'').replace(/^./,c=>c.toUpperCase()):'';
    s.classList.add('c3-tool');d.classList.add('c3-tool-row');
-   s.innerHTML=`<span class="c3-tool-i" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" data-c3-flag></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>${f?`<span class="c3-tool-pop" role="note" hidden><strong>${f[1]}</strong>${reason?` ${esc(reason)}`:''}</span>`:''}`;
+   s.innerHTML=`<span class="c3-tool-i"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${TI[t[1]]}</svg>${f?`<span class="c3-tool-flag" data-tone="${f[2]}" data-c3-flag role="button" tabindex="0" aria-label="${f[1]}: what this means"></span>`:''}</span><span class="c3-tool-t" title="${esc(text)}">${esc(text)}${f?`<span class="c3-sr"> · ${f[1]}</span>`:''}</span><span class="c3-tool-d">${t[2]}</span><svg class="c3-tool-c" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>${f?`<span class="c3-tool-pop" role="note" hidden><strong>${f[1]}</strong>${reason?`<span class="c3-pop-why">${esc(reason)}</span>`:''}${go?`<span class="c3-pop-now">What works now</span><span class="c3-tool-go" role="button" tabindex="0" data-c3-go="${esc(t[0])}">${esc(go[0])}<svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`:''}</span>`:''}`;
   }
  }
- // A mark on a tool's icon explains itself on click without opening or closing the tool.
- document.addEventListener('click',event=>{
+ // A mark on a tool's icon explains itself without opening or closing the tool; its button does the one thing that works now.
+ const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function bring(el,focusEl){el.scrollIntoView({block:'center',behavior:reduce()?'auto':'smooth'});el.classList.remove('c3-arrive');void el.offsetWidth;el.classList.add('c3-arrive');setTimeout(()=>el.classList.remove('c3-arrive'),1400);(focusEl||el).focus?.({preventScroll:true});}
+ function act(key){
+  const g=GO[key];if(!g)return;const [,a]=g;const ws=document.querySelector('#app .workspace');if(!ws)return;
+  if(a.press){const b=ws.querySelector(a.press);if(b&&!b.disabled)b.click();return;}
+  if(a.show){const el=ws.querySelector(a.show);if(el)bring(el);return;}
+  if(a.open){const row=[...ws.querySelectorAll('details.c3-tool-row')].find(d=>(d.querySelector(':scope>summary .c3-tool-t')?.title||'').startsWith(a.open));if(!row)return;row.open=true;const f=a.focus?row.querySelector(a.focus):null;for(let d=f?.parentElement?.closest('details');d&&row.contains(d);d=d.parentElement?.closest('details'))d.open=true;requestAnimationFrame(()=>bring(row,f));}
+ }
+ function closePops(except){for(const p of document.querySelectorAll('.c3-tool-pop:not([hidden])'))if(p!==except)p.hidden=true;}
+ function handle(event){
+  const go=event.target.closest?.('[data-c3-go]');
+  if(go){event.preventDefault();event.stopPropagation();closePops();act(go.dataset.c3Go);return true;}
   const flag=event.target.closest?.('[data-c3-flag]');
-  for(const p of document.querySelectorAll('.c3-tool-pop:not([hidden])'))if(!flag||!p.parentElement.contains(flag))p.hidden=true;
-  if(!flag)return;event.preventDefault();event.stopPropagation();
-  const pop=flag.closest('summary')?.querySelector('.c3-tool-pop');if(pop)pop.hidden=!pop.hidden;
+  if(flag){event.preventDefault();event.stopPropagation();const pop=flag.closest('summary')?.querySelector('.c3-tool-pop');closePops(pop);if(pop){pop.hidden=!pop.hidden;flag.setAttribute('aria-expanded',String(!pop.hidden));}return true;}
+  if(event.target.closest?.('.c3-tool-pop')){event.preventDefault();event.stopPropagation();return true;}
+  return false;
+ }
+ document.addEventListener('click',event=>{if(!handle(event))closePops();},true);
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){closePops();return;}
+  if((event.key==='Enter'||event.key===' ')&&event.target.closest?.('[data-c3-flag],[data-c3-go]'))handle(event);
  },true);
  function decorate(){
   const n=stage();document.body.dataset.c3Stage=String(n);
