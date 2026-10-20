@@ -4,7 +4,7 @@
    and repaints. The save notice and failed-save recovery (.draft-bar) are never hidden. Install last. */
 (()=>{
  if(window.surfaceBar)return;
- const ROWS=['.workspace>.topbar','.workspace>#work-context','.workspace>.workbar','.workspace #direction-writing-tools>.dwt-orientation'];
+ const ROWS=['.workspace>.topbar','.workspace>#work-context','.workspace>.workbar','.workspace>.historicalToolbar','.workspace #direction-writing-tools>.dwt-orientation'];
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const I={undo:'<path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2"/>',history:'<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5v4h4"/><path d="M12 8v4.5l3 2"/>',focus:'<path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>',margin:'<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M15 4.5v15"/>',more:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chev:'<path d="m7 10 5 5 5-5"/>',outputs:'<path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12.5l8.5 4.5 8.5-4.5"/><path d="M3.5 16.5l8.5 4.5 8.5-4.5"/>',back:'<path d="M14.5 6 8.5 12l6 6"/>'};
@@ -15,7 +15,7 @@
  function rows(){return ROWS.map(s=>document.querySelector(s)).filter(Boolean);}
  // Sort the real controls of the hidden rows into bar slots. Unknown controls go to More, never away.
  function collect(){
-  const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,more:[]};reals=[];
+  const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,mode:null,more:[]};reals=[];
   const add=(n,slot)=>{const i=reals.push(n)-1;if(slot)out[slot]=i;return i;};
   for(const row of rows()){
    if(row.matches('.dwt-orientation')&&stage()!==5)continue;
@@ -27,6 +27,7 @@
     const on=n.getAttribute('onclick')||'';
     if(n.matches('a.i64-return')){add(n,'ret');continue;}
     if(n.matches('[data-wn-piece]')){add(n,'piece');continue;}
+    if(row.matches('.historicalToolbar')&&out.mode==null){add(n,'mode');continue;}
     if(n.matches('[data-wn-outputs]')&&out.outputs==null){add(n,'outputs');continue;}
     if(n.matches('[data-surface-mode="margin"]')&&out.margin==null&&row.matches('.topbar')){add(n,'margin');continue;}
     if(n.matches('[data-surface-mode="focus"]')&&out.focus==null&&row.matches('.topbar')){add(n,'focus');continue;}
@@ -48,18 +49,19 @@
  }
  function proxy(i,cls,inner,extra=''){const n=reals[i];if(n==null)return '';const dis=n.disabled?'disabled':'';const t=n.title||label(n);return `<button type="button" class="${cls}" data-sb="${i}" ${dis} title="${esc(t)}" ${n.getAttribute('aria-pressed')?`aria-pressed="${esc(n.getAttribute('aria-pressed'))}"`:''} ${n.getAttribute('aria-current')?'aria-current="page"':''} ${extra}>${inner}</button>`;}
  function selectProxy(i,cls,aria){const n=reals[i];if(n==null)return '';return `<select class="${cls}" data-sb-select="${i}" aria-label="${esc(aria||n.getAttribute('aria-label')||'Choose')}" ${n.disabled?'disabled':''}>${[...n.options].map(o=>`<option value="${esc(o.value)}" ${o.selected?'selected':''} ${o.disabled?'disabled':''}>${esc(o.textContent)}</option>`).join('')}</select>`;}
+ function noteText(){const s=document.querySelector('.workspace>.historicalToolbar>span');const t=s?label(s):'';return /read-only/i.test(t)?'Read-only':/retained|historical/i.test(t)?'Earlier record':'';}
  function statusText(){const s=document.querySelector('.workspace>.workbar .saved')||document.querySelector('.workspace>.topbar .status');return s?label(s):'';}
  function identity(){const p=current(),ctx=document.querySelector('#work-context .wn-identity'),title=ctx?.querySelector('strong')?.textContent.trim(),meta=ctx?.querySelector(':scope>span')?.textContent.trim();return {piece:p.name,title:title&&title!=='Project workspace'?title:'',meta:meta||''};}
  function build(){
   const ws=document.querySelector('#app .workspace');if(!ws)return;
   const slots=collect(),id=identity(),status=statusText();
   const more=slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
-  const sig=JSON.stringify([id,status,reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen]);
+  const sig=JSON.stringify([id,status,noteText(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen]);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
   if(bar&&sig===lastSig)return;
   lastSig=sig;
-  const html=`<div class="sb-left">${slots.ret!=null?`<a class="sb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" aria-label="Return to i64 OS" title="Return to i64 OS">${icon(I.back)}<span>i64 OS</span></a><span class="sb-slash" aria-hidden="true">/</span>`:''}<span class="sb-piece" title="${esc(id.piece)}">${esc(id.piece)}</span>${id.title?`<span class="sb-slash" aria-hidden="true">/</span><span class="sb-out"><strong title="${esc(id.title)}">${esc(id.title)}</strong>${id.meta?`<small>${esc(id.meta)}</small>`:''}</span>`:''}${slots.piece!=null?selectProxy(slots.piece,'sb-piece-select','Choose output'):''}</div>
-<div class="sb-right">${status?`<span class="sb-status" role="status" data-tone="${/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok'}" title="${esc(status)}">${esc(status)}</span>`:''}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${proxy(slots.history,'sb-icon',icon(I.history),'aria-label="History · every saved version"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.outputs,'sb-btn',`${icon(I.outputs)}<span>Outputs</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${slots.primary!=null?proxy(slots.primary,'sb-primary',esc(label(reals[slots.primary])),'onmousedown="event.preventDefault()"'):''}</div>`;
+  const html=`<div class="sb-left">${slots.ret!=null?`<a class="sb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" aria-label="Return to i64 OS" title="Return to i64 OS">${icon(I.back)}<span>i64 OS</span></a><span class="sb-slash" aria-hidden="true">/</span>`:''}<span class="sb-piece" title="${esc(id.piece)}">${esc(id.piece)}</span>${id.title?`<span class="sb-slash" aria-hidden="true">/</span><span class="sb-out"><strong title="${esc(id.title)}">${esc(id.title)}</strong>${id.meta?`<small>${esc(id.meta)}</small>`:''}</span>`:''}${slots.piece!=null?selectProxy(slots.piece,'sb-piece-select','Choose output'):''}${noteText()?`<span class="sb-note" title="${esc(label(document.querySelector('.workspace>.historicalToolbar>span')))}">${esc(noteText())}</span>`:''}</div>
+<div class="sb-right">${status?`<span class="sb-status" role="status" data-tone="${/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok'}" title="${esc(status)}">${esc(status)}</span>`:''}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${proxy(slots.history,'sb-icon',icon(I.history),'aria-label="History · every saved version"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.mode,'sb-btn sb-mode',esc(slots.mode!=null?label(reals[slots.mode]):''))}${proxy(slots.outputs,'sb-btn',`${icon(I.outputs)}<span>Outputs</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${slots.primary!=null?proxy(slots.primary,'sb-primary',esc(label(reals[slots.primary])),'onmousedown="event.preventDefault()"'):''}</div>`;
   if(!bar){bar=document.createElement('header');bar.id='c3-surface-bar';bar.setAttribute('aria-label','This piece and its actions');ws.prepend(bar);}
   bar.innerHTML=html;
   document.body.classList.add('c3-bar-on');

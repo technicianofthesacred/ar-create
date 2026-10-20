@@ -9,7 +9,7 @@
  let queued=false;
  const stage=()=>{const p=current();return p.view==='record'?Number(p.viewedStage)||0:p.view==='article'?5:0;};
  const status=()=>document.querySelector('#c3-surface-bar .sb-status')?.textContent.trim()||'';
- function titleHTML(n){const [name,line]=LINES[n],s=status();return `<span class="c3t-n">${String(n).padStart(2,'0')}</span><span class="c3t-name">${name}</span><span class="c3t-line">${line}${s?' · '+s.replace(/</g,'&lt;'):''}</span>`;}
+ function titleHTML(n){const [name,line]=LINES[n],s=status();return `<span class="c3t-n">${String(n).padStart(2,'0')}</span><span class="c3t-name">${name}</span><span class="c3t-line">${line}</span>`;}
  function ensureTitle(host,n,before){
   if(!host)return;
   let t=host.querySelector(':scope>.c3-ctitle');

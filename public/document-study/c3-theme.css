@@ -135,3 +135,77 @@ body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.researc
 /* ---------- notices: quiet lift instead of a separate block colour ---------- */
 body.c3-tabs .workspace>.draft-bar{background:var(--paper);border-color:var(--line)}
 body.c3-tabs .workspace>.direction-writing-tools,body.c3-tabs .workspace>#direction-writing-tools{background:var(--paper);border-color:var(--line)}
+
+/* ================= Polish pass (Impeccable critique, 20 Oct) ================= */
+/* Control edge: 3:1 against the surface so every button shows where it is (WCAG 1.4.11). */
+:root,:root[data-theme="light"]{--c3-edge:#8c877b;--c3-fill:color-mix(in srgb,var(--ink) 4%,var(--paper))}
+:root[data-theme="dark"]{--c3-edge:#6f695d;--c3-fill:color-mix(in srgb,var(--ink) 6%,var(--paper))}
+
+/* Fewer layers: the notice row now lives in the bar as a small label and button. */
+body.c3-bar-on #app .workspace>.historicalToolbar{display:none!important}
+#c3-surface-bar .sb-note{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;border:1px solid var(--c3-line2);color:var(--dim);font-size:12px;white-space:nowrap}
+#c3-surface-bar .sb-mode{border:1px solid var(--c3-edge)!important;color:var(--ink)!important}
+/* The draft save line under the bar: one slim row, recovery untouched. */
+body.c3-tabs #app .workspace>.draft-bar{padding:8px 40px!important;min-height:0!important;font:var(--c3-t1)/1.45 var(--ar-ui);border-bottom:1px solid var(--line)}
+body.c3-tabs #app .workspace>.draft-bar .draft-explanation{margin:0 0 6px;color:var(--dim);font-size:12px}
+
+/* One quiet heading scale for everything that is not the manuscript. */
+body.c3-tabs #app .workspace :is(h2,h3):not(.shared-prose-block):not(#manuscript *):not(.document>h1){letter-spacing:0}
+body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h2:not(.shared-prose-block){font:600 var(--c3-t2)/1.35 var(--ar-ui)!important;margin:0 0 8px!important}
+body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h3:not(.shared-prose-block){font:600 var(--c3-t1)/1.35 var(--ar-ui)!important;margin:0 0 6px!important}
+/* The manuscript title: still the Atlas face, one step smaller so the page starts sooner. */
+body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:38px!important;line-height:1.15!important;margin:0 0 12px!important}
+
+/* Buttons in three clear tiers. */
+/* Secondary: a visible edge and a faint fill, everywhere in the work area. */
+body.c3-tabs #app .workspace button:not(.workflowStep):not(.sb-icon):not(.sb-btn):not(.sb-primary):not(.ce-btn.pri):not(.ci-tab):not([class*="pri"]):not(.mrb-resource):not(.pl-open):not(.oo-title),
+#c3-read-insp .ci-go,.c3-empty .ce-btn:not(.pri),#c3-research .rt-btn:not(.pri):not(.ghost),#project-library.c3-home .ht-homebar-actions button:not(.ht-primary){border-color:var(--c3-edge)!important;background:var(--c3-fill)!important}
+body.c3-tabs #app .workspace button:not(:disabled):hover,#c3-read-insp .ci-go:hover,.c3-empty .ce-btn:hover:not(:disabled){border-color:var(--ink)!important}
+/* Primary: one per surface, the ink fill; disabled reads as disabled, never as a grey primary. */
+#c3-surface-bar .sb-primary:disabled,.c3-empty .ce-btn.pri:disabled{background:transparent!important;color:var(--dim)!important;border:1px dashed var(--c3-edge)!important;opacity:1}
+/* Tertiary: bar text actions keep ink colour with an icon, and lift on hover. */
+#c3-surface-bar .sb-btn,#c3-surface-bar .sb-icon{color:var(--ink)}
+#c3-surface-bar{border-bottom-color:var(--c3-line2)}
+/* Disclosures look pressable: a chevron and an edge. */
+body.c3-tabs #app .workspace summary{list-style:none}
+body.c3-tabs #app .workspace summary::-webkit-details-marker{display:none}
+body.c3-tabs #app .workspace details:not(.ht-card-more):not(.wn-new)>summary::after{content:"";display:inline-block;width:6px;height:6px;margin-left:8px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s ease-out;opacity:.7}
+body.c3-tabs #app .workspace details[open]:not(.ht-card-more):not(.wn-new)>summary::after{transform:translateY(1px) rotate(-135deg)}
+body.c3-tabs #app .workspace :is(.sws-work-tools,.mot-tool-grid,.oss-review-tools,.material-surface,.oss-surface)>details>summary,body.c3-tabs #app .workspace .material-tools>.material-note-tools>details>summary{border-color:var(--c3-edge)!important;background:var(--c3-fill)!important}
+/* Fields: a visible edge, warm focus. */
+body.c3-tabs #app .workspace :is(input:not([type=checkbox]):not([type=radio]),select,textarea):not(#manuscript){border-color:var(--c3-edge)!important}
+/* Clickable rows and cards lift on hover so the eye finds them. */
+#project-library.c3-home .pl-results.ht-grid .pl-open:hover .ht-cover,#c3-research .rt-card:hover,.material-surface.sws-material .mrb-resource:hover{border-color:var(--c3-edge)!important;background-color:var(--c3-fill)}
+
+/* Write: a paper on a desk. The page is a sheet; the desk around it is the darker ground. */
+@media(min-width:851px){
+ body.c3-tabs #app .workspace .desk.c3-insp-desk{background:var(--bg)}
+ body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document{max-width:760px!important;margin:28px auto 72px!important;padding:44px 64px 72px!important;background:var(--paper);border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22)}
+ :root[data-theme="light"] body.c3-tabs #app .workspace .desk.c3-insp-desk>.document.prose-document{box-shadow:0 1px 2px rgba(40,35,25,.08),0 12px 32px rgba(40,35,25,.10)}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read{background:var(--bg)}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.recordPage{max-width:760px!important;margin:8px auto 72px!important;padding:44px 64px 72px!important;background:var(--paper)!important;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22)}
+}
+body.c3-tabs #manuscript{caret-color:var(--warm)}
+body.c3-tabs #app .workspace ::selection{background:color-mix(in srgb,var(--warm) 30%,transparent)}
+/* Focus: the paper alone on the desk. */
+body.c3-tabs[data-draft-focus="true"] #c3-tabstrip,body.c3-tabs[data-draft-focus="true"] .shell>.workflowNavigation.c3-rail{opacity:.25;transition:opacity .2s ease-out}
+body.c3-tabs[data-draft-focus="true"] #c3-tabstrip:hover,body.c3-tabs[data-draft-focus="true"] .shell>.workflowNavigation.c3-rail:hover{opacity:1}
+/* The keyboard hint under the page stays out of the way until you are in the page. */
+body.c3-tabs #app .workspace .docfooter{opacity:0;transition:opacity .2s ease-out}
+body.c3-tabs #app .workspace .document:focus-within .docfooter,body.c3-tabs #app .workspace .document:hover .docfooter{opacity:.8}
+
+/* Livelier where it helps: each empty step's icon carries its stage colour. */
+.c3-empty[data-stage="1"] .ce-icon,.c3-empty[data-stage="2"] .ce-icon,.c3-empty[data-stage="3"] .ce-icon,.c3-empty[data-stage="4"] .ce-icon{color:var(--warm);background:color-mix(in srgb,var(--warm) 14%,transparent)}
+.c3-empty:is([data-stage="5"],[data-stage="6"],[data-stage="7"]) .ce-icon{color:var(--c3-good);background:color-mix(in srgb,var(--c3-good) 14%,transparent)}
+.c3-empty:is([data-stage="8"],[data-stage="9"]) .ce-icon{color:var(--c3-warn);background:color-mix(in srgb,var(--c3-warn) 14%,transparent)}
+.c3-empty:is([data-stage="10"],[data-stage="11"],[data-stage="12"]) .ce-icon{color:var(--ink);background:var(--c3-sel)}
+.c3-empty .ce-shape{opacity:.6}
+/* Check's own run button stays the primary (ink fill), not a secondary. */
+body.c3-tabs #app #workspace button[data-current-check="run"]:not(:disabled){background:var(--ink)!important;border-color:var(--ink)!important;color:var(--bg)!important}
+/* Read with a working copy: the same paper on a desk; its status row sits above the sheet. */
+@media(min-width:851px){
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.document.prose-document{max-width:760px!important;width:100%;margin:8px auto 72px!important;padding:44px 64px 72px!important;background:var(--paper)!important;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.22);box-sizing:border-box}
+ :root[data-theme="light"] body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>:is(.document,.recordPage){box-shadow:0 1px 2px rgba(40,35,25,.08),0 12px 32px rgba(40,35,25,.10)!important}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.draft-row{max-width:760px;width:100%;margin:6px auto 0;padding:0 4px;box-sizing:border-box;font:var(--c3-t1)/1.4 var(--ar-ui);color:var(--dim)}
+ body.c3-tabs[data-c3-stage="6"] #app .workspace>.phaseReader.c3-read>.draft-details{max-width:760px;width:100%;margin:0 auto 40px;box-sizing:border-box}
+}

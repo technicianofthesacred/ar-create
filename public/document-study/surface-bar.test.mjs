@@ -133,3 +133,12 @@ test('Share uses its own Copy message as the primary; copying is the app own act
  f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="oss-surface"><button data-oss-action="copy" onclick="calls.push(\'copy\')">Copy message</button></section>');f.w.surfaceBar.build();
  const p=f.bar().querySelector('.sb-primary');assert.equal(p.textContent,'Copy message');p.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['copy']);
 });
+
+test('the read-only notice row joins the bar: its words become a small label and its button a bar action',()=>{
+ const f=fixture();
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<div class="historicalToolbar"><span>Read-only snapshot · working copy kept separate</span><button onclick="calls.push(\'open-words\')">Open working words</button></div>');
+ f.w.surfaceBar.build();
+ assert.equal(f.bar().querySelector('.sb-note').textContent,'Read-only');
+ const m=f.bar().querySelector('.sb-mode');assert.equal(m.textContent,'Open working words');m.click();
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['open-words']);
+});
