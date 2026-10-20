@@ -555,3 +555,24 @@ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.docum
 #c3-crumb .cb-size output{min-width:38px;text-align:center;font:500 11.5px/1 var(--ar-ui);color:var(--dim)}
 #c3-crumb .cb-size button:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
 body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(.manuscript,.recordBody){margin-left:0!important;margin-right:0!important;max-width:none!important}
+/* Phone writing surface: a phone-sized type scale (A- / A+ still applies), text on the one 16px gutter in Write, Read
+   and Check alike, and no status lines above the page that the bottom bar already shows. */
+@media(max-width:650px){
+ body.c3-tabs #app #workspace :is(.desk,.wn-check-layout,.phaseReader){padding-left:0!important;padding-right:0!important}
+ body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){padding:20px 16px 64px!important;margin:0!important;max-width:none!important;width:auto!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-size:calc(15px * var(--c3-doc-scale))!important;line-height:1.5!important;margin:0 0 calc(8px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(26px * var(--c3-doc-scale))!important;line-height:1.2!important;margin:0 0 calc(10px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(19px * var(--c3-doc-scale))!important;margin:calc(20px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(17px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace .document>.reference,body.c3-tabs #app #workspace .document .draft-surface-document-meta>span,body.c3-tabs #app #workspace .phaseReader>.draft-row>:not(button){display:none!important}
+ body.c3-tabs #app #workspace .document .draft-tabs .draft-action{min-height:26px!important;padding:0 10px!important;font-size:12px!important}
+ /* Bar: every control 36px tall on one centre line; icons 36px square. */
+ #c3-surface-bar{min-height:52px!important;align-items:center!important}
+ #c3-surface-bar .sb-right{align-items:center!important}
+ #c3-surface-bar .sb-right>*{height:36px!important;min-height:36px!important;align-self:center!important}
+ #c3-surface-bar :is(.sb-icon,.sb-mode,.sb-morew>button){width:36px!important;min-width:36px!important;height:36px!important;padding:0!important;display:grid!important;place-items:center!important}
+ #c3-surface-bar .sb-morew{display:flex;align-items:center}
+ #c3-surface-bar .sb-primary{height:36px!important;display:inline-flex!important;align-items:center!important}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{top:7px!important;min-height:36px!important;height:36px!important}
+}
+@media(max-width:650px){#c3-crumb .cb-size output{display:none}#c3-crumb .cb-size{gap:0;margin-right:0}}

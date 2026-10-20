@@ -2409,7 +2409,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "3406394c4fd4b80a940b4125c698017bcbd7cd535c14a695047456c7e8ed2cb2"
+      "candidateSha256": "bf07eb821fbd9aec6621251af17e8bde97b634606be2de41184fb4a5698d3df2"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
