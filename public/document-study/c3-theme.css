@@ -421,3 +421,27 @@ body.c3-tabs .workspace :is(details.c3-tool-row,[data-material-browser-host],.ma
 @media(prefers-reduced-motion:reduce){body.c3-tabs .workspace .c3-arrive{animation:none}}
 body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select):focus{outline:0!important;border-color:color-mix(in srgb,var(--warm) 60%,var(--c3-line2,var(--line)))!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--warm) 12%,transparent)!important}
 body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select):focus-visible{outline:0!important}
+/* Write inspector (desktop): tabs on top, tab content, page info as a footer. One unbroken left edge, one 16px inset,
+   quiet controls. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk{grid-template-rows:auto minmax(0,1fr) auto!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>#c3-insp-head{grid-column:2!important;grid-row:1!important;top:52px!important;padding:10px 16px!important;border-left:1px solid var(--line)!important;border-bottom:1px solid var(--line)!important;background:var(--c3-lift,var(--rail))!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>#c3-insp-head::before{inset:10px 16px!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>:is(#margin,.ci-panel){grid-row:2!important;top:105px!important;padding:16px 16px 24px!important;border-left:1px solid var(--line)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes{grid-column:2!important;grid-row:3!important;align-self:stretch!important;margin:0!important;padding:12px 16px 16px!important;border-left:1px solid var(--line)!important;border-top:1px solid var(--line)!important;background:var(--c3-lift,var(--rail))!important;gap:6px!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-ctitle{font-size:12.5px!important;color:var(--dim)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-ctitle .c3t-n,body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-ctitle .c3t-name{display:none}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn{min-height:26px!important;padding:0 9px!important;border:0!important;border-radius:6px!important;background:var(--c3-sel,var(--line))!important;color:var(--c3-ink2,var(--ink))!important;font:500 12px/1 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-btn:hover{color:var(--ink)!important}
+ body.c3-tabs #app #workspace #margin strong{font:600 13px/1.4 var(--ar-ui)!important;color:var(--ink)}
+ body.c3-tabs #app #workspace #margin [data-surface-action],body.c3-tabs #app #workspace #margin button.quiet{min-height:26px!important;min-width:26px;padding:0 6px!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--dim)!important;font:500 12px/1 var(--ar-ui)!important;border-radius:6px!important}
+ body.c3-tabs #app #workspace #margin [data-surface-action]:hover,body.c3-tabs #app #workspace #margin button.quiet:hover{color:var(--ink)!important;background:var(--c3-sel,var(--line))!important}
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action]){min-height:28px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--warm)!important;font:500 13px/1.4 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action])::after{content:none!important}
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action]):hover{text-decoration:underline;text-underline-offset:3px}
+ body.c3-tabs #app #workspace #margin :is(p,.why,.draft-surface-ai-state,small,.small){font:12.5px/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace #margin .draft-surface-margin-body button:not(.quiet):not([data-surface-action]){display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;width:auto!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes{position:sticky!important;bottom:var(--cb-h,28px);z-index:4}
+}
