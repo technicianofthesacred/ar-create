@@ -10,7 +10,7 @@
 ## Future
 
 - [ ] Bring the magazine story path (Map, Plan, Draft, Checks, Edit passes, Photos, Publish, Feedback) into AR Create from the Teajia magazine _(band: agent-runnable)_ _(effort: deep)_
-- [ ] Add a Try again button to the bottom bar when a save fails, pressing the owner's own retry _(band: agent-runnable)_ _(effort: quick)_
+
 
 ## Operational notes
 
