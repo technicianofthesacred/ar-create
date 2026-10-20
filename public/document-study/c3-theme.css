@@ -1,0 +1,137 @@
+/* C3 theme: the board's palette, interface font, sizes and scrollbars applied to the app's own tokens. Loaded last.
+   Manuscript typography (Atlas Lora / Cormorant) and the approved portrait templates keep their own fonts and colours. */
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-400-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-400-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:500;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-500-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:600 700;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:600 700;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-600-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+/* ---------- palette (the board's .t-light / .t-dark) mapped onto the app's tokens ---------- */
+:root,:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--green:#3f6146;
+ --c3-ink2:#51564b;--c3-line2:#cfcdc3;--c3-lift:#f7f5ef;--c3-sel:#e9e4d7;--c3-good:#3f6146;--c3-warn:#94600f;--c3-bad:#a23b2a;--c3-pend:#f4e6c6;--c3-okbg:#e2ead9;--c3-sbt:rgba(122,90,48,.42);--c3-sbh:rgba(122,90,48,.7);--c3-shadow:0 18px 50px rgba(40,35,25,.18);
+ --ar-ui:'AR Plus Jakarta Sans','Plus Jakarta Sans',system-ui,-apple-system,sans-serif;--ar-ui-muted:#686c61;--ar-ui-focus:#7a5a30;--draft-active:#e9e4d7;--mrb-accent:#7a5a30;--rpb-accent:#7a5a30;--c3-t1:13px;--c3-t2:15px;--c3-r:8px}
+:root[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--green:#8fb08a;
+ --c3-ink2:#c3bdad;--c3-line2:#423e34;--c3-lift:#191813;--c3-sel:#2c2a22;--c3-good:#8fb08a;--c3-warn:#d9a95a;--c3-bad:#e08a74;--c3-pend:#423a23;--c3-okbg:#2b3326;--c3-sbt:rgba(191,169,140,.4);--c3-sbh:rgba(211,192,166,.7);--c3-shadow:0 18px 50px rgba(0,0,0,.55);
+ --ar-ui-muted:#a39e8e;--ar-ui-focus:#c9a874;--draft-active:#2c2a22;--mrb-accent:#c9a874;--rpb-accent:#c9a874}
+
+/* ---------- type and scrollbars ---------- */
+body{font-family:var(--ar-ui);-webkit-font-smoothing:antialiased;scrollbar-color:var(--c3-sbt) transparent}
+body :is(button,input,select,textarea,summary){font-family:inherit}
+*{scrollbar-width:thin;scrollbar-color:var(--c3-sbt) transparent}
+*:hover{scrollbar-color:var(--c3-sbh) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background-color:var(--c3-sbt);border-radius:10px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background-color:var(--c3-sbh)}
+:root[data-theme] :focus-visible{outline-color:var(--warm)}
+
+/* ---------- the app's older hard-coded dark greens, moved to the board's neutral selection ---------- */
+:root[data-theme="dark"] button.on{background:var(--c3-sel);border-color:var(--c3-line2);color:var(--ink)}
+:root[data-theme="dark"] button:hover{background:color-mix(in srgb,var(--ink) 5%,transparent)}
+:root[data-theme="dark"] .topbar,:root[data-theme="dark"] .workbar{background:var(--paper)}
+:root[data-theme="dark"] .discussion{background:var(--c3-lift);border-left-color:var(--c3-line2)}
+:root[data-theme="dark"] .discussion .head strong,:root[data-theme="dark"] .discussion .reply{color:var(--ink)}
+:root[data-theme="dark"] .discussion :is(.target,.why,label,.tag,details,.thread){color:var(--dim);border-color:var(--c3-line2)}
+:root[data-theme="dark"] .discussion textarea,:root[data-theme="dark"] .popover :is(textarea,input,select),:root[data-theme="dark"] .catalogDrawer :is(input,select){background:var(--bg);border-color:var(--c3-line2);color:var(--ink)}
+:root[data-theme="dark"] :is(.popover,.catalogDrawer){background:var(--paper);border-color:var(--c3-line2);box-shadow:var(--c3-shadow)}
+:root[data-theme="dark"] .popover p{color:var(--c3-ink2)}
+:root[data-theme="dark"] .popover .context{background:var(--c3-sel);border-color:var(--c3-line2);color:var(--ink)}
+:root[data-theme="dark"] .hovertools{background:color-mix(in srgb,var(--paper) 92%,transparent)}
+:root[data-theme="dark"] :is(.hovertools button:hover,.hovertools .sectionOn){background:var(--c3-sel);color:var(--ink)}
+:root[data-theme="dark"] .selectionTools{background:var(--paper);border-color:var(--c3-line2)}
+:root[data-theme="dark"] .margin.mobileVisible{background:var(--c3-lift);border-color:var(--c3-line2)}
+:root[data-theme="dark"] .manuscript>blockquote{color:var(--c3-ink2);border-left-color:var(--c3-line2)}
+:root[data-theme="dark"] :is(.referenceLinks a,.recordBody a,.recordPage footer a,.recordDetails a){color:var(--warm)}
+:root[data-theme="dark"] .workflowStep.isViewed{outline-color:var(--warm)}
+
+/* ---------- workspace surfaces: the board's paper canvas on a darker frame ---------- */
+body.c3-tabs .shell{background:var(--bg)}
+body.c3-tabs .workspace{background:var(--paper)}
+body.c3-tabs.draft-surface-active .workspace{background:var(--paper)}
+
+/* ---------- tab strip: folder tabs joining the paper bar below ---------- */
+#c3-tabstrip{background:var(--bg);border-bottom-color:var(--line);font:var(--c3-t1)/1.4 var(--ar-ui);align-items:flex-end;padding:0 8px;gap:2px}
+#c3-tabstrip>.ht-place,#c3-tabstrip>.ht-sep,#c3-tabstrip>details,#c3-tabstrip>.ht-theme{align-self:center}
+#c3-tabstrip .ht-place{color:var(--c3-ink2);border-radius:7px}
+#c3-tabstrip .ht-place.on{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+#c3-tabstrip .ht-sep{background:var(--c3-line2)}
+#c3-tabstrip .ht-tabs{align-items:flex-end;height:auto}
+#c3-tabstrip .ht-tab{height:38px;margin:0 0 -1px;border:1px solid transparent;border-bottom:0;border-radius:9px 9px 0 0;color:var(--c3-ink2);flex:0 1 210px;max-width:210px;font-weight:400}
+#c3-tabstrip .ht-tab:hover{background:var(--c3-lift)}
+#c3-tabstrip .ht-tab.on{background:var(--paper);border-color:var(--line);color:var(--ink);box-shadow:none;font-weight:400}
+#c3-tabstrip .ht-tab.on .ht-title{font-weight:600}
+#c3-tabstrip .ht-open{padding:0 4px 0 12px;gap:8px;min-height:36px}
+#c3-tabstrip .ht-close{color:var(--dim);opacity:1;width:28px;min-height:28px;margin-right:5px}
+#c3-tabstrip .ht-close:hover{background:var(--c3-sel);color:var(--ink)}
+#c3-tabstrip .ht-switch>summary{border-color:var(--c3-line2);background:var(--paper);color:var(--ink);font-weight:500;min-height:32px;border-radius:7px}
+#c3-tabstrip :is(.ht-more,.ht-plus)>summary{color:var(--c3-ink2)}
+#c3-tabstrip .ht-menu,#project-library.c3-home .ht-card-more .ht-menu,#c3-surface-bar .sb-menu{background:var(--paper);border-color:var(--c3-line2);border-radius:10px;box-shadow:var(--c3-shadow)}
+#c3-tabstrip .ht-find,#project-library .ht-find{background:var(--c3-lift);border-color:var(--c3-line2);border-radius:var(--c3-r);height:38px;min-height:38px}
+#c3-tabstrip .ht-find:focus-within,#project-library .ht-find:focus-within{outline:2px solid var(--warm);outline-offset:1px;border-color:var(--c3-line2)}
+
+/* ---------- Home: filters on the lift, the library on paper ---------- */
+#project-library.c3-home{background:var(--bg);font:var(--c3-t2)/1.5 var(--ar-ui)}
+#project-library.c3-home .ht-homebar{background:var(--paper);border-bottom-color:var(--line)}
+#project-library.c3-home .ht-homebar-actions button{min-height:36px;padding:0 14px;border-color:var(--c3-line2);background:var(--paper);font-size:var(--c3-t1);font-weight:500}
+#project-library.c3-home .ht-homebar-actions .ht-primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+#project-library.c3-home .ht-home-body{grid-template-columns:236px minmax(0,1fr)}
+#project-library.c3-home .ht-facets{background:var(--c3-lift);border-right-color:var(--line);padding:16px 12px 32px;gap:20px}
+#project-library.c3-home .ht-home-main{background:var(--paper);padding:20px 28px 48px}
+#project-library.c3-home .ht-fh{font-size:var(--c3-t1);font-weight:600;color:var(--dim);padding:0 8px 4px}
+#project-library.c3-home .ht-facet{min-height:34px;border-radius:7px;color:var(--c3-ink2);font-size:var(--c3-t1);gap:10px}
+#project-library.c3-home .ht-facet:hover{background:var(--paper)}
+#project-library.c3-home .ht-facet.on{background:var(--c3-sel);color:var(--ink);font-weight:600}
+#project-library.c3-home .ht-fnote{font-size:var(--c3-t1)}
+#project-library.c3-home .ht-dot{width:8px;height:8px;background:var(--c3-warn)}
+#project-library.c3-home [data-pl-count]{font-size:var(--c3-t2);font-weight:600}
+#project-library.c3-home .ht-seg-l{font-size:var(--c3-t1);color:var(--dim)}
+#project-library.c3-home .ht-seg{background:var(--c3-lift);border-color:var(--line);border-radius:9px}
+#project-library.c3-home .ht-view{min-height:30px;padding:0 12px;border-radius:7px;color:var(--c3-ink2);font-size:var(--c3-t1)}
+#project-library.c3-home .ht-view.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--c3-line2)}
+#project-library.c3-home .pl-results.ht-grid{grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:22px 18px}
+#project-library.c3-home .pl-results.ht-grid .ht-cover{height:auto;aspect-ratio:4/3;border-color:var(--line);background:var(--c3-lift);padding:14px 16px 0 38px;align-items:stretch}
+#project-library.c3-home .pl-results.ht-grid .ht-cover span{width:100%;padding:16px 16px 40px;background-color:var(--paper);border-left:1px solid var(--line);border-right:1px solid var(--line);font-size:19px;line-height:1.15}
+#project-library.c3-home .pl-results.ht-grid .pl-open:hover .ht-cover,#project-library.c3-home .pl-results.ht-grid .is-current .ht-cover{border-color:var(--c3-ink2)}
+#project-library.c3-home .pl-results.ht-grid .pl-open strong{font-size:var(--c3-t2);font-weight:600;line-height:1.35}
+#project-library.c3-home .pl-open>span:not(.ht-cover){font-size:var(--c3-t1);color:var(--c3-ink2)}
+#project-library.c3-home .ht-card-more>summary{background:var(--paper);border-color:var(--line);border-radius:var(--c3-r);color:var(--c3-ink2);width:36px;height:36px}
+#project-library.c3-home .ht-card-more{top:8px;right:8px}
+
+/* ---------- checkpoint list: the board's rail ---------- */
+body.c3-rail-on .shell>.workflowNavigation.c3-rail{background:var(--c3-lift);border-right-color:var(--line);padding:10px 8px}
+.workflowNavigation.c3-rail .wn-family{border-top-color:var(--line);padding:7px 0 0;margin-top:7px}
+.workflowNavigation.c3-rail .wn-family:first-child{margin-top:0;padding-top:0}
+.workflowNavigation.c3-rail .workflowStep{min-height:35px;padding:0 10px;gap:10px;border-radius:7px;color:var(--c3-ink2);font:400 var(--c3-t1)/1.3 var(--ar-ui)}
+.workflowNavigation.c3-rail .workflowStep .cr-icon{color:var(--dim)}
+.workflowNavigation.c3-rail .workflowStep:hover{background:var(--paper);color:var(--ink)}
+.workflowNavigation.c3-rail .workflowStep[aria-current]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--c3-line2)}
+.workflowNavigation.c3-rail .workflowStep[aria-current] .cr-icon{color:var(--ink)}
+.workflowNavigation.c3-rail .cr-dot[data-state="current"]{background:var(--c3-warn)}
+.workflowNavigation.c3-rail .cr-dot[data-state="record"]{background:var(--c3-good)}
+.workflowNavigation.c3-rail .cr-dot[data-state="none"]{visibility:hidden;border:0}
+
+/* ---------- surface bar: on paper, the board's controls ---------- */
+#c3-surface-bar{background:var(--paper);border-bottom-color:var(--line);font:var(--c3-t1)/1.35 var(--ar-ui);min-height:60px}
+#c3-surface-bar .sb-out strong{font-size:var(--c3-t2)}
+#c3-surface-bar .sb-piece,#c3-surface-bar .sb-ret{color:var(--c3-ink2)}
+#c3-surface-bar :is(.sb-icon,.sb-btn){color:var(--c3-ink2);border-radius:var(--c3-r)}
+#c3-surface-bar :is(.sb-icon,.sb-btn):hover{background:var(--c3-lift);color:var(--ink)}
+#c3-surface-bar .sb-btn:is([aria-pressed=true],[aria-current]){background:var(--c3-sel);color:var(--ink)}
+#c3-surface-bar .sb-sep{background:var(--line);height:24px;margin:0 6px}
+#c3-surface-bar .sb-primary{border-radius:var(--c3-r);font-weight:500;min-height:36px;padding:0 14px}
+#c3-surface-bar .sb-status{color:var(--c3-good)}
+#c3-surface-bar .sb-status[data-tone="bad"]{color:var(--c3-bad);font-weight:600}
+#c3-surface-bar .sb-status[data-tone="warn"]{color:var(--c3-warn);font-weight:600}
+#c3-surface-bar select{background:var(--c3-lift);border-color:var(--c3-line2)}
+
+/* ---------- the manuscript sits on the page, as on the board (Atlas type and ink unchanged) ---------- */
+:root[data-theme="dark"] body .workspace :is(.document,.recordPage).prose-document{--atlas-paper:var(--paper)}
+:root[data-theme="light"] body .workspace :is(.document,.recordPage).prose-document{--atlas-paper:var(--paper)}
+/* ---------- the app's tool buttons in the board's button style ---------- */
+body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface,.draft-bar,.material-surface,.output-overview,#output-overview,.historicalToolbar,.stage-flow) :is(button:not(.workflowStep),select){font:500 var(--c3-t1)/1.3 var(--ar-ui);border-radius:var(--c3-r);border:1px solid var(--c3-line2);background:var(--paper);color:var(--ink)}
+body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface,.draft-bar,.material-surface,.output-overview,#output-overview,.historicalToolbar,.stage-flow) button:not(.workflowStep):not(:disabled):hover{border-color:var(--c3-ink2);background:var(--paper)}
+body.c3-tabs .workspace :is(.sws-tool,.oss-surface,.research-work-tools,.research-work-brief,.direction-writing-tools,.mot-surface,.draft-bar,.material-surface,.output-overview,#output-overview,.stage-flow) button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+/* ---------- notices: quiet lift instead of a separate block colour ---------- */
+body.c3-tabs .workspace>.draft-bar{background:var(--paper);border-color:var(--line)}
+body.c3-tabs .workspace>.direction-writing-tools,body.c3-tabs .workspace>#direction-writing-tools{background:var(--paper);border-color:var(--line)}

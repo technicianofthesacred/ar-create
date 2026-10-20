@@ -1,0 +1,182 @@
+/* C3 Source: the board's grouping. Same elements, shown in the board's order: status, session tabs, the transcript,
+   then the tools as a quiet row. Nothing moves in the DOM; owners keep repainting their own parts. */
+body.c3-tabs .workspace .material-surface.sws-source{display:flex;flex-direction:column;gap:14px}
+.material-surface.sws-source>.material-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.material-surface.sws-source>.material-readiness{order:1;display:flex;flex-wrap:wrap;gap:4px 16px;margin:-6px 0 2px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-source>.material-readiness strong{font-weight:600;color:var(--c3-ink2,var(--ink));margin-right:4px}
+.material-surface.sws-source>.material-layout{order:2;display:block!important;grid-template-columns:none!important}
+.material-surface.sws-source>.sws-work-tools{order:3}
+.material-surface.sws-source>.sws-secondary{order:4}
+.material-surface.sws-source>.material-boundary{order:5;font:12px/1.5 var(--ar-ui);color:var(--dim)}
+/* Sessions & versions: a row of session tabs, as on the board. */
+.material-surface.sws-source .material-index{position:static!important;width:auto!important;border:0!important;padding:0!important;margin:0 0 18px!important;background:none!important;max-height:none!important}
+.material-surface.sws-source .material-index>h3{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.material-surface.sws-source .material-inventory{display:inline-flex!important;flex-wrap:wrap;gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--c3-lift,var(--rail))}
+.material-surface.sws-source .material-record{position:relative;display:flex!important;align-items:center;gap:6px;min-height:30px;padding:0 12px!important;margin:0!important;border:0!important;border-radius:7px;background:none!important;font:var(--c3-t1,13px)/1.2 var(--ar-ui);color:var(--c3-ink2,var(--dim))}
+.material-surface.sws-source .material-record>div{display:flex;align-items:baseline;gap:6px}
+.material-surface.sws-source .material-record strong{font-weight:500;color:inherit}
+.material-surface.sws-source .material-record .small{color:var(--dim);font-size:12px}
+.material-surface.sws-source .material-record.is-current{background:var(--paper)!important;color:var(--ink);box-shadow:0 0 0 1px var(--c3-line2,var(--line))}
+.material-surface.sws-source .material-record.is-current strong{font-weight:600}
+.material-surface.sws-source .material-record>button.flow-action{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;border:0}
+.material-surface.sws-source .material-record>button.flow-action:focus-visible{opacity:1;background:transparent;color:transparent;outline:2px solid var(--warm);outline-offset:1px;border-radius:7px}
+.material-surface.sws-source .material-record>details{display:none}
+/* The transcript: speaker line small, the words large, as on the board. */
+.material-surface.sws-source .material-reading{border:0!important;padding:0!important;background:none!important}
+.material-surface.sws-source .material-document{border:0!important;padding:0!important;background:none!important;box-shadow:none!important;max-width:720px}
+.material-surface.sws-source .material-document>header{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+.material-surface.sws-source .material-document>header h3{font:600 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));margin:0}
+.material-surface.sws-source .material-document>header .small{font:12px/1.3 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-source .material-document>.recordBody{padding:0!important;margin:0 0 10px}
+.material-surface.sws-source .material-document>details{font:12px/1.4 var(--ar-ui);color:var(--dim)}
+/* Tools last, as one quiet group. */
+.material-surface.sws-source>.sws-work-tools{padding-top:14px;border-top:1px solid var(--line)}
+.material-surface.sws-source>.sws-work-tools>.sws-revision{flex-basis:100%;margin:0;font:12px/1.5 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-source>.sws-secondary{margin:0}
+/* One tools row: the tool disclosures and the two secondary disclosures share a single wrapping line. */
+body.c3-tabs .workspace .material-surface.sws-source{flex-direction:row;flex-wrap:wrap;column-gap:8px}
+.material-surface.sws-source>*{flex:1 1 100%;min-width:0}
+.material-surface.sws-source>.sws-work-tools{display:contents!important}
+.material-surface.sws-source>.sws-work-tools>.sws-revision{order:3;flex:1 1 100%;padding-top:14px;border-top:1px solid var(--line);margin-top:4px}
+.material-surface.sws-source>.sws-work-tools>details,.material-surface.sws-source>.sws-secondary{order:4;flex:0 0 auto}
+.material-surface.sws-source>.sws-work-tools>details[open],.material-surface.sws-source>.sws-secondary[open]{flex:1 1 100%}
+.material-surface.sws-source>.sws-work-tools>details>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.material-surface.sws-source>.material-boundary{order:6}
+
+/* ---------- Material: the board's grouping. Status, the resource rows, the selected resource, then one tools row. ---------- */
+body.c3-tabs .workspace .material-surface.sws-material{display:flex;flex-direction:row;flex-wrap:wrap;gap:14px 8px}
+.material-surface.sws-material>*{flex:1 1 100%;min-width:0}
+.material-surface.sws-material>.material-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.material-surface.sws-material>.material-readiness{order:1;display:flex;flex-wrap:wrap;gap:4px 16px;margin:-6px 0 2px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-material>.material-readiness strong{font-weight:600;color:var(--c3-ink2,var(--ink));margin-right:4px}
+.material-surface.sws-material>[data-material-browser-host],.material-surface.sws-material>.material-layout{order:2}
+.material-surface.sws-material>.material-tools{display:contents!important}
+.material-surface.sws-material>.material-tools>.material-intake{order:3;flex:1 1 100%;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding-top:14px;border-top:1px solid var(--line);margin:4px 0 0;background:none!important;border-left:0;border-right:0;border-bottom:0;font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-material>.material-tools>.material-intake .small{font-size:12px}
+.material-surface.sws-material>.material-tools>.material-note-tools{display:contents!important}
+.material-surface.sws-material>.material-tools>.material-note-tools>details,.material-surface.sws-material>.sws-work-tools>details,.material-surface.sws-material>.sws-secondary{order:4;flex:0 0 auto;margin:0}
+.material-surface.sws-material>.sws-work-tools{display:contents!important}
+.material-surface.sws-material details[open]{flex:1 1 100%!important}
+.material-surface.sws-material>.material-tools>.material-note-tools>details>summary,.material-surface.sws-material>.sws-work-tools>details>summary,.material-surface.sws-material>.sws-secondary>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none}
+.material-surface.sws-material summary:hover{border-color:var(--c3-ink2,var(--ink))}
+/* Resources: board-style rows, then the selected resource below. */
+.material-surface.sws-material .mrb-browser{border:0!important;background:none!important;padding:0!important}
+.material-surface.sws-material .mrb-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 8px;font:var(--c3-t1,13px)/1.3 var(--ar-ui)}
+.material-surface.sws-material .mrb-toolbar strong{font-size:var(--c3-t2,15px);font-weight:600}
+.material-surface.sws-material .mrb-count{color:var(--dim)}
+.material-surface.sws-material .mrb-view-controls{margin-left:auto}
+.material-surface.sws-material .mrb-layout{display:block!important}
+.material-surface.sws-material .mrb-collection[data-view="list"]{display:flex!important;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.material-surface.sws-material .mrb-collection[data-view="list"] .mrb-item{border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:none!important;margin:0!important}
+.material-surface.sws-material .mrb-collection[data-view="list"] .mrb-resource{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 4px!important;border:0!important;background:none!important;text-align:left;font:var(--c3-t1,13px)/1.4 var(--ar-ui)}
+.material-surface.sws-material .mrb-collection[data-view="list"] .mrb-item.is-selected .mrb-resource{box-shadow:inset 3px 0 0 var(--warm)}
+.material-surface.sws-material .mrb-resource .mrb-icon{flex:none;width:20px;color:var(--c3-ink2,var(--dim))}
+.material-surface.sws-material .mrb-item-info{display:flex;flex-direction:column;min-width:0}
+.material-surface.sws-material .mrb-item-info>:first-child{font:600 var(--c3-t2,15px)/1.35 var(--ar-ui);color:var(--ink)}
+.material-surface.sws-material .mrb-item-info>:not(:first-child){font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-material .mrb-preview{border:0!important;background:none!important;box-shadow:none!important;padding:14px 0 0 32px!important;margin:0!important;max-width:720px}
+.material-surface.sws-material .mrb-preview-head{display:flex;align-items:center;gap:8px}
+.material-surface.sws-material .mrb-preview-head .mrb-icon{display:none}
+.material-surface.sws-material .mrb-preview-head h3{font:600 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));margin:0}
+.material-surface.sws-material .mrb-meta{font:12px/1.4 var(--ar-ui);color:var(--dim);margin:2px 0 8px}
+.material-surface.sws-material .mrb-actions{margin-top:10px}
+.material-surface.sws-material>[data-material-browser-host]{order:2}
+.material-surface.sws-material>.material-layout{order:5}
+.material-surface.sws-material>.material-boundary,.material-surface.sws-material>p.small{order:9;font:12px/1.5 var(--ar-ui);color:var(--dim)}
+.material-surface.sws-material .mrb-list-side,.material-surface.sws-material .mrb-collection{width:auto!important;max-width:none!important;flex:none!important;max-height:none!important}
+
+/* ---------- Research and Direction: the board's order inside the lane ---------- */
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4)>.flow-paper{display:flex;flex-direction:column;gap:14px}
+.phaseReader.c3-s3>.flow-paper>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.phaseReader.c3-s3>.flow-paper>.flow-details{order:1}
+.phaseReader.c3-s3>.flow-paper>#downstream-human-direction{order:2}
+.phaseReader.c3-s3>.flow-paper>#study-source-continuation{order:3}
+.phaseReader.c3-s4>.flow-paper>.flow-lane-head{order:1}
+.phaseReader.c3-s4>.flow-paper>h2{order:1;font:600 var(--c3-t2,15px)/1.3 var(--ar-ui)!important;margin:0!important}
+.phaseReader.c3-s4>.flow-paper>p{order:1;margin:-8px 0 0;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+.phaseReader.c3-s4>.flow-paper>.flow-directions{order:1}
+.phaseReader.c3-s4>.flow-paper>#direction-writing-tools{order:2}
+.phaseReader.c3-s4>.flow-paper>#study-source-continuation{order:3}
+.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-lane-head{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.phaseReader.c3-flow:is(.c3-s3,.c3-s4)>.flow-paper>:is(#study-source-continuation,#direction-writing-tools){padding-top:14px;border-top:1px solid var(--line)}
+/* The source settings used a typewriter face; the board uses the interface font everywhere outside prose. */
+body.c3-tabs .workspace .source-continuation :is(span,button,small,p,label,select,strong,summary,h3){font-family:var(--ar-ui)!important;letter-spacing:normal!important}
+body.c3-tabs .workspace .phaseReader.c3-flow .flow-details>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui);color:var(--c3-ink2,var(--ink));cursor:pointer}
+.c3-open-research{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:36px;margin:0 40px 6px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
+.c3-open-research:hover{border-color:var(--c3-ink2,var(--ink))}
+@media(min-width:851px){body.c3-tabs .workspace>.phaseReader.c3-flow>.c3-open-research{grid-column:1;justify-self:start}}
+body.c3-tabs .workspace>.phaseReader.c3-flow>.c3-open-research{justify-self:start;width:auto;margin:0 0 8px 40px}
+.phaseReader.c3-s4>.flow-paper{padding-top:10px!important}
+body.c3-tabs .workspace .source-continuation :is(button,select){font-size:var(--c3-t1,13px)!important;min-height:36px;padding:0 14px;border-radius:var(--c3-r,8px)}
+body.c3-tabs .workspace .source-continuation :is(p,span,small,label){font-size:var(--c3-t1,13px)!important;line-height:1.5}
+body.c3-tabs .workspace .source-continuation .source-continuation-primary:not(:disabled){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+body.c3-tabs .workspace>.phaseReader.c3-flow>button.c3-open-research:not(#c3-read-insp){justify-self:start;width:auto;max-width:none;margin:0 0 10px 40px}
+body.c3-tabs .workspace>.phaseReader.c3-flow.c3-s4 .flow-paper:not(#c3-read-insp){padding-top:14px!important}
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper :is(.flow-details p,.flow-details label,.flow-details span,.flow-details small){font-size:var(--c3-t1,13px)!important;line-height:1.5}
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper .flow-action{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;min-height:36px;padding:0 14px;border-radius:var(--c3-r,8px)}
+body.c3-tabs .workspace>.phaseReader.c3-flow:is(.c3-s3,.c3-s4) .flow-paper textarea{font:var(--c3-t2,15px)/1.5 var(--ar-ui);border-radius:var(--c3-r,8px);border-color:var(--c3-line2,var(--line));background:var(--c3-lift,var(--rail))}
+
+/* ---------- Media and Arrange: the board's order across the workspace, inspector fixed at the right ---------- */
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace{display:flex;flex-direction:column}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>*{order:5}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:is(#c3-surface-bar,.topbar,#work-context,.workbar){order:0}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>.historicalToolbar{order:1}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>.c3-ws-title{order:2;padding:28px 40px 0;margin:0 0 10px}
+@media(min-width:851px){
+ body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:not(#c3-surface-bar):not(#c3-read-insp){margin-right:328px}
+ body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{position:fixed;right:0;top:calc(var(--ht-strip,44px) + 60px);bottom:0;width:328px;box-sizing:border-box;overflow:auto;z-index:20;background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);padding:12px 16px 48px;display:flex;flex-direction:column;gap:12px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--ink)}
+}
+@media(max-width:850px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{display:none}}
+/* Media: filter row, then the contact sheet, then the tools as one quiet row. */
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface{display:contents!important}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-bar{order:3;padding:0 40px;margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:0;background:none}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-bar>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-context{order:3;padding:0 40px;margin:0 0 10px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+body.c3-tabs[data-c3-stage="8"] .workspace>#owned-photo-stage{order:4;padding:0 40px!important}
+body.c3-tabs[data-c3-stage="8"] .workspace>#owned-photo-stage .photos-stage-room{border:0!important;background:none!important;box-shadow:none!important;padding:0!important;margin:0!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="8"] .workspace>#owned-photo-stage .photos-stage-heading h2{font:600 var(--c3-t2,15px)/1.3 var(--ar-ui)!important;margin:0}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-tool-grid{order:6;display:flex!important;flex-wrap:wrap;gap:8px;padding:14px 40px 0;margin:14px 0 0;border-top:1px solid var(--line)}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-tool-grid>details{flex:0 0 auto;margin:0;border:0}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-tool-grid>details[open]{flex:1 1 100%}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-tool-grid>details>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none}
+body.c3-tabs[data-c3-stage="8"] .workspace>.mot-surface>.mot-status{order:7;padding:0 40px}
+body.c3-tabs[data-c3-stage="8"] .workspace>.flow-retained{order:8;padding:14px 40px 40px}
+/* Arrange: the arrangement first, then placement tools; the stage heading becomes the board's heading line. */
+body.c3-tabs[data-c3-stage="9"] .workspace>.oss-surface{order:6;padding:14px 40px 40px!important;margin:0!important;border:0!important;border-top:1px solid var(--line)!important;background:none!important;box-shadow:none!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="9"] .workspace>.oss-surface>.oss-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs[data-c3-stage="9"] .workspace>.oss-surface .oss-muted{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+body.c3-tabs[data-c3-stage="9"] .workspace>.oss-surface>.oss-disclosure>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;width:auto}
+body.c3-tabs[data-c3-stage="9"] .workspace>.oo-stage{order:4;padding:0 40px!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="9"] .workspace>.oo-stage>.oo-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs[data-c3-stage="9"] .workspace>.oo-stage #study-output-notice{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+body.c3-tabs[data-c3-stage="8"] .workspace>#owned-photo-stage :is(.photos-stage-room,.study-photos,#owned-photos-mount){margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;max-width:none!important}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:is(.phaseReader,.oo-stage,.oss-surface){max-width:none!important;margin-left:0!important}
+@media(min-width:851px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>:is(.phaseReader,.oo-stage,.oss-surface){margin-right:328px!important}}
+
+/* ---------- Audience view, Share, Outputs: flat on the page, the work first, disclosures as one quiet row ---------- */
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface{order:4;padding:0 40px 24px!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;max-width:none!important;display:flex;flex-direction:column;gap:12px}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface>.oss-heading>div{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface>.oss-heading{display:flex;justify-content:flex-start;order:9;margin:0}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface .oss-muted{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface .oss-field{font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--c3-ink2,var(--dim))}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface :is(input,textarea){font:var(--c3-t2,15px)/1.5 var(--ar-ui);border-radius:var(--c3-r,8px);border-color:var(--c3-line2,var(--line));background:var(--c3-lift,var(--rail))}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface textarea[data-oss-field="message"]{font:18px/1.7 var(--shared-prose-font,'AR Atlas Lora',Georgia,serif);min-height:180px;padding:14px 16px}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface>.oss-review-tools{display:flex;flex-wrap:wrap;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface :is(.oss-review-tools>details,>details.oss-disclosure){border:0!important;margin:0!important;padding:0!important}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>details.oss-disclosure{order:8;align-self:flex-start}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>details.oss-disclosure[open]{align-self:stretch}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-surface details.oss-disclosure>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;width:auto}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>.oss-tool-row{order:7}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>p.oss-muted:first-of-type{order:1}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>.oss-field-row{order:2}
+body.c3-tabs[data-c3-stage="11"] .workspace>.oss-surface>label.oss-field{order:3}
+body.c3-tabs:is([data-c3-stage="10"],[data-c3-stage="11"]) .workspace>.oss-retained{order:9;padding:14px 40px 40px;font:var(--c3-t1,13px)/1.5 var(--ar-ui)}
+body.c3-tabs[data-c3-stage="10"] .workspace>.oss-surface .oss-readiness{font:var(--c3-t1,13px)/1.5 var(--ar-ui);padding:10px 14px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--c3-lift,var(--rail))}
+body.c3-tabs[data-c3-stage="10"] .workspace>.oss-surface .oss-readiness:is([data-blocked],[data-blocked="true"]){border-color:var(--c3-bad);color:var(--c3-bad)}
+/* Outputs: the register first, Continue creating after it. */
+body.c3-tabs[data-c3-stage="12"] .workspace>:is(#output-overview,.oo-panel,section:has(.oo-panel)){order:4;padding:0 40px!important;margin:0!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="12"] .workspace .oo-panel{border:0!important;background:none!important;box-shadow:none!important;padding:0!important}
+body.c3-tabs[data-c3-stage="12"] .workspace .oo-panel>.oo-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs[data-c3-stage="12"] .workspace>.mot-surface{order:6;padding:14px 40px 40px!important;margin:14px 0 0!important;border:0!important;border-top:1px solid var(--line)!important;background:none!important;max-width:none!important}
+body.c3-tabs[data-c3-stage="12"] .workspace>.mot-surface .mot-bar h2{font:600 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink))}
+@media(min-width:851px){body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace>*:not(#c3-surface-bar):not(#c3-read-insp){margin-right:328px!important;box-sizing:border-box}}

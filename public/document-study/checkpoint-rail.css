@@ -1,0 +1,40 @@
+/* C3 compact checkpoint list: a slim left column, one line per checkpoint, groups split by a thin line. */
+@media(min-width:651px){
+ body.c3-rail-on #app>.shell{grid-template-columns:184px minmax(0,1fr)}
+ body.c3-rail-on.c3-tabs #app>.shell>.rail:not(.open){display:none}
+}
+body.c3-rail-on .shell>.workflowNavigation.c3-rail{box-sizing:border-box;min-width:0;overflow:auto;margin:0;padding:10px 8px;border:0;border-right:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;gap:0}
+.workflowNavigation.c3-rail .workflowLegend{display:none}
+.workflowNavigation.c3-rail .workflowSteps[data-work-groups]{display:flex;flex-direction:column;gap:0;grid-template-columns:none}
+.workflowNavigation.c3-rail .wn-family{display:flex;flex-direction:column;padding:6px 0;border-top:1px solid var(--line)}
+.workflowNavigation.c3-rail .wn-family:first-child{border-top:0;padding-top:0}
+.workflowNavigation.c3-rail .wn-family-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.workflowNavigation.c3-rail .wn-family-steps{display:flex;flex-direction:column;gap:1px;grid-template-columns:none}
+.workflowNavigation.c3-rail .workflowStep{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:9px;width:100%;min-width:0;min-height:34px;margin:0;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--dim);font:500 13px/1.3 var(--ar-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif);text-align:left;outline:0;box-shadow:none}
+.workflowNavigation.c3-rail .workflowStep:hover{background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink)}
+.workflowNavigation.c3-rail .workflowStep:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+.workflowNavigation.c3-rail .workflowStep[aria-current]{background:color-mix(in srgb,var(--warm) 18%,transparent);color:var(--ink);font-weight:600}
+.workflowNavigation.c3-rail .cr-icon{flex:none}
+.workflowNavigation.c3-rail .stepName{flex:1 1 auto;min-width:0;font:inherit!important;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workflowNavigation.c3-rail :is(.stepNumber,.currentMark){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.workflowNavigation.c3-rail .recordDot{display:none}
+.workflowNavigation.c3-rail .cr-dot{flex:none;width:7px;height:7px;border-radius:50%;box-sizing:border-box}
+.workflowNavigation.c3-rail .cr-dot[data-state="current"]{background:var(--warm)}
+.workflowNavigation.c3-rail .cr-dot[data-state="record"]{background:color-mix(in srgb,var(--dim) 70%,transparent)}
+.workflowNavigation.c3-rail .cr-dot[data-state="none"]{border:1px solid color-mix(in srgb,var(--dim) 55%,transparent)}
+.workflowNavigation.c3-rail .cr-picker{display:none}
+/* Focus hides the checkpoint list, as on the C3 board. */
+[data-draft-focus="true"] body.c3-rail-on .shell>.workflowNavigation.c3-rail,body.c3-rail-on[data-draft-focus="true"] .shell>.workflowNavigation.c3-rail{display:none}
+@media(min-width:651px){[data-draft-focus="true"] body.c3-rail-on #app>.shell,body.c3-rail-on[data-draft-focus="true"] #app>.shell{grid-template-columns:minmax(0,1fr)}}
+/* Phone: one picker line above the work; the list opens below it. */
+@media(max-width:650px){
+ body.c3-rail-on #app>.shell{display:flex;flex-direction:column}
+ body.c3-rail-on #app>.shell>.workspace{flex:1 1 auto;min-height:0;height:auto}
+ body.c3-rail-on .shell>.workflowNavigation.c3-rail{flex:none;position:relative;overflow:visible;padding:4px 8px;border-right:0;border-bottom:1px solid var(--line);z-index:30}
+ .workflowNavigation.c3-rail .cr-picker{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--ink);font:inherit;text-align:left}
+ .workflowNavigation.c3-rail .cr-picker-text{display:flex;flex-direction:column;line-height:1.25}
+ .workflowNavigation.c3-rail .cr-picker-count{font-size:12px;color:var(--dim)}
+ .workflowNavigation.c3-rail .workflowSteps[data-work-groups]{display:none}
+ .workflowNavigation.c3-rail.cr-open .workflowSteps[data-work-groups]{display:flex;position:absolute;left:8px;right:8px;top:calc(100% + 4px);max-height:min(70dvh,560px);overflow:auto;padding:6px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px #0003}
+ .workflowNavigation.c3-rail .workflowStep{min-height:44px}
+}

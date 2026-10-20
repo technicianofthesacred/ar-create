@@ -1,0 +1,52 @@
+/* C3 empty states: the shape of what will come, a card with the next step, and how the space fills. */
+.c3-empty{position:relative;margin:4px 0 24px;min-height:340px;font:var(--c3-t1,13px)/1.45 var(--ar-ui);color:var(--ink)}
+#app [data-c3-empty-hidden]{display:none!important}
+.c3-empty .ce-shape{pointer-events:none;opacity:.9}
+.c3-empty .ce-ghost{display:grid;gap:18px}
+.c3-empty .ce-tiles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.c3-empty .ce-tile{aspect-ratio:4/3;border:1.5px dashed var(--c3-line2,var(--line));border-radius:10px}
+.c3-empty .ce-line{display:block;height:10px;border-radius:5px;background:var(--line);margin-top:8px}
+.c3-empty .ce-soft{opacity:.6}
+.c3-empty .ce-big{height:12px}
+.c3-empty .ce-title{height:22px;margin-bottom:10px}
+.c3-empty .ce-rows{gap:10px}
+.c3-empty .ce-row{height:58px;border:1.5px dashed var(--c3-line2,var(--line));border-radius:10px;display:flex;align-items:center;gap:14px;padding:0 14px}
+.c3-empty .ce-row .ce-line{margin-top:6px}
+.c3-empty .ce-rowtext{flex:1;display:flex;flex-direction:column}
+.c3-empty .ce-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--c3-line2,var(--line));flex:none}
+.c3-empty .ce-pill{width:150px;height:30px;border:1.5px dashed var(--c3-line2,var(--line));border-radius:8px;flex:none}
+.c3-empty .ce-cards{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.c3-empty .ce-card{border:1.5px dashed var(--c3-line2,var(--line));border-radius:10px;padding:12px;display:flex;flex-direction:column;height:150px}
+.c3-empty .ce-end{margin-top:auto}
+.c3-empty .ce-lines{gap:16px;max-width:640px}
+.c3-empty .ce-page{display:flex;flex-direction:column;gap:6px;max-width:640px}
+.c3-empty .ce-page .ce-big{margin-top:12px}
+.c3-empty .ce-card-wrap{position:absolute;left:50%;top:44px;transform:translateX(-50%);width:min(480px,calc(100% - 24px));display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--c3-line2,var(--line));border-radius:14px;padding:22px 24px;box-shadow:var(--c3-shadow,0 18px 50px rgba(0,0,0,.4))}
+.c3-empty .ce-icon{width:40px;height:40px;border-radius:10px;background:var(--c3-sel,var(--line));display:grid;place-items:center;color:var(--warm);margin-bottom:12px}
+.c3-empty h3{margin:0 0 6px;font:600 17px/1.3 var(--ar-ui);color:var(--ink)}
+.c3-empty p{margin:0 0 16px;font:var(--c3-t2,15px)/1.55 var(--ar-ui);color:var(--c3-ink2,var(--dim))}
+.c3-empty .ce-acts{display:flex;gap:8px;flex-wrap:wrap}
+.c3-empty .ce-btn{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
+.c3-empty .ce-btn:hover:not(:disabled){border-color:var(--c3-ink2,var(--ink))}
+.c3-empty .ce-btn.pri{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.c3-empty .ce-btn:disabled{opacity:.45;cursor:default}
+.c3-empty .ce-btn:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.c3-empty .ce-steps{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--dim)}
+.c3-empty .ce-step{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.c3-empty .ce-n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--c3-line2,var(--line));font-size:11px;color:var(--c3-ink2,var(--ink))}
+.c3-empty .ce-arr{opacity:.5}
+/* Compact: a single quiet card above the work (Write's empty page, Share's empty message). */
+.c3-empty.ce-compact{min-height:0;margin:0 0 18px}
+.c3-empty.ce-compact .ce-card-wrap{position:static;transform:none;width:auto;max-width:640px;flex-direction:row;gap:14px;align-items:flex-start;padding:16px 18px;box-shadow:none;background:var(--c3-lift,var(--rail))}
+.c3-empty.ce-compact .ce-icon{margin:0;flex:none}
+.c3-empty.ce-compact p{margin-bottom:12px}
+/* Placement on steps laid out across the workspace (Media to Outputs): under the filter row, beside the inspector. */
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace>.c3-empty{order:4;padding:0 40px}
+body.c3-tabs #app .phaseReader>.c3-empty{padding:0 40px}
+body.c3-tabs #app .material-surface>.c3-empty{flex:1 1 100%}
+@media(max-width:650px){.c3-empty .ce-card-wrap{position:static;transform:none;width:auto;margin-top:-260px}.c3-empty{min-height:0}}
+
+/* Home and the inspector. */
+#project-library .ht-c3-empty{grid-column:1/-1;min-height:380px}
+#project-library [data-c3-empty-hidden]{display:none!important}
+#c3-read-insp .ci-empty,.ci-panel .ci-empty{border:1px dashed var(--c3-line2,var(--line));border-radius:10px;padding:14px;color:var(--c3-ink2,var(--dim))!important;background:none}

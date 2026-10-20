@@ -1,0 +1,69 @@
+/* C3 canvas for Write, Read and Check: the board's heading line, quiet notices, Read's inspector, Check's right panel. */
+.c3-ctitle{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 14px;font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--dim)}
+.c3-ctitle .c3t-n{font-weight:600;font-variant-numeric:tabular-nums}
+.c3-ctitle .c3t-name{font-size:var(--c3-t2,15px);font-weight:600;color:var(--ink)}
+.c3-ctitle .c3t-line{min-width:0}
+/* The app's own notices, quieter: one muted line, controls kept. */
+body.c3-tabs .workspace>.historicalToolbar{background:var(--paper);border-bottom:1px solid var(--line);color:var(--dim)!important;font:var(--c3-t1,13px)/1.4 var(--ar-ui);padding:6px 40px;min-height:44px}
+body.c3-tabs .workspace>.historicalToolbar *{color:inherit}
+body.c3-tabs .workspace>.historicalToolbar button{color:var(--ink)!important}
+body.c3-tabs .workspace .draft-surface-document-meta{font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--dim);margin-bottom:10px}
+body.c3-tabs .workspace .draft-tabs{opacity:.85}
+body.c3-tabs .workspace .draft-tabs .draft-action{min-height:26px;padding:2px 9px;font:500 12px/1.2 var(--ar-ui);border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--dim)}
+body.c3-tabs .workspace .draft-tabs .draft-action[aria-pressed="true"]{background:var(--c3-sel,var(--line));color:var(--ink)}
+body.c3-tabs .workspace .docfooter{font:12px/1.4 var(--ar-ui);color:var(--dim);opacity:.8}
+#c3-surface-bar .sb-out small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;display:block}
+#c3-surface-bar .sb-out strong{max-width:320px}
+/* Read: the manuscript with the inspector as a full-height right column. */
+@media(min-width:851px){
+ body.c3-tabs .workspace>.phaseReader:is(.c3-read,.c3-flow){display:grid;grid-template-columns:minmax(0,1fr) 328px;grid-template-rows:auto auto auto auto minmax(0,1fr);align-items:stretch;min-height:calc(100dvh - var(--ht-strip,44px) - 104px);padding:0!important;max-width:none!important}
+ body.c3-tabs .workspace>.phaseReader:is(.c3-read,.c3-flow)>:not(#c3-read-insp){grid-column:1;width:100%;max-width:780px;margin:0 auto;box-sizing:border-box}
+ body.c3-tabs .workspace>.phaseReader:is(.c3-read,.c3-flow)>.c3-ctitle{padding:28px 40px 0;margin:0}
+ body.c3-tabs .workspace>.phaseReader:is(.c3-read,.c3-flow)>#c3-read-insp{grid-column:2;grid-row:1/-1;background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);padding:12px 16px 48px;display:flex;flex-direction:column;gap:12px;font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--ink)}
+}
+@media(max-width:850px){#c3-read-insp{display:none}}
+#c3-read-insp .c3-insp-tabs{display:flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--c3-lift,var(--rail));position:sticky;top:72px}
+#c3-read-insp .ci-tab{flex:1 1 0;min-height:30px;padding:0 8px;border:0;border-radius:7px;background:none;color:var(--c3-ink2,var(--dim));font:var(--c3-t1,13px)/1.2 var(--ar-ui);cursor:pointer;white-space:nowrap}
+#c3-read-insp .ci-tab[aria-selected="true"]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--c3-line2,var(--line))}
+#c3-read-insp .ci-tab:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+#c3-read-insp .c3-insp-body{display:flex;flex-direction:column;gap:10px}
+/* Check: the app's check panel becomes the full-height right column; checks first on narrow screens (unchanged). */
+body.c3-tabs .workspace>.phaseReader.c3-check>.c3-ctitle{padding:28px 40px 0;margin:0 0 6px}
+@media(min-width:851px){
+ body.c3-tabs .workspace>.phaseReader.c3-check{padding:0!important;max-width:none!important}
+ body.c3-tabs .workspace>.phaseReader.c3-check .wn-check-layout{grid-template-columns:minmax(0,1fr) 328px;gap:0;padding:0;align-items:stretch;min-height:calc(100dvh - var(--ht-strip,44px) - 150px)}
+ body.c3-tabs .workspace>.phaseReader.c3-check .wn-check-manuscript{padding:8px 40px 96px;max-width:780px;width:100%;margin:0 auto;box-sizing:border-box}
+ body.c3-tabs .workspace>.phaseReader.c3-check .wn-check-findings{background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);padding:12px 16px 48px;font-family:var(--ar-ui)}
+ body.c3-tabs .workspace>.phaseReader.c3-check>.c3-ctitle{max-width:780px;margin-right:328px}
+}
+body.c3-tabs .workspace>.phaseReader.c3-check .draft-check-room>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs .workspace>.phaseReader.c3-check>:not(.c3-ctitle):not(.wn-check-layout){padding-left:40px!important;padding-right:40px!important;box-sizing:border-box}
+/* Check with a loaded manuscript: manuscript left, the check panel as the full-height right column. */
+@media(min-width:851px){
+ body.c3-tabs .workspace>.wn-check-layout.c3-check{grid-template-columns:minmax(0,1fr) 328px;gap:0;padding:0;align-items:stretch;min-height:calc(100dvh - var(--ht-strip,44px) - 104px)}
+ body.c3-tabs .workspace>.wn-check-layout.c3-check>.wn-check-manuscript{padding:28px 40px 96px;max-width:780px;width:100%;margin:0 auto;box-sizing:border-box}
+ body.c3-tabs .workspace>.wn-check-layout.c3-check>.wn-check-findings{background:var(--c3-lift,var(--rail));border-left:1px solid var(--line);padding:12px 16px 48px;font-family:var(--ar-ui)}
+}
+body.c3-tabs .workspace>.wn-check-layout.c3-check .wn-check-findings :is(.recordPage,.draft-check-room){border:0!important;background:none!important;box-shadow:none!important;padding:0!important;margin:0!important}
+body.c3-tabs .workspace>.wn-check-layout.c3-check .wn-check-findings .draft-check-room>h2{font:600 var(--c3-t2,15px)/1.3 var(--ar-ui)!important;margin:4px 0 6px!important}
+body.c3-tabs .workspace>.wn-check-layout.c3-check .wn-check-findings p{font:var(--c3-t1,13px)/1.5 var(--ar-ui)!important;color:var(--dim)}
+body.c3-tabs .workspace>.wn-check-layout.c3-check .wn-check-findings h2{font:600 var(--c3-t2,15px)/1.3 var(--ar-ui)!important;margin:4px 0 6px!important}
+/* Material and Source: the lane on the page itself, its big heading replaced by the board's heading line. */
+body.c3-tabs .workspace>.phaseReader.c3-flow .flow-paper{border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important;padding:0 40px 96px!important;max-width:none!important;margin:0!important}
+body.c3-tabs .workspace>.phaseReader.c3-flow .flow-lane-head,body.c3-tabs .workspace>.phaseReader.c3-flow .material-heading{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tabs .workspace>.phaseReader.c3-flow>.c3-ctitle{padding:28px 40px 0;margin:0 0 6px}
+body.c3-tabs .workspace>.phaseReader.c3-flow>:not(#c3-read-insp){max-width:960px}
+body.c3-tabs .workspace>.phaseReader.c3-flow .material-readiness{font:var(--c3-t1,13px)/1.5 var(--ar-ui);color:var(--dim)}
+/* The lane's tool disclosures as a quiet row of tool links, not large headings. */
+body.c3-tabs .workspace>.phaseReader.c3-flow .sws-work-tools{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:flex-start}
+body.c3-tabs .workspace>.phaseReader.c3-flow .sws-work-tools>details>summary,body.c3-tabs .workspace>.phaseReader.c3-flow .sws-secondary>summary{font:500 var(--c3-t1,13px)/1.3 var(--ar-ui)!important;color:var(--c3-ink2,var(--ink));min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:var(--c3-r,8px);background:var(--paper);display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+body.c3-tabs .workspace>.phaseReader.c3-flow .sws-work-tools>details[open]{flex-basis:100%}
+body.c3-tabs .workspace>.phaseReader.c3-flow .sws-work-tools>details>summary:hover,body.c3-tabs .workspace>.phaseReader.c3-flow .sws-secondary>summary:hover{border-color:var(--c3-ink2,var(--ink))}
+/* Inspector body rows everywhere (Read, Material, Source, Research, Direction, Media, Arrange). */
+#c3-read-insp .ci-row{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+#c3-read-insp .ci-row strong{display:block;font-weight:600}
+#c3-read-insp .ci-row span{color:var(--dim)}
+#c3-read-insp .ci-lead{color:var(--dim);margin:0}
+#c3-read-insp .ci-go{align-self:flex-start;min-height:36px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
+#c3-read-insp .ci-go:hover{border-color:var(--c3-ink2,var(--ink))}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp .c3-insp-tabs{position:static}
