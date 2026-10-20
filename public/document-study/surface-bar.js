@@ -54,7 +54,11 @@
  function mid(t,max=40){t=String(t||'');if(t.length<=max)return t;const tail=Math.max(8,Math.floor(max*.35));return t.slice(0,max-tail-1).trimEnd()+'…'+t.slice(-tail).trimStart();}
  function checkpoint(){const b=document.querySelector('.workflowNavigation .workflowStep[aria-current]')||document.querySelector('.workflowNavigation .workflowStep.isViewed');if(!b)return stage()===3?{n:3,name:'Research'}:null;return {n:Number(b.querySelector('.stepNumber')?.textContent.trim())||stage(),name:(b.querySelector('.stepName')?.textContent||'').trim()};}
  // The bottom location bar: i64 OS › piece › output › checkpoint, then read-only, output switch and save status.
+ // A piece whose words are still only in this browser says so in the bottom bar, with the real working-copy control.
+ const localOnly=()=>document.querySelector('#app .workspace>.draft-bar .draft-copy-row [data-draft-action^="open:"]:not(:disabled)');
+ document.addEventListener('click',event=>{if(event.target.closest?.('[data-cb-local]'))localOnly()?.click();});
  function crumb(slots,id,status){
+  const local=localOnly();if(local)status='';
   let bar=document.getElementById('c3-crumb');
   if(!bar){bar=document.createElement('footer');bar.id='c3-crumb';bar.setAttribute('aria-label','Where you are');document.body.append(bar);document.body.classList.add('c3-crumb-on');}
   const cp=checkpoint(),tone=/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok';
@@ -67,7 +71,7 @@
   else if(id.title)parts.push(`<span class="cb-seg cb-on" title="${esc(id.title+(id.meta?' · '+id.meta:''))}">${esc(mid(id.title))}</span>`);
   if(cp)parts.push(seg(cp.name));
   const note=noteText();
-  const html=`<div class="cb-path">${parts.join(sep)}</div><div class="cb-right">${note?`<span class="cb-note">${esc(note)}</span>`:''}${status?`<span class="cb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(status)}</span>`:''}</div>`;
+  const html=`<div class="cb-path">${parts.join(sep)}</div><div class="cb-right">${note?`<span class="cb-note">${esc(note)}</span>`:''}${local?`<span class="cb-status" data-tone="warn" role="status" title="These words are kept only in this browser until the piece has its project file.">Only in this browser</span><button type="button" class="cb-act" data-cb-local>Save to the project</button>`:''}${status?`<span class="cb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(status)}</span>`:''}</div>`;
   if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
  }
  function statusText(){const s=document.querySelector('.workspace>.workbar .saved')||document.querySelector('.workspace>.topbar .status');return s?label(s):'';}

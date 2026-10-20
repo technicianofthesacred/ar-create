@@ -307,7 +307,7 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document.prose-document,
  body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript>.document{margin:28px auto 0!important}
  body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript{padding-top:0!important;padding-bottom:0!important}
- body.c3-tabs[data-c3-stage="7"] #app #workspace>.wn-check-layout.c3-check{min-height:0!important}
+ body.c3-tabs[data-c3-stage="7"] #app #workspace>.wn-check-layout.c3-check{min-height:calc(100dvh - var(--ht-strip,44px) - 53px - var(--cb-h,28px))!important}
 }
 @media(min-width:851px){
  body.c3-tabs[data-c3-stage="7"] #app #workspace .wn-check-manuscript{display:flex!important;flex-direction:column;align-self:stretch!important}
@@ -503,3 +503,34 @@ body.c3-tabs #app #workspace :is(#c3-read-insp,.ci-panel) .ci-go{background:none
 }
 body.c3-tabs #app #workspace .document .docfooter{flex-wrap:wrap;gap:4px 14px}
 body.c3-tabs #app #workspace .document .docfooter::before{content:"Type straight into the page · select across paragraphs";order:-1;flex-basis:100%}
+/* The browser-only notice lives in the bottom bar; Write's own strip above the page keeps only errors or progress. */
+body.c3-tabs #app .workspace>.draft-bar :is(.draft-explanation,.draft-copy-row){display:none!important}
+#c3-crumb .cb-act{min-height:22px;padding:0 10px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c3-warn) 16%,transparent);color:var(--c3-warn);font:600 12px/1 var(--ar-ui);cursor:pointer}
+#c3-crumb .cb-act:hover{background:color-mix(in srgb,var(--c3-warn) 26%,transparent)}
+#c3-crumb .cb-act:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+/* Full-width paper: the page fills the writing column edge to edge; the text keeps a Docs-like width (about 640px). */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk{background:var(--paper)!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.document.prose-document{max-width:none!important;width:100%!important;min-height:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important;align-self:stretch!important}
+ body.c3-tabs #app #workspace .phaseReader.c3-read{background:var(--paper)!important}
+ body.c3-tabs #app #workspace .phaseReader.c3-read>.recordPage{max-width:none!important;width:100%!important;min-height:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript{background:var(--paper)!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript>.recordPage{max-width:none!important;width:100%!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important}
+}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace :is(.phaseReader.c3-read,.wn-check-layout .wn-check-manuscript)>.document.prose-document{max-width:none!important;width:100%!important;min-height:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;padding:56px max(64px,calc((100% - 640px)/2)) 120px!important;align-self:stretch!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript{padding:0!important}
+}
+/* Check with nothing saved yet: one ground from top to bottom, and the retained-checks link on the page's own edge. */
+body.c3-tabs[data-c3-stage="7"] #app #workspace,body.c3-tabs[data-c3-stage="7"] #app #workspace>.phaseReader{background:var(--bg)!important}
+body.c3-tabs[data-c3-stage="7"] #app #workspace>.phaseReader{min-height:100%}
+body.c3-tabs[data-c3-stage="7"] #app #workspace .phaseReader>details.flow-retained{padding:0 40px!important;margin:16px 0 40px!important}
+@media(max-width:650px){body.c3-tabs[data-c3-stage="7"] #app #workspace .phaseReader>details.flow-retained{padding:0 var(--c3-gx)!important}}
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .wn-check-layout{align-items:stretch!important;min-height:calc(100dvh - var(--ht-strip,44px) - 52px - var(--cb-h,28px))}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript{display:flex!important;flex-direction:column;align-self:stretch!important}
+ body.c3-tabs #app #workspace .wn-check-layout .wn-check-manuscript>.document.prose-document{flex:1 0 auto}
+ body.c3-tabs #app #workspace .phaseReader.c3-read{min-height:calc(100dvh - var(--ht-strip,44px) - 52px - var(--cb-h,28px))}
+ body.c3-tabs #app #workspace .phaseReader.c3-read>.document.prose-document{min-height:100%!important}
+}
+@media(min-width:851px){body.c3-tabs #app #workspace>.wn-check-layout.c3-check{min-height:calc(100dvh - var(--ht-strip,44px) - 53px - var(--cb-h,28px))!important}}

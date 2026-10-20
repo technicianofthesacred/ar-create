@@ -2409,7 +2409,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "c1967838620faae0de922543f9bb510be3a8581ce8d8585f8e219031dcdd7c9a"
+      "candidateSha256": "188c5487390eb1f8bac27658afd3cb4a56a717676075a52dee7be19fafdd93e5"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -2497,7 +2497,7 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "3f8d16ab79eeeb08e7a5f5af34d711520014c87745a4cd89fac1ca37105631a0"
+      "candidateSha256": "d9e6e6290699aee60640658bd8f8b6bdc6d7fefc9633f55caec5cdf70f68f2ba"
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
