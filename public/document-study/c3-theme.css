@@ -332,3 +332,31 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  #app #workspace .reference,#app #workspace .draft-row{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
  #c3-research .rt-search{flex:1 1 100%;max-width:none;min-width:0}
 }
+
+/* Phone, one row above the work: the checkpoint picker sits in the left of the command bar instead of on its own line,
+   desktop-only layout toggles (margin, focus, keyboard hints) step aside, and the page reads at phone sizes. */
+@media(max-width:650px){
+ body.c3-rail-on #app>.shell>.workflowNavigation.c3-rail{height:0;min-height:0;padding:0;border-bottom:0;z-index:40}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker{position:absolute;left:8px;top:6px;width:auto;max-width:118px;min-height:40px;padding:0 8px 0 10px;gap:6px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--c3-lift,var(--rail))}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker-count{display:none}
+ body.c3-rail-on .workflowNavigation.c3-rail .cr-picker strong{font:600 14px var(--ar-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ body.c3-rail-on .workflowNavigation.c3-rail.cr-open .workflowSteps[data-work-groups]{top:52px}
+ #c3-surface-bar{min-height:52px;padding:0 8px}
+ #c3-surface-bar .sb-left{display:block!important;flex:0 0 auto;width:122px}
+ #c3-surface-bar .sb-right{overflow:visible}
+ #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode),#c3-surface-bar .sb-morew>button{font-size:0;gap:0;min-width:36px;padding:0 8px;justify-content:center}
+ #c3-surface-bar .sb-mode{font-size:12.5px;padding:0 8px;white-space:nowrap}
+ #c3-surface-bar .sb-left>*{display:none}
+ #c3-surface-bar .sb-right{gap:2px}
+ #c3-surface-bar .sb-sep{display:none}
+ #c3-surface-bar :is(.sb-margin,.sb-focus){display:none}
+ #c3-surface-bar .sb-primary{font-size:13px;padding:0 12px;min-height:36px}
+ body.c3-tabs #app .workspace .docfooter{display:none}
+ body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:27px!important;line-height:1.2!important}
+ body.c3-tabs #app .workspace :is(.document,.recordPage) :is(h2,h3):not(:first-of-type){font-size:21px!important}
+ body.c3-tabs #app .workspace :is(.manuscript,.recordBody,.recordPage) p{font-size:16.5px!important;line-height:1.6!important}
+}
+@media(max-width:650px){
+ body.c3-tabs #app .c3-empty{flex-shrink:0}
+ #project-library.c3-home [data-pl-close]{white-space:nowrap;font-size:13px;padding:0 12px}
+}
