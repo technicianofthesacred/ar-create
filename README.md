@@ -1,3 +1,7 @@
+# Current Claude entry
+
+Read [CLAUDE-DESIGN-START.md](CLAUDE-DESIGN-START.md) on current `main` for the approved C3 look, current Round 2 instructions and truthful connection status. Everything needed for the code/design pass is in this private repository; no handoff ZIP is required. Private saved work and account settings stay outside GitHub.
+
 # AR Create — private code repository
 
 Product direction starts at [What we are building](docs/PRODUCT.md): purpose, pillars, twelve section briefs and the connection to Delivery’s work checklist.

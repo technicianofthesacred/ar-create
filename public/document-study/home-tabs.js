@@ -13,7 +13,7 @@
  const tabKey=t=>t.projectId+'::'+(t.outputId||'');
  const tabs=()=>nav().openTabs.filter(t=>project(t.projectId));
  const library=()=>document.getElementById('project-library');
- const homeOpen=()=>!!library()?.open;
+ const homeOpen=()=>!!library()?.open&&!library()?.dataset.plContext;
  const stage=()=>Number(current().viewedStage)||(current().view==='article'?5:0);
  const note=p=>p.archived?'Archived':p.step||p.status||'Material';
  function message(text){const node=document.querySelector('#c3-tabstrip [data-ht-status]');if(node){node.textContent=text||'';node.hidden=!text;}}
@@ -65,7 +65,7 @@
   if(host.dataset.render!==html){host.innerHTML=html;host.dataset.render=html;}
  }
  // While Home is open the strip lives inside the modal library so it stays reachable; otherwise above the workspace.
- function place(node){const d=library();if(d?.open){decorateHome(d);if(node.parentElement!==d){node.querySelectorAll('details[open]').forEach(m=>m.open=false);d.prepend(node);}}else if(node.parentElement!==document.body)document.body.prepend(node);}
+ function place(node){const d=library();if(homeOpen()){decorateHome(d);if(node.parentElement!==d){node.querySelectorAll('details[open]').forEach(m=>m.open=false);d.prepend(node);}}else if(node.parentElement!==document.body)document.body.prepend(node);}
  async function flush(){if(window.studyOutputConnection?.flush)await window.studyOutputConnection.flush();else{const proof=await window.studyDraft?.flush?.();if(proof?.dirty)throw Error('Save or resolve the current changes before continuing.');}}
  async function leaveHome(){if(homeOpen())await window.projectLibrary.close();if(homeOpen())throw Error('Home is still open because the current work needs saving first.');}
  async function activate(k){
@@ -99,6 +99,7 @@
   return `<div class="ht-fgroup" role="group" aria-label="Brand or folder"><div class="ht-fh">Brand</div>${facetButton('data-ht-folder','','All brands',scoped.length,!folder)}${folders.map(([f,n])=>facetButton('data-ht-folder',f,f,n,folder===f)).join('')}</div><div class="ht-fgroup" role="group" aria-label="Status"><div class="ht-fh">Status</div>${facetButton('data-ht-status-filter','','Any status',inFolder.length,!statusFilter)}${statuses.map(([s,n])=>facetButton('data-ht-status-filter',s,s,n,statusFilter===s,true)).join('')}</div><div class="ht-fgroup" role="group" aria-label="Format"><div class="ht-fh">Format</div><p class="ht-fnote">Article, carousel and other format counts are not connected yet: they need each piece's outputs.</p></div><div class="ht-fgroup" role="group" aria-label="Show"><div class="ht-fh">Show</div>${shows.map(([v,l])=>facetButton('data-ht-show',v,l,base(v).length,show===v&&!folder)).join('')}</div>${folder||statusFilter||show!=='active'?'<button type="button" class="ht-clear" data-ht-clear>Clear filters</button>':''}<p class="ht-fnote">Brands are your folders. Folders and pins are browser-local filing.</p>`;
  }
  function decorateHome(d){
+  if(!d||d.dataset.plContext)return;
   if(!d.classList.contains('c3-home')){
    d.classList.add('c3-home');
    const title=d.querySelector('#pl-title');if(title){title.textContent='Home · every piece';title.classList.add('ht-sr');}

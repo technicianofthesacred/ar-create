@@ -83,6 +83,18 @@ function CompositionDocumentWorkspace({options,doc,change}:CompositionProps){
   const frame=event.target.closest<HTMLElement>('[data-frame-slot]'),slot=frame?.dataset.frameSlot;
   if(slot&&frame&&event.currentTarget.contains(frame)&&output?.placements.some(photo=>photo.slot===slot))setSelectedPhoto(slot);
  }
+ useEffect(()=>{
+  if(output?.kind!=='article')return;
+  const entry={outputId:output.id,focus:async(location:any)=>{
+   if(location.kind!=='article'||!output.placements.some(p=>p.slot===location.slot))throw Error('This saved article photograph is no longer available.');
+   setMode('photos');setSelectedPhoto(location.slot);
+   await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+   const frames=Array.from(canvas.current?.querySelectorAll<HTMLElement>('[data-frame-slot]')||[]).filter(el=>el.dataset.frameSlot===location.slot),frame=frames[location.slotOccurrence||0];
+   if(!frame)throw Error('The exact saved photograph occurrence is not rendered.');
+   frame.scrollIntoView({block:'center'});frame.focus({preventScroll:true});return {outputId:output.id,slot:location.slot,slotOccurrence:location.slotOccurrence||0};
+  }};
+  (window as any).studyCompositionFocus=entry;return()=>{if((window as any).studyCompositionFocus===entry)delete (window as any).studyCompositionFocus;};
+ },[output]);
  function focusPhoto(slot:string){setSelectedPhoto(slot);requestAnimationFrame(()=>{const frame=Array.from(canvas.current?.querySelectorAll<HTMLElement>('[data-frame-slot]')||[]).find(element=>element.dataset.frameSlot===slot);frame?.scrollIntoView({block:'center',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});frame?.focus({preventScroll:true});});}
  function addPhoto(cover=false){if(!output)return;let slot='cover';if(!cover){let n=1;while(output.placements.some(p=>p.slot==='photo-'+n))n++;slot='photo-'+n;}
   if(!output.placements.some(p=>p.slot===slot))placements([...output.placements,{slot,url:'',x:.5,y:.5,zoom:1,alt:cover?'Cover photograph':'Article photograph',paragraphId:cover?null:output.manuscript?.[Math.min(output.placements.filter(p=>p.slot!=='cover').length,(output.manuscript?.length||1)-1)]?.id||null}]);setMode('photos');focusPhoto(slot);

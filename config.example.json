@@ -7,5 +7,12 @@
   "transcriptionRuntime": null,
   "originalReaderBaseUrl": null,
   "editorialSkills": [],
-  "tools": {"python": null, "ytDlp": null, "firecrawl": null, "codex": null}
+  "tools": {
+    "python": null,
+    "ytDlp": null,
+    "firecrawl": null,
+    "codex": null
+  },
+  "transcriptLibrary": null,
+  "importedTranscriptOwner": null
 }

@@ -505,7 +505,8 @@ body.c3-tabs #app #workspace :is(#c3-read-insp,.ci-panel) .ci-go{background:none
 body.c3-tabs #app #workspace .document .docfooter{flex-wrap:wrap;gap:4px 14px}
 body.c3-tabs #app #workspace .document .docfooter::before{content:"Type straight into the page · select across paragraphs";order:-1;flex-basis:100%}
 /* The browser-only notice lives in the bottom bar; Write's own strip above the page keeps only errors or progress. */
-body.c3-tabs #app .workspace>.draft-bar :is(.draft-explanation,.draft-copy-row){display:none!important}
+/* Working-copy choices stay with their owner until automatic file selection is connected. */
+body.c3-tabs #app .workspace>.draft-bar .draft-explanation{display:none!important}
 #c3-crumb .cb-act{min-height:22px;padding:0 10px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c3-warn) 16%,transparent);color:var(--c3-warn);font:600 12px/1 var(--ar-ui);cursor:pointer}
 #c3-crumb .cb-act:hover{background:color-mix(in srgb,var(--c3-warn) 26%,transparent)}
 #c3-crumb .cb-act:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
@@ -539,11 +540,11 @@ body.c3-tabs[data-c3-stage="7"] #app #workspace .phaseReader>details.flow-retain
    24px section headings, Notion's ~700px text width. On-screen Write, Read and Check only: slide templates, portrait
    previews and exports keep their own type. --c3-doc-scale is the reader's own text size (A- / A+ in the bottom bar). */
 body.c3-tabs{--c3-doc-font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI Variable","Segoe UI",Helvetica,Arial,sans-serif;--c3-doc-scale:1}
-body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-family:var(--c3-doc-font)!important;font-size:calc(16px * var(--c3-doc-scale))!important;line-height:1.5!important;letter-spacing:0!important;margin:0 0 calc(10px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-family:var(--c3-doc-font)!important;font-size:calc(16px * var(--c3-doc-scale))!important;line-height:1.5!important;letter-spacing:0!important;margin:0 0 calc(10px * var(--c3-doc-scale))}
 body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h1,h2,h3,h4){font-family:var(--c3-doc-font)!important;letter-spacing:-.01em!important;color:var(--ink)!important}
-body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(40px * var(--c3-doc-scale))!important;font-weight:700!important;line-height:1.2!important;margin:0 0 calc(14px * var(--c3-doc-scale))!important}
-body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(24px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(28px * var(--c3-doc-scale)) 0 calc(6px * var(--c3-doc-scale))!important}
-body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(20px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(22px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))!important}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(40px * var(--c3-doc-scale))!important;font-weight:700!important;line-height:1.2!important;margin:0 0 calc(14px * var(--c3-doc-scale))}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(24px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(28px * var(--c3-doc-scale)) 0 calc(6px * var(--c3-doc-scale))}
+body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(20px * var(--c3-doc-scale))!important;font-weight:600!important;line-height:1.3!important;margin:calc(22px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))}
 @media(min-width:851px){
  body.c3-tabs #app #workspace :is(.desk.c3-insp-desk>.document.prose-document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-layout .wn-check-manuscript>:is(.document,.recordPage)){padding:72px max(64px,calc((100% - 708px * var(--c3-doc-scale)) / 2)) 120px!important}
 }
@@ -560,9 +561,9 @@ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.docum
 @media(max-width:650px){
  body.c3-tabs #app #workspace :is(.desk,.wn-check-layout,.phaseReader){padding-left:0!important;padding-right:0!important}
  body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){padding:20px 16px 64px!important;margin:0!important;max-width:none!important;width:auto!important}
- body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-size:calc(15px * var(--c3-doc-scale))!important;line-height:1.5!important;margin:0 0 calc(8px * var(--c3-doc-scale))!important}
- body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(26px * var(--c3-doc-scale))!important;line-height:1.2!important;margin:0 0 calc(10px * var(--c3-doc-scale))!important}
- body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(19px * var(--c3-doc-scale))!important;margin:calc(20px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))!important}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(p,li,.shared-prose-block,blockquote){font-size:calc(15px * var(--c3-doc-scale))!important;line-height:1.5!important;margin:0 0 calc(8px * var(--c3-doc-scale))}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{font-size:calc(26px * var(--c3-doc-scale))!important;line-height:1.2!important;margin:0 0 calc(10px * var(--c3-doc-scale))}
+ body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h2{font-size:calc(19px * var(--c3-doc-scale))!important;margin:calc(20px * var(--c3-doc-scale)) 0 calc(4px * var(--c3-doc-scale))}
  body.c3-tabs #app #workspace :is(.desk .document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h3,h4){font-size:calc(17px * var(--c3-doc-scale))!important}
  body.c3-tabs #app #workspace .document>.reference,body.c3-tabs #app #workspace .document .draft-surface-document-meta>span,body.c3-tabs #app #workspace .phaseReader>.draft-row>:not(button){display:none!important}
  body.c3-tabs #app #workspace .document .draft-tabs .draft-action{min-height:26px!important;padding:0 10px!important;font-size:12px!important}

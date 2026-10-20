@@ -1,0 +1,26 @@
+/* Inherit the current document face and native controls; limit new styling to reading density. */
+.source-reader { min-width:0; margin:0 0 1.2rem; }
+.source-reader-toolbar,.source-reader-actions,.source-reader-title { display:flex; align-items:center; gap:.55rem; flex-wrap:wrap; }
+.source-reader-selector { display:flex; align-items:center; gap:.5rem; min-width:0; flex:1; }
+.source-reader-selector select { max-width:100%; min-width:0; flex:1; }
+.source-reader-title { margin:.7rem 0 .4rem; justify-content:space-between; }
+.source-reader-title h3 { margin:0; }
+.source-reader [data-source-reader-status]:empty { display:none; }
+.source-reader .conversation-notes { margin:.4rem 0 .8rem; }
+.source-reader .conversation-note-section h3 { font:inherit; font-weight:600; margin:.45rem 0 .15rem; }
+.source-reader .conversation-note-section ul { margin:.15rem 0 .35rem; padding-left:1.2rem; }
+.source-reader .note-link { border:0; padding:0; background:transparent; color:inherit; font:inherit; text-align:left; text-decoration:underline; text-underline-offset:.15em; cursor:pointer; }
+.source-reader .source-dialogue-group { margin:.45rem 0; }
+.source-reader .source-speaker { display:inline; margin:0 .45em 0 0; }
+.source-reader .source-remark { display:inline; white-space:pre-wrap; cursor:pointer; margin:0 .3em 0 0; border-radius:2px; overflow-wrap:anywhere; }
+.source-reader .source-remark:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+.source-reader [data-source-reader-highlight] { background:color-mix(in srgb, currentColor 16%, transparent); color:inherit; }
+.source-reader .source-dialogue-boundary { display:block; border-top:1px solid var(--line,#ccc); padding-top:.5rem; }
+.source-reader [data-source-reader-edit] { display:grid; gap:.5rem; margin:.6rem 0; }
+.source-reader [data-source-reader-edit] label { display:grid; gap:.25rem; font-family:var(--font-sans, sans-serif); }
+.source-reader [data-source-reader-edit] input,.source-reader [data-source-reader-edit] textarea { width:100%; box-sizing:border-box; font:inherit; }
+.source-reader [data-source-reader-edit] textarea { resize:vertical; }
+.source-reader .source-reader-conflict,.source-reader .conversation-notes-stale { padding:.5rem 0; font-family:var(--font-sans,sans-serif); }
+.source-reader-original,.source-reader-details,.source-reader-legacy { margin:.5rem 0; font-size:.9em; }
+.source-reader-original p { white-space:pre-wrap; }
+@media(max-width:600px) { .source-reader-selector { flex-basis:100%; align-items:flex-start; } .source-reader-title { align-items:flex-start; } }

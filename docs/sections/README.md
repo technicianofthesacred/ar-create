@@ -1,6 +1,6 @@
 # AR Create living section briefs
 
-Updated 13 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
+Updated 20 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
 
 Read [the product overview](../PRODUCT.md) for the shared purpose and S01–S12 / C01–C07 requirement map. This directory defines detailed intent; Delivery’s private checklist records current implementation and verification. Each assignment references both its brief and current checklist row.
 
@@ -86,3 +86,7 @@ The author explicitly expects a substantial, well-organized reusable library, de
 ## 18 October — Connected next-pass design plan
 
 [Library, ideas and tea projects](../superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md) proposes one shared connection map, focused development of each experience and a combined journey review. Primary scope is S01–S04 with existing output contracts preserved. This is future design work only; do not restart the active Claude pass or treat the plan as approved implementation.
+
+## 20 October — Design-ready supporting brief set
+
+Provide all twelve briefs with the next Claude Design handoff, including their purpose, tools, decisions and dated rationale. Latest human instruction explicitly permits designing the complete functional surface before every connection is finished. Keep working/verified, prepared-unmounted, planned and external states distinct through the same integration list and flow map. Builder-owned native verification remains required for implementation claims; it is not a gate that hides intended controls from the designer. Preserve the current Claude build, and continue unfinished wiring in parallel. The [supporting-document reading index](../WORKSPACE.md#supporting-documents-for-the-next-claude-design-pass) explains where to go deeper.

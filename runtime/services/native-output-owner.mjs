@@ -182,7 +182,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const start = await native.read({ bindingId: input.sourceBindingId, parentStudyId: input.parentStudyId });
       if(shortKind(input.kind)&&!input.expectedNative)input.expectedNative=clone(start.expected);
       if(!same(start.expected,input.expectedNative))fail("Exact starting native snapshot required before output registration.");
-      const preflight=mapper.capture(start,{projectId:t.projectId,documentId:t.documentId,outputId:input.operationId});
+      const preflight=mapper.capture(start,{projectId:t.projectId,documentId:t.documentId,outputId:input.operationId},shortKind(input.kind)?{outputKind:input.kind}:{});
       if(!shortKind(input.kind)&&!preflight.ready)fail("Native layout is held before output registration: "+preflight.held.map(x=>x.reason).join("; "));
       if (textKind(input.kind)) {
         if (input.kind === "article" && input.sourceBindingId === input.rootBindingId && (!start.binding.canonicalOutputId || start.binding.canonicalOutputId === input.operationId)) snapshot = await native.registerOutput({ bindingId: input.rootBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative });

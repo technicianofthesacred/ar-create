@@ -1,3 +1,5 @@
+For the current C3 / Round 2 design work, start at [CLAUDE-DESIGN-START.md](CLAUDE-DESIGN-START.md) on current `main`; no ZIP is required. Preserve the actual installed/candidate/history distinctions in its status index.
+
 # AR Create project instructions
 
 Start with [docs/PRODUCT.md](docs/PRODUCT.md) for product purpose and requirements; obtain the latest Delivery checklist row/current-state for the assigned work.

@@ -1,3 +1,4 @@
+import {createInquiryProjectSelectors} from './services/inquiry-project-selectors.mjs';
 import {createNativeOutputExports} from './services/native-output-exports.mjs';
 import {createNativeOutputFactory} from './services/native-output-factory.mjs';
 import {sharedArticlesEnabled} from './services/shared-article-activation.mjs';
@@ -15,6 +16,18 @@ import {createStudyDerivedFindings} from './services/study-derived-findings.mjs'
 import {createStudyOriginals} from './services/study-originals.mjs';
 import {createStudyDraftCopies} from './services/study-draft-copies.mjs';
 import * as studyPhotoFiles from './services/files.mjs';
+import {createLibraryWorkReferences} from './services/library-work-references.mjs';
+import {createProjectMembership} from './services/project-membership.mjs';
+import {createCurrentUnderstandingResolver} from './services/current-understanding.mjs';
+import {createInquiryInterfaceRoutes} from './services/inquiry-interface-routes.mjs';
+import {createContinuityInterfaceRoutes} from './services/continuity-interface-routes.mjs';
+import {createWorkContinuity} from './services/work-continuity.mjs';
+import {conceptContextProjection} from './services/concept-markdown.mjs';
+import {createMediaUsage} from './services/media-usage.mjs';
+import {outputSpec as mediaArticleSpec} from './services/media-article-spec.mjs';
+import mediaCarouselTemplates from './src/donors/mag/carousel/ig-templates.js';
+import {createSharePreparation} from './services/share-preparation.mjs';
+import {outputPrivatePrefix} from './output-records.mjs';
 import {createStudyPhotos} from './services/study-photos.mjs';
 import {createStudyOwnedPhotoBindings} from './services/study-owned-photo-bindings.mjs';
 import {createConceptWork} from './services/concept-work.mjs';
@@ -30,6 +43,9 @@ import { createStore, StateError, MAX_BODY_BYTES } from './store.mjs';
 import { createResearchMaterial } from './services/research-material.mjs';
 import {createWritingTemplates} from './services/writing-template.mjs';
 import { createLibrary } from './services/library.mjs';
+import {createRetainedTranscriptCatalog} from './services/retained-transcript-catalog.mjs';
+import {createMaterialFolder} from './services/material-folder.mjs';
+import {createMaterialAlbums} from './services/material-albums.mjs';
 import { createGuidance } from './services/guidance.mjs';
 import { createRecordings } from './services/recordings.mjs';
 import {createTranscriptToolConnection} from './services/transcript-tool-connection.mjs';
@@ -49,6 +65,7 @@ import { createICloudAlbums, isICloudAlbum } from './services/icloud-albums.mjs'
 import { createReadStream } from 'node:fs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const publicStudyModules=new Set(['/document-study/connected-workspace.mjs','/document-study/inquiry-workspace.mjs','/document-study/work-continuity-panel.mjs','/document-study/continuity-browser-recovery.mjs']);
 const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
@@ -99,7 +116,7 @@ async function staticFile(publicDir, pathname) {
     throw new StateError('File is not available.', 404);
   }
   if (!segments.length || pathname.endsWith('/')) segments.push('index.html');
-  const type = types[path.extname(segments.at(-1)).toLowerCase()];
+  const type = types[path.extname(segments.at(-1)).toLowerCase()]||(publicStudyModules.has(pathname)?'text/javascript; charset=utf-8':null);
   if (!type) throw new StateError('File is not available.', 404);
   let current = publicDir;
   for (const segment of [null, ...segments]) {
@@ -135,7 +152,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, packageView=null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null } = {}) {
   dataDir = path.resolve(dataDir);
   const store = await createStore({ dataDir, sharedArticles, publicationFault });
   try {
@@ -152,8 +169,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const magazine=createMagazinePortfolio({roots:magazineRoots});
   const magazineRead=async operation=>{try{return await operation();}catch(error){if([400,404,409,413,415].includes(error.status))throw new StateError(error.message,error.status);throw error;}};
   const ingestion = createUrlIngestion({ dataDir, ...(ingestionOptions || {}) });
-  let recordings;
-  const library = createLibrary({ dataDir, connections, extraction, legacyState: () => store.get(), urlIngestion: extraction ? null : source => ingestion.schedule(source), ingestionState: id => ingestion.state(id), recordingState: id => recordings?.state(id), recordingSourceSnapshot: source => recordings?.sourceSnapshot?.(source) });
+  let recordings,libraryWorkReferences=null,projectMembership=null;
+  const library = createLibrary({ dataDir, workReferences:{read:input=>{if(!libraryWorkReferences)throw new StateError('Existing work references are unavailable.',503);return libraryWorkReferences.read(input);},measure:input=>{if(!libraryWorkReferences)throw new StateError('Measured media usage is unavailable.',503);return libraryWorkReferences.measure(input);}},projectAssociations:{read:input=>{if(!projectMembership)throw new StateError('Named Project authority is unavailable.',503);return projectMembership.readAuthority(input);}}, connections, retainedCatalog:transcriptLibrary?createRetainedTranscriptCatalog(transcriptLibrary):null, extraction, legacyState: () => store.get(), urlIngestion: extraction ? null : source => ingestion.schedule(source), ingestionState: id => ingestion.state(id), recordingState: id => recordings?.state(id), recordingSourceSnapshot: source => recordings?.sourceSnapshot?.(source) });
   const writingTemplates=createWritingTemplates({store,library,magazine:{read:input=>magazineRead(()=>magazine.read(input))}});
   const connectedFolders = createConnections({dataDir,library,connections,editable:connectionsEditable,...(!connectionsEditable?{reason:'Folders are managed by the server startup configuration.'}:{})});
   const researchMaterial = createResearchMaterial({dataDir,library});
@@ -163,10 +180,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const transcriptTools=createTranscriptToolConnection({dataDir,library,recordings});
   const albums = createICloudAlbums({ dataDir, library, ...(ingestionOptions?.albumFetch ? { fetcher: ingestionOptions.albumFetch } : {}) });
   const studyBindings=createStudyBindings({dataDir,store});
+  const materialFolder=createMaterialFolder({dataDir,bindings:studyBindings,library,store,...(materialHostActions?.openFolder?{openFolder:materialHostActions.openFolder}:{})});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
   const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
   const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation}):null;
-  const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts}):null;
+  const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts,library,...sharedArticles?{readOutputDocument:input=>store.readArticle(input)}:{}}):null;
+  const collectionDirection=studyHumanDirection||createStudyHumanDirection({dataDir,library});
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
   const requests = createRequestPreviews({ dataDir, store, library, guidance, researchMaterial, researchAnswers:answerContext,...(studyHumanDirection?{humanDirection:studyHumanDirection}:{}) });
   const sharedArticleBridge=sharedArticles?createSharedArticleBridge({dataDir,store,requests,parseArticle,guidance,writingTemplates}):null;
@@ -181,13 +200,23 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const passageRevisions = createPassageRevisions({dataDir,store,requests,terminal,execution});
   researchAnswers=createResearchAnswers({dataDir,store,library,requests,execution});
   const firstFlow=createFirstFlow({dataDir,store,library,recordings,requests,execution});
+  const materialAlbums=createMaterialAlbums({library,albums,bindings:studyBindings,firstFlow,store});
+  const sourceSessions=importedSourceFactory?await importedSourceFactory():null;
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts}):null;
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
   const createStudyCollection=async input=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};};
   const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
   const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings}):null;
   const studyOutputs=studyOutputFactory?.owner;
+  const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
+  const studyShare=studyOutputs?createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix}):null;
   const studyOutputExports=studyOutputFactory?createNativeOutputExports({dataDir,store,outputs:studyOutputs,resolveScope:studyOutputFactory.scope.resolve,library,exports,carousel}):null;
+  libraryWorkReferences=createLibraryWorkReferences({store,outputs:studyOutputs||{read(){throw new StateError('Native output authority is unavailable.',503);}},mediaUsage:studyMediaUsage});
+  projectMembership=studyDrafts&&studyOwnedPhotoBindings&&studyOutputs?createProjectMembership({store,bindings:studyBindings,drafts:studyDrafts,ownedPhotos:studyOwnedPhotoBindings,outputs:studyOutputs,library,workReferences:libraryWorkReferences}):null;
+  const currentUnderstanding=createCurrentUnderstandingResolver({library,humanDirection:studyHumanDirection||collectionDirection,collectionDirection,nativeOutputs:studyOutputs,nativeWords:studyDrafts,carouselWords:store,conceptContextProjection,workReferences:libraryWorkReferences});
+  const workContinuity=createWorkContinuity({dataDir,direction:studyHumanDirection||collectionDirection,outputs:studyOutputs,outputExports:studyOutputExports,understanding:currentUnderstanding});
+  const inquiryInterface=createInquiryInterfaceRoutes({library,direction:collectionDirection,projectMembership:projectMembership||{read(){throw new StateError('Named Project authority is unavailable.',503);},readAuthority(){throw new StateError('Named Project authority is unavailable.',503);}},understanding:currentUnderstanding,listProjectSelectors:studyDrafts&&projectMembership?createInquiryProjectSelectors({drafts:studyDrafts,bindings:studyBindings,readAuthority:endpoint=>projectMembership.readAuthority(endpoint)}):async()=>[]});
+  const continuityInterface=createContinuityInterfaceRoutes({continuity:workContinuity,understanding:currentUnderstanding,outputExports:studyOutputExports});
   const studyPhotos=studyOwnedPhotoBindings?createStudyPhotos({dataDir,library,runtime:studyPhotoFiles,resolveBinding:projectId=>studyOwnedPhotoBindings.resolve(projectId)}):null;
   const studyResearchChoices=studyDrafts?createStudyResearchChoices({dataDir,originals:studyOriginals,drafts:studyDrafts}):null;
   const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices}):null;
@@ -211,10 +240,19 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'"+(new URL(request.url,'http://localhost').pathname==='/document-study/index.html'?" 'unsafe-inline'":"")+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
     try {
       if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.', 403);
-      if (packageView && request.method==='GET' && new URL(request.url,'http://localhost').pathname === '/document-study/package-config.js') {response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
       let pathname;
       try { pathname = decodeURIComponent((request.url || '/').split('?')[0]); }
       catch { throw new StateError('Invalid request path.'); }
+      if(await continuityInterface.handle(request,response))return;
+      if(pathname.startsWith('/api/inquiries/')){
+        if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
+        if(request.headers.origin&&request.headers.origin!==new URL(request.url,'http://'+request.headers.host).origin)throw new StateError('Foreign-origin inquiry request refused.',403);
+        const url=new URL(request.url,'http://'+request.headers.host),suffix=pathname.slice('/api/inquiries'.length);let input;
+        if(request.method==='GET'){if([...url.searchParams.keys()].some(key=>key!=='input')||url.searchParams.getAll('input').length!==1||url.searchParams.get('input').length>32768)throw new StateError('Use one bounded inquiry selector.',400);try{input=JSON.parse(url.searchParams.get('input'));}catch{throw new StateError('Inquiry selector must be JSON.',400);}}
+        else if(request.method==='POST')input=await body(request,1200*1024);
+        else throw new StateError('Unsupported inquiry method.',405);
+        const result=await inquiryInterface.handle({method:request.method,path:suffix,input});return json(response,result.status,result.body);
+      }
       if(pathname==='/api/shared-carousels/capabilities'&&request.method==='GET')return json(response,200,{enabled:sharedArticles});
       if(pathname.startsWith('/api/shared-carousels')){
         if(!sharedCarouselBridge)throw new StateError('Shared carousel review is disabled in this workspace.',409);
@@ -369,6 +407,14 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         '/api/study-research/findings': {GET:()=>draftCall(()=>studyDerivedFindings.read({projectKey:url.searchParams.get('projectKey'),parentStudyId:url.searchParams.get('parentStudyId')}))},
         '/api/study-research/choices': {GET:()=>draftCall(()=>studyResearchChoices.read({projectKey:url.searchParams.get('projectKey'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyResearchChoices.save(input))},
         '/api/study-draft/root-recovery': {GET:()=>draftCall(()=>studyDrafts.inspectRoots({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyDrafts.recoverRoots(input))},
+        '/api/study/source-context': {GET:async()=>{if([...url.searchParams.keys()].some(key=>key!=='id')||url.searchParams.getAll('id').length!==1)throw new StateError('Select one existing Library source.',400);const source=await library.snapshot(url.searchParams.get('id'),{includeBody:true});return {sourceId:source.id,hash:source.hash,title:source.title||source.name||'Source',text:typeof source.text==='string'?source.text:null,missing:!!source.missing};}},
+        '/api/study/media-usage': {GET:()=>draftCall(()=>{if(!studyMediaUsage)throw new StateError('Saved media usage is unavailable.',503);const input=Object.fromEntries(url.searchParams);input.sourceIds=url.searchParams.getAll('sourceId');delete input.sourceId;return studyMediaUsage.read(input);})},
+        '/api/study/media-usage/resolve': {GET:()=>draftCall(()=>{if(!studyMediaUsage)throw new StateError('Saved media usage is unavailable.',503);return studyMediaUsage.resolve(Object.fromEntries(url.searchParams));})},
+        '/api/study/share/recipients': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.list(Object.fromEntries(url.searchParams));})},
+        '/api/study/share': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.read(Object.fromEntries(url.searchParams));})},
+        '/api/study/share/save': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.save(input);})},
+        '/api/study/share/fact': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.appendFact(input);})},
+        '/api/study/share/undo': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.undo(input);})},
         '/api/study/outputs': {GET:()=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.read({rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('selectedOutputId')?{selectedOutputId:url.searchParams.get('selectedOutputId')}:{})});})},
         '/api/study/outputs/review-words': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.reviewCarouselWords(input);})},
         '/api/study/outputs/export': {POST:input=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const {kind,...payload}=input;if(!['article','carousel','post','product-listing'].includes(kind))throw new StateError('Choose a supported output export.',400);const result=kind!=='carousel'?await studyOutputExports.saveArticle(payload):await studyOutputExports.saveCarousel(payload,'http://127.0.0.1:'+server.address().port);return decorateOutputExports(result,input);})},
@@ -388,6 +434,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         '/api/study-draft/recover': {POST:input=>draftCall(()=>studyDrafts.recover(input))},
         '/api/study-draft/check': {GET:()=>draftCall(()=>studyDraftChecks.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})})),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
 
+        '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
+        '/api/source-sessions/edit': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.edit(input);}},
+        '/api/source-sessions/undo': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.undo(input);}},
+        '/api/material/folder/open': {POST:input=>materialFolder.open(input)},
+        '/api/material/album': {POST:input=>materialAlbums.add(input)},
+        '/api/first-flow/binding': {GET:()=>studyBindings.lookup({projectKey:url.searchParams.get('projectKey')})},
         '/api/first-flow/select': {POST:input=>studyBindings.select(input)},
         '/api/first-flow': {GET:async()=>({...await firstFlow.get({projectId:url.searchParams.get('projectId')||store.get().project.id}),researchAvailable:researchEnabled})},
         '/api/first-flow/source-review': {POST:input=>firstFlow.reviewSources(input)},

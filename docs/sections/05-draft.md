@@ -47,3 +47,13 @@ Let the author download the current saved working draft without silently resolvi
 ## 16 October — Adopted Write / Read / Check continuity
 
 Use continuous modes of the same existing selected output/editor; preserve current words and valid passage/selection/position across mode switches where supported. Retain truthful saved/unsaved/earlier identity, existing marked-word review, direct edits, versions, history and exact Undo. Keep compact selected-piece context, Outputs and a meaningful Continue entrance available without repeating setup. No new editor, duplicate manuscript authority or automatic real wording acceptance.
+
+## 20 October — One working text and session history
+
+C01/C04/C05/C06. Adopted from the approved C3 writing handoff. Each piece has one project-backed working text: the first keystroke creates or opens its maintained working file automatically. Keep the original read-only. The local safety buffer retains each keystroke ahead of guarded file saves; it is not a selectable competing manuscript. Failed/offline saves preserve exact pending requests and newer text, retry safely, and cannot overwrite another piece or an outside revision. Show a human saved time or an honest unsaved/retrying state.
+
+Reconcile earlier local writing once: identical text can clear its redundant buffer after verified durable equality; different text needs a readable comparison and an explicit bring-in or discard decision. Keep both until that decision succeeds; never silently delete or replace wording. First inspect and report whether today’s Open action carries the earlier words into the working file.
+
+History uses the existing operation receipts and correspondence inverses, with human timestamps and writing sessions. Retain every available version, without a twelve-entry display/retention cap. Preview a selected version read-only, and restore it as a new guarded operation while keeping intervening history. If receipt coverage cannot reconstruct an older version exactly, show the limitation rather than fabricate a snapshot. Do not add a second history authority, editor engine, dependency or silent source writeback.
+
+Acceptance: invented piece first typing → its owned project file; save/close/fresh browser reading the same owner → exact words; failed save and concurrent change retain both contributions; earlier local-text match and mismatch paths; dated session preview and older-version restore with new operation and exact saved Undo; sibling/source preservation. A second browser is not evidence of remote device synchronization. Real-phone and remote/offline access remain separately evidenced. C3 appearance approval does not itself prove these functions.

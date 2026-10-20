@@ -13,4 +13,5 @@ await build({absWorkingDir:runtime,entryPoints:['../scripts/gen-capabilities-por
 console.log('Document-study runtime and template wrappers built from reviewed source.');
 
 await import('./build-native-output-owner.mjs');
+await import('./build-media-article-spec.mjs');
 await import('./build-study-output-canvas.mjs');

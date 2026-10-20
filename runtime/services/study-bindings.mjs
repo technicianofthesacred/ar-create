@@ -6,7 +6,16 @@ import {atomicWrite,readJson,digest,ensurePrivateDirectory} from './files.mjs';
 // exactly that ID, never a title or whichever piece happens to be active.
 export function createStudyBindings({dataDir,store,afterCreate=null}){
  const dir=ensurePrivateDirectory(dataDir,'study-project-bindings');let queue=Promise.resolve();
- return {select(input){const captured=structuredClone(input);const work=queue.then(async()=>{
+ return {async lookup({projectKey}={}){
+  if(typeof projectKey!=='string'||!projectKey.trim()||projectKey.length>256||/[\x00-\x1f\x7f]/.test(projectKey))throw new StateError('Explicit study project identity required.',400);
+  const binding=readJson(path.join(dir,digest(projectKey)+'.json'),null);
+  if(!binding)throw new StateError('No saved Material connection for this project.',404);
+  const uuid=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+  if(binding.schema!=='ar-create.study-binding.v1'||binding.status!=='ready'||binding.projectKey!==projectKey||!uuid.test(binding.projectId||'')||!uuid.test(binding.documentId||''))throw new StateError('Saved Material connection needs recovery; no replacement was created.',409);
+  const {pieces}=await store.listPieces();
+  if(pieces.filter(p=>p.id===binding.projectId&&p.documentId===binding.documentId).length!==1)throw new StateError('Saved Material project/document is unavailable; existing identity preserved.',409);
+  return {projectKey,projectId:binding.projectId,documentId:binding.documentId};
+ },select(input){const captured=structuredClone(input);const work=queue.then(async()=>{
   const {projectKey,title,operationId}=captured||{};
   if(typeof projectKey!=='string'||!projectKey.trim()||projectKey.length>256||/[\x00-\x1f\x7f]/.test(projectKey)||typeof title!=='string'||!title.trim()||title.length>256||!/^([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i.test(operationId||''))throw new StateError('Choose a named study project and operation ID.',400);
   const file=path.join(dir,digest(projectKey)+'.json');let binding=readJson(file,null);

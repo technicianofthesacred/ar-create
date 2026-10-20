@@ -168,3 +168,11 @@ test('All pieces finder opens a piece through the library path; theme switch onl
  assert.equal(f.w.state.theme,'dark');
  assert.equal(JSON.stringify(f.w.state.projects),before);
 });
+
+
+test('context detours retain their actual header/content and are never decorated as Home',async()=>{
+ const f=fixture(),content=f.w.document.createElement('div');content.innerHTML='<textarea>Unsent source correction</textarea>';
+ f.w.projectLibrary.openContext({title:'Source',content,beforeClose:()=>true});f.w.homeTabs.paint();
+ const d=f.w.document.getElementById('project-library');assert.equal(d.dataset.plContext,'true');assert.equal(d.classList.contains('c3-home'),false);assert.equal(d.querySelector('#pl-title').textContent,'Source');assert.equal(d.querySelector('textarea'),content.querySelector('textarea'));assert.equal(d.querySelector('.ht-facets'),null);assert.notEqual(f.w.document.getElementById('c3-tabstrip').parentElement,d);
+ await f.w.projectLibrary.close();await f.w.projectLibrary.open();f.w.homeTabs.paint();assert.equal(d.dataset.plContext,undefined);assert.equal(d.classList.contains('c3-home'),true);assert.ok(d.querySelector('[data-pl-search]'));
+});

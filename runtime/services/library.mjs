@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { StateError, MAX_BODY_BYTES } from '../store.mjs';
-import { readFolder, splitFrontmatter, slugifyName } from './wordforge-sources.mjs';
+import { readFolder, splitFrontmatter, slugifyName, readMeta, kindFor } from './wordforge-sources.mjs';
 import { normalizeSourceUrl } from './source-identity.mjs';
 import { createScraper } from './wordforge-firecrawl.mjs';
 import { atomicWrite, readJson, digest, safeRel, regular, resolveInside, ensurePrivateDirectory } from './files.mjs';
@@ -24,7 +24,7 @@ const now = () => new Date().toISOString();
 function string(value, label, max = MAX_BODY_BYTES) { if (typeof value !== 'string' || value.length > max) throw new StateError(`${label} must be text under ${max} characters.`); return value; }
 
 /** Adapted WordForge shelves and Board references, isolated from vault/db/runtime. */
-export function createLibrary({ dataDir, connections = [], legacyState = () => ({ project: { sources: [] } }), extraction = null, urlIngestion = null, ingestionState = null, recordingState = null, recordingSourceSnapshot = null }) {
+export function createLibrary({ dataDir, connections = [], legacyState = () => ({ project: { sources: [] } }), extraction = null, urlIngestion = null, ingestionState = null, recordingState = null, recordingSourceSnapshot = null, retainedCatalog = null, workReferences = null, projectAssociations = null }) {
   const scrape = extraction ? createScraper(extraction) : null;
   const owned = path.join(dataDir, 'library');
   fs.mkdirSync(owned, { recursive: true, mode: 0o700 });
@@ -35,7 +35,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if (!Array.isArray(entries) || entries.length > 64) throw new StateError('Invalid explicitly configured read-only roots.');
     const configured=[];
     for (const entry of entries) {
-      if (!entry || !/^[a-zA-Z0-9_-]+$/.test(entry.id) || ['library', 'recordings'].includes(entry.id) || configured.some(r => r.id === entry.id) || typeof entry.path !== 'string' || !path.isAbsolute(entry.path)) throw new StateError('Invalid explicitly configured read-only root.');
+      if (!entry || !/^[a-zA-Z0-9_-]+$/.test(entry.id) || (['library', 'recordings'].includes(entry.id) || entry.id === retainedCatalog?.id) || configured.some(r => r.id === entry.id) || typeof entry.path !== 'string' || !path.isAbsolute(entry.path)) throw new StateError('Invalid explicitly configured read-only root.');
       let configuredPath=entry.path,available=true;
       try{resolveInside(entry.path, '', { directory: true });configuredPath=fs.realpathSync(entry.path);}catch(error){if(error.code!=='ENOENT')throw error;available=false;}
       configured.push({ id: entry.id, name: entry.name || entry.id, path: configuredPath, writable: false,available });
@@ -43,6 +43,10 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     return configured;
   }
   roots.push(...configuredRoots(connections));
+  if (retainedCatalog !== null) {
+    if (!retainedCatalog || !/^[a-zA-Z0-9_-]+$/.test(retainedCatalog.id) || roots.some(root => root.id === retainedCatalog.id) || typeof retainedCatalog.path !== 'string' || !path.isAbsolute(retainedCatalog.path) || typeof retainedCatalog.entries !== 'function') throw new StateError('Invalid retained transcript catalog root.');
+    roots.push({id: retainedCatalog.id, name: retainedCatalog.name || retainedCatalog.id, path: retainedCatalog.path.replace(/^\/(tmp|var)(?=\/|$)/, '/private/$1'), writable: false, retainedCatalog: true});
+  }
   const indexFile = path.join(dataDir, 'library-index.json');
   let index = readJson(indexFile, { revision: 0, sources: [], collections: [], evidence: [], legacyImported: [] });
   if (!Array.isArray(index.sources) || !Array.isArray(index.collections) || !Array.isArray(index.evidence)) throw new Error('Invalid library index; files preserved.');
@@ -65,10 +69,201 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       throw error;
     }
   }
+  // Typed inquiry references remain in this same Library index; legacy relates-to stays untouched.
+  const TYPED_SCHEMA='ar-create.library-typed-relationship.v1',UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/;
+  const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
+  const same=(a,b)=>stable(a)===stable(b),fingerprint=value=>digest(stable(value));
+  const typedFail=(message,status=409)=>{throw new StateError(message,status);};
+  function typedFields(value,allowed){if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!allowed.includes(k)))typedFail('Use explicit relationship fields; caller paths and snapshots are refused.',400);}
+  const organizational=record=>record?.recordKind==='organizational-association';
+  const workEndpoint=value=>['workspace','piece'].includes(value?.kind);
+  function typedEndpoint(value,kinds){
+    typedFields(value,['kind','id',...['piece','project'].includes(value?.kind)?['rootBindingId','parentStudyId']:[]]);
+    if(value.kind==='output')typedFail('Use an explicit technical workspace or native Piece mapping; human Project identity is not inferred.',400);
+    if(!kinds.includes(value.kind)||!UUID.test(value.id||''))typedFail('Use a supported existing Library/work endpoint UUID.',400);
+    if(['piece','project'].includes(value.kind)&&(!UUID.test(value.rootBindingId||'')||typeof value.parentStudyId!=='string'||!value.parentStudyId||value.parentStudyId.length>256||/[\u0000-\u001f\u007f]/.test(value.parentStudyId)))typedFail('Native Piece references require trusted exact root and parent selectors.',400);
+  }
+  async function readProject(endpoint){
+    if(!projectAssociations?.read)typedFail('Narrow named Project authority adapter is not connected.');
+    const current=await projectAssociations.read(structuredClone(endpoint));
+    if(current?.schema!=='ar-create.named-project-authority.v1'||!same(current.endpoint,endpoint)||current.humanProjectMapping!=='existing-named-saved-workspace'||current.project?.id!==endpoint.id||!UUID.test(current.project?.documentId||'')||!HASH.test(current.proofHash||''))typedFail('Named Project authority returned another or unsupported binding.');return current;
+  }
+  async function checkProject(record){const current=await readProject(record.to);if(current.proofHash!==record.projectAnchor?.proofHash)typedFail('Named Project identity binding changed; review this association.');return current;}
+  async function readWork(endpoint){
+    if(!workReferences?.read)typedFail('Trusted existing workspace/native Piece adapter is not connected.');
+    const result=await workReferences.read(structuredClone(endpoint));
+    if(result?.schema!=='ar-create.library-work-target.v1'||!same(result.endpoint,endpoint)||!HASH.test(result.workHash||'')||!UUID.test(result.authority?.projectId||'')||!UUID.test(result.authority?.documentId||''))typedFail('Trusted work owner returned another or unavailable target.');return result;
+  }
+  async function checkWork(record){
+    if(!workEndpoint(record.to))return null;
+    const current=await readWork(record.to);if(current.freshness?.stale)typedFail('Selected native work edition requires review before adoption.');if(current.workHash!==record.workAnchor?.workHash)typedFail('Existing work edition changed; retain this reference and review before adoption.');
+    if(record.usageBasis==='measured-native'){
+      if(!workReferences?.measure)typedFail('Measured native usage adapter is not connected.');
+      const measured=await workReferences.measure({endpoint:record.to,sourceId:record.anchor.sourceId,sourceHash:record.anchor.sourceHash});if(!same(measured,record.usageProof))typedFail('Actual native placement usage changed; review the saved reference.');
+    }
+    return current;
+  }
+  function validateTypedIndex(value){
+    if(!value||!Number.isSafeInteger(value.revision)||value.revision<0||!['sources','collections','evidence'].every(k=>Array.isArray(value[k])))typedFail('Invalid Library index; existing bytes preserved.');
+    const legacy=value.collectionRelationships??[];
+    if(!Array.isArray(legacy)||legacy.some(r=>!r||typeof r.id!=='string'||typeof r.sourceId!=='string'||typeof r.destinationId!=='string'||r.sourceId===r.destinationId||!['accepted','detached'].includes(r.status)||r.relationshipType!=='relates-to')||new Set(legacy.map(r=>r.id)).size!==legacy.length)typedFail('Invalid legacy Library relationships; existing bytes preserved.');
+    const records=value.typedRelationships??[],ops=value.typedRelationshipOperations??[];
+    if(!Array.isArray(records)||records.length>5000||!Array.isArray(ops)||ops.length>10000||new Set(records.map(r=>r?.id)).size!==records.length||new Set(ops.map(o=>o?.operationId)).size!==ops.length)typedFail('Invalid or full typed relationship history; existing bytes preserved.');
+    for(const r of records){
+      if(r?.schema!==TYPED_SCHEMA||!UUID.test(r.id||'')||!(organizational(r)?r.relationshipType==='associated-with':['supports','challenges','explores','used-in'].includes(r.relationshipType))||!['proposed','accepted','detached'].includes(r.status)||typeof r.reason!=='string'||!r.reason.trim()||!organizational(r)&&(!HASH.test(r.anchor?.sourceHash||'')||!UUID.test(r.anchor?.sourceId||''))||!Array.isArray(r.history)||r.history.length>2000)typedFail('Invalid typed relationship; existing bytes preserved.');
+      if(organizational(r)){
+        typedEndpoint(r.from,['collection']);typedEndpoint(r.to,['project']);
+        if(!same(r.projectAnchor?.endpoint,r.to)||!HASH.test(r.projectAnchor?.proofHash||'')||r.projectAnchor?.project?.id!==r.to.id||!UUID.test(r.projectAnchor?.project?.documentId||'')||['anchor','workAnchor','usageProof','usageBasis'].some(k=>r[k]!==undefined))typedFail('Invalid source-free organizational association.');
+      }else{
+        if(r.recordKind!==undefined)typedFail('Unsupported typed relationship subtype.');
+      typedEndpoint(r.from,['source','evidence','collection']);typedEndpoint(r.to,['collection','workspace','piece']);
+      if(workEndpoint(r.to)){if(r.from.kind!=='collection'||r.anchor.collectionId!==r.from.id||!same(r.workAnchor?.endpoint,r.to)||!HASH.test(r.workAnchor?.workHash||'')||!['declared','measured-native'].includes(r.usageBasis)||r.usageBasis==='measured-native'&&(r.relationshipType!=='used-in'||!HASH.test(r.usageProof?.hash||'')))typedFail('Invalid existing-work relationship anchor.');}else if(r.from.kind==='collection')typedFail('Collection context requires an existing work target.');
+      if(r.from.kind==='source'&&r.from.id!==r.anchor.sourceId||r.from.kind==='evidence'&&(r.from.id!==r.anchor.evidenceId||!HASH.test(r.anchor.evidenceHash||'')))typedFail('Invalid typed source/evidence anchor; existing bytes preserved.');
+      }
+      let previous=null;
+      for(const [i,event]of r.history.entries()){
+        const state=v=>v&&['proposed','accepted','detached'].includes(v.status)&&typeof v.reason==='string'&&!!v.reason.trim();
+        if(!UUID.test(event?.operationId||'')||!['propose','change','undo'].includes(event.action)||!['human','agent'].includes(event.actor)||i===0&&(event.action!=='propose'||event.before!==null)||i>0&&(event.action==='propose'||event.actor!=='human'||!state(event.before)||!same({status:event.before.status,reason:event.before.reason},previous))||!state(event.after)||!ops.some(op=>op.operationId===event.operationId&&op.relationshipId===r.id))typedFail('Invalid typed relationship history; existing bytes preserved.');
+        previous={status:event.after.status,reason:event.after.reason};
+      }
+      if(!previous||!same(previous,{status:r.status,reason:r.reason}))typedFail('Typed relationship state no longer matches its saved history.');
+    }
+    for(const op of ops)if(!UUID.test(op?.operationId||'')||!UUID.test(op.relationshipId||'')||!HASH.test(op.fingerprint||'')||!Number.isSafeInteger(op.resultRevision))typedFail('Invalid typed operation receipt; existing bytes preserved.');
+    return value;
+  }
+  function loadTyped(){
+    const file=resolveInside(dataDir,'library-index.json',{missing:true});
+    const bytes=fs.existsSync(file)?(regular(file),fs.readFileSync(file,'utf8')):null;
+    let value;try{value=bytes===null?structuredClone(index):JSON.parse(bytes);}catch{typedFail('Cannot read Library index; existing bytes preserved.');}
+    validateTypedIndex(value);index=value;return {value,bytes,hash:digest(bytes??'')};
+  }
+  function endpointExists(value,endpoint){
+    if(workEndpoint(endpoint))typedFail('Work endpoints must resolve through the trusted existing owner.');
+    const rows=value[{source:'sources',evidence:'evidence',collection:'collections'}[endpoint.kind]];
+    const matches=rows.filter(row=>row.id===endpoint.id);if(matches.length!==1)typedFail('Exact Library endpoint was not found or is ambiguous.',404);return matches[0];
+  }
+  async function sourceVersion(value,sourceId){
+    const rows=value.sources.filter(s=>s.id===sourceId);if(rows.length!==1||rows[0].missing||rows[0].managedTerminalSnapshot)return {available:false,hash:null};
+    try{const file=checkedFile(rows[0]),before=regular(file),hash=await streamHash(file),after=regular(file);if(fileStamp(before)!==fileStamp(after))typedFail('Source changed during relationship read.');return {available:true,hash};}
+    catch(error){if(error.status===409)throw error;if([403,404,503].includes(error.status)||error.code==='ENOENT')return {available:false,hash:null};throw error;}
+  }
+  const evidenceHash=card=>fingerprint({sourceId:card.sourceId,sourceHash:card.sourceHash,quote:card.quote,locator:card.locator,kind:card.kind});
+  async function associationView(record){
+    let projectAvailable=true,projectChanged=false;try{const current=await readProject(record.to);projectChanged=current.proofHash!==record.projectAnchor.proofHash;}catch(error){if(![400,403,404,409,503].includes(error.status))throw error;projectAvailable=false;}
+    return {...structuredClone(record),review:{needed:!projectAvailable||projectChanged,projectAvailable,projectChanged,factVerified:false,nativeUsageVerified:false,basis:'Explicit organizational association only; no source-version, usage, direction inheritance or approval is implied.'}};
+  }
+  async function typedView(value,record){
+    if(organizational(record))return associationView(record);
+    const current=await sourceVersion(value,record.anchor.sourceId),collection=value.collections.find(c=>c.id===(workEndpoint(record.to)?record.from.id:record.to.id)),member=!!collection?.sourceIds?.includes(record.anchor.sourceId),card=record.anchor.evidenceId?value.evidence.find(c=>c.id===record.anchor.evidenceId):null;
+    const sourceChanged=current.available&&current.hash!==record.anchor.sourceHash,evidenceChanged=!!record.anchor.evidenceId&&(!card||evidenceHash(card)!==record.anchor.evidenceHash);
+    let workAvailable=true,workChanged=false,nativeUsageVerified=false,workReason=null;
+    if(workEndpoint(record.to)){try{const work=await readWork(record.to);workChanged=work.workHash!==record.workAnchor.workHash;if(record.usageBasis==='measured-native'&&!sourceChanged&&current.available&&!workChanged){await checkWork(record);nativeUsageVerified=true;}}catch(error){if(![400,403,404,409,503].includes(error.status))throw error;workAvailable=false;workReason='Existing work/placement proof is unavailable or changed; review this retained reference.';}}
+    return {...structuredClone(record),review:{needed:!current.available||sourceChanged||evidenceChanged||!member||!workAvailable||workChanged,sourceChanged,evidenceChanged,sourceAvailable:current.available,currentSourceHash:current.hash,collectionAvailable:!!collection,member,workAvailable,workChanged,workReason,factVerified:false,nativeUsageVerified,basis:nativeUsageVerified?'Actual saved native placement only; factual support is not certified.':'Explicit declared relationship; factual support and native usage are not certified.'}};
+  }
+  async function anchorFor(value,from,to,expectedSourceHash,selectedSourceId){
+    const endpoint=endpointExists(value,from),collection=endpointExists(value,workEndpoint(to)?from:to),sourceId=from.kind==='collection'?selectedSourceId:from.kind==='source'?endpoint.id:endpoint.sourceId;
+    if(!collection.sourceIds?.includes(sourceId))typedFail('Select this source as a member of the target inquiry before linking.');
+    const current=await sourceVersion(value,sourceId);if(!current.available||current.hash!==expectedSourceHash)typedFail('Source changed or is unavailable; review its exact version before linking.');
+    if(from.kind==='evidence'&&(endpoint.sourceHash!==current.hash||typeof endpoint.quote!=='string'||!endpoint.locator))typedFail('Evidence belongs to an earlier source version; review a current passage.');
+    return {sourceId,sourceHash:current.hash,...from.kind==='collection'?{collectionId:from.id}:{},...from.kind==='evidence'?{evidenceId:endpoint.id,evidenceHash:evidenceHash(endpoint)}:{}};
+  }
+  // Trusted work owners can read Library snapshots while resolving an edition.
+  // Capture under our queue, release it for owner reads, then use the exact index
+  // bytes as a publication/read guard. Never hold Library's queue across owners.
+  let typedPending=Promise.resolve();
+  function typedSerial(fn){const op=typedPending.then(fn);typedPending=op.catch(()=>{});return op;}
+  function typedSnapshot(){return serial(()=>{const loaded=loadTyped();return {...loaded,value:structuredClone(loaded.value)};});}
+  async function listTyped(input={}){
+    typedFields(input,['entity','direction','includeDetached']);
+    if(input.entity)typedEndpoint(input.entity,['source','evidence','collection','workspace','piece','project']);
+    if(input.direction!==undefined&&!['incoming','outgoing','both'].includes(input.direction)||input.includeDetached!==undefined&&typeof input.includeDetached!=='boolean')typedFail('Use explicit relationship direction and detached-state choice.',400);
+    const loaded=await typedSnapshot(),value=loaded.value;if(input.entity){if(input.entity.kind==='project')await readProject(input.entity);else if(workEndpoint(input.entity))await readWork(input.entity);else endpointExists(value,input.entity);}
+    const direction=input.direction||'both',entity=input.entity;
+    const matches=(value.typedRelationships||[]).filter(r=>(input.includeDetached||r.status!=='detached')&&(!entity||direction!=='incoming'&&(same(r.from,entity)||entity.kind==='source'&&r.anchor?.sourceId===entity.id)||direction!=='outgoing'&&same(r.to,entity)));
+    const relationships=[];for(const r of matches)relationships.push(await typedView(value,r));
+    const current=await typedSnapshot();if(current.hash!==loaded.hash)typedFail('Library changed during relationship read; refresh.');
+    return {schema:'ar-create.library-typed-relationships.v1',revision:value.revision,indexHash:loaded.hash,relationships,coverage:{kind:'known-recorded-references-only',unknownDependencies:['Unrecorded source/learning dependencies are unknown.','Only explicit existing workspace/native Piece references and supported measured placements are known; unrecorded dependencies remain unknown.','External files and provider activity are not exhaustively indexed.']}};
+  }
+  async function mutateTyped(action,input){
+    typedFields(input,['operationId','expectedRevision','expectedHash','actor','reason',...action==='propose'?['from','to','relationshipType','expectedSourceHash','sourceId','expectedWorkHash','usageBasis','recordKind','expectedProjectProofHash']:action==='change'?['id','status']:['id','undoOperationId']]);
+    if(!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!HASH.test(input.expectedHash||''))typedFail('Exact Library revision/hash and operation UUID required.',400);
+    string(input.reason,'Relationship reason',10000);if(!input.reason.trim()||!['human','agent'].includes(input.actor))typedFail('Explicit actor and reason required.',400);
+    if(action!=='propose'&&input.actor!=='human')typedFail('Only an explicit human decision can accept, detach or restore a relationship.',400);
+    if(action==='propose'){
+      if(organizational(input)){typedEndpoint(input.from,['collection']);typedEndpoint(input.to,['project']);if(input.relationshipType!=='associated-with'||!HASH.test(input.expectedProjectProofHash||'')||['expectedSourceHash','sourceId','expectedWorkHash','usageBasis'].some(k=>input[k]!==undefined))typedFail('Organizational association requires only an existing Collection and exact named Project proof; no source or usage anchor.',400);}
+      else{if(input.recordKind!==undefined)typedFail('Unsupported typed relationship subtype.',400);typedEndpoint(input.from,['source','evidence','collection']);typedEndpoint(input.to,['collection','workspace','piece']);if(!['supports','challenges','explores','used-in'].includes(input.relationshipType)||!HASH.test(input.expectedSourceHash||''))typedFail('Explicit meaning and selected source hash required.',400);if(workEndpoint(input.to)){if(input.from.kind!=='collection'||!UUID.test(input.sourceId||'')||!HASH.test(input.expectedWorkHash||'')||input.usageBasis!==undefined&&!['declared','measured-native'].includes(input.usageBasis)||input.usageBasis==='measured-native'&&input.relationshipType!=='used-in')typedFail('Existing work references require trusted selected Collection/source context, exact work edition and declared/measured basis.',400);}else if(input.from.kind==='collection'||['sourceId','expectedWorkHash','usageBasis'].some(k=>input[k]!==undefined))typedFail('Extra work claims are not accepted for a Library-only reference.',400);}
+    }
+    else if(!UUID.test(input.id||'')||action==='change'&&!['proposed','accepted','detached'].includes(input.status)||action==='undo'&&!UUID.test(input.undoOperationId||''))typedFail('Exact relationship and supported state/Undo identities required.',400);
+    const loaded=await typedSnapshot(),value=loaded.value,commandHash=fingerprint({action,input}),prior=(value.typedRelationshipOperations||[]).find(o=>o.operationId===input.operationId);
+    if(prior){if(prior.fingerprint!==commandHash)typedFail('Operation UUID already owns a different exact relationship request.');const r=value.typedRelationships.find(r=>r.id===prior.relationshipId);if(!r)typedFail('Recorded relationship operation has no matching record.');return {revision:value.revision,indexHash:loaded.hash,relationship:await typedView(value,r),receipt:structuredClone(prior),replayed:true};}
+    if(input.expectedRevision!==value.revision||input.expectedHash!==loaded.hash)typedFail('Library changed; refresh its revision and index hash before saving.');
+    const next=structuredClone(value);next.typedRelationships??=[];next.typedRelationshipOperations??=[];
+    let record,before=null,deduplicated=false;
+    if(action==='propose'){
+      if(organizational(input)){
+        endpointExists(value,input.from);const projectAnchor=await readProject(input.to);if(projectAnchor.proofHash!==input.expectedProjectProofHash)typedFail('Named Project proof changed since the selected association.');
+        record=next.typedRelationships.find(r=>organizational(r)&&same(r.from,input.from)&&same(r.to,input.to));
+        if(record)deduplicated=true;
+        else{record={schema:TYPED_SCHEMA,recordKind:'organizational-association',id:randomUUID(),from:structuredClone(input.from),to:structuredClone(input.to),relationshipType:'associated-with',status:'proposed',reason:input.reason,projectAnchor,createdAt:now(),updatedAt:now(),history:[]};next.typedRelationships.push(record);}
+      }else{
+      const anchor=await anchorFor(value,input.from,input.to,input.expectedSourceHash,input.sourceId);
+      let workAnchor,usageProof;if(workEndpoint(input.to)){workAnchor=await readWork(input.to);if(workAnchor.workHash!==input.expectedWorkHash)typedFail('Existing work edition changed since the selected reference.');if(input.usageBasis==='measured-native'){if(!workReferences?.measure)typedFail('Measured native usage adapter is not connected.');usageProof=await workReferences.measure({endpoint:input.to,sourceId:anchor.sourceId,sourceHash:anchor.sourceHash});}}
+      record=next.typedRelationships.find(r=>same(r.from,input.from)&&same(r.to,input.to)&&r.relationshipType===input.relationshipType&&same(r.anchor,anchor)&&(!workAnchor||r.workAnchor?.workHash===workAnchor.workHash&&r.usageBasis===(input.usageBasis||'declared')));
+      if(record)deduplicated=true;
+      else{record={schema:TYPED_SCHEMA,id:randomUUID(),from:structuredClone(input.from),to:structuredClone(input.to),relationshipType:input.relationshipType,status:'proposed',reason:input.reason,anchor,...workAnchor?{workAnchor,usageBasis:input.usageBasis||'declared',...usageProof?{usageProof}:{}}:{},createdAt:now(),updatedAt:now(),history:[]};next.typedRelationships.push(record);}
+      }
+    }else{
+      record=next.typedRelationships.find(r=>r.id===input.id);if(!record)typedFail('Typed relationship was not found.',404);
+      before={status:record.status,reason:record.reason};
+      if(action==='change'){record.status=input.status;record.reason=input.reason;}
+      else{
+        const last=record.history.at(-1);if(!last||last.operationId!==input.undoOperationId||!same(last.after,before))typedFail('Saved relationship Undo no longer matches its exact latest state.');
+        const restored=last.before??{status:'detached',reason:input.reason};record.status=restored.status;record.reason=restored.reason;
+      }
+      if(record.status!=='detached'){if(organizational(record)){endpointExists(value,record.from);await checkProject(record);}else{const check=await anchorFor(value,record.from,record.to,record.anchor.sourceHash,record.anchor.sourceId);if(!same(check,record.anchor))typedFail('Relationship source/evidence anchor changed; review before restoring.');await checkWork(record);}}
+    }
+    if(!deduplicated){record.updatedAt=now();record.history.push({operationId:input.operationId,action,actor:input.actor,explanation:input.reason,before,after:{status:record.status,reason:record.reason},at:record.updatedAt});}
+    // Recheck physical source ownership/hash after asynchronous work; detached records retain old anchors.
+    if(record.status!=='detached'){if(organizational(record)){endpointExists(value,record.from);await checkProject(record);}else{const check=await anchorFor(value,record.from,record.to,record.anchor.sourceHash,record.anchor.sourceId);if(!same(check,record.anchor))typedFail('Source changed before relationship publication.');await checkWork(record);}}
+    next.revision=value.revision+1;const receipt={operationId:input.operationId,fingerprint:commandHash,relationshipId:record.id,resultRevision:next.revision,deduplicated};next.typedRelationshipOperations.push(receipt);validateTypedIndex(next);
+    const bytes=JSON.stringify(next,null,2);await serial(()=>{
+      const current=loadTyped();if(current.hash!==loaded.hash||current.value.revision!==value.revision)typedFail('Library changed; refresh its revision and index hash before saving.');
+      try{resolveInside(dataDir,'library-index.json',{missing:true});atomicWrite(indexFile,bytes,loaded.bytes===null?{exclusive:true}:{expectedHash:loaded.hash});index=next;}
+      catch(error){try{index=readJson(indexFile,value);}catch{index=value;}throw error;}
+    });
+    return {revision:next.revision,indexHash:digest(bytes),relationship:await typedView(next,record),receipt:structuredClone(receipt),deduplicated};
+  }
+  validateTypedIndex(index);
+  // The registry owns identity and membership. Never discover neighboring files,
+  // infer identity from an inode, or adopt a new UUID for an existing path.
+  function catalogTree(root) {
+    resolveInside(root.path, '', {directory: true});
+    if (fs.realpathSync(root.path) !== root.path) throw new StateError('Catalog folder changed into a symlink.', 403);
+    const entries = retainedCatalog.entries();
+    if (!Array.isArray(entries) || entries.length > 20000) throw new StateError('Retained catalog is unavailable.');
+    const ids = new Set(), paths = new Set();
+    const tree = {rel_path:'', name:root.name, file_count:0, total_count:0, conflict_count:0, folders:[], files:[]};
+    for (const entry of entries) {
+      if (!entry || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(entry.id) || ids.has(entry.id) || paths.has(entry.rel_path) || typeof entry.title !== 'string' || !entry.title.trim() || entry.title.length > 2000) throw new StateError('Invalid retained catalog identity.');
+      safeRel(entry.rel_path, false); ids.add(entry.id); paths.add(entry.rel_path);
+      const file = resolveInside(root.path, entry.rel_path), stat = regular(file);
+      if (index.sources.some(source => source.id === entry.id ? source.rootId !== root.id : (source.rootId === root.id && source.rel_path === entry.rel_path) || roots.some(other => other.id === source.rootId && path.join(other.path, source.rel_path) === file))) throw new StateError('Retained catalog conflicts with an existing source identity.',409);
+      const meta = readMeta(file), parts = entry.rel_path.split('/'); let folder = tree;
+      if (parts.length > 25) throw new StateError('Retained catalog path is too deep.');
+      for (let depth=0; depth<parts.length-1; depth++) {
+        let child = folder.folders.find(item => item.name === parts[depth]);
+        if (!child) { child={rel_path:parts.slice(0,depth+1).join('/'),name:parts[depth],file_count:0,total_count:0,conflict_count:0,folders:[],files:[]};folder.folders.push(child); }
+        folder=child;
+      }
+      folder.files.push({providedUUID:entry.id,rel_path:entry.rel_path,name:path.basename(entry.rel_path,path.extname(entry.rel_path)),title:entry.title,kind:kindFor(file,meta.frontmatter),size_bytes:stat.size,modified_at:stat.mtime.toISOString(),transcriptProvenance:structuredClone(entry.transcriptProvenance ?? null)});
+    }
+    const count = folder => {folder.file_count=folder.files.length;folder.total_count=folder.file_count+folder.folders.reduce((total,child)=>total+count(child),0);return folder.total_count;}; count(tree);
+    return tree;
+  }
   function rootById(id = 'library', write = false) { const root = roots.find(r => r.id === id); if (!root) throw new StateError('Unknown configured library root.', 404); if (write && !root.writable) throw new StateError('Connected original roots are read-only.', 403); return root; }
   function publicSource(source) { const root = rootById(source.rootId); const { originalFile, ...metadata } = source; return { ...metadata, sourceUnavailable:root.available===false, ...(root.available===false?{cardEligibility:{eligible:false,reason:'The connected folder is unavailable. Reconnect it before reading or keeping a passage.'}}:{}), originalUrl: originalFile ? `/api/sources/blob?id=${encodeURIComponent(source.id)}&original=1` : null, path: path.join(root.path, source.rel_path), writable: root.writable, url: source.source_url || '', body: undefined }; }
   function sourceById(id) { const source = index.sources.find(s => s.id === id && !s.missing && !s.managedTerminalSnapshot); if (!source) throw new StateError('Source was not found. Refresh the library.', 404); return source; }
-  function checkedFile(source, write = false) { const root = rootById(source.rootId, write);if(root.available===false)throw new StateError('The source folder is unavailable. Reconnect it and refresh the library.',503); const file = resolveInside(root.path, source.rel_path); if (write) regular(file); else { const stat = fs.lstatSync(file); if (!stat.isFile()) throw new StateError('Source must be a regular file.'); } return file; }
+  function checkedFile(source, write = false) { const root = rootById(source.rootId, write);if(root.retainedCatalog){try{const tree=catalogTree(root),find=folder=>folder.files.some(item=>item.providedUUID===source.id&&item.rel_path===source.rel_path)||folder.folders.some(find);if(!find(tree))throw new StateError('Source is no longer kept in the catalog.',404);root.available=true;}catch(error){root.available=false;throw new StateError('Retained transcript catalog is unavailable or changed. Refresh the library.',503);}}if(root.available===false)throw new StateError('The source folder is unavailable. Reconnect it and refresh the library.',503); const file = resolveInside(root.path, source.rel_path); if (write) regular(file); else { const stat = fs.lstatSync(file); if (!stat.isFile()) throw new StateError('Source must be a regular file.'); } return file; }
   function makeFolder(rootId, folder) { const root = rootById(rootId, true); safeRel(folder, false); resolveInside(root.path, folder, { directory: true, createParents: true }); }
   function savedFile(rootId, folder, name, bytes, provenance, legacyId) {
     const root = rootById(rootId, true); safeRel(folder); safeRel(name, false); if (name.includes('/')) throw new StateError('File name must not contain a folder.');
@@ -118,7 +313,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const unavailable=root=>{root.available=false;root.connectionError='Folder unavailable or its scan could not complete. Reconnect it and refresh.';incompleteRoots.add(root.id);trees.push({...root,tree:{rel_path:'',name:root.name,file_count:0,total_count:0,conflict_count:0,folders:[],files:[]}});};
     for (const root of roots) {
       let tree;
-      try{resolveInside(root.path, '', { directory: true });const lexical=root.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1');if(fs.realpathSync(root.path)!==lexical)throw new StateError('A connected folder path changed into a symlink.',403);tree = readFolder(root.path, '', { count: 0, max: 20000, truncated: false, metadataCache: folderMetadata,throwOnReadError:true });root.available=true;delete root.connectionError;}
+      try{resolveInside(root.path, '', { directory: true });const lexical=root.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1');if(fs.realpathSync(root.path)!==lexical)throw new StateError('A connected folder path changed into a symlink.',403);tree = root.retainedCatalog ? catalogTree(root) : readFolder(root.path, '', { count: 0, max: 20000, truncated: false, metadataCache: folderMetadata,throwOnReadError:true });root.available=true;delete root.connectionError;}
       catch{unavailable(root);continue;}
       if (root.id === 'library' && managedSnapshots.size) {
         const prune = folder => { folder.files = folder.files.filter(file => !managedSnapshots.has(path.join(root.path, file.rel_path))); for (const child of folder.folders) prune(child); folder.file_count = folder.files.length; folder.total_count = folder.file_count + folder.folders.reduce((total, child) => total + child.total_count, 0); };
@@ -136,13 +331,13 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       // Ambiguous hardlinks stay path-based; missing old inodes are never guessed.
       const previous=index.sources.filter(source=>source.rootId===root.id),matches=new Map(),claimed=new Set(),previousInodes=new Map(),previousPaths=new Map();
       for(const source of previous){previousPaths.set(source.rel_path,source);if(!source.missing){const candidates=previousInodes.get(source.inode)||[];candidates.push(source);previousInodes.set(source.inode,candidates);}}
-      for(const meta of flat){const stat=scanStats.get(meta.rel_path),inode=`${stat.dev}:${stat.ino}`,candidates=previousInodes.get(inode)||[];if(inodeCounts.get(inode)===1&&candidates.length===1){matches.set(meta.rel_path,candidates[0]);claimed.add(candidates[0].id);}}
-      for(const meta of flat)if(!matches.has(meta.rel_path)){const source=previousPaths.get(meta.rel_path);if(source&&!claimed.has(source.id)){matches.set(meta.rel_path,source);claimed.add(source.id);}}
+      for(const meta of flat){if(root.retainedCatalog){const source=previous.find(item=>item.id===meta.providedUUID);if(source){matches.set(meta.rel_path,source);claimed.add(source.id);}continue;}const stat=scanStats.get(meta.rel_path),inode=`${stat.dev}:${stat.ino}`,candidates=previousInodes.get(inode)||[];if(inodeCounts.get(inode)===1&&candidates.length===1){matches.set(meta.rel_path,candidates[0]);claimed.add(candidates[0].id);}}
+      for(const meta of flat)if(!root.retainedCatalog&&!matches.has(meta.rel_path)){const source=previousPaths.get(meta.rel_path);if(source&&!claimed.has(source.id)){matches.set(meta.rel_path,source);claimed.add(source.id);}}
       for (const meta of flat) {
         const file = resolveInside(root.path, meta.rel_path), stat = scanStats.get(meta.rel_path);
         const inode = `${stat.dev}:${stat.ino}`;
         let source = matches.get(meta.rel_path);
-        if (!source) { source = { id: randomUUID(), rootId: root.id, provenance: { kind: root.writable ? 'external-file' : 'connected-root', capturedAt: now(), originalPath: file } }; index.sources.push(source); }
+        if (!source) { source = { id: meta.providedUUID || randomUUID(), rootId: root.id, provenance: { kind: root.retainedCatalog ? 'retained-transcript-catalog' : root.writable ? 'external-file' : 'connected-root', capturedAt: now(), originalPath: file } }; index.sources.push(source); }
         const stamp = fileStamp(stat), changed = source.fileStamp !== stamp;
         const textFile = TEXT.has(path.extname(file).toLowerCase());
         let body = null, hash = changed ? null : source.hash ?? null;
@@ -151,6 +346,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
           else body={frontmatter:{processing_status:source.processingStatus,review_status:source.reviewDeclaration,source_url:source.source_url,recording_id:source.recordingId},body:source.hasReadableBody?'present':''};
         }
         Object.assign(source, meta, { hash, fileStamp: stamp, hashStatus: hash ? 'verified' : 'deferred-until-open', inode, missing: false });
+        delete source.providedUUID;
         source.status = textFile && stat.size > MAX_BODY_BYTES ? 'retained-text-too-large' : source.kind === 'audio' ? 'retained-needs-transcription' : source.kind === 'other' || source.kind === 'pdf' ? 'retained-needs-extraction' : ['link', 'web-extraction'].includes(source.provenance.kind) && body?.frontmatter.processing_status && body.frontmatter.processing_status !== 'ready' ? body.frontmatter.processing_status : 'ready';
         source.source_url ||= body?.frontmatter.source_url;
         if (body?.frontmatter.recording_id) source.recordingId = body.frontmatter.recording_id;
@@ -178,7 +374,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if (JSON.stringify(index) !== before) persist();
     return { revision: index.revision, roots: trees, sources: index.sources.filter(s => !s.missing && !s.managedTerminalSnapshot).map(publicSource), collections: index.collections, missingSources: index.sources.filter(s => s.missing&&!s.managedTerminalSnapshot).map(missingSummary), unavailableSources: index.sources.filter(s => !s.missing&&!s.managedTerminalSnapshot&&roots.find(root=>root.id===s.rootId)?.available===false).map(missingSummary) };
   }
-  const externalRoot = root => root && !['library','recordings'].includes(root.id) && !root.writable;
+  const externalRoot = root => root && !root.retainedCatalog && !['library','recordings'].includes(root.id) && !root.writable;
   function missingSummary(source) {
     const root=roots.find(root=>root.id===source.rootId),external=externalRoot(root)&&source.provenance?.kind==='connected-root';
     return {id:source.id,rootId:source.rootId,rootName:root?.name||source.rootId,title:source.title||source.name||path.basename(source.rel_path),rel_path:source.rel_path,hash:source.hash||null,reconnectable:!!external&&/^[a-f0-9]{64}$/.test(source.hash||''),reason:!root?'Connect the original folder before reconciling this file.':!external?'Only a missing external file can be reconnected.':!/^[a-f0-9]{64}$/.test(source.hash||'')?'No verified captured hash; identity cannot be reconciled safely.':root.available===false?'Original folder unavailable.':'File missing.'};
@@ -232,7 +428,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   }
   function expected(source, hash) { if (typeof hash !== 'string' || hash !== source.hash || digest(fs.readFileSync(checkedFile(source))) !== hash) throw new StateError('Source changed outside this edit. Refresh before saving.', 409); }
   return {
-    setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured);folderMetadata.clear();return refresh(); }),
+    setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),
     // Existing indexed identity + current physical bytes; no scan, index save or extraction.
     snapshot: (id,{includeBody=false}={}) => serial(async()=>{
@@ -304,6 +500,13 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       if (currentStat.ino !== originalStat.ino || currentStat.dev !== originalStat.dev || digest(fs.readFileSync(to)) !== source.hash) { fs.unlinkSync(to); throw new StateError('Source changed during rename. Refresh before moving.', 409); }
       fs.unlinkSync(from); source.rel_path = input.toPath; persist(); refresh(); return read(source.id);
     }),
+    typedRelationships: input => listTyped(structuredClone(input)),
+    proposeProjectAssociation: input => {const captured=structuredClone(input);return typedSerial(()=>{typedFields(captured,['operationId','expectedRevision','expectedHash','collectionId','workspaceId','parentStudyId','rootBindingId','expectedProjectProofHash','actor','reason']);return mutateTyped('propose',{operationId:captured.operationId,expectedRevision:captured.expectedRevision,expectedHash:captured.expectedHash,from:{kind:'collection',id:captured.collectionId},to:{kind:'project',id:captured.workspaceId,parentStudyId:captured.parentStudyId,rootBindingId:captured.rootBindingId},recordKind:'organizational-association',relationshipType:'associated-with',expectedProjectProofHash:captured.expectedProjectProofHash,actor:captured.actor,reason:captured.reason});});},
+    proposeTypedRelationship: input => {const captured=structuredClone(input);return typedSerial(()=>mutateTyped('propose',captured));},
+    changeTypedRelationship: input => {const captured=structuredClone(input);return typedSerial(()=>mutateTyped('change',captured));},
+    undoTypedRelationship: input => {const captured=structuredClone(input);return typedSerial(()=>mutateTyped('undo',captured));},
+    // Exact current indexed Collection metadata; no source discovery, refresh or writes.
+    collectionsSnapshot: () => serial(() => { const loaded=loadTyped(); return {revision:loaded.value.revision,indexHash:loaded.hash,collections:structuredClone(loaded.value.collections)}; }),
     collections: () => serial(() => { refresh(); return { revision: index.revision, collections: index.collections }; }),
     collectionRelationships: collectionId => serial(() => { refresh(); return {revision:index.revision,relationships:resolvedCollectionLinks(index.collectionRelationships,index.collections,collectionId)}; }),
     linkCollections: input => serial(() => {

@@ -77,6 +77,7 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
  document.addEventListener('click',event=>{
   const t=event.target.closest?.('#c3-tabstrip [data-ht-research]');
   if(t){event.preventDefault();event.stopImmediatePropagation();
+   if(window.connectedWorkspace?.openContext){if(open)hide();void window.connectedWorkspace.openContext('inquiries').catch(error=>{const status=document.querySelector('#c3-tabstrip [data-ht-status]');if(status){status.hidden=false;status.textContent=error.message;}});return;}
    const go=async()=>{if(document.getElementById('project-library')?.open)await window.projectLibrary.close();if(document.getElementById('project-library')?.open)return;open?hide():show();};void go();return;}
   if(open&&event.target.closest?.('#c3-tabstrip [data-ht-home],#c3-tabstrip [data-ht-tab],#c3-tabstrip [data-pl-open]'))hide();
  },true);

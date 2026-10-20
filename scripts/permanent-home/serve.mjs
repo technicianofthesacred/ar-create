@@ -1,3 +1,4 @@
+import {createImportedSourceOwner} from './runtime/services/source-sessions.mjs';
 import {createServer} from './runtime/server.mjs';
 import {createWorkspaceExecution} from './runtime/services/artifact-execution.mjs';
 import fs from 'node:fs';
@@ -10,6 +11,6 @@ const config=JSON.parse(fs.readFileSync(configFile,'utf8'));
 if(config.home!==home||!Number.isInteger(config.port)||config.port<1024||config.port>65535||!config.dataDir.startsWith(home+path.sep)||config.publicDir!==path.join(home,'service/public'))throw Error('Explicit permanent local service configuration required.');
 if(config.port===8841&&config.dataDir!==path.join(home,'data'))throw Error('Candidates cannot use installed port 8841.');
 canonical(config.dataDir);canonical(config.publicDir);canonical(config.relocationFile);const studyRelocation=JSON.parse(fs.readFileSync(config.relocationFile,'utf8'));
-const server=await createServer({dataDir:config.dataDir,publicDir:config.publicDir,sharedArticles:true,researchEnabled:false,studyOriginalRoots:config.studyOriginalRoots,studyRelocation,execution:createWorkspaceExecution({boundedEditorial:true})});
+const server=await createServer({dataDir:config.dataDir,publicDir:config.publicDir,sharedArticles:true,researchEnabled:false,studyOriginalRoots:config.studyOriginalRoots,studyRelocation,transcriptLibrary:config.transcriptLibrary||null,importedSourceFactory:config.importedTranscriptOwner?()=>createImportedSourceOwner(config.importedTranscriptOwner):null,execution:createWorkspaceExecution({boundedEditorial:true})});
 server.on('error',e=>{console.error(e.code+': existing listener preserved');process.exitCode=1;});
 server.listen(config.port,'127.0.0.1',()=>console.log('AR Create listening on loopback '+config.port));

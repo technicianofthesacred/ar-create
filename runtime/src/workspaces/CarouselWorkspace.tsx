@@ -17,7 +17,7 @@ function editableText(element:HTMLElement):string {
  const read=(node:Node):string=>node.nodeType===3?node.nodeValue||'':node.nodeType===1?(node as HTMLElement).tagName==='BR'?'\n':[...node.childNodes].map(read).join('')+(['DIV','P'].includes((node as HTMLElement).tagName)?'\n':''):'';
  return [...element.childNodes].map(read).join('').replace(/\n$/,'');
 }
-function Frame({slide,title,width=420,interactive=false,onCrop,onPhoto,onOverflow,onText,onSelectPhoto,onFit}:{slide:CarouselSlide;title:string;width?:number;interactive?:boolean;onCrop?:(slot:number,x:number,y:number)=>void;onPhoto?:(slot:number,src:string)=>void;onOverflow?:(value:boolean)=>void;onText?:(field:'text'|'label'|'credit',value:string)=>void;onSelectPhoto?:(slot:number,inspect?:boolean)=>void;onFit?:(scale:number)=>void}){
+export function Frame({slide,title,width=420,interactive=false,onCrop,onPhoto,onOverflow,onText,onSelectPhoto,onFit}:{slide:CarouselSlide;title:string;width?:number;interactive?:boolean;onCrop?:(slot:number,x:number,y:number)=>void;onPhoto?:(slot:number,src:string)=>void;onOverflow?:(value:boolean)=>void;onText?:(field:'text'|'label'|'credit',value:string)=>void;onSelectPhoto?:(slot:number,inspect?:boolean)=>void;onFit?:(scale:number)=>void}){
  const host=useRef<HTMLDivElement>(null),canvas=useRef<HTMLDivElement>(null),editing=useRef<HTMLElement|null>(null),cropCleanup=useRef<(()=>void)|null>(null),[size,setSize]=useState(width);
  const initialMarkup=useRef({__html:IG.render(slide.template,{...slide,label:slide.label??title},{})});
  const callbacks=useRef({onCrop,onPhoto,onOverflow,onText,onSelectPhoto,onFit});callbacks.current={onCrop,onPhoto,onOverflow,onText,onSelectPhoto,onFit};
@@ -58,6 +58,18 @@ export function CarouselWorkspace({doc,output,change,options,onSelectOutput,onAr
  useEffect(()=>{if(!focused)return;const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!(event.target instanceof Element&&event.target.closest('[contenteditable]')))setFocused(false);};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[focused]);
  const latest=useRef(doc);latest.current=doc;const slides=output.slides||[],slide=slides.find(s=>s.id===selected)||slides[0],index=slides.findIndex(s=>s.id===slide?.id);
  useEffect(()=>{let active=true;options.api?.('/api/sources/tree').then(r=>{if(active)setPhotos((r.sources||[]).filter((s:any)=>/\.(jpe?g|png|webp)$/i.test(s.rel_path||'')));}).catch(()=>{});options.api?.('/api/carousel/exports').then(r=>{if(active)setSaved(r.exports||[]);}).catch(()=>{});return()=>{active=false;};},[options.api,output.id]);
+ useEffect(()=>{
+  const entry={outputId:output.id,focus:async(location:any)=>{
+   const target=output.slides?.find(s=>s.id===location.slideId);
+   if(location.kind!=='carousel'||!target||!Number.isSafeInteger(location.photoIndex)||location.photoIndex<0||location.photoIndex>=IG.T[target.template].photos||!target.photos[location.photoIndex]?.src)throw Error('This saved slide photograph is no longer available.');
+   setSelected(target.id);setMode('slide');setPanel('canvas');setSelectedPhoto(location.photoIndex);setPhotoOpen(true);
+   await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
+   const frame=document.querySelector<HTMLElement>('.car-canvas [data-slot="'+location.photoIndex+'"]')||document.querySelector<HTMLElement>('.car-frame [data-slot="'+location.photoIndex+'"]');
+   if(!frame)throw Error('The exact saved slide photograph is not rendered.');
+   frame.tabIndex=-1;frame.scrollIntoView({block:'center'});frame.focus({preventScroll:true});return {outputId:output.id,slideId:target.id,photoIndex:location.photoIndex};
+  }};
+  (window as any).studyCompositionFocus=entry;return()=>{if((window as any).studyCompositionFocus===entry)delete (window as any).studyCompositionFocus;};
+ },[output]);
  function update(fn:(o:Output)=>Output){const next=updateCarousel(latest.current,output.id,fn);latest.current=next;change(next);}
  function patchSlide(id:string,value:Partial<CarouselSlide>){update(o=>{const previous=o.slides!.find(row=>row.id===id)!;const words=['text','label','credit','role'].some(key=>Object.hasOwn(value,key)&&(value as any)[key] !== (previous as any)[key]);return {...o,slides:o.slides!.map(s=>s.id===id?{...s,...value}:s),...(words?{stage:'words',wordsReview:undefined}:{})};});}
  function patch(value:Partial<CarouselSlide>){if(slide)patchSlide(slide.id,value);}

@@ -15,5 +15,5 @@ export function mountStudyComposition(element:HTMLElement,input:any){
   root.render(<div className="ar-donor-workspace"><CompositionWorkspace key={JSON.stringify(identity)} options={options} doc={doc} change={outputChange}/></div>);
  };
  boundary=createStudyOutputBoundary({...input,onView:(next:Manuscript)=>{doc=next;render();}});doc=boundary.document;render();
- return {update(model:any){boundary.update(model);},async flush(){await boundary.ensureSaved();},returnToDraft(outputId?:string){return boundary.nativeEdit(outputId);},destroy(){boundary.destroy();root.unmount();}};
+ return {update(model:any){boundary.update(model);},async flush(){await boundary.ensureSaved();},returnToDraft(outputId?:string){return boundary.nativeEdit(outputId);},restoreBrowserDraft(output:any){const next=boundary.document;next.outputs=next.outputs.map((row:any)=>row.id===output.id?output:row);return boundary.change(next);},destroy(){boundary.destroy();root.unmount();}};
 }

@@ -11,6 +11,40 @@ const fail = (message) => {
   throw Object.assign(Error(message), { status: 409, outcome: "not-applied" });
 };
 const identity = (b) => ({ originalId: b.originalId, originalHash: b.originalHash, parentStudyKey: b.parentStudyKey, partKey: b.partKey });
+// Output leases only inspect committed direction journals. Never recover or reenter
+// the asynchronous direction/native owners while these leases are held.
+const directionMetadata = (snapshot) => {
+  const { body, history, path: unusedPath, externalEdit, metadataHash, ...metadata } = snapshot;
+  return JSON.stringify(metadata, null, 2) + "\n";
+};
+function directionJournalValid(op, scope, operations) {
+  const snapshot = (s) => s?.schema === "ar-create.study-human-direction.v1" && s.role === ROLE && same(s.scope, scope) && Number.isSafeInteger(s.revision) && s.revision >= 0 && typeof s.body === "string" && s.hash === digest(s.body);
+  const locator = (a) => a && HASH.test(a.hash || "") && (a.kind === "field" ? ["body", "adoptedDirection", "authorThoughts", "aiInterpretation", "suggestions"].includes(a.name) : a.kind === "range" && Number.isSafeInteger(a.start) && Number.isSafeInteger(a.end) && a.start >= 0 && a.end > a.start);
+  const pin = (p) => p && Number.isSafeInteger(p.revision) && p.revision >= 0 && HASH.test(p.hash || "") && locator(p.locator) && ["project", "part", "output", "collection"].includes(p.scope?.kind) && p.selector?.scope === p.scope.kind && (p.scope.kind === "collection" ? UUID.test(p.scope.collectionId || "") && p.selector.collectionId === p.scope.collectionId : UUID.test(p.scope.projectId || "") && typeof p.scope.parentStudyId === "string" && p.selector.parentStudyId === p.scope.parentStudyId && (p.scope.kind !== "output" || UUID.test(p.scope.outputId || "") && p.selector.outputId === p.scope.outputId));
+  const rows = (s) => {
+    const list = s.scopeReferences ?? [];
+    return Array.isArray(list) && list.length <= 128 && new Set(list.map(r => r?.id)).size === list.length && list.every(r => r?.schema === "ar-create.direction-scope-reference.v1" && UUID.test(r.id || "") && ["linked-learning", "inherit-direction", "supersedes"].includes(r.kind) && ["proposed", "accepted", "detached"].includes(r.status) && pin(r.origin) && same(r.target?.scope, scope) && r.target?.selector?.scope === scope.kind && HASH.test(r.target?.hash || "") && Number.isSafeInteger(r.target?.revisionAtPin) && r.target.revisionAtPin >= 0 && ["agent", "human"].includes(r.proposedBy) && ["agent", "human"].includes(r.stateActor) && (r.status !== "accepted" || r.stateActor === "human") && r.createdOperationId === r.id && UUID.test(r.lastOperationId || "") && typeof r.reason === "string" && r.reason.trim().length > 0 && r.reason.length <= 256 && (r.associationReferenceId == null || UUID.test(r.associationReferenceId)) && (r.kind !== "supersedes" || UUID.test(r.supersedesId || "") && locator(r.replacement)));
+  };
+  if (!op || op.schema !== "ar-create.study-human-direction-operation.v1" || !same(op.scope, scope) || !["committed", "rejected"].includes(op.status) || !UUID.test(op.operationId || "") || !["write", "undo", "reference-propose", "reference-change", "reference-undo"].includes(op.kind) || op.before?.hash !== digest(op.before?.body || "") || op.after?.hash !== digest(op.after?.body || "")) return false;
+  if (op.afterMetadataHash !== undefined && (!HASH.test(op.afterMetadataHash || "") || op.beforeMetadataHash !== null && !HASH.test(op.beforeMetadataHash || "") || op.afterMetadataHash !== digest(directionMetadata(op.after)))) return false;
+  if (!op.kind.startsWith("reference-")) return true; // Legacy body journals retain their existing proof contract.
+  if (!snapshot(op.before) || !snapshot(op.after) || !rows(op.before) || !rows(op.after) || !HASH.test(op.beforeMetadataHash || "") || !HASH.test(op.afterMetadataHash || "") || !HASH.test(op.fingerprint || "") || !UUID.test(op.referenceId || "") || op.before.body !== op.after.body || op.before.hash !== op.after.hash || op.after.revision !== op.before.revision + 1 || op.after.operationId !== op.operationId || op.createdAt !== op.after.updatedAt) return false;
+  const unchangedMetadata = s => { const { scopeReferences, revision, updatedAt, operationId, body, history, path: unusedPath, externalEdit, metadataHash, ...rest } = s; return rest; };
+  if (!same(unchangedMetadata(op.before), unchangedMetadata(op.after))) return false;
+  const before = op.before.scopeReferences ?? [], after = op.after.scopeReferences ?? [];
+  if (op.kind === "reference-propose") {
+    const added = after.at(-1);
+    return after.length === before.length + 1 && same(after.slice(0, -1), before) && added.id === op.operationId && added.id === op.referenceId && added.lastOperationId === op.operationId && added.status === "proposed" && added.stateActor === added.proposedBy && added.target.hash === op.before.hash && added.target.revisionAtPin === op.before.revision;
+  }
+  if (op.kind === "reference-change") {
+    const index = before.findIndex(r => r.id === op.referenceId);
+    if (index < 0 || before.length !== after.length || after[index]?.id !== op.referenceId) return false;
+    const stableReference = r => { const { status, reason, stateActor, lastOperationId, ...rest } = r; return rest; };
+    return after.every((r, i) => i === index ? same(stableReference(r), stableReference(before[i])) && r.stateActor === "human" && r.lastOperationId === op.operationId : same(r, before[i]));
+  }
+  const undone = operations.get(op.undoOperationId);
+  return UUID.test(op.undoOperationId || "") && undone?.status === "committed" && undone.kind.startsWith("reference-") && undone.referenceId === op.referenceId && undone.afterMetadataHash === op.beforeMetadataHash && undone.after.revision === op.before.revision && same(undone.scope, scope) && same(after, undone.before.scopeReferences ?? []);
+}
 function createNativeOutputFactory({ dataDir, store, native, originals, library, ownedPhotos }) {
   if (!ownedPhotos?.resolve || !native?.read || !originals?.readDraft || !library?.snapshot) throw Error("Supply the existing exact owners.");
   const scopes = /* @__PURE__ */ new Map();
@@ -75,11 +109,16 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
     const journal = path.join(directory, "human-direction-history");
     if (fs.existsSync(journal)) {
       resolveInside(dataDir, prefix + "/human-direction-history", { directory: true });
+      const operations = new Map();
       for (const name of fs.readdirSync(journal)) {
         if (!UUID.test(name.slice(0, -5)) || !name.endsWith(".json")) continue;
         const op = read(prefix + "/human-direction-history/" + name);
-        if (!op || op.schema !== "ar-create.study-human-direction-operation.v1" || !same(op.scope, scope2) || !["committed", "rejected"].includes(op.status) || op.operationId !== name.slice(0, -5) || !["write", "undo"].includes(op.kind) || op.before?.hash !== digest(op.before?.body || "") || op.after?.hash !== digest(op.after?.body || "")) fail("Human direction recovery is pending or corrupt; use its existing owner outside output leases.");
+        if (op?.operationId !== name.slice(0, -5)) fail("Human direction recovery journal identity is corrupt.");
+        operations.set(op.operationId, op);
       }
+      for (const op of operations.values()) if (!directionJournalValid(op, scope2, operations)) fail("Human direction recovery is pending or corrupt; use its existing owner outside output leases.");
+      const latest = operations.get(meta.operationId);
+      if (latest?.kind.startsWith("reference-") && (latest.status !== "committed" || latest.afterMetadataHash !== digest(directionMetadata(meta)))) fail("Human direction reference metadata is outside its exact committed journal; recover there before output use.");
     }
     return { role: ROLE, scope: scope2, revision: meta.revision, hash: meta.hash };
   }

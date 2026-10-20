@@ -29,3 +29,6 @@ public/document-study/donor/catalog-browser.js
 public/document-study/donor/ig-templates.browser.js
 
 scripts/gen-capabilities.mjs
+
+# Read-only projection rebuilt from maintained compositionSpec.ts.
+runtime/services/media-article-spec.mjs

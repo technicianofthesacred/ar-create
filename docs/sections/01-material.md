@@ -61,3 +61,17 @@ Material can select from a full personal library as well as accept new input. Li
 ## 18 October — Material can follow the author's concept
 
 A project can begin with the author's own thoughts, feelings and intended meaning before any Library lookup. Material then gathers existing or new resources around that concept; a kept resource can also spark the concept in the opposite direction. Both entrances continue inside the existing AR Create project and connected Research/Direction/output tools, not a separate collection workflow. Personal expression is creative material as well as instruction and must remain accessible and versioned independently of AI summaries. See PRODUCT and the connected next-pass plan; this is not a new implementation assignment or change to the active Claude design.
+
+
+## 20 October — Open the material folder and connect album links
+
+C01/C02/C03/C04/C06, S01/S08. Add a compact **Open material folder** action to the current project's Material tools. Resolve the existing owned project binding, open that permanent local folder and keep direct-folder additions in the same project after discovery/refresh. Do not create another project, move originals or accept an arbitrary filesystem path. Preserve existing notes, learning work, sources, unsaved edits and recovery.
+
+Provide an album-link entry beside the existing intake tools, reusing maintained link/album operations. The author may supply Apple iCloud, Lightroom or another photo-album URL. Distinguish saving the project-bound link from a successful import; expose actual supported-provider, private/unavailable, unsupported, partial and failure states. No automatic login, provider activation, private transmission, ongoing synchronization or all-provider capability is implied. No album URL was supplied with this request. Test supported imports with synthetic records and leave real access limits explicit.
+
+Finish criterion: actual project button opens its existing folder; synthetic folder additions preserve original bytes and appear in the same project after refresh/reopen. Album input retains the link in the correct project and reports the real saved/imported/unsupported/error state without inventing photos. Verify changed controls proportionately on the actual wide/narrow app. Preserve Claude's first design pass; these compact functional additions are recorded for the later pass in [DESIGN-PASS-ADDITIONS.md](../DESIGN-PASS-ADDITIONS.md).
+
+
+## 20 October — Mixed-origin topic collection and learning
+
+Material intake accepts the agreed mixed-origin topic model: batch video URLs, available transcripts, files and personal notes, with reusable topic relationships and understandable existing folder/source locations. Inspect and reuse current maintained folders and IDs before implementation; no duplicate originals or new store/migration. URL saved, transcript available, processing pending/failed and usable source are different states. Reversible grouping and compact browse mechanics remain proposed interface input; current Claude design stays intact. Follow the [adopted cross-section contract](../PRODUCT.md#20-october--mixed-origin-topic-learning-and-understandable-source-organization). Requirements are not completion proof.

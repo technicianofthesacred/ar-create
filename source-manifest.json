@@ -59,8 +59,8 @@
     },
     {
       "path": "runtime/server.mjs",
-      "sourceSha256": "bfc26a555c7ebc0d3d147a76cf64c1b710ec0cb2c32dffbefaab07ab8b210107",
-      "candidateSha256": "75315923c240941613953dcad117537338c381939296a04d25bc0c63714fc9e4",
+      "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
+      "candidateSha256": "88a35ed59b864e411e2a7000a29398e4f400e087e220fc6f9e3baad538476fa7",
       "adapted": true
     },
     {
@@ -215,9 +215,9 @@
     },
     {
       "path": "runtime/services/library.mjs",
-      "sourceSha256": "1d496359ab9e54a03c0b9aa22be67c33807f2fb8a0ee229649c25fe6423dcf84",
-      "candidateSha256": "1d496359ab9e54a03c0b9aa22be67c33807f2fb8a0ee229649c25fe6423dcf84",
-      "adapted": false
+      "sourceSha256": "affb24c911e41b3bd98e90dd60fe6bc4e9ecca4445fb67106e113a20beab5bb6",
+      "candidateSha256": "8dba5621b075cf516b34b26ee1f5957d763c0ecab920e718e93197cc579d1ba1",
+      "adapted": true
     },
     {
       "path": "runtime/services/local-article.mjs",
@@ -455,8 +455,8 @@
     },
     {
       "path": "runtime/services/study-bindings.mjs",
-      "sourceSha256": "f040fb90fa7871c7f27c1d02a359872efa9dea5112056eaeeed2590597fb0a5d",
-      "candidateSha256": "f040fb90fa7871c7f27c1d02a359872efa9dea5112056eaeeed2590597fb0a5d",
+      "sourceSha256": "4e439557f0f9dedab50576f0dcfe81583bbee8b6729b6cfacfefa5657cf5714e",
+      "candidateSha256": "4e439557f0f9dedab50576f0dcfe81583bbee8b6729b6cfacfefa5657cf5714e",
       "adapted": false
     },
     {
@@ -473,9 +473,9 @@
     },
     {
       "path": "runtime/services/study-human-direction.mjs",
-      "sourceSha256": "3b2871183add3aa2d82407de2a4a9ca67e725b50231473892ffb18632facf4e5",
-      "candidateSha256": "3b2871183add3aa2d82407de2a4a9ca67e725b50231473892ffb18632facf4e5",
-      "adapted": false
+      "sourceSha256": "55c79d5b59d54347bb0828f50e3520f869d20285b53526c19cee9a7a9260511a",
+      "candidateSha256": "835d34c4e7184bf8dd65a8567dd99346ff3b7193e96aaaa1c4dd6ef24fb598c7",
+      "adapted": true
     },
     {
       "path": "runtime/services/study-inheritance.mjs",
@@ -737,8 +737,8 @@
     },
     {
       "path": "public/document-study/index.html",
-      "sourceSha256": "523d801d692aab275d5463fb5e7d4ca6223a41fdab3d05ea6d27caaeb6c1449a",
-      "candidateSha256": "7612e786f8ca62c12ee26b15c376d9996662b810414839baf792919d5a68344b",
+      "sourceSha256": "09fd11675198b106f48360ef23146946fffa230b1471528f0f8c2fe60f5247cf",
+      "candidateSha256": "9e6b71c768d4e85f67d64c99ef996670a9ff784f0764f8413fd82e08686fcf90",
       "adapted": true
     },
     {
@@ -755,8 +755,8 @@
     },
     {
       "path": "public/document-study/stage-flow.js",
-      "sourceSha256": "14c15fa303d25b175b55201412f0ee0d5cec36b9c86f0ae1ce64976c8b0cd417",
-      "candidateSha256": "14c15fa303d25b175b55201412f0ee0d5cec36b9c86f0ae1ce64976c8b0cd417",
+      "sourceSha256": "50355aceafb6f15df37640c20c821311edaa50ce356590b1f4632993f827ff49",
+      "candidateSha256": "50355aceafb6f15df37640c20c821311edaa50ce356590b1f4632993f827ff49",
       "adapted": false
     },
     {
@@ -768,8 +768,8 @@
     {
       "path": "public/document-study/draft-flow.js",
       "sourceSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "candidateSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "adapted": false
+      "candidateSha256": "427842f2be866588af70741013430ac342403c21d1a7c21f737a5b5a10798b02",
+      "adapted": true
     },
     {
       "path": "public/document-study/draft-flow.css",
@@ -815,8 +815,8 @@
     },
     {
       "path": "public/document-study/material-surface.js",
-      "sourceSha256": "12c7809d0d85ff85739343393d64ff39dbcc311a2a2f50a09a234cfc8d5d0669",
-      "candidateSha256": "12c7809d0d85ff85739343393d64ff39dbcc311a2a2f50a09a234cfc8d5d0669",
+      "sourceSha256": "0951e41a205cc9c62103045f42da01a6596130dd753bec1d8e65b72c5cec8830",
+      "candidateSha256": "0951e41a205cc9c62103045f42da01a6596130dd753bec1d8e65b72c5cec8830",
       "adapted": false
     },
     {
@@ -827,9 +827,9 @@
     },
     {
       "path": "public/document-study/human-direction.js",
-      "sourceSha256": "8e489686ce8487142b5ad195842887e063f31fdf9903c8431a25ef83f7e64625",
-      "candidateSha256": "8e489686ce8487142b5ad195842887e063f31fdf9903c8431a25ef83f7e64625",
-      "adapted": false
+      "sourceSha256": "243a94ede4c89ad5a0de458ac008255bc01e7d902a8df8e9928bd40909047b61",
+      "candidateSha256": "ba576a90a01b07463f6b2ea2fb8f2b367e74b68b9d53f291c3b8ed084adc2945",
+      "adapted": true
     },
     {
       "path": "public/document-study/human-direction.css",
@@ -839,8 +839,8 @@
     },
     {
       "path": "public/document-study/study-photos.js",
-      "sourceSha256": "2711ba5917ddaad1929628601ee9db8a527c8901220d04bf441ee511ffc6f856",
-      "candidateSha256": "2711ba5917ddaad1929628601ee9db8a527c8901220d04bf441ee511ffc6f856",
+      "sourceSha256": "3bb2181d7be3e86302cf9ea08742b38c71a8f797bce9d80b1dae4f2b068b0383",
+      "candidateSha256": "3bb2181d7be3e86302cf9ea08742b38c71a8f797bce9d80b1dae4f2b068b0383",
       "adapted": false
     },
     {
@@ -851,9 +851,9 @@
     },
     {
       "path": "public/document-study/photos-stage.js",
-      "sourceSha256": "16b053378c45bb258114c98465aecaefffe3aff91be6c7fecae94b01a112b64e",
-      "candidateSha256": "16b053378c45bb258114c98465aecaefffe3aff91be6c7fecae94b01a112b64e",
-      "adapted": false
+      "sourceSha256": "3e9d0e12307dff80d3aa307d0d1e8afc69b8d13edb4d0d4f2ed6da8a998226f9",
+      "candidateSha256": "236641cda49db827cfbcfdbe80b38ffeaa12f6c33103753a38660f52b16e3f3a",
+      "adapted": true
     },
     {
       "path": "public/document-study/i64-return.js",
@@ -1104,9 +1104,9 @@
     },
     {
       "path": "public/document-study/mountStudyComposition.tsx",
-      "sourceSha256": "deef6596954f94d6e006881574e17fe3f3dad4de12db9ebfdeb2cb6ccfa460cd",
-      "candidateSha256": "c12edff0ea0f56f28ef0eef770a027deb8aa5a1a6574070b951b2282c71c36c8",
-      "adapted": true
+      "sourceSha256": "2992532e79fd92c8d988f5923aeead87dd3f1d7ebac772c9051db3cafe284701",
+      "candidateSha256": "2992532e79fd92c8d988f5923aeead87dd3f1d7ebac772c9051db3cafe284701",
+      "adapted": false
     },
     {
       "path": "public/document-study/mountStudyOutputHost.tsx",
@@ -1128,9 +1128,9 @@
     },
     {
       "path": "public/document-study/output-connection.js",
-      "sourceSha256": "6fff89f963d6230e37d98587d483f46f181f05f28ad07721edcb3eddad0975cb",
-      "candidateSha256": "6fff89f963d6230e37d98587d483f46f181f05f28ad07721edcb3eddad0975cb",
-      "adapted": false
+      "sourceSha256": "413cdf1a2bd186ec81d31db05215eff82dc63ca6b63ff8f1c70931b7aaf35403",
+      "candidateSha256": "237ec3f94fe1db9d6ab79297ca71d10901bdd7847902272bd2d91feaa7fb7e2b",
+      "adapted": true
     },
     {
       "path": "public/document-study/output-evidence.test.mjs",
@@ -1152,8 +1152,8 @@
     },
     {
       "path": "public/document-study/study-output-boundary.mjs",
-      "sourceSha256": "dfb0a5a72671fa38fed98edde5dbeac607a944cf151b198f7457baca34045d2f",
-      "candidateSha256": "dfb0a5a72671fa38fed98edde5dbeac607a944cf151b198f7457baca34045d2f",
+      "sourceSha256": "13fbebc5f6d03addff7e5631cd6659079940741481563dc54c1b1c765b605307",
+      "candidateSha256": "13fbebc5f6d03addff7e5631cd6659079940741481563dc54c1b1c765b605307",
       "adapted": false
     },
     {
@@ -1164,21 +1164,21 @@
     },
     {
       "path": "public/document-study/study-output-entry.ts",
-      "sourceSha256": "e86e26ca0ea2b52bc375fea54d56c854d48e5ce506549acadded983c8b048735",
-      "candidateSha256": "cca0640774fa9866dff20f7c9e300dfd7f3c38751bcf4b1d8b0ac5df689de298",
-      "adapted": true
+      "sourceSha256": "83eb853b95beaa1cac5b328afa08db2fae2e82a7982432814bbc805d95a13985",
+      "candidateSha256": "83eb853b95beaa1cac5b328afa08db2fae2e82a7982432814bbc805d95a13985",
+      "adapted": false
     },
     {
       "path": "public/document-study/study-output-host.mjs",
-      "sourceSha256": "7421c4d485ca9652380b771cd63efbbca1e452c7f844e13400d911e677ebc541",
-      "candidateSha256": "7421c4d485ca9652380b771cd63efbbca1e452c7f844e13400d911e677ebc541",
-      "adapted": false
+      "sourceSha256": "d636429529cb9423a8e3c38022e86764123c9ef4b31045c967c81bacdf9c469e",
+      "candidateSha256": "50cecfb29b90fb5c7e681871bee5965a8fda1f112092d0c0d1f8a908227a8433",
+      "adapted": true
     },
     {
       "path": "public/document-study/study-output-host.test.mjs",
-      "sourceSha256": "4c92801cffeddc6e643f3a9a338bb7b3d32b5a3c2900ec59ab9f86a854a1f034",
-      "candidateSha256": "4c92801cffeddc6e643f3a9a338bb7b3d32b5a3c2900ec59ab9f86a854a1f034",
-      "adapted": false
+      "sourceSha256": "e4ad29effbdb1e92dd73442656f5de6ea013092099e726a60fca86fe327883b5",
+      "candidateSha256": "439d8e7e92dad71181508820fa788ae6e9bf9279d4cac941197e3f517535d5ca",
+      "adapted": true
     },
     {
       "path": "runtime/output-records.mjs",
@@ -1362,8 +1362,8 @@
     },
     {
       "path": "runtime/services/native-output-factory.mjs",
-      "sourceSha256": "e431ae093c7d42b19b8d73531f57486b87e89f29b08e2b187f233b68bf29c00d",
-      "candidateSha256": "e431ae093c7d42b19b8d73531f57486b87e89f29b08e2b187f233b68bf29c00d",
+      "sourceSha256": "2acdcbe50a074e2f076a5f9acd5f7b3feabbee66b68c4675ec6224d45d9287be",
+      "candidateSha256": "2acdcbe50a074e2f076a5f9acd5f7b3feabbee66b68c4675ec6224d45d9287be",
       "adapted": false
     },
     {
@@ -1386,8 +1386,8 @@
     },
     {
       "path": "runtime/services/native-output-owner.mjs",
-      "sourceSha256": "e3955ab304e841caf930141c8b9dc7d10a79361fe077554fb07362c2ef287d28",
-      "candidateSha256": "e3955ab304e841caf930141c8b9dc7d10a79361fe077554fb07362c2ef287d28",
+      "sourceSha256": "1436de89ae9bc2d0860fd715e434a7bd9a8bf73495f58e81b8092373047a8069",
+      "candidateSha256": "1436de89ae9bc2d0860fd715e434a7bd9a8bf73495f58e81b8092373047a8069",
       "adapted": false
     },
     {
@@ -1560,14 +1560,14 @@
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.tsx",
-      "sourceSha256": "ef1d659c6902bcb929d94fd6beab6111bb64356e66ab42c42d343d5ded9c1a2a",
-      "candidateSha256": "ef1d659c6902bcb929d94fd6beab6111bb64356e66ab42c42d343d5ded9c1a2a",
+      "sourceSha256": "3c86ca3f393d32963210ac38860877364dda6057c84f1c3ebb37fde111447c59",
+      "candidateSha256": "3c86ca3f393d32963210ac38860877364dda6057c84f1c3ebb37fde111447c59",
       "adapted": false
     },
     {
       "path": "runtime/src/workspaces/CompositionWorkspace.tsx",
-      "sourceSha256": "cefcc01bba4baebe60933679f009eb5f1b16c2bc2984fcc1380b2e2f82e804ca",
-      "candidateSha256": "cefcc01bba4baebe60933679f009eb5f1b16c2bc2984fcc1380b2e2f82e804ca",
+      "sourceSha256": "b3472c251403fd4a43d12b71efe76a8bb190916caec2bb9d84dfa09978d01077",
+      "candidateSha256": "b3472c251403fd4a43d12b71efe76a8bb190916caec2bb9d84dfa09978d01077",
       "adapted": false
     },
     {
@@ -1806,9 +1806,9 @@
     },
     {
       "path": "public/document-study/output-connection.test.mjs",
-      "sourceSha256": "a2d6f8d5cb30572be0abbf1a6560cf235c9e9fe88213b314f76b7e89fea5a508",
-      "candidateSha256": "c4282151ac8cddd604e319bf3884fc2e6a2c6bb489c30a5edb476e9c92c4d720",
-      "adapted": true
+      "sourceSha256": "f18c1855e87e786d3dfe13434129185b0c9ce4342411eada7fbc070b4b7d2a2e",
+      "candidateSha256": "f18c1855e87e786d3dfe13434129185b0c9ce4342411eada7fbc070b4b7d2a2e",
+      "adapted": false
     },
     {
       "path": "runtime/public/assets/fonts/wordforge.css",
@@ -1908,8 +1908,8 @@
     },
     {
       "path": "public/document-study/media-outputs-tools.js",
-      "sourceSha256": "7177a473b3c56cc760214c4bc56e4573bf028a85dbcc7e7f499901cc34552798",
-      "candidateSha256": "7177a473b3c56cc760214c4bc56e4573bf028a85dbcc7e7f499901cc34552798",
+      "sourceSha256": "7552d037073fc3719a0280a69ae8f04ad2cf47e181fb5f0bb7501ff230791fb2",
+      "candidateSha256": "7552d037073fc3719a0280a69ae8f04ad2cf47e181fb5f0bb7501ff230791fb2",
       "adapted": false
     },
     {
@@ -1920,8 +1920,8 @@
     },
     {
       "path": "public/document-study/output-stage-surfaces.js",
-      "sourceSha256": "71e55e7451e986856a58a37c306d547b18a03e75a20941df8b1215600ab1a754",
-      "candidateSha256": "71e55e7451e986856a58a37c306d547b18a03e75a20941df8b1215600ab1a754",
+      "sourceSha256": "9427da7f0a5ccf8acb2b603fb98937dd54b65578b9f6b766da72300f69d84418",
+      "candidateSha256": "9427da7f0a5ccf8acb2b603fb98937dd54b65578b9f6b766da72300f69d84418",
       "adapted": false
     },
     {
@@ -2004,9 +2004,9 @@
     },
     {
       "path": "public/document-study/workspace-navigation.js",
-      "sourceSha256": "d0ebb5aa6ec3119cfd7575c730798670284d316773c0ddd41fcafba39401403b",
-      "candidateSha256": "d0ebb5aa6ec3119cfd7575c730798670284d316773c0ddd41fcafba39401403b",
-      "adapted": false
+      "sourceSha256": "b2f79f2bd738fcc7b381478340912b6dd5d708f3bc366ac2d91e16140e20fc6f",
+      "candidateSha256": "b503a29cf5c2162d3f609883b1c98ab8d2c84e52a5eb3f1933dd87537c87942a",
+      "adapted": true
     },
     {
       "path": "public/document-study/workspace-navigation.css",
@@ -2016,9 +2016,9 @@
     },
     {
       "path": "public/document-study/project-library.js",
-      "sourceSha256": "de6c6edbab99049f5419e9e6841a7adb1f04bbb0857a12841f5074ac679f3b31",
-      "candidateSha256": "de6c6edbab99049f5419e9e6841a7adb1f04bbb0857a12841f5074ac679f3b31",
-      "adapted": false
+      "sourceSha256": "e30cde6913de87fa40252a712c5970f576b490941a7c2fc609c74ce66841052a",
+      "candidateSha256": "74d182cc57ca718acae18bb4a190d55e7cff6420217b5c0e8a4c08642e5ca944",
+      "adapted": true
     },
     {
       "path": "public/document-study/project-library.css",
@@ -2028,9 +2028,9 @@
     },
     {
       "path": "public/document-study/workspace-navigation.test.mjs",
-      "sourceSha256": "651bf750958d001b80de7d974dedbf83cc7944cf7b036599f6a1c99a2cf0f33b",
-      "candidateSha256": "e895761683a7fda84379fdca66ee503f8ad4bbbd13c90ae95f4d7e95fe22cc9a",
-      "adapted": true
+      "sourceSha256": "96f2e4283961c18337060cf14c8e5ebaeb9f7d90b1a4eee341d5d16fef0b36b3",
+      "candidateSha256": "96f2e4283961c18337060cf14c8e5ebaeb9f7d90b1a4eee341d5d16fef0b36b3",
+      "adapted": false
     },
     {
       "path": "public/document-study/research-learning-navigation.test.mjs",
@@ -2070,9 +2070,9 @@
     },
     {
       "path": "docs/superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md",
-      "sourceSha256": "90b4741cb070a13482c9cbacfecf340dc2156e71e181afc3be4991f0f12db075",
-      "candidateSha256": "27a53ba70d92d38f9f0c672e1e8332a30c9c1a55e3a7e70398ca97833ddaaa91",
-      "adapted": true
+      "sourceSha256": "46172c900a91805f5754eac29fcb66d2d05c55530c9e8a3fae0513722b3e1df6",
+      "candidateSha256": "46172c900a91805f5754eac29fcb66d2d05c55530c9e8a3fae0513722b3e1df6",
+      "adapted": false
     },
     {
       "path": "runtime/services/study-owned-relocation.mjs",
@@ -2106,8 +2106,8 @@
     },
     {
       "path": "scripts/permanent-home/serve.mjs",
-      "sourceSha256": "0024028f56e1417f57c57d05538c237fa95a0979b1dc20c01f477f3314b8d200",
-      "candidateSha256": "65edf9d2b570d787dbf0e331233ab3b5ede2d0248fc3ae4a8289b3559c41cce1",
+      "sourceSha256": "65edf9d2b570d787dbf0e331233ab3b5ede2d0248fc3ae4a8289b3559c41cce1",
+      "candidateSha256": "fcf0d08fd7775dba0bc10d60324a45f147ac2df5de05aa58398d74c0dce189c4",
       "adapted": true
     }
   ],
@@ -2137,19 +2137,19 @@
   "authored": [
     {
       "path": ".gitignore",
-      "candidateSha256": "73fd05d4c81fbd782f268fd99ccb3a39f294ac81a656d2e208fa38d64a86f7e2"
+      "candidateSha256": "cea3fcf59ade1773c3faa6a01a3baa32d0be98c842d697b6a274c23189a84251"
     },
     {
       "path": "README.md",
-      "candidateSha256": "fbeb92c23f781d673bc69026c824a6be0c3696a0de3d12152dfbd36c6e2a0430"
+      "candidateSha256": "f82b6a643dd4a6bc39edc1db4326b2d542a497099ba8ea0f85dd7f05540e8745"
     },
     {
       "path": "config.example.json",
-      "candidateSha256": "3eccb713e247b4733f2f2a36bd23b39c99eed20cd48cd7453937583aea06df57"
+      "candidateSha256": "dd300a42e8551d67bd52ad97b5230cacdb89101c50b2dc24cb957f19f7b814f4"
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "51b082e7975333c3b97e1ad5e5beff51850b5e7bfbef0a64784d62259d0c217e"
+      "candidateSha256": "761be798228725cf828ef0b09714719577e7196dba2ef5b0ebdac1108ef870a4"
     },
     {
       "path": "package.json",
@@ -2157,11 +2157,11 @@
     },
     {
       "path": "serve.mjs",
-      "candidateSha256": "be6f8c77d6b652f975b5c7d0f02edb14a729c8fe8662d56569f97a997adbff2f"
+      "candidateSha256": "e27e5750288b6479ab55cf4fe213f1a9d8f335b37f12d7fc868da0e607e34e1d"
     },
     {
       "path": "scripts/check-package.mjs",
-      "candidateSha256": "7e103033f5f22b3c00deeb186e3e849840c73abf03db0116aae92910153fad68"
+      "candidateSha256": "c40c5bde44daba3bfd30cd0f8dd8fd14051f0ad5504459d2b818034399c8d341"
     },
     {
       "path": "scripts/demo.mjs",
@@ -2177,11 +2177,11 @@
     },
     {
       "path": "runtime/scripts/build-document-study.mjs",
-      "candidateSha256": "b535e2cafd88d671f2e4e1303ca4cb22332fa3b6cfab841ae3b69d42ca31f4ff"
+      "candidateSha256": "dae31e476db119f42c9c3b570d10443791e948f8e3ce2e77d062c2e48ba26f8c"
     },
     {
       "path": "tests/config.test.mjs",
-      "candidateSha256": "a9ca7297462f76fd7a923bda9072ae789a54c431e6f9a6be54d7f6c5299d3891"
+      "candidateSha256": "4e9385cdc7afe1b45095899d7644a1f16811880e99bd12720f1425b98b43e13f"
     },
     {
       "path": "tests/package.test.mjs",
@@ -2205,27 +2205,27 @@
     },
     {
       "path": "CLAUDE-DEVELOPMENT.md",
-      "candidateSha256": "0ad8ebc94f532833f38cd9849571ade7b472fa3292620bdcd98a1d8b844da60f"
+      "candidateSha256": "04b5d84d4099eb41b9cc21ce7e2736fd4ae2a482ca3cd1c0c5740a6617c01f67"
     },
     {
       "path": "docs/sections/01-material.md",
-      "candidateSha256": "6d47500543b44c8e7882f3facd1db914e925ed7356222863c5fb7aa6e5eb1971"
+      "candidateSha256": "18b0f183d8f3605c371ab70e1417a44f6257a092ecf57683ae3abb543b074b7a"
     },
     {
       "path": "docs/sections/02-transcripts.md",
-      "candidateSha256": "cb5d9add2c482ea7e8577e4e40b23e4e70f3967bcf20e234d022de1368d76a98"
+      "candidateSha256": "54a2b8816d7e94dbc4645299869a11b956b3f12daf7ad2606c8574339cfad991"
     },
     {
       "path": "docs/sections/03-research.md",
-      "candidateSha256": "72446341185785a9d6239cfa37916180adc8d5a596d4e8caf9d06b66b89d047c"
+      "candidateSha256": "e36b269fd5568b7c28d9d1dfe51bee6b3a3d614a87441224f1590c69282a30e0"
     },
     {
       "path": "docs/sections/04-direction.md",
-      "candidateSha256": "bb546744c9f272b696e5e3aa064aa5cdbdbaa2fc438b71bf341587bcf5745db7"
+      "candidateSha256": "5e9d0dbb37c385ffc6e5a3811d2d6dc5659b1ef9325b418c6fe1f0aebcf5603e"
     },
     {
       "path": "docs/sections/05-draft.md",
-      "candidateSha256": "e2a3033684716b1f4c9425f2419c7dc5913d6502f4868dca09a9043682ed0ca7"
+      "candidateSha256": "d728dd7b2b91e34852d47fefdcf3f34f1399580db43dd9d1b68c53f6cac62798"
     },
     {
       "path": "docs/sections/06-read-refine.md",
@@ -2237,7 +2237,7 @@
     },
     {
       "path": "docs/sections/08-media.md",
-      "candidateSha256": "3ec09c5c1b1ef6bc1c68547b600781a7b07376c702d89e5c53a90f35cd3c5896"
+      "candidateSha256": "193f18320a737fe5cd363f21df7f48008b9ac1171aecdbe294ceb5b4aecefcd6"
     },
     {
       "path": "docs/sections/09-arrange.md",
@@ -2253,11 +2253,11 @@
     },
     {
       "path": "docs/sections/12-published-complete.md",
-      "candidateSha256": "92b24f6860a963c2b17fff86fc7129ac17d81a109d8e60fe0a743c86c4139627"
+      "candidateSha256": "eb289509619b11de3a1762b4db0e9f23b8cf8fe7b4985d76d0ab53dab41e020d"
     },
     {
       "path": "docs/sections/README.md",
-      "candidateSha256": "0bf35a79438a783f80e88de68e5cec2bf00a17e978c3f796ed557ac802c567d7"
+      "candidateSha256": "75c22ae61b72ec034bae44b93ac65f2a8edd753fd0ee565aab3faba1f9c5b174"
     },
     {
       "path": "docs/REPOSITORY-PROVENANCE.md",
@@ -2281,11 +2281,11 @@
     },
     {
       "path": "docs/WORKSPACE.md",
-      "candidateSha256": "4a78c5cb6f3f182e925597b93801473eb3d71f1a680bb7243c792f1fb3fe8c4a"
+      "candidateSha256": "e3d3efd05d5e246b5a52bfdcad650147316eff5ec17faed3935a873673300442"
     },
     {
       "path": "CLAUDE.md",
-      "candidateSha256": "73876c3770c995d198acc0e5e02c8790f7fee8db75ab64537b3b9c5387ea076a"
+      "candidateSha256": "9a0b683fbcf07d07f048bfbd1d8ba8665f0f1fe179bca9aa8689c12ecbac003c"
     },
     {
       "path": "docs/HUMAN-EXPERIENCE.md",
@@ -2293,7 +2293,7 @@
     },
     {
       "path": "docs/PRODUCT.md",
-      "candidateSha256": "e03cbe5e3559df72aa95f33c1ed2b620b513338278d323bf9cbbb06893e77dfb"
+      "candidateSha256": "9bb7d65853d2582f58687bf70a56bfc866933f90ca768364d0778be57ac89a4f"
     },
     {
       "path": "tests/prose-surface.test.mjs",
@@ -2317,7 +2317,7 @@
     },
     {
       "path": "public/document-study/output-stage-surfaces.test.mjs",
-      "candidateSha256": "045f7fad2f33bb16ea655655ff16bf61bc9e1d7a96ccc463a42db13cad46e919"
+      "candidateSha256": "5fd8e127e25184589db03806b026dc4576fd326303a446259c1d70ba2536f79d"
     },
     {
       "path": "tests/source-note-navigation.test.mjs",
@@ -2353,7 +2353,7 @@
     },
     {
       "path": "docs/CLAUDE-ACCESS.md",
-      "candidateSha256": "66de740bbd915b35327cc1a19cf9ec9837d2f0d113c417a45f74a02984dbfb65"
+      "candidateSha256": "ac00f2cb88d125f3312a9a905334485276013dccaf5e8feaa674b36304cb576c"
     },
     {
       "path": "docs/PERMANENT-HOME.md",
@@ -2365,7 +2365,7 @@
     },
     {
       "path": "runtime/services/concept-work.mjs",
-      "candidateSha256": "73d9d81396b8222a8f26a7fc8d7d1b32bd42fa0f93e37de5852e4947fb6a581f"
+      "candidateSha256": "c80d713727f915da7ebb9d21930f61fec1a5c384c03fdcfaf075efbac85bb5da"
     },
     {
       "path": "runtime/services/concept-markdown.mjs",
@@ -2377,7 +2377,7 @@
     },
     {
       "path": "docs/CONCEPT-AGENT.md",
-      "candidateSha256": "03134acf3bbbd27a3eb728fc84bc7ffe345301c8d36aa88dbc5f25190dcb3093"
+      "candidateSha256": "5f0b5e4a02122b28b2390c2333d75885df9fbc5cef9389a1a7d7d571aed9cd27"
     },
     {
       "path": "skills/ar-create-concepts/SKILL.md",
@@ -2408,8 +2408,216 @@
       "candidateSha256": "6055c095212c05a2a66f6d374c3ffdefd44bbfd6350bb9a4b5d336dd719af6e5"
     },
     {
+      "path": "runtime/services/retained-transcript-catalog.mjs",
+      "candidateSha256": "9efc390629364badb8e06fbf252502a73512c5f2eac4310e8c353160914c978f"
+    },
+    {
+      "path": "runtime/services/material-folder.mjs",
+      "candidateSha256": "3be35178bd7ef82122e9ee421271d03d541376840b4d00212544ed0ac892114b"
+    },
+    {
+      "path": "runtime/services/material-albums.mjs",
+      "candidateSha256": "485b8a6af340115b24a6ee4fda42c9ec82a690aece08cc10b48b99bdff8093b4"
+    },
+    {
+      "path": "tests/source-imported.test.mjs",
+      "candidateSha256": "eb88af52fc21f62b49f202e31ee46727dc4a0b19fbb470adda60ccea51e38881"
+    },
+    {
+      "path": "runtime/services/source-sessions.mjs",
+      "candidateSha256": "9f40d7f8ae5e363a91ccb4959d7a693c08f9071c40606673594cb70978fcad72"
+    },
+    {
+      "path": "runtime/services/imported-transcript-manager.mjs",
+      "candidateSha256": "56297dd7b0ef81f2f08aa08b41e733fb6693b95dea23509f3dcb90c632283eb6"
+    },
+    {
+      "path": "tests/source-sessions-http.test.mjs",
+      "candidateSha256": "1464a2f53d9262ed1338a4862aab3adf256795ef73b584d777bbc324a1541da4"
+    },
+    {
+      "path": "public/document-study/source-dialogue.mjs",
+      "candidateSha256": "7e10a22894a0a341085d1617016b3bf33a053fd3510ee240af6553363d0d7dbc"
+    },
+    {
+      "path": "public/document-study/source-imported.css",
+      "candidateSha256": "3a8b25ed30563f2e1f823b22d0dd0e8ecc509da989ac387463d4e8ae5676d4e5"
+    },
+    {
+      "path": "public/document-study/source-imported.js",
+      "candidateSha256": "896200b02db5f7eb7a306e4a584bcd79b5928c6711915fdce4948ee60ba9f701"
+    },
+    {
+      "path": "public/document-study/source-dialogue.js",
+      "candidateSha256": "7e10a22894a0a341085d1617016b3bf33a053fd3510ee240af6553363d0d7dbc"
+    },
+    {
+      "path": "tests/learning-shared-notes.test.mjs",
+      "candidateSha256": "984b56c71dbcd47edd93d8323c67a48d13064d6ff2cd75bc4e75421c6e3c7bda"
+    },
+    {
+      "path": "tests/retained-transcript-library.test.mjs",
+      "candidateSha256": "b80bc38fedfbe9d4125bef5039205a4c8c5f234ee22530b4cee280bf1d6b2f5e"
+    },
+    {
+      "path": "runtime/services/retained-transcript-catalog.test.mjs",
+      "candidateSha256": "3556781916304eeb4975bacd36af0fe99e1b2e70438d637a03d47b3c66c98627"
+    },
+    {
+      "path": "tests/transcript-concept-http.test.mjs",
+      "candidateSha256": "189e862d619db947a8e2803e188eb6765f83e878fe477eef6d6ea931b5dcea52"
+    },
+    {
+      "path": "tests/material-controls.test.mjs",
+      "candidateSha256": "91e3dc30a8990522efa997ff9d9721bea31421aac1505116ba24efed71742251"
+    },
+    {
+      "path": "tests/material-actions-http.test.mjs",
+      "candidateSha256": "ae6acf268269d99e35f91660cbf4c9e1dbdae97ccdfe0fc4c72f6a3d9bb6bf42"
+    },
+    {
+      "path": "tests/material-folder.test.mjs",
+      "candidateSha256": "6582ffe5ef447b94890c70c9d473f7867367ab5d145e511cacb06181dc0ee07b"
+    },
+    {
+      "path": "runtime/services/material-albums.test.mjs",
+      "candidateSha256": "71ab1833049e455efa05d7d47cb4eb12434e35d0f53665f281cbd1ba1462e496"
+    },
+    {
+      "path": "runtime/study-bindings.test.mjs",
+      "candidateSha256": "b5d681fb25e1245745a2da721e6caf49282cf8c79dc4712264c416602f0e1246"
+    },
+    {
+      "path": "docs/SOURCE-CONNECTION.md",
+      "candidateSha256": "fe5c36c8ef18763046f74941cd886b0e66cfa12cf0d554671e5704f8ef186b24"
+    },
+    {
+      "path": "runtime/services/collection-short-output.test.mjs",
+      "candidateSha256": "8fdeadc671ec95a12a0576671df9f08392467cf389090f9265243ba9f41f62ae"
+    },
+    {
+      "path": "public/document-study/output-browser-recovery.test.mjs",
+      "candidateSha256": "6ad3d1165ea33718079308ecac2031fca7122990eda9e1148474f57a69b9277c"
+    },
+    {
+      "path": "public/document-study/mountStudyAudience.tsx",
+      "candidateSha256": "f0c1bb6035c3f0e3018c0147374ae6a01dc913c24a08e12684f304418c3767f4"
+    },
+    {
+      "path": "runtime/services/project-membership.mjs",
+      "candidateSha256": "377cdde858e3abfd4063dfe70d213ef11bfc540e13aeb9e4323694151e817377"
+    },
+    {
+      "path": "runtime/services/library-work-references.mjs",
+      "candidateSha256": "bac1811f49085cbb2a48946d9f531ba1004e64aba0f94e9f0ddf92e7f1db7e63"
+    },
+    {
+      "path": "runtime/services/current-understanding.mjs",
+      "candidateSha256": "7a025de5104fa146ca19b234e8b0eb0854e67332cbe5605f4d79e90e75dea75d"
+    },
+    {
+      "path": "runtime/services/work-continuity.mjs",
+      "candidateSha256": "624ff0b282850ddd24eb2ff226e3b902867fbbb22aa9e5eea432775bdc4eb407"
+    },
+    {
+      "path": "runtime/services/share-preparation.mjs",
+      "candidateSha256": "7d5af9a1640e09582fc9bff2c96c55e34b9d58613cf29fe64e34bb1e7586fb22"
+    },
+    {
+      "path": "runtime/services/media-usage.mjs",
+      "candidateSha256": "a2d1521d1e9d787c1d512122d7091e070d49b75b4d19f008f2f9b7e015bc4de0"
+    },
+    {
+      "path": "public/document-study/share-stage.js",
+      "candidateSha256": "fd1f4127c7671667337ac7262f14aaf82a80d1884629c6985cd5b210ea897d1d"
+    },
+    {
+      "path": "public/document-study/media-usage.js",
+      "candidateSha256": "e4e91a4303f6cfe2895e50046def569964efd517278686aa379336ac5124a943"
+    },
+    {
+      "path": "public/document-study/share-stage.test.mjs",
+      "candidateSha256": "16e2a8e9fc9e073b9ad7c5404483caec69a3888a8f5e05b45af6b7c802e4e1d0"
+    },
+    {
+      "path": "runtime/services/share-preparation.test.mjs",
+      "candidateSha256": "f9cfaa8e0abcd1b8f24bbd81278097af24bc5f40042a39f27e4bddff14dd82ea"
+    },
+    {
+      "path": "runtime/services/media-usage.test.mjs",
+      "candidateSha256": "bca418ff05e12154e7e75444bfff2f3e336971d833259e6be5a195b065e50de1"
+    },
+    {
+      "path": "runtime/scripts/build-media-article-spec.mjs",
+      "candidateSha256": "b1ed0cd1cacfd7412d1c5450b74d76a1468fedc9472346156b283e9de96fccf9"
+    },
+    {
+      "path": "public/document-study/work-continuity-panel.mjs",
+      "candidateSha256": "124c247573088bca592425955ae03c07c11ef19e7a30cc6f481f0a6b39a6e8d9"
+    },
+    {
+      "path": "runtime/services/continuity-interface-routes.mjs",
+      "candidateSha256": "f883392677c9a5fe59d448fab5fe768685989949a912b6e01ae3b559fab4b36f"
+    },
+    {
+      "path": "public/document-study/inquiry-workspace.mjs",
+      "candidateSha256": "5fb7d70951577c09031368add4774781ec1be78c61dc9e4f90cd320ac36cb5db"
+    },
+    {
+      "path": "runtime/services/inquiry-interface-routes.mjs",
+      "candidateSha256": "af62bf35d502f50b4a7306d5de3392d15dba76354328223910fdf88088cae3fa"
+    },
+    {
+      "path": "runtime/services/continuity-interface.test.mjs",
+      "candidateSha256": "681f596386aaa2a0063dcd20d368e95427865348a8436659d8e2a3a79a7a9154"
+    },
+    {
+      "path": "runtime/services/continuity-interface.fixture.mjs",
+      "candidateSha256": "02a72676a3911c403c5c156369b990fd55d04ca10eefc1e6ed36c8d65ec7ceae"
+    },
+    {
+      "path": "runtime/services/inquiry-interface.test.mjs",
+      "candidateSha256": "418212212eb720332f3f7165fbd6d49bbeccac3bb4d211555e892b15f4445d7d"
+    },
+    {
+      "path": "runtime/services/test-fixtures/inquiry-owners.mjs",
+      "candidateSha256": "375e125ca43353e962239763baa4968bb27148026c4067ebda73a883bf5e3842"
+    },
+    {
+      "path": "docs/DESIGN-PASS-ADDITIONS.md",
+      "candidateSha256": "21fab20b25ed6d06ec576944800f893ea239b596a8719660ba4ac7b5bd50e4b7"
+    },
+    {
+      "path": "docs/FUNCTION-FLOW.md",
+      "candidateSha256": "e99164d2d6325b729e734cd31be47889654f222dc341f3741d210d1a2992cf5a"
+    },
+    {
+      "path": "docs/FILE-CONTRACT-MAP.md",
+      "candidateSha256": "f8f767fe216adae1a2e8b6838d58e0d7913cf70e4dc20bd3180b584933031163"
+    },
+    {
+      "path": "docs/CLAUDE-DESIGN-PASTE.md",
+      "candidateSha256": "70a86b43a9faec7d42f1da51a1da2c3f5bee522cc5af67e8f78c6c7276dd4a60"
+    },
+    {
+      "path": "CLAUDE-DESIGN-START.md",
+      "candidateSha256": "6072b90e3640b4a3c5e3a881d7d43961a6d0f1cd8832578959be91e85b1f975a"
+    },
+    {
+      "path": "docs/AGENT-CONNECTIONS.md",
+      "candidateSha256": "5a3555c94ab9890496222c27ea10a04b775ba57e5f34dd2c0248e403f4f1d8c5"
+    },
+    {
+      "path": "docs/LOOK.md",
+      "candidateSha256": "15e9b416823cd4c137814ab41a7fc7e48f512593d0f3df623616d2ff12fff6ec"
+    },
+    {
+      "path": "public/document-study/c3-defaults.css",
+      "candidateSha256": "7ff4834f3e8a48f1861e9d4a7eec02454c57d7b267abb0157048dae16813648d"
+    },
+    {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "f740b26124a9401e3f19f05ede78b4822d0fce63324d46b8ff984824ddc9df42"
+      "candidateSha256": "56ed6ca124d3847c8413ec6368ed2f8a9c71a2442f2bc1dd49811b6fb293a0b7"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -2440,12 +2648,20 @@
       "candidateSha256": "50d599402bd76f850aee856bef4bd8f7adba520af8e2078736412a91b029e47c"
     },
     {
+      "path": "public/document-study/connected-workspace.mjs",
+      "candidateSha256": "753b69d8ede685247a4ff5dc0a330daa1c41180e502f59a150e728833a2efff7"
+    },
+    {
+      "path": "public/document-study/continuity-browser-recovery.mjs",
+      "candidateSha256": "5be8127c22127bd7a94b92cb0265b741ab1bf88ccde8c598a665677e82dd4b15"
+    },
+    {
       "path": "public/document-study/empty-states.css",
       "candidateSha256": "fb7d69c27cf79148025924b97198ab4bfab5a18e94d1009be58e467f7a1f5aaf"
     },
     {
       "path": "public/document-study/empty-states.js",
-      "candidateSha256": "f70d7e3d4fcecc0816ba9f51dd75b2ef8c39532a3cd9bc92fb2c753852525f3d"
+      "candidateSha256": "5da53c7efa39984af4ba1d151089b1115a36fdedac56613608d57b82d2300a82"
     },
     {
       "path": "public/document-study/empty-states.test.mjs",
@@ -2457,11 +2673,11 @@
     },
     {
       "path": "public/document-study/home-tabs.js",
-      "candidateSha256": "9ccac1ed3fa92eb4530d76ac2baf1956862b6780fab14d3b40463ee16bb9c9db"
+      "candidateSha256": "30388255b92d55b3fdddb987e204acbd6d798b92adc14d525392c9c92a7c41c7"
     },
     {
       "path": "public/document-study/home-tabs.test.mjs",
-      "candidateSha256": "683dc42dbf7c93ba44eda9622db40a71b2c3b200191946d21692d5d03770d57d"
+      "candidateSha256": "831c6c8b4d4ecfe7015a42aa7a87a268b2fa7ea5e2ed91c55f4a52dbe8b631d8"
     },
     {
       "path": "public/document-study/inspector.css",
@@ -2481,7 +2697,7 @@
     },
     {
       "path": "public/document-study/research-tab.js",
-      "candidateSha256": "ff24c315dd0c09ef2dc7236ac669cdcc424c24dd407113d2f36d1813c6c14ef1"
+      "candidateSha256": "624e81d938dda260a52962f5c20b18a71484b5217033e6b28118a31f59621ade"
     },
     {
       "path": "public/document-study/research-tab.test.mjs",
@@ -2493,15 +2709,15 @@
     },
     {
       "path": "public/document-study/surface-bar.css",
-      "candidateSha256": "6b1ceead8c9fb3dd30f57a6eb1adc97442c25006be55db1e9b10a5bf609f66cb"
+      "candidateSha256": "13c4ab77ac79d583549528c533e6a7ee6733dac9325b0bfa6b73524e0bb6a965"
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "b7e57b60e2a055ccee4a1a3c9544c24b2619a89f5142305db3a3c430566fe03f"
+      "candidateSha256": "d0b98113e6e73131177e0e2496a74135fc72e7a55d10b93d6bfec67980ea3a99"
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
-      "candidateSha256": "bde6f5181b0509c6125491091b91bdd2ba86c005d2a0dfc11c90debf42360462"
+      "candidateSha256": "ba791216316d4729d0061fa25467c7c2ea1827c98fbba1f7f555690ff26e75d6"
     },
     {
       "path": "public/document-study/waiting-band.css",
@@ -2540,12 +2756,36 @@
       "candidateSha256": "cd8db90cd950e26bc8761f65d323588bd5cd112d326d6d322bc7c8ea86771215"
     },
     {
-      "path": "public/document-study/c3-defaults.css",
-      "candidateSha256": "7ff4834f3e8a48f1861e9d4a7eec02454c57d7b267abb0157048dae16813648d"
+      "path": "runtime/services/connected-workspace-bridge.test.mjs",
+      "candidateSha256": "baabb90e6aa2dfa70278e303072e6f1bf387d251938d216ba96f55c395a44941"
     },
     {
-      "path": "docs/LOOK.md",
-      "candidateSha256": "15e9b416823cd4c137814ab41a7fc7e48f512593d0f3df623616d2ff12fff6ec"
+      "path": "runtime/services/continuity-browser-recovery.test.mjs",
+      "candidateSha256": "1fead38bc6087478d514d55ba7bc1c0354647cbb5b6ebdb3ea39600ae158100e"
+    },
+    {
+      "path": "runtime/services/continuity-recovery.fixture.mjs",
+      "candidateSha256": "02a72676a3911c403c5c156369b990fd55d04ca10eefc1e6ed36c8d65ec7ceae"
+    },
+    {
+      "path": "runtime/services/inquiry-project-selectors.mjs",
+      "candidateSha256": "57efcd07b1cdfaa4fbbb74a570205053ef3e76a6f6350cbea0c20561f134c35e"
+    },
+    {
+      "path": "runtime/services/inquiry-project-selectors.test.mjs",
+      "candidateSha256": "a191b4094e0a98c2671171c28f292727537423d1241d9971c074ce84b069e3f3"
+    },
+    {
+      "path": "runtime/services/library-native-reentry.test.mjs",
+      "candidateSha256": "1d22f7b644aee35e1b1397de5aed0edaceeffc55ebc121ea1d62ca2bcf58865e"
+    },
+    {
+      "path": "runtime/services/study-human-direction-inactive-output.test.mjs",
+      "candidateSha256": "c6abd9e1acfc5c8d45200639dff35623e3aeb163db05f06b377ecabaeda51eb6"
+    },
+    {
+      "path": "docs/ROUND2-SOURCE-LOOK-STATUS.md",
+      "candidateSha256": "47d6a784e0db26bea8a871eb0c9dfb7df615d7be307332b1f23389b1a2c89527"
     }
   ],
   "dependencyRepair": {
@@ -2595,6 +2835,280 @@
       "runtimeChanged": false,
       "privateContentImported": false,
       "currentDesignPassChanged": false
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Authored collection to independent Post/Product listing",
+      "files": [
+        "runtime/services/native-output-owner.mjs",
+        "runtime/services/collection-short-output.test.mjs"
+      ],
+      "note": "Exact reviewed short-kind preflight option only; strict Article/native owner guards retained. No private content, live activation or publication."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Closed installed selected-output recovery and truthful mode navigation",
+      "files": [
+        "public/document-study/output-connection.js",
+        "public/document-study/workspace-navigation.js",
+        "public/document-study/study-output-host.mjs",
+        "public/document-study/study-output-boundary.mjs",
+        "public/document-study/mountStudyComposition.tsx",
+        "public/document-study/output-browser-recovery.test.mjs",
+        "public/document-study/study-output-host.test.mjs",
+        "public/document-study/output-connection.test.mjs",
+        "public/document-study/workspace-navigation.test.mjs"
+      ],
+      "note": "Exact reviewed maintained source/test pins from the installed closed receipt; generated canvas deliberately rebuilt, not copied. No private work or runtime change. Provisional until combined final source freeze."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Closed installed designed Article and portrait Carousel audience journey",
+      "files": [
+        "public/document-study/output-stage-surfaces.js",
+        "public/document-study/mountStudyAudience.tsx",
+        "public/document-study/study-output-entry.ts",
+        "runtime/src/workspaces/CarouselWorkspace.tsx",
+        "public/document-study/output-stage-surfaces.test.mjs"
+      ],
+      "note": "Exact reviewed maintained source/test pins only. Newer recovery host/test retained. Generated canvas excluded/rebuild required; no private data, activation or completion claim."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Prepared reviewed maintained-owner union, not installed or wired",
+      "files": [
+        "runtime/services/library.mjs",
+        "runtime/services/project-membership.mjs",
+        "runtime/services/study-human-direction.mjs",
+        "runtime/services/native-output-factory.mjs",
+        "runtime/services/library-work-references.mjs",
+        "runtime/services/current-understanding.mjs",
+        "runtime/services/work-continuity.mjs",
+        "runtime/services/share-preparation.mjs",
+        "runtime/services/media-usage.mjs"
+      ],
+      "note": "Exact reviewed generic owners only; same Library/native authority. Routes/UI/composed proof still pending. No private files/tests/receipts copied, no activation/push/completion claim."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Installed connected Share and Media source consolidation",
+      "files": [
+        "runtime/server.mjs",
+        "runtime/services/share-preparation.mjs",
+        "runtime/services/media-usage.mjs",
+        "runtime/src/workspaces/CompositionWorkspace.tsx",
+        "runtime/src/workspaces/CarouselWorkspace.tsx",
+        "public/document-study/index.html",
+        "public/document-study/share-stage.js",
+        "public/document-study/media-usage.js",
+        "public/document-study/study-photos.js",
+        "public/document-study/photos-stage.js",
+        "public/document-study/media-outputs-tools.js",
+        "public/document-study/study-output-host.mjs",
+        "public/document-study/study-output-boundary.mjs",
+        "public/document-study/mountStudyComposition.tsx",
+        "public/document-study/mountStudyAudience.tsx",
+        "public/document-study/study-output-entry.ts",
+        "public/document-study/study-output-host.test.mjs",
+        "public/document-study/share-stage.test.mjs",
+        "public/document-study/media-outputs-tools.test.mjs",
+        "runtime/services/share-preparation.test.mjs",
+        "runtime/services/media-usage.test.mjs",
+        "runtime/scripts/build-media-article-spec.mjs",
+        "runtime/scripts/build-document-study.mjs",
+        "scripts/check-package.mjs",
+        ".gitignore"
+      ],
+      "note": "Exact reviewed payload except portable packageView server/synthetic bootstrap retained and two synthetic refused-path test literals generalized. Canonical build regenerates media-article-spec from compositionSpec; generated outputs excluded. No foreign package.json copied, runtime change or final package claim."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Accepted continuity interface lane B, not mounted",
+      "files": [
+        "public/document-study/work-continuity-panel.mjs",
+        "runtime/services/continuity-interface-routes.mjs"
+      ],
+      "note": "Exact reviewed panel/finite routes after ACK-generation repair. Installed host capture/restore wiring and combined final own-package journey remain pending; no private content or runtime change."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Accepted inquiry interface lane A, not mounted",
+      "files": [
+        "public/document-study/inquiry-workspace.mjs",
+        "runtime/services/inquiry-interface-routes.mjs"
+      ],
+      "note": "Exact reviewed panel after late-create ACK repair and finite routes. Actual server mount/catalog/native navigation/combined screen remains pending. No CSS/private data/runtime change."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Portable continuity interface source-layout synthetic test graph",
+      "files": [
+        "runtime/services/continuity-interface.test.mjs",
+        "runtime/services/continuity-interface.fixture.mjs"
+      ],
+      "note": "Eight actual-packaged-owner HTTP/DOM cases passed once with plain Node, no loader/machine paths. Exact source-layout test/fixture only; no private data or production change."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Portable inquiry interface source-layout synthetic test graph",
+      "files": [
+        "runtime/services/inquiry-interface.test.mjs",
+        "runtime/services/test-fixtures/inquiry-owners.mjs"
+      ],
+      "note": "Loader-free actual package graph13passed after explicit invented catalog initialization repair. Final fixture only normalizes3historical names to synthetic IDs; representative HTTP/Project/nativePiece1pass, testunchanged. No private/default catalog or production changes."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Immediate design-ready snapshot under explicit design-first priority",
+      "files": [
+        "docs/WORKSPACE.md",
+        "CLAUDE-DEVELOPMENT.md",
+        "docs/PRODUCT.md",
+        "docs/HUMAN-EXPERIENCE.md",
+        "docs/DESIGN-PASS-ADDITIONS.md",
+        "docs/FUNCTION-FLOW.md",
+        "docs/FILE-CONTRACT-MAP.md",
+        "docs/superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md",
+        "docs/sections/01-material.md",
+        "docs/sections/02-transcripts.md",
+        "docs/sections/03-research.md",
+        "docs/sections/04-direction.md",
+        "docs/sections/05-draft.md",
+        "docs/sections/06-read-refine.md",
+        "docs/sections/07-check-changes.md",
+        "docs/sections/08-media.md",
+        "docs/sections/09-arrange.md",
+        "docs/sections/10-review-release.md",
+        "docs/sections/11-share-celebrate.md",
+        "docs/sections/12-published-complete.md",
+        "docs/sections/README.md",
+        "CLAUDE-DESIGN-START.md",
+        "docs/CLAUDE-DESIGN-PASTE.md",
+        "docs/CLAUDE-ACCESS.md"
+      ],
+      "note": "Current reviewed code plus accepted prepared-unmounted interfaces and current requirements/placement/status. No all-functions/native-integration completion claim; current design/runtime/private contents unchanged."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Current C3 Round2 design-ready snapshot",
+      "approvedMergedRevision": "336bb20d9ebf0027a64eae45f3989cb325e5acf9",
+      "reviewedDeltaSha256": "bd71ce64144751642c90b4e2a45799461ad2e987bc0184db7ae982756e82b2f6",
+      "files": [
+        "CLAUDE-DESIGN-START.md",
+        "CLAUDE-DEVELOPMENT.md",
+        "docs/AGENT-CONNECTIONS.md",
+        "docs/CLAUDE-ACCESS.md",
+        "docs/CLAUDE-DESIGN-PASTE.md",
+        "docs/CONCEPT-AGENT.md",
+        "docs/DESIGN-PASS-ADDITIONS.md",
+        "docs/FILE-CONTRACT-MAP.md",
+        "docs/FUNCTION-FLOW.md",
+        "docs/HUMAN-EXPERIENCE.md",
+        "docs/LOOK.md",
+        "docs/PRODUCT.md",
+        "docs/ROUND2-SOURCE-LOOK-STATUS.md",
+        "docs/WORKSPACE.md",
+        "docs/sections/01-material.md",
+        "docs/sections/02-transcripts.md",
+        "docs/sections/03-research.md",
+        "docs/sections/04-direction.md",
+        "docs/sections/05-draft.md",
+        "docs/sections/06-read-refine.md",
+        "docs/sections/07-check-changes.md",
+        "docs/sections/08-media.md",
+        "docs/sections/09-arrange.md",
+        "docs/sections/10-review-release.md",
+        "docs/sections/11-share-celebrate.md",
+        "docs/sections/12-published-complete.md",
+        "docs/sections/README.md",
+        "docs/superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md",
+        "public/document-study/c3-defaults.css",
+        "public/document-study/c3-theme.css",
+        "public/document-study/c3-theme.test.mjs",
+        "public/document-study/canvas-c3.css",
+        "public/document-study/canvas-c3.js",
+        "public/document-study/canvas-c3.test.mjs",
+        "public/document-study/checkpoint-rail.css",
+        "public/document-study/checkpoint-rail.js",
+        "public/document-study/checkpoint-rail.test.mjs",
+        "public/document-study/connected-workspace.mjs",
+        "public/document-study/continuity-browser-recovery.mjs",
+        "public/document-study/draft-flow.js",
+        "public/document-study/empty-states.css",
+        "public/document-study/empty-states.js",
+        "public/document-study/empty-states.test.mjs",
+        "public/document-study/home-tabs.css",
+        "public/document-study/home-tabs.js",
+        "public/document-study/home-tabs.test.mjs",
+        "public/document-study/human-direction.js",
+        "public/document-study/index.html",
+        "public/document-study/inquiry-workspace.mjs",
+        "public/document-study/inspector.css",
+        "public/document-study/inspector.js",
+        "public/document-study/inspector.test.mjs",
+        "public/document-study/output-connection.js",
+        "public/document-study/photos-stage.js",
+        "public/document-study/project-library.js",
+        "public/document-study/research-tab.css",
+        "public/document-study/research-tab.js",
+        "public/document-study/research-tab.test.mjs",
+        "public/document-study/source-c3.css",
+        "public/document-study/source-imported.js",
+        "public/document-study/study-output-host.mjs",
+        "public/document-study/study-output-host.test.mjs",
+        "public/document-study/study.js",
+        "public/document-study/surface-bar.css",
+        "public/document-study/surface-bar.js",
+        "public/document-study/surface-bar.test.mjs",
+        "public/document-study/waiting-band.css",
+        "public/document-study/waiting-band.js",
+        "public/document-study/waiting-band.test.mjs",
+        "public/document-study/work-continuity-panel.mjs",
+        "public/document-study/workspace-navigation.js",
+        "runtime/public/assets/fonts/PLUS-JAKARTA-SANS-LICENSE.txt",
+        "runtime/public/assets/fonts/plus-jakarta-sans-400-normal-latin-ext.woff2",
+        "runtime/public/assets/fonts/plus-jakarta-sans-500-normal-latin-ext.woff2",
+        "runtime/public/assets/fonts/plus-jakarta-sans-500-normal-latin.woff2",
+        "runtime/public/assets/fonts/plus-jakarta-sans-600-normal-latin-ext.woff2",
+        "runtime/public/assets/fonts/plus-jakarta-sans-600-normal-latin.woff2",
+        "runtime/scripts/build-study-output-canvas.mjs",
+        "runtime/server.mjs",
+        "runtime/services/connected-workspace-bridge.test.mjs",
+        "runtime/services/continuity-browser-recovery.test.mjs",
+        "runtime/services/continuity-interface-routes.mjs",
+        "runtime/services/continuity-interface.fixture.mjs",
+        "runtime/services/continuity-interface.test.mjs",
+        "runtime/services/continuity-recovery.fixture.mjs",
+        "runtime/services/current-understanding.mjs",
+        "runtime/services/inquiry-interface-routes.mjs",
+        "runtime/services/inquiry-interface.test.mjs",
+        "runtime/services/inquiry-project-selectors.mjs",
+        "runtime/services/inquiry-project-selectors.test.mjs",
+        "runtime/services/library-native-reentry.test.mjs",
+        "runtime/services/library-work-references.mjs",
+        "runtime/services/library.mjs",
+        "runtime/services/native-output-factory.mjs",
+        "runtime/services/project-membership.mjs",
+        "runtime/services/study-human-direction-inactive-output.test.mjs",
+        "runtime/services/study-human-direction.mjs",
+        "runtime/services/test-fixtures/inquiry-owners.mjs",
+        "runtime/services/work-continuity.mjs"
+      ],
+      "note": "Safe prior source plus exact selective74-file reviewed delta/current requirements. Installed C3 and prepared connected candidate distinguished; automatic one-copy/history not integrated. No private content/generated bundles/provider activation/deployment."
+    },
+    {
+      "date": "2026-10-20",
+      "scope": "Repo-native current C3 Round2 source delivery under explicit human request",
+      "files": [
+        "CLAUDE-DESIGN-START.md",
+        "docs/CLAUDE-DESIGN-PASTE.md",
+        "docs/ROUND2-SOURCE-LOOK-STATUS.md",
+        "docs/CLAUDE-ACCESS.md",
+        "README.md",
+        "CLAUDE.md",
+        "docs/DESIGN-PASS-ADDITIONS.md"
+      ],
+      "note": "Current main repository entry/paste/LOOK/status and current feature-list facts. No ZIP required. Reviewed code preserved; private content and runtime activation excluded. Exact published revision is verified externally against GitHub after push."
     }
   ],
   "repositorySeparation": {

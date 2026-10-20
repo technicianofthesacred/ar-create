@@ -153,3 +153,9 @@ test('long titles are trimmed in the middle so both ends stay readable; the full
  assert.match(seg.textContent,/^Seven Lessons.*….*Yunnan$/);
  assert.equal(seg.title,'Seven Lessons from the Wood-Fired Kiln in Jianshui, Yunnan');
 });
+
+
+test('connected work receipt inputs and recovery stay with their visible owner, never bar proxies',()=>{
+ const f=fixture(),owner=f.d.createElement('details');owner.id='connected-work-receipts';owner.innerHTML='<summary>Work receipts</summary><textarea data-field="desired">Exact pending author task</textarea><p role="status">Outcome pending</p><button>Retry exact operation</button>';f.d.querySelector('#work-context').append(owner);f.w.surfaceBar.build();
+ assert.equal(f.d.getElementById('connected-work-receipts'),owner);assert.equal(owner.querySelector('textarea').value,'Exact pending author task');assert.equal(f.bar().textContent.includes('Retry exact operation'),false);
+});

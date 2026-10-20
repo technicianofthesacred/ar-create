@@ -33,3 +33,8 @@ Premiere remains available for the full footage review and detailed editing. The
 ## Preserve useful movement when selecting footage
 
 Carry the existing footage review's chosen calibration into the selection handoff. Keep whole usable actions and their relevant lead-in/out rather than cutting a long useful movement to a tiny central highlight. Consider meaningful motion or direction changes when proposing boundaries. Flag very short clips and visibly failed rapid, jumpy or choppy camera movement for review; where only part fails, retain useful footage before and after it. These are review criteria, not blanket automatic cutting or deletion permission. The footage owner retains its detailed calibration, full-context review and original ranges; AR Create reuses that evidence rather than rescreening or inventing a new trimming engine.
+
+
+## 20 October — Project folder and album entrance
+
+Use Material's permanent project folder and album-link entry as the same media intake, not another asset store. **Open material folder** must resolve that project's saved owned binding. Imported files retain one project/source identity and their original remains untouched. An album link is not a selected photo, completed import, continuous sync or approved output placement. Show actual provider access/import limits, including unavailable/private/unsupported and partial results. A supplied album does not authorize account setup, upstream edits or publishing. Keep existing video limitations honest. Follow the [Material acceptance](01-material.md#20-october--open-the-material-folder-and-connect-album-links) and [next-design additions record](../DESIGN-PASS-ADDITIONS.md); current Claude design remains unchanged.

@@ -52,3 +52,29 @@ For the later idea-led workflow, a personally stated concept, belief, fundamenta
 ## 18 October — Research from the curated personal library
 
 Use the [curated personal library requirements](../PRODUCT.md#18-october--curated-personal-resource-library-later-design-pass) for cross-project source discovery. The author's own writing, participated conversations and explicitly marked passages carry different personal context from a saved, partly read or unread reference. Match the current question and explain source relevance; no fixed file-type hierarchy overrides an explicitly relevant passage. Keep personal relevance separate from factual support. Preserve actual page/section/speaker/time anchors, quotation/translation provenance and the author's annotation. AI-read is not personally read or endorsed. Existing source/collection/evidence mechanisms are reuse candidates; complete mixed-format readers, meaning-based retrieval and relevance tracking remain unverified future functionality. Do not change the active design pass or start a second source store.
+
+
+## 19 October — Education beyond confirming an angle
+
+C01/C04/C06, S03: investigate what the author should understand even if they have not mentioned it or selected an output. Ask a few questions only the author can answer; use permitted research for discoverable information. Explain important terms, competing accounts and unanswered questions with enough substance to learn, not just extracted supporting claims. Personal experience, seller statements, book passages, external evidence and AI interpretation remain distinct. Preserve edition/page/section or URL/date and surrounding context where available; relevance is not verification. Agent-prepared research and the author's subsequent notes use the same readable records.
+
+Finish criterion: an authorized agent produces an evidence-linked learning brief with provisional directions; the app displays it, a human correction/comment survives save/switch/reload, and the next agent read respects it. Unknown sources and unconnected Atlas/book/web retrieval stay explicit. A choice of angle or output is not a prerequisite for learning. See [shared author/agent direction](../PRODUCT.md#19-october--author-led-work-without-constant-supervision). No provider activation or current Claude-design change is granted by this brief.
+
+
+## 20 October — Mixed-origin topic collection and learning
+
+Research supports topics across several videos, available transcripts, personal notes and other sources, including inquiries unrelated to tea. Retain actual URL/title/channel/timestamp/transcript provenance and distinguish author notes from AI synthesis. Find aspects/questions worth learning beyond a prechosen angle; permit deeper selected inquiry and optional output reuse without changing research. Shared topic references reuse one original; source changes require scoped review, never replacement of human contributions. Four invented video links plus available transcripts/notes in one topic, a separate tea topic, cross-topic reuse/save/switch/reload/agent read and preserved author amendments define the next bounded acceptance. Native acquisition/semantic indexing/provider gaps remain unproved; no URL-only transcript or model-run claim. Follow the [adopted cross-section contract](../PRODUCT.md#20-october--mixed-origin-topic-learning-and-understandable-source-organization). Requirements are not completion proof.
+
+
+## 20 October — One understandable file authority across tools
+
+Research is actual learning, including new questions, related groups and multiple topic/tag relationships. Its notes, selected passages and independent expressions must fit a precise human-readable tree navigable/editable through Obsidian, authorized agents and AR Create, with one source authority, stable IDs/relative links and preserved human revisions. Before changing files, inventory/map the current maintained layout and verify supported rename/move/reference integrity and real tool roundtrip. Source once, reusable links across topics; selected private sharing is separate from the whole library. No live relocation/newDB/external sharing follows from adoption. See [the file contract](../PRODUCT.md#human-readable-files-shared-by-obsidian-agents-and-ar-create--20-october).
+
+
+### Relationships-first learning model — 20 October
+
+Adopted: Library sources/personal notes once; Collections as reusable topic/inquiry independent of Project/Piece; Pieces as independent expressions; Projects connect multiple Collections/Pieces. Retain supports/challenges/explores/used-in relations, optional tags, learning history/reasons and scoped staleness. Map existing IDs/files before tree implementation; no second Research system, newDB or private migration. See [the adopted model](../PRODUCT.md#adopted-relationships-before-folders--20-october). Current implementation remains partial, not renamed into completion.
+
+## 20 October — Current understanding and useful return
+
+Apply the adopted [return-to-work requirements](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), C01–C06. Keep active understanding/questions, scoped adopted direction and protected exact wording distinguishable from proposals and retained history. Resume the actual selected work with a useful continuation, preserve research/Library detours and independent Piece/edition states, and show only supported change impact. No repeated intake, automatic summary authority or all-checkpoints completion gate. Finish criterion: the next-pass synthetic return/agent-change/detour/scoped-supersession journey preserves saved and unsaved work, source context, sibling outputs and exact Undo. Adopted intent is not installed proof; preserve Claude's active build.

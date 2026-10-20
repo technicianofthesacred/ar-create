@@ -21,6 +21,7 @@
    if(row.matches('.dwt-orientation')&&stage()!==5)continue;
    const group={title:row.matches('#work-context')?'This piece':row.matches('.topbar')?'View':row.matches('.dwt-orientation')?'Direction and voice':'Writing tools',items:[]};
    for(const n of row.querySelectorAll('button,select,a.i64-return')){
+    if(n.closest('#connected-work-receipts'))continue;
     if(!visible(n)&&!n.closest('details'))continue;
     if(n.closest('details')&&n.closest('details').closest('[hidden]'))continue;
     if(n.matches('.themeSelect'))continue;
@@ -95,6 +96,7 @@
   crumb(slots,id,status);
   if(!bar){bar=document.createElement('header');bar.id='c3-surface-bar';bar.setAttribute('aria-label','This piece and its actions');ws.prepend(bar);}
   bar.innerHTML=html;
+  if(moreOpen){const rect=bar.querySelector('[data-sb-more]')?.getBoundingClientRect();if(rect)bar.style.setProperty('--c3-menu-top',Math.max(8,rect.bottom+6)+'px');}
   document.body.classList.add('c3-bar-on');
  }
  function schedule(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;build();watch();});}

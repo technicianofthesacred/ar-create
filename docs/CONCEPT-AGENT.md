@@ -66,3 +66,8 @@ Exit 1 reports validation, HTTP or connection failure as JSON. Each invocation s
 Requirements covered: C01/C03/C04/C06 and S04. The CLI's finish criterion is an external JSON-input command that reads shared revisions, searches/reads permitted sources, saves guarded concept work and exposes conflicts. Actual app round-trip and native recovery proof belong to the integrated candidate verification; this document is not installed or human-acceptance proof.
 
 Downstream manuscript/MCP preparation honors the mixed concept role: exact personal contributions stay separate from provisional AI interpretation, unadopted suggestions and Library references. It preserves the whole Markdown snapshot hash/revision for conflict checks; the context body contains only explicitly adopted human direction; exact personal thoughts remain a separately labeled creative contribution and are not inferred to be instructions. If manual edits prevent safe separation, the context retains the complete mixed text with an empty direction body. Ordinary saved human editorial direction keeps its existing behavior.
+
+
+## Standalone inquiries and local work receipts — 20 October integration candidate
+
+The `parentStudyId` command flow above remains the Project concept interface. It does not create or address a standalone Library Collection. Read [Agent connections](AGENT-CONNECTIONS.md) for the actual separate Collection/inquiry routes, exact ownership and save guards, local continuity receipts, transient browser recovery, and verified agent→app→agent handoff. These additions are connected in the synthetic candidate; live installation and combined acceptance remain separate. No new MCP/provider, publication authority or replacement content store is implied.
