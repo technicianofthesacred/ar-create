@@ -50,18 +50,40 @@
  function proxy(i,cls,inner,extra=''){const n=reals[i];if(n==null)return '';const dis=n.disabled?'disabled':'';const t=n.title||label(n);return `<button type="button" class="${cls}" data-sb="${i}" ${dis} title="${esc(t)}" ${n.getAttribute('aria-pressed')?`aria-pressed="${esc(n.getAttribute('aria-pressed'))}"`:''} ${n.getAttribute('aria-current')?'aria-current="page"':''} ${extra}>${inner}</button>`;}
  function selectProxy(i,cls,aria){const n=reals[i];if(n==null)return '';return `<select class="${cls}" data-sb-select="${i}" aria-label="${esc(aria||n.getAttribute('aria-label')||'Choose')}" ${n.disabled?'disabled':''}>${[...n.options].map(o=>`<option value="${esc(o.value)}" ${o.selected?'selected':''} ${o.disabled?'disabled':''}>${esc(o.textContent)}</option>`).join('')}</select>`;}
  function noteText(){const s=document.querySelector('.workspace>.historicalToolbar>span');const t=s?label(s):'';return /read-only/i.test(t)?'Read-only':/retained|historical/i.test(t)?'Earlier record':'';}
+ // Middle trim: names past the limit keep their start and end, e.g. "Seven Lessons from…the Kiln"; the full name is the tooltip.
+ function mid(t,max=40){t=String(t||'');if(t.length<=max)return t;const tail=Math.max(8,Math.floor(max*.35));return t.slice(0,max-tail-1).trimEnd()+'…'+t.slice(-tail).trimStart();}
+ function checkpoint(){const b=document.querySelector('.workflowNavigation .workflowStep[aria-current]')||document.querySelector('.workflowNavigation .workflowStep.isViewed');if(!b)return stage()===3?{n:3,name:'Research'}:null;return {n:Number(b.querySelector('.stepNumber')?.textContent.trim())||stage(),name:(b.querySelector('.stepName')?.textContent||'').trim()};}
+ // The bottom location bar: i64 OS › piece › output › checkpoint, then read-only, output switch and save status.
+ function crumb(slots,id,status){
+  let bar=document.getElementById('c3-crumb');
+  if(!bar){bar=document.createElement('footer');bar.id='c3-crumb';bar.setAttribute('aria-label','Where you are');document.body.append(bar);document.body.classList.add('c3-crumb-on');}
+  const cp=checkpoint(),tone=/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok';
+  const seg=(t,cls='')=>`<span class="cb-seg ${cls}" title="${esc(t)}">${esc(mid(t))}</span>`;
+  const sep='<span class="cb-sep" aria-hidden="true">›</span>';
+  const parts=[];
+  if(slots.ret!=null)parts.push(`<a class="cb-seg cb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" title="Return to i64 OS">i64 OS</a>`);
+  parts.push(seg(id.piece,'cb-piece'));
+  if(slots.piece!=null)parts.push(`<label class="cb-out"><span class="cb-sr">Output</span>${selectProxy(slots.piece,'cb-select','Choose output')}</label>`);
+  else if(id.title)parts.push(`<span class="cb-seg cb-on" title="${esc(id.title+(id.meta?' · '+id.meta:''))}">${esc(mid(id.title))}</span>`);
+  if(cp)parts.push(seg(cp.name));
+  const note=noteText();
+  const html=`<div class="cb-path">${parts.join(sep)}</div><div class="cb-right">${note?`<span class="cb-note">${esc(note)}</span>`:''}${status?`<span class="cb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(status)}</span>`:''}</div>`;
+  if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
+ }
  function statusText(){const s=document.querySelector('.workspace>.workbar .saved')||document.querySelector('.workspace>.topbar .status');return s?label(s):'';}
  function identity(){const p=current(),ctx=document.querySelector('#work-context .wn-identity'),title=ctx?.querySelector('strong')?.textContent.trim(),meta=ctx?.querySelector(':scope>span')?.textContent.trim();return {piece:p.name,title:title&&title!=='Project workspace'?title:'',meta:meta||''};}
  function build(){
   const ws=document.querySelector('#app .workspace');if(!ws)return;
   const slots=collect(),id=identity(),status=statusText();
   const more=slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
-  const sig=JSON.stringify([id,status,noteText(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen]);
+  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen]);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
   if(bar&&sig===lastSig)return;
   lastSig=sig;
-  const html=`<div class="sb-left">${slots.ret!=null?`<a class="sb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" aria-label="Return to i64 OS" title="Return to i64 OS">${icon(I.back)}<span>i64 OS</span></a><span class="sb-slash" aria-hidden="true">/</span>`:''}<span class="sb-piece" title="${esc(id.piece)}">${esc(id.piece)}</span>${id.title?`<span class="sb-slash" aria-hidden="true">/</span><span class="sb-out"><strong title="${esc(id.title)}">${esc(id.title)}</strong>${id.meta?`<small>${esc(id.meta)}</small>`:''}</span>`:''}${slots.piece!=null?selectProxy(slots.piece,'sb-piece-select','Choose output'):''}${noteText()?`<span class="sb-note" title="${esc(label(document.querySelector('.workspace>.historicalToolbar>span')))}">${esc(noteText())}</span>`:''}</div>
-<div class="sb-right">${status?`<span class="sb-status" role="status" data-tone="${/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok'}" title="${esc(status)}">${esc(status)}</span>`:''}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${proxy(slots.history,'sb-icon',icon(I.history),'aria-label="History · every saved version"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.mode,'sb-btn sb-mode',esc(slots.mode!=null?label(reals[slots.mode]):''))}${proxy(slots.outputs,'sb-btn',`${icon(I.outputs)}<span>Outputs</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${slots.primary!=null?proxy(slots.primary,'sb-primary',esc(label(reals[slots.primary])),'onmousedown="event.preventDefault()"'):''}</div>`;
+  const cp=checkpoint();
+  const html=`<div class="sb-left">${cp?`<span class="sb-cp"><span class="sb-cp-n">${String(cp.n).padStart(2,'0')}</span><span class="sb-cp-name">${esc(cp.name)}</span></span>`:''}</div>
+<div class="sb-right">${''&&status?`<span class="sb-status" role="status" data-tone="${/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok'}" title="${esc(status)}">${esc(status)}</span>`:''}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${proxy(slots.history,'sb-icon',icon(I.history),'aria-label="History · every saved version"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.mode,'sb-btn sb-mode',esc(slots.mode!=null?label(reals[slots.mode]):''))}${proxy(slots.outputs,'sb-btn',`${icon(I.outputs)}<span>Outputs</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${slots.primary!=null?proxy(slots.primary,'sb-primary',esc(label(reals[slots.primary])),'onmousedown="event.preventDefault()"'):''}</div>`;
+  crumb(slots,id,status);
   if(!bar){bar=document.createElement('header');bar.id='c3-surface-bar';bar.setAttribute('aria-label','This piece and its actions');ws.prepend(bar);}
   bar.innerHTML=html;
   document.body.classList.add('c3-bar-on');
@@ -77,7 +99,7 @@
   if(moreOpen&&!event.target.closest?.('#c3-surface-bar .sb-morew')){moreOpen=false;lastSig='';schedule();}
  });
  document.addEventListener('change',event=>{
-  const s=event.target.closest?.('#c3-surface-bar [data-sb-select]');if(!s)return;
+  const s=event.target.closest?.('#c3-surface-bar [data-sb-select],#c3-crumb [data-sb-select]');if(!s)return;
   const real=reals[Number(s.dataset.sbSelect)];if(!real?.isConnected)return;
   real.value=s.value;real.dispatchEvent(new Event('change',{bubbles:true}));lastSig='';schedule();
  });

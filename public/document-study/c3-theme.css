@@ -253,3 +253,38 @@ body.c3-tabs #app .workspace [data-c3-mirrored]:not(.c3-mirror-open){display:non
 }
 @media(max-width:850px){#app #workspace .desk.c3-insp-desk>.c3-page-notes{margin:0 0 12px}}
 body.c3-tabs #app .wn-check-findings>.c3-page-notes{padding-top:16px}
+
+/* ================= Option A: commands on top, location at the bottom (20 Oct) ================= */
+body.c3-crumb-on{--cb-h:28px}
+body.c3-tabs.c3-crumb-on .shell,body.c3-tabs.c3-crumb-on.draft-surface-active .shell:has(.rail.open){height:calc(100dvh - var(--ht-strip,44px) - var(--cb-h))}
+#c3-crumb{position:fixed;left:0;right:0;bottom:0;z-index:40;height:var(--cb-h);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 14px;box-sizing:border-box;background:var(--c3-lift);border-top:1px solid var(--line);font:12px/1 var(--ar-ui);color:var(--dim);white-space:nowrap}
+#c3-crumb .cb-path{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
+#c3-crumb .cb-seg{overflow:hidden;text-overflow:ellipsis;color:var(--dim);text-decoration:none}
+#c3-crumb .cb-piece,#c3-crumb .cb-on{color:var(--ink)}
+#c3-crumb .cb-ret:hover{color:var(--ink)}
+#c3-crumb .cb-sep{opacity:.5}
+#c3-crumb .cb-out{display:inline-flex;align-items:center;min-width:0}
+#c3-crumb .cb-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#c3-crumb .cb-select{height:22px;min-height:0!important;padding:0 22px 0 8px!important;font:12px/1 var(--ar-ui)!important;color:var(--ink)!important;background-color:transparent!important;border:1px solid var(--c3-line2)!important;border-radius:6px!important;max-width:320px}
+#c3-crumb .cb-right{display:flex;align-items:center;gap:10px;flex:none}
+#c3-crumb .cb-note{padding:2px 8px;border:1px solid var(--c3-line2);border-radius:10px}
+#c3-crumb .cb-status[data-tone="ok"]{color:var(--c3-good)}
+#c3-crumb .cb-status[data-tone="warn"]{color:var(--c3-warn);font-weight:600}
+#c3-crumb .cb-status[data-tone="bad"]{color:var(--c3-bad);font-weight:600}
+/* Top bar: one line, the checkpoint on the left. */
+#c3-surface-bar{flex-wrap:nowrap!important;min-height:52px!important;white-space:nowrap}
+#c3-surface-bar .sb-left{flex:0 1 auto}
+#c3-surface-bar .sb-cp{display:inline-flex;align-items:baseline;gap:8px}
+#c3-surface-bar .sb-cp-n{font:600 13px var(--ar-ui);color:var(--dim);font-variant-numeric:tabular-nums}
+#c3-surface-bar .sb-cp-name{font:600 15px var(--ar-ui);color:var(--ink)}
+#c3-surface-bar .sb-right{flex:0 1 auto;min-width:0;overflow:hidden}
+#c3-surface-bar .sb-status,#c3-surface-bar .sb-note{display:none!important}
+/* The bar is 52px now; sticky elements below follow. */
+body.c3-tabs #app .workspace .desk.c3-insp-desk>#c3-insp-head{top:52px!important}
+body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{top:calc(var(--ht-strip,44px) + 52px)!important;bottom:var(--cb-h,0px)!important}
+/* Home and Research cover the location bar while open. */
+#project-library.c3-home[open]~#c3-crumb,body.c3-research-open #c3-crumb{display:none}
+@media(max-width:650px){#c3-crumb .cb-path>:not(.cb-piece):not(.cb-out):not(.cb-sep:first-of-type){display:none}}
+/* The top bar names the checkpoint, so the page heading line keeps only its one-line description. */
+body.c3-crumb-on .c3-ctitle :is(.c3t-n,.c3t-name){display:none}
+body.c3-crumb-on .c3-ctitle .c3t-line{font:var(--c3-t1)/1.45 var(--ar-ui);color:var(--dim)}

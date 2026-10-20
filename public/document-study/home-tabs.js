@@ -35,9 +35,10 @@
   if(changed)store();
  }
  function isCurrent(t){if(homeOpen())return false;const h=here();return tabKey(t)===tabKey(h);}
+ function midTrim(t,max){t=String(t||'');if(t.length<=max)return t;const tail=Math.max(6,Math.floor(max*.35));return t.slice(0,max-tail-1).trimEnd()+'…'+t.slice(-tail).trimStart();}
  function tabIcon(t){return icon(t.format==='Carousel'?ICONS.slides:t.outputId?ICONS.doc:ICONS.piece);}
  function tabLabel(t){const p=project(t.projectId);return t.outputId?`${t.title} · ${t.format||'output'} · ${p?.name||''}`:`${p?.name||t.title} · piece`;}
- function tabHTML(t,inMenu=false){const k=esc(tabKey(t)),cur=isCurrent(t),label=esc(tabLabel(t));return `<div class="ht-tab ${cur?'on':''} ${inMenu?'ht-menu-tab':''}" role="presentation"><button type="button" class="ht-open" data-ht-tab="${k}" ${cur?'aria-current="page"':''} title="${label}">${tabIcon(t)}<span class="ht-title">${esc(t.outputId?t.title:project(t.projectId)?.name||t.title)}</span></button><button type="button" class="ht-close" data-ht-close="${k}" aria-label="Close tab ${label}" title="Close tab. Nothing is deleted.">${icon(ICONS.x)}</button></div>`;}
+ function tabHTML(t,inMenu=false){const k=esc(tabKey(t)),cur=isCurrent(t),label=esc(tabLabel(t));return `<div class="ht-tab ${cur?'on':''} ${inMenu?'ht-menu-tab':''}" role="presentation"><button type="button" class="ht-open" data-ht-tab="${k}" ${cur?'aria-current="page"':''} title="${label}">${tabIcon(t)}<span class="ht-title">${esc(midTrim(t.outputId?t.title:project(t.projectId)?.name||t.title,26))}</span></button><button type="button" class="ht-close" data-ht-close="${k}" aria-label="Close tab ${label}" title="Close tab. Nothing is deleted.">${icon(ICONS.x)}</button></div>`;}
  function visibleCount(strip,total){const width=strip?.clientWidth||0;if(!width)return total;const fixed=width<=650?190:330;return Math.max(1,Math.floor((width-fixed)/TAB_MIN));}
  function strip(){let node=document.getElementById('c3-tabstrip');if(node)return node;node=document.createElement('header');node.id='c3-tabstrip';node.setAttribute('aria-label','Home, Research and open tabs');document.body.prepend(node);document.body.classList.add('c3-tabs');window.requestAnimationFrame?.(()=>paint());return node;}
  function paint(){

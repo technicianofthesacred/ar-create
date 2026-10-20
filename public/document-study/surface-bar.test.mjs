@@ -19,17 +19,18 @@ function fixture(opts){
 }
 const press=(f,sel)=>{const b=f.bar().querySelector(sel);assert.ok(b,'missing '+sel);b.click();};
 
-test('one bar at the top of the work: piece, output, status, Undo, History, Margin, Focus, Outputs, More, one primary',()=>{
- const f=fixture(),bar=f.bar();
+test('commands on one top line; piece, output, return link and save status in the bottom location bar',()=>{
+ const f=fixture(),bar=f.bar(),crumb=f.d.getElementById('c3-crumb');
  assert.equal(bar.parentElement,f.d.querySelector('.workspace'));
  assert.equal(f.d.querySelector('.workspace').firstElementChild,bar);
- assert.match(bar.querySelector('.sb-piece').textContent,/Kiln piece/);
- assert.match(bar.querySelector('.sb-out').textContent,/Clay article/);
- assert.equal(bar.querySelector('.sb-status').textContent,'Saved on this device');
+ assert.match(crumb.querySelector('.cb-piece').textContent,/Kiln piece/);
+ assert.ok(crumb.querySelector('.cb-select'),'output switch in the location bar');
+ assert.match(crumb.querySelector('.cb-status').textContent,/Saved on this device/);
+ assert.equal(bar.querySelector('.sb-status'),null,'no status on the top line');
  assert.ok(bar.querySelector('[aria-label="Undo"]'));
  assert.ok(bar.querySelector('[aria-label^="History"]'));
  assert.equal(bar.querySelector('.sb-primary').textContent,'Discuss wording');
- assert.equal(bar.querySelector('.sb-ret').getAttribute('href'),'http://127.0.0.1:8888/ar-create');
+ assert.equal(crumb.querySelector('.cb-ret').getAttribute('href'),'http://127.0.0.1:8888/ar-create');
  assert.equal(bar.querySelectorAll('.sb-primary').length,1);
 });
 
@@ -59,7 +60,7 @@ test('More lists the remaining real controls, keeps disabled ones disabled and s
 test('output choice goes through the real select and its change event',()=>{
  const f=fixture();let seen=null;
  f.d.querySelector('[data-wn-piece]').addEventListener('change',e=>{seen=e.target.value;});
- const s=f.bar().querySelector('.sb-piece-select');
+ const s=f.d.querySelector('#c3-crumb .cb-select');
  s.value='';s.dispatchEvent(new f.w.Event('change',{bubbles:true}));
  assert.equal(seen,'');
  assert.equal(f.d.querySelector('[data-wn-piece]').value,'');
@@ -73,7 +74,8 @@ test('the save notice and failed-save recovery are left alone; status follows th
  assert.equal(f.bar().textContent.includes('Retry exact save'),false,'recovery stays in its own visible notice');
  f.d.querySelector('.workbar .saved').textContent='Save failed · words kept';
  await new Promise(r=>setTimeout(r,0));
- assert.equal(f.bar().querySelector('.sb-status').textContent,'Save failed · words kept');
+ assert.match(f.d.querySelector('#c3-crumb .cb-status').textContent,/Save failed · words kept/);
+ assert.equal(f.d.querySelector('#c3-crumb .cb-status').dataset.tone,'bad');
  assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');
 });
 
@@ -138,7 +140,16 @@ test('the read-only notice row joins the bar: its words become a small label and
  const f=fixture();
  f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<div class="historicalToolbar"><span>Read-only snapshot · working copy kept separate</span><button onclick="calls.push(\'open-words\')">Open working words</button></div>');
  f.w.surfaceBar.build();
- assert.equal(f.bar().querySelector('.sb-note').textContent,'Read-only');
+ assert.equal(f.d.querySelector('#c3-crumb .cb-note').textContent,'Read-only');
  const m=f.bar().querySelector('.sb-mode');assert.equal(m.textContent,'Open working words');m.click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['open-words']);
+});
+
+test('long titles are trimmed in the middle so both ends stay readable; the full title is the tooltip',()=>{
+ const f=fixture();
+ f.w.state.projects[0].name='Seven Lessons from the Wood-Fired Kiln in Jianshui, Yunnan';f.w.surfaceBar.build();
+ const seg=f.d.querySelector('#c3-crumb .cb-piece');
+ assert.ok(seg.textContent.length<=40,seg.textContent);
+ assert.match(seg.textContent,/^Seven Lessons.*….*Yunnan$/);
+ assert.equal(seg.title,'Seven Lessons from the Wood-Fired Kiln in Jianshui, Yunnan');
 });
