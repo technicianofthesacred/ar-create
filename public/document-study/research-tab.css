@@ -86,3 +86,17 @@ body.c3-research-open #c3-tabstrip [data-ht-research]{background:var(--paper);co
 #c3-research .rt-cmenu{top:42px;right:8px;z-index:6}
 #c3-research .rt-board>.c3-empty{flex:1 1 100%;max-width:none}
 #c3-research .c3-empty .ce-btn.pri{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* Quote cards: the spoken words lead, the speaker is named with an initial, evidence reads as filled chips. */
+#c3-research .rt-cardo{gap:10px;padding:14px 44px 14px 16px}
+#c3-research .rt-av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--c3-sel,var(--line));color:var(--warm);font:600 12px var(--ar-ui)}
+#c3-research .rt-k{color:var(--c3-ink2,var(--ink));font-weight:500;gap:8px}
+#c3-research .rt-q{position:relative;display:block;padding-left:22px;font-size:16px;line-height:1.55;color:var(--ink)}
+#c3-research .rt-q::before{content:"\201C";position:absolute;left:0;top:-6px;font-size:34px;line-height:1;color:var(--warm);opacity:.8}
+#c3-research .rt-q+.rt-c{font-weight:500;font-size:var(--c3-t1,13px);color:var(--dim)}
+#c3-research .rt-f{padding-top:10px;border-top:1px solid var(--line);margin-top:0}
+#c3-research .rt-ev{border:0;padding:2px 9px;background:color-mix(in srgb,currentColor 14%,transparent)}
+#c3-research .rt-src{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dim);min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#c3-research .rt-cardo{padding-right:16px}
+#c3-research .rt-k{padding-right:30px}
+#c3-research .rt-used{flex-basis:100%;margin-left:0}

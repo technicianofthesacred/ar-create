@@ -44,7 +44,27 @@
 body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) #app .workspace>.c3-empty{order:4;padding:0 40px}
 body.c3-tabs #app .phaseReader>.c3-empty{padding:0 40px}
 body.c3-tabs #app .material-surface>.c3-empty{flex:1 1 100%}
-@media(max-width:650px){.c3-empty .ce-shape{display:none}.c3-empty .ce-card-wrap{position:static;transform:none;width:auto;margin:0}.c3-empty{min-height:0}}
+/* Arrange: a filmstrip of 4:5 slide slots under a stage; Audience: a phone frame. The card sits beside or below so the shape stays visible. */
+.c3-empty .ce-film{display:flex;flex-direction:column;gap:16px}
+.c3-empty .ce-stage{aspect-ratio:16/7;max-height:220px;border:1.5px dashed var(--c3-line2,var(--line));border-radius:12px;padding:28px 32px;display:flex;flex-direction:column;gap:4px}
+.c3-empty .ce-strip{display:flex;gap:12px;overflow:hidden}
+.c3-empty .ce-slot{position:relative;flex:none;width:96px;aspect-ratio:4/5;border:1.5px dashed var(--c3-line2,var(--line));border-radius:8px;display:grid;place-items:center;color:var(--dim)}
+.c3-empty .ce-slot.on{border-style:solid;border-color:var(--warm)}
+.c3-empty .ce-sn{position:absolute;left:8px;top:6px;font:600 11px var(--ar-ui);color:var(--dim)}
+.c3-empty .ce-slot.on .ce-sn{color:var(--warm)}
+.c3-empty .ce-add span{font-size:20px;opacity:.6}
+.c3-empty .ce-phone{display:flex;justify-content:center}
+.c3-empty .ce-device{position:relative;width:230px;aspect-ratio:9/18.5;border:1.5px solid var(--c3-line2,var(--line));border-radius:34px;padding:12px;background:var(--c3-lift,var(--rail))}
+.c3-empty .ce-notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:64px;height:16px;border-radius:10px;background:var(--line)}
+.c3-empty .ce-screen{height:100%;border-radius:24px;border:1px dashed var(--c3-line2,var(--line));padding:40px 16px 16px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.c3-empty .ce-hero{aspect-ratio:4/5;border-radius:8px;border:1.5px dashed var(--c3-line2,var(--line));margin:10px 0 6px}
+.c3-empty.ce-below,.c3-empty.ce-side{flex-shrink:0}
+.c3-empty.ce-below{min-height:0}
+.c3-empty.ce-below .ce-card-wrap{position:static;transform:none;width:auto;max-width:640px;margin-top:18px;box-shadow:none}
+.c3-empty.ce-side{min-height:0;display:flex;align-items:center;gap:40px}
+.c3-empty.ce-side .ce-shape{flex:none}
+.c3-empty.ce-side .ce-card-wrap{position:static;transform:none;width:auto;max-width:440px;flex:1 1 300px;box-shadow:none}
+@media(max-width:650px){.c3-empty.ce-side{display:block}.c3-empty .ce-shape{display:none}.c3-empty .ce-card-wrap{position:static;transform:none;width:auto;margin:0}.c3-empty{min-height:0}}
 
 /* Home and the inspector. */
 #project-library .ht-c3-empty{grid-column:1/-1;min-height:380px}

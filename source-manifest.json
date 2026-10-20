@@ -2441,11 +2441,11 @@
     },
     {
       "path": "public/document-study/empty-states.css",
-      "candidateSha256": "bda2c1d44387330a73eb064f941c913ad7ded8292399a96696e4f0e6a1f23fb1"
+      "candidateSha256": "fb7d69c27cf79148025924b97198ab4bfab5a18e94d1009be58e467f7a1f5aaf"
     },
     {
       "path": "public/document-study/empty-states.js",
-      "candidateSha256": "78afd1818a8dca123f6605e5a82f4676804a9be6426b8db0a3e34d3d0ecec90e"
+      "candidateSha256": "f70d7e3d4fcecc0816ba9f51dd75b2ef8c39532a3cd9bc92fb2c753852525f3d"
     },
     {
       "path": "public/document-study/empty-states.test.mjs",
@@ -2477,11 +2477,11 @@
     },
     {
       "path": "public/document-study/research-tab.css",
-      "candidateSha256": "7304458e9c5db6d3a63dd23d1ec06abda8e1f8189bbf2f9a278e2355938f187f"
+      "candidateSha256": "074f7800346cc886cc8b814d9b08ceab1b00fd33a232f7a13102e53276282963"
     },
     {
       "path": "public/document-study/research-tab.js",
-      "candidateSha256": "4eb0904e0c26ec66c2d05708d652594010bdc5c7a878ad5789647e50a520d428"
+      "candidateSha256": "ff24c315dd0c09ef2dc7236ac669cdcc424c24dd407113d2f36d1813c6c14ef1"
     },
     {
       "path": "public/document-study/research-tab.test.mjs",
