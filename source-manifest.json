@@ -2545,7 +2545,7 @@
     },
     {
       "path": "docs/LOOK.md",
-      "candidateSha256": "52be11e77aab21d1ab049fbb99f312e1cbcfe43d192a34fd14d5a08a5d132bcd"
+      "candidateSha256": "f0db9a8cad7ebe33bf5cf5a6bbb170ae5376e6f8d59103ca18978cd2ebaa2c53"
     }
   ],
   "dependencyRepair": {
