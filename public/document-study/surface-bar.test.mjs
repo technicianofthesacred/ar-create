@@ -159,3 +159,16 @@ test('connected work receipt inputs and recovery stay with their visible owner, 
  const f=fixture(),owner=f.d.createElement('details');owner.id='connected-work-receipts';owner.innerHTML='<summary>Work receipts</summary><textarea data-field="desired">Exact pending author task</textarea><p role="status">Outcome pending</p><button>Retry exact operation</button>';f.d.querySelector('#work-context').append(owner);f.w.surfaceBar.build();
  assert.equal(f.d.getElementById('connected-work-receipts'),owner);assert.equal(owner.querySelector('textarea').value,'Exact pending author task');assert.equal(f.bar().textContent.includes('Retry exact operation'),false);
 });
+
+test('a failed save offers Try again, which asks the save owner to save once more; a good save does not',async()=>{
+ const failed=fixture({saved:'Could not save. Your words are kept here.'});
+ let saves=0;failed.w.studyDraft={flush:async()=>{saves++;return {dirty:false};}};
+ failed.w.surfaceBar.build();
+ const retry=failed.d.querySelector('#c3-crumb [data-cb-retry]');
+ assert.ok(retry,'Try again on a failed save');
+ assert.equal(retry.textContent,'Try again');
+ retry.click();await new Promise(r=>setTimeout(r,10));
+ assert.equal(saves,1);
+ const ok=fixture();ok.w.studyDraft={flush:async()=>{}};ok.w.surfaceBar.build();
+ assert.equal(ok.d.querySelector('#c3-crumb [data-cb-retry]'),null);
+});
