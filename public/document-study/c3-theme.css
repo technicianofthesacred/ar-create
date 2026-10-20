@@ -492,3 +492,14 @@ body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input
  body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn.on{color:var(--ink)!important;font-weight:600!important}
 }
 body.c3-tabs #app #workspace :is(#c3-read-insp,.ci-panel) .ci-go{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+/* What the editor needs, where they look for it. Save state lives in the bottom bar, so the panel footer no longer
+   repeats Status and File; it keeps the draft parts and the Source & brief link. The how-to joins the page's own hints. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-reference{display:none!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta>span{display:none!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-surface-document-meta::before{content:"Brief"!important}
+ body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mr-draft-tabs{order:-1}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mr-draft-row>span{display:none!important}
+}
+body.c3-tabs #app #workspace .document .docfooter{flex-wrap:wrap;gap:4px 14px}
+body.c3-tabs #app #workspace .document .docfooter::before{content:"Type straight into the page · select across paragraphs";order:-1;flex-basis:100%}
