@@ -64,6 +64,21 @@ body{margin:0}
 .retbar span{flex:1;min-width:200px}
 .search{font:inherit;padding:8px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--lift);color:var(--ink);min-width:220px}
 .app .mc{text-align:left}
+.sfilter{font:inherit;font-size:12.5px;margin:4px 6px 8px;padding:7px 10px;border-radius:8px;border:1px solid var(--line2);background:var(--paper);color:var(--ink)}
+.app .ghead{display:flex;align-items:center;gap:6px;width:100%;min-height:28px;margin-top:8px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+.ghead .n{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500}
+.chev{flex:none;color:var(--dim);transition:transform .15s}.chev.open{transform:rotate(90deg)}.chev.none{visibility:hidden}.chevhit{display:inline-flex;padding:4px;margin:-4px 0 -4px -4px;border-radius:4px}.chevhit:hover{background:var(--line2)}
+.nav .n{white-space:nowrap}
+.prow{display:flex;align-items:center;position:relative}
+.prow .proj{flex:1;min-width:0}
+.pt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app .padd{position:absolute;right:2px;min-height:26px;width:26px;padding:0;text-align:center;color:var(--dim);opacity:0}
+.prow:hover .padd,.padd:focus-visible{opacity:1}
+.prow:hover .proj .n{visibility:hidden}
+.mk{display:inline-block;width:8px;height:8px;flex:none}
+.mk.piece{border-radius:50%;background:var(--dim)}
+.mk.piece.warn{background:var(--warn)}.mk.piece.good{background:var(--good)}.mk.piece.real{background:var(--warm)}
+.mk.coll{border-radius:2px;border:1.5px solid var(--warm);transform:rotate(45deg);width:7px;height:7px}
 .turn.hi{background:color-mix(in srgb,var(--warm) 10%,transparent)}
 .h1{font-size:28px;font-weight:700;line-height:1.2;margin:0 0 6px}
 .h2{font-size:17px;font-weight:600;margin:26px 0 10px}
@@ -138,18 +153,21 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
   <div class="brand">AR Create</div>
   <button class="nav {{navHome}}" onClick="{{goHome}}">Studio home<span class="n">{{waitCount}} waiting</span></button>
   <button class="nav {{navLib}}" onClick="{{goLibrary}}">Library<span class="n">142 kept</span></button>
-  <h4>Collections</h4>
-  <sc-for list="{{collNav}}" as="c" hint-placeholder-count="3"><button class="nav {{c.cls}}" onClick="{{c.open}}"><span class="dot {{c.dot}}"></span>{{c.title}}<span class="n">{{c.n}}</span></button></sc-for>
-  <h4>Projects</h4>
-  <button class="nav {{navAll}}" onClick="{{goProjects}}">All projects<span class="n">{{projCount}}</span></button>
-  <h4 style="margin-top:8px">Pinned</h4>
-  <button class="nav {{navProj}}" onClick="{{goOverview}}">Water first</button>
-  <sc-for list="{{pieceNav}}" as="p" hint-placeholder-count="4"><button class="nav sub {{p.cls}}" onClick="{{p.open}}"><span class="dot {{p.dot}}"></span>{{p.title}}</button></sc-for>
-  <button class="nav {{navMend}}" onClick="{{openMendColl}}">Mending</button>
-  <button class="nav sub {{navReal}}" onClick="{{openReal}}"><span class="dot real"></span>Porcelain and Tea</button>
-  <button class="nav sub" onClick="{{openMendColl}}"><span class="dot"></span>The bowl with a gold seam</button>
-  <h4 style="margin-top:8px">Recent</h4>
-  <sc-for list="{{recentNav}}" as="r" hint-placeholder-count="3"><button class="nav" onClick="{{r.open}}">{{r.title}}<span class="n">{{r.when}}</span></button></sc-for>
+  <input class="sfilter" aria-label="Filter projects and collections" placeholder="Filter projects, pieces, collections" value="{{sideQ}}" onInput="{{onSideQ}}">
+  <sc-for list="{{tree}}" as="g" hint-placeholder-count="3">
+   <button class="ghead" onClick="{{g.toggle}}" aria-expanded="{{g.openStr}}"><svg class="chev {{g.chevCls}}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4.5 2.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{g.label}}<span class="n">{{g.count}}</span></button>
+   <sc-if value="{{g.open}}" hint-placeholder-val="{{true}}">
+    <sc-for list="{{g.projects}}" as="pr" hint-placeholder-count="2">
+     <div class="prow"><button class="nav proj {{pr.cls}}" onClick="{{pr.open}}" aria-expanded="{{pr.openStr}}"><span class="chevhit" onClick="{{pr.toggle}}"><svg class="chev {{pr.chevCls}}" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M4.5 2.5l3.5 3.5-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="pt">{{pr.title}}</span><span class="n">{{pr.when}}</span></button><button class="padd" onClick="{{pr.add}}" aria-label="New piece in {{pr.title}}">+</button></div>
+     <sc-if value="{{pr.isOpen}}" hint-placeholder-val="{{false}}">
+      <sc-for list="{{pr.kids}}" as="k" hint-placeholder-count="3"><button class="nav sub {{k.cls}}" onClick="{{k.open}}"><span class="mk {{k.mk}}" aria-hidden="true"></span><span class="pt">{{k.title}}</span><span class="n">{{k.when}}</span></button></sc-for>
+     </sc-if>
+    </sc-for>
+    <sc-if value="{{g.more}}" hint-placeholder-val="{{false}}"><button class="nav sub" onClick="{{goProjects}}">Show all {{projCount}} projects →</button></sc-if>
+   </sc-if>
+  </sc-for>
+  <sc-if value="{{treeEmpty}}" hint-placeholder-val="{{false}}"><p class="meta" style="padding:0 10px">Nothing matches. <button class="link" onClick="{{clearSideQ}}">Clear</button></p></sc-if>
+  <p class="meta" style="padding:8px 10px 0;margin:0"><span class="mk piece" aria-hidden="true"></span> piece <span class="mk coll" aria-hidden="true" style="margin-left:8px"></span> collection</p>
   <button class="btn" style="margin:14px 8px 0;text-align:center">New project or concept</button>
  </nav>
 
@@ -444,7 +462,7 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
 class Component extends DCLogic {
-  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1']};}
+  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin',side:true,dock:null,wu:null,coll:'water',libKind:'all',ret:null,projQ:'',brand:'all',pstat:'active',pins:['p0','p1'],open:{p0:true},grp:{pinned:true,recent:true,unfiled:true},sideQ:''};}
   set(o){this.setState(o);}
   renderVals(){
     const s=this.state,self=this,st=s.st;
@@ -582,6 +600,26 @@ class Component extends DCLogic {
       goHome:go('home'),goOverview:go('overview'),goResearch:go('research'),goDirection:go('direction'),goSource:go('source'),goMedia:go('media'),goShare:go('share'),goAudience:go('audience'),goMending:go('real'),openReal:go('real'),openCarousel:go('arrange',{sel:3}),
       resumeWrite:go('write',{insp:'margin'}),goOverviewFocusO1:go('overview',{focus:'o1'}),
       openLib:()=>self.set({libOpen:(s.libOpen&&(s.dock||'lib')==='lib')?false:true,dock:'lib'}),findLib:()=>self.set({libOpen:true,dock:'lib'}),
+      sideQ:s.sideQ,onSideQ:(e)=>self.set({sideQ:e.target.value}),clearSideQ:()=>self.set({sideQ:''}),
+      tree:(()=>{const sq=(s.sideQ||'').toLowerCase();
+        const kidsFor={p0:[['The water is half the tea','piece '+(s.p3done?'':'warn'),'today','write'],['Why water changes tea','coll','2 new','cw'],['Three waters, one leaf','piece '+((s.corrected&&!s.slide4fixed)?'warn':'good'),'15 Oct','arrange'],['Spring-water tasting set','piece','12 Oct','outputs'],['At the spring','piece','11 Oct','outputs']],
+          p1:[['Porcelain and Tea','piece real','29 Sep','real'],['Keeping old things in use','coll','9 Oct','cm'],['The bowl with a gold seam','piece','8 Oct','outputs']]};
+        const target=(t)=>t==='cw'?openColl('water'):(t==='cm'?openColl('mend'):go(t));
+        const curKid=(t)=>(t==='write'&&isW)||(t==='arrange'&&carouselPiece)||(t==='real'&&s.view==='real')||(t==='cw'&&s.view==='collection'&&s.coll==='water')||(t==='cm'&&s.view==='collection'&&s.coll==='mend');
+        const node=(x)=>{if(x.id==='u0'){if(sq&&x.title.toLowerCase().indexOf(sq)<0)return null;return {title:x.title,when:x.when,isOpen:false,openStr:'false',chevCls:'none',cls:(s.view==='collection'&&s.coll==='read')?'on':'',open:openColl('read'),toggle:(e)=>e.stopPropagation(),add:openColl('read'),kids:[]};}
+          const raw=kidsFor[x.id]||[['Collection · '+x.title,'coll',x.when,'cw'],['Draft piece','piece',x.when,'outputs']];
+          const match=!sq||x.title.toLowerCase().indexOf(sq)>=0;const kids=raw.filter(k=>!sq||match||k[0].toLowerCase().indexOf(sq)>=0);
+          if(sq&&!match&&kids.length===0)return null;const isOpen=sq?true:!!s.open[x.id];
+          return {title:x.title,when:x.when,isOpen,openStr:isOpen?'true':'false',chevCls:isOpen?'open':'',cls:(x.id==='p0'&&projViews.indexOf(s.view)>=0&&s.view!=='research'&&s.view!=='projects')?'on':'',
+            open:()=>{const O=Object.assign({},s.open);O[x.id]=true;self.set({open:O});(x.id==='p1'?openColl('mend'):go('overview'))();},
+            toggle:(e)=>{e.stopPropagation();const O=Object.assign({},s.open);O[x.id]=!isOpen;self.set({open:O});},add:go('outputs'),
+            kids:kids.map(k=>({title:k[0],mk:k[1],when:k[2],open:target(k[3]),cls:curKid(k[3])?'on':''}))};};
+        const grp=(key,label,list,more)=>{const ps=list.map(node).filter(Boolean);const open=sq?true:s.grp[key]!==false;return {label,count:ps.length,open,openStr:open?'true':'false',chevCls:open?'open':'',projects:ps,more:more&&!sq,toggle:()=>{const G=Object.assign({},s.grp);G[key]=!open;self.set({grp:G});},show:ps.length>0||(!sq)};};
+        const pinned=allProj.filter(x=>s.pins.indexOf(x.id)>=0);const recent=allProj.filter(x=>s.pins.indexOf(x.id)<0&&x.status!=='archived').slice(0,sq?60:5);
+        const unfiled={id:'u0',title:'Tea water reading list',when:'2 Oct'};
+        const g=[grp('pinned','Pinned',pinned,false),grp('recent','Projects',recent,true),grp('unfiled','Collections without a project',[unfiled],false)];
+        return g.filter(x=>x.projects.length>0);})(),
+      treeEmpty:!!s.sideQ&&false,
       goProjects:go('projects'),isProjects:s.view==='projects',navAll:s.view==='projects'?'on':'',projCount:allProj.length,
       recentNav:allProj.slice(2,5).map(x=>({title:x.title,when:x.when,open:go('overview')})),
       projQ:s.projQ,onProjQ:(e)=>self.set({projQ:e.target.value}),clearProjQ:()=>self.set({projQ:''}),
