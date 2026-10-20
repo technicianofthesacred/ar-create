@@ -472,3 +472,23 @@ body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input
  body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row::before{position:absolute;left:0;top:0}
  body.c3-tabs #app #workspace .desk.c3-insp-desk>.c3-page-notes .c3-mirror-row>*{margin-right:0!important}
 }
+/* Read inspector, matched to Write: tabs on top with a hairline under them, the tab's content, then page info as the
+   labelled footer at the bottom of the column. */
+@media(min-width:851px){
+ body.c3-tabs #app #workspace #c3-read-insp{padding:10px 16px 0!important}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-insp-tabs{order:1;position:static!important;margin:0!important}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-insp-body{order:2;margin:10px -16px 0!important;padding:16px 16px 24px!important;border-top:1px solid var(--line)}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-page-notes{order:3;margin:auto -16px 0!important;padding:12px 16px 14px!important;border:0!important;border-top:1px solid var(--line)!important;gap:0!important;position:sticky;bottom:var(--cb-h,28px);background:var(--c3-lift,var(--rail))}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-page-notes>.c3-ctitle{display:none!important}
+ body.c3-tabs #app #workspace #c3-read-insp>.c3-page-notes:not(:has(.c3-mirror-row)){display:none!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror{display:flex;flex-direction:column;gap:6px}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-row{display:flex!important;flex-wrap:wrap;align-items:baseline;gap:0 10px!important;position:relative;padding-left:58px!important;font:12px/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-row::before{position:absolute;left:0;top:0;font:600 10.5px/1.9 var(--ar-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--c3-ghost,var(--line2));content:"Page"}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mr-draft-row::before{content:"Copy"}
+ body.c3-tabs #app #workspace #c3-read-insp :is(.c3-mr-draft-details,.c3-mr-flow-retained)::before{content:"Earlier"}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn{min-height:22px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:3px!important;color:var(--warm)!important;font:500 12px/1.5 var(--ar-ui)!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn::after{content:none!important}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn:hover{text-decoration:underline;text-underline-offset:3px}
+ body.c3-tabs #app #workspace #c3-read-insp .c3-mirror-btn.on{color:var(--ink)!important;font-weight:600!important}
+}
+body.c3-tabs #app #workspace :is(#c3-read-insp,.ci-panel) .ci-go{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
