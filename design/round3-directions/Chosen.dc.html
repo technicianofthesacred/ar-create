@@ -51,6 +51,13 @@ body{margin:0}
 .nonotes .wrap2{grid-template-columns:minmax(0,1fr);max-width:760px}.nonotes .wrap2>.margin{display:none}
 .app.overlayside .side{position:fixed;left:0;top:0;bottom:0;z-index:36;overflow:auto;box-shadow:18px 0 50px rgba(0,0,0,.45);max-width:300px}
 .h1.small{font-size:20px}
+.app .foot{position:sticky;bottom:0;z-index:20}
+.foot.bad{background:var(--badbg);border-top-color:var(--bad);color:var(--ink)}
+.foot .loc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsz{display:inline-flex;align-items:center;gap:2px}.app .tsz button{min-height:24px;padding:0 6px;color:var(--dim)}
+.chev{opacity:0;transition:opacity .12s,transform .15s}
+.ghead:hover .chev,.ghead:focus-visible .chev,.prow:hover .chev,.prow:focus-within .chev{opacity:.8}
+.app .ghead{cursor:pointer}
 .savest{font-size:12px;color:var(--good);margin-left:4px}.savest.warn{color:var(--warn)}.savest.bad{color:var(--bad);font-weight:600}
 .failbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:8px 16px;border-top:1px solid var(--bad);background:var(--badbg);color:var(--ink);font-size:13px}.failbar span{flex:1;min-width:200px}
 .rail{display:none;flex:0 0 48px;flex-direction:column;align-items:center;gap:4px;padding:10px 0;background:var(--lift);border-right:1px solid var(--line)}
@@ -222,10 +229,10 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
  <div class="main">
   <div class="head">
    <div class="t"><span class="meta">{{crumb}}</span></div>
-   <div class="t"><h1 class="h1 {{titleCls}}" style="margin:4px 0 0">{{title}}</h1><sc-for list="{{titleChips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.tone}}">{{c.label}}</span></sc-for><sc-if value="{{showSave}}" hint-placeholder-val="{{false}}"><span class="savest {{saveTone}}" role="status">{{saveShort}}</span></sc-if>
+   <div class="t"><h1 class="h1 {{titleCls}}" style="margin:4px 0 0">{{title}}</h1><sc-for list="{{titleChips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.tone}}">{{c.label}}</span></sc-for>
     <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{inPiece}}" hint-placeholder-val="{{false}}"><button class="btn">Undo</button><button class="btn" onClick="{{toggleAll}}" aria-pressed="{{allStr}}">{{allLabel}}</button></sc-if><button class="btn" onClick="{{openLib}}" aria-pressed="{{libOpen}}">Library</button><sc-if value="{{notInPiece}}" hint-placeholder-val="{{true}}"><button class="pri" onClick="{{primary.go}}">{{primary.label}}</button></sc-if></span></div>
    <sc-if value="{{hasNext}}" hint-placeholder-val="{{false}}"><div class="nextbar"><span class="nx"><b>Next</b>{{nextText}}</span><button class="pri" onClick="{{nextGo}}">{{nextBtn}}</button></div></sc-if>
-   <sc-if value="{{hasConn}}" hint-placeholder-val="{{false}}"><div class="conn"><sc-if value="{{hasNotes}}" hint-placeholder-val="{{false}}"><button class="cchip" onClick="{{toggleNotes}}">{{notesLabel}}</button><span class="meta" style="margin:0 4px">·</span></sc-if><span class="meta">Text size</span><button class="cchip" aria-label="Smaller text">A−</button><button class="cchip" aria-label="Larger text">A+</button><span class="meta" style="margin:0 4px">·</span><span class="meta">This piece uses:</span><sc-for list="{{conn}}" as="c" hint-placeholder-count="4"><button class="cchip" onClick="{{c.go}}">{{c.label}}</button></sc-for></div></sc-if>
+   <sc-if value="{{hasConn}}" hint-placeholder-val="{{false}}"><div class="conn"><sc-if value="{{hasNotes}}" hint-placeholder-val="{{false}}"><button class="cchip" onClick="{{toggleNotes}}">{{notesLabel}}</button><span class="meta" style="margin:0 4px">·</span></sc-if><span class="meta">This piece uses:</span><sc-for list="{{conn}}" as="c" hint-placeholder-count="4"><button class="cchip" onClick="{{c.go}}">{{c.label}}</button></sc-for></div></sc-if>
    <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
    <div class="tabs" role="tablist"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="8"><sc-if value="{{t.isSep}}" hint-placeholder-val="{{false}}"><span class="sep"></span><small>{{t.label}}</small></sc-if><sc-if value="{{t.isTab}}" hint-placeholder-val="{{true}}"><button class="tab {{t.cls}}" onClick="{{t.go}}">{{t.label}}</button></sc-if></sc-for></div>
    </sc-if>
@@ -483,7 +490,7 @@ textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid 
 </sc-if>
 
   </div>
-  <sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><div class="failbar" role="alert"><span>{{saveText}}</span><button class="btn" onClick="{{clearState}}">Retry save</button></div></sc-if>
+  <footer class="foot {{footCls}}" role="status"><span class="loc">{{location}}</span><span class="st {{saveTone}}">{{saveText}}</span><sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{clearState}}">Retry save</button></sc-if><span class="tsz"><button aria-label="Smaller text">A−</button>100%<button aria-label="Larger text">A+</button></span></footer>
  </div>
  <sc-if value="{{dockOpen}}" hint-placeholder-val="{{false}}">
  <aside class="dock" aria-label="Library and where used">
@@ -603,7 +610,7 @@ class Component extends DCLogic {
       j3:{title:'Resume → marked edit → save → switch → return → export',steps:[
         ['home',{corrected:true},'Studio home: what is waiting on you, and one place to pick up.'],
         ['write',{insp:'margin'},'The article, with the marked passage and its finding in the margin.'],
-        ['write',{editing:true,draft:P3b,dirty:true},'Edit directly. Next to the title it says unsaved, then saves ahead.'],
+        ['write',{editing:true,draft:P3b,dirty:true},'Edit directly. The footer says unsaved, then saves ahead.'],
         ['write',{editing:false,p3done:true,dirty:false},'Saved to the working file. The finding resolves.'],
         ['arrange',{sel:3,libOpen:false},'Switch to the carousel from the sidebar. Slide 4 is flagged on its own.'],
         ['write',{returned:true},'Back to the article at the same paragraph.'],
@@ -640,7 +647,7 @@ class Component extends DCLogic {
     const photosRaw=[{name:'spring-path.jpg',caption:'The path to the spring',credit:'by you',uses:'Article fig. 1 · Slide 1'},{name:'three-cups.jpg',caption:'Tap, filtered, spring',credit:'by you',uses:'Article fig. 2 · Slides 2, 5'},{name:'lin-yun-hands.jpg',caption:'Pouring',credit:'by Lin Yun · permission asked',uses:'Slide 3'},{name:'limestone.jpg',caption:'White stone',credit:'by you',uses:'Slide 4'},{name:'cabin-window.jpg',caption:'Cabin kettle',credit:'by you',uses:'Selected, not placed'},{name:'kettle.jpg',caption:'No caption yet',credit:'by you',uses:'Unused'}];
     const photos=photosRaw.map((p,i)=>Object.assign({},p,{wu:openWu('ph'+i)}));
     const titleMap={projects:'All projects',library:'Library',collection:(COLL[s.coll]||COLL.water).title,home:'Studio home',overview:'Water first',material:'Water first',source:'Water first',research:'Why water changes tea',direction:'Water first',outputs:'Water first',write:'The water is half the tea',read:'The water is half the tea',check:'The water is half the tea',media:'Three waters, one leaf',arrange:'Three waters, one leaf',audience:'Three waters, one leaf',share:'The water is half the tea',real:'Porcelain and Tea',mending:'Mending'};
-    const crumbMap={projects:'Projects',library:'Everything you kept, once',collection:'Topic',home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Collection research · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
+    const crumbMap={projects:'Projects',library:'Everything you kept, once',collection:'Topic',home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Topic research · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
     let saveText='Saved to working file 09:41',saveTone='good';
     if(st==='unsaved'||s.dirty){saveText='Unsaved · saving ahead…';saveTone='warn';}
     if(st==='failed'){saveText='Couldn’t save to the project file. Your words are kept in this browser.';saveTone='bad';}
@@ -708,7 +715,7 @@ closeLib:()=>self.set({libOpen:false}),stop:(e)=>e.stopPropagation(),libOpen:s.l
       insp:[['margin','Margin'],['dec','Decisions'],['ready','Readiness'],['hist','History']].map(t=>({label:t[1],cls:s.insp===t[0]?'on':'',go:()=>self.set({insp:t[0]})})),inspMargin:s.insp==='margin',inspDec:s.insp==='dec',inspReady:s.insp==='ready',inspHist:s.insp==='hist',decExtra:s.adopted?' · hard water in paragraph 3':'',
       checkLine:s.p3done?'Checks ran on revision 8; you are on 9. Rerun before review.':'Checked revision 8: quotes and splits. 1 finding open.',previewOld:()=>self.set({st:'readonly'}),clearState:()=>self.set({st:'normal'}),
       photos,slides,selSlide:slides[s.sel]||slides[0],fixSlide:()=>self.set({slide4fixed:true}),pieces,exported:s.exported,
-      primary:{label:pr[0],go:pr[1]},location:s.view==='home'?'Studio home':'Water first › '+titleMap[s.view]+' › '+s.view.charAt(0).toUpperCase()+s.view.slice(1),saveText,saveTone,saveFailed:st==='failed',showSave:['home','library','projects','collection','real'].indexOf(s.view)<0,saveShort:(st==='failed'?'Not saved':(st==='readonly'||s.view==='real')?'Read-only':(st==='unsaved'||s.dirty)?'Unsaved · saving…':(s.p3done?'Saved 09:52':'Saved 09:41')),
+      primary:{label:pr[0],go:pr[1]},location:s.view==='home'?'Studio home':(['library','projects'].indexOf(s.view)>=0?titleMap[s.view]:(s.view==='collection'?'Topic › '+titleMap[s.view]:'Water first › '+titleMap[s.view]+' › '+s.view.charAt(0).toUpperCase()+s.view.slice(1))),saveText,saveTone,saveFailed:st==='failed',footCls:st==='failed'?'bad':'',showSave:['home','library','projects','collection','real'].indexOf(s.view)<0,saveShort:(st==='failed'?'Not saved':(st==='readonly'||s.view==='real')?'Read-only':(st==='unsaved'||s.dirty)?'Unsaved · saving…':(s.p3done?'Saved 09:52':'Saved 09:41')),
       walkOn:!!wk,walkTitle:wk?wk.title:'',walkStepN:s.step+1,walkLen:n,walkCaption:wk?wk.steps[s.step][2]:'',walkNext:()=>{if(s.step+1<n)applyStep(s.walk,s.step+1);else self.set({walk:null});},walkNextLabel:s.step+1<n?'Next':'Finish',walkBack:()=>{if(s.step>0)applyStep(s.walk,s.step-1);},walkEnd:()=>self.set({walk:null})
     };
   }
