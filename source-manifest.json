@@ -2409,7 +2409,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "5e983c8bbad2628875c1cf4f0d6216d3ab75fea88d2b35a2800688243ad23c6c"
+      "candidateSha256": "2c5e2ee06a7c32beeebc1164eb15cce6ebcd95c2e232d07adeeeae25c4cb7beb"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -2421,7 +2421,7 @@
     },
     {
       "path": "public/document-study/canvas-c3.js",
-      "candidateSha256": "1dcc9ca9384b032f7e55ede4b0f97b7cd1a419733acf163737cbff9acb9ec251"
+      "candidateSha256": "ac84b0cd3955ba27283dfa53d17c41a4ba2723f14d154fc7388ac3b6ccc04ee0"
     },
     {
       "path": "public/document-study/canvas-c3.test.mjs",

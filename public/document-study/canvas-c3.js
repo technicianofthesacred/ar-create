@@ -65,7 +65,7 @@
  }
  // A tool that is not connected says so at the top of its own opened panel, with the one step that works now. explains itself without opening or closing the tool; its button does the one thing that works now.
  const reduce=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
- function bring(el,focusEl){el.scrollIntoView({block:'center',behavior:reduce()?'auto':'smooth'});el.classList.remove('c3-arrive');void el.offsetWidth;el.classList.add('c3-arrive');setTimeout(()=>el.classList.remove('c3-arrive'),1400);(focusEl||el).focus?.({preventScroll:true});}
+ function bring(el,focusEl){el.scrollIntoView({block:'center',behavior:reduce()?'auto':'smooth'});el.classList.remove('c3-arrive');void el.offsetWidth;el.classList.add('c3-arrive');setTimeout(()=>el.classList.remove("c3-arrive"),1700);(focusEl||el).focus?.({preventScroll:true});}
  function act(key,from){
   const g=GO[key];if(!g)return;const [,a]=g;const ws=document.querySelector('#app .workspace');if(!ws)return;
   if(a.press){const b=ws.querySelector(a.press);if(b&&!b.disabled)b.click();return;}

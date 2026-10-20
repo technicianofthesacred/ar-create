@@ -404,3 +404,20 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
 @media(max-width:650px){body.c3-tabs #app #workspace .reference[data-c3-mirrored]{display:flex!important}}
 #c3-surface-bar .sb-mode-i{display:none}
 @media(max-width:650px){body.c3-tabs #app #workspace .recordPage .material-surface{padding-left:0!important;padding-right:0!important}}
+/* Inspector tabs, style B: a quiet filled switch. No outline around the group or the chosen tab; the chosen one is a
+   slightly lifted fill. Links out of the inspector are sand text with an arrow, not boxed buttons. */
+#c3-read-insp .c3-insp-tabs,body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head{border:0!important;background:var(--c3-lift,var(--rail))!important}
+#c3-read-insp .c3-insp-tabs{padding:3px!important;border-radius:8px!important;gap:4px!important}
+body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head::before{border:0!important;background:color-mix(in srgb,var(--ink) 4%,transparent);border-radius:8px!important}
+:is(#c3-read-insp,#c3-insp-head) .ci-tab{color:var(--dim)!important;border-radius:6px!important}
+:is(#c3-read-insp,#c3-insp-head) .ci-tab:hover{color:var(--ink)!important}
+:is(#c3-read-insp,#c3-insp-head) .ci-tab[aria-selected="true"]{background:var(--c3-sel,var(--line))!important;box-shadow:none!important;color:var(--ink)!important;font-weight:500!important}
+:is(#c3-read-insp,.ci-panel) .ci-go{min-height:28px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--warm)!important;font:500 13px/1.4 var(--ar-ui)!important}
+:is(#c3-read-insp,.ci-panel) .ci-go::after{content:" →"}
+:is(#c3-read-insp,.ci-panel) .ci-go:hover{text-decoration:underline;text-underline-offset:3px}
+/* Arriving at a tool: a soft sand edge that fades, not a hard ring. Fields: one quiet sand edge on focus, not two. */
+body.c3-tabs .workspace :is(details.c3-tool-row,[data-material-browser-host],.material-layout).c3-arrive{box-shadow:none!important;animation:c3-arrive 1.6s ease-out}
+@keyframes c3-arrive{0%{border-color:color-mix(in srgb,var(--warm) 70%,var(--line))}100%{border-color:var(--c3-line2,var(--line))}}
+@media(prefers-reduced-motion:reduce){body.c3-tabs .workspace .c3-arrive{animation:none}}
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select):focus{outline:0!important;border-color:color-mix(in srgb,var(--warm) 60%,var(--c3-line2,var(--line)))!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--warm) 12%,transparent)!important}
+body.c3-tabs .workspace .material-surface details.c3-tool-row :is(textarea,input,select):focus-visible{outline:0!important}
