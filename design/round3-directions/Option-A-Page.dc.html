@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Option A — The Page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.app{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--lift:#191813;--line2:#423e34;--sel:#2c2a22;--good:#8fb08a;--warn:#d9a95a;--bad:#e08a74;--pend:#423a23;--okbg:#2b3326;--badbg:#3a2620;
+ font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;line-height:1.45;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.app.light{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#62665b;--line:#e2e0d8;--warm:#7a5a30;--lift:#f7f5ef;--line2:#cfcdc3;--sel:#e9e4d7;--good:#3f6146;--warn:#8a580c;--bad:#a23b2a;--pend:#f4e6c6;--okbg:#e2ead9;--badbg:#f6dfd8}
+.app *{box-sizing:border-box}
+.app button{font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:8px;min-height:32px;padding:0 10px;cursor:pointer}
+.app button:hover{background:var(--sel)}
+.app button:focus-visible,.app textarea:focus-visible,.app input:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.app .btn{border-color:var(--line2);background:var(--paper);font-weight:500}
+.app .pri{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.app .pri:hover{background:var(--ink);opacity:.9}
+.app .link{color:var(--warm);padding:0 4px;min-height:28px}
+.proto{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 14px;background:var(--pend);color:var(--ink);font-size:12px;border-bottom:1px solid var(--line2)}
+.proto b{font-weight:700;letter-spacing:.02em}
+.proto .grp{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.proto button{min-height:26px;padding:0 8px;font-size:12px;border-color:var(--line2)}
+.proto button.on{background:var(--ink);color:var(--bg)}
+.top{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.01em}
+.crumb{display:flex;align-items:center;gap:4px;color:var(--dim);min-width:0}
+.crumb strong{color:var(--ink);font-weight:600}
+.cps{display:flex;align-items:center;gap:2px;margin:0 auto;flex-wrap:wrap}
+.cpg{display:flex;align-items:center;gap:1px;padding:0 6px;border-left:1px solid var(--line)}
+.cpg:first-child{border-left:0}
+.cpg small{color:var(--dim);font-size:11px;margin-right:2px}
+@media (max-width:1560px){.cpg small{display:none}}
+.cp{min-height:30px;padding:0 7px;color:var(--dim)}
+.cp.on{color:var(--ink);background:var(--sel);font-weight:600}
+.cp .d{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-left:5px;vertical-align:middle}
+.right{display:flex;gap:6px;align-items:center}
+.body{flex:1;display:flex;min-height:0;position:relative}
+.page{flex:1;min-width:0;overflow:auto;background:var(--paper);padding:28px 24px 80px}
+.col{max-width:760px;margin:0 auto}
+.wide{max-width:1080px;margin:0 auto}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;max-width:1120px;margin:0 auto}
+.h1{font-size:30px;font-weight:700;line-height:1.2;margin:0 0 6px}
+.h2{font-size:18px;font-weight:600;margin:28px 0 10px}
+.h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+.meta{color:var(--dim);font-size:12px}
+.lead{font-size:15px;color:var(--ink);margin:0 0 16px}
+.prose{font-size:16px;line-height:1.6}
+.prose p{margin:0 0 14px}
+.serif{font-family:'Source Serif 4',Georgia,serif}
+.quote{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.5;border-left:2px solid var(--warm);padding:2px 0 2px 14px;margin:6px 0 16px}
+.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.grow{flex:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line2);color:var(--dim);white-space:nowrap}
+.chip.good{color:var(--good);border-color:var(--good)}
+.chip.warn{color:var(--warn);border-color:var(--warn)}
+.chip.bad{color:var(--bad);border-color:var(--bad)}
+.chip.ink{color:var(--ink)}
+.tag{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.t-prep{color:var(--warn);border:1px solid var(--warn)}
+.t-prop{color:var(--dim);border:1px dashed var(--dim)}
+.t-gate{color:var(--bad);border:1px solid var(--bad)}
+.t-work{color:var(--good);border:1px solid var(--good)}
+.app .card{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--lift)}
+.note{border-radius:10px;padding:10px 12px;background:var(--lift);border:1px solid var(--line);margin:0 0 10px;font-size:13px}
+.note.warn{border-color:var(--warn)}
+.note.bad{border-color:var(--bad);background:var(--badbg)}
+.note.good{border-color:var(--good)}
+.mark{background:color-mix(in srgb,var(--warn) 22%,transparent);border-bottom:2px solid var(--warn);cursor:pointer}
+.ok{background:color-mix(in srgb,var(--good) 18%,transparent)}
+.num{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--warn);color:var(--bg);margin-right:6px;flex:none}
+.margin{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.drawer{width:380px;flex:none;border-left:1px solid var(--line);background:var(--lift);overflow:auto;padding:16px}
+.foot{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:34px;border-top:1px solid var(--line);background:var(--bg);color:var(--dim);font-size:12px;flex-wrap:wrap}
+.foot .st{margin-left:auto;font-weight:500}
+.st.good{color:var(--good)}.st.warn{color:var(--warn)}.st.bad{color:var(--bad)}
+textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:12px;width:100%;resize:vertical}
+.tx{font-size:16px;line-height:1.6;min-height:110px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.ph{aspect-ratio:4/3;border-radius:8px;background:linear-gradient(135deg,var(--sel),var(--line2));display:flex;align-items:flex-end;padding:8px;font-size:11px;color:var(--ink)}
+.strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.slide{aspect-ratio:4/5;border-radius:6px;border:1px solid var(--line2);background:var(--lift);padding:8px;display:flex;flex-direction:column;justify-content:space-between;font-size:11px;cursor:grab;position:relative}
+.slide.sel{outline:2px solid var(--warm);outline-offset:2px}
+.slide.stale{border-color:var(--warn)}
+.slide .sw{font-family:'Source Serif 4',Georgia,serif;font-size:12px;line-height:1.3}
+.slide .img{flex:1;margin:6px 0;border-radius:4px;background:linear-gradient(160deg,var(--line2),var(--sel))}
+.phone{width:300px;border-radius:30px;border:8px solid var(--line2);background:var(--bg);padding:14px;margin:0 auto}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;padding:2px;gap:2px;background:var(--lift)}
+.seg button{min-height:28px;font-size:12px;color:var(--dim)}
+.seg button.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line2)}
+.walk{position:fixed;left:16px;bottom:46px;width:360px;max-width:calc(100vw - 32px);background:var(--paper);border:1px solid var(--warm);border-radius:12px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.45);z-index:20}
+.turn{display:grid;grid-template-columns:56px 90px minmax(0,1fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.turn .who{font-weight:600}
+.turn .t{color:var(--dim);font-size:12px}
+.fix{background:color-mix(in srgb,var(--warn) 22%,transparent);border-bottom:2px dotted var(--warn)}
+.fixed{background:color-mix(in srgb,var(--good) 20%,transparent)}
+.kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:6px 12px;font-size:13px}
+.kv span:nth-child(odd){color:var(--dim)}
+.empty{border:1px dashed var(--line2);border-radius:12px;padding:28px;text-align:center;color:var(--dim)}
+.focus .top,.focus .proto,.focus .margin{display:none}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}.margin{position:static}.drawer{position:absolute;inset:0 0 0 auto;width:min(380px,100%);z-index:10}.strip{grid-template-columns:repeat(4,minmax(0,1fr))}.cps{order:3;width:100%;margin:0}.page{padding:20px 16px 80px}.turn{grid-template-columns:48px minmax(0,1fr)}.turn .t{grid-column:1}}
+</style>
+</helmet>
+<div class="app {{themeClass}} {{focusClass}}">
+<div class="proto" role="note">
+ <b>PROTOTYPE · A · The Page</b><span>Invented material. Nothing here saves, generates, sends or exports.</span>
+ <span class="grp"><span>Walk through:</span>
+  <sc-for list="{{walks}}" as="w" hint-placeholder-count="3"><button class="{{w.cls}}" onClick="{{w.go}}">{{w.label}}</button></sc-for>
+ </span>
+ <span class="grp"><span>Show state:</span>
+  <sc-for list="{{states}}" as="s" hint-placeholder-count="7"><button class="{{s.cls}}" onClick="{{s.go}}">{{s.label}}</button></sc-for>
+ </span>
+ <button onClick="{{toggleTheme}}">{{themeLabel}}</button>
+</div>
+
+<header class="top">
+ <button class="brand" onClick="{{goHome}}">AR Create</button>
+ <sc-if value="{{notHome}}" hint-placeholder-val="{{true}}">
+  <div class="crumb"><span>Water first</span><span>›</span><strong>{{pieceTitle}}</strong>
+   <button class="link" onClick="{{switchPiece}}">Switch piece</button></div>
+ </sc-if>
+ <nav class="cps" aria-label="Checkpoints">
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+   <div class="cpg"><small>{{g.label}}</small>
+    <sc-for list="{{g.items}}" as="c" hint-placeholder-count="3"><button class="cp {{c.cls}}" onClick="{{c.go}}" aria-current="{{c.cur}}">{{c.label}}<sc-if value="{{c.dot}}" hint-placeholder-val="{{false}}"><span class="d" aria-label="needs you"></span></sc-if></button></sc-for>
+   </div>
+  </sc-for>
+ </nav>
+ <div class="right">
+  <button class="btn" onClick="{{toggleLib}}" aria-pressed="{{libOpen}}">Library</button>
+  <sc-if value="{{isWrite}}" hint-placeholder-val="{{false}}"><button class="btn" aria-label="Undo your last saved edit">Undo</button><button class="btn" onClick="{{toggleHist}}">History</button><button class="btn" onClick="{{toggleFocus}}">Focus</button></sc-if>
+  <button class="pri" onClick="{{primary.go}}">{{primary.label}}</button>
+ </div>
+</header>
+
+<div class="body">
+<main class="page">
+
+<!-- ============ HOME / RESUME ============ -->
+<sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
+ <div class="col">
+ <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+  <h1 class="h1">Start something</h1>
+  <p class="lead">Begin with whatever you have. Nothing else is required first.</p>
+  <div class="grid">
+   <button class="card" onClick="{{goConcept}}"><b>A thought</b><br><span class="meta">Write what you noticed</span></button>
+   <button class="card" onClick="{{goMaterial}}"><b>A recording</b><br><span class="meta">Add audio or a transcript</span></button>
+   <button class="card" onClick="{{goMaterial}}"><b>Photos</b><br><span class="meta">Files or an album link</span></button>
+   <button class="card" onClick="{{toggleLib}}"><b>From your Library</b><br><span class="meta">Something you already kept</span></button>
+  </div>
+ </sc-if>
+ <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
+  <p class="meta">Tuesday 20 October</p>
+  <div class="card" style="margin:8px 0 24px;padding:22px">
+   <div class="meta">Pick up here · Article · The water is half the tea</div>
+   <h1 class="h1" style="font-size:24px;margin-top:6px">You were fixing paragraph 3: “soft water” now disagrees with your correction.</h1>
+   <p class="meta" style="margin:0 0 14px">Last edit today 09:41 · saved to the working file · revision 8</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pri" onClick="{{resumeWrite}}">Continue at paragraph 3</button><button class="btn" onClick="{{goResearch}}">Open the inquiry</button></div>
+  </div>
+  <h2 class="h2">Since you were last here</h2>
+  <div class="row"><span class="num">1</span><div class="grow">Your correction in <b>Spring walk</b> (12:40, “soft” → “hard”) affects 2 known places: Article paragraph 3 and Carousel slide 4.</div><button class="link" onClick="{{goSource}}">See correction →</button></div>
+  <div class="row"><span class="num" style="background:var(--dim)">2</span><div class="grow">An agent added 2 sources on water hardness to <b>Why water changes tea</b>. Linked as background, not adopted.</div><button class="link" onClick="{{goResearch}}">Review →</button></div>
+  <div class="row"><span class="num" style="background:var(--good)">3</span><div class="grow">Carousel <b>Three waters, one leaf</b> was exported 15 Oct (8 PNG + caption). Not marked as published.</div><button class="link" onClick="{{goOutputs}}">Outputs →</button></div>
+  <p class="meta">Visit tracking for the Mending inquiry is not available yet, so no changes are listed for it. <span class="tag t-prep">Prepared</span></p>
+  <h2 class="h2">Current understanding · Why water changes tea</h2>
+  <p class="prose serif" style="font-size:17px">Minerals change how flavour leaves the leaf: moderate hardness tends to give body, very soft water can taste thin. Why Lin Yun’s limestone spring suits her oolong is <b>still open</b>.</p>
+  <p class="meta">From 3 sources and your notes · updated 16 Oct · 2 open questions <button class="link" onClick="{{goResearch}}">Read it →</button></p>
+  <h2 class="h2">Unfinished</h2>
+  <sc-for list="{{pieces}}" as="p" hint-placeholder-count="5">
+   <div class="row"><div class="grow"><b>{{p.title}}</b><div class="meta">{{p.kind}} · {{p.inquiry}}</div></div><span class="chip {{p.tone}}">{{p.status}}</span><button class="btn" onClick="{{p.open}}">Open</button></div>
+  </sc-for>
+ </sc-if>
+ </div>
+</sc-if>
+
+<!-- ============ CONCEPT ============ -->
+<sc-if value="{{isConcept}}" hint-placeholder-val="{{false}}">
+ <div class="two">
+  <div>
+   <div class="meta">Concept · in the inquiry “Why water changes tea”</div>
+   <h1 class="h1">Water first</h1>
+   <h2 class="h2" style="margin-top:18px">Your thoughts</h2>
+   <textarea class="tx serif" aria-label="Your thoughts" onInput="{{onThought}}" value="{{thought}}"></textarea>
+   <p class="meta">Yours, attributed to you · 12 Oct. Your experience, not an outside fact.</p>
+   <h2 class="h2">Linked from your Library</h2>
+   <sc-if value="{{noLinks}}" hint-placeholder-val="{{false}}"><div class="empty">Nothing linked yet. <button class="link" onClick="{{toggleLib}}">Find in Library →</button></div></sc-if>
+   <sc-for list="{{linkedList}}" as="l" hint-placeholder-count="2">
+    <div class="note"><div class="serif" style="font-size:15px">“{{l.text}}”</div><div class="meta">{{l.src}} · linked, not copied · {{l.rel}}</div></div>
+   </sc-for>
+   <h2 class="h2">Tentative ideas</h2>
+   <div class="row"><div class="grow">Tell it from the kitchen table, not the lab.<div class="meta">Suggested by an agent · not adopted</div></div><button class="btn" onClick="{{goDirection}}">Make this direction</button><button class="btn">Not this</button></div>
+   <div class="row"><div class="grow">A three-cup comparison anyone can repeat at home.<div class="meta">Your note · 13 Oct</div></div></div>
+   <h2 class="h2">Make from this</h2>
+   <p class="meta">Each piece gets its own words, review and edition. Sharing an origin never shares approval.</p>
+   <div class="grid">
+    <button class="card" onClick="{{openArticle}}"><b>Article</b><br><span class="meta">The water is half the tea · draft</span></button>
+    <button class="card" onClick="{{openCarousel}}"><b>Carousel</b><br><span class="meta">Three waters, one leaf · approved</span></button>
+    <button class="card" onClick="{{goOutputs}}"><b>Product listing</b><br><span class="meta">Spring-water tasting set · draft</span></button>
+    <button class="card" onClick="{{goOutputs}}"><b>Video script</b><br><span class="meta">At the spring · 60 s · draft</span></button>
+   </div>
+  </div>
+  <aside class="margin">
+   <div class="note"><b>Ask about this concept</b><p class="meta" style="margin:4px 0 8px">Discussion beside the page. Live AI is not connected in this app; Claude or Codex can work on the same concept from outside. <span class="tag t-gate">Not connected</span></p><button class="btn" style="width:100%">Start a sample discussion</button></div>
+   <div class="note"><b>Agent work</b><p class="meta" style="margin:4px 0 0">Claude added 2 sources yesterday 21:14 (reported). Same records you see here. <span class="tag t-prep">Prepared</span></p></div>
+  </aside>
+ </div>
+</sc-if>
+
+<!-- ============ MATERIAL ============ -->
+<sc-if value="{{isMaterial}}" hint-placeholder-val="{{false}}">
+ <div class="wide">
+  <h1 class="h1">Material</h1>
+  <p class="lead">What you have for Water first, and what to bring in next.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"><button class="pri">Add files</button><button class="btn">Add a note</button><button class="btn">Add a link or album</button><button class="btn">Open material folder</button></div>
+  <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty"><b>No material yet.</b><br>Drop files here, or start with a thought — material can come later.</div></sc-if>
+  <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
+  <div class="row"><div class="grow"><b>Spring walk</b> · recording 38 min · Lin Yun &amp; you<div class="meta">Transcript kept · 1 correction by you</div></div>
+   <sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><span class="chip warn">Preparing transcript · 12 of 38 min</span></sc-if>
+   <sc-if value="{{notProcessing}}" hint-placeholder-val="{{true}}"><span class="chip good">Transcript ready</span></sc-if>
+   <button class="btn" onClick="{{goSource}}">Read transcript</button></div>
+  <div class="row"><div class="grow"><b>Kitchen tasting</b> · your typed notes · with Tomas<div class="meta">Text only, no audio</div></div><span class="chip">Notes</span><button class="btn" onClick="{{goSource}}">Read</button></div>
+  <div class="row"><div class="grow"><b>Spring visit</b> · iCloud shared album link<div class="meta">12 photos imported 14 Oct · videos are skipped</div></div><span class="chip good">Imported</span><button class="btn" onClick="{{goMedia}}">See photos</button></div>
+  <div class="row"><div class="grow"><b>Cabin roll</b> · Lightroom album link<div class="meta">Link saved. Lightroom photos are not imported. <span class="tag t-gate">Not connected</span></div></div><span class="chip">Link only</span></div>
+  <div class="row"><div class="grow"><b>Water chemistry and brewing.pdf</b> · 2.1 MB<div class="meta">In the Library · used by 2 inquiries</div></div><span class="chip">Library</span></div>
+  <sc-if value="{{isFailed}}" hint-placeholder-val="{{false}}"><div class="note bad"><b>kettle-video.mov couldn’t be added.</b> It is 210 MB; file picking takes up to 64 MB. Put it in the material folder instead — the original stays where it is. <button class="link">Open material folder →</button></div></sc-if>
+  </sc-if>
+ </div>
+</sc-if>
+
+<!-- ============ SOURCE ============ -->
+<sc-if value="{{isSource}}" hint-placeholder-val="{{false}}">
+ <div class="two">
+  <div>
+   <div class="seg" role="tablist"><button class="on">Spring walk · 38 min</button><button>Kitchen tasting · notes</button></div>
+   <h1 class="h1" style="margin-top:14px">Spring walk</h1>
+   <p class="meta">14 Oct · Lin Yun and you · original audio kept, read-only</p>
+   <div class="note"><b>Your opening note</b><div class="serif">Recorded walking up to the spring. Wind noise from minute 20.</div></div>
+   <sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><div class="note warn">Transcript is being prepared: 12 of 38 minutes. You can read what is ready; nothing below minute 12 is final.</div></sc-if>
+   <div class="turn"><span class="t">02:10</span><span class="who">Lin Yun</span><span class="serif">We carry water from up there every morning. Not for the garden, for the tea.</span></div>
+   <div class="turn"><span class="t">02:31</span><span class="who">You</span><span class="serif">Every morning? Even in winter?</span></div>
+   <div class="turn"><span class="t">02:35</span><span class="who">Lin Yun</span><span class="serif">Winter especially. The guests come in winter.</span></div>
+   <div class="turn"><span class="t">12:40</span><span class="who">Lin Yun</span><span class="serif">The water here is <span class="{{fixClass}}">{{waterWord}}</span>, it comes through the white stone.</span></div>
+   <div class="turn"><span class="t">12:58</span><span class="who">Lin Yun</span><span class="serif ok">Tea is a guest in the water. If the house is unkind, the guest leaves early.</span></div>
+   <div class="turn"><span class="t">21:09</span><span class="who">Lin Yun</span><span class="serif">[unclear, wind] … only to wash the cups.</span></div>
+   <div class="note" style="margin-top:14px"><b>Your closing note</b><div class="serif">She asked that the garden’s location not be named.</div></div>
+  </div>
+  <aside class="margin">
+   <sc-if value="{{notCorrected}}" hint-placeholder-val="{{true}}">
+    <div class="note warn"><b>12:40 · “soft” may be misheard</b><p class="meta" style="margin:4px 0">Water through limestone is usually hard. Listen and decide.</p>
+     <div class="kv"><span>As heard</span><span>soft</span><span>Your correction</span><span><b>hard</b></span></div>
+     <p class="meta">Will affect: Article paragraph 3 · Carousel slide 4 · research point 1. Other pieces: unknown until checked.</p>
+     <div style="display:flex;gap:6px"><button class="pri" onClick="{{applyFix}}">Save correction</button><button class="btn">Leave as heard</button></div></div>
+   </sc-if>
+   <sc-if value="{{corrected}}" hint-placeholder-val="{{false}}">
+    <div class="note good"><b>Corrected by you · 16 Oct</b><p class="meta" style="margin:4px 0">“soft” → “hard”. The original wording is kept. <button class="link" onClick="{{undoFix}}">Undo</button></p>
+     <p style="margin:6px 0 4px">Flagged for your review, nothing rewritten:</p>
+     <button class="link" onClick="{{resumeWrite}}">Article paragraph 3 →</button><button class="link" onClick="{{openCarousel}}">Carousel slide 4 →</button><button class="link" onClick="{{goResearch}}">Research point 1 →</button></div>
+   </sc-if>
+   <div class="note"><b>Notes from this conversation</b><p class="meta" style="margin:4px 0 0">Potential stories: carrying water each morning. Points of interest: limestone spring. Purchases: none.</p></div>
+   <div class="note"><b>12:58 is used</b><p class="meta" style="margin:4px 0 0">Exact words in Article paragraph 2 and Carousel slide 3.</p></div>
+  </aside>
+ </div>
+</sc-if>
+
+<!-- ============ RESEARCH ============ -->
+<sc-if value="{{isResearch}}" hint-placeholder-val="{{false}}">
+ <div class="two">
+  <article>
+   <div class="meta">Inquiry · works without any piece</div>
+   <h1 class="h1">Why does water change the taste of tea?</h1>
+   <div class="note"><b>Current understanding</b><div class="serif" style="font-size:16px;margin-top:4px">Minerals change how flavour leaves the leaf. Moderate hardness tends to give body; very soft water can taste thin; very hard water can flatten aroma. How this applies to Lin Yun’s oolong is not established.</div><div class="meta" style="margin-top:6px">3 sources · your notes · updated 16 Oct</div></div>
+   <sc-if value="{{isStale}}" hint-placeholder-val="{{false}}"><div class="note warn"><b>Point 1 was written from the transcript before your correction.</b> The quote it relies on changed on 16 Oct. Review it; it has not been rewritten. <button class="link">Show both versions</button></div></sc-if>
+   <h2 class="h2">1 · Limestone makes hard water <span class="chip good">Supported</span></h2>
+   <div class="prose serif"><p>Rain picks up carbon dioxide, passes through limestone and dissolves calcium carbonate. Water from limestone springs is therefore usually hard.</p></div>
+   <div class="quote">The water here is {{waterWord}}, it comes through the white stone.<div class="meta">Lin Yun · Spring walk 12:40 · {{fixLabel}}</div></div>
+   <h2 class="h2">2 · Minerals and extraction <span class="chip warn">Qualified</span></h2>
+   <div class="prose serif"><p>Calcium and magnesium bind with flavour compounds; too few and the cup goes thin, too many and it flattens. Most measured work is on black and green tea. Oolong evidence is thin.</p></div>
+   <p class="meta">Water chemistry and brewing.pdf, p. 14 · limit: “mostly black tea”</p>
+   <h2 class="h2">3 · Competing accounts</h2>
+   <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <div class="note"><b>Mountain spring is best</b><div class="meta">Lu Yu’s ranking, retold in The Book of Tea (public domain): mountain spring, then river, then well.</div></div>
+    <div class="note"><b>Some minerals help</b><div class="meta">Modern brewing guides: very soft water under-extracts.</div></div>
+   </div>
+   <h2 class="h2">Open questions</h2>
+   <div class="row"><div class="grow">Does the spring’s hardness change by season?</div><button class="btn">Ask Lin Yun (Share)</button></div>
+   <div class="row"><div class="grow">At 21:09 she says “only to wash the cups” — habit, or taste? The words before it are unclear.</div><button class="btn" onClick="{{goSource}}">Hear it</button></div>
+   <h2 class="h2">Your experience</h2>
+   <div class="note"><div class="serif">At the cabin the same leaf tasted rounder.</div><div class="meta">Yours · personal experience, not externally verified</div></div>
+  </article>
+  <aside class="margin">
+   <div class="note"><b>Ask the inquiry</b><p class="meta" style="margin:4px 0 0">Atlas and web research aren’t connected here. An authorized agent can add sourced notes. <span class="tag t-gate">Not connected</span></p></div>
+   <div class="note"><b>Used by</b><p class="meta" style="margin:4px 0 0">Concept Water first · Article (background) · Carousel (background). Linking is not adopting.</p><button class="link" onClick="{{goDirection}}">Carry into Direction →</button></div>
+   <div class="note"><b>Also in Mending</b><p class="meta" style="margin:4px 0 0">Water chemistry.pdf supports this inquiry and “Keeping old things in use”. One file, two inquiries.</p></div>
+  </aside>
+ </div>
+</sc-if>
+
+<!-- ============ DIRECTION ============ -->
+<sc-if value="{{isDirection}}" hint-placeholder-val="{{false}}">
+ <div class="col">
+  <h1 class="h1">Direction</h1>
+  <p class="lead">Your choices for Water first, and where each one applies.</p>
+  <h2 class="h2">Adopted</h2>
+  <div class="row"><div class="grow"><b>Water is the hidden half of tea, told from the kitchen table, not the lab.</b><div class="meta">Angle · 15 Oct</div></div><span class="chip ink">Article</span><span class="chip ink">Carousel</span></div>
+  <div class="row"><div class="grow"><b>First person, plain, curious. No product claims.</b><div class="meta">Voice · applies to every piece</div></div><span class="chip ink">All pieces</span></div>
+  <div class="row"><div class="grow"><b>Keep Lin Yun’s “guest in the water” line exactly.</b><div class="meta">Exact words · protected</div></div><span class="chip ink">All pieces</span></div>
+  <sc-if value="{{adopted}}" hint-placeholder-val="{{false}}"><div class="row"><div class="grow"><b>Say “hard water”, and keep the surprise that it still tastes sweet.</b><div class="meta">After your 16 Oct correction · new</div></div><span class="chip ink">Article paragraph 3</span><span class="chip ink">Slide 4</span><button class="link" onClick="{{undoAdopt}}">Undo</button></div></sc-if>
+  <h2 class="h2">Waiting for your choice</h2>
+  <div class="note"><b>From research: name the limestone in the title?</b><p class="meta" style="margin:4px 0 8px">Linked learning, not direction until you adopt it. Choose where it applies.</p>
+   <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" onClick="{{adopt}}">Adopt for Article paragraph 3 + slide 4</button><button class="btn">Article only</button><button class="btn">Not now</button><button class="btn">Reject, with a reason</button></div></div>
+  <h2 class="h2">Changed your mind</h2>
+  <div class="row"><div class="grow"><s>Lead with the science.</s><div class="meta">12 Oct · replaced 15 Oct: “Science felt like a lecture; the cabin story is the way in.”</div></div></div>
+  <div class="row"><div class="grow"><s>A taste-test listicle.</s><div class="meta">Rejected 13 Oct: “Turns it into a buying guide.”</div></div></div>
+ </div>
+</sc-if>
+
+<!-- ============ WRITE / READ / CHECK ============ -->
+<sc-if value="{{isWrite}}" hint-placeholder-val="{{false}}">
+ <div class="two">
+  <article>
+   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+    <span class="meta">Article · revision {{rev}} · {{modeName}} mode</span>
+   </div>
+   <sc-if value="{{returned}}" hint-placeholder-val="{{false}}"><div class="note good">Back where you were: paragraph 3, your saved words unchanged.</div></sc-if>
+   <sc-if value="{{isReadOnly}}" hint-placeholder-val="{{false}}"><div class="note warn"><b>Read-only · earlier version from 16 Oct 18:40.</b> Restoring makes a new version; nothing in between is lost. <button class="link">Restore as new version</button> <button class="link" onClick="{{clearState}}">Back to current</button> <span class="tag t-prop">Proposed</span></div></sc-if>
+   <h1 class="h1" style="font-size:40px">The water is half the tea</h1>
+   <div class="prose">
+    <p>At the cabin the same leaf tasted rounder. I blamed the altitude, then the kettle, then my mood. It took a second visit to admit the obvious: the water was different.</p>
+    <div class="quote">Tea is a guest in the water. If the house is unkind, the guest leaves early.<div class="meta">Lin Yun · exact words, protected</div></div>
+    <sc-if value="{{notEditing}}" hint-placeholder-val="{{true}}"><p><span class="num">1</span><span class="{{p3Class}}" onClick="{{editP3}}">{{p3}}</span></p></sc-if>
+    <sc-if value="{{editing}}" hint-placeholder-val="{{false}}"><div style="margin:0 0 14px"><textarea class="tx" aria-label="Paragraph 3" value="{{draft}}" onInput="{{onDraft}}"></textarea><div style="display:flex;gap:6px;margin-top:6px"><button class="pri" onClick="{{saveP3}}">Done</button><button class="btn" onClick="{{cancelP3}}">Cancel</button><span class="meta">Your direct edit becomes the text. Typing saves ahead automatically.</span></div></div></sc-if>
+    <p>Back in the city I tried three waters side by side: tap, filtered, and bottled spring. The leaf was the same. The tea was not.</p>
+    <h2 class="h2" style="font-size:24px">What the minerals do</h2>
+    <p><span class="num" style="background:var(--dim)">3</span>Calcium and magnesium change how quickly flavour leaves the leaf. Too little and the cup goes thin; too much and it turns flat.</p>
+    <p>I still don’t know why Lin Yun’s spring works for her oolong. That question is staying open.</p>
+   </div>
+  </article>
+  <aside class="margin">
+   <div class="seg" role="tablist" aria-label="Beside the page"><sc-for list="{{insp}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" onClick="{{t.go}}">{{t.label}}</button></sc-for></div>
+   <sc-if value="{{inspDec}}" hint-placeholder-val="{{false}}">
+    <div class="note"><b>Decisions for this article</b><p class="meta" style="margin:4px 0">Angle: kitchen table, not the lab · Voice: first person, no product claims · Keep Lin Yun’s line exactly.</p><button class="link" onClick="{{goDirection}}">Open Direction →</button></div>
+   </sc-if>
+   <sc-if value="{{inspReady}}" hint-placeholder-val="{{false}}">
+    <div class="note"><b>Readiness</b><p class="meta" style="margin:4px 0">Checked against saved revision 8, not while you type. 1 finding open. Export: HTML with photos is available; nothing is published from here.</p><button class="link" onClick="{{goAudience}}">Open Audience view →</button></div>
+   </sc-if>
+   <sc-if value="{{inspMargin}}" hint-placeholder-val="{{true}}">
+   <sc-if value="{{showHist}}" hint-placeholder-val="{{false}}">
+    <div class="note"><b>History · this article</b>
+     <div class="row"><div class="grow">Today 09:12–09:41<div class="meta">6 edits · paragraph 3, paragraph 5</div></div><button class="link" onClick="{{previewOld}}">Preview</button></div>
+     <div class="row"><div class="grow">16 Oct 18:02–18:40<div class="meta">14 edits</div></div><button class="link" onClick="{{previewOld}}">Preview</button></div>
+     <div class="row"><div class="grow">Before 12 Oct<div class="meta">2 versions can’t be rebuilt exactly; shown as a gap, not invented.</div></div></div>
+     <span class="tag t-prop">Proposed · uses existing receipts</span></div>
+   </sc-if>
+   <sc-if value="{{isCheck}}" hint-placeholder-val="{{false}}"><div class="note"><b>Checks</b><p class="meta" style="margin:4px 0 0">{{checkLine}}</p><button class="btn" style="margin-top:6px">Rerun checks</button></div></sc-if>
+   <sc-if value="{{p3Open}}" hint-placeholder-val="{{true}}"><div class="note warn"><b><span class="num">1</span>“soft water” disagrees with your correction</b><p class="meta" style="margin:4px 0 8px">Spring walk 12:40 now reads “hard” (you, 16 Oct).</p><button class="btn" onClick="{{editP3}}">Edit this passage</button></div></sc-if>
+   <sc-if value="{{p3Done}}" hint-placeholder-val="{{false}}"><div class="note good"><b><span class="num" style="background:var(--good)">1</span>Resolved by your edit</b><p class="meta" style="margin:4px 0 0">paragraph 3 now says hard water. Carousel slide 4 is still flagged separately. <button class="link" onClick="{{openCarousel}}">Go to slide 4 →</button></p></div></sc-if>
+   <div class="note"><b><span class="num" style="background:var(--good)">2</span>Quote matches the transcript</b><p class="meta" style="margin:4px 0 0">paragraph 2 checked against Spring walk revision 4.</p></div>
+   <div class="note"><b><span class="num" style="background:var(--dim)">3</span>“turns flat” is qualified</b><p class="meta" style="margin:4px 0 0">Research: supported for black tea, uncertain for oolong. Keep, qualify, or leave it.</p></div>
+   <div class="note"><b>Alongside the words</b><p class="meta" style="margin:4px 0 0">Select a phrase to discuss it here. Suggestions stay pending until you apply them. <span class="tag t-gate">Live AI not connected</span></p></div>
+   </sc-if>
+   <details class="meta"><summary>Work receipts</summary>Today 09:41 save · rev 8 · 16 Oct correction applied · Undo available for your last edit.</details>
+  </aside>
+ </div>
+</sc-if>
+
+<!-- ============ MEDIA ============ -->
+<sc-if value="{{isMedia}}" hint-placeholder-val="{{false}}">
+ <div class="wide">
+  <h1 class="h1">Media</h1>
+  <p class="lead">Originals stay untouched. Each photo shows where it is used.</p>
+  <div class="seg" style="margin-bottom:14px"><button class="on">All 12</button><button>Placed 6</button><button>Selected 2</button><button>Unused 4</button></div>
+  <div class="grid">
+   <sc-for list="{{photos}}" as="ph" hint-placeholder-count="6">
+    <div><div class="ph">{{ph.name}}</div><div style="padding:6px 2px"><b>{{ph.caption}}</b><div class="meta">{{ph.credit}}</div><div class="meta">{{ph.uses}}</div></div></div>
+   </sc-for>
+  </div>
+  <div class="note" style="margin-top:16px"><b>spring-walk.mov · 1:12</b> Preview only. Trimming and video placement are not connected. <span class="tag t-gate">Not connected</span></div>
+ </div>
+</sc-if>
+
+<!-- ============ ARRANGE ============ -->
+<sc-if value="{{isArrange}}" hint-placeholder-val="{{false}}">
+ <div class="wide">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1 class="h1" style="margin:0">Three waters, one leaf</h1><span class="meta">Portrait carousel · 8 slides · 1080 × 1350 · existing templates</span></div>
+  <p class="meta">Drag to reorder. Click a slide to edit its words below. The whole sequence stays in view.</p>
+  <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty">Nothing arranged yet. Pick an output, then its words and photos fill these slots.<br><button class="btn" style="margin-top:10px">Make a carousel from the article</button></div></sc-if>
+  <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
+  <div class="strip" style="margin:14px 0">
+   <sc-for list="{{slides}}" as="s" hint-placeholder-count="8">
+    <div class="slide {{s.cls}}" draggable="true" onDragStart="{{s.dragStart}}" onDragOver="{{s.dragOver}}" onDrop="{{s.drop}}" onClick="{{s.pick}}"><span class="meta">{{s.n}} · {{s.tpl}}</span><div class="img"></div><span class="sw">{{s.text}}</span></div>
+   </sc-for>
+  </div>
+  <div class="two" style="max-width:none">
+   <div class="card"><div class="meta">Slide {{selSlide.n}} · {{selSlide.tpl}}</div>
+    <div class="serif" style="font-size:20px;margin:8px 0">{{selSlide.text}}</div>
+    <sc-if value="{{selSlide.flag}}" hint-placeholder-val="{{false}}"><div class="note warn">Your transcript correction affects this slide. The words were not changed. <button class="btn" onClick="{{fixSlide}}">Use “hard water, still sweet”</button></div></sc-if>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn">Edit words</button><button class="btn">Swap photo</button><button class="btn">Crop for this slide</button><button class="btn">Change template</button></div></div>
+   <div class="note"><b>Caption</b><div class="serif" style="margin-top:4px">Same leaf, three waters. Slide through to see what changed, and why the spring matters.</div><div class="meta" style="margin-top:6px">Approved edition 15 Oct. Editing makes a new edition; the exported one is kept.</div></div>
+  </div>
+  </sc-if>
+ </div>
+</sc-if>
+
+<!-- ============ AUDIENCE / SHARE / OUTPUTS ============ -->
+<sc-if value="{{isAudience}}" hint-placeholder-val="{{false}}">
+ <div class="wide" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px">
+  <div><div class="phone"><div class="slide" style="cursor:default;font-size:13px"><span class="meta">1 / 8</span><div class="img"></div><span class="sw" style="font-size:16px">Three waters, one leaf</span></div><p class="meta" style="text-align:center">As your audience will see it · swipe through all 8</p></div></div>
+  <div><h1 class="h1">Audience</h1><p class="lead">Approved edition 15 Oct · English</p>
+   <div class="row"><div class="grow">Export 8 PNG + caption</div><span class="chip good">Exported 15 Oct</span><button class="btn">Download again</button></div>
+   <div class="row"><div class="grow">Chinese caption<div class="meta">Linked translation, needs a reviewer</div></div><span class="tag t-prop">Proposed</span></div>
+   <div class="row"><div class="grow">Post to Instagram</div><span class="tag t-gate">Not connected</span></div>
+   <p class="meta">Exported is not published. You record where it went.</p></div>
+ </div>
+</sc-if>
+<sc-if value="{{isShare}}" hint-placeholder-val="{{false}}">
+ <div class="col">
+  <h1 class="h1">Share</h1><p class="lead">Thank the people in the story and ask whether it feels right to them.</p>
+  <div class="card"><div class="meta">To Lin Yun · about the Article (when ready) · prepared, not sent</div>
+   <div class="serif" style="font-size:16px;margin:8px 0">Thank you for the walk to the spring. I wrote about the water, and your line about the guest is in it exactly as you said it. Is it right to call your spring limestone? I left the garden’s place unnamed, as you asked.</div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn">Edit</button><button class="btn">Copy to send yourself</button><button class="btn">Chinese version · needs review</button></div>
+   <p class="meta">AR Create doesn’t send messages. Record when you sent it. <span class="tag t-gate">Sending not connected</span></p></div>
+  <div class="row"><div class="grow"><b>Tomas</b> · appreciation note<div class="meta">Copied 16 Oct · no reply yet (no reply is not a yes)</div></div><span class="chip">Waiting</span></div>
+ </div>
+</sc-if>
+<sc-if value="{{isOutputs}}" hint-placeholder-val="{{false}}">
+ <div class="col">
+  <h1 class="h1">Outputs</h1><p class="lead">Each piece finishes on its own. The inquiry stays open.</p>
+  <sc-if value="{{exported}}" hint-placeholder-val="{{false}}"><div class="note good"><b>Article exported · HTML with photos · revision 8</b> Saved to your downloads folder record. Not published. <button class="link">Record where it went</button></div></sc-if>
+  <sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><div class="note warn">Rendering carousel PNGs: 3 of 8. Your words aren’t touched.</div></sc-if>
+  <sc-for list="{{pieces}}" as="p" hint-placeholder-count="5">
+   <div class="row"><div class="grow"><b>{{p.title}}</b><div class="meta">{{p.kind}} · {{p.detail}}</div></div><span class="chip {{p.tone}}">{{p.status}}</span><button class="btn" onClick="{{p.open}}">Open</button><button class="btn" onClick="{{p.export}}">{{p.exportLabel}}</button></div>
+  </sc-for>
+  <button class="btn" style="margin-top:14px">New output</button>
+ </div>
+</sc-if>
+
+</main>
+
+<sc-if value="{{libOpen}}" hint-placeholder-val="{{false}}">
+ <aside class="drawer" aria-label="Library">
+  <div style="display:flex;align-items:center"><b style="font-size:15px">Library</b><button style="margin-left:auto" onClick="{{toggleLib}}" aria-label="Close Library">Close</button></div>
+  <input aria-label="Search the Library" value="water hardness" style="width:100%;margin:10px 0;font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line2);background:var(--paper);color:var(--ink)">
+  <p class="meta">Matching passages from what you kept. Search is literal for now; meaning-based search is not connected. <span class="tag t-prep">Bounded</span></p>
+  <sc-for list="{{libItems}}" as="li" hint-placeholder-count="4">
+   <div class="note"><div class="serif">“{{li.text}}”</div><div class="meta">{{li.src}}</div><button class="link" onClick="{{li.link}}">{{li.btn}}</button></div>
+  </sc-for>
+ </aside>
+</sc-if>
+</div>
+
+<footer class="foot">
+ <span>{{location}}</span>
+ <span class="st {{saveTone}}">{{saveText}}</span>
+ <sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{clearState}}">Retry save</button></sc-if>
+ <span>A− 100% A+</span>
+</footer>
+
+<sc-if value="{{walkOn}}" hint-placeholder-val="{{false}}">
+ <div class="walk" role="dialog" aria-label="Walkthrough">
+  <div class="meta">{{walkTitle}} · step {{walkStepN}} of {{walkLen}}</div>
+  <p style="margin:6px 0 10px;font-size:14px">{{walkCaption}}</p>
+  <div style="display:flex;gap:6px"><button class="btn" onClick="{{walkBack}}">Back</button><button class="pri" onClick="{{walkNext}}">{{walkNextLabel}}</button><button style="margin-left:auto" onClick="{{walkEnd}}">Close</button></div>
+ </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={cp:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,hist:false,focus:false,mode:'write',adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,piece:'article'};}
+  set(o){this.setState(o);}
+  renderVals(){
+    const s=this.state,self=this;
+    const theme=s.light===null?(this.props.theme??'dark'):(s.light?'light':'dark');
+    const P3a='The spring above her garden runs through limestone, so the water is soft, and it carries the leaf’s sweetness forward.';
+    const P3b='The spring above her garden runs through limestone, so the water is hard with calcium, and somehow it still carries the leaf’s sweetness forward.';
+    const st=s.st;
+    const go=(cp,extra)=>()=>self.set(Object.assign({cp:cp,returned:false},extra||{}));
+    const C=[['Gather',[['material','Material'],['source','Source']]],['Understand',[['research','Research'],['direction','Direction']]],['Make',[['write','Write'],['read','Read'],['check','Check'],['media','Media'],['arrange','Arrange']]],['Deliver',[['audience','Audience'],['share','Share'],['outputs','Outputs']]]];
+    const isW=['write','read','check'].indexOf(s.cp)>=0;
+    const groups=C.map(g=>({label:g[0],items:g[1].map(c=>({label:c[1],cls:(s.cp===c[0]?'on':''),cur:(s.cp===c[0]?'page':'false'),dot:(c[0]==='check'&&!s.p3done)||(c[0]==='direction'&&!s.adopted),go:()=>self.set({cp:c[0],mode:(['write','read','check'].indexOf(c[0])>=0?c[0]:s.mode),returned:(c[0]==='write'&&s.cp==='arrange'&&s.p3done)})}))}));
+    const W={
+      j1:{title:'Concept → Library → direction → outputs',steps:[
+        ['concept',{linked:[]},'Start from a thought. Your words sit in their own place, attributed to you.'],
+        ['concept',{libOpen:true},'Open the Library beside the concept. Matching passages from what you kept, without leaving the page.'],
+        ['concept',{libOpen:true,linked:['l1','l2']},'Link two passages. They are linked, not copied — the Book of Tea passage also serves another inquiry.'],
+        ['direction',{libOpen:false},'Linked learning is not direction. Here you choose what applies, and to which pieces.'],
+        ['direction',{adopted:true},'Adopted for Article paragraph 3 and Carousel slide 4 only. Your earlier choices stay visible.'],
+        ['outputs',{},'Several independent pieces from one origin: each has its own words, review and finish.']]},
+      j2:{title:'Recording → correction → research → direction',steps:[
+        ['material',{},'The recording is kept as Material, with its transcript ready.'],
+        ['source',{corrected:false},'In Source, 12:40 is flagged: “soft” may be misheard. You hear it and decide.'],
+        ['source',{corrected:true},'Correction saved. The original wording is kept, and the 3 known affected places are listed — nothing is rewritten.'],
+        ['research',{st:'stale'},'Research point 1 says it was written before your correction. It waits for your review.'],
+        ['direction',{st:'normal',adopted:true},'You record a new direction for exactly the affected passages.']]},
+      j3:{title:'Resume → marked edit → save → switch → return → export',steps:[
+        ['home',{corrected:true},'Coming back: one place to pick up, what changed, and the current understanding.'],
+        ['write',{mode:'check',editing:false},'The marked passage and its finding sit side by side.'],
+        ['write',{editing:true,draft:P3b,dirty:true},'You edit the passage directly. The bottom bar shows unsaved, then saves ahead.'],
+        ['write',{editing:false,p3done:true,dirty:false,rev:9},'Saved to the working file. The finding resolves because of your edit.'],
+        ['arrange',{sel:3},'Switch to the carousel. Slide 4 is still flagged on its own — siblings are independent.'],
+        ['write',{returned:true},'Return to the article: same paragraph, saved words unchanged.'],
+        ['outputs',{exported:true},'Export the article edition. Exported, not published; the carousel and inquiry stay open.']]}
+    };
+    const wk=s.walk?W[s.walk]:null;
+    const applyStep=(k,i)=>{const w=W[k],stp=w.steps[i];self.set(Object.assign({walk:k,step:i,cp:stp[0],returned:false},stp[1]));};
+    const walks=[['j1','1 · Concept to outputs'],['j2','2 · Recording to direction'],['j3','3 · Resume to export']].map(w=>({label:w[1],cls:(s.walk===w[0]?'on':''),go:()=>applyStep(w[0],0)}));
+    const states=[['normal','Normal'],['empty','Empty'],['unsaved','Unsaved'],['processing','Processing'],['failed','Failed save'],['stale','Stale'],['readonly','Read-only']].map(x=>({label:x[1],cls:(st===x[0]?'on':''),go:()=>self.set({st:x[0],cp:(x[0]==='readonly'||x[0]==='unsaved'||x[0]==='failed')&&!isW?'write':(x[0]==='stale'&&['research','arrange','write'].indexOf(s.cp)<0?'research':s.cp)})}));
+    const photos=[
+      {name:'spring-path.jpg',caption:'The path to the spring',credit:'by you',uses:'Article figure 1 · Carousel slide 1'},
+      {name:'three-cups.jpg',caption:'Tap, filtered, spring',credit:'by you',uses:'Article figure 2 · Carousel slides 2, 5'},
+      {name:'lin-yun-hands.jpg',caption:'Pouring',credit:'by Lin Yun · permission asked 16 Oct',uses:'Carousel slide 3'},
+      {name:'limestone.jpg',caption:'White stone above the garden',credit:'by you',uses:'Carousel slide 4'},
+      {name:'cabin-window.jpg',caption:'Cabin kettle',credit:'by you',uses:'Selected for Carousel slide 8, not placed'},
+      {name:'kettle.jpg',caption:'No caption yet',credit:'by you',uses:'Unused'}];
+    const S=[['Title','Three waters, one leaf'],['Photo + line','Same leaf. Three cups.'],['Quote','“Tea is a guest in the water.” — Lin Yun'],['Photo + line',s.slide4fixed?'Her spring runs through limestone: hard water, still sweet.':'Her spring runs through limestone: soft water, sweet tea.'],['Split','Tap · filtered · spring'],['Text','Too few minerals: thin. Too many: flat.'],['Text','What I still don’t know'],['Closing','The full story is on Teajia']];
+    const slides=s.order.map((idx,pos)=>({n:pos+1,tpl:S[idx][0],text:S[idx][1],flag:(idx===3&&s.corrected&&!s.slide4fixed),cls:[(s.sel===pos?'sel':''),((idx===3&&s.corrected&&!s.slide4fixed)||(st==='stale'&&idx===3)?'stale':'')].join(' '),
+      pick:()=>self.set({sel:pos}),dragStart:(e)=>{e.dataTransfer.setData('text/plain',String(pos));},dragOver:(e)=>e.preventDefault(),
+      drop:(e)=>{e.preventDefault();const from=Number(e.dataTransfer.getData('text/plain'));const o=s.order.slice();const [m]=o.splice(from,1);o.splice(pos,0,m);self.set({order:o,sel:pos});}}));
+    const selSlide=slides[s.sel]||slides[0];
+    const lib=[{id:'l1',text:'Mountain spring water is best, river water next, well water last.',src:'The Book of Tea · Lu Yu’s ranking · public domain · also in Mending'},{id:'l2',text:'Tea is a guest in the water.',src:'Spring walk 12:58 · Lin Yun · kept conversation'},{id:'l3',text:'Hardness above 150 mg/L dulled aroma in every black tea tested.',src:'Water chemistry and brewing.pdf p.14'},{id:'l4',text:'Same leaf, rounder at the cabin.',src:'Your note · 2025'}];
+    const libItems=lib.map(l=>({text:l.text,src:l.src,btn:s.linked.indexOf(l.id)>=0?'Linked ✓ (unlink)':'Link to Water first',link:()=>{const L=s.linked.slice();const i=L.indexOf(l.id);if(i>=0)L.splice(i,1);else L.push(l.id);self.set({linked:L});}}));
+    const linkedList=lib.filter(l=>s.linked.indexOf(l.id)>=0).map(l=>({text:l.text,src:l.src,rel:'supports'}));
+    const pieces=[
+      {title:'The water is half the tea',kind:'Article',inquiry:'Why water changes tea',detail:'revision '+(s.rev||8)+' · not reviewed',status:s.p3done?'Draft · saved':'Draft · 1 finding',tone:s.p3done?'':'warn',open:go('write',{mode:'write'}),export:()=>self.set({exported:true}),exportLabel:'Export HTML'},
+      {title:'Three waters, one leaf',kind:'Portrait carousel · 8 slides',inquiry:'Why water changes tea',detail:'approved edition 15 Oct · exported',status:s.corrected&&!s.slide4fixed?'Slide 4 flagged':'Exported',tone:s.corrected&&!s.slide4fixed?'warn':'good',open:go('arrange'),export:go('audience'),exportLabel:'Audience view'},
+      {title:'Spring-water tasting set',kind:'Product listing',inquiry:'Why water changes tea',detail:'own wording · shop keeps price and stock',status:'Draft',tone:'',open:go('write'),export:()=>{},exportLabel:'Copy text'},
+      {title:'At the spring',kind:'Video script · 60 s',inquiry:'Why water changes tea',detail:'video editing not connected',status:'Draft',tone:'',open:go('write'),export:()=>{},exportLabel:'Copy script'},
+      {title:'The bowl with a gold seam',kind:'Post',inquiry:'Keeping old things in use',detail:'separate inquiry · shares one PDF',status:'Draft',tone:'',open:go('write'),export:()=>{},exportLabel:'Copy text'}];
+    const titles={home:'Home',concept:'Water first',material:'Material',source:'Spring walk',research:'Why water changes tea',direction:'Direction',write:'The water is half the tea',read:'The water is half the tea',check:'The water is half the tea',media:'Media',arrange:'Three waters, one leaf',audience:'Three waters, one leaf',share:'Share',outputs:'Outputs'};
+    let saveText='Saved to working file 09:41',saveTone='good';
+    if(st==='unsaved'||s.dirty){saveText='Unsaved · saving ahead…';saveTone='warn';}
+    if(st==='failed'){saveText='Couldn’t save to the project file. Your words are kept in this browser.';saveTone='bad';}
+    if(st==='readonly'){saveText='Read-only · earlier version';saveTone='warn';}
+    if(s.p3done&&!s.dirty&&st==='normal'){saveText='Saved to working file 09:52 · revision 9';}
+    const prim={home:['Continue',()=>applyStep('j3',1)],concept:['Make a piece',go('outputs')],material:['Add files',()=>{}],source:['Save correction',()=>self.set({corrected:true})],research:['Carry into Direction',go('direction')],direction:['Continue writing',go('write',{mode:'write'})],write:['Discuss wording',()=>{}],read:['Discuss wording',()=>{}],check:['Rerun checks',()=>{}],media:['Add photos',()=>{}],arrange:['Audience view',go('audience')],audience:['Export',()=>{}],share:['Copy message',()=>{}],outputs:['New output',()=>{}]};
+    const pr=prim[s.cp];
+    const modes=[['write','Write'],['read','Read'],['check','Check']].map(m=>({label:m[1],cls:(s.cp===m[0]?'on':''),go:()=>self.set({cp:m[0],mode:m[0]})}));
+    const n=wk?wk.steps.length:0;
+    return {
+      themeClass:theme==='light'?'light':'',themeLabel:theme==='light'?'Dark':'Light',toggleTheme:()=>self.set({light:theme!=='light'}),
+      focusClass:s.focus&&isW?'focus':'',toggleFocus:()=>self.set({focus:!s.focus}),
+      walks,states,groups,notHome:s.cp!=='home',pieceTitle:titles[s.cp],
+      isHome:s.cp==='home',isConcept:s.cp==='concept',isMaterial:s.cp==='material',isSource:s.cp==='source',isResearch:s.cp==='research',isDirection:s.cp==='direction',isWrite:isW,isMedia:s.cp==='media',isArrange:s.cp==='arrange',isAudience:s.cp==='audience',isShare:s.cp==='share',isOutputs:s.cp==='outputs',isCheck:s.cp==='check',
+      isEmpty:st==='empty',notEmpty:st!=='empty',isProcessing:st==='processing',notProcessing:st!=='processing',isFailed:st==='failed',isStale:st==='stale'||(s.corrected&&s.cp==='research'&&s.walk==='j2'),isReadOnly:st==='readonly',
+      goHome:go('home'),goConcept:go('concept'),goMaterial:go('material'),goSource:go('source'),goResearch:go('research'),goDirection:go('direction'),goOutputs:go('outputs'),goMedia:go('media'),
+      resumeWrite:go('write',{mode:'check'}),openArticle:go('write',{mode:'write'}),openCarousel:go('arrange',{sel:3}),switchPiece:go('outputs'),
+      toggleLib:()=>self.set({libOpen:!s.libOpen}),libOpen:s.libOpen,toggleHist:()=>self.set({hist:!s.hist}),showHist:s.hist,previewOld:()=>self.set({st:'readonly'}),clearState:()=>self.set({st:'normal'}),
+      primary:{label:pr[0],go:pr[1]},
+      thought:s.thought,onThought:(e)=>self.set({thought:e.target.value}),noLinks:s.linked.length===0,linkedList,libItems,
+      waterWord:s.corrected?'hard':'soft',fixClass:s.corrected?'fixed':'fix',fixLabel:s.corrected?'corrected by you, 16 Oct · original “soft” kept':'as heard · unchecked',
+      corrected:s.corrected,notCorrected:!s.corrected,applyFix:()=>self.set({corrected:true}),undoFix:()=>self.set({corrected:false}),
+      adopted:s.adopted,adopt:()=>self.set({adopted:true}),undoAdopt:()=>self.set({adopted:false}),
+      insp:[['margin','Margin'],['dec','Decisions'],['ready','Readiness']].map(t=>({label:t[1],cls:((s.insp||'margin')===t[0]?'on':''),go:()=>self.set({insp:t[0]})})),inspMargin:(s.insp||'margin')==='margin',inspDec:s.insp==='dec',inspReady:s.insp==='ready',goAudience:go('audience'),modeName:(s.cp==='read'?'Read':s.cp==='check'?'Check':'Write'),modes,rev:s.rev||(s.p3done?9:8),returned:s.returned,
+      p3:s.p3done?(s.draft||P3b):P3a,p3Class:s.p3done?'':'mark',editing:s.editing,notEditing:!s.editing,editP3:()=>self.set({editing:true,draft:s.draft||P3a,cp:(isW?s.cp:'write')}),
+      draft:s.draft,onDraft:(e)=>self.set({draft:e.target.value,dirty:true}),saveP3:()=>self.set({editing:false,p3done:true,dirty:false}),cancelP3:()=>self.set({editing:false,dirty:false}),
+      p3Open:!s.p3done,p3Done:s.p3done,checkLine:s.p3done?'Checked revision 8. You are on revision 9, so these results are out of date.':'Checked revision 8 at 09:30: quote fidelity and splits.',
+      photos,slides,selSlide,fixSlide:()=>self.set({slide4fixed:true}),exported:s.exported,pieces,
+      location:(s.cp==='home'?'Home':'Water first › '+titles[s.cp]+' › '+s.cp.charAt(0).toUpperCase()+s.cp.slice(1)),saveText,saveTone,saveFailed:st==='failed',
+      walkOn:!!wk,walkTitle:wk?wk.title:'',walkStepN:s.step+1,walkLen:n,walkCaption:wk?wk.steps[s.step][2]:'',
+      walkNext:()=>{if(s.step+1<n)applyStep(s.walk,s.step+1);else self.set({walk:null});},walkNextLabel:(s.step+1<n)?'Next':'Finish',
+      walkBack:()=>{if(s.step>0)applyStep(s.walk,s.step-1);},walkEnd:()=>self.set({walk:null})
+    };
+  }
+}
+</script>
+</body>
+</html>

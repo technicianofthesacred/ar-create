@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Option B — The Studio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.app{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--lift:#191813;--line2:#423e34;--sel:#2c2a22;--good:#8fb08a;--warn:#d9a95a;--bad:#e08a74;--pend:#423a23;--badbg:#3a2620;
+ font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px;line-height:1.45;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.app.light{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#62665b;--line:#e2e0d8;--warm:#7a5a30;--lift:#f7f5ef;--line2:#cfcdc3;--sel:#e9e4d7;--good:#3f6146;--warn:#8a580c;--bad:#a23b2a;--pend:#f4e6c6;--badbg:#f6dfd8}
+.app *{box-sizing:border-box}
+.app button{font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:8px;min-height:32px;padding:0 10px;cursor:pointer;text-align:left}
+.app button:hover{background:var(--sel)}
+.app button:focus-visible,.app textarea:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.app .btn{border-color:var(--line2);background:var(--paper);font-weight:500}
+.app .pri{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.app .pri:hover{background:var(--ink);opacity:.9}
+.app .link{color:var(--warm);padding:0 4px;min-height:28px}
+.proto{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 14px;background:var(--pend);font-size:12px;border-bottom:1px solid var(--line2)}
+.proto b{font-weight:700}
+.proto .grp{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.proto button{min-height:26px;padding:0 8px;font-size:12px;border-color:var(--line2)}
+.proto button.on{background:var(--ink);color:var(--bg)}
+.shell{flex:1;display:flex;flex-wrap:wrap;min-height:0}
+.side{flex:1 1 240px;max-width:260px;background:var(--lift);border-right:1px solid var(--line);padding:12px 8px 24px;display:flex;flex-direction:column;gap:2px}
+.side .brand{font-weight:700;padding:6px 10px 10px}
+.side h4{margin:14px 10px 4px;font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.nav{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;color:var(--dim)}
+.nav.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line2)}
+.nav .n{margin-left:auto;font-size:11px;color:var(--dim);font-weight:500}
+.nav.sub{padding-left:24px;min-height:30px;font-size:12.5px}
+.dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--line2)}
+.dot.warn{background:var(--warn)}.dot.good{background:var(--good)}.dot.real{background:var(--warm)}
+.main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;background:var(--paper)}
+.head{padding:16px 28px 0;border-bottom:1px solid var(--line)}
+.head .t{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;margin-top:12px}
+.tab{border-radius:8px 8px 0 0;min-height:36px;color:var(--dim);border-bottom:2px solid transparent}
+.tab.on{color:var(--ink);font-weight:600;border-bottom-color:var(--warm)}
+.tabs .sep{width:1px;background:var(--line);margin:8px 6px}
+.tabs small{color:var(--dim);font-size:11px;align-self:center;margin:0 4px 0 6px}
+.content{flex:1;overflow:auto;padding:24px 28px 80px}
+.wrap2{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:36px}
+.h1{font-size:28px;font-weight:700;line-height:1.2;margin:0 0 6px}
+.h2{font-size:17px;font-weight:600;margin:26px 0 10px}
+.meta{color:var(--dim);font-size:12px}
+.lead{font-size:15px;margin:0 0 16px}
+.prose{font-size:16px;line-height:1.6;max-width:700px}
+.prose p{margin:0 0 14px}
+.serif{font-family:'Source Serif 4',Georgia,serif}
+.quote{font-family:'Source Serif 4',Georgia,serif;font-size:18px;line-height:1.5;border-left:2px solid var(--warm);padding:2px 0 2px 14px;margin:6px 0 16px}
+.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.grow{flex:1;min-width:180px}
+.chip{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line2);color:var(--dim);white-space:nowrap}
+.chip.good{color:var(--good);border-color:var(--good)}.chip.warn{color:var(--warn);border-color:var(--warn)}.chip.ink{color:var(--ink)}
+.tag{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.t-prep{color:var(--warn);border:1px solid var(--warn)}.t-prop{color:var(--dim);border:1px dashed var(--dim)}.t-gate{color:var(--bad);border:1px solid var(--bad)}.t-real{color:var(--warm);border:1px solid var(--warm)}
+.note{border-radius:10px;padding:10px 12px;background:var(--lift);border:1px solid var(--line);margin:0 0 10px}
+.note.warn{border-color:var(--warn)}.note.bad{border-color:var(--bad);background:var(--badbg)}.note.good{border-color:var(--good)}
+.band{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--warn);border-radius:12px;background:color-mix(in srgb,var(--warn) 8%,var(--paper));margin-bottom:18px}
+.map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.mcol h3{font-size:12px;color:var(--dim);font-weight:600;margin:0 0 8px;letter-spacing:.03em;text-transform:uppercase}
+.app .mc{display:block;width:100%;border:1px solid var(--line);background:var(--lift);border-radius:10px;padding:10px 12px;margin-bottom:8px;min-height:auto;transition:opacity .15s,border-color .15s}
+.mc b{display:block;font-weight:600;margin-bottom:2px}
+.app .mc.hi{border-color:var(--warm);background:color-mix(in srgb,var(--warm) 10%,var(--lift))}
+.app .mc.lo{opacity:.35}
+.app .mc.focus{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.thoughts{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--lift);margin-bottom:20px}
+textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:12px;width:100%;resize:vertical}
+.tx{font-size:16px;line-height:1.6;min-height:96px}
+.mark{background:color-mix(in srgb,var(--warn) 22%,transparent);border-bottom:2px solid var(--warn);cursor:pointer}
+.num{display:inline-flex;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--warn);color:var(--bg);margin-right:6px;flex:none}
+.margin{display:flex;flex-direction:column;gap:10px;align-self:start;position:sticky;top:0}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;padding:2px;gap:2px;background:var(--lift);flex-wrap:wrap}
+.seg button{min-height:28px;font-size:12px;color:var(--dim)}
+.seg button.on{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line2)}
+.turn{display:grid;grid-template-columns:52px 80px minmax(0,1fr);gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.turn .who{font-weight:600}.turn .t{color:var(--dim);font-size:12px}
+.fix{background:color-mix(in srgb,var(--warn) 22%,transparent);border-bottom:2px dotted var(--warn)}
+.fixed{background:color-mix(in srgb,var(--good) 20%,transparent)}
+.cgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.app .slide{aspect-ratio:4/5;border-radius:8px;border:1px solid var(--line2);background:var(--lift);padding:10px;display:flex;flex-direction:column;justify-content:space-between;cursor:grab;min-height:auto;text-align:left}
+.slide.sel{outline:2px solid var(--warm);outline-offset:2px}.slide.stale{border-color:var(--warn)}
+.slide .sw{font-family:'Source Serif 4',Georgia,serif;font-size:14px;line-height:1.3}
+.slide .img{flex:1;margin:8px 0;border-radius:4px;background:linear-gradient(160deg,var(--line2),var(--sel))}
+.mtable .row>span{min-width:120px}
+.ph{width:72px;height:54px;border-radius:6px;background:linear-gradient(135deg,var(--sel),var(--line2));flex:none}
+.figure{margin:18px 0;border-radius:8px;aspect-ratio:16/9;background:linear-gradient(135deg,var(--sel),var(--line2));display:flex;align-items:flex-end;padding:10px;font-size:12px;color:var(--ink)}
+.pull{font-family:'Source Serif 4',Georgia,serif;font-size:24px;line-height:1.35;margin:18px 0;padding:0 0 0 16px;border-left:3px solid var(--warm)}
+.term{border-bottom:1px dotted var(--warm);color:var(--ink)}
+.foot{display:flex;align-items:center;gap:10px;padding:0 16px;min-height:34px;border-top:1px solid var(--line);background:var(--bg);color:var(--dim);font-size:12px;flex-wrap:wrap}
+.foot .st{margin-left:auto;font-weight:500}.st.good{color:var(--good)}.st.warn{color:var(--warn)}.st.bad{color:var(--bad)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;justify-content:flex-end;z-index:30}
+.panel{width:min(420px,100%);height:100%;overflow:auto;background:var(--lift);border-left:1px solid var(--line2);padding:18px}
+.walk{position:fixed;right:16px;bottom:46px;width:360px;max-width:calc(100vw - 32px);background:var(--paper);border:1px solid var(--warm);border-radius:12px;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.45);z-index:40}
+.empty{border:1px dashed var(--line2);border-radius:12px;padding:28px;text-align:center;color:var(--dim)}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px 12px}
+.kv span:nth-child(odd){color:var(--dim)}
+@media (max-width:1100px){.map{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap2{grid-template-columns:minmax(0,1fr)}.margin{position:static}.cgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.side{max-width:none;border-right:0;border-bottom:1px solid var(--line)}.map{grid-template-columns:minmax(0,1fr)}.content,.head{padding-left:16px;padding-right:16px}.turn{grid-template-columns:48px minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="app {{themeClass}}">
+<div class="proto" role="note">
+ <b>PROTOTYPE · B · The Studio</b><span>Invented material, plus one real published story (read-only). Nothing saves, generates, sends or exports.</span>
+ <span class="grp"><span>Walk through:</span><sc-for list="{{walks}}" as="w" hint-placeholder-count="3"><button class="{{w.cls}}" onClick="{{w.go}}">{{w.label}}</button></sc-for></span>
+ <span class="grp"><span>Show state:</span><sc-for list="{{states}}" as="s" hint-placeholder-count="7"><button class="{{s.cls}}" onClick="{{s.go}}">{{s.label}}</button></sc-for></span>
+ <button onClick="{{toggleTheme}}">{{themeLabel}}</button>
+</div>
+<div class="shell">
+ <nav class="side" aria-label="Studio">
+  <div class="brand">AR Create</div>
+  <button class="nav {{navHome}}" onClick="{{goHome}}">Studio home<span class="n">{{waitCount}} waiting</span></button>
+  <button class="nav" onClick="{{openLib}}">Library<span class="n">142</span></button>
+  <h4>Inquiries</h4>
+  <button class="nav {{navInq}}" onClick="{{goResearch}}"><span class="dot warn"></span>Why water changes tea<span class="n">2 new</span></button>
+  <button class="nav" onClick="{{goMending}}"><span class="dot"></span>Keeping old things in use</button>
+  <h4>Projects</h4>
+  <button class="nav {{navProj}}" onClick="{{goOverview}}">Water first</button>
+  <sc-for list="{{pieceNav}}" as="p" hint-placeholder-count="4"><button class="nav sub {{p.cls}}" onClick="{{p.open}}"><span class="dot {{p.dot}}"></span>{{p.title}}</button></sc-for>
+  <button class="nav {{navMend}}" onClick="{{goMending}}">Mending</button>
+  <button class="nav sub {{navReal}}" onClick="{{openReal}}"><span class="dot real"></span>Porcelain and Tea</button>
+  <button class="nav sub" onClick="{{goMending}}"><span class="dot"></span>The bowl with a gold seam</button>
+  <button class="btn" style="margin:14px 8px 0;text-align:center">New project or concept</button>
+ </nav>
+
+ <div class="main">
+  <div class="head">
+   <div class="t"><span class="meta">{{crumb}}</span></div>
+   <div class="t"><h1 class="h1" style="margin:4px 0 0">{{title}}</h1><sc-for list="{{titleChips}}" as="c" hint-placeholder-count="1"><span class="chip {{c.tone}}">{{c.label}}</span></sc-for>
+    <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{inPiece}}" hint-placeholder-val="{{false}}"><button class="btn">Undo</button><button class="btn" onClick="{{openLib}}">Library</button></sc-if><button class="pri" onClick="{{primary.go}}">{{primary.label}}</button></span></div>
+   <sc-if value="{{showTabs}}" hint-placeholder-val="{{true}}">
+   <div class="tabs" role="tablist"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="8"><sc-if value="{{t.isSep}}" hint-placeholder-val="{{false}}"><span class="sep"></span><small>{{t.label}}</small></sc-if><sc-if value="{{t.isTab}}" hint-placeholder-val="{{true}}"><button class="tab {{t.cls}}" onClick="{{t.go}}">{{t.label}}</button></sc-if></sc-for></div>
+   </sc-if>
+  </div>
+  <div class="content">
+
+<!-- HOME -->
+<sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
+ <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty"><b>Your studio is empty.</b><br>Start with a thought, a recording, photos or something from your Library.<div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap"><button class="pri" onClick="{{goOverview}}">Write a thought</button><button class="btn">Add a recording</button><button class="btn" onClick="{{openLib}}">Open Library</button></div></div></sc-if>
+ <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
+ <div class="band"><b>Waiting on you</b><span class="grow">Paragraph 3 of the article disagrees with your transcript correction · slide 4 the same · 1 direction to choose</span><button class="btn" onClick="{{resumeWrite}}">Paragraph 3</button><button class="btn" onClick="{{goDirection}}">Choose direction</button></div>
+ <h2 class="h2" style="margin-top:0">Pick up here</h2>
+ <div class="note" style="padding:16px"><div class="meta">Water first › The water is half the tea · today 09:41</div><div style="font-size:18px;font-weight:600;margin:6px 0 10px">Fix “soft water” in paragraph 3, then slide 4.</div><button class="pri" onClick="{{resumeWrite}}">Continue at paragraph 3</button> <button class="btn" onClick="{{goOverview}}">Open project map</button></div>
+ <h2 class="h2">Projects</h2>
+ <div class="map" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+  <button class="mc" onClick="{{goOverview}}"><b>Water first</b><span class="meta">1 inquiry · 4 pieces · carousel exported · article in draft</span></button>
+  <button class="mc" onClick="{{goMending}}"><b>Mending</b><span class="meta">1 inquiry · 1 real published story · 1 post draft</span></button>
+ </div>
+ <h2 class="h2">Inquiries</h2>
+ <div class="row"><div class="grow"><b>Why water changes tea</b><div class="meta">3 sources · 2 open questions · 2 new agent sources (not adopted)</div></div><button class="btn" onClick="{{goResearch}}">Open</button></div>
+ <div class="row"><div class="grow"><b>Keeping old things in use</b><div class="meta">Research without any piece yet · shares Water chemistry.pdf</div></div><button class="btn" onClick="{{goMending}}">Open</button></div>
+ </sc-if>
+</sc-if>
+
+<!-- PROJECT OVERVIEW / CONCEPT -->
+<sc-if value="{{isOverview}}" hint-placeholder-val="{{false}}">
+ <div class="thoughts"><div style="display:flex;align-items:center;gap:8px"><b>Your thoughts</b><span class="meta">yours, attributed to you · 12 Oct</span><button class="link" style="margin-left:auto" onClick="{{openLib}}">Find in Library →</button></div>
+  <textarea class="tx serif" aria-label="Your thoughts" value="{{thought}}" onInput="{{onThought}}" style="margin-top:8px"></textarea></div>
+ <p class="meta" style="margin:0 0 10px">How the project connects. Click any card to light up what it feeds and what feeds it. {{focusHint}}</p>
+ <div class="map">
+  <sc-for list="{{cols}}" as="col" hint-placeholder-count="4">
+   <div class="mcol"><h3>{{col.label}}</h3>
+    <sc-for list="{{col.cards}}" as="c" hint-placeholder-count="4"><button class="mc {{c.cls}}" onClick="{{c.pick}}"><b>{{c.title}}</b><span class="meta">{{c.sub}}</span></button></sc-for>
+    <button class="link" onClick="{{col.add}}">{{col.addLabel}}</button>
+   </div>
+  </sc-for>
+ </div>
+ <sc-if value="{{hasFocus}}" hint-placeholder-val="{{false}}"><div class="note" style="margin-top:14px"><b>{{focusTitle}}</b><div class="meta">{{focusText}}</div><button class="link" onClick="{{focusOpen}}">Open →</button><button class="link" onClick="{{clearFocus}}">Clear</button></div></sc-if>
+</sc-if>
+
+<!-- MATERIAL -->
+<sc-if value="{{isMaterial}}" hint-placeholder-val="{{false}}">
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><button class="pri">Add files</button><button class="btn">Add a note</button><button class="btn">Add a link or album</button><button class="btn">Open material folder</button></div>
+ <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}"><div class="empty">No material in this project yet. A thought is enough to begin.</div></sc-if>
+ <sc-if value="{{notEmpty}}" hint-placeholder-val="{{true}}">
+ <div class="row"><div class="grow"><b>Spring walk</b> · recording 38 min<div class="meta">Lin Yun &amp; you · transcript kept · used by 3 pieces</div></div><sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><span class="chip warn">Preparing transcript · 12 of 38 min</span></sc-if><sc-if value="{{notProcessing}}" hint-placeholder-val="{{true}}"><span class="chip good">Ready</span></sc-if><button class="btn" onClick="{{goSource}}">Read</button></div>
+ <div class="row"><div class="grow"><b>Kitchen tasting</b> · typed notes<div class="meta">with Tomas · text only</div></div><span class="chip">Notes</span><button class="btn" onClick="{{goSource}}">Read</button></div>
+ <div class="row"><div class="grow"><b>Spring visit</b> · iCloud shared album<div class="meta">12 photos imported 14 Oct · videos skipped</div></div><span class="chip good">Imported</span><button class="btn" onClick="{{goMedia}}">Photos</button></div>
+ <div class="row"><div class="grow"><b>Cabin roll</b> · Lightroom link<div class="meta">Link saved only <span class="tag t-gate">Not connected</span></div></div><span class="chip">Link only</span></div>
+ <div class="row"><div class="grow"><b>Water chemistry and brewing.pdf</b><div class="meta">Library · also supports “Keeping old things in use”</div></div><span class="chip">Library</span></div>
+ <sc-if value="{{isFailed}}" hint-placeholder-val="{{false}}"><div class="note bad"><b>kettle-video.mov wasn’t added.</b> 210 MB is over the 64 MB picker limit. Drop it in the material folder; the original stays put.</div></sc-if>
+ </sc-if>
+</sc-if>
+
+<!-- SOURCE -->
+<sc-if value="{{isSource}}" hint-placeholder-val="{{false}}">
+ <div class="wrap2"><div>
+  <div class="seg"><button class="on">Spring walk · 38 min</button><button>Kitchen tasting</button><button>All sessions</button></div>
+  <div class="note" style="margin-top:12px"><b>Your opening note</b><div class="serif">Recorded walking up to the spring. Wind noise from minute 20.</div></div>
+  <sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><div class="note warn">Transcript is being prepared: 12 of 38 minutes ready.</div></sc-if>
+  <div class="turn"><span class="t">02:10</span><span class="who">Lin Yun</span><span class="serif">We carry water from up there every morning. Not for the garden, for the tea.</span></div>
+  <div class="turn"><span class="t">02:35</span><span class="who">Lin Yun</span><span class="serif">Winter especially. The guests come in winter.</span></div>
+  <div class="turn"><span class="t">12:40</span><span class="who">Lin Yun</span><span class="serif">The water here is <span class="{{fixClass}}">{{waterWord}}</span>, it comes through the white stone.</span></div>
+  <div class="turn"><span class="t">12:58</span><span class="who">Lin Yun</span><span class="serif">Tea is a guest in the water. If the house is unkind, the guest leaves early.</span></div>
+  <div class="turn"><span class="t">21:09</span><span class="who">Lin Yun</span><span class="serif">[unclear, wind] … only to wash the cups.</span></div>
+  <div class="note" style="margin-top:12px"><b>Your closing note</b><div class="serif">She asked that the garden’s location not be named.</div></div>
+ </div><aside class="margin">
+  <sc-if value="{{notCorrected}}" hint-placeholder-val="{{true}}"><div class="note warn"><b>12:40 · “soft” may be misheard</b><div class="kv" style="margin:6px 0"><span>As heard</span><span>soft</span><span>Correction</span><span><b>hard</b></span></div><p class="meta">Known effects: Article paragraph 3 · Carousel slide 4 · research point 1.</p><button class="pri" onClick="{{applyFix}}">Save correction</button></div></sc-if>
+  <sc-if value="{{corrected}}" hint-placeholder-val="{{false}}"><div class="note good"><b>Corrected by you · original kept</b><p class="meta">Flagged for review, nothing rewritten. <button class="link" onClick="{{undoFix}}">Undo</button></p><button class="link" onClick="{{goOverviewFocusO1}}">See it on the project map →</button></div></sc-if>
+  <div class="note"><b>Notes</b><div class="meta">Stories: carrying water each morning · Interest: limestone spring · Purchases: none</div></div>
+ </aside></div>
+</sc-if>
+
+<!-- RESEARCH -->
+<sc-if value="{{isResearch}}" hint-placeholder-val="{{false}}">
+ <div class="wrap2"><article>
+  <div class="note"><b>Current understanding</b><div class="serif" style="font-size:16px;margin-top:4px">Minerals change how flavour leaves the leaf. Moderate hardness tends to give body; very soft water can taste thin. How this applies to Lin Yun’s oolong is not established.</div></div>
+  <sc-if value="{{isStale}}" hint-placeholder-val="{{false}}"><div class="note warn"><b>Point 1 predates your correction.</b> It relies on the 12:40 quote, which changed on 16 Oct. Not rewritten; waiting for your review.</div></sc-if>
+  <h2 class="h2">1 · Limestone makes hard water <span class="chip good">Supported</span></h2>
+  <div class="prose serif"><p>Rain picks up carbon dioxide, passes through limestone and dissolves calcium carbonate, so limestone springs usually give hard water.</p></div>
+  <div class="quote">The water here is {{waterWord}}, it comes through the white stone.<div class="meta">Lin Yun · Spring walk 12:40</div></div>
+  <h2 class="h2">2 · Minerals and extraction <span class="chip warn">Qualified</span></h2>
+  <div class="prose serif"><p>Too few minerals and the cup goes thin; too many and it flattens. Most measured work is on black and green tea; oolong evidence is thin.</p></div>
+  <h2 class="h2">3 · Competing accounts</h2>
+  <div class="row"><div class="grow"><b>Mountain spring is best</b><div class="meta">Lu Yu’s ranking, retold in The Book of Tea</div></div><div class="grow"><b>Some minerals help</b><div class="meta">Modern brewing guides</div></div></div>
+  <h2 class="h2">Open questions</h2>
+  <div class="row"><div class="grow">Does the spring’s hardness change by season?</div><button class="btn" onClick="{{goShare}}">Ask Lin Yun</button></div>
+  <h2 class="h2">Your experience</h2>
+  <div class="note"><div class="serif">At the cabin the same leaf tasted rounder.</div><div class="meta">Yours · not externally verified</div></div>
+ </article><aside class="margin">
+  <div class="note"><b>New from an agent · 2</b><p class="meta" style="margin:4px 0">Claude added “Hardness and aroma” and “Spring sampling” yesterday 21:14. Linked as background.</p><button class="btn">Keep</button> <button class="btn">Not useful</button></div>
+  <div class="note"><b>Feeds</b><p class="meta" style="margin:4px 0">Article, Carousel (background only). Use is decided in Direction.</p><button class="link" onClick="{{goDirection}}">Direction →</button></div>
+  <div class="note"><b>Research from Atlas or the web</b><p class="meta" style="margin:4px 0 0"><span class="tag t-gate">Not connected</span> An authorized agent can add sourced notes.</p></div>
+ </aside></div>
+</sc-if>
+
+<!-- DIRECTION -->
+<sc-if value="{{isDirection}}" hint-placeholder-val="{{false}}">
+ <div style="max-width:820px">
+ <div class="row"><div class="grow"><b>Water is the hidden half of tea, told from the kitchen table.</b><div class="meta">Angle · 15 Oct</div></div><span class="chip ink">Article</span><span class="chip ink">Carousel</span></div>
+ <div class="row"><div class="grow"><b>First person, plain, curious. No product claims.</b><div class="meta">Voice</div></div><span class="chip ink">All pieces</span></div>
+ <div class="row"><div class="grow"><b>Keep Lin Yun’s “guest in the water” line exactly.</b><div class="meta">Exact words</div></div><span class="chip ink">All pieces</span></div>
+ <sc-if value="{{adopted}}" hint-placeholder-val="{{false}}"><div class="row"><div class="grow"><b>Say “hard water”, and keep the surprise that it’s still sweet.</b><div class="meta">New · after your correction</div></div><span class="chip ink">Article paragraph 3</span><span class="chip ink">Slide 4</span><button class="link" onClick="{{undoAdopt}}">Undo</button></div></sc-if>
+ <sc-if value="{{notAdopted}}" hint-placeholder-val="{{true}}"><div class="note warn" style="margin-top:14px"><b>Choose: how to handle “hard water” after your correction?</b><p class="meta" style="margin:4px 0 8px">Pick the scope. Pieces outside it keep their words.</p><button class="btn" onClick="{{adopt}}">Article paragraph 3 + slide 4</button> <button class="btn">Article only</button> <button class="btn">Not now</button></div></sc-if>
+ <h2 class="h2">Changed your mind</h2>
+ <div class="row"><div class="grow"><s>Lead with the science.</s><div class="meta">Replaced 15 Oct: “Science felt like a lecture; the cabin story is the way in.”</div></div></div>
+ <div class="row"><div class="grow"><s>A taste-test listicle.</s><div class="meta">Rejected: “Turns it into a buying guide.”</div></div></div>
+ </div>
+</sc-if>
+
+<!-- WRITE / READ / CHECK -->
+<sc-if value="{{isWrite}}" hint-placeholder-val="{{false}}">
+ <div class="wrap2"><article>
+  <sc-if value="{{returned}}" hint-placeholder-val="{{false}}"><div class="note good">Back at paragraph 3. Your saved words are unchanged.</div></sc-if>
+  <sc-if value="{{isReadOnly}}" hint-placeholder-val="{{false}}"><div class="note warn"><b>Read-only · version from 16 Oct 18:40.</b> <button class="link">Restore as new version</button> <button class="link" onClick="{{clearState}}">Back to current</button> <span class="tag t-prop">Proposed</span></div></sc-if>
+  <div class="prose">
+   <p>At the cabin the same leaf tasted rounder. I blamed the altitude, then the kettle, then my mood. It took a second visit to admit the obvious: the water was different.</p>
+   <div class="quote">Tea is a guest in the water. If the house is unkind, the guest leaves early.<div class="meta">Lin Yun · exact words, protected</div></div>
+   <sc-if value="{{notEditing}}" hint-placeholder-val="{{true}}"><p><span class="num">1</span><span class="{{p3Class}}" onClick="{{editP3}}">{{p3}}</span></p></sc-if>
+   <sc-if value="{{editing}}" hint-placeholder-val="{{false}}"><div style="margin:0 0 14px"><textarea class="tx" aria-label="Paragraph 3" value="{{draft}}" onInput="{{onDraft}}"></textarea><div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="pri" onClick="{{saveP3}}">Done</button><button class="btn" onClick="{{cancelP3}}">Cancel</button></div></div></sc-if>
+   <p>Back in the city I tried three waters side by side: tap, filtered, and bottled spring. The leaf was the same. The tea was not.</p>
+   <h2 class="h2" style="font-size:22px">What the minerals do</h2>
+   <p>Calcium and magnesium change how quickly flavour leaves the leaf. Too little and the cup goes thin; too much and it turns flat.</p>
+  </div>
+ </article><aside class="margin">
+  <div class="seg"><sc-for list="{{insp}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" onClick="{{t.go}}">{{t.label}}</button></sc-for></div>
+  <sc-if value="{{inspMargin}}" hint-placeholder-val="{{true}}">
+   <sc-if value="{{p3Open}}" hint-placeholder-val="{{true}}"><div class="note warn"><b><span class="num">1</span>“soft water” vs your correction</b><p class="meta" style="margin:4px 0 8px">Spring walk 12:40 now reads “hard”.</p><button class="btn" onClick="{{editP3}}">Edit passage</button></div></sc-if>
+   <sc-if value="{{p3Done}}" hint-placeholder-val="{{false}}"><div class="note good"><b>Resolved by your edit</b><p class="meta" style="margin:4px 0 0">Slide 4 is still flagged on its own. <button class="link" onClick="{{openCarousel}}">Go →</button></p></div></sc-if>
+   <div class="note"><b>Quote matches the transcript</b><div class="meta">Paragraph 2 · checked on revision 8</div></div>
+   <div class="note"><b>Alongside the words</b><div class="meta">Select a phrase to discuss. <span class="tag t-gate">Live AI not connected</span></div></div>
+  </sc-if>
+  <sc-if value="{{inspDec}}" hint-placeholder-val="{{false}}"><div class="note"><b>Applies to this article</b><div class="meta">Kitchen-table angle · first person · exact Lin Yun line{{decExtra}}</div></div></sc-if>
+  <sc-if value="{{inspReady}}" hint-placeholder-val="{{false}}"><div class="note"><b>Readiness</b><div class="meta">{{checkLine}}</div><button class="link" onClick="{{goAudience}}">Audience view →</button></div></sc-if>
+  <sc-if value="{{inspHist}}" hint-placeholder-val="{{false}}"><div class="note"><b>Sessions</b>
+   <div class="row"><div class="grow">Today 09:12–09:41 · 6 edits</div><button class="link" onClick="{{previewOld}}">Preview</button></div>
+   <div class="row"><div class="grow">16 Oct 18:02–18:40 · 14 edits</div><button class="link" onClick="{{previewOld}}">Preview</button></div>
+   <div class="row"><div class="grow meta">Before 12 Oct: 2 versions can’t be rebuilt from receipts</div></div><span class="tag t-prop">Proposed</span></div></sc-if>
+ </aside></div>
+</sc-if>
+
+<!-- REAL STORY -->
+<sc-if value="{{isReal}}" hint-placeholder-val="{{false}}">
+ <div class="wrap2"><article class="prose">
+  <div class="note"><span class="tag t-real">Real · published</span> <span class="meta">This text is the live story from teajia.com/read/porcelain-and-tea, shown read-only so you can judge real material in this layout. Photo slots are labelled, not loaded.</span></div>
+  <div class="figure">Yan Jinwen seated in his studio · cover</div>
+  <div class="pull">“Nine out of ten old things are damaged. But I think these are all marks of history.”</div>
+  <p class="serif" style="font-size:17px">At the base of the Wuyi Mountains, I found my way into this shop where I just loved everything. Everything was taken care of at such a high level. Everywhere I looked, each and every piece was cared for immaculately, using skills that have been developed over many years.</p>
+  <p class="serif" style="font-size:17px">Yan Jinwen mends old tea ware with <span class="term">lacquer</span>. It began with tea.</p>
+  <h2 class="h2" style="font-size:22px">Marks of history</h2>
+  <div class="figure">Adrian at the repair table during the class, seen through the studio window</div>
+  <p class="serif" style="font-size:17px">I asked when he first felt inspired to work with porcelain restoration.</p>
+  <p class="serif" style="font-size:17px">“First of all, I quite like collecting things. Because of tea, I like to collect some tea-related utensils. Many old utensils have some damages here and there.”</p>
+  <h2 class="h2" style="font-size:22px">People cherished utensils more</h2>
+  <p class="serif" style="font-size:17px">I guessed that a thousand years ago, people would just make a new cup.</p>
+  <p class="serif" style="font-size:17px">“Repair techniques have existed for thousands of years.”</p>
+  <p class="serif" style="font-size:17px">“In the past, people cherished utensils more.”</p>
+ </article><aside class="margin">
+  <div class="note"><b>How this story maps</b><div class="meta">Your questions in your own words · his words exact, from the transcript · photos placed between thoughts · terms link to the glossary · pull quote marked in the draft.</div></div>
+  <div class="note"><b>Edition</b><div class="kv"><span>Published</span><span>29 Sep</span><span>Conversation version</span><span>1 Oct</span><span>Feedback</span><span>Sent to the people in the story</span></div></div>
+  <div class="note"><b>Editing</b><div class="meta">Changing a published story makes a new edition; the live one is kept. Disabled in this prototype.</div></div>
+ </aside></div>
+</sc-if>
+
+<!-- MEDIA -->
+<sc-if value="{{isMedia}}" hint-placeholder-val="{{false}}">
+ <div class="seg" style="margin-bottom:12px"><button class="on">All 12</button><button>Placed</button><button>Selected</button><button>Unused</button></div>
+ <div class="mtable"><sc-for list="{{photos}}" as="ph" hint-placeholder-count="6"><div class="row"><div class="ph"></div><div class="grow"><b>{{ph.caption}}</b><div class="meta">{{ph.name}} · {{ph.credit}}</div></div><span class="meta">{{ph.uses}}</span><button class="btn">Edit caption</button></div></sc-for></div>
+ <div class="note" style="margin-top:12px"><b>spring-walk.mov · 1:12</b> Preview only. <span class="tag t-gate">Trimming not connected</span></div>
+</sc-if>
+
+<!-- ARRANGE -->
+<sc-if value="{{isArrange}}" hint-placeholder-val="{{false}}">
+ <p class="meta" style="margin-top:0">All 8 portrait slides at once · existing templates · 1080 × 1350. Drag to reorder; click to edit.</p>
+ <div class="wrap2"><div class="cgrid">
+  <sc-for list="{{slides}}" as="s" hint-placeholder-count="8"><div class="slide {{s.cls}}" draggable="true" onDragStart="{{s.dragStart}}" onDragOver="{{s.dragOver}}" onDrop="{{s.drop}}" onClick="{{s.pick}}"><span class="meta">{{s.n}} · {{s.tpl}}</span><div class="img"></div><span class="sw">{{s.text}}</span></div></sc-for>
+ </div><aside class="margin">
+  <div class="note"><b>Slide {{selSlide.n}}</b><div class="serif" style="font-size:17px;margin:6px 0">{{selSlide.text}}</div>
+   <sc-if value="{{selSlide.flag}}" hint-placeholder-val="{{false}}"><div class="note warn">Affected by your correction; words unchanged. <button class="btn" onClick="{{fixSlide}}">Use “hard water, still sweet”</button></div></sc-if>
+   <button class="btn">Edit words</button> <button class="btn">Swap photo</button> <button class="btn">Crop here</button> <button class="btn">Template</button></div>
+  <div class="note"><b>Caption</b><div class="serif">Same leaf, three waters. Slide through to see what changed.</div></div>
+ </aside></div>
+</sc-if>
+
+<!-- AUDIENCE -->
+<sc-if value="{{isAudience}}" hint-placeholder-val="{{false}}">
+ <div class="wrap2"><div class="cgrid">
+  <sc-for list="{{slides}}" as="s" hint-placeholder-count="8"><div class="slide" style="cursor:default"><span class="meta">{{s.n}} / 8</span><div class="img"></div><span class="sw">{{s.text}}</span></div></sc-for>
+ </div><aside class="margin">
+  <div class="note"><b>Approved edition · 15 Oct · English</b><div class="meta">Exported 8 PNG + caption + record. Not published.</div><button class="btn" style="margin-top:6px">Export again</button></div>
+  <div class="note"><b>Chinese caption</b><div class="meta">Linked translation, needs review <span class="tag t-prop">Proposed</span></div></div>
+  <div class="note"><b>Post to Instagram</b><div class="meta"><span class="tag t-gate">Not connected</span> Record where it went yourself.</div></div>
+ </aside></div>
+</sc-if>
+
+<!-- SHARE -->
+<sc-if value="{{isShare}}" hint-placeholder-val="{{false}}">
+ <div style="max-width:760px"><div class="note" style="padding:16px"><div class="meta">To Lin Yun · prepared, not sent</div><div class="serif" style="font-size:16px;margin:8px 0">Thank you for the walk to the spring. Your line about the guest is in the article exactly as you said it. Is it right to call your spring limestone? I left the garden’s place unnamed, as you asked.</div><button class="btn">Copy to send yourself</button> <button class="btn">Chinese version · needs review</button> <span class="tag t-gate">Sending not connected</span></div>
+ <div class="row"><div class="grow"><b>Tomas</b> · thank-you note · copied 16 Oct</div><span class="chip">Waiting · no reply is not a yes</span></div></div>
+</sc-if>
+
+<!-- OUTPUTS -->
+<sc-if value="{{isOutputs}}" hint-placeholder-val="{{false}}">
+ <sc-if value="{{exported}}" hint-placeholder-val="{{false}}"><div class="note good"><b>Article exported · HTML with photos · revision 9.</b> Not published. <button class="link">Record where it went</button></div></sc-if>
+ <sc-if value="{{isProcessing}}" hint-placeholder-val="{{false}}"><div class="note warn">Rendering carousel PNGs: 3 of 8.</div></sc-if>
+ <sc-for list="{{pieces}}" as="p" hint-placeholder-count="4"><div class="row"><div class="grow"><b>{{p.title}}</b><div class="meta">{{p.kind}} · {{p.detail}}</div></div><span class="chip {{p.tone}}">{{p.status}}</span><button class="btn" onClick="{{p.open}}">Open</button><button class="btn" onClick="{{p.export}}">{{p.exportLabel}}</button></div></sc-for>
+ <button class="btn" style="margin-top:14px">New output</button>
+</sc-if>
+
+  </div>
+  <footer class="foot"><span>{{location}}</span><span class="st {{saveTone}}">{{saveText}}</span><sc-if value="{{saveFailed}}" hint-placeholder-val="{{false}}"><button class="btn" onClick="{{clearState}}">Retry save</button></sc-if><span>A− 100% A+</span></footer>
+ </div>
+</div>
+
+<sc-if value="{{libOpen}}" hint-placeholder-val="{{false}}">
+ <div class="overlay" onClick="{{closeLib}}"><div class="panel" onClick="{{stop}}">
+  <div style="display:flex;align-items:center"><b style="font-size:16px">Library</b><button style="margin-left:auto" onClick="{{closeLib}}">Close</button></div>
+  <p class="meta">142 kept items · searching “water”. Literal search for now. <span class="tag t-prep">Bounded</span></p>
+  <sc-for list="{{libItems}}" as="li" hint-placeholder-count="4"><div class="note"><div class="serif">“{{li.text}}”</div><div class="meta">{{li.src}}</div><button class="link" onClick="{{li.link}}">{{li.btn}}</button></div></sc-for>
+ </div></div>
+</sc-if>
+<sc-if value="{{walkOn}}" hint-placeholder-val="{{false}}">
+ <div class="walk" role="dialog" aria-label="Walkthrough"><div class="meta">{{walkTitle}} · step {{walkStepN}} of {{walkLen}}</div><p style="margin:6px 0 10px;font-size:14px">{{walkCaption}}</p><div style="display:flex;gap:6px"><button class="btn" onClick="{{walkBack}}">Back</button><button class="pri" onClick="{{walkNext}}">{{walkNextLabel}}</button><button style="margin-left:auto" onClick="{{walkEnd}}">Close</button></div></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={view:'home',st:'normal',corrected:false,editing:false,p3done:false,draft:'',libOpen:false,adopted:false,linked:['l1'],thought:'I keep noticing the same leaf tastes different at the cabin than in the city. Maybe the water is half the tea. I want to say this without turning it into a chemistry lesson.',order:[0,1,2,3,4,5,6,7],sel:3,slide4fixed:false,returned:false,exported:false,walk:null,step:0,light:null,dirty:false,focus:null,insp:'margin'};}
+  set(o){this.setState(o);}
+  renderVals(){
+    const s=this.state,self=this,st=s.st;
+    const theme=s.light===null?(this.props.theme??'dark'):(s.light?'light':'dark');
+    const P3a='The spring above her garden runs through limestone, so the water is soft, and it carries the leaf’s sweetness forward.';
+    const P3b='The spring above her garden runs through limestone, so the water is hard with calcium, and somehow it still carries the leaf’s sweetness forward.';
+    const go=(v,extra)=>()=>self.set(Object.assign({view:v,returned:false},extra||{}));
+    const projViews=['overview','material','source','research','direction','outputs'];
+    const pieceViews=['write','read','check','media','arrange','audience','share'];
+    const inPiece=pieceViews.indexOf(s.view)>=0;
+    const isW=['write','read','check'].indexOf(s.view)>=0;
+    const carouselPiece=['arrange','audience','media'].indexOf(s.view)>=0;
+    const T=(id,l)=>({isTab:true,isSep:false,label:l,cls:s.view===id?'on':'',go:()=>self.set({view:id,returned:(id==='write'&&s.view==='arrange'&&s.p3done)})});
+    const Sep=(l)=>({isTab:false,isSep:true,label:l});
+    let tabs=[];
+    if(projViews.indexOf(s.view)>=0) tabs=[T('overview','Map'),Sep('Gather'),T('material','Material'),T('source','Source'),Sep('Understand'),T('research','Research'),T('direction','Direction'),Sep('Deliver'),T('outputs','Outputs')];
+    if(inPiece) tabs=[Sep('Make'),T('write','Write'),T('read','Read'),T('check','Check'),T('media','Media'),T('arrange','Arrange'),Sep('Deliver'),T('audience','Audience'),T('share','Share'),{isTab:true,isSep:false,label:'Project ›',cls:'',go:go('overview')}];
+    const W={
+      j1:{title:'Concept → Library → direction → outputs',steps:[
+        ['overview',{focus:null,linked:[]},'The project opens on your thoughts and a map of how everything connects.'],
+        ['overview',{libOpen:true},'Open the Library over the map. Matching passages from everything you kept.'],
+        ['overview',{libOpen:true,linked:['l1','l2']},'Link passages. Linked, not copied: the same file also serves the Mending inquiry.'],
+        ['overview',{libOpen:false,focus:'o6'},'Click your own thoughts: the map lights up the direction and pieces they feed.'],
+        ['direction',{adopted:true},'Choose a direction and its scope. Pieces outside the scope keep their words.'],
+        ['outputs',{},'Four independent pieces from one origin, each with its own state.']]},
+      j2:{title:'Recording → correction → research → direction',steps:[
+        ['material',{},'The recording is project material, transcript ready.'],
+        ['source',{corrected:false},'12:40 is flagged as possibly misheard. You decide.'],
+        ['source',{corrected:true},'Saved. The original is kept; known effects are flagged, not rewritten.'],
+        ['overview',{focus:'o1'},'On the map, the recording lights up the research point, direction and pieces it touches.'],
+        ['research',{st:'stale'},'Research point 1 says it predates your correction.'],
+        ['direction',{st:'normal',adopted:true},'Record a new direction for exactly the affected places.']]},
+      j3:{title:'Resume → marked edit → save → switch → return → export',steps:[
+        ['home',{corrected:true},'Studio home: what is waiting on you, and one place to pick up.'],
+        ['write',{insp:'margin'},'The article, with the marked passage and its finding in the margin.'],
+        ['write',{editing:true,draft:P3b,dirty:true},'Edit directly. The bottom bar shows unsaved, then saves ahead.'],
+        ['write',{editing:false,p3done:true,dirty:false},'Saved to the working file. The finding resolves.'],
+        ['arrange',{sel:3},'Switch to the carousel from the sidebar. Slide 4 is flagged on its own.'],
+        ['write',{returned:true},'Back to the article at the same paragraph.'],
+        ['outputs',{exported:true},'Export the article from the project’s outputs. The rest stays open.']]}
+    };
+    const wk=s.walk?W[s.walk]:null;const n=wk?wk.steps.length:0;
+    const applyStep=(k,i)=>{const stp=W[k].steps[i];self.set(Object.assign({walk:k,step:i,view:stp[0],returned:false},stp[1]));};
+    const walks=[['j1','1 · Concept to outputs'],['j2','2 · Recording to direction'],['j3','3 · Resume to export']].map(w=>({label:w[1],cls:s.walk===w[0]?'on':'',go:()=>applyStep(w[0],0)}));
+    const states=[['normal','Normal'],['empty','Empty'],['unsaved','Unsaved'],['processing','Processing'],['failed','Failed save'],['stale','Stale'],['readonly','Read-only']].map(x=>({label:x[1],cls:st===x[0]?'on':'',go:()=>{let v=s.view;if(['readonly','unsaved','failed'].indexOf(x[0])>=0&&!isW)v='write';if(x[0]==='stale'&&['research','arrange'].indexOf(v)<0)v='research';if(x[0]==='processing'&&['material','source','outputs'].indexOf(v)<0)v='material';self.set({st:x[0],view:v});}}));
+    // map
+    const nodes={o1:['Spring walk','recording · Lin Yun','source'],o2:['Kitchen tasting','notes · Tomas','source'],o3:['Spring visit album','12 photos','media'],o4:['Book of Tea passage','Library · also in Mending','research'],o5:['Water chemistry.pdf','Library · also in Mending','research'],o6:['Your thoughts','12 Oct · yours','overview'],
+      u1:['Limestone → hard water','supported','research'],u2:['Minerals and extraction','qualified','research'],u3:['Competing accounts','2 views','research'],u4:['Does hardness change by season?','open question','research'],
+      d1:['Kitchen table, not the lab','Article · Carousel','direction'],d2:['First person, no claims','All pieces','direction'],d3:['Keep Lin Yun’s line','All pieces','direction'],d4:[s.adopted?'Say “hard water”, still sweet':'Hard water: choose scope',s.adopted?'Article para 3 · slide 4':'waiting on you','direction'],
+      p1:['The water is half the tea','Article · draft','write'],p2:['Three waters, one leaf','Carousel · exported','arrange'],p3:['Spring-water tasting set','Listing · draft','outputs'],p4:['At the spring','Script · draft','outputs']};
+    const E=[['o1','u1'],['o5','u1'],['o5','u2'],['o2','u2'],['o4','u3'],['o5','u3'],['o1','u4'],['u2','d1'],['o6','d1'],['o1','d3'],['u1','d4'],['d1','p1'],['d1','p2'],['d2','p1'],['d2','p2'],['d2','p3'],['d2','p4'],['d3','p1'],['d3','p2'],['d4','p1'],['d4','p2'],['o3','p2'],['o1','p4']];
+    const reach=(start,fwd)=>{const seen={};const q=[start];while(q.length){const x=q.shift();E.forEach(e=>{const a=fwd?e[0]:e[1],b=fwd?e[1]:e[0];if(a===x&&!seen[b]){seen[b]=1;q.push(b);}});}return seen;};
+    let lit=null;if(s.focus){lit=Object.assign({},reach(s.focus,true),reach(s.focus,false));}
+    const card=id=>({title:nodes[id][0],sub:nodes[id][1],cls:s.focus===id?'focus':(lit?(lit[id]?'hi':'lo'):''),pick:()=>self.set({focus:s.focus===id?null:id})});
+    const cols=[['Origins',['o1','o2','o3','o4','o5','o6'],'+ From Library',()=>self.set({libOpen:true})],['Understanding',['u1','u2','u3','u4'],'Open inquiry →',go('research')],['Direction',['d1','d2','d3','d4'],'Open Direction →',go('direction')],['Pieces',['p1','p2','p3','p4'],'+ New piece',go('outputs')]].map(c=>({label:c[0],cards:c[1].map(card),addLabel:c[2],add:c[3]}));
+    const fdesc={o1:'Feeds research points 1 and 4, the exact-words direction, the article, carousel and script. Your correction at 12:40 flags only the article paragraph 3 and slide 4.',o6:'Your own words feed the kitchen-table angle, which reaches the article and carousel. The listing and script do not inherit it.',o5:'One PDF supports three research points here and the Mending inquiry, without a copy.'};
+    // pieces & slides
+    const S=[['Title','Three waters, one leaf'],['Photo + line','Same leaf. Three cups.'],['Quote','“Tea is a guest in the water.” — Lin Yun'],['Photo + line',s.slide4fixed?'Her spring runs through limestone: hard water, still sweet.':'Her spring runs through limestone: soft water, sweet tea.'],['Split','Tap · filtered · spring'],['Text','Too few minerals: thin. Too many: flat.'],['Text','What I still don’t know'],['Closing','The full story is on Teajia']];
+    const flag4=s.corrected&&!s.slide4fixed;
+    const slides=s.order.map((idx,pos)=>({n:pos+1,tpl:S[idx][0],text:S[idx][1],flag:idx===3&&flag4,cls:[(s.sel===pos?'sel':''),((idx===3&&flag4)||(st==='stale'&&idx===3)?'stale':'')].join(' '),pick:()=>self.set({sel:pos}),dragStart:(e)=>e.dataTransfer.setData('text/plain',String(pos)),dragOver:(e)=>e.preventDefault(),drop:(e)=>{e.preventDefault();const f=Number(e.dataTransfer.getData('text/plain'));const o=s.order.slice();const [m]=o.splice(f,1);o.splice(pos,0,m);self.set({order:o,sel:pos});}}));
+    const pieces=[
+      {id:'p1',title:'The water is half the tea',kind:'Article',detail:'revision '+(s.p3done?9:8)+' · not reviewed',status:s.p3done?'Draft · saved':'1 finding',tone:s.p3done?'':'warn',dot:s.p3done?'':'warn',open:go('write'),export:()=>self.set({exported:true}),exportLabel:'Export HTML',view:'write'},
+      {id:'p2',title:'Three waters, one leaf',kind:'Portrait carousel · 8',detail:'approved 15 Oct · exported',status:flag4?'Slide 4 flagged':'Exported',tone:flag4?'warn':'good',dot:flag4?'warn':'good',open:go('arrange'),export:go('audience'),exportLabel:'Audience view',view:'arrange'},
+      {id:'p3',title:'Spring-water tasting set',kind:'Product listing',detail:'shop keeps price and stock',status:'Draft',tone:'',dot:'',open:go('write'),export:()=>{},exportLabel:'Copy text',view:'x'},
+      {id:'p4',title:'At the spring',kind:'Video script · 60 s',detail:'video editing not connected',status:'Draft',tone:'',dot:'',open:go('write'),export:()=>{},exportLabel:'Copy script',view:'x'}];
+    const curPiece=carouselPiece?'p2':(isW?'p1':null);
+    const pieceNav=pieces.map(p=>({title:p.title,dot:p.dot,open:p.open,cls:curPiece===p.id?'on':''}));
+    const lib=[{id:'l1',text:'Mountain spring water is best, river water next, well water last.',src:'The Book of Tea · Lu Yu’s ranking · public domain'},{id:'l2',text:'Tea is a guest in the water.',src:'Spring walk 12:58 · Lin Yun'},{id:'l3',text:'Hardness above 150 mg/L dulled aroma in every black tea tested.',src:'Water chemistry and brewing.pdf p.14'},{id:'l4',text:'Same leaf, rounder at the cabin.',src:'Your note · 2025'}];
+    const libItems=lib.map(l=>({text:l.text,src:l.src,btn:s.linked.indexOf(l.id)>=0?'Linked to Water first ✓':'Link to Water first',link:()=>{const L=s.linked.slice();const i=L.indexOf(l.id);if(i>=0)L.splice(i,1);else L.push(l.id);self.set({linked:L});}}));
+    const photos=[{name:'spring-path.jpg',caption:'The path to the spring',credit:'by you',uses:'Article fig. 1 · Slide 1'},{name:'three-cups.jpg',caption:'Tap, filtered, spring',credit:'by you',uses:'Article fig. 2 · Slides 2, 5'},{name:'lin-yun-hands.jpg',caption:'Pouring',credit:'by Lin Yun · permission asked',uses:'Slide 3'},{name:'limestone.jpg',caption:'White stone',credit:'by you',uses:'Slide 4'},{name:'cabin-window.jpg',caption:'Cabin kettle',credit:'by you',uses:'Selected, not placed'},{name:'kettle.jpg',caption:'No caption yet',credit:'by you',uses:'Unused'}];
+    const titleMap={home:'Studio home',overview:'Water first',material:'Water first',source:'Water first',research:'Why water changes tea',direction:'Water first',outputs:'Water first',write:'The water is half the tea',read:'The water is half the tea',check:'The water is half the tea',media:'Three waters, one leaf',arrange:'Three waters, one leaf',audience:'Three waters, one leaf',share:'The water is half the tea',real:'Porcelain and Tea',mending:'Mending'};
+    const crumbMap={home:'',overview:'Project',material:'Project · Material',source:'Project · Source',research:'Inquiry · works without any piece',direction:'Project · Direction',outputs:'Project · Outputs',real:'Mending › real published story'};
+    let saveText='Saved to working file 09:41',saveTone='good';
+    if(st==='unsaved'||s.dirty){saveText='Unsaved · saving ahead…';saveTone='warn';}
+    if(st==='failed'){saveText='Couldn’t save to the project file. Your words are kept in this browser.';saveTone='bad';}
+    if(st==='readonly'||s.view==='real'){saveText='Read-only';saveTone='warn';}
+    if(s.p3done&&!s.dirty&&st==='normal'&&s.view!=='real')saveText='Saved to working file 09:52 · revision 9';
+    const prim={home:['Continue',()=>applyStep('j3',1)],overview:['Continue writing',go('write')],material:['Add files',()=>{}],source:['Save correction',()=>self.set({corrected:true})],research:['Carry into Direction',go('direction')],direction:['Continue writing',go('write')],outputs:['New output',()=>{}],write:['Discuss wording',()=>{}],read:['Discuss wording',()=>{}],check:['Rerun checks',()=>{}],media:['Add photos',()=>{}],arrange:['Audience view',go('audience')],audience:['Export',()=>{}],share:['Copy message',()=>{}],real:['Open live page',()=>{}],mending:['Open',()=>{}]};
+    const pr=prim[s.view]||prim.home;
+    let chips=[];if(inPiece&&!carouselPiece)chips=[{label:'Article · rev '+(s.p3done?9:8),tone:''}];if(carouselPiece)chips=[{label:'Carousel · edition 15 Oct',tone:'good'}];if(s.view==='real')chips=[{label:'Published 29 Sep',tone:'good'}];
+    return {
+      themeClass:theme==='light'?'light':'',themeLabel:theme==='light'?'Dark':'Light',toggleTheme:()=>self.set({light:theme!=='light'}),
+      walks,states,cols,pieceNav,inPiece,showTabs:s.view!=='home'&&s.view!=='real',tabs,crumb:crumbMap[s.view]||(inPiece?'Water first › piece':''),title:titleMap[s.view],titleChips:chips,
+      navHome:s.view==='home'?'on':'',navInq:s.view==='research'?'on':'',navProj:projViews.indexOf(s.view)>=0&&s.view!=='research'?'on':'',navReal:s.view==='real'?'on':'',navMend:'',waitCount:(s.p3done?0:1)+(flag4?1:0)+(s.adopted?0:1),
+      isHome:s.view==='home',isOverview:s.view==='overview',isMaterial:s.view==='material',isSource:s.view==='source',isResearch:s.view==='research',isDirection:s.view==='direction',isWrite:isW,isMedia:s.view==='media',isArrange:s.view==='arrange',isAudience:s.view==='audience',isShare:s.view==='share',isOutputs:s.view==='outputs',isReal:s.view==='real',
+      isEmpty:st==='empty',notEmpty:st!=='empty',isProcessing:st==='processing',notProcessing:st!=='processing',isFailed:st==='failed',isStale:st==='stale',isReadOnly:st==='readonly',
+      goHome:go('home'),goOverview:go('overview'),goResearch:go('research'),goDirection:go('direction'),goSource:go('source'),goMedia:go('media'),goShare:go('share'),goAudience:go('audience'),goMending:go('real'),openReal:go('real'),openCarousel:go('arrange',{sel:3}),
+      resumeWrite:go('write',{insp:'margin'}),goOverviewFocusO1:go('overview',{focus:'o1'}),
+      openLib:()=>self.set({libOpen:true}),closeLib:()=>self.set({libOpen:false}),stop:(e)=>e.stopPropagation(),libOpen:s.libOpen,libItems,
+      thought:s.thought,onThought:(e)=>self.set({thought:e.target.value}),
+      hasFocus:!!s.focus,focusTitle:s.focus?nodes[s.focus][0]:'',focusText:s.focus?(fdesc[s.focus]||'Highlighted cards are what this feeds and what feeds it. Dimmed cards are unaffected.'):'',focusOpen:()=>{if(s.focus)self.set({view:nodes[s.focus][2]});},clearFocus:()=>self.set({focus:null}),focusHint:s.focus?'':'',
+      waterWord:s.corrected?'hard':'soft',fixClass:s.corrected?'fixed':'fix',corrected:s.corrected,notCorrected:!s.corrected,applyFix:()=>self.set({corrected:true}),undoFix:()=>self.set({corrected:false}),
+      adopted:s.adopted,notAdopted:!s.adopted,adopt:()=>self.set({adopted:true}),undoAdopt:()=>self.set({adopted:false}),
+      returned:s.returned,p3:s.p3done?(s.draft||P3b):P3a,p3Class:s.p3done?'':'mark',editing:s.editing,notEditing:!s.editing,editP3:()=>self.set({editing:true,draft:s.draft||P3a}),draft:s.draft,onDraft:(e)=>self.set({draft:e.target.value,dirty:true}),saveP3:()=>self.set({editing:false,p3done:true,dirty:false}),cancelP3:()=>self.set({editing:false,dirty:false}),
+      p3Open:!s.p3done,p3Done:s.p3done,
+      insp:[['margin','Margin'],['dec','Decisions'],['ready','Readiness'],['hist','History']].map(t=>({label:t[1],cls:s.insp===t[0]?'on':'',go:()=>self.set({insp:t[0]})})),inspMargin:s.insp==='margin',inspDec:s.insp==='dec',inspReady:s.insp==='ready',inspHist:s.insp==='hist',decExtra:s.adopted?' · hard water in paragraph 3':'',
+      checkLine:s.p3done?'Checks ran on revision 8; you are on 9. Rerun before review.':'Checked revision 8: quotes and splits. 1 finding open.',previewOld:()=>self.set({st:'readonly'}),clearState:()=>self.set({st:'normal'}),
+      photos,slides,selSlide:slides[s.sel]||slides[0],fixSlide:()=>self.set({slide4fixed:true}),pieces,exported:s.exported,
+      primary:{label:pr[0],go:pr[1]},location:s.view==='home'?'Studio home':'Water first › '+titleMap[s.view]+' › '+s.view.charAt(0).toUpperCase()+s.view.slice(1),saveText,saveTone,saveFailed:st==='failed',
+      walkOn:!!wk,walkTitle:wk?wk.title:'',walkStepN:s.step+1,walkLen:n,walkCaption:wk?wk.steps[s.step][2]:'',walkNext:()=>{if(s.step+1<n)applyStep(s.walk,s.step+1);else self.set({walk:null});},walkNextLabel:s.step+1<n?'Next':'Finish',walkBack:()=>{if(s.step>0)applyStep(s.walk,s.step-1);},walkEnd:()=>self.set({walk:null})
+    };
+  }
+}
+</script>
+</body>
+</html>

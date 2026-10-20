@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AR Create — start here</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pg{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--lift:#191813;--line2:#423e34;--sel:#2c2a22;--good:#8fb08a;--warn:#d9a95a;--bad:#e08a74;
+ background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+.pg *{box-sizing:border-box}
+.in{max-width:1180px;margin:0 auto;padding:48px 24px 96px}
+h1{font-size:34px;line-height:1.15;margin:0 0 10px;font-weight:700}
+h2{font-size:22px;margin:56px 0 14px;font-weight:700}
+h3{font-size:16px;margin:0 0 6px;font-weight:600}
+p{margin:0 0 12px}
+.dim{color:var(--dim)}
+.small{font-size:12.5px;color:var(--dim)}
+.lead{font-size:16px;max-width:820px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{border:1px solid var(--line);background:var(--paper);border-radius:14px;padding:18px}
+.card.rec{border-color:var(--warm)}
+.mini{height:150px;border:1px solid var(--line2);border-radius:8px;background:var(--lift);margin:0 0 14px;display:flex;flex-direction:column;overflow:hidden}
+.mini .b{background:var(--sel)}
+.mini .t{height:14px;border-bottom:1px solid var(--line2);display:flex;gap:3px;padding:3px 6px}
+.mini .t i{display:block;width:18px;height:6px;border-radius:2px;background:var(--line2)}
+.mini .t i.on{background:var(--warm)}
+.mini .r{flex:1;display:flex;gap:6px;padding:6px}
+.blk{border-radius:4px;background:var(--line);}
+.doc{flex:1;border-radius:4px;background:var(--paper);border:1px solid var(--line2);padding:8px;display:flex;flex-direction:column;gap:4px}
+.doc i{display:block;height:4px;border-radius:2px;background:var(--line2)}
+.doc i.m{background:var(--warn)}
+ul{margin:6px 0 12px;padding-left:18px}
+li{margin:3px 0}
+.k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);margin:12px 0 4px}
+.tbl{border-top:1px solid var(--line)}
+.tr{display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr)) 130px;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);align-items:start}
+.tr.h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.tr2{display:grid;grid-template-columns:220px minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid var(--line);align-items:start}
+.tr2.h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--dim);word-break:break-word}
+.st{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.w{color:var(--good);border:1px solid var(--good)}.pr{color:var(--warn);border:1px solid var(--warn)}.po{color:var(--dim);border:1px dashed var(--dim)}.g{color:var(--bad);border:1px solid var(--bad)}
+.four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.combo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.box{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--lift)}
+a{color:#c9a874}a:hover{color:#e0c48f}
+.navlinks{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0}
+.navlinks a{border:1px solid var(--line2);border-radius:9px;padding:10px 14px;text-decoration:none;background:var(--paper);font-weight:600}
+@media (max-width:900px){.three,.four,.combo{grid-template-columns:minmax(0,1fr)}.tr,.tr2{grid-template-columns:minmax(0,1fr);gap:4px}.tr.h,.tr2.h{display:none}.in{padding:32px 16px 72px}}
+</style>
+</helmet>
+<div class="pg">
+<div class="in">
+ <p class="small">AR Create · next interface · 20 October · design proposal, nothing installed</p>
+ <h1>Three ways AR Create could work next</h1>
+ <p class="lead">Three working prototypes, built on the approved C3 look and the same invented tea project, so you compare structure, not content. Each one walks the three journeys you asked for and shows the empty, unsaved, processing, failed, stale and read-only states. Option B also holds one real story, the published Porcelain and Tea, read-only.</p>
+ <p class="small">How to use: press Play on an option, then use the gold bar at the top. “Walk through” plays a journey step by step; “Show state” switches any screen into an awkward state. Nothing in them saves, generates, sends or exports. Your installed app on port 8841 was not touched.</p>
+ <div class="navlinks"><a href="Option-A-Page.dc.html">Open A · The Page</a><a href="Option-B-Studio.dc.html">Open B · The Studio</a><a href="Option-C-Bench.dc.html">Open C · The Bench</a></div>
+
+ <h2>The three directions</h2>
+ <div class="three">
+  <div class="card">
+   <div class="mini" aria-hidden="true"><div class="t"><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div><div class="r"><div class="doc"><i></i><i></i><i class="m"></i><i></i><i></i><i></i></div><div class="blk" style="width:28%"></div></div></div>
+   <h3>A · The Page — document-first</h3>
+   <p class="dim">One long page per checkpoint, centred like a good document. All twelve checkpoints sit in one line across the top in four groups. Notes, findings and history sit in the margin. Library slides in from the right without leaving the page.</p>
+   <div class="k">Strong at</div><ul><li>Content dominates; scrolling reads like a document</li><li>Closest to today’s C3, so the least to rebuild</li><li>Writing, Research and Source feel the same: calm pages</li></ul>
+   <div class="k">Gives up</div><ul><li>Least sense of the whole project at a glance</li><li>Connections are described in words, not shown</li><li>The top bar is long; on a phone it wraps to two lines</li></ul>
+  </div>
+  <div class="card rec">
+   <div class="mini" aria-hidden="true"><div class="r" style="padding:0;gap:0"><div class="blk" style="width:22%;border-radius:0;background:var(--sel)"></div><div style="flex:1;display:flex;flex-direction:column"><div class="t"><i></i><i class="on"></i><i></i><i></i></div><div class="r"><div class="blk" style="flex:1"></div><div class="blk" style="flex:1;background:var(--warm);opacity:.5"></div><div class="blk" style="flex:1"></div><div class="blk" style="flex:1;background:var(--warm);opacity:.5"></div></div></div></div></div>
+   <h3>B · The Studio — project-first <span class="st w">Recommended frame</span></h3>
+   <p class="dim">A sidebar holds Home, Library, Inquiries and Projects with their pieces. Each project opens on your thoughts and a map: Origins → Understanding → Direction → Pieces. Click a card and everything it feeds lights up. Checkpoints split by owner: the project owns Material to Direction and Outputs; each piece owns Write to Share.</p>
+   <div class="k">Strong at</div><ul><li>Shows the connections you asked for, honestly and at a glance</li><li>The sidebar makes switching pieces and returning one click</li><li>Splitting checkpoints by owner matches how the data really works</li></ul>
+   <div class="k">Gives up</div><ul><li>One more level to understand (project vs piece tabs)</li><li>The map needs real “which passage feeds which piece” links; today only some exist</li><li>The sidebar takes width from writing (it can collapse)</li></ul>
+  </div>
+  <div class="card">
+   <div class="mini" aria-hidden="true"><div class="r"><div class="blk" style="width:20%"></div><div class="doc"><i></i><i></i><i class="m"></i><i></i></div><div class="blk" style="width:24%"></div></div><div style="height:16px;border-top:1px solid var(--line2);display:flex;gap:4px;padding:3px 6px"><i style="display:block;width:30px;background:var(--warm);border-radius:2px"></i><i style="display:block;width:30px;background:var(--line2);border-radius:2px"></i><i style="display:block;width:30px;background:var(--line2);border-radius:2px"></i></div></div>
+   <h3>C · The Bench — creative workbench</h3>
+   <p class="dim">Everything at once. The Shelf on the left (Library, Material, Media), the work on the bench in the middle, the Thread on the right (decisions, findings, history, “where used”), and every piece as a tile in the tray at the bottom. A “Go to anything” palette reaches all twelve checkpoints.</p>
+   <div class="k">Strong at</div><ul><li>Library is truly on demand: always one glance away</li><li>“Where used” answers two-way questions instantly</li><li>Concept as a board of cards you drag into order</li></ul>
+   <div class="k">Gives up</div><ul><li>Busiest screen; three panes compete with the writing</li><li>On a phone the panes stack, so it becomes a long scroll</li><li>Most new building: almost nothing in today’s layout carries over</li></ul>
+  </div>
+ </div>
+
+ <h2>Recommendation</h2>
+ <p class="lead"><b>Build B’s frame, with A’s pages inside it, and borrow two things from C.</b> B solves the hardest problems in your brief: knowing where you are, seeing how a correction or a photo connects, and keeping pieces independent. A’s calm document pages are the best place to actually read and write, so Write, Read, Check, Source and Research keep A’s page-and-margin layout inside B. From C, take the “Where used” panel (two-way connections for any passage, photo or source) and the always-available Library shelf, as a collapsible side panel rather than a permanent third column.</p>
+ <div class="combo">
+  <div class="box"><h3>Keep from today</h3><p class="small">Tabs for open pieces, the four checkpoint groups, Margin / Decisions / Readiness beside Write, the bottom bar with save status and A− / A+, the Waiting-on-you band, Work receipts, Undo, and the real exports. They all appear in the prototypes.</p></div>
+  <div class="box"><h3>Safest first step</h3><p class="small">A’s top bar and margin can go into the current app with the least risk, because they decorate today’s screens like C3 does. B’s sidebar and project map come next, since they need the prepared Collections and connections installed.</p></div>
+  <div class="box"><h3>What I decided for you</h3><p class="small">Dark by default, the C3 palette, no sideways scrolling anywhere (bars wrap), drag and drop for reordering slides and cards, plain labels instead of status codes, and every not-yet-connected tool says so where you hit it.</p></div>
+ </div>
+
+ <h2>Where every function lives</h2>
+ <p class="small">Status: <span class="st w">Working</span> installed and checked · <span class="st pr">Prepared</span> built but not installed · <span class="st po">Proposed</span> agreed, not built · <span class="st g">Gated</span> needs an outside account, provider or sending.</p>
+ <div class="tbl">
+  <div class="tr h"><span>Function</span><span>A · The Page</span><span>B · The Studio</span><span>C · The Bench</span><span>Status</span></div>
+  <div class="tr"><b>Find and resume work</b><span>Home: one “Pick up here” card, then changes</span><span>Studio home: Waiting band + Pick up here</span><span>Bench reopens as left; “Since you left” tops the Thread</span><span><span class="st pr">Prepared</span></span></div>
+  <div class="tr"><b>Current understanding</b><span>On Home and top of Research</span><span>Top of the inquiry; Home inquiry rows</span><span>Top of Research on the bench</span><span><span class="st pr">Prepared</span></span></div>
+  <div class="tr"><b>Your thoughts (concept)</b><span>Concept page, first block</span><span>Top of every project map</span><span>Big card on the concept board</span><span><span class="st w">Working</span> concept record</span></div>
+  <div class="tr"><b>Library on demand</b><span>Right drawer from any page</span><span>Overlay from sidebar or map</span><span>Shelf, always open</span><span><span class="st w">Working</span> literal search · meaning search <span class="st g">Gated</span></span></div>
+  <div class="tr"><b>Link, not copy</b><span>“Link to Water first”</span><span>“Link to Water first”</span><span>“Place on bench”</span><span><span class="st pr">Prepared</span> typed references</span></div>
+  <div class="tr"><b>Material: add files, note, link, open folder</b><span>Material page</span><span>Project › Material</span><span>Shelf › Material</span><span><span class="st w">Working</span> · 64 MB picker limit</span></div>
+  <div class="tr"><b>Album links</b><span>Material rows</span><span>Project › Material</span><span>Shelf › Material</span><span><span class="st w">Working</span> public iCloud photos · others <span class="st g">Gated</span></span></div>
+  <div class="tr"><b>Transcripts, opening/closing notes</b><span>Source page</span><span>Project › Source</span><span>Bench › Source</span><span><span class="st w">Working</span> kept conversations</span></div>
+  <div class="tr"><b>Correct a remark + Undo</b><span>Margin beside the line</span><span>Margin beside the line</span><span>From the Thread</span><span><span class="st w">Working</span></span></div>
+  <div class="tr"><b>Correction shows affected work</b><span>Listed under the correction</span><span>Lit up on the project map</span><span>Thread + “Where used”</span><span><span class="st pr">Prepared</span> known impact only</span></div>
+  <div class="tr"><b>Recording, ASR, alignment</b><span>Labelled not connected</span><span>Labelled not connected</span><span>Labelled not connected</span><span><span class="st g">Gated</span></span></div>
+  <div class="tr"><b>Research points, evidence, competing accounts, open questions</b><span>Long research page</span><span>Inquiry page (works without a piece)</span><span>Bench › Research</span><span><span class="st w">Working</span> saved learning · live research <span class="st g">Gated</span></span></div>
+  <div class="tr"><b>Your experience vs outside fact</b><span>Labelled block</span><span>Labelled block</span><span>Labelled block</span><span><span class="st w">Working</span> as separate fields</span></div>
+  <div class="tr"><b>Direction with scope, rejections, changed mind</b><span>Direction page</span><span>Project › Direction + map column</span><span>Thread › Decisions</span><span><span class="st w">Working</span> scoped direction · inheritance <span class="st pr">Prepared</span></span></div>
+  <div class="tr"><b>Write: continuous document, margin, Focus</b><span>Page + margin</span><span>Piece › Write</span><span>Bench › Write</span><span><span class="st w">Working</span></span></div>
+  <div class="tr"><b>Marked passage edit, protected exact words</b><span>Click the mark</span><span>Click the mark</span><span>Click the mark or Thread</span><span><span class="st w">Working</span></span></div>
+  <div class="tr"><b>One working text, save-ahead</b><span>Bottom bar status</span><span>Bottom bar status</span><span>Bottom bar status</span><span><span class="st pr">Prepared</span> not installed</span></div>
+  <div class="tr"><b>Session history, preview, restore as new</b><span>History in the margin</span><span>Inspector › History tab</span><span>Thread › History</span><span><span class="st po">Proposed</span> from existing receipts</span></div>
+  <div class="tr"><b>Check findings tied to passages</b><span>Numbered marks + margin</span><span>Margin</span><span>Thread</span><span><span class="st w">Working</span> quotes and splits only</span></div>
+  <div class="tr"><b>AI help beside the words</b><span>Margin, labelled</span><span>Margin, labelled</span><span>Thread, labelled</span><span><span class="st g">Gated</span> live AI · agents via Claude/Codex <span class="st w">Working</span></span></div>
+  <div class="tr"><b>Media: originals, captions, credits, where used</b><span>Media grid</span><span>Piece › Media list</span><span>Shelf › Media</span><span><span class="st w">Working</span> one native root</span></div>
+  <div class="tr"><b>Arrange whole carousel (8 × 4:5), drag reorder</b><span>Filmstrip of all slides</span><span>4 × 2 grid + side editor</span><span>Grid on the bench</span><span><span class="st w">Working</span> 66 existing templates</span></div>
+  <div class="tr"><b>Video and script</b><span>Script piece; video preview only</span><span>Script piece</span><span>Script tile</span><span><span class="st po">Proposed</span> · trimming <span class="st g">Gated</span></span></div>
+  <div class="tr"><b>Audience view</b><span>Phone frame</span><span>All slides as seen</span><span>Bench › Audience</span><span><span class="st w">Working</span></span></div>
+  <div class="tr"><b>Export</b><span>Outputs + Audience</span><span>Project › Outputs</span><span>Bench › Outputs</span><span><span class="st w">Working</span> HTML/MD/JSON, 1080×1350 PNG + caption</span></div>
+  <div class="tr"><b>Share: invitations, thanks, replies, translation</b><span>Share page</span><span>Piece › Share</span><span>Bench › Share</span><span><span class="st w">Working</span> preparing · sending <span class="st g">Gated</span></span></div>
+  <div class="tr"><b>Outputs: independent pieces, completion records</b><span>Outputs page</span><span>Project › Outputs + sidebar</span><span>Tray + Outputs</span><span><span class="st w">Working</span> register · per-edition completion <span class="st pr">Prepared</span></span></div>
+  <div class="tr"><b>Collections without a project</b><span>Inquiry pages</span><span>Sidebar › Inquiries</span><span>Bench › Research</span><span><span class="st pr">Prepared</span></span></div>
+  <div class="tr"><b>Agent work shown as the same records</b><span>Margin note “Agent work”</span><span>Research margin “New from an agent”</span><span>Thread entry</span><span><span class="st pr">Prepared</span> receipts</span></div>
+ </div>
+
+ <h2>Which existing code each part presses</h2>
+ <p class="small">For the builder. Every new control calls the owner that already does the work, the way C3 does today. No new store, no new history, no new dependency.</p>
+ <div class="tbl">
+  <div class="tr2 h"><span>New component</span><span>Existing owner</span><span>Route it calls</span><span>Note</span></div>
+  <div class="tr2"><b>Checkpoint bar / project and piece tabs</b><span class="code">viewPhase(n) · workspace-navigation.js groups</span><span class="code">none</span><span class="small">Look modules expect exactly 12 steps</span></div>
+  <div class="tr2"><b>Sidebar pieces, open tabs</b><span class="code">switchProject · homeTabs.activate · projectLibrary</span><span class="code">GET /api/study-draft/catalog</span><span class="small">Pins and folders are browser-only today</span></div>
+  <div class="tr2"><b>Pick up here, Since you left</b><span class="code">connected-workspace.mjs</span><span class="code">/api/work-continuity/read · seen · understanding</span><span class="small">Prepared, not installed</span></div>
+  <div class="tr2"><b>Waiting on you</b><span class="code">waiting-band.js · realOutputOverview.read</span><span class="code">GET /api/study/outputs</span><span class="small">Keep as is</span></div>
+  <div class="tr2"><b>Project map, inquiries</b><span class="code">inquiry-workspace.mjs</span><span class="code">/api/inquiries/* (references, association, understanding)</span><span class="small">Shows only known links; unknown stays unknown</span></div>
+  <div class="tr2"><b>Library drawer / Shelf</b><span class="code">material-resource-browser.js</span><span class="code">GET /api/sources/tree · /api/collections · /api/concept/sources/search</span><span class="small">Literal search</span></div>
+  <div class="tr2"><b>Your thoughts</b><span class="code">studyHumanDirection · concept-work</span><span class="code">GET /api/concept · POST /api/concept/save</span><span class="small">Same record Claude/Codex use</span></div>
+  <div class="tr2"><b>Material buttons</b><span class="code">stage-flow.js importItems · handle</span><span class="code">/api/sources/import · /api/material/folder/open · /api/material/album</span><span class="small">Primary: data-flow-action="files"</span></div>
+  <div class="tr2"><b>Correct remark + Undo</b><span class="code">source-imported.js submit</span><span class="code">POST /api/source-sessions/edit · /undo</span><span class="small">Kept conversations only</span></div>
+  <div class="tr2"><b>Research points, include/leave out</b><span class="code">research-standard.js planActions</span><span class="code">GET /api/study-research/findings · POST /choices</span><span class="small">Running new research is switched off in the safe build</span></div>
+  <div class="tr2"><b>Direction with scope</b><span class="code">human-direction.js editor</span><span class="code">/api/study/human-direction/write · /undo</span><span class="small">Revision-guarded</span></div>
+  <div class="tr2"><b>Manuscript, save status</b><span class="code">window.studyDraft (draft-flow.js) flush · capture</span><span class="code">POST /api/study-draft/save · /undo · /recover</span><span class="small">States: Saved / Unsaved / Saving / Conflict / Recover save</span></div>
+  <div class="tr2"><b>Exact words, marked passage</b><span class="code">study-exact-wording.js · approveWords</span><span class="code">/api/study-ai/human-contract · save op approveMark</span><span class="small">Human-only</span></div>
+  <div class="tr2"><b>Margin / Decisions / Readiness</b><span class="code">inspector.js · #margin · #downstream-human-direction</span><span class="code">none</span><span class="small">Keep</span></div>
+  <div class="tr2"><b>History panel</b><span class="code">studyDraft serverHistory + each owner’s receipts</span><span class="code">/api/study-draft/* receipts · /api/study/outputs · /api/study/share</span><span class="small">Today shows 12 rows; no unified panel yet</span></div>
+  <div class="tr2"><b>Check findings</b><span class="code">draft-check-flow.js</span><span class="code">GET/POST /api/study-draft/check</span><span class="small">Refuses while unsaved</span></div>
+  <div class="tr2"><b>AI proposals</b><span class="code">study-ai-proposals.js decide</span><span class="code">/api/study-ai/accept · /reject</span><span class="small">Agents propose via the 6 MCP tools; you apply</span></div>
+  <div class="tr2"><b>Media list, where used</b><span class="code">study-photos.js · media-usage.js</span><span class="code">/api/study/photos/* · GET /api/study/media-usage</span><span class="small">No “record use” writer exists; uses come from placements</span></div>
+  <div class="tr2"><b>Carousel grid, drag reorder, templates</b><span class="code">React canvas via output-connection.js</span><span class="code">POST /api/study/outputs/save · /undo · /review-words</span><span class="small">1080×1350, 1–40 slides</span></div>
+  <div class="tr2"><b>Audience and export</b><span class="code">output-stage-surfaces.js · persistOutputExport</span><span class="code">POST /api/study/outputs/export-check · /export</span><span class="small">PNG needs local Chrome</span></div>
+  <div class="tr2"><b>Share</b><span class="code">share-stage.js commit · action</span><span class="code">/api/study/share/save · /fact · /undo</span><span class="small">Copy only; nothing is sent</span></div>
+  <div class="tr2"><b>Outputs, new piece, completion</b><span class="code">output-connection.js create · output-overview.js</span><span class="code">/api/study/outputs/create · /api/work-continuity/complete</span><span class="small">Completion is Prepared</span></div>
+  <div class="tr2"><b>Return to i64 OS</b><span class="code">i64-return.js</span><span class="code">none</span><span class="small">Keep</span></div>
+ </div>
+
+ <h2>What works, what is ready, what is not</h2>
+ <div class="four">
+  <div class="box"><h3><span class="st w">Working</span></h3><ul class="small"><li>C3 look, tabs, grouped checkpoints</li><li>Material files, folder, iCloud public photos</li><li>Kept transcripts, remark correction, Undo</li><li>Saved research and scoped direction</li><li>Write / Read / Check on one text, exact words</li><li>Article and carousel arranging, 66 templates</li><li>Audience view and real exports</li><li>Share preparation, Post and Listing drafts</li><li>Claude/Codex concept tools on the same records</li></ul></div>
+  <div class="box"><h3><span class="st pr">Prepared</span></h3><ul class="small"><li>Collections without a project</li><li>Pick up here and current understanding</li><li>Typed links and known change impact</li><li>Scoped inheritance and supersession</li><li>Safe detours keeping unsaved words</li><li>Work receipts and agent assignments</li><li>Per-edition completion records</li><li>One working text with save-ahead</li></ul></div>
+  <div class="box"><h3><span class="st po">Proposed</span></h3><ul class="small"><li>Session history with preview and restore as new</li><li>Full Library browsing and filters</li><li>Aligned transcript reading layout</li><li>Video ranges, scenes, script-to-footage</li><li>Linked translations in Audience</li><li>The three layouts on this canvas</li></ul></div>
+  <div class="box"><h3><span class="st g">Gated</span></h3><ul class="small"><li>Live AI inside the app</li><li>Microphone, transcription, alignment</li><li>Atlas, web and book research connections</li><li>Lightroom and private albums, video import</li><li>Sending messages, publishing, shop writes</li><li>Phone, VPS and device sync</li></ul></div>
+ </div>
+
+ <h2>About the Magazine workflow</h2>
+ <p class="lead">I read the Magazine repository. Its fifteen steps map onto the twelve checkpoints, and four decisions that are yours today show in every option: your own entry and closing lines stay in your words, connecting lines wait for your yes, every quote traces back to the transcript, and photos come last, placed between thoughts. The real Porcelain and Tea story in Option B shows how that markup reads inside the new layout.</p>
+ <p class="small">Not covered by any option yet: blind fresh-reader reviews and the rating loop, which have no home in AR Create so far. They could sit in Check.</p>
+
+ <h2>Your call</h2>
+ <p class="lead">Pick one, or name a combination (for example “B with A’s pages and C’s Where used”). Then the build can start on a branch, beginning with the pieces that are already working.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
