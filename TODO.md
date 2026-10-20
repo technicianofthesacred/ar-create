@@ -11,7 +11,6 @@
 
 - [ ] Bring the magazine story path (Map, Plan, Draft, Checks, Edit passes, Photos, Publish, Feedback) into AR Create from the Teajia magazine _(band: agent-runnable)_ _(effort: deep)_
 
-
 ## Operational notes
 
 - The chosen design is Full A, the Tree, on the design canvas: https://claude.ai/artifact/WCibjsYNREMrVdaToKWGpR. Its build plan is `design/round3-directions/BUILD-PLAN.md` on the `claude/ar-create-interface-directions` branch.
