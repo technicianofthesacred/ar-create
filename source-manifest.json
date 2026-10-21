@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "aefd5a30e25eb00daa8454e9207988862e5982f925a4990235dca974c1a8c8e4",
+      "candidateSha256": "37869e8be00aca9ef530175bc2ae19eb97d83c90ccab1568fbc363f3904743a1",
       "adapted": true
     },
     {
@@ -72,7 +72,7 @@
     {
       "path": "runtime/services/article-make.mjs",
       "sourceSha256": "883c4a4cd5c352adcf8a4b0c749f438200f6c1d7cf462edb8bc4a428fd3ef50a",
-      "candidateSha256": "585927eae3417b3fe5af14b0f07a4552294d5aabc38821b2e4cf168cb3907e5b",
+      "candidateSha256": "1d7e55a67a700d0dee3c6e1422e8c2238693e3f9afc455003ca84c877715eefe",
       "adapted": false
     },
     {
@@ -102,7 +102,7 @@
     {
       "path": "runtime/services/carousel-make.mjs",
       "sourceSha256": "ad6cc928725234b49b103b664fb478f68ff722acbb685768976d0db73eb9d32d",
-      "candidateSha256": "94b320994e541094947367720db07eb1dadc5c506aebae7aa4a2fb3767f735bb",
+      "candidateSha256": "85fbe53400738cbc1c261ce029a39768b243bfdb028fd4518fb5e6389d39f6a5",
       "adapted": false
     },
     {
@@ -3270,6 +3270,10 @@
     {
       "path": "runtime/services/render-helper.mjs",
       "candidateSha256": "f50e451a8c6795af8edb869678c45c9e9ce883215f62d13f9d03ed54d835b9e8"
+    },
+    {
+      "path": "tests/magazine-config.test.mjs",
+      "candidateSha256": "c2c7c69675f1996df4b93224da7f57055449c73f109e0ea2ff5f1c304b9d0bcd"
     }
   ],
   "dependencyRepair": {
