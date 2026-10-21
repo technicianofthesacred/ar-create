@@ -15,11 +15,14 @@
 // server; swaps service.next in for <home>/service (the old one stays as <home>/service.prev) and writes
 // <home>/RELEASE.json. It never touches <home>/data, <home>/config or <home>/state, and it never starts or stops
 // anything: it prints the restart command instead.
+// After the swap it also copies the repo's AGENTS.md (resolved through the CLAUDE.md symlink) to <home>/AGENTS.md
+// and appends one `release:<sha>` line to <home>/data/journal/<yyyy-mm>.jsonl (the only thing it ever writes in data/).
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
+import {createJournal} from '../runtime/services/journal.mjs';
 import {GENERATED,MANIFEST_FILE,NOT_SHIPPED,PRUNE_AFTER_BUILD,REQUIRED_GENERATED,compareManifest,git,manifestSha256,sha256} from './lib/manifest.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
@@ -67,6 +70,26 @@ function restartHint(home){
 }
 function readJson(file){try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch{return null;}}
 function appendLog(home,entry){fs.appendFileSync(path.join(home,'RELEASES.jsonl'),JSON.stringify(entry)+'\n');}
+
+// The agent entry file travels with the release: <home>/AGENTS.md is the repo's AGENTS.md (a symlink target is followed).
+function copyAgentsFile(repo,home,log){
+ const source=path.join(repo,'AGENTS.md');
+ if(!fs.existsSync(source)){log('  AGENTS.md: none in this commit; nothing copied');return false;}
+ const target=path.join(home,'AGENTS.md'),temp=target+'.next';
+ fs.writeFileSync(temp,fs.readFileSync(fs.realpathSync(source)));fs.renameSync(temp,target);
+ log(`  AGENTS.md copied to ${target}`);return true;
+}
+// One journal line, through the app's own journal writer, so history shows when each release happened.
+async function journalRelease({home,sha,tag,by,at,previousSha,log}){
+ const data=path.join(home,'data');
+ try{
+  fs.mkdirSync(data,{recursive:true,mode:0o700});
+  const journal=createJournal({dataDir:data,now:()=>new Date(at)});
+  const actor=/^(human|agent|cron|import):[A-Za-z0-9._-]+$/.test(by)?by:'human:release';
+  await journal.append({operationId:null,actor,client:'file',scope:{kind:'system',id:sha},kind:'release:'+sha,status:'committed',before:{revision:null,hash:previousSha},after:{revision:null,hash:sha},summary:`Released ${sha.slice(0,12)}${tag?` (${tag})`:''}.`});
+  log('  journal: release line written');return true;
+ }catch(error){log(`  journal: release line NOT written (${error.message})`);return false;}
+}
 
 function cleanTree(repo){
  const dirty=git(repo,'status','--porcelain','--untracked-files=all').split('\n').filter(Boolean);
@@ -142,7 +165,7 @@ function smoke(staged,log){
  log('  smoke: server.mjs imports resolve and serve.mjs parses');
 }
 
-export function release({home,repo=path.resolve(here,'..'),dryRun=false,depsFrom=null,tag=null,builtBy=null,log=console.log}={}){
+export async function release({home,repo=path.resolve(here,'..'),dryRun=false,depsFrom=null,tag=null,builtBy=null,log=console.log}={}){
  repo=fs.realpathSync(repo);home=checkHome(home,repo);
  const {sha,rows,shipped,notShipped}=plan(repo);
  const actualTag=tag||(()=>{try{return git(repo,'describe','--tags','--exact-match').trim();}catch{return null;}})();
@@ -154,7 +177,7 @@ export function release({home,repo=path.resolve(here,'..'),dryRun=false,depsFrom
  log(`  currently installed: ${current?`${String(current.sha).slice(0,12)} built ${current.builtAt}`:'no RELEASE.json'}`);
  for(const line of depsPreview)log(`  dependencies ${line}`);
  if(dryRun){
-  log(`  would: stage ${staged}; build generated files; keep ${previous}; swap into ${live}; write ${path.join(home,'RELEASE.json')}`);
+  log(`  would: stage ${staged}; build generated files; keep ${previous}; swap into ${live}; write ${path.join(home,'RELEASE.json')}; copy AGENTS.md to ${path.join(home,'AGENTS.md')}; append a release:${sha.slice(0,12)} line to ${path.join(home,'data/journal')}`);
   log('  dry run: nothing written, nothing started or stopped.');
   return {dryRun:true,sha,shipped:shipped.length};
  }
@@ -181,6 +204,8 @@ export function release({home,repo=path.resolve(here,'..'),dryRun=false,depsFrom
   if(fs.existsSync(path.join(home,'RELEASE.json')))safeRename(path.join(home,'RELEASE.json'),path.join(home,'RELEASE.prev.json'));
   safeRename(path.join(home,'RELEASE.json.next'),path.join(home,'RELEASE.json'));
   appendLog(home,{action:'release',sha,tag:actualTag,at:record.builtAt,by:record.builtBy,previousSha:record.previousSha});
+  copyAgentsFile(repo,home,log);
+  await journalRelease({home,sha,tag:actualTag,by:record.builtBy,at:record.builtAt,previousSha:record.previousSha,log});
   log(`released ${sha.slice(0,12)} into ${live}${hadLive?`; previous kept at ${previous}`:''}`);
   log(`restart (not done by this script): ${restartHint(home)}`);
   return {dryRun:false,sha,record};
@@ -238,6 +263,6 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   const common={home:options.home,...(options.repo?{repo:options.repo}:{})};
   if(options.rollback)rollback(common);
   else if(options.verify)verify(common);
-  else release({...common,dryRun:!!options['dry-run'],depsFrom:options['deps-from']||null,tag:options.tag||null,builtBy:options['built-by']||null});
+  else await release({...common,dryRun:!!options['dry-run'],depsFrom:options['deps-from']||null,tag:options.tag||null,builtBy:options['built-by']||null});
  }catch(error){console.error('release refused: '+error.message);process.exit(1);}
 }

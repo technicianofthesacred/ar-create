@@ -2721,7 +2721,7 @@
     },
     {
       "path": "scripts/release.mjs",
-      "candidateSha256": "1ae3933769df864407d4fa28d55c35b3c375923418c7c4f967ea292e7445d1dc"
+      "candidateSha256": "92179cf15cab40cf334a03717095cb66ca230bace0b3a827710e7bb92e98a636"
     },
     {
       "path": "tests/private-config.test.mjs",
@@ -2737,7 +2737,7 @@
     },
     {
       "path": "tests/release.test.mjs",
-      "candidateSha256": "1e1b4a045e17340fa44535b8adf05258fca6a544aa2675d626ed289f47745ab0"
+      "candidateSha256": "d438a097dec8c027f4a62aed9defc1b48382bacba2151572f0ecff3fb4c4df80"
     },
     {
       "path": "agents/cli/ar-create.mjs",
@@ -2749,7 +2749,7 @@
     },
     {
       "path": "agents/lib/client.mjs",
-      "candidateSha256": "74be96ea10d34c831599ba28fcd6b440ff23a5ffd470c483a1693c2dfa5291d8"
+      "candidateSha256": "831b88ee3d7076e51746ad87bc29c8062741e7c1923a06deb168068bc77aec11"
     },
     {
       "path": "agents/mcp/server.mjs",
@@ -2785,7 +2785,7 @@
     },
     {
       "path": "tests/command-registry.test.mjs",
-      "candidateSha256": "321da0a1528f529d0f389959bb4ca79ba7c8d9a30660a1b3695f121f3b7c6e0e"
+      "candidateSha256": "3e52475f540ca663cb73931beca4b0d4a9348b62dabfbf97b5ba770ea51d91f9"
     },
     {
       "path": "tests/events-presence.test.mjs",
@@ -3250,6 +3250,26 @@
     {
       "path": "tools/magazine/register.mjs",
       "candidateSha256": "7054247635c8b604744a229061ceeac5cb1dce071731d3ed3228a5bd6ec3d35e"
+    },
+    {
+      "path": "runtime/public/assets/study-output-canvas.css",
+      "candidateSha256": "4af00cb4aa9d496dcb8034b6011c704aa0246bac7465615b596dfa7015cde172"
+    },
+    {
+      "path": "runtime/public/assets/study-output-canvas.js",
+      "candidateSha256": "1d63c4e22d27df19a3bf4968e887ead11c864bca8abc47f2302ecfbf7cb18f8f"
+    },
+    {
+      "path": "runtime/services/native-output-helpers.mjs",
+      "candidateSha256": "14d7fb53e464a9b27825458f1cdd4b6860a66ab7451868c115cc46ffedbdaa34"
+    },
+    {
+      "path": "runtime/services/native-output-owner.test.mjs",
+      "candidateSha256": "222767bdcbd651500913ae7d5bb2c9225fffe4221657e94b47ac0c8e37065d46"
+    },
+    {
+      "path": "runtime/services/render-helper.mjs",
+      "candidateSha256": "f50e451a8c6795af8edb869678c45c9e9ce883215f62d13f9d03ed54d835b9e8"
     }
   ],
   "dependencyRepair": {
