@@ -49,16 +49,16 @@ test('host tools: transcriptionVenv supplies python, tools.python wins, nothing 
  }finally{cleanup(dir);}
 });
 
-test('editorialSkillsDir, magazineTemplatesDir and fixturesDir are explicit directories; skills are derived from the folder',()=>{
+test('editorialSkillsDir, magazine.vaultRoot and fixturesDir are explicit directories; skills are derived from the folder',()=>{
  const dir=scratch();try{
   const skills=path.join(dir,'skills');write(skills,'arcreate/SKILL.md','a');write(skills,'mag/SKILL.md','m');
-  const loaded=loadConfig(scratchOk({AR_CREATE_CONFIG:write(dir,'c.json',JSON.stringify({dataDir:path.join(dir,'d'),editorialSkillsDir:skills,fixturesDir:dir,magazineTemplatesDir:skills}))}));
+  const loaded=loadConfig(scratchOk({AR_CREATE_CONFIG:write(dir,'c.json',JSON.stringify({dataDir:path.join(dir,'d'),editorialSkillsDir:skills,fixturesDir:dir,magazine:{vaultRoot:skills}}))}));
   const real=fs.realpathSync(skills);
   assert.deepEqual(loaded.editorialSkills,[path.join(real,'arcreate/SKILL.md'),path.join(real,'mag/SKILL.md')]);
   assert.equal(loaded.editorialSkillsDir,real);assert.equal(loaded.fixturesDir,fs.realpathSync(dir));
   assert.throws(()=>loadConfig(scratchOk({AR_CREATE_CONFIG:write(dir,'r.json',JSON.stringify({dataDir:path.join(dir,'d'),editorialSkillsDir:'skills'}))})),/explicit absolute directory/);
   const none=loadConfig(scratchOk({AR_CREATE_DATA_DIR:path.join(dir,'d')}));
-  assert.deepEqual([none.editorialSkillsDir,none.fixturesDir,none.magazineTemplatesDir,none.editorialSkills],[null,null,null,[]]);
+  assert.deepEqual([none.editorialSkillsDir,none.fixturesDir,none.magazine.vaultRoot,none.editorialSkills],[null,null,null,[]]);
  }finally{cleanup(dir);}
 });
 

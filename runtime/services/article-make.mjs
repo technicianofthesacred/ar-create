@@ -13,7 +13,7 @@ import {captureArticleSource,renderArticleSource,validateArticleSource} from './
 import {parseWholeDraft} from '../article-codec.mjs';
 import {articlePaths,renderProjectArticle} from '../article-persistence.mjs';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-// Private locations come from the host config (editorialSkillsDir, magazineTemplatesDir), exported by serve.mjs as env.
+// Private locations come from the host config (editorialSkillsDir, magazine.vaultRoot), exported by serve.mjs as env.
 // The skills folder keeps its conventional home default; the magazine templates have no default.
 // Read lazily: serve.mjs sets the env after its imports are loaded.
 const defaultSkillRoot=()=>process.env.AR_CREATE_EDITORIAL_SKILL_ROOT||path.join(os.homedir(),'.claude','skills');

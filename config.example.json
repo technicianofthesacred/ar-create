@@ -14,7 +14,7 @@
     "originalReaderBaseUrl": "http(s) base URL of a reader for originals, or null.",
     "editorialSkillsDir": "Folder with arcreate/ and mag/ skill files. Null = none.",
     "editorialSkills": "Optional explicit skill file paths. Derived from editorialSkillsDir when empty.",
-    "magazineTemplatesDir": "Folder holding TEMPLATE.md and SYSTEM.md for the magazine. Null = none.",
+    "magazine": "{vaultRoot}: the Magazine folder holding TEMPLATE.md and SYSTEM.md. Null = none.",
     "tools": "Absolute paths of host tools. Null = that capability is off. python = interpreter; transcriptionVenv = a virtualenv folder whose bin/python is used when python is null.",
     "transcriptLibrary": "{registryFile, indexFile, libraryRoot}, all absolute, or null.",
     "importedTranscriptOwner": "{dataDir, notesFile, handoverFile, connections:[]}, or null."
@@ -32,7 +32,7 @@
   "originalReaderBaseUrl": null,
   "editorialSkillsDir": "/srv/ar-create-example/skills",
   "editorialSkills": [],
-  "magazineTemplatesDir": "/srv/ar-create-example/magazine-templates",
+  "magazine": {"vaultRoot": "/srv/ar-create-example/magazine"},
   "tools": {
     "python": null,
     "transcriptionVenv": "/srv/ar-create-example/venv-transcription",

@@ -61,8 +61,9 @@ export function loadConfig(env=process.env){
  if(config.originalReaderBaseUrl){const url=new URL(config.originalReaderBaseUrl);if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw Error('Original reader URL must not contain credentials.');}
  const editorialSkillsDir=optionalDirectory(config.editorialSkillsDir,'editorialSkillsDir');
  const fixturesDir=optionalDirectory(config.fixturesDir,'fixturesDir');
- const magazineTemplatesDir=optionalDirectory(config.magazineTemplatesDir,'magazineTemplatesDir');
+ if(config.magazine!==undefined&&config.magazine!==null&&(typeof config.magazine!=='object'||Array.isArray(config.magazine)))throw Error('magazine must be an object.');
+ const magazineVaultRoot=optionalDirectory(config.magazine?.vaultRoot,'magazine.vaultRoot');
  let editorialSkills=Array.isArray(config.editorialSkills)?config.editorialSkills:[];
  if(!editorialSkills.length&&editorialSkillsDir)editorialSkills=['arcreate/SKILL.md','mag/SKILL.md'].map(name=>path.join(editorialSkillsDir,name)).filter(file=>fs.existsSync(file));
- return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazineTemplatesDir,allowScratchRoots:allowScratch,tools:{...tools,python}};
+ return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine:{vaultRoot:magazineVaultRoot},allowScratchRoots:allowScratch,tools:{...tools,python}};
 }

@@ -25,7 +25,7 @@ const config=loadConfig(env);
 const setting=(key,value)=>{if(value)process.env[key]=value;else delete process.env[key];};
 for(const [key,name] of [['AR_CREATE_PYTHON','python'],['AR_CREATE_YT_DLP','ytDlp'],['AR_CREATE_FIRECRAWL_CLI','firecrawl'],['AR_CREATE_CODEX','codex']])setting(key,config.tools[name]);
 setting('AR_CREATE_EDITORIAL_SKILL_ROOT',config.editorialSkillsDir);
-setting('AR_CREATE_MAGAZINE_ROOT',config.magazineTemplatesDir);
+setting('AR_CREATE_MAGAZINE_ROOT',config.magazine.vaultRoot);
 process.env.AR_CREATE_EDITORIAL_SKILLS=JSON.stringify(config.editorialSkills);
 // The installed home records which git commit it is: <home>/RELEASE.json, written only by scripts/release.mjs.
 let release=null;
