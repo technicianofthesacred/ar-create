@@ -12,7 +12,7 @@ type: BRIEF
 brand: Teajia
 title: Hong Kong Day 1
 recorded: 2026-10-03
-speakers: Adrian; Mathew (Pu'er Medicine)
+speakers: Adrian; Lin (Mountain Tea House)
 source: <the clean record's file>
 research: <the research file>
 ---
@@ -21,12 +21,12 @@ research: <the research file>
 One or two sentences, after research. ("Hong Kong storage" is a place, not a flavor.)
 
 ## Moments
-- 05:20 Mathew stops mid-sentence as the tea hits
+- 05:20 Lin stops mid-sentence as the tea hits
 - …
 
 ## Quotes that can be used
 Only lines research and the speaker check allow, each with speaker and time, word for word.
-- Mathew, 05:20: "It was a wave."
+- Lin, 05:20: "It was a wave."
 
 ## What research adds
 The usable and qualified facts and the traced teachings worth teaching, one line each, with their state.

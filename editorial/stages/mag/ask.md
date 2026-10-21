@@ -14,7 +14,7 @@ record-to: Workflow/2-Guidance/MAP - Tea Teacher.md
 # Tea Teacher
 
 ## What the story is about
-I'd go with living in the present. It follows the order she spoke in and ends where she ended.
+I'd go with learning to wait. It follows the order she spoke in and ends where she ended.
 read: Workflow/2-Guidance/MAP - Tea Teacher.md | Read the map
 - [ ] Living in the present (recommended)
 - [ ] Trust yourself

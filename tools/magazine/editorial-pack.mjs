@@ -45,7 +45,7 @@ export function verifyPack({skills = null} = {}) {
   const problems = [], drift = [];
   for (const f of manifest.files) {
     const at = path.join(EDITORIAL, f.path);
-    if (!fs.existsSync(at)) problems.push(`${f.path} is missing`); else if (sha(fs.readFileSync(at)) !== f.sha256) problems.push(`${f.path} differs from its manifest hash (edited after copying: update the manifest with --copy or record why)`);
+    if (!fs.existsSync(at)) problems.push(`${f.path} is missing`); else if (sha(fs.readFileSync(at)) !== (f.editedSha256 ?? f.sha256)) problems.push(`${f.path} differs from its manifest hash (edited after copying: update the manifest with --copy or record why)`);
     if (skills) { const src = path.join(skills, f.source.replace('~/.claude/skills/', '')); if (fs.existsSync(src) && sha(fs.readFileSync(src)) !== f.sha256) drift.push(f.source); }
   }
   if (skills) for (const e of manifest.entries) { const src = path.join(skills, e.source.replace('~/.claude/skills/', '')); if (fs.existsSync(src) && sha(fs.readFileSync(src)) !== e.sha256) drift.push(e.source); }

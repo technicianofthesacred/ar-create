@@ -386,7 +386,7 @@ function approveMade(rel, value) {
   fs.writeFileSync(abs, t);
 }
 // The words lineup (stop 1 of a carousel). The file holds "## Slides", one numbered line per slide:
-// "1. [cover] words" or "3. [quote · Mathew, Pu'er Medicine] words", and "## Caption" below it.
+// "1. [cover] words" or "3. [quote · Lin, Mountain Tea House] words", and "## Caption" below it.
 // Reordering, editing and cutting on the page rewrite those two sections and nothing else.
 const sectionOf = (body, name) => (body.split(new RegExp('^## ' + name + '\\s*$', 'm'))[1] || '').split(/^## /m)[0];
 function lineupOf(body) {
