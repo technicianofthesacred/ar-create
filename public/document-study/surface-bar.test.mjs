@@ -114,8 +114,10 @@ test('in Material, Add files presses the lane’s own button',()=>{
 test('in Direction, Save direction is the primary and the angle tools stay on the page, not in More',()=>{
  const f=fixture();
  f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=4;
- f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="phaseReader"><button data-direction-save onclick="calls.push(\'save-direction\')">Save direction</button></section>');
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="phaseReader"><textarea data-human-direction></textarea><button data-direction-save onclick="calls.push(\'save-direction\')">Save direction</button></section>');
  f.w.surfaceBar.build();
+ assert.notEqual(f.bar().querySelector('.sb-primary').textContent,'Save direction','nothing typed, nothing to save');
+ f.d.querySelector('[data-human-direction]').value='Open with the gate';f.w.surfaceBar.build();
  assert.equal(f.bar().querySelector('.sb-primary').textContent,'Save direction');
  f.bar().querySelector('.sb-primary').click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['save-direction']);

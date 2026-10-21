@@ -29,7 +29,7 @@ test('an empty step shows the shape, the card and its steps, and hides only the 
 test('card buttons press the real controls; a disabled control stays disabled with its own reason',()=>{
  const {w,d}=fixture(12);
  const btns=[...d.querySelectorAll('.c3-empty .ce-btn')];
- assert.deepEqual(json(btns.map(b=>[b.textContent,b.disabled])),[['New article',false],['New carousel',true],['Continue writing',false]]);
+ assert.deepEqual(json(btns.map(b=>[b.textContent,b.disabled])),[['New article',false],['New carousel',true],['Open the draft',false]]);
  assert.equal(btns[1].title,'Open an owned working manuscript first');
  btns[0].click();btns[2].click();
  assert.deepEqual(json(w.calls),['create-article','phase:5']);
@@ -81,4 +81,8 @@ test('acting on a hidden tool from the card reveals the step for this visit',()=
  assert.equal(d.querySelector('.c3-empty'),null);assert.equal(d.querySelectorAll('[data-c3-empty-hidden]').length,0);
  assert.equal(d.querySelector('.tools details').open,true);
  w.c3Empty.decorate();assert.equal(d.querySelector('.c3-empty'),null,'stays revealed on this step');
+});
+test('one verb for going to the manuscript: every surface says Open the draft',()=>{
+ const dir=new URL('./',import.meta.url),old=/Open writing draft|Open working words|Open Draft|Open Write|Open in Write|Continue writing|Continue to Draft|Open editor|Edit draft/;
+ for(const f of fs.readdirSync(dir).filter(f=>f.endsWith('.js')&&!f.endsWith('.test.mjs')))assert.doesNotMatch(fs.readFileSync(new URL(f,dir),'utf8'),old,f);
 });
