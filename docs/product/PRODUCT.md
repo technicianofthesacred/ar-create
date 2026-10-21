@@ -468,3 +468,10 @@ A finished task does not make the whole section finished. Acceptance includes ap
 Each label is the canonical name used in the app (aliases are in [START.md](../START.md#sections-one-name-each)). The linked brief is the detailed authority for that section. The table names the required result, not current completion. Keep the twelve underlying checkpoints while sharing continuous work surfaces where useful. Materials and media remain accessible throughout; stages are not ceremonial gates.
 
 The table itself is unchanged apart from section labels, which now use the canonical names; the earlier labels are aliases in START.md.
+
+
+### 21 October — point to existing work; do not re-import it
+
+The author explicitly reiterates that the filesystem is the foundation. Existing recordings, transcripts, personal writings, research, media and output work stay at their canonical locations outside the software checkout. Configure their approved roots and catalog references so the interface and agents resolve the same identities and current revisions. A software update or a fresh interface must not require importing the material again. The Library index is discovery metadata, not another copy of the content or another manuscript authority. New files may be brought in normally; existing work must be found by reference.
+
+Acceptance must include the actual retained cases: An Cha sessions/context, Hong Kong research and its existing carousel, and Porcelain media. An empty synthetic library cannot establish these connections. Projects remain projects; their sources are reusable Library material; saved research and outputs keep their respective owners. Retained/browser/original-file work must not be called missing merely because a newer output register is empty. The approved ZIP remains the complete visual authority independently of content wiring. No bulk file moves, automatic migration, new database, duplicate bodies, provider activation or runtime installation follows from this clarification.

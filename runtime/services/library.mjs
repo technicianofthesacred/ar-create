@@ -1,3 +1,4 @@
+import {createLibraryFolders,validateLibraryFolders} from './library-folders.mjs';
 import {collectionPair,liveCollectionLink,resolvedCollectionLinks} from './donors/study/collection-relationships.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,7 +25,7 @@ const now = () => new Date().toISOString();
 function string(value, label, max = MAX_BODY_BYTES) { if (typeof value !== 'string' || value.length > max) throw new StateError(`${label} must be text under ${max} characters.`); return value; }
 
 /** Adapted WordForge shelves and Board references, isolated from vault/db/runtime. */
-export function createLibrary({ dataDir, connections = [], legacyState = () => ({ project: { sources: [] } }), extraction = null, urlIngestion = null, ingestionState = null, recordingState = null, recordingSourceSnapshot = null, retainedCatalog = null, workReferences = null, projectAssociations = null }) {
+export function createLibrary({ dataDir, connections = [], legacyState = () => ({ project: { sources: [] } }), extraction = null, urlIngestion = null, ingestionState = null, recordingState = null, recordingSourceSnapshot = null, retainedCatalog = null, originalCatalog = null, workReferences = null, projectAssociations = null }) {
   const scrape = extraction ? createScraper(extraction) : null;
   const owned = path.join(dataDir, 'library');
   fs.mkdirSync(owned, { recursive: true, mode: 0o700 });
@@ -35,7 +36,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if (!Array.isArray(entries) || entries.length > 64) throw new StateError('Invalid explicitly configured read-only roots.');
     const configured=[];
     for (const entry of entries) {
-      if (!entry || !/^[a-zA-Z0-9_-]+$/.test(entry.id) || (['library', 'recordings'].includes(entry.id) || entry.id === retainedCatalog?.id) || configured.some(r => r.id === entry.id) || typeof entry.path !== 'string' || !path.isAbsolute(entry.path)) throw new StateError('Invalid explicitly configured read-only root.');
+      if (!entry || !/^[a-zA-Z0-9_-]+$/.test(entry.id) || (['library', 'recordings'].includes(entry.id) || (entry.id === retainedCatalog?.id || entry.id === originalCatalog?.id)) || configured.some(r => r.id === entry.id) || typeof entry.path !== 'string' || !path.isAbsolute(entry.path)) throw new StateError('Invalid explicitly configured read-only root.');
       let configuredPath=entry.path,available=true;
       try{resolveInside(entry.path, '', { directory: true });configuredPath=fs.realpathSync(entry.path);}catch(error){if(error.code!=='ENOENT')throw error;available=false;}
       configured.push({ id: entry.id, name: entry.name || entry.id, path: configuredPath, writable: false,available });
@@ -46,6 +47,10 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   if (retainedCatalog !== null) {
     if (!retainedCatalog || !/^[a-zA-Z0-9_-]+$/.test(retainedCatalog.id) || roots.some(root => root.id === retainedCatalog.id) || typeof retainedCatalog.path !== 'string' || !path.isAbsolute(retainedCatalog.path) || typeof retainedCatalog.entries !== 'function') throw new StateError('Invalid retained transcript catalog root.');
     roots.push({id: retainedCatalog.id, name: retainedCatalog.name || retainedCatalog.id, path: retainedCatalog.path.replace(/^\/(tmp|var)(?=\/|$)/, '/private/$1'), writable: false, retainedCatalog: true});
+  }
+  if(originalCatalog!==null){
+    if(!originalCatalog||!/^[a-zA-Z0-9_-]+$/.test(originalCatalog.id)||roots.some(root=>root.id===originalCatalog.id)||typeof originalCatalog.path!=='string'||!path.isAbsolute(originalCatalog.path)||typeof originalCatalog.entries!=='function')throw new StateError('Invalid explicitly catalogued original root.');
+    roots.push({id:originalCatalog.id,name:originalCatalog.name||originalCatalog.id,path:originalCatalog.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1'),writable:false,originalCatalog:true});
   }
   const indexFile = path.join(dataDir, 'library-index.json');
   let index = readJson(indexFile, { revision: 0, sources: [], collections: [], evidence: [], legacyImported: [] });
@@ -129,6 +134,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       if(!previous||!same(previous,{status:r.status,reason:r.reason}))typedFail('Typed relationship state no longer matches its saved history.');
     }
     for(const op of ops)if(!UUID.test(op?.operationId||'')||!UUID.test(op.relationshipId||'')||!HASH.test(op.fingerprint||'')||!Number.isSafeInteger(op.resultRevision))typedFail('Invalid typed operation receipt; existing bytes preserved.');
+    validateLibraryFolders(value);
     return value;
   }
   function loadTyped(){
@@ -239,15 +245,22 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   function catalogTree(root) {
     resolveInside(root.path, '', {directory: true});
     if (fs.realpathSync(root.path) !== root.path) throw new StateError('Catalog folder changed into a symlink.', 403);
-    const entries = retainedCatalog.entries();
+    const entries = (root.originalCatalog?originalCatalog:retainedCatalog).entries();
+    if(root.originalCatalog)root.catalogDiagnostics=[];
     if (!Array.isArray(entries) || entries.length > 20000) throw new StateError('Retained catalog is unavailable.');
-    const ids = new Set(), paths = new Set();
+    const ids = new Set(), paths = new Set(),aliases=[];
     const tree = {rel_path:'', name:root.name, file_count:0, total_count:0, conflict_count:0, folders:[], files:[]};
     for (const entry of entries) {
-      if (!entry || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(entry.id) || ids.has(entry.id) || paths.has(entry.rel_path) || typeof entry.title !== 'string' || !entry.title.trim() || entry.title.length > 2000) throw new StateError('Invalid retained catalog identity.');
+      if (!entry || !root.originalCatalog&&(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(entry.id)||ids.has(entry.id)) || paths.has(entry.rel_path) || typeof entry.title !== 'string' || !entry.title.trim() || entry.title.length > 2000) throw new StateError('Invalid retained catalog identity.');
       safeRel(entry.rel_path, false); ids.add(entry.id); paths.add(entry.rel_path);
-      const file = resolveInside(root.path, entry.rel_path), stat = regular(file);
-      if (index.sources.some(source => source.id === entry.id ? source.rootId !== root.id : (source.rootId === root.id && source.rel_path === entry.rel_path) || roots.some(other => other.id === source.rootId && path.join(other.path, source.rel_path) === file))) throw new StateError('Retained catalog conflicts with an existing source identity.',409);
+      let file,stat;try{file=resolveInside(root.path,entry.rel_path);stat=regular(file);}catch(error){if(root.originalCatalog&&(error.code==='ENOENT'||error.status===404)){root.catalogDiagnostics.push({path:entry.rel_path,state:'missing'});continue;}throw error;}
+      if(root.originalCatalog){
+        if(!Array.isArray(entry.originalReferences)||!entry.originalReferences.length)throw new StateError('Original discovery has no configured provenance.',409);
+        const existing=index.sources.filter(source=>{const owner=roots.find(r=>r.id===source.rootId);return (owner?path.join(owner.path,source.rel_path):source.provenance?.originalPath)===file;});
+        if(existing.length>1)throw new StateError('Original file already has ambiguous Library identities.',409);
+        const prior=existing[0];if(prior&&prior.rootId!==root.id){const owner=roots.find(r=>r.id===prior.rootId);if(!owner||owner.writable)throw new StateError('Original file has an unavailable or writable existing authority; preserve its current identity.',409);aliases.push([prior,entry.originalReferences]);continue;}
+      }
+      if (!root.originalCatalog&&index.sources.some(source => source.id === entry.id ? source.rootId !== root.id : (source.rootId === root.id && source.rel_path === entry.rel_path) || roots.some(other => other.id === source.rootId && path.join(other.path, source.rel_path) === file))) throw new StateError('Retained catalog conflicts with an existing source identity.',409);
       const meta = readMeta(file), parts = entry.rel_path.split('/'); let folder = tree;
       if (parts.length > 25) throw new StateError('Retained catalog path is too deep.');
       for (let depth=0; depth<parts.length-1; depth++) {
@@ -255,15 +268,15 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
         if (!child) { child={rel_path:parts.slice(0,depth+1).join('/'),name:parts[depth],file_count:0,total_count:0,conflict_count:0,folders:[],files:[]};folder.folders.push(child); }
         folder=child;
       }
-      folder.files.push({providedUUID:entry.id,rel_path:entry.rel_path,name:path.basename(entry.rel_path,path.extname(entry.rel_path)),title:entry.title,kind:kindFor(file,meta.frontmatter),size_bytes:stat.size,modified_at:stat.mtime.toISOString(),transcriptProvenance:structuredClone(entry.transcriptProvenance ?? null)});
+      folder.files.push({...root.originalCatalog?{originalReferences:structuredClone(entry.originalReferences)}:{providedUUID:entry.id},rel_path:entry.rel_path,name:path.basename(entry.rel_path,path.extname(entry.rel_path)),title:entry.title,kind:kindFor(file,meta.frontmatter),size_bytes:stat.size,modified_at:stat.mtime.toISOString(),transcriptProvenance:structuredClone(entry.transcriptProvenance ?? null)});
     }
-    const count = folder => {folder.file_count=folder.files.length;folder.total_count=folder.file_count+folder.folders.reduce((total,child)=>total+count(child),0);return folder.total_count;}; count(tree);
+    const count = folder => {folder.file_count=folder.files.length;folder.total_count=folder.file_count+folder.folders.reduce((total,child)=>total+count(child),0);return folder.total_count;}; count(tree);for(const [source,refs]of aliases)source.originalReferences=structuredClone(refs);
     return tree;
   }
   function rootById(id = 'library', write = false) { const root = roots.find(r => r.id === id); if (!root) throw new StateError('Unknown configured library root.', 404); if (write && !root.writable) throw new StateError('Connected original roots are read-only.', 403); return root; }
   function publicSource(source) { const root = rootById(source.rootId); const { originalFile, ...metadata } = source; return { ...metadata, sourceUnavailable:root.available===false, ...(root.available===false?{cardEligibility:{eligible:false,reason:'The connected folder is unavailable. Reconnect it before reading or keeping a passage.'}}:{}), originalUrl: originalFile ? `/api/sources/blob?id=${encodeURIComponent(source.id)}&original=1` : null, path: path.join(root.path, source.rel_path), writable: root.writable, url: source.source_url || '', body: undefined }; }
   function sourceById(id) { const source = index.sources.find(s => s.id === id && !s.missing && !s.managedTerminalSnapshot); if (!source) throw new StateError('Source was not found. Refresh the library.', 404); return source; }
-  function checkedFile(source, write = false) { const root = rootById(source.rootId, write);if(root.retainedCatalog){try{const tree=catalogTree(root),find=folder=>folder.files.some(item=>item.providedUUID===source.id&&item.rel_path===source.rel_path)||folder.folders.some(find);if(!find(tree))throw new StateError('Source is no longer kept in the catalog.',404);root.available=true;}catch(error){root.available=false;throw new StateError('Retained transcript catalog is unavailable or changed. Refresh the library.',503);}}if(root.available===false)throw new StateError('The source folder is unavailable. Reconnect it and refresh the library.',503); const file = resolveInside(root.path, source.rel_path); if (write) regular(file); else { const stat = fs.lstatSync(file); if (!stat.isFile()) throw new StateError('Source must be a regular file.'); } return file; }
+  function checkedFile(source, write = false) { const root = rootById(source.rootId, write);if(root.retainedCatalog||root.originalCatalog){try{const tree=catalogTree(root),find=folder=>folder.files.some(item=>(root.originalCatalog||item.providedUUID===source.id)&&item.rel_path===source.rel_path)||folder.folders.some(find);if(!find(tree))throw new StateError('Source is no longer kept in the catalog.',404);root.available=true;}catch(error){root.available=false;throw new StateError('Retained transcript catalog is unavailable or changed. Refresh the library.',503);}}if(root.available===false)throw new StateError('The source folder is unavailable. Reconnect it and refresh the library.',503); const file = resolveInside(root.path, source.rel_path); if (write) regular(file); else { const stat = fs.lstatSync(file); if (!stat.isFile()) throw new StateError('Source must be a regular file.'); } return file; }
   function makeFolder(rootId, folder) { const root = rootById(rootId, true); safeRel(folder, false); resolveInside(root.path, folder, { directory: true, createParents: true }); }
   function savedFile(rootId, folder, name, bytes, provenance, legacyId) {
     const root = rootById(rootId, true); safeRel(folder); safeRel(name, false); if (name.includes('/')) throw new StateError('File name must not contain a folder.');
@@ -305,7 +318,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     return result;
   }
   function refresh() {
-    const before = JSON.stringify(index); importLegacy();
+    const before = JSON.stringify(index); importLegacy();for(const source of index.sources)delete source.originalReferences;
     if (folderMetadata.size > 20000) folderMetadata.clear();
     const managedSnapshots = terminalSnapshotPaths();
     for (const source of index.sources) { if (source.rootId === 'library' && managedSnapshots.has(path.join(roots[0].path, source.rel_path))) source.managedTerminalSnapshot = true; else delete source.managedTerminalSnapshot; }
@@ -313,8 +326,16 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const unavailable=root=>{root.available=false;root.connectionError='Folder unavailable or its scan could not complete. Reconnect it and refresh.';incompleteRoots.add(root.id);trees.push({...root,tree:{rel_path:'',name:root.name,file_count:0,total_count:0,conflict_count:0,folders:[],files:[]}});};
     for (const root of roots) {
       let tree;
-      try{resolveInside(root.path, '', { directory: true });const lexical=root.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1');if(fs.realpathSync(root.path)!==lexical)throw new StateError('A connected folder path changed into a symlink.',403);tree = root.retainedCatalog ? catalogTree(root) : readFolder(root.path, '', { count: 0, max: 20000, truncated: false, metadataCache: folderMetadata,throwOnReadError:true });root.available=true;delete root.connectionError;}
+      try{resolveInside(root.path, '', { directory: true });const lexical=root.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1');if(fs.realpathSync(root.path)!==lexical)throw new StateError('A connected folder path changed into a symlink.',403);tree = root.retainedCatalog||root.originalCatalog ? catalogTree(root) : readFolder(root.path, '', { count: 0, max: 20000, truncated: false, metadataCache: folderMetadata,throwOnReadError:true });root.available=true;delete root.connectionError;}
       catch{unavailable(root);continue;}
+      // A later overlapping connection must not mint another UUID for an
+      // existing catalogued original. Its allowlist and original root still own
+      // availability; reconnecting a broad folder cannot bypass that boundary.
+      if (!root.writable && !root.retainedCatalog && !root.originalCatalog && originalCatalog) {
+        const owned = new Set(index.sources.filter(source => source.rootId === originalCatalog.id).map(source => path.join(originalCatalog.path, source.rel_path)));
+        const prune = folder => { folder.files = folder.files.filter(file => !owned.has(path.join(root.path, file.rel_path))); for (const child of folder.folders) prune(child); folder.file_count = folder.files.length; folder.total_count = folder.file_count + folder.folders.reduce((total, child) => total + child.total_count, 0); };
+        prune(tree);
+      }
       if (root.id === 'library' && managedSnapshots.size) {
         const prune = folder => { folder.files = folder.files.filter(file => !managedSnapshots.has(path.join(root.path, file.rel_path))); for (const child of folder.folders) prune(child); folder.file_count = folder.files.length; folder.total_count = folder.file_count + folder.folders.reduce((total, child) => total + child.total_count, 0); };
         prune(tree);
@@ -331,13 +352,13 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       // Ambiguous hardlinks stay path-based; missing old inodes are never guessed.
       const previous=index.sources.filter(source=>source.rootId===root.id),matches=new Map(),claimed=new Set(),previousInodes=new Map(),previousPaths=new Map();
       for(const source of previous){previousPaths.set(source.rel_path,source);if(!source.missing){const candidates=previousInodes.get(source.inode)||[];candidates.push(source);previousInodes.set(source.inode,candidates);}}
-      for(const meta of flat){if(root.retainedCatalog){const source=previous.find(item=>item.id===meta.providedUUID);if(source){matches.set(meta.rel_path,source);claimed.add(source.id);}continue;}const stat=scanStats.get(meta.rel_path),inode=`${stat.dev}:${stat.ino}`,candidates=previousInodes.get(inode)||[];if(inodeCounts.get(inode)===1&&candidates.length===1){matches.set(meta.rel_path,candidates[0]);claimed.add(candidates[0].id);}}
+      for(const meta of flat){if(root.originalCatalog)continue;if(root.retainedCatalog){const source=previous.find(item=>item.id===meta.providedUUID);if(source){matches.set(meta.rel_path,source);claimed.add(source.id);}continue;}const stat=scanStats.get(meta.rel_path),inode=`${stat.dev}:${stat.ino}`,candidates=previousInodes.get(inode)||[];if(inodeCounts.get(inode)===1&&candidates.length===1){matches.set(meta.rel_path,candidates[0]);claimed.add(candidates[0].id);}}
       for(const meta of flat)if(!root.retainedCatalog&&!matches.has(meta.rel_path)){const source=previousPaths.get(meta.rel_path);if(source&&!claimed.has(source.id)){matches.set(meta.rel_path,source);claimed.add(source.id);}}
       for (const meta of flat) {
         const file = resolveInside(root.path, meta.rel_path), stat = scanStats.get(meta.rel_path);
         const inode = `${stat.dev}:${stat.ino}`;
         let source = matches.get(meta.rel_path);
-        if (!source) { source = { id: meta.providedUUID || randomUUID(), rootId: root.id, provenance: { kind: root.retainedCatalog ? 'retained-transcript-catalog' : root.writable ? 'external-file' : 'connected-root', capturedAt: now(), originalPath: file } }; index.sources.push(source); }
+        if (!source) { source = { id: meta.providedUUID || randomUUID(), rootId: root.id, provenance: { kind: root.retainedCatalog ? 'retained-transcript-catalog' : root.originalCatalog ? 'catalogued-original-reference' : root.writable ? 'external-file' : 'connected-root', capturedAt: now(), originalPath: file } }; index.sources.push(source); }
         const stamp = fileStamp(stat), changed = source.fileStamp !== stamp;
         const textFile = TEXT.has(path.extname(file).toLowerCase());
         let body = null, hash = changed ? null : source.hash ?? null;
@@ -345,7 +366,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
           if (changed || source.hasReadableBody === undefined) { const bytes=fs.readFileSync(file); hash=digest(bytes);body=splitFrontmatter(bytes.toString('utf8'));source.hasReadableBody=Boolean(body.body.trim());source.processingStatus=body.frontmatter.processing_status;source.reviewDeclaration=body.frontmatter.review_status; }
           else body={frontmatter:{processing_status:source.processingStatus,review_status:source.reviewDeclaration,source_url:source.source_url,recording_id:source.recordingId},body:source.hasReadableBody?'present':''};
         }
-        Object.assign(source, meta, { hash, fileStamp: stamp, hashStatus: hash ? 'verified' : 'deferred-until-open', inode, missing: false });
+        const {originalReferences,...sourceMeta}=meta;
+        Object.assign(source, sourceMeta, { hash, fileStamp: stamp, hashStatus: hash ? 'verified' : 'deferred-until-open', inode, missing: false });
         delete source.providedUUID;
         source.status = textFile && stat.size > MAX_BODY_BYTES ? 'retained-text-too-large' : source.kind === 'audio' ? 'retained-needs-transcription' : source.kind === 'other' || source.kind === 'pdf' ? 'retained-needs-extraction' : ['link', 'web-extraction'].includes(source.provenance.kind) && body?.frontmatter.processing_status && body.frontmatter.processing_status !== 'ready' ? body.frontmatter.processing_status : 'ready';
         source.source_url ||= body?.frontmatter.source_url;
@@ -366,6 +388,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
         source.cardEligibility = source.provenance?.kind === 'piece-writing-template' ? { eligible: false, reason: 'This is writing guidance for a piece, not source evidence.' } : { eligible: readable && source.status === 'ready', reason: readable && source.status === 'ready' ? reviewed ? 'Readable material; human review is recorded.' : 'Readable material; human review is still unrecorded.' : source.kind === 'audio' ? 'Choose its transcript before making a text card.' : 'Readable extraction is not ready.' };
         if(recording?.state==='unavailable')source.cardEligibility={eligible:false,reason:recording.reason};
         if(transcript?.managed&&!transcript.coherent)source.cardEligibility={eligible:false,reason:transcript.reason||'Open this recording’s transcript to review outside edits before using it.'};
+        if(originalReferences)source.originalReferences=structuredClone(originalReferences);
         seen.add(source.id); Object.assign(meta, publicSource(source));
       }
       trees.push({ ...root, tree });
@@ -374,7 +397,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if (JSON.stringify(index) !== before) persist();
     return { revision: index.revision, roots: trees, sources: index.sources.filter(s => !s.missing && !s.managedTerminalSnapshot).map(publicSource), collections: index.collections, missingSources: index.sources.filter(s => s.missing&&!s.managedTerminalSnapshot).map(missingSummary), unavailableSources: index.sources.filter(s => !s.missing&&!s.managedTerminalSnapshot&&roots.find(root=>root.id===s.rootId)?.available===false).map(missingSummary) };
   }
-  const externalRoot = root => root && !root.retainedCatalog && !['library','recordings'].includes(root.id) && !root.writable;
+  const externalRoot = root => root && !root.retainedCatalog && !root.originalCatalog && !['library','recordings'].includes(root.id) && !root.writable;
   function missingSummary(source) {
     const root=roots.find(root=>root.id===source.rootId),external=externalRoot(root)&&source.provenance?.kind==='connected-root';
     return {id:source.id,rootId:source.rootId,rootName:root?.name||source.rootId,title:source.title||source.name||path.basename(source.rel_path),rel_path:source.rel_path,hash:source.hash||null,reconnectable:!!external&&/^[a-f0-9]{64}$/.test(source.hash||''),reason:!root?'Connect the original folder before reconciling this file.':!external?'Only a missing external file can be reconnected.':!/^[a-f0-9]{64}$/.test(source.hash||'')?'No verified captured hash; identity cannot be reconciled safely.':root.available===false?'Original folder unavailable.':'File missing.'};
@@ -427,8 +450,21 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     return { ...publicSource(source), raw, text, body: text, breadcrumbs, blobUrl: `/api/sources/blob?id=${encodeURIComponent(id)}` };
   }
   function expected(source, hash) { if (typeof hash !== 'string' || hash !== source.hash || digest(fs.readFileSync(checkedFile(source))) !== hash) throw new StateError('Source changed outside this edit. Refresh before saving.', 409); }
+  const filing=createLibraryFolders({serial,load:loadTyped,publicSource:source=>{
+    let metadata;try{metadata=publicSource(source);}catch(error){if(error.status!==404)throw error;metadata={...source,sourceUnavailable:true,writable:false};delete metadata.originalFile;}
+    let available=!source.missing&&!metadata.sourceUnavailable;
+    if(available){try{regular(resolveInside(rootById(source.rootId).path,source.rel_path));}catch{available=false;}}
+    return {...metadata,sourceUnavailable:!available,blobUrl:`/api/sources/blob?id=${encodeURIComponent(source.id)}`};
+  },publish:(loaded,next)=>{
+    const current=loadTyped();if(current.hash!==loaded.hash||current.value.revision!==loaded.value.revision)typedFail('Library changed before folder publication; refresh.');
+    const bytes=JSON.stringify(next,null,2);
+    try{resolveInside(dataDir,'library-index.json',{missing:true});atomicWrite(indexFile,bytes,loaded.bytes===null?{exclusive:true}:{expectedHash:loaded.hash});index=next;}
+    catch(error){try{index=readJson(indexFile,loaded.value);}catch{index=loaded.value;}throw error;}
+    return {value:next,bytes,hash:digest(bytes)};
+  }});
   return {
-    setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog));folderMetadata.clear();return refresh(); }),
+    folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),
+    setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog||root.originalCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),
     // Existing indexed identity + current physical bytes; no scan, index save or extraction.
     snapshot: (id,{includeBody=false}={}) => serial(async()=>{

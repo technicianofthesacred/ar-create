@@ -22,6 +22,7 @@ const HUMAN = Object.freeze(['human']), ANY = Object.freeze(['any']);
 export const READ_ONLY_POSTS = new Set(['/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
 
 const UNDO = {
+  'POST /api/library/folders': 'library.folders.post',
   'POST /api/study-draft/save': 'study-draft.undo', 'POST /api/study-draft/history-restore': 'study-draft.undo',
   'POST /api/study/human-direction/write': 'study.human-direction.undo', 'POST /api/concept/save': 'study.human-direction.undo',
   'POST /api/study/share/save': 'study.share.undo', 'POST /api/study/outputs/save': 'study.outputs.undo',
@@ -32,6 +33,7 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/library/folders': ['domain', 'action', 'operationId', 'expectedRevision', 'expectedHash', 'folderId?', 'parentId?', 'name?', 'sourceIds?', 'undoOperationId?'],
   '/api/concepts': ['parentStudyId', 'title', 'operationId'],
   '/api/concept/save': ['parentStudyId', 'operationId', 'expectedRevision', 'expectedHash', 'authorThoughts', 'adoptedDirection?', 'aiInterpretation', 'suggestions', 'sourceSelections', 'body?', 'replaceExistingDirection?'],
   '/api/concept/sources/search': ['parentStudyId?', 'query', 'limit?'],
@@ -49,7 +51,7 @@ const BODY = {
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
-  const rules = [[/^(concept|study\/human-direction)/, 'direction'], [/^(sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
+  const rules = [[/^(concept|study\/human-direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^(study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance)/, 'writing'],
@@ -150,7 +152,7 @@ export function createRouteMap(services) {
       '/api/writing-template/restore-copy': {POST:input=>writingTemplates.restoreCopy(input)},
       '/api/magazine/portfolio': {GET:()=>magazineRead(()=>magazine.list())},
       '/api/magazine/artifact': {GET:()=>magazineRead(()=>magazine.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))},
-      '/api/library/folders': {GET:async()=>{const domain=url.searchParams.get('domain');if(!['library','media'].includes(domain))throw new StateError('Choose library or media folders.',400);const tree=await library.tree();const sources=(tree.sources||[]).filter(source=>!source.managedTerminalSnapshot&&(domain==='library'||['image','video','photo'].includes(source.kind)||/^(?:image|video)\//i.test(source.mimeType||source.mime||'')||/\.(?:jpe?g|png|webp|gif|avif|heic|mp4|mov|webm|m4v|mkv)$/i.test(source.rel_path||'')));return {schema:'ar-create.library-folders.v1',domain,readOnly:true,revision:null,indexHash:null,folders:[],sources,undoOperationId:null};},POST:()=>{throw new StateError('Folder changes are not connected yet. Your sources are unchanged.',503);}},
+      '/api/library/folders': {GET:()=>library.folders({domain:url.searchParams.get('domain')}),POST:input=>library.changeFolders(input)},
       '/api/sources/tree': { GET: () => library.tree() },
       '/api/sources/file': { GET: () => library.read(url.searchParams.get('id'),{allowUnreconciled:true}), POST: input => library.write(input) },
       '/api/sources/import': { POST: async input => {
