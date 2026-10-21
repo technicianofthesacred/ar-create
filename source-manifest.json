@@ -2613,7 +2613,7 @@
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
-      "candidateSha256": "afd1e07fe5c54fcf78345bf6a7daf0235de33735ae4cb81b569d4a8843cf099e"
+      "candidateSha256": "9c6dde438f90a4ccf368c5e6520b36849d1fc0156c405ed5993777b74afb19a2"
     },
     {
       "path": "public/document-study/waiting-band.css",
@@ -2905,11 +2905,11 @@
     },
     {
       "path": "public/document-study/piece-state.js",
-      "candidateSha256": "ea49a274f489737d1dd8f3080c7a6ad69745ddcc432ed1673960cde2f7e404fc"
+      "candidateSha256": "cde1036a7621e6e74f5fb41e1ac801f4317bbaa59b3989804ba311654a63b94b"
     },
     {
       "path": "public/document-study/piece-state.test.mjs",
-      "candidateSha256": "38abf87ccb4ccff0c47da127a176c4aa060c58993a0f318a59e34df4a47b0194"
+      "candidateSha256": "7b67e83bafb20217dd1cab05695f545f650331648e77e8a226b35a6364bd8fb8"
     },
     {
       "path": "public/document-study/shell.js",

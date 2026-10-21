@@ -145,7 +145,7 @@ test('the read-only notice row joins the bar: the state word says why, and its b
  const f=fixture();f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=6;
  f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<div class="historicalToolbar"><span>Read-only snapshot · working copy kept separate</span><button onclick="calls.push(\'open-words\')">Open working words</button></div>');
  f.w.surfaceBar.build();
- assert.match(f.bar().querySelector('.sb-ro').textContent,/open the draft to edit/,'never a bare Read-only');
+ assert.equal(f.bar().querySelector('.sb-ro').textContent,'Retained record · read-only','identifies the actual retained view');
  const m=f.bar().querySelector('.sb-mode');m.click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['open-words']);
 });
