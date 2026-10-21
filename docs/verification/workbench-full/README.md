@@ -13,7 +13,7 @@ The candidate adopts the prototype palette, local Plus Jakarta Sans interface/ty
 - Toolbar refresh retains the exact part picker and its selected value/handler. Understanding keeps its original record across inspector passes. Open tool drawers follow a changed story/owner. Focused regressions cover these cases plus header repaint on resize/theme changes.
 - Twelve sections compared in both themes at 1440px and 390px. Browser-native screenshot capture timed out in this environment; the included comparison uses actual Chromium screen-media PDF rendering converted to images, together with native interaction and measured layout evidence. It is not real-phone proof or pixel-identical screenshot proof.
 
-Global size controls were also compared in the same light theme in default, hover and keyboard-focus states. All measured size, weight, line-height, colors, padding, radius and focus outline agree; the font family name is a local alias for the same typeface. See `control-states.json`. Full UI-only tests: 348 / 341 passing / the same seven failures as main. Build passes; package proof is recorded after reviewed-manifest refresh.
+Global size controls were also compared in the same light theme in default, hover and keyboard-focus states. All measured size, weight, line-height, colors, padding, radius and focus outline agree; the font family name is a local alias for the same typeface. See `control-states.json`. Full UI-only tests retain the same seven failure names as main. Build and reviewed package checks pass. The final checkpoint-count repair received its own focused and native switch/return proof (`navigation-preservation.json`).
 
 ## Deliberate differences / remaining scope
 

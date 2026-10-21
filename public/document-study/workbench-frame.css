@@ -172,3 +172,7 @@ html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{font:500 var(--t-label)/1.5
 html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn:hover{color:var(--ink)!important;background:var(--sel)!important}
 html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{height:32px!important;min-height:32px!important}
 html body.wbf-on #c3-tabstrip .wbf-top-actions .sizer .tbtn{height:30px!important;min-height:30px!important}
+/* Pieces is an entrance, not a thirteenth workflow checkpoint. */
+html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:46px;padding:4px 0;border:0;border-radius:6px;background:transparent;color:var(--dim);font:400 var(--t-label)/1.3 var(--ar-ui);cursor:pointer}
+html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces:hover{background:var(--sel);color:var(--ink)}
+html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces svg{width:18px;height:18px}

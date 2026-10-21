@@ -3429,7 +3429,7 @@
     },
     {
       "path": "docs/verification/workbench-full/README.md",
-      "candidateSha256": "c49fde4b992c992852e4b9d0af9b3e478149405faeafbb49a2bc8bb4f03aa809"
+      "candidateSha256": "419d810e1959033247970775304bd73d2a771aa854e4d6fc7e2deb6deae2329b"
     },
     {
       "path": "docs/verification/workbench-full/all-sections-comparison.webp",
@@ -3461,7 +3461,7 @@
     },
     {
       "path": "docs/verification/workbench-full/write-comparison.webp",
-      "candidateSha256": "7315eca8a3a3745b793ca3ed56ffd5556f77010b696c55feafb7b327c0dbc81a"
+      "candidateSha256": "4e21e989ebeaf4fea1d8085fd128e94108a6a71fbaf0638bdb890e393e373291"
     },
     {
       "path": "public/document-study/workbench-design.css",
@@ -3469,11 +3469,11 @@
     },
     {
       "path": "public/document-study/workbench-frame.css",
-      "candidateSha256": "331f913dba1ee1e76803c2494a506c1a676fcfe452a46753c75f7d62534eb3ff"
+      "candidateSha256": "42b92ba31c493ceedff22652f0ea0638fc5f0d725fdc7888f921bcc3d43195d8"
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "b862ec163e25b4b9e4a9602158475c925ad286f8e2f0e5385b98f05e307f2609"
+      "candidateSha256": "b4265c125539130d7b891f569a23ee67a60fe8c65705ab31430b73917d46dee2"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3489,7 +3489,7 @@
     },
     {
       "path": "tests/workbench-frame.test.mjs",
-      "candidateSha256": "2313617e9ebbc63f6b083a9bff38c2e24a948cb4816d78989168edae4d32b226"
+      "candidateSha256": "ce09bcc055cf4f4b9808869d0c8e2b226cf18eb10d408066ea2462d74f756e56"
     },
     {
       "path": "tests/workbench-surfaces.test.mjs",
@@ -3502,6 +3502,10 @@
     {
       "path": "docs/verification/workbench-full/test-comparison.json",
       "candidateSha256": "31bd800357c9b1c102225a9935085aba28dece052ed7f51ad87f88a5f3085852"
+    },
+    {
+      "path": "docs/verification/workbench-full/navigation-preservation.json",
+      "candidateSha256": "76df74b8f550d5494f4f883447758dda3be724d7beca710b7a1c63be4e27e3c2"
     }
   ],
   "dependencyRepair": {
