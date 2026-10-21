@@ -62,6 +62,8 @@
  const saver=()=>window.studyOutputConnection?.flush||window.studyDraft?.flush||null;
  let retrying=false;
  document.addEventListener('click',async event=>{const b=event.target.closest?.('[data-cb-retry]');if(!b||retrying)return;const save=saver();if(!save)return;retrying=true;b.disabled=true;b.textContent='Trying again…';try{await save();}catch{}finally{retrying=false;lastSig='';window.surfaceBar?.build?.();}});
+ // Someone else saved a newer version under unsaved words: Compare opens both, beside Keep mine, in the work column.
+ document.addEventListener('click',event=>{if(event.target.closest?.('[data-cb-compare]'))void window.studyDraft?.compare?.();});
  // Reader's own text size for the manuscript on Write, Read and Check (A- / A+), remembered on this device only.
  const SIZES=[.875,1,1.125,1.25,1.375];let size=1;try{const v=Number(localStorage.getItem('c3-doc-scale'));if(SIZES.includes(v))size=v}catch{}
  const applySize=()=>document.body?.style.setProperty('--c3-doc-scale',String(size));applySize();
@@ -71,7 +73,7 @@
  // reading view, why it cannot be edited; a browser-only piece and a failed save keep their one recovery action here.
  function here(slots,id,status){
   const local=localOnly(),cp=checkpoint(),st=window.c3PieceState,ro=st?.readOnlyReason?.()||'';
-  const tone=/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving|only in this browser/i.test(status)?'warn':'ok';
+  const tone=/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving|only in this browser|newer version|held by/i.test(status)?'warn':'ok';
   const sep='<span class="sb-sep2" aria-hidden="true">›</span>',parts=[];
   if(slots.ret!=null)parts.push(`<a class="sb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" title="Return to i64 OS">i64 OS</a>`);
   parts.push(`<span class="sb-piece" title="${esc(id.piece)}">${esc(mid(id.piece,32))}</span>`);
@@ -81,7 +83,9 @@
   let word='';
   if(local)word=`<span class="sb-status" data-tone="warn" role="status" title="These words are kept only in this browser until the piece has its project file.">Only in this browser</span><button type="button" class="sb-act" data-cb-local>Save to the project</button>`;
   else if(ro&&tone==='ok')word=`<span class="sb-status sb-ro" role="status" title="${esc(ro)}">${esc(ro)}</span>`;
-  else if(status)word=`<span class="sb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(mid(status,36))}</span>${tone==='bad'&&saver()?'<button type="button" class="sb-act" data-cb-retry>Try again</button>':''}`;
+  else if(status)word=`<span class="sb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(mid(status,36))}</span>${tone==='bad'&&saver()?'<button type="button" class="sb-act" data-cb-retry>Try again</button>':''}${/newer version/i.test(status)&&window.studyDraft?.compare?'<button type="button" class="sb-act" data-cb-compare>Compare</button>':''}`;
+  const agent=window.arLive?.note?.();
+  if(agent)word+=`<span class="sb-agent" role="status" title="${esc(agent.title)}">${esc(agent.text)}</span>`;
   return `<span class="sb-where">${parts.join(sep)}</span>${word}`;
  }
  function textSize(){return [5,6,7].includes(stage())?`<div class="sb-group" role="group" aria-label="Text size"><div class="sb-gh">Text size</div><span class="cb-size" role="group" aria-label="Text size"><button type="button" class="sb-item" data-cb-size="-1" aria-label="Smaller text" ${size<=SIZES[0]?'disabled':''}>A−</button><output aria-live="polite">${Math.round(size*100)}%</output><button type="button" class="sb-item" data-cb-size="1" aria-label="Larger text" ${size>=SIZES.at(-1)?'disabled':''}>A+</button></span></div>`:'';}
@@ -102,9 +106,9 @@
   const slots=collect(),id=identity(),status=statusText();
   // Work receipts and the piece's own status line used to be a strip of their own; they now live in More and in the bar.
   const receipts=document.getElementById('connected-work-receipts'),msgNode=document.getElementById('wn-message'),msg=msgNode&&!msgNode.hidden?label(msgNode):'';
-  const own=`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div>${proxy(slots.outputs,'sb-item','Outputs')}${proxy(slots.history,'sb-item','History · every saved version','aria-label="History · every saved version"')}${receipts?'<button type="button" class="sb-item" data-sb-receipts>Receipts</button>':''}${window.c3Tree?'<button type="button" class="sb-item" data-sb-everything>Everything that’s here</button>':''}</div>`;
+  const own=`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div>${proxy(slots.outputs,'sb-item','Outputs')}${proxy(slots.history,'sb-item','History · every saved version','aria-label="History · every saved version"')}${window.arLive?'<button type="button" class="sb-item" data-sb-recent>Recent changes · who did what</button>':''}${receipts?'<button type="button" class="sb-item" data-sb-receipts>Receipts</button>':''}${window.c3Tree?'<button type="button" class="sb-item" data-sb-everything>Everything that’s here</button>':''}</div>`;
   const more=own+textSize()+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
-  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,document.body.classList.contains('c3-insp-sheet'),msg,!!receipts,size,window.c3PieceState?.readOnlyReason?.()||'',!!localOnly()]);
+  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,document.body.classList.contains('c3-insp-sheet'),msg,!!receipts,size,window.c3PieceState?.readOnlyReason?.()||'',!!localOnly(),window.arLive?.note?.()?.text||'']);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
   if(bar&&sig===lastSig)return;
   lastSig=sig;
@@ -137,6 +141,7 @@
   if(event.target.closest?.('#c3-surface-bar [data-sb-insp]')){document.body.classList.toggle('c3-insp-sheet');lastSig='';build();return;}
   if(document.body.classList.contains('c3-insp-sheet')&&!event.target.closest?.('#margin,#c3-insp-head,.ci-panel,#c3-read-insp')){document.body.classList.remove('c3-insp-sheet');lastSig='';schedule();}
   if(event.target.closest?.('#c3-surface-bar [data-sb-everything]')){moreOpen=false;lastSig='';build();window.c3Tree?.everything?.();return;}
+  if(event.target.closest?.('#c3-surface-bar [data-sb-recent]')){moreOpen=false;lastSig='';build();window.arLive?.openRecent?.();return;}
   if(event.target.closest?.('#c3-surface-bar [data-sb-receipts]')){moreOpen=false;lastSig='';build();openReceipts();return;}
   const pa=event.target.closest?.('#c3-surface-bar [data-sb-primary]');if(pa){if(!pa.disabled&&primaryAction)void Promise.resolve(window.c3PieceState?.run?.(primaryAction)).finally(()=>{lastSig='';schedule();});return;}
   const b=event.target.closest?.('#c3-surface-bar [data-sb]');

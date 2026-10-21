@@ -126,7 +126,8 @@
  async function go(target){
   if(target.home)return document.querySelector('[data-ht-home]')?.click();
   if(target.topics)return window.connectedWorkspace?.openContext?.('inquiries');
-  if(target.history)return historyControl()?.click();
+  // History opens Recent changes (review A8, F-30): one view of who did what, whose rows open the exact saved versions.
+  if(target.history)return window.arLive?window.arLive.openRecent():historyControl()?.click();
   if(target.phase)return window.viewPhase(target.phase);
  }
  // ---------- one decorate pass after every render

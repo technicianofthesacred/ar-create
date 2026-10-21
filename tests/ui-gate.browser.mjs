@@ -11,7 +11,8 @@ const failures=[];
 const browser=await chromium.launch();
 for(const [w,h,size] of [[1440,900,'desktop'],[390,844,'phone']]){
  const page=await browser.newPage({viewport:{width:w,height:h}});const errors=[];page.on('pageerror',e=>errors.push(String(e)));
- await page.goto(url,{waitUntil:'networkidle'});await page.waitForTimeout(1200);
+ // The live event stream keeps one request open for good, so the network never goes idle; wait for the bar instead.
+ await page.goto(url,{waitUntil:'load'});await page.waitForSelector('#c3-surface-bar',{timeout:15000});await page.waitForTimeout(1200);
  for(let n=1;n<=12;n++){
   const step=page.locator('nav.workflowNavigation .workflowStep').nth(n-1);
   if(!(await step.isVisible()))await page.locator('.cr-picker').click();

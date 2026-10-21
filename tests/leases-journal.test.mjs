@@ -30,14 +30,17 @@ test('a foreign live lease answers 423 with the holder and changes no bytes; hol
  assert.equal(lease.exitCode,0,JSON.stringify(lease.result));assert.equal(lease.result.lease.actor,'agent:claude-code');
  assert.ok(Date.parse(lease.result.lease.expiresAt)-Date.parse(lease.result.lease.acquiredAt)===15*60_000,'15 minutes');
  assert.ok(fs.existsSync(path.join(f.config.dataDir,'leases','project',pid+'.json')));
- // Another agent and the app are both held at 423, with the holder named.
- const other=await f.cli(['lease','acquire'],{scope},'agent:codex');assert.equal(other.exitCode,4);assert.equal(other.result.details.holder.actor,'agent:claude-code');
+ // Another agent is held at 423, with the holder named, and no bytes change.
  const before=fs.readFileSync(base.path,'utf8');
- const human=await f.app('/api/concept/save',conceptSave(pid,base,{aiInterpretation:'Typed in the app.'}));
- assert.equal(human.status,423);assert.equal(human.body.holder.actor,'agent:claude-code');assert.equal(human.body.holder.reason,'Drafting suggestions');assert.match(human.body.error,/agent:claude-code/);
+ const other=await f.cli(['lease','acquire'],{scope},'agent:codex');assert.equal(other.exitCode,4);assert.equal(other.result.details.holder.actor,'agent:claude-code');
+ const otherSave=await f.cli(['project','save'],conceptSave(pid,base,{aiInterpretation:'From another agent.'}),'agent:codex');
+ assert.equal(otherSave.exitCode,4);assert.equal(otherSave.result.details.holder.actor,'agent:claude-code');assert.equal(otherSave.result.details.holder.reason,'Drafting suggestions');
  assert.equal(fs.readFileSync(base.path,'utf8'),before,'no bytes changed under a foreign lease');
+ // The human's words win over an agent's lease (lease-override.test.mjs covers the notice); the holder re-reads, then writes.
+ const human=await f.app('/api/concept/save',conceptSave(pid,base,{aiInterpretation:'Typed in the app.'}));assert.equal(human.status,200,JSON.stringify(human.body));
+ const reread=await f.cli(['project','read'],{parentStudyId:pid});
  // The holder writes; renewing keeps the same lease.
- const mine=await f.cli(['project','save'],conceptSave(pid,base,{aiInterpretation:'From the holder.'}));assert.equal(mine.exitCode,0,JSON.stringify(mine.result));
+ const mine=await f.cli(['project','save'],conceptSave(pid,reread.result,{aiInterpretation:'From the holder.'}));assert.equal(mine.exitCode,0,JSON.stringify(mine.result));
  const renewed=await f.cli(['lease','renew'],{scope});assert.equal(renewed.result.renewed,true);assert.equal(renewed.result.lease.leaseId,lease.result.lease.leaseId);
  // Another agent cannot release it; the human can, with force.
  assert.equal((await f.cli(['lease','release'],{scope},'agent:codex')).exitCode,4);

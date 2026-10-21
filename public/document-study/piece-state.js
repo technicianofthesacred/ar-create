@@ -24,7 +24,7 @@
  function saveText(){const s=document.querySelector('#app .workspace>.workbar .saved')||document.querySelector('#app .workspace>.topbar .status');return s?(s.textContent||'').replace(/\s+/g,' ').trim():'';}
  function save(m){
   const t=saveText();
-  if(m.dirty)return {word:'Unsaved',tone:'warn',text:t&&/unsaved|pending|saving|conflict|fail|not saved|could not/i.test(t)?t:'Unsaved changes'};
+  if(m.dirty)return {word:'Unsaved',tone:'warn',text:t&&/unsaved|pending|saving|conflict|fail|not saved|could not|newer version|held by/i.test(t)?t:'Unsaved changes'};
   if(/fail|conflict|unavailable|not saved|could not/i.test(t))return {word:'Not saved',tone:'bad',text:t};
   if(/saving|pending/i.test(t))return {word:'Saving',tone:'warn',text:t};
   if(m.bound)return {word:'Saved',tone:'ok',text:/^saved/i.test(t)?t:'Saved to the project'};
@@ -65,6 +65,8 @@
  const press=(label,sel,why)=>{const n=control(sel);return n?{label,press:sel,disabled:!!n.disabled,reason:n.disabled?(n.title||why||''):''}:null;};
  const OPEN_DRAFT='Open the draft';
  function primary(n=stage(),st=read()){
+  // An assistant's open question about this piece is the one thing to do here until it is answered (review C3).
+  const asked=window.arLive?.question?.(n);if(asked)return asked;
   const m=st.manuscript,q=probe(n);
   switch(n){
    case 1:return q.count>0&&(m.words||m.bound)?go(2):press('Add files','[data-flow-action="files"]')||(q.count>0?go(2):{label:'Add files',disabled:true,reason:'Adding files is not available for this piece yet.'});
@@ -87,6 +89,7 @@
  }
  async function run(action){
   if(!action||action.disabled)return;
+  if(action.ask)return window.arLive?.showAsk?.(action.ask);
   if(action.phase)return window.viewPhase(action.phase);
   if(action.press){const n=ws(action.press);if(n&&!n.disabled){if(n.closest('[data-c3-empty-hidden]'))window.c3Empty?.reveal?.();const d=n.closest('details');if(d&&!d.open)d.open=true;n.click();if(n.matches('[data-current-issue]'))n.scrollIntoView?.({block:'center'});}return;}
   if(action.save){const save=window.studyOutputConnection?.flush||window.studyDraft?.flush;return save?.();}
