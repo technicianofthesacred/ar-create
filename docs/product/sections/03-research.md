@@ -77,3 +77,9 @@ Adopted: Library sources/personal notes once; Collections as reusable topic/inqu
 ## 20 October — Current understanding and useful return
 
 Applies the adopted return-to-work requirements, C01–C06; stated once in [PRODUCT, resume creative work without reconstructing its history](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), including the finish criterion.
+
+## Workbench step 3 review candidate — 21 October
+
+Requirements C04/C05/C06, S03. The approved console uses the existing bounded case-sensitive Library text lookup, rather than searching only the visible project DOM. It returns exact source identities/hashes, passages and surrounding context, with provenance disclosed only when returned by the maintained source reader. It does not run AI, verify a claim, add a citation, change research decisions or send questions to a provider. Console history remains transient in this open page. Unsupported formats, scan limits, missing files and unavailable services are explicit.
+
+Finish criterion for this bounded connection: native console lookup finds an invented imported Library source outside the visible project findings, opens that same exact source, and preserves pending human wording and current project; stale/cancelled results cannot appear after a story/stage switch. Review candidate only; no installation or broader semantic/web/Atlas retrieval claim.

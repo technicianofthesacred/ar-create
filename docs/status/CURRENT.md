@@ -1,4 +1,4 @@
-> Review-tree boundary: this folders candidate contains only the cumulative scopes through folders. The following status is a combined-candidate work log; later-scope evidence does not mean those controls are connected in this tree. No installation or human acceptance is claimed.
+> Review-tree boundary: this research candidate contains only the cumulative scopes through research. The following status is a combined-candidate work log; later-scope evidence does not mean those controls are connected in this tree. No installation or human acceptance is claimed.
 
 # Status: what works today
 

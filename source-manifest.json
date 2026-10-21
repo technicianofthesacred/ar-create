@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "09fd11675198b106f48360ef23146946fffa230b1471528f0f8c2fe60f5247cf",
-      "candidateSha256": "0a6763f19bddc364be906eba0c22fabcabdbc78d38de3548b0f8cc46090f3f99",
+      "candidateSha256": "8a14673a72399edc9c9e330e84a49bcd4c3053231e28bfd0e6d2f35c7dc56ca3",
       "adapted": true
     },
     {
@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "95c684c62dc85a418dca1db92de13dea471adb5e3478bc3f18bd8efa3c0ec246"
+      "candidateSha256": "dd7897e6f14c2f92ecf2f21b1a631c6d03ca5096f728dc115f432787363cb77a"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2857,7 +2857,7 @@
     },
     {
       "path": "docs/product/sections/03-research.md",
-      "candidateSha256": "7d78c3f3d7e52d8f2b4fa331aa35370cd77d5b17e4df8aa916a1c205e6c91712"
+      "candidateSha256": "dc650b7da1b7e7a060ca0db4f8332840564daa0a90ab8234e30497e328d37d83"
     },
     {
       "path": "docs/product/sections/04-direction.md",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "949811c6e4392bdb0972cfe273f36fbb64025c0e157e76b14685c2700a1b76f0"
+      "candidateSha256": "cf08b9f26eb41a3882d455443dd9de2c904e62989c1b112a3273147800300c8b"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3622,6 +3622,18 @@
     {
       "path": "tests/library-folders.test.mjs",
       "candidateSha256": "5ce893baca0079eff5c68e16cdf3f0ae92c4a616570f4b6b4b878be119a52d24"
+    },
+    {
+      "path": "docs/verification/workbench-research/README.md",
+      "candidateSha256": "0750a7e3ba2eec3de14482263478c789085deb2f71bc20eb050b95ebfdeac381"
+    },
+    {
+      "path": "public/document-study/research-library-console.js",
+      "candidateSha256": "ec40294b38a02ad0f69fa2850530c46cfd58661becbb17b7df17835cb436f5b7"
+    },
+    {
+      "path": "tests/research-library-console.test.mjs",
+      "candidateSha256": "bb04e7f676d40677fa663ef50b4100b22bf3951f6fa1e8fc9a05905923312d9b"
     }
   ],
   "dependencyRepair": {
