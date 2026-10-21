@@ -23,6 +23,7 @@ import {approveMade, saveLineup, requestLine, pageFeedbackLine, madeStatus} from
 import {renderTable, replaceTable, installMarkers, findTable} from './status.mjs';
 import {createMagazineProjects, statusEntries} from './projects.mjs';
 import {planTidy} from './tidy.mjs';
+import {createReconcile} from './reconcile.mjs';
 
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const stable = v => JSON.stringify(v, (_, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
@@ -408,8 +409,18 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     const bytes = fs.readFileSync(file); return {id, text: bytes.toString('utf8'), hash: sha256(bytes), path: 'editorial/brands/' + id + '.md'};
   }
 
-  return {
-    configured, get writable() { return writable; }, projects,
+  /** A registered story with each vault record's current hash beside the hash seen at registration. */
+  function story({id} = {}) {
+    const p = projects.project(id);
+    const records = Object.fromEntries(Object.entries(p.vaultRecords).map(([k, v]) => [k, [].concat(v).map(r => { const cur = io('mag').read(r.rel); return {...r, currentHash: cur.hash, changedSinceRegistration: cur.hash !== r.sha256}; })]));
+    const article = p.pieces.find(x => x.kind === 'article' && x.rel) || p.pieces.find(x => x.rel && x.kind === 'article-part');
+    return {...p, vaultRecords: records, draft: article ? read({path: article.rel}) : null, board: readBoard({vault: vaultRoot, files: filesRoot || '', drops, previewPort}).board.find(b => b.story === p.name) || null};
+  }
+
+  const api = {
+    configured, get writable() { return writable; }, projects, story,
+    // study-draft-copies asks before making a new working copy (only while AR Create writes the vault).
+    vaultBound: source => (configured && writable ? projects.vaultBound(source) : null),
     status: () => ({configured, writable, vaultRoot: configured ? vaultRoot : null, filesRoot, drops, lock: configured ? roots().lock.status() : null}),
     board, read, write, edit, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
@@ -426,4 +437,6 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     // Internals the intake (M5) and reconcile steps build on.
     _operation: operation, _io: io, _roots: roots, _dirs: dirs, _ctx: ctx, _requireWritable: requireWritable, _intakeEngine: intakeEngine,
   };
+  api.extra.reconcile = createReconcile({dataDir, vault: api});
+  return api;
 }

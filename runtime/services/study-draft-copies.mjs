@@ -12,7 +12,7 @@ const readable=(v,label,max=256)=>{if(typeof v!=='string'||!v.trim()||v.length>m
 const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x);
 /** An explicit owned working-copy binding over the tested Magazine DEV journal.
  * Original readers are injected allowlists; no arbitrary caller path is opened. */
-export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCommit,beforeCommit,studyRelocation}={}){
+export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCommit,beforeCommit,studyRelocation,vaultBound=null}={}){
  const readOriginal=originals?.readDraft||originals?.read;if(!originals?.catalog||!readOriginal)throw Error('Supply the root-owned read-only originals catalog.');
  const relocation=createStudyOwnedRelocation({dataDir,manifest:studyRelocation});
  const root=ensurePrivateDirectory(dataDir,'study-draft-copies'),intents=ensurePrivateDirectory(root,'bindings'),copies=ensurePrivateDirectory(root,'copies'),outputLinks=ensurePrivateDirectory(root,'output-bindings');let pending=Promise.resolve();
@@ -55,6 +55,9 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
  }
  async function openCopy(input){inputFields(input,['originalId','originalHash','parentStudyId','operationId']);readable(input.parentStudyId,'Parent study ID');const source=original(input.originalId);if(source.parentStudyKey!==input.parentStudyId)fail('Original belongs to a different parent study.');const key=digest(stable({parentStudyId:input.parentStudyId,originalId:input.originalId})),file=path.join(intents,key+'.json');let b=readJson(file,null);
   if(b?.status==='ready')return readOwned(b);
+  // A registered magazine story is edited in place in the vault (magazine-vault); no new working copy is made.
+  // Existing copies stay readable until Adrian chooses between them (magazine.reconcile, D7).
+  if(!b){const bound=vaultBound?.(source);if(bound)fail(bound,409);}
   const selected=source.records.find(r=>r.role==='draft');if(input.originalHash!==selected.hash)fail('Review the exact current original DEV hash before making a copy.');
   if(!b){b={schema:'ar-create.study-draft-copy.v1',key,id:randomUUID(),status:'pending',parentStudyId:input.parentStudyId,parentStudyKey:source.parentStudyKey,originalId:source.id,partKey:source.partKey,title:source.title,originalHash:selected.hash,createdAt:new Date().toISOString(),operationId:input.operationId,prepareOperationId:randomUUID(),draftRelative:'Workflow/3-Develop/'+path.basename(selected.path)};if(!/^Workflow\/3-Develop\/DEV - [^/]+\.md$/.test(b.draftRelative))fail('Trusted original DEV filename is unsupported.',400);atomicWrite(file,JSON.stringify(b,null,2),{exclusive:true});}else if(b.originalHash!==selected.hash)fail('Original changed during an unfinished copy; captured copy intent is preserved.');
   return finishCopy(b,source);

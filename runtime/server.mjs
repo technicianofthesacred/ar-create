@@ -216,7 +216,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const materialFolder=createMaterialFolder({dataDir,bindings:studyBindings,library,store,...(materialHostActions?.openFolder?{openFolder:materialHostActions.openFolder}:{})});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
   const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
-  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation}):null;
+  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation,vaultBound:source=>magazineVault.vaultBound(source)}):null;
   const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts,library,...sharedArticles?{readOutputDocument:input=>store.readArticle(input)}:{}}):null;
   const collectionDirection=studyHumanDirection||createStudyHumanDirection({dataDir,library});
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
