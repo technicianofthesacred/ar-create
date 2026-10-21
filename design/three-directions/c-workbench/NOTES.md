@@ -72,3 +72,37 @@ Code: `scale.js` and `scale.css` extend the revision-2 page through `window.ARC`
 - **Phone (390px):** the table becomes two-line rows, and the folders, facets and saved views move into a "Folders and filters" sheet. The research split stacks, and the carousel row scrolls inside itself. Nothing scrolls sideways.
 
 **Still not connected:** AI sorting, Claude in the console (questions are only kept), opening an original source, real thumbnails and chapters, saving anything, export of rendered templates, and Media at 2,000 photos (Media is still the revision-2 grid). Bench next moves are not yet grouped and capped, and drawer lists are not yet searchable.
+
+## Revision 4 — Media at scale, Arrange picker
+Adrian's note: "Give Media the same folder tree and one-line list, sized for 2,000 photos, and reuse it as the photo picker in Arrange." His standing rules still hold: folders nest to any depth, you can drag items and folders, an item can be linked into several folders, counts include subfolders, and there is a breadcrumb. Rows stay one line (two at most). The drawer only previews one item or holds a tool. The type scale (13 / 15 / 16 / 15-600 / 17-600, weights 400/500/600) and the two-column maximum are unchanged.
+
+This supersedes revision 3's "Media at 2,000 photos (Media is still the revision-2 grid)".
+
+Code: `media.js` and `media.css`. Media is not a second implementation. It is one more domain in revision 3's browser engine: the folder tree, virtualised one-line table, facets, saved views, multi-select, bulk bar, drag-to-folder and phone sheet. To make that possible, `scale.js` now exposes the engine through `window.ARC_SCALE` with small hooks: tree labels, bulk buttons, column sort keys and sort getters, per-key options, an `onPick` row handler, and a virtualised **grid mode** that any domain gets by defining `tile()`. Library, Pieces and the Add-sources picker behave as before.
+
+- **Media.** 278 invented photos and videos, the same on every load, in a nested structure:
+  - Trips › Wuyi 2026 › Day 1 / Day 2 / Day 3, Trips › Alishan 2025 › Gardens / Tea houses, and Trips › Ipoh 2026
+  - Studio › Teaware shoot / Kiln Day › Firing / Opening the kiln / Behind the scenes
+  - Products › Spring Oolong / Teaware › Gaiwans / Yixing pots / Dark tea
+  - Projects › Porcelain and Tea / Harbour Night Market
+  - Posted to Instagram › 2025 / 2026
+  - Unsorted
+
+  Some items are linked into two folders. Counts include subfolders and count a linked item once: Trips 132, Wuyi 2026 82 (22 + 34 + 26), Kiln Day 36. Revision 2's assets keep their ids, so the bench's "Review 6 new photos", Write ¶3 and the carousel still point at them.
+- **Each row is one line:** a small square gradient thumbnail (play mark on video), title, file name, kind (Photo or "Video · 0:12"), date, folder (+N when it is linked into more than one), and "Used in N". On a phone the row becomes two lines. A **List / Grid** toggle switches to a compact thumbnail grid. The grid is virtualised by tile-row, so only the visible tiles exist.
+- **Facets:** Kind, Folder (top level), Date (last 30 days, earlier in 2026, 2025, 2024 and before), Used, Orientation, Project, Added by. **Saved views:** All, Unused, Videos, From Claude's import. The header button "6 new from Claude's import" opens that view.
+- **Bulk:** Link to folder (keeps the other folders), Move to folder (replaces them), Tag, Add to piece. Rows and tiles drag onto folders, and folders drag onto folders.
+- **The drawer previews one item:** a larger image (an invented SVG with the orientation's real proportions), the file, kind, date, place, size, who added it and the project. Then come **Used in N places**, one line each with Open (Open goes to the exact slide in Arrange, or to the paragraph in Write), and the folders it sits in, each removable. New imports get Keep / Set aside here.
+- **"Used in" is worked out, not stored twice.** Carousel slides, the post and the listing image each hold their photo ids per slot. A photo's uses are its stored uses (Write, pieces, posted) plus every slot that currently shows it. Reordering slides renumbers its uses, and changing a template to one with fewer photos drops the slots it no longer has.
+- **Arrange picker.** Under each slide's render there is a one-line slot strip: a thumbnail per photo slot, then the photo's title, or "Choose photos · 1 of 2" for multi-photo templates. Clicking a slot, the strip link or the render itself opens **the same Media browser as a sheet over the work area**. The rack stays visible, and it is not a third column. The sheet starts in the project's folder (Porcelain and Tea → Projects › Porcelain and Tea), with Photo pre-filtered and the grid as the default. Search, the tree and every facet work as in Media. Clicking a photo places it: the template render's `__IG_PHOTO_n__` / `__IG_BG_n__` is replaced with that photo, the toast says "now used in N places", and Media shows the new use. For multi-photo templates there are slot tabs ("Photo 1", "Photo 2 · empty"). A click fills the current slot and moves to the next one. Selecting several photos and pressing **Fill N slots in order** fills them from the current slot onward. Videos are refused for a photo slot. The post and the product listing image work the same way.
+- **Stress test:** the hidden "Stress test: load 2,000 more" link at the foot of the tree (or `?mstress=1`) adds 2,000 older items into a nested Archive › year › quarter branch, so the realistic folders stay realistic.
+
+**Verified** (Playwright, 1440 and 390, served locally):
+- (a) The default count is 278, with the nested counts listed above. Breadcrumb: Media › Trips › Wuyi 2026 › Day 2 — the cliffs (34).
+- (b) The stress test gives 2,278 items. Scrolled to the bottom (row 2,278), there are 21 row elements in the DOM in list mode and 28 tiles in grid mode.
+- (c) Linking 5 unused photos into Spring Oolong took Products from 50 to 55 and Spring Oolong from 16 to 21, and each photo kept its other folder.
+- (d) Arrange → slide 2's slot opens the sheet in Projects › Porcelain and Tea (11 photos). Picking an unused photo replaced the render's image, and that photo's Used in went from 0 to 1 ("Carousel slide 2 · Porcelain and Tea").
+- (e) Outside template renders, the only sizes are 13 / 15 / 17px and the only weights are 400 / 500 / 600. The single 17/400 is the quiet "· project" in the title line, as in revision 3.
+- (f) There were 0 console errors and no sideways scroll at 390 in Media list, grid, preview, Arrange and the picker.
+
+**Still not connected:** real files, thumbnails and video playback, saving anything, rendering export, and choosing a crop or focal point inside a slot. Arrange's own "click the exact photo region of a multi-photo render" isn't there either: clicking the render opens the first empty slot, and the slot strip picks a specific one.

@@ -171,7 +171,7 @@ const PCE=id=>PIECES.find(x=>x.id===id);
 const projPiece=p=>({porc:'pc_porc',oolong:'pc_oolong',ancha:'pc_ancha2',kiln:'pc_kiln',harb:'pc_harb',care:'pc_care'}[p]);
 
 /* ---------- generic browser: folder tree + one-line virtualised table ---------- */
-const BS={};
+const BS={};const BOPTS={};const HOOK={};
 function bstate(key,init){return BS[key]||(BS[key]=Object.assign({folder:'all',q:'',f:{},sort:'date',dir:-1,view:'all',sel:new Set(),anchor:null,open:new Set(),cur:null,top:0,tree:true},init||{}));}
 const subCache={};
 function subtree(folders,fid){const k=fid+':'+folders.length;if(subCache[k])return subCache[k];const out=new Set([fid]);let grew=true;while(grew){grew=false;folders.forEach(f=>{if(f.parent&&out.has(f.parent)&&!out.has(f.id)){out.add(f.id);grew=true;}});}subCache[k]=out;return out;}
@@ -245,7 +245,7 @@ function filterRows(key,except){
 const st_dom=key=>BS[key].dom||key;
 function sortRows(key,rows){
  const st=BS[key];const k=st.sort,d=st.dir;
- const g={date:x=>x.date,title:x=>x.title.toLowerCase(),src:x=>x.src,used:x=>x.pieces?x.pieces.length:0,status:x=>x.status,upd:x=>PIECES.indexOf(x),kind:x=>x.kind}[k]||(x=>x.title);
+ const D0=DOM[st_dom(key)];const g=(D0.sortGet&&D0.sortGet[k])||{date:x=>x.date,title:x=>x.title.toLowerCase(),src:x=>x.src,used:x=>x.pieces?x.pieces.length:0,status:x=>x.status,upd:x=>PIECES.indexOf(x),kind:x=>x.kind}[k]||(x=>x.title);
  return rows.sort((a,b)=>{const A1=g(a),B1=g(b);return (A1<B1?-1:A1>B1?1:0)*(k==='upd'?1:d);});
 }
 function folderCount(key,fid){
@@ -263,14 +263,14 @@ function treeHTML(key){
    <button class="tl" data-act="tpick" data-k="${key}" data-f="${f.id}" title="${f.q?esc(f.name+' — '+f.q):esc(f.name)}">${ic(f.q?'coll':'folder',`sm ${f.q?'coll':''}`)}<span>${esc(f.name)}</span></button><span class="tc">${folderCount(key,f.id)}</span></div>
    ${ch.length&&open?`<ul>${ch.map(c=>node(c,depth+1)).join('')}</ul>`:''}</li>`;};
  const special=(id,label,icn)=>`<div class="tn ${st.folder===id?'on':''}" ${id==='unsorted'?'data-drop="unsorted"':''}><span class="tw"></span><button class="tl" data-act="tpick" data-k="${key}" data-f="${id}">${ic(icn,'sm')}<span>${label}</span></button><span class="tc">${folderCount(key,id)}</span></div>`;
- return `${special('all',key==='pce'?'All pieces':'All sources',key==='pce'?'pieces':'library')}${key!=='pce'?special('unsorted','Unsorted','material'):''}<div class="tsep"></div><ul>${kids(null).map(f=>node(f,0)).join('')}</ul>
+ return `${special('all',D.allLabel||(key==='pce'?'All pieces':'All sources'),D.allIcon||(key==='pce'?'pieces':'library'))}${D.unsorted!==false&&key!=='pce'?special('unsorted','Unsorted','material'):''}<div class="tsep"></div><ul>${kids(null).map(f=>node(f,0)).join('')}</ul>
  <div class="tfoot"><button class="lnk" data-act="newfolder" data-k="${key}">+ New folder${st.folder!=='all'&&st.folder!=='unsorted'?' inside '+esc((D.folders.find(f=>f.id===st.folder)||{}).name||''):''}</button>
- <span class="dim">Drag rows onto a folder to add them. Drag a folder onto another to nest it. An item can sit in several folders.</span>
- ${key==='lib'?`<button class="lnk" data-act="stress" style="opacity:.75">${stressed?'Stress test loaded · 5,214 sources':'Stress test: load 5,000 more'}</button>`:''}</div>`;
+ <span class="dim">${D.treeHint||'Drag rows onto a folder to add them. Drag a folder onto another to nest it. An item can sit in several folders.'}</span>
+ ${D.stressHTML?D.stressHTML(key):key==='lib'?`<button class="lnk" data-act="stress" style="opacity:.75">${stressed?'Stress test loaded · 5,214 sources':'Stress test: load 5,000 more'}</button>`:''}</div>`;
 }
 function crumbs(key){
  const D=DOM[st_dom(key)];const st=BS[key];
- const root=`<button class="cr ${st.folder==='all'?'last':''}" data-act="tpick" data-k="${key}" data-f="all">${key==='pce'?'All pieces':'Library'}</button>`;
+ const root=`<button class="cr ${st.folder==='all'?'last':''}" data-act="tpick" data-k="${key}" data-f="all">${D.rootLabel||(key==='pce'?'All pieces':'Library')}</button>`;
  let h=`<button class="tbtn" data-act="ttree" data-k="${key}" title="${st.tree?'Hide':'Show'} folders" aria-label="${st.tree?'Hide':'Show'} folders">${ic('panelL','sm')}</button><button class="tbtn mob" data-act="lsheet" data-k="${key}" title="Folders and filters">${ic('filter','sm')}</button>`+root;
  if(st.folder==='unsorted')h+=` › <span class="cr last">Unsorted</span>`;
  else if(st.folder!=='all'){const pth=fpath(D.folders,st.folder);pth.forEach((f,i)=>{h+=` › <button class="cr ${i===pth.length-1?'last':''}" data-act="tpick" data-k="${key}" data-f="${f.id}">${esc(f.name)}</button>`;});
@@ -291,26 +291,38 @@ function browserHTML(key,opts){
  const allSel=rows.length&&rows.every(r=>st.sel.has(r.id));const someSel=!allSel&&rows.some(r=>st.sel.has(r.id));
  const fl=Object.keys(st.f).filter(k=>st.f[k]).length+(st.q?1:0);
  const line=nsel?`<div class="cline bulk" role="toolbar" aria-label="Selection"><span><b>${nsel.toLocaleString()}</b> selected</span>
-   ${key==='pce'?`<button class="btn" data-act="bulk" data-op="folder" data-k="${key}">Add to folder</button><button class="btn" data-act="bulk" data-op="status" data-k="${key}">Set status</button>`:
+   ${D.bulkHTML?D.bulkHTML(key):key==='pce'?`<button class="btn" data-act="bulk" data-op="folder" data-k="${key}">Add to folder</button><button class="btn" data-act="bulk" data-op="status" data-k="${key}">Set status</button>`:
    `<button class="btn" data-act="bulk" data-op="folder" data-k="${key}">Add to collection or folder</button><button class="btn" data-act="bulk" data-op="piece" data-k="${key}">Add to piece</button><button class="btn" data-act="bulk" data-op="topic" data-k="${key}">Tag topic</button><button class="btn" data-act="bulkread" data-k="${key}">Mark read</button>`}
    ${opts.pickerFoot||''}<button class="btn quiet" data-act="bclear" data-k="${key}">Clear</button></div>`:
   `<div class="cline"><span><b>${rows.length.toLocaleString()}</b> shown of <b>${total.toLocaleString()}</b> ${D.noun}${fl?` · ${fl} filter${fl>1?'s':''} <button class="lnk" data-act="bfclear" data-k="${key}">clear</button>`:''}</span>${opts.lineRight||''}</div>`;
- const sh=(c,i)=>{const sk=key==='pce'?['title','kind','upd',null,null,'status'][i]:['title','src','date',null,'used','status'][i];return `<button class="h-${c.toLowerCase().replace(/\s/g,'')} ${st.sort===sk?'on':''}" ${sk?`data-act="bsort" data-k="${key}" data-s="${sk}"`:''}>${c}${st.sort===sk?(st.dir<0&&sk!=='upd'?' ↓':' ↑'):''}</button>`;};
- return `<div class="lb ${st.tree?'':'notree'}" data-bkey="${key}">
+ const sh=(c,i)=>{const sk=D.colSort?D.colSort[i]:key==='pce'?['title','kind','upd',null,null,'status'][i]:['title','src','date',null,'used','status'][i];return `<button class="h-${c.toLowerCase().replace(/\s/g,'')} ${st.sort===sk?'on':''}" ${sk?`data-act="bsort" data-k="${key}" data-s="${sk}"`:''}>${c}${st.sort===sk?(st.dir<0&&sk!=='upd'?' ↓':' ↑'):''}</button>`;};
+ const grid=st.mode==='grid'&&D.tile;
+ return `<div class="lb k-${st_dom(key)} ${grid?'mode-grid':''} ${st.tree?'':'notree'}" data-bkey="${key}">
   <aside class="tree" aria-label="Folders">${treeHTML(key)}</aside>
   <section class="lbm">
    ${crumbs(key)}
-   <div class="fstrip"><label class="fsearch">${ic('search','sm')}<input id="bq-${key}" data-bq="${key}" value="${esc(st.q)}" placeholder="Search ${D.noun} — title, source, topic" aria-label="Search ${D.noun}"></label>${facetSelects(key)}</div>
+   <div class="fstrip"><label class="fsearch">${ic('search','sm')}<input id="bq-${key}" data-bq="${key}" value="${esc(st.q)}" placeholder="${D.searchPh||'Search '+D.noun+' — title, source, topic'}" aria-label="Search ${D.noun}"></label>${facetSelects(key)}</div>
    <nav class="views" aria-label="Saved views"><span class="vl">Saved views</span>${D.views.map(v=>`<button class="${st.view===v.id?'on':''}" data-act="bview" data-k="${key}" data-v="${v.id}">${esc(v.label)}${v.id==='unsorted'?` · ${folderCount(key,'unsorted')}`:''}</button>`).join('')}</nav>
    ${line}
-   <div class="vhead" role="row"><span class="cbw"><button class="cb ${allSel?'on':someSel?'part':''}" data-act="bselall" data-k="${key}" role="checkbox" aria-checked="${allSel?'true':someSel?'mixed':'false'}" aria-label="Select all ${rows.length} matching"></button></span><span></span>${D.cols.map(sh).join('')}</div>
+   <div class="vhead" role="row"><span class="cbw"><button class="cb ${allSel?'on':someSel?'part':''}" data-act="bselall" data-k="${key}" role="checkbox" aria-checked="${allSel?'true':someSel?'mixed':'false'}" aria-label="Select all ${rows.length} matching"></button></span>${grid?`<span class="gsel">Select all ${rows.length.toLocaleString()} matching</span><span class="gsort">${D.cols.map(sh).join('')}</span>`:'<span></span>'+D.cols.map(sh).join('')}</div>
    <div class="vt" id="vt-${key}" role="grid" aria-rowcount="${rows.length}"><div class="vt-sp"></div>${rows.length?'':`<div class="vempty">Nothing matches here. ${fl?'<button class="lnk" data-act="bfclear" data-k="'+key+'">Clear the filters</button>':''}</div>`}</div>
   </section></div>`;
 }
 const rowH=()=>X.isPhone()?56:36;
+/* grid mode: the same rows as tiles, virtualised by tile-row */
+function gridGeom(vt){const W=vt.clientWidth-16;const ph=X.isPhone();const min=ph?104:132;const gap=ph?8:10;const cols=Math.max(2,Math.floor((W+gap)/(min+gap)));const tw=Math.floor((W-gap*(cols-1))/cols);return {cols,tw,th:tw+(ph?40:44),gap};}
+function paintGrid(key,st,D,vt,sp){
+ const g=gridGeom(vt);const n=st.rows.length;const nr=Math.ceil(n/g.cols);const rh=g.th+g.gap;sp.style.height=nr*rh+8+'px';
+ const h=vt.clientHeight||600;const a=Math.max(0,Math.floor(vt.scrollTop/rh)-2),b=Math.min(nr,Math.ceil((vt.scrollTop+h)/rh)+2);
+ let out='';for(let r=a;r<b;r++)for(let c=0;c<g.cols;c++){const i=r*g.cols+c;if(i>=n)break;const it=st.rows[i];const on=st.sel.has(it.id);
+  out+=`<div class="vtile ${on?'sel':''} ${st.cur===it.id?'cur':''}" role="row" aria-rowindex="${i+1}" style="top:${r*rh+8}px;left:${8+c*(g.tw+g.gap)}px;width:${g.tw}px;height:${g.th}px" data-id="${it.id}" data-k="${key}" draggable="true"><span class="cbw"><button class="cb ${on?'on':''}" data-act="bsel" data-k="${key}" data-id="${it.id}" role="checkbox" aria-checked="${on}" aria-label="Select ${esc(it.title)}"></button></span>${D.tile(it,g.tw)}</div>`;}
+ sp.innerHTML=out;st.top=vt.scrollTop;
+}
 function paint(key){
  const st=BS[key];const vt=document.getElementById('vt-'+key);if(!vt||!st||!st.rows)return;
- const D=DOM[st_dom(key)];const rh=rowH();const n=st.rows.length;const sp=vt.firstElementChild;
+ const D=DOM[st_dom(key)];const sp=vt.firstElementChild;
+ if(st.mode==='grid'&&D.tile){paintGrid(key,st,D,vt,sp);return;}
+ const rh=rowH();const n=st.rows.length;
  sp.style.height=n*rh+'px';
  const h=vt.clientHeight||600;const a=Math.max(0,Math.floor(vt.scrollTop/rh)-6),b=Math.min(n,Math.ceil((vt.scrollTop+h)/rh)+6);
  let out='';for(let i=a;i<b;i++){const it=st.rows[i];const on=st.sel.has(it.id);
@@ -324,7 +336,7 @@ function mount(key,keepTop){
 }
 function rerenderBrowser(key,keepTop){
  const host=document.querySelector(`.lb[data-bkey="${key}"]`);if(!host){X.render(true);return;}
- const opts=key==='pick'?pickerOpts():{lineRight:key==='lib'?libLineRight():''};
+ const opts=BOPTS[key]?BOPTS[key]():key==='pick'?pickerOpts():{lineRight:key==='lib'?libLineRight():''};
  const tmp=document.createElement('div');tmp.innerHTML=browserHTML(key,opts);host.replaceWith(tmp.firstElementChild);mount(key,keepTop);
  const sh=$('#lsheet');if(sh&&sh.classList.contains('on')&&sh.dataset.k===key)fillSheet(key);
 }
@@ -541,8 +553,8 @@ function tplHTML(t,sl,proj){
   .replace(/__IG_CREDIT__/g,'@teajia')
   .replace(/__IG_LOGO__/g,LOGO)
   .replace(/__IG_STYLE_(\d)__/g,(m,n)=>(t.photoStyles&&t.photoStyles[+n]?t.photoStyles[+n].style:'width:100%;height:100%;object-fit:cover;display:block'))
-  .replace(/__IG_PHOTO_(\d)__/g,(m,n)=>photo(tones[+n%tones.length],+n+1+(sl.seed||0)))
-  .replace(/__IG_BG_(\d)__/g,(m,n)=>`url(${photo(tones[+n%tones.length],+n+11+(sl.seed||0))})`);
+  .replace(/__IG_PHOTO_(\d)__/g,(m,n)=>(HOOK.slot&&HOOK.slot(sl,+n))||photo(tones[+n%tones.length],+n+1+(sl.seed||0)))
+  .replace(/__IG_BG_(\d)__/g,(m,n)=>`url(${(HOOK.slot&&HOOK.slot(sl,+n))||photo(tones[+n%tones.length],+n+11+(sl.seed||0))})`);
  return h;
 }
 function render1080(t,sl,w,attrs){const sc=w/1080;return `<div class="tplr" style="width:${w}px;height:${Math.round(w*1.25)}px" ${attrs||''}><div class="tpli" style="transform:scale(${sc})">${tplHTML(t,sl)}</div></div>`;}
@@ -580,6 +592,7 @@ V.arrange=()=>{
   <div class="tseq" data-sortable="car">${c.slides.map((s,i)=>{const t=TPL&&(TPN[s.tpl]||TPL[0]);return `<div class="slide2 ${selId===s.id?'on':''} ${s.draft?'draft':''}" data-idx="${i}" id="sl-${s.id}">
    <div class="sh2"><span class="handle" data-handle="1" title="Drag to reorder" aria-label="Drag slide ${i+1}">${ic('grip','sm')}</span><span>${i+1}</span><button class="tn2" data-act="tpfor" data-sid="${s.id}" title="Change template">${ic('tpl','sm')} ${esc(s.tpl)}</button></div>
    ${t?render1080(t,s,198,`data-rsid="${s.id}"`):`<div class="tplr" style="width:198px;height:248px;display:grid;place-items:center;color:var(--dim)">${ic('image')}</div>`}
+   ${HOOK.slots?HOOK.slots(s,t,s.id,'slide '+(i+1)):''}
    <div class="tx2" contenteditable="true" data-tsid="${s.id}" data-part="text" aria-label="Slide ${i+1} text">${esc(s.text)}</div>
    ${t&&t.textParts>1?`<div class="tx2 second" contenteditable="true" data-tsid="${s.id}" data-part="sub" aria-label="Slide ${i+1} second line">${esc(s.sub)}</div>`:''}
    ${s.draft?`<div class="df">${esc(s.draft)} drafted · not accepted<button class="btn primary" data-act="accept" data-id="${s.id}">Accept</button><button class="btn" data-act="discard" data-id="${s.id}">Discard</button></div>`:''}
@@ -590,6 +603,7 @@ V.arrange=()=>{
   const o=(mode==='post'?POST:LISTING)[p];const t=TPL&&(TPN[o.tpl]||TPL[0]);
   body=`${TPL?'':tplFallback()}<div class="postwrap">${t?render1080(t,o,320,`data-rsid="__${mode}"`):''}<div class="side">
    <div class="lab">${mode==='post'?'Single post · 1080 × 1350':'Listing image · 1080 × 1350, for the shop and Instagram'}</div>
+   ${HOOK.slots?HOOK.slots(o,t,'__'+mode,mode==='post'?'the post':'the listing image'):''}
    <button class="btn" data-act="tpfor" data-sid="__${mode}" style="justify-self:start">${ic('tpl','sm')} Template: ${esc(o.tpl)}</button>
    <div class="tx2" contenteditable="true" data-tsid="__${mode}" data-part="text" aria-label="Headline">${esc(o.text)}</div>
    <div class="tx2" contenteditable="true" data-tsid="__${mode}" data-part="sub" aria-label="Second line">${esc(o.sub)}</div>
@@ -630,8 +644,8 @@ function addToFolder(key,ids,fid){const D=DOM[st_dom(key)];let n=0;ids.forEach(i
 const selIds=key=>[...BS[key].sel];
 
 Object.assign(A,{
- bopen:el=>{const key=el.dataset.k||getKey(el);const D=DOM[key==='pick'?'lib':key];const it=D.items().find(x=>x.id===el.dataset.id);if(!it)return;if(BS[key]){BS[key].cur=it.id;}
-  if(key==='pick'||key==='lib'||D===DOM.lib){X.openDrawer('preview',{id:it.id});paint(key);}else D.open(it);},
+ bopen:el=>{const key=el.dataset.k||getKey(el);const D=DOM[BS[key]?st_dom(key):key];const it=D.items().find(x=>x.id===el.dataset.id);if(!it)return;if(BS[key]){BS[key].cur=it.id;if(BS[key].onPick){BS[key].onPick(it);return;}}
+  if(key==='pick'||key==='lib'||D===DOM.lib){X.openDrawer('preview',{id:it.id});paint(key);}else{D.open(it);paint(key);}},
  bsel:(el,e)=>{const key=el.dataset.k;const st=BS[key];const id=el.dataset.id;
   if(e&&e.shiftKey&&st.anchor){const ids=st.rows.map(r=>r.id);const a=ids.indexOf(st.anchor),b=ids.indexOf(id);if(a>=0&&b>=0){const [x,y]=a<b?[a,b]:[b,a];for(let i=x;i<=y;i++)st.sel.add(ids[i]);}}
   else{st.sel.has(id)?st.sel.delete(id):st.sel.add(id);st.anchor=id;}
@@ -650,7 +664,7 @@ Object.assign(A,{
   const lbl=document.querySelector(`.tn [data-f="${id}"].tl span`);if(lbl){lbl.contentEditable='true';lbl.focus();document.execCommand&&document.execCommand('selectAll');lbl.onblur=()=>{const f=D.folders.find(x=>x.id===id);f.name=lbl.textContent.trim()||'New folder';rerenderBrowser(key,true);};lbl.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();lbl.blur();}};}
   X.toast('Folder made — type its name. Prototype, nothing is saved');},
  stress:()=>{if(!stressed){stress();clearSub();X.toast('Loaded 5,000 more invented sources for the stress test');}rerenderBrowser('lib');},
- bulk:el=>{const key=el.dataset.k;const ids=selIds(key);const op=el.dataset.op;const D=DOM[st_dom(key)];
+ bulk:el=>{const key=el.dataset.k;const ids=selIds(key);const op=el.dataset.op;const D=DOM[st_dom(key)];if(D.bulk){D.bulk(op,el,key,ids);return;}
   if(op==='folder')popMenu(el,`Add ${ids.length} to…`,folderItems(D.folders),x=>{const n=addToFolder(key,ids,x.id);X.toast(`Added ${n} to ${x.label} — they stay in their other folders. Prototype, nothing is saved`);BS[key].sel.clear();X.render(true);});
   if(op==='piece')popMenu(el,`Use ${ids.length} in…`,PIECES.map(pc=>({id:pc.id,label:pc.title,path:KIND_L[pc.kind],icon:KIND_IC[pc.kind]})),x=>{ids.forEach(id=>{const it=LIB.find(i=>i.id===id);if(it&&!it.pieces.includes(x.id))it.pieces.push(x.id);});X.toast(`${ids.length} linked to ${x.label} as sources. Prototype, nothing is saved`);BS[key].sel.clear();X.render(true);});
   if(op==='topic'){const tps=[...new Set(LIB.flatMap(i=>i.topics))].sort();popMenu(el,`Tag ${ids.length} with topic…`,tps.map(t=>({id:t,label:t})),x=>{ids.forEach(id=>{const it=LIB.find(i=>i.id===id);if(it&&!it.topics.includes(x.id))it.topics.push(x.id);});X.toast(`Tagged ${ids.length} “${x.id}”. Prototype, nothing is saved`);rerenderBrowser(key,true);});}
@@ -705,14 +719,14 @@ document.addEventListener('keydown',e=>{
   return;}
  if(e.key==='Escape'){if($('#pop')&&$('#pop').classList.contains('on')){closePop();e.stopImmediatePropagation();return;}if($('#picker')&&$('#picker').classList.contains('on')){closePicker();e.stopImmediatePropagation();return;}if($('#lsheet')&&$('#lsheet').classList.contains('on')){closeSheet();e.stopImmediatePropagation();}}
 },true);
-let rz=0;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>['lib','pce','pick'].forEach(k=>paint(k)),120);});
+let rz=0;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>Object.keys(BS).forEach(k=>paint(k)),120);});
 
 /* drag: rows → folders (link), folders → folders (nest), sources → text (cite) */
 let DRAG=null;
 document.addEventListener('dragstart',e=>{
- const row=e.target.closest&&e.target.closest('.vrow');
+ const row=e.target.closest&&e.target.closest('.vrow,.vtile');
  if(row){const key=row.dataset.k;const st=BS[key];const ids=st.sel.has(row.dataset.id)?[...st.sel]:[row.dataset.id];DRAG={kind:'rows',key,ids};e.dataTransfer.setData('text/plain',ids.length+' items');e.dataTransfer.effectAllowed='link';row.classList.add('dragging');
-  if(ids.length>1){const g=document.createElement('div');g.textContent=ids.length+' sources';g.style.cssText='position:fixed;top:-100px;padding:4px 10px;background:#c9a874;color:#141310;border-radius:6px;font:500 13px sans-serif';document.body.appendChild(g);e.dataTransfer.setDragImage(g,10,10);setTimeout(()=>g.remove(),0);}return;}
+  if(ids.length>1){const g=document.createElement('div');g.textContent=ids.length+' '+DOM[st_dom(key)].noun;g.style.cssText='position:fixed;top:-100px;padding:4px 10px;background:#c9a874;color:#141310;border-radius:6px;font:500 13px sans-serif';document.body.appendChild(g);e.dataTransfer.setDragImage(g,10,10);setTimeout(()=>g.remove(),0);}return;}
  const fn=e.target.closest&&e.target.closest('[data-fdrag]');
  if(fn){DRAG={kind:'folder',key:getKey(fn),id:fn.dataset.fdrag};e.dataTransfer.setData('text/plain','folder');return;}
  const ci=e.target.closest&&e.target.closest('[data-cite]');
@@ -744,5 +758,7 @@ const oldMat=V.material;V.material=()=>oldMat().replace('<div class="drop" id="d
 
 
 X.render();
-window.ARC_SCALE={LIB,F,PIECES,BS,search,runCmd,stress,get TPL(){return TPL;}};
+window.ARC_SCALE={LIB,F,PIECES,BS,search,runCmd,stress,get TPL(){return TPL;},
+ /* the shared browser engine (folder tree + virtualised one-line table/grid), reused by media.js */
+ DOM,BOPTS,HOOK,bstate,browserHTML,mount,paint,rerenderBrowser,filterRows,folderCount,fpath,subtree,clearSub,popMenu,closePop,folderItems,addToFolder,selIds,rng,pick,cap,fmtDate,PCE,KIND_L,KIND_IC,TPN,tplHTML,photo,slideObj,repaintSlide,POST,LISTING,openSheet,closeSheet,st_dom};
 })();
