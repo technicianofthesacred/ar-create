@@ -1,12 +1,12 @@
 # Agent connections: independent learning and work receipts
 
-Integration addendum to the existing CONCEPT-AGENT guide, checked against the maintained source on 20 October 2026. The bounded connected routes are now installed; synthetic mutation proof and installed read-only preservation remain distinct. This is not human editorial acceptance, provider execution or publication. Host authentication, origin checks and configuration still apply. An unavailable owner or route is a hold, not permission to invent a replacement.
+Integration addendum to the existing [CONCEPT-AGENT](CONCEPT-AGENT.md) guide, checked against the maintained source on 20 October 2026 and updated for the one CLI on 21 October. The bounded connected routes are now installed; synthetic mutation proof and installed read-only preservation remain distinct. This is not human editorial acceptance, provider execution or publication. Host authentication, origin checks and configuration still apply. An unavailable owner or route is a hold, not permission to invent a replacement.
 
 ## Start with the actual inquiry
 
 An inquiry is an existing Library Collection and its shared learning record. It can have no sources, Project or output. Discover it through `catalog`, use its returned Collection UUID, and read/save through the inquiry interface. Names and titles are display text, not identity joins.
 
-Learning selectors use `{scope:"collection", collectionId}`. Project direction uses `{scope:"project", parentStudyId}`; part direction adds `scope:"part", bindingId`; output direction uses `{scope:"output", parentStudyId, bindingId, outputId}`. Resolve these exact identities from maintained owners. A legacy CLI command accepting only `parentStudyId` addresses Project direction; it does **not** read or save an independent Collection. This addendum adds no CLI, MCP server or provider.
+Learning selectors use `{scope:"collection", collectionId}`. Project direction uses `{scope:"project", parentStudyId}`; part direction adds `scope:"part", bindingId`; output direction uses `{scope:"output", parentStudyId, bindingId, outputId}`. Resolve these exact identities from maintained owners. A legacy CLI command accepting only `parentStudyId` addresses Project direction; it does **not** read or save an independent Collection. The one CLI (`agents/cli/ar-create.mjs --actor agent:<name>`) now reaches these routes as `collection list|read|save|projects|create|update|undo`, with the selector in `--input`; the MCP server reaches them with `ar_create_call`. Every write needs an actor. `collection list` (the catalog) currently answers 400 through both, because an empty selector is dropped before sending: read the catalog with `GET /api/inquiries/catalog?input=%7B%7D` until that is fixed. This addendum adds no provider.
 
 The route factory exposes these agent-safe methods only:
 

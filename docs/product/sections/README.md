@@ -10,22 +10,22 @@ This committed directory is the canonical developer copy of the section briefs. 
 
 Design and implementation handoffs cite the brief(s), name the bounded change, and attach actual-screen/file proof. A section is not complete because its heading or backend exists. No missing record means no work happened; no visible record proves a task is complete. Owner: root manager maintains intent; existing integrator owns live shared wiring; specialists supply isolated contributions and reviews.
 
-| Checkpoint | Working section | Core question |
+| Checkpoint | Section (canonical label) | Core question |
 | --- | --- | --- |
 | 1 | [Material](01-material.md) | What do I have, what else can I bring in, and how do I bring it together? |
-| 2 | [Transcripts & sources](02-transcripts.md) | What was said across these sources, and what needs correction? |
+| 2 | [Source](02-transcripts.md) | What was said across these sources, and what needs correction? |
 | 3 | [Research](03-research.md) | What can I learn, verify and deepen from this material? |
 | 4 | [Direction](04-direction.md) | What do I want to say, and which expressions will I make? |
-| 5 | [Draft](05-draft.md) | How do we develop my chosen piece without losing my voice? |
-| 6 | [Read & refine](06-read-refine.md) | Does this say and feel what I mean? |
-| 7 | [Check changes](07-check-changes.md) | Were my decisions carried through correctly? |
+| 5 | [Write](05-draft.md) | How do we develop my chosen piece without losing my voice? |
+| 6 | [Read](06-read-refine.md) | Does this say and feel what I mean? |
+| 7 | [Check](07-check-changes.md) | Were my decisions carried through correctly? |
 | 8 | [Media](08-media.md) | Which photos and videos can I use, and where are they used? |
 | 9 | [Arrange](09-arrange.md) | How should these words and media work together? |
-| 10 | [Review & release](10-review-release.md) | What will each audience actually receive? |
-| 11 | [Share & celebrate](11-share-celebrate.md) | How do I invite the people involved to enjoy and respond to the piece? |
-| 12 | [Published & complete](12-published-complete.md) | Where are all the expressions of this work, and what remains? |
+| 10 | [Audience](10-review-release.md) | What will each audience actually receive? |
+| 11 | [Share](11-share-celebrate.md) | How do I invite the people involved to enjoy and respond to the piece? |
+| 12 | [Outputs](12-published-complete.md) | Where are all the expressions of this work, and what remains? |
 
-Working labels are proposed navigation wording. Preserve original twelve checkpoint IDs and historical meanings. Sections can be modes of one continuous workspace: Material/Transcript and Arrange/Preview need not be separate shells. Collection and media remain accessible at any time. Do not create unnecessary gates for text-only projects or outputs with no follow-up recipients.
+These labels are the canonical names, the ones the app shows. Older names are aliases listed once in [START.md](../../START.md#sections-one-name-each). Preserve the twelve checkpoint IDs and their historical meanings. Sections can be modes of one continuous workspace: Material/Transcript and Arrange/Preview need not be separate shells. Collection and media remain accessible at any time. Do not create unnecessary gates for text-only projects or outputs with no follow-up recipients.
 
 ## Preserve what the author has already developed
 
@@ -44,6 +44,8 @@ Use the existing Magazine process/commands/prompts and AR editing/recovery/portr
 
 ## Acceptance for every section
 
+The 14 October strengthening applies to every brief: each dated acceptance note records requirements from direct feedback, never an installed-functionality claim. It is stated here once and not repeated in the briefs.
+
 For the scoped implementation, show actual content and useful actions; preserve save/switch/reload/Undo, original files and exact scope; distinguish earlier/read-only/current; verify empty, busy, failed, stale and unavailable states; inspect actual light/dark/narrow screens. State what's implemented, verified and missing in the delivery board, referencing proof rather than repeating whole audits.
 
 ## Decision history
@@ -61,11 +63,11 @@ Research exact-match work is ongoing separately. Private reference samples, samp
 
 Populate the existing twelve surfaces with their agreed work and tools so the author can use Claude Design while the remaining operations are connected. A represented operation must show its intended scope/input/review interaction and an honest not-connected state where applicable; no fabricated results or persistence. Keep connected operations live and preserve the current document, project navigation and editorial protections. Delivery tracks interface-present, connected and verified separately within its existing rows. The earlier manager instruction to complete all functions before design is superseded as a misinterpretation.
 
-Accepted Atlas document typography applies across relevant long-form sources, transcripts, research, notes and writing, including retained/read-only representations and nested passages. Controls/compact metadata remain sans serif; platform-template typography stays governed by its existing designs. Stage-specific purpose matters more than making every section another copy of the manuscript.
+Typography is recorded once, in [PRODUCT: Typography](../PRODUCT.md#typography). Stage-specific purpose matters more than making every section another copy of the manuscript.
 
 ## 16 October — Shared visual refinement direction
 
-The author authorized one isolated Impeccable visual-consistency candidate across S01–S12, with routine design decisions delegated. Reduce duplicate presentation and wasted space; align shared hierarchy/statuses/controls/icons/grids while retaining purpose-specific section tools, current editor/project navigation, Atlas prose, approved templates and working actions. Delivery receives the exact patch/proof; existing Build alone integrates and activates it. Requirements and isolated candidate proof are not installed or human acceptance. No parallel shared-code visual builder or backend/content migration.
+The author authorized one isolated Impeccable visual-consistency candidate across S01–S12, with routine design decisions delegated. Reduce duplicate presentation and wasted space; align shared hierarchy/statuses/controls/icons/grids while retaining purpose-specific section tools, current editor/project navigation, the typography rule, approved templates and working actions. Delivery receives the exact patch/proof; existing Build alone integrates and activates it. Requirements and isolated candidate proof are not installed or human acceptance. No parallel shared-code visual builder or backend/content migration.
 
 ## 16 October — Adopted navigation and shared editing context
 
@@ -77,16 +79,16 @@ Adopted build: projects may collect material for a product, place, idea or exper
 
 ## 18 October — Later design pass, idea-led entry
 
-The active Claude Design work continues on its existing handoff, including its next returned version. Later collection/tea/sidebar refinements and concept brainstorming are queued for a subsequent design pass. PRODUCT records the shared intent once; S01 covers scratch notes/material/reference collection, S03 idea-led inquiry, and S04 honing ideas/titles/angles into independently edited pieces. Record requirements without starting a new competing design or implementing a new editor/store. [Future-design and idea-led workflow](../PRODUCT.md#18-october--future-design-pass-and-starting-from-an-idea).
+Later collection/tea/sidebar refinements and concept brainstorming are queued for a subsequent design pass. PRODUCT records the shared intent once; S01 covers scratch notes/material/reference collection, S03 idea-led inquiry, and S04 honing ideas/titles/angles into independently edited pieces. Record requirements without starting a new competing design or implementing a new editor/store. [Future-design and idea-led workflow](../PRODUCT.md#18-october--future-design-pass-and-starting-from-an-idea).
 
 ## 18 October — Full curated library and personal relevance
 
-The author explicitly expects a substantial, well-organized reusable library, despite deliberate curation. Full library search/filing/collections/filters is distinct from bounded recent/pinned sidebar access and from project-specific Material. Own writing, participated conversations, translations, reading/PDFs/ebooks and video resources share stable source references. Personal relevance, marked passage importance, actual reading coverage and factual support remain distinct. S01/S02/S03/S04 refer to the [canonical curated library brief](../PRODUCT.md#18-october--curated-personal-resource-library-later-design-pass); record this for a subsequent design pass, without restarting active Claude work or asserting all-format/global retrieval is built.
+The author explicitly expects a substantial, well-organized reusable library, despite deliberate curation. Full library search/filing/collections/filters is distinct from bounded recent/pinned sidebar access and from project-specific Material. Own writing, participated conversations, translations, reading/PDFs/ebooks and video resources share stable source references. Personal relevance, marked passage importance, actual reading coverage and factual support remain distinct. S01/S02/S03/S04 refer to the [canonical curated library brief](../PRODUCT.md#18-october--curated-personal-resource-library-later-design-pass); record this for a subsequent design pass, without asserting all-format or global retrieval is built.
 
 ## 18 October — Connected next-pass design plan
 
-[Library, ideas and tea projects](../superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md) proposes one shared connection map, focused development of each experience and a combined journey review. Primary scope is S01–S04 with existing output contracts preserved. This is future design work only; do not restart the active Claude pass or treat the plan as approved implementation.
+[Library, ideas and tea projects](../specs/2026-10-18-connected-library-ideas-tea-design.md) proposes one shared connection map, focused development of each experience and a combined journey review. Primary scope is S01–S04 with existing output contracts preserved. This is future design work only; do not treat the plan as approved implementation.
 
 ## 20 October — Design-ready supporting brief set
 
-Provide all twelve briefs with the next Claude Design handoff, including their purpose, tools, decisions and dated rationale. Latest human instruction explicitly permits designing the complete functional surface before every connection is finished. Keep working/verified, prepared-unmounted, planned and external states distinct through the same integration list and flow map. Builder-owned native verification remains required for implementation claims; it is not a gate that hides intended controls from the designer. Preserve the current Claude build, and continue unfinished wiring in parallel. The [supporting-document reading index](../WORKSPACE.md#supporting-documents-for-the-next-claude-design-pass) explains where to go deeper.
+Provide all twelve briefs with the next Claude Design handoff, including their purpose, tools, decisions and dated rationale. Latest human instruction explicitly permits designing the complete functional surface before every connection is finished. Keep working/verified, prepared-unmounted, planned and external states distinct through the same integration list and flow map. Builder-owned native verification remains required for implementation claims; it is not a gate that hides intended controls from the designer. Continue unfinished wiring in parallel. The [supporting-document reading index](../../WORKSPACE.md#supporting-documents) explains where to go deeper.

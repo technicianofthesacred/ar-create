@@ -26,7 +26,6 @@ Adrian explores a point with AI, challenges a claim, contributes lived experienc
 
 Save evidence-linked findings, discussion and human choices; produce a reusable brief for selected origins. Research can support multiple output directions without replacing source speech or Adrian's voice. Verify actual-screen match, source disclosure, contextual discussion/proposals and durable decisions; synthetic discussion is not live execution.
 
-14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
 
 ## Recover the full existing research process — 15 October clarification
 
@@ -58,7 +57,7 @@ Use the [curated personal library requirements](../PRODUCT.md#18-october--curate
 
 C01/C04/C06, S03: investigate what the author should understand even if they have not mentioned it or selected an output. Ask a few questions only the author can answer; use permitted research for discoverable information. Explain important terms, competing accounts and unanswered questions with enough substance to learn, not just extracted supporting claims. Personal experience, seller statements, book passages, external evidence and AI interpretation remain distinct. Preserve edition/page/section or URL/date and surrounding context where available; relevance is not verification. Agent-prepared research and the author's subsequent notes use the same readable records.
 
-Finish criterion: an authorized agent produces an evidence-linked learning brief with provisional directions; the app displays it, a human correction/comment survives save/switch/reload, and the next agent read respects it. Unknown sources and unconnected Atlas/book/web retrieval stay explicit. A choice of angle or output is not a prerequisite for learning. See [shared author/agent direction](../PRODUCT.md#19-october--author-led-work-without-constant-supervision). No provider activation or current Claude-design change is granted by this brief.
+Finish criterion: an authorized agent produces an evidence-linked learning brief with provisional directions; the app displays it, a human correction/comment survives save/switch/reload, and the next agent read respects it. Unknown sources and unconnected Atlas/book/web retrieval stay explicit. A choice of angle or output is not a prerequisite for learning. See [shared author/agent direction](../PRODUCT.md#19-october--author-led-work-without-constant-supervision). No provider activation is granted by this brief.
 
 
 ## 20 October — Mixed-origin topic collection and learning
@@ -77,4 +76,4 @@ Adopted: Library sources/personal notes once; Collections as reusable topic/inqu
 
 ## 20 October — Current understanding and useful return
 
-Apply the adopted [return-to-work requirements](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), C01–C06. Keep active understanding/questions, scoped adopted direction and protected exact wording distinguishable from proposals and retained history. Resume the actual selected work with a useful continuation, preserve research/Library detours and independent Piece/edition states, and show only supported change impact. No repeated intake, automatic summary authority or all-checkpoints completion gate. Finish criterion: the next-pass synthetic return/agent-change/detour/scoped-supersession journey preserves saved and unsaved work, source context, sibling outputs and exact Undo. Adopted intent is not installed proof; preserve Claude's active build.
+Applies the adopted return-to-work requirements, C01–C06; stated once in [PRODUCT, resume creative work without reconstructing its history](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), including the finish criterion.

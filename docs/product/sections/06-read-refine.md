@@ -18,11 +18,10 @@ Adrian's direct edits stand. Distinguish an edit already applied from an instruc
 
 Saved manuscript revision, edit/request history and explicit decisions feeding Check changes. The same current text appears in Draft. Editing a reviewed revision marks affected checks/output approval stale. No reviewer is asked to reconstruct the passage a comment concerns.
 
-14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
 
 ## Accepted shared manuscript appearance — 15 October 2026
 
-Read uses the same Atlas typography and paragraph rhythm as Draft (see S05): locally hosted Lora body, Cormorant document headings, readable measure and warm themed colors, without printed page numbers. Preserve a visible gap between true paragraphs and meaningful hierarchy between title/section/body. The first Draft-only styling pass was rejected because Read still used sans-serif headings/body with zero paragraph spacing. Check actual screenshots of both Hong Kong and An Cha and both working/retained representations where applicable, not just CSS/font declarations or a single Draft. Wrapper sections and protected nested blocks must not collapse paragraph rhythm. Keep words, source emphasis and historical/read-only meaning intact; styling does not authorize editing source content or expanding scope into platform template redesign.
+Read uses the same manuscript typography and paragraph rhythm as Write (see [PRODUCT: Typography](../PRODUCT.md#typography)): the system sans with A− / A+, a readable measure and warm themed colors, without printed page numbers. The 15 October Atlas wording for this view was narrowed when C3 shipped. Preserve a visible gap between true paragraphs and meaningful hierarchy between title/section/body. The first Draft-only styling pass was rejected because Read still used sans-serif headings/body with zero paragraph spacing. Check actual screenshots of both Hong Kong and An Cha and both working/retained representations where applicable, not just CSS/font declarations or a single Draft. Wrapper sections and protected nested blocks must not collapse paragraph rhythm. Keep words, source emphasis and historical/read-only meaning intact; styling does not authorize editing source content or expanding scope into platform template redesign.
 
 ## Accepted single-note passage navigation — 15 October 2026
 

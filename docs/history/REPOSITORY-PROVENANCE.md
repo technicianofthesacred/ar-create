@@ -1,5 +1,7 @@
 # Repository provenance and preservation
 
+> **Historical, kept for the record.** Records how the repository was extracted from i64os. It is not required reading and does not describe today. Start at [AGENTS.md](../../AGENTS.md) and [START.md](../START.md); what works now is in [status/CURRENT.md](../status/CURRENT.md).
+
 Canonical code repository: `technicianofthesacred/ar-create` (private). This repository was extracted from the reviewed `apps/ar-create` subtree of private `technicianofthesacred/i64os`, checkpoint `ec820f0d6c2b413127535114b734bc059582aaf5`.
 
 The subtree split is `64c898cab82e11635c3983e8ee684b6044804c90`. It retains only five relevant AR Create commits; unrelated i64 history, personal data and live runtime directories were not imported.
@@ -20,4 +22,4 @@ The generic code, licensed fonts/templates and invented fixtures are included. P
 
 The code checkpoint is the newest completed source/direction checkpoint represented by the preserved manifest. Research exact-match repair and other in-progress live changes remain separate until their owner supplies a stable reviewed code-only delta. This does not claim the full creative suite, phone access or offline synchronization is complete.
 
-The developer section briefs now have their canonical committed home in `docs/sections/`. Product Direction maintains intent and working discussion drafts; Delivery Manager coordinates execution; the existing integrator alone owns live wiring and activation. Sidebar/project grouping changes remain with Product Direction.
+The developer section briefs now have their canonical committed home in `docs/product/sections/`. Product Direction maintains intent and working discussion drafts; Delivery Manager coordinates execution; the existing integrator alone owns live wiring and activation. Sidebar/project grouping changes remain with Product Direction.
