@@ -274,7 +274,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
   const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
-  const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial')});
+  const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
   function afterRequest(request,response,context){

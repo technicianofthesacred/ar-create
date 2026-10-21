@@ -64,6 +64,13 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
   const send=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
   async function input(req){let bytes='';for await(const chunk of req){bytes+=chunk;if(Buffer.byteLength(bytes)>2*1024*1024)throw new StateError('Request exceeds 2 MB.',413);}return bytes.trim()?JSON.parse(bytes):{};}
   return {
+    // Magazine intake (magazine-vault/intake.mjs): transcribe one filed recording in this isolated
+    // runner. Its RAW stays here until magazine-vault files it into the real Inbox under the lock.
+    magazineIntake:{
+      ready:()=>ready,
+      start:(story,file)=>withIsolatedConfig(config,()=>startLocalIntake(story,file,{})),
+      job:id=>withIsolatedConfig(config,()=>{const job=localJobs().find(j=>j.id===id);return job?{id:job.id,state:job.state,stage:job.stage,error:job.error||null,raw:job.raw||null,rawSha256:job.rawCandidateSha256||null,transcriptReady:!!job.transcriptReady}:null;}),
+    },
     transcriptCorrections:corrections,
     sourceSnapshot:source=>corrections.sourceSnapshot(source),
     async readTranscriptSource(sourceId){const {source}=await library.blob(sourceId);const managed=corrections.sourceSnapshot(source);if(!managed.managed)throw new StateError('Choose this recording’s canonical transcript.',400);const snapshot=corrections.read(managed.jobId);return {...snapshot,sourceId};},

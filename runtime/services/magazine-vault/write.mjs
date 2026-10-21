@@ -9,6 +9,8 @@ import {StateError} from '../../store.mjs';
 import {cleanRelative} from './kinds.mjs';
 
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+/** sha256 of a file, read in 1 MB pieces (recordings can be large). */
+export const sha256File = file => { const h = createHash('sha256'), fd = fs.openSync(file, 'r'), buf = Buffer.alloc(1 << 20); try { let n; while ((n = fs.readSync(fd, buf, 0, buf.length, null)) > 0) h.update(buf.subarray(0, n)); } finally { fs.closeSync(fd); } return h.digest('hex'); };
 const HASH = /^[a-f0-9]{64}$/;
 export const MAX_TEXT = 2 * 1024 * 1024;
 

@@ -17,13 +17,14 @@ import * as askDonor from '../../reference/mag-ask.mjs';
 import * as editDonor from '../../reference/mag-edit.mjs';
 import {classify, storyFromName, storyId, cleanRelative} from './kinds.mjs';
 import {createVaultLock} from './lock.mjs';
-import {createRootIO, realRoot, sha256, expected, textBytes} from './write.mjs';
+import {createRootIO, realRoot, sha256, sha256File, expected, textBytes} from './write.mjs';
 import {readBoard, boardText, dropped} from './board.mjs';
 import {approveMade, saveLineup, requestLine, pageFeedbackLine, madeStatus} from './social.mjs';
 import {renderTable, replaceTable, installMarkers, findTable} from './status.mjs';
 import {createMagazineProjects, statusEntries} from './projects.mjs';
 import {planTidy} from './tidy.mjs';
 import {createReconcile} from './reconcile.mjs';
+import {createMagazineIntake} from './intake.mjs';
 
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const stable = v => JSON.stringify(v, (_, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
@@ -42,7 +43,7 @@ const FILES_DIRS = rel => /^[^/]+$/.test(rel) && rel !== 'Drop' || /^[^/]+\/Phot
 export function createMagazineVault({vaultRoot = null, filesRoot = null, drops = [], writable = false, exportStaging = null, dataDir, machine, bootId, now = () => Date.now(), events = null, journal = null, leases = null, editorialRoot = null, magSendRepo = null, previewPort = 8766, intakeEngine = null} = {}) {
   const configured = typeof vaultRoot === 'string' && vaultRoot.length > 0;
   const home = ensurePrivateDirectory(dataDir, 'magazine');
-  const dirs = Object.fromEntries(['operations', 'proposals', 'undone', 'tmp', 'sends', 'recovered-locks'].map(d => [d, ensurePrivateDirectory(home, d)]));
+  const dirs = Object.fromEntries(['operations', 'proposals', 'undone', 'tmp', 'sends', 'recovered-locks', 'intake'].map(d => [d, ensurePrivateDirectory(home, d)]));
   const projects = createMagazineProjects({dataDir});
   let state = null;
   function roots() {
@@ -89,6 +90,21 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
           const out = target.put(r, expectedHash, bytes);
           change.applied = true; save();
           return out;
+        },
+        /** Copy a large file (a recording) in without reading it into memory: new files only. */
+        copyIn(root, r, source, expectedSha) {
+          const target = io(root), {abs} = target.locate(r, {create: true});
+          if (fs.existsSync(abs)) { if (sha256File(abs) === expectedSha) return {reused: true, rel: r}; throw new StateError(`A different file named ${r} is already filed.`, 409); }
+          const change = {root, rel: r, beforeHash: null, before: null, afterHash: expectedSha, large: true, applied: false};
+          record.changes.push(change); save();
+          const temporary = path.join(path.dirname(abs), '.' + path.basename(abs) + '.' + randomUUID() + '.ar-create.tmp');
+          try {
+            fs.copyFileSync(source, temporary, fs.constants.COPYFILE_EXCL);
+            if (sha256File(temporary) !== expectedSha) throw new StateError(`${r} changed while it was copied; nothing was filed.`, 409);
+            fs.linkSync(temporary, abs);
+          } finally { fs.rmSync(temporary, {force: true}); }
+          change.applied = true; save();
+          return {reused: false, rel: r};
         },
         move(root, from, to, hash) { const change = {root, move: {from, to}, hash, applied: false}; record.changes.push(change); save(); const out = io(root).move(from, to, hash); change.applied = true; save(); return out; },
       };
@@ -324,6 +340,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     const result = await operation({command: 'magazine.undo', operationId: input.operationId, input: {undoOperationId: input.undoOperationId}, rel: applied.find(c => c.rel)?.rel || null, doing: 'undo'}, async tx => {
       for (const ch of [...applied].reverse()) {
         if (ch.move) { const at = io(ch.root).read(ch.move.to); if (at.hash !== ch.hash) throw new StateError(`${ch.move.to} changed after the move; nothing was undone.`, 409); tx.move(ch.root, ch.move.to, ch.move.from, ch.hash); continue; }
+        if (ch.large) { const {abs} = io(ch.root).locate(ch.rel); if (!fs.existsSync(abs) || sha256File(abs) !== ch.afterHash) throw new StateError(`${ch.rel} changed after it was filed; nothing was undone.`, 409); const keep = path.join(dirs.undone, input.operationId); fs.mkdirSync(keep, {recursive: true, mode: 0o700}); try { fs.renameSync(abs, path.join(keep, path.basename(ch.rel))); } catch (error) { if (error.code !== 'EXDEV') throw error; fs.copyFileSync(abs, path.join(keep, path.basename(ch.rel)), fs.constants.COPYFILE_EXCL); fs.rmSync(abs); } continue; }
         const cur = tx.read(ch.root, ch.rel);
         if ((cur.hash || null) !== (ch.afterHash || null)) throw new StateError(`${ch.rel} changed after that write; undo would lose the newer words. Nothing was undone.`, 409);
         if (ch.before === null && cur.exists) { const keep = path.join(dirs.undone, input.operationId); fs.mkdirSync(keep, {recursive: true, mode: 0o700}); fs.writeFileSync(path.join(keep, path.basename(ch.rel)), cur.bytes, {mode: 0o600}); }
@@ -438,5 +455,6 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     _operation: operation, _io: io, _roots: roots, _dirs: dirs, _ctx: ctx, _requireWritable: requireWritable, _intakeEngine: intakeEngine,
   };
   api.extra.reconcile = createReconcile({dataDir, vault: api});
+  api.extra.intake = configured && filesRoot ? createMagazineIntake({vault: api, engine: intakeEngine, drops, filesRoot, now, events}) : null;
   return api;
 }
