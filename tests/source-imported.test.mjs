@@ -9,11 +9,11 @@ const {installSourceReader}=await import('data:text/javascript;base64,'+Buffer.f
 const clone=x=>JSON.parse(JSON.stringify(x));
 const base={revision:3,sessions:[{id:'a',title:'First visit',date:'2026-01-01',sourceId:'source-a',sourceHash:'hash-a',version:1,turns:[{id:'a1',speaker:'Source',text:'A sample was offered.',originalText:'A sample was offered.'},{id:'a2',speaker:'Response',text:'The price remains unknown.'},{id:'a3',speaker:'Response',text:'No purchase yet.'}]},{id:'b',title:'Second visit',sourceId:'source-b',sourceHash:'hash-b',version:1,turns:[{id:'b1',speaker:'Unknown',text:'A different conversation.'}]}],notes:{a:{sourceHash:'hash-a',stories:[],interests:[],business:[{text:'Offer, price unresolved.',turnIds:['a1','a3']}]}}};
 const tick=()=>new Promise(r=>setTimeout(r,0));
-async function setup({saved,send,chrome=''}={}) {
+async function setup({saved,send,read,chrome=''}={}) {
  const dom=new JSDOM('<div id="app"><div id="stage-working-lane">'+chrome+'<div class="material-reading"><article id="legacy">Existing controls</article></div></div></div>',{url:'http://localhost/'});
  const {window}=dom;let project={id:'project-one',view:'record',viewedStage:2};let state=clone(base),posts=[],ids=0;
  if(saved)window.localStorage.setItem('ar-create:source-reader:v1',saved);
- const api=installSourceReader({document:window.document,getProject:()=>project,makeId:()=>`op-${++ids}`,fetch:async(url,options={})=>{if(!options.method)return {ok:true,json:async()=>clone(state)};const body=JSON.parse(options.body);posts.push({url,body});return send?send({url,body,state,posts}):{ok:true,status:200,json:async()=>({revision:0})};}});
+ const api=installSourceReader({document:window.document,getProject:()=>project,makeId:()=>`op-${++ids}`,fetch:async(url,options={})=>{if(!options.method)return read?read({url,options,state}):{ok:true,json:async()=>clone(state)};const body=JSON.parse(options.body);posts.push({url,body});return send?send({url,body,state,posts}):{ok:true,status:200,json:async()=>({revision:0})};}});
  await tick();
  const q=s=>window.document.querySelector(s),click=s=>q(s).click(),edit=(field,value)=>{q(`[data-source-reader-field="${field}"]`).value=value;q(`[data-source-reader-field="${field}"]`).dispatchEvent(new window.Event('input',{bubbles:true}));};
  const choose=id=>{q('[data-source-reader-select]').value=id;q('[data-source-reader-select]').dispatchEvent(new window.Event('change',{bubbles:true}));};
@@ -72,4 +72,21 @@ test('one transcript-wide original-wording toggle replaces a disclosure under ev
  assert.equal(x.q('[data-source-original-toggle]').getAttribute('aria-pressed'),'true');
  assert.equal([...x.q('[data-source-reader-dialogue]').querySelectorAll('.source-reader-original')].filter(n=>!n.hidden).length,2);
  x.close();
+});
+
+
+test('startup-unconfigured 503 is Not connected and keeps original retained source readable',async()=>{
+ const x=await setup({read:async()=>({ok:false,status:503,json:async()=>({error:'Kept conversation editing is not connected in this workspace.'})})});try{const status=x.q('[data-source-reader-status]');assert.match(status.textContent,/Not connected/);assert.doesNotMatch(status.textContent,/Try Refresh|could not be loaded/);assert.match(status.textContent,/Existing source records remain readable/);assert.equal(x.q('[data-source-reader-action="refresh"]').textContent,'Check connection');assert.ok(x.q('#legacy'));assert.equal(x.q('#legacy').textContent,'Existing controls');assert.equal(x.q('#legacy').closest('details'),null);}finally{x.close();}
+});
+
+for(const failure of ['other503','server500','malformed','network'])test('transient '+failure+' retains honest retry rather than startup Not connected',async()=>{
+ const x=await setup({read:async()=>{if(failure==='network')throw Error('Network request failed');return{ok:false,status:failure==='other503'?503:500,json:async()=>{if(failure==='malformed')throw Error('Invalid JSON');return{error:'Temporary source owner failure'};}};}});try{assert.doesNotMatch(x.q('[data-source-reader-status]').textContent,/Not connected/);assert.match(x.q('[data-source-reader-status]').textContent,/Refresh|Network request failed/);assert.equal(x.q('[data-source-reader-action="refresh"]').textContent,'Refresh');assert.ok(x.q('#legacy'));}finally{x.close();}
+});
+
+test('checking the connection after runtime setup restores actual kept owner data',async()=>{
+ let reads=0;const x=await setup({read:async({state})=>++reads===1?{ok:false,status:503,json:async()=>({error:'Kept conversation editing is not connected in this workspace.'})}:{ok:true,status:200,json:async()=>clone(state)}});try{assert.match(x.q('[data-source-reader-status]').textContent,/Not connected/);x.click('[data-source-reader-action="refresh"]');await tick();assert.equal(reads,2);assert.equal(x.q('[data-source-reader-action="refresh"]').textContent,'Refresh');assert.equal(x.q('[data-source-reader-select]').options.length,2);assert.ok(x.q('[data-source-reader-turn="a1"]'));assert.doesNotMatch(x.q('[data-source-reader-status]').textContent,/Not connected/);}finally{x.close();}
+});
+
+test('late unconfigured response after disposal cannot restore a reader or hide the retained source',async()=>{
+ let release;const held=new Promise(resolve=>release=resolve),x=await setup({read:async()=>held});try{const legacy=x.q('#legacy');x.api.dispose();release({ok:false,status:503,json:async()=>({error:'Kept conversation editing is not connected in this workspace.'})});await tick();await tick();assert.equal(x.q('[data-source-reader]'),null);assert.strictEqual(x.q('#legacy'),legacy);assert.equal(legacy.closest('details'),null);}finally{x.close();}
 });

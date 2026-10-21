@@ -30,7 +30,7 @@
   9:{empty:()=>!!at('#study-output-canvas .oo-empty'),host:()=>at('.c3-ws-title'),after:true,hide:['#study-output-arrange'],ghost:['film',5],layout:'below',icon:'arrange',title:'Nothing to arrange yet',text:'Arrange lays out one output: an article in reading order, or every carousel slide in its approved portrait template.',actions:[['Make an output',go(12),true],['Open Media',go(8)]],steps:['Make an output','Place words and photos','See it in Audience view']},
   10:{empty:()=>/No connected audience preview/i.test(at('[data-oss-reader]')?.textContent||''),host:()=>at('.c3-ws-title'),after:true,hide:['[data-oss-reader]','.oss-readiness','.oss-surface>.oss-tool-row','.oss-retained'],ghost:['phone',5],layout:'side',icon:'eye',title:'No audience preview yet',text:'Audience view shows exactly what readers receive for one output and edition, and what blocks it from export.',actions:[['Open Outputs',go(12),true],['Open Arrange',go(9)]],steps:['Make an output','Arrange it','Review and export here']},
   11:{empty:()=>{const m=at('[data-oss-field="message"]');return !!m&&!m.value.trim();},host:()=>at('.c3-ws-title'),after:true,hide:[],compact:true,icon:'send',title:'Invite the people in this piece',text:'Write a warm note with the finished piece and ask whether it feels right to them. Copying is not sending; you mark it sent yourself.',actions:[['Write the message','focus:[data-oss-field="message"]',true],['Open Audience view',go(10)]],steps:[]},
-  12:{empty:()=>!!at('#output-overview .oo-empty, .oo-panel .oo-empty'),host:()=>at('.c3-ws-title'),after:true,hide:['#output-overview','.oo-panel'],ghost:['rows',3],icon:'layers',title:'No outputs made yet',text:'An output is one finished form of this piece: an article, a carousel, a post. Each keeps its own words and layout.',actions:[['New article','[data-wn-create="article"]',true],['New carousel','[data-wn-create="carousel"]'],['Open the draft',go(5)]],steps:['Write the draft','Make an output','Review and export']}};
+  12:{empty:()=>{const e=at('#output-overview .oo-empty, .oo-panel .oo-empty');return !!e&&!e.matches('[role=status],[role=alert]')&&!e.querySelector('[role=status],[role=alert],[data-output-retry]');},host:()=>at('.c3-ws-title'),after:true,hide:['#output-overview','.oo-panel'],ghost:['rows',3],icon:'layers',title:'No outputs made yet',text:'An output is one finished form of this piece: an article, a carousel, a post. Each keeps its own words and layout.',actions:[['New article','[data-wn-create="article"]',true],['New carousel','[data-wn-create="carousel"]'],['Open the draft',go(5)]],steps:['Write the draft','Make an output','Review and export']}};
  const stage=()=>{const p=current();return p.view==='record'?Number(p.viewedStage)||0:p.view==='article'?5:0;};
  function real(target){
   if(typeof target!=='string')return null;
@@ -77,8 +77,17 @@
  }
  // When the person acts on a tool the card hid (Write my own angle, a disclosure), the card steps aside for this step.
  function reveal(){revealed=key();clear();}
+ // The shared native browser already presents the original photo intake. When
+ // it adopts that owner, retire this card through its own cleanup lifecycle;
+ // otherwise its hidden mount would also hide the browser's actual uploader.
+ function nativeMediaOwnsSurface(){
+  const ws=document.querySelector('#app #workspace.wfb-native'),adopted=ws?.querySelector('.wfb-native-owner #owned-photo-stage');
+  if(!adopted)return false;
+  try{const owner=window.studyPhotoStage?.browserOwner?.(),scope=owner?.scope,snapshot=owner?.read?.();return scope?.parentStudyId===current().id&&typeof scope.rootBindingId==='string'&&!!scope.rootBindingId&&Array.isArray(snapshot?.photos);}catch{return false;}
+ }
  function decorate(){
   const n=stage(),s=STEPS[n];
+  if(n===8&&nativeMediaOwnsSurface()){clear();return;}
   if(revealed&&revealed!==key())revealed='';
   if(!revealed&&notApplicable(n))return;
   if(!s||revealed||!s.empty()){if(document.querySelector('#app .c3-empty'))clear();return;}

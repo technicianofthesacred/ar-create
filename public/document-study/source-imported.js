@@ -11,7 +11,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   const drafts=stored.drafts && typeof stored.drafts==='object'?stored.drafts:{};
   const contextualCopy=new Map();
   let contextView=null, showOriginal=false;
-  let data={revision:null,sessions:[],notes:{}}, loaded=false, loading=false, loadError='', disposed=false, panel=null, stamp='', refreshQueued=false;
+  let data={revision:null,sessions:[],notes:{}}, loaded=false, loading=false, loadError='', notConnected=false, disposed=false, panel=null, stamp='', refreshQueued=false;
   const active = () => { const p=contextView?.project||getProject(); return p?.view==='record' && Number(p.viewedStage)===2 ? p:null; };
   const room = p => projects[p.id] ||= {sessionId:'',turnId:'',navigation:null,pending:null,message:''};
   const draftKey = (p,s,t) => JSON.stringify([p.id,s.id,t.id]);
@@ -32,7 +32,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
       const validNav=nav && nav.sourceHash===s.sourceHash && nav.ids.every(id=>s.turns.some(t=>t.id===id));
       body=`<article><header class="source-reader-title"><h3>${esc(s.title||'Untitled conversation')}</h3><span class="small">${[s.date,s.location].filter(Boolean).map(esc).join(' · ')}</span></header><div data-source-reader-notes tabindex="-1">${notes||'<p class="small">No reviewed notes are connected to this conversation.</p>'}</div>${validNav?`<nav class="source-reader-actions" aria-label="Supporting passages">${button('previous','Previous',nav.index===0)}<span>${nav.index+1} of ${nav.ids.length}</span>${button('next','Next',nav.index>=nav.ids.length-1)}${button('notes','Back to notes')}</nav>`:nav?'<p class="source-reader-conflict">The supporting passage belongs to earlier wording. Review the notes before following it.</p>':''}<div data-source-reader-dialogue>${namespaced(renderSourceGroups(s))}</div>${s.undoOperationId?`<div class="source-reader-actions">${button('undo','Undo last correction',!!pending||Object.keys(drafts).some(k=>{try {const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}}))}</div>`:''}<details class="source-reader-details"><summary>Source & versions</summary><p>Version ${esc(s.version??'unspecified')}. Original source and earlier wording are preserved.</p><p>Source: ${esc(s.sourceId)}<br>Revision: ${esc(data.revision)}<br>Source fingerprint: ${esc(s.sourceHash)}</p></details></article>`;
     }
-    return `<div class="source-reader-toolbar">${selector}${button('refresh',loading?'Loading…':'Refresh',loading||!!pending)}</div><p data-source-reader-status role="status">${esc(loadError||r.message||(!loaded?'Loading kept conversations…':!data.sessions.length?'No kept conversations are connected yet. Existing source records remain available below.':''))}</p>${pending?`<p class="source-reader-conflict">${pending.uncertain?'The response was interrupted. Retry the same request to find out whether it was saved.':'Saving correction…'}</p>${pending.uncertain?button('retry','Retry same request'):''}`:''}${body}`;
+    return `<div class="source-reader-toolbar">${selector}${button('refresh',loading?'Loading…':notConnected?'Check connection':'Refresh',loading||!!pending)}</div><p data-source-reader-status role="status">${esc(loadError||r.message||(!loaded?'Loading kept conversations…':!data.sessions.length?'No kept conversations are connected yet. Existing source records remain available below.':''))}</p>${pending?`<p class="source-reader-conflict">${pending.uncertain?'The response was interrupted. Retry the same request to find out whether it was saved.':'Saving correction…'}</p>${pending.uncertain?button('retry','Retry same request'):''}`:''}${body}`;
   }
   function paint() {
     const p=active(); if(!p||!panel?.isConnected||panel.dataset.sourceReaderProject!==p.id)return;
@@ -76,12 +76,18 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     }
   }
   async function refresh() {
-    if(disposed)return;if(loading){refreshQueued=true;return;}loading=true;loadError='';paint();
+    if(disposed)return;if(loading){refreshQueued=true;return;}loading=true;loadError='';notConnected=false;paint();
     try {
       const response=await request('/api/source-sessions',{headers:{Accept:'application/json'},cache:'no-store'});
-      if(!response.ok)throw Error('Kept conversations could not be loaded. Try Refresh.');
-      const next=await response.json();
-      if(next.revision===undefined||!Array.isArray(next.sessions)||next.sessions.some(s=>!s.id||!s.sourceHash||!Array.isArray(s.turns)))throw Error('Kept conversation data is incomplete. Try Refresh.');
+      let next;try{next=await response.json();}catch{}
+      if(disposed)return;
+      if(!response.ok){
+        if(response.status===503&&next?.error==='Kept conversation editing is not connected in this workspace.'){
+          notConnected=true;throw Error('Not connected · Kept conversation editing is not available in this workspace. Existing source records remain readable below.');
+        }
+        throw Error('Kept conversations could not be loaded. Try Refresh.');
+      }
+      if(!next||next.revision===undefined||!Array.isArray(next.sessions)||next.sessions.some(s=>!s.id||!s.sourceHash||!Array.isArray(s.turns)))throw Error('Kept conversation data is incomplete. Try Refresh.');
       data=next;data.notes ||= {};loaded=true;
     }catch(e){loadError=e.message||'Kept conversations could not be loaded.';}finally{loading=false;mount();paint();if(refreshQueued){refreshQueued=false;void refresh();}}
   }

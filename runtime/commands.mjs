@@ -150,6 +150,7 @@ export function createRouteMap(services) {
       '/api/writing-template/restore-copy': {POST:input=>writingTemplates.restoreCopy(input)},
       '/api/magazine/portfolio': {GET:()=>magazineRead(()=>magazine.list())},
       '/api/magazine/artifact': {GET:()=>magazineRead(()=>magazine.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))},
+      '/api/library/folders': {GET:async()=>{const domain=url.searchParams.get('domain');if(!['library','media'].includes(domain))throw new StateError('Choose library or media folders.',400);const tree=await library.tree();const sources=(tree.sources||[]).filter(source=>!source.managedTerminalSnapshot&&(domain==='library'||['image','video','photo'].includes(source.kind)||/^(?:image|video)\//i.test(source.mimeType||source.mime||'')||/\.(?:jpe?g|png|webp|gif|avif|heic|mp4|mov|webm|m4v|mkv)$/i.test(source.rel_path||'')));return {schema:'ar-create.library-folders.v1',domain,readOnly:true,revision:null,indexHash:null,folders:[],sources,undoOperationId:null};},POST:()=>{throw new StateError('Folder changes are not connected yet. Your sources are unchanged.',503);}},
       '/api/sources/tree': { GET: () => library.tree() },
       '/api/sources/file': { GET: () => library.read(url.searchParams.get('id'),{allowUnreconciled:true}), POST: input => library.write(input) },
       '/api/sources/import': { POST: async input => {

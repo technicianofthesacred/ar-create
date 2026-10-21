@@ -1,0 +1,84 @@
+/* Arrange uses the approved V.arrange canvas geometry around the maintained owner. */
+html body.wbf-on #app #workspace.wb-arrange #study-output-arrange#study-output-arrange {
+  box-sizing:border-box;width:auto!important;max-width:none!important;
+  margin:0 32px 32px!important;padding:0!important;
+  font:400 var(--t-body,15px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);
+}
+body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench {
+  --cwb-line:var(--line);--cwb-dim:var(--dim);color:var(--ink);
+}
+body.wbf-on #app #workspace.wb-arrange .car-workspace {
+  font:400 var(--t-body,15px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);
+}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 {min-height:26px;height:26px;}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 :is(.handle,.tn2) {
+  min-height:26px;height:26px;border:0!important;padding:0!important;color:var(--ink);
+}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .sh2 .handle {color:var(--dim);}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .slide2 .tx2 {
+  border:1px solid transparent!important;border-radius:6px;outline:none;background:none;
+  padding:4px 6px;box-shadow:none;resize:vertical;
+}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .slide2 .tx2:hover {border-color:var(--line)!important;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .slide2 .tx2:focus {
+  border-color:var(--warm)!important;background:var(--bg)!important;
+}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .tseq {scrollbar-color:var(--line) transparent;}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .tseq::-webkit-scrollbar-track {background:transparent;}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .tseq::-webkit-scrollbar-thumb {background:var(--line);border-color:transparent;}
+body.wbf-on #app #workspace.wb-arrange .car-workspace :is(.car-status,.car-messages) {
+  background:none!important;color:var(--dim)!important;border:0!important;
+  font:400 var(--t-label,13px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);
+}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .car-status * {color:inherit;}
+body.wbf-on #app #workspace.wb-arrange .cwb-manuscript-receipt:not(.is-stale) {color:var(--dim)!important;}
+body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench :is(.car-more>summary,.cwb-new-output>summary) {
+  background:var(--paper)!important;color:var(--ink)!important;border:1px solid var(--line)!important;
+}
+body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .car-more-menu>button[aria-selected=true] {
+  background:var(--sel)!important;color:var(--warm)!important;
+}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .slide2 :is(.tn2,.sln,.handle):focus-visible {
+  outline:2px solid var(--warm);outline-offset:2px;
+}
+@media(max-width:760px) {
+  html body.wbf-on #app #workspace.wb-arrange #study-output-arrange#study-output-arrange {margin:0 16px 32px!important;}
+}
+body.wbf-on #app #workspace.wb-arrange .cwb-article-outline {padding:0;color:var(--ink);font:400 var(--t-body)/1.5 var(--ar-ui);}
+body.wbf-on #app #workspace.wb-arrange .cwb-article-outline>.small {font-size:var(--t-label);color:var(--dim);margin:0 0 12px;}
+body.wbf-on #app #workspace.wb-arrange .lblocks {display:grid;gap:8px;max-width:calc(var(--measure,40rem) + 6rem);}
+body.wbf-on #app #workspace.wb-arrange .lblock {display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--paper);}
+body.wbf-on #app #workspace.wb-arrange .lblock .x {color:var(--dim);font-size:var(--t-label);}
+body.wbf-on #app #workspace.wb-arrange .tnote {border:1px dashed var(--line);border-radius:10px;padding:14px 16px;color:var(--dim);max-width:calc(var(--measure,40rem) + 10rem);margin-top:14px;}
+body.wbf-on #app #workspace.wb-arrange .tnote b {color:var(--ink);}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-status {background:none!important;color:var(--dim)!important;border:0!important;font:400 var(--t-label)/1.5 var(--ar-ui);padding:6px 0;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-manuscript-receipt:not(.is-stale) strong {color:var(--dim)!important;font-weight:400;}
+body.wbf-on #app #workspace.wb-arrange .car-arrange-help {font-size:var(--t-label);color:var(--dim);margin:0;line-height:1.5;}
+body.wbf-on #app #workspace.wb-arrange .car-workspace .car-warning {color:var(--warm);}
+@media(max-width:560px) {
+ body.wbf-on #app #workspace.wb-arrange .car-workspace>.car-tools {padding-right:200px!important;}
+ body.wbf-on #app #workspace.wb-arrange .car-workspace .car-more {margin-left:0;}
+ body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-back {width:auto;max-width:none;white-space:nowrap;font-size:var(--t-label)!important;}
+ body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-new-output>summary {padding-inline:7px!important;}
+}
+/* The article outline shares the same quiet page as the carousel. */
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) {position:relative;display:flex;flex-direction:column;background:none!important;color:var(--ink)!important;border:0!important;font-family:var(--ar-ui)!important;box-shadow:none!important;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-toolbar {position:absolute;right:0;top:0;z-index:4;background:none!important;border:0!important;padding:0!important;min-height:34px;gap:6px;}
+body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) .cwb-output-identity {display:none;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-manuscript-receipt {order:3;background:none!important;border:0!important;padding:6px 0!important;font-size:var(--t-label);}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-tabs {order:0;background:none!important;border:0!important;padding:0 232px 10px 0!important;min-height:38px;display:flex;gap:6px;flex-wrap:wrap;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-article-outline {order:1;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-body {order:1;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-status {order:4;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) :is(.cwb-tabs>button,.cwb-toolbar>button) {font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--ink)!important;background:var(--paper)!important;border:1px solid var(--line)!important;min-height:30px;padding:4px 9px;}
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace)) .cwb-tabs>button[aria-selected=true] {border-color:var(--warm)!important;}
+@media(max-width:760px) {html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-toolbar {position:static;align-self:flex-end;}html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench:not(:has(>.car-workspace))>.cwb-tabs {padding-right:0!important;}}
+
+/* Suppress the donor dark button fill in all Workbench template-trigger states. */
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .car-workspace .slide2 .sh2 .tn2:is(:hover,:focus,:focus-visible,:active){background:transparent!important;color:var(--ink)!important}
+
+/* Floating native menus must escape the composition frame. Inspector mode must
+   contribute height even when the sequence becomes display:contents. */
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench{overflow:visible!important}
+html body.wbf-on #app #workspace.wb-arrange .car-workspace .car-body[data-panel="inspector"]{min-height:clamp(320px,calc(100dvh - 220px),620px)}
+html body.wbf-on #app #workspace.wb-arrange .car-workspace .car-inspector-content{min-height:0;overflow:auto}

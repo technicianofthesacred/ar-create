@@ -1,0 +1,177 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+const script=fs.readFileSync(new URL('../public/document-study/workbench-pieces.js',import.meta.url),'utf8');
+const tick=()=>new Promise(r=>setTimeout(r,0));
+const defer=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
+function boot({projects=[{id:'p',name:'First project',folder:'Travel'},{id:'q',name:'Second project',folder:'Essays'}],drafts=[],outputBindings=[],records={},supported=[],read,phone=false}={}){
+ const dom=new JSDOM('<dialog id="project-library" open><section id="original"><input value="Unsaved home text"><button id="original-action">Original</button></section></dialog><p id="wn-message"></p>',{url:'http://localhost',runScripts:'dangerously'}),w=dom.window,d=w.document,dialog=d.querySelector('dialog');
+ let currentId='p',catalogRows=drafts,closeFailure=false,switchFailure=false;
+ const calls=[];w.state={projects};w.current=()=>projects.find(p=>p.id===currentId)||({id:currentId});w.matchMedia=()=>({matches:phone});w.fetch=async url=>{calls.push(['catalog',url]);return {ok:true,json:async()=>({drafts:catalogRows,outputBindings})};};
+ w.projectLibrary={close:async()=>{calls.push(['close']);if(closeFailure)throw Error('Save refused');dialog.open=false;dialog.dispatchEvent(new w.Event('close'));},whenIdle:async()=>{}};
+ w.switchProject=async id=>{calls.push(['switch',id]);if(!switchFailure)currentId=id;};
+ w.realOutputOverview={read:read|| (async({projectId})=>({projectId,outputs:projectId==='q'?[{id:'same',title:'Second piece',format:'Carousel',edition:'English',rootBindingId:'root-q',status:'in-progress',actions:[{kind:'words'}]}]:[{id:'same',title:'First piece',format:'Article',edition:'Original',rootBindingId:'root-p',status:'review-needed',actions:[{kind:'native'}]}]})),onAction:async input=>calls.push(['action',input])};
+ w.WORKFLOW_RECORDS=records;w.setOutputMode=async mode=>calls.push(['carousel',mode]);w.setView=async view=>calls.push(['view',view]);
+ w.studyDraft={supports:id=>supported.includes(id),openBinding:async input=>calls.push(['binding',input])};w.viewPhase=async n=>calls.push(['stage',n]);w.eval(script);
+ return {w,d,dialog,calls,set current(id){currentId=id;},set drafts(v){catalogRows=v;},set closeFailure(v){closeFailure=v;},set switchFailure(v){switchFailure=v;},open:()=>w.workbenchPieces.open({dialog}),async click(selector){const el=d.querySelector(selector);assert.ok(el,selector);el.click();await tick();await tick();},close:()=>w.close()};
+}
+const draft=(id,parentStudyId,title,extra={})=>({bindingId:id,parentStudyId,title,bindingStatus:'ready',...extra});
+test('Pieces shows independent exact outputs and every ready primary manuscript without replacing Home',async()=>{
+ const f=boot({drafts:[draft('one','p','First manuscript'),draft('two','p','Second manuscript'),draft('fork','p','Fork',{kind:'output-fork'}),draft('pending','q','Pending',{bindingStatus:'pending'}),draft('foreign','z','Foreign')]});const original=f.d.querySelector('#original'),input=original.querySelector('input');let hits=0;original.querySelector('button').onclick=()=>hits++;
+ await f.open();assert.equal(f.d.querySelectorAll('.wbp-row').length,4);assert.match(f.d.querySelector('.wbp-panel').textContent,/Travel/);assert.match(f.d.querySelector('.wbp-panel').textContent,/Essays/);assert.doesNotMatch(f.d.querySelector('.wbp-root').textContent,/Foreign|Pending|Fork/);assert.equal(f.d.querySelectorAll('.wbp-row input:disabled').length,0);assert.ok([...f.d.querySelectorAll('.wbp-row .wbp-date')].every(n=>n.textContent==='—'));
+ f.w.workbenchPieces.close();assert.strictEqual(f.d.querySelector('#original'),original);assert.strictEqual(original.querySelector('input'),input);assert.equal(input.value,'Unsaved home text');original.querySelector('button').click();assert.equal(hits,1);assert.equal(f.dialog.dataset.workbenchPieces,undefined);f.close();
+});
+test('native and output actions close/flush then switch and reread exact identity and edition',async()=>{
+ const f=boot();await f.open();const rows=[...f.d.querySelectorAll('.wbp-row')];rows.find(r=>r.textContent.includes('Second piece')).querySelector('[data-wbp-open]').click();await tick();await tick();const action=f.calls.find(c=>c[0]==='action')[1];assert.deepEqual(JSON.parse(JSON.stringify(action)),{projectId:'q',outputId:'same',edition:'English',kind:'words'});assert.ok(f.calls.findIndex(c=>c[0]==='close')<f.calls.findIndex(c=>c[0]==='switch'));assert.equal(f.dialog.dataset.workbenchPieces,undefined);f.close();
+ const n=boot({drafts:[draft('part-two','q','Part Two')]});await n.open();[...n.d.querySelectorAll('[data-wbp-open]')].find(b=>b.textContent==='Part Two').click();await tick();await tick();assert.equal(n.calls.filter(c=>c[0]==='catalog').length,2);assert.deepEqual(JSON.parse(JSON.stringify(n.calls.find(c=>c[0]==='binding')[1])),{bindingId:'part-two',parentStudyId:'q'});assert.ok(n.calls.some(c=>c[0]==='stage'&&c[1]===5));n.close();
+});
+test('failed close and refused project switch never open the output',async()=>{
+ for(const failure of ['closeFailure','switchFailure']){const f=boot();await f.open();f[failure]=true;[...f.d.querySelectorAll('[data-wbp-open]')].find(b=>b.textContent.includes('Second piece')).click();await tick();await tick();assert.equal(f.calls.some(c=>c[0]==='action'),false);if(failure==='closeFailure'){assert.equal(f.dialog.open,true);assert.match(f.d.querySelector('.wbp-message').textContent,/Save refused/);}else assert.match(f.d.querySelector('#wn-message').textContent,/did not open/);f.close();}
+});
+test('late inventory responses never repopulate closed or reopened Pieces',async()=>{
+ const held=defer();let delayed=true;const f=boot({read:async({projectId})=>{if(delayed)await held.promise;return {projectId,outputs:[{id:'out',title:delayed?'Old title':'Fresh title',format:'Article'}]};}});const opening=f.open();await tick();f.w.workbenchPieces.close();delayed=false;await f.open();held.resolve();await opening;assert.equal(f.d.querySelectorAll('.wbp-row').length,2);assert.doesNotMatch(f.d.querySelector('.wbp-root').textContent,/Old title/);f.close();
+});
+test('a changed context during the final exact read cannot trigger an output action',async()=>{
+ const held=defer();let count=0;const f=boot({projects:[{id:'p',name:'One'}],read:async({projectId})=>{if(++count===2)await held.promise;return {projectId,outputs:[{id:'o',title:'Exact output',format:'Article',edition:'e',rootBindingId:'root'}]};}});await f.open();f.d.querySelector('[data-wbp-open]').click();await tick();f.current='elsewhere';held.resolve();await tick();await tick();assert.equal(f.calls.some(c=>c[0]==='action'),false);assert.match(f.d.querySelector('#wn-message').textContent,/project changed/);f.close();
+});
+test('changed edition rejects navigation instead of opening another edition',async()=>{
+ let count=0;const f=boot({projects:[{id:'p',name:'One'}],read:async({projectId})=>({projectId,outputs:[{id:'o',title:'Exact output',format:'Article',edition:++count===1?'English':'Chinese',rootBindingId:'root'}]})});await f.open();await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>c[0]==='action'),false);assert.match(f.d.querySelector('#wn-message').textContent,/edition changed/);f.close();
+});
+test('partial failures retain successful pieces with a retry; malformed project identities are excluded',async()=>{
+ let failed=true;const f=boot({read:async({projectId})=>{if(projectId==='q'&&failed)return {projectId:'wrong',outputs:[{id:'foreign',title:'Foreign output'}]};return {projectId,outputs:[{id:projectId,title:'Saved '+projectId,format:'Article'}]};}});await f.open();assert.equal(f.d.querySelectorAll('.wbp-row').length,1);assert.ok(f.d.querySelector('[data-wbp-retry]'));assert.doesNotMatch(f.d.querySelector('.wbp-root').textContent,/Foreign output/);failed=false;await f.click('[data-wbp-retry]');assert.equal(f.d.querySelectorAll('.wbp-row').length,2);f.close();
+});
+test('empty Projects do not become pieces, and search/folders/filters reflect actual rows',async()=>{
+ const empty=boot({read:async({projectId})=>({projectId,outputs:[]})});await empty.open();assert.equal(empty.d.querySelectorAll('.wbp-row').length,0);assert.match(empty.d.querySelector('.wbp-empty').textContent,/No saved pieces yet/);empty.close();
+ const f=boot({phone:true});await f.open();await f.click('[data-wbp-folders]');assert.ok(f.d.querySelector('.wbp-sheet-open'));await f.click('[data-wbp-folder="Essays"]');assert.equal(f.d.querySelectorAll('.wbp-row').length,1);assert.equal(f.d.querySelector('.wbp-sheet-open'),null);const input=f.d.querySelector('[data-wbp-search]');input.value='missing';input.dispatchEvent(new f.w.Event('input',{bubbles:true}));assert.match(f.d.querySelector('.wbp-empty').textContent,/No matching pieces/);await f.click('[data-wbp-clear]');assert.equal(f.d.querySelectorAll('.wbp-row').length,2);await f.click('[data-wbp-filters]');const select=f.d.querySelector('[data-wbp-kind]');select.value='Carousel';select.dispatchEvent(new f.w.Event('change',{bubbles:true}));assert.equal(f.d.querySelectorAll('.wbp-row').length,1);assert.match(f.d.querySelector('.wbp-row').textContent,/Second piece/);f.close();
+});
+test('read concurrency stays bounded and closing prevents further queued discovery',async()=>{
+ let concurrent=0,max=0;const gate=defer(),ps=Array.from({length:12},(_,i)=>({id:'p'+i,name:'Project '+i}));const f=boot({projects:ps,read:async({projectId})=>{concurrent++;max=Math.max(max,concurrent);await gate.promise;concurrent--;return {projectId,outputs:[]};}});const opening=f.open();await tick();assert.equal(max,3);f.w.workbenchPieces.close();gate.resolve();await opening;assert.equal(max,3);assert.equal(f.d.querySelector('.wbp-root'),null);f.close();
+});
+
+test('Drafts includes saved in-progress outputs while Ready never invents completion',async()=>{
+ const f=boot({drafts:[draft('primary','p','Working manuscript')]});await f.open();await f.click('[data-wbp-view="drafts"]');assert.equal(f.d.querySelectorAll('.wbp-row').length,2);assert.match(f.d.querySelector('.wbp-rows').textContent,/Second piece/);assert.match(f.d.querySelector('.wbp-rows').textContent,/Working manuscript/);await f.click('[data-wbp-view="ready"]');assert.equal(f.d.querySelectorAll('.wbp-row').length,0);assert.match(f.d.querySelector('.wbp-empty').textContent,/No matching pieces/);f.close();
+});
+
+test('only an explicit canonical native-output registration deduplicates shared authority',async()=>{
+ const f=boot({drafts:[draft('registered','p','Same title'),draft('independent','p','Same title')],outputBindings:[{bindingId:'registered',parentStudyId:'p',bindingStatus:'ready',kind:'existing-native-output-registration',canonicalOutputId:'same'}]});await f.open();assert.equal(f.d.querySelectorAll('.wbp-row').length,3);assert.equal([...f.d.querySelectorAll('[data-wbp-open]')].filter(b=>b.textContent==='Same title').length,1);assert.match(f.d.querySelector('.wbp-root').textContent,/First piece/);f.close();
+ const missing=boot({drafts:[draft('registered','p','Registered draft')],outputBindings:[{bindingId:'registered',parentStudyId:'p',bindingStatus:'ready',kind:'existing-native-output-registration',canonicalOutputId:'absent'}]});await missing.open();assert.equal(missing.d.querySelectorAll('.wbp-row').length,3);assert.match(missing.d.querySelector('.wbp-root').textContent,/Registered draft/);missing.close();
+});
+
+const retained=(path,title='Same title')=>({path,title,html:'<p>Invented retained wording</p>',notes:[]});
+test('zero native outputs still discovers browser words, whole carousel and separate multipart originals',async()=>{
+ const parts=[retained('synthetic/part-1.md'),retained('synthetic/part-2.md'),retained('synthetic/part-3.md')];
+ const projects=[{id:'p',name:'Browser article',blocks:[{id:'a',tag:'p',html:'Invented words'}],rev:3},{id:'q',name:'Retained carousel',slides:[{id:'s1',text:'One'},{id:'s2',text:'Two'}],rev:4},{id:'r',name:'Multipart',ownedDraft:{bindingId:'native'},blocks:[{id:'native'}]}];
+ const f=boot({projects,records:{r:{words:parts,stages:{6:parts}}},read:async({projectId})=>({projectId,outputs:[]})});await f.open();
+ assert.equal(f.d.querySelectorAll('.wbp-row').length,5);assert.match(f.d.querySelector('.wbp-rows').textContent,/Browser copy/);assert.match(f.d.querySelector('.wbp-rows').textContent,/Retained original/);assert.equal([...f.d.querySelectorAll('[data-wbp-open]')].filter(b=>b.textContent.includes('Same title')).length,3);
+ await f.click('[data-wbp-open*="browser-carousel"]');assert.ok(f.calls.some(c=>c[0]==='carousel'&&c[1]==='words'));assert.equal(f.calls.some(c=>['binding','action'].includes(c[0])),false);assert.equal(f.calls.filter(c=>c[0]==='catalog').length,1);f.close();
+ const words=boot({projects:[projects[0]],read:async({projectId})=>({projectId,outputs:[]})});await words.open();await words.click('[data-wbp-open]');assert.ok(words.calls.some(c=>c[0]==='view'&&c[1]==='article'));assert.equal(words.calls.some(c=>c[0]==='binding'),false);words.close();
+});
+test('multipart pickup opens the exact existing original reader record and reveals its disclosure',async()=>{
+ const parts=[retained('synthetic/a.md'),retained('synthetic/b.md')],f=boot({projects:[{id:'p',name:'Parts'}],records:{p:{words:parts,stages:{6:parts}}},read:async({projectId})=>({projectId,outputs:[]})});
+ f.w.viewPhase=async stage=>{f.calls.push(['stage',stage]);f.d.body.insertAdjacentHTML('beforeend','<select aria-label="Jump to retained record"><option value="">Records (2)</option><option value="phase-record-0">Part one</option><option value="phase-record-1">Part two</option></select><details><summary>Earlier original draft</summary><article id="phase-record-0"></article><article id="phase-record-1"></article></details>');};
+ await f.open();const buttons=[...f.d.querySelectorAll('[data-wbp-open]')];assert.equal(buttons.length,2);buttons[1].click();await tick();await tick();assert.ok(f.calls.some(c=>c[0]==='stage'&&c[1]===6));assert.equal(f.d.querySelector('details').open,true);assert.equal(f.d.querySelector('[aria-label="Jump to retained record"]').value,'phase-record-1');assert.equal(f.calls.some(c=>['binding','action','view'].includes(c[0])),false);f.close();
+});
+test('retained pickup refuses unsaved close, changed browser revision, removed entry and project switches',async()=>{
+ for(const failure of ['close','revision','removed','project']){const p={id:'p',name:'Carousel',slides:[{id:'s',text:'Invented'}],rev:1},f=boot({projects:[p],read:async({projectId})=>({projectId,outputs:[]})});await f.open();
+ if(failure==='close')f.closeFailure=true;
+ else f.w.projectLibrary.whenIdle=async()=>{if(failure==='revision')p.rev++;if(failure==='removed')p.slides=[];if(failure==='project')f.current='elsewhere';};
+ await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>c[0]==='carousel'),false,failure);assert.match((f.d.querySelector('.wbp-message')||f.d.querySelector('#wn-message')).textContent,/Save refused|changed|available/);f.close();}
+});
+test('native project blocks never appear as a separate browser manuscript',async()=>{
+ const f=boot({projects:[{id:'p',name:'Owned',ownedDraft:{bindingId:'b'},blocks:[{id:'a',html:'Owned wording'}]}],drafts:[draft('b','p','Owned manuscript')],read:async({projectId})=>({projectId,outputs:[]})});await f.open();assert.equal(f.d.querySelectorAll('.wbp-row').length,1);assert.doesNotMatch(f.d.querySelector('.wbp-row').textContent,/Browser copy/);f.close();
+});
+
+test('retained pickup does not render a supported remembered writer on project switch',async()=>{
+ const record=retained('synthetic/part.md'),f=boot({projects:[{id:'p',name:'Current'},{id:'q',name:'Retained',view:'article',viewedStage:5}],supported:['q'],records:{q:{words:[record],stages:{6:[record]}}},read:async({projectId})=>({projectId,outputs:[]})});await f.open();await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>['switch','stage','binding','action'].includes(c[0])),false);assert.match(f.d.querySelector('.wbp-message').textContent,/choose Read/);assert.equal(f.dialog.open,true);f.close();
+});
+
+test('retained pickup uses the guarded owner destination before a supported remembered writer can render',async()=>{
+ for(const same of [false,true]){const record=retained('synthetic/safe.md'),target=same?'p':'q',f=boot({projects:[{id:'p',name:'Current',view:'article',viewedStage:5},{id:'q',name:'Retained',view:'article',viewedStage:5}],supported:['p','q'],records:{[target]:{words:[record],stages:{6:[record]}}},read:async({projectId})=>({projectId,outputs:[]})});
+ f.w.projectDestination=()=>{};f.w.switchProject=async(id,options)=>{f.calls.push(['guarded-switch',id,JSON.parse(JSON.stringify(options))]);f.current=id;f.d.body.insertAdjacentHTML('beforeend','<details><summary>Earlier original draft</summary><article id="phase-record-0"></article></details>');};
+ await f.open();await f.click('[data-wbp-open]');const opened=f.calls.find(c=>c[0]==='guarded-switch');assert.ok(opened);assert.equal(opened[1],target);assert.deepEqual(opened[2],{destination:'retained-read',originProjectId:'p'});assert.equal(f.d.querySelector('details').open,true);assert.equal(f.calls.some(c=>['switch','stage','binding','action'].includes(c[0])),false);f.close();}
+});
+
+test('retained carousel uses the same guarded destination and stale rows refuse before switching',async()=>{
+ for(const stale of [false,true]){const target={id:'q',name:'Carousel',view:'article',viewedStage:5,slides:[{id:'slide',text:'Invented'}],rev:1},f=boot({projects:[{id:'p',name:'Origin'},target],supported:['q'],read:async({projectId})=>({projectId,outputs:[]})});f.w.projectDestination=()=>{};f.w.switchProject=async(id,options)=>{f.calls.push(['guarded-switch',id,JSON.parse(JSON.stringify(options))]);f.current=id;};if(stale)f.w.projectLibrary.whenIdle=async()=>{target.rev++;};await f.open();await f.click('[data-wbp-open]');const opened=f.calls.find(c=>c[0]==='guarded-switch');if(stale){assert.equal(opened,undefined);assert.match(f.d.querySelector('#wn-message').textContent,/changed/);}else{assert.ok(opened);assert.deepEqual(opened[2],{destination:'carousel-words',originProjectId:'p'});assert.equal(f.calls.some(c=>c[0]==='carousel'),false);}assert.equal(f.calls.some(c=>['binding','action'].includes(c[0])),false);f.close();}
+});
+
+test('retained wording changed without a recorded hash refuses pickup before entering another record',async()=>{
+ const record=retained('synthetic/no-hash.md'),f=boot({projects:[{id:'p',name:'Original records'}],records:{p:{words:[record],stages:{6:[record]}}},read:async({projectId})=>({projectId,outputs:[]})});await f.open();f.w.projectLibrary.whenIdle=async()=>{record.html='<p>Changed retained wording without a new metadata hash.</p>';};await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>['switch','stage','binding','action'].includes(c[0])),false);assert.match(f.d.querySelector('#wn-message').textContent,/changed/);f.close();
+});
+
+
+test('supported unbound browser words appear and use exact guarded read-only destination',async()=>{
+ const target={id:'q',name:'Earlier browser article',view:'article',viewedStage:5,blocks:[{id:'exact',tag:'blockquote',html:'Preserved earlier words',quote:true,protection:{reason:'Exact'}}],note:{state:'proposal',original:'Preserved earlier words'},originalNotes:[{anchor:'exact',text:'Keep'}],rev:2};
+ const f=boot({projects:[{id:'p',name:'Origin'},target],supported:['q'],read:async({projectId})=>({projectId,outputs:[]})});f.w.projectDestination=()=>{};f.w.switchProject=async(id,options)=>{f.calls.push(['guarded-switch',id,JSON.parse(JSON.stringify(options))]);target.view='record';target.viewedStage=6;target.readSource='browser';f.current=id;};
+ try{const before=JSON.stringify([target.blocks,target.note,target.originalNotes]);await f.open();assert.equal(f.d.querySelectorAll('.wbp-row').length,1);assert.match(f.d.querySelector('.wbp-row').textContent,/Browser copy/);await f.click('[data-wbp-open]');const opened=f.calls.find(c=>c[0]==='guarded-switch');assert.ok(opened);assert.deepEqual(opened[2],{destination:'browser-read',originProjectId:'p',browserSignature:JSON.stringify([target.blocks,target.note,target.originalNotes])});assert.equal(f.calls.some(c=>['view','stage','binding','action'].includes(c[0])),false);assert.equal(JSON.stringify([target.blocks,target.note,target.originalNotes]),before);}finally{f.close();}
+});
+
+test('supported browser pickup refuses words or protection changed without a revision bump',async()=>{
+ for(const change of ['words','protection']){const p={id:'p',name:'Earlier browser article',blocks:[{id:'same',tag:'p',html:'Exact words',quote:false}],rev:1},f=boot({projects:[p],supported:['p'],read:async({projectId})=>({projectId,outputs:[]})});f.w.projectDestination=()=>{};f.w.projectLibrary.whenIdle=async()=>{if(change==='words')p.blocks[0].html='Changed words';else p.blocks[0].quote=true;};
+  try{await f.open();assert.equal(f.d.querySelectorAll('.wbp-row').length,1);await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>['switch','view','stage','binding','action'].includes(c[0])),false);assert.match(f.d.querySelector('#wn-message').textContent,/changed/);}finally{f.close();}
+ }
+});
+
+
+test('blank markup is not browser writing and late support discovery refuses the old editing route',async()=>{
+ const blank=boot({projects:[{id:'p',name:'Empty',blocks:[{id:'blank',html:'<br>'}]}],supported:['p'],read:async({projectId})=>({projectId,outputs:[]})});try{await blank.open();assert.equal(blank.d.querySelectorAll('.wbp-row').length,0);}finally{blank.close();}
+ const p={id:'p',name:'Earlier words',blocks:[{id:'old',html:'Exact existing text.'}]},f=boot({projects:[p],read:async({projectId})=>({projectId,outputs:[]})});
+ try{await f.open();f.w.projectLibrary.whenIdle=async()=>{f.w.studyDraft.supports=()=>true;};await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>['switch','view','stage','binding','action'].includes(c[0])),false);assert.match(f.d.querySelector('#wn-message').textContent,/changed/);}finally{f.close();}
+});
+
+
+test('supported browser pickup rechecks exact words after awaited owner switch and refuses a missing read guard',async()=>{
+ for(const failure of ['guard','changed-after-switch']){const p={id:'p',name:'Earlier browser text',blocks:[{id:'b',html:'Pinned browser words.',quote:true}],rev:1},f=boot({projects:[p],supported:['p'],read:async({projectId})=>({projectId,outputs:[]})});
+  if(failure==='changed-after-switch'){f.w.projectDestination=()=>{};f.w.switchProject=async()=>{p.readSource='browser';p.view='record';p.viewedStage=6;await tick();p.blocks[0].html='Different words arrived during switch.';};}
+  try{await f.open();await f.click('[data-wbp-open]');assert.equal(f.calls.some(c=>['view','stage','binding','action'].includes(c[0])),false);assert.match((f.d.querySelector('.wbp-message')||f.d.querySelector('#wn-message')).textContent,/unavailable|changed/);if(failure==='guard'){assert.equal(f.dialog.open,true);assert.equal(f.calls.some(c=>c[0]==='close'),false);}}finally{f.close();}
+ }
+});
+
+
+const manyPieces=(count=5000)=>Array.from({length:count},(_,i)=>({id:'piece-'+i,title:'Piece '+String(i).padStart(5,'0'),format:i%2?'Carousel':'Article',edition:'Original',rootBindingId:'root-'+i,status:i%2?'in-progress':'ready',actions:[{kind:i%2?'words':'native'}]}));
+const setViewport=f=>Object.defineProperty(f.w.HTMLElement.prototype,'clientHeight',{configurable:true,get(){return this.classList.contains('wbp-rows')?480:0;}});
+const scrollPieces=(f,offset)=>{const viewport=f.d.querySelector('.wbp-rows');viewport.scrollTop=offset;viewport.dispatchEvent(new f.w.Event('scroll'));return viewport;};
+const pieceButton=(f,id)=>[...f.d.querySelectorAll('[data-wbp-open]')].find(b=>JSON.parse(b.dataset.wbpOpen)[2]===id);
+test('5000 Pieces keep a viewport-sized DOM and open the exact scrolled project/output',async()=>{
+ const list=manyPieces(),f=boot({read:async({projectId})=>({projectId,outputs:projectId==='p'?list.slice(0,2500):list.slice(2500)})});setViewport(f);
+ try{await f.open();assert.ok(f.d.querySelectorAll('.wbp-row').length<=40,'bounded initial DOM');assert.equal(f.d.querySelector('[role=table]').getAttribute('aria-rowcount'),'5001');
+ const viewport=scrollPieces(f,3400*36);assert.strictEqual(f.d.querySelector('.wbp-rows'),viewport,'scroll updates keep the viewport');assert.ok(f.d.querySelectorAll('.wbp-row').length<=40);assert.ok(pieceButton(f,'piece-3400'));assert.equal(pieceButton(f,'piece-0'),undefined);
+ const top=+f.d.querySelector('[data-wbp-spacer=top]').style.height.replace('px',''),bottom=+f.d.querySelector('[data-wbp-spacer=bottom]').style.height.replace('px','');assert.equal(top+bottom+f.d.querySelectorAll('.wbp-row').length*36,5000*36);
+ pieceButton(f,'piece-3400').click();await tick();await tick();assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find(c=>c[0]==='action')[1])),{projectId:'q',outputId:'piece-3400',edition:'Original',kind:'native'});
+ }finally{f.close();}
+});
+test('phone virtual rows use phone height and keyboard navigation reaches offscreen identities',async()=>{
+ const list=manyPieces(3000),f=boot({phone:true,projects:[{id:'p',name:'One'}],read:async({projectId})=>({projectId,outputs:list})});setViewport(f);
+ try{await f.open();scrollPieces(f,2100*56);assert.ok(pieceButton(f,'piece-2100'));assert.ok(f.d.querySelectorAll('.wbp-row').length<=32);const last=pieceButton(f,'piece-2100');last.focus();last.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'End',bubbles:true,cancelable:true}));assert.equal(JSON.parse(f.d.activeElement.dataset.wbpOpen)[2],'piece-2999');assert.equal(f.d.querySelector('.wbp-rows').scrollTop,3000*56-480);f.d.activeElement.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'Home',bubbles:true,cancelable:true}));assert.equal(JSON.parse(f.d.activeElement.dataset.wbpOpen)[2],'piece-0');assert.equal(f.d.querySelector('.wbp-rows').scrollTop,0);assert.equal(f.calls.filter(c=>c[0]==='catalog').length,1);
+ }finally{f.close();}
+});
+test('selection uses exact keys across virtual windows, shift ranges and filters without saved writes',async()=>{
+ const list=manyPieces(1200),projects=[{id:'p',name:'One',folder:'Travel'},{id:'q',name:'Two',folder:'Essays'}],before=JSON.stringify(projects),f=boot({projects,read:async({projectId})=>({projectId,outputs:list.slice(0,600)})});setViewport(f);
+ try{await f.open();const first=f.d.querySelector('[data-wbp-select]');assert.ok(first,'enabled local-selection control');assert.equal(first.disabled,false);first.click();assert.match(f.d.querySelector('.wbp-selection').textContent,/1 selected/);assert.match(f.d.querySelector('.wbp-selection').textContent,/Local/);
+ // Same IDs/titles exist in both projects; the key distinguishes them.
+ await f.click('[data-wbp-folder="Essays"]');assert.equal(f.d.querySelector('[data-wbp-select]').checked,false);f.d.querySelector('[data-wbp-select]').click();assert.match(f.d.querySelector('.wbp-selection').textContent,/2 selected/);await f.click('[data-wbp-folder=""]');
+ // Shift-select across unmounted rows using the current sorted result order.
+ scrollPieces(f,80*36);const target=f.d.querySelector('.wbp-row[aria-rowindex="87"] [data-wbp-select]');assert.ok(target);target.dispatchEvent(new f.w.MouseEvent('click',{bubbles:true,shiftKey:true}));assert.match(f.d.querySelector('.wbp-selection').textContent,/86 selected/);
+ await f.click('[data-wbp-show-selected]');assert.equal(f.d.querySelector('[role=table]').getAttribute('aria-rowcount'),'87');assert.ok(f.d.querySelectorAll('.wbp-row').length<=40);await f.click('[data-wbp-clear-selection]');assert.equal(f.d.querySelector('.wbp-selection'),null);assert.equal(f.d.querySelectorAll('[data-wbp-select]:checked').length,0);
+ assert.equal(JSON.stringify(projects),before);assert.equal(f.calls.some(c=>['action','binding','switch','close','stage'].includes(c[0])),false);assert.equal(f.w.localStorage.length,0);
+ }finally{f.close();}
+});
+test('search/folder resets the window, while returning preserves scroll and local selection',async()=>{
+ let list=manyPieces(2000);const f=boot({projects:[{id:'p',name:'One',folder:'Travel'}],read:async({projectId})=>({projectId,outputs:list})});setViewport(f);
+ try{await f.open();scrollPieces(f,1500*36);const checkbox=pieceButton(f,'piece-1500').closest('.wbp-row').querySelector('input');checkbox.click();assert.equal(f.d.querySelector('.wbp-rows').scrollTop,1500*36);assert.equal(pieceButton(f,'piece-1500').closest('.wbp-row').querySelector('input').checked,true);
+ f.w.workbenchPieces.close();await f.open();assert.equal(f.d.querySelector('.wbp-rows').scrollTop,1500*36);assert.equal(pieceButton(f,'piece-1500').closest('.wbp-row').querySelector('input').checked,true);
+ const search=f.d.querySelector('[data-wbp-search]');search.value='Piece 01999';search.focus();search.dispatchEvent(new f.w.Event('input',{bubbles:true}));assert.equal(f.d.querySelector('.wbp-rows').scrollTop,0);assert.equal(f.d.querySelectorAll('.wbp-row').length,1);assert.ok(pieceButton(f,'piece-1999'));assert.equal(f.d.activeElement,f.d.querySelector('[data-wbp-search]'));
+ const cleared=f.d.querySelector('[data-wbp-search]');cleared.value='';cleared.dispatchEvent(new f.w.Event('input',{bubbles:true}));await f.click('[data-wbp-select-all]');assert.match(f.d.querySelector('.wbp-selection').textContent,/2000 selected/);list=list.slice(0,10);f.w.workbenchPieces.close();await f.open();assert.match(f.d.querySelector('.wbp-selection').textContent,/10 selected/);assert.equal(f.d.querySelectorAll('.wbp-row').length,10);
+ }finally{f.close();}
+});
+
+test('keyboard selection actions keep focus and unread pieces are not treated as removed',async()=>{
+ let unavailable=false;const f=boot({read:async({projectId})=>{if(projectId==='q'&&unavailable)throw Error('Reader offline');return {projectId,outputs:[{id:'same',title:projectId,format:'Article',edition:'Original'}]};}});
+ try{await f.open();f.d.querySelector('[data-wbp-selection-tools]').open=true;const all=f.d.querySelector('[data-wbp-select-all]');all.focus();all.click();assert.equal(f.d.activeElement,f.d.querySelector('[data-wbp-select-all]'));
+ f.w.workbenchPieces.close();unavailable=true;await f.open();assert.match(f.d.querySelector('.wbp-selection').textContent,/2 selected.*1 unavailable/);assert.match(f.d.querySelector('.wbp-message').textContent,/could not be read/);await f.click('[data-wbp-show-selected]');assert.equal(f.d.querySelectorAll('.wbp-row').length,1);unavailable=false;await f.click('[data-wbp-retry]');assert.match(f.d.querySelector('.wbp-selection').textContent,/2 selected/);assert.doesNotMatch(f.d.querySelector('.wbp-selection').textContent,/unavailable/);
+ }finally{f.close();}
+});
+
+test('no-selection Pieces keeps selection behind a disclosure and guarded close readable',async()=>{const f=boot({phone:true});try{await f.open();assert.equal(f.d.querySelector('.wbp-selection'),null);const menu=f.d.querySelector('[data-wbp-selection-tools]');assert.ok(menu);assert.equal(menu.open,false);menu.open=true;const all=menu.querySelector('[data-wbp-select-all]');all.focus();all.click();assert.match(f.d.querySelector('.wbp-selection').textContent,/2 selected/);assert.equal(f.d.activeElement,f.d.querySelector('[data-wbp-select-all]'));const clear=f.d.querySelector('[data-wbp-clear-selection]');clear.focus();clear.click();assert.equal(f.d.querySelector('.wbp-selection'),null);assert.equal(f.d.activeElement,f.d.querySelector('[data-wbp-selection-tools] summary'));assert.equal(f.d.querySelector('[data-wbp-close]').textContent,'Back to work');f.closeFailure=true;await f.click('[data-wbp-close]');assert.equal(f.dialog.open,true);assert.match(f.d.querySelector('.wbp-message').textContent,/Save refused/);assert.equal(f.d.querySelector('#original input').value,'Unsaved home text');assert.ok(f.d.querySelector('[data-wbp-folders]'));}finally{f.close();}});

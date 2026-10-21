@@ -125,3 +125,29 @@ html body.wb-on #app>.shell>.workflowNavigation.wb-rail>.tr-find>[data-tr-topics
  /* The workspace scrolls above the bar; the bar's More menu and toasts stay above the bottom bar. */
  html body.wb-on #c3-surface-bar .sb-menu{max-height:calc(100dvh - 140px);overflow:auto}
 }
+/* Approved sidebar details: exact header height and icon stroke. Folder bodies retain
+   their existing owner and disclosure geometry; these rules address the shared frame. */
+html body.wbf-on #wb-panel>.wbp-head{height:40px;min-height:40px;font:500 var(--t-label)/1.5 var(--ar-ui)}
+html body.wbf-on #wb-panel>.wbp-head .wbp-fold{width:33px;height:32px}
+html body.wbf-on #wb-panel>.wbp-head svg{width:15px;height:15px;stroke-width:1.6}
+html body.wbf-on .workflowNavigation.wb-rail svg{stroke-width:1.6}
+html body.wbf-on #wb-panel .wbp-group .wbp-row{gap:10px}
+html body.wbf-on #wb-panel .wbp-group .wbp-row>svg{width:15px;height:15px;flex:none}
+/* The approved phone folder sheet covers the bottom navigation and closes with Done. */
+@media(max-width:760px){
+ html body.wb-on #app>.shell>#wb-panel{bottom:0;z-index:75;max-height:80dvh}
+ html body.wbf-on #wb-panel>.wbp-head{height:56px;min-height:56px;padding:0 14px;border-bottom:1px solid var(--line);font:600 var(--t-head)/1.5 var(--ar-ui)}
+ html body.wbf-on #wb-panel>.wbp-head .wbp-fold{width:auto;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:7px;font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--ink)}
+ html body.wbf-on #wb-panel>.wbp-body{padding:8px 8px 24px}
+}
+/* Final media.css uses a distinct panel shade, shared with the active rail item.
+   Keep the theme tokens live: the mixed shade differs in both light and dark. */
+html body.wbf-on.wb-on{--wb-panel:color-mix(in srgb,var(--rail) 45%,var(--sel))}
+@media(min-width:761px){
+ html body.wbf-on.wb-on #app>.shell>.workflowNavigation.wb-rail{background:var(--rail)!important}
+ html body.wbf-on.wb-on #app>.shell>#wb-panel{background:var(--wb-panel)!important}
+}
+@media(min-width:761px){
+ html body.wbf-on.wb-on.wb-panel-on #app>.shell>.workflowNavigation.wb-rail .workflowStep[aria-current]{background:var(--wb-panel)!important;color:var(--ink)!important}
+ html body.wbf-on.wb-on #app>.shell>#wb-panel .wfb-tn.on{background:color-mix(in srgb,var(--sel) 70%,var(--ink) 6%)!important}
+}

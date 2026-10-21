@@ -5,23 +5,37 @@
    and repaints. The save notice and failed-save recovery (.draft-bar) are never hidden. Install last. */
 (()=>{
  if(window.surfaceBar)return;
- const ROWS=['.workspace>.topbar','.workspace>#work-context','.workspace>.workbar','.workspace>.historicalToolbar','.workspace #direction-writing-tools>.dwt-orientation'];
+ const ROWS=['.workspace>.topbar','.workspace>#work-context','.workspace>.workbar','.workspace>.historicalToolbar','.workspace #direction-writing-tools>.dwt-orientation','.workspace .draft-surface-more-body'];
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const I={pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',undo:'<path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2"/>',history:'<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5v4h4"/><path d="M12 8v4.5l3 2"/>',focus:'<path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/>',margin:'<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M15 4.5v15"/>',more:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',chev:'<path d="m7 10 5 5 5-5"/>',outputs:'<path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12.5l8.5 4.5 8.5-4.5"/><path d="M3.5 16.5l8.5 4.5 8.5-4.5"/>',back:'<path d="M14.5 6 8.5 12l6 6"/>'};
- let reals=[],lastSig='',moreOpen=false,queued=false,primaryAction=null;
+ let reals=[],lastSig='',moreOpen=false,queued=false,primaryAction=null,focusedOutput=null,focusSerial=0;
  const visible=n=>n&&n.isConnected&&!n.hidden&&!n.closest('[hidden]')&&!(n.dataset?.wnConsolidated);
  const label=n=>(n.textContent||'').replace(/\s+/g,' ').trim()||n.getAttribute('aria-label')||n.title||'';
  const stage=()=>{const p=current();return p.view==='record'?Number(p.viewedStage)||0:p.view==='article'?5:0;};
  function rows(){return ROWS.map(s=>document.querySelector(s)).filter(Boolean);}
+ // A focused format chooser projects only the original guarded controls. Its
+ // exact owner and selected work must still agree when a choice is pressed.
+ function outputMenuScope(){try{const p=current(),selected=window.studyOutputConnection?.selection?.(),binding=window.studyDraft?.currentBinding?.();return JSON.stringify([p.id,p.view,p.viewedStage,selected?.projectId,selected?.rootBindingId,selected?.output?.id,binding?.id,binding?.canonicalOutputId]);}catch{return null;}}
+ function focusedOutputCurrent(){
+  if(!focusedOutput||!focusedOutput.scope||focusedOutput.scope!==outputMenuScope()||!focusedOutput.owner.isConnected||focusedOutput.owner!==document.querySelector('#work-context .wn-new'))return false;
+  const controls=[...focusedOutput.owner.querySelectorAll('[data-wn-create]')];return controls.length===focusedOutput.controls.length&&controls.every((node,i)=>node===focusedOutput.controls[i]);
+ }
+ function closeMore({focus=false}={}){const target=focusedOutput?.returnFocus;moreOpen=false;focusedOutput=null;lastSig='';build();if(focus)(target?.isConnected?target:document.querySelector('#c3-surface-bar [data-sb-more]'))?.focus({preventScroll:true});}
+
  // Sort the real controls of the hidden rows into bar slots. Unknown controls go to More, never away.
  function collect(){
   const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,mode:null,records:null,more:[]};reals=[];
   const add=(n,slot)=>{const i=reals.push(n)-1;if(slot)out[slot]=i;return i;};
   for(const row of rows()){
    if(row.matches('.dwt-orientation')&&stage()!==5)continue;
+   const protectionOnly=row.matches('.draft-surface-more-body');
+   if(protectionOnly&&![5,6].includes(stage()))continue;
    const group={title:row.matches('#work-context')?'This piece':row.matches('.topbar')?'View':row.matches('.dwt-orientation')?'Direction and voice':'Writing tools',items:[]};
    for(const n of row.querySelectorAll('button,select,a.i64-return')){
+    // The nested donor More keeps its other tools. Project only its guarded
+    // protection-list entrance, including when the owner appends it later.
+    if(reals.includes(n)||(protectionOnly&&!n.matches('[data-wording-action="list"]')))continue;
     if(n.closest('#connected-work-receipts'))continue;
     if(n.matches('[data-wn-mode]')&&!window.workspaceNavigation?.selectedOutput?.())continue; // the sidebar steps cover these
     if(!visible(n)&&!n.closest('details'))continue;
@@ -104,18 +118,20 @@
  function identity(){const p=current(),ctx=document.querySelector('#work-context .wn-identity'),title=ctx?.querySelector('strong')?.textContent.trim(),meta=ctx?.querySelector(':scope>span')?.textContent.trim();return {piece:p.name,title:title&&title!=='Project workspace'?title:'',meta:meta||''};}
  function build(){
   const ws=document.querySelector('#app .workspace');if(!ws)return;
+  if(focusedOutput&&!focusedOutputCurrent()){focusedOutput=null;moreOpen=false;}
   const slots=collect(),id=identity(),status=statusText();
   // Work receipts and the piece's own status line used to be a strip of their own; they now live in More and in the bar.
   const receipts=document.getElementById('connected-work-receipts'),msgNode=document.getElementById('wn-message'),msg=msgNode&&!msgNode.hidden?label(msgNode):'';
   const own=`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div>${proxy(slots.outputs,'sb-item','Outputs')}${proxy(slots.history,'sb-item','History · every saved version','aria-label="History · every saved version"')}${window.arLive?'<button type="button" class="sb-item" data-sb-recent>Recent changes · who did what</button>':''}${receipts?'<button type="button" class="sb-item" data-sb-receipts>Receipts</button>':''}${window.c3Tree?'<button type="button" class="sb-item" data-sb-everything>Everything that’s here</button>':''}</div>`;
-  const more=own+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
-  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,document.body.classList.contains('c3-insp-sheet'),msg,!!receipts,size,window.c3PieceState?.readOnlyReason?.()||'',!!localOnly(),window.arLive?.note?.()?.text||'']);
+  const ordinaryMore=own+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
+  const more=focusedOutput?`<div class="sb-group" role="group" aria-label="Output formats"><div class="sb-gh">Make an output</div>${focusedOutput.controls.map(real=>proxy(reals.indexOf(real),'sb-item',esc(label(real)),`data-sb-output-choice="${focusedOutput.id}"`)).join('')}<button type="button" class="sb-item" data-sb-close-output>Close</button></div>`:ordinaryMore;
+  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,focusedOutput?.id??null,!!saver(),retrying,primaryAction,document.body.classList.contains('c3-insp-sheet'),msg,!!receipts,size,window.c3PieceState?.readOnlyReason?.()||'',!!localOnly(),window.arLive?.note?.()?.text||'']);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
   if(bar&&sig===lastSig)return;
   lastSig=sig;
   const cp=checkpoint();
   const html=`<div class="sb-left">${here(slots,id,status)}${msg?`<span class="sb-msg" role="status" title="${esc(msg)}">${esc(msg)}</span>`:''}</div>
-<div class="sb-right">${textSize()}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn sb-margin',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn sb-focus',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${[5,6].includes(stage())&&document.querySelector('#app .desk>#margin,#app #c3-read-insp')?`<button type="button" class="sb-btn sb-insp" data-sb-insp aria-expanded="${document.body.classList.contains('c3-insp-sheet')}" aria-label="Notes beside the words">${icon(I.margin)}<span>Notes</span></button>`:''}${proxy(slots.mode,'sb-btn sb-mode',`<span class="sb-mode-i">${icon(I.pen)}</span><span class="sb-mode-t">${esc(slots.mode!=null?label(reals[slots.mode]):'')}</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${primaryAction?`<span class="sb-pw">${primaryAction.disabled&&primaryAction.reason?`<span class="sb-why" id="sb-why">${esc(primaryAction.reason)}</span>`:''}<button type="button" class="sb-primary" data-sb-primary data-short="${esc(primaryAction.label==='Ask about words'?'Ask':primaryAction.label.replace(/^Next: /,''))}" aria-label="${esc(primaryAction.label)}" ${primaryAction.disabled?'disabled aria-describedby="sb-why"':''} ${primaryAction.reason?`title="${esc(primaryAction.reason)}"`:''} onmousedown="event.preventDefault()">${esc(primaryAction.label)}</button></span>`:''}</div>`;
+<div class="sb-right">${textSize()}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn sb-margin',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn sb-focus',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${[5,6].includes(stage())&&document.querySelector('#app .desk>#margin,#app #c3-read-insp')?`<button type="button" class="sb-btn sb-insp" data-sb-insp aria-expanded="${document.body.classList.contains('c3-insp-sheet')}" aria-label="Notes beside the words">${icon(I.margin)}<span>Notes</span></button>`:''}${proxy(slots.mode,'sb-btn sb-mode',`<span class="sb-mode-i">${icon(I.pen)}</span><span class="sb-mode-t">${esc(slots.mode!=null?label(reals[slots.mode]):'')}</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" ${focusedOutput?'data-sb-focused-output':''} role="group" aria-label="${focusedOutput?'Make an output':'More for this checkpoint'}">${more}</div>`:''}</div>`:''}${primaryAction?`<span class="sb-pw">${primaryAction.disabled&&primaryAction.reason?`<span class="sb-why" id="sb-why">${esc(primaryAction.reason)}</span>`:''}<button type="button" class="sb-primary" data-sb-primary data-short="${esc(primaryAction.label==='Ask about words'?'Ask':primaryAction.label.replace(/^Next: /,''))}" aria-label="${esc(primaryAction.label)}" ${primaryAction.disabled?'disabled aria-describedby="sb-why"':''} ${primaryAction.reason?`title="${esc(primaryAction.reason)}"`:''} onmousedown="event.preventDefault()">${esc(primaryAction.label)}</button></span>`:''}</div>`;
   records(slots);document.getElementById('c3-crumb')?.remove();document.body.classList.add('c3-crumb-on');
   // The owner's control that the primary presses stays in the column, demoted, so one filled button shows per screen.
   const twin=primaryAction?.press?document.querySelector('#app .workspace '+primaryAction.press):null;
@@ -141,7 +157,8 @@
  document.addEventListener('mousedown',event=>{if(event.target.closest?.('#c3-surface-bar button,#c3-surface-bar .sb-menu'))event.preventDefault();},true);
  document.addEventListener('click',event=>{
   const more=event.target.closest?.('#c3-surface-bar [data-sb-more]');
-  if(more){moreOpen=!moreOpen;lastSig='';build();if(moreOpen)document.querySelector('#c3-surface-bar .sb-menu button,#c3-surface-bar .sb-menu select')?.focus({preventScroll:true});return;}
+  if(more){const wasFocused=!!focusedOutput;focusedOutput=null;moreOpen=wasFocused||!moreOpen;lastSig='';build();if(moreOpen)document.querySelector('#c3-surface-bar .sb-menu button,#c3-surface-bar .sb-menu select')?.focus({preventScroll:true});return;}
+  if(event.target.closest?.('#c3-surface-bar [data-sb-close-output]')){closeMore({focus:true});return;}
   if(event.target.closest?.('#c3-surface-bar [data-sb-insp]')){document.body.classList.toggle('c3-insp-sheet');lastSig='';build();return;}
   if(document.body.classList.contains('c3-insp-sheet')&&!event.target.closest?.('#margin,#c3-insp-head,.ci-panel,#c3-read-insp')){document.body.classList.remove('c3-insp-sheet');lastSig='';schedule();}
   if(event.target.closest?.('#c3-surface-bar [data-sb-everything]')){moreOpen=false;lastSig='';build();window.c3Tree?.everything?.();return;}
@@ -150,22 +167,37 @@
   const pa=event.target.closest?.('#c3-surface-bar [data-sb-primary]');if(pa){if(!pa.disabled&&primaryAction)void Promise.resolve(window.c3PieceState?.run?.(primaryAction)).finally(()=>{lastSig='';schedule();});return;}
   const b=event.target.closest?.('#c3-surface-bar [data-sb]');
   if(b&&b.getAttribute('aria-label')==='History · every saved version'&&window.studyDraft?.currentBinding?.()){void window.studyDraft.history();return;}
-  if(b){const real=reals[Number(b.dataset.sb)];if(!real?.isConnected||real.disabled)return;if(b.closest('.sb-menu'))moreOpen=false;real.click();lastSig='';build();watch();return;}
-  if(moreOpen&&!event.target.closest?.('#c3-surface-bar .sb-morew')){moreOpen=false;lastSig='';schedule();}
+  if(b){
+   const real=reals[Number(b.dataset.sb)];
+   if(b.hasAttribute('data-sb-output-choice')&&(!focusedOutputCurrent()||String(focusedOutput.id)!==b.dataset.sbOutputChoice||!focusedOutput.controls.includes(real))){closeMore();return;}
+   if(!real?.isConnected||real.disabled)return;
+   if(b.closest('.sb-menu')){moreOpen=false;focusedOutput=null;}
+   real.click();lastSig='';build();watch();return;
+  }
+  if(moreOpen&&!event.target.closest?.('#c3-surface-bar .sb-morew')){moreOpen=false;focusedOutput=null;lastSig='';schedule();}
  });
  document.addEventListener('change',event=>{
   const s=event.target.closest?.('#c3-surface-bar [data-sb-select],#c3-records [data-sb-select]');if(!s)return;
   const real=reals[Number(s.dataset.sbSelect)];if(!real?.isConnected)return;
   real.value=s.value;real.dispatchEvent(new Event('change',{bubbles:true}));lastSig='';schedule();
  });
- document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('c3-insp-sheet')){document.body.classList.remove('c3-insp-sheet');lastSig='';build();return;}if(event.key==='Escape'&&moreOpen){moreOpen=false;lastSig='';build();document.querySelector('#c3-surface-bar [data-sb-more]')?.focus();}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('c3-insp-sheet')){document.body.classList.remove('c3-insp-sheet');lastSig='';build();return;}if(event.key==='Escape'&&moreOpen){closeMore({focus:true});}});
  // Rebuild after every render and whenever an owner repaints its row (labels, disabled, saved status).
  let watched=[];const observer=new MutationObserver(schedule);
  function watch(){const now=rows();if(now.length===watched.length&&now.every((r,i)=>r===watched[i]))return;observer.disconnect();watched=now;for(const r of now)observer.observe(r,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','hidden','aria-pressed','aria-current','href']});}
  window.c3Shell.register('bar',()=>{build();watch();},{order:30});
  for(const name of ['study-draft-change','study-output-selection','c3-piece-state'])window.addEventListener(name,()=>{lastSig='';schedule();});
- // Open More, optionally scrolled to the item whose section names this (e.g. New output · Article).
- function openMore(section){moreOpen=true;lastSig='';build();const items=[...document.querySelectorAll('#c3-surface-bar .sb-menu .sb-item')];(items.find(b=>section&&b.textContent.includes(section))||items[0])?.focus({preventScroll:false});}
+ // New output opens a bounded chooser; other section hints keep ordinary More complete.
+ function openMore(section){
+  focusedOutput=null;
+  if(section==='New output'){
+   const owner=document.querySelector('#work-context .wn-new'),controls=owner?[...owner.querySelectorAll('[data-wn-create]')]:[];
+   if(!owner||!controls.length){closeMore();return;}
+   const scope=outputMenuScope();if(!scope){closeMore();return;}
+   focusedOutput={id:++focusSerial,owner,controls,scope,returnFocus:document.querySelector('[data-wbf-make-output]')||document.activeElement};
+  }
+  moreOpen=true;lastSig='';build();const items=[...document.querySelectorAll('#c3-surface-bar .sb-menu .sb-item')];(focusedOutput?items.find(b=>!b.disabled):items.find(b=>section&&b.textContent.includes(section))||items[0])?.focus({preventScroll:true});
+ }
  window.surfaceBar={build,openMore,reals:()=>reals};
  build();watch();
 })();

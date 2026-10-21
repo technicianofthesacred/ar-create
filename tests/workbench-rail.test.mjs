@@ -75,3 +75,51 @@ test('real shell, canvas and empty-state mounts settle on phone Media without co
  assert.ok(d.querySelector('.c3-ctitle+.c3-empty'),'the empty card retains its actual title sibling');
  const settled=rounds;w.c3Shell.run();await tick();assert.equal(rounds,settled,'another full mount pass creates no child-list mutations');for(const observer of observers)observer.disconnect();w.close();
 });
+
+test('collapsed section reopens from the visible Workbench title bar, surviving its repaint',()=>{
+ const {w,d,close}=boot(3,{prefs:'{"3":false}',work:'<header id="c3-surface-bar"><div class="sb-left">Research</div><div class="sb-right"></div></header>'});
+ const owner=d.querySelector('#wb-open');assert.strictEqual(owner.parentElement,d.querySelector('#c3-surface-bar>.sb-right'));assert.ok(owner.hasAttribute('data-c3-retain-control'));
+ d.querySelector('#c3-surface-bar>.sb-left').append(owner);w.c3Workbench.decorate();assert.strictEqual(d.querySelector('#c3-surface-bar>.sb-right>#wb-open'),owner);owner.click();assert.ok(d.querySelector('#wb-panel'));assert.equal(d.querySelector('#wb-open'),null);close();
+});
+
+test('mobile current navigation follows the visible Bench or Pieces, preserving the return stage',()=>{
+ const {w,d,close}=boot(11,{phone:true});try{
+ const dialog=d.createElement('dialog');dialog.id='project-library';d.body.append(dialog);dialog.open=true;w.c3Workbench.decorate();
+ assert.ok(d.querySelector('[data-wb-home][aria-current="page"]'));assert.equal(d.querySelector('.wb-bb[data-here]'),null);
+ dialog.dataset.workbenchPieces='true';w.c3Workbench.decorate();assert.equal(d.querySelector('[data-wb-home][aria-current]'),null);assert.ok(d.querySelector('[data-wb-group="make"][data-here]'));
+ dialog.open=false;w.c3Workbench.decorate();assert.ok(d.querySelector('[data-wb-group="deliver"][data-here]'));assert.equal(d.querySelector('.workflowStep[aria-current]').dataset.stage,'11');
+ }finally{close();}
+});
+
+test('phone navigation uses the exact approved Bench and group icon paths',()=>{
+ const{d,close}=boot(2,{phone:true});
+ assert.equal(d.querySelector('[data-wb-home] path').getAttribute('d'),'M3 10h18M5 10v9M19 10v9M7 6h10M9 14h6');
+ assert.equal(d.querySelector('[data-wb-group="develop"] path').getAttribute('d'),'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM16 16l4 4');
+ assert.equal(d.querySelector('[data-wb-group="deliver"] path').getAttribute('d'),'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5');close();
+});
+test('generic Source and Outputs rows use domain icons without changing exact owner dispatch',()=>{
+ const{d,stage,close}=boot(2,{work:'<select data-source-reader-select><option value="actual">Actual session</option></select><div id="output-overview"><div class="oo-row" data-overview-output="output-id"><span class="oo-meta">Article · Draft</span><button class="oo-title">Actual output</button></div></div>'});
+ assert.equal(d.querySelector('[data-wb-fold] path').getAttribute('d'),'M4 4h16v16H4zM9 4v16');
+ assert.equal(d.querySelector('[data-wb-row="sess:actual"] svg').getAttribute('aria-hidden'),'true');
+ const owner=d.querySelector('.oo-title');let clicks=0;owner.onclick=()=>clicks++;stage(12);d.querySelector('[data-wb-row="out:output-id"] svg').dispatchEvent(new d.defaultView.MouseEvent('click',{bubbles:true}));assert.equal(clicks,1);assert.equal(d.querySelector('[data-wb-row="out:output-id"] .wbp-l').textContent,'Actual output');close();
+});
+
+test('phone section sheet exposes the approved Done action and returns to its opener',()=>{
+ const{d,close}=boot(2,{phone:true,work:'<select data-source-reader-select><option>Actual session</option></select>'});
+ d.querySelector('#wb-open').click();assert.equal(d.querySelector('[data-wb-fold]').textContent,'Done');d.querySelector('[data-wb-fold]').click();assert.equal(d.querySelector('#wb-panel'),null);assert.equal(d.activeElement.id,'wb-open');close();
+});
+
+test('Research record navigation opens the exact raw owner without points or a new write',()=>{
+ const {d,close}=boot(3,{work:'<details class="flow-retained"><summary>Retained history</summary><article class="compactRecord"><details class="recordDetails"><summary>Details</summary><p>retained/research.md</p></details><div class="recordBody"><h1>Earlier inquiry</h1><p>Exact retained text</p></div></article></details>'});const original=d.querySelector('.compactRecord');const row=d.querySelector('[data-wb-row="rr:0"]');assert.ok(row);assert.match(row.textContent,/Earlier inquiry/);row.click();assert.ok(original.parentElement.open);assert.strictEqual(d.querySelector('.compactRecord'),original);assert.equal(d.querySelector('.recordDetails').open,false);close();
+});
+test('Media retained placements have a direct entrance with no native filter or photos',()=>{
+ const {d,close}=boot(8,{work:'<div id="owned-photo-stage">No photos added yet</div><details data-retained-photo-records><summary>Earlier photo placements · read-only</summary><div class="stagePhotoGrid"><img src="/invented.jpg"></div></details>'});const retained=d.querySelector('[data-retained-photo-records]');const row=d.querySelector('[data-wb-row="mr:retained"]');assert.ok(row);row.click();assert.ok(retained.open);assert.strictEqual(d.querySelector('[data-retained-photo-records]'),retained);assert.equal(d.querySelector('[data-photo-occurrence]'),null);close();
+});
+
+const inquiryId='11111111-1111-4111-8111-111111111111',otherInquiry='22222222-2222-4222-8222-222222222222',inquiryHash='a'.repeat(64),inquiryCatalog=()=>({revision:1,indexHash:inquiryHash,collections:[{id:inquiryId,name:'Independent sunlight learning',question:'What changes sunlight?',sourceIds:[]},{id:otherInquiry,name:'Another question?',body:'# Question-shaped saved words?',sourceIds:[]}]});
+test('Research lists exact independent Collections and marks only recorded questions through the same learning owner',async()=>{const {w,d,close}=boot(3,{work:'<section class="research-standard-point" data-research-point="p"><h2>Existing project point</h2></section>'});try{const opened=[];w.connectedWorkspace={readCollections:async()=>inquiryCatalog(),openContext:async(...args)=>opened.push(args)};w.c3Workbench.decorate();await tick();await tick();const row=d.querySelector('[data-wb-row="rc:'+inquiryId+'"]');assert.ok(row);assert.match(row.textContent,/Independent sunlight learning/);assert.ok(row.querySelector('[data-wb-question-marker]'));assert.equal(d.querySelector('[data-wb-row="rc:'+otherInquiry+'"] [data-wb-question-marker]'),null);assert.ok(d.querySelector('[data-wb-row="rp:0"]'));row.click();await tick();assert.deepEqual(JSON.parse(JSON.stringify(opened)),[['inquiries',{collectionId:inquiryId}]]);assert.equal(d.querySelector('.research-standard-point h2').textContent,'Existing project point');}finally{close();}});
+test('Research Collection read failure leaves current points available and explicit retry uses the same read owner',async()=>{const {w,d,close}=boot(3,{work:'<section class="research-standard-point" data-research-point="p"><h2>Kept inquiry point</h2></section>'});try{let fail=true;w.connectedWorkspace={readCollections:async()=>{if(fail)throw Error('Local inquiry unavailable');return inquiryCatalog();},openContext:async()=>{}};w.c3Workbench.decorate();await tick();await tick();assert.match(d.querySelector('#wb-panel').textContent,/Collections.*unavailable/);assert.ok(d.querySelector('[data-wb-row="rp:0"]'));fail=false;d.querySelector('[data-wb-row="rc:refresh"]').click();await tick();await tick();assert.ok(d.querySelector('[data-wb-row="rc:'+inquiryId+'"]'));}finally{close();}});
+test('Research guarded Collection refusal keeps the actual point nodes and never opens another stage',async()=>{const {w,d,close}=boot(3,{work:'<section class="research-standard-point" data-research-point="p"><h2>Kept point</h2><textarea>Pending question</textarea></section>'});try{let legacy=0;w.viewPhase=()=>legacy++;w.connectedWorkspace={readCollections:async()=>inquiryCatalog(),openContext:async()=>{throw Error('Keep the held work for review.');}};w.c3Workbench.decorate();await tick();await tick();const node=d.querySelector('[data-research-point]');d.querySelector('[data-wb-row="rc:'+inquiryId+'"]').click();await tick();assert.equal(d.querySelector('[data-research-point]'),node);assert.equal(node.querySelector('textarea').value,'Pending question');assert.equal(legacy,0);assert.match(d.querySelector('#wb-panel').textContent,/Keep the held work/);}finally{close();}});
+test('a late Research Collection reply cannot populate a different section',async()=>{const {w,d,stage,close}=boot(3);try{let release;w.connectedWorkspace={readCollections:()=>new Promise(resolve=>release=resolve)};w.c3Workbench.decorate();stage(2);release(inquiryCatalog());await tick();assert.equal(d.querySelector('[data-wb-row="rc:'+inquiryId+'"]'),null);assert.equal(d.querySelector('#wb-panel').getAttribute('aria-label'),'Source sessions');}finally{close();}});
+
+test('Research refuses an unknown Collection row and a stale project catalog without redirecting',async()=>{const {w,d,close}=boot(3);try{let projectId='project-one',release;const opened=[];w.current=()=>({id:projectId,view:'record',viewedStage:3});w.connectedWorkspace={readCollections:()=>new Promise(resolve=>release=resolve),openContext:async(...args)=>opened.push(args)};w.c3Workbench.decorate();projectId='project-two';release(inquiryCatalog());await tick();assert.equal(d.querySelector('[data-wb-row="rc:'+inquiryId+'"]'),null);w.connectedWorkspace.readCollections=async()=>inquiryCatalog();w.c3Workbench.decorate();await tick();await tick();const row=d.querySelector('[data-wb-row="rc:'+inquiryId+'"]');row.dataset.wbRow='rc:33333333-3333-4333-8333-333333333333';row.click();await tick();assert.equal(opened.length,0);projectId='project-three';row.dataset.wbRow='rc:'+inquiryId;row.click();await tick();assert.equal(opened.length,0);}finally{close();}});

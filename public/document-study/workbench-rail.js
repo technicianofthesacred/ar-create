@@ -4,11 +4,11 @@
    still study.js's own .workflowStep buttons with their viewPhase(n) handlers; this module only restyles them and adds a
    panel beside the rail for sections that have something to browse, all from what the page already shows:
      Source  - the kept conversations (the reader's own select) and the Source index (sessions and versions)
-     Research - supplied points and the shared brief, through existing controls or headings
+     Research - supplied points, the shared brief, and exact Collections through the maintained learning owner
      Media   - the Media tools' own groupings (All media, Photos, Video, Selected, Unavailable)
      Outputs - this piece's outputs from the Outputs register, grouped by kind
    Every row presses the owner's real control (a button, or the owner's select with a change event). Nothing here
-   saves, approves, sends or exports, and no store is read that the page has not already read. The panel's open or
+   saves, approves, sends or exports. Collections use the existing read-only catalog owner. The panel's open or
    collapsed state is remembered per section on this device. Phone (850px and narrower): the rail is a bottom bar of
    Home and the four groups, each opening the existing step sheet; the panel opens as a sheet from the title line.
    Install after tree.js. */
@@ -16,14 +16,15 @@
  if(window.c3Workbench)return;
  const PREF='c3-workbench-panel-v1',PHONE='(max-width:760px)';
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
- const I={home:'<path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>',gather:'<path d="M4 13.5 6.5 5h11l2.5 8.5"/><path d="M4 13.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5.5"/><path d="M4 13.5h4.5l1 2h5l1-2H20"/>',develop:'<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',make:'<path d="M4.5 19.5h4l10-10-4-4-10 10z"/><path d="M13 7l4 4"/>',deliver:'<path d="M20.5 3.5 10 14"/><path d="M20.5 3.5 14 20.5l-4-6.5-6.5-4z"/>',fold:'<path d="M14.5 7 9.5 12l5 5"/>',panel:'<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9 4.5v15"/>'};
+ const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+ const I={home:'<path d="M3 10h18M5 10v9M19 10v9M7 6h10M9 14h6"/>',gather:'<path d="M4 13l2-8h12l2 8M4 13v6h16v-6M4 13h5l1 2h4l1-2h5"/>',develop:'<path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM16 16l4 4"/>',make:'<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/>',deliver:'<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>',fold:'<path d="M4 4h16v16H4zM9 4v16"/>',panel:'<path d="M4 4h16v16H4zM9 4v16"/>',source:'<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>',piece:'<path d="M6 3h9l4 4v14H6zM15 3v4h4"/>'};
  const GROUPS=[['gather','Gather'],['develop','Develop'],['make','Make'],['deliver','Deliver']];
  let prefs={};try{const v=JSON.parse(localStorage.getItem(PREF)||'{}');if(v&&typeof v==='object')prefs=v;}catch{}
  const store=()=>{try{localStorage.setItem(PREF,JSON.stringify(prefs));}catch{}};
  const phone=()=>!!window.matchMedia?.(PHONE).matches;
  const stage=()=>{try{const p=current();return p.view==='record'&&Number(p.viewedStage)||(p.view==='article'?5:0);}catch{return 0;}};
- const homeOpen=()=>document.body.classList.contains('c3-home-open');
+ const homeView=()=>{const d=document.getElementById('project-library');return d?.open&&!d.dataset.plContext?(d.dataset.workbenchPieces==='true'?'pieces':'bench'):'';};
+ const homeOpen=()=>!!homeView()||document.body.classList.contains('c3-home-open');
  const text=n=>(n?.textContent||'').replace(/\s+/g,' ').trim();
  let sheet=false,lastStage=null,forwardingStep=false; // phone: the panel is open as a sheet
 
@@ -69,11 +70,12 @@
   }
  }
  function mediaRows(){
-  const ws=document.querySelector('#app #workspace'),select=ws?.querySelector('[data-mot-filter]');if(!select)return null;
-  // The owner's filter may hide cards; visible cards cannot establish totals for the other groups.
-  return {groups:[{label:'Show',rows:[...select.options].map(o=>({key:'mf:'+o.value,label:text(o),on:o.selected,disabled:select.disabled}))}],empty:''};
+  const ws=document.querySelector('#app #workspace'),select=ws?.querySelector('[data-mot-filter]'),retained=ws?.querySelector('[data-retained-photo-records]');if(!select&&!retained)return null;
+  // Filter totals belong to the native owner; retained placements are a separate authority.
+  return {groups:[{label:'Show',rows:select?[...select.options].map(o=>({key:'mf:'+o.value,label:text(o),on:o.selected,disabled:select.disabled})):[]},{label:'Retained project records',rows:retained?[{key:'mr:retained',label:text(retained.querySelector(':scope>summary'))}]:[]}],empty:''};
  }
- function mediaPress(key){const s=document.querySelector('#app #workspace [data-mot-filter]');if(!s||s.disabled)return;s.value=key.slice(3);s.dispatchEvent(new Event('change',{bubbles:true}));}
+ function revealRecord(target){if(!target)return;if(target.matches('details'))target.open=true;for(let d=target.parentElement;d;d=d.parentElement)if(d.matches('details'))d.open=true;target.scrollIntoView?.({block:'nearest'});const heading=target.querySelector(':scope>summary,.recordBody h1,.recordBody h2,h2,h3')||target;heading.tabIndex=-1;heading.focus?.({preventScroll:true});}
+ function mediaPress(key){if(key==='mr:retained')return revealRecord(document.querySelector('#app #workspace [data-retained-photo-records]'));const s=document.querySelector('#app #workspace [data-mot-filter]');if(!s||s.disabled)return;s.value=key.slice(3);s.dispatchEvent(new Event('change',{bubbles:true}));}
  function outputRows(){
   const host=document.querySelector('#app #workspace #output-overview');if(!host)return null;
   const rows=[...host.querySelectorAll('.oo-row[data-overview-output]')],byKind=new Map();
@@ -87,8 +89,16 @@
   if(controls.length)return controls.map(n=>({node:n,label:text(n),on:n.getAttribute('aria-current')==='true'||n.getAttribute('aria-pressed')==='true',disabled:n.disabled}));
   return [...ws.querySelectorAll('.research-standard-point[data-research-point]')].map(n=>({node:n,label:text(n.querySelector('h2')),on:false}));
  }
- function researchRows(){return {groups:[{label:'Points and brief',rows:researchTargets().map((r,i)=>({key:'rp:'+i,label:r.label,on:r.on,disabled:r.disabled}))}],empty:'No research points are connected to this piece yet.'};}
+ function researchRecords(){const ws=document.querySelector('#app #workspace');return ws?[...ws.querySelectorAll('.research-standard-coverage>details:not([data-research-source-point]),.flow-retained .compactRecord,[data-disclosure="retained-research"],[data-disclosure="retained-brief"],[data-disclosure^="research-role:"]')].filter(n=>!n.closest('[data-research-point]')):[];}
+ const researchCollections={context:null,reader:null,pending:null,data:null,error:'',request:0},collectionUUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+ const researchContext=()=>{try{const p=current();return JSON.stringify([p.id,p.view,p.viewedStage]);}catch{return null;}};
+ const recordedQuestion=row=>typeof row?.question==='string'&&row.question.trim()?row.question:null;
+ async function readResearchCollections(force=false){const context=researchContext(),reader=window.connectedWorkspace?.readCollections;if(stage()!==3||!force&&researchCollections.context===context&&researchCollections.reader===reader)return researchCollections.pending;const token=++researchCollections.request;researchCollections.context=context;researchCollections.reader=reader;researchCollections.data=null;researchCollections.error='';const pending=(async()=>{try{if(typeof reader!=='function')throw Error('The learning owner is not connected.');const value=await reader();if(token!==researchCollections.request||context!==researchContext()||stage()!==3)return;if(!Number.isSafeInteger(value?.revision)||!/^[a-f0-9]{64}$/.test(value.indexHash||'')||!Array.isArray(value.collections)||new Set(value.collections.map(row=>row.id)).size!==value.collections.length||value.collections.some(row=>!collectionUUID.test(row.id||'')||typeof row.name!=='string'||!Array.isArray(row.sourceIds)||new Set(row.sourceIds).size!==row.sourceIds.length||row.sourceIds.some(id=>!collectionUUID.test(id))))throw Error('The saved Collection list was not confirmed.');researchCollections.data=value;}catch(error){if(token===researchCollections.request&&context===researchContext())researchCollections.error='Collections are unavailable. '+error.message;}finally{if(token===researchCollections.request){researchCollections.pending=null;if(context===researchContext()&&stage()===3)queueMicrotask(decorate);else researchCollections.context=null;}}})();researchCollections.pending=pending;await pending;if(researchCollections.pending===pending)researchCollections.pending=null;}
+ async function openResearchCollection(key){if(key==='rc:refresh')return readResearchCollections(true);const id=key.slice(3),context=researchContext();if(stage()!==3||context!==researchCollections.context||!researchCollections.data?.collections.some(row=>row.id===id))return;try{if(typeof window.connectedWorkspace?.openContext!=='function')throw Error('The learning owner is unavailable.');await window.connectedWorkspace.openContext('inquiries',{collectionId:id});}catch(error){if(context===researchContext()&&stage()===3){researchCollections.error=error.message;decorate();}}}
+ function researchRows(){void readResearchCollections();const collections=researchCollections.data?.collections||[];return {groups:[{label:'Points and brief',rows:researchTargets().map((r,i)=>({key:'rp:'+i,label:r.label,on:r.on,disabled:r.disabled}))},{label:'Collections · independent learning',rows:[...collections.map(row=>({key:'rc:'+row.id,label:row.name,question:recordedQuestion(row),title:recordedQuestion(row)||'Question not recorded'})),{key:'rc:refresh',label:'Refresh Collections',disabled:!!researchCollections.pending}],note:researchCollections.error||(!researchCollections.data?'Reading Collections…':!collections.length?'No Collections yet. Learning remains independent.':'')},{label:'Research records · read-only',rows:researchRecords().map((node,i)=>({key:'rr:'+i,label:text(node.querySelector(':scope>summary,.recordBody h1,.recordBody h2'))||'Retained research record'}))}],empty:'No research points or retained records are connected yet.'};}
  function researchPress(key){
+  if(key.startsWith('rc:'))return openResearchCollection(key);
+  if(key.startsWith('rr:'))return revealRecord(researchRecords()[Number(key.slice(3))]);
   const target=researchTargets()[Number(key.slice(3))]?.node;if(!target)return;
   if(target.matches('button'))target.click();else{
    // Jump to the actual finding without changing its plan, narration or saved choices.
@@ -109,9 +119,9 @@
  // ---------- the rail ----------
  function bottomBar(nav){
   let bar=nav.querySelector(':scope>.wb-bbar');
-  const here=nav.querySelector('.workflowStep[aria-current]')?.closest('.wn-family')?.dataset.family||'',open=nav.classList.contains('cr-open')?nav.dataset.wbGroup||'all':'';
-  const html=`<button type="button" class="wb-bb" data-wb-home ${homeOpen()?'aria-current="page"':''}>${icon(I.home)}<span>Home</span></button>${GROUPS.map(([k,l])=>`<button type="button" class="wb-bb" data-wb-group="${k}" aria-expanded="${open===k}" ${here===k&&!homeOpen()?'data-here':''}>${icon(I[k])}<span>${l}</span></button>`).join('')}`;
-  if(!bar){bar=document.createElement('div');bar.className='wb-bbar';bar.setAttribute('role','group');bar.setAttribute('aria-label','Home and the four groups of steps');nav.append(bar);}
+  const view=homeView(),here=view==='pieces'?'make':homeOpen()?'':nav.querySelector('.workflowStep[aria-current]')?.closest('.wn-family')?.dataset.family||'',open=nav.classList.contains('cr-open')?nav.dataset.wbGroup||'all':'';
+  const html=`<button type="button" class="wb-bb" data-wb-home ${homeOpen()&&view!=='pieces'?'aria-current="page"':''}>${icon(I.home)}<span>Bench</span></button>${GROUPS.map(([k,l])=>`<button type="button" class="wb-bb" data-wb-group="${k}" aria-expanded="${open===k}" ${here===k?'data-here':''}>${icon(I[k])}<span>${l}</span></button>`).join('')}`;
+  if(!bar){bar=document.createElement('div');bar.className='wb-bbar';bar.setAttribute('role','group');bar.setAttribute('aria-label','Bench and the four groups of steps');nav.append(bar);}
   if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
  }
  function rail(nav){
@@ -126,23 +136,23 @@
  }
  // ---------- the panel ----------
  function panelHTML(n,spec,data){
-  const head=`<div class="wbp-head"><span class="wbp-title">${esc(spec.name)}</span><button type="button" class="wbp-fold" data-wb-fold aria-label="${phone()?'Close':'Collapse'} the ${esc(spec.name)} panel" title="${phone()?'Close':'Collapse'} ([)">${icon(I.fold)}</button></div>`;
+  const head=`<div class="wbp-head"><span class="wbp-title">${esc(spec.name)}</span><button type="button" class="wbp-fold" data-wb-fold aria-label="${phone()?'Close':'Collapse'} the ${esc(spec.name)} panel" title="${phone()?'Close':'Collapse'} ([)">${phone()?'Done':icon(I.fold)}</button></div>`;
   if(!data)return head+`<p class="wbp-note" role="status">Reading this section…</p>`;
   if(spec.body)return head+`<div class="wbp-body">${spec.body(data)}</div>`;
   const groups=(data.groups||[]).filter(g=>g.rows.length||g.note);
-  const body=groups.length?groups.map(g=>`<div class="wbp-group" role="group" aria-label="${esc(g.label)}"><div class="wbp-gl">${esc(g.label)}</div>${g.rows.map(r=>`<button type="button" class="wbp-row${r.on?' on':''}" data-wb-row="${esc(r.key)}" ${r.on?'aria-current="true"':''} ${r.disabled?'disabled':''} title="${esc([r.label,r.title].filter(Boolean).join(' · '))}"><span class="wbp-l">${esc(r.label)}</span>${r.count!=null?`<span class="wbp-n">${esc(r.count)}</span>`:''}</button>`).join('')}${g.note?`<p class="wbp-note">${esc(g.note)}</p>`:''}</div>`).join(''):`<p class="wbp-note">${esc(data.empty)}</p>`;
+  const body=groups.length?groups.map(g=>`<div class="wbp-group" role="group" aria-label="${esc(g.label)}"><div class="wbp-gl">${esc(g.label)}</div>${g.rows.map(r=>`<button type="button" class="wbp-row${r.on?' on':''}" data-wb-row="${esc(r.key)}" ${r.on?'aria-current="true"':''} ${r.disabled?'disabled':''} title="${esc([r.label,r.title].filter(Boolean).join(' · '))}">${icon(n===2?I.source:n===3?I.develop:n===12?I.piece:I.gather)}<span class="wbp-l">${r.question?'<span data-wb-question-marker aria-label="Recorded question">?</span> ':''}${esc(r.label)}</span>${r.count!=null?`<span class="wbp-n">${esc(r.count)}</span>`:''}</button>`).join('')}${g.note?`<p class="wbp-note">${esc(g.note)}</p>`:''}</div>`).join(''):`<p class="wbp-note">${esc(data.empty)}</p>`;
   return head+`<div class="wbp-body">${body}</div>`;
  }
  function opener(n,spec,show){
   let b=document.getElementById('wb-open');
-  const title=document.querySelector('#app #workspace .c3-ctitle');
+  const title=document.querySelector('#app #workspace #c3-surface-bar>.sb-right')||document.querySelector('#app #workspace #c3-surface-bar>.sb-left')||document.querySelector('#app #workspace .c3-ctitle');
   if(!show||!title){b?.remove();return;}
   if(!b){b=document.createElement('button');b.type='button';b.id='wb-open';b.className='wb-open';b.dataset.wbOpen='';}
   const html=`${icon(I.panel)}<span>${esc(spec.open)}</span>`;if(b.dataset.render!==html){b.innerHTML=html;b.dataset.render=html;}
   b.setAttribute('aria-label',`Open the ${spec.name} panel: ${spec.aria}`);b.setAttribute('aria-controls','wb-panel');b.setAttribute('aria-expanded','false');
-  // Empty-state cards and Source/Research controls own the title's following sibling.
-  // Put this action inside the title so independent decorators cannot keep moving siblings past one another.
-  if(b.parentElement!==title)title.append(b);
+  // Keep the title at the approved left edge. The original panel action belongs
+  // with title actions and survives the bar owner's retained-control repaint.
+  if(title.classList.contains('sb-right')||title.classList.contains('sb-left')){b.dataset.c3RetainControl='';if(b.parentElement!==title)title.prepend(b);}else if(b.parentElement!==title)title.append(b);
  }
  function panel(shell,nav){
   const n=stage(),spec=panelFor(n),active=nav.querySelector('.workflowStep[aria-current]');
@@ -168,7 +178,7 @@
   rail(nav);panel(shell,nav);
   document.body.classList.add('wb-on');
  }
- function toggle(n,open){if(phone()){sheet=open;}else{prefs[n]=open;store();}decorate();if(open)(document.querySelector('#wb-panel .wbp-row.on')||document.querySelector('#wb-panel .wbp-row')||document.querySelector('#wb-panel [data-wb-fold]'))?.focus({preventScroll:true});else document.querySelector('#wb-open,.workflowNavigation .workflowStep[aria-current]')?.focus({preventScroll:true});}
+ function toggle(n,open){if(phone()){sheet=open;}else{prefs[n]=open;store();}decorate();if(open)(document.querySelector('#wb-panel .wbp-row.on')||document.querySelector('#wb-panel .wbp-row')||document.querySelector('#wb-panel [data-wb-fold]'))?.focus({preventScroll:true});else (document.getElementById('wb-open')||document.querySelector('.workflowNavigation .workflowStep[aria-current]'))?.focus({preventScroll:true});}
  // Clicking the active step again opens or closes its panel (it is already the section shown, so nothing else happens).
  document.addEventListener('click',event=>{
   const step=event.target.closest?.('.workflowNavigation.wb-rail .workflowStep[aria-current]');
@@ -210,6 +220,7 @@
  });
  // The piece switcher's menu flies out beside the rail, level with its own row.
  document.addEventListener('toggle',event=>{const d=event.target;if(!d.matches?.('#c3-tabstrip details')||!d.open||!d.closest('.wb-rail')||phone())return;const r=d.querySelector('summary').getBoundingClientRect();d.style.setProperty('--wb-my',Math.round(Math.max(8,Math.min(r.top,innerHeight-440)))+'px');},true);
+ document.addEventListener('toggle',event=>{if(event.target.id==='project-library')decorate();},true);
  window.matchMedia?.(PHONE).addEventListener?.('change',()=>{sheet=false;decorate();});
  window.addEventListener('study-output-selection',()=>decorate());
  window.c3Workbench={registerPanel(n,spec){PANELS[n]=spec;decorate();},decorate,panels:()=>Object.keys(PANELS).map(Number),isOpen,toggle};

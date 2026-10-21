@@ -10,7 +10,9 @@ Visible A−/A+ controls scale the interface together. The manuscript is 16px/1.
 
 The panel keeps each section's collapse preference. Keyboard navigation changes focus without changing a section; `[` leaves text inputs alone. The phone Media empty-state/opener now converge instead of endlessly moving each other around the title.
 
-## Acceptance proof
+## Historical bounded proof
+
+The filenames below identify historical external review records, not files shipped in this code-only PR. Generated captures and state receipts are deliberately excluded from its source tree. They do not prove the current complete Workbench candidate. Current same-version review evidence must be supplied separately before delivery.
 
 - `screen-measurements.json`: all twelve sections at exact 1440px and 390px viewports, light and dark — 48 cases. No horizontal overflow and no visible text size/weight outside the approved tokens (template renders excluded). Read/Write geometry matches in all four combinations.
 - `paragraph-geometry.json`: exact (zero-tolerance) x/y/width/height/font/size measurements for all five manuscript blocks in Read and Write, at both widths and in both themes.

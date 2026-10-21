@@ -231,3 +231,75 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #wbf-drawer :is(.small,.dra
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace:is(.wb-share,.wb-outputs) :is(.oss-loading,.oss-muted,.oo-detail-body) :is(p,strong,span){font-size:var(--t-label)!important;line-height:1.5!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-share [data-output-stage-surface="11"]>p{font-size:var(--t-label)!important;line-height:1.5!important}
 html[data-draft-focus="true"] body.wbf-on #wbf-drawer,body.wbf-on[data-draft-focus="true"] #wbf-drawer{display:none!important}
+
+/* Bench is outside #app: give its existing home owner the approved typography too. */
+html body.wbf-on #project-library.wbf-home {font:400 var(--t-body)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home :is(h1,h2,h3,h4,p,blockquote){letter-spacing:normal!important}
+html body.wbf-on #project-library.wbf-home h1{font:600 var(--t-title)/1.5 var(--ar-ui)!important;margin:0!important}
+html body.wbf-on #project-library.wbf-home :is(h2,h3,h4){font:600 var(--t-head)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home .thead{min-height:34px!important;height:34px!important;margin:0 0 20px!important;padding:0!important;display:flex;align-items:center}
+html body.wbf-on #project-library.wbf-home .ht-home-main{background:none!important}
+html body.wbf-on #project-library.wbf-home .pickup h2{margin:4px 0 2px!important}
+html body.wbf-on #project-library.wbf-home .pickup .meta{font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home .lab{font:500 var(--t-label)/1.5 var(--ar-ui)!important;letter-spacing:normal!important;text-transform:none!important}
+html body.wbf-on #project-library.wbf-home .sec{font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim);margin:0 0 12px!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar-actions{display:none!important}
+html body.wbf-on #project-library.wbf-home .pickup .lnk,html body.wbf-on #project-library.wbf-home .wbf-active-title .lnk{border:0!important;background:none!important;padding:0!important;color:var(--warm)!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;min-height:34px}
+html body.wbf-on #project-library.wbf-home .move{border:0!important;background:none!important;box-shadow:none!important;min-height:0!important}
+html body.wbf-on #project-library.wbf-home .move:hover{background:var(--sel)!important}
+html body.wbf-on #project-library.wbf-home .wbf-active-title{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
+html body.wbf-on #project-library.wbf-home .wbf-active-title .sec{margin-bottom:10px!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar .pl-search{flex:1!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar input{font:400 var(--t-body)/1.5 var(--ar-ui)!important}
+html body.wbf-on #project-library.wbf-home .since small{font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+/* Match the prototype rail's 46px rows; older rail rules had higher specificity. */
+@media(min-width:761px){
+html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.wbf-pieces){height:46px!important;min-height:46px!important;flex:none!important;padding:5px 0 4px!important;gap:3px!important;border-radius:8px!important;font:400 var(--t-label)/1.15 var(--ar-ui)!important;letter-spacing:-.01em!important}
+html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail .wn-family+.wn-family::before,html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail>.workflowSteps::before{margin:6px 10px!important}
+}
+@media(min-width:761px){
+html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail>.workflowSteps::before{margin:6px 10px 7px!important}
+html body.wb-on.wbf-on #app>.shell>.workflowNavigation.wb-rail .wn-family+.wn-family::before{margin:7px 10px!important}
+html body.wbf-on:is([data-wbf-home="bench"],[data-wbf-home="pieces"]) .workflowNavigation.wb-rail .workflowStep[aria-current]{background:none!important;color:var(--dim)!important;font-weight:400!important}
+html body.wbf-on:is([data-wbf-home="bench"],[data-wbf-home="pieces"]) .workflowNavigation.wb-rail .workflowStep[aria-current]::before{display:none!important}
+html body.wbf-on[data-wbf-home="pieces"] .workflowNavigation.wb-rail .wbf-pieces{background:var(--sel)!important;color:var(--ink)!important}
+html body.wbf-on[data-wbf-home="pieces"] .workflowNavigation.wb-rail .wbf-pieces::before{content:'';position:absolute;left:-3px;top:9px;bottom:9px;width:3px;background:var(--warm);border-radius:0 3px 3px 0}
+html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces{position:relative}
+}
+/* The Bench scrolls as one page, with the same stable work-area gutter as the prototype. */
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]){overflow-x:hidden!important;overflow-y:auto!important;scrollbar-gutter:stable!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-body{height:auto!important;min-height:100%!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-main{max-width:none!important;overflow:visible!important}
+html body.wbf-on #project-library.wbf-home .wbf-active-title{max-width:calc(var(--measure) + 16rem)}
+
+@media(min-width:761px){html body.wbf-on[data-wbf-home="bench"] .workflowNavigation.wb-rail [data-tr-home]{background:var(--sel)!important;color:var(--ink)!important}}
+
+/* Section actions remain reachable in the native More menu; writing geometry is unchanged. */
+html body.wbf-on #c3-surface-bar[data-wbf-section-actions] .sb-right>:is(.sb-mode,.sb-pw){display:none!important}
+html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action{display:flex!important;width:100%;flex-wrap:wrap;gap:4px}
+html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-primary{width:100%;text-align:left;font-size:var(--t-label)!important}
+html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-primary::after{display:none!important}
+html body.wbf-on #c3-surface-bar .sb-menu .wbf-section-action .sb-why{white-space:normal;max-width:none}
+@media(min-width:761px){
+ html body.wbf-on:not(.wb-panel-on):not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]):not([data-c3-stage="9"]) #c3-surface-bar{max-width:1056px}
+ html body.wbf-on.wb-panel-on #c3-surface-bar{max-width:1070px}
+}
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #c3-surface-bar .sb-left{flex:1 1 auto!important;width:auto!important;min-width:0!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #c3-surface-bar .sb-where{flex:0 1 auto!important;min-width:0!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #c3-surface-bar .sb-out{flex:0 1 220px!important;min-width:150px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #c3-surface-bar .sb-oselect{width:100%!important;min-width:150px!important;max-width:220px!important}
+}
+/* Older phone overrides must not shrink the work header to its old 90px identity slot. */
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #app #workspace #c3-surface-bar{width:calc(100% - 32px)!important;flex-wrap:nowrap!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #c3-surface-bar[data-wbf-section-actions]>.sb-right{flex:0 0 auto!important;width:auto!important;justify-content:flex-start!important}
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action{width:100%!important;min-width:0!important;height:auto!important;min-height:34px!important;font-size:var(--t-label)!important;display:flex!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action span{display:inline!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action .sb-primary{width:100%!important;max-width:none!important;font-size:var(--t-label)!important;white-space:normal!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar .sb-menu .wbf-section-action .sb-primary::after{display:none!important}
+html body.wbf-on #workspace .wfb-fsearch{gap:3px}
+
+/* Arrange keeps its existing guarded reader-preview primary in the title line. */
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar[data-wbf-section-actions] .sb-right>.sb-pw{display:inline-flex!important}

@@ -332,3 +332,211 @@ html body.wbf-on #app #workspace.wb-research #material-human-direction.wb-shared
 html body.c3-tabs #app #workspace.wb-source :is(.sws-secondary,.sws-tool,.flow-details,.source-reader-details,.wb-source-more,.wb-source-secondary)>summary{display:list-item;width:auto;min-height:30px;padding:6px 0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim);cursor:pointer}
 html body.c3-tabs #app #workspace.wb-source :is(.sws-secondary,.sws-tool,.flow-details,.source-reader-details,.wb-source-more,.wb-source-secondary){border-left:0;border-right:0;border-bottom:0;border-radius:0;background:none;box-shadow:none}
 #workspace.wb-source .wb-source-retained-leading .material-reading>.material-document{padding-bottom:0}
+
+/* Search returns maintained Library passages, with technical identity in Details. */
+.wb-console .wrl-result{margin:12px 0;padding-top:12px;border-top:1px solid var(--line)}
+.wb-console .wrl-result h3{font:600 var(--t-head)/1.5 var(--ar-ui);margin:0 0 6px}
+.wb-console .wrl-result blockquote{font:400 var(--t-body)/1.65 Lora,Georgia,serif;margin:8px 0;padding-left:12px;border-left:2px solid var(--warm)}
+.wb-console .wrl-result details{margin:8px 0;font-size:var(--t-label)}
+.wb-console .wrl-result :is(p,summary){font-size:var(--t-label);overflow-wrap:anywhere}
+.wb-console .wb-library-preview pre{font:400 var(--t-body)/1.65 var(--ar-ui);white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto}
+
+/* Source is the selected words first, not the Material inventory repeated above them. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-source .recordPage.flow-paper{padding:0!important}
+html body.wbf-on #workspace.wb-source .material-layout{display:flex!important;flex-direction:column!important;gap:16px!important}
+html body.wbf-on #workspace.wb-source .material-reading{order:-1;max-width:var(--measure)}
+html body.wbf-on #workspace.wb-source .wb-source-inventory{order:2;margin:12px 0 0;border-top:1px solid var(--line);padding-top:10px}
+html body.wbf-on #workspace.wb-source .wb-source-inventory>summary{font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);cursor:pointer}
+
+/* Source adopts the approved workbench transcript grid; only actual sessions
+   supply speech, speakers and times. Retained records remain separately labelled. */
+#workspace.wb-source .material-surface.wb-source-retained-leading>.source-reader{order:0;display:block;margin:0 0 20px;padding:0;border:0}
+#workspace.wb-source .wb-source-retained-leading>.source-reader>.source-reader-toolbar{margin:0 0 10px}
+#workspace.wb-source .wb-source-retained-leading>.source-reader>[data-source-reader-status]{margin:0;font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--dim)}
+#workspace.wb-source .wb-source-retained-leading>.wb-source-secondary{order:3}
+#workspace.wb-source .wb-source-secondary{margin-top:16px}
+#workspace.wb-source .wb-source-secondary>.wb-source-more{margin:0;border:0}
+#workspace.wb-source .wb-source-secondary>.material-boundary{margin:10px 0 0;padding:10px 0;border-top:1px solid var(--line)}
+#workspace.wb-source .material-reading>.material-document>[data-disclosure="material-original"]{border:0;border-radius:0;background:none;box-shadow:none;margin:10px 0 0}
+html body.c3-tabs #app #workspace.wb-source [data-disclosure="material-original"]>summary{display:flex;gap:6px;align-items:center;padding:6px 0!important;min-height:30px;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)}
+#workspace.wb-source [data-disclosure="material-original"]>summary :is(.c3-tool-i,.c3-tool-d){display:none}
+#workspace.wb-source [data-disclosure="material-original"]>summary .c3-tool-c{width:14px;height:14px;flex:none}
+#workspace.wb-source .tline{max-width:calc(var(--measure) + 10rem);grid-template-columns:48px 64px minmax(0,1fr);gap:10px;padding:8px;border-radius:7px}
+#workspace.wb-source .tline>.tx{grid-column:3;min-width:0}
+#workspace.wb-source .tline .who,#workspace.wb-source .tline .who strong{font:500 var(--t-label)/1.5 var(--ar-ui)}
+#workspace.wb-source .tline .quote{font-family:Lora,Georgia,serif;font-size:var(--t-body);line-height:1.65;margin:0 0 8px}
+#workspace.wb-source .tline .quote:last-child{margin-bottom:0}
+#workspace.wb-source .tline .quote:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+@media(max-width:650px){
+ #workspace.wb-source .tline{grid-template-columns:44px minmax(0,1fr);gap:10px;padding:8px}
+ #workspace.wb-source .tline>.who{display:none}
+ #workspace.wb-source .tline>.tx{grid-column:2}
+ #workspace.wb-source .source-reader-toolbar{gap:8px}
+ #workspace.wb-source .source-reader-selector{max-width:100%;min-width:0}
+ #workspace.wb-source .source-reader-selector select{max-width:100%}
+}
+#workspace.wb-source :is(.material-surface,.source-reader,.source-reader-toolbar){font-family:var(--ar-ui);font-size:var(--t-body)}
+html body.wbf-on #workspace.wb-source .material-layout{gap:0!important}
+html body.wbf-on #workspace.wb-source .wb-source-inventory{margin:10px 0 0;padding:6px 0 0}
+html body.c3-tabs #app #workspace.wb-source .material-reading [data-disclosure="material-original"],
+html body.c3-tabs #app #workspace.wb-source .material-reading [data-disclosure="material-original"]>summary.c3-tool{border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important}
+html body.c3-tabs #app #workspace.wb-source .material-reading [data-disclosure="material-original"]>summary.c3-tool{padding:4px 0!important;min-height:28px}
+/* Research follows the approved full work-area split. Native scope and note
+   controls remain available within that surface instead of adding a second gutter. */
+#workspace.wb-research .flow-paper{padding:0!important;min-width:0}
+#workspace.wb-research :is(.research-standard,.wb-shared-research){margin:0!important;max-width:none!important}
+#workspace.wb-research .wb-shared-research .rpts{padding:0}
+#workspace.wb-research .rsplit{font-family:"Plus Jakarta Sans",system-ui,sans-serif}
+#workspace.wb-research .cons{background:color-mix(in srgb,var(--bg) 70%,#000)}
+[data-theme="light"] #workspace.wb-research .cons{background:#f6f4ee}
+#workspace.wb-research .rpts>.human-direction-editor{padding:12px}
+#workspace.wb-research .phaseReader{position:relative}
+#workspace.wb-research .c3-scope{position:absolute;right:12px;top:8px;z-index:2;margin:0;padding:0;border:0;box-shadow:none}
+#workspace.wb-research .c3-scope button{padding:2px 7px;min-height:26px;font-size:var(--t-label)}
+#workspace.wb-research .cin{gap:8px}
+#workspace.wb-research .cin>input{flex:1;min-width:0;width:0;border:0;background:none;font:inherit;color:var(--ink)}
+#workspace.wb-research .hints button{min-height:22px}
+#workspace.wb-research :is(.hints button,.cin input):focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+#workspace.wb-research .hints button:hover{color:var(--ink);border-color:var(--warm)}
+
+#workspace.wb-research .rpts>.rh{padding-right:175px;min-height:44px}
+@media(min-width:761px){#workspace.wb-research .c3-scope{right:auto;left:244px}}
+
+/* Direction: reference mine geometry, one words-first surface, secondary context. */
+html body.wbf-on #workspace.wb-direction .phaseReader{margin:0 32px 32px!important;max-width:1120px}
+html body.wbf-on #workspace.wb-direction #stage-working-lane{padding:0!important;margin:0!important;display:flex;flex-direction:column;gap:0}
+#workspace.wb-direction #study-source-continuation{order:-2}
+#workspace.wb-direction #direction-writing-tools{order:1;margin-top:18px;border:0;padding:0}
+#workspace.wb-direction :is(.flow-lane-head,.dwt-identity,.dwt-orientation [data-dwt-action="angle"],.source-continuation-header>h2){display:none!important}
+#workspace.wb-direction .dwt-orientation{border:0;padding:0;min-height:0;justify-content:flex-start}
+#workspace.wb-direction .source-continuation{display:flex;flex-direction:column}
+#workspace.wb-direction .wb-direction-context{order:2;margin:12px 0 0;max-width:calc(var(--measure,40rem) + 16rem);font-size:var(--t-label);color:var(--dim)}
+#workspace.wb-direction .wb-direction-context>summary{cursor:pointer;min-height:34px;display:flex;align-items:center;gap:6px}
+#workspace.wb-direction .wb-direction-context>summary:after{content:'⌄'}
+#workspace.wb-direction .wb-direction-context[open]>summary:after{content:'⌃'}
+#workspace.wb-direction .wb-direction-context .source-continuation-header{margin:8px 0;justify-content:flex-start;border:0;padding:0}
+#workspace.wb-direction .wb-direction-context footer{margin:12px 0 0}
+#workspace.wb-direction .wb-direction-record{max-width:calc(var(--measure,40rem) + 16rem);padding:0!important;margin:0!important}
+#workspace.wb-direction .wb-direction-record>header{min-height:34px;margin:0 0 12px;justify-content:flex-start}
+#workspace.wb-direction .wb-direction-record>header h3{display:none}
+#workspace.wb-direction .wb-direction-record>header select{min-height:34px;padding:4px 8px;border-radius:7px;font-size:var(--t-label)}
+#workspace.wb-direction .human-direction-edit{margin:0!important}
+#workspace.wb-direction .human-direction-edit>summary{display:none}
+#workspace.wb-direction .human-direction-words{box-sizing:border-box;max-width:var(--measure,40rem);padding:10px 12px;margin:0;font-size:var(--t-label);font-weight:500;line-height:1.5}
+html body.wbf-on #workspace.wb-direction .human-direction-words textarea{min-height:74px!important;height:74px;box-sizing:border-box;margin:0!important;padding:4px 0 0!important;border:0!important;border-radius:0!important;background:none!important;font:400 var(--t-body)/var(--lh,1.5) var(--ar-ui)!important}
+#workspace.wb-direction .human-direction-words:focus-within{outline:1px solid var(--warm);outline-offset:2px}
+#workspace.wb-direction .human-direction-actions{margin:10px 0 6px}
+#workspace.wb-direction .human-direction-edit>p.small{margin:6px 0;font-size:var(--t-label)}
+#workspace.wb-direction #stage-working-lane>h2{font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);margin:18px 0 10px}
+#workspace.wb-direction #stage-working-lane>p{font-size:var(--t-body);color:var(--dim);margin:0 0 10px}
+@media(max-width:650px){html body.wbf-on #workspace.wb-direction .phaseReader{margin:0 18px 24px!important}#workspace.wb-direction .wb-direction-record>header label{width:auto;flex-wrap:nowrap}#workspace.wb-direction .wb-direction-record>header select{width:auto;max-width:260px}#workspace.wb-direction .human-direction-actions span{flex-basis:100%}}
+html body.wbf-on #workspace.wb-direction .phaseReader{width:auto!important;min-width:0!important}
+#workspace.wb-direction .wb-direction-context :is(select,button){max-width:100%}
+html body.wbf-on #workspace.wb-direction .phaseReader{min-height:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-direction .human-direction-words textarea{font:400 var(--t-body)/1.5 var(--ar-ui)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-direction .human-direction-edit>p.small{font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+#workspace.wb-direction .human-direction-words{min-height:121px}
+@media(max-width:650px){html body.wbf-on #workspace.wb-direction .phaseReader{margin-left:16px!important;margin-right:16px!important}}
+/* The live writer replaces the legacy setup instruction; real choices remain visible. */
+#workspace.wb-direction #stage-working-lane>p.small[role=status],#workspace.wb-direction #stage-working-lane.wb-direction-no-angles>h2,#workspace.wb-direction #stage-working-lane.wb-direction-no-angles>h2+p{display:none!important}
+#workspace.wb-direction .wb-direction-context #direction-writing-tools{margin-top:12px}
+html body.wbf-on #workspace.wb-direction #c3-next{margin:20px 32px!important;align-self:flex-start;flex:none}
+@media(max-width:650px){html body.wbf-on #workspace.wb-direction #c3-next{margin:16px!important}}
+
+/* S12: adopt the reference origin card and branch surface without changing its owners. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview{width:calc(100% - 64px)!important;align-self:stretch;max-width:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-panel{width:100%;max-width:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .wb-output-origin-heading{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim);margin:0 0 10px!important;padding:0}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .origin{display:flex;flex-wrap:nowrap;box-sizing:border-box;width:100%;max-width:calc(var(--measure,40rem) + 16rem);padding:14px 16px;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .origin>svg{width:18px;height:18px;flex:0 0 18px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .origin b{display:block;font:600 var(--t-body)/1.5 var(--ar-ui)}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .origin .small{font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--dim)}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-register{max-width:calc(var(--measure,40rem) + 14rem)}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-row{min-height:69px;box-sizing:border-box}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-row:before{top:24px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-identity h3{margin:0!important;font:600 var(--t-body)/1.5 var(--ar-ui)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-title{font:600 var(--t-body)/1.5 var(--ar-ui)!important;background:none!important;border:0!important;border-radius:0;min-height:22.5px;padding:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-actions>.oo-action{font:400 var(--t-label)/1.5 var(--ar-ui)!important;min-height:30px!important;color:var(--warm)!important;background:none!important;border:0!important;padding:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-more>summary{font:400 var(--t-label)/1.5 var(--ar-ui);min-height:30px;padding:0 4px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .wb-output-facts strong{font-weight:400!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview :is(.oo-title,.oo-actions>.oo-action):hover{color:var(--warm)!important;text-decoration:underline;text-underline-offset:3px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview :is(.oo-title,.oo-action,.oo-more>summary):focus-visible{outline:2px solid var(--warm);outline-offset:3px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs>.mot-outputs>.mot-bar{display:none!important}
+@media(max-width:650px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-register{margin-left:26px}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-row{padding-left:22px!important;grid-template-columns:minmax(0,1fr) auto}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-actions{flex-direction:row;align-items:center;gap:8px}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-actions>.oo-action{max-width:94px;white-space:normal;text-align:right}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .wb-output-facts{grid-column:1/-1}
+}
+
+@media(max-width:650px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview{width:calc(100% - 32px)!important}}
+
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs>.mot-outputs:not(:has([data-wn-planning-open])){display:none!important}
+@media(max-width:650px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-register{margin-left:8px}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-row{padding-left:20px!important;gap:2px 12px}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-identity{grid-column:1/-1;grid-row:1}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-actions{grid-column:1/-1;grid-row:2;justify-content:space-between}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-actions>.oo-action{max-width:none;min-height:20px!important;text-align:left}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-more>summary{min-height:20px}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .wb-output-facts{grid-column:1/-1;grid-row:3}
+}
+
+/* Keep the maintained Research scope within the point header. */
+html body.wbf-on #app #workspace.wb-research .flow-paper{padding:0!important}
+html body.wbf-on #app #workspace.wb-research .c3-scope{margin:0!important;left:auto!important;right:calc(100% - 26rem + 12px)!important}
+#workspace.wb-research .cin>label{flex:0 0 auto}
+@media(max-width:760px){html body.wbf-on #app #workspace.wb-research .c3-scope{right:12px!important}}
+/* Real imported speech uses the same grid without legacy inline/implicit columns. */
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline{display:grid!important;grid-template-columns:48px 64px minmax(0,1fr)!important;gap:10px!important;align-items:start!important}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline>.tm{grid-column:1!important;grid-row:1!important;white-space:nowrap!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important;margin:0!important;padding:0!important;overflow:visible}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline>.who{grid-column:2!important;grid-row:1!important;margin:0!important;padding:0!important}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline>.tx{grid-column:3!important;grid-row:1!important;min-width:0}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline .source-remark{display:block!important;font:400 var(--t-body)/1.65 'Workbench Lora',Lora,Georgia,serif!important;margin:0 0 8px!important;padding:0!important}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline .source-remark:last-child{margin-bottom:0!important}
+@media(max-width:760px){
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline{grid-template-columns:44px minmax(0,1fr)!important;row-gap:2px!important}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline>.who{display:block!important;grid-column:2!important;grid-row:1!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline>.tx{grid-column:2!important;grid-row:2!important}
+html body.wbf-on #app #workspace.wb-source .source-dialogue-group.tline>.tm{grid-row:1 / span 2!important}
+}
+/* Only writing modes need a forced gutter for Read/Write parity. Full-height research/browser surfaces do not. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:not([data-c3-stage="5"]):not([data-c3-stage="6"]):not([data-c3-stage="7"]) #app #workspace{scrollbar-gutter:auto!important}
+/* A collapsed section panel keeps its purpose in the accessible label; the phone button leaves room for the title. */
+@media(max-width:760px){
+html body.wbf-on #app #c3-surface-bar #wb-open{width:32px!important;min-width:32px!important;max-width:32px!important;height:32px!important;min-height:32px!important;margin:0!important;padding:0!important;justify-content:center!important;flex:0 0 32px!important}
+html body.wbf-on #app #c3-surface-bar #wb-open>span{display:none!important}
+html body.wbf-on #c3-surface-bar .sb-left:has(#wb-open){flex:1 1 auto!important;min-width:100px!important}
+html body.wbf-on #c3-surface-bar .sb-left:has(#wb-open) .sb-where{flex:1 1 auto!important;min-width:0!important;justify-content:flex-end}
+}
+/* Keep the maintained scope controls in normal header flow: no print/compositor offset or clipped label. */
+html body.wbf-on #app #workspace.wb-research .rpts>.rh{padding-right:12px!important;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+html body.wbf-on #app #workspace.wb-research .rpts>.rh .wb-research-count{flex:0 0 auto;white-space:nowrap}
+html body.wbf-on #app #workspace.wb-research .rpts>.rh .c3-scope{position:static!important;inset:auto!important;flex:none;margin:0 0 0 auto!important;max-width:100%;width:auto!important}
+html body.wbf-on #app #workspace.wb-research .phaseReader{margin-bottom:0!important;display:block!important}
+html body.wbf-on #app #workspace.wb-research .flow-paper{display:block!important;gap:0!important}
+#workspace.wb-research .wb-research-tools{margin:12px;padding:8px 0;border-top:1px solid var(--line);font:400 var(--t-label)/1.5 var(--ar-ui)}
+#workspace.wb-research .wb-research-tools>summary{cursor:pointer;color:var(--dim);padding:2px 0}
+#workspace.wb-research .wb-research-tools[open]>:not(summary){margin-top:10px!important;max-width:100%;min-width:0}
+#workspace.wb-research .wb-research-tools :is(input,textarea,select){max-width:100%;box-sizing:border-box}
+/* The approved rail and title actions already navigate the work; the old Next footer is redundant. */
+html body.wbf-on #app #c3-next{display:none!important}
+
+#workspace.wb-source .wb-source-notes{border:0;background:none;margin:0 0 12px;padding:0}
+#workspace.wb-source .wb-source-notes>summary{font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);padding:4px 0;cursor:pointer}
+#workspace.wb-source .conversation-notes .note-link{white-space:normal;text-overflow:clip;overflow:visible;height:auto;text-align:left;overflow-wrap:anywhere}
+
+/* Retained-record access follows the count and scope instead of squeezing them into letter columns. */
+html body.wbf-on #app #workspace.wb-research .rpts>.rh .wb-research-records{flex:1 0 100%;min-width:0;display:flex;flex-wrap:wrap;gap:6px}
+html body.wbf-on #app #workspace.wb-research .rpts>.rh .wb-research-records button{max-width:100%;white-space:normal;overflow-wrap:break-word}
+
+/* Source keeps one conversation identity beside its original tools. The label
+   remains accessible; date/location survive when the title repeats the picker. */
+html body.wbf-on #app #workspace.wb-source .wbg-source .source-reader-toolbar .source-reader-selector{display:flex;flex:1 1 12rem;align-items:center;gap:0;min-width:0;width:auto}
+html body.wbf-on #app #workspace.wb-source .wbg-source .source-reader-toolbar .source-reader-selector select{display:block;flex:1 1 auto;width:0;max-width:none;min-width:0;margin:0}
+html body.wbf-on #app #workspace.wb-source .wbg-source .wbg-session-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+html body.wbf-on #app #workspace.wb-source .wbg-source .source-reader-toolbar{flex-wrap:wrap;gap:8px;margin-bottom:8px}
+html body.wbf-on #app #workspace.wb-source .wbg-source .wbg-reader-more{flex:0 0 auto;margin-left:0}
+html body.wbf-on #app #workspace.wb-source .wbg-source .wbg-reader-more>summary{min-height:34px;display:flex;align-items:center;box-sizing:border-box;padding:5px 9px}
+html body.wbf-on #app #workspace.wb-source .wbg-source .source-reader-title [hidden],html body.wbf-on #app #workspace.wb-source .wbg-source .source-reader-title[hidden]{display:none!important}

@@ -98,7 +98,7 @@
   reader.classList.toggle('c3-read',n===6);reader.classList.toggle('c3-check',n===7);reader.classList.toggle('c3-flow',n>=1&&n<=4);for(const k of [1,2,3,4])reader.classList.toggle('c3-s'+k,n===k);
   if(n===6)readInspector(reader,n);else reader.querySelector(':scope>#c3-read-insp')?.remove(); // review A7: no inspector on 1–4
   if(n===6){const side=reader.querySelector(':scope>#c3-read-insp');if(side){const box=notesBox(side,side.querySelector(':scope>.c3-insp-tabs'));gather(box,[reader.querySelector(':scope>.c3-ctitle')]);mirror(box,[reader.querySelector(':scope>.draft-row'),reader.querySelector(':scope>.draft-details'),reader.querySelector(':scope>details.flow-retained'),ws.querySelector(':scope>details.flow-retained')]);}}
-  if(n===3&&window.c3Research){const t=reader.querySelector(':scope>.c3-ctitle');if(t&&!reader.querySelector(':scope>.c3-scope'))t.after(scopeSwitch(false));}
+  if(n===3&&window.c3Research){const t=reader.querySelector(':scope>.c3-ctitle');if(t&&!reader.querySelector('.c3-scope'))t.after(scopeSwitch(false));}
   if(n===7&&reader.querySelector('[data-current-check="run"]')&&!document.querySelector('#c3-surface-bar .sb-primary'))window.surfaceBar?.build?.();
  }
  document.addEventListener('click',event=>{

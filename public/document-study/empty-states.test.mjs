@@ -12,7 +12,10 @@ function fixture(stage,page=stage,withState=false){
  const dom=new JSDOM(`<div id="app">${pages[page]}</div>`,{url:'http://localhost',runScripts:'dangerously'}),w=dom.window;
  w.calls=[];w.state={project:'p1',projects:[{id:'p1',name:'Piece',view:'record',viewedStage:Math.floor(stage)}]};w.current=()=>w.state.projects[0];
  w.viewPhase=n=>w.calls.push('phase:'+n);w.render=()=>{};
- w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));if(withState)w.eval(fs.readFileSync(new URL('./piece-state.js',import.meta.url),'utf8'));w.eval(code);return {w,d:w.document};
+ const observers=[],Observer=w.MutationObserver;
+ w.MutationObserver=class extends Observer{constructor(fn){super(fn);observers.push(this);}};
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));if(withState)w.eval(fs.readFileSync(new URL('./piece-state.js',import.meta.url),'utf8'));w.eval(code);
+ w.MutationObserver=Observer;const close=w.close.bind(w);w.close=()=>{observers.forEach(observer=>observer.disconnect());close();};return {w,d:w.document};
 }
 const json=v=>JSON.parse(JSON.stringify(v));
 test('an empty step shows the shape, the card and its steps, and hides only the terse empty text',()=>{
@@ -106,3 +109,7 @@ test('every tool an empty card hides stays one quiet click away',()=>{
  d.querySelector('.c3-empty [data-ce-anyway]').click();
  assert.equal(d.querySelector('.mot-surface').hasAttribute('data-c3-empty-hidden'),false);
 });
+
+test('Outputs leaves actual owner loading, failure and unavailable states visible',()=>{for(const html of ['<p class="oo-empty" role="status">Reading this project’s outputs…</p>','<div class="oo-empty"><p role="alert">Reader failed.</p><button data-output-retry>Try again</button></div>','<div class="oo-empty"><p role="status">Saved outputs are unavailable.</p><button data-output-retry>Try again</button></div>']){const {w,d}=fixture(12);d.querySelector('#output-overview .oo-panel').innerHTML=html;w.c3Empty.decorate();assert.equal(d.querySelector('.c3-empty'),null);assert.equal(d.querySelectorAll('[data-c3-empty-hidden]').length,0);w.close();}});
+
+test('actual Outputs reader stays pending through its empty decorator, then shows saved rows or its error',async()=>{for(const failure of [false,true]){const {w,d}=fixture(12);let settle;const delay=new Promise(resolve=>settle=resolve);w.historicalNotice=()=>'';w.workflowBar=()=>'';w.phaseReader=()=>'';w.render=()=>{d.querySelector('#app').innerHTML='<main class="workspace"><div class="c3-ws-title">Outputs</div>'+w.phaseReader(w.current())+'</main>';};w.realOutputOverview={read:async({projectId})=>{await delay;if(failure)throw Error('Saved reader offline.');return {projectId,outputs:[{id:'saved-article',title:'Actual saved Article',format:'Article',status:'draft',nextAction:{kind:'arrange',label:'Arrange'}}]};}};w.eval(fs.readFileSync(new URL('./output-overview.js',import.meta.url),'utf8'));w.c3Empty.decorate();assert.match(d.querySelector('#output-overview').textContent,/Reading this project/);assert.equal(d.querySelector('.c3-empty'),null);settle();await new Promise(resolve=>setTimeout(resolve,0));w.c3Empty.decorate();assert.equal(d.querySelector('.c3-empty'),null);assert.equal(d.querySelector('#output-overview').hasAttribute('data-c3-empty-hidden'),false);if(failure)assert.match(d.querySelector('[role=alert]').textContent,/offline/);else assert.equal(d.querySelector('[data-overview-output]').dataset.overviewOutput,'saved-article');w.close();}});

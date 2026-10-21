@@ -129,7 +129,7 @@ test('in Direction, Save direction is the primary and the angle tools stay on th
 
 test('Media and Arrange press their own Upload photos and Audience view buttons as the primary',()=>{
  for(const [stage,html,label,call] of [[8,'<section class="study-photos"><button data-add onclick="calls.push(\'upload\')">Upload photos</button></section>','Add media','upload'],[9,'<section class="oss-surface"><button data-oss-action="look" onclick="calls.push(\'look\')">Audience view</button></section>','Audience view','look']]){
-  const f=fixture();f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=stage;
+  const f=fixture();f.w.workspaceNavigation={outputs:()=>[{id:'o1',format:'Article'}]};f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=stage;
   f.d.querySelector('.workspace').insertAdjacentHTML('beforeend',html);f.w.surfaceBar.build();
   const p=f.bar().querySelector('.sb-primary');assert.equal(p.textContent,label);p.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),[call]);
  }
@@ -215,4 +215,40 @@ test('Workbench exposes one root text-size control outside More and keeps the sc
 
 test('retained live part controls survive a toolbar refresh with their selection and handler intact',()=>{
  const f=fixture(),slot=f.d.createElement('details');slot.dataset.c3RetainControl='';slot.innerHTML='<summary>Parts</summary><select><option>Part one</option><option>Part two</option></select>';const select=slot.querySelector('select');select.selectedIndex=1;let changed=0;select.onchange=()=>changed++;f.bar().querySelector('.sb-right').append(slot);f.w.surfaceBar.openMore();assert.strictEqual(f.bar().querySelector('[data-c3-retain-control]'),slot);assert.equal(select.selectedIndex,1);select.dispatchEvent(new f.w.Event('change'));assert.equal(changed,1);f.w.close();
+});
+
+test('Make an output projects only original format choices; Close and Escape restore ordinary More',()=>{
+ const f=fixture(),editor=f.d.querySelector('#manuscript'),originalText=editor.textContent;
+ f.w.surfaceBar.openMore('New output');
+ const menu=f.bar().querySelector('.sb-menu');assert.equal(menu.getAttribute('aria-label'),'Make an output');assert.deepEqual([...menu.querySelectorAll('[data-sb]')].map(b=>[b.textContent.trim(),b.disabled]),[['Article',false],['Post',true]]);assert.doesNotMatch(menu.textContent,/Outputs|History|Recent|Receipts|Everything|Study details|Voice|Perspective/);assert.ok(menu.querySelector('[data-sb-close-output]'));
+ menu.querySelector('[data-sb-close-output]').click();assert.equal(f.bar().querySelector('.sb-menu'),null);press(f,'[data-sb-more]');assert.match(f.bar().querySelector('.sb-menu').textContent,/Outputs/);assert.match(f.bar().querySelector('.sb-menu').textContent,/Voice/);
+ f.w.surfaceBar.openMore('New output');f.d.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));assert.equal(f.bar().querySelector('.sb-menu'),null);press(f,'[data-sb-more]');assert.match(f.bar().querySelector('.sb-menu').textContent,/Study details/);
+ f.w.surfaceBar.openMore('New output');const article=f.bar().querySelector('.sb-menu [data-sb]');article.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['create-article']);assert.equal(f.bar().querySelector('.sb-menu'),null);assert.strictEqual(f.d.querySelector('#manuscript'),editor);assert.equal(editor.textContent,originalText);
+});
+for(const change of ['project','output','owner'])test('focused output choice refuses stale '+change+' before original dispatch',()=>{
+ const f=fixture();let output='first';f.w.studyOutputConnection={selection:()=>({projectId:'p1',rootBindingId:'root',output:{id:output}})};f.w.surfaceBar.openMore('New output');const article=f.bar().querySelector('.sb-menu [data-sb]');
+ if(change==='project')f.w.current().id='another-project';else if(change==='output')output='another-output';else{const old=f.d.querySelector('#work-context .wn-new'),replacement=old.cloneNode(true);old.replaceWith(replacement);}
+ article.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),[]);assert.equal(f.bar().querySelector('.sb-menu'),null);press(f,'[data-sb-more]');assert.match(f.bar().querySelector('.sb-menu').textContent,/Outputs/);
+});
+test('focused output menu follows disabled owner state and ordinary More stays complete',()=>{
+ const f=fixture();f.w.surfaceBar.openMore('New output');const article=f.bar().querySelector('.sb-menu [data-sb]');f.d.querySelector('[data-wn-create="article"]').disabled=true;article.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),[],'current owner disabled state wins over stale enabled proxy');
+ f.w.surfaceBar.build();assert.equal(f.bar().querySelector('.sb-menu [data-sb]').disabled,true);press(f,'[data-sb-more]');assert.match(f.bar().querySelector('.sb-menu').textContent,/Outputs/);assert.match(f.bar().querySelector('.sb-menu').textContent,/New output/);
+});
+
+test('Outputs frame cannot append unrelated section tools into the focused format chooser',()=>{
+ const f=fixture();f.d.querySelector('.workspace').id='workspace';f.w.current().view='record';f.w.current().viewedStage=12;f.w.matchMedia=()=>({matches:false});f.w.eval(fs.readFileSync(new URL('./workbench-frame.js',import.meta.url),'utf8'));f.w.surfaceBar.openMore('New output');
+ const owner=f.d.createElement('span');owner.className='sb-pw';owner.innerHTML='<button>Original next action</button>';f.bar().querySelector('.sb-right').append(owner);f.w.c3WorkbenchFrame.decorate();
+ assert.equal(f.bar().querySelector('.sb-menu .sb-pw'),null);assert.strictEqual(owner.parentElement,f.bar().querySelector('.sb-right'));assert.deepEqual([...f.bar().querySelectorAll('.sb-menu [data-sb]')].map(b=>b.textContent.trim()),['Article','Post']);
+});
+
+test('ordinary writing More discovers the late original protected wording control outside toolbar rows',async()=>{
+ const f=fixture(),owner=f.d.createElement('section');owner.className='draft-surface';owner.innerHTML='<details class="draft-surface-more"><summary>More</summary><div class="draft-surface-more-body"><button>Unrelated donor tool</button></div></details>';f.d.querySelector('.workspace').append(owner);
+ await new Promise(resolve=>setTimeout(resolve,0));f.w.surfaceBar.openMore();
+ const original=f.d.createElement('button');original.dataset.wordingAction='list';original.textContent='Protected wording';original.disabled=true;original.title='Wait for the saved part';let opened=0;f.d.addEventListener('click',event=>{if(event.target===original)opened++;});owner.querySelector('.draft-surface-more-body').append(original);
+ await new Promise(resolve=>setTimeout(resolve,0));
+ const items=()=>[...f.bar().querySelectorAll('.sb-menu [data-sb]')].filter(b=>b.textContent.trim()==='Protected wording');assert.equal(items().length,1);assert.equal(items()[0].disabled,true);assert.equal(items()[0].title,original.title);assert.doesNotMatch(f.bar().querySelector('.sb-menu').textContent,/Unrelated donor tool/);items()[0].click();assert.equal(opened,0);
+ original.disabled=false;await new Promise(resolve=>setTimeout(resolve,0));assert.equal(items()[0].disabled,false);items()[0].click();assert.equal(opened,1);assert.equal(f.bar().querySelector('.sb-menu'),null);assert.strictEqual(owner.querySelector('[data-wording-action=list]'),original);assert.equal(f.d.querySelectorAll('.draft-surface-more').length,1);await new Promise(resolve=>setTimeout(resolve,0));f.w.close();
+});
+test('nested donor protection is projected only once and never enters the focused output chooser',async()=>{
+ const f=fixture(),owner=f.d.createElement('details');owner.innerHTML='<summary>More</summary><div class="draft-surface-more-body"><button data-wording-action="list">Protected wording</button></div>';f.d.querySelector('.workbar').append(owner);f.w.surfaceBar.openMore();assert.equal([...f.bar().querySelectorAll('.sb-menu [data-sb]')].filter(b=>b.textContent.trim()==='Protected wording').length,1);f.w.surfaceBar.openMore('New output');assert.doesNotMatch(f.bar().querySelector('.sb-menu').textContent,/Protected wording/);assert.deepEqual([...f.bar().querySelectorAll('.sb-menu [data-sb]')].map(b=>b.textContent.trim()),['Article','Post']);await new Promise(resolve=>setTimeout(resolve,0));f.w.close();
 });

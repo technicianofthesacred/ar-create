@@ -60,6 +60,7 @@
       host.querySelectorAll('[data-preview]').forEach(node => node.onclick = () => { if (!busy) { remember(); previewId = node.dataset.preview; paint(); } });
       host.querySelectorAll('[data-caption],[data-credit],[data-selected]').forEach(node => node.addEventListener(node.matches('[data-selected]') ? 'change' : 'input', () => { if (!busy) { remember(); const count = state.photos.filter(row => photo(row.sourceId).selected).length; host.querySelector('[data-photo-count]').textContent = `${count} selected · ${state.photos.length} in this piece`; const thumb = Array.from(host.querySelectorAll('[data-preview]')).find(el => el.dataset.preview === previewId); if (thumb) thumb.querySelector('.photo-thumb-state').textContent = `${photo(previewId).selected ? 'Selected' : 'Not selected'}${drafts.has(previewId) ? ' · Edited' : ''}`; status(drafts.size ? 'Unsaved details' : 'Saved to this piece'); } }));
       host.querySelector('[data-save]')?.addEventListener('click', () => { remember(); runMutation('/api/study/photos/update', {sourceId: previewId, selected: photo(previewId).selected, caption: photo(previewId).caption || '', credit: photo(previewId).credit || ''}); });
+      window.dispatchEvent(new CustomEvent('study-photo-state',{detail:{...binding}}));
     }
     async function showUsage(sourceId){
       const token=++usageRequest,node=host.querySelector('[data-photo-usage]');if(!node)return;node.innerHTML='<p>Reading saved placements…</p>';
@@ -113,7 +114,7 @@
     }
     paint();
     const ready=get('/api/study/photos').then(result => { if (destroyed) return; state = result; finish(drafts.size ? 'Unsaved details restored' : state.photos.length ? 'Saved photo details' : 'No photos added yet'); }).catch(failure => finish(failure.message, true));
-    return {binding,ready,async focusAsset(sourceId){await ready;if(destroyed||!state?.photos.some(p=>p.sourceId===sourceId))throw Error('The exact photograph is unavailable in this manuscript.');remember();previewId=sourceId;paint();const detail=host.querySelector('[data-detail]');detail?.scrollIntoView({block:'center'});return {sourceId,projectId,documentId};}, destroy() { destroyed = true; host.replaceChildren(); }};
+    return {binding,ready,snapshot(){if(destroyed)return null;return state?{binding:{...binding},revision:state.revision,busy,error,message,previewId,photos:state.photos.map(row=>photo(row.sourceId))}:null;},async focusAsset(sourceId){await ready;if(destroyed||!state?.photos.some(p=>p.sourceId===sourceId))throw Error('The exact photograph is unavailable in this manuscript.');remember();previewId=sourceId;paint();const detail=host.querySelector('[data-detail]');detail?.scrollIntoView({block:'center'});return {sourceId,projectId,documentId};}, destroy() { destroyed = true; host.replaceChildren(); }};
   };
   async function defaultRequest(url, input) {
     const response = await fetch(url, {method: input ? 'POST' : 'GET', headers: input ? {'Content-Type': 'application/json'} : undefined, body: input ? JSON.stringify(input) : undefined});

@@ -113,7 +113,7 @@
   return `<details class="ht-filter" data-ht-filter><summary>${icon(ICONS.list)}<span>Filter</span>${on.length?`<span class="ht-filter-on">${esc(on.join(' · '))}</span>`:''}</summary><div class="ht-filter-panel" role="group" aria-label="Filter pieces"><div class="ht-fgroup" role="group" aria-label="Brand or folder"><div class="ht-fh">Brand</div>${facetButton('data-ht-folder','','All brands',scoped.length,!folder)}${folders.map(([f,n])=>facetButton('data-ht-folder',f,f,n,folder===f)).join('')}</div><div class="ht-fgroup" role="group" aria-label="Status"><div class="ht-fh">Status</div>${facetButton('data-ht-status-filter','','Any status',inFolder.length,!statusFilter)}${statuses.map(([s,n])=>facetButton('data-ht-status-filter',s,s,n,statusFilter===s,true)).join('')}</div><div class="ht-fgroup" role="group" aria-label="Show"><div class="ht-fh">Show</div>${shows.map(([v,l])=>facetButton('data-ht-show',v,l,base(v).length,show===v&&!folder)).join('')}</div>${folder||statusFilter||show!=='active'?'<button type="button" class="ht-clear" data-ht-clear>Clear filters</button>':''}<p class="ht-fnote">Brands are your folders. Folders and pins are browser-local filing.</p></div></details>`;
  }
  function decorateHome(d){
-  if(!d||d.dataset.plContext)return;
+  if(!d||d.dataset.plContext||d.dataset.workbenchPieces==='true')return;
   if(!d.classList.contains('c3-home')){
    d.classList.add('c3-home');
    const title=d.querySelector('#pl-title');if(title){title.textContent='Home · every piece';title.classList.add('ht-sr');}
