@@ -20,7 +20,7 @@ export const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
 export const readManifest=root=>JSON.parse(fs.readFileSync(path.join(root,MANIFEST_FILE),'utf8'));
 export const manifestRows=manifest=>[...manifest.included,...manifest.authored];
 export const manifestSha256=root=>sha256(fs.readFileSync(path.join(root,MANIFEST_FILE)));
-export const git=(root,...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',maxBuffer:64*1024*1024});
+export const git=(root,...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',maxBuffer:64*1024*1024,stdio:['ignore','pipe','pipe']});
 export const trackedFiles=root=>git(root,'ls-files','-z').split('\0').filter(Boolean);
 
 // Compare the manifest with the checkout: stale hashes, missing files, tracked files nobody reviewed.

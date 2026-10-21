@@ -2815,7 +2815,7 @@
     },
     {
       "path": "scripts/lib/manifest.mjs",
-      "candidateSha256": "a8f65a8860c002a8917600aa6bae423508d9610e349bff06a99dd50228650fac"
+      "candidateSha256": "69e8713f97f0d488e9aa2a8346a8789e20f1687a0170562a6d08392b6d73ceba"
     },
     {
       "path": "scripts/refresh-manifest.mjs",
@@ -2823,7 +2823,7 @@
     },
     {
       "path": "scripts/release.mjs",
-      "candidateSha256": "7dba2b810bfea66197e37a0cfb0c34d7a2a37bc2f9e0761da3be27712c9446da"
+      "candidateSha256": "1ae3933769df864407d4fa28d55c35b3c375923418c7c4f967ea292e7445d1dc"
     },
     {
       "path": "tests/private-config.test.mjs",
@@ -2836,6 +2836,10 @@
     {
       "path": "todo/archive.md",
       "candidateSha256": "1c81a21a3a801a7394fce264ba3c476ed7a51423572a12990ad70e246d415301"
+    },
+    {
+      "path": "tests/release.test.mjs",
+      "candidateSha256": "1e1b4a045e17340fa44535b8adf05258fca6a544aa2675d626ed289f47745ab0"
     }
   ],
   "dependencyRepair": {

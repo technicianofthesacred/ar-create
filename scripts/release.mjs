@@ -50,7 +50,12 @@ function checkHome(home,repo){
  if(!home||!path.isAbsolute(home))throw new Error('--home requires an absolute directory.');
  const resolved=path.resolve(home);
  const relative=path.relative(repo,resolved);
- if(!relative.startsWith('..')&&!path.isAbsolute(relative))throw new Error('--home must be outside the source checkout.');
+ // Inside the checkout is allowed only for an ignored folder (the .test-home used by tests), never for the checkout itself.
+ if(!relative.startsWith('..')&&!path.isAbsolute(relative)){
+  if(relative==='')throw new Error('--home must not be the source checkout itself.');
+  try{git(repo,'check-ignore','-q',resolved);}catch{throw new Error('--home must be outside the source checkout (or an ignored folder inside it, such as .test-home).');}
+ }
+ if(path.relative(resolved,repo)===''||!path.relative(resolved,repo).startsWith('..'))throw new Error('--home must not contain the source checkout.');
  let at=resolved;
  while(true){const stat=fs.lstatSync(at,{throwIfNoEntry:false});if(stat?.isSymbolicLink())throw new Error(`Symlinked home paths are refused: ${at}`);const parent=path.dirname(at);if(parent===at)break;at=parent;}
  for(const name of ['service','service.next','service.prev']){const stat=fs.lstatSync(path.join(resolved,name),{throwIfNoEntry:false});if(stat&&(stat.isSymbolicLink()||!stat.isDirectory()))throw new Error(`${name} must be a real directory.`);}
