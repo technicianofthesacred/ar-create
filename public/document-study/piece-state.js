@@ -6,7 +6,7 @@
 (()=>{
  if(window.c3PieceState)return;
  const NAMES=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
- const TTL=30000,cache=new Map();let loading=null;
+ const TTL=30000,cache=new Map(),mediaSeen=new Map();let loading=null;
  const text=html=>{const d=document.createElement('div');d.innerHTML=html||'';return (d.textContent||'').trim();};
  const ws=sel=>document.querySelector('#app .workspace '+sel);
  const visible=n=>!!n&&n.isConnected&&!n.hidden&&!n.closest('[hidden]')&&!n.closest('[data-wn-consolidated]');
@@ -43,7 +43,7 @@
   const check=window.studyDraftCheck?.state?.()||null;
   const waiting=(list||[]).filter(o=>['review-needed','correction-needed'].includes(o.status));
   // Text-only: no photographs in the words and no output that needs a visual layout. Unknown outputs never count as text-only.
-  const textOnly=list===null?null:figures===0&&visual===0;
+  const textOnly=list===null?null:figures===0&&visual===0&&!(mediaSeen.get(p.id)>0);
   return {projectId:p.id,name:p.name,step:stage(),manuscript,save:save(manuscript),outputs:list,waiting,published,check,media:{figures},textOnly,loading:list===null};
  }
  // ---------- what is on screen for the step being viewed, read from the owners' controls in one place
@@ -54,7 +54,7 @@
   if(n===2){const host=ws('.material-surface.sws-source');s.count=host?host.querySelectorAll('.material-record').length:null;}
   if(n===3)s.count=ws('#stage-working-lane')?document.querySelectorAll('#app .workspace :is([data-research-point],.research-standard-row)').length:null;
   if(n===4){const save=control('[data-direction-save]'),typed=[...document.querySelectorAll('#app .workspace :is(textarea,input[type=text])')].some(t=>visible(t)&&t.value.trim()&&t.value!==t.defaultValue);s.dirty=!!save&&!save.disabled&&typed;s.count=document.querySelectorAll('#app .workspace .flow-directions button').length;s.saved=!!(document.getElementById('downstream-human-direction')?.textContent.trim());}
-  if(n===8)s.count=/No photos added yet/i.test(ws('#owned-photo-stage')?.textContent||'')?0:ws('#owned-photo-stage [data-asset],#owned-photo-stage figure,#owned-photo-stage img')?1:null;
+  if(n===8){s.count=/No photos added yet/i.test(ws('#owned-photo-stage')?.textContent||'')?0:ws('#owned-photo-stage [data-asset],#owned-photo-stage figure,#owned-photo-stage img')?1:null;if(s.count!==null)mediaSeen.set(current().id,s.count);}
   if(n===9)s.empty=!!ws('#study-output-canvas .oo-empty');
   if(n===10)s.empty=/No connected audience preview/i.test(ws('[data-oss-reader]')?.textContent||'');
   if(n===11){const m=ws('[data-share-field="message"],[data-oss-field="message"]');s.message=m?m.value.trim():null;}
@@ -91,7 +91,7 @@
   if(action.press){const n=ws(action.press);if(n&&!n.disabled){if(n.closest('[data-c3-empty-hidden]'))window.c3Empty?.reveal?.();const d=n.closest('details');if(d&&!d.open)d.open=true;n.click();if(n.matches('[data-current-issue]'))n.scrollIntoView?.({block:'center'});}return;}
   if(action.save){const save=window.studyOutputConnection?.flush||window.studyDraft?.flush;return save?.();}
   if(action.focus){const n=document.querySelector('#app .workspace :is('+action.focus+')')||document.querySelector(action.focus);n?.focus?.();n?.scrollIntoView?.({block:'center'});return;}
-  if(action.menu){if(stage()!==12)await window.viewPhase(12);const menu=document.querySelector('#work-context details.wn-new');if(menu){menu.open=true;window.c3Shell?.reveal?.(menu);}return;}
+  if(action.menu){if(stage()!==12)await window.viewPhase(12);return window.surfaceBar?.openMore?.('New output');} // the kinds of output are in More
   if(action.output){const id=current().id;await window.realOutputOverview?.onAction?.({projectId:id,outputId:action.output,kind:'native'});return window.viewPhase(5);}
  }
  // ---------- one state word per step for the sidebar (review C5): only words this object can stand behind

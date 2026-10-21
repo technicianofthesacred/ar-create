@@ -155,6 +155,8 @@
  function watch(){const now=rows();if(now.length===watched.length&&now.every((r,i)=>r===watched[i]))return;observer.disconnect();watched=now;for(const r of now)observer.observe(r,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','hidden','aria-pressed','aria-current','href']});}
  window.c3Shell.register('bar',()=>{build();watch();},{order:30});
  for(const name of ['study-draft-change','study-output-selection','c3-piece-state'])window.addEventListener(name,()=>{lastSig='';schedule();});
- window.surfaceBar={build,reals:()=>reals};
+ // Open More, optionally scrolled to the item whose section names this (e.g. New output · Article).
+ function openMore(section){moreOpen=true;lastSig='';build();const items=[...document.querySelectorAll('#c3-surface-bar .sb-menu .sb-item')];(items.find(b=>section&&b.textContent.includes(section))||items[0])?.focus({preventScroll:false});}
+ window.surfaceBar={build,openMore,reals:()=>reals};
  build();watch();
 })();

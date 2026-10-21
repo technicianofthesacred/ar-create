@@ -75,3 +75,13 @@ test('Read-only always says why',()=>{
  assert.match(ps.readOnlyReason(6),/Published copy · open the draft to edit/);
  assert.equal(fixture({stage:5}).ps.readOnlyReason(5),'');
 });
+
+test('C1: each step’s first answer when it is empty, from the one table',()=>{
+ const want={1:'Add files',2:'Add a recording',3:'Research these sources',4:'Write my own angle',5:'Start writing',6:'Write first',7:'Save a draft first',8:'Add media',10:'Make an output',12:'New output'};
+ const work={1:'<section class="material-surface sws-material"><span class="mrb-count">0</span><button data-flow-action="files">Add files</button></section>',2:'<section class="material-surface sws-source"></section>',3:'<section id="stage-working-lane"><button data-flow-action="analyze" disabled title="Add a source in Material first.">Research these sources</button></section>',4:'<section id="stage-working-lane"><div class="flow-directions"></div><button data-dwt-action="angle">Write my own angle</button></section>',8:'<section id="owned-photo-stage">No photos added yet</section><section class="study-photos"><button data-add>Upload photos</button></section>'};
+ for(const [n,label] of Object.entries(want)){const {ps}=fixture({stage:Number(n),blocks:[],work:work[n]||''});assert.equal(ps.primary(Number(n))?.label,label,'step '+n);}
+});
+test('C1: New output opens the bar’s More where the kinds of output live',async()=>{
+ const {w,ps}=fixture({stage:12});let opened=null;w.surfaceBar={openMore:s=>{opened=s;}};
+ await ps.run(ps.primary(12));assert.equal(opened,'New output');
+});
