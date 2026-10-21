@@ -2,6 +2,26 @@
 
 Status: plan only, 21 October 2026. Nothing here is built. Review items it settles: F-04, F-28, B12, D3 in `03-multi-agent.md`, DM-5 and DM-8 in `04-dual-mode.md`. Adrian's instruction (2026-10-21): "/mag somehow integrated with it all."
 
+## Built (branch claude/arc-mag, 21 October 2026)
+
+Adrian's decisions D1 to D9 were all taken as recommended. What exists now, step by step:
+
+| Step | Built | Where |
+|---|---|---|
+| M1 | Read-only inventory; register `--dry-run` / `--apply` (hash proof, self-rollback) / `--rollback`; follows the board's own story assignment | `tools/magazine/inventory.mjs`, `register.mjs` |
+| M2 | The one writer: lock (`_mag-running.md`, transaction or session hold), CAS by kind, proposals for agents' prose, exact undo, conflict-copy refusal | `runtime/services/magazine-vault/` |
+| M3 | 40-odd `magazine.*` commands in the one registry (human-only decisions marked); `magazine.board` equals `mag-status.mjs` | `runtime/commands/magazine.mjs` |
+| M4 | Stories as projects (`magazine.stories`, `.story`); no new working copies of a registered story; D7 side-by-side `magazine.reconcile` | `projects.mjs`, `reconcile.mjs` |
+| M5 | Intake to the real roots: `drops.claim`, `intake.file`, drop emptied last | `intake.mjs` |
+| M6 | Quote and split checks as code, equal to the `~/builds` scripts | `checks.mjs` |
+| M7 | `editorial/` (stages, LESSONS, brands) with `MANIFEST.json` | `editorial/`, `tools/magazine/editorial-pack.mjs` |
+| M8 | The 8766 page saving through AR Create, plus "Waiting for your yes" | `editorial/builds-next/`, `tools/magazine/make-page-proxy.mjs` |
+| M9 | Thin `/mag` and `/arcreate` | `editorial/skills-next/`, `tools/magazine/mag.mjs` |
+| M10 | Installer (`--dry-run`, `--apply`, `--restore`, `--retire-mag-local`) and the `mag-intake.sh` shim | `scripts/install-mag-clients.mjs` |
+| M11 | D2 settles it for now: the VPS and innerstellar keep the legacy path under the shared lock (`editorial/skills-next/mag/stages/legacy.md`, the page's `MAG_ARC=legacy` mode, the shim's non-Mac branch). AR Create on the Mac honours their lock (423) and refuses to write beside a Syncthing conflict copy. A replica or the i64os proxy waits for B13/Q4. | — |
+
+Known limit of D2: AR Create holds the lock per write, so a run on another machine sees it only while a Mac session holds it with `magazine.lock.hold` (the thin `/mag` does). Compare-and-swap catches any change that has already synced, and a conflict copy stops the write.
+
 Every fact below was read on 21 October from the files named. "Measured" means read or run by this survey; "reported" means taken from the review.
 
 ## 0. Four corrections to the review, measured
