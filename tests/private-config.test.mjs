@@ -90,3 +90,26 @@ test('fixturesDir overlay serves only its allowed file to loopback hosts and def
  fs.rmSync(path.join(dir,'synthetic-study-data.js'));
  assert.equal((await get('/document-study/synthetic-study-data.js')).body,'original:/document-study/synthetic-study-data.js','a missing fixture falls through to the synthetic file');
 });
+
+test('magazine settings: vault, Files, drops in order, writable defaults to false, staging and teajia checkout; bad values refused',()=>{
+ const dir=scratch();try{
+  const vault=path.join(dir,'vault'),files=path.join(dir,'files'),site=path.join(dir,'site');for(const d of [vault,files,site])fs.mkdirSync(d);
+  const drops=[path.join(dir,'files/Drop'),path.join(dir,'phone/Drop')],staging=path.join(dir,'cache/export');
+  const load=magazine=>loadConfig(scratchOk({AR_CREATE_CONFIG:write(dir,'m.json',JSON.stringify({dataDir:path.join(dir,'d'),magazine}))})).magazine;
+  const set=load({vaultRoot:vault,filesRoot:files,drops,exportStaging:staging,magSendRepo:site});
+  assert.deepEqual(set,{vaultRoot:fs.realpathSync(vault),filesRoot:fs.realpathSync(files),drops,writable:false,exportStaging:staging,magSendRepo:fs.realpathSync(site)},'MAG_DROPS order kept; writable false unless the file says true');
+  assert.equal(load({vaultRoot:vault,writable:true}).writable,true);
+  assert.equal(load({vaultRoot:vault,writable:false}).writable,false);
+ }finally{cleanup(dir);}
+ const again=scratch();try{
+  const vault=path.join(again,'vault');fs.mkdirSync(vault);
+  const load=magazine=>loadConfig(scratchOk({AR_CREATE_CONFIG:write(again,'m.json',JSON.stringify({dataDir:path.join(again,'d'),magazine}))}));
+  assert.throws(()=>load({vaultRoot:vault,writable:1}),/magazine\.writable must be true or false/);
+  assert.throws(()=>load({vaultRoot:vault,drops:['relative/Drop']}),/magazine\.drops\[0\] must be an absolute path/);
+  assert.throws(()=>load({vaultRoot:vault,exportStaging:'cache/export'}),/magazine\.exportStaging must be an absolute path/);
+  assert.throws(()=>load({vaultRoot:vault,sendNow:true}),/unsupported field/);
+  assert.throws(()=>load({vaultRoot:vault,filesRoot:path.join(again,'missing')}),/ENOENT|real directory/);
+  const none=loadConfig(scratchOk({AR_CREATE_DATA_DIR:path.join(again,'d')})).magazine;
+  assert.equal(none.vaultRoot,null);assert.equal(none.writable,false);assert.deepEqual(none.drops,[]);
+ }finally{cleanup(again);}
+});

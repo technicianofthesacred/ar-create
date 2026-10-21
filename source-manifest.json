@@ -2133,11 +2133,11 @@
     },
     {
       "path": "config.example.json",
-      "candidateSha256": "6038201735923fdb7f9b468779dbbf13a37e4338e76676b0778150a511b52f84"
+      "candidateSha256": "51c194583d87c1df128672c8eab7d5ec742365a10576718f633958c3a2da143a"
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "88470943a9911653e3b81e182c664ae5cb7af1ed0f37f8c282ede85d56de4e16"
+      "candidateSha256": "159dc21d1045e52e59a32897dbcd057edd04eec61bbf7703b3a3066c9af9c223"
     },
     {
       "path": "package.json",
@@ -2145,7 +2145,7 @@
     },
     {
       "path": "serve.mjs",
-      "candidateSha256": "8a29546e8b0b5e9f44a4f7c1c886e10b4d9f60f4e06fcb1c0207242034d73a0e"
+      "candidateSha256": "cab8a410fbace87ffe719fbda4d99cb0d8645ea601f60cb8104ffcce0c631a12"
     },
     {
       "path": "scripts/check-package.mjs",
@@ -2725,7 +2725,7 @@
     },
     {
       "path": "tests/private-config.test.mjs",
-      "candidateSha256": "9f63b8c5bbedce71d475beda96ed70687b279b94a92a5c5e1a6833cbe82dfc0f"
+      "candidateSha256": "1b45f9460b769258346f6e7e1496a542bf55cc04ec8f422077466d2abe18134b"
     },
     {
       "path": "tests/stale-guards.test.mjs",
