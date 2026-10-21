@@ -1,0 +1,26 @@
+{
+ "schema": "ar-create.builds-next.v1",
+ "files": {
+  "mag-preview.mjs": {
+   "installsTo": "~/builds/mag-preview.mjs",
+   "builtFrom": {
+    "sha256": "31d07b6d6f7148a8479937c2b7af2d4a0de55aa9dd95bceaed1d5b3507e005e5",
+    "bytes": 160368
+   },
+   "sha256": "02ff2328e63d303984ef2dcf50a5420b002d3f5c4594683aa36b37d4a559fc62"
+  },
+  "mag-intake.sh": {
+   "installsTo": "~/builds/mag-intake.sh",
+   "replaces": {
+    "sha256": "b83752d32049c1e480a1b51582e3e54ecd5f658435852226044f20279ebebcb1",
+    "keptAs": "~/builds/mag-intake.legacy.sh"
+   },
+   "sha256": "55818b7a815db5acefdf9ccee8af045b5a84ebab3e6ae6f2ad3f098d20d40bfd"
+  },
+  "mag-arc.mjs": {
+   "installsTo": "~/builds/mag-arc.mjs",
+   "new": true,
+   "sha256": "02742f80aa2441646f93ba0c3e76580fc5fccb0128644d576ecc6fcec56502dc"
+  }
+ }
+}

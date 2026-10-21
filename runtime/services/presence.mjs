@@ -6,7 +6,7 @@ import {StateError} from '../store.mjs';
  * heartbeat. The app posts it so agents see "Adrian has unsaved words";
  * agents post it so the app can show "Claude is working on part 2".
  */
-export const SCOPE_KINDS=Object.freeze(['project','collection','draft','output','piece','source','share','concept','research','media','library']);
+export const SCOPE_KINDS=Object.freeze(['project','collection','draft','output','piece','source','share','concept','research','media','library','story']);
 const ID=/^[A-Za-z0-9._:-]{1,256}$/;
 const fail=message=>{throw new StateError(message,400);};
 export function validScope(scope){

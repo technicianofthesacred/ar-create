@@ -275,6 +275,14 @@ export function createRouteMap(services) {
       '/api/recordings': { GET: () => recordings.list() },
       '/api/capabilities': { GET: async () => ({ library: 'file-backed', webExtraction: { configured: true, backend: extraction ? 'WordForge Firecrawl' : 'i64os Readability', local: ingestion.capabilities.article }, youtube: ingestion.capabilities.youtube, transcription: (await recordings.list()).capability, guidance: 'shared-own-files', sharedArticles: {enabled:sharedArticles}, ...await describe() }) },
     };
+    // The magazine's commands (runtime/commands/magazine.mjs), when the server passes them.
+    if (services.magazineRoutes) Object.assign(routes, services.magazineRoutes({ url }));
     return routes;
   };
 }
+
+// Magazine commands (runtime/commands/magazine.mjs): human-only decisions, read-only POSTs, body hints.
+import {MAGAZINE_HUMAN_ONLY, MAGAZINE_READ_ONLY_POSTS, MAGAZINE_BODY} from './commands/magazine.mjs';
+for (const key of MAGAZINE_HUMAN_ONLY) HUMAN_ONLY.add(key);
+for (const route of MAGAZINE_READ_ONLY_POSTS) READ_ONLY_POSTS.add(route);
+Object.assign(BODY, MAGAZINE_BODY);

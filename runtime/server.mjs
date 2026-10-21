@@ -41,6 +41,9 @@ import {createPresence} from './services/presence.mjs';
 import {createLeases} from './services/leases.mjs';
 import {createJournal} from './services/journal.mjs';
 import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
+import {createMagazineRoutes} from './commands/magazine.mjs';
+import {createMagazineVault} from './services/magazine-vault/index.mjs';
+import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
 import fs from 'node:fs';
@@ -182,7 +185,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions } = {}) {
   dataDir = path.resolve(dataDir);
   const store = await createStore({ dataDir, sharedArticles, publicationFault });
   try {
@@ -213,7 +216,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const materialFolder=createMaterialFolder({dataDir,bindings:studyBindings,library,store,...(materialHostActions?.openFolder?{openFolder:materialHostActions.openFolder}:{})});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
   const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
-  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation}):null;
+  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation,vaultBound:source=>magazineVault.vaultBound(source)}):null;
   const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts,library,...sharedArticles?{readOutputDocument:input=>store.readArticle(input)}:{}}):null;
   const collectionDirection=studyHumanDirection||createStudyHumanDirection({dataDir,library});
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
@@ -270,6 +273,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   // Agent coordination routes (mounted below, before the route map).
   const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
   const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
+  // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
+  const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
   function afterRequest(request,response,context){
@@ -310,7 +315,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const commandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates});
+  const commandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   let registry=null;
   const commandList=()=>registry||(registry=describeRoutes(commandRoutes({url:new URL('http://127.0.0.1/'),request:{headers:{}},server:null,outputQuery:()=>({}),decorateOutputExports:value=>value,describe:async()=>({})}),extraCommands));
   const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))},commands:commandList().map(publicEntry)});
