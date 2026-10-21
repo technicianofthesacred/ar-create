@@ -289,5 +289,174 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#mpicker.on')&&!
 const oldApply=A.tpapply;A.tpapply=el=>{SLOT=null;oldApply(el);};
 
 X.render(true);
-window.ARC_MEDIA={MEDIA,MF,usedOf,mstress,openMPicker,byId};
+window.ARC_MEDIA={MEDIA,MF,MFD,PROJ_MF,usedOf,mstress,openMPicker,byId,thumbBg,mimg};
+})();
+
+
+/* ================================================================
+   Revision 5 — rail and section panel.
+   The rail (index.html) picks a section. Sections with something to
+   navigate get one panel attached to the rail (folders, recordings,
+   points, outputs by kind). The work takes every other pixel: one
+   title line (section › folder path + count), search + Filters, a
+   small row of saved views, then the list. Opening an item shows it
+   in the work area; Back or Esc returns to the same scroll and row.
+   ================================================================ */
+(()=>{
+'use strict';
+const X=window.ARC,Z=window.ARC_SCALE,M=window.ARC_MEDIA;if(!X||!Z||!M)return;
+const {S,V,A,DR,P,PN,RES,MAT,OUT,SRC,COUNT,PANEL,esc,ic}=X;
+const {treeHTML,BS,BOPTS,DOM,bstate,mount,paint,rerenderBrowser,fpath,FD,PROJ_COLL,projPiece,LIB,F,PCE,KIND_L,KIND_IC}=Z;
+const {MEDIA,MF,MFD,byId}=M;
+const $=s=>document.querySelector(s);
+const INWORK={lib:'library',med:'media',pce:'pieces'};
+const SEC={lib:'Library',med:'Media',pce:'Pieces'};
+
+/* Library carries Material's count now (Material is its Inbox) */
+COUNT.library=p=>COUNT.material(p);
+
+/* ---------- title line: section › folder path, plus the count ---------- */
+function crumbSegs(key){
+ const D=DOM[key==='lib'?'lib':key==='med'?'med':'pce'];const st=BS[key];
+ if(key==='lib'&&S.libInbox)return [{label:'Inbox'}];
+ if(st.folder==='all')return [];
+ if(st.folder==='unsorted')return [{label:'Unsorted'}];
+ return fpath(D.folders,st.folder).map(f=>({label:f.name,f:f.id,q:f.q}));
+}
+function titleLine(key,segs,count,right,item){
+ const root=`<button class="crr" data-act="${item?'oback':'tpick'}" data-k="${key}" data-f="all">${SEC[key]}</button>`;
+ const parts=segs.map((g,i)=>{const last=i===segs.length-1&&!item;return `<span class="crs" aria-hidden="true">›</span>${g.f&&!last?`<button class="crp" data-act="${item?'oback':'tpick'}" data-k="${key}" data-f="${g.f}">${esc(g.label)}</button>`:`<span class="crp ${last?'last':''}">${esc(g.label)}</span>`}`;}).join('');
+ const it=item?`<span class="crs" aria-hidden="true">›</span><span class="crp last">${esc(item)}</span>`:'';
+ return `<div class="thead t5">${item?`<button class="btn quiet back5" data-act="oback" title="Back to the list (Esc)">${ic('chev','sm flip')} Back</button>`:''}<h1 class="crumb5">${root}${parts}${it}</h1>${count!=null?`<span class="tcount">${count}</span>`:''}<span class="sp"></span>${right||''}${X.panelBtn()}</div>`;
+}
+const qLine=segs=>{const g=segs[segs.length-1];return g&&g.q?`<p class="qline"><span class="qm" title="This folder carries a question">?</span>${esc(g.q)}</p>`:'';};
+const countTxt=(rows,total,nf)=>nf?`${rows.length.toLocaleString()} of ${total.toLocaleString()}`:rows.length.toLocaleString();
+
+BOPTS.lib=()=>({compact:1,title:(rows,total,nf)=>{const segs=crumbSegs('lib');const st=BS.lib;
+ const right=`<span class="tag" title="Invented sources — no real library was read">Sample library</span>${st.folder==='unsorted'?`<button class="btn" data-act="libsuggest">Suggest sorting</button>`:''}`;
+ return titleLine('lib',segs,countTxt(rows,total,nf),right)+qLine(segs);}});
+BOPTS.pce=()=>({compact:1,title:(rows,total,nf)=>{const segs=crumbSegs('pce');return titleLine('pce',segs,countTxt(rows,total,nf),'')+qLine(segs);}});
+const oldMedOpts=BOPTS.med;
+BOPTS.med=()=>({compact:1,lineRight:oldMedOpts().lineRight,title:(rows,total,nf)=>{const segs=crumbSegs('med');const nw=MEDIA.filter(m=>m.isNew).length;
+ const right=`<span class="tag" title="Invented photos and videos — none of your files were read">Sample media</span>${nw?`<button class="btn" data-act="mview" data-v="claude">${nw} new from Claude’s import</button>`:''}`;
+ return titleLine('med',segs,countTxt(rows,total,nf),right);}});
+
+/* ---------- opening an item: in the work area, full width ---------- */
+function withDrawer(k,id,fn){const save=S.drawer;S.drawer={k,id};try{return fn();}finally{S.drawer=save;}}
+function detail(key){
+ const id=S.open.id;const segs=crumbSegs(key);let title='',body='';
+ if(key==='lib'){const it=LIB.find(i=>i.id===id);if(!it){S.open=null;return null;}title=it.title;
+  body=`<div class="odet k-lib">${withDrawer('preview',id,DR.preview)}</div>`;}
+ else if(key==='med'){const m=byId(id);if(!m){S.open=null;return null;}title=m.title;
+  const h=withDrawer('mpreview',id,DR.mpreview);const cut=h.indexOf('</div>')+6;
+  body=`<div class="odet k-med"><div class="ol5">${h.slice(0,cut)}</div><div class="or5">${h.slice(cut)}</div></div>`;}
+ else {const pc=PCE(id);if(!pc){S.open=null;return null;}title=pc.title;
+  body=`<div class="odet k-pce">${withDrawer('piece',id,DR.piece)}</div>`;}
+ return `<div class="wrap full det5">${titleLine(key,segs,null,'',title)}<div class="dscroll">${body}</div></div>`;
+}
+const directPiece=pc=>(pc.p&&projPiece(pc.p)===pc.id&&(X.DOCS[pc.p]||pc.kind==='listing'))||pc.id==='pc_porcc'||pc.id==='pc_porcp';
+
+V.library=()=>{
+ bstate('lib');
+ if(S.open&&S.open.key==='lib'){const d=detail('lib');if(d)return d;}
+ if(S.libInbox){
+  const n=MAT.filter(m=>m.state==='new'&&(S.scope==='all'||m.p===S.scope)).length;
+  const h=oldMaterial();
+  return h.replace(/<div class="thead">[\s\S]*?<\/div>/,titleLine('lib',[{label:'Inbox'}],n?`${n} new`:'',`<button class="btn" data-act="pickfile">Choose files</button>`));
+ }
+ queueMicrotask(()=>{mount('lib',true);focusCur('lib');});
+ return `<div class="wrap full">${Z.browserHTML('lib',BOPTS.lib())}</div>`;
+};
+const oldMaterial=V.material;
+V.material=()=>{S.libInbox=true;return V.library();};
+V.pieces=()=>{
+ bstate('pce',{sort:'upd'});
+ if(S.open&&S.open.key==='pce'){const d=detail('pce');if(d)return d;}
+ queueMicrotask(()=>{mount('pce',true);focusCur('pce');});
+ return `<div class="wrap full">${Z.browserHTML('pce',BOPTS.pce())}</div>`;
+};
+const oldMedia=V.media;
+V.media=()=>{
+ if(S.open&&S.open.key==='med'){bstate('med');const d=detail('med');if(d)return d;}
+ const h=oldMedia();
+ queueMicrotask(()=>focusCur('med'));
+ return h.replace(/<div class="thead">[\s\S]*?<\/div>/,'');
+};
+let refocus=null;
+function focusCur(key){if(refocus!==key)return;refocus=null;const el=document.querySelector(`.lb[data-bkey="${key}"] .vrow.cur .ti, .lb[data-bkey="${key}"] .vtile.cur .mt-t`);if(el)el.focus({preventScroll:true});}
+
+const getKey=el=>el.dataset.k||((el.closest('[data-bkey]')||{}).dataset||{}).bkey||'lib';
+const oldBopen=A.bopen;
+A.bopen=(el,e)=>{
+ const key=getKey(el);const st=BS[key];
+ if(INWORK[key]&&!(st&&st.onPick)){
+  const D=DOM[key==='pce'?'pce':key];const it=D.items().find(x=>x.id===el.dataset.id);if(!it)return;
+  if(key==='pce'&&directPiece(it)){oldBopen(el,e);return;}
+  if(S.view===INWORK[key]){if(st)st.cur=it.id;S.open={key,id:it.id};X.render();return;}
+  /* a piece named inside another item's "Used in" opens in Pieces, not in a side pop-out */
+  if(key==='pce'&&(S.view==='library'||S.view==='media')){bstate('pce',{sort:'upd'});X.go('pieces');BS.pce.cur=it.id;S.open={key:'pce',id:it.id};X.render();return;}
+ }
+ oldBopen(el,e);
+};
+function back(){if(!S.open)return;const k=S.open.key;S.open=null;refocus=k;X.render();}
+A.oback=el=>{const f=el&&el.dataset.f;const k=S.open&&S.open.key;back();if(k&&f&&f!=='all'&&BS[k]&&BS[k].folder!==f){}};
+/* a folder anywhere (panel, title line) shows that folder's list and leaves any opened item */
+const oldTpick=A.tpick;A.tpick=el=>{const key=el.dataset.k;if(S.open&&S.open.key===key)S.open=null;if(key==='lib')S.libInbox=false;if(INWORK[key]&&S.view!==INWORK[key]&&!(BS[key]&&BS[key].onPick)){bstate(key);BS[key].folder=el.dataset.f;BS[key].view=el.dataset.f==='all'?'all':'';X.go(INWORK[key]);return;}oldTpick(el);if(!document.querySelector(`.lb[data-bkey="${key}"]`))X.render(true);};
+const oldBview=A.bview;A.bview=el=>{if(el.dataset.k==='lib')S.libInbox=false;oldBview(el);};
+const oldOpencoll=A.opencoll;A.opencoll=el=>{S.libInbox=false;oldOpencoll(el);};
+const oldLibsearch=A.libsearch;A.libsearch=el=>{S.libInbox=false;oldLibsearch(el);};
+A.libinbox=()=>{S.libInbox=true;S.open=null;if(S.view!=='library')X.go('material');else X.render();};
+A.libsuggest=()=>{X.go('collections');A.suggest();};
+A.fopen=el=>{const st=BS[el.dataset.k];st.fopen=!st.fopen;rerenderBrowser(el.dataset.k,true);};
+A.fchipx=el=>{const st=BS[el.dataset.k];delete st.f[el.dataset.facet];st.view='';rerenderBrowser(el.dataset.k);};
+/* the active rail item, clicked again, opens or closes its panel (or returns from an opened item) */
+const oldGo=A.go;A.go=el=>{
+ if(el.dataset.rail&&el.dataset.tool===X.railId()&&!(X.T(el.dataset.tool)||{}).pull){
+  if(S.open){back();return;}
+  if(el.dataset.tool==='library'&&S.view!=='library'){oldGo(el);return;}
+  if(PANEL[el.dataset.tool]){A.ptog();return;}
+ }
+ oldGo(el);
+};
+/* actions inside an opened item re-draw the item, not a drawer */
+const oldRD=X.renderDrawer;X.renderDrawer=()=>{oldRD();if(S.open)X.render(true);};
+['keepasset','setaside'].forEach(k=>{const o=A[k];A[k]=el=>{o(el);if(S.open)X.render(true);};});
+document.addEventListener('keydown',e=>{
+ if(e.key!=='Escape'||!S.open||S.drawer)return;
+ if(document.querySelector('#pop.on,#lsheet.on,#psheet.on,#picker.on,#mpicker.on,#finder.on'))return;
+ if(e.target&&e.target.closest&&e.target.closest('input,textarea,[contenteditable="true"]'))return;
+ e.stopImmediatePropagation();back();
+},true);
+
+/* ---------- the section panels ---------- */
+const libPanel=()=>{const n=COUNT.material(S.scope==='all'?null:S.scope);const nn=S.scope==='all'?P.reduce((a,p)=>a+COUNT.material(p.id),0):n;
+ return `<div class="tn ${S.libInbox&&S.view==='library'?'on':''}"><span class="tw"></span><button class="tl" data-act="libinbox">${ic('material','sm')}<span>Inbox</span></button>${nn?`<span class="cnt">${nn}</span>`:''}</div>`+treeHTML('lib',S.libInbox);};
+PANEL.library={btn:'Folders',html:()=>{bstate('lib');return `<div class="tree t5">${libPanel()}</div>`;}};
+PANEL.media={btn:'Folders',html:()=>{bstate('med',{sort:'date'});return `<div class="tree t5">${treeHTML('med')}</div>`;}};
+PANEL.pieces={btn:'Folders',html:()=>{bstate('pce',{sort:'upd'});return `<div class="tree t5">${treeHTML('pce')}</div>`;}};
+const inScope=id=>S.scope==='all'||S.scope===id;
+PANEL.source={btn:'Recordings',html:()=>{const cur=X.resolveProj('source');
+ const recs=Object.keys(SRC).filter(inScope).map(p=>{const s=SRC[p];const u=s.lines.filter(l=>l.unclear&&!l.fixed).length;
+  return `<button class="pi ${p===cur?'on':''}" data-act="toolproj" data-p="${p}" ${p===cur?'aria-current="true"':''}>${ic('recording','sm')}<span class="pt"><span class="pn">${esc(s.file)}</span><span class="ps">${esc(PN(p))} · ${s.dur}</span></span>${u?`<span class="cnt" title="${u} unclear lines">${u}</span>`:''}</button>`;}).join('');
+ const raw=MAT.filter(m=>m.kind==='audio'&&inScope(m.p)&&!SRC[m.p]).map(m=>`<button class="pi" data-act="go" data-tool="material" data-x="${m.id}">${ic('recording','sm')}<span class="pt"><span class="pn">${esc(m.name)}</span><span class="ps">${esc(PN(m.p))} · not transcribed · in Inbox</span></span></button>`).join('');
+ return `<div class="plist5">${recs||'<p class="pe">No recordings in this project.</p>'}${raw}</div>`;}};
+const LVLN={settled:'Sure',unsure:'Unsure',disputed:'Disputed',likely:'Unsure'};
+PANEL.research={btn:'Points',html:()=>{const cur=X.resolveProj('research');
+ return `<div class="plist5">${P.filter(x=>RES[x.id]&&inScope(x.id)).map(x=>{const on=x.id===cur;const pts=RES[x.id];const c=PROJ_COLL[x.id];const f=c&&FD(c);const open=pts.filter(r=>r.level==='unsure'||r.level==='disputed').length;
+  const head=`<button class="pgh ${on?'on':''}" data-act="toolproj" data-p="${x.id}" aria-expanded="${on}">${ic(f&&f.q?'coll':'folder','sm')}<span class="pn">${esc(f?f.name:PN(x.id))}</span>${f&&f.q?'<span class="qm" title="This collection carries a question">?</span>':''}${open?`<span class="cnt">${open}</span>`:''}</button>`;
+  if(!on)return head;
+  return head+`<div class="pps">${pts.map((r,i)=>`<button class="pp ${S.research[x.id]===r.id?'on':''}" data-act="rpset" data-id="${r.id}" title="${esc(r.claim)}"><span class="n">${i+1}</span><span class="lv ${r.level}" title="${LVLN[r.level]}"></span><span class="pn">${esc(r.claim)}</span></button>`).join('')}</div>`;}).join('')}</div>`;}};
+A.rpset=el=>{const p=X.resolveProj('research');S.research[p]=el.dataset.id;X.render(true);};
+const OKIND=k=>/^(Article|Part |Magazine)/.test(k)?'Articles':/Carousel/.test(k)?'Carousels':/caption/i.test(k)?'Captions':/note/i.test(k)?'Shared notes':/script/i.test(k)?'Scripts':'Other';
+PANEL.outputs={btn:'Outputs by kind',html:()=>{const cur=X.resolveProj('outputs');const g={};
+ Object.keys(OUT).filter(inScope).forEach(p=>OUT[p].items.forEach(it=>{(g[OKIND(it.k)]=g[OKIND(it.k)]||[]).push({p,k:it.k});}));
+ return `<div class="plist5">${['Articles','Carousels','Captions','Scripts','Shared notes','Other'].filter(k=>g[k]).map(k=>`<div class="pkh">${k} · ${g[k].length}</div>${g[k].map(x=>`<button class="pi ${x.p===cur?'on':''}" data-act="toolproj" data-p="${x.p}"><span class="pt"><span class="pn">${esc(x.k)}</span><span class="ps">${esc(PN(x.p))}</span></span></button>`).join('')}`).join('')}</div>`;}};
+/* Research: with the panel open the points live there, and the work shows the open point + console */
+const oldResearch=V.research;
+V.research=()=>{const p=X.resolveProj('research');const pts=RES[p]||[];
+ if(X.hasPanel()&&X.panelOpen('research')&&pts.length&&!pts.some(r=>r.id===S.research[p]))S.research[p]=(pts.find(r=>r.level==='unsure'||r.level==='disputed')||pts[0]).id;
+ return oldResearch();};
+
+X.render(true);
+window.ARC_R5={detail,back,PANEL};
 })();

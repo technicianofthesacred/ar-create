@@ -254,8 +254,8 @@ function folderCount(key,fid){
  if(fid==='unsorted')return items.filter(it=>!it.folders.length).length;
  const sub=subtree(D.folders,fid);let n=0;for(const it of items)if(it.folders.some(f=>sub.has(f)))n++;return n;
 }
-function treeHTML(key){
- const D=DOM[st_dom(key)];const st=BS[key];
+function treeHTML(key,off){
+ const D=DOM[st_dom(key)];const st=Object.assign({},BS[key]);if(off)st.folder='__none';
  const kids=pid=>D.folders.filter(f=>f.parent===pid);
  const node=(f,depth)=>{const ch=kids(f.id);const open=st.open.has(f.id);
   return `<li><div class="tn ${st.folder===f.id?'on':''}" data-drop="${f.id}" data-fdrag="${f.id}" draggable="true" style="padding-left:${depth*14}px">
@@ -264,9 +264,7 @@ function treeHTML(key){
    ${ch.length&&open?`<ul>${ch.map(c=>node(c,depth+1)).join('')}</ul>`:''}</li>`;};
  const special=(id,label,icn)=>`<div class="tn ${st.folder===id?'on':''}" ${id==='unsorted'?'data-drop="unsorted"':''}><span class="tw"></span><button class="tl" data-act="tpick" data-k="${key}" data-f="${id}">${ic(icn,'sm')}<span>${label}</span></button><span class="tc">${folderCount(key,id)}</span></div>`;
  return `${special('all',D.allLabel||(key==='pce'?'All pieces':'All sources'),D.allIcon||(key==='pce'?'pieces':'library'))}${D.unsorted!==false&&key!=='pce'?special('unsorted','Unsorted','material'):''}<div class="tsep"></div><ul>${kids(null).map(f=>node(f,0)).join('')}</ul>
- <div class="tfoot"><button class="lnk" data-act="newfolder" data-k="${key}">+ New folder${st.folder!=='all'&&st.folder!=='unsorted'?' inside '+esc((D.folders.find(f=>f.id===st.folder)||{}).name||''):''}</button>
- <span class="dim">${D.treeHint||'Drag rows onto a folder to add them. Drag a folder onto another to nest it. An item can sit in several folders.'}</span>
- ${D.stressHTML?D.stressHTML(key):key==='lib'?`<button class="lnk" data-act="stress" style="opacity:.75">${stressed?'Stress test loaded · 5,214 sources':'Stress test: load 5,000 more'}</button>`:''}</div>`;
+ <div class="tfoot"><button class="lnk" data-act="newfolder" data-k="${key}">+ New folder${st.folder!=='all'&&st.folder!=='unsorted'?' inside '+esc((D.folders.find(f=>f.id===st.folder)||{}).name||''):''}</button></div>`;
 }
 function crumbs(key){
  const D=DOM[st_dom(key)];const st=BS[key];
@@ -285,7 +283,7 @@ function facetSelects(key){
   `<select class="fsel" data-sort="1" data-k="${key}" aria-label="Sort">${D.sorts.map(([v,l])=>`<option value="${v}" ${st.sort===v?'selected':''}>Sort: ${l}</option>`).join('')}</select>`;
 }
 function browserHTML(key,opts){
- opts=opts||{};const D=DOM[st_dom(key)];const st=BS[key];
+ opts=opts||{};if(opts.compact)return compactHTML(key,opts);const D=DOM[st_dom(key)];const st=BS[key];
  const rows=sortRows(key,filterRows(key));st.rows=rows;
  const total=D.items().length;const nsel=st.sel.size;
  const allSel=rows.length&&rows.every(r=>st.sel.has(r.id));const someSel=!allSel&&rows.some(r=>st.sel.has(r.id));
@@ -306,6 +304,28 @@ function browserHTML(key,opts){
    ${line}
    <div class="vhead" role="row"><span class="cbw"><button class="cb ${allSel?'on':someSel?'part':''}" data-act="bselall" data-k="${key}" role="checkbox" aria-checked="${allSel?'true':someSel?'mixed':'false'}" aria-label="Select all ${rows.length} matching"></button></span>${grid?`<span class="gsel">Select all ${rows.length.toLocaleString()} matching</span><span class="gsort">${D.cols.map(sh).join('')}</span>`:'<span></span>'+D.cols.map(sh).join('')}</div>
    <div class="vt" id="vt-${key}" role="grid" aria-rowcount="${rows.length}"><div class="vt-sp"></div>${rows.length?'':`<div class="vempty">Nothing matches here. ${fl?'<button class="lnk" data-act="bfclear" data-k="'+key+'">Clear the filters</button>':''}</div>`}</div>
+  </section></div>`;
+}
+function chipsHTML(key){const D=DOM[st_dom(key)];const st=BS[key];
+ return D.facets.filter(fc=>st.f[fc.k]).map(fc=>`<button class="fchip" data-act="fchipx" data-k="${key}" data-facet="${fc.k}" title="Remove this filter">${esc(fc.label)}: ${esc(fc.fmt(st.f[fc.k]))} ${ic('close','sm')}</button>`).join('');}
+function compactHTML(key,opts){
+ const D=DOM[st_dom(key)];const st=BS[key];
+ const rows=sortRows(key,filterRows(key));st.rows=rows;
+ const total=D.items().length;const nsel=st.sel.size;
+ const allSel=rows.length&&rows.every(r=>st.sel.has(r.id));const someSel=!allSel&&rows.some(r=>st.sel.has(r.id));
+ const nf=Object.keys(st.f).filter(k=>st.f[k]).length;
+ const sh=(c,i)=>{const sk=D.colSort?D.colSort[i]:key==='pce'?['title','kind','upd',null,null,'status'][i]:['title','src','date',null,'used','status'][i];return `<button class="h-${c.toLowerCase().replace(/\s/g,'')} ${st.sort===sk?'on':''}" ${sk?`data-act="bsort" data-k="${key}" data-s="${sk}"`:''}>${c}${st.sort===sk?(st.dir<0&&sk!=='upd'?' ↓':' ↑'):''}</button>`;};
+ const grid=st.mode==='grid'&&D.tile;
+ const bulk=nsel?`<div class="cline bulk" role="toolbar" aria-label="Selection"><span><b>${nsel.toLocaleString()}</b> selected</span>${D.bulkHTML?D.bulkHTML(key):key==='pce'?`<button class="btn" data-act="bulk" data-op="folder" data-k="${key}">Add to folder</button><button class="btn" data-act="bulk" data-op="status" data-k="${key}">Set status</button>`:`<button class="btn" data-act="bulk" data-op="folder" data-k="${key}">Add to folder</button><button class="btn" data-act="bulk" data-op="piece" data-k="${key}">Add to piece</button><button class="btn" data-act="bulk" data-op="topic" data-k="${key}">Tag topic</button><button class="btn" data-act="bulkread" data-k="${key}">Mark read</button>`}<button class="btn quiet" data-act="bclear" data-k="${key}">Clear</button></div>`:'';
+ return `<div class="lb compact k-${st_dom(key)} ${grid?'mode-grid':''} ${nsel?'has-sel':''}" data-bkey="${key}">
+  ${opts.title?opts.title(rows,total,nf+(st.q?1:0)):''}
+  <section class="lbm">
+   <div class="ftool"><label class="fsearch">${ic('search','sm')}<input id="bq-${key}" data-bq="${key}" value="${esc(st.q)}" placeholder="${D.searchPh||'Search '+D.noun}" aria-label="Search ${D.noun}"></label><button class="btn ${st.fopen?'on':''}" data-act="fopen" data-k="${key}" aria-expanded="${!!st.fopen}">${ic('filter','sm')} Filters${nf?` · ${nf}`:''}</button>${chipsHTML(key)}${nf||st.q?`<button class="lnk" data-act="bfclear" data-k="${key}">Clear</button>`:''}<span class="sp"></span>${opts.lineRight||''}</div>
+   ${st.fopen?`<div class="fpanel">${facetSelects(key)}</div>`:''}
+   <nav class="views" aria-label="Saved views">${D.views.map(v=>`<button class="${st.view===v.id?'on':''}" data-act="bview" data-k="${key}" data-v="${v.id}">${esc(v.label)}</button>`).join('')}</nav>
+   ${bulk}
+   <div class="vhead" role="row"><span class="cbw"><button class="cb ${allSel?'on':someSel?'part':''}" data-act="bselall" data-k="${key}" role="checkbox" aria-checked="${allSel?'true':someSel?'mixed':'false'}" aria-label="Select all ${rows.length} matching"></button></span>${grid?`<span class="gsel">Select all ${rows.length.toLocaleString()}</span><span class="gsort">${D.cols.map(sh).join('')}</span>`:'<span></span>'+D.cols.map(sh).join('')}</div>
+   <div class="vt" id="vt-${key}" role="grid" aria-rowcount="${rows.length}"><div class="vt-sp"></div>${rows.length?'':`<div class="vempty">Nothing matches here. ${nf||st.q?'<button class="lnk" data-act="bfclear" data-k="'+key+'">Clear the filters</button>':''}</div>`}</div>
   </section></div>`;
 }
 const rowH=()=>X.isPhone()?56:36;
@@ -331,7 +351,8 @@ function paint(key){
 }
 function mount(key,keepTop){
  const vt=document.getElementById('vt-'+key);if(!vt)return;const st=BS[key];
- vt.scrollTop=keepTop?st.top:0;paint(key);
+ /* size the list first, then restore the scroll position (an empty spacer would clamp it to 0) */
+ const want=keepTop?st.top:0;paint(key);vt.scrollTop=want;paint(key);
  let raf=0;vt.addEventListener('scroll',()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;paint(key);});},{passive:true});
 }
 function rerenderBrowser(key,keepTop){
@@ -339,11 +360,12 @@ function rerenderBrowser(key,keepTop){
  const opts=BOPTS[key]?BOPTS[key]():key==='pick'?pickerOpts():{lineRight:key==='lib'?libLineRight():''};
  const tmp=document.createElement('div');tmp.innerHTML=browserHTML(key,opts);host.replaceWith(tmp.firstElementChild);mount(key,keepTop);
  const sh=$('#lsheet');if(sh&&sh.classList.contains('on')&&sh.dataset.k===key)fillSheet(key);
+ if(X.renderPanel)X.renderPanel();
 }
 const libLineRight=()=>'';
 
 /* ---------- views: Library, Collections, Pieces ---------- */
-TOOLS.unshift({id:'collections',label:'Collections',g:'Gather'});
+TOOLS.unshift({id:'collections',label:'Collections',g:'Gather',hidden:1}); /* Revision 5: collections are folders with a question, inside Library */
 TOOLS.unshift({id:'library',label:'Library',g:'Gather'});
 const mi=TOOLS.findIndex(t=>t.id==='write');TOOLS.splice(mi,0,{id:'pieces',label:'Pieces',g:'Make'});
 HAS.library=()=>true;HAS.collections=()=>true;HAS.pieces=()=>true;
@@ -369,7 +391,6 @@ V.collections=()=>{
  const colls=F.filter(f=>f.q);const un=folderCount('lib','unsorted');
  const row=f=>{const pth=fpath(F,f.id).slice(0,-1).map(x=>x.name).join(' › ');return `<li><button class="corow" data-act="opencoll" data-f="${f.id}" data-drop="${f.id}">${ic('coll','sm')}<span class="nm"><b>${esc(f.name)}</b> <span class="dim small">${esc(pth)}</span></span><span class="n">${folderCount('lib',f.id)} sources</span><span class="q">${esc(f.q)}</span></button></li>`;};
  return `<div class="wrap">${X.head('collections','all',`<button class="btn primary" data-act="suggest">Suggest sorting</button><button class="btn" data-act="newcoll">New collection</button>`)}
- <p class="dim small" style="margin:-8px 0 14px;max-width:var(--measure)">A collection is a folder that carries a question. It lives in the same folder tree as the Library, so sources can sit in several collections at once.</p>
  <ul class="colist">
   <li><button class="corow" data-act="opencoll" data-f="unsorted" data-drop="unsorted">${ic('material','sm')}<span class="nm"><b>Unsorted</b></span><span class="n warm">${un} sources</span><span class="q">In the Library but in no folder or collection yet</span></button></li>
   ${colls.map(row).join('')}
@@ -424,7 +445,7 @@ DR.preview=()=>{
  return `<div class="pvh">${ic(it.type==='youtube'?'youtube':it.type)}<h3 style="flex:1;min-width:0">${esc(it.title)}</h3></div>
  <dl class="kv"><dt>Source</dt><dd>${esc(it.src)}</dd><dt>Date</dt><dd>${fmtDate(it.date)}</dd><dt>Length</dt><dd>${esc(it.len)}</dd><dt>Topics</dt><dd>${esc(it.topics.join(', '))}</dd><dt>Status</dt><dd>${it.status}</dd><dt>Id</dt><dd>${it.id}</dd></dl>
  ${body}
- <div class="pvacts"><button class="btn primary" data-act="pvpiece" data-id="${it.id}">Use in piece…</button><button class="btn" data-act="pvfolder" data-id="${it.id}">Add to collection…</button>${it.status==='new'?`<button class="btn quiet" data-act="pvread" data-id="${it.id}">Mark ${it.type==='youtube'?'watched':'read'}</button>`:''}</div>
+ <div class="pvacts"><button class="btn primary" data-act="pvpiece" data-id="${it.id}">Use in piece…</button><button class="btn" data-act="pvfolder" data-id="${it.id}">Add to folder…</button>${it.status==='new'?`<button class="btn quiet" data-act="pvread" data-id="${it.id}">Mark ${it.type==='youtube'?'watched':'read'}</button>`:''}</div>
  <h4 class="lab" style="margin:14px 0 4px">In ${it.folders.length} folder${it.folders.length===1?'':'s'}</h4>${fl?`<ul class="ol">${fl}</ul>`:'<p class="dim small">Unsorted — in no folder yet.</p>'}
  <h4 class="lab" style="margin:14px 0 4px">Used in ${it.pieces.length} piece${it.pieces.length===1?'':'s'}</h4>${pl?`<ul class="ol">${pl}</ul>`:'<p class="dim small">Not used yet.</p>'}
  <p class="foot-note">Sample source. Opening the original isn’t connected. Prototype — nothing is saved.</p>`;
@@ -754,11 +775,11 @@ document.addEventListener('drop',e=>{if(!DRAG)return;const d=DRAG;
 });
 
 /* Material is the intake inbox that feeds the Library */
-const oldMat=V.material;V.material=()=>oldMat().replace('<div class="drop" id="drop">',`<p class="dim small" style="margin:-8px 0 14px">Material is the inbox. Processed items land in the <button class="lnk" data-act="opencoll" data-f="unsorted">Library → Unsorted (${LIB.filter(i=>!i.folders.length).length})</button>, where you file them into folders and collections.</p><div class="drop" id="drop">`);
+/* Revision 5: Material is the Library's Inbox (see media.js, Revision 5) */
 
 
 X.render();
-window.ARC_SCALE={LIB,F,PIECES,BS,search,runCmd,stress,get TPL(){return TPL;},
+window.ARC_SCALE={treeHTML,compactHTML,FD,PROJ_COLL,projPiece,DOMLIB:DOM.lib,makeSuggestions,LIB,F,PIECES,BS,search,runCmd,stress,get TPL(){return TPL;},
  /* the shared browser engine (folder tree + virtualised one-line table/grid), reused by media.js */
  DOM,BOPTS,HOOK,bstate,browserHTML,mount,paint,rerenderBrowser,filterRows,folderCount,fpath,subtree,clearSub,popMenu,closePop,folderItems,addToFolder,selIds,rng,pick,cap,fmtDate,PCE,KIND_L,KIND_IC,TPN,tplHTML,photo,slideObj,repaintSlide,POST,LISTING,openSheet,closeSheet,st_dom};
 })();

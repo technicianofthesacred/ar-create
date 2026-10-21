@@ -28,7 +28,7 @@
  --lh:1.5;--lh-read:1.65;
  --measure:40rem;      /* the reading column, same in Read and Write */
  --gut:32px;--top:24px;/* every screen starts at the same left edge and top */
- --rackw:200px;--drw:380px
+ --railw:66px;--pw:0px;--rackw:calc(var(--railw) + var(--pw));--drw:380px
 }
 html{font-size:calc(100% * var(--z))}
 :root,[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;--hl:rgba(201,168,116,.28)}
@@ -71,9 +71,10 @@ kbd{font-family:inherit;font-size:var(--t-label);font-weight:400;line-height:1;b
 @keyframes fl{0%,30%{background:var(--hl)}100%{background:transparent}}
 
 /* ---------- frame: two columns only — the rack and the work ---------- */
-.app{display:grid;height:100dvh;grid-template-columns:var(--rackw) minmax(0,1fr);grid-template-rows:48px minmax(0,1fr)}
-body.rack-min{--rackw:58px}
-body.focus{--rackw:0px}
+/* Revision 5: rail + (only when a section has something to navigate) its panel + the work */
+.app{display:grid;height:100dvh;grid-template-columns:var(--railw) var(--pw) minmax(0,1fr);grid-template-rows:48px minmax(0,1fr)}
+body.has-panel{--pw:15rem}
+body.focus{--railw:0px;--pw:0px}
 #top{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--rail)}
 #switch{display:flex;align-items:center;gap:9px;height:34px;padding:0 10px 0 8px;border-radius:7px;min-width:0;max-width:340px;font-weight:600}
 #switch:hover{background:var(--sel)}
@@ -87,8 +88,25 @@ body.focus{--rackw:0px}
 .sizer{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:7px;height:32px}
 .sizer .tbtn{height:30px;padding:0 8px}
 .sizer .pct{font-size:var(--t-label);color:var(--dim);min-width:3.2em;text-align:center;font-variant-numeric:tabular-nums}
-#rack{grid-row:2;grid-column:1;border-right:1px solid var(--line);background:var(--rail);overflow-y:auto;overflow-x:hidden;padding:var(--top) 8px 8px;display:flex;flex-direction:column}
-body.focus #rack{display:none}
+#rack{grid-row:2;grid-column:1;border-right:1px solid var(--line);background:var(--rail);overflow-y:auto;overflow-x:hidden;padding:8px 4px;display:flex;flex-direction:column;gap:1px;scrollbar-width:none;padding:6px 3px}
+#rack::-webkit-scrollbar{display:none}
+body.has-panel #rack{border-right:0}
+body.focus #rack,body.focus #spanel{display:none}
+.rl{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:46px;padding:5px 0 4px;letter-spacing:-.01em;border-radius:8px;color:var(--dim);font-size:var(--t-label);line-height:1.15;flex:none}
+.rl .rlb{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl:hover{color:var(--ink);background:var(--sel)}
+.rl.on{color:var(--ink);background:var(--sel)}
+.rl.on::before{content:"";position:absolute;left:-3px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--warm)}
+.rl .cnt{position:absolute;top:2px;left:calc(50% + 10px);min-width:17px;padding:0 4px;line-height:1.3}
+.rdiv{height:1px;background:var(--line);margin:6px 10px;flex:none}
+#spanel{grid-row:2;grid-column:2;background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+#spanel[hidden]{display:none}
+.sph{display:flex;align-items:center;gap:6px;height:40px;padding:0 6px 0 14px;flex:none;font-size:var(--t-label);font-weight:500;color:var(--dim)}
+.sph .sp{flex:1}
+.spb{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 6px 16px}
+.pnlbtn{flex:none}
+body:not(.v-write):not(.v-read) #pull{display:none}
+body.has-panel .pnlbtn{display:none}
 .rk{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:0 9px;border-radius:7px;color:var(--dim);text-align:left;white-space:nowrap;font-size:var(--t-body)}
 .rk:hover{color:var(--ink);background:var(--sel)}
 .rk.on{color:var(--ink);background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
@@ -101,7 +119,7 @@ body.rack-min .rk .lbl,body.rack-min .rk .pm,body.rack-min .rk-gl span{display:n
 body.rack-min .rk{justify-content:center;padding:0;position:relative}
 body.rack-min .rk .cnt{position:absolute;top:6px;right:8px;min-width:0;width:7px;height:7px;padding:0;border-radius:50%;background:var(--warm);color:transparent;overflow:hidden}
 body.rack-min .rk-gl{height:1px;padding:0;border-top:1px solid var(--line);margin:10px 6px}
-main{grid-row:2;grid-column:2;overflow-y:auto;overflow-x:hidden;min-width:0;background:var(--bg)}
+main{grid-row:2;grid-column:3;overflow-y:auto;overflow-x:hidden;min-width:0;background:var(--bg)}
 .wrap{padding:var(--top) var(--gut) 96px;max-width:1120px}
 body.focus .wrap{margin:0 auto}
 .thead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;min-height:34px}
@@ -347,6 +365,12 @@ body.focus .margin{display:none}
 #finder .gh{font-size:var(--t-label);font-weight:500;color:var(--dim);padding:8px 10px 4px}
 #bbar{display:none}
 #gsheet{display:none}
+#psheet{position:fixed;left:0;right:0;bottom:0;max-height:80vh;background:var(--paper);border-top:1px solid var(--line);border-radius:14px 14px 0 0;z-index:66;display:none;flex-direction:column}
+#psheet.on{display:flex}
+#psheet .shh{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+#psheet .shh h2{flex:1}
+#psheet .shb{padding:8px 8px 24px}
+.scrim.p{z-index:65}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--paper);border:1px solid var(--line);color:var(--ink);padding:9px 14px;border-radius:9px;font-size:var(--t-label);z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 
 /* ---------- narrow ---------- */
@@ -357,8 +381,9 @@ body.focus .margin{display:none}
 @media (max-width:760px){
   :root{--gut:16px;--top:16px}
   .app{grid-template-columns:minmax(0,1fr)}
-  #rack{display:none}
+  #rack,#spanel{display:none}
   main{grid-column:1}
+  body.has-panel .pnlbtn{display:inline-flex}
   .wrap{padding-bottom:96px}
   #top .lbl-wide{display:none}
   #top{gap:2px;padding:0 6px}
@@ -404,6 +429,7 @@ body.focus .margin{display:none}
 <div class="app">
   <header id="top"></header>
   <nav id="rack" aria-label="Tools"></nav>
+  <aside id="spanel" aria-label="Section panel" hidden></aside>
   <main id="main"></main>
 </div>
 <aside id="drawer" aria-label="Side drawer" aria-hidden="true"></aside>
@@ -465,7 +491,7 @@ const ic=(n,c='')=>`<svg class="ic ${c}" viewBox="0 0 24 24" aria-hidden="true">
 
 /* ---------------- tools ---------------- */
 const TOOLS=[
- {id:'material',n:'01',label:'Material',g:'Gather'},
+ {id:'material',n:'01',label:'Material',g:'Gather',hidden:1}, /* Revision 5: Material is the Library's Inbox */
  {id:'source',n:'02',label:'Source',g:'Gather'},
  {id:'research',n:'03',label:'Research',g:'Develop'},
  {id:'direction',n:'04',label:'Direction',g:'Develop'},
@@ -659,7 +685,7 @@ const HAS={
 const CROSS={material:1,media:1}; // these show everything at once under "All"
 
 /* ---------------- state ---------------- */
-const S={scope:'all',view:'bench',work:'porc',ret:null,toolProj:{},target:null,q:'',sel:0,research:{},mediaF:'all',arrangeMode:{},audMode:{},fixing:null,openPv:{},bilingual:false,activeNote:null,lastHonest:null,drawer:null,find:null};
+const S={open:null,libInbox:false,scope:'all',view:'bench',work:'porc',ret:null,toolProj:{},target:null,q:'',sel:0,research:{},mediaF:'all',arrangeMode:{},audMode:{},fixing:null,openPv:{},bilingual:false,activeNote:null,lastHonest:null,drawer:null,find:null};
 /* text size: one root multiplier, 87.5%–137.5% */
 const SIZES=[.875,1,1.125,1.25,1.375];let zi=1;
 try{const z=+localStorage.getItem('arc-c-size');const i=SIZES.indexOf(z);if(i>=0)zi=i;}catch(e){}
@@ -698,7 +724,7 @@ function moves(){
 }
 function stateLine(p){
  const parts=[];
- TOOLS.forEach(t=>{const c=count(t.id,p);if(c)parts.push(`${c} in ${t.label}`);});
+ TOOLS.forEach(t=>{if(t.hidden)return;const c=count(t.id,p);if(c)parts.push(`${c} in ${t.label}`);});
  const base={porc:'Writing — ¶4 reworked yesterday',harb:'Correcting the recording',oolong:'Choosing an angle',ancha:'Part two in research',kiln:'Draft complete, not checked',wuyi:'Gathering — nothing waiting',care:'Shared draft, idle'}[p];
  return base+(parts.length?' · '+parts.join(', '):'');
 }
@@ -737,21 +763,54 @@ function renderTop(){
 }
 function rackBtn(t){
  const c=count(t.id,S.scope);
- const on=t.pull?(S.drawer&&S.drawer.k===t.id):S.view===t.id;
- return `<button class="rk ${on?'on':''}" data-act="go" data-tool="${t.id}" title="${t.label}${t.pull?' — pulls out beside your work':''}${c?` — ${c} need you`:''}">${ic(t.id)}<span class="lbl">${t.label}</span>${c?`<span class="cnt" aria-label="${c} need you">${c}</span>`:''}${t.pull?`<span class="pm" aria-hidden="true">${ic('panelR','sm')}</span>`:''}</button>`;
+ const on=t.pull?(S.drawer&&S.drawer.k===t.id):railId()===t.id;
+ return `<button class="rk ${on?'on':''}" data-act="go" data-tool="${t.id}" title="${t.label}${t.pull?' — pulls out beside your work':''}${c?` — ${c} need you`:''}">${ic(t.id)}<span class="lbl">${t.label}</span>${c?`<span class="cnt" aria-label="${c} need you">${c}</span>`:''}</button>`;
+}
+/* Revision 5: the rail (icon + small label + count) and the section panel attached to it */
+const RAILV={material:'library',collections:'library'};
+const railId=()=>RAILV[S.view]||S.view;
+const shown=()=>TOOLS.filter(t=>!t.hidden);
+function railBtn(t){
+ const c=count(t.id,S.scope);
+ const on=t.pull?(S.drawer&&S.drawer.k===t.id):railId()===t.id;
+ return `<button class="rl ${on?'on':''}" data-act="go" data-tool="${t.id}" data-rail="1" title="${t.label}${t.pull?' — pulls out beside your work':''}${c?` — ${c} need you`:''}" ${on?'aria-current="page"':''}>${ic(t.id)}<span class="rlb">${t.label}</span>${c?`<span class="cnt" aria-label="${c} need you">${c}</span>`:''}</button>`;
 }
 function renderRack(){
- const total=TOOLS.reduce((a,t)=>a+count(t.id,S.scope),0);
- let h=`<button class="rk ${S.view==='bench'?'on':''}" data-act="go" data-tool="bench" title="The bench">${ic('bench')}<span class="lbl">The bench</span>${total?`<span class="cnt">${total}</span>`:''}</button>`;
- GROUPS.forEach(g=>{h+=`<div class="rk-gl"><span>${g}</span></div>`+TOOLS.filter(t=>t.g===g).map(rackBtn).join('');});
- h+=`<div class="rk-foot"><button class="rk" data-act="rackmin" title="Collapse rack ([)">${ic('panelL')}<span class="lbl">${document.body.classList.contains('rack-min')?'Expand':'Collapse to icons'}</span></button></div>`;
+ const total=shown().reduce((a,t)=>a+count(t.id,S.scope),0);
+ let h=`<button class="rl ${S.view==='bench'?'on':''}" data-act="go" data-tool="bench" data-rail="1" title="The bench">${ic('bench')}<span class="rlb">Bench</span>${total?`<span class="cnt">${total}</span>`:''}</button>`;
+ GROUPS.forEach(g=>{h+=`<div class="rdiv" role="separator" aria-label="${g}"></div>`+shown().filter(t=>t.g===g).map(railBtn).join('');});
  $('#rack').innerHTML=h;
- const gc=g=>TOOLS.filter(t=>t.g===g).reduce((a,t)=>a+count(t.id,S.scope),0);
+ const gc=g=>shown().filter(t=>t.g===g).reduce((a,t)=>a+count(t.id,S.scope),0);
  const gi={Gather:'material',Develop:'research',Make:'write',Deliver:'outputs'};
- const inG=g=>S.view!=='bench'&&T(S.view)&&T(S.view).g===g;
+ const inG=g=>S.view!=='bench'&&T(railId())&&T(railId()).g===g;
  $('#bbar').innerHTML=`<button class="${S.view==='bench'?'on':''}" data-act="go" data-tool="bench">${ic('bench')}Bench${total?`<span class="cnt">${total}</span>`:''}</button>`+
   GROUPS.map(g=>`<button class="${inG(g)?'on':''}" data-act="gsheet" data-g="${g}">${ic(gi[g])}${g}${gc(g)?`<span class="cnt">${gc(g)}</span>`:''}</button>`).join('');
+ renderPanel();
 }
+const PANEL={};
+let POPEN={};try{POPEN=JSON.parse(localStorage.getItem('arc-c-panel')||'{}')||{};}catch(e){POPEN={};}
+const panelOpen=id=>POPEN[id]!==false;
+function setPanel(id,v){POPEN[id]=v;try{localStorage.setItem('arc-c-panel',JSON.stringify(POPEN));}catch(e){}}
+const hasPanel=()=>!!PANEL[railId()]&&!document.body.classList.contains('focus');
+let lastPanel=null;
+function renderPanel(){
+ const id=railId();const on=hasPanel()&&panelOpen(id);const el=$('#spanel');
+ document.body.classList.toggle('has-panel',on);
+ if(!on){el.innerHTML='';el.hidden=true;lastPanel=null;return;}
+ const old=el.querySelector('.spb');const top=old&&lastPanel===id?old.scrollTop:0;
+ el.hidden=false;
+ el.innerHTML=`<div class="sph"><span>${PANEL[id].btn||'Folders'}</span><span class="sp"></span><button class="tbtn" data-act="ptog" title="Collapse ([)" aria-label="Collapse ${PANEL[id].btn||'Folders'}">${ic('panelL','sm')}</button></div><div class="spb">${PANEL[id].html()}</div>`;
+ el.querySelector('.spb').scrollTop=top;lastPanel=id;
+ const ps=$('#psheet');if(ps&&ps.classList.contains('on'))fillPSheet();
+}
+function panelBtn(){const id=railId();if(!PANEL[id])return '';return `<button class="btn quiet pnlbtn" data-act="pshow" title="Show ${PANEL[id].btn||'Folders'} ([)">${ic('panelL','sm')} ${PANEL[id].btn||'Folders'}</button>`;}
+function fillPSheet(){const ps=$('#psheet');const id=railId();if(!PANEL[id]){closePSheet();return;}ps.innerHTML=`<div class="shh"><h2>${PANEL[id].btn||'Folders'}</h2><button class="btn" data-act="closepsheet">Done</button></div><div class="shb spb">${PANEL[id].html()}</div>`;}
+function openPSheet(){let ps=$('#psheet');if(!ps){ps=document.createElement('div');ps.id='psheet';ps.setAttribute('role','dialog');ps.setAttribute('aria-label','Folders');document.body.appendChild(ps);const sc=document.createElement('div');sc.className='scrim p';sc.dataset.act='closepsheet';document.body.appendChild(sc);
+  /* picking something in the sheet closes it; opening and closing folders does not */
+  ps.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&!['ttog','newfolder','closepsheet'].includes(a.dataset.act))setTimeout(closePSheet,0);});}
+ fillPSheet();ps.classList.add('on');$('.scrim.p').classList.add('on');}
+function closePSheet(){const ps=$('#psheet');if(ps)ps.classList.remove('on');const s=$('.scrim.p');if(s)s.classList.remove('on');}
+function togglePanel(){const id=railId();if(!PANEL[id])return;if(isPhone()){openPSheet();return;}setPanel(id,!panelOpen(id));render(true);}
 function uList(arr,empty){
  if(!arr.length)return `<p class="dim">${empty}</p>`;
  return `<ul class="u-list">${arr.map(x=>`<li><span>${esc(x.t)}</span><span class="w">${esc(x.w)}</span></li>`).join('')}</ul>`;
@@ -835,7 +894,7 @@ function head(tool,p,right=''){
  const t=T(tool);
  const back=S.ret&&tool!=='write'?`<button class="btn quiet" data-act="ret" title="Back to the paragraph you were writing">${ic('write','sm')} Back to ¶${S.ret.n} in Write</button>`:'';
  // the way back sits in the title line, so every screen's title starts at the same top edge
- return `<div class="thead"><h1>${t.label}<span class="sub"> · ${esc(PN(p))}</span></h1><span class="sp"></span>${right}${back}</div>`+pstrip(tool,p);
+ return `<div class="thead"><h1>${t.label}<span class="sub"> · ${esc(PN(p))}</span></h1><span class="sp"></span>${right}${back}${panelBtn()}</div>`+(PANEL[tool]?'':pstrip(tool,p));
 }
 function pstrip(tool,p){
  if(S.scope!=='all'||CROSS[tool])return '';
@@ -1105,7 +1164,8 @@ function honest(btn,msg){
 
 /* ---------------- navigation ---------------- */
 function go(tool,p,x){
- closeSheets();
+ closeSheets();closePSheet();S.open=null;
+ if(tool==='material'){S.libInbox=true;tool='library';x=x||null;}
  // Check is not a page: it pulls out beside the text you are reading or writing
  if(T(tool)&&T(tool).pull){
   if(S.view!=='write'&&S.view!=='read'){go('write',p);}
@@ -1186,8 +1246,10 @@ const A={
  thought:()=>openThought(),
  theme:()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light';try{localStorage.setItem('arc-c-theme',r.dataset.theme);}catch(e){}renderTop();},
  focus:()=>{document.body.classList.toggle('focus');if(document.body.classList.contains('focus')){S.drawer=null;S.find=null;}render(true);},
- rackmin:()=>{document.body.classList.toggle('rack-min');renderRack();},
- gsheet:el=>{const g=el.dataset.g;const sh=$('#gsheet');if(sh.classList.contains('on')&&sh.dataset.g===g){sh.classList.remove('on');return;}sh.dataset.g=g;sh.innerHTML=`<div class="rk-gl"><span>${g}</span></div>`+TOOLS.filter(t=>t.g===g).map(rackBtn).join('');sh.classList.add('on');},
+ ptog:()=>togglePanel(),
+ pshow:()=>togglePanel(),
+ closepsheet:()=>closePSheet(),
+ gsheet:el=>{const g=el.dataset.g;const sh=$('#gsheet');if(sh.classList.contains('on')&&sh.dataset.g===g){sh.classList.remove('on');return;}sh.dataset.g=g;sh.innerHTML=`<div class="rk-gl"><span>${g}</span></div>`+shown().filter(t=>t.g===g).map(rackBtn).join('');sh.classList.add('on');},
  honest:el=>honest(el,el.dataset.msg),
  addthought:()=>{const q=$('#quickT');const v=q&&q.value.trim();if(!v){q&&q.focus();return;}U[curProj()].thoughts.unshift({t:v,w:'You · just now (not saved)'});renderDrawer();setTimeout(()=>{const n=$('#quickT');n&&n.focus();},0);},
  size:el=>{zi=Math.max(0,Math.min(SIZES.length-1,zi+(+el.dataset.d)));applySize();renderTop();},
@@ -1281,7 +1343,7 @@ document.addEventListener('keydown',e=>{
  if(e.target.classList&&e.target.classList.contains('tline')&&k==='Enter'){A.fixline(e.target);return;}
  if(typing(e.target)||e.metaKey||e.ctrlKey||e.altKey)return;
  if(k==='t'||k==='T'){e.preventDefault();openThought();return;}
- if(k==='['){document.body.classList.toggle('rack-min');renderRack();return;}
+ if(k==='['){togglePanel();return;}
  if(k===']'){toggleUnd();return;}
  if(k==='/'&&S.view==='bench'){e.preventDefault();const a=$('#aq');a&&a.focus();return;}
  if(S.view==='bench'&&(k==='j'||k==='k'||k==='Enter'))benchKey(k);
@@ -1295,7 +1357,7 @@ function benchKey(k){
 }
 
 /* Revision 3: scale.js extends these (Library, Collections, Pieces, research console, templates) */
-window.ARC={S,V,A,DR,DR_TABS,DR_TITLE,NOTABS,DR_SUB,TOOLS,GROUPS,I,P,PN,T,HAS,COUNT,CROSS,DOCS,CAR,RES,U,MEDIA,MAT,OUT,DIR,esc,ic,render,renderDrawer,renderRack,renderTop,openDrawer,closeDrawer,go,toast,head,emptyFor,resolveProj,curProj,docProj,isPhone,honest,setScope,fillFinder,stateLine,moves,resume};
+window.ARC={PANEL,renderPanel,panelBtn,railId,hasPanel,panelOpen,setPanel,closePSheet,openPSheet,SRC,S,V,A,DR,DR_TABS,DR_TITLE,NOTABS,DR_SUB,TOOLS,GROUPS,I,P,PN,T,HAS,COUNT,CROSS,DOCS,CAR,RES,U,MEDIA,MAT,OUT,DIR,esc,ic,render,renderDrawer,renderRack,renderTop,openDrawer,closeDrawer,go,toast,head,emptyFor,resolveProj,curProj,docProj,isPhone,honest,setScope,fillFinder,stateLine,moves,resume};
 render();
 })();
 </script>
