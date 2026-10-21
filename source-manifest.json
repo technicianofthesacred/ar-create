@@ -2201,7 +2201,7 @@
     },
     {
       "path": "docs/CAPABILITIES.md",
-      "candidateSha256": "2b4b5e498fc4cdb047076d63ec8ca618bd9555d07eb7e324d8346f5e628c5c5b"
+      "candidateSha256": "f9e04ecf32c11c4d3c6a2ed0fa07a6568fb894f8619411078aa1e1b5a89f19b2"
     },
     {
       "path": "AGENTS.md",
@@ -3282,6 +3282,10 @@
     {
       "path": "tests/editorial-rules.test.mjs",
       "candidateSha256": "06eb0970a0e2dd96aa1bcb11dc3cb02eacb06a7d061751fed54becb646eb0634"
+    },
+    {
+      "path": "tests/magazine-shortcut.test.mjs",
+      "candidateSha256": "43e842a3f532bd1fab7a9b9703f25bebd0177d9c277f408508b3c9ea830bc87e"
     }
   ],
   "dependencyRepair": {
