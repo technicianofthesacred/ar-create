@@ -1,10 +1,10 @@
-/* C3 inspector. In the writing view the right-hand column gets the board's tabs: Margin (study.js #margin, untouched and
-   still aligned beside its passages), Decisions (the human-direction record #downstream-human-direction, moved here by
-   id; its owner keeps repainting it) and Readiness (where checks and export readiness actually live: Check and Audience).
+/* C3 inspector. In the writing view the right-hand column gets two tabs: Margin (study.js #margin, untouched and
+   still aligned beside its passages) and Decisions (the human-direction record #downstream-human-direction, moved here
+   by id; its owner keeps repainting it). Readiness is not a tab: checks live on Check, export readiness on Audience.
    Nothing here saves, approves or exports. Install after human-direction and surface-bar. */
 (()=>{
  if(window.c3Inspector)return;
- const TABS=[['margin','Margin'],['decisions','Decisions'],['readiness','Readiness']];
+ const TABS=[['margin','Margin'],['decisions','Decisions']]; // Readiness lives on Check and Audience (review A7)
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let queued=false;
  const tab=()=>{const t=state.projectNavigation?.inspectorTab;return TABS.some(([k])=>k===t)?t:'margin';};
@@ -25,21 +25,28 @@
   let empty=dec.querySelector(':scope>.ci-empty');
   if(!record||!record.textContent.trim()){if(!empty){empty=document.createElement('p');empty.className='ci-empty';empty.textContent='No saved direction for this piece yet. Decisions are made in Direction and carried here.';dec.prepend(empty);}}
   else empty?.remove();
-  let ready=desk.querySelector(':scope>#c3-insp-readiness');
-  if(!ready){ready=document.createElement('section');ready.id='c3-insp-readiness';ready.className='ci-panel';ready.setAttribute('role','tabpanel');ready.setAttribute('aria-label','Readiness');desk.append(ready);
-   ready.innerHTML=`<p class="ci-lead">Readiness is checked against a saved revision, not while you type.</p><div class="ci-row"><div><strong>Checks</strong><span>Mechanical checks and quote fidelity run in Check, on the saved manuscript.</span></div><button type="button" class="ci-go" data-ci-go="7">Open Check</button></div><div class="ci-row"><div><strong>Export readiness</strong><span>Missing assets and out-of-date approvals that block export are shown in Audience view for the selected output.</span></div><button type="button" class="ci-go" data-ci-go="10">Open Audience view</button></div>`;}
+  desk.querySelector(':scope>#c3-insp-readiness')?.remove();
+  sample(desk.querySelector(':scope>#margin'));
  }
+ // A sample proposal never opens by itself: it waits behind one quiet line until the person asks for it, and when it is
+ // shown it carries a visible Sample badge (i64 OS: mock data must say so). Starting a discussion shows it at once.
+ let sampleShown=false;
+ function sample(margin){
+  const d=margin?.querySelector('#discussion');let gate=margin?.querySelector(':scope>.ci-sample-gate');
+  if(!d){gate?.remove();return;}
+  d.classList.add('ci-sample');
+  if(sampleShown){d.hidden=false;gate?.remove();return;}
+  d.hidden=true;
+  if(!gate){gate=document.createElement('div');gate.className='ci-sample-gate';gate.innerHTML='<span class="ci-badge">Sample</span><span>A sample editorial discussion is kept for this passage. It is not a live AI response.</span><button type="button" data-ci-sample>Show the sample</button>';d.before(gate);}
+ }
+ document.addEventListener('click',event=>{if(event.target.closest?.('[data-ci-sample]')||event.target.closest?.('#app [onclick^="openInstruction"],#app [onclick^="prepareNote"]')){sampleShown=true;queueMicrotask(decorate);}},true);
  document.addEventListener('click',event=>{
   const b=event.target.closest?.('#c3-insp-head [data-ci-tab]');if(b){setTab(b.dataset.ciTab);document.querySelector(`#c3-insp-head [data-ci-tab="${b.dataset.ciTab}"]`)?.focus();return;}
-  const go=event.target.closest?.('#c3-insp-readiness [data-ci-go]');if(go){void viewPhase(Number(go.dataset.ciGo));}
  });
  document.addEventListener('keydown',event=>{
   const b=event.target.closest?.('#c3-insp-head [data-ci-tab]');if(!b||!['ArrowLeft','ArrowRight'].includes(event.key))return;
   const i=TABS.findIndex(([k])=>k===b.dataset.ciTab),n=TABS[(i+(event.key==='ArrowRight'?1:TABS.length-1))%TABS.length][0];event.preventDefault();setTab(n);document.querySelector(`#c3-insp-head [data-ci-tab="${n}"]`)?.focus();
  });
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
- new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
- window.c3Inspector={decorate,tab};
- decorate();
+ window.c3Inspector={decorate,tab,showSample:()=>{sampleShown=true;decorate();}};
+ window.c3Shell.register('inspector',decorate,{order:40});
 })();
