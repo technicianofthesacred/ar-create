@@ -98,3 +98,11 @@ test('C6: Share on a words-only piece with no one to invite says Not applicable 
  card.querySelector('[data-ce-anyway]').click();
  assert.equal(d.querySelector('.c3-empty'),null);assert.equal(d.querySelector('.oss-surface').hasAttribute('data-c3-empty-hidden'),false);
 });
+
+test('every tool an empty card hides stays one quiet click away',()=>{
+ const {d}=fixture(12);
+ const ws=d.querySelector('.workspace');ws.insertAdjacentHTML('beforeend','<section class="mot-surface"><button>Continue creating</button></section>');d.defaultView.c3Empty.decorate();
+ assert.ok(d.querySelector('.mot-surface').hasAttribute('data-c3-empty-hidden'));
+ d.querySelector('.c3-empty [data-ce-anyway]').click();
+ assert.equal(d.querySelector('.mot-surface').hasAttribute('data-c3-empty-hidden'),false);
+});
