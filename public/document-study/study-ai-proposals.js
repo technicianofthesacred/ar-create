@@ -45,5 +45,8 @@
  let lastScope='';function mount(){if(disposed||typeof document==='undefined')return;const s=scope(),next=s?key(s):'';if(next!==lastScope){generation++;lastScope=next;document.getElementById('study-ai-proposals')?.remove();}paint();}
  window.addEventListener('study-draft-change',mount);
  const root=document.getElementById('app')||document.body;const observer=new MutationObserver(()=>{if(disposed||typeof document==='undefined'||scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;if(!disposed&&typeof document!=='undefined')mount()})});observer.observe(root,{childList:true,subtree:true});window.addEventListener('pagehide',()=>{disposed=true;observer.disconnect();},{once:true});
+  // Live sync (review F-25): a proposal an agent makes for the open part appears in the open panel without pressing Refresh.
+  const liveHook=()=>window.c3Shell?.live?.on({},event=>{const s=scope();if(!s)return;const r=room(s);if(!r.open||r.busy||r.review)return;if(!event.reset&&!(event.scope?.kind==='draft'&&event.scope.id===s.bindingId&&/^study-ai\./.test(event.kind||'')))return;void load(s);});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',liveHook,{once:true});else setTimeout(liveHook,0);
  window.studyAIProposals={mount};mount();
 })();

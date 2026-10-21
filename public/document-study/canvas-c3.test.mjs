@@ -16,7 +16,7 @@ function fixture(stage){
  const dom=new JSDOM(`<div id="app">${pages[stage]}</div>`,{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
  w.state={project:'p1',projects:[{id:'p1',name:'Piece',view:stage===5?'article':'record',viewedStage:stage}]};w.current=()=>w.state.projects[0];
  w.phases=[];w.viewPhase=n=>w.phases.push(n);w.save=()=>{};let builds=0;w.surfaceBar={build:()=>builds++};let shown=0;w.c3Research={show:()=>shown++};Object.defineProperty(w,'researchShown',{get:()=>shown});w.render=()=>{w.document.getElementById('app').innerHTML=pages[stage];};
- w.eval(code);return {w,d:w.document,get builds(){return builds;}};
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));w.eval(code);return {w,d:w.document,get builds(){return builds;}};
 }
 test('Write gets the board heading line inside the document, above the title; the editor is untouched',()=>{
  const f=fixture(5),t=f.d.querySelector('.document>.c3-ctitle');
@@ -24,16 +24,15 @@ test('Write gets the board heading line inside the document, above the title; th
  assert.equal(t.nextElementSibling.tagName,'H1');
  assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');
 });
-test('Read gets the heading and an inspector that only points to where the work happens',()=>{
+test('Read keeps one inspector: the margin and this page’s notes, no tab strip of pointers',()=>{
  const f=fixture(6);
  assert.match(f.d.querySelector('#c3-read-insp>.c3-page-notes>.c3-ctitle').textContent,/06\s*Read/);
  assert.equal(f.d.querySelector('.phaseReader').firstElementChild.className,'recordPage','Read starts with the page');
  const side=f.d.querySelector('#c3-read-insp');
  assert.ok(side);
+ assert.equal(side.querySelector('[role=tablist]'),null,'one panel, no tabs');
  side.querySelector('[data-c3-go="5"]').click();
- side.querySelector('[data-c3-tab="readiness"]').click();
- f.d.querySelector('#c3-read-insp [data-c3-go="7"]').click();
- assert.deepEqual(JSON.parse(JSON.stringify(f.w.phases)),[5,7]);
+ assert.deepEqual(JSON.parse(JSON.stringify(f.w.phases)),[5]);
  assert.equal(f.d.querySelectorAll('#c3-read-insp textarea,#c3-read-insp input').length,0,'no field that would pretend to save');
 });
 test('Check with a loaded manuscript: heading above the manuscript, panel kept, bar asked to pick up the run button',()=>{
@@ -52,32 +51,34 @@ test('Material gets the heading, the flattened lane and an inspector that opens 
  const f=fixture(1);
  assert.match(f.d.querySelector('.phaseReader>.c3-ctitle').textContent,/01\s*Material\s*Shared by every output/);
  assert.ok(f.d.querySelector('.phaseReader.c3-flow'));
- assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
+ assert.equal(f.d.querySelector('#c3-read-insp'),null,'no inspector on 1–4 (review A7)');
  assert.ok(f.d.querySelector('[data-flow-action="files"]'),'the lane keeps its own add button');
 });
 
-test('Research checkpoint: heading, Open in Research opens the Research tab, inspector on Decisions',()=>{
+test('Research checkpoint: one Research screen with a this piece / all pieces switch, no inspector',()=>{
  const f=fixture(3);
  assert.match(f.d.querySelector('.phaseReader>.c3-ctitle').textContent,/03\s*Research/);
- f.d.querySelector('.c3-open-research').click();
+ assert.equal(f.d.querySelector('.c3-open-research'),null);
+ assert.equal(f.d.querySelector('.c3-scope [data-c3-scope="piece"]').getAttribute('aria-pressed'),'true');
+ f.d.querySelector('.c3-scope [data-c3-scope="all"]').click();
  assert.equal(f.w.researchShown,1);
- assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
+ assert.equal(f.d.querySelector('#c3-read-insp'),null,'no inspector on 1–4 (review A7)');
  assert.ok(f.d.querySelector('[data-flow-action="analyze"]'));
 });
 
-test('Media: heading after the notice line, inspector opens on Readiness, the contact sheet stays put',()=>{
+test('Media: heading after the notice line, no inspector, the contact sheet stays put',()=>{
  const f=fixture(8);
  const t=f.d.querySelector('.workspace>.c3-ws-title');
  assert.match(t.textContent,/08\s*Media/);
  assert.equal(t.previousElementSibling.className,'historicalToolbar');
- assert.equal(f.d.querySelector('.workspace>#c3-read-insp [aria-selected="true"]').textContent,'Readiness');
+ assert.equal(f.d.querySelector('#c3-read-insp'),null,'no inspector on 8–12 (review A7)');
  assert.ok(f.d.querySelector('#owned-photo-stage [data-add]'));
 });
 
-test('Share: heading line, inspector on Readiness, the message and Copy message stay the app own',()=>{
+test('Share: heading line, no inspector, the message and Copy message stay the app own',()=>{
  const f=fixture(11);
  assert.match(f.d.querySelector('.workspace>.c3-ws-title').textContent,/11\s*Share\s*A personal invitation/);
- assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Readiness');
+ assert.equal(f.d.querySelector('#c3-read-insp'),null,'no inspector on 8–12 (review A7)');
  assert.ok(f.d.querySelector('.oss-surface textarea[data-oss-field="message"]'));
  assert.ok(f.builds>=1,'bar asked to pick up Copy message');
 });

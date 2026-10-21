@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {StateError} from '../store.mjs';
 import {atomicWrite,readJson,digest,ensurePrivateDirectory,regular,resolveInside} from './files.mjs';
+import {provenance,authorOf} from './actor.mjs';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const ROLE='human-authored-editorial-direction-not-evidence-or-source-quotation';
@@ -157,7 +158,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   recover(loc,scope);const m=metadata(loc,scope),raw=bytes(loc.body);
   if(!m&&raw!==null)fail('Direction bytes have no owned revision record; preserved for recovery.');
   if(m&&raw===null)fail('Saved human direction file is missing; recovery history preserved.');
-  const history=ops(loc).map(({record:o})=>({operationId:o.operationId,kind:o.kind,status:o.status,createdAt:o.createdAt,before:{body:o.before.body,hash:o.before.hash,revision:o.before.revision,updatedAt:o.before.updatedAt,...(o.before.scopeReferences?{scopeReferences:structuredClone(o.before.scopeReferences)}:{})},after:{body:o.after.body,hash:o.after.hash,revision:o.after.revision,updatedAt:o.after.updatedAt,...(o.after.scopeReferences?{scopeReferences:structuredClone(o.after.scopeReferences)}:{})},...(o.undoOperationId?{undoOperationId:o.undoOperationId}:{}),...(o.reason?{reason:o.reason}:{})})).sort((a,b)=>a.after.revision-b.after.revision||a.createdAt.localeCompare(b.createdAt));
+  const history=ops(loc).map(({record:o})=>({operationId:o.operationId,...authorOf(o),kind:o.kind,status:o.status,createdAt:o.createdAt,before:{body:o.before.body,hash:o.before.hash,revision:o.before.revision,updatedAt:o.before.updatedAt,...(o.before.scopeReferences?{scopeReferences:structuredClone(o.before.scopeReferences)}:{})},after:{body:o.after.body,hash:o.after.hash,revision:o.after.revision,updatedAt:o.after.updatedAt,...(o.after.scopeReferences?{scopeReferences:structuredClone(o.after.scopeReferences)}:{})},...(o.undoOperationId?{undoOperationId:o.undoOperationId}:{}),...(o.reason?{reason:o.reason}:{})})).sort((a,b)=>a.after.revision-b.after.revision||a.createdAt.localeCompare(b.createdAt));
   if(!m)return {...empty(scope),history,path:loc.body,metadataHash:null};
   return {...m,body:raw,hash:digest(raw),externalEdit:digest(raw)!==m.hash,history,path:loc.body,metadataHash:metadataSnapshots.get(m)};
  }
@@ -187,7 +188,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    if(input.expectedRevision!==before.revision||input.expectedHash!==before.hash){
     if(kind==='write'&&typeof input.body==='string'&&Buffer.byteLength(input.body)<=1024*1024&&!input.body.includes('\0')){
      const rejected={...empty(scope),bound:true,body:input.body,hash:digest(input.body),revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};
-     atomicWrite(file,JSON.stringify({schema:'ar-create.study-human-direction-operation.v1',operationId:input.operationId,scope,kind,fingerprint,status:'rejected',createdAt:rejected.updatedAt,before:{...before,history:undefined,path:undefined},after:rejected,reason:'Stale revision or body hash; submitted wording preserved without applying it.'},null,2)+'\n',{exclusive:true});
+     atomicWrite(file,JSON.stringify({schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'rejected',createdAt:rejected.updatedAt,before:{...before,history:undefined,path:undefined},after:rejected,reason:'Stale revision or body hash; submitted wording preserved without applying it.'},null,2)+'\n',{exclusive:true});
     }
     fail('Human direction changed. Refresh and preserve both versions before saving.');
    }
@@ -205,7 +206,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    // Undo restores exact owner-journal bytes; it does not introduce a new source claim.
    if(kind==='write'&&scope.kind==='collection')await validateCollectionReferences(scope,before,body);
    const after={...before,...empty(scope),bound:true,body,hash:digest(body),revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};delete after.history;delete after.path;delete after.externalEdit;delete after.metadataHash;
-   const op={schema:'ar-create.study-human-direction-operation.v1',operationId:input.operationId,scope,kind,fingerprint,status:'pending',beforeMetadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined},after,...(undoOperationId?{undoOperationId}:{})};
+   const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',beforeMetadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined},after,...(undoOperationId?{undoOperationId}:{})};
    atomicWrite(file,JSON.stringify(op,null,2)+'\n',{exclusive:true});
    const expectedMetaHash=beforeMetadataHash;
    try{
@@ -321,7 +322,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    if(digest(bytes(loc.body)||'')!==before.hash||metaHash(loc)!==before.metadataHash)fail('Target direction changed during reference preparation.');
    for(const ref of rows)if(ref.id===referenceId&&ref.status==='accepted'&&(await reviewReference(ref,before,rows)).needed)fail('Accepted origin changed before reference publication.');
    if(digest(bytes(loc.body)||'')!==before.hash||metaHash(loc)!==before.metadataHash)fail('Target direction changed before metadata commit.');
-   ensurePrivateDirectory(loc.dir,'human-direction-history');const op={schema:'ar-create.study-human-direction-operation.v1',operationId:input.operationId,scope,kind,fingerprint,status:'pending',referenceId,beforeMetadataHash:before.metadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined},after,...(action==='undo'?{undoOperationId:input.undoOperationId}:{})};
+   ensurePrivateDirectory(loc.dir,'human-direction-history');const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',referenceId,beforeMetadataHash:before.metadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined},after,...(action==='undo'?{undoOperationId:input.undoOperationId}:{})};
    atomicWrite(file,JSON.stringify(op,null,2)+'\n',{exclusive:true});persistMeta(loc,after,before.metadataHash);atomicWrite(file,JSON.stringify({...op,status:'committed'},null,2)+'\n');
    return {operationId:input.operationId,reference:structuredClone(rows.find(r=>r.id===referenceId)||null),record:current(scope),replayed:false};
   });

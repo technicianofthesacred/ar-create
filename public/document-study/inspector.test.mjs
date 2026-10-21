@@ -10,7 +10,7 @@ function fixture(record='Direction: open with the gate'){
  w.state={project:'p1',projects:[{id:'p1',name:'Piece'}]};w.current=()=>w.state.projects[0];
  let saves=0;w.save=()=>{saves++;};w.phases=[];w.viewPhase=n=>{w.phases.push(n);};
  w.render=()=>{w.document.getElementById('app').innerHTML=page(record);};
- w.eval(code);
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));w.eval(code);
  return {w,d:w.document,get saves(){return saves;}};
 }
 test('tabs sit above the margin; the margin node and its notes are untouched and stay in place',()=>{
@@ -18,7 +18,7 @@ test('tabs sit above the margin; the margin node and its notes are untouched and
  assert.equal(f.d.getElementById('c3-insp-head').nextElementSibling,margin);
  assert.equal(margin.parentElement,desk);
  assert.match(margin.textContent,/Approve these words/);
- assert.deepEqual(JSON.parse(JSON.stringify([...f.d.querySelectorAll('[data-ci-tab]')].map(b=>[b.textContent,b.getAttribute('aria-selected')]))),[['Margin','true'],['Decisions','false'],['Readiness','false']]);
+ assert.deepEqual(JSON.parse(JSON.stringify([...f.d.querySelectorAll('[data-ci-tab]')].map(b=>[b.textContent,b.getAttribute('aria-selected')]))),[['Margin','true'],['Decisions','false']]);
 });
 test('Decisions shows the owner’s direction record (moved by id, not copied); empty record says so',()=>{
  const f=fixture();
@@ -29,13 +29,19 @@ test('Decisions shows the owner’s direction record (moved by id, not copied); 
  const g=fixture('');
  assert.match(g.d.querySelector('#c3-insp-decisions .ci-empty').textContent,/No saved direction/);
 });
-test('Readiness only points to where checks and export readiness really live',()=>{
+test('no Readiness tab: checks live on Check, export readiness on Audience',()=>{
  const f=fixture();
- f.d.querySelector('[data-ci-tab="readiness"]').click();
- f.d.querySelector('[data-ci-go="7"]').click();
- f.d.querySelector('[data-ci-go="10"]').click();
- assert.deepEqual(JSON.parse(JSON.stringify(f.w.phases)),[7,10]);
- assert.equal(f.d.querySelector('#c3-insp-readiness').textContent.includes('Ready to export'),false,'claims no readiness itself');
+ assert.equal(f.d.querySelector('[data-ci-tab="readiness"]'),null);
+ assert.equal(f.d.getElementById('c3-insp-readiness'),null);
+});
+test('a sample proposal never opens by itself; shown on request, it says Sample',()=>{
+ const f=fixture();
+ f.d.getElementById('margin').insertAdjacentHTML('beforeend','<section class="discussion" id="discussion"><div class="tag">Sample · not a live AI response</div><button class="primary">Accept</button></section>');
+ f.w.c3Inspector.decorate();
+ const d=f.d.getElementById('discussion');assert.equal(d.hidden,true,'not auto-opened');
+ const gate=f.d.querySelector('.ci-sample-gate');assert.match(gate.querySelector('.ci-badge').textContent,/Sample/);
+ gate.querySelector('[data-ci-sample]').click();
+ return new Promise(r=>setTimeout(r,0)).then(()=>{assert.equal(d.hidden,false);assert.equal(f.d.querySelector('.ci-sample-gate'),null);assert.ok(d.classList.contains('ci-sample'));});
 });
 test('the chosen tab survives a full render; the editor is never replaced by the inspector',()=>{
  const f=fixture();

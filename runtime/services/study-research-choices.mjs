@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { StateError } from '../store.mjs';
 import { atomicWrite, digest, ensurePrivateDirectory, readJson, regular, safeRel } from './files.mjs';
+import { provenance } from './actor.mjs';
 
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const PARENTS = { hk: 'hk', ancha: 'ref-an-cha', collector: 'ref-collector' };
@@ -91,7 +92,7 @@ export function createStudyResearchChoices({ dataDir, originals, drafts } = {}) 
       if (input.anchorId !== undefined && (typeof input.anchorId !== 'string' || !current.draft.projection?.some(p => p.id === input.anchorId && p.blockKind === 'paragraph'))) fail('Choose a current owned draft paragraph as the editorial anchor.');
       if (!input.expected || stable(input.expected) !== stable(current.draft.expected)) fail('Owned draft changed. Refresh before choosing.');
       const choice = { pointId: input.pointId, recordPath: input.recordPath, recordHash: input.recordHash, originalText: input.originalText, decision: input.decision, narration: input.narration || '', anchorId: input.anchorId || null, sourceExpected: input.sourceExpected, expected: structuredClone(input.expected), operationId: input.operationId, updatedAt: new Date().toISOString() };
-      const next = { ...value, choices: [...value.choices.filter(c => c.pointId !== input.pointId), choice], receipts: [...value.receipts, { operationId: input.operationId, requestHash, pointId: input.pointId, decision: input.decision, savedAt: choice.updatedAt }] };
+      const next = { ...value, choices: [...value.choices.filter(c => c.pointId !== input.pointId), choice], receipts: [...value.receipts, { operationId: input.operationId, requestHash, pointId: input.pointId, decision: input.decision, savedAt: choice.updatedAt, provenance: provenance() }] };
       value.pending = { operationId: input.operationId, requestHash, next, markdown: markdown(next) };
       const stat = fs.lstatSync(files.journal, { throwIfNoEntry: false });
       atomicWrite(files.journal, JSON.stringify(value, null, 2), stat ? { expectedHash: digest(fs.readFileSync(files.journal)) } : { exclusive: true });

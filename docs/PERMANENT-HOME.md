@@ -28,4 +28,4 @@ Owner and independent root checks confirmed identical saved native state and ori
 
 Keep one writer, the same127.0.0.1:8841 origin and prior copies for rollback. Browser-only drafts are not automatically covered by file backups. Never restore an old tree over newer saved work; stop the exact owned writer, preserve a new private snapshot and have the integrator reconcile newer data and any reverse relocation. Installed private migration/rollback records remain in the permanent home, outside Git.
 
-Bounded relocation is complete. Full workflow/human visual acceptance, the existing sticky-header follow-up, live AI, complete media/platform publication and private synchronization remain separate work. The active Claude design and its next result retain their existing scope.
+Bounded relocation is complete. Full workflow/human visual acceptance, the existing sticky-header follow-up, live AI, complete media/platform publication and private synchronization remain separate work.

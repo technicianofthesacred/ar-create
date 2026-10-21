@@ -2,7 +2,6 @@
 // writes artifacts; normal service validators decide whether returned bytes fit.
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import {spawn} from 'node:child_process';
 import {StringDecoder} from 'node:string_decoder';
 import {StateError} from '../store.mjs';
@@ -10,7 +9,8 @@ import {atomicWrite,digest,regular} from './files.mjs';
 
 export function executionEnvironment(inherited=process.env){return Object.fromEntries(['PATH','HOME','USER','LOGNAME','LANG','LC_ALL','TMPDIR','CODEX_HOME','XDG_CONFIG_HOME'].filter(key=>inherited[key]).map(key=>[key,inherited[key]]));}
 export function installedCodex(inherited=process.env){
- const candidates=[path.join(os.homedir(),'.local/bin/codex'),...(inherited.PATH||'').split(path.delimiter).filter(Boolean).map(dir=>path.join(dir,'codex'))];
+ // The Codex executable is configured (tools.codex -> AR_CREATE_CODEX); only then does a plain PATH lookup apply.
+ const candidates=[...(inherited.AR_CREATE_CODEX?[inherited.AR_CREATE_CODEX]:[]),...(inherited.PATH||'').split(path.delimiter).filter(Boolean).map(dir=>path.join(dir,'codex'))];
  return candidates.find(file=>{try{fs.accessSync(file,fs.constants.X_OK);return fs.statSync(file).isFile();}catch{return false;}})||null;
 }
 export function executionSchema(names){return {type:'object',additionalProperties:false,required:['artifacts'],properties:{artifacts:{type:'object',additionalProperties:false,required:names,properties:Object.fromEntries(names.map(name=>[name,{type:'string'}]))}}};}
@@ -73,7 +73,7 @@ export function createArtifactExecution({execute=executeCodexArtifacts,available
 
 /** App runs use the owner's workhorse choice without changing client settings. */
 export function createWorkspaceExecution({codexPath,spawnChild=spawn,boundedEditorial=false}={}){
- if(codexPath===undefined){const bundled='/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex';try{fs.accessSync(bundled,fs.constants.X_OK);codexPath=fs.statSync(bundled).isFile()?bundled:null;}catch{}codexPath ||= installedCodex();}
+ if(codexPath===undefined)codexPath=installedCodex();
  return createArtifactExecution({available:()=>!!codexPath,model:'gpt-6.1-sol',reasoningEffort:'medium',execute:packet=>executeCodexArtifacts({...packet,codexPath,spawnChild,boundedEditorial})});
 }
 

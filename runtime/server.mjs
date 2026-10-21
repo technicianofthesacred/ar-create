@@ -35,8 +35,18 @@ import {createStudyHumanDirection} from './services/study-human-direction.mjs';
 import {createStudyResearchChoices} from './services/study-research-choices.mjs';
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
 import {createWorkspaceExecution} from './services/artifact-execution.mjs';
+import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger} from './services/actor.mjs';
+import {createEventBus,scopeOf,revisionOf} from './services/events.mjs';
+import {createPresence} from './services/presence.mjs';
+import {createLeases} from './services/leases.mjs';
+import {createJournal} from './services/journal.mjs';
+import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
+import {createMagazineRoutes} from './commands/magazine.mjs';
+import {createMagazineVault} from './services/magazine-vault/index.mjs';
+import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStore, StateError, MAX_BODY_BYTES } from './store.mjs';
@@ -74,6 +84,7 @@ const types = {
 };
 function json(response, status, body) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  response.arResult = body;
   response.end(JSON.stringify(body));
 }
 function body(request, limit = MAX_BODY_BYTES, raw = false) {
@@ -91,7 +102,7 @@ function body(request, limit = MAX_BODY_BYTES, raw = false) {
     });
     request.on('end', () => {
       if (overflow) return;
-      try { resolve(raw ? Buffer.concat(chunks) : JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+      try { const value = raw ? Buffer.concat(chunks) : JSON.parse(Buffer.concat(chunks).toString('utf8')); if (!raw) request.arInput = value; resolve(value); }
       catch { reject(new StateError('Request body must be valid JSON.')); }
     });
     request.on('error', reject);
@@ -109,6 +120,28 @@ function checkWriteOrigin(request, server) {
   if (!localAuthorities(server).some(host => request.headers.origin === `http://${host}`)) {
     throw new StateError('Writes must originate from this local workspace.', 403);
   }
+}
+/** Read the commit this code runs from: AR_CREATE_GIT_SHA, else the checkout's HEAD. */
+function gitSha(repoRoot) {
+  if (/^[a-f0-9]{7,40}$/.test(process.env.AR_CREATE_GIT_SHA || '')) return process.env.AR_CREATE_GIT_SHA;
+  try {
+    let gitDir = path.join(repoRoot, '.git');
+    const stat = fs.lstatSync(gitDir, { throwIfNoEntry: false });
+    if (!stat) return null;
+    if (stat.isFile()) { const pointer = fs.readFileSync(gitDir, 'utf8').match(/^gitdir: (.+)$/m); if (!pointer) return null; gitDir = path.resolve(repoRoot, pointer[1].trim()); }
+    const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf8').trim();
+    if (/^[a-f0-9]{40}$/.test(head)) return head;
+    const ref = head.match(/^ref: (.+)$/)?.[1]; if (!ref) return null;
+    const common = fs.existsSync(path.join(gitDir, 'commondir')) ? path.resolve(gitDir, fs.readFileSync(path.join(gitDir, 'commondir'), 'utf8').trim()) : gitDir;
+    for (const dir of [gitDir, common]) { const loose = path.join(dir, ref); if (fs.existsSync(loose)) return fs.readFileSync(loose, 'utf8').trim(); }
+    const packed = fs.readFileSync(path.join(common, 'packed-refs'), 'utf8').split('\n').find(line => line.endsWith(' ' + ref));
+    return packed ? packed.split(' ')[0] : null;
+  } catch { return null; }
+}
+/** A write: local Origin (when sent) and a resolved actor. */
+function checkWrite(request, server) {
+  checkWriteOrigin(request, server);
+  requireWriteActor();
 }
 async function staticFile(publicDir, pathname) {
   const segments = pathname.split('/').filter(Boolean);
@@ -152,7 +185,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, release=null } = {}) {
   dataDir = path.resolve(dataDir);
   const store = await createStore({ dataDir, sharedArticles, publicationFault });
   try {
@@ -183,7 +216,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const materialFolder=createMaterialFolder({dataDir,bindings:studyBindings,library,store,...(materialHostActions?.openFolder?{openFolder:materialHostActions.openFolder}:{})});
   const studyOriginals=studyOriginalRoots?createStudyOriginals(studyOriginalRoots):null;
   const studyDerivedFindings=studyOriginals?createStudyDerivedFindings({dataDir,originals:studyOriginals}):null;
-  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation}):null;
+  const studyDrafts=studyOriginals?createStudyDraftCopies({dataDir,originals:studyOriginals,studyRelocation,vaultBound:source=>magazineVault.vaultBound(source)}):null;
   const studyHumanDirection=studyDrafts?createStudyHumanDirection({dataDir,store,bindings:studyBindings,drafts:studyDrafts,library,...sharedArticles?{readOutputDocument:input=>store.readArticle(input)}:{}}):null;
   const collectionDirection=studyHumanDirection||createStudyHumanDirection({dataDir,library});
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
@@ -194,7 +227,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const carousel = createCarouselExports({dataDir,store,library});
   const terminal = createTerminal({ dataDir, store, requests });
   const sharedArticleLauncher=createSharedArticleLauncher({dataDir,store,bridge:sharedArticleBridge,terminal});
-  const carouselMake = createCarouselMake({dataDir,store,library,requests,terminal,execution,publicDir});
+  const carouselMake = createCarouselMake({dataDir,store,library,requests,terminal,execution,publicDir,...(articleMakeSkillRoot?{skillRoot:articleMakeSkillRoot}:{})});
   const articleMake = createArticleMake({dataDir,store,library,requests,terminal,execution,...(articleMakeSkillRoot?{skillRoot:articleMakeSkillRoot}:{})});
   const articleVisual = createArticleVisual({dataDir,store,library,terminal,execution});
   const passageRevisions = createPassageRevisions({dataDir,store,requests,terminal,execution});
@@ -202,6 +235,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const firstFlow=createFirstFlow({dataDir,store,library,recordings,requests,execution});
   const materialAlbums=createMaterialAlbums({library,albums,bindings:studyBindings,firstFlow,store});
   const sourceSessions=importedSourceFactory?await importedSourceFactory():null;
+  // Kept-conversation edits are journaled by the transcript owner; who made each is kept here.
+  const provenanceLedger=createProvenanceLedger({dataDir});
+  const stampSourceSession=async(action,input)=>{const out=await sourceSessions[action](input);if(typeof input?.operationId==='string'&&typeof input?.sessionId==='string'){try{provenanceLedger.stamp({area:'source-session',scopeId:input.sessionId,key:input.operationId,action});}catch(error){console.error('Source edit provenance was not recorded:',error.message);}}return out;};
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts}):null;
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
   const createStudyCollection=async input=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};};
@@ -234,23 +270,72 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     // carousel can publish from its live wording file.
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
-  const server = http.createServer(async (request, response) => {
-    if(packageView&&request.method==='GET'&&new URL(request.url,'http://localhost').pathname==='/document-study/package-config.js'){response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
-    response.setHeader('X-Content-Type-Options', 'nosniff');
-    response.setHeader('Referrer-Policy', 'no-referrer');
-    response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'"+(new URL(request.url,'http://localhost').pathname==='/document-study/index.html'?" 'unsafe-inline'":"")+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
-    try {
-      if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.', 403);
+  // Agent coordination routes (mounted below, before the route map).
+  const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
+  const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
+  // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
+  const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
+  // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
+  const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
+  function afterRequest(request,response,context){
+   if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return;
+   let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return;}
+   const command=findCommand(commandList(),request.method,pathname);
+   if(!command||command.readOnly||NOT_JOURNALED.has(command.name))return;
+   const input=request.arInput,result=response.arResult,status=response.statusCode,query=new URL(request.url||'/','http://local.invalid').searchParams;
+   const scope=scopeOf({input,result,query,section:command.section}),operationId=typeof input?.operationId==='string'?input.operationId:null;
+   if(status>=200&&status<300)events.emit({kind:command.name,scope,revision:revisionOf(result),actor:context.actor,client:context.client,operationId});
+   const expected=input&&typeof input==='object'?(Number.isSafeInteger(input.expectedRevision)||typeof input.expectedHash==='string'?{revision:input.expectedRevision??null,hash:input.expectedHash??null}:input.expected&&typeof input.expected==='object'?{revision:input.expected.revision??null,hash:input.expected.hash??null}:null):null;
+   const ok=status>=200&&status<300,after=ok?{revision:revisionOf(result),hash:typeof result?.hash==='string'?result.hash:null}:null;
+   journal.append({operationId,actor:context.actor,client:context.client,scope,kind:command.name,status:ok?'committed':status===409||status===423?'conflict':'rejected',before:expected,after,reason:ok?null:String(result?.error||'HTTP '+status).slice(0,500),http:status}).catch(error=>console.error('Journal line was not written:',error.message));
+  }
+  function eventFilter(url){const kind=url.searchParams.get('kind'),id=url.searchParams.get('id');return {...(kind?{kind}:{}),...(id?{id}:{})};}
+  async function coordination(request,response,pathname,url){
+   if(pathname==='/api/events/since'&&request.method==='GET'){const since=Number(url.searchParams.get('since')||0),limit=Number(url.searchParams.get('limit')||200);json(response,200,events.since(since,eventFilter(url),Number.isSafeInteger(limit)?limit:200));return true;}
+   if(pathname==='/api/events'&&request.method==='GET'){
+    const since=Number(url.searchParams.get('since')??request.headers['last-event-id']??events.cursor),filter=eventFilter(url);
+    response.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-store','Connection':'keep-alive','X-Accel-Buffering':'no'});
+    const send=event=>response.write('id: '+event.cursor+'\nevent: change\ndata: '+JSON.stringify(event)+'\n\n');
+    const backlog=events.since(Number.isSafeInteger(since)?since:events.cursor,filter,1000);
+    response.write('retry: 3000\n'+(backlog.reset?'event: reset\ndata: '+JSON.stringify({bootId:events.bootId,cursor:events.cursor})+'\n':'')+'\n');
+    for(const event of backlog.reset?[]:backlog.events)send(event);
+    const stop=events.subscribe(send,filter),beat=setInterval(()=>response.write(': ping\n\n'),20_000);beat.unref?.();
+    const client={response,close(){clearInterval(beat);stop();sseClients.delete(client);}};sseClients.add(client);
+    request.on('close',()=>client.close());response.on('close',()=>client.close());
+    return true;
+   }
+   if(pathname==='/api/leases'&&request.method==='GET'){json(response,200,leases.list(eventFilter(url)));return true;}
+   if(pathname==='/api/journal'&&request.method==='GET'){const q=Object.fromEntries(['kind','id','status','actor','since','limit'].filter(k=>url.searchParams.has(k)).map(k=>[k,url.searchParams.get(k)]));json(response,200,await journal.read(q));return true;}
+   const coordinationWrites={'/api/leases/acquire':input=>leases.acquire(input,request.arActor),'/api/leases/release':input=>leases.release(input,request.arActor),'/api/journal/handoff':async input=>{const line=await journal.handoff(input,request.arActor);events.emit({kind:'handoff',scope:line.scope,revision:null,actor:line.actor,client:line.client,operationId:line.operationId,to:line.to,summary:line.summary});return line;},'/api/journal/ask':async input=>{const line=await journal.ask(input,request.arActor);events.emit({kind:'needs-decision',scope:line.scope,revision:null,actor:line.actor,client:line.client,operationId:line.operationId,to:line.to,summary:line.summary,...(line.options?{options:line.options}:{})});return line;}};
+   if(Object.hasOwn(coordinationWrites,pathname)){if(request.method!=='POST'){response.setHeader('Allow','POST');throw new StateError('Method is not supported.',405);}checkWrite(request,server);if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);json(response,200,await coordinationWrites[pathname](await body(request,64*1024)));return true;}
+   if(pathname==='/api/presence'){
+    if(request.method==='GET'){json(response,200,presence.list(eventFilter(url)));return true;}
+    if(request.method==='POST'){checkWrite(request,server);if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);const input=await body(request,64*1024);const ctx=request.arActor;json(response,200,presence.post(input,ctx));return true;}
+    response.setHeader('Allow','GET, POST');throw new StateError('Method is not supported.',405);
+   }
+   return false;
+  }
+  const commandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  let registry=null;
+  const commandList=()=>registry||(registry=describeRoutes(commandRoutes({url:new URL('http://127.0.0.1/'),request:{headers:{}},server:null,outputQuery:()=>({}),decorateOutputExports:value=>value,describe:async()=>({})}),extraCommands));
+  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))},commands:commandList().map(publicEntry)});
+  const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
+  // Every request runs inside its actor context so services can stamp writes.
+  async function routeRequest(request, response) {
       let pathname;
       try { pathname = decodeURIComponent((request.url || '/').split('?')[0]); }
       catch { throw new StateError('Invalid request path.'); }
+      if(pathname.startsWith('/api/work-continuity/')&&request.method==='POST'&&!findCommand(commandList(),'POST',pathname)?.readOnly&&!(request.headers.origin&&!localAuthorities(server).some(host=>request.headers.origin===`http://${host}`)))requireWriteActor();
+      if(pathname.startsWith('/api/events')||pathname==='/api/presence'||pathname.startsWith('/api/leases')||pathname.startsWith('/api/journal')){const coordinationUrl=new URL(request.url,'http://'+request.headers.host);if(await coordination(request,response,pathname,coordinationUrl))return;}
+      // i64 OS health (B3): which release this program is. The sha comes from <home>/RELEASE.json, which serve.mjs reads and passes in.
+      if(pathname==='/api/i64os/health'&&['GET','HEAD'].includes(request.method)){if(!studyDrafts)throw new StateError('Document study is not configured.',503);const sha=typeof release?.sha==='string'&&/^[a-f0-9]{7,40}$/.test(release.sha)?release.sha:null;return json(response,200,{service:'ar-create-document-study',ready:true,release:{sha}});}
       if(await continuityInterface.handle(request,response))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
         if(request.headers.origin&&request.headers.origin!==new URL(request.url,'http://'+request.headers.host).origin)throw new StateError('Foreign-origin inquiry request refused.',403);
         const url=new URL(request.url,'http://'+request.headers.host),suffix=pathname.slice('/api/inquiries'.length);let input;
         if(request.method==='GET'){if([...url.searchParams.keys()].some(key=>key!=='input')||url.searchParams.getAll('input').length!==1||url.searchParams.get('input').length>32768)throw new StateError('Use one bounded inquiry selector.',400);try{input=JSON.parse(url.searchParams.get('input'));}catch{throw new StateError('Inquiry selector must be JSON.',400);}}
-        else if(request.method==='POST')input=await body(request,1200*1024);
+        else if(request.method==='POST'){requireWriteActor();input=await body(request,1200*1024);leases.check(scopeOf({input,section:'collection'}),request.arActor);}
         else throw new StateError('Unsupported inquiry method.',405);
         const result=await inquiryInterface.handle({method:request.method,path:suffix,input});return json(response,result.status,result.body);
       }
@@ -275,7 +360,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
           }
         }
         if(request.method==='POST'){
-          checkWriteOrigin(request,server);
+          checkWrite(request, server);
           if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
           const input=await body(request);if(!input||typeof input!=='object'||Array.isArray(input))throw new StateError('Request body must be an object.');
           if(['/api/shared-carousels/prepare','/api/shared-carousels/recover-external'].includes(pathname)){
@@ -302,7 +387,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
           if(match&&match[2]==='external'){const bytes=await sharedArticleBridge.external(match[1]);response.writeHead(200,{'Content-Type':'application/octet-stream','Content-Disposition':'attachment; filename="external-article.md"','Cache-Control':'no-store','Content-Length':bytes.length});return response.end(bytes);}
         }
         if(request.method==='POST'){
-          checkWriteOrigin(request,server);
+          checkWrite(request, server);
           if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
           const input=await body(request);
           if(pathname==='/api/shared-articles/launches')return json(response,200,await sharedArticleLauncher.prepare(input,`http://${request.headers.host}`));
@@ -317,7 +402,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       if (pathname === '/api/state') {
         if (request.method === 'GET') return json(response, 200, await store.read({allowEditedMarkdown:true}));
         if (request.method === 'PUT') {
-          checkWriteOrigin(request, server);
+          checkWrite(request, server);
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
           if (Number(request.headers['content-length']) > MAX_BODY_BYTES) {
             request.resume();
@@ -330,179 +415,32 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       }
       const url = new URL(request.url, `http://${request.headers.host}`);
       if (pathname.startsWith('/transcription/')) {
-        if (request.method === 'POST') checkWriteOrigin(request, server);
+        if (request.method === 'POST') checkWrite(request, server);
         // The copied Magazine workshop contains its own inline controls.
         response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors "+(/^\/transcription\/[a-f0-9-]{36}\/view$/.test(pathname)?"'self'":"'none'")+"; base-uri 'none'; form-action 'self'");
         if (await recordings.route(request, response, url)) return;
         throw new StateError('Recording route is unavailable.', 404);
       }
-      const studyAICall=(action,input={})=>draftCall(()=>{
-        const scope={};
-        for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
-        if([...url.searchParams.keys()].some(key=>!['bindingId','parentStudyId','requestId'].includes(key))||url.searchParams.getAll('requestId').length>1)throw new StateError('Unsupported manuscript proposal query.',400);
-        if(Object.keys(input).some(key=>['bindingId','parentStudyId'].includes(key)))throw new StateError('Manuscript identity comes from the explicit route scope.',400);
-        const requestId=url.searchParams.get('requestId');if(requestId){if(input.requestId&&input.requestId!==requestId)throw new StateError('Request identity differs from its route.',409);input={...input,requestId};}
-        return studyAI.call(action,{...scope,...input});
-      });
-      const conceptCall=fn=>draftCall(()=>{if(!conceptWork)throw new StateError('Concept work requires configured collections.',503);return fn();});
-      const routes = {
-        '/api/concept/capabilities': {GET:()=>conceptCall(()=>conceptWork.capabilities())},
-        '/api/concepts': {GET:()=>conceptCall(()=>conceptWork.list()),POST:input=>conceptCall(()=>conceptWork.create(input))},
-        '/api/concept': {GET:()=>conceptCall(()=>conceptWork.read({parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/concept/save': {POST:input=>conceptCall(()=>conceptWork.save(input))},
-        '/api/concept/source': {GET:()=>conceptCall(()=>conceptWork.source({...url.searchParams.has('parentStudyId')?{parentStudyId:url.searchParams.get('parentStudyId')}:{},sourceId:url.searchParams.get('sourceId')}))},
-        '/api/concept/sources/search': {POST:input=>conceptCall(()=>conceptWork.sourcesSearch(input))},
-        '/api/writing-template': {GET:()=>writingTemplates.get({expectedProjectId:url.searchParams.get('expectedProjectId'),expectedDocumentId:url.searchParams.get('expectedDocumentId')})},
-        '/api/writing-template/attach': {POST:input=>writingTemplates.attach(input)},
-        '/api/writing-template/detach': {POST:input=>writingTemplates.detach(input)},
-        '/api/writing-template/snapshot': {POST:input=>writingTemplates.snapshot(input)},
-        '/api/writing-template/restore-copy': {POST:input=>writingTemplates.restoreCopy(input)},
-        '/api/magazine/portfolio': {GET:()=>magazineRead(()=>magazine.list())},
-        '/api/magazine/artifact': {GET:()=>magazineRead(()=>magazine.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))},
-        '/api/sources/tree': { GET: () => library.tree() },
-        '/api/sources/file': { GET: () => library.read(url.searchParams.get('id'),{allowUnreconciled:true}), POST: input => library.write(input) },
-        '/api/sources/import': { POST: async input => {
-          if (!Array.isArray(input.urls || []) || !Array.isArray(input.files || []) || (input.urls?.length || 0) + (input.files?.length || 0) > 100) throw new StateError('Import up to 100 files or URLs.');
-          const albumLinks=(input.urls || []).filter(isICloudAlbum);
-          const result=await library.import({...input,urls:(input.urls || []).filter(url=>!isICloudAlbum(url))});
-          for(const link of albumLinks) {try {const imported=await albums.import(link);result.receipts.push(...imported.receipts);}catch(error){result.receipts.push({ok:false,url:link,error:error.message});}}
-          for (const receipt of result.receipts) if (receipt.ok && receipt.source) { try { await recordings.retain(receipt.source); } catch (error) { receipt.recordingError = error.message; } }
-          return result;
-        } },
-        '/api/icloud-albums': { GET: () => albums.list() },
-        '/api/sources/rename': { POST: input => library.rename(input) },
-        '/api/sources/reconnect/preview': {POST:input=>library.reconnectPreview(input)},
-        '/api/sources/reconnect': {POST:input=>library.reconnectMoved(input)},
-        '/api/sources/folders': { POST: input => library.folder(input) },
-        '/api/collections': { GET: () => library.collections(), POST: input => library.saveCollection(input) },
-        '/api/collection-relationships': {GET:()=>library.collectionRelationships(url.searchParams.get('collectionId'))},
-        '/api/collection-relationships/link': {POST:input=>library.linkCollections(input)},
-        '/api/collection-relationships/detach': {POST:input=>library.detachCollectionRelationship(input)},
-        '/api/connections': {GET:()=>connectedFolders.list(),POST:input=>connectedFolders.add(input),DELETE:input=>connectedFolders.remove(input)},
-        '/api/guidance': { GET: () => guidance.get(), POST: input => guidance.put(input) },
-        '/api/evidence': { GET: () => library.evidence(), POST: input => library.saveEvidence(input) },
-        '/api/terminal/capabilities': { GET: () => terminal.capabilities() },
-        '/api/terminal/sessions': { GET: () => terminal.list(), POST: input => terminal.start(input) },
-        '/api/pieces': {GET:()=>store.listPieces(),POST:input=>store.createPiece(input)},
-        '/api/i64os/health': {GET:()=>{if(!studyDrafts)throw new StateError('Document study is not configured.',503);return {service:'ar-create-document-study',ready:true};}},
-        '/api/study-ai/contracts': {GET:()=>studyAICall('contracts')},
-        '/api/study-ai/human-contract': {POST:input=>studyAICall('humanContract',input)},
-        '/api/study-ai/read': {GET:()=>studyAICall('read')},
-        '/api/study-ai/prepare': {POST:input=>studyAICall('prepare',input)},
-        '/api/study-ai/context': {GET:()=>studyAICall('context')},
-        '/api/study-ai/propose': {POST:input=>studyAICall('propose',input)},
-        '/api/study-ai/review': {GET:()=>studyAICall('review')},
-        '/api/study-ai/requests': {GET:()=>studyAICall('list')},
-        '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},
-        '/api/study-ai/reject': {POST:input=>studyAICall('reject',input)},
-        '/api/study/human-direction': {GET:()=>draftCall(()=>studyHumanDirection.read({parentStudyId:url.searchParams.get('parentStudyId'),scope:url.searchParams.get('scope')||'project',...(url.searchParams.has('bindingId')?{bindingId:url.searchParams.get('bindingId')}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})}))},
-        '/api/study/human-direction/select': {POST:input=>draftCall(()=>studyHumanDirection.select(input))},
-        '/api/study/human-direction/write': {POST:input=>draftCall(()=>studyHumanDirection.write(input))},
-        '/api/study/human-direction/undo': {POST:input=>draftCall(()=>studyHumanDirection.undo(input))},
-        '/api/study-originals': {GET:()=>originalRead(()=>studyOriginals.list(url.searchParams.get('projectKey')))},
-        '/api/study/photos/select': {POST:input=>draftCall(()=>studyOwnedPhotoBindings.select(input))},
-        '/api/study/photos': {GET:()=>draftCall(()=>studyPhotos.list({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
-        '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
-        '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
-        '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
-        '/api/study-research/findings': {GET:()=>draftCall(()=>studyDerivedFindings.read({projectKey:url.searchParams.get('projectKey'),parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/study-research/choices': {GET:()=>draftCall(()=>studyResearchChoices.read({projectKey:url.searchParams.get('projectKey'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyResearchChoices.save(input))},
-        '/api/study-draft/root-recovery': {GET:()=>draftCall(()=>studyDrafts.inspectRoots({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyDrafts.recoverRoots(input))},
-        '/api/study/source-context': {GET:async()=>{if([...url.searchParams.keys()].some(key=>key!=='id')||url.searchParams.getAll('id').length!==1)throw new StateError('Select one existing Library source.',400);const source=await library.snapshot(url.searchParams.get('id'),{includeBody:true});return {sourceId:source.id,hash:source.hash,title:source.title||source.name||'Source',text:typeof source.text==='string'?source.text:null,missing:!!source.missing};}},
-        '/api/study/media-usage': {GET:()=>draftCall(()=>{if(!studyMediaUsage)throw new StateError('Saved media usage is unavailable.',503);const input=Object.fromEntries(url.searchParams);input.sourceIds=url.searchParams.getAll('sourceId');delete input.sourceId;return studyMediaUsage.read(input);})},
-        '/api/study/media-usage/resolve': {GET:()=>draftCall(()=>{if(!studyMediaUsage)throw new StateError('Saved media usage is unavailable.',503);return studyMediaUsage.resolve(Object.fromEntries(url.searchParams));})},
-        '/api/study/share/recipients': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.list(Object.fromEntries(url.searchParams));})},
-        '/api/study/share': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.read(Object.fromEntries(url.searchParams));})},
-        '/api/study/share/save': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.save(input);})},
-        '/api/study/share/fact': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.appendFact(input);})},
-        '/api/study/share/undo': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.undo(input);})},
-        '/api/study/outputs': {GET:()=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.read({rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('selectedOutputId')?{selectedOutputId:url.searchParams.get('selectedOutputId')}:{})});})},
-        '/api/study/outputs/review-words': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.reviewCarouselWords(input);})},
-        '/api/study/outputs/export': {POST:input=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const {kind,...payload}=input;if(!['article','carousel','post','product-listing'].includes(kind))throw new StateError('Choose a supported output export.',400);const result=kind!=='carousel'?await studyOutputExports.saveArticle(payload):await studyOutputExports.saveCarousel(payload,'http://127.0.0.1:'+server.address().port);return decorateOutputExports(result,input);})},
-        '/api/study/outputs/exports': {GET:()=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const input=outputQuery();return decorateOutputExports(await studyOutputExports.list(input),input);})},
-        '/api/study/outputs/create': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.create(input);})},
-        '/api/study/outputs/save': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.save(input);})},
-        '/api/study/outputs/refresh': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.refreshSelectedArticle(input);})},
-        '/api/study/outputs/undo': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.undo(input);})},
-        '/api/study/outputs/export-check': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.assertExport(input);})},
-        '/api/study-draft/catalog': {GET:()=>draftCall(()=>studyDrafts.catalog())},
-        '/api/study-draft/read': {GET:()=>draftCall(()=>studyDrafts.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/study-draft/create-collection': {POST:input=>draftCall(()=>createStudyCollection(input))},
-        '/api/study-draft/open': {POST:input=>draftCall(()=>studyDrafts.openCopy(input))},
-        '/api/study-draft/save': {POST:input=>draftCall(()=>studyDrafts.save(input))},
-        '/api/study-draft/history-preview': {POST:input=>draftCall(()=>studyDrafts.previewVersion(input))},
-        '/api/study-draft/history-restore': {POST:input=>draftCall(()=>studyDrafts.restoreVersion(input))},
-        '/api/study-draft/undo': {POST:input=>draftCall(()=>studyDrafts.undo(input))},
-        '/api/study-draft/inspect': {GET:()=>draftCall(()=>studyDrafts.inspect({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),operationId:url.searchParams.get('operationId')})),POST:input=>draftCall(()=>studyDrafts.inspect(input))},
-        '/api/study-draft/recover': {POST:input=>draftCall(()=>studyDrafts.recover(input))},
-        '/api/study-draft/check': {GET:()=>draftCall(()=>studyDraftChecks.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})})),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
-
-        '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
-        '/api/source-sessions/edit': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.edit(input);}},
-        '/api/source-sessions/undo': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.undo(input);}},
-        '/api/material/folder/open': {POST:input=>materialFolder.open(input)},
-        '/api/material/album': {POST:input=>materialAlbums.add(input)},
-        '/api/first-flow/binding': {GET:()=>studyBindings.lookup({projectKey:url.searchParams.get('projectKey')})},
-        '/api/first-flow/select': {POST:input=>studyBindings.select(input)},
-        '/api/first-flow': {GET:async()=>({...await firstFlow.get({projectId:url.searchParams.get('projectId')||store.get().project.id}),researchAvailable:researchEnabled})},
-        '/api/first-flow/source-review': {POST:input=>firstFlow.reviewSources(input)},
-        '/api/first-flow/attach': {POST:input=>firstFlow.attach(input)},
-        '/api/first-flow/prepare': {POST:researchAction(input=>firstFlow.prepare(input))},
-        '/api/first-flow/run': {POST:researchAction(input=>firstFlow.run(input))},
-        '/api/first-flow/pick': {POST:researchAction(input=>firstFlow.pick(input))},
-        '/api/first-flow/check': {POST:researchAction(input=>firstFlow.check(input))},
-        '/api/first-flow/decide-line': {POST:researchAction(input=>firstFlow.decideLine(input))},
-        '/api/first-flow/reinspect': {POST:researchAction(input=>firstFlow.reinspect(input))},
-        '/api/pieces/switch': {POST:input=>store.switchPiece(input)},
-        '/api/research-material': {GET:()=>researchMaterial.list(store.get().project.id)},
-        '/api/research-material/claim': {POST:input=>researchMaterial.saveClaim(researchInput(input))},
-        '/api/research-material/account': {POST:input=>researchMaterial.saveAccount(researchInput(input))},
-        '/api/research-material/concept': {POST:input=>researchMaterial.saveConcept(researchInput(input))},
-        '/api/research-material/position': {POST:input=>researchMaterial.savePosition(researchInput(input))},
-        '/api/research-material/preview': {POST:input=>researchMaterial.previewImport(researchInput(input))},
-        '/api/research-material/import': {POST:input=>researchMaterial.import(researchInput(input))},
-        '/api/research-material/inherit': {POST:input=>researchMaterial.inherit(researchInput(input))},
-        '/api/research-material/review': {POST:input=>researchMaterial.review(researchInput(input))},
-        '/api/requests/preview': { POST: input => requests.preview(input) },
-        '/api/requests/recent': { GET: () => requests.recent() },
-        '/api/exports': { GET: () => exports.list(), POST: async input => {await guardCarouselOutput(input);return exports.save(input);} },
-        '/api/research/answers/recent': {GET:()=>researchAnswers.recent(url.searchParams.get('projectId')||store.get().project.id)},
-        '/api/research/answers/preview': {POST:input=>researchAnswers.preview(researchInput(input))},
-        '/api/ai/execution/capabilities': {GET:()=>execution.capabilities()},
-        '/api/passage/revisions/recent': {GET:()=>passageRevisions.recent()},
-        '/api/passage/revisions/preview': {POST:input=>passageRevisions.preview(input)},
-        '/api/article/visual/recent': {GET:()=>articleVisual.recent()},
-        '/api/article/visual/preview': {POST:input=>articleVisual.preview(input)},
-        '/api/article/make/recent': {GET:()=>articleMake.recent()},
-        '/api/article/make/preview': {POST: input => articleMake.preview(input, `http://${request.headers.host}`)},
-        '/api/carousel/make/recent': {GET:()=>carouselMake.recent()},
-        '/api/carousel/make/preview': {POST: async input => {if(input.stage==='look')await guardCarouselOutput(input);return carouselMake.preview(input);}},
-        '/api/carousel/exports': {GET:()=>carousel.list(),POST:async input=>{await guardCarouselOutput(input);return carousel.save(input,`http://${request.headers.host}`);}},
-        '/api/ingestion': { GET: () => ingestion.list() },
-        '/api/ingestion/retry': { POST: input => ingestion.retry(input.id) },
-        '/api/transcript-tools/connect': {POST:input=>transcriptTools.connect(input,url.origin)},
-        '/api/recordings': { GET: () => recordings.list() },
-        '/api/capabilities': { GET: async () => ({ library: 'file-backed', webExtraction: { configured: true, backend: extraction ? 'WordForge Firecrawl' : 'i64os Readability', local: ingestion.capabilities.article }, youtube: ingestion.capabilities.youtube, transcription: (await recordings.list()).capability, guidance: 'shared-own-files', sharedArticles: {enabled:sharedArticles} }) },
-      };
+      const routes = commandRoutes({ url, request, server, outputQuery, decorateOutputExports, describe: () => describeCapabilities() });
       const passageMatch=pathname.match(/^\/api\/passage\/revisions\/([a-f0-9-]{36})(?:\/(send|run))?$/);
       if(passageMatch){
         const [,id,action]=passageMatch;
         if(!action&&request.method==='GET')return json(response,200,await passageRevisions.get(id));
         if(['send','run'].includes(action)&&request.method==='POST'){
-          checkWriteOrigin(request,server);
+          checkWrite(request, server);
           if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
           return json(response,200,await passageRevisions[action](id,await body(request)));
         }
         throw new StateError('Method is not supported.',405);
       }
       const researchAnswerMatch=pathname.match(/^\/api\/research\/answers\/([a-f0-9-]{36})(?:\/(run|keep|markdown))?$/);
-      if(researchAnswerMatch){const [,id,action]=researchAnswerMatch;if(!action&&request.method==='GET')return json(response,200,await researchAnswers.get(id));if(action==='markdown'&&request.method==='GET'){response.writeHead(200,{'Content-Type':'text/markdown; charset=utf-8','Cache-Control':'no-store'});return response.end(await researchAnswers.markdown(id));}if(['run','keep'].includes(action)&&request.method==='POST'){checkWriteOrigin(request,server);const input=await body(request);return json(response,200,await researchAnswers[action](id,input));}throw new StateError('Use a supported research answer action.',405);}
+      if(researchAnswerMatch){const [,id,action]=researchAnswerMatch;if(!action&&request.method==='GET')return json(response,200,await researchAnswers.get(id));if(action==='markdown'&&request.method==='GET'){response.writeHead(200,{'Content-Type':'text/markdown; charset=utf-8','Cache-Control':'no-store'});return response.end(await researchAnswers.markdown(id));}if(['run','keep'].includes(action)&&request.method==='POST'){checkWrite(request, server);const input=await body(request);return json(response,200,await researchAnswers[action](id,input));}throw new StateError('Use a supported research answer action.',405);}
       const articleVisualMatch=pathname.match(/^\/api\/article\/visual\/([a-f0-9-]{36})(?:\/(send|run))?$/);
       if(articleVisualMatch){
         const [,id,action]=articleVisualMatch;
         if(!action&&request.method==='GET')return json(response,200,await articleVisual.get(id));
         if(['send','run'].includes(action)&&request.method==='POST'){
-          checkWriteOrigin(request,server);
+          checkWrite(request, server);
           if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
           return json(response,200,await articleVisual[action](id,await body(request)));
         }
@@ -514,7 +452,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if(!action&&request.method==='GET')return json(response,200,await articleMake.get(id));
         if(action==='context'&&request.method==='GET')return json(response,200,await articleMake.context(id));
         if(['send','run','propose','accept'].includes(action)&&request.method==='POST'){
-          checkWriteOrigin(request,server);
+          checkWrite(request, server);
           if(!(request.headers['content-type']||'').startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
           return json(response,200,await articleMake[action==='accept'?'acceptFirstDraft':action](id,await body(request)));
         }
@@ -525,7 +463,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         const [,id,action]=makeMatch;
         if(!action&&request.method==='GET')return json(response,200,await carouselMake.get(id));
         if(['send','run'].includes(action)&&request.method==='POST'){
-          checkWriteOrigin(request,server);
+          checkWrite(request, server);
           if(!(request.headers['content-type']||'').startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
           return json(response,200,await carouselMake[action](id,await body(request)));
         }
@@ -535,7 +473,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       if (terminalMatch) {
         const [, id, action] = terminalMatch;
         if (!action && request.method === 'GET') return json(response, 200, terminal.get(id));
-        if (action && request.method === 'POST') { checkWriteOrigin(request, server); if (!(request.headers['content-type'] || '').startsWith('application/json')) throw new StateError('Use Content-Type: application/json.',415); const input=await body(request); return json(response,200,action==='input'?await terminal.input(id,input):action==='resize'?terminal.resize(id,input):terminal.stop(id)); }
+        if (action && request.method === 'POST') { checkWrite(request, server); if (!(request.headers['content-type'] || '').startsWith('application/json')) throw new StateError('Use Content-Type: application/json.',415); const input=await body(request); return json(response,200,action==='input'?await terminal.input(id,input):action==='resize'?terminal.resize(id,input):terminal.stop(id)); }
         throw new StateError('Method is not supported.',405);
       }
       function outputQuery(){return {rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),selectedOutputId:url.searchParams.get('selectedOutputId')};}
@@ -606,7 +544,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       }
       if (pathname === '/api/media') {
         if (request.method !== 'POST') throw new StateError('Method is not supported.', 405);
-        checkWriteOrigin(request, server);
+        checkWrite(request, server);
         const type = (request.headers['content-type'] || '').split(';')[0];
         const extensions = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
         if (!extensions[type]) throw new StateError('Upload a JPEG, PNG or WebP image.', 415);
@@ -624,10 +562,11 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (!handler) { response.setHeader('Allow', Object.keys(routes[pathname]).join(', ')); throw new StateError('Method is not supported.', 405); }
         let input;
         if (['POST','DELETE'].includes(request.method)) {
-          checkWriteOrigin(request, server);
+          if (request.method === 'POST' && READ_ONLY_POSTS.has(pathname)) checkWriteOrigin(request, server); else checkWrite(request, server);
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
           input = await body(request, pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');
+          if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
         }
         return json(response, 200, await handler(input));
       }
@@ -639,12 +578,28 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       let file;try{file=await staticFile(path.resolve(publicDir),pathname);}catch(error){if((error.status!==404&&error.code!=='ENOENT')||!/^\/(assets|ig-assets)\//.test(pathname))throw error;file=await staticFile(path.join(root,'public'),pathname);}
       response.writeHead(200, { 'Content-Type': file.type, 'Content-Length': file.contents.length, 'Cache-Control': 'no-cache' });
       response.end(request.method === 'HEAD' ? undefined : file.contents);
+  }
+  const server = http.createServer(async (request, response) => {
+    if(packageView&&request.method==='GET'&&new URL(request.url,'http://localhost').pathname==='/document-study/package-config.js'){response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('Referrer-Policy', 'no-referrer');
+    response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'"+(new URL(request.url,'http://localhost').pathname==='/document-study/index.html'?" 'unsafe-inline'":"")+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    try {
+      if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.', 403);
+      const mutation = !['GET', 'HEAD', 'OPTIONS'].includes(request.method);
+      const actorContext = resolveRequestActor(request, { appOrigins: localAuthorities(server).map(host => `http://${host}`) });
+      if (mutation) guardHumanOnly(request.method, (request.url || '/').split('?')[0], actorContext);
+      request.arActor = actorContext;
+      return await (actorContext ? withActor(actorContext, () => routeRequest(request, response)) : routeRequest(request, response));
     } catch (error) {
       if (response.headersSent || response.destroyed) return;
       if (['ENOENT', 'ENOTDIR', 'EISDIR'].includes(error.code)) return json(response, 404, { error: 'File was not found.' });
       const status = error instanceof StateError ? error.status : 500;
       if (status === 500) console.error('Local workspace request failed:', error.message);
-      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}) });
+      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}),...(error.holder?{holder:error.holder}:{}) });
+    } finally {
+      // After the answer: tell watchers what changed (and, from B8, journal it).
+      try { afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }
     }
   });
   attachTerminalSockets(server, terminal, { checkHost: request => { if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.',403); }, checkOrigin: request => checkWriteOrigin(request,server) });
@@ -659,7 +614,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   };
   server.on('close',()=>execution.dispose());
   const close=server.close;
-  server.close=function(callback){return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
+  server.close=function(callback){for(const client of [...sseClients]){client.close();client.response.end();}return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
   server.closeWorkspace=()=>store.close();
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;

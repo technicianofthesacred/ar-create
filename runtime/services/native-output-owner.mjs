@@ -3,6 +3,7 @@ import {validateCarouselTypography} from "../src/workspaces/carousel-typography.
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { outputRecordsExpected, outputPrivatePrefix } from "../output-records.mjs";
+import { provenance } from "./actor.mjs";
 const stable = (v) => JSON.stringify(v, (_, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
 const hash = (v) => createHash("sha256").update(typeof v === "string" ? v : stable(v)).digest("hex");
 const same = (a, b) => stable(a) === stable(b), clone = (v) => structuredClone(v), uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
@@ -282,7 +283,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const outputs = selected ? doc.outputs.map((o) => o.id === id ? output : o) : doc.outputs.concat(output), now = (/* @__PURE__ */ new Date()).toISOString(), owner = textKind(output.kind) ? { kind: "native", bindingId: binding, parentStudyId: input.parentStudyId } : { kind: "carousel-words", projectId: t.projectId, documentId: t.documentId, outputId: id };
       const index = doc.nativeOutputIndex || { schema: "ar-create.native-output-index.v1", revision: 0, records: [] };
       const nextRecord = { outputId: id, wordOwner: owner, captureId, proofId: captureId, historyIds: [...selected?.record.historyIds || [], input.operationId], createdAt: selected?.record.createdAt || now, updatedAt: now };
-      const history = { schema: "ar-create.native-output-command.v1", group: group(input), commandHash, outputId: id, captureId, beforeArrangement: selected ? arrangement(selected.output) : null, beforeAssets: selected?.private.proof.assets ?? null, afterHash: hash(output) };
+      const history = { schema: "ar-create.native-output-command.v1", provenance: provenance(), group: group(input), commandHash, outputId: id, captureId, beforeArrangement: selected ? arrangement(selected.output) : null, beforeAssets: selected?.private.proof.assets ?? null, afterHash: hash(output) };
       const extraFiles = [{ relativePath: privatePath(t, "history", input.operationId), contents: JSON.stringify(history), expectedHash: null }];
       if (action === "create" || action === "refresh" || captureId !== selected.record.captureId) extraFiles.push({ relativePath: privatePath(t, "captures", captureId), contents: JSON.stringify(privateValue), expectedHash: privateRead(t, "captures", captureId)?.hash ?? null });
       return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, finalCheck: async () => {

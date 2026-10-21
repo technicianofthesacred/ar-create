@@ -32,3 +32,12 @@ scripts/gen-capabilities.mjs
 
 # Read-only projection rebuilt from maintained compositionSpec.ts.
 runtime/services/media-article-spec.mjs
+.test-home/
+
+# Synthetic magazine vault fixtures, built by the tests (never committed).
+.scratch/
+runtime/public/assets/study-output-canvas.css
+runtime/public/assets/study-output-canvas.js
+runtime/services/native-output-helpers.mjs
+runtime/services/native-output-owner.test.mjs
+runtime/services/render-helper.mjs

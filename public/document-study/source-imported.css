@@ -24,3 +24,9 @@
 .source-reader-original,.source-reader-details,.source-reader-legacy { margin:.5rem 0; font-size:.9em; }
 .source-reader-original p { white-space:pre-wrap; }
 @media(max-width:600px) { .source-reader-selector { flex-basis:100%; align-items:flex-start; } .source-reader-title { align-items:flex-start; } }
+
+/* One transcript-wide original-wording toggle (review A11); each corrected line shows its original only when it is on. */
+.source-reader-original-toggle{align-self:flex-start;min-height:36px;margin:.25rem 0 .5rem;padding:0 12px;border:1px solid var(--c3-line2,var(--line));border-radius:6px;background:none;color:var(--ink);font:500 13px/1 var(--ar-ui);cursor:pointer}
+.source-reader-original-toggle[aria-pressed="true"]{background:color-mix(in srgb,var(--warm) 16%,transparent)}
+p.source-reader-original{margin:.15rem 0 .6rem;color:var(--dim)}
+.source-reader-original-l{font-weight:600;margin-right:.25rem}

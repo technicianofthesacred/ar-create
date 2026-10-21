@@ -2,33 +2,33 @@
 
 AR Create is part of the i64 OS tool family. This standalone private repository is its canonical code/design container; i64 OS provides the host integration. Private content, the installed runtime and unfinished external candidates do not belong in this checkout. The authorized permanent local service/data home is separate from the source repository.
 
-## Supporting documents for the next Claude Design pass
+## Supporting documents
 
-Read the handoff's brief first, then follow this index when a function or its reason needs more depth. The 20 October design-first instruction means unfinished connections do not block design; their actual states must remain visible. These documents are supplied together, not as a promise that every requirement is implemented.
+Start at [AGENTS.md](../AGENTS.md) and [START.md](START.md); follow this index when a function or its reason needs more depth. Unfinished connections never block design work, and their actual states stay visible. These documents are supplied together, not as a promise that every requirement is implemented. What works today: [status/CURRENT.md](status/CURRENT.md).
 
 | Question | Read | What it explains |
 | --- | --- | --- |
-| Why are we building this, and what must it preserve? | [Product purpose and pillars](PRODUCT.md) | Author-led creation, the seven human contributions, adopted decisions and their reasons, independent learning and independent outputs. Latest dated human direction takes precedence over older sequencing. |
-| What belongs on each screen, and why? | [All twelve section briefs](sections/README.md) | Each section's purpose, core question, material, tools, decisions, result, constraints and dated refinements. The sections are accessible checkpoints, not mandatory steps. |
-| Which functions work, and which still need connecting? | [Single function integration list](DESIGN-PASS-ADDITIONS.md) | Purpose/action/context/state map and working, prepared-unmounted, planned or external limits. A visible control is not evidence that its operation ran. |
-| How do the functions join up? | [Seven connected flow diagrams](FUNCTION-FLOW.md) | Both agent/app entrances, collecting and learning, independent expressions, editing/media/export, safeguards, organizational relationships and returning to work. |
-| How are the files and content related? | [File and identity contract](FILE-CONTRACT-MAP.md) | Library, Collections, Pieces and Projects mapped to existing owners; one source, exact references, scope/revision, supported moves and explicit interoperability limits. |
-| How should the next pass combine these ideas? | [Connected next-pass plan](superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md) | Invented tea scenario, personal contributions, Library alongside/on demand/full access, natural detours and current-understanding rules. Adopted requirements remain distinct from unresolved layout proposals. |
-| How should the interface speak to the person? | [Human experience rules](HUMAN-EXPERIENCE.md) | Plain purpose/action language, useful entry and resume, readable work, honest states and progressive disclosure. |
-| How do builders preserve and connect the real functions? | [Developer source map and setup](../CLAUDE-DEVELOPMENT.md), [source manifest](../source-manifest.json) | Exact packaged source, maintained components/services, synthetic setup, revision/Undo/conflict contracts, private exclusions and focused verification. Older baseline tables do not override the handoff's pinned current-status record. |
+| Why are we building this, and what must it preserve? | [Product purpose and pillars](product/PRODUCT.md) | Author-led creation, the seven human contributions, adopted decisions and their reasons, independent learning and independent outputs. Latest dated human direction takes precedence over older sequencing. |
+| What belongs on each screen, and why? | [All twelve section briefs](product/sections/README.md) | Each section's purpose, core question, material, tools, decisions, result, constraints and dated refinements. The sections are accessible checkpoints, not mandatory steps. |
+| Which functions work, and which still need connecting? | [Single function integration list](product/DESIGN-PASS-ADDITIONS.md) | Purpose/action/context/state map and working, prepared-unmounted, planned or external limits. A visible control is not evidence that its operation ran. |
+| How do the functions join up? | [Seven connected flow diagrams](product/FUNCTION-FLOW.md) | Both agent/app entrances, collecting and learning, independent expressions, editing/media/export, safeguards, organizational relationships and returning to work. |
+| How are the files and content related? | [File and identity contract](product/FILE-CONTRACT-MAP.md) | Library, Collections, Pieces and Projects mapped to existing owners; one source, exact references, scope/revision, supported moves and explicit interoperability limits. |
+| How should the next pass combine these ideas? | [Connected next-pass plan](product/specs/2026-10-18-connected-library-ideas-tea-design.md) | Invented tea scenario, personal contributions, Library alongside/on demand/full access, natural detours and current-understanding rules. Adopted requirements remain distinct from unresolved layout proposals. |
+| How should the interface speak to the person? | [Human experience rules](product/HUMAN-EXPERIENCE.md) | Plain purpose/action language, useful entry and resume, readable work, honest states and progressive disclosure. |
+| How do builders preserve and connect the real functions? | [Developer source map and setup](DEVELOPMENT.md), [source manifest](../source-manifest.json) | Exact packaged source, maintained components/services, synthetic setup, revision/Undo/conflict contracts, private exclusions and focused verification. Older baseline tables do not override the handoff's pinned current-status record. |
 
 Use these as complementary authorities: product/section briefs state intent and rationale; the integration list states measured coverage; code defines the current contract. A dated implementation receipt may prove a bounded behavior, not every intended feature. Private operational receipts, real transcripts, manuscripts, media, credentials and decision histories are deliberately absent from this code-only package. Use its invented fixtures for design examples. Claude Design does not gain access to localhost, private folders or agent accounts from these documents.
 
 | Area | Canonical code-only location | Use |
 |---|---|---|
 | Application source | `public/document-study/`, `runtime/`, `mcp/study/` | Existing Document Study UI, file/workflow services and fixed-identity assistant adapter |
-| Product purpose and requirements | [What we are building](PRODUCT.md) | Pillars, shared acceptance, twelve-section map and direction-to-checklist update contract |
-| Living intent/design | [Section brief index](sections/README.md) | Twelve authoritative developer briefs, updated from Product Direction; not completion claims |
-| Developer setup/source map | [Claude guide](../CLAUDE-DEVELOPMENT.md) | Root-local commands, preserved behavior and focused checks |
+| Product purpose and requirements | [What we are building](product/PRODUCT.md) | Pillars, shared acceptance, twelve-section map and direction-to-checklist update contract |
+| Living intent/design | [Section brief index](product/sections/README.md) | Twelve authoritative developer briefs, updated from Product Direction; not completion claims |
+| Developer setup/source map | [Development guide](DEVELOPMENT.md) | Root-local commands, preserved behavior and focused checks |
 | Synthetic examples | `fixtures/synthetic-study-data.js`, `scripts/demo.mjs`, `tests/` | Invented projects and temporary test storage; no actual interviews/media |
 | Host-only configuration | `config.mjs`, `config.example.json`, `serve.mjs` | Explicit private roots/catalogs/tools, data outside checkout, loopback candidate ports |
 | Source freeze | `source-manifest.json` | Reviewed included files, adaptations, completed delta pins and dependency overlay |
-| Repository history | [Provenance](REPOSITORY-PROVENANCE.md) | AR Create-only history extracted from the preserved i64 package |
+| Repository history | [Provenance](history/REPOSITORY-PROVENANCE.md) | AR Create-only history extracted from the preserved i64 package |
 | i64 connection | [Host integration](I64-INTEGRATION.md) | Launcher/routing boundaries; authorized reversible local service move, completion subject to owner proof |
 | Generated commands | [Capability index](CAPABILITIES.md) | Regenerate with `npm run build` then `npm run capabilities`; review manifest changes |
 
@@ -40,7 +40,7 @@ Media/template experiments, source restoration, private playback/ASR tooling and
 
 ## External management and proof
 
-Product Direction owns human intent, section briefs and visual acceptance. Delivery Manager coordinates execution and owner receipts. The existing integrator alone owns live shared wiring and activation. Delivery also owns AI connection and code-only repository/release preparation, assigning bounded background helpers. Prior Internal chats are retained history, not routine owners.
+Roles named in older documents (Product Direction, Delivery, Start Here, the sole integrator) are chat roles, not files. Product Direction owns human intent, the section briefs and visual acceptance. Delivery coordinates execution; its public list is [TODO.md](../TODO.md). The integrator is whoever runs `scripts/release.mjs`, recorded in `RELEASE.json` as `builtBy`; nothing else activates the installed app. Prior internal chats are retained history, not routine owners.
 
 External manager working drafts, installed-service handoffs, private-data preservation receipts and native proof/screenshots remain outside Git. The local repository-separation receipt names their current locations for the managers; it is deliberately not committed because private operational/proof directories are not application source. Use the manager's latest receipt rather than inventing an external path or copying an archive.
 

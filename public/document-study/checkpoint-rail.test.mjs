@@ -18,7 +18,7 @@ function fixture(opts){
  w.current=()=>w.state.projects[0];
  w.phases=[];w.viewPhase=n=>w.phases.push(n);
  w.render=()=>{w.document.getElementById('app').innerHTML=grouped(opts);};
- w.eval(code);
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));w.eval(code);
  return {dom,w,d:w.document};
 }
 
@@ -44,12 +44,15 @@ test('every checkpoint still calls viewPhase(n) directly; groups are not gates',
  assert.equal(d.querySelectorAll('.workflowStep[disabled]').length,0);
 });
 
-test('state dot reads existing evidence only: current step, retained record, or none',()=>{
- const {d}=fixture({current:6,record:[3]});
- const dot=n=>[...d.querySelectorAll('.workflowStep')].find(b=>b.querySelector('.stepNumber').textContent==String(n)).querySelector('.cr-dot').dataset.state;
- assert.equal(dot(6),'current');
- assert.equal(dot(3),'record');
- assert.equal(dot(9),'none');
+test('one step model: no second "current" mark and no unexplained dot; one state word comes from the piece state',()=>{
+ const {w,d}=fixture({current:6,record:[3]});
+ assert.equal(d.querySelectorAll('.workflowStep.isCurrent,.workflowStep .currentMark,.workflowStep .cr-dot').length,0);
+ assert.equal(d.querySelectorAll('.workflowStep .tr-state').length,0,'no piece state, no invented words');
+ w.c3PieceState={read:()=>({}),word:n=>n===5?{word:'unsaved',title:'Unsaved changes in the draft'}:{word:'',title:''},load(){}};
+ w.checkpointRail.decorate();
+ const words=[...d.querySelectorAll('.workflowStep .tr-state')];
+ assert.equal(words.length,1);assert.equal(words[0].textContent,'unsaved');assert.equal(words[0].title,'Unsaved changes in the draft');
+ assert.equal(words[0].closest('.workflowStep').dataset.state,'unsaved');
 });
 
 test('the phone picker names the viewed checkpoint and opens and closes the list',()=>{
@@ -73,4 +76,14 @@ test('a full re-render is decorated again; an incomplete bar is left where it wa
  partial.w.checkpointRail.decorate();
  assert.equal(partial.d.querySelector('.workflowNavigation').parentElement,partial.d.querySelector('.workspace'));
  assert.equal(partial.d.querySelectorAll('.cr-icon').length,0);
+});
+
+test('phone: the picker opens the whole sidebar as a sheet; choosing a step or tapping outside closes it',async()=>{
+ const {w,d}=fixture();
+ const picker=d.querySelector('.cr-picker');picker.click();
+ const nav=d.querySelector('.workflowNavigation');assert.ok(nav.classList.contains('cr-open'));assert.equal(picker.getAttribute('aria-expanded'),'true');
+ [...d.querySelectorAll('.workflowStep')][10].click();await new Promise(r=>setTimeout(r,0));
+ assert.equal(nav.classList.contains('cr-open'),false);assert.deepEqual(JSON.parse(JSON.stringify(w.phases)),[11]);
+ picker.click();assert.ok(nav.classList.contains('cr-open'));
+ d.getElementById('manuscript').click();assert.equal(nav.classList.contains('cr-open'),false,'a tap outside closes it');
 });

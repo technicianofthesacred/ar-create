@@ -1,0 +1,69 @@
+/* One shell render. The chrome around the work is three regions and one bar: the sidebar, the bar, the work column and,
+   only where passages are anchored, the inspector. The chrome layers used to each wrap render() and watch #app with their
+   own observer, and each appended its own bar; now each registers one mount here, and after every render and after any
+   change inside #app the shell runs the mounts once, in order. Content owners (study.js, draft-flow, photos, outputs...)
+   keep producing the work column. Load before the chrome layers (checkpoint-rail and later). */
+(()=>{
+ if(window.c3Shell)return;
+ const mounts=[];let queued=false,installed=false,running=false;
+ function run(){
+  if(running)return;running=true;
+  try{for(const m of mounts){try{m.fn();}catch(error){console.error('AR Create shell: the '+m.name+' region could not mount.',error);}}}
+  finally{running=false;}
+ }
+ function schedule(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;run();});}
+ function install(){
+  if(installed||typeof window.render!=='function')return;installed=true;
+  const previous=window.render;
+  window.render=function(...args){const result=previous.apply(this,args);if(result?.then)return result.then(value=>{run();return value;});run();return result;};
+  new MutationObserver(records=>{if(records.every(r=>mounts.some(m=>m.ignore&&r.target.closest?.(m.ignore))))return;schedule();}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
+ }
+ // order: lower mounts first. ignore: a selector whose own repaints never need another pass.
+ function register(name,fn,{order=50,ignore=''}={}){
+  const at=mounts.findIndex(m=>m.name===name);if(at>=0)mounts.splice(at,1);
+  mounts.push({name,fn,order,ignore});mounts.sort((a,b)=>a.order-b.order);install();
+  try{fn();}catch(error){console.error('AR Create shell: the '+name+' region could not mount.',error);}
+ }
+ // Scroll something into view inside the work column and mark its arrival.
+ function reveal(node){if(!node)return;node.scrollIntoView?.({block:'center'});node.querySelector?.('summary,button,input,textarea,select')?.focus?.({preventScroll:true});}
+ // Who wrote something, in plain words. The UI is always Adrian; another window or the command line still reads "You".
+ const NAMES={'agent:claude-code':'Claude','agent:claude-design':'Claude Design','agent:codex':'Codex','agent:hermes':'Hermes','agent:grok':'Grok','agent:chatgpt':'ChatGPT'};
+ function actorName(actor){actor=String(actor||'');if(actor.startsWith('human:'))return 'You';if(NAMES[actor])return NAMES[actor];if(actor.startsWith('cron:'))return 'Scheduled job '+actor.slice(5);if(actor.startsWith('import:'))return 'Import from '+actor.slice(7);if(actor.startsWith('release:'))return 'Release '+actor.slice(8,15);if(actor.startsWith('agent:'))return actor.slice(6);return 'Someone earlier';}
+ const isAgent=actor=>String(actor||'').startsWith('agent:');
+ // Live sync: one event stream for the whole app (GET /api/events). Each surface subscribes for the records it shows and
+ // calls its own existing refresh; a reset (server restarted, or this window fell too far behind) asks every surface to
+ // re-read what it holds. Reconnects carry the last cursor, so nothing in between is lost. Without EventSource (tests,
+ // old browsers) the app keeps its earlier refresh-on-focus behaviour.
+ const live=(()=>{
+  const listeners=new Set();let source=null,cursor=null,bootId=null,connected=false,retry=0,timer=null,stopped=false;
+  const matches=(filter,event)=>(!filter.kind||event.scope?.kind===filter.kind)&&(!filter.id||event.scope?.id===filter.id)&&(!filter.kinds||filter.kinds.some(k=>k.endsWith('*')?String(event.kind).startsWith(k.slice(0,-1)):event.kind===k));
+  function dispatch(event){for(const l of [...listeners]){if(event.reset||matches(l.filter,event)){try{l.fn(event);}catch(error){console.error('AR Create live sync: a surface could not refresh.',error);}}}window.dispatchEvent(new CustomEvent('ar-live-change',{detail:event}));}
+  function reset(info){cursor=Number.isSafeInteger(info?.cursor)?info.cursor:cursor;if(info?.bootId)bootId=info.bootId;dispatch({reset:true,bootId,cursor});}
+  let learning=null;
+  async function connect(){
+   if(stopped||typeof EventSource!=='function')return;
+   clearTimeout(timer);source?.close?.();source=null;
+   // Learn where the stream stands first, so a drop before the first change still resumes from the right place.
+   if(cursor==null&&typeof fetch==='function'){learning||=fetch('/api/events/since?limit=1').then(r=>r.ok?r.json():null).then(v=>{if(cursor==null&&Number.isSafeInteger(v?.cursor)){cursor=v.cursor;bootId=v.bootId||bootId;}}).catch(()=>{}).finally(()=>{learning=null;});await learning;if(stopped||source)return;}
+   const es=new EventSource('/api/events'+(cursor!=null?'?since='+encodeURIComponent(cursor):''));source=es;
+   es.onopen=()=>{connected=true;retry=0;window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:true}}));};
+   es.addEventListener('change',message=>{let event;try{event=JSON.parse(message.data);}catch{return;}
+    if(bootId&&event.bootId&&event.bootId!==bootId){bootId=event.bootId;cursor=event.cursor;dispatch({reset:true,bootId,cursor});return;}
+    bootId=event.bootId||bootId;if(cursor!=null&&Number(event.cursor)<=cursor)return;cursor=Number(event.cursor);dispatch(event);});
+   es.addEventListener('reset',message=>{let info={};try{info=JSON.parse(message.data);}catch{}reset(info);});
+   // The browser's own retry would replay the first URL's cursor; reopen with the newest one instead.
+   es.onerror=()=>{const was=connected;connected=false;es.close();if(source===es)source=null;if(was)window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:false}}));if(stopped)return;retry=Math.min(retry+1,6);timer=setTimeout(connect,Math.min(30000,1000*2**(retry-1)));};
+  }
+  return {
+   /** fn(event) for each change matching {kind?, id?, kinds?}; fn({reset:true}) when everything should be re-read. */
+   on(filter,fn){const l={filter:filter||{},fn};listeners.add(l);if(!source&&!stopped)connect();return ()=>listeners.delete(l);},
+   connected:()=>connected,cursor:()=>cursor,connect,
+   stop(){stopped=true;clearTimeout(timer);source?.close?.();source=null;connected=false;},
+   // Back from the page cache: the stream was closed meanwhile, so everything is re-read.
+   resume(){if(!stopped)return;stopped=false;dispatch({reset:true,bootId,cursor});connect();},
+  };
+ })();
+ if(typeof window.addEventListener==='function'){window.addEventListener('pagehide',()=>live.stop());window.addEventListener('pageshow',event=>{if(event.persisted)live.resume();});}
+ window.c3Shell={register,run,schedule,reveal,mounts:()=>mounts.map(m=>m.name),live,actorName,isAgent};
+ if(typeof EventSource==='function')queueMicrotask(()=>live.connect());
+})();

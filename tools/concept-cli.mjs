@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { validActor, actorHeaders } from '../agents/lib/actors.mjs';
 
 const COMMANDS = new Set(['list', 'create', 'read', 'library-search', 'library-read', 'save', 'status']);
 const SCHEMAS = {
@@ -63,7 +64,7 @@ function parseArgs(args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '--help' || arg === '-h') return { help: true };
-    if (['--url', '--config', '--input'].includes(arg)) {
+    if (['--url', '--config', '--input', '--actor'].includes(arg)) {
       const key = arg.slice(2);
       if (Object.hasOwn(options, key) || !args[i + 1] || args[i + 1].startsWith('--')) throw new Error(`Provide ${arg} exactly once with its value.`);
       options[key] = args[++i];
@@ -85,7 +86,7 @@ export async function run(args, { fetchImpl = fetch, stdin = async () => {
   return Buffer.concat(chunks).toString('utf8');
 } } = {}) {
   const options = parseArgs(args);
-  if (options.help) return { exitCode: 0, result: { usage: 'node tools/concept-cli.mjs --url http://127.0.0.1:PORT COMMAND [--input FILE|-]', commands: [...COMMANDS], config: 'Use --config FILE instead of --url; JSON object: {"url":"http://127.0.0.1:PORT"}. Read docs/CONCEPT-AGENT.md first.' } };
+  if (options.help) return { exitCode: 0, result: { usage: 'node tools/concept-cli.mjs --url http://127.0.0.1:PORT [--actor agent:claude-code] COMMAND [--input FILE|-]', alias: 'Kept for one release; the full CLI is agents/cli/ar-create.mjs.', commands: [...COMMANDS], config: 'Use --config FILE instead of --url; JSON object: {"url":"http://127.0.0.1:PORT"}. Read docs/CONCEPT-AGENT.md first.' } };
   let endpoint = options.url;
   if (options.config) {
     const config = await jsonFile(options.config, stdin);
@@ -93,13 +94,16 @@ export async function run(args, { fetchImpl = fetch, stdin = async () => {
     endpoint = config.url;
   }
   const base = localUrl(endpoint);
+  // Writes name their author; reads do not need one. --actor wins over AR_CREATE_ACTOR.
+  const actor = options.actor ?? process.env.AR_CREATE_ACTOR;
+  if (actor !== undefined && !validActor(actor)) throw new Error('--actor must be one of human:adrian, agent:claude-code, agent:codex, agent:claude-design, agent:hermes, agent:grok, agent:chatgpt, cron:<name>, import:<source>, release:<sha>.');
   if (!options.input && !['list', 'status'].includes(options.command)) throw new Error('This command requires --input FILE or --input -.');
   const input = validateInput(options.command, options.input ? await jsonFile(options.input, stdin) : {});
   const paths = { list: '/api/concepts', create: '/api/concepts', read: '/api/concept', save: '/api/concept/save', 'library-search': '/api/concept/sources/search', 'library-read': '/api/concept/source', status: '/api/concept/capabilities' };
   const post = ['create', 'save', 'library-search'].includes(options.command);
   const url = new URL(paths[options.command], base);
   if (!post) for (const [key, value] of Object.entries(input)) url.searchParams.set(key, value);
-  const response = await fetchImpl(url, { method: post ? 'POST' : 'GET', headers: { Accept: 'application/json', ...(post ? { 'Content-Type': 'application/json' } : {}) }, ...(post ? { body: JSON.stringify(input) } : {}), redirect: 'error', signal: AbortSignal.timeout(15000) });
+  const response = await fetchImpl(url, { method: post ? 'POST' : 'GET', headers: { Accept: 'application/json', ...(actor ? actorHeaders(actor, 'cli') : {}), ...(post ? { 'Content-Type': 'application/json' } : {}) }, ...(post ? { body: JSON.stringify(input) } : {}), redirect: 'error', signal: AbortSignal.timeout(15000) });
   let result;
   try { result = await response.json(); } catch { throw new Error(`Server returned non-JSON response (${response.status}).`); }
   return response.ok ? { exitCode: 0, result } : { exitCode: response.status === 409 ? 3 : 1, result: { ok: false, status: response.status, error: response.status === 409 ? 'revision_conflict' : 'request_failed', details: result } };

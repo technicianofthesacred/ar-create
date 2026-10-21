@@ -1,19 +1,20 @@
 # Work on a shared concept from an external agent
 
-Read this before saving. This program lets an authorized local Claude/Codex conversation read and develop the same concept that AR Create displays. It uses the existing project and human-direction authority. It does not run a model, grant filesystem/account access, approve manuscripts or publish output. Only already configured local project material is available for source lookup; this is not internet search or a new global Library store.
+Read this before saving. This program lets an authorized local Claude/Codex conversation read and develop the same concept that AR Create displays. It uses the existing project and human-direction authority. It does not run a model, grant filesystem/account access, approve manuscripts or publish output. Every write names its author: pass `--actor agent:<name>` (or set `AR_CREATE_ACTOR`); the server refuses a write without one (400) and stamps the actor on the record and the journal. Only already configured local project material is available for source lookup; this is not internet search or a new global Library store.
 
 Keep the person's exact contributions in `authorThoughts`. Put AI interpretations in `aiInterpretation` and provisional alternatives in `suggestions`. A conversation with an agent does not automatically adopt its interpretation, approve wording or create an editorial decision. Preserve the person's choices and rejected alternatives from the latest read. Source words, personal beliefs and AI proposals have different meanings: never invent quotations, source identities, evidence or human approval. Saved concept prose does not silently rewrite independent outputs.
 
 ## Connect explicitly
 
-Run from the authorized candidate checkout with Node 22 or newer. Start the existing synthetic candidate through its documented launcher separately; use its actual port. No automatic discovery or installed-home activation occurs here.
+Use the one CLI, `agents/cli/ar-create.mjs`, from the checkout with Node 22 or newer. Point it at the app you mean: a synthetic candidate from `npm run demo` (port 8854, or the port you gave it), or the installed app at `http://127.0.0.1:8841` when the task is real work. Only HTTP on `127.0.0.1`, `localhost` or `::1` with an explicit port is accepted; redirects and credentialed URLs are refused.
 
 ```sh
-node tools/concept-cli.mjs --url http://127.0.0.1:8854 status
-node tools/concept-cli.mjs --url http://127.0.0.1:8854 list
+export AR_CREATE_URL=http://127.0.0.1:8854 AR_CREATE_ACTOR=agent:claude-code
+node agents/cli/ar-create.mjs status
+node agents/cli/ar-create.mjs project list
 ```
 
-Alternatively pass `--config /absolute/path/to/local-config.json`, containing only `{"url":"http://127.0.0.1:8854"}`. Keep actual local configuration and input files outside Git. Only HTTP on `127.0.0.1`, `localhost` or `::1` with an explicit port is accepted; redirects and credentialed URLs are refused. Pick the authorized instance deliberately.
+Actor values: `agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`. The older `tools/concept-cli.mjs` is kept for one release as an alias with the same input fields; it also needs `--actor` or `AR_CREATE_ACTOR` to write. Keep input files outside Git.
 
 ## Read, connect sources, then save
 
@@ -21,23 +22,23 @@ Every command returns JSON on stdout. Pass content in a JSON file with `--input 
 
 | Command | Input JSON fields |
 | --- | --- |
-| `list` | none |
-| `status` | none; reports supported capabilities |
-| `create` | `parentStudyId`, `title`, fresh `operationId` UUID |
-| `read` | `parentStudyId` |
-| `library-search` | `query`, optional `parentStudyId` and integer `limit` (1–20) |
-| `library-read` | `sourceId`, optional `parentStudyId` |
-| `save` | `parentStudyId`, `operationId`, `expectedRevision`, `expectedHash`, exact `body`; or the structured convenience fields below |
+| `project list` | none |
+| `status` | none; shows commands, presence, whether Adrian has unsaved words, recent events. `project capabilities` reports the concept limits |
+| `project create` | `parentStudyId`, `title`, fresh `operationId` UUID |
+| `project read` | `parentStudyId` |
+| `library search` | `query`, optional `parentStudyId` and integer `limit` (1–20) |
+| `library read` | `sourceId`, optional `parentStudyId` |
+| `project save` | `parentStudyId`, `operationId`, `expectedRevision`, `expectedHash`, exact `body`; or the structured convenience fields below |
 
-Unknown fields are refused. Use `create` with an explicit `parentStudyId`, title and operation UUID to create a new maintained collection/project identity; a prior project is not required. Repeating the exact same create intent is idempotent. Use `list` and `read` to resume existing work. For example, an entirely synthetic read:
+Unknown fields are refused. `project list` shows only projects that already have a concept; `project read` of any other id answers 404. Use `project create` with an explicit `parentStudyId`, title and operation UUID to create a new maintained collection/project identity; a prior project is not required. Repeating the exact same create intent is idempotent. Use `project list` and `project read` to resume existing work. For example, an entirely synthetic read:
 
 ```sh
-node tools/concept-cli.mjs --url http://127.0.0.1:8854 read --input - <<'JSON'
+node agents/cli/ar-create.mjs project read --input - <<'JSON'
 {"parentStudyId":"synthetic-project-id"}
 JSON
 ```
 
-Read the concept before each edit. The receipt includes its current `revision`, SHA-256 `hash`, shared `path`, human thoughts, AI fields, selected sources and recorded history. Retain exact human wording and existing source selections unless the person requests their change. Search returns matching passages with identity, hash, offset, context and relevance. Use `library-read` to inspect the source and confirm the exact selection before linking it. Search/read can also begin without `parentStudyId`; link the result to a concept later.
+Read the concept before each edit. The receipt includes its current `revision`, SHA-256 `hash`, shared `path`, human thoughts, AI fields, selected sources and recorded history. Retain exact human wording and existing source selections unless the person requests their change. Search returns matching passages with identity, hash, offset, context and relevance. Use `library read` to inspect the source and confirm the exact selection before linking it. Search/read can also begin without `parentStudyId`; link the result to a concept later.
 
 If `structured` is false, the file has manual or unrecognized direction. Save it as exact `body` text with the same guarded metadata; do not convert it silently. A raw-body save excludes the structured fields and preserves its text exactly. Explicitly authorized conversion can instead send all structured fields with `replaceExistingDirection: true`; without that flag the server refuses to replace manual direction.
 
@@ -59,7 +60,7 @@ Each selected source has exactly `sourceId`, lowercase SHA-256 `sourceHash`, exa
 
 ## Conflicts and uncertain completion
 
-Exit 0 means the server accepted the request; it does not imply human approval. Exit 3 means HTTP 409: stdout preserves the conflict details. Read the latest state, retain both contributions, and resolve the difference deliberately before a new save with current guards and a new operation UUID. Never remove guards or overwrite a newer revision to make the command succeed.
+Exit 0 means the server accepted the request; it does not imply human approval. Exit 3 means HTTP 409: stdout preserves the conflict details. Exit 4 means 423: another actor holds a lease on the project, so wait or ask; take one yourself with `lease acquire --input '{"scope":{"kind":"project","id":"<parentStudyId>"}}'` before a long edit and `handoff` when you stop. Exit 5 means a human-only decision. Exit 2 means usage, for example a missing actor. Read the latest state, retain both contributions, and resolve the difference deliberately before a new save with current guards and a new operation UUID. Never remove guards or overwrite a newer revision to make the command succeed.
 
 Exit 1 reports validation, HTTP or connection failure as JSON. Each invocation sends at most one request and never retries automatically. A connection can fail after the server saved: read the concept/history before deciding whether another mutation is needed. Keep the operation UUID to identify the uncertain attempt; do not assume a failed response means nothing changed. A stale/dirty app surface must resolve its own conflict rather than discard unsaved human work.
 
