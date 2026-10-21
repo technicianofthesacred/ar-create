@@ -93,7 +93,7 @@ def direction_page(d):
     out = [HEAD.format(title=f"{d['letter']} {d['name']}")]
     out.append(f'      <div class="pg" data-screen-label="{d["letter"]} {e(d["name"])}">\n        <div class="wrap">\n')
     out.append(f'''          <div>
-            <p class="kick">Direction {d['letter']} · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Start%20here.dc.html" target="_top">Start here</a> · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Compare.dc.html" target="_top">Compare</a></p>
+            <p class="kick">Direction {d['letter']}{(' · '+d['revision']) if d.get('revision') else ''} · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Start%20here.dc.html" target="_top">Start here</a> · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Compare.dc.html" target="_top">Compare</a></p>
             <h1 class="h1">{e(d['name'])}</h1>
             <p class="lede">{e(d['idea'])}</p>
           </div>
@@ -122,9 +122,10 @@ def direction_page(d):
     crit = "".join(
         f'            <div class="crit"><span class="num">{i+1:02d}</span><span>{e(c[0])}</span><span class="v {c[1]}">{c[1].capitalize()}</span><span class="dimt">{e(c[2])}</span></div>\n'
         for i, c in enumerate(d["critique"]))
+    crit_html = ('            <p class="sub">' + e(d['crit_note']) + '</p>\n') if d.get('crit_note') else ''
     out.append(f'''          <div>
             <h2 class="h2">Against the 13 must-haves</h2>
-            <p class="score"><span>Meets {counts['meets']}</span><span>Partial {counts['partial']}</span><span>Missing {counts['missing']}</span></p>
+{crit_html}            <p class="score"><span>Meets {counts['meets']}</span><span>Partial {counts['partial']}</span><span>Missing {counts['missing']}</span></p>
 {crit}          </div>
 ''')
     fx = []

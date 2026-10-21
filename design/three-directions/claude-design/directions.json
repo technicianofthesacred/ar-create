@@ -270,6 +270,10 @@
    "idea": "The opening screen answers two questions across every project: what was I doing, and what is the next useful move. The twelve sections are tools on a rack, not stations in an order; a right-hand column carries the project's understanding and your own thoughts into every tool.",
    "notes": [
     [
+     "Revision 2",
+     "After Adrian's feedback: one type scale (13/15/16/17px, weights 400–600), two columns at most (rack + work), Understanding, Check and History in one right-hand pull-out drawer, A− / A+ text size, Read and Write set as the same document."
+    ],
+    [
      "Opening",
      "The bench: one card for the last piece with the paragraph you were in and \"Since you were here\" (actor-labelled), then Next moves across all projects, then every active project on one line."
     ],
@@ -389,7 +393,9 @@
     "How you switch": "Switcher + ⌘K; rack of twelve tools with counts; In: strip under All.",
     "Best for": "Coming back after a gap; many pieces at once.",
     "Main cost": "A persistent third column; counts must be trustworthy."
-   }
+   },
+   "revision": "Revision 2",
+   "crit_note": "This critique and the three fixes were written against revision 1. Revision 2 removes the permanent understanding column (fix 1) and gives Write a single right-hand drawer (fix 2); fix 3, one home for Adrian's words, is not yet checked against it."
   }
  ]
 }
