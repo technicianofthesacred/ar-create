@@ -768,7 +768,7 @@
     {
       "path": "public/document-study/draft-flow.js",
       "sourceSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "candidateSha256": "ed165b3941ac82fbd97a1ad257d5dcd6f9cfa9495f029b0074554b5c9366b18d",
+      "candidateSha256": "f48f706456138bf42fe987d0d14d731852b9ead8a293b3027933ac09cc87ece5",
       "adapted": true
     },
     {
@@ -1123,7 +1123,7 @@
     {
       "path": "public/document-study/native-open-binding.test.mjs",
       "sourceSha256": "6c71927caad622094ce2f46548894191f6ac5a39bbc15398448740b24d08418d",
-      "candidateSha256": "954837c6b039b9efb8ff73795095b2f7942c52befbaabf97a4d20f9423008e91",
+      "candidateSha256": "4302ffc0d91ddb89ffdc0f8be1a0747b5b52346478d8942408aaccd7240d547f",
       "adapted": true
     },
     {
