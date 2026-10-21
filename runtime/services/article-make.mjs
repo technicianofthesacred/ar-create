@@ -13,8 +13,11 @@ import {captureArticleSource,renderArticleSource,validateArticleSource} from './
 import {parseWholeDraft} from '../article-codec.mjs';
 import {articlePaths,renderProjectArticle} from '../article-persistence.mjs';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-const defaultSkillRoot=path.join(os.homedir(),'.claude','skills');
-const magazineRoot=path.join(os.homedir(),'Library','Mobile Documents','iCloud~md~obsidian','Documents','Adrian-obsidian','Brands','Teajia','Magazine');
+// Private locations come from the host config (editorialSkillsDir, magazine.vaultRoot), exported by serve.mjs as env.
+// The skills folder keeps its conventional home default; the magazine templates have no default.
+// Read lazily: serve.mjs sets the env after its imports are loaded.
+const defaultSkillRoot=()=>process.env.AR_CREATE_EDITORIAL_SKILL_ROOT||path.join(os.homedir(),'.claude','skills');
+const magazineRoot=()=>process.env.AR_CREATE_MAGAZINE_ROOT||null;
 const fingerprint=doc=>digest(JSON.stringify(doc?{id:doc.id,revision:doc.revision,title:doc.title,paragraphs:doc.paragraphs}:null));
 const maxArtifact=1024*1024;
 const sourceContract=record=>['ar-create.article-make.v3','ar-create.article-make.v4'].includes(record.schema);
@@ -53,7 +56,7 @@ function checkDraft(raw){
  if(!title||title.length>256)throw new StateError('The DEV draft needs a title of at most 256 characters in its frontmatter.');
  if(!match[2].trim())throw new StateError('The AI draft contains no story text.');
 }
-export function createArticleMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),skillRoot=defaultSkillRoot}){
+export function createArticleMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),skillRoot=defaultSkillRoot()}){
  const dir=ensurePrivateDirectory(dataDir,'article-make');let pending=Promise.resolve();
  const serial=fn=>{const op=pending.then(fn);pending=op.catch(()=>{});return op;};
  const file=id=>{if(typeof id!=='string'||!uuid.test(id))throw new StateError('Unknown article Make request.',404);return resolveInside(dir,id+'.json',{missing:true});};
@@ -77,7 +80,7 @@ export function createArticleMake({dataDir,store,library,requests,terminal,execu
    let root=skillRoot,rel=name;
    // These two files live in MAG, as /mag's own instructions specify. A
    // supplied skillRoot remains self-contained (e.g. disposable fixtures).
-   if(skillRoot===defaultSkillRoot&&['mag/TEMPLATE.md','mag/SYSTEM.md'].includes(name)&&!fs.lstatSync(path.join(skillRoot,name),{throwIfNoEntry:false})){root=magazineRoot;rel=path.basename(name);}
+   if(skillRoot===defaultSkillRoot()&&['mag/TEMPLATE.md','mag/SYSTEM.md'].includes(name)&&!fs.lstatSync(path.join(skillRoot,name),{throwIfNoEntry:false})&&magazineRoot()){root=magazineRoot();rel=path.basename(name);}
    const full=boundedText(root,rel),body=name==='mag/SYSTEM.md'?['## 1: Source (SRC)','## 3: Develop (DEV)','### From draft to page (mag-send)'].map(heading=>systemSection(full,heading)).join('\n\n'):full;
    return {name,root,rel,hash:digest(full),body};
   });
