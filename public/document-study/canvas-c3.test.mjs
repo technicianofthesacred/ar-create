@@ -56,10 +56,12 @@ test('Material gets the heading, the flattened lane and an inspector that opens 
  assert.ok(f.d.querySelector('[data-flow-action="files"]'),'the lane keeps its own add button');
 });
 
-test('Research checkpoint: heading, Open in Research opens the Research tab, inspector on Decisions',()=>{
+test('Research checkpoint: one Research screen with a this piece / all pieces switch, inspector on Decisions',()=>{
  const f=fixture(3);
  assert.match(f.d.querySelector('.phaseReader>.c3-ctitle').textContent,/03\s*Research/);
- f.d.querySelector('.c3-open-research').click();
+ assert.equal(f.d.querySelector('.c3-open-research'),null);
+ assert.equal(f.d.querySelector('.c3-scope [data-c3-scope="piece"]').getAttribute('aria-pressed'),'true');
+ f.d.querySelector('.c3-scope [data-c3-scope="all"]').click();
  assert.equal(f.w.researchShown,1);
  assert.equal(f.d.querySelector('#c3-read-insp [aria-selected="true"]').textContent,'Decisions');
  assert.ok(f.d.querySelector('[data-flow-action="analyze"]'));

@@ -120,3 +120,20 @@ body.c3-tabs .workspace .themeSelect{display:none}
 @media(max-width:650px){#c3-tabstrip .ht-switch-label{display:none}#project-library.c3-home .ht-homebar{flex-wrap:wrap}#project-library.c3-home .ht-homebar .pl-search{flex:1 1 100%}#project-library.c3-home .ht-homebar-actions{margin-left:0;width:100%}#project-library.c3-home .ht-homebar-actions button{flex:1}#project-library.c3-home .ht-seg-l{display:none}}
 #project-library.c3-home .pl-results.ht-grid .ht-cover span{font:inherit!important;color:inherit!important}
 #project-library.c3-home .pl-results.ht-grid .ht-cover span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+
+/* Folded into the sidebar head (review A3): the piece switcher and New; Home is the sidebar's own; theme is at the bottom.
+   The Research flask is gone (step 3 has a this piece / all pieces switch), and open tabs live in the piece switcher. */
+body.c3-strip-in-rail{--ht-strip:0px}
+.workflowNavigation.c3-rail>#c3-tabstrip{position:static;height:auto;display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;padding:0 0 8px;margin:0;border:0;background:none}
+.workflowNavigation.c3-rail>#c3-tabstrip :is(.ht-place,.ht-sep,.ht-tabs,.ht-more,.ht-grow){display:none}
+.workflowNavigation.c3-rail>#c3-tabstrip .ht-switch{flex:1 1 100%;order:1}
+.workflowNavigation.c3-rail>#c3-tabstrip .ht-switch>summary{width:100%;justify-content:flex-start;min-height:36px}
+.workflowNavigation.c3-rail>#c3-tabstrip .ht-switch>summary .ht-switch-label{display:inline;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink)}
+.workflowNavigation.c3-rail>#c3-tabstrip .ht-plus{order:2;flex:1 1 100%}
+.workflowNavigation.c3-rail>#c3-tabstrip .ht-plus>summary{width:100%;justify-content:flex-start;min-height:34px;color:var(--dim)}
+.workflowNavigation.c3-rail>#c3-tabstrip .ht-menu{position:fixed;left:var(--ht-mx,8px);top:var(--ht-my,48px);right:auto;z-index:60}
+#project-library.c3-home #c3-tabstrip :is([data-ht-research],.ht-tabs,.ht-more,.ht-sep){display:none}
+.ht-plus-label{font-size:13px}
+#project-library .ht-plus-label{display:none}
+body.c3-tree-slim .workflowNavigation.c3-rail>#c3-tabstrip :is(.ht-switch-label,.ht-plus-label){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+body.c3-tree-slim .workflowNavigation.c3-rail>#c3-tabstrip summary{justify-content:center;padding:0}

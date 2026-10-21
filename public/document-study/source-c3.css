@@ -266,3 +266,11 @@ body.c3-tabs .workspace .material-surface .c3-tool-banner strong{font:600 12.5px
 body.c3-tabs .workspace .material-surface .c3-tool-banner .c3-tool-go{border:0!important;background:none!important;padding:0!important;box-shadow:none!important;min-height:28px!important;margin:0!important;color:var(--warm)!important;font:500 13px/1.3 var(--ar-ui)!important}
 body.c3-tabs .workspace .material-surface details.c3-tool-row :is(p,.small,small,label,.flow-field){font-family:var(--ar-ui)!important;font-size:13.5px!important;line-height:1.5!important}
 body.c3-tabs #app #workspace .material-surface details.c3-tool-row :is(p,.small,small,label,.flow-field){font-family:var(--ar-ui)!important;font-size:13.5px!important;line-height:1.5!important}
+
+/* Research scope: one Research screen, this piece or all pieces (replaces the tab-strip flask and "Open in Research"). */
+.c3-scope{display:inline-flex;gap:2px;align-self:flex-start;justify-self:start;width:auto;padding:2px;border:1px solid var(--c3-line2,var(--line));border-radius:8px}
+body.c3-tabs #app .workspace>.phaseReader>.c3-scope{width:max-content!important;max-width:100%;justify-self:start!important;margin:0 0 10px var(--c3-gx,40px)!important;background:none!important}
+@media(min-width:851px){body.c3-tabs .workspace>.phaseReader.c3-flow>.c3-scope{grid-column:1}}
+#app .c3-scope button,#c3-research .c3-scope button{min-height:32px;padding:0 12px;border:0!important;border-radius:6px;background:none!important;color:var(--dim);font:500 13px/1 var(--ar-ui);cursor:pointer}
+#app .c3-scope button[aria-pressed="true"],#c3-research .c3-scope button[aria-pressed="true"]{background:color-mix(in srgb,var(--warm) 18%,transparent)!important;color:var(--ink)}
+.c3-scope button:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
