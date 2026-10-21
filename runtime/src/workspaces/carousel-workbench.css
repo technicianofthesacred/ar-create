@@ -283,6 +283,12 @@
 .car-photo-sheet .pkh{display:flex;align-items:center;gap:8px 12px;margin-bottom:10px;flex-wrap:wrap}.car-photo-sheet .pkh h2{flex:1 1 auto;margin:0;font-size:var(--t-head,15px);font-weight:600}.car-photo-sheet .pkh>.dim{flex:1 1 100%;order:3;font-size:var(--t-label);color:var(--dim)}
 .car-photo-sheet .mptabs{display:inline-flex;gap:4px;flex-wrap:wrap}.car-photo-sheet button{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:7px;cursor:pointer;min-height:30px}
 .car-photo-sheet .mptabs button{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 8px 0 3px;font-size:var(--t-label);color:var(--dim)}.car-photo-sheet .mptabs button.on{border-color:var(--warm);color:var(--ink)}.car-photo-sheet .mptabs .sl{width:22px;height:22px;border-radius:4px;border:1px dashed var(--line);display:grid;place-items:center}
+/* Keep the real file control focusable while presenting one compact dialog action. */
+.car-photo-sheet .car-picker-upload{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:32px;padding:0 10px;margin:0;overflow:hidden;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:var(--t-label,13px);cursor:pointer;white-space:nowrap}
+.car-photo-sheet .car-picker-upload input[type=file]{position:absolute;inset:0;width:100%;height:100%;max-width:none;min-height:0;margin:0;padding:0;opacity:0;cursor:pointer}
+.car-photo-sheet .car-picker-upload:focus-within{outline:2px solid var(--warm);outline-offset:2px}
+.car-photo-sheet .car-picker-upload[aria-disabled=true]{opacity:.55;cursor:default}
+.car-photo-sheet .car-picker-upload input:disabled{cursor:default}
 .car-photo-sheet-browser{flex:1;min-width:0;min-height:0;overflow:hidden}
 @media(max-width:760px){.car-photo-sheet{inset:0;border-radius:0;padding:10px}}
 

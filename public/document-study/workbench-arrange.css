@@ -82,3 +82,68 @@ html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .car-works
 html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench{overflow:visible!important}
 html body.wbf-on #app #workspace.wb-arrange .car-workspace .car-body[data-panel="inspector"]{min-height:clamp(320px,calc(100dvh - 220px),620px)}
 html body.wbf-on #app #workspace.wb-arrange .car-workspace .car-inspector-content{min-height:0;overflow:auto}
+
+/* Native React controls share the shell's retained title line. The shell keeps
+   the same host across repaints; all handlers remain with their output owner. */
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .wb-arrange-owner-actions{display:flex;min-width:0;order:0}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions)>.sb-right{overflow:visible!important}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .sb-right>.sb-pw{order:2}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .wb-arrange-owner-actions .cwb-toolbar{position:static;display:flex;flex-wrap:nowrap;align-items:center;gap:8px;padding:0;min-height:34px;border:0;background:none;--cwb-line:var(--line);--cwb-dim:var(--dim);color:var(--ink)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-output-identity,html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-tbar-kind{display:none}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-tools{display:flex;align-items:center;min-height:34px;margin:0;padding:0;border:0;background:none}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more,.cwb-new-output){margin:0;position:relative}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more,.cwb-new-output)>summary{display:flex;align-items:center;gap:6px;box-sizing:border-box;min-height:34px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font:400 var(--t-label)/1.5 var(--ar-ui);white-space:nowrap;color:var(--ink);cursor:pointer}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options){box-sizing:border-box;position:absolute;top:calc(100% + 6px);right:0;left:auto;z-index:20;width:270px;max-width:calc(100vw - 48px);max-height:min(70dvh,560px);overflow:auto;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);box-shadow:0 10px 24px #0002;font:400 var(--t-label)/1.5 var(--ar-ui)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-menu{left:0;right:auto}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options)>button{display:block;width:100%;min-height:34px;padding:6px 8px;border:0;border-radius:5px;background:none;color:var(--ink);text-align:left;font:inherit}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar :is(.car-more-menu,.cwb-new-options)>button:hover{background:var(--sel)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-menu>button[aria-selected=true]{color:var(--warm);font-weight:600}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .car-more-help{margin:6px 8px;color:var(--dim)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-rename{display:grid;gap:4px;margin:0;color:var(--dim)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-rename input{box-sizing:border-box;width:100%;min-width:0;min-height:34px;border:1px solid var(--line);border-radius:5px;padding:5px 8px;font:inherit;color:var(--ink);background:var(--bg)}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-output select{width:100%;max-width:100%}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar .cwb-menu-label{color:var(--dim);margin:4px 8px 0}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar summary:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+html body.wbf-on #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions)~* .ar-composition-workbench>.cwb-manuscript-receipt.is-stale{margin-top:0!important}
+/* Phone action groups contribute their full height; legacy fixed-height shell
+   children must never clip the native title controls. */
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions){display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(34px,auto) minmax(44px,auto) minmax(44px,auto);align-items:center!important;align-content:start!important;gap:8px!important;flex:0 0 auto!important;height:auto!important;min-height:138px!important;overflow:visible!important;white-space:normal}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions)>.sb-left{grid-column:1/-1;grid-row:1;display:flex!important;width:100%!important;min-width:0!important;height:auto!important;min-height:34px!important;flex:none!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-where{display:flex!important;width:100%;min-width:0!important;max-width:100%;flex:1 1 auto!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-out{flex:1 1 auto!important;min-width:0!important;max-width:100%}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-oselect{width:100%!important;min-width:0!important;max-width:100%!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions)>.sb-right{display:contents!important;width:auto!important;height:auto!important;min-height:0!important;overflow:visible!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .wb-arrange-owner-actions{display:contents!important;height:auto!important;min-height:0!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .wb-arrange-owner-actions .cwb-toolbar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));grid-column:1/-1;grid-row:2;gap:8px!important;width:100%;min-width:0;height:auto!important;min-height:44px!important;position:static!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) :is(.cwb-carousel-actions,.car-tools,.car-more,.cwb-new-output){min-width:0!important;width:100%!important;max-width:100%;height:auto!important;min-height:0!important;margin:0!important;position:static!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) :is(.car-more,.cwb-new-output)>summary{justify-content:center;min-width:0;width:100%;min-height:44px!important;height:auto!important;padding:6px 8px!important;white-space:normal;overflow-wrap:anywhere}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw{grid-column:1;grid-row:3;display:flex!important;min-width:0;max-width:100%;height:auto!important;min-height:44px!important;flex-wrap:wrap}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw .sb-primary{width:100%;max-width:100%!important;min-width:0;height:auto!important;min-height:44px!important;white-space:normal!important;justify-content:center;font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-pw .sb-primary::after{display:none!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew{grid-column:2;grid-row:3;min-width:0;width:auto!important;height:auto!important;min-height:44px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew>.sb-btn{display:flex!important;gap:6px!important;width:auto!important;max-width:100%;height:auto!important;min-height:44px!important;padding:6px 9px!important;font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) .sb-right>.sb-morew>.sb-btn>span{display:inline!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions) :is(.car-more-menu,.cwb-new-options){left:auto;right:0;top:calc(100% + 6px)}
+}
+html body.wbf-on #workspace.wb-arrange:has(#study-output-canvas .ar-composition-workbench) .oss-arrange-limit{display:none}
+
+/* Relationship warnings inherit the current workbench theme, including light. */
+html body.wbf-on #app #workspace.wb-arrange .ar-composition-workbench .cwb-manuscript-receipt.is-stale strong {color:var(--ink)!important;}
+
+/* Article has one native tools menu, so its phone actions fit one shared row.
+   Carousel keeps its additional native controls and its original artwork sizes. */
+@media(max-width:760px){
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)){grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:minmax(34px,auto) minmax(36px,auto);min-height:78px!important;gap:6px 8px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .wb-arrange-owner-actions .cwb-toolbar{display:contents!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .cwb-new-output{grid-column:1;grid-row:2;justify-self:start;width:auto!important;min-height:36px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .cwb-new-output>summary{width:auto!important;min-height:36px!important;padding:4px 8px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .sb-right>.sb-pw{grid-column:2;grid-row:2;width:auto!important;min-height:36px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .sb-right>.sb-pw .sb-primary{width:auto!important;min-height:36px!important;padding:4px 8px!important;white-space:nowrap!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .sb-right>.sb-morew{grid-column:3;grid-row:2;min-height:36px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .sb-right>.sb-morew>.sb-btn{position:relative;width:36px!important;min-height:36px!important;padding:4px 8px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-arrange #c3-surface-bar:has(.wb-arrange-owner-actions):not(:has(.cwb-carousel-actions)) .sb-right>.sb-morew>.sb-btn>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+}
+/* A lone section cannot move. Its identical title remains on its block group. */
+html body.wbf-on #workspace.wb-arrange .cwb-article-outline>section[aria-label="Sections · move with their blocks"]:not(:has(.handle)):has(+section[aria-label$=" · blocks"]){display:none}
+html body.wbf-on #workspace.wb-arrange .cwb-article-outline>section>h3{font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);margin:12px 0 4px}

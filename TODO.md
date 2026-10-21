@@ -1,5 +1,3 @@
-> Review-tree boundary: this research candidate contains only the cumulative scopes through research. The following status is a combined-candidate work log; later-scope evidence does not mean those controls are connected in this tree. No installation or human acceptance is claimed.
-
 # AR Create — to-do
 
 This is the public mirror of Delivery's work checklist: open items only, no private detail. There is no other list. What works today is in [docs/status/CURRENT.md](docs/status/CURRENT.md).
