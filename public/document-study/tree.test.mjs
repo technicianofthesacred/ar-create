@@ -24,19 +24,19 @@ function fixture({outputs={},stage=1,selected=null,folders=['Tea','Tea','Repair'
 }
 const tick=()=>new Promise(r=>setTimeout(r,20));
 
-test('the sidebar names each activity and its question, and keeps the twelve steps calling viewPhase',async()=>{
+test('the sidebar names each activity, with no question under it, and keeps the twelve steps calling viewPhase',async()=>{
  const {w,d}=fixture();await tick();
  assert.deepEqual([...d.querySelectorAll('.tr-act b')].map(n=>n.textContent),['Gather','Develop','Make','Deliver']);
- assert.match(d.querySelector('.wn-family[data-family="gather"] .tr-act').textContent,/What do I have\?/);
+ assert.equal(d.querySelector('.wn-family[data-family="gather"] .tr-act').textContent,'Gather');
  assert.equal(d.querySelectorAll('.workflowStep').length,12);
  for(const b of d.querySelectorAll('.workflowStep'))b.click();
  assert.deepEqual([...w.phases],[1,2,3,4,5,6,7,8,9,10,11,12]);
 });
 
-test('counts come only from saved output records and land on the step of their next action',async()=>{
- const {d}=fixture({outputs:{p1:[{id:'o1',status:'correction-needed',nextAction:{kind:'native'}},{id:'o2',status:'review-needed',nextAction:{kind:'review'}},{id:'o3',status:'draft'}],p2:[{id:'o4',status:'review-needed'}]}});await tick();
- const n=k=>[...d.querySelectorAll('.workflowStep')].find(b=>b.querySelector('.stepNumber').textContent===String(k)).querySelector('.tr-n')?.textContent||'';
- assert.equal(n(5),'1');assert.equal(n(10),'2');assert.equal(n(1),'');assert.equal(n(12),'');
+test('counts come only from saved output records; they are read, not drawn as a second badge beside the state word',async()=>{
+ const {w,d}=fixture({outputs:{p1:[{id:'o1',status:'correction-needed',nextAction:{kind:'native'}},{id:'o2',status:'review-needed',nextAction:{kind:'review'}},{id:'o3',status:'draft'}],p2:[{id:'o4',status:'review-needed'}]}});await tick();await tick();
+ assert.deepEqual(JSON.parse(JSON.stringify(w.c3Tree.counts())),{5:1,10:2});
+ assert.equal(d.querySelectorAll('.workflowStep .tr-n').length,0);
 });
 
 test('one list of pieces: no pieces column beside the sidebar, no Working on switch, no duplicate Find entries',async()=>{

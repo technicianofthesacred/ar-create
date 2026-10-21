@@ -1,5 +1,5 @@
 /* Full A · the Tree. Turns the C3 checkpoint column into the working sidebar: Home and a "Working on" switch at the top,
-   the four activities (Gather, Develop, Make, Deliver) with their questions and honest "needs you" counts, the learning
+   the four activities (Gather, Develop, Make, Deliver) by name, one state word per step (from the piece state), the learning
    library, History and theme at the bottom, and its own collapse arrow that leaves a slim icon rail. No second list of
    pieces beside it: the piece switcher at the top is the one list. "Next" is a quiet link at the end of the work.
    Everything here is a look over the existing owners: steps still call viewPhase(n), pieces open through the wrapped
@@ -59,23 +59,17 @@
   let top=nav.querySelector(':scope>.tr-head');
   if(!top){top=document.createElement('div');top.className='tr-head';const picker=nav.querySelector(':scope>.cr-picker');picker?picker.after(top):nav.prepend(top);}
   const h=head();if(top.dataset.render!==h){top.innerHTML=h;top.dataset.render=h;}
-  const c=counts(),known=readCount();
+
   for(const fam of nav.querySelectorAll('.wn-family')){
    const key=fam.dataset.family,steps=fam.querySelector('.wn-family-steps');
    let act=fam.querySelector(':scope>.tr-act');
    if(!act&&steps){act=document.createElement('div');act.className='tr-act';act.setAttribute('aria-hidden','true');steps.before(act);}
    const label=fam.querySelector('.wn-family-label')?.textContent||key;
-   const ah=`<b>${esc(label)}</b><span>${esc(ACTS[key]||'')}</span>`;if(act&&act.dataset.render!==ah){act.innerHTML=ah;act.dataset.render=ah;}
+   const ah=`<b>${esc(label)}</b>`;if(act&&act.dataset.render!==ah){act.innerHTML=ah;act.dataset.render=ah;} // group name only (review C5)
   }
-  for(let n=1;n<=12;n++){
-   const b=stepButton(n);if(!b)continue;
-   let badge=b.querySelector('.tr-n');const v=c[n]||0;
-   if(!v){badge?.remove();b.removeAttribute('data-tr-needs');continue;}
-   if(!badge){badge=document.createElement('span');badge.className='tr-n';const dot=b.querySelector('.cr-dot');if(dot)dot.before(badge);else b.append(badge);}
-   const text=String(v);if(badge.textContent!==text)badge.textContent=text;
-   badge.title=`${v} output${v===1?'':'s'} need you here · ${scopeName()} · from the saved records of ${known} piece${known===1?'':'s'}`;
-   b.dataset.trNeeds=String(v);
-  }
+  // One state word per step comes from the piece state (checkpoint-rail); the old count badge is not a second indicator.
+  for(const badge of nav.querySelectorAll('.tr-n'))badge.remove();
+  for(const b of nav.querySelectorAll('.workflowStep[data-tr-needs]'))b.removeAttribute('data-tr-needs');
   let foot=nav.querySelector(':scope>.tr-find');
   if(!foot){foot=document.createElement('div');foot.className='tr-find';nav.append(foot);}
   const f=find();if(foot.dataset.render!==f){foot.innerHTML=f;foot.dataset.render=f;}
