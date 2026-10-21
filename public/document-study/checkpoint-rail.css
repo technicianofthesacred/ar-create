@@ -38,3 +38,7 @@ body.c3-rail-on .shell>.workflowNavigation.c3-rail{box-sizing:border-box;min-wid
  .workflowNavigation.c3-rail.cr-open .workflowSteps[data-work-groups]{display:flex;position:absolute;left:8px;right:8px;top:calc(100% + 4px);max-height:min(70dvh,560px);overflow:auto;padding:6px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 30px #0003}
  .workflowNavigation.c3-rail .workflowStep{min-height:44px}
 }
+/* One state word per step, from the one piece state (piece-state.js). Quiet; "needs you" and "unsaved" carry a tone. */
+.workflowNavigation.c3-rail .tr-state{flex:none;margin-left:auto;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 11px/1.2 var(--ar-ui);color:var(--dim)}
+.workflowNavigation.c3-rail .workflowStep:is([data-state="needs you"],[data-state="unsaved"],[data-state="browser only"]) .tr-state{color:var(--c3-warn)}
+body.c3-tree-slim .workflowNavigation.c3-rail .tr-state{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

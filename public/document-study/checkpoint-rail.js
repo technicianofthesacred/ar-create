@@ -14,11 +14,18 @@
   if(!shell||!workspace||!nav||!grid)return;
   const buttons=[...grid.querySelectorAll('.workflowStep')];
   if(buttons.length!==12||buttons.some(b=>!(number(b)>=1&&number(b)<=12)))return;
+  // One step model: the viewed step is marked; "current" is no longer a second, disagreeing mark. Each step carries at
+  // most one state word, read from the one piece state (piece-state.js), in place of an unexplained dot.
+  const ps=window.c3PieceState,st=ps?.read?.();
   for(const b of buttons){
    if(!b.querySelector('.cr-icon'))b.insertAdjacentHTML('afterbegin',svg(ICONS[number(b)-1]));
-   let dot=b.querySelector('.cr-dot');if(!dot){dot=document.createElement('span');dot.className='cr-dot';dot.setAttribute('aria-hidden','true');b.append(dot);}
-   dot.dataset.state=b.classList.contains('isCurrent')?'current':b.querySelector('.recordDot')?'record':'none';
+   b.classList.remove('isCurrent');b.querySelector('.currentMark')?.remove();b.querySelector('.cr-dot')?.remove();
+   const aria=b.getAttribute('aria-label')||'';if(/, current author work|, retained record available/.test(aria))b.setAttribute('aria-label',aria.replace(', current author work','').replace(', retained record available',''));
+   const w=st?ps.word(number(b),st):{word:'',title:''};let tag=b.querySelector(':scope>.tr-state');
+   if(w.word){if(!tag){tag=document.createElement('span');tag.className='tr-state';b.append(tag);}if(tag.textContent!==w.word)tag.textContent=w.word;if(tag.title!==w.title)tag.title=w.title;if(b.dataset.state!==w.word)b.dataset.state=w.word;}
+   else if(tag){tag.remove();delete b.dataset.state;}
   }
+  ps?.load?.();
   const n=viewed(),here=buttons.find(b=>number(b)===n),name=here?.querySelector('.stepName')?.textContent||'';
   let picker=nav.querySelector(':scope>.cr-picker');
   if(!picker){picker=document.createElement('button');picker.type='button';picker.className='cr-picker';picker.setAttribute('aria-expanded','false');nav.prepend(picker);}
@@ -46,6 +53,7 @@
  window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
  let queued=false;
  new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
+ window.addEventListener('c3-piece-state',()=>decorate());
  window.checkpointRail={decorate};
  decorate();
 })();

@@ -44,12 +44,15 @@ test('every checkpoint still calls viewPhase(n) directly; groups are not gates',
  assert.equal(d.querySelectorAll('.workflowStep[disabled]').length,0);
 });
 
-test('state dot reads existing evidence only: current step, retained record, or none',()=>{
- const {d}=fixture({current:6,record:[3]});
- const dot=n=>[...d.querySelectorAll('.workflowStep')].find(b=>b.querySelector('.stepNumber').textContent==String(n)).querySelector('.cr-dot').dataset.state;
- assert.equal(dot(6),'current');
- assert.equal(dot(3),'record');
- assert.equal(dot(9),'none');
+test('one step model: no second "current" mark and no unexplained dot; one state word comes from the piece state',()=>{
+ const {w,d}=fixture({current:6,record:[3]});
+ assert.equal(d.querySelectorAll('.workflowStep.isCurrent,.workflowStep .currentMark,.workflowStep .cr-dot').length,0);
+ assert.equal(d.querySelectorAll('.workflowStep .tr-state').length,0,'no piece state, no invented words');
+ w.c3PieceState={read:()=>({}),word:n=>n===5?{word:'unsaved',title:'Unsaved changes in the draft'}:{word:'',title:''},load(){}};
+ w.checkpointRail.decorate();
+ const words=[...d.querySelectorAll('.workflowStep .tr-state')];
+ assert.equal(words.length,1);assert.equal(words[0].textContent,'unsaved');assert.equal(words[0].title,'Unsaved changes in the draft');
+ assert.equal(words[0].closest('.workflowStep').dataset.state,'unsaved');
 });
 
 test('the phone picker names the viewed checkpoint and opens and closes the list',()=>{

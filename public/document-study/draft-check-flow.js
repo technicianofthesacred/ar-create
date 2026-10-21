@@ -24,5 +24,7 @@
  const previousWorkflow=workflowBar;workflowBar=function(p){const html=previousWorkflow(p);return active()?html.replace('View step 7: Your changes in, checked (read-only)','View step 7: Your changes in, checked (saved working manuscript)').replace('Your changes in, checked · retained record available, not a completion claim','Your changes in, checked · saved mechanical checks; editorial review separate'):html};
  const previousPhase=phaseReader;phaseReader=function(p){if(p.viewedStage!==7)return previousPhase(p);return `<section id="current-draft-check" class="phaseReader">${surface()}</section><details class="flow-retained"><summary>Earlier retained checks · read-only</summary>${previousPhase(p)}</details>`};
  const previousRender=render;render=function(){epoch++;previousRender();if(current().viewedStage===7&&current().view==='record'){wire();const a=active();if(a&&!room(a.key).busy)load(a);else if(!a)loadParts(current())}};
+ // Read only: the saved receipt's state for the one piece-state object (piece-state.js). Changes nothing.
+ window.studyDraftCheck={state(){const a=active();if(!a)return null;const c=room(a.key).record;if(!c)return {current:false,complete:false,findings:0,status:'none'};const cur=currentReceipt(a,c),complete=['checked','needs-review','held'].includes(c.status);return {current:cur,complete,findings:cur&&complete?(c.issues||[]).length:0,status:c.status};}};
  window.addEventListener('study-draft-change',()=>{if(current().viewedStage===7&&current().view==='record')paint()});render();
 })();
