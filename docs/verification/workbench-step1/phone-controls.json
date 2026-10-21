@@ -1,0 +1,431 @@
+{
+  "synthetic": true,
+  "rows": [
+    {
+      "stage": 1,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 156.1953125,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 186.1953125,
+          "w": 30
+        },
+        {
+          "label": "Open the draft",
+          "hit": true,
+          "x": 224.1953125,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 262.1953125,
+          "w": 36
+        },
+        {
+          "label": "Next: Source",
+          "hit": true,
+          "x": 304.1953125,
+          "w": 66.8046875
+        }
+      ]
+    },
+    {
+      "stage": 2,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 143.078125,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 173.078125,
+          "w": 30
+        },
+        {
+          "label": "Open the draft",
+          "hit": true,
+          "x": 211.078125,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 249.078125,
+          "w": 36
+        },
+        {
+          "label": "Next: Research",
+          "hit": true,
+          "x": 291.078125,
+          "w": 79.921875
+        }
+      ]
+    },
+    {
+      "stage": 3,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 161,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 191,
+          "w": 30
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 229,
+          "w": 36
+        },
+        {
+          "label": "Research these sources",
+          "hit": true,
+          "x": 271,
+          "w": 100
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 134,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 164,
+          "w": 30
+        },
+        {
+          "label": "Open the draft",
+          "hit": true,
+          "x": 202,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 240,
+          "w": 36
+        },
+        {
+          "label": "Write my own angle",
+          "hit": true,
+          "x": 282,
+          "w": 100
+        }
+      ]
+    },
+    {
+      "stage": 5,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 174,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 204,
+          "w": 30
+        },
+        {
+          "label": "Undo",
+          "hit": true,
+          "x": 242,
+          "w": 36
+        },
+        {
+          "label": "Notes beside the words",
+          "hit": true,
+          "x": 280,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 318,
+          "w": 36
+        },
+        {
+          "label": "Ask about words",
+          "hit": true,
+          "x": 360,
+          "w": 22
+        }
+      ]
+    },
+    {
+      "stage": 6,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 133.2734375,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 163.2734375,
+          "w": 30
+        },
+        {
+          "label": "Notes beside the words",
+          "hit": true,
+          "x": 201.2734375,
+          "w": 36
+        },
+        {
+          "label": "Open the draft",
+          "hit": true,
+          "x": 239.2734375,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 277.2734375,
+          "w": 36
+        },
+        {
+          "label": "Next: Check",
+          "hit": true,
+          "x": 319.2734375,
+          "w": 62.7265625
+        }
+      ]
+    },
+    {
+      "stage": 7,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 168.1953125,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 198.1953125,
+          "w": 30
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 236.1953125,
+          "w": 36
+        },
+        {
+          "label": "Run checks",
+          "hit": true,
+          "x": 278.1953125,
+          "w": 92.8046875
+        }
+      ]
+    },
+    {
+      "stage": 8,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 182.8046875,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 212.8046875,
+          "w": 30
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 250.8046875,
+          "w": 36
+        },
+        {
+          "label": "Add media",
+          "hit": true,
+          "x": 292.8046875,
+          "w": 89.1953125
+        }
+      ]
+    },
+    {
+      "stage": 9,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 190.7578125,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 220.7578125,
+          "w": 30
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 258.7578125,
+          "w": 36
+        },
+        {
+          "label": "Next: Audience",
+          "hit": true,
+          "x": 300.7578125,
+          "w": 81.2421875
+        }
+      ]
+    },
+    {
+      "stage": 10,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 134,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 164,
+          "w": 30
+        },
+        {
+          "label": "Open the draft",
+          "hit": true,
+          "x": 202,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 240,
+          "w": 36
+        },
+        {
+          "label": "Make an output",
+          "hit": true,
+          "x": 282,
+          "w": 100
+        }
+      ]
+    },
+    {
+      "stage": 11,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 134,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 164,
+          "w": 30
+        },
+        {
+          "label": "Open the draft",
+          "hit": true,
+          "x": 202,
+          "w": 36
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 240,
+          "w": 36
+        },
+        {
+          "label": "Open Outputs",
+          "hit": true,
+          "x": 282,
+          "w": 100
+        }
+      ]
+    },
+    {
+      "stage": 12,
+      "width": 390,
+      "overflow": false,
+      "controls": [
+        {
+          "label": "Smaller text",
+          "hit": true,
+          "x": 176.890625,
+          "w": 30
+        },
+        {
+          "label": "Larger text",
+          "hit": true,
+          "x": 206.890625,
+          "w": 30
+        },
+        {
+          "label": "More",
+          "hit": true,
+          "x": 244.890625,
+          "w": 36
+        },
+        {
+          "label": "New output",
+          "hit": true,
+          "x": 286.890625,
+          "w": 95.109375
+        }
+      ]
+    }
+  ]
+}

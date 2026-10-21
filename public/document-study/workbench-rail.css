@@ -3,6 +3,10 @@
    reads as opening out of the item. */
 :root{--wb-railw:66px;--wb-panelw:240px;--wb-rail-bg:var(--c3-lift,var(--rail));--wb-sel:var(--c3-sel,var(--line));--wb-panel:color-mix(in srgb,var(--wb-rail-bg) 45%,var(--wb-sel));--wb-bbar:60px}
 .wb-bbar{display:none}
+/* Library lives in Gather. Its former footer entry remains the real action owner, used by All sources. */
+html body.wb-on #app>.shell>.workflowNavigation.wb-rail>.tr-find>[data-tr-topics]{display:none!important}
+/* The grouped phone sheet keeps the same unnumbered section names as the desktop rail. */
+.workflowNavigation.wb-rail :is(.stepNumber,.cr-picker-count){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;margin:0!important;padding:0!important;font:400 var(--t-label)/1.2 var(--ar-ui)!important}
 
 @media(min-width:851px){
  /* Columns: rail, the panel only where a section has something to browse, then the work. */
@@ -25,7 +29,7 @@
  .workflowNavigation.wb-rail>#c3-tabstrip :is(.ht-switch,.ht-plus){flex:none;width:100%}
  .workflowNavigation.wb-rail .wn-family{padding:0!important;margin:0!important;border:0!important}
  .workflowNavigation.wb-rail .wn-family+.wn-family::before,.workflowNavigation.wb-rail>.workflowSteps::before,.workflowNavigation.wb-rail>.tr-find::before{content:"";display:block;height:1px;margin:5px 10px;background:var(--line)}
- .workflowNavigation.wb-rail .tr-act{display:none!important}
+ .workflowNavigation.wb-rail :is(.tr-act,.wn-family-label){display:none!important}
  .workflowNavigation.wb-rail .wn-family-steps{gap:1px}
  .workflowNavigation.wb-rail>.tr-find{margin-top:auto;padding:0!important;border:0!important;gap:1px}
  /* One item: icon over a 13px name. */
@@ -38,7 +42,7 @@
  .workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.tr-link,#c3-tabstrip summary) svg{flex:none;width:18px;height:18px;color:inherit!important}
  .workflowNavigation.wb-rail .workflowStep .stepName{flex:none!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit!important;color:inherit}
  /* No number badges and no state words on the rail; both stay in the button for screen readers. */
- .workflowNavigation.wb-rail :is(.stepNumber,.currentMark,.tr-state,.tr-n,.tr-label,.ht-switch-label,.ht-plus-label){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;margin:0!important;padding:0!important}
+ .workflowNavigation.wb-rail :is(.stepNumber,.currentMark,.tr-state,.tr-n,.tr-label,.ht-switch-label,.ht-plus-label){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;margin:0!important;padding:0!important;font:400 var(--t-label)/1.2 var(--ar-ui)!important}
  .workflowNavigation.wb-rail :is(.recordDot,.cr-dot){display:none!important}
  .workflowNavigation.wb-rail #c3-tabstrip .ht-switch>summary>svg:last-of-type{display:none}
  .workflowNavigation.wb-rail :is(.tr-home,.tr-link)::after{content:attr(data-short);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -79,7 +83,7 @@
 @media(prefers-reduced-motion:reduce){#wb-panel .wbp-n{transition:none}}
 
 /* The title-line button that brings a collapsed panel back (desktop) or opens its sheet (phone). */
-#app #wb-open{display:inline-flex!important;align-items:center;gap:6px;align-self:flex-start;justify-self:start;width:auto;min-height:32px;margin:0 0 10px 40px;padding:0 10px;border:1px solid var(--c3-line2,var(--line));border-radius:7px;background:none;color:var(--ink);font:500 var(--t-label)/1 var(--ar-ui);cursor:pointer}
+#app #wb-open{display:inline-flex!important;align-items:center;gap:6px;align-self:center;justify-self:start;width:auto;min-height:32px;margin:0 0 0 auto;padding:0 10px;border:1px solid var(--c3-line2,var(--line));border-radius:7px;background:none;color:var(--ink);font:500 var(--t-label)/1 var(--ar-ui);cursor:pointer}
 #app #wb-open:hover{background:var(--wb-sel)}
 #app #wb-open:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 
@@ -117,7 +121,7 @@
  html body.wb-on #app>.shell>#wb-panel{position:fixed;left:0;right:0;bottom:calc(var(--wb-bbar) + env(safe-area-inset-bottom,0px));z-index:66;display:flex;flex-direction:column;max-height:min(70dvh,560px);background:var(--paper);border-top:1px solid var(--line);border-radius:14px 14px 0 0;box-shadow:0 0 0 100vmax rgba(0,0,0,.45);font:400 var(--t-body)/1.45 var(--ar-ui);color:var(--ink)}
  #wb-panel .wbp-row{min-height:44px}
  #wb-panel .wbp-n{opacity:1}
- #app #wb-open{margin-left:var(--c3-gx,16px)!important}
+ #app #wb-open{margin-left:auto!important;flex:none}
  /* The workspace scrolls above the bar; the bar's More menu and toasts stay above the bottom bar. */
  html body.wb-on #c3-surface-bar .sb-menu{max-height:calc(100dvh - 140px);overflow:auto}
 }

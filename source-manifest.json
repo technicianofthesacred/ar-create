@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "09fd11675198b106f48360ef23146946fffa230b1471528f0f8c2fe60f5247cf",
-      "candidateSha256": "9b8b63a5b4b6bab05c9ade9e0d315894cbb7ef07acc268c9eacd0f8cea5b85c9",
+      "candidateSha256": "f8a7b76dbe82b8cfece94c6e11a3aceda4ce0384fe1cf5c2d24371d16d558f1d",
       "adapted": true
     },
     {
@@ -2609,11 +2609,11 @@
     },
     {
       "path": "public/document-study/surface-bar.js",
-      "candidateSha256": "857781b3dd15eeb3f7025da27b65c789d242c614150d18839e22f5f914db3b1d"
+      "candidateSha256": "af02c949921950a2ced91cd3cf0acb8ec21a3bb47f6523b3fc079a4d43874a39"
     },
     {
       "path": "public/document-study/surface-bar.test.mjs",
-      "candidateSha256": "9c6dde438f90a4ccf368c5e6520b36849d1fc0156c405ed5993777b74afb19a2"
+      "candidateSha256": "80db6d612f71c10f247887f5effbf68e13b21e7046f0924d0ffcbd2442ece947"
     },
     {
       "path": "public/document-study/waiting-band.css",
@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "0b034ad77466c7622c79d2e4789465a74869247357b9d558d764259d337e4eb0"
+      "candidateSha256": "3a64b0950a65cf2a3d35086c88c9630de9166e29059d797a58f507d76bd880a7"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2705,7 +2705,7 @@
     },
     {
       "path": "public/document-study/tree.js",
-      "candidateSha256": "03239343735d9b9fadeb8b82fca98b2d60ebc012802ba072b4152bb03e689a29"
+      "candidateSha256": "92a0004eff832ca05088a7f9fd1d65312a1eb2641c46acff23d60d2401cef3ba"
     },
     {
       "path": "public/document-study/tree.test.mjs",
@@ -2845,7 +2845,7 @@
     },
     {
       "path": "docs/product/PRODUCT.md",
-      "candidateSha256": "a0d94264b37ad3e85594c52f7222079d36270ee1e7f71e5443b59e317e367368"
+      "candidateSha256": "8f7015d8e6320fe156efd14a9a3abeebb71298a12af5bde78a9eb581d554cd74"
     },
     {
       "path": "docs/product/sections/01-material.md",
@@ -2897,7 +2897,7 @@
     },
     {
       "path": "docs/product/sections/README.md",
-      "candidateSha256": "1a248b375b8cbe9d233097832d68b51f7eeb9af068c6b6018a00ede341b8ab30"
+      "candidateSha256": "9df6135ad804b210e37f31aa49264c590eb1cf942782983c8fcca65b6a932bbe"
     },
     {
       "path": "docs/product/specs/2026-10-18-connected-library-ideas-tea-design.md",
@@ -2925,11 +2925,11 @@
     },
     {
       "path": "docs/START.md",
-      "candidateSha256": "265f47285783476effe04a488ae40a9920022285cb27114e96d8935aefaf7c43"
+      "candidateSha256": "1c91553c2f84d37e5aa0eca1997ec27e41521cf8797eb71df588a44284d9a1a8"
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "c263b1f84931956994eaebab10076517eae8ef548c74ec280abd65ee4e36af41"
+      "candidateSha256": "971494bcbf261e6f1180b6a1df8e1acffe399a55442d27fcd871700f2a6bb43a"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3290,6 +3290,142 @@
     {
       "path": "tests/study-originals-audio.test.mjs",
       "candidateSha256": "94b39cfaa820d39484271f131d2c9234e4d799e855c1453daae9e517b21e878c"
+    },
+    {
+      "path": "design/three-directions/BRIEF.md",
+      "candidateSha256": "4c5158e05dd67ee68471c787037cada83fdf05255f993033a29bbd0500ab776a"
+    },
+    {
+      "path": "design/three-directions/a-document/NOTES.md",
+      "candidateSha256": "dd709d4b19749c5f834975ec9707849f3729f95a217a67c43bf47c0fb95dab61"
+    },
+    {
+      "path": "design/three-directions/a-document/index.html",
+      "candidateSha256": "f987d82fc1a3525239b361774997cf94c56a4f24e2f9209ef358607442b56648"
+    },
+    {
+      "path": "design/three-directions/b-studio/NOTES.md",
+      "candidateSha256": "91a1e21c3ca4c477ae5992d49d344531ef1e5b01fb791ed9d9e81b27f0361ba9"
+    },
+    {
+      "path": "design/three-directions/b-studio/index.html",
+      "candidateSha256": "19f9264e376acc60088178f5e853c2c871ab6a17de622f44ae69eb0f134ae2db"
+    },
+    {
+      "path": "design/three-directions/c-workbench/NOTES.md",
+      "candidateSha256": "ed372f6e7f6899d1c800ff8bd377cebedd9fda398728dc251e7a4da88d29dc1b"
+    },
+    {
+      "path": "design/three-directions/c-workbench/SCALE-AUDIT.md",
+      "candidateSha256": "a78a204994d61c040468f7500ac2d25e4cc3719dff8bb24af29920401b65b0f0"
+    },
+    {
+      "path": "design/three-directions/c-workbench/ig-layouts.json",
+      "candidateSha256": "1e987f06ecdca273fa70b6008a40e8811a057f2185bb87d78546c8a0b2dadc85"
+    },
+    {
+      "path": "design/three-directions/c-workbench/index.html",
+      "candidateSha256": "fcfb59edde96e914f409995c8d4009015dc3e3b7003152a740620045c26a644e"
+    },
+    {
+      "path": "design/three-directions/c-workbench/media.css",
+      "candidateSha256": "b1dc8e5f8d53cbbb7aa233ee4f89f9f2a14c090c36b760c89181f474eddde7a1"
+    },
+    {
+      "path": "design/three-directions/c-workbench/media.js",
+      "candidateSha256": "a2da7a39e31742ab2bf7ba35ec8007b7e46978a5393721e8d7d71d1138e5004f"
+    },
+    {
+      "path": "design/three-directions/c-workbench/scale.css",
+      "candidateSha256": "cf8ba4826df6452c61f0cc08088054134a7aaf9bf338ae4ed6ea222cc6114798"
+    },
+    {
+      "path": "design/three-directions/c-workbench/scale.js",
+      "candidateSha256": "c063ce0b5c4b4c7a23a7613aeee7631a2688cb3cbd0e182511e0810cdba88ee3"
+    },
+    {
+      "path": "design/three-directions/claude-design/A Document-led.dc.html",
+      "candidateSha256": "263925cc8745346d079f0a3d152d2314146dcbbb0fc6c02d3d12341b6b940ebc"
+    },
+    {
+      "path": "design/three-directions/claude-design/B Studio by subject.dc.html",
+      "candidateSha256": "cf861e52afab420325be4f6751cc31cbc5cad16596e15b75b9efeba2503e3f7d"
+    },
+    {
+      "path": "design/three-directions/claude-design/C Workbench by resuming.dc.html",
+      "candidateSha256": "03c604caea9f7a2782e9603213e73d0302421bf3b8a0491cb41affdaf1447d57"
+    },
+    {
+      "path": "design/three-directions/claude-design/CANVAS.md",
+      "candidateSha256": "b639bc6543bce9b6635675a4633f698c6a7e15e3682042a12578e638bb415287"
+    },
+    {
+      "path": "design/three-directions/claude-design/Compare.dc.html",
+      "candidateSha256": "79d35b640c848a903ea27c7be596d96bed865cbd369e88eb58f53cdd15896730"
+    },
+    {
+      "path": "design/three-directions/claude-design/Start here.dc.html",
+      "candidateSha256": "62bdf31852f3509aeb203414836c98db65d7a746e21b3a9a005ca554c1de5207"
+    },
+    {
+      "path": "design/three-directions/claude-design/build_pages.py",
+      "candidateSha256": "de00586a55e1e7388452d243cc02e629b5b25b662cc7e9d926472a449f53ef29"
+    },
+    {
+      "path": "design/three-directions/claude-design/directions.json",
+      "candidateSha256": "85e9db15f905e81578041b2243b2a63e855a885509d43333e6384ef7a6936885"
+    },
+    {
+      "path": "design/three-directions/claude-design/verify_upload.sh",
+      "candidateSha256": "b4673958df263cf4d78393e4bf52ef4f1808e6c65706c9bf4fce7d0d80e1c1b0"
+    },
+    {
+      "path": "design/three-directions/index.html",
+      "candidateSha256": "0644ef24aacbbde5feece7ec0c0ca73df5106dd297d4d0f1189513afc86d4254"
+    },
+    {
+      "path": "docs/verification/workbench-step1/README.md",
+      "candidateSha256": "e88559eb0463842da39c52bceb5a61149a192539a86346c322842f0d65c6084e"
+    },
+    {
+      "path": "docs/verification/workbench-step1/phone-controls.json",
+      "candidateSha256": "4c61528d8db93c4b81e0cd75bedf9e045b0ed58d9513696ac13bf5c57988b01c"
+    },
+    {
+      "path": "docs/verification/workbench-step1/save-switch-undo.json",
+      "candidateSha256": "e6929951b4153602b7518c257b9ac08c7226c6b477d0fd0b95f8d60a588d7df0"
+    },
+    {
+      "path": "docs/verification/workbench-step1/screen-measurements.json",
+      "candidateSha256": "61c9767c93867aa68df54c1f0ef4b0827d1687b7bf2dcf3ce52c20e890a8cd39"
+    },
+    {
+      "path": "docs/verification/workbench-step1/test-comparison.json",
+      "candidateSha256": "99462faffc7e5293a641e3a14524afe1fd7def3b753254e768d666c9edcd55e0"
+    },
+    {
+      "path": "docs/verification/workbench-step1/zoom.json",
+      "candidateSha256": "fe315d44a7a315db7f76a8f346e9e0e0e6398a2552d8b5493f3960de1dc72bc5"
+    },
+    {
+      "path": "public/document-study/type-scale.css",
+      "candidateSha256": "ce51f12bbf2209c74f334957a839ef26cfc2a0cebd372b8d5e8562b5fda893b4"
+    },
+    {
+      "path": "public/document-study/workbench-rail.css",
+      "candidateSha256": "bd3fd017babb3a381c580b78ff38659b37ac72aabe1ea65e5cc6d6a469a8f42e"
+    },
+    {
+      "path": "public/document-study/workbench-rail.js",
+      "candidateSha256": "48e70c3d66d97c4e8006673de2e88e82073116ac261d1f8a6d0c9f95445bf85e"
+    },
+    {
+      "path": "tests/workbench-rail.test.mjs",
+      "candidateSha256": "1d76dbc87ef786c5753aa81dcdac02ddc5e8cea1a907104e1f712d9d73281382"
+    },
+    {
+      "path": "docs/verification/workbench-step1/paragraph-geometry.json",
+      "candidateSha256": "acebddab9ce6ac737eb44ccfced71652029842731bca43fea372f75fd82c02ea"
     }
   ],
   "dependencyRepair": {

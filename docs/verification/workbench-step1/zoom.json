@@ -1,0 +1,19 @@
+{
+  "synthetic": true,
+  "rootScalePersistsReload": true,
+  "results": [
+    {
+      "width": 1440,
+      "zoom": 1.125,
+      "readWriteIdentical": true,
+      "blocks": 5
+    },
+    {
+      "width": 390,
+      "zoom": 1.125,
+      "readWriteIdentical": true,
+      "blocks": 5
+    }
+  ],
+  "restoredScale": 1
+}

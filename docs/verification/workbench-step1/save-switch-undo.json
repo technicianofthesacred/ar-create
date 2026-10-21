@@ -1,0 +1,29 @@
+{
+  "synthetic": true,
+  "privateContentRead": false,
+  "installedAppTouched": false,
+  "checks": [
+    "hk edit/autosave",
+    "An Cha edit/autosave",
+    "switch back HK exact saved words",
+    "HK reload exact saved words",
+    "HK saved Undo exact raw and SHA256",
+    "switch back An Cha exact saved words",
+    "An Cha reload exact saved words",
+    "An Cha saved Undo exact raw and SHA256"
+  ],
+  "projects": [
+    {
+      "id": "hk",
+      "originalId": "hk-article",
+      "restoredHash": "212ae43c761e9cb06570a2bc197a853816d462ffd84032ffb80d8e3626e34d57",
+      "originalHash": "212ae43c761e9cb06570a2bc197a853816d462ffd84032ffb80d8e3626e34d57"
+    },
+    {
+      "id": "ref-an-cha",
+      "originalId": "ancha-1",
+      "restoredHash": "7793bb30c7c09197b76c862484af2de6de5b7d13cf86ef3da710060965e3f4b0",
+      "originalHash": "7793bb30c7c09197b76c862484af2de6de5b7d13cf86ef3da710060965e3f4b0"
+    }
+  ]
+}

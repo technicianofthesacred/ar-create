@@ -32,6 +32,8 @@ test('one bar: where you are and one state word on the left, exactly one primary
  assert.ok(bar.querySelector('[aria-label="Undo"]'));
  assert.equal(bar.querySelector('.sb-right [aria-label^="History"]'),null,'History is in More');
  assert.equal(bar.querySelector('.sb-primary').textContent,'Ask about words','the C1 primary for Write with words');
+ assert.equal(bar.querySelector('.sb-primary').getAttribute('aria-label'),'Ask about words');
+ assert.equal(bar.querySelector('.sb-primary').dataset.short,'Ask');
  assert.equal(bar.querySelectorAll('.sb-primary').length,1);
 });
 
@@ -51,7 +53,7 @@ test('More lists the remaining real controls, keeps disabled ones disabled and s
  const f=fixture();
  press(f,'[data-sb-more]');
  const items=[...f.bar().querySelectorAll('.sb-menu .sb-item')].map(b=>[b.textContent.replace(/\s+/g,' ').trim(),b.disabled]);
- assert.deepEqual(JSON.parse(JSON.stringify(items)),[['Outputs',false],['History · every saved version',false],['A−',false],['A+',false],['New output · Article',false],['New output · Post',true],['Study details',false],['Revisions',true],['Voice',false],['Perspective',false]]);
+ assert.deepEqual(JSON.parse(JSON.stringify(items)),[['Outputs',false],['History · every saved version',false],['New output · Article',false],['New output · Post',true],['Study details',false],['Revisions',true],['Voice',false],['Perspective',false]]);
  assert.equal(f.bar().textContent.includes('Open current working words'),false);
  [...f.bar().querySelectorAll('.sb-menu .sb-item')].find(b=>b.textContent.includes('Study details')).click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['study']);
@@ -194,4 +196,19 @@ test('work receipts have no strip of their own: More → Receipts opens them, st
  const item=f.bar().querySelector('[data-sb-receipts]');assert.ok(item,'Receipts in More');item.click();
  const dialog=f.d.getElementById('c3-receipts');assert.ok(dialog?.hasAttribute('open'));
  assert.equal(f.d.getElementById('connected-work-receipts'),owner,'the same panel, moved');assert.ok(dialog.contains(owner));assert.equal(owner.open,true);
+});
+
+test('Workbench exposes one root text-size control outside More and keeps the scale across sections',async()=>{
+ const f=fixture({draft:true});
+ assert.equal(f.bar().querySelectorAll('.sb-right>[aria-label="Text size"]').length,1);
+ assert.equal(f.bar().querySelector('[data-sb-more]').getAttribute('aria-expanded'),'false');
+ press(f,'[aria-label="Larger text"]');
+ assert.equal(f.d.documentElement.style.getPropertyValue('--z'),'1.125');
+ assert.equal(f.w.localStorage.getItem('c3-doc-scale'),'1.125');
+ f.w.current().view='record';f.w.current().viewedStage=6;f.w.render();
+ assert.equal(f.d.documentElement.style.getPropertyValue('--z'),'1.125');
+ press(f,'[aria-label="Smaller text"]');
+ assert.equal(f.d.documentElement.style.getPropertyValue('--z'),'1');
+ assert.equal(f.bar().querySelectorAll('[data-cb-size]').length,2);
+ await new Promise(r=>setTimeout(r,0));f.w.close();
 });

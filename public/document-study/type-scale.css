@@ -19,9 +19,10 @@
  --c3-t1:var(--t-label);--c3-t2:var(--t-body);
 }
 body{font-size:var(--t-body)}
+body.c3-tabs{--c3-doc-font:var(--ar-ui)}
 
 /* ---------- the manuscript: Write, Read and Check are one document ----------
-   Same column (--measure), same font (the shipped system sans), same size and line height, same left edge and top
+   Same column (--measure), same font (the approved shipped Plus Jakarta Sans), same size and line height, same left edge and top
    padding. Paragraph margins, padding and borders never change on focus, highlight or a margin note, so nothing moves. */
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){
  padding:var(--wb-doc-top) 48px 120px var(--wb-doc-left)!important;margin:0!important;max-width:none!important;width:auto!important;
@@ -36,8 +37,9 @@ html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) h1{
  font-family:var(--c3-doc-font)!important;font-size:var(--t-title)!important;font-weight:600!important;line-height:1.35!important;letter-spacing:0!important;margin:0 0 calc(var(--t-reading) * 1)!important;padding:0!important;max-width:var(--measure)!important}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h2,h3,h4,h5,h6){
- font-family:var(--c3-doc-font)!important;font-size:var(--t-reading)!important;font-weight:600!important;line-height:var(--lh-read)!important;letter-spacing:0!important;margin:calc(var(--t-reading) * 1.5) 0 calc(var(--t-reading) * .25)!important;padding:0!important;max-width:var(--measure)!important}
-html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(h1,h2,h3,h4,h5,h6):first-child{margin-top:0!important}
+ font-family:var(--c3-doc-font)!important;font-size:var(--t-head)!important;font-weight:600!important;line-height:var(--lh-read)!important;letter-spacing:0!important;margin:calc(var(--t-reading) * 1.5) 0 calc(var(--t-reading) * .25)!important;padding:0!important;max-width:var(--measure)!important}
+html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)) :is(#manuscript,.draft-read-words)>:is(h1,h2,h3,h4,h5,h6):first-child{margin-top:0!important}
+html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace .draft-read-words>section:first-child>:is(h1,h2,h3,h4,h5,h6):first-child{margin-top:0!important}
 /* The read-only reader no longer floats a narrower card in the middle: it is the Write page without the editing. */
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs[data-c3-stage="6"] #app #workspace>.phaseReader.c3-read{max-width:none!important;margin:0!important;padding:0!important}
 html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.phaseReader.c3-read,.wn-check-manuscript){padding-top:0!important;margin-top:0!important}
@@ -45,18 +47,28 @@ html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.phaseReader.c3
  :root:root:root{--wb-doc-left:16px;--wb-doc-top:24px}
  html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){padding:var(--wb-doc-top) 16px 96px var(--wb-doc-left)!important}
  html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:var(--t-title)!important;line-height:1.35!important}
- html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.document,.recordPage) :is(h2,h3):not(:first-of-type){font-size:var(--t-reading)!important}
+ html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.document,.recordPage) :is(h2,h3):not(:first-of-type){font-size:var(--t-head)!important}
  html:not(#wb):not(#wb):not(#wb) body.c3-tabs #app .workspace :is(.manuscript,.recordBody,.recordPage) p{font-size:var(--t-reading)!important;line-height:var(--lh-read)!important}
 }
 
-/* ---------- long-form serif (Source, Research, notes, shared prose): stays serif, at the reading size ---------- */
+/* Read wraps passages for exact note targets; wrappers add no layout or spacing.
+   Keep the elements themselves present so passage jumps still have real boxes. */
+html:not(#wb):not(#wb):not(#wb) body #app #workspace .draft-read-words>section[data-draft-passage]{margin:0!important;padding:0!important;border:0!important}
+html:not(#wb):not(#wb):not(#wb) body #app #workspace .draft-read-words>section[data-draft-passage]>:last-child{margin-bottom:calc(var(--t-reading) * .75)!important}
+
+/* Shared notes use the same interface family. Serif is reserved for spoken words. */
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody){font-family:var(--ar-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody) :is(p,li,h1,h2,h3,h4,h5,h6,.shared-prose-block){font-family:var(--ar-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.source-turn-speech,.source-turn-text,.rpb-quote,.source-quote,.rs-quote){font-family:var(--atlas-prose-font)!important;font-size:var(--t-body)!important}
+
+/* ---------- long-form notes and shared prose: the one reading size ---------- */
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody) :is(p,li,blockquote,.shared-prose-block,del,ins){font-size:var(--t-reading)!important;line-height:var(--lh-read)!important;font-weight:400!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.draft-context-words,.recordBody){font-size:var(--t-reading)!important;line-height:var(--lh-read)!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.recordBody) :is(h1,h2,h3,h4,h5,h6).shared-prose-block{font-size:var(--t-title)!important;font-weight:600!important;line-height:1.35!important}
 
 /* ---------- weights: 400, 500, 600 only ---------- */
 body :is(b,strong,th,h1,h2,h3,h4,h5,h6,dt,legend):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-weight:600}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(b,strong){font-weight:600!important}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(b,strong):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-weight:600!important}
 
 /* ---------- the interface: every remaining size on one of the tokens ---------- */
 html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(small,.small,.c3t-line,.ce-step,.ce-n,.ce-arr,.docfooter span,.sws-revision,.material-boundary,.material-intake span,.flow-lane-head span,.sourceGuard,.why,.draft-surface-ai-state,.c3-tool-d,.sb-why,.draft-check-status span,.flow-row>.small,.c3-sr){font-size:var(--t-label)!important;line-height:var(--lh-ui)!important}
@@ -106,3 +118,41 @@ html:not(#wb):not(#wb):not(#wb) body #app .workspace .flow-details>p,html:not(#w
 html:not(#wb):not(#wb):not(#wb) body #app .workspace button:not(.workflowStep):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-size:var(--t-label)!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.material-readiness,.human-direction-actions,.sws-check-scope) :is(span,strong){font-size:var(--t-label)!important}
 html:not(#wb):not(#wb):not(#wb) body #app .workspace .c3-empty .ce-copy h3{font-size:var(--t-title)!important;font-weight:600!important}
+
+/* Tool descriptions remain interface copy, including unclassed donor paragraphs. */
+html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.mot-surface,.mot-tools,.sws-tool,.flow-tool,.photos-stage-room) p{font-size:var(--t-body)!important;font-weight:400!important}
+
+/* The approved text controls live on the title line, not behind More. */
+#c3-surface-bar .wb-text-size{display:inline-flex;align-items:center;gap:2px;flex:none;font:400 var(--t-label)/1 var(--ar-ui)}
+#c3-surface-bar .wb-text-size button{min-width:30px;min-height:32px;padding:0 5px;border:0;border-radius:6px;background:transparent;color:var(--ink);font:500 var(--t-label)/1 var(--ar-ui);cursor:pointer}
+#c3-surface-bar .wb-text-size button:hover:not(:disabled){background:var(--wb-sel,var(--line))}
+#c3-surface-bar .wb-text-size button:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+#c3-surface-bar .wb-text-size button:disabled{opacity:.4;cursor:default}
+#c3-surface-bar .wb-text-size output{min-width:3.3em;text-align:center;color:var(--dim)}
+#c3-surface-bar .sb-cp-n{display:none!important}
+@media(max-width:650px){#c3-surface-bar .wb-text-size output{display:none}#c3-surface-bar .wb-text-size{gap:0}}
+/* Existing material previews and the phone's section picker share the same scale. */
+html:not(#wb):not(#wb):not(#wb) body #app .mrb-meta{font-size:var(--t-label)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .mrb-icon{font-size:var(--t-head)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .mrb-reading{font:400 var(--t-reading)/var(--lh-read) var(--ar-ui)!important}
+html:not(#wb):not(#wb):not(#wb) body #app .workflowNavigation .cr-picker strong{font:600 var(--t-head)/var(--lh-ui) var(--ar-ui)!important}
+
+/* Retained manuscript headings and margin labels obey the same scale on narrow screens. */
+html:not(#wb):not(#wb):not(#wb) body #app #workspace :is(.document,.recordPage) :is(h2,h3,h4,h5,h6):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-size:var(--t-head)!important;font-weight:600!important}
+html:not(#wb):not(#wb):not(#wb) body #app #margin .draft-surface-margin-summary span{font-size:var(--t-label)!important;font-weight:400!important}
+/* The mobile decorators must not put a second toolbar or source summary between identical words.
+   Their real controls remain mirrored in the bar/More and the source-and-brief tool. */
+@media(max-width:850px){
+ html:not(#wb):not(#wb):not(#wb) body #app #workspace>.desk{padding-top:0!important}
+ html:not(#wb):not(#wb):not(#wb) body #app #workspace>.phaseReader.c3-read>.draft-row,
+ html:not(#wb):not(#wb):not(#wb) body #app #workspace>.desk>.document>.draft-surface-document-meta[data-c3-mirrored]{display:none!important}
+}
+/* Keep every phone action inside its actual hit area instead of clipping A−/A+ off the left.
+   The primary keeps its complete accessible name; the compact label states the same action. */
+@media(max-width:650px){
+ #c3-surface-bar .sb-left{width:90px!important}
+ html body.wb-on #app .workflowNavigation .cr-picker{width:90px!important;max-width:90px!important}
+ html:not(#wb):not(#wb):not(#wb) body #app .workflowNavigation .cr-picker strong{font-size:var(--t-label)!important}
+ html:not(#wb):not(#wb):not(#wb) body #app #c3-surface-bar .sb-primary{font-size:0!important;max-width:100px;padding-inline:10px}
+ html:not(#wb):not(#wb):not(#wb) body #app #c3-surface-bar .sb-primary::after{content:attr(data-short);font:500 var(--t-label)/1.45 var(--ar-ui)}
+}
