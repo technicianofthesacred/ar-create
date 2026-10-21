@@ -3501,7 +3501,7 @@
     },
     {
       "path": "docs/verification/workbench-full/test-comparison.json",
-      "candidateSha256": "31bd800357c9b1c102225a9935085aba28dece052ed7f51ad87f88a5f3085852"
+      "candidateSha256": "3b928a4460f7212e8af998443e89b69b9c5b8db3553acb83b5697c73d6a13674"
     },
     {
       "path": "docs/verification/workbench-full/navigation-preservation.json",

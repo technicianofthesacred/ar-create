@@ -10,8 +10,8 @@
     "durationMs": 24751
   },
   "uiCandidate": {
-    "tests": 348,
-    "pass": 341,
+    "tests": 349,
+    "pass": 342,
     "fail": 7,
     "sameFailureNames": true
   },
@@ -32,5 +32,8 @@
   "notes": [
     "Full UI-only source suite; pending folder tests are excluded.",
     "Final accessible icon labels also received focused owner regression checks."
-  ]
+  ],
+  "build": "pass",
+  "package": "pass",
+  "verificationRevision": "247d75649799c0d9da14f7f652043935736dd852"
 }
