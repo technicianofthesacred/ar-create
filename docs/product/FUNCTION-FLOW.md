@@ -4,11 +4,9 @@ Maintained 20 October 2026. Read this with the [function integration list](DESIG
 
 **Status legend:** **Working, bounded** means the recorded installed behavior has scoped verification; it does not mean every requested operation works. **Partial** means some requested connections remain. **Not connected** means the action must not be presented as having run. Dashed arrows are intended or conditional connections, not proof of implementation. Provider access, editorial approval, exporting and publication are different facts.
 
-## Current connection status — installed bounded checkpoint, 20 October
+## Current connection status
 
-Standalone Collection learning, optional source-free Project connection, scoped current understanding/typed references/direction connections and work receipts are now installed alongside C3. Synthetic native proof covers pickup fallback, source/evidence acceptance and known/unknown impact, inherited direction/local override with sibling preservation, dirty context detours, bounded preparation/recovery and whole-Carousel completion facts. Exact installed bytes and read-only Learning library→same editor/words plus usable receipt controls are separately verified. These statements supersede older candidate-only notes below for those named edges, not all product functions.
-
-Automatic one project-backed writing text at first typing, explicit earlier-browser-text reconciliation and expanded existing-receipt/session history are now installed as a separate bounded checkpoint. Synthetic native proof covers writes/conflicts/preview/new-operation restore/Undo; actual installed review is read-only and leaves existing earlier wording pending. Actual provider execution, private content-repository synchronization, device access, universal history and publication remain separate. See [the same integration list](DESIGN-PASS-ADDITIONS.md#installed-connected-c3-checkpoint--20-october).
+Moved. Status is stated once, in [status/CURRENT.md](../status/CURRENT.md#installed-checkpoints-20-october). The diagrams below show intended and conditional connections only.
 
 ## 1. Whole workspace
 
@@ -295,11 +293,11 @@ flowchart TD
 
 **Bounded Project mapping:** the existing named saved workspace can represent the human Project in this local pass; no separate entity or multi-workspace Project is required by the adopted model. Preserve exact maintained identities. Project-to-Piece membership resolves native parent/root bindings, not a guessed shared physical workspace. Accepted Collection-to-work usage references may establish association; proposal, organizational membership, source/edition freshness and permission to inherit direction remain distinct. A stale usage reference flags review without erasing organizational navigation. A source-free Collection remains independently useful; unavailable source-free attachment is an explicit gap, never a fabricated source. Deep Review adjudicated this mapping; actual two-Collection/Project/Article+Carousel drift/detach/Undo proof remains with Delivery and Build before completion.
 
-The designer needs one explicit existing-to-intended mapping before choosing new labels or relationships. Keep the first Claude pass intact; carry this as a dated next-pass delta in the same integration list and versioned handoff. A local file or an authorized local Claude tool does not prove Claude Design in the cloud received the update. Returned designs must be reconciled against current verified functions and recovery/approval boundaries before integration.
+The designer needs one explicit existing-to-intended mapping before choosing new labels or relationships. Carry this as a dated next-pass delta in the same integration list and versioned handoff. A local file or an authorized local Claude tool does not prove Claude Design in the cloud received the update. Returned designs must be reconciled against current verified functions and recovery/approval boundaries before integration.
 
 ## Coverage and maintenance
 
-The authoritative status, owner and finish criteria remain in [the integration list's section map](DESIGN-PASS-ADDITIONS.md#section-and-connection-map-for-the-combined-handoff), with detailed proof on Delivery's existing checklist. All twelve sections appear above. Optional future Library, media, provider and private-access work remains visible with its actual limits rather than silently being omitted from the handoff.
+The authoritative status, owner and finish criteria remain in [the section-by-section status](../status/CURRENT.md#section-by-section), with detailed proof on Delivery's existing checklist. All twelve sections appear above. Optional future Library, media, provider and private-access work remains visible with its actual limits rather than silently being omitted from the handoff.
 
 For every functional delivery, the owner supplies its changed nodes/edges, affected section IDs and proof/limits. Delivery updates the same integration list; the flowchart maintainer updates this file from that accepted result. Update connections and status before freezing a Claude handoff. Do not make a feature appear complete merely by changing a label or arrow.
 
@@ -309,7 +307,7 @@ The design-ready handoff must contain the reviewed current code-only source/pack
 
 Apply the [six adopted improvements](PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history) across these same connections. Prioritize Pick up here and Current understanding; they are accepted requirements, not newly verified functions. The visible return path is selected Collection/Piece → current understanding and actual changes → one useful continuation → source/research/media detour → same work. The twelve checkpoints remain accessible beneath this journey. Scoped source/decision changes lead to known affected work or an explicit uncertainty; bounded agent work uses the same records; completion belongs to each Piece/edition while inquiry may continue.
 
-Before the next Claude handoff, Deep Review checks this map's paths and Delivery reconciles accepted requirements, actual connection proof and unfinished edges with the sole Build owner. Preserve the active Claude build. Keep detailed implementation status in the existing integration list, not this acceptance overlay.
+Before the next Claude handoff, Deep Review checks this map's paths and Delivery reconciles accepted requirements, actual connection proof and unfinished edges with the sole Build owner. Keep detailed implementation status in the existing integration list, not this acceptance overlay.
 
 ## 7. Return, understand and continue — adopted paths awaiting connection proof
 
@@ -354,7 +352,7 @@ flowchart TD
 
 ## Latest handoff priority — design and wiring in parallel
 
-[20 October direct human instruction](PRODUCT.md#20-october--design-ready-handoff-comes-first): deliver the reviewed current code-only design packet now. These diagrams and the same integration list show where every agreed function belongs, what it does and what remains unfinished. Keep prepared/unmounted and intended edges visible and truthful; the next designer need not wait for their live wiring. Preserve the current Claude build. Continue the functional goal and builder-owned native verification separately; this packet is not proof of full completion.
+[20 October direct human instruction](PRODUCT.md#20-october--design-ready-handoff-comes-first): deliver the reviewed current code-only design packet now. These diagrams and the same integration list show where every agreed function belongs, what it does and what remains unfinished. Keep prepared/unmounted and intended edges visible and truthful; the next designer need not wait for their live wiring. Continue the functional goal and builder-owned native verification separately; this packet is not proof of full completion.
 
 ### Earlier connected candidate proof — superseded by the installed status above
 

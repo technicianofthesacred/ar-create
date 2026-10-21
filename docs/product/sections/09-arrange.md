@@ -24,7 +24,6 @@ Consume the same selected footage and saved shot ranges from Media. An article m
 
 Begin with the smallest supported select/play/place/save/reopen journey. Reuse the existing templates and output tools. Preserve the original, allow a proposed range to be reviewed in context and derive where-used/order from actual placements. Unsupported video export targets must be clearly identified before export; showing a poster is not proof that video export works. Whole-film timeline editing and automatic cross-tool synchronization require separately bounded work.
 
-14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
 
 ## Distinct composition work — 15 October clarification
 

@@ -1,10 +1,12 @@
 # Round 2 — source, look and actual connection status
 
+> **Historical, kept for the record.** Written for the 20 October 2026 Claude Design round. It is not required reading and does not describe today. Start at [AGENTS.md](../../AGENTS.md) and [START.md](../START.md); what works now is in [status/CURRENT.md](../status/CURRENT.md).
+
 20 October 2026. **This is the current repository entry/status baseline. Read current `main`; no ZIP is required.** The prior8334 archive is historical. This repository source composes the reviewed safe source with the exact 74-file C3/connection delta and current requirements. It is not a checkout of remote main alone and is published as an explicit private source update. Git history identifies the exact source revision; source delivery is separate from runtime activation.
 
 ## The visual baseline
 
-Approved merged C3 source: `336bb20d9ebf0027a64eae45f3989cb325e5acf9` (PR12/13 already merged). Read [LOOK.md](LOOK.md). Actual values and behavior decoration are in `public/document-study/c3-theme.css`, `c3-defaults.css`, `home-tabs.*`, `surface-bar.*`, `checkpoint-rail.*`, `canvas-c3.*`, `inspector.*`, `research-tab.*`, `empty-states.*` and `waiting-band.*`. Use those files rather than inventing a new visual specification. The final annotation-fit stylesheet is SHA256 `56ed6ca124d3847c8413ec6368ed2f8a9c71a2442f2bc1dd49811b6fb293a0b7`.
+Approved merged C3 source: `336bb20d9ebf0027a64eae45f3989cb325e5acf9` (PR12/13 already merged). Read [LOOK.md](../product/LOOK.md). Actual values and behavior decoration are in `public/document-study/c3-theme.css`, `c3-defaults.css`, `home-tabs.*`, `surface-bar.*`, `checkpoint-rail.*`, `canvas-c3.*`, `inspector.*`, `research-tab.*`, `empty-states.*` and `waiting-band.*`. Use those files rather than inventing a new visual specification. The final annotation-fit stylesheet is SHA256 `56ed6ca124d3847c8413ec6368ed2f8a9c71a2442f2bc1dd49811b6fb293a0b7`.
 
 The approved C3 look is installed on the author's Mac. Native owned-manuscript Write→Read→return preserved exact words/binding/revision state; Home and Library remained reachable. More-menu actions fit wide and phone layouts. Final annotation repair keeps all ten marked-word groups clear at wide and390px, with a12px minimum gap and reachable native approval buttons; no approval was submitted or words changed. The same active server was retained. Those bounded installed checks do not prove every function below or this source baseline's whole synthetic journey.
 
@@ -24,16 +26,16 @@ The six supported local paths plus one-copy/history and visible independent lear
 
 ## Read and run the actual source
 
-[CLAUDE-DEVELOPMENT.md](../CLAUDE-DEVELOPMENT.md) maps source and synthetic setup. [CONCEPT-AGENT.md](CONCEPT-AGENT.md) describes the existing installed parent-based local concept path; [AGENT-CONNECTIONS.md](AGENT-CONNECTIONS.md) describes the bounded installed standalone-Collection and work-receipt contracts. Legacy parentStudyId-only commands do not implicitly cover standalone Collection scope. A source hash is not factual certification, and a proposed relationship is not human adoption.
+[CLAUDE-DEVELOPMENT.md](../DEVELOPMENT.md) maps source and synthetic setup. [CONCEPT-AGENT.md](../CONCEPT-AGENT.md) describes the existing installed parent-based local concept path; [AGENT-CONNECTIONS.md](../AGENT-CONNECTIONS.md) describes the bounded installed standalone-Collection and work-receipt contracts. Legacy parentStudyId-only commands do not implicitly cover standalone Collection scope. A source hash is not factual certification, and a proposed relationship is not human adoption.
 
 Build this source baseline itself and run its disposable synthetic demo on an unused candidate port; never on installed8841 or private data. Source delivery verification is pinned to the actual pushed commit outside the source itself; the manifest records each reviewed source file. Build success is not a full native-flow claim. Local entry is the real app at `http://127.0.0.1:8841/document-study/index.html`; i64 entrance is `http://127.0.0.1:8888/ar-create`. Connected Claude can read only the repository files its granted connection exposes, not automatic access to either URL or private folders.
 
 ## Repository reading order
 
-1. `CLAUDE-DESIGN-START.md` and the paste brief: actual structure, intended function placement and current limits.
-2. `docs/LOOK.md`: the approved C3 guide.
+1. `docs/history/CLAUDE-DESIGN-START.md` and the paste brief: actual structure, intended function placement and current limits.
+2. `docs/product/LOOK.md`: the approved C3 guide.
 3. `public/document-study/c3-theme.css` and `c3-defaults.css`: actual style values; the other C3 modules show their real hooks.
-4. `docs/DESIGN-PASS-ADDITIONS.md` and `docs/FUNCTION-FLOW.md`: added functions and why the work connects.
-5. `docs/PRODUCT.md` and the twelve section briefs: adopted intent, including one working text and session history.
+4. `docs/product/DESIGN-PASS-ADDITIONS.md` and `docs/product/FUNCTION-FLOW.md`: added functions and why the work connects.
+5. `docs/product/PRODUCT.md` and the twelve section briefs: adopted intent, including one working text and session history.
 
 No private screenshots or media are included. Shipped screens exist at the local route; the packet relies on the actual approved look guide/style modules rather than attaching private author text. Use invented fixtures for all returned design examples.

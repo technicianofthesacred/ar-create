@@ -2,6 +2,10 @@
 
 AR Create is a separate development repository and remains an i64 OS capability. i64 hosts the entry, routing and availability/lifecycle boundary; AR Create owns Document Study and its existing file/workflow services. Do not merge the databases or introduce a second manuscript authority.
 
+## Where the entrance lives
+
+The entrance is the i64os code that opens AR Create from the shell and returns to it: `apps/core/lib/develop/ar-create.ts`, `apps/core/routes/develop.ts`, `apps/web/lib/ar-create-navigation.ts` and `apps/web/components/concourse/ArCreateSurface.tsx`, plus the rail entry and the full-page route with the i64os header. It lands on i64os `main` in i64os pull request #208. Until that merges, the files exist only on that branch, and a path to them from `main` is dangling. The old `claude/ar-create-finish` i64os branch also carries a stale copy of the app under `apps/ar-create`; this repository is the only source, so that copy is retired and not to be merged.
+
 ## Preserved current integration
 
 The existing i64 rail and Writing entrance opens `/ar-create`, checks the local companion's identity and offers its guarded owned launcher when available. The companion retains `/document-study/index.html`, loopback binding and its existing Host/Origin/CSP checks. The metadata-only health endpoint is `/api/i64os/health`; it identifies the service, not completion of every workflow.
@@ -16,6 +20,6 @@ The 18 October bounded relocation is verified: installed runtime/dependencies/da
 2. Verify this repository's locked install/build and relevant synthetic screen/file journeys without private copies, services or providers being activated implicitly.
 3. Prepare an explicit reversible code-home/config transition. Moving data is a separate decision; absolute captured ownership must remain valid or be migrated by its existing owner with proof.
 4. Let the integrator perform sole live activation. Verify the i64 entry, service identity, same existing story/part, durable save/return and exact Undo before retiring anything.
-5. Only after replacement/preservation acceptance may i64 be reduced to documented launcher/integration code. Keep a recoverable old package/data snapshot; do not strip it during repository creation.
+5. i64os is reduced to the entrance described above. Keep a recoverable old package/data snapshot until the integrator confirms the retirement.
 
 Secure VPS/desktop replicas, offline writes, conflicts, phone access, media availability and versioned backup remain the separately agreed private-content plan. They are not installed or authorized by this code repository handoff. No public deployment or private upload is implied.

@@ -1,6 +1,6 @@
 # Generic kept-source and Material host contract
 
-This is a provisional source contract for accepted transcript/Material/Source/Research slices. Final output integration and Delivery's latest flow/list/doc freeze are separate. Keep the existing Claude design pass unchanged.
+This is a provisional source contract for accepted transcript/Material/Source/Research slices. Final output integration and Delivery's latest flow/list/doc freeze are separate.
 
 ## Explicit host configuration only
 

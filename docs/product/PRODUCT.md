@@ -1,8 +1,10 @@
 # AR Create — what we are building
 
-Living product requirements · maintained 20 October 2026.
+Living product intent · reorganised 21 October 2026. Everything above the Decision log is current intent. The Decision log at the end holds every dated decision, in date order, with nothing deleted.
 
-This is the entry point for product direction. It connects the purpose, non-negotiable behavior, twelve section briefs and Delivery's work checklist. Requirements describe the intended product; they do not prove that it works today.
+New here: read [AGENTS.md](../../AGENTS.md) and [START.md](../START.md) first. What works today is in [status/CURRENT.md](../status/CURRENT.md), never in this file. Requirements describe the intended product; they do not prove that it works.
+
+The order of authority when sources disagree is stated once, in [START.md](../START.md#rules-that-do-not-bend).
 
 ## The purpose
 
@@ -23,62 +25,15 @@ Projects can begin with a recording, supplied transcript, typed idea, photo, lin
 - **Reward useful effort through clarity:** the project browser shows one concise project title and its current step, supports new projects and filing, and follows the selected light/dark theme. Resume the author's own work; don't substitute a generic file tree. Show how a contribution changed the current work and what meaningful action is next, without invented progress or gamification.
 - **Prove the direction visually:** before implementing a consequential unresolved major-section direction, show focused alternatives for that choice. Alternatives are not a compulsory exercise for every section or each delivery. Existing chosen aspects remain respected; do not repeatedly reopen them. The current document-first foundation is an evolving direction, not blanket acceptance of every surface. Use targeted Impeccable critique when useful; verify actual screen interactions as well as file behavior.
 
-## Accepted delivery priorities — 14 October 2026
+## Design baseline and typography
 
-The author adopted the critical recommendations: additions must make the actual conversation-to-output journey clearer, faster and more trustworthy. Treat them as priorities and constraints, not an obligation to build every possible control or make every checkpoint compulsory.
+### The design baseline
 
-1. Finish usable work from material understanding and chosen direction through reliable direct editing, media arrangement, actual output review and export. Prioritize creative decisions carrying forward, visible agent work, preserved edits and working output links.
-2. Reuse the original Magazine editorial process and approved AR capabilities while improving demonstrated interaction friction. Preserve the author's editorial decisions; legacy controls, awkward forms and conflicting storage are not automatically requirements to retain.
-3. Add refinements only where they earn their effort: concise voice guidance, contextual edit/move controls, decision-ready transcript cards, readable bilingual sources and source-linked footage selection. Build on the maintained tools and scope each delivery to a testable journey.
-4. Keep private online/offline synchronization as a separate bounded workstream. First prove reliable text access, revision conflict handling and recovery; expand device/media coverage afterward. It must not become a dependency that blocks local content production. Private hosting, credentials, transmission and external activation still need their actual authority.
+The baseline is the Tree, commit `094204e` (activity sidebar, Working on switch, pieces list, step path), on the approved C3 look (`336bb20`) with Try again (`1b7a156`). The October 2026 rebuild re-laid it as three regions and one bar (sidebar, work column, inspector only where passages are anchored, and the bar); see [START.md](../START.md#the-screen-three-regions-and-one-bar). Preserve that shipped look and its working handlers, save guards and exact Undo. Dated entries below that say "preserve Claude's current build" refer to the pass that was current on their date; they no longer bind.
 
-### Guardrails from the critical review
+### Typography
 
-- Incoming agent/file changes show origin, revision and what changed. Review conflicts with the current draft; never silently overwrite human work or present historical analysis as newly verified evidence.
-- Writing remains dominant. Reveal move/structural controls when useful; keep highlights and margin assistance selective, with discussion attached to its actual context. More controls are not automatically a better work surface.
-- Keep reusable voice guidance concise and distinguish general preferences from this piece's direction. Changes identify affected pending assistance; existing accepted output wording does not silently change or become uniform across every story.
-- Summary cards speed ordinary sorting, but a summary alone is insufficient grounds for destructive deletion. Provide easy access to supporting dialogue and the full conversation; preserve the scope and explicit human decision for permanent removal.
-- Bilingual turn labels follow the appropriate imported source convention and never infer real personal identity from language alone. Keep recording timing available for checking without interrupting the default read.
-- Footage suggestions preserve useful scenes and expose uncertain movement for review. Story needs guide final selection; original recordings remain intact. Existing footage review does not grant automatic trimming of all clips.
-- Design alternatives are for consequential unresolved choices. The earlier request for alternatives for every section does not require recurring design exercises after a direction is chosen. Respect accepted aspects and refine the working view with actual feedback.
-
-### Intended private access
-
-AR Create belongs to the i64 OS tool family. Its separate AR Create repository is the canonical code component; i64 OS provides its host/entrance, and Teajia supplies relevant content and research. The repository contains software, tests and synthetic examples, not private manuscripts, recordings, photographs, saved decisions or account configuration. Private text and revision/decision records are intended to be available online on the author's private server and as computer replicas for offline work. Large originals may remain on the chosen always-on desktop or laptop, with explicit availability and privately accessible previews. Phone access must be authenticated and must explain which originals are available. This topology is an agreed product direction, not installed synchronization or authorization to transmit content. Preserve offline edits and conflicting versions; prove backup/restore independently of synchronization.
-
-### 18 October — Authorized permanent local home
-
-The author separately authorized moving the running app and saved working data outside Codex into `~/Library/Application Support/i64os/ar-create`. Canonical editable source remains in the standalone AR Create checkout. The existing Build integrator alone owns the reversible local copy, launcher update and controlled cutover; retain prior copies for rollback and verify saved edits, revisions, recovery/Undo, source links and the i64 entry/return before declaring the move complete. Preserve the same `http://127.0.0.1:8841` origin so existing browser drafts remain reachable. Linked source originals stay in their existing folders.
-
-The local move is installed. The 18 October owner receipts verify the permanent service/data home, restart preservation of native bindings/words/review/history, unchanged original Markdown and unchanged browser origin; subsequent direct-entry browser proof verifies one-click i64 access and return. These are bounded local checks, not remote synchronization or universal device access. It is distinct from the still-planned VPS replicas, offline synchronization, phone access or private uploads. Do not infer provider activation, new network exposure or external deployment. Claude's active design brief and next returned result remain unchanged; an access/architecture addendum may explain the new home without expanding design scope. Local Claude tools require granted filesystem access; cloud design tools do not gain access to private folders or localhost from a repository connection.
-
-## 20 October — Design-ready handoff comes first
-
-Latest direct human instruction supersedes any later requirement to finish every connection before the next Claude Design handoff. Freeze and deliver the current reviewed code-only source, full function/purpose/placement/state map, section briefs and exact current connection limits **now**, while unfinished functions continue in parallel. The designer must be able to place every agreed capability without pretending it is connected. Distinguish working/verified, prepared but unmounted, planned and externally gated actions. A control may illustrate intended inputs/results but cannot simulate a successful save, processing, approval or export.
-
-This is a design-readiness checkpoint, not completion of the active functional delivery goal. Preserve Claude's current build; the next design pass is separate. Keep originals, direct edits, identities/revisions, exact saved Undo and output independence intact. Builders retain combined-flow verification responsibility before calling later integration usable; Adrian is not asked to test unfinished pieces. Source/package privacy and immutable version checks still apply, but do not wait for unrelated new wiring or repeat old suites to create the handoff.
-
-## Design sequence — complete interface and connections in parallel
-
-15 October direct human clarification supersedes the manager's earlier functional-first interpretation: place the agreed functions in the appropriate sections, even when their connections are not finished, so Claude Design can redesign the interface while implementation continues. Complete backend functionality is not a prerequisite for the design handoff. Preserve the existing document-study foundation and working connections; do not create a third application or editor.
-
-Interface readiness means each section expresses its own purpose, material, actions and meaningful states. An unfinished action may expose its intended inputs, review and result structure with a clear not-connected explanation, without claiming processing, saving, research, approval or export occurred. Working actions keep their real behavior. Distinguish interface-present, connected, verified and human-accepted rather than treating any one as all four. Preserve actual current data and existing private drafts; sample results must be explicitly illustrative and never masquerade as records of this project.
-
-Use the existing twelve section briefs and Delivery checklist, not another backlog. Material and Source must offer different work; Research must represent the actual Magazine/Wordforge depth; Checked must show findings or an honest not-run/empty state and useful next actions; Arrange is composition and Look is audience preview/review/export. Apply the accepted writing typography throughout relevant long-form sources, transcripts, research, notes and manuscripts, not only Read. Keep compact controls sans serif and preserve approved platform-template typography. Clicking one note selects and reveals only its associated passage. Preserve save, revision, Undo, review and independent-output contracts during visual work.
-
-The earlier statement that every function had to work before Claude Design was the manager's misinterpretation, not a separate human requirement. The corrected order is complete the section-specific interface, redesign with Claude Design, and connect the unfinished operations concurrently with protected integration and verification.
-
-## Purpose-specific interfaces across the workspace
-
-15 October direct human direction: review the totality of AR Create so each section has the interaction elements appropriate to its actual job, rather than treating every section as text or a generic record display. Preserve predictable navigation, compact aligned controls and shared work identities while varying the main surface for collection, source reading/correction, research, decisions, writing, checking, visual composition, audience review and follow-up. The overview is an access, addition and editing portal: direct links and meaningful actions orient the author and continue the actual work. Detailed visual arrangements remain subject to focused review; this principle does not authorize a replacement editor, new backend architecture or automatic implementation of every proposed control.
-
-### 16 October — Delegated visual consistency refinement
-
-The author explicitly requested a new isolated visual-design subagent using Impeccable to reduce clutter and make all twelve sections more consistent, delegating routine design choices. Apply shared hierarchy, status vocabulary, control/icon treatment, spacing and aligned grids while preserving each section’s distinct work, existing project navigation, editor, accepted document typography, approved output templates and actual handlers. This is a scoped refinement of the existing application, not a new shell or permission to remove agreed tools, change content authority or infer human visual acceptance. Candidate implementation remains isolated until reviewed and handed through Delivery to the sole Build integrator.
-
-### 16 October — First-class learning in Research
-
-Research helps the author become educated, deepen understanding and continue inquiry even when no output is selected or planned. AR Create remains primarily a content-creation workspace, but learning has independent value: preserve direct Research access, substantial explanations, evidence/source context, follow-up questions and additions to an inquiry. Selecting material for an article/carousel is an optional editorial use of that learning, not its defining purpose or access gate. An output-centered proposal must not subordinate Research to writing or replace it with extracted facts/brief cards. Future standalone research potential does not authorize a separate product/backend/provider now. Grouped navigation and unified writing-mode proposals have not been adopted by this clarification.
+Recorded once. The shipped manuscript in Write, Read and Check is the system sans (16px on 1.5, 40px title, about 700px wide) with a remembered A− / A+ text size; the interface is Plus Jakarta Sans. Atlas (Lora body at 18px on 1.8, Cormorant Garamond headings, 680px) is the type for Source, Research, notes, retained transcripts and other shared long-form prose. Templates and exports keep their own type. The 15 October choice of Atlas for every long-form view was narrowed when C3's system-sans manuscript was approved; Adrian confirmed this split on 21 October 2026. Details: [LOOK](LOOK.md) and [Write](sections/05-draft.md).
 
 ## Product pillars and shared acceptance
 
@@ -90,9 +45,10 @@ These requirements apply across section boundaries. Each scoped delivery names t
 | C02 | Easy project pickup | Browse all projects, see useful progress, create/file a project, switch parts and outputs, then return to the right work and position without losing changes. |
 | C03 | Shared material, independent expressions | One source collection supports separate output wording, layout, review and delivery states. A change flags only affected work for review; it never silently replaces human edits or makes all sibling outputs stale merely because they share origins. |
 | C04 | Trustworthy files and recovery | Finder, the interface and agents refer to the same underlying material with stable identities and revisions. Preserve originals, unsaved work, saved Undo, conflict handling and historical editions. Show unavailable files honestly. |
-| C05 | Joy through clarity | A compact workspace with sans-serif controls, coherent themes, persistent project navigation and continuous document editing. Long-form document typography follows the author’s accepted Atlas reference across relevant source/transcript, research, note and manuscript views, including actual paragraph gaps and heading hierarchy; compact controls and approved output templates retain their appropriate typography. Useful controls sit beside the relevant work. Contextual margin is visible by default with optional Focus. Whole carousels are editable together. Inspect actual wide/narrow and light/dark screens. |
+| C05 | Joy through clarity | A compact workspace with sans-serif controls, coherent themes, persistent project navigation and continuous document editing. Typography follows the one rule under [Typography](#typography). Useful controls sit beside the relevant work. Contextual margin is visible by default with optional Focus. Whole carousels are editable together. Inspect actual wide/narrow and light/dark screens. |
 | C06 | Honest AI and evidence | Distinguish transcript speech, personal reflection, outside evidence and AI proposals. Show processing, failures, uncertainty and unsupported actions. Saved analysis, mechanical checks, synthetic tests and live model execution are different facts. Suggestions need explicit human acceptance. |
-| C07 | Private content and portable access | Keep software in Git and personal material/configuration outside it. Private text replicas, offline work, large-media availability and phone access require their own implementation and recovery proof; they are not established by a source push or local launcher. |
+| C07 | Private content and portable access | Keep software in Git and personal material and configuration outside the code repository and outside the installed `service/` folder. Separately authorized private content backing (the private `teajia-magazine` repository) is allowed. Private text replicas, offline work, large-media availability and phone access require their own implementation and recovery proof; they are not established by a source push or local launcher. |
+
 
 ### The author's decisions carry forward
 
@@ -100,53 +56,52 @@ The visible current decision accompanies relevant research, direction, draft, ar
 
 Browsing an earlier checkpoint is not a stage reset, approval or permission to overwrite later work. Show retained earlier material separately from the current editable version and give a clear route back.
 
+## How the work is organised
+
+**Library** holds reusable sources and personal notes once, with permanent identities. **Collections** are reusable topics or inquiries relating sources, questions and evolving understanding. **Pieces** are independently edited expressions: articles, carousels, videos, shared notes. **Projects** connect multiple Collections and Pieces through the shared Library. A Collection can be explored with no Project or Piece. Associating one with a Project needs no invented source, quote or Piece. Files need not mirror the twelve sections. Source changes flag affected work for targeted review and never rewrite human wording. Full text: [Adopted relationships before folders](#adopted-relationships-before-folders--20-october) and [FILE-CONTRACT-MAP](FILE-CONTRACT-MAP.md).
+
+## Author-led work, many entrances
+
+Adrian supplies lived experience, taste and editorial judgment; AI assists with connections, investigation, organisation and production. The workspace is not a compulsory approval console. Decisions carry forward; questions are asked only when they cannot be inferred. The twelve sections are entrances, not twelve compulsory visits. Full text: [Author-led work without constant supervision](#19-october--author-led-work-without-constant-supervision).
+
+## Agents
+
+The app and agents are equal entrances to the same records. **Agents only propose prose, in every section.** Adrian writes, accepts, rejects, protects wording, adopts direction, publishes and sends; the server refuses those decisions to any non-human actor (403). A human save in the app always stands: it is never silently overwritten, and an agent lease does not block it.
+
+| Agent | Role | Door |
+|---|---|---|
+| Claude Code, Codex | Develop concepts, research, propose wording; build code | `agents/cli/ar-create.mjs --actor agent:<name>` or `agents/mcp/server.mjs`, from this Mac |
+| Claude Design | Design from the code-only repository; no private data | Reads GitHub only |
+| Hermes, Grok, ChatGPT | Intended participants, as above | The same CLI or MCP, from this Mac only for now. Off-Mac reach waits for the VPS replica |
+
+Access is never automatic because something is an AI. Conventions (actor, lease, journal, handoff, ask): [START.md](../START.md#actors-leases-journal).
+
 ## Twelve sections: the work each must support
 
-The linked brief is the detailed authority for that section. The checklist below names its required result, not current completion. Keep the twelve underlying checkpoints while sharing continuous work surfaces where useful. Materials and media remain accessible throughout; stages are not ceremonial gates.
+Each label is the canonical name used in the app (aliases are in [START.md](../START.md#sections-one-name-each)). The linked brief is the detailed authority for that section. The table names the required result, not current completion. Keep the twelve underlying checkpoints while sharing continuous work surfaces where useful. Materials and media remain accessible throughout; stages are not ceremonial gates.
 
 | ID / section brief | Required work and human contribution | Result that carries forward |
 | --- | --- | --- |
 | S01 · [Material](sections/01-material.md) | Bring more files, recordings, text, links and notes in; inspect what deserves keeping; preview, organize and connect whole conversations/resources; choose opening, closing and supporting context; start applicable processing. | Original-linked collection, meaningful groups, processing state and scoped personal context; explicit selected material for the next work. |
-| S02 · [Transcripts & sources](sections/02-transcripts.md) | Transcribe or use supplied transcripts; read several sessions; compare/correct terms and speakers; preserve uncertainty and translations; play associated audio where actually connected. | Versioned corrected sources, attribution and explicit audio/transcript relationships; corrections flag affected later work. |
+| S02 · [Source](sections/02-transcripts.md) | Transcribe or use supplied transcripts; read several sessions; compare/correct terms and speakers; preserve uncertainty and translations; play associated audio where actually connected. | Versioned corrected sources, attribution and explicit audio/transcript relationships; corrections flag affected later work. |
 | S03 · [Research](sections/03-research.md) | Learn from unique conversation points; consult evidence and connected Tea Atlas; distinguish fact, opinion and wisdom; discuss a point, qualify claims, Include/Leave out, and develop a reusable brief. | Evidence-linked understanding and human choices, with honest verification/model status; knowledge enriches rather than replaces personal experience. |
 | S04 · [Direction](sections/04-direction.md) | Compare story/title/structure options; write an original angle; choose audience, language and desired outputs; reject alternatives with reasons. | A scoped plan for each requested piece and retained alternatives; choosing a direction is not prose/publication approval. |
-| S05 · [Draft](sections/05-draft.md) | Resume or develop current words using the plan/research/context; review first-person opening samples before a full new draft; type directly; request selected-passage help in context; save/recover. | Durable independent output wording, accepted edits and pending proposals linked to sources and decisions. |
-| S06 · [Read & refine](sections/06-read-refine.md) | Read and polish the same manuscript; comment beside a passage; compare/accept/reject alternatives; protect deliberate wording and make structural edits. | The author's current text and explicit requests/decisions, with affected checks and approval identified. |
-| S07 · [Check changes](sections/07-check-changes.md) | Reconcile direct edits and AI requests; inspect anchored findings, quote fidelity and remaining editorial questions; jump to passages/sources; rerun only relevant checks. | Revision-bound findings and resolved/held issues; mechanical success remains distinct from evidence, visual and publication approval. |
+| S05 · [Write](sections/05-draft.md) | Resume or develop current words using the plan/research/context; review first-person opening samples before a full new draft; type directly; request selected-passage help in context; save/recover. | Durable independent output wording, accepted edits and pending proposals linked to sources and decisions. |
+| S06 · [Read](sections/06-read-refine.md) | Read and polish the same manuscript; comment beside a passage; compare/accept/reject alternatives; protect deliberate wording and make structural edits. | The author's current text and explicit requests/decisions, with affected checks and approval identified. |
+| S07 · [Check](sections/07-check-changes.md) | Reconcile direct edits and AI requests; inspect anchored findings, quote fidelity and remaining editorial questions; jump to passages/sources; rerun only relevant checks. | Revision-bound findings and resolved/held issues; mechanical success remains distinct from evidence, visual and publication approval. |
 | S08 · [Media](sections/08-media.md) | Inspect photos and videos together; add, preview/play, organize, select, caption and credit; see unused and used-where/order; consume existing source-linked footage selections. | The same material enriched with metadata and selections; usage comes from actual saved placements. Selection is not placement or final approval. |
 | S09 · [Arrange](sections/09-arrange.md) | Place words/media in the selected output; edit the whole carousel sequence; reorder/swap; crop each occurrence nondestructively; use supported video ranges and linked script scenes. | Independent output composition with source references, ordering, captions/credits and transforms; changes appear in Media's used-where view. |
-| S10 · [Review & release](sections/10-review-release.md) | See the actual audience-facing article/carousel/other supported output; resolve readiness issues; compare/edit linked translations; approve the exact edition; export or explicitly request publication. | Correct reviewed edition and export/publication receipts; preview, exported, submitted and verified live remain separate. |
-| S11 · [Share & celebrate](sections/11-share-celebrate.md) | Polish an invitation to people involved; translate/copy/export when needed; record actual sending/replies; discuss corrections or objections linked to the delivered piece. | Private recipient correspondence and explicit correction decisions; no sending by implication and an honest not-applicable/waiting route. |
-| S12 · [Published & complete](sections/12-published-complete.md) | See every requested output and its real next action; open actual content/exports/delivered editions; resolve remaining work, begin a later edition or file the project. | Per-output destinations, dates, edition history and justified completion; no disabled examples or bare Confirmed label counted as usable. |
+| S10 · [Audience](sections/10-review-release.md) | See the actual audience-facing article/carousel/other supported output; resolve readiness issues; compare/edit linked translations; approve the exact edition; export or explicitly request publication. | Correct reviewed edition and export/publication receipts; preview, exported, submitted and verified live remain separate. |
+| S11 · [Share](sections/11-share-celebrate.md) | Polish an invitation to people involved; translate/copy/export when needed; record actual sending/replies; discuss corrections or objections linked to the delivered piece. | Private recipient correspondence and explicit correction decisions; no sending by implication and an honest not-applicable/waiting route. |
+| S12 · [Outputs](sections/12-published-complete.md) | See every requested output and its real next action; open actual content/exports/delivered editions; resolve remaining work, begin a later edition or file the project. | Per-output destinations, dates, edition history and justified completion; no disabled examples or bare Confirmed label counted as usable. |
 
 ## How requirements connect to the work checklist
 
-There is one execution list: **Delivery's existing private work checklist**. Delivery's current-state pointer locates that list and its proof. Do not create another TODO list here or copy private interviews, screenshots, requests or operational histories into Git.
+Delivery's private work checklist is the execution record. [TODO.md](../../TODO.md) at the repository root is its public mirror: it carries the open items with no private detail, and the two are kept in step. There is no third list.
 
-For each S/C requirement being worked on, that checklist records:
+For each S/C requirement being worked on, the checklist records what can actually be used now and where, the missing result with its owner and next action, the status (not started, building, ready to try, blocked or finished), the brief and requirement IDs with the exact result version, and any remaining human choice or limitation. Candidate proof is labelled apart from installed behavior. A finished task does not finish a section. Acceptance includes empty, processing, failed, stale, read-only and unavailable states, and compares the result with Adrian's real journey.
 
-- What can actually be used now, and in which environment.
-- The missing result, responsible owner and next action/dependency.
-- Status: not started, building, ready to try, blocked or finished. Candidate proof is labeled separately from installed behavior.
-- The brief/requirement IDs, exact result version and relevant evidence.
-- Any remaining human choice, privacy permission or limitation.
-
-A finished task does not make the whole section finished. Acceptance includes applicable empty, processing, failed, stale, read-only and unavailable states, not just a happy path. Compare each claimed result with the user's actual journey; preserve exact words, save/switch/reload/Undo and independent outputs wherever affected.
-
-## Every builder uses this entry point
-
-Before scoping work, read this overview, the [relevant section brief](sections/README.md), [human-experience rules](HUMAN-EXPERIENCE.md) and the latest assigned checklist row/current-state pointer. Use [the development guide](../CLAUDE-DEVELOPMENT.md) for maintained source and focused verification. Missing private work-list access is a stated limitation; do not substitute an old chat or this requirements page as current status.
-
-A bounded assignment names requirement IDs, the usable result, allowed files, ownership/dependencies, exact acceptance and the evidence it will return. The existing integrator controls shared wiring and live activation. Delivery commissions useful background helpers and receives results; existing chats have no automatic shared context.
-
-When direction changes:
-
-1. Record the accepted intent in the affected brief and its dated decision note. Change this overview when purpose, pillars or a cross-section relationship changes.
-2. Preserve the rejected/superseded intent and why it changed; distinguish proposals from adopted direction.
-3. Update only affected checklist rows and dependencies, then send Delivery one actionable delta. Do not relay the full conversation through other chats.
-4. Verify the actual result before marking it ready; show a working preview and specific feedback request in the working Build/Design/story chat.
-
-This document records direction; by itself it does not authorize a new architecture, original writeback, provider activation, private-data upload, external publication or runtime cutover. The separately authorized bounded local service move above is an explicit exception for its designated owner, not a general migration or deployment permission.
+When direction changes: record the accepted intent in the affected brief and its dated note (this file only for purpose, pillars or a cross-section relationship); keep the superseded intent and why; update only the affected rows; verify the real result before marking it ready. This file records direction. It does not by itself authorize a new architecture, original writeback, provider activation, private-data upload, publication or runtime cutover.
 
 ## Journey acceptance against the original intent
 
@@ -156,13 +111,44 @@ Review the selected output as a whole, open every listed result, switch projects
 
 ## Connected records
 
-- [All section briefs](sections/README.md): detailed evolving interactions and acceptance.
-- [Human-experience rules](HUMAN-EXPERIENCE.md): language, visual presentation and working-chat expectations.
-- [Developer workspace](WORKSPACE.md): source, private/runtime separation and ownership.
-- [Development guide](../CLAUDE-DEVELOPMENT.md): setup, maintained source and verification.
-- Delivery work checklist/current-state: private execution and current proof, supplied with each builder assignment.
+- [START.md](../START.md): names, data map, conventions. [CURRENT.md](../status/CURRENT.md): what works today.
+- [All section briefs](sections/README.md): detailed interactions and acceptance.
+- [Human-experience rules](HUMAN-EXPERIENCE.md); [LOOK](LOOK.md); [function flow](FUNCTION-FLOW.md); [integration list](DESIGN-PASS-ADDITIONS.md); [file contracts](FILE-CONTRACT-MAP.md).
+- [Developer workspace](../WORKSPACE.md) and [development guide](../DEVELOPMENT.md).
 
-## Change history
+---
+
+## Decision log
+
+Dated decisions in date order, kept whole, including those since superseded. Within a date the order is reconstructed from the working record (the entries are not timestamped). The sequencing that survives from 20 October: place the agreed functions and hand over the design packet now, continue connections in parallel, apply the approved C3 look, and invite Adrian to a walkthrough only after the integrated redesign. Superseded statements stay for the reasoning, not as instruction. "Claude's current build" in an entry means the pass current on that date.
+
+### 14 October
+
+
+#### Accepted delivery priorities — 14 October 2026
+
+The author adopted the critical recommendations: additions must make the actual conversation-to-output journey clearer, faster and more trustworthy. Treat them as priorities and constraints, not an obligation to build every possible control or make every checkpoint compulsory.
+
+1. Finish usable work from material understanding and chosen direction through reliable direct editing, media arrangement, actual output review and export. Prioritize creative decisions carrying forward, visible agent work, preserved edits and working output links.
+2. Reuse the original Magazine editorial process and approved AR capabilities while improving demonstrated interaction friction. Preserve the author's editorial decisions; legacy controls, awkward forms and conflicting storage are not automatically requirements to retain.
+3. Add refinements only where they earn their effort: concise voice guidance, contextual edit/move controls, decision-ready transcript cards, readable bilingual sources and source-linked footage selection. Build on the maintained tools and scope each delivery to a testable journey.
+4. Keep private online/offline synchronization as a separate bounded workstream. First prove reliable text access, revision conflict handling and recovery; expand device/media coverage afterward. It must not become a dependency that blocks local content production. Private hosting, credentials, transmission and external activation still need their actual authority.
+
+##### Guardrails from the critical review
+
+- Incoming agent/file changes show origin, revision and what changed. Review conflicts with the current draft; never silently overwrite human work or present historical analysis as newly verified evidence.
+- Writing remains dominant. Reveal move/structural controls when useful; keep highlights and margin assistance selective, with discussion attached to its actual context. More controls are not automatically a better work surface.
+- Keep reusable voice guidance concise and distinguish general preferences from this piece's direction. Changes identify affected pending assistance; existing accepted output wording does not silently change or become uniform across every story.
+- Summary cards speed ordinary sorting, but a summary alone is insufficient grounds for destructive deletion. Provide easy access to supporting dialogue and the full conversation; preserve the scope and explicit human decision for permanent removal.
+- Bilingual turn labels follow the appropriate imported source convention and never infer real personal identity from language alone. Keep recording timing available for checking without interrupting the default read.
+- Footage suggestions preserve useful scenes and expose uncertain movement for review. Story needs guide final selection; original recordings remain intact. Existing footage review does not grant automatic trimming of all clips.
+- Design alternatives are for consequential unresolved choices. The earlier request for alternatives for every section does not require recurring design exercises after a direction is chosen. Respect accepted aspects and refine the working view with actual feedback.
+
+##### Intended private access
+
+AR Create belongs to the i64 OS tool family. Its separate AR Create repository is the canonical code component; i64 OS provides its host/entrance, and Teajia supplies relevant content and research. The repository contains software, tests and synthetic examples, not private manuscripts, recordings, photographs, saved decisions or account configuration. Private text and revision/decision records are intended to be available online on the author's private server and as computer replicas for offline work. Large originals may remain on the chosen always-on desktop or laptop, with explicit availability and privately accessible previews. Phone access must be authenticated and must explain which originals are available. This topology is an agreed product direction, not installed synchronization or authorization to transmit content. Preserve offline edits and conflicting versions; prove backup/restore independently of synchronization.
+
+#### Change history, 14 October
 
 - 14 October 2026: Connected the existing twelve briefs and shared creative requirements into one product entry point. Delivery retains the existing execution/proof checklist; requirements are not completion claims. No new product behavior is implemented by this documentation.
 
@@ -170,11 +156,49 @@ Review the selected output as a whole, open every listed result, switch projects
 
 - 14 October 2026: The author adopted the critical recommendations and delivery priorities. Narrowed repetitive design-option requirements, made data/edit conflict and deletion-review safeguards explicit, and separated portable synchronization from local content-production delivery. Existing requirements remain; not every enhancement is equally urgent.
 
+### 15 October
+
+
+#### Design sequence — complete interface and connections in parallel
+
+15 October direct human clarification supersedes the manager's earlier functional-first interpretation: place the agreed functions in the appropriate sections, even when their connections are not finished, so Claude Design can redesign the interface while implementation continues. Complete backend functionality is not a prerequisite for the design handoff. Preserve the existing document-study foundation and working connections; do not create a third application or editor.
+
+Interface readiness means each section expresses its own purpose, material, actions and meaningful states. An unfinished action may expose its intended inputs, review and result structure with a clear not-connected explanation, without claiming processing, saving, research, approval or export occurred. Working actions keep their real behavior. Distinguish interface-present, connected, verified and human-accepted rather than treating any one as all four. Preserve actual current data and existing private drafts; sample results must be explicitly illustrative and never masquerade as records of this project.
+
+Use the existing twelve section briefs and Delivery checklist, not another backlog. Material and Source must offer different work; Research must represent the actual Magazine/Wordforge depth; Checked must show findings or an honest not-run/empty state and useful next actions; Arrange is composition and Look is audience preview/review/export. Apply the accepted writing typography throughout relevant long-form sources, transcripts, research, notes and manuscripts, not only Read. Keep compact controls sans serif and preserve approved platform-template typography. Clicking one note selects and reveals only its associated passage. Preserve save, revision, Undo, review and independent-output contracts during visual work.
+
+The earlier statement that every function had to work before Claude Design was the manager's misinterpretation, not a separate human requirement. The corrected order is complete the section-specific interface, redesign with Claude Design, and connect the unfinished operations concurrently with protected integration and verification.
+
+#### Purpose-specific interfaces across the workspace
+
+15 October direct human direction: review the totality of AR Create so each section has the interaction elements appropriate to its actual job, rather than treating every section as text or a generic record display. Preserve predictable navigation, compact aligned controls and shared work identities while varying the main surface for collection, source reading/correction, research, decisions, writing, checking, visual composition, audience review and follow-up. The overview is an access, addition and editing portal: direct links and meaningful actions orient the author and continue the actual work. Detailed visual arrangements remain subject to focused review; this principle does not authorize a replacement editor, new backend architecture or automatic implementation of every proposed control.
+
+##### 16 October — Delegated visual consistency refinement
+
+The author explicitly requested a new isolated visual-design subagent using Impeccable to reduce clutter and make all twelve sections more consistent, delegating routine design choices. Apply shared hierarchy, status vocabulary, control/icon treatment, spacing and aligned grids while preserving each section’s distinct work, existing project navigation, editor, accepted document typography, approved output templates and actual handlers. This is a scoped refinement of the existing application, not a new shell or permission to remove agreed tools, change content authority or infer human visual acceptance. Candidate implementation remains isolated until reviewed and handed through Delivery to the sole Build integrator.
+
+##### 16 October — First-class learning in Research
+
+Research helps the author become educated, deepen understanding and continue inquiry even when no output is selected or planned. AR Create remains primarily a content-creation workspace, but learning has independent value: preserve direct Research access, substantial explanations, evidence/source context, follow-up questions and additions to an inquiry. Selecting material for an article/carousel is an optional editorial use of that learning, not its defining purpose or access gate. An output-centered proposal must not subordinate Research to writing or replace it with extracted facts/brief cards. Future standalone research potential does not authorize a separate product/backend/provider now. Grouped navigation and unified writing-mode proposals have not been adopted by this clarification.
+
+#### Change history, 15 October
+
 - 15 October 2026: The author selected the Tea Atlas reading typography and spacing for the writing surface, omitting printed page numbers. This explicitly updates the previous prose font preference while retaining sans-serif controls and the working document’s editing, margin, navigation and recovery behavior. See S05 for observed reference values and acceptance.
 
 - 15 October corrective feedback: the initial Draft-only Atlas patch was rejected. Verify all representations of the same writing in Draft and Read with actual Hong Kong/An Cha screenshots, including paragraph rhythm and nested/protected blocks. Loaded fonts or one successfully styled view do not establish visual completion.
 
-## 16 October — Adopted grouped navigation and continuous editing
+### 16 October
+
+
+#### 16 October — Delegated visual consistency refinement
+
+The author explicitly requested a new isolated visual-design subagent using Impeccable to reduce clutter and make all twelve sections more consistent, delegating routine design choices. Apply shared hierarchy, status vocabulary, control/icon treatment, spacing and aligned grids while preserving each section’s distinct work, existing project navigation, editor, accepted document typography, approved output templates and actual handlers. This is a scoped refinement of the existing application, not a new shell or permission to remove agreed tools, change content authority or infer human visual acceptance. Candidate implementation remains isolated until reviewed and handed through Delivery to the sole Build integrator.
+
+#### 16 October — First-class learning in Research
+
+Research helps the author become educated, deepen understanding and continue inquiry even when no output is selected or planned. AR Create remains primarily a content-creation workspace, but learning has independent value: preserve direct Research access, substantial explanations, evidence/source context, follow-up questions and additions to an inquiry. Selecting material for an article/carousel is an optional editorial use of that learning, not its defining purpose or access gate. An output-centered proposal must not subordinate Research to writing or replace it with extracted facts/brief cards. Future standalone research potential does not authorize a separate product/backend/provider now. Grouped navigation and unified writing-mode proposals have not been adopted by this clarification.
+
+#### 16 October — Adopted grouped navigation and continuous editing
 
 The author explicitly approved the recommended navigation and editing changes, with Research remaining an independently useful learning space. Keep the existing project rail, all twelve checkpoint identities/entrances and deep links, grouped as Material (1–2), Develop (3–4), Make (5–9), Deliver (10–12). Groups organize access, not mandatory gates. Keep Outputs, the actual selected piece and a meaningful Continue action immediately available; offer one clear New output entrance with supported creation and honestly separate unsupported requests.
 
@@ -182,13 +206,16 @@ Write, Read and Check are continuous modes of the same existing selected output/
 
 This explicitly supersedes the earlier proposal-only status for grouped navigation and continuous writing modes. It authorizes bounded implementation in the existing app, not a new editor/database/research product, provider activation, real output creation or editorial approval. Preserve current styling/templates/words/revisions/Undo/guards and return the actual integrated app with scoped proof and unfinished connections stated.
 
-## 17 October — Collections for posts, products and stories
+### 17 October
+
+
+#### 17 October — Collections for posts, products and stories
 
 Adopted build direction: a project is an ongoing collection around a subject, experience, product, place or idea. It need not begin or end as a story. Shared recordings/transcripts, original photos/video, generated artwork, product documents, personal reflections and research can support independent short posts, product-listing drafts, discovery stories, carousels and requested scripts. Keep sources accessible and useful even when no output is requested. Each output owns its wording, selected context, review and delivery state; creating one does not require or approve another.
 
 Product-listing content belongs in AR Create; Teajia remains responsible for product identity, price, stock and orders. A supplied product reference connects the content to that product without duplicating commerce data or claiming synchronization. Product/source facts, seller claims, personal experience, external evidence and AI suggestions remain distinguishable. Generated artwork is identified separately from photographs of the actual product. Do not invent a tea's age, provenance, attributes or publication history to populate a screen.
 
-### Tea articles and related content — working brief
+##### Tea articles and related content — working brief
 
 The author collects and develops understanding around individual teas, including the experience of finding them, the people and conversations involved, personal tasting/reflection, product information, original photos/video and generated artwork. This material must remain useful before an article is chosen and after any individual piece is finished. One tea collection can support continued learning and several independently developed expressions.
 
@@ -208,7 +235,16 @@ C02 scale requirement: the project sidebar is a compact return point, not an ind
 
 First bounded acceptance: normal navigation across a synthetic collection catalog of at least 100 projects; find, pin, file, archive/restore and resume without an unbounded rail; create and independently edit/save/reopen Post and Product listing drafts using the maintained authorities; preserve Article/Carousel behavior, originals, source identity, exact saved Undo and review safeguards. Validate changed desktop/phone Light/Dark surfaces. New text-output support is content preparation/export only, not authorization to connect or publish to a shop/social account. Requirements recorded here are not installed or verified-functionality claims.
 
-## 18 October — Future design pass and starting from an idea
+### 18 October
+
+
+#### 18 October — Authorized permanent local home
+
+The author separately authorized moving the running app and saved working data outside Codex into `~/Library/Application Support/i64os/ar-create`. Canonical editable source remains in the standalone AR Create checkout. The existing Build integrator alone owns the reversible local copy, launcher update and controlled cutover; retain prior copies for rollback and verify saved edits, revisions, recovery/Undo, source links and the i64 entry/return before declaring the move complete. Preserve the same `http://127.0.0.1:8841` origin so existing browser drafts remain reachable. Linked source originals stay in their existing folders.
+
+The local move is installed. The 18 October owner receipts verify the permanent service/data home, restart preservation of native bindings/words/review/history, unchanged original Markdown and unchanged browser origin; subsequent direct-entry browser proof verifies one-click i64 access and return. These are bounded local checks, not remote synchronization or universal device access. It is distinct from the still-planned VPS replicas, offline synchronization, phone access or private uploads. Do not infer provider activation, new network exposure or external deployment. Claude's active design brief and next returned result remain unchanged; an access/architecture addendum may explain the new home without expanding design scope. Local Claude tools require granted filesystem access; cloud design tools do not gain access to private folders or localhost from a repository connection.
+
+#### 18 October — Future design pass and starting from an idea
 
 **Timing correction:** the Claude Design version already being built/designing remains on its existing handoff, including the version next returned from that work. Later collection/tea/sidebar additions and the concept-brainstorming direction below are inputs for a subsequent design pass, after the active result is available. Do not replace its attachments, rebase its brief, restart it or claim the next returned design includes later changes. Keep already installed application behavior and published source intact; this correction does not request a source rollback or another live redesign. The later design pass should reconcile the returned design with the then-current application and these recorded requirements. No new implementation or design-agent dispatch is requested by recording this idea.
 
@@ -238,7 +274,7 @@ When ready, the author can select an angle and relevant material to develop a vi
 
 **Future acceptance:** start with a blank idea and rough notes; connect an existing story, transcript/source and new writing; retain these references and the original notes through switching/reload; compare proposed titles/angles without accepting them automatically; create two independently editable pieces from selected idea material and revisit the scratchboard without losing notes or altering either piece. This is a requirement for later work, not a claim of installed concept-brainstorming capability.
 
-## 18 October — Curated personal resource library, later design pass
+#### 18 October — Curated personal resource library, later design pass
 
 **Purpose and scale:** AR Create needs an organized, substantial personal library across projects, not only files attached to the current story and not a small recent-items drawer. It holds resources the author has chosen to keep: their own writing/articles, conversations and transcripts, translations, saved reading, PDFs/ebooks and YouTube/video references or permitted clips. Curated describes the selection, not a low volume limit; the library can grow considerably. Projects are the places where work develops; the library is reusable source material. One resource can support several concepts, tea collections and outputs without duplication. These requirements are for a later design pass; the active Claude Design version retains its frozen scope.
 
@@ -256,20 +292,22 @@ When ready, the author can select an angle and relevant material to develop a vi
 
 **Future acceptance:** browse/search a substantial mixed-format curated catalog; find remembered contributions across multiple conversations, the author's writing and saved references; pin a precise passage in a partially read book without marking the entire book personally read; find a translation through its original; connect one resource to several projects without copies; retrieve exact passage/context into an idea and keep all links through source revision and project switching. Check empty/no-match/unavailable/unsupported-processing states and preserve originals and human decisions. This records intent, not installed functionality.
 
-## 18 October — First shared concept connection authorized
+#### 18 October — First shared concept connection authorized
 
 The author now explicitly authorizes connecting the existing agent/file tools so a conversation in Claude or Codex can develop a concept, find permitted Library material and save the same work privately for AR Create to display. This supersedes the earlier implementation hold only for this bounded functional slice. Preserve the current Claude design build, attachments and next returned result; no new concept-page redesign or generic chat client is authorized. Reuse current source/project/context/direction authorities, with an actual usable local agent entry, exact personal words, selected source links, revision-conflict protection and independent outputs. First acceptance is an agent-tool→saved-record→existing-app journey with synthetic material, then app-edit→agent-next-read and conflict preservation. Report available resource types/search limits and actual client setup separately from model account sign-in or universal synchronization. Sole Build integrator owns shared wiring/activation; Delivery retains one checklist and Root verifies the returned journey.
 
-## 18 October — Connected plan for the next design pass
+#### 18 October — Connected plan for the next design pass
 
-The proposed [Library, ideas and tea projects design plan](superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md) connects the accepted intentions above. Agree shared source references, decision scope and return behavior first; develop Library, idea work and tea-project experiences individually; then review their combined journey against the returned Claude design before bounded implementation. A concept is a flexible entrance/working surface within the existing project model, and a tea project is a subject-specific use of that model, not another application or commerce store. The active Claude pass and its next result stay unchanged. This is a proposed design sequence for review, not approved screen layouts, a new implementation assignment or completion proof. Delivery retains the one execution checklist.
+The proposed [Library, ideas and tea projects design plan](specs/2026-10-18-connected-library-ideas-tea-design.md) connects the accepted intentions above. Agree shared source references, decision scope and return behavior first; develop Library, idea work and tea-project experiences individually; then review their combined journey against the returned Claude design before bounded implementation. A concept is a flexible entrance/working surface within the existing project model, and a tea project is a subject-specific use of that model, not another application or commerce store. The active Claude pass and its next result stay unchanged. This is a proposed design sequence for review, not approved screen layouts, a new implementation assignment or completion proof. Delivery retains the one execution checklist.
 
-### Next-pass worked example — one tea concept across formats
+##### Next-pass worked example — one tea concept across formats
 
-The [connected design plan's worked example](superpowers/specs/2026-10-18-connected-library-ideas-tea-design.md#worked-example--one-tea-concept-three-different-pieces) now follows one illustrative tea concept through selected Library conversations, personal writing, media and marked reading into a video, post and article. Each has a distinct purpose, appropriate working surface and independent content/media review; there is no writing-first requirement. Shared creative decisions and exact source links carry forward, while corrections prompt targeted review instead of overwriting edits. This is a synthetic future-design scenario, not a search of private material or proof of connected video production/export. Claude's current pass and next returned design remain unchanged.
+The [connected design plan's worked example](specs/2026-10-18-connected-library-ideas-tea-design.md#worked-example--one-tea-concept-three-different-pieces) now follows one illustrative tea concept through selected Library conversations, personal writing, media and marked reading into a video, post and article. Each has a distinct purpose, appropriate working surface and independent content/media review; there is no writing-first requirement. Shared creative decisions and exact source links carry forward, while corrections prompt targeted review instead of overwriting edits. This is a synthetic future-design scenario, not a search of private material or proof of connected video production/export. Claude's current pass and next returned design remain unchanged.
+
+### 19 October
 
 
-## 19 October — Author-led work without constant supervision
+#### 19 October — Author-led work without constant supervision
 
 Adopted product direction from the author's conversation. Requirements C01/C02/C03/C04/C05/C06, S01–S06; not installed-functionality proof or authorization for a new architecture, provider, external transmission or publication. Preserve Claude's current design build and next returned result. Use this section together with the existing section briefs and Delivery's single checklist.
 
@@ -287,8 +325,10 @@ Adopted product direction from the author's conversation. Requirements C01/C02/C
 
 **Builder acceptance:** one bounded author request can produce a saved, source-linked learning brief and provisional directions through an authorized agent, then open as the same readable work in AR Create. The author adds a direct edit/comment and the next agent read respects it without repeated explanation; adding a known transcript does not require another import or manual quote-extraction task. Prove original/corrected/translated source links and context, save/switch/reload/conflict protection, optional human intervention, honest unsupported states, and that no output is silently approved or rewritten. Do not count synthetic QA as broad live-library or provider completion. Delivery records implemented/verified/missing separately.
 
+### 20 October
 
-## 20 October — Functional completion and one coherent design handoff
+
+#### 20 October — Functional completion and one coherent design handoff
 
 Latest author direction: the current interface is too disjointed to support comfortable content work. Prioritize completing the already-agreed functional connections across the existing workspace, then provide Claude a coherent redesign handoff. Pause the personal tea interview until the author resumes it; preserve the chosen article direction and all saved words. This changes delivery priority, not editorial decisions.
 
@@ -298,36 +338,31 @@ Finish the functional journey in bounded verified slices: add/find material and 
 
 Claude's active design build stays intact. The next handoff includes the current safe source revision, purpose/action map, working/limited/proposed status, representative synthetic end-to-end scenarios, preserved interaction contracts and unresolved limitations. Changes after that freeze go into the same additions record for the next pass. Do not make the author reconstruct capabilities from scattered chats or provide repeated context. Visual acceptance and actual functional verification remain distinct; completion requires the combined app journey, not a checklist of isolated passing handlers.
 
-
-## 20 October — Material access and the next design round
+#### 20 October — Material access and the next design round
 
 Adopted C01/C02/C03/C04/C06, S01/S08: a project's Material tools offer **Open material folder** and an album-link entry, keeping later photo/video additions in that same existing project. Reuse the permanent private folder, source identity and maintained intake/import contracts. Album provider access and import success must be represented honestly; saving a URL alone does not establish imported images, continuous synchronization or support for every private album service. Exact acceptance is in the affected Material/Media briefs.
 
 Keep Claude's active first design pass and next returned result intact. Maintain [one list of added functions and connection limits](DESIGN-PASS-ADDITIONS.md) so the subsequent design round can reconcile them with the existing workspace. This is a design-input record, not a second delivery backlog or permission to implement every proposed function. Private sources, project examples and account configuration stay outside Git.
 
-
-### Human walkthrough comes after integrated design — 20 October clarification
+#### Human walkthrough comes after integrated design — 20 October clarification
 
 The author explicitly does not want to walk through or live-test intermediate functional connections. Builders and Delivery own functional testing, representative synthetic journeys, appropriate installed verification and preservation checks. Do not ask the author to operate unfinished work as QA or make progress depend on their intermediate walkthrough.
 
 Current order: complete the agreed functional connections and record actual limits; hand the consolidated function map and preserved contracts to Claude for interface work; integrate the reviewed design without breaking those connections; builders verify the combined interface; only then invite the author to a coherent walkthrough for personal usability, taste and editorial feedback. Show a human-review item only when that reviewable interface is actually ready. This defers human walkthroughs, not builder screen testing, current implementation or necessary permission boundaries. Do not infer human design acceptance or promise all unsupported/provider-dependent features are complete.
 
+#### Immediate deliverables — functions and UI integration list, 20 October
 
-### Immediate deliverables — functions and UI integration list, 20 October
-
-The author's latest clarification defines two immediate deliverables: (1) build and verify the already-agreed functions, including their connections, and (2) maintain one complete list of what the new UI must integrate. UI redesign is a later delivery and must not displace unfinished functional work. Use docs/DESIGN-PASS-ADDITIONS.md as the single designer-facing integration map and Delivery's existing checklist for execution; do not create another feature list.
+The author's latest clarification defines two immediate deliverables: (1) build and verify the already-agreed functions, including their connections, and (2) maintain one complete list of what the new UI must integrate. UI redesign is a later delivery and must not displace unfinished functional work. Use docs/product/DESIGN-PASS-ADDITIONS.md as the single designer-facing integration map and Delivery's existing checklist for execution; do not create another feature list.
 
 Each agreed function's integration entry identifies its purpose, current location/entry, inputs, actions, result, connected project/source/output context, meaningful empty/processing/error/stale states and actual implementation/verification limits. A listed or visible function is not a built function; a built function is not necessarily integrated into the future UI. Preserve existing working controls while connections are completed. Required account/provider/unsupported-format dependencies stay explicit rather than silently excluded or claimed finished. No new speculative features or architecture are authorized by asking for completeness.
 
-
-### Connected function map and ongoing delivery — 20 October
+#### Connected function map and ongoing delivery — 20 October
 
 The author explicitly requests continued implementation, builder-owned verification, a current Claude handoff and a complete maintained function flowchart. [How the functions connect](FUNCTION-FLOW.md) is the diagram view of the existing [UI integration list](DESIGN-PASS-ADDITIONS.md), not a second backlog. It covers author/agent entrances, Material/Library/transcript processing, independent learning/direction, supported independent outputs, editing/review/media/export/return and revision/recovery safeguards. Working, partial and missing connections must remain distinguishable.
 
 Every accepted functional delivery updates its affected integration entry and diagram nodes/edges from actual proof. Cross-section intent changes update this product brief and the affected section brief. Delivery keeps the existing execution record and owner handoffs current. Continue runnable agreed work after each stable checkpoint; do not stop at another plan, substitute a handoff for unfinished functions or ask the author to test intermediate pieces. Refresh the Claude package only from reviewed current safe source and include the integration list, connected map and preservation contracts. Actual provider/private-transmission/publication gates remain respected and explicit.
 
-
-## 20 October — Mixed-origin topic learning and understandable source organization
+#### 20 October — Mixed-origin topic learning and understandable source organization
 
 Adopted human intent from the working Deep Review conversation: one topic may combine several YouTube videos, available transcripts, personal notes and other origins; a non-tea inquiry remains distinct from a tea project. Collecting, grouping and finding accumulated sources should be easy for both the author and authorized agents. Reuse existing Library, collections, concept/shared-record and Research authorities, with human-readable maintained folder/file organization and stable source identities. Keep each original once; reusable topic relationships do not require duplicate source files or a new Library database/migration.
 
@@ -337,21 +372,19 @@ Proposed interaction mechanics are a compact predictable collection grid/list, s
 
 Next bounded builder acceptance: invented topic A with four video URLs, available supplied transcripts and personal notes, topic B with separate tea material; collect/group/save/switch/reload, open exact original/timestamp/context, reuse one source across topics without copying, agent read of the same source-linked learning record and preserved author amendment, optional output creation without research mutation. Record actual acquisition/provider/index limits separately. Continue the current functional queue; do not start a parallel builder or claim this intent is installed. Same integration list, function flow and existing delivery checklist remain authoritative.
 
-
-### Human-readable files shared by Obsidian, agents and AR Create — 20 October
+#### Human-readable files shared by Obsidian, agents and AR Create — 20 October
 
 The author explicitly adopts a precise, understandable file tree as a fundamental functional requirement, not merely UI tags. Research must support learning questions not yet considered, related groups, multiple topics/tags and optional selected expressions for self/friends or articles/carousels. Maintain one authority for each source, personal note, learning record and output, in human-readable files where the maintained contract supports them. Stable IDs plus relative/Obsidian-compatible references should preserve relationships through supported rename/move operations. App and agent edits use the same notes with revision/conflict protection. A filename alone is not verified Obsidian interoperability.
 
 Reuse the current private Library/collection/project layout. Before any tree implementation, the sole integration owner must inventory current locations and propose an exact existing→extended mapping, with a shallow comprehensible synthetic Sun Exposure/Tea example: reusable source, learning question/brief, personal note, selected passage and independent article/carousel/private-share reference. Cross-topic tags/links reuse the canonical source instead of forcing one source into a single topic or copying it. Verify supported rename/move/reference integrity and Obsidian/agent/app roundtrip before claiming them. No automatic live relocation, new database, private migration or external sharing is authorized. Sharing selects a scoped expression/edition; it never shares the private library folder by default. This contract work stays on the existing delivery plan while current functional implementation continues.
 
-
-### Adopted relationships before folders — 20 October
+#### Adopted relationships before folders — 20 October
 
 The author adopted the refined model: **Library** holds reusable sources and personal notes once with permanent identities; **Collections** are reusable topics/inquiries relating sources, questions and evolving understanding; **Pieces** are independently edited intended expressions such as articles, carousels, videos or shared notes; **Projects** connect multiple Collections and Pieces through that shared Library. A Collection can be explored without a Project or Piece. Explicitly associating an empty or idea-only Collection with an existing named Project must not require an invented source, quote or Piece: organizational association is distinct from evidential support or direction inheritance. A broad tea topic is not one specific visit project. Files need not mirror the twelve checkpoints, and all current tools/direct entrances remain available.
 
 Use meaningful supports/challenges/explores/used-in relationships, optional tags and reversible suggestions, rather than making classification a constant manual task. Retain learning history and reasons; source changes require targeted review instead of rewriting human work. The coherent collect→explore→develop→share direction is accepted; a new pixel layout is not inferred. Map these concepts onto existing maintained private IDs, files and contracts using synthetic examples before changing a tree. Preserve Obsidian/app/agent rename/move/external-edit/conflict integrity and the boundary between selected sharing and unselected private material. This supersedes a rigid Library/Sources/Notes/Research/Outputs folder sketch as conceptual direction; it authorizes no second Research system, new database, private relocation, provider or transmission.
 
-## 20 October — Resume creative work without reconstructing its history
+#### 20 October — Resume creative work without reconstructing its history
 
 Adopted by the author after reviewing the function flow. Prioritize easy pickup and a clear current understanding in the next Claude design pass. These are requirements, not installed completion. Preserve Claude's current build, attachments and next returned version; continue the already-authorized functional connections through Delivery and the sole Build integrator.
 
@@ -366,14 +399,64 @@ Adopted by the author after reviewing the function flow. Prioritize easy pickup 
 
 Next-pass acceptance uses invented material: leave a piece mid-edit, let an authorized agent add permitted learning, return to see actual changes and current understanding, follow a source/research detour and resume the same piece, supersede a scoped decision without rewriting siblings, and complete one edition while another piece and its inquiry remain open. Builders verify save/switch/reload/unsaved conflict/exact Undo and actual navigation before inviting human usability review. Detailed sequencing remains on Delivery's existing checklist; do not create another backlog.
 
-## 20 October — Apply the approved C3 look, then continue writing reliability
+#### 20 October — Design-ready handoff comes first
+
+Latest direct human instruction supersedes any later requirement to finish every connection before the next Claude Design handoff. Freeze and deliver the current reviewed code-only source, full function/purpose/placement/state map, section briefs and exact current connection limits **now**, while unfinished functions continue in parallel. The designer must be able to place every agreed capability without pretending it is connected. Distinguish working/verified, prepared but unmounted, planned and externally gated actions. A control may illustrate intended inputs/results but cannot simulate a successful save, processing, approval or export.
+
+This is a design-readiness checkpoint, not completion of the active functional delivery goal. Preserve Claude's current build; the next design pass is separate. Keep originals, direct edits, identities/revisions, exact saved Undo and output independence intact. Builders retain combined-flow verification responsibility before calling later integration usable; Adrian is not asked to test unfinished pieces. Source/package privacy and immutable version checks still apply, but do not wait for unrelated new wiring or repeat old suites to create the handoff.
+
+#### 20 October — Apply the approved C3 look, then continue writing reliability
 
 The author now authorizes review and integration of the finished C3 look into the working app before beginning the next design pass. This supersedes keeping that specific C3 result unintegrated; it does not authorize overwriting newer connections or treating a GitHub merge as installed proof. Preserve the exact merged source, compose it with the maintained app, and verify actual affected screens and editing/save/switch/export safeguards. Earlier draft pull requests may close once their work is preserved in the merged C3 result.
 
 The [writing brief](sections/05-draft.md#20-october--one-working-text-and-session-history) now requires one project-backed text per piece, automatic working-file creation/opening, invisible local save-ahead, explicit reconciliation of different earlier writing, and session-grouped preview/restore history on existing receipts. No new dependencies or history store. These are accepted work, not claims of installation or cross-device synchronization. The prior design-ready archive remains immutable historical evidence; the next current handoff must describe C3 and its actually verified functional baseline.
 
-## 20 October — Reuse the existing private content repository
+#### 20 October — Reuse the existing private content repository
 
 The author wants personally accessible private repository backing for content as well as code. The existing private `technicianofthesacred/teajia-magazine` repository already contains a Magazine/vault snapshot and photos; its README explicitly describes manual refresh and manual return, with recordings remaining on the Mac. Reuse and assess that existing destination before proposing another content repository. The separate private `ar-create` repository remains software, synthetic fixtures and product/design instructions; granting a designer code access must not implicitly grant access to the complete content library.
 
 Current app data and retained external transcript/original owners are not automatically synchronized to that snapshot. A later bounded connection must map these maintained authorities, preserve exact identities/revisions and source links, keep local/offline work and conflicting edits recoverable, and prove pull/update/return rather than declaring a snapshot to be synchronization. Keep credentials, account configuration and machine-only runtime/lock state outside both repositories. This accepted requirement does not itself relocate originals, upload private files, activate remote access or establish cross-device editing. Earlier “outside Git” language governs the code repository; it does not prohibit separately authorized private content storage.
+
+### Superseded wording kept for the record, 21 October 2026
+
+
+#### Every builder uses this entry point (earlier text)
+
+Before scoping work, read this overview, the [relevant section brief](sections/README.md), [human-experience rules](HUMAN-EXPERIENCE.md) and the latest assigned checklist row/current-state pointer. Use [the development guide](../DEVELOPMENT.md) for maintained source and focused verification. Missing private work-list access is a stated limitation; do not substitute an old chat or this requirements page as current status.
+
+A bounded assignment names requirement IDs, the usable result, allowed files, ownership/dependencies, exact acceptance and the evidence it will return. The existing integrator controls shared wiring and live activation. Delivery commissions useful background helpers and receives results; existing chats have no automatic shared context.
+
+When direction changes:
+
+1. Record the accepted intent in the affected brief and its dated decision note. Change this overview when purpose, pillars or a cross-section relationship changes.
+2. Preserve the rejected/superseded intent and why it changed; distinguish proposals from adopted direction.
+3. Update only affected checklist rows and dependencies, then send Delivery one actionable delta. Do not relay the full conversation through other chats.
+4. Verify the actual result before marking it ready; show a working preview and specific feedback request in the working Build/Design/story chat.
+
+This document records direction; by itself it does not authorize a new architecture, original writeback, provider activation, private-data upload, external publication or runtime cutover. The separately authorized bounded local service move above is an explicit exception for its designated owner, not a general migration or deployment permission.
+
+#### How requirements connect to the work checklist (earlier text)
+
+There is one execution list: **Delivery's existing private work checklist**. Delivery's current-state pointer locates that list and its proof. Do not create another TODO list here or copy private interviews, screenshots, requests or operational histories into Git.
+
+For each S/C requirement being worked on, that checklist records:
+
+- What can actually be used now, and in which environment.
+- The missing result, responsible owner and next action/dependency.
+- Status: not started, building, ready to try, blocked or finished. Candidate proof is labeled separately from installed behavior.
+- The brief/requirement IDs, exact result version and relevant evidence.
+- Any remaining human choice, privacy permission or limitation.
+
+A finished task does not make the whole section finished. Acceptance includes applicable empty, processing, failed, stale, read-only and unavailable states, not just a happy path. Compare each claimed result with the user's actual journey; preserve exact words, save/switch/reload/Undo and independent outputs wherever affected.
+
+#### Product pillars C05 and C07 (earlier wording)
+
+| C05 | Joy through clarity | A compact workspace with sans-serif controls, coherent themes, persistent project navigation and continuous document editing. Long-form document typography follows the author’s accepted Atlas reference across relevant source/transcript, research, note and manuscript views, including actual paragraph gaps and heading hierarchy; compact controls and approved output templates retain their appropriate typography. Useful controls sit beside the relevant work. Contextual margin is visible by default with optional Focus. Whole carousels are editable together. Inspect actual wide/narrow and light/dark screens. |
+
+| C07 | Private content and portable access | Keep software in Git and personal material/configuration outside it. Private text replicas, offline work, large-media availability and phone access require their own implementation and recovery proof; they are not established by a source push or local launcher. |
+
+#### Twelve sections preface (earlier text)
+
+Each label is the canonical name used in the app (aliases are in [START.md](../START.md#sections-one-name-each)). The linked brief is the detailed authority for that section. The table names the required result, not current completion. Keep the twelve underlying checkpoints while sharing continuous work surfaces where useful. Materials and media remain accessible throughout; stages are not ceremonial gates.
+
+The table itself is unchanged apart from section labels, which now use the canonical names; the earlier labels are aliases in START.md.

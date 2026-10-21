@@ -14,9 +14,13 @@ AI transcribes/aligns/flags uncertain words and speaker turns through existing c
 
 The initial recommendation card supplies enough subject, context and meaningful reason for an ordinary keep/remove decision without opening every transcript. Full dialogue stays available; opening it is an optional safety check when the author doubts a recommendation, not a compulsory step for each card. Group whole conversations and preserve their relationships. Extra technical metadata and provenance do not crowd the default decision surface. Clearly disclose the scope before permanent deletion; reversible removal and permanent review-library deletion are different choices.
 
+**Status: Not started** (checked 21 October 2026). No recommendation-card or keep/remove code exists for Source.
+
 ## Readable bilingual conversations
 
 Where an imported conversation uses the established Chinese-source/English-response turn convention, render its back-and-forth as natural dialogue with stable, concise labels. Do not repeat a translation explanation on every turn or insert timestamps that break the reading flow; keep genuine timing available as secondary detail or playback navigation. This convention is scoped to that source format, not a universal language-to-person identification rule. Preserve actual/unknown speaker attribution separately and do not fabricate timing or translation.
+
+**Status: Not started** (checked 21 October 2026). The Source screen has no bilingual dialogue reading; the dormant magazine translation services are not wired to it.
 
 ## Saved result and handoff
 
@@ -34,7 +38,8 @@ This section prepares and organizes conversations that survived the initial Mate
 
 Use compact one-column review cards grouped by recommendation: Worth keeping, Needs your judgment and Removal candidates. The default card shows the subject, a short description, one short decision reason and clear Keep/Remove actions. Optional Read/Expand supports uncertain judgments or deliberate inspection; it is not a routine prerequisite for every decision. Full reasons, dates, media days, companion links and provenance stay behind Why. Short chats expand in place; no passage-selection tasks return. Limit the initial visible batch to reduce scanning. Clearly distinguish earlier recommendations from human decisions and from recorded analysis checks; never infer full-read or product-check completion from an imported source or a generic confidence label. Preserve full explanations and complete dialogue. This is the isolated8927 candidate, not shared activation.
 
-14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
+**Status: Not started** (checked 21 October 2026). There is no code for the Worth keeping, Needs your judgment or Removal candidates cards.
+
 
 ## Distinct Source surface — 15 October clarification
 
@@ -63,7 +68,7 @@ Initial implementation and private content belong to the isolated transcript-rev
 
 S02 / C01 / C04 / C06: factual bullets open the exact source conversation at supporting speech, retaining the full surrounding dialogue. Multiple supporting passages have Previous/Next and Back to notes. Bind anchors to stable existing turn IDs and the reviewed source revision; refuse stale/foreign links instead of searching approximately or inventing quotations. Notes remain separate from source speech.
 
-The author requests processing options for pricing/cost, product details, research/education and stories across future subjects. Filing does not mean processed: pending work must remain visible, accessible and distinguishable from an actual saved result. A visible Needs processing workflow is the recommended design, not an installed processor. Preserve source identity, purchase/sample/offer uncertainty and one item’s multiple potential uses. Product/price writes, destination matching, task execution and result receipts need their maintained connections; this notes candidate does not change shared wiring or the active Claude design.
+The author requests processing options for pricing/cost, product details, research/education and stories across future subjects. Filing does not mean processed: pending work must remain visible, accessible and distinguishable from an actual saved result. A visible Needs processing workflow is the recommended design, not an installed processor. Preserve source identity, purchase/sample/offer uncertainty and one item’s multiple potential uses. Product/price writes, destination matching, task execution and result receipts need their maintained connections; this notes candidate does not change shared wiring.
 
 ## 19 October — Compact fragment reading
 
@@ -74,8 +79,8 @@ Finish criterion: read compact dialogue, jump from a factual bullet to the exact
 
 ## 20 October — Aligned transcript reading and contextual review
 
-S02 / C02 / C04 / C05 / C06. Adopted visual direction for the next appropriate pass: use a polished underlying alignment grid without making the workspace look like a visible grid. Keep buttons in predictable positions, give speech its own aligned reading region, use slim vertical spacing and support easy sequential navigation. Avoid repeated per-turn toolbars and layout jumps as the selected issue changes. Preserve the current frozen Claude design and existing editor/source authorities while this direction is recorded.
+S02 / C02 / C04 / C05 / C06. Adopted visual direction for the next appropriate pass: use a polished underlying alignment grid without making the workspace look like a visible grid. Keep buttons in predictable positions, give speech its own aligned reading region, use slim vertical spacing and support easy sequential navigation. Avoid repeated per-turn toolbars and layout jumps as the selected issue changes. Preserve the existing editor and source authorities while this direction is recorded.
 
 A compact session rail, dominant continuous transcript column and bounded contextual correction/translation review column are a proposal to validate, not a final adopted arrangement. Keep toolbar, applicable playback and review actions stable; labels and common controls align with minimal borders. At narrow widths preserve action order and readable text without horizontal scrolling. Validate ordinary reading, an audio-related issue and a translation issue using invented material on actual wide/narrow screens. Available recordings, corrected sources and separate translations retain identity/revision/attribution and exact words; unavailable playback or translation remains explicit.
 
-Speech, conversations and translated transcripts are pivotal recurring creative inputs, not occasional file attachments. A reliable microphone entrance and whole-session processing are further product-development proposals; direct capture, recording recovery, audio alignment and provider execution are not proven by this visual decision. Source speech, spoken reflection and explicit editing instruction remain distinct. Delivery sequences any later accepted implementation through the sole integrator; this note does not expand the active local connection scope or change the current Claude pass.
+Speech, conversations and translated transcripts are pivotal recurring creative inputs, not occasional file attachments. A reliable microphone entrance and whole-session processing are further product-development proposals; direct capture, recording recovery, audio alignment and provider execution are not proven by this visual decision. Source speech, spoken reflection and explicit editing instruction remain distinct. Delivery sequences any later accepted implementation through the sole integrator; this note does not expand the active local connection scope.

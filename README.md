@@ -1,12 +1,8 @@
-# Current Claude entry
-
-Read [CLAUDE-DESIGN-START.md](CLAUDE-DESIGN-START.md) on current `main` for the approved C3 look, current Round 2 instructions and truthful connection status. Everything needed for the code/design pass is in this private repository; no handoff ZIP is required. Private saved work and account settings stay outside GitHub.
-
 # AR Create — private code repository
 
-Product direction starts at [What we are building](docs/PRODUCT.md): purpose, pillars, twelve section briefs and the connection to Delivery’s work checklist.
+**Agents start at [AGENTS.md](AGENTS.md), then [docs/START.md](docs/START.md).** Product intent is [What we are building](docs/product/PRODUCT.md); what works today is [docs/status/CURRENT.md](docs/status/CURRENT.md); open work is [TODO.md](TODO.md).
 
-This repository is the canonical code-only AR Create development home. It preserves Document Study as a standalone loopback companion integrated with i64 OS. Source delivery is separate from runtime deployment. The sole integrator has completed the bounded permanent local relocation; this checkout does not activate it or contain its private data. See [Claude access](docs/CLAUDE-ACCESS.md).
+This repository is the canonical code-only AR Create development home. It preserves Document Study as a standalone loopback companion integrated with i64 OS. Source delivery is separate from runtime deployment: `node scripts/release.mjs` is the only thing that writes the installed `service/`. This checkout contains none of the private data. See [access](docs/CLAUDE-ACCESS.md).
 
 Use Node 22 or newer. From this directory, run `npm run setup`, `npm run build`, then `npm test`. Dependencies have their own `runtime/package-lock.json`; they are not added to the parent i64 workspace.
 
@@ -34,10 +30,8 @@ The SDK lock is preserved from its checkpoint. Its development-only @modelcontex
 
 ## Living section design briefs
 
-Read the [section brief index](docs/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.
+Read the [section brief index](docs/product/sections/README.md) before changing a section’s purpose or interface. The twelve briefs are canonical developer requirements and proposed interactions, not claims of built functionality. Update the relevant brief and dated decision history as intent is discussed; keep implemented/verified/missing status separate and preserve independently progressing surface work.
 
-Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git. The installed runtime/data have moved to the separately verified permanent home; source/history extraction did not migrate originals.
+Repository history was extracted only from the reviewed i64 `apps/ar-create` subtree. See [repository provenance and preservation](docs/history/REPOSITORY-PROVENANCE.md) and [i64 host integration](docs/I64-INTEGRATION.md). Private data/configuration remain outside Git. The installed runtime/data have moved to the separately verified permanent home; source/history extraction did not migrate originals.
 
 Use the [developer workspace index](docs/WORKSPACE.md) to find code, the twelve briefs, synthetic examples, host/config boundaries and external ownership receipts.
-
-Completed Research/Check checkpoint: scoped read-only derived-findings validation, approved Research presentation, retained-note disclosure and exact owned-part Check entry are included. No actual derived findings receipt is shipped; missing/stale/unverified data remains visibly unavailable. Summary/source integrity is not fresh factual verification or accepted manuscript text. Discussion with a real AI account remains unconnected.

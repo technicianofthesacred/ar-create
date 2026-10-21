@@ -4,7 +4,7 @@
 
 **Boundary:** leave the active Claude Design pass, its attachments and its next returned version unchanged. This plan is for a subsequent pass. It does not start implementation, modify the installed application, replace an editor or source store, import private material, enable providers, or authorize publication. Accepted product intent lives in PRODUCT.md; this document proposes how to design it together. Requirements and proposed screens are not completion proof.
 
-Feature changes accumulated during the frozen first pass are tracked in [the design-pass additions record](../../DESIGN-PASS-ADDITIONS.md). Read its working, limited and proposed states before the subsequent design round.
+Feature changes accumulated during the frozen first pass are tracked in [the design-pass additions record](../DESIGN-PASS-ADDITIONS.md). Read its working, limited and proposed states before the subsequent design round.
 
 ## One connected workspace
 
@@ -258,7 +258,7 @@ Observed local setup on 18 October: Claude and Codex command-line executables ar
 
 ## Adopted next-pass return-to-work direction — 20 October
 
-The author adopts the [six workflow improvements](../../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history). Highest priority: easy pickup and readable current understanding. This adds to the next design pass only; preserve the active Claude build and its next returned result.
+The author adopts the [six workflow improvements](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history). Highest priority: easy pickup and readable current understanding. This adds to the next design pass only; preserve the active Claude build and its next returned result.
 
 Show one compact return point rather than another dashboard of compulsory tasks. Current questions, understanding, author direction and protected words stay close to the work; full history remains available behind them. Use maintained records and show their freshness, source and proposed/adopted distinction. No automatic AI summary may replace the author's record or words. Library-alongside is a selected concept-page direction; retain on-demand/full Library access without making an in-app AI conversation compulsory.
 
@@ -273,7 +273,7 @@ Demonstrate with synthetic content:
 
 C01–C06; use existing S01–S12 contracts. Builder acceptance includes native save/switch/reload/conflict/exact Undo and source-linked return paths. Design demonstrations are illustrative until integrated and verified. Deep Review validates the build paths; Delivery and the sole Build owner reconcile proof/gaps and freeze the same current source, integration list and FUNCTION-FLOW for the next Claude handoff. Do not create a competing plan or change Claude's current build.
 
-Deep Review completed the bounded path check and identified the [concrete missing contracts](../../DESIGN-PASS-ADDITIONS.md#deep-review--concrete-path-gaps-20-october). Include their actual connection status in the next-pass packet: last-seen revisions, scoped current understanding/inheritance, unsaved and failed-save detour recovery, reverse-use coverage, durable assignment receipts and per-edition destination/completion facts. These are acceptance dependencies of the six adopted improvements, not another feature list or authority to interrupt current Build work. The first Claude pass remains intact.
+Deep Review completed the bounded path check and identified the [concrete missing contracts](../DESIGN-PASS-ADDITIONS.md#deep-review--concrete-path-gaps-20-october). Include their actual connection status in the next-pass packet: last-seen revisions, scoped current understanding/inheritance, unsaved and failed-save detour recovery, reverse-use coverage, durable assignment receipts and per-edition destination/completion facts. These are acceptance dependencies of the six adopted improvements, not another feature list or authority to interrupt current Build work. The first Claude pass remains intact.
 
 ### Current-understanding read rules — bounded Deep Review contract
 

@@ -4,7 +4,7 @@ Intent: develop the chosen piece with AI assistance while preserving Adrian's hu
 
 ## Work surface
 
-Continuous document, direct typing, compact toolbar, visible contextual margin and optional Focus. The writing typography follows the author’s 15 October Atlas reference below; navigation, controls and assistance remain sans serif. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
+Continuous document, direct typing, compact toolbar, visible contextual margin and optional Focus. The writing typography follows [PRODUCT: Typography](../PRODUCT.md#typography) (system sans with A− / A+ in Write, Read and Check); the 15 October Atlas reference below is the history of that choice and still governs Source, Research and notes. Navigation, controls and assistance remain sans serif. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
 
 ## Editing and useful guidance
 
@@ -13,6 +13,8 @@ The working page should feel like a capable text document. Move whole paragraphs
 Voice, perspective and recipe guidance must explain the current choice through the actual piece: its purpose, output scope, editable example or suggestion and visible effect. Sources/versions give useful reference and recovery without replacing the manuscript with a settings dashboard. Reuse established guidance instead of generating another voice framework. AI prepares most structuring and suggestions; the author directs and polishes.
 
 The existing voice/expression sheet must be easy to open from the writing surface, read and edit in ordinary language. Add, change or remove guidance in the same maintained record the assistant consumes; show which scope/revision applies to the selected piece. Do not hide it as terminal-only configuration or create a competing voice profile. Editing shared guidance flags affected proposals for review; it does not silently rewrite existing work.
+
+**Status: Not started** (checked 21 October 2026). The writing surface has no way to open or edit the voice and expression sheet.
 
 ## Decisions and AI
 
@@ -26,9 +28,10 @@ Keep reusable voice guidance concise, with general preferences distinct from thi
 
 One durable working manuscript revision with source/decision references, recoverable drafts and scoped proposal history. Save, switch, return, reload and Undo preserve words. Stale or context-invalid proposals refuse application. Existing real documents resume without a new setup ceremony. Live AI connection and arbitrary formatting support must be reported honestly.
 
-14 October clarification: strengthened interaction acceptance from direct human feedback; no installed-functionality claim.
 
 ## Accepted writing appearance — 15 October 2026
+
+**Narrowed on 21 October 2026.** The shipped C3 manuscript in Write, Read and Check is the system sans with a remembered A− / A+ size, and Atlas applies to Source, Research, notes and shared prose. The rule is recorded once in [PRODUCT: Typography](../PRODUCT.md#typography); the original 15 October text follows unchanged.
 
 The author selected the look of the Tea Atlas article at https://www.teajia.com/atlas/read/1906-the-book-of-tea-p11-ii-the-schools-of-tea for writing: its font, spacing and calm continuous presentation, without the printed page numbers. This is a focused refinement of the working document, not a new reader shell or editor. It supersedes the earlier blanket sans-serif requirement for prose and document headings only; keep the surrounding interface in sans serif.
 
