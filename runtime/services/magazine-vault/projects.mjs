@@ -60,7 +60,13 @@ export function planRegistration({vault, files = '', drops = [], archived = DEFA
   const statusText = fs.existsSync(path.join(vault, 'STATUS.md')) ? fs.readFileSync(path.join(vault, 'STATUS.md'), 'utf8') : '';
   const entries = statusEntries(statusText);
   const stories = board.board.map(b => ({b, key: lead(b.story)}));
+  // For the kinds the board itself assigns, registration follows the board exactly (the same story the
+  // live board and STATUS check use); the name matcher below covers only the kinds the board does not track.
+  const DIRS = {RAW: '0-Inbox', SRC: '1-Source', CONTEXT: '1-Source', MAP: '2-Guidance', PLANS: '2-Guidance', DEV: '3-Develop', NOTES: '3-Develop', CHECK: '4-Review', FEEDBACK: '6-Feedback'};
+  const byBoard = new Map();
+  for (const {b} of stories) for (const [kind, names] of Object.entries(b.files || {})) for (const n of names) byBoard.set(`Workflow/${DIRS[kind]}/${n}`, b.story);
   const owner = file => {
+    if (byBoard.has(file.rel)) return byBoard.get(file.rel);
     if (!file.kind || file.archived || ['STATUS', 'ISSUE', 'EXPORT', 'REQUESTS', 'GLOSSARY', 'PAGE-FEEDBACK', 'RATINGS', 'IDEA', 'BLIND', 'WRITER-GUIDE'].includes(file.kind)) return null;
     const base = file.rel.split('/').pop().replace(/\.(md|txt)$/, '').replace(/^EDITS - /, '').replace(/^[A-Z]+ - /, '');
     const names = [base, file.story, file.title, ...(file.aliases || [])].filter(Boolean).map(lead);
