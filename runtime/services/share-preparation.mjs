@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {constants} from 'node:fs';
+import {provenance} from './actor.mjs';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const HASH=/^[a-f0-9]{64}$/;
@@ -139,7 +140,7 @@ export function createSharePreparation({dataDir,outputs,files,outputPrivatePrefi
    const now=snapshot(a);if(!same(expected(now),expected(before)))fail('Share record changed during save; existing bytes preserved.');
    record.revision++;
    const receipt={operationId:input.operationId,revision:record.revision,action,edition:target};
-   record.operations.push({operationId:input.operationId,fingerprint,action,edition:target,beforePreparation:previous,afterPreparationHash:hash(entry.preparation),receipt});
+   record.operations.push({operationId:input.operationId,provenance:provenance(),fingerprint,action,edition:target,beforePreparation:previous,afterPreparationHash:hash(entry.preparation),receipt});
    const bytes=JSON.stringify(record,null,2)+'\n';if(Buffer.byteLength(bytes)>8*1024*1024)fail('Share history has reached the bounded local record limit; no bytes changed.');
    atomicWrite(file,bytes,before.bytes===null?{exclusive:true}:{expectedHash:hash(before.bytes)});
    return render(latest,{file,bytes,record},input,receipt);

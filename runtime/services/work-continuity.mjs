@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {atomicWrite,digest,ensurePrivateDirectory,readJson,regular,resolveInside} from './files.mjs';
+import {provenance,authorOf} from './actor.mjs';
 import {outputPrivatePrefix} from '../output-records.mjs';
 import IG from '../src/donors/mag/carousel/ig-templates.js';
 
@@ -107,7 +108,7 @@ export function createWorkContinuity({dataDir,direction,outputs,outputExports,un
    visit={...visit,state:sameVersion?'same-version':work.known.has(previous.version.revision+':'+previous.version.hash)?'changed-known-history':'changed-history-unavailable',previousVersion:clone(previous.version),recordedVisitAt:previous.recordedAt,registryRevisionChanged:previous.version.revision!==work.version.revision,position:work.scope.kind==='piece'&&!sameVersion?'start-of-work-revision-changed':previous.position&&work.anchors.includes(previous.position.paragraphId)?'anchor-current':work.scope.kind==='piece'?'start-of-work-anchor-unavailable':'start-of-work-no-anchor-owner'};
   }
   const {known,anchors,native,...pointer}=work;
-  return {scope:clone(work.scope),expected:{revision:saved.revision,hash:saved.hash},work:clone(pointer),data:clone(saved.state.data),visit,changeImpact:{coverage:'unknown',affected:null,reason:'No reviewed reverse-use dependency coverage is available.'},completionFacts:saved.state.data.completions.map(row=>({id:row.id,currentEdition:row.version?.editionHash===work.version.editionHash&&row.version?.hash===work.version.hash,publicationVerified:false,artifactRechecked:false})),history:saved.history.map(({op})=>({operationId:op.operationId,kind:op.kind,status:op.status,before:{revision:op.before.revision,hash:op.before.hash},after:{revision:op.after.revision,hash:op.after.hash}})),...operation?{operation}:{}};
+  return {scope:clone(work.scope),expected:{revision:saved.revision,hash:saved.hash},work:clone(pointer),data:clone(saved.state.data),visit,changeImpact:{coverage:'unknown',affected:null,reason:'No reviewed reverse-use dependency coverage is available.'},completionFacts:saved.state.data.completions.map(row=>({id:row.id,currentEdition:row.version?.editionHash===work.version.editionHash&&row.version?.hash===work.version.hash,publicationVerified:false,artifactRechecked:false})),history:saved.history.map(({op})=>({operationId:op.operationId,...authorOf(op),kind:op.kind,status:op.status,before:{revision:op.before.revision,hash:op.before.hash},after:{revision:op.after.revision,hash:op.after.hash}})),...operation?{operation}:{}};
  }
  async function read(input){fields(input,['scope'],['viewerId']);const scope=scopeOf(input.scope);if(input.viewerId!==undefined)uuid(input.viewerId);const work=await currentWork(scope),saved=load(locations(work),scope);return view(work,saved,input.viewerId);}
  function expectedOf(value){fields(value,['revision','hash']);if(!Number.isSafeInteger(value.revision)||value.revision<0||!HASH.test(value.hash||''))fail('Exact continuity metadata revision/hash required.',400);}
@@ -264,7 +265,7 @@ export function createWorkContinuity({dataDir,direction,outputs,outputExports,un
    if(assigned?.understandingContext){const publicationWork=await currentWork(scope);lock.check();if(!same(publicationWork.version,work.version))fail('Maintained work changed during context verification; receipt held.');}
    if(exportRecheck){await exportRecheck();lock.check();}
    const after=snapshot(encode(next),scope,true);
-   ensurePrivateDirectory(loc.dir,'history');const file=resolveInside(loc.history,input.operationId+'.json',{missing:true});const op={schema:'ar-create.work-continuity-operation.v1',scope,operationId:input.operationId,kind,fingerprint,status:'pending',createdAt:now,before:{revision:before.revision,hash:before.hash,raw:before.raw},after:{revision:after.revision,hash:after.hash,raw:after.raw}};
+   ensurePrivateDirectory(loc.dir,'history');const file=resolveInside(loc.history,input.operationId+'.json',{missing:true});const op={schema:'ar-create.work-continuity-operation.v1',provenance:provenance(),scope,operationId:input.operationId,kind,fingerprint,status:'pending',createdAt:now,before:{revision:before.revision,hash:before.hash,raw:before.raw},after:{revision:after.revision,hash:after.hash,raw:after.raw}};
    lock.check();atomicWrite(file,encode(op),{exclusive:true});
    lock.check();atomicWrite(loc.file,after.raw,before.exists?{expectedHash:before.hash}:{exclusive:true});
    lock.check();atomicWrite(file,encode({...op,status:'committed'}),{expectedHash:digest(encode(op))});
