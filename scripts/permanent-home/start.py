@@ -32,7 +32,7 @@ with logfile.open('ab',buffering=0) as log:
   if p.poll() is not None:status['state']='failed';persist();raise SystemExit('Service exited; inspect permanent logs. Existing data preserved.')
   try:
    with urllib.request.urlopen('http://127.0.0.1:8841/api/i64os/health',timeout=.5) as r:body=json.load(r)
-   if body=={'service':'ar-create-document-study','ready':True}:status['state']='listening';persist();print('AR Create listening; PID '+str(p.pid));break
+   if body.get('service')=='ar-create-document-study' and body.get('ready') is True:status['state']='listening';persist();print('AR Create listening; PID '+str(p.pid));break
   except (OSError,ValueError):pass
   time.sleep(.2)
  else:raise SystemExit('Startup incomplete; inspect permanent state and log before retry.')

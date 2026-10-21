@@ -39,7 +39,7 @@ function adaptationGuidance(policy){return [
  'This is a draft awaiting human review. Structural validation checks the recorded slide range, format and permitted media; it cannot certify factual accuracy, voice, meaning or editorial quality.',
 ].join('\n\n');}
 function selectedIds(value,label){if(!Array.isArray(value)||value.length>100||value.some(id=>typeof id!=='string'||!id)||new Set(value).size!==value.length)throw new StateError(`${label} must contain up to 100 unique library IDs.`);return value;}
-export function createCarouselMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),publicDir,fitPreflight=createCarouselFit({publicDir}),skillRoot=path.join(os.homedir(),'.claude','skills')}){
+export function createCarouselMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),publicDir,fitPreflight=createCarouselFit({publicDir}),skillRoot=process.env.AR_CREATE_EDITORIAL_SKILL_ROOT||path.join(os.homedir(),'.claude','skills')}){
  const dir=ensurePrivateDirectory(dataDir,'carousel-make');let pending=Promise.resolve();
  const serial=fn=>{const op=pending.then(fn);pending=op.catch(()=>{});return op;};
  const file=id=>{if(!uuid.test(id))throw new StateError('Unknown Make request.',404);return path.join(dir,id+'.json');};
