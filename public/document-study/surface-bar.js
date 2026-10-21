@@ -22,6 +22,7 @@
    const group={title:row.matches('#work-context')?'This piece':row.matches('.topbar')?'View':row.matches('.dwt-orientation')?'Direction and voice':'Writing tools',items:[]};
    for(const n of row.querySelectorAll('button,select,a.i64-return')){
     if(n.closest('#connected-work-receipts'))continue;
+    if(n.matches('[data-wn-mode]')&&!window.workspaceNavigation?.selectedOutput?.())continue; // the sidebar steps cover these
     if(!visible(n)&&!n.closest('details'))continue;
     if(n.closest('details')&&n.closest('details').closest('[hidden]'))continue;
     if(n.matches('.themeSelect'))continue;
@@ -86,13 +87,16 @@
  function build(){
   const ws=document.querySelector('#app .workspace');if(!ws)return;
   const slots=collect(),id=identity(),status=statusText();
-  const more=slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
-  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction]);
+  // Work receipts and the piece's own status line used to be a strip of their own; they now live in More and in the bar.
+  const receipts=document.getElementById('connected-work-receipts'),msgNode=document.getElementById('wn-message'),msg=msgNode&&!msgNode.hidden?label(msgNode):'';
+  const own=receipts?`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div><button type="button" class="sb-item" data-sb-receipts>Receipts</button></div>`:'';
+  const more=own+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
+  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,msg,!!receipts]);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
   if(bar&&sig===lastSig)return;
   lastSig=sig;
   const cp=checkpoint();
-  const html=`<div class="sb-left">${cp?`<span class="sb-cp"><span class="sb-cp-n">${String(cp.n).padStart(2,'0')}</span><span class="sb-cp-name">${esc(cp.name)}</span></span>`:''}</div>
+  const html=`<div class="sb-left">${cp?`<span class="sb-cp"><span class="sb-cp-n">${String(cp.n).padStart(2,'0')}</span><span class="sb-cp-name">${esc(cp.name)}</span></span>`:''}${msg?`<span class="sb-msg" role="status" title="${esc(msg)}">${esc(msg)}</span>`:''}</div>
 <div class="sb-right">${''&&status?`<span class="sb-status" role="status" data-tone="${/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok'}" title="${esc(status)}">${esc(status)}</span>`:''}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${proxy(slots.history,'sb-icon',icon(I.history),'aria-label="History · every saved version"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn sb-margin',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn sb-focus',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.mode,'sb-btn sb-mode',`<span class="sb-mode-i">${icon(I.pen)}</span><span class="sb-mode-t">${esc(slots.mode!=null?label(reals[slots.mode]):'')}</span>`)}${proxy(slots.outputs,'sb-btn',`${icon(I.outputs)}<span>Outputs</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${primaryAction?`<button type="button" class="sb-primary" data-sb-primary ${primaryAction.disabled?'disabled':''} ${primaryAction.reason?`title="${esc(primaryAction.reason)}"`:''} onmousedown="event.preventDefault()">${esc(primaryAction.label)}</button>`:''}</div>`;
   crumb(slots,id,status);
   if(!bar){bar=document.createElement('header');bar.id='c3-surface-bar';bar.setAttribute('aria-label','This piece and its actions');ws.prepend(bar);}
@@ -100,12 +104,20 @@
   if(moreOpen){const rect=bar.querySelector('[data-sb-more]')?.getBoundingClientRect();if(rect)bar.style.setProperty('--c3-menu-top',Math.max(8,rect.bottom+6)+'px');}
   document.body.classList.add('c3-bar-on');
  }
+ // Receipts open in a dialog of their own; connected-workspace keeps owning the panel and moves it back when it closes.
+ function openReceipts(){
+  let d=document.getElementById('c3-receipts');
+  if(!d){d=document.createElement('dialog');d.id='c3-receipts';d.setAttribute('aria-labelledby','c3-receipts-title');d.innerHTML='<div class="te-head"><h2 id="c3-receipts-title">Receipts</h2><p>What was saved, handed over or held for this piece.</p><button type="button" class="te-close" data-receipts-close>Close</button></div><div id="c3-receipts-body"></div>';document.body.append(d);d.addEventListener('click',e=>{if(e.target.closest('[data-receipts-close]'))d.close?.();});}
+  const r=document.getElementById('connected-work-receipts');if(r){d.querySelector('#c3-receipts-body').append(r);r.open=true;}
+  if(!d.open)d.showModal?d.showModal():d.setAttribute('open','');
+ }
  function schedule(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;build();watch();});}
  // Proxies keep the editor selection: mousedown never moves focus out of the manuscript.
  document.addEventListener('mousedown',event=>{if(event.target.closest?.('#c3-surface-bar button,#c3-surface-bar .sb-menu'))event.preventDefault();},true);
  document.addEventListener('click',event=>{
   const more=event.target.closest?.('#c3-surface-bar [data-sb-more]');
   if(more){moreOpen=!moreOpen;lastSig='';build();if(moreOpen)document.querySelector('#c3-surface-bar .sb-menu button,#c3-surface-bar .sb-menu select')?.focus({preventScroll:true});return;}
+  if(event.target.closest?.('#c3-surface-bar [data-sb-receipts]')){moreOpen=false;lastSig='';build();openReceipts();return;}
   const pa=event.target.closest?.('#c3-surface-bar [data-sb-primary]');if(pa){if(!pa.disabled&&primaryAction)void Promise.resolve(window.c3PieceState?.run?.(primaryAction)).finally(()=>{lastSig='';schedule();});return;}
   const b=event.target.closest?.('#c3-surface-bar [data-sb]');
   if(b&&b.getAttribute('aria-label')==='History · every saved version'&&window.studyDraft?.currentBinding?.()){void window.studyDraft.history();return;}
@@ -121,9 +133,7 @@
  // Rebuild after every render and whenever an owner repaints its row (labels, disabled, saved status).
  let watched=[];const observer=new MutationObserver(schedule);
  function watch(){const now=rows();if(now.length===watched.length&&now.every((r,i)=>r===watched[i]))return;observer.disconnect();watched=now;for(const r of now)observer.observe(r,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','hidden','aria-pressed','aria-current','href']});}
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{lastSig='';build();watch();return value;});lastSig='';build();watch();return result;};
- new MutationObserver(()=>{if(!document.querySelector('#app .workspace>#c3-surface-bar')){lastSig='';schedule();}else if(rows().some(r=>!watched.includes(r)))schedule();}).observe(document.getElementById('app')||document.body,{childList:true,subtree:false});
+ window.c3Shell.register('bar',()=>{build();watch();},{order:30});
  for(const name of ['study-draft-change','study-output-selection','c3-piece-state'])window.addEventListener(name,()=>{lastSig='';schedule();});
  window.surfaceBar={build,reals:()=>reals};
  build();watch();

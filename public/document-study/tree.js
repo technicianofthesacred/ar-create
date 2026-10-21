@@ -1,7 +1,7 @@
 /* Full A · the Tree. Turns the C3 checkpoint column into the working sidebar: Home and a "Working on" switch at the top,
    the four activities (Gather, Develop, Make, Deliver) with their questions and honest "needs you" counts, a Find section
    at the bottom, and its own collapse arrow that leaves a slim icon rail. Beside it, a list of the pieces in the chosen
-   scope for the step you are on, and above the work a step path for the open output with one Next line.
+   scope for the step you are on. "Next" is a quiet link at the end of the work, not a bar.
    Everything here is a look over the existing owners: steps still call viewPhase(n), pieces open through the wrapped
    switchProject (save-checked), counts come only from saved output records, and nothing is created, changed or deleted.
    Preferences (collapsed, list shown, scope) stay in this browser. Install after checkpoint-rail and empty-states. */
@@ -9,8 +9,6 @@
  if(window.c3Tree)return;
  const ACTS={gather:'What do I have?',develop:'What does it mean?',make:'Say it well',deliver:'Send it out'};
  const NAMES=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
- // The per-kind paths through the same twelve steps, in their original order.
- const PATHS={Carousel:[9,8,10,11],output:[5,6,7,8,10,11],piece:[1,2,3,4,12]};
  const KIND_STEP={native:5,arrange:9,review:10},STATUS_STEP={'correction-needed':5,'review-needed':10};
  const WAITING={'review-needed':'Review needed','correction-needed':'Correction needed'};
  const MAX_READ=12,TTL=60000,LIST_PAGE=40,PREF='c3-tree-v1';
@@ -27,7 +25,6 @@
  const inScope=p=>!scope()||p.folder===scope();
  const scopeName=()=>scope()||'Everything';
  const stepButton=n=>[...document.querySelectorAll('.workflowNavigation .workflowStep')].find(b=>Number(b.querySelector('.stepNumber')?.textContent.trim())===n);
- const selected=()=>{try{return window.workspaceNavigation?.selectedOutput?.()||null;}catch{return null;}};
  // ---------- saved output records: the only source of "needs you" counts
  function recent(){const nav=state.projectNavigation||{},ids=[current().id,...(nav.openTabs||[]).map(t=>t.projectId),...(nav.recent||[])];return [...new Set(ids)];}
  function readable(){const order=recent(),list=pieces().filter(inScope);list.sort((a,b)=>{const i=order.indexOf(a.id),j=order.indexOf(b.id);return (i<0?1e9:i)-(j<0?1e9:j);});return list.slice(0,MAX_READ);}
@@ -99,19 +96,18 @@
   document.body.classList.add('c3-queue-on');
   document.body.dataset.c3Writing=[5,6,7].includes(n)?'true':'false';
  }
- // ---------- the step path for the open output, with one Next line
- function path(ws){
-  const n=stage(),o=selected(),writing=n>=5&&n<=11,kind=o?(o.format==='Carousel'?'Carousel':'output'):writing?'output':'piece',steps=PATHS[kind];
-  let bar=document.getElementById('c3-path');
-  if(!n){bar?.remove();return;}
-  if(!bar){bar=document.createElement('nav');bar.id='c3-path';bar.setAttribute('aria-label','Steps for this '+(o?'output':'piece'));}
-  const anchor=ws.querySelector(':scope>#c3-surface-bar');
-  if(anchor?(anchor.nextElementSibling!==bar):(ws.firstElementChild!==bar))anchor?anchor.after(bar):ws.prepend(bar);
-  const at=steps.indexOf(n),next=at<0?steps[0]:steps[at+1];
-  const what=o?`${o.format||'Output'} · ${o.title||'Untitled'}`:writing?'The manuscript':'Before an output';
-  const html=`<span class="tp-what" title="${esc(what)}">${esc(what)}</span><ol class="tp-steps">${steps.map(s=>`<li><button type="button" data-tp-go="${s}" ${s===n?'aria-current="step"':''}>${esc(NAMES[s-1])}</button></li>`).join('')}</ol>${next?`<button type="button" class="tp-next" data-tp-go="${next}">${at<0?'Start':'Next'}: ${esc(NAMES[next-1])}</button>`:'<span class="tp-done">Last step for this '+(o?'output':'piece')+'</span>'}`;
-  bar.dataset.kind=kind;
-  if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
+ // ---------- Next: a quiet link at the end of the work, never a bar. It follows the twelve steps in order, skips a step
+ // the piece state calls not applicable, and steps aside when the bar's one primary already says the same Next.
+ function next(ws){
+  const n=stage(),ps=window.c3PieceState;let to=n?n+1:0;
+  while(to&&to<=12&&ps?.notApplicable?.(to))to++;
+  let link=document.getElementById('c3-next');
+  const primary=document.querySelector('#c3-surface-bar .sb-primary')?.textContent.trim()||'';
+  if(!n||to>12||primary==='Next: '+NAMES[to-1]){link?.remove();return;}
+  if(!link){link=document.createElement('nav');link.id='c3-next';link.setAttribute('aria-label','Next step');}
+  if(link.parentElement!==ws||ws.lastElementChild!==link)ws.append(link);
+  const html=`<button type="button" class="c3-next-go" data-c3-next="${to}">Next: ${esc(NAMES[to-1])} <span aria-hidden="true">→</span></button>`;
+  if(link.dataset.render!==html){link.innerHTML=html;link.dataset.render=html;}
  }
  // ---------- Everything that's here: every part and whether it works yet
  const PARTS=[
@@ -157,7 +153,7 @@
  function decorate(){
   const shell=document.querySelector('#app>.shell'),ws=shell?.querySelector(':scope>.workspace'),nav=shell?.querySelector(':scope>.workflowNavigation.c3-rail');
   if(!shell||!ws||!nav)return;
-  sidebar(nav);queue(shell,nav);path(ws);
+  sidebar(nav);queue(shell,nav);next(ws);document.getElementById('c3-path')?.remove();
   document.body.classList.toggle('c3-tree-slim',!!prefs.slim);
   document.body.classList.add('c3-tree-on');
   load();
@@ -171,7 +167,7 @@
   decorate();
  }
  document.addEventListener('click',event=>{
-  const t=event.target.closest?.('[data-tr-home],[data-tr-fold],[data-tr-list],[data-tr-topics],[data-tr-history],[data-tr-all],[data-tq-open],[data-tq-all],[data-tp-go],[data-te-go],[data-te-close]');if(!t)return;
+  const t=event.target.closest?.('[data-tr-home],[data-tr-fold],[data-tr-list],[data-tr-topics],[data-tr-history],[data-tr-all],[data-tq-open],[data-tq-all],[data-c3-next],[data-te-go],[data-te-close]');if(!t)return;
   if(t.matches('[data-tr-home]'))return document.querySelector('[data-ht-home]')?.click();
   if(t.matches('[data-tr-fold]')){prefs.slim=!prefs.slim;store();return decorate();}
   if(t.matches('[data-tr-list]')){prefs.list=!prefs.list;store();return decorate();}
@@ -180,16 +176,12 @@
   if(t.matches('[data-tr-all]'))return everything();
   if(t.matches('[data-tq-open]'))return void open(t.dataset.tqOpen);
   if(t.matches('[data-tq-all]')){listAll=true;return decorate();}
-  if(t.matches('[data-tp-go]'))return void window.viewPhase(Number(t.dataset.tpGo));
+  if(t.matches('[data-c3-next]'))return void window.viewPhase(Number(t.dataset.c3Next));
   if(t.matches('[data-te-close]'))return document.getElementById('c3-everything')?.close?.();
   if(t.matches('[data-te-go]')){const part=PARTS[Number(t.dataset.teGo)];document.getElementById('c3-everything')?.close?.();return void go(part[4]);}
  });
  document.addEventListener('change',event=>{const s=event.target.closest?.('[data-tr-scope]');if(!s)return;prefs.scope=s.value;listAll=false;store();decorate();});
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
- let queued=false;
- new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
  window.addEventListener('study-output-selection',()=>decorate());
- window.c3Tree={decorate,everything,counts,paths:PATHS,parts:PARTS};
- decorate();
+ window.c3Tree={decorate,everything,counts,parts:PARTS};
+ window.c3Shell.register('sidebar',decorate,{order:20});
 })();

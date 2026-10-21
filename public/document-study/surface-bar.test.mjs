@@ -15,7 +15,7 @@ function fixture(opts){
  w.undo=()=>w.calls.push('undo');w.openInstruction=()=>w.calls.push('instruction');
  w.render=()=>{w.document.getElementById('app').innerHTML=rows(opts);};
  if(opts?.draft)w.studyDraft={currentBinding:()=>({id:'b1',title:'Clay article'}),currentProof:()=>({bindingId:'b1',dirty:false,sequence:3}),flush:async()=>({dirty:false})};
- w.eval(pieceState);w.eval(code);
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));w.eval(pieceState);w.eval(code);
  return {w,d:w.document,bar:()=>w.document.querySelector('#c3-surface-bar')};
 }
 const press=(f,sel)=>{const b=f.bar().querySelector(sel);assert.ok(b,'missing '+sel);b.click();};
@@ -174,4 +174,12 @@ test('a failed save offers Try again, which asks the save owner to save once mor
  assert.equal(saves,1);
  const ok=fixture();ok.w.studyDraft={flush:async()=>{}};ok.w.surfaceBar.build();
  assert.equal(ok.d.querySelector('#c3-crumb [data-cb-retry]'),null);
+});
+
+test('work receipts have no strip of their own: More → Receipts opens them, still owned by their panel',()=>{
+ const f=fixture(),owner=f.d.createElement('details');owner.id='connected-work-receipts';owner.innerHTML='<summary>Work receipts</summary><p>Saved r3</p>';f.d.querySelector('#work-context').append(owner);f.w.surfaceBar.build();
+ press(f,'[data-sb-more]');
+ const item=f.bar().querySelector('[data-sb-receipts]');assert.ok(item,'Receipts in More');item.click();
+ const dialog=f.d.getElementById('c3-receipts');assert.ok(dialog?.hasAttribute('open'));
+ assert.equal(f.d.getElementById('connected-work-receipts'),owner,'the same panel, moved');assert.ok(dialog.contains(owner));assert.equal(owner.open,true);
 });

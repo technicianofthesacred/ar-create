@@ -49,11 +49,7 @@
   const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;
   nav.classList.remove('cr-open');const picker=nav.querySelector('.cr-picker');picker?.setAttribute('aria-expanded','false');picker?.focus();
  });
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
- let queued=false;
- new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
  window.addEventListener('c3-piece-state',()=>decorate());
  window.checkpointRail={decorate};
- decorate();
+ window.c3Shell.register('sidebar steps',decorate,{order:10});
 })();

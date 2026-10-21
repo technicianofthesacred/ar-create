@@ -19,7 +19,7 @@ function fixture({outputs={},stage=1,selected=null,folders=['Tea','Tea','Repair'
  w.reads=[];w.realOutputOverview={read:async({projectId})=>{w.reads.push(projectId);return {projectId,outputs:outputs[projectId]||[]};}};
  w.workspaceNavigation={selectedOutput:()=>selected};
  w.render=()=>{w.document.getElementById('app').innerHTML=grouped();};
- w.eval(rail);w.eval(tree);
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));w.eval(rail);w.eval(tree);
  return {dom,w,d:w.document};
 }
 const tick=()=>new Promise(r=>setTimeout(r,20));
@@ -66,17 +66,16 @@ test('a refused switch keeps the current piece and says why',async()=>{
  assert.match(d.querySelector('#c3-queue .tq-msg').textContent,/Save or resolve/);
 });
 
-test('the step path follows the kind of output and Next moves along it',async()=>{
- const article=fixture({stage:5,selected:{id:'o',format:'Article',title:'The water'}});await tick();
- assert.deepEqual([...article.d.querySelectorAll('#c3-path .tp-steps button')].map(b=>b.textContent),['Write','Read','Check','Media','Audience','Share']);
- assert.equal(article.d.querySelector('#c3-path .tp-next').textContent,'Next: Read');
- article.d.querySelector('#c3-path .tp-next').click();
- assert.deepEqual([...article.w.phases],[6]);
- const carousel=fixture({stage:9,selected:{id:'c',format:'Carousel',title:'Three waters'}});await tick();
- assert.deepEqual([...carousel.d.querySelectorAll('#c3-path .tp-steps button')].map(b=>b.textContent),['Arrange','Media','Audience','Share']);
- const piece=fixture({stage:3});await tick();
- assert.deepEqual([...piece.d.querySelectorAll('#c3-path .tp-steps button')].map(b=>b.textContent),['Material','Source','Research','Direction','Outputs']);
- assert.equal(piece.d.querySelector('#c3-path .tp-next').textContent,'Next: Direction');
+test('no step path bar: Next is one quiet link at the end of the work, in step order, skipping what does not apply',async()=>{
+ const {w,d}=fixture({stage:5});await tick();
+ assert.equal(d.getElementById('c3-path'),null);
+ const link=d.querySelector('#c3-next [data-c3-next]');
+ assert.equal(link.textContent.replace(/\s*→\s*$/,''),'Next: Read');
+ assert.equal(link.closest('#c3-next'),d.querySelector('.workspace').lastElementChild,'at the end of the work column');
+ link.click();assert.deepEqual([...w.phases],[6]);
+ const media=fixture({stage:8});media.w.c3PieceState={notApplicable:n=>n===9?'words only':''};media.w.c3Tree.decorate();
+ assert.match(media.d.querySelector('#c3-next').textContent,/Next: Audience/);
+ const last=fixture({stage:12});await tick();assert.equal(last.d.getElementById('c3-next'),null);
 });
 
 test('the fold arrow leaves a slim rail and is remembered; the pieces list can be hidden',async()=>{
@@ -106,10 +105,4 @@ test('the Tree saves nothing: no output record is changed and only reads are mad
  const {w}=fixture({outputs:{p1:[{id:'o',status:'review-needed'}]}});await tick();
  assert.ok(w.reads.length>=1);
  assert.equal(Object.keys(w.realOutputOverview).join(),'read');
-});
-
-test('in Write with no output chosen, the path is the manuscript path, not the before-an-output path',async()=>{
- const {d}=fixture({stage:5});await tick();
- assert.deepEqual([...d.querySelectorAll('#c3-path .tp-steps button')].map(b=>b.textContent),['Write','Read','Check','Media','Audience','Share']);
- assert.match(d.querySelector('#c3-path .tp-what').textContent,/The manuscript/);
 });

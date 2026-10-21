@@ -18,7 +18,7 @@ function fixture(opts){
  w.current=()=>w.state.projects[0];
  w.phases=[];w.viewPhase=n=>w.phases.push(n);
  w.render=()=>{w.document.getElementById('app').innerHTML=grouped(opts);};
- w.eval(code);
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));w.eval(code);
  return {dom,w,d:w.document};
 }
 
