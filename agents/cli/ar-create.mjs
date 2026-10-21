@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { createClient, exitCodeFor, EXIT } from '../lib/client.mjs';
 import { ACTOR_VALUES } from '../lib/actors.mjs';
@@ -21,8 +22,14 @@ export const SUGAR = Object.freeze({
   collection: { list: 'inquiries.catalog', read: 'inquiries.read', create: 'inquiries.create', update: 'inquiries.update', save: 'inquiries.save', projects: 'inquiries.projects', undo: 'inquiries.learning.undo' },
   project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
+  magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
   draft: { catalog: 'study-draft.catalog', read: 'study-draft.read', open: 'study-draft.open', create: 'study-draft.create-collection', save: 'study-draft.save', undo: 'study-draft.undo', check: 'study-draft.check.get', inspect: 'study-draft.inspect.get', proposals: 'study-ai.requests' },
 });
+// Sugar verbs that take one positional value (put into the input under that key) or need a fresh id for a single attempt.
+// `magazine story <id>`; `magazine propose --input {path, content, expectedHash}` (agents' prose becomes a proposal for Adrian;
+// the operationId is generated unless the input names one).
+export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id' });
+export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': () => ({ operationId: randomUUID() }) });
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
@@ -110,9 +117,9 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
     return { exitCode: EXIT.ok, result: { url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort(), presence: presence.ok ? presence.body.presence : [], editor: editorOf(presence.ok ? presence.body.presence : []), events: changes.ok ? changes.body : null } };
   }
   if (Object.hasOwn(SUGAR, command)) {
-    const verb = rest[0], name = SUGAR[command][verb];
-    if (!name || rest.length !== 1) return { exitCode: EXIT.usage, result: { ok: false, error: `Use: ${command} ${Object.keys(SUGAR[command]).join('|')}` } };
-    return answer(await client.call(name, input));
+    const verb = rest[0], name = SUGAR[command][verb], key = `${command} ${verb}`, positional = SUGAR_POSITIONAL[key];
+    if (!name || rest.length !== (positional ? 2 : 1)) return { exitCode: EXIT.usage, result: { ok: false, error: `Use: ${command} ${Object.keys(SUGAR[command]).map(v => SUGAR_POSITIONAL[`${command} ${v}`] ? `${v} <${SUGAR_POSITIONAL[`${command} ${v}`]}>` : v).join('|')}` } };
+    return answer(await client.call(name, { ...(SUGAR_DEFAULTS[key]?.() || {}), ...input, ...(positional ? { [positional]: rest[1] } : {}) }));
   }
   return { exitCode: EXIT.usage, result: { ok: false, error: `Unknown command "${command}".`, ...USAGE } };
 }

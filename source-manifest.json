@@ -2741,7 +2741,7 @@
     },
     {
       "path": "agents/cli/ar-create.mjs",
-      "candidateSha256": "85ed077bf922891acb125beeda6ec4a360b70686fed1c707f012c86611ea1461"
+      "candidateSha256": "37a48794dda532110d25b4216b44b2826d51b44f94489eb937d908e0aafd835e"
     },
     {
       "path": "agents/lib/actors.mjs",
@@ -3274,6 +3274,14 @@
     {
       "path": "tests/magazine-config.test.mjs",
       "candidateSha256": "c2c7c69675f1996df4b93224da7f57055449c73f109e0ea2ff5f1c304b9d0bcd"
+    },
+    {
+      "path": "runtime/services/editorial-rules.mjs",
+      "candidateSha256": "898e28d2b19cddf825d247164d2bcf7299ced309e1155fbb4148d5d445ce5f7f"
+    },
+    {
+      "path": "tests/editorial-rules.test.mjs",
+      "candidateSha256": "06eb0970a0e2dd96aa1bcb11dc3cb02eacb06a7d061751fed54becb646eb0634"
     }
   ],
   "dependencyRepair": {
