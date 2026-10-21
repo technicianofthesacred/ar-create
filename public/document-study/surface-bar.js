@@ -64,9 +64,10 @@
  document.addEventListener('click',async event=>{const b=event.target.closest?.('[data-cb-retry]');if(!b||retrying)return;const save=saver();if(!save)return;retrying=true;b.disabled=true;b.textContent='Trying again…';try{await save();}catch{}finally{retrying=false;lastSig='';window.surfaceBar?.build?.();}});
  // Someone else saved a newer version under unsaved words: Compare opens both, beside Keep mine, in the work column.
  document.addEventListener('click',event=>{if(event.target.closest?.('[data-cb-compare]'))void window.studyDraft?.compare?.();});
- // Reader's own text size for the manuscript on Write, Read and Check (A- / A+), remembered on this device only.
+ // The one text size (A- / A+, 87.5% to 137.5%), remembered on this device only under the reader's existing key. It sets
+ // the root multiplier --z (type-scale.css), so the interface and the manuscript scale together on every screen.
  const SIZES=[.875,1,1.125,1.25,1.375];let size=1;try{const v=Number(localStorage.getItem('c3-doc-scale'));if(SIZES.includes(v))size=v}catch{}
- const applySize=()=>document.body?.style.setProperty('--c3-doc-scale',String(size));applySize();
+ const applySize=()=>{document.documentElement?.style.setProperty('--z',String(size));document.body?.style.removeProperty('--c3-doc-scale');};applySize();
  document.addEventListener('click',event=>{const b=event.target.closest?.('[data-cb-size]');if(!b)return;const i=SIZES.indexOf(size)+Number(b.dataset.cbSize);if(i<0||i>=SIZES.length)return;size=SIZES[i];try{localStorage.setItem('c3-doc-scale',String(size))}catch{}applySize();lastSig='';window.surfaceBar?.build?.();});
  // Where you are and in what state, on the bar's left (the bottom location bar is gone, review A5): the way back to i64 OS,
  // the piece, the chosen output, the step, then one state word. The state word is the save owner's status or, on a
@@ -88,7 +89,7 @@
   if(agent)word+=`<span class="sb-agent" role="status" title="${esc(agent.title)}">${esc(agent.text)}</span>`;
   return `<span class="sb-where">${parts.join(sep)}</span>${word}`;
  }
- function textSize(){return [5,6,7].includes(stage())?`<div class="sb-group" role="group" aria-label="Text size"><div class="sb-gh">Text size</div><span class="cb-size" role="group" aria-label="Text size"><button type="button" class="sb-item" data-cb-size="-1" aria-label="Smaller text" ${size<=SIZES[0]?'disabled':''}>A−</button><output aria-live="polite">${Math.round(size*100)}%</output><button type="button" class="sb-item" data-cb-size="1" aria-label="Larger text" ${size>=SIZES.at(-1)?'disabled':''}>A+</button></span></div>`:'';}
+ function textSize(){return `<div class="sb-group" role="group" aria-label="Text size"><div class="sb-gh">Text size</div><span class="cb-size" role="group" aria-label="Text size"><button type="button" class="sb-item" data-cb-size="-1" aria-label="Smaller text" ${size<=SIZES[0]?'disabled':''}>A−</button><output aria-live="polite">${Math.round(size*100)}%</output><button type="button" class="sb-item" data-cb-size="1" aria-label="Larger text" ${size>=SIZES.at(-1)?'disabled':''}>A+</button></span></div>`;}
  // A retained-record select (e.g. "Checked against" on Check) is a control of the work, not of the bar: it sits at the
  // top of the column as a labelled proxy of the owner's select.
  function records(slots){
