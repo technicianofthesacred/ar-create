@@ -4,7 +4,7 @@
  * dependency-free so the CLI and MCP load nothing from the server.
  */
 export const ACTOR_VALUES = Object.freeze(['human:adrian', 'agent:claude-code', 'agent:codex', 'agent:claude-design', 'agent:hermes', 'agent:grok', 'agent:chatgpt', 'cron:<name>', 'import:<source>', 'release:<sha>']);
-export const CLIENT_VALUES = Object.freeze(['ui', 'cli', 'mcp', 'http', 'file']);
+export const CLIENT_VALUES = Object.freeze(['ui', 'cli', 'mcp', 'http', 'file', 'mag-page']);
 const FIXED = new Set(ACTOR_VALUES.filter(value => !value.includes('<')));
 export function validActor(value) {
   if (typeof value !== 'string') return false;
