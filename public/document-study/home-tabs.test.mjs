@@ -200,3 +200,12 @@ test('connected Learning library is present once in actual C3 Open menus after r
  await w.projectLibrary.close();await settle();
  assert.equal(d.querySelector('#project-library').open,false);assert.equal(d.querySelectorAll('#c3-tabstrip .ht-plus .ht-menu > [data-learning-library]').length,1);
 });
+
+test('Home keeps every filter behind one Filter control; Format waits until it is connected',async()=>{
+ const f=fixture();
+ await f.click('[data-ht-home]');
+ const d=f.w.document.querySelector('#project-library'),filter=d.querySelector('.ht-facets>details.ht-filter');
+ assert.ok(filter,'one Filter control');assert.equal(filter.open,false,'closed until asked');
+ assert.equal(d.querySelector('.ht-fgroup[aria-label="Format"]'),null);
+ assert.ok(filter.querySelector('[data-ht-folder]')&&filter.querySelector('[data-ht-status-filter]')&&filter.querySelector('[data-ht-show]'),'brand, status and show are kept inside it');
+});

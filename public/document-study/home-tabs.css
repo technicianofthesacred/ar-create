@@ -137,3 +137,12 @@ body.c3-strip-in-rail{--ht-strip:0px}
 #project-library .ht-plus-label{display:none}
 body.c3-tree-slim .workflowNavigation.c3-rail>#c3-tabstrip :is(.ht-switch-label,.ht-plus-label){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 body.c3-tree-slim .workflowNavigation.c3-rail>#c3-tabstrip summary{justify-content:center;padding:0}
+
+/* Home (review A11): the facets sit behind one Filter control above the cards, not in a column of their own. */
+#project-library.c3-home .ht-home-body{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)}
+#project-library.c3-home .ht-facets{display:block!important;position:relative;overflow:visible!important;padding:8px 24px 0!important;border:0!important;background:none!important}
+#project-library.c3-home .ht-filter{position:relative;display:inline-block}
+#project-library.c3-home .ht-filter>summary{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;list-style:none;color:var(--ink);font:500 14px/1 var(--ar-ui)}
+#project-library.c3-home .ht-filter>summary::-webkit-details-marker{display:none}
+#project-library.c3-home .ht-filter-on{color:var(--dim);font-weight:400;max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#project-library.c3-home .ht-filter-panel{position:absolute;left:0;top:calc(100% + 6px);z-index:30;width:min(320px,calc(100vw - 32px));max-height:min(70dvh,560px);overflow:auto;display:flex;flex-direction:column;gap:16px;padding:14px 12px;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px #0004}
