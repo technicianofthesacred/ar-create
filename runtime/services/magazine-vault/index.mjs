@@ -421,6 +421,8 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     lockRecover: async input => { requireHuman('Clearing the magazine lock'); fields(input || {}, ['expectedHash'], ['expectedHash']); requireWritable(); return roots().lock.recover(input); },
     tidy, sendCheck, send, sendApproval, markPublished, brandRead,
     drops: () => ({drops: dropped(drops).map(d => ({...d, size: (() => { try { return fs.statSync(d.path).size; } catch { return null; } })()}))}),
+    // Optional services the routes reach (intake M5, checks M6, reconcile D7); filled in below.
+    extra: {},
     // Internals the intake (M5) and reconcile steps build on.
     _operation: operation, _io: io, _roots: roots, _dirs: dirs, _ctx: ctx, _requireWritable: requireWritable, _intakeEngine: intakeEngine,
   };
