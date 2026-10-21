@@ -38,7 +38,7 @@ const fields = (input, allowed, required = []) => {
 const ctx = () => currentActor() || {actor: IN_PROCESS_ACTOR, client: null};
 const donorError = error => { if (error instanceof StateError) return error; const m = String(error.message || error); return new StateError(m, /changed since|gone; reload|Pending|ambiguous|could not be restored/.test(m) ? 409 : 400); };
 const scopeFor = rel => { const s = rel && storyFromName(rel); return s ? {kind: 'story', id: storyId(s.replace(/\s*\(.*$/, ''))} : null; };
-const MAKE_DIRS = rel => /^Workflow\/4-Review\/_blind$/.test(rel) || /^Workflow\/5-Social\/(CAROUSEL|POST|REEL|VIDEO|SCRIPT) - [^/]+$/.test(rel) || /^_archive\/Superseded drafts(\/[^/]+)?$/.test(rel) || /^Issues\/[^/]+$/.test(rel);
+const MAKE_DIRS = rel => /^Workflow\/4-Review\/_blind$/.test(rel) || /^Workflow\/5-Social\/[A-Z][A-Z ]{1,30} - [^/]+$/.test(rel) || /^_archive\/Superseded drafts(\/[^/]+)?$/.test(rel) || /^Issues\/[^/]+$/.test(rel);
 const FILES_DIRS = rel => /^[^/]+$/.test(rel) && rel !== 'Drop' || /^[^/]+\/Photos$/.test(rel);
 
 export function createMagazineVault({vaultRoot = null, filesRoot = null, drops = [], writable = false, exportStaging = null, dataDir, machine, bootId, now = () => Date.now(), events = null, journal = null, leases = null, editorialRoot = null, magSendRepo = null, previewPort = 8766, intakeEngine = null} = {}) {

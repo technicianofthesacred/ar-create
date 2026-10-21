@@ -61,7 +61,7 @@ export function planRegistration({vault, files = '', drops = [], archived = DEFA
   const entries = statusEntries(statusText);
   const stories = board.board.map(b => ({b, key: lead(b.story)}));
   const owner = file => {
-    if (!file.kind || file.archived || ['STATUS', 'ISSUE', 'EXPORT', 'REQUESTS', 'GLOSSARY', 'PAGE-FEEDBACK', 'RATINGS', 'IDEA', 'BLIND'].includes(file.kind)) return null;
+    if (!file.kind || file.archived || ['STATUS', 'ISSUE', 'EXPORT', 'REQUESTS', 'GLOSSARY', 'PAGE-FEEDBACK', 'RATINGS', 'IDEA', 'BLIND', 'WRITER-GUIDE'].includes(file.kind)) return null;
     const base = file.rel.split('/').pop().replace(/\.(md|txt)$/, '').replace(/^EDITS - /, '').replace(/^[A-Z]+ - /, '');
     const names = [base, file.story, file.title, ...(file.aliases || [])].filter(Boolean).map(lead);
     const hits = stories.filter(s => names.some(n => n === s.key || n.startsWith(s.key)));
@@ -71,7 +71,7 @@ export function planRegistration({vault, files = '', drops = [], archived = DEFA
   const ambiguities = [], unassigned = [];
   for (const file of scanned) {
     const who = owner(file);
-    if (!who) { if (file.kind && !file.archived && !['STATUS', 'ISSUE', 'EXPORT'].includes(file.kind) && file.class !== 'log' && !['REQUESTS', 'GLOSSARY', 'PAGE-FEEDBACK', 'RATINGS', 'IDEA', 'BLIND'].includes(file.kind)) unassigned.push(file.rel); continue; }
+    if (!who) { if (file.kind && !file.archived && !['STATUS', 'ISSUE', 'EXPORT'].includes(file.kind) && file.class !== 'log' && !['REQUESTS', 'GLOSSARY', 'PAGE-FEEDBACK', 'RATINGS', 'IDEA', 'BLIND', 'WRITER-GUIDE'].includes(file.kind)) unassigned.push(file.rel); continue; }
     if (who.ambiguous) { ambiguities.push({rel: file.rel, reason: 'matches more than one story', stories: who.ambiguous}); continue; }
     const p = projects.get(who), key = RECORD[file.kind]; if (!key) continue;
     const record = {rel: file.rel, sha256: file.sha256};

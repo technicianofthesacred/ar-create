@@ -41,9 +41,11 @@ const ROWS = [
   [/^Workflow\/4-Review\/RATINGS-LOG\.md$/, 'RATINGS', 'note'],
   [/^Workflow\/4-Review\/EDITS - [^/]+\.md$/, 'EDITS', 'log'],
   [/^Workflow\/5-Social\/REQUESTS\.md$/, 'REQUESTS', 'note'],
-  [/^Workflow\/5-Social\/(CAROUSEL|POST|REEL|VIDEO|SCRIPT) - [^/]+\.md$/, 'SOCIAL', 'social'],
-  [/^Workflow\/5-Social\/(CAROUSEL|POST|REEL|VIDEO|SCRIPT) - [^/]+\/(slide-\d{2}\.png|caption\.txt)$/, 'EXPORT', 'log'],
+  [/^Workflow\/5-Social\/[A-Z][A-Z ]{1,30} - [^/]+\.md$/, 'SOCIAL', 'social'],
+  [/^Workflow\/5-Social\/[A-Z][A-Z ]{1,30} - [^/]+\/(slide-\d{2}\.png|caption\.txt)$/, 'EXPORT', 'log'],
   [/^Workflow\/6-Feedback\/FEEDBACK - [^/]+\.md$/, 'FEEDBACK', 'prose'],
+  // Adrian asked /mag to keep its "What we've learned" lines growing (2026-10-03), though it sits outside Workflow/.
+  [/^WRITER-GUIDE\.md$/, 'WRITER-GUIDE', 'note'],
   [/^STATUS\.md$/, 'STATUS', 'board'],
   [/^Issues\/(?:[^/]+\/)*[^/]+\.md$/, 'ISSUE', 'issue'],
 ];
