@@ -36,8 +36,10 @@ import {createStudyResearchChoices} from './services/study-research-choices.mjs'
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
 import {createWorkspaceExecution} from './services/artifact-execution.mjs';
 import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger} from './services/actor.mjs';
+import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStore, StateError, MAX_BODY_BYTES } from './store.mjs';
@@ -111,18 +113,22 @@ function checkWriteOrigin(request, server) {
     throw new StateError('Writes must originate from this local workspace.', 403);
   }
 }
-/** Decisions only a human makes. Agents propose; the app records who decided. */
-export const HUMAN_ONLY_ROUTES=[
-  /^\/api\/study-ai\/(accept|reject|human-contract)$/,
-  /^\/api\/shared-articles\/requests\/[a-f0-9-]{36}\/(accept|reject)$/,
-  /^\/api\/shared-carousels\/requests\/[a-f0-9-]{36}\/(accept|reject)$/,
-  /^\/api\/article\/make\/[a-f0-9-]{36}\/accept$/,
-  /^\/api\/inquiries\/(association|references|direction-references)\/change$/,
-  /^\/api\/study\/share\/fact$/,
-];
-function guardHumanOnly(method, pathname, context) {
-  if (!HUMAN_ONLY_ROUTES.some(pattern => pattern.test(pathname))) return;
-  if (!context || !isHuman(context.actor)) throw new StateError(`This decision is human-only; ${context?.actor || 'an unattributed caller'} may propose but not decide.`, 403);
+/** Read the commit this code runs from: AR_CREATE_GIT_SHA, else the checkout's HEAD. */
+function gitSha(repoRoot) {
+  if (/^[a-f0-9]{7,40}$/.test(process.env.AR_CREATE_GIT_SHA || '')) return process.env.AR_CREATE_GIT_SHA;
+  try {
+    let gitDir = path.join(repoRoot, '.git');
+    const stat = fs.lstatSync(gitDir, { throwIfNoEntry: false });
+    if (!stat) return null;
+    if (stat.isFile()) { const pointer = fs.readFileSync(gitDir, 'utf8').match(/^gitdir: (.+)$/m); if (!pointer) return null; gitDir = path.resolve(repoRoot, pointer[1].trim()); }
+    const head = fs.readFileSync(path.join(gitDir, 'HEAD'), 'utf8').trim();
+    if (/^[a-f0-9]{40}$/.test(head)) return head;
+    const ref = head.match(/^ref: (.+)$/)?.[1]; if (!ref) return null;
+    const common = fs.existsSync(path.join(gitDir, 'commondir')) ? path.resolve(gitDir, fs.readFileSync(path.join(gitDir, 'commondir'), 'utf8').trim()) : gitDir;
+    for (const dir of [gitDir, common]) { const loose = path.join(dir, ref); if (fs.existsSync(loose)) return fs.readFileSync(loose, 'utf8').trim(); }
+    const packed = fs.readFileSync(path.join(common, 'packed-refs'), 'utf8').split('\n').find(line => line.endsWith(' ' + ref));
+    return packed ? packed.split(' ')[0] : null;
+  } catch { return null; }
 }
 /** A write: local Origin (when sent) and a resolved actor. */
 function checkWrite(request, server) {
@@ -256,12 +262,18 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     // carousel can publish from its live wording file.
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
+  const extraCommands=[];
+  const commandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates});
+  let registry=null;
+  const commandList=()=>registry||(registry=describeRoutes(commandRoutes({url:new URL('http://127.0.0.1/'),request:{headers:{}},server:null,outputQuery:()=>({}),decorateOutputExports:value=>value,describe:async()=>({})}),extraCommands));
+  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))},commands:commandList().map(publicEntry)});
+  const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
   // Every request runs inside its actor context so services can stamp writes.
   async function routeRequest(request, response) {
       let pathname;
       try { pathname = decodeURIComponent((request.url || '/').split('?')[0]); }
       catch { throw new StateError('Invalid request path.'); }
-      if(pathname.startsWith('/api/work-continuity/')&&request.method==='POST'&&!(request.headers.origin&&!localAuthorities(server).some(host=>request.headers.origin===`http://${host}`)))requireWriteActor();
+      if(pathname.startsWith('/api/work-continuity/')&&request.method==='POST'&&!findCommand(commandList(),'POST',pathname)?.readOnly&&!(request.headers.origin&&!localAuthorities(server).some(host=>request.headers.origin===`http://${host}`)))requireWriteActor();
       if(await continuityInterface.handle(request,response))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
@@ -354,154 +366,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (await recordings.route(request, response, url)) return;
         throw new StateError('Recording route is unavailable.', 404);
       }
-      const studyAICall=(action,input={})=>draftCall(()=>{
-        const scope={};
-        for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
-        if([...url.searchParams.keys()].some(key=>!['bindingId','parentStudyId','requestId'].includes(key))||url.searchParams.getAll('requestId').length>1)throw new StateError('Unsupported manuscript proposal query.',400);
-        if(Object.keys(input).some(key=>['bindingId','parentStudyId'].includes(key)))throw new StateError('Manuscript identity comes from the explicit route scope.',400);
-        const requestId=url.searchParams.get('requestId');if(requestId){if(input.requestId&&input.requestId!==requestId)throw new StateError('Request identity differs from its route.',409);input={...input,requestId};}
-        return studyAI.call(action,{...scope,...input});
-      });
-      const conceptCall=fn=>draftCall(()=>{if(!conceptWork)throw new StateError('Concept work requires configured collections.',503);return fn();});
-      const routes = {
-        '/api/concept/capabilities': {GET:()=>conceptCall(()=>conceptWork.capabilities())},
-        '/api/concepts': {GET:()=>conceptCall(()=>conceptWork.list()),POST:input=>conceptCall(()=>conceptWork.create(input))},
-        '/api/concept': {GET:()=>conceptCall(()=>conceptWork.read({parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/concept/save': {POST:input=>conceptCall(()=>conceptWork.save(input))},
-        '/api/concept/source': {GET:()=>conceptCall(()=>conceptWork.source({...url.searchParams.has('parentStudyId')?{parentStudyId:url.searchParams.get('parentStudyId')}:{},sourceId:url.searchParams.get('sourceId')}))},
-        '/api/concept/sources/search': {POST:input=>conceptCall(()=>conceptWork.sourcesSearch(input))},
-        '/api/writing-template': {GET:()=>writingTemplates.get({expectedProjectId:url.searchParams.get('expectedProjectId'),expectedDocumentId:url.searchParams.get('expectedDocumentId')})},
-        '/api/writing-template/attach': {POST:input=>writingTemplates.attach(input)},
-        '/api/writing-template/detach': {POST:input=>writingTemplates.detach(input)},
-        '/api/writing-template/snapshot': {POST:input=>writingTemplates.snapshot(input)},
-        '/api/writing-template/restore-copy': {POST:input=>writingTemplates.restoreCopy(input)},
-        '/api/magazine/portfolio': {GET:()=>magazineRead(()=>magazine.list())},
-        '/api/magazine/artifact': {GET:()=>magazineRead(()=>magazine.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))},
-        '/api/sources/tree': { GET: () => library.tree() },
-        '/api/sources/file': { GET: () => library.read(url.searchParams.get('id'),{allowUnreconciled:true}), POST: input => library.write(input) },
-        '/api/sources/import': { POST: async input => {
-          if (!Array.isArray(input.urls || []) || !Array.isArray(input.files || []) || (input.urls?.length || 0) + (input.files?.length || 0) > 100) throw new StateError('Import up to 100 files or URLs.');
-          const albumLinks=(input.urls || []).filter(isICloudAlbum);
-          const result=await library.import({...input,urls:(input.urls || []).filter(url=>!isICloudAlbum(url))});
-          for(const link of albumLinks) {try {const imported=await albums.import(link);result.receipts.push(...imported.receipts);}catch(error){result.receipts.push({ok:false,url:link,error:error.message});}}
-          for (const receipt of result.receipts) if (receipt.ok && receipt.source) { try { await recordings.retain(receipt.source); } catch (error) { receipt.recordingError = error.message; } }
-          return result;
-        } },
-        '/api/icloud-albums': { GET: () => albums.list() },
-        '/api/sources/rename': { POST: input => library.rename(input) },
-        '/api/sources/reconnect/preview': {POST:input=>library.reconnectPreview(input)},
-        '/api/sources/reconnect': {POST:input=>library.reconnectMoved(input)},
-        '/api/sources/folders': { POST: input => library.folder(input) },
-        '/api/collections': { GET: () => library.collections(), POST: input => library.saveCollection(input) },
-        '/api/collection-relationships': {GET:()=>library.collectionRelationships(url.searchParams.get('collectionId'))},
-        '/api/collection-relationships/link': {POST:input=>library.linkCollections(input)},
-        '/api/collection-relationships/detach': {POST:input=>library.detachCollectionRelationship(input)},
-        '/api/connections': {GET:()=>connectedFolders.list(),POST:input=>connectedFolders.add(input),DELETE:input=>connectedFolders.remove(input)},
-        '/api/guidance': { GET: () => guidance.get(), POST: input => guidance.put(input) },
-        '/api/evidence': { GET: () => library.evidence(), POST: input => library.saveEvidence(input) },
-        '/api/terminal/capabilities': { GET: () => terminal.capabilities() },
-        '/api/terminal/sessions': { GET: () => terminal.list(), POST: input => terminal.start(input) },
-        '/api/pieces': {GET:()=>store.listPieces(),POST:input=>store.createPiece(input)},
-        '/api/i64os/health': {GET:()=>{if(!studyDrafts)throw new StateError('Document study is not configured.',503);return {service:'ar-create-document-study',ready:true};}},
-        '/api/study-ai/contracts': {GET:()=>studyAICall('contracts')},
-        '/api/study-ai/human-contract': {POST:input=>studyAICall('humanContract',input)},
-        '/api/study-ai/read': {GET:()=>studyAICall('read')},
-        '/api/study-ai/prepare': {POST:input=>studyAICall('prepare',input)},
-        '/api/study-ai/context': {GET:()=>studyAICall('context')},
-        '/api/study-ai/propose': {POST:input=>studyAICall('propose',input)},
-        '/api/study-ai/review': {GET:()=>studyAICall('review')},
-        '/api/study-ai/requests': {GET:()=>studyAICall('list')},
-        '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},
-        '/api/study-ai/reject': {POST:input=>studyAICall('reject',input)},
-        '/api/study/human-direction': {GET:()=>draftCall(()=>studyHumanDirection.read({parentStudyId:url.searchParams.get('parentStudyId'),scope:url.searchParams.get('scope')||'project',...(url.searchParams.has('bindingId')?{bindingId:url.searchParams.get('bindingId')}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})}))},
-        '/api/study/human-direction/select': {POST:input=>draftCall(()=>studyHumanDirection.select(input))},
-        '/api/study/human-direction/write': {POST:input=>draftCall(()=>studyHumanDirection.write(input))},
-        '/api/study/human-direction/undo': {POST:input=>draftCall(()=>studyHumanDirection.undo(input))},
-        '/api/study-originals': {GET:()=>originalRead(()=>studyOriginals.list(url.searchParams.get('projectKey')))},
-        '/api/study/photos/select': {POST:input=>draftCall(()=>studyOwnedPhotoBindings.select(input))},
-        '/api/study/photos': {GET:()=>draftCall(()=>studyPhotos.list({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
-        '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
-        '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
-        '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
-        '/api/study-research/findings': {GET:()=>draftCall(()=>studyDerivedFindings.read({projectKey:url.searchParams.get('projectKey'),parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/study-research/choices': {GET:()=>draftCall(()=>studyResearchChoices.read({projectKey:url.searchParams.get('projectKey'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyResearchChoices.save(input))},
-        '/api/study-draft/root-recovery': {GET:()=>draftCall(()=>studyDrafts.inspectRoots({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyDrafts.recoverRoots(input))},
-        '/api/study/source-context': {GET:async()=>{if([...url.searchParams.keys()].some(key=>key!=='id')||url.searchParams.getAll('id').length!==1)throw new StateError('Select one existing Library source.',400);const source=await library.snapshot(url.searchParams.get('id'),{includeBody:true});return {sourceId:source.id,hash:source.hash,title:source.title||source.name||'Source',text:typeof source.text==='string'?source.text:null,missing:!!source.missing};}},
-        '/api/study/media-usage': {GET:()=>draftCall(()=>{if(!studyMediaUsage)throw new StateError('Saved media usage is unavailable.',503);const input=Object.fromEntries(url.searchParams);input.sourceIds=url.searchParams.getAll('sourceId');delete input.sourceId;return studyMediaUsage.read(input);})},
-        '/api/study/media-usage/resolve': {GET:()=>draftCall(()=>{if(!studyMediaUsage)throw new StateError('Saved media usage is unavailable.',503);return studyMediaUsage.resolve(Object.fromEntries(url.searchParams));})},
-        '/api/study/share/recipients': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.list(Object.fromEntries(url.searchParams));})},
-        '/api/study/share': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.read(Object.fromEntries(url.searchParams));})},
-        '/api/study/share/save': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.save(input);})},
-        '/api/study/share/fact': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.appendFact(input);})},
-        '/api/study/share/undo': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.undo(input);})},
-        '/api/study/outputs': {GET:()=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.read({rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('selectedOutputId')?{selectedOutputId:url.searchParams.get('selectedOutputId')}:{})});})},
-        '/api/study/outputs/review-words': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.reviewCarouselWords(input);})},
-        '/api/study/outputs/export': {POST:input=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const {kind,...payload}=input;if(!['article','carousel','post','product-listing'].includes(kind))throw new StateError('Choose a supported output export.',400);const result=kind!=='carousel'?await studyOutputExports.saveArticle(payload):await studyOutputExports.saveCarousel(payload,'http://127.0.0.1:'+server.address().port);return decorateOutputExports(result,input);})},
-        '/api/study/outputs/exports': {GET:()=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const input=outputQuery();return decorateOutputExports(await studyOutputExports.list(input),input);})},
-        '/api/study/outputs/create': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.create(input);})},
-        '/api/study/outputs/save': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.save(input);})},
-        '/api/study/outputs/refresh': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.refreshSelectedArticle(input);})},
-        '/api/study/outputs/undo': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.undo(input);})},
-        '/api/study/outputs/export-check': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.assertExport(input);})},
-        '/api/study-draft/catalog': {GET:()=>draftCall(()=>studyDrafts.catalog())},
-        '/api/study-draft/read': {GET:()=>draftCall(()=>studyDrafts.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
-        '/api/study-draft/create-collection': {POST:input=>draftCall(()=>createStudyCollection(input))},
-        '/api/study-draft/open': {POST:input=>draftCall(()=>studyDrafts.openCopy(input))},
-        '/api/study-draft/save': {POST:input=>draftCall(()=>studyDrafts.save(input))},
-        '/api/study-draft/history-preview': {POST:input=>draftCall(()=>studyDrafts.previewVersion(input))},
-        '/api/study-draft/history-restore': {POST:input=>draftCall(()=>studyDrafts.restoreVersion(input))},
-        '/api/study-draft/undo': {POST:input=>draftCall(()=>studyDrafts.undo(input))},
-        '/api/study-draft/inspect': {GET:()=>draftCall(()=>studyDrafts.inspect({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),operationId:url.searchParams.get('operationId')})),POST:input=>draftCall(()=>studyDrafts.inspect(input))},
-        '/api/study-draft/recover': {POST:input=>draftCall(()=>studyDrafts.recover(input))},
-        '/api/study-draft/check': {GET:()=>draftCall(()=>studyDraftChecks.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})})),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
-
-        '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
-        '/api/source-sessions/edit': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('edit',input);}},
-        '/api/source-sessions/undo': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('undo',input);}},
-        '/api/material/folder/open': {POST:input=>materialFolder.open(input)},
-        '/api/material/album': {POST:input=>materialAlbums.add(input)},
-        '/api/first-flow/binding': {GET:()=>studyBindings.lookup({projectKey:url.searchParams.get('projectKey')})},
-        '/api/first-flow/select': {POST:input=>studyBindings.select(input)},
-        '/api/first-flow': {GET:async()=>({...await firstFlow.get({projectId:url.searchParams.get('projectId')||store.get().project.id}),researchAvailable:researchEnabled})},
-        '/api/first-flow/source-review': {POST:input=>firstFlow.reviewSources(input)},
-        '/api/first-flow/attach': {POST:input=>firstFlow.attach(input)},
-        '/api/first-flow/prepare': {POST:researchAction(input=>firstFlow.prepare(input))},
-        '/api/first-flow/run': {POST:researchAction(input=>firstFlow.run(input))},
-        '/api/first-flow/pick': {POST:researchAction(input=>firstFlow.pick(input))},
-        '/api/first-flow/check': {POST:researchAction(input=>firstFlow.check(input))},
-        '/api/first-flow/decide-line': {POST:researchAction(input=>firstFlow.decideLine(input))},
-        '/api/first-flow/reinspect': {POST:researchAction(input=>firstFlow.reinspect(input))},
-        '/api/pieces/switch': {POST:input=>store.switchPiece(input)},
-        '/api/research-material': {GET:()=>researchMaterial.list(store.get().project.id)},
-        '/api/research-material/claim': {POST:input=>researchMaterial.saveClaim(researchInput(input))},
-        '/api/research-material/account': {POST:input=>researchMaterial.saveAccount(researchInput(input))},
-        '/api/research-material/concept': {POST:input=>researchMaterial.saveConcept(researchInput(input))},
-        '/api/research-material/position': {POST:input=>researchMaterial.savePosition(researchInput(input))},
-        '/api/research-material/preview': {POST:input=>researchMaterial.previewImport(researchInput(input))},
-        '/api/research-material/import': {POST:input=>researchMaterial.import(researchInput(input))},
-        '/api/research-material/inherit': {POST:input=>researchMaterial.inherit(researchInput(input))},
-        '/api/research-material/review': {POST:input=>researchMaterial.review(researchInput(input))},
-        '/api/requests/preview': { POST: input => requests.preview(input) },
-        '/api/requests/recent': { GET: () => requests.recent() },
-        '/api/exports': { GET: () => exports.list(), POST: async input => {await guardCarouselOutput(input);return exports.save(input);} },
-        '/api/research/answers/recent': {GET:()=>researchAnswers.recent(url.searchParams.get('projectId')||store.get().project.id)},
-        '/api/research/answers/preview': {POST:input=>researchAnswers.preview(researchInput(input))},
-        '/api/ai/execution/capabilities': {GET:()=>execution.capabilities()},
-        '/api/passage/revisions/recent': {GET:()=>passageRevisions.recent()},
-        '/api/passage/revisions/preview': {POST:input=>passageRevisions.preview(input)},
-        '/api/article/visual/recent': {GET:()=>articleVisual.recent()},
-        '/api/article/visual/preview': {POST:input=>articleVisual.preview(input)},
-        '/api/article/make/recent': {GET:()=>articleMake.recent()},
-        '/api/article/make/preview': {POST: input => articleMake.preview(input, `http://${request.headers.host}`)},
-        '/api/carousel/make/recent': {GET:()=>carouselMake.recent()},
-        '/api/carousel/make/preview': {POST: async input => {if(input.stage==='look')await guardCarouselOutput(input);return carouselMake.preview(input);}},
-        '/api/carousel/exports': {GET:()=>carousel.list(),POST:async input=>{await guardCarouselOutput(input);return carousel.save(input,`http://${request.headers.host}`);}},
-        '/api/ingestion': { GET: () => ingestion.list() },
-        '/api/ingestion/retry': { POST: input => ingestion.retry(input.id) },
-        '/api/transcript-tools/connect': {POST:input=>transcriptTools.connect(input,url.origin)},
-        '/api/recordings': { GET: () => recordings.list() },
-        '/api/capabilities': { GET: async () => ({ library: 'file-backed', webExtraction: { configured: true, backend: extraction ? 'WordForge Firecrawl' : 'i64os Readability', local: ingestion.capabilities.article }, youtube: ingestion.capabilities.youtube, transcription: (await recordings.list()).capability, guidance: 'shared-own-files', sharedArticles: {enabled:sharedArticles} }) },
-      };
+      const routes = commandRoutes({ url, request, server, outputQuery, decorateOutputExports, describe: () => describeCapabilities() });
       const passageMatch=pathname.match(/^\/api\/passage\/revisions\/([a-f0-9-]{36})(?:\/(send|run))?$/);
       if(passageMatch){
         const [,id,action]=passageMatch;
@@ -642,7 +507,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (!handler) { response.setHeader('Allow', Object.keys(routes[pathname]).join(', ')); throw new StateError('Method is not supported.', 405); }
         let input;
         if (['POST','DELETE'].includes(request.method)) {
-          checkWrite(request, server);
+          if (request.method === 'POST' && READ_ONLY_POSTS.has(pathname)) checkWriteOrigin(request, server); else checkWrite(request, server);
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
           input = await body(request, pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');

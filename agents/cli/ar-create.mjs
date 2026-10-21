@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+import { readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { createClient, exitCodeFor, EXIT } from '../lib/client.mjs';
+import { ACTOR_VALUES } from '../lib/actors.mjs';
+
+/**
+ * ar-create — the one CLI for every agent. JSON in (--input FILE or - for
+ * stdin), JSON out (one line on stdout). Every request carries --actor.
+ *
+ *   node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor agent:claude-code status
+ *   ... list-commands [--section draft]
+ *   ... call <command-name> --input -
+ *   ... project read --input -        (domain sugar; see SUGAR below)
+ *
+ * Exit codes: 0 ok, 1 failed, 2 usage, 3 conflict (409: re-read, never force),
+ * 4 locked (423: someone holds a lease), 5 forbidden (403: human-only or Origin).
+ */
+export const SUGAR = Object.freeze({
+  library: { tree: 'sources.tree', file: 'sources.file.get', search: 'concept.sources.search', read: 'concept.source', collections: 'collections.get' },
+  collection: { list: 'inquiries.catalog', read: 'inquiries.read', create: 'inquiries.create', update: 'inquiries.update', save: 'inquiries.save', projects: 'inquiries.projects', undo: 'inquiries.learning.undo' },
+  project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
+  piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
+  draft: { catalog: 'study-draft.catalog', read: 'study-draft.read', open: 'study-draft.open', create: 'study-draft.create-collection', save: 'study-draft.save', undo: 'study-draft.undo', check: 'study-draft.check.get', inspect: 'study-draft.inspect.get', proposals: 'study-ai.requests' },
+});
+const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
+export const USAGE = {
+  usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
+  commands: ['status', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
+  actors: ACTOR_VALUES,
+  env: { AR_CREATE_URL: 'default for --url', AR_CREATE_ACTOR: 'default for --actor' },
+  exitCodes: { 0: 'ok', 1: 'failed', 2: 'usage', 3: 'conflict (re-read; never force)', 4: 'locked by another actor', 5: 'forbidden (human-only)' },
+};
+
+export function parseArgs(args, env = process.env) {
+  const options = {}, positional = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--help' || arg === '-h') return { help: true };
+    if (FLAGS.includes(arg)) {
+      const key = arg.slice(2);
+      if (Object.hasOwn(options, key) || args[i + 1] === undefined || (args[i + 1].startsWith('--') && args[i + 1] !== '-')) throw new Error(`Provide ${arg} exactly once with its value.`);
+      options[key] = args[++i];
+    } else if (arg.startsWith('--')) throw new Error(`Unknown option ${arg}; content belongs in --input JSON.`);
+    else positional.push(arg);
+  }
+  options.url ??= env.AR_CREATE_URL;
+  options.actor ??= env.AR_CREATE_ACTOR;
+  if (!positional.length) throw new Error('Choose a command. Run --help.');
+  if (!options.url) throw new Error('Provide --url http://127.0.0.1:PORT (or AR_CREATE_URL).');
+  if (!options.actor) throw new Error('Provide --actor (for example agent:claude-code) or AR_CREATE_ACTOR. Every request names its author.');
+  return { ...options, positional };
+}
+async function readInput(path, stdin) {
+  if (!path) return {};
+  const text = path === '-' ? await stdin() : await readFile(path, 'utf8');
+  if (Buffer.byteLength(text) > 4 * 1024 * 1024) throw new Error('JSON input exceeds 4 MiB.');
+  const value = JSON.parse(text);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Input must be a JSON object.');
+  return value;
+}
+const defaultStdin = async () => { const chunks = []; for await (const chunk of process.stdin) chunks.push(chunk); return Buffer.concat(chunks).toString('utf8'); };
+
+export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env = process.env } = {}) {
+  let options;
+  try { options = parseArgs(args, env); } catch (error) { return { exitCode: EXIT.usage, result: { ok: false, error: error.message, ...USAGE } }; }
+  if (options.help) return { exitCode: EXIT.ok, result: USAGE };
+  let client;
+  try { client = createClient({ url: options.url, actor: options.actor, client: 'cli', fetchImpl }); }
+  catch (error) { return { exitCode: EXIT.usage, result: { ok: false, error: error.message } }; }
+  const [command, ...rest] = options.positional, input = await readInput(options.input, stdin);
+  const answer = result => ({ exitCode: exitCodeFor(result.status), result: result.ok ? result.body : { ok: false, status: result.status, error: result.status === 409 ? 'revision_conflict' : result.status === 423 ? 'locked' : result.status === 403 ? 'forbidden' : 'request_failed', command: result.command, details: result.body } });
+  if (command === 'list-commands') {
+    const caps = await client.listCommands();
+    const commands = caps.commands.filter(item => !options.section || item.section === options.section);
+    return { exitCode: EXIT.ok, result: { schema: caps.schema, git: caps.git, count: commands.length, commands } };
+  }
+  if (command === 'call') {
+    if (rest.length !== 1) return { exitCode: EXIT.usage, result: { ok: false, error: 'Use: call COMMAND-NAME [--input FILE|-]' } };
+    return answer(await client.call(rest[0], input));
+  }
+  if (command === 'status') {
+    const caps = await client.listCommands();
+    return { exitCode: EXIT.ok, result: { url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort() } };
+  }
+  if (Object.hasOwn(SUGAR, command)) {
+    const verb = rest[0], name = SUGAR[command][verb];
+    if (!name || rest.length !== 1) return { exitCode: EXIT.usage, result: { ok: false, error: `Use: ${command} ${Object.keys(SUGAR[command]).join('|')}` } };
+    return answer(await client.call(name, input));
+  }
+  return { exitCode: EXIT.usage, result: { ok: false, error: `Unknown command "${command}".`, ...USAGE } };
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try { const { result, exitCode } = await run(process.argv.slice(2)); process.stdout.write(`${JSON.stringify(result)}\n`); process.exitCode = exitCode; }
+  catch (error) { process.stdout.write(`${JSON.stringify({ ok: false, error: error.message })}\n`); process.exitCode = EXIT.failed; }
+}
