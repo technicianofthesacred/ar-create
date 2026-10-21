@@ -165,3 +165,16 @@ body.has-panel.v-research .rp.on{pointer-events:none}
  .lb.compact .views{overflow-x:auto}
  .odet.k-lib,.odet.k-pce{max-width:none}
 }
+
+/* Revision 6 — Adrian: fewer numbers, Read = Write, panel reads as an expansion of the selected rail item */
+:root{--panel:color-mix(in srgb,var(--rail) 45%,var(--sel))}
+#rack .cnt,#bbar .cnt{display:none}
+html body #spanel{background:var(--panel)}
+html body .rl.on{background:var(--panel)}
+html body.has-panel .rl.on{border-radius:8px 0 0 8px;margin-right:-3px;width:calc(100% + 3px)}
+#spanel .tn .cnt,#psheet .tn .cnt{background:none;color:var(--dim);font-weight:400;min-width:0;padding:0;opacity:0;transition:opacity .12s}
+#spanel .tn:hover .cnt,#spanel .tn.on .cnt,#psheet .tn:hover .cnt,#psheet .tn.on .cnt{opacity:1}
+#spanel .tn.on{background:color-mix(in srgb,var(--sel) 70%,var(--ink) 6%)}
+.wrow>.margin{height:0;overflow:visible;position:relative;z-index:1}
+#spanel .tn .tc,#psheet .tn .tc{opacity:0;transition:opacity .12s}
+#spanel .tn:hover .tc,#spanel .tn.on .tc,#psheet .tn:hover .tc,#psheet .tn.on .tc{opacity:1}

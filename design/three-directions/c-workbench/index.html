@@ -1121,8 +1121,10 @@ V.outputs=()=>{
 };
 
 /* ---------------- main render ---------------- */
+let prevView=null;
 function render(keepScroll){
  const main=$('#main');const st=main.scrollTop;
+ const rw=['read','write'];if(rw.includes(S.view)&&rw.includes(prevView)&&prevView!==S.view){keepScroll=true;S.target=null;}prevView=S.view;
  document.body.className=document.body.className.replace(/\bv-\S+/g,'').trim();document.body.classList.add('v-'+S.view);
  renderTop();renderRack();renderDrawer();
  main.innerHTML=(V[S.view]||V.bench)();
