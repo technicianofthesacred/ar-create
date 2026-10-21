@@ -25,6 +25,7 @@ import {createMagazineProjects, statusEntries} from './projects.mjs';
 import {planTidy} from './tidy.mjs';
 import {createReconcile} from './reconcile.mjs';
 import {createMagazineIntake} from './intake.mjs';
+import {createMagazineChecks} from './checks.mjs';
 
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const stable = v => JSON.stringify(v, (_, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
@@ -455,6 +456,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     _operation: operation, _io: io, _roots: roots, _dirs: dirs, _ctx: ctx, _requireWritable: requireWritable, _intakeEngine: intakeEngine,
   };
   api.extra.reconcile = createReconcile({dataDir, vault: api});
+  api.extra.checks = configured ? createMagazineChecks({vault: api}) : null;
   api.extra.intake = configured && filesRoot ? createMagazineIntake({vault: api, engine: intakeEngine, drops, filesRoot, now, events}) : null;
   return api;
 }
