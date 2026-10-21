@@ -1,17 +1,15 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Three Directions</title>
+<title>AR Create Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--sel:#2c2a22}
-:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--sel:#e9e4d7}
+/* Layout: header line, three live prototypes side by side, then one comparison table. Dark-first like AR Create. */
+:root{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--sel:#2c2a22;color-scheme:dark}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--sel:#e9e4d7;color-scheme:light}}
+:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--sel:#e9e4d7;color-scheme:light}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif}
-header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--line)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;align-items:center;gap:16px;padding-block:14px;border-bottom:1px solid var(--line)}
 header h1{font-size:15px;font-weight:600;margin:0}
 header p{margin:0;color:var(--dim);font-size:13px;flex:1}
 button{font:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
@@ -19,26 +17,24 @@ button:hover{background:var(--sel)}
 button[aria-pressed="true"]{border-color:var(--warm);color:var(--warm)}
 :focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
-.stage{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:16px 24px}
+.stage{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-block:16px}
 .stage.single{grid-template-columns:1fr}
 .card{display:flex;flex-direction:column;min-width:0}
 .card h2{font-size:15px;font-weight:600;margin:0 0 2px}
 .card .idea{color:var(--dim);font-size:13px;margin:0 0 10px;min-height:3em}
-.frame{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper);aspect-ratio:16/10}
+.frame{position:relative;max-width:100%;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper);aspect-ratio:16/10}
 .stage.single .frame{aspect-ratio:auto;height:calc(100vh - 150px)}
 .frame iframe{position:absolute;inset:0;width:250%;height:250%;border:0;transform:scale(.4);transform-origin:0 0}
 .stage.single .frame iframe{width:100%;height:100%;transform:none}
 .card a{color:var(--warm);font-size:13px;margin-top:8px;text-decoration:none}
 .card a:hover{text-decoration:underline}
-table{width:calc(100% - 48px);margin:8px 24px 40px;border-collapse:collapse;font-size:14px}
+table{width:100%;margin:8px 0 40px;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;vertical-align:top;padding:10px 12px;border-top:1px solid var(--line)}
 th{color:var(--dim);font-weight:500;width:16%}
 td{width:28%}
-h3{margin:24px 24px 4px;font-size:15px;font-weight:600}
+h3{margin:24px 0 4px;font-size:15px;font-weight:600}
 @media (max-width:900px){.stage{grid-template-columns:1fr}table{display:block;overflow-x:auto}header{flex-wrap:wrap}}
 </style>
-</head>
-<body>
 <header>
   <h1>AR Create — three directions</h1>
   <p>Prototypes with invented content. Nothing here saves, runs AI or publishes.</p>
@@ -73,9 +69,19 @@ h3{margin:24px 24px 4px;font-size:15px;font-weight:600}
 </section>
 
 <h3>How they differ</h3>
+<p style="color:var(--dim);font-size:13px;margin:0 0 4px">The task: resume, add your own thought, correct a line in Source, return to the same spot, move carousel slide 3 to first, preview as a reader. The design review's suggestion: B's structure, with A's writing screen inside a piece and C's resume card on B's home.</p>
 <table id="compare">
   <tr><th></th><td><b>A Document</b></td><td><b>B Studio</b></td><td><b>C Workbench</b></td></tr>
-  <!--ROWS-->
+  <tr><th>You open it and see</th><td>The sentence you were on, with a "Left off here · next: tighten the ending" marker in the text.</td><td>Every subject as a tile with its pieces in miniature, plus "Waiting on you" and "Since you left" strips.</td><td>One big "Pick up where you left off" card, then a queue of next moves across all projects.</td></tr>
+  <tr><th>Switching projects</th><td>Project name or ⌘K opens a finder. Sibling pieces sit as tabs on the top line.</td><td>A permanent searchable subject list on the left, filtered by "Waiting on me" or "Touched by Claude".</td><td>⌘K finder that scopes everything, or "All projects" to work across them.</td></tr>
+  <tr><th>The twelve sections</th><td>Sheets that slide over the document. Esc returns you to the same line.</td><td>A tab row inside a subject or piece only.</td><td>A tool rack on the left, each tool showing how much needs you.</td></tr>
+  <tr><th>Your own words</th><td>Select text, then "Your words": your notes sit in the margin, visibly yours.</td><td>A "Your thoughts" box at the centre of every subject board.</td><td>An always-open understanding column with your thoughts box. Press T from anywhere.</td></tr>
+  <tr><th>Best at</th><td>Long writing and revision. The calmest; most like an editor's desk.</td><td>One origin feeding many outputs, and seeing what each piece inherits.</td><td>Coming back after a gap and juggling six or more pieces at once.</td></tr>
+  <tr><th>What it costs</th><td>Gathering and research feel secondary. A project with no piece yet has nothing to open onto.</td><td>Two levels to navigate (subject, then piece). Library and Collections have no home across subjects.</td><td>Only as good as its counts. A stale count makes the bench lie. Three columns get dense under 1280px.</td></tr>
+  <tr><th>Versus the chosen Tree</th><td>Drops the Tree's sidebar and middle list; keeps its margin and the piece's own path.</td><td>Replaces the Tree's step sidebar with a subject list; the middle list becomes the board.</td><td>Closest to the Tree: same left list of twelve steps, but with counts and a resume home instead of a middle list.</td></tr>
+  <tr><th>Building it on today's app</th><td>Medium. Write becomes the resting screen; the inspector becomes a permanent margin; other steps become one shared sheet.</td><td>Largest. The sidebar changes job, plus two new screens and an aggregate "waiting" query.</td><td>Smallest layout change; the most new data (left-off position, change feed, next-move ranking).</td></tr>
+  <tr><th>Same task, clicks</th><td>9 on desktop, 11 on phone. Resume costs nothing: it opens on your sentence.</td><td>10. Adding a thought means leaving the piece for the subject board.</td><td>Not counted: its review pass ran out of time.</td></tr>
+  <tr><th>Must-haves met (of 13)</th><td>11, plus 2 partly</td><td>11, plus 2 partly</td><td>9, plus 4 partly</td></tr>
 </table>
 
 <script>
@@ -93,5 +99,3 @@ t.addEventListener('click',()=>{
   t.textContent=light?'Dark':'Light';
 });
 </script>
-</body>
-</html>

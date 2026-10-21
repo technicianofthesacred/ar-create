@@ -14,6 +14,8 @@ AR Create is organised around **subjects**: one origin (a talk, a visit, a harve
 
 "New subject" starts an empty one.
 
+Above the strips, one **Pick up where you left off** card names the exact spot (for example Claude's margin note on ¶3 of an article) and Resume lands there with that passage highlighted.
+
 ## How switching works
 
 - **Left list**, always present on desktop: search across subject and piece titles, plus filters for All, Active, Waiting on me and Touched by Claude. Each row shows the title, small marks for the kinds of piece, and one state line (for example "Article: Check ready · Carousel: 3 slides empty"). It collapses to a rail of initials.
@@ -33,7 +35,7 @@ AR Create is organised around **subjects**: one origin (a talk, a visit, a harve
 
 - **Two levels of navigation**, subject then piece. A one-off post with no real origin still has to live inside a subject. It could be a subject with one origin, or an "Unfiled" subject.
 - **The board is wide.** Three bands need about 1240px. Below that, Origins becomes a full-width row above two columns, and on a phone everything stacks, so the left-to-right "flow" is lost on small screens.
-- **The Library and Collections are folded into "Origins" and "Understanding" per subject.** A source or inquiry reused across subjects has no home of its own in this direction. Searching it across subjects would need a separate Library view, which this direction does not draw.
+- **The Library and Collections live mainly inside each subject**, as Origins and Understanding. A light cross-subject **Library** view (from the Studio home line, or "Library" at the foot of the subject list) lists every source once with "Used in" links, and every open inquiry as Collections. It is an index, not a workspace: you open an item inside the subject that uses it. Search inside it is not drawn.
 - **The tab row is long** (13 items). It scrolls sideways on a phone, and the group labels help but do not remove the length.
 - **The piece-level sections need a "current piece".** If a subject has none, those tabs show an empty state that points to "New expression".
 
@@ -71,3 +73,31 @@ All content is invented sample content.
 - Export, review links and publishing.
 
 Nothing is saved.
+
+## Critique pass, 21 October
+
+Five fixes made after a critique against the brief:
+
+1. **Resume goes to the exact spot.** The Studio home now opens with a "Pick up where you left off" card, and Resume (there and on the board) opens the piece, selects the margin note and highlights its passage. "Where you left off" updates as you work in this tab.
+2. **A way back after a detour.** Leaving a piece for a subject section (Board, Direction, Source, Material…) puts "Back to Write" first in the section row. It returns to the same piece, section and note or scroll position.
+3. **The Library has a home across subjects.** A small Library view lists every source once with where it is used, plus open inquiries as Collections. It is labelled honestly: the sample data shares no source between subjects, and search is not connected.
+4. **The phone header says where you are.** The brand no longer repeats "Studio" next to the "Studio" crumb. On a phone, inside a subject, the header shows only "‹ Subject › Current" instead of three crushed crumbs.
+5. **Source works on a phone.** An inline column width overrode the phone layout, so the transcript collapsed to one word per line. It now stacks properly.
+
+## Same task, counted
+
+Task: resume the last piece where I left off → add my own thought → correct a misheard line in Source → come back to the exact spot → move carousel slide 3 to first → preview it as the audience sees it. Counted from the Studio home on desktop. Each click or drag is one; typing is not counted.
+
+| Step | Clicks | How |
+|---|---|---|
+| Resume where I left off | 1 | Resume on the "Pick up where you left off" card. The article opens with Claude's ¶3 note highlighted. |
+| Add my own thought | 2 | Board tab, then click into "Your thoughts". |
+| Correct a misheard line in Source | 3 | Source tab, click the line, then "Keep correction". |
+| Come back to the exact spot | 1 | "Back to Write". The same note is highlighted again. |
+| Move slide 3 to first | 2 | Choose the carousel in the piece picker, then drag slide 3's handle onto the cover. |
+| Preview as the audience | 1 | Audience tab. The phone preview opens on the new first slide. |
+| **Total** | **10** | |
+
+Checked by running it in a browser. The note was re-highlighted after the return, the slide order changed, and there were no page errors.
+
+Where it felt awkward: "Your thoughts" belongs to the subject, not the piece, so adding a thought means leaving the piece you are writing. Before this pass there was no way back to the same paragraph. On a phone, Audience sits at the far end of a section row that scrolls sideways.

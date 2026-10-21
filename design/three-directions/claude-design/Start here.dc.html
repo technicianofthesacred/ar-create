@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Start here</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet data-dc-atomics>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+        <style>
+          body{margin:0;background:#141310}
+          a{color:#c9a874;text-decoration:none}
+          a:hover{text-decoration:underline}
+          .pg{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--good:#8fb08a;--warnc:#d9a95a;background:var(--bg);color:var(--ink);font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;padding:48px 24px 80px}
+          .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+          .kick{color:var(--warm);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0}
+          .h1{font-size:34px;font-weight:700;line-height:1.15;margin:6px 0 10px;text-wrap:balance}
+          .lede{color:var(--dim);font-size:17px;max-width:680px;margin:0;text-wrap:pretty}
+          .h2{font-size:18px;font-weight:600;margin:0 0 14px}
+          .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+          .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px}
+          .letter{font-size:13px;color:var(--warm);font-weight:700}
+          .ct{font-size:17px;font-weight:600;margin:0}
+          .cb{color:var(--dim);margin:0;text-wrap:pretty}
+          .row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 16px;padding:10px 0;border-top:1px solid var(--line)}
+          .rk{color:var(--dim);font-size:13px}
+          .list{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 32px}
+          .list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+          .num{color:var(--warm);font-weight:600;font-size:13px;padding-top:2px}
+          .stub{display:inline-flex;font-size:12px;padding:2px 8px;border:1px solid var(--warnc);color:var(--warnc);border-radius:4px}
+          .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px}
+          .note{border-top:1px solid var(--line);padding-top:16px;color:var(--dim);font-size:13px}
+        </style>
+      </helmet>
+      <div class="pg" data-screen-label="Start here">
+        <div class="wrap">
+          <div>
+            <p class="kick">AR Create · design canvas · 21 Oct 2026</p>
+            <h1 class="h1">Three ways to arrange the same workspace</h1>
+            <p class="lede">The installed app works, but it does not look or move like the design you chose (Full A / Tree). These are three different answers to one question: what should you see first, and how do you get between projects and sections? All three use the same records, the same twelve sections and the same dark look. Only the structure changes.</p>
+          </div>
+
+          <div>
+            <h2 class="h2">The three directions</h2>
+            <div class="grid3">
+              <div class="card">
+                <span class="letter">A</span>
+                <p class="ct">Document-led</p>
+                <p class="cb">The piece you are writing is the screen. Sections come to the text as sheets; the margin carries notes, decisions and sources.</p>
+                <a href="?file=A%20Document-led.dc.html">Open direction A →</a>
+              </div>
+              <div class="card">
+                <span class="letter">B</span>
+                <p class="ct">Studio by subject</p>
+                <p class="cb">Each subject is a room. You walk in and everything about it is laid out: material, research, your direction, every piece made from it.</p>
+                <a href="?file=B%20Studio%20by%20subject.dc.html">Open direction B →</a>
+              </div>
+              <div class="card">
+                <span class="letter">C</span>
+                <p class="ct">Workbench by resuming</p>
+                <p class="cb">The opening screen is where you left off, across every project. You pick up a thread; the bench rearranges around it.</p>
+                <a href="?file=C%20Workbench%20by%20resuming.dc.html">Open direction C →</a>
+              </div>
+            </div>
+            <p class="note">Then: <a href="?file=Compare.dc.html">Compare side by side</a> · Earlier chosen design: Full A / Tree (branch claude/ar-create-interface-directions, design/round3-directions). History, not a target to copy.</p>
+          </div>
+
+          <div class="two">
+            <div>
+              <h2 class="h2">What stays the same in all three</h2>
+              <div class="row"><span class="rk">Library</span><span>Sources and your notes, each kept once.</span></div>
+              <div class="row"><span class="rk">Collections</span><span>Reusable inquiries: questions, evidence, how understanding changed.</span></div>
+              <div class="row"><span class="rk">Direction</span><span>Your own thoughts, feelings and the angle you chose.</span></div>
+              <div class="row"><span class="rk">Pieces</span><span>Article, carousel, post, listing, script, shared note. Each edited on its own.</span></div>
+              <div class="row"><span class="rk">Projects</span><span>Optional links between Collections and Pieces.</span></div>
+              <div class="row"><span class="rk">Sections</span><span>Gather 01–02 · Develop 03–04 · Make 05–09 · Deliver 10–12. All reachable, none compulsory.</span></div>
+            </div>
+            <div>
+              <h2 class="h2">What is honestly stubbed</h2>
+              <p class="cb" style="margin:0 0 12px">These are not connected today. Every prototype shows them in place with a plain note, never a fake result. Saves say “Prototype — nothing is saved”.</p>
+              <div class="row"><span class="stub">Not connected</span><span>Broad AI research and retrieval</span></div>
+              <div class="row"><span class="stub">Not connected</span><span>AI editor help in Write</span></div>
+              <div class="row"><span class="stub">Not connected</span><span>Device sync</span></div>
+              <div class="row"><span class="stub">Not connected</span><span>Material keep / remove review</span></div>
+              <div class="row"><span class="stub">Not connected</span><span>Bilingual Source view; voice / expression sheet</span></div>
+              <div class="row"><span class="stub">Partial</span><span>Magazine single-writer path</span></div>
+            </div>
+          </div>
+
+          <div>
+            <h2 class="h2">The 13 things every direction must make visible</h2>
+            <ol class="list">
+              <li><span class="num">01</span><span>Where am I, what can I do, without a manual.</span></li>
+              <li><span class="num">02</span><span>Many active projects: easy to find and switch.</span></li>
+              <li><span class="num">03</span><span>An obvious place for your own thoughts and words.</span></li>
+              <li><span class="num">04</span><span>Where I left off, and the current understanding.</span></li>
+              <li><span class="num">05</span><span>Material is intake; Source is understanding what was said.</span></li>
+              <li><span class="num">06</span><span>Research: inspect evidence, mark uncertainty, discuss one point.</span></li>
+              <li><span class="num">07</span><span>Write feels like a document; margin notes highlight their passage; Focus hides them.</span></li>
+              <li><span class="num">08</span><span>Carousel edited as a whole sequence.</span></li>
+              <li><span class="num">09</span><span>Media shows where each photo or video is used.</span></li>
+              <li><span class="num">10</span><span>Arrange, Audience and Export are three different jobs.</span></li>
+              <li><span class="num">11</span><span>One origin, several independently edited outputs.</span></li>
+              <li><span class="num">12</span><span>Decisions, protected phrases, corrections and rejected angles carry forward.</span></li>
+              <li><span class="num">13</span><span>No stacked headers, repeated notices, unexplained buttons or extra sidebars.</span></li>
+            </ol>
+          </div>
+
+          <p class="note">Each direction page shows the live prototype, its own tradeoffs, a critique against these 13, and three proposed fixes drawn as variants. Prototypes are built by other sessions; this canvas does not edit them. All content is invented.</p>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{}'>
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

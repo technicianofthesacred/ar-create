@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A Document-led</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet data-dc-atomics>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Lora:wght@400;500&amp;display=swap" rel="stylesheet" />
+        <style>
+          body{margin:0;background:#141310}
+          a{color:#c9a874;text-decoration:none}
+          a:hover{text-decoration:underline}
+          .pg{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;background:var(--bg);color:var(--ink);font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;padding:40px 24px 80px}
+          .wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+          .kick{color:var(--warm);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0}
+          .h1{font-size:32px;font-weight:700;line-height:1.15;margin:6px 0 10px;text-wrap:balance}
+          .lede{color:var(--dim);font-size:17px;max-width:760px;margin:0;text-wrap:pretty}
+          .h2{font-size:18px;font-weight:600;margin:0 0 6px}
+          .sub{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:760px}
+          .frames{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:20px;align-items:start}
+          .fr{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+          .frl{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)}
+          .ifd{display:block;width:100%;height:760px;border:0;background:var(--bg)}
+          .ifm{display:block;width:390px;height:760px;border:0;background:var(--bg)}
+          .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px}
+          .row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px 16px;padding:10px 0;border-top:1px solid var(--line)}
+          .rk{color:var(--dim);font-size:13px}
+          .crit{display:grid;grid-template-columns:36px 210px 96px minmax(0,1fr);gap:4px 14px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
+          .num{color:var(--warm);font-weight:600;font-size:13px}
+          .v{font-size:12px;padding:1px 8px;border-radius:4px;border:1px solid;justify-self:start}
+          .v.meets{color:var(--good);border-color:var(--good)}
+          .v.partial{color:var(--warnc);border-color:var(--warnc)}
+          .v.missing{color:var(--bad);border-color:var(--bad)}
+          .score{display:flex;gap:16px;font-size:14px;color:var(--dim);margin:0 0 8px}
+          .fixes{display:flex;flex-direction:column;gap:28px}
+          .fix{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;border-top:1px solid var(--line);padding-top:20px}
+          .ft{font-size:16px;font-weight:600;margin:4px 0 8px}
+          .fb{color:var(--dim);margin:0 0 8px;text-wrap:pretty}
+          .ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+          .mock{border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow:hidden;font-size:13px}
+          .mock.after{border-color:var(--warm)}
+          .ml{padding:6px 10px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
+          .mock.after .ml{color:var(--warm)}
+          .mb{padding:12px;display:flex;flex-direction:column;gap:8px;min-height:180px}
+          .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+          .blk{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+          .tag{font-size:11px;padding:1px 6px;border:1px solid var(--line);border-radius:4px;color:var(--dim)}
+          .tag.w{color:var(--warm);border-color:var(--warm)}
+          .tag.s{color:var(--warnc);border-color:var(--warnc)}
+          .hl{background:color-mix(in srgb,var(--warm) 22%,transparent);border-radius:2px}
+          .ms{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6}
+          .dimt{color:var(--dim)}
+          .stack{display:flex;flex-direction:column;gap:6px}
+          .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px}
+          .note{border-top:1px solid var(--line);padding-top:16px;color:var(--dim);font-size:13px}
+          .cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+          .cmph{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}
+          .ifc{display:block;width:100%;height:620px;border:0;background:var(--bg)}
+          .tbl{display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr));gap:0 16px}
+          .tbl > div{padding:10px 0;border-top:1px solid var(--line)}
+          .th{color:var(--dim);font-size:13px}
+          @media (max-width:1000px){.frames,.fix,.cmp{grid-template-columns:minmax(0,1fr)}.crit{grid-template-columns:36px minmax(0,1fr)}.tbl{grid-template-columns:minmax(0,1fr)}}
+        </style>
+      </helmet>
+      <div class="pg" data-screen-label="A Document-led">
+        <div class="wrap">
+          <div>
+            <p class="kick">Direction A · <a href="?file=Start%20here.dc.html">Start here</a> · <a href="?file=Compare.dc.html">Compare</a></p>
+            <h1 class="h1">Document-led</h1>
+            <p class="lede">The piece you are writing fills the screen, opened at the sentence you left off. Notes, decisions and sources live in a margin beside the passage they concern; the other ten sections slide over the document as sheets and drop you back on the same line.</p>
+          </div>
+          <div>
+            <h2 class="h2">The prototype</h2>
+            <p class="sub">Live and clickable. Invented content; nothing saves, no AI runs. Built by another session — this canvas shows it unedited.</p>
+            <div class="frames">
+              <div class="fr"><div class="frl"><span>Desktop</span><a href="prototypes/a-document/index.html" target="_blank">Open full screen →</a></div><iframe class="ifd" src="prototypes/a-document/index.html" title="Direction A desktop"></iframe></div>
+              <div class="fr"><div class="frl"><span>Phone · 390px</span></div><iframe class="ifm" src="prototypes/a-document/index.html" title="Direction A phone"></iframe></div>
+            </div>
+          </div>
+          <div class="two">
+            <div>
+              <h2 class="h2">From the builder's notes</h2>
+              <div class="row"><span class="rk">Opening</span><span>The last piece, scrolled to the paragraph you left, with an inline &quot;Left off here — next: tighten the ending&quot; marker; the margin&#x27;s first line says what changed while you were away.</span></div>
+              <div class="row"><span class="rk">Switching</span><span>Project name or ⌘K opens a finder with left-off lines; sibling tabs for pieces from one origin; a slim rail with the outline above the twelve sections. Write and Read are modes; the rest open as sheets.</span></div>
+              <div class="row"><span class="rk">Best at</span><span>Long writing and revision. The text is never more than one Esc away and &quot;where I left off&quot; is a place in the text.</span></div>
+              <div class="row"><span class="rk">Costs</span><span>Gather and Develop work lives in sheets, not a home of its own; a project with no piece has nothing to land on; thin overview; long margins at real volume; sheets hide the document.</span></div>
+              <div class="row"><span class="rk">To build</span><span>Write becomes the resting state with a stored position; the 12-step sidebar collapses into the rail; the inspector becomes a permanent three-tab margin with note-to-passage anchors; carousel strip; media reverse index.</span></div>
+            </div>
+            <div>
+              <h2 class="h2">Critique in one paragraph</h2>
+              <p class="fb" style="color:var(--ink)">A is the best writing room of the three: the margin, Your words, protected-phrase checks and Focus make Write feel like a good editor&#x27;s desk, and &quot;left off&quot; is a place in the text rather than a status card. It pays for that everywhere else. Projects are one click away but never in view, the carousel is a tall strip you scroll through rather than a sequence you see whole, and intake or research days happen in a sheet over a dimmed document. The fixes keep the document as home and give the other work enough room.</p>
+            </div>
+          </div>
+          <div>
+            <h2 class="h2">Against the 13 must-haves</h2>
+            <p class="score"><span>Meets 11</span><span>Partial 2</span><span>Missing 0</span></p>
+            <div class="crit"><span class="num">01</span><span>Where am I, what can I do</span><span class="v meets">Meets</span><span class="dimt">You land on your own sentence with a dismissible &quot;Left off here&quot; marker and one next step. Nothing to read first.</span></div>
+            <div class="crit"><span class="num">02</span><span>Many projects: find and switch</span><span class="v partial">Partial</span><span class="dimt">The finder works, but projects are hidden behind the title. With six active projects there is no list in view and no sign which one is waiting on you.</span></div>
+            <div class="crit"><span class="num">03</span><span>A place for my own words</span><span class="v meets">Meets</span><span class="dimt">&quot;Your words&quot; anchored to a selection, in serif with a sand edge, clearly authored by Adrian; Direction opens with &quot;In your own words&quot;.</span></div>
+            <div class="crit"><span class="num">04</span><span>Where I left off + understanding</span><span class="v meets">Meets</span><span class="dimt">Inline marker in the text, &quot;Since you left: Claude added 3 source notes&quot; with Show them.</span></div>
+            <div class="crit"><span class="num">05</span><span>Material ≠ Source</span><span class="v meets">Meets</span><span class="dimt">Material is drop, list and drag into topics; Source is speakers, timestamps and click-to-correct, with corrections flowing to Decisions.</span></div>
+            <div class="crit"><span class="num">06</span><span>Research: evidence, uncertainty, one point</span><span class="v meets">Meets</span><span class="dimt">Points marked Sure / Unsure / Disputed with evidence counts; one-point thread kept, AI reply honestly not connected.</span></div>
+            <div class="crit"><span class="num">07</span><span>Write feels like a document</span><span class="v meets">Meets</span><span class="dimt">The strongest Write of the three: margin notes and passages light each other both ways; Focus hides the margin.</span></div>
+            <div class="crit"><span class="num">08</span><span>Carousel as a whole sequence</span><span class="v partial">Partial</span><span class="dimt">All six slides exist on one page, but as a tall 4:5 strip. At 1440×900 about one and a half slides are visible, so the sequence is read by scrolling, not seen.</span></div>
+            <div class="crit"><span class="num">09</span><span>Media shows where used</span><span class="v meets">Meets</span><span class="dimt">Every asset lists &quot;Used in: Article ¶3 · Carousel slide 2&quot; and the links jump there.</span></div>
+            <div class="crit"><span class="num">10</span><span>Arrange vs Audience vs Export</span><span class="v meets">Meets</span><span class="dimt">Arrange reorders the parts, Audience shows reader frames with no marks, Outputs says in one line what each of the three is for.</span></div>
+            <div class="crit"><span class="num">11</span><span>One origin → several outputs</span><span class="v meets">Meets</span><span class="dimt">Sibling tabs &quot;Article · Carousel · Listing — from Conversation with Mei Lin&quot;, each edited on its own.</span></div>
+            <div class="crit"><span class="num">12</span><span>Carry-forward visible</span><span class="v meets">Meets</span><span class="dimt">Decisions tab with a live intact/changed check on protected phrases, corrections from Source, rejected angles struck through.</span></div>
+            <div class="crit"><span class="num">13</span><span>No stacked headers, extra sidebars</span><span class="v meets">Meets</span><span class="dimt">One thin top line, a slim rail and the margin. Sheets dim the document instead of adding columns.</span></div>
+          </div>
+          <div>
+            <h2 class="h2">Top three fixes, as variants</h2>
+            <p class="sub">Proposals only. The prototype file is not changed; these sketches show the structural change in the same look.</p>
+            <div class="fixes">
+            <div class="fix" data-screen-label="A fix 1">
+              <div>
+                <span class="num">Fix 1 · must-have 8</span>
+                <p class="ft">Carousel opens as a contact sheet</p>
+                <p class="fb">A tall strip shows one slide at a time, so pacing and repetition across the six slides can&#x27;t be judged at a glance.</p>
+                <p class="fb">Open the carousel as a grid of all slides at thumbnail size, text editable in place, drag to reorder between cells. The current strip stays as a &quot;Read through&quot; toggle for checking slide by slide.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="stack" style="align-items:center"><div class="blk" style="width:60%;height:110px">1/6 · Porcelain and tea</div><div class="blk" style="width:60%;height:30px">2/6 …</div></div><span class="dimt">Scroll to see the rest.</span></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="bar"><span class="tag w">Sequence</span><span class="tag">Read through</span></div><div class="cols" style="grid-template-columns:repeat(6,1fr)"><div class="blk" style="height:70px">1</div><div class="blk" style="height:70px">2</div><div class="blk" style="height:70px">3</div><div class="blk" style="height:70px">4</div><div class="blk" style="height:70px">5</div><div class="blk" style="height:70px">6</div></div><span class="dimt">All six in view; drag a slide between cells; type on any of them.</span></div></div>
+              </div>
+            </div>
+            <div class="fix" data-screen-label="A fix 2">
+              <div>
+                <span class="num">Fix 2 · must-have 2 · 4</span>
+                <p class="ft">Projects in view, without leaving the document</p>
+                <p class="fb">Switching is one click, but knowing which of six projects needs you means opening the finder or Home.</p>
+                <p class="fb">Put a short &quot;Projects&quot; block at the top of the rail, above the outline: each active project on one line with its left-off line and a dot when something waits on you. The outline of the current piece follows below. ⌘K stays for search.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="stack"><span class="tag">Porcelain and Tea ▾</span><span class="dimt">Outline</span><div class="blk">Left off here</div><div class="blk">The workshop</div><span class="dimt">Gather · Develop · Make · Deliver</span></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="stack"><span class="dimt">Projects</span><div class="blk"><b>Porcelain and Tea</b> <span class="dimt">¶14 · tighten the ending</span></div><div class="blk">Harbour Night Market <span class="tag s">4 lines to correct</span></div><div class="blk">Spring Oolong <span class="tag s">angle to choose</span></div><span class="dimt">Outline · Porcelain and Tea</span><div class="blk">Left off here</div></div></div></div>
+              </div>
+            </div>
+            <div class="fix" data-screen-label="A fix 3">
+              <div>
+                <span class="num">Fix 3 · must-have 5 · 6</span>
+                <p class="ft">Gather and Develop can take the screen beside the paragraph</p>
+                <p class="fb">Material, Source and Research open over a dimmed document. On a day of sorting or correcting, the sheet is cramped and the paragraph you came from is hidden.</p>
+                <p class="fb">Give each sheet a &quot;Work here&quot; width: the sheet takes most of the screen and the document shrinks to a narrow column on the right, still showing the paragraph you came from. A Source line can then be read against the sentence that quotes it.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="cols" style="grid-template-columns:3fr 2fr"><div class="blk stack"><span class="tag w">Source sheet</span><span class="dimt">00:21:05 Mei — …</span></div><div class="blk dimt" style="opacity:.4">document, dimmed</div></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="cols" style="grid-template-columns:3fr 1fr"><div class="blk stack"><span class="tag w">Source · work here</span><span>00:21:05 Mei — <span class="hl">a window is better than a wall</span></span><span class="dimt">Click a line to correct it</span></div><div class="blk ms">¶13 … <span class="hl">a window is better than a wall</span> …</div></div></div></div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{}'>
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

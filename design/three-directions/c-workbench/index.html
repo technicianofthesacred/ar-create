@@ -66,6 +66,10 @@ body.rack-min .rk-gl{height:12px;padding:8px 0 0;border-top:1px solid var(--line
 main{grid-row:2;grid-column:2;overflow-y:auto;overflow-x:hidden;min-width:0;background:var(--bg)}
 .wrap{padding:22px 28px 80px;max-width:1180px;margin:0 auto}
 .thead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.retrow{flex-basis:100%;display:flex;align-items:center;gap:10px;font-size:12.5px;margin:-4px 0 -2px}
+.retb{height:30px;font-size:13px;color:var(--warm)}
+.since h4 .tag,.sec .tag{text-transform:none;letter-spacing:0;font-weight:400;margin-left:4px}
+.note b .tag{font-size:10.5px;padding:0 4px;margin-left:4px;font-weight:400}
 .thead h1{font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em}
 .thead h1 .n{color:var(--dim);font-weight:500;margin-right:8px;font-size:15px}
 .thead .sp{flex:1}
@@ -303,6 +307,11 @@ body.focus .doc{margin:0 auto;max-width:700px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--paper);border:1px solid var(--line);color:var(--ink);padding:9px 14px;border-radius:9px;font-size:13px;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 
 /* ---------- narrow ---------- */
+@media (min-width:761px) and (max-width:1360px){
+  .app{--rackw:196px}
+  body.v-write:not(.und-pin) .app,body.v-arrange:not(.und-pin) .app{--undw:0px}
+  body.v-write:not(.und-pin) #und,body.v-arrange:not(.und-pin) #und{display:none}
+}
 @media (max-width:1100px){
   .pickup{grid-template-columns:1fr}
   .bench-cols{grid-template-columns:1fr}
@@ -342,6 +351,13 @@ body.focus .doc{margin:0 auto;max-width:700px}
   .tline .who{display:none}
   .tline .tx,.fix{grid-column:2}
   .seq{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .slide{aspect-ratio:auto;min-height:250px}
+  .slide .img{height:96px}
+  .slide .st{overflow:visible}
+  .pstrip{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:none;margin-right:-16px;padding-right:16px}
+  .pstrip::-webkit-scrollbar{display:none}
+  .pstrip span{flex:none}
+  .pstrip button{flex:none}
   .slide .st{font-size:13.5px}
   .mgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .page{padding:22px 18px}
@@ -608,7 +624,7 @@ const HAS={
 const CROSS={material:1,media:1}; // these show everything at once under "All"
 
 /* ---------------- state ---------------- */
-const S={scope:'all',view:'bench',toolProj:{},target:null,q:'',sel:0,research:{},mediaF:'all',arrangeMode:{},audMode:{},fixing:null,openPv:{},bilingual:false,activeNote:null,lastHonest:null};
+const S={scope:'all',view:'bench',work:'porc',ret:null,toolProj:{},target:null,q:'',sel:0,research:{},mediaF:'all',arrangeMode:{},audMode:{},fixing:null,openPv:{},bilingual:false,activeNote:null,lastHonest:null};
 try{const t=localStorage.getItem('arc-c-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
 
 function resolveProj(tool){
@@ -616,6 +632,8 @@ function resolveProj(tool){
  if(tool==='bench'||!HAS[tool])return 'porc';
  const pick=S.toolProj[tool];
  if(pick&&HAS[tool](pick))return pick;
+ // the project you are working in wins over the busiest one, so a tool never jumps you elsewhere
+ if(S.work&&HAS[tool](S.work))return S.work;
  const c=P.filter(p=>HAS[tool](p.id)).sort((a,b)=>count(tool,b.id)-count(tool,a.id));
  return c.length?c[0].id:'porc';
 }
@@ -668,7 +686,7 @@ function renderTop(){
   </button>
   <span class="top-sp"></span>
   <button class="tbtn" data-act="thought" title="Add a thought (T)">${ic('thought')}<span class="lbl-wide">Add a thought</span></button>
-  <button class="tbtn ${document.body.classList.contains('und-off')?'':'on'}" data-act="und" title="Understanding (])">${ic('panelR')}<span class="lbl-wide">Understanding</span></button>
+  <button class="tbtn ${undShown()?'on':''}" data-act="und" title="Understanding (])">${ic('panelR')}<span class="lbl-wide">Understanding</span></button>
   <button class="tbtn" data-act="theme" title="Light / dark">${ic(document.documentElement.dataset.theme==='light'?'moon':'sun')}</button>`;
 }
 function rackBtn(t){
@@ -714,7 +732,8 @@ function renderUnd(){
 /* ---------------- views ---------------- */
 function head(tool,p,right=''){
  const t=T(tool);
- return `<div class="thead"><h1><span class="n">${t.n}</span>${t.label}<span class="dim" style="font-weight:400"> · ${esc(PN(p))}</span></h1><span class="sp"></span>${right}</div>`+pstrip(tool,p);
+ const back=S.ret&&tool!=='write'?`<button class="btn quiet retb" data-act="ret" title="Back to the paragraph you were writing">${ic('write','sm')} Back to ¶${S.ret.n} in Write</button>`:'';
+ return `<div class="thead">${back?`<div class="retrow">${back}<span class="dim">${esc(PN(S.ret.p))}</span></div>`:''}<h1><span class="n">${t.n}</span>${t.label}<span class="dim" style="font-weight:400"> · ${esc(PN(p))}</span></h1><span class="sp"></span>${right}</div>`+pstrip(tool,p);
 }
 function pstrip(tool,p){
  if(S.scope!=='all'||CROSS[tool])return '';
@@ -740,7 +759,7 @@ V.bench=()=>{
    <blockquote>${esc(r.ex)}</blockquote>
    <button class="btn primary" data-act="go" data-tool="${r.go.tool}" data-p="${r.p}" data-x="${r.go.x||''}">${esc(r.cta)} ${ic('chev','sm')}</button>
   </div>
-  <div class="since"><h4>Since you were here</h4>${r.ch.length?`<ul>${r.ch.map(c=>`<li><i class="${c.a?'agent':''}"></i><span>${esc(c.t)}<small>${esc(c.w)}</small></span></li>`).join('')}</ul>`:'<p class="dim">Nothing changed.</p>'}</div>
+  <div class="since"><h4>Since you were here <span class="tag" title="Invented records — no agent ran">Sample</span></h4>${r.ch.length?`<ul>${r.ch.map(c=>`<li><i class="${c.a?'agent':''}"></i><span>${esc(c.t)}<small>${esc(c.w)}</small></span></li>`).join('')}</ul>`:'<p class="dim">Nothing changed.</p>'}</div>
  </section>
  <div class="bench-cols">
   <section><h2 class="sec">Next moves ${S.scope==='all'?'<span style="text-transform:none;letter-spacing:0;font-weight:400">across all projects</span>':''}</h2>
@@ -805,7 +824,7 @@ V.research=()=>{
  <div class="rgrid"><ul class="plist">${pts.map(x=>`<li><button class="pbtn ${x.id===sel.id?'on':''}" data-act="rpoint" data-id="${x.id}"><span class="lv ${x.level}"></span><span>${esc(x.claim)}<small>${x.level} · ${x.evidence.length} evidence</small></span></button></li>`).join('')}</ul>
  <div class="pdet"><h3>${esc(sel.claim)}</h3>
   <div class="seg" role="group" aria-label="How sure">${LV.map(l=>`<button class="${sel.level===l?'on':''}" data-act="level" data-id="${sel.id}" data-l="${l}">${l[0].toUpperCase()+l.slice(1)}</button>`).join('')}</div>
-  <ul class="ev">${sel.evidence.map(e=>`<li><q>${esc(e.q)}</q><div class="src"><span>${esc(e.src)}</span><span class="${e.agent?'warm':''}">${esc(e.by)}</span></div></li>`).join('')}</ul>
+  <ul class="ev">${sel.evidence.map(e=>`<li><q>${esc(e.q)}</q><div class="src"><span>${esc(e.src)}</span><span class="${e.agent?'warm':''}">${esc(e.by)}${e.agent?' <span class="tag">Sample</span>':''}</span></div></li>`).join('')}</ul>
   <div class="thread"><h2 class="sec">Discuss this point</h2>
    ${sel.thread.map(m=>m.who==='you'?`<div class="msg you"><small>You · ${esc(m.when)}</small>${esc(m.text)}</div>`:`<div class="msg sys">${esc(m.text)}</div>`).join('')||'<p class="dim" style="font-size:13px;margin:0 0 6px">One point at a time. Ask what you would ask an editor.</p>'}
    <div class="compose"><textarea id="discuss" placeholder="Ask about this point…" aria-label="Ask about this point"></textarea><button class="btn primary" data-act="discuss" data-id="${sel.id}">Send</button></div>
@@ -841,7 +860,7 @@ V.write=()=>{
   <div class="by">${esc(d.kind)} · ${esc(PN(p))}${CAR[p]?` · <button class="lnk" data-act="go" data-tool="arrange">Carousel cut from this</button>`:''}</div>
   ${d.paras.map((x,i)=>{const ns=d.notes.filter(n=>n.pid===x.id);return `<div class="wrow">
    <p class="para ${x.id===d.last?'last':''}" id="pa-${x.id}" data-pid="${x.id}" contenteditable="true">${protWrap(x.text,p)}</p>
-   <div class="margin">${ns.map(n=>`<button class="note ${n.agent?'agent':''} ${S.activeNote===n.id?'on':''}" data-act="note" data-id="${n.id}"><b>${esc(n.by)}</b>${esc(n.text)}${n.needs&&!n.done?`<span class="r" data-act="resolve" data-id="${n.id}">Mark answered</span>`:''}</button>`).join('')}</div></div>`;}).join('')}
+   <div class="margin">${ns.map(n=>`<button class="note ${n.agent?'agent':''} ${S.activeNote===n.id?'on':''}" data-act="note" data-id="${n.id}"><b>${esc(n.by)}${n.agent?' <span class="tag" title="Invented note — no agent ran">Sample</span>':''}</b>${esc(n.text)}${n.needs&&!n.done?`<span class="r" data-act="resolve" data-id="${n.id}">Mark answered</span>`:''}</button>`).join('')}</div></div>`;}).join('')}
   <div class="legend"><span><span class="prot">underlined</span> protected phrase</span><span>Click a margin note to find its passage</span><span>Focus hides rack, understanding and margin</span></div>
  </article></div>`;
 };
@@ -946,6 +965,7 @@ V.outputs=()=>{
 /* ---------------- main render ---------------- */
 function render(keepScroll){
  const main=$('#main');const st=main.scrollTop;
+ document.body.className=document.body.className.replace(/\bv-\S+/g,'').trim();document.body.classList.add('v-'+S.view);
  renderTop();renderRack();renderUnd();
  main.innerHTML=(V[S.view]||V.bench)();
  if(keepScroll)main.scrollTop=st;else main.scrollTop=0;
@@ -987,20 +1007,27 @@ function honest(btn,msg){
 /* ---------------- navigation ---------------- */
 function go(tool,p,x){
  closeSheets();
- if(p){ if(S.scope!=='all'&&S.scope!==p)S.scope=p; if(S.scope==='all')S.toolProj[tool]=p; }
+ // leaving Write remembers the exact paragraph, so every tool can offer the way back
+ if(S.view==='write'&&tool!=='write'){const wp=resolveProj('write');const d=DOCS[wp];if(d){const i=d.paras.findIndex(q=>q.id===d.last);S.ret={p:wp,pid:d.last,n:i+1};}}
+ if(p){ if(S.scope!=='all'&&S.scope!==p)S.scope=p; if(S.scope==='all')S.toolProj={[tool]:p}; S.work=p; }
+ if(tool==='write'&&!x){const d=DOCS[p||resolveProj('write')];if(d&&d.last)x=d.last;}
+ if(tool==='write')S.ret=null;
  S.view=tool;S.target=x||null;S.fixing=null;S.activeNote=null;
  if(tool!=='write')document.body.classList.remove('focus');
  render();
 }
-function setScope(p){S.scope=p;S.sel=0;closeSheets();render();}
+function setScope(p){S.scope=p;if(p!=='all')S.work=p;S.sel=0;closeSheets();render();}
 function closeSheets(){document.body.classList.remove('und-sheet');$('#gsheet').classList.remove('on');$('.scrim.f').classList.remove('on');}
 const isPhone=()=>matchMedia('(max-width:760px)').matches;
+const narrowAside=()=>matchMedia('(min-width:761px) and (max-width:1360px)').matches&&(S.view==='write'||S.view==='arrange');
+const undShown=()=>!document.body.classList.contains('und-off')&&!(narrowAside()&&!document.body.classList.contains('und-pin'));
 function toggleUnd(){
  if(isPhone()){document.body.classList.toggle('und-sheet');return;}
+ if(narrowAside()){const on=undShown();document.body.classList.toggle('und-pin',!on);if(!on)document.body.classList.remove('und-off');renderTop();return;}
  document.body.classList.toggle('und-off');renderTop();
 }
 function openThought(){
- if(isPhone())document.body.classList.add('und-sheet');else document.body.classList.remove('und-off','focus');
+ if(isPhone())document.body.classList.add('und-sheet');else{document.body.classList.remove('und-off','focus');if(narrowAside())document.body.classList.add('und-pin');}
  renderTop();
  setTimeout(()=>{const q=$('#quickT');if(q)q.focus();},30);
 }
@@ -1049,8 +1076,9 @@ document.addEventListener('pointercancel',endDrag);
 /* ---------------- actions ---------------- */
 const A={
  go:el=>go(el.dataset.tool,el.dataset.p||null,el.dataset.x||null),
+ ret:()=>{const r=S.ret;if(r)go('write',r.p,r.pid);},
  scope:el=>setScope(el.dataset.p),
- toolproj:el=>{S.toolProj[S.view]=el.dataset.p;S.fixing=null;render();},
+ toolproj:el=>{S.toolProj[S.view]=el.dataset.p;S.work=el.dataset.p;S.fixing=null;render();},
  finder:()=>openFinder(),
  fpick:el=>pickFinder(+el.dataset.k),
  closeall:()=>{closeFinder();closeSheets();},
@@ -1127,6 +1155,7 @@ document.addEventListener('input',e=>{
  if(t.dataset.pid){const p=resolveProj('write');const x=DOCS[p].paras.find(q=>q.id===t.dataset.pid);if(x){x.text=t.innerText.replace(/\n+$/,'');DOCS[p].last=x.id;}return;}
  if(t.dataset.sid){const s=CAR[resolveProj('arrange')].slides.find(q=>q.id===t.dataset.sid);if(s)s.text=t.innerText;return;}
 });
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.pid&&S.view==='write'){const d=DOCS[resolveProj('write')];if(d)d.last=t.dataset.pid;}});
 $('#filein').addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
 
 /* ---------------- keyboard ---------------- */

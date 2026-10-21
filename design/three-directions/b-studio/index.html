@@ -115,6 +115,20 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .home .lede{color:var(--dim);margin:0 0 24px;font-size:14.5px}
 .strip{margin-bottom:28px}
 .strip h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:0 0 10px;font-weight:600;display:flex;gap:8px;align-items:center}
+.pickup{display:grid;grid-template-columns:1fr auto;grid-template-areas:"l b" "t b" "s b";gap:2px 16px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-left:3px solid var(--warm);border-radius:6px;padding:14px 16px;background:var(--paper);margin-bottom:28px}
+.pickup:hover{background:var(--sel)}
+.pickup .pl{grid-area:l;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:600}
+.pickup .pt{grid-area:t;font-size:16px;font-weight:600;color:var(--ink)}
+.pickup .ps{grid-area:s;font-size:13px;color:var(--dim)}
+.pickup .btn{grid-area:b}
+.retbtn{color:var(--warm)!important;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.retbtn .ic{transform:scaleX(-1)}
+.libl{border-top:1px solid var(--line)}
+.lrow2{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+.lrow2 .lt{display:flex;flex-direction:column;min-width:0}.lrow2 .lt b{font-weight:500}
+.lrow2 .lu{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font-size:13px}
+.lrow2 .unc{grid-column:1;font-size:10px}
+@media (max-width:640px){.lrow2{grid-template-columns:auto minmax(0,1fr)}.lrow2 .lu{grid-column:2;justify-content:flex-start}.pickup{grid-template-columns:1fr;grid-template-areas:"l" "t" "s" "b"}.pickup .btn{justify-self:start;margin-top:8px}}
 .wait-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .wcard{text-align:left;border:1px solid var(--line);border-left:3px solid var(--warnc);border-radius:6px;padding:12px 14px;background:var(--paper)}
 .wcard:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line));border-left-color:var(--warnc)}
@@ -423,7 +437,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 }
 @media (max-width:900px){
   .board{grid-template-columns:minmax(0,1fr)}
-  .two{grid-template-columns:minmax(0,1fr)}
+  .two{grid-template-columns:minmax(0,1fr)!important}
 }
 @media (max-width:760px){
   .phone-only{display:inline-flex!important}
@@ -433,7 +447,10 @@ button{cursor:pointer;background:none;border:0;padding:0}
   .side.open{transform:none}
   .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:39}
   .side .grab{display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 0}
-  .crumbs button{max-width:110px}
+  .insub .brand{display:none}
+  .crumbs button,.crumbs .cur{max-width:150px;min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .crumbs > :not(:nth-last-child(-n+3)){display:none}
+  .crumbs > :nth-last-child(3):not(.sep)::before{content:"\2039\00a0"}
   .home{padding:18px 16px 60px}
   .bhead{padding:16px 16px 0}.board{padding:12px 16px 60px}
   .secwrap{padding:16px 16px 60px}
@@ -458,7 +475,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 <body>
 <header class="top">
   <button class="iconbtn desk-only" data-act="rail" aria-label="Collapse or expand the subject list" title="Collapse list"><span class="ic" data-i="panel"></span></button>
-  <button class="brand" data-act="home">AR Create <span>· Studio</span></button>
+  <button class="brand" data-act="home" title="Back to the Studio home">AR Create</button>
   <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
   <span class="sp"></span>
   <span class="tag desk-only" title="Every subject, recording and note here is invented for the prototype">Sample content · Prototype — nothing is saved</span>
@@ -473,7 +490,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
       <div class="filters" id="filters"></div>
     </div>
     <div class="plist" id="plist"></div>
-    <div class="side-foot"><button class="link" data-act="newsubject"><span class="lbl">+ New subject</span><span class="ic phone-hide" data-i="plus"></span></button><span class="dim lbl" style="font-size:12px" id="count"></span></div>
+    <div class="side-foot"><button class="link" data-act="library"><span class="lbl">Library</span></button><button class="link" data-act="newsubject"><span class="lbl">+ New subject</span><span class="ic phone-hide" data-i="plus"></span></button><span class="dim lbl" style="font-size:12px" id="count"></span></div>
   </aside>
   <main id="main" tabindex="-1"></main>
 </div>
@@ -531,7 +548,7 @@ const SUBJECTS = [
 {
   id:'porcelain', title:'Porcelain and Tea', state:'active', waiting:false,
   touched:{actor:'Claude', when:'yesterday', mins:1300},
-  lastLeft:{text:'a margin note on ¶3 of “The cup should disappear”', pid:'pa', sec:'write'},
+  lastLeft:{text:'Claude’s margin note on ¶3 of “The cup should disappear”', pid:'pa', sec:'write', nid:'n3'},
   understanding:'Thin, white porcelain is valued less for its looks than for what it gives back: it takes little heat from the tea and shows the liquor honestly. Mei’s practice is the human thread — nineteen years of trimming walls until they let light through. What is still unproven is whether thin walls change taste, or only feel.',
   thoughts:'I keep coming back to the idea of a cup that gets out of the way. Not minimalism as a style — more like good manners.',
   decisions:['Lead with the cup in the hand, not the history','Use Mei’s name — permission given 12 Oct'],
@@ -694,7 +711,7 @@ const FEED = [
 
 /* ================= state ================= */
 const S = {view:'home', sid:null, pid:null, sec:'board', filter:'all', q:'', rail:false, sheet:false, focus:false, activeNote:null,
-  newMenu:false, mediaFilter:'all', matSel:null, rpSel:null, editLine:null, aud:'phone', audSlide:0};
+  newMenu:false, mediaFilter:'all', matSel:null, rpSel:null, editLine:null, aud:'phone', audSlide:0, ret:null, lastSid:'porcelain'};
 try { const t = localStorage.getItem('arc-b-theme'); if (t) document.documentElement.dataset.theme = t; } catch(e) {}
 
 const PIECE_SECS = ['write','read','check','arrange','audience','share'];
@@ -798,12 +815,14 @@ function renderSide(){
 function renderTop(){
   const s = subj(), e = piece();
   let h = `<button data-act="home" class="${S.view==='home'?'cur':''}">Studio</button>`;
-  if (S.view !== 'home' && s) {
+  if (S.view === 'library') h += `<span class="sep">›</span><span class="cur">Library</span>`;
+  else if (S.view !== 'home' && s) {
     h += `<span class="sep">›</span><button data-act="board" class="${!PIECE_SECS.includes(S.sec) && S.sec==='board'?'cur':''}">${esc(s.title)}</button>`;
     if (PIECE_SECS.includes(S.sec) && e) h += `<span class="sep">›</span><button class="cur" data-act="sec" data-sec="write">${esc(e.title)}</button>`;
     if (S.sec !== 'board' && S.sec !== 'write') h += `<span class="sep">›</span><span class="cur">${SECNAME[S.sec]}</span>`;
   }
   $('#crumbs').innerHTML = h;
+  document.body.classList.toggle('insub', S.view !== 'home');
   $('#app').classList.toggle('rail', S.rail);
   $('#side').classList.toggle('open', S.sheet);
   $('#scrim').classList.toggle('open', S.sheet);
@@ -822,7 +841,9 @@ function homeHTML(){
   const waiting = SUBJECTS.filter(s => s.waiting);
   return `<div class="home">
     <h1>Studio</h1>
-    <p class="lede">${SUBJECTS.length} subjects, ${SUBJECTS.reduce((n,s) => n + s.expressions.length, 0)} pieces growing from them. ${waiting.length} ${waiting.length===1?'is':'are'} waiting on you.</p>
+    <p class="lede">${SUBJECTS.length} subjects, ${SUBJECTS.reduce((n,s) => n + s.expressions.length, 0)} pieces growing from them. ${waiting.length} ${waiting.length===1?'is':'are'} waiting on you. Sources and inquiries across all of them live in the <button class="link" data-act="library">Library</button>.</p>
+    ${(() => { const L = SUBJECTS.find(x => x.id === S.lastSid); if (!L) return ''; const e = L.expressions.find(x => x.id === L.lastLeft.pid);
+      return `<button class="pickup" data-act="resume" data-sid="${L.id}"><span class="pl">Pick up where you left off</span><span class="pt">${esc(L.lastLeft.text)}</span><span class="ps">${esc(L.title)}${e ? ' · ' + KIND[e.kind] : ''}</span><span class="btn primary">Resume ${ic('arrow','sm')}</span></button>`; })()}
     <section class="strip"><h3>Waiting on you</h3><div class="wait-row">
       ${waiting.map(s => `<button class="wcard" data-act="go" data-sid="${s.id}" data-sec="${s.waitSec}" data-pid="${s.waitPid||''}"><div class="s">${esc(s.title)}</div><div class="a">${esc(s.waitText)}</div><div class="go">Go to ${SECNAME[s.waitSec]} →</div></button>`).join('')}
     </div></section>
@@ -841,9 +862,26 @@ function homeHTML(){
   </div>`;
 }
 
+/* ================= library (across subjects) ================= */
+function libraryHTML(){
+  const items = []; SUBJECTS.forEach(s => s.origins.forEach(o => { const k = o.title.toLowerCase(); let it = items.find(x => x.k === k); if (!it) items.push(it = {k, o, uses:[]}); it.uses.push(s); }));
+  const inq = SUBJECTS.filter(s => s.points.length);
+  return `<div class="home"><h1>Library</h1>
+    <p class="lede">Every source and note once, and every open inquiry, across all subjects. Open one to work on it inside the subject that uses it.</p>
+    <section class="strip"><h3>Sources and notes <span class="dim" style="text-transform:none;letter-spacing:0;font-weight:400">· ${items.length}</span></h3><div class="libl">
+      ${items.map(it => `<div class="lrow2"><span class="ty">${ic(it.o.type)}</span><span class="lt"><b>${esc(it.o.title)}</b><span class="dim">${esc(it.o.meta)}</span></span><span class="lu"><span class="dim">Used in</span>${it.uses.map(s => `<button class="link" data-act="libopen" data-sid="${s.id}" data-sec="material" data-oid="${it.o.id}">${esc(s.title)}</button>`).join('')}</span></div>`).join('')}
+    </div></section>
+    <section class="strip"><h3>Collections — open inquiries</h3><div class="libl">
+      ${inq.map(s => s.points.map(p => `<div class="lrow2"><span class="unc ${p.unc}">${p.unc}</span><span class="lt"><b>${esc(p.title)}</b><span class="dim">${p.evidence.length} piece${p.evidence.length===1?'':'s'} of evidence</span></span><span class="lu"><button class="link" data-act="libopen" data-sid="${s.id}" data-sec="research" data-rid="${p.id}">${esc(s.title)}</button></span></div>`).join('')).join('')}
+    </div></section>
+    <p class="honest">${ic('alert','sm')}<span>Sample data: no source is shared between two subjects here, so each shows one “Used in”. Search across the Library is not connected yet.</span></p>
+  </div>`;
+}
+
 /* ================= tabs ================= */
 function tabsHTML(){
-  return `<nav class="ctx" aria-label="Sections"><div class="g"><button class="board-tab ${S.sec==='board'?'on':''}" data-act="sec" data-sec="board">Board</button></div>
+  const r = S.ret && !PIECE_SECS.includes(S.sec) && S.sid === S.ret.sid ? subj().expressions.find(x => x.id === S.ret.pid) : null;
+  return `<nav class="ctx" aria-label="Sections">${r ? `<div class="g"><button class="retbtn" data-act="ret" title="Back to the exact place you were in “${esc(r.title)}”">${ic('arrow','sm')}Back to ${SECNAME[S.ret.sec]}</button></div>` : ''}<div class="g"><button class="board-tab ${S.sec==='board'?'on':''}" data-act="sec" data-sec="board">Board</button></div>
     ${GROUPS.map(([g, items]) => `<div class="g"><span class="gl">${g}</span>${items.map(([k,n]) => `<button class="${S.sec===k?'on':''}" data-act="sec" data-sec="${k}" title="${SECNUM[k]} ${n} — ${esc(PURPOSE[k])}">${n}</button>`).join('')}</div>`).join('')}
   </nav>`;
 }
@@ -1142,7 +1180,8 @@ const SEC_RENDER = {material:materialHTML, source:sourceHTML, research:researchH
 function render(keepScroll){
   const m = $('#main'), y = m.scrollTop;
   renderSide(); renderTop();
-  if (S.view === 'home' || !subj()) m.innerHTML = homeHTML();
+  if (S.view === 'library') m.innerHTML = libraryHTML();
+  else if (S.view === 'home' || !subj()) m.innerHTML = homeHTML();
   else m.innerHTML = tabsHTML() + (S.sec === 'board' ? boardHTML() : SEC_RENDER[S.sec]());
   m.scrollTop = keepScroll ? y : 0;
   requestAnimationFrame(placeNotes);
@@ -1180,9 +1219,21 @@ function openSubject(sid, sec){ S.view = 'subject'; S.sid = sid; S.sec = sec || 
   render(); }
 function openPiece(sid, pid, sec){ openSubject(sid, sec || 'write'); S.pid = pid || S.pid; render(); }
 function setSec(sec){
+  const fromPiece = S.view === 'subject' && PIECE_SECS.includes(S.sec) && piece();
+  if (fromPiece && !PIECE_SECS.includes(sec)) S.ret = {sid:S.sid, pid:S.pid, sec:S.sec, nid:S.activeNote, y:$('#main').scrollTop};
+  else if (PIECE_SECS.includes(sec)) S.ret = null;
   S.sec = sec; S.editLine = null; S.activeNote = null; S.audSlide = 0;
   if (PIECE_SECS.includes(sec) && !piece()) { const s = subj(); S.pid = s.expressions[0] ? s.expressions[0].id : null; }
+  if (PIECE_SECS.includes(sec) && piece()) { const s = subj(), e = piece(); S.lastSid = s.id; s.lastLeft = {text:`${SECNAME[sec]} — “${e.title}”`, pid:e.id, sec}; }
   render();
+}
+function goSpot(sp){
+  if (!sp) return;
+  if (S.view !== 'subject' || S.sid !== sp.sid) { S.view = 'subject'; S.sid = sp.sid; S.sheet = false; }
+  if (sp.pid) S.pid = sp.pid;
+  setSec(sp.sec);
+  if (sp.nid) { S.activeNote = sp.nid; render(); requestAnimationFrame(() => requestAnimationFrame(() => highlight(sp.nid))); }
+  else if (sp.y) { $('#main').scrollTop = sp.y; }
 }
 
 /* ================= events ================= */
@@ -1201,7 +1252,10 @@ document.addEventListener('click', ev => {
     case 'go': if (d.pid) openPiece(d.sid, d.pid, d.sec); else openSubject(d.sid, d.sec); break;
     case 'sec': setSec(d.sec); break;
     case 'pick': S.pid = d.pid; S.activeNote = null; S.audSlide = 0; render(); break;
-    case 'resume': { const ll = s.lastLeft; if (ll.pid) { S.pid = ll.pid; } setSec(ll.sec); break; }
+    case 'resume': { const t = d.sid ? SUBJECTS.find(x => x.id === d.sid) : s; goSpot({sid:t.id, ...t.lastLeft}); break; }
+    case 'ret': { const r = S.ret; goSpot(r); if (r && r.y && !r.nid) requestAnimationFrame(() => $('#main').scrollTop = r.y); break; }
+    case 'library': S.view = 'library'; S.sheet = false; render(); break;
+    case 'libopen': openSubject(d.sid, d.sec); if (d.oid) { S.matSel = d.oid; render(); } if (d.rid) { S.rpSel = d.rid; render(); } break;
     case 'openpiece': S.pid = d.pid; S.focus = false; setSec(d.sec || 'write'); break;
     case 'origin': S.matSel = d.oid; setSec('material'); break;
     case 'point': S.rpSel = d.rid; setSec('research'); break;

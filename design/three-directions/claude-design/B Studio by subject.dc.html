@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>B Studio by subject</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet data-dc-atomics>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Lora:wght@400;500&amp;display=swap" rel="stylesheet" />
+        <style>
+          body{margin:0;background:#141310}
+          a{color:#c9a874;text-decoration:none}
+          a:hover{text-decoration:underline}
+          .pg{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;background:var(--bg);color:var(--ink);font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;padding:40px 24px 80px}
+          .wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+          .kick{color:var(--warm);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0}
+          .h1{font-size:32px;font-weight:700;line-height:1.15;margin:6px 0 10px;text-wrap:balance}
+          .lede{color:var(--dim);font-size:17px;max-width:760px;margin:0;text-wrap:pretty}
+          .h2{font-size:18px;font-weight:600;margin:0 0 6px}
+          .sub{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:760px}
+          .frames{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:20px;align-items:start}
+          .fr{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+          .frl{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)}
+          .ifd{display:block;width:100%;height:760px;border:0;background:var(--bg)}
+          .ifm{display:block;width:390px;height:760px;border:0;background:var(--bg)}
+          .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px}
+          .row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px 16px;padding:10px 0;border-top:1px solid var(--line)}
+          .rk{color:var(--dim);font-size:13px}
+          .crit{display:grid;grid-template-columns:36px 210px 96px minmax(0,1fr);gap:4px 14px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
+          .num{color:var(--warm);font-weight:600;font-size:13px}
+          .v{font-size:12px;padding:1px 8px;border-radius:4px;border:1px solid;justify-self:start}
+          .v.meets{color:var(--good);border-color:var(--good)}
+          .v.partial{color:var(--warnc);border-color:var(--warnc)}
+          .v.missing{color:var(--bad);border-color:var(--bad)}
+          .score{display:flex;gap:16px;font-size:14px;color:var(--dim);margin:0 0 8px}
+          .fixes{display:flex;flex-direction:column;gap:28px}
+          .fix{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;border-top:1px solid var(--line);padding-top:20px}
+          .ft{font-size:16px;font-weight:600;margin:4px 0 8px}
+          .fb{color:var(--dim);margin:0 0 8px;text-wrap:pretty}
+          .ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+          .mock{border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow:hidden;font-size:13px}
+          .mock.after{border-color:var(--warm)}
+          .ml{padding:6px 10px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
+          .mock.after .ml{color:var(--warm)}
+          .mb{padding:12px;display:flex;flex-direction:column;gap:8px;min-height:180px}
+          .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+          .blk{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+          .tag{font-size:11px;padding:1px 6px;border:1px solid var(--line);border-radius:4px;color:var(--dim)}
+          .tag.w{color:var(--warm);border-color:var(--warm)}
+          .tag.s{color:var(--warnc);border-color:var(--warnc)}
+          .hl{background:color-mix(in srgb,var(--warm) 22%,transparent);border-radius:2px}
+          .ms{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6}
+          .dimt{color:var(--dim)}
+          .stack{display:flex;flex-direction:column;gap:6px}
+          .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px}
+          .note{border-top:1px solid var(--line);padding-top:16px;color:var(--dim);font-size:13px}
+          .cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+          .cmph{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}
+          .ifc{display:block;width:100%;height:620px;border:0;background:var(--bg)}
+          .tbl{display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr));gap:0 16px}
+          .tbl > div{padding:10px 0;border-top:1px solid var(--line)}
+          .th{color:var(--dim);font-size:13px}
+          @media (max-width:1000px){.frames,.fix,.cmp{grid-template-columns:minmax(0,1fr)}.crit{grid-template-columns:36px minmax(0,1fr)}.tbl{grid-template-columns:minmax(0,1fr)}}
+        </style>
+      </helmet>
+      <div class="pg" data-screen-label="B Studio by subject">
+        <div class="wrap">
+          <div>
+            <p class="kick">Direction B · <a href="?file=Start%20here.dc.html">Start here</a> · <a href="?file=Compare.dc.html">Compare</a></p>
+            <h1 class="h1">Studio by subject</h1>
+            <p class="lede">Work is organised around subjects: one origin and everything that grew from it. A subject opens as a board read left to right, Origins → Understanding → Expressions, so one origin becoming several separately edited pieces is the first thing you see.</p>
+          </div>
+          <div>
+            <h2 class="h2">The prototype</h2>
+            <p class="sub">Live and clickable. Invented content; nothing saves, no AI runs. Built by another session — this canvas shows it unedited.</p>
+            <div class="frames">
+              <div class="fr"><div class="frl"><span>Desktop</span><a href="prototypes/b-studio/index.html" target="_blank">Open full screen →</a></div><iframe class="ifd" src="prototypes/b-studio/index.html" title="Direction B desktop"></iframe></div>
+              <div class="fr"><div class="frl"><span>Phone · 390px</span></div><iframe class="ifm" src="prototypes/b-studio/index.html" title="Direction B phone"></iframe></div>
+            </div>
+          </div>
+          <div class="two">
+            <div>
+              <h2 class="h2">From the builder's notes</h2>
+              <div class="row"><span class="rk">Opening</span><span>Studio home: Pick up where you left off, Waiting on you, Since you left (Claude and Codex, with times), and a tile per subject with miniatures of its pieces.</span></div>
+              <div class="row"><span class="rk">Switching</span><span>A permanent subject list with search and filters (All, Active, Waiting on me, Touched by Claude) and a state line per subject; the twelve sections as a tab row inside a subject, with a piece picker on piece-level sections.</span></div>
+              <div class="row"><span class="rk">Best at</span><span>One origin, many outputs as the structure itself; carry-forward chips on the board and an &quot;inherits&quot; column beside every piece; juggling many projects.</span></div>
+              <div class="row"><span class="rk">Costs</span><span>Two levels of navigation; a one-off post still needs a subject; the board needs ~1240px; Library and Collections fold into each subject; a 13-item tab row.</span></div>
+              <div class="row"><span class="rk">To build</span><span>Sidebar becomes the subject list; steps move to a tab row; new Board and Studio home screens; inspector becomes the inherits column; per-subject state line, left-off record and a waiting-on-you query.</span></div>
+            </div>
+            <div>
+              <h2 class="h2">Critique in one paragraph</h2>
+              <p class="fb" style="color:var(--ink)">B gives the clearest picture of the product itself: a subject board makes Origins → Understanding → Pieces visible, carry-forward travels as chips into every piece, and the subject list with &quot;Waiting on me&quot; makes six projects easy to hold. The carousel and Media are the best of the three. It loses most on chrome: a breadcrumb, a 13-tab row, a piece picker and a toolbar stack above the text, the tab row runs out of room at 1280px, and anything without a subject has nowhere to go.</p>
+            </div>
+          </div>
+          <div>
+            <h2 class="h2">Against the 13 must-haves</h2>
+            <p class="score"><span>Meets 11</span><span>Partial 2</span><span>Missing 0</span></p>
+            <div class="crit"><span class="num">01</span><span>Where am I, what can I do</span><span class="v meets">Meets</span><span class="dimt">Studio home leads with &quot;Pick up where you left off&quot; and a Resume button, then what is waiting on you.</span></div>
+            <div class="crit"><span class="num">02</span><span>Many projects: find and switch</span><span class="v meets">Meets</span><span class="dimt">The strongest: permanent list with search, Waiting-on-me and Touched-by-Claude filters, and a state line per subject.</span></div>
+            <div class="crit"><span class="num">03</span><span>A place for my own words</span><span class="v meets">Meets</span><span class="dimt">&quot;Your thoughts — only your words&quot; in the middle of every board and at the top of Direction.</span></div>
+            <div class="crit"><span class="num">04</span><span>Where I left off + understanding</span><span class="v meets">Meets</span><span class="dimt">Resume on home and board; Current understanding heads the middle band.</span></div>
+            <div class="crit"><span class="num">05</span><span>Material ≠ Source</span><span class="v meets">Meets</span><span class="dimt">Material: just arrived / in this subject, sort and preview. Source: transcript to correct, &quot;Corrections travel into every piece&quot;.</span></div>
+            <div class="crit"><span class="num">06</span><span>Research: evidence, uncertainty, one point</span><span class="v meets">Meets</span><span class="dimt">Solid / Unsure / Disputed per point, evidence shown, &quot;How sure are we?&quot;, one point talked through with no invented reply.</span></div>
+            <div class="crit"><span class="num">07</span><span>Write feels like a document</span><span class="v partial">Partial</span><span class="dimt">The document itself is good and has its own margin, but above it are four header rows, and beside it both the margin and a &quot;This piece inherits&quot; column, so the text gets the middle third.</span></div>
+            <div class="crit"><span class="num">08</span><span>Carousel as a whole sequence</span><span class="v meets">Meets</span><span class="dimt">All six slides in one grid, type on any, drag to reorder, empty slides marked.</span></div>
+            <div class="crit"><span class="num">09</span><span>Media shows where used</span><span class="v meets">Meets</span><span class="dimt">Each asset: &quot;Used in Article · after ¶2 · Carousel slide 1&quot; or &quot;Not used yet&quot;.</span></div>
+            <div class="crit"><span class="num">10</span><span>Arrange vs Audience vs Export</span><span class="v meets">Meets</span><span class="dimt">Arrange composes, Audience says &quot;Nothing here is editable&quot;, Outputs lists the pieces side by side with export honestly not connected.</span></div>
+            <div class="crit"><span class="num">11</span><span>One origin → several outputs</span><span class="v meets">Meets</span><span class="dimt">It is the structure: Expressions band on every board and Outputs as a side-by-side table.</span></div>
+            <div class="crit"><span class="num">12</span><span>Carry-forward visible</span><span class="v meets">Meets</span><span class="dimt">Decisions, protected phrases, rejected angles and corrections on the board and again in &quot;This piece inherits&quot;.</span></div>
+            <div class="crit"><span class="num">13</span><span>No stacked headers, extra sidebars</span><span class="v partial">Partial</span><span class="dimt">Above the text sit a breadcrumb, a 13-tab row, a piece picker and a toolbar: four rows. The tab row fits at 1440, but at 1280 Share and Outputs run past the edge.</span></div>
+          </div>
+          <div>
+            <h2 class="h2">Top three fixes, as variants</h2>
+            <p class="sub">Proposals only. The prototype file is not changed; these sketches show the structural change in the same look.</p>
+            <div class="fixes">
+            <div class="fix" data-screen-label="B fix 1">
+              <div>
+                <span class="num">Fix 1 · must-have 7 · 13</span>
+                <p class="ft">One header line above a piece</p>
+                <p class="fb">Breadcrumb, tab row, piece picker and toolbar all sit above the first sentence.</p>
+                <p class="fb">Merge into one line: &quot;Porcelain and Tea › The cup should disappear ▾&quot; (the piece picker becomes the last crumb), then the section tabs, then Focus and Note on the right.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="stack"><div class="bar dimt">Studio › Porcelain and Tea › Write</div><div class="bar"><span class="dimt">Board · Material · Source · … · Outputs</span></div><div class="bar"><span class="tag w">The cup should disappear</span><span class="tag">Five things…</span><span class="tag">Gaiwan</span></div><div class="bar dimt">Article · Check ready · Note on selection · Focus</div><div class="blk ms">The best porcelain cup I own…</div></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="stack"><div class="bar"><span>Porcelain and Tea ›</span><span class="tag w">The cup should disappear ▾</span><span class="dimt" style="margin-left:auto">Note · Focus</span></div><div class="bar dimt">Board · Gather · Develop · <b style="color:var(--ink)">Make: Write</b> · Deliver</div><div class="blk ms">The best porcelain cup I own is the one I notice least…</div></div></div></div>
+              </div>
+            </div>
+            <div class="fix" data-screen-label="B fix 2">
+              <div>
+                <span class="num">Fix 2 · must-have 13</span>
+                <p class="ft">The tab row fits by collapsing the list inside a piece</p>
+                <p class="fb">Thirteen tabs plus the subject list plus the inherits column fit at 1440 but not at 1280, where Share and Outputs fall off the edge.</p>
+                <p class="fb">When a piece opens, the subject list collapses to its initials rail automatically (one click restores it). The tab row shows the four group names with only the current group expanded, so it never scrolls sideways.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="cols" style="grid-template-columns:1fr 3fr"><div class="blk dimt">Subjects list</div><div class="bar dimt" style="overflow:hidden;white-space:nowrap">Board Material Source Research Direction Write Read Check Media Arrange Audi…</div></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="cols" style="grid-template-columns:28px 3fr"><div class="blk dimt">P</div><div class="bar"><span class="dimt">Board</span><span class="dimt">Gather ▸</span><span class="dimt">Develop ▸</span><span class="tag w">Make: Write · Read · Check · Media · Arrange</span><span class="dimt">Deliver ▸</span></div></div></div></div>
+              </div>
+            </div>
+            <div class="fix" data-screen-label="B fix 3">
+              <div>
+                <span class="num">Fix 3 · must-have 1 · 11</span>
+                <p class="ft">Work can start without a subject</p>
+                <p class="fb">The brief says work can start anywhere. In B a quick post or a stray idea must first become a subject.</p>
+                <p class="fb">Add &quot;Loose pieces&quot; at the top of the subject list: pieces and ideas with no origin yet. Each has &quot;Give it a subject&quot; to move it onto a board later, carrying its decisions with it.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="stack"><span class="dimt">Subjects</span><div class="blk">Porcelain and Tea</div><div class="blk">Harbour Night Market</div><span class="tag">+ New subject</span></div><span class="dimt">A quick post needs a subject first.</span></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="stack"><span class="dimt">Loose pieces · 2</span><div class="blk">Post: rain on the tin roof <span class="tag">Give it a subject</span></div><div class="blk">Idea: why I stopped using lids</div><span class="dimt">Subjects</span><div class="blk">Porcelain and Tea</div><div class="blk">Harbour Night Market</div></div></div></div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{}'>
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

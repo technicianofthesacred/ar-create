@@ -1,0 +1,395 @@
+{
+ "recommendation": "Build B's structure, with A's Write and C's bench. B makes the product legible: the subject list keeps many projects in hand, and the board shows one origin becoming several pieces, with decisions carried into each. Inside a piece, use A's single editorial margin and one header line, so writing feels like a document. Put C's resume card (the paragraph you were in, and what Claude or Codex did since) at the top of B's Studio home. Each direction's top-three fixes still apply.",
+ "directions": [
+  {
+   "letter": "A",
+   "name": "Document-led",
+   "dir": "a-document",
+   "file": "A%20Document-led.dc.html",
+   "short": "The piece is the screen; sections visit as sheets.",
+   "idea": "The piece you are writing fills the screen, opened at the sentence you left off. Notes, decisions and sources live in a margin beside the passage they concern; the other ten sections slide over the document as sheets and drop you back on the same line.",
+   "notes": [
+    [
+     "Opening",
+     "The last piece, scrolled to the paragraph you left, with an inline \"Left off here — next: tighten the ending\" marker; the margin's first line says what changed while you were away."
+    ],
+    [
+     "Switching",
+     "Project name or ⌘K opens a finder with left-off lines; sibling tabs for pieces from one origin; a slim rail with the outline above the twelve sections. Write and Read are modes; the rest open as sheets."
+    ],
+    [
+     "Best at",
+     "Long writing and revision. The text is never more than one Esc away and \"where I left off\" is a place in the text."
+    ],
+    [
+     "Costs",
+     "Gather and Develop work lives in sheets, not a home of its own; a project with no piece has nothing to land on; thin overview; long margins at real volume; sheets hide the document."
+    ],
+    [
+     "To build",
+     "Write becomes the resting state with a stored position; the 12-step sidebar collapses into the rail; the inspector becomes a permanent three-tab margin with note-to-passage anchors; carousel strip; media reverse index."
+    ]
+   ],
+   "summary": "A is the best writing room of the three: the margin, Your words, protected-phrase checks and Focus make Write feel like a good editor's desk, and \"left off\" is a place in the text rather than a status card. It pays for that everywhere else. Projects are one click away but never in view, the carousel is a tall strip you scroll through rather than a sequence you see whole, and intake or research days happen in a sheet over a dimmed document. The fixes keep the document as home and give the other work enough room.",
+   "critique": [
+    [
+     "Where am I, what can I do",
+     "meets",
+     "You land on your own sentence with a dismissible \"Left off here\" marker and one next step. Nothing to read first."
+    ],
+    [
+     "Many projects: find and switch",
+     "partial",
+     "The finder works, but projects are hidden behind the title. With six active projects there is no list in view and no sign which one is waiting on you."
+    ],
+    [
+     "A place for my own words",
+     "meets",
+     "\"Your words\" anchored to a selection, in serif with a sand edge, clearly authored by Adrian; Direction opens with \"In your own words\"."
+    ],
+    [
+     "Where I left off + understanding",
+     "meets",
+     "Inline marker in the text, \"Since you left: Claude added 3 source notes\" with Show them."
+    ],
+    [
+     "Material ≠ Source",
+     "meets",
+     "Material is drop, list and drag into topics; Source is speakers, timestamps and click-to-correct, with corrections flowing to Decisions."
+    ],
+    [
+     "Research: evidence, uncertainty, one point",
+     "meets",
+     "Points marked Sure / Unsure / Disputed with evidence counts; one-point thread kept, AI reply honestly not connected."
+    ],
+    [
+     "Write feels like a document",
+     "meets",
+     "The strongest Write of the three: margin notes and passages light each other both ways; Focus hides the margin."
+    ],
+    [
+     "Carousel as a whole sequence",
+     "partial",
+     "All six slides exist on one page, but as a tall 4:5 strip. At 1440×900 about one and a half slides are visible, so the sequence is read by scrolling, not seen."
+    ],
+    [
+     "Media shows where used",
+     "meets",
+     "Every asset lists \"Used in: Article ¶3 · Carousel slide 2\" and the links jump there."
+    ],
+    [
+     "Arrange vs Audience vs Export",
+     "meets",
+     "Arrange reorders the parts, Audience shows reader frames with no marks, Outputs says in one line what each of the three is for."
+    ],
+    [
+     "One origin → several outputs",
+     "meets",
+     "Sibling tabs \"Article · Carousel · Listing — from Conversation with Mei Lin\", each edited on its own."
+    ],
+    [
+     "Carry-forward visible",
+     "meets",
+     "Decisions tab with a live intact/changed check on protected phrases, corrections from Source, rejected angles struck through."
+    ],
+    [
+     "No stacked headers, extra sidebars",
+     "meets",
+     "One thin top line, a slim rail and the margin. Sheets dim the document instead of adding columns."
+    ]
+   ],
+   "fixes": [
+    {
+     "mh": "8",
+     "title": "Carousel opens as a contact sheet",
+     "why": "A tall strip shows one slide at a time, so pacing and repetition across the six slides can't be judged at a glance.",
+     "change": "Open the carousel as a grid of all slides at thumbnail size, text editable in place, drag to reorder between cells. The current strip stays as a \"Read through\" toggle for checking slide by slide.",
+     "before": "<div class=\"stack\" style=\"align-items:center\"><div class=\"blk\" style=\"width:60%;height:110px\">1/6 · Porcelain and tea</div><div class=\"blk\" style=\"width:60%;height:30px\">2/6 …</div></div><span class=\"dimt\">Scroll to see the rest.</span>",
+     "after": "<div class=\"bar\"><span class=\"tag w\">Sequence</span><span class=\"tag\">Read through</span></div><div class=\"cols\" style=\"grid-template-columns:repeat(6,1fr)\"><div class=\"blk\" style=\"height:70px\">1</div><div class=\"blk\" style=\"height:70px\">2</div><div class=\"blk\" style=\"height:70px\">3</div><div class=\"blk\" style=\"height:70px\">4</div><div class=\"blk\" style=\"height:70px\">5</div><div class=\"blk\" style=\"height:70px\">6</div></div><span class=\"dimt\">All six in view; drag a slide between cells; type on any of them.</span>"
+    },
+    {
+     "mh": "2 · 4",
+     "title": "Projects in view, without leaving the document",
+     "why": "Switching is one click, but knowing which of six projects needs you means opening the finder or Home.",
+     "change": "Put a short \"Projects\" block at the top of the rail, above the outline: each active project on one line with its left-off line and a dot when something waits on you. The outline of the current piece follows below. ⌘K stays for search.",
+     "before": "<div class=\"stack\"><span class=\"tag\">Porcelain and Tea ▾</span><span class=\"dimt\">Outline</span><div class=\"blk\">Left off here</div><div class=\"blk\">The workshop</div><span class=\"dimt\">Gather · Develop · Make · Deliver</span></div>",
+     "after": "<div class=\"stack\"><span class=\"dimt\">Projects</span><div class=\"blk\"><b>Porcelain and Tea</b> <span class=\"dimt\">¶14 · tighten the ending</span></div><div class=\"blk\">Harbour Night Market <span class=\"tag s\">4 lines to correct</span></div><div class=\"blk\">Spring Oolong <span class=\"tag s\">angle to choose</span></div><span class=\"dimt\">Outline · Porcelain and Tea</span><div class=\"blk\">Left off here</div></div>"
+    },
+    {
+     "mh": "5 · 6",
+     "title": "Gather and Develop can take the screen beside the paragraph",
+     "why": "Material, Source and Research open over a dimmed document. On a day of sorting or correcting, the sheet is cramped and the paragraph you came from is hidden.",
+     "change": "Give each sheet a \"Work here\" width: the sheet takes most of the screen and the document shrinks to a narrow column on the right, still showing the paragraph you came from. A Source line can then be read against the sentence that quotes it.",
+     "before": "<div class=\"cols\" style=\"grid-template-columns:3fr 2fr\"><div class=\"blk stack\"><span class=\"tag w\">Source sheet</span><span class=\"dimt\">00:21:05 Mei — …</span></div><div class=\"blk dimt\" style=\"opacity:.4\">document, dimmed</div></div>",
+     "after": "<div class=\"cols\" style=\"grid-template-columns:3fr 1fr\"><div class=\"blk stack\"><span class=\"tag w\">Source · work here</span><span>00:21:05 Mei — <span class=\"hl\">a window is better than a wall</span></span><span class=\"dimt\">Click a line to correct it</span></div><div class=\"blk ms\">¶13 … <span class=\"hl\">a window is better than a wall</span> …</div></div>"
+    }
+   ],
+   "compare": {
+    "Opening screen": "Your last piece, at the sentence you left, with one next step.",
+    "How you switch": "Title / ⌘K finder; sibling tabs for pieces; rail with outline and twelve sections opening as sheets.",
+    "Best for": "Long writing and revision.",
+    "Main cost": "Overview and intake work feel secondary; projects not in view."
+   }
+  },
+  {
+   "letter": "B",
+   "name": "Studio by subject",
+   "dir": "b-studio",
+   "file": "B%20Studio%20by%20subject.dc.html",
+   "short": "Each subject is a board: origins → understanding → pieces.",
+   "idea": "Work is organised around subjects: one origin and everything that grew from it. A subject opens as a board read left to right, Origins → Understanding → Expressions, so one origin becoming several separately edited pieces is the first thing you see.",
+   "notes": [
+    [
+     "Opening",
+     "Studio home: Pick up where you left off, Waiting on you, Since you left (Claude and Codex, with times), and a tile per subject with miniatures of its pieces."
+    ],
+    [
+     "Switching",
+     "A permanent subject list with search and filters (All, Active, Waiting on me, Touched by Claude) and a state line per subject; the twelve sections as a tab row inside a subject, with a piece picker on piece-level sections."
+    ],
+    [
+     "Best at",
+     "One origin, many outputs as the structure itself; carry-forward chips on the board and an \"inherits\" column beside every piece; juggling many projects."
+    ],
+    [
+     "Costs",
+     "Two levels of navigation; a one-off post still needs a subject; the board needs ~1240px; Library and Collections fold into each subject; a 13-item tab row."
+    ],
+    [
+     "To build",
+     "Sidebar becomes the subject list; steps move to a tab row; new Board and Studio home screens; inspector becomes the inherits column; per-subject state line, left-off record and a waiting-on-you query."
+    ]
+   ],
+   "summary": "B gives the clearest picture of the product itself: a subject board makes Origins → Understanding → Pieces visible, carry-forward travels as chips into every piece, and the subject list with \"Waiting on me\" makes six projects easy to hold. The carousel and Media are the best of the three. It loses most on chrome: a breadcrumb, a 13-tab row, a piece picker and a toolbar stack above the text, the tab row runs out of room at 1280px, and anything without a subject has nowhere to go.",
+   "critique": [
+    [
+     "Where am I, what can I do",
+     "meets",
+     "Studio home leads with \"Pick up where you left off\" and a Resume button, then what is waiting on you."
+    ],
+    [
+     "Many projects: find and switch",
+     "meets",
+     "The strongest: permanent list with search, Waiting-on-me and Touched-by-Claude filters, and a state line per subject."
+    ],
+    [
+     "A place for my own words",
+     "meets",
+     "\"Your thoughts — only your words\" in the middle of every board and at the top of Direction."
+    ],
+    [
+     "Where I left off + understanding",
+     "meets",
+     "Resume on home and board; Current understanding heads the middle band."
+    ],
+    [
+     "Material ≠ Source",
+     "meets",
+     "Material: just arrived / in this subject, sort and preview. Source: transcript to correct, \"Corrections travel into every piece\"."
+    ],
+    [
+     "Research: evidence, uncertainty, one point",
+     "meets",
+     "Solid / Unsure / Disputed per point, evidence shown, \"How sure are we?\", one point talked through with no invented reply."
+    ],
+    [
+     "Write feels like a document",
+     "partial",
+     "The document itself is good and has its own margin, but above it are four header rows, and beside it both the margin and a \"This piece inherits\" column, so the text gets the middle third."
+    ],
+    [
+     "Carousel as a whole sequence",
+     "meets",
+     "All six slides in one grid, type on any, drag to reorder, empty slides marked."
+    ],
+    [
+     "Media shows where used",
+     "meets",
+     "Each asset: \"Used in Article · after ¶2 · Carousel slide 1\" or \"Not used yet\"."
+    ],
+    [
+     "Arrange vs Audience vs Export",
+     "meets",
+     "Arrange composes, Audience says \"Nothing here is editable\", Outputs lists the pieces side by side with export honestly not connected."
+    ],
+    [
+     "One origin → several outputs",
+     "meets",
+     "It is the structure: Expressions band on every board and Outputs as a side-by-side table."
+    ],
+    [
+     "Carry-forward visible",
+     "meets",
+     "Decisions, protected phrases, rejected angles and corrections on the board and again in \"This piece inherits\"."
+    ],
+    [
+     "No stacked headers, extra sidebars",
+     "partial",
+     "Above the text sit a breadcrumb, a 13-tab row, a piece picker and a toolbar: four rows. The tab row fits at 1440, but at 1280 Share and Outputs run past the edge."
+    ]
+   ],
+   "fixes": [
+    {
+     "mh": "7 · 13",
+     "title": "One header line above a piece",
+     "why": "Breadcrumb, tab row, piece picker and toolbar all sit above the first sentence.",
+     "change": "Merge into one line: \"Porcelain and Tea › The cup should disappear ▾\" (the piece picker becomes the last crumb), then the section tabs, then Focus and Note on the right.",
+     "before": "<div class=\"stack\"><div class=\"bar dimt\">Studio › Porcelain and Tea › Write</div><div class=\"bar\"><span class=\"dimt\">Board · Material · Source · … · Outputs</span></div><div class=\"bar\"><span class=\"tag w\">The cup should disappear</span><span class=\"tag\">Five things…</span><span class=\"tag\">Gaiwan</span></div><div class=\"bar dimt\">Article · Check ready · Note on selection · Focus</div><div class=\"blk ms\">The best porcelain cup I own…</div></div>",
+     "after": "<div class=\"stack\"><div class=\"bar\"><span>Porcelain and Tea ›</span><span class=\"tag w\">The cup should disappear ▾</span><span class=\"dimt\" style=\"margin-left:auto\">Note · Focus</span></div><div class=\"bar dimt\">Board · Gather · Develop · <b style=\"color:var(--ink)\">Make: Write</b> · Deliver</div><div class=\"blk ms\">The best porcelain cup I own is the one I notice least…</div></div>"
+    },
+    {
+     "mh": "13",
+     "title": "The tab row fits by collapsing the list inside a piece",
+     "why": "Thirteen tabs plus the subject list plus the inherits column fit at 1440 but not at 1280, where Share and Outputs fall off the edge.",
+     "change": "When a piece opens, the subject list collapses to its initials rail automatically (one click restores it). The tab row shows the four group names with only the current group expanded, so it never scrolls sideways.",
+     "before": "<div class=\"cols\" style=\"grid-template-columns:1fr 3fr\"><div class=\"blk dimt\">Subjects list</div><div class=\"bar dimt\" style=\"overflow:hidden;white-space:nowrap\">Board Material Source Research Direction Write Read Check Media Arrange Audi…</div></div>",
+     "after": "<div class=\"cols\" style=\"grid-template-columns:28px 3fr\"><div class=\"blk dimt\">P</div><div class=\"bar\"><span class=\"dimt\">Board</span><span class=\"dimt\">Gather ▸</span><span class=\"dimt\">Develop ▸</span><span class=\"tag w\">Make: Write · Read · Check · Media · Arrange</span><span class=\"dimt\">Deliver ▸</span></div></div>"
+    },
+    {
+     "mh": "1 · 11",
+     "title": "Work can start without a subject",
+     "why": "The brief says work can start anywhere. In B a quick post or a stray idea must first become a subject.",
+     "change": "Add \"Loose pieces\" at the top of the subject list: pieces and ideas with no origin yet. Each has \"Give it a subject\" to move it onto a board later, carrying its decisions with it.",
+     "before": "<div class=\"stack\"><span class=\"dimt\">Subjects</span><div class=\"blk\">Porcelain and Tea</div><div class=\"blk\">Harbour Night Market</div><span class=\"tag\">+ New subject</span></div><span class=\"dimt\">A quick post needs a subject first.</span>",
+     "after": "<div class=\"stack\"><span class=\"dimt\">Loose pieces · 2</span><div class=\"blk\">Post: rain on the tin roof <span class=\"tag\">Give it a subject</span></div><div class=\"blk\">Idea: why I stopped using lids</div><span class=\"dimt\">Subjects</span><div class=\"blk\">Porcelain and Tea</div><div class=\"blk\">Harbour Night Market</div></div>"
+    }
+   ],
+   "compare": {
+    "Opening screen": "Studio home: resume, waiting on you, agent activity, subject tiles.",
+    "How you switch": "Permanent subject list with filters; board per subject; tab row with a piece picker.",
+    "Best for": "Many projects; one origin into many pieces; carry-forward.",
+    "Main cost": "Chrome stacks above the text; nothing can live outside a subject."
+   }
+  },
+  {
+   "letter": "C",
+   "name": "Workbench by resuming",
+   "dir": "c-workbench",
+   "file": "C%20Workbench%20by%20resuming.dc.html",
+   "short": "Opens on where you left off; tools on a rack.",
+   "idea": "The opening screen answers two questions across every project: what was I doing, and what is the next useful move. The twelve sections are tools on a rack, not stations in an order; a right-hand column carries the project's understanding and your own thoughts into every tool.",
+   "notes": [
+    [
+     "Opening",
+     "The bench: one card for the last piece with the paragraph you were in and \"Since you were here\" (actor-labelled), then Next moves across all projects, then every active project on one line."
+    ],
+    [
+     "Switching",
+     "One-line project switcher top left, ⌘K finder over projects and tools, a twelve-tool rack with honest counts, an \"In:\" strip when the scope is All."
+    ],
+    [
+     "Best at",
+     "Coming back after a gap, juggling six or more pieces, seeing agent work with its actor where it matters."
+    ],
+    [
+     "Costs",
+     "Suggests rather than guides; counts must be true or the bench lies; three columns are dense at 1280px; ranking of next moves is hand-ordered."
+    ],
+    [
+     "To build",
+     "Sidebar becomes rack with counts; new bench route needs last-edited position, a changes-since feed and a next-moves query; global scope; inspector becomes the understanding column; deep links into lines, slides and assets."
+    ]
+   ],
+   "summary": "C is the strongest answer to \"where was I\" and \"which project\": the bench is inviting, specific and honest about who did what, and every next move lands on the exact line or slide. Its weakness is the right-hand understanding column. It is useful, but it is open on every tool, it competes with Write's own editorial margin, it splits Adrian's own words between two boxes, and under All projects it shows one project while the work shows another. Fix the column and C needs very little else.",
+   "critique": [
+    [
+     "Where am I, what can I do",
+     "meets",
+     "The bench leads with one card, one button (Continue at ¶4) and a short list of next moves. No manual needed."
+    ],
+    [
+     "Many projects: find and switch",
+     "meets",
+     "One-line switcher, ⌘K finder, \"Everything active\" list with j/k, and the In: strip under All."
+    ],
+    [
+     "A place for my own words",
+     "partial",
+     "Two boxes: \"Your thoughts — Adrian\" in the column and \"What I want this to say — Adrian\" in Direction. It is not clear they are the same record, or which one an agent reads."
+    ],
+    [
+     "Where I left off + understanding",
+     "meets",
+     "Resume card quotes the paragraph; Current understanding heads the column."
+    ],
+    [
+     "Material ≠ Source",
+     "meets",
+     "Material is an intake list (bring in, open in Source, mark processed). Source is a timed transcript where you click a line to correct it. Keep/remove review is honestly stubbed."
+    ],
+    [
+     "Research: evidence, uncertainty, one point",
+     "meets",
+     "Claims marked Refuted / Likely / Unsure / Disputed, evidence quoted, \"Discuss this point\" shown as not connected yet."
+    ],
+    [
+     "Write feels like a document",
+     "partial",
+     "Margin, highlight-on-click and Focus all work, but with the rack, margin and understanding column open the manuscript is squeezed; two right-hand rails both carry notes."
+    ],
+    [
+     "Carousel as a whole sequence",
+     "meets",
+     "All slides on one canvas, edit text in place, drag grips to reorder, Codex slide marked not accepted."
+    ],
+    [
+     "Media shows where used",
+     "partial",
+     "\"Used in\" appears on kept items lower down; the new-import cards you see first don't show it, so placement is hidden at the decision point."
+    ],
+    [
+     "Arrange vs Audience vs Export",
+     "meets",
+     "Arrange composes, Audience says it is for looking not editing, Export lives in Outputs. Three distinct jobs."
+    ],
+    [
+     "One origin → several outputs",
+     "meets",
+     "Outputs shows the recording first, then article, carousel, caption and shared note, each with its own state and tool."
+    ],
+    [
+     "Carry-forward visible",
+     "meets",
+     "Decisions, protected phrases, corrections and rejected angles, each with where it applies; choosing an angle moves the other to Rejected."
+    ],
+    [
+     "No stacked headers, extra sidebars",
+     "partial",
+     "The understanding column is a third persistent rail on every tool. Under All projects it names the project you were working in while the screen lists all of them; on phone the sheet stays open over the work."
+    ]
+   ],
+   "fixes": [
+    {
+     "mh": "13 · 2",
+     "title": "The column follows the scope and starts closed under All",
+     "why": "Under All projects the Material screen lists every project while the column stays on Porcelain and Tea, the project you were last working in. The screen and the column give two answers to \"where am I\".",
+     "change": "When the scope is All, close the column and put a one-line \"Understanding: pick a project\" link in its place. It opens only when a single project is in scope or an item is selected, and its header names that project. On phone it never opens by itself.",
+     "before": "<div class=\"bar\"><span class=\"tag\">All projects</span><span class=\"dimt\">Material · 9 items, 5 projects</span></div><div class=\"cols\" style=\"grid-template-columns:2fr 1fr\"><div class=\"stack\"><div class=\"blk\">harbour-night-0914.m4a</div><div class=\"blk\">Kiln visit with Mr. Lin</div><div class=\"blk\">Spring Oolong — supplier sheet</div></div><div class=\"blk stack\"><span class=\"tag w\">Understanding · Porcelain and Tea</span><span class=\"dimt\">The piece is about what a vessel keeps…</span></div></div>",
+     "after": "<div class=\"bar\"><span class=\"tag\">All projects</span><span class=\"dimt\">Material · 9 items, 5 projects</span><span style=\"margin-left:auto\" class=\"tag w\">Understanding ▸ pick a project</span></div><div class=\"stack\"><div class=\"blk\">harbour-night-0914.m4a <span class=\"tag\">Harbour</span></div><div class=\"blk\">Kiln visit with Mr. Lin <span class=\"tag\">Porcelain</span></div><div class=\"blk\">Spring Oolong — supplier sheet <span class=\"tag\">Oolong</span></div></div><span class=\"dimt\">Full width for the cross-project list. Select an item and the column opens for its project.</span>"
+    },
+    {
+     "mh": "7 · 13",
+     "title": "Write has one right-hand rail",
+     "why": "In Write the editorial margin and the understanding column sit side by side and both carry notes and decisions. The manuscript gets the leftover width.",
+     "change": "In Write the column folds into a single line above the margin: \"Carries forward: 2 decisions · 3 protected · 1 correction\". Clicking it expands inside the margin. Protected phrases stay underlined in the text. Focus hides the margin as before.",
+     "before": "<div class=\"cols\" style=\"grid-template-columns:28px 2fr 1fr 1fr\"><div class=\"blk\"></div><div class=\"blk ms\">Clay is different. A Yixing pot remembers…</div><div class=\"blk dimt\">Margin · Codex suggested…</div><div class=\"blk dimt\">Understanding · Decisions · Protected</div></div>",
+     "after": "<div class=\"cols\" style=\"grid-template-columns:28px 3fr 1fr\"><div class=\"blk\"></div><div class=\"blk ms\">Clay is different. A Yixing pot remembers… <span class=\"hl\">what you want the cup to remember</span></div><div class=\"stack\"><span class=\"tag w\">Carries forward: 2 · 3 · 1 ▾</span><div class=\"blk dimt\">Margin · Codex suggested…</div><div class=\"blk dimt\">Margin · Claude checked…</div></div></div>"
+    },
+    {
+     "mh": "3 · 12",
+     "title": "One home for Adrian's own words",
+     "why": "\"Your thoughts — Adrian\" in the column and \"What I want this to say — Adrian\" in Direction look like two records. Adrian has to guess which one agents read and which one carries forward.",
+     "change": "Make them one record, \"Your words\", with dated entries. Direction shows it large at the top; the column shows the latest two entries and a link to the rest. Both say \"only you write here\". A thought added anywhere with T lands in the same list.",
+     "before": "<div class=\"cols\" style=\"grid-template-columns:1fr 1fr\"><div class=\"blk stack\"><span class=\"tag w\">Direction</span><span>What I want this to say — Adrian</span><span class=\"dimt\">In your own words…</span></div><div class=\"blk stack\"><span class=\"tag w\">Column</span><span>Your thoughts — Adrian</span><span class=\"dimt\">The last paragraph still ends too neatly…</span></div></div>",
+     "after": "<div class=\"blk stack\"><div class=\"bar\"><span class=\"tag w\">Your words</span><span class=\"dimt\">only you write here · shown in Direction and the column</span></div><span>The last paragraph still ends too neatly. Maybe end on the drive.</span><span class=\"dimt\">Oct 21 · Write ¶5</span><span>Ask Mr. Lin if he minds being named.</span><span class=\"dimt\">Oct 4 · Direction</span></div>"
+    }
+   ],
+   "compare": {
+    "Opening screen": "The bench: last paragraph, since-you-were-here, next moves across projects.",
+    "How you switch": "Switcher + ⌘K; rack of twelve tools with counts; In: strip under All.",
+    "Best for": "Coming back after a gap; many pieces at once.",
+    "Main cost": "A persistent third column; counts must be trustworthy."
+   }
+  }
+ ]
+}
