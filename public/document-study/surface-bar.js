@@ -1,5 +1,6 @@
-/* C3 surface bar. One bar above the work: piece and output on the left; save status, Undo, History, Margin/Focus, More and
-   at most one primary action on the right. Every control here presses the app's real control (still in the page, its row
+/* C3 surface bar. The one bar above the work: where you are (i64 OS, piece, output, step) and one state word on the left;
+   Undo, Margin/Focus, More and exactly one primary action, from the one piece state, on the right. History, Outputs,
+   Receipts, Text size and Everything that's here are in More. There is no bottom location bar. Every control here presses the app's real control (still in the page, its row
    hidden), so study.js, draft-flow, draft-surface, workspace-navigation and i64-return keep owning their buttons, handlers
    and repaints. The save notice and failed-save recovery (.draft-bar) are never hidden. Install last. */
 (()=>{
@@ -15,7 +16,7 @@
  function rows(){return ROWS.map(s=>document.querySelector(s)).filter(Boolean);}
  // Sort the real controls of the hidden rows into bar slots. Unknown controls go to More, never away.
  function collect(){
-  const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,mode:null,more:[]};reals=[];
+  const out={undo:null,history:null,margin:null,focus:null,outputs:null,ret:null,primary:null,piece:null,mode:null,records:null,more:[]};reals=[];
   const add=(n,slot)=>{const i=reals.push(n)-1;if(slot)out[slot]=i;return i;};
   for(const row of rows()){
    if(row.matches('.dwt-orientation')&&stage()!==5)continue;
@@ -29,6 +30,7 @@
     const on=n.getAttribute('onclick')||'';
     if(n.matches('a.i64-return')){add(n,'ret');continue;}
     if(n.matches('[data-wn-piece]')){add(n,'piece');continue;}
+    if(row.matches('.historicalToolbar')&&n.tagName==='SELECT'&&out.records==null){add(n,'records');continue;}
     if(row.matches('.historicalToolbar')&&out.mode==null){add(n,'mode');continue;}
     if(n.matches('[data-wn-outputs]')&&out.outputs==null){add(n,'outputs');continue;}
     if(n.matches('[data-surface-mode="margin"]')&&out.margin==null&&row.matches('.topbar')){add(n,'margin');continue;}
@@ -59,28 +61,39 @@
  // A failed save offers Try again, which asks the save owner to save the current words once more.
  const saver=()=>window.studyOutputConnection?.flush||window.studyDraft?.flush||null;
  let retrying=false;
- document.addEventListener('click',async event=>{const b=event.target.closest?.('[data-cb-retry]');if(!b||retrying)return;const save=saver();if(!save)return;retrying=true;b.disabled=true;b.textContent='Trying again…';try{await save();}catch{}finally{retrying=false;const bar=document.getElementById('c3-crumb');if(bar)delete bar.dataset.render;window.surfaceBar?.build?.();}});
+ document.addEventListener('click',async event=>{const b=event.target.closest?.('[data-cb-retry]');if(!b||retrying)return;const save=saver();if(!save)return;retrying=true;b.disabled=true;b.textContent='Trying again…';try{await save();}catch{}finally{retrying=false;lastSig='';window.surfaceBar?.build?.();}});
  // Reader's own text size for the manuscript on Write, Read and Check (A- / A+), remembered on this device only.
  const SIZES=[.875,1,1.125,1.25,1.375];let size=1;try{const v=Number(localStorage.getItem('c3-doc-scale'));if(SIZES.includes(v))size=v}catch{}
  const applySize=()=>document.body?.style.setProperty('--c3-doc-scale',String(size));applySize();
- document.addEventListener('click',event=>{const b=event.target.closest?.('[data-cb-size]');if(!b)return;const i=SIZES.indexOf(size)+Number(b.dataset.cbSize);if(i<0||i>=SIZES.length)return;size=SIZES[i];try{localStorage.setItem('c3-doc-scale',String(size))}catch{}applySize();const o=document.querySelector('#c3-crumb .cb-size output');if(o)o.textContent=Math.round(size*100)+'%';const bar=document.getElementById('c3-crumb');if(bar)delete bar.dataset.render;window.surfaceBar?.build?.();});
- function crumb(slots,id,status){
-  const local=localOnly();if(local)status='';
-  let bar=document.getElementById('c3-crumb');
-  if(!bar){bar=document.createElement('footer');bar.id='c3-crumb';bar.setAttribute('aria-label','Where you are');document.body.append(bar);document.body.classList.add('c3-crumb-on');}
-  const cp=checkpoint(),tone=/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok';
-  const seg=(t,cls='')=>`<span class="cb-seg ${cls}" title="${esc(t)}">${esc(mid(t))}</span>`;
-  const sep='<span class="cb-sep" aria-hidden="true">›</span>';
-  const parts=[];
-  if(slots.ret!=null)parts.push(`<a class="cb-seg cb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" title="Return to i64 OS">i64 OS</a>`);
-  parts.push(seg(id.piece,'cb-piece'));
-  if(slots.piece!=null)parts.push(`<label class="cb-out"><span class="cb-sr">Output</span>${selectProxy(slots.piece,'cb-select','Choose output')}</label>`);
-  else if(id.title)parts.push(`<span class="cb-seg cb-on" title="${esc(id.title+(id.meta?' · '+id.meta:''))}">${esc(mid(id.title))}</span>`);
-  if(cp)parts.push(seg(cp.name));
-  const note=noteText();
-  const sizing=cp&&[5,6,7].includes(cp.n)?`<span class="cb-size" role="group" aria-label="Text size"><button type="button" data-cb-size="-1" aria-label="Smaller text" ${size<=SIZES[0]?'disabled':''}>A−</button><output aria-live="polite">${Math.round(size*100)}%</output><button type="button" data-cb-size="1" aria-label="Larger text" ${size>=SIZES.at(-1)?'disabled':''}>A+</button></span>`:'';
-  const html=`<div class="cb-path">${parts.join(sep)}</div><div class="cb-right">${sizing}${note?`<span class="cb-note">${esc(note)}</span>`:''}${local?`<span class="cb-status" data-tone="warn" role="status" title="These words are kept only in this browser until the piece has its project file.">Only in this browser</span><button type="button" class="cb-act" data-cb-local>Save to the project</button>`:''}${status?`<span class="cb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(status)}</span>`:''}${status&&tone==='bad'&&saver()?`<button type="button" class="cb-act" data-cb-retry>Try again</button>`:''}</div>`;
-  if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
+ document.addEventListener('click',event=>{const b=event.target.closest?.('[data-cb-size]');if(!b)return;const i=SIZES.indexOf(size)+Number(b.dataset.cbSize);if(i<0||i>=SIZES.length)return;size=SIZES[i];try{localStorage.setItem('c3-doc-scale',String(size))}catch{}applySize();lastSig='';window.surfaceBar?.build?.();});
+ // Where you are and in what state, on the bar's left (the bottom location bar is gone, review A5): the way back to i64 OS,
+ // the piece, the chosen output, the step, then one state word. The state word is the save owner's status or, on a
+ // reading view, why it cannot be edited; a browser-only piece and a failed save keep their one recovery action here.
+ function here(slots,id,status){
+  const local=localOnly(),cp=checkpoint(),st=window.c3PieceState,ro=st?.readOnlyReason?.()||'';
+  const tone=/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving|only in this browser/i.test(status)?'warn':'ok';
+  const sep='<span class="sb-sep2" aria-hidden="true">›</span>',parts=[];
+  if(slots.ret!=null)parts.push(`<a class="sb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" title="Return to i64 OS">i64 OS</a>`);
+  parts.push(`<span class="sb-piece" title="${esc(id.piece)}">${esc(mid(id.piece,32))}</span>`);
+  if(slots.piece!=null)parts.push(`<label class="sb-out"><span class="cb-sr">Output</span>${selectProxy(slots.piece,'sb-oselect','Choose output')}</label>`);
+  else if(id.title)parts.push(`<span class="sb-on" title="${esc(id.title+(id.meta?' · '+id.meta:''))}">${esc(mid(id.title,28))}</span>`);
+  if(cp)parts.push(`<span class="sb-cp"><span class="sb-cp-n">${String(cp.n).padStart(2,'0')}</span><span class="sb-cp-name">${esc(cp.name)}</span></span>`);
+  let word='';
+  if(local)word=`<span class="sb-status" data-tone="warn" role="status" title="These words are kept only in this browser until the piece has its project file.">Only in this browser</span><button type="button" class="sb-act" data-cb-local>Save to the project</button>`;
+  else if(ro&&tone==='ok')word=`<span class="sb-status sb-ro" role="status" title="${esc(ro)}">${esc(ro)}</span>`;
+  else if(status)word=`<span class="sb-status" data-tone="${tone}" role="status" title="${esc(status)}">${tone==='ok'?'✓ ':''}${esc(mid(status,36))}</span>${tone==='bad'&&saver()?'<button type="button" class="sb-act" data-cb-retry>Try again</button>':''}`;
+  return `<span class="sb-where">${parts.join(sep)}</span>${word}`;
+ }
+ function textSize(){return [5,6,7].includes(stage())?`<div class="sb-group" role="group" aria-label="Text size"><div class="sb-gh">Text size</div><span class="cb-size" role="group" aria-label="Text size"><button type="button" class="sb-item" data-cb-size="-1" aria-label="Smaller text" ${size<=SIZES[0]?'disabled':''}>A−</button><output aria-live="polite">${Math.round(size*100)}%</output><button type="button" class="sb-item" data-cb-size="1" aria-label="Larger text" ${size>=SIZES.at(-1)?'disabled':''}>A+</button></span></div>`:'';}
+ // A retained-record select (e.g. "Checked against" on Check) is a control of the work, not of the bar: it sits at the
+ // top of the column as a labelled proxy of the owner's select.
+ function records(slots){
+  const host=document.querySelector('#app .workspace>.phaseReader,#app .workspace>.wn-check-layout .wn-check-findings');let box=document.getElementById('c3-records');
+  if(slots.records==null||!host){box?.remove();return;}
+  if(!box){box=document.createElement('div');box.id='c3-records';}
+  if(box.parentElement!==host||host.firstElementChild!==box)host.prepend(box);
+  const html=`<label class="c3-records-l"><span>${stage()===7?'Checked against':'Record'}</span>${selectProxy(slots.records,'c3-records-select',stage()===7?'Checked against':'Jump to retained record')}</label>`;
+  if(box.dataset.render!==html){box.innerHTML=html;box.dataset.render=html;}
  }
  function statusText(){const st=window.c3PieceState?.read?.();if(st)return st.save.text||'';const s=document.querySelector('.workspace>.workbar .saved')||document.querySelector('.workspace>.topbar .status');return s?label(s):'';}
  function identity(){const p=current(),ctx=document.querySelector('#work-context .wn-identity'),title=ctx?.querySelector('strong')?.textContent.trim(),meta=ctx?.querySelector(':scope>span')?.textContent.trim();return {piece:p.name,title:title&&title!=='Project workspace'?title:'',meta:meta||''};}
@@ -89,16 +102,20 @@
   const slots=collect(),id=identity(),status=statusText();
   // Work receipts and the piece's own status line used to be a strip of their own; they now live in More and in the bar.
   const receipts=document.getElementById('connected-work-receipts'),msgNode=document.getElementById('wn-message'),msg=msgNode&&!msgNode.hidden?label(msgNode):'';
-  const own=`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div>${receipts?'<button type="button" class="sb-item" data-sb-receipts>Receipts</button>':''}${window.c3Tree?'<button type="button" class="sb-item" data-sb-everything>Everything that’s here</button>':''}</div>`;
-  const more=own+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
-  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,msg,!!receipts]);
+  const own=`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div>${proxy(slots.outputs,'sb-item','Outputs')}${proxy(slots.history,'sb-item','History · every saved version','aria-label="History · every saved version"')}${receipts?'<button type="button" class="sb-item" data-sb-receipts>Receipts</button>':''}${window.c3Tree?'<button type="button" class="sb-item" data-sb-everything>Everything that’s here</button>':''}</div>`;
+  const more=own+textSize()+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
+  const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,msg,!!receipts,size,window.c3PieceState?.readOnlyReason?.()||'',!!localOnly()]);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
   if(bar&&sig===lastSig)return;
   lastSig=sig;
   const cp=checkpoint();
-  const html=`<div class="sb-left">${cp?`<span class="sb-cp"><span class="sb-cp-n">${String(cp.n).padStart(2,'0')}</span><span class="sb-cp-name">${esc(cp.name)}</span></span>`:''}${msg?`<span class="sb-msg" role="status" title="${esc(msg)}">${esc(msg)}</span>`:''}</div>
-<div class="sb-right">${''&&status?`<span class="sb-status" role="status" data-tone="${/fail|conflict|unavailable|not saved|could not/i.test(status)?'bad':/unsaved|pending|saving/i.test(status)?'warn':'ok'}" title="${esc(status)}">${esc(status)}</span>`:''}${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${proxy(slots.history,'sb-icon',icon(I.history),'aria-label="History · every saved version"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn sb-margin',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn sb-focus',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.mode,'sb-btn sb-mode',`<span class="sb-mode-i">${icon(I.pen)}</span><span class="sb-mode-t">${esc(slots.mode!=null?label(reals[slots.mode]):'')}</span>`)}${proxy(slots.outputs,'sb-btn',`${icon(I.outputs)}<span>Outputs</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${primaryAction?`<button type="button" class="sb-primary" data-sb-primary ${primaryAction.disabled?'disabled':''} ${primaryAction.reason?`title="${esc(primaryAction.reason)}"`:''} onmousedown="event.preventDefault()">${esc(primaryAction.label)}</button>`:''}</div>`;
-  crumb(slots,id,status);
+  const html=`<div class="sb-left">${here(slots,id,status)}${msg?`<span class="sb-msg" role="status" title="${esc(msg)}">${esc(msg)}</span>`:''}</div>
+<div class="sb-right">${proxy(slots.undo,'sb-icon',icon(I.undo),'aria-label="Undo"')}${slots.margin!=null||slots.focus!=null?'<span class="sb-sep" aria-hidden="true"></span>':''}${proxy(slots.margin,'sb-btn sb-margin',`${icon(I.margin)}<span>Margin</span>`)}${proxy(slots.focus,'sb-btn sb-focus',`${icon(I.focus)}<span>Focus</span>`)}<span class="sb-sep" aria-hidden="true"></span>${proxy(slots.mode,'sb-btn sb-mode',`<span class="sb-mode-i">${icon(I.pen)}</span><span class="sb-mode-t">${esc(slots.mode!=null?label(reals[slots.mode]):'')}</span>`)}${more?`<div class="sb-morew"><button type="button" class="sb-btn" data-sb-more aria-expanded="${moreOpen}" aria-haspopup="true">${icon(I.more)}<span>More</span></button>${moreOpen?`<div class="sb-menu" role="group" aria-label="More for this checkpoint">${more}</div>`:''}</div>`:''}${primaryAction?`<span class="sb-pw">${primaryAction.disabled&&primaryAction.reason?`<span class="sb-why" id="sb-why">${esc(primaryAction.reason)}</span>`:''}<button type="button" class="sb-primary" data-sb-primary ${primaryAction.disabled?'disabled aria-describedby="sb-why"':''} ${primaryAction.reason?`title="${esc(primaryAction.reason)}"`:''} onmousedown="event.preventDefault()">${esc(primaryAction.label)}</button></span>`:''}</div>`;
+  records(slots);document.getElementById('c3-crumb')?.remove();document.body.classList.add('c3-crumb-on');
+  // The owner's control that the primary presses stays in the column, demoted, so one filled button shows per screen.
+  const twin=primaryAction?.press?document.querySelector('#app .workspace '+primaryAction.press):null;
+  for(const n of document.querySelectorAll('#app [data-c3-bar-twin]'))if(n!==twin)n.removeAttribute('data-c3-bar-twin');
+  if(twin&&!twin.hasAttribute('data-c3-bar-twin'))twin.setAttribute('data-c3-bar-twin','');
   if(!bar){bar=document.createElement('header');bar.id='c3-surface-bar';bar.setAttribute('aria-label','This piece and its actions');ws.prepend(bar);}
   bar.innerHTML=html;
   if(moreOpen){const rect=bar.querySelector('[data-sb-more]')?.getBoundingClientRect();if(rect)bar.style.setProperty('--c3-menu-top',Math.max(8,rect.bottom+6)+'px');}
@@ -126,7 +143,7 @@
   if(moreOpen&&!event.target.closest?.('#c3-surface-bar .sb-morew')){moreOpen=false;lastSig='';schedule();}
  });
  document.addEventListener('change',event=>{
-  const s=event.target.closest?.('#c3-surface-bar [data-sb-select],#c3-crumb [data-sb-select]');if(!s)return;
+  const s=event.target.closest?.('#c3-surface-bar [data-sb-select],#c3-records [data-sb-select]');if(!s)return;
   const real=reals[Number(s.dataset.sbSelect)];if(!real?.isConnected)return;
   real.value=s.value;real.dispatchEvent(new Event('change',{bubbles:true}));lastSig='';schedule();
  });

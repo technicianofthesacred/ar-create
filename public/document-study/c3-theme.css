@@ -279,7 +279,7 @@ body.c3-tabs.c3-crumb-on .shell,body.c3-tabs.c3-crumb-on.draft-surface-active .s
 #c3-surface-bar .sb-cp-n{font:600 13px var(--ar-ui);color:var(--dim);font-variant-numeric:tabular-nums}
 #c3-surface-bar .sb-cp-name{font:600 15px var(--ar-ui);color:var(--ink)}
 #c3-surface-bar .sb-right{flex:0 1 auto;min-width:0;overflow:hidden}
-#c3-surface-bar .sb-status,#c3-surface-bar .sb-note{display:none!important}
+#c3-surface-bar .sb-note{display:none!important}
 /* The bar is 52px now; sticky elements below follow. */
 body.c3-tabs #app .workspace .desk.c3-insp-desk>#c3-insp-head{top:52px!important}
 body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{top:calc(var(--ht-strip,44px) + 52px)!important;bottom:var(--cb-h,0px)!important}

@@ -20,18 +20,18 @@ function fixture(opts){
 }
 const press=(f,sel)=>{const b=f.bar().querySelector(sel);assert.ok(b,'missing '+sel);b.click();};
 
-test('commands on one top line; piece, output, return link and save status in the bottom location bar',()=>{
- const f=fixture(),bar=f.bar(),crumb=f.d.getElementById('c3-crumb');
+test('one bar: where you are and one state word on the left, exactly one primary on the right, no bottom bar',()=>{
+ const f=fixture(),bar=f.bar();
  assert.equal(bar.parentElement,f.d.querySelector('.workspace'));
  assert.equal(f.d.querySelector('.workspace').firstElementChild,bar);
- assert.match(crumb.querySelector('.cb-piece').textContent,/Kiln piece/);
- assert.ok(crumb.querySelector('.cb-select'),'output switch in the location bar');
- assert.match(crumb.querySelector('.cb-status').textContent,/Saved on this device/);
- assert.equal(bar.querySelector('.sb-status'),null,'no status on the top line');
+ assert.equal(f.d.getElementById('c3-crumb'),null,'no bottom location bar');
+ assert.match(bar.querySelector('.sb-piece').textContent,/Kiln piece/);
+ assert.ok(bar.querySelector('.sb-oselect'),'output switch in the bar');
+ assert.match(bar.querySelector('.sb-status').textContent,/Saved on this device/);
+ assert.equal(bar.querySelector('.sb-ret').getAttribute('href'),'http://127.0.0.1:8888/ar-create');
  assert.ok(bar.querySelector('[aria-label="Undo"]'));
- assert.ok(bar.querySelector('[aria-label^="History"]'));
+ assert.equal(bar.querySelector('.sb-right [aria-label^="History"]'),null,'History is in More');
  assert.equal(bar.querySelector('.sb-primary').textContent,'Ask about words','the C1 primary for Write with words');
- assert.equal(crumb.querySelector('.cb-ret').getAttribute('href'),'http://127.0.0.1:8888/ar-create');
  assert.equal(bar.querySelectorAll('.sb-primary').length,1);
 });
 
@@ -40,9 +40,9 @@ test('every bar control presses the real control; nothing is reimplemented',()=>
  press(f,'[aria-label="Undo"]');
  press(f,'.sb-primary');
  const focus=[...f.bar().querySelectorAll('.sb-btn')].find(b=>b.textContent.includes('Focus'));focus.click();
- const outputs=[...f.bar().querySelectorAll('.sb-btn')].find(b=>b.textContent.includes('Outputs'));outputs.click();
+ press(f,'[data-sb-more]');[...f.bar().querySelectorAll('.sb-menu .sb-item')].find(b=>b.textContent==='Outputs').click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['undo','instruction','focus','outputs']);
- press(f,'[aria-label^="History"]');
+ press(f,'[data-sb-more]');press(f,'.sb-menu [aria-label^="History"]');
  assert.equal(f.w.modal,'history');
  assert.ok(f.bar(),'bar rebuilt after the full render History triggers');
 });
@@ -51,7 +51,7 @@ test('More lists the remaining real controls, keeps disabled ones disabled and s
  const f=fixture();
  press(f,'[data-sb-more]');
  const items=[...f.bar().querySelectorAll('.sb-menu .sb-item')].map(b=>[b.textContent.replace(/\s+/g,' ').trim(),b.disabled]);
- assert.deepEqual(JSON.parse(JSON.stringify(items)),[['New output · Article',false],['New output · Post',true],['Study details',false],['Revisions',true],['Voice',false],['Perspective',false]]);
+ assert.deepEqual(JSON.parse(JSON.stringify(items)),[['Outputs',false],['History · every saved version',false],['A−',false],['A+',false],['New output · Article',false],['New output · Post',true],['Study details',false],['Revisions',true],['Voice',false],['Perspective',false]]);
  assert.equal(f.bar().textContent.includes('Open current working words'),false);
  [...f.bar().querySelectorAll('.sb-menu .sb-item')].find(b=>b.textContent.includes('Study details')).click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['study']);
@@ -61,7 +61,7 @@ test('More lists the remaining real controls, keeps disabled ones disabled and s
 test('output choice goes through the real select and its change event',()=>{
  const f=fixture();let seen=null;
  f.d.querySelector('[data-wn-piece]').addEventListener('change',e=>{seen=e.target.value;});
- const s=f.d.querySelector('#c3-crumb .cb-select');
+ const s=f.bar().querySelector('.sb-oselect');
  s.value='';s.dispatchEvent(new f.w.Event('change',{bubbles:true}));
  assert.equal(seen,'');
  assert.equal(f.d.querySelector('[data-wn-piece]').value,'');
@@ -75,8 +75,8 @@ test('the save notice and failed-save recovery are left alone; status follows th
  assert.equal(f.bar().textContent.includes('Retry exact save'),false,'recovery stays in its own visible notice');
  f.d.querySelector('.workbar .saved').textContent='Save failed · words kept';
  await new Promise(r=>setTimeout(r,0));
- assert.match(f.d.querySelector('#c3-crumb .cb-status').textContent,/Save failed · words kept/);
- assert.equal(f.d.querySelector('#c3-crumb .cb-status').dataset.tone,'bad');
+ assert.match(f.bar().querySelector('.sb-status').textContent,/Save failed · words kept/);
+ assert.equal(f.bar().querySelector('.sb-status').dataset.tone,'bad');
  assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');
 });
 
@@ -139,20 +139,30 @@ test('Share: an empty invitation asks to write it; a written one presses the app
  const p=f.bar().querySelector('.sb-primary');assert.equal(p.textContent,'Save invitation');p.click();assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['copy']);
 });
 
-test('the read-only notice row joins the bar: its words become a small label and its button a bar action',()=>{
- const f=fixture();
+test('the read-only notice row joins the bar: the state word says why, and its button is a bar action',()=>{
+ const f=fixture();f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=6;
  f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<div class="historicalToolbar"><span>Read-only snapshot · working copy kept separate</span><button onclick="calls.push(\'open-words\')">Open working words</button></div>');
  f.w.surfaceBar.build();
- assert.equal(f.d.querySelector('#c3-crumb .cb-note').textContent,'Read-only');
- const m=f.bar().querySelector('.sb-mode');assert.equal(m.textContent,'Open working words');m.click();
+ assert.match(f.bar().querySelector('.sb-ro').textContent,/open the draft to edit/,'never a bare Read-only');
+ const m=f.bar().querySelector('.sb-mode');m.click();
  assert.deepEqual(JSON.parse(JSON.stringify(f.w.calls)),['open-words']);
+});
+
+test('a retained-record select is a labelled control in the column, not machine text in the bar',()=>{
+ const f=fixture();f.w.state.projects[0].view='record';f.w.state.projects[0].viewedStage=7;let seen=null;
+ f.d.querySelector('.workspace').insertAdjacentHTML('beforeend','<div class="historicalToolbar"><span>Read-only snapshot</span><select aria-label="Jump to retained record"><option value="">Records (2)</option><option value="r1">CHK - 2026-10-01 receipt</option></select><button>Open working words</button></div><section class="phaseReader"><p>Findings</p></section>');
+ f.d.querySelector('.historicalToolbar select').addEventListener('change',e=>{seen=e.target.value;});
+ f.w.surfaceBar.build();
+ assert.equal(f.bar().querySelector('select:not(.sb-oselect)'),null);
+ const box=f.d.querySelector('.phaseReader>#c3-records');assert.ok(box);assert.match(box.textContent,/Checked against/);
+ const s=box.querySelector('select');s.value='r1';s.dispatchEvent(new f.w.Event('change',{bubbles:true}));assert.equal(seen,'r1');
 });
 
 test('long titles are trimmed in the middle so both ends stay readable; the full title is the tooltip',()=>{
  const f=fixture();
  f.w.state.projects[0].name='Seven Lessons from the Wood-Fired Kiln in Jianshui, Yunnan';f.w.surfaceBar.build();
- const seg=f.d.querySelector('#c3-crumb .cb-piece');
- assert.ok(seg.textContent.length<=40,seg.textContent);
+ const seg=f.bar().querySelector('.sb-piece');
+ assert.ok(seg.textContent.length<=32,seg.textContent);
  assert.match(seg.textContent,/^Seven Lessons.*….*Yunnan$/);
  assert.equal(seg.title,'Seven Lessons from the Wood-Fired Kiln in Jianshui, Yunnan');
 });
@@ -167,13 +177,13 @@ test('a failed save offers Try again, which asks the save owner to save once mor
  const failed=fixture({saved:'Could not save. Your words are kept here.'});
  let saves=0;failed.w.studyDraft={flush:async()=>{saves++;return {dirty:false};}};
  failed.w.surfaceBar.build();
- const retry=failed.d.querySelector('#c3-crumb [data-cb-retry]');
+ const retry=failed.bar().querySelector('[data-cb-retry]');
  assert.ok(retry,'Try again on a failed save');
  assert.equal(retry.textContent,'Try again');
  retry.click();await new Promise(r=>setTimeout(r,10));
  assert.equal(saves,1);
  const ok=fixture();ok.w.studyDraft={flush:async()=>{}};ok.w.surfaceBar.build();
- assert.equal(ok.d.querySelector('#c3-crumb [data-cb-retry]'),null);
+ assert.equal(ok.bar().querySelector('[data-cb-retry]'),null);
 });
 
 test('work receipts have no strip of their own: More → Receipts opens them, still owned by their panel',()=>{
