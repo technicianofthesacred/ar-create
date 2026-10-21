@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR Create — The Document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;--scrim:rgba(8,7,5,.55);--hl:rgba(201,168,116,.22);--prot:rgba(143,176,138,.16)}
+[data-theme=light]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;--scrim:rgba(40,38,30,.32);--hl:rgba(122,90,48,.16);--prot:rgba(63,97,70,.12)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink)}
+body{font:14px/1.45 "Plus Jakarta Sans",system-ui,sans-serif;overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--warm) 45%,transparent) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--warm) 45%,transparent);border-radius:8px}
+svg.i{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.dim{color:var(--dim)}
+.tag{font-size:11px;letter-spacing:.02em;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--dim);white-space:nowrap}
+.tag.warm{color:var(--warm);border-color:color-mix(in srgb,var(--warm) 40%,transparent)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:6px;color:var(--dim);font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--sel);color:var(--ink)}
+.btn.solid{background:var(--sel);color:var(--ink)}
+.btn.solid:hover{background:color-mix(in srgb,var(--warm) 22%,var(--sel))}
+.honest{font-size:12px;color:var(--warnc);display:inline-flex;align-items:center;gap:6px}
+
+/* ---------- top line ---------- */
+#top{height:44px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--line);background:var(--rail);position:relative;z-index:30}
+#menuBtn{display:none}
+#projBtn{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:6px;min-width:0;max-width:280px;font-weight:600;font-size:14px}
+#projBtn:hover{background:var(--sel)}
+#projBtn .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#projBtn kbd{font:11px "Plus Jakarta Sans";color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.sep{width:1px;height:20px;background:var(--line);margin:0 4px;flex:none}
+#pieces{display:flex;align-items:center;gap:2px;min-width:0}
+#pieces .from{font-size:12px;color:var(--dim);margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptab{display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:6px;color:var(--dim);font-size:13px;font-weight:500;white-space:nowrap}
+.ptab:hover{color:var(--ink);background:var(--sel)}
+.ptab[aria-selected=true]{color:var(--ink);background:var(--sel);box-shadow:inset 0 -2px 0 var(--warm)}
+.spacer{flex:1}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{height:28px;padding:0 10px;font-size:12px;font-weight:500;color:var(--dim)}
+.seg button[aria-pressed=true]{background:var(--sel);color:var(--ink)}
+.icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;color:var(--dim)}
+.icon-btn:hover{background:var(--sel);color:var(--ink)}
+
+/* ---------- frame ---------- */
+#frame{display:grid;grid-template-columns:232px minmax(0,1fr) 336px;height:calc(100vh - 44px);height:calc(100dvh - 44px)}
+body.rail-collapsed #frame{grid-template-columns:44px minmax(0,1fr) 336px}
+body.focus #frame{grid-template-columns:232px minmax(0,1fr) 0}
+body.focus.rail-collapsed #frame{grid-template-columns:44px minmax(0,1fr) 0}
+body.home #frame,body.home.focus #frame,body.home.rail-collapsed #frame{grid-template-columns:minmax(0,1fr)}
+body.home #wordsBtn,body.home #marginSeg,body.home #focusBtn{visibility:hidden}
+
+/* rail */
+#rail{background:var(--rail);border-right:1px solid var(--line);overflow:auto;padding:10px 8px 24px;min-width:0}
+body.home #rail{display:none}
+.rail-h{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:6px 8px 4px}
+.rail-h .icon-btn{width:26px;height:26px}
+body.rail-collapsed #rail .rail-body{display:none}
+body.rail-collapsed #rail .rail-h span{display:none}
+.ol a,.sec a{display:flex;align-items:baseline;gap:8px;padding:5px 8px;border-radius:6px;color:var(--dim);text-decoration:none;font-size:13px;cursor:pointer}
+.ol a:hover,.sec a:hover{background:var(--sel);color:var(--ink)}
+.ol a.lo{color:var(--warm)}
+.sec{margin-top:14px}
+.sec .g{font-size:11px;color:var(--dim);padding:8px 8px 2px;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.sec a .n{font-variant-numeric:tabular-nums;font-size:11px;opacity:.7;width:16px}
+.sec a.on{color:var(--ink);background:var(--sel)}
+.rail-foot{display:none}
+
+/* document */
+#docScroll{overflow:auto;position:relative;background:var(--bg)}
+#page{max-width:740px;margin:0 auto;padding:48px 20px 40vh}
+.doc-meta{font-size:12px;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.doc h1{font-size:32px;line-height:1.2;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;outline:none}
+.doc .dek{font-size:17px;color:var(--dim);margin:0 0 34px;outline:none}
+.doc h2{font-size:20px;font-weight:600;margin:40px 0 10px;outline:none}
+.doc p{font:16.5px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0 0 18px;outline:none}
+.doc [contenteditable]:focus{outline:none}
+.doc .body{outline:none}
+.anc{border-radius:3px;transition:background .2s;cursor:pointer;box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--warm) 45%,transparent)}
+.anc.lit{background:var(--hl);box-shadow:inset 0 -2px 0 var(--warm)}
+body.focus .anc,body.reading .anc{box-shadow:none;cursor:auto}
+.prot{border-radius:3px}
+body.show-prot .prot{background:var(--prot);box-shadow:inset 0 -2px 0 var(--good)}
+.leftoff{display:flex;align-items:center;gap:10px;margin:0 -12px 14px;padding:8px 12px;border-left:2px solid var(--warm);background:color-mix(in srgb,var(--warm) 8%,transparent);font:13px/1.4 "Plus Jakarta Sans",sans-serif;color:var(--ink);user-select:none;border-radius:0 6px 6px 0}
+.leftoff b{font-weight:600;color:var(--warm)}
+.leftoff .x{margin-left:auto}
+body.reading .leftoff{display:none}
+.reading-bar{display:none;font-size:12px;color:var(--dim);margin-bottom:18px;align-items:center;gap:8px}
+body.reading .reading-bar{display:flex}
+body.reading .doc p{font-size:18px}
+.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,40%{background:var(--hl)}100%{background:transparent}}
+
+/* carousel */
+.strip{display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:6px}
+.slide{position:relative;width:min(420px,100%);aspect-ratio:4/5;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:26px 26px 22px;display:flex;flex-direction:column;gap:10px}
+.slide.dark{background:#0f0e0c;color:#e7e1d3}
+[data-theme=light] .slide.dark{background:#2d302a;color:#f4f1ea}
+.slide .no{position:absolute;top:10px;left:12px;font-size:11px;color:var(--dim)}
+.slide .handle{position:absolute;top:6px;right:6px;width:32px;height:32px;display:grid;place-items:center;color:var(--dim);cursor:grab;touch-action:none;border-radius:6px}
+.slide .handle:hover{background:var(--sel)}
+.slide .hd{font-size:26px;line-height:1.15;font-weight:600;margin-top:auto;outline:none}
+.slide .tx{font:16px/1.5 system-ui,sans-serif;color:inherit;opacity:.85;outline:none}
+.slide .ph{flex:1;min-height:90px;border-radius:6px;background:var(--sel);display:grid;place-items:center;color:var(--dim);font-size:12px;text-align:center}
+.slide.lit{box-shadow:0 0 0 2px var(--warm)}
+.dragging{opacity:.55}
+.drop-hint{font-size:12px;color:var(--dim);text-align:center;margin:0 0 10px}
+
+/* listing */
+.listing .price{font-size:18px;font-weight:600;margin:0 0 20px}
+.listing dl{display:grid;grid-template-columns:130px 1fr;gap:8px 16px;font-size:15px;margin:0 0 20px}
+.listing dt{color:var(--dim)}
+.listing dd{margin:0;outline:none}
+
+/* margin */
+#margin{border-left:1px solid var(--line);background:var(--rail);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+body.focus #margin,body.home #margin,body.reading #margin{display:none}
+#mHead{display:flex;align-items:center;gap:2px;padding:6px 8px;border-bottom:1px solid var(--line)}
+#mHead .grab{display:none}
+.mtab{height:30px;padding:0 10px;border-radius:6px;color:var(--dim);font-size:13px;font-weight:500}
+.mtab[aria-selected=true]{color:var(--ink);background:var(--sel)}
+.mtab .ct{font-size:11px;opacity:.7;margin-left:4px}
+#mBody{overflow:auto;padding:10px 12px 40px;flex:1}
+.since{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:12px}
+.since .t{flex:1}
+.since a{color:var(--warm);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.note{border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;border:1px solid transparent}
+.note:hover{background:var(--sel)}
+.note.on{border-color:color-mix(in srgb,var(--warm) 55%,transparent);background:var(--sel)}
+.note .who{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dim);margin-bottom:4px}
+.note .who b{font-weight:600;color:var(--ink)}
+.note .q{font-size:12px;color:var(--dim);border-left:2px solid var(--line);padding-left:8px;margin:4px 0 6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.note .tx{font-size:13.5px}
+.note.mine{border-left:3px solid var(--warm);border-radius:2px 8px 8px 2px;background:color-mix(in srgb,var(--warm) 6%,transparent)}
+.note.mine .tx{font-family:Lora,Georgia,serif;font-size:14.5px}
+.note.machine .tx{color:color-mix(in srgb,var(--ink) 82%,var(--dim))}
+.note.new{animation:flash 2.4s ease}
+.mh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:16px 2px 8px;display:flex;align-items:center;justify-content:space-between}
+.mh:first-child{margin-top:4px}
+.dec{font-size:13.5px;padding:7px 8px;border-radius:6px}
+.dec .by{font-size:11.5px;color:var(--dim)}
+.dec.rej .w{text-decoration:line-through;color:var(--dim)}
+.dec.pp .w{font-family:Lora,serif;background:var(--prot);box-shadow:inset 0 -2px 0 var(--good);border-radius:2px}
+.dec.cor .from{text-decoration:line-through;color:var(--dim)}
+.srcq{padding:10px 12px;border-radius:8px;margin-bottom:8px;border:1px solid var(--line)}
+.srcq blockquote{margin:0 0 6px;font:14.5px/1.5 Lora,Georgia,serif}
+.srcq .meta{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:11.5px;color:var(--dim);align-items:center}
+.srcq .meta a{color:var(--warm);cursor:pointer}
+.composer{border:1px solid color-mix(in srgb,var(--warm) 50%,transparent);border-radius:8px;padding:10px;margin-bottom:12px;background:var(--paper)}
+.composer textarea{width:100%;min-height:80px;resize:vertical;background:transparent;border:0;outline:none;font:14.5px/1.5 Lora,Georgia,serif}
+.composer .row{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.empty{font-size:13px;color:var(--dim);padding:10px 4px}
+.empty b{color:var(--ink);font-weight:500}
+
+/* floating your-words */
+#selBtn{position:fixed;z-index:40;display:none;background:var(--paper);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.35);color:var(--ink)}
+#selBtn.show{display:inline-flex}
+
+/* home */
+#home{display:none;max-width:820px;margin:0 auto;padding:48px 20px 80px}
+body.home #home{display:block}
+body.home #page{display:none}
+#home h1{font-size:26px;font-weight:600;margin:0 0 4px}
+.hrow{display:grid;grid-template-columns:1fr auto;gap:4px 16px;padding:16px 12px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:6px}
+.hrow:hover{background:var(--sel)}
+.hrow .nm{font-size:16px;font-weight:600}
+.hrow .lo{font-size:13.5px;color:var(--ink)}
+.hrow .lo em{font-style:normal;color:var(--warm)}
+.hrow .ps{font-size:12px;color:var(--dim)}
+.hrow .when{font-size:12px;color:var(--dim);text-align:right}
+
+/* palette */
+#palWrap{position:fixed;inset:0;z-index:60;background:var(--scrim);display:none;align-items:flex-start;justify-content:center;padding-top:9vh}
+#palWrap.open{display:flex}
+#pal{width:min(640px,calc(100vw - 24px));background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden}
+#palIn{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:14px 16px;font-size:16px;outline:none}
+#palList{max-height:60vh;overflow:auto;padding:6px}
+.pi{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:9px 10px;border-radius:8px;cursor:pointer}
+.pi[aria-selected=true]{background:var(--sel)}
+.pi .nm{font-weight:600}
+.pi .lo{font-size:12.5px;color:var(--dim)}
+.pi .ps{font-size:12px;color:var(--dim);grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.pi .w{font-size:12px;color:var(--dim)}
+.pgroup{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:10px 10px 4px}
+
+/* sheet */
+#scrim{position:fixed;left:0;right:0;bottom:0;top:44px;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .22s;z-index:45}
+#scrim.open{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;top:44px;bottom:0;width:min(1000px,94vw);background:var(--bg);border-right:1px solid var(--line);transform:translateX(-102%);transition:transform .26s ease;z-index:50;display:flex;flex-direction:column}
+#sheet.open{transform:none;box-shadow:24px 0 60px rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:reduce){#sheet,#scrim{transition:none}}
+#shHead{display:flex;align-items:flex-start;gap:12px;padding:18px 22px 14px;border-bottom:1px solid var(--line)}
+#shHead .g{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+#shHead h2{margin:2px 0 2px;font-size:22px;font-weight:600}
+#shHead p{margin:0;color:var(--dim);font-size:13.5px}
+#shBody{overflow:auto;padding:18px 22px 60px;flex:1}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px}
+.box{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper)}
+.box h3{margin:0 0 8px;font-size:14px;font-weight:600}
+.drop{border:1.5px dashed color-mix(in srgb,var(--warm) 45%,var(--line));border-radius:10px;padding:22px;text-align:center;color:var(--dim);margin-bottom:16px}
+.drop.over{background:var(--hl);color:var(--ink)}
+.topics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.topic{border:1px solid var(--line);border-radius:10px;padding:8px;min-height:120px;background:var(--lift)}
+.topic.over{border-color:var(--warm)}
+.topic h4{margin:2px 4px 8px;font-size:12.5px;font-weight:600;display:flex;justify-content:space-between}
+.mat{display:flex;gap:8px;align-items:center;padding:7px;border-radius:7px;background:var(--paper);border:1px solid var(--line);margin-bottom:6px;font-size:12.5px;cursor:grab;touch-action:none;user-select:none}
+.mat .th{width:34px;height:34px;border-radius:5px;background:var(--sel);display:grid;place-items:center;color:var(--dim);flex:none}
+.mat .t{min-width:0}
+.mat .t div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mat.pick{outline:2px solid var(--warm)}
+.preview{min-height:120px}
+.line{display:grid;grid-template-columns:64px 70px 1fr;gap:10px;padding:8px 8px;border-radius:6px;cursor:text}
+.line:hover{background:var(--sel)}
+.line .ts{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.line .sp{font-size:12.5px;font-weight:600}
+.line .tx{font:15px/1.55 Lora,Georgia,serif}
+.line .was{text-decoration:line-through;color:var(--dim);font-size:13px;display:block}
+.line.lit{background:var(--hl)}
+.line textarea{width:100%;font:15px/1.55 Lora,Georgia,serif;background:var(--paper);border:1px solid var(--warm);border-radius:6px;padding:6px 8px;resize:vertical}
+.player{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:14px;background:var(--paper)}
+.player .bar{flex:1;height:4px;background:var(--line);border-radius:2px}
+.plist a{display:block;padding:9px 10px;border-radius:7px;cursor:pointer}
+.plist a:hover{background:var(--sel)}
+.plist a.on{background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
+.plist .u{font-size:11.5px}
+.u-sure{color:var(--good)}.u-unsure{color:var(--warnc)}.u-disputed{color:var(--bad)}
+.ev{border-left:2px solid var(--line);padding:2px 0 2px 12px;margin:0 0 12px}
+.ev blockquote{margin:0 0 4px;font:15px/1.55 Lora,Georgia,serif}
+.ev .m{font-size:12px;color:var(--dim)}
+.thread .msg{padding:8px 10px;border-radius:8px;margin-bottom:6px;font-size:13.5px}
+.thread .msg.me{background:color-mix(in srgb,var(--warm) 8%,transparent);border-left:3px solid var(--warm);font-family:Lora,serif}
+.thread .msg.sys{color:var(--warnc);font-size:12.5px}
+.inrow{display:flex;gap:8px;margin-top:8px}
+.inrow input{flex:1;min-width:0;height:36px;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:0 10px}
+.mine-box textarea{width:100%;min-height:150px;border:1px solid color-mix(in srgb,var(--warm) 50%,var(--line));border-radius:8px;background:var(--paper);padding:12px 14px;font:16px/1.6 Lora,Georgia,serif;resize:vertical}
+.prov{border:1px dashed var(--line);border-radius:10px;padding:14px;margin-top:18px}
+.prov p{color:color-mix(in srgb,var(--ink) 80%,var(--dim));margin:8px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.asset{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+.asset .pic{aspect-ratio:4/3;background:var(--sel);display:grid;place-items:center;color:var(--dim);position:relative}
+.asset .pic .dur{position:absolute;right:8px;bottom:8px;font-size:11px;background:var(--bg);padding:1px 6px;border-radius:4px}
+.asset .cap{padding:10px 12px;font-size:13px}
+.asset .used{font-size:12px;color:var(--dim);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 8px}
+.asset .used a{color:var(--warm);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.arr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--paper);user-select:none}
+.arr .handle{cursor:grab;touch-action:none;color:var(--dim);width:32px;height:32px;display:grid;place-items:center;border-radius:6px}
+.arr .handle:hover{background:var(--sel)}
+.arr .x{font-size:12px;color:var(--dim);margin-left:auto}
+.frames{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.phone{width:340px;max-width:100%;border:1px solid var(--line);border-radius:22px;padding:14px;background:var(--paper)}
+.phone .scr{height:560px;overflow:auto;border-radius:12px;background:var(--bg);padding:18px 16px}
+.webf{flex:1;min-width:280px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.webf .bar{height:30px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:var(--dim)}
+.webf .scr{height:560px;overflow:auto;padding:28px 34px}
+.rv h1{font-size:24px;margin:0 0 6px}.rv h2{font-size:18px;margin:24px 0 6px}.rv p{font:16px/1.65 system-ui,sans-serif;margin:0 0 14px}
+.rv .anc,.rv .prot{box-shadow:none!important;background:none!important}
+.swipe{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px}
+.swipe .slide{flex:0 0 100%;scroll-snap-align:start;width:100%}
+.swipe .handle,.swipe .no{display:none}
+.out{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--paper);flex-wrap:wrap}
+.out .t{flex:1;min-width:180px}
+.out .t div:last-child{font-size:12px;color:var(--dim)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid var(--line)}
+.chk .s{width:70px;font-size:12px;font-weight:600;flex:none}
+.ok{color:var(--good)}.warn{color:var(--warnc)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13px;z-index:80;display:none;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#toast.show{display:block}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- phone ---------- */
+@media (max-width:760px){
+  #menuBtn{display:grid}
+  #projBtn{max-width:112px;padding:0 6px}
+  #wordsBtn{display:none}
+  #pieces{overflow:hidden}
+  #projBtn kbd,#pieces .from,.sep,#wordsBtn .lbl,#themeBtn,#marginSeg{display:none}
+  #focusBtn{display:grid!important}
+  .ptab{padding:0 8px}
+  .ptab .lbl{display:none}
+  .ptab[aria-selected=true] .lbl{display:inline}
+  #frame,body.rail-collapsed #frame,body.focus #frame{grid-template-columns:minmax(0,1fr)!important}
+  #rail{position:fixed;top:44px;bottom:0;left:0;width:280px;z-index:55;transform:translateX(-102%);transition:transform .22s}
+  body.rail-open #rail{transform:none;box-shadow:20px 0 50px rgba(0,0,0,.4)}
+  body.rail-collapsed #rail .rail-body{display:block}
+  #railCollapse{display:none}
+  .rail-foot{display:flex;gap:8px;padding:14px 8px;border-top:1px solid var(--line);margin-top:14px}
+  #margin{position:fixed;left:0;right:0;bottom:0;height:72vh;z-index:44;border-left:0;border-top:1px solid var(--line);border-radius:14px 14px 0 0;transform:translateY(calc(100% - 46px));transition:transform .22s;box-shadow:0 -12px 40px rgba(0,0,0,.35)}
+  body.msheet-open #margin{transform:none}
+  #mHead .grab{display:grid}
+  #page{padding:28px 16px 40vh}
+  .doc h1{font-size:26px}
+  .cols{grid-template-columns:1fr}
+  .topics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #sheet{width:100vw}
+  #shHead{padding:14px 16px 12px}#shBody{padding:14px 16px 60px}
+  .line{grid-template-columns:1fr}
+  .listing dl{grid-template-columns:1fr}
+  .webf .scr{padding:18px}
+  .hrow{grid-template-columns:1fr}.hrow .when{text-align:left}
+}
+#focusBtn{display:none}
+</style>
+</head>
+<body class="show-prot">
+<a class="vh" href="#page">Skip to document</a>
+
+<header id="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Open outline and sections" title="Outline and sections"></button>
+  <button id="projBtn" aria-haspopup="dialog" title="Switch project (Ctrl/Cmd K)"><span class="nm" id="projName">Porcelain and Tea</span><span class="ic-chev"></span><kbd>⌘K</kbd></button>
+  <span class="sep"></span>
+  <nav id="pieces" role="tablist" aria-label="Pieces from this origin"></nav>
+  <span class="spacer"></span>
+  <button class="btn" id="wordsBtn" title="Add your own thought to the margin"><span class="ic-pen"></span><span class="lbl">Your words</span></button>
+  <div class="seg" id="marginSeg" role="group" aria-label="Margin or Focus">
+    <button id="segMargin" aria-pressed="true">Margin</button><button id="segFocus" aria-pressed="false">Focus</button>
+  </div>
+  <button class="icon-btn" id="focusBtn" aria-label="Show or hide the margin"></button>
+  <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"></button>
+</header>
+
+<div id="frame">
+  <aside id="rail" aria-label="Outline and sections">
+    <div class="rail-h"><span>Outline</span><button class="icon-btn" id="railCollapse" aria-label="Collapse outline"></button></div>
+    <div class="rail-body">
+      <div class="ol" id="outline"></div>
+      <div id="sections"></div>
+      <div class="rail-foot"><button class="btn solid" id="themeBtn2">Light / dark</button><button class="btn" id="homeBtn2">All work</button></div>
+    </div>
+  </aside>
+
+  <main id="docScroll" tabindex="-1">
+    <div id="page"></div>
+    <div id="home"></div>
+  </main>
+
+  <aside id="margin" aria-label="Editorial margin">
+    <div id="mHead">
+      <button class="icon-btn grab" id="mGrab" aria-label="Open or close the margin"></button>
+      <button class="mtab" data-mt="notes" aria-selected="true">Notes<span class="ct" id="ctNotes"></span></button>
+      <button class="mtab" data-mt="decisions" aria-selected="false">Decisions</button>
+      <button class="mtab" data-mt="sources" aria-selected="false">Sources<span class="ct" id="ctSrc"></span></button>
+    </div>
+    <div id="mBody"></div>
+  </aside>
+</div>
+
+<div id="scrim"></div>
+<section id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" aria-hidden="true">
+  <div id="shHead"><div style="flex:1;min-width:0"><div class="g" id="shGroup"></div><h2 id="shTitle"></h2><p id="shPurpose"></p></div><button class="btn" id="shClose">Back to the piece <span class="tag">Esc</span></button></div>
+  <div id="shBody"></div>
+</section>
+
+<div id="palWrap"><div id="pal" role="dialog" aria-label="Find a project"><input id="palIn" placeholder="Find a project, piece or where you left off…" autocomplete="off"><div id="palList" role="listbox"></div></div></div>
+<button class="btn" id="selBtn"><span class="ic-pen"></span>Your words</button>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const P={chev:'<path d="M6 9l6 6 6-6"/>',pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>',menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/>',left:'<path d="M15 6l-6 6 6 6"/>',right:'<path d="M9 6l6 6-6 6"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',grip:'<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h6M10 16h6"/>',slides:'<rect x="4" y="3" width="11" height="14" rx="1.5"/><path d="M18 6v14H8"/>',tag:'<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8" r="1.2"/>',note:'<path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4"/>',script:'<path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6"/>',post:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 15l5-4 4 3 3-2 4 3"/>',img:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>',vid:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',file:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>',play:'<path d="M8 5v14l11-7z"/>',margin:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',up:'<path d="M6 15l6-6 6 6"/>'};
+const ic=(n,s)=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"'+(s?' style="width:'+s+'px;height:'+s+'px"':'')+'>'+P[n]+'</svg>';
+function paintIcons(){
+  $$('.ic-chev').forEach(e=>e.innerHTML=ic('chev',14));
+  $$('.ic-pen').forEach(e=>e.innerHTML=ic('pen'));
+  $('#menuBtn').innerHTML=ic('menu');
+  $('#railCollapse').innerHTML=ic(document.body.classList.contains('rail-collapsed')?'right':'left');
+  $('#themeBtn').innerHTML=ic(document.documentElement.dataset.theme==='dark'?'sun':'moon');
+  $('#focusBtn').innerHTML=ic('margin');
+  $('#mGrab').innerHTML=ic('up');
+}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ================= DATA (invented sample content) ================= */
+const projects=[
+ {id:'porcelain',name:'Porcelain and Tea',origin:'Conversation with Mei Lin · 14 Oct',when:'2 days ago',leftOff:'Article ¶8',next:'tighten the ending',actor:'Claude added 3 source notes',pieces:['article','carousel','listing'],full:true},
+ {id:'oolong',name:'Spring Oolong listing',origin:'Tasting notes · 18 Oct',when:'yesterday',leftOff:'Price table',next:'confirm the 50 g price',actor:'Codex corrected 2 weights',pieces:['listing','post']},
+ {id:'harbour',name:'Harbour Night Market',origin:'Voice memo · 9 Oct',when:'5 days ago',leftOff:'Script, scene 2',next:'choose the opening shot',actor:'',pieces:['script','post']},
+ {id:'ancha',name:'An Cha — three parts',origin:'Interview · 2 Oct',when:'1 week ago',leftOff:'Part 2 ¶4',next:'check the dates with Wei',actor:'Claude added a research point',pieces:['article','carousel']},
+ {id:'kiln',name:'Wood-fired kiln visit',origin:'Photos · 28 Sep',when:'2 weeks ago',leftOff:'Material sorted',next:'pick the photos',actor:'',pieces:['note']},
+ {id:'patience',name:'Tea Wisdom: patience',origin:'Idea · 20 Sep',when:'3 weeks ago',leftOff:'Slide 3',next:'find a quieter last line',actor:'',pieces:['carousel']},
+ {id:'yixing',name:'Yixing clay notes',origin:'Library collection',when:'1 month ago',leftOff:'Direction',next:'decide if this is a piece yet',actor:'',pieces:['note']},
+ {id:'openday',name:'Studio open day',origin:'Idea · 1 Sep',when:'7 weeks ago',leftOff:'Post draft',next:'add the date',actor:'',pieces:['post']},
+ {id:'water',name:'Water and heat',origin:'Conversation · 22 Aug',when:'2 months ago',leftOff:'Article ¶2',next:'not decided yet',actor:'',pieces:['article']}
+];
+const KIND={article:{l:'Article',i:'doc'},carousel:{l:'Carousel',i:'slides'},listing:{l:'Listing',i:'tag'},post:{l:'Post',i:'post'},script:{l:'Script',i:'script'},note:{l:'Shared note',i:'note'}};
+
+const notes={
+ article:[
+  {id:'n1',a:'a1',by:'Claude',kind:'agent',when:'2 days ago',t:'Year checked against Source 0:14:22 — matches your correction (1998).'},
+  {id:'n2',a:'a2',by:'Adrian',kind:'mine',when:'3 days ago',t:'This line is the rhythm of the whole piece. Don’t trim it.'},
+  {id:'n3',a:'a3',by:'Claude',kind:'agent',when:'2 days ago',t:'Repeats the idea of ¶4. Possible cut — your call.'},
+  {id:'n4',a:'a4',by:'Adrian',kind:'mine',when:'2 days ago',t:'Too long, too abstract. End on the cup, not on “continuity”.'},
+  {id:'n5',a:'a5',by:'Codex',kind:'agent',when:'4 days ago',t:'“Thin oolong”: the Material photo shows a darker roast. Worth checking with Mei.'}
+ ],
+ carousel:[
+  {id:'c1',a:'sl4',by:'Claude',kind:'agent',when:'2 days ago',t:'Slides 4 and 5 make the same move. One could go.'},
+  {id:'c2',a:'sl5',by:'Adrian',kind:'mine',when:'3 days ago',t:'Slide 5 alone, on the dark ground. Nothing else on it.'}
+ ],
+ listing:[
+  {id:'l1',a:'la1',by:'Adrian',kind:'mine',when:'3 days ago',t:'Only say food safe if Mei confirms the brass is lead-free.'},
+  {id:'l2',a:'la2',by:'Claude',kind:'agent',when:'2 days ago',t:'Dimensions are from the Material photo with a ruler — approximate.'}
+ ]
+};
+const sources=[
+ {id:'s1',q:'I was not good at making. I was good at looking at what was already made.',from:'Source · Mei Lin · 0:06:41',line:'t2',used:'¶2',anchor:'p2'},
+ {id:'s2',q:'A clean break is a day. The other kind, I stop counting.',from:'Source · Mei Lin · 0:21:05',line:'t6',used:'supports ¶4',anchor:'p4',isNew:true},
+ {id:'s3',q:'Riveted repair of porcelain is described in China from at least the Song period.',from:'Research · point 1 · marked unsure',research:'r1',used:'not used yet',anchor:null,isNew:true},
+ {id:'s4',q:'They want to know it happened, and that it is finished happening.',from:'Source · Mei Lin · 0:33:12',line:'t8',used:'¶6',anchor:'p6',isNew:true},
+ {id:'s5',q:'I started in nineteen ninety-eight, after three years at the kilns.',from:'Source · Mei Lin · 0:14:22',line:'t4',used:'¶2',anchor:'p2'}
+];
+const decisions={
+ made:[{w:'Write in Mei’s present tense.',by:'Adrian · Direction · 12 Oct'},{w:'No “ancient art” framing anywhere.',by:'Adrian · Direction · 12 Oct'}],
+ protectedP:[{w:'a staple of brass, warm from the hand',by:'Adrian · in Article ¶3, Carousel 2'},{w:'The crack is part of the cup now.',by:'Adrian · in Article ¶7, Carousel 5, Listing'}],
+ corrections:[{from:'nineteen ninety-six',to:'nineteen ninety-eight',by:'Adrian · Source 0:14:22 · 13 Oct'}],
+ rejected:[{w:'Kintsugi comparison as the opening',by:'Adrian · 12 Oct — “it’s a different craft”'},{w:'“Dying craft” story',by:'Adrian · 12 Oct'}]
+};
+const transcript=[
+ {id:'t1',ts:'0:01:12',sp:'Adrian',tx:'How did you start with this?'},
+ {id:'t2',ts:'0:06:41',sp:'Mei',tx:'I was not good at making. I was good at looking at what was already made.'},
+ {id:'t3',ts:'0:11:03',sp:'Adrian',tx:'And when was that?'},
+ {id:'t4',ts:'0:14:22',sp:'Mei',tx:'I started in nineteen ninety-eight, after three years at the kilns.',was:'I started in nineteen ninety-six, after three years at the kilns.'},
+ {id:'t5',ts:'0:18:40',sp:'Mei',tx:'The drill goes maybe a millimetre a minute. Glaze is hard. You listen to it.'},
+ {id:'t6',ts:'0:21:05',sp:'Mei',tx:'A clean break is a day. The other kind, I stop counting.'},
+ {id:'t7',ts:'0:27:51',sp:'Adrian',tx:'Do people want it to look like new?'},
+ {id:'t8',ts:'0:33:12',sp:'Mei',tx:'No. They want to know it happened, and that it is finished happening.'},
+ {id:'t9',ts:'0:39:30',sp:'Mei',tx:'The brass is a little warmer than the cup. You feel it on your lip, just there.'}
+];
+const research=[
+ {id:'r1',q:'How old is porcelain riveting?',u:'unsure',ev:[{q:'Riveted repair of porcelain is described in China from at least the Song period.',m:'Library · museum catalogue note (sample) — no primary source yet'},{q:'My teacher said his teacher learned it from a travelling mender.',m:'Source · Mei Lin · 0:12:10'}],thread:[]},
+ {id:'r2',q:'Why do people repair rather than replace?',u:'sure',ev:[{q:'They want to know it happened, and that it is finished happening.',m:'Source · Mei Lin · 0:33:12'}],thread:[]},
+ {id:'r3',q:'Does the brass change the taste of the tea?',u:'disputed',ev:[{q:'The brass is a little warmer than the cup. You feel it on your lip.',m:'Source · Mei Lin · 0:39:30 — temperature, not taste'},{q:'Copper alloys can react with acidic drinks.',m:'Library · general note (sample) — not about tea specifically'}],thread:[{me:true,t:'Is this worth a line in the article, or is it a distraction?'},{sys:true,t:'AI is not connected yet — your question is kept on this point.'}]},
+ {id:'r4',q:'Was kiln cleaning a normal route into restoration?',u:'unsure',ev:[{q:'I started after three years at the kilns.',m:'Source · Mei Lin · 0:14:22'}],thread:[]}
+];
+const media=[
+ {id:'m1',t:'Rivets, close',k:'img',used:[['Article ¶3','article','p3'],['Carousel slide 2','carousel','sl2']]},
+ {id:'m2',t:'Workbench and the green lamp',k:'img',used:[['Article ¶1','article','p1'],['Carousel slide 1','carousel','sl1'],['Listing','listing','la1']]},
+ {id:'m3',t:'Drilling through glaze',k:'vid',d:'0:42',used:[['Carousel slide 3','carousel','sl3']]},
+ {id:'m4',t:'Pouring the oolong',k:'img',used:[['Article ¶9','article','p9']]},
+ {id:'m5',t:'Tray of broken cups',k:'img',used:[]},
+ {id:'m6',t:'Mei talking at the table',k:'vid',d:'3:10',used:[['Source 0:21:05','source','t6']]}
+];
+const material=[
+ {id:'x1',k:'mic',t:'Conversation with Mei.m4a',s:'48:10 · transcribed',topic:'person'},
+ {id:'x2',k:'img',t:'Rivets, close.jpg',s:'Photo',topic:'craft'},
+ {id:'x3',k:'img',t:'Workbench.jpg',s:'Photo',topic:'craft'},
+ {id:'x4',k:'vid',t:'Drilling.mov',s:'0:42',topic:'craft'},
+ {id:'x5',k:'img',t:'Pouring oolong.jpg',s:'Photo',topic:'tea'},
+ {id:'x6',k:'file',t:'Ideas on the train.txt',s:'Your note · 11 Oct',topic:'unsorted'},
+ {id:'x7',k:'link',t:'Museum page on riveting',s:'Link · added by Claude',topic:'unsorted'},
+ {id:'x8',k:'img',t:'Tray of broken cups.jpg',s:'Photo',topic:'unsorted'}
+];
+const topics=[['unsorted','Unsorted'],['craft','The craft'],['person','The person'],['tea','Tea']];
+const SECTIONS=[
+ ['Gather',[['01','Material','material','Bring things in, see them, sort them into topics.'],['02','Source','source','Understand and correct exactly what was said.']]],
+ ['Develop',[['03','Research','research','Explore points, inspect evidence, mark what is uncertain.'],['04','Direction','direction','Your own thoughts first; the chosen direction for every piece.']]],
+ ['Make',[['05','Write','write','The piece itself — you are here.'],['06','Read','read','Read it through without editing or margin.'],['07','Check','check','What still needs attention before it goes out.'],['08','Media','media','Photos and video, and where each one is used.'],['09','Arrange','arrange','Compose: change the order of the parts.']]],
+ ['Deliver',[['10','Audience','audience','See it exactly as a reader will.'],['11','Share','share','Let someone else read or comment.'],['12','Outputs','outputs','Export the finished files.']]]
+];
+
+/* ================= STATE ================= */
+const S={project:'porcelain',piece:'article',mtab:'notes',activeNote:null,since:true,leftOffShown:true,composer:null,sheet:null,sheetArg:null,returnScroll:0,returnFocus:null,research:'r1',pickedMat:null};
+const pieceEls={};
+
+/* ================= PIECES ================= */
+function articleEl(){
+ const d=document.createElement('article');d.className='doc';d.dataset.piece='article';
+ d.innerHTML=`
+ <div class="reading-bar">${ic('doc')} Reading view — nothing here is editable. <button class="btn" data-go-write>Back to writing</button></div>
+ <div class="doc-meta"><span class="tag warm">Article</span><span>from Conversation with Mei Lin · 14 Oct</span><span id="wc"></span></div>
+ <h1 contenteditable="true" spellcheck="true">Porcelain and Tea</h1>
+ <p class="dek" contenteditable="true">A restorer in a room above a hardware shop, and the cups people carry up her stairs.</p>
+ <div class="body" contenteditable="true" spellcheck="true">
+ <section data-block data-title="The workshop" id="sec1"><h2>The workshop</h2>
+ <p data-p="1">Mei Lin’s workshop is one room above a hardware shop, and most of the room is a table. On the table there is a lamp with a green shade, a bow drill strung with fishing line, and a shallow tray of broken cups that people have carried up the stairs wrapped in newspaper.</p>
+ <p data-p="2"><span class="anc" data-a="a1">She started mending porcelain in 1998</span>, after three years cleaning kilns in Jingdezhen. “I was not good at making,” she says. “I was good at looking at what was already made.”</p></section>
+ <section data-block data-title="Riveting" id="sec2"><h2>Riveting</h2>
+ <p data-p="3">The method is old and plain. She fits the pieces dry, marks both sides of each crack, and drills shallow holes that never pass through the wall of the cup. Then she bends <span class="prot">a staple of brass, warm from the hand</span>, and taps it home so it pulls the two edges together.</p>
+ <p data-p="4"><span class="anc" data-a="a2">A cup takes a day if it broke cleanly and a week if it didn’t.</span> She doesn’t hurry the second kind. The drill moves maybe a millimetre a minute through glaze.</p>
+ <p data-p="5"><span class="anc" data-a="a3">It is slow work, and it cannot be rushed, because the porcelain decides how fast it goes.</span></p></section>
+ <section data-block data-title="What the crack keeps" id="sec3"><h2>What the crack keeps</h2>
+ <p data-p="6">Most of the cups that come to her are not valuable. They are the cup a grandfather drank from, the one a child knocked off a shelf, the one that went through a move. People don’t want them to look new. “They want to know it happened,” Mei says, “and that it is finished happening.”</p>
+ <p data-p="7">She turns a mended cup under the lamp so the staples catch the light. <span class="prot">The crack is part of the cup now.</span></p></section>
+ <section data-block data-title="Tea in a mended cup" id="sec4"><h2>Tea in a mended cup</h2>
+ <div class="leftoff" contenteditable="false" id="leftoff"><span><b>Left off here</b> · 2 days ago — next: tighten the ending</span><button class="icon-btn x" aria-label="Dismiss left-off marker">${ic('x',14)}</button></div>
+ <p data-p="8"><span class="anc" data-a="a4">A riveted cup holds tea again, and it holds it differently, and there is something about that which is hard to say but we feel it when we drink, a kind of continuity, a sense of the past still being present in the hands.</span></p>
+ <p data-p="9"><span class="anc" data-a="a5">Mei pours a thin oolong</span> into the cup with four staples and passes it across the table. It does not leak. It is warm all the way around except where the brass is, which is a little warmer.</p></section>
+ </div>`;
+ return d;
+}
+const SLIDES=[
+ ['sl1','Porcelain and tea','A restorer, a bow drill, and the cup that came back.','Workbench and the green lamp'],
+ ['sl2','A staple of brass','warm from the hand, tapped home across the crack.','Rivets, close'],
+ ['sl3','A day, or a week','“A clean break is a day. The other kind, I stop counting.”','Drilling through glaze · video 0:42'],
+ ['sl4','Not new','People don’t want it to look new. They want to know it happened.',null],
+ ['sl5','The crack is part of the cup now.','',null,true],
+ ['sl6','Pour something','Save this for the next cup you almost threw away.',null]
+];
+function carouselEl(){
+ const d=document.createElement('article');d.className='doc';d.dataset.piece='carousel';
+ d.innerHTML=`<div class="doc-meta"><span class="tag warm">Carousel</span><span>from Conversation with Mei Lin · 6 slides · 4:5</span></div>
+ <h1 contenteditable="true">Porcelain and Tea — carousel</h1>
+ <p class="drop-hint">The whole sequence. Type on any slide; drag the grip to reorder.</p>
+ <div class="strip" id="strip">${SLIDES.map((s,i)=>`<div class="slide${s[4]?' dark':''}" data-block data-title="${esc(s[1])}" id="${s[0]}" data-a="${s[0]}"><span class="no">${i+1} / 6</span><button class="handle" aria-label="Drag to reorder slide">${ic('grip')}</button>${s[3]?`<div class="ph">${ic(s[3].includes('video')?'vid':'img',22)}<div>${esc(s[3])}<br><span class="tag">Sample image</span></div></div>`:''}<div class="hd" contenteditable="true">${s[1].includes('crack is part')?'<span class="prot">'+esc(s[1])+'</span>':esc(s[1])}</div>${s[2]?`<div class="tx" contenteditable="true">${esc(s[2])}</div>`:''}</div>`).join('')}</div>`;
+ return d;
+}
+function listingEl(){
+ const d=document.createElement('article');d.className='doc listing';d.dataset.piece='listing';
+ d.innerHTML=`<div class="doc-meta"><span class="tag warm">Product listing</span><span>from Conversation with Mei Lin · for the shop</span></div>
+ <h1 contenteditable="true">Mended qingbai teacup, four brass rivets</h1>
+ <p class="price" contenteditable="true">Price — to confirm with Mei</p>
+ <div class="body" contenteditable="true">
+ <section data-block data-title="Description" id="lsec1"><h2>Description</h2>
+ <p>A pale qingbai cup, broken in a move and riveted by Mei Lin in her workshop. Four staples cross the crack on the outside; the inside is smooth. <span class="prot">The crack is part of the cup now.</span></p>
+ <p><span class="anc" data-a="la1">It holds tea as it did before. Rinse with warm water; no dishwasher.</span></p></section>
+ <section data-block data-title="Details" id="lsec2"><h2>Details</h2>
+ <dl><dt>Size</dt><dd><span class="anc" data-a="la2">About 7 cm across, 4.5 cm tall</span></dd><dt>Repair</dt><dd>Four hand-bent brass staples</dd><dt>Restorer</dt><dd>Mei Lin</dd><dt>Ships</dt><dd>Wrapped in paper, boxed</dd></dl></section>
+ </div>`;
+ return d;
+}
+function genericEl(p,k){
+ const d=document.createElement('article');d.className='doc';d.dataset.piece=k;
+ d.innerHTML=`<div class="doc-meta"><span class="tag warm">${KIND[k].l}</span><span>from ${esc(p.origin)}</span><span class="tag">Sample</span></div>
+ <h1 contenteditable="true">${esc(p.name)}</h1>
+ <div class="leftoff" contenteditable="false"><span><b>Left off</b> at ${esc(p.leftOff)} · ${esc(p.when)} — next: ${esc(p.next)}</span></div>
+ <div class="body" contenteditable="true"><section data-block data-title="Draft"><h2>Draft</h2><p>This project is listed so finding and switching can be tried. Only “Porcelain and Tea” is drawn in full in this prototype; its pieces, margin and sections are the working example.</p><p>You can still type here — it behaves like any piece. Prototype — nothing is saved.</p></section></div>`;
+ return d;
+}
+function getPieceEl(){
+ const key=S.project+':'+S.piece;
+ if(!pieceEls[key]){
+  const p=proj();
+  pieceEls[key]=!p.full?genericEl(p,S.piece):S.piece==='article'?articleEl():S.piece==='carousel'?carouselEl():listingEl();
+  wirePiece(pieceEls[key]);
+ }
+ return pieceEls[key];
+}
+function wirePiece(el){
+ el.addEventListener('click',e=>{
+  const x=e.target.closest('.leftoff .x');if(x){x.closest('.leftoff').remove();S.leftOffShown=false;renderOutline();return;}
+  if(e.target.closest('[data-go-write]')){setMode('write');return;}
+  const a=e.target.closest('[data-a]');
+  if(a&&!document.body.classList.contains('focus')&&!document.body.classList.contains('reading')){
+   const n=(notes[S.piece]||[]).find(n=>n.a===a.dataset.a);if(n&&!window.getSelection().toString()){S.mtab='notes';activateNote(n.id,false);}
+  }
+ });
+ el.addEventListener('input',()=>{updateWC();renderOutline();});
+ const strip=$('#strip',el);
+ if(strip)sortable({container:strip,item:'.slide',handle:'.handle',onEnd:()=>{renumberSlides(strip);renderOutline();toast('Order changed · Prototype — nothing is saved');}});
+}
+function renumberSlides(strip){$$('.slide',strip).forEach((s,i)=>{const n=$('.no',s);if(n)n.textContent=(i+1)+' / '+$$('.slide',strip).length;});}
+function proj(){return projects.find(p=>p.id===S.project);}
+function curEl(){return pieceEls[S.project+':'+S.piece];}
+function updateWC(){const el=curEl();if(!el)return;const w=$('#wc',el);if(!w)return;const n=($('.body',el)||el).innerText.trim().split(/\s+/).filter(Boolean).length;w.textContent=n+' words · '+Math.max(1,Math.round(n/220))+' min read';}
+
+/* ================= TOP LINE ================= */
+function renderPieces(){
+ const p=proj(),nav=$('#pieces');
+ if(document.body.classList.contains('home')){nav.innerHTML='<span class="from" style="margin-left:4px">All work · '+projects.length+' projects</span>';return;}
+ nav.innerHTML=p.pieces.map(k=>`<button class="ptab" role="tab" aria-selected="${k===S.piece}" data-k="${k}" title="${KIND[k].l}">${ic(KIND[k].i)}<span class="lbl">${KIND[k].l}${k==='carousel'&&p.full?' · 6':''}</span></button>`).join('')+`<span class="from" title="These pieces share one origin">from ${esc(p.origin)}</span>`;
+}
+$('#pieces').addEventListener('click',e=>{const b=e.target.closest('.ptab');if(b)openPiece(b.dataset.k);});
+function openPiece(k,then){
+ S.piece=k;S.activeNote=null;setMode('write',true);
+ const el=getPieceEl();$('#page').replaceChildren(el);
+ $('#projName').textContent=proj().name;
+ renderPieces();renderOutline();renderMargin();updateWC();
+ $('#docScroll').scrollTop=0;
+ if(then)requestAnimationFrame(then);
+}
+$('#segMargin').onclick=()=>setFocus(false);
+$('#segFocus').onclick=()=>setFocus(true);
+$('#focusBtn').onclick=()=>{if(window.innerWidth<=760){document.body.classList.toggle('msheet-open');if(document.body.classList.contains('focus'))setFocus(false);}else setFocus(!document.body.classList.contains('focus'));};
+function setFocus(on){document.body.classList.toggle('focus',on);$('#segMargin').setAttribute('aria-pressed',!on);$('#segFocus').setAttribute('aria-pressed',on);if(on)$$('.anc.lit').forEach(x=>x.classList.remove('lit'));}
+function toggleTheme(){const r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';paintIcons();}
+$('#themeBtn').onclick=toggleTheme;$('#themeBtn2').onclick=toggleTheme;
+$('#menuBtn').onclick=()=>document.body.classList.toggle('rail-open');
+$('#railCollapse').onclick=()=>{document.body.classList.toggle('rail-collapsed');paintIcons();};
+$('#homeBtn2').onclick=()=>{document.body.classList.remove('rail-open');showHome();};
+
+/* ================= RAIL ================= */
+function renderOutline(){
+ const el=curEl(),o=$('#outline');if(!el){o.innerHTML='';return;}
+ const items=$$('[data-block]',el).map(b=>{const h=$('h2',b)||$('.hd',b);const t=(h?h.innerText:b.dataset.title)||b.dataset.title;return `<a data-jump="${b.id}">${esc(t.trim().slice(0,40))}</a>`;});
+ const lo=$('.leftoff',el)?`<a class="lo" data-jump="__leftoff">Left off here</a>`:'';
+ o.innerHTML=lo+items.join('');
+}
+$('#outline').addEventListener('click',e=>{const a=e.target.closest('[data-jump]');if(!a)return;document.body.classList.remove('rail-open');const el=curEl();const t=a.dataset.jump==='__leftoff'?$('.leftoff',el):el.querySelector('#'+CSS.escape(a.dataset.jump));if(t){t.scrollIntoView({behavior:'smooth',block:'start'});t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash');}});
+function renderSections(){
+ $('#sections').innerHTML=SECTIONS.map(([g,list])=>`<div class="sec"><div class="g">${g}</div>${list.map(s=>`<a data-sec="${s[2]}" title="${esc(s[3])}"><span class="n">${s[0]}</span>${s[1]}</a>`).join('')}</div>`).join('');
+ markSection();
+}
+function markSection(){const cur=document.body.classList.contains('reading')?'read':S.sheet||'write';$$('#sections a').forEach(a=>a.classList.toggle('on',a.dataset.sec===cur));}
+$('#sections').addEventListener('click',e=>{const a=e.target.closest('[data-sec]');if(!a)return;document.body.classList.remove('rail-open');const k=a.dataset.sec;if(k==='write')setMode('write');else if(k==='read')setMode('read');else openSheet(k);});
+function setMode(m,quiet){
+ if(document.body.classList.contains('home')&&!quiet){hideHome();}
+ const reading=m==='read';document.body.classList.toggle('reading',reading);
+  $$('#page [contenteditable]:not(.leftoff)').forEach(x=>x.setAttribute('contenteditable',reading?'false':'true'));
+ markSection();
+}
+
+/* ================= MARGIN ================= */
+$('#mHead').addEventListener('click',e=>{
+ const t=e.target.closest('.mtab');
+ if(t){S.mtab=t.dataset.mt;renderMargin();if(window.innerWidth<=760)document.body.classList.add('msheet-open');return;}
+ if(e.target.closest('#mGrab')||e.target===$('#mHead'))document.body.classList.toggle('msheet-open');
+});
+function renderMargin(newSrc){
+ $$('.mtab').forEach(t=>t.setAttribute('aria-selected',t.dataset.mt===S.mtab));
+ const list=notes[S.piece]||[],full=proj().full;
+ $('#ctNotes').textContent=full?list.length:'';$('#ctSrc').textContent=full?sources.length:'';
+ const b=$('#mBody');let h='';
+ if(!full){b.innerHTML=`<div class="empty"><b>No notes on this sample project.</b><br>Select any text and choose “Your words” to start one, or open Porcelain and Tea to see a full margin.</div>`+composerHTML();wireComposer();return;}
+ if(S.mtab==='notes'){
+  if(S.since&&S.piece==='article')h+=`<div class="since"><span class="t">Since you left: <b>Claude added 3 source notes</b> · 2 days ago. <a data-since>Show them</a></span><button class="icon-btn" data-since-x aria-label="Dismiss" style="width:24px;height:24px">${ic('x',13)}</button></div>`;
+  h+=S.composer?composerHTML():`<button class="btn" data-words style="margin:0 0 8px">${ic('pen')} Add your words</button>`;
+  h+=list.map(n=>{const el=curEl();const anc=el&&el.querySelector('[data-a="'+n.a+'"]');const q=anc?(anc.querySelector('.hd')||anc).innerText.trim():'';
+   return `<div class="note ${n.kind==='mine'?'mine':'machine'}${S.activeNote===n.id?' on':''}${n.fresh?' new':''}" data-n="${n.id}" tabindex="0"><div class="who">${n.kind==='mine'?'<b>Your words</b> · Adrian':'<b>'+n.by+'</b> · agent note'} · ${n.when}</div>${q?`<div class="q">${esc(q)}</div>`:''}<div class="tx">${esc(n.t)}</div></div>`;}).join('')||'<div class="empty">No notes on this piece yet.</div>';
+ } else if(S.mtab==='decisions'){
+  h+=`<div class="mh">Decisions</div>`+decisions.made.map(d=>`<div class="dec"><div class="w">${esc(d.w)}</div><div class="by">${esc(d.by)}</div></div>`).join('');
+  h+=`<div class="mh">Protected phrases <button class="btn" id="protToggle" style="height:24px;font-size:11.5px">${document.body.classList.contains('show-prot')?'Hide in text':'Show in text'}</button></div>`+decisions.protectedP.map(d=>`<div class="dec pp"><span class="w">${esc(d.w)}</span><div class="by">${esc(d.by)} · ${presentIn(d.w)}</div></div>`).join('');
+  h+=`<div class="mh">Corrections</div>`+decisions.corrections.map(d=>`<div class="dec cor"><span class="from">${esc(d.from)}</span> → ${esc(d.to)}<div class="by">${esc(d.by)}</div></div>`).join('');
+  h+=`<div class="mh">Rejected angles</div>`+decisions.rejected.map(d=>`<div class="dec rej"><span class="w">${esc(d.w)}</span><div class="by">${esc(d.by)}</div></div>`).join('');
+  h+=`<p class="empty">These carry into every piece from this origin. Change them in <a data-open="direction" style="color:var(--warm);cursor:pointer">Direction</a>.</p>`;
+ } else {
+  h+=sources.map(s=>`<div class="srcq${s.isNew&&newSrc?' note new':''}"><blockquote>“${esc(s.q)}”</blockquote><div class="meta">${s.isNew?'<span class="tag warm">Claude · 2 days ago</span>':''}<span>${esc(s.from)}</span><span>Used: ${s.anchor?`<a data-jp="${s.anchor}">${esc(s.used)}</a>`:esc(s.used)}</span>${s.line?`<a data-src="${s.line}">Open in Source</a>`:`<a data-res="${s.research}">Open in Research</a>`}</div></div>`).join('');
+ }
+ b.innerHTML=h;wireComposer();
+}
+function presentIn(w){const el=pieceEls['porcelain:article'];if(!el)return'';return el.innerText.includes(w)?'<span class="ok">intact in Article</span>':'<span class="warn">changed in Article</span>';}
+$('#mBody').addEventListener('click',e=>{
+ const n=e.target.closest('.note[data-n]');if(n){activateNote(n.dataset.n,true);return;}
+ if(e.target.closest('[data-words]')){openComposer(null);return;}
+ if(e.target.closest('[data-since-x]')){S.since=false;renderMargin();return;}
+ if(e.target.closest('[data-since]')){S.mtab='sources';S.since=false;renderMargin(true);return;}
+ if(e.target.closest('#protToggle')){document.body.classList.toggle('show-prot');renderMargin();return;}
+ const o=e.target.closest('[data-open]');if(o){openSheet(o.dataset.open);return;}
+ const s=e.target.closest('[data-src]');if(s){openSheet('source',s.dataset.src);return;}
+ const r=e.target.closest('[data-res]');if(r){S.research=r.dataset.res;openSheet('research');return;}
+ const j=e.target.closest('[data-jp]');if(j){jumpTo('article',j.dataset.jp);}
+});
+$('#mBody').addEventListener('keydown',e=>{if(e.key==='Enter'){const n=e.target.closest('.note[data-n]');if(n)activateNote(n.dataset.n,true);}});
+function activateNote(id,scroll){
+ const n=(notes[S.piece]||[]).find(x=>x.id===id);if(!n)return;
+ S.activeNote=id;const el=curEl();
+ $$('.anc.lit,.slide.lit',el).forEach(x=>x.classList.remove('lit'));
+ const a=el.querySelector('[data-a="'+n.a+'"]');
+ if(a){a.classList.add('lit');if(scroll){a.scrollIntoView({behavior:'smooth',block:'center'});if(window.innerWidth<=760)document.body.classList.remove('msheet-open');}}
+ if(S.mtab!=='notes')S.mtab='notes';
+ renderMargin();
+ const card=$('.note[data-n="'+id+'"]');if(card&&!scroll)card.scrollIntoView({block:'nearest'});
+}
+
+/* ---- Your words ---- */
+function composerHTML(){
+ if(!S.composer)return'';
+ return `<div class="composer"><div class="who" style="font-size:11.5px;color:var(--dim);margin-bottom:4px"><b style="color:var(--ink)">Your words</b> · Adrian${S.composer.quote?' · on “'+esc(S.composer.quote.slice(0,60))+(S.composer.quote.length>60?'…':'')+'”':''}</div><textarea id="cmpTx" placeholder="A thought, a doubt, a feeling about this…"></textarea><div class="row"><span class="honest">Prototype — nothing is saved</span><button class="btn" id="cmpCancel">Cancel</button><button class="btn solid" id="cmpSave">Add to margin</button></div></div>`;
+}
+function wireComposer(){const t=$('#cmpTx');if(!t)return;if(S.composer&&S.composer.fresh){S.composer.fresh=false;t.focus();}$('#cmpCancel').onclick=()=>{S.composer=null;renderMargin();};$('#cmpSave').onclick=saveComposer;t.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))saveComposer();};}
+function saveComposer(){
+ const t=$('#cmpTx').value.trim();if(!t){$('#cmpTx').focus();return;}
+ let aid=null;const c=S.composer;
+ if(c.range){try{const sp=document.createElement('span');sp.className='anc';aid='u'+Date.now();sp.dataset.a=aid;c.range.surroundContents(sp);}catch(err){aid=null;}}
+ if(!aid&&c.anchorEl){aid='u'+Date.now();c.anchorEl.dataset.a=aid;}
+ if(!notes[S.piece])notes[S.piece]=[];
+ const n={id:'n'+Date.now(),a:aid||'none',by:'Adrian',kind:'mine',when:'just now',t,fresh:true};
+ notes[S.piece].unshift(n);S.composer=null;S.mtab='notes';S.activeNote=n.id;renderMargin();
+ if(aid){const a=curEl().querySelector('[data-a="'+aid+'"]');if(a)a.classList.add('lit');}
+ toast('Added to the margin · Prototype — nothing is saved');
+}
+function openComposer(range){
+ if(document.body.classList.contains('home'))return;
+ setFocus(false);if(document.body.classList.contains('reading'))setMode('write');
+ let quote='',anchorEl=null;
+ if(range){quote=range.toString().trim();}
+ else{const el=curEl();anchorEl=$('.leftoff',el)?$('.leftoff',el).nextElementSibling:null;if(anchorEl)quote=anchorEl.innerText.trim();}
+ S.composer={range,quote,anchorEl,fresh:true};S.mtab='notes';renderMargin();
+ if(window.innerWidth<=760)document.body.classList.add('msheet-open');
+}
+$('#wordsBtn').addEventListener('mousedown',e=>e.preventDefault());
+$('#wordsBtn').onclick=()=>{const r=currentDocRange();openComposer(r);};
+const selBtn=$('#selBtn');let selRange=null;
+function currentDocRange(){const s=window.getSelection();if(!s.rangeCount||s.isCollapsed)return null;const r=s.getRangeAt(0);const el=curEl();if(!el||!el.contains(r.commonAncestorContainer))return null;return r.cloneRange();}
+document.addEventListener('selectionchange',()=>{
+ const r=currentDocRange();
+ if(!r||document.body.classList.contains('reading')){selBtn.classList.remove('show');selRange=null;return;}
+ const rect=r.getBoundingClientRect();if(!rect.width){selBtn.classList.remove('show');return;}
+ selRange=r;selBtn.classList.add('show');
+ const top=Math.max(50,rect.top-42),left=Math.min(window.innerWidth-130,Math.max(8,rect.left+rect.width/2-60));
+ selBtn.style.top=top+'px';selBtn.style.left=left+'px';
+});
+selBtn.addEventListener('mousedown',e=>e.preventDefault());
+selBtn.onclick=()=>{const r=selRange;selBtn.classList.remove('show');openComposer(r);};
+
+/* ================= HOME ================= */
+function showHome(){
+ closePalette();closeSheet(true);
+ document.body.classList.add('home');document.body.classList.remove('reading');
+ $('#projName').textContent='All work';renderPieces();
+ $('#home').innerHTML=`<h1>All work</h1><p class="dim" style="margin:0 0 20px">Most recent first. Each line is where you left off and what comes next.</p>`+projects.map(p=>`<div class="hrow" data-p="${p.id}" tabindex="0" role="button"><div class="nm">${esc(p.name)}</div><div class="when">${esc(p.when)}</div><div class="lo">Left off at ${esc(p.leftOff)} — <em>next: ${esc(p.next)}</em></div><div class="ps">${p.pieces.map(k=>KIND[k].l).join(' · ')}${p.actor?' · '+esc(p.actor):''}</div></div>`).join('');
+ $('#docScroll').scrollTop=0;
+}
+function hideHome(){document.body.classList.remove('home');$('#projName').textContent=proj().name;renderPieces();}
+$('#home').addEventListener('click',e=>{const r=e.target.closest('[data-p]');if(r)openProject(r.dataset.p);});
+$('#home').addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('[data-p]');if(r)openProject(r.dataset.p);}});
+function openProject(id,pieceK){
+ hideHome();closePalette();
+ S.project=id;const p=proj();
+ const ix=projects.indexOf(p);projects.splice(ix,1);projects.unshift(p);p.when='just now';
+ openPiece(pieceK||p.pieces[0],()=>{if(p.full&&!pieceK)scrollToLeftOff();});
+}
+function scrollToLeftOff(){const el=curEl();const lo=el&&$('.leftoff',el);if(!lo)return;const sc=$('#docScroll');sc.scrollTop=lo.getBoundingClientRect().top-sc.getBoundingClientRect().top+sc.scrollTop-sc.clientHeight*0.3;}
+
+/* ================= PALETTE ================= */
+let palIx=0,palItems=[];
+function openPalette(){$('#palWrap').classList.add('open');$('#palIn').value='';palIx=0;renderPal();$('#palIn').focus();}
+function closePalette(){$('#palWrap').classList.remove('open');}
+function renderPal(){
+ const q=$('#palIn').value.trim().toLowerCase();
+ palItems=[{home:true,name:'All work',sub:'Every project, with where you left off'}].concat(projects.filter(p=>!q||(p.name+' '+p.pieces.map(k=>KIND[k].l).join(' ')+' '+p.leftOff+' '+p.next).toLowerCase().includes(q)));
+ if(q)palItems=palItems.filter(x=>!x.home||'all work home'.includes(q));
+ if(palIx>=palItems.length)palIx=Math.max(0,palItems.length-1);
+ $('#palList').innerHTML=palItems.map((p,i)=>p.home?`<div class="pi" role="option" data-i="${i}" aria-selected="${i===palIx}"><div class="nm">All work</div><div class="w">Home</div><div class="lo">${p.sub}</div></div>${q?'':'<div class="pgroup">Recent</div>'}`:
+  `<div class="pi" role="option" data-i="${i}" aria-selected="${i===palIx}"><div class="nm">${esc(p.name)}</div><div class="w">${esc(p.when)}</div><div class="lo">Left off at ${esc(p.leftOff)} — next: ${esc(p.next)}</div><div class="ps">${p.pieces.map(k=>`<span class="tag" data-piece="${k}">${KIND[k].l}</span>`).join('')}${p.actor?'<span>· '+esc(p.actor)+'</span>':''}</div></div>`).join('')||'<div class="empty">Nothing matches. Try a piece kind, like “carousel”.</div>';
+ const on=$('#palList [aria-selected=true]');if(on)on.scrollIntoView({block:'nearest'});
+}
+function pickPal(i,pieceK){const p=palItems[i];if(!p)return;if(p.home)showHome();else openProject(p.id,pieceK);}
+$('#palIn').addEventListener('input',()=>{palIx=0;renderPal();});
+$('#palIn').addEventListener('keydown',e=>{if(e.key==='ArrowDown'){palIx=Math.min(palItems.length-1,palIx+1);renderPal();e.preventDefault();}else if(e.key==='ArrowUp'){palIx=Math.max(0,palIx-1);renderPal();e.preventDefault();}else if(e.key==='Enter'){pickPal(palIx);e.preventDefault();}});
+$('#palList').addEventListener('click',e=>{const it=e.target.closest('.pi');if(!it)return;const pc=e.target.closest('[data-piece]');pickPal(+it.dataset.i,pc?pc.dataset.piece:null);});
+$('#palWrap').addEventListener('click',e=>{if(e.target.id==='palWrap')closePalette();});
+$('#projBtn').onclick=openPalette;
+
+/* ================= SHEETS ================= */
+const SEC={};SECTIONS.forEach(([g,l])=>l.forEach(s=>SEC[s[2]]={g,n:s[0],t:s[1],p:s[3]}));
+function openSheet(k,arg){
+ if(document.body.classList.contains('home'))hideHome();
+ if(!S.sheet){S.returnScroll=$('#docScroll').scrollTop;S.returnFocus=document.activeElement;}
+ S.sheet=k;S.sheetArg=arg||null;
+ const m=SEC[k];$('#shGroup').textContent=m.g+' · '+m.n;$('#shTitle').textContent=m.t;$('#shPurpose').textContent=m.p;
+ $('#shClose').firstChild.textContent='Back to the '+(KIND[S.piece]?KIND[S.piece].l.toLowerCase():'piece')+' ';
+ const body=$('#shBody');body.onclick=null;body.innerHTML='';body.scrollTop=0;
+ (RENDER[k]||(()=>{}))(body,arg);
+ $('#sheet').classList.add('open');$('#sheet').setAttribute('aria-hidden','false');$('#scrim').classList.add('open');
+ markSection();setTimeout(()=>$('#shClose').focus(),30);
+}
+function closeSheet(silent){
+ if(!S.sheet)return;S.sheet=null;
+ $('#sheet').classList.remove('open');$('#sheet').setAttribute('aria-hidden','true');$('#scrim').classList.remove('open');
+ markSection();
+ if(!silent){$('#docScroll').scrollTop=S.returnScroll;if(S.returnFocus&&S.returnFocus.focus&&document.contains(S.returnFocus))S.returnFocus.focus({preventScroll:true});}
+}
+$('#shClose').onclick=()=>closeSheet();$('#scrim').onclick=()=>closeSheet();
+function jumpTo(piece,anchor){
+ closeSheet(true);
+ const go=()=>{const el=curEl();const t=el.querySelector('[data-p="'+anchor.replace('p','')+'"]')||el.querySelector('#'+CSS.escape(anchor))||el.querySelector('[data-a="'+anchor+'"]');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash');}};
+ if(S.project!=='porcelain'){openProject('porcelain',piece);requestAnimationFrame(go);return;}
+ if(S.piece!==piece)openPiece(piece,go);else{setMode('write');go();}
+}
+
+const RENDER={
+ material(b){
+  b.innerHTML=`<div class="drop" id="drop">${ic('file',22)}<div style="margin-top:6px"><b style="color:var(--ink)">Drop recordings, photos, notes or links here</b></div><div style="font-size:12.5px;margin-top:4px">or <button class="btn" id="pickFiles" style="height:26px;display:inline-flex">choose files</button> — in the prototype they are listed, not stored.</div><input type="file" id="fileIn" multiple hidden></div>
+  <div class="cols"><div><div class="mh" style="margin-top:0">Sort into topics <span style="text-transform:none;letter-spacing:0">drag an item, or tap it then tap a topic</span></div><div class="topics" id="topics"></div></div>
+  <div><div class="mh" style="margin-top:0">Preview</div><div class="box preview" id="matPrev"><p class="dim" style="margin:0">Choose an item to preview it.</p></div>
+  <div class="box" style="margin-top:12px"><h3>Keep or remove review</h3><p class="honest" style="margin:0">Not connected yet — nothing is removed from your Material.</p></div></div></div>`;
+  const draw=()=>{$('#topics').innerHTML=topics.map(([k,l])=>`<div class="topic" data-topic="${k}"><h4>${l}<span class="dim">${material.filter(m=>m.topic===k).length}</span></h4>${material.filter(m=>m.topic===k).map(m=>`<div class="mat${S.pickedMat===m.id?' pick':''}" data-m="${m.id}" tabindex="0"><span class="th">${ic(m.k)}</span><span class="t"><div>${esc(m.t)}</div><div class="dim">${esc(m.s)}</div></span></div>`).join('')}</div>`).join('');};
+  draw();
+  const prev=m=>{$('#matPrev').innerHTML=`<h3>${esc(m.t)}</h3><div style="aspect-ratio:16/9;background:var(--sel);border-radius:8px;display:grid;place-items:center;color:var(--dim)">${ic(m.k,30)}</div><p class="dim" style="font-size:12.5px">${esc(m.s)} · <span class="tag">Sample</span></p>${m.k==='mic'?'<p style="margin:0"><a style="color:var(--warm);cursor:pointer" data-gosrc>Open its transcript in Source</a></p>':''}`;const g=$('[data-gosrc]',$('#matPrev'));if(g)g.onclick=()=>openSheet('source');};
+  const tp=$('#topics');
+  sortable({container:tp,containers:'.topic',item:'.mat',handle:'.mat',onEnd:(it,cont)=>{const m=material.find(x=>x.id===it.dataset.m);if(cont&&m)m.topic=cont.dataset.topic;draw();},onTap:it=>{const m=material.find(x=>x.id===it.dataset.m);S.pickedMat=S.pickedMat===m.id?null:m.id;prev(m);draw();}});
+  tp.addEventListener('click',e=>{const t=e.target.closest('.topic');if(!t||e.target.closest('.mat')||!S.pickedMat)return;material.find(x=>x.id===S.pickedMat).topic=t.dataset.topic;S.pickedMat=null;draw();});
+  const d=$('#drop');d.ondragover=e=>{e.preventDefault();d.classList.add('over');};d.ondragleave=()=>d.classList.remove('over');
+  const add=files=>{Array.from(files).forEach((f,i)=>material.push({id:'f'+Date.now()+i,k:/image/.test(f.type)?'img':/video/.test(f.type)?'vid':/audio/.test(f.type)?'mic':'file',t:f.name,s:'Just added · not stored (prototype)',topic:'unsorted'}));draw();toast('Listed '+files.length+' item(s) · Prototype — nothing is saved');};
+  d.ondrop=e=>{e.preventDefault();d.classList.remove('over');if(e.dataTransfer.files.length)add(e.dataTransfer.files);};
+  $('#pickFiles').onclick=()=>$('#fileIn').click();$('#fileIn').onchange=e=>add(e.target.files);
+ },
+ source(b,line){
+  b.innerHTML=`<div class="player">${ic('play',18)}<div style="min-width:0"><b>Original recording</b> · Conversation with Mei.m4a · 48:10</div><div class="bar"></div><span class="honest">Playback not connected in the prototype</span></div>
+  <p class="dim" style="font-size:13px;margin:0 0 10px">Click any line to correct what was said. Corrections carry into Decisions and every piece.</p><div id="tr"></div>`;
+  const draw=()=>{$('#tr').innerHTML=transcript.map(t=>`<div class="line${t.id===line?' lit':''}" data-t="${t.id}" id="tl-${t.id}"><span class="ts">${t.ts}</span><span class="sp">${t.sp}</span><span class="tx">${t.was?`<span class="was">${esc(t.was)}</span>`:''}${esc(t.tx)}${t.was?' <span class="tag warm">corrected</span>':''}</span></div>`).join('');};
+  draw();
+  if(line)setTimeout(()=>{const el=$('#tl-'+line);if(el)el.scrollIntoView({block:'center'});},60);
+  $('#tr').addEventListener('click',e=>{
+   const l=e.target.closest('.line');if(!l||l.querySelector('textarea'))return;
+   const t=transcript.find(x=>x.id===l.dataset.t);const cell=$('.tx',l);
+   cell.innerHTML=`<textarea rows="2">${esc(t.tx)}</textarea><div class="row" style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><span class="honest">Prototype — nothing is saved</span><button class="btn" data-c>Cancel</button><button class="btn solid" data-s>Save correction</button></div>`;
+   const ta=$('textarea',cell);ta.focus();
+   $('[data-c]',cell).onclick=ev=>{ev.stopPropagation();draw();};
+   $('[data-s]',cell).onclick=ev=>{ev.stopPropagation();const v=ta.value.trim();if(v&&v!==t.tx){if(!t.was)t.was=t.tx;decisions.corrections.unshift({from:t.tx,to:v,by:'Adrian · Source '+t.ts+' · just now'});t.tx=v;toast('Correction recorded in Decisions · Prototype — nothing is saved');}line=t.id;draw();};
+  });
+ },
+ research(b){
+  b.innerHTML=`<div class="cols" style="grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr)"><div><div class="mh" style="margin-top:0">Points</div><div class="plist" id="pl"></div><p class="honest" style="margin-top:12px">Broad AI research is not connected yet. Points here come from your Source and Library.</p></div><div id="pd"></div></div>`;
+  const U={sure:'Sure',unsure:'Unsure',disputed:'Disputed'};
+  const draw=()=>{
+   $('#pl').innerHTML=research.map(r=>`<a data-r="${r.id}" class="${r.id===S.research?'on':''}"><div>${esc(r.q)}</div><div class="u u-${r.u}">● ${U[r.u]} · ${r.ev.length} evidence</div></a>`).join('');
+   const r=research.find(x=>x.id===S.research);
+   $('#pd').innerHTML=`<h3 style="font-size:18px;margin:0 0 10px">${esc(r.q)}</h3>
+   <div style="display:flex;gap:6px;align-items:center;margin-bottom:16px;flex-wrap:wrap"><span class="dim" style="font-size:12.5px">How sure are we?</span><div class="seg" id="useg">${Object.keys(U).map(k=>`<button data-u="${k}" aria-pressed="${r.u===k}">${U[k]}</button>`).join('')}</div></div>
+   <div class="mh">Evidence</div>${r.ev.map(e=>`<div class="ev"><blockquote>“${esc(e.q)}”</blockquote><div class="m">${esc(e.m)}</div></div>`).join('')}
+   <div class="box thread" style="margin-top:16px"><h3>Discuss this point</h3><div id="th">${r.thread.map(m=>`<div class="msg ${m.me?'me':'sys'}">${m.me?'':''}${esc(m.t)}</div>`).join('')||'<p class="dim" style="font-size:13px;margin:0">Ask about this one point only. Your question stays attached to it.</p>'}</div>
+   <div class="inrow"><input id="thIn" placeholder="Ask about this point…"><button class="btn solid" id="thGo">Ask</button></div></div>`;
+   $('#useg').onclick=e=>{const u=e.target.closest('[data-u]');if(u){r.u=u.dataset.u;draw();}};
+   const go=()=>{const v=$('#thIn').value.trim();if(!v)return;r.thread.push({me:true,t:v});r.thread.push({sys:true,t:'AI is not connected yet — your question is kept on this point.'});draw();};
+   $('#thGo').onclick=go;$('#thIn').onkeydown=e=>{if(e.key==='Enter')go();};
+  };
+  draw();$('#pl').onclick=e=>{const a=e.target.closest('[data-r]');if(a){S.research=a.dataset.r;draw();}};
+ },
+ direction(b){
+  b.innerHTML=`<div style="max-width:760px"><div class="mine-box"><div class="mh" style="margin-top:0">In your own words</div><textarea id="dirTx">I don’t want this to be about an old craft. It’s about a woman who looks closely at things people almost threw away. The cup isn’t fixed, it’s finished. Quiet, present tense, end on the tea.</textarea><div style="display:flex;justify-content:flex-end;margin-top:6px"><span class="honest">Prototype — nothing is saved</span></div></div>
+  <div class="mh">Chosen direction</div><p contenteditable="true" style="font-size:16px;margin:0 0 6px;outline:none;border-bottom:1px solid var(--line);padding-bottom:6px">A close portrait of attention: the mended cup as something finished, not fixed.</p>
+  <div class="prov"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>Claude’s interpretation</b><span class="tag warm">Provisional</span><span class="tag">Sample · written 3 days ago, not regenerated</span></div>
+  <p>Three possible angles: (1) Mei’s way of looking as the subject; (2) repair as a record — the crack as history; (3) the tea at the end as proof the cup works.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn solid" id="adopt">Adopt angle 1 into my words</button><button class="btn" id="reject3">Reject angle 2</button></div></div>
+  <div class="mh">Carries forward</div><p class="dim" style="font-size:13px;margin:0">${decisions.made.length} decisions · ${decisions.protectedP.length} protected phrases · ${decisions.rejected.length} rejected angles — see the margin’s Decisions tab.</p></div>`;
+  $('#adopt').onclick=()=>{const t=$('#dirTx');t.value+='\n\n[Adopted from Claude] Mei’s way of looking is the subject.';t.focus();toast('Added to your words — now yours to rewrite');};
+  $('#reject3').onclick=e=>{if(!decisions.rejected.some(d=>d.w.startsWith('Repair as a record'))){decisions.rejected.push({w:'Repair as a record — the crack as history',by:'Adrian · Direction · just now'});renderMargin();}e.target.disabled=true;e.target.textContent='Rejected — in Decisions';};
+ },
+ check(b){
+  const art=pieceEls['porcelain:article']||(pieceEls['porcelain:article']=(()=>{const e=articleEl();wirePiece(e);return e;})());
+  const txt=art.innerText;const rows=[];
+  decisions.protectedP.forEach(d=>rows.push([txt.includes(d.w),'Protected phrase “'+d.w+'”',txt.includes(d.w)?'Intact in the article.':'Changed or missing in the article.']));
+  rows.push([!/1996/.test(txt),'Correction 1996 → 1998','The article uses '+(/1996/.test(txt)?'1996 — fix it.':'1998.')]);
+  const open=(notes.article||[]).filter(n=>n.kind==='agent').length;rows.push([open===0,'Agent notes still open',open+' on the article — read them in the margin.']);
+  rows.push([!$('.leftoff',art),'Your own next step','“Tighten the ending” — '+($('.leftoff',art)?'still marked.':'marker dismissed.')]);
+  rows.push([false,'Fact check of dates and names','Not connected yet — check by hand against Source.']);
+  b.innerHTML=`<p class="dim" style="margin:0 0 12px;font-size:13px">Worked out from the article as it is now — edit it and reopen Check to see it change.</p>`+rows.map(r=>`<div class="chk"><span class="s ${r[0]?'ok':'warn'}">${r[0]?'Fine':'Look'}</span><div><div>${esc(r[1])}</div><div class="dim" style="font-size:12.5px">${esc(r[2])}</div></div></div>`).join('');
+ },
+ media(b){
+  b.innerHTML=`<div class="grid">${media.map(m=>`<div class="asset"><div class="pic">${ic(m.k,30)}${m.d?`<span class="dur">${m.d}</span>`:''}</div><div class="cap"><div>${esc(m.t)} <span class="tag">Sample</span></div><div class="used">${m.used.length?'Used in: '+m.used.map(u=>`<a data-mp="${u[1]}" data-ma="${u[2]}">${esc(u[0])}</a>`).join(''):'<span>Not used yet</span>'}</div></div></div>`).join('')}</div>`;
+  b.onclick=e=>{const a=e.target.closest('[data-mp]');if(!a)return;if(a.dataset.mp==='source'){openSheet('source',a.dataset.ma);return;}jumpTo(a.dataset.mp,a.dataset.ma);};
+ },
+ arrange(b){
+  const el=curEl();
+  b.innerHTML=`<p class="dim" style="margin:0 0 12px;font-size:13px">Composing the ${KIND[S.piece].l.toLowerCase()}: drag the parts into a new order. The document behind follows.</p><div id="arrL"></div>`;
+  const draw=()=>{$('#arrL').innerHTML=$$('[data-block]',el).map(x=>{const h=$('h2',x)||$('.hd',x);const words=x.innerText.trim().split(/\s+/).length;return `<div class="arr" data-id="${x.id}"><button class="handle" aria-label="Drag to reorder">${ic('grip')}</button><span>${esc((h?h.innerText:x.dataset.title).trim())}</span><span class="x">${words} words</span></div>`;}).join('');};
+  draw();
+  sortable({container:$('#arrL'),item:'.arr',handle:'.handle',onEnd:()=>{const ids=$$('#arrL .arr').map(a=>a.dataset.id);const blocks=ids.map(id=>el.querySelector('#'+CSS.escape(id)));const parent=blocks[0].parentNode;blocks.forEach(x=>parent.appendChild(x));const strip=$('#strip',el);if(strip)renumberSlides(strip);renderOutline();toast('Order changed · Prototype — nothing is saved');}});
+ },
+ audience(b){
+  const el=curEl();const clone=el.cloneNode(true);
+  $$('[contenteditable]',clone).forEach(x=>x.removeAttribute('contenteditable'));$$('.leftoff,.reading-bar,.doc-meta,.drop-hint,.handle,.no',clone).forEach(x=>x.remove());
+  const isCar=S.piece==='carousel';
+  if(isCar){const st=$('#strip',clone);st.className='swipe';}
+  $$('[id]',clone).forEach(x=>x.removeAttribute('id'));
+  const html=clone.innerHTML;
+  b.innerHTML=`<p class="dim" style="margin:0 0 14px;font-size:13px">No margin, no marks — what a reader gets. ${isCar?'Swipe the phone frame like Instagram.':'Phone and web side by side.'}</p><div class="frames"><div class="phone"><div class="scr rv">${html}</div></div>${isCar?'':`<div class="webf"><div class="bar">teajia.com/magazine · preview</div><div class="scr rv">${html}</div></div>`}</div>`;
+ },
+ share(b){
+  b.innerHTML=`<div class="box" style="max-width:620px"><h3>Read-only link</h3><p class="dim" style="font-size:13px;margin:0 0 10px">Someone can read the ${KIND[S.piece].l.toLowerCase()} and leave comments in a margin of their own.</p><button class="btn solid" id="mk">Make a link</button> <span id="mkS"></span></div>
+  <div class="box" style="max-width:620px;margin-top:12px"><h3>To Claude or Codex</h3><p class="dim" style="font-size:13px;margin:0">They already see the same records — no sharing step needed. Their notes arrive in the margin with their name.</p></div>`;
+  $('#mk').onclick=()=>{$('#mkS').innerHTML='<span class="honest">Not connected yet — no link was made.</span>';};
+ },
+ outputs(b){
+  const O={article:[['Magazine page','Teajia magazine layout'],['Markdown','Plain text with headings'],['PDF','Print, A4']],carousel:[['6 images','1080 × 1350 PNG, one per slide'],['Caption','Text for the post']],listing:[['Shop listing','Fields for the product page'],['Plain text','Copy to anywhere']]}[S.piece]||[['Text','Plain text']];
+  b.innerHTML=O.map((o,i)=>`<div class="out"><div class="t"><div>${o[0]}</div><div>${o[1]} · never exported</div></div><span data-st="${i}"></span><button class="btn solid" data-ex="${i}">Export</button></div>`).join('')+`<p class="dim" style="font-size:12.5px">Export makes files. Seeing it as a reader is <a data-open="audience" style="color:var(--warm);cursor:pointer">Audience</a>; changing the order is <a data-open="arrange" style="color:var(--warm);cursor:pointer">Arrange</a>.</p>`;
+  b.onclick=e=>{const x=e.target.closest('[data-ex]');if(x){$('[data-st="'+x.dataset.ex+'"]',b).innerHTML='<span class="honest">Prototype — nothing is exported</span>';return;}const o=e.target.closest('[data-open]');if(o)openSheet(o.dataset.open);};
+ }
+};
+
+/* ================= DRAG & DROP (pointer, works with touch) ================= */
+function sortable(o){
+ o.container.addEventListener('pointerdown',e=>{
+  const h=e.target.closest(o.handle);if(!h||e.button>0)return;
+  const it=h.closest(o.item);if(!it||!o.container.contains(it))return;
+  const sx=e.clientX,sy=e.clientY;let moved=false;
+  const mv=ev=>{
+   if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)<6)return;
+   if(!moved){moved=true;it.classList.add('dragging');it.style.pointerEvents='none';}
+   ev.preventDefault();
+   let parent=it.parentNode;
+   if(o.containers){const under=document.elementFromPoint(ev.clientX,ev.clientY);const c=under&&under.closest(o.containers);$$(o.containers,o.container).forEach(x=>x.classList.toggle('over',x===c));if(c)parent=c;}
+   const sibs=$$(o.item,parent).filter(x=>x!==it&&x.parentNode===parent);
+   let before=null;for(const s of sibs){const r=s.getBoundingClientRect();if(ev.clientY<r.top+r.height/2){before=s;break;}}
+   if(before)parent.insertBefore(it,before);else parent.appendChild(it);
+   const sc=it.closest('#docScroll,#shBody');if(sc){const r=sc.getBoundingClientRect();if(ev.clientY<r.top+40)sc.scrollTop-=12;else if(ev.clientY>r.bottom-40)sc.scrollTop+=12;}
+  };
+  const up=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+   if(moved){it.classList.remove('dragging');it.style.pointerEvents='';let c=null;if(o.containers){c=it.closest(o.containers);$$(o.containers,o.container).forEach(x=>x.classList.remove('over'));}o.onEnd&&o.onEnd(it,c);}
+   else if(o.onTap)o.onTap(it);};
+  document.addEventListener('pointermove',mv,{passive:false});document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);
+ });
+}
+
+/* ================= KEYS ================= */
+document.addEventListener('keydown',e=>{
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#palWrap').classList.contains('open')?closePalette():openPalette();return;}
+ if(e.key==='Escape'){
+  if($('#palWrap').classList.contains('open')){closePalette();$('#projBtn').focus();}
+  else if(S.sheet)closeSheet();
+  else if(S.composer){S.composer=null;renderMargin();}
+  else if(document.body.classList.contains('rail-open'))document.body.classList.remove('rail-open');
+  else if(document.body.classList.contains('msheet-open'))document.body.classList.remove('msheet-open');
+ }
+});
+
+/* ================= BOOT ================= */
+paintIcons();renderSections();
+openPiece('article',()=>scrollToLeftOff());
+})();
+</script>
+</body>
+</html>
