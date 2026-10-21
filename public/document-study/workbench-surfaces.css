@@ -206,3 +206,129 @@ html body.wbf-on #app #workspace.wb-research #material-human-direction.wb-shared
 #workspace.wb-research:has(.wb-shared-research) .c3-empty{border:0!important;min-height:0!important;padding:0!important;margin-bottom:16px!important}
 /* The compact action summary fits its owned 44px slot, including its border. */
 .wb-outputs .oo-more>summary{box-sizing:border-box!important;max-width:100%;overflow:hidden}
+/* Section parity: use the prototype's uninterrupted Source, point list, angle cards,
+   narrow invitation, audience page/phone and two-line output branches. */
+#workspace.wb-source .material-heading{display:none}
+#workspace.wb-source .material-layout{max-width:calc(var(--measure,40rem) + 10rem);padding:0}
+#workspace.wb-source .material-index{margin:0 0 14px;padding:0;border:0}
+#workspace.wb-source .material-document{margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+#workspace.wb-source .material-document>header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+#workspace.wb-source .material-document>header h3{font-size:var(--t-head);font-weight:500;margin:0}
+#workspace.wb-source .material-document>header .small{font-size:var(--t-label);color:var(--dim)}
+#workspace.wb-source .material-reading>.material-document>.recordBody,#workspace.wb-source .material-reading .flow-transcript .flow-prose{max-height:none;overflow:visible;overscroll-behavior:auto;padding:0;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--t-body);line-height:1.65}
+#workspace.wb-source .material-reading .recordBody :is(p,blockquote){margin:0 0 .9em;padding-left:0;border:0;background:none}
+#workspace.wb-source .wb-source-secondary{border:0;border-top:1px solid var(--line);margin:18px 0 0;padding:0;background:none;border-radius:0}
+#workspace.wb-source .wb-source-secondary>summary{font-size:var(--t-label);font-weight:500;color:var(--dim);padding:10px 0;cursor:pointer}
+#workspace.wb-source .wb-source-secondary :is(.sws-secondary,.material-author,.material-readiness){background:none;border:0;border-radius:0;box-shadow:none;margin:0;padding:8px 0}
+#workspace.wb-source .wb-source-secondary .material-tools{border:0}
+#workspace.wb-source .source-reader-title{margin:0 0 14px}
+#workspace.wb-source .source-reader-toolbar{margin:0 0 14px}
+#workspace.wb-source .source-reader-selector{font-size:var(--t-label);color:var(--dim)}
+#workspace.wb-research .rsplit{min-height:min(620px,calc(100dvh - 180px));align-items:stretch}
+#workspace.wb-research .rpts{max-height:calc(100dvh - 180px);overflow:auto;min-height:0}
+#workspace.wb-research .rpts>.rh{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:var(--t-label);font-weight:400;color:var(--dim)}
+#workspace.wb-research .rp{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:center;padding:7px 12px 7px 8px;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);list-style:none}
+#workspace.wb-research .rp::-webkit-details-marker{display:none}
+#workspace.wb-research .rp>.n{font-size:var(--t-label);color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+#workspace.wb-research .rp>.cl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--t-body);font-weight:400;line-height:1.5}
+#workspace.wb-research .wb-point[open]>.rp>.cl{white-space:normal}
+#workspace.wb-research .rpd{padding:10px 12px 16px}
+#workspace.wb-research .wb-evidence{margin:10px 0;border:1px solid var(--line);border-radius:9px;background:var(--paper);padding:9px 11px}
+#workspace.wb-research .wb-evidence .research-standard-label{margin-bottom:6px}
+#workspace.wb-research .wb-evidence .src{font-size:var(--t-label);color:var(--dim);margin:6px 0 0}
+#workspace.wb-research .rpd>.acts:last-child{margin-top:10px}
+#workspace.wb-research .cons .ch{padding:8px 12px;gap:8px;align-items:center}
+#workspace.wb-research .cons .tag{border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:var(--t-label);font-weight:400;color:var(--dim)}
+#workspace.wb-research .clog{max-height:none;min-height:0}
+#workspace.wb-research .cin>label{font-size:var(--t-label)}
+#workspace.wb-research .cin input{height:42px}
+#workspace.wb-research .cin>button{border:0;background:none;color:var(--dim)}
+#workspace.wb-direction .angles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:14px;margin:10px 0 0;max-width:calc(var(--measure,40rem) + 16rem)}
+#workspace.wb-direction .angles>.angle{border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--paper);box-shadow:none;margin:0;min-width:0}
+#workspace.wb-direction .angle.chosen{border-color:var(--warm);box-shadow:inset 0 0 0 1px var(--warm)}
+#workspace.wb-direction .angle h3{font-size:var(--t-head);font-weight:600;line-height:1.5;margin:0 0 6px}
+#workspace.wb-direction .angle .flow-prose{font-size:var(--t-body);font-family:inherit;line-height:1.5;color:var(--dim);margin:0 0 12px;padding:0;border:0;background:none;max-height:none;overflow:visible}
+#workspace.wb-direction .angle .flow-prose p{margin:0 0 8px}
+#workspace.wb-direction .angle .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:var(--t-label)}
+#workspace.wb-direction .angle .foot .small{font-size:var(--t-label);color:var(--dim)}
+#workspace.wb-direction .human-direction-words{max-width:var(--measure,40rem)}
+#workspace.wb-direction .human-direction-words textarea{min-height:90px}
+#workspace.wb-direction .human-direction-edit>summary{margin-bottom:4px;min-height:30px}
+#workspace.wb-direction .source-continuation{margin:0;padding:0;border:0;border-radius:0}
+#workspace.wb-direction :is(.flow-map-verdict,.flow-existing,.dwt-context){background:none;border:0;border-radius:0;box-shadow:none}
+#workspace.wb-direction .recordedDirection{margin-top:20px}
+#workspace.wb-share .wb-invitation{max-width:var(--measure,40rem)}
+#workspace.wb-share .wb-invitation>.mine{margin:12px 0;max-width:var(--measure,40rem);font-size:var(--t-label);font-weight:500}
+#workspace.wb-share .wb-invitation>.mine textarea{min-height:90px}
+#workspace.wb-share .wb-invitation>.oss-muted{font-size:var(--t-label);font-weight:400;margin:0 0 12px}
+#workspace.wb-share .wb-correspondence{max-width:var(--measure,40rem);background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:0;box-shadow:none}
+#workspace.wb-share .oss-field-row{margin:0}
+/* Read-only audience artwork keeps its original renderer and native ResizeObserver. */
+#workspace.wb-audience [data-oss-reader] .phone{width:320px;max-width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:28px;padding:14px 10px 18px;background:var(--rail);overflow:hidden}
+#workspace.wb-audience [data-oss-reader] .phone>.swipe{display:flex;grid-template-columns:none;gap:0;margin:0;padding:0;border-radius:6px;overflow-x:auto;scroll-snap-type:x mandatory;align-items:start}
+#workspace.wb-audience [data-oss-reader] .swipe>.oss-slide{flex:0 0 100%;min-width:0;width:100%;aspect-ratio:4/5;margin:0;padding:0;border:0;scroll-snap-align:start;background:var(--paper);overflow:hidden}
+#workspace.wb-audience [data-oss-reader] .swipe .car-artboard-slot{width:100%;height:100%;aspect-ratio:4/5;min-width:0;min-height:0;padding:0;align-items:start;justify-content:start;background:none}
+#workspace.wb-audience .phone>.cap2{font-size:var(--t-label);line-height:1.5;font-family:inherit;max-width:100%;padding:10px 6px 0;margin:0}
+#workspace.wb-audience .phone>.cap2 h3{font-size:var(--t-label);margin:0 0 4px}
+#workspace.wb-audience [data-oss-reader] .page{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:28px 32px;max-width:calc(var(--measure,40rem) + 4rem);margin:0}
+#workspace.wb-audience .oss-review-tools{padding-top:8px;border-top:1px solid var(--line)}
+#workspace.wb-audience .oss-readiness{border:0;margin:0 0 18px;padding:0}
+/* The real register becomes the approved origin-and-branches structure. */
+#workspace.wb-outputs #output-overview{padding:0!important;margin:0 32px 32px!important}
+#workspace.wb-outputs .oo-panel{overflow:visible}
+#workspace.wb-outputs .oo-columns{display:none}
+#workspace.wb-outputs .oo-register{margin:0 0 0 26px;padding:0;border-left:1px solid var(--line);max-width:calc(var(--measure,40rem) + 14rem)}
+#workspace.wb-outputs .oo-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:12px 0 12px 22px!important;border-top:0;border-bottom:1px solid var(--line);min-width:0}
+#workspace.wb-outputs .oo-identity{grid-column:1;grid-row:1;margin:0;padding:0}
+#workspace.wb-outputs .oo-identity h3{margin:0;font-size:var(--t-body);font-weight:600;line-height:1.5}
+#workspace.wb-outputs .oo-title{min-height:24px;padding:0;line-height:1.5;background:none;font-size:var(--t-body);font-weight:600}
+#workspace.wb-outputs .oo-actions{grid-column:2;grid-row:1/3;display:flex;align-items:center;gap:8px;position:relative;min-width:0}
+#workspace.wb-outputs .oo-actions>.oo-action{flex:0 1 auto;min-height:30px!important;border:0;background:none;color:var(--warm);font-size:var(--t-label)!important;font-weight:500;padding:0!important}
+#workspace.wb-outputs .wb-output-facts{grid-column:1;grid-row:2;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;font-size:var(--t-label);line-height:1.5;color:var(--dim);min-width:0}
+#workspace.wb-outputs .wb-output-facts :is(.oo-meta,.oo-state,.oo-delivery){display:inline-flex;align-items:baseline;gap:6px;grid-area:auto;margin:0;padding:0;font-size:var(--t-label);font-weight:400;line-height:1.5;color:var(--dim);opacity:1;max-width:100%}
+#workspace.wb-outputs .wb-output-facts :is(strong,.oo-detail,.oo-delivery-line){font-size:var(--t-label);font-weight:400;line-height:1.5;color:var(--dim);opacity:1}
+#workspace.wb-outputs .oo-more{flex:0 0 auto}
+#workspace.wb-outputs .oo-more>summary{font-size:var(--t-label);min-height:30px;padding:0 4px}
+#workspace.wb-outputs .origin{padding:14px 16px;align-items:center;gap:12px;max-width:calc(var(--measure,40rem) + 16rem);margin-bottom:0}
+#workspace.wb-outputs .origin>strong{font-size:var(--t-body);font-weight:500}
+@media(max-width:1000px){#workspace.wb-research .rpts{max-height:none}#workspace.wb-research .cons{min-height:360px}#workspace.wb-research .clog{min-height:240px;max-height:360px}}
+@media(max-width:650px){#workspace.wb-outputs #output-overview{margin-left:16px!important;margin-right:16px!important}#workspace.wb-outputs .oo-register{margin-left:10px}#workspace.wb-outputs .oo-row{padding-left:18px!important;grid-template-columns:minmax(0,1fr) auto}#workspace.wb-outputs .oo-actions{flex-direction:column;gap:4px;align-items:end}#workspace.wb-outputs .oo-title{white-space:normal}#workspace.wb-audience [data-oss-reader] .page{padding:20px 18px}}
+/* The prototype keeps Research in the available work height and stacks at 760px. */
+#workspace.wb-research .rsplit{height:calc(100dvh - 142px);min-height:360px;grid-template-columns:minmax(17rem,26rem) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+#workspace.wb-research .rpts{max-height:none;min-height:0;overflow:auto;border-right:1px solid var(--line);border-bottom:0}
+#workspace.wb-research .cons{min-height:0}
+#workspace.wb-research .clog{min-height:0;max-height:none}
+#workspace.wb-research .rh{flex-wrap:wrap}
+#workspace.wb-research .rh>.research-standard-heading{display:flex!important;align-items:baseline;gap:6px 10px;margin:0;padding:0;border:0;background:none;font-size:var(--t-label);flex:1 1 100%}
+#workspace.wb-research .rh>.research-standard-heading h1{display:none}
+#workspace.wb-research .rh>.research-standard-heading p{font-size:var(--t-label);margin:0;color:var(--dim)}
+#workspace.wb-research .rh>.research-standard-heading label{font-size:var(--t-label)}
+@media(max-width:760px){#workspace.wb-research .rsplit{height:calc(100dvh - 194px);grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,38%) minmax(0,1fr)}#workspace.wb-research .rpts{border-right:0;border-bottom:1px solid var(--line)}#workspace.wb-research .cons{min-height:0}#workspace.wb-research .clog{min-height:0;max-height:none}}
+/* Approved controls with no saved mutation owner remain visibly unavailable. */
+#workspace.wb-source .wb-bilingual{margin-left:auto}
+#workspace.wb-section-surface :is(.wb-bilingual,.wb-certainty button,.wb-share-link button):disabled{opacity:.55;cursor:default}
+#workspace.wb-source .tline{grid-template-columns:48px 64px minmax(0,1fr);gap:10px}
+#workspace.wb-source .tline>.tm{grid-column:1;grid-row:1;font-size:var(--t-label);color:var(--dim);font-variant-numeric:tabular-nums}
+#workspace.wb-source .tline>.who{grid-column:2;grid-row:1}
+#workspace.wb-source .tline>:not(.tm):not(.who){grid-column:3}
+#workspace.wb-research .wb-certainty{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap;margin:0 0 10px}
+#workspace.wb-research .wb-certainty button{padding:6px 11px;font-size:var(--t-label);font-weight:400;color:var(--dim);background:none;border:0;border-right:1px solid var(--line);border-radius:0;min-height:32px}
+#workspace.wb-research .wb-certainty button:last-child{border-right:0}
+#workspace.wb-share .wb-share-link{margin:12px 0}
+#workspace.wb-share .wb-share-link button{min-height:34px;padding:0 12px;border:1px solid var(--warm);border-radius:7px;font-size:var(--t-label);font-weight:600;background:var(--warm);color:var(--bg)}
+@media(max-width:650px){#workspace.wb-source .tline{grid-template-columns:32px 52px minmax(0,1fr);gap:8px}}
+/* A missing session-editing capability does not displace the real retained source.
+   The original reader's visible error and Refresh stay mounted together. */
+#workspace.wb-source .material-surface.wb-source-retained-leading{display:flex;flex-direction:column}
+#workspace.wb-source .wb-source-retained-leading>.material-layout{order:1}
+#workspace.wb-source .wb-source-retained-leading>.source-reader{order:2;display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin:18px 0 0;padding:10px 0;border-top:1px solid var(--line);background:none;box-shadow:none}
+#workspace.wb-source .wb-source-retained-leading>.source-reader>[data-source-reader-status]{order:0;flex:1 1 280px;margin:0;font-size:var(--t-label);line-height:1.5;color:var(--dim)}
+#workspace.wb-source .wb-source-retained-leading>.source-reader>.source-reader-toolbar{order:1;flex:0 1 auto;margin:0}
+#workspace.wb-source .wb-source-retained-leading>.wb-source-more{order:3}
+#workspace.wb-source .wb-source-retained-leading>.wb-source-secondary{order:4}
+#workspace.wb-source .wb-source-retained-leading>.material-boundary{order:5}
+#workspace.wb-source .wb-source-duplicate-title{display:none!important}
+/* Override older C3 filled disclosure bars with the prototype's quiet tool links. */
+html body.c3-tabs #app #workspace.wb-source :is(.sws-secondary,.sws-tool,.flow-details,.source-reader-details,.wb-source-more,.wb-source-secondary)>summary{display:list-item;width:auto;min-height:30px;padding:6px 0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim);cursor:pointer}
+html body.c3-tabs #app #workspace.wb-source :is(.sws-secondary,.sws-tool,.flow-details,.source-reader-details,.wb-source-more,.wb-source-secondary){border-left:0;border-right:0;border-bottom:0;border-radius:0;background:none;box-shadow:none}
+#workspace.wb-source .wb-source-retained-leading .material-reading>.material-document{padding-bottom:0}

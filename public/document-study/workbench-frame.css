@@ -176,3 +176,58 @@ html body.wbf-on #c3-tabstrip .wbf-top-actions .sizer .tbtn{height:30px!importan
 html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:46px;padding:4px 0;border:0;border-radius:6px;background:transparent;color:var(--dim);font:400 var(--t-label)/1.3 var(--ar-ui);cursor:pointer}
 html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces:hover{background:var(--sel);color:var(--ink)}
 html body.wbf-on .workflowNavigation.wb-rail .wbf-pieces svg{width:18px;height:18px}
+/* Exact prototype header details; preserve the maintained switcher's real menu. */
+html body.wbf-on #c3-tabstrip .ht-switch>summary>.wbf-project-dot{width:9px;height:9px;flex:none;border-radius:2px;background:var(--warm)}
+html body.wbf-on #c3-tabstrip .ht-switch>summary>svg:first-of-type{display:none!important}
+html body.wbf-on #c3-tabstrip .ht-switch>summary>kbd{margin-left:2px}
+html body.wbf-on #c3-tabstrip .ht-switch>summary:hover{background:var(--sel)!important}
+html body.wbf-on #wbf-document-actions{display:flex;align-items:center;gap:8px;order:4}
+html body.wbf-on #c3-surface-bar .sb-morew{order:5}
+html body.wbf-on #c3-surface-bar #wbf-tools{order:1}
+html body.wbf-on #c3-surface-bar .sb-focus{order:2}
+html body.wbf-on #c3-surface-bar .sb-sep{display:none!important}
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #c3-surface-bar .sb-right>:is(.sb-pw,.sb-icon[aria-label="Undo"]){display:none!important}
+html body.wbf-on #c3-surface-bar .sb-menu [data-wbf-menu]{display:flex!important}
+html body.wbf-on #c3-surface-bar .sb-cp-name{font:600 var(--t-title)/1.5 var(--ar-ui)!important}
+html body.wbf-on #c3-surface-bar .sb-status[data-tone="ok"]{display:none!important}
+html body.wbf-on #app #workspace .desk>#margin{padding-top:67px!important}
+html body.wbf-on #app #workspace .desk :is(.wbf-doc-by){margin-bottom:20px!important}
+@media(max-width:900px){html body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important}html body.wbf-on #app #workspace .desk>#margin{grid-row:2;padding-top:3px!important}}
+@media(max-width:760px){html body.wbf-on #c3-tabstrip .ht-switch>summary>.lbl-wide{display:none!important}html body.wbf-on #wbf-document-actions .wbf-word-count{display:none}html body.wbf-on #wbf-drawer{width:100vw;border-left:0}}
+
+/* The approved edge handle opens the same understanding owner as the header. */
+#wbf-pull{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:20;width:22px;height:72px;border:1px solid var(--line);border-right:0;border-radius:8px 0 0 8px;background:var(--rail);color:var(--dim);display:grid;place-items:center;cursor:pointer}
+#wbf-pull svg{transform:rotate(180deg)}
+#wbf-pull:hover{color:var(--ink);width:26px}
+body.wbf-drawer-open #wbf-pull,body.c3-focus #wbf-pull{display:none}
+@media(max-width:760px){#wbf-pull{display:none}}
+/* Earlier inspector rules must not place the margin in a second grid row. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .desk>.document{grid-column:1!important;grid-row:1!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .desk>#margin{grid-column:2!important;grid-row:1!important;padding:67px 0 0!important;align-self:start!important}
+html[data-draft-focus="true"] body.wbf-on #wbf-pull,body.wbf-on[data-draft-focus="true"] #wbf-pull{display:none}
+@media(max-width:900px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .desk>#margin{grid-column:1!important;grid-row:2!important;padding:3px 0 0!important}}
+/* One compact action row keeps Read and Write at the same vertical origin on phones. */
+@media(max-width:760px){
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;min-height:67px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar>.sb-right{width:100%!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:4px!important;min-height:36px!important}
+html body.wbf-on #wbf-tools{gap:2px!important}
+html body.wbf-on #wbf-tools>.btn{font-size:0!important;width:30px!important;min-width:30px!important;padding:0!important;gap:0!important}
+html body.wbf-on #wbf-tools>.btn svg{width:16px!important;height:16px!important}
+html body.wbf-on #c3-surface-bar .sb-focus{font-size:0!important;width:30px!important;min-width:30px!important;padding:0!important;gap:0!important}
+html body.wbf-on #wbf-document-actions{gap:4px!important}
+html body.wbf-on #wbf-document-actions>.btn{padding:0 7px!important}
+}
+
+/* Check uses the same dismissible tool drawer, retaining its saved-revision owner. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-manuscript{margin-right:0!important}
+html body.wbf-on #wbf-drawer .wn-check-findings{position:static!important;inset:auto!important;width:auto!important;padding:0!important;border:0!important;overflow:visible!important;background:none!important}
+html body.wbf-on #wbf-drawer .wn-check-findings :is(.phaseReader,.recordPage){padding:0!important;margin:0!important;max-width:none!important;background:none!important;border:0!important;box-shadow:none!important}
+html body.wbf-on #wbf-drawer .wn-check-findings :is(h1,h2,h3,h4){font:600 var(--t-head)/1.5 var(--ar-ui)!important}
+html body.wbf-on #wbf-drawer .wn-check-findings :is(p,button,summary,label,li){font-size:var(--t-label)!important;line-height:1.5!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{display:none!important}
+html body.wbf-on #wbf-drawer .wn-check-findings{display:block!important}
+/* Drawer and loading/detail states use the same approved type tokens. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #wbf-drawer :is(.small,.draft-check-status>span){font-size:var(--t-label)!important;line-height:1.5!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace:is(.wb-share,.wb-outputs) :is(.oss-loading,.oss-muted,.oo-detail-body) :is(p,strong,span){font-size:var(--t-label)!important;line-height:1.5!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #workspace.wb-share [data-output-stage-surface="11"]>p{font-size:var(--t-label)!important;line-height:1.5!important}
+html[data-draft-focus="true"] body.wbf-on #wbf-drawer,body.wbf-on[data-draft-focus="true"] #wbf-drawer{display:none!important}

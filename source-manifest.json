@@ -1561,7 +1561,7 @@
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.tsx",
       "sourceSha256": "3c86ca3f393d32963210ac38860877364dda6057c84f1c3ebb37fde111447c59",
-      "candidateSha256": "a89fab4c899a434cd0c2c101c7bf0dd1750564e6148264f4536687bff73e8df8",
+      "candidateSha256": "2c67fbeced9114662860c3836016d1216ccc2a1e505aa8ff270f9a85289e9ea0",
       "adapted": false
     },
     {
@@ -1669,7 +1669,7 @@
     {
       "path": "runtime/src/workspaces/carousel-workbench.css",
       "sourceSha256": "c6460a340fd2a7601d76645b8dbeca5c8b490285ecff09a3632968ee3befc4b7",
-      "candidateSha256": "e9b254e8e5751c88999a9f9171516ac3466ae2846262f2ce5a4e3e0832daaeb4",
+      "candidateSha256": "f4e9013a0c7788865b76f4f2d682bf41435207015cfae06c3a4977f445eadd43",
       "adapted": false
     },
     {
@@ -2017,7 +2017,7 @@
     {
       "path": "public/document-study/project-library.js",
       "sourceSha256": "e30cde6913de87fa40252a712c5970f576b490941a7c2fc609c74ce66841052a",
-      "candidateSha256": "d7f1e603f02444cf05f6525ec111230a8554055506a1bb60657f244c1aeae9ed",
+      "candidateSha256": "0941a7946fd69bc06087307f1085c862ffc4bc9199075925de42c01a05899aaa",
       "adapted": true
     },
     {
@@ -2569,7 +2569,7 @@
     },
     {
       "path": "public/document-study/home-tabs.js",
-      "candidateSha256": "59e10805ead0e94c56a20cb31db19072ac327cf6d6bfaf53a02e320d10c4ac8c"
+      "candidateSha256": "c8b86eea5637aa1e84240ffcd736c2c4bcafb3dda814bce5b592c06b1fed5099"
     },
     {
       "path": "public/document-study/home-tabs.test.mjs",
@@ -3469,31 +3469,31 @@
     },
     {
       "path": "public/document-study/workbench-frame.css",
-      "candidateSha256": "42b92ba31c493ceedff22652f0ea0638fc5f0d725fdc7888f921bcc3d43195d8"
+      "candidateSha256": "55d777ea3125477ec32f05c91de51c2394763ec1f939a0041cc6adff33d447f6"
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "b4265c125539130d7b891f569a23ee67a60fe8c65705ab31430b73917d46dee2"
+      "candidateSha256": "9a8a42571df6b799c6dd95905e4b71feb11d6fe5a5dffe298765d7dc843b3107"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
-      "candidateSha256": "b8ccd8dd1838019b9ce3c84c662c75c5d58d25a810591a8b131bee31e7bb0380"
+      "candidateSha256": "702a73b40df01fd67b13b17cab0502814d66e3a15478bb85f2da71b819f43cf2"
     },
     {
       "path": "public/document-study/workbench-surfaces.js",
-      "candidateSha256": "59459776f56eaed539ed3996ec444bf8e90460b5625669fcc698737482b8c3bf"
+      "candidateSha256": "9d7a9dd456a9650237b4f0ac8c1143d51b93f89b8b3cc810ae579efc99508a4d"
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.test.mjs",
-      "candidateSha256": "0755350fe88b85a92cce992cba6695393a988e80456ea93f7bc2535c53423457"
+      "candidateSha256": "d1781cd409e4bc106f700862e3a9b4c1fb3a0e03f88259f03950cc9eb6530982"
     },
     {
       "path": "tests/workbench-frame.test.mjs",
-      "candidateSha256": "ce09bcc055cf4f4b9808869d0c8e2b226cf18eb10d408066ea2462d74f756e56"
+      "candidateSha256": "4685f3fe0b63d601d32cdb27fc838e8eafb918adf7d223b5648b0b69a168c14f"
     },
     {
       "path": "tests/workbench-surfaces.test.mjs",
-      "candidateSha256": "28cb217a02618220d28d25f4a72f1d432461ca60d16f7d885e672ec4ad9c5027"
+      "candidateSha256": "99fe36c571ae4a8b358c891809ab3c57842d1780ae48e4c5a940c10778148f7a"
     },
     {
       "path": "docs/verification/workbench-full/control-states.json",
@@ -3506,6 +3506,14 @@
     {
       "path": "docs/verification/workbench-full/navigation-preservation.json",
       "candidateSha256": "76df74b8f550d5494f4f883447758dda3be724d7beca710b7a1c63be4e27e3c2"
+    },
+    {
+      "path": "docs/verification/workbench-full/GOAL-CURRENT.md",
+      "candidateSha256": "36bcf6cd82e36615cdb110b28db36e542a11429a61f8ebbd51403959ddeb82cd"
+    },
+    {
+      "path": "tests/workbench-finder.test.mjs",
+      "candidateSha256": "e8cc14a96dc1130edd6a48856aac8294bb66a697f40dc424c86be11581d53e52"
     }
   ],
   "dependencyRepair": {

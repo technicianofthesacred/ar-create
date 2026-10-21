@@ -29,6 +29,10 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   const render=()=>root.render(React.createElement(CarouselWorkspace,{doc:current,output:current.outputs[0],options:{api},change:next=>{current=next;changes++;render();}}));
   await act(async()=>render());
   assert.equal(document.querySelectorAll('.car-sequence-card').length,2);
+  assert.equal(document.querySelectorAll('.tseq .slide2').length,2);
+  assert.equal(document.querySelector('.car-stage-label'),null);
+  assert.ok(document.querySelector('.car-add-slide button').disabled);
+  assert.equal(document.querySelector('.car-photo-sheet'),null);
   assert.equal(document.querySelectorAll('.car-sequence-preview .car-frame').length,2);
   assert.deepEqual([...document.querySelectorAll('.car-sequence-words')].map(el=>el.value),['First words','Second words']);
   const click=async(label)=>{const el=document.querySelector('[aria-label="'+label+'"]');assert.ok(el,label);await act(async()=>el.click());};
@@ -44,6 +48,8 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   await click('Change template for slide 2');
   const template=[...document.querySelectorAll('.car-layout-option')].find(el=>!el.disabled&&el.getAttribute('aria-pressed')==='false');
   assert.ok(template);
+  assert.ok(document.querySelector('.car-stage>.tpick .tph'));
+  assert.ok(document.querySelector('.car-tools .car-more-menu [aria-label="Enlarge slide"]'));
   await act(async()=>template.click());
   assert.equal(current.outputs[0].slides[0].template,'H1');
   assert.notEqual(current.outputs[0].slides[1].template,'H1');
