@@ -4,7 +4,7 @@ This is the public mirror of Delivery's work checklist: open items only, no priv
 
 ## Soon
 
-- [ ] Look over the new Tree sidebar, pieces list and step path in the real app, and say what to change _(band: you-required)_ _(effort: quick)_
+- [ ] Reconcile the installed rebuild with the chosen Full A / Tree design, including work lists, navigation, status and section surfaces; verify actual screens before requesting human review _(band: agent-runnable)_ _(effort: deep)_
 - [ ] Turn on Material keep-or-remove: the review is prepared but not connected _(band: agent-runnable)_ _(effort: moderate)_
 - [ ] Complete topics in the Working on switch and sort-into-topics screen (one at a time, groups, bulk move, rules); the merged Collection/learning source is installed _(band: agent-runnable)_ _(effort: deep)_
 - [ ] Docked panel beside the work: Find in Library, Where it's used (photos, quotes and saved items together) and History in one place _(band: agent-runnable)_ _(effort: deep)_

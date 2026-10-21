@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "73422af9f4604d5273d4e5252a244e47d68ac36c25a0beca57f9bde97405e322"
+      "candidateSha256": "0b034ad77466c7622c79d2e4789465a74869247357b9d558d764259d337e4eb0"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "7eb20bc93e6cf9e6f41be2d43436ebae5454d4b56f9b465429e59b14d3c71afa"
+      "candidateSha256": "c263b1f84931956994eaebab10076517eae8ef548c74ec280abd65ee4e36af41"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
