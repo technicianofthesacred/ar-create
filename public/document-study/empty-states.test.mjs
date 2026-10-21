@@ -83,6 +83,6 @@ test('acting on a hidden tool from the card reveals the step for this visit',()=
  w.c3Empty.decorate();assert.equal(d.querySelector('.c3-empty'),null,'stays revealed on this step');
 });
 test('one verb for going to the manuscript: every surface says Open the draft',()=>{
- const dir=new URL('./',import.meta.url),old=/Open writing draft|Open working words|Open Draft|Open Write|Open in Write|Continue writing|Continue to Draft|Open editor|Edit draft/;
+ const dir=new URL('./',import.meta.url),old=/Open writing draft|Open working words|Open Draft|Open Write|Open in Write|Continue writing|Continue to Draft|Open editor|Edit draft|Edit this copy/;
  for(const f of fs.readdirSync(dir).filter(f=>f.endsWith('.js')&&!f.endsWith('.test.mjs')))assert.doesNotMatch(fs.readFileSync(new URL(f,dir),'utf8'),old,f);
 });

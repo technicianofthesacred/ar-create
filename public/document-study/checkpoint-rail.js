@@ -31,7 +31,7 @@
   if(!picker){picker=document.createElement('button');picker.type='button';picker.className='cr-picker';picker.setAttribute('aria-expanded','false');nav.prepend(picker);}
   const pickerHTML=`<span class="cr-picker-text"><span class="cr-picker-count">${n?`Step ${n} of 12`:'Steps'}</span><strong>${name||'Choose a step'}</strong></span><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m7 10 5 5 5-5"/></svg>`;
   if(picker.dataset.key!==n+'|'+name){picker.innerHTML=pickerHTML;picker.dataset.key=n+'|'+name;}
-  picker.setAttribute('aria-label',`${n?`Step ${n} of 12, ${name}. `:''}Show all twelve steps`);
+  picker.setAttribute('aria-label',`${n?`Step ${n} of 12, ${name}. `:''}Open the sidebar: Home, pieces and all twelve steps`);
   nav.classList.add('c3-rail');
   // The Tree's pieces list (#c3-queue) may sit between the column and the workspace.
   const after=nav.nextElementSibling?.id==='c3-queue'?nav.nextElementSibling.nextElementSibling:nav.nextElementSibling;
@@ -44,6 +44,14 @@
   nav.classList.toggle('cr-open',open);picker.setAttribute('aria-expanded',String(open));
   if(open)nav.querySelector('.workflowStep[aria-current],.workflowStep')?.focus();
  });
+ // Phone: the sidebar is a sheet. A step, Home or a piece chosen in it, or a tap outside it, closes it.
+ const closeSheet=()=>{const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;nav.classList.remove('cr-open');nav.querySelector('.cr-picker')?.setAttribute('aria-expanded','false');document.body.classList.remove('c3-nav-sheet');};
+ document.addEventListener('click',event=>{
+  const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;
+  if(!nav.contains(event.target)){if(!event.target.closest?.('#c3-tabstrip .ht-menu,dialog'))closeSheet();return;}
+  if(event.target.closest?.('.workflowStep,[data-tr-home],[data-tr-topics],[data-tr-history],.ht-find-row,[data-pl-open]'))queueMicrotask(closeSheet);
+ });
+ new MutationObserver(()=>document.body.classList.toggle('c3-nav-sheet',!!document.querySelector('.workflowNavigation.c3-rail.cr-open'))).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
  document.addEventListener('keydown',event=>{
   if(event.key!=='Escape')return;
   const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;

@@ -67,7 +67,7 @@
  // While Home is open the strip lives inside the modal library so it stays reachable. Otherwise it is no longer a row of
  // its own: it is the head of the sidebar (Home, the piece switcher, New), above the steps (review A3).
  function place(node){const d=library();if(homeOpen()){decorateHome(d);if(node.parentElement!==d){node.querySelectorAll('details[open]').forEach(m=>m.open=false);d.prepend(node);}document.body.classList.remove('c3-strip-in-rail');return;}
-  const rail=window.matchMedia?.('(min-width:651px)')?.matches!==false?document.querySelector('#app>.shell>.workflowNavigation.c3-rail'):null;
+  const rail=document.querySelector('#app>.shell>.workflowNavigation.c3-rail');
   if(rail){const head=rail.querySelector(':scope>.tr-head');if(node.parentElement!==rail||(head?node.previousElementSibling!==head:rail.firstElementChild!==node))head?head.after(node):rail.prepend(node);document.body.classList.add('c3-strip-in-rail');}
   else{if(node.parentElement!==document.body)document.body.prepend(node);document.body.classList.remove('c3-strip-in-rail');}}
  async function flush(){if(window.studyOutputConnection?.flush)await window.studyOutputConnection.flush();else{const proof=await window.studyDraft?.flush?.();if(proof?.dirty)throw Error('Save or resolve the current changes before continuing.');}}

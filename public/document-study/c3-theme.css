@@ -377,7 +377,7 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  body.c3-tabs #app .workspace :is(small,.small,summary,label.flow-field,.draft-action,.reference span,.reference,.docfooter span){font-size:12.5px!important;letter-spacing:0}
  body.c3-tabs #app .workspace .reference{display:flex;flex-wrap:wrap;gap:2px 10px;text-transform:none}
 
- #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode){display:none}
+ #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode):not(.sb-insp){display:none}
  #c3-surface-bar .sb-mode{width:36px;min-width:36px;padding:0!important;display:grid;place-items:center}
  #c3-surface-bar .sb-mode .sb-mode-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
  #c3-surface-bar .sb-mode .sb-mode-i{display:grid}

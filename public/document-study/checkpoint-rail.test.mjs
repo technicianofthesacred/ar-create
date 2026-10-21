@@ -77,3 +77,13 @@ test('a full re-render is decorated again; an incomplete bar is left where it wa
  assert.equal(partial.d.querySelector('.workflowNavigation').parentElement,partial.d.querySelector('.workspace'));
  assert.equal(partial.d.querySelectorAll('.cr-icon').length,0);
 });
+
+test('phone: the picker opens the whole sidebar as a sheet; choosing a step or tapping outside closes it',async()=>{
+ const {w,d}=fixture();
+ const picker=d.querySelector('.cr-picker');picker.click();
+ const nav=d.querySelector('.workflowNavigation');assert.ok(nav.classList.contains('cr-open'));assert.equal(picker.getAttribute('aria-expanded'),'true');
+ [...d.querySelectorAll('.workflowStep')][10].click();await new Promise(r=>setTimeout(r,0));
+ assert.equal(nav.classList.contains('cr-open'),false);assert.deepEqual(JSON.parse(JSON.stringify(w.phases)),[11]);
+ picker.click();assert.ok(nav.classList.contains('cr-open'));
+ d.getElementById('manuscript').click();assert.equal(nav.classList.contains('cr-open'),false,'a tap outside closes it');
+});
