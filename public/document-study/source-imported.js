@@ -155,10 +155,14 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   }
   doc.addEventListener('click',onClick);doc.addEventListener('input',onInput);doc.addEventListener('change',onChange);doc.addEventListener('keydown',onKey);doc.addEventListener('submit',onSubmit);
   const observer=observe?new win.MutationObserver(()=>mount()):null;observer?.observe(doc.getElementById('app')||doc.body,{childList:true,subtree:true});
-  function focus(){if(active())void refresh();}win.addEventListener('focus',focus);
+  // Live sync (review F-25): a correction saved elsewhere re-reads the open transcript; refresh-on-focus is only the fallback
+  // for when the live stream is down.
+  function focus(){if(win.c3Shell?.live?.connected?.())return;if(active())void refresh();}win.addEventListener('focus',focus);
+  let liveOff=null,liveTimer=null;const liveHook=()=>{liveOff=win.c3Shell?.live?.on?.({},event=>{if(disposed||!active())return;if(!event.reset&&!(event.scope?.kind==='source'||/^source-sessions/.test(event.kind||'')))return;win.clearTimeout(liveTimer);liveTimer=win.setTimeout(()=>{if(!disposed&&active())void refresh();},250);})||null;};
+  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',liveHook,{once:true});else win.setTimeout(liveHook,0);
   // In-flight transport does not survive reload; preserve its exact idempotent request.
   for(const r of Object.values(projects))if(r.pending){r.pending.sending=false;r.pending.uncertain=true;}
   mount();
-  return {openContext({container,project}){if(!container?.isConnected||!project?.id)throw Error('Choose an existing project and context mount.');contextView={container,project:{...project,view:'record',viewedStage:2}};stamp='';mount();},closeContext(){contextView=null;stamp='';mount();},mount,refresh,getState:()=>({data,projects,drafts}),dispose(){disposed=true;observer?.disconnect();for(const [name,fn] of [['click',onClick],['input',onInput],['change',onChange],['keydown',onKey],['submit',onSubmit]])doc.removeEventListener(name,fn);win.removeEventListener('focus',focus);panel?.remove();restoreLegacy();}};
+  return {openContext({container,project}){if(!container?.isConnected||!project?.id)throw Error('Choose an existing project and context mount.');contextView={container,project:{...project,view:'record',viewedStage:2}};stamp='';mount();},closeContext(){contextView=null;stamp='';mount();},mount,refresh,getState:()=>({data,projects,drafts}),dispose(){disposed=true;liveOff?.();observer?.disconnect();for(const [name,fn] of [['click',onClick],['input',onInput],['change',onChange],['keydown',onKey],['submit',onSubmit]])doc.removeEventListener(name,fn);win.removeEventListener('focus',focus);panel?.remove();restoreLegacy();}};
 }
 if(typeof document!=='undefined'&&typeof current==='function'&&!window.studyImportedSource){window.studyImportedSource=installSourceReader({document,getProject:()=>current()});}
