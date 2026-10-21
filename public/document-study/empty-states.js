@@ -43,43 +43,55 @@
   const disabled=missing||(r&&r.disabled);const why=missing?'Not available for this piece yet':r?.disabled?(r.title||'Not available yet'):'';
   return `<button type="button" class="ce-btn ${primary?'pri':''}" data-ce-act="${i}" ${disabled?'disabled':''} ${why?`title="${esc(why)}"`:''}>${esc(label)}</button>`;
  }
+ // The card's first button is the same action as the bar's one primary (piece-state.js), never a second opinion.
+ function primaryHTML(s){const ps=window.c3PieceState;if(!ps)return '';const a=ps.primary(stage());if(!a)return '';return `<button type="button" class="ce-btn pri" data-ce-primary ${a.disabled?'disabled':''} ${a.reason?`title="${esc(a.reason)}"`:''}>${esc(a.label)}</button>`;}
  function cardHTML(s){
   const steps=s.steps.length?`<div class="ce-steps">${s.steps.map((t,i)=>`<span class="ce-step"><span class="ce-n">${i+1}</span>${esc(t)}</span>`).join('<span class="ce-arr" aria-hidden="true">→</span>')}</div>`:'';
   // Words come from the one piece state when it knows better than the step's generic copy (review F-08).
   const st=window.c3PieceState?.read?.(),c=(st&&s.copy?.(st))||{},title=c.title||s.title,text=c.text||s.text;
-  return `<div class="ce-card-wrap" role="region" aria-label="${esc(title)}"><div class="ce-icon">${icon(s.icon)}</div><div class="ce-copy"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="ce-acts">${s.actions.map(actionHTML).join('')}</div>${steps}</div></div>`;
+  return `<div class="ce-card-wrap" role="region" aria-label="${esc(title)}"><div class="ce-icon">${icon(s.icon)}</div><div class="ce-copy"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="ce-acts">${primaryHTML(s)}${s.actions.map((a,i)=>[a,i]).filter(([a])=>!(st&&a[2])).map(([a,i])=>actionHTML(st?[a[0],a[1],false]:a,i)).join('')}</div>${steps}</div></div>`;
  }
- let current_=null;
+ let current_=null,revealed='';
+ const KEEP='#c3-surface-bar,.c3-ctitle,.c3-ws-title,.c3-scope,#c3-next,#c3-records,.draft-bar,.topbar,.workbar,#work-context,.historicalToolbar,[role=alert],#c3-read-insp,#c3-insp-head,#margin,dialog,details.flow-retained,details.oss-retained,script,style';
+ const key=()=>{const p=current();return p.id+':'+stage();};
  function clear(){document.querySelectorAll('#app [data-c3-empty-hidden]').forEach(n=>n.removeAttribute('data-c3-empty-hidden'));document.querySelectorAll('#app .c3-empty').forEach(n=>n.remove());current_=null;}
+ // The empty card owns the screen (review A6): every tool block beside the path from the card up to the work column is
+ // hidden, not removed, so nothing works on a step that has nothing yet except the card. Owners' notices stay.
+ function own(block){
+  const ws=block.closest('.workspace');if(!ws)return;
+  for(let node=block;node&&node!==ws;node=node.parentElement)for(const sib of node.parentElement?.children||[])if(sib!==node&&!sib.matches(KEEP)&&!sib.contains(block)&&!sib.hasAttribute('data-c3-empty-hidden'))sib.setAttribute('data-c3-empty-hidden','');
+ }
+ // When the person acts on a tool the card hid (Write my own angle, a disclosure), the card steps aside for this step.
+ function reveal(){revealed=key();clear();}
  function decorate(){
   const n=stage(),s=STEPS[n];
-  if(!s||!s.empty()){if(document.querySelector('#app .c3-empty'))clear();return;}
+  if(revealed&&revealed!==key())revealed='';
+  if(!s||revealed||!s.empty()){if(document.querySelector('#app .c3-empty'))clear();return;}
   const host=s.host();if(!host)return;
   let block=document.querySelector('#app .c3-empty');
   const html=`${s.compact?'':`<div class="ce-shape" aria-hidden="true">${GHOST[s.ghost[0]](s.ghost[1])}</div>`}${cardHTML(s)}`;
   if(!block||block.dataset.stage!==String(n)){block?.remove();block=document.createElement('section');block.className='c3-empty'+(s.compact?' ce-compact':'')+(s.layout?' ce-'+s.layout:'');block.dataset.stage=String(n);}
-  const place=s.after?host.parentElement:host;
   if(s.after){if(block.previousElementSibling!==host)host.after(block);}else if(block.parentElement!==host)host.insertBefore(block,host.firstChild);
   if(block.dataset.render!==html){block.innerHTML=html;block.dataset.render=html;}
   for(const sel of s.hide)for(const el of document.querySelectorAll('#app .workspace '+sel))if(!el.contains(block)&&!el.hasAttribute('data-c3-empty-hidden'))el.setAttribute('data-c3-empty-hidden','');
-  current_=s;void place;
+  if(!s.compact)own(block);
+  current_=s;
  }
  document.addEventListener('click',event=>{
+  if(event.target.closest?.('#app .c3-empty [data-ce-primary]')){const ps=window.c3PieceState,a=ps?.primary?.(stage());if(!a||a.disabled)return;const n=a.press&&document.querySelector('#app .workspace '+a.press);if(n?.closest('[data-c3-empty-hidden]'))reveal();void ps.run(a);return;}
   const b=event.target.closest?.('#app .c3-empty [data-ce-act]');if(!b||b.disabled)return;
   const s=current_;if(!s)return;const [,target]=s.actions[Number(b.dataset.ceAct)]||[];
   if(target&&typeof target==='object'&&target.phase){void viewPhase(target.phase);return;}
   if(target==='research-tab'){window.c3Research?.show?.();return;}
   if(target==='focus-manuscript'){const m=document.getElementById('manuscript');m?.focus();return;}
-  if(typeof target==='string'&&target.startsWith('focus:')){document.querySelector('#app .workspace '+target.slice(6))?.focus();return;}
+  if(typeof target==='string'&&target.startsWith('focus:')){reveal();document.querySelector('#app .workspace '+target.slice(6))?.focus();return;}
   const r=real(target);if(!r||r.disabled)return;
-  if(r.tagName==='SUMMARY'){const d=r.parentElement;for(const el of document.querySelectorAll('#app [data-c3-empty-hidden]'))if(el.contains(d))el.removeAttribute('data-c3-empty-hidden');d.open=true;d.scrollIntoView({block:'nearest'});d.querySelector('input,textarea')?.focus();return;}
+  if(r.closest('[data-c3-empty-hidden]'))reveal();
+  if(r.tagName==='SUMMARY'){const d=r.parentElement;d.open=true;d.scrollIntoView?.({block:'nearest'});d.querySelector('input,textarea')?.focus();return;}
   r.click();
  });
  document.addEventListener('input',event=>{if(event.target.matches?.('#app .workspace textarea,#app .workspace input,#manuscript'))queueMicrotask(decorate);},true);
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
- let queued=false;
- new MutationObserver(records=>{if(records.every(r=>r.target.closest?.('.c3-empty')))return;if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
+ window.c3Shell.register('empty states',decorate,{order:60,ignore:'.c3-empty'});
  // Home: no pieces at all, or none matching the search and filters.
  function homeEmpty(){
   const d=document.getElementById('project-library');if(!d?.open)return;
@@ -98,6 +110,6 @@
   d?.querySelector('.ht-facets [data-ht-clear]')?.click();
  });
  new MutationObserver(()=>homeEmpty()).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['open']});
- window.c3Empty={decorate,steps:STEPS,ghost:GHOST,icon,homeEmpty};
+ window.c3Empty={decorate,reveal,steps:STEPS,ghost:GHOST,icon,homeEmpty};
  decorate();
 })();

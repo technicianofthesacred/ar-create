@@ -8,11 +8,11 @@ const pages={
  12:'<main class="workspace"><div class="c3-ctitle c3-ws-title">12 Outputs</div><section id="output-overview"><div class="oo-panel"><div class="oo-empty">No connected outputs yet.</div></div></section><section id="work-context"><button data-wn-create="article" onclick="calls.push(\'create-article\')">Article</button><button data-wn-create="carousel" disabled title="Open an owned working manuscript first">Carousel</button></section></main>',
  12.5:'<main class="workspace"><div class="c3-ctitle c3-ws-title">12 Outputs</div><section id="output-overview"><div class="oo-panel"><article class="oo-row">Clay article</article></div></section></main>',
  11:'<main class="workspace"><div class="c3-ctitle c3-ws-title">11 Share</div><section class="oss-surface"><textarea data-oss-field="message"></textarea></section></main>'};
-function fixture(stage,page=stage){
+function fixture(stage,page=stage,withState=false){
  const dom=new JSDOM(`<div id="app">${pages[page]}</div>`,{url:'http://localhost',runScripts:'dangerously'}),w=dom.window;
  w.calls=[];w.state={project:'p1',projects:[{id:'p1',name:'Piece',view:'record',viewedStage:Math.floor(stage)}]};w.current=()=>w.state.projects[0];
  w.viewPhase=n=>w.calls.push('phase:'+n);w.render=()=>{};
- w.eval(code);return {w,d:w.document};
+ w.eval(fs.readFileSync(new URL('./shell.js',import.meta.url),'utf8'));if(withState)w.eval(fs.readFileSync(new URL('./piece-state.js',import.meta.url),'utf8'));w.eval(code);return {w,d:w.document};
 }
 const json=v=>JSON.parse(JSON.stringify(v));
 test('an empty step shows the shape, the card and its steps, and hides only the terse empty text',()=>{
@@ -56,4 +56,29 @@ test('every one of the twelve steps has an empty state with a real next step and
   assert.ok(s.actions.length>=1&&s.actions.some(a=>a[2]),'a primary next step for '+n);
   assert.doesNotMatch(s.text,/Lin Wei|kiln-gate|Clay That/i,'no invented content in '+n);
  }
+});
+
+test('the empty card owns the screen: tool blocks beside it are hidden, notices and the title stay',()=>{
+ const {d}=fixture(12);
+ const ws=d.querySelector('.workspace');ws.insertAdjacentHTML('beforeend','<section class="mot-surface" data-media-outputs-tools="12"><button>Continue creating</button></section><p role="alert">Saved edition unavailable</p>');
+ d.defaultView.c3Empty.decorate();
+ assert.ok(d.querySelector('.mot-surface').hasAttribute('data-c3-empty-hidden'),'tools wait until there is content');
+ assert.equal(d.querySelector('[role=alert]').hasAttribute('data-c3-empty-hidden'),false,'notices stay');
+ assert.equal(d.querySelector('.c3-ws-title').hasAttribute('data-c3-empty-hidden'),false);
+});
+test('with the piece state, the card’s first button is the bar’s one primary and runs the same action',async()=>{
+ const {w,d}=fixture(12,12,true);w.workspaceNavigation={outputs:()=>[]};w.c3Empty.decorate();
+ const first=d.querySelector('.c3-empty .ce-btn');
+ assert.equal(first.textContent,w.c3PieceState.primary(12).label);
+ assert.ok(first.hasAttribute('data-ce-primary'));
+ assert.equal([...d.querySelectorAll('.c3-empty .ce-btn')].filter(b=>b.textContent==='New article').length,0,'the step’s own primary is not repeated');
+});
+test('acting on a hidden tool from the card reveals the step for this visit',()=>{
+ const {w,d}=fixture(12);
+ d.querySelector('.workspace').insertAdjacentHTML('beforeend','<section class="tools"><details><summary>Write a note</summary><textarea></textarea></details></section>');
+ w.c3Empty.steps[12].actions.push(['Write a note','summary:Write a note']);w.c3Empty.decorate();
+ const b=[...d.querySelectorAll('.c3-empty .ce-btn')].find(x=>x.textContent==='Write a note');b.click();
+ assert.equal(d.querySelector('.c3-empty'),null);assert.equal(d.querySelectorAll('[data-c3-empty-hidden]').length,0);
+ assert.equal(d.querySelector('.tools details').open,true);
+ w.c3Empty.decorate();assert.equal(d.querySelector('.c3-empty'),null,'stays revealed on this step');
 });
