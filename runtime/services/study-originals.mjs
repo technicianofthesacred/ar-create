@@ -53,8 +53,31 @@ function readMarkdown(root, relative, role) {
   return { name: path.basename(relative), path: relative, role, raw: new TextDecoder('utf-8',{fatal:true}).decode(bytes), hash: digest(bytes), modifiedAt: stat.mtime.toISOString() };
 }
 
+// Audio selectors come only from the trusted project catalog; HTTP supplies an opaque id.
+const AUDIO_TYPES={'.wav':'audio/wav','.mp3':'audio/mpeg','.m4a':'audio/mp4','.ogg':'audio/ogg','.flac':'audio/flac'};
+function readAudioReceipt(files,configuredFiles,configuredVault,entry){
+  const file=resolveExact(files,`.transcription-jobs/${entry.id}.json`,{allowJobReceipt:true});
+  if(fs.statSync(file).size>MAX_JOB_BYTES)throw stateError('Transcription receipt exceeds the read limit.',413);
+  let receipt;try{receipt=JSON.parse(fs.readFileSync(file,'utf8'));}catch{throw stateError('Original audio receipt is invalid.',409);}
+  // Resolve the configured relative selectors before trusting their receipt counterparts.
+  const audioFile=resolveExact(files,entry.source);
+  if(!receipt||typeof receipt!=='object'||Array.isArray(receipt))throw stateError('Original audio receipt is invalid.',409);
+  // A missing historical raw note does not invalidate the completed recording, but its path must be safe.
+  resolveExact(checkedRoot(configuredVault),entry.raw,{missing:true});
+  const expectedAudio=path.join(configuredFiles,entry.source),expectedRaw=path.join(configuredVault,entry.raw);
+  if(receipt.id!==entry.id||receipt.state!=='done'||receipt.transcriptReady!==true||typeof receipt.source!=='string'||typeof receipt.originalSource!=='string'||path.resolve(receipt.source)!==expectedAudio||path.resolve(receipt.originalSource)!==expectedAudio)throw stateError('Original audio receipt does not match the verified recording.',409);
+  if(typeof receipt.raw!=='string'||path.resolve(receipt.raw)!==expectedRaw)throw stateError('Original audio receipt has unexpected raw-source provenance.',409);
+  const type=AUDIO_TYPES[path.extname(audioFile).toLowerCase()];if(!type)throw stateError('Unsupported original audio type.',415);
+  return {file:audioFile,type,title:entry.title,hash:null,size:fs.statSync(audioFile).size,provenance:entry.playbackProvenance??entry.provenance};
+}
+
 export function createStudyOriginals({ vaultRoot, filesRoot, catalog={projects:{},drafts:{}} }) {
-  const PROJECTS=catalog.projects||{},DRAFTS=catalog.drafts||{};
+  const PROJECTS=structuredClone(catalog.projects||{}),DRAFTS=catalog.drafts||{};
+  const audioEntries=new Map();
+  for(const project of Object.values(PROJECTS))for(const entry of project.audio||[]){
+    if(!JOB_ID_RE.test(entry.id||'')||audioEntries.has(entry.id))throw stateError('Original audio catalog identity is invalid.',403);
+    audioEntries.set(entry.id,entry);
+  }
   if (!vaultRoot || !filesRoot) throw new TypeError('vaultRoot and filesRoot are required.');
   const vault = checkedRoot(vaultRoot);
   const files = checkedRoot(filesRoot);
@@ -66,9 +89,16 @@ export function createStudyOriginals({ vaultRoot, filesRoot, catalog={projects:{
       const project = PROJECTS[projectKey];
       const records = project.docs.map(([relative, role]) => readMarkdown(vault, relative, role));
       const audio=[],diagnostics=[];
+      for(const entry of project.audio||[]){
+        try{readAudioReceipt(files,configuredFiles,configuredVault,entry);audio.push({id:entry.id,title:entry.title,url:`/api/study-originals/audio?id=${entry.id}`,provenance:entry.listProvenance??entry.provenance});}
+        catch(error){diagnostics.push(error.message);}
+      }
       return { projectKey, records, audio, diagnostics, relatedProjects: (project.relatedProjects||[]).map(item => ({ ...item })) };
     },
-    audio() { throw stateError('Original audio adapter is not configured; use owned recording intake.',503); },
+    audio(id) {
+      const entry=audioEntries.get(id);if(!entry)throw stateError('Original audio was not found.',404);
+      return readAudioReceipt(files,configuredFiles,configuredVault,entry);
+    },
     catalog() {
       return Object.entries(DRAFTS).map(([id, config]) => {
         const { current } = draftRecords(vault, config);

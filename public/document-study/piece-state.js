@@ -118,7 +118,7 @@
  // Why a step's surface cannot be edited, in words; never a bare "Read-only".
  function readOnlyReason(n=stage(),st=read()){
   const p=current();if(n===5&&p.view==='article')return '';
-  if(n===5||n===6||n===7)return st.published&&!st.manuscript.bound?'Published copy · open the draft to edit':'Reading view · open the draft to edit';
+  if(n===5||n===6||n===7)return p.view==='record'?'Retained record · read-only':'Reading view · open the draft to edit';
   return '';
  }
  window.c3PieceState={read,primary:n=>primary(n),run,word,notApplicable,readOnlyReason,load,stage,names:NAMES};

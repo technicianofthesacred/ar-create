@@ -70,10 +70,16 @@ test('run presses the owner’s control, opens a step, or asks the save owner; n
  void d;
 });
 
-test('Read-only always says why',()=>{
- const {ps}=fixture({stage:6,status:'Published'});
- assert.match(ps.readOnlyReason(6),/Published copy · open the draft to edit/);
- assert.equal(fixture({stage:5}).ps.readOnlyReason(5),'');
+test('retained context in a published project remains a read-only record, preserving its words and identity',()=>{
+ const f=fixture({stage:5,view:'record',status:'Published',work:'<section class="phaseReader"><article class="recordPage compactRecord"><div class="recordBody"><h1>Context</h1><p>Author context retained exactly.</p></div></article></section>'});
+ const before=JSON.stringify(f.w.current()),body=f.d.querySelector('.recordBody'),words=body.textContent;
+ assert.equal(f.ps.readOnlyReason(5),'Retained record · read-only');
+ assert.equal(f.d.querySelector('.recordBody'),body);assert.equal(body.textContent,words);assert.equal(JSON.stringify(f.w.current()),before);
+});
+test('read-only reason follows the actual view and never infers a published copy from project status',()=>{
+ const owned=fixture({stage:5,status:'Published',binding:{id:'bound-draft'}});assert.equal(owned.ps.readOnlyReason(5),'');
+ const reading=fixture({stage:6,view:'article',status:'Published',binding:{id:'bound-draft'}});assert.equal(reading.ps.readOnlyReason(6),'Reading view · open the draft to edit');
+ for(const stage of [5,6,7]){const retained=fixture({stage,view:'record',status:'Published',binding:{id:'bound-draft'}});assert.equal(retained.ps.readOnlyReason(stage),'Retained record · read-only');}
 });
 
 test('C1: each step’s first answer when it is empty, from the one table',()=>{
