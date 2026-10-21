@@ -486,7 +486,7 @@
     {
       "path": "runtime/services/study-originals.mjs",
       "sourceSha256": "b894b734e3233f3dd6bdd038d6da8686f6687cb3fa8eb09f2e1f24ae9e180300",
-      "candidateSha256": "3dd1a54cf284df692155e0b8d97d246dd6b3fcf347326ac5b2cc4cd87835ed27",
+      "candidateSha256": "dad31a2da06d808a8fdc7a93ba1138478c3fef9537b0468b7642d1471504b8f3",
       "adapted": true
     },
     {
@@ -3286,6 +3286,10 @@
     {
       "path": "tests/fixture-overlay.test.mjs",
       "candidateSha256": "f8d2d09ba511db5e784b3baf44e4d199ff54a198447c7d756d1096bfd505abce"
+    },
+    {
+      "path": "tests/study-originals-audio.test.mjs",
+      "candidateSha256": "94b39cfaa820d39484271f131d2c9234e4d799e855c1453daae9e517b21e878c"
     }
   ],
   "dependencyRepair": {
