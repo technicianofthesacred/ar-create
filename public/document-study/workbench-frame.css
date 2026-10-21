@@ -1,0 +1,174 @@
+/* The approved Workbench frame and document geometry; owners keep their nodes and events. */
+body.wbf-on{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;--hl:rgba(201,168,116,.28);--gut:32px;--top:24px;--c3-lift:var(--rail);--c3-sel:var(--sel);--wb-rail-bg:var(--rail);--wb-panel:var(--rail);--c3-doc-font:var(--ar-ui);font-family:var(--ar-ui);line-height:1.5}
+html[data-theme="light"] body.wbf-on{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;--hl:rgba(122,90,48,.2)}
+body.wbf-on ::selection{background:var(--hl);color:var(--ink)}
+body.wbf-on :focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+html body.wbf-on{--wb-doc-left:32px;--wb-doc-top:0px}
+html body.wbf-on #app{height:calc(100dvh - 48px)!important;margin-top:48px!important}
+html body.wbf-on #app>.shell{height:100%!important;min-height:0!important;background:var(--bg)!important}
+html body.wbf-on #workspace{background:var(--bg)!important;padding:0!important;overflow-x:hidden!important}
+html body.wbf-on #c3-tabstrip.wbf-top{position:fixed!important;inset:0 0 auto!important;z-index:75!important;width:100%!important;height:48px!important;min-height:48px!important;padding:0 12px!important;display:flex!important;align-items:center!important;gap:6px!important;border:0!important;border-bottom:1px solid var(--line)!important;background:var(--rail)!important;color:var(--ink)!important;box-sizing:border-box!important}
+html body.wbf-on #c3-tabstrip.wbf-top>:is(.ht-place:not(.ht-theme),.ht-tabs,.ht-sep,.ht-more,.ht-grow,.ht-plus){display:none!important}
+html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch{display:block!important;order:0;max-width:340px;min-width:0;margin:0!important}
+html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch>summary{display:flex!important;flex-direction:row!important;align-items:center;gap:9px;min-height:34px!important;height:34px!important;width:auto!important;max-width:340px;padding:0 10px 0 8px!important;font:600 var(--t-body)/1.5 var(--ar-ui)!important;color:var(--ink)!important;border:0!important;background:none!important}
+html body.wbf-on #c3-tabstrip.wbf-top .ht-switch-label{display:block!important;position:static!important;width:auto!important;height:auto!important;clip:auto!important;max-width:240px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+html body.wbf-on #c3-tabstrip.wbf-top .ht-switch>summary::after{content:none!important}
+html body.wbf-on #c3-tabstrip.wbf-top>.ht-theme{order:3;display:inline-flex!important;flex:none;min-width:32px!important;height:32px!important;margin:0!important;border:0!important}
+html body.wbf-on #c3-tabstrip .ht-switch-menu{position:fixed!important;left:12px!important;top:44px!important;z-index:90!important;max-height:calc(100dvh - 80px);overflow:auto}
+.wbf-top-actions{display:flex;align-items:center;gap:6px;margin-left:auto;order:2}
+.wbf-top-actions .tbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--dim);font:500 var(--t-label)/1.5 var(--ar-ui);white-space:nowrap;cursor:pointer}
+.wbf-top-actions .tbtn:hover{color:var(--ink);background:var(--sel)}
+.wbf-top-actions .sizer{display:inline-flex;align-items:center;height:32px;border:1px solid var(--line);border-radius:7px}
+.wbf-top-actions .sizer .tbtn{height:30px;padding:0 8px}
+.wbf-top-actions .pct{font-size:var(--t-label);min-width:3.2em;text-align:center;color:var(--dim)}
+/* A title/action line above the work; metadata no longer occupies a second banner. */
+html body.wbf-on #c3-surface-bar{position:relative!important;top:auto!important;min-height:34px!important;height:auto!important;max-width:1120px;margin:24px 32px 20px!important;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:8px!important;border:0!important;background:var(--bg)!important;box-shadow:none!important;z-index:15!important}
+html body.wbf-on #c3-surface-bar .sb-left{display:flex!important;gap:10px;min-width:0;flex:1 1 auto}
+html body.wbf-on #c3-surface-bar .sb-where{display:flex;flex-direction:row-reverse!important;gap:6px;min-width:0;align-items:baseline}
+html body.wbf-on #c3-surface-bar :is(.sb-cp-n,.sb-sep2,.sb-on,.sb-ret,.cb-size,.sb-insp,.sb-margin){display:none!important}
+html body.wbf-on #c3-surface-bar .sb-cp-name{font:600 var(--t-title)/1.5 var(--ar-ui)!important}
+html body.wbf-on #c3-surface-bar .sb-piece{font:400 var(--t-title)/1.5 var(--ar-ui)!important;color:var(--dim)}
+html body.wbf-on #c3-surface-bar .sb-piece::before{content:'· ';color:var(--dim)}
+html body.wbf-on #c3-surface-bar .sb-right{margin-left:auto!important;display:flex!important;gap:8px!important;flex-wrap:wrap}
+html body.wbf-on #c3-surface-bar .sb-status{font:400 var(--t-label)/1.5 var(--ar-ui)!important;max-width:15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.wbf-on #c3-surface-bar .sb-btn,html body.wbf-on #c3-surface-bar .sb-icon{height:34px!important;min-height:34px!important;border:1px solid var(--line)!important;border-radius:7px!important;background:var(--paper)!important;padding:0 10px!important;color:var(--ink)!important}
+html body.wbf-on #c3-surface-bar .sb-primary{height:34px!important;min-height:34px!important;padding:0 12px!important;border:1px solid var(--warm)!important;border-radius:7px!important;background:var(--warm)!important;color:var(--bg)!important}
+html body.wbf-on #app #workspace .c3-ctitle,html body.wbf-on #app #workspace .c3-page-notes{display:none!important}
+html body.wbf-on .workflowNavigation.wb-rail .workflowStep{min-height:46px!important}
+html body.wbf-on .workflowNavigation.wb-rail .tr-find{display:none!important}
+html body.wbf-on .workflowNavigation.wb-rail .tr-home{min-height:46px!important}
+/**** The one document: common column, title/byline and paragraph geometry in Write/Read/Check. ****/
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace :is(.desk>.document,.phaseReader.c3-read>:is(.document,.recordPage),.wn-check-manuscript>:is(.document,.recordPage)){padding:0 0 96px!important;margin:0!important;border:0!important;box-shadow:none!important;background:none!important;width:100%!important;max-width:var(--measure)!important}
+html body.wbf-on #app #workspace .desk{display:grid!important;grid-template-columns:minmax(0,var(--measure)) minmax(160px,208px)!important;gap:32px!important;align-items:start;padding:0 32px!important;margin:0!important;background:none!important;max-width:1008px!important;overflow:visible!important}
+html body.wbf-on #app #workspace .desk>:is(#c3-insp-head,#c3-insp-decisions,.c3-page-notes){display:none!important}
+html body.wbf-on #app #workspace .desk>.document{grid-column:1;grid-row:1}
+html body.wbf-on #app #workspace .desk>#margin{display:block!important;grid-column:2;grid-row:1;position:relative!important;inset:auto!important;width:auto!important;min-width:0!important;max-width:none!important;border:0!important;background:none!important;padding:42px 0 0!important;margin:0!important;transform:none!important;height:auto!important;overflow:visible!important}
+html body.wbf-on #app #margin :is(.draft-surface-margin-head,.draft-surface-margin-summary){display:none!important}
+html body.wbf-on #app #margin :is(.discussion,.note,.marginNote){padding:4px 0 4px 10px!important;margin:0 0 8px!important;border:0!important;border-left:2px solid var(--line)!important;border-radius:0!important;background:none!important;box-shadow:none!important;font-size:var(--t-label)!important}
+html body.wbf-on #app #margin :is(.head,.head strong,p,.why,.sourceGuard){font-size:var(--t-label)!important;line-height:1.5!important}
+html body.wbf-on #app #workspace .phaseReader.c3-read{display:block!important;padding:0 32px!important;max-width:none!important}
+html body.wbf-on #app #workspace .phaseReader.c3-read>#c3-read-insp{display:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc>h1{font:600 var(--t-head)/1.5 var(--ar-ui)!important;margin:0 0 2px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc>.wbf-doc-by{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important;margin:0 0 20px!important}
+html body.wbf-on #app #workspace .doc>:is(.subtitle,.draft-surface-document-meta,.reference,.docfooter){display:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose)>:is(p,div),html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc .draft-read-words>section>p{font:400 var(--t-reading)/1.65 var(--ar-ui)!important;margin:0 0 var(--t-reading)!important;padding:1px 4px!important;margin-left:-4px!important;border:0!important}
+html body.wbf-on #wbf-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:1008px;padding:0 32px;margin:-8px 0 20px}
+html body.wbf-on #wbf-tools .btn{font-size:var(--t-label)!important;min-height:34px}
+/**** One tool drawer, retaining the real controls and unsaved values. ****/
+#wbf-drawer{position:fixed;top:48px;right:0;bottom:0;width:min(380px,100vw);z-index:80;display:flex;flex-direction:column;background:var(--rail);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(0,0,0,.3)}
+#wbf-drawer .dr-head{display:flex;align-items:center;padding:12px 12px 12px 18px;min-height:52px;gap:8px;border-bottom:1px solid var(--line)}
+#wbf-drawer .dr-head h2{flex:1;font:600 var(--t-head)/1.5 var(--ar-ui)}
+#wbf-drawer .dr-tabs{display:flex;gap:14px;padding:0 18px;border-bottom:1px solid var(--line);overflow:auto}
+#wbf-drawer .dr-tabs button{border:0;border-bottom:1.5px solid transparent;background:none;color:var(--dim);padding:9px 0;font:400 var(--t-label)/1.5 var(--ar-ui)}
+#wbf-drawer .dr-tabs button.on{border-color:var(--warm);color:var(--ink)}
+#wbf-drawer .dr-body{flex:1;min-height:0;overflow:auto;padding:16px 18px 48px;font-size:var(--t-body)}
+#wbf-drawer .dr-body :is(input,textarea){max-width:100%;box-sizing:border-box}
+html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-layout{display:block!important;padding:0 32px!important}
+html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{position:fixed!important;top:48px;right:0;bottom:0;z-index:55;width:min(380px,100vw);overflow:auto;padding:16px 18px!important;border-left:1px solid var(--line)!important;background:var(--rail)!important}
+html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-manuscript{margin-right:380px!important}
+/**** Bench and Pieces are two entrances to the existing project browser. ****/
+html body.wbf-on #project-library.wbf-home{inset:0!important;margin:0!important;max-width:none!important;max-height:none!important;width:100vw!important;height:100dvh!important;padding:0!important;border:0!important;background:var(--bg)!important;color:var(--ink)!important}
+html body.wbf-on #project-library.wbf-home .ht-home-body{display:block!important;padding:24px 32px 96px!important;margin:48px 0 0 66px!important;max-width:1120px!important;border-left:1px solid var(--line)}
+html body.wbf-on #project-library.wbf-home .ht-facets{display:none!important}
+html body.wbf-on #project-library.wbf-home .ht-home-main{padding:0!important;width:100%!important;max-width:calc(var(--measure) + 16rem)!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar{padding:0 32px!important;margin:0 0 0 66px!important;background:none!important;border:0!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar-actions{position:fixed;top:56px;right:32px;z-index:76}
+html body.wbf-on #project-library.wbf-home :is(.ht-cover,.ht-views,.pl-results-head small){display:none!important}
+html body.wbf-on #project-library.wbf-home .pl-results{display:block!important;max-width:calc(var(--measure) + 16rem)!important}
+html body.wbf-on #project-library.wbf-home .pl-library-row{display:flex!important;align-items:center;min-height:58px!important;background:none!important;border:0!important;border-radius:6px!important;box-shadow:none!important;padding:0!important}
+html body.wbf-on #project-library.wbf-home .pl-library-row:hover{background:var(--sel)!important}
+html body.wbf-on #project-library.wbf-home .pl-open{display:flex!important;flex-direction:column;align-items:flex-start;gap:2px;flex:1;padding:8px!important;background:none!important;border:0!important;min-width:0!important}
+html body.wbf-on #project-library.wbf-home .pl-open strong{font:500 var(--t-body)/1.5 var(--ar-ui)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+html body.wbf-on #project-library.wbf-home .pl-open>span{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+html body.wbf-on #project-library.wbf-home .ht-card-more{position:relative!important;inset:auto!important;flex:none}
+html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .wbf-bench{display:none!important}
+html body.wbf-on #project-library.wbf-home .pickup{max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home .pickup .meta{font-size:var(--t-label)}
+html body.wbf-on #project-library.wbf-home .wbf-bench>.block{margin-top:32px}
+html body.wbf-on #project-library.wbf-home .move .w{display:block}
+html body.wbf-on[data-draft-focus="true"] #app,html[data-draft-focus="true"] body.wbf-on #app{height:100dvh!important;margin-top:0!important}
+html body.wbf-on[data-draft-focus="true"] #c3-tabstrip,html[data-draft-focus="true"] body.wbf-on #c3-tabstrip{display:none!important}
+html body.wbf-on[data-draft-focus="true"] #app #workspace .desk,html[data-draft-focus="true"] body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important;margin:auto!important}
+html body.wbf-on[data-draft-focus="true"] #margin,html[data-draft-focus="true"] body.wbf-on #margin{display:none!important}
+@media(max-width:1100px){html body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important}html body.wbf-on #app #workspace .desk>#margin{grid-column:1;grid-row:2;padding-top:0!important;max-width:var(--measure)!important}}
+@media(max-width:760px){
+ html body.wbf-on{--wb-doc-left:16px;--gut:16px}
+ html body.wbf-on #c3-tabstrip.wbf-top{padding:0 6px!important;gap:2px!important}
+ html body.wbf-on #c3-tabstrip.wbf-top>.ht-switch{flex:1;min-width:0}
+ html body.wbf-on #c3-tabstrip.wbf-top .ht-switch-label{max-width:120px}
+ .wbf-top-actions{gap:2px}.wbf-top-actions .lbl-wide,.wbf-top-actions .pct{display:none}.wbf-top-actions .tbtn{padding:0 7px}
+ html body.wbf-on #c3-surface-bar{margin:16px 16px 20px!important;gap:8px!important}
+ html body.wbf-on #c3-surface-bar .sb-piece{display:none!important}
+ html body.wbf-on #c3-surface-bar .sb-right{margin-left:0!important;flex:1 1 auto}
+ html body.wbf-on #app #workspace .desk,html body.wbf-on #app #workspace .phaseReader.c3-read,html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-layout{padding:0 16px!important}
+ html body.wbf-on #wbf-tools{padding:0 16px}
+ html body.wbf-on #project-library.wbf-home .ht-home-body{margin:48px 0 0!important;padding:16px 16px 96px!important;border:0}
+ html body.wbf-on #project-library.wbf-home .ht-homebar{margin:0!important;padding:0 16px!important}
+ html body.wbf-on #project-library.wbf-home .ht-homebar-actions{position:static;margin:0}
+ html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-manuscript{margin:0!important}
+ html body.wbf-on[data-c3-stage="7"] #app #workspace .wn-check-findings{position:relative!important;width:auto!important;top:auto!important;bottom:auto!important;margin:0 -16px!important;border:0!important;border-top:1px solid var(--line)!important}
+ html body.wbf-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open)>.cr-picker{display:none!important}
+}
+/* Document tools share the single title/action line, as in the prototype. */
+html body.wbf-on #c3-surface-bar #wbf-tools{padding:0!important;margin:0!important;gap:8px}
+html body.wbf-on #wbf-parts{position:relative;margin:0;color:var(--dim);font-size:var(--t-label)}
+html body.wbf-on #wbf-parts>summary{display:flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:7px;cursor:pointer}
+html body.wbf-on #wbf-parts>div{position:absolute;right:0;top:38px;min-width:240px;max-width:calc(100vw - 32px);max-height:60dvh;overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;z-index:40;box-shadow:var(--c3-shadow)}
+html body.wbf-on #app #workspace>.draft-bar{min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important}
+html body.wbf-on #app #workspace .doc{min-height:0!important;height:auto!important}
+@font-face{font-family:'Workbench Lora';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-normal-latin.woff2') format('woff2')}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .workspace :is(.source-turn-speech,.source-turn-text,.source-remark,.rpb-quote,.source-quote,.rs-quote,.research-standard-said blockquote){font-family:'Workbench Lora',Lora,Georgia,serif!important}
+
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .desk{background:none!important;min-height:0!important;height:auto!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words)>p,html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc .draft-read-words>section>p{width:calc(100% + 4px)!important;max-width:calc(var(--measure) + 4px)!important}
+/* Bench and Pieces occupy the work area; the actual rail remains reachable. */
+html body.wbf-on #project-library.wbf-home{position:fixed!important;inset:48px 0 0 66px!important;margin:0!important;width:calc(100vw - 66px)!important;height:calc(100dvh - 48px)!important;z-index:60!important}
+html body.wbf-on #project-library.wbf-home .ht-home-body{margin:0!important;padding:24px 32px 96px!important;border:0!important}
+html body.wbf-on #project-library.wbf-home .ht-homebar{margin:0!important;padding:0 32px!important}
+@media(min-width:761px){html body.wbf-on .workflowNavigation .cr-picker{display:none!important}}
+@media(max-width:760px){html body.wbf-on #project-library.wbf-home{inset:48px 0 60px!important;width:100vw!important;height:calc(100dvh - 108px)!important}html body.wbf-on #project-library.wbf-home .ht-home-body{padding:16px 16px 96px!important}}
+html body.wbf-on #project-library.wbf-home .ht-home-main>.ht-homebar{margin:0 0 6px!important;padding:0!important;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home .ht-home-main>.ht-homebar .search{margin:0!important;max-width:none!important;width:100%;height:36px!important}
+html body.wbf-on #project-library.wbf-home .ht-home-main>.wbf-bench{margin:0!important}
+html body.wbf-on #project-library.wbf-home .pl-results-head{min-height:0!important;padding:0!important;margin:0!important}
+html body.wbf-on #project-library.wbf-home .pl-results-head>[data-pl-count]{display:none!important}
+/* The prototype's empty surface is quiet and useful; preserve the real actions, discard the old ghost illustration. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty{display:block!important;position:relative!important;inset:auto!important;min-height:0!important;max-width:calc(var(--measure) + 96px)!important;margin:0 32px 24px!important;padding:28px 24px!important;border:1px dashed var(--line)!important;border-radius:10px!important;background:none!important;box-shadow:none!important}
+html body.wbf-on #app .c3-empty :is(.ce-shape,.ce-icon,.ce-steps){display:none!important}
+html body.wbf-on #app .c3-empty .ce-card-wrap{display:block!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;max-width:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-copy h3{font:600 var(--t-head)/1.5 var(--ar-ui)!important;margin:0 0 6px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-copy p{font:400 var(--t-body)/1.5 var(--ar-ui)!important;margin:0 0 12px!important;max-width:var(--measure)}
+@media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty{margin:0 16px 24px!important;padding:20px 16px!important}}
+/* Read's passage wrappers retain their anchors but add no competing geometry. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace>.phaseReader.c3-read{padding:0 32px!important;margin:0!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;max-width:none!important;display:block!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace .doc :is(#manuscript,.draft-read-words) p{font:400 var(--t-reading)/1.65 var(--ar-ui)!important;padding:1px 4px!important;margin:0 0 var(--t-reading) -4px!important;width:calc(100% + 4px)!important;max-width:calc(var(--measure) + 4px)!important;box-sizing:border-box!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace .draft-read-words>section{margin:0!important;padding:0!important;width:100%!important;min-width:0!important}
+@media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace>.phaseReader.c3-read{padding:0 16px!important}}
+.wbf-piece-nav{display:none}
+html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"]>.wbf-piece-nav{position:absolute;display:flex;flex-direction:column;top:0;left:0;bottom:0;width:240px;border-right:1px solid var(--line);background:var(--rail);overflow:auto}
+html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .ht-home-body{margin-left:240px!important}
+.wbf-piece-nav .sph{display:flex;align-items:center;height:40px;padding:0 14px;font-size:var(--t-label);color:var(--dim)}
+.wbf-piece-nav .spb{padding:0 6px 16px}
+.wbf-piece-nav .rk{display:flex;align-items:center;min-height:34px;width:100%;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--dim);font:400 var(--t-body)/1.5 var(--ar-ui);text-align:left;cursor:pointer}
+.wbf-piece-nav .rk.on,.wbf-piece-nav .rk:hover{background:var(--sel);color:var(--ink)}
+@media(max-width:760px){html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"]>.wbf-piece-nav{position:static;width:auto;border:0;border-bottom:1px solid var(--line);padding:0 16px}.wbf-piece-nav .sph{display:none}.wbf-piece-nav .spb{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0}.wbf-piece-nav .rk{width:auto}html body.wbf-on #project-library.wbf-home[data-wbf-home="pieces"] .ht-home-body{margin-left:0!important}}
+
+/* History is a margin tool, not a second heading above the writing. Its original controls remain in the drawer. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .draft-bar>.draft-inspect[data-wbf-history="true"]{display:none!important}
+/* Reserve the same scroll gutter in both modes so long writing never changes the text measure. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace{scrollbar-gutter:stable!important}
+/* Arrange is a whole sequence in the page, not a short canvas inside another scrolling box. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="9"] #app #study-output-canvas .ar-composition-workbench:has(>.car-workspace){height:auto!important;min-height:0!important;max-height:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="9"] #app .car-workspace :is(.car-body,.car-stage,.car-writing-page){height:auto!important;max-height:none!important;overflow:visible!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="9"] #app .car-workspace{height:auto!important;max-height:none!important;overflow:visible!important}
+/* Legacy empty-state cards were absolutely centred. Keep their real actions in normal page flow. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty :is(.ce-shape,.ce-icon,.ce-steps){display:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty :is(.ce-card-wrap,.ce-copy){position:static!important;inset:auto!important;transform:none!important;width:auto!important;max-width:none!important;min-height:0!important;margin:0!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;display:block!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .c3-empty .ce-acts{position:static!important;display:flex!important;flex-wrap:wrap;gap:8px;justify-content:flex-start!important;margin:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research:has(.wb-shared-research) .c3-empty :is(.ce-copy>h3,.ce-copy>p,.ce-tools){display:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research:has(.wb-shared-research) .c3-empty{padding:0!important;border:0!important;margin:0 32px 16px!important}
+@media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research:has(.wb-shared-research) .c3-empty{margin:0 16px 16px!important}}
+html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{font:500 var(--t-label)/1.5 var(--ar-ui)!important;border-radius:7px!important;color:var(--dim)!important;background:transparent!important}
+html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn:hover{color:var(--ink)!important;background:var(--sel)!important}
+html body.wbf-on #c3-tabstrip .wbf-top-actions .tbtn{height:32px!important;min-height:32px!important}
+html body.wbf-on #c3-tabstrip .wbf-top-actions .sizer .tbtn{height:30px!important;min-height:30px!important}

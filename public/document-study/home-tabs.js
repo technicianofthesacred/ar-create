@@ -54,6 +54,7 @@
   if(status)message(status);
   const find=node.querySelector('[data-ht-find]');if(find&&find.value!==findQuery)find.value=findQuery;findResults();
   place(node);
+  window.dispatchEvent(new CustomEvent('c3-header-painted'));
  }
  function themeLabel(){return document.documentElement.dataset.theme==='dark'?'Switch to light theme':'Switch to dark theme';}
  function findRow(p){return `<button type="button" class="ht-find-row" data-pl-open="${esc(p.id)}" title="${esc(p.name)}">${icon(ICONS.piece)}<span><strong>${esc(p.name)}</strong><small>${esc([p.folder||'Projects',note(p)].join(' · '))}</small></span></button>`;}
@@ -66,10 +67,8 @@
  }
  // While Home is open the strip lives inside the modal library so it stays reachable. Otherwise it is no longer a row of
  // its own: it is the head of the sidebar (Home, the piece switcher, New), above the steps (review A3).
- function place(node){const d=library();if(homeOpen()){decorateHome(d);if(node.parentElement!==d){node.querySelectorAll('details[open]').forEach(m=>m.open=false);d.prepend(node);}document.body.classList.remove('c3-strip-in-rail');return;}
-  const rail=document.querySelector('#app>.shell>.workflowNavigation.c3-rail');
-  if(rail){const head=rail.querySelector(':scope>.tr-head');if(node.parentElement!==rail||(head?node.previousElementSibling!==head:rail.firstElementChild!==node))head?head.after(node):rail.prepend(node);document.body.classList.add('c3-strip-in-rail');}
-  else{if(node.parentElement!==document.body)document.body.prepend(node);document.body.classList.remove('c3-strip-in-rail');}}
+ function place(node){const d=library();if(homeOpen()){decorateHome(d);if(node.parentElement!==document.body){node.querySelectorAll('details[open]').forEach(m=>m.open=false);document.body.prepend(node);}document.body.classList.remove('c3-strip-in-rail');return;}
+  if(node.parentElement!==document.body)document.body.prepend(node);document.body.classList.remove('c3-strip-in-rail');}
  async function flush(){if(window.studyOutputConnection?.flush)await window.studyOutputConnection.flush();else{const proof=await window.studyDraft?.flush?.();if(proof?.dirty)throw Error('Save or resolve the current changes before continuing.');}}
  async function leaveHome(){if(homeOpen())await window.projectLibrary.close();if(homeOpen())throw Error('Home is still open because the current work needs saving first.');}
  async function activate(k){

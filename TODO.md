@@ -4,7 +4,7 @@ This is the public mirror of Delivery's work checklist: open items only, no priv
 
 ## Soon
 
-- [ ] Step 1: review the C workbench UI candidate against C02, C05, C06 and S01–S12; [demo verification is recorded](docs/verification/workbench-step1/README.md); it is not installed _(band: human review)_ _(effort: deep)_
+- [ ] Step 1: review the C workbench UI candidate against C02, C05, C06 and S01–S12; [full-interface correction and proof](docs/verification/workbench-full/README.md); it is not installed _(band: human review)_ _(effort: deep)_
 - [ ] Next: add nested Library and Media storage _(band: agent-runnable)_ _(effort: deep)_
 - [ ] Then: connect real Library research _(band: agent-runnable)_ _(effort: deep)_
 - [ ] Then: complete Arrange templates and the photo picker _(band: agent-runnable)_ _(effort: deep)_

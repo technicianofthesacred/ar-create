@@ -21,7 +21,7 @@
   let dec=desk.querySelector(':scope>#c3-insp-decisions');
   if(!dec){dec=document.createElement('section');dec.id='c3-insp-decisions';dec.className='ci-panel';dec.setAttribute('role','tabpanel');dec.setAttribute('aria-label','Decisions');desk.append(dec);}
   const record=document.getElementById('downstream-human-direction');
-  if(record&&record.parentElement!==dec)dec.append(record);
+  if(record&&record.parentElement!==dec&&!record.closest('#wbf-drawer'))dec.append(record);
   let empty=dec.querySelector(':scope>.ci-empty');
   if(!record||!record.textContent.trim()){if(!empty){empty=document.createElement('p');empty.className='ci-empty';empty.textContent='No saved direction for this piece yet. Decisions are made in Direction and carried here.';dec.prepend(empty);}}
   else empty?.remove();

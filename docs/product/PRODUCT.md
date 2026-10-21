@@ -56,6 +56,10 @@ The visible current decision accompanies relevant research, direction, draft, ar
 
 Browsing an earlier checkpoint is not a stage reset, approval or permission to overwrite later work. Show retained earlier material separately from the current editable version and give a clear route back.
 
+## Approved Workbench presentation — 21 October 2026
+
+For this isolated four-PR sequence, the complete visual authority is `design/three-directions/c-workbench/` and its final NOTES. Apply the full section surfaces, not only navigation or fonts: 66px unnumbered rail, adjacent folder panel, Bench/Pieces pickup, common Plus Jakarta Sans 13/15/16/17px scale and A−/A+, Lora only for speech, identical Write/Read geometry, compact context tools and whole sequences. Preserve every maintained state/command/approval owner; honest empty or unavailable states replace demonstration records. This approved direction supersedes older conflicting visual wording below, without claiming functional completion. See CURRENT for implementation proof and the separately reviewed steps.
+
 ## How the work is organised
 
 **Library** holds reusable sources and personal notes once, with permanent identities. **Collections** are reusable topics or inquiries relating sources, questions and evolving understanding. **Pieces** are independently edited expressions: articles, carousels, videos, shared notes. **Projects** connect multiple Collections and Pieces through the shared Library. A Collection can be explored with no Project or Piece. Associating one with a Project needs no invented source, quote or Piece. Files need not mirror the twelve sections. Source changes flag affected work for targeted review and never rewrite human wording. Full text: [Adopted relationships before folders](#adopted-relationships-before-folders--20-october) and [FILE-CONTRACT-MAP](FILE-CONTRACT-MAP.md).

@@ -212,3 +212,7 @@ test('Workbench exposes one root text-size control outside More and keeps the sc
  assert.equal(f.bar().querySelectorAll('[data-cb-size]').length,2);
  await new Promise(r=>setTimeout(r,0));f.w.close();
 });
+
+test('retained live part controls survive a toolbar refresh with their selection and handler intact',()=>{
+ const f=fixture(),slot=f.d.createElement('details');slot.dataset.c3RetainControl='';slot.innerHTML='<summary>Parts</summary><select><option>Part one</option><option>Part two</option></select>';const select=slot.querySelector('select');select.selectedIndex=1;let changed=0;select.onchange=()=>changed++;f.bar().querySelector('.sb-right').append(slot);f.w.surfaceBar.openMore();assert.strictEqual(f.bar().querySelector('[data-c3-retain-control]'),slot);assert.equal(select.selectedIndex,1);select.dispatchEvent(new f.w.Event('change'));assert.equal(changed,1);f.w.close();
+});

@@ -8,7 +8,7 @@ html body.wb-on #app>.shell>.workflowNavigation.wb-rail>.tr-find>[data-tr-topics
 /* The grouped phone sheet keeps the same unnumbered section names as the desktop rail. */
 .workflowNavigation.wb-rail :is(.stepNumber,.cr-picker-count){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;margin:0!important;padding:0!important;font:400 var(--t-label)/1.2 var(--ar-ui)!important}
 
-@media(min-width:851px){
+@media(min-width:761px){
  /* Columns: rail, the panel only where a section has something to browse, then the work. */
  html body.wb-on.c3-rail-on #app>.shell{grid-template-columns:var(--wb-railw) minmax(0,1fr)!important}
  html body.wb-on.wb-panel-on #app>.shell{grid-template-columns:var(--wb-railw) var(--wb-panelw) minmax(0,1fr)!important}
@@ -88,7 +88,7 @@ html body.wb-on #app>.shell>.workflowNavigation.wb-rail>.tr-find>[data-tr-topics
 #app #wb-open:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 
 /* ---------- phone and narrow windows: the rail is the bottom bar, the panel a sheet ---------- */
-@media(max-width:850px){
+@media(max-width:760px){
  html body.wb-on #app>.shell{display:flex!important;flex-direction:column}
  html body.wb-on #app>.shell>.workspace{flex:1 1 auto;min-height:0;padding-bottom:calc(var(--wb-bbar) + env(safe-area-inset-bottom,0px))!important;box-sizing:border-box}
  html body.wb-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open){flex:none;height:0!important;min-height:0!important;padding:0!important;border:0!important;overflow:visible!important;position:relative;z-index:40}

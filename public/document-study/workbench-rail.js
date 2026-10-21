@@ -14,7 +14,7 @@
    Install after tree.js. */
 (()=>{
  if(window.c3Workbench)return;
- const PREF='c3-workbench-panel-v1',PHONE='(max-width:850px)';
+ const PREF='c3-workbench-panel-v1',PHONE='(max-width:760px)';
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const I={home:'<path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>',gather:'<path d="M4 13.5 6.5 5h11l2.5 8.5"/><path d="M4 13.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5.5"/><path d="M4 13.5h4.5l1 2h5l1-2H20"/>',develop:'<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',make:'<path d="M4.5 19.5h4l10-10-4-4-10 10z"/><path d="M13 7l4 4"/>',deliver:'<path d="M20.5 3.5 10 14"/><path d="M20.5 3.5 14 20.5l-4-6.5-6.5-4z"/>',fold:'<path d="M14.5 7 9.5 12l5 5"/>',panel:'<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9 4.5v15"/>'};
@@ -128,7 +128,8 @@
  function panelHTML(n,spec,data){
   const head=`<div class="wbp-head"><span class="wbp-title">${esc(spec.name)}</span><button type="button" class="wbp-fold" data-wb-fold aria-label="${phone()?'Close':'Collapse'} the ${esc(spec.name)} panel" title="${phone()?'Close':'Collapse'} ([)">${icon(I.fold)}</button></div>`;
   if(!data)return head+`<p class="wbp-note" role="status">Reading this section…</p>`;
-  const groups=data.groups.filter(g=>g.rows.length||g.note);
+  if(spec.body)return head+`<div class="wbp-body">${spec.body(data)}</div>`;
+  const groups=(data.groups||[]).filter(g=>g.rows.length||g.note);
   const body=groups.length?groups.map(g=>`<div class="wbp-group" role="group" aria-label="${esc(g.label)}"><div class="wbp-gl">${esc(g.label)}</div>${g.rows.map(r=>`<button type="button" class="wbp-row${r.on?' on':''}" data-wb-row="${esc(r.key)}" ${r.on?'aria-current="true"':''} ${r.disabled?'disabled':''} title="${esc([r.label,r.title].filter(Boolean).join(' · '))}"><span class="wbp-l">${esc(r.label)}</span>${r.count!=null?`<span class="wbp-n">${esc(r.count)}</span>`:''}</button>`).join('')}${g.note?`<p class="wbp-note">${esc(g.note)}</p>`:''}</div>`).join(''):`<p class="wbp-note">${esc(data.empty)}</p>`;
   return head+`<div class="wbp-body">${body}</div>`;
  }
@@ -158,6 +159,7 @@
   const html=panelHTML(n,spec,spec.rows());
   if(el.dataset.render!==html){el.innerHTML=html;el.dataset.render=html;}
   document.body.classList.toggle('wb-panel-on',!phone());document.body.classList.toggle('wb-panel-sheet',phone());
+  spec.afterRender?.(el);
  }
  function decorate(){
   const shell=document.querySelector('#app>.shell'),nav=shell?.querySelector(':scope>.workflowNavigation.c3-rail');
@@ -210,6 +212,6 @@
  document.addEventListener('toggle',event=>{const d=event.target;if(!d.matches?.('#c3-tabstrip details')||!d.open||!d.closest('.wb-rail')||phone())return;const r=d.querySelector('summary').getBoundingClientRect();d.style.setProperty('--wb-my',Math.round(Math.max(8,Math.min(r.top,innerHeight-440)))+'px');},true);
  window.matchMedia?.(PHONE).addEventListener?.('change',()=>{sheet=false;decorate();});
  window.addEventListener('study-output-selection',()=>decorate());
- window.c3Workbench={decorate,panels:()=>Object.keys(PANELS).map(Number),isOpen,toggle};
+ window.c3Workbench={registerPanel(n,spec){PANELS[n]=spec;decorate();},decorate,panels:()=>Object.keys(PANELS).map(Number),isOpen,toggle};
  window.c3Shell.register('workbench rail',decorate,{order:70,ignore:'#wb-panel'});
 })();

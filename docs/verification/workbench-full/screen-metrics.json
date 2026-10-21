@@ -1,0 +1,146 @@
+[
+  {
+    "name": "library",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "library",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "source",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "source",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "research",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "research",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "direction",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "direction",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "write",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "write",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "read",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "read",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "check",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "check",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "media",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "media",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "arrange",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "arrange",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "audience",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "audience",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "share",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "share",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "outputs",
+    "width": 1440,
+    "overflow": false,
+    "workOverflow": false
+  },
+  {
+    "name": "outputs",
+    "width": 390,
+    "overflow": false,
+    "workOverflow": false
+  }
+]

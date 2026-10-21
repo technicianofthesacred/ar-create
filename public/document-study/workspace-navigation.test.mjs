@@ -1,12 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {createRequire} from 'node:module';const require=createRequire(new URL('../../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('./workspace-navigation.js',import.meta.url),'utf8'),tick=()=>new Promise(r=>setTimeout(r,15));
-function fixture({learning=false}={}){const dom=new JSDOM('<div id="app"></div>',{url:'http://localhost:8860',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;let p={id:'hk',name:'Invented project',view:learning?'record':'article',viewedStage:learning?3:5,blocks:[{id:'paragraph-one',html:'My kept wording remains here.'}]},binding=learning?null:{id:'native-one',parentStudyId:'hk',title:'My article',canonicalOutputId:'article-one'},chosen=learning?null:'article-one',dirty=false,fail=false;const calls=[],rows=[{id:'article-one',title:'My article',format:'Article',edition:'edition-7',rootBindingId:'root-one'},{id:'carousel-one',title:'My carousel',format:'Carousel',edition:'edition-2',rootBindingId:'root-two'}];
+function fixture({learning=false,overviewRead}={}){const dom=new JSDOM('<div id="app"></div>',{url:'http://localhost:8860',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;let p={id:'hk',name:'Invented project',view:learning?'record':'article',viewedStage:learning?3:5,blocks:[{id:'paragraph-one',html:'My kept wording remains here.'}]},binding=learning?null:{id:'native-one',parentStudyId:'hk',title:'My article',canonicalOutputId:'article-one'},chosen=learning?null:'article-one',dirty=false,fail=false;const calls=[],rows=[{id:'article-one',title:'My article',format:'Article',edition:'edition-7',rootBindingId:'root-one'},{id:'carousel-one',title:'My carousel',format:'Carousel',edition:'edition-2',rootBindingId:'root-two'}];
  const scope=()=>chosen?{projectId:p.id,rootBindingId:chosen==='article-one'?'root-one':'root-two',output:{id:chosen,kind:chosen==='article-one'?'article':'carousel'},owner:chosen==='article-one'?{kind:'native',bindingId:'native-one'}:{kind:'carousel-words'}}:null;
  w.current=()=>p;w.studyDraft={currentBinding:()=>binding,currentProof:()=>binding?{bindingId:binding.id,parentStudyId:p.id,draftHash:'same-saved-hash',dirty}:null,flush:async()=>{if(fail)throw Error('Save failed; current words retained.');return {dirty};},readView:()=>binding?'<article><section data-draft-passage="paragraph-one">'+p.blocks[0].html+'</section></article>':null,openBinding:async input=>{calls.push(['native',input.bindingId]);binding={...binding,id:input.bindingId};p.view='article';p.viewedStage=5;w.render();}};
  w.studyOutputConnection={flush:async()=>{if(fail||dirty)throw Error('Save failed; current words retained.');},selection:scope,selectOutput:async input=>{calls.push(['select',input.outputId]);chosen=input.outputId;return scope();}};
- w.realOutputOverview={read:async({projectId})=>({projectId,outputs:learning?[]:rows,existingDraft:learning?null:{bindingId:'native-one'},emptyActions:learning?[]:[{kind:'create-article'},{kind:'create-carousel'}]}),onAction:async input=>{calls.push(['action',input.outputId,input.kind]);if(input.outputId)chosen=input.outputId;if(input.kind==='native'){binding={id:'native-one',canonicalOutputId:input.outputId,parentStudyId:p.id,title:'My article'};p.view='article';p.viewedStage=5;w.render();}else if(['arrange','words'].includes(input.kind)){p.view='record';p.viewedStage=9;w.render();}}};
+ w.realOutputOverview={read:overviewRead||(async({projectId})=>({projectId,outputs:learning?[]:rows,existingDraft:learning?null:{bindingId:'native-one'},emptyActions:learning?[]:[{kind:'create-article'},{kind:'create-carousel'}]})),onAction:async input=>{calls.push(['action',input.outputId,input.kind]);if(input.outputId)chosen=input.outputId;if(input.kind==='native'){binding={id:'native-one',canonicalOutputId:input.outputId,parentStudyId:p.id,title:'My article'};p.view='article';p.viewedStage=5;w.render();}else if(['arrange','words'].includes(input.kind)){p.view='record';p.viewedStage=9;w.render();}}};
  w.phaseReader=()=>p.viewedStage===3?'<section data-research-point="inquiry-one">Deep independent learning and source questions</section>':p.viewedStage===6?'<section data-draft-passage="paragraph-one">'+p.blocks[0].html+'</section>':p.viewedStage===7?'<section id="current-draft-check"><button>Check saved revision</button></section>':'<article>Stage '+p.viewedStage+'</article>';
  w.render=()=>{w.document.querySelector('#app').innerHTML='<main class="workspace" id="workspace"><header class="topbar"><h1>Invented project</h1></header><nav class="workflowNavigation"><div class="workflowLegend">Old stage bookkeeping</div><div class="workflowSteps">'+Array.from({length:12},(_,i)=>'<button class="workflowStep" data-original-step="'+(i+1)+'"><span class="stepNumber">'+(i+1)+'</span><span class="stepName">Original</span></button>').join('')+'</div></nav>'+(p.view==='article'?'<div id="manuscript" contenteditable="true"><p data-block="paragraph-one">'+p.blocks[0].html+'</p></div>':w.phaseReader(p))+'</main>';for(const b of w.document.querySelectorAll('[data-original-step]'))b.onclick=()=>w.viewPhase(Number(b.dataset.originalStep));};
- w.viewPhase=n=>{calls.push(['stage',n]);p.viewedStage=n;p.view=n===5?'article':'record';w.render();};w.switchProject=id=>{p={...p,id};w.render();};w.setView=view=>{p.view=view;w.render();};w.render();w.eval(code);return {dom,w,calls,get p(){return p},set fail(value){fail=value},set dirty(value){dirty=value},get chosen(){return chosen}};}
+ w.viewPhase=n=>{calls.push(['stage',n]);p.viewedStage=n;p.view=n===5?'article':'record';w.render();};w.switchProject=id=>{p={...p,id};w.render();};w.setView=view=>{p.view=view;w.render();};w.render();w.eval(code);return {dom,w,calls,get p(){return p},set fail(value){fail=value},set dirty(value){dirty=value},get chosen(){return chosen},set binding(value){binding=value}};}
 
 test('all original twelve entrances retain IDs and handlers in four adopted groups; Research has no output gate',async()=>{const f=fixture({learning:true});await tick();assert.deepEqual([...f.w.document.querySelectorAll('.wn-family')].map(n=>n.getAttribute('aria-label')),['Gather','Develop','Make','Deliver']);assert.equal(f.w.document.querySelectorAll('.workflowStep').length,12);assert.match(f.w.document.querySelector('#work-context').textContent,/Research · independent learning/);assert.equal(f.w.document.querySelector('[data-wn-create="article"]').disabled,true);assert.equal(f.calls.some(c=>c[0]==='action'),false);for(let n=1;n<=12;n++){f.w.document.querySelector('[data-original-step="'+n+'"]').click();await tick();assert.equal(f.p.viewedStage,n);}await f.w.viewPhase(3);assert.match(f.w.document.body.textContent,/Deep independent learning/);assert.equal(f.calls.some(c=>c[0]==='select'),false);f.dom.window.close();});
 
@@ -17,3 +17,36 @@ test('failed save blocks mode and identity changes without replacing dirty DOM o
 test('Audience output selection retains exact selected output and edition, and returns to matching arrangement',async()=>{const f=fixture();await tick();await f.w.viewPhase(10);const select=f.w.document.querySelector('[data-wn-piece]');select.value='carousel-one';select.dispatchEvent(new f.w.Event('change',{bubbles:true}));await tick();assert.equal(f.chosen,'carousel-one');assert.equal(f.p.viewedStage,10);assert.match(f.w.document.querySelector('.wn-identity').textContent,/My carousel/);assert.match(f.w.document.querySelector('.wn-identity').textContent,/edition-2/);await f.w.workspaceNavigation.changeMode('arrange');assert.equal(f.p.viewedStage,9);assert.equal(f.chosen,'carousel-one');f.dom.window.close();});
 
 test('carousel Audience highlights Audience alone rather than its Read shortcut',async()=>{const f=fixture();await tick();const select=f.w.document.querySelector('[data-wn-piece]');select.value='carousel-one';select.dispatchEvent(new f.w.Event('change',{bubbles:true}));await tick();assert.equal(f.chosen,'carousel-one');await f.w.viewPhase(10);await tick();assert.equal(f.w.document.querySelector('[data-wn-mode="read"]').hasAttribute('aria-current'),false);assert.equal(f.w.document.querySelector('[data-wn-mode="audience"]').getAttribute('aria-current'),'page');f.dom.window.close();});
+
+
+test('a binding becoming ready invalidates an overview already in flight once, with no typing refresh loop',async()=>{
+ let reads=0,finishFirst;
+ const first=new Promise(resolve=>finishFirst=resolve);
+ const ready={projectId:'hk',outputs:[],existingDraft:{bindingId:'ready-native'},emptyActions:[{kind:'create-article'},{kind:'create-carousel'}]};
+ const f=fixture({learning:true,overviewRead:async()=>{reads++;return reads===1?first:ready;}});
+ try{
+  assert.equal(reads,1);
+  f.binding={id:'ready-native',parentStudyId:'hk',status:'ready',kind:'primary'};
+  f.w.dispatchEvent(new f.w.CustomEvent('study-draft-change',{detail:{parentStudyId:'hk',bindingId:'ready-native'}}));
+  assert.equal(reads,1,'one initial reader remains in flight');
+  finishFirst({projectId:'hk',outputs:[],existingDraft:null,emptyActions:[]});
+  await tick();
+  assert.equal(reads,2,'stale initial snapshot replaced by one fresh read');
+  assert.equal(f.w.document.querySelector('[data-wn-create="carousel"]').disabled,false);
+  for(let i=0;i<8;i++){f.dirty=!!(i%2);f.w.dispatchEvent(new f.w.CustomEvent('study-draft-change',{detail:{parentStudyId:'hk',bindingId:'ready-native',dirty:!!(i%2)}}));f.w.render();}
+  await tick();
+  assert.equal(reads,2,'same binding typing and paint never poll the catalog');
+  assert.equal(f.w.document.querySelector('[data-wn-create="carousel"]').disabled,false);
+ }finally{f.dom.window.close();}
+});
+
+test('an already cached unavailable overview refreshes when its binding becomes ready',async()=>{
+ let reads=0;
+ const f=fixture({learning:true,overviewRead:async()=>({projectId:'hk',outputs:[],existingDraft:null,emptyActions:++reads===1?[]:[{kind:'create-carousel'}]})});
+ try{
+  await tick();assert.equal(f.w.document.querySelector('[data-wn-create="carousel"]').disabled,true);
+  f.binding={id:'new-ready',parentStudyId:'hk',status:'ready'};
+  f.w.dispatchEvent(new f.w.CustomEvent('study-draft-change'));
+  await tick();assert.equal(reads,2);assert.equal(f.w.document.querySelector('[data-wn-create="carousel"]').disabled,false);
+ }finally{f.dom.window.close();}
+});

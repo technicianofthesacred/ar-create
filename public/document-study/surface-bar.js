@@ -122,7 +122,10 @@
   for(const n of document.querySelectorAll('#app [data-c3-bar-twin]'))if(n!==twin)n.removeAttribute('data-c3-bar-twin');
   if(twin&&!twin.hasAttribute('data-c3-bar-twin'))twin.setAttribute('data-c3-bar-twin','');
   if(!bar){bar=document.createElement('header');bar.id='c3-surface-bar';bar.setAttribute('aria-label','This piece and its actions');ws.prepend(bar);}
+  const retained=[...bar.querySelectorAll('[data-c3-retain-control]')];
+  retained.forEach(n=>n.remove());
   bar.innerHTML=html;
+  for(const node of retained)bar.querySelector('.sb-right').append(node);
   if(moreOpen){const rect=bar.querySelector('[data-sb-more]')?.getBoundingClientRect();if(rect)bar.style.setProperty('--c3-menu-top',Math.max(8,rect.bottom+6)+'px');}
   document.body.classList.add('c3-bar-on');
  }

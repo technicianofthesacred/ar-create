@@ -1,5 +1,6 @@
 # 5 — Draft
 
+Current approved appearance: the full repository Workbench prototype and final NOTES govern the isolated review candidate. Write and Read share paragraph positions, measure and type at each size; the original editor, saved history, exact Undo, part selection and meaningful read-only states stay authoritative. See [CURRENT](../../status/CURRENT.md) for proof; older typography notes below are historical where they conflict.
 Intent: develop the chosen piece with AI assistance while preserving Adrian's human authorship.
 
 ## Work surface
