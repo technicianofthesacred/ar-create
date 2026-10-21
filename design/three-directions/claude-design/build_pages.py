@@ -93,7 +93,7 @@ def direction_page(d):
     out = [HEAD.format(title=f"{d['letter']} {d['name']}")]
     out.append(f'      <div class="pg" data-screen-label="{d["letter"]} {e(d["name"])}">\n        <div class="wrap">\n')
     out.append(f'''          <div>
-            <p class="kick">Direction {d['letter']} · <a href="?file=Start%20here.dc.html">Start here</a> · <a href="?file=Compare.dc.html">Compare</a></p>
+            <p class="kick">Direction {d['letter']} · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Start%20here.dc.html" target="_top">Start here</a> · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Compare.dc.html" target="_top">Compare</a></p>
             <h1 class="h1">{e(d['name'])}</h1>
             <p class="lede">{e(d['idea'])}</p>
           </div>
@@ -102,7 +102,7 @@ def direction_page(d):
             <h2 class="h2">The prototype</h2>
             <p class="sub">Live and clickable. Invented content; nothing saves, no AI runs. Built by another session — this canvas shows it unedited.</p>
             <div class="frames">
-              <div class="fr"><div class="frl"><span>Desktop</span><a href="{proto}" target="_blank">Open full screen →</a></div><iframe class="ifd" src="{proto}" title="Direction {d['letter']} desktop"></iframe></div>
+              <div class="fr"><div class="frl"><span>Desktop</span><a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=prototypes%2F{d['dir']}%2Findex.html" target="_top">Open full screen →</a></div><iframe class="ifd" src="{proto}" title="Direction {d['letter']} desktop"></iframe></div>
               <div class="fr"><div class="frl"><span>Phone · 390px</span></div><iframe class="ifm" src="{proto}" title="Direction {d['letter']} phone"></iframe></div>
             </div>
           </div>
@@ -158,13 +158,13 @@ def compare_page(ds):
     out = [HEAD.format(title="Compare")]
     out.append('      <div class="pg" data-screen-label="Compare">\n        <div class="wrap" style="max-width:1600px">\n')
     out.append('''          <div>
-            <p class="kick"><a href="?file=Start%20here.dc.html">Start here</a> · Compare</p>
+            <p class="kick"><a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Start%20here.dc.html" target="_top">Start here</a> · Compare</p>
             <h1 class="h1">All three, side by side</h1>
             <p class="lede">Same records, same twelve sections, same look. What differs is what you see first and how you move.</p>
           </div>
 ''')
     cards = "".join(f'''            <div>
-              <div class="cmph"><span class="num">{d['letter']}</span><span class="ft" style="margin:0">{e(d['name'])}</span><span class="dimt">{e(d['short'])}</span><a href="?file={d['file']}">Direction page →</a></div>
+              <div class="cmph"><span class="num">{d['letter']}</span><span class="ft" style="margin:0">{e(d['name'])}</span><span class="dimt">{e(d['short'])}</span><a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file={d['file']}" target="_top">Direction page →</a></div>
               <div class="fr"><iframe class="ifc" src="prototypes/{d['dir']}/index.html" title="Direction {d['letter']}"></iframe></div>
             </div>
 ''' for d in ds)
