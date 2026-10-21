@@ -92,11 +92,18 @@ test('the real CLI process and the MCP tools speak the same registry; human-only
  const anonymous=createTools({url:f.url});await assert.rejects(anonymous.callTool('ar_create_list_commands',{}),/Name the agent/);
 });
 
+test('`collection list` with no input reaches the catalog (an empty selector is still sent)',async t=>{
+ const f=await setup(t),answer=await f.cli(['collection','list']);
+ assert.equal(answer.exitCode,0,JSON.stringify(answer.result));
+ assert.notEqual(answer.result?.error,'request_failed');
+});
+
 test('requests are built from the registry: path ids, scoped queries, input-json',()=>{
  assert.deepEqual(buildRequest({name:'a',method:'POST',route:'/api/passage/revisions/{id}/run',schema:{}},{id:'abc',x:1}),{method:'POST',path:'/api/passage/revisions/abc/run',body:{x:1}});
  assert.deepEqual(buildRequest({name:'b',method:'POST',route:'/api/study-ai/propose',mode:'scope',schema:{query:['bindingId','parentStudyId','requestId?']}},{bindingId:'b',parentStudyId:'p',requestId:'r',replacements:[]}),{method:'POST',path:'/api/study-ai/propose?bindingId=b&parentStudyId=p&requestId=r',body:{replacements:[]}});
  assert.deepEqual(buildRequest({name:'c',method:'POST',route:'/api/shared-carousels/prepare',mode:'scope-copy',schema:{query:['projectId','documentId','outputId']}},{projectId:'1',documentId:'2',outputId:'3'}).body,{projectId:'1',documentId:'2',outputId:'3'});
  assert.equal(buildRequest({name:'d',method:'GET',route:'/api/inquiries/read',mode:'input-json',schema:{}},{collectionId:'x'}).path,'/api/inquiries/read?input='+encodeURIComponent(JSON.stringify({collectionId:'x'})).replace(/%20/g,'+'));
+ assert.equal(buildRequest({name:'f',method:'GET',route:'/api/inquiries/catalog',mode:'input-json',schema:{}},{}).path,'/api/inquiries/catalog?input=%7B%7D','an empty selector is still sent: the server answers 400 without one');
  assert.equal(buildRequest({name:'e',method:'GET',route:'/api/study/media-usage',schema:{}},{sourceId:['a','b']}).path,'/api/study/media-usage?sourceId=a&sourceId=b');
 });
 

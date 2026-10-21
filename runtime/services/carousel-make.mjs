@@ -1,11 +1,11 @@
 import {createCarouselFit,carouselFitCatalog} from './carousel-fit.mjs';
+import {CAROUSEL_RULES,ruleLocation} from './editorial-rules.mjs';
 import {assertOutputEditorialReady} from '../src/workspaces/editorial-state.mjs';
 import {createArtifactExecution,automaticArtifacts} from './artifact-execution.mjs';
 // Isolated adapter for /arcreate's real Make rules. It composes no words or
 // layouts itself: a normal provider terminal writes the owned result artifact.
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import {randomUUID} from 'node:crypto';
 import {StateError} from '../store.mjs';
 import {atomicWrite,readJson,digest,ensurePrivateDirectory,resolveInside,regular} from './files.mjs';
@@ -39,7 +39,8 @@ function adaptationGuidance(policy){return [
  'This is a draft awaiting human review. Structural validation checks the recorded slide range, format and permitted media; it cannot certify factual accuracy, voice, meaning or editorial quality.',
 ].join('\n\n');}
 function selectedIds(value,label){if(!Array.isArray(value)||value.length>100||value.some(id=>typeof id!=='string'||!id)||new Set(value).size!==value.length)throw new StateError(`${label} must contain up to 100 unique library IDs.`);return value;}
-export function createCarouselMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),publicDir,fitPreflight=createCarouselFit({publicDir}),skillRoot=process.env.AR_CREATE_EDITORIAL_SKILL_ROOT||path.join(os.homedir(),'.claude','skills')}){
+export function createCarouselMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),publicDir,fitPreflight=createCarouselFit({publicDir}),skillRoot}){
+ const ruleFile=name=>{const {root,rel}=ruleLocation(name,{skillRoot});return path.join(root,rel);};
  const dir=ensurePrivateDirectory(dataDir,'carousel-make');let pending=Promise.resolve();
  const serial=fn=>{const op=pending.then(fn);pending=op.catch(()=>{});return op;};
  const file=id=>{if(!uuid.test(id))throw new StateError('Unknown Make request.',404);return path.join(dir,id+'.json');};
@@ -67,7 +68,7 @@ export function createCarouselMake({dataDir,store,library,requests,terminal,exec
   if(typeof input.wordsHash!=='string'||!/^[a-f0-9]{64}$/.test(input.wordsHash)||input.wordsHash!==wordsHash||output.wordsReview?.hash!==wordsHash||typeof output.wordsReview.reviewedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(output.wordsReview.reviewedAt)||!Number.isFinite(Date.parse(output.wordsReview.reviewedAt)))throw new StateError('Explicitly review the complete writing sequence before arranging visuals.',409);
   const photoIds=selectedIds(input.photoIds||[],'photoIds'),sourceIds=selectedIds(input.sourceIds||[],'sourceIds'),id=randomUUID(),cwd=ensurePrivateDirectory(dir,id),tree=await library.tree(),photos=await capturePhotos(cwd,photoIds,tree),sources=[];
   const sourcesDir=ensurePrivateDirectory(cwd,'sources');let sourceBytes=0;for(const sourceId of sourceIds){const source=await library.read(sourceId);if(typeof source.text!=='string'||!source.cardEligibility?.eligible)throw new StateError('Choose readable visual-reference sources.');sourceBytes+=Buffer.byteLength(source.text);if(sourceBytes>8*1024*1024)throw new StateError('Visual reference sources exceed 8 MB.',413);const snapshot=path.join(sourcesDir,(sources.length+1)+'.txt');atomicWrite(snapshot,source.text,{exclusive:true});fs.chmodSync(snapshot,0o400);sources.push({id:source.id,title:source.title||source.name,hash:source.hash,bodyHash:digest(source.text),snapshot});}
-  const skillNames=['arcreate/stages/make.md','arcreate/brands/teajia.md','mag/LESSONS.md'],skillFiles=skillNames.map(name=>{const source=path.join(skillRoot,name);regular(source);const body=fs.readFileSync(source,'utf8');return {name,body,hash:digest(body)};});
+  const skillNames=CAROUSEL_RULES,skillFiles=skillNames.map(name=>{const source=ruleFile(name);regular(source);const body=fs.readFileSync(source,'utf8');return {name,body,hash:digest(body)};});
   const context=['# Reviewed carousel visual authority','Current manuscript text and shared writing guidance are NOT sent. The explicitly reviewed carousel sequence is the wording authority. Style guidance comes only from captured visual skill snapshots in request.md. Original sources and personal notes stay untouched.','Writing-review receipt: '+JSON.stringify(output.wordsReview),'Frozen ordered words file: '+JSON.stringify(path.join(cwd,'frozen-words.json')),'Available real photographs: '+JSON.stringify(photos),'Optional readable visual references: '+JSON.stringify(sources)].join('\n\n');
   atomicWrite(path.join(cwd,'context.md'),context,{exclusive:true});fs.chmodSync(path.join(cwd,'context.md'),0o400);atomicWrite(path.join(cwd,'frozen-words.json'),JSON.stringify(frozenWords,null,2),{exclusive:true});fs.chmodSync(path.join(cwd,'frozen-words.json'),0o400);
   const resultPath=path.join(cwd,'result.json'),completionPath=path.join(cwd,'complete.json');
@@ -90,8 +91,8 @@ export function createCarouselMake({dataDir,store,library,requests,terminal,exec
   const doc=store.get().project.document;if(!doc?.paragraphs?.length)throw new StateError('Save a manuscript before asking AI to make a carousel.');
   if(input.includeThoughts!==undefined&&input.includeThoughts!==false)throw new StateError('Personal thoughts are excluded from Make; add accepted material to the manuscript explicitly.');
   const photoIds=selectedIds(input.photoIds||[],'photoIds'),sourceIds=selectedIds(input.sourceIds||[],'sourceIds');
-  const skillNames=['arcreate/stages/make.md','arcreate/brands/teajia.md','mag/LESSONS.md'];
-  const skillFiles=skillNames.map(name=>{const source=path.join(skillRoot,name);regular(source);const body=fs.readFileSync(source,'utf8');return {name,hash:digest(body),body};});
+  const skillNames=CAROUSEL_RULES;
+  const skillFiles=skillNames.map(name=>{const source=ruleFile(name);regular(source);const body=fs.readFileSync(source,'utf8');return {name,hash:digest(body),body};});
   const context=await requests.preview({paragraphIds:doc.paragraphs.map(p=>p.id),sourceIds,includeThoughts:false,...(contextSelection?{contextSelection}:{})});
   if(!store.get().project.document||fingerprint(store.get().project.document)!==fingerprint(doc))throw new StateError('The manuscript changed while preparing Make. Try again.',409);
   const id=randomUUID(),cwd=ensurePrivateDirectory(dir,id),photosDir=ensurePrivateDirectory(cwd,'photos');
@@ -206,7 +207,7 @@ export function createCarouselMake({dataDir,store,library,requests,terminal,exec
  }
  async function validateAutomatic(record){
   validateReceipt(record);await validatePhotos(record);await validateSources(record);
-  for(const skill of record.skills){const original=path.join(skillRoot,skill.name);regular(original);if(digest(fs.readFileSync(original))!==skill.hash)throw new StateError('Captured carousel skills changed. Prepare a fresh request.',409);}
+  for(const skill of record.skills){const original=ruleFile(skill.name);regular(original);if(digest(fs.readFileSync(original))!==skill.hash)throw new StateError('Captured carousel skills changed. Prepare a fresh request.',409);}
   if(isNew(record)&&record.stage==='look')await validateLook(record);else{currentDocument(record);const request=requests.recent().records.find(item=>item.manifest.id===record.requestId);if(!request||request.manifest.contextHash!==record.contextHash)throw new StateError('Captured writing context is unavailable.',409);await requests.validateWriting(request);currentDocument(record);}
  }
  const automatic=automaticArtifacts({execution,load:getRecord,loadOwned:ownedRecord,isActive:record=>store.get().project.id===record.projectId,persist,workspace,validate:validateAutomatic,names:record=>[artifactName(record)],collect:id=>get(id,true),serial});

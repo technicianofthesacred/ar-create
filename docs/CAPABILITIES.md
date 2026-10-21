@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It reads the code, so it cannot drift.
-> Generated 2026-10-21T02:56:56.984Z.
+> Generated 2026-10-21T03:26:15.507Z.
 
-**At a glance:** 7 commands · 243 registry commands · 13 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 243 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -376,6 +376,10 @@ Exit codes: 0 = ok; 1 = failed; 2 = usage; 3 = conflict (re-read; never force); 
 | `piece list` | registry command `pieces.get` |
 | `piece create` | registry command `pieces.post` |
 | `piece switch` | registry command `pieces.switch` |
+| `magazine board` | registry command `magazine.board` |
+| `magazine story` | registry command `magazine.story` |
+| `magazine propose` | registry command `magazine.write` |
+| `magazine status` | registry command `magazine.status.table` |
 | `draft catalog` | registry command `study-draft.catalog` |
 | `draft read` | registry command `study-draft.read` |
 | `draft open` | registry command `study-draft.open` |

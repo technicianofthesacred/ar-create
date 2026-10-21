@@ -22,7 +22,7 @@ export function buildRequest(command, input = {}) {
   });
   const query = new URLSearchParams();
   if (command.method === 'GET' || command.method === 'HEAD') {
-    if (command.mode === 'input-json') { if (Object.keys(body).length) query.set('input', JSON.stringify(body)); }
+    if (command.mode === 'input-json') query.set('input', JSON.stringify(body)); // always sent: the server requires exactly one input, even `{}`
     else for (const [key, value] of Object.entries(body)) for (const item of Array.isArray(value) ? value : [value]) query.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item));
     return { method: command.method, path: route + (query.size ? '?' + query : ''), body: undefined };
   }

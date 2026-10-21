@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';import {fileURLToPath} from 'node:url';
+import {validateMagazineVaultConfig} from './runtime/services/magazine-vault/config.mjs';
 const packageDir=path.dirname(fileURLToPath(import.meta.url));
 const checkoutDir=packageDir;
 const canonicalDestination=value=>{let ancestor=path.resolve(value);const suffix=[];while(!fs.existsSync(ancestor)){suffix.unshift(path.basename(ancestor));const parent=path.dirname(ancestor);if(parent===ancestor)throw Error('Data directory has no existing ancestor.');ancestor=parent;}return path.resolve(fs.realpathSync(ancestor),...suffix);};
@@ -62,8 +63,13 @@ export function loadConfig(env=process.env){
  const editorialSkillsDir=optionalDirectory(config.editorialSkillsDir,'editorialSkillsDir');
  const fixturesDir=optionalDirectory(config.fixturesDir,'fixturesDir');
  if(config.magazine!==undefined&&config.magazine!==null&&(typeof config.magazine!=='object'||Array.isArray(config.magazine)))throw Error('magazine must be an object.');
+ // The magazine, from trusted configuration only: where it is, which folders feed it, and whether AR Create may write it.
+ // writable defaults to false; the vault, Files and teajia folders must already exist, the drop and staging folders may not yet.
  const magazineVaultRoot=optionalDirectory(config.magazine?.vaultRoot,'magazine.vaultRoot');
+ const magazineFilesRoot=optionalDirectory(config.magazine?.filesRoot,'magazine.filesRoot');
+ const magazineSendRepo=optionalDirectory(config.magazine?.magSendRepo,'magazine.magSendRepo');
+ const magazine=validateMagazineVaultConfig({...(config.magazine||{}),vaultRoot:magazineVaultRoot,filesRoot:magazineFilesRoot,magSendRepo:magazineSendRepo});
  let editorialSkills=Array.isArray(config.editorialSkills)?config.editorialSkills:[];
  if(!editorialSkills.length&&editorialSkillsDir)editorialSkills=['arcreate/SKILL.md','mag/SKILL.md'].map(name=>path.join(editorialSkillsDir,name)).filter(file=>fs.existsSync(file));
- return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine:{vaultRoot:magazineVaultRoot},allowScratchRoots:allowScratch,tools:{...tools,python}};
+ return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
 }

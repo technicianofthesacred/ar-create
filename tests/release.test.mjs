@@ -8,8 +8,10 @@ function scene(t){
  const base=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'ar-release-')));t.after(()=>fs.rmSync(base,{recursive:true,force:true}));
  const repo=path.join(base,'repo'),home=path.join(base,'home');fs.mkdirSync(repo);
  git(repo,'init','-q');git(repo,'config','user.email','test@example.invalid');git(repo,'config','user.name','Test');
- const files={'serve.mjs':'console.log("serve");\n','runtime/lib.mjs':'export const one=1;\n','public/index.html':'<p>invented</p>\n','tests/lib.test.mjs':'// a test\n','runtime/lib.test.mjs':'// another test\n','TODO.md':'- [ ] invented\n'};
+ const files={'serve.mjs':'console.log("serve");\n','runtime/lib.mjs':'export const one=1;\n','public/index.html':'<p>invented</p>\n','tests/lib.test.mjs':'// a test\n','runtime/lib.test.mjs':'// another test\n','TODO.md':'- [ ] invented\n','AGENTS.md':'# Invented agent entry\n','editorial/stages/mag/ask.md':'# invented stage\n','tools/magazine/mag.mjs':'export const mag=1;\n'};
  for(const [file,body] of Object.entries(files))write(repo,file,body);
+ // CLAUDE.md is a symlink to AGENTS.md, as in the real repository.
+ fs.symlinkSync('AGENTS.md',path.join(repo,'CLAUDE.md'));files['CLAUDE.md']=files['AGENTS.md'];
  const manifest=()=>{const rows=Object.keys(files).sort().map(file=>({path:file,candidateSha256:sha(fs.readFileSync(path.join(repo,file)))}));write(repo,'source-manifest.json',JSON.stringify({schema:'test',included:[],authored:rows},null,2)+'\n');};
  const commit=message=>{manifest();git(repo,'add','-A');git(repo,'commit','-q','-m',message);return git(repo,'rev-parse','HEAD').trim();};
  const run=(...args)=>spawnSync(process.execPath,[script,'--repo',repo,'--home',home,...args],{encoding:'utf8'});
@@ -32,7 +34,7 @@ test('refuses a dirty tree and a stale manifest, and writes nothing',t=>{
 
 test('dry run reports the plan and writes nothing',t=>{
  const s=scene(t);const commit=s.commit('first');
- const result=s.run('--dry-run');assert.equal(result.status,0,result.stderr);assert.match(result.stdout,new RegExp(commit.slice(0,12)));assert.match(result.stdout,/shipped 3/);assert.match(result.stdout,/dry run: nothing written/);
+ const result=s.run('--dry-run');assert.equal(result.status,0,result.stderr);assert.match(result.stdout,new RegExp(commit.slice(0,12)));assert.match(result.stdout,/shipped 7/);assert.match(result.stdout,/dry run: nothing written/);
  assert.equal(fs.existsSync(s.home),false);
 });
 
@@ -43,7 +45,7 @@ test('releases exactly the manifest files, records the commit, keeps the previou
  const first=s.commit('first');
  let result=s.run('--built-by','agent:test');assert.equal(result.status,0,result.stderr);
  assert.match(result.stdout,/restart \(not done by this script\)/);
- assert.deepEqual(walk(path.join(s.home,'service')),['public/index.html','runtime/lib.mjs','serve.mjs','source-manifest.json'],'no tests, no TODO, nothing else');
+ assert.deepEqual(walk(path.join(s.home,'service')),['AGENTS.md','CLAUDE.md','editorial/stages/mag/ask.md','public/index.html','runtime/lib.mjs','serve.mjs','source-manifest.json','tools/magazine/mag.mjs'],'editorial and tools/magazine ship; no tests, no TODO, nothing else');
  const record=JSON.parse(fs.readFileSync(path.join(s.home,'RELEASE.json'),'utf8'));
  assert.equal(record.sha,first);assert.equal(record.builtBy,'agent:test');assert.match(record.builtAt,/^\d{4}-\d\d-\d\dT/);assert.equal(record.manifestSha256,sha(fs.readFileSync(path.join(s.repo,'source-manifest.json'))));assert.equal(record.previousSha,null);
  assert.equal(fs.existsSync(path.join(s.home,'service.next')),false);assert.equal(fs.existsSync(path.join(s.home,'.release.lock')),false);
@@ -94,5 +96,40 @@ test('a build that leaves a file outside the manifest and the declared generated
  const result=s.run();assert.equal(result.status,1);assert.match(result.stderr,/not in the manifest and not declared generated/);assert.match(result.stderr,/runtime\/stray-receipt\.md/);
  assert.equal(JSON.parse(fs.readFileSync(path.join(s.home,'RELEASE.json'),'utf8')).sha,first,'still the first release');
  assert.equal(fs.existsSync(path.join(s.home,'service.next')),false,'staging is cleaned up');assert.equal(fs.existsSync(path.join(s.home,'.release.lock')),false);
- assert.deepEqual(walk(path.join(s.home,'service')),['public/index.html','runtime/lib.mjs','serve.mjs','source-manifest.json']);
+ assert.deepEqual(walk(path.join(s.home,'service')),['AGENTS.md','CLAUDE.md','editorial/stages/mag/ask.md','public/index.html','runtime/lib.mjs','serve.mjs','source-manifest.json','tools/magazine/mag.mjs']);
+});
+
+test('copies AGENTS.md to the home and appends one release line to the journal, through the app journal writer',t=>{
+ const s=scene(t);fs.mkdirSync(path.join(s.home,'data'),{recursive:true});write(s.home,'data/saved.json','{"precious":true}');
+ const saved=sha(fs.readFileSync(path.join(s.home,'data/saved.json')));
+ const first=s.commit('first');let result=s.run('--built-by','agent:test');assert.equal(result.status,0,result.stderr);
+ assert.equal(fs.lstatSync(path.join(s.home,'AGENTS.md')).isSymbolicLink(),false,'a real file, not the symlink');
+ assert.equal(fs.readFileSync(path.join(s.home,'AGENTS.md'),'utf8'),'# Invented agent entry\n');
+ const month=new Date().toISOString().slice(0,7),journal=path.join(s.home,'data/journal',month+'.jsonl');
+ let lines=fs.readFileSync(journal,'utf8').trim().split('\n').map(line=>JSON.parse(line));
+ assert.equal(lines.length,1);
+ assert.equal(lines[0].kind,'release:'+first);assert.equal(lines[0].actor,'agent:test');assert.equal(lines[0].status,'committed');assert.equal(lines[0].client,'file');assert.deepEqual(lines[0].scope,{kind:'system',id:first});
+ assert.match(lines[0].ts,/^\d{4}-\d\d-\d\dT/);assert.match(lines[0].summary,new RegExp(first.slice(0,12)));
+ assert.equal(sha(fs.readFileSync(path.join(s.home,'data/saved.json'))),saved,'nothing else in data/ is touched');
+ // A second release appends; it never rewrites the first line. The home copy follows the repo.
+ s.write('AGENTS.md','# Invented agent entry, second edition\n');const second=s.commit('second');
+ result=s.run();assert.equal(result.status,0,result.stderr);
+ lines=fs.readFileSync(journal,'utf8').trim().split('\n').map(line=>JSON.parse(line));
+ assert.deepEqual(lines.map(line=>line.kind),['release:'+first,'release:'+second]);assert.equal(lines[1].before.hash,first);
+ assert.equal(fs.readFileSync(path.join(s.home,'AGENTS.md'),'utf8'),'# Invented agent entry, second edition\n');
+ // The journal is the app's own: it reads the line back.
+ assert.match(result.stdout,/journal: release line written/);
+});
+
+test('a release into a home with no data folder still records the line, and a dry run writes neither the copy nor the line',t=>{
+ const s=scene(t);s.commit('first');
+ assert.equal(s.run('--dry-run').status,0);assert.equal(fs.existsSync(s.home),false);
+ assert.equal(s.run().status,0);assert.equal(fs.readdirSync(path.join(s.home,'data/journal')).length,1);
+});
+
+test('the real manifest ships the editorial files and the magazine tools',()=>{
+ const manifest=JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname,'../source-manifest.json'),'utf8')),paths=[...manifest.included,...manifest.authored].map(row=>row.path);
+ for(const prefix of ['editorial/','tools/magazine/'])assert.ok(paths.some(file=>file.startsWith(prefix)),prefix+' is in the manifest');
+ assert.ok(paths.includes('AGENTS.md'));
+ assert.ok(paths.includes('editorial/stages/mag/ask.md'),'the stage files the article and carousel makers read');
 });
