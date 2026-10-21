@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR Create — The Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;
+  --ui:"Plus Jakarta Sans",system-ui,sans-serif;--doc:system-ui,-apple-system,"Segoe UI",sans-serif;--quote:"Lora",Georgia,serif;color-scheme:dark}
+:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:400 14px/1.45 var(--ui);overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--warm) 45%,transparent) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--warm) 45%,transparent);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--warm) 70%,transparent)}
+.ic{display:inline-flex;align-items:center;justify-content:center;flex:none}
+.ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.ic.sm svg{width:13px;height:13px}
+.dim{color:var(--dim)}
+.tag{font-size:11px;letter-spacing:.02em;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.tag.warm{color:var(--warm);border-color:color-mix(in srgb,var(--warm) 40%,transparent)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-weight:500;background:var(--paper);white-space:nowrap}
+.btn:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))}
+.btn.primary{background:var(--warm);color:var(--bg);border-color:var(--warm)}
+.btn.ghost{background:none}
+.btn.on{border-color:var(--warm);color:var(--warm)}
+.link{color:var(--warm);font-weight:500;font-size:13px}
+.link:hover{text-decoration:underline}
+.tone-good{color:var(--good)}.tone-warn{color:var(--warnc)}.tone-bad{color:var(--bad)}.tone-dim{color:var(--dim)}
+.who{font-size:11px;font-weight:600;letter-spacing:.03em;padding:1px 6px;border-radius:4px;background:var(--sel);color:var(--dim);white-space:nowrap}
+.who.claude{color:var(--warm)}.who.codex{color:var(--good)}.who.you{color:var(--ink)}
+
+/* ---------- frame ---------- */
+.top{height:48px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--rail)}
+.brand{font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.brand span{color:var(--warm);font-weight:500}
+.crumbs{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;font-size:13px;color:var(--dim)}
+.crumbs button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.crumbs button:hover{color:var(--ink)}
+.crumbs .cur{color:var(--ink);font-weight:500}
+.crumbs .sep{opacity:.5}
+.top .sp{flex:1}
+.iconbtn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;color:var(--dim)}
+.iconbtn:hover{background:var(--sel);color:var(--ink)}
+.phone-only{display:none!important}
+.app{display:grid;grid-template-columns:288px minmax(0,1fr);height:calc(100dvh - 48px)}
+.app.rail{grid-template-columns:56px minmax(0,1fr)}
+#main{overflow:auto;min-width:0;position:relative}
+
+/* ---------- side ---------- */
+.side{border-right:1px solid var(--line);background:var(--rail);display:flex;flex-direction:column;min-height:0}
+.side-head{padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
+.search{display:flex;align-items:center;gap:6px;height:34px;border:1px solid var(--line);border-radius:6px;padding:0 10px;background:var(--bg);color:var(--dim)}
+.search input{border:0;outline:0;background:none;flex:1;min-width:0;font-size:13px;color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:4px}
+.filters button{font-size:12px;padding:3px 8px;border-radius:5px;color:var(--dim);border:1px solid transparent}
+.filters button:hover{color:var(--ink)}
+.filters button.on{color:var(--ink);border-color:var(--line);background:var(--bg)}
+.filters .n{color:var(--warm);margin-left:3px}
+.plist{overflow:auto;flex:1;padding:4px 6px 12px}
+.prow{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:6px;border-left:2px solid transparent}
+.prow:hover{background:var(--sel)}
+.prow.on{background:var(--sel);border-left-color:var(--warm)}
+.prow .t{display:flex;align-items:center;gap:6px;font-weight:600;font-size:13.5px}
+.prow .t .wait{width:7px;height:7px;border-radius:50%;background:var(--warnc);flex:none}
+.prow .marks{display:flex;gap:3px;margin:4px 0 3px;color:var(--dim)}
+.prow .st{font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .touch{font-size:11px;color:var(--dim);margin-top:2px}
+.side-foot{padding:8px 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.rail .side-head .search,.rail .filters,.rail .prow .marks,.rail .prow .st,.rail .prow .touch,.rail .side-foot .lbl{display:none}
+.rail .side-head{padding:10px 6px}
+.rail .prow{padding:8px 0;text-align:center;border-left:0}
+.rail .prow .t{justify-content:center;position:relative}
+.rail .prow .t .full{display:none}
+.mono{display:none;width:32px;height:32px;border-radius:6px;background:var(--bg);border:1px solid var(--line);align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--dim)}
+.rail .mono{display:inline-flex}
+.rail .prow.on .mono{border-color:var(--warm);color:var(--warm)}
+.rail .prow .t .wait{position:absolute;top:0;right:8px}
+.empty-list{padding:16px 10px;color:var(--dim);font-size:13px}
+
+/* ---------- context tabs ---------- */
+.ctx{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:stretch;gap:2px;padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.ctx::-webkit-scrollbar{display:none}
+.ctx .g{display:flex;align-items:center;gap:1px;padding-right:10px;margin-right:6px;border-right:1px solid var(--line)}
+.ctx .g:last-child{border-right:0}
+.ctx .gl{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);opacity:.75;margin-right:6px;white-space:nowrap}
+.ctx button{font-size:13px;color:var(--dim);padding:11px 8px 10px;border-bottom:2px solid transparent;white-space:nowrap}
+.ctx button:hover{color:var(--ink)}
+.ctx button.on{color:var(--ink);border-bottom-color:var(--warm);font-weight:500}
+.ctx .board-tab{font-weight:600}
+.secwrap{padding:20px 24px 60px;max-width:1400px}
+.sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.sec-head h2{margin:0;font-size:20px;font-weight:600}
+.sec-head .num{font-size:12px;color:var(--warm);font-weight:600}
+.sec-head p{margin:0;color:var(--dim);font-size:13.5px;flex:1;min-width:200px}
+.sec-head .acts{display:flex;gap:6px;flex-wrap:wrap}
+.pick{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 16px;align-items:center}
+.pick .lbl{font-size:12px;color:var(--dim);margin-right:4px}
+.pick button{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 9px;border:1px solid var(--line);border-radius:5px;color:var(--dim)}
+.pick button.on{color:var(--ink);border-color:var(--warm)}
+.honest{font-size:12.5px;color:var(--dim);display:flex;gap:6px;align-items:flex-start}
+.honest .ic{color:var(--warnc);margin-top:1px}
+
+/* ---------- home ---------- */
+.home{padding:28px 28px 60px;max-width:1400px}
+.home h1{font-size:26px;font-weight:600;margin:0 0 4px}
+.home .lede{color:var(--dim);margin:0 0 24px;font-size:14.5px}
+.strip{margin-bottom:28px}
+.strip h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:0 0 10px;font-weight:600;display:flex;gap:8px;align-items:center}
+.pickup{display:grid;grid-template-columns:1fr auto;grid-template-areas:"l b" "t b" "s b";gap:2px 16px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);border-left:3px solid var(--warm);border-radius:6px;padding:14px 16px;background:var(--paper);margin-bottom:28px}
+.pickup:hover{background:var(--sel)}
+.pickup .pl{grid-area:l;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:600}
+.pickup .pt{grid-area:t;font-size:16px;font-weight:600;color:var(--ink)}
+.pickup .ps{grid-area:s;font-size:13px;color:var(--dim)}
+.pickup .btn{grid-area:b}
+.retbtn{color:var(--warm)!important;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.retbtn .ic{transform:scaleX(-1)}
+.libl{border-top:1px solid var(--line)}
+.lrow2{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+.lrow2 .lt{display:flex;flex-direction:column;min-width:0}.lrow2 .lt b{font-weight:500}
+.lrow2 .lu{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font-size:13px}
+.lrow2 .unc{grid-column:1;font-size:10px}
+@media (max-width:640px){.lrow2{grid-template-columns:auto minmax(0,1fr)}.lrow2 .lu{grid-column:2;justify-content:flex-start}.pickup{grid-template-columns:1fr;grid-template-areas:"l" "t" "s" "b"}.pickup .btn{justify-self:start;margin-top:8px}}
+.wait-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.wcard{text-align:left;border:1px solid var(--line);border-left:3px solid var(--warnc);border-radius:6px;padding:12px 14px;background:var(--paper)}
+.wcard:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line));border-left-color:var(--warnc)}
+.wcard .s{font-size:12px;color:var(--dim)}
+.wcard .a{font-weight:500;margin-top:3px}
+.wcard .go{font-size:12.5px;color:var(--warm);margin-top:6px}
+.feed{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.feed button{display:flex;gap:10px;align-items:baseline;text-align:left;padding:9px 2px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.feed button:hover .what{color:var(--warm)}
+.feed .when{font-size:12px;color:var(--dim);margin-left:auto;white-space:nowrap}
+.feed .subj{font-weight:600}
+.feed .what{color:var(--ink)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.tile{text-align:left;border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--paper);display:flex;flex-direction:column;gap:10px;min-width:0}
+.tile:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))}
+.tile h4{margin:0;font-size:15.5px;font-weight:600;display:flex;gap:8px;align-items:center}
+.tile .left{font-size:12.5px;color:var(--dim)}
+.tile .left b{color:var(--ink);font-weight:500}
+.tile .minis{display:flex;gap:8px;overflow:hidden;min-height:74px}
+.tile .foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim);gap:8px}
+.tile.new{align-items:center;justify-content:center;border-style:dashed;color:var(--dim);min-height:180px;text-align:center}
+
+/* miniatures */
+.mini{flex:none;width:96px;height:74px;border:1px solid var(--line);border-radius:5px;background:var(--bg);padding:6px;overflow:hidden;display:flex;flex-direction:column;gap:3px;font-size:9px;line-height:1.25;color:var(--dim)}
+.mini b{color:var(--ink);font-size:9.5px;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mini.car{flex-direction:row;gap:3px;padding:6px 5px;align-items:flex-start}
+.mini.car i{display:block;width:21px;aspect-ratio:4/5;border:1px solid var(--line);border-radius:2px;background:var(--sel)}
+.mini.car i.e{background:none;border-style:dashed}
+.mini .k{display:flex;align-items:center;gap:3px;color:var(--dim)}
+.mini .k .ic svg{width:10px;height:10px}
+
+/* ---------- board ---------- */
+.bhead{padding:20px 24px 4px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end}
+.bhead h1{margin:0;font-size:24px;font-weight:600;outline:0;min-width:120px}
+.bhead .lo{font-size:13px;color:var(--dim);flex:1;min-width:240px}
+.bhead .lo b{color:var(--ink);font-weight:500}
+.board{display:grid;grid-template-columns:minmax(240px,.9fr) 22px minmax(300px,1.25fr) 22px minmax(300px,1.25fr);gap:28px 0;padding:16px 24px 60px;align-items:start}
+.arrow{align-self:start;margin-top:14px;color:var(--dim);display:flex;justify-content:center}
+.band{min-width:0}
+.band>header{display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.band>header h3{margin:0;font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:700}
+.band>header .c{font-size:12px;color:var(--dim)}
+.band>header .sp{flex:1}
+.ocard{display:flex;gap:10px;width:100%;text-align:left;padding:10px;border:1px solid var(--line);border-radius:7px;margin-bottom:8px;background:var(--paper)}
+.ocard:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))}
+.ocard .ty{width:30px;height:30px;border-radius:6px;background:var(--sel);display:flex;align-items:center;justify-content:center;color:var(--warm);flex:none}
+.ocard .tt{font-weight:500;font-size:13.5px}
+.ocard .mm{font-size:12px;color:var(--dim);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ublock{margin-bottom:18px}
+.ublock h4{margin:0 0 6px;font-size:12px;color:var(--dim);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.under{font-size:14.5px;line-height:1.6;margin:0}
+.rp{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.rp:hover{color:var(--warm)}
+.unc{flex:none;font-size:10.5px;font-weight:600;letter-spacing:.03em;padding:1px 6px;border-radius:4px;border:1px solid currentColor;margin-top:2px;text-transform:uppercase}
+.unc.solid{color:var(--good)}.unc.unsure{color:var(--warnc)}.unc.disputed{color:var(--bad)}
+.thoughts{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:7px;background:var(--paper);padding:10px 12px;font-size:14px;line-height:1.55;font-family:var(--doc)}
+.thoughts:focus{outline:2px solid var(--warm);outline-offset:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 8px;border-radius:5px;border:1px solid var(--line);background:var(--paper);max-width:100%}
+.chip.dec{border-left:3px solid var(--good)}
+.chip.pro{border-left:3px solid var(--warm);font-family:var(--quote);font-style:italic}
+.chip.rej{color:var(--dim);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--bad) 70%,transparent)}
+.chip.cor{border-left:3px solid var(--dim)}
+.chip .x{color:var(--dim);display:inline-flex}
+.chip .x:hover{color:var(--bad)}
+.ecard{border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-bottom:10px;overflow:hidden}
+.ecard .eh{display:flex;align-items:center;gap:8px;padding:10px 12px 0;font-size:12px;color:var(--dim)}
+.ecard .eh .sp{flex:1}
+.ecard .et{font-weight:600;font-size:14.5px;padding:4px 12px 0}
+.ecard .ebody{padding:8px 12px 10px}
+.ecard .ef{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--line);font-size:12.5px}
+.art-lines{font-family:var(--doc);font-size:13px;line-height:1.55;color:var(--dim);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0}
+.carstrip{display:flex;gap:6px;overflow:hidden}
+.carstrip .s{flex:none;width:58px;aspect-ratio:4/5;border:1px solid var(--line);border-radius:3px;background:var(--bg);font-size:8.5px;line-height:1.25;padding:4px;overflow:hidden;position:relative;color:var(--ink)}
+.carstrip .s.e{border-style:dashed;color:var(--dim)}
+.carstrip .s .art{position:absolute;inset:0;opacity:.55}
+.carstrip .s span{position:relative}
+.lcard{display:flex;gap:10px;align-items:center}
+.lcard .art{width:56px;height:56px;border-radius:5px;flex:none}
+.lcard .n{font-weight:500;font-size:13px}
+.lcard .p{font-size:12.5px;margin-top:2px}
+.newexp{width:100%;border:1px dashed var(--line);border-radius:8px;padding:12px;color:var(--dim);display:flex;align-items:center;gap:8px;justify-content:center;font-size:13.5px}
+.newexp:hover{color:var(--warm);border-color:var(--warm)}
+.kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.kinds button{display:flex;align-items:center;gap:6px;padding:8px;border-radius:5px;font-size:13px;border:1px solid var(--line)}
+.kinds button:hover{border-color:var(--warm);color:var(--warm)}
+.kinds .honest{grid-column:1/-1}
+
+/* media art */
+.art{position:relative;overflow:hidden;background:var(--sel)}
+.art svg{display:block;width:100%;height:100%}
+.a-bg{fill:var(--sel)}.a-gr{fill:var(--line)}.a-cup{fill:var(--dim);opacity:.55}.a-rim{fill:var(--ink);opacity:.55}.a-play circle{fill:var(--bg);opacity:.75}.a-play path{fill:var(--ink)}
+.dur{position:absolute;right:4px;bottom:4px;font-size:10px;background:var(--bg);color:var(--ink);padding:0 4px;border-radius:3px}
+
+/* ---------- studio (write) ---------- */
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 270px;min-height:100%}
+.studio.focus{grid-template-columns:minmax(0,1fr)}
+.studio.focus .inherit,.studio.focus .margin{display:none}
+.docpane{padding:16px 24px 80px;min-width:0}
+.doctools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:12.5px;color:var(--dim)}
+.doctools .sp{flex:1}
+.docgrid{display:grid;grid-template-columns:minmax(0,700px) 230px;gap:28px;justify-content:center}
+.studio.focus .docgrid{grid-template-columns:minmax(0,700px)}
+.doc{font-family:var(--doc);font-size:16.5px;line-height:1.65;min-width:0}
+.doc h1{font-family:var(--doc);font-size:28px;line-height:1.25;margin:0 0 18px;font-weight:650;outline:0}
+.doc p{margin:0 0 1em;outline:0;border-radius:3px}
+.doc p:focus{box-shadow:-10px 0 0 -8px var(--warm)}
+.doc [contenteditable]:empty::before{content:attr(data-ph);color:var(--dim);opacity:.7}
+.doc mark{background:color-mix(in srgb,var(--warm) 32%,transparent);color:inherit;border-radius:2px;padding:0 1px}
+.doc figure{margin:4px 0 1.2em}
+.doc figure .art{aspect-ratio:16/9;border-radius:6px}
+.doc figcaption{font-size:12.5px;color:var(--dim);margin-top:6px;font-family:var(--ui)}
+.margin{position:relative;font-size:13px}
+.margin .mh{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:8px;font-weight:600}
+.note{display:block;width:100%;text-align:left;padding:8px 10px;border-left:2px solid var(--line);margin-bottom:10px;border-radius:0 5px 5px 0;line-height:1.45}
+.note:hover{background:var(--sel)}
+.note.on{border-left-color:var(--warm);background:var(--sel)}
+.note .nb{display:flex;gap:6px;align-items:center;margin-bottom:3px;font-size:11.5px;color:var(--dim)}
+.note q{display:block;font-family:var(--quote);font-style:italic;color:var(--dim);font-size:12.5px;margin-bottom:3px;quotes:"\201C" "\201D"}
+@media(min-width:1101px){.margin.abs .note{position:absolute;left:0;right:0}}
+@media(min-width:1101px){.inherit{position:sticky;top:42px;align-self:start;max-height:calc(100dvh - 92px);overflow:auto}}
+.inherit{border-left:1px solid var(--line);background:var(--rail);padding:16px 16px 60px;font-size:13px;min-width:0}
+.inherit h3{margin:0 0 2px;font-size:13px;font-weight:600}
+.inherit .sub{font-size:12px;color:var(--dim);margin-bottom:14px}
+.inherit .grp{margin-bottom:16px}
+.inherit .grp h5{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:600}
+.inherit .src{display:flex;gap:6px;align-items:center;padding:3px 0;color:var(--ink);text-align:left}
+.inherit .src:hover{color:var(--warm)}
+.inherit p{margin:0;line-height:1.5;color:var(--dim)}
+
+/* carousel sequence */
+.seq{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.slide{border:1px solid var(--line);border-radius:8px;background:var(--paper);overflow:hidden;transition:transform .15s,opacity .15s}
+.slide.dragging{opacity:.4}
+.slide.over{outline:2px solid var(--warm);outline-offset:2px}
+.slide .sh{display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:12px;color:var(--dim);border-bottom:1px solid var(--line)}
+.grip{cursor:grab;touch-action:none;display:inline-flex;padding:4px;margin:-4px;border-radius:4px;color:var(--dim)}
+.grip:hover{color:var(--warm);background:var(--sel)}
+.grip:active{cursor:grabbing}
+.slide .sh .sp{flex:1}
+.face{aspect-ratio:4/5;position:relative;background:var(--bg)}
+.face .art{position:absolute;inset:0;opacity:.5}
+.face .stext{position:absolute;left:0;right:0;bottom:0;top:0;padding:16px 14px;font-weight:600;font-size:17px;line-height:1.3;outline:0;display:flex;align-items:flex-end;overflow:auto}
+.face .stext:empty::before{content:"Empty slide — type here";color:var(--dim);font-weight:400;font-size:14px}
+.face.e{background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);outline:1px dashed color-mix(in srgb,var(--dim) 45%,transparent);outline-offset:-8px}
+.addslide{aspect-ratio:auto;min-height:120px;border:1px dashed var(--line);border-radius:8px;color:var(--dim);display:flex;align-items:center;justify-content:center;gap:6px}
+.addslide:hover{color:var(--warm);border-color:var(--warm)}
+
+/* listing */
+.lform{display:grid;gap:14px;max-width:700px}
+.lrow{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:10px}
+.lrow label{font-size:12.5px;color:var(--dim)}
+.lrow [contenteditable]{outline:0;font-family:var(--doc);font-size:16px;line-height:1.55;min-height:1.5em}
+.lrow [contenteditable]:empty::before{content:attr(data-ph);color:var(--warnc)}
+
+/* panes */
+.two{display:grid;grid-template-columns:minmax(260px,360px) minmax(0,1fr);gap:20px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--paper);min-width:0}
+.panel>.ph{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.panel>.ph .sp{flex:1}
+.panel>.pb{padding:14px}
+.drop{border:1px dashed color-mix(in srgb,var(--warm) 45%,var(--line));border-radius:8px;padding:16px;text-align:center;color:var(--dim);margin-bottom:12px;font-size:13px}
+.drop label{color:var(--warm);font-weight:500;cursor:pointer}
+.drop input{display:none}
+.mitem{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:9px 10px;border-radius:6px}
+.mitem:hover{background:var(--sel)}
+.mitem.on{background:var(--sel);box-shadow:inset 2px 0 var(--warm)}
+.mitem .ty{color:var(--warm)}
+.mitem .tt{font-size:13.5px;font-weight:500}
+.mitem .mm{font-size:12px;color:var(--dim)}
+.grouplbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:12px 10px 4px;font-weight:600}
+.wave{display:flex;gap:2px;align-items:center;height:48px;margin:6px 0 12px}
+.wave i{flex:1;background:color-mix(in srgb,var(--warm) 55%,transparent);border-radius:1px;min-width:1px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.thumbs .art{aspect-ratio:1;border-radius:5px}
+.quote{font-family:var(--quote);font-size:15.5px;line-height:1.6;margin:0 0 6px}
+.cite{font-size:12px;color:var(--dim)}
+
+/* source */
+.player{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-bottom:14px;flex-wrap:wrap}
+.player .bar{flex:1;height:4px;background:var(--line);border-radius:2px;min-width:80px;position:relative}
+.player .bar i{position:absolute;left:0;top:0;bottom:0;width:22%;background:var(--warm);border-radius:2px}
+.tline{display:grid;grid-template-columns:52px 64px minmax(0,1fr);gap:10px;padding:8px 10px;border-radius:6px;width:100%;text-align:left;align-items:baseline}
+.tline:hover{background:var(--sel)}
+.tline .ts{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.tline .sp{font-size:12.5px;font-weight:600;color:var(--warm)}
+.tline .tx{font-family:var(--quote);font-size:15.5px;line-height:1.55}
+.tline .lc{text-decoration:underline dotted var(--warnc);text-underline-offset:4px}
+.tline .fixed{font-size:11px;color:var(--good);font-family:var(--ui);margin-left:6px}
+.tedit{grid-column:3}
+.tedit textarea{width:100%;min-height:70px;border:1px solid var(--warm);border-radius:6px;background:var(--bg);padding:8px;font-family:var(--quote);font-size:15px;line-height:1.5}
+.tedit .row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+
+/* research */
+.rlist button{display:flex;gap:8px;width:100%;text-align:left;padding:10px;border-radius:6px;align-items:flex-start;font-size:13.5px}
+.rlist button:hover{background:var(--sel)}
+.rlist button.on{background:var(--sel);box-shadow:inset 2px 0 var(--warm)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{padding:5px 10px;font-size:12.5px;color:var(--dim);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--sel);color:var(--ink);font-weight:500}
+.thread{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
+.msg{padding:8px 10px;border-radius:6px;background:var(--bg);margin-bottom:8px;font-size:13.5px}
+.msg .nb{font-size:11.5px;color:var(--dim);margin-bottom:2px}
+.msg.sys{background:none;border:1px dashed var(--line);color:var(--dim)}
+.compose{display:flex;gap:8px;align-items:flex-end}
+.compose textarea{flex:1;min-height:44px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:8px 10px;resize:vertical;font-size:13.5px}
+
+/* direction */
+.dgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start}
+.addrow{display:flex;gap:6px;margin-top:8px}
+.addrow input{flex:1;min-width:0;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:0 10px;font-size:13px}
+.understand{width:100%;min-height:110px;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:10px 12px;font-size:14.5px;line-height:1.6;resize:vertical}
+
+/* read */
+.reader{max-width:680px;margin:10px auto 0;font-family:var(--doc);font-size:18px;line-height:1.7}
+.reader h1{font-size:32px;line-height:1.2;margin:0 0 6px}
+.reader .by{font-family:var(--ui);font-size:13px;color:var(--dim);margin-bottom:28px}
+.reader p{margin:0 0 1.1em}
+.reader figure{margin:0 0 1.2em}.reader figure .art{aspect-ratio:16/9;border-radius:6px}
+
+/* check */
+.cbanner{padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cbanner b{font-weight:600}
+.crow{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start;font-size:13.5px}
+.crow .ic{margin-top:2px}
+
+/* media */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.mcard{border:1px solid var(--line);border-radius:8px;background:var(--paper);overflow:hidden}
+.mcard .art{aspect-ratio:4/3}
+.mcard .mb{padding:10px 12px}
+.mcard .mt{font-weight:500;font-size:13.5px;display:flex;justify-content:space-between;gap:6px}
+.uses{margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.uses button{text-align:left;color:var(--warm);display:flex;gap:5px;align-items:center}
+.uses button:hover{text-decoration:underline}
+
+/* arrange */
+.arr{display:grid;grid-template-columns:minmax(0,560px) minmax(220px,300px);gap:24px;align-items:start}
+.ablock{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:7px;background:var(--paper);padding:10px 12px;margin-bottom:8px}
+.ablock.dragging{opacity:.4}.ablock.over{outline:2px solid var(--warm);outline-offset:1px}
+.ablock .bt{font-size:11px;color:var(--dim);width:58px;flex:none;text-transform:uppercase;letter-spacing:.06em}
+.ablock .bx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--doc)}
+.ablock .art{width:64px;height:40px;border-radius:4px;flex:none}
+.story{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px}
+.story .slide{flex:none;width:150px}
+.story .face .stext{font-size:13px;padding:10px}
+.cover{font-size:10.5px;color:var(--warm);font-weight:600}
+
+/* audience */
+.aud{display:flex;flex-direction:column;align-items:center;gap:16px}
+.frame{border:1px solid var(--line);background:var(--paper);overflow:hidden;max-width:100%}
+.frame.phone{width:360px;border-radius:28px;padding:14px 0;border-width:8px;border-color:var(--sel)}
+.frame.desktop{width:min(920px,100%);border-radius:8px}
+.frame.feed{width:380px;border-radius:10px}
+.frame .inner{max-height:640px;overflow:auto;padding:20px 22px;font-family:var(--doc)}
+.frame.desktop .inner{padding:36px min(80px,6vw)}
+.frame .inner h1{font-size:24px;line-height:1.25;margin:0 0 12px}
+.frame.desktop .inner h1{font-size:34px}
+.frame .inner p{font-size:16px;line-height:1.65;margin:0 0 1em}
+.frame figure{margin:0 0 1em}.frame figure .art{aspect-ratio:16/9;border-radius:4px}
+.feedtop{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:13px;font-weight:600}
+.feedtop i{width:28px;height:28px;border-radius:50%;background:var(--sel);display:block}
+.bigslide{aspect-ratio:4/5;position:relative;background:var(--bg)}
+.bigslide .art{position:absolute;inset:0;opacity:.5}
+.bigslide .tx{position:absolute;inset:0;padding:26px 22px;display:flex;align-items:flex-end;font-weight:600;font-size:22px;line-height:1.3;font-family:var(--ui)}
+.dots{display:flex;gap:5px;justify-content:center;padding:10px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--warm)}
+.slnav{display:flex;justify-content:space-between;align-items:center;padding:0 12px 10px;font-size:13px}
+
+/* share */
+.sgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start}
+.frow{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.frow .fi{width:38px;height:38px;border-radius:6px;background:var(--sel);display:flex;align-items:center;justify-content:center;color:var(--warm);font-size:10.5px;font-weight:700;flex:none}
+.frow .fx{flex:1;min-width:0}
+.frow .fx b{font-weight:500;font-size:13.5px;display:block}
+.frow .fx span{font-size:12.5px;color:var(--dim)}
+
+/* outputs */
+.otable{width:100%;border-collapse:collapse;font-size:13.5px}
+.otable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+.otable td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.otable td .k{display:inline-flex;gap:6px;align-items:center;color:var(--dim)}
+.ofrom{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;color:var(--dim)}
+
+/* toast + sheet */
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:7px;font-size:13px;transition:opacity .18s,transform .18s;pointer-events:none;z-index:50;max-width:calc(100vw - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.scrim{display:none}
+.emptyst{padding:28px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center;max-width:560px}
+.emptyst b{color:var(--ink);display:block;margin-bottom:4px;font-weight:600}
+
+@media (max-width:1240px){
+  .board{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:24px}
+  .board .arrow{display:none}
+  .board .band.origins{grid-column:1/-1}
+  .board .band.origins .olist{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0 10px}
+}
+@media (max-width:1100px){
+  .docgrid{grid-template-columns:minmax(0,700px)}
+  .margin{border-top:1px solid var(--line);padding-top:12px}
+  .studio{grid-template-columns:minmax(0,1fr)}
+  .inherit{border-left:0;border-top:1px solid var(--line)}
+  .arr,.sgrid,.dgrid{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:900px){
+  .board{grid-template-columns:minmax(0,1fr)}
+  .two{grid-template-columns:minmax(0,1fr)!important}
+}
+@media (max-width:760px){
+  .phone-only{display:inline-flex!important}
+  .desk-only{display:none!important}
+  .app,.app.rail{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;right:0;bottom:0;height:82dvh;z-index:40;border:1px solid var(--line);border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .22s;box-shadow:0 -10px 40px rgba(0,0,0,.35)}
+  .side.open{transform:none}
+  .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:39}
+  .side .grab{display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 0}
+  .insub .brand{display:none}
+  .crumbs button,.crumbs .cur{max-width:150px;min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .crumbs > :not(:nth-last-child(-n+3)){display:none}
+  .crumbs > :nth-last-child(3):not(.sep)::before{content:"\2039\00a0"}
+  .home{padding:18px 16px 60px}
+  .bhead{padding:16px 16px 0}.board{padding:12px 16px 60px}
+  .secwrap{padding:16px 16px 60px}
+  .docpane{padding:12px 16px 60px}
+  .ctx{padding:0 8px}
+  .tiles{grid-template-columns:minmax(0,1fr)}
+  .frame.phone{width:100%;max-width:340px}.frame.feed{width:100%}
+  .lrow{grid-template-columns:minmax(0,1fr);gap:2px}
+  .tline{grid-template-columns:44px minmax(0,1fr)}
+  .tline .sp{display:none}
+  .tedit{grid-column:1/-1}
+  .seq{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .face .stext{font-size:14px;padding:10px}
+  .brand span{display:none}
+}
+.side .grab{display:none}
+.side-foot .ic{display:none}.rail .side-foot .ic{display:inline-flex}.rail .side-foot{justify-content:center}
+@media (max-width:760px){.side .grab{display:block}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="iconbtn desk-only" data-act="rail" aria-label="Collapse or expand the subject list" title="Collapse list"><span class="ic" data-i="panel"></span></button>
+  <button class="brand" data-act="home" title="Back to the Studio home">AR Create</button>
+  <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+  <span class="sp"></span>
+  <span class="tag desk-only" title="Every subject, recording and note here is invented for the prototype">Sample content · Prototype — nothing is saved</span>
+  <button class="btn phone-only" data-act="sheet"><span class="ic" data-i="list"></span>Subjects</button>
+  <button class="iconbtn" data-act="theme" aria-label="Switch light or dark"><span class="ic" data-i="sun"></span></button>
+</header>
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Subjects">
+    <span class="grab"></span>
+    <div class="side-head">
+      <label class="search"><span class="ic" data-i="search"></span><input id="q" type="search" placeholder="Find a subject or piece" autocomplete="off"></label>
+      <div class="filters" id="filters"></div>
+    </div>
+    <div class="plist" id="plist"></div>
+    <div class="side-foot"><button class="link" data-act="library"><span class="lbl">Library</span></button><button class="link" data-act="newsubject"><span class="lbl">+ New subject</span><span class="ic phone-hide" data-i="plus"></span></button><span class="dim lbl" style="font-size:12px" id="count"></span></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div class="scrim" id="scrim" data-act="sheet"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ================= icons ================= */
+const ICONS = {
+  article:'<path d="M3 3.5h10M3 6.5h10M3 9.5h10M3 12.5h6"/>',
+  carousel:'<rect x="1.5" y="3.5" width="5.5" height="8" rx="1"/><rect x="9" y="3.5" width="5.5" height="8" rx="1"/>',
+  post:'<rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M4.5 11l2.5-3 2 2 2.5-3.5"/>',
+  listing:'<path d="M2.5 8.5V3a.5.5 0 0 1 .5-.5h5.5l5 5-6 6z"/><circle cx="5.5" cy="5.5" r="1"/>',
+  script:'<rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 6h12M5 3l1.5 3M9 3l1.5 3"/>',
+  recording:'<rect x="6" y="2" width="4" height="8" rx="2"/><path d="M3.5 8a4.5 4.5 0 0 0 9 0M8 12.5V14"/>',
+  photos:'<rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="6.5" r="1.2"/><path d="M2.5 12l3.5-3.5 3 3 2-2 2.5 2.5"/>',
+  conversation:'<path d="M2.5 4a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 13.5 4v5A1.5 1.5 0 0 1 12 10.5H7l-3 2.5v-2.5h0A1.5 1.5 0 0 1 2.5 9z"/>',
+  note:'<path d="M10.5 2.5l3 3-7.5 7.5H3v-3z"/>',
+  search:'<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>',
+  plus:'<path d="M8 3v10M3 8h10"/>',
+  play:'<path d="M5 3.5l8 4.5-8 4.5z"/>',
+  grip:'<circle cx="6" cy="4" r=".6"/><circle cx="10" cy="4" r=".6"/><circle cx="6" cy="8" r=".6"/><circle cx="10" cy="8" r=".6"/><circle cx="6" cy="12" r=".6"/><circle cx="10" cy="12" r=".6"/>',
+  close:'<path d="M4 4l8 8M12 4l-8 8"/>',
+  sun:'<circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/>',
+  moon:'<path d="M13 9.5A5.5 5.5 0 1 1 6.5 3a4.5 4.5 0 0 0 6.5 6.5z"/>',
+  panel:'<rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M6 2.5v11"/>',
+  list:'<path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01"/>',
+  check:'<path d="M3 8.5l3 3 7-7"/>',
+  alert:'<path d="M8 2.5l6 11H2z"/><path d="M8 7v3M8 12h.01"/>',
+  circle:'<circle cx="8" cy="8" r="5.5"/>',
+  arrow:'<path d="M3 8h10M9.5 4.5L13 8l-3.5 3.5"/>',
+  open:'<path d="M9.5 2.5h4v4M13.5 2.5L7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3"/>',
+  focus:'<path d="M2.5 5.5v-3h3M10.5 2.5h3v3M13.5 10.5v3h-3M5.5 13.5h-3v-3"/>',
+  star:'<path d="M8 2l1.8 3.8 4.2.5-3.1 2.9.8 4.1L8 11.3 4.3 13.3l.8-4.1L2 6.3l4.2-.5z"/>',
+  upload:'<path d="M8 11V3M4.5 6.5L8 3l3.5 3.5M3 13h10"/>',
+  link:'<path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"/>',
+  video:'<rect x="2" y="4" width="9" height="8" rx="1.5"/><path d="M11 7l3-2v6l-3-2"/>'
+};
+const ic = (n, cls='') => `<span class="ic ${cls}"><svg viewBox="0 0 16 16" aria-hidden="true">${ICONS[n]||''}</svg></span>`;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const hash = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+const KIND = {article:'Article', carousel:'Carousel', post:'Post', listing:'Listing', script:'Script'};
+const OTYPE = {recording:'Recording', photos:'Photos', conversation:'Conversation', note:'Note'};
+
+/* ================= sample data (invented) ================= */
+let bid = 0;
+const P = t => ({id:'b'+(++bid), t:'p', text:t});
+const IMG = m => ({id:'b'+(++bid), t:'img', media:m});
+const SL = (t, img) => ({id:'s'+(++bid), text:t||'', img:img||null});
+
+const SUBJECTS = [
+{
+  id:'porcelain', title:'Porcelain and Tea', state:'active', waiting:false,
+  touched:{actor:'Claude', when:'yesterday', mins:1300},
+  lastLeft:{text:'Claude’s margin note on ¶3 of “The cup should disappear”', pid:'pa', sec:'write', nid:'n3'},
+  understanding:'Thin, white porcelain is valued less for its looks than for what it gives back: it takes little heat from the tea and shows the liquor honestly. Mei’s practice is the human thread — nineteen years of trimming walls until they let light through. What is still unproven is whether thin walls change taste, or only feel.',
+  thoughts:'I keep coming back to the idea of a cup that gets out of the way. Not minimalism as a style — more like good manners.',
+  decisions:['Lead with the cup in the hand, not the history','Use Mei’s name — permission given 12 Oct'],
+  protected:['the cup should disappear','White is a listening colour'],
+  rejected:['A history-of-porcelain explainer','Porcelain vs clay comparison chart'],
+  corrections:[{from:'almost twenty years', to:'nineteen years', at:'12:40'}],
+  origins:[
+    {id:'o1', type:'recording', title:'Studio talk with Mei, Jingdezhen', meta:'48 min · Transcribed', from:'you', preview:'Long conversation at the wheel and the trimming bench.'},
+    {id:'o2', type:'photos', title:'Kiln shelf and trimming bench', meta:'14 photos · 2 videos', from:'you', preview:'Taken on the studio visit.'},
+    {id:'o3', type:'conversation', title:'Thin walls and aroma', meta:'Claude conversation · 22 turns', from:'Claude', preview:'Claude gathered what is known about wall thickness and heat loss; added 3 source notes.'},
+    {id:'o4', type:'note', title:'Why white matters', meta:'Your note · 140 words', from:'you', preview:'White shows the liquor. It does not add a colour of its own. It listens.'}
+  ],
+  inbox:[{id:'o5', type:'photos', title:'Phone photos, 19 Oct', meta:'6 photos · not sorted', from:'you', preview:'Arrived from your phone. Not yet sorted into the subject.'}],
+  points:[
+    {id:'r1', title:'Thin walls take less heat from the tea', unc:'unsure', claim:'A thinner wall has less mass, so it absorbs less heat from the liquor on first pour.', evidence:[{q:'Thinner than that and it argues with your hand. But the tea stays hot longer, you feel it.', src:'Mei, studio talk · 14:02'},{q:'Wall mass, not material alone, accounts for most early heat loss in small cups.', src:'Claude source note 2 · sample'}], thread:[]},
+    {id:'r2', title:'Jingdezhen porcelain is kaolin plus porcelain stone', unc:'solid', claim:'The classic Jingdezhen body combines kaolin with porcelain stone, which allows high firing and thin walls.', evidence:[{q:'We still mix the two. Kaolin gives the bones, stone gives the skin.', src:'Mei, studio talk · 22:15'}], thread:[]},
+    {id:'r3', title:'Glaze changes perceived aroma', unc:'disputed', claim:'Some drinkers report that glazed interiors mute aroma compared with unglazed clay.', evidence:[{q:'People say this. I have never been sure.', src:'Mei, studio talk · 31:40'},{q:'No controlled comparison found yet.', src:'Claude source note 3 · sample'}], thread:[]}
+  ],
+  transcript:[
+    {t:'00:02', who:'Adrian', text:'How long have you been throwing cups here?'},
+    {t:'00:06', who:'Mei', text:'Nineteen years. My teacher would say almost twenty, but I count from the first cup I sold.', lc:true},
+    {t:'02:18', who:'Mei', text:'You trim until the light comes through. Then you stop.'},
+    {t:'04:51', who:'Adrian', text:'Is there a moment when it gets too thin?'},
+    {t:'05:02', who:'Mei', text:'Thinner than that and it argues with your hand.'},
+    {t:'09:30', who:'Mei', text:'White is not empty. White is listening to the tea.', lc:true},
+    {t:'14:02', who:'Mei', text:'But the tea stays hot longer, you feel it.'},
+    {t:'22:15', who:'Mei', text:'We still mix the two. Kaolin gives the bones, stone gives the skin.'},
+    {t:'31:40', who:'Mei', text:'People say the glaze takes the smell away. I have never been sure.'}
+  ],
+  media:[
+    {id:'m1', type:'photo', title:'Mei trimming a cup'},
+    {id:'m2', type:'photo', title:'Kiln shelf at dawn'},
+    {id:'m3', type:'video', title:'Pouring into a white cup', dur:'0:18'},
+    {id:'m4', type:'photo', title:'Gaiwan on linen'},
+    {id:'m5', type:'photo', title:'Clay bucket'},
+    {id:'m6', type:'video', title:'Wheel, slowly', dur:'0:42'}
+  ],
+  expressions:[
+    {id:'pa', kind:'article', title:'The cup should disappear', status:'Check ready', tone:'good', by:'You', when:'yesterday', blocks:[
+      P('The best porcelain cup I own is the one I notice least. When the tea is good, the cup should disappear — what stays is warmth in the fingers and the smell rising off a white rim.'),
+      P('Mei has thrown cups in Jingdezhen for nineteen years. She trims each wall until it lets light through, then stops. “Thinner than that and it argues with your hand,” she told me.'),
+      IMG('m1'),
+      P('Thin walls change how tea behaves. The cup takes less heat from the liquor, so the first sip arrives closer to the temperature the leaf was brewed at. Whether that is something you taste, or something you feel, is still an open question.'),
+      P('White matters too. A white interior shows the colour of the liquor honestly — amber, gold, the green edge of a spring oolong. White is a listening colour; it does not add anything of its own.'),
+      P('What I want from a cup, after all these years, is less. Less weight, less pattern, less opinion. Mei’s cups get out of the way, and the tea gets the room.')
+    ], notes:[]},
+    {id:'pc', kind:'carousel', title:'Five things a thin cup does', status:'In progress', by:'Claude', when:'yesterday', slides:[
+      SL('Five things a thin cup does','m1'), SL('It lets light through the wall.'), SL('It takes less heat from the tea.','m2'), SL(''), SL(''), SL('')
+    ]},
+    {id:'pl', kind:'listing', title:'Jingdezhen white gaiwan', status:'Draft', by:'You', when:'3 days ago', media:'m4', fields:{name:'Jingdezhen white gaiwan, 110 ml', price:'', size:'110 ml · 7.5 cm across', desc:'Thrown and trimmed by hand in Jingdezhen. Thin enough to see the tea through the wall.'}},
+    {id:'pp', kind:'post', title:'Mei at the wheel', status:'Idea', by:'You', when:'4 days ago', blocks:[IMG('m3'), P('A cup takes nineteen years to make, and about four minutes.'), P('')], notes:[]}
+  ]
+},
+{
+  id:'harbour', title:'Harbour Night Market', state:'active', waiting:true,
+  waitText:'Claude asked which stall name may be used', waitSec:'direction',
+  touched:{actor:'Claude', when:'yesterday', mins:1500},
+  lastLeft:{text:'the second scene of the 60-second script', pid:'hs', sec:'write'},
+  understanding:'A night market where one stall still brews tea over charcoal. The story is the contrast — steam and slow fire inside a fast, bright market.',
+  thoughts:'', decisions:['Keep it to one stall, not a market guide'], protected:['slow fire in a fast street'], rejected:['Top 10 market snacks'], corrections:[],
+  origins:[
+    {id:'h1', type:'recording', title:'Voice memo at the stall', meta:'6 min · Transcribed', from:'you', preview:'Background noise; the stall keeper explains the kettle.'},
+    {id:'h2', type:'photos', title:'Lanterns and steam', meta:'22 photos · 1 video', from:'you', preview:'Shot after dark.'},
+    {id:'h3', type:'note', title:'Question for you', meta:'From Claude · open', from:'Claude', preview:'The stall keeper did not say whether the stall name may be published. Which name should the pieces use?'}
+  ],
+  inbox:[], points:[{id:'hr1', title:'Charcoal brewing is now rare at markets', unc:'unsure', claim:'Most market stalls switched to electric kettles.', evidence:[{q:'Everyone else uses the plug now.', src:'Stall keeper · 02:10'}], thread:[]}],
+  transcript:[{t:'00:04', who:'Adrian', text:'How long has the kettle been on?'},{t:'00:09', who:'Keeper', text:'Since five. It never goes off until we close.'},{t:'02:10', who:'Keeper', text:'Everyone else uses the plug now.', lc:true}],
+  media:[{id:'hm1', type:'photo', title:'Lantern row'},{id:'hm2', type:'video', title:'Kettle steam', dur:'0:12'},{id:'hm3', type:'photo', title:'Cups on the counter'}],
+  expressions:[
+    {id:'hp', kind:'post', title:'Steam and lanterns', status:'Ready to share', tone:'good', by:'You', when:'2 days ago', blocks:[IMG('hm1'), P('One kettle has been on since five. Slow fire in a fast street.')], notes:[]},
+    {id:'hs', kind:'script', title:'60-second walk to the stall', status:'Draft', by:'Claude', when:'yesterday', blocks:[P('0:00 — Lanterns coming on. Voice: “Every market has a fast lane.”'), P('0:12 — Close on the kettle. Voice: “This stall never got the memo.”'), P('0:30 — ')], notes:[]},
+    {id:'hc', kind:'carousel', title:'One stall, one kettle', status:'In progress', by:'You', when:'3 days ago', slides:[SL('One stall, one kettle','hm1'), SL('On since five.','hm2'), SL(''), SL('')]}
+  ]
+},
+{
+  id:'oolong', title:'Spring Oolong', state:'active', waiting:true,
+  waitText:'Set the price for the listing', waitSec:'write', waitPid:'ol',
+  touched:{actor:'Claude', when:'2h ago', mins:120},
+  lastLeft:{text:'the listing description', pid:'ol', sec:'write'},
+  understanding:'This year’s spring picking was late and small; the tea is brighter and more floral than last year. The grower call gives the picking dates and the rolling method.',
+  thoughts:'Tell the truth about the small harvest — it is the reason for the price.', decisions:['Say the harvest was small'], protected:['picked in the last week of April'], rejected:['“Limited edition” language'], corrections:[],
+  origins:[
+    {id:'so1', type:'recording', title:'Call with the grower', meta:'31 min · Transcribed', from:'you', preview:'Picking dates, weather, rolling.'},
+    {id:'so2', type:'conversation', title:'Grower call notes', meta:'Claude · 3 source notes · 2h ago', from:'Claude', preview:'Claude added 3 source notes from the grower call: picking window, rain days, rolling count.'},
+    {id:'so3', type:'photos', title:'Dry leaf and liquor', meta:'8 photos', from:'you', preview:'Shot on the tasting table.'}
+  ],
+  inbox:[], points:[{id:'or1', title:'The harvest was about a third smaller', unc:'unsure', claim:'The grower estimated a third less than last spring.', evidence:[{q:'Maybe a third less. Maybe more, I have not weighed it all.', src:'Grower · 08:44'}], thread:[]}],
+  transcript:[{t:'08:44', who:'Grower', text:'Maybe a third less. Maybe more, I have not weighed it all.'},{t:'11:02', who:'Grower', text:'We picked in the last week of April, after the rain.'}],
+  media:[{id:'om1', type:'photo', title:'Dry leaf, close'},{id:'om2', type:'photo', title:'Liquor in a white cup'}],
+  expressions:[
+    {id:'ol', kind:'listing', title:'Spring Oolong 2026 — 50 g', status:'Draft', by:'Claude', when:'2h ago', media:'om1', fields:{name:'Spring Oolong 2026, 50 g', price:'', size:'50 g · loose leaf', desc:'Picked in the last week of April, after the rain. A small harvest: bright, floral and lightly rolled.'}},
+    {id:'oa', kind:'article', title:'Picking day', status:'Outline', by:'You', when:'5 days ago', blocks:[P('We picked in the last week of April, after the rain.'), P('')], notes:[]},
+    {id:'op', kind:'post', title:'First cup of the spring', status:'Idea', by:'You', when:'5 days ago', blocks:[IMG('om2'), P('')], notes:[]}
+  ]
+},
+{
+  id:'ancha', title:'An Cha — three parts', state:'active', waiting:false,
+  touched:{actor:'Codex', when:'5h ago', mins:300},
+  lastLeft:{text:'Part 2, the section on the bamboo baskets', pid:'a2', sec:'write'},
+  understanding:'A dark tea pressed into bamboo baskets and aged. Three parts: the place, the basket, the years.',
+  thoughts:'Part 3 should be quieter than the others.', decisions:['Three parts, published a week apart'], protected:['the basket breathes'], rejected:['A buying guide'], corrections:[],
+  origins:[{id:'ac1', type:'recording', title:'Interview at the warehouse', meta:'1 h 12 min · Transcribed', from:'you', preview:'Walking the aisles of baskets.'},{id:'ac2', type:'conversation', title:'Outline for Part 3', meta:'Codex · 5h ago', from:'Codex', preview:'Codex drafted an outline for Part 3. You have not read it yet.'}],
+  inbox:[], points:[], transcript:[{t:'03:20', who:'Keeper', text:'The basket breathes. Plastic would kill it.'}],
+  media:[{id:'am1', type:'photo', title:'Basket stacks'}],
+  expressions:[
+    {id:'a1', kind:'article', title:'Part 1 — The place', status:'Published', tone:'good', by:'You', when:'2 weeks ago', blocks:[P('The warehouse is cooler than the street by ten degrees.')], notes:[]},
+    {id:'a2', kind:'article', title:'Part 2 — The basket', status:'Writing', by:'You', when:'yesterday', blocks:[P('The basket breathes. That was the first thing he told me.'), IMG('am1'), P('')], notes:[]},
+    {id:'a3', kind:'article', title:'Part 3 — The years', status:'Outline by Codex, unread', tone:'warn', by:'Codex', when:'5h ago', blocks:[P('')], notes:[]}
+  ]
+},
+{
+  id:'puer', title:'Storing Pu’er in the Wet Season', state:'active', waiting:true,
+  waitText:'Two research points are marked unsure', waitSec:'research',
+  touched:{actor:'You', when:'3 days ago', mins:4300},
+  lastLeft:{text:'research point on humidity', sec:'research'},
+  understanding:'Humidity matters more than temperature in the wet months, but the safe range is argued about.',
+  thoughts:'', decisions:[], protected:[], rejected:['Fear-based “your tea is ruined” angle'], corrections:[],
+  origins:[{id:'pu1', type:'note', title:'Storage questions', meta:'Your note', from:'you', preview:'What humidity is too much?'}],
+  inbox:[], points:[
+    {id:'pr1', title:'Above 75% humidity risks mould', unc:'unsure', claim:'Several storage guides name 75% as a ceiling.', evidence:[{q:'Guides disagree between 65% and 80%.', src:'Your note · sample'}], thread:[]},
+    {id:'pr2', title:'Clay jars buffer humidity', unc:'unsure', claim:'Unglazed jars absorb and release moisture.', evidence:[], thread:[]}
+  ],
+  transcript:[], media:[],
+  expressions:[{id:'pua', kind:'article', title:'A wet season for pu’er', status:'Draft', by:'You', when:'3 days ago', blocks:[P('Every year the rain comes, and every year someone asks if their cakes are safe.'), P('')], notes:[]}]
+},
+{
+  id:'kiln', title:'Wood-fired Kiln Visit', state:'active', waiting:false,
+  touched:{actor:'You', when:'4 days ago', mins:5800},
+  lastLeft:{text:'sorting the kiln photos', sec:'material'},
+  understanding:'Forming. Three days of firing, two potters, ash glaze that cannot be planned.',
+  thoughts:'', decisions:[], protected:[], rejected:[], corrections:[],
+  origins:[{id:'k1', type:'photos', title:'Firing, day two', meta:'41 photos · 4 videos', from:'you', preview:'Night stoking.'},{id:'k2', type:'recording', title:'Unloading the kiln', meta:'22 min · Not transcribed', from:'you', preview:'Not processed yet.'}],
+  inbox:[], points:[], transcript:[], media:[{id:'km1', type:'photo', title:'Stoking at night'},{id:'km2', type:'video', title:'Flame at the spy hole', dur:'0:09'}],
+  expressions:[]
+},
+{
+  id:'repair', title:'Mending a Broken Cup', state:'resting', waiting:false,
+  touched:{actor:'You', when:'2 weeks ago', mins:20000},
+  lastLeft:{text:'the finished carousel', pid:'rc', sec:'audience'},
+  understanding:'Urushi repair keeps the break visible. The cup is used again.',
+  thoughts:'', decisions:['Show the break, do not hide it'], protected:['used again'], rejected:[], corrections:[],
+  origins:[{id:'rp1', type:'photos', title:'Repair, step by step', meta:'12 photos', from:'you', preview:''}],
+  inbox:[], points:[], transcript:[], media:[{id:'rm1', type:'photo', title:'The break'},{id:'rm2', type:'photo', title:'Gold line'}],
+  expressions:[{id:'rc', kind:'carousel', title:'A cup, used again', status:'Ready', tone:'good', by:'You', when:'2 weeks ago', slides:[SL('A cup, used again','rm1'), SL('The break stays visible.'), SL('Lacquer, then gold.','rm2'), SL('Used again.')]}]
+}
+];
+SUBJECTS[0].expressions[0].notes = [
+  {id:'n1', block:SUBJECTS[0].expressions[0].blocks[0].id, quote:'the cup should disappear', by:'You', text:'Title line. Do not repeat it on the carousel cover.'},
+  {id:'n2', block:SUBJECTS[0].expressions[0].blocks[1].id, quote:'nineteen years', by:'Claude', text:'Source corrected at 12:40: “almost twenty” → “nineteen”. Matches.'},
+  {id:'n3', block:SUBJECTS[0].expressions[0].blocks[3].id, quote:'the first sip arrives closer to the temperature', by:'Claude', text:'Research point is marked Unsure. Consider “may arrive”.'},
+  {id:'n4', block:SUBJECTS[0].expressions[0].blocks[4].id, quote:'White is a listening colour', by:'You', text:'Protected phrase — keep exactly.'}
+];
+const FEED = [
+  {actor:'Claude', when:'2h ago', sid:'oolong', what:'added 3 source notes from the grower call', sec:'material'},
+  {actor:'Claude', when:'2h ago', sid:'oolong', what:'drafted the listing description — price left for you', pid:'ol', sec:'write'},
+  {actor:'Codex', when:'5h ago', sid:'ancha', what:'drafted an outline for Part 3 (unread)', pid:'a3', sec:'write'},
+  {actor:'Claude', when:'yesterday', sid:'porcelain', what:'left 2 margin notes on “The cup should disappear”', pid:'pa', sec:'write'},
+  {actor:'Claude', when:'yesterday', sid:'harbour', what:'asked which stall name may be used', sec:'direction'}
+];
+
+/* ================= state ================= */
+const S = {view:'home', sid:null, pid:null, sec:'board', filter:'all', q:'', rail:false, sheet:false, focus:false, activeNote:null,
+  newMenu:false, mediaFilter:'all', matSel:null, rpSel:null, editLine:null, aud:'phone', audSlide:0, ret:null, lastSid:'porcelain'};
+try { const t = localStorage.getItem('arc-b-theme'); if (t) document.documentElement.dataset.theme = t; } catch(e) {}
+
+const PIECE_SECS = ['write','read','check','arrange','audience','share'];
+const GROUPS = [
+  ['Gather', [['material','Material'],['source','Source']]],
+  ['Develop', [['research','Research'],['direction','Direction']]],
+  ['Make', [['write','Write'],['read','Read'],['check','Check'],['media','Media'],['arrange','Arrange']]],
+  ['Deliver', [['audience','Audience'],['share','Share'],['outputs','Outputs']]]
+];
+const SECNUM = {material:'01',source:'02',research:'03',direction:'04',write:'05',read:'06',check:'07',media:'08',arrange:'09',audience:'10',share:'11',outputs:'12'};
+const SECNAME = {}; GROUPS.forEach(g => g[1].forEach(([k,n]) => SECNAME[k] = n));
+const PURPOSE = {
+  material:'Bring things in, sort them, preview them, and choose what to process.',
+  source:'Understand what was actually said — and correct it. Corrections travel into every piece.',
+  research:'Explore the points, inspect the evidence, mark what is unsure, and talk one point through.',
+  direction:'Your own thinking: what this is about, what you decided, what it must never become.',
+  write:'The piece itself.',
+  read:'Read it straight through, as finished text.',
+  check:'Look for problems before it goes out.',
+  media:'Every photo and video in this subject, and where each one is used.',
+  arrange:'Compose — decide what goes where. Drag to reorder.',
+  audience:'See it the way a reader will. Nothing here is editable.',
+  share:'Export files to take elsewhere, or send it for a look.',
+  outputs:'Every piece that grew from this subject, side by side.'
+};
+
+const subj = () => SUBJECTS.find(s => s.id === S.sid);
+const piece = () => { const s = subj(); return s && s.expressions.find(e => e.id === S.pid); };
+const mediaOf = (s, id) => s.media.find(m => m.id === id);
+const emptySlides = e => e.slides.filter(x => !x.text.trim()).length;
+function status(e){
+  if (e.kind === 'carousel') { const n = emptySlides(e); if (n) return `${n} slide${n>1?'s':''} empty`; }
+  if (e.kind === 'listing' && !e.fields.price.trim()) return 'Price missing';
+  return e.status;
+}
+function tone(e){
+  if (e.kind === 'carousel' && emptySlides(e)) return 'warn';
+  if (e.kind === 'listing' && !e.fields.price.trim()) return 'warn';
+  return e.tone || 'dim';
+}
+const stateLine = s => s.expressions.length ? s.expressions.slice(0,2).map(e => `${KIND[e.kind]}: ${status(e)}`).join(' · ') : 'Origins only — no pieces yet';
+const whoCls = a => a === 'Claude' ? 'claude' : a === 'Codex' ? 'codex' : 'you';
+const whoTag = a => `<span class="who ${whoCls(a)}">${esc(a === 'you' ? 'You' : a)}</span>`;
+const initials = t => t.replace(/[—’']/g,' ').split(/\s+/).filter(w => w && /[A-Za-z]/.test(w[0]) && !/^(and|of|the|in|a)$/i.test(w)).slice(0,2).map(w => w[0].toUpperCase()).join('');
+
+function art(m, cls=''){
+  if (!m) return `<div class="art ${cls}"></div>`;
+  const h = hash(m.id + m.title);
+  const cx = 28 + h % 44, r = 13 + (h >> 4) % 10, gy = 78 + (h >> 7) % 18, cy = gy - r * 0.6;
+  return `<div class="art ${cls}" role="img" aria-label="${esc(m.title)} (sample image)"><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="100" class="a-bg"/><rect y="${gy}" width="100" height="40" class="a-gr"/><path d="M${cx-r-4} ${cy-r*0.5} h${2*r+8} l-4 ${r*1.3} q-${r+0} 6 -${2*r} 0 z" class="a-cup"/><ellipse cx="${cx}" cy="${cy-r*0.5}" rx="${r+4}" ry="3" class="a-rim"/>${m.type==='video'?'<g class="a-play"><circle cx="50" cy="42" r="11"/><path d="M46.5 36l9 6-9 6z"/></g>':''}</svg>${m.type==='video'?`<span class="dur">${esc(m.dur)}</span>`:''}</div>`;
+}
+function usedIn(s, mid){
+  const out = [];
+  s.expressions.forEach(e => {
+    if (e.blocks) { let p = 0; e.blocks.forEach(b => { if (b.t === 'p') p++; else if (b.media === mid) out.push({pid:e.id, label:`${KIND[e.kind]} “${e.title}” · after ¶${p}`}); }); }
+    if (e.slides) e.slides.forEach((sl, i) => { if (sl.img === mid) out.push({pid:e.id, label:`${KIND[e.kind]} “${e.title}” · slide ${i+1}`}); });
+    if (e.kind === 'listing' && e.media === mid) out.push({pid:e.id, label:`Listing “${e.title}” · main photo`});
+  });
+  return out;
+}
+function pieceText(e){
+  if (e.blocks) return e.title + '\n' + e.blocks.filter(b => b.t === 'p').map(b => b.text).join('\n');
+  if (e.slides) return e.title + '\n' + e.slides.map(x => x.text).join('\n');
+  if (e.fields) return Object.values(e.fields).join('\n');
+  return '';
+}
+
+/* ================= toast ================= */
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800); }
+
+/* ================= side ================= */
+function filtered(){
+  const q = S.q.trim().toLowerCase();
+  return SUBJECTS.filter(s => {
+    if (S.filter === 'active' && s.state !== 'active') return false;
+    if (S.filter === 'waiting' && !s.waiting) return false;
+    if (S.filter === 'claude' && !(s.touched.actor === 'Claude' && s.touched.mins < 2880)) return false;
+    if (!q) return true;
+    return (s.title + ' ' + s.expressions.map(e => e.title).join(' ')).toLowerCase().includes(q);
+  });
+}
+function renderSide(){
+  const counts = {all:SUBJECTS.length, active:SUBJECTS.filter(s => s.state === 'active').length, waiting:SUBJECTS.filter(s => s.waiting).length, claude:SUBJECTS.filter(s => s.touched.actor === 'Claude' && s.touched.mins < 2880).length};
+  $('#filters').innerHTML = [['all','All'],['active','Active'],['waiting','Waiting on me'],['claude','Touched by Claude']].map(([k,l]) =>
+    `<button class="${S.filter===k?'on':''}" data-act="filter" data-k="${k}">${l}<span class="n">${counts[k]}</span></button>`).join('');
+  const list = filtered();
+  $('#plist').innerHTML = list.length ? list.map(s => {
+    const kinds = [...new Set(s.expressions.map(e => e.kind))];
+    return `<button class="prow ${S.sid===s.id && S.view!=='home'?'on':''}" data-act="subject" data-sid="${s.id}" title="${esc(s.title)}">
+      <div class="t"><span class="mono">${esc(initials(s.title) || '?')}</span><span class="full">${esc(s.title)}</span>${s.waiting?'<span class="wait" title="Waiting on you"></span>':''}</div>
+      <div class="marks">${kinds.length ? kinds.map(k => `<span title="${KIND[k]}">${ic(k,'sm')}</span>`).join('') : '<span class="dim" style="font-size:11px">no pieces yet</span>'}</div>
+      <div class="st">${esc(stateLine(s))}</div>
+      <div class="touch">${esc(s.touched.actor === 'You' ? 'You' : s.touched.actor)} · ${esc(s.touched.when)}${s.state==='resting'?' · resting':''}</div>
+    </button>`;
+  }).join('') : `<div class="empty-list">No subject matches. <button class="link" data-act="clearq">Clear the search</button></div>`;
+  $('#count').textContent = `${list.length} of ${SUBJECTS.length}`;
+}
+
+/* ================= top ================= */
+function renderTop(){
+  const s = subj(), e = piece();
+  let h = `<button data-act="home" class="${S.view==='home'?'cur':''}">Studio</button>`;
+  if (S.view === 'library') h += `<span class="sep">›</span><span class="cur">Library</span>`;
+  else if (S.view !== 'home' && s) {
+    h += `<span class="sep">›</span><button data-act="board" class="${!PIECE_SECS.includes(S.sec) && S.sec==='board'?'cur':''}">${esc(s.title)}</button>`;
+    if (PIECE_SECS.includes(S.sec) && e) h += `<span class="sep">›</span><button class="cur" data-act="sec" data-sec="write">${esc(e.title)}</button>`;
+    if (S.sec !== 'board' && S.sec !== 'write') h += `<span class="sep">›</span><span class="cur">${SECNAME[S.sec]}</span>`;
+  }
+  $('#crumbs').innerHTML = h;
+  document.body.classList.toggle('insub', S.view !== 'home');
+  $('#app').classList.toggle('rail', S.rail);
+  $('#side').classList.toggle('open', S.sheet);
+  $('#scrim').classList.toggle('open', S.sheet);
+  $('[data-act="theme"]').innerHTML = ic(document.documentElement.dataset.theme === 'light' ? 'moon' : 'sun');
+}
+
+/* ================= home ================= */
+function miniHTML(s, e){
+  const k = `<span class="k">${ic(e.kind)}${KIND[e.kind]}</span>`;
+  if (e.kind === 'carousel') return `<div class="mini car" title="${esc(e.title)}">${e.slides.slice(0,4).map(x => `<i class="${x.text.trim()?'':'e'}"></i>`).join('')}</div>`;
+  if (e.kind === 'listing') return `<div class="mini">${k}<b>${esc(e.fields.name)}</b><span class="tone-${tone(e)}">${esc(e.fields.price || 'Price missing')}</span></div>`;
+  const first = (e.blocks.find(b => b.t === 'p' && b.text) || {}).text || '';
+  return `<div class="mini">${k}<b>${esc(e.title)}</b><span>${esc(first.slice(0,60))}</span></div>`;
+}
+function homeHTML(){
+  const waiting = SUBJECTS.filter(s => s.waiting);
+  return `<div class="home">
+    <h1>Studio</h1>
+    <p class="lede">${SUBJECTS.length} subjects, ${SUBJECTS.reduce((n,s) => n + s.expressions.length, 0)} pieces growing from them. ${waiting.length} ${waiting.length===1?'is':'are'} waiting on you. Sources and inquiries across all of them live in the <button class="link" data-act="library">Library</button>.</p>
+    ${(() => { const L = SUBJECTS.find(x => x.id === S.lastSid); if (!L) return ''; const e = L.expressions.find(x => x.id === L.lastLeft.pid);
+      return `<button class="pickup" data-act="resume" data-sid="${L.id}"><span class="pl">Pick up where you left off</span><span class="pt">${esc(L.lastLeft.text)}</span><span class="ps">${esc(L.title)}${e ? ' · ' + KIND[e.kind] : ''}</span><span class="btn primary">Resume ${ic('arrow','sm')}</span></button>`; })()}
+    <section class="strip"><h3>Waiting on you</h3><div class="wait-row">
+      ${waiting.map(s => `<button class="wcard" data-act="go" data-sid="${s.id}" data-sec="${s.waitSec}" data-pid="${s.waitPid||''}"><div class="s">${esc(s.title)}</div><div class="a">${esc(s.waitText)}</div><div class="go">Go to ${SECNAME[s.waitSec]} →</div></button>`).join('')}
+    </div></section>
+    <section class="strip"><h3>Since you left — Claude and Codex did</h3><div class="feed">
+      ${FEED.map(f => { const s = SUBJECTS.find(x => x.id === f.sid); return `<button data-act="go" data-sid="${f.sid}" data-sec="${f.sec}" data-pid="${f.pid||''}">${whoTag(f.actor)}<span class="subj">${esc(s.title)}</span><span class="what">${esc(f.what)}</span><span class="when">${esc(f.when)}</span></button>`; }).join('')}
+    </div></section>
+    <section class="strip"><h3>Subjects</h3><div class="tiles">
+      ${SUBJECTS.map(s => `<button class="tile" data-act="subject" data-sid="${s.id}">
+        <h4>${esc(s.title)}${s.waiting?'<span class="tag warm">waiting on you</span>':''}${s.state==='resting'?'<span class="tag">resting</span>':''}</h4>
+        <div class="minis">${s.expressions.length ? s.expressions.slice(0,3).map(e => miniHTML(s,e)).join('') : `<div class="mini" style="width:100%"><span class="k">${ic('photos')}${s.origins.length} origins</span><span>No pieces yet. Open to start one.</span></div>`}</div>
+        <div class="left">Where you left off: <b>${esc(s.lastLeft.text)}</b></div>
+        <div class="foot"><span>${esc(stateLine(s))}</span><span>${whoTag(s.touched.actor)} ${esc(s.touched.when)}</span></div>
+      </button>`).join('')}
+      <button class="tile new" data-act="newsubject">${ic('plus')}<span>New subject<br><span class="dim" style="font-size:12.5px">Start from a recording, a photo, a conversation or an idea</span></span></button>
+    </div></section>
+  </div>`;
+}
+
+/* ================= library (across subjects) ================= */
+function libraryHTML(){
+  const items = []; SUBJECTS.forEach(s => s.origins.forEach(o => { const k = o.title.toLowerCase(); let it = items.find(x => x.k === k); if (!it) items.push(it = {k, o, uses:[]}); it.uses.push(s); }));
+  const inq = SUBJECTS.filter(s => s.points.length);
+  return `<div class="home"><h1>Library</h1>
+    <p class="lede">Every source and note once, and every open inquiry, across all subjects. Open one to work on it inside the subject that uses it.</p>
+    <section class="strip"><h3>Sources and notes <span class="dim" style="text-transform:none;letter-spacing:0;font-weight:400">· ${items.length}</span></h3><div class="libl">
+      ${items.map(it => `<div class="lrow2"><span class="ty">${ic(it.o.type)}</span><span class="lt"><b>${esc(it.o.title)}</b><span class="dim">${esc(it.o.meta)}</span></span><span class="lu"><span class="dim">Used in</span>${it.uses.map(s => `<button class="link" data-act="libopen" data-sid="${s.id}" data-sec="material" data-oid="${it.o.id}">${esc(s.title)}</button>`).join('')}</span></div>`).join('')}
+    </div></section>
+    <section class="strip"><h3>Collections — open inquiries</h3><div class="libl">
+      ${inq.map(s => s.points.map(p => `<div class="lrow2"><span class="unc ${p.unc}">${p.unc}</span><span class="lt"><b>${esc(p.title)}</b><span class="dim">${p.evidence.length} piece${p.evidence.length===1?'':'s'} of evidence</span></span><span class="lu"><button class="link" data-act="libopen" data-sid="${s.id}" data-sec="research" data-rid="${p.id}">${esc(s.title)}</button></span></div>`).join('')).join('')}
+    </div></section>
+    <p class="honest">${ic('alert','sm')}<span>Sample data: no source is shared between two subjects here, so each shows one “Used in”. Search across the Library is not connected yet.</span></p>
+  </div>`;
+}
+
+/* ================= tabs ================= */
+function tabsHTML(){
+  const r = S.ret && !PIECE_SECS.includes(S.sec) && S.sid === S.ret.sid ? subj().expressions.find(x => x.id === S.ret.pid) : null;
+  return `<nav class="ctx" aria-label="Sections">${r ? `<div class="g"><button class="retbtn" data-act="ret" title="Back to the exact place you were in “${esc(r.title)}”">${ic('arrow','sm')}Back to ${SECNAME[S.ret.sec]}</button></div>` : ''}<div class="g"><button class="board-tab ${S.sec==='board'?'on':''}" data-act="sec" data-sec="board">Board</button></div>
+    ${GROUPS.map(([g, items]) => `<div class="g"><span class="gl">${g}</span>${items.map(([k,n]) => `<button class="${S.sec===k?'on':''}" data-act="sec" data-sec="${k}" title="${SECNUM[k]} ${n} — ${esc(PURPOSE[k])}">${n}</button>`).join('')}</div>`).join('')}
+  </nav>`;
+}
+function secHead(k, acts=''){
+  return `<div class="sec-head"><span class="num">${SECNUM[k]}</span><h2>${SECNAME[k]}</h2><p>${esc(PURPOSE[k])}</p>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
+}
+function pickerHTML(){
+  const s = subj();
+  return `<div class="pick"><span class="lbl">Piece</span>${s.expressions.map(e => `<button class="${S.pid===e.id?'on':''}" data-act="pick" data-pid="${e.id}">${ic(e.kind,'sm')}${esc(e.title)}</button>`).join('')}</div>`;
+}
+
+/* ================= board ================= */
+function expCardHTML(s, e){
+  let body = '';
+  if (e.kind === 'carousel') body = `<div class="carstrip">${e.slides.map(x => `<div class="s ${x.text.trim()?'':'e'}">${x.img?art(mediaOf(s,x.img)):''}<span>${esc(x.text || 'empty')}</span></div>`).join('')}</div>`;
+  else if (e.kind === 'listing') body = `<div class="lcard">${art(mediaOf(s,e.media))}<div><div class="n">${esc(e.fields.name)}</div><div class="p tone-${tone(e)}">${esc(e.fields.price || 'Price missing — waiting on you')}</div></div></div>`;
+  else { const ps = e.blocks.filter(b => b.t === 'p' && b.text).map(b => b.text); body = `<p class="art-lines">${esc(ps.join(' ') || 'Empty — nothing written yet.')}</p>`; }
+  return `<div class="ecard"><div class="eh">${ic(e.kind,'sm')}${KIND[e.kind]}<span class="sp"></span>${whoTag(e.by)}<span>${esc(e.when)}</span></div>
+    <div class="et">${esc(e.title)}</div><div class="ebody">${body}</div>
+    <div class="ef"><span class="tone-${tone(e)}">${esc(status(e))}</span><span style="display:flex;gap:10px"><button class="link" data-act="openpiece" data-pid="${e.id}" data-sec="audience">Preview</button><button class="btn" data-act="openpiece" data-pid="${e.id}">Open</button></span></div></div>`;
+}
+function chipList(s, key, cls, removable){
+  const arr = s[key];
+  if (!arr.length) return `<span class="dim" style="font-size:12.5px">None yet</span>`;
+  return arr.map((t,i) => `<span class="chip ${cls}">${cls==='pro'?'“'+esc(t)+'”':esc(t)}${removable?`<button class="x" data-act="chipdel" data-key="${key}" data-i="${i}" aria-label="Remove">${ic('close','sm')}</button>`:''}</span>`).join('');
+}
+function boardHTML(){
+  const s = subj();
+  const ll = s.lastLeft;
+  return `<div class="bhead"><h1 contenteditable="true" spellcheck="false" data-bind="stitle">${esc(s.title)}</h1>
+    <div class="lo">Where you left off: <b>${esc(ll.text)}</b> · last touched by ${whoTag(s.touched.actor)} ${esc(s.touched.when)}</div>
+    <button class="btn primary" data-act="resume">Resume ${ic('arrow','sm')}</button></div>
+  <div class="board">
+    <section class="band origins"><header>${ic('photos')}<h3>Origins</h3><span class="c">${s.origins.length}</span><span class="sp"></span><button class="link" data-act="sec" data-sec="material">Material</button></header>
+      <div class="olist">${s.origins.map(o => `<button class="ocard" data-act="origin" data-oid="${o.id}"><span class="ty">${ic(o.type)}</span><span style="min-width:0"><div class="tt">${esc(o.title)}</div><div class="mm">${esc(o.meta)} ${o.from==='you'?whoTag('You'):'<span>from</span>'+whoTag(o.from)}</div></span></button>`).join('')}</div>
+      ${s.inbox.length ? `<button class="link" data-act="sec" data-sec="material">${s.inbox.length} new item${s.inbox.length>1?'s':''} not sorted yet →</button>` : ''}
+      <label class="newexp" style="margin-top:6px;cursor:pointer">${ic('upload')}Bring in material<input type="file" multiple hidden data-act-file="intake"></label>
+    </section>
+    <div class="arrow" aria-hidden="true">${ic('arrow')}</div>
+    <section class="band"><header>${ic('circle')}<h3>Understanding</h3><span class="sp"></span><button class="link" data-act="sec" data-sec="direction">Direction</button></header>
+      <div class="ublock"><h4>Current understanding</h4><p class="under">${esc(s.understanding)}</p></div>
+      <div class="ublock"><h4>Key points <button class="link" data-act="sec" data-sec="research">Research</button></h4>
+        ${s.points.length ? s.points.map(p => `<button class="rp" data-act="point" data-rid="${p.id}"><span class="unc ${p.unc}">${p.unc}</span><span>${esc(p.title)}</span></button>`).join('') : '<span class="dim" style="font-size:12.5px">No research points yet.</span>'}</div>
+      <div class="ublock"><h4>Your thoughts</h4><textarea class="thoughts" data-bind="thoughts" placeholder="What you think, feel or want from this — in your own words.">${esc(s.thoughts)}</textarea></div>
+      <div class="ublock"><h4>Decisions</h4><div class="chips">${chipList(s,'decisions','dec')}</div></div>
+      <div class="ublock"><h4>Protected phrases</h4><div class="chips">${chipList(s,'protected','pro')}</div></div>
+      <div class="ublock"><h4>Rejected angles</h4><div class="chips">${chipList(s,'rejected','rej')}</div></div>
+    </section>
+    <div class="arrow" aria-hidden="true">${ic('arrow')}</div>
+    <section class="band"><header>${ic('article')}<h3>Expressions</h3><span class="c">${s.expressions.length}</span><span class="sp"></span><button class="link" data-act="sec" data-sec="outputs">Outputs</button></header>
+      ${s.expressions.map(e => expCardHTML(s,e)).join('')}
+      <button class="newexp" data-act="newmenu" aria-expanded="${S.newMenu}">${ic('plus')}New expression from this</button>
+      ${S.newMenu ? `<div class="kinds">${Object.keys(KIND).map(k => `<button data-act="newpiece" data-kind="${k}">${ic(k)}${KIND[k]}</button>`).join('')}<p class="honest">${ic('alert','sm')}<span>A new piece starts empty and inherits this subject’s decisions and protected phrases. Prototype — nothing is saved.</span></p></div>` : ''}
+    </section>
+  </div>`;
+}
+
+/* ================= sections ================= */
+function materialHTML(){
+  const s = subj();
+  const all = [...s.inbox.map(o => ({...o, inbox:true})), ...s.origins];
+  const sel = all.find(o => o.id === S.matSel) || all[0];
+  let prev = '<div class="dim">Nothing here yet.</div>';
+  if (sel) {
+    if (sel.type === 'recording') prev = `<div class="wave">${Array.from({length:70}, (_,i) => `<i style="height:${12 + (hash(sel.id+i) % 80)}%"></i>`).join('')}</div><p class="dim" style="margin:0 0 12px;font-size:13px">Waveform is a sample drawing.</p><button class="btn" data-act="sec" data-sec="source">Open in Source ${ic('arrow','sm')}</button>`;
+    else if (sel.type === 'photos') prev = `<div class="thumbs">${(s.media.length ? s.media : [{id:sel.id,title:sel.title,type:'photo'}]).map(m => art(m)).join('')}</div>`;
+    else prev = `<p class="quote">${esc(sel.preview)}</p><div class="cite">${esc(sel.meta)}</div>`;
+  }
+  const row = o => `<button class="mitem ${sel&&sel.id===o.id?'on':''}" data-act="matsel" data-oid="${o.id}"><span class="ty">${ic(o.type)}</span><span style="min-width:0;flex:1"><div class="tt">${esc(o.title)}</div><div class="mm">${esc(o.meta)}</div></span>${o.from!=='you'?whoTag(o.from):''}</button>`;
+  return `<div class="secwrap">${secHead('material')}
+  <div class="two">
+    <div class="panel"><div class="pb">
+      <div class="drop">${ic('upload')} Drop recordings, photos, video or notes here, or <label>choose files<input type="file" multiple data-act-file="intake"></label>.<br><span style="font-size:12px">Prototype — files stay in this tab and are not uploaded.</span></div>
+      ${s.inbox.length ? `<div class="grouplbl">Just arrived — not sorted</div>${s.inbox.map(o => row({...o})).join('')}` : ''}
+      <div class="grouplbl">In this subject</div>${s.origins.map(row).join('')}
+    </div></div>
+    <div class="panel">${sel ? `<div class="ph">${ic(sel.type)}${esc(sel.title)}<span class="sp"></span>${sel.from==='you'?whoTag('You'):whoTag(sel.from)}</div>
+      <div class="pb">${prev}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn" data-act="honest" data-msg="Processing is not connected here — ask Claude in conversation and the result appears in this subject.">Process</button>
+          ${sel.inbox ? `<button class="btn" data-act="sortin" data-oid="${sel.id}">Sort into this subject</button>` : ''}
+        </div>
+        <p class="honest" style="margin-top:12px">${ic('alert','sm')}<span>Keep / remove review is not connected yet.</span></p>
+      </div>` : '<div class="pb dim">Nothing selected.</div>'}</div>
+  </div></div>`;
+}
+function sourceHTML(){
+  const s = subj();
+  const rec = s.origins.find(o => o.type === 'recording');
+  if (!s.transcript.length) return `<div class="secwrap">${secHead('source')}<div class="emptyst"><b>No transcript in this subject yet.</b>${rec ? `“${esc(rec.title)}” has not been transcribed.` : 'Bring in a recording in Material.'}<div style="margin-top:12px"><button class="btn" data-act="sec" data-sec="material">Go to Material</button></div></div></div>`;
+  return `<div class="secwrap">${secHead('source', `<button class="btn ghost" data-act="honest" data-msg="Bilingual view is not connected yet.">Bilingual view</button>`)}
+  <div class="two" style="grid-template-columns:minmax(0,1fr) minmax(240px,320px)">
+    <div>
+      <div class="player"><button class="iconbtn" data-act="honest" data-msg="Recording playback is not connected in this prototype.">${ic('play')}</button><span style="font-weight:500">${esc(rec ? rec.title : 'Recording')}</span><span class="bar"><i></i></span><span class="dim" style="font-size:12px">Playback not connected</span></div>
+      <p class="dim" style="font-size:12.5px;margin:0 0 8px">Click any line to correct it. Dotted lines are low-confidence.</p>
+      ${s.transcript.map((l,i) => S.editLine === i ? `<div class="tline" style="background:var(--sel)"><span class="ts">${l.t}</span><span class="sp">${esc(l.who)}</span><div class="tedit"><textarea id="tedit" aria-label="Correct this line">${esc(l.text)}</textarea><div class="row"><button class="btn primary" data-act="tsave" data-i="${i}">Keep correction</button><button class="btn ghost" data-act="tcancel">Cancel</button><span class="dim" style="font-size:12px;align-self:center">Kept in this tab only</span></div></div></div>`
+        : `<button class="tline" data-act="tedit" data-i="${i}"><span class="ts">${l.t}</span><span class="sp">${esc(l.who)}</span><span class="tx ${l.lc && !l.fixed?'lc':''}">${esc(l.text)}${l.fixed?'<span class="fixed">corrected</span>':''}</span></button>`).join('')}
+    </div>
+    <div class="panel"><div class="ph">Corrections<span class="sp"></span><span class="dim" style="font-weight:400;font-size:12px">carry into every piece</span></div><div class="pb">
+      ${s.corrections.length ? s.corrections.map(c => `<div style="margin-bottom:10px;font-size:13px"><span class="dim" style="text-decoration:line-through">${esc(c.from)}</span> → <b style="font-weight:500">${esc(c.to)}</b><div class="cite">${esc(c.at)}</div></div>`).join('') : '<span class="dim">None yet.</span>'}
+    </div></div>
+  </div></div>`;
+}
+function researchHTML(){
+  const s = subj();
+  if (!s.points.length) return `<div class="secwrap">${secHead('research')}<div class="emptyst"><b>No research points yet.</b>Points appear here when Claude or you pull them out of the origins. Broad AI research is not connected yet.</div></div>`;
+  const p = s.points.find(x => x.id === S.rpSel) || s.points[0];
+  return `<div class="secwrap">${secHead('research', `<button class="btn ghost" data-act="honest" data-msg="Broad AI research and retrieval is not connected yet.">Find more evidence</button>`)}
+  <div class="two">
+    <div class="panel rlist"><div class="pb" style="padding:6px">${s.points.map(x => `<button class="${x.id===p.id?'on':''}" data-act="point" data-rid="${x.id}"><span class="unc ${x.unc}">${x.unc}</span><span>${esc(x.title)}</span></button>`).join('')}</div></div>
+    <div class="panel"><div class="ph">${esc(p.title)}</div><div class="pb">
+      <p style="margin:0 0 14px;font-size:14.5px;line-height:1.6">${esc(p.claim)}</p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px"><span class="dim" style="font-size:12.5px">How sure are we?</span>
+        <div class="seg">${['solid','unsure','disputed'].map(u => `<button class="${p.unc===u?'on':''}" data-act="unc" data-u="${u}">${u[0].toUpperCase()+u.slice(1)}</button>`).join('')}</div></div>
+      <h4 style="margin:0 0 8px;font-size:12px;color:var(--dim);font-weight:600">Evidence</h4>
+      ${p.evidence.length ? p.evidence.map(ev => `<div style="border-left:2px solid var(--line);padding:2px 0 2px 12px;margin-bottom:12px"><p class="quote">“${esc(ev.q)}”</p><div class="cite">${esc(ev.src)}</div></div>`).join('') : '<p class="dim">No evidence attached yet.</p>'}
+      <div class="thread"><h4 style="margin:0 0 8px;font-size:13px;font-weight:600">Discuss this point</h4>
+        ${p.thread.map(m => `<div class="msg ${m.sys?'sys':''}"><div class="nb">${m.sys?'Note':'You'}</div>${esc(m.text)}</div>`).join('')}
+        <div class="compose"><textarea id="rmsg" placeholder="Ask or argue about this one point…"></textarea><button class="btn" data-act="rsend">Send</button></div>
+        <p class="honest" style="margin-top:8px">${ic('alert','sm')}<span>AI discussion is not connected here yet — what you write is kept with this point.</span></p>
+      </div>
+    </div></div>
+  </div></div>`;
+}
+function directionHTML(){
+  const s = subj();
+  const ed = (key, cls, label, ph) => `<div class="panel" style="margin-bottom:14px"><div class="ph">${label}</div><div class="pb"><div class="chips">${chipList(s,key,cls,true)}</div><div class="addrow"><input data-add="${key}" placeholder="${ph}"><button class="btn" data-act="chipadd" data-key="${key}">Add</button></div></div></div>`;
+  const q = s.origins.find(o => o.from === 'Claude' && o.type === 'note');
+  return `<div class="secwrap">${secHead('direction')}
+  ${q ? `<div class="cbanner" style="border-left:3px solid var(--warnc)">${whoTag('Claude')}<span><b>Asked you:</b> ${esc(q.preview)}</span></div>` : ''}
+  <div class="dgrid">
+    <div>
+      <div class="panel" style="margin-bottom:14px"><div class="ph">Your thoughts<span class="sp"></span><span class="dim" style="font-weight:400;font-size:12px">only your words</span></div><div class="pb"><textarea class="thoughts" style="min-height:180px" data-bind="thoughts" placeholder="What you think, feel, question or want from this.">${esc(s.thoughts)}</textarea></div></div>
+      <div class="panel"><div class="ph">Current understanding</div><div class="pb"><textarea class="understand" data-bind="understanding">${esc(s.understanding)}</textarea></div></div>
+    </div>
+    <div>
+      ${ed('decisions','dec','Decisions','Add a decision')}
+      ${ed('protected','pro','Protected phrases','Add a phrase to keep exactly')}
+      ${ed('rejected','rej','Rejected angles','Add an angle to avoid')}
+      <p class="dim" style="font-size:12.5px">Everything here shows beside every piece in this subject.</p>
+    </div>
+  </div></div>`;
+}
+function noPieceHTML(k){
+  return `<div class="secwrap">${secHead(k)}<div class="emptyst"><b>No pieces in this subject yet.</b>Start one from the board — it will inherit everything decided here.<div style="margin-top:12px"><button class="btn primary" data-act="boardnew">New expression from this</button></div></div></div>`;
+}
+function inheritHTML(s, e){
+  const srcs = s.origins;
+  return `<aside class="inherit" aria-label="What this piece inherits">
+    <h3>${esc(s.title)}</h3><div class="sub">This piece inherits — <button class="link" data-act="sec" data-sec="direction">change in Direction</button></div>
+    <div class="grp"><h5>Decisions</h5><div class="chips">${chipList(s,'decisions','dec')}</div></div>
+    <div class="grp"><h5>Protected phrases</h5><div class="chips">${chipList(s,'protected','pro')}</div></div>
+    <div class="grp"><h5>Rejected angles</h5><div class="chips">${chipList(s,'rejected','rej')}</div></div>
+    <div class="grp"><h5>Corrections from Source</h5>${s.corrections.length ? s.corrections.map(c => `<div style="font-size:12.5px;margin-bottom:4px"><span class="dim" style="text-decoration:line-through">${esc(c.from)}</span> → ${esc(c.to)}</div>`).join('') : '<p>None.</p>'}</div>
+    <div class="grp"><h5>Sources used</h5>${srcs.map(o => `<button class="src" data-act="origin" data-oid="${o.id}">${ic(o.type,'sm')}<span>${esc(o.title)}</span></button>`).join('')}</div>
+    <div class="grp"><h5>Understanding</h5><p>${esc(s.understanding)}</p></div>
+  </aside>`;
+}
+function writeHTML(){
+  const s = subj(), e = piece();
+  if (!e) return noPieceHTML('write');
+  const tools = `<div class="doctools">${ic(e.kind,'sm')}<span>${KIND[e.kind]}</span>·<span class="tone-${tone(e)}" id="pstatus">${esc(status(e))}</span>
+    <span class="sp"></span><span>Edits kept in this tab · Prototype — nothing is saved</span>
+    ${e.blocks ? `<button class="btn ghost" data-act="addnote">${ic('note','sm')}Note on selection</button>` : ''}
+    <button class="btn ${S.focus?'on':''}" data-act="focus" aria-pressed="${S.focus}">${ic('focus','sm')}Focus</button></div>`;
+  let main = '';
+  if (e.kind === 'carousel') {
+    main = `<p class="dim" style="font-size:12.5px;margin:0 0 12px" id="seqcount">${e.slides.length} slides · ${emptySlides(e)} empty · drag the handle to reorder · type straight onto a slide</p>
+    <div class="seq" data-dnd-list="slides">${e.slides.map((x,i) => `<div class="slide" data-dnd-item="${i}"><div class="sh"><span class="grip" data-dnd-handle aria-label="Drag to reorder">${ic('grip')}</span><span>${i===0?'Cover':'Slide '+(i+1)}</span><span class="sp"></span>${x.img?`<span title="Image: ${esc(mediaOf(s,x.img).title)}">${ic('photos','sm')}</span>`:''}<button class="iconbtn" style="width:24px;height:24px" data-act="slidedel" data-i="${i}" aria-label="Remove slide">${ic('close','sm')}</button></div>
+      <div class="face ${x.text.trim()||x.img?'':'e'}">${x.img?art(mediaOf(s,x.img)):''}<div class="stext" contenteditable="true" data-slide="${i}">${esc(x.text)}</div></div></div>`).join('')}
+      <button class="addslide" data-act="slideadd">${ic('plus')}Add slide</button></div>`;
+  } else if (e.kind === 'listing') {
+    const f = e.fields;
+    main = `<div class="lform doc"><h1 contenteditable="true" data-bind="ptitle">${esc(e.title)}</h1>
+      <div style="display:flex;gap:14px;align-items:center">${art(mediaOf(s,e.media),'')}<span class="dim" style="font-size:13px;font-family:var(--ui)">Main photo: ${esc((mediaOf(s,e.media)||{}).title||'none')} · <button class="link" data-act="sec" data-sec="media">change in Media</button></span></div>
+      ${[['name','Name','Product name'],['price','Price','Price missing — waiting on you'],['size','Size','Size or weight'],['desc','Description','Describe it']].map(([k,l,ph]) => `<div class="lrow"><label>${l}</label><div contenteditable="true" data-field="${k}" data-ph="${ph}">${esc(f[k])}</div></div>`).join('')}
+    </div>`;
+    main = main.replace('<div style="display:flex;gap:14px;align-items:center"><div class="art ', '<div style="display:flex;gap:14px;align-items:center"><div style="width:96px;height:96px;border-radius:6px" class="art ');
+  } else {
+    let pn = 0;
+    main = `<div class="docgrid"><article class="doc"><h1 contenteditable="true" data-bind="ptitle" spellcheck="true">${esc(e.title)}</h1>
+      ${e.blocks.map(b => b.t === 'img' ? `<figure>${art(mediaOf(s,b.media))}<figcaption>${esc((mediaOf(s,b.media)||{}).title||'')} · <span class="dim">sample image</span></figcaption></figure>`
+        : `<p contenteditable="true" data-block="${b.id}" data-ph="${++pn===1?'Start writing…':'Keep writing…'}">${esc(b.text)}</p>`).join('')}
+    </article>
+    <aside class="margin abs" aria-label="Editorial margin"><div class="mh">Margin</div>
+      ${e.notes.length ? e.notes.map(n => `<button class="note ${S.activeNote===n.id?'on':''}" data-act="note" data-nid="${n.id}" data-block="${n.block}"><div class="nb">${whoTag(n.by)}</div><q>${esc(n.quote)}</q>${esc(n.text)}</button>`).join('') : '<p class="dim" style="font-size:12.5px;margin:0">No notes. Select text and use “Note on selection”.</p>'}
+    </aside></div>`;
+  }
+  return `<div class="studio ${S.focus?'focus':''}"><div class="docpane">${S.focus?'':pickerHTML()}${tools}${main}</div>${inheritHTML(s,e)}</div>`;
+}
+function readHTML(){
+  const s = subj(), e = piece();
+  if (!e) return noPieceHTML('read');
+  let body = '';
+  if (e.blocks) body = e.blocks.map(b => b.t === 'img' ? `<figure>${art(mediaOf(s,b.media))}</figure>` : (b.text ? `<p>${esc(b.text)}</p>` : '')).join('');
+  else if (e.slides) body = e.slides.map((x,i) => `<p><span class="dim" style="font-family:var(--ui);font-size:13px">${i+1}.</span> ${esc(x.text || '— empty slide —')}</p>`).join('');
+  else body = `<p><b>${esc(e.fields.price || 'Price missing')}</b> · ${esc(e.fields.size)}</p><p>${esc(e.fields.desc)}</p>`;
+  return `<div class="secwrap">${secHead('read')}${pickerHTML()}<article class="reader"><h1>${esc(e.title)}</h1><div class="by">${KIND[e.kind]} · from ${esc(s.title)}</div>${body}</article></div>`;
+}
+function checkHTML(){
+  const s = subj(), e = piece();
+  if (!e) return noPieceHTML('check');
+  const t = pieceText(e).toLowerCase(), rows = [];
+  s.protected.forEach(p => { const ok = t.includes(p.toLowerCase()); rows.push([ok ? 'good' : 'dim', ok ? 'check' : 'circle', `Protected phrase “${p}”`, ok ? 'Present, word for word.' : 'Not in this piece — fine if it does not belong here.']); });
+  s.corrections.forEach(c => { const bad = t.includes(c.from.toLowerCase()); rows.push([bad ? 'warn' : 'good', bad ? 'alert' : 'check', `Correction “${c.from}” → “${c.to}”`, bad ? 'The uncorrected wording still appears.' : 'Uncorrected wording not found.']); });
+  if (e.slides) { const n = emptySlides(e); rows.push([n ? 'warn' : 'good', n ? 'alert' : 'check', 'Empty slides', n ? `${n} slide${n>1?'s are':' is'} still empty.` : 'Every slide has text.']); }
+  if (e.blocks) { const n = e.blocks.filter(b => b.t === 'p' && !b.text.trim()).length; if (n) rows.push(['warn','alert','Empty paragraphs', `${n} empty paragraph${n>1?'s':''}.`]); }
+  if (e.fields && !e.fields.price.trim()) rows.push(['warn','alert','Price','No price set.']);
+  return `<div class="secwrap">${secHead('check')}${pickerHTML()}
+    <div class="cbanner">${ic('circle')}<b>No check has run on this revision.</b><span class="dim">The full editorial and fact check is not connected yet.</span><span class="sp" style="flex:1"></span><button class="btn" data-act="honest" data-msg="The full check is not connected yet. The simple text matches below are all this prototype can do.">Run full check</button></div>
+    <div class="panel"><div class="ph">Simple text matches<span class="sp"></span><span class="dim" style="font-weight:400;font-size:12px">counted in this tab — not an AI check</span></div><div class="pb" style="padding-top:0">
+      ${rows.length ? rows.map(([tn,i,l,d]) => `<div class="crow"><span class="tone-${tn}">${ic(i)}</span><span><b style="font-weight:500">${esc(l)}</b><br><span class="dim">${esc(d)}</span></span></div>`).join('') : '<p class="dim">Nothing to match against yet — add protected phrases in Direction.</p>'}
+    </div></div></div>`;
+}
+function mediaHTML(){
+  const s = subj();
+  const list = s.media.filter(m => S.mediaFilter === 'all' || (S.mediaFilter === 'photo' ? m.type === 'photo' : m.type === 'video'));
+  return `<div class="secwrap">${secHead('media', `<label class="btn" style="cursor:pointer">${ic('upload','sm')}Add photos or video<input type="file" accept="image/*,video/*" multiple hidden data-act-file="media"></label>`)}
+    <div class="pick"><span class="lbl">Show</span>${[['all','All'],['photo','Photos'],['video','Video']].map(([k,l]) => `<button class="${S.mediaFilter===k?'on':''}" data-act="mfilter" data-k="${k}">${l}</button>`).join('')}<span class="dim" style="font-size:12px;margin-left:8px">Images are sample drawings.</span></div>
+    ${list.length ? `<div class="mgrid">${list.map(m => { const u = usedIn(s, m.id); return `<div class="mcard">${art(m)}<div class="mb"><div class="mt"><span>${esc(m.title)}</span><span class="dim" style="font-size:12px">${m.type==='video'?ic('video','sm'):ic('photos','sm')}</span></div>
+      <div class="uses">${u.length ? `<span class="dim" style="font-size:11.5px">Used in</span>${u.map(x => `<button data-act="openpiece" data-pid="${x.pid}">${ic('arrow','sm')}${esc(x.label)}</button>`).join('')}` : '<span class="dim">Not used yet</span>'}</div></div></div>`; }).join('')}</div>` : '<div class="emptyst"><b>No media yet.</b>Add photos or video, or bring them in through Material.</div>'}
+  </div>`;
+}
+function arrangeHTML(){
+  const s = subj(), e = piece();
+  if (!e) return noPieceHTML('arrange');
+  let canvas = '', tray = '';
+  if (e.slides) {
+    canvas = `<p class="dim" style="font-size:12.5px;margin:0 0 10px">The order a reader swipes through. Drag to reorder; the first slide is the cover.</p><div class="story" data-dnd-list="slides">${e.slides.map((x,i) => `<div class="slide" data-dnd-item="${i}"><div class="sh"><span class="grip" data-dnd-handle aria-label="Drag to reorder">${ic('grip')}</span>${i===0?'<span class="cover">COVER</span>':`<span>${i+1}</span>`}<span class="sp"></span>${i?`<button class="link" style="font-size:11.5px" data-act="mkcover" data-i="${i}">Make cover</button>`:''}</div><div class="face ${x.text.trim()||x.img?'':'e'}">${x.img?art(mediaOf(s,x.img)):''}<div class="stext">${esc(x.text)}</div></div></div>`).join('')}</div>`;
+  } else if (e.blocks) {
+    let pn = 0;
+    canvas = `<div data-dnd-list="blocks">${e.blocks.map((b,i) => `<div class="ablock" data-dnd-item="${i}"><span class="grip" data-dnd-handle aria-label="Drag to reorder">${ic('grip')}</span>${b.t==='img' ? `<span class="bt">Image</span>${art(mediaOf(s,b.media))}<span class="bx">${esc((mediaOf(s,b.media)||{}).title||'')}</span><button class="iconbtn" style="width:26px;height:26px" data-act="unplace" data-i="${i}" aria-label="Remove image from piece">${ic('close','sm')}</button>` : `<span class="bt">¶${++pn}</span><span class="bx">${esc(b.text || '(empty)')}</span>`}</div>`).join('')}</div>`;
+    const used = new Set(e.blocks.filter(b => b.t === 'img').map(b => b.media));
+    const free = s.media.filter(m => !used.has(m.id));
+    tray = `<div class="panel"><div class="ph">Media not in this piece</div><div class="pb">${free.length ? free.map(m => `<div class="ablock" style="margin-bottom:6px">${art(m)}<span class="bx" style="font-family:var(--ui);font-size:13px">${esc(m.title)}</span><button class="link" data-act="place" data-mid="${m.id}">Place</button></div>`).join('') : '<span class="dim">Everything is placed.</span>'}</div></div>`;
+  } else {
+    canvas = `<div class="emptyst"><b>A listing has a fixed shape.</b>Name, photo, price, description — change the photo in Media, the words in Write.</div>`;
+  }
+  return `<div class="secwrap">${secHead('arrange')}${pickerHTML()}<div class="arr"><div>${canvas}</div>${tray ? `<div>${tray}</div>` : ''}</div></div>`;
+}
+function audienceHTML(){
+  const s = subj(), e = piece();
+  if (!e) return noPieceHTML('audience');
+  const modes = e.slides || e.kind === 'post' ? [['phone','Phone'],['feed','In the feed']] : e.kind === 'listing' ? [['phone','Phone'],['desktop','Shop page']] : [['phone','Phone'],['desktop','Desktop']];
+  if (!modes.some(m => m[0] === S.aud)) S.aud = modes[0][0];
+  let inner = '';
+  if (e.slides) {
+    const i = Math.min(S.audSlide, e.slides.length - 1), x = e.slides[i];
+    const sl = `<div class="bigslide">${x.img?art(mediaOf(s,x.img)):''}<div class="tx">${esc(x.text || '')}</div></div><div class="dots">${e.slides.map((_,j) => `<i class="${j===i?'on':''}"></i>`).join('')}</div><div class="slnav"><button class="link" data-act="aslide" data-d="-1" ${i===0?'disabled style="opacity:.3"':''}>‹ Back</button><span class="dim">${i+1} / ${e.slides.length}</span><button class="link" data-act="aslide" data-d="1" ${i===e.slides.length-1?'disabled style="opacity:.3"':''}>Next ›</button></div>`;
+    inner = S.aud === 'feed' ? `<div class="feedtop"><i></i>adrian.tea</div>${sl}<div style="padding:0 14px 14px;font-size:13.5px">${esc(e.title)}</div>` : `<div class="inner" style="padding:0">${sl}</div>`;
+  } else if (e.kind === 'listing') {
+    const f = e.fields;
+    inner = `<div class="inner"><div style="display:${S.aud==='desktop'?'grid':'block'};grid-template-columns:1fr 1fr;gap:28px">${art(mediaOf(s,e.media),'').replace('class="art ','style="aspect-ratio:1;border-radius:6px;margin-bottom:14px" class="art ')}<div><h1>${esc(f.name)}</h1><p style="font-family:var(--ui);font-weight:600">${esc(f.price || '— price not set —')}</p><p class="dim" style="font-size:14px">${esc(f.size)}</p><p>${esc(f.desc)}</p></div></div></div>`;
+  } else {
+    const body = e.blocks.map(b => b.t === 'img' ? `<figure>${art(mediaOf(s,b.media))}</figure>` : (b.text ? `<p>${esc(b.text)}</p>` : '')).join('');
+    inner = S.aud === 'feed' ? `<div class="feedtop"><i></i>adrian.tea</div>${body.replace(/<p>/,'<p style="padding:0 14px">')}` : `<div class="inner"><h1>${esc(e.title)}</h1>${body}</div>`;
+  }
+  return `<div class="secwrap">${secHead('audience')}${pickerHTML()}
+    <div class="aud"><div class="seg">${modes.map(([k,l]) => `<button class="${S.aud===k?'on':''}" data-act="aud" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="frame ${S.aud}">${inner}</div><p class="dim" style="font-size:12.5px;margin:0">Preview only. Change words in Write, order in Arrange.</p></div></div>`;
+}
+function shareHTML(){
+  const s = subj(), e = piece();
+  if (!e) return noPieceHTML('share');
+  const fmts = e.slides ? [['PNG','Slides as images','1080 × 1350, one file per slide'],['PDF','Slide sheet','All slides on one page, for review'],['TXT','Slide text','Plain text, one line per slide']]
+    : e.kind === 'listing' ? [['TXT','Listing text','Name, price, size and description'],['CSV','Shop import row','One row for the shop’s product import']]
+    : [['MD','Markdown','Clean text with headings'],['HTML','Magazine HTML','For the magazine single-writer path'],['DOCX','Word document','For an editor who wants Word']];
+  return `<div class="secwrap">${secHead('share')}${pickerHTML()}
+  <div class="sgrid">
+    <div class="panel"><div class="ph">${ic('upload','sm')}Export — files to take elsewhere</div><div class="pb" style="padding-top:0">
+      ${fmts.map(([x,n,d]) => `<div class="frow"><span class="fi">${x}</span><span class="fx"><b>${n}</b><span>${d}</span></span><button class="btn" data-act="honest" data-msg="Prototype — nothing is exported.">Export</button></div>`).join('')}
+    </div></div>
+    <div>
+      <div class="panel" style="margin-bottom:14px"><div class="ph">${ic('link','sm')}Send for a look</div><div class="pb">
+        <p style="margin:0 0 10px;font-size:13.5px">A private link someone can read and comment on.</p>
+        <p class="honest">${ic('alert','sm')}<span>Private review links are not connected yet.</span></p></div></div>
+      <div class="panel"><div class="ph">${ic('open','sm')}Publish</div><div class="pb">
+        <p style="margin:0 0 10px;font-size:13.5px">Status: <b style="font-weight:500">${esc(status(e))}</b></p>
+        <p class="honest">${ic('alert','sm')}<span>Publishing happens outside AR Create today. Parts of the magazine path are not connected.</span></p></div></div>
+    </div>
+  </div></div>`;
+}
+function outputsHTML(){
+  const s = subj();
+  return `<div class="secwrap">${secHead('outputs')}
+    <div class="ofrom">${s.origins.slice(0,3).map(o => `<span style="display:inline-flex;gap:5px;align-items:center">${ic(o.type,'sm')}${esc(o.title)}</span>`).join('<span>+</span>')}<span>${ic('arrow','sm')}</span><b style="color:var(--ink);font-weight:500">${s.expressions.length} independently edited piece${s.expressions.length===1?'':'s'}</b></div>
+    ${s.expressions.length ? `<div style="overflow-x:auto"><table class="otable"><thead><tr><th>Piece</th><th>Kind</th><th>Status</th><th>Last touched</th><th></th></tr></thead><tbody>
+      ${s.expressions.map(e => `<tr><td><b style="font-weight:500">${esc(e.title)}</b></td><td><span class="k">${ic(e.kind,'sm')}${KIND[e.kind]}</span></td><td class="tone-${tone(e)}">${esc(status(e))}</td><td>${whoTag(e.by)} <span class="dim">${esc(e.when)}</span></td><td style="white-space:nowrap;text-align:right"><button class="link" data-act="openpiece" data-pid="${e.id}" data-sec="read">Read</button> &nbsp; <button class="btn" data-act="openpiece" data-pid="${e.id}">Open</button></td></tr>`).join('')}
+    </tbody></table></div>` : ''}
+    <div style="margin-top:16px;max-width:420px"><button class="newexp" data-act="boardnew">${ic('plus')}New expression from this</button></div>
+  </div>`;
+}
+
+/* ================= main render ================= */
+const SEC_RENDER = {material:materialHTML, source:sourceHTML, research:researchHTML, direction:directionHTML, write:writeHTML, read:readHTML, check:checkHTML, media:mediaHTML, arrange:arrangeHTML, audience:audienceHTML, share:shareHTML, outputs:outputsHTML};
+function render(keepScroll){
+  const m = $('#main'), y = m.scrollTop;
+  renderSide(); renderTop();
+  if (S.view === 'library') m.innerHTML = libraryHTML();
+  else if (S.view === 'home' || !subj()) m.innerHTML = homeHTML();
+  else m.innerHTML = tabsHTML() + (S.sec === 'board' ? boardHTML() : SEC_RENDER[S.sec]());
+  m.scrollTop = keepScroll ? y : 0;
+  requestAnimationFrame(placeNotes);
+}
+function placeNotes(){
+  const mg = $('.margin');
+  if (!mg) return;
+  const notes = $$('.note', mg);
+  if (window.innerWidth <= 1100) { notes.forEach(n => n.style.top = ''); mg.style.minHeight = ''; return; }
+  const base = mg.getBoundingClientRect().top;
+  let prev = 26;
+  notes.forEach(n => {
+    const b = document.querySelector(`[data-block="${n.dataset.block}"]`);
+    let t = b ? b.getBoundingClientRect().top - base : prev;
+    t = Math.max(t, prev);
+    n.style.top = t + 'px';
+    prev = t + n.offsetHeight + 10;
+  });
+  mg.style.minHeight = prev + 'px';
+}
+function highlight(nid){
+  const e = piece(); if (!e || !e.notes) return;
+  $$('.doc p[data-block]').forEach(p => { if (p.querySelector('mark')) p.textContent = p.textContent; });
+  const n = e.notes.find(x => x.id === nid); if (!n) return;
+  const p = document.querySelector(`.doc p[data-block="${n.block}"]`); if (!p) return;
+  const txt = p.textContent, i = txt.toLowerCase().indexOf(n.quote.toLowerCase());
+  if (i < 0) { toast('That passage has changed — the note no longer matches the text.'); p.scrollIntoView({block:'center', behavior:'smooth'}); return; }
+  p.innerHTML = esc(txt.slice(0,i)) + '<mark>' + esc(txt.slice(i, i + n.quote.length)) + '</mark>' + esc(txt.slice(i + n.quote.length));
+  p.scrollIntoView({block:'center', behavior:'smooth'});
+}
+
+/* ================= navigation ================= */
+function openSubject(sid, sec){ S.view = 'subject'; S.sid = sid; S.sec = sec || 'board'; S.pid = null; S.newMenu = false; S.activeNote = null; S.matSel = null; S.rpSel = null; S.editLine = null; S.sheet = false; S.audSlide = 0;
+  if (PIECE_SECS.includes(S.sec)) { const s = subj(); S.pid = s.expressions[0] ? s.expressions[0].id : null; }
+  render(); }
+function openPiece(sid, pid, sec){ openSubject(sid, sec || 'write'); S.pid = pid || S.pid; render(); }
+function setSec(sec){
+  const fromPiece = S.view === 'subject' && PIECE_SECS.includes(S.sec) && piece();
+  if (fromPiece && !PIECE_SECS.includes(sec)) S.ret = {sid:S.sid, pid:S.pid, sec:S.sec, nid:S.activeNote, y:$('#main').scrollTop};
+  else if (PIECE_SECS.includes(sec)) S.ret = null;
+  S.sec = sec; S.editLine = null; S.activeNote = null; S.audSlide = 0;
+  if (PIECE_SECS.includes(sec) && !piece()) { const s = subj(); S.pid = s.expressions[0] ? s.expressions[0].id : null; }
+  if (PIECE_SECS.includes(sec) && piece()) { const s = subj(), e = piece(); S.lastSid = s.id; s.lastLeft = {text:`${SECNAME[sec]} — “${e.title}”`, pid:e.id, sec}; }
+  render();
+}
+function goSpot(sp){
+  if (!sp) return;
+  if (S.view !== 'subject' || S.sid !== sp.sid) { S.view = 'subject'; S.sid = sp.sid; S.sheet = false; }
+  if (sp.pid) S.pid = sp.pid;
+  setSec(sp.sec);
+  if (sp.nid) { S.activeNote = sp.nid; render(); requestAnimationFrame(() => requestAnimationFrame(() => highlight(sp.nid))); }
+  else if (sp.y) { $('#main').scrollTop = sp.y; }
+}
+
+/* ================= events ================= */
+document.addEventListener('click', ev => {
+  const a = ev.target.closest('[data-act]'); if (!a) return;
+  const d = a.dataset, s = subj();
+  switch (d.act) {
+    case 'home': S.view = 'home'; S.sheet = false; render(); break;
+    case 'board': setSec('board'); break;
+    case 'rail': S.rail = !S.rail; render(true); break;
+    case 'sheet': S.sheet = !S.sheet; renderTop(); break;
+    case 'theme': { const n = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = n; try { localStorage.setItem('arc-b-theme', n); } catch(e) {} renderTop(); break; }
+    case 'filter': S.filter = d.k; renderSide(); break;
+    case 'clearq': S.q = ''; $('#q').value = ''; S.filter = 'all'; renderSide(); break;
+    case 'subject': openSubject(d.sid); break;
+    case 'go': if (d.pid) openPiece(d.sid, d.pid, d.sec); else openSubject(d.sid, d.sec); break;
+    case 'sec': setSec(d.sec); break;
+    case 'pick': S.pid = d.pid; S.activeNote = null; S.audSlide = 0; render(); break;
+    case 'resume': { const t = d.sid ? SUBJECTS.find(x => x.id === d.sid) : s; goSpot({sid:t.id, ...t.lastLeft}); break; }
+    case 'ret': { const r = S.ret; goSpot(r); if (r && r.y && !r.nid) requestAnimationFrame(() => $('#main').scrollTop = r.y); break; }
+    case 'library': S.view = 'library'; S.sheet = false; render(); break;
+    case 'libopen': openSubject(d.sid, d.sec); if (d.oid) { S.matSel = d.oid; render(); } if (d.rid) { S.rpSel = d.rid; render(); } break;
+    case 'openpiece': S.pid = d.pid; S.focus = false; setSec(d.sec || 'write'); break;
+    case 'origin': S.matSel = d.oid; setSec('material'); break;
+    case 'point': S.rpSel = d.rid; setSec('research'); break;
+    case 'newmenu': S.newMenu = !S.newMenu; render(true); break;
+    case 'boardnew': S.newMenu = true; setSec('board'); break;
+    case 'newpiece': {
+      const k = d.kind, id = 'n' + (++bid);
+      const e = {id, kind:k, title:`New ${KIND[k].toLowerCase()} from ${s.title}`, status:'New — empty', by:'You', when:'just now'};
+      if (k === 'carousel') e.slides = [SL(''),SL(''),SL(''),SL(''),SL('')];
+      else if (k === 'listing') e.fields = {name:'', price:'', size:'', desc:''};
+      else { e.blocks = [P('')]; e.notes = []; }
+      s.expressions.push(e); S.newMenu = false; S.pid = id; S.focus = false;
+      setSec('write'); toast('New piece made in this tab — Prototype, nothing is saved.'); break;
+    }
+    case 'newsubject': {
+      const id = 'sub' + (++bid);
+      SUBJECTS.unshift({id, title:'Untitled subject', state:'active', waiting:false, touched:{actor:'You', when:'just now', mins:0}, lastLeft:{text:'just started', sec:'material'},
+        understanding:'Nothing understood yet — bring in some material.', thoughts:'', decisions:[], protected:[], rejected:[], corrections:[], origins:[], inbox:[], points:[], transcript:[], media:[], expressions:[]});
+      openSubject(id); toast('Subject made in this tab — click the title to rename. Prototype, nothing is saved.'); break;
+    }
+    case 'focus': S.focus = !S.focus; render(true); break;
+    case 'note': S.activeNote = d.nid; $$('.note').forEach(n => n.classList.toggle('on', n.dataset.nid === d.nid)); highlight(d.nid); break;
+    case 'addnote': {
+      const e = piece();
+      if (!lastSel || !lastSel.q) { toast('Select some words in the text first.'); break; }
+      const txt = prompt('Your note on “' + lastSel.q.slice(0,60) + '”'); if (!txt) break;
+      e.notes.push({id:'n' + (++bid), block:lastSel.block, quote:lastSel.q, by:'You', text:txt}); lastSel = null; render(true); break;
+    }
+    case 'slideadd': piece().slides.push(SL('')); render(true); break;
+    case 'slidedel': { const e = piece(); if (e.slides.length <= 1) { toast('A carousel needs at least one slide.'); break; } e.slides.splice(+d.i, 1); render(true); break; }
+    case 'mkcover': { const e = piece(); const [x] = e.slides.splice(+d.i, 1); e.slides.unshift(x); render(true); break; }
+    case 'place': piece().blocks.push(IMG(d.mid)); render(true); break;
+    case 'unplace': piece().blocks.splice(+d.i, 1); render(true); break;
+    case 'matsel': S.matSel = d.oid; render(true); break;
+    case 'sortin': { const i = s.inbox.findIndex(o => o.id === d.oid); if (i > -1) { const [o] = s.inbox.splice(i, 1); o.meta = o.meta.replace(' · not sorted', ''); s.origins.push(o); } render(true); toast('Sorted in this tab — Prototype, nothing is saved.'); break; }
+    case 'tedit': { S.editLine = +d.i; render(true); const ta = $('#tedit'); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } break; }
+    case 'tcancel': S.editLine = null; render(true); break;
+    case 'tsave': { const l = s.transcript[+d.i], v = $('#tedit').value.trim(); if (v && v !== l.text) { s.corrections.push({from:l.text, to:v, at:l.t + ' · ' + l.who}); l.text = v; l.fixed = true; } S.editLine = null; render(true); break; }
+    case 'unc': { const p = s.points.find(x => x.id === (S.rpSel || s.points[0].id)); p.unc = d.u; render(true); break; }
+    case 'rsend': {
+      const p = s.points.find(x => x.id === (S.rpSel || s.points[0].id)), v = $('#rmsg').value.trim(); if (!v) break;
+      p.thread.push({text:v}); if (!p.thread.some(m => m.sys)) p.thread.push({sys:true, text:'No reply — AI discussion is not connected here. Your note is kept with this point.'});
+      render(true); break;
+    }
+    case 'chipadd': { const inp = document.querySelector(`[data-add="${d.key}"]`), v = inp.value.trim(); if (v) { s[d.key].push(v); render(true); } break; }
+    case 'chipdel': s[d.key].splice(+d.i, 1); render(true); break;
+    case 'mfilter': S.mediaFilter = d.k; render(true); break;
+    case 'aud': S.aud = d.k; render(true); break;
+    case 'aslide': S.audSlide = Math.max(0, S.audSlide + (+d.d)); render(true); break;
+    case 'honest': toast(d.msg); break;
+  }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter' && ev.target.matches('[data-add]')) { ev.preventDefault(); const b = document.querySelector(`[data-act="chipadd"][data-key="${ev.target.dataset.add}"]`); if (b) b.click(); }
+  if (ev.key === 'Enter' && ev.target.matches('[data-bind="stitle"],[data-bind="ptitle"]')) { ev.preventDefault(); ev.target.blur(); }
+  if (ev.key === 'Escape' && S.sheet) { S.sheet = false; renderTop(); }
+  if (ev.key === 'Enter' && (ev.target.matches('.tline') || ev.target.matches('.note'))) { /* native button handles */ }
+});
+let placeT, lastSel = null;
+document.addEventListener('selectionchange', () => {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return;
+  const n = sel.anchorNode, el = n && (n.nodeType === 1 ? n : n.parentElement);
+  const p = el && el.closest && el.closest('.doc p[data-block]');
+  if (p) lastSel = {q: sel.toString().trim().slice(0, 200), block: p.dataset.block};
+});
+document.addEventListener('input', ev => {
+  const t = ev.target, s = subj(), e = piece();
+  if (t.id === 'q') { S.q = t.value; renderSide(); return; }
+  if (t.dataset.bind === 'thoughts') { s.thoughts = t.value; return; }
+  if (t.dataset.bind === 'understanding') { s.understanding = t.value; return; }
+  if (t.dataset.bind === 'stitle') { s.title = t.textContent.trim() || 'Untitled subject'; renderSide(); return; }
+  if (t.dataset.bind === 'ptitle' && e) { e.title = t.textContent.trim() || 'Untitled'; return; }
+  if (t.dataset.block && e && e.blocks) { const b = e.blocks.find(x => x.id === t.dataset.block); if (b) b.text = t.textContent; clearTimeout(placeT); placeT = setTimeout(placeNotes, 120); return; }
+  if (t.dataset.slide != null && e && e.slides) {
+    e.slides[+t.dataset.slide].text = t.textContent;
+    t.parentElement.classList.toggle('e', !t.textContent.trim() && !e.slides[+t.dataset.slide].img);
+    const c = $('#seqcount'); if (c) c.textContent = `${e.slides.length} slides · ${emptySlides(e)} empty · drag the handle to reorder · type straight onto a slide`;
+    const st = $('#pstatus'); if (st) { st.textContent = status(e); st.className = 'tone-' + tone(e); }
+    renderSide(); return;
+  }
+  if (t.dataset.field && e && e.fields) { e.fields[t.dataset.field] = t.textContent; const st = $('#pstatus'); if (st) { st.textContent = status(e); st.className = 'tone-' + tone(e); } renderSide(); return; }
+});
+document.addEventListener('change', ev => {
+  const t = ev.target; if (!t.dataset.actFile) return;
+  const n = t.files ? t.files.length : 0; if (!n) return;
+  const s = subj();
+  if (t.dataset.actFile === 'intake') {
+    Array.from(t.files).forEach(f => s.inbox.push({id:'f' + (++bid), type: /^image|^video/.test(f.type) ? 'photos' : /^audio/.test(f.type) ? 'recording' : 'note', title:f.name, meta:`${Math.max(1, Math.round(f.size/1024))} KB · not sorted`, from:'you', preview:'Chosen just now. Kept in this tab only — not uploaded.'}));
+    S.matSel = s.inbox[s.inbox.length - 1].id; setSec('material');
+  } else {
+    Array.from(t.files).forEach(f => s.media.push({id:'f' + (++bid), type: /^video/.test(f.type) ? 'video' : 'photo', title:f.name, dur:'—'}));
+    render(true);
+  }
+  toast(`${n} file${n>1?'s':''} added in this tab — not uploaded. Prototype, nothing is saved.`);
+});
+
+/* ---------- drag to reorder (pointer based: mouse + touch) ---------- */
+let drag = null;
+document.addEventListener('pointerdown', ev => {
+  const h = ev.target.closest('[data-dnd-handle]'); if (!h) return;
+  const item = h.closest('[data-dnd-item]'), list = h.closest('[data-dnd-list]'); if (!item || !list) return;
+  ev.preventDefault();
+  drag = {list, key:list.dataset.dndList, from:+item.dataset.dndItem, to:+item.dataset.dndItem, item};
+  item.classList.add('dragging');
+  try { h.setPointerCapture(ev.pointerId); } catch(e) {}
+});
+document.addEventListener('pointermove', ev => {
+  if (!drag) return;
+  const el = document.elementFromPoint(ev.clientX, ev.clientY);
+  const over = el && el.closest('[data-dnd-item]');
+  $$('[data-dnd-item].over', drag.list).forEach(x => x.classList.remove('over'));
+  if (over && drag.list.contains(over)) { drag.to = +over.dataset.dndItem; if (over !== drag.item) over.classList.add('over'); }
+});
+function endDrag(){
+  if (!drag) return;
+  const {key, from, to} = drag; drag = null;
+  if (from !== to) {
+    const e = piece(); const arr = key === 'slides' ? e.slides : e.blocks;
+    const [x] = arr.splice(from, 1); arr.splice(to, 0, x);
+    toast('Reordered in this tab — Prototype, nothing is saved.');
+  }
+  render(true);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+window.addEventListener('resize', () => { clearTimeout(placeT); placeT = setTimeout(placeNotes, 100); });
+
+$$('[data-i]').forEach(el => { el.outerHTML = ic(el.dataset.i); });
+render();
+</script>
+</body>
+</html>

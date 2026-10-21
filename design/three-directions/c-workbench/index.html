@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AR Create — The Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<!-- template fonts: used ONLY inside rendered 1080x1350 template artwork (.tplr), exempt from the app type scale -->
+<link href="https://fonts.googleapis.com/css2?family=Caudex:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Instrument+Sans:wght@400;500&family=Shippori+Mincho:wght@400;700&family=Source+Serif+4:wght@400;600&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+<link href="scale.css" rel="stylesheet">
+<link href="media.css" rel="stylesheet">
+<style>
+/* ================================================================
+   ONE type system for every screen (Revision 2).
+   Sizes are rem, and the root size is 100% x --z, so the A− / A+
+   control scales every token at once. Only these five sizes and
+   three weights (400 / 500 / 600) appear anywhere in the file.
+   ================================================================ */
+:root{
+ --z:1;
+ --t-label:.8125rem;   /* 13px  quiet labels, metadata, controls, counts */
+ --t-body:.9375rem;    /* 15px  interface text, rows, list items */
+ --t-reading:1rem;     /* 16px  Read and Write prose — identical */
+ --t-head:.9375rem;    /* 15px / 600  section and card headings */
+ --t-title:1.0625rem;  /* 17px / 600  the one page title per screen */
+ --lh:1.5;--lh-read:1.65;
+ --measure:40rem;      /* the reading column, same in Read and Write */
+ --gut:32px;--top:24px;/* every screen starts at the same left edge and top */
+ --railw:66px;--pw:0px;--rackw:calc(var(--railw) + var(--pw));--drw:380px
+}
+html{font-size:calc(100% * var(--z))}
+:root,[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;--hl:rgba(201,168,116,.28)}
+[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;--hl:rgba(122,90,48,.2)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:var(--t-body);font-weight:400;line-height:var(--lh);-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2,h3,h4,p,blockquote{margin:0}
+h1{font-size:var(--t-title);font-weight:600}
+h2,h3,h4{font-size:var(--t-head);font-weight:600}
+b,strong{font-weight:600}
+small{font-size:var(--t-label)}
+button,input,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0;text-align:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--warm) 45%,transparent) transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--warm) 45%,transparent);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--warm) 70%,transparent)}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.sm{width:15px;height:15px}
+kbd{font-family:inherit;font-size:var(--t-label);font-weight:400;line-height:1;border:1px solid var(--line);border-radius:4px;padding:2px 5px;color:var(--dim)}
+.dim{color:var(--dim)}.warm{color:var(--warm)}
+.lab{font-size:var(--t-label);font-weight:500;color:var(--dim)}
+.sub{font-weight:400;color:var(--dim)}
+.honest{display:inline-block;margin:4px 0 0 10px;font-size:var(--t-label);color:var(--warnc)}
+.honest::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;border:1.5px solid currentColor;margin-right:6px;vertical-align:1px}
+.tag{font-size:var(--t-label);font-weight:400;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 6px;white-space:nowrap}
+.tag.agent{color:var(--warm);border-color:color-mix(in srgb,var(--warm) 40%,var(--line))}
+.btn{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:7px;font-size:var(--t-label);font-weight:500;color:var(--ink);background:var(--paper)}
+.btn:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))}
+.btn.primary{background:var(--warm);color:var(--bg);border-color:var(--warm);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.quiet{background:none;border-color:transparent;color:var(--dim)}.btn.quiet:hover{color:var(--ink)}
+.btn.on{border-color:var(--warm);color:var(--ink)}
+.btn[aria-disabled="true"]{opacity:.55}
+.lnk{color:var(--warm);font-weight:500;font-size:var(--t-label)}.lnk:hover{text-decoration:underline}
+.flash{animation:fl 1.8s ease-out}
+@keyframes fl{0%,30%{background:var(--hl)}100%{background:transparent}}
+
+/* ---------- frame: two columns only — the rack and the work ---------- */
+/* Revision 5: rail + (only when a section has something to navigate) its panel + the work */
+.app{display:grid;height:100dvh;grid-template-columns:var(--railw) var(--pw) minmax(0,1fr);grid-template-rows:48px minmax(0,1fr)}
+body.has-panel{--pw:15rem}
+body.focus{--railw:0px;--pw:0px}
+#top{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--rail)}
+#switch{display:flex;align-items:center;gap:9px;height:34px;padding:0 10px 0 8px;border-radius:7px;min-width:0;max-width:340px;font-weight:600}
+#switch:hover{background:var(--sel)}
+#switch .nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#switch .dot{width:9px;height:9px;border-radius:2px;background:var(--warm);flex:none}
+#switch .dot.all{background:none;border:1.5px solid var(--warm)}
+.top-sp{flex:1}
+.tbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border-radius:7px;color:var(--dim);font-size:var(--t-label);font-weight:500}
+.tbtn:hover,.tbtn.on{color:var(--ink);background:var(--sel)}
+.tbtn:disabled{opacity:.4;cursor:default;background:none}
+.sizer{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:7px;height:32px}
+.sizer .tbtn{height:30px;padding:0 8px}
+.sizer .pct{font-size:var(--t-label);color:var(--dim);min-width:3.2em;text-align:center;font-variant-numeric:tabular-nums}
+#rack{grid-row:2;grid-column:1;border-right:1px solid var(--line);background:var(--rail);overflow-y:auto;overflow-x:hidden;padding:8px 4px;display:flex;flex-direction:column;gap:1px;scrollbar-width:none;padding:6px 3px}
+#rack::-webkit-scrollbar{display:none}
+body.has-panel #rack{border-right:0}
+body.focus #rack,body.focus #spanel{display:none}
+.rl{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;min-height:46px;padding:5px 0 4px;letter-spacing:-.01em;border-radius:8px;color:var(--dim);font-size:var(--t-label);line-height:1.15;flex:none}
+.rl .rlb{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl:hover{color:var(--ink);background:var(--sel)}
+.rl.on{color:var(--ink);background:var(--sel)}
+.rl.on::before{content:"";position:absolute;left:-3px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--warm)}
+.rl .cnt{position:absolute;top:2px;left:calc(50% + 10px);min-width:17px;padding:0 4px;line-height:1.3}
+.rdiv{height:1px;background:var(--line);margin:6px 10px;flex:none}
+#spanel{grid-row:2;grid-column:2;background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+#spanel[hidden]{display:none}
+.sph{display:flex;align-items:center;gap:6px;height:40px;padding:0 6px 0 14px;flex:none;font-size:var(--t-label);font-weight:500;color:var(--dim)}
+.sph .sp{flex:1}
+.spb{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 6px 16px}
+.pnlbtn{flex:none}
+body:not(.v-write):not(.v-read) #pull{display:none}
+body.has-panel .pnlbtn{display:none}
+.rk{display:flex;align-items:center;gap:10px;width:100%;min-height:34px;padding:0 9px;border-radius:7px;color:var(--dim);text-align:left;white-space:nowrap;font-size:var(--t-body)}
+.rk:hover{color:var(--ink);background:var(--sel)}
+.rk.on{color:var(--ink);background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
+.rk .lbl{flex:1;overflow:hidden;text-overflow:ellipsis}
+.rk .pm{color:var(--dim);opacity:.7}
+.cnt{min-width:20px;padding:0 6px;border-radius:5px;background:color-mix(in srgb,var(--warm) 22%,transparent);color:var(--warm);font-size:var(--t-label);font-weight:500;line-height:1.5;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.rk-gl{font-size:var(--t-label);font-weight:500;color:var(--dim);padding:14px 9px 4px}
+.rk-foot{margin-top:auto;padding-top:10px}
+body.rack-min .rk .lbl,body.rack-min .rk .pm,body.rack-min .rk-gl span{display:none}
+body.rack-min .rk{justify-content:center;padding:0;position:relative}
+body.rack-min .rk .cnt{position:absolute;top:6px;right:8px;min-width:0;width:7px;height:7px;padding:0;border-radius:50%;background:var(--warm);color:transparent;overflow:hidden}
+body.rack-min .rk-gl{height:1px;padding:0;border-top:1px solid var(--line);margin:10px 6px}
+main{grid-row:2;grid-column:3;overflow-y:auto;overflow-x:hidden;min-width:0;background:var(--bg)}
+.wrap{padding:var(--top) var(--gut) 96px;max-width:1120px}
+body.focus .wrap{margin:0 auto}
+.thead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;min-height:34px}
+.thead h1{margin:0}
+.thead .sp{flex:1}
+.pstrip{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--t-label);margin:-8px 0 20px;color:var(--dim)}
+.pstrip button{color:var(--dim);padding:3px 0;border-bottom:1.5px solid transparent}
+.pstrip button.on{color:var(--ink);border-color:var(--warm)}
+.pstrip button:hover{color:var(--ink)}
+.empty{border:1px dashed var(--line);border-radius:10px;padding:28px 24px;color:var(--dim)}
+.empty h3{color:var(--ink);margin:0 0 6px}
+h2.sec{font-size:var(--t-label);font-weight:500;color:var(--dim);margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.block{margin-top:32px}
+.small{font-size:var(--t-label)}
+
+/* ---------- the one side drawer (understanding, check, used in, history) ---------- */
+#drawer{position:fixed;top:48px;right:0;bottom:0;width:min(var(--drw),100vw);background:var(--rail);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(0,0,0,.3);transform:translateX(102%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s;z-index:46;display:flex;flex-direction:column}
+#drawer.on{transform:none;visibility:visible;transition:transform .2s ease}
+.dr-head{display:flex;align-items:center;gap:8px;padding:12px 12px 12px 18px;border-bottom:1px solid var(--line);min-height:52px}
+.dr-head h2{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dr-tabs{display:flex;gap:14px;padding:0 18px;border-bottom:1px solid var(--line);font-size:var(--t-label);overflow-x:auto;scrollbar-width:none}
+.dr-tabs button{color:var(--dim);padding:9px 0;border-bottom:1.5px solid transparent;white-space:nowrap}
+.dr-tabs button.on{color:var(--ink);border-color:var(--warm)}
+.dr-body{overflow-y:auto;padding:16px 18px 48px;flex:1}
+#pull{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:20;width:22px;height:72px;border:1px solid var(--line);border-right:0;border-radius:8px 0 0 8px;background:var(--rail);color:var(--dim);display:grid;place-items:center}
+#pull:hover{color:var(--ink);width:26px}
+body.dr-open #pull,body.focus #pull{display:none}
+.u-sec{border-top:1px solid var(--line);padding:14px 0}
+.u-sec:first-child{border-top:0;padding-top:0}
+.u-sec h4{margin:0 0 6px;font-size:var(--t-label);font-weight:500;color:var(--dim)}
+.u-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.u-list .w{display:block;font-size:var(--t-label);color:var(--dim)}
+.mine{border:1px solid color-mix(in srgb,var(--warm) 45%,var(--line));border-radius:9px;background:var(--paper);padding:10px 12px}
+.mine .who{font-size:var(--t-label);color:var(--warm);font-weight:500;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.mine .who .dim{font-weight:400}
+.mine textarea{width:100%;min-height:74px;resize:vertical;border:0;background:none;outline:none;padding:4px 0 0;line-height:var(--lh)}
+.addt{display:flex;gap:6px;margin-top:8px}
+.addt input{flex:1;min-width:0;height:34px;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:0 9px}
+.thoughts{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.thoughts li{border-left:2px solid var(--warm);padding-left:8px}
+.thoughts li span{display:block;font-size:var(--t-label);color:var(--dim)}
+.foot-note{font-size:var(--t-label);color:var(--dim);margin-top:12px}
+.finds{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.find{display:grid;grid-template-columns:10px minmax(0,1fr);gap:10px;width:100%;text-align:left;padding:9px 8px;border-radius:7px}
+.find:hover,.find.on{background:var(--sel)}
+.find.on{box-shadow:inset 2px 0 0 var(--warm)}
+.find i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--good)}
+.find i.miss{background:var(--warnc)}.find i.risk{background:var(--bad)}
+.find .w{display:block;font-size:var(--t-label);color:var(--dim)}
+.status{border:1px dashed var(--line);border-radius:9px;padding:14px}
+.status h3{margin:0 0 4px}
+.status p{color:var(--dim);margin:0 0 12px}
+.usedrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+
+/* ---------- bench (one column) ---------- */
+.pickup{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:calc(var(--measure) + 16rem)}
+.pickup h2{margin:4px 0 2px}
+.pickup .meta{font-size:var(--t-label);color:var(--dim)}
+.pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:2px solid var(--warm);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
+.pickup .acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.since{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.since ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.since li{display:grid;grid-template-columns:8px 1fr;gap:10px}
+.since li i{width:7px;height:7px;border-radius:50%;margin-top:8px;background:var(--dim)}
+.since li i.agent{background:var(--warm)}
+.since li small{display:block;color:var(--dim)}
+.oac{display:inline-flex;align-items:center;gap:6px;color:var(--warm);font-size:var(--t-label);font-weight:500;text-decoration:none;white-space:nowrap}
+.oac:hover{text-decoration:underline}
+.oac-note{font-size:var(--t-label);color:var(--dim)}
+.moves{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);max-width:calc(var(--measure) + 16rem)}
+.moves li{border-bottom:1px solid var(--line)}
+.move{display:grid;grid-template-columns:22px minmax(0,1fr) 18px;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 6px;border-radius:6px}
+.move:hover{background:var(--sel)}
+.move .t{font-weight:500}
+.move .w{font-size:var(--t-label);color:var(--dim)}
+.move .ic{color:var(--dim)}
+.search{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line);border-radius:7px;padding:0 9px;background:var(--paper);margin-bottom:6px;max-width:calc(var(--measure) + 16rem)}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none}
+.alist{list-style:none;margin:0;padding:0;max-width:calc(var(--measure) + 16rem)}
+.alist li{display:flex;align-items:center;gap:10px;border-radius:6px}
+.alist li:hover{background:var(--sel)}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;flex:1;min-width:0;text-align:left;padding:8px 8px;border-radius:6px}
+.arow.sel{background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
+.arow b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .k{font-size:var(--t-label);color:var(--dim);white-space:nowrap}
+.arow .s{grid-column:1/-1;font-size:var(--t-label);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alist .oac{padding:0 10px 0 0}
+
+/* ---------- material ---------- */
+.drop{border:1.5px dashed color-mix(in srgb,var(--warm) 40%,var(--line));border-radius:11px;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.drop.over{background:var(--hl)}
+.drop .t{flex:1;min-width:200px}
+.drop b{display:block}
+.mrow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:start;padding:12px 4px;border-bottom:1px solid var(--line)}
+.thumb{width:44px;height:44px;border-radius:7px;background:var(--sel);display:grid;place-items:center;color:var(--dim)}
+.mrow .m{font-size:var(--t-label);color:var(--dim)}
+.mrow .pv{margin-top:8px;background:var(--paper);border-radius:7px;padding:9px 11px;border:1px solid var(--line);max-width:var(--measure)}
+.mrow .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:300px}
+.state{font-weight:500}
+.state.new{color:var(--warm)}.state.processed,.state.transcribed{color:var(--good)}
+.review{margin-top:28px;border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:var(--lift)}
+.review p{color:var(--dim);margin:6px 0 0}
+.review .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+
+/* ---------- source: serif only for what people said, at body size ---------- */
+.tbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.tline{display:grid;grid-template-columns:48px 64px minmax(0,1fr);gap:10px;padding:8px;border-radius:7px;cursor:pointer;align-items:baseline;max-width:calc(var(--measure) + 10rem)}
+.tline:hover{background:var(--sel)}
+.tline .tm{font-size:var(--t-label);color:var(--dim);font-variant-numeric:tabular-nums}
+.tline .who{font-size:var(--t-label);font-weight:500;color:var(--dim)}
+.quote{font-family:Lora,Georgia,serif;font-size:var(--t-body);line-height:var(--lh-read)}
+.unc{text-decoration:underline dotted var(--warnc) 2px;text-underline-offset:4px}
+.tline .fx{font-size:var(--t-label);color:var(--good);margin-left:8px}
+.fix{grid-column:3;margin-top:8px}
+.fix textarea{width:100%;min-height:62px;border:1px solid var(--warm);border-radius:7px;background:var(--paper);padding:8px 10px;font-family:Lora,Georgia,serif;font-size:var(--t-body);line-height:var(--lh-read);outline:none}
+.fix .row{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
+
+/* ---------- research: one column, the open point expands in place ---------- */
+.plist{list-style:none;margin:0;padding:0;display:grid;gap:2px;max-width:calc(var(--measure) + 6rem)}
+.pbtn{display:grid;grid-template-columns:10px 1fr auto;gap:10px;width:100%;text-align:left;padding:10px;border-radius:7px}
+.pbtn:hover,.pbtn.on{background:var(--sel)}
+.pbtn.on{box-shadow:inset 2px 0 0 var(--warm)}
+.pbtn .w{font-size:var(--t-label);color:var(--dim);white-space:nowrap}
+.lv{width:9px;height:9px;border-radius:50%;margin-top:7px}
+.lv.settled{background:var(--good)}.lv.likely{background:var(--dim)}.lv.unsure{background:var(--warnc)}.lv.disputed{background:var(--bad)}
+.pdet{padding:6px 10px 22px 30px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{padding:6px 11px;font-size:var(--t-label);color:var(--dim);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--sel);color:var(--ink);font-weight:500}
+.ev{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.ev li{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:12px 14px}
+.ev q{display:block;quotes:none}
+.ev .src{font-size:var(--t-label);color:var(--dim);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap}
+.thread{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+.msg{padding:9px 12px;border-radius:9px;margin-bottom:8px;max-width:560px}
+.msg.you{background:var(--paper);border:1px solid color-mix(in srgb,var(--warm) 40%,var(--line))}
+.msg.sys{color:var(--warnc);padding:2px 0}
+.msg small{display:block;color:var(--dim)}
+.compose{display:flex;gap:8px;align-items:flex-end;margin-top:8px;max-width:600px}
+.compose textarea{flex:1;min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px 10px;resize:vertical;outline:none}
+
+/* ---------- direction ---------- */
+.angles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px;max-width:calc(var(--measure) + 16rem)}
+.angle{border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--paper)}
+.angle.chosen{border-color:var(--warm);box-shadow:inset 0 0 0 1px var(--warm)}
+.angle.rej{opacity:.6}
+.angle h3{margin:0 0 6px}
+.angle p{margin:0 0 12px;color:var(--dim)}
+.angle .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--t-label)}
+
+/* ---------- Write and Read: the SAME document column ---------- */
+.doc .dt{margin:0 0 2px;outline:none;max-width:var(--measure)}
+.doc .by{font-size:var(--t-label);color:var(--dim);margin-bottom:20px}
+.wrow{display:grid;grid-template-columns:minmax(0,var(--measure)) minmax(10rem,13rem);gap:32px;align-items:start}
+body.focus .wrow,body.v-read .wrow{grid-template-columns:minmax(0,var(--measure))}
+body.focus .margin{display:none}
+.para{font-size:var(--t-reading);line-height:var(--lh-read);font-weight:400;margin:0 0 1em;outline:none;border-radius:4px;padding:1px 4px;margin-left:-4px}
+.para[contenteditable]:focus{background:color-mix(in srgb,var(--sel) 35%,transparent)}
+.para mark{background:var(--hl);color:inherit;border-radius:3px;box-shadow:0 0 0 2px var(--hl)}
+.para.last{box-shadow:-10px 0 0 -8px var(--warm)}
+.prot{border-bottom:1.5px solid color-mix(in srgb,var(--good) 70%,transparent)}
+.margin{display:grid;gap:8px;padding-top:3px}
+.note{display:block;width:100%;text-align:left;border-left:2px solid var(--line);padding:4px 0 4px 10px;font-size:var(--t-label);color:var(--dim)}
+.note:hover,.note.on{border-color:var(--warm);color:var(--ink)}
+.note b{display:block;font-weight:500;color:var(--dim)}
+.note.agent b{color:var(--warm)}
+.note .r{display:block;margin-top:4px;color:var(--warm);font-weight:500}
+.legend{font-size:var(--t-label);color:var(--dim);display:flex;gap:14px;flex-wrap:wrap;margin-top:24px;border-top:1px solid var(--line);padding-top:10px;max-width:var(--measure)}
+
+/* ---------- media ---------- */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.asset{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+.asset.new{border-color:color-mix(in srgb,var(--warm) 55%,var(--line))}
+.ph{aspect-ratio:4/3;display:grid;place-items:center;color:rgba(255,255,255,.55);position:relative}
+.ph .tag{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.35);color:#eee;border:0}
+.ph .dur{position:absolute;bottom:8px;right:8px;font-size:var(--t-label);color:#eee;background:rgba(0,0,0,.4);padding:0 5px;border-radius:4px}
+.asset .b{padding:10px 12px}
+.asset .cap{font-weight:500}
+.asset .by{font-size:var(--t-label);color:var(--dim)}
+.used{margin-top:6px;font-size:var(--t-label)}
+.used button{color:var(--warm);font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.used button:hover{text-decoration:underline}
+.asset .acts{display:flex;gap:6px;margin-top:8px}
+.filt{display:flex;gap:16px;font-size:var(--t-label)}
+.filt button{color:var(--dim);border-bottom:1.5px solid transparent;padding:3px 0}
+.filt button.on{color:var(--ink);border-color:var(--warm)}
+
+/* ---------- arrange ---------- */
+.seq{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:14px}
+.slide{position:relative;aspect-ratio:4/5;border:1px solid var(--line);border-radius:10px;background:var(--paper);display:flex;flex-direction:column;overflow:hidden}
+.slide.draft{border:1.5px dashed var(--warm)}
+.slide.dragging,.lblock.dragging{opacity:.55;outline:2px solid var(--warm)}
+.slide .sh{display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:var(--t-label);color:var(--dim);border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden}
+.handle{cursor:grab;touch-action:none;color:var(--dim);display:inline-grid;place-items:center;width:26px;height:26px;border-radius:5px;flex:none}
+.handle:hover{background:var(--sel);color:var(--ink)}
+.slide .img{height:38%;flex:none}
+.slide .st{flex:1;padding:10px 11px;font-weight:600;outline:none;overflow:auto}
+.slide .df{padding:7px 8px;border-top:1px solid var(--line);font-size:var(--t-label);color:var(--warm);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.slide .df .btn{min-height:28px;padding:0 8px}
+.addslide{aspect-ratio:4/5;border:1.5px dashed var(--line);border-radius:10px;color:var(--dim);display:grid;place-items:center;width:100%}
+.addslide:hover{color:var(--ink);border-color:var(--warm)}
+.lblocks{display:grid;gap:8px;max-width:calc(var(--measure) + 6rem)}
+.lblock{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--paper)}
+.lblock .x{color:var(--dim);font-size:var(--t-label)}
+
+/* ---------- audience (one column) ---------- */
+.aud-note{color:var(--dim);margin:-6px 0 18px;max-width:var(--measure)}
+.aud-note b{color:var(--ink)}
+.phone{width:320px;max-width:100%;border:1px solid var(--line);border-radius:28px;padding:14px 10px 18px;background:var(--rail)}
+.phone .hdr{display:flex;align-items:center;gap:8px;font-size:var(--t-label);padding:0 6px 10px}
+.phone .av{width:26px;height:26px;border-radius:50%;background:var(--warm)}
+.swipe{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:6px}
+.swipe>div{flex:0 0 100%;aspect-ratio:4/5;scroll-snap-align:start;background:var(--paper);display:flex;flex-direction:column}
+.swipe .img{height:45%}
+.swipe p{margin:0;padding:14px;font-size:var(--t-title);font-weight:600;line-height:1.35}
+.cap2{font-size:var(--t-label);padding:10px 6px 0}
+.page{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:28px 32px;max-width:calc(var(--measure) + 4rem)}
+.page h2{font-size:var(--t-title);margin:0 0 12px}
+
+/* ---------- outputs ---------- */
+.origin{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--lift);display:flex;gap:12px;align-items:center;max-width:calc(var(--measure) + 16rem)}
+.otree{margin:0 0 0 26px;padding:0;list-style:none;border-left:1px solid var(--line);max-width:calc(var(--measure) + 14rem)}
+.otree li{position:relative;padding:12px 0 12px 22px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;border-bottom:1px solid var(--line)}
+.otree li::before{content:"";position:absolute;left:0;top:24px;width:16px;border-top:1px solid var(--line)}
+.otree small{grid-column:1;color:var(--dim)}
+.exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px;max-width:calc(var(--measure) + 16rem)}
+.exp .x{border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:var(--paper)}
+.exp .x b{display:block}
+.exp .x span{display:block;color:var(--dim);font-size:var(--t-label);margin:2px 0 8px}
+
+/* ---------- finder / sheets ---------- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:40}
+.scrim.on{display:block}
+#finder{position:fixed;top:12vh;left:50%;transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:var(--paper);border:1px solid var(--line);border-radius:12px;z-index:50;display:none;box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden}
+#finder.on{display:block}
+#finder .fi{display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--line)}
+#finder input{flex:1;height:50px;border:0;background:none;outline:none}
+#finder ul{list-style:none;margin:0;padding:6px;max-height:min(420px,60vh);overflow:auto}
+#finder li button{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:8px 10px;border-radius:7px}
+#finder li button.sel{background:var(--sel)}
+#finder li .s{font-size:var(--t-label);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#finder .gh{font-size:var(--t-label);font-weight:500;color:var(--dim);padding:8px 10px 4px}
+#bbar{display:none}
+#gsheet{display:none}
+#psheet{position:fixed;left:0;right:0;bottom:0;max-height:80vh;background:var(--paper);border-top:1px solid var(--line);border-radius:14px 14px 0 0;z-index:66;display:none;flex-direction:column}
+#psheet.on{display:flex}
+#psheet .shh{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+#psheet .shh h2{flex:1}
+#psheet .shb{padding:8px 8px 24px}
+.scrim.p{z-index:65}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--paper);border:1px solid var(--line);color:var(--ink);padding:9px 14px;border-radius:9px;font-size:var(--t-label);z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+
+/* ---------- narrow ---------- */
+@media (max-width:900px){
+  .wrow{grid-template-columns:minmax(0,1fr)}
+  .margin{padding:0 0 12px}
+}
+@media (max-width:760px){
+  :root{--gut:16px;--top:16px}
+  .app{grid-template-columns:minmax(0,1fr)}
+  #rack,#spanel{display:none}
+  main{grid-column:1}
+  body.has-panel .pnlbtn{display:inline-flex}
+  .wrap{padding-bottom:96px}
+  #top .lbl-wide{display:none}
+  #top{gap:2px;padding:0 6px}
+  #switch{max-width:none;flex:1 1 auto}
+  .top-sp{display:none}
+  .sizer .pct{display:none}
+  #pull{display:none}
+  #drawer{bottom:0;width:100vw;border-left:0}
+  #bbar{display:flex;position:fixed;left:0;right:0;bottom:0;height:60px;background:var(--rail);border-top:1px solid var(--line);z-index:30}
+  #bbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:var(--t-label);color:var(--dim);position:relative}
+  #bbar button.on{color:var(--ink)}
+  #bbar .cnt{position:absolute;top:5px;left:calc(50% + 6px);min-width:16px;padding:0 4px}
+  #gsheet{position:fixed;left:0;right:0;bottom:60px;background:var(--paper);border-top:1px solid var(--line);z-index:35;padding:8px;border-radius:14px 14px 0 0}
+  #gsheet.on{display:block}
+  #gsheet .rk{min-height:46px}
+  body.focus #bbar{display:none}
+  .pickup{padding:16px}
+  .mrow{grid-template-columns:40px minmax(0,1fr)}
+  .thumb{width:40px;height:40px}
+  .mrow .acts{grid-column:2;justify-content:flex-start;max-width:none}
+  .tline{grid-template-columns:44px minmax(0,1fr)}
+  .tline .who{display:none}
+  .tline .tx,.fix{grid-column:2}
+  .pdet{padding-left:10px}
+  .seq{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .slide{aspect-ratio:auto;min-height:250px}
+  .slide .img{height:96px}
+  .slide .st{overflow:visible}
+  .pstrip{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:none;margin-right:-16px;padding-right:16px}
+  .pstrip::-webkit-scrollbar{display:none}
+  .pstrip span,.pstrip button{flex:none}
+  .mgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .page{padding:20px 16px}
+  .otree{margin-left:8px}
+  .otree li{grid-template-columns:minmax(0,1fr)}
+  .alist li{flex-wrap:wrap;gap:0}
+  .alist .oac{padding:0 8px 8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header id="top"></header>
+  <nav id="rack" aria-label="Tools"></nav>
+  <aside id="spanel" aria-label="Section panel" hidden></aside>
+  <main id="main"></main>
+</div>
+<aside id="drawer" aria-label="Side drawer" aria-hidden="true"></aside>
+<button id="pull" data-act="und" title="Pull out the understanding (])" aria-label="Pull out the understanding"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+<nav id="bbar" aria-label="Tools"></nav>
+<div id="gsheet"></div>
+<div class="scrim f" data-act="closeall"></div>
+<div class="scrim u" data-act="closeall"></div>
+<div id="finder" role="dialog" aria-label="Find a project or tool">
+  <div class="fi"><svg class="ic" viewBox="0 0 24 24"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM16 16l4 4"/></svg><input id="fq" placeholder="Find a project, piece or tool…" autocomplete="off"><kbd>esc</kbd></div>
+  <ul id="flist"></ul>
+</div>
+<input type="file" id="filein" multiple hidden>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------- icons ---------------- */
+const I={
+ bench:'M3 10h18M5 10v9M19 10v9M7 6h10M9 14h6',
+ material:'M4 13l2-8h12l2 8M4 13v6h16v-6M4 13h5l1 2h4l1-2h5',
+ source:'M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2',
+ research:'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM16 16l4 4',
+ direction:'M12 3v18M5 5h11l3 3-3 3H5zM9 15h-4',
+ write:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
+ read:'M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z',
+ check:'M5 12l4 4L19 6',
+ media:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01',
+ arrange:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+ audience:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
+ share:'M4 12v7h16v-7M12 3v12M8 7l4-4 4 4',
+ outputs:'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',
+ search:'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM16 16l4 4',
+ chev:'M9 6l6 6-6 6',
+ down:'M6 9l6 6 6-6',
+ sun:'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',
+ moon:'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+ panelR:'M4 4h16v16H4zM15 4v16',
+ panelL:'M4 4h16v16H4zM9 4v16',
+ focus:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+ grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
+ play:'M7 5l12 7-12 7z',
+ plus:'M12 5v14M5 12h14',
+ audio:'M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2',
+ text:'M5 6h14M5 10h14M5 14h10M5 18h7',
+ doc:'M6 3h9l4 4v14H6zM15 3v4h4',
+ image:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4',
+ photos:'M3 7h14v12H3zM7 3h14v12',
+ video:'M3 6h13v12H3zM16 10l5-3v10l-5-3',
+ thought:'M5 5h14v10H9l-4 4z',
+ close:'M6 6l12 12M18 6L6 18',
+ history:'M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4M12 8v4l3 2',
+ ext:'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6'
+};
+const ic=(n,c='')=>`<svg class="ic ${c}" viewBox="0 0 24 24" aria-hidden="true"><path d="${I[n]||''}"/></svg>`;
+
+/* ---------------- tools ---------------- */
+const TOOLS=[
+ {id:'material',n:'01',label:'Material',g:'Gather',hidden:1}, /* Revision 5: Material is the Library's Inbox */
+ {id:'source',n:'02',label:'Source',g:'Gather'},
+ {id:'research',n:'03',label:'Research',g:'Develop'},
+ {id:'direction',n:'04',label:'Direction',g:'Develop'},
+ {id:'write',n:'05',label:'Write',g:'Make'},
+ {id:'read',n:'06',label:'Read',g:'Make'},
+ {id:'check',n:'07',label:'Check',g:'Make',pull:1},
+ {id:'media',n:'08',label:'Media',g:'Make'},
+ {id:'arrange',n:'09',label:'Arrange',g:'Make'},
+ {id:'audience',n:'10',label:'Audience',g:'Deliver'},
+ {id:'share',n:'11',label:'Share',g:'Deliver'},
+ {id:'outputs',n:'12',label:'Outputs',g:'Deliver'}
+];
+const GROUPS=['Gather','Develop','Make','Deliver'];
+const T=id=>TOOLS.find(t=>t.id===id);
+
+/* ---------------- invented content ---------------- */
+const P=[
+ {id:'porc',name:'Porcelain and Tea',kind:'Article + carousel',updated:'Yesterday 22:40'},
+ {id:'harb',name:'Harbour Night Market',kind:'Recording → magazine story',updated:'Today 09:12 · Claude'},
+ {id:'oolong',name:'Spring Oolong listing',kind:'Product listing',updated:'Mon'},
+ {id:'ancha',name:'An Cha — three parts',kind:'Series, 3 articles',updated:'Sun'},
+ {id:'kiln',name:'Kiln Day reel script',kind:'Reel script',updated:'Last week'},
+ {id:'wuyi',name:'Wuyi notebook',kind:'Collection',updated:'2 weeks ago'},
+ {id:'care',name:'Teaware care sheet',kind:'Shared note',updated:'Sep 30'}
+];
+const PN=id=>(P.find(p=>p.id===id)||{name:'All projects'}).name;
+
+const MAT=[
+ {id:'m1',p:'harb',name:'harbour-night-0914.m4a',kind:'audio',meta:'42 min recording · transcribed',by:'You · Sep 14',state:'transcribed',preview:'Wen at the dumpling stall, then Ah Kok on the tea cart. Wind noise from 18:00 onward.'},
+ {id:'m2',p:'harb',name:'Stall notes, written after',kind:'text',meta:'Note · 310 words',by:'You · Sep 15',state:'new',preview:'The tea cart only sells one tea after nine: a roasted tieguanyin poured from a thermos the size of a fire extinguisher.'},
+ {id:'m3',p:'harb',name:'6 photos from the market',kind:'photos',meta:'Imported from your Drive folder',by:'Claude · 3h ago',agent:1,state:'new',preview:'Six night photos. Review them one at a time in Media.',link:'media'},
+ {id:'m4',p:'porc',name:'Kiln visit with Mr. Lin.m4a',kind:'audio',meta:'38 min recording · transcribed',by:'You · Oct 2',state:'transcribed',preview:'Walk through the kiln yard, then tea in the drying room.'},
+ {id:'m5',p:'porc',name:'Glaze test tiles',kind:'image',meta:'Photo',by:'You · Oct 2',state:'processed',preview:'Twelve tiles, celadon to clear.'},
+ {id:'m6',p:'oolong',name:'Spring Oolong — supplier sheet.pdf',kind:'doc',meta:'PDF · 2 pages',by:'Codex attached · Mon',agent:1,state:'new',preview:'Harvest 18–24 April, 1,100 m, lightly oxidised, hand-rolled. Rain on the 21st.'},
+ {id:'m7',p:'oolong',name:'Tasting memo, third steep',kind:'audio',meta:'3 min voice memo · not transcribed',by:'You · Mon',state:'new',preview:'Not transcribed yet.'},
+ {id:'m8',p:'wuyi',name:'Wuyi rock — 9 notes',kind:'text',meta:'Collection notes',by:'You · 2 weeks ago',state:'processed',preview:'Notes on yancha from three visits; mineral, roast, the “rock rhyme”.'}
+];
+
+const SRC={
+ harb:{file:'harbour-night-0914.m4a',dur:'42:10',lines:[
+  {t:'00:41',who:'Wen',text:'We open when the ferry comes in, not before. Nobody walks this way before the ferry.'},
+  {t:'01:12',who:'Wen',text:'The dough is … my mother’s way, rested twice.',unclear:1},
+  {t:'01:40',who:'You',text:'Twice — once at night and once in the morning?'},
+  {t:'01:44',who:'Wen',text:'Night and then again at four. You can taste the difference, the skin is thinner.'},
+  {t:'06:03',who:'Ah Kok',text:'After nine I only pour one tea. People ask for milk tea, I say … go to the mall.',unclear:1},
+  {t:'06:20',who:'Ah Kok',text:'Roasted tieguanyin. The thermos keeps it honest — it gets darker, not bitter.'},
+  {t:'09:58',who:'Ah Kok',text:'My father had this cart on … street, before they built the ferry terminal.',unclear:1},
+  {t:'10:15',who:'You',text:'How long ago was that?'},
+  {t:'10:17',who:'Ah Kok',text:'Thirty, maybe … years. I was smaller than the thermos.',unclear:1},
+  {t:'18:02',who:'Wen',text:'When it rains everybody comes under here and the whole market becomes one table.'}
+ ]},
+ porc:{file:'Kiln visit with Mr. Lin.m4a',dur:'38:22',lines:[
+  {t:'00:18',who:'Mr. Lin',text:'This kiln was my teacher’s. I came here when I was nineteen.'},
+  {t:'03:12',who:'Mr. Lin',text:'Thirty-one years now. Same hill, same wood, different arms.'},
+  {t:'11:40',who:'You',text:'Which is better for tea, porcelain or clay?'},
+  {t:'11:44',who:'Mr. Lin',text:'You are asking whether a window is better than a wall.'},
+  {t:'12:30',who:'Mr. Lin',text:'Porcelain shows you the tea. Clay keeps a little for itself.'}
+ ]}
+};
+
+const RES={
+ porc:[
+  {id:'r1',claim:'Glazed porcelain adds no taste of its own to the tea',level:'likely',evidence:[
+   {q:'Porcelain shows you the tea. Clay keeps a little for itself.',src:'Kiln visit, 12:30',by:'You recorded'},
+   {q:'A fully vitrified glaze surface is non-porous, so it does not take up oils from repeated brewing.',src:'Library: Notes on ceramics for tea',by:'Claude added · 2h ago',agent:1}],thread:[]},
+  {id:'r2',claim:'Mr. Lin has fired at the same hillside kiln for thirty-one years',level:'settled',evidence:[
+   {q:'Thirty-one years now. Same hill, same wood, different arms.',src:'Kiln visit, 03:12',by:'You recorded'}],thread:[]},
+  {id:'r3',claim:'Unglazed Yixing clay takes on the character of the tea brewed in it',level:'likely',evidence:[
+   {q:'After a season of one oolong the pot gives a sweetness with no leaf in it.',src:'Library: Yixing notebook',by:'You · 2025'},
+   {q:'Unglazed zisha remains slightly porous after firing.',src:'Library: Notes on ceramics for tea',by:'Claude added · 2h ago',agent:1}],thread:[{who:'you',text:'Is “remembers” fair, or is it romantic? I want to keep the word if it holds.',when:'Oct 4'}]}
+ ],
+ ancha:[
+  {id:'r4',ph:'drunk for the lungs',claim:'An Cha was carried to Southeast Asian tin-mining towns and drunk as a remedy',level:'unsure',evidence:[
+   {q:'The old men in Ipoh said the basket tea was for the lungs after the mines.',src:'Interview notes, Ipoh',by:'You · Aug'}],thread:[]},
+  {id:'r5',claim:'The bamboo baskets let the tea age for years before sale',level:'unsure',evidence:[
+   {q:'We do not sell it young. Three winters at least.',src:'Shop recording, 04:10',by:'You recorded'}],thread:[]},
+  {id:'r6',ph:'which county',claim:'Anhua county is the origin of An Cha',level:'disputed',evidence:[
+   {q:'Most sources trace basket-pressed An Cha to Guangxi, not Hunan.',src:'Library: Southern dark teas',by:'Codex added · Sun',agent:1}],thread:[]},
+  {id:'r7',claim:'Leaves are steamed and packed while still warm',level:'settled',evidence:[
+   {q:'Warm in the basket, then it sweats for a month.',src:'Shop recording, 07:52',by:'You recorded'}],thread:[]}
+ ]
+};
+
+const DIR={
+ porc:{mine:'I want people to leave thinking about what their cup remembers — not which one to buy.',chosen:'a',angles:[
+  {id:'a',title:'A window or a wall',body:'Mr. Lin’s line carries the piece. Porcelain and clay as two ways of meeting tea.',by:'You · Oct 3'},
+  {id:'b',title:'Porcelain vs clay — a buyer’s guide',body:'Comparison table, care, price points.',by:'Codex suggested · Oct 3',agent:1}]},
+ oolong:{mine:'',chosen:null,angles:[
+  {id:'a',title:'For people who think they don’t like oolong',body:'Lead with the morning cup: light, floral, nothing roasted. Harvest and price come second.',by:'You · Mon'},
+  {id:'b',title:'The week the leaves were picked',body:'A short harvest diary from the supplier sheet: 18–24 April, 1,100 m, rain on the 21st.',by:'Claude suggested · Mon',agent:1}]},
+ ancha:{mine:'Three parts: the basket, the journey, the cup. Part two is the journey.',chosen:'a',angles:[
+  {id:'a',title:'Follow one basket',body:'From the steaming room to a shop shelf in Ipoh.',by:'You · Sep'},
+  {id:'b',title:'History of dark tea',body:'Chronological survey.',by:'You · Sep'}]}
+};
+
+const U={
+ porc:{text:'The piece is about what a vessel keeps. Porcelain shows the tea; clay holds some of it back. Mr. Lin’s “window or wall” is the turn, and it is not a buying guide.',mine:'The last paragraph still ends too neatly. Maybe end on the drive, not on the idea.',thoughts:[{t:'Ask Mr. Lin if he minds being named.',w:'Oct 4'}],
+  decisions:[{t:'Article first, carousel cut from it',w:'Oct 3'},{t:'Name Mr. Lin, no first name',w:'Oct 4'}],
+  protected:[{t:'staying out of the way',w:'Article ¶1 · carousel 1'},{t:'a window is better than a wall',w:'Article ¶3 · carousel 3'},{t:'what you want the cup to remember',w:'Article ¶4'}],
+  corrections:[{t:'“thirty years” → “thirty-one years”',to:'thirty-one years',w:'From Source 03:12 · applies to article, carousel'}],
+  rejected:[{t:'Porcelain vs clay — a buyer’s guide',w:'Article, carousel, post'}]},
+ harb:{text:'A market that only exists after the ferry. Two people carry it: Wen with the dumplings, Ah Kok with one tea after nine. The rain line may be the ending.',mine:'',thoughts:[],decisions:[{t:'Magazine story, not a reel',w:'Sep 16'}],protected:[{t:'the whole market becomes one table',w:'Story ending (planned)'}],corrections:[],rejected:[{t:'Street-food guide format',w:'Story'}]},
+ oolong:{text:'A light, floral spring oolong from 1,100 m. The question is who the listing is for.',mine:'',thoughts:[],decisions:[{t:'Listing goes up with the May restock',w:'Mon'}],protected:[],corrections:[{t:'“1,000 m” → “1,100 m”',to:'1,100 m',w:'From supplier sheet · applies to listing'}],rejected:[]},
+ ancha:{text:'Part two follows a basket south. Two claims are still unsure and one origin claim is disputed between Hunan and Guangxi.',mine:'',thoughts:[],decisions:[{t:'Three parts, published a week apart',w:'Sep'}],protected:[{t:'it sweats for a month',w:'Part one, part two'}],corrections:[],rejected:[{t:'History of dark tea',w:'All three parts'}]},
+ kiln:{text:'A 45-second reel: fire, wait, open. No voice-over, captions only.',mine:'',thoughts:[],decisions:[{t:'Captions only, no voice-over',w:'Last week'}],protected:[],corrections:[],rejected:[]},
+ wuyi:{text:'A collection, not a piece yet. Notes on rock tea across three visits.',mine:'',thoughts:[],decisions:[],protected:[],corrections:[],rejected:[]},
+ care:{text:'A one-page care note for customers who buy a clay pot.',mine:'',thoughts:[],decisions:[],protected:[],corrections:[],rejected:[]}
+};
+
+const DOCS={
+ porc:{title:'Porcelain and Tea',kind:'Article',last:'p4',paras:[
+  {id:'p1',text:'The first cup I poured from the new gaiwan tasted of nothing at all. That was the point. Porcelain takes nothing from the tea and gives nothing back; it is the closest a vessel comes to staying out of the way.'},
+  {id:'p2',text:'Clay is different. A Yixing pot remembers. After a season of the same oolong, the walls hold a faint sweetness that rises with the steam, and you start to brew for the pot as much as for the leaf.'},
+  {id:'p3',text:'Mr. Lin has fired porcelain in the same hillside kiln for thirty-one years. He laughed when I asked which is better. “You are asking whether a window is better than a wall,” he said.'},
+  {id:'p4',text:'So the question is not which vessel is purer. It is what you want the cup to remember. Porcelain is for the mornings you want to meet the tea as it is — thin, bright, a little exposed. Clay is for the evenings you want company.'},
+  {id:'p5',text:'On the drive back down, the boxes of new cups clinking in the boot, I kept thinking about that window.'}],
+  notes:[
+  {id:'n1',pid:'p1',phrase:'staying out of the way',by:'You · Oct 4',text:'Keep. This is the line the carousel opens on.'},
+  {id:'n2',pid:'p2',phrase:'A Yixing pot remembers',by:'Codex · yesterday',agent:1,needs:1,text:'Suggests “Clay keeps a record.” Not accepted.'},
+  {id:'n3',pid:'p3',phrase:'thirty-one years',by:'Claude · 2h ago',agent:1,needs:1,text:'Source check: Lin says 31 years at 03:12 in the kiln recording. Matches.'},
+  {id:'n4',pid:'p4',phrase:'thin, bright, a little exposed',by:'You · yesterday',text:'Three adjectives. Sit with it before cutting.'},
+  {id:'n5',pid:'p5',phrase:'kept thinking about that window',by:'You · yesterday',text:'Ending lands too neatly?'}]},
+ kiln:{title:'Kiln Day — reel script',kind:'Script',last:'k3',paras:[
+  {id:'k1',text:'Beat 1 (0–6s). Black screen, the sound of wood being split. Caption: “Firing day starts before light.”'},
+  {id:'k2',text:'Beat 2 (6–20s). Hands feeding the firebox. Caption: “Thirty hours. Nobody sleeps much.”'},
+  {id:'k3',text:'Beat 3 (20–34s). The bricks come down. Caption: “Then you wait two days to see what the fire decided.”'},
+  {id:'k4',text:'Beat 4 (34–45s). First cup poured from a still-warm bowl. Caption: “This one stays.”'}],
+  notes:[{id:'kn1',pid:'k3',phrase:'what the fire decided',by:'You · last week',text:'Keep this exact wording.'}]},
+ ancha:{title:'An Cha, part two: the journey',kind:'Article',last:'a2',paras:[
+  {id:'a1',text:'The basket I followed left the steaming room in late October, still warm, tied with split bamboo.'},
+  {id:'a2',text:'For a long time, the old men in Ipoh told me, the tea came south for the miners — it was drunk for the lungs after a shift underground.'},
+  {id:'a3',text:'Nobody I met could say exactly which county the baskets came from. Everyone could say how many winters a basket should wait.'}],
+  notes:[{id:'an1',pid:'a2',phrase:'drunk for the lungs',by:'You · Sun',text:'Unsure in Research — soften or source it.'}]}
+};
+
+const CAR={porc:{slides:[
+ {id:'s1',text:'Porcelain takes nothing from the tea. It stays out of the way.',img:'c2'},
+ {id:'s2',text:'Clay remembers. A season of one oolong, and the pot keeps some.',img:'c3'},
+ {id:'s3',text:'“You are asking whether a window is better than a wall.” — Mr. Lin, 31 years at the kiln',img:'c1'},
+ {id:'s4',text:'Which vessel is purer? Wrong question. What should your cup remember?',prev:'So: which one is better?',draft:'Codex'},
+ {id:'s5',text:'Porcelain for the mornings you want to meet the tea as it is.',img:'c4'},
+ {id:'s6',text:'Clay for the evenings you want company.'}
+]}};
+
+const MEDIA=[
+ {id:'h1',p:'harb',kind:'photo',cap:'Tea cart under the ferry lights',tone:'#4b3e30',isNew:1,by:'Claude imported · 3h ago',used:[]},
+ {id:'h2',p:'harb',kind:'photo',cap:'Wen folding dumplings',tone:'#3d3a2e',isNew:1,by:'Claude imported · 3h ago',used:[]},
+ {id:'h3',p:'harb',kind:'photo',cap:'Thermos, close',tone:'#33302a',isNew:1,by:'Claude imported · 3h ago',used:[]},
+ {id:'h4',p:'harb',kind:'photo',cap:'Queue in the rain',tone:'#2e3638',isNew:1,by:'Claude imported · 3h ago',used:[]},
+ {id:'h5',p:'harb',kind:'photo',cap:'Ferry arriving, 21:40',tone:'#283035',isNew:1,by:'Claude imported · 3h ago',used:[]},
+ {id:'h6',p:'harb',kind:'photo',cap:'Ah Kok counting cups',tone:'#45382c',isNew:1,by:'Claude imported · 3h ago',used:[]},
+ {id:'hv',p:'harb',kind:'video',dur:'0:12',cap:'Thermos pour',tone:'#3a3128',by:'You · Sep 14',used:[]},
+ {id:'c1',p:'porc',kind:'photo',cap:'Mr. Lin at the kiln mouth',tone:'#5a4532',by:'You · Oct 2',used:[{l:'Article ¶3',tool:'write',x:'p3'},{l:'Carousel slide 3',tool:'arrange',x:'s3'}]},
+ {id:'c2',p:'porc',kind:'photo',cap:'New gaiwan, first pour',tone:'#55564f',by:'You · Oct 2',used:[{l:'Carousel slide 1',tool:'arrange',x:'s1'}]},
+ {id:'c3',p:'porc',kind:'photo',cap:'Yixing pot, side light',tone:'#5b3b2b',by:'You · Oct 3',used:[{l:'Carousel slide 2',tool:'arrange',x:'s2'},{l:'Article ¶2',tool:'write',x:'p2'}]},
+ {id:'c4',p:'porc',kind:'photo',cap:'Cups drying on boards',tone:'#4f4b44',by:'You · Oct 2',used:[{l:'Carousel slide 5',tool:'arrange',x:'s5'}]},
+ {id:'cv',p:'porc',kind:'video',dur:'0:31',cap:'Opening the kiln',tone:'#3f2e24',by:'You · Oct 2',used:[]},
+ {id:'k1',p:'kiln',kind:'video',dur:'0:08',cap:'Splitting wood, before light',tone:'#2b2723',by:'You · last week',used:[{l:'Reel beat 1',tool:'write',x:'k1'}]},
+ {id:'k2',p:'kiln',kind:'video',dur:'0:14',cap:'Feeding the firebox',tone:'#4a2e20',by:'You · last week',used:[{l:'Reel beat 2',tool:'write',x:'k2'}]},
+ {id:'o1',p:'oolong',kind:'photo',cap:'Dry leaf on white',tone:'#4a4d3a',by:'You · Mon',used:[]}
+];
+
+const OUT={
+ porc:{origin:'Kiln visit with Mr. Lin — recording, 38 min, Oct 2',items:[
+  {k:'Article',d:()=>`“Porcelain and Tea” · ${wc(DOCS.porc)} words · draft`,tool:'write'},
+  {k:'Carousel',d:()=>`${CAR.porc.slides.length} slides · ${CAR.porc.slides.filter(s=>s.draft).length?'1 agent draft waiting':'all accepted'}`,tool:'arrange'},
+  {k:'Post caption',d:()=>'Short caption cut from ¶4 · not started',tool:'write'},
+  {k:'Shared note for Mr. Lin',d:()=>'So he can read his quote before it goes out · not shared',tool:'share'}]},
+ harb:{origin:'harbour-night-0914.m4a — 42 min, Sep 14',items:[{k:'Magazine story',d:()=>'Not started — finish correcting the Source first',tool:'source'}]},
+ kiln:{origin:'Kiln firing footage — 14 clips, last week',items:[{k:'Reel script',d:()=>`${DOCS.kiln.paras.length} beats · draft`,tool:'write'}]},
+ ancha:{origin:'Ipoh shop recordings + interview notes',items:[{k:'Part one',d:()=>'Published Sep 28 (outside this prototype)',tool:'outputs'},{k:'Part two',d:()=>'Draft',tool:'write'},{k:'Part three',d:()=>'Not started',tool:'direction'}]}
+};
+const wc=d=>d.paras.reduce((a,p)=>a+p.text.split(/\s+/).filter(Boolean).length,0);
+
+/* ---------------- counts: what needs you ---------------- */
+const COUNT={
+ material:p=>MAT.filter(m=>m.p===p&&m.state==='new').length,
+ source:p=>SRC[p]?SRC[p].lines.filter(l=>l.unclear&&!l.fixed).length:0,
+ research:p=>(RES[p]||[]).filter(r=>r.level==='unsure'||r.level==='disputed').length,
+ direction:p=>DIR[p]&&!DIR[p].chosen?1:0,
+ write:p=>DOCS[p]?DOCS[p].notes.filter(n=>n.needs&&!n.done).length:0,
+ media:p=>MEDIA.filter(m=>m.p===p&&m.isNew).length,
+ arrange:p=>CAR[p]?CAR[p].slides.filter(s=>s.draft).length:0
+};
+const count=(tool,scope)=>{const f=COUNT[tool];if(!f)return 0;return scope==='all'?P.reduce((a,p)=>a+f(p.id),0):f(scope);};
+const HAS={
+ material:p=>MAT.some(m=>m.p===p),source:p=>!!SRC[p],research:p=>!!RES[p],direction:p=>!!DIR[p],
+ write:p=>!!DOCS[p],read:p=>!!DOCS[p],check:p=>!!DOCS[p],media:p=>MEDIA.some(m=>m.p===p),
+ arrange:p=>!!CAR[p]||!!DOCS[p],audience:p=>!!CAR[p]||!!DOCS[p],share:p=>!!DOCS[p],outputs:p=>!!OUT[p]
+};
+const CROSS={material:1,media:1}; // these show everything at once under "All"
+
+/* ---------------- state ---------------- */
+const S={open:null,libInbox:false,scope:'all',view:'bench',work:'porc',ret:null,toolProj:{},target:null,q:'',sel:0,research:{},mediaF:'all',arrangeMode:{},audMode:{},fixing:null,openPv:{},bilingual:false,activeNote:null,lastHonest:null,drawer:null,find:null};
+/* text size: one root multiplier, 87.5%–137.5% */
+const SIZES=[.875,1,1.125,1.25,1.375];let zi=1;
+try{const z=+localStorage.getItem('arc-c-size');const i=SIZES.indexOf(z);if(i>=0)zi=i;}catch(e){}
+function applySize(){document.documentElement.style.setProperty('--z',SIZES[zi]);try{localStorage.setItem('arc-c-size',String(SIZES[zi]));}catch(e){}}
+applySize();
+const APP='http://127.0.0.1:8841/document-study/index.html';
+const APP_NOTE='Opens your installed app at its home; choose the story there — direct story links aren’t built yet';
+const oac=(label)=>`<a class="oac" href="${APP}" target="_blank" rel="noopener" title="${APP_NOTE}" aria-label="Open in AR Create${label?' — '+esc(label):''}. ${APP_NOTE}">${ic('ext','sm')}Open in AR Create</a>`;
+try{const t=localStorage.getItem('arc-c-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
+
+function resolveProj(tool){
+ if(S.scope!=='all')return S.scope;
+ if(tool==='bench'||!HAS[tool])return 'porc';
+ const pick=S.toolProj[tool];
+ if(pick&&HAS[tool](pick))return pick;
+ // the project you are working in wins over the busiest one, so a tool never jumps you elsewhere
+ if(S.work&&HAS[tool](S.work))return S.work;
+ const c=P.filter(p=>HAS[tool](p.id)).sort((a,b)=>count(tool,b.id)-count(tool,a.id));
+ return c.length?c[0].id:'porc';
+}
+const curProj=()=>resolveProj(S.view);
+
+/* ---------------- next moves ---------------- */
+function moves(){
+ const m=[];
+ const n=(t,p)=>COUNT[t](p);
+ if(n('source','harb'))m.push({p:'harb',tool:'source',x:'first-unclear',t:`Correct ${n('source','harb')} unclear line${n('source','harb')>1?'s':''} in the harbour recording`});
+ if(n('direction','oolong'))m.push({p:'oolong',tool:'direction',t:'Choose between two angles for Spring Oolong'});
+ if(n('media','harb'))m.push({p:'harb',tool:'media',t:`Review ${n('media','harb')} new photo${n('media','harb')>1?'s':''} from Claude’s import`});
+ if(n('arrange','porc'))m.push({p:'porc',tool:'arrange',x:'s4',t:'Accept or discard Codex’s draft of carousel slide 4'});
+ if(n('research','ancha'))m.push({p:'ancha',tool:'research',t:`Settle ${n('research','ancha')} uncertain points in An Cha part two`});
+ if(n('write','porc'))m.push({p:'porc',tool:'write',x:'notes',t:`Answer ${n('write','porc')} agent note${n('write','porc')>1?'s':''} in the margin of Porcelain and Tea`});
+ if(MAT.find(x=>x.id==='m6'&&x.state==='new'))m.push({p:'oolong',tool:'material',x:'m6',t:'Process the supplier sheet for Spring Oolong'});
+ m.push({p:'kiln',tool:'read',t:'Read the Kiln Day script through once, start to finish'});
+ return S.scope==='all'?m:m.filter(x=>x.p===S.scope);
+}
+function stateLine(p){
+ const parts=[];
+ TOOLS.forEach(t=>{if(t.hidden)return;const c=count(t.id,p);if(c)parts.push(`${c} in ${t.label}`);});
+ const base={porc:'Writing — ¶4 reworked yesterday',harb:'Correcting the recording',oolong:'Choosing an angle',ancha:'Part two in research',kiln:'Draft complete, not checked',wuyi:'Gathering — nothing waiting',care:'Shared draft, idle'}[p];
+ return base+(parts.length?' · '+parts.join(', '):'');
+}
+function resume(p){
+ if(p==='porc'){
+  const d=DOCS.porc;const para=d.paras.find(x=>x.id===d.last)||d.paras[0];const idx=d.paras.indexOf(para)+1;
+  const ch=[];
+  if(CAR.porc.slides.some(s=>s.draft))ch.push({a:1,t:'Codex drafted slide 4 of the carousel · not accepted',w:'yesterday 23:10'});
+  if(d.notes.find(x=>x.id==='n3'&&!x.done))ch.push({a:1,t:'Claude checked “thirty-one years” against the recording',w:'2h ago · margin note on ¶3'});
+  ch.push({a:1,t:'Claude added 2 library notes to Research',w:'2h ago'});
+  ch.push({a:0,t:`You edited ¶${idx}`,w:'yesterday 22:40'});
+  return {p:'porc',lab:'Article',title:'Porcelain and Tea',meta:`You left off in ¶${idx} · yesterday 22:40`,ex:para.text,ch,go:{tool:'write',x:para.id},cta:`Continue at ¶${idx}`};
+ }
+ if(p==='harb'){const l=SRC.harb.lines.find(x=>x.unclear&&!x.fixed)||SRC.harb.lines[0];
+  return {p,lab:'Recording',title:'Harbour Night Market',meta:`Paused in the transcript at ${l.t}`,ex:l.text,ch:[{a:1,t:'Claude imported 6 photos from your Drive folder',w:'3h ago · not reviewed'},{a:0,t:'You corrected 2 lines',w:'Sep 16'}],go:{tool:'source',x:l.t},cta:'Continue correcting'};}
+ if(p==='oolong')return {p,lab:'Listing',title:'Spring Oolong listing',meta:'You stopped before choosing an angle · Mon',ex:DIR.oolong.angles[0].body,ch:[{a:1,t:'Claude suggested a second angle',w:'Mon · not chosen'},{a:1,t:'Codex attached the supplier sheet',w:'Mon · not processed'}],go:{tool:'direction'},cta:'Continue in Direction'};
+ if(p==='ancha')return {p,lab:'Article',title:'An Cha, part two',meta:'You left off in ¶2 · Sun',ex:DOCS.ancha.paras[1].text,ch:[{a:1,t:'Codex added a source that disputes the origin county',w:'Sun · not discussed'}],go:{tool:'write',x:'a2'},cta:'Continue at ¶2'};
+ if(p==='kiln')return {p,lab:'Script',title:'Kiln Day reel script',meta:'Draft complete · last week',ex:DOCS.kiln.paras[2].text,ch:[{a:0,t:'You finished beat 4',w:'last week'}],go:{tool:'read'},cta:'Read it through'};
+ return {p,lab:'Collection',title:PN(p),meta:'Nothing waiting on you',ex:U[p].text,ch:[],go:{tool:'material'},cta:'Open Material'};
+}
+
+/* ---------------- render: top, rack, und ---------------- */
+function renderTop(){
+ const all=S.scope==='all';const dk=S.drawer&&S.drawer.k;
+ $('#top').innerHTML=`
+  <button id="switch" data-act="finder" aria-label="Switch project">
+   <span class="dot ${all?'all':''}"></span><span class="nm">${esc(all?'All projects':PN(S.scope))}</span>${ic('down','sm')}<kbd class="lbl-wide">⌘K</kbd>
+  </button>
+  <span class="top-sp"></span>
+  <span class="sizer" role="group" aria-label="Text size">
+   <button class="tbtn" data-act="size" data-d="-1" title="Smaller text" aria-label="Smaller text" ${zi===0?'disabled':''}>A−</button><span class="pct" aria-live="polite">${Math.round(SIZES[zi]*1000)/10}%</span><button class="tbtn" data-act="size" data-d="1" title="Bigger text" aria-label="Bigger text" ${zi===SIZES.length-1?'disabled':''}>A+</button>
+  </span>
+  <button class="tbtn" data-act="thought" title="Add a thought (T)">${ic('thought')}<span class="lbl-wide">Add a thought</span></button>
+  <button class="tbtn ${dk==='und'?'on':''}" data-act="und" title="Understanding — pulls out from the right (])" aria-expanded="${dk==='und'}">${ic('panelR')}<span class="lbl-wide">Understanding</span></button>
+  <button class="tbtn" data-act="theme" title="Light / dark" aria-label="Light or dark">${ic(document.documentElement.dataset.theme==='light'?'moon':'sun')}</button>`;
+}
+function rackBtn(t){
+ const c=count(t.id,S.scope);
+ const on=t.pull?(S.drawer&&S.drawer.k===t.id):railId()===t.id;
+ return `<button class="rk ${on?'on':''}" data-act="go" data-tool="${t.id}" title="${t.label}${t.pull?' — pulls out beside your work':''}${c?` — ${c} need you`:''}">${ic(t.id)}<span class="lbl">${t.label}</span>${c?`<span class="cnt" aria-label="${c} need you">${c}</span>`:''}</button>`;
+}
+/* Revision 5: the rail (icon + small label + count) and the section panel attached to it */
+const RAILV={material:'library',collections:'library'};
+const railId=()=>RAILV[S.view]||S.view;
+const shown=()=>TOOLS.filter(t=>!t.hidden);
+function railBtn(t){
+ const c=count(t.id,S.scope);
+ const on=t.pull?(S.drawer&&S.drawer.k===t.id):railId()===t.id;
+ return `<button class="rl ${on?'on':''}" data-act="go" data-tool="${t.id}" data-rail="1" title="${t.label}${t.pull?' — pulls out beside your work':''}${c?` — ${c} need you`:''}" ${on?'aria-current="page"':''}>${ic(t.id)}<span class="rlb">${t.label}</span>${c?`<span class="cnt" aria-label="${c} need you">${c}</span>`:''}</button>`;
+}
+function renderRack(){
+ const total=shown().reduce((a,t)=>a+count(t.id,S.scope),0);
+ let h=`<button class="rl ${S.view==='bench'?'on':''}" data-act="go" data-tool="bench" data-rail="1" title="The bench">${ic('bench')}<span class="rlb">Bench</span>${total?`<span class="cnt">${total}</span>`:''}</button>`;
+ GROUPS.forEach(g=>{h+=`<div class="rdiv" role="separator" aria-label="${g}"></div>`+shown().filter(t=>t.g===g).map(railBtn).join('');});
+ $('#rack').innerHTML=h;
+ const gc=g=>shown().filter(t=>t.g===g).reduce((a,t)=>a+count(t.id,S.scope),0);
+ const gi={Gather:'material',Develop:'research',Make:'write',Deliver:'outputs'};
+ const inG=g=>S.view!=='bench'&&T(railId())&&T(railId()).g===g;
+ $('#bbar').innerHTML=`<button class="${S.view==='bench'?'on':''}" data-act="go" data-tool="bench">${ic('bench')}Bench${total?`<span class="cnt">${total}</span>`:''}</button>`+
+  GROUPS.map(g=>`<button class="${inG(g)?'on':''}" data-act="gsheet" data-g="${g}">${ic(gi[g])}${g}${gc(g)?`<span class="cnt">${gc(g)}</span>`:''}</button>`).join('');
+ renderPanel();
+}
+const PANEL={};
+let POPEN={};try{POPEN=JSON.parse(localStorage.getItem('arc-c-panel')||'{}')||{};}catch(e){POPEN={};}
+const panelOpen=id=>POPEN[id]!==false;
+function setPanel(id,v){POPEN[id]=v;try{localStorage.setItem('arc-c-panel',JSON.stringify(POPEN));}catch(e){}}
+const hasPanel=()=>!!PANEL[railId()]&&!document.body.classList.contains('focus');
+let lastPanel=null;
+function renderPanel(){
+ const id=railId();const on=hasPanel()&&panelOpen(id);const el=$('#spanel');
+ document.body.classList.toggle('has-panel',on);
+ if(!on){el.innerHTML='';el.hidden=true;lastPanel=null;return;}
+ const old=el.querySelector('.spb');const top=old&&lastPanel===id?old.scrollTop:0;
+ el.hidden=false;
+ el.innerHTML=`<div class="sph"><span>${PANEL[id].btn||'Folders'}</span><span class="sp"></span><button class="tbtn" data-act="ptog" title="Collapse ([)" aria-label="Collapse ${PANEL[id].btn||'Folders'}">${ic('panelL','sm')}</button></div><div class="spb">${PANEL[id].html()}</div>`;
+ el.querySelector('.spb').scrollTop=top;lastPanel=id;
+ const ps=$('#psheet');if(ps&&ps.classList.contains('on'))fillPSheet();
+}
+function panelBtn(){const id=railId();if(!PANEL[id])return '';return `<button class="btn quiet pnlbtn" data-act="pshow" title="Show ${PANEL[id].btn||'Folders'} ([)">${ic('panelL','sm')} ${PANEL[id].btn||'Folders'}</button>`;}
+function fillPSheet(){const ps=$('#psheet');const id=railId();if(!PANEL[id]){closePSheet();return;}ps.innerHTML=`<div class="shh"><h2>${PANEL[id].btn||'Folders'}</h2><button class="btn" data-act="closepsheet">Done</button></div><div class="shb spb">${PANEL[id].html()}</div>`;}
+function openPSheet(){let ps=$('#psheet');if(!ps){ps=document.createElement('div');ps.id='psheet';ps.setAttribute('role','dialog');ps.setAttribute('aria-label','Folders');document.body.appendChild(ps);const sc=document.createElement('div');sc.className='scrim p';sc.dataset.act='closepsheet';document.body.appendChild(sc);
+  /* picking something in the sheet closes it; opening and closing folders does not */
+  ps.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&!['ttog','newfolder','closepsheet'].includes(a.dataset.act))setTimeout(closePSheet,0);});}
+ fillPSheet();ps.classList.add('on');$('.scrim.p').classList.add('on');}
+function closePSheet(){const ps=$('#psheet');if(ps)ps.classList.remove('on');const s=$('.scrim.p');if(s)s.classList.remove('on');}
+function togglePanel(){const id=railId();if(!PANEL[id])return;if(isPhone()){openPSheet();return;}setPanel(id,!panelOpen(id));render(true);}
+function uList(arr,empty){
+ if(!arr.length)return `<p class="dim">${empty}</p>`;
+ return `<ul class="u-list">${arr.map(x=>`<li><span>${esc(x.t)}</span><span class="w">${esc(x.w)}</span></li>`).join('')}</ul>`;
+}
+
+/* ---------------- the one side drawer ----------------
+   Understanding, Check, Media "used in" and History all open here:
+   same width, same header, Esc closes, the work stays visible behind. */
+const DR_TABS=[['und','Understanding'],['check','Check'],['history','History']];
+const DR_TITLE={und:'Understanding',check:'Check',history:'History',used:'Used in'};const NOTABS={used:1};const DR_SUB={used:()=>'Media'};
+function openDrawer(k,extra){S.drawer=Object.assign({k},extra||{});closeSheets();renderDrawer();renderTop();renderRack();}
+function closeDrawer(){if(!S.drawer)return;S.drawer=null;S.find=null;clearMarks();renderDrawer();renderTop();renderRack();}
+function renderDrawer(){
+ const d=$('#drawer');const on=!!S.drawer;
+ d.classList.toggle('on',on);d.setAttribute('aria-hidden',on?'false':'true');document.body.classList.toggle('dr-open',on);
+ document.querySelectorAll('main [data-act=drawer]').forEach(b=>b.classList.toggle('on',!!S.drawer&&S.drawer.k===b.dataset.k&&(!b.dataset.id||b.dataset.id===S.drawer.id)));
+ if(!on){d.innerHTML='';return;}
+ const k=S.drawer.k;const p=k==='check'||k==='history'?docProj():curProj();
+ const title=DR_TITLE[k]||k;
+ const tabs=NOTABS[k]?'':`<nav class="dr-tabs" aria-label="Drawer">${DR_TABS.map(([id,l])=>`<button class="${k===id?'on':''}" data-act="drawer" data-k="${id}">${l}</button>`).join('')}</nav>`;
+ d.innerHTML=`<div class="dr-head"><h2>${title} <span class="sub">· ${esc(DR_SUB[k]?DR_SUB[k]():PN(p))}</span></h2><button class="tbtn" data-act="closedrawer" title="Close (Esc)" aria-label="Close drawer">${ic('close','sm')}</button></div>${tabs}<div class="dr-body">${DR[k](p)}</div>`;
+}
+const docProj=()=>{const p=curProj();return DOCS[p]?p:resolveProj('write');};
+const DR={};
+DR.und=p=>{const u=U[p];return `
+  ${S.scope==='all'?`<p class="dim small" style="margin:0 0 12px">Following the project you are working in. Pick one at top-left to pin it.</p>`:''}
+  <div class="u-sec"><h4>Current understanding</h4><p>${esc(u.text)}</p></div>
+  <div class="u-sec"><div class="mine">
+   <div class="who"><span>Your thoughts — Adrian</span><span class="dim">only you write here</span></div>
+   <textarea id="mineBox" aria-label="Your thoughts" placeholder="What you think, feel or doubt about this…">${esc(u.mine)}</textarea>
+   <div class="addt"><input id="quickT" placeholder="Add a thought  (T)" aria-label="Add a thought"><button class="btn" data-act="addthought">Add</button></div>
+   ${u.thoughts.length?`<ul class="thoughts">${u.thoughts.map(t=>`<li>${esc(t.t)}<span>${esc(t.w)}</span></li>`).join('')}</ul>`:''}
+  </div></div>
+  <div class="u-sec"><h4>Decisions</h4>${uList(u.decisions,'No decisions yet.')}</div>
+  <div class="u-sec"><h4>Protected phrases</h4>${uList(u.protected,'None protected yet. Select words in Write to protect them.')}</div>
+  <div class="u-sec"><h4>Corrections</h4>${uList(u.corrections,'No corrections yet.')}</div>
+  <div class="u-sec"><h4>Rejected angles</h4>${uList(u.rejected,'Nothing rejected.')}</div>
+  <p class="foot-note">These carry forward into every tool and output for this project. Prototype — nothing here is saved.</p>`;};
+function paraWith(p,ph){const d=DOCS[p];if(!d||!ph)return null;const x=d.paras.find(q=>q.text.includes(ph));return x?x.id:null;}
+function checkFindings(p){
+ const u=U[p],f=[];
+ u.protected.forEach(x=>{const pid=paraWith(p,x.t);f.push({id:'pr'+f.length,kind:'Protected phrase',t:x.t,ph:x.t,pid,st:pid?'ok':'miss',w:pid?`Present in ¶${DOCS[p].paras.findIndex(q=>q.id===pid)+1}`:'Not in this piece — was it cut?'});});
+ u.corrections.filter(x=>x.to).forEach(x=>{const pid=paraWith(p,x.to);f.push({id:'co'+f.length,kind:'Correction',t:x.t,ph:x.to,pid,st:pid?'ok':'miss',w:pid?`Corrected wording is in ¶${DOCS[p].paras.findIndex(q=>q.id===pid)+1}`:'Corrected wording not found here'});});
+ (RES[p]||[]).filter(r=>(r.level==='unsure'||r.level==='disputed')&&r.ph).forEach(r=>{const pid=paraWith(p,r.ph);if(pid)f.push({id:'re'+f.length,kind:`Research point marked ${r.level}`,t:r.claim,ph:r.ph,pid,st:'risk',w:`This passage leans on it · ¶${DOCS[p].paras.findIndex(q=>q.id===pid)+1}`});});
+ return f;
+}
+DR.check=p=>{
+ const d=DOCS[p];
+ if(!d)return `<div class="status"><h3>Nothing to check yet</h3><p>A check runs against a piece. Start one in Write.</p></div>`;
+ const f=checkFindings(p);
+ return `<div class="status"><h3>No check has run on this revision</h3>
+  <p>A check reads the piece against what this project already knows: corrections from Source, unsure research points, protected phrases and rejected angles.</p>
+  <button class="btn primary" data-act="honest" data-msg="Checking isn’t connected in this prototype — no check ran.">Run a check</button></div>
+  <h2 class="sec block" style="margin-top:22px">Local text checks <span class="tag">counted in this page, not a check</span></h2>
+  <p class="dim small" style="margin:-4px 0 10px">Matched against the words you can see. Click one to find its passage.</p>
+  ${f.length?`<ul class="finds">${f.map(x=>`<li><button class="find ${S.find===x.id?'on':''}" data-act="find" data-id="${x.id}" data-ph="${esc(x.ph)}" data-pid="${x.pid||''}"><i class="${x.st==='miss'?'miss':x.st==='risk'?'risk':''}"></i><span><span class="w">${esc(x.kind)}</span>${esc(x.t)}<span class="w">${esc(x.w)}</span></span></button></li>`).join('')}</ul>`:'<p class="dim">Nothing this page can count locally for this piece.</p>'}
+  <p class="foot-note">Rejected angles and tone can’t be counted from the text alone — they need the real check.</p>`;
+};
+DR.history=p=>{
+ const r=resume(p);
+ return `<p class="dim small" style="margin:0 0 10px">${esc(r.title)} · ${esc(r.meta)} <span class="tag" title="Invented records — no agent ran">Sample</span></p>
+  ${r.ch.length?`<div class="since" style="margin:0;padding:0;border:0"><ul>${r.ch.map(c=>`<li><i class="${c.a?'agent':''}"></i><span>${esc(c.t)}<small>${esc(c.w)}</small></span></li>`).join('')}</ul></div>`:'<p class="dim">No changes recorded.</p>'}
+  <p class="foot-note">Revision history and restore aren’t connected in this prototype.</p>`;
+};
+DR.used=()=>{
+ const m=MEDIA.find(x=>x.id===S.drawer.id);if(!m)return '<p class="dim">This asset is no longer here.</p>';
+ return `<div class="asset" style="margin-bottom:14px">${phBlock(m)}<div class="b"><div class="cap">${esc(m.cap)}</div><div class="by">${esc(m.by)} · ${esc(PN(m.p))}</div></div></div>
+  <h2 class="sec">${m.used.length?`Used in ${m.used.length} place${m.used.length>1?'s':''}`:'Not used yet'}</h2>
+  ${m.used.map(u=>`<div class="usedrow"><span>${esc(u.l)}</span><button class="lnk" data-act="go" data-tool="${u.tool}" data-p="${m.p}" data-x="${u.x}">Open in ${T(u.tool).label}</button></div>`).join('')||'<p class="dim">Place it in a slide in Arrange or a paragraph in Write.</p>'}`;
+};
+function clearMarks(){document.querySelectorAll('.para mark').forEach(m=>{const t=document.createTextNode(m.textContent);m.replaceWith(t);});}
+function findPassage(ph,pid){
+ clearMarks();
+ const para=pid&&($('#pa-'+pid));if(!para)return false;
+ if(!wrapPhrase(para,ph))para.classList.add('flash');
+ para.scrollIntoView({block:'center',behavior:'smooth'});return true;
+}
+
+/* ---------------- views ---------------- */
+function head(tool,p,right=''){
+ const t=T(tool);
+ const back=S.ret&&tool!=='write'?`<button class="btn quiet" data-act="ret" title="Back to the paragraph you were writing">${ic('write','sm')} Back to ¶${S.ret.n} in Write</button>`:'';
+ // the way back sits in the title line, so every screen's title starts at the same top edge
+ return `<div class="thead"><h1>${t.label}<span class="sub"> · ${esc(PN(p))}</span></h1><span class="sp"></span>${right}${back}${panelBtn()}</div>`+(PANEL[tool]?'':pstrip(tool,p));
+}
+function pstrip(tool,p){
+ if(S.scope!=='all'||CROSS[tool])return '';
+ const ps=P.filter(x=>HAS[tool]&&HAS[tool](x.id));
+ if(ps.length<2)return '';
+ return `<div class="pstrip"><span>In:</span>${ps.map(x=>{const c=count(tool,x.id);return `<button class="${x.id===p?'on':''}" data-act="toolproj" data-p="${x.id}">${esc(x.name)}${c?` <span class="warm">${c}</span>`:''}</button>`;}).join('')}</div>`;
+}
+function emptyFor(tool,p,msg,btn=''){return head(tool,p)+`<div class="empty"><h3>${msg}</h3><p>${btn}</p></div>`;}
+
+const V={};
+V.bench=()=>{
+ const r=resume(S.scope==='all'?'porc':S.scope);
+ const mv=moves();
+ const q=S.q.toLowerCase();
+ const list=P.filter(p=>!q||(p.name+' '+p.kind+' '+stateLine(p.id)).toLowerCase().includes(q));
+ if(S.sel>=list.length)S.sel=Math.max(0,list.length-1);
+ return `<div class="wrap">
+ <div class="thead"><h1>The bench<span class="sub"> · ${esc(S.scope==='all'?'All projects':PN(S.scope))}</span></h1></div>
+ <section class="pickup" aria-label="Pick up where you left off">
+  <div class="lab">Pick up where you left off</div>
+  <h2>${esc(r.title)} <span class="sub">· ${esc(r.lab)}</span></h2>
+  <div class="meta">${esc(r.meta)}</div>
+  <blockquote>${esc(r.ex)}</blockquote>
+  <div class="acts"><button class="btn primary" data-act="go" data-tool="${r.go.tool}" data-p="${r.p}" data-x="${r.go.x||''}">${esc(r.cta)} ${ic('chev','sm')}</button>${oac(r.title)}</div>
+  <p class="oac-note" style="margin-top:6px">${APP_NOTE}.</p>
+  <div class="since"><div class="lab">Since you were here <span class="tag" title="Invented records — no agent ran">Sample</span></div>${r.ch.length?`<ul>${r.ch.map(c=>`<li><i class="${c.a?'agent':''}"></i><span>${esc(c.t)}<small>${esc(c.w)}</small></span></li>`).join('')}</ul>`:'<p class="dim">Nothing changed.</p>'}</div>
+ </section>
+ <section class="block"><h2 class="sec">Next moves ${S.scope==='all'?'<span class="sub">across all projects</span>':''}</h2>
+  ${mv.length?`<ol class="moves">${mv.map(m=>`<li><button class="move" data-act="go" data-tool="${m.tool}" data-p="${m.p}" data-x="${m.x||''}">${ic(m.tool)}<span><span class="t">${esc(m.t)}</span><br><span class="w">${esc(PN(m.p))} · ${T(m.tool).label}</span></span>${ic('chev','sm')}</button></li>`).join('')}</ol>`:'<p class="dim">Nothing is waiting on you here.</p>'}
+ </section>
+ <section class="block"><h2 class="sec">Everything active <span class="sub">· ${P.length}</span></h2>
+  <p class="oac-note" style="margin:-4px 0 10px">“Open in AR Create” — ${APP_NOTE}.</p>
+  <label class="search">${ic('search','sm')}<input id="aq" value="${esc(S.q)}" placeholder="Filter projects" aria-label="Filter projects"><kbd>j</kbd><kbd>k</kbd></label>
+  <ul class="alist" id="alist">${list.map((p,i)=>`<li><button class="arow ${i===S.sel?'sel':''}" data-act="scope" data-p="${p.id}"><b>${esc(p.name)}</b><span class="k">${esc(p.updated)}</span><span class="s">${esc(stateLine(p.id))}</span></button>${oac(p.name)}</li>`).join('')||'<li class="dim" style="padding:8px">No project matches.</li>'}</ul>
+  ${S.scope!=='all'?`<p style="margin-top:8px"><button class="lnk" data-act="scope" data-p="all">Show all projects again</button></p>`:''}
+ </section></div>`;
+};
+
+V.material=()=>{
+ const all=S.scope==='all';const p=resolveProj('material');
+ const items=MAT.filter(m=>all||m.p===S.scope);
+ const kindIc={audio:'audio',text:'text',doc:'doc',image:'image',photos:'photos',video:'video'};
+ const stateTxt={new:'Needs processing',transcribed:'Transcribed',processed:'Processed'};
+ const acts=m=>{
+  const a=[];
+  if(m.kind==='audio'&&m.state==='new')a.push(`<button class="btn" data-act="honest" data-msg="Transcription isn’t connected in this prototype — the file is kept here.">Transcribe</button>`);
+  if(m.state==='transcribed')a.push(`<button class="btn" data-act="go" data-tool="source" data-p="${m.p}">Open in Source</button>`);
+  if(m.link)a.push(`<button class="btn" data-act="go" data-tool="${m.link}" data-p="${m.p}">Review in Media</button>`);
+  if(m.state==='new'&&m.kind!=='audio'&&!m.link)a.push(`<button class="btn" data-act="processed" data-id="${m.id}">Mark processed</button>`);
+  a.push(`<button class="btn quiet" data-act="pv" data-id="${m.id}">${S.openPv[m.id]?'Hide':'Preview'}</button>`);
+  return a.join('');
+ };
+ return `<div class="wrap">${head('material',all?'all':p)}
+ <div class="drop" id="drop">${ic('material')}<div class="t"><b>Bring something in</b><span class="dim">Drop recordings, photos, PDFs or notes here — or paste a link. Claude and Codex can add here too.</span></div><button class="btn" data-act="pickfile">Choose files</button></div>
+ ${items.length?items.map(m=>`<div class="mrow" id="it-${m.id}">
+   <div class="thumb">${ic(kindIc[m.kind]||'doc')}</div>
+   <div><b>${esc(m.name)}</b> ${all?`<span class="tag">${esc(PN(m.p))}</span>`:''}<div class="m">${esc(m.meta)} · <span class="${m.agent?'warm':''}">${esc(m.by)}</span> · <span class="state ${m.state}">${stateTxt[m.state]}</span></div>
+   ${S.openPv[m.id]?`<div class="pv">${esc(m.preview)}</div>`:''}</div>
+   <div class="acts">${acts(m)}</div></div>`).join(''):`<div class="empty"><h3>No material in ${esc(PN(p))} yet</h3><p>Drop something above to start.</p></div>`}
+ <div class="review"><b>Keep / remove review</b> <span class="tag">Prepared, not connected</span>
+  <p>When connected, this walks you through each item once — keep it in the Library or let it go. The review is designed; the action behind it is not wired yet, so nothing is removed.</p>
+  <div class="row"><button class="btn" aria-disabled="true" data-act="honest" data-msg="Not connected yet — nothing was kept or removed.">Start review</button></div></div>
+ </div>`;
+};
+
+V.source=()=>{
+ const p=resolveProj('source');const s=SRC[p];
+ if(!s)return `<div class="wrap">${emptyFor('source',p,`No recording or transcript in ${esc(PN(p))}`,`<button class="btn" data-act="go" data-tool="material">Bring one in through Material</button>`)}</div>`;
+ const unc=s.lines.filter(l=>l.unclear&&!l.fixed).length;
+ return `<div class="wrap">${head('source',p,`<span class="dim small">${unc?`<span class="warm">${unc} unclear</span> · `:''}click any line to correct it</span>`)}
+ <div class="tbar"><button class="btn" data-act="honest" data-msg="Playback isn’t connected in this prototype — timestamps are real, audio is not.">${ic('play','sm')} Play from start</button>
+  <span class="dim small">${esc(s.file)} · ${s.dur}</span><span style="flex:1"></span>
+  <button class="btn quiet" data-act="honest" data-msg="Bilingual view isn’t connected yet — the original-language line will sit beside each line here.">Bilingual view</button></div>
+ <div>${s.lines.map((l,i)=>`<div class="tline" id="ln-${i}" data-act="fixline" data-i="${i}" role="button" tabindex="0">
+   <span class="tm">${l.t}</span><span class="who">${esc(l.who)}</span>
+   <span class="tx"><span class="quote ${l.unclear&&!l.fixed?'unc':''}">${esc(l.text)}</span>${l.fixed?'<span class="fx">corrected by you</span>':''}${l.unclear&&!l.fixed?' <span class="tag">unclear</span>':''}</span>
+   ${S.fixing===i?`<div class="fix" data-stop="1"><textarea id="fixBox">${esc(l.text)}</textarea><div class="row"><button class="btn primary" data-act="savefix" data-i="${i}">Save correction</button><button class="btn quiet" data-act="cancelfix">Cancel</button><span class="dim small">Corrections carry into Research, Write and every output.</span></div></div>`:''}
+  </div>`).join('')}</div></div>`;
+};
+
+V.research=()=>{
+ const p=resolveProj('research');const pts=RES[p];
+ if(!pts)return `<div class="wrap">${emptyFor('research',p,`No research points in ${esc(PN(p))} yet`,'Points appear here as you mark claims in Source or Write.')}</div>`;
+ const sel=pts.find(x=>x.id===S.research[p])||pts.find(x=>x.level==='unsure'||x.level==='disputed')||pts[0];
+ const LV=['settled','likely','unsure','disputed'];
+ const det=`<div class="pdet">
+  <div class="seg" role="group" aria-label="How sure">${LV.map(l=>`<button class="${sel.level===l?'on':''}" data-act="level" data-id="${sel.id}" data-l="${l}">${l[0].toUpperCase()+l.slice(1)}</button>`).join('')}</div>
+  <ul class="ev">${sel.evidence.map(e=>`<li><q class="quote">${esc(e.q)}</q><div class="src"><span>${esc(e.src)}</span><span class="${e.agent?'warm':''}">${esc(e.by)}${e.agent?' <span class="tag">Sample</span>':''}</span></div></li>`).join('')}</ul>
+  <div class="thread"><h2 class="sec">Discuss this point</h2>
+   ${sel.thread.map(m=>m.who==='you'?`<div class="msg you"><small>You · ${esc(m.when)}</small>${esc(m.text)}</div>`:`<div class="msg sys">${esc(m.text)}</div>`).join('')||'<p class="dim" style="margin:0 0 6px">One point at a time. Ask what you would ask an editor.</p>'}
+   <div class="compose"><textarea id="discuss" placeholder="Ask about this point…" aria-label="Ask about this point"></textarea><button class="btn primary" data-act="discuss" data-id="${sel.id}">Send</button></div>
+   <p class="dim small" style="margin:6px 0 0">AI discussion isn’t connected yet — your question stays with this point.</p>
+  </div></div>`;
+ return `<div class="wrap">${head('research',p,`<button class="btn" data-act="honest" data-msg="Broad research and retrieval aren’t connected — add evidence by hand for now.">${ic('search','sm')} Find more evidence</button>`)}
+ <ul class="plist">${pts.map(x=>`<li><button class="pbtn ${x.id===sel.id?'on':''}" data-act="rpoint" data-id="${x.id}" aria-expanded="${x.id===sel.id}"><span class="lv ${x.level}"></span><span>${x.id===sel.id?`<b>${esc(x.claim)}</b>`:esc(x.claim)}</span><span class="w">${x.level} · ${x.evidence.length} evidence</span></button>${x.id===sel.id?det:''}</li>`).join('')}</ul></div>`;
+};
+
+V.direction=()=>{
+ const p=resolveProj('direction');const d=DIR[p];
+ if(!d)return `<div class="wrap">${emptyFor('direction',p,`No direction written for ${esc(PN(p))} yet`,`<button class="btn" data-act="newdir">Write what you want this to say</button>`)}</div>`;
+ return `<div class="wrap">${head('direction',p)}
+ <div class="mine" style="max-width:var(--measure)"><div class="who"><span>What I want this to say — Adrian</span></div><textarea data-bind="dir" aria-label="What I want this to say" placeholder="In your own words…">${esc(d.mine)}</textarea></div>
+ <h2 class="sec block">${d.chosen?'Chosen angle':'Two angles — choose one'}</h2>
+ <div class="angles">${d.angles.map(a=>{const ch=d.chosen===a.id,rj=d.chosen&&!ch;return `<div class="angle ${ch?'chosen':''} ${rj?'rej':''}"><h3>${esc(a.title)}</h3><p>${esc(a.body)}</p><div class="foot"><span class="${a.agent?'warm':'dim'}">${esc(a.by)}</span>${ch?'<span class="warm">Chosen</span>':rj?'<span class="dim">Rejected — carried forward</span>':`<button class="btn primary" data-act="choose" data-id="${a.id}">Choose this angle</button>`}</div></div>`;}).join('')}</div>
+ ${d.chosen?`<p style="margin-top:12px"><button class="lnk" data-act="unchoose">Reopen the choice</button></p>`:'<p class="dim small" style="margin-top:10px">The one you don’t choose is kept in Rejected angles so it isn’t suggested again.</p>'}
+ </div>`;
+};
+
+function protWrap(text,p){
+ let h=esc(text);
+ (U[p].protected||[]).forEach(x=>{const k=esc(x.t);if(k&&h.includes(k))h=h.split(k).join(`<span class="prot" title="Protected phrase">${k}</span>`);});
+ return h;
+}
+/* Write and Read share one document: same column, same type, same left edge.
+   Read is the same page with the margin and editing taken away. */
+function docTools(){
+ const dk=S.drawer&&S.drawer.k;
+ return `<button class="btn ${dk==='check'?'on':''}" data-act="drawer" data-k="check" title="Pull out Check beside the text">${ic('check','sm')} Check</button><button class="btn ${dk==='history'?'on':''}" data-act="drawer" data-k="history" title="Pull out History beside the text">${ic('history','sm')} History</button>`;
+}
+V.write=()=>{
+ const p=resolveProj('write');const d=DOCS[p];
+ if(!d)return `<div class="wrap">${emptyFor('write',p,`No piece in Write for ${esc(PN(p))} yet`,`<button class="btn primary" data-act="newdoc">Start a piece</button>`)}</div>`;
+ const focus=document.body.classList.contains('focus');
+ return `<div class="wrap">${head('write',p,`<span class="dim small">${wc(d)} words</span>
+  ${docTools()}
+  <button class="btn" data-act="focus" title="Focus — hide the rack and margin (Esc to leave)">${ic('focus','sm')} ${focus?'Leave focus':'Focus'}</button>
+  <button class="btn quiet" data-act="go" data-tool="read">${ic('read','sm')} Read</button>
+  <button class="btn quiet" data-act="honest" data-msg="Prototype — nothing is saved.">Save</button>`)}
+ <article class="doc">
+  <h2 class="dt" contenteditable="true" data-bind="title" spellcheck="false">${esc(d.title)}</h2>
+  <div class="by">${esc(d.kind)} · ${esc(PN(p))}${CAR[p]?` · <button class="lnk" data-act="go" data-tool="arrange">Carousel cut from this</button>`:''}</div>
+  ${d.paras.map(x=>{const ns=d.notes.filter(n=>n.pid===x.id);return `<div class="wrow">
+   <p class="para ${x.id===d.last?'last':''}" id="pa-${x.id}" data-pid="${x.id}" contenteditable="true">${protWrap(x.text,p)}</p>
+   <div class="margin">${ns.map(n=>`<button class="note ${n.agent?'agent':''} ${S.activeNote===n.id?'on':''}" data-act="note" data-id="${n.id}"><b>${esc(n.by)}${n.agent?' <span class="tag" title="Invented note — no agent ran">Sample</span>':''}</b>${esc(n.text)}${n.needs&&!n.done?`<span class="r" data-act="resolve" data-id="${n.id}">Mark answered</span>`:''}</button>`).join('')}</div></div>`;}).join('')}
+  <div class="legend"><span><span class="prot">underlined</span> protected phrase</span><span>Click a margin note to find its passage</span><span>Focus hides the rack and the margin</span></div>
+ </article></div>`;
+};
+
+V.read=()=>{
+ const p=resolveProj('read');const d=DOCS[p];
+ if(!d)return `<div class="wrap">${emptyFor('read',p,'Nothing to read yet','Write something first.')}</div>`;
+ const w=wc(d);
+ return `<div class="wrap">${head('read',p,`<span class="dim small">about ${Math.max(1,Math.round(w/220))} min</span>${docTools()}<button class="btn" data-act="go" data-tool="write">${ic('write','sm')} Back to Write</button>`)}
+ <article class="doc">
+  <h2 class="dt">${esc(d.title)}</h2>
+  <div class="by">${esc(d.kind)} · ${esc(PN(p))} · reading view, no notes</div>
+  ${d.paras.map(x=>`<div class="wrow"><p class="para" id="pa-${x.id}">${esc(x.text)}</p></div>`).join('')}
+ </article></div>`;
+};
+
+function phBlock(m,cls='ph'){return `<div class="${cls}" style="background:${m.tone}"><span class="tag">Sample</span>${ic(m.kind==='video'?'video':'image')}${m.dur?`<span class="dur">${m.dur}</span>`:''}</div>`;}
+V.media=()=>{
+ const all=S.scope==='all';const p=resolveProj('media');
+ let items=MEDIA.filter(m=>all||m.p===S.scope);
+ if(S.mediaF!=='all')items=items.filter(m=>m.kind===S.mediaF);
+ const nw=items.filter(m=>m.isNew),old=items.filter(m=>!m.isNew);
+ const card=m=>`<div class="asset ${m.isNew?'new':''}" id="as-${m.id}">${phBlock(m)}<div class="b"><div class="cap">${esc(m.cap)}</div><div class="by"><span class="${m.isNew?'warm':''}">${esc(m.by)}</span>${all?` · ${esc(PN(m.p))}`:''}</div>
+  ${m.isNew?`<div class="acts"><button class="btn" data-act="keepasset" data-id="${m.id}">Keep</button><button class="btn quiet" data-act="setaside" data-id="${m.id}">Set aside</button></div>`:
+  `<div class="used"><button data-act="drawer" data-k="used" data-id="${m.id}" title="Pull out where this is used">${m.used.length?`Used in ${m.used.length} place${m.used.length>1?'s':''}`:'Not used yet'} ${ic('panelR','sm')}</button></div>`}</div></div>`;
+ return `<div class="wrap">${head('media',all?'all':p,`<div class="filt">${['all','photo','video'].map(f=>`<button class="${S.mediaF===f?'on':''}" data-act="mfilt" data-f="${f}">${f==='all'?'All':f==='photo'?'Photos':'Video'}</button>`).join('')}</div>`)}
+ ${nw.length?`<h2 class="sec">New from Claude’s import · ${nw.length} <button class="lnk" data-act="keepall">Keep all</button></h2><div class="mgrid" style="margin-bottom:28px">${nw.map(card).join('')}</div>`:''}
+ ${old.length?`<h2 class="sec">In use and kept</h2><div class="mgrid">${old.map(card).join('')}</div>`:(!nw.length?'<div class="empty"><h3>No media here yet</h3><p>Bring photos or video in through Material.</p></div>':'')}
+ </div>`;
+};
+
+V.arrange=()=>{
+ const p=resolveProj('arrange');const c=CAR[p],d=DOCS[p];
+ if(!c&&!d)return `<div class="wrap">${emptyFor('arrange',p,'Nothing to arrange yet','Arrange composes a piece: slides, sections, images.')}</div>`;
+ const mode=S.arrangeMode[p]||(c?'car':'art');
+ const tabs=`<div class="filt">${c?`<button class="${mode==='car'?'on':''}" data-act="amode" data-m="car">Carousel</button>`:''}${d?`<button class="${mode==='art'?'on':''}" data-act="amode" data-m="art">${esc(d.kind)} layout</button>`:''}</div>`;
+ let body='';
+ if(mode==='car'&&c){
+  body=`<p class="dim small" style="margin:0 0 12px">The whole sequence on one canvas. Edit text in place; drag the grip to reorder.</p>
+  <div class="seq" data-sortable="car">${c.slides.map((s,i)=>{const m=s.img&&MEDIA.find(x=>x.id===s.img);return `<div class="slide ${s.draft?'draft':''}" data-idx="${i}" id="sl-${s.id}">
+   <div class="sh"><span class="handle" data-handle="1" title="Drag to reorder" aria-label="Drag slide ${i+1}">${ic('grip','sm')}</span>Slide ${i+1}${m?` · ${esc(m.cap)}`:''}</div>
+   ${m?`<div class="img" style="background:${m.tone}"></div>`:''}
+   <div class="st" contenteditable="true" data-sid="${s.id}">${esc(s.text)}</div>
+   ${s.draft?`<div class="df">${esc(s.draft)} drafted · not accepted<button class="btn primary" data-act="accept" data-id="${s.id}">Accept</button><button class="btn" data-act="discard" data-id="${s.id}">Discard</button></div>`:''}
+  </div>`;}).join('')}</div>
+  <div style="max-width:178px;margin-top:14px"><button class="addslide" data-act="addslide" aria-label="Add a slide">${ic('plus')}</button></div>`;
+ } else {
+  body=`<p class="dim small" style="margin:0 0 12px">Section order for the ${esc(d.kind.toLowerCase())}. Drag to reorder; the text is edited in Write.</p>
+  <div class="lblocks" data-sortable="art">${d.paras.map((x,i)=>`<div class="lblock" data-idx="${i}"><span class="handle" data-handle="1" aria-label="Drag section ${i+1}">${ic('grip','sm')}</span><div><span class="x">¶${i+1}</span> ${esc(x.text.slice(0,120))}${x.text.length>120?'…':''}</div></div>`).join('')}</div>`;
+ }
+ return `<div class="wrap">${head('arrange',p,tabs+`<button class="btn" data-act="go" data-tool="audience">${ic('audience','sm')} See it as a reader</button>`)}${body}</div>`;
+};
+
+V.audience=()=>{
+ const p=resolveProj('audience');const c=CAR[p],d=DOCS[p];
+ if(!c&&!d)return `<div class="wrap">${emptyFor('audience',p,'Nothing to preview yet','')}</div>`;
+ const mode=S.audMode[p]||(c?'feed':'mag');
+ const tabs=`<div class="filt">${c?`<button class="${mode==='feed'?'on':''}" data-act="aumode" data-m="feed">Instagram feed</button>`:''}${d?`<button class="${mode==='mag'?'on':''}" data-act="aumode" data-m="mag">Magazine reader</button>`:''}</div>`;
+ let body;
+ if(mode==='feed'&&c){
+  body=`<div class="phone"><div class="hdr"><span class="av"></span><b>teajia</b><span class="dim">· Sample preview</span></div>
+   <div class="swipe">${c.slides.map(s=>{const m=s.img&&MEDIA.find(x=>x.id===s.img);return `<div>${m?`<div class="img" style="background:${m.tone}"></div>`:''}<p>${esc(s.text)}</p></div>`;}).join('')}</div>
+   <div class="cap2"><b>teajia</b> What do you want your cup to remember? <span class="dim">Swipe ${c.slides.length} slides</span></div></div>`;
+ } else {
+  body=`<div class="page"><div class="lab" style="margin-bottom:6px">Teajia Magazine · Sample preview</div><h2>${esc(d.title)}</h2>${d.paras.map(x=>`<p class="para">${esc(x.text)}</p>`).join('')}</div>`;
+ }
+ return `<div class="wrap">${head('audience',p,tabs+`<button class="btn quiet" data-act="go" data-tool="arrange">Back to Arrange</button>`)}
+  <p class="aud-note"><b>Audience is for looking, not editing.</b> This is how a reader meets the piece. Arrange is where you compose it; Outputs is where files leave.${c&&c.slides.some(s=>s.draft)?' <span class="warm">Slide 4 is still an unaccepted Codex draft.</span>':''}</p>
+  ${body}</div>`;
+};
+
+V.share=()=>{
+ const p=resolveProj('share');
+ return `<div class="wrap">${head('share',p)}
+ <div style="max-width:var(--measure)"><p class="dim" style="margin:0 0 14px">Share a readable note of one piece with one person — for a quote check or a read-through. Only you can see this project now.</p>
+ <div class="mine"><div class="who"><span>Note to go with it — Adrian</span></div><textarea placeholder="e.g. Mr. Lin — here is how I used your words. Tell me if anything is wrong.">${p==='porc'?'Mr. Lin — this is how I used your words about the window and the wall. Tell me if anything is wrong.':''}</textarea></div>
+ <p style="margin-top:12px"><button class="btn primary" data-act="honest" data-msg="Sharing isn’t connected — no link was made and nothing was sent.">Create a read-only link</button></p>
+ <p class="dim small" style="margin-top:8px">Who can see it: only you.</p></div></div>`;
+};
+
+V.outputs=()=>{
+ const p=resolveProj('outputs');const o=OUT[p];
+ if(!o)return `<div class="wrap">${emptyFor('outputs',p,`No outputs from ${esc(PN(p))} yet`,'Outputs appear once a piece exists.')}</div>`;
+ return `<div class="wrap">${head('outputs',p)}
+ <h2 class="sec">One origin, edited separately</h2>
+ <div class="origin">${ic('source')}<div><b>${esc(o.origin)}</b><div class="dim small">Each output below has its own text and its own state. Changing one does not change the others.</div></div></div>
+ <ul class="otree">${o.items.map(x=>`<li><b>${esc(x.k)}</b><button class="lnk" data-act="go" data-tool="${x.tool}" data-p="${p}">Open in ${T(x.tool).label}</button><small>${esc(x.d())}</small></li>`).join('')}</ul>
+ <h2 class="sec block">Export</h2>
+ <div class="exp">${[['Article','Markdown or PDF'],['Carousel','PNG per slide, 1080 × 1350'],['Caption','Plain text'],['Everything','A folder with all outputs']].map(e=>`<div class="x"><b>${e[0]}</b><span>${e[1]}</span><button class="btn" data-act="honest" data-msg="Export isn’t connected in this prototype — nothing was written.">Export</button></div>`).join('')}</div></div>`;
+};
+
+/* ---------------- main render ---------------- */
+let prevView=null;
+function render(keepScroll){
+ const main=$('#main');const st=main.scrollTop;
+ const rw=['read','write'];if(rw.includes(S.view)&&rw.includes(prevView)&&prevView!==S.view){keepScroll=true;S.target=null;}prevView=S.view;
+ document.body.className=document.body.className.replace(/\bv-\S+/g,'').trim();document.body.classList.add('v-'+S.view);
+ renderTop();renderRack();renderDrawer();
+ main.innerHTML=(V[S.view]||V.bench)();
+ if(keepScroll)main.scrollTop=st;else main.scrollTop=0;
+ afterRender();
+}
+function afterRender(){
+ const x=S.target;S.target=null;
+ if(x){
+  let el=null;
+  if(x==='first-unclear'&&S.view==='source'){const p=resolveProj('source');const i=SRC[p].lines.findIndex(l=>l.unclear&&!l.fixed);if(i>=0)el=$('#ln-'+i);}
+  else if(x==='notes'){el=document.querySelector('.note.agent');}
+  else if(S.view==='source'){const p=resolveProj('source');const i=SRC[p].lines.findIndex(l=>l.t===x);if(i>=0)el=$('#ln-'+i);}
+  else el=$('#pa-'+x)||$('#sl-'+x)||$('#it-'+x)||$('#as-'+x);
+  if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('flash');if(el.classList.contains('para')&&el.isContentEditable){placeCaretEnd(el);}}
+ }
+ const drop=$('#drop');
+ if(drop){
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+  drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles(e.dataTransfer.files);});
+ }
+}
+function placeCaretEnd(el){try{el.focus({preventScroll:true});const r=document.createRange();r.selectNodeContents(el);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}}
+function addFiles(files){
+ const p=S.scope==='all'?resolveProj('material'):S.scope;
+ [...files].forEach((f,i)=>{const k=/audio/.test(f.type)?'audio':/image/.test(f.type)?'image':/video/.test(f.type)?'video':/pdf/.test(f.type)?'doc':'text';
+  MAT.unshift({id:'u'+Date.now()+i,p,name:f.name,kind:k,meta:`${Math.max(1,Math.round(f.size/1024))} KB · kept in this page only — nothing uploaded`,by:'You · just now',state:'new',preview:'Preview of new files isn’t connected in this prototype.'});});
+ if(files.length){toast(`${files.length} added to ${PN(p)} — prototype, nothing uploaded`);render(true);}
+}
+let toastT;
+function toast(m){let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t);}t.textContent=m;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),2600);}
+function honest(btn,msg){
+ const host=btn.closest('.acts,.row,.thead,.tbar,.x,.status,p,.empty,div')||btn.parentElement;
+ let s=host.querySelector(':scope > .honest');
+ if(!s){s=document.createElement('span');s.className='honest';s.setAttribute('role','status');host.appendChild(s);}
+ s.textContent=msg;
+}
+
+/* ---------------- navigation ---------------- */
+function go(tool,p,x){
+ closeSheets();closePSheet();S.open=null;
+ if(tool==='material'){S.libInbox=true;tool='library';x=x||null;}
+ // Check is not a page: it pulls out beside the text you are reading or writing
+ if(T(tool)&&T(tool).pull){
+  if(S.view!=='write'&&S.view!=='read'){go('write',p);}
+  openDrawer(tool);return;
+ }
+ S.drawer=null;S.find=null;
+ if(S.view==='write'&&tool!=='write'){const wp=resolveProj('write');const d=DOCS[wp];if(d){const i=d.paras.findIndex(q=>q.id===d.last);S.ret={p:wp,pid:d.last,n:i+1};}}
+ if(p){ if(S.scope!=='all'&&S.scope!==p)S.scope=p; if(S.scope==='all')S.toolProj={[tool]:p}; S.work=p; }
+ if(tool==='write'&&!x){const d=DOCS[p||resolveProj('write')];if(d&&d.last)x=d.last;}
+ if(tool==='write'||tool==='read')S.ret=null;
+ S.view=tool;S.target=x||null;S.fixing=null;S.activeNote=null;
+ if(tool!=='write')document.body.classList.remove('focus');
+ render();
+}
+function setScope(p){S.scope=p;if(p!=='all')S.work=p;S.sel=0;closeSheets();render();}
+function closeSheets(){$('#gsheet').classList.remove('on');$('.scrim.f').classList.remove('on');}
+const isPhone=()=>matchMedia('(max-width:760px)').matches;
+function toggleUnd(){if(S.drawer&&S.drawer.k==='und')closeDrawer();else openDrawer('und');}
+function openThought(){
+ document.body.classList.remove('focus');
+ openDrawer('und');
+ setTimeout(()=>{const q=$('#quickT');if(q)q.focus();},60);
+}
+
+/* ---------------- finder ---------------- */
+let fsel=0,fitems=[];
+function openFinder(){$('#finder').classList.add('on');$('.scrim.f').classList.add('on');const q=$('#fq');q.value='';fsel=0;fillFinder();q.focus();}
+function closeFinder(){$('#finder').classList.remove('on');$('.scrim.f').classList.remove('on');}
+function fillFinder(){
+ const q=$('#fq').value.trim().toLowerCase();
+ /* Revision 3: pinned and recent first, then the rest; at fifty projects the search narrows it */
+ const PIN=['porc','harb'],REC=['oolong','ancha'];const ord=P.slice().sort((x,y)=>{const r=v=>PIN.includes(v.id)?0:REC.includes(v.id)?1:2;return r(x)-r(y);});
+ const pr=[{type:'scope',id:'all',label:'All projects',sub:'Everything active, one bench'}].concat(ord.map(p=>({type:'scope',id:p.id,label:p.name,sub:(PIN.includes(p.id)?'Pinned · ':REC.includes(p.id)?'Recent · ':'')+stateLine(p.id)})));
+ const tl=[{type:'tool',id:'bench',label:'The bench',sub:'Pick up and next moves'}].concat(TOOLS.map(t=>({type:'tool',id:t.id,label:t.label,sub:t.pull?t.g+' · pulls out beside your work':t.g})));
+ const f=a=>a.filter(x=>!q||(x.label+' '+x.sub).toLowerCase().includes(q));
+ const a=f(pr),b=f(tl);fitems=a.concat(b);if(fsel>=fitems.length)fsel=0;
+ let i=0;const row=x=>{const k=i++;return `<li><button class="${k===fsel?'sel':''}" data-act="fpick" data-k="${k}">${x.type==='scope'?`<span style="width:9px;height:9px;border-radius:2px;${x.id==='all'?'border:1.5px solid var(--warm)':'background:var(--warm)'}"></span>`:ic(x.id)}<span><b>${esc(x.label)}</b><br><span class="s">${esc(x.sub)}</span></span>${x.type==='scope'&&x.id===S.scope?'<span class="tag">current</span>':''}</button></li>`;};
+ $('#flist').innerHTML=(a.length?`<li class="gh">Projects</li>`+a.map(row).join(''):'')+(b.length?`<li class="gh">Tools</li>`+b.map(row).join(''):'')+(!fitems.length?'<li class="dim" style="padding:12px">Nothing matches.</li>':'');
+}
+function pickFinder(k){const x=fitems[k];if(!x)return;closeFinder();if(x.type==='scope')setScope(x.id);else go(x.id);}
+
+/* ---------------- drag reorder (pointer, works with touch) ---------------- */
+let drag=null;
+document.addEventListener('pointerdown',e=>{
+ const h=e.target.closest('[data-handle]');if(!h)return;
+ const item=h.closest('[data-idx]');if(!item)return;
+ e.preventDefault();drag={item,box:item.parentElement};item.classList.add('dragging');
+});
+document.addEventListener('pointermove',e=>{
+ if(!drag)return;
+ const el=document.elementFromPoint(e.clientX,e.clientY);const over=el&&el.closest('[data-idx]');
+ if(!over||over===drag.item||over.parentElement!==drag.box)return;
+ const kids=[...drag.box.children];const oi=kids.indexOf(over),di=kids.indexOf(drag.item);
+ drag.box.insertBefore(drag.item,oi>di?over.nextSibling:over);
+});
+function endDrag(){
+ if(!drag)return;
+ const order=[...drag.box.children].map(c=>+c.dataset.idx);const key=drag.box.dataset.sortable;
+ drag.item.classList.remove('dragging');drag=null;
+ const p=resolveProj('arrange');
+ if(key==='car'){const s=CAR[p].slides;CAR[p].slides=order.map(i=>s[i]);}
+ if(key==='art'){const s=DOCS[p].paras;DOCS[p].paras=order.map(i=>s[i]);}
+ render(true);
+}
+document.addEventListener('pointerup',endDrag);
+document.addEventListener('pointercancel',endDrag);
+
+/* ---------------- actions ---------------- */
+const A={
+ go:el=>go(el.dataset.tool,el.dataset.p||null,el.dataset.x||null),
+ ret:()=>{const r=S.ret;if(r)go('write',r.p,r.pid);},
+ scope:el=>setScope(el.dataset.p),
+ toolproj:el=>{S.toolProj[S.view]=el.dataset.p;S.work=el.dataset.p;S.fixing=null;render();},
+ finder:()=>openFinder(),
+ fpick:el=>pickFinder(+el.dataset.k),
+ closeall:()=>{closeFinder();closeSheets();},
+ und:()=>toggleUnd(),
+ thought:()=>openThought(),
+ theme:()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light';try{localStorage.setItem('arc-c-theme',r.dataset.theme);}catch(e){}renderTop();},
+ focus:()=>{document.body.classList.toggle('focus');if(document.body.classList.contains('focus')){S.drawer=null;S.find=null;}render(true);},
+ ptog:()=>togglePanel(),
+ pshow:()=>togglePanel(),
+ closepsheet:()=>closePSheet(),
+ gsheet:el=>{const g=el.dataset.g;const sh=$('#gsheet');if(sh.classList.contains('on')&&sh.dataset.g===g){sh.classList.remove('on');return;}sh.dataset.g=g;sh.innerHTML=`<div class="rk-gl"><span>${g}</span></div>`+shown().filter(t=>t.g===g).map(rackBtn).join('');sh.classList.add('on');},
+ honest:el=>honest(el,el.dataset.msg),
+ addthought:()=>{const q=$('#quickT');const v=q&&q.value.trim();if(!v){q&&q.focus();return;}U[curProj()].thoughts.unshift({t:v,w:'You · just now (not saved)'});renderDrawer();setTimeout(()=>{const n=$('#quickT');n&&n.focus();},0);},
+ size:el=>{zi=Math.max(0,Math.min(SIZES.length-1,zi+(+el.dataset.d)));applySize();renderTop();},
+ drawer:el=>{const k=el.dataset.k;if(S.drawer&&S.drawer.k===k&&(k!=='used'||S.drawer.id===el.dataset.id)){closeDrawer();return;}if(k==='check'&&S.view!=='write'&&S.view!=='read'){go('check');return;}openDrawer(k,el.dataset.id?{id:el.dataset.id}:null);},
+ closedrawer:()=>closeDrawer(),
+ find:el=>{S.find=el.dataset.id;document.querySelectorAll('.find.on').forEach(x=>x.classList.remove('on'));el.classList.add('on');if(!findPassage(el.dataset.ph,el.dataset.pid))toast('That wording isn’t in the text — nothing to highlight');},
+ pickfile:()=>$('#filein').click(),
+ processed:el=>{const m=MAT.find(x=>x.id===el.dataset.id);if(m)m.state='processed';render(true);},
+ pv:el=>{S.openPv[el.dataset.id]=!S.openPv[el.dataset.id];render(true);},
+ fixline:el=>{const i=+el.dataset.i;if(S.fixing===i)return;S.fixing=i;render(true);const b=$('#fixBox');if(b){b.focus();b.select();}},
+ cancelfix:()=>{S.fixing=null;render(true);},
+ savefix:el=>{const p=resolveProj('source');const l=SRC[p].lines[+el.dataset.i];const v=$('#fixBox').value.trim();
+  if(v&&v!==l.text){U[p].corrections.unshift({t:`${l.t} “${l.text.slice(0,40)}${l.text.length>40?'…':''}” → “${v.slice(0,40)}${v.length>40?'…':''}”`,w:'From Source · carries into Research, Write and outputs'});l.text=v;}
+  l.fixed=true;S.fixing=null;render(true);},
+ rpoint:el=>{S.research[resolveProj('research')]=el.dataset.id;render(true);},
+ level:el=>{const p=resolveProj('research');const r=RES[p].find(x=>x.id===el.dataset.id);r.level=el.dataset.l;S.research[p]=r.id;render(true);},
+ discuss:el=>{const p=resolveProj('research');const r=RES[p].find(x=>x.id===el.dataset.id);const v=$('#discuss').value.trim();if(!v)return;
+  r.thread.push({who:'you',text:v,when:'just now'});r.thread.push({who:'sys',text:'AI isn’t connected here yet — no answer was generated. Your question is kept with this point.'});S.research[p]=r.id;render(true);},
+ choose:el=>{const p=resolveProj('direction');const d=DIR[p];d.chosen=el.dataset.id;const a=d.angles.find(x=>x.id===d.chosen);
+  U[p].decisions.unshift({t:`Angle: ${a.title}`,w:'Just now · Direction'});
+  d.angles.filter(x=>x.id!==d.chosen).forEach(x=>{if(!U[p].rejected.some(r=>r.t===x.title))U[p].rejected.unshift({t:x.title,w:'Every piece in this project'});});
+  render(true);},
+ unchoose:()=>{const p=resolveProj('direction');DIR[p].chosen=null;render(true);},
+ newdir:()=>{const p=resolveProj('direction');DIR[p]={mine:'',chosen:null,angles:[]};render(true);},
+ newdoc:()=>{const p=resolveProj('write');DOCS[p]={title:'Untitled',kind:'Piece',last:'x1',paras:[{id:'x1',text:'Start here.'}],notes:[]};S.target='x1';render();},
+ note:(el,e)=>{
+  if(e&&e.target.closest('[data-act="resolve"]'))return;
+  const p=resolveProj('write');const n=DOCS[p].notes.find(x=>x.id===el.dataset.id);if(!n)return;
+  clearMarks();
+  document.querySelectorAll('.note.on').forEach(x=>x.classList.remove('on'));el.classList.add('on');S.activeNote=n.id;
+  const para=$('#pa-'+n.pid);if(!para)return;
+  if(!wrapPhrase(para,n.phrase))para.classList.add('flash');
+  para.scrollIntoView({block:'center',behavior:'smooth'});
+ },
+ resolve:el=>{const p=resolveProj('write');const n=DOCS[p].notes.find(x=>x.id===el.dataset.id);if(n)n.done=1;render(true);},
+ mfilt:el=>{S.mediaF=el.dataset.f;render(true);},
+ keepasset:el=>{const m=MEDIA.find(x=>x.id===el.dataset.id);if(m){m.isNew=0;m.by=m.by.replace('imported','imported')+' · kept by you';}render(true);},
+ setaside:el=>{const i=MEDIA.findIndex(x=>x.id===el.dataset.id);if(i>=0)MEDIA.splice(i,1);toast('Set aside — still in the Library, not in this project (prototype)');render(true);},
+ keepall:()=>{MEDIA.forEach(m=>{if(m.isNew&&(S.scope==='all'||m.p===S.scope)){m.isNew=0;m.by+=' · kept by you';}});render(true);},
+ amode:el=>{S.arrangeMode[resolveProj('arrange')]=el.dataset.m;render(true);},
+ aumode:el=>{S.audMode[resolveProj('audience')]=el.dataset.m;render(true);},
+ accept:el=>{const s=CAR[resolveProj('arrange')].slides.find(x=>x.id===el.dataset.id);if(s){delete s.draft;delete s.prev;}render(true);},
+ discard:el=>{const s=CAR[resolveProj('arrange')].slides.find(x=>x.id===el.dataset.id);if(s){s.text=s.prev||'';delete s.draft;delete s.prev;}render(true);},
+ addslide:()=>{const c=CAR[resolveProj('arrange')];c.slides.push({id:'s'+Date.now(),text:'New slide — type here'});render(true);}
+};
+function wrapPhrase(el,phrase){
+ const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let node;
+ while((node=walker.nextNode())){const i=node.nodeValue.indexOf(phrase);if(i>=0){const r=document.createRange();r.setStart(node,i);r.setEnd(node,i+phrase.length);const m=document.createElement('mark');try{r.surroundContents(m);}catch(e){return false;}return true;}}
+ // phrase may span a protected-phrase span: fall back to whole-text search
+ if(el.textContent.includes(phrase)){el.classList.add('flash');return true;}
+ return false;
+}
+
+document.addEventListener('click',e=>{
+ const el=e.target.closest('[data-act]');if(!el)return;
+ if(e.target.closest('[data-stop]')&&el.dataset.act==='fixline')return;
+ if(el.dataset.act==='honest'||el.getAttribute('aria-disabled')==='true'){e.preventDefault();honest(el,el.dataset.msg||'Not connected yet.');return;}
+ const f=A[el.dataset.act];if(f){if(el.tagName==='A')e.preventDefault();f(el,e);}
+});
+
+/* ---------------- editing binds (no re-render while typing) ---------------- */
+document.addEventListener('input',e=>{
+ const t=e.target;
+ if(t.id==='mineBox'){U[curProj()].mine=t.value;return;}
+ if(t.id==='aq'){S.q=t.value;S.sel=0;const pos=t.selectionStart;render(true);const n=$('#aq');if(n){n.focus();n.setSelectionRange(pos,pos);}return;}
+ if(t.id==='fq'){fsel=0;fillFinder();return;}
+ if(t.dataset.bind==='dir'){DIR[resolveProj('direction')].mine=t.value;return;}
+ if(t.dataset.bind==='title'){DOCS[resolveProj('write')].title=t.textContent;return;}
+ if(t.dataset.pid){const p=resolveProj('write');const x=DOCS[p].paras.find(q=>q.id===t.dataset.pid);if(x){x.text=t.innerText.replace(/\n+$/,'');DOCS[p].last=x.id;}return;}
+ if(t.dataset.sid){const s=CAR[resolveProj('arrange')].slides.find(q=>q.id===t.dataset.sid);if(s)s.text=t.innerText;return;}
+});
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.pid&&S.view==='write'){const d=DOCS[resolveProj('write')];if(d)d.last=t.dataset.pid;}});
+$('#filein').addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
+
+/* ---------------- keyboard ---------------- */
+const typing=t=>t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable);
+document.addEventListener('keydown',e=>{
+ const k=e.key;
+ if((e.metaKey||e.ctrlKey)&&k.toLowerCase()==='k'){e.preventDefault();$('#finder').classList.contains('on')?closeFinder():openFinder();return;}
+ if($('#finder').classList.contains('on')){
+  if(k==='Escape'){closeFinder();return;}
+  if(k==='ArrowDown'){e.preventDefault();fsel=Math.min(fitems.length-1,fsel+1);fillFinder();return;}
+  if(k==='ArrowUp'){e.preventDefault();fsel=Math.max(0,fsel-1);fillFinder();return;}
+  if(k==='Enter'){e.preventDefault();pickFinder(fsel);return;}
+  return;
+ }
+ if(k==='Escape'&&S.drawer){closeDrawer();return;}
+ if(k==='Escape'){if(document.body.classList.contains('focus')){document.body.classList.remove('focus');render(true);}closeSheets();if(S.fixing!=null){S.fixing=null;render(true);}return;}
+ if(e.target.id==='quickT'&&k==='Enter'){e.preventDefault();A.addthought();return;}
+ if(e.target.id==='aq'&&(k==='ArrowDown'||k==='ArrowUp'||k==='Enter')){e.preventDefault();benchKey(k==='ArrowDown'?'j':k==='ArrowUp'?'k':'Enter');return;}
+ if(e.target.classList&&e.target.classList.contains('tline')&&k==='Enter'){A.fixline(e.target);return;}
+ if(typing(e.target)||e.metaKey||e.ctrlKey||e.altKey)return;
+ if(k==='t'||k==='T'){e.preventDefault();openThought();return;}
+ if(k==='['){togglePanel();return;}
+ if(k===']'){toggleUnd();return;}
+ if(k==='/'&&S.view==='bench'){e.preventDefault();const a=$('#aq');a&&a.focus();return;}
+ if(S.view==='bench'&&(k==='j'||k==='k'||k==='Enter'))benchKey(k);
+});
+function benchKey(k){
+ const rows=[...document.querySelectorAll('#alist .arow')];if(!rows.length)return;
+ if(k==='j')S.sel=Math.min(rows.length-1,S.sel+1);
+ else if(k==='k')S.sel=Math.max(0,S.sel-1);
+ else if(k==='Enter'){rows[S.sel]&&setScope(rows[S.sel].dataset.p);return;}
+ rows.forEach((r,i)=>r.classList.toggle('sel',i===S.sel));rows[S.sel].scrollIntoView({block:'nearest'});
+}
+
+/* Revision 3: scale.js extends these (Library, Collections, Pieces, research console, templates) */
+window.ARC={PANEL,renderPanel,panelBtn,railId,hasPanel,panelOpen,setPanel,closePSheet,openPSheet,SRC,S,V,A,DR,DR_TABS,DR_TITLE,NOTABS,DR_SUB,TOOLS,GROUPS,I,P,PN,T,HAS,COUNT,CROSS,DOCS,CAR,RES,U,MEDIA,MAT,OUT,DIR,esc,ic,render,renderDrawer,renderRack,renderTop,openDrawer,closeDrawer,go,toast,head,emptyFor,resolveProj,curProj,docProj,isPhone,honest,setScope,fillFinder,stateLine,moves,resume};
+render();
+})();
+</script>
+<script src="scale.js">
+</script>
+<script src="media.js"></script>
+</body>
+</html>

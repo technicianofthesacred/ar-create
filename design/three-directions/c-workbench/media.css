@@ -1,0 +1,180 @@
+/* Revision 4 — Media at scale and the Arrange photo picker.
+   Same five type tokens and three weights; the only images are invented gradients. */
+.lb.k-med .vhead,.lb.k-med .vrow{grid-template-columns:30px 30px minmax(0,2.4fr) 6.5rem 6.5rem minmax(0,1.3fr) 5.5rem}
+.mth{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;color:rgba(255,255,255,.8);flex:none}
+.mth .ic.sm{width:12px;height:12px}
+.vrow .ti .fn{color:var(--dim);font-size:var(--t-label);margin-left:4px}
+.nw{font-size:var(--t-label);font-weight:500;color:var(--warm)}
+.cline .mtog{margin-left:auto}
+.mtog{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.mtog button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;color:var(--dim);font-size:var(--t-label)}
+.mtog button+button{border-left:1px solid var(--line)}
+.mtog button.on{background:var(--sel);color:var(--ink)}
+/* grid mode: same rows as tiles, virtualised a tile-row at a time */
+.lb.mode-grid .vhead{grid-template-columns:30px auto minmax(0,1fr)}
+.lb.mode-grid .vhead .gsel{color:var(--dim)}
+.lb.mode-grid .vhead .gsort{display:flex;gap:14px;justify-content:flex-end;overflow:hidden}
+.vtile{position:absolute;display:flex;flex-direction:column;gap:2px;border-radius:8px;padding:0;font-size:var(--t-label);color:var(--dim)}
+.vtile .cbw{position:absolute;left:4px;top:4px;width:26px;height:26px;z-index:1;background:rgba(0,0,0,.35);border-radius:6px}
+.vtile .cbw .cb{border-color:rgba(255,255,255,.75)}
+.vtile .cbw{opacity:0;transition:opacity .12s}
+.vtile:hover .cbw,.vtile.sel .cbw,.vtile .cbw:focus-within,.lb.mode-grid.has-sel .vtile .cbw{opacity:1}
+.vtile .mt-img{position:relative;width:100%;aspect-ratio:1/1;border-radius:7px;display:block}
+.vtile.sel .mt-img{outline:2px solid var(--warm);outline-offset:-2px}
+.vtile.cur .mt-img{box-shadow:0 0 0 2px var(--warm)}
+.vtile .mt-img .vd{position:absolute;right:6px;bottom:6px;display:inline-flex;align-items:center;gap:3px;background:rgba(0,0,0,.55);color:#eee;border-radius:4px;padding:0 5px;font-size:var(--t-label)}
+.vtile .mt-img .vd .ic.sm{width:11px;height:11px}
+.vtile .mt-img .nw{position:absolute;right:6px;top:6px;background:rgba(0,0,0,.55);border-radius:4px;padding:0 5px}
+.vtile .mt-t{color:var(--ink);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.vtile .mt-t:hover{text-decoration:underline;text-decoration-color:var(--warm)}
+.vtile .mt-m{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;font-variant-numeric:tabular-nums}
+.vtile.dragging{opacity:.5}
+/* preview drawer: one item */
+.mpv{position:relative;border-radius:8px;overflow:hidden;background:var(--rail);display:grid;place-items:center}
+.mpv img{display:block;width:100%;height:auto;max-height:46vh;object-fit:contain}
+.mpv .vd{position:absolute;left:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);color:#eee;border-radius:4px;padding:1px 6px;font-size:var(--t-label)}
+/* Arrange: one-line photo slot strip under a render */
+.slots{display:flex;align-items:center;gap:4px;min-height:28px;min-width:0}
+.slots .sl{width:26px;height:26px;border-radius:5px;flex:none;border:1px solid var(--line);font-size:var(--t-label);color:var(--dim);display:grid;place-items:center}
+.slots .sl.vacant{border-style:dashed}
+.slots .sl:hover{border-color:var(--warm)}
+.slots .sln{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;margin-left:4px}
+.slide2 .tplr[data-rsid],.postwrap .tplr[data-rsid]{cursor:pointer}
+.slide2 .tplr[data-rsid]:hover,.postwrap .tplr[data-rsid]:hover{box-shadow:0 0 0 2px color-mix(in srgb,var(--warm) 60%,transparent)}
+/* the picker: a sheet over the work area only (the rack stays visible) */
+#mpicker{position:fixed;left:calc(var(--rackw) + 10px);top:58px;right:10px;bottom:10px;z-index:62;background:var(--bg);border:1px solid var(--line);border-radius:12px;display:none;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.5);padding:12px 14px 14px}
+#mpicker.on{display:flex}
+#mpicker .pkh{display:flex;align-items:center;gap:8px 12px;margin-bottom:10px;flex-wrap:wrap}
+#mpicker .pkh h2{flex:1 1 auto}
+#mpicker .pkh>.dim{flex:1 1 100%;order:3}
+.mptabs{display:inline-flex;gap:4px;flex-wrap:wrap}
+.mptabs button{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 8px 0 3px;border:1px solid var(--line);border-radius:7px;font-size:var(--t-label);color:var(--dim)}
+.mptabs button.on{border-color:var(--warm);color:var(--ink)}
+.mptabs .sl{width:22px;height:22px;border-radius:4px;border:1px dashed var(--line);display:grid;place-items:center}
+@media (max-width:760px){
+ .lb.k-med .vrow{grid-template-columns:30px 44px minmax(0,1fr)}
+ .lb.k-med .vrow .mth{width:40px;height:40px}
+ .lb.k-med .vrow .ti .fn{display:none}
+ .lb.mode-grid .vhead{display:grid;height:36px}
+ .lb.mode-grid .vhead .gsort{display:none}
+ .vtile .cbw{opacity:1}
+ #mpicker{inset:0;border-radius:0;padding:10px}
+ .cline .mtog{margin-left:0}
+}
+
+/* ================================================================
+   Revision 5 — rail and section panel; the work gets the room.
+   Same five type tokens and three weights.
+   ================================================================ */
+/* the panel: the tree sits straight on the panel, no box */
+#spanel .tree.t5{border:0;background:none;padding:0;overflow:visible}
+#spanel .tn,#psheet .tn{font-size:var(--t-body);min-height:32px}
+#spanel .tn .cnt,#psheet .tn .cnt{margin-left:auto}
+#spanel .tfoot,#psheet .tfoot{padding:8px 8px 0}
+.plist5{display:flex;flex-direction:column;gap:1px}
+.plist5 .pi,.plist5 .pgh,.plist5 .pp{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:4px 8px;border-radius:6px;color:var(--dim);text-align:left}
+.plist5 .pi:hover,.plist5 .pgh:hover,.plist5 .pp:hover{background:var(--sel);color:var(--ink)}
+.plist5 .on{background:var(--sel);color:var(--ink)}
+.plist5 .pt{flex:1;min-width:0;display:flex;flex-direction:column}
+.plist5 .pn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plist5 .pt .pn{color:var(--ink)}
+.plist5 .ps{font-size:var(--t-label);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plist5 .pgh .pn{color:inherit;font-weight:500}
+.plist5 .pps{display:flex;flex-direction:column;gap:1px;padding:2px 0 6px 10px}
+.plist5 .pp{font-size:var(--t-label);min-height:30px}
+.plist5 .pp .n{width:1.2em;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+.plist5 .pp .lv{flex:none}
+.plist5 .pkh{font-size:var(--t-label);font-weight:500;color:var(--dim);padding:12px 8px 4px}
+.plist5 .pe{color:var(--dim);font-size:var(--t-label);padding:8px}
+.qm{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid color-mix(in srgb,var(--warm) 60%,transparent);color:var(--warm);font-size:var(--t-label);font-weight:500;line-height:1;flex:none}
+
+/* one title line: section › folder path, then the count */
+.thead.t5{flex-wrap:nowrap;margin-bottom:12px;min-width:0}
+.crumb5{display:flex;align-items:baseline;gap:6px;min-width:0;overflow:hidden;white-space:nowrap}
+.crumb5 button,.crumb5 span{font:inherit}
+.crumb5 .crr{font-weight:600}
+.crumb5 .crp{font-weight:400;color:var(--dim);overflow:hidden;text-overflow:ellipsis;min-width:0}
+.crumb5 .crp.last{font-weight:600;color:var(--ink)}
+.crumb5 button:hover{text-decoration:underline;text-decoration-color:var(--warm)}
+.crumb5 .crs{color:var(--dim);font-weight:400}
+.tcount{font-size:var(--t-label);color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.thead.t5 .sp{flex:1}
+.thead.t5 .tag,.thead.t5 .btn{flex:none}
+.back5{margin-left:-12px}
+.back5 .flip{transform:rotate(180deg)}
+.qline{display:flex;align-items:center;gap:8px;margin:-6px 0 12px;font-size:var(--t-label);color:var(--warm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* the list, unboxed */
+.lb.compact{display:flex;flex-direction:column;border:0;border-radius:0;background:none;overflow:visible}
+.lb.compact .lbm{flex:1;min-height:0;container-type:inline-size}
+.ftool{display:flex;align-items:center;gap:8px;padding:0 0 8px;flex-wrap:wrap}
+.ftool .sp{flex:1}
+.ftool .fsearch{flex:0 1 20rem}
+.ftool .btn{min-height:32px}
+.fchip{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 6px 0 9px;border-radius:7px;background:color-mix(in srgb,var(--warm) 16%,transparent);color:var(--ink);font-size:var(--t-label)}
+.fchip .ic.sm{width:12px;height:12px;color:var(--dim)}
+.fpanel{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 8px}
+.lb.compact .views{padding:2px 0 6px;border-bottom:1px solid var(--line)}
+.lb.compact .cline{padding:6px 8px;border-bottom:1px solid var(--line)}
+.lb.compact .vhead{background:none}
+.lb.compact .vhead,.lb.compact .vrow{padding-left:0}
+/* titles get the width; secondary columns drop off before titles truncate */
+@media (min-width:761px){
+ .lb.compact.k-lib .vhead,.lb.compact.k-lib .vrow{grid-template-columns:30px 22px minmax(0,1fr) 9rem 6.5rem 8rem 5.5rem 6rem}
+ .lb.compact.k-pce .vhead,.lb.compact.k-pce .vrow{grid-template-columns:30px 22px minmax(0,1fr) 8rem 7rem 10rem 4.5rem 5.5rem}
+ .lb.compact.k-med:not(.mode-grid) .vhead,.lb.compact.k-med .vrow{grid-template-columns:30px 30px minmax(0,1fr) 6.5rem 6.5rem 10rem 5.5rem}
+ @container (max-width:1040px){
+  .lb.compact.k-lib .vhead,.lb.compact.k-lib .vrow{grid-template-columns:30px 22px minmax(0,1fr) 9rem 6.5rem 5.5rem 6rem}
+  .lb.compact.k-pce .vhead,.lb.compact.k-pce .vrow{grid-template-columns:30px 22px minmax(0,1fr) 8rem 7rem 4.5rem 5.5rem}
+  .lb.compact.k-lib .vhead>:nth-child(6),.lb.compact.k-lib .vrow>:nth-child(6),
+  .lb.compact.k-pce .vhead>:nth-child(6),.lb.compact.k-pce .vrow>:nth-child(6){display:none}
+ }
+ @container (max-width:820px){
+  .lb.compact.k-lib .vhead,.lb.compact.k-lib .vrow{grid-template-columns:30px 22px minmax(0,1fr) 9rem 6.5rem 6rem}
+  .lb.compact.k-pce .vhead,.lb.compact.k-pce .vrow{grid-template-columns:30px 22px minmax(0,1fr) 8rem 7rem 5.5rem}
+  .lb.compact.k-lib .vhead>:nth-child(7),.lb.compact.k-lib .vrow>:nth-child(7),
+  .lb.compact.k-pce .vhead>:nth-child(7),.lb.compact.k-pce .vrow>:nth-child(7){display:none}
+  .lb.compact.k-med:not(.mode-grid) .vhead,.lb.compact.k-med .vrow{grid-template-columns:30px 30px minmax(0,1fr) 6.5rem 6.5rem 5.5rem}
+  .lb.compact.k-med:not(.mode-grid) .vhead>:nth-child(6),.lb.compact.k-med .vrow>:nth-child(6){display:none}
+ }
+ @container (max-width:620px){
+  .lb.compact.k-lib .vhead,.lb.compact.k-lib .vrow,.lb.compact.k-pce .vhead,.lb.compact.k-pce .vrow{grid-template-columns:30px 22px minmax(0,1fr) 6.5rem}
+  .lb.compact.k-lib .vhead>:nth-child(4),.lb.compact.k-lib .vrow>:nth-child(4),.lb.compact.k-lib .vhead>:nth-child(8),.lb.compact.k-lib .vrow>:nth-child(8),
+  .lb.compact.k-pce .vhead>:nth-child(4),.lb.compact.k-pce .vrow>:nth-child(4),.lb.compact.k-pce .vhead>:nth-child(8),.lb.compact.k-pce .vrow>:nth-child(8){display:none}
+  .lb.compact.k-med:not(.mode-grid) .vhead,.lb.compact.k-med .vrow{grid-template-columns:30px 30px minmax(0,1fr) 6.5rem}
+  .lb.compact.k-med:not(.mode-grid) .vhead>:nth-child(4),.lb.compact.k-med .vrow>:nth-child(4),.lb.compact.k-med:not(.mode-grid) .vhead>:nth-child(7),.lb.compact.k-med .vrow>:nth-child(7){display:none}
+ }
+}
+
+/* an opened item, in the work area */
+.det5 .dscroll{flex:1;min-height:0;overflow-y:auto}
+.odet .pvh{display:none}
+.odet.k-lib,.odet.k-pce{max-width:44rem}
+.odet.k-med{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(16rem,1fr);gap:24px;align-items:start}
+.odet.k-med .mpv img{max-height:calc(100dvh - 150px)}
+.odet .kv{margin-top:0}
+@media (max-width:900px){.odet.k-med{grid-template-columns:minmax(0,1fr)}.odet.k-med .mpv img{max-height:56vh}}
+
+/* Research with its points in the panel: the work shows the open point and the console */
+body.has-panel.v-research .rp:not(.on){display:none}
+body.has-panel.v-research .rp.on{pointer-events:none}
+
+@media (max-width:760px){
+ .thead.t5{flex-wrap:wrap;row-gap:6px}
+ .ftool .fsearch{flex:1 1 100%;max-width:none}
+ .lb.compact .views{overflow-x:auto}
+ .odet.k-lib,.odet.k-pce{max-width:none}
+}
+
+/* Revision 6 — Adrian: fewer numbers, Read = Write, panel reads as an expansion of the selected rail item */
+:root{--panel:color-mix(in srgb,var(--rail) 45%,var(--sel))}
+#rack .cnt,#bbar .cnt{display:none}
+html body #spanel{background:var(--panel)}
+html body .rl.on{background:var(--panel)}
+html body.has-panel .rl.on{border-radius:8px 0 0 8px;margin-right:-3px;width:calc(100% + 3px)}
+#spanel .tn .cnt,#psheet .tn .cnt{background:none;color:var(--dim);font-weight:400;min-width:0;padding:0;opacity:0;transition:opacity .12s}
+#spanel .tn:hover .cnt,#spanel .tn.on .cnt,#psheet .tn:hover .cnt,#psheet .tn.on .cnt{opacity:1}
+#spanel .tn.on{background:color-mix(in srgb,var(--sel) 70%,var(--ink) 6%)}
+.wrow>.margin{height:0;overflow:visible;position:relative;z-index:1}
+#spanel .tn .tc,#psheet .tn .tc{opacity:0;transition:opacity .12s}
+#spanel .tn:hover .tc,#spanel .tn.on .tc,#psheet .tn:hover .tc,#psheet .tn.on .tc{opacity:1}

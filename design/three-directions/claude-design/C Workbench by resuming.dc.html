@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>C Workbench by resuming</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet data-dc-atomics>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Lora:wght@400;500&amp;display=swap" rel="stylesheet" />
+        <style>
+          body{margin:0;background:#141310}
+          a{color:#c9a874;text-decoration:none}
+          a:hover{text-decoration:underline}
+          .pg{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;background:var(--bg);color:var(--ink);font:15px/1.55 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;padding:40px 24px 80px}
+          .wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+          .kick{color:var(--warm);font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0}
+          .h1{font-size:32px;font-weight:700;line-height:1.15;margin:6px 0 10px;text-wrap:balance}
+          .lede{color:var(--dim);font-size:17px;max-width:760px;margin:0;text-wrap:pretty}
+          .h2{font-size:18px;font-weight:600;margin:0 0 6px}
+          .sub{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:760px}
+          .frames{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:20px;align-items:start}
+          .fr{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+          .frl{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)}
+          .ifd{display:block;width:100%;height:760px;border:0;background:var(--bg)}
+          .ifm{display:block;width:390px;height:760px;border:0;background:var(--bg)}
+          .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px}
+          .row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px 16px;padding:10px 0;border-top:1px solid var(--line)}
+          .rk{color:var(--dim);font-size:13px}
+          .crit{display:grid;grid-template-columns:36px 210px 96px minmax(0,1fr);gap:4px 14px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
+          .num{color:var(--warm);font-weight:600;font-size:13px}
+          .v{font-size:12px;padding:1px 8px;border-radius:4px;border:1px solid;justify-self:start}
+          .v.meets{color:var(--good);border-color:var(--good)}
+          .v.partial{color:var(--warnc);border-color:var(--warnc)}
+          .v.missing{color:var(--bad);border-color:var(--bad)}
+          .score{display:flex;gap:16px;font-size:14px;color:var(--dim);margin:0 0 8px}
+          .fixes{display:flex;flex-direction:column;gap:28px}
+          .fix{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;border-top:1px solid var(--line);padding-top:20px}
+          .ft{font-size:16px;font-weight:600;margin:4px 0 8px}
+          .fb{color:var(--dim);margin:0 0 8px;text-wrap:pretty}
+          .ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+          .mock{border:1px solid var(--line);border-radius:8px;background:var(--bg);overflow:hidden;font-size:13px}
+          .mock.after{border-color:var(--warm)}
+          .ml{padding:6px 10px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
+          .mock.after .ml{color:var(--warm)}
+          .mb{padding:12px;display:flex;flex-direction:column;gap:8px;min-height:180px}
+          .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+          .blk{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+          .tag{font-size:11px;padding:1px 6px;border:1px solid var(--line);border-radius:4px;color:var(--dim)}
+          .tag.w{color:var(--warm);border-color:var(--warm)}
+          .tag.s{color:var(--warnc);border-color:var(--warnc)}
+          .hl{background:color-mix(in srgb,var(--warm) 22%,transparent);border-radius:2px}
+          .ms{font-family:system-ui,sans-serif;font-size:14px;line-height:1.6}
+          .dimt{color:var(--dim)}
+          .stack{display:flex;flex-direction:column;gap:6px}
+          .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px}
+          .note{border-top:1px solid var(--line);padding-top:16px;color:var(--dim);font-size:13px}
+          .cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+          .cmph{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}
+          .ifc{display:block;width:100%;height:620px;border:0;background:var(--bg)}
+          .tbl{display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr));gap:0 16px}
+          .tbl > div{padding:10px 0;border-top:1px solid var(--line)}
+          .th{color:var(--dim);font-size:13px}
+          @media (max-width:1000px){.frames,.fix,.cmp{grid-template-columns:minmax(0,1fr)}.crit{grid-template-columns:36px minmax(0,1fr)}.tbl{grid-template-columns:minmax(0,1fr)}}
+        </style>
+      </helmet>
+      <div class="pg" data-screen-label="C Workbench by resuming">
+        <div class="wrap">
+          <div>
+            <p class="kick">Direction C · Revision 2 · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Start%20here.dc.html" target="_top">Start here</a> · <a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=Compare.dc.html" target="_top">Compare</a></p>
+            <h1 class="h1">Workbench by resuming</h1>
+            <p class="lede">The opening screen answers two questions across every project: what was I doing, and what is the next useful move. The twelve sections are tools on a rack, not stations in an order; a right-hand column carries the project&#x27;s understanding and your own thoughts into every tool.</p>
+          </div>
+          <div>
+            <h2 class="h2">The prototype</h2>
+            <p class="sub">Live and clickable. Invented content; nothing saves, no AI runs. Built by another session — this canvas shows it unedited.</p>
+            <div class="frames">
+              <div class="fr"><div class="frl"><span>Desktop</span><a href="https://claude.ai/design/p/dac191b6-fa50-432b-983f-a27966fdd3ee?file=prototypes%2Fc-workbench%2Findex.html" target="_top">Open full screen →</a></div><iframe class="ifd" src="prototypes/c-workbench/index.html" title="Direction C desktop"></iframe></div>
+              <div class="fr"><div class="frl"><span>Phone · 390px</span></div><iframe class="ifm" src="prototypes/c-workbench/index.html" title="Direction C phone"></iframe></div>
+            </div>
+          </div>
+          <div class="two">
+            <div>
+              <h2 class="h2">From the builder's notes</h2>
+              <div class="row"><span class="rk">Revision 2</span><span>After Adrian&#x27;s feedback: one type scale (13/15/16/17px, weights 400–600), two columns at most (rack + work), Understanding, Check and History in one right-hand pull-out drawer, A− / A+ text size, Read and Write set as the same document.</span></div>
+              <div class="row"><span class="rk">Opening</span><span>The bench: one card for the last piece with the paragraph you were in and &quot;Since you were here&quot; (actor-labelled), then Next moves across all projects, then every active project on one line.</span></div>
+              <div class="row"><span class="rk">Switching</span><span>One-line project switcher top left, ⌘K finder over projects and tools, a twelve-tool rack with honest counts, an &quot;In:&quot; strip when the scope is All.</span></div>
+              <div class="row"><span class="rk">Best at</span><span>Coming back after a gap, juggling six or more pieces, seeing agent work with its actor where it matters.</span></div>
+              <div class="row"><span class="rk">Costs</span><span>Suggests rather than guides; counts must be true or the bench lies; three columns are dense at 1280px; ranking of next moves is hand-ordered.</span></div>
+              <div class="row"><span class="rk">To build</span><span>Sidebar becomes rack with counts; new bench route needs last-edited position, a changes-since feed and a next-moves query; global scope; inspector becomes the understanding column; deep links into lines, slides and assets.</span></div>
+            </div>
+            <div>
+              <h2 class="h2">Critique in one paragraph</h2>
+              <p class="fb" style="color:var(--ink)">C is the strongest answer to &quot;where was I&quot; and &quot;which project&quot;: the bench is inviting, specific and honest about who did what, and every next move lands on the exact line or slide. Its weakness is the right-hand understanding column. It is useful, but it is open on every tool, it competes with Write&#x27;s own editorial margin, it splits Adrian&#x27;s own words between two boxes, and under All projects it shows one project while the work shows another. Fix the column and C needs very little else.</p>
+            </div>
+          </div>
+          <div>
+            <h2 class="h2">Against the 13 must-haves</h2>
+            <p class="sub">This critique and the three fixes were written against revision 1. Revision 2 removes the permanent understanding column (fix 1) and gives Write a single right-hand drawer (fix 2); fix 3, one home for Adrian&#x27;s words, is not yet checked against it.</p>
+            <p class="score"><span>Meets 9</span><span>Partial 4</span><span>Missing 0</span></p>
+            <div class="crit"><span class="num">01</span><span>Where am I, what can I do</span><span class="v meets">Meets</span><span class="dimt">The bench leads with one card, one button (Continue at ¶4) and a short list of next moves. No manual needed.</span></div>
+            <div class="crit"><span class="num">02</span><span>Many projects: find and switch</span><span class="v meets">Meets</span><span class="dimt">One-line switcher, ⌘K finder, &quot;Everything active&quot; list with j/k, and the In: strip under All.</span></div>
+            <div class="crit"><span class="num">03</span><span>A place for my own words</span><span class="v partial">Partial</span><span class="dimt">Two boxes: &quot;Your thoughts — Adrian&quot; in the column and &quot;What I want this to say — Adrian&quot; in Direction. It is not clear they are the same record, or which one an agent reads.</span></div>
+            <div class="crit"><span class="num">04</span><span>Where I left off + understanding</span><span class="v meets">Meets</span><span class="dimt">Resume card quotes the paragraph; Current understanding heads the column.</span></div>
+            <div class="crit"><span class="num">05</span><span>Material ≠ Source</span><span class="v meets">Meets</span><span class="dimt">Material is an intake list (bring in, open in Source, mark processed). Source is a timed transcript where you click a line to correct it. Keep/remove review is honestly stubbed.</span></div>
+            <div class="crit"><span class="num">06</span><span>Research: evidence, uncertainty, one point</span><span class="v meets">Meets</span><span class="dimt">Claims marked Refuted / Likely / Unsure / Disputed, evidence quoted, &quot;Discuss this point&quot; shown as not connected yet.</span></div>
+            <div class="crit"><span class="num">07</span><span>Write feels like a document</span><span class="v partial">Partial</span><span class="dimt">Margin, highlight-on-click and Focus all work, but with the rack, margin and understanding column open the manuscript is squeezed; two right-hand rails both carry notes.</span></div>
+            <div class="crit"><span class="num">08</span><span>Carousel as a whole sequence</span><span class="v meets">Meets</span><span class="dimt">All slides on one canvas, edit text in place, drag grips to reorder, Codex slide marked not accepted.</span></div>
+            <div class="crit"><span class="num">09</span><span>Media shows where used</span><span class="v partial">Partial</span><span class="dimt">&quot;Used in&quot; appears on kept items lower down; the new-import cards you see first don&#x27;t show it, so placement is hidden at the decision point.</span></div>
+            <div class="crit"><span class="num">10</span><span>Arrange vs Audience vs Export</span><span class="v meets">Meets</span><span class="dimt">Arrange composes, Audience says it is for looking not editing, Export lives in Outputs. Three distinct jobs.</span></div>
+            <div class="crit"><span class="num">11</span><span>One origin → several outputs</span><span class="v meets">Meets</span><span class="dimt">Outputs shows the recording first, then article, carousel, caption and shared note, each with its own state and tool.</span></div>
+            <div class="crit"><span class="num">12</span><span>Carry-forward visible</span><span class="v meets">Meets</span><span class="dimt">Decisions, protected phrases, corrections and rejected angles, each with where it applies; choosing an angle moves the other to Rejected.</span></div>
+            <div class="crit"><span class="num">13</span><span>No stacked headers, extra sidebars</span><span class="v partial">Partial</span><span class="dimt">The understanding column is a third persistent rail on every tool. Under All projects it names the project you were working in while the screen lists all of them; on phone the sheet stays open over the work.</span></div>
+          </div>
+          <div>
+            <h2 class="h2">Top three fixes, as variants</h2>
+            <p class="sub">Proposals only. The prototype file is not changed; these sketches show the structural change in the same look.</p>
+            <div class="fixes">
+            <div class="fix" data-screen-label="C fix 1">
+              <div>
+                <span class="num">Fix 1 · must-have 13 · 2</span>
+                <p class="ft">The column follows the scope and starts closed under All</p>
+                <p class="fb">Under All projects the Material screen lists every project while the column stays on Porcelain and Tea, the project you were last working in. The screen and the column give two answers to &quot;where am I&quot;.</p>
+                <p class="fb">When the scope is All, close the column and put a one-line &quot;Understanding: pick a project&quot; link in its place. It opens only when a single project is in scope or an item is selected, and its header names that project. On phone it never opens by itself.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="bar"><span class="tag">All projects</span><span class="dimt">Material · 9 items, 5 projects</span></div><div class="cols" style="grid-template-columns:2fr 1fr"><div class="stack"><div class="blk">harbour-night-0914.m4a</div><div class="blk">Kiln visit with Mr. Lin</div><div class="blk">Spring Oolong — supplier sheet</div></div><div class="blk stack"><span class="tag w">Understanding · Porcelain and Tea</span><span class="dimt">The piece is about what a vessel keeps…</span></div></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="bar"><span class="tag">All projects</span><span class="dimt">Material · 9 items, 5 projects</span><span style="margin-left:auto" class="tag w">Understanding ▸ pick a project</span></div><div class="stack"><div class="blk">harbour-night-0914.m4a <span class="tag">Harbour</span></div><div class="blk">Kiln visit with Mr. Lin <span class="tag">Porcelain</span></div><div class="blk">Spring Oolong — supplier sheet <span class="tag">Oolong</span></div></div><span class="dimt">Full width for the cross-project list. Select an item and the column opens for its project.</span></div></div>
+              </div>
+            </div>
+            <div class="fix" data-screen-label="C fix 2">
+              <div>
+                <span class="num">Fix 2 · must-have 7 · 13</span>
+                <p class="ft">Write has one right-hand rail</p>
+                <p class="fb">In Write the editorial margin and the understanding column sit side by side and both carry notes and decisions. The manuscript gets the leftover width.</p>
+                <p class="fb">In Write the column folds into a single line above the margin: &quot;Carries forward: 2 decisions · 3 protected · 1 correction&quot;. Clicking it expands inside the margin. Protected phrases stay underlined in the text. Focus hides the margin as before.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="cols" style="grid-template-columns:28px 2fr 1fr 1fr"><div class="blk"></div><div class="blk ms">Clay is different. A Yixing pot remembers…</div><div class="blk dimt">Margin · Codex suggested…</div><div class="blk dimt">Understanding · Decisions · Protected</div></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="cols" style="grid-template-columns:28px 3fr 1fr"><div class="blk"></div><div class="blk ms">Clay is different. A Yixing pot remembers… <span class="hl">what you want the cup to remember</span></div><div class="stack"><span class="tag w">Carries forward: 2 · 3 · 1 ▾</span><div class="blk dimt">Margin · Codex suggested…</div><div class="blk dimt">Margin · Claude checked…</div></div></div></div></div>
+              </div>
+            </div>
+            <div class="fix" data-screen-label="C fix 3">
+              <div>
+                <span class="num">Fix 3 · must-have 3 · 12</span>
+                <p class="ft">One home for Adrian&#x27;s own words</p>
+                <p class="fb">&quot;Your thoughts — Adrian&quot; in the column and &quot;What I want this to say — Adrian&quot; in Direction look like two records. Adrian has to guess which one agents read and which one carries forward.</p>
+                <p class="fb">Make them one record, &quot;Your words&quot;, with dated entries. Direction shows it large at the top; the column shows the latest two entries and a link to the rest. Both say &quot;only you write here&quot;. A thought added anywhere with T lands in the same list.</p>
+              </div>
+              <div class="ba">
+                <div class="mock"><div class="ml">Now</div><div class="mb"><div class="cols" style="grid-template-columns:1fr 1fr"><div class="blk stack"><span class="tag w">Direction</span><span>What I want this to say — Adrian</span><span class="dimt">In your own words…</span></div><div class="blk stack"><span class="tag w">Column</span><span>Your thoughts — Adrian</span><span class="dimt">The last paragraph still ends too neatly…</span></div></div></div></div>
+                <div class="mock after"><div class="ml">Proposed variant</div><div class="mb"><div class="blk stack"><div class="bar"><span class="tag w">Your words</span><span class="dimt">only you write here · shown in Direction and the column</span></div><span>The last paragraph still ends too neatly. Maybe end on the drive.</span><span class="dimt">Oct 21 · Write ¶5</span><span>Ask Mr. Lin if he minds being named.</span><span class="dimt">Oct 4 · Direction</span></div></div></div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{}'>
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>
