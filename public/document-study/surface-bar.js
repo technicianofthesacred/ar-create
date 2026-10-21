@@ -89,7 +89,7 @@
   const slots=collect(),id=identity(),status=statusText();
   // Work receipts and the piece's own status line used to be a strip of their own; they now live in More and in the bar.
   const receipts=document.getElementById('connected-work-receipts'),msgNode=document.getElementById('wn-message'),msg=msgNode&&!msgNode.hidden?label(msgNode):'';
-  const own=receipts?`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div><button type="button" class="sb-item" data-sb-receipts>Receipts</button></div>`:'';
+  const own=`<div class="sb-group" role="group" aria-label="This piece"><div class="sb-gh">This piece</div>${receipts?'<button type="button" class="sb-item" data-sb-receipts>Receipts</button>':''}${window.c3Tree?'<button type="button" class="sb-item" data-sb-everything>Everything that’s here</button>':''}</div>`;
   const more=own+slots.more.map(g=>`<div class="sb-group" role="group" aria-label="${esc(g.title)}"><div class="sb-gh">${esc(g.title)}</div>${g.items.map(({i,section})=>reals[i].tagName==='SELECT'?`<label class="sb-sel">${esc(reals[i].getAttribute('aria-label')||'Option')}${selectProxy(i,'sb-select')}</label>`:proxy(i,'sb-item',`${section?`<span class="sb-sec">${esc(section)} ·</span> `:''}${esc(label(reals[i]))}`)).join('')}</div>`).join('');
   const sig=JSON.stringify([id,status,noteText(),checkpoint(),reals.map(n=>[label(n),n.disabled,n.getAttribute('aria-pressed'),n.getAttribute('aria-current'),n.tagName==='SELECT'?n.value:'']),stage(),moreOpen,!!saver(),retrying,primaryAction,msg,!!receipts]);
   let bar=ws.querySelector(':scope>#c3-surface-bar');
@@ -117,6 +117,7 @@
  document.addEventListener('click',event=>{
   const more=event.target.closest?.('#c3-surface-bar [data-sb-more]');
   if(more){moreOpen=!moreOpen;lastSig='';build();if(moreOpen)document.querySelector('#c3-surface-bar .sb-menu button,#c3-surface-bar .sb-menu select')?.focus({preventScroll:true});return;}
+  if(event.target.closest?.('#c3-surface-bar [data-sb-everything]')){moreOpen=false;lastSig='';build();window.c3Tree?.everything?.();return;}
   if(event.target.closest?.('#c3-surface-bar [data-sb-receipts]')){moreOpen=false;lastSig='';build();openReceipts();return;}
   const pa=event.target.closest?.('#c3-surface-bar [data-sb-primary]');if(pa){if(!pa.disabled&&primaryAction)void Promise.resolve(window.c3PieceState?.run?.(primaryAction)).finally(()=>{lastSig='';schedule();});return;}
   const b=event.target.closest?.('#c3-surface-bar [data-sb]');

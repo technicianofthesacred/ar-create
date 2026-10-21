@@ -39,31 +39,14 @@ test('counts come only from saved output records and land on the step of their n
  assert.equal(n(5),'1');assert.equal(n(10),'2');assert.equal(n(1),'');assert.equal(n(12),'');
 });
 
-test('the Working on switch narrows the pieces list and the counts to one folder',async()=>{
- const {w,d}=fixture({outputs:{p3:[{id:'o',status:'review-needed'}]},stage:10});await tick();
- assert.equal(d.querySelectorAll('#c3-queue .tq-row').length,3);
- const s=d.querySelector('[data-tr-scope]');s.value='Tea';s.dispatchEvent(new w.Event('change',{bubbles:true}));await tick();
- assert.equal(d.querySelectorAll('#c3-queue .tq-row').length,2);
- assert.equal([...d.querySelectorAll('.workflowStep')].find(b=>b.querySelector('.stepNumber').textContent==='10').querySelector('.tr-n'),null);
- const s2=d.querySelector('[data-tr-scope]');s2.value='Repair';s2.dispatchEvent(new w.Event('change',{bubbles:true}));await tick();
- assert.equal(d.querySelectorAll('#c3-queue .tq-row').length,1);
- assert.match(d.querySelector('#c3-queue .tq-row').textContent,/Review needed/);
-});
-
-test('opening a piece from the list switches through switchProject and stays on the same step',async()=>{
- const {w,d}=fixture({stage:2});await tick();
- d.querySelector('[data-tq-open="p2"]').click();await tick();
- assert.deepEqual([...w.switches],['p2']);
- assert.equal(w.current().id,'p2');
- assert.equal(d.querySelector('#c3-queue .tq-row.on').dataset.tqOpen,'p2');
-});
-
-test('a refused switch keeps the current piece and says why',async()=>{
- const {w,d}=fixture({stage:2});await tick();
- w.switchProject=async()=>{throw Error('Save or resolve the current changes first.');};
- d.querySelector('[data-tq-open="p3"]').click();await tick();
- assert.equal(w.current().id,'p1');
- assert.match(d.querySelector('#c3-queue .tq-msg').textContent,/Save or resolve/);
+test('one list of pieces: no pieces column beside the sidebar, no Working on switch, no duplicate Find entries',async()=>{
+ const {d}=fixture({stage:2});await tick();
+ assert.equal(d.getElementById('c3-queue'),null);
+ assert.equal(d.querySelector('[data-tr-scope]'),null);
+ assert.equal(d.querySelector('[data-tr-list]'),null);
+ assert.equal(d.querySelector('.tr-find [data-tr-all]'),null,'Everything that’s here lives in the bar’s More');
+ assert.ok(d.querySelector('.tr-find [data-tr-history]'),'History stays at the bottom');
+ assert.equal(d.body.classList.contains('c3-queue-on'),false);
 });
 
 test('no step path bar: Next is one quiet link at the end of the work, in step order, skipping what does not apply',async()=>{
@@ -78,26 +61,24 @@ test('no step path bar: Next is one quiet link at the end of the work, in step o
  const last=fixture({stage:12});await tick();assert.equal(last.d.getElementById('c3-next'),null);
 });
 
-test('the fold arrow leaves a slim rail and is remembered; the pieces list can be hidden',async()=>{
+test('the fold arrow leaves a slim rail and is remembered',async()=>{
  const {w,d}=fixture({stage:2});await tick();
  d.querySelector('[data-tr-fold]').click();
  assert.ok(d.body.classList.contains('c3-tree-slim'));
  assert.equal(JSON.parse(w.localStorage.getItem('c3-tree-v1')).slim,true);
  assert.equal(d.querySelector('[data-tr-fold]').getAttribute('aria-expanded'),'false');
- d.querySelector('[data-tr-list]').click();
- assert.equal(d.getElementById('c3-queue'),null);
 });
 
 test('Everything that’s here lists every part with an honest status, and Open goes through the real owners',async()=>{
  const {w,d}=fixture();await tick();
- d.querySelector('[data-tr-all]').click();
+ w.c3Tree.everything();
  const rows=[...d.querySelectorAll('#c3-everything .te-row')];
  assert.equal(rows.length,w.c3Tree.parts.length);
  assert.ok(rows.some(r=>/Not built here yet/.test(r.textContent)));
  const write=rows.find(r=>r.querySelector('strong').textContent==='Write');write.querySelector('[data-te-go]').click();
  assert.deepEqual([...w.phases],[5]);
  let home=0;d.querySelector('[data-ht-home]').addEventListener('click',()=>home++);
- d.querySelector('[data-tr-all]').click();[...d.querySelectorAll('#c3-everything .te-row')].find(r=>r.querySelector('strong').textContent==='Home').querySelector('[data-te-go]').click();
+ w.c3Tree.everything();[...d.querySelectorAll('#c3-everything .te-row')].find(r=>r.querySelector('strong').textContent==='Home').querySelector('[data-te-go]').click();
  assert.equal(home,1);
 });
 
