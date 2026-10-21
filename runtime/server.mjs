@@ -36,6 +36,8 @@ import {createStudyResearchChoices} from './services/study-research-choices.mjs'
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
 import {createWorkspaceExecution} from './services/artifact-execution.mjs';
 import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger} from './services/actor.mjs';
+import {createEventBus,scopeOf,revisionOf} from './services/events.mjs';
+import {createPresence} from './services/presence.mjs';
 import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
@@ -77,6 +79,7 @@ const types = {
 };
 function json(response, status, body) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  response.arResult = body;
   response.end(JSON.stringify(body));
 }
 function body(request, limit = MAX_BODY_BYTES, raw = false) {
@@ -94,7 +97,7 @@ function body(request, limit = MAX_BODY_BYTES, raw = false) {
     });
     request.on('end', () => {
       if (overflow) return;
-      try { resolve(raw ? Buffer.concat(chunks) : JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+      try { const value = raw ? Buffer.concat(chunks) : JSON.parse(Buffer.concat(chunks).toString('utf8')); if (!raw) request.arInput = value; resolve(value); }
       catch { reject(new StateError('Request body must be valid JSON.')); }
     });
     request.on('error', reject);
@@ -262,7 +265,42 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     // carousel can publish from its live wording file.
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
-  const extraCommands=[];
+  // Agent coordination routes (mounted below, before the route map).
+  const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence']];
+  const events=createEventBus(),presence=createPresence({events}),sseClients=new Set();
+  // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
+  const NOT_JOURNALED=new Set(['presence.post']);
+  function afterRequest(request,response,context){
+   if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return;
+   let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return;}
+   const command=findCommand(commandList(),request.method,pathname);
+   if(!command||command.readOnly||NOT_JOURNALED.has(command.name))return;
+   const input=request.arInput,result=response.arResult,status=response.statusCode,query=new URL(request.url||'/','http://local.invalid').searchParams;
+   const scope=scopeOf({input,result,query,section:command.section}),operationId=typeof input?.operationId==='string'?input.operationId:null;
+   if(status>=200&&status<300)events.emit({kind:command.name,scope,revision:revisionOf(result),actor:context.actor,client:context.client,operationId});
+  }
+  function eventFilter(url){const kind=url.searchParams.get('kind'),id=url.searchParams.get('id');return {...(kind?{kind}:{}),...(id?{id}:{})};}
+  async function coordination(request,response,pathname,url){
+   if(pathname==='/api/events/since'&&request.method==='GET'){const since=Number(url.searchParams.get('since')||0),limit=Number(url.searchParams.get('limit')||200);json(response,200,events.since(since,eventFilter(url),Number.isSafeInteger(limit)?limit:200));return true;}
+   if(pathname==='/api/events'&&request.method==='GET'){
+    const since=Number(url.searchParams.get('since')??request.headers['last-event-id']??events.cursor),filter=eventFilter(url);
+    response.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-store','Connection':'keep-alive','X-Accel-Buffering':'no'});
+    const send=event=>response.write('id: '+event.cursor+'\nevent: change\ndata: '+JSON.stringify(event)+'\n\n');
+    const backlog=events.since(Number.isSafeInteger(since)?since:events.cursor,filter,1000);
+    response.write('retry: 3000\n'+(backlog.reset?'event: reset\ndata: '+JSON.stringify({bootId:events.bootId,cursor:events.cursor})+'\n':'')+'\n');
+    for(const event of backlog.reset?[]:backlog.events)send(event);
+    const stop=events.subscribe(send,filter),beat=setInterval(()=>response.write(': ping\n\n'),20_000);beat.unref?.();
+    const client={response,close(){clearInterval(beat);stop();sseClients.delete(client);}};sseClients.add(client);
+    request.on('close',()=>client.close());response.on('close',()=>client.close());
+    return true;
+   }
+   if(pathname==='/api/presence'){
+    if(request.method==='GET'){json(response,200,presence.list(eventFilter(url)));return true;}
+    if(request.method==='POST'){checkWrite(request,server);if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);const input=await body(request,64*1024);const ctx=request.arActor;json(response,200,presence.post(input,ctx));return true;}
+    response.setHeader('Allow','GET, POST');throw new StateError('Method is not supported.',405);
+   }
+   return false;
+  }
   const commandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates});
   let registry=null;
   const commandList=()=>registry||(registry=describeRoutes(commandRoutes({url:new URL('http://127.0.0.1/'),request:{headers:{}},server:null,outputQuery:()=>({}),decorateOutputExports:value=>value,describe:async()=>({})}),extraCommands));
@@ -274,6 +312,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       try { pathname = decodeURIComponent((request.url || '/').split('?')[0]); }
       catch { throw new StateError('Invalid request path.'); }
       if(pathname.startsWith('/api/work-continuity/')&&request.method==='POST'&&!findCommand(commandList(),'POST',pathname)?.readOnly&&!(request.headers.origin&&!localAuthorities(server).some(host=>request.headers.origin===`http://${host}`)))requireWriteActor();
+      if(pathname.startsWith('/api/events')||pathname==='/api/presence'){const coordinationUrl=new URL(request.url,'http://'+request.headers.host);if(await coordination(request,response,pathname,coordinationUrl))return;}
       if(await continuityInterface.handle(request,response))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
@@ -533,6 +572,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       const mutation = !['GET', 'HEAD', 'OPTIONS'].includes(request.method);
       const actorContext = resolveRequestActor(request, { appOrigins: localAuthorities(server).map(host => `http://${host}`) });
       if (mutation) guardHumanOnly(request.method, (request.url || '/').split('?')[0], actorContext);
+      request.arActor = actorContext;
       return await (actorContext ? withActor(actorContext, () => routeRequest(request, response)) : routeRequest(request, response));
     } catch (error) {
       if (response.headersSent || response.destroyed) return;
@@ -540,6 +580,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       const status = error instanceof StateError ? error.status : 500;
       if (status === 500) console.error('Local workspace request failed:', error.message);
       json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}) });
+    } finally {
+      // After the answer: tell watchers what changed (and, from B8, journal it).
+      try { afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }
     }
   });
   attachTerminalSockets(server, terminal, { checkHost: request => { if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.',403); }, checkOrigin: request => checkWriteOrigin(request,server) });
@@ -554,7 +597,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   };
   server.on('close',()=>execution.dispose());
   const close=server.close;
-  server.close=function(callback){return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
+  server.close=function(callback){for(const client of [...sseClients]){client.close();client.response.end();}return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
   server.closeWorkspace=()=>store.close();
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;

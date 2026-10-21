@@ -26,12 +26,14 @@ export const SUGAR = Object.freeze({
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
-  commands: ['status', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
+  commands: ['status', 'events', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
   actors: ACTOR_VALUES,
   env: { AR_CREATE_URL: 'default for --url', AR_CREATE_ACTOR: 'default for --actor' },
   exitCodes: { 0: 'ok', 1: 'failed', 2: 'usage', 3: 'conflict (re-read; never force)', 4: 'locked by another actor', 5: 'forbidden (human-only)' },
 };
 
+/** The human's editor state among presence rows: dirty/sequence/lastSeen. */
+export function editorOf(rows) { const human = rows.find(row => String(row.actor).startsWith('human:')); return human ? { dirty: !!human.dirty, sequence: human.sequence, lastSeen: human.lastSeen, stage: human.stage, scope: human.scope } : { dirty: false, sequence: null, lastSeen: null }; }
 export function parseArgs(args, env = process.env) {
   const options = {}, positional = [];
   for (let i = 0; i < args.length; i++) {
@@ -79,9 +81,15 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
     if (rest.length !== 1) return { exitCode: EXIT.usage, result: { ok: false, error: 'Use: call COMMAND-NAME [--input FILE|-]' } };
     return answer(await client.call(rest[0], input));
   }
+  if (command === 'events') {
+    // --input {since, kind, id, limit}; pass the returned cursor as since next time.
+    return answer(await client.call('events.since', input));
+  }
   if (command === 'status') {
-    const caps = await client.listCommands();
-    return { exitCode: EXIT.ok, result: { url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort() } };
+    // --input {since, kind, id} narrows presence and recent events to one record.
+    const caps = await client.listCommands(), filter = { ...(input.kind ? { kind: input.kind } : {}), ...(input.id ? { id: input.id } : {}) };
+    const presence = await client.call('presence.get', filter), changes = await client.call('events.since', { since: input.since ?? 0, limit: 20, ...filter });
+    return { exitCode: EXIT.ok, result: { url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort(), presence: presence.ok ? presence.body.presence : [], editor: editorOf(presence.ok ? presence.body.presence : []), events: changes.ok ? changes.body : null } };
   }
   if (Object.hasOwn(SUGAR, command)) {
     const verb = rest[0], name = SUGAR[command][verb];
