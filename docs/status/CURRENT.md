@@ -4,19 +4,17 @@ Updated 21 October 2026. **This is the only status authority.** Product docs sta
 
 ## The installed app and this branch
 
-- **Installed**: whatever `RELEASE.json` in the home names. It is still the pre-rebuild copy until the integrator runs `node scripts/release.mjs`; the running app reports its commit at `/api/capabilities` (`git.sha`).
-- **On `main` after the October rebuild** (not yet released): recorded releases and config-driven private paths (`scripts/release.mjs`, scratch-root refusal); an actor on every mutation (`X-AR-Actor`; a write without one is refused with 400; human-only decisions with 403); one command registry (`runtime/commands.mjs`, 243 commands at `/api/capabilities`) behind one CLI and one MCP server; an event stream and presence (Adrian's unsaved words are visible to agents); advisory 15-minute leases (423 for a foreign live lease); an append-only journal with handoff and ask lines; and the three-region shell with one bar and one primary action per step, guarded by `tests/shell-gate.test.mjs`.
-- **Tests**: `npm test` runs 233 tests; 228 pass. The 5 failing tests are on `main` already and are not caused by the rebuild. The list is in the repository's test output; do not add to it.
+- **Installed**: the home still runs the previous release. PR17 is merged at `761da68`; the reviewed release/fixture repair is candidate `a9ebf85`. The new installation is pending preservation rehearsal. The running app reports a recorded installed release at `/api/i64os/health` (`release.sha`); the previous unrecorded installation has no release SHA. Source implementation and candidate checks do not establish installed behavior.
+- **Merged source**: recorded releases and config-driven private paths; actor-stamped mutations and human-only decisions; one command registry, CLI and MCP server; event stream, presence and advisory leases; append-only journal with handoff and ask; and the three-region shell. PR17 also implements human saves over an agent lease, Collection CLI catalog calls, the Home question/answer inbox, and Magazine command, editorial and thin-client paths. The bounded shell gate remains in `tests/shell-gate.test.mjs`.
+- **Verification**: the author reports 312 tests with 307 passing and five baseline failures; this total and failure list are not independently verified here. The current fixture-overlay safety checks are reported 4/4 and the package check passed. These results do not mean the full suite is green. Do not add unrecorded failure names.
+- **Release boundary**: the new release remains pending rehearsal. Provider execution, off-Mac access, private-content synchronization and human approvals remain separate gates.
 
-## Not yet true in code
+## Remaining source limits
 
 | Item | State |
 |---|---|
-| A human save in the app overrides an agent's lease | Decided; the lease check currently answers 423 to any actor, human included. Needs a code change in `runtime/services/leases.mjs`. |
-| Agents see a question you left them (`ask`) and Adrian sees it in the app | The journal line and event exist; an in-app inbox for them is not verified. |
-| Hermes, Grok, ChatGPT reach AR Create | The CLI and MCP accept their actor values. No connector or skill exists for them; Hermes in i64os only runs `--version`. This Mac only. |
-| `/mag` folded into AR Create as one writer over the vault | Being built separately; today two writers touch the Teajia `Workflow/` folder with no shared lock. |
-| `collection list` through the CLI and MCP | Answers 400: `agents/lib/client.mjs` drops an empty selector, so `inquiries.catalog` never gets its `input={}`. Workaround: `GET /api/inquiries/catalog?input=%7B%7D`. |
+| Hermes, Grok, ChatGPT reach AR Create | Their actor values are accepted by the CLI and MCP, but no connector or skill exists for them; Hermes in i64os only runs `--version`. This Mac only. |
+| `/mag` as one writer over the vault | Magazine command, editorial and thin-client paths exist in merged source. A single writer over the Teajia `Workflow/` folder and its shared lock are not established by those paths. |
 | Dormant provider code moved to `runtime/_donors/`; `runtime/src/shell` deleted | Not done. |
 | Off-Mac agent access, data-folder `INDEX.md`, route/service split by domain | Not started. |
 
