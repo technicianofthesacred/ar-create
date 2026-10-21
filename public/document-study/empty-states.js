@@ -61,11 +61,26 @@
   const ws=block.closest('.workspace');if(!ws)return;
   for(let node=block;node&&node!==ws;node=node.parentElement)for(const sib of node.parentElement?.children||[])if(sib!==node&&!sib.matches(KEEP)&&!sib.contains(block)&&!sib.hasAttribute('data-c3-empty-hidden'))sib.setAttribute('data-c3-empty-hidden','');
  }
+ // Skip what does not apply (review C6): a words-only piece has nothing to arrange and, with no one recorded in it,
+ // no one to invite. The step says so in one line instead of showing an empty tool page; it stays one click away.
+ const NAMES=['Material','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
+ function notApplicable(n){
+  const ps=window.c3PieceState,why=ps?.notApplicable?.(n);if(!why)return false;
+  const ws=document.querySelector('#app .workspace');if(!ws)return false;
+  const host=ws.querySelector(':scope>.c3-ws-title')||ws.querySelector(':scope>#c3-surface-bar');if(!host)return false;
+  let block=document.querySelector('#app .c3-empty');
+  if(!block||block.dataset.stage!==n+':na'){block?.remove();block=document.createElement('section');block.className='c3-empty ce-na';block.dataset.stage=n+':na';}
+  if(block.previousElementSibling!==host)host.after(block);
+  const html=`<div class="ce-card-wrap" role="region" aria-label="Not applicable to this piece"><div class="ce-icon">${icon(n===9?'arrange':'send')}</div><div class="ce-copy"><h3>Not applicable to this piece</h3><p>${esc(why)}</p><div class="ce-acts">${primaryHTML(STEPS[n])}<button type="button" class="ce-btn" data-ce-anyway>Open ${esc(NAMES[n-1])} anyway</button></div></div></div>`;
+  if(block.dataset.render!==html){block.innerHTML=html;block.dataset.render=html;}
+  own(block);current_=null;return true;
+ }
  // When the person acts on a tool the card hid (Write my own angle, a disclosure), the card steps aside for this step.
  function reveal(){revealed=key();clear();}
  function decorate(){
   const n=stage(),s=STEPS[n];
   if(revealed&&revealed!==key())revealed='';
+  if(!revealed&&notApplicable(n))return;
   if(!s||revealed||!s.empty()){if(document.querySelector('#app .c3-empty'))clear();return;}
   const host=s.host();if(!host)return;
   let block=document.querySelector('#app .c3-empty');
@@ -78,6 +93,7 @@
   current_=s;
  }
  document.addEventListener('click',event=>{
+  if(event.target.closest?.('#app .c3-empty [data-ce-anyway]')){reveal();return;}
   if(event.target.closest?.('#app .c3-empty [data-ce-primary]')){const ps=window.c3PieceState,a=ps?.primary?.(stage());if(!a||a.disabled)return;const n=a.press&&document.querySelector('#app .workspace '+a.press);if(n?.closest('[data-c3-empty-hidden]'))reveal();void ps.run(a);return;}
   const b=event.target.closest?.('#app .c3-empty [data-ce-act]');if(!b||b.disabled)return;
   const s=current_;if(!s)return;const [,target]=s.actions[Number(b.dataset.ceAct)]||[];

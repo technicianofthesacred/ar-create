@@ -86,3 +86,15 @@ test('one verb for going to the manuscript: every surface says Open the draft',(
  const dir=new URL('./',import.meta.url),old=/Open writing draft|Open working words|Open Draft|Open Write|Open in Write|Continue writing|Continue to Draft|Open editor|Edit draft|Edit this copy/;
  for(const f of fs.readdirSync(dir).filter(f=>f.endsWith('.js')&&!f.endsWith('.test.mjs')))assert.doesNotMatch(fs.readFileSync(new URL(f,dir),'utf8'),old,f);
 });
+
+test('C6: Share on a words-only piece with no one to invite says Not applicable with its one-line reason; the step stays one click away',()=>{
+ const {w,d}=fixture(11);
+ w.c3PieceState={notApplicable:n=>n===11?'This piece is words only and has no one recorded in it to invite.':'',primary:()=>({label:'Open Outputs',phase:12}),run:()=>{}};
+ w.c3Empty.decorate();
+ const card=d.querySelector('.c3-empty.ce-na');assert.ok(card);
+ assert.match(card.querySelector('h3').textContent,/Not applicable to this piece/);assert.match(card.textContent,/no one recorded/);
+ assert.equal(card.querySelector('[data-ce-primary]').textContent,'Open Outputs','its button is the bar’s primary');
+ assert.ok(d.querySelector('.oss-surface').hasAttribute('data-c3-empty-hidden'));
+ card.querySelector('[data-ce-anyway]').click();
+ assert.equal(d.querySelector('.c3-empty'),null);assert.equal(d.querySelector('.oss-surface').hasAttribute('data-c3-empty-hidden'),false);
+});
