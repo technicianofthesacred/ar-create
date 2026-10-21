@@ -38,6 +38,8 @@ import {createWorkspaceExecution} from './services/artifact-execution.mjs';
 import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger} from './services/actor.mjs';
 import {createEventBus,scopeOf,revisionOf} from './services/events.mjs';
 import {createPresence} from './services/presence.mjs';
+import {createLeases} from './services/leases.mjs';
+import {createJournal} from './services/journal.mjs';
 import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
@@ -266,10 +268,10 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
   // Agent coordination routes (mounted below, before the route map).
-  const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence']];
-  const events=createEventBus(),presence=createPresence({events}),sseClients=new Set();
+  const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
+  const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
-  const NOT_JOURNALED=new Set(['presence.post']);
+  const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
   function afterRequest(request,response,context){
    if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return;
    let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return;}
@@ -278,6 +280,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    const input=request.arInput,result=response.arResult,status=response.statusCode,query=new URL(request.url||'/','http://local.invalid').searchParams;
    const scope=scopeOf({input,result,query,section:command.section}),operationId=typeof input?.operationId==='string'?input.operationId:null;
    if(status>=200&&status<300)events.emit({kind:command.name,scope,revision:revisionOf(result),actor:context.actor,client:context.client,operationId});
+   const expected=input&&typeof input==='object'?(Number.isSafeInteger(input.expectedRevision)||typeof input.expectedHash==='string'?{revision:input.expectedRevision??null,hash:input.expectedHash??null}:input.expected&&typeof input.expected==='object'?{revision:input.expected.revision??null,hash:input.expected.hash??null}:null):null;
+   const ok=status>=200&&status<300,after=ok?{revision:revisionOf(result),hash:typeof result?.hash==='string'?result.hash:null}:null;
+   journal.append({operationId,actor:context.actor,client:context.client,scope,kind:command.name,status:ok?'committed':status===409||status===423?'conflict':'rejected',before:expected,after,reason:ok?null:String(result?.error||'HTTP '+status).slice(0,500),http:status}).catch(error=>console.error('Journal line was not written:',error.message));
   }
   function eventFilter(url){const kind=url.searchParams.get('kind'),id=url.searchParams.get('id');return {...(kind?{kind}:{}),...(id?{id}:{})};}
   async function coordination(request,response,pathname,url){
@@ -294,6 +299,10 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     request.on('close',()=>client.close());response.on('close',()=>client.close());
     return true;
    }
+   if(pathname==='/api/leases'&&request.method==='GET'){json(response,200,leases.list(eventFilter(url)));return true;}
+   if(pathname==='/api/journal'&&request.method==='GET'){const q=Object.fromEntries(['kind','id','status','actor','since','limit'].filter(k=>url.searchParams.has(k)).map(k=>[k,url.searchParams.get(k)]));json(response,200,await journal.read(q));return true;}
+   const coordinationWrites={'/api/leases/acquire':input=>leases.acquire(input,request.arActor),'/api/leases/release':input=>leases.release(input,request.arActor),'/api/journal/handoff':async input=>{const line=await journal.handoff(input,request.arActor);events.emit({kind:'handoff',scope:line.scope,revision:null,actor:line.actor,client:line.client,operationId:line.operationId,to:line.to,summary:line.summary});return line;},'/api/journal/ask':async input=>{const line=await journal.ask(input,request.arActor);events.emit({kind:'needs-decision',scope:line.scope,revision:null,actor:line.actor,client:line.client,operationId:line.operationId,to:line.to,summary:line.summary,...(line.options?{options:line.options}:{})});return line;}};
+   if(Object.hasOwn(coordinationWrites,pathname)){if(request.method!=='POST'){response.setHeader('Allow','POST');throw new StateError('Method is not supported.',405);}checkWrite(request,server);if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);json(response,200,await coordinationWrites[pathname](await body(request,64*1024)));return true;}
    if(pathname==='/api/presence'){
     if(request.method==='GET'){json(response,200,presence.list(eventFilter(url)));return true;}
     if(request.method==='POST'){checkWrite(request,server);if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);const input=await body(request,64*1024);const ctx=request.arActor;json(response,200,presence.post(input,ctx));return true;}
@@ -312,14 +321,14 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       try { pathname = decodeURIComponent((request.url || '/').split('?')[0]); }
       catch { throw new StateError('Invalid request path.'); }
       if(pathname.startsWith('/api/work-continuity/')&&request.method==='POST'&&!findCommand(commandList(),'POST',pathname)?.readOnly&&!(request.headers.origin&&!localAuthorities(server).some(host=>request.headers.origin===`http://${host}`)))requireWriteActor();
-      if(pathname.startsWith('/api/events')||pathname==='/api/presence'){const coordinationUrl=new URL(request.url,'http://'+request.headers.host);if(await coordination(request,response,pathname,coordinationUrl))return;}
+      if(pathname.startsWith('/api/events')||pathname==='/api/presence'||pathname.startsWith('/api/leases')||pathname.startsWith('/api/journal')){const coordinationUrl=new URL(request.url,'http://'+request.headers.host);if(await coordination(request,response,pathname,coordinationUrl))return;}
       if(await continuityInterface.handle(request,response))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
         if(request.headers.origin&&request.headers.origin!==new URL(request.url,'http://'+request.headers.host).origin)throw new StateError('Foreign-origin inquiry request refused.',403);
         const url=new URL(request.url,'http://'+request.headers.host),suffix=pathname.slice('/api/inquiries'.length);let input;
         if(request.method==='GET'){if([...url.searchParams.keys()].some(key=>key!=='input')||url.searchParams.getAll('input').length!==1||url.searchParams.get('input').length>32768)throw new StateError('Use one bounded inquiry selector.',400);try{input=JSON.parse(url.searchParams.get('input'));}catch{throw new StateError('Inquiry selector must be JSON.',400);}}
-        else if(request.method==='POST'){requireWriteActor();input=await body(request,1200*1024);}
+        else if(request.method==='POST'){requireWriteActor();input=await body(request,1200*1024);leases.check(scopeOf({input,section:'collection'}),request.arActor);}
         else throw new StateError('Unsupported inquiry method.',405);
         const result=await inquiryInterface.handle({method:request.method,path:suffix,input});return json(response,result.status,result.body);
       }
@@ -550,6 +559,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
           input = await body(request, pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');
+          if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
         }
         return json(response, 200, await handler(input));
       }
@@ -579,7 +589,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       if (['ENOENT', 'ENOTDIR', 'EISDIR'].includes(error.code)) return json(response, 404, { error: 'File was not found.' });
       const status = error instanceof StateError ? error.status : 500;
       if (status === 500) console.error('Local workspace request failed:', error.message);
-      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}) });
+      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}),...(error.holder?{holder:error.holder}:{}) });
     } finally {
       // After the answer: tell watchers what changed (and, from B8, journal it).
       try { afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }

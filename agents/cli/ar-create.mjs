@@ -26,7 +26,7 @@ export const SUGAR = Object.freeze({
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
-  commands: ['status', 'events', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
+  commands: ['status', 'events', 'history', 'lease acquire|renew|release|list', 'handoff', 'ask', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
   actors: ACTOR_VALUES,
   env: { AR_CREATE_URL: 'default for --url', AR_CREATE_ACTOR: 'default for --actor' },
   exitCodes: { 0: 'ok', 1: 'failed', 2: 'usage', 3: 'conflict (re-read; never force)', 4: 'locked by another actor', 5: 'forbidden (human-only)' },
@@ -80,6 +80,24 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
   if (command === 'call') {
     if (rest.length !== 1) return { exitCode: EXIT.usage, result: { ok: false, error: 'Use: call COMMAND-NAME [--input FILE|-]' } };
     return answer(await client.call(rest[0], input));
+  }
+  if (command === 'history') {
+    // --input {kind, id, status, actor, since, limit}: journal lines, newest first.
+    return answer(await client.call('journal', input));
+  }
+  if (command === 'lease') {
+    // lease acquire|renew --input {scope:{kind,id}, reason?, ttlMs?}; lease release --input {scope, leaseId?, force?}; lease list --input {kind?, id?}
+    const verb = rest[0], names = { acquire: 'leases.acquire', renew: 'leases.acquire', release: 'leases.release', list: 'leases' };
+    if (!names[verb] || rest.length !== 1) return { exitCode: EXIT.usage, result: { ok: false, error: 'Use: lease acquire|renew|release|list --input -' } };
+    return answer(await client.call(names[verb], input));
+  }
+  if (command === 'handoff') {
+    // --input {scope:{kind,id}, to: actor, summary (<=280), operationId?}
+    return answer(await client.call('journal.handoff', input));
+  }
+  if (command === 'ask') {
+    // --input {scope:{kind,id}, question (<=280), options?: [<=5], to?: actor (default human:adrian)}
+    return answer(await client.call('journal.ask', input));
   }
   if (command === 'events') {
     // --input {since, kind, id, limit}; pass the returned cursor as since next time.
