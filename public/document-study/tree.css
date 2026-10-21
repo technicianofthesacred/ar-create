@@ -1,26 +1,17 @@
-/* Full A · the Tree: the sidebar with activities, the pieces list beside it, the step path above the work,
-   and the Everything-that's-here page. Uses the C3 tokens only. */
+/* Full A · the Tree: the sidebar with activities and its foot, the quiet Next link at the end of the work, and the
+   Everything-that's-here page (opened from the bar's More). Uses the C3 tokens only. */
 @media(min-width:651px){
  body.c3-rail-on.c3-tree-on #app>.shell{grid-template-columns:216px minmax(0,1fr)}
- body.c3-rail-on.c3-tree-on.c3-queue-on #app>.shell{grid-template-columns:216px 248px minmax(0,1fr)}
  body.c3-rail-on.c3-tree-on.c3-tree-slim #app>.shell{grid-template-columns:56px minmax(0,1fr)}
- body.c3-rail-on.c3-tree-on.c3-tree-slim.c3-queue-on #app>.shell{grid-template-columns:56px 248px minmax(0,1fr)}
-}
-/* Write, Read and Check keep the page wide: the pieces list steps aside below 1680px unless the sidebar is folded. */
-@media(min-width:651px) and (max-width:1679px){
- body.c3-tree-on.c3-queue-on[data-c3-writing="true"]:not(.c3-tree-slim) #c3-queue{display:none}
- body.c3-rail-on.c3-tree-on.c3-queue-on[data-c3-writing="true"]:not(.c3-tree-slim) #app>.shell{grid-template-columns:216px minmax(0,1fr)}
 }
 .workflowNavigation.tr-tree{gap:0}
 .tr-head{display:flex;flex-direction:column;gap:8px;padding:0 0 10px;margin:0 0 4px;border-bottom:1px solid var(--line)}
 .tr-row{display:flex;align-items:center;gap:4px}
 .tr-head button,.tr-find button{display:flex;align-items:center;gap:9px;min-height:34px;padding:0 8px;border:0;border-radius:6px;background:none;color:var(--ink);font:500 13px/1.3 var(--ar-ui);text-align:left;cursor:pointer}
 .tr-head button:hover,.tr-find button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
-.tr-head button:focus-visible,.tr-find button:focus-visible,#c3-queue button:focus-visible,#c3-path button:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+.tr-head button:focus-visible,.tr-find button:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
 .tr-home{flex:1 1 auto;font-weight:600!important}
 .tr-fold{flex:none;width:34px;justify-content:center;color:var(--dim)!important}
-.tr-scope{display:flex;flex-direction:column;gap:3px;padding:0 8px;font:500 12px/1.3 var(--ar-ui);color:var(--dim)}
-.tr-scope select{width:100%;min-height:32px;padding:0 6px;border:1px solid var(--c3-line2);border-radius:6px;background:var(--paper);color:var(--ink);font:500 13px/1.3 var(--ar-ui)}
 .tr-act{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;padding:2px 8px 3px;line-height:1.25}
 .tr-act b{font:600 12px/1.3 var(--ar-ui);color:var(--ink);letter-spacing:.01em}
 .tr-act span{font:400 12px/1.3 var(--ar-ui);color:var(--dim)}
@@ -32,39 +23,11 @@
 .tr-find [aria-pressed="true"]{color:var(--ink)}
 /* Folded: a slim rail of icons; every control keeps its name for screen readers and as a tooltip. */
 body.c3-tree-slim .workflowNavigation.tr-tree{padding-inline:6px}
-body.c3-tree-slim .workflowNavigation.tr-tree :is(.tr-label,.tr-scope,.tr-act,.tr-find-h,.stepName){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+body.c3-tree-slim .workflowNavigation.tr-tree :is(.tr-label,.tr-act,.stepName){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 body.c3-tree-slim .tr-row{flex-direction:column}
 body.c3-tree-slim .tr-head button,body.c3-tree-slim .tr-find button,body.c3-tree-slim .workflowNavigation.tr-tree .workflowStep{justify-content:center;padding:0;width:44px}
 body.c3-tree-slim .workflowNavigation.tr-tree .workflowStep .cr-dot{position:absolute;right:4px;top:6px;width:6px;height:6px}
 body.c3-tree-slim .workflowNavigation.tr-tree .tr-n{position:absolute;right:0;bottom:2px;min-width:15px;height:15px;font-size:10px;line-height:15px;padding:0 3px}
-/* The pieces list for this step. */
-#c3-queue{box-sizing:border-box;min-width:0;min-height:0;overflow:auto;border-right:1px solid var(--line);background:var(--rail);padding:12px 8px;display:flex;flex-direction:column;gap:8px}
-.tq-head{display:flex;flex-direction:column;gap:2px;padding:0 6px}
-.tq-head strong{font:600 15px/1.3 var(--ar-ui);color:var(--ink)}
-.tq-head span{font:400 12px/1.35 var(--ar-ui);color:var(--dim)}
-.tq-list{display:flex;flex-direction:column;gap:2px}
-.tq-row{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:44px;padding:7px 8px;border:0;border-radius:6px;background:none;color:var(--ink);text-align:left;cursor:pointer}
-.tq-row:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
-.tq-row.on{background:color-mix(in srgb,var(--warm) 16%,transparent)}
-.tq-row strong{font:500 13px/1.3 var(--ar-ui);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tq-row small{font:400 12px/1.3 var(--ar-ui);color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tq-row.needs small{color:var(--c3-warn)}
-.tq-msg{margin:0 6px;padding:6px 8px;border-radius:6px;background:color-mix(in srgb,var(--c3-bad) 12%,transparent);color:var(--c3-bad);font:500 12px/1.35 var(--ar-ui)}
-.tq-empty{margin:0 6px;color:var(--dim);font:400 13px/1.4 var(--ar-ui)}
-.tq-more{align-self:flex-start;margin:0 6px;min-height:32px;padding:0 10px;border:1px solid var(--c3-line2);border-radius:6px;background:var(--paper);color:var(--ink);font:500 12px/1 var(--ar-ui)}
-/* The step path for the open output, with one Next line. Wraps; never scrolls sideways. */
-#c3-path{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 16px;border-bottom:1px solid var(--line);background:var(--paper);font:500 13px/1.3 var(--ar-ui)}
-.tp-what{color:var(--dim);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tp-steps{display:flex;flex-wrap:wrap;gap:2px;margin:0;padding:0;list-style:none;counter-reset:tp}
-.tp-steps li{display:flex;align-items:center;counter-increment:tp}
-.tp-steps li+li::before{content:'';width:10px;height:1px;margin:0 2px;background:var(--c3-line2)}
-.tp-steps button{min-height:30px;padding:0 9px;border:0;border-radius:6px;background:none;color:var(--dim);font:500 13px/1 var(--ar-ui);cursor:pointer}
-.tp-steps button:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent)}
-#app #c3-path .tp-steps button[aria-current]{color:var(--ink);font-weight:600;background:color-mix(in srgb,var(--warm) 16%,transparent)}
-/* Secondary on purpose: the surface bar keeps the one filled action per screen (c3-theme button tiers). */
-#app #c3-path .tp-next{margin-left:auto;min-height:32px;padding:0 12px;border:1px solid var(--c3-line2);border-radius:6px;color:var(--ink);font:600 13px/1 var(--ar-ui);cursor:pointer}
-.tp-done{margin-left:auto;color:var(--dim)}
-[data-draft-focus="true"] #c3-path,body[data-draft-focus="true"] #c3-path,[data-draft-focus="true"] #c3-queue,body[data-draft-focus="true"] #c3-queue{display:none}
 /* Everything that's here. */
 #c3-everything{width:min(860px,calc(100vw - 32px));max-height:min(88dvh,900px);padding:0;border:1px solid var(--c3-line2);border-radius:12px;background:var(--paper);color:var(--ink);box-shadow:var(--c3-shadow)}
 #c3-everything::backdrop{background:rgba(0,0,0,.45)}
@@ -84,12 +47,17 @@ body.c3-tree-slim .workflowNavigation.tr-tree .tr-n{position:absolute;right:0;bo
 .te-tone[data-tone="gated"]{color:var(--dim)}
 .te-row button{min-height:32px;padding:0 12px;border:1px solid var(--c3-line2);border-radius:6px;background:none;color:var(--ink);font:500 13px/1 var(--ar-ui)}
 @media(max-width:650px){
- #c3-queue{display:none}
  .tr-find,.tr-head{display:none}
  .workflowNavigation.c3-rail.cr-open .tr-head{display:flex}
- #c3-path{padding:6px 12px}
- .tp-what{display:none}
  .te-row{grid-template-columns:minmax(0,1fr) auto;}
  .te-row .te-tone{grid-column:1}
  .te-row button,.te-row .te-none{grid-column:2;grid-row:1/3}
 }
+
+/* Next: one quiet link at the end of the work column (the step path bar is gone). */
+#app .workspace>#c3-next{grid-column:1/-1;display:flex;justify-content:flex-end;padding:24px 24px 40px;background:none;border:0}
+#app #c3-next .c3-next-go{min-height:40px;padding:0 4px;border:0!important;background:none!important;box-shadow:none!important;color:var(--dim);font:500 14px/1.3 var(--ar-ui);cursor:pointer}
+#app #c3-next .c3-next-go:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+#c3-next .c3-next-go:focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+/* The work-context strip is gone: its controls are pressed from the bar (More), receipts open from More → Receipts. */
+body.c3-bar-on #app .workspace>#work-context{display:none!important}

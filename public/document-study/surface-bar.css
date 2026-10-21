@@ -33,7 +33,7 @@ body.c3-bar-on .workspace>#work-context>#wn-message:not([hidden]){display:block;
 #c3-surface-bar .sb-item:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
 #c3-surface-bar .sb-sec{color:var(--dim);margin-right:4px}
 #c3-surface-bar .sb-sel{display:flex;flex-direction:column;gap:4px;padding:6px 10px;color:var(--dim)}
-@media(max-width:850px){#c3-surface-bar .sb-btn span,#c3-surface-bar .sb-status{display:none}#c3-surface-bar .sb-piece{max-width:120px}}
+@media(max-width:850px){#c3-surface-bar .sb-btn span{display:none}#c3-surface-bar .sb-piece{max-width:120px}}
 @media(max-width:650px){#c3-surface-bar{flex-wrap:wrap;padding:6px 10px}#c3-surface-bar .sb-left{flex:1 1 100%}#c3-surface-bar .sb-right{flex:1 1 100%;justify-content:flex-end}#c3-surface-bar .sb-icon,#c3-surface-bar .sb-btn,#c3-surface-bar .sb-primary{min-height:44px}#c3-surface-bar .sb-piece-select{max-width:100%}}
 /* The direction tools strip moves into More; its panel still opens here, under the bar. */
 body.c3-bar-on[data-c3-stage="5"] .workspace #direction-writing-tools>.dwt-orientation{display:none!important}
@@ -57,3 +57,45 @@ body.c3-tabs #app .workspace>.draft-bar>.draft-inspect{max-height:60dvh;overflow
 body.c3-tabs #app .workspace>.draft-bar .draft-row{flex-wrap:wrap;gap:8px}
 body.c3-tabs #app .workspace>.draft-bar .draft-context-words{overflow-wrap:anywhere;max-width:100%;white-space:normal}
 body.c3-tabs #app .workspace>.draft-bar :is(ins,del){overflow-wrap:anywhere}
+
+#c3-surface-bar .sb-msg{min-width:0;max-width:46ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--c3-warn);font:500 13px/1.3 var(--ar-ui)}
+#c3-receipts{width:min(760px,calc(100vw - 32px));max-height:min(88dvh,900px);padding:0;border:1px solid var(--c3-line2);border-radius:12px;background:var(--paper);color:var(--ink)}
+#c3-receipts::backdrop{background:rgba(0,0,0,.45)}
+#c3-receipts-body{padding:12px 20px 20px}
+
+/* Review A5: location, state word and recovery on the bar's left; the bottom location bar is gone. */
+body.c3-bar-on.c3-crumb-on{--cb-h:0px}
+#c3-surface-bar .sb-where{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap}
+#c3-surface-bar .sb-sep2{color:var(--dim);opacity:.55}
+#c3-surface-bar .sb-on{color:var(--dim);overflow:hidden;text-overflow:ellipsis}
+#c3-surface-bar .sb-cp{display:inline-flex;align-items:baseline;gap:6px;flex:none}
+#c3-surface-bar .sb-oselect{min-height:30px;max-width:200px}
+#c3-surface-bar .sb-status{font-size:13px}
+#c3-surface-bar .sb-status[data-tone="ok"]{color:var(--c3-good,var(--dim))}
+#c3-surface-bar .sb-status[data-tone="warn"]{color:var(--c3-warn)}
+#c3-surface-bar .sb-status[data-tone="bad"]{color:var(--c3-bad);font-weight:600}
+#c3-surface-bar .sb-ro{color:var(--dim);padding:2px 8px;border:1px solid var(--c3-line2,var(--line));border-radius:10px}
+#c3-surface-bar .sb-act{min-height:30px;padding:0 10px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c3-warn) 16%,transparent);color:var(--ink);font-size:13px;white-space:nowrap}
+#c3-surface-bar .sb-pw{display:inline-flex;align-items:center;gap:10px}
+#c3-surface-bar .sb-why{max-width:30ch;color:var(--dim);font-size:12px;line-height:1.3;text-align:right}
+#c3-surface-bar .cb-size{display:flex;align-items:center;gap:4px;padding:0 6px 6px}
+#c3-surface-bar .cb-size .sb-item{width:auto;min-width:44px;justify-content:center}
+#c3-surface-bar .cb-size output{min-width:44px;text-align:center;color:var(--dim)}
+#c3-surface-bar .cb-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media(max-width:1100px){#c3-surface-bar :is(.sb-piece,.sb-on,.sb-ret)+.sb-sep2,#c3-surface-bar :is(.sb-piece,.sb-on,.sb-ret){display:none}#c3-surface-bar .sb-why{display:none}}
+/* One filled button per screen: the owner's control that the bar's primary presses is shown as a secondary one. */
+#app .workspace [data-c3-bar-twin]:not(.sb-primary){background:none!important;color:var(--ink)!important;border:1px solid var(--c3-line2,var(--line))!important;box-shadow:none!important;font-weight:500!important}
+body.c3-bar-on #app .c3-empty .ce-btn.pri{background:none!important;color:var(--ink)!important;border:1px solid var(--c3-line2,var(--line))!important;font-weight:600}
+/* Check: the retained-record select is a labelled control at the top of the column. */
+#c3-records{padding:12px 0 4px}
+.c3-records-l{display:inline-flex;align-items:center;gap:8px;color:var(--dim);font:500 13px/1.3 var(--ar-ui)}
+.c3-records-l select{min-height:34px;max-width:min(360px,70vw);border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);font:inherit}
+
+/* Notes: on wide screens the inspector is a column; on narrow ones it is a bottom sheet opened from the bar. */
+#c3-surface-bar .sb-insp{display:none}
+@media(max-width:850px){
+ #c3-surface-bar .sb-insp{display:inline-flex}
+ body.c3-insp-sheet #app .workspace .desk.c3-insp-desk>#c3-insp-head{display:flex!important;position:fixed!important;left:0;right:0;bottom:min(70dvh,560px);top:auto!important;z-index:81;margin:0!important;padding:8px 12px!important;background:var(--paper)!important;border-top:1px solid var(--line);border-radius:12px 12px 0 0}
+ body.c3-insp-sheet #app .workspace .desk.c3-insp-desk[data-insp="margin"]>#margin,body.c3-insp-sheet #app .workspace .desk>#margin:only-of-type,body.c3-insp-sheet #app .workspace .desk.c3-insp-desk[data-insp="decisions"]>#c3-insp-decisions,body.c3-insp-sheet #app #c3-read-insp{display:block!important;position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;width:auto!important;max-width:none!important;height:min(70dvh,560px)!important;max-height:none!important;overflow:auto!important;z-index:80!important;margin:0!important;padding:12px 16px 24px!important;background:var(--paper)!important;border:0!important;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)!important}
+ body.c3-insp-sheet #app #c3-read-insp{border-radius:12px 12px 0 0!important}
+}

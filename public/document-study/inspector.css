@@ -28,3 +28,9 @@ body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel #downstream-human-direction
 body.c3-tabs[data-draft-focus="true"] .workspace .desk.c3-insp-desk>#c3-insp-head,body.c3-tabs[data-draft-focus="true"] .workspace .desk.c3-insp-desk>.ci-panel{display:none}
 @media(min-width:851px){body.c3-tabs[data-draft-focus="true"] .workspace .desk.c3-insp-desk{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:850px){body.c3-tabs .workspace .desk.c3-insp-desk>#c3-insp-head,body.c3-tabs .workspace .desk.c3-insp-desk>.ci-panel{display:none}}
+
+/* A sample never opens by itself; when shown it says Sample, and its Accept is not the screen's filled button. */
+#margin .ci-sample-gate{display:flex;flex-direction:column;gap:8px;margin:12px 0;padding:12px;border:1px dashed var(--c3-line2,var(--line));border-radius:8px;color:var(--dim);font:400 13px/1.45 var(--ar-ui)}
+#margin .ci-sample-gate button{align-self:flex-start;min-height:34px;padding:0 12px;border:1px solid var(--c3-line2,var(--line));border-radius:6px;background:none;color:var(--ink);font:500 13px/1 var(--ar-ui);cursor:pointer}
+.ci-badge,#margin .ci-sample .tag{align-self:flex-start;display:inline-block;padding:2px 8px;border-radius:10px;background:color-mix(in srgb,var(--c3-warn) 18%,transparent);color:var(--c3-warn);font:700 11px/1.4 var(--ar-ui);letter-spacing:.02em;text-transform:uppercase}
+#app #margin .ci-sample .primary{background:none!important;color:var(--ink)!important;border:1px solid var(--c3-line2,var(--line))!important}

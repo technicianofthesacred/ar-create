@@ -10,7 +10,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   const projects=stored.projects && typeof stored.projects==='object'?stored.projects:{};
   const drafts=stored.drafts && typeof stored.drafts==='object'?stored.drafts:{};
   const contextualCopy=new Map();
-  let contextView=null;
+  let contextView=null, showOriginal=false;
   let data={revision:null,sessions:[],notes:{}}, loaded=false, loading=false, loadError='', disposed=false, panel=null, stamp='', refreshQueued=false;
   const active = () => { const p=contextView?.project||getProject(); return p?.view==='record' && Number(p.viewedStage)===2 ? p:null; };
   const room = p => projects[p.id] ||= {sessionId:'',turnId:'',navigation:null,pending:null,message:''};
@@ -41,14 +41,16 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     const scroll=panel.querySelector('[data-source-reader-dialogue]')?.scrollTop||0;
     panel.innerHTML=html(p);
     const s=selected(p);
+    let changed=0;
     if(s) for(const node of panel.querySelectorAll('[data-source-reader-turn]')) {
       const t=s.turns.find(x=>x.id===node.dataset.sourceReaderTurn); if(!t)continue;
       node.tabIndex=0;node.setAttribute('role','button');node.setAttribute('aria-label',`Correct remark: ${t.text}`);
-      if(t.originalText!==undefined && t.originalText!==t.text){const details=doc.createElement('details');details.className='source-reader-original';details.innerHTML=`<summary>Original wording</summary><p>${esc(t.originalText)}</p>`;node.after(details);}
+      if(t.originalText!==undefined && t.originalText!==t.text){const original=doc.createElement('p');original.className='source-reader-original';original.hidden=!showOriginal;original.innerHTML=`<span class="source-reader-original-l">Original wording</span> ${esc(t.originalText)}`;node.after(original);changed++;}
       if(r.turnId===t.id){const host=doc.createElement('div');host.innerHTML=editor(p,s,t);node.after(host);}
       if(r.navigation?.sourceHash===s.sourceHash && r.navigation.ids[r.navigation.index]===t.id)node.setAttribute('data-source-reader-highlight','true');
     }
     const dialogue=panel.querySelector('[data-source-reader-dialogue]');if(dialogue)dialogue.scrollTop=scroll;
+    if(changed&&dialogue){const toggle=doc.createElement('button');toggle.type='button';toggle.className='source-reader-original-toggle';toggle.dataset.sourceOriginalToggle='';toggle.setAttribute('aria-pressed',String(showOriginal));toggle.textContent=(showOriginal?'Hide':'Show')+` original wording · ${changed} corrected line${changed===1?'':'s'}`;dialogue.before(toggle);}
     compactLegacy();
   }
   function restoreContextualCopy() {
@@ -121,6 +123,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   }
   function scrollPassage(){const n=panel?.querySelector('[data-source-reader-highlight]');n?.scrollIntoView?.({block:'center',behavior:'instant'});n?.focus({preventScroll:true});}
   function onClick(event) {
+    if(event.target.closest?.('[data-source-original-toggle]')){showOriginal=!showOriginal;paint();return;}
     if(!event.target.closest?.('[data-source-reader]'))return;
     const p=active();if(!p||panel?.dataset.sourceReaderProject!==p.id)return;
     const r=room(p),note=event.target.closest('[data-source-reader-note-section]'),action=event.target.closest('[data-source-reader-action]')?.dataset.sourceReaderAction;

@@ -62,3 +62,14 @@ test('actual Source surface leads with full-width reader before readiness, tools
  x.click('[data-source-reader-turn="a1"]');x.edit('text','Still my unfinished correction');const field=x.q('[data-source-reader-field="text"]');x.api.mount();await tick();assert.equal(x.q('[data-source-reader-field="text"]'),field);assert.equal(field.value,'Still my unfinished correction');
  x.close();
 });
+test('one transcript-wide original-wording toggle replaces a disclosure under every corrected line',async()=>{
+ const turns=base.sessions[0].turns;turns[1].originalText='The prize remains unknown.';turns[2].originalText='No purchase yet!';let x;try{x=await setup();await tick();}finally{delete turns[1].originalText;delete turns[2].originalText;}
+ const dialogue=x.q('[data-source-reader-dialogue]');
+ assert.equal(dialogue.querySelectorAll('details').length,0,'no per-turn disclosure');
+ const toggle=x.q('[data-source-original-toggle]');assert.ok(toggle,'one toggle for the transcript');assert.match(toggle.textContent,/2 corrected lines/);
+ assert.equal([...dialogue.querySelectorAll('.source-reader-original')].every(n=>n.hidden),true);
+ toggle.click();
+ assert.equal(x.q('[data-source-original-toggle]').getAttribute('aria-pressed'),'true');
+ assert.equal([...x.q('[data-source-reader-dialogue]').querySelectorAll('.source-reader-original')].filter(n=>!n.hidden).length,2);
+ x.close();
+});

@@ -14,17 +14,24 @@
   if(!shell||!workspace||!nav||!grid)return;
   const buttons=[...grid.querySelectorAll('.workflowStep')];
   if(buttons.length!==12||buttons.some(b=>!(number(b)>=1&&number(b)<=12)))return;
+  // One step model: the viewed step is marked; "current" is no longer a second, disagreeing mark. Each step carries at
+  // most one state word, read from the one piece state (piece-state.js), in place of an unexplained dot.
+  const ps=window.c3PieceState,st=ps?.read?.();
   for(const b of buttons){
    if(!b.querySelector('.cr-icon'))b.insertAdjacentHTML('afterbegin',svg(ICONS[number(b)-1]));
-   let dot=b.querySelector('.cr-dot');if(!dot){dot=document.createElement('span');dot.className='cr-dot';dot.setAttribute('aria-hidden','true');b.append(dot);}
-   dot.dataset.state=b.classList.contains('isCurrent')?'current':b.querySelector('.recordDot')?'record':'none';
+   b.classList.remove('isCurrent');b.querySelector('.currentMark')?.remove();b.querySelector('.cr-dot')?.remove();
+   const aria=b.getAttribute('aria-label')||'';if(/, current author work|, retained record available/.test(aria))b.setAttribute('aria-label',aria.replace(', current author work','').replace(', retained record available',''));
+   const w=st?ps.word(number(b),st):{word:'',title:''};let tag=b.querySelector(':scope>.tr-state');
+   if(w.word){if(!tag){tag=document.createElement('span');tag.className='tr-state';b.append(tag);}if(tag.textContent!==w.word)tag.textContent=w.word;if(tag.title!==w.title)tag.title=w.title;if(b.dataset.state!==w.word)b.dataset.state=w.word;}
+   else if(tag){tag.remove();delete b.dataset.state;}
   }
+  ps?.load?.();
   const n=viewed(),here=buttons.find(b=>number(b)===n),name=here?.querySelector('.stepName')?.textContent||'';
   let picker=nav.querySelector(':scope>.cr-picker');
   if(!picker){picker=document.createElement('button');picker.type='button';picker.className='cr-picker';picker.setAttribute('aria-expanded','false');nav.prepend(picker);}
   const pickerHTML=`<span class="cr-picker-text"><span class="cr-picker-count">${n?`Step ${n} of 12`:'Steps'}</span><strong>${name||'Choose a step'}</strong></span><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m7 10 5 5 5-5"/></svg>`;
   if(picker.dataset.key!==n+'|'+name){picker.innerHTML=pickerHTML;picker.dataset.key=n+'|'+name;}
-  picker.setAttribute('aria-label',`${n?`Step ${n} of 12, ${name}. `:''}Show all twelve steps`);
+  picker.setAttribute('aria-label',`${n?`Step ${n} of 12, ${name}. `:''}Open the sidebar: Home, pieces and all twelve steps`);
   nav.classList.add('c3-rail');
   // The Tree's pieces list (#c3-queue) may sit between the column and the workspace.
   const after=nav.nextElementSibling?.id==='c3-queue'?nav.nextElementSibling.nextElementSibling:nav.nextElementSibling;
@@ -37,15 +44,20 @@
   nav.classList.toggle('cr-open',open);picker.setAttribute('aria-expanded',String(open));
   if(open)nav.querySelector('.workflowStep[aria-current],.workflowStep')?.focus();
  });
+ // Phone: the sidebar is a sheet. A step, Home or a piece chosen in it, or a tap outside it, closes it.
+ const closeSheet=()=>{const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;nav.classList.remove('cr-open');nav.querySelector('.cr-picker')?.setAttribute('aria-expanded','false');document.body.classList.remove('c3-nav-sheet');};
+ document.addEventListener('click',event=>{
+  const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;
+  if(!nav.contains(event.target)){if(!event.target.closest?.('#c3-tabstrip .ht-menu,dialog'))closeSheet();return;}
+  if(event.target.closest?.('.workflowStep,[data-tr-home],[data-tr-topics],[data-tr-history],.ht-find-row,[data-pl-open]'))queueMicrotask(closeSheet);
+ });
+ new MutationObserver(()=>document.body.classList.toggle('c3-nav-sheet',!!document.querySelector('.workflowNavigation.c3-rail.cr-open'))).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
  document.addEventListener('keydown',event=>{
   if(event.key!=='Escape')return;
   const nav=document.querySelector('.workflowNavigation.c3-rail.cr-open');if(!nav)return;
   nav.classList.remove('cr-open');const picker=nav.querySelector('.cr-picker');picker?.setAttribute('aria-expanded','false');picker?.focus();
  });
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
- let queued=false;
- new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
+ window.addEventListener('c3-piece-state',()=>decorate());
  window.checkpointRail={decorate};
- decorate();
+ window.c3Shell.register('sidebar steps',decorate,{order:10});
 })();

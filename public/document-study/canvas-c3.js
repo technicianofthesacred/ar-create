@@ -17,19 +17,22 @@
   const html=titleHTML(n);if(t.dataset.render!==html){t.innerHTML=html;t.dataset.render=html;}
  }
  // Each checkpoint remembers its own inspector tab; Material and Source open on Decisions, as on the board.
- const tab=()=>{const n=stage(),t=state.projectNavigation?.inspectorTabs?.[n]??(n>=1&&n<=4?null:state.projectNavigation?.inspectorTab);return TABS.some(([k])=>k===t)?t:(n>=1&&n<=4?'decisions':n>=8?'readiness':'margin');};
+ const tab=()=>'margin'; // Read's inspector is the margin and this page's notes only (review A7)
  function readInspector(reader,n=6){
   let side=reader.querySelector(':scope>#c3-read-insp');
   if(!side){side=document.createElement('aside');side.id='c3-read-insp';side.setAttribute('aria-label','Inspector');reader.append(side);}
   const t=tab();
-  const body=t==='margin'?`<p class="ci-lead">${n<3?'Margin notes belong to the writing, not to this material. They sit beside their passage in Write.':'Margin notes and discussion sit beside their passage in Write, on this same manuscript. Nothing pending changes until you approve it there.'}</p><button type="button" class="ci-go" data-c3-go="5">Open in Write</button>`
+  const body=t==='margin'?`<p class="ci-lead">${n<3?'Margin notes belong to the writing, not to this material. They sit beside their passage in Write.':'Margin notes and discussion sit beside their passage in Write, on this same manuscript. Nothing pending changes until you approve it there.'}</p><button type="button" class="ci-go" data-c3-go="5">Open the draft</button>`
    :t==='decisions'?`<p class="ci-lead">The direction for this piece (opening, closing, audience) is saved in Direction and carried into Write.</p><button type="button" class="ci-go" data-c3-go="4">Open Direction</button>`
    :`<p class="ci-lead">Readiness is checked against a saved revision, not while you read.</p><div class="ci-row"><div><strong>Checks</strong><span>Mechanical checks and quote fidelity run in Check.</span></div><button type="button" class="ci-go" data-c3-go="7">Open Check</button></div><div class="ci-row"><div><strong>Export readiness</strong><span>Missing assets and out-of-date approvals are shown in Audience view.</span></div><button type="button" class="ci-go" data-c3-go="10">Open Audience view</button></div>`;
-  const html=`<div class="c3-insp-tabs" role="tablist" aria-label="Inspector">${TABS.map(([k,l])=>`<button type="button" role="tab" class="ci-tab" data-c3-tab="${k}" aria-selected="${k===t}">${l}</button>`).join('')}</div><div class="c3-insp-body" role="tabpanel">${body}</div>`;
+  const html=`<div class="c3-insp-body" role="region" aria-label="Margin">${body}</div>`;
   if(side.dataset.render!==html){const keep=side.querySelector(':scope>.c3-page-notes');side.innerHTML=html;side.dataset.render=html;if(keep)side.prepend(keep);}
  }
  function notesBox(col,before){let box=col.querySelector(':scope>.c3-page-notes');if(!box){box=document.createElement('section');box.className='c3-page-notes';box.setAttribute('aria-label','About this page');}if(before===box)before=box.nextElementSibling;const want=before||null;if(box.parentElement!==col||(want?box.nextElementSibling!==want:col.firstElementChild!==box))col.insertBefore(box,want||col.firstChild);return box;}
  function gather(box,nodes){for(const n of nodes)if(n&&n.matches?.('.c3-ctitle')&&n.parentElement!==box&&!n.contains(box))box.append(n);}
+ // One Research screen with a scope: this piece (step 3 itself) or all pieces (research-tab's layer over it).
+ function scopeSwitch(all){const g=document.createElement('div');g.className='c3-scope';g.setAttribute('role','group');g.setAttribute('aria-label','Research scope');g.innerHTML=`<button type="button" data-c3-scope="piece" aria-pressed="${!all}">This piece</button><button type="button" data-c3-scope="all" aria-pressed="${all}">All pieces</button>`;return g;}
+ window.c3ResearchScope=scopeSwitch;
  const mirrored=[];
  function mirror(box,nodes){
   const rows=[];mirrored.length=0;
@@ -86,27 +89,24 @@
    let t=ws.querySelector(':scope>.c3-ctitle');
    if(!t){const after=ws.querySelector(':scope>.historicalToolbar')||ws.querySelector(':scope>#work-context');t=document.createElement('div');t.className='c3-ctitle c3-ws-title';(after?after.after(t):ws.prepend(t));}
    const html=titleHTML(n);if(t.dataset.render!==html){t.innerHTML=html;t.dataset.render=html;}
-   readInspector(ws,n);
+   ws.querySelector(':scope>#c3-read-insp')?.remove(); // review A7: no inspector on 8–12
    if(!document.querySelector('#c3-surface-bar .sb-primary')&&ws.querySelector({8:'.study-photos [data-add]',9:'[data-oss-action="look"]',11:'[data-oss-action="copy"]'}[n]||':not(*)'))window.surfaceBar?.build?.();
    return;
   }
   const reader=ws.querySelector(':scope>.phaseReader');if(!reader)return;
   ensureTitle(reader,n,reader.firstChild);
   reader.classList.toggle('c3-read',n===6);reader.classList.toggle('c3-check',n===7);reader.classList.toggle('c3-flow',n>=1&&n<=4);for(const k of [1,2,3,4])reader.classList.toggle('c3-s'+k,n===k);
-  if(n===6||(n>=1&&n<=4))readInspector(reader,n);
+  if(n===6)readInspector(reader,n);else reader.querySelector(':scope>#c3-read-insp')?.remove(); // review A7: no inspector on 1–4
   if(n===6){const side=reader.querySelector(':scope>#c3-read-insp');if(side){const box=notesBox(side,side.querySelector(':scope>.c3-insp-tabs'));gather(box,[reader.querySelector(':scope>.c3-ctitle')]);mirror(box,[reader.querySelector(':scope>.draft-row'),reader.querySelector(':scope>.draft-details'),reader.querySelector(':scope>details.flow-retained'),ws.querySelector(':scope>details.flow-retained')]);}}
-  if(n===3&&window.c3Research){const t=reader.querySelector(':scope>.c3-ctitle');if(t&&!reader.querySelector(':scope>.c3-open-research')){const b=document.createElement('button');b.type='button';b.className='c3-open-research';b.innerHTML='<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3.5h5"/><path d="M10.5 3.5v6l-5.3 8.9A1.8 1.8 0 0 0 6.8 21h10.4a1.8 1.8 0 0 0 1.6-2.6L13.5 9.5v-6"/><path d="M7.6 15h8.8"/></svg><span>Open in Research</span>';b.title='Research across every piece';t.after(b);}}
+  if(n===3&&window.c3Research){const t=reader.querySelector(':scope>.c3-ctitle');if(t&&!reader.querySelector(':scope>.c3-scope'))t.after(scopeSwitch(false));}
   if(n===7&&reader.querySelector('[data-current-check="run"]')&&!document.querySelector('#c3-surface-bar .sb-primary'))window.surfaceBar?.build?.();
  }
  document.addEventListener('click',event=>{
   const mb=event.target.closest?.('.c3-mirror [data-c3-mirror]');if(mb){const real=mirrored[Number(mb.dataset.c3Mirror)];if(real?.isConnected&&!real.disabled){if(real.matches('summary')){const d=real.parentElement;d.open=!d.open;d.closest('[data-c3-mirrored]')?.classList.toggle('c3-mirror-open',d.open);if(d.open)d.scrollIntoView({block:'nearest'});}else real.click();}return;}
-  if(event.target.closest?.('.c3-open-research')){window.c3Research?.show?.();return;}
+  const sc=event.target.closest?.('[data-c3-scope]');if(sc){if(sc.dataset.c3Scope==='all')window.c3Research?.show?.();else window.c3Research?.hide?.();return;}
   const t=event.target.closest?.('#c3-read-insp [data-c3-tab]');if(t){state.projectNavigation||={recent:[]};state.projectNavigation.inspectorTabs||={};state.projectNavigation.inspectorTabs[stage()]=t.dataset.c3Tab;try{save();}catch{}decorate();document.querySelector(`#c3-read-insp [data-c3-tab="${t.dataset.c3Tab}"]`)?.focus();return;}
   const g=event.target.closest?.('#c3-read-insp [data-c3-go]');if(g)void viewPhase(Number(g.dataset.c3Go));
  });
- const previousRender=window.render;
- window.render=function(...args){const result=previousRender.apply(this,args);if(result?.then)return result.then(value=>{decorate();return value;});decorate();return result;};
- new MutationObserver(records=>{if(records.every(r=>r.target.closest?.('.c3-page-notes,#c3-read-insp')))return;if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
  window.c3Canvas={decorate};
- decorate();
+ window.c3Shell.register('canvas',decorate,{order:45,ignore:'.c3-page-notes,#c3-read-insp'});
 })();

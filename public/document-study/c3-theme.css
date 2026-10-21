@@ -279,7 +279,7 @@ body.c3-tabs.c3-crumb-on .shell,body.c3-tabs.c3-crumb-on.draft-surface-active .s
 #c3-surface-bar .sb-cp-n{font:600 13px var(--ar-ui);color:var(--dim);font-variant-numeric:tabular-nums}
 #c3-surface-bar .sb-cp-name{font:600 15px var(--ar-ui);color:var(--ink)}
 #c3-surface-bar .sb-right{flex:0 1 auto;min-width:0;overflow:hidden}
-#c3-surface-bar .sb-status,#c3-surface-bar .sb-note{display:none!important}
+#c3-surface-bar .sb-note{display:none!important}
 /* The bar is 52px now; sticky elements below follow. */
 body.c3-tabs #app .workspace .desk.c3-insp-desk>#c3-insp-head{top:52px!important}
 body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp{top:calc(var(--ht-strip,44px) + 52px)!important;bottom:var(--cb-h,0px)!important}
@@ -377,7 +377,7 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  body.c3-tabs #app .workspace :is(small,.small,summary,label.flow-field,.draft-action,.reference span,.reference,.docfooter span){font-size:12.5px!important;letter-spacing:0}
  body.c3-tabs #app .workspace .reference{display:flex;flex-wrap:wrap;gap:2px 10px;text-transform:none}
 
- #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode){display:none}
+ #c3-surface-bar .sb-right>.sb-btn:not(.sb-mode):not(.sb-insp){display:none}
  #c3-surface-bar .sb-mode{width:36px;min-width:36px;padding:0!important;display:grid;place-items:center}
  #c3-surface-bar .sb-mode .sb-mode-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
  #c3-surface-bar .sb-mode .sb-mode-i{display:grid}

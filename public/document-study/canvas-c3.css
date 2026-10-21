@@ -67,3 +67,6 @@ body.c3-tabs .workspace>.phaseReader.c3-flow .sws-work-tools>details>summary:hov
 #c3-read-insp .ci-go{align-self:flex-start;min-height:36px;padding:0 14px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui);cursor:pointer}
 #c3-read-insp .ci-go:hover{border-color:var(--c3-ink2,var(--ink))}
 body.c3-tabs:is([data-c3-stage="8"],[data-c3-stage="9"],[data-c3-stage="10"],[data-c3-stage="11"],[data-c3-stage="12"]) .workspace>#c3-read-insp .c3-insp-tabs{position:static}
+
+/* No inspector on 1–4 (review A7): the flow takes the full width instead of a 328px column of pointers. */
+@media(min-width:851px){body.c3-tabs .workspace>.phaseReader.c3-flow:not(:has(>#c3-read-insp)){grid-template-columns:minmax(0,1fr)}}
