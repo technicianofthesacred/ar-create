@@ -36,3 +36,8 @@ runtime/services/media-article-spec.mjs
 
 # Synthetic magazine vault fixtures, built by the tests (never committed).
 .scratch/
+runtime/public/assets/study-output-canvas.css
+runtime/public/assets/study-output-canvas.js
+runtime/services/native-output-helpers.mjs
+runtime/services/native-output-owner.test.mjs
+runtime/services/render-helper.mjs
