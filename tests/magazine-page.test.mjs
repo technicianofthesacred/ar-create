@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
+import crypto from 'node:crypto';
 import {magazineServer} from './helpers/magazine-server.mjs';
 import {buildMagazineFixture} from './helpers/magazine-fixture.mjs';
 
@@ -49,6 +50,18 @@ test('the page saves through AR Create as Adrian (client mag-page); a held lock 
   assert.equal(held.status, 423); assert.match(held.body.error, /innerstellar/);
   assert.doesNotMatch(fs.readFileSync(path.join(s.f.vault, 'Workflow/5-Social/REQUESTS.md'), 'utf8'), /Redo Map/);
   assert.equal((await page.post('/transcription/00000000-0000-0000-0000-000000000000/save', {})).status, 409, 'the old workshop saves are off');
+  fs.rmSync(path.join(s.f.vault, 'Workflow/_mag-running.md'));
+  const dev = 'Workflow/3-Develop/DEV - Clay Teacher (story).md', read = await s.cli(['call', 'magazine.read'], {path: dev});
+  const proposed = await s.cli(['call', 'magazine.write'], {path: dev, content: read.result.text + '\nA line the editor proposes.\n', expectedHash: read.result.hash, operationId: crypto.randomUUID(), reason: 'editor pass'});
+  assert.equal(proposed.result.proposed, true);
+  const yes = await (await fetch(`http://127.0.0.1:${PORT}/yes`)).text();
+  assert.match(yes, /Waiting for your yes/); assert.match(yes, /A line the editor proposes/); assert.match(yes, /editor pass/);
+  assert.match(await (await fetch(`http://127.0.0.1:${PORT}/`)).text(), /1 piece of writing waits for your yes/);
+  assert.equal((await page.post('/proposal', {id: proposed.result.proposalId, yes: true})).status, 200);
+  assert.match(fs.readFileSync(path.join(s.f.vault, dev), 'utf8'), /A line the editor proposes/);
+  const accepted = s.journal().find(l => l.kind === 'magazine.proposal.accept');
+  assert.equal(accepted.actor, 'human:adrian'); assert.equal(accepted.client, 'mag-page');
+  fs.writeFileSync(path.join(s.f.vault, 'Workflow/_mag-running.md'), `machine: innerstellar\nsince: ${new Date().toISOString()}\ndoing: x\n`);
   await page.stop();
   fs.rmSync(path.join(s.f.vault, 'Workflow/_mag-running.md'));
   const down = await startPage(t, s.f, {MAG_ARC_URL: 'http://127.0.0.1:9'});

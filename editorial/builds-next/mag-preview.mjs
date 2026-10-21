@@ -35,7 +35,7 @@ const LOOK_JS = fs.readFileSync(new URL('./mag-look.js', import.meta.url), 'utf8
 // mag-local-v1
 import { startLocalIntake, localJobs, handleLocalRoute } from './mag-local/jobs.mjs';
 import { renderLocalJob, renderRecordings, LOCAL_JOB_JS, LOCAL_TRANSCRIPT_CSS } from './mag-local/workshop-ui.mjs';
-import { ARC, arc, withLegacyLock } from './mag-arc.mjs';
+import { ARC, arc, arcGet, withLegacyLock } from './mag-arc.mjs';
 import { createHash as magHash, randomUUID as magUuid } from 'crypto';
 
 const HOME = process.env.HOME;
@@ -1116,6 +1116,8 @@ document.addEventListener('click',async e=>{
   if(lc){const box=lc.closest('.d-lineup');lc.closest('.ln-card').remove();lnNumber(box);lnSave(box);return}
   const ap=e.target.closest('[data-approve]');
   if(ap){ap.disabled=true;if(ap.closest('.d-look'))ap.firstChild.textContent='Saving the slides as images…';const r=await post('/approve',{file:ap.dataset.approve,hash:(ap.closest('[data-hash]')||{dataset:{}}).dataset.hash,value:'yes'});if(r.ok)location.reload();else{ap.disabled=false;toast(r.error)}return}
+  const py=e.target.closest('[data-yes],[data-no]');
+  if(py){py.disabled=true;const r=await post('/proposal',{id:py.dataset.yes||py.dataset.no,yes:!!py.dataset.yes});if(r.ok)location.reload();else{py.disabled=false;toast(r.error)}return}
   const cc=e.target.closest('[data-copy-cap]');
   if(cc){try{await navigator.clipboard.writeText(cc.dataset.copyCap);toast('Caption copied')}catch(_){toast('Select the caption and copy it')}return}
   const cm=e.target.closest('[data-copy-msg]');
@@ -1411,6 +1413,17 @@ async function claimDrop(story, dest, defer) {
   return r.claim?.claimId || '';
 }
 const madeHash = m => magHash('sha256').update(m.raw).digest('hex');
+// D4: words an agent proposed (a draft, Adrian's note, a feedback message, post words) wait here for his yes.
+async function yesBanner() {
+  const r = await arcGet('/api/magazine/proposals', { status: 'open' }), n = (r.body.proposals || []).length;
+  return r.status !== 200 ? '<p class="d-ctx">AR Create is not running, so nothing can be saved right now.</p>' : n ? '<p class="d-ctx"><a href="/yes">' + n + (n === 1 ? ' piece of writing waits' : ' pieces of writing wait') + ' for your yes</a></p>' : '';
+}
+async function yesPage() {
+  const list = await arcGet('/api/magazine/proposals', { status: 'open' });
+  const rows = await Promise.all((list.body.proposals || []).map(p => arcGet('/api/magazine/proposal', { proposalId: p.proposalId })));
+  const cards = rows.map(r => r.body).filter(p => p && p.proposalId).map(p => '<div class="q d-q" data-proposal="' + esc(p.proposalId) + '"><p class="d-eyebrow">' + esc(p.story || '') + ' · proposed by ' + esc(String(p.actor).replace(/^agent:/, '')) + '</p><h2 class="d-qt">' + esc(p.path.split('/').pop().replace(/.md$/, '')) + '</h2>' + (p.reason ? '<p class="d-ctx">' + esc(p.reason) + '</p>' : '') + (p.stale ? '<p class="d-ctx">The file changed after these words were proposed, so they can only be turned down; ask for a fresh version.</p>' : '') + '<details' + (p.current.exists ? '' : ' hidden') + '><summary>As it is now</summary><div class="readall">' + render(p.current.text || '') + '</div></details><details open><summary>Proposed</summary><div class="readall">' + render(p.content) + '</div></details><div class="d-opts">' + (p.stale ? '' : '<button class="opt big rec" data-yes="' + esc(p.proposalId) + '">Yes, save these words</button>') + '<button class="opt big ghost" data-no="' + esc(p.proposalId) + '">Not these</button></div></div>').join('');
+  return page('Waiting for your yes', '<div class="top"><a href="/">← Stories</a></div><h1>Waiting for your yes</h1>' + (list.status !== 200 ? '<p>AR Create is not running.</p>' : cards || '<p>Nothing waits for your yes.</p>'));
+}
 
 const app = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -1512,6 +1525,7 @@ const app = http.createServer(async (req, res) => {
         await saveRequest(b, () => { if (!t.split('\n').some(l => l.endsWith(kind + ' · ' + story) && l.startsWith('- [ ]'))) fs.writeFileSync(f, t.replace(/\s*$/, '\n') + line + '\n'); });
         return json(res, 200, { ok: true });
       }
+      if (url.pathname === '/proposal') { if (!ARC) return json(res, 404, { ok: false, error: 'not found' }); await arcDo(b.yes === true ? '/api/magazine/proposal/accept' : '/api/magazine/proposal/reject', { proposalId: String(b.id || '') }); return json(res, 200, { ok: true }); }
       if (url.pathname === '/answer') { await saveAnswer(b); return json(res, 200, { ok: true }); }
       if (url.pathname === '/album') {
         const story = String(b.story || ''); const link = String(b.link || '').trim();
@@ -1527,8 +1541,10 @@ const app = http.createServer(async (req, res) => {
   }
 
   let html;
-  if (url.pathname === '/') {
-    html = page('Teajia Magazine', frontPage(remote, url.searchParams.get('s') || '', url.searchParams.get('q'), url.searchParams.get('step'), url.searchParams.get('read')));
+  if (ARC && url.pathname === '/yes') {
+    html = await yesPage();
+  } else if (url.pathname === '/') {
+    html = page('Teajia Magazine', (ARC ? await yesBanner() : '') + frontPage(remote, url.searchParams.get('s') || '', url.searchParams.get('q'), url.searchParams.get('step'), url.searchParams.get('read')));
   } else if (url.pathname === '/transcription' || url.pathname === '/transcription/') {
     html = page('Local transcription', transcriptionHome(remote));
   } else if (url.pathname === '/read' || url.pathname.startsWith('/read/')) {

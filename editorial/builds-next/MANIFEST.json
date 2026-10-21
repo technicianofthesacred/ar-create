@@ -7,7 +7,7 @@
     "sha256": "31d07b6d6f7148a8479937c2b7af2d4a0de55aa9dd95bceaed1d5b3507e005e5",
     "bytes": 160368
    },
-   "sha256": "f12d4b42a3294791b839597b7884698143e4270564c5f0ad6ba710ec7c36f500"
+   "sha256": "02ff2328e63d303984ef2dcf50a5420b002d3f5c4594683aa36b37d4a559fc62"
   },
   "mag-intake.sh": {
    "installsTo": "~/builds/mag-intake.sh",

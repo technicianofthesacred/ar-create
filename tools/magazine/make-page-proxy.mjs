@@ -58,12 +58,23 @@ async function claimDrop(story, dest, defer) {
   return r.claim?.claimId || '';
 }
 const madeHash = m => magHash('sha256').update(m.raw).digest('hex');
+// D4: words an agent proposed (a draft, Adrian's note, a feedback message, post words) wait here for his yes.
+async function yesBanner() {
+  const r = await arcGet('/api/magazine/proposals', { status: 'open' }), n = (r.body.proposals || []).length;
+  return r.status !== 200 ? '<p class="d-ctx">AR Create is not running, so nothing can be saved right now.</p>' : n ? '<p class="d-ctx"><a href="/yes">' + n + (n === 1 ? ' piece of writing waits' : ' pieces of writing wait') + ' for your yes</a></p>' : '';
+}
+async function yesPage() {
+  const list = await arcGet('/api/magazine/proposals', { status: 'open' });
+  const rows = await Promise.all((list.body.proposals || []).map(p => arcGet('/api/magazine/proposal', { proposalId: p.proposalId })));
+  const cards = rows.map(r => r.body).filter(p => p && p.proposalId).map(p => '<div class="q d-q" data-proposal="' + esc(p.proposalId) + '"><p class="d-eyebrow">' + esc(p.story || '') + ' · proposed by ' + esc(String(p.actor).replace(/^agent:/, '')) + '</p><h2 class="d-qt">' + esc(p.path.split('/').pop().replace(/\.md$/, '')) + '</h2>' + (p.reason ? '<p class="d-ctx">' + esc(p.reason) + '</p>' : '') + (p.stale ? '<p class="d-ctx">The file changed after these words were proposed, so they can only be turned down; ask for a fresh version.</p>' : '') + '<details' + (p.current.exists ? '' : ' hidden') + '><summary>As it is now</summary><div class="readall">' + render(p.current.text || '') + '</div></details><details open><summary>Proposed</summary><div class="readall">' + render(p.content) + '</div></details><div class="d-opts">' + (p.stale ? '' : '<button class="opt big rec" data-yes="' + esc(p.proposalId) + '">Yes, save these words</button>') + '<button class="opt big ghost" data-no="' + esc(p.proposalId) + '">Not these</button></div></div>').join('');
+  return page('Waiting for your yes', '<div class="top"><a href="/">← Stories</a></div><h1>Waiting for your yes</h1>' + (list.status !== 200 ? '<p>AR Create is not running.</p>' : cards || '<p>Nothing waits for your yes.</p>'));
+}
 `;
 
 /** [description, find, replace, expected count] */
 export const EDITS = [
   ['header note', "// folder. Binds to 127.0.0.1, so nothing is reachable from outside this Mac.", "// folder. Binds to 127.0.0.1, so nothing is reachable from outside this Mac.\n//\n// Since 2026-10-21 every save goes through AR Create (mag-arc.mjs): on this Mac the page asks AR Create\n// to write, as Adrian; off the Mac it writes as before inside the shared lock. Built from the original\n// by AR Create's tools/magazine/make-page-proxy.mjs; edit there, not here.", 1],
-  ['imports', "import { renderLocalJob, renderRecordings, LOCAL_JOB_JS, LOCAL_TRANSCRIPT_CSS } from './mag-local/workshop-ui.mjs';", "import { renderLocalJob, renderRecordings, LOCAL_JOB_JS, LOCAL_TRANSCRIPT_CSS } from './mag-local/workshop-ui.mjs';\nimport { ARC, arc, withLegacyLock } from './mag-arc.mjs';\nimport { createHash as magHash, randomUUID as magUuid } from 'crypto';", 1],
+  ['imports', "import { renderLocalJob, renderRecordings, LOCAL_JOB_JS, LOCAL_TRANSCRIPT_CSS } from './mag-local/workshop-ui.mjs';", "import { renderLocalJob, renderRecordings, LOCAL_JOB_JS, LOCAL_TRANSCRIPT_CSS } from './mag-local/workshop-ui.mjs';\nimport { ARC, arc, arcGet, withLegacyLock } from './mag-arc.mjs';\nimport { createHash as magHash, randomUUID as magUuid } from 'crypto';", 1],
   ['helpers', "const app = http.createServer(async (req, res) => {", HELPERS + "\nconst app = http.createServer(async (req, res) => {", 1],
   ['workshop writes', "  if (await handleLocalRoute(req, res, url)) return;", "  // The recordings workshop's saves belong to AR Create now; the page keeps showing it read-only.\n  if (ARC && req.method === 'POST' && url.pathname.startsWith('/transcription')) return json(res, 409, { ok: false, error: 'Recordings are worked on in AR Create now (Material). Nothing was saved here.' });\n  if (await handleLocalRoute(req, res, url)) return;", 1],
   ['upload intake', "      out.on('finish', () => {", "      out.on('finish', async () => {", 1],
@@ -89,6 +100,9 @@ export const EDITS = [
   ['js answer form', "post('/answer',{file:f.dataset.file,index:+f.dataset.index,value:v})", "post('/answer',{file:f.dataset.file,index:+f.dataset.index,title:f.dataset.title,value:v})", 1],
   ['js words', "post('/approve',{file:aw.dataset.approveWords,value:'words'})", "post('/approve',{file:aw.dataset.approveWords,hash:box.dataset.hash,value:'words'})", 1],
   ['js yes', "post('/approve',{file:ap.dataset.approve,value:'yes'})", "post('/approve',{file:ap.dataset.approve,hash:(ap.closest('[data-hash]')||{dataset:{}}).dataset.hash,value:'yes'})", 1],
+  ['yes page', "  if (url.pathname === '/') {\n    html = page('Teajia Magazine', frontPage(", "  if (ARC && url.pathname === '/yes') {\n    html = await yesPage();\n  } else if (url.pathname === '/') {\n    html = page('Teajia Magazine', (ARC ? await yesBanner() : '') + frontPage(", 1],
+  ['yes save', "      if (url.pathname === '/answer') { await saveAnswer(b);", "      if (url.pathname === '/proposal') { if (!ARC) return json(res, 404, { ok: false, error: 'not found' }); await arcDo(b.yes === true ? '/api/magazine/proposal/accept' : '/api/magazine/proposal/reject', { proposalId: String(b.id || '') }); return json(res, 200, { ok: true }); }\n      if (url.pathname === '/answer') { await saveAnswer(b);", 1],
+  ['js yes buttons', "  const cc=e.target.closest('[data-copy-cap]');", "  const py=e.target.closest('[data-yes],[data-no]');\n  if(py){py.disabled=true;const r=await post('/proposal',{id:py.dataset.yes||py.dataset.no,yes:!!py.dataset.yes});if(r.ok)location.reload();else{py.disabled=false;toast(r.error)}return}\n  const cc=e.target.closest('[data-copy-cap]');", 1],
   ['js change', "post('/approve',{file:f.dataset.file,value:v0})", "post('/approve',{file:f.dataset.file,hash:(f.closest('[data-hash]')||{dataset:{}}).dataset.hash,value:v0})", 1],
 ];
 
