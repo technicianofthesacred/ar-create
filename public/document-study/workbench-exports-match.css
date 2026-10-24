@@ -1,0 +1,9 @@
+/* V.outputs Export geometry; only real current-edition export owners are live. */
+html body.wbf-on #workspace.wb-outputs .wb-export-section{margin-top:28px;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #workspace.wb-outputs .wb-export-section h2{font:500 var(--t-label)/1.5 var(--ar-ui);margin:0}
+html body.wbf-on #workspace.wb-outputs .wb-export-section .exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #workspace.wb-outputs .wb-export-section .x{border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:var(--paper)}
+html body.wbf-on #workspace.wb-outputs .wb-export-section .x b{display:block;font-weight:600}
+html body.wbf-on #workspace.wb-outputs .wb-export-section .x span{display:block;color:var(--dim);font-size:var(--t-label);margin:2px 0 8px;overflow-wrap:anywhere}
+html body.wbf-on #workspace.wb-outputs .wb-export-section .btn{font:400 var(--t-label)/1.5 var(--ar-ui);min-height:34px;padding:6px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink)}
+html body.wbf-on #workspace.wb-outputs .wb-export-section .btn:focus-visible{outline:2px solid var(--warm);outline-offset:2px}

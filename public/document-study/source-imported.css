@@ -13,8 +13,8 @@
 .source-reader .source-dialogue-group { margin:.45rem 0; }
 .source-reader .source-speaker { display:inline; margin:0 .45em 0 0; }
 .source-reader .source-remark { display:inline; white-space:pre-wrap; cursor:pointer; margin:0 .3em 0 0; border-radius:2px; overflow-wrap:anywhere; }
-.source-reader .source-remark:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
-.source-reader [data-source-reader-highlight] { background:color-mix(in srgb, currentColor 16%, transparent); color:inherit; }
+.source-reader .source-remark:focus-visible { outline:none; }
+.source-reader [data-source-reader-highlight] { background:none; color:inherit; }
 .source-reader .source-dialogue-boundary { display:block; border-top:1px solid var(--line,#ccc); padding-top:.5rem; }
 .source-reader [data-source-reader-edit] { display:grid; gap:.5rem; margin:.6rem 0; }
 .source-reader [data-source-reader-edit] label { display:grid; gap:.25rem; font-family:var(--font-sans, sans-serif); }
@@ -30,3 +30,52 @@
 .source-reader-original-toggle[aria-pressed="true"]{background:color-mix(in srgb,var(--warm) 16%,transparent)}
 p.source-reader-original{margin:.15rem 0 .6rem;color:var(--dim)}
 .source-reader-original-l{font-weight:600;margin-right:.25rem}
+
+.source-reader-tea-link{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid var(--line,#8885);border-radius:6px;font:500 13px/1.3 var(--ar-ui,system-ui,sans-serif);color:inherit;text-decoration:none;white-space:nowrap}.source-reader-tea-link:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* Compact dialogue uses the same turn nodes and correction owner; timing is optional metadata. */
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group{display:block!important;grid-template-columns:none!important;margin:0 0 .3em!important;padding:0!important;border:0!important;min-height:0!important}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group>.source-speaker{display:inline!important;width:auto!important;min-width:0!important;margin:0 .5em 0 0!important;padding:0!important;line-height:inherit!important;white-space:nowrap}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group>.tx{display:inline!important;margin:0!important;padding:0!important;min-width:0!important}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group .source-remark{display:inline!important;margin:0 .3em 0 0!important;padding:0!important;border:0!important;line-height:inherit!important}
+html body.wbf-on #app #workspace .source-reader[data-source-reader]:not(.source-reader-show-timing) .source-dialogue-group>:is(.tm,time){display:none!important}
+html body.wbf-on #app #workspace .source-reader[data-source-reader].source-reader-show-timing .source-dialogue-group>:is(.tm,time){display:inline!important;float:right;font:400 12px/1.6 var(--ar-ui,system-ui,sans-serif);margin-left:12px;color:var(--dim)}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-boundary{display:block!important;border-top:1px solid var(--line,#8884)!important;padding-top:.5em!important;margin-top:.6em!important}
+
+html body.wbf-on #app #workspace .source-reader[data-source-reader]:not(.source-reader-paired) [data-source-reader-pair]{display:contents}
+html body.wbf-on #app #workspace .source-reader[data-source-reader].source-reader-paired [data-source-reader-pair]{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:0 16px;margin:0 0 .25em;min-width:0;align-items:start}
+html body.wbf-on #app #workspace .source-reader[data-source-reader].source-reader-paired [data-source-reader-pair]>.source-remark{display:block!important;grid-column:2;grid-row:1;margin:0!important;min-width:0;overflow-wrap:anywhere}
+html body.wbf-on #app #workspace .source-reader[data-source-reader].source-reader-paired [data-source-reader-pair]>.source-reader-original:not([hidden]){display:block;grid-column:1;grid-row:1;margin:0;font:inherit;line-height:inherit;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--dim)}
+.source-reader-paired .source-reader-original-l{display:none}.source-reader-pair-legend{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:16px;width:100%;color:var(--dim);font:500 12px/1.5 var(--ar-ui,system-ui,sans-serif)}
+@media(max-width:600px){html body.wbf-on #app #workspace .source-reader[data-source-reader].source-reader-paired [data-source-reader-pair]{gap:0 10px;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}.source-reader-pair-legend{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:10px}}
+
+.source-reader-paired [data-source-reader-pair-kind="edited"]>.source-remark::before{content:"Edited wording · ";font:500 11px/1.5 var(--ar-ui,system-ui,sans-serif);color:var(--dim)}
+.source-reader-paired [data-source-reader-pair]>div:has([data-source-reader-edit]){grid-column:1/-1}
+
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group .source-remark[hidden]{display:none!important}
+
+/* Consecutive remarks share one speaker label, but retain their individual reading lines. */
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group>.source-speaker{display:block!important;margin:0 0 2px!important}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group>.tx{display:block!important}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group .source-remark{display:block!important;margin:0 0 3px!important;white-space:pre-wrap;overflow-wrap:anywhere}
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group .source-remark[hidden]{display:none!important}
+
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dialogue-group{margin-bottom:1em!important}
+.source-reader [data-source-reader-edit]{gap:4px;margin:3px 0 8px}
+.source-reader [data-source-reader-edit]>.small{margin:0;font-size:11px;color:var(--dim)}
+.source-reader-speaker-edit{font:400 12px/1.5 var(--ar-ui,system-ui,sans-serif)}
+
+/* Caret entry adds no area decoration; tools never participate in transcript layout. */
+.source-reader-inline-tools{position:fixed;z-index:85;right:24px;bottom:16px;max-width:min(420px,calc(100vw - 32px));background:var(--paper);color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:6px}
+.source-reader-inline-tools [data-source-reader-edit]{margin:0;gap:4px}
+.source-reader-inline-tools .source-reader-speaker-edit{font-size:12px}
+.source-reader-inline-tools [data-source-reader-edit]>.small{display:none}
+
+.source-reader-translation-readiness{margin:4px 0 10px;color:var(--dim);font:400 12px/1.5 var(--ar-ui,system-ui,sans-serif)}
+
+.source-reader .source-remark{cursor:text}
+
+/* Editable from the first render: focus has no visual state or box of its own. */
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-remark,
+html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-remark:is(:focus,:focus-visible){outline:none!important;background:none!important;box-shadow:none!important;border-radius:0;caret-color:currentColor}
+.source-reader-inline-tools[hidden]{display:none!important}

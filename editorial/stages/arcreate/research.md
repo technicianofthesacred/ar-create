@@ -2,9 +2,15 @@
 
 Adrian, 2026-10-04: "the goal is also to deeper educate people", and "before the whole story is written all these new things are considered." Research runs once the clean record exists and before anything is written from it. For a Teajia magazine story it is the first half of step 3, before the map.
 
-Write the research file where the brand's profile says (Teajia: `MAG/Workflow/3-Develop/RESEARCH - [Title].md`), as a bare-list working file. Worked example of the thinking: the Hong Kong day 1 debrief, where checking turned "Hong Kong storage has a bad reputation" into "Hong Kong storage is a place, not a flavor" and surfaced the 88 Qing story.
+Write the research file where the brand's profile says (Teajia: `MAG/Workflow/3-Develop/RESEARCH - [Title].md`), as a readable learning document for Adrian and agents using the same underlying record. Worked example of the thinking: the Hong Kong day 1 debrief, where checking turned "Hong Kong storage has a bad reputation" into "Hong Kong storage is a place, not a flavor" and surfaced the 88 Qing story.
 
 A recording already past this point: run research once before the next thing made from it is shown to Adrian, and fix that thing from it.
+
+## Write for reading and reuse (adopted 2026-10-22)
+
+Begin with a short useful overview of what the inquiry helps Adrian understand, then use descriptive semantic headings and substantial explanations. Give each finding a descriptive lead and a separate paragraph or item. Use numbered lists only when order or a stable reference matters; do not produce one giant dense numbered block. Explain unfamiliar terms and the significance of the finding. The sections below describe the work to cover, not a compulsory form or a limit on useful depth.
+
+Within a finding, make the source evidence, attributed view, interpretation, uncertainty and possible editorial use distinguishable in plain language. Put citations beside the claims they support. Preserve known quotation, speaker/time, page/section, edition and URL/date anchors; never invent one. Keep exact technical provenance available in secondary details where supported, rather than filling the default reading with raw paths. Do not remove provenance or full analysis to shorten the overview, create a second summary authority, rewrite human/source words or change quotation permissions. The closing “What you can now share” is a useful entry point, not the only part intended for Adrian to read.
 
 ## 1. Claims
 
@@ -56,7 +62,7 @@ Rules:
 
 ## 5. For Adrian, and for the people who spoke
 
-- **What you can now share** (for Adrian): the corrected and new facts, each in one plain line, so he can say them in future talks. Then what to ask, taste or see next time, and one or two good reads. This is the only part of the research file he reads: send it as a reading link when this step stops.
+- **What you can now share** (for Adrian): the corrected and new facts, each in one plain line, so he can say them in future talks. Then what to ask, taste or see next time, and one or two good reads. Send a reading link to the same full research document when this step stops; this section offers a quick return point while the complete analysis remains readable and available.
 - **What we learned** (for each other speaker): what research confirmed, corrected or added about what they said, in two or three short lines. It goes into the message they get after publishing, so they learn it too.
 - **Teach points**: the one to three things a reader should leave knowing, and the terms worth defining. The brand's profile says where those go.
 - **Threads**: an idea that also turns up in another recording's research. Name them. Three or more is a series worth raising with Adrian.

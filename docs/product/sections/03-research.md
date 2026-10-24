@@ -77,3 +77,18 @@ Adopted: Library sources/personal notes once; Collections as reusable topic/inqu
 ## 20 October — Current understanding and useful return
 
 Applies the adopted return-to-work requirements, C01–C06; stated once in [PRODUCT, resume creative work without reconstructing its history](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), including the finish criterion.
+
+## Workbench step 3 review candidate — 21 October
+
+Requirements C04/C05/C06, S03. The approved console uses the existing bounded case-sensitive Library text lookup, rather than searching only the visible project DOM. It returns exact source identities/hashes, passages and surrounding context, with provenance disclosed only when returned by the maintained source reader. It does not run AI, verify a claim, add a citation, change research decisions or send questions to a provider. Console history remains transient in this open page. Unsupported formats, scan limits, missing files and unavailable services are explicit.
+
+Finish criterion for this bounded connection: native console lookup finds an invented imported Library source outside the visible project findings, opens that same exact source, and preserves pending human wording and current project; stale/cancelled results cannot appear after a story/stage switch. Review candidate only; no installation or broader semantic/web/Atlas retrieval claim.
+
+
+## 22 October — Research is a readable document for the person and AI
+
+Adopted intent, C04/C05/C06 and S03: retained and newly prepared research must be useful to Adrian as a learning document and reusable by agents from the same underlying record. A giant dense numbered block does not meet that intent. Start with a short useful overview, then semantic headings and substantial explanations. Give a finding a descriptive lead and its own paragraph or item; preserve depth rather than replacing the full analysis with summaries. Explain unfamiliar terms and distinguish source evidence, interpretation, uncertainty and possible editorial use in plain language. Keep citations near their claims and known source/page/section/speaker/time anchors available; detailed exact provenance can use secondary disclosure without a default raw-path wall. No invented facts, rewritten human/source words or new quotation permissions follow from readability work.
+
+The document reader uses a readable line length, paragraph spacing and heading hierarchy in both themes and at wide/narrow widths. Library source titles/rows open the correct reader for that same exact record; a redundant Read button is unnecessary. Root production guidance must support the readable structure as well as the renderer. Older bare-list and closing-summary-only instructions are superseded by this human-and-agent reading requirement, without making a new form or a second research store.
+
+Finish criterion: an invented structured research document opens through its Library title/row with correct identity and displays an overview, headings, paragraphs/findings and usable citations on the actual wide/narrow screen; the full underlying record and its source text/hash remain unchanged by rendering. Review the maintained generation and installation paths for conflicting instructions before claiming production guidance reaches them. Existing private documents are not silently rewritten. This brief records adopted intent, not implementation, installation, provider execution or proof that an external skill was updated.

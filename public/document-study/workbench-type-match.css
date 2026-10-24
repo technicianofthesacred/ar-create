@@ -1,0 +1,11 @@
+/* Native tools use the same approved Workbench type tokens as their surrounding
+   surface. Platform artwork inside rendered slides intentionally keeps its own type. */
+html body.wbf-on #workspace .sws-source :is(input,select),
+html body.wbf-on #workspace #direction-writing-tools .dwt-context .dwt-fields input,
+html body.wbf-on #current-draft-check .sws-check-tools .sws-field :is(input,select){font-family:var(--ar-ui)!important;font-size:var(--t-label)!important;line-height:1.5!important;font-weight:400!important}
+html body.wbf-on #workspace .sws-source textarea,
+html body.wbf-on #current-draft-check .sws-check-tools .sws-field textarea{font-family:var(--ar-ui)!important;font-size:var(--t-body)!important;line-height:1.5!important;font-weight:400!important}
+html body.wbf-on #workspace.wb-arrange .oss-disclosure :is(p,label),
+html body.wbf-on #workspace.wb-arrange .oss-disclosure .oss-muted{font-family:var(--ar-ui)!important;font-size:var(--t-label)!important;line-height:1.5!important}
+html body.wbf-on #workspace.wb-arrange .car-workspace :is(.car-sequence-template,.car-sequence-actions button,.car-sequence-photos :is(a,button),.car-add-slide button),
+html body.wbf-on #workspace.wb-arrange #study-output-canvas footer.cwb-status :is(span,strong,small){font-family:var(--ar-ui)!important;font-size:var(--t-label)!important;line-height:1.5!important;font-weight:400!important}

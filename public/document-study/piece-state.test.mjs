@@ -21,7 +21,7 @@ test('one read answers every surface: words, binding, outputs, published and sav
  assert.equal(st.manuscript.bound,true);assert.equal(st.manuscript.revision,7);assert.equal(st.save.word,'Saved');
  assert.equal(st.outputs.length,1);assert.equal(st.waiting.length,1);
  assert.equal(st.published.label,'Published outside AR Create');
- assert.equal(st.textOnly,true,'an article with no photographs is words only');
+ assert.equal(st.textOnly,false,'a saved article still has a composition and audience edition');
 });
 
 test('a published piece with no saved draft says why Check cannot run instead of "nothing yet"',()=>{
@@ -91,3 +91,7 @@ test('C1: New output opens the bar’s More where the kinds of output live',asyn
  const {w,ps}=fixture({stage:12});let opened=null;w.surfaceBar={openMore:s=>{opened=s;}};
  await ps.run(ps.primary(12));assert.equal(opened,'New output');
 });
+
+test('saved Article composition remains applicable even without photographs',()=>{const {ps,w}=fixture({stage:9,binding:{id:'b1'},outputs:[{id:'a',format:'Article'}]});assert.equal(ps.notApplicable(9),'');assert.equal(ps.read().textOnly,false);w.close();});
+test('shared output state keeps delayed reads unknown and failures distinct from empty',async()=>{for(const failure of [false,true]){const {ps,w}=fixture({stage:12,outputs:null});let settle;const pending=new Promise(resolve=>settle=resolve);w.realOutputOverview={read:async()=>{await pending;if(failure)throw Error('Saved reader offline.');return {projectId:'p1',outputs:[{id:'saved',format:'Article'}]};}};const loading=ps.load();assert.equal(ps.read().loading,true);assert.equal(ps.read().textOnly,null);assert.equal(ps.primary(12).label,'Reading saved outputs…');settle();await loading;assert.equal(ps.read().loading,false);if(failure){assert.equal(ps.read().outputs,null);assert.equal(ps.primary(12).label,'Outputs unavailable');assert.match(ps.primary(12).reason,/offline/);}else{assert.equal(ps.read().outputs[0].id,'saved');assert.equal(ps.notApplicable(9),'');}w.close();}});
+test('unavailable output reader never establishes text-only empty outputs',async()=>{const {ps,w}=fixture({stage:9,outputs:null});w.realOutputOverview={read:async()=>({projectId:'p1',outputs:[],availability:{state:'unsupported',message:'Not connected here.'}})};await ps.load();assert.equal(ps.read().outputs,null);assert.equal(ps.read().textOnly,null);assert.equal(ps.notApplicable(9),'');assert.match(ps.read().outputError,/Not connected/);w.close();});

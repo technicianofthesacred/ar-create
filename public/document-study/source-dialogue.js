@@ -59,6 +59,12 @@ export function renderConversationNotes(session, records) {
     }).join('')}</ul>` : `<p class="muted">${key === 'stories' ? 'No distinct story identified.' : 'No points recorded.'}</p>`}</section>`;
   }).join('')}</div>`;
 }
+function groupTime(group) {
+  const value = group.turns[0]?.timestamp;
+  // Timing belongs to the first supplied remark, never an inferred group offset.
+  if (typeof value !== 'string' || !value.trim() || !Number.isFinite(clock(value))) return '';
+  return `<time datetime="${escape(value)}" title="Timestamp of first remark">${escape(value)}</time>`;
+}
 export function renderSourceGroups(session) {
-  return `<div class="recordBody source-dialogue">${groupTurns(session.turns).map(group => `<section class="source-dialogue-group${group.boundary ? ' source-dialogue-boundary' : ''}">${group.speaker ? `<p class="source-speaker"><strong>${escape(group.speaker)}</strong></p>` : ''}${group.turns.map(turn => `<p class="source-remark" data-source-session="${escape(session.id)}" data-source-turn="${escape(turn.id)}">${escape(turn.text).replace(/\n/g, '\n<br>')}</p>`).join('')}</section>`).join('')}</div>`;
+  return `<div class="recordBody source-dialogue">${groupTurns(session.turns).map(group => `<section class="source-dialogue-group${group.boundary ? ' source-dialogue-boundary' : ''}">${groupTime(group)}${group.speaker ? `<p class="source-speaker"><strong>${escape(group.speaker)}</strong></p>` : ''}${group.turns.map(turn => `<p class="source-remark" data-source-session="${escape(session.id)}" data-source-turn="${escape(turn.id)}">${escape(turn.text).replace(/\n/g, '\n<br>')}</p>`).join('')}</section>`).join('')}</div>`;
 }

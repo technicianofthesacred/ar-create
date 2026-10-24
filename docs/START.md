@@ -41,9 +41,11 @@ Read [AGENTS.md](../AGENTS.md) first. This page is enough to act. Intent lives i
 | `project`, `parentStudyId` | A Project's identity in the older APIs. Agents pass `parentStudyId`. |
 | working root | `study-draft-copies/copies/<bindingUUID>/workflow/Workflow/`, holding `DEV - Collection.md` and the Piece's working text. |
 
-## The screen: three regions and one bar
+## The screen: approved workbench direction
 
-The shell (`public/document-study/shell.js`) mounts four things. The **sidebar** has Home and the piece switcher at its head, then the twelve steps under their groups, each with one state word; on a phone it is a sheet opened by the step name in the bar. The **bar** shows where you are, Undo, Margin or Focus, More, and exactly one primary action. The **work column** is the section. The **inspector** (Margin and Decisions) appears only in Write and Read, where passages are anchored. Removed for good: the path strip, the pieces column, the work-context strip, the bottom location bar and a tab row of their own. `tests/shell-gate.test.mjs` fails if any returns. Typography: the shipped system sans with A- and A+ for Write, Read and Check; Atlas (Lora and Cormorant) for Source, Research, notes and shared prose. Design baseline: the Tree (commit `094204e`) on C3, rebuilt as this shell. Keep that look; do not restore an older pass.
+The current design authority is the approved [C workbench preview](../design/three-directions/c-workbench/index.html) and its [revisions 2–5 and final notes](../design/three-directions/c-workbench/NOTES.md). The navigation is unnumbered: a 66px icon rail sits beside a 240px current-owner panel when that section has places to navigate, then the work area. On phones, navigation becomes group sheets. Do not imply that the twelve product sections form a numbered or compulsory sequence.
+
+Use Plus Jakarta Sans throughout the interface with the approved 13/15/16/17px scale, shared A−/A+ sizing, and Lora only for speech. Read and Write share the same document geometry. This is the approved design direction; its step-1 implementation remains a review candidate and is not installed. The installed app and its existing data connections remain as recorded in [CURRENT](status/CURRENT.md).
 
 ## Where data lives
 

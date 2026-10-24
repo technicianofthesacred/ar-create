@@ -14,3 +14,11 @@
 :root .draft-check-room .flow-action[data-current-check="run"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 :root .draft-check-room .flow-action:not(:disabled):hover,:root .draft-check-room .flow-action:not(:disabled):focus-visible{background:var(--green);color:var(--draft-check-on-green);border-color:var(--green)}
 :root .draft-check-room .flow-action:disabled{background:transparent;color:var(--dim);border-color:var(--line);opacity:1}
+
+/* Preview is the current editor with editing affordances put away, never a saved snapshot. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-write-view="preview"] #app #workspace .desk>#margin,
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-write-view="preview"] #app #workspace :is(.draft-approval-rail,.draft-tabs,.draft-surface-document-meta),
+html body[data-write-view="preview"] #app :is(#selectionTools,.hovertools){display:none!important}
+html body[data-write-view="preview"] #manuscript{cursor:text;outline:none!important;user-select:text}
+html body[data-write-view="preview"] #manuscript [data-block]{cursor:text}
+html body[data-write-view="preview"] #c3-surface-bar :is(.sb-margin,.sb-focus,.sb-insp,[data-sb-undo]){display:none!important}

@@ -1,0 +1,125 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+const code=name=>fs.readFileSync(new URL('../public/document-study/'+name+'.js',import.meta.url),'utf8');
+const tick=()=>new Promise(r=>setTimeout(r,0));
+function setup(t,{query='reviewCarousel=target',view='article'}={}){
+ const dom=new JSDOM('<div id="app"></div><div id="hover-tools" hidden></div>',{url:'http://localhost/document-study/index.html'+(query?'?'+query:''),runScripts:'outside-only',pretendToBeVisual:true});t.after(()=>dom.window.close());
+ const w=dom.window;w.matchMedia=()=>({matches:false});w.AR_CREATE_REVIEW_MODE={actualWork:true};
+ const project={id:'previous',name:'Previous project',view,viewedStage:5,blocks:[{id:'old',tag:'p',html:'Previous manuscript words'}],slides:view==='carousel'?[{text:'Previous carousel words',role:'cover'}]:[],history:[],rev:1,scroll:0};
+ w.localStorage.setItem('ar-existing-work-review-v1:ar-create-packaged-document-study-v1',JSON.stringify({project:'previous',projects:[project],theme:'dark',variant:'visible'}));
+ w.eval(code('review-mode')+'\n'+code('synthetic-study-data')+'\n'+code('study')+'\nwindow.state=state;window.current=current;');
+ let resolveCatalog,resolveOwner;
+ w.fetch=()=>new Promise(resolve=>{resolveCatalog=(fail=false)=>resolve({ok:!fail,json:async()=>fail?{error:'Catalog unavailable'}:({mode:'existing-work-read-only',stories:[],sources:[]})});});
+ w.studyDraft={flush:async()=>({dirty:false})};
+ w.workbenchPieces={carouselEdition:id=>id==='target'?{origin:w.location.origin,projectId:id}:null,openCarousel:()=>new Promise((resolve,reject)=>{resolveOwner=(fail=false)=>{if(fail){reject(Error('Exact saved carousel unavailable'));return;}const p=w.current();p.id='target';p.view='carousel';p.slides=[{text:'Requested carousel words',role:'cover'}];w.state.project='target';w.render();resolve(true);};})};
+ return {w,start:()=>w.eval(code('existing-work')),catalog:fail=>resolveCatalog(fail),owner:fail=>resolveOwner(fail)};
+}
+for(const view of ['article','carousel'])test('cached '+view+' is concealed before study first render until exact owner resolves',async t=>{
+ const s=setup(t,{view}),{w}=s,app=w.document.getElementById('app');
+ assert.equal(w.getComputedStyle(app).visibility,'hidden');assert.equal(app.hasAttribute('inert'),true);
+ assert.match(app.textContent,/Previous (manuscript|carousel) words/,'cached owner remains mounted without destructive state replacement');
+ s.start();s.catalog();await tick();
+ assert.equal(w.getComputedStyle(app).visibility,'hidden');
+ s.owner();await tick();
+ assert.notEqual(w.getComputedStyle(app).visibility,'hidden');assert.equal(app.hasAttribute('inert'),false);assert.match(app.textContent,/Requested carousel words/);
+ assert.equal(w.document.querySelector('[data-review-startup]'),null);
+});
+test('unavailable exact route keeps prior work concealed and Retry preserves the complete URL',async t=>{
+ const s=setup(t,{query:'reviewCarousel=missing'}),{w}=s,url=w.location.href;s.start();s.catalog();await tick();
+ const status=w.document.querySelector('[data-review-startup]');assert.ok(status);assert.match(status.textContent,/could not|unavailable/i);
+ assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');assert.equal(w.document.querySelector('[data-review-startup] a').href,url);assert.equal(w.location.href,url);
+});
+test('ordinary no-query startup retains its existing visible workspace',t=>{
+ const {w}=setup(t,{query:''});assert.equal(w.document.querySelector('[data-review-startup]'),null);assert.notEqual(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+});
+
+test('a failed owner stays concealed even if another catalog refresh succeeds',async t=>{
+ const s=setup(t),{w}=s;s.start();s.catalog();await tick();s.owner(true);await tick();
+ assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+ const refresh=w.existingWork.load();s.catalog();await refresh;
+ assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+ assert.equal(w.document.querySelector('[data-review-startup] a').href,'http://localhost/document-study/index.html?reviewCarousel=target');
+});
+test('catalog failure and duplicate route values retain the exact failed URL',async t=>{
+ for(const query of ['reviewCarousel=target','reviewCarousel=target&reviewCarousel=other']){
+  const s=setup(t,{query}),{w}=s,url=w.location.href;s.start();s.catalog(query==='reviewCarousel=target');await tick();
+  assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup] a').href,url);assert.equal(w.location.href,url);
+ }
+});
+test('exact Magazine entry stays concealed through its owner load and rejects cancelled pickup',async t=>{
+ for(const cancelled of [false,true]){
+  const query=new URLSearchParams({reviewStory:'story',reviewStage:'5',reviewMagazineStory:'mag-story',reviewMagazinePiece:'piece',reviewMagazineParent:'previous'}).toString();
+  const s=setup(t,{query}),{w}=s,hash='a'.repeat(64);let finish;
+  w.AR_CREATE_REVIEW_MODE.magazineDraftCorrections=true;
+  const target={kind:'magazine',edition:'working',artifactId:'draft',hash,nativeProjectId:'previous',storyId:'mag-story',pieceId:'piece',partKey:'one',editable:true};
+  w.fetch=async()=>({ok:true,json:async()=>({mode:'existing-work-read-only',sources:[],stories:[{id:'story',name:'Requested story',nativeProjectId:'previous',artifacts:[{artifactId:'draft',hash,kind:'DEV',magazineWorkingTarget:target}]}]})});
+  w.studyDraft.openMagazine=()=>new Promise(resolve=>{finish=()=>{if(cancelled){resolve(null);return;}const p=w.current();p.view='article';p.viewedStage=5;p.blocks=[{id:'new',tag:'p',html:'Requested Magazine words'}];w.render();resolve({owner:{kind:'magazine',storyId:'mag-story',pieceId:'piece',partKey:'one'},parentStudyId:'previous',expected:{workflow:{draft:hash}},dirty:false});};});
+  s.start();await tick();assert.equal(w.arCreateReviewStartup.pending,true);finish();await tick();
+  assert.equal(w.arCreateReviewStartup.pending,cancelled);
+  if(cancelled)assert.ok(w.document.querySelector('[data-review-startup] a'));else assert.match(w.document.getElementById('app').textContent,/Requested Magazine words/);
+ }
+});
+test('an intentional later section supersedes the pending initial URL',async t=>{
+ const s=setup(t),{w}=s;s.start();await w.viewPhase(3);s.catalog();await tick();
+ assert.equal(w.arCreateReviewStartup.pending,false);assert.equal(w.current().viewedStage,3);assert.equal(w.current().id,'previous');
+ assert.equal(w.document.querySelector('[data-review-startup]'),null);
+});
+test('an exact original read failure cannot reveal the cached manuscript behind its reader',async t=>{
+ const hash='a'.repeat(64),s=setup(t,{query:new URLSearchParams({reviewStory:'story',reviewArtifact:'draft',reviewHash:hash}).toString()}),{w}=s;
+ w.fetch=async url=>({ok:url==='/api/review/catalog',json:async()=>url==='/api/review/catalog'?{mode:'existing-work-read-only',sources:[],stories:[{id:'story',name:'Requested story',nativeProjectId:'previous',artifacts:[{artifactId:'draft',hash,kind:'DEV'}]}]}:{error:'Requested original unavailable'}});
+ s.start();await tick();await tick();
+ assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');assert.ok(w.document.querySelector('[data-review-startup] a'));
+});
+
+test('failed exact route offers an explicit workspace entrance without changing the route or cached words',async t=>{
+ const s=setup(t,{query:'reviewCarousel=missing#saved-position'}),{w}=s,url=w.location.href,cache=w.localStorage.getItem('ar-create-packaged-document-study-v1');
+ s.start();s.catalog();await tick();
+ const links=[...w.document.querySelectorAll('[data-review-startup] a')];
+ assert.deepEqual(links.map(a=>a.textContent),['Retry','Open workspace']);
+ assert.equal(links[0].href,url);assert.equal(links[1].href,'http://localhost/document-study/index.html');
+ assert.equal(w.location.href,url);assert.equal(w.localStorage.getItem('ar-create-packaged-document-study-v1'),cache);
+ assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');assert.equal(w.document.getElementById('app').hasAttribute('inert'),true);
+});
+
+test('exact entry stays concealed through a stalled current-owner flush and reports its refusal',async t=>{
+ for(const dirty of [false,true]){
+  const s=setup(t,{query:'reviewStory=story&reviewStage=5'}),{w}=s;let release,flushing=false;
+  const held=new Promise(resolve=>{release=resolve;});w.studyDraft.flush=async()=>{flushing=true;return held;};
+  w.AR_CREATE_REVIEW_MODE.studyDraftCorrections=true;w.studyDraft.openBinding=async input=>({bindingId:input.bindingId,parentStudyId:input.parentStudyId,expected:{workflow:{draft:'synthetic-hash'}},dirty:false});
+  w.fetch=async()=>({ok:true,json:async()=>({mode:'existing-work-read-only',sources:[],stories:[{id:'story',name:'Synthetic story',nativeProjectId:'previous',artifacts:[],latestDraft:{hash:'synthetic-hash'}}],workspaceLinks:{pieces:[{workspaceId:'synthetic-workspace',targets:[{workspaceId:'synthetic-workspace',documentId:'synthetic-document',rootBindingId:'synthetic-binding',parentStudyId:'previous',partKey:'article',originalHash:'synthetic-hash'}]}]},workspacePieces:[{id:'synthetic-workspace',documentId:'synthetic-document'}]})});
+  const before=JSON.stringify(w.current().blocks),url=w.location.href;s.start();await tick();await tick();
+  assert.equal(flushing,true);assert.ok(w.existingWork.catalog(),'catalogue completion does not imply route completion');assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup]').textContent,'Checking your current writing…');assert.equal(w.document.querySelector('[data-review-startup]').dataset.reviewOpeningStep,'flush-current');assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');assert.equal(JSON.stringify(w.current().blocks),before);
+  release({dirty});await w.existingWork.load();await tick();
+  if(dirty){assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup]').getAttribute('role'),'alert');assert.equal(w.document.querySelector('[data-review-startup] a').href,url);assert.equal(JSON.stringify(w.current().blocks),before);}
+  else{assert.equal(w.arCreateReviewStartup.pending,false);assert.equal(w.current().id,'previous');assert.equal(w.current().viewedStage,5);}
+ }
+});
+
+test('concealed startup restores saved output words mode without waiting for visibility, while navigation awaits host flush',async t=>{
+ const s=setup(t,{query:'reviewStory=story&reviewStage=5',view:'record'}),{w}=s,p=w.current(),root='synthetic-primary',outputId='synthetic-carousel';
+ p.id='hk';p.viewedStage=9;w.state.project='hk';w.structuredClone=structuredClone;
+ const output={id:outputId,kind:'carousel',title:'Synthetic saved carousel',slides:[],outputRevision:1},scope={rootBindingId:root,parentStudyId:'hk'};
+ const view={scope,documentId:root,photoScope:{projectId:'synthetic-physical',documentId:'synthetic-document'},outputs:[output],outputBindings:[{outputId,wordOwner:{kind:'carousel-words',projectId:'synthetic-physical',documentId:'synthetic-document',outputId}}],output,expectedOutput:{revision:1,hash:'synthetic-receipt'},writingProof:{kind:'carousel-words',outputId}};
+ const catalog={mode:'existing-work-read-only',sources:[],stories:[{id:'story',name:'Synthetic story',nativeProjectId:'hk',artifacts:[]}]};
+ w.localStorage.setItem('ar-study-output-connection-v1',JSON.stringify({groups:{},selection:{hk:{rootBindingId:root,outputId,mode:'words'}}}));
+ w.fetch=async url=>{const path=new URL(url,w.location.href).pathname;return {ok:true,json:async()=>path==='/api/review/catalog'?catalog:path==='/api/study-draft/catalog'?{drafts:[{bindingId:root,parentStudyId:'hk',bindingStatus:'ready'}]}:view};};
+ let release,hostFlushes=0,modeClicks=0;const held=new Promise(resolve=>{release=resolve;});
+ w.ArStudyOutputHost={mountStudyOutputHost:async element=>{element.innerHTML='<button>Writing content</button>';element.querySelector('button').onclick=()=>{modeClicks++;};return {model:{selectedOutputId:outputId,outputs:[output],expectedOutput:view.expectedOutput,writingProof:view.writingProof},flush:async()=>{hostFlushes++;await held;},destroy(){}};}};
+ w.eval(code('output-connection'));await tick();await tick();
+ assert.equal(modeClicks,1,'mode restoration clicks the exact enabled control even behind the startup veil');assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+ s.start();await tick();await tick();assert.ok(hostFlushes>0);assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup]').dataset.reviewOpeningStep,'catalog');
+ release();await w.existingWork.load();await tick();assert.equal(w.arCreateReviewStartup.pending,false);assert.equal(p.viewedStage,5);assert.equal(p.id,'hk');
+});
+
+
+test('startup phase labels reject unknown steps and cannot replace a failed or completed gate',t=>{
+ const {w}=setup(t),startup=w.arCreateReviewStartup,status=w.document.querySelector('[data-review-startup]');
+ startup.phase('catalog');assert.equal(status.textContent,'Finding your saved work…');assert.equal(status.dataset.reviewOpeningStep,'catalog');
+ for(const step of ['unknown-step','constructor','__proto__']){startup.phase(step);assert.equal(status.textContent,'Finding your saved work…');assert.equal(status.dataset.reviewOpeningStep,'catalog');}
+ startup.phase('flush-current');assert.equal(status.textContent,'Checking your current writing…');assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+ startup.fail('Synthetic exact owner refused');const failure=status.innerHTML;startup.phase('open-binding');assert.equal(status.innerHTML,failure);assert.equal(status.getAttribute('role'),'alert');assert.equal(startup.pending,true);
+ startup.complete();assert.equal(startup.pending,false);assert.equal(w.document.querySelector('[data-review-startup]'),null);startup.phase('catalog');assert.equal(w.document.querySelector('[data-review-startup]'),null);assert.equal(status.innerHTML,failure);assert.equal(w.document.documentElement.hasAttribute('data-review-startup-pending'),false);
+});

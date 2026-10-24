@@ -76,3 +76,13 @@ Finish criterion: actual project button opens its existing folder; synthetic fol
 ## 20 October — Mixed-origin topic collection and learning
 
 Material intake accepts the agreed mixed-origin topic model: batch video URLs, available transcripts, files and personal notes, with reusable topic relationships and understandable existing folder/source locations. Inspect and reuse current maintained folders and IDs before implementation; no duplicate originals or new store/migration. URL saved, transcript available, processing pending/failed and usable source are different states. Reversible grouping and compact browse mechanics remain proposed interface input. Follow the [adopted cross-section contract](../PRODUCT.md#20-october--mixed-origin-topic-learning-and-understandable-source-organization). Requirements are not completion proof.
+
+
+## Existing-file connection acceptance · 21 October
+
+C02/C04/C06: point at explicitly configured existing folders/catalogs; discover their current files without copying bodies or requiring another import. Cold Library browsing and agent/console lookup must agree on source identity, revision and availability. Keep original folders, kept-session UUIDs and current working-text authority. Show missing/unavailable paths as such instead of silently presenting an empty collection. Verify existing An Cha material, Hong Kong research/carousel references and Porcelain media through their respective owners; a prototype's sample count is not a real inventory.
+
+
+## 22 October — Open a Library document directly
+
+S01/C02/C04/C05/C06: the source title/row is the normal accessible opening target; no separate Read button is required for the same action. Exact source identity and owning story determine the reader and applicable section. A research file opens in that story's Research workspace rather than over an unrelated story. Keep Library return/search position and unsaved work safe. Research reading uses semantic headings/lists, comfortable measure and disclosure of long file-reference metadata; preserve complete source text. This is adopted intent; installation and actual navigation/rendering proof are separate.

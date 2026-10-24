@@ -41,3 +41,9 @@ test('other stages and non-record views receive no new stage UI',t=>{
 test('Material review-source action navigates to Source after the original control runs',async t=>{
  const f=fixture(t);f.paint();let original=0;const b=f.d.querySelector('[data-sws-open-source]');b.onclick=()=>original++;b.click();await new Promise(r=>setTimeout(r,0));assert.equal(original,1);assert.equal(f.project.viewedStage,2);
 });
+
+test('Check drawer retains editorial preparation beside Write without changing its mode',t=>{
+ const f=fixture(t,5);f.project.view='article';const host=f.d.querySelector('#current-draft-check');const drawer=f.d.createElement('aside');drawer.id='wbf-drawer';drawer.innerHTML='<div class="dr-body" data-tool="check"></div>';f.d.body.append(drawer);drawer.firstChild.append(host);
+ f.w.studyStageWorkSurfaces.decorate();assert.ok(host.querySelector('[data-sws-check]'));input(f,'editorial-question','Preserve this wording');host.querySelector('[data-sws-action="editorial"]').click();assert.match(host.querySelector('[data-sws-result]').textContent,/no check has run or been saved/);assert.equal(f.project.viewedStage,5);assert.equal(f.project.view,'article');
+});
+test('Check changes scope recognizes exact Magazine owner and never presents its local sequence as a saved revision',t=>{const f=fixture(t,7),H='a'.repeat(64),owner={kind:'magazine',storyId:'registered-clay',pieceId:'registered-clay:part-2',path:'Workflow/3-Develop/DEV - Invented.md',partKey:'2',title:'Invented second part'};f.w.studyDraft={currentProof:()=>({owner:{...owner},parentStudyId:f.project.id,draftHash:H,expected:{workflow:{draft:H}},sequence:0,dirty:false}),currentBinding:()=>null,currentOwner:()=>owner};f.w.studyStageWorkSurfaces.decorate();const scope=f.d.querySelector('.sws-check-scope');assert.match(scope.textContent,/Invented second part/);assert.match(scope.textContent,/Saved wording/);assert.doesNotMatch(scope.textContent,/Choose a saved manuscript|revision 0/);});

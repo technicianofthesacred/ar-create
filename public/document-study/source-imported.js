@@ -1,17 +1,24 @@
 /* The kept conversation reader is a projection; source sessions remain server-owned. */
 import {renderConversationNotes, resolveNoteAnchors, renderSourceGroups} from './source-dialogue.js';
+import {detectInterpretation,pairingInfo,isSourceBoundary} from './interpretation-view.js';
+import {translationReadiness,prepareTranslationBatch} from './translation-readiness.js';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const STORAGE = 'ar-create:source-reader:v1';
+// Chromium inserts DIV/BR nodes for plain-text line breaks; innerText doubles blank lines here.
+function editableWords(node){let text='';for(const child of node.childNodes){if(child.nodeType===3)text+=child.nodeValue;else if(child.nodeType===1){if(child.tagName==='BR')text+='\n';else{const block=['DIV','P'].includes(child.tagName);if(block&&text&&!text.endsWith('\n'))text+='\n';text+=editableWords(child);if(block&&child.nextSibling?.nodeType===3&&!text.endsWith('\n'))text+='\n';}}}return text;}
+
 const button = (action, text, disabled=false) => `<button type="button" data-source-reader-action="${action}"${disabled?' disabled':''}>${text}</button>`;
 const namespaced = html => html.replace(/data-note-/g, 'data-source-reader-note-').replace(/data-source-session=/g, 'data-source-reader-session=').replace(/data-source-turn=/g, 'data-source-reader-turn=');
+export function teaLibraryURL(session){if(!session||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(session.sourceId||'')||!/^[a-f0-9]{64}$/i.test(session.sourceHash||''))return null;const url=new URL('https://www.teajia.com/admin/compass');url.search=new URLSearchParams({tab:'library',arSource:session.sourceId}).toString();return url.href;}
 export function installSourceReader({document:doc, window:win=doc.defaultView, getProject, fetch:request=win.fetch.bind(win), storage=win.localStorage, makeId=()=>win.crypto.randomUUID(), observe=true}={}) {
   let stored;
   try { stored=JSON.parse(storage.getItem(STORAGE)||'{}'); } catch { stored={}; }
   const projects=stored.projects && typeof stored.projects==='object'?stored.projects:{};
   const drafts=stored.drafts && typeof stored.drafts==='object'?stored.drafts:{};
   const contextualCopy=new Map();
-  let contextView=null, showOriginal=false;
-  let data={revision:null,sessions:[],notes:{}}, loaded=false, loading=false, loadError='', disposed=false, panel=null, stamp='', refreshQueued=false;
+  const translationBatches=new Map();
+  let contextView=null, showOriginal=false,showTiming=false,navigationEpoch=0;
+  let data={revision:null,sessions:[],notes:{}}, loaded=false, loading=false, loadError='', notConnected=false, disposed=false, panel=null, stamp='', refreshQueued=false,refreshJob=null;
   const active = () => { const p=contextView?.project||getProject(); return p?.view==='record' && Number(p.viewedStage)===2 ? p:null; };
   const room = p => projects[p.id] ||= {sessionId:'',turnId:'',navigation:null,pending:null,message:''};
   const draftKey = (p,s,t) => JSON.stringify([p.id,s.id,t.id]);
@@ -21,36 +28,47 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   function editor(p,s,t) {
     const d=drafts[draftKey(p,s,t)]; if(!d)return '';
     const old=stale(d,s), pending=!!room(p).pending;
-    return `<form data-source-reader-edit="${esc(t.id)}"><label>Speaker<input data-source-reader-field="speaker" value="${esc(d.speaker)}"${pending?' disabled':''}></label><label>Wording<textarea data-source-reader-field="text" rows="4"${pending?' disabled':''}>${esc(d.text)}</textarea></label>${old?`<p class="source-reader-conflict" role="alert">This conversation changed. Your unsaved wording is kept below; saving is blocked until you resolve it.</p><details><summary>Compare saved and unsaved wording</summary><p>Saved now: ${esc(t.speaker)} — ${esc(t.text)}</p><p>Your edit: ${esc(d.speaker)} — ${esc(d.text)}</p><p>Started at revision ${esc(d.baseRevision)} / ${esc(d.baseSourceHash)}. Current revision ${esc(data.revision)} / ${esc(s.sourceHash)}.</p></details>`:''}<div class="source-reader-actions">${button('save','Save correction',pending||old||!d.text.trim())}${button('cancel',old?'Discard my unsaved edit':'Cancel',pending)}</div><p class="small">${old?'Discard only when you have kept any wording you still need.':'Unsaved wording stays on this device until saved or cancelled.'}</p></form>`;
+    return `<form data-source-reader-edit="${esc(t.id)}"><details class="source-reader-speaker-edit"><summary>Speaker</summary><label>Speaker<input data-source-reader-field="speaker" value="${esc(d.speaker)}"${pending?' disabled':''}></label></details>${old?`<p class="source-reader-conflict" role="alert">This conversation changed. Your unsaved wording remains in the remark; saving is blocked until you resolve it.</p><details><summary>Compare saved and unsaved wording</summary><p>Saved now: ${esc(t.speaker)} — ${esc(t.text)}</p><p>Your edit: ${esc(d.speaker)} — ${esc(d.text)}</p><p>Started at revision ${esc(d.baseRevision)} / ${esc(d.baseSourceHash)}. Current revision ${esc(data.revision)} / ${esc(s.sourceHash)}.</p></details>`:''}<div class="source-reader-actions">${button('save','Save correction',pending||old||!d.text.trim())}${button('cancel',old?'Discard my unsaved edit':'Cancel',pending)}</div><p class="small">${old?'Discard only when you have kept any wording you still need.':'Unsaved wording stays on this device until saved or cancelled.'}</p></form>`;
+  }
+  function inlineNode(node,p,s,t) {
+    const d=drafts[draftKey(p,s,t)];if(!d)return;
+    if(node.textContent!==d.text)node.textContent=d.text;node.dataset.sourceReaderField='text';
   }
   function html(p) {
     const r=room(p),s=selected(p),nav=r.navigation, pending=r.pending;
-    const selector=data.sessions.length?`<label class="source-reader-selector">Kept conversations<select data-source-reader-select${pending?' disabled':''}>${data.sessions.map(x=>`<option value="${esc(x.id)}"${x.id===s?.id?' selected':''}>${esc(x.title||'Untitled conversation')}${x.date?' · '+esc(x.date):''}</option>`).join('')}</select></label>`:'';
+    const teaHref=loaded&&!loading&&!loadError&&!pending&&s&&!Object.keys(drafts).some(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}})?teaLibraryURL(s):null;
+    const teaAction=teaHref?`<a class="source-reader-tea-link" data-source-tea-link href="${esc(teaHref)}" target="_blank" rel="noopener noreferrer" title="Review this transcript and choose existing teas in Teajia. Opening saves nothing.">Link to tea library</a>`:'';
+    const selector=data.sessions.length?`<label class="source-reader-selector">Kept conversations · shared Library<select data-source-reader-select${pending?' disabled':''}><option value=""${!s?' selected':''}>Choose a kept conversation</option>${data.sessions.map(x=>`<option value="${esc(x.id)}"${x.id===s?.id?' selected':''}>${esc(x.title||'Untitled conversation')}${x.date?' · '+esc(x.date):''}</option>`).join('')}</select></label>`:'';
     let body='';
     if(s) {
       const notes=namespaced(renderConversationNotes(s,data.notes));
+      const hasDraft=Object.keys(drafts).some(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}});
+      const readiness=translationReadiness(s,{loading,error:loadError,stale:hasDraft||!!pending});
+      if(hasDraft||pending)readiness.message='Save or cancel local corrections before preparing conversation translation.';
+      translationBatches.delete(s.id);
+      if(!loading&&!loadError&&!hasDraft&&!pending)try{translationBatches.set(s.id,prepareTranslationBatch(s,data.revision));}catch{readiness.state='error';readiness.message='Conversation turn identities are incomplete. Refresh before preparing translation.';}
       const validNav=nav && nav.sourceHash===s.sourceHash && nav.ids.every(id=>s.turns.some(t=>t.id===id));
-      body=`<article><header class="source-reader-title"><h3>${esc(s.title||'Untitled conversation')}</h3><span class="small">${[s.date,s.location].filter(Boolean).map(esc).join(' · ')}</span></header><div data-source-reader-notes tabindex="-1">${notes||'<p class="small">No reviewed notes are connected to this conversation.</p>'}</div>${validNav?`<nav class="source-reader-actions" aria-label="Supporting passages">${button('previous','Previous',nav.index===0)}<span>${nav.index+1} of ${nav.ids.length}</span>${button('next','Next',nav.index>=nav.ids.length-1)}${button('notes','Back to notes')}</nav>`:nav?'<p class="source-reader-conflict">The supporting passage belongs to earlier wording. Review the notes before following it.</p>':''}<div data-source-reader-dialogue>${namespaced(renderSourceGroups(s))}</div>${s.undoOperationId?`<div class="source-reader-actions">${button('undo','Undo last correction',!!pending||Object.keys(drafts).some(k=>{try {const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}}))}</div>`:''}<details class="source-reader-details"><summary>Source & versions</summary><p>Version ${esc(s.version??'unspecified')}. Original source and earlier wording are preserved.</p><p>Source: ${esc(s.sourceId)}<br>Revision: ${esc(data.revision)}<br>Source fingerprint: ${esc(s.sourceHash)}</p></details></article>`;
+      body=`<article><header class="source-reader-title"><h3>${esc(s.title||'Untitled conversation')}</h3>${s.location?`<span class="small">${esc(s.location)}</span>`:''}<span class="source-reader-attribution small" title="Supplied source labels do not establish speaker identities. Review individual remarks before attribution.">Speaker labels unverified</span></header><p class="source-reader-translation-readiness small" data-source-translation-readiness="${readiness.state}" role="status">${esc(readiness.message)}</p><div data-source-reader-notes tabindex="-1">${notes||'<p class="small">No reviewed notes are connected to this conversation.</p>'}</div>${validNav?`<nav class="source-reader-actions" aria-label="Supporting passages">${button('previous','Previous',nav.index===0)}<span>${nav.index+1} of ${nav.ids.length}</span>${button('next','Next',nav.index>=nav.ids.length-1)}${button('notes','Back to notes')}</nav>`:nav?'<p class="source-reader-conflict">The supporting passage belongs to earlier wording. Review the notes before following it.</p>':''}<div data-source-reader-dialogue>${namespaced(renderSourceGroups(s))}</div>${s.undoOperationId?`<div class="source-reader-actions">${button('undo','Undo last correction',!!pending||Object.keys(drafts).some(k=>{try {const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}}))}</div>`:''}<details class="source-reader-details"><summary>Source & versions</summary>${button('timing',showTiming?'Hide timestamps':'Show timestamps')}${button('speaker','Correct speaker')}<p>Version ${esc(s.version??'unspecified')}. Original source and earlier wording are preserved.</p><p>Source: ${esc(s.sourceId)}<br>Revision: ${esc(data.revision)}<br>Source fingerprint: ${esc(s.sourceHash)}</p></details></article>`;
     }
-    return `<div class="source-reader-toolbar">${selector}${button('refresh',loading?'Loading…':'Refresh',loading||!!pending)}</div><p data-source-reader-status role="status">${esc(loadError||r.message||(!loaded?'Loading kept conversations…':!data.sessions.length?'No kept conversations are connected yet. Existing source records remain available below.':''))}</p>${pending?`<p class="source-reader-conflict">${pending.uncertain?'The response was interrupted. Retry the same request to find out whether it was saved.':'Saving correction…'}</p>${pending.uncertain?button('retry','Retry same request'):''}`:''}${body}`;
+    return `<div class="source-reader-toolbar">${selector}${button('refresh',loading?'Loading…':notConnected?'Check connection':'Refresh',loading||!!pending)}${teaAction}</div><p data-source-reader-status role="status">${esc(loadError||r.message||(!loaded?'Loading kept conversations…':!data.sessions.length?'No kept conversations are connected yet. Existing source records remain available below.':!s?'Choose a conversation from the shared Library. No conversation has been linked to this project here.':''))}</p>${pending?`<p class="source-reader-conflict">${pending.uncertain?'The response was interrupted. Retry the same request to find out whether it was saved.':'Saving correction…'}</p>${pending.uncertain?button('retry','Retry same request'):''}`:''}${body}`;
   }
   function paint() {
     const p=active(); if(!p||!panel?.isConnected||panel.dataset.sourceReaderProject!==p.id)return;
-    const r=room(p); if(loaded&&!data.sessions.some(s=>s.id===r.sessionId)){r.sessionId=data.sessions[0]?.id||'';r.turnId='';r.navigation=null;saveLocal();}
+    const r=room(p); if(loaded&&r.sessionId&&!data.sessions.some(s=>s.id===r.sessionId))r.message='The selected conversation is unavailable. Your local wording is preserved; choose a shared Library conversation explicitly.';
     if(!r.turnId){const s=selected(p);const key=s&&Object.keys(drafts).find(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}});if(key)r.turnId=JSON.parse(key)[2];}
     const scroll=panel.querySelector('[data-source-reader-dialogue]')?.scrollTop||0;
-    panel.innerHTML=html(p);
-    const s=selected(p);
+    panel.innerHTML=html(p);panel.classList.toggle('source-reader-show-timing',showTiming);
+    const s=selected(p),interpretation=!!s&&detectInterpretation(s),originalShown=showOriginal??interpretation;panel.classList.toggle('source-reader-paired',interpretation&&originalShown);
     let changed=0;
     if(s) for(const node of panel.querySelectorAll('[data-source-reader-turn]')) {
-      const t=s.turns.find(x=>x.id===node.dataset.sourceReaderTurn); if(!t)continue;
-      node.tabIndex=0;node.setAttribute('role','button');node.setAttribute('aria-label',`Correct remark: ${t.text}`);
-      if(t.originalText!==undefined && t.originalText!==t.text){const original=doc.createElement('p');original.className='source-reader-original';original.hidden=!showOriginal;original.innerHTML=`<span class="source-reader-original-l">Original wording</span> ${esc(t.originalText)}`;node.after(original);changed++;}
-      if(r.turnId===t.id){const host=doc.createElement('div');host.innerHTML=editor(p,s,t);node.after(host);}
+      const t=s.turns.find(x=>x.id===node.dataset.sourceReaderTurn); if(!t)continue;const local=drafts[draftKey(p,s,t)];node.textContent=local?local.text:t.text;if(local)node.dataset.sourceReaderUnsaved='true';
+      node.tabIndex=0;node.setAttribute('role','textbox');node.setAttribute('aria-multiline','true');node.setAttribute('aria-label','Conversation remark');node.setAttribute('contenteditable',correctionsAllowed()&&!r.pending?'plaintext-only':'false');node.setAttribute('aria-readonly',String(!correctionsAllowed()||!!r.pending));
+      if(!isSourceBoundary(t) && t.originalText!==undefined && t.originalText!==t.text){const original=doc.createElement('p'),pair=pairingInfo(t);original.className='source-reader-original';original.hidden=!originalShown;original.dataset.sourceReaderOriginalFor=t.id;original.innerHTML=`<span class="source-reader-original-l">Original ${pair.sourceLanguage==='zh'?'Chinese':pair.sourceLanguage==='en'?'English':'wording'}</span> ${esc(pair.originalText)}`;if(interpretation){const wrapper=doc.createElement('span');wrapper.className='source-reader-pair';wrapper.dataset.sourceReaderPair=t.id;wrapper.dataset.sourceReaderPairKind=pair.sourceLanguage==='en'?'edited':'translated';wrapper.title=pair.sourceLanguage==='en'?'Original English and saved edited wording for the same turn':'Original speech and current translated wording for the same turn';node.before(wrapper);wrapper.append(original,node);}else node.after(original);changed++;}
+      if(r.turnId===t.id&&local){inlineNode(node,p,s,t);const host=doc.createElement('div');host.className='source-reader-inline-tools';host.innerHTML=editor(p,s,t);panel.append(host);}
       if(r.navigation?.sourceHash===s.sourceHash && r.navigation.ids[r.navigation.index]===t.id)node.setAttribute('data-source-reader-highlight','true');
     }
     const dialogue=panel.querySelector('[data-source-reader-dialogue]');if(dialogue)dialogue.scrollTop=scroll;
-    if(changed&&dialogue){const toggle=doc.createElement('button');toggle.type='button';toggle.className='source-reader-original-toggle';toggle.dataset.sourceOriginalToggle='';toggle.setAttribute('aria-pressed',String(showOriginal));toggle.textContent=(showOriginal?'Hide':'Show')+` original wording · ${changed} corrected line${changed===1?'':'s'}`;dialogue.before(toggle);}
+    if(changed&&dialogue){const toggle=doc.createElement('button');toggle.type='button';toggle.className='source-reader-original-toggle';toggle.dataset.sourceOriginalToggle='';toggle.setAttribute('aria-pressed',String(originalShown));toggle.textContent=interpretation?(originalShown?'Read English wording':'Show originals'):(originalShown?'Hide':'Show')+` original wording · ${changed} corrected line${changed===1?'':'s'}`;toggle.title='The current wording includes saved corrections. Viewing never changes the source.';const toolbar=panel.querySelector('.source-reader-toolbar'),tea=toolbar?.querySelector('[data-source-tea-link]');if(tea)tea.before(toggle);else if(toolbar)toolbar.append(toggle);else dialogue.before(toggle);if(interpretation&&originalShown){const legend=doc.createElement('div');legend.className='source-reader-pair-legend';legend.innerHTML='<span>Original speech</span><span>Translation / current wording</span>';const title=panel.querySelector('.source-reader-title');title?.append(legend);}}
     compactLegacy();
   }
   function restoreContextualCopy() {
@@ -75,21 +93,48 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
       for(const n of [...target.childNodes])if(n!==panel&&n!==fallback)fallback.append(n);
     }
   }
-  async function refresh() {
-    if(disposed)return;if(loading){refreshQueued=true;return;}loading=true;loadError='';paint();
+  function refresh(){if(disposed)return Promise.resolve();if(refreshJob){refreshQueued=true;return refreshJob;}refreshJob=runRefresh().finally(()=>{refreshJob=null;if(refreshQueued){refreshQueued=false;void refresh();}});return refreshJob;}
+  async function runRefresh() {
+    if(disposed)return;loading=true;loadError='';notConnected=false;paint();
     try {
       const response=await request('/api/source-sessions',{headers:{Accept:'application/json'},cache:'no-store'});
-      if(!response.ok)throw Error('Kept conversations could not be loaded. Try Refresh.');
-      const next=await response.json();
-      if(next.revision===undefined||!Array.isArray(next.sessions)||next.sessions.some(s=>!s.id||!s.sourceHash||!Array.isArray(s.turns)))throw Error('Kept conversation data is incomplete. Try Refresh.');
+      let next;try{next=await response.json();}catch{}
+      if(disposed)return;
+      if(!response.ok){
+        if(response.status===503&&next?.error==='Kept conversation editing is not connected in this workspace.'){
+          notConnected=true;throw Error('Not connected · Kept conversation editing is not available in this workspace. Existing source records remain readable below.');
+        }
+        throw Error('Kept conversations could not be loaded. Try Refresh.');
+      }
+      if(!next||next.revision===undefined||!Array.isArray(next.sessions)||next.sessions.some(s=>!s.id||!s.sourceHash||!Array.isArray(s.turns)))throw Error('Kept conversation data is incomplete. Try Refresh.');
       data=next;data.notes ||= {};loaded=true;
-    }catch(e){loadError=e.message||'Kept conversations could not be loaded.';}finally{loading=false;mount();paint();if(refreshQueued){refreshQueued=false;void refresh();}}
+    }catch(e){loadError=e.message||'Kept conversations could not be loaded.';}finally{loading=false;mount();paint();}
   }
-  function startEdit(p,id) {
-    const s=selected(p),t=s?.turns.find(t=>t.id===id);if(!t||room(p).pending)return;
+  async function selectSource({sourceId,expectedSourceHash,expectedVersion}={}){const p=active(),intent=++navigationEpoch;if(!p||room(p).pending||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(sourceId||''))throw Error('Choose one existing transcript source in the Source reader.');await(refreshJob||refresh());if(refreshJob)await refreshJob;if(disposed||active()!==p||intent!==navigationEpoch||room(p).pending||loadError||!loaded)throw Error(loadError||'The selected Source context changed. Open the transcript again.');const matches=data.sessions.filter(s=>s.sourceId===sourceId);if(matches.length!==1)throw Error('The exact transcript source is missing or ambiguous. No alternative was selected.');const s=matches[0];if(expectedSourceHash!==undefined&&s.sourceHash!==expectedSourceHash||expectedVersion!==undefined&&s.version!==expectedVersion)throw Error('This transcript changed. Refresh the catalog before opening its current version.');const r=room(p);r.sessionId=s.id;r.turnId='';r.navigation=null;r.message='';saveLocal();paint();return {sessionId:s.id,sourceId:s.sourceId,sourceHash:s.sourceHash,version:s.version};}
+  function correctionsAllowed(){return !(win.AR_CREATE_REVIEW_MODE?.actualWork===true&&win.AR_CREATE_REVIEW_MODE.sourceCorrections!==true);}
+  function syncTools(p,s,t){
+    let host=panel.querySelector('.source-reader-inline-tools');
+    const d=t&&drafts[draftKey(p,s,t)];
+    if(!d){if(host)host.hidden=true;return;}
+    if(!host){host=doc.createElement('div');host.className='source-reader-inline-tools';panel.append(host);}
+    host.hidden=false;host.innerHTML=editor(p,s,t);
+  }
+  function selectCaret(p,id){
+    const s=selected(p),t=s?.turns.find(t=>t.id===id),r=room(p);if(!t||r.pending||!correctionsAllowed())return;
+    // All current remarks are already editable. Selection never replaces words,
+    // changes contenteditable, forces focus, creates a draft or writes browser storage.
+    const node=[...panel.querySelectorAll('[data-source-reader-turn]')].find(n=>n.dataset.sourceReaderTurn===id);if(!node)return;if(r.turnId===id&&node.dataset.sourceReaderField==='text')return;
+    for(const previous of panel.querySelectorAll('[data-source-reader-field="text"]'))if(previous!==node)delete previous.dataset.sourceReaderField;
+    node.dataset.sourceReaderField='text';r.turnId=id;
+    syncTools(p,s,t);if(drafts[draftKey(p,s,t)])saveLocal();
+  }
+  function ensureDraft(p,s,t){
     const key=draftKey(p,s,t);
     drafts[key] ||= {baseRevision:data.revision,baseSourceHash:s.sourceHash,speaker:t.speaker||'',text:t.text,baseSpeaker:t.speaker||'',baseText:t.text};
-    room(p).turnId=id;saveLocal();paint();panel.querySelector('[data-source-reader-field="text"]')?.focus();
+    navigationEpoch++;translationBatches.delete(s.id);room(p).turnId=t.id;
+    const node=[...panel.querySelectorAll('[data-source-reader-turn]')].find(n=>n.dataset.sourceReaderTurn===t.id);if(node)node.dataset.sourceReaderUnsaved='true';
+    const tea=panel.querySelector('[data-source-tea-link]');if(tea){tea.style.visibility='hidden';tea.removeAttribute('href');tea.removeAttribute('data-source-tea-link');tea.setAttribute('aria-disabled','true');}
+    return drafts[key];
   }
   async function submit(p,kind) {
     const r=room(p),s=selected(p);if(!s||r.pending||!loaded)return;
@@ -123,26 +168,30 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   }
   function scrollPassage(){const n=panel?.querySelector('[data-source-reader-highlight]');n?.scrollIntoView?.({block:'center',behavior:'instant'});n?.focus({preventScroll:true});}
   function onClick(event) {
-    if(event.target.closest?.('[data-source-original-toggle]')){showOriginal=!showOriginal;paint();return;}
+    if(event.target.closest?.('[data-source-original-toggle]')){const p=active(),s=p&&selected(p);showOriginal=!(showOriginal??(!!s&&detectInterpretation(s)));paint();return;}
     if(!event.target.closest?.('[data-source-reader]'))return;
     const p=active();if(!p||panel?.dataset.sourceReaderProject!==p.id)return;
     const r=room(p),note=event.target.closest('[data-source-reader-note-section]'),action=event.target.closest('[data-source-reader-action]')?.dataset.sourceReaderAction;
     if(note){event.preventDefault();follow(p,note.dataset.sourceReaderNoteSection,Number(note.dataset.sourceReaderNoteIndex));return;}
-    if(action){event.preventDefault();if(action==='refresh')return refresh();if(action==='save')return submit(p,'edit');if(action==='undo')return submit(p,'undo');if(action==='retry')return send(p);
+    if(action){event.preventDefault();if(action==='speaker'){const s=selected(p),t=s?.turns.find(t=>t.id===r.turnId);if(t&&correctionsAllowed()&&!r.pending){ensureDraft(p,s,t);saveLocal();syncTools(p,s,t);const details=panel.querySelector('.source-reader-speaker-edit');if(details)details.open=true;panel.querySelector('[data-source-reader-field="speaker"]')?.focus({preventScroll:true});}return;}if(action==='timing'){showTiming=!showTiming;paint();return;}if(action==='refresh')return refresh();if(action==='save')return submit(p,'edit');if(action==='undo')return submit(p,'undo');if(action==='retry')return send(p);
       if(action==='cancel'){const s=selected(p),t=s?.turns.find(t=>t.id===r.turnId);if(t&&!r.pending)delete drafts[draftKey(p,s,t)];r.turnId='';saveLocal();paint();}
       if(action==='notes'){r.navigation=null;saveLocal();paint();panel.querySelector('[data-source-reader-notes]')?.focus();panel.querySelector('[data-source-reader-notes]')?.scrollIntoView?.({block:'start'});}
       if(action==='previous'||action==='next'){const s=selected(p),n=r.navigation;if(n?.sourceHash===s?.sourceHash){n.index=Math.max(0,Math.min(n.ids.length-1,n.index+(action==='next'?1:-1)));saveLocal();paint();scrollPassage();}}
       return;
     }
-    const turn=event.target.closest('[data-source-reader-turn]');if(turn){event.preventDefault();startEdit(p,turn.dataset.sourceReaderTurn);}
+    const turn=event.target.closest('[data-source-reader-turn]');if(turn)selectCaret(p,turn.dataset.sourceReaderTurn);
   }
+  function onFocusIn(event){const node=event.target.closest?.('[data-source-reader-turn]'),p=active();if(node&&p&&panel?.contains(node))selectCaret(p,node.dataset.sourceReaderTurn);}
   function onInput(event) {
-    const field=event.target.dataset?.sourceReaderField;if(!field||!['speaker','text'].includes(field))return;
-    const p=active(),s=p&&selected(p),r=p&&room(p),t=s?.turns.find(t=>t.id===r.turnId);if(!t||r.pending)return;
-    const d=drafts[draftKey(p,s,t)];if(d){d[field]=event.target.value;saveLocal();const b=panel.querySelector('[data-source-reader-action="save"]');if(b)b.disabled=stale(d,s)||!d.text.trim();}
+    const field=event.target.dataset?.sourceReaderField|| (event.target.matches?.('[data-source-reader-turn]')?'text':null);if(!field||!['speaker','text'].includes(field))return;
+    const p=active(),s=p&&selected(p),r=p&&room(p),id=field==='text'?event.target.dataset.sourceReaderTurn:r?.turnId,t=s?.turns.find(t=>t.id===id);if(!t||r.pending||!correctionsAllowed())return;
+    if(field==='text')selectCaret(p,t.id);
+    const d=ensureDraft(p,s,t);d[field]=field==='text'?editableWords(event.target):event.target.value;saveLocal();
+    // Tool state changes only after an actual edit, outside the speech flow.
+    if(field==='text')syncTools(p,s,t);
+    const b=panel.querySelector('[data-source-reader-action="save"]');if(b)b.disabled=stale(d,s)||!d.text.trim();
   }
-  function onChange(event){if(!event.target.matches?.('[data-source-reader-select]'))return;const p=active();if(!p||room(p).pending)return;const r=room(p);r.sessionId=event.target.value;r.turnId='';r.navigation=null;r.message='';saveLocal();paint();}
-  function onKey(event){if((event.key==='Enter'||event.key===' ')&&event.target.matches?.('[data-source-reader-turn]')){event.preventDefault();const p=active();if(p)startEdit(p,event.target.dataset.sourceReaderTurn);}}
+  function onChange(event){if(!event.target.matches?.('[data-source-reader-select]'))return;const p=active();if(!p||room(p).pending)return;navigationEpoch++;const r=room(p);r.sessionId=event.target.value;r.turnId='';r.navigation=null;r.message='';saveLocal();paint();}
   function onSubmit(event){if(event.target.matches?.('[data-source-reader-edit]')){event.preventDefault();const p=active();if(p)submit(p,'edit');}}
   function restoreLegacy(){restoreContextualCopy();doc.querySelectorAll('[data-source-reader-legacy]').forEach(n=>{const parent=n.parentNode;for(const child of [...n.childNodes])if(child.tagName!=='SUMMARY')parent.insertBefore(child,n);n.remove();});}
   function mount(){
@@ -153,16 +202,15 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     if(panel?.isConnected&&stamp===next){place();return;}
     restoreContextualCopy();panel?.remove();panel=doc.createElement('section');panel.dataset.sourceReader='';panel.dataset.sourceReaderProject=p.id;panel.className='source-reader';panel.setAttribute('aria-label','Kept conversation reader');place();stamp=next;paint();if(!loaded&&!loading)void refresh();
   }
-  doc.addEventListener('click',onClick);doc.addEventListener('input',onInput);doc.addEventListener('change',onChange);doc.addEventListener('keydown',onKey);doc.addEventListener('submit',onSubmit);
+  doc.addEventListener('focusin',onFocusIn);doc.addEventListener('click',onClick);doc.addEventListener('input',onInput);doc.addEventListener('change',onChange);doc.addEventListener('submit',onSubmit);
   const observer=observe?new win.MutationObserver(()=>mount()):null;observer?.observe(doc.getElementById('app')||doc.body,{childList:true,subtree:true});
-  // Live sync (review F-25): a correction saved elsewhere re-reads the open transcript; refresh-on-focus is only the fallback
-  // for when the live stream is down.
-  function focus(){if(win.c3Shell?.live?.connected?.())return;if(active())void refresh();}win.addEventListener('focus',focus);
+  // Returning browser focus must not replace prose under the incoming pointer.
+  // Live source events and the explicit Refresh action retain freshness checks.
   let liveOff=null,liveTimer=null;const liveHook=()=>{liveOff=win.c3Shell?.live?.on?.({},event=>{if(disposed||!active())return;if(!event.reset&&!(event.scope?.kind==='source'||/^source-sessions/.test(event.kind||'')))return;win.clearTimeout(liveTimer);liveTimer=win.setTimeout(()=>{if(!disposed&&active())void refresh();},250);})||null;};
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',liveHook,{once:true});else win.setTimeout(liveHook,0);
   // In-flight transport does not survive reload; preserve its exact idempotent request.
   for(const r of Object.values(projects))if(r.pending){r.pending.sending=false;r.pending.uncertain=true;}
   mount();
-  return {openContext({container,project}){if(!container?.isConnected||!project?.id)throw Error('Choose an existing project and context mount.');contextView={container,project:{...project,view:'record',viewedStage:2}};stamp='';mount();},closeContext(){contextView=null;stamp='';mount();},mount,refresh,getState:()=>({data,projects,drafts}),dispose(){disposed=true;liveOff?.();observer?.disconnect();for(const [name,fn] of [['click',onClick],['input',onInput],['change',onChange],['keydown',onKey],['submit',onSubmit]])doc.removeEventListener(name,fn);win.removeEventListener('focus',focus);panel?.remove();restoreLegacy();}};
+  return {openContext({container,project}){if(!container?.isConnected||!project?.id)throw Error('Choose an existing project and context mount.');contextView={container,project:{...project,view:'record',viewedStage:2}};stamp='';mount();},closeContext(){contextView=null;stamp='';mount();},mount,refresh,selectSource,getTranslationBatch(){const p=active(),s=p&&selected(p);if(!s||loading||loadError)throw Error('Refresh the conversation before preparing translation.');if(room(p).pending||Object.keys(drafts).some(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}}))throw Error('Save or cancel local corrections before preparing translation.');const batch=translationBatches.get(s.id);if(!batch)throw Error('Conversation translation preparation is unavailable.');return structuredClone(batch);},getState:()=>({data,projects,drafts}),dispose(){disposed=true;liveOff?.();observer?.disconnect();for(const [name,fn] of [['focusin',onFocusIn],['click',onClick],['input',onInput],['change',onChange],['submit',onSubmit]])doc.removeEventListener(name,fn);panel?.remove();restoreLegacy();}};
 }
 if(typeof document!=='undefined'&&typeof current==='function'&&!window.studyImportedSource){window.studyImportedSource=installSourceReader({document,getProject:()=>current()});}

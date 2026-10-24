@@ -17,7 +17,17 @@
     "magazine": "The Teajia magazine. vaultRoot = the Magazine folder in the vault (TEMPLATE.md, SYSTEM.md, Workflow/); filesRoot = the Files folder (stories, Photos, Drop/); drops = absolute drop folders in the order the intake numbers them (0 = Files Drop, 1 = phone drop); writable = true lets AR Create write the magazine, default false (every write answers 503); exportStaging = where finished social exports are staged; magSendRepo = the teajia checkout whose scripts/mag-send.mjs publishes; machine and previewPort are optional. Null vaultRoot = no magazine; <data>/magazine-vault.json is then read as a fallback.",
     "tools": "Absolute paths of host tools. Null = that capability is off. python = interpreter; transcriptionVenv = a virtualenv folder whose bin/python is used when python is null.",
     "transcriptLibrary": "{registryFile, indexFile, libraryRoot}, all absolute, or null.",
-    "importedTranscriptOwner": "{dataDir, notesFile, handoverFile, connections:[]}, or null."
+    "importedTranscriptOwner": "{dataDir, notesFile, handoverFile, connections:[]}, or null.",
+    "retainedCarouselState": "Optional {path, projectId, documentId, outputIds:[explicit unique UUIDs]}, or null. Use an absolute non-symlink original SPA state JSON outside the checkout. This bounded reader never imports, writes, or associates the original automatically. Missing/changed sources report unavailable. No environment-variable or request-path fallback.",
+    "retainedCarouselCopyUI": {
+      "availability": "GET /api/capabilities \u2192 retainedCarouselCopy. configured means an explicit host descriptor; available means its exact source metadata is readable and the native output writer exists. This does not choose or prove a destination. Surface error when unavailable; no fallback/guessing. requiresOriginalValidation is always true: availability is not a compatibility or copying-success claim for every listed original.",
+      "source": "items exposes only the configured original projectId, documentId, outputId, sourceHash, outputHash and existing allowed metadata. Never send a filesystem path. Refresh before presenting a copy.",
+      "destination": "Ask the person to explicitly select an existing ready owned-working-copy root from GET /api/study-draft/catalog. Exclude output-fork child bindings. Keep its parentStudyId/rootBindingId distinct from the original source IDs. Do not create a root, select a project, or infer an association by title/count.",
+      "proof": "GET /api/study/outputs?rootBindingId=...&parentStudyId=... supplies photoScope.projectId/documentId and expectedOutput. GET /api/study-draft/read?bindingId=<rootBindingId>&parentStudyId=... supplies expectedNative. Verify returned IDs match the chosen root/parent. If either existing owner is unavailable, stop; do not invoke select/open/create routes implicitly.",
+      "command": "After an explicit copy action, POST /api/study/outputs/copy-retained-carousel with exactly {rootBindingId,parentStudyId,destinationProjectId:<photoScope.projectId>,destinationDocumentId:<photoScope.documentId>,expectedOutput,expectedNative,operationId:<fresh UUID>,source:{projectId,documentId,outputId,sourceHash,outputHash}}. Keep an exact pending request for safe replay; never change its payload under the same operationId.",
+      "result": "Validate returned scope and new output ID, then use its existing read/edit/own-word-review/export owners. A copy never inherits approval or publication. Original photo slots and unsupported appearance metadata can refuse; do not promise every original can copy. No live reader/writer or UI activation is implied by this example."
+    },
+    "browserCarouselOrigins": "Optional exact HTTP loopback source origins behind the existing local proxy. The current request origin remains mandatory. No remote origins or arbitrary forwarded headers."
   },
   "home": null,
   "dataDir": "/srv/ar-create-example/data",
@@ -35,7 +45,10 @@
   "magazine": {
     "vaultRoot": "/srv/ar-create-example/vault/Brands/Example/Magazine",
     "filesRoot": "/srv/ar-create-example/files/Example Magazine",
-    "drops": ["/srv/ar-create-example/files/Example Magazine/Drop", "/srv/ar-create-example/phone/Example Drop"],
+    "drops": [
+      "/srv/ar-create-example/files/Example Magazine/Drop",
+      "/srv/ar-create-example/phone/Example Drop"
+    ],
     "writable": false,
     "exportStaging": "/srv/ar-create-example/cache/export",
     "magSendRepo": "/srv/ar-create-example/example-site"
@@ -48,5 +61,7 @@
     "codex": "/srv/ar-create-example/bin/codex"
   },
   "transcriptLibrary": null,
-  "importedTranscriptOwner": null
+  "importedTranscriptOwner": null,
+  "retainedCarouselState": null,
+  "browserCarouselOrigins": []
 }

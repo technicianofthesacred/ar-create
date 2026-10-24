@@ -2,7 +2,7 @@
    Presentation only: no replacement, reparenting, serialization or hidden headings. */
 (() => {
   const roots = [
-    '.recordBody', '.draft-context-words', '.material-read-text', '.source-continuation-reader > pre',
+    '.recordBody', '.draft-context-words', '.material-read-text', '.source-continuation-reader > pre', '.source-continuation-prose',
     '.flow-direction > .flow-prose', '.flow-details.flow-prose',
     '.research-standard-row > div', '.research-standard-surrounding',
     '.research-standard-controls > details[data-research-source-point] > p',

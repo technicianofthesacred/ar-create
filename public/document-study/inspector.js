@@ -21,7 +21,7 @@
   let dec=desk.querySelector(':scope>#c3-insp-decisions');
   if(!dec){dec=document.createElement('section');dec.id='c3-insp-decisions';dec.className='ci-panel';dec.setAttribute('role','tabpanel');dec.setAttribute('aria-label','Decisions');desk.append(dec);}
   const record=document.getElementById('downstream-human-direction');
-  if(record&&record.parentElement!==dec)dec.append(record);
+  if(record&&record.parentElement!==dec&&!record.closest('#wbf-drawer'))dec.append(record);
   let empty=dec.querySelector(':scope>.ci-empty');
   if(!record||!record.textContent.trim()){if(!empty){empty=document.createElement('p');empty.className='ci-empty';empty.textContent='No saved direction for this piece yet. Decisions are made in Direction and carried here.';dec.prepend(empty);}}
   else empty?.remove();
@@ -32,12 +32,16 @@
  // shown it carries a visible Sample badge (i64 OS: mock data must say so). Starting a discussion shows it at once.
  let sampleShown=false;
  function sample(margin){
-  const d=margin?.querySelector('#discussion');let gate=margin?.querySelector(':scope>.ci-sample-gate');
-  if(!d){gate?.remove();return;}
-  d.classList.add('ci-sample');
-  if(sampleShown){d.hidden=false;gate?.remove();return;}
-  d.hidden=true;
-  if(!gate){gate=document.createElement('div');gate.className='ci-sample-gate';gate.innerHTML='<span class="ci-badge">Sample</span><span>A sample editorial discussion is kept for this passage. It is not a live AI response.</span><button type="button" data-ci-sample>Show the sample</button>';d.before(gate);}
+  // Draft's presentation adapter nests the discussion and its gate together.
+  // Resolve within the actual margin subtree, including stale duplicate gates.
+  const d=margin?.querySelector('#discussion'),gates=[...(margin?.querySelectorAll('.ci-sample-gate')||[])];
+  if(!d){for(const gate of gates)gate.remove();return;}
+  if(!d.classList.contains('ci-sample'))d.classList.add('ci-sample');
+  if(sampleShown){if(d.hidden)d.hidden=false;for(const gate of gates)gate.remove();return;}
+  if(d.hidden!==true)d.hidden=true;
+  let gate=gates.shift();for(const duplicate of gates)duplicate.remove();
+  if(!gate){gate=document.createElement('div');gate.className='ci-sample-gate';gate.innerHTML='<span class="ci-badge">Sample</span><span>A sample editorial discussion is kept for this passage. It is not a live AI response.</span><button type="button" data-ci-sample>Show the sample</button>';}
+  if(gate.parentElement!==d.parentElement||gate.nextElementSibling!==d)d.before(gate);
  }
  document.addEventListener('click',event=>{if(event.target.closest?.('[data-ci-sample]')||event.target.closest?.('#app [onclick^="openInstruction"],#app [onclick^="prepareNote"]')){sampleShown=true;queueMicrotask(decorate);}},true);
  document.addEventListener('click',event=>{

@@ -31,6 +31,9 @@ const U = () => randomUUID(), H = 'a'.repeat(64);
 const NOTES = 'Workflow/3-Develop/NOTES - Clay Teacher (story).md', DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md', MADE = 'Workflow/5-Social/CAROUSEL - Clay Teacher - the fire.md', ASK = 'Workflow/ASK - Clay Teacher.md';
 // A well-formed body for each write route, so it gets as far as the writable check rather than failing on its shape.
 const BODIES = {
+  '/api/magazine/working-draft/save': {storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',edition:'working',content:'x',expectedHash:H,operationId:U()},
+  '/api/magazine/working-draft/edit': {storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',edition:'working',block:0,seen:'a'.repeat(12),text:'x',operationId:U()},
+  '/api/magazine/working-draft/undo': {storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',edition:'working',undoOperationId:U(),operationId:U()},
   '/api/magazine/write': {path: NOTES, content: 'x', expectedHash: H, operationId: U()},
   '/api/magazine/ask/set': {path: ASK, content: 'x', expectedHash: H, operationId: U()},
   '/api/magazine/ask/answer': {path: ASK, index: 0, value: 'x', operationId: U()},
@@ -57,9 +60,9 @@ const BODIES = {
   '/api/magazine/reconcile/choose': {bindingId: U(), choice: 'vault', expectedVaultHash: H, expectedCopyHash: H, operationId: U()},
 };
 // Not writes: reads that happen to be POST, and releasing a lock nobody holds.
-const NOT_WRITES = new Set(['/api/magazine/send-check', '/api/magazine/check', '/api/magazine/lock/release']);
+const NOT_WRITES = new Set(['/api/magazine/working-draft/prepare', '/api/magazine/send-check', '/api/magazine/check', '/api/magazine/lock/release']);
 // These need something to already exist (an intake, a proposal, a past operation, a binding); with nothing there they answer 404 or 400 before the writable check.
-const NEEDS_EXISTING = new Set(['/api/magazine/intake/file', '/api/magazine/proposal/accept', '/api/magazine/undo', '/api/magazine/reconcile/choose', '/api/magazine/mark-published', '/api/magazine/send', '/api/magazine/issue/write', '/api/magazine/ask/set', '/api/magazine/ask/answer', '/api/magazine/lineup/save', '/api/magazine/approve', '/api/magazine/export/save', '/api/magazine/album/link', '/api/magazine/edit']);
+const NEEDS_EXISTING = new Set(['/api/magazine/working-draft/save', '/api/magazine/working-draft/edit', '/api/magazine/working-draft/undo', '/api/magazine/intake/file', '/api/magazine/proposal/accept', '/api/magazine/undo', '/api/magazine/reconcile/choose', '/api/magazine/mark-published', '/api/magazine/send', '/api/magazine/issue/write', '/api/magazine/ask/set', '/api/magazine/ask/answer', '/api/magazine/lineup/save', '/api/magazine/approve', '/api/magazine/export/save', '/api/magazine/album/link', '/api/magazine/edit']);
 
 test('the configured magazine reaches the server: vault, Files folder and both drop folders in order; writable defaults to false', async t => {
   const s = await start(t);

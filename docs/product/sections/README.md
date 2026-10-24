@@ -1,6 +1,6 @@
 # AR Create living section briefs
 
-Updated 20 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
+Updated 21 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
 
 Read [the product overview](../PRODUCT.md) for the shared purpose and S01–S12 / C01–C07 requirement map. This directory defines detailed intent; Delivery’s private checklist records current implementation and verification. Each assignment references both its brief and current checklist row.
 
@@ -92,3 +92,9 @@ The author explicitly expects a substantial, well-organized reusable library, de
 ## 20 October — Design-ready supporting brief set
 
 Provide all twelve briefs with the next Claude Design handoff, including their purpose, tools, decisions and dated rationale. Latest human instruction explicitly permits designing the complete functional surface before every connection is finished. Keep working/verified, prepared-unmounted, planned and external states distinct through the same integration list and flow map. Builder-owned native verification remains required for implementation claims; it is not a gate that hides intended controls from the designer. Continue unfinished wiring in parallel. The [supporting-document reading index](../../WORKSPACE.md#supporting-documents) explains where to go deeper.
+
+## 21 October — Approved C workbench direction and review sequence
+
+The current visual authority is the [C workbench preview](../../../design/three-directions/c-workbench/index.html) and [NOTES revisions 2–5](../../../design/three-directions/c-workbench/NOTES.md), including Adrian's final instruction to remove numbers from navigation. Use an unnumbered 66px icon rail, an adjacent 240px current-owner panel where needed, Plus Jakarta Sans at 13/15/16/17px with shared A−/A+, matching Read/Write geometry, and Lora only for speech. Phone navigation uses group sheets. These are design requirements, not installed-functionality claims.
+
+The bounded sequence is: step 1, review the current UI candidate; then nested Library/Media storage, real Library research, and Arrange templates/photo picker. Human review applies to every PR; this sequence does not install a candidate. Requirements in scope are C02, C05, C06 and S01–S12. Keep each section's established purpose and connection state in its brief and Delivery checklist.

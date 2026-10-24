@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';import {fileURLToPath} from 'node:url';
 import {validateMagazineVaultConfig} from './runtime/services/magazine-vault/config.mjs';
+import {createRetainedCarouselReader} from './runtime/services/review-retained-carousels.mjs';
 const packageDir=path.dirname(fileURLToPath(import.meta.url));
 const checkoutDir=packageDir;
 const canonicalDestination=value=>{let ancestor=path.resolve(value);const suffix=[];while(!fs.existsSync(ancestor)){suffix.unshift(path.basename(ancestor));const parent=path.dirname(ancestor);if(parent===ancestor)throw Error('Data directory has no existing ancestor.');ancestor=parent;}return path.resolve(fs.realpathSync(ancestor),...suffix);};
@@ -48,6 +49,19 @@ export function loadConfig(env=process.env){
  const studyOriginalRoots=roots?{vaultRoot:directory(roots.vaultRoot,'vaultRoot'),filesRoot:directory(roots.filesRoot,'filesRoot'),catalog:roots.catalog||{projects:{},drafts:{}}}:null;
  const hostRecord=(value,keys,label)=>{if(value===null||value===undefined)return null;if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==keys.length||keys.some(key=>!Object.hasOwn(value,key)))throw Error(label+' requires only its explicit supported fields.');return value;};
  const hostPath=(value,label)=>{if(typeof value!=='string'||!path.isAbsolute(value))throw Error(label+' requires an explicit absolute path.');return value;};
+ const browserCarouselOrigins=config.browserCarouselOrigins??[];
+ if(!Array.isArray(browserCarouselOrigins)||browserCarouselOrigins.length>8||new Set(browserCarouselOrigins).size!==browserCarouselOrigins.length||browserCarouselOrigins.some(value=>{try{const u=new URL(value);return typeof value!=='string'||u.origin!==value||u.protocol!=='http:'||!['127.0.0.1','localhost'].includes(u.hostname)||!u.port||u.username||u.password;}catch{return true;}}))throw Error('browserCarouselOrigins requires explicit distinct HTTP loopback origins.');
+ let retainedCarouselState=null;
+ if(config.retainedCarouselState!==null&&config.retainedCarouselState!==undefined){
+  const record=hostRecord(config.retainedCarouselState,['path','projectId','documentId','outputIds',...(Object.hasOwn(config.retainedCarouselState,'readOnlyOutputIds')?['readOnlyOutputIds']:[])],'retainedCarouselState');
+  hostPath(record.path,'retainedCarouselState.path');
+  if(insideCheckout(canonicalDestination(record.path)))throw Error('Retained carousel source must remain outside the package checkout.');
+  noSymlinks(record.path,'retainedCarouselState.path');
+  // Validate the same bounded descriptor used by the existing review reader.
+  // Its availability is checked on read; startup never imports or writes it.
+  createRetainedCarouselReader({retainedCarouselState:record});
+  retainedCarouselState=structuredClone(record);
+ }
  const transcriptLibrary=hostRecord(config.transcriptLibrary,['registryFile','indexFile','libraryRoot'],'transcriptLibrary');
  if(transcriptLibrary)for(const key of ['registryFile','indexFile','libraryRoot']){hostPath(transcriptLibrary[key],'transcriptLibrary.'+key);}
  const importedTranscriptOwner=hostRecord(config.importedTranscriptOwner,['dataDir','notesFile','handoverFile','connections'],'importedTranscriptOwner');
@@ -71,5 +85,5 @@ export function loadConfig(env=process.env){
  const magazine=validateMagazineVaultConfig({...(config.magazine||{}),vaultRoot:magazineVaultRoot,filesRoot:magazineFilesRoot,magSendRepo:magazineSendRepo});
  let editorialSkills=Array.isArray(config.editorialSkills)?config.editorialSkills:[];
  if(!editorialSkills.length&&editorialSkillsDir)editorialSkills=['arcreate/SKILL.md','mag/SKILL.md'].map(name=>path.join(editorialSkillsDir,name)).filter(file=>fs.existsSync(file));
- return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
+ return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,retainedCarouselState,browserCarouselOrigins:[...browserCarouselOrigins],syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
 }

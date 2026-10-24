@@ -44,16 +44,16 @@
  const readCount=()=>pieces().filter(inScope).filter(p=>cache.get(p.id)?.ok).length;
  // ---------- the sidebar
  function head(){
-  return `<div class="tr-row"><button type="button" class="tr-home" data-tr-home title="Home · every piece and what needs you">${icon(ICONS.home)}<span class="tr-label">Home</span></button><button type="button" class="tr-fold" data-tr-fold aria-expanded="${!prefs.slim}" aria-label="${prefs.slim?'Open the sidebar':'Fold the sidebar to icons'}" title="${prefs.slim?'Open the sidebar':'Fold the sidebar'}">${icon(prefs.slim?ICONS.unfold:ICONS.fold)}</button></div>`;
+  return `<div class="tr-row"><button type="button" class="tr-home" data-tr-home data-short="Home" title="Home · every piece and what needs you">${icon(ICONS.home)}<span class="tr-label">Home</span></button><button type="button" class="tr-fold" data-tr-fold aria-expanded="${!prefs.slim}" aria-label="${prefs.slim?'Open the sidebar':'Fold the sidebar to icons'}" title="${prefs.slim?'Open the sidebar':'Fold the sidebar'}">${icon(prefs.slim?ICONS.unfold:ICONS.fold)}</button></div>`;
  }
  // The bottom of the sidebar: the learning library, History and the theme. The pieces list is the piece switcher at the
  // top; "Everything that's here" lives in the bar's More (review A4).
  function find(){
   const topics=!!window.connectedWorkspace?.openContext,history=!!historyControl();
-  return `${topics?`<button type="button" class="tr-link" data-tr-topics title="Topics and what you have learned, shared by every piece">${icon(ICONS.topics)}<span class="tr-label">Learning library</span></button>`:''}${history?`<button type="button" class="tr-link" data-tr-history title="Earlier versions of this piece. Going back makes a new version.">${icon(ICONS.history)}<span class="tr-label">History</span></button>`:''}${theme()}`;
+  return `${topics?`<button type="button" class="tr-link" data-tr-topics data-short="Learning" title="Topics and what you have learned, shared by every piece">${icon(ICONS.topics)}<span class="tr-label">Learning library</span></button>`:''}${history?`<button type="button" class="tr-link" data-tr-history data-short="History" title="Earlier versions of this piece. Going back makes a new version.">${icon(ICONS.history)}<span class="tr-label">History</span></button>`:''}${theme()}`;
  }
  // The theme switch moved here from the old tab strip; it presses the strip's own control, which keeps owning the theme.
- function theme(){const dark=document.documentElement.dataset.theme==='dark',l=dark?'Light theme':'Dark theme';return document.querySelector('#c3-tabstrip [data-ht-theme]')?`<button type="button" class="tr-link" data-tr-theme title="Switch to ${l.toLowerCase()}" aria-label="Switch to ${l.toLowerCase()}">${icon(dark?ICONS.sun:ICONS.moon)}<span class="tr-label">${l}</span></button>`:'';}
+ function theme(){const dark=document.documentElement.dataset.theme==='dark',l=dark?'Light theme':'Dark theme';return document.querySelector('#c3-tabstrip [data-ht-theme]')?`<button type="button" class="tr-link" data-tr-theme data-short="${dark?'Light':'Dark'}" title="Switch to ${l.toLowerCase()}" aria-label="Switch to ${l.toLowerCase()}">${icon(dark?ICONS.sun:ICONS.moon)}<span class="tr-label">${l}</span></button>`:'';}
  function historyControl(){return [...document.querySelectorAll('#app .workspace [onclick]')].find(n=>/modal='history'/.test(n.getAttribute('onclick')||''))||null;}
  function sidebar(nav){
   let top=nav.querySelector(':scope>.tr-head');

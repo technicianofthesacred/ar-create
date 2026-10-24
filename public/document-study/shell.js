@@ -35,35 +35,58 @@
  // re-read what it holds. Reconnects carry the last cursor, so nothing in between is lost. Without EventSource (tests,
  // old browsers) the app keeps its earlier refresh-on-focus behaviour.
  const live=(()=>{
-  const listeners=new Set();let source=null,cursor=null,bootId=null,connected=false,retry=0,timer=null,stopped=false;
+  const listeners=new Set();let source=null,cursor=null,bootId=null,connected=false,retry=0,timer=null,stopped=false,pageAway=false,focused=typeof document.hasFocus!=='function'||document.hasFocus(),epoch=0,needsRefresh=document.hidden||!focused,pendingAPI=0;
   const matches=(filter,event)=>(!filter.kind||event.scope?.kind===filter.kind)&&(!filter.id||event.scope?.id===filter.id)&&(!filter.kinds||filter.kinds.some(k=>k.endsWith('*')?String(event.kind).startsWith(k.slice(0,-1)):event.kind===k));
   function dispatch(event){for(const l of [...listeners]){if(event.reset||matches(l.filter,event)){try{l.fn(event);}catch(error){console.error('AR Create live sync: a surface could not refresh.',error);}}}window.dispatchEvent(new CustomEvent('ar-live-change',{detail:event}));}
   function reset(info){cursor=Number.isSafeInteger(info?.cursor)?info.cursor:cursor;if(info?.bootId)bootId=info.bootId;dispatch({reset:true,bootId,cursor});}
+  const available=()=>!stopped&&!pageAway&&!document.hidden&&focused&&pendingAPI===0;
+  function disconnect(){epoch++;clearTimeout(timer);timer=null;source?.close?.();source=null;const was=connected;connected=false;if(was)window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:false}}));}
+  function suspend(){needsRefresh=true;disconnect();}
+  function resume(){if(!available())return;if(needsRefresh){needsRefresh=false;dispatch({reset:true,bootId,cursor});}return connect();}
   let learning=null;
   async function connect(){
-   if(stopped||typeof EventSource!=='function')return;
-   clearTimeout(timer);source?.close?.();source=null;
+   if(!available()||source||typeof EventSource!=='function')return;
+   const token=epoch;clearTimeout(timer);timer=null;
    // Learn where the stream stands first, so a drop before the first change still resumes from the right place.
-   if(cursor==null&&typeof fetch==='function'){learning||=fetch('/api/events/since?limit=1').then(r=>r.ok?r.json():null).then(v=>{if(cursor==null&&Number.isSafeInteger(v?.cursor)){cursor=v.cursor;bootId=v.bootId||bootId;}}).catch(()=>{}).finally(()=>{learning=null;});await learning;if(stopped||source)return;}
+   if(cursor==null&&typeof fetch==='function'){learning||=fetch('/api/events/since?limit=1').then(r=>r.ok?r.json():null).then(v=>{if(cursor==null&&Number.isSafeInteger(v?.cursor)){cursor=v.cursor;bootId=v.bootId||bootId;}}).catch(()=>{}).finally(()=>{learning=null;});await learning;if(token!==epoch||!available()||source)return;}
    const es=new EventSource('/api/events'+(cursor!=null?'?since='+encodeURIComponent(cursor):''));source=es;
-   es.onopen=()=>{connected=true;retry=0;window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:true}}));};
-   es.addEventListener('change',message=>{let event;try{event=JSON.parse(message.data);}catch{return;}
+   es.onopen=()=>{if(source!==es||!available())return;connected=true;retry=0;window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:true}}));};
+   es.addEventListener('change',message=>{if(source!==es||!available())return;let event;try{event=JSON.parse(message.data);}catch{return;}
     if(bootId&&event.bootId&&event.bootId!==bootId){bootId=event.bootId;cursor=event.cursor;dispatch({reset:true,bootId,cursor});return;}
     bootId=event.bootId||bootId;if(cursor!=null&&Number(event.cursor)<=cursor)return;cursor=Number(event.cursor);dispatch(event);});
-   es.addEventListener('reset',message=>{let info={};try{info=JSON.parse(message.data);}catch{}reset(info);});
+   es.addEventListener('reset',message=>{if(source!==es||!available())return;let info={};try{info=JSON.parse(message.data);}catch{}reset(info);});
    // The browser's own retry would replay the first URL's cursor; reopen with the newest one instead.
-   es.onerror=()=>{const was=connected;connected=false;es.close();if(source===es)source=null;if(was)window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:false}}));if(stopped)return;retry=Math.min(retry+1,6);timer=setTimeout(connect,Math.min(30000,1000*2**(retry-1)));};
+   es.onerror=()=>{if(source!==es||!available())return;const was=connected;connected=false;es.close();if(source===es)source=null;if(was)window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:false}}));if(!available())return;retry=Math.min(retry+1,6);timer=setTimeout(connect,Math.min(30000,1000*2**(retry-1)));};
+  }
+  // Hidden or unfocused documents release scarce per-origin connections. Returning owners refresh
+  // their current records while the stream replays from the retained cursor.
+  window.addEventListener('blur',()=>{focused=false;suspend();});
+  window.addEventListener('focus',()=>{focused=true;resume();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else resume();});
+  window.addEventListener('pagehide',()=>{pageAway=true;suspend();});
+  window.addEventListener('pageshow',event=>{if(event.persisted){pageAway=false;resume();}});
+  // Finite work takes priority over this page's long-lived stream. Older open
+  // tabs can otherwise occupy every per-origin connection and strand a click.
+  // Retain the cursor; transport yielding itself never requests a record reset.
+  if(typeof window.fetch==='function'&&typeof EventSource==='function'){
+   const fetch=window.fetch;
+   window.fetch=function(...args){
+    let url;try{url=new URL(typeof args[0]==='string'?args[0]:args[0]?.url||String(args[0]),location.href);}catch{return fetch.apply(this,args);}
+    if(url.origin!==location.origin||!url.pathname.startsWith('/api/')||url.pathname.startsWith('/api/events'))return fetch.apply(this,args);
+    pendingAPI++;disconnect();
+    const release=()=>{pendingAPI--;if(pendingAPI===0)void resume();};
+    let request;try{request=fetch.apply(this,args);}catch(error){release();throw error;}
+    return Promise.resolve(request).finally(release);
+   };
   }
   return {
    /** fn(event) for each change matching {kind?, id?, kinds?}; fn({reset:true}) when everything should be re-read. */
    on(filter,fn){const l={filter:filter||{},fn};listeners.add(l);if(!source&&!stopped)connect();return ()=>listeners.delete(l);},
    connected:()=>connected,cursor:()=>cursor,connect,
-   stop(){stopped=true;clearTimeout(timer);source?.close?.();source=null;connected=false;},
-   // Back from the page cache: the stream was closed meanwhile, so everything is re-read.
-   resume(){if(!stopped)return;stopped=false;dispatch({reset:true,bootId,cursor});connect();},
+   stop(){stopped=true;disconnect();},
+   resume(){if(!stopped)return;stopped=false;needsRefresh=true;return resume();},
   };
  })();
- if(typeof window.addEventListener==='function'){window.addEventListener('pagehide',()=>live.stop());window.addEventListener('pageshow',event=>{if(event.persisted)live.resume();});}
  window.c3Shell={register,run,schedule,reveal,mounts:()=>mounts.map(m=>m.name),live,actorName,isAgent};
  if(typeof EventSource==='function')queueMicrotask(()=>live.connect());
 })();

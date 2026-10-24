@@ -35,6 +35,7 @@ const pick=(...values)=>values.find(value=>typeof value==='string'&&value&&value
 export function scopeOf({input,result,query,section}){
  const i=input&&typeof input==='object'&&!Array.isArray(input)?input:{},q=query||new URLSearchParams(),r=result&&typeof result==='object'?result:{};
  if(i.scope&&typeof i.scope==='object'&&typeof i.scope.kind==='string')return {kind:i.scope.kind,id:pick(i.scope.id,i.scope.outputId,i.scope.bindingId,i.scope.collectionId,i.scope.parentStudyId)||null};
+ if(section==='library'&&['library','media'].includes(i.domain))return {kind:'library',id:'folders-'+i.domain};
  const draft=pick(i.bindingId,q.get('bindingId'),r.binding?.id);if(draft)return {kind:'draft',id:draft};
  const collection=pick(i.collectionId);if(collection)return {kind:'collection',id:collection};
  const output=pick(i.outputId,i.selectedOutputId,q.get('outputId'));if(output)return {kind:'output',id:output};

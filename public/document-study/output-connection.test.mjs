@@ -1,23 +1,37 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {randomUUID} from 'node:crypto';import {createRequire} from 'node:module';const require=createRequire(new URL('../../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('./output-connection.js',import.meta.url),'utf8'),overview=fs.readFileSync(new URL('./output-overview.js',import.meta.url),'utf8');const tick=()=>new Promise(r=>setTimeout(r,30));
+
+test('missing Outputs reader reports unavailable and retries without claiming an empty inventory',async()=>{const f=fixture();try{const owner=f.w.realOutputOverview;delete f.w.realOutputOverview;f.w.eval(overview);await tick();assert.match(f.w.document.querySelector('#output-overview').textContent,/Outputs are unavailable/);assert.doesNotMatch(f.w.document.querySelector('#output-overview').textContent,/No connected outputs|Open the draft/);assert.ok(f.w.document.querySelector('[data-output-retry]'));assert.equal(f.w.document.querySelector('[data-output-action]'),null);f.w.realOutputOverview=owner;f.w.document.querySelector('[data-output-retry]').click();await tick();assert.equal(f.w.document.querySelectorAll('.oo-row').length,2);assert.equal(f.calls.some(c=>c.body),false);}finally{f.dom.window.close();}});
+
+test('unsupported output owner exposes its availability boundary rather than saying earlier work is empty',async()=>{const f=fixture();try{f.setParent('porcelain');const data=await f.w.realOutputOverview.read({projectId:'porcelain'});assert.equal(data.availability.state,'unsupported');assert.deepEqual(JSON.parse(JSON.stringify(data.outputs)),[]);f.w.eval(overview);await tick();const body=f.w.document.querySelector('#output-overview').textContent;assert.match(body,/Saved outputs are not connected for this project/);assert.doesNotMatch(body,/No connected outputs|Open the draft|Create article/);assert.ok(f.w.document.querySelector('[data-output-retry]'));assert.equal(f.w.document.querySelector('[data-output-action]'),null);assert.equal(f.calls.some(c=>c.body),false);}finally{f.dom.window.close();}});
+
+test('losing an Outputs reader clears stale cards and preserves them only when its exact owner returns',async()=>{const f=fixture();try{f.w.eval(overview);await tick();assert.equal(f.w.document.querySelectorAll('.oo-row').length,2);const owner=f.w.realOutputOverview;delete f.w.realOutputOverview;await f.w.outputOverview.refresh();assert.equal(f.w.document.querySelectorAll('.oo-row').length,0);assert.match(f.w.document.querySelector('#output-overview').textContent,/Outputs are unavailable/);assert.equal(f.w.document.querySelector('[data-output-action]'),null);f.w.realOutputOverview=owner;await f.w.outputOverview.refresh();assert.equal(f.w.document.querySelectorAll('.oo-row').length,2);assert.equal(f.calls.some(c=>c.body),false);}finally{f.dom.window.close();}});
 const root='11111111-1111-4111-8111-111111111111',child='22222222-2222-4222-8222-222222222222',other='33333333-3333-4333-8333-333333333333';
-function fixture({stage=12,empty=false,missing=false,query='',readGate=null,nav=false,review=null,storage=null}={}){const dom=new JSDOM((nav?'<nav><button aria-label="View step 9: Photos placed (read-only)"><b>9</b><span>Placed</span></button><button aria-label="View step 12: Confirmed (read-only)"><b>12</b><span>Confirmed</span></button></nav>':'')+'<aside id="rail">Project rail</aside><main id="app"><article id="native">Exact native words</article></main>',{runScripts:'outside-only',url:'http://localhost/document-study/'+query,pretendToBeVisual:true}),w=dom.window;w.structuredClone=structuredClone;w.crypto.randomUUID=randomUUID;let p={id:'hk',name:'Hong Kong',view:stage===5?'article':'record',viewedStage:stage},mapped=!missing,failFlush=false,creates=0;const calls=[],opens=[],mounts=[],remembered=[];const outputs=empty?[]:[{id:'a',kind:'article',name:'Actual article title',title:'Native title',manuscriptRevision:2,placements:[],outputRevision:3},{id:'c',kind:'carousel',name:'Actual carousel title',slides:[],caption:'Own words',outputRevision:2}];
+function fixture({stage=12,empty=false,missing=false,query='',readGate=null,nav=false,review=null,storage=null,deferControls=false,parentMissing=false,sessionClient=null,canvasMount=null,reviewOwner=null,portalControls=false,initialProjectId='hk',collectionRoot=null,catalogGate=null,initialSelection=null}={}){const dom=new JSDOM((nav?'<nav><button aria-label="View step 9: Photos placed (read-only)"><b>9</b><span>Placed</span></button><button aria-label="View step 12: Confirmed (read-only)"><b>12</b><span>Confirmed</span></button></nav>':'')+'<aside id="rail">Project rail</aside><main id="workspace"><div id="c3-surface-bar"><div class="sb-right"></div></div><div id="app"><article id="native">Exact native words</article></div></main>',{runScripts:'outside-only',url:'http://localhost/document-study/'+query,pretendToBeVisual:true}),w=dom.window;w.structuredClone=structuredClone;w.crypto.randomUUID=randomUUID;let p={id:initialProjectId,name:'Hong Kong',view:stage===5?'article':'record',viewedStage:stage},mapped=!missing,parentConnected=!parentMissing,failFlush=false,creates=0;const calls=[],opens=[],mounts=[],remembered=[],hosts=[],controls=[];const outputs=empty?[]:[{id:'a',kind:'article',name:'Actual article title',title:'Native title',manuscriptRevision:2,placements:[],outputRevision:3},{id:'c',kind:'carousel',name:'Actual carousel title',slides:[],caption:'Own words',outputRevision:2}];
  const view=(g,id)=>({scope:g,documentId:g.rootBindingId,photoScope:{projectId:'owned-physical',documentId:'owned-document'},outputs:structuredClone(outputs),outputBindings:outputs.map(o=>({outputId:o.id,wordOwner:o.kind==='article'?{kind:'native',bindingId:child,parentStudyId:g.parentStudyId}:{kind:'carousel-words',projectId:'owned-physical',documentId:'owned-document',outputId:o.id}})),output:structuredClone(outputs.find(o=>o.id===id)),expectedOutput:{revision:creates,hash:'hash'},writingProof:{kind:'native',bindingId:child,expected:{hash:'native'}},document:{id:g.rootBindingId,outputs:structuredClone(outputs)}});
  w.current=()=>p;w.article=()=>'<article id="native">Exact native words</article>'+(review?.blocks||[]).map(b=>'<div data-approval-block="'+b.id+'">Pending words</div>').join('');w.phaseReader=()=>'<article id="native">Exact native words</article>';w.historicalNotice=()=>'';w.workflowBar=()=>'';w.render=()=>{w.document.getElementById('app').innerHTML=p.view==='article'?w.article(p):w.phaseReader(p)};w.viewPhase=n=>{p.view=review&&n===5?'article':'record';p.viewedStage=n;return w.render()};w.switchProject=id=>{p={...p,id};return w.render()};w.setView=view=>{p.view=view;return w.render()};w.toast=message=>remembered.push(message);w.studyDraft={currentBinding:()=>({id:child,parentStudyId:'hk',kind:'output-fork'}),flush:async()=>({dirty:false}),openBinding:async input=>{opens.push(JSON.parse(JSON.stringify(input)));if(review){p.view='article';p.viewedStage=5;w.render();}return {bindingId:input.bindingId,parentStudyId:input.parentStudyId};},reviewState:()=>review?{bindingId:root,parentStudyId:'hk',dirty:false,...review}:null};
  w.fetch=async(url,options)=>{const parsed=new URL(url,'http://localhost'),body=options?.body&&JSON.parse(options.body);calls.push({path:parsed.pathname,query:Object.fromEntries(parsed.searchParams),body});if(readGate&&parsed.pathname==='/api/study/outputs')await readGate(parsed.searchParams.get('parentStudyId'));
-  if(parsed.pathname==='/api/study-draft/catalog')return {ok:true,json:async()=>({drafts:[{bindingId:root,parentStudyId:'hk',parentStudyKey:'hk',bindingStatus:'ready',title:'Primary Hong Kong'},{bindingId:child,parentStudyId:'hk',bindingStatus:'ready',kind:'output-fork',title:'Fork cannot become root'},{bindingId:other,parentStudyId:'ref-an-cha',bindingStatus:'ready',title:'An Cha primary'}],outputBindings:[{bindingId:child,outputId:'a'}]})};
+  if(parsed.pathname==='/api/study-draft/catalog'){if(catalogGate)await catalogGate();return {ok:true,json:async()=>({...(collectionRoot?{collections:[{bindingId:collectionRoot,parentStudyId:initialProjectId,parentStudyKey:initialProjectId,bindingStatus:'ready',kind:'collection-root',title:'Saved collection'}]}:{}),drafts:[{bindingId:root,parentStudyId:'hk',parentStudyKey:'hk',bindingStatus:'ready',title:'Primary Hong Kong'},{bindingId:child,parentStudyId:'hk',bindingStatus:'ready',kind:'output-fork',title:'Fork cannot become root'},{bindingId:other,parentStudyId:'ref-an-cha',bindingStatus:'ready',title:'An Cha primary'}],outputBindings:[{bindingId:child,outputId:'a'}]})};}
+  if(parsed.pathname==='/api/first-flow/binding')return parentConnected?{ok:true,json:async()=>({projectKey:parsed.searchParams.get('projectKey'),projectId:root,documentId:child})}:{ok:false,status:404,json:async()=>({error:'No saved Material connection for this project.'})};
+  if(parsed.pathname==='/api/first-flow/select'){parentConnected=true;return {ok:true,json:async()=>({projectId:root,documentId:child})};}
   if(parsed.pathname==='/api/study/photos/select'){mapped=true;return {ok:true,json:async()=>({bindingId:body.bindingId,parentStudyId:body.parentStudyId,projectId:'owned-physical',documentId:'owned-document'})};}
   if(parsed.pathname==='/api/study-draft/read')return {ok:true,json:async()=>({binding:{id:parsed.searchParams.get('bindingId'),parentStudyId:parsed.searchParams.get('parentStudyId')},expected:{hash:'native-primary'}})};
   if(parsed.pathname==='/api/study/outputs/create'){creates++;outputs.push({id:body.operationId,kind:body.kind,title:'Created exact output'});return {ok:true,json:async()=>({view:view(body,body.operationId)})};}
-  if(parsed.pathname==='/api/study/outputs'){if(!mapped)return {ok:false,status:409,json:async()=>({error:'Exact ready root photo/document binding required; no physical document is guessed or created.'})};const g=Object.fromEntries(parsed.searchParams);return {ok:true,json:async()=>view({rootBindingId:g.rootBindingId,parentStudyId:g.parentStudyId},g.selectedOutputId)};}
+  if(parsed.pathname==='/api/study/outputs'){if(!parentConnected)return {ok:false,status:409,json:async()=>({error:'Exact ready persisted study binding required; select through its existing owner first.'})};if(!mapped)return {ok:false,status:409,json:async()=>({error:'Exact ready root photo/document binding required; no physical document is guessed or created.'})};const g=Object.fromEntries(parsed.searchParams);return {ok:true,json:async()=>view({rootBindingId:g.rootBindingId,parentStudyId:g.parentStudyId},g.selectedOutputId)};}
   throw Error('Unexpected route '+parsed.pathname);
  };
- w.ArStudyOutputHost={mountStudyOutputHost:async(element,options)=>{mounts.push(options);element.innerHTML='<button>Writing content</button><button>Visual content</button><button>Export</button>';for(const b of element.querySelectorAll('button'))b.onclick=()=>element.dataset.mode=b.textContent;const host={model:{selectedOutputId:options.selectedOutputId},flush:async()=>{if(failFlush)throw Error('Pending own save failed');},destroy:()=>{element.dataset.destroyed='true';},recoverPending:async()=>remembered.push('recover')};return host;}};
- if(storage)Object.defineProperty(w,'localStorage',{value:storage});w.eval(code);return {dom,w,calls,opens,mounts,outputs,get project(){return p},get creates(){return creates},set failFlush(value){failFlush=value},setParent:id=>{p={...p,id};w.render();},view};}
+ w.ArStudyOutputHost={mountStudyOutputHost:async(element,options)=>{mounts.push(options);const commit=()=>{let target=element;if(portalControls){element.innerHTML='';target=w.document.querySelector('.wb-arrange-owner-actions');if(!target){target=w.document.createElement('div');target.className='wb-arrange-owner-actions';w.document.querySelector('#c3-surface-bar .sb-right').append(target);}target.dataset.cwbDocumentId=options.scope.rootBindingId;target.dataset.cwbOutputId=options.selectedOutputId;}target.innerHTML='<button>Writing content</button><button>Visual content</button><button>Export</button>';for(const b of target.querySelectorAll('button'))b.onclick=()=>element.dataset.mode=b.textContent;};controls.push(commit);const dispose=canvasMount?.(w,element,options);if(!canvasMount&&!deferControls)commit();const host={model:{selectedOutputId:options.selectedOutputId,expectedOutput:{revision:0,hash:'hash'},writingProof:{expected:{hash:'native'}}},flush:async()=>{if(failFlush)throw Error('Pending own save failed');},destroy:()=>{dispose?.();element.dataset.destroyed='true';},recoverPending:async()=>remembered.push('recover')};if(reviewOwner)host.reviewWords=()=>reviewOwner(host,options);hosts.push(host);return host;}};
+ if(sessionClient)w.sessionStorage.setItem('ar-study-output-browser-client-v1',sessionClient);if(storage)Object.defineProperty(w,'localStorage',{value:storage});if(initialSelection)w.localStorage.setItem('ar-study-output-connection-v1',JSON.stringify({groups:{},selection:{[initialProjectId]:initialSelection}}));w.eval(code);return {dom,w,calls,opens,mounts,hosts,controls,messages:remembered,outputs,get project(){return p},get creates(){return creates},set failFlush(value){failFlush=value},setParent:id=>{p={...p,id};w.render();},view};}
 test('real overview uses catalog primary roots, saved titles/IDs only; no query examples, read creates no physical scope',async()=>{const f=fixture({query:'?output-layout-review=1'});f.w.eval(overview);await tick();assert.equal(f.w.document.querySelectorAll('.oo-row').length,2);assert.match(f.w.document.body.textContent,/Actual article title/);assert.doesNotMatch(f.w.document.body.textContent,/Examples|Morning at|example-/);assert.ok(f.calls.filter(c=>c.path==='/api/study/outputs').every(c=>c.query.rootBindingId===root));assert.equal(f.calls.some(c=>c.body),false);assert.equal(f.w.document.getElementById('rail').textContent,'Project rail');f.dom.window.close();});
 test('article edit opens exact registered child native binding; title/arrange mounts saved selected output and supplied photo scope',async()=>{const f=fixture();await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'native'});assert.deepEqual(f.opens[0],{bindingId:child,parentStudyId:'hk',canonicalOutputId:'a'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();assert.equal(f.project.viewedStage,9);assert.equal(f.mounts[0].scope.rootBindingId,root);assert.equal(f.mounts[0].selectedOutputId,'c');assert.deepEqual(JSON.parse(JSON.stringify(f.mounts[0].photoScope)),{projectId:'owned-physical',documentId:'owned-document'});assert.equal(f.calls.some(c=>c.path==='/api/study/photos/select'),false);f.dom.window.close();});
 test('carousel Edit words reuses same mounted canvas writing mode and no native opener',async()=>{const f=fixture();await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');const opts=f.mounts[0];opts.openCarouselWriting({outputId:'c',owner:{kind:'carousel-words',outputId:'c'}});assert.equal(f.mounts.length,1);assert.equal(f.opens.length,0);f.dom.window.close();});
 test('empty project offers owned-only creation and initializes scope solely on explicit Create; current fork cannot hijack primary root',async()=>{const f=fixture({empty:true,missing:true});const r=await f.w.realOutputOverview.read({projectId:'hk'});assert.equal(r.existingDraft.bindingId,root);assert.deepEqual(JSON.parse(JSON.stringify(r.emptyActions.map(a=>a.kind))),['native','create-article','create-carousel','create-post','create-product-listing']);assert.equal(f.calls.some(c=>c.body),false);await f.w.realOutputOverview.onAction({projectId:'hk',kind:'create-carousel'});await tick();const select=f.calls.find(c=>c.path==='/api/study/photos/select');assert.equal(select.body.bindingId,root);const create=f.calls.find(c=>c.path==='/api/study/outputs/create');assert.equal(create.body.rootBindingId,root);assert.equal(create.body.sourceBindingId,root);assert.equal(f.mounts[0].selectedOutputId,create.body.operationId);f.dom.window.close();});
 test('failed pending buffer flush prevents navigation/destruction and retains device scoped exact operation',async()=>{const f=fixture();await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'arrange'});await tick();const opts=f.mounts[0],pending={path:'/api/study/outputs/save',body:{...opts.scope,selectedOutputId:'a',operationId:'exact-op',changes:{name:'Retained title'}}};opts.rememberPending(pending);const stored=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1'));assert.deepEqual(stored.clients[f.w.sessionStorage.getItem('ar-study-output-browser-client-v1')].groups['hk:'+root].pending,pending);f.failFlush=true;await f.w.viewPhase(12);assert.equal(f.project.viewedStage,9);assert.equal(f.w.document.getElementById('study-output-canvas').dataset.destroyed,undefined);assert.match(f.w.document.body.textContent,/Pending own save failed/);f.dom.window.close();});
+test('explicit primary deselection requires the exact opened primary and keeps saved carousel and recovery records',async()=>{
+ const f=fixture();try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.studyOutputConnection.selectOutput({projectId:'hk',outputId:'c'});const before=JSON.stringify(f.outputs);await assert.rejects(f.w.studyOutputConnection.clearSelection({projectId:'hk',rootBindingId:root}),/exact primary working manuscript/);assert.equal(f.w.studyOutputConnection.selection().output.id,'c');f.w.studyDraft.currentBinding=()=>({id:root,parentStudyId:'hk'});await f.w.studyOutputConnection.clearSelection({projectId:'hk',rootBindingId:root});assert.equal(f.w.studyOutputConnection.selection(),null);assert.equal(JSON.stringify(f.outputs),before);const disk=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1'));assert.deepEqual(disk.selection.hk,{rootBindingId:root,outputId:null,mode:null});assert.equal(f.calls.some(call=>call.body),false);}finally{f.dom.window.close();}
+});
+test('failed output flush refuses primary deselection before the current saved owner is changed',async()=>{
+ const f=fixture();try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();const canvas=f.w.document.getElementById('study-output-canvas');f.w.studyDraft.currentBinding=()=>({id:root,parentStudyId:'hk'});f.failFlush=true;await assert.rejects(f.w.studyOutputConnection.clearSelection({projectId:'hk',rootBindingId:root}),/Pending own save failed/);assert.equal(f.w.studyOutputConnection.selection().output.id,'c');assert.equal(f.w.document.getElementById('study-output-canvas'),canvas);}finally{f.dom.window.close();}
+});
 test('late read cannot mount in another project; unsupported projects preserve existing editor and have no invented rows',async()=>{let release;const wait=new Promise(r=>release=r);const f=fixture({stage:9,readGate:parent=>parent==='hk'?wait:undefined});await tick();f.setParent('ref-an-cha');release();await tick();assert.ok(f.mounts.every(m=>m.scope.parentStudyId==='ref-an-cha'));f.setParent('porcelain');await tick();assert.equal(f.w.document.getElementById('native').textContent,'Exact native words');const read=await f.w.realOutputOverview.read({projectId:'porcelain'});assert.deepEqual(JSON.parse(JSON.stringify(read.outputs)),[]);assert.equal(read.existingDraft,null);await assert.rejects(f.w.realOutputOverview.onAction({projectId:'porcelain',outputId:'a',kind:'arrange'}),/supported project/);f.dom.window.close();});
 
 test('server refusal of marked native words offers one Draft review action and clears only explicit not-applied intent',async()=>{const f=fixture({empty:true}),request=f.w.fetch;f.w.fetch=async(url,options)=>new URL(url,'http://localhost').pathname==='/api/study/outputs/create'?{ok:false,status:409,json:async()=>({error:'Native approval marks must be approved before output registration.',outcome:'not-applied'})}:request(url,options);f.w.eval(overview);await tick();const create=f.w.document.querySelector('[data-output-action=create-article]');assert.ok(create);create.click();await tick();const actions=[...f.w.document.querySelectorAll('#output-overview .oo-action')];assert.equal(actions.length,1);assert.equal(actions[0].textContent,'Review in Draft');assert.match(f.w.document.body.textContent,/Some wording is still marked for review/);assert.doesNotMatch(f.w.document.body.textContent,/output registration/);const disk=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1'));assert.equal(disk.clients[f.w.sessionStorage.getItem('ar-study-output-browser-client-v1')].groups['hk:'+root].pending,null);actions[0].click();await tick();assert.deepEqual(f.opens[0],{bindingId:root,parentStudyId:'hk'});f.dom.window.close();});
@@ -25,6 +39,23 @@ test('server refusal of marked native words offers one Draft review action and c
 test('lost create response retains exact scoped request and owner recovery replays the same payload before mounting',async()=>{const f=fixture({empty:true}),request=f.w.fetch;let saved,seen=[];f.w.fetch=async(url,options)=>{if(new URL(url,'http://localhost').pathname==='/api/study/outputs/create'){seen.push(JSON.parse(options.body));if(saved)return {ok:true,json:async()=>saved};const result=await request(url,options);saved=await result.json();throw Error('Lost response');}return request(url,options);};await f.w.realOutputOverview.read({projectId:'hk'});await assert.rejects(f.w.realOutputOverview.onAction({projectId:'hk',kind:'create-article'}),/Lost response/);const disk=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1'));assert.equal(disk.clients[f.w.sessionStorage.getItem('ar-study-output-browser-client-v1')].groups['hk:'+root].pending.body.operationId,seen[0].operationId);await f.w.studyOutputConnection.recover();await tick();assert.deepEqual(seen[0],seen[1]);assert.equal(f.mounts[0].selectedOutputId,seen[0].operationId);assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).clients[f.w.sessionStorage.getItem('ar-study-output-browser-client-v1')].groups['hk:'+root].pending,null);f.dom.window.close();});
 
 test('cold Arrange reload waits for deferred canvas module instead of leaving a disconnected error',async()=>{const f=fixture();await f.w.realOutputOverview.read({projectId:'hk'});const ready=f.w.ArStudyOutputHost;delete f.w.ArStudyOutputHost;Object.defineProperty(f.w.document,'readyState',{configurable:true,get:()=> 'loading'});const loads=[],add=f.w.addEventListener.bind(f.w);f.w.addEventListener=(kind,fn,options)=>kind==='load'?loads.push(fn):add(kind,fn,options);await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();assert.equal(f.mounts.length,0);assert.equal(loads.length,1);assert.doesNotMatch(f.w.document.body.textContent,/bundle is not connected/);f.w.ArStudyOutputHost=ready;Object.defineProperty(f.w.document,'readyState',{configurable:true,get:()=> 'complete'});loads[0]();await tick();assert.equal(f.mounts[0].selectedOutputId,'c');assert.doesNotMatch(f.w.document.body.textContent,/bundle is not connected/);f.dom.window.close();});
+
+const savedCollectionRoot='d5903b0e-27c3-42a0-81f4-15280a6a5b3c';
+test('fresh saved collection Arrange discovers the exact catalog root then mounts its selected carousel once',async()=>{
+ let release;const gate=new Promise(resolve=>release=resolve),projectId='retained-synthetic-collection',f=fixture({stage:9,initialProjectId:projectId,collectionRoot:savedCollectionRoot,catalogGate:()=>gate,initialSelection:{rootBindingId:savedCollectionRoot,outputId:'c',mode:'words'}});
+ try{assert.equal(f.mounts.length,0);release();await tick();await tick();assert.equal(f.mounts.length,1);assert.equal(f.mounts[0].scope.parentStudyId,projectId);assert.equal(f.mounts[0].scope.rootBindingId,savedCollectionRoot);assert.equal(f.mounts[0].selectedOutputId,'c');assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');assert.equal(f.calls.some(call=>call.body),false);assert.equal(f.creates,0);}finally{f.dom.window.close();}
+});
+for(const change of ['project','stage'])test('late collection catalog cannot remount saved Arrange after a '+change+' change',async()=>{
+ let release;const gate=new Promise(resolve=>release=resolve),projectId='retained-synthetic-collection',f=fixture({stage:9,initialProjectId:projectId,collectionRoot:savedCollectionRoot,catalogGate:()=>gate,initialSelection:{rootBindingId:savedCollectionRoot,outputId:'c',mode:'words'}});
+ try{if(change==='project')f.setParent('ref-an-cha');else{f.project.viewedStage=12;f.w.render();}release();await tick();await tick();assert.equal(f.mounts.some(options=>options.scope.parentStudyId===projectId),false);assert.equal(f.calls.some(call=>call.body),false);if(change==='stage')assert.equal(f.project.viewedStage,12);}finally{f.dom.window.close();}
+});
+for(const missing of ['root','output'])test('collection reload refuses an unavailable saved '+missing+' instead of substituting another output',async()=>{
+ const projectId='retained-synthetic-collection',f=fixture({stage:9,initialProjectId:projectId,collectionRoot:missing==='root'?other:savedCollectionRoot,initialSelection:{rootBindingId:savedCollectionRoot,outputId:missing==='output'?'missing-carousel':'c',mode:'words'}});
+ try{await tick();await tick();assert.equal(f.mounts.length,0);assert.equal(f.w.document.getElementById('native').textContent,'Exact native words');const saved=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1'));assert.equal(saved.selection[projectId].rootBindingId,savedCollectionRoot);assert.equal(saved.selection[projectId].outputId,missing==='output'?'missing-carousel':'c');assert.equal(f.calls.some(call=>call.body),false);}finally{f.dom.window.close();}
+});
+test('existing Hong Kong first-load Arrange still mounts its exact saved carousel',async()=>{
+ const f=fixture({stage:9,initialSelection:{rootBindingId:root,outputId:'c',mode:'words'}});try{await tick();await tick();assert.equal(f.mounts.length,1);assert.equal(f.mounts[0].selectedOutputId,'c');assert.equal(f.mounts[0].scope.parentStudyId,'hk');assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');}finally{f.dom.window.close();}
+});
 
 test('confirmed canvas selection persists and retained request reopens its own output with recovery before canvas',async()=>{const f=fixture();await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'arrange'});await tick();const mounted=f.mounts[0];mounted.onSelectionChange('c');assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.outputId,'c');mounted.rememberPending({path:'/api/study/outputs/save',body:{rootBindingId:root,parentStudyId:'hk',selectedOutputId:'c',operationId:'retained'}});mounted.onSelectionChange('a');f.w.render();await tick();assert.equal(f.mounts.at(-1).selectedOutputId,'c');const recover=f.w.document.querySelector('[data-output-recover]'),canvas=f.w.document.getElementById('study-output-canvas');assert.ok(recover.compareDocumentPosition(canvas)&f.w.Node.DOCUMENT_POSITION_FOLLOWING);f.mounts.at(-1).rememberPending(null);assert.equal(f.w.document.querySelector('[data-output-recover]'),null);f.dom.window.close();});
 
@@ -73,3 +104,251 @@ test('separate tabs keep distinct complete buffers and exact pending requests; s
  const map=new Map(),storage={getItem:key=>map.get(key)||null,setItem:(key,value)=>map.set(key,value)},a=fixture({storage}),b=fixture({storage});for(const f of[a,b]){await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();}
  const first=a.mounts[0],second=b.mounts[0],draft=token=>({schema:'ar-create.output-browser-draft.v1',scope:{rootBindingId:root,parentStudyId:'hk'},selectedOutputId:'c',token,base:{},output:{id:'c',kind:'carousel',slides:[{text:token}],caption:'Caption '+token}});first.rememberBrowserDraft(draft('a-one'),null,'c');second.rememberBrowserDraft(draft('b-one'),null,'c');first.rememberPending({path:'/api/study/outputs/save',body:{selectedOutputId:'c',operationId:'a-pending'}});second.rememberPending({path:'/api/study/outputs/save',body:{selectedOutputId:'c',operationId:'b-pending'}});first.rememberBrowserDraft(draft('a-two'),'a-one','c');assert.throws(()=>first.rememberBrowserDraft(null,'a-one','c'),/Newer browser edits/);first.onSelectionChange('a');const saved=JSON.parse(storage.getItem('ar-study-output-connection-v1')),ca=a.w.sessionStorage.getItem('ar-study-output-browser-client-v1'),cb=b.w.sessionStorage.getItem('ar-study-output-browser-client-v1');assert.notEqual(ca,cb);assert.equal(saved.clients[ca].groups['hk:'+root].drafts.c.output.caption,'Caption a-two');assert.equal(saved.clients[cb].groups['hk:'+root].drafts.c.output.caption,'Caption b-one');assert.equal(saved.clients[ca].groups['hk:'+root].pending.body.operationId,'a-pending');assert.equal(saved.clients[cb].groups['hk:'+root].pending.body.operationId,'b-pending');b.w.dispatchEvent(new b.w.StorageEvent('storage',{key:'ar-study-output-connection-v1'}));assert.match(b.w.document.getElementById('study-output-other-recovery').textContent,/Caption a-two/);assert.ok(b.w.document.querySelector('[data-output-download-recovery]'));a.dom.window.close();b.dom.window.close();
 });
+
+
+test('Get export waits for the maintained async canvas commit, then opens only its exact saved output',async()=>{
+ const f=fixture({deferControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'export'});await tick();
+ const canvas=f.w.document.getElementById('study-output-canvas');assert.equal(canvas.dataset.mode,undefined);assert.doesNotMatch(f.w.document.body.textContent,/canvas control is unavailable/);f.controls[0]();await tick();
+ assert.equal(canvas.dataset.mode,'Export');assert.equal(f.mounts[0].scope.rootBindingId,root);assert.equal(f.mounts[0].scope.parentStudyId,'hk');assert.equal(f.hosts[0].model.selectedOutputId,'a');assert.equal(f.calls.some(c=>c.path.endsWith('/export')),false,'opening the native Export panel never exports bytes itself');
+ }finally{f.dom.window.close();}
+});
+test('carousel words mode also waits for its real canvas controls without opening a different writer',async()=>{
+ const f=fixture({deferControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();f.controls[0]();await tick();assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');assert.equal(f.opens.length,0);}finally{f.dom.window.close();}
+});
+for(const change of ['project','stage','output','edition'])test('a late Export control cannot activate after its '+change+' changes',async()=>{
+ const f=fixture({deferControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'export'});await tick();const canvas=f.w.document.getElementById('study-output-canvas');
+ if(change==='project'){f.setParent('ref-an-cha');await tick();}else if(change==='stage')await f.w.viewPhase(12);else if(change==='output'){f.hosts[0].model.selectedOutputId='c';f.mounts[0].onSelectionChange('c');}else f.hosts[0].model.expectedOutput={revision:1,hash:'changed-edition'};
+ f.controls[0]();await tick();assert.equal(canvas.dataset.mode,undefined);assert.doesNotMatch(f.w.document.body.textContent,/canvas control is unavailable/);assert.equal(f.messages.some(m=>/canvas control is unavailable/.test(m)),false);assert.equal(f.calls.some(c=>c.path.endsWith('/export')),false);
+ }finally{f.dom.window.close();}
+});
+
+test('a disabled maintained mode control stays held until its owner enables it',async()=>{
+ const f=fixture({deferControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'export'});await tick();f.controls[0]();const canvas=f.w.document.getElementById('study-output-canvas'),button=[...canvas.querySelectorAll('button')].find(b=>b.textContent==='Export');button.disabled=true;await tick();assert.equal(canvas.dataset.mode,undefined);button.disabled=false;await tick();assert.equal(canvas.dataset.mode,'Export');assert.equal(f.calls.some(c=>c.path.endsWith('/export')),false);}finally{f.dom.window.close();}
+});
+test('an unavailable native mode control times out boundedly and cannot activate on a later commit',async()=>{
+ const f=fixture({deferControls:true});try{const schedule=f.w.setTimeout.bind(f.w);let expire;f.w.setTimeout=(fn,ms,...args)=>{if(ms===8000){expire=fn;return 1000000;}return schedule(fn,ms,...args);};await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'export'});await tick();assert.equal(typeof expire,'function');expire();await tick();assert.match(f.w.document.querySelector('#study-output-notice').textContent,/existing Export canvas control is unavailable/);f.controls[0]();await tick();assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,undefined);assert.equal(f.calls.some(c=>c.path.endsWith('/export')),false);}finally{f.dom.window.close();}
+});
+
+test('changing the primary manuscript root cancels the old Export intent before either canvas can activate it',async()=>{
+ const f=fixture({deferControls:true});try{const request=f.w.fetch,nextRoot='44444444-4444-4444-8444-444444444444';f.w.fetch=async(url,options)=>{const response=await request(url,options),parsed=new URL(url,'http://localhost');if(parsed.pathname==='/api/study/outputs'&&parsed.searchParams.get('rootBindingId')===nextRoot){const value=await response.json();return {ok:true,json:async()=>({...value,outputs:[],outputBindings:[],output:undefined,document:{...value.document,outputs:[]}})};}if(parsed.pathname!=='/api/study-draft/catalog')return response;const value=await response.json();value.drafts.push({bindingId:nextRoot,parentStudyId:'hk',parentStudyKey:'hk',bindingStatus:'ready',title:'Second exact primary root'});return {ok:true,json:async()=>value};};
+ await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'export'});await tick();const canvas=f.w.document.getElementById('study-output-canvas'),part=f.w.document.querySelector('[data-output-part]');part.value=nextRoot;part.dispatchEvent(new f.w.Event('change',{bubbles:true}));await tick();f.controls[0]();f.controls.at(-1)();await tick();assert.equal(canvas.dataset.mode,undefined);assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,undefined);assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.rootBindingId,nextRoot);assert.doesNotMatch(f.w.document.body.textContent,/canvas control is unavailable/);assert.equal(f.calls.some(c=>c.path.endsWith('/export')),false);
+ }finally{f.dom.window.close();}
+});
+
+
+test('explicit output creation connects the exact missing parent through its existing owner and preserves independent work',async()=>{
+ const f=fixture({missing:true,parentMissing:true});try{
+  const prior=structuredClone(f.outputs),native=f.w.document.getElementById('native').textContent;
+  await f.w.realOutputOverview.read({projectId:'hk'});assert.equal(f.calls.some(c=>c.body),false);
+  await f.w.realOutputOverview.onAction({projectId:'hk',kind:'create-article'});await tick();
+  const parent=f.calls.filter(c=>c.path==='/api/first-flow/select');assert.equal(parent.length,1);
+  assert.equal(parent[0].body.projectKey,'hk');assert.equal(parent[0].body.title,'Hong Kong');assert.match(parent[0].body.operationId,/^[a-f0-9-]{36}$/);
+  assert.equal(f.calls.filter(c=>c.path==='/api/first-flow/binding').length,2);
+  const photos=f.calls.findIndex(c=>c.path==='/api/study/photos/select'),selected=f.calls.findIndex(c=>c.path==='/api/first-flow/select');
+  assert.ok(photos>selected);assert.equal(f.calls[photos].body.bindingId,root);
+  const created=f.calls.find(c=>c.path==='/api/study/outputs/create');assert.equal(created.body.parentStudyId,'hk');assert.equal(created.body.rootBindingId,root);assert.equal(created.body.sourceBindingId,root);
+  assert.deepEqual(f.outputs.slice(0,prior.length),prior);assert.equal(f.outputs.length,prior.length+1);
+  assert.equal(native,'Exact native words');assert.equal(f.calls.some(c=>/study-draft\/(?:open|save|fork)|sources\/(?:import|file)/.test(c.path)),false);
+ }finally{f.dom.window.close();}
+});
+
+test('existing exact parent binding is read without selecting or replacing it during output connection',async()=>{
+ const f=fixture({empty:true,missing:true});try{
+  await f.w.realOutputOverview.onAction({projectId:'hk',kind:'create-carousel'});await tick();
+  assert.equal(f.calls.filter(c=>c.path==='/api/first-flow/binding').length,1);
+  assert.equal(f.calls.some(c=>c.path==='/api/first-flow/select'),false);
+  assert.equal(f.calls.filter(c=>c.path==='/api/study/photos/select').length,1);assert.equal(f.creates,1);
+ }finally{f.dom.window.close();}
+});
+
+for(const failure of ['foreign','invalid','recovery','selected-identity'])test('parent connection refuses '+failure+' before photo or output mutation',async()=>{
+ const f=fixture({empty:true,missing:true,parentMissing:failure==='selected-identity'});try{
+  const request=f.w.fetch;let lookups=0;
+  f.w.fetch=async(url,options)=>{const route=new URL(url,'http://localhost').pathname;
+   if(route==='/api/first-flow/binding'){
+    lookups++;
+    if(failure==='recovery')return {ok:false,status:409,json:async()=>({error:'Saved Material connection needs recovery; no replacement was created.'})};
+    if(failure==='foreign'||failure==='invalid'||failure==='selected-identity'&&lookups>1)return {ok:true,json:async()=>({projectKey:failure==='foreign'?'ref-an-cha':'hk',projectId:failure==='invalid'?'not-a-project':other,documentId:child})};
+   }
+   return request(url,options);
+  };
+  await assert.rejects(f.w.realOutputOverview.onAction({projectId:'hk',kind:'create-article'}),/connection|identity|recovery|parent/i);
+  assert.equal(f.calls.some(c=>c.path==='/api/study/photos/select'||c.path==='/api/study/outputs/create'),false);
+  if(failure!=='selected-identity')assert.equal(f.calls.some(c=>c.path==='/api/first-flow/select'),false);
+  assert.equal(f.outputs.length,0);assert.equal(f.w.document.getElementById('native').textContent,'Exact native words');
+ }finally{f.dom.window.close();}
+});
+
+for(const stop of ['lookup','select','verification','photos','native'])test('project switch during '+stop+' stops subsequent output setup mutations',async()=>{
+ const f=fixture({empty:true,missing:true,parentMissing:true});try{
+  const request=f.w.fetch;let entered,release,lookups=0;const waiting=new Promise(r=>entered=r),gate=new Promise(r=>release=r);
+  f.w.fetch=async(url,options)=>{const route=new URL(url,'http://localhost').pathname;
+   if(route==='/api/first-flow/binding')lookups++;
+   const hold=stop==='lookup'&&route==='/api/first-flow/binding'&&lookups===1||stop==='select'&&route==='/api/first-flow/select'||stop==='verification'&&route==='/api/first-flow/binding'&&lookups===2||stop==='photos'&&route==='/api/study/photos/select'||stop==='native'&&route==='/api/study-draft/read';
+   const response=await request(url,options);if(hold){entered();await gate;}return response;
+  };
+  const operation=f.w.realOutputOverview.onAction({projectId:'hk',kind:'create-article'});
+  const outcome=operation.then(()=>null,error=>error);
+  await Promise.race([waiting,operation.then(()=>{throw Error('Owner gate was never reached.');})]);
+  const before=f.calls.filter(c=>c.body).length;f.setParent('ref-an-cha');release();
+  const error=await outcome;assert.match(error?.message||'',/selected project changed/i);
+  assert.equal(f.calls.filter(c=>c.body).length,before);assert.equal(f.creates,0);
+  assert.equal(f.w.document.getElementById('native').textContent,'Exact native words');
+ }finally{f.dom.window.close();}
+});
+
+
+test('same-output mount selection confirmation cannot cancel the pending carousel words intent',async()=>{
+ const f=fixture({deferControls:true});try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();
+  f.mounts[0].onSelectionChange('c');f.controls[0]();await tick();
+  assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');
+  assert.equal(f.opens.length,0);assert.equal(f.calls.some(c=>c.body),false);
+ }finally{f.dom.window.close();}
+});
+
+test('carousel writing mode survives same-output callbacks and reload while pending recovery stays exact',async()=>{
+ const values=new Map(),storage={getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)};
+ const f=fixture({storage});let reopened;try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();
+  const pending={path:'/api/study/outputs/save',body:{rootBindingId:root,parentStudyId:'hk',selectedOutputId:'c',operationId:'exact-retained-words',changes:{caption:'Complete independent retained caption.'}}};
+  f.mounts[0].rememberPending(pending);f.mounts[0].onSelectionChange('c');
+  assert.equal(JSON.parse(storage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');
+  const sessionClient=f.w.sessionStorage.getItem('ar-study-output-browser-client-v1');f.dom.window.close();reopened=fixture({stage:9,storage,deferControls:true,sessionClient});await tick();
+  assert.equal(reopened.mounts[0].selectedOutputId,'c');assert.deepEqual(JSON.parse(JSON.stringify(reopened.mounts[0].pendingRequest)),pending);reopened.mounts[0].onSelectionChange('c');reopened.controls[0]();await tick();
+  assert.equal(reopened.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');
+  const saved=JSON.parse(storage.getItem('ar-study-output-connection-v1'));
+  assert.equal(saved.selection.hk.mode,'words');
+  assert.ok(Object.values(saved.clients).some(client=>JSON.stringify(client.groups?.['hk:'+root]?.pending)===JSON.stringify(pending)));
+  assert.equal(reopened.calls.some(c=>c.body),false);assert.equal(reopened.opens.length,0);
+ }finally{f.dom.window.close();reopened?.dom.window.close();}
+});
+
+test('explicit visual mode and a real output switch clear the retained words mode',async()=>{
+ const f=fixture();try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();
+  const canvas=f.w.document.getElementById('study-output-canvas');[...canvas.querySelectorAll('button')].find(b=>b.textContent==='Visual content').click();
+  assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,null);
+  [...canvas.querySelectorAll('button')].find(b=>b.textContent==='Writing content').click();
+  assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');
+  f.hosts[0].model.selectedOutputId='a';f.mounts[0].onSelectionChange('a');
+  assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,null);
+  assert.equal(f.calls.some(c=>c.body),false);
+ }finally{f.dom.window.close();}
+});
+
+
+// Exercise the maintained React handler rather than a label-only button stub.
+let maintainedCarouselBundle;
+function mountMaintainedCarousel(w,element,componentOptions={}){
+ if(!maintainedCarouselBundle){
+  const {buildSync}=require('esbuild'),component=require.resolve('./src/workspaces/CarouselWorkspace.tsx');
+  maintainedCarouselBundle=buildSync({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import {CarouselWorkspace} from ${JSON.stringify(component)};
+   export function mount(element,options={}){const output={id:'c',kind:'carousel',title:'Invented carousel',stage:'words',manuscript:[],placements:[],slides:[1,2].map(n=>({id:'slide-'+n,role:n===1?'hook':'inner',template:'M12',text:'Exact independently saved words '+n+'.',label:'',credit:'',photos:[],paragraphIds:[]})),caption:'Exact saved caption.'},doc={id:'invented-document',outputs:[output]};const root=createRoot(element);flushSync(()=>root.render(React.createElement(CarouselWorkspace,{doc,output,change:()=>{throw Error('This navigation test must not write.');},options})));return()=>flushSync(()=>root.unmount());}`,
+   resolveDir:require.resolve('./package.json').replace(/package\.json$/,''),loader:'tsx'},bundle:true,write:false,format:'iife',globalName:'MaintainedCarousel',platform:'browser',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}}).outputFiles[0].text;
+ }
+ if(!w.MaintainedCarousel)w.eval(maintainedCarouselBundle);
+ return w.MaintainedCarousel.mount(element,componentOptions);
+}
+
+test('maintained Review writing content control persists its actual React words view through reload',async()=>{
+ const values=new Map(),storage={getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)},f=fixture({storage,canvasMount:(w,element)=>mountMaintainedCarousel(w,element)});let reopened;
+ try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();
+  assert.ok(f.w.document.querySelector('textarea[aria-label="Words for slide 2"]'));
+  const button=[...f.w.document.querySelectorAll('#study-output-canvas button')].find(b=>b.textContent==='Review writing content');assert.ok(button);button.click();await tick();
+  assert.equal(f.w.document.querySelector('textarea[aria-label="Writing for slide 2"]').value,'Exact independently saved words 2.');
+  assert.equal(JSON.parse(storage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');
+  const sessionClient=f.w.sessionStorage.getItem('ar-study-output-browser-client-v1');f.hosts[0].destroy();f.dom.window.close();
+  reopened=fixture({stage:9,storage,sessionClient,canvasMount:(w,element)=>mountMaintainedCarousel(w,element)});await tick();
+  assert.equal(reopened.w.document.querySelector('textarea[aria-label="Writing for slide 2"]').value,'Exact independently saved words 2.');
+  assert.equal(reopened.w.document.querySelector('textarea[aria-label="Words for slide 2"]'),null);
+  assert.equal(reopened.mounts[0].selectedOutputId,'c');assert.equal(reopened.calls.some(c=>c.body),false);assert.equal(f.calls.some(c=>c.body),false);
+ }finally{f.hosts[0]?.destroy();f.dom.window.close();reopened?.hosts[0]?.destroy();reopened?.dom.window.close();}
+});
+
+
+for(const transition of ['remove','reparent'])test('writing intent survives synchronous '+transition+' of its actual clicked control before bubbling',async()=>{
+ const f=fixture({canvasMount:(w,element)=>{
+  const button=w.document.createElement('button');button.textContent='Review writing content';
+  button.onclick=()=>{if(transition==='remove')button.remove();else w.document.getElementById('app').append(button);const words=w.document.createElement('textarea');words.setAttribute('aria-label','Writing for slide 2');words.value='Exact retained independently edited words.';element.append(words);};
+  element.replaceChildren(button);
+ }});try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();
+  const button=f.w.document.querySelector('#study-output-canvas button');button.click();
+  assert.equal(f.w.document.getElementById('study-output-canvas').contains(button),false,'the real target leaves the canvas before its ancestor bubble listener runs');
+  assert.equal(f.w.document.querySelector('textarea[aria-label="Writing for slide 2"]').value,'Exact retained independently edited words.');
+  const selection=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk;
+  assert.equal(selection.outputId,'c');assert.equal(selection.rootBindingId,root);assert.equal(selection.mode,'words');
+  assert.equal(f.calls.some(c=>c.body),false);
+ }finally{f.dom.window.close();}
+});
+
+
+for(const outcome of ['success','refused'])test('maintained Review words and continue changes remembered mode only after '+outcome+' owner result',async()=>{
+ let f,reviewCalls=0;const wordsHash='a'.repeat(64);
+ const reviewOwner=async(host,options)=>{reviewCalls++;if(outcome==='refused')throw Error('Exact current words review refused; retained copy stays.');const next={...host.model,outputs:[{id:'c',kind:'carousel',stage:'look',wordsReview:{hash:wordsHash}}],writingProof:{kind:'carousel-words',wordsHash}};host.model=next;options.onSelectionChange('c');return structuredClone(next);};
+ f=fixture({reviewOwner,canvasMount:(w,element)=>mountMaintainedCarousel(w,element,{onReviewCarouselWords:async id=>{assert.equal(id,'c');const reviewed=await f.hosts[0].reviewWords();return reviewed.outputs.find(output=>output.id===id);}})});
+ try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();
+  assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');
+  const button=[...f.w.document.querySelectorAll('#study-output-canvas button')].find(b=>b.textContent==='Review words and continue');assert.ok(button);button.click();await tick();
+  assert.equal(reviewCalls,1);const selected=JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk;
+  assert.equal(selected.outputId,'c');assert.equal(selected.rootBindingId,root);
+  if(outcome==='success'){assert.ok(f.w.document.querySelector('textarea[aria-label="Words for slide 2"]'));assert.equal(selected.mode,null);assert.equal(f.hosts[0].model.outputs[0].stage,'look');assert.equal(f.hosts[0].model.outputs[0].wordsReview.hash,wordsHash);}
+  else{assert.ok(f.w.document.querySelector('textarea[aria-label="Writing for slide 2"]'));assert.equal(selected.mode,'words');assert.match(f.w.document.body.textContent,/Exact current words review refused/);}
+  assert.equal(f.calls.some(c=>c.body),false);
+ }finally{f.hosts[0]?.destroy();f.dom.window.close();}
+});
+
+
+test('late successful words review preserves its original result without resetting another context',async()=>{
+ let release,ownerResult;const gate=new Promise(r=>release=r),wordsHash='b'.repeat(64),f=fixture({reviewOwner:async host=>{await gate;ownerResult={...host.model,outputs:[{id:'c',kind:'carousel',stage:'look',wordsReview:{hash:wordsHash}}],writingProof:{kind:'carousel-words',wordsHash}};return ownerResult;}});
+ try{
+  await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();
+  const review=f.hosts[0].reviewWords();f.setParent('ref-an-cha');await tick();release();assert.equal(await review,ownerResult);
+  assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');assert.equal(f.calls.some(c=>c.body),false);
+ }finally{f.dom.window.close();}
+});
+
+
+test('exact owned portal controls restore words and the maintained writing callback without a second canvas',async()=>{
+ const f=fixture({portalControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'words'});await tick();const canvas=f.w.document.getElementById('study-output-canvas'),portal=f.w.document.querySelector('.wb-arrange-owner-actions');assert.equal(canvas.querySelector('button'),null);assert.equal(canvas.dataset.mode,'Writing content');assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');portal.querySelectorAll('button')[1].click();assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,null);f.mounts[0].openCarouselWriting({outputId:'c',owner:{kind:'carousel-words',outputId:'c'}});assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');assert.equal(f.mounts.length,1);assert.equal(f.opens.length,0);await f.w.render();await tick();assert.equal(f.w.document.getElementById('study-output-canvas').dataset.mode,'Writing content');}finally{f.dom.window.close();}
+});
+
+test('delayed portal ownership is required before Export intent can activate',async()=>{
+ const f=fixture({portalControls:true,deferControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'a',kind:'export'});await tick();f.controls[0]();const portal=f.w.document.querySelector('.wb-arrange-owner-actions'),canvas=f.w.document.getElementById('study-output-canvas');portal.dataset.cwbOutputId='foreign';await tick();assert.equal(canvas.dataset.mode,undefined);delete portal.dataset.cwbOutputId;await tick();assert.equal(canvas.dataset.mode,undefined);portal.dataset.cwbOutputId='a';await tick();assert.equal(canvas.dataset.mode,'Export');assert.equal(f.calls.some(c=>c.path.endsWith('/export')),false);}finally{f.dom.window.close();}
+});
+
+for(const invalid of ['document','output','foreign-host','duplicate','stale'])test('portal mode capture refuses '+invalid+' ownership',async()=>{
+ const f=fixture({portalControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();const portal=f.w.document.querySelector('.wb-arrange-owner-actions'),button=portal.querySelector('button');if(invalid==='document')portal.dataset.cwbDocumentId=other;else if(invalid==='output')portal.dataset.cwbOutputId='a';else if(invalid==='foreign-host')f.w.document.body.append(portal);else if(invalid==='duplicate')portal.after(portal.cloneNode(true));else await f.w.viewPhase(12);button.click();assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,null);}finally{f.dom.window.close();}
+});
+
+
+test('portal capture records explicit writing before its target is synchronously removed and stops on pagehide',async()=>{
+ const f=fixture({portalControls:true});try{await f.w.realOutputOverview.read({projectId:'hk'});await f.w.realOutputOverview.onAction({projectId:'hk',outputId:'c',kind:'arrange'});await tick();const portal=f.w.document.querySelector('.wb-arrange-owner-actions'),button=portal.querySelector('button');button.onclick=()=>button.remove();button.click();assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');f.w.dispatchEvent(new f.w.Event('pagehide'));portal.querySelector('button').click();assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-output-connection-v1')).selection.hk.mode,'words');}finally{f.dom.window.close();}
+});
+
+test('optional occurrence Arrange origin guard cancels both owner flush seams before selection or navigation writes',async()=>{
+ for(const seam of [1,2]){const f=fixture({stage:8});try{await f.w.studyOutputConnection.read({projectId:'hk'});let calls=0,release,entered;const started=new Promise(resolve=>{entered=resolve;});f.w.studyDraft.flush=async()=>{if(++calls===seam){entered();await new Promise(resolve=>{release=resolve;});}return {dirty:false};};const p=f.project,guard=()=>{if(f.project!==p||p.viewedStage!==8)throw Error('The occurrence origin changed.');};
+ const opening=f.w.studyOutputConnection.onAction({projectId:'hk',outputId:'a',kind:'arrange'},{rootBindingId:root,originGuard:guard});await started;p.viewedStage=3;release();await assert.rejects(opening,/origin changed/);assert.equal(p.viewedStage,3);assert.equal(f.w.studyOutputConnection.selection(),null);assert.equal(f.mounts.length,0);
+ }finally{f.dom.window.close();}}
+});
+
+test('guarded Arrange refuses a different root and dirty writing while ordinary caller remains supported',async()=>{
+ const f=fixture({stage:8});try{await f.w.studyOutputConnection.read({projectId:'hk'});await assert.rejects(f.w.studyOutputConnection.onAction({projectId:'hk',outputId:'a',kind:'arrange'},{rootBindingId:other,originGuard:()=>{}}),/root|part/);assert.equal(f.w.studyOutputConnection.selection(),null);f.w.studyDraft.flush=async()=>({dirty:true});await assert.rejects(f.w.studyOutputConnection.onAction({projectId:'hk',outputId:'a',kind:'arrange'},{rootBindingId:root,originGuard:()=>{}}),/Draft changes/);assert.equal(f.project.viewedStage,8);assert.equal(f.w.studyOutputConnection.selection(),null);f.w.studyDraft.flush=async()=>({dirty:false});await f.w.studyOutputConnection.onAction({projectId:'hk',outputId:'a',kind:'arrange'});assert.equal(f.project.viewedStage,9);await tick();
+ }finally{f.dom.window.close();}
+});
+
+test('real output owner honors media occurrence guard and double resolve through Arrange and Back to its exact photo owner',async()=>{
+ const sourceId='owned-photo',occurrence={id:'a'.repeat(64),sourceId,scope:{parentStudyId:'hk',rootBindingId:root},outputId:'a',edition:{revision:3,hash:'b'.repeat(64)},location:{kind:'article',slot:'photo-1',slotOccurrence:0},navigation:{rootBindingId:root,request:{projectId:'hk',outputId:'a',kind:'arrange'},expectedOutput:{revision:0,hash:'hash'}}},focused=[],photos=[],f=fixture({stage:8,canvasMount:(w,_element,options)=>{const entry={outputId:options.selectedOutputId,focus:async location=>{focused.push(JSON.parse(JSON.stringify(location)));return {outputId:options.selectedOutputId};}};w.studyCompositionFocus=entry;return()=>{if(w.studyCompositionFocus===entry)delete w.studyCompositionFocus;};}});
+ try{const request=f.w.fetch;let resolves=0;f.w.fetch=async(url,options)=>new URL(url,'http://localhost').pathname==='/api/study/media-usage/resolve'?{ok:true,json:async()=>{resolves++;return structuredClone(occurrence);}}:request(url,options);f.w.studyPhotoStage={focusAsset:async input=>{input.originGuard();assert.equal(input.rootBindingId,root);assert.equal(input.parentStudyId,'hk');photos.push(input.sourceId);return {sourceId:input.sourceId};},browserOwner:()=>f.project.viewedStage===8?{key:'exact-photo-owner',scope:{parentStudyId:'hk',rootBindingId:root},read:()=>({photos:[{sourceId}]}),focusAsset:async id=>{photos.push(id);return {sourceId:id};}}:null};f.w.eval(fs.readFileSync(new URL('./media-usage.js',import.meta.url),'utf8'));
+ await f.w.studyMediaUsage.open(occurrence,'c'.repeat(64));assert.equal(resolves,2);assert.equal(f.project.viewedStage,9);assert.equal(f.w.studyOutputConnection.selection().rootBindingId,root);assert.equal(f.w.studyOutputConnection.selection().output.id,'a');assert.deepEqual(focused,[occurrence.location]);const button=f.w.document.querySelector('#study-media-return button');assert.ok(button);button.click();await tick();await tick();assert.equal(f.project.viewedStage,8);assert.deepEqual(photos,[sourceId]);assert.equal(f.calls.some(call=>call.body),false,'pickup and Back make no output creation or media writes');
+ }finally{f.dom.window.close();}
+});
+
+test('Magazine Outputs uses the exact read-only reference adapter and routes its title and working continuation without native output reads',async()=>{
+ const f=fixture();try{f.setParent('porcelain');const actions=[],reads=[],nativeBefore=f.calls.length;f.w.studyDraft.currentOwner=()=>({kind:'magazine',storyId:'mag-invented',pieceId:'mag-invented:article'});f.w.studyDraft.currentProof=()=>({parentStudyId:'porcelain',owner:f.w.studyDraft.currentOwner(),draftHash:'d'.repeat(64),dirty:false});f.w.studyOutputConnection.setMagazineAdapter({read:async input=>{reads.push(input);return {projectId:'porcelain',outputs:[{id:'recorded-publication',title:'Invented publication',kind:'publication-reference',format:'Publication reference',status:'not-recorded',nextAction:{kind:'publication-reference',label:'Open recorded publication'},publicationReference:{url:'https://www.teajia.com/read/invented',recordedBy:'working-draft-frontmatter',edition:null},delivery:{}}],existingDraft:{kind:'magazine-working'},allowNewExpression:false};},onAction:async input=>actions.push(input)});f.w.eval(overview);await tick();const body=f.w.document.querySelector('#output-overview');assert.match(body.textContent,/Recorded article link/);assert.equal(body.querySelectorAll('[data-output-action="publication-reference"]').length,1);assert.doesNotMatch(body.textContent,/Published|New expression|Saved outputs are not connected/);assert.equal(f.calls.length,nativeBefore,'Magazine reference does not call native UUID output inventory');body.querySelector('.oo-title').click();await tick();assert.equal(actions.at(-1).kind,'publication-reference');body.querySelector('[data-output-action="native"]').click();await tick();assert.equal(actions.at(-1).type,'magazine-working');assert.equal(actions.at(-1).outputId,null);assert.ok(reads.length>0);
+ }finally{f.dom.window.close();}
+});
+test('installed Magazine adapter never intercepts an ordinary native output owner',async()=>{const f=fixture();try{let reads=0;f.w.studyOutputConnection.setMagazineAdapter({read:async()=>{reads++;throw Error('Wrong owner');},onAction:async()=>{throw Error('Wrong owner');}});const view=await f.w.realOutputOverview.read({projectId:'hk'});assert.equal(view.outputs.length,2);assert.equal(reads,0);}finally{f.dom.window.close();}});

@@ -2,6 +2,7 @@ import {exactApprovalSpans,approveExactSpan} from '../../services/draft-approval
 import {reworkSlashes} from '../../reference/mag-edit.mjs';
 import {createHash,randomUUID} from 'node:crypto';
 import {documentParts,plain,editable,readableBlock} from '../donors/mag/markdown-blocks';
+import {draftBody,parseDraft} from '../donors/mag/mag-send';
 import {markdownToDoc} from '../donors/wordforge/wf-block-markdown';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const conflict=(reason:string):never=>{throw new Error(reason);};
@@ -70,7 +71,7 @@ export function capture(raw:string,sourceKey:string):Snapshot{
 }
 export function projection(s:Snapshot){return s.blocks.map(b=>({id:b.id,origin:b.origin,blockHash:hash(b.raw),...inlineMap(b.raw)}));}
 type Edit={kind:'text';id:string;from:number;to:number;insert:string;seenBlockHash:string};
-type Op=Edit|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
+type Op=Edit|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
 const byteBoundary=(map:ReturnType<typeof inlineMap>,position:number,bias:'left'|'right'='right')=>{
  if(position>0&&position<map.words.length&&/[\uD800-\uDBFF]/.test(map.words[position-1])&&/[\uDC00-\uDFFF]/.test(map.words[position]))conflict('Native range divides a Unicode character.');
  if(!Number.isSafeInteger(position)||position<0||position>map.words.length)conflict('Invalid native range.');
@@ -89,7 +90,17 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[]){
  if(!Array.isArray(ops)||ops.length>1000)conflict('Bounded operation array required.');
  for(const op of ops){
   validateOperation(op);
-  if(op.kind==='approveMark'){
+  if(op.kind==='photoFocus'){
+   const b=get(op.id);if(ops.length!==1||hash(b.raw)!==op.seenBlockHash)conflict('Use one current exact photo occurrence for its focal point.');
+   const raw=render(next),offset=next.prefix.length+next.blocks.slice(0,next.blocks.indexOf(b)).reduce((n,row)=>n+row.raw.length+row.separator.length,0),trimmed=b.raw.trim(),start=offset+b.raw.indexOf(trimmed);
+   let range:{start:number;end:number}|undefined;const body=draftBody(raw,r=>{range=r;}),observations:any[]=[];
+   const story=parseDraft(body.body,undefined,(shot,origin)=>observations.push({shot,origin}));
+   const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length);
+   const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
+   const hit=matches[0],o=hit?.origin;
+   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||o.directiveEnd!==o.chunkEnd||contains(story.ending,hit.shot))conflict('Focal adjustment supports only a standalone article photo.');
+   b.raw=photoFocusRaw(b.raw,op.x,op.y);
+  }else if(op.kind==='approveMark'){
       const b=get(op.id),beforeFrame=envelope(b.raw);
       if(hash(b.raw)!==op.seenBlockHash)conflict('Block changed since exact human approval capture.');
       if(!editable(b.raw))conflict('Opaque source structure requires its own decision, not prose approval.');
@@ -175,7 +186,7 @@ export function undo(current:Snapshot,currentRaw:string,inverse:any){
  return {raw,snapshot:structuredClone(inverse.before),expectedOriginalHash:current.fileHash,nextOriginalHash:inverse.before.fileHash};
 }
 function validateOperation(op:any){
- const shapes:any={approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
+ const shapes:any={photoFocus:['kind','id','seenBlockHash','x','y'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
  if(!op||typeof op!=='object'||Array.isArray(op)||!Object.hasOwn(shapes,op.kind))conflict('Unknown document operation kind.');
  const keys=shapes[op.kind];if(Object.keys(op).some(k=>!keys.includes(k))||keys.filter((k:string)=>k!=='level').some((k:string)=>!Object.hasOwn(op,k)))conflict('Malformed document operation fields.');
  for(const key of ['id','leftId','rightId','newId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\u0000-\u001f]/.test(op[key])))conflict('Malformed stable native ID.');
@@ -183,7 +194,30 @@ function validateOperation(op:any){
  for(const key of ['from','to','at'])if(key in op&&(!Number.isSafeInteger(op[key])||op[key]<0))conflict('Invalid native range.');
  for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))conflict('Well-formed Unicode text required.');
  if('seenBlockHash' in op&&(typeof op.seenBlockHash!=='string'||!/^[a-f0-9]{64}$/.test(op.seenBlockHash)))conflict('Malformed seen block hash.');
+ if(op.kind==='photoFocus'&&![op.x,op.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1))conflict('Focal coordinates must be finite values from zero to one.');
  if(op.kind==='blockKind'&&(!['paragraph','heading','blockquote'].includes(op.blockKind)||op.blockKind==='heading'&&![1,2,3].includes(op.level)||op.blockKind!=='heading'&&op.level!==undefined))conflict('Unsupported native block kind or heading level.');
 }
 
 export function approvalSpans(raw:string){if(!editable(raw))return [];return exactApprovalSpans(raw).map(span=>({...span,preview:raw.slice(span.rawFrom+2,span.rawTo-2).replace(/%%rework%%[\s\S]*?%%\/rework%%|%%[\s\S]*?%%|<!--[\s\S]*?-->/g,"")}));}
+
+/** Change coordinate tokens only, retaining original file, alt, layout and whitespace. */
+export function photoFocusRaw(raw:string,x:number,y:number){
+ if(![x,y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1))conflict('Invalid focal coordinates.');
+ const match=/^(\s*%%photo:[ \t]*)([^\r\n%]*)(%%\s*)$/.exec(raw),bits=match?.[2].split(' · ');
+ if(!match||!bits||!bits[0].trim())conflict('An exact standalone photo directive is required.');
+ const layout=bits.slice(2).join(' · '),tokens=[...layout.matchAll(/\S+/g)],seen=new Set<string>();
+ if(tokens.some(t=>['cover','opener'].includes(t[0])))conflict('Unsupported focal-point layout.');
+ let changed=layout;
+ for(const token of [...tokens].reverse()){
+  const m=/^([xy])=(.*)$/.exec(token[0]);if(!m)continue;
+  if(seen.has(m[1])||!m[2]||!Number.isFinite(Number(m[2]))||Number(m[2])<0||Number(m[2])>1)conflict('Ambiguous or invalid existing focal coordinate.');
+  seen.add(m[1]);const value=m[1]==='x'?x:y;
+  if(Number(m[2])!==value)changed=changed.slice(0,token.index)+m[1]+'='+String(value)+changed.slice(token.index!+token[0].length);
+ }
+ const additions=[...(!seen.has('x')?['x='+String(x)]:[]),...(!seen.has('y')?['y='+String(y)]:[])];
+ if(additions.length){const at=changed.trimEnd().length;changed=changed.slice(0,at)+(at?' ':'')+additions.join(' ')+changed.slice(at);}
+ return match[1]+bits[0]+' · '+(bits[1]??'')+' · '+changed+match[3];
+}
+
+// Advertised by the maintained owner read; absent on older installed engines.
+export const supportedNativeOperations=Object.freeze(['photoFocus']);

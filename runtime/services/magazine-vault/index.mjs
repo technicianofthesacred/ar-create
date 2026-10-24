@@ -67,6 +67,22 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
 
   // ---- operations: the record that makes every write replayable and undoable ----
   const opFile = id => path.join(dirs.operations, id + '.json');
+  // Read-only discovery over the same durable receipts used by operation/Undo.
+  // No before-bytes or unrelated operation metadata leave this owner method.
+  function draftHistory(input) {
+    fields(input, ['path', 'storyId', 'limit'], ['path', 'storyId']);
+    const rel = classify(input.path).rel, limit = input.limit ?? 200;
+    if (classify(rel).kind !== 'DEV' || typeof input.storyId !== 'string' || !input.storyId || input.storyId.length > 256 || !Number.isSafeInteger(limit) || limit < 1 || limit > 1000) throw new StateError('Choose an exact draft story/path and bounded history limit.', 400);
+    const records = [];
+    for (const name of fs.readdirSync(dirs.operations)) {
+      if (!name.endsWith('.json') || !UUID.test(name.slice(0, -5))) continue;
+      const record = readJson(path.join(dirs.operations, name), null);
+      if (record?.schema !== 'ar-create.magazine-operation.v1' || record.operationId !== name.slice(0, -5) || record.state !== 'committed' || !['magazine.write', 'magazine.edit'].includes(record.command) || record.scope?.kind !== 'story' || record.scope.id !== input.storyId || record.result?.path !== rel || typeof record.at !== 'string' || !record.changes?.some(c => c.applied !== false && c.root === 'mag' && c.rel === rel)) continue;
+      records.push({operationId: record.operationId, at: record.at});
+    }
+    records.sort((a,b) => b.at.localeCompare(a.at) || b.operationId.localeCompare(a.operationId));
+    return {operationIds: records.slice(0, limit).map(r => r.operationId)};
+  }
   async function operation({command, operationId, input, rel = null, story = null, doing}, fn) {
     requireWritable();
     if (typeof operationId !== 'string' || !UUID.test(operationId)) throw new StateError('operationId must be a fresh UUID for every write.', 400);
@@ -442,7 +458,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     status: () => ({configured, writable, vaultRoot: configured ? vaultRoot : null, filesRoot, drops, lock: configured ? roots().lock.status() : null}),
     board, read, write, edit, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
-    issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo,
+    issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo, draftHistory,
     operation: ({operationId}) => { if (!UUID.test(operationId || '')) throw new StateError('operationId must be a UUID.', 400); const r = readJson(opFile(operationId), null); if (!r) throw new StateError('No such operation.', 404); return {...r, changes: r.changes.map(({before, ...rest}) => rest)}; },
     lockStatus: () => roots().lock.status(),
     lockHold: async input => { fields(input || {}, ['doing', 'ttlMs']); requireWritable(); const who = ctx(); return roots().lock.hold({actor: who.actor, doing: typeof input?.doing === 'string' ? input.doing.slice(0, 120) : 'a /mag run on this Mac'}, input?.ttlMs ? {ttlMs: input.ttlMs} : {}); },

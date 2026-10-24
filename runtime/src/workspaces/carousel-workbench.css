@@ -199,3 +199,121 @@
 
 /* Slides are already visible beside the canvas at this width. */
 @container carousel (min-width:760px){.car-workspace:not(.is-focused) .car-body:not([data-panel=inspector]) .car-panel-toggle[aria-label="Show slides"]{display:none}}
+
+/* Workbench Arrange: one portrait sequence, using the maintained slide renderer. */
+.car-workspace{--cwb-line:var(--line,#dcd8d1);--cwb-dim:var(--dim,#756e64);color:var(--ink,#302d28);font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper,#f8f6f1)}
+.car-workspace .car-body,.car-workspace .car-body[data-panel=inspector]{display:block;position:relative;overflow:hidden;padding:0}
+.car-workspace .car-stage,.car-workspace .car-stage:not(.car-single-slide),.car-workspace .car-body[data-panel=inspector] .car-stage,.car-workspace.is-focused .car-stage{display:flex;flex-direction:column;gap:12px;padding:16px 20px;overflow:auto;height:100%;box-sizing:border-box;min-width:0;align-items:stretch}
+.car-workspace .car-stage>.car-stage-label{display:flex;flex:none;min-height:32px;font-size:var(--t-label,13px);color:var(--cwb-dim)}
+.car-sequence-help{margin:0;font-size:var(--t-label,13px);line-height:1.6;color:var(--cwb-dim)}
+.car-workspace .car-sequence.car-lineup{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));align-items:start;align-content:start;gap:16px;overflow:visible;flex:none;padding:0;margin:0;scrollbar-gutter:auto}
+.car-sequence-card{min-width:0;border:1px solid var(--cwb-line);border-radius:8px;background:var(--surface,var(--paper,#fff));overflow:hidden;scroll-margin:16px}
+.car-sequence-card.is-selected{border-color:var(--warm,#a17547)}
+.car-sequence-header{display:flex;align-items:center;gap:6px;min-width:0;padding:6px 8px;color:var(--cwb-dim);font-size:var(--t-label,13px)}
+.car-workspace .car-sequence button{font:inherit;color:inherit;min-height:32px;touch-action:auto;user-select:auto;cursor:pointer;background:transparent;border:1px solid transparent;border-radius:4px;padding:3px 6px;white-space:normal}
+.car-workspace .car-sequence .car-sequence-grip{flex:none;cursor:grab;touch-action:none;font-size:var(--t-label,13px);min-width:32px;padding:0}
+.car-workspace .car-sequence .car-sequence-template{text-align:left;min-width:0;flex:1;font-size:var(--t-label,13px);color:var(--ink,#302d28);overflow-wrap:anywhere}
+.car-workspace .car-sequence button:hover{background:var(--hover,#ece8df)}
+.car-workspace .car-sequence-preview{width:100%;aspect-ratio:4/5;overflow:hidden;background:#1a1714}
+.car-workspace .car-sequence-preview>.car-artboard-slot{height:100%;width:100%}
+.car-workspace .car-sequence-preview .car-frame{box-shadow:none}
+.car-sequence-photos{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;font-size:var(--t-label,13px)}
+.car-workspace .car-sequence-photos button{border-color:var(--cwb-line);font-size:var(--t-label,13px)}
+.car-sequence-photos .car-sequence-edit{margin-left:auto}
+.car-workspace .car-sequence-words{display:block;width:100%;box-sizing:border-box;resize:vertical;min-height:112px;max-height:360px;margin:0;border:0;border-top:1px solid var(--cwb-line);border-radius:0;padding:10px 12px;background:transparent;color:inherit;font:400 var(--t-body,15px)/1.6 'Plus Jakarta Sans',sans-serif;overflow-wrap:anywhere}
+.car-sequence-words:focus{outline:2px solid var(--warm,#a17547);outline-offset:-2px}
+.car-sequence-actions{padding:0 10px;border-top:1px solid var(--cwb-line);font-size:var(--t-label,13px)}
+.car-sequence-actions summary{padding:8px 0;min-height:32px;box-sizing:border-box;cursor:pointer;color:var(--cwb-dim)}
+.car-sequence-actions>div{display:flex;flex-wrap:wrap;gap:4px;padding-bottom:8px}
+.car-workspace .car-sequence-card.car-drop-target{outline:2px solid var(--warm,#a17547)}
+.car-workspace .car-messages{flex:none;justify-content:flex-start}
+.car-workspace .car-inspector,.car-workspace:not(.is-focused) .car-inspector{display:none}
+.car-workspace .car-body[data-panel=inspector] .car-inspector,.car-workspace:not(.is-focused) .car-body[data-panel=inspector] .car-inspector{display:flex;position:absolute;z-index:3;right:0;top:0;bottom:0;width:min(380px,100%);box-sizing:border-box;border:0;border-left:1px solid var(--cwb-line);border-radius:0;box-shadow:-8px 0 28px #0002;background:var(--paper,#f8f6f1)}
+.car-workspace .car-view-controls .car-panel-toggle{display:inline-flex!important;align-items:center}
+.car-workspace.is-focused{background:var(--paper,#f8f6f1)}
+.car-workspace .car-inspector-header{background:var(--surface,var(--paper,#fff))}
+.car-workspace .car-writing-page{background:transparent;color:inherit;font-family:inherit}
+.car-workspace .car-writing-page h2{font:600 var(--t-title,17px)/1.4 'Plus Jakarta Sans',sans-serif;color:inherit}
+.car-workspace .car-writing-page textarea,.car-workspace .car-writing-page input,.car-workspace .cwb-field textarea,.car-workspace .cwb-field input{background:var(--surface,var(--paper,#fff));color:inherit;border-color:var(--cwb-line);font-family:inherit}
+.car-workspace .car-inspector :is(strong,h2,small,summary,label,p,legend),.car-workspace .car-current-layout-action{color:inherit;font-family:inherit}
+.car-workspace .car-inspector-content{font-size:var(--t-label,13px)}
+.car-workspace .car-body[data-panel=inspector] .car-stage-label{padding-right:min(380px,35%)}
+@container carousel (max-width:560px){
+ .car-workspace .car-stage,.car-workspace .car-stage:not(.car-single-slide),.car-workspace .car-body[data-panel=inspector] .car-stage{padding:12px}
+ .car-workspace .car-sequence.car-lineup{grid-template-columns:minmax(0,1fr);max-width:420px;width:100%;margin-inline:auto}
+ .car-workspace .car-body[data-panel=inspector] .car-stage-label{padding-right:0}
+ .car-workspace .car-sequence button{min-height:40px}
+ .car-workspace .car-tools .car-dim{display:none}
+}
+.car-workspace .car-close-inspector{align-self:flex-end;margin:8px 12px 0;min-height:36px;font-size:var(--t-label,13px)}
+
+/* Approved Arrange geometry and classes (visual correction). */
+.car-workspace .car-sequence.car-lineup.tseq{display:flex;flex-wrap:nowrap;gap:14px;overflow-x:auto;overflow-y:hidden;padding:4px 2px 12px;align-items:flex-start;width:100%;max-width:none;margin:0;box-sizing:border-box}
+.car-workspace .tseq .slide2{flex:0 0 212px;box-sizing:border-box;border:1px solid var(--cwb-line);border-radius:10px;background:var(--paper);padding:6px;display:flex;flex-direction:column;gap:6px;overflow:visible}
+.car-workspace .slide2.on{border-color:var(--warm);box-shadow:inset 0 0 0 1px var(--warm)}
+.car-workspace .slide2 .sh2{display:flex;align-items:center;gap:4px;padding:0;font-size:var(--t-label,13px);color:var(--cwb-dim);min-width:0}
+.car-workspace .slide2 .sh2 .tn2{display:flex;align-items:center;gap:4px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;color:var(--ink);padding:0;min-height:28px}
+.car-workspace .slide2 .sh2 .tn2 svg{flex:none}
+.car-workspace .slide2 .sh2 .tn2:hover{color:var(--warm);background:none}
+.car-workspace .slide2 .sh2 .handle{width:18px;min-width:18px;min-height:28px}
+.car-workspace .slide2 .tplr{border-radius:4px;width:198px;max-width:100%;aspect-ratio:4/5;flex:none}
+.car-workspace .slide2 .tx2{font:400 var(--t-label,13px)/1.45 'Plus Jakarta Sans',sans-serif;border:1px solid transparent;border-radius:6px;padding:4px 6px;outline:none;min-height:2.2em;max-height:none;resize:vertical}
+.car-workspace .slide2 .tx2:hover{border-color:var(--cwb-line)}
+.car-workspace .slide2 .tx2:focus{border-color:var(--warm);background:var(--bg);outline:none}
+.car-workspace .slots{display:flex;align-items:center;gap:4px;min-height:28px;min-width:0;padding:0;flex-wrap:nowrap}
+.car-workspace .slots .sl{width:26px;min-width:26px;height:26px;min-height:26px;border-radius:5px;flex:none;border:1px solid var(--cwb-line);font-size:var(--t-label);color:var(--cwb-dim);display:grid;place-items:center;padding:0}
+.car-workspace .slots .sl.vacant{border-style:dashed}.car-workspace .slots .sl:hover{border-color:var(--warm)}
+.car-workspace .slots .sln{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;margin-left:4px;border:0;padding:0;min-height:28px}
+.car-workspace .car-sequence-actions{padding:0;border:0}.car-workspace .car-sequence-actions summary{padding:0;min-height:24px}
+.car-workspace .car-template-hint{font-size:var(--t-label);color:var(--cwb-dim);margin:0}
+.car-workspace .tpick{margin-top:14px;border:1px solid var(--cwb-line);border-radius:10px;overflow:hidden;flex:none}
+.car-workspace .tpick .tph{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--rail);border-bottom:1px solid var(--cwb-line);flex-wrap:wrap;font-size:var(--t-label)}
+.car-workspace .tpick .tph b{flex:1;min-width:12rem;font-weight:600}.car-workspace .tpick .sub{font-weight:400;color:var(--cwb-dim)}
+.car-workspace .tpick .fsel{background:var(--paper);color:var(--ink);border:1px solid var(--cwb-line);border-radius:6px;font:inherit;min-height:32px;padding:3px 7px}
+.car-workspace .tpick .views{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;border-bottom:1px solid var(--cwb-line)}
+.car-workspace .tpick .views button{font-size:var(--t-label);background:none;color:var(--cwb-dim);border:1px solid transparent;padding:4px 8px;min-height:30px}
+.car-workspace .tpick .views button.on{color:var(--ink);border-color:var(--warm)}
+.car-workspace .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:12px;padding:12px;max-height:46vh;overflow:auto}
+.ar-donor-workspace .car-workspace button.tcard{display:flex;flex-direction:column;gap:4px;text-align:left;border-radius:8px;padding:4px;border:1px solid transparent;background:none;min-width:0;white-space:normal;color:var(--ink)}
+.ar-donor-workspace .car-workspace button.tcard:hover{border-color:var(--cwb-line);background:var(--sel)}.ar-donor-workspace .car-workspace button.tcard.on{border-color:var(--warm)}
+.car-template-render{display:block;width:112px;height:140px;max-width:100%;overflow:hidden;border-radius:4px;background:#111}
+.car-workspace .tcard .nm{font-size:var(--t-label);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.car-workspace .tcard .m{font-size:var(--t-label);color:var(--cwb-dim)}
+/* Step 4: shared Media picker sheet, preserving the rack and composition owner. */
+.car-photo-sheet{position:fixed;left:calc(var(--rackw,66px) + 10px);top:58px;right:10px;bottom:10px;z-index:92;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;box-shadow:0 30px 80px #0008;padding:12px 14px 14px;font:400 var(--t-body,15px)/1.5 'Plus Jakarta Sans',sans-serif}
+.car-photo-sheet .pkh{display:flex;align-items:center;gap:8px 12px;margin-bottom:10px;flex-wrap:wrap}.car-photo-sheet .pkh h2{flex:1 1 auto;margin:0;font-size:var(--t-head,15px);font-weight:600}.car-photo-sheet .pkh>.dim{flex:1 1 100%;order:3;font-size:var(--t-label);color:var(--dim)}
+.car-photo-sheet .mptabs{display:inline-flex;gap:4px;flex-wrap:wrap}.car-photo-sheet button{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:7px;cursor:pointer;min-height:30px}
+.car-photo-sheet .mptabs button{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 8px 0 3px;font-size:var(--t-label);color:var(--dim)}.car-photo-sheet .mptabs button.on{border-color:var(--warm);color:var(--ink)}.car-photo-sheet .mptabs .sl{width:22px;height:22px;border-radius:4px;border:1px dashed var(--line);display:grid;place-items:center}
+/* Keep the real file control focusable while presenting one compact dialog action. */
+.car-photo-sheet .car-picker-upload{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:32px;padding:0 10px;margin:0;overflow:hidden;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:7px;font:inherit;font-size:var(--t-label,13px);cursor:pointer;white-space:nowrap}
+.car-photo-sheet .car-picker-upload input[type=file]{position:absolute;inset:0;width:100%;height:100%;max-width:none;min-height:0;margin:0;padding:0;opacity:0;cursor:pointer}
+.car-photo-sheet .car-picker-upload:focus-within{outline:2px solid var(--warm);outline-offset:2px}
+.car-photo-sheet .car-picker-upload[aria-disabled=true]{opacity:.55;cursor:default}
+.car-photo-sheet .car-picker-upload input:disabled{cursor:default}
+.car-photo-sheet-browser{flex:1;min-width:0;min-height:0;overflow:hidden}
+@media(max-width:760px){.car-photo-sheet{inset:0;border-radius:0;padding:10px}}
+
+/* The native carousel shares Arrange's page; supporting modes stay in More. */
+body.wbf-on #app .wb-arrange #study-output-arrange:has(.car-workspace){max-width:none!important;width:auto!important}
+body.wbf-on #app #study-output-canvas:has(.car-workspace),body.wbf-on #app #study-output-canvas:has(.car-workspace)>.ar-donor-workspace{max-width:none!important;width:100%!important;margin:0!important;padding:0!important;background:none!important;box-sizing:border-box}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace){position:relative;background:none!important;color:var(--ink)!important;font-family:var(--ar-ui,'Plus Jakarta Sans',sans-serif)!important;--cwb-line:var(--line);--cwb-dim:var(--dim);box-shadow:none!important;border:0!important}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar{position:absolute;right:0;top:0;z-index:4;min-height:34px;padding:0!important;gap:6px!important;border:0!important;background:none!important}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace) .cwb-output-identity{display:none}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-manuscript-receipt{order:3;padding:6px 0!important;min-height:0!important;background:none!important;border:0!important;font-size:var(--t-label);color:var(--dim)}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-manuscript-receipt.is-stale{order:0;margin-top:38px;border-left:2px solid var(--warm)!important;padding-left:10px!important}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.car-workspace{order:1;background:none!important}
+body.wbf-on #app .car-workspace>.car-tools{position:relative;min-height:34px!important;padding:0 232px 8px 0!important;margin:0;gap:8px;border:0!important;background:none!important;justify-content:flex-start;box-sizing:border-box}
+body.wbf-on #app .car-workspace .car-tbar-kind{font:500 var(--t-label)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);color:var(--ink)}
+body.wbf-on #app .car-workspace .car-more{margin-left:auto}
+body.wbf-on #app .car-workspace .car-more>summary{min-height:30px;padding:0 8px;font-size:var(--t-label)}
+body.wbf-on #app .car-workspace .car-more-menu{left:0;right:auto;z-index:8;background:var(--paper);border-color:var(--line);border-radius:8px;color:var(--ink)}
+body.wbf-on #app .car-workspace .car-more-menu>button{border:0!important;min-height:34px;font:400 var(--t-label)/1.5 var(--ar-ui)}
+body.wbf-on #app .car-workspace .car-more-help{margin:6px 8px;font-size:var(--t-label);line-height:1.5;color:var(--dim)}
+body.wbf-on #app .car-workspace .car-stage,body.wbf-on #app .car-workspace .car-stage:not(.car-single-slide),body.wbf-on #app .car-workspace .car-body[data-panel=inspector] .car-stage{padding:0;gap:10px;background:none}
+body.wbf-on #app .car-workspace .car-body{background:none}
+body.wbf-on #app #study-output-canvas .ar-composition-workbench:has(>.car-workspace) :is(button,select){background:var(--paper)!important;border-color:var(--line)!important;color:var(--ink);font-family:var(--ar-ui,'Plus Jakarta Sans',sans-serif)}
+body.wbf-on #app #study-output-canvas .ar-composition-workbench .slide2 :is(.handle,.tn2,.sln){background:none!important;border-color:transparent!important}
+body.wbf-on #app #study-output-canvas .ar-composition-workbench .slide2 .tx2{border-color:transparent;background:none;color:var(--ink);font-family:var(--ar-ui,'Plus Jakarta Sans',sans-serif)}
+body.wbf-on #app #study-output-canvas .ar-composition-workbench .slide2 .tx2:focus,body.wbf-on #app #study-output-canvas .ar-composition-workbench .slide2 .tx2:hover{border-color:var(--warm)}
+body.wbf-on #app .car-workspace .car-tools .car-more-menu button[aria-selected=true]{color:var(--warm);font-weight:600}
+body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar :is(button,summary){min-height:30px;padding:0 9px;font-size:var(--t-label);background:none!important}
+@media(max-width:560px){body.wbf-on #app .car-workspace>.car-tools{padding-right:154px!important;min-height:38px!important}body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar{gap:4px!important}body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar .cwb-back{max-width:84px;line-height:1.3;padding:0 5px}body.wbf-on #app .car-workspace .car-tbar-kind{display:none}}

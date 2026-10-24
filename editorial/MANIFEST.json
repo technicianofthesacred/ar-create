@@ -6,7 +6,7 @@
     {
       "path": "LESSONS.md",
       "source": "~/.claude/skills/mag/LESSONS.md",
-      "sha256": "132101c0f718e49eca96f888cc39dab526fe1b96a34a8f8731aeb369ecf7741c"
+      "sha256": "f61332f98d63ea1483ca2ef64f3a6209da5f587aa35f2aca04a257f452353c00"
     },
     {
       "path": "stages/mag/ask.md",
@@ -90,7 +90,7 @@
     {
       "path": "stages/arcreate/research.md",
       "source": "~/.claude/skills/arcreate/stages/research.md",
-      "sha256": "77d3f7cf4035f8c76540a7f0f45d038c70e3a8ecf63d025ac428d783b46f4c28"
+      "sha256": "5bb3a0da5d61607ec8f3f623865b172f0cdb162cb4379aa5ed0611c8cebb5d73"
     },
     {
       "path": "brands/teajia.md",

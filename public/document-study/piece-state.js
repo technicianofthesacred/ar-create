@@ -12,11 +12,11 @@
  const visible=n=>!!n&&n.isConnected&&!n.hidden&&!n.closest('[hidden]')&&!n.closest('[data-wn-consolidated]');
  const stage=()=>{const p=current();return p.view==='record'?Number(p.viewedStage)||0:p.view==='article'?5:0;};
  // ---------- the output register: one read per piece, shared by every reader of this object
- function outputs(id){const nav=window.workspaceNavigation?.outputs?.(id);if(Array.isArray(nav))return nav;const hit=cache.get(id);return hit&&Date.now()-hit.at<TTL?hit.outputs:hit?.outputs??null;}
+ function outputs(id){if(cache.get(id)?.error)return null;const nav=window.workspaceNavigation?.outputs?.(id);if(Array.isArray(nav))return nav;const hit=cache.get(id);return hit&&Date.now()-hit.at<TTL?hit.outputs:hit?.outputs??null;}
  function load(id=current().id){
   if(loading||typeof window.realOutputOverview?.read!=='function')return loading;
   const hit=cache.get(id);if(hit&&Date.now()-hit.at<TTL)return null;
-  loading=(async()=>{try{const data=await window.realOutputOverview.read({projectId:id});if(data?.projectId===id)cache.set(id,{at:Date.now(),outputs:Array.isArray(data.outputs)?data.outputs:[]});}catch{cache.set(id,{at:Date.now(),outputs:hit?.outputs??null,error:true});}})().finally(()=>{loading=null;window.dispatchEvent(new Event('c3-piece-state'));});
+  loading=(async()=>{try{const data=await window.realOutputOverview.read({projectId:id});if(data?.projectId!==id||!Array.isArray(data.outputs))throw Error('Saved outputs could not be read.');if(data.availability&&data.availability.state!=='ready')throw Error(data.availability.message||'Saved outputs are unavailable for this project.');cache.set(id,{at:Date.now(),outputs:data.outputs});}catch(error){cache.set(id,{at:Date.now(),outputs:null,error:error.message||'Saved outputs could not be read.'});}})().finally(()=>{loading=null;window.dispatchEvent(new Event('c3-piece-state'));});
   return loading;
  }
  for(const name of ['study-output-selection','study-draft-change'])window.addEventListener(name,()=>{cache.delete(current()?.id);});
@@ -34,17 +34,18 @@
  function read(){
   const p=current(),proof=window.studyDraft?.currentProof?.()||null,binding=window.studyDraft?.currentBinding?.()||null;
   const words=(p.blocks||[]).some(b=>text(b.html));
-  const list=outputs(p.id);
+  const browserCarousel=window.workbenchPieces?.carouselEdition?.(p.id)||null;
+  const list=outputs(p.id),outputError=cache.get(p.id)?.error||'';
   const figures=(p.blocks||[]).filter(b=>b.tag==='figure').length;
-  const visual=(list||[]).filter(o=>!['Article','Post','Product listing'].includes(o.format)).length;
+  const visual=(list||[]).filter(o=>!['Post','Product listing'].includes(o.format)).length;
   const record=[p.step,p.status].filter(Boolean).join(' · ');
   const published=/publish/i.test(record)?{label:'Published outside AR Create',record}:null;
   const manuscript={bound:!!binding,title:binding?.title||p.title||p.name,words,dirty:!!proof?.dirty,revision:proof?proof.sequence||0:p.rev||0,local:!binding&&words};
   const check=window.studyDraftCheck?.state?.()||null;
   const waiting=(list||[]).filter(o=>['review-needed','correction-needed'].includes(o.status));
   // Text-only: no photographs in the words and no output that needs a visual layout. Unknown outputs never count as text-only.
-  const textOnly=list===null?null:figures===0&&visual===0&&!(mediaSeen.get(p.id)>0);
-  return {projectId:p.id,name:p.name,step:stage(),manuscript,save:save(manuscript),outputs:list,waiting,published,check,media:{figures},textOnly,loading:list===null};
+  const textOnly=browserCarousel?false:list===null?null:figures===0&&visual===0&&!(mediaSeen.get(p.id)>0);
+  return {projectId:p.id,name:p.name,step:stage(),manuscript,save:save(manuscript),outputs:list,browserCarousel,waiting,published,check,media:{figures},textOnly,outputError,loading:list===null&&!outputError};
  }
  // ---------- what is on screen for the step being viewed, read from the owners' controls in one place
  function control(sel){const n=ws(sel);return n&&(visible(n)||n.closest('details'))?n:null;}
@@ -68,6 +69,8 @@
   // An assistant's open question about this piece is the one thing to do here until it is answered (review C3).
   const asked=window.arLive?.question?.(n);if(asked)return asked;
   const m=st.manuscript,q=probe(n);
+  if(n===12&&st.browserCarousel&&!(st.outputs||[]).length)return press('Open browser copy','[data-output-browser-carousel]')||{label:'Open browser copy',disabled:true,reason:'Open Outputs to continue this browser copy.'};
+  if([9,10,12].includes(n)&&st.outputs===null)return {label:st.outputError?'Outputs unavailable':'Reading saved outputs…',disabled:true,reason:st.outputError||'Wait for the saved output reader.'};
   switch(n){
    case 1:return q.count>0&&(m.words||m.bound)?go(2):press('Add files','[data-flow-action="files"]')||(q.count>0?go(2):{label:'Add files',disabled:true,reason:'Adding files is not available for this piece yet.'});
    case 2:return q.count===0?{label:'Add a recording',phase:1,reason:'Recordings and transcripts are added in Material.'}:go(3);
@@ -111,6 +114,7 @@
   if(n===5)return m.dirty?{word:'unsaved',title:'Unsaved changes in the draft'}:m.bound?{word:'saved',title:'The draft is saved to the project'}:m.words?{word:'browser only',title:'These words are only in this browser'}:{word:'empty',title:'No words yet'};
   if(n===6)return m.words||m.bound?{word:'',title:''}:{word:'empty',title:'Nothing to read yet'};
   if(n===7){const c=st.check;if(!m.bound)return {word:'',title:''};if(c?.current&&c.findings)return {word:'needs you',title:`${c.findings} finding${c.findings===1?'':'s'} to resolve`};if(c?.current&&c.complete)return {word:'checked',title:'Checks cover the current saved revision'};return {word:'',title:''};}
+  if(n===12&&st.browserCarousel)return {word:st.outputs?.length?st.outputs.length+' + browser':'browser copy',title:st.outputs?.length?st.outputs.length+' saved outputs and a separate browser carousel':'Carousel saved in this browser only'};
   if(n===12&&st.outputs)return st.outputs.length?{word:String(st.outputs.length),title:`${st.outputs.length} output${st.outputs.length===1?'':'s'}`}:{word:'none',title:'No outputs made yet'};
   if(n===stage()){const q=probe(n);if(q.count===0||q.empty===true)return {word:'empty',title:'Nothing here yet'};}
   return {word:'',title:''};
@@ -118,6 +122,7 @@
  // Why a step's surface cannot be edited, in words; never a bare "Read-only".
  function readOnlyReason(n=stage(),st=read()){
   const p=current();if(n===5&&p.view==='article')return '';
+  if(n===6&&visible(ws('.phaseReader.draft-reading>.document .draft-read-words')))return 'Current manuscript · read-only';
   if(n===5||n===6||n===7)return p.view==='record'?'Retained record · read-only':'Reading view · open the draft to edit';
   return '';
  }
