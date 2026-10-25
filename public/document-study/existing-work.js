@@ -64,6 +64,7 @@
  async function openStory(id,{continueWork=false,stage=null}={}){
   const token=++openEpoch,story=catalog?.stories.find(s=>s.id===id);if(!story)throw Error('This story is no longer in the catalog. Refresh before opening it.');
   const writer=[5,6,7].includes(stage)?storyWriter(story):null;if(writer)return openWorkspaceTarget(writer.link.workspaceId,writer.index,{stage,storyId:story.id});
+  if(stage===7){const drafts=story.artifacts.filter(a=>magazineTarget(story,a));if(drafts.length===1)return openMagazineTarget(story,drafts[0],{write:false,presentationStage:7});}
   const origin=project(),originStage=origin?.viewedStage,originView=origin?.view,unchanged=()=>token===openEpoch&&project()===origin&&origin?.viewedStage===originStage&&origin?.view===originView;await window.projectLibrary?.close?.();if(document.getElementById('project-library')?.open)throw Error('Save or resolve the open work before continuing.');
   if(!unchanged())throw Error('The selected project changed. Open the story again.');
   const proof=await window.studyDraft?.flush?.();if(proof?.dirty)throw Error('Save or resolve the current writing before continuing.');

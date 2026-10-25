@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "4f44bf9d7f4a0ad8a3b6b77250f064d6a32080821665633b29c8430719e9f084"
+      "candidateSha256": "99f91cb144a11fb923a24c047780fc554020e7e661ae279b99dbb03012e6bf04"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -3685,7 +3685,7 @@
     },
     {
       "path": "tests/existing-work.test.mjs",
-      "candidateSha256": "ad6eec08e95036f83de983919e3bcce3e254507e3a5310e8f9742cabe2be7bc8"
+      "candidateSha256": "a66b61c0d9fe97ca640a937e6242bf2c23b2a27fa986c44adea47ee3820d0369"
     },
     {
       "path": "tests/review-connection.test.mjs",
