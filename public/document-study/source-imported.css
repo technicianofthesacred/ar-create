@@ -66,7 +66,7 @@ html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dial
 .source-reader-speaker-edit{font:400 12px/1.5 var(--ar-ui,system-ui,sans-serif)}
 
 /* Caret entry adds no area decoration; tools never participate in transcript layout. */
-.source-reader-inline-tools{position:fixed;z-index:85;right:24px;bottom:16px;max-width:min(420px,calc(100vw - 32px));background:var(--paper);color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:6px}
+.source-reader-inline-tools{position:fixed;z-index:85;right:24px;bottom:16px;max-width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;background:var(--paper);color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:6px}
 .source-reader-inline-tools [data-source-reader-edit]{margin:0;gap:4px}
 .source-reader-inline-tools .source-reader-speaker-edit{font-size:12px}
 .source-reader-inline-tools [data-source-reader-edit]>.small{display:none}
