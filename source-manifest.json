@@ -2365,7 +2365,7 @@
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "915199c5f89bb0fae1df34a240ef0bce1b842559dc18af007db1d1e44ca3d95f"
+      "candidateSha256": "c1150744135d73b89d650b304e0363c540c702b937a7abdd8ef20332c3f3670f"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -4161,7 +4161,7 @@
     },
     {
       "path": "tests/kept-source-translation-reader.test.mjs",
-      "candidateSha256": "50071fa1c4ba8d2b617a3476b3b591408a7cc65766cad379f4e78b405eb75c5b"
+      "candidateSha256": "ebb291c752e041fdb02c6f00833d337d195cb1dc9522f05ff9b3f49197b2b43f"
     },
     {
       "path": "tests/kept-source-translation-requests.test.mjs",
@@ -4185,11 +4185,11 @@
     },
     {
       "path": "runtime/services/kept-source-translation-review.mjs",
-      "candidateSha256": "54da8d1660c7bf815fa0f295a0bf34f1c28d60ca39986d1dd7dd54748be84698"
+      "candidateSha256": "f80a36ebeab76fccf3b7aeb3ec605fb2b5f7af0ebcd3c99fe3f15205a24367d3"
     },
     {
       "path": "tests/kept-source-translation-review.test.mjs",
-      "candidateSha256": "b464852f61ffcec8c2e4217f91d497059c9c553a9131d5e855c95bd8438f9ecd"
+      "candidateSha256": "616868ddea754ec3c61af0b4838a46e69f1f776f17961ddb874228029ee81055"
     },
     {
       "path": "tests/saved-translation-review-proxy.test.mjs",
