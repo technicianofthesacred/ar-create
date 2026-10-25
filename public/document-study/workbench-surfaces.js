@@ -72,6 +72,10 @@
   if(secondary){const summary=secondary.querySelector(':scope>summary');if(summary.textContent!=='Source tools & context')summary.textContent='Source tools & context';if(more)secondary.append(more);if(boundary)secondary.append(boundary);}
   if(hasDialogue&&ws.querySelector('.c3-empty'))window.c3Empty?.reveal?.();
  }
+ function selectResearchPoint(details){
+  if(!details)return;const points=details.closest('.rpts');for(const other of points?.querySelectorAll('details.wb-point')||[])if(other!==details)other.open=false;details.open=true;
+  const summary=details.querySelector(':scope>summary');if(summary&&points){const rect=summary.getBoundingClientRect(),top=rect.top-points.getBoundingClientRect().top;if(top<0)points.scrollTop+=top;else if(top+rect.height>points.clientHeight)points.scrollTop+=top+rect.height-points.clientHeight;summary.focus?.({preventScroll:true});}
+ }
  function researchRecords(ws){return [...ws.querySelectorAll('.research-standard-coverage>details:not([data-research-source-point]),.flow-retained .compactRecord,[data-disclosure="retained-research"],[data-disclosure="retained-brief"],[data-disclosure^="research-role:"]')].filter(n=>!n.closest('[data-research-point]'));}
  function research(ws,p){
   const full=ws.querySelector('.research-standard'),shared=ws.querySelector('#material-human-direction');
@@ -94,7 +98,7 @@
    const heading=point.querySelector(':scope>h2');if(!heading)continue;
    const details=make('details','wb-point'),summary=make('summary','rp'),body=make('div','rpd pdet'),number=make('span','n',String([...points.querySelectorAll(':scope>[data-research-point]')].indexOf(point)+1));heading.classList.add('cl');const level=make('span','lv wb-level-unrecorded');level.title='Read the recorded evidence and uncertainty below';level.setAttribute('aria-hidden','true');summary.append(number,level,heading);details.append(summary,body);
    for(const n of [...point.childNodes])if(n!==heading)body.append(n);
-   point.append(details);if(!points.querySelector('details.wb-point[open]'))details.open=true;
+   point.append(details);details.setAttribute('name','wb-research-points');summary.addEventListener('click',event=>{if(!details.open){event.preventDefault();selectResearchPoint(details);}});if(!points.querySelector('details.wb-point[open]'))details.open=true;
    const action=make('button','btn primary wb-discuss-console','Discuss in console');action.type='button';action.onclick=()=>{const command=split.querySelector('.cin input');if(command){command.value='/point '+([...points.querySelectorAll(':scope>[data-research-point]')].indexOf(point)+1);command.focus();}};const acts=make('div','acts');acts.append(action);body.append(acts);
   }
   let rh=points.querySelector(':scope>.rh');if(!rh){rh=make('div','rh');points.prepend(rh);}let counter=rh.querySelector(':scope>.wb-research-count');if(!counter){counter=make('span','wb-research-count');rh.prepend(counter);}const scope=ws.querySelector('.c3-scope');if(scope&&scope.parentElement!==rh)rh.append(scope);const count=points.querySelectorAll(':scope>[data-research-point]').length,label=count+' point'+(count===1?'':'s')+(records.length?' · '+records.length+' record'+(records.length===1?'':'s'):'');if(counter.textContent!==label)counter.textContent=label;const ownerHeading=host.querySelector(':scope>.research-standard-heading');if(ownerHeading){if(!points.querySelector('.wb-research-tools')){const details=make('details','wb-research-tools');details.append(make('summary','','Sources & research tools'));points.append(details);}points.querySelector('.wb-research-tools').append(ownerHeading);}const brief=host.querySelector(':scope>.research-work-brief');if(brief&&brief.nextElementSibling===split)split.after(brief);
@@ -150,7 +154,7 @@
   input.onkeydown=e=>{if(!['ArrowUp','ArrowDown'].includes(e.key)||!room.history.length)return;e.preventDefault();cursor=Math.max(0,Math.min(room.history.length,cursor+(e.key==='ArrowUp'?-1:1)));input.value=room.history[cursor]||'';room.draft=input.value;};
   form.onsubmit=async e=>{e.preventDefault();if(typeof current==='function'&&(current()?.id!==p.id||Number(current()?.viewedStage)!==3))return;const submitted=input.value,command=submitted.trim();if(!command)return;const ticket=(room.serial||0)+1;room.serial=ticket;room.pending?.abort();room.pending=null;
    const ws=panel.closest('#workspace'),rows=[...ws.querySelectorAll('[data-research-point]')],sources=[...ws.querySelectorAll('[data-learning-shared-body],[data-learning-sources] section,.source-continuation-row')];let result,libraryResult;
-   if(/^\/point\s+\d+$/.test(command)){const index=Number(command.split(/\s+/)[1])-1,row=rows[index];if(row){row.querySelector('.wb-point')?.setAttribute('open','');reveal(row);result='Opened point '+(index+1)+': '+(row.querySelector('h2')?.textContent||'Research point');}else result='Choose a point from 1 to '+rows.length+'.';}
+   if(/^\/point\s+\d+$/.test(command)){const index=Number(command.split(/\s+/)[1])-1,row=rows[index];if(row){const detail=row.querySelector('.wb-point');if(detail)selectResearchPoint(detail);else reveal(row);result='Opened point '+(index+1)+': '+(row.querySelector('h2')?.textContent||'Research point');}else result='Choose a point from 1 to '+rows.length+'.';}
    else if(command==='/sources')result=sources.length?sources.map((n,i)=>(i+1)+'. '+n.textContent.trim()).join('\n'):'No linked source passages are available in this view. Open Sources and writing context to inspect the current connections.';
    else if(command.startsWith('/search ')&&window.workbenchLibraryResearch){const controller=new AbortController();room.pending=controller;submit.disabled=true;const pending=make('div','hon','Searching Library…');log.append(pending);try{libraryResult=await window.workbenchLibraryResearch.search({query:command.slice(8),signal:controller.signal});result=window.workbenchLibraryResearch.format(libraryResult);}catch(error){if(error.name==='AbortError')return;result='Library search failed: '+error.message;}finally{pending.remove();if(room.serial===ticket){room.pending=null;submit.disabled=false;}}if(!active()||room.serial!==ticket)return;}
    else if(command.startsWith('/search ')){const q=command.slice(8).trim().toLocaleLowerCase();const matches=[...rows,...sources].filter(n=>n.textContent.toLocaleLowerCase().includes(q));result=matches.length?matches.map(n=>{const index=rows.indexOf(n);return (index>=0?'Point '+(index+1)+': ':'Source: ')+n.textContent.trim().replace(/\s+/g,' ').slice(0,520);}).join('\n\n'):'No connected project record matches “'+command.slice(8).trim()+'”.';}
@@ -238,5 +242,5 @@
   ws.classList.toggle('wb-section-surface',!!name&&p?.view==='record');if(!name||p?.view!=='record')return;
   ({inbox,'piece-media':pieceMedia,source,research,direction,arrange,audience,share,outputs}[name])(ws,p);
  }
- window.workbenchSurfaces={decorate};window.c3Shell?.register('workbench-surfaces',decorate,{order:85,ignore:'.wb-console'});decorate();
+ window.workbenchSurfaces={decorate,selectResearchPoint};window.c3Shell?.register('workbench-surfaces',decorate,{order:85,ignore:'.wb-console'});decorate();
 })();
