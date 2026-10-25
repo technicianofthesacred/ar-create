@@ -2,6 +2,7 @@
 // store or private directory is imported or initialized here. Optional human source and manuscript
 // corrections forward only to that existing owner; this entrance never owns writes.
 import http from 'node:http';
+import {validateImportedTranscriptTranslation} from '../config.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -61,6 +62,24 @@ function validateCorrection(pathname,bytes){
  // The owner alone compares the caller's unchanged revision/hash under its lock.
  const operation=value=>typeof value==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(value);
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!operation(input.operationId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||typeof input.expectedSourceHash!=='string'||!word(input.sessionId,300)||(pathname.endsWith('/edit')?(!word(input.turnId,300)||!word(input.speaker,100)||!word(input.text,12000)):!operation(input.undoOperationId)))throw Object.assign(Error('Use the complete current source correction request.'),{status:400});
+}
+const TRANSLATION_PROPOSAL_PATH='/api/source-sessions/translation-proposals';
+function validateTranslationProposal(bytes){
+ const input=JSON.parse(bytes.toString('utf8')),keys=['sessionId','expectedRevision','expectedSourceHash'];
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||typeof input.sessionId!=='string'||!input.sessionId.trim()||input.sessionId.length>300||!input.sessionId.isWellFormed()||/[\x00-\x1f\x7f]/.test(input.sessionId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||typeof input.expectedSourceHash!=='string'||!/^[a-f0-9]{64}$/i.test(input.expectedSourceHash))throw Object.assign(Error('Use the exact selected conversation, revision and source fingerprint.'),{status:400});
+ return input;
+}
+function translationSnapshot(upstream,timeoutMs){
+ return new Promise((resolve,reject)=>{
+  const fail=()=>reject(Object.assign(Error('The conversation owner is unavailable; no translation was started.'),{status:503}));
+  const pending=http.get(new URL('/api/source-sessions',upstream),{headers:{accept:'application/json'}},owner=>{
+   if(owner.statusCode!==200){owner.resume();return fail();}
+   let size=0;const chunks=[];
+   owner.on('data',chunk=>{size+=chunk.length;if(size>8*1024*1024){owner.destroy();fail();}else chunks.push(chunk);});
+   owner.once('error',fail);owner.once('end',()=>{try{resolve(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))));}catch{fail();}});
+  });
+  pending.setTimeout(timeoutMs,()=>pending.destroy(Error('timeout')));pending.once('error',fail);
+ });
 }
 const STUDY_DRAFT_CORRECTION_PATHS=new Set(['/api/study-draft/save','/api/study-draft/undo']);
 function validateDraftCorrection(pathname,bytes,{approvals=false}={}){
@@ -132,8 +151,12 @@ async function staticRead(publicDir,pathname){
   return {bytes:await fs.readFile(current),type:TYPES[path.extname(current).toLowerCase()]||'application/octet-stream'};
  }catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return null;throw error;}
 }
-export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,catalogCacheScope=null}={}){
+export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null}={}){
  const upstream=authority(authorityURL,allowedAuthorityPort);
+ const translationPolicy=validateImportedTranscriptTranslation(translationProposals);
+ if(translationPermissionCurrent!==null&&typeof translationPermissionCurrent!=='function')throw Error('Translation permission freshness must be a trusted host check.');
+ const translationEnabled=translationPolicy?.keptConversations.enabled===true&&translationPolicy.keptConversations.shareEntireContext===true&&translationPolicy.keptConversations.sourceIds.length>0;
+ const translationDeadline=translationPolicy?translationPolicy.timeoutMs+5000:timeoutMs;
  // Browser HTTP/1 pools commonly permit six sockets per origin. Keep live
  // review events from occupying that entire pool across older open clients.
  const eventStreams=new Map(),maxEventStreams=2;
@@ -153,6 +176,14 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(port===allowedAuthorityPort)return fail(503,'Review must use a separate port from the existing authority.');
   const pathname=validPath(req.url);if(!pathname)return fail(400,'This review path is not allowed.');
   if(actualWorkReview===true&&pathname==='/api/sources/blob'&&['GET','HEAD'].includes(req.method)){req.resume();return fail(403,'Original blob reads are unavailable in this read-only review.');}
+  const translationPath=pathname===TRANSLATION_PROPOSAL_PATH;
+  if(translationPath){
+   if(req.url!==pathname){req.resume();return fail(400,'Use the exact translation proposal path without a query.');}
+   if(req.method!=='POST'){req.resume();res.setHeader('Allow','POST');return fail(405,'Translation proposals require an explicit POST.');}
+   if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'){req.resume();return fail(403,'Translation proposals must originate from this exact local review page.');}
+   if(!translationEnabled){req.resume();res.writeHead(503,{'Content-Type':'application/json; charset=utf-8'});return res.end(JSON.stringify({state:'unavailable',gate:'kept-conversation-execution-disabled',message:'English proposals are not enabled for this review.',applied:false,proposals:[]}));}
+  }
+  const translationProposal=translationPath&&translationEnabled;
   const correctionPath=SOURCE_CORRECTION_PATHS.has(pathname);
   const draftCorrectionPath=STUDY_DRAFT_CORRECTION_PATHS.has(pathname);
   const magazineCorrectionPath=MAGAZINE_DRAFT_CORRECTION_PATHS.has(pathname);
@@ -168,15 +199,22 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const carouselCorrection=nativeCarouselCorrections&&carouselCorrectionPath&&req.method==='POST';
   const correction=sourceCorrection||draftCorrection||magazineCorrection||carouselCorrection;
   const postRead=req.method==='POST'&&postReads.has(pathname);
-  if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
+  if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
-   const readBody=postRead||correction?await readJSON(req,{correction}):null;
+   const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal}):null;
+   if(translationProposal){
+    const input=validateTranslationProposal(readBody);translationPermissionCurrent?.();
+    const current=await translationSnapshot(upstream,timeoutMs),sessions=Array.isArray(current.sessions)?current.sessions.filter(s=>s.id===input.sessionId):[];
+    if(sessions.length!==1||!translationPolicy.keptConversations.sourceIds.includes(sessions[0].sourceId))throw Object.assign(Error('This conversation is not approved for account context sharing.'),{status:403});
+    if(current.revision!==input.expectedRevision||sessions[0].sourceHash!==input.expectedSourceHash)throw Object.assign(Error('The conversation changed before translation. Refresh its current wording.'),{status:409});
+    translationPermissionCurrent?.();
+   }
    if(sourceCorrection)validateCorrection(pathname,readBody);
    if(draftCorrection)validateDraftCorrection(pathname,readBody,{approvals:studyDraftApprovals});
    if(magazineCorrection)validateMagazineCorrection(pathname,readBody);
    if(carouselCorrection)validateCarouselCorrection(pathname,readBody);
    if(actualWorkReview===true&&pathname==='/document-study/package-config.js'){
-    const bytes=Buffer.from('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify({syntheticFixtures:false,originalReaderBaseUrl:upstream.origin})+';window.AR_CREATE_REVIEW_MODE='+JSON.stringify({actualWork:true,readOnly:true,...(sourceCorrections?{sourceCorrections:true}:{}),...(studyDraftCorrections?{studyDraftCorrections:true}:{}),...(studyDraftApprovals?{studyDraftApprovals:true}:{}),...(browserCarouselCorrections?{browserCarouselCorrections:true}:{}),...(nativeCarouselCorrections?{nativeCarouselCorrections:true}:{}),...(magazineDraftCorrections?{magazineDraftCorrections:true}:{}),...(typeof catalogCacheScope==='string'&&/^[a-f0-9]{64}$/.test(catalogCacheScope)?{catalogCacheScope}:{}),authorityOrigin:upstream.origin})+';');
+    const bytes=Buffer.from('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify({syntheticFixtures:false,originalReaderBaseUrl:upstream.origin})+';window.AR_CREATE_REVIEW_MODE='+JSON.stringify({actualWork:true,readOnly:true,...(sourceCorrections?{sourceCorrections:true}:{}),...(translationEnabled?{translationProposals:true}:{}),...(studyDraftCorrections?{studyDraftCorrections:true}:{}),...(studyDraftApprovals?{studyDraftApprovals:true}:{}),...(browserCarouselCorrections?{browserCarouselCorrections:true}:{}),...(nativeCarouselCorrections?{nativeCarouselCorrections:true}:{}),...(magazineDraftCorrections?{magazineDraftCorrections:true}:{}),...(typeof catalogCacheScope==='string'&&/^[a-f0-9]{64}$/.test(catalogCacheScope)?{catalogCacheScope}:{}),authorityOrigin:upstream.origin})+';');
     res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Content-Length':bytes.length});return res.end(req.method==='HEAD'?undefined:bytes);
    }
    if(!postRead&&overrides.has(pathname)){
@@ -194,7 +232,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     // The runtime serves generated assets from these two known namespaces.
     if(!/^\/(assets|ig-assets)\//.test(pathname))return fail(404,'This review file is unavailable.');
    }
-   const headers={};if(postRead||correction){headers['content-type']='application/json';headers['content-length']=readBody.length;if(req.headers.origin!==undefined)headers.origin=upstream.origin;}for(const key of ['accept','accept-language','range','if-range'])if(typeof req.headers[key]==='string')headers[key]=req.headers[key];if(pathname==='/api/events'&&req.method==='GET'&&/^\d{1,16}$/.test(req.headers['last-event-id']||'')&&Number.isSafeInteger(Number(req.headers['last-event-id'])))headers['last-event-id']=req.headers['last-event-id'];
+   const headers={};if(postRead||correction||translationProposal){headers['content-type']='application/json';headers['content-length']=readBody.length;if(req.headers.origin!==undefined)headers.origin=upstream.origin;}for(const key of ['accept','accept-language','range','if-range'])if(typeof req.headers[key]==='string')headers[key]=req.headers[key];if(pathname==='/api/events'&&req.method==='GET'&&/^\d{1,16}$/.test(req.headers['last-event-id']||'')&&Number.isSafeInteger(Number(req.headers['last-event-id'])))headers['last-event-id']=req.headers['last-event-id'];
    const pending=http.request(upstream,{method:req.method,path:req.url,headers},owner=>{
     if(owner.statusCode>=300&&owner.statusCode<400){owner.resume();return fail(502,'The existing work authority returned a redirect; review did not follow it.');}
     const selected={};for(const key of ['content-type','content-length','content-range','accept-ranges','content-disposition',...(actualWorkReview===true&&pathname==='/api/study/photos/preview'?['x-content-sha256']:[])])if(owner.headers[key]!==undefined)selected[key]=owner.headers[key];
@@ -215,8 +253,11 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     owner.on('error',()=>{if(!retired)res.destroy();});
     if(req.method==='HEAD'){owner.resume();res.end();}else owner.pipe(res);
    });
-   pending.setTimeout(timeoutMs,()=>pending.destroy(Error('timeout')));
-   pending.on('error',()=>fail(502,correction?'The existing work authority could not confirm this correction. Keep this operation ID when retrying; reload to check its saved result.':'The existing work authority is unavailable. Your saved work has not changed.'));
+   // Generation has a wall deadline as well as socket inactivity protection.
+   const generationTimer=translationProposal?setTimeout(()=>pending.destroy(Error('timeout')),translationDeadline):null;
+   if(generationTimer)pending.once('close',()=>clearTimeout(generationTimer));
+   pending.setTimeout(translationProposal?translationDeadline:timeoutMs,()=>pending.destroy(Error('timeout')));
+   pending.on('error',()=>fail(502,translationProposal?'English proposals could not be confirmed. Your source wording is unchanged.':correction?'The existing work authority could not confirm this correction. Keep this operation ID when retrying; reload to check its saved result.':'The existing work authority is unavailable. Your saved work has not changed.'));
    res.on('close',()=>pending.destroy());pending.end(readBody);
   }catch(error){fail(error.status||500,error.status?error.message:'This review could not read the requested file. Your saved work has not changed.');}
  });

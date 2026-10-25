@@ -17,6 +17,18 @@ const within=(value,root)=>{const relative=path.relative(root,value);return rela
 const refuseScratch=(value,label,allowed)=>{if(allowed||typeof value!=='string'||!path.isAbsolute(value))return;let canonical;try{canonical=canonicalDestination(value);}catch{canonical=path.resolve(value);}const raw=path.resolve(value);for(const root of scratchRoots())if(within(raw,root)||within(canonical,root))throw Error(`${label} must not live under ${root}: it is a scratch location another process may clean up. Move it into the permanent home, or set allowScratchRoots for a test.`);};
 const noSymlinks=(value,label)=>{let at=path.resolve(value);while(true){const stat=fs.lstatSync(at,{throwIfNoEntry:false});if(stat?.isSymbolicLink())throw Error(`${label} must not pass through a symlink.`);const parent=path.dirname(at);if(parent===at)return value;at=parent;}};
 const optionalDirectory=(value,label)=>{if(value===null||value===undefined||value==='')return null;if(typeof value!=='string'||!path.isAbsolute(value))throw Error(`${label} requires an explicit absolute directory.`);return directory(value,label);};
+// Host-only generation policy. No tools.* fallback or request-supplied execution grant.
+export function validateImportedTranscriptTranslation(value){
+ if(value===undefined||value===null)return null;
+ const fields=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===keys.length&&keys.every(k=>Object.hasOwn(v,k));
+ if(!fields(value,['codexPath','timeoutMs','keptConversations']))throw Error('Imported Source translation requires only its explicit supported fields.');
+ if(typeof value.codexPath!=='string'||!path.isAbsolute(value.codexPath)||/[\x00-\x1f\x7f]/.test(value.codexPath)||!fs.statSync(value.codexPath).isFile())throw Error('Imported Source translation requires an explicit absolute executable path.');
+ fs.accessSync(value.codexPath,fs.constants.X_OK);
+ if(!Number.isSafeInteger(value.timeoutMs)||value.timeoutMs<1000||value.timeoutMs>600000)throw Error('Imported Source translation timeoutMs must be between 1000 and 600000 milliseconds.');
+ const kept=value.keptConversations;
+ if(!fields(kept,['enabled','shareEntireContext','sourceIds'])||typeof kept.enabled!=='boolean'||typeof kept.shareEntireContext!=='boolean'||!Array.isArray(kept.sourceIds)||kept.sourceIds.length>100||new Set(kept.sourceIds).size!==kept.sourceIds.length||kept.sourceIds.some(id=>typeof id!=='string'||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)))throw Error('Imported Source translation requires explicit boolean permissions and distinct UUID sourceIds.');
+ return structuredClone(value);
+}
 export function loadConfig(env=process.env){
  const configPath=env.AR_CREATE_CONFIG;
  const config=configPath?JSON.parse(fs.readFileSync(optionalFile(configPath,'AR_CREATE_CONFIG'),'utf8')):{};
@@ -64,8 +76,9 @@ export function loadConfig(env=process.env){
  }
  const transcriptLibrary=hostRecord(config.transcriptLibrary,['registryFile','indexFile','libraryRoot'],'transcriptLibrary');
  if(transcriptLibrary)for(const key of ['registryFile','indexFile','libraryRoot']){hostPath(transcriptLibrary[key],'transcriptLibrary.'+key);}
- const importedTranscriptOwner=hostRecord(config.importedTranscriptOwner,['dataDir','notesFile','handoverFile','connections'],'importedTranscriptOwner');
+ const importedTranscriptOwner=hostRecord(config.importedTranscriptOwner,['dataDir','notesFile','handoverFile','connections',...(Object.hasOwn(config.importedTranscriptOwner||{},'translation')?['translation']:[])],'importedTranscriptOwner');
  if(importedTranscriptOwner){for(const key of ['dataDir','notesFile','handoverFile']){hostPath(importedTranscriptOwner[key],'importedTranscriptOwner.'+key);}if(insideCheckout(canonicalDestination(importedTranscriptOwner.dataDir)))throw Error('Imported Source private data must remain outside the package checkout.');if(!Array.isArray(importedTranscriptOwner.connections))throw Error('Imported Source connections must be explicitly configured.');}
+ if(importedTranscriptOwner&&Object.hasOwn(importedTranscriptOwner,'translation'))importedTranscriptOwner.translation=validateImportedTranscriptTranslation(importedTranscriptOwner.translation);
  const executable=(value,label)=>{if(value===null||value===undefined||value==='')return null;if(typeof value!=='string'||!path.isAbsolute(value)||!fs.statSync(value).isFile())throw Error(`${label} requires an explicit executable path.`);fs.accessSync(value,fs.constants.X_OK);return value;};
  const tools=Object.fromEntries(['python','ytDlp','firecrawl','codex'].map(name=>{const value=executable(config.tools?.[name],`tools.${name}`);return [name,value&&fs.realpathSync(value)];}));
  // A virtualenv's interpreter must keep its own path (resolving the symlink would leave the venv), so it is not realpath'd.

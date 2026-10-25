@@ -6,13 +6,29 @@ import {createHash} from 'node:crypto';
 import {createLibraryReviewInspection} from './library-review-inspection.mjs';
 import {createMagazineMediaInspection} from './magazine-media-inspection.mjs';
 import {fileURLToPath} from 'node:url';
+import {validateImportedTranscriptTranslation} from '../config.mjs';
 import {createReviewConnection} from './review-connection.mjs';
 import {createReviewMedia} from '../runtime/services/review-media.mjs';
 import {createExistingWorkReader} from '../runtime/services/review-existing-work.mjs';
 import {createRetainedCarouselReader} from '../runtime/services/review-retained-carousels.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-export async function createExistingWorkReview({config,fetchImpl=fetch,libraryInspection=null}={}){
+// Reuse the explicitly selected host file; review JSON cannot grant generation.
+export async function readReviewTranslationPermission(configFile,inspection){
+ if(configFile===null||configFile===undefined)return null;
+ if(!inspection||typeof inspection.assertCurrent!=='function'||typeof configFile!=='string'||!path.isAbsolute(configFile))throw Error('Translation review requires the same explicit host Library inspection.');
+ inspection.assertCurrent();
+ const before=await fs.lstat(configFile),stamp=s=>[s.dev,s.ino,s.size,s.mtimeMs,s.ctimeMs].join(':');
+ if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size>1024*1024)throw Error('Host translation configuration must be bounded regular JSON.');
+ const handle=await fs.open(configFile,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);let bytes;
+ try{if(stamp(await handle.stat())!==stamp(before))throw Error('Host translation configuration changed.');bytes=await handle.readFile();if(bytes.length!==before.size||stamp(await handle.stat())!==stamp(before))throw Error('Host translation configuration changed.');}finally{await handle.close();}
+ if(stamp(await fs.lstat(configFile))!==stamp(before))throw Error('Host translation configuration changed.');
+ const host=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+ const translation=validateImportedTranscriptTranslation(host?.importedTranscriptOwner?.translation);
+ inspection.assertCurrent();return translation;
+}
+export async function createExistingWorkReview({config,fetchImpl=fetch,libraryInspection=null,libraryInspectionConfigFile=null}={}){
  if(!config||typeof config!=='object'||!Array.isArray(config.magazineRoots))throw Error('Explicit read-only review configuration required.');
+ const translationProposals=await readReviewTranslationPermission(libraryInspectionConfigFile,libraryInspection);
  const upstream=new URL(config.authorityURL);if(upstream.origin!==config.authorityURL.replace(/\/$/,'')||upstream.protocol!=='http:'||!['127.0.0.1','localhost'].includes(upstream.hostname)||upstream.port!==String(config.allowedAuthorityPort))throw Error('Fixed explicit loopback authority required.');
  const catalogCacheScope=createHash('sha256').update(JSON.stringify({config,libraryInspection:libraryInspection?.scope||!!libraryInspection})).digest('hex');
  const inspectPaths=new Map(libraryInspection?[
@@ -64,7 +80,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
   ['/api/magazine/portfolio',result(()=>reader.portfolio.list())],
   ['/api/magazine/artifact',result(({url})=>reader.portfolio.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))],
  ]);
- const server=createReviewConnection({publicDir:path.join(root,'public'),authorityURL:config.authorityURL,allowedAuthorityPort:config.allowedAuthorityPort,actualWorkReview:true,catalogCacheScope,sourceCorrections:true,studyDraftCorrections:true,studyDraftApprovals:config.studyDraftApprovals??false,browserCarouselCorrections:true,nativeCarouselCorrections:config.nativeCarouselCorrections??false,magazineDraftCorrections:config.magazineDraftCorrections??false,readPostPaths:['/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts'],readOverrides});
+ const server=createReviewConnection({publicDir:path.join(root,'public'),authorityURL:config.authorityURL,allowedAuthorityPort:config.allowedAuthorityPort,actualWorkReview:true,catalogCacheScope,translationProposals,translationPermissionCurrent:translationProposals?()=>libraryInspection.assertCurrent():null,sourceCorrections:true,studyDraftCorrections:true,studyDraftApprovals:config.studyDraftApprovals??false,browserCarouselCorrections:true,nativeCarouselCorrections:config.nativeCarouselCorrections??false,magazineDraftCorrections:config.magazineDraftCorrections??false,readPostPaths:['/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts'],readOverrides});
  return{server,reader,media,retainedCarousels};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
@@ -72,5 +88,5 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
  const file=process.argv[3],stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw Error('Review configuration must be a regular external file.');
  const config=JSON.parse(await fs.readFile(file,'utf8'));const port=config.port;
  if(!Number.isInteger(port)||port<1||port>65535||port===8841||port===config.allowedAuthorityPort)throw Error('Use a distinct loopback review port.');
- const libraryInspection=process.argv.length===6?createLibraryReviewInspection({configFile:process.argv[5]}):null;const {server}=await createExistingWorkReview({config,libraryInspection});server.on('error',error=>{console.error(error.message);process.exitCode=1;});server.listen(port,'127.0.0.1',()=>console.log(`Existing-work review with source and manuscript corrections: http://127.0.0.1:${port}/document-study/index.html`));
+ const libraryInspection=process.argv.length===6?createLibraryReviewInspection({configFile:process.argv[5]}):null;const {server}=await createExistingWorkReview({config,libraryInspection,libraryInspectionConfigFile:process.argv.length===6?process.argv[5]:null});server.on('error',error=>{console.error(error.message);process.exitCode=1;});server.listen(port,'127.0.0.1',()=>console.log(`Existing-work review with source and manuscript corrections: http://127.0.0.1:${port}/document-study/index.html`));
 }
