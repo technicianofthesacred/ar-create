@@ -194,3 +194,9 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 /* Undo and source history stay available while reading a long conversation. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title{position:sticky;top:48px;z-index:12;background:var(--bg);padding:8px 0;align-items:center;flex-wrap:wrap}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* The approved quiet footer remains reachable in a 1,100-remark conversation. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{position:fixed;left:98px;right:32px;bottom:0;z-index:20;background:var(--bg);margin:0;padding:6px 0;gap:6px 20px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.wb-panel-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{left:338px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-reader-dialogue]{margin-bottom:68px!important}
+@media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary,html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.wb-panel-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{left:16px;right:16px;bottom:60px;gap:6px 16px}}
