@@ -20,14 +20,8 @@
   const currentEdition=()=>root.isConnected&&token===generation&&active()?.id===projectId&&Number(active()?.viewedStage)===10&&r.selected===outputId&&selected(r)?.workingHash===hash;
   r.exportBusy=true;if(control)control.disabled=true;status(root,r,'Preparing working HTML with photographs and fonts…');
   try{
-   if(typeof window.studyOutputConnection?.readMagazineEdition!=='function'||typeof window.ArStudyOutputHost?.prepareMagazineHtml!=='function'||typeof window.ArStudyOutputHost?.downloadMagazineHtml!=='function')throw Error('Working HTML download is unavailable. Reopen Audience and try again.');
-   const query={projectId,outputId,expectedHash:hash};
-   const read=await window.studyOutputConnection.readMagazineEdition(query),exact=JSON.stringify(read);
-   if(read?.ownerRef?.hash!==hash)throw Error('The working article changed. Reopen Audience before downloading.');
-   const body=await window.ArStudyOutputHost.prepareMagazineHtml(read);
-   const fresh=await window.studyOutputConnection.readMagazineEdition(query);
-   if(JSON.stringify(fresh)!==exact||!currentEdition())throw Error('The selected project or article changed. Reopen its Audience preview before downloading.');
-   window.ArStudyOutputHost.downloadMagazineHtml(body,{title:o.title||'article',hash:read.ownerRef.hash});
+   if(typeof window.studyOutputConnection?.downloadMagazineEdition!=='function')throw Error('Working HTML download is unavailable. Reopen Audience and try again.');
+   await window.studyOutputConnection.downloadMagazineEdition({projectId,outputId,expectedHash:hash},{assertCurrent:()=>{if(!currentEdition())throw Error('The selected project or article changed. Reopen its preview before downloading.');}});
    status(root,r,'Download prepared for this working article. Nothing was approved or published.');
   }catch(error){status(root,r,'Download unavailable: '+(error.message||'Preparation failed.')+' No file was downloaded.');}
   finally{r.exportBusy=false;if(control)control.disabled=false;const latest=root.querySelector('[data-oss-action="export"]');if(latest)latest.disabled=false;}
@@ -66,5 +60,7 @@
  let queued=false;const observer=new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});});observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
  window.addEventListener('study-output-selection',()=>{const p=active();if(Number(p?.viewedStage)!==10)return;const root=document.querySelector('[data-output-stage-surface="10"]'),r=room(p),owner=window.studyOutputConnection?.selection?.();if(!root||owner?.projectId!==p.id||!r.data?.outputs?.some(o=>o.id===owner.output?.id))return;r.selected=owner.output.id;paintReview(root,p,r);void preview(root,p,r,generation);});
  window.addEventListener('pagehide',()=>{generation++;audience?.destroy();audience=null;observer.disconnect();});
- window.outputStageSurfaces={refresh:decorate};decorate();
+ // Ephemeral reader selection only; the adapter owns current-file validation.
+ function selectMagazineEdition(input){const p=current();if(p?.id!==input.projectId||p.view!=='record'||![10,12].includes(Number(p.viewedStage))||typeof input.outputId!=='string'||!input.outputId.startsWith('magazine-working:'))throw Error('Open this exact working article from Outputs.');const r=room(p);r.selected=input.outputId;r.status='';}
+ window.outputStageSurfaces={refresh:decorate,selectMagazineEdition};decorate();
 })();

@@ -12,11 +12,24 @@
  const visible=n=>!!n&&n.isConnected&&!n.hidden&&!n.closest('[hidden]')&&!n.closest('[data-wn-consolidated]');
  const stage=()=>{const p=current();return p.view==='record'?Number(p.viewedStage)||0:p.view==='article'?5:0;};
  // ---------- the output register: one read per piece, shared by every reader of this object
- function outputs(id){if(cache.get(id)?.error)return null;const nav=window.workspaceNavigation?.outputs?.(id);if(Array.isArray(nav))return nav;const hit=cache.get(id);return hit&&Date.now()-hit.at<TTL?hit.outputs:hit?.outputs??null;}
+ const sha=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+ const sameOwner=(a,b)=>a?.kind==='magazine'&&b?.kind==='magazine'&&['storyId','pieceId','path'].every(key=>typeof a[key]==='string'&&!!a[key]&&a[key]===b[key]);
+ function magazineContext(id){
+  const owner=window.studyDraft?.currentOwner?.(),proof=window.studyDraft?.currentProof?.();if(owner?.kind!=='magazine')return null;
+  const valid=current()?.id===id&&proof?.parentStudyId===id&&sameOwner(owner,proof.owner)&&sha(proof.draftHash)&&proof.expected?.workflow?.draft===proof.draftHash;
+  return {valid,owner,hash:proof?.draftHash,dirty:!!proof?.dirty,key:JSON.stringify([id,owner.storyId,owner.pieceId,owner.path,proof?.draftHash,!!proof?.dirty,valid])};
+ }
+ const hitFor=(id,context=magazineContext(id))=>{const hit=cache.get(id);return hit?.scope===(context?.key||null)?hit:null;};
+ function outputs(id){const context=magazineContext(id),hit=hitFor(id,context);if(context)return context.valid&&!context.dirty&&!hit?.error?hit?.outputs??null:null;if(hit?.error)return null;const nav=window.workspaceNavigation?.outputs?.(id);if(Array.isArray(nav))return nav;return hit&&Date.now()-hit.at<TTL?hit.outputs:hit?.outputs??null;}
  function load(id=current().id){
   if(loading||typeof window.realOutputOverview?.read!=='function')return loading;
-  const hit=cache.get(id);if(hit&&Date.now()-hit.at<TTL)return null;
-  loading=(async()=>{try{const data=await window.realOutputOverview.read({projectId:id});if(data?.projectId!==id||!Array.isArray(data.outputs))throw Error('Saved outputs could not be read.');if(data.availability&&data.availability.state!=='ready')throw Error(data.availability.message||'Saved outputs are unavailable for this project.');cache.set(id,{at:Date.now(),outputs:data.outputs});}catch(error){cache.set(id,{at:Date.now(),outputs:null,error:error.message||'Saved outputs could not be read.'});}})().finally(()=>{loading=null;window.dispatchEvent(new Event('c3-piece-state'));});
+  const context=magazineContext(id),scope=context?.key||null,hit=hitFor(id,context);if(context&&!context.valid)return null;
+  if(hit&&Date.now()-hit.at<TTL)return null;
+  loading=(async()=>{try{const data=await window.realOutputOverview.read({projectId:id});if(data?.projectId!==id||!Array.isArray(data.outputs))throw Error('Saved outputs could not be read.');if(data.availability&&data.availability.state!=='ready')throw Error(data.availability.message||'Saved outputs are unavailable for this project.');
+   let list=data.outputs;
+   if(context){if(!sameOwner(data.existingDraft?.owner,context.owner)||data.existingDraft?.hash!==context.hash||data.existingDraft?.kind!=='magazine-working')throw Error('The output register belongs to a different working part.');list=list.filter(o=>o.kind==='magazine-working');if(list.some(o=>o.id!=='magazine-working:'+context.owner.storyId+':'+context.owner.pieceId||o.workingHash!==context.hash||!sameOwner(o.workingOwner,context.owner))||list.length>1)throw Error('The output register belongs to a different working article.');}
+   if((magazineContext(id)?.key||null)!==scope)return;cache.set(id,{at:Date.now(),scope,outputs:list});
+  }catch(error){if((magazineContext(id)?.key||null)===scope)cache.set(id,{at:Date.now(),scope,outputs:null,error:error.message||'Saved outputs could not be read.'});}})().finally(()=>{loading=null;window.dispatchEvent(new Event('c3-piece-state'));});
   return loading;
  }
  for(const name of ['study-output-selection','study-draft-change'])window.addEventListener(name,()=>{cache.delete(current()?.id);});
@@ -35,12 +48,13 @@
   const p=current(),proof=window.studyDraft?.currentProof?.()||null,binding=window.studyDraft?.currentBinding?.()||null;
   const words=(p.blocks||[]).some(b=>text(b.html));
   const browserCarousel=window.workbenchPieces?.carouselEdition?.(p.id)||null;
-  const list=outputs(p.id),outputError=cache.get(p.id)?.error||'';
+  const magazine=magazineContext(p.id),list=outputs(p.id),outputError=hitFor(p.id,magazine)?.error||'';
   const figures=(p.blocks||[]).filter(b=>b.tag==='figure').length;
   const visual=(list||[]).filter(o=>!['Post','Product listing'].includes(o.format)).length;
   const record=[p.step,p.status].filter(Boolean).join(' · ');
   const published=/publish/i.test(record)?{label:'Published outside AR Create',record}:null;
-  const manuscript={bound:!!binding,title:binding?.title||p.title||p.name,words,dirty:!!proof?.dirty,revision:proof?proof.sequence||0:p.rev||0,local:!binding&&words};
+  const bound=magazine?magazine.valid:!!binding;
+  const manuscript={bound,title:(!magazine&&binding?.title)||p.title||p.name,words,dirty:!!proof?.dirty,revision:proof?proof.sequence||0:p.rev||0,local:!bound&&words};
   const check=window.studyDraftCheck?.state?.()||null;
   const waiting=(list||[]).filter(o=>['review-needed','correction-needed'].includes(o.status));
   // Text-only: no photographs in the words and no output that needs a visual layout. Unknown outputs never count as text-only.
@@ -86,7 +100,7 @@
    case 9:if(st.textOnly)return go(10);if(!m.words&&!m.bound)return {label:'Write first',phase:5};if(q.empty)return {label:'Make an output',phase:12};return press('Audience view','[data-oss-action="look"]')||go(10);
    case 10:if(st.outputs&&!st.outputs.length)return {label:'Make an output',phase:12};return press('Export','[data-output-action="export"]')||(q.empty?{label:'Make an output',phase:12}:go(11));
    case 11:if(notApplicable(11,st))return {label:'Open Outputs',phase:12};if(q.message)return press('Save invitation','[data-share-action="save"]')||press('Copy message','[data-oss-action="copy"]')||{label:'Open Outputs',phase:12};return {label:'Write invitation',focus:'[data-share-field="message"],[data-oss-field="message"]'};
-   case 12:{const list=st.outputs||[];if(!list.length)return {label:'New output',menu:true};const o=window.workspaceNavigation?.selectedOutput?.()||list[0];return {label:'Continue '+(o.title||o.format||'output'),output:o.id};}
+   case 12:{const list=st.outputs||[];if(!list.length)return {label:'New output',menu:true};const o=list[0]?.kind==='magazine-working'?list[0]:window.workspaceNavigation?.selectedOutput?.()||list[0];return {label:'Continue '+(o.title||o.format||'output'),output:o.id,...(o.kind==='magazine-working'?{expectedHash:o.workingHash,edition:'working'}:{})};}
   }
   return null;
  }
@@ -95,10 +109,10 @@
   if(action.ask)return window.arLive?.showAsk?.(action.ask);
   if(action.phase)return window.viewPhase(action.phase);
   if(action.press){const n=ws(action.press);if(n&&!n.disabled){if(n.closest('[data-c3-empty-hidden]'))window.c3Empty?.reveal?.();const d=n.closest('details');if(d&&!d.open)d.open=true;n.click();if(n.matches('[data-current-issue]'))n.scrollIntoView?.({block:'center'});}return;}
-  if(action.save){const save=window.studyOutputConnection?.flush||window.studyDraft?.flush;return save?.();}
+  if(action.save){const save=window.studyDraft?.currentOwner?.()?.kind==='magazine'?window.studyDraft?.flush:window.studyOutputConnection?.flush||window.studyDraft?.flush;return save?.();}
   if(action.focus){const n=document.querySelector('#app .workspace :is('+action.focus+')')||document.querySelector(action.focus);n?.focus?.();n?.scrollIntoView?.({block:'center'});return;}
   if(action.menu){if(stage()!==12)await window.viewPhase(12);return window.surfaceBar?.openMore?.('New output');} // the kinds of output are in More
-  if(action.output){const id=current().id;await window.realOutputOverview?.onAction?.({projectId:id,outputId:action.output,kind:'native'});return window.viewPhase(5);}
+  if(action.output){const id=current().id;await window.realOutputOverview?.onAction?.({projectId:id,outputId:action.output,kind:'native',...(action.expectedHash?{expectedHash:action.expectedHash,edition:action.edition}:{})});return window.viewPhase(5);}
  }
  // ---------- one state word per step for the sidebar (review C5): only words this object can stand behind
  function notApplicable(n,st=read()){

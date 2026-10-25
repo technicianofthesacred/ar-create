@@ -44,13 +44,13 @@ async function magazineDownloadFixture(){
  const f=fixture(),working={id:'magazine-working:story:part',kind:'magazine-working',title:'Current article',workingHash:'a'.repeat(64)};
  f.outputs.splice(0,f.outputs.length,working);
  let release;const pending=new Promise(resolve=>release=resolve),downloads=[],reads=[];
- const snapshot={ownerRef:{hash:working.workingHash},spec:{intro:'Exact working words'}};
+ const snapshot={ownerRef:{hash:working.workingHash},spec:{title:['Current','article'],intro:'Exact working words'}};
  f.w.studyOutputConnection.readMagazineEdition=async input=>{reads.push(JSON.parse(JSON.stringify(input)));return JSON.parse(JSON.stringify(snapshot));};
  f.w.ArStudyOutputHost.mountMagazineAudience=(target,read)=>{target.textContent=read.spec.intro;return{destroy:()=>target.replaceChildren()};};
  let preparations=0;
  f.w.ArStudyOutputHost.prepareMagazineHtml=async()=>{preparations++;await pending;return '<html>Private working article</html>';};
  f.w.ArStudyOutputHost.downloadMagazineHtml=(body,options)=>downloads.push({body,options:JSON.parse(JSON.stringify(options))});
- await tick();return {...f,working,snapshot,downloads,reads,release,preparations:()=>preparations};
+ await tick();const read=f.w.studyOutputConnection.readMagazineEdition;f.w.structuredClone=structuredClone;f.w.studyDraft={currentOwner:()=>({kind:'magazine'})};f.w.phaseReader=()=>'';f.w.eval(readFileSync(new URL('./output-connection.js',import.meta.url),'utf8'));f.w.studyOutputConnection.readMagazineEdition=read;f.w.studyOutputConnection.setMagazineAdapter({read:async()=>({projectId:f.p.id,outputs:f.outputs}),onAction:async input=>f.actions.push(input),readWorkingEdition:input=>f.w.studyOutputConnection.readMagazineEdition(input)});return {...f,working,snapshot,downloads,reads,release,preparations:()=>preparations};
 }
 test('working HTML prepares exactly once, rereads exact edition and downloads without native actions or writes',async()=>{
  const f=await magazineDownloadFixture(),button=f.w.document.querySelector('[data-oss-action=export]');
@@ -72,4 +72,8 @@ test('delayed working HTML refuses changed project, edition, dirty snapshot, has
 });
 test('working HTML read or asset preparation failure is actionable and never falls back to native export',async()=>{
  for(const failure of ['read','prepare']){const f=await magazineDownloadFixture();if(failure==='read')f.w.studyOutputConnection.readMagazineEdition=async()=>{throw Error('Save or resolve the changed draft first.');};else f.w.ArStudyOutputHost.prepareMagazineHtml=async()=>{throw Error('An article image could not be embedded. Reopen its Media source.');};const button=f.w.document.querySelector('[data-oss-action=export]');button.click();await tick();assert.equal(f.downloads.length,0);assert.equal(button.disabled,false);assert.match(f.w.document.querySelector('[data-oss-status]').textContent,/Download unavailable:.*No file was downloaded/);assert.equal(f.actions.length,0);assert.equal(f.requests.length,0);f.dom.window.close();}
+});
+
+test('explicit working article pickup replaces earlier publication choice without native selection or losing review fields',async()=>{
+ const f=fixture(),working={id:'magazine-working:story:part',kind:'magazine-working',title:'Current article',workingHash:'a'.repeat(64)},reference={id:'reference',kind:'publication-reference',title:'Earlier link'};f.outputs.splice(0,f.outputs.length,working,reference);f.w.studyOutputConnection.readMagazineEdition=async()=>({spec:{intro:'Exact current words'}});f.w.ArStudyOutputHost.mountMagazineAudience=(target,read)=>{target.textContent=read.spec.intro;return{destroy:()=>target.replaceChildren()};};await tick();const note=f.w.document.querySelector('[data-oss-field="review:'+working.id+'"]');note.value='Unsaved review note';note.dispatchEvent(new f.w.Event('input'));const select=f.w.document.querySelector('[data-oss-output]');select.value=reference.id;select.dispatchEvent(new f.w.Event('change'));await tick();assert.equal(f.w.document.querySelector('[data-oss-output]').value,'reference');f.p.viewedStage=12;f.w.outputStageSurfaces.selectMagazineEdition({projectId:f.p.id,outputId:working.id});await f.w.viewPhase(10);await tick();assert.equal(f.w.document.querySelector('[data-oss-output]').value,working.id);assert.equal(f.w.document.querySelector('[data-oss-reader]').textContent,'Exact current words');assert.equal(f.w.document.querySelector('[data-oss-field="review:'+working.id+'"]').value,'Unsaved review note');assert.equal(f.selectionCalls.length,0);assert.equal(f.w.localStorage.length,0);assert.throws(()=>f.w.outputStageSurfaces.selectMagazineEdition({projectId:'foreign',outputId:working.id}));f.dom.window.close();
 });
