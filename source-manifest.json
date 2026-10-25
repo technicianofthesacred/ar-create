@@ -2365,7 +2365,7 @@
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "c1150744135d73b89d650b304e0363c540c702b937a7abdd8ef20332c3f3670f"
+      "candidateSha256": "b47a193a5d7948042b282514969e18c9b8c8cb5907be586705f1d8b5e1828f13"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -4161,7 +4161,7 @@
     },
     {
       "path": "tests/kept-source-translation-reader.test.mjs",
-      "candidateSha256": "ebb291c752e041fdb02c6f00833d337d195cb1dc9522f05ff9b3f49197b2b43f"
+      "candidateSha256": "2f397178fa57896741220f79bac85e7b8e7ba3425d2ad107d489355cc7aa4654"
     },
     {
       "path": "tests/kept-source-translation-requests.test.mjs",
