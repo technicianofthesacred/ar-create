@@ -2361,11 +2361,11 @@
     },
     {
       "path": "public/document-study/source-imported.css",
-      "candidateSha256": "bc2e2eb746d7980efa483e4d50a8e53e244d09b659042675c7198d3d89cad673"
+      "candidateSha256": "ce6f9757b05bee71b1edde9a7a2e48db01842e0040a41e68a5a4f8e4f8ecc2ef"
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "e44efbe00ee82742e9ef25cacd762bc4a663bc5e6f1bacb6bd35f454c29375cf"
+      "candidateSha256": "5046c302fb6fdccedebfbbf0a1ab4bb920117f109e43ed9e90b1476429b81825"
     },
     {
       "path": "public/document-study/source-dialogue.js",
