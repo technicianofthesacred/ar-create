@@ -5,3 +5,25 @@ test('mixed authorities and same titles retain exact independent identities and 
 test('conflicting hash, authority and artifact duplicate IDs refuse; equivalent identity duplicates are deterministic',()=>{for(const changed of [{hash:'d'.repeat(64)},{authority:'other'},{artifactId:'different'}])assert.throws(()=>build([library,{...library,...changed}]),/Conflicting/);const a=build([library,{...library,title:'Another metadata title'}]),b=build([{...library,title:'Another metadata title'},library]);assert.equal(JSON.stringify(a),JSON.stringify(b));assert.equal(a.data.sources.length,1);assert.deepEqual([...a.duplicateIds],[library.id]);});
 test('folder membership uses only exact catalog IDs; safe metadata never joins by matching title',()=>{const p=build([library,original],{folderData:{revision:7,indexHash:'folders',folders:[{id:'kept',name:'Kept',sourceIds:[library.id,'same-title-but-absent']}],sources:[{id:library.id,createdAt:'2026-10-21',body:'never copy'},{id:'same-title-but-absent',title:original.title,readingStatus:'read'}]}});assert.deepEqual([...p.data.folders[0].sourceIds],[library.id]);assert.equal(p.data.sources[0].createdAt,'2026-10-21');assert.equal(p.data.sources[1].readingStatus,undefined);assert.equal(p.data.sources[0].body,undefined);});
 test('stale catalog/root/revision/readiness rejects opening; exact descriptor carries fresh identity to owner',()=>{const p=build([original]);for(const extra of [{ready:false},{scope:'d'.repeat(64)},{revision:'d'.repeat(64)}])assert.throws(()=>openDescriptor(p,original.id,{scope,revision,ready:true,...extra}),/updating/);const value=openDescriptor(p,original.id,{scope,revision,ready:true});assert.equal(value.hash,hash);assert.equal(value.artifactId,original.id);assert.equal(value.catalogRevision,revision);assert.throws(()=>openDescriptor(build([{...original,missing:true}]),original.id,{scope,revision,ready:true}),/unavailable/);});
+const transcriptProvenance=(row=library,extra={})=>({authority:'retained-transcript-manager',sessionId:'invented-session',workingSourceId:row.id,workingHash:row.hash,version:2,date:'2026-10-22',...extra});
+test('exact retained transcript projects only allowed scalar metadata without changing source identity or open guards',()=>{
+ const row={...library,transcriptProvenance:transcriptProvenance(library,{audioLinked:false,turns:[{text:'SECRET speech',segments:[{content:'SECRET segment'}]}],nested:{turns:['SECRET nested']},content:'SECRET body',original:{text:'SECRET original'}})},p=build([row]),saved=p.data.sources[0];
+ assert.deepEqual(JSON.parse(JSON.stringify(saved.transcriptProvenance)),transcriptProvenance());
+ assert.equal(saved.kind,'note');assert.equal(saved.hash,hash);assert.equal(saved.id,library.id);assert.equal(saved.authority,'library');assert.ok(Object.isFrozen(saved.transcriptProvenance));assert.doesNotMatch(JSON.stringify(p),/SECRET|turns|segments|audioLinked|nested|original/);
+ assert.equal(JSON.stringify(openDescriptor(p,row.id,{scope,revision,ready:true})),JSON.stringify(openDescriptor(build([library]),row.id,{scope,revision,ready:true})));
+ assert.throws(()=>openDescriptor(p,row.id,{scope,revision:'d'.repeat(64),ready:true}),/updating/);
+});
+test('malformed, foreign and stale transcript provenance is omitted, never recovered from folder metadata',()=>{
+ for(const extra of [{authority:'foreign'},{sessionId:''},{sessionId:' '},{sessionId:2},{workingSourceId:'another-source'},{workingHash:'d'.repeat(64)},{workingHash:'bad'}]){
+  const p=build([{...library,transcriptProvenance:transcriptProvenance(library,extra)}]);assert.equal(p.data.sources[0].transcriptProvenance,undefined);
+ }
+ const p=build([library],{folderData:{sources:[{...library,transcriptProvenance:transcriptProvenance()}]}});assert.equal(p.data.sources[0].transcriptProvenance,undefined);
+ const optional=build([{...library,transcriptProvenance:transcriptProvenance(library,{version:{turns:['SECRET']},date:{text:'SECRET'}})}]).data.sources[0].transcriptProvenance;assert.equal(optional.version,undefined);assert.equal(optional.date,undefined);
+});
+test('transcript metadata never overrides foreign catalog authorities or explicit original/media roles',()=>{
+ for(const row of [{...library,authority:'foreign'},original,...['SRC','RAW','image','photo','audio','video','pdf','file'].map(kind=>({...library,kind}))]){
+  const saved=build([{...row,transcriptProvenance:transcriptProvenance(row)}]).data.sources[0];assert.equal(saved.transcriptProvenance,undefined);assert.equal(saved.kind,row.kind);assert.equal(saved.authority,row.authority);
+ }
+ for(const sessionId of ['x'.repeat(241),'session\nbody','session\u007fbody'])assert.equal(build([{...library,transcriptProvenance:transcriptProvenance(library,{sessionId})}]).data.sources[0].transcriptProvenance,undefined);
+ for(const date of ['x'.repeat(65),'2026-10-22\nbody','date\u007fbody'])assert.equal(build([{...library,transcriptProvenance:transcriptProvenance(library,{date})}]).data.sources[0].transcriptProvenance.date,undefined);
+});

@@ -7,11 +7,20 @@
  const metadata=(value,depth=0)=>{if(depth>6)return undefined;if(value===null||['string','number','boolean'].includes(typeof value))return value;if(Array.isArray(value))return value.slice(0,100).map(x=>metadata(x,depth+1));if(value&&typeof value==='object'){const out={};for(const key of Object.keys(value).sort())if(!blocked.test(key)){const v=metadata(value[key],depth+1);if(v!==undefined)out[key]=v;}return out;}return undefined;};
  const freeze=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
  const identity=s=>JSON.stringify([s.id,s.authority,s.hash??null,s.artifactId??null,s.storyId??null]);
+ // Only the retained transcript owner's exact revision may describe a transcript.
+ function transcriptMetadata(row){
+  const p=row.transcriptProvenance;
+  if(row.authority!=='library'||!['note','text','transcript'].includes(row.kind)||!p||Array.isArray(p)||p.authority!=='retained-transcript-manager'||typeof p.sessionId!=='string'||!p.sessionId.trim()||p.sessionId.length>240||/[\x00-\x1f\x7f]/.test(p.sessionId)||p.workingSourceId!==row.id||typeof p.workingHash!=='string'||!HASH.test(p.workingHash)||p.workingHash!==row.hash)return undefined;
+  const out={authority:p.authority,sessionId:p.sessionId,workingSourceId:p.workingSourceId,workingHash:p.workingHash};
+  if(Number.isSafeInteger(p.version)&&p.version>=1)out.version=p.version;
+  if(typeof p.date==='string'&&p.date.length<=64&&!/[\x00-\x1f\x7f]/.test(p.date))out.date=p.date;
+  return out;
+ }
  function source(row){
   if(!row||typeof row.id!=='string'||!row.id||typeof row.authority!=='string'||!row.authority)throw Error('The source list has an unconfirmed identity.');
   if(row.hash!=null&&!HASH.test(row.hash))throw Error('The source list has an unconfirmed revision.');
   if(row.authority==='magazine-original'&&(!row.artifactId||!HASH.test(row.hash||'')))throw Error('An original file needs its exact saved reference.');
-  const out={};for(const key of fields)if(Object.hasOwn(row,key))out[key]=metadata(row[key]);return out;
+  const out={};for(const key of fields)if(Object.hasOwn(row,key))out[key]=metadata(row[key]);const transcript=transcriptMetadata(row);if(transcript)out.transcriptProvenance=transcript;return out;
  }
  function project({sources,scope,revision=null,folderData=null}={}){
   if(typeof scope!=='string'||!HASH.test(scope))throw Error('The source connection is not confirmed.');
