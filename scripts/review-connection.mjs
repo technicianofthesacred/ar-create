@@ -1,6 +1,7 @@
 // A code-only review entrance over one existing loopback authority. No app backend,
 // store or private directory is imported or initialized here. Optional human source and manuscript
 // corrections forward only to that existing owner; this entrance never owns writes.
+import {createTranslationOneRunAdmission} from '../runtime/services/translation-one-run-admission.mjs';
 import http from 'node:http';
 import {validateImportedTranscriptTranslation} from '../config.mjs';
 import fs from 'node:fs/promises';
@@ -151,9 +152,10 @@ async function staticRead(publicDir,pathname){
   return {bytes:await fs.readFile(current),type:TYPES[path.extname(current).toLowerCase()]||'application/octet-stream'};
  }catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return null;throw error;}
 }
-export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null}={}){
+export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
  const upstream=authority(authorityURL,allowedAuthorityPort);
  const translationPolicy=validateImportedTranscriptTranslation(translationProposals);
+ const admitTranslation=createTranslationOneRunAdmission({oneRunId:translationPolicy?.keptConversations?.oneRunId,dataDir:translationAdmissionDataDir,scope:'proxy'});
  if(translationPermissionCurrent!==null&&typeof translationPermissionCurrent!=='function')throw Error('Translation permission freshness must be a trusted host check.');
  const translationEnabled=translationPolicy?.keptConversations.enabled===true&&translationPolicy.keptConversations.shareEntireContext===true&&translationPolicy.keptConversations.sourceIds.length>0;
  const translationDeadline=translationPolicy?translationPolicy.timeoutMs+5000:timeoutMs;
@@ -207,7 +209,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     const current=await translationSnapshot(upstream,timeoutMs),sessions=Array.isArray(current.sessions)?current.sessions.filter(s=>s.id===input.sessionId):[];
     if(sessions.length!==1||!translationPolicy.keptConversations.sourceIds.includes(sessions[0].sourceId))throw Object.assign(Error('This conversation is not approved for account context sharing.'),{status:403});
     if(current.revision!==input.expectedRevision||sessions[0].sourceHash!==input.expectedSourceHash)throw Object.assign(Error('The conversation changed before translation. Refresh its current wording.'),{status:409});
-    translationPermissionCurrent?.();
+    translationPermissionCurrent?.();admitTranslation();
    }
    if(sourceCorrection)validateCorrection(pathname,readBody);
    if(draftCorrection)validateDraftCorrection(pathname,readBody,{approvals:studyDraftApprovals});

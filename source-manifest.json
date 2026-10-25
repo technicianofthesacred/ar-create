@@ -2137,7 +2137,7 @@
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "52e7f638ade806154ef9bd9772017ca167b24b6d68790df0add59cdb6f1c083a"
+      "candidateSha256": "e370b063c17f0494f5d367663c7a73b3f295ed3203dfc5f60d10b64a6cdaf1e0"
     },
     {
       "path": "package.json",
@@ -2345,7 +2345,7 @@
     },
     {
       "path": "runtime/services/source-sessions.mjs",
-      "candidateSha256": "ad3191fd989b69eaf2ea2042f86d184864ab7ad011da55e0d826a61c6817bb65"
+      "candidateSha256": "bd4a54ea144229c6eb61a55c08fecf152b675975db7876cf30369c042c31b986"
     },
     {
       "path": "runtime/services/imported-transcript-manager.mjs",
@@ -2365,7 +2365,7 @@
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "fd9a2e6c61f99147594ea430d7d7462d0b29042c9fe38bb11d455f33dd996baa"
+      "candidateSha256": "e01c181611fb42932512078ecf999ff284c53a0e38853547772d4902aa0f7926"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -3677,11 +3677,11 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "66e9283c9b9e4068247520ad56adfec16f5d766204c9da6619c813cab34e8235"
+      "candidateSha256": "91df32cff4bd9887c450570706433f453cfa939cfdd6d18d0b5ffa178245ed39"
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "2810fc9b5e8ee7ad33fd9bb91fa9b6765b99ef80e9d5dbdbe2a1c323c0522458"
+      "candidateSha256": "a7cc2b8e588ef74414f7f0640111a8da90b0d75542a160d2384c4afcce90f5b2"
     },
     {
       "path": "tests/existing-work.test.mjs",
@@ -4125,7 +4125,7 @@
     },
     {
       "path": "runtime/services/kept-source-translation-requests.mjs",
-      "candidateSha256": "6360fef87d5948739634895dce7d14606203f71b9e6907ec72d134580ebabdee"
+      "candidateSha256": "21c1f749c23d9dcddb060c1a7896aa7ece807910a5d4b820fe737432d1415345"
     },
     {
       "path": "runtime/services/magazine/kept-conversation-translation.mjs",
@@ -4161,7 +4161,7 @@
     },
     {
       "path": "tests/kept-source-translation-reader.test.mjs",
-      "candidateSha256": "59873f5031452171c41420947e35a0f48e69df8e3e8d6db3140b9e12ad673d88"
+      "candidateSha256": "2ef78480f5605b5fbeb6252f306e91e4606c2ee93107857aeddb39f47b86c294"
     },
     {
       "path": "tests/kept-source-translation-requests.test.mjs",
@@ -4174,6 +4174,14 @@
     {
       "path": "tests/kept-translation-normal-host.test.mjs",
       "candidateSha256": "a0a401f3c261429c1a3a6a96ab2394e91e745bbbd35f81ad439f0888209f14b7"
+    },
+    {
+      "path": "runtime/services/translation-one-run-admission.mjs",
+      "candidateSha256": "0c20eda8138ff6b6b8d74d0ef54718fdf03395d8265bab0494d7006f418fe29e"
+    },
+    {
+      "path": "tests/translation-one-run-admission.test.mjs",
+      "candidateSha256": "a66209989583bc8c8c30efe3da8a02afbfc71d39b3d28877c8ba766e173b529b"
     }
   ],
   "dependencyRepair": {

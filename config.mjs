@@ -26,7 +26,8 @@ export function validateImportedTranscriptTranslation(value){
  fs.accessSync(value.codexPath,fs.constants.X_OK);
  if(!Number.isSafeInteger(value.timeoutMs)||value.timeoutMs<1000||value.timeoutMs>600000)throw Error('Imported Source translation timeoutMs must be between 1000 and 600000 milliseconds.');
  const kept=value.keptConversations;
- if(!fields(kept,['enabled','shareEntireContext','sourceIds'])||typeof kept.enabled!=='boolean'||typeof kept.shareEntireContext!=='boolean'||!Array.isArray(kept.sourceIds)||kept.sourceIds.length>100||new Set(kept.sourceIds).size!==kept.sourceIds.length||kept.sourceIds.some(id=>typeof id!=='string'||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)))throw Error('Imported Source translation requires explicit boolean permissions and distinct UUID sourceIds.');
+ if(!fields(kept,['enabled','shareEntireContext','sourceIds',...(Object.hasOwn(kept||{},'oneRunId')?['oneRunId']:[])])||typeof kept.enabled!=='boolean'||typeof kept.shareEntireContext!=='boolean'||!Array.isArray(kept.sourceIds)||kept.sourceIds.length>100||new Set(kept.sourceIds).size!==kept.sourceIds.length||kept.sourceIds.some(id=>typeof id!=='string'||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)))throw Error('Imported Source translation requires explicit boolean permissions and distinct UUID sourceIds.');
+ if(Object.hasOwn(kept,'oneRunId')&&(typeof kept.oneRunId!=='string'||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(kept.oneRunId)))throw Error('Imported Source translation oneRunId must be an explicit UUID.');
  return structuredClone(value);
 }
 export function loadConfig(env=process.env){

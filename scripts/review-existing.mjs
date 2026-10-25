@@ -13,8 +13,8 @@ import {createExistingWorkReader} from '../runtime/services/review-existing-work
 import {createRetainedCarouselReader} from '../runtime/services/review-retained-carousels.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 // Reuse the explicitly selected host file; review JSON cannot grant generation.
-export async function readReviewTranslationPermission(configFile,inspection){
- if(configFile===null||configFile===undefined)return null;
+async function readReviewTranslationHost(configFile,inspection){
+ if(configFile===null||configFile===undefined)return {translation:null,dataDir:null};
  if(!inspection||typeof inspection.assertCurrent!=='function'||typeof configFile!=='string'||!path.isAbsolute(configFile))throw Error('Translation review requires the same explicit host Library inspection.');
  inspection.assertCurrent();
  const before=await fs.lstat(configFile),stamp=s=>[s.dev,s.ino,s.size,s.mtimeMs,s.ctimeMs].join(':');
@@ -24,11 +24,14 @@ export async function readReviewTranslationPermission(configFile,inspection){
  if(stamp(await fs.lstat(configFile))!==stamp(before))throw Error('Host translation configuration changed.');
  const host=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
  const translation=validateImportedTranscriptTranslation(host?.importedTranscriptOwner?.translation);
- inspection.assertCurrent();return translation;
+ const dataDir=host?.importedTranscriptOwner?.dataDir??null;
+ if(translation?.keptConversations?.oneRunId&&(typeof dataDir!=='string'||!path.isAbsolute(dataDir)))throw Error('One-use translation requires the same trusted imported owner data directory.');
+ inspection.assertCurrent();return {translation,dataDir};
 }
+export async function readReviewTranslationPermission(configFile,inspection){return (await readReviewTranslationHost(configFile,inspection)).translation;}
 export async function createExistingWorkReview({config,fetchImpl=fetch,libraryInspection=null,libraryInspectionConfigFile=null}={}){
  if(!config||typeof config!=='object'||!Array.isArray(config.magazineRoots))throw Error('Explicit read-only review configuration required.');
- const translationProposals=await readReviewTranslationPermission(libraryInspectionConfigFile,libraryInspection);
+ const {translation:translationProposals,dataDir:translationAdmissionDataDir}=await readReviewTranslationHost(libraryInspectionConfigFile,libraryInspection);
  const upstream=new URL(config.authorityURL);if(upstream.origin!==config.authorityURL.replace(/\/$/,'')||upstream.protocol!=='http:'||!['127.0.0.1','localhost'].includes(upstream.hostname)||upstream.port!==String(config.allowedAuthorityPort))throw Error('Fixed explicit loopback authority required.');
  const catalogCacheScope=createHash('sha256').update(JSON.stringify({config,libraryInspection:libraryInspection?.scope||!!libraryInspection})).digest('hex');
  const inspectPaths=new Map(libraryInspection?[
@@ -80,7 +83,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
   ['/api/magazine/portfolio',result(()=>reader.portfolio.list())],
   ['/api/magazine/artifact',result(({url})=>reader.portfolio.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))],
  ]);
- const server=createReviewConnection({publicDir:path.join(root,'public'),authorityURL:config.authorityURL,allowedAuthorityPort:config.allowedAuthorityPort,actualWorkReview:true,catalogCacheScope,translationProposals,translationPermissionCurrent:translationProposals?()=>libraryInspection.assertCurrent():null,sourceCorrections:true,studyDraftCorrections:true,studyDraftApprovals:config.studyDraftApprovals??false,browserCarouselCorrections:true,nativeCarouselCorrections:config.nativeCarouselCorrections??false,magazineDraftCorrections:config.magazineDraftCorrections??false,readPostPaths:['/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts'],readOverrides});
+ const server=createReviewConnection({publicDir:path.join(root,'public'),authorityURL:config.authorityURL,allowedAuthorityPort:config.allowedAuthorityPort,actualWorkReview:true,catalogCacheScope,translationProposals,translationAdmissionDataDir,translationPermissionCurrent:translationProposals?()=>libraryInspection.assertCurrent():null,sourceCorrections:true,studyDraftCorrections:true,studyDraftApprovals:config.studyDraftApprovals??false,browserCarouselCorrections:true,nativeCarouselCorrections:config.nativeCarouselCorrections??false,magazineDraftCorrections:config.magazineDraftCorrections??false,readPostPaths:['/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts'],readOverrides});
  return{server,reader,media,retainedCarousels};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
