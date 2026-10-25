@@ -203,7 +203,8 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     const title=typeof spec?.title==='string'?spec.title:Array.isArray(spec?.title)&&spec.title.every(v=>typeof v==='string')?spec.title.join(' '):'Recorded article';
     return {schema:'ar-create.magazine-publication-reference.v1',revision,workingOwnerRef,nativeProjectId:resolved.target.nativeProjectId,publication:url?{id,url:url.href,title:title.trim()||'Recorded article',recordedBy:'working-draft-frontmatter',edition:null,date:null}:null};
   }
-  async function inspect(input) {
+  async function inspect(input) { return (await inspectEdition(input)).media; }
+  async function inspectEdition(input) {
     const {resolved,api,code,spec}=await publicationContext(input);
     const memory = api.memoryOf(spec), originalBody = api.draftBody(resolved.document.text).body;
     const parsed = api.parseDraft(originalBody,memory);
@@ -244,7 +245,37 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,previewKind:'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
     });
     snapshot = {input:{...input},scope,revision,code,files:new Map([...files.values()].map(r=>[r.sourceId,r])),ownerRef};
-    return {schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,limitations:['Publication photographs; original camera files and album provenance are not established.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is not a caption or credit.']};
+    const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,limitations:['Publication photographs; original camera files and album provenance are not established.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is not a caption or credit.']};
+    return {media,parsed,spec,code,files};
+  }
+  async function workingEdition(input) {
+    const {media,parsed,spec,code,files}=await inspectEdition(input);
+    // The maintained canvas's nested Words surface supports only these forms.
+    // Refuse anything it would omit rather than showing an incomplete edition.
+    const walk=(blocks,nested=false,depth=0)=>{
+      if(!Array.isArray(blocks)||depth>8)fail('Unsupported working article blocks.');
+      for(const b of blocks){
+        if(!b||!['q','a','n','line','side','glyph','photos','wide','bleed','on-photo'].includes(b.kind))fail('Unsupported working article block.');
+        if(nested&&(!['q','a','n','line'].includes(b.kind)||b.kind==='line'&&b.follow))fail('This nested article layout cannot be rendered completely.');
+        if(b.kind==='side'||b.kind==='glyph')walk(b.blocks,true,depth+1);
+      }
+    };
+    walk(parsed.opening);for(const p of parsed.parts)walk(p.blocks);walk(parsed.ending.blocks);
+    if(typeof parsed.intro!=='string'||typeof parsed.ending.saying?.text!=='string')fail('The working article is incomplete.');
+    const pick=(value,keys)=>Object.fromEntries(keys.filter(k=>Object.hasOwn(value||{},k)).map(k=>[k,structuredClone(value[k])]));
+    const metadata=pick(spec,['slug','path','images','source','pageTitle','title','dek','form','credit']);
+    metadata.subject=pick(spec.subject,['name','nameCn','role','href']);
+    metadata.speakers=pick(spec.speakers,['author','subject']);
+    metadata.author={...pick(spec.author,['name']),links:(spec.author?.links||[]).map(link=>pick(link,['label','href']))};
+    metadata.next=(spec.next||[]).map(link=>pick(link,['to','kicker','title','blurb']));
+    if(spec.share)metadata.share={...pick(spec.share,['line']),...(spec.share.photo?{photo:pick(spec.share.photo,['slot','file','alt','x','y'])}:{})};
+    // Story fields come exclusively from this parse. In particular, absent
+    // portrait/hook/closing never fall back to a previous publication's words.
+    const currentSpec={...metadata,...pick(parsed,['portrait','intro','hook','opening','parts','ending','closing'])};
+    for(const asset of files.values())if(readChecked(root,asset.relative,MAX_ASSET).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
+    guardCode(code);await working(input);guardCode(code);
+    for(const asset of files.values())if(readChecked(root,asset.relative,MAX_ASSET).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
+    return {schema:'ar-create.magazine-working-edition.v1',revision:media.revision,ownerRef:media.ownerRef,spec:currentSpec,media};
   }
   // Read-only preparation: final prepare/save/Undo still use the maintained
   // native owner. Expose a hash so the client can verify that owner's prepared
@@ -307,5 +338,5 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       throw Object.assign(new Error('Publication photographs are unavailable; inspect the working draft again.'), {status:409, cause:error});
     }
   };
-  return {inspect:safe(inspect),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus)};
+  return {inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus)};
 }

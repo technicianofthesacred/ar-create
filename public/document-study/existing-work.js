@@ -376,6 +376,8 @@
   window.studyOutputConnection.setMagazineAdapter(window.createMagazineOutputAdapter({
    current:()=>{const p=project(),owner=window.studyDraft?.currentOwner?.(),proof=window.studyDraft?.currentProof?.();if(owner?.kind!=='magazine')return null;const exact=proof?.owner?.kind==='magazine'&&proof.parentStudyId===p?.id&&proof.owner.storyId===owner.storyId&&proof.owner.pieceId===owner.pieceId&&proof.owner.path===owner.path&&proof.expected?.workflow?.draft===proof.draftHash;return {projectId:p?.id,owner,hash:exact?proof.draftHash:null,dirty:!!proof?.dirty};},
    resolve:input=>read('/api/review/magazine-publication-reference?'+new URLSearchParams(input)),
+   readWorking:input=>read('/api/review/magazine-working-edition?'+new URLSearchParams(input)),
+   openArrangement:async(payload,assertCurrent)=>{assertCurrent();await window.viewPhase(9,{originGuard:assertCurrent});assertCurrent();rememberRoute({reviewMagazineStory:payload.owner.storyId,reviewMagazinePiece:payload.owner.pieceId,reviewMagazineParent:payload.projectId});},
    openWorking:async(payload,assertCurrent)=>{assertCurrent();await window.viewPhase(5,{originGuard:assertCurrent});assertCurrent();rememberRoute({reviewMagazineStory:payload.owner.storyId,reviewMagazinePiece:payload.owner.pieceId,reviewMagazineParent:payload.projectId});},
    openPublication:(payload,assertCurrent)=>{assertCurrent();window.open(payload.publication.url,'_blank','noopener,noreferrer');}
   }));
