@@ -43,7 +43,7 @@
  function sourceRows(){
   const groups=[],ws=document.querySelector('#app #workspace');if(!ws)return null;
   const select=ws.querySelector('[data-source-reader-select]');
-  if(select&&select.options.length)groups.push({label:'Kept conversations',rows:[...select.options].map(o=>({key:'sess:'+o.value,label:text(o),on:o.selected,disabled:select.disabled}))});
+  if(select&&select.options.length)groups.push({label:'Kept conversations',rows:[...select.options].filter(o=>o.value.trim()).map(o=>({key:'sess:'+o.value,label:text(o),on:o.selected,disabled:select.disabled||o.disabled}))});
   const index=ws.querySelector('.material-index');
   if(index){
    let group=null,i=0;
@@ -61,7 +61,7 @@
  }
  function sourcePress(key){
   const ws=document.querySelector('#app #workspace');if(!ws)return;
-  if(key.startsWith('sess:')){const s=ws.querySelector('[data-source-reader-select]');if(!s||s.disabled)return;s.value=key.slice(5);s.dispatchEvent(new Event('change',{bubbles:true}));return;}
+  if(key.startsWith('sess:')){const s=ws.querySelector('[data-source-reader-select]'),id=key.slice(5);if(!s||s.disabled||!id.trim()||![...s.options].some(o=>o.value===id&&!o.disabled))return;s.value=id;s.dispatchEvent(new Event('change',{bubbles:true}));return;}
   const index=ws.querySelector('.material-index');if(!index)return;let i=0;
   for(const n of index.querySelectorAll(':scope h3,:scope .material-record,:scope>button,:scope>.material-audio,:scope>p.small')){
    if(n.matches('h3,p.small'))continue;

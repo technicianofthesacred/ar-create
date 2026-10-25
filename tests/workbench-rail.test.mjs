@@ -140,3 +140,14 @@ test('Research rail opens the same selected point and keeps the original pending
  w.current=()=>({id:'synthetic',view:'record',viewedStage:3});w.eval(fs.readFileSync(new URL('../public/document-study/workbench-surfaces.js',import.meta.url),'utf8'));w.c3Workbench.decorate();const input=d.querySelector('textarea');input.value='Unsaved learning';
  d.querySelector('[data-wb-row="rp:1"]').click();assert.equal(d.querySelector('[data-research-point="b"]>.wb-point').open,true);assert.equal(d.querySelector('[data-research-point="a"]>.wb-point').open,false);assert.strictEqual(d.querySelector('textarea'),input);assert.equal(input.value,'Unsaved learning');assert.equal(d.activeElement,d.querySelector('[data-research-point="b"] summary'));close();
 });
+
+test('Source panel lists real conversation identities only and preserves owner option availability',async()=>{
+ const {w,d,close}=boot(2,{work:'<select data-source-reader-select><option value="" selected>Choose a kept conversation</option><option value="a">Conversation A</option><option value="b" disabled>Unavailable conversation B</option></select>'});
+ const select=d.querySelector('select'),placeholder=select.options[0];let changes=0;select.onchange=()=>changes++;
+ assert.equal(d.querySelector('[data-wb-row="sess:"]'),null);
+ assert.equal(d.querySelectorAll('[data-wb-row^="sess:"]').length,2);
+ assert.equal(select.options[0],placeholder);assert.equal(select.value,'');assert.equal(changes,0);
+ assert.equal(d.querySelector('[data-wb-row="sess:b"]').disabled,true);
+ d.querySelector('[data-wb-row="sess:a"]').click();await tick();assert.equal(select.value,'a');assert.equal(changes,1);
+ select.disabled=true;w.c3Workbench.decorate();assert.equal(d.querySelector('[data-wb-row="sess:a"]').disabled,true);close();
+});
