@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';import {fileURLToPath} from 'node:url';
+import {validateTranslationReviewConfig} from './runtime/services/kept-source-translation-review.mjs';
 import {validateMagazineVaultConfig} from './runtime/services/magazine-vault/config.mjs';
 import {createRetainedCarouselReader} from './runtime/services/review-retained-carousels.mjs';
 const packageDir=path.dirname(fileURLToPath(import.meta.url));
@@ -77,9 +78,10 @@ export function loadConfig(env=process.env){
  }
  const transcriptLibrary=hostRecord(config.transcriptLibrary,['registryFile','indexFile','libraryRoot'],'transcriptLibrary');
  if(transcriptLibrary)for(const key of ['registryFile','indexFile','libraryRoot']){hostPath(transcriptLibrary[key],'transcriptLibrary.'+key);}
- const importedTranscriptOwner=hostRecord(config.importedTranscriptOwner,['dataDir','notesFile','handoverFile','connections',...(Object.hasOwn(config.importedTranscriptOwner||{},'translation')?['translation']:[])],'importedTranscriptOwner');
+ const importedTranscriptOwner=hostRecord(config.importedTranscriptOwner,['dataDir','notesFile','handoverFile','connections',...(Object.hasOwn(config.importedTranscriptOwner||{},'translation')?['translation']:[]),...(Object.hasOwn(config.importedTranscriptOwner||{},'translationReview')?['translationReview']:[])],'importedTranscriptOwner');
  if(importedTranscriptOwner){for(const key of ['dataDir','notesFile','handoverFile']){hostPath(importedTranscriptOwner[key],'importedTranscriptOwner.'+key);}if(insideCheckout(canonicalDestination(importedTranscriptOwner.dataDir)))throw Error('Imported Source private data must remain outside the package checkout.');if(!Array.isArray(importedTranscriptOwner.connections))throw Error('Imported Source connections must be explicitly configured.');}
  if(importedTranscriptOwner&&Object.hasOwn(importedTranscriptOwner,'translation'))importedTranscriptOwner.translation=validateImportedTranscriptTranslation(importedTranscriptOwner.translation);
+ if(importedTranscriptOwner&&Object.hasOwn(importedTranscriptOwner,'translationReview')){const review=validateTranslationReviewConfig(importedTranscriptOwner.translationReview);if(review&&insideCheckout(canonicalDestination(review.file)))throw Error('Saved translation review must remain outside the package checkout.');importedTranscriptOwner.translationReview=review;}
  const executable=(value,label)=>{if(value===null||value===undefined||value==='')return null;if(typeof value!=='string'||!path.isAbsolute(value)||!fs.statSync(value).isFile())throw Error(`${label} requires an explicit executable path.`);fs.accessSync(value,fs.constants.X_OK);return value;};
  const tools=Object.fromEntries(['python','ytDlp','firecrawl','codex'].map(name=>{const value=executable(config.tools?.[name],`tools.${name}`);return [name,value&&fs.realpathSync(value)];}));
  // A virtualenv's interpreter must keep its own path (resolving the symlink would leave the venv), so it is not realpath'd.

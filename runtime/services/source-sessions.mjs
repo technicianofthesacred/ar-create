@@ -6,6 +6,7 @@ import {createLibrary} from './library.mjs';
 import {createTranscriptManager} from './imported-transcript-manager.mjs';
 import * as files from './files.mjs';
 import {StateError} from '../store.mjs';
+import {createKeptSourceTranslationReview} from './kept-source-translation-review.mjs';
 import {createKeptSourceTranslationRequests} from './kept-source-translation-requests.mjs';
 const fail=(message,status=409)=>{throw new StateError(message,status);};
 const sha=value=>createHash('sha256').update(value).digest('hex');
@@ -14,7 +15,7 @@ function canonical(value){if(Array.isArray(value))return value.map(canonical);if
 function same(a,b){return JSON.stringify(canonical(a))===JSON.stringify(canonical(b));}
 function stripped(session){const {sourceHash,originalUrl,staleSelections,...saved}=session;return saved;}
 /** A bounded projection of the maintained owner; never expose import/delete/group. */
-export function createSourceSessions({manager,notesFile=null,translationConfig=null,translationAdmissionDataDir=null}){
+export function createSourceSessions({manager,notesFile=null,translationConfig=null,translationAdmissionDataDir=null,translationReviewConfig=null}){
  let queue=Promise.resolve();
  const serial=fn=>{const result=queue.then(fn);queue=result.catch(()=>{});return result;};
  function notesFor(sessions){
@@ -39,7 +40,8 @@ export function createSourceSessions({manager,notesFile=null,translationConfig=n
   return manager.api[action](input);
  }
  const list=()=>serial(projection),translation=createKeptSourceTranslationRequests({read:list,config:translationConfig,admissionDataDir:translationAdmissionDataDir});
- return {list,proposeTranslation:input=>translation.propose(input),edit:input=>serial(()=>mutate('edit',input)),undo:input=>serial(()=>mutate('undo',input))};
+ const review=createKeptSourceTranslationReview({read:list,config:translationReviewConfig});
+ return {list,readTranslationReview:input=>review.read(input),proposeTranslation:input=>translation.propose(input),edit:input=>serial(()=>mutate('edit',input)),undo:input=>serial(()=>mutate('undo',input))};
 }
 async function listening(port){return new Promise(resolve=>{const socket=net.createConnection({host:'127.0.0.1',port});socket.setTimeout(500);socket.once('connect',()=>{socket.destroy();resolve(true);});socket.once('error',()=>{socket.destroy();resolve(false);});socket.once('timeout',()=>{socket.destroy();resolve(false);});});}
 /** Explicit private startup authority. Data stays in the maintained owner's home. */
@@ -53,5 +55,5 @@ export async function createImportedSourceOwner(config){
  if(await listening(handover.legacyPort))fail('The previous transcript writer is still running. Source editing remains unavailable.');
  const library=createLibrary({dataDir:config.dataDir,connections:config.connections});
  const manager=createTranscriptManager({dataDir:config.dataDir,library,files,StateError,requests:{preview:()=>fail('Source selection uses the existing project connection.')},store:{get:()=>({project:{id:'source-owner'}})}});
- return createSourceSessions({manager,notesFile:config.notesFile,translationConfig:config.translation?{translation:config.translation}:null,translationAdmissionDataDir:config.dataDir});
+ return createSourceSessions({manager,notesFile:config.notesFile,translationConfig:config.translation?{translation:config.translation}:null,translationAdmissionDataDir:config.dataDir,translationReviewConfig:config.translationReview});
 }

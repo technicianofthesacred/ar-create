@@ -2137,7 +2137,7 @@
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "e370b063c17f0494f5d367663c7a73b3f295ed3203dfc5f60d10b64a6cdaf1e0"
+      "candidateSha256": "1ccdb73cfaa11e55bca7d1435c08049e559bc07a3b4dc394d8a405d7796c1b5a"
     },
     {
       "path": "package.json",
@@ -2345,7 +2345,7 @@
     },
     {
       "path": "runtime/services/source-sessions.mjs",
-      "candidateSha256": "bd4a54ea144229c6eb61a55c08fecf152b675975db7876cf30369c042c31b986"
+      "candidateSha256": "7871e033e7cde861121dc69bb2aa31c84235f8cb6647af91836339acf4a0f21f"
     },
     {
       "path": "runtime/services/imported-transcript-manager.mjs",
@@ -2365,7 +2365,7 @@
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "e01c181611fb42932512078ecf999ff284c53a0e38853547772d4902aa0f7926"
+      "candidateSha256": "915199c5f89bb0fae1df34a240ef0bce1b842559dc18af007db1d1e44ca3d95f"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "361f548bc1c1f8ae7e8e8a102de26690871a15b9b3c9054e6d1ac14f4afaeb9b"
+      "candidateSha256": "3bdcbad4cb846dcaf011c0d4b9fb957ac8a7c19af9b751f8e695992e46f207ba"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -3677,7 +3677,7 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "91df32cff4bd9887c450570706433f453cfa939cfdd6d18d0b5ffa178245ed39"
+      "candidateSha256": "4f0e0778f56c41e6d9d587cbea031dbc40f54b761f0f0f8cd36cfa0f508bbe8a"
     },
     {
       "path": "scripts/review-existing.mjs",
@@ -4161,7 +4161,7 @@
     },
     {
       "path": "tests/kept-source-translation-reader.test.mjs",
-      "candidateSha256": "2ef78480f5605b5fbeb6252f306e91e4606c2ee93107857aeddb39f47b86c294"
+      "candidateSha256": "50071fa1c4ba8d2b617a3476b3b591408a7cc65766cad379f4e78b405eb75c5b"
     },
     {
       "path": "tests/kept-source-translation-requests.test.mjs",
@@ -4182,6 +4182,18 @@
     {
       "path": "tests/translation-one-run-admission.test.mjs",
       "candidateSha256": "a66209989583bc8c8c30efe3da8a02afbfc71d39b3d28877c8ba766e173b529b"
+    },
+    {
+      "path": "runtime/services/kept-source-translation-review.mjs",
+      "candidateSha256": "54da8d1660c7bf815fa0f295a0bf34f1c28d60ca39986d1dd7dd54748be84698"
+    },
+    {
+      "path": "tests/kept-source-translation-review.test.mjs",
+      "candidateSha256": "b464852f61ffcec8c2e4217f91d497059c9c553a9131d5e855c95bd8438f9ecd"
+    },
+    {
+      "path": "tests/saved-translation-review-proxy.test.mjs",
+      "candidateSha256": "94ed2f1a4123bf8b3443e8c1b037d9d919bb1152fd92e90b0f925337419e829d"
     }
   ],
   "dependencyRepair": {
