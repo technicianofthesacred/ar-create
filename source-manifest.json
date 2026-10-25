@@ -792,7 +792,7 @@
     {
       "path": "public/document-study/draft-check-flow.js",
       "sourceSha256": "f3d5c3f4cb28a5ff66e7466de47b4ed0911931822c348d5b5909ae83e9757a76",
-      "candidateSha256": "a584357a113aa005a5b11878742f0bf1adf5998fdc9293c385a4762748b3404b",
+      "candidateSha256": "17cbe81cf5c328356cf2c386c9a34332da0fa8d7e58d056b80f4366ea4a19577",
       "adapted": false
     },
     {
@@ -1093,7 +1093,7 @@
     {
       "path": "tests/draft-check-flow.test.mjs",
       "sourceSha256": "0d56c6a2888c1940d642d7ce8d6791785acc955d3df0b45fbf1d8526e982bcc4",
-      "candidateSha256": "1b57f0d2b13a38ffb4bac1e29e7854be4d1c22f2f6a1fd741e1fb371113e2ca2",
+      "candidateSha256": "b3a06b4734e7a64ff49587fda5f47b3201ad7e711831b1401268828e6448de99",
       "adapted": true
     },
     {
@@ -3921,7 +3921,7 @@
     },
     {
       "path": "tests/magazine-check-flow.test.mjs",
-      "candidateSha256": "60e8fdaf469337925dafd674018747b2bb2d82df5674fa92c4ff8d455455c8d9"
+      "candidateSha256": "8d128bea3eb25310be8dc39e54a6677621a14286386995924a63ec2106c9ad38"
     },
     {
       "path": "tests/magazine-check-registration.test.mjs",
