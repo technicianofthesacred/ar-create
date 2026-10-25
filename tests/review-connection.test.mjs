@@ -36,7 +36,7 @@ test('candidate generated native assets precede the installed fallback',async t=
 
 test('only explicitly configured maintained POST reads forward JSON to the fixed authority',async t=>{const {port,calls,authorityPort}=await setup(t,{readPostPaths:['/api/work-continuity/understanding']});const body=JSON.stringify({request:{scope:{kind:'project',parentStudyId:'synthetic'},hash:'unchanged'}});const r=await request(port,'/api/work-continuity/understanding',{method:'POST',headers:{'content-type':'application/json',origin:`http://localhost:${port}`},body});assert.equal(r.status,200);assert.equal(calls.length,1);assert.equal(calls[0].method,'POST');assert.equal(calls[0].body,body);assert.equal(calls[0].headers.origin,`http://127.0.0.1:${authorityPort}`);assert.equal(calls[0].headers.authorization,undefined);assert.equal((await request(port,'/api/work-continuity/assign',{method:'POST',headers:{'content-type':'application/json'},body})).status,423);assert.equal(calls.length,1);});
 test('POST read configuration and JSON boundaries refuse before the authority',async t=>{
- for(const name of ['/api/state','/api/work-continuity/assign','/api/magazine/check','/api/magazine/send-check','/api/study-draft/inspect?x=1'])assert.throws(()=>createReviewConnection({readPostPaths:[name]}));
+ for(const name of ['/api/state','/api/work-continuity/assign','/api/magazine/write','/api/magazine/send-check','/api/study-draft/inspect?x=1'])assert.throws(()=>createReviewConnection({readPostPaths:[name]}));
  const {port,calls}=await setup(t,{readPostPaths:['/api/study-draft/history-preview']});
  const cases=[
   {status:415,headers:{'content-type':'text/plain'},body:'{}'},

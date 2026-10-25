@@ -32,7 +32,7 @@ function validPath(raw){
 }
 // Same flat, passive image namespaces as fixture-overlay.mjs. Other originals
 // are read through the existing /api owner, never by exposing a data directory.
-const READ_POST_PATHS=new Set(['/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts']);
+const READ_POST_PATHS=new Set(['/api/magazine/check','/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts']);
 const NATIVE_CAROUSEL_PATHS=new Set(['/api/study/outputs/copy-retained-carousel','/api/study/outputs/copy-browser-carousel','/api/study/outputs/save','/api/study/outputs/review-words','/api/study/outputs/undo','/api/study/outputs/undo-words']);
 function validateCarouselCorrection(pathname,bytes){
  const input=JSON.parse(bytes.toString('utf8')),object=v=>v&&typeof v==='object'&&!Array.isArray(v),uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),fail=()=>{throw Object.assign(Error('Use the exact saved carousel owner and current revision guards.'),{status:400});};
@@ -210,6 +210,10 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
    const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal}):null;
+   if(postRead&&pathname==='/api/magazine/check'){
+    const input=JSON.parse(readBody.toString('utf8')),path=(value,kind)=>typeof value==='string'&&new RegExp('^Workflow/'+(kind==='DEV'?'3-Develop':'1-Source')+'/'+kind+' - [^/]+\\.md$').test(value)&&!/[\\\x00-\x1f]/.test(value)&&!value.split('/').some(p=>p==='.'||p==='..');
+    if(req.url!==pathname||!input||Array.isArray(input)||Object.keys(input).length!==3||!path(input.draft,'DEV')||!path(input.source,'SRC')||!Array.isArray(input.context)||input.context.length>64||new Set(input.context).size!==input.context.length||input.context.some(p=>!path(p,'CONTEXT')))throw Object.assign(Error('Use the exact saved draft, explicitly linked transcript and context notes.'),{status:400});
+   }
    if(translationProposal){
     const input=validateTranslationProposal(readBody);translationPermissionCurrent?.();
     const current=await translationSnapshot(upstream,timeoutMs),sessions=Array.isArray(current.sessions)?current.sessions.filter(s=>s.id===input.sessionId):[];

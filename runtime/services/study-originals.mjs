@@ -6,8 +6,9 @@ const MAX_MARKDOWN_BYTES = 2 * 1024 * 1024;
 const MAX_JOB_BYTES = 64 * 1024;
 const JOB_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Every path here is deliberately enumerated. This module never accepts a path
-// or project slug from the HTTP caller.
+// Every readable path is deliberately enumerated in the trusted catalog. A
+// check-input selector must match its configured parent/part/path exactly; it
+// never grants access to a caller-chosen file.
 
 function stateError(message, status = 400) {
   const error = new Error(message);
@@ -83,7 +84,45 @@ export function createStudyOriginals({ vaultRoot, filesRoot, catalog={projects:{
   const files = checkedRoot(filesRoot);
   const configuredVault = path.resolve(vaultRoot);
   const configuredFiles = path.resolve(filesRoot);
+  const checkDrafts = structuredClone(DRAFTS);
+  const vaultStat = fs.statSync(vault);
+  const rootIdentity = { scheme: 'canonical-directory-sha256-v1', fingerprint: digest(vault) };
   return {
+    checkInputs(input) {
+      const keys = ['parentStudyKey', 'partKey', 'draftPath', 'expectedDraftHash'];
+      if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length !== keys.length || keys.some(key => !Object.hasOwn(input, key))) throw stateError('Exact draft check identity is required.');
+      for (const key of keys) {
+        const limit = key === 'draftPath' ? 4096 : key === 'expectedDraftHash' ? 64 : 256;
+        if (typeof input[key] !== 'string' || !input[key].trim() || input[key].length > limit || /[\u0000-\u001f\u007f]/.test(input[key])) throw stateError('Invalid draft check identity.');
+      }
+      if (!/^[0-9a-f]{64}$/.test(input.expectedDraftHash)) throw stateError('Invalid draft check hash.');
+      let currentVault;
+      try {
+        currentVault = checkedRoot(configuredVault);
+        const stat = fs.statSync(currentVault);
+        if (currentVault !== vault || stat.dev !== vaultStat.dev || stat.ino !== vaultStat.ino) throw stateError('Original source root changed.', 409);
+      } catch { throw stateError('Original source root changed or is unavailable.', 409); }
+      // A caller can only select the exact maintained relationship. No path,
+      // title or nearby-source inference confers a relationship or ownership.
+      const matches = Object.values(checkDrafts).filter(config => config.parentStudyKey === input.parentStudyKey && config.partKey === input.partKey && config.path === input.draftPath);
+      if (!matches.length) throw stateError('No configured check inputs match this draft.', 404);
+      if (matches.length !== 1 || Object.values(checkDrafts).filter(config => config.path === input.draftPath).length !== 1) throw stateError('Configured draft check identity is ambiguous.', 409);
+      const config = matches[0], paths = new Set([config.path]);
+      if (!Array.isArray(config.support)) throw stateError('Configured draft support is invalid.', 409);
+      for (const support of config.support) {
+        if (!Array.isArray(support) || support.length !== 2 || typeof support[1] !== 'string' || paths.has(support[0])) throw stateError('Configured draft support is ambiguous.', 409);
+        resolveExact(currentVault, support[0], { missing: true });
+        paths.add(support[0]);
+      }
+      const current = originalDraft(currentVault, config);
+      if (current.hash !== input.expectedDraftHash) throw stateError('Original draft changed before checking. Refresh before checking.', 409);
+      const refs = new Map(config.support.filter(([, label]) => ['source', 'context'].includes(canonicalDraftRole(label))).map(([relative, label]) => [relative, readMarkdown(currentVault, relative, label)]));
+      const finalVault = checkedRoot(configuredVault), finalStat = fs.statSync(finalVault);
+      if (finalVault !== vault || finalStat.dev !== vaultStat.dev || finalStat.ino !== vaultStat.ino) throw stateError('Original source root changed during checking.', 409);
+      const reference = role => config.support.filter(([, label]) => canonicalDraftRole(label) === role).map(([relative]) => ({ path: relative, hash: refs.get(relative).hash ?? null, role }));
+      const metadata = { schema: 'ar-create.study-original-inputs.v1', rootIdentity: { ...rootIdentity }, parentStudyKey: input.parentStudyKey, partKey: input.partKey, draftPath: input.draftPath, draftHash: current.hash, sources: reference('source'), contexts: reference('context') };
+      return { ...metadata, revision: digest(JSON.stringify(metadata)) };
+    },
     list(projectKey) {
       if (!Object.hasOwn(PROJECTS, projectKey)) throw stateError('Unsupported original project.', 404);
       const project = PROJECTS[projectKey];
