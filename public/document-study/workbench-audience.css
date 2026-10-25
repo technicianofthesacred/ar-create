@@ -70,3 +70,6 @@ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-
 @media(max-width:760px){
  html:not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-output{font-size:0!important}
 }
+
+/* Working-draft readiness below names this state; avoid a third header row. */
+#workspace.wb-audience:has([data-output-kind="magazine-working"]) #c3-surface-bar>[data-review-state]{display:none!important}
