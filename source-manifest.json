@@ -798,7 +798,7 @@
     {
       "path": "public/document-study/research-standard.js",
       "sourceSha256": "b5857ecdb39c7b6512a7fef97d69dbd4574f129d13e26ae1269fb27df0bbd85c",
-      "candidateSha256": "fb87306ae4c54724a191d64ab89891b096ec87228efdbc8646d559199ba2c606",
+      "candidateSha256": "f101d73d154d873e72b014e1dbf4c21bc11bbdb63fbb5b247d6dbf008e22f881",
       "adapted": false
     },
     {
@@ -4114,6 +4114,10 @@
     {
       "path": "tests/source-location-browser.test.mjs",
       "candidateSha256": "6c4a488c1220ebe3f4f38e009a7559d04a6e7482c6ea4ce7e97e38d6104b2d7e"
+    },
+    {
+      "path": "tests/research-progressive-loading.test.mjs",
+      "candidateSha256": "d447ee007191229957eaea8949878f5912ff163d90e79508477f5f293dfd2e4b"
     }
   ],
   "dependencyRepair": {
