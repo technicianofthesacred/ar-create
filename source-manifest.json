@@ -264,7 +264,7 @@
     {
       "path": "runtime/services/magazine/openai-translation.mjs",
       "sourceSha256": "da3d877bd8ee5e6c1c0e8bf55904381021c99a65fa512226772d81d62043f046",
-      "candidateSha256": "72d64fbcf894347cb1635f4e560fbab6c535a1be4085426bcc56830a6d0059c1",
+      "candidateSha256": "5623e81ad0cd94e98484fbc4ceeaefc1e8ed05686f5b673c0a11eef05a6ce078",
       "adapted": true
     },
     {
@@ -2137,7 +2137,7 @@
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "bc53e689295415f902f98d7209690b01795258ff669fe310e9aa7cda253e2ad1"
+      "candidateSha256": "52e7f638ade806154ef9bd9772017ca167b24b6d68790df0add59cdb6f1c083a"
     },
     {
       "path": "package.json",
@@ -2345,7 +2345,7 @@
     },
     {
       "path": "runtime/services/source-sessions.mjs",
-      "candidateSha256": "9f40d7f8ae5e363a91ccb4959d7a693c08f9071c40606673594cb70978fcad72"
+      "candidateSha256": "ad3191fd989b69eaf2ea2042f86d184864ab7ad011da55e0d826a61c6817bb65"
     },
     {
       "path": "runtime/services/imported-transcript-manager.mjs",
@@ -2365,7 +2365,7 @@
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "1dcee6bd415847c45924c92029c122ac318907e5b88204f2167109c848ed808b"
+      "candidateSha256": "fd9a2e6c61f99147594ea430d7d7462d0b29042c9fe38bb11d455f33dd996baa"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "ba970c027dc5330ac39c790ff3963e324d6452c4f623379a9edf99c502758b49"
+      "candidateSha256": "361f548bc1c1f8ae7e8e8a102de26690871a15b9b3c9054e6d1ac14f4afaeb9b"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -3677,11 +3677,11 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "bf05c9c575a3a8defda0d81ab49c19d85fb083cecdf088c147340a03d34a9732"
+      "candidateSha256": "66e9283c9b9e4068247520ad56adfec16f5d766204c9da6619c813cab34e8235"
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "b57a5155780f22e3b3f20266d8e583ecaa41a991fc9940909e7cbf8f1406daf1"
+      "candidateSha256": "2810fc9b5e8ee7ad33fd9bb91fa9b6765b99ef80e9d5dbdbe2a1c323c0522458"
     },
     {
       "path": "tests/existing-work.test.mjs",
@@ -4118,6 +4118,62 @@
     {
       "path": "tests/research-progressive-loading.test.mjs",
       "candidateSha256": "d447ee007191229957eaea8949878f5912ff163d90e79508477f5f293dfd2e4b"
+    },
+    {
+      "path": "public/document-study/conversation-translation-bridge.js",
+      "candidateSha256": "cb01420c4f41b864370e136f403aaf69ca78a8e7e552003bf71805ca8f7e6e9f"
+    },
+    {
+      "path": "runtime/services/kept-source-translation-requests.mjs",
+      "candidateSha256": "6360fef87d5948739634895dce7d14606203f71b9e6907ec72d134580ebabdee"
+    },
+    {
+      "path": "runtime/services/magazine/kept-conversation-translation.mjs",
+      "candidateSha256": "6215cb88af41eada848148c7ba75214dac94a1ef5faf63e688426a411265902b"
+    },
+    {
+      "path": "tests/conversation-translation-bridge.test.mjs",
+      "candidateSha256": "75a6c6edadea708ebeeea898e9d82643385e95432b208254acd9e260957a536c"
+    },
+    {
+      "path": "tests/fixtures/kept-source-translation-proxy-demo.mjs",
+      "candidateSha256": "f6bc573d1a18fe083f3fa2fbaea01156ce9728ac06c533be2a9de7b880cddf0f"
+    },
+    {
+      "path": "tests/fixtures/kept-source-translation-reader-demo.mjs",
+      "candidateSha256": "316c7c5d893d8a6b190a6e80e722e4277c4a63fd18402636731d34dd365a4594"
+    },
+    {
+      "path": "tests/fixtures/translation-bridge-demo.mjs",
+      "candidateSha256": "82a741b7b5fbf48f3f0ae49fd0ad33e1b1d7b9671eafb895eb93116a1a664044"
+    },
+    {
+      "path": "tests/helpers/kept-source-translation-fixture.mjs",
+      "candidateSha256": "ea94151ca77b1bf3b5a782f94be8ccdec7b7ff2bf90dfbea5913ecd92ace85e9"
+    },
+    {
+      "path": "tests/kept-conversation-translation.test.mjs",
+      "candidateSha256": "15fb383a7ecaf96a2089dba25b75c0eb714389a7c606f4cd357a2a65b3bf664c"
+    },
+    {
+      "path": "tests/kept-source-translation-http.test.mjs",
+      "candidateSha256": "0f7e64b5ba4790bd2a6dc99c7c33cb0e39dde9b4ec2f48ee41d1f8813cc48c55"
+    },
+    {
+      "path": "tests/kept-source-translation-reader.test.mjs",
+      "candidateSha256": "59873f5031452171c41420947e35a0f48e69df8e3e8d6db3140b9e12ad673d88"
+    },
+    {
+      "path": "tests/kept-source-translation-requests.test.mjs",
+      "candidateSha256": "453c9d340270f28a0658beda19ccd8051393ad727d33815ef36ad6398856fd39"
+    },
+    {
+      "path": "tests/kept-translation-host-proxy.test.mjs",
+      "candidateSha256": "2fb16dae4ae5c5bb5c0c21163bb5cd988db35f67dbe3d9837fe515408be4fe99"
+    },
+    {
+      "path": "tests/kept-translation-normal-host.test.mjs",
+      "candidateSha256": "a0a401f3c261429c1a3a6a96ab2394e91e745bbbd35f81ad439f0888209f14b7"
     }
   ],
   "dependencyRepair": {

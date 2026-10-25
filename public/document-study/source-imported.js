@@ -17,6 +17,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   const drafts=stored.drafts && typeof stored.drafts==='object'?stored.drafts:{};
   const contextualCopy=new Map();
   const translationBatches=new Map();
+  const translationReviews=new Map();
   let contextView=null, showOriginal=false,showTiming=false,navigationEpoch=0;
   let data={revision:null,sessions:[],notes:{}}, loaded=false, loading=false, loadError='', notConnected=false, disposed=false, panel=null, stamp='', refreshQueued=false,refreshJob=null;
   const active = () => { const p=contextView?.project||getProject(); return p?.view==='record' && Number(p.viewedStage)===2 ? p:null; };
@@ -34,6 +35,39 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     const d=drafts[draftKey(p,s,t)];if(!d)return;
     if(node.textContent!==d.text)node.textContent=d.text;node.dataset.sourceReaderField='text';
   }
+  const reviewKey=(p,s)=>JSON.stringify([p.id,s.id]);
+  const sessionDirty=(p,s)=>Object.keys(drafts).some(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}});
+  function reviewCurrent(review,s){const c=review?.result?.sourceContext;return c&&c.sessionId===s.id&&c.sourceId===s.sourceId&&c.expectedRevision===data.revision&&c.expectedSourceHash===s.sourceHash;}
+  function reviewHTML(p,s){
+    const review=translationReviews.get(reviewKey(p,s));if(!review)return '';
+    if(review.state==='proposal-ready'&&!reviewCurrent(review,s)){review.state='stale';review.message='The saved source changed. These proposals cannot be accepted; prepare the current conversation again.';}
+    const message=review.message||review.result?.message||'';
+    if(review.state!=='proposal-ready')return `<p class="small" role="status" data-source-translation-state="${esc(review.state)}">${esc(message)}</p>`;
+    const proposals=review.result.proposals,selected=proposals.find(t=>t.turnId===review.selectedTurnId)||proposals[0],turn=s.turns.find(t=>t.id===selected?.turnId);
+    if(!selected||!turn)return '<p class="small" role="status">No current English proposal is available.</p>';
+    review.selectedTurnId=selected.turnId;
+    return `<details class="source-reader-details" open><summary>English proposals · ${proposals.length} · not saved</summary><p class="small" role="status" data-source-translation-state="proposal-ready">Review one remark at a time. Accepting saves only the selected remark through the existing correction history.</p><label>Remark <select data-source-translation-select>${proposals.map((t,i)=>`<option value="${esc(t.turnId)}"${t.turnId===selected.turnId?' selected':''}>${i+1} of ${proposals.length} · ${esc(s.turns.find(x=>x.id===t.turnId)?.speaker||'Supplied speaker')}</option>`).join('')}</select></label><p class="small">Current saved wording</p><p data-source-translation-current>${esc(turn.text)}</p><p class="small">Proposed English · not saved</p><p data-source-translation-proposal>${esc(selected.text)}</p>${selected.uncertainty?`<p class="small">Uncertainty: ${esc(selected.uncertainty)}</p>`:''}<div class="source-reader-actions">${button('accept-translation','Save English for this remark',!correctionsAllowed()||!!room(p).pending||sessionDirty(p,s))}</div><p class="small">Saving requires the existing correction permission and no unfinished local corrections.</p></details>`;
+  }
+  function paintReview(controlsOnly=false){const p=active(),s=p&&selected(p);if(!p||!s||!panel?.isConnected)return;const target=panel.querySelector('[data-source-translation-review]');if(target&&!controlsOnly)target.innerHTML=reviewHTML(p,s);const accept=panel.querySelector('[data-source-reader-action="accept-translation"]');if(accept)accept.disabled=!correctionsAllowed()||!!room(p).pending||sessionDirty(p,s)||!reviewCurrent(translationReviews.get(reviewKey(p,s)),s);const b=panel.querySelector('[data-source-reader-action="translate"]');if(b)b.disabled=loading||!!room(p).pending||sessionDirty(p,s)||translationReviews.get(reviewKey(p,s))?.state==='busy';}
+  async function generateTranslation(p){
+    const s=selected(p);if(!s||loading||room(p).pending||sessionDirty(p,s))return;
+    const key=reviewKey(p,s);if(translationReviews.get(key)?.state==='busy')return;
+    const input={sessionId:s.id,expectedRevision:data.revision,expectedSourceHash:s.sourceHash};let batch;try{batch=prepareTranslationBatch(s,data.revision);}catch{translationReviews.set(key,{state:'error',message:'The source turn identities are incomplete. Refresh before preparing English proposals.'});paintReview();return;}
+    const review={state:'busy',message:'Preparing English proposals for this conversation. Saved wording is unchanged.'};translationReviews.set(key,review);paintReview();
+    try{const response=await request('/api/source-sessions/translation-proposals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});const result=await response.json();
+      if(!response.ok){review.state=response.status===409?'stale':'error';review.message=result?.error||'English proposals could not be prepared. Saved wording is unchanged.';return;}
+      if(!result||!['proposal-ready','ready','unavailable','stale','error'].includes(result.state))throw Error('The translation response is incomplete.');
+      if(result.state==='proposal-ready'){const c=result.sourceContext,ids=new Set(batch.gapIds);if(result.applied!==false||!c||c.sessionId!==input.sessionId||c.sourceId!==s.sourceId||c.expectedRevision!==input.expectedRevision||c.expectedSourceHash!==input.expectedSourceHash||!Array.isArray(result.proposals)||result.proposals.length!==ids.size||result.proposals.some(t=>!ids.delete(t.turnId)||typeof t.text!=='string'||!t.text.trim()))throw Error('The translation result does not match this exact conversation.');}
+      review.state=result.state;review.result=result;review.message=result.message||'';
+    }catch(error){review.state='error';review.message=error.message||'English proposals could not be prepared. No source wording was changed.';}
+    finally{paintReview();}
+  }
+  function acceptTranslation(p){
+    const s=selected(p),r=room(p),review=s&&translationReviews.get(reviewKey(p,s));if(!s||!correctionsAllowed()||r.pending||sessionDirty(p,s)||review?.state!=='proposal-ready'||!reviewCurrent(review,s))return;
+    const proposal=review.result.proposals.find(t=>t.turnId===review.selectedTurnId),turn=s.turns.find(t=>t.id===proposal?.turnId);if(!proposal||!turn)return;
+    const c=review.result.sourceContext,body={operationId:makeId(),expectedRevision:c.expectedRevision,expectedSourceHash:c.expectedSourceHash,sessionId:s.id,turnId:turn.id,speaker:turn.speaker||'',text:proposal.text};
+    r.pending={kind:'edit',body,uncertain:false,translation:true};saveLocal();return send(p);
+  }
   function html(p) {
     const r=room(p),s=selected(p),nav=r.navigation, pending=r.pending;
     const teaHref=loaded&&!loading&&!loadError&&!pending&&s&&!Object.keys(drafts).some(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}})?teaLibraryURL(s):null;
@@ -44,13 +78,14 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
       const notes=namespaced(renderConversationNotes(s,data.notes));
       const hasDraft=Object.keys(drafts).some(k=>{try{const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}});
       const readiness=translationReadiness(s,{loading,error:loadError,stale:hasDraft||!!pending});
+      if(readiness.state==='unavailable'&&readiness.count)readiness.message=`${readiness.count} Chinese remark${readiness.count===1?' needs':'s need'} English. Prepare conversation proposals to check availability; saved wording stays unchanged.`;
       if(hasDraft||pending)readiness.message='Save or cancel local corrections before preparing conversation translation.';
       translationBatches.delete(s.id);
       if(!loading&&!loadError&&!hasDraft&&!pending)try{translationBatches.set(s.id,prepareTranslationBatch(s,data.revision));}catch{readiness.state='error';readiness.message='Conversation turn identities are incomplete. Refresh before preparing translation.';}
       const validNav=nav && nav.sourceHash===s.sourceHash && nav.ids.every(id=>s.turns.some(t=>t.id===id));
-      body=`<article><header class="source-reader-title"><h3>${esc(s.title||'Untitled conversation')}</h3>${s.location?`<span class="small">${esc(s.location)}</span>`:''}<span class="source-reader-attribution small" title="Supplied source labels do not establish speaker identities. Review individual remarks before attribution.">Speaker labels unverified</span></header><p class="source-reader-translation-readiness small" data-source-translation-readiness="${readiness.state}" role="status">${esc(readiness.message)}</p><div data-source-reader-notes tabindex="-1">${notes||'<p class="small">No reviewed notes are connected to this conversation.</p>'}</div>${validNav?`<nav class="source-reader-actions" aria-label="Supporting passages">${button('previous','Previous',nav.index===0)}<span>${nav.index+1} of ${nav.ids.length}</span>${button('next','Next',nav.index>=nav.ids.length-1)}${button('notes','Back to notes')}</nav>`:nav?'<p class="source-reader-conflict">The supporting passage belongs to earlier wording. Review the notes before following it.</p>':''}<div data-source-reader-dialogue>${namespaced(renderSourceGroups(s))}</div>${s.undoOperationId?`<div class="source-reader-actions">${button('undo','Undo last correction',!!pending||Object.keys(drafts).some(k=>{try {const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}}))}</div>`:''}<details class="source-reader-details"><summary>Source & versions</summary>${button('timing',showTiming?'Hide timestamps':'Show timestamps')}${button('speaker','Correct speaker')}<p>Version ${esc(s.version??'unspecified')}. Original source and earlier wording are preserved.</p><p>Source: ${esc(s.sourceId)}<br>Revision: ${esc(data.revision)}<br>Source fingerprint: ${esc(s.sourceHash)}</p></details></article>`;
+      body=`<article><header class="source-reader-title"><h3>${esc(s.title||'Untitled conversation')}</h3>${s.location?`<span class="small">${esc(s.location)}</span>`:''}<span class="source-reader-attribution small" title="Supplied source labels do not establish speaker identities. Review individual remarks before attribution.">Speaker labels unverified</span></header><p class="source-reader-translation-readiness small" data-source-translation-readiness="${readiness.state}" role="status">${esc(readiness.message)}</p><div data-source-translation-review>${reviewHTML(p,s)}</div><div data-source-reader-notes tabindex="-1">${notes||'<p class="small">No reviewed notes are connected to this conversation.</p>'}</div>${validNav?`<nav class="source-reader-actions" aria-label="Supporting passages">${button('previous','Previous',nav.index===0)}<span>${nav.index+1} of ${nav.ids.length}</span>${button('next','Next',nav.index>=nav.ids.length-1)}${button('notes','Back to notes')}</nav>`:nav?'<p class="source-reader-conflict">The supporting passage belongs to earlier wording. Review the notes before following it.</p>':''}<div data-source-reader-dialogue>${namespaced(renderSourceGroups(s))}</div>${s.undoOperationId?`<div class="source-reader-actions">${button('undo','Undo last correction',!!pending||Object.keys(drafts).some(k=>{try {const ids=JSON.parse(k);return ids[0]===p.id&&ids[1]===s.id;}catch{return false;}}))}</div>`:''}<details class="source-reader-details"><summary>Source & versions</summary>${button('timing',showTiming?'Hide timestamps':'Show timestamps')}${button('speaker','Correct speaker')}<p>Version ${esc(s.version??'unspecified')}. Original source and earlier wording are preserved.</p><p>Source: ${esc(s.sourceId)}<br>Revision: ${esc(data.revision)}<br>Source fingerprint: ${esc(s.sourceHash)}</p></details></article>`;
     }
-    return `<div class="source-reader-toolbar">${selector}${button('refresh',loading?'Loading…':notConnected?'Check connection':'Refresh',loading||!!pending)}${teaAction}</div><p data-source-reader-status role="status">${esc(loadError||r.message||(!loaded?'Loading kept conversations…':!data.sessions.length?'No kept conversations are connected yet. Existing source records remain available below.':!s?'Choose a conversation from the shared Library. No conversation has been linked to this project here.':''))}</p>${pending?`<p class="source-reader-conflict">${pending.uncertain?'The response was interrupted. Retry the same request to find out whether it was saved.':'Saving correction…'}</p>${pending.uncertain?button('retry','Retry same request'):''}`:''}${body}`;
+    return `<div class="source-reader-toolbar">${selector}${button('refresh',loading?'Loading…':notConnected?'Check connection':'Refresh',loading||!!pending)}${teaAction}${s?button('translate','Prepare English proposals',loading||!!pending||sessionDirty(p,s)||translationReviews.get(reviewKey(p,s))?.state==='busy'):''}</div><p data-source-reader-status role="status">${esc(loadError||r.message||(!loaded?'Loading kept conversations…':!data.sessions.length?'No kept conversations are connected yet. Existing source records remain available below.':!s?'Choose a conversation from the shared Library. No conversation has been linked to this project here.':''))}</p>${pending?`<p class="source-reader-conflict">${pending.uncertain?'The response was interrupted. Retry the same request to find out whether it was saved.':'Saving correction…'}</p>${pending.uncertain?button('retry','Retry same request'):''}`:''}${body}`;
   }
   function paint() {
     const p=active(); if(!p||!panel?.isConnected||panel.dataset.sourceReaderProject!==p.id)return;
@@ -153,10 +188,10 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     const r=room(p),pending=r.pending;if(!pending||pending.sending)return;pending.sending=true;pending.uncertain=false;saveLocal();paint();
     try{
       const response=await request(`/api/source-sessions/${pending.kind}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pending.body)});
-      if(response.status===409){if(pending.key&&drafts[pending.key])drafts[pending.key].conflict=true;r.pending=null;r.message='This conversation changed. Your unsaved wording is preserved. Compare it with the current wording before continuing.';await refresh();return;}
+      if(response.status===409){if(pending.translation)translationReviews.set(JSON.stringify([p.id,pending.body.sessionId]),{state:'stale',message:'The source changed. Proposed English was not saved; local wording is preserved. Prepare the current conversation again.'});if(pending.key&&drafts[pending.key])drafts[pending.key].conflict=true;r.pending=null;r.message='This conversation changed. Your unsaved wording is preserved. Compare it with the current wording before continuing.';await refresh();return;}
       if(!response.ok){if(response.status>=500)throw Error('The response was interrupted.');r.pending=null;r.message='The correction was refused. Your unsaved wording is preserved.';return;}
       await response.json(); // Receipt is historical; never replace current state from it.
-      if(pending.key)delete drafts[pending.key];r.pending=null;r.turnId='';r.message=pending.kind==='undo'?'Last correction undone.':'Correction saved. Notes may need review.';
+      if(pending.translation)translationReviews.set(JSON.stringify([p.id,pending.body.sessionId]),{state:'stale',message:'Selected-remark request confirmed. Current saved wording is shown; other proposals were not accepted.'});if(pending.key)delete drafts[pending.key];r.pending=null;r.turnId='';r.message=pending.kind==='undo'?'Last correction undone.':'Correction saved. Notes may need review.';
       await refresh();
     }catch {pending.uncertain=true;r.message='Your wording and complete request are kept on this device.';}
     finally{pending.sending=false;saveLocal();paint();}
@@ -173,7 +208,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     const p=active();if(!p||panel?.dataset.sourceReaderProject!==p.id)return;
     const r=room(p),note=event.target.closest('[data-source-reader-note-section]'),action=event.target.closest('[data-source-reader-action]')?.dataset.sourceReaderAction;
     if(note){event.preventDefault();follow(p,note.dataset.sourceReaderNoteSection,Number(note.dataset.sourceReaderNoteIndex));return;}
-    if(action){event.preventDefault();if(action==='speaker'){const s=selected(p),t=s?.turns.find(t=>t.id===r.turnId);if(t&&correctionsAllowed()&&!r.pending){ensureDraft(p,s,t);saveLocal();syncTools(p,s,t);const details=panel.querySelector('.source-reader-speaker-edit');if(details)details.open=true;panel.querySelector('[data-source-reader-field="speaker"]')?.focus({preventScroll:true});}return;}if(action==='timing'){showTiming=!showTiming;paint();return;}if(action==='refresh')return refresh();if(action==='save')return submit(p,'edit');if(action==='undo')return submit(p,'undo');if(action==='retry')return send(p);
+    if(action){event.preventDefault();if(action==='translate')return generateTranslation(p);if(action==='accept-translation')return acceptTranslation(p);if(action==='speaker'){const s=selected(p),t=s?.turns.find(t=>t.id===r.turnId);if(t&&correctionsAllowed()&&!r.pending){ensureDraft(p,s,t);saveLocal();syncTools(p,s,t);const details=panel.querySelector('.source-reader-speaker-edit');if(details)details.open=true;panel.querySelector('[data-source-reader-field="speaker"]')?.focus({preventScroll:true});}return;}if(action==='timing'){showTiming=!showTiming;paint();return;}if(action==='refresh')return refresh();if(action==='save')return submit(p,'edit');if(action==='undo')return submit(p,'undo');if(action==='retry')return send(p);
       if(action==='cancel'){const s=selected(p),t=s?.turns.find(t=>t.id===r.turnId);if(t&&!r.pending)delete drafts[draftKey(p,s,t)];r.turnId='';saveLocal();paint();}
       if(action==='notes'){r.navigation=null;saveLocal();paint();panel.querySelector('[data-source-reader-notes]')?.focus();panel.querySelector('[data-source-reader-notes]')?.scrollIntoView?.({block:'start'});}
       if(action==='previous'||action==='next'){const s=selected(p),n=r.navigation;if(n?.sourceHash===s?.sourceHash){n.index=Math.max(0,Math.min(n.ids.length-1,n.index+(action==='next'?1:-1)));saveLocal();paint();scrollPassage();}}
@@ -188,10 +223,10 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     if(field==='text')selectCaret(p,t.id);
     const d=ensureDraft(p,s,t);d[field]=field==='text'?editableWords(event.target):event.target.value;saveLocal();
     // Tool state changes only after an actual edit, outside the speech flow.
-    if(field==='text')syncTools(p,s,t);
+    if(field==='text')syncTools(p,s,t);paintReview(true);
     const b=panel.querySelector('[data-source-reader-action="save"]');if(b)b.disabled=stale(d,s)||!d.text.trim();
   }
-  function onChange(event){if(!event.target.matches?.('[data-source-reader-select]'))return;const p=active();if(!p||room(p).pending)return;navigationEpoch++;const r=room(p);r.sessionId=event.target.value;r.turnId='';r.navigation=null;r.message='';saveLocal();paint();}
+  function onChange(event){if(event.target.matches?.('[data-source-translation-select]')){const p=active(),s=p&&selected(p),review=s&&translationReviews.get(reviewKey(p,s));if(review){review.selectedTurnId=event.target.value;paintReview();}return;}if(!event.target.matches?.('[data-source-reader-select]'))return;const p=active();if(!p||room(p).pending)return;navigationEpoch++;const r=room(p);r.sessionId=event.target.value;r.turnId='';r.navigation=null;r.message='';saveLocal();paint();}
   function onSubmit(event){if(event.target.matches?.('[data-source-reader-edit]')){event.preventDefault();const p=active();if(p)submit(p,'edit');}}
   function restoreLegacy(){restoreContextualCopy();doc.querySelectorAll('[data-source-reader-legacy]').forEach(n=>{const parent=n.parentNode;for(const child of [...n.childNodes])if(child.tagName!=='SUMMARY')parent.insertBefore(child,n);n.remove();});}
   function mount(){
@@ -206,7 +241,7 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
   const observer=observe?new win.MutationObserver(()=>mount()):null;observer?.observe(doc.getElementById('app')||doc.body,{childList:true,subtree:true});
   // Returning browser focus must not replace prose under the incoming pointer.
   // Live source events and the explicit Refresh action retain freshness checks.
-  let liveOff=null,liveTimer=null;const liveHook=()=>{liveOff=win.c3Shell?.live?.on?.({},event=>{if(disposed||!active())return;if(!event.reset&&!(event.scope?.kind==='source'||/^source-sessions/.test(event.kind||'')))return;win.clearTimeout(liveTimer);liveTimer=win.setTimeout(()=>{if(!disposed&&active())void refresh();},250);})||null;};
+  let liveOff=null,liveTimer=null;const liveHook=()=>{liveOff=win.c3Shell?.live?.on?.({},event=>{if(disposed||!active())return;if(!event.reset&&event.kind==='source-sessions.translation-proposals')return;if(!event.reset&&!(event.scope?.kind==='source'||/^source-sessions/.test(event.kind||'')))return;win.clearTimeout(liveTimer);liveTimer=win.setTimeout(()=>{if(!disposed&&active())void refresh();},250);})||null;};
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',liveHook,{once:true});else win.setTimeout(liveHook,0);
   // In-flight transport does not survive reload; preserve its exact idempotent request.
   for(const r of Object.values(projects))if(r.pending){r.pending.sending=false;r.pending.uncertain=true;}

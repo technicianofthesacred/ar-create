@@ -246,6 +246,7 @@ export function createRouteMap(services) {
       '/api/study-draft/check': {GET:()=>draftCall(()=>studyDraftChecks.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})})),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
 
       '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
+      '/api/source-sessions/translation-proposals': {POST:input=>{if(typeof sourceSessions?.proposeTranslation!=='function')throw new StateError('Kept-conversation proposals are not connected in this workspace.',503);return sourceSessions.proposeTranslation(input);}},
       '/api/source-sessions/edit': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('edit',input);}},
       '/api/source-sessions/undo': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('undo',input);}},
       '/api/material/folder/open': {POST:input=>materialFolder.open(input)},
