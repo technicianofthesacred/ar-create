@@ -142,3 +142,24 @@ test('delayed save stays bound to its owner while Preview and a different part a
   assert.deepEqual(retainedWriting(f, sibling), second); assertEditingPosition(f, position, 7, 12, {editor: 91, page: 122});
   assert.equal(f.calls.filter(call => call.path.endsWith('/save')).length, 1, 'mode switches never submit a second owner save');
 });
+
+test('Check passage route uses the maintained preview editor, scrolls exact stable ID and marks only one passage without caret or owner reread',async t=>{
+ const f=fixture(t);await f.open();f.w.viewPhase(7);await tick();const before=retainedWriting(f),requests=f.calls.length,scrolls=[];
+ f.w.HTMLElement.prototype.scrollIntoView=function(options){scrolls.push({id:this.dataset.block,options});};
+ assert.equal(await f.w.studyDraft.focusPassage(primary+'-paragraph',{edit:false,highlight:true}),true);
+ assert.equal(f.w.studyDraft.viewMode(),'preview');const editor=f.d.getElementById('manuscript');assert.equal(editor.getAttribute('contenteditable'),'false');assert.equal(f.d.querySelector('[data-draft-passage]'),null);assert.equal(scrolls.at(-1).id,primary+'-paragraph');assert.equal(f.d.activeElement===editor,false);assert.equal(f.w.getSelection().rangeCount,0);assert.equal(f.d.querySelectorAll('[data-draft-passage-active]').length,1);assert.deepEqual(retainedWriting(f),before);await tick();assert.equal(f.calls.length,requests,'exact passage routing must not restart an owner read that repaints after scrolling');
+ const target=editor.querySelector('[data-block]');target.removeAttribute('data-draft-passage-active');const previous=f.d.createElement('p');previous.setAttribute('data-draft-passage-active','');editor.before(previous);assert.equal(await f.w.studyDraft.focusPassage(primary+'-paragraph',{edit:false,highlight:true}),true);assert.equal(f.d.querySelectorAll('[data-draft-passage-active]').length,1);assert.equal(target.hasAttribute('data-draft-passage-active'),true);
+});
+test('passage routing refuses duplicate rendered IDs, missing IDs and changed project/proof across awaited navigation',async t=>{
+ for(const change of ['duplicate','project','part','dirty']){
+  const f=fixture(t);await f.open();f.w.viewPhase(7);await tick();let release;const navigation=f.w.viewPhase;
+  f.w.viewPhase=async stage=>{navigation(stage);await new Promise(resolve=>release=resolve);};
+  const scrolls=[];f.w.HTMLElement.prototype.scrollIntoView=function(){scrolls.push(this);};const pending=f.w.studyDraft.focusPassage(primary+'-paragraph',{edit:false,highlight:true});
+  if(change==='duplicate'){const editor=f.d.getElementById('manuscript');editor.append(editor.firstElementChild.cloneNode(true));}
+  if(change==='project')f.p.id='other-project';
+  if(change==='part')await f.open(sibling);
+  if(change==='dirty'){f.w.studyDraft.setViewMode('edit');f.type('Unsent changed words while the route was pending.');}
+  release();assert.equal(await pending,false,change);assert.equal(scrolls.length,0,change);assert.equal(f.d.querySelector('[data-draft-passage-active]'),null,change);
+ }
+ const f=fixture(t);await f.open();assert.equal(await f.w.studyDraft.focusPassage('not-current',{edit:false,highlight:true}),false);
+});

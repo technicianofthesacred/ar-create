@@ -22,3 +22,6 @@ html body[data-write-view="preview"] #app :is(#selectionTools,.hovertools){displ
 html body[data-write-view="preview"] #manuscript{cursor:text;outline:none!important;user-select:text}
 html body[data-write-view="preview"] #manuscript [data-block]{cursor:text}
 html body[data-write-view="preview"] #c3-surface-bar :is(.sb-margin,.sb-focus,.sb-insp,[data-sb-undo]){display:none!important}
+
+/* A check finding marks one existing passage without changing its layout. */
+#app [data-draft-passage-active]{outline:2px solid var(--warm,var(--green));outline-offset:4px;background:var(--sel,transparent);scroll-margin-block:96px}
