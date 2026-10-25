@@ -47,6 +47,24 @@
  }
  let magazineAdapter=null;
  const magazineProject=id=>current().id===id&&window.studyDraft?.currentOwner?.()?.kind==='magazine';
+ function readMagazineEdition(input){if(!magazineAdapter?.readWorkingEdition||!magazineProject(input.projectId))throw Error('Choose the exact Magazine working article.');return magazineAdapter.readWorkingEdition(input);}
+ let magazineDownloadBusy=false;
+ async function downloadMagazineEdition(input,{assertCurrent}={}){
+  const q=structuredClone(input);if(typeof assertCurrent!=='function')throw Error('A current article selection guard is required.');
+  if(magazineDownloadBusy)throw Error('An article download is already being prepared.');
+  assertCurrent();if(typeof window.ArStudyOutputHost?.prepareMagazineHtml!=='function'||typeof window.ArStudyOutputHost?.downloadMagazineHtml!=='function')throw Error('Working HTML download is unavailable. Reopen its preview.');
+  magazineDownloadBusy=true;
+  try{
+   const read=await readMagazineEdition(q),exact=JSON.stringify(read);assertCurrent();
+   if(read?.ownerRef?.hash!==q.expectedHash)throw Error('The working article changed. Reopen its preview.');
+   const body=await window.ArStudyOutputHost.prepareMagazineHtml(read);assertCurrent();
+   const fresh=await readMagazineEdition(q);if(JSON.stringify(fresh)!==exact)throw Error('The saved article changed while its download was prepared.');
+   assertCurrent();const title=Array.isArray(read.spec?.title)?read.spec.title.join(' '):read.spec?.title||'Working article';
+   window.ArStudyOutputHost.downloadMagazineHtml(body,{title,hash:read.ownerRef.hash});
+   return Object.freeze({status:'download-prepared',hash:read.ownerRef.hash});
+  }finally{magazineDownloadBusy=false;}
+ }
+
  async function read({projectId}){if(magazineAdapter&&magazineProject(projectId))return magazineAdapter.read({projectId});const r=await catalog(projectId);if(!supported(projectId))return {projectId,outputs:[],existingDraft:null,availability:{state:'unsupported',message:'Saved outputs are not connected for this project.'}};const outputs=[];let blocked='';for(const part of r.parts){const g=group(projectId,part.bindingId);let value;try{value=await readGroup(g);}catch(error){if(missingScope(error)){blocked=error.message;continue;}throw error;}
   outputs.push(...await Promise.all(value.outputs.map(output=>overviewRow(g,output))));
  }
@@ -151,7 +169,7 @@
   if(!r.parts.some(part=>part.bindingId===rootBindingId)||binding?.id!==rootBindingId||binding.parentStudyId!==projectId)throw Error('Open the exact primary working manuscript before leaving this output.');
   disk.selection[projectId]={rootBindingId,outputId:null,mode:null};persist();cancelModes();window.dispatchEvent(new CustomEvent('study-output-selection',{detail:{projectId,outputId:null}}));return null;
  }
- window.studyOutputConnection={read,onAction,readMagazineEdition:input=>{if(!magazineAdapter?.readWorkingEdition||!magazineProject(input.projectId))throw Error('Choose the exact Magazine working article.');return magazineAdapter.readWorkingEdition(input);},recover,flush,selection,selectOutput,clearSelection,setMagazineAdapter(adapter){if(!adapter||typeof adapter.read!=='function'||typeof adapter.onAction!=='function')throw Error('The Magazine output adapter is incomplete.');magazineAdapter=adapter;if(current().view==='record'&&Number(current().viewedStage)===12)void window.outputOverview?.refresh?.();},canvasProof:()=>host?{scope:structuredClone(hostScope),selectedOutputId:host.model.selectedOutputId,writingProof:structuredClone(host.model.writingProof),pending:!!host.pending,browserDraftToken:readBrowserDraft(hostScope,host.model.selectedOutputId)?.token||null}:null};window.addEventListener('storage',event=>{if(event.key!==STORAGE||!isArrange(current()))return;const s=disk.selection[current().id];if(s?.outputId)paintBrowserDraft(group(current().id,s.rootBindingId),s.outputId);});
+ window.studyOutputConnection={read,onAction,readMagazineEdition,downloadMagazineEdition,recover,flush,selection,selectOutput,clearSelection,setMagazineAdapter(adapter){if(!adapter||typeof adapter.read!=='function'||typeof adapter.onAction!=='function')throw Error('The Magazine output adapter is incomplete.');magazineAdapter=adapter;if(current().view==='record'&&Number(current().viewedStage)===12)void window.outputOverview?.refresh?.();},canvasProof:()=>host?{scope:structuredClone(hostScope),selectedOutputId:host.model.selectedOutputId,writingProof:structuredClone(host.model.writingProof),pending:!!host.pending,browserDraftToken:readBrowserDraft(hostScope,host.model.selectedOutputId)?.token||null}:null};window.addEventListener('storage',event=>{if(event.key!==STORAGE||!isArrange(current()))return;const s=disk.selection[current().id];if(s?.outputId)paintBrowserDraft(group(current().id,s.rootBindingId),s.outputId);});
  if(supported(current().id))for(const button of document.querySelectorAll('button[aria-label^="View step 9:"],button[aria-label^="View step 12:"]')){const ninth=button.getAttribute('aria-label').startsWith('View step 9:');button.setAttribute('aria-label',ninth?'View step 9: Arrange saved outputs':'View step 12: Outputs (private register)');const walk=node=>{for(const child of node.childNodes)if(child.nodeType===3){if(['Placed','Photos placed','Confirmed'].includes(child.nodeValue.trim()))child.nodeValue=ninth?'Arrange':'Outputs';}else walk(child);};walk(button);}
  async function resumeSavedCollection(){
   const p=current(),token=epoch,saved=structuredClone(disk.selection[p.id]||null),stamp=JSON.stringify(saved);

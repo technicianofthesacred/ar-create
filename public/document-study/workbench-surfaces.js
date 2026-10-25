@@ -235,7 +235,8 @@
   const root=ws.querySelector('#output-overview .oo-panel');if(!root)return;if(root.querySelector('.oo-row'))window.c3Empty?.reveal?.();root.classList.add('wb-output-tree');add(root,'.oo-register','otree');
   // Project identity is real; it does not infer which source originated an output.
   for(const row of root.querySelectorAll('.oo-row')){if(row.querySelector(':scope>.wb-output-facts'))continue;const facts=make('small','wb-output-facts');for(const n of [row.querySelector('.oo-meta'),row.querySelector(':scope>.oo-state'),row.querySelector(':scope>.oo-delivery')])if(n)facts.append(n);row.append(facts);}
-  let origin=root.querySelector(':scope>.origin');if(!origin&&p.name){
+  const singleMagazine=!!root.querySelector('.oo-row[data-output-kind="magazine-working"]')&&root.querySelectorAll('.oo-row:not([data-output-kind="publication-reference"])').length===1;
+  let origin=root.querySelector(':scope>.origin');if(singleMagazine){origin?.remove();root.querySelector(':scope>.wb-output-origin-heading')?.remove();origin=null;}if(!singleMagazine&&!origin&&p.name){
    const heading=make('h2','sec wb-output-origin-heading','One project, edited separately');
    origin=make('div','origin');const icon=doc.querySelector('[aria-label="View step 12: Outputs (private register)"] svg')?.cloneNode(true);if(icon){icon.setAttribute('aria-hidden','true');origin.append(icon);}
    const copy=make('div','wb-output-origin-copy');copy.append(make('b','',p.name),make('div','dim small','Each output below has its own text and its own state. Changing one does not change the others.'));origin.append(copy);root.querySelector('.oo-heading')?.after(heading,origin);
