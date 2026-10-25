@@ -192,7 +192,10 @@
   event.preventDefault();event.stopPropagation();toggle(n,!isOpen(n));
  },true);
  document.addEventListener('click',event=>{
-  const t=event.target.closest?.('[data-wb-row],[data-wb-fold],[data-wb-open],[data-wb-home],button[data-wb-group]');if(!t)return;
+  const t=event.target.closest?.('[data-wb-row],[data-wb-fold],[data-wb-open],[data-wb-home],button[data-wb-group],[data-wbf-pieces]');if(!t)return;
+  // Pieces uses its maintained browser action, rather than a workflowStep.
+  // Dismiss the phone tool picker without swallowing or replaying that action.
+  if(t.matches('[data-wbf-pieces]')){if(phone()&&!t.disabled){const nav=t.closest('.workflowNavigation');nav?.classList.remove('cr-open');nav?.querySelector('.cr-picker')?.setAttribute('aria-expanded','false');queueMicrotask(decorate);}return;}
   if(t.matches('[data-wb-home]'))return void document.querySelector('[data-tr-home],[data-ht-home]')?.click();
   if(t.matches('[data-wb-group]')){
    const nav=t.closest('.workflowNavigation'),g=t.dataset.wbGroup,already=nav.classList.contains('cr-open')&&nav.dataset.wbGroup===g;
