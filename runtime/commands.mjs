@@ -28,12 +28,14 @@ const UNDO = {
   'POST /api/study/human-direction/write': 'study.human-direction.undo', 'POST /api/concept/save': 'study.human-direction.undo',
   'POST /api/study/share/save': 'study.share.undo', 'POST /api/study/outputs/save': 'study.outputs.undo',
   'POST /api/source-sessions/edit': 'source-sessions.undo',
+  'POST /api/source-sessions/translation-accept': 'source-sessions.undo',
   'POST /api/inquiries/references/propose': 'inquiries.references.undo', 'POST /api/inquiries/direction-references/propose': 'inquiries.direction-references.undo',
   'POST /api/inquiries/save': 'inquiries.learning.undo', 'POST /api/inquiries/update': 'inquiries.learning.undo',
   'POST /api/work-continuity/assign': 'work-continuity.undo', 'POST /api/work-continuity/result': 'work-continuity.undo', 'POST /api/work-continuity/complete': 'work-continuity.undo',
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/source-sessions/translation-accept': ['operationId','expectedRevision','expectedSourceHash','sessionId','turnId','speaker','text','receiptSha256'],
   '/api/magazine/working-draft/prepare': ['storyId','pieceId','edition','expectedHash','operations'],
   '/api/magazine/working-draft/save': ['storyId','pieceId','edition','expectedHash','content','operationId'],
   '/api/magazine/working-draft/edit': ['storyId','pieceId','edition','block','seen','text','operationId'],
@@ -93,7 +95,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
+const HUMAN_ONLY = new Set(['POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -249,6 +251,7 @@ export function createRouteMap(services) {
       '/api/source-sessions/translation-review': {GET:()=>{const keys=['sessionId','expectedRevision','expectedSourceHash'];if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1)||!/^(0|[1-9][0-9]*)$/.test(url.searchParams.get('expectedRevision')||''))throw new StateError('Select the exact saved conversation review.',400);if(typeof sourceSessions?.readTranslationReview!=='function')throw new StateError('Saved conversation review is not connected in this workspace.',503);return sourceSessions.readTranslationReview({sessionId:url.searchParams.get('sessionId'),expectedRevision:Number(url.searchParams.get('expectedRevision')),expectedSourceHash:url.searchParams.get('expectedSourceHash')});}},
       '/api/source-sessions/translation-proposals': {POST:input=>{if(typeof sourceSessions?.proposeTranslation!=='function')throw new StateError('Kept-conversation proposals are not connected in this workspace.',503);return sourceSessions.proposeTranslation(input);}},
       '/api/source-sessions/edit': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('edit',input);}},
+      '/api/source-sessions/translation-accept': {POST:input=>{if(typeof sourceSessions?.acceptTranslation!=='function')throw new StateError('Saved translation review is not connected in this workspace.',503);return stampSourceSession('acceptTranslation',input);}},
       '/api/source-sessions/undo': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('undo',input);}},
       '/api/material/folder/open': {POST:input=>materialFolder.open(input)},
       '/api/material/album': {POST:input=>materialAlbums.add(input)},

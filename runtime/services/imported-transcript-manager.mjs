@@ -78,6 +78,7 @@ export function createTranscriptManager({dataDir,library,requests,store,files,St
   const op=p.operationId?state.operations.find(o=>o.id===p.operationId):null;
   if(p.operationId&&(!op||op.status!=='prepared'||op.sessionId!==p.before.id||op.beforeHash!==p.beforeHash||op.afterHash!==p.afterHash||op.beforeRevision!==state.revision-1||p.history.operationId!==op.id||!['edit','undo'].includes(op.action)))fail('Interrupted operation identity is invalid. Receipt preserved.',409);
   if(canonical(p.history.before)!==canonical(p.before)||canonical(p.history.after)!==canonical(p.next)||p.history.beforeRaw!==p.beforeRaw||p.history.afterRaw!==p.afterRaw||p.history.beforeHash!==p.beforeHash||p.history.afterHash!==p.afterHash)fail('Interrupted history identity is invalid. Receipt preserved.',409);
+  if(canonical(p.history.translationAcceptance)!==canonical(op?.translationAcceptance))fail('Interrupted reviewed correction identity changed. Receipt preserved.',409);
   if(p.history.undoOf&&!state.history.some(h=>h.operationId===p.history.undoOf&&!h.undoneBy))fail('Undo target changed. Receipt preserved.',409);
   const index=state.sessions.findIndex(s=>s.id===p.before.id);
   if(index<0||canonical(state.sessions[index])!==canonical(p.before)||digest(p.beforeRaw)!==p.beforeHash||digest(p.afterRaw)!==p.afterHash||p.next.id!==p.before.id||p.next.sourceId!==p.sourceId)fail('Interrupted edit receipt conflicts with the registry. Both versions are retained.',409);
@@ -97,7 +98,7 @@ export function createTranscriptManager({dataDir,library,requests,store,files,St
  async function change(s,next,reason,{current=null,record=null,afterRaw=null,undoOf=null}={}){
   current??=await source(s);assertLock();
   const raw=afterRaw??dialogue(next),at=new Date().toISOString();
-  const history={at,sessionId:s.id,reason,before:structuredClone(s),after:structuredClone(next),beforeRaw:current.raw,afterRaw:raw,beforeHash:current.hash,afterHash:digest(raw),...(record?{operationId:record.id}:{}),...(undoOf?{undoOf}:{})};
+  const history={at,sessionId:s.id,reason,before:structuredClone(s),after:structuredClone(next),beforeRaw:current.raw,afterRaw:raw,beforeHash:current.hash,afterHash:digest(raw),...(record?{operationId:record.id}:{}),...(record?.translationAcceptance?{translationAcceptance:structuredClone(record.translationAcceptance)}:{}),...(undoOf?{undoOf}:{})};
   state.pending={schema:'ar-create.transcript-change.v2',preparedRevision:state.revision+1,sourceId:s.sourceId,before:structuredClone(s),beforeRaw:current.raw,beforeHash:current.hash,afterRaw:raw,afterHash:digest(raw),next,history,operationId:record?.id??null};
   if(record)state.operations.push({...record,beforeRevision:state.revision,sessionId:s.id,beforeHash:current.hash,afterHash:digest(raw)});
   persist();await recover();
@@ -165,11 +166,29 @@ export function createTranscriptManager({dataDir,library,requests,store,files,St
    return {reused:false,receipt,revision:state.revision};
   }),
   edit:input=>serial(async()=>{
+   if(Object.hasOwn(input,'receiptSha256')||Object.hasOwn(input,'translationAcceptance'))fail('Reviewed translations use their exact saved-review action.');
    const op=operation(input,'edit');if(op.prior)return structuredClone(op.prior.result);
    guard(input);const s=session(input.sessionId);if(s.editorial==='deleted')fail('This review session was permanently excluded.',409);
    const current=await source(s);sourceGuard(input,current);
    const next=structuredClone(s),t=next.turns.find(t=>t.id===input.turnId);if(!t)fail('Turn was not found.');
    t.text=word(input.text,'dialogue text',12000);t.speaker=word(input.speaker,'speaker label',100);next.version++;
+   return change(s,next,'human-correction',{current,record:op.record});
+  }),
+  // Internal capability only: never exposed by transcript-manager routes. The
+  // Source owner verifies the immutable receipt and exact current lineage while
+  // this maintained writer holds its lock. Generic edits cannot stamp approval.
+  editReviewed:(input,authorize)=>serial(async()=>{
+   if(typeof authorize!=='function')fail('A verified saved-review owner is required.',403);
+   const op=operation(input,'edit');
+   const s=session(input.sessionId);if(s.editorial!=='keep')fail('This conversation is not in the kept Source collection.',409);
+   const current=await source(s);
+   const stamp=await authorize({revision:state.revision,session:structuredClone({...s,sourceHash:current.hash}),history:structuredClone(state.history),operations:structuredClone(state.operations),replay:op.prior?structuredClone(op.prior):null});
+   if(!stamp||stamp.schema!=='ar-create.translation-acceptance.v1'||stamp.receiptSha256!==input.receiptSha256||stamp.sourceId!==s.sourceId||stamp.sessionId!==s.id||stamp.turnId!==input.turnId||Object.keys(stamp).length!==5)fail('The reviewed correction has no exact receipt authority.',409);
+   if(op.prior){if(canonical(op.prior.translationAcceptance)!==canonical(stamp))fail('This operation belongs to a different reviewed correction.',409);return structuredClone(op.prior.result);}
+   guard(input);sourceGuard(input,current);
+   const next=structuredClone(s),turn=next.turns.find(t=>t.id===input.turnId);if(!turn)fail('Turn was not found.');
+   turn.text=word(input.text,'dialogue text',12000);turn.speaker=word(input.speaker,'speaker label',100);next.version++;
+   op.record.translationAcceptance=structuredClone(stamp);
    return change(s,next,'human-correction',{current,record:op.record});
   }),
   undo:input=>serial(async()=>{

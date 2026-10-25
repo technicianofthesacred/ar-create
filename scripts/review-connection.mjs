@@ -54,15 +54,16 @@ async function readJSON(req,{correction=false}={}){
  try{JSON.parse(correction?new TextDecoder('utf-8',{fatal:true}).decode(bytes):bytes.toString('utf8'));}catch{reject(400,'Request must contain valid UTF-8 JSON.');}
  return bytes;
 }
-const SOURCE_CORRECTION_PATHS=new Set(['/api/source-sessions/edit','/api/source-sessions/undo']);
+const SOURCE_CORRECTION_PATHS=new Set(['/api/source-sessions/edit','/api/source-sessions/undo','/api/source-sessions/translation-accept']);
 function validateCorrection(pathname,bytes){
  const input=JSON.parse(bytes.toString('utf8'));
- const keys=pathname.endsWith('/edit')?['operationId','expectedRevision','expectedSourceHash','sessionId','turnId','speaker','text']:['operationId','undoOperationId','expectedRevision','expectedSourceHash','sessionId'];
+ const reviewed=pathname.endsWith('/translation-accept'),edit=reviewed||pathname.endsWith('/edit');
+ const keys=edit?['operationId','expectedRevision','expectedSourceHash','sessionId','turnId','speaker','text',...(reviewed?['receiptSha256']:[])]:['operationId','undoOperationId','expectedRevision','expectedSourceHash','sessionId'];
  const word=(value,max)=>typeof value==='string'&&!!value.trim()&&value.length<=max&&!value.includes('\0');
  // Match the maintained source owner, including its non-UUID operation IDs.
  // The owner alone compares the caller's unchanged revision/hash under its lock.
  const operation=value=>typeof value==='string'&&/^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(value);
- if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!operation(input.operationId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||typeof input.expectedSourceHash!=='string'||!word(input.sessionId,300)||(pathname.endsWith('/edit')?(!word(input.turnId,300)||!word(input.speaker,100)||!word(input.text,12000)):!operation(input.undoOperationId)))throw Object.assign(Error('Use the complete current source correction request.'),{status:400});
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!operation(input.operationId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||typeof input.expectedSourceHash!=='string'||!word(input.sessionId,300)||(edit?(!word(input.turnId,300)||!word(input.speaker,100)||!word(input.text,12000)):!operation(input.undoOperationId))||(reviewed&&!/^[a-f0-9]{64}$/.test(input.receiptSha256)))throw Object.assign(Error('Use the complete current source correction request.'),{status:400});
 }
 const TRANSLATION_PROPOSAL_PATH='/api/source-sessions/translation-proposals';
 function validateTranslationProposal(bytes){
