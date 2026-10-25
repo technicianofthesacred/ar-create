@@ -3733,11 +3733,11 @@
     },
     {
       "path": "public/document-study/readable-markdown.js",
-      "candidateSha256": "3b738d12fb238fd10d3b6b3ad19432f5f722285e1fd823a7e6381cee92aa3fc2"
+      "candidateSha256": "ebeab7ad0210d0b01a000eac1d2b50f4030f98190cd099fe618e12c06e3c9267"
     },
     {
       "path": "tests/readable-markdown.test.mjs",
-      "candidateSha256": "9c0e1e65b40d8c5970160b7a6fd0e4c0b7081209a746fa476d3f131198b4bba1"
+      "candidateSha256": "727413df970f81cf3d55538a0b367988dde526ececa1f14336b03a2cdfe8486e"
     },
     {
       "path": "tests/review-draft-corrections.test.mjs",

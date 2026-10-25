@@ -1,7 +1,14 @@
 /* Safe semantic reading of the same Markdown. No document, claim or source is rewritten. */
 (()=>{
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const inline=s=>esc(s).replace(/`([^`\n]+)`|\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|\[([^\]\n]+)\]\(([^)\s]+)\)/g,(_,code,bold,em,label,url)=>code!==undefined?'<code>'+code+'</code>':bold!==undefined?'<strong>'+bold+'</strong>':em!==undefined?'<em>'+em+'</em>':/^(?:https?:\/\/|mailto:|#|\/(?!\/))/i.test(url)?'<a href="'+url+'" rel="noopener noreferrer">'+label+'</a>':label+' ('+url+')');
+ // Parse escaped text once so generated markup and code-span contents stay literal.
+ const inline=s=>esc(s).replace(/`([^`\n]+)`|\[\[term:([^|\]\n]+)\|([^\]\n]+)\]\]|\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|(?<![\p{L}\p{N}_])__(?=[^\s_\n])([^\n]+?)(?<![\s_])__(?![\p{L}\p{N}_])|(?<![\p{L}\p{N}_])_(?!_)(?=[^\s_\n])([^\n]+?)(?<![\s_])_(?![\p{L}\p{N}_])|\[([^\]\n]+)\]\(([^)\s]+)\)/gu,(_,code,term,alias,bold,em,underBold,underEm,label,url)=>{
+  if(code!==undefined)return '<code>'+code+'</code>';
+  if(term!==undefined)return alias;
+  if(bold!==undefined||underBold!==undefined)return '<strong>'+(bold??underBold)+'</strong>';
+  if(em!==undefined||underEm!==undefined)return '<em>'+(em??underEm)+'</em>';
+  return /^(?:https?:\/\/|mailto:|#|\/(?!\/))/i.test(url)?'<a href="'+url+'" rel="noopener noreferrer">'+label+'</a>':label+' ('+url+')';
+ });
  function render(body){
   const lines=String(body??'').replace(/\r\n?/g,'\n').split('\n');let html='',paragraph=[],list=null,code=null,quote=null;
   const para=()=>{if(paragraph.length){html+='<p>'+inline(paragraph.join('\n')).replace(/\n/g,'<br>')+'</p>';paragraph=[];}};

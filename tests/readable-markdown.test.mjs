@@ -13,3 +13,24 @@ test('quoted source passages render as readable quotations without Markdown mark
 test('quote-looking code and greater-than comparisons remain literal',()=>{
  const out=load()('```\n> literal code\n```\n\nThe value is > 2.');assert.match(out,/<pre><code>&gt; literal code<\/code><\/pre>/);assert.match(out,/The value is &gt; 2/);assert.equal(out.includes('<blockquote>'),false);
 });
+
+test('retained term aliases and underscore emphasis read naturally without changing manuscript words',()=>{
+ const body='The [[term:lacquer|lacquer]] is _a single utensil or a single matter._ and __bold words__.';
+ assert.equal(load()(body),'<p>The lacquer is <em>a single utensil or a single matter.</em> and <strong>bold words</strong>.</p>');
+ assert.equal(body,'The [[term:lacquer|lacquer]] is _a single utensil or a single matter._ and __bold words__.');
+ assert.equal(load()('[[term:<key>|<img src=x> & "alias"]]'),'<p>&lt;img src=x&gt; &amp; &quot;alias&quot;</p>');
+});
+test('code spans keep term aliases and both emphasis styles literal and escaped',()=>{
+ assert.equal(load()('`[[term:key|<alias>]] _words_ __bold__ **stars**`'),'<p><code>[[term:key|&lt;alias&gt;]] _words_ __bold__ **stars**</code></p>');
+});
+test('unmatched markup, intraword underscores and filenames retain their exact visible spelling',()=>{
+ const body='[[term:key|alias] _unfinished __unfinished file_name.md a_b_c foo__bar__baz 中文_词_语 _ spaced _';
+ assert.equal(load()(body),'<p>'+body+'</p>');
+ assert.equal(load()('_a_ (__b__) _file_name_'),'<p><em>a</em> (<strong>b</strong>) <em>file_name</em></p>');
+});
+test('added retained markup keeps link URL validation and HTML escaping intact',()=>{
+ const html=load()('[[term:key|<script>]] _<b>_ __<i>__ [safe](https://example.test/?a=1&b=2) [bad](javascript:alert) [network](//evil.test)');
+ assert.match(html,/&lt;script&gt; <em>&lt;b&gt;<\/em> <strong>&lt;i&gt;<\/strong>/);
+ assert.match(html,/<a href="https:\/\/example.test\/\?a=1&amp;b=2" rel="noopener noreferrer">safe<\/a>/);
+ assert.ok(!html.includes('href="javascript:'));assert.ok(!html.includes('href="//'));assert.ok(!html.includes('<script>'));
+});
