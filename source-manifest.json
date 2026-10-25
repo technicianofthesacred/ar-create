@@ -1165,7 +1165,7 @@
     {
       "path": "public/document-study/study-output-entry.ts",
       "sourceSha256": "83eb853b95beaa1cac5b328afa08db2fae2e82a7982432814bbc805d95a13985",
-      "candidateSha256": "cd66d2f233d4ae59596a8d3cfc6de2c902d9f4ebd51d30eb552745fe6bfa11f1",
+      "candidateSha256": "76933bfbbb3d1811cf253ac7443a794c6d0e85c0d74fcad0eee5eedaec09fdc9",
       "adapted": false
     },
     {
@@ -1669,7 +1669,7 @@
     {
       "path": "runtime/src/workspaces/carousel-workbench.css",
       "sourceSha256": "c6460a340fd2a7601d76645b8dbeca5c8b490285ecff09a3632968ee3befc4b7",
-      "candidateSha256": "eec3da7064104dbe58a26909bce88702e26ae0ad6b05ccfd17c5b62fe163659c",
+      "candidateSha256": "09bc97beb46312a0e3520ed95abbfa7c27efc1c8319d1973cbeb89df91ec5b94",
       "adapted": false
     },
     {
@@ -1705,7 +1705,7 @@
     {
       "path": "runtime/src/workspaces/exportOutput.tsx",
       "sourceSha256": "df351c4c2970ca2542a3008f96b872eac132adaa0c1bb19f1d37bd8b0c5fd5aa",
-      "candidateSha256": "df351c4c2970ca2542a3008f96b872eac132adaa0c1bb19f1d37bd8b0c5fd5aa",
+      "candidateSha256": "7454134e36ee5487d383a3e90e9cee7df9862064df197f035d6e5330d79b72b8",
       "adapted": false
     },
     {
@@ -1921,7 +1921,7 @@
     {
       "path": "public/document-study/output-stage-surfaces.js",
       "sourceSha256": "9427da7f0a5ccf8acb2b603fb98937dd54b65578b9f6b766da72300f69d84418",
-      "candidateSha256": "d5fb8bb4d872f4d8886614f8536ab4cae4af7212fe5680bb97bddc96c94257ea",
+      "candidateSha256": "fe6082360294f6208b46fce836fbb0d1c1a5019e9c55a2c1ae9ea8a928b0c913",
       "adapted": false
     },
     {
@@ -2237,7 +2237,7 @@
     },
     {
       "path": "public/document-study/output-stage-surfaces.test.mjs",
-      "candidateSha256": "515efbbc1154ae17d2143f1de5896b2e689835f7ffc7d42d7693c77e86d4b8b4"
+      "candidateSha256": "d1102b6ea4edec94f46eef7f4abe10032ffce44d6c3738486896775694b62cfa"
     },
     {
       "path": "tests/source-note-navigation.test.mjs",
@@ -4221,11 +4221,27 @@
     },
     {
       "path": "public/document-study/mountMagazineAudience.tsx",
-      "candidateSha256": "9efdc3e4188e531931fc70391c41cc2460b2e0c4e2b70a29b679d86f11504980"
+      "candidateSha256": "be158149dedb92c569c859f8622766938b8fcafeb57b8ac04124c6b59a9000d1"
     },
     {
       "path": "tests/magazine-working-edition.test.mjs",
       "candidateSha256": "4fa57a8a7916ec354e07e788767c6f39d04f3d8b78e51052b5392f045d724fa7"
+    },
+    {
+      "path": "runtime/src/workspaces/standaloneArticleHtml.ts",
+      "candidateSha256": "bce566a220b0d52fe6a89c688ad265abc34d4870e7d8920c615d1c5e9b5304da"
+    },
+    {
+      "path": "tests/fixtures/magazine-working-edition.mjs",
+      "candidateSha256": "6c3c787e63830b6a7059186235750d605d90eb2ec2768f1236d56dccb7041b49"
+    },
+    {
+      "path": "tests/magazine-article-html.test.mjs",
+      "candidateSha256": "03f2f66917e4d952d8751612de3c98e1ebcf83d71b3bd44aa3cb17576effb469"
+    },
+    {
+      "path": "tests/standalone-article-html.test.mjs",
+      "candidateSha256": "38a876b2e08fd6c3a1e4edd28012761da0a40a7a8242b12fe14c346b5b372cc3"
     }
   ],
   "dependencyRepair": {
