@@ -11,7 +11,7 @@ html body.wbf-on #app #workspace.wb-research .rp{display:grid;grid-template-colu
 #workspace.wb-research .rp:hover{background:var(--sel)}
 #workspace.wb-research .rp .n{font-size:var(--t-label);color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
 #workspace.wb-research .rp .lv{width:7px;height:7px;border:1px solid var(--dim);border-radius:50%;box-sizing:border-box;background:none}
-html body.wbf-on #app #workspace.wb-research .rp .cl{font:500 var(--t-body)/1.5 var(--ar-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
+html body.wbf-on #app #workspace.wb-research .rp .cl{font:400 var(--t-body)/1.5 var(--ar-ui)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0}
 html body.wbf-on #app #workspace.wb-research .wb-point[open]>.rp .cl{white-space:normal}
 html body.wbf-on #app #workspace.wb-research .rpd{padding:10px 12px 16px;border-bottom:1px solid var(--line)}
 html body.wbf-on #app #workspace.wb-research .cons{display:flex;flex-direction:column;min-height:0;min-width:0;align-self:stretch;background:color-mix(in srgb,var(--bg) 70%,#000);font:var(--t-label)/1.6 ui-monospace,'SF Mono',Menlo,Consolas,monospace}
@@ -90,3 +90,23 @@ html body.wbf-on #app #workspace.wb-research .wb-discuss-console{min-height:32px
    retain their existing owners and compact sans-serif hierarchy. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research .rpd :is(p,blockquote,ul,ol,li,pre).shared-prose-block{font-family:var(--shared-prose-font)!important;font-size:18px!important;line-height:1.8!important;letter-spacing:.16px}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research .rpd :is(p,blockquote).shared-prose-block{margin-block:0 1.1em!important}
+
+/* The Research split uses the remaining workspace, never a second viewport
+   below a full-height header. Original notes stay in their native lane. */
+html body.wbf-on #app #workspace.wb-research{display:flex!important;flex-direction:column;min-height:0!important;height:100%!important;overflow:clip!important}
+html body.wbf-on #app #workspace.wb-research>#c3-surface-bar{flex:0 0 auto}
+html body.wbf-on #app #workspace.wb-research>.phaseReader{flex:1 1 0!important;height:auto!important;min-height:0!important;margin-bottom:16px!important;overflow:clip!important}
+html body.wbf-on #app #workspace.wb-research .rpts{max-height:none!important;overscroll-behavior:contain}
+html body.wbf-on #app #workspace.wb-research .wb-research-tools>.ew-context{margin:8px 0!important;padding:0!important;max-width:100%}
+/* Each retained record already has an exact entrance in Points and research tools.
+   Keep its phase-owned reader in place; reveal it only when an entrance opens it. */
+html body.wbf-on #app #workspace.wb-research>.phaseReader>.flow-retained{display:none!important}
+html body.wbf-on #app #workspace.wb-research>.phaseReader>.flow-retained[open]{display:block!important;flex:0 1 45%;min-height:0;overflow:auto;margin:8px 0 0!important;padding:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research .rp>.cl{font:400 var(--t-body)/1.5 var(--ar-ui)!important}
+/* The phone title and output selector take priority over the repeated review
+   notice; actual controls retain their read-only and disabled behavior. */
+@media(max-width:650px){
+ html body.wbf-on #app #workspace.wb-research #c3-surface-bar>[data-review-state]{display:none!important}
+ html body.wbf-on #app #workspace.wb-research #c3-surface-bar .sb-left{flex:1 1 0!important;min-width:0!important}
+ html body.wbf-on #app #workspace.wb-research #c3-surface-bar .sb-where{min-width:0!important}
+}

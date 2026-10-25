@@ -123,6 +123,10 @@
 
   let more=points.querySelector(':scope>.wb-research-tools');
   if(extra.length){if(!more){more=make('details','wb-research-tools');more.append(make('summary','','Sources & research tools'));points.append(more);}for(const child of extra)if(child!==more&&!more.contains(child))more.append(child);}
+  // Retain the original file readers in the existing tools disclosure. Their
+  // banner must not push the findings offscreen. The phase owner retains its history.
+  const history=[ws.querySelector(':scope>.ew-context')].filter(Boolean);
+  if(history.length){if(!more){more=make('details','wb-research-tools');more.append(make('summary','','Sources & research tools'));points.append(more);}for(const record of history)more.append(record);}
   const originalHeading=points.querySelector('.research-standard-heading');if(originalHeading&&more&&originalHeading.parentElement!==more)more.prepend(originalHeading);
   // Keep the source quote and recorded findings readable; the original planning,
   // provenance and additional preparation controls retain their own nodes below.

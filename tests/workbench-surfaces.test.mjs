@@ -173,3 +173,9 @@ test('Research point selection closes only sibling points and preserves their or
  b.run();assert.strictEqual(b.d.querySelectorAll('textarea')[0],fields[0]);assert.strictEqual(b.d.querySelectorAll('textarea')[1],fields[1]);assert.deepEqual(fields.map(f=>f.value),['Unsaved first','Unsaved second']);
  first.querySelector('summary').click();assert.equal(b.d.querySelectorAll('.wb-point[open]').length,0);b.close();
 });
+
+test('Research keeps original file access compact and phase-owned history intact',()=>{
+ const b=boot(3,'<details class="ew-context"><summary>Existing research work</summary><button data-ew-artifact="exact">Read original</button></details><section class="phaseReader"><article class="flow-paper" id="stage-working-lane"><div id="material-human-direction"><textarea>Shared note</textarea></div><div class="research-standard"><section data-research-point="one"><h2>Recorded finding</h2><p>Recorded evidence</p></section></div></article><details class="flow-retained"><summary>Historical records</summary><button>Read retained</button></details></section>');
+ const context=b.d.querySelector('.ew-context'),history=b.d.querySelector('.flow-retained'),note=b.d.querySelector('textarea'),reader=context.querySelector('button');let reads=0;reader.onclick=()=>reads++;note.value='Pending note';b.run();b.run();
+ assert.strictEqual(b.d.querySelector('.wb-research-tools>.ew-context'),context);assert.strictEqual(b.d.querySelector('.phaseReader>.flow-retained'),history);assert.equal(b.d.querySelector('#workspace>.ew-context'),null);assert.equal(context.closest('.wb-research-tools').open,false);reader.click();assert.equal(reads,1);assert.strictEqual(b.d.querySelector('textarea'),note);assert.equal(note.value,'Pending note');assert.equal(note.closest('#material-human-direction').parentElement.id,'stage-working-lane');assert.equal(b.d.querySelectorAll('.ew-context').length,1);b.close();
+});
