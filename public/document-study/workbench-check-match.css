@@ -1,0 +1,42 @@
+/* S07: actual saved-revision owner in the approved Workbench pullout.
+   This file changes presentation only; findings and revision state remain owned
+   by draft-check-flow. Never substitute prototype local checks for its results. */
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]){width:min(380px,100vw);top:48px;bottom:0;box-sizing:border-box}
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]) .dr-head{height:57px;min-height:57px;box-sizing:border-box;padding:12px 12px 12px 18px}
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]) .dr-head h2{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:600 var(--t-head)/1.5 var(--ar-ui)}
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]) .dr-head .sub{font-weight:400;color:var(--dim)}
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]) [data-wbf-close]{width:32px;height:32px;min-height:32px;padding:0;border:0;background:none;color:var(--dim);box-shadow:none}
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]) .dr-tabs{min-height:40px;box-sizing:border-box;gap:14px;scrollbar-width:none}
+body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]) .dr-tabs button{border-radius:0;font-size:var(--t-label);font-weight:400}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"]{padding:16px 18px 48px;overflow-x:hidden}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .c3-page-notes{display:none!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-room{box-sizing:border-box;padding:14px!important;border:1px dashed var(--line)!important;border-radius:9px!important;background:none!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0 0 4px}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-room h2{margin:0!important;font-size:var(--t-body)!important;line-height:1.5!important;font-weight:600!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-room>p.small{margin:0 0 12px!important;color:var(--dim);font-size:var(--t-body)!important;line-height:1.5!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-room>.flow-row:not(.draft-check-heading){display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check]{min-height:34px!important;padding:7px 12px!important;border-radius:7px!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check="run"]{background:var(--warm)!important;border:1px solid var(--warm)!important;color:#17150f!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check="run"]:hover:not(:disabled){background:color-mix(in srgb,var(--warm) 85%,var(--ink))!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check]:disabled{opacity:.5;cursor:not-allowed}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] :is(button,summary,select,textarea):focus-visible{outline:2px solid var(--warm)!important;outline-offset:3px}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-status{margin:12px 0 0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .sws-check-tools{padding:0!important;margin:22px 0 0!important;border:0!important;background:none!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .sws-check-scope{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .sws-check-scope strong{font-weight:500}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .sws-check-scope span{color:var(--dim);font-size:var(--t-label)}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] details.sws-tool{border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;background:none!important;margin:0!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] details.sws-tool>summary{padding:10px 0!important;min-height:40px;box-sizing:border-box;color:var(--dim);font-weight:500!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] details.sws-tool>summary:hover{color:var(--ink);background:var(--sel)}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .flow-retained{margin:16px 0 0!important;padding:12px 0!important;border-top:1px solid var(--line);background:none!important;position:static!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .flow-retained>summary{color:var(--dim);font-size:var(--t-label)}
+@media(max-width:760px){body.wbf-on #wbf-drawer:has(.dr-body[data-tool="check"]){width:100vw;border-left:0}}
+/* Legacy typography deliberately used repeated root selectors; match its cascade
+   only for this tool, so the approved body scale actually reaches the owner. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .draft-check-room>p.small{font:400 var(--t-body)/1.5 var(--ar-ui)!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"]{font-family:var(--ar-ui)}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check]{padding:6px 12px!important;height:34px!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check="run"]{font-weight:600!important;color:var(--bg)!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] [data-current-check="run"]:hover:not(:disabled){background:var(--warm)!important}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] .sws-check-scope{align-items:flex-start;text-align:left}
+body.wbf-on #wbf-drawer .dr-body[data-tool="check"] details.sws-tool{padding:0!important}

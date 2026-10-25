@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm,readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createRequire} from 'node:module';
+import {MessageChannel} from 'node:worker_threads';
+import {build} from '../../node_modules/esbuild/lib/main.js';
+import {JSDOM} from '../../node_modules/jsdom/lib/api.js';
+test('picker forwards the supplied scoped photo reader and uploader; delayed uploads keep their original slot and cannot cross an unmount',async()=>{
+ const temp=await mkdtemp(join(tmpdir(),'arc-native-picker-')),dom=new JSDOM('<div id="root"></div>',{url:'http://localhost'}),keys=['window','document','navigator','HTMLElement','Element','Node','IS_REACT_ACT_ENVIRONMENT','MessageChannel'],previous=new Map(keys.map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)]));let root,rendererAct;const channels=[];
+ for(const key of keys)Object.defineProperty(globalThis,key,{configurable:true,writable:true,value:key==='IS_REACT_ACT_ENVIRONMENT'?true:dom.window[key]});
+ globalThis.MessageChannel=class extends MessageChannel{constructor(){super();channels.push(this);}};
+ try{const outfile=join(temp,'fixture.cjs');await build({stdin:{contents:"export {default as React,act} from 'react'; export {createRoot} from 'react-dom/client'; export {CarouselPhotoPicker} from './CarouselPhotoPicker';",resolveDir:dirname(fileURLToPath(import.meta.url)),loader:'tsx'},bundle:true,platform:'node',format:'cjs',outfile});const {React,act,createRoot,CarouselPhotoPicker}=createRequire(import.meta.url)(outfile);rendererAct=act;let adapterInput,reads=0,finish;const placements=[],uploads=[];
+ window.workbenchFolderBrowser={mountPhotoPicker:async input=>{adapterInput=input;return {destroy(){},setMaxPick(){}};}};
+ const api=async path=>{assert.equal(path,'/api/sources/tree');reads++;return {sources:[{id:'native',rel_path:'Native.png',url:'/api/sources/blob?id=native'}]};},mediaApi={uploadImageProgress:async file=>{uploads.push(file);return new Promise(resolve=>finish=resolve);}},slide={id:'same-slide',photos:[{src:''},{src:''}]};let slot=0;
+ root=createRoot(document.getElementById('root'));const render=()=>root.render(React.createElement(CarouselPhotoPicker,{slide,index:0,slot,count:2,api,mediaApi,onSlot(){},onClose(){},onPick:(at,src)=>placements.push({at,src}),onPickMany(){}}));await act(async()=>render());assert.equal(typeof adapterInput.readNativePhotos,'function');const sources=await adapterInput.readNativePhotos();assert.equal(reads,1);assert.equal(sources.sources[0].id,'native');
+ const input=document.querySelector('input[type=file]');assert.ok(input,'the real scoped upload is available directly in the picker');const css=await readFile(new URL('./carousel-workbench.css',import.meta.url),'utf8'),style=document.createElement('style');style.textContent=(css.match(/[^{}]+\{[^{}]*\}/g)||[]).filter(rule=>/^\s*\.car-photo-sheet \.car-picker-upload/.test(rule)).join('\n');document.head.append(style);assert.ok(input.closest('.car-picker-upload'));assert.equal(window.getComputedStyle(input).position,'absolute');assert.equal(window.getComputedStyle(input).opacity,'0');assert.notEqual(window.getComputedStyle(input).display,'none');assert.equal(input.getAttribute('aria-label'),'Upload a photo to this piece');const file=new dom.window.File(['invented bytes'],'Invented.png',{type:'image/png'});Object.defineProperty(input,'files',{configurable:true,value:[file]});await act(async()=>input.dispatchEvent(new dom.window.Event('change',{bubbles:true})));assert.equal(uploads[0],file);slot=1;await act(async()=>render());await act(async()=>finish('/api/sources/blob?id=uploaded'));assert.deepEqual(placements,[{at:0,src:'/api/sources/blob?id=uploaded'}]);
+ const next=document.querySelector('input[type=file]');Object.defineProperty(next,'files',{configurable:true,value:[file]});await act(async()=>next.dispatchEvent(new dom.window.Event('change',{bubbles:true})));await act(async()=>root.unmount());root=null;await act(async()=>finish('/api/sources/blob?id=late'));assert.equal(placements.length,1);
+ }finally{if(root)await rendererAct(async()=>root.unmount());for(const channel of channels){channel.port1.close();channel.port2.close();}dom.window.close();for(const [key,descriptor]of previous){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}await rm(temp,{recursive:true,force:true});}
+});

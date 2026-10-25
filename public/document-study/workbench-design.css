@@ -1,0 +1,55 @@
+/* Component rules copied from the approved Workbench prototype. Runtime records are supplied only by existing owners. */
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.sm{width:15px;height:15px}
+kbd{font-family:inherit;font-size:var(--t-label);font-weight:400;line-height:1;border:1px solid var(--line);border-radius:4px;padding:2px 5px;color:var(--dim)}
+.dim{color:var(--dim)}.warm{color:var(--warm)}
+.lab{font-size:var(--t-label);font-weight:500;color:var(--dim)}
+.sub{font-weight:400;color:var(--dim)}
+.honest{display:inline-block;margin:4px 0 0 10px;font-size:var(--t-label);color:var(--warnc)}
+.honest::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;border:1.5px solid currentColor;margin-right:6px;vertical-align:1px}
+.tag{font-size:var(--t-label);font-weight:400;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 6px;white-space:nowrap}
+.tag.agent{color:var(--warm);border-color:color-mix(in srgb,var(--warm) 40%,var(--line))}
+.btn{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:7px;font-size:var(--t-label);font-weight:500;color:var(--ink);background:var(--paper)}
+.btn:hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))}
+.btn.primary{background:var(--warm);color:var(--bg);border-color:var(--warm);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.quiet{background:none;border-color:transparent;color:var(--dim)}.btn.quiet:hover{color:var(--ink)}
+.btn.on{border-color:var(--warm);color:var(--ink)}
+.btn[aria-disabled="true"]{opacity:.55}
+.lnk{color:var(--warm);font-weight:500;font-size:var(--t-label)}.lnk:hover{text-decoration:underline}
+.flash{animation:fl 1.8s ease-out}
+@keyframes fl{0%,30%{background:var(--hl)}100%{background:transparent}}
+
+/* ---------- bench (one column) ---------- */
+.pickup{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:calc(var(--measure) + 16rem)}
+.pickup h2{margin:4px 0 2px}
+.pickup .meta{font-size:var(--t-label);color:var(--dim)}
+.pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:2px solid var(--warm);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
+.pickup .acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.since{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.since ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.since li{display:grid;grid-template-columns:8px 1fr;gap:10px}
+.since li i{width:7px;height:7px;border-radius:50%;margin-top:8px;background:var(--dim)}
+.since li i.agent{background:var(--warm)}
+.since li small{display:block;color:var(--dim)}
+.oac{display:inline-flex;align-items:center;gap:6px;color:var(--warm);font-size:var(--t-label);font-weight:500;text-decoration:none;white-space:nowrap}
+.oac:hover{text-decoration:underline}
+.oac-note{font-size:var(--t-label);color:var(--dim)}
+.moves{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);max-width:calc(var(--measure) + 16rem)}
+.moves li{border-bottom:1px solid var(--line)}
+.move{display:grid;grid-template-columns:22px minmax(0,1fr) 18px;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 6px;border-radius:6px}
+.move:hover{background:var(--sel)}
+.move .t{font-weight:500}
+.move .w{font-size:var(--t-label);color:var(--dim)}
+.move .ic{color:var(--dim)}
+.search{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line);border-radius:7px;padding:0 9px;background:var(--paper);margin-bottom:6px;max-width:calc(var(--measure) + 16rem)}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none}
+.alist{list-style:none;margin:0;padding:0;max-width:calc(var(--measure) + 16rem)}
+.alist li{display:flex;align-items:center;gap:10px;border-radius:6px}
+.alist li:hover{background:var(--sel)}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;flex:1;min-width:0;text-align:left;padding:8px 8px;border-radius:6px}
+.arow.sel{background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
+.arow b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .k{font-size:var(--t-label);color:var(--dim);white-space:nowrap}
+.arow .s{grid-column:1/-1;font-size:var(--t-label);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alist .oac{padding:0 10px 0 0}

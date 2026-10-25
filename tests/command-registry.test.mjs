@@ -10,6 +10,7 @@ import {createServer} from '../runtime/server.mjs';
 import {run} from '../agents/cli/ar-create.mjs';
 import {buildRequest} from '../agents/lib/client.mjs';
 import {createTools} from '../agents/mcp/server.mjs';
+import {createExistingWorkReview} from '../scripts/review-existing.mjs';
 
 const repo=path.resolve(import.meta.dirname,'..');
 async function setup(t){
@@ -24,18 +25,35 @@ async function setup(t){
 /** Every '/api/...' literal the app's own files call. */
 function uiRoutes(){
  const out=new Set(),dir=path.join(repo,'public/document-study');
- const walk=d=>{for(const entry of fs.readdirSync(d,{withFileTypes:true})){const full=path.join(d,entry.name);if(entry.isDirectory())walk(full);else if(/\.(m?js|html)$/.test(entry.name))for(const m of fs.readFileSync(full,'utf8').matchAll(/['"`](\/api\/[A-Za-z0-9_./-]*)/g))out.add(m[1]);}};
+ const walk=d=>{for(const entry of fs.readdirSync(d,{withFileTypes:true})){const full=path.join(d,entry.name);if(entry.isDirectory())walk(full);else if(/\.(m?js|html)$/.test(entry.name)&&!entry.name.endsWith('.test.mjs'))for(const m of fs.readFileSync(full,'utf8').matchAll(/['"`](\/api\/[A-Za-z0-9_./-]*)/g))out.add(m[1]);}};
  walk(dir);return [...out].filter(route=>route!=='/api/');
 }
 
-test('every route the app calls is in /api/capabilities, with the commit it runs from',async t=>{
+test('every app route belongs to runtime capabilities or an explicit read-only review-host route',async t=>{
  const f=await setup(t),routes=f.capabilities.commands.map(c=>c.route);
  assert.equal(f.capabilities.schema,'ar-create.capabilities.v1');
  assert.ok(f.capabilities.git && 'sha' in f.capabilities.git);
  assert.ok(f.capabilities.commands.length>=200,'whole route map, not a hand-picked subset');
  const pattern=route=>new RegExp('^'+route.replace(/\{\w+\}/g,'[^/]+')+'$');
- const missing=uiRoutes().filter(ui=>!routes.some(route=>route===ui||pattern(route).test(ui)||route.startsWith(ui)));
+ // Review readers belong to the separate review host, never the agent command
+ // registry. Derive the exact mounted routes; an unknown /api/review/* still fails.
+ const reviewSource=fs.readFileSync(path.join(repo,'scripts/review-existing.mjs'),'utf8');
+ const reviewRoutes=[...reviewSource.matchAll(/\['(\/api\/review\/[A-Za-z0-9_./-]+)',result\(/g)].map(match=>match[1]);
+ assert.ok(reviewRoutes.length>0,'the maintained review-host route table is inspected');
+ const matches=(ui,registered)=>registered.some(route=>route===ui||pattern(route).test(ui)||route.startsWith(ui));
+ const missing=uiRoutes().filter(ui=>!matches(ui,routes)&&!matches(ui,reviewRoutes));
  assert.deepEqual(missing,[],'UI routes missing from the registry');
+ const {server:review}=await createExistingWorkReview({config:{authorityURL:f.url,allowedAuthorityPort:Number(new URL(f.url).port),magazineRoots:[]}});
+ await new Promise(resolve=>review.listen(0,'127.0.0.1',resolve));
+ t.after(()=>new Promise(resolve=>review.close(resolve)));
+ const reviewURL='http://127.0.0.1:'+review.address().port;
+ for(const route of reviewRoutes){
+  assert.equal(matches(route,routes),false,'review-only reader is not an agent command: '+route);
+  assert.equal((await fetch(f.url+route)).status,404,'runtime must not mount review-only reader: '+route);
+  const denied=await fetch(reviewURL+route,{method:'POST'});
+  assert.equal(denied.status,423,'review reader must reject mutation: '+route);
+  assert.equal(denied.headers.get('allow'),'GET, HEAD');
+ }
  // Names are unique; every entry is described.
  const names=f.capabilities.commands.map(c=>c.name);assert.equal(new Set(names).size,names.length);
  for(const c of f.capabilities.commands){assert.ok(c.section&&c.method&&c.route&&c.schema&&Array.isArray(c.actors)&&typeof c.readOnly==='boolean',c.name);}

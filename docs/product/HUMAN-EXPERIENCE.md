@@ -48,6 +48,12 @@ A chat title alone is not a content library. If the person is invited to interac
 
 The person accepts scrolling through useful writing or research. Remove needless top space and repeated notices rather than compressing readable content or hiding it in many boxes. Do not make the author open every quote, slide or transcript to understand the work. Human-first purpose/actions, supported workflow order and actual visible results matter more than explaining the interface in chat. Make guidance controls contextual and meaningful, and show agent-created work without making the person repeat the same inputs.
 
+## Make the document itself readable — adopted 22 October 2026
+
+Research, notes and other working documents serve the person and agents through the same underlying record. Produce a short useful overview followed by semantic headings, descriptive finding leads and one coherent point per paragraph or item, with enough explanation to learn. Keep full analysis available; do not assume only a closing summary will be read. Distinguish evidence, interpretation, uncertainty and possible editorial use, with citations near the claims. Exact provenance belongs in accessible secondary details rather than a default wall of paths. Preserve original wording, attribution, revisions and human choices.
+
+Use a readable text measure, paragraph spacing and meaningful hierarchy on wide and narrow screens. Useful long-form depth may scroll; repeated labels, unnecessary controls and giant unbroken lists should not create the journey. A Library source title or row opens that exact source in its appropriate reader; a redundant Read action adds no useful choice. Presentation and generation guidance both need to meet this intent. Adoption alone does not establish that existing documents, prompts or installed tools have been repaired.
+
 ## Let additions earn their place
 
 Evaluate a refinement by whether it makes the author’s actual journey clearer, faster and more trustworthy. Preserve chosen editorial behavior without automatically copying old interface friction. Focused design alternatives resolve consequential open choices; they are not a recurring prerequisite once a direction is chosen. Reliable direct editing, visible creative decisions and actual reachable outputs take priority over adding controls or expanding synchronization. Ordinary use must not become a tour of compulsory workflow steps.

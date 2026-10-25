@@ -29,11 +29,11 @@ Projects can begin with a recording, supplied transcript, typed idea, photo, lin
 
 ### The design baseline
 
-The baseline is the Tree, commit `094204e` (activity sidebar, Working on switch, pieces list, step path), on the approved C3 look (`336bb20`) with Try again (`1b7a156`). The October 2026 rebuild re-laid it as three regions and one bar (sidebar, work column, inspector only where passages are anchored, and the bar); see [START.md](../START.md#the-screen-three-regions-and-one-bar). Preserve that shipped look and its working handlers, save guards and exact Undo. Dated entries below that say "preserve Claude's current build" refer to the pass that was current on their date; they no longer bind.
+The current approved direction is [C workbench](../../design/three-directions/c-workbench/index.html), with its decision record in [NOTES revisions 2–5](../../design/three-directions/c-workbench/NOTES.md). The final instruction removes numbers from navigation: the twelve section IDs remain requirements and history, not visible step numbers or a compulsory sequence. The layout uses a 66px icon rail, an adjacent 240px current-owner panel where navigation belongs, and the work area; phone navigation uses group sheets. This supersedes the earlier Tree/C3 visual baseline recorded below, while preserving its installed behavior and data protections until a reviewed candidate is integrated.
 
 ### Typography
 
-Recorded once. The shipped manuscript in Write, Read and Check is the system sans (16px on 1.5, 40px title, about 700px wide) with a remembered A− / A+ text size; the interface is Plus Jakarta Sans. Atlas (Lora body at 18px on 1.8, Cormorant Garamond headings, 680px) is the type for Source, Research, notes, retained transcripts and other shared long-form prose. Templates and exports keep their own type. The 15 October choice of Atlas for every long-form view was narrowed when C3's system-sans manuscript was approved; Adrian confirmed this split on 21 October 2026. Details: [LOOK](LOOK.md) and [Write](sections/05-draft.md).
+Use Plus Jakarta Sans throughout the interface with the 13/15/16/17px token scale and shared A− / A+ control. Read and Write use the same document geometry. Lora is reserved for speech. This supersedes the previous split that assigned Atlas and display serifs to other long-form screens; template renderings retain their own design type. The approved design direction does not establish installed or verified behavior. See [C workbench](../../design/three-directions/c-workbench/index.html), its [revision notes](../../design/three-directions/c-workbench/NOTES.md), and the [Write brief](sections/05-draft.md).
 
 ## Product pillars and shared acceptance
 
@@ -55,6 +55,10 @@ These requirements apply across section boundaries. Each scoped delivery names t
 The visible current decision accompanies relevant research, direction, draft, arrangement and output review. Do not make the person repeat their opening, correction or rejection at each stage. Local decisions stay local unless broader intent is expressed. Preserve prior decisions with the reason for supersession. If exact downstream impact cannot be established, explain that review is needed rather than inventing a precise dependency.
 
 Browsing an earlier checkpoint is not a stage reset, approval or permission to overwrite later work. Show retained earlier material separately from the current editable version and give a clear route back.
+
+## Approved Workbench presentation — 21 October 2026
+
+For this isolated four-PR sequence, the complete visual authority is `design/three-directions/c-workbench/` and its final NOTES. Apply the full section surfaces, not only navigation or fonts: 66px unnumbered rail, adjacent folder panel, Bench/Pieces pickup, common Plus Jakarta Sans 13/15/16/17px scale and A−/A+, Lora only for speech, identical Write/Read geometry, compact context tools and whole sequences. Preserve every maintained state/command/approval owner; honest empty or unavailable states replace demonstration records. This approved direction supersedes older conflicting visual wording below, without claiming functional completion. See CURRENT for implementation proof and the separately reviewed steps.
 
 ## How the work is organised
 
@@ -417,6 +421,10 @@ The author wants personally accessible private repository backing for content as
 
 Current app data and retained external transcript/original owners are not automatically synchronized to that snapshot. A later bounded connection must map these maintained authorities, preserve exact identities/revisions and source links, keep local/offline work and conflicting edits recoverable, and prove pull/update/return rather than declaring a snapshot to be synchronization. Keep credentials, account configuration and machine-only runtime/lock state outside both repositories. This accepted requirement does not itself relocate originals, upload private files, activate remote access or establish cross-device editing. Earlier “outside Git” language governs the code repository; it does not prohibit separately authorized private content storage.
 
+#### 21 October — Approved C workbench direction and staged review
+
+The approved visual authority is the [C workbench preview](../../design/three-directions/c-workbench/index.html) and [NOTES revisions 2–5](../../design/three-directions/c-workbench/NOTES.md), with Adrian's final instruction to remove numbers from navigation. The shared direction is an unnumbered 66px icon rail, an adjacent 240px current-owner panel where needed, Plus Jakarta Sans at 13/15/16/17px with shared A−/A+, matching Read/Write geometry, and Lora only for speech; phone navigation uses group sheets. The current step-1 source is a review candidate, not installed; its bounded demo verification is recorded in [the step-1 evidence](../verification/workbench-step1/README.md) for human PR review. The installed runtime remains unchanged. C02, C05, C06 and S01–S12 frame the affected design review. Each PR receives human review; no candidate is installed by this sequence. Remaining order is nested Library/Media storage, real Library research, then Arrange templates and the photo picker.
+
 ### Superseded wording kept for the record, 21 October 2026
 
 
@@ -460,3 +468,10 @@ A finished task does not make the whole section finished. Acceptance includes ap
 Each label is the canonical name used in the app (aliases are in [START.md](../START.md#sections-one-name-each)). The linked brief is the detailed authority for that section. The table names the required result, not current completion. Keep the twelve underlying checkpoints while sharing continuous work surfaces where useful. Materials and media remain accessible throughout; stages are not ceremonial gates.
 
 The table itself is unchanged apart from section labels, which now use the canonical names; the earlier labels are aliases in START.md.
+
+
+### 21 October — point to existing work; do not re-import it
+
+The author explicitly reiterates that the filesystem is the foundation. Existing recordings, transcripts, personal writings, research, media and output work stay at their canonical locations outside the software checkout. Configure their approved roots and catalog references so the interface and agents resolve the same identities and current revisions. A software update or a fresh interface must not require importing the material again. The Library index is discovery metadata, not another copy of the content or another manuscript authority. New files may be brought in normally; existing work must be found by reference.
+
+Acceptance must include the actual retained cases: An Cha sessions/context, Hong Kong research and its existing carousel, and Porcelain media. An empty synthetic library cannot establish these connections. Projects remain projects; their sources are reusable Library material; saved research and outputs keep their respective owners. Retained/browser/original-file work must not be called missing merely because a newer output register is empty. The approved ZIP remains the complete visual authority independently of content wiring. No bulk file moves, automatic migration, new database, duplicate bodies, provider activation or runtime installation follows from this clarification.

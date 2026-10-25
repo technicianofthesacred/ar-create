@@ -1,0 +1,73 @@
+/* Geometry copied from the approved C-workbench index.html (Inbox/Source) and
+   scale.css (Library). Scope it to maintained Gather owners. */
+html body.wbf-on #app #workspace :is(.wbg-inbox,.wbg-source){padding:0;max-width:1056px;margin:0;border:0;background:none;box-shadow:none}
+html body.wbf-on #app #workspace .wbg-inbox .material-tools{padding:0;margin:0;border:0;background:none;box-shadow:none}
+html body.wbf-on #app #workspace .wbg-inbox .drop{border:1.5px dashed color-mix(in srgb,var(--warm) 40%,var(--line));border-radius:11px;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 18px;background:none;min-height:0}
+html body.wbf-on #app #workspace .wbg-inbox .drop .t{flex:1;min-width:200px;font-size:var(--t-body);line-height:1.5}
+.wbg-intake-copy b{display:block;font-weight:600}.wbg-intake-copy .dim{color:var(--dim)}
+html body.wbf-on #app #workspace .wbg-inbox .drop>[data-flow-action=files]{min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font:500 var(--t-label)/1.4 var(--ar-ui);white-space:nowrap}
+html body.wbf-on #app #workspace .wbg-inbox :is(.wbg-capture,.wbg-intake-extra,.wbg-inbox-more,.wb-intake-more,.wb-intake-status){border:0;border-top:1px solid var(--line);border-radius:0;padding:0;background:none;margin:14px 0 0;box-shadow:none;font-size:var(--t-label)}
+html body.wbf-on #app #workspace .wbg-inbox :is(.wbg-capture,.wbg-intake-extra,.wbg-inbox-more,.wb-intake-more,.wb-intake-status)>summary{min-height:34px;padding:7px 0;color:var(--dim);cursor:pointer}
+html body.wbf-on #app #workspace .wbg-inbox [data-material-browser-host]{display:block!important;margin:0!important}
+html body.wbf-on #app #workspace .wbg-inbox .material-layout{display:none!important}
+html body.wbf-on #app #workspace .wbg-material-list{display:flex!important;flex-direction:column;border:0;border-radius:0;padding:0;margin:0;background:none;box-shadow:none}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-toolbar{display:none}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-layout{display:block!important;padding:0;gap:0;min-height:0}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-list-side{padding:0;border:0}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-collection{display:block!important;padding:0;border:0}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-item{display:block!important;padding:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;box-shadow:none}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-resource{display:grid!important;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:start;padding:12px 4px!important;width:100%;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;text-align:left;font:400 var(--t-body)/1.5 var(--ar-ui);color:var(--ink)}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-resource:is(:hover,:focus-visible){background:var(--sel)!important}
+html body.wbf-on #app #workspace .wbg-material-list :is(.mrb-thumb,.mrb-icon){width:44px;height:44px;border-radius:7px;object-fit:cover;background:var(--paper);display:grid;place-items:center;color:var(--dim)}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-item-info{display:block!important;min-width:0;padding:0}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-item-info strong{display:block;font-weight:500;overflow-wrap:anywhere}
+html body.wbf-on #app #workspace .wbg-material-list .mrb-meta{display:block;font-size:var(--t-label);color:var(--dim);margin:2px 0 0}
+.wbg-preview{margin:14px 0;font-size:var(--t-label);color:var(--dim)}.wbg-preview>summary{padding:7px 0;cursor:pointer}.wbg-preview .mrb-preview{border:1px solid var(--line);border-radius:7px;padding:14px}
+html body.wbf-on #app #workspace .wbg-source :is(.source-reader,.source-reader>article){padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none;max-width:none}
+html body.wbf-on #app #workspace .wbg-source .source-reader-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px;padding:0;border:0;background:none}
+.wbg-reader-more{margin-left:auto;font-size:var(--t-label);color:var(--dim)}.wbg-reader-more>summary{cursor:pointer;padding:5px 9px}
+html body.wbf-on #app #workspace .wbg-source .source-reader-title{margin:0 0 12px;padding:0;border:0;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+html body.wbf-on #app #workspace .wbg-source .source-reader-title h3{font:600 var(--t-body)/1.5 var(--ar-ui);margin:0}
+html body.wbf-on #app #workspace .wbg-source [data-source-reader-dialogue]{margin:0;padding:0;overflow:visible;max-height:none;max-width:calc(var(--measure,68ch) + 10rem)}
+html body.wbf-on #app #workspace .wbg-source .source-dialogue-group.tline{display:grid!important;grid-template-columns:48px 64px minmax(0,1fr)!important;gap:10px!important;padding:8px!important;border-radius:7px;align-items:baseline!important;margin:0!important;border:0}
+html body.wbf-on #app #workspace .wbg-source .tline:hover{background:var(--sel)}
+html body.wbf-on #app #workspace .wbg-source .tline .tm{font-size:var(--t-label);color:var(--dim);font-variant-numeric:tabular-nums}
+html body.wbf-on #app #workspace .wbg-source .tline .who{font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--dim)}
+html body.wbf-on #app #workspace .wbg-source .source-remark{font:400 var(--t-body)/1.65 'Workbench Lora',Lora,Georgia,serif!important}
+html body.wbf-on #app #workspace .wbg-source :is(.wbg-source-notes,.wbg-retained,.wb-source-secondary){margin:18px 0 0;padding:0;border:0;border-top:1px solid var(--line);border-radius:0;background:none;font-size:var(--t-label)}
+html body.wbf-on #app #workspace .wbg-source :is(.wbg-source-notes,.wbg-retained,.wb-source-secondary)>summary{padding:9px 0;color:var(--dim);cursor:pointer}
+html body.wbf-on #app #workspace .wbg-source audio{height:32px;max-width:100%;width:300px}
+/* Library keeps the existing functional shared folder browser. */
+html body.wbf-on #app #workspace .k-library .wfb-fsearch{gap:6px;padding:0 8px}
+@media(max-width:760px){
+ html body.wbf-on #app #workspace .wbg-inbox .drop{padding:14px;gap:10px}
+ html body.wbf-on #app #workspace .wbg-source .source-dialogue-group.tline{grid-template-columns:44px minmax(0,1fr)!important;row-gap:2px!important}
+ html body.wbf-on #app #workspace .wbg-source .tline>.tm{grid-column:1!important;grid-row:1 / span 2!important}
+ html body.wbf-on #app #workspace .wbg-source .tline>.who{grid-column:2!important;grid-row:1!important}
+ html body.wbf-on #app #workspace .wbg-source .tline>.tx{grid-column:2!important;grid-row:2!important}
+ html body.wbf-on #app #workspace .wbg-source .source-reader-selector{max-width:100%;min-width:0}
+ html body.wbf-on #app #workspace .wbg-source .source-reader-selector select{max-width:100%;width:100%;min-width:0}
+}
+/* Supersede the retained Material flex-order projection: approved Inbox is a
+   normal document flow, intake first and secondary preparation at the end. */
+html body.wbf-on #app #workspace .wbg-inbox{display:block!important}
+html body.wbf-on #app #workspace .wbg-inbox>.material-tools{display:block!important;order:0!important}
+html body.wbf-on #app #workspace .wbg-inbox .material-intake.drop{order:0!important}
+html body.wbf-on #app #workspace .wbg-inbox>.material-boundary{display:none!important}
+html body.wbf-on #app #workspace .wbg-inbox .wbg-capture>.material-note-tools{display:flex!important}
+html body.wbf-on #app #workspace .wbg-inbox .wbg-capture:not([open])>.material-note-tools{display:none!important}
+html body.wbf-on #app #workspace .wbg-inbox .wbg-capture>summary{padding:7px 0!important;min-height:34px!important;border:0!important;background:none!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important;display:list-item!important}
+html body.wbf-on #app #workspace .wbg-inbox .wbg-capture>summary>:not(.c3-tool-t){display:none!important}
+html body.wbf-on #app #workspace .wbg-inbox .drop>.material-note-tools{flex:1 1 100%;border:0;margin:0;padding:0;display:flex;gap:16px}
+html body.wbf-on #app #workspace .wbg-inbox .drop>.material-note-tools>details>summary{padding:0!important;min-height:24px!important;display:list-item!important;border:0!important;background:none!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+html body.wbf-on #app #workspace .wbg-inbox .drop>.material-note-tools>details>summary>:not(.c3-tool-t){display:none!important}
+html body.wbf-on #app #workspace:is(.wb-inbox,.wb-source) .recordPage.flow-paper{padding:0 0 96px!important}
+html body.wbf-on #app #workspace .wbg-inbox .drop>.material-note-tools>details{flex:0 1 auto!important;min-width:0!important;width:auto!important;padding:0!important;background:none!important;border:0!important}
+html body.wbf-on #app #workspace .wbg-inbox .drop>.material-note-tools>details>summary .c3-tool-t{display:inline!important;border:0!important;border-radius:0!important;background:none!important;padding:0!important;margin:0!important;width:auto!important;min-height:0!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--warm)!important}
+html body.wbf-on #app #workspace .wbg-source .recordBody.source-dialogue{padding:0!important;margin:0!important;max-width:none!important;width:auto!important}
+html body.wbf-on #app #workspace .wbg-source .source-reader-selector{flex:0 1 auto;display:flex;gap:8px;align-items:center;font-size:var(--t-label);min-width:0}
+html body.wbf-on #app #workspace .wbg-source .source-reader-selector select{flex:none;width:min(28rem,100%);max-width:100%;min-width:0;font-size:var(--t-label)}
+html body.wbf-on #app #workspace .wbg-source :is(.wbg-retained,.wbg-source-notes,.wb-source-secondary)>summary{background:none!important;border:0!important;border-radius:0!important}
+html body.wbf-on #app #workspace .wbg-source .source-reader-selector{flex:1 1 24rem;white-space:nowrap}
+html body.wbf-on #app #workspace .wbg-source .source-reader-selector select{flex:1 1 auto;width:0;min-width:0;max-width:28rem}
+@media(max-width:760px){html body.wbf-on #app #workspace .wbg-source .source-reader-selector{display:block;flex:1 1 100%;width:100%}html body.wbf-on #app #workspace .wbg-source .source-reader-selector select{display:block;width:100%;max-width:100%;margin-top:4px}}

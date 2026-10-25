@@ -1,0 +1,82 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {randomUUID,createHash} from 'node:crypto';
+import {createLibrary} from '../runtime/services/library.mjs';
+const sha=b=>createHash('sha256').update(b).digest('hex');
+async function fixture(t){
+ const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'arc-folders-'));t.after(()=>fs.rmSync(dataDir,{recursive:true,force:true}));
+ const library=createLibrary({dataDir});
+ const imported=await library.import({rootId:'library',files:[{name:'note.md',content:'Invented exact words.'},{name:'photo.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII='},{name:'clip.mp4',base64:Buffer.from('00000018667479706d7034320000000069736f6d6d703432','hex').toString('base64')}]});
+ const ids=imported.receipts.map(r=>r.source.id),originals=imported.receipts.map(r=>({path:r.source.path,hash:sha(fs.readFileSync(r.source.path))}));
+ let current=library;
+ return {dataDir,ids,originals,get library(){return current;},reopen(){current=createLibrary({dataDir});},async view(domain='library'){return current.folders({domain});},async change(action,extra={},domain='library'){const v=await current.folders({domain});return current.changeFolders({domain,action,operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash,...extra});}};
+}
+test('folder filing persists hierarchy, independent domains, exact Undo and originals/legacy records',async t=>{
+ const f=await fixture(t),legacy=await f.library.saveCollection({name:'Legacy inquiry',sourceIds:[f.ids[0]],expectedRevision:(await f.library.collections()).revision});
+ const before=JSON.parse(fs.readFileSync(path.join(f.dataDir,'library-index.json')));
+ const a=await f.change('create',{name:'A'}),b=await f.change('create',{name:'B',parentId:a.selectedFolderId}),c=await f.change('create',{name:'C',parentId:b.selectedFolderId});
+ await f.change('link',{folderId:a.selectedFolderId,sourceIds:[f.ids[0]]});await f.change('link',{folderId:c.selectedFolderId,sourceIds:[f.ids[0]]});
+ await assert.rejects(f.change('reparent',{folderId:a.selectedFolderId,parentId:c.selectedFolderId}),/cycle/i);
+ await assert.rejects(f.change('remove',{folderId:b.selectedFolderId}),/empty/i);
+ const m=await f.change('create',{name:'Images'},'media');await f.change('link',{folderId:m.selectedFolderId,sourceIds:[f.ids[1]]},'media');
+ await assert.rejects(f.change('link',{folderId:m.selectedFolderId,sourceIds:[f.ids[0]]},'media'),/source/i);
+ await assert.rejects(f.change('reparent',{folderId:a.selectedFolderId,parentId:m.selectedFolderId}),/folder/i);
+ const filed=(await f.view()).folders;const move=await f.change('move',{folderId:b.selectedFolderId,sourceIds:[f.ids[0]]});
+ assert.equal(move.folders.filter(row=>row.sourceIds.includes(f.ids[0])).length,1);
+ f.reopen();assert.deepEqual((await f.view()).folders,move.folders);
+ const undone=await f.change('undo',{undoOperationId:move.receipt.operationId});assert.deepEqual(undone.folders,filed);
+ await f.change('rename',{folderId:c.selectedFolderId,name:'Renamed'});await f.change('reparent',{folderId:c.selectedFolderId,parentId:null});
+ await f.change('unlink',{folderId:c.selectedFolderId,sourceIds:[f.ids[0]]});await f.change('remove',{folderId:c.selectedFolderId});
+ assert.equal((await f.view('media')).folders[0].sourceIds[0],f.ids[1]);assert.equal((await f.view('media')).sources.length,2);const video=(await f.view('media')).sources.find(s=>s.id===f.ids[2]);assert.equal(video.kind,'audio');assert.equal(video.mediaKind,'video');
+ const after=JSON.parse(fs.readFileSync(path.join(f.dataDir,'library-index.json')));
+ for(const key of ['sources','collections','evidence','legacyImported'])assert.deepEqual(after[key],before[key]);
+ assert.deepEqual(after.collections[0],legacy.collection);for(const original of f.originals)assert.equal(sha(fs.readFileSync(original.path)),original.hash);
+});
+test('exact guards, operation replay, changed UUID payload and queued writes',async t=>{
+ const f=await fixture(t),v=await f.view(),input={domain:'library',action:'create',name:'First',operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash};
+ const first=await f.library.changeFolders(input),bytes=fs.readFileSync(path.join(f.dataDir,'library-index.json'),'utf8');
+ assert.equal((await f.library.changeFolders(input)).replayed,true);assert.equal(fs.readFileSync(path.join(f.dataDir,'library-index.json'),'utf8'),bytes);
+ await assert.rejects(f.library.changeFolders({...input,name:'Changed'}),/UUID/i);
+ await assert.rejects(f.library.changeFolders({...input,operationId:randomUUID()}),/changed/i);
+ const fresh=await f.view(),request=name=>({...input,name,operationId:randomUUID(),expectedRevision:fresh.revision,expectedHash:fresh.indexHash});
+ const queued=await Promise.allSettled([f.library.changeFolders(request('Second')),f.library.changeFolders(request('Third'))]);assert.equal(queued.filter(r=>r.status==='fulfilled').length,1);
+ await assert.rejects(f.change('undo',{undoOperationId:first.receipt.operationId}),/last|preceding/i);
+ await assert.rejects(f.change('link',{folderId:first.selectedFolderId,sourceIds:[randomUUID()]}),/source/i);
+ await assert.rejects(f.change('create',{name:'../bad'}),/name/i);
+});
+test('unavailable references stay visible and malformed persisted folders preserve bytes',async t=>{
+ const f=await fixture(t),a=await f.change('create',{name:'Keep'});await f.change('link',{folderId:a.selectedFolderId,sourceIds:[f.ids[0]]});fs.unlinkSync(f.originals[0].path);
+ const unavailable=(await f.view()).sources.find(s=>s.id===f.ids[0]);assert.equal(unavailable.sourceUnavailable,true);assert.equal((await f.view()).folders[0].sourceIds[0],f.ids[0]);
+ const file=path.join(f.dataDir,'library-index.json'),bad=JSON.parse(fs.readFileSync(file));bad.folders[0].parentId=bad.folders[0].id;const bytes=JSON.stringify(bad);fs.writeFileSync(file,bytes);
+ await assert.rejects(f.view(),/folder|cycle/i);assert.equal(fs.readFileSync(file,'utf8'),bytes);
+});
+test('registered folder command shares HTTP/CLI guards, actor attribution and journal',async t=>{
+ const {syntheticHome}=await import('../scripts/demo.mjs'),{createServer}=await import('../runtime/server.mjs'),{run}=await import('../agents/cli/ar-create.mjs');
+ const fixture=syntheticHome(),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+ const server=await createServer({dataDir:config.dataDir,publicDir:path.resolve('public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(async()=>{await new Promise(resolve=>server.close(resolve));fs.rmSync(fixture.dir,{recursive:true,force:true});});
+ const url='http://127.0.0.1:'+server.address().port,cli=async(command,input,actor='agent:codex')=>run(['--url',url,'--actor',actor,...command,'--input','-'],{stdin:async()=>JSON.stringify(input)});
+ const capabilities=await (await fetch(url+'/api/capabilities')).json(),commands=capabilities.commands;
+ const registered=commands.find(c=>c.name==='library.folders.post');assert.equal(registered.section,'library');assert.equal(registered.readOnly,false);assert.equal(registered.undo,'library.folders.post');
+ const get=await cli(['call','library.folders.get'],{domain:'library'});assert.equal(get.exitCode,0,JSON.stringify(get.result));
+ const input={domain:'library',action:'create',name:'CLI folder',operationId:randomUUID(),expectedRevision:get.result.revision,expectedHash:get.result.indexHash};
+ const anonymous=await fetch(url+'/api/library/folders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});assert.equal(anonymous.status,400);
+ const saved=await cli(['call','library.folders.post'],input);assert.equal(saved.exitCode,0,JSON.stringify(saved.result));
+ const stale=await cli(['call','library.folders.post'],{...input,operationId:randomUUID()});assert.equal(stale.exitCode,3);
+ const scope={kind:'library',id:'folders-library'};
+ const lease=await cli(['lease','acquire'],{scope,reason:'Organizing folders'},'agent:claude-code');assert.equal(lease.exitCode,0,JSON.stringify(lease.result));
+ const exact=await (await fetch(url+'/api/library/folders?domain=library')).json();
+ const guarded={domain:'library',action:'create',name:'Guarded folder',operationId:randomUUID(),expectedRevision:exact.revision,expectedHash:exact.indexHash};
+ const indexFile=path.join(config.dataDir,'library-index.json'),before=fs.readFileSync(indexFile,'utf8');
+ const locked=await cli(['call','library.folders.post'],guarded);assert.equal(locked.exitCode,4,JSON.stringify(locked.result));assert.equal(locked.result.details.holder.actor,'agent:claude-code');assert.equal(fs.readFileSync(indexFile,'utf8'),before);
+ const human=await fetch(url+'/api/library/folders',{method:'POST',headers:{'Content-Type':'application/json',Origin:url},body:JSON.stringify(guarded)});assert.equal(human.status,200);const humanResult=await human.json();assert.ok(humanResult.folders.some(row=>row.name==='Guarded folder'));
+ // A Library lease does not block Media filing through the same command.
+ const mediaView=await (await fetch(url+'/api/library/folders?domain=media')).json();
+ const mediaSaved=await cli(['call','library.folders.post'],{domain:'media',action:'create',name:'Media independent',operationId:randomUUID(),expectedRevision:mediaView.revision,expectedHash:mediaView.indexHash});assert.equal(mediaSaved.exitCode,0,JSON.stringify(mediaSaved.result));
+ const records=fs.readdirSync(path.join(config.dataDir,'journal')).flatMap(file=>fs.readFileSync(path.join(config.dataDir,'journal',file),'utf8').split('\n').filter(Boolean).map(JSON.parse));
+ const line=records.find(row=>row.operationId===input.operationId&&row.status==='committed');assert.equal(line.actor,'agent:codex');assert.equal(line.kind,'library.folders.post');assert.deepEqual(line.scope,scope);
+ const humanLine=records.find(row=>row.operationId===guarded.operationId&&row.status==='committed');assert.equal(humanLine.actor,'human:adrian');assert.deepEqual(humanLine.scope,scope);assert.ok(records.some(row=>row.kind==='lease.override'&&row.to==='agent:claude-code'));
+});

@@ -1,0 +1,56 @@
+/* Workbench Write/Read continuity. Retains the maintained editor and real controls.
+   Load after workbench-frame.css. Geometry follows C Workbench revisions 2–6. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc,
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose),
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose) :is(p,div,section,blockquote,li){color:var(--ink)!important}
+/* An old sticky inspector offset must not move the contextual margin down. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #workspace .desk>#margin{
+ position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+ padding:67px 0 0!important;align-self:start!important;font-family:var(--ar-ui)!important
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .draft-surface-margin-body{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .discussion{color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .discussion .head strong{font-weight:500!important;color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .discussion:hover{border-left-color:var(--warm)!important;color:var(--ink)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .discussion button{font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--warm)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .draft-surface-ai-state{font:400 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+/* The same quiet control styling as the reference; preserve More/Parts owners. */
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(.sb-btn,.sb-icon,#wbf-tools .btn,#wbf-document-actions .btn){font:500 var(--t-label)/1.5 var(--ar-ui)!important;background:var(--paper)!important;border:1px solid var(--line)!important;border-radius:7px!important;box-shadow:none!important;color:var(--ink)!important}
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(.sb-btn,.sb-icon,#wbf-tools .btn,#wbf-document-actions .btn):hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))!important}
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar #wbf-document-actions .quiet{background:transparent!important;border-color:transparent!important;color:var(--dim)!important}
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar #wbf-document-actions .quiet:hover{color:var(--ink)!important;background:transparent!important}
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(#wbf-tools,#wbf-document-actions)>.btn{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:0 12px!important;min-height:34px!important}
+@media(max-width:900px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #workspace .desk>#margin{padding:3px 0 0!important}
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .draft-surface-margin-body{padding:0!important;border:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #workspace .desk>#margin{border:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #margin .discussion :is(p,.why,.sourceGuard){line-height:1.5!important}
+/* Keep the maintained Focus state stronger than the legacy inspector grid. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-draft-focus="true"] #app #workspace .desk,
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb)[data-draft-focus="true"] body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important;margin-left:auto!important;margin-right:auto!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-draft-focus="true"] #app #workspace .desk>#margin,
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb)[data-draft-focus="true"] body.wbf-on #app #workspace .desk>#margin{display:none!important}
+
+/* Recovery is the original banner in a tool drawer, rather than an extra row
+   above only Write. Its native controls and delegated handlers stay intact. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace>.draft-bar{display:none!important}
+html body.wbf-on #wbf-drawer .dr-body[data-tool="recovery"]>.draft-bar{display:block!important;padding:0!important;margin:0!important}
+html body.wbf-on #wbf-drawer .dr-body[data-tool="recovery"] .draft-inspect{display:block!important;margin:12px 0!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+/* A single shared action row gives both modes exactly the same document top.
+   Sources, explicit Save and recovery remain in More on every viewport. */
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar{flex-direction:row!important;align-items:center!important;align-content:flex-start!important;justify-content:flex-start!important;flex-wrap:wrap!important;gap:10px!important;min-height:74px!important;margin-top:16px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar>.sb-left{flex:1 1 100%!important;height:30px!important;min-height:30px!important;padding-right:100px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(.sb-right,#wbf-tools,#wbf-document-actions){display:contents!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar .sb-morew{position:absolute!important;top:0!important;right:0!important;width:34px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar .sb-morew>.sb-btn{display:inline-flex!important;width:34px!important;padding:0!important;gap:0!important}
+ html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar .sb-morew>.sb-btn>span{font-size:0!important}
+ html body.wbf-on #c3-surface-bar .wbf-word-count{display:none!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar .sb-focus{display:inline-flex!important;order:3!important;width:30px!important;min-width:30px!important;padding:0!important;font-size:0!important}
+ html body.wbf-on #c3-surface-bar #wbf-parts{position:absolute!important;top:0!important;right:44px!important}
+}
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(#wbf-tools,#wbf-document-actions)>.btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;height:34px!important;padding:0 12px!important;white-space:nowrap!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important}
+}
+html body.wbf-on #c3-surface-bar .sb-morew>.sb-btn[data-wbf-recovery="true"]::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--warm)}

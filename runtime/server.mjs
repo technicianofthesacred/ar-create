@@ -1,6 +1,7 @@
 import {createInquiryProjectSelectors} from './services/inquiry-project-selectors.mjs';
 import {createNativeOutputExports} from './services/native-output-exports.mjs';
 import {createNativeOutputFactory} from './services/native-output-factory.mjs';
+import {createRetainedCarouselReader} from './services/review-retained-carousels.mjs';
 import {sharedArticlesEnabled} from './services/shared-article-activation.mjs';
 import {createSharedCarouselBridge} from './services/shared-carousel-bridge.mjs';
 import {createSharedArticleBridge} from './services/shared-article-bridge.mjs';
@@ -14,6 +15,7 @@ import {createStudyFirstFlowPlanContext} from './services/study-first-flow-plan-
 import {createStudyProjectMaterialContext} from './services/study-project-material-context.mjs';
 import {createStudyDerivedFindings} from './services/study-derived-findings.mjs';
 import {createStudyOriginals} from './services/study-originals.mjs';
+import {createStudyOriginalSourceCatalog} from './services/study-original-source-catalog.mjs';
 import {createStudyDraftCopies} from './services/study-draft-copies.mjs';
 import * as studyPhotoFiles from './services/files.mjs';
 import {createLibraryWorkReferences} from './services/library-work-references.mjs';
@@ -28,7 +30,7 @@ import {outputSpec as mediaArticleSpec} from './services/media-article-spec.mjs'
 import mediaCarouselTemplates from './src/donors/mag/carousel/ig-templates.js';
 import {createSharePreparation} from './services/share-preparation.mjs';
 import {outputPrivatePrefix} from './output-records.mjs';
-import {createStudyPhotos} from './services/study-photos.mjs';
+import {createStudyPhotos,studyPhotoPreviewInput} from './services/study-photos.mjs';
 import {createStudyOwnedPhotoBindings} from './services/study-owned-photo-bindings.mjs';
 import {createConceptWork} from './services/concept-work.mjs';
 import {createStudyHumanDirection} from './services/study-human-direction.mjs';
@@ -43,6 +45,7 @@ import {createJournal} from './services/journal.mjs';
 import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
 import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
+import {createWorkingDraftBridge} from './services/magazine/working-draft-bridge.mjs';
 import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
@@ -185,7 +188,10 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, release=null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
+  // Host-selected read capability only. No request can choose a source path or
+  // establish an association between an original and the current manuscript.
+  const retainedCarouselSource=retainedCarouselState===undefined||retainedCarouselState===null?null:createRetainedCarouselReader({retainedCarouselState});
   dataDir = path.resolve(dataDir);
   const store = await createStore({ dataDir, sharedArticles, publicationFault });
   try {
@@ -203,7 +209,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const magazineRead=async operation=>{try{return await operation();}catch(error){if([400,404,409,413,415].includes(error.status))throw new StateError(error.message,error.status);throw error;}};
   const ingestion = createUrlIngestion({ dataDir, ...(ingestionOptions || {}) });
   let recordings,libraryWorkReferences=null,projectMembership=null;
-  const library = createLibrary({ dataDir, workReferences:{read:input=>{if(!libraryWorkReferences)throw new StateError('Existing work references are unavailable.',503);return libraryWorkReferences.read(input);},measure:input=>{if(!libraryWorkReferences)throw new StateError('Measured media usage is unavailable.',503);return libraryWorkReferences.measure(input);}},projectAssociations:{read:input=>{if(!projectMembership)throw new StateError('Named Project authority is unavailable.',503);return projectMembership.readAuthority(input);}}, connections, retainedCatalog:transcriptLibrary?createRetainedTranscriptCatalog(transcriptLibrary):null, extraction, legacyState: () => store.get(), urlIngestion: extraction ? null : source => ingestion.schedule(source), ingestionState: id => ingestion.state(id), recordingState: id => recordings?.state(id), recordingSourceSnapshot: source => recordings?.sourceSnapshot?.(source) });
+  const library = createLibrary({ dataDir, workReferences:{read:input=>{if(!libraryWorkReferences)throw new StateError('Existing work references are unavailable.',503);return libraryWorkReferences.read(input);},measure:input=>{if(!libraryWorkReferences)throw new StateError('Measured media usage is unavailable.',503);return libraryWorkReferences.measure(input);}},projectAssociations:{read:input=>{if(!projectMembership)throw new StateError('Named Project authority is unavailable.',503);return projectMembership.readAuthority(input);}}, connections, originalCatalog:studyOriginalRoots?createStudyOriginalSourceCatalog(studyOriginalRoots):null, retainedCatalog:transcriptLibrary?createRetainedTranscriptCatalog(transcriptLibrary):null, extraction, legacyState: () => store.get(), urlIngestion: extraction ? null : source => ingestion.schedule(source), ingestionState: id => ingestion.state(id), recordingState: id => recordings?.state(id), recordingSourceSnapshot: source => recordings?.sourceSnapshot?.(source) });
   const writingTemplates=createWritingTemplates({store,library,magazine:{read:input=>magazineRead(()=>magazine.read(input))}});
   const connectedFolders = createConnections({dataDir,library,connections,editable:connectionsEditable,...(!connectionsEditable?{reason:'Folders are managed by the server startup configuration.'}:{})});
   const researchMaterial = createResearchMaterial({dataDir,library});
@@ -242,7 +248,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
   const createStudyCollection=async input=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};};
   const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
-  const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings}):null;
+  const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings,retainedSource:retainedCarouselSource,browserOrigins:browserCarouselOrigins}):null;
   const studyOutputs=studyOutputFactory?.owner;
   const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
   const studyShare=studyOutputs?createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix}):null;
@@ -275,6 +281,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
+  const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal});
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
   function afterRequest(request,response,context){
@@ -315,10 +322,35 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const commandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
+    if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
+    if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);
+    return studyOutputs.copyRetainedCarousel(input);
+  })},'/api/study/outputs/undo-words':{POST:input=>draftCall(()=>{
+    if([...context.url.searchParams].length)throw new StateError('Use the exact wording Undo command without a query.',400);
+    if(!studyOutputs)throw new StateError('Saved carousel wording is not configured for this workspace.',503);
+    return studyOutputs.undoCarouselWords(input);
+  })},'/api/study/outputs/copy-browser-carousel':{POST:input=>draftCall(()=>{
+    if([...context.url.searchParams].length)throw new StateError('Use the exact browser copy command without a query.',400);
+    if(context.request.headers.origin!==context.url.origin)throw new StateError('Browser carousel copying requires this workspace origin.',403);
+    if(!studyOutputs)throw new StateError('Browser carousel copying is not configured for this workspace.',503);
+    return studyOutputs.copyBrowserCarousel(input,{origin:context.url.origin});
+  })}});
   let registry=null;
   const commandList=()=>registry||(registry=describeRoutes(commandRoutes({url:new URL('http://127.0.0.1/'),request:{headers:{}},server:null,outputQuery:()=>({}),decorateOutputExports:value=>value,describe:async()=>({})}),extraCommands));
-  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))},commands:commandList().map(publicEntry)});
+  const retainedCopyAvailability=async()=>{
+    const result={readOnly:true,configured:!!retainedCarouselSource,available:false,requiresExplicitDestination:true,requiresOriginalValidation:true,items:[]};
+    if(!retainedCarouselSource)return result;
+    try{
+      const retained=await retainedCarouselSource.list();
+      return {...result,available:retained.available===true&&!!studyOutputs,items:retained.items.filter(item=>item.copyAllowed!==false),...(!studyOutputs?{error:'The existing native output writer is unavailable.'}:{})};
+    }catch(error){return {...result,error:[403,409,413,415,503].includes(error.status)?error.message:'The retained originals are unavailable; their existing records were preserved.'};}
+  };
+  // Metadata only: no destination is selected/created here. The caller must
+  // explicitly choose a ready existing root, then read /api/study/outputs for
+  // photoScope + expectedOutput and /api/study-draft/read for expectedNative.
+  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))},commands:commandList().map(publicEntry),retainedCarouselCopy:await retainedCopyAvailability(),browserCarouselCopy:{available:!!studyOutputs,requiresExplicitDestination:true,requiresBrowserSnapshot:true}});
   const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
   // Every request runs inside its actor context so services can stamp writes.
   async function routeRequest(request, response) {
@@ -523,6 +555,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (request.method === 'HEAD' || !size) return response.end();
         const stream = createReadStream(file, { start, end }); stream.on('error', () => response.destroy()); response.on('close', () => stream.destroy()); stream.pipe(response); return;
       }
+      if (pathname === '/api/study/photos/preview') {
+        if(request.method!=='GET'){response.setHeader('Allow','GET');throw new StateError('Method is not supported.',405);}
+        const preview=await draftCall(()=>studyPhotos.preview(studyPhotoPreviewInput(url)));
+        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.contentLength,'X-Content-SHA256':preview.hash,'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
+        return response.end(preview.bytes);
+      }
       if (pathname === '/api/sources/blob') {
         if (!['GET', 'HEAD'].includes(request.method)) throw new StateError('Method is not supported.', 405);
         const { file, source } = await library.blob(url.searchParams.get('id'), url.searchParams.get('original') === '1');
@@ -564,7 +602,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (['POST','DELETE'].includes(request.method)) {
           if (request.method === 'POST' && READ_ONLY_POSTS.has(pathname)) checkWriteOrigin(request, server); else checkWrite(request, server);
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
-          input = await body(request, pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
+          input = await body(request, pathname === '/api/study/outputs/copy-browser-carousel' ? 512 * 1024 : pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');
           if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
         }

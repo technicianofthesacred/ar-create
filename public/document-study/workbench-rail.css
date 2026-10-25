@@ -1,0 +1,169 @@
+/* Workbench rail and section panel (workbench-rail.js). Tokens only: type from type-scale.css, colour from c3-theme.css.
+   The panel's shade sits between the rail and the selected-row colour, and the active rail item shares it, so the panel
+   reads as opening out of the item. */
+:root{--wb-railw:66px;--wb-panelw:240px;--wb-rail-bg:var(--c3-lift,var(--rail));--wb-sel:var(--c3-sel,var(--line));--wb-panel:color-mix(in srgb,var(--wb-rail-bg) 45%,var(--wb-sel));--wb-bbar:60px}
+.wb-bbar{display:none}
+/* Library lives in Gather. Its former footer entry remains the real action owner, used by All sources. */
+html body.wb-on #app>.shell>.workflowNavigation.wb-rail>.tr-find>[data-tr-topics]{display:none!important}
+/* The grouped phone sheet keeps the same unnumbered section names as the desktop rail. */
+.workflowNavigation.wb-rail :is(.stepNumber,.cr-picker-count){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;margin:0!important;padding:0!important;font:400 var(--t-label)/1.2 var(--ar-ui)!important}
+
+@media(min-width:761px){
+ /* Columns: rail, the panel only where a section has something to browse, then the work. */
+ html body.wb-on.c3-rail-on #app>.shell{grid-template-columns:var(--wb-railw) minmax(0,1fr)!important}
+ html body.wb-on.wb-panel-on #app>.shell{grid-template-columns:var(--wb-railw) var(--wb-panelw) minmax(0,1fr)!important}
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail{grid-column:1;grid-row:1}
+ html body.wb-on #app>.shell>#wb-panel{grid-column:2;grid-row:1}
+ html body.wb-on #app>.shell>.workspace{grid-column:-2/-1;grid-row:1}
+ html body.wb-on[data-draft-focus="true"] #app>.shell,html[data-draft-focus="true"] body.wb-on #app>.shell{grid-template-columns:minmax(0,1fr)!important}
+ html body.wb-on[data-draft-focus="true"] #app>.shell>#wb-panel,html[data-draft-focus="true"] body.wb-on #app>.shell>#wb-panel{display:none}
+
+ /* ---------- the rail ---------- */
+ html body.wb-on .shell>.workflowNavigation.wb-rail{box-sizing:border-box;width:var(--wb-railw);min-width:0;padding:6px 3px!important;gap:1px;overflow-x:hidden;overflow-y:auto;scrollbar-width:none;background:var(--wb-rail-bg);border-right:1px solid var(--line)}
+ html body.wb-on .shell>.workflowNavigation.wb-rail::-webkit-scrollbar{display:none}
+ html body.wb-on.wb-panel-on .shell>.workflowNavigation.wb-rail{border-right:0}
+ .workflowNavigation.wb-rail>.tr-head{padding:0;margin:0;border:0;gap:1px}
+ .workflowNavigation.wb-rail .tr-row{flex-direction:column;gap:1px}
+ .workflowNavigation.wb-rail .tr-fold{display:none!important}
+ .workflowNavigation.wb-rail>#c3-tabstrip{flex-direction:column;flex-wrap:nowrap;gap:1px;padding:0!important;margin:0!important}
+ .workflowNavigation.wb-rail>#c3-tabstrip :is(.ht-switch,.ht-plus){flex:none;width:100%}
+ .workflowNavigation.wb-rail .wn-family{padding:0!important;margin:0!important;border:0!important}
+ .workflowNavigation.wb-rail .wn-family+.wn-family::before,.workflowNavigation.wb-rail>.workflowSteps::before,.workflowNavigation.wb-rail>.tr-find::before{content:"";display:block;height:1px;margin:5px 10px;background:var(--line)}
+ .workflowNavigation.wb-rail :is(.tr-act,.wn-family-label){display:none!important}
+ .workflowNavigation.wb-rail .wn-family-steps{gap:1px}
+ .workflowNavigation.wb-rail>.tr-find{margin-top:auto;padding:0!important;border:0!important;gap:1px}
+ /* One item: icon over a 13px name. */
+ .workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.tr-link,#c3-tabstrip .ht-switch>summary,#c3-tabstrip .ht-plus>summary){
+  position:relative;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;
+  box-sizing:border-box;width:100%!important;min-width:0;min-height:42px!important;margin:0!important;padding:4px 0 3px!important;border:0!important;border-radius:8px!important;
+  background:none!important;box-shadow:none!important;color:var(--dim)!important;font:500 var(--t-label)/1.15 var(--ar-ui)!important;letter-spacing:-.02em;text-align:center!important;cursor:pointer}
+ .workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.tr-link,#c3-tabstrip summary):hover{color:var(--ink)!important;background:var(--wb-sel)!important}
+ .workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.tr-link,#c3-tabstrip summary):focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+ .workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.tr-link,#c3-tabstrip summary) svg{flex:none;width:18px;height:18px;color:inherit!important}
+ .workflowNavigation.wb-rail .workflowStep .stepName{flex:none!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit!important;color:inherit}
+ /* No number badges and no state words on the rail; both stay in the button for screen readers. */
+ .workflowNavigation.wb-rail :is(.stepNumber,.currentMark,.tr-state,.tr-n,.tr-label,.ht-switch-label,.ht-plus-label){position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;margin:0!important;padding:0!important;font:400 var(--t-label)/1.2 var(--ar-ui)!important}
+ .workflowNavigation.wb-rail :is(.recordDot,.cr-dot){display:none!important}
+ .workflowNavigation.wb-rail #c3-tabstrip .ht-switch>summary>svg:last-of-type{display:none}
+ .workflowNavigation.wb-rail :is(.tr-home,.tr-link)::after{content:attr(data-short);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .workflowNavigation.wb-rail #c3-tabstrip .ht-switch>summary::after{content:"Pieces"}
+ .workflowNavigation.wb-rail #c3-tabstrip .ht-plus>summary::after{content:"New"}
+ .workflowNavigation.wb-rail .tr-home{font-weight:500!important}
+ /* A step that needs you keeps one quiet mark, never a number. */
+ .workflowNavigation.wb-rail .workflowStep:is([data-state="needs you"],[data-state="unsaved"],[data-state="browser only"])::after{content:"";position:absolute;top:8px;left:calc(50% + 10px);width:6px;height:6px;border-radius:50%;background:var(--c3-warn)}
+ /* The active item: lifted, with a sand edge; with a panel open it takes the panel's shade and meets it. */
+ .workflowNavigation.wb-rail .workflowStep[aria-current]{color:var(--ink)!important;background:var(--wb-sel)!important;font-weight:600!important}
+ .workflowNavigation.wb-rail .workflowStep[aria-current]::before{content:"";position:absolute;left:-3px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--warm)}
+ html body.wb-panel-on .workflowNavigation.wb-rail .workflowStep[aria-current]{background:var(--wb-panel)!important;border-radius:8px 0 0 8px!important;margin-right:-3px!important;width:calc(100% + 3px)!important}
+ /* A section with a collapsed panel says so on its item. */
+ html body[data-wb-panel]:not(.wb-panel-on) .workflowNavigation.wb-rail .workflowStep[aria-current][aria-expanded="false"]::after{content:"";position:absolute;right:5px;top:50%;width:5px;height:5px;margin-top:-3px;border-top:1.5px solid var(--dim);border-right:1.5px solid var(--dim);transform:rotate(45deg)}
+ /* The piece switcher and New open beside the rail, level with their row. */
+ .workflowNavigation.wb-rail>#c3-tabstrip .ht-menu{position:fixed!important;left:calc(var(--wb-railw) + 6px)!important;top:var(--wb-my,56px)!important;right:auto!important}
+
+ /* ---------- the section panel ---------- */
+ #wb-panel{box-sizing:border-box;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow:hidden;background:var(--wb-panel);border-right:1px solid var(--line);color:var(--ink);font:400 var(--t-body)/var(--lh-ui,1.45) var(--ar-ui)}
+}
+#wb-panel .wbp-head{display:flex;align-items:center;gap:6px;flex:none;height:44px;padding:0 6px 0 14px;font:500 var(--t-label)/1.2 var(--ar-ui);color:var(--dim)}
+#wb-panel .wbp-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wb-panel .wbp-fold{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:none;color:var(--dim);cursor:pointer}
+#wb-panel .wbp-fold:hover{background:var(--wb-sel);color:var(--ink)}
+#wb-panel .wbp-fold:focus-visible,#wb-panel .wbp-row:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+#wb-panel .wbp-body{flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;padding:0 6px 16px;scrollbar-width:thin;scrollbar-color:var(--c3-sbt,transparent) transparent}
+#wb-panel .wbp-group{display:flex;flex-direction:column;gap:1px;padding:0 0 10px}
+#wb-panel .wbp-gl{padding:8px 9px 4px;font:500 var(--t-label)/1.3 var(--ar-ui);color:var(--dim)}
+#wb-panel .wbp-row{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:0 9px;border:0;border-radius:7px;background:none;color:var(--c3-ink2,var(--dim));font:400 var(--t-body)/1.3 var(--ar-ui);text-align:left;cursor:pointer}
+#wb-panel .wbp-row:hover:not(:disabled){background:var(--wb-sel);color:var(--ink)}
+#wb-panel .wbp-row.on{background:color-mix(in srgb,var(--wb-sel) 70%,var(--ink) 6%);color:var(--ink);box-shadow:inset 2px 0 0 var(--warm)}
+#wb-panel .wbp-row:disabled{opacity:.55;cursor:default}
+#wb-panel .wbp-l{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Counts only on hover or on the selected row. */
+#wb-panel .wbp-n{flex:none;font:400 var(--t-label)/1 var(--ar-ui);color:var(--dim);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .12s}
+#wb-panel .wbp-row:is(:hover,:focus-visible,.on) .wbp-n{opacity:1}
+#wb-panel .wbp-note{margin:4px 9px 8px;font:400 var(--t-label)/var(--lh-ui,1.45) var(--ar-ui);color:var(--dim)}
+@media(prefers-reduced-motion:reduce){#wb-panel .wbp-n{transition:none}}
+
+/* The title-line button that brings a collapsed panel back (desktop) or opens its sheet (phone). */
+#app #wb-open{display:inline-flex!important;align-items:center;gap:6px;align-self:center;justify-self:start;width:auto;min-height:32px;margin:0 0 0 auto;padding:0 10px;border:1px solid var(--c3-line2,var(--line));border-radius:7px;background:none;color:var(--ink);font:500 var(--t-label)/1 var(--ar-ui);cursor:pointer}
+#app #wb-open:hover{background:var(--wb-sel)}
+#app #wb-open:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+
+/* ---------- phone and narrow windows: the rail is the bottom bar, the panel a sheet ---------- */
+@media(max-width:760px){
+ html body.wb-on #app>.shell{display:flex!important;flex-direction:column}
+ html body.wb-on #app>.shell>.workspace{flex:1 1 auto;min-height:0;padding-bottom:calc(var(--wb-bbar) + env(safe-area-inset-bottom,0px))!important;box-sizing:border-box}
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open){flex:none;height:0!important;min-height:0!important;padding:0!important;border:0!important;overflow:visible!important;position:relative;z-index:40}
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open)>:not(.cr-picker):not(.wb-bbar){display:none!important}
+ .workflowNavigation.wb-rail .wb-bbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:70;height:calc(var(--wb-bbar) + env(safe-area-inset-bottom,0px));padding:0 4px env(safe-area-inset-bottom,0px);box-sizing:border-box;background:var(--wb-rail-bg);border-top:1px solid var(--line)}
+ .workflowNavigation.wb-rail .wb-bb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;border:0;border-radius:8px;background:none;color:var(--dim);font:500 var(--t-label)/1.1 var(--ar-ui);cursor:pointer;position:relative}
+ .workflowNavigation.wb-rail .wb-bb>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .workflowNavigation.wb-rail .wb-bb:is([aria-current],[data-here],[aria-expanded="true"]){color:var(--ink)}
+ .workflowNavigation.wb-rail .wb-bb[data-here]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:0 0 2px 2px;background:var(--warm)}
+ .workflowNavigation.wb-rail .wb-bb:focus-visible{outline:2px solid var(--warm);outline-offset:-2px}
+ /* The step sheet rises from the bottom bar. A group button shows that group's steps; the step name shows them all. */
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail.cr-open{position:fixed!important;inset:auto 0 calc(var(--wb-bbar) + env(safe-area-inset-bottom,0px)) 0!important;width:auto!important;height:auto!important;min-height:0!important;max-height:min(72dvh,640px);overflow:auto!important;
+  display:flex!important;flex-direction:column;gap:2px;padding:10px 10px 12px!important;background:var(--paper)!important;border:0!important;border-top:1px solid var(--line)!important;border-radius:14px 14px 0 0;z-index:65!important;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)}
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail.cr-open>.cr-picker{display:none!important}
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail.cr-open .workflowSteps[data-work-groups]{position:static!important;display:flex!important;max-height:none!important;overflow:visible!important;padding:0!important;border:0!important;box-shadow:none!important;background:none!important}
+ .workflowNavigation.wb-rail.cr-open[data-wb-group] .wn-family:not([data-family]),.workflowNavigation.wb-rail.cr-open[data-wb-group="gather"] .wn-family:not([data-family="gather"]),.workflowNavigation.wb-rail.cr-open[data-wb-group="develop"] .wn-family:not([data-family="develop"]),.workflowNavigation.wb-rail.cr-open[data-wb-group="make"] .wn-family:not([data-family="make"]),.workflowNavigation.wb-rail.cr-open[data-wb-group="deliver"] .wn-family:not([data-family="deliver"]){display:none!important}
+ .workflowNavigation.wb-rail.cr-open .wn-family{border-top:0!important;margin:0!important;padding:0!important}
+ .workflowNavigation.wb-rail.cr-open .tr-act{display:block!important;padding:6px 10px 2px!important}
+ .workflowNavigation.wb-rail.cr-open .tr-act b{font:500 var(--t-label)/1.3 var(--ar-ui)!important;color:var(--dim)!important}
+ .workflowNavigation.wb-rail.cr-open :is(.workflowStep,.tr-head button,.tr-find button,#c3-tabstrip summary){min-height:46px!important;font:400 var(--t-body)/1.3 var(--ar-ui)!important}
+ .workflowNavigation.wb-rail.cr-open .tr-state{font:400 var(--t-label)/1.2 var(--ar-ui)!important}
+ .workflowNavigation.wb-rail.cr-open>.wb-bbar{display:flex}
+ .workflowNavigation.wb-rail.cr-open .tr-fold{display:none!important}
+ .workflowNavigation.wb-rail.cr-open>:is(.tr-head,.tr-find,#c3-tabstrip){display:flex!important;border-top:1px solid var(--line);padding-top:6px!important;margin-top:4px!important}
+ .workflowNavigation.wb-rail.cr-open>.tr-head{order:3;border-bottom:0!important}
+ .workflowNavigation.wb-rail.cr-open>#c3-tabstrip{order:4}
+ .workflowNavigation.wb-rail.cr-open>.tr-find{order:5}
+ .workflowNavigation.wb-rail.cr-open>.workflowSteps{order:1}
+ /* The panel as a sheet. */
+ html body.wb-on #app>.shell>#wb-panel{position:fixed;left:0;right:0;bottom:calc(var(--wb-bbar) + env(safe-area-inset-bottom,0px));z-index:66;display:flex;flex-direction:column;max-height:min(70dvh,560px);background:var(--paper);border-top:1px solid var(--line);border-radius:14px 14px 0 0;box-shadow:0 0 0 100vmax rgba(0,0,0,.45);font:400 var(--t-body)/1.45 var(--ar-ui);color:var(--ink)}
+ #wb-panel .wbp-row{min-height:44px}
+ #wb-panel .wbp-n{opacity:1}
+ #app #wb-open{margin-left:auto!important;flex:none}
+ /* The workspace scrolls above the bar; the bar's More menu and toasts stay above the bottom bar. */
+ html body.wb-on #c3-surface-bar .sb-menu{max-height:calc(100dvh - 140px);overflow:auto}
+}
+/* Approved sidebar details: exact header height and icon stroke. Folder bodies retain
+   their existing owner and disclosure geometry; these rules address the shared frame. */
+html body.wbf-on #wb-panel>.wbp-head{height:40px;min-height:40px;font:500 var(--t-label)/1.5 var(--ar-ui)}
+html body.wbf-on #wb-panel>.wbp-head .wbp-fold{width:33px;height:32px}
+html body.wbf-on #wb-panel>.wbp-head svg{width:15px;height:15px;stroke-width:1.6}
+html body.wbf-on .workflowNavigation.wb-rail svg{stroke-width:1.6}
+html body.wbf-on #wb-panel .wbp-group .wbp-row{gap:10px}
+html body.wbf-on #wb-panel .wbp-group .wbp-row>svg{width:15px;height:15px;flex:none}
+/* The approved phone folder sheet covers the bottom navigation and closes with Done. */
+@media(max-width:760px){
+ html body.wb-on #app>.shell>#wb-panel{bottom:0;z-index:75;max-height:80dvh}
+ html body.wbf-on #wb-panel>.wbp-head{height:56px;min-height:56px;padding:0 14px;border-bottom:1px solid var(--line);font:600 var(--t-head)/1.5 var(--ar-ui)}
+ html body.wbf-on #wb-panel>.wbp-head .wbp-fold{width:auto;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:7px;font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--ink)}
+ html body.wbf-on #wb-panel>.wbp-body{padding:8px 8px 24px}
+}
+/* Final media.css uses a distinct panel shade, shared with the active rail item.
+   Keep the theme tokens live: the mixed shade differs in both light and dark. */
+html body.wbf-on.wb-on{--wb-panel:color-mix(in srgb,var(--rail) 45%,var(--sel))}
+@media(min-width:761px){
+ html body.wbf-on.wb-on #app>.shell>.workflowNavigation.wb-rail{background:var(--rail)!important}
+ html body.wbf-on.wb-on #app>.shell>#wb-panel{background:var(--wb-panel)!important}
+}
+@media(min-width:761px){
+ html body.wbf-on.wb-on.wb-panel-on #app>.shell>.workflowNavigation.wb-rail .workflowStep[aria-current]{background:var(--wb-panel)!important;color:var(--ink)!important}
+ html body.wbf-on.wb-on #app>.shell>#wb-panel .wfb-tn.on{background:color-mix(in srgb,var(--sel) 70%,var(--ink) 6%)!important}
+}
+/* Current location fills the icon-and-label tile. Keep it distinct from an open
+   panel, and from a phone group that is merely expanded for browsing. */
+html body.wb-on{--wb-current:color-mix(in srgb,var(--warm) 18%,var(--wb-rail-bg))}
+html body.wb-on:not([data-wbf-home="bench"]):not([data-wbf-home="pieces"]) #app>.shell>.workflowNavigation.wb-rail .workflowStep[aria-current],
+html body.wb-on[data-wbf-home="bench"] #app>.shell>.workflowNavigation.wb-rail [data-tr-home],
+html body.wb-on[data-wbf-home="pieces"] #app>.shell>.workflowNavigation.wb-rail .wbf-pieces{
+ background:var(--wb-current)!important;color:var(--ink)!important}
+/* Icons and names share the tile's foreground, including stale section markers
+   beneath Bench/Pieces. The existing home guards still own those stale tiles. */
+html body.wb-on #app>.shell>.workflowNavigation.wb-rail :is(.workflowStep,.tr-home,.wbf-pieces,.wb-bb) :is(svg,.cr-icon,.stepName){color:inherit!important}
+@media(max-width:760px){
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail .wb-bb:is([aria-current],[data-here]){background:var(--wb-current);color:var(--ink);margin:4px 1px}
+ html body.wb-on #app>.shell>.workflowNavigation.wb-rail .wb-bb[aria-expanded="true"]:not([aria-current]):not([data-here]){background:var(--wb-sel);color:var(--dim);box-shadow:inset 0 0 0 1px var(--line);margin:4px 1px}
+ /* A stale section can remain aria-current while its home overlay is open. */
+ html body.wb-on:is([data-wbf-home="bench"],[data-wbf-home="pieces"]) #app>.shell>.workflowNavigation.wb-rail .workflowStep[aria-current]{background:none!important;color:var(--dim)!important}
+}

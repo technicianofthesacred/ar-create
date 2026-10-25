@@ -1,0 +1,72 @@
+/* Audience's reference page/phone frame surrounds the exact native edition.
+   Artwork, words, export, review and revision owners remain unchanged. */
+html body.wbf-on #app #workspace.wb-audience .oss-surface.wb-audience{
+ margin:0 32px 32px;padding:0;max-width:1056px;width:auto;
+ font:400 var(--t-body,.9375rem)/1.5 var(--ar-ui);color:var(--ink);
+}
+#workspace.wb-audience .wb-audience-selection{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin:0 0 18px;padding:0;font-size:var(--t-label);min-height:34px}
+#workspace.wb-audience .wb-audience-selection>.oss-output{flex:0 1 auto;width:auto;max-width:100%;font:inherit}
+#workspace.wb-audience .wb-audience-selection select{font:inherit;background:transparent;min-height:34px;padding:4px 28px 4px 10px;max-width:min(100%,25rem);color:var(--ink);border:1px solid var(--line);border-radius:7px}
+#workspace.wb-audience .wb-audience-selection>.oss-action{margin-left:auto;border-color:transparent;background:transparent;font-weight:400;color:var(--dim);white-space:nowrap}
+#workspace.wb-audience .wb-audience-selection>.oss-action:hover{background:var(--sel);color:var(--ink)}
+#workspace.wb-audience .wb-audience-purpose.aud-note{display:block;max-width:var(--measure,40rem);margin:-6px 0 12px;padding:0;font:400 var(--t-body)/1.5 var(--ar-ui);color:var(--dim);background:none;border:0;border-radius:0}
+#workspace.wb-audience .wb-audience-purpose b{font-weight:600;color:var(--ink)}
+#workspace.wb-audience [data-oss-readiness]{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;max-width:var(--measure,40rem);margin:0 0 18px;padding:0;background:none;border:0;border-radius:0;font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--dim)}
+#workspace.wb-audience [data-oss-readiness] strong{font-weight:600;color:var(--ink)}
+#workspace.wb-audience .oss-review-tools{max-width:44rem;font:400 var(--t-body)/1.5 var(--ar-ui)}
+#workspace.wb-audience .oss-disclosure summary{font:600 var(--t-label)/1.5 var(--ar-ui);padding:12px 0}
+#workspace.wb-audience :is(.oss-action,.oss-output select,.oss-disclosure summary):focus-visible{outline:2px solid var(--warm);outline-offset:3px}
+@media(max-width:650px){
+ html body.wbf-on #app #workspace.wb-audience .oss-surface.wb-audience{margin:0 16px 24px;padding:0}
+ #workspace.wb-audience .wb-audience-selection{gap:8px 12px;margin-bottom:18px}
+ #workspace.wb-audience .wb-audience-selection>.oss-output{flex:1 1 100%}
+ #workspace.wb-audience .wb-audience-selection select{flex:1;max-width:100%;width:0;min-width:0}
+ #workspace.wb-audience .wb-audience-selection>.oss-action{margin-left:auto;min-height:34px;padding:4px 8px}
+ #workspace.wb-audience .wb-audience-purpose.aud-note{margin:0 0 12px}
+}
+/* The older stage rules use important padding; keep the approved 32/16px gutter. */
+html body.wbf-on #app #workspace.wb-audience .oss-surface.wb-audience{margin:0 32px 32px!important;padding:0!important;max-width:1056px!important;width:auto!important}
+html body.wbf-on #workspace.wb-audience .wb-audience-selection>.oss-action{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+@media(max-width:650px){html body.wbf-on #app #workspace.wb-audience .oss-surface.wb-audience{margin:0 16px 24px!important}}
+/* One edition chooser, beside the actual reader. The shell proxy stays mounted. */
+html body.wbf-on[data-c3-stage="10"] #c3-surface-bar .sb-out{display:none!important}
+/* Native magazine pages own their printed palette. Do not put their cream
+   lettering on the workbench's light paper when the shell theme changes. */
+#workspace.wb-audience [data-oss-reader] .ar-output-reader.page{background:var(--tj-read-bg,#151b18)}
+#workspace.wb-audience .wb-audience-purpose.aud-note{margin:-6px 0 12px!important}
+#workspace.wb-audience [data-oss-readiness]{margin:0 0 18px!important}
+@media(max-width:650px){#workspace.wb-audience .wb-audience-purpose.aud-note{margin:0 0 12px!important}}
+/* The same native edition control occupies the template's format-choice position. */
+html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools{display:flex;align-items:center;gap:10px;margin:0!important;min-height:34px;font:400 var(--t-label)/1.5 var(--ar-ui)}
+html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-output{display:flex;align-items:center;gap:8px;max-width:320px;font:inherit}
+html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools select{font:inherit;max-width:260px;min-width:140px;height:34px;padding:4px 25px 4px 8px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:7px}
+html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-action{white-space:nowrap;background:none!important;border-color:transparent!important;color:var(--dim);font-size:var(--t-label);margin:0!important}
+@media(max-width:760px){html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools{flex:1 1 auto;flex-wrap:wrap;gap:6px}html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-output{max-width:100%;flex:1 1 200px}html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools select{flex:1;max-width:100%;min-width:140px;width:200px}}
+/* Phone: title/More on the first line, the real edition and return action on
+   the second. Never let the shared compact bar squeeze these offscreen. */
+@media(max-width:760px){
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px!important;height:auto!important;min-width:0!important}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar>.sb-left{grid-column:1;grid-row:1;min-width:0!important;width:auto!important}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar>.sb-right{display:contents!important}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .sb-morew{grid-column:2;grid-row:1;justify-self:end}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools{grid-column:1/-1;grid-row:2;display:flex!important;flex-wrap:wrap!important;width:100%;min-width:0;height:auto!important;min-height:36px;gap:6px!important}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-output{font-size:0!important;gap:0;min-width:min(180px,100%);flex:1 0 180px;max-width:100%}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools select{font-size:var(--t-label)!important;width:100%!important;min-width:0!important;max-width:100%!important}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-action{flex:none;max-width:124px;padding-inline:6px!important}
+}
+@media(max-width:760px){
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar{min-height:80px!important;flex:0 0 auto!important;grid-template-rows:36px minmax(36px,auto)!important}
+ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .sb-where{flex-direction:row!important;justify-content:flex-start!important}
+}
+
+/* Identity is read from the exact selected owner, independently of a clipped title. */
+html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-identity{flex:0 1 auto;max-width:100%;min-width:0;font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere}
+
+/* The exact owner identity replaces the verbose fallback at every width. */
+html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools:has([data-wb-audience-identity])>.oss-muted{display:none!important}
+
+/* The picker already has its accessible name; do not spend phone width on a
+   repeated Output label when the global control type scale is applied. */
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-output{font-size:0!important}
+}

@@ -61,3 +61,8 @@ body.c3-tree-slim .workflowNavigation.tr-tree .tr-n{position:absolute;right:0;bo
 #c3-next .c3-next-go:focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
 /* The work-context strip is gone: its controls are pressed from the bar (More), receipts open from More → Receipts. */
 body.c3-bar-on #app .workspace>#work-context{display:none!important}
+/* Keep the original action owner's current notice reachable without restoring its obsolete toolbar. */
+body.c3-bar-on #app .workspace>#work-context:has(>#wn-message:not([hidden])){display:block!important;flex:0 0 auto}
+body.c3-bar-on #app .workspace>#work-context>.wn-identity,
+body.c3-bar-on #app .workspace>#work-context>.wn-actions,
+body.c3-bar-on #app .workspace>#work-context>.wn-modes{display:none!important}

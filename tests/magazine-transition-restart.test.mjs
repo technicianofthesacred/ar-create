@@ -1,0 +1,68 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash,randomUUID} from 'node:crypto';
+import {createRequire} from 'node:module';
+import {startMagazineTransitionHarness,TRANSITION_DEV,TRANSITION_SELECTION} from './helpers/magazine-transition-harness.mjs';
+import {treeHashes} from './helpers/magazine-fixture.mjs';
+const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+const hash=file=>createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const wait=async(fn,label)=>{for(let n=0;n<500;n++){if(await fn())return;await new Promise(resolve=>setTimeout(resolve,10));}throw Error('Timed out: '+label);};
+
+async function editor(h,windows){
+ const dom=new JSDOM('<div id="app"></div><dialog id="project-library" open><div class="wbf-active"></div></dialog>',{url:h.origin+'/document-study/index.html',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;windows.push(dom);
+ w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+ const p={id:'notes',name:'Invented existing story',title:'Earlier retained browser edition',view:'record',viewedStage:1,blocks:[{id:'retained-public-block',tag:'p',html:'Earlier retained browser words stay separate.'}],history:[],note:null,originalNotes:[],slides:[],rev:1};
+ const sibling={id:'other-browser-story',name:'Independent browser story',view:'record',viewedStage:1,blocks:[{id:'other-retained',tag:'p',html:'Independent retained browser words.'}],history:[],note:null,originalNotes:[],slides:[],rev:1},mounts=[];
+ w.state={project:p.id,projects:[p,sibling]};w.current=()=>w.state.projects.find(p=>p.id===w.state.project);w.selected=w.activeBlock=w.keyboardBlock=w.typingSession=null;w.structuredClone=structuredClone;w.crypto.randomUUID=randomUUID;
+ w.AR_CREATE_REVIEW_MODE={actualWork:true,readOnly:true,magazineDraftCorrections:true};
+ w.fetch=(url,options)=>fetch(new URL(url,h.origin),options?.method==='POST'?{...options,headers:{...options.headers,Origin:h.origin}}:options);
+ w.esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));w.readonlyHTML=x=>x;w.shortRecordName=x=>x;w.WORKFLOW_RECORDS={};
+ for(const name of ['toast','commitTyping','rememberPosition','save','undo','refreshDiscussion','wireDocument','openInstruction'])w[name]=()=>{};
+ w.blockHTML=b=>'<'+b.tag+' data-block="'+b.id+'">'+b.html+'</'+b.tag+'>';
+ w.article=x=>'<div class="workbar"><span class="saved"></span></div><div id="manuscript" contenteditable="true">'+x.blocks.map(w.blockHTML).join('')+'</div><aside id="margin"></aside><div class="marginHint"></div>';
+ w.phaseReader=()=>'<section class="phaseReader">Retained story</section>';
+ w.render=()=>{const p=w.current();w.document.getElementById('app').innerHTML='<main id="workspace"><header class="topbar"></header><nav class="workflowNavigation"></nav>'+(p.view==='article'?w.article(p):w.phaseReader(p))+'</main>';for(const mount of mounts)mount();};
+ w.onTyping=el=>{w.current().blocks=[...el.children].map(child=>({id:child.dataset.block,tag:child.tagName.toLowerCase(),html:child.innerHTML}));};
+ w.viewPhase=stage=>{w.current().viewedStage=stage;w.current().view='record';w.render();};w.setView=view=>{w.current().view=view;w.render();};w.switchProject=async id=>{w.state.project=id;w.render();};w.workflowBar=()=>'';w.historicalNotice=()=>'';
+ w.projectLibrary={close:async()=>w.document.getElementById('project-library').close(),open:async()=>{w.document.getElementById('project-library').open=true;}};
+ w.c3Shell={register:(_name,fn)=>{mounts.push(fn);fn();}};
+ w.eval(fs.readFileSync(new URL('../public/document-study/draft-flow.js',import.meta.url),'utf8'));
+ w.eval(fs.readFileSync(new URL('../public/document-study/existing-work.js',import.meta.url),'utf8'));await w.existingWork.load();
+ return {w,dom,p,sibling,pickup:async(write=true)=>{const story=w.existingWork.catalog().stories.find(s=>s.id===h.storyId),current=story.artifacts.find(a=>a.relativePath===TRANSITION_DEV&&!a.archived);return w.existingWork.openWorkingDraft(story.id,current.artifactId,{write});},type:words=>{const manuscript=w.document.getElementById('manuscript'),opening=[...manuscript.children].find(el=>el.textContent.startsWith('I met Mira'));assert.ok(opening);opening.textContent=words;w.onTyping(manuscript);}};
+}
+
+test('exact existing pickup survives owner process restart, keeps editions separate, and restores only eligible same-file bytes',async t=>{
+ const h=await startMagazineTransitionHarness(),windows=[];t.after(async()=>{for(const dom of windows)dom.window.close();await h.close();});
+ assert.deepEqual(h.registrationPreview.ambiguities,[]);
+ const planned=h.registrationPreview.stories.find(s=>s.storyId===TRANSITION_SELECTION.storyId);
+ assert.equal(planned.pieces.filter(p=>p.rel===TRANSITION_DEV).length,1);
+ assert.ok(h.registrationPreview.unassigned.includes('Workflow/4-Review/CHECK - Unrelated calibration.md'),'unrelated CHECK is accounted, not silently assigned');
+ assert.ok(h.registrationPreview.unmatched.some(item=>item.endsWith('CHECK - Unrelated calibration.md')),'unmatched board item also remains visible');
+ let ui=await editor(h,windows);const siblingBefore=JSON.stringify(ui.sibling),initial=fs.readFileSync(h.currentFile,'utf8');
+ const catalog=ui.w.existingWork.catalog(),story=catalog.stories.find(s=>s.id===h.storyId),target=story.latestDraft.magazineWorkingTarget;
+ assert.equal(target.storyId,TRANSITION_SELECTION.storyId);assert.equal(target.pieceId,TRANSITION_SELECTION.pieceId);assert.equal(target.nativeProjectId,'notes');
+ assert.notEqual(story.id,target.storyId);assert.notEqual(target.nativeProjectId,target.storyId);assert.notEqual(story.latestDraft.hash,hash(h.publishedFile));
+ assert.ok(story.artifacts.some(a=>a.archived&&a.kind==='DEV'&&!a.magazineWorkingTarget));
+ assert.equal(story.publishedUrl,'https://example.invalid/invented-earlier-edition');
+ await ui.pickup();assert.equal(ui.w.studyDraft.currentBinding(),null);assert.equal(ui.w.studyDraft.currentOwner().pieceId,target.pieceId);
+ const retained=JSON.parse(ui.w.localStorage.getItem('ar-document-study-owned-drafts-v1')).projects.notes.browser;
+ assert.equal(retained.blocks[0].id,'retained-public-block');assert.match(retained.blocks[0].html,/Earlier retained/);
+ ui.type('Invented direct pickup words saved before restarting the owner.');
+ await wait(()=>fs.readFileSync(h.currentFile,'utf8').includes('saved before restarting')&&ui.w.studyDraft.currentProof()?.dirty===false,'actual idle autosave');
+ const saved=fs.readFileSync(h.currentFile,'utf8');
+ await ui.w.studyDraft.read();assert.match(ui.w.document.getElementById('app').textContent,/saved before restarting/);ui.w.studyDraft.edit();
+ await ui.w.switchProject('other-browser-story');assert.equal(JSON.stringify(ui.sibling),siblingBefore);await ui.w.switchProject('notes');assert.match(ui.w.document.getElementById('manuscript').textContent,/saved before restarting/);
+ ui.dom.window.close();ui=await editor(h,windows);await ui.pickup(false);assert.equal(ui.w.current().viewedStage,5);assert.equal(ui.w.studyDraft.viewMode(),'preview');assert.equal(ui.w.document.getElementById('manuscript').getAttribute('contenteditable'),'false');assert.match(ui.w.document.getElementById('app').textContent,/saved before restarting/);
+ ui.dom.window.close();const restart=await h.restart();assert.notEqual(restart.current,restart.previous,'a new maintained owner process reads the same data/receipts');
+ ui=await editor(h,windows);await ui.pickup();assert.equal(fs.readFileSync(h.currentFile,'utf8'),saved);
+ const undo=ui.w.document.querySelector('[data-draft-action="disk-undo"]');assert.ok(undo&&!undo.disabled,'fresh native context has exact owner receipt eligibility after process restart');undo.click();
+ await wait(()=>fs.readFileSync(h.currentFile,'utf8')===initial&&ui.w.studyDraft.currentProof()?.dirty===false,'exact same-file Undo after process restart');
+ assert.deepEqual(treeHashes(h.f.vault),h.initialFiles);assert.equal(hash(h.publishedFile),h.initialPublished.capture);assert.equal(hash(h.overridesFile),h.initialPublished.overrides);
+ const indexFile=path.join(h.dataDir,'magazine/index.json'),registrationBefore=fs.readFileSync(indexFile);
+ const opening=[...ui.w.document.getElementById('manuscript').children].find(el=>el.textContent.startsWith('I met Mira'));opening.textContent='Local words remain while an outside edit changes the DEV.';ui.w.onTyping(ui.w.document.getElementById('manuscript'));
+ fs.appendFileSync(h.currentFile,'\nExternal words must remain exact.\n');const external=fs.readFileSync(h.currentFile,'utf8');assert.equal((await ui.w.studyDraft.flush()).dirty,true);assert.equal(fs.readFileSync(h.currentFile,'utf8'),external);assert.match(ui.w.document.getElementById('manuscript').textContent,/Local words remain/);
+ assert.deepEqual(fs.readFileSync(indexFile),registrationBefore);assert.equal(fs.existsSync(path.join(h.dataDir,'study-draft-copies')),false);assert.equal(hash(h.publishedFile),h.initialPublished.capture);assert.equal(hash(h.overridesFile),h.initialPublished.overrides);
+ t.diagnostic(JSON.stringify({inventedOnly:true,directExactPickup:true,registrationAmbiguities:0,activeSelectedDEVs:1,unmatchedCHECKAccounted:true,ownerRestart:restart,exactEligibleUndoAfterRestart:true,staleLocalAndExternalWordsPreserved:true,publishedCaptureAndOverridesUnchanged:true,retainedAndSiblingIdentitiesPreserved:true,nativeCopyCreated:false}));
+});

@@ -12,10 +12,18 @@ Read this once per run, after SKILL.md. Each line is a rule Adrian gave or a mis
 - Every line traces to a source: the subject's words to the SRC transcript, Adrian's words to what he typed or said (his CONTEXT note, dated, original underneath). Never infer a line of his. A made-up scene in someone's mouth is the one error an interview cannot carry (2026-09-28: "this didn't happen").
 - A story, not an interview: his questions are there to bring out the person's essence, not to show a Q&A (2026-09-29). The reader meets Adrian too: his lines at the table are short first-person telling, never quotes of himself (2026-10-01).
 - When reworking his lines, show two or three in the new shape first, let him react, then apply to the rest and write the rule once.
-- The map he decides on: three short directions, best fit first, two or three sentences each, then five or more titles. The full analysis goes in NOTES, which he never reads.
+- The map he decides on: three short directions, best fit first, two or three sentences each, then five or more titles. Keep the full analysis available in readable notes; a concise entry point helps him choose without treating the underlying work as AI-only (clarified 2026-10-22).
 - Facts only the interviewee has take days: list them in one batch he can forward, record them under "Waiting on you" in STATUS.md, and never block the draft (write around the gap with a `%%Adrian: …%%` note).
 - No em dashes anywhere. Use a period, comma, colon or parentheses.
 - Site and partner copy speaks as Teajia, not Adrian, except his About page, bylines and photo captions of him.
+
+## Research and documents are for people and agents (2026-10-22)
+
+- Write every research document and working analysis so Adrian can read and learn from it directly, and an agent can reuse the same underlying record. Begin with a short useful overview, then semantic headings and substantial explanations. Retain the full analysis; an overview is an entrance, not a replacement or a separate authority.
+- Give each finding a descriptive lead and its own paragraph or item. Split dense numbered walls into meaningful sections and paragraphs; use numbering only when order or a stable reference matters. Explain unfamiliar terms and why the point matters. Do not turn useful depth into compulsory forms, tiny summary cards or a chain of expansion clicks.
+- Make source evidence, attributed opinion, AI interpretation, uncertainty and possible editorial use distinguishable in plain language. Keep citations beside the claims they support and preserve exact quotes, speaker/page/section/time anchors where known. An interpretation is not verification, and a relevant source is not automatically support.
+- Keep exact provenance accessible through secondary details without a raw-path wall in the default read. Use a readable line length, paragraph spacing and hierarchy that work on wide and narrow screens. Rendering and production guidance must both support this: styling cannot repair an unstructured document by itself.
+- Do not invent facts, rewrite Adrian's or a speaker's words, change quotation permissions or remove analysis to make a document look simpler. Existing human decisions, revisions and source authority still apply. These rules supersede older instructions that call research a bare list or assume he reads only its closing summary.
 
 ## Notes in drafts (what the page shows him)
 

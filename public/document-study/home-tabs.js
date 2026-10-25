@@ -7,7 +7,7 @@
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const icon=d=>`<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const ICONS={home:'<path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>',flask:'<path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',plus:'<path d="M12 5v14M5 12h14"/>',x:'<path d="M7 7l10 10M17 7 7 17"/>',chev:'<path d="m7 10 5 5 5-5"/>',doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 15h5"/>',slides:'<rect x="6" y="3" width="12" height="18" rx="1.5"/><path d="M9 8h6M9 11h6"/>',piece:'<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M8 9h8M8 12h8M8 15h5"/>',grid:'<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',moon:'<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',more:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>'};
- let queue=Promise.resolve(),statusFilter='',lastPaint='',findQuery='',lastProject=null,resultsObserver=null;
+ let queue=Promise.resolve(),statusFilter='',lastPaint='',findQuery='',lastProject=null,resultsObserver=null,finderReturnFocus=null;
  const nav=()=>{state.projectNavigation||={recent:[]};if(!Array.isArray(state.projectNavigation.openTabs))state.projectNavigation.openTabs=[];return state.projectNavigation;};
  const project=id=>state.projects.find(p=>p.id===id);
  const tabKey=t=>t.projectId+'::'+(t.outputId||'');
@@ -48,28 +48,37 @@
   const n=visibleCount(node,all.length),cur=all.findIndex(isCurrent);let shown=all.slice(0,n);
   if(cur>=n&&n>0)shown=[...all.slice(0,n-1),all[cur]];
   const hidden=all.filter(t=>!shown.includes(t));
-  const html=`<button type="button" class="ht-place ${home?'on':''}" data-ht-home ${home?'aria-current="page"':''} aria-label="Home, every piece" title="Home · every piece">${icon(ICONS.home)}</button><button type="button" class="ht-place ${research?'on':''}" data-ht-research ${research?'aria-current="page"':''} aria-label="Research for the current piece" title="Research · current piece. Across every piece is not connected yet.">${icon(ICONS.flask)}</button><span class="ht-sep" aria-hidden="true"></span><nav class="ht-tabs" aria-label="Open tabs">${shown.map(t=>tabHTML(t)).join('')}</nav>${hidden.length?`<details class="ht-more"><summary aria-label="${hidden.length} more open tabs" title="Open tabs that do not fit">+${hidden.length}${icon(ICONS.chev)}</summary><div class="ht-menu" role="group" aria-label="More open tabs">${hidden.map(t=>tabHTML(t,true)).join('')}</div></details>`:''}<details class="ht-plus"><summary aria-label="Open or create" title="Open or create">${icon(ICONS.plus)}<span class="ht-plus-label">New</span></summary><div class="ht-menu" role="group" aria-label="Open or create"><button type="button" data-pl-new>New project</button><button type="button" data-ht-new-output>New output for this piece</button><button type="button" data-ht-home>Find any piece</button></div></details><span class="ht-grow" aria-hidden="true"></span><details class="ht-switch"><summary title="Find any piece and open it" aria-label="${esc(home?'All pieces':current().name+', switch piece')}">${icon(ICONS.list)}<span class="ht-switch-label">${esc(home?'All pieces':midTrim(current().name,24))}</span>${icon(ICONS.chev)}</summary><div class="ht-menu ht-switch-menu" role="dialog" aria-label="All pieces"><label class="ht-find">${icon(ICONS.search)}<span class="ht-sr">Find a piece</span><input type="search" data-ht-find autocomplete="off" placeholder="Find any of ${state.projects.filter(p=>!p.archived).length} pieces"></label><div data-ht-find-results></div><button type="button" class="ht-find-all" data-ht-home>${icon(ICONS.home)}<span>See all ${state.projects.filter(p=>!p.archived).length} pieces in Home</span></button></div></details><button type="button" class="ht-place ht-theme" data-ht-theme aria-label="${themeLabel()}" title="${themeLabel()}">${icon(document.documentElement.dataset.theme==='dark'?ICONS.sun:ICONS.moon)}</button><p class="ht-status" role="status" data-ht-status hidden></p>`;
+  const html=`<button type="button" class="ht-place ${home?'on':''}" data-ht-home ${home?'aria-current="page"':''} aria-label="Home, every piece" title="Home · every piece">${icon(ICONS.home)}</button><button type="button" class="ht-place ${research?'on':''}" data-ht-research ${research?'aria-current="page"':''} aria-label="Research for the current piece" title="Research · current piece. Across every piece is not connected yet.">${icon(ICONS.flask)}</button><span class="ht-sep" aria-hidden="true"></span><nav class="ht-tabs" aria-label="Open tabs">${shown.map(t=>tabHTML(t)).join('')}</nav>${hidden.length?`<details class="ht-more"><summary aria-label="${hidden.length} more open tabs" title="Open tabs that do not fit">+${hidden.length}${icon(ICONS.chev)}</summary><div class="ht-menu" role="group" aria-label="More open tabs">${hidden.map(t=>tabHTML(t,true)).join('')}</div></details>`:''}<details class="ht-plus"><summary aria-label="Open or create" title="Open or create">${icon(ICONS.plus)}<span class="ht-plus-label">New</span></summary><div class="ht-menu" role="group" aria-label="Open or create"><button type="button" data-pl-new>New project</button><button type="button" data-ht-new-output>New output for this piece</button><button type="button" data-ht-home>Find any piece</button></div></details><span class="ht-grow" aria-hidden="true"></span><details class="ht-switch"><summary title="Find any piece and open it" aria-label="${esc(home?'All pieces':current().name+', switch piece')}">${icon(ICONS.list)}<span class="ht-switch-label">${esc(home?'All pieces':current().name)}</span>${icon(ICONS.chev)}</summary><div class="ht-menu ht-switch-menu" role="dialog" aria-label="Projects and tools"><label class="ht-find">${icon(ICONS.search)}<span class="ht-sr">Find a project or tool</span><input type="search" data-ht-find autocomplete="off" placeholder="Find a project or tool"></label><div data-ht-find-results></div><button type="button" class="ht-find-all" data-ht-home>${icon(ICONS.home)}<span>See all ${state.projects.filter(p=>!p.archived).length} pieces in Home</span></button></div></details><button type="button" class="ht-place ht-theme" data-ht-theme aria-label="${themeLabel()}" title="${themeLabel()}">${icon(document.documentElement.dataset.theme==='dark'?ICONS.sun:ICONS.moon)}</button><p class="ht-status" role="status" data-ht-status hidden></p>`;
   const status=node.querySelector('[data-ht-status]')?.textContent||'';
   if(html!==lastPaint||!node.firstChild){const openMenus=[...node.querySelectorAll('details[open]')].map(d=>d.className);node.innerHTML=html;lastPaint=html;const moved=lastProject!==current().id;lastProject=current().id;openMenus.forEach(c=>{if(moved&&c.includes('ht-switch')){findQuery='';return;}const d=node.querySelector('details.'+c.split(' ')[0]);if(d)d.open=true;});}
   if(status)message(status);
   const find=node.querySelector('[data-ht-find]');if(find&&find.value!==findQuery)find.value=findQuery;findResults();
   place(node);
+  window.dispatchEvent(new CustomEvent('c3-header-painted'));
  }
  function themeLabel(){return document.documentElement.dataset.theme==='dark'?'Switch to light theme':'Switch to dark theme';}
  function findRow(p){return `<button type="button" class="ht-find-row" data-pl-open="${esc(p.id)}" title="${esc(p.name)}">${icon(ICONS.piece)}<span><strong>${esc(p.name)}</strong><small>${esc([p.folder||'Projects',note(p)].join(' · '))}</small></span></button>`;}
+ function toolChoices(){
+  const labels=['Library','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
+  return [...document.querySelectorAll('.workflowNavigation .workflowStep')].map((button,index)=>({number:Number(button.dataset.stage||button.querySelector('.stepNumber')?.textContent)||index+1,button})).filter(t=>labels[t.number-1]).map(t=>({...t,label:labels[t.number-1],disabled:t.button.disabled}));
+ }
+ function toolRow(t){return `<button type="button" class="ht-find-row" data-ht-tool="${t.number}" ${t.disabled?'disabled':''}>${icon(ICONS.piece)}<span><strong>${esc(t.label)}</strong><small>Tool · current project</small></span></button>`;}
  function findResults(){
   const host=document.querySelector('#c3-tabstrip [data-ht-find-results]');if(!host)return;
-  const q=findQuery.trim().toLocaleLowerCase();let html;
-  if(q){const rows=state.projects.filter(p=>!p.archived&&[p.name,p.folder].filter(Boolean).join(' ').toLocaleLowerCase().includes(q)).slice(0,8);html=rows.length?rows.map(findRow).join(''):'<p class="ht-find-empty">No piece matches. Try a shorter name or a folder.</p>';}
-  else{const openIds=[...new Set(tabs().map(t=>t.projectId))],recent=(nav().recent||[]).filter(id=>!openIds.includes(id));html=`<div class="ht-find-h">Open tabs</div>${openIds.map(project).filter(Boolean).map(findRow).join('')}${recent.length?`<div class="ht-find-h">Recent</div>${recent.slice(0,5).map(project).filter(p=>p&&!p.archived).map(findRow).join('')}`:''}`;}
+  const q=findQuery.trim().toLocaleLowerCase(),tools=toolChoices().filter(t=>!q||t.label.toLocaleLowerCase().includes(q));let html;
+  if(q){const rows=state.projects.filter(p=>!p.archived&&[p.name,p.folder].filter(Boolean).join(' ').toLocaleLowerCase().includes(q)).slice(0,8);html=(rows.length?'<div class="ht-find-h">Projects</div>'+rows.map(findRow).join(''):'')+(tools.length?'<div class="ht-find-h">Tools</div>'+tools.map(toolRow).join(''):'');if(!html)html='<p class="ht-find-empty">No project or tool matches. Try a shorter name or a folder.</p>';}
+  else{const pinned=state.projects.filter(p=>p.pinnedAt&&!p.archived).sort((a,b)=>b.pinnedAt-a.pinnedAt),used=new Set(pinned.map(p=>p.id)),recent=(nav().recent||[]).map(project).filter(p=>p&&!p.archived&&!used.has(p.id));recent.forEach(p=>used.add(p.id));const openIds=[...new Set(tabs().map(t=>t.projectId))].filter(id=>!used.has(id)),open=openIds.map(project).filter(p=>p&&!p.archived);html=`${pinned.length?'<div class="ht-find-h">Pinned</div>'+pinned.map(findRow).join(''):''}${recent.length?'<div class="ht-find-h">Recent</div>'+recent.slice(0,5).map(findRow).join(''):''}${open.length?'<div class="ht-find-h">Open tabs</div>'+open.map(findRow).join(''):''}${tools.length?'<div class="ht-find-h">Tools</div>'+tools.map(toolRow).join(''):''}`;}
   if(host.dataset.render!==html){host.innerHTML=html;host.dataset.render=html;}
  }
+ async function openFinder(){
+  await flush();await leaveHome();finderReturnFocus=document.activeElement;findQuery='';paint();
+  const finder=document.querySelector('#c3-tabstrip .ht-switch');if(!finder)throw Error('The project finder is not available. Your current work is retained.');finder.open=true;finder.querySelector('[data-ht-find]')?.focus();
+ }
+ async function openTool(number){const tool=toolChoices().find(t=>t.number===number);if(!tool||tool.disabled)return;await flush();await leaveHome();await viewPhase(number);}
  // While Home is open the strip lives inside the modal library so it stays reachable. Otherwise it is no longer a row of
  // its own: it is the head of the sidebar (Home, the piece switcher, New), above the steps (review A3).
- function place(node){const d=library();if(homeOpen()){decorateHome(d);if(node.parentElement!==d){node.querySelectorAll('details[open]').forEach(m=>m.open=false);d.prepend(node);}document.body.classList.remove('c3-strip-in-rail');return;}
-  const rail=document.querySelector('#app>.shell>.workflowNavigation.c3-rail');
-  if(rail){const head=rail.querySelector(':scope>.tr-head');if(node.parentElement!==rail||(head?node.previousElementSibling!==head:rail.firstElementChild!==node))head?head.after(node):rail.prepend(node);document.body.classList.add('c3-strip-in-rail');}
-  else{if(node.parentElement!==document.body)document.body.prepend(node);document.body.classList.remove('c3-strip-in-rail');}}
+ function place(node){const d=library();if(homeOpen()){decorateHome(d);if(node.parentElement!==document.body){node.querySelectorAll('details[open]').forEach(m=>m.open=false);document.body.prepend(node);}document.body.classList.remove('c3-strip-in-rail');return;}
+  if(node.parentElement!==document.body)document.body.prepend(node);document.body.classList.remove('c3-strip-in-rail');}
  async function flush(){if(window.studyOutputConnection?.flush)await window.studyOutputConnection.flush();else{const proof=await window.studyDraft?.flush?.();if(proof?.dirty)throw Error('Save or resolve the current changes before continuing.');}}
  async function leaveHome(){if(homeOpen())await window.projectLibrary.close();if(homeOpen())throw Error('Home is still open because the current work needs saving first.');}
  async function activate(k){
@@ -104,7 +113,7 @@
   return `<details class="ht-filter" data-ht-filter><summary>${icon(ICONS.list)}<span>Filter</span>${on.length?`<span class="ht-filter-on">${esc(on.join(' · '))}</span>`:''}</summary><div class="ht-filter-panel" role="group" aria-label="Filter pieces"><div class="ht-fgroup" role="group" aria-label="Brand or folder"><div class="ht-fh">Brand</div>${facetButton('data-ht-folder','','All brands',scoped.length,!folder)}${folders.map(([f,n])=>facetButton('data-ht-folder',f,f,n,folder===f)).join('')}</div><div class="ht-fgroup" role="group" aria-label="Status"><div class="ht-fh">Status</div>${facetButton('data-ht-status-filter','','Any status',inFolder.length,!statusFilter)}${statuses.map(([s,n])=>facetButton('data-ht-status-filter',s,s,n,statusFilter===s,true)).join('')}</div><div class="ht-fgroup" role="group" aria-label="Show"><div class="ht-fh">Show</div>${shows.map(([v,l])=>facetButton('data-ht-show',v,l,base(v).length,show===v&&!folder)).join('')}</div>${folder||statusFilter||show!=='active'?'<button type="button" class="ht-clear" data-ht-clear>Clear filters</button>':''}<p class="ht-fnote">Brands are your folders. Folders and pins are browser-local filing.</p></div></details>`;
  }
  function decorateHome(d){
-  if(!d||d.dataset.plContext)return;
+  if(!d||d.dataset.plContext||d.dataset.workbenchPieces==='true')return;
   if(!d.classList.contains('c3-home')){
    d.classList.add('c3-home');
    const title=d.querySelector('#pl-title');if(title){title.textContent='Home · every piece';title.classList.add('ht-sr');}
@@ -165,6 +174,7 @@
   event.preventDefault();
   for(const d of document.querySelectorAll('#c3-tabstrip details[open]'))if(!d.contains(button)||button.closest('.ht-menu'))d.open=false;
   void serial(async()=>{
+   if(button.hasAttribute('data-ht-tool'))return openTool(Number(button.dataset.htTool));
    if(button.hasAttribute('data-ht-home'))return homeOpen()?library().querySelector('[data-pl-search]')?.focus():window.projectLibrary.open();
    if(button.hasAttribute('data-ht-research')){await flush();await leaveHome();if(stage()!==3)await viewPhase(3);return;}
    if(button.hasAttribute('data-ht-tab'))return activate(button.dataset.htTab);
@@ -180,6 +190,15 @@
   });
  });
  document.addEventListener('input',event=>{if(!event.target.matches?.('#c3-tabstrip [data-ht-find]'))return;findQuery=event.target.value;findResults();});
+ document.addEventListener('keydown',event=>{
+  const finder=document.querySelector('#c3-tabstrip .ht-switch[open]');if(!finder)return;
+  if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();finder.open=false;const target=finderReturnFocus?.isConnected?finderReturnFocus:finder.querySelector('summary');target?.focus?.({preventScroll:true});finderReturnFocus=null;return;}
+  if(!finder.contains(event.target)||event.metaKey||event.ctrlKey||event.altKey)return;
+  const rows=[...finder.querySelectorAll('[data-ht-find-results] button:not(:disabled)')],at=rows.indexOf(event.target);
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){if(!rows.length)return;event.preventDefault();const next=at<0?(event.key==='ArrowDown'?0:rows.length-1):(at+(event.key==='ArrowDown'?1:-1)+rows.length)%rows.length;rows[next].focus();}
+  else if(event.key==='Enter'&&event.target.matches('[data-ht-find]')&&rows.length){event.preventDefault();rows[0].click();}
+ },true);
+
  document.addEventListener('toggle',event=>{const d=event.target;if(!d.matches?.('.ht-card-more,#c3-tabstrip details')||!d.open)return;if(d.closest('.c3-rail')){const r=d.querySelector('summary').getBoundingClientRect();d.style.setProperty('--ht-mx',Math.round(Math.min(r.left,Math.max(8,innerWidth-372)))+'px');d.style.setProperty('--ht-my',Math.round(r.bottom+4)+'px');}document.querySelectorAll('.ht-card-more[open],#c3-tabstrip details[open]').forEach(o=>{if(o!==d&&!o.contains(d))o.open=false;});if(d.matches('.ht-switch'))d.querySelector('[data-ht-find]')?.focus();},true);
  // Facet counts follow the library's own filter changes and result repaints.
  document.addEventListener('change',event=>{if(event.target.matches?.('#project-library [data-pl-filter]'))void window.projectLibrary.whenIdle().then(()=>{if(homeOpen())decorateHome(library());});});
@@ -190,6 +209,6 @@
  for(const name of ['study-output-selection','study-draft-change'])window.addEventListener(name,()=>{track();paint();});
  window.addEventListener('resize',()=>paint());
  window.c3Shell?.register?.('sidebar head',()=>{const n=document.getElementById('c3-tabstrip');if(n)place(n);},{order:25});
- window.homeTabs={tabs,paint,track,activate:k=>serial(()=>activate(k)),close:k=>serial(()=>closeTab(k)),whenIdle:()=>queue};
+ window.homeTabs={tabs,paint,track,openFinder:()=>serial(openFinder),activate:k=>serial(()=>activate(k)),close:k=>serial(()=>closeTab(k)),whenIdle:()=>queue};
  track();paint();
 })();

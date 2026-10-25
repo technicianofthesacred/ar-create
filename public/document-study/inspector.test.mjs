@@ -50,3 +50,7 @@ test('the chosen tab survives a full render; the editor is never replaced by the
  assert.equal(f.d.querySelector('.desk').dataset.insp,'decisions');
  assert.equal(f.d.querySelector('#manuscript').textContent,'Unsaved human writing');
 });
+
+test('Understanding keeps the original direction owner while its Workbench drawer is open',()=>{
+ const f=fixture(),record=f.d.getElementById('downstream-human-direction'),drawer=f.d.createElement('aside');drawer.id='wbf-drawer';f.d.body.append(drawer);drawer.append(record);f.w.c3Inspector.decorate();assert.strictEqual(record.parentElement,drawer);assert.equal(f.d.querySelectorAll('#downstream-human-direction').length,1);f.w.close();
+});

@@ -1,0 +1,26 @@
+@layer workbench-share {
+/* Share adopts V.share's measure and mine geometry; saved fields remain in their owner. */
+html body.wbf-on #app #workspace.wb-share .wb-invitation{display:block!important;box-sizing:border-box!important;width:auto!important;max-width:var(--measure,40rem)!important;margin:0 32px 32px!important;padding:0!important;font-size:var(--t-body)!important;line-height:1.5!important}
+html body.wbf-on #app #workspace.wb-share .wb-invitation> *{order:0!important;min-height:0}
+html body.wbf-on #app #workspace.wb-share .wb-invitation>.oss-heading{display:none!important}
+html body.wbf-on #app #workspace.wb-share .wb-share-intro{margin:0 0 14px!important;font-size:var(--t-body)!important;line-height:1.5!important;color:var(--dim)}
+html body.wbf-on #app #workspace.wb-share .wb-invitation>.mine{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;height:auto!important;min-height:121px!important;margin:0!important;padding:10px 12px!important;border:1px solid color-mix(in srgb,var(--warm) 45%,var(--line))!important;border-radius:9px!important;background:var(--paper)!important}
+html body.wbf-on #app #workspace.wb-share .mine .who{display:flex;font:500 var(--t-label)/1.5 var(--ar-ui);color:var(--warm)}
+html body.wbf-on #app #workspace.wb-share .mine textarea{display:block!important;box-sizing:border-box!important;width:100%!important;min-height:74px!important;height:74px;max-width:100%!important;margin:0!important;padding:4px 0 0!important;border:0!important;border-radius:0!important;background:none!important;font:400 var(--t-body)/1.5 var(--ar-ui)!important;color:var(--ink)!important;resize:vertical}
+html body.wbf-on #app #workspace.wb-share .wb-share-actions{margin:12px 0!important;gap:8px}
+html body.wbf-on #app #workspace.wb-share .wb-share-link{margin:12px 0 0!important}
+html body.wbf-on #app #workspace.wb-share .wb-share-link button{background:var(--warm)!important;color:var(--bg)!important;border-color:var(--warm)!important}
+html body.wbf-on #app #workspace.wb-share .wb-share-privacy{margin:8px 0 18px!important;color:var(--dim);font-size:var(--t-label)!important}
+html body.wbf-on #app #workspace.wb-share .wb-correspondence{margin:0!important;padding:0!important;border:0!important;border-top:1px solid var(--line)!important;background:none!important;border-radius:0!important}
+html body.wbf-on #app #workspace.wb-share .wb-correspondence>summary{display:list-item!important;width:auto!important;padding:10px 0!important;border:0!important;border-radius:0!important;background:none!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important;color:var(--dim)!important}
+html body.wbf-on #app #workspace.wb-share .oss-status{margin:10px 0!important;padding:0!important;font-size:var(--t-label)!important;color:var(--dim)}
+html body.wbf-on #app #workspace.wb-share :is(input,select){max-width:100%;min-width:0}
+html body.wbf-on #app #workspace.wb-share .oss-output{flex:1 1 240px}
+html body.wbf-on #app #workspace.wb-share .oss-output select{flex:1;min-width:0}
+html body.wbf-on #app #workspace.wb-share :is(button,summary):hover:not(:disabled){border-color:color-mix(in srgb,var(--warm) 50%,var(--line))!important;color:var(--ink)}
+html body.wbf-on #app #workspace.wb-share :is(button,summary,input,select,textarea):focus-visible{outline:2px solid var(--warm)!important;outline-offset:2px!important}
+@media(max-width:760px){html body.wbf-on #app #workspace.wb-share .wb-invitation{margin:0 16px 32px!important;max-width:calc(100% - 32px)!important}.wb-share .wb-share-actions{gap:6px}}
+
+html body.wbf-on #app #workspace.wb-share .wb-invitation[data-c3-empty-hidden]{display:none!important}
+
+}

@@ -45,7 +45,7 @@ function directionJournalValid(op, scope, operations) {
   const undone = operations.get(op.undoOperationId);
   return UUID.test(op.undoOperationId || "") && undone?.status === "committed" && undone.kind.startsWith("reference-") && undone.referenceId === op.referenceId && undone.afterMetadataHash === op.beforeMetadataHash && undone.after.revision === op.before.revision && same(undone.scope, scope) && same(after, undone.before.scopeReferences ?? []);
 }
-function createNativeOutputFactory({ dataDir, store, native, originals, library, ownedPhotos }) {
+function createNativeOutputFactory({ dataDir, store, native, originals, library, ownedPhotos, retainedSource, browserOrigins = [] }) {
   if (!ownedPhotos?.resolve || !native?.read || !originals?.readDraft || !library?.snapshot) throw Error("Supply the existing exact owners.");
   const scopes = /* @__PURE__ */ new Map();
   function read(relative) {
@@ -171,7 +171,7 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
     }
     return { sources: sources.sort((a, b) => a.id.localeCompare(b.id)), photos: [], assets: assets.sort((a, b) => a.id.localeCompare(b.id)), decisionsHash: decisionProof(s, input.outputId) };
   } };
-  return { owner: createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scope, proof }), scope, proof };
+  return { owner: createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scope, proof, retainedSource, browserOrigins }), scope, proof };
 }
 export {
   createNativeOutputFactory

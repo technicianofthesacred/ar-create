@@ -1,0 +1,60 @@
+/* Direct approved Workbench Bench composition. Scope excludes Pieces and all writing surfaces. */
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup h2{margin:4px 0 2px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .meta{font-size:var(--t-label);color:var(--dim)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:2px solid var(--warm);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li{display:grid;grid-template-columns:8px 1fr;gap:10px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li i{width:7px;height:7px;border-radius:50%;margin-top:8px;background:var(--dim)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li i.agent{background:var(--warm)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li small{display:block;color:var(--dim)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac{display:inline-flex;align-items:center;gap:6px;color:var(--warm);font-size:var(--t-label);font-weight:500;text-decoration:none;white-space:nowrap}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac:hover{text-decoration:underline}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .oac-note{font-size:var(--t-label);color:var(--dim)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .moves{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .moves li{border-bottom:1px solid var(--line)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move{display:grid;grid-template-columns:22px minmax(0,1fr) 18px;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 6px;border-radius:6px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move:hover{background:var(--sel)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .t{font-weight:500}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .w{font-size:var(--t-label);color:var(--dim)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .ic{color:var(--dim)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .search{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line);border-radius:7px;padding:0 9px;background:var(--paper);margin-bottom:6px;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .search input{flex:1;min-width:0;border:0;background:none;outline:none}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist{list-style:none;margin:0;padding:0;max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist li{display:flex;align-items:center;gap:10px;border-radius:6px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist li:hover{background:var(--sel)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 10px;flex:1;min-width:0;text-align:left;padding:8px 8px;border-radius:6px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow.sel{background:var(--sel);box-shadow:inset 2px 0 0 var(--warm)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow .k{font-size:var(--t-label);color:var(--dim);white-space:nowrap}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .arow .s{grid-column:1/-1;font-size:var(--t-label);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .alist .oac{padding:0 10px 0 0}
+
+
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-body{padding:0!important;max-width:none!important;display:block!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{padding:24px 32px 96px!important;max-width:1120px!important;margin:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story>.block,html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-active{margin-top:32px!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-active{max-width:calc(var(--measure) + 16rem)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-homebar{padding:0!important;margin:0 0 6px!important;display:flex!important;min-height:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-homebar .search{width:100%;max-width:none!important;margin:0!important;height:36px!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-results{padding:0!important;display:block!important;margin:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-library-row{display:flex!important;align-items:center;gap:10px!important;min-height:0!important;height:auto!important;padding:0!important;margin:0!important;border:0!important;border-radius:6px!important;background:none!important;box-shadow:none!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-open.arow{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:0 10px!important;flex:1!important;min-width:0!important;padding:8px!important;border:0!important;background:none!important;text-align:left!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-open strong{font-weight:600!important;grid-column:1!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-open .k{grid-column:2!important;grid-row:1!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-open .s{grid-column:1/-1!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-dot{display:none!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-card-more{position:relative!important;inset:auto!important;flex:none!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-card-more summary{background:none!important;border:0!important;box-shadow:none!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pl-library-row.is-current .arow{background:var(--sel)!important;box-shadow:inset 2px 0 0 var(--warm)!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-pl-form]:not([hidden]){margin:24px 32px!important}
+@media(max-width:760px){html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{padding:16px 16px 96px!important}html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{padding:16px}html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) [data-pl-form]:not([hidden]){margin:16px!important}}
+/* The prior Home question band is not part of the approved Bench. Its owner stays mounted. */
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-main>.wb-band{display:none!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-main{display:block!important}
+
+/* Final reference: section labels use a 10px lead; only leading move icons are 18px. */
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story .sec{margin-bottom:10px!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move>.ic:first-child{width:18px;height:18px}

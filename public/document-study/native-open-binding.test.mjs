@@ -8,7 +8,43 @@ function fixture({retained=null,rows=null}={}){const dom=new JSDOM('<div id="app
  return {dom,w,calls,get p(){return p},setGate:fn=>gate=fn,setOverride:fn=>override=fn,disk:()=>JSON.parse(w.localStorage.getItem('ar-document-study-owned-drafts-v1')),switchProject:id=>{p=projects.find(x=>x.id===id);w.render();},type:async words=>{p.blocks[0].html=words;w.save();await tick();},close:async()=>{await tick();dom.window.close();}};
 }
 test('child and primary share original provenance but open by distinct exact binding IDs',async()=>{const f=fixture();await f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});assert.equal(f.w.studyDraft.currentBinding().id,child);assert.equal(f.p.blocks[0].html,'Independent child canonical words.');await f.w.studyDraft.openPart({bindingId:primary,parentStudyId:parent});assert.equal(f.w.studyDraft.currentBinding().id,primary);assert.equal(f.p.blocks[0].html,'Primary canonical words.');assert.deepEqual(Object.keys(f.disk().documents).sort(),[child,primary].sort());assert.equal(f.calls.filter(c=>c.path.endsWith('/open')).length,0);assert.deepEqual(f.calls.filter(c=>c.path.endsWith('/read')).map(c=>c.query.bindingId),[child,primary]);await f.close();});
-test('dirty and interrupted pending parent words survive switching to exact child owner',async()=>{const f=fixture();await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent,canonicalOutputId:'primary-output'});await f.type('My unsaved primary revision.');await f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});await tick();const disk=f.disk();assert.equal(f.w.studyDraft.currentBinding().id,child);assert.equal(disk.documents[primary].blocks[0].html,'My unsaved primary revision.');assert.ok(disk.documents[primary].pending);assert.equal(disk.documents[primary].pending.request.bindingId,primary);assert.equal(disk.documents[primary].pending.request.parentStudyId,parent);assert.equal(disk.documents[child].blocks[0].html,'Independent child canonical words.');await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent,canonicalOutputId:'primary-output'});assert.equal(f.p.blocks[0].html,'My unsaved primary revision.');assert.ok(f.disk().documents[primary].pending);await f.close();});
+test('dirty and interrupted pending parent words survive switching to exact child owner',async()=>{
+ const f=fixture();
+ try{
+  await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent,canonicalOutputId:'primary-output'});
+  await f.type('My unsaved primary revision.');
+  const dirty=f.disk().documents[primary];
+  assert.equal(dirty.status,'Unsaved changes');
+  assert.equal(f.calls.filter(c=>c.path.endsWith('/save')).length,0);
+  await f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});
+  assert.equal(f.w.studyDraft.currentBinding().id,child);
+  assert.deepEqual(f.disk().documents[primary],dirty);
+  assert.equal(f.p.blocks[0].html,'Independent child canonical words.');
+  await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent,canonicalOutputId:'primary-output'});
+  assert.equal(f.p.blocks[0].html,'My unsaved primary revision.');
+
+  // Opening a binding retains dirty work; explicitly submit it to exercise interrupted-save recovery.
+  await f.w.studyDraft.flush();
+  const interrupted=f.disk().documents[primary];
+  const assertInterrupted=()=>{const kept=f.disk().documents[primary];for(const key of ['binding','blocks','pending','sequence','signature','base','expected','serverRaw','history','note','status','error'])assert.deepEqual(kept[key],interrupted[key],key+' retained under primary owner');};
+  assert.equal(interrupted.status,'Recover save');
+  assert.equal(interrupted.blocks[0].html,'My unsaved primary revision.');
+  assert.ok(interrupted.pending);
+  assert.equal(interrupted.pending.request.bindingId,primary);
+  assert.equal(interrupted.pending.request.parentStudyId,parent);
+  assert.deepEqual(interrupted.pending.blocks,interrupted.blocks);
+  assert.equal(f.calls.filter(c=>c.path.endsWith('/save')).length,1);
+  assert.deepEqual(f.calls.find(c=>c.path.endsWith('/save')).body,interrupted.pending.request);
+  await f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});
+  assert.equal(f.w.studyDraft.currentBinding().id,child);
+  assertInterrupted();
+  assert.equal(f.disk().documents[child].blocks[0].html,'Independent child canonical words.');
+  await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent,canonicalOutputId:'primary-output'});
+  assert.equal(f.p.blocks[0].html,'My unsaved primary revision.');
+  assertInterrupted();
+  assert.equal(f.calls.filter(c=>c.path.endsWith('/save')).length,1);
+ }finally{await f.close();}
+});
 test('wrong parent, binding or canonical output refuses without replacing current words or caching foreign response',async()=>{const f=fixture();await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent,canonicalOutputId:'primary-output'});const before=f.p.blocks[0].html;await assert.rejects(f.w.studyDraft.openBinding({bindingId:child,parentStudyId:'hk',canonicalOutputId:'child-output'}),/current parent study/);await assert.rejects(f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'wrong-output'}),/canonical output owner/);f.setOverride(route=>route.pathname.endsWith('/read')?{...result(child),binding:{...result(child).binding,parentStudyId:'hk'}}:null);await assert.rejects(f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'}),/another working copy or parent/);assert.equal(f.w.studyDraft.currentBinding().id,primary);assert.equal(f.p.blocks[0].html,before);assert.equal(f.disk().documents[child],undefined);await f.close();});
 test('late child response is cached but cannot activate a different project',async()=>{const f=fixture();await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent});let release;const hold=new Promise(r=>release=r);f.setGate((path,q)=>path.endsWith('/read')&&q.bindingId===child?hold:null);const pending=f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});f.switchProject('hk');release();assert.equal(await pending,null);assert.equal(f.p.id,'hk');assert.equal(f.p.blocks[0].html,'Other browser words.');assert.equal(f.w.studyDraft.currentBinding(),null);assert.equal(f.disk().documents[child].binding.parentStudyId,parent);await f.close();});
 test('newer binding-open intent and stage navigation cancel late activation without dropping cached records',async()=>{const f=fixture();let release;const hold=new Promise(r=>release=r);f.setGate((path,q)=>path.endsWith('/read')&&q.bindingId===child?hold:null);const pending=f.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});await f.w.studyDraft.openBinding({bindingId:primary,parentStudyId:parent});release();assert.equal(await pending,null);assert.equal(f.w.studyDraft.currentBinding().id,primary);assert.equal(f.p.blocks[0].html,'Primary canonical words.');await f.close();const other=fixture();let unblock;const held=new Promise(r=>unblock=r);other.setGate(path=>path.endsWith('/read')?held:null);const loading=other.w.studyDraft.openBinding({bindingId:child,parentStudyId:parent,canonicalOutputId:'child-output'});other.w.viewPhase(3);unblock();assert.equal(await loading,null);assert.equal(other.p.viewedStage,3);assert.equal(other.p.view,'record');await other.close();});

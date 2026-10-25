@@ -1,0 +1,246 @@
+// Invented files only: the maintained parser plans, and the existing Magazine
+// HTTP owner alone prepares, saves and exactly undoes the same registered DEV.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash, randomUUID} from 'node:crypto';
+import {createRequire} from 'node:module';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
+import {createMagazineMediaInspection} from '../scripts/magazine-media-inspection.mjs';
+import {createMagazinePortfolio} from '../runtime/services/magazine-portfolio.mjs';
+import {createExistingWorkReader} from '../runtime/services/review-existing-work.mjs';
+import {apply as register} from '../tools/magazine/register.mjs';
+import {treeHashes} from './helpers/magazine-fixture.mjs';
+
+const repo = path.resolve(import.meta.dirname, '..');
+const DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
+const selection = {storyId:'mag-clay-teacher', pieceId:'mag-clay-teacher:article', edition:'working'};
+const sha = value => createHash('sha256').update(value).digest('hex');
+const require = createRequire(new URL('../runtime/package.json', import.meta.url));
+const parserCode = fs.readFileSync(new URL('../runtime/src/donors/mag/mag-send.ts', import.meta.url), 'utf8');
+const specCode = fs.readFileSync(new URL('../runtime/src/donors/mag/spec.ts', import.meta.url), 'utf8');
+const compiled = await require('esbuild').transform(parserCode, {loader:'ts', format:'esm'});
+const parser = await import('data:text/javascript;base64,' + Buffer.from(compiled.code).toString('base64'));
+const original = [
+  '---', 'type: DEV', 'story: Clay Teacher', 'title: Invented placement journey',
+  'published: https://www.teajia.com/read/synthetic', '---', '',
+  'Invented retained reader metadata.', '', '---', '',
+  '%%photo: same.png · Invented cover · cover%%', '',
+  'Invented opening 瓷 😀.', '',
+  '%%photo: same.png · Invented wide · wide x=0.2 y=0.8%%', '',
+  'Invented words between photographs.', '',
+  '%%photos: same.png · First group member | same.png · Second group member · aspect=4/5%%', '',
+  'Invented words after the group.', '', '%%ending%%', '', '%%saying%%', '> "An invented closing saying."', '', 'Invented closing words.', '', '---', '', 'Invented retained author notes.', ''
+].join('\r\n');
+
+// Keeping the helper in its own process lets this test terminate the actual
+// owner, then open a fresh owner over the same fixture and persisted receipts.
+const ownerCode = `
+import {magazineServer} from './tests/helpers/magazine-server.mjs';
+import {createServer} from './runtime/server.mjs';
+import path from 'node:path';
+const prior = JSON.parse(process.env.AR_SYNTHETIC_OWNER || 'null');
+let server, fixture, url;
+if (!prior) {
+  const s = await magazineServer({after(){}}, {fixture:JSON.parse(process.env.AR_SYNTHETIC_OPTIONS)});
+  fixture = Object.fromEntries(['dir','vault','files','data','drops'].map(k=>[k,s.f[k]]));
+  url = s.url;
+} else {
+  fixture = prior;
+  server = await createServer({dataDir:fixture.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,magazineVault:{vaultRoot:fixture.vault,filesRoot:fixture.files,drops:fixture.drops,writable:true,machine:'synthetic-placement-owner',exportStaging:path.join(fixture.dir,'staging')}});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  url = 'http://127.0.0.1:'+server.address().port;
+}
+process.send({fixture,url,pid:process.pid});
+`;
+
+async function startOwner(fixture) {
+  const options = {extra:{
+    [DEV]:original,
+    '_archive/DEV - Clay Teacher (earlier).md':'---\ntype: DEV\nstory: Clay Teacher\n---\n\nInvented earlier published words.\n',
+    'Workflow/3-Develop/DEV - River Potter (story).md':'---\ntype: DEV\nstory: River Potter\n---\n\nInvented independent sibling words.\n'
+  }};
+  const child = spawn(process.execPath, ['--input-type=module','--eval',ownerCode], {
+    cwd:repo, env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,
+      AR_SYNTHETIC_OWNER:JSON.stringify(fixture || null), AR_SYNTHETIC_OPTIONS:JSON.stringify(options)},
+    stdio:['ignore','ignore','pipe','ipc']
+  });
+  let log = '';
+  child.stderr.on('data', chunk => { log = (log + chunk).slice(-6000); });
+  const ready = await new Promise((resolve,reject) => {
+    const timeout = setTimeout(() => { child.kill('SIGKILL'); reject(Error('Synthetic owner startup timed out: ' + log)); },15000);
+    child.once('message', value => { clearTimeout(timeout); resolve(value); });
+    child.once('error', error => { clearTimeout(timeout); reject(error); });
+    child.once('exit', code => { clearTimeout(timeout); reject(Error('Synthetic owner exited ' + code + ': ' + log)); });
+  });
+  return {...ready, child};
+}
+async function stopOwner(owner) {
+  if (owner.child.exitCode !== null || owner.child.signalCode !== null) return;
+  const stopped = once(owner.child, 'exit');
+  owner.child.kill('SIGTERM');
+  await stopped;
+}
+async function fixture(t) {
+  let owner = await startOwner();
+  const f = owner.fixture;
+  t.after(async () => { await stopOwner(owner); fs.rmSync(f.dir,{recursive:true,force:true}); });
+  const registration = await register({mag:f.vault,files:f.files,data:f.data,verification:path.join(f.dir,'verification')});
+  assert.equal(registration.applied,true); assert.equal(registration.identical,true);
+  const publication = path.join(f.dir,'publication');
+  const conversation = path.join(publication,'src/pages/read/conversation');
+  fs.mkdirSync(path.join(conversation,'pieces'),{recursive:true});
+  fs.writeFileSync(path.join(conversation,'magSend.ts'),parserCode);
+  fs.writeFileSync(path.join(conversation,'spec.ts'),specCode);
+  fs.writeFileSync(path.join(conversation,'pieces/index.ts'),"export const CONVERSATIONS=[{path:'/read/synthetic',slug:'synthetic',images:'/read/synthetic/',opening:[],parts:[],ending:{blocks:[]}}];");
+  fs.mkdirSync(path.join(publication,'public/read/synthetic'),{recursive:true});
+  fs.writeFileSync(path.join(publication,'public/read/synthetic/same.png'),Buffer.from([137,80,78,71,13,10,26,10,1,2,3]));
+  fs.writeFileSync(path.join(publication,'published.html'),'<article>Invented immutable published edition.</article>\n');
+  const get = async (route, input={}, headers={}) => {
+    const url=new URL(route,owner.url);for(const [key,value] of Object.entries(input))url.searchParams.set(key,value);
+    const response = await fetch(url,{headers});
+    const body = await response.json();
+    if (!response.ok) throw Object.assign(Error(body.error),{status:response.status});
+    return body;
+  };
+  const post = async (action, input) => {
+    const response = await fetch(owner.url + '/api/magazine/working-draft/' + action, {
+      method:'POST', headers:{'Content-Type':'application/json','X-AR-Actor':'human:adrian','X-AR-Client':'mag-page'}, body:JSON.stringify(input)
+    });
+    return {status:response.status,body:await response.json()};
+  };
+  const roots = [{id:'invented-placement-magazine',path:f.vault}];
+  const portfolio = createMagazinePortfolio({roots});
+  const story = (await portfolio.list()).stories.find(s=>s.artifacts.some(a=>a.relativePath===DEV && !a.archived));
+  assert.ok(story);
+  const reader = createExistingWorkReader({roots,portfolio,projectLinks:{[story.id]:{nativeProjectId:'invented-native-project'}},readAuthority:get});
+  let resolveCount = 0;
+  const resolveWorking = async ({storyId,pieceId,expectedHash}) => {
+    resolveCount++;
+    const catalog = await reader.catalog();
+    const claims = catalog.stories.flatMap(s=>s.artifacts.filter(a=>a.magazineWorkingTarget?.storyId===storyId && a.magazineWorkingTarget?.pieceId===pieceId).map(a=>({artifact:a,target:a.magazineWorkingTarget})));
+    if (claims.length!==1 || claims[0].artifact.hash!==expectedHash || claims[0].target.hash!==expectedHash) throw Object.assign(Error('Exact registered working target changed.'),{status:409});
+    const [registered, value] = await Promise.all([get('/api/magazine/working-draft/catalog'),get('/api/magazine/working-draft/read',{storyId,pieceId,edition:'working'})]);
+    const {artifact,target} = claims[0];
+    assert.deepEqual(registered.rootIdentity,catalog.magazineWorkingLinks.rootIdentity);
+    assert.equal(registered.rootIdentity.fingerprint,sha(fs.realpathSync(f.vault)));
+    assert.equal(registered.stories.flatMap(s=>s.pieces).filter(p=>p.relativePath===artifact.relativePath && p.pieceId===pieceId && p.hash===expectedHash).length,1);
+    if (value.document.hash!==expectedHash || value.document.path!==artifact.relativePath || value.authority.storyId!==storyId || value.authority.pieceId!==pieceId) throw Object.assign(Error('Exact owner read changed.'),{status:409});
+    return {document:value.document,authority:value.authority,projection:value.projection,supportedNativeOperations:value.supportedNativeOperations,target,rootIdentity:registered.rootIdentity};
+  };
+  const media = createMagazineMediaInspection({repoRoot:publication,resolveWorking,originTrace:{parserHash:sha(parserCode),specHash:sha(specCode),loadParser:async()=>parser}});
+  const read = () => get('/api/magazine/working-draft/read',selection);
+  const inspect = async () => { const current=await read();return media.inspect({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:current.document.hash}); };
+  const moveRequest = inspection => {
+    const all=inspection.sources.flatMap(s=>s.placements),photo=alt=>all.find(p=>p.alt===alt);
+    assert.equal(inspection.originTrace.status,'ready');
+    return {storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:inspection.ownerRef.hash,revision:inspection.revision,placementId:photo('First group member').placementId,beforeId:photo('Invented wide').nativeOrigin.blockId};
+  };
+  return {f,publication,media,get,post,read,inspect,moveRequest,get resolveCount(){return resolveCount;},
+    async restart(){const previous=owner.pid;await stopOwner(owner);owner=await startOwner(f);assert.notEqual(owner.pid,previous);return {previous,current:owner.pid};}};
+}
+
+function onlyDraftChanged(before,after) {
+  const differences = [...new Set([...Object.keys(before),...Object.keys(after)])].filter(key=>before[key]!==after[key]);
+  assert.deepEqual(differences,[DEV]);
+}
+
+test('S08/S09: a real owner prepares the exact planned photo move, saves the same DEV, restarts and exactly undoes it',async t=>{
+  const h=await fixture(t),beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication);
+  const first=await h.read(),inspection=await h.inspect(),request=h.moveRequest(inspection),count=h.resolveCount;
+  const plan=await h.media.planMove(request);
+  assert.ok(h.resolveCount>count,'planning resolves the current registered owner afresh');
+  assert.equal(plan.schema,'ar-create.magazine-placement-plan.v1');
+  assert.deepEqual(plan.ownerRef,inspection.ownerRef); assert.equal(plan.expectedHash,first.document.hash);
+  assert.equal(plan.placementIds.length,2,'both repeated-photo group members share one native move');
+  assert.equal(plan.operations.length,1); assert.equal(plan.operations[0].kind,'move');
+  assert.ok(!JSON.stringify(plan).includes('%%photos:')); assert.ok(!JSON.stringify(plan).includes(h.f.dir));
+  assert.equal(Object.hasOwn(plan,'content'),false); assert.equal(Object.hasOwn(plan,'raw'),false);
+  assert.deepEqual(treeHashes(h.f.vault),beforeVault,'inspection and planning never write');
+  const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});
+  assert.equal(prepared.status,200,JSON.stringify(prepared.body));
+  assert.equal(sha(prepared.body.content),plan.expectedContentHash,'maintained native preparation matches the reviewed candidate hash');
+  assert.equal(prepared.body.expectedHash,plan.expectedHash);
+  assert.ok(prepared.body.content.indexOf('%%photos:')<prepared.body.content.indexOf('%%photo: same.png · Invented wide'));
+  assert.match(prepared.body.content,/Invented opening 瓷 😀/);
+  assert.ok(prepared.body.content.startsWith(original.slice(0,original.indexOf('%%photo:'))));
+  assert.ok(prepared.body.content.endsWith('---\r\n\r\nInvented retained author notes.\r\n'));
+  assert.deepEqual(treeHashes(h.f.vault),beforeVault,'prepare is read-only');
+  const operationId=randomUUID(),saved=await h.post('save',{...selection,expectedHash:plan.expectedHash,content:prepared.body.content,operationId});
+  assert.equal(saved.status,200,JSON.stringify(saved.body));
+  const disk=fs.readFileSync(path.join(h.f.vault,DEV),'utf8');
+  assert.equal(disk,prepared.body.content); assert.equal(sha(disk),plan.expectedContentHash);
+  onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+  const sameDEV=await h.read();assert.deepEqual(sameDEV.authority,first.authority);assert.equal(sameDEV.document.path,DEV);assert.equal(sameDEV.document.text,disk);
+  assert.equal(sameDEV.history.find(r=>r.operationId===operationId)?.actor,'human:adrian');
+  const afterInspection=await h.inspect();assert.notEqual(afterInspection.revision,inspection.revision);
+  assert.notEqual(afterInspection.sources[0].placements.find(p=>p.alt==='First group member').nativeOrigin.blockId,plan.operations[0].id,'fresh reads expose the new revision-scoped native block IDs');
+  const restart=await h.restart(),reopened=await h.read();
+  assert.equal(reopened.document.text,disk);assert.equal(reopened.document.hash,plan.expectedContentHash);
+  assert.equal(reopened.history.find(r=>r.operationId===operationId)?.canUndo,true,'saved exact Undo eligibility survives owner process restart');
+  const undo=await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()});
+  assert.equal(undo.status,200,JSON.stringify(undo.body));
+  assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(original),'exact Undo restores frontmatter, notes, words and CRLF bytes');
+  assert.equal((await h.read()).document.text,original);
+  assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);
+  assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
+  t.diagnostic(JSON.stringify({inventedOnly:true,sameDEV:true,expectedCandidateHash:true,ownerRestart:restart,exactEligibleUndo:true,sourcePhotosPublishedAndSiblingPreserved:true}));
+});
+
+test('S08/S09: changed owner bytes refuse old plans and stale prepare/save without changing any current file',async t=>{
+  const h=await fixture(t),inspection=await h.inspect(),request=h.moveRequest(inspection),plan=await h.media.planMove(request);
+  const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepared.status,200);
+  const publicationBefore=treeHashes(h.publication),photosBefore=treeHashes(h.f.files);
+  fs.appendFileSync(path.join(h.f.vault,DEV),'\r\nInvented external words must remain.\r\n');
+  const current=treeHashes(h.f.vault),dataBefore=treeHashes(h.f.data);
+  await assert.rejects(h.media.planMove(request),e=>e.status===409);
+  const fresh=await h.read();await assert.rejects(h.media.planMove({...request,expectedHash:fresh.document.hash}),e=>e.status===409,'old placement revision cannot be relabelled with the new file hash');
+  assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations})).status,409);
+  assert.equal((await h.post('save',{...selection,expectedHash:plan.expectedHash,content:prepared.body.content,operationId:randomUUID()})).status,409);
+  assert.deepEqual(treeHashes(h.f.vault),current);assert.deepEqual(treeHashes(h.f.files),photosBefore);assert.deepEqual(treeHashes(h.publication),publicationBefore);
+  // A refused writer may journal its failure, but it cannot create a native copy
+  // or alter registration; the maintained owner still exposes the external bytes.
+  for(const [relative,hash] of Object.entries(dataBefore).filter(([relative])=>relative.startsWith('magazine/')))assert.equal(treeHashes(h.f.data)[relative],hash);
+  assert.equal((await h.read()).document.hash,fresh.document.hash);
+  assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
+});
+
+test('S08/S09: focal change uses the same real DEV owner, persists through restart, retries one operation and exactly undoes',async t=>{
+ const h=await fixture(t),beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication),first=await h.read(),inspection=await h.inspect(),photo=inspection.sources.flatMap(s=>s.placements).find(p=>p.alt==='Invented wide');
+ assert.ok(first.supportedNativeOperations.includes('photoFocus'));
+ const request={storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:first.document.hash,revision:inspection.revision,placementId:photo.placementId,x:.7,y:.3},plan=await h.media.planFocus(request);
+ assert.equal(plan.operations[0].kind,'photoFocus');assert.deepEqual(plan.placementIds,[photo.placementId]);assert.equal(Object.hasOwn(plan,'content'),false);assert.deepEqual(treeHashes(h.f.vault),beforeVault);
+ const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepared.status,200,JSON.stringify(prepared.body));assert.equal(sha(prepared.body.content),plan.expectedContentHash);
+ const expected=original.replace('Invented wide · wide x=0.2 y=0.8','Invented wide · wide x=0.7 y=0.3');assert.equal(prepared.body.content,expected);assert.deepEqual(treeHashes(h.f.vault),beforeVault);
+ const operationId=randomUUID(),payload={...selection,expectedHash:plan.expectedHash,content:prepared.body.content,operationId},saved=await h.post('save',payload);assert.equal(saved.status,200,JSON.stringify(saved.body));onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+ const committed=await h.read();assert.equal(committed.history.find(r=>r.operationId===operationId)?.canUndo,true,'the owner exposes its persisted eligible receipt before restart');
+ const restart=await h.restart(),replayed=await h.post('save',payload);assert.equal(replayed.status,200,JSON.stringify(replayed.body));const reopened=await h.read();assert.equal(reopened.document.text,expected);assert.equal(reopened.history.filter(r=>r.operationId===operationId).length,1);assert.equal(reopened.history.find(r=>r.operationId===operationId).canUndo,true);
+ const fresh=await h.inspect(),afterPhoto=fresh.sources.flatMap(s=>s.placements).find(p=>p.alt==='Invented wide');assert.equal(afterPhoto.crop.x,.7);assert.equal(afterPhoto.crop.y,.3);assert.notEqual(fresh.revision,inspection.revision);
+ for(const p of inspection.sources.flatMap(s=>s.placements).filter(p=>p.placementId!==photo.placementId)){const after=fresh.sources.flatMap(s=>s.placements).find(n=>n.alt===p.alt);assert.equal(after.alt,p.alt);assert.deepEqual(after.crop,p.crop);}
+ await assert.rejects(h.media.planFocus(request),e=>e.status===409);
+ const undone=await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()});assert.equal(undone.status,200,JSON.stringify(undone.body));assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(original));assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
+ t.diagnostic(JSON.stringify({inventedOnly:true,sameDEV:true,focalChangedOnlyOneOccurrence:true,ownerRestart:restart,sameOperationIdReplay:true,exactUndo:true,sourceAndPublishedBytesPreserved:true}));
+});
+
+test('committed owner receipts expose exact Undo after save response and immediate child restart without journal discovery',async t=>{
+ const h=await fixture(t),first=await h.read(),row=first.projection.find(p=>p.raw==='Invented opening 瓷 😀.'),prepared=await h.post('prepare',{...selection,expectedHash:first.document.hash,operations:[{kind:'text',id:row.id,from:0,to:8,insert:'Changed',seenBlockHash:row.blockHash}]});
+ assert.equal(prepared.status,200);const operationId=randomUUID(),saved=await h.post('save',{...selection,expectedHash:first.document.hash,content:prepared.body.content,operationId});assert.equal(saved.status,200);
+ // No read-confirm, timer or receipt read before stopping the actual writer.
+ const restart=await h.restart(),receiptPath=path.join(h.f.data,'magazine/operations',operationId+'.json'),receipt=JSON.parse(fs.readFileSync(receiptPath,'utf8'));
+ assert.equal(receipt.state,'committed');assert.equal(sha(fs.readFileSync(path.join(h.f.vault,DEV))),sha(prepared.body.content));
+ // Explicitly remove the invented secondary index to make the missing-journal
+ // regression deterministic even if the old process won its shutdown race.
+ fs.rmSync(path.join(h.f.data,'journal'),{recursive:true,force:true});
+ const excluded=[];
+ for(const override of [{scope:{kind:'story',id:'mag-river-potter'}},{result:{...receipt.result,path:'Workflow/3-Develop/DEV - River Potter (story).md'}},{state:'pending'}]){const id=randomUUID();excluded.push(id);fs.writeFileSync(path.join(h.f.data,'magazine/operations',id+'.json'),JSON.stringify({...receipt,...override,operationId:id}));}
+ const reopened=await h.read(),history=reopened.history.find(r=>r.operationId===operationId);
+ assert.ok(history,'a committed exact owner receipt is discoverable without an optional journal line');assert.equal(history.canUndo,true);assert.equal(history.actor,'human:adrian');assert.equal(history.beforeHash,first.document.hash);assert.equal(history.afterHash,sha(prepared.body.content));assert.ok(excluded.every(id=>!reopened.history.some(r=>r.operationId===id)),'other scope/path and pending receipts stay out of this history');
+ const agent=await h.get('/api/magazine/working-draft/read',selection,{'X-AR-Actor':'agent:codex','X-AR-Client':'cli'});assert.equal(agent.history.find(r=>r.operationId===operationId).canUndo,false,'discovery does not grant an agent wording Undo');
+ const newerId=randomUUID(),newerContent=prepared.body.content.replace('Changed opening','Newer opening'),newer=await h.post('save',{...selection,expectedHash:reopened.document.hash,content:newerContent,operationId:newerId});assert.equal(newer.status,200);
+ const stale=await h.read();assert.equal(stale.history.find(r=>r.operationId===operationId).canUndo,false);assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,409);assert.equal(fs.readFileSync(path.join(h.f.vault,DEV),'utf8'),newerContent);
+ assert.equal((await h.post('undo',{...selection,undoOperationId:newerId,operationId:randomUUID()})).status,200);assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,200);assert.equal(fs.readFileSync(path.join(h.f.vault,DEV),'utf8'),original);
+ const undone=await h.read();assert.equal(undone.history.find(r=>r.operationId===operationId).canUndo,false);assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,409);
+ t.diagnostic(JSON.stringify({inventedOnly:true,saveResponseThenImmediateRestart:restart,durableReceiptWithoutJournal:true,scopedHistory:true,staleAndUndoneRefused:true,exactUndo:true}));
+});

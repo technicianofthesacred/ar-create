@@ -29,9 +29,9 @@ test('/api/i64os/health returns the release sha it was given, and null when ther
 
 // ---------- the shell's one event stream
 function shellPage(){
- const dom=new JSDOM('<div id="app"></div>',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window,sources=[],fetched=[];
+ const dom=new JSDOM('<div id="app"></div>',{url:'http://localhost',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window,sources=[],fetched=[];
  class FakeSource{constructor(url){this.url=url;this.handlers={};this.readyState=0;sources.push(this);queueMicrotask(()=>this.onopen?.());}addEventListener(type,fn){(this.handlers[type]||=[]).push(fn);}send(type,data){for(const fn of this.handlers[type]||[])fn({data:JSON.stringify(data)});}close(){this.readyState=2;this.closed=true;}}
- w.EventSource=FakeSource;w.fetch=async url=>{fetched.push(url);return {ok:true,json:async()=>({cursor:5,bootId:'boot-1',events:[]})};};
+ w.document.hasFocus=()=>true;w.EventSource=FakeSource;w.fetch=async url=>{fetched.push(url);return {ok:true,json:async()=>({cursor:5,bootId:'boot-1',events:[]})};};
  w.eval(read('shell.js'));return {w,dom,sources,fetched};
 }
 test('one event stream: resumes from the last cursor, filters by record, drops repeats and resets on a new boot',async()=>{
@@ -51,6 +51,57 @@ test('one event stream: resumes from the last cursor, filters by record, drops r
  sources.at(-1).send('reset',{bootId:'boot-3',cursor:0});assert.equal(got.filter(e=>e.reset).length,2);
  assert.equal(w.c3Shell.actorName('agent:claude-code'),'Claude');assert.equal(w.c3Shell.actorName('agent:codex'),'Codex');assert.equal(w.c3Shell.actorName('human:adrian'),'You');
  w.c3Shell.live.stop();dom.window.close();
+});
+
+// Visibility and retry transitions use explicit events/callbacks, never real-time polling.
+function visibilityShell({hidden=false,focused=true,learn,request}={}){
+ const dom=new JSDOM('<div id="app"></div>',{url:'http://localhost',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window,sources=[],fetched=[],timers=new Map(),queued=[];let timerId=0;
+ Object.defineProperty(w.document,'hidden',{get:()=>hidden});w.document.hasFocus=()=>focused;
+ w.queueMicrotask=fn=>queued.push(fn);w.setTimeout=fn=>{timers.set(++timerId,fn);return timerId;};w.clearTimeout=id=>timers.delete(id);
+ class FakeSource{constructor(url){this.url=url;this.handlers={};sources.push(this);}addEventListener(type,fn){this.handlers[type]=fn;}send(type,data){this.handlers[type]?.({data:JSON.stringify(data)});}close(){this.closed=true;}}
+ w.EventSource=FakeSource;w.fetch=(url,init)=>{fetched.push(url);return request&&!String(url).includes('/api/events')?request(url,init):learn?learn():Promise.resolve({ok:true,json:async()=>({cursor:5,bootId:'boot-1'})});};w.eval(read('shell.js'));
+ return {w,sources,fetched,timers,queued,visible(value){hidden=!value;w.document.dispatchEvent(new w.Event('visibilitychange'));},focus(value){focused=value;w.dispatchEvent(new w.Event(value?'focus':'blur'));},page(type,persisted=true){const event=new w.Event(type);Object.defineProperty(event,'persisted',{value:persisted});w.dispatchEvent(event);},close(){w.c3Shell.live.stop();dom.window.close();}};
+}
+test('hidden shells consume no stream and become current on their first visible return',async()=>{
+ const x=visibilityShell({hidden:true});try{const got=[];x.w.c3Shell.live.on({},e=>got.push(e));x.queued.shift()();await x.w.c3Shell.live.connect();assert.equal(x.fetched.length,0);assert.equal(x.sources.length,0);
+  x.visible(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1);assert.equal(x.sources[0].url,'/api/events?since=5');assert.equal(got.filter(e=>e.reset).length,1);
+ }finally{x.close();}
+});
+test('hidden shells release their stream, retain the exact cursor and reject stale callbacks',async()=>{
+ const x=visibilityShell();try{const got=[];x.w.c3Shell.live.on({},e=>got.push(e));await x.w.c3Shell.live.connect();const first=x.sources[0];first.onopen();first.send('change',{cursor:9,bootId:'boot-1',kind:'saved'});
+  x.visible(false);assert.equal(first.closed,true);assert.equal(x.w.c3Shell.live.connected(),false);first.onopen();first.send('change',{cursor:99,bootId:'old',kind:'saved'});first.onerror();assert.equal(x.timers.size,0);assert.equal(x.w.c3Shell.live.cursor(),9);
+  x.visible(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,2);assert.equal(x.sources[1].url,'/api/events?since=9');assert.equal(got.filter(e=>e.reset).length,1,'visible owners re-read missed changes');x.sources[1].send('reset',{cursor:0,bootId:'boot-2'});assert.equal(got.filter(e=>e.reset).length,2,'server resets still reach every owner');
+ }finally{x.close();}
+});
+test('hiding cancels retries and a captured old retry cannot reopen the stream',async()=>{
+ const x=visibilityShell();try{await x.w.c3Shell.live.connect();x.sources[0].onerror();assert.equal(x.timers.size,1);const retry=[...x.timers.values()][0];x.visible(false);assert.equal(x.timers.size,0);await retry();assert.equal(x.sources.length,1);
+  x.visible(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,2);assert.equal(x.sources[1].url,'/api/events?since=5');
+ }finally{x.close();}
+});
+test('manual stop remains stopped through visibility and BFcache events',async()=>{
+ const x=visibilityShell();try{await x.w.c3Shell.live.connect();x.w.c3Shell.live.stop();x.visible(false);x.visible(true);x.focus(false);x.focus(true);x.page('pagehide');x.page('pageshow');await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1);assert.equal(x.sources[0].closed,true);assert.equal(x.timers.size,0);await x.w.c3Shell.live.resume();assert.equal(x.sources.length,2,'the existing explicit resume control still restarts a manually stopped stream');
+ }finally{x.close();}
+});
+test('BFcache closes the old stream and restores its exact cursor with a fresh read',async()=>{
+ const x=visibilityShell();try{const got=[];x.w.c3Shell.live.on({},e=>got.push(e));await x.w.c3Shell.live.connect();x.sources[0].send('change',{cursor:12,bootId:'boot-1',kind:'saved'});x.page('pagehide');assert.equal(x.sources[0].closed,true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1,'pagehide prevents reopening even before hidden changes');x.page('pageshow');await x.w.c3Shell.live.connect();assert.equal(x.sources.length,2);assert.equal(x.sources[1].url,'/api/events?since=12');assert.equal(got.filter(e=>e.reset).length,1);
+ }finally{x.close();}
+});
+test('visible but unfocused shells leave origin connections free until focus returns',async()=>{
+ const x=visibilityShell({focused:false});try{const got=[];x.w.c3Shell.live.on({},e=>got.push(e));x.queued.shift()();await x.w.c3Shell.live.connect();assert.equal(x.fetched.length,0);assert.equal(x.sources.length,0);x.focus(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1);assert.equal(x.sources[0].url,'/api/events?since=5');assert.equal(got.filter(e=>e.reset).length,1);
+ }finally{x.close();}
+});
+test('blur closes a visible stream and focus resumes the exact cursor with a fresh read',async()=>{
+ const x=visibilityShell();try{const got=[];x.w.c3Shell.live.on({},e=>got.push(e));await x.w.c3Shell.live.connect();x.sources[0].send('change',{cursor:16,bootId:'boot-1',kind:'saved'});x.focus(false);assert.equal(x.sources[0].closed,true);assert.equal(x.w.document.hidden,false);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1);x.focus(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,2);assert.equal(x.sources[1].url,'/api/events?since=16');assert.equal(got.filter(e=>e.reset).length,1);
+ }finally{x.close();}
+});
+test('cursor learning cannot open a stream after a visible document loses focus',async()=>{
+ let resolve;const learning=new Promise(r=>resolve=r),x=visibilityShell({learn:()=>learning});try{const opening=x.w.c3Shell.live.connect();assert.equal(x.fetched.length,1);x.focus(false);resolve({ok:true,json:async()=>({cursor:23,bootId:'boot-1'})});await opening;assert.equal(x.sources.length,0);x.focus(true);await x.w.c3Shell.live.connect();assert.equal(x.sources[0].url,'/api/events?since=23');
+ }finally{x.close();}
+});
+test('cursor learning cannot open a stream after the document hides or is manually stopped',async()=>{
+ for(const stop of [false,true]){let resolve;const learning=new Promise(r=>resolve=r),x=visibilityShell({learn:()=>learning});try{const opening=x.w.c3Shell.live.connect();assert.equal(x.fetched.length,1);x.visible(false);if(stop)x.w.c3Shell.live.stop();resolve({ok:true,json:async()=>({cursor:21,bootId:'boot-1'})});await opening;assert.equal(x.sources.length,0);assert.equal(x.w.c3Shell.live.cursor(),21);
+   x.visible(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,stop?0:1);if(!stop)assert.equal(x.sources[0].url,'/api/events?since=21');
+  }finally{x.close();}}
 });
 
 // ---------- the draft: live refresh, conflicts that name who saved, Keep mine, presence, 423
@@ -210,4 +261,21 @@ test('with an assistant question open, every step still has exactly one primary 
   assert.equal(w.document.querySelectorAll('.sb-primary').length,1,`step ${stage}: exactly one primary`);
   assert.equal(w.document.querySelector('.sb-primary').textContent,'Claude asks: Which angle opens the piece?');
  }
+});
+
+
+test('finite local API requests release the stream until every pending response settles without a reset loop',async()=>{
+ const pending=[],x=visibilityShell({request:(url,init)=>new Promise(resolve=>pending.push({url,init,resolve}))});try{
+  const got=[];x.w.c3Shell.live.on({},e=>got.push(e));await x.w.c3Shell.live.connect();x.sources[0].send('change',{cursor:19,bootId:'boot-1',kind:'saved'});got.length=0;
+  const options={method:'POST',signal:new AbortController().signal},first=x.w.fetch('/api/working/read',options),second=x.w.fetch('/api/review/reference');
+  assert.equal(x.sources[0].closed,true,'a live stream must free its connection for real work');assert.strictEqual(pending[0].init,options);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1,'subscriptions cannot reconnect while finite requests are pending');
+  const response={ok:true};pending[0].resolve(response);assert.strictEqual(await first,response);assert.equal(x.sources.length,1);
+  pending[1].resolve(response);await second;await Promise.resolve();assert.equal(x.sources.length,2);assert.equal(x.sources[1].url,'/api/events?since=19');assert.equal(got.length,0,'transport yielding never triggers catalog reset-refresh recursion');
+ }finally{x.close();}
+});
+test('API rejection preserves its error and an explicit stream stop survives pending request completion',async()=>{
+ let reject;const x=visibilityShell({request:()=>new Promise((_r,no)=>reject=no)});try{await x.w.c3Shell.live.connect();const failure=Error('Invented request cancelled'),pending=x.w.fetch('/api/working/read');assert.equal(x.sources[0].closed,true);x.w.c3Shell.live.stop();reject(failure);await assert.rejects(pending,e=>e===failure);assert.equal(x.sources.length,1);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,1);await x.w.c3Shell.live.resume();assert.equal(x.sources.length,2);}finally{x.close();}
+});
+test('external and static fetches leave the stream connected; hidden API completion cannot reconnect it',async()=>{
+ let resolve;const x=visibilityShell({request:()=>new Promise(done=>resolve=done)});try{await x.w.c3Shell.live.connect();const external=x.w.fetch('https://example.test/api/reference');assert.equal(x.sources[0].closed,undefined);resolve({ok:true});await external;const staticRead=x.w.fetch('/document-study/source.js');assert.equal(x.sources[0].closed,undefined);resolve({ok:true});await staticRead;const local=x.w.fetch({url:'http://localhost/api/working/read'});assert.equal(x.sources[0].closed,true);x.visible(false);resolve({ok:true});await local;assert.equal(x.sources.length,1);x.visible(true);await x.w.c3Shell.live.connect();assert.equal(x.sources.length,2);}finally{x.close();}
 });

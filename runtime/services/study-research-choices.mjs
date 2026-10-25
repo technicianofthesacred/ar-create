@@ -24,7 +24,6 @@ function markdown(state) {
  * and manuscript authority; this service never calls their save methods. */
 export function createStudyResearchChoices({ dataDir, originals, drafts } = {}) {
   if (!originals?.list || !drafts?.read) throw new TypeError('Trusted originals.list and drafts.read are required.');
-  const root = ensurePrivateDirectory(dataDir, 'study-research-choices');
   let pending = Promise.resolve();
   const serial = fn => { const result = pending.then(fn); pending = result.catch(() => {}); return result; };
   function identity(input, saving = false) {
@@ -44,8 +43,25 @@ export function createStudyResearchChoices({ dataDir, originals, drafts } = {}) 
     const sourceExpected = digest(stable(sourceRecords));
     return { draft, sourceExpected, sourceRecords, records: listed.records.filter(r => r.role === 'research' || r.role === 'research notes') };
   }
-  function paths(input) {
-    const room = ensurePrivateDirectory(root, input.bindingId.toLowerCase());
+  function paths(input, { create = false } = {}) {
+    const relative = `study-research-choices/${input.bindingId.toLowerCase()}`;
+    let room;
+    if (create) room = ensurePrivateDirectory(dataDir, relative);
+    else {
+      const rootStat = fs.lstatSync(dataDir);
+      if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) fail('Research-choice data root must be a real directory.', 403);
+      room = dataDir;
+      const parts = relative.split('/');
+      for (let i = 0; i < parts.length; i++) {
+        room = path.join(room, parts[i]);
+        const stat = fs.lstatSync(room, { throwIfNoEntry: false });
+        if (!stat) {
+          room = path.join(room, ...parts.slice(i + 1));
+          break;
+        }
+        if (stat.isSymbolicLink() || !stat.isDirectory()) fail('Research-choice folders must be real directories.', 403);
+      }
+    }
     return { choices: path.join(room, 'choices.md'), journal: path.join(room, 'journal.json') };
   }
   function state(input, files) {
@@ -82,7 +98,7 @@ export function createStudyResearchChoices({ dataDir, originals, drafts } = {}) 
     if (input.pointId !== researchPointId(input.recordPath, input.originalText)) fail('Research point identity does not match its exact source words.');
     if (!['include', 'leave-out'].includes(input.decision)) fail('Choose Include or Leave out explicitly.', 400);
     if (input.narration !== undefined && (typeof input.narration !== 'string' || Buffer.byteLength(input.narration) > 16 * 1024 || input.narration.includes('\0'))) fail('Narration must be readable text within the limit.', 400);
-    const current = await authority(input), files = paths(input), value = state(input, files), requestHash = digest(stable(input));
+    const current = await authority(input), files = paths(input, { create: true }), value = state(input, files), requestHash = digest(stable(input));
     const prior = value.receipts.find(r => r.operationId === input.operationId);
     if (prior) { if (prior.requestHash !== requestHash) fail('Operation UUID already belongs to a different decision.'); return response(value, files, current); }
     if (value.pending && (value.pending.operationId !== input.operationId || value.pending.requestHash !== requestHash)) fail('Finish the pending research-choice operation first.');
