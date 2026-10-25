@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
 const read=name=>fs.readFileSync(new URL('../public/document-study/'+name,import.meta.url),'utf8');
 const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
-function boot({native=true,initialStage=5}={}){
+function boot({native=true,initialStage=5,surfaceBar=false}={}){
  const steps=Array.from({length:12},(_,i)=>`<button class="workflowStep"><span class="stepNumber">${i+1}</span><span class="stepName">Step ${i+1}</span></button>`).join('');
  const dom=new JSDOM(`<header id="c3-tabstrip"></header><div id="app"><div class="shell"><nav class="workflowNavigation"><div class="workflowSteps">${steps}</div></nav><main class="workspace" id="workspace"><header class="topbar"></header><header id="c3-surface-bar"><div class="sb-right"><button class="sb-mode">Read</button><div class="sb-menu"></div></div></header><div class="desk"><article class="document"><h1>Invented piece</h1><div id="manuscript" contenteditable="true"><p data-block="a">Unsent exact words</p></div></article></div></main></div></div>`,{url:'http://localhost',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,d=w.document,p={id:'p',name:'Invented project',view:initialStage===5?'article':'record',viewedStage:initialStage},calls=[],editor=d.querySelector('#manuscript');let mode='edit';const observers=[],Observer=w.MutationObserver;
@@ -15,7 +15,7 @@ function boot({native=true,initialStage=5}={}){
  w.viewPhase=async n=>{calls.push(['stage',n]);p.viewedStage=n===6?5:n;p.view=n===5||n===6?'article':'record';if(n===6)mode='preview';};
  const setViewMode=value=>{mode=value;p.view='article';p.viewedStage=5;editor.setAttribute('contenteditable',String(value==='edit'));w.dispatchEvent(new w.CustomEvent('study-write-view',{detail:{mode:value}}));return true;};
  w.studyDraft={setViewMode,viewMode:()=>mode,edit:()=>{calls.push('edit');return setViewMode('edit');},read:()=>{calls.push('preview');return setViewMode('preview');},currentBinding:()=>native?{id:'b',parentStudyId:'p',title:'Invented piece'}:null,currentProof:()=>native?{bindingId:'b',parentStudyId:'p',dirty:true}:null};
- w.eval(read('workspace-navigation.js'));w.eval(read('workbench-frame.js'));
+ w.eval(read('workspace-navigation.js'));if(surfaceBar)w.eval(read('surface-bar.js'));w.eval(read('workbench-frame.js'));
  return {w,d,p,calls,editor,close(){observers.forEach(o=>o.disconnect());w.close();}};
 }
 test('one visible Write entrance retains hidden legacy Read action and omits the Read piece-mode tab',()=>{
@@ -33,3 +33,12 @@ test('leaving the current owner still uses the existing save guard',async()=>{co
 test('an existing carousel canvas never gains prose Edit / Preview controls',()=>{const f=boot();try{f.editor.remove();const canvas=f.d.createElement('section');canvas.id='study-output-canvas';canvas.className='car-workspace';canvas.innerHTML='<div class="car-writing-page">Existing slide words</div>';f.d.querySelector('#workspace').append(canvas);f.p.view='record';f.p.viewedStage=9;f.w.studyOutputConnection.selection=()=>({projectId:'p',output:{id:'carousel',kind:'carousel'}});f.w.c3WorkbenchFrame.decorate();assert.equal(f.d.querySelector('[data-wbf-mode]'),null);assert.strictEqual(f.d.querySelector('#study-output-canvas'),canvas);assert.equal(canvas.textContent,'Existing slide words');}finally{f.close();}});
 test('browser carousel Preview slides calls its existing look owner and never enters the article',async()=>{const f=boot();try{f.editor.remove();f.p.view='carousel';f.p.outputMode='words';const sequence=f.d.createElement('section');sequence.className='wordSequence';sequence.innerHTML='<div class="slideProse" contenteditable="true">Current slide wording</div>';f.d.querySelector('#workspace').append(sequence);f.w.setOutputMode=mode=>{f.calls.push(['carousel',mode]);f.p.outputMode=mode;};f.w.c3WorkbenchFrame.decorate();assert.equal(f.d.querySelector('[data-wbf-mode]'),null);const preview=f.d.querySelector('[data-wbf-carousel-view="look"]');assert.equal(preview.textContent,'Preview slides');preview.click();await tick();assert.deepEqual(f.calls,[['carousel','look']]);assert.equal(f.p.view,'carousel');assert.equal(sequence.textContent,'Current slide wording');}finally{f.close();}});
 test('saved legacy Read continuation accepts the same owner canonical Write preview',async()=>{const f=boot({initialStage:2});try{f.w.studyOutputConnection.flush=async()=>{};f.w.studyDraft.openBinding=async()=>{};await f.w.workspaceNavigation.resumeLast({projectId:'p',last:{stage:6,bindingId:'b'},key:'native:p:b',item:{stage:6,scroll:0}});assert.equal(f.p.viewedStage,5);assert.equal(f.w.studyDraft.viewMode(),'preview');assert.equal(f.editor.textContent,'Unsent exact words');}finally{f.close();}});
+
+test('pointer press and release reach Preview with the maintained surface bar and focused manuscript',async()=>{
+ const f=boot({native:false,surfaceBar:true});try{
+  const {w,d,editor}=f;await tick();editor.focus();const text=editor.firstElementChild.firstChild,range=d.createRange();range.setStart(text,7);range.setEnd(text,12);w.getSelection().removeAllRanges();w.getSelection().addRange(range);
+  const preview=d.querySelector('[data-wbf-mode="preview"]');
+  for(const type of ['pointerdown','mousedown','pointerup','mouseup','click']){preview.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,detail:1}));await tick();}
+  assert.equal(preview.isConnected,true);assert.deepEqual(f.calls,['preview']);assert.equal(w.studyDraft.viewMode(),'preview');assert.equal(d.querySelector('[data-wbf-mode="preview"]').getAttribute('aria-pressed'),'true');assert.strictEqual(d.querySelector('#manuscript'),editor);assert.equal(editor.textContent,'Unsent exact words');assert.equal(w.getSelection().toString(),'exact');
+ }finally{f.close();}
+});

@@ -774,7 +774,7 @@
     {
       "path": "public/document-study/draft-flow.css",
       "sourceSha256": "022db91d05a003defb691c60b84d0ccbb17aec5be45d12ad2ccc35e0aec624f2",
-      "candidateSha256": "fccce65e23b5e9147a68fe48282d13385b064d8ac77e31eb1a0554b195c4c7da",
+      "candidateSha256": "bec95477004c1e2a429c359338dbc6090d1fc5f8adad943558ce9f1afec9a6f2",
       "adapted": true
     },
     {
@@ -2905,11 +2905,11 @@
     },
     {
       "path": "public/document-study/piece-state.js",
-      "candidateSha256": "e178ec569dfa2bcc67cc9a1614f975e32fd191945b0c32287154f5c2d6c31847"
+      "candidateSha256": "4d2dc3223c2e9a5b41b5a8ae6c39b02f2dbe27012457bf07a5f441133bb12a1c"
     },
     {
       "path": "public/document-study/piece-state.test.mjs",
-      "candidateSha256": "60c9515e0ff86cbd5a3044ff6a5c800c71f2b492c6dfcadaae9a2c26cd07ca04"
+      "candidateSha256": "7fe6407d6de51848f465c9d5f7f2c924c426247e0369d84e4a282ca9542db0d1"
     },
     {
       "path": "public/document-study/shell.js",
@@ -3413,7 +3413,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.css",
-      "candidateSha256": "c0ef5d885d1e91ab521734590d7b58c70977bee62547ceb4c5ce1c0dd737dfb6"
+      "candidateSha256": "a23045ba3231cdade058d892341370d595d2fc0b5d8403988e9faa23d33f64a3"
     },
     {
       "path": "public/document-study/workbench-frame.js",
@@ -3525,7 +3525,7 @@
     },
     {
       "path": "public/document-study/workbench-write-match.css",
-      "candidateSha256": "cc162a639d2daea9067bc5e0c294d8114d49ef139fb3ab83c8b018ff44b19c2c"
+      "candidateSha256": "5d52992a88ac4b6d6a438ac4eb63e4fb242a03a6517023eebf7fc02526472a96"
     },
     {
       "path": "runtime/services/native-output-parent-connection.test.mjs",
@@ -3661,7 +3661,7 @@
     },
     {
       "path": "public/document-study/review-mode.js",
-      "candidateSha256": "abb7d65362273c218790f012620bc280e30a2643a697fd30c7a27f5d1afbedb9"
+      "candidateSha256": "3673f0dbb2bdb511b275650816fa669affce6a8a9585f1e34e925dba9c9cfcd0"
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
@@ -3709,7 +3709,7 @@
     },
     {
       "path": "tests/review-mode.test.mjs",
-      "candidateSha256": "50b424a264214c449f6d9ef35e3bb3c4503a9310d0267e0df79c8930db65d2bb"
+      "candidateSha256": "2770d9c3ddba8b4d36a2286485327afe392e13462ab53e1681daf110dc62a418"
     },
     {
       "path": "tests/review-piece-links.test.mjs",
@@ -4065,7 +4065,7 @@
     },
     {
       "path": "tests/write-preview-navigation.test.mjs",
-      "candidateSha256": "9a7c7e650a6a7977555faba39f90443e1f46f0528ee5f384ee1bb588fcb7e69e"
+      "candidateSha256": "9ff64d72eee83a7bfd84f0f6f4f19aa35eb6dad52e0d4f9aa8f74ac69c4219e8"
     },
     {
       "path": "public/document-study/retained-carousel-copy.js",

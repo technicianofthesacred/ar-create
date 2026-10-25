@@ -119,3 +119,46 @@ test('failed native Keep wording save retains the exact pending request and disa
 });
 
 test('owner cues reapply the narrow approval gate without losing its original control title',async()=>{const f=await retainedMarkReviewFixture({enabled:false});try{f.applyReview();assert.equal(f.button.disabled,true);f.button.disabled=false;f.w.dispatchEvent(new f.w.CustomEvent('study-draft-change'));assert.equal(f.button.disabled,true);f.w.AR_CREATE_REVIEW_MODE.studyDraftApprovals=true;f.w.dispatchEvent(new f.w.CustomEvent('study-draft-change'));assert.equal(f.button.disabled,false);assert.equal(f.button.getAttribute('title'),null);assert.strictEqual(f.button.onclick,f.handler);f.w.document.body.dataset.writeView='preview';f.w.dispatchEvent(new f.w.CustomEvent('study-write-view'));assert.equal(f.button.disabled,true);assert.equal(f.calls.some(c=>c.path.endsWith('/save')),false);}finally{f.close();}});
+
+test('direct Check badge follows exact current manuscript/save proof while preserving review locks and earlier records',async()=>{
+ const pieceCode=fs.readFileSync(new URL('../public/document-study/piece-state.js',import.meta.url),'utf8');
+ const changes=[null,f=>f.proof.dirty=true,f=>f.proof.parentStudyId='foreign',f=>f.proof.owner.pieceId='foreign',f=>f.proof.owner.path='foreign',f=>f.proof.expected.workflow.draft='b'.repeat(64),f=>f.p.magazineDraft.storyId='foreign',f=>f.w.document.getElementById('current-draft-check').hidden=true,f=>delete f.w.studyDraft];
+ for(const [index,change] of changes.entries()){
+  const f=await reviewDOM('<header id="c3-surface-bar"></header><section id="current-draft-check">Not checked yet</section><details><summary>Earlier retained checks · read-only</summary>Earlier words</details><div id="other" contenteditable="true"></div><button data-draft-approve></button>');
+  try{
+   f.p={id:'parent-a',view:'record',viewedStage:7,blocks:[],magazineDraft:{storyId:'story',pieceId:'piece'}};
+   const owner={kind:'magazine',storyId:'story',pieceId:'piece',path:'Workflow/DEV - Synthetic.md'};f.proof={parentStudyId:f.p.id,owner:{...owner},draftHash:'a'.repeat(64),expected:{workflow:{draft:'a'.repeat(64)}},dirty:false};
+   f.w.current=()=>f.p;f.w.studyDraft={currentProof:()=>f.proof,currentOwner:()=>owner};f.w.eval(pieceCode);change?.(f);f.w.eval(code);
+   const badge=()=>f.w.document.querySelector('[data-review-state]').textContent;
+   if(index===0){
+    f.w.document.body.insertAdjacentHTML('beforeend','<aside id="wbf-drawer"><div class="dr-body" data-tool="check"></div></aside>');
+    f.w.document.querySelector('.dr-body').append(f.w.document.getElementById('current-draft-check'));f.callbacks[0]();
+    assert.equal(badge(),'Saved manuscript');assert.equal(f.w.c3PieceState.readOnlyReason(7),'Saved manuscript · read-only');
+    f.w.document.querySelector('.dr-body').dataset.tool='history';f.callbacks[0]();assert.equal(badge(),'Read-only review');
+    f.w.document.querySelector('.dr-body').dataset.tool='check';f.callbacks[0]();
+    f.w.document.getElementById('workspace').insertAdjacentHTML('beforeend','<div class="wn-check-layout"><section class="wn-check-manuscript" aria-label="Current manuscript · read only"><article class="document"><div class="manuscript draft-read-words"><section data-draft-passage="paragraph-a">Invented current words</section></div></article></section></div>');
+    f.w.document.getElementById('wbf-drawer').remove();f.callbacks[0]();
+    assert.equal(badge(),'Saved manuscript');assert.equal(f.w.c3PieceState.readOnlyReason(7),'Saved manuscript · read-only');
+   }
+   assert.equal(badge(),index===0?'Saved manuscript':index===1?'Unsaved changes':'Read-only review');
+   assert.match(f.w.document.querySelector('details').textContent,/Earlier retained checks · read-only/);assert.equal(f.w.document.querySelector('#other').getAttribute('contenteditable'),'false');assert.equal(f.w.document.querySelector('[data-draft-approve]').disabled,true);
+   if(index===0){f.proof.dirty=true;f.callbacks[0]();assert.equal(badge(),'Unsaved changes');f.proof.dirty=false;f.callbacks[0]();assert.equal(badge(),'Saved manuscript');}
+  }finally{f.close();}
+ }
+});
+
+test('current Check review badge suppresses only its visible matching surface status and restores elsewhere',async()=>{
+ const f=await reviewDOM('<header id="c3-surface-bar"><span class="sb-ro">Saved manuscript · read-only</span></header><div id="other" contenteditable="true"></div><button data-draft-approve></button>');
+ try{
+  let currentStatus='Saved manuscript';f.w.c3PieceState={checkManuscriptStatus:()=>currentStatus};f.w.eval(code);
+  const badge=f.w.document.querySelector('[data-review-state]'),reason=f.w.document.querySelector('.sb-ro');
+  assert.equal(badge.hidden,true);assert.equal(reason.hidden,false);assert.equal(reason.textContent,'Saved manuscript · read-only');
+  for(const hide of [()=>reason.hidden=true,()=>reason.style.display='none',()=>reason.setAttribute('aria-hidden','true'),()=>reason.style.visibility='hidden']){
+   hide();f.callbacks[0]();assert.equal(badge.hidden,false);reason.hidden=false;reason.style.cssText='';reason.removeAttribute('aria-hidden');f.callbacks[0]();assert.equal(badge.hidden,true);
+  }
+  reason.textContent='Retained record · read-only';f.callbacks[0]();assert.equal(badge.hidden,false);
+  reason.textContent='Saved manuscript · read-only';currentStatus='';f.callbacks[0]();assert.equal(badge.hidden,false);assert.equal(badge.textContent,'Read-only review');
+  currentStatus='Unsaved changes';reason.textContent='Unsaved changes · checks use the saved revision';f.callbacks[0]();assert.equal(badge.hidden,true);assert.equal(badge.textContent,'Unsaved changes');
+  reason.remove();f.callbacks[0]();assert.equal(badge.hidden,false);assert.equal(f.w.document.querySelector('#other').getAttribute('contenteditable'),'false');assert.equal(f.w.document.querySelector('[data-draft-approve]').disabled,true);
+ }finally{f.close();}
+});
