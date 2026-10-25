@@ -14,6 +14,8 @@ function readJson(file,max=4*1024*1024){const stat=fs.lstatSync(file);if(!stat.i
 function canonical(value){if(Array.isArray(value))return value.map(canonical);if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().filter(k=>value[k]!==undefined).map(k=>[k,canonical(value[k])]));return value;}
 function same(a,b){return JSON.stringify(canonical(a))===JSON.stringify(canonical(b));}
 function stripped(session){const {sourceHash,originalUrl,staleSelections,...saved}=session;return saved;}
+export function projectSourceSession(session,sourceHash,undoOperationId){return {id:session.id,title:session.title,date:session.date,location:session.location,sourceId:session.sourceId,sourceHash,version:session.version,turns:session.turns.map(turn=>structuredClone(turn)),...(undoOperationId?{undoOperationId}:{})};}
+function undoFor(session,history){return [...history].reverse().find(h=>h.sessionId===session.id&&h.reason==='human-correction'&&h.operationId&&!h.undoneBy&&h.afterHash===session.sourceHash&&same(h.after,stripped(session)))?.operationId;}
 /** A bounded projection of the maintained owner; never expose import/delete/group. */
 export function createSourceSessions({manager,notesFile=null,translationConfig=null,translationAdmissionDataDir=null,translationReviewConfig=null}){
  let queue=Promise.resolve();
@@ -25,11 +27,11 @@ export function createSourceSessions({manager,notesFile=null,translationConfig=n
  }
  async function projection(){
   const state=await manager.api.list(),kept=state.sessions.filter(s=>s.editorial==='keep');
-  const sessions=kept.map(session=>{const undo=[...state.history].reverse().find(h=>h.sessionId===session.id&&h.reason==='human-correction'&&h.operationId&&!h.undoneBy&&h.afterHash===session.sourceHash&&same(h.after,stripped(session)));return {id:session.id,title:session.title,date:session.date,location:session.location,sourceId:session.sourceId,sourceHash:session.sourceHash,version:session.version,turns:session.turns.map(turn=>structuredClone(turn)),...(undo?{undoOperationId:undo.operationId}:{})};});
+  const sessions=kept.map(session=>projectSourceSession(session,session.sourceHash,undoFor(session,state.history)));
   return {revision:state.revision,sessions,...notesFor(sessions)};
  }
  function inputFor(action,input){
-  const keys=action==='edit'?['operationId','expectedRevision','expectedSourceHash','sessionId','turnId','speaker','text']:['operationId','undoOperationId','expectedRevision','expectedSourceHash','sessionId'];
+  const keys=['edit','acceptTranslation'].includes(action)?['operationId','expectedRevision','expectedSourceHash','sessionId','turnId','speaker','text',...(action==='acceptTranslation'?['receiptSha256']:[])]:['operationId','undoOperationId','expectedRevision','expectedSourceHash','sessionId'];
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k)))fail('Use the current source, revision and complete correction request.',400);
  }
  async function mutate(action,input){
@@ -40,8 +42,9 @@ export function createSourceSessions({manager,notesFile=null,translationConfig=n
   return manager.api[action](input);
  }
  const list=()=>serial(projection),translation=createKeptSourceTranslationRequests({read:list,config:translationConfig,admissionDataDir:translationAdmissionDataDir});
- const review=createKeptSourceTranslationReview({read:list,config:translationReviewConfig});
- return {list,readTranslationReview:input=>review.read(input),proposeTranslation:input=>translation.propose(input),edit:input=>serial(()=>mutate('edit',input)),undo:input=>serial(()=>mutate('undo',input))};
+ const review=createKeptSourceTranslationReview({read:list,config:translationReviewConfig,readAuthority:()=>manager.api.list(),projectSession:projectSourceSession});
+ const acceptTranslation=input=>serial(async()=>{inputFor('acceptTranslation',input);if(typeof manager.api.editReviewed!=='function')fail('Reviewed translation saving is unavailable.',503);return manager.api.editReviewed(input,authority=>review.authorize(input,authority));});
+ return {list,readTranslationReview:input=>review.read(input),proposeTranslation:input=>translation.propose(input),acceptTranslation,edit:input=>serial(()=>mutate('edit',input)),undo:input=>serial(()=>mutate('undo',input))};
 }
 async function listening(port){return new Promise(resolve=>{const socket=net.createConnection({host:'127.0.0.1',port});socket.setTimeout(500);socket.once('connect',()=>{socket.destroy();resolve(true);});socket.once('error',()=>{socket.destroy();resolve(false);});socket.once('timeout',()=>{socket.destroy();resolve(false);});});}
 /** Explicit private startup authority. Data stays in the maintained owner's home. */

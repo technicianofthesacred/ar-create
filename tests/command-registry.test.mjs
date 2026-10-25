@@ -58,7 +58,7 @@ test('every app route belongs to runtime capabilities or an explicit read-only r
  const names=f.capabilities.commands.map(c=>c.name);assert.equal(new Set(names).size,names.length);
  for(const c of f.capabilities.commands){assert.ok(c.section&&c.method&&c.route&&c.schema&&Array.isArray(c.actors)&&typeof c.readOnly==='boolean',c.name);}
  // Decisions stay human; undo points at a real command.
- for(const name of ['study-ai.accept','study-ai.reject','study.share.fact','shared-articles.requests.id.accept'])assert.deepEqual(f.capabilities.commands.find(c=>c.name===name).actors,['human'],name);
+ for(const name of ['study-ai.accept','study-ai.reject','study.share.fact','shared-articles.requests.id.accept','source-sessions.translation-accept'])assert.deepEqual(f.capabilities.commands.find(c=>c.name===name).actors,['human'],name);
  for(const c of f.capabilities.commands.filter(c=>c.undo))assert.ok(names.includes(c.undo),c.name+' -> '+c.undo);
  assert.equal(f.capabilities.commands.find(c=>c.name==='study-draft.save').undo,'study-draft.undo');
  // Existing keys are unchanged.
