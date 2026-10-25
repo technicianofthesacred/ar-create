@@ -117,3 +117,15 @@ test('focus inspection preserves the actual Options controls until activation an
   assert.equal(x.calls.includes('FLUSH'),false);
  }finally{x.close();}
 });
+
+test('finding quotation opens only its exact registered source with a currentness guard and no write',async t=>{
+ const x=await setup(t);try{const opened=[];x.w.existingWork={openCheckSource:async(descriptor,options)=>{opened.push({descriptor,options});assert.equal(options.isCurrent(),true);return {opened:true,anchored:false};}};
+ const before=JSON.stringify(x.p.blocks);x.w.document.querySelector('[data-current-check="run"]').click();await tick();await tick();const quote=x.w.document.querySelector('[data-magazine-source="0"]');assert.ok(quote);assert.match(quote.textContent,/View source/);quote.click();await tick();assert.equal(opened.length,1);const {descriptor,options}=opened[0];assert.equal(descriptor.parentStudyId,x.p.id);assert.equal(descriptor.owner.pieceId,x.owner.pieceId);assert.equal(descriptor.owner.path,x.owner.path);assert.equal(descriptor.draftHash,x.proof.draftHash);assert.equal(descriptor.source.path,x.src);assert.equal(descriptor.source.hash,createHash('sha256').update(fs.readFileSync(path.join(x.f.vault,x.src))).digest('hex'));assert.equal(descriptor.passage,'The river taught me to throw thin walls.');assert.equal(descriptor.catalogRevision,H);assert.equal(descriptor.rootFingerprint,H);assert.equal(JSON.stringify(x.p.blocks),before);assert.equal(x.calls.includes('FLUSH'),false);
+ x.proof.dirty=true;assert.equal(options.isCurrent(),false);quote.click();await tick();assert.equal(opened.length,1);x.proof.dirty=false;x.owner.pieceId='foreign-part';assert.equal(options.isCurrent(),false);quote.click();await tick();assert.equal(opened.length,1);
+ }finally{x.close();}
+});
+test('changed registered source invalidates an open evidence reader guard',async t=>{
+ const x=await setup(t);try{const opened=[];x.w.existingWork={openCheckSource:async(descriptor,options)=>{opened.push({descriptor,options});return {opened:true};}};x.w.document.querySelector('[data-current-check="run"]').click();await tick();await tick();const split=x.w.document.querySelector('[data-magazine-source="0"]');assert.ok(split);split.click();await tick();assert.equal(opened.length,1);assert.equal(opened[0].descriptor.passage,'The river taught me to throw thin walls.');assert.equal(opened[0].options.isCurrent(),true);
+ fs.appendFileSync(path.join(x.f.vault,x.src),'\nA later invented source revision.\n');x.w.dispatchEvent(new x.w.Event('ar-live-change'));await tick();await tick();assert.equal(opened[0].options.isCurrent(),false);assert.equal(x.w.document.querySelector('[data-magazine-source]'),null);assert.equal(x.calls.includes('FLUSH'),false);
+ }finally{x.close();}
+});

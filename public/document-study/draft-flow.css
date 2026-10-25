@@ -25,3 +25,10 @@ html body[data-write-view="preview"] #c3-surface-bar :is(.sb-margin,.sb-focus,.s
 
 /* A check finding marks one existing passage without changing its layout. */
 #app [data-draft-passage-active]{outline:2px solid var(--warm,var(--green));outline-offset:4px;background:var(--sel,transparent);scroll-margin-block:96px}
+
+/* Evidence opens from the finding's quoted words, using the existing reader. */
+.draft-check-source-quote{display:block;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}
+.draft-check-source-action{display:inline-block;margin-left:.5em;color:var(--warm);font:500 var(--t-label,13px)/1.5 var(--ar-ui);text-decoration:underline;text-underline-offset:3px}
+.draft-check-source-quote:focus-visible{outline:2px solid var(--warm);outline-offset:4px}
+.draft-check-source-quote:disabled{cursor:default;color:var(--dim)}
+#ew-reader [data-check-source-highlight]{background:var(--sel);color:var(--ink);outline:1px solid var(--warm);outline-offset:2px;box-decoration-break:clone;-webkit-box-decoration-break:clone;scroll-margin-block:96px}
