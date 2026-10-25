@@ -151,3 +151,7 @@ test('Source panel lists real conversation identities only and preserves owner o
  d.querySelector('[data-wb-row="sess:a"]').click();await tick();assert.equal(select.value,'a');assert.equal(changes,1);
  select.disabled=true;w.c3Workbench.decorate();assert.equal(d.querySelector('[data-wb-row="sess:a"]').disabled,true);close();
 });
+
+test('phone Pieces choice dismisses Make without swallowing or duplicating its maintained action',async()=>{
+ const {w,d,close}=boot(5,{phone:true});try{const nav=d.querySelector('.workflowNavigation'),pieces=d.createElement('button');pieces.dataset.wbfPieces='';pieces.textContent='Pieces';nav.querySelector('.wn-family[data-family="make"]').prepend(pieces);let calls=0;pieces.addEventListener('click',()=>calls++);d.querySelector('button[data-wb-group="make"]').click();assert.ok(nav.classList.contains('cr-open'));pieces.click();await tick();assert.equal(calls,1);assert.equal(nav.classList.contains('cr-open'),false);assert.equal(nav.querySelector('.cr-picker').getAttribute('aria-expanded'),'false');assert.equal(d.querySelector('button[data-wb-group="make"]').getAttribute('aria-expanded'),'false');}finally{close();}
+});

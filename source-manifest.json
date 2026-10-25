@@ -3397,11 +3397,11 @@
     },
     {
       "path": "public/document-study/workbench-rail.js",
-      "candidateSha256": "8215bab504e089b58bc1497553e1fe5daf6f819324093671729ae7d17708aef0"
+      "candidateSha256": "2c7a76889a79a008d86aa7def8bf93fbd646ee1f1622d46eee64641bfc39bd94"
     },
     {
       "path": "tests/workbench-rail.test.mjs",
-      "candidateSha256": "103b9dbe870c23c7fffc2152af7d0a5950e7ebb11e7d81e5597a52852bc943a9"
+      "candidateSha256": "cc2b00a30cc224fbe63de2732800e1753dff4ed2feafd9190ff909305e52e9d3"
     },
     {
       "path": "docs/verification/workbench-full/README.md",
