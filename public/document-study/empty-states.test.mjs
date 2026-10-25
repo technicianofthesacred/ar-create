@@ -85,9 +85,16 @@ test('acting on a hidden tool from the card reveals the step for this visit',()=
  assert.equal(d.querySelector('.tools details').open,true);
  w.c3Empty.decorate();assert.equal(d.querySelector('.c3-empty'),null,'stays revealed on this step');
 });
-test('one verb for going to the manuscript: every surface says Open the draft',()=>{
- const dir=new URL('./',import.meta.url),old=/Open writing draft|Open working words|Open Draft|Open Write|Open in Write|Continue writing|Continue to Draft|Open editor|Edit draft|Edit this copy/;
- for(const f of fs.readdirSync(dir).filter(f=>f.endsWith('.js')&&!f.endsWith('.test.mjs')))assert.doesNotMatch(fs.readFileSync(new URL(f,dir),'utf8'),old,f);
+test('manuscript button and action labels avoid retired editor names while contextual writing actions remain clear',()=>{
+ const dir=new URL('./',import.meta.url),old=/Open writing draft|Open working words|Open Draft|Open Write|Open in Write|Continue to Draft|Open editor|Edit draft|Edit this copy/;
+ for(const f of fs.readdirSync(dir).filter(f=>f.endsWith('.js'))){
+  const source=fs.readFileSync(new URL(f,dir),'utf8');
+  // Error guidance and comments may name the Write section without being a button label.
+  const labels=[...source.matchAll(/<button\b[^>]*>([^<]*)<\/button>|\blabel\s*:\s*(['"])(.*?)\2/g)].map(match=>match[1]??match[3]);
+  for(const label of labels)assert.doesNotMatch(label,old,f+': '+label);
+ }
+ const outputs=fs.readFileSync(new URL('output-overview.js',dir),'utf8');
+ assert.match(outputs,/kind:'native',label:'Continue writing'/,'existing manuscript continuation remains an explicit action');
 });
 
 test('C6: Share on a words-only piece with no one to invite says Not applicable with its one-line reason; the step stays one click away',()=>{

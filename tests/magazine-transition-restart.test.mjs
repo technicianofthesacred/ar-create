@@ -54,7 +54,7 @@ test('exact existing pickup survives owner process restart, keeps editions separ
  const saved=fs.readFileSync(h.currentFile,'utf8');
  await ui.w.studyDraft.read();assert.match(ui.w.document.getElementById('app').textContent,/saved before restarting/);ui.w.studyDraft.edit();
  await ui.w.switchProject('other-browser-story');assert.equal(JSON.stringify(ui.sibling),siblingBefore);await ui.w.switchProject('notes');assert.match(ui.w.document.getElementById('manuscript').textContent,/saved before restarting/);
- ui.dom.window.close();ui=await editor(h,windows);await ui.pickup(false);assert.equal(ui.w.current().viewedStage,6);assert.match(ui.w.document.getElementById('app').textContent,/saved before restarting/);
+ ui.dom.window.close();ui=await editor(h,windows);await ui.pickup(false);assert.equal(ui.w.current().viewedStage,5);assert.equal(ui.w.studyDraft.viewMode(),'preview');assert.equal(ui.w.document.getElementById('manuscript').getAttribute('contenteditable'),'false');assert.match(ui.w.document.getElementById('app').textContent,/saved before restarting/);
  ui.dom.window.close();const restart=await h.restart();assert.notEqual(restart.current,restart.previous,'a new maintained owner process reads the same data/receipts');
  ui=await editor(h,windows);await ui.pickup();assert.equal(fs.readFileSync(h.currentFile,'utf8'),saved);
  const undo=ui.w.document.querySelector('[data-draft-action="disk-undo"]');assert.ok(undo&&!undo.disabled,'fresh native context has exact owner receipt eligibility after process restart');undo.click();

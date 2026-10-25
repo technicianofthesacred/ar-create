@@ -251,7 +251,7 @@
    for(const[node,value]of hiddenOwners){if(value)node.style.setProperty('display',value.value,value.priority);else node.style.removeProperty('display');}hiddenOwners.clear();
    ws?.querySelector('.ew-source-library')?.remove();
    if(entryPreview)for(const node of ws?.children||[])if(!node.matches('.wfb-browser.k-library,#c3-surface-bar,.topbar,.workflowNavigation')){cachedSourceHidden.set(node,{hidden:node.hidden,style:node.style.cssText});node.style.setProperty('display','none','important');}
-   table.setLibraryCatalog({sources:(catalog||rememberedSources)?.sources??null,scope:window.AR_CREATE_REVIEW_MODE?.catalogCacheScope,revision:catalog?.revision||null,ready:!!catalog,error,entryPreview,openSource:openTableSource,refresh:load});
+   table.setLibraryCatalog({sources:(catalog||rememberedSources)?.sources??null,storyNames:Object.fromEntries((catalog?.stories||[]).map(story=>[story.id,story.name])),scope:window.AR_CREATE_REVIEW_MODE?.catalogCacheScope,revision:catalog?.revision||null,ready:!!catalog,error,entryPreview,openSource:openTableSource,refresh:load});
    return;
   }
   // A cold catalog owns a loading state too; never reveal the generic source list.

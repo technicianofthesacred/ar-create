@@ -54,9 +54,25 @@ export async function createPhotoHTTPFixture(){
    return {scriptCount:scripts.size,parentStudyId:projects[0].id,emptyBootstrapBlocks:true};
   };
   const checkDOMBoot=async()=>{
-   let destroyed=false;const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM,VirtualConsole}=require('jsdom'),errors=[],console=new VirtualConsole();console.on('jsdomError',e=>{if(!destroyed&&!/Could not parse CSS stylesheet|Not implemented: window/.test(e.message))errors.push(e.detail?.stack||e.message);});
+   let destroyed=false;const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM,VirtualConsole,ResourceLoader}=require('jsdom'),errors=[],console=new VirtualConsole();console.on('jsdomError',e=>{if(!destroyed&&!/Could not parse CSS stylesheet|Not implemented: window/.test(e.message))errors.push(e.message+' '+(e.detail?.stack||''));});
    const closedRead=new Promise(()=>{});
-   const origin=`http://127.0.0.1:${reviewPort}`,dom=await JSDOM.fromURL(receipt.url,{resources:'usable',runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:console,beforeParse(w){w.fetch=async(url,opts)=>{const response=await fetch(new URL(url,origin),opts?{...opts,headers:{...opts.headers,Origin:origin}}:undefined);if(destroyed)return closedRead;const json=response.json.bind(response);response.json=async()=>{const value=await json();return destroyed?closedRead:value;};return response;};w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}}),w=dom.window;
+   // jsdom starts every script resource in parallel; use the browser's bounded
+   // per-origin loading instead of opening dozens of simultaneous test sockets.
+   let activeResources=0;const resourceQueue=[];
+   class BrowserResources extends ResourceLoader{
+    fetch(url,options){
+     if(!options.element)return super.fetch(url,options);
+     let request,cancelled=false;
+     const response=new Promise((resolve,reject)=>{
+      const start=()=>{if(cancelled){const error=Error('Fixture resource cancelled');error.isAbortError=true;reject(error);return;}activeResources++;
+       request=super.fetch(url,options);request.then(resolve,reject).finally(()=>{activeResources--;resourceQueue.shift()?.();});};
+      if(activeResources<6)start();else resourceQueue.push(start);
+     });
+     response.abort=()=>{cancelled=true;request?.abort();};return response;
+    }
+   }
+
+   const origin=`http://127.0.0.1:${reviewPort}`,dom=await JSDOM.fromURL(receipt.url,{resources:new BrowserResources(),runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:console,beforeParse(w){w.fetch=async(url,opts)=>{const response=await fetch(new URL(url,origin),opts?{...opts,headers:{...opts.headers,Origin:origin}}:undefined);if(destroyed)return closedRead;const json=response.json.bind(response);response.json=async()=>{const value=await json();return destroyed?closedRead:value;};return response;};w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}}),w=dom.window;
    await new Promise(resolve=>w.document.readyState==='complete'?resolve():w.addEventListener('load',resolve,{once:true}));
    try{const end=Date.now()+15000;while(Date.now()<end){if(w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await new Promise(r=>setTimeout(r,25));}if(w.studyDraft?.currentBinding?.()?.id!==bindingId||w.document.querySelector('[data-caption]')?.value!==receipt.caption||w.eval('current().viewedStage')!==8)throw Error('The real native photo editor did not mount its exact saved part/details.');if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));return {mounted:true,stage:8,bindingId,caption:w.document.querySelector('[data-caption]').value,scriptErrors:[...errors]};}catch(error){process.stderr.write('Native fixture boot error: '+error.stack+'\n');throw error;}finally{await new Promise(r=>setTimeout(r,500));destroyed=true;dom.window.close();}
   };

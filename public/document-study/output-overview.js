@@ -55,7 +55,7 @@
  const previousNotice=historicalNotice;historicalNotice=function(p,stage){return stage===12?'':previousNotice(p,stage)};
  const previousWorkflow=workflowBar;workflowBar=function(p){return previousWorkflow(p).replace('View step 12: Confirmed (read-only)','View step 12: Outputs (private register)').replace('>Confirmed</span>','>Outputs</span>').replace('Viewing: 12. Confirmed','Viewing: 12. Outputs')};
  const previousPhase=phaseReader;phaseReader=function(p){return active(p)?`<section class="phaseReader oo-stage" id="output-overview" data-output-project="${esc(p.id)}">${surface(p)}</section>`:previousPhase(p)};
- const previousRender=render;render=function(){epoch++;previousRender();if(active(current())){wire(current());load();}};
+ const previousRender=render;render=function(...args){const token=++epoch,p=current(),finish=()=>{if(token===epoch&&current()===p&&active(p)){wire(p);void load();}};const result=previousRender.apply(this,args);if(result&&typeof result.then==='function')return result.then(value=>{finish();return value;});finish();return result;};
  window.outputOverview={refresh(){if(active(current())){epoch++;return load();}}};
  wire();
  if(examples)viewPhase(12);else if(active(current()))render();

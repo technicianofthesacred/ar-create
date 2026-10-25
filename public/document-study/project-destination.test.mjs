@@ -157,7 +157,7 @@ test('Magazine destination pickup refuses later project or same-project view nav
   f.w.studyDraft.releaseContext=options=>{const result=releaseHold(options);released.push(result);return result};
   f.w.studyDraft.flush=()=>new Promise(resolve=>release=resolve);
   const pending=f.w.switchProject('target',f.intent('carousel-words')),refusal=pending.then(()=>null,error=>error);
-  if(navigation==='project')f.w.switchProject('other');else if(navigation==='stage')f.w.viewPhase(6);else f.w.setView('carousel');
+  if(navigation==='project')f.w.switchProject('other');else if(navigation==='stage')f.w.viewPhase(8);else f.w.setView('carousel');
   release({dirty:false});assert.match((await refusal)?.message||'',/changed/i,navigation);assert.equal(JSON.stringify(f.projects[1]),before,navigation);assert.equal(released.length,1,navigation);assert.equal(released[0].released,true,navigation);
  }
 });

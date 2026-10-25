@@ -14,7 +14,7 @@ function fixture(t){
  put(draft,'---\ntype: DEV\nstory: River Conversation\ntitle: Invented River Story\n---\n\nInvented current draft words.\n');
  put('Workflow/3-Develop/RESEARCH - River Conversation.md','---\ntype: RESEARCH\nstory: River Conversation\n---\n\nInvented retained research.\n');
  function bytes(){const result={};function walk(rel=''){for(const name of fs.readdirSync(path.join(vault,rel)).sort()){const relative=path.posix.join(rel,name),file=path.join(vault,relative),st=fs.statSync(file);if(st.isDirectory())walk(relative);else result[relative]=sha(fs.readFileSync(file));}}walk();return result;}
- const calls=[],readAuthority=async route=>{calls.push(route);if(route==='/api/sources/tree')return {sources:[]};if(route==='/api/source-sessions')return {sessions:[]};if(route==='/api/pieces')return {pieces:[]};if(route==='/api/study-draft/catalog')return {drafts:[],collections:[],outputBindings:[]};throw Error('Unexpected authority route '+route);};
+ const calls=[],readAuthority=async route=>{calls.push(route);if(route==='/api/sources/tree')return {sources:[]};if(route==='/api/source-sessions')return {sessions:[]};if(route==='/api/pieces')return {pieces:[]};if(route==='/api/study-draft/catalog')return {drafts:[],collections:[],outputBindings:[]};if(route==='/api/magazine/working-draft/catalog')return {registered:false,stories:[]};throw Error('Unexpected authority route '+route);};
  const options={roots:[{id:'invented-current-vault',label:'Existing invented work',path:vault}],readAuthority,seedProjects:[{id:'unrelated-same-title',name:'River Conversation',slideCount:3}],excludedStoryNames:[]};
  return {home,vault,source,draft,put,bytes,calls,open:extra=>createExistingWorkReader({...options,...extra})};
 }
@@ -34,7 +34,7 @@ test('actual configured reader cold-discovers, refreshes new files, survives res
  await assert.rejects(reader.readArtifact({artifactId:original.artifactId,expectedHash:original.hash}),e=>e.status===409);
  const current=await reader.catalog(),updated=artifacts(current).find(a=>a.relativePath===f.source);assert.equal(updated.artifactId,original.artifactId);assert.notEqual(updated.hash,original.hash);
  const exact=await reader.readArtifact({artifactId:updated.artifactId,expectedHash:updated.hash});assert.equal(exact.raw,amended);assert.equal(exact.provenance.sha256,sha(Buffer.from(amended)));assert.deepEqual(f.bytes(),afterExternal);
- assert.deepEqual(fs.readdirSync(f.home),['existing-vault'],'readers create no new Library/index/content home');assert.ok(!JSON.stringify(current).includes('Invented amendment by an external editor.'),'discovery catalog carries metadata, not bodies');assert.ok(f.calls.every(route=>['/api/sources/tree','/api/source-sessions','/api/pieces','/api/study-draft/catalog'].includes(route)));
+ assert.deepEqual(fs.readdirSync(f.home),['existing-vault'],'readers create no new Library/index/content home');assert.ok(!JSON.stringify(current).includes('Invented amendment by an external editor.'),'discovery catalog carries metadata, not bodies');assert.ok(f.calls.every(route=>['/api/sources/tree','/api/source-sessions','/api/pieces','/api/study-draft/catalog','/api/magazine/working-draft/catalog'].includes(route)));
 });
 test('only explicit stable story-ID mapping attaches an existing native owner, independent of seed display title',async t=>{
  const f=fixture(t),cold=await f.open().catalog(),storyId=cold.stories[0].id,before=f.bytes();

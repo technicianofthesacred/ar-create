@@ -4,9 +4,10 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(new URL(p,import.meta.url),'utf8');
 const css=read('./c3-theme.css'),html=read('./index.html'),study=read('./study.js');
 
-test('the theme loads after every other stylesheet so it wins without !important wars',()=>{
+test('the base theme precedes specialized Workbench and native surface styles',()=>{
  const links=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m=>m[1]);
- assert.equal(links.at(-1),'c3-theme.css');
+ const theme=links.indexOf('c3-theme.css');assert.ok(theme>=0);
+ for(const name of ['workbench-rail.css','type-scale.css','workbench-design.css','workbench-frame.css','workbench-write-match.css','workbench-read-match.css','magazine-arrange.css'])assert.ok(links.indexOf(name)>theme,name+' overrides the base theme');
 });
 
 test('dark is the default only when no theme was ever saved',()=>{
@@ -32,5 +33,5 @@ test('the default layer has bare-element weight so module rules always win, and 
  const d=read('./c3-defaults.css');
  for(const rule of d.split('}').map(r=>r.trim()).filter(r=>r&&!r.startsWith('/*'))){const sel=rule.split('{')[0].replace(/\/\*[\s\S]*?\*\//g,'').trim();for(const part of sel.split(/,(?![^(]*\))/))assert.match(part.trim(),/^:where\([^)]*\) [a-z0-9]+(:[a-z-]+)?$/,'bare element: '+part);}
  const links=[...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m=>m[1]);
- assert.equal(links.at(-2),'c3-defaults.css');
+ assert.ok(links.indexOf('c3-defaults.css')>=0);assert.equal(links.indexOf('c3-defaults.css')+1,links.indexOf('c3-theme.css'));
 });

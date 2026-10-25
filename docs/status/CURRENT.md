@@ -1,3 +1,13 @@
+## 25 October — Workbench release candidate and remaining limits
+
+This is source-candidate status, not a statement that a release is installed. The release receipt and exact deployed revision remain separate from product completion.
+
+The Library can browse existing physical locations separately from saved logical filing. Location selection filters the existing source list, opens sources through the same guarded reader, and creates or moves no files. Folder edits remain disabled in read-only review. Current catalog, tree and owner identities guard asynchronous results; cached or stale locations cannot select another source.
+
+Outputs now preserve the underlying render promise before wiring their controls, so navigation can wait for an active composition to finish rendering. The real HTTP output journey verifies independent article/carousel words, exact title and next-action routing, project return, owner restart and saved Undo. Synthetic browser fixtures use current Write/Edit/Preview, nonmodal project browsing and the existing context disclosures; their correction does not weaken application approval, revision, conflict or save guards.
+
+Still unfinished: complete visual comparison across all twelve sections, phone and both themes; remaining source/project/part relationships, export readiness and complete Porcelain acceptance. Physical-location screen verification is bounded and does not establish full visual parity. Original and published content stays separate from editable copies; only an explicit human click approves real wording. Historical dated notes below describe their original verification state and do not supersede this candidate summary.
+
 ## 22 October — Media visibility, exact retained occurrences and pure photo inspection
 
 C02/C04/C05/C06, S08/S09/S10: the folder-browser hide rule no longer suppresses connected retained-media or maintained native-photo surfaces. The existing retained reader preserves all captions, distinguishes every duplicate occurrence and refuses a stale selector after URL/caption/revision/context changes. Its list describes images in the shown browser/retained view; folder-name matching and saved-output/published ownership remain explicitly distinct. Secondary provenance stays in closed disclosures.
