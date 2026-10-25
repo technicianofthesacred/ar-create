@@ -211,7 +211,9 @@
   const tools=root.querySelector(':scope>.oss-tool-row'),back=root.querySelector('.oss-heading [data-oss-action="arrange"]');
   if(tools){tools.classList.add('wb-audience-selection');if(back){back.classList.add('btn','quiet');back.textContent='Back to Arrange';tools.append(back);}}
   const readiness=root.querySelector('[data-oss-readiness]');
-  if(readiness&&!root.querySelector(':scope>.wb-audience-purpose')){const note=make('p','aud-note wb-audience-purpose'),lead=make('b','','Audience is for looking, not editing.');note.append(lead,doc.createTextNode(' This is how a reader meets the piece. Arrange is where you compose it; Outputs is where files leave.'));readiness.before(note);}
+  const purpose=root.querySelector(':scope>.wb-audience-purpose');
+  if(root.dataset.outputKind==='magazine-working')purpose?.remove();
+  if(readiness&&root.dataset.outputKind!=='magazine-working'&&!root.querySelector(':scope>.wb-audience-purpose')){const note=make('p','aud-note wb-audience-purpose'),lead=make('b','','Audience is for looking, not editing.');note.append(lead,doc.createTextNode(' This is how a reader meets the piece. Arrange is where you compose it; Outputs is where files leave.'));readiness.before(note);}
   add(ws,'[data-oss-reader]','wb-audience-edition');
   add(ws,'[data-oss-reader] .ar-donor-workspace:has(>.oss-sequence)','phone');add(ws,'[data-oss-reader] .oss-sequence','swipe');add(ws,'[data-oss-reader] .oss-reader','cap2');add(ws,'[data-oss-reader] .ar-output-reader','page');
  }
