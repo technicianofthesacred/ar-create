@@ -79,3 +79,118 @@ html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-dial
 html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-remark,
 html body.wbf-on #app #workspace .source-reader[data-source-reader] .source-remark:is(:focus,:focus-visible){outline:none!important;background:none!important;box-shadow:none!important;border-radius:0;caret-color:currentColor}
 .source-reader-inline-tools[hidden]{display:none!important}
+
+/* Approved Source conversation + passage margin review. Keep the C shell and
+   portable Atlas prose; every row reserves the same review measure. S02/C04/C05/C06. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved[data-source-reader]{
+  --source-review-width:300px;
+  --source-review-gap:24px;
+  display:block;min-width:0;max-width:1100px;margin:0 auto 20px;padding:0;border:0;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px 20px;margin:16px 0 8px;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title h3{
+  flex:1 1 14rem;min-width:0;margin:0;font:500 22px/1.3 var(--ar-ui,system-ui,sans-serif)!important;letter-spacing:-.025em;overflow-wrap:anywhere;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title-tools{
+  display:flex;align-items:center;gap:6px;flex:0 0 auto;margin-left:auto;font:400 var(--t-label,13px)/1.5 var(--ar-ui,system-ui,sans-serif);
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title-tools button{
+  min-height:34px;padding:5px 9px;background:none;border:0;border-radius:6px;color:var(--dim);font:inherit;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-reader-dialogue]{
+  width:100%;max-width:none!important;min-width:0;box-sizing:border-box;margin:24px 0 28px!important;padding:0;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group{
+  display:block!important;grid-template-columns:none!important;margin:0 0 22px!important;padding:0!important;border:0!important;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group>.source-speaker{
+  display:block!important;width:auto!important;margin:0 0 6px!important;padding:0!important;color:var(--dim);font:400 12px/1.5 var(--ar-ui,system-ui,sans-serif)!important;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group>.tx{
+  display:block!important;margin:0!important;padding:0!important;min-width:0!important;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-passage{
+  display:grid;grid-template-columns:minmax(0,1fr) var(--source-review-width);gap:0 var(--source-review-gap);align-items:start;min-width:0;margin:0 0 6px;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-passage-words{
+  grid-column:1;min-width:0;max-width:68ch;overflow-wrap:anywhere;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group .source-remark,
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-translation-proposal]{
+  font:400 calc(18px * var(--z,1))/1.8 var(--shared-prose-font,'AR Atlas Lora',Georgia,serif)!important;letter-spacing:.16px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group .source-remark{
+  margin:0 0 3px!important;padding:0!important;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-target>.source-reader-passage-words{
+  background:color-mix(in srgb,var(--warm) 11%,transparent);border-radius:4px;padding:10px 12px;margin:0 -12px;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-passage>[data-source-translation-review]{
+  grid-column:2;grid-row:1;min-width:0;align-self:start;margin:0;padding:0;box-sizing:border-box;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card{
+  min-width:0;margin:0;padding:12px 18px 16px;border:0;border-left:1px solid var(--line);border-radius:0;background:var(--c3-lift,var(--rail));box-shadow:none;font:400 var(--t-label,13px)/1.6 var(--ar-ui,system-ui,sans-serif);
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-top h4{
+  min-width:0;margin:0!important;font:500 13px/1.45 var(--ar-ui,system-ui,sans-serif)!important;letter-spacing:normal;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-stepper{
+  display:flex;align-items:center;gap:4px;flex:0 0 auto;white-space:nowrap;color:var(--dim);font:400 12px/1.4 var(--ar-ui,system-ui,sans-serif);font-variant-numeric:tabular-nums;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-stepper button{
+  display:grid;place-items:center;min-width:30px;min-height:32px;padding:4px;border:0;border-radius:4px;background:none;color:inherit;font:inherit;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card>label,
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card>.small{
+  display:block;margin:8px 0;color:var(--dim);font:400 12px/1.6 var(--ar-ui,system-ui,sans-serif)!important;letter-spacing:normal;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-translation-proposal]{margin:0 0 18px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card .source-reader-actions{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 0;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card .source-reader-actions button{
+  min-height:36px;max-width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:none;color:var(--ink);font:500 12px/1.4 var(--ar-ui,system-ui,sans-serif);white-space:normal;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card [data-source-reader-action="accept-translation"]{
+  background:var(--warm);color:var(--bg);border-color:var(--warm);
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved :is(.source-reader-title-tools,.source-reader-proposal-stepper) button:not(:disabled):hover{background:var(--c3-sel,var(--paper));color:var(--ink)}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved :is(.source-reader-title-tools,.source-reader-proposal-card) button:focus-visible{outline:2px solid var(--warm);outline-offset:3px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{
+  display:flex;align-items:flex-start;gap:8px 24px;flex-wrap:wrap;border-top:1px solid var(--line);padding:8px 0;margin:20px 0 0;font:400 12px/1.6 var(--ar-ui,system-ui,sans-serif);
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary>details{min-width:0;max-width:100%;margin:0;border:0;overflow-wrap:anywhere}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary>details[open]{flex:1 1 100%}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary>details>summary{min-height:32px;cursor:pointer;color:var(--dim);font:500 12px/1.6 var(--ar-ui,system-ui,sans-serif)!important}
+@media(max-width:760px){
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title{gap:8px 12px;margin-top:12px}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title h3{font-size:20px!important;flex-basis:12rem}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-reader-dialogue]{margin-top:20px!important}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-passage{grid-template-columns:minmax(0,1fr);gap:0}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-target>.source-reader-passage-words{margin:0;padding:10px 12px}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-passage>[data-source-translation-review]{grid-column:1;grid-row:auto;margin:14px 0 18px}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-card{border-left:0;border-bottom:1px solid var(--line);background:none;padding:0 0 20px}
+  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{gap:6px 18px}
+}
+
+/* Secondary source records open as bounded sheets, never a second reading page. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary>details[open]{position:fixed;z-index:86;top:64px;right:16px;bottom:16px;width:min(380px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow:auto;overscroll-behavior:contain;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:16px;box-shadow:0 12px 40px #0003}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved:not(.source-reader-has-proposal) .source-reader-passage{grid-template-columns:minmax(0,1fr)}
+
+html body.wbf-on #app #workspace.wb-source .material-reading:has(.source-reader-approved){width:100%;max-width:none!important}
+
+/* The margin must not insert a card-height hole into the conversation. */
+@media(min-width:761px){
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-passage{position:relative}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-target>[data-source-translation-review]{position:absolute;z-index:3;top:0;right:0;width:var(--source-review-width)}
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-proposal-stepper button{font-size:20px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary [data-source-reader-secondary-tools]{display:flex;gap:8px;flex-wrap:wrap}
+/* Undo and source history stay available while reading a long conversation. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title{position:sticky;top:48px;z-index:12;background:var(--bg);padding:8px 0;align-items:center;flex-wrap:wrap}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
