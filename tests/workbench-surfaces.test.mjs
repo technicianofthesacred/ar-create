@@ -19,7 +19,7 @@ test('Research adopts point/console split without cloning or resetting a pending
  const input=b.d.querySelector('textarea'),button=b.d.querySelector('[data-research-decision]');input.value='Pending unsaved plan';let clicks=0;button.onclick=()=>clicks++;b.run();b.run();button.click();
  assert.equal(clicks,1);assert.equal(input.value,'Pending unsaved plan');assert.equal(b.d.querySelectorAll('.rsplit').length,1);assert.equal(b.d.querySelectorAll('.wb-point').length,2);assert.equal(b.d.querySelectorAll('[data-research-point="a"]').length,1);assert.ok(b.d.querySelector('.wb-point').open);
  const command=b.d.querySelector('.cin input'),form=b.d.querySelector('.cin');command.value='/search Exact source';form.dispatchEvent(new b.w.Event('submit',{cancelable:true}));assert.match(b.d.querySelector('.clog').textContent,/Point 1:.*Exact source passage/);
- command.value='/point 2';form.dispatchEvent(new b.w.Event('submit',{cancelable:true}));assert.ok(b.d.querySelector('[data-research-point="b"] .wb-point').open);
+ command.value='/point 2';form.dispatchEvent(new b.w.Event('submit',{cancelable:true}));assert.ok(b.d.querySelector('[data-research-point="b"] .wb-point').open);assert.equal(b.d.querySelector('[data-research-point="a"] .wb-point').open,false);assert.equal(input.value,'Pending unsaved plan');
  command.value='Please ask AI';form.dispatchEvent(new b.w.Event('submit',{cancelable:true}));assert.match(b.d.querySelector('.clog').textContent,/has not been saved or sent/);assert.equal(input.value,'Pending unsaved plan');b.close();
 });
 test('Direction opens the original revision-guarded editor and leaves Save and Undo bound',()=>{
@@ -163,4 +163,13 @@ test('Research findings lead while existing record controls stay reachable witho
  const record=b.d.querySelector('.research-standard-coverage>details'),plan=b.d.querySelector('textarea'),action=b.d.querySelector('.research-standard-controls button'),finding=b.d.querySelector('#recorded-finding');let hits=0;action.onclick=()=>hits++;plan.value='Unsaved exact plan';b.run();
  const access=b.d.querySelector('.wb-research-records'),tools=access.closest('.wb-research-tools');assert.ok(tools);assert.equal(tools.open,false);assert.equal(b.d.querySelector('.rh .wb-research-records'),null);assert.equal(finding.closest('.wb-point-more'),null);assert.ok(plan.closest('.wb-point-more'));assert.equal(plan.value,'Unsaved exact plan');action.click();assert.equal(hits,1);access.querySelector('button').click();assert.equal(record.open,true);assert.equal(tools.open,true);assert.equal(record.querySelector('pre').textContent,'Exact research record');assert.strictEqual(b.d.querySelector('textarea'),plan);
  const observer=new b.w.MutationObserver(()=>{});observer.observe(b.d.querySelector('#workspace'),{childList:true,subtree:true});b.run();await Promise.resolve();assert.equal(observer.takeRecords().length,0);observer.disconnect();assert.strictEqual(b.d.querySelector('.wb-research-records'),access);b.close();
+});
+
+test('Research point selection closes only sibling points and preserves their original pending inputs',async()=>{
+ const b=boot(3,'<div class="research-standard"><section data-research-point="a"><h2>First finding</h2><textarea>Original first</textarea></section><section data-research-point="b"><h2>Second finding</h2><textarea>Original second</textarea></section></div>');
+ b.run();const [first,second]=b.d.querySelectorAll('.wb-point'),fields=[...b.d.querySelectorAll('textarea')];fields[0].value='Unsaved first';fields[1].value='Unsaved second';
+ assert.equal(first.getAttribute('name'),'wb-research-points');assert.equal(second.getAttribute('name'),first.getAttribute('name'));second.querySelector('summary').click();assert.equal(first.open,false);assert.equal(second.open,true);
+ first.querySelector('summary').click();assert.equal(first.open,true);assert.equal(second.open,false);
+ b.run();assert.strictEqual(b.d.querySelectorAll('textarea')[0],fields[0]);assert.strictEqual(b.d.querySelectorAll('textarea')[1],fields[1]);assert.deepEqual(fields.map(f=>f.value),['Unsaved first','Unsaved second']);
+ first.querySelector('summary').click();assert.equal(b.d.querySelectorAll('.wb-point[open]').length,0);b.close();
 });

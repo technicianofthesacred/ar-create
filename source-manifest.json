@@ -3397,11 +3397,11 @@
     },
     {
       "path": "public/document-study/workbench-rail.js",
-      "candidateSha256": "60b9f07dbf6d3e83db41e7d6464647f242a7f581f5ba2e9e1e43975c837a2f1a"
+      "candidateSha256": "ada1493d0eea987d79ff8602a3a17a901f8dd8c7e250d34e0117fe1a8df9691d"
     },
     {
       "path": "tests/workbench-rail.test.mjs",
-      "candidateSha256": "3ac89d354056c0803faa4fb5fd40890c713cb13fbb1438cbd542b2e0b997140b"
+      "candidateSha256": "583111522cb962fbba14b98cddd7b172885fa6eaaa8b26df495070474253396f"
     },
     {
       "path": "docs/verification/workbench-full/README.md",
@@ -3425,7 +3425,7 @@
     },
     {
       "path": "public/document-study/workbench-surfaces.js",
-      "candidateSha256": "a3520b85ce2e4f691d4b00699cd9b9f6af8eedf2c84266a03534db6dd0b8914f"
+      "candidateSha256": "2746fa30a66f8592107c8a596c1851851712759f95631c2b5b7262d418b0d54e"
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.test.mjs",
@@ -3437,7 +3437,7 @@
     },
     {
       "path": "tests/workbench-surfaces.test.mjs",
-      "candidateSha256": "816776a6917769c8b300173a29952ac2055bf208bdadf710129908eec08b9017"
+      "candidateSha256": "c8344d2b5e045c0cf555b719902c40e1269fc2f1fb7525ea231c0fed87012cce"
     },
     {
       "path": "docs/verification/workbench-full/GOAL-CURRENT.md",

@@ -103,6 +103,7 @@
   const target=researchTargets()[Number(key.slice(3))]?.node;if(!target)return;
   if(target.matches('button'))target.click();else{
    // Jump to the actual finding without changing its plan, narration or saved choices.
+   const point=target.querySelector(':scope>.wb-point');if(point){if(window.workbenchSurfaces?.selectResearchPoint)window.workbenchSurfaces.selectResearchPoint(point);else revealRecord(point);return;}
    for(let d=target.parentElement;d;d=d.parentElement)if(d.matches('details'))d.open=true;
    target.scrollIntoView?.({block:'start'});const heading=target.querySelector('h2');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
   }
