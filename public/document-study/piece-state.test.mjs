@@ -123,3 +123,38 @@ test('Magazine dirty state cannot reuse the saved output projection; native outp
 test('Magazine cannot inherit a leftover native binding or selected native output',async()=>{const f=magazineFixture();f.w.studyDraft.currentBinding=()=>({id:'old-native',title:'Other document'});f.proof.owner.pieceId='foreign';assert.equal(f.ps.read().manuscript.bound,false);assert.notEqual(f.ps.read().manuscript.title,'Other document');f.proof.owner={...f.owner};await f.ps.load();f.w.workspaceNavigation.selectedOutput=()=>({id:'old-native',title:'Other output'});const action=f.ps.primary(12);assert.equal(action.output,'magazine-working:story:part');assert.equal(action.expectedHash,f.proof.draftHash);assert.equal(action.edition,'working');f.w.close();});
 
 test('Magazine Save dispatches only to its maintained draft owner, leaving native output saving separate',async()=>{const f=magazineFixture();f.proof.dirty=true;let magazine=0,native=0;f.w.studyDraft.flush=async()=>{magazine++;return{dirty:false};};f.w.studyOutputConnection={flush:async()=>native++};await f.ps.run(f.ps.primary(5));assert.equal(magazine,1);assert.equal(native,0);f.w.close();});
+
+test('direct Check labels only the mounted exact current Magazine manuscript; dirty is not saved',()=>{
+ const f=magazineFixture();try{
+  f.w.current().viewedStage=7;f.w.current().magazineDraft={storyId:f.owner.storyId,pieceId:f.owner.pieceId};
+  f.d.getElementById('workspace').insertAdjacentHTML('beforeend','<section id="current-draft-check">Mechanical checks</section><details><summary>Earlier retained checks · read-only</summary>Earlier wording</details>');
+  const before=JSON.stringify(f.w.current()),earlier=f.d.querySelector('details').textContent;
+  assert.equal(f.ps.checkManuscriptStatus(),'Saved manuscript');assert.equal(f.ps.readOnlyReason(7),'Saved manuscript · read-only');
+  assert.equal(f.ps.read().check,null,'saved manuscript does not imply checks ran');
+  f.proof.dirty=true;assert.equal(f.ps.checkManuscriptStatus(),'Unsaved changes');assert.equal(f.ps.readOnlyReason(7),'Unsaved changes · checks use the saved revision');
+  assert.equal(JSON.stringify(f.w.current()),before);assert.equal(f.d.querySelector('details').textContent,earlier);
+ }finally{f.w.close();}
+});
+test('current Check labels reject foreign/missing proof and selected part, hidden/absent checks and earlier stages',()=>{
+ const changes=[f=>f.proof.parentStudyId='other',f=>f.proof.owner.storyId='other',f=>f.proof.owner.pieceId='other',f=>f.proof.owner.path='other',f=>f.proof.draftHash='invalid',f=>f.proof.expected.workflow.draft='b'.repeat(64),f=>delete f.proof.dirty,f=>f.w.current().magazineDraft.storyId='other',f=>f.w.current().magazineDraft.pieceId='other',f=>delete f.w.current().magazineDraft,f=>f.d.getElementById('current-draft-check').hidden=true,f=>f.d.getElementById('current-draft-check').remove(),f=>f.w.current().viewedStage=5];
+ for(const change of changes){const f=magazineFixture();try{f.w.current().viewedStage=7;f.w.current().magazineDraft={storyId:f.owner.storyId,pieceId:f.owner.pieceId};f.d.getElementById('workspace').insertAdjacentHTML('beforeend','<section id="current-draft-check"></section>');change(f);assert.equal(f.ps.checkManuscriptStatus(),'');assert.equal(f.ps.readOnlyReason(7),'Retained record · read-only');}finally{f.w.close();}}
+});
+
+test('current Check status follows its maintained owner into the external tool drawer and rejects hidden, wrong-tool or duplicate surfaces',()=>{
+ const changes=[null,f=>f.d.getElementById('wbf-drawer').hidden=true,f=>f.d.getElementById('wbf-drawer').style.display='none',f=>f.d.getElementById('wbf-drawer').setAttribute('aria-hidden','true'),f=>f.d.querySelector('.dr-body').dataset.tool='history',f=>f.d.getElementById('workspace').insertAdjacentHTML('beforeend','<section id="current-draft-check"></section>')];
+ for(const change of changes){const f=magazineFixture();try{
+  f.w.current().viewedStage=7;f.w.current().magazineDraft={storyId:f.owner.storyId,pieceId:f.owner.pieceId};f.d.getElementById('workspace').insertAdjacentHTML('beforeend','<section id="current-draft-check">Not checked yet</section>');
+  f.d.body.insertAdjacentHTML('beforeend','<aside id="wbf-drawer"><div class="dr-body" data-tool="check"></div></aside>');f.d.querySelector('.dr-body').append(f.d.getElementById('current-draft-check'));change?.(f);
+  assert.equal(f.ps.checkManuscriptStatus(),change?'':'Saved manuscript');assert.equal(f.ps.readOnlyReason(7),change?'Retained record · read-only':'Saved manuscript · read-only');
+ }finally{f.w.close();}}
+});
+
+test('closing Check tools retains exact current manuscript status only for the maintained structured reader',()=>{
+ const reader='<div class="wn-check-layout"><section class="wn-check-manuscript" aria-label="Current manuscript · read only"><article class="document"><div class="manuscript draft-read-words"><section data-draft-passage="paragraph-1">Invented current words</section></div></article></section></div>';
+ const changes=[null,f=>f.d.querySelector('.draft-read-words').remove(),f=>f.d.querySelector('.wn-check-manuscript').hidden=true,f=>f.d.querySelector('.wn-check-manuscript').style.display='none',f=>f.d.querySelector('.wn-check-manuscript').setAttribute('aria-label','Earlier manuscript'),f=>f.proof.owner.path='foreign',f=>f.d.getElementById('workspace').insertAdjacentHTML('beforeend',reader),f=>f.d.body.insertAdjacentHTML('beforeend','<aside id="wbf-drawer"><div class="dr-body" data-tool="history"><section id="current-draft-check"></section></div></aside>')];
+ for(const change of changes){const f=magazineFixture();try{
+  f.w.current().viewedStage=7;f.w.current().magazineDraft={storyId:f.owner.storyId,pieceId:f.owner.pieceId};f.d.getElementById('workspace').insertAdjacentHTML('beforeend',reader);f.d.body.insertAdjacentHTML('beforeend','<aside id="wbf-drawer"><div class="dr-body" data-tool="check"><section id="current-draft-check">Not checked yet</section></div></aside>');
+  assert.equal(f.ps.checkManuscriptStatus(),'Saved manuscript');f.d.getElementById('wbf-drawer').remove();change?.(f);
+  assert.equal(f.ps.checkManuscriptStatus(),change?'':'Saved manuscript');assert.equal(f.ps.readOnlyReason(7),change?'Retained record · read-only':'Saved manuscript · read-only');
+ }finally{f.w.close();}}
+});

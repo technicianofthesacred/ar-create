@@ -17,7 +17,7 @@
  function magazineContext(id){
   const owner=window.studyDraft?.currentOwner?.(),proof=window.studyDraft?.currentProof?.();if(owner?.kind!=='magazine')return null;
   const valid=current()?.id===id&&proof?.parentStudyId===id&&sameOwner(owner,proof.owner)&&sha(proof.draftHash)&&proof.expected?.workflow?.draft===proof.draftHash;
-  return {valid,owner,hash:proof?.draftHash,dirty:!!proof?.dirty,key:JSON.stringify([id,owner.storyId,owner.pieceId,owner.path,proof?.draftHash,!!proof?.dirty,valid])};
+  return {valid,owner,knownSave:typeof proof?.dirty==='boolean',hash:proof?.draftHash,dirty:!!proof?.dirty,key:JSON.stringify([id,owner.storyId,owner.pieceId,owner.path,proof?.draftHash,!!proof?.dirty,valid])};
  }
  const hitFor=(id,context=magazineContext(id))=>{const hit=cache.get(id);return hit?.scope===(context?.key||null)?hit:null;};
  function outputs(id){const context=magazineContext(id),hit=hitFor(id,context);if(context)return context.valid&&!context.dirty&&!hit?.error?hit?.outputs??null:null;if(hit?.error)return null;const nav=window.workspaceNavigation?.outputs?.(id);if(Array.isArray(nav))return nav;return hit&&Date.now()-hit.at<TTL?hit.outputs:hit?.outputs??null;}
@@ -133,12 +133,31 @@
   if(n===stage()){const q=probe(n);if(q.count===0||q.empty===true)return {word:'empty',title:'Nothing here yet'};}
   return {word:'',title:''};
  }
+ // Direct Check uses the selected maintained manuscript, even before Write/Read mounts.
+ // A retained page or a merely bound draft is insufficient to identify the work on screen.
+ function checkManuscriptStatus(){
+  const p=current(),context=magazineContext(p.id);
+  if(p.view!=='record'||Number(p.viewedStage)!==7||!context?.valid||!context.knownSave||p.magazineDraft?.storyId!==context.owner.storyId||p.magazineDraft?.pieceId!==context.owner.pieceId)return '';
+  const checks=[...document.querySelectorAll('#current-draft-check')],check=checks[0];
+  if(checks.length>1||check&&!check.matches('#app .workspace #current-draft-check,#wbf-drawer .dr-body[data-tool="check"] #current-draft-check'))return '';
+  // Closing the phone tool drawer leaves the maintained readView manuscript in Check.
+  const readers=[...document.querySelectorAll('#app .workspace .wn-check-layout>.wn-check-manuscript[aria-label="Current manuscript · read only"]>.document>.draft-read-words')];
+  if(readers.length>1)return '';
+  const surfaced=node=>{
+   if(!visible(node))return false;
+   for(let parent=node;parent;parent=parent.parentElement){const style=window.getComputedStyle?.(parent);if(parent.getAttribute('aria-hidden')==='true'||style?.display==='none'||style?.visibility==='hidden'||style?.visibility==='collapse')return false;}
+   return true;
+  };
+  if(!surfaced(check)&&!surfaced(readers[0]))return '';
+  return context.dirty?'Unsaved changes':'Saved manuscript';
+ }
  // Why a step's surface cannot be edited, in words; never a bare "Read-only".
  function readOnlyReason(n=stage(),st=read()){
   const p=current();if(n===5&&p.view==='article')return '';
+  if(n===7){const status=checkManuscriptStatus();if(status)return status==='Saved manuscript'?'Saved manuscript · read-only':'Unsaved changes · checks use the saved revision';}
   if(n===6&&visible(ws('.phaseReader.draft-reading>.document .draft-read-words')))return 'Current manuscript · read-only';
   if(n===5||n===6||n===7)return p.view==='record'?'Retained record · read-only':'Reading view · open the draft to edit';
   return '';
  }
- window.c3PieceState={read,primary:n=>primary(n),run,word,notApplicable,readOnlyReason,load,stage,names:NAMES};
+ window.c3PieceState={read,checkManuscriptStatus,primary:n=>primary(n),run,word,notApplicable,readOnlyReason,load,stage,names:NAMES};
 })();

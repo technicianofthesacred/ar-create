@@ -75,6 +75,12 @@
   }catch{}
   return false;
  };
+ // Keep the exact current Check status once when the surface bar already shows it.
+ const visibleCheckStatus=(bar,status)=>!!status&&[...bar.querySelectorAll('.sb-ro')].some(node=>{
+  const text=(node.textContent||'').trim();if(text!==status&&!text.startsWith(status+' · '))return false;
+  for(let parent=node;parent;parent=parent.parentElement){const style=window.getComputedStyle(parent);if(parent.hidden||parent.getAttribute('aria-hidden')==='true'||style.display==='none'||style.visibility==='hidden'||style.visibility==='collapse')return false;}
+  return true;
+ });
  // Lock passes can be triggered by the same rows whose attributes the bar watches.
  // Do not manufacture another owner change when the guarded state is unchanged.
  const attr=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value);};
@@ -87,7 +93,7 @@
   for(const el of document.querySelectorAll('[data-draft-approve],[data-draft-action="disk-undo"],[data-draft-action="restore-version"],[data-draft-action^="undo:"]')){if(el.hasAttribute('data-draft-approve')&&nativeApprovalAllowed(el)){disabled(el,false);if(el.dataset.reviewDraftLock){removeAttr(el,'data-review-draft-lock');const title=approvalPins.get(el)?.title;if(title===null)removeAttr(el,'title');else if(title!==undefined)attr(el,'title',title);}continue;}if((el.dataset.draftAction==='disk-undo'||el.dataset.draftAction?.startsWith('undo:'))&&draftAllowed){if(el.dataset.reviewDraftLock){disabled(el,el.dataset.blocked==='true');removeAttr(el,'data-review-draft-lock');}continue;}if(!reviewTitles.has(el))reviewTitles.set(el,el.getAttribute('title'));disabled(el,true);attr(el,'data-review-draft-lock','true');attr(el,'title','This action is not connected in the review. Saved words and history remain with the installed writer.');}
   for(const el of document.querySelectorAll('.ci-sample-gate,.ci-sample,button[onclick^="openInstruction"],button[onclick^="prepareNote"]'))if(el.style.getPropertyValue('display')!=='none'||el.style.getPropertyPriority('display')!=='important')el.style.setProperty('display','none','important');
   const bar=document.getElementById('c3-surface-bar');if(bar&&!bar.querySelector('[data-review-state]')){const badge=document.createElement('span');badge.dataset.reviewState='';badge.textContent='Read-only review';badge.style.cssText='font:inherit;font-size:13px;white-space:nowrap;opacity:.75;margin-left:auto';bar.append(badge);}
-  const badge=bar?.querySelector('[data-review-state]');if(badge){const title=carouselAllowed?'Browser carousel · saved here':'';if(badge.title!==title)badge.title=title;const text=carouselAllowed?'Saved':workingNativeCarousel()?'Working carousel':draftAllowed?'Working manuscript':writableSource()?'Transcript editing':'Read-only review';if(badge.textContent!==text)badge.textContent=text;}
+  const badge=bar?.querySelector('[data-review-state]');if(badge){const checkStatus=window.c3PieceState?.checkManuscriptStatus?.()||'',redundant=visibleCheckStatus(bar,checkStatus);if(badge.hidden!==redundant)badge.hidden=redundant;const title=carouselAllowed?'Browser carousel · saved here':'';if(badge.title!==title)badge.title=title;const text=carouselAllowed?'Saved':workingNativeCarousel()?'Working carousel':draftAllowed?'Working manuscript':writableSource()?'Transcript editing':checkStatus||'Read-only review';if(badge.textContent!==text)badge.textContent=text;}
   attr(document.body,'data-existing-work-review','readonly');
  };
  window.addEventListener?.('study-draft-change',lock);window.addEventListener?.('study-write-view',lock);

@@ -19,7 +19,7 @@ html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is
 html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(.sb-btn,.sb-icon,#wbf-tools .btn,#wbf-document-actions .btn):hover{border-color:color-mix(in srgb,var(--warm) 50%,var(--line))!important}
 html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar #wbf-document-actions .quiet{background:transparent!important;border-color:transparent!important;color:var(--dim)!important}
 html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar #wbf-document-actions .quiet:hover{color:var(--ink)!important;background:transparent!important}
-html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(#wbf-tools,#wbf-document-actions)>.btn{display:inline-flex!important;align-items:center!important;gap:7px!important;padding:0 12px!important;min-height:34px!important}
+html body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(#wbf-tools,#wbf-document-actions)>.btn{display:var(--wbf-header-control-display,inline-flex)!important;align-items:center!important;gap:7px!important;padding:0 12px!important;min-height:34px!important}
 @media(max-width:900px){
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-c3-stage="5"] #app #workspace .desk>#margin{padding:3px 0 0!important}
 }
@@ -51,6 +51,6 @@ html body.wbf-on #wbf-drawer .dr-body[data-tool="recovery"] .draft-inspect{displ
  html body.wbf-on #c3-surface-bar #wbf-parts{position:absolute!important;top:0!important;right:44px!important}
 }
 @media(max-width:760px){
- html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(#wbf-tools,#wbf-document-actions)>.btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;height:34px!important;padding:0 12px!important;white-space:nowrap!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"]) #c3-surface-bar :is(#wbf-tools,#wbf-document-actions)>.btn{display:var(--wbf-header-control-display,inline-flex)!important;align-items:center!important;justify-content:center!important;gap:7px!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;height:34px!important;padding:0 12px!important;white-space:nowrap!important;font:500 var(--t-label)/1.5 var(--ar-ui)!important}
 }
 html body.wbf-on #c3-surface-bar .sb-morew>.sb-btn[data-wbf-recovery="true"]::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--warm)}

@@ -335,3 +335,12 @@ html body.wbf-on #wbf-document-actions .wbf-mode-switch button:hover{color:var(-
 /* Project-wide browsers cover the manuscript without disposing its tools.
    Keep mounted editor/check nodes intact, but out of the browser and tab order. */
 html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-drawer,#wbf-pull){display:none!important}
+
+/* The desktop tool drawer must leave the current writing controls reachable. */
+@media(min-width:761px){
+ html body.wbf-on.wbf-drawer-open:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #app #workspace #c3-surface-bar{margin-right:412px!important}
+ html body.wbf-on.wbf-drawer-open #c3-surface-bar>.sb-right{max-width:100%;min-width:0;flex-wrap:wrap!important;overflow:visible!important}
+ html body.wbf-on.wbf-drawer-open #wbf-document-actions .wbf-word-count{display:none}
+ /* These tools remain immediately available in the open drawer tabs. */
+ html body.wbf-on.wbf-drawer-open:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #c3-surface-bar [data-wbf-tool]{--wbf-header-control-display:none;display:none!important}
+}
