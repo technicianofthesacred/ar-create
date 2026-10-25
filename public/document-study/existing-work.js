@@ -25,7 +25,7 @@
  function artifactsAt(story,stage){const allowed=STAGES[Number(stage)]||[];return (story?.artifacts||[]).filter(a=>allowed.includes(kind(a)));}
  const recordLabel=a=>shownTitle(a,'Saved record');
  const rowsFor=story=>[...(story.artifacts||[])].sort((a,b)=>Number(!!a.archived)-Number(!!b.archived)||recordLabel(a).localeCompare(recordLabel(b)));
- async function read(url){const response=await fetch(url,{method:'GET',cache:'no-store'});const value=await response.json();if(!response.ok)throw Error(value.error||'Existing work is unavailable. Reconnect and retry.');return value;}
+ async function read(url){const response=await fetch(url,{method:'GET',cache:'no-store'});const value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'Existing work is unavailable. Reconnect and retry.'),{status:response.status});return value;}
  async function openRequestedSource(){const params=new URLSearchParams(location.search),ids=params.getAll('reviewSource');if(!ids.length)return;if(ids.length!==1||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(ids[0]))throw Error('Use one exact Library source UUID to open a transcript.');const source=catalog.sources.find(s=>s.id===ids[0]&&s.authority==='library');if(!source)throw Error('This source is not in the connected Library. No substitute was opened.');const sessions=(catalog.conversations||[]).filter(s=>s.sourceId===source.id);if(sessions.length>1)throw Error('This source has several retained conversations. Choose the exact conversation in Bench.');if(sessions.length===1)await openConversation(sessions[0].id);else await openSource(source.id);}
  function baseRoute(){const p=project(),story=storyFor(p);return story?{reviewStory:story.id,reviewStage:String(contextStage(p))}:{};}
  function rememberRoute(extra){if(extra!==undefined)readerRoute=extra;if(!entryConsumed||restoringRoute||window.arCreateReviewStartup?.pending)return;if(readerRoute?.reviewMagazinePiece&&(readerRoute.reviewMagazineParent!==project()?.id||![5,6,7,8,9,10,11,12].includes(contextStage(project()))))readerRoute=null;const url=new URL(location.pathname,location.origin),values=readerRoute?.reviewCarousel?{reviewCarousel:readerRoute.reviewCarousel}:{...baseRoute(),...(readerRoute?.reviewWorkspace?{reviewStage:String(contextStage(project()))}:{}),...(readerRoute||{})};for(const[key,value]of Object.entries(values))if(value!==null&&value!==undefined)url.searchParams.set(key,String(value));if(url.href!==location.href)history.replaceState(null,'',url.href);}
@@ -366,9 +366,11 @@
  window.c3Shell?.register('existing work access',decorate,{order:125,ignore:'.ew-context,.ew-primary,.ew-source-library,.ew-media,.ew-route-error,.ew-document-reader'});
  if(typeof window.createMagazineCheckAdapter==='function'&&typeof window.resolveMagazineCheckRegistration==='function'&&typeof window.studyDraftCheck?.setMagazineAdapter==='function'){
   window.studyDraftCheck.setMagazineAdapter(window.createMagazineCheckAdapter({origin:location.origin,actor:'human:adrian',resolve:async snapshot=>{
-   const [fresh,ownerCatalog]=await Promise.all([read('/api/review/catalog'),read('/api/magazine/working-draft/catalog')]);
-   return window.resolveMagazineCheckRegistration({catalog:fresh,ownerCatalog,snapshot});
-  }}));
+   const inputQuery=new URLSearchParams({parentStudyKey:snapshot.parentStudyId,partKey:window.magazineCheckInputPartKey(snapshot.owner),draftPath:snapshot.owner.path,expectedDraftHash:snapshot.proof.draftHash});
+   const configuredInputs=read('/api/study-originals/check-inputs?'+inputQuery).catch(error=>{if([404,503].includes(error.status))return null;throw error;});
+   const [fresh,ownerCatalog,originalInputs]=await Promise.all([read('/api/review/catalog'),read('/api/magazine/working-draft/catalog'),configuredInputs]);
+   return window.resolveMagazineCheckRegistration({catalog:fresh,ownerCatalog,snapshot,originalInputs});
+  },read:path=>read('/api/magazine/read?'+new URLSearchParams({path})),run:async input=>{const response=await fetch('/api/magazine/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)}),result=await response.json();if(!response.ok)throw Error(result.error||'The saved manuscript could not be checked.');return result;}}));
  }
  if(typeof window.createMagazineOutputAdapter==='function'&&typeof window.studyOutputConnection?.setMagazineAdapter==='function'){
   window.studyOutputConnection.setMagazineAdapter(window.createMagazineOutputAdapter({

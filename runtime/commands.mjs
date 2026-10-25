@@ -209,6 +209,7 @@ export function createRouteMap(services) {
       '/api/study/human-direction/write': {POST:input=>draftCall(()=>studyHumanDirection.write(input))},
       '/api/study/human-direction/undo': {POST:input=>draftCall(()=>studyHumanDirection.undo(input))},
       '/api/study-originals': {GET:()=>originalRead(()=>studyOriginals.list(url.searchParams.get('projectKey')))},
+      '/api/study-originals/check-inputs': {GET:()=>{const keys=['parentStudyKey','partKey','draftPath','expectedDraftHash'];if([...url.searchParams.keys()].length!==keys.length||keys.some(k=>url.searchParams.getAll(k).length!==1))throw new StateError('Use one exact current part and draft revision.',400);return originalRead(()=>studyOriginals.checkInputs(Object.fromEntries(url.searchParams)));}},
       '/api/study/photos/select': {POST:input=>draftCall(()=>studyOwnedPhotoBindings.select(input))},
       '/api/study/photos/inspect': {GET:()=>draftCall(()=>studyPhotos.inspect({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study/photos': {GET:()=>draftCall(()=>studyPhotos.list({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
