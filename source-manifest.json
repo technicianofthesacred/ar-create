@@ -3425,7 +3425,7 @@
     },
     {
       "path": "public/document-study/workbench-surfaces.js",
-      "candidateSha256": "2746fa30a66f8592107c8a596c1851851712759f95631c2b5b7262d418b0d54e"
+      "candidateSha256": "6904d6ea763076f5760349d129f9120578a71f58f74a389bca482205099d144a"
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.test.mjs",
@@ -3437,7 +3437,7 @@
     },
     {
       "path": "tests/workbench-surfaces.test.mjs",
-      "candidateSha256": "c8344d2b5e045c0cf555b719902c40e1269fc2f1fb7525ea231c0fed87012cce"
+      "candidateSha256": "c700e2f42a1f9866e4b9fc334f45fa93890406540eecfd25f7c2ad92f45dc6c7"
     },
     {
       "path": "docs/verification/workbench-full/GOAL-CURRENT.md",
@@ -3481,7 +3481,7 @@
     },
     {
       "path": "public/document-study/workbench-develop-match.css",
-      "candidateSha256": "67b2c79519d63d39f9a66be7bd9c2f51cbe7640c647a2837717d259c238700f3"
+      "candidateSha256": "41da069721ff87450bd6ff84015c617385f4a346b03f5143ca9efcd3df14ea59"
     },
     {
       "path": "public/document-study/workbench-exports-match.css",
