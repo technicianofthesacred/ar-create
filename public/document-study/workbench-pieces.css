@@ -143,3 +143,17 @@ html body.wbf-on #project-library .wbp-root .wbp-filter-button{border:1px solid 
 
 /* Reserve the reference tree disclosure space without adding false expand controls. */
 #project-library .wbp-panel nav>button>svg{width:14px;height:14px;flex:none}
+
+/* Keep the phone title at the leading edge while retaining every header action. */
+#project-library .wbp-back-icon{display:none}
+@media(max-width:760px){
+ #project-library .wbp-heading{gap:4px;flex-wrap:nowrap}
+ #project-library .wbp-heading h2{order:0;flex:1;min-width:3.3em}
+ #project-library .wbp-heading>.wbp-count{order:1;font-size:var(--t-label,13px);flex:none}
+ #project-library .wbp-heading>.wbp-folder-toggle{order:2;flex:none;padding-inline:6px}
+ #project-library .wbp-heading>.ew-original-stories{order:3;margin:0}
+ #project-library .wbp-heading>.ew-original-stories>summary{padding-inline:3px;font-size:var(--t-label,13px)}
+ #project-library .wbp-heading>[data-wbp-close]{order:4;display:flex;align-items:center;justify-content:center;width:34px;height:34px;margin-left:0;padding:0}
+ #project-library .wbp-back-icon{display:block;flex:none}
+ #project-library .wbp-back-label{display:none}
+}

@@ -269,3 +269,11 @@ test('an unavailable original folder is explained without raw builder wording an
  assert.equal(f.d.querySelector('#original input').value,'Unsaved home text');
  await f.click('[data-wbp-open]');assert.ok(f.calls.some(c=>c[0]==='action'&&c[1].outputId==='good'));f.close();
 });
+
+test('phone header keeps named Folders and Back actions through repaint and closes using the Back icon',async()=>{
+ const f=boot({phone:true});try{await f.open();
+ const back=f.d.querySelector('[data-wbp-close]');assert.equal(back.getAttribute('aria-label'),'Back to work');assert.equal(back.querySelector('svg').getAttribute('aria-hidden'),'true');assert.equal(back.querySelector('.wbp-back-label').textContent,'Back to work');
+ await f.click('[data-wbp-folders]');assert.equal(f.d.querySelector('.wbp-heading [data-wbp-folders]').getAttribute('aria-expanded'),'true');assert.equal(f.d.querySelector('#wbp-title').textContent,'Pieces');
+ f.d.querySelector('[data-wbp-close] svg').dispatchEvent(new f.w.MouseEvent('click',{bubbles:true}));await tick();assert.ok(f.calls.some(([kind])=>kind==='close'));assert.equal(f.dialog.open,false);
+ }finally{f.close();}
+});
