@@ -178,6 +178,11 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(port===allowedAuthorityPort)return fail(503,'Review must use a separate port from the existing authority.');
   const pathname=validPath(req.url);if(!pathname)return fail(400,'This review path is not allowed.');
   if(actualWorkReview===true&&pathname==='/api/sources/blob'&&['GET','HEAD'].includes(req.method)){req.resume();return fail(403,'Original blob reads are unavailable in this read-only review.');}
+  if(pathname==='/api/source-sessions/translation-review'){
+   if(!['GET','HEAD'].includes(req.method)){req.resume();res.setHeader('Allow','GET, HEAD');return fail(405,'Saved English proposals are read-only.');}
+   const query=new URL(req.url,upstream).searchParams,keys=['sessionId','expectedRevision','expectedSourceHash'];
+   if([...query.keys()].length!==keys.length||keys.some(k=>query.getAll(k).length!==1)||!query.get('sessionId')?.trim()||query.get('sessionId').length>160||! /^(0|[1-9][0-9]*)$/.test(query.get('expectedRevision'))||!Number.isSafeInteger(Number(query.get('expectedRevision')))||! /^[a-f0-9]{64}$/i.test(query.get('expectedSourceHash')||''))return fail(400,'Use the selected conversation and its exact current revision.');
+  }
   const translationPath=pathname===TRANSLATION_PROPOSAL_PATH;
   if(translationPath){
    if(req.url!==pathname){req.resume();return fail(400,'Use the exact translation proposal path without a query.');}
