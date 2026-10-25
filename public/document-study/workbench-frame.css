@@ -331,3 +331,7 @@ html body.wbf-on #wbf-document-actions .wbf-mode-switch button{height:30px;min-h
 html body.wbf-on #wbf-document-actions .wbf-mode-switch button[aria-pressed="true"]{background:var(--paper);border-color:var(--line);color:var(--ink);box-shadow:0 1px 2px #0001}
 html body.wbf-on #wbf-document-actions .wbf-mode-switch button:hover{color:var(--ink)}
 @media(max-width:760px){html body.wbf-on #wbf-document-actions .wbf-mode-switch button{padding:0 8px}html body.wbf-on #wbf-document-actions .wbf-mode-switch{margin-left:2px}}
+
+/* Project-wide browsers cover the manuscript without disposing its tools.
+   Keep mounted editor/check nodes intact, but out of the browser and tab order. */
+html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-drawer,#wbf-pull){display:none!important}
