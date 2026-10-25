@@ -54,8 +54,13 @@ export async function createPhotoHTTPFixture(){
    return {scriptCount:scripts.size,parentStudyId:projects[0].id,emptyBootstrapBlocks:true};
   };
   const checkDOMBoot=async()=>{
-   let destroyed=false;const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM,VirtualConsole,ResourceLoader}=require('jsdom'),errors=[],console=new VirtualConsole();console.on('jsdomError',e=>{if(!destroyed&&!/Could not parse CSS stylesheet|Not implemented: window/.test(e.message))errors.push(e.message+' '+(e.detail?.stack||''));});
-   const closedRead=new Promise(()=>{});
+   let dom,w;const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM,VirtualConsole,ResourceLoader}=require('jsdom'),errors=[],console=new VirtualConsole();console.on('jsdomError',e=>{if(!/Could not parse CSS stylesheet|Not implemented: window/.test(e.message))errors.push(e.message+' '+(e.detail?.stack||''));});
+   const pending=new Set(),controllers=new Set(),observers=new Set();let activity=0,closed=false,pagehides=0,requestsAfterClose=0;
+   const track=promise=>{activity++;pending.add(promise);promise.then(()=>pending.delete(promise),()=>pending.delete(promise));return promise;};
+   const tick=()=>new Promise(resolve=>setTimeout(resolve,25));
+   // A header response is not idle: callers still consume JSON and run their
+   // own continuations. Require a quiet period across task/microtask turns.
+   const drain=async()=>{const end=Date.now()+10000;let quiet=0,previous=activity;while(Date.now()<end){await tick();if(!pending.size&&!activeResources&&!resourceQueue.length&&previous===activity){if(++quiet===4)return;}else quiet=0;previous=activity;}throw Error('Native fixture teardown did not drain: '+pending.size+' HTTP/body operations, '+activeResources+' resources, '+resourceQueue.length+' queued.');};
    // jsdom starts every script resource in parallel; use the browser's bounded
    // per-origin loading instead of opening dozens of simultaneous test sockets.
    let activeResources=0;const resourceQueue=[];
@@ -65,16 +70,49 @@ export async function createPhotoHTTPFixture(){
      let request,cancelled=false;
      const response=new Promise((resolve,reject)=>{
       const start=()=>{if(cancelled){const error=Error('Fixture resource cancelled');error.isAbortError=true;reject(error);return;}activeResources++;
-       request=super.fetch(url,options);request.then(resolve,reject).finally(()=>{activeResources--;resourceQueue.shift()?.();});};
+       request=super.fetch(url,options);const finish=()=>{activeResources--;resourceQueue.shift()?.();};request.then(value=>{finish();resolve(value);},error=>{finish();reject(error);});};
       if(activeResources<6)start();else resourceQueue.push(start);
      });
      response.abort=()=>{cancelled=true;request?.abort();};return response;
     }
    }
 
-   const origin=`http://127.0.0.1:${reviewPort}`,dom=await JSDOM.fromURL(receipt.url,{resources:new BrowserResources(),runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:console,beforeParse(w){w.fetch=async(url,opts)=>{const response=await fetch(new URL(url,origin),opts?{...opts,headers:{...opts.headers,Origin:origin}}:undefined);if(destroyed)return closedRead;const json=response.json.bind(response);response.json=async()=>{const value=await json();return destroyed?closedRead:value;};return response;};w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}}),w=dom.window;
-   await new Promise(resolve=>w.document.readyState==='complete'?resolve():w.addEventListener('load',resolve,{once:true}));
-   try{const end=Date.now()+15000;while(Date.now()<end){if(w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await new Promise(r=>setTimeout(r,25));}if(w.studyDraft?.currentBinding?.()?.id!==bindingId||w.document.querySelector('[data-caption]')?.value!==receipt.caption||w.eval('current().viewedStage')!==8)throw Error('The real native photo editor did not mount its exact saved part/details.');if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));return {mounted:true,stage:8,bindingId,caption:w.document.querySelector('[data-caption]').value,scriptErrors:[...errors]};}catch(error){process.stderr.write('Native fixture boot error: '+error.stack+'\n');throw error;}finally{await new Promise(r=>setTimeout(r,500));destroyed=true;dom.window.close();}
+   const origin=`http://127.0.0.1:${reviewPort}`;let proof,probe,probeFinished=false;
+   try{
+    dom=await JSDOM.fromURL(receipt.url,{resources:new BrowserResources(),runScripts:'dangerously',pretendToBeVisual:true,virtualConsole:console,beforeParse(window){w=window;const Observer=w.MutationObserver;w.MutationObserver=class extends Observer{constructor(callback){super(callback);observers.add(this);}};w.addEventListener('pagehide',()=>pagehides++);w.fetch=(url,opts)=>{
+     if(closed){requestsAfterClose++;return Promise.reject(Error('HTTP requested after fixture close.'));}
+     const controller=new AbortController();controllers.add(controller);
+     const signal=opts?.signal?AbortSignal.any([opts.signal,controller.signal]):controller.signal;
+     return track((async()=>{
+      const response=await fetch(new URL(url,origin),{...opts,signal,headers:{...opts?.headers,Origin:origin}});
+      for(const method of ['json','text','arrayBuffer','blob','formData']){const consume=response[method].bind(response);response[method]=(...args)=>track(consume(...args));}
+      return response;
+     })());
+    };w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}});
+    const end=Date.now()+15000;while(Date.now()<end){if(w.document.readyState==='complete'&&w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await tick();}
+    assert.equal(w.document.readyState,'complete','All maintained modules finish loading.');
+    if(w.studyDraft?.currentBinding?.()?.id!==bindingId||w.document.querySelector('[data-caption]')?.value!==receipt.caption||w.eval('current().viewedStage')!==8)throw Error('The real native photo editor did not mount its exact saved part/details.');
+    assert.deepEqual(errors,[],'Native DOM boot errors.');
+    proof={mounted:true,stage:8,bindingId,caption:w.document.querySelector('[data-caption]').value};
+    // Begin an actual owner read immediately before pagehide. Its body and
+    // downstream callback must complete while the document still exists.
+    probe=track(w.fetch(receipt.inspect).then(response=>response.json()).then(value=>{assert.equal(value.bindingId,bindingId);assert.ok(w.document.querySelectorAll);assert.equal(closed,false);probeFinished=true;}));
+   }finally{
+    try{
+     if(w){w.dispatchEvent(new w.Event('pagehide'));await drain();if(probe)await probe;assert.equal(pagehides,1);assert.equal(pending.size,0);assert.equal(activeResources,0);assert.equal(resourceQueue.length,0);assert.deepEqual(errors,[],'Native errors through pagehide and drained callbacks.');}
+    }finally{
+     // On a failed boot/drain, cancel real transport instead of leaving
+     // unresolved reads or a JSDOM window behind.
+     for(const controller of controllers)controller.abort();
+     // JSDOM close removes the document and queues mutation delivery to
+     // observers that have no pagehide hook. Dispose those native observers
+     // only after the real pagehide handlers and HTTP continuations finish.
+     for(const observer of observers)observer.disconnect();observers.clear();
+     closed=true;w?.close();
+    }
+   }
+   await tick();assert.equal(requestsAfterClose,0);assert.equal(observers.size,0);assert.deepEqual(errors,[],'Native errors after window close.');assert.equal(probeFinished,true);
+   return {...proof,scriptErrors:[...errors],cleanup:{pagehides,pendingHTTP:pending.size,pendingResources:activeResources,queuedResources:resourceQueue.length,bodyCallbackBeforeClose:probeFinished,requestsAfterClose}};
   };
   receipt.uiBoot=await checkUIBoot();receipt.nativeDOMBoot=await checkDOMBoot();
   const freeze=()=>{receipt={...receipt,baselineRequestCount:calls.length,baselineAt:new Date().toISOString()};fs.writeFileSync(baselineFile,JSON.stringify(inventory(protectedRoots),null,2));fs.writeFileSync(receiptFile,JSON.stringify(receipt,null,2));};freeze();
@@ -89,7 +127,7 @@ else if(command==='--serve'){
 }else test('real native HTTP photo inspect and exact persisted lookup do not write, and restart preserves identities',async t=>{
  const f=await createPhotoHTTPFixture();t.after(async()=>{await f.stop();await f.remove();});
  for(let boot=0;boot<2;boot++){
-  const r=f.receipt;assert.equal((await f.checkUIBoot()).parentStudyId,r.parentStudyId);assert.equal((await f.checkDOMBoot()).mounted,true);const before=JSON.parse(fs.readFileSync(r.baselineFile)),lookup=await f.http(r.lookup,undefined,{reviewRequest:true}),native=await f.http(r.nativeRead,undefined,{reviewRequest:true}),photos=await f.http(r.inspect,undefined,{reviewRequest:true});
+  const r=f.receipt;assert.equal((await f.checkUIBoot()).parentStudyId,r.parentStudyId);const nativeBoot=await f.checkDOMBoot();assert.equal(nativeBoot.mounted,true);assert.deepEqual(nativeBoot.cleanup,{pagehides:1,pendingHTTP:0,pendingResources:0,queuedResources:0,bodyCallbackBeforeClose:true,requestsAfterClose:0});const before=JSON.parse(fs.readFileSync(r.baselineFile)),lookup=await f.http(r.lookup,undefined,{reviewRequest:true}),native=await f.http(r.nativeRead,undefined,{reviewRequest:true}),photos=await f.http(r.inspect,undefined,{reviewRequest:true});
   assert.equal(lookup.projectKey,'owned-draft:'+r.bindingId);assert.equal(lookup.projectId,r.physical.projectId);assert.equal(lookup.documentId,r.physical.documentId);assert.equal(native.binding.id,r.bindingId);assert.equal(native.binding.parentStudyId,r.parentStudyId);assert.equal(native.expected.workflow.draft,r.expectedDraftHash);assert.equal(photos.projectId,r.physical.projectId);assert.equal(photos.documentId,r.physical.documentId);assert.equal(photos.bindingId,r.bindingId);assert.equal(photos.parentStudyId,r.parentStudyId);assert.equal(photos.photos[0].sourceId,r.sourceId);assert.equal(photos.photos[0].caption,r.caption);assert.equal(photos.photos[0].credit,r.credit);assert.equal(photos.photos[0].previewUnavailable,false);const preview=new URL(photos.photos[0].url,r.reviewURL);assert.equal(preview.pathname,'/api/study/photos/preview');assert.equal(preview.searchParams.get('sourceId'),r.sourceId);assert.equal(preview.searchParams.get('bindingId'),r.bindingId);assert.equal(preview.searchParams.get('expectedHash'),photos.photos[0].sha256);
   const absent=await f.http(r.absentInspect,undefined,{reviewRequest:true});assert.equal(absent.state,'not-created');assert.equal(absent.photos.length,0);
   assert.deepEqual(inventory(r.protectedRoots),before);assert.deepEqual(f.check().changed,[]);assert.equal(f.check().noMutationsOrLegacyBlobRequests,true,JSON.stringify(f.check().unsafeRequests));

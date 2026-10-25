@@ -3689,7 +3689,7 @@
     },
     {
       "path": "tests/review-connection.test.mjs",
-      "candidateSha256": "bac0c61888b0818b3f1996e64a3d229921d5df41f0fe17c1dd38bf4e2324c85d"
+      "candidateSha256": "bce968d88afad9c916d33e1b0bbb0bfb6caaa9a2a034e8391a42159efc159cba"
     },
     {
       "path": "tests/review-discovery.test.mjs",
@@ -3813,7 +3813,7 @@
     },
     {
       "path": "tests/photo-inspect-native-http.test.mjs",
-      "candidateSha256": "8b92f512fa316da2668c1b56b68470fd54a2d8d9c3792a433f14c48631ec8e15"
+      "candidateSha256": "7915d24c48e4682b934a1c2eaa8aa05571dbf74961c1529d3d7ace90f686ba23"
     },
     {
       "path": "tests/photo-preview-native-http.test.mjs",
