@@ -1,3 +1,13 @@
+## 26 October — Magazine sharing context candidate, not installed
+
+S11/C01/C04/C06: the maintained working-draft bridge now exposes read-only sharing context for an exact registered Magazine story/piece and current DEV hash. It identifies the existing registered feedback, relationship context and research records by current hashes, with missing, unreadable and changed-since-registration states. It returns references rather than copying prose, creating messages or claiming a published edition. The GET connection rejects caller paths, duplicate selectors, stale articles and ambiguous ownership.
+
+The same read-only context is discoverable through the existing command registry, CLI and MCP call tool with all four exact selectors. A synthetic real-server journey proves both agent entrances return the same registered message references and refuse a stale manuscript with conflict status, without import or new records.
+
+The existing frontend Magazine output adapter now has a guarded read-only invitation-context transport. It validates exact owner/hash and registered-reference states, refuses delayed owner changes, and strips uncontracted payload fields. This adds no Share controls or automatic selection/save. A recovered permanent isolated checkout passes221 affected checks; the original temporary checkout is no longer a source authority.
+
+This is a backend candidate only. The current Share screen still uses native Study output selection and cannot yet select a Magazine working article. Recipient/output/edition mapping, reuse of the existing feedback editor and native visual acceptance remain unfinished. No content, editorial approval, external delivery or installed configuration changed.
+
 ## 25 October — Workbench release candidate and remaining limits
 
 This is source-candidate status, not a statement that a release is installed. The release receipt and exact deployed revision remain separate from product completion.

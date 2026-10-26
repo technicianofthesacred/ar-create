@@ -20,13 +20,31 @@
   // Keep only contract metadata. Resolver extras can never become file bodies or delivery proof.
   return freeze({schema:r.schema,revision:r.revision,nativeProjectId:r.nativeProjectId,workingOwnerRef:{projectId:w.projectId,pieceId:w.pieceId,editionId:'working',artifactId:w.artifactId,hash:w.hash},publication:r.publication===null?null:{id:r.publication.id,url:r.publication.url,title:r.publication.title,recordedBy:r.publication.recordedBy,edition:null,date:null}});
  }
- function createMagazineOutputAdapter({current,resolve,openWorking,openPublication,readWorking,openArrangement,openAudience,downloadWorking}={}){
+ function createMagazineOutputAdapter({current,resolve,openWorking,openPublication,readWorking,readShareContext:readShare,openArrangement,openAudience,downloadWorking}={}){
   if(typeof current!=='function'||typeof resolve!=='function')throw Error('The Magazine reference reader is not connected.');
   const state=id=>snapshot(current(),id);
   const unchanged=s=>{if(stable(state(s.projectId))!==stable(s))throw Error('The selected working part changed. Read its references again.');};
   async function fresh(s){unchanged(s);const r=reference(await resolve(freeze({storyId:s.owner.storyId,pieceId:s.owner.pieceId,expectedHash:s.hash})),s);unchanged(s);return r;}
   const working=(s,r)=>freeze({kind:'magazine-working',projectId:s.projectId,owner:copy(s.owner),hash:s.hash,workingOwnerRef:copy(r.workingOwnerRef),revision:r.revision});
   const workingId=s=>'magazine-working:'+s.owner.storyId+':'+s.owner.pieceId;
+  async function readShareContext(input={}){
+   const q=copy(input),s=state(q.projectId);
+   if(typeof readShare!=='function')throw Error('Magazine invitation context is not connected.');
+   if(q.outputId!==workingId(s)||q.expectedHash!==s.hash)throw Error('Choose this exact current article before preparing its invitation.');
+   const value=copy(await readShare(freeze({storyId:s.owner.storyId,pieceId:s.owner.pieceId,edition:'working',expectedHash:s.hash})));unchanged(s);
+   const a=value?.authority,d=value?.draft,selection=value?.selection,root=value?.rootIdentity;
+   if(value?.schema!=='ar-create.magazine-share-context.v1'||selection?.storyId!==s.owner.storyId||selection.pieceId!==s.owner.pieceId||selection.edition!=='working'||a?.kind!=='magazine'||a.storyId!==s.owner.storyId||a.pieceId!==s.owner.pieceId||a.path!==s.owner.path||d?.path!==s.owner.path||d.hash!==s.hash||root?.scheme!=='canonical-directory-sha256-v1'||!sha(root.fingerprint))throw Error('Invitation context belongs to different or changed work.');
+   const references={};let count=0;
+   for(const [key,kind]of Object.entries({feedback:'FEEDBACK',context:'CONTEXT',research:'RESEARCH'})){
+    if(!Array.isArray(value.references?.[key]))throw Error('Registered invitation references are unavailable.');
+    references[key]=value.references[key].map(r=>{
+     const missing=r.state==='missing',readable=['current','changed-since-registration'].includes(r.state);
+     if(++count>512||r.kind!==kind||!text(r.path)||!sha(r.registeredHash)||!(missing?r.currentHash===null:sha(r.currentHash))||!['current','changed-since-registration','missing','unreadable'].includes(r.state)||r.readable!==readable||r.changedSinceRegistration!==(r.currentHash!==r.registeredHash)||r.state==='current'&&r.changedSinceRegistration||r.state==='changed-since-registration'&&!r.changedSinceRegistration)throw Error('Registered invitation reference state is inconsistent.');
+     return {path:r.path,kind,registeredHash:r.registeredHash,currentHash:r.currentHash,state:r.state,readable:r.readable,changedSinceRegistration:r.changedSinceRegistration};
+    });
+   }
+   return freeze({schema:value.schema,selection:{storyId:selection.storyId,pieceId:selection.pieceId,edition:'working'},authority:{...s.owner},rootIdentity:{scheme:root.scheme,fingerprint:root.fingerprint},draft:{path:d.path,hash:d.hash},references});
+  }
   async function read({projectId}={}){
    const selected=copy(current());if(selected?.projectId!==projectId||selected?.owner?.kind!=='magazine')return null;
    const s=snapshot(selected,projectId),r=await fresh(s),p=r.publication,existingDraft=working(s,r);
@@ -62,7 +80,7 @@
    if(stable(after)!==stable(r))throw Error('The recorded reference changed while opening. Read its current metadata again.');
    return result;
   }
-  return Object.freeze({read,onAction,readWorkingEdition});
+  return Object.freeze({read,onAction,readWorkingEdition,readShareContext});
  }
  globalThis.createMagazineOutputAdapter=createMagazineOutputAdapter;
 })();

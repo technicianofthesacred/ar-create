@@ -114,6 +114,51 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     const projection = native.projection(model).map((row, i) => ({...row, raw: model.blocks[i].raw}));
     return {selection: select(input), authority, editable: !unavailableReason, unavailableReason, document, paragraphs, projection, supportedNativeOperations: (native.supportedNativeOperations || []).filter(kind=>kind!=='photoReplaceAsset'||photoLibrary), history: await historyFor(authority)};
   }
+  // References only: Share reads the existing owners, never creates an edition,
+  // recipient, message store or another copy of the working manuscript.
+  async function shareContext(input) {
+    workingOnly(input); fields(input, ['expectedHash']);
+    const expectedHash = expected(input.expectedHash);
+    if (expectedHash === null) throw new StateError('Share context requires the exact current working draft hash.', 400);
+    const authority = resolve(input), root = registrationRoot();
+    const project = magazine.projects.project(input.storyId), registration = JSON.stringify(project);
+    const kinds = {feedback: 'FEEDBACK', context: 'CONTEXT', research: 'RESEARCH'};
+    const references = {}, seen = new Set(), snapshots = [];
+    // The public reader omits conflict metadata when the primary is missing.
+    const hasConflicts = rel => magazine._roots().mag.conflictCopies(rel).length > 0;
+    async function inspect(rel, kind) {
+      const document = await magazine.read({path: rel});
+      if (document.path !== rel || document.kind !== kind || document.conflicts?.length || hasConflicts(rel)) throw new StateError('A registered Share file is inconsistent or has conflicting copies. Resolve it before continuing.', 409);
+      if (document.exists && !/^[a-f0-9]{64}$/.test(document.hash || '')) throw new StateError('A registered Share file has no exact current hash.', 409);
+      snapshots.push({rel, kind, document});
+      return document;
+    }
+    const draft = await inspect(authority.path, 'DEV');
+    if (!draft.exists || typeof draft.text !== 'string' || draft.hash !== expectedHash) throw new StateError('The working draft changed or is unreadable. Read it again before preparing Share.', 409);
+    for (const [key, kind] of Object.entries(kinds)) {
+      references[key] = [];
+      for (const record of [].concat(project.vaultRecords[key] || [])) {
+        if (!record || typeof record.rel !== 'string' || classify(record.rel).kind !== kind || !/^[a-f0-9]{64}$/.test(record.sha256 || '') || seen.has(record.rel)) throw new StateError('The registered Share references are inconsistent.', 409);
+        seen.add(record.rel);
+        if (seen.size > 512) throw new StateError('Share context exceeds its bounded registered-reference limit.', 413);
+        const current = await inspect(record.rel, kind), readable = current.exists && typeof current.text === 'string';
+        const currentHash = current.exists ? current.hash : null, changedSinceRegistration = currentHash !== record.sha256;
+        references[key].push({path: record.rel, kind, registeredHash: record.sha256, currentHash, readable, changedSinceRegistration,
+          state: !current.exists ? 'missing' : !readable ? 'unreadable' : changedSinceRegistration ? 'changed-since-registration' : 'current'});
+      }
+    }
+    // Re-read each selected file and registration after collecting references.
+    // A stable registration hash is historical evidence, never current authority.
+    for (const {rel, kind, document} of snapshots) {
+      const current = await magazine.read({path: rel});
+      if (current.path !== rel || current.kind !== kind || current.exists !== document.exists || current.hash !== document.hash || current.text !== document.text || current.conflicts?.length || hasConflicts(rel)) throw new StateError('A Share file changed while reading. Read it again before continuing.', 409);
+    }
+    const currentAuthority = resolve(input);
+    if (registrationRoot() !== root || JSON.stringify(currentAuthority) !== JSON.stringify(authority) || JSON.stringify(magazine.projects.project(input.storyId)) !== registration) throw new StateError('The Share registration changed while reading. Read it again before continuing.', 409);
+    return {schema: 'ar-create.magazine-share-context.v1', selection: select(input), authority,
+      rootIdentity: {scheme: 'canonical-directory-sha256-v1', fingerprint: sha256(Buffer.from(root, 'utf8'))},
+      draft: {path: authority.path, hash: draft.hash}, references};
+  }
   async function prepare(input) {
     workingOnly(input); fields(input, ['expectedHash', 'operations']);
     requireHuman('Preparing a native draft edit');
@@ -231,5 +276,5 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     if (!eligible.eligible) throw new StateError(eligible.reason, isHuman(currentActor()?.actor) ? 409 : 403);
     return magazine.undo({undoOperationId: input.undoOperationId, operationId: input.operationId});
   }
-  return {catalog, read, prepare, edit, save, operation, eligibleUndo, undo};
+  return {catalog, read, shareContext, prepare, edit, save, operation, eligibleUndo, undo};
 }

@@ -46,3 +46,27 @@ test('download gives callback the final guard without a fresh read after its irr
 });
 
 test('working export requires its projected exact hash while legacy navigation remains supported',async()=>{const f=workingActionsFixture();await assert.rejects(f.adapter.onAction({...currentAction('export'),expectedHash:undefined}),/Refresh Outputs/);assert.equal(f.calls.length,0);for(const kind of ['review','native'])await f.adapter.onAction({...currentAction(kind),expectedHash:undefined});await f.adapter.onAction(native);assert.equal(f.calls.length,3);f.state.hash='d'.repeat(64);f.record.workingOwnerRef.hash=f.state.hash;await assert.rejects(f.adapter.onAction(currentAction('export')),/Refresh Outputs/);assert.equal(f.calls.length,3);});
+
+function shareFixture(readContext){
+ const f=fixture(),ctx=vm.createContext({structuredClone,URL});vm.runInContext(code,ctx);
+ f.context={schema:'ar-create.magazine-share-context.v1',selection:{storyId:'story',pieceId:'article:1',edition:'working'},authority:{...f.state.owner,title:'Clay',partKey:'article'},rootIdentity:{scheme:'canonical-directory-sha256-v1',fingerprint:R},draft:{path:f.state.owner.path,hash:H},references:{feedback:[],context:[],research:[]}};
+ f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),readShareContext:async q=>{f.calls.push(q);return readContext?readContext(f,q):f.context;}});return f;
+}
+const shareInput=()=>({projectId:'native-project',outputId:'magazine-working:story:article:1',expectedHash:H});
+test('Magazine Share context reaches existing story/piece authority without native UUID selection or prose copies',async()=>{
+ const f=shareFixture(),value=await f.adapter.readShareContext(shareInput());
+ assert.deepEqual(JSON.parse(JSON.stringify(f.calls)),[{storyId:'story',pieceId:'article:1',edition:'working',expectedHash:H}]);assert.equal(value.draft.hash,H);assert.equal(value.authority.pieceId,'article:1');assert.ok(Object.isFrozen(value));assert.ok(Object.isFrozen(f.calls[0]));
+});
+test('Magazine Share context refuses stale, dirty and foreign work before reading',async()=>{
+ for(const change of [q=>q.outputId='another',q=>q.expectedHash=R,q=>q.projectId='another']){const f=shareFixture(),q=shareInput();change(q);await assert.rejects(f.adapter.readShareContext(q));assert.equal(f.calls.length,0);}
+ const f=shareFixture();f.state.dirty=true;await assert.rejects(f.adapter.readShareContext(shareInput()));assert.equal(f.calls.length,0);
+});
+test('Magazine Share context refuses delayed owner changes and mismatched backend ownership',async()=>{
+ for(const change of [f=>f.state.dirty=true,f=>f.state.hash=R,f=>f.context.authority.pieceId='other',f=>f.context.draft.hash=R,f=>f.context.selection.storyId='other']){const f=shareFixture((f)=>{change(f);return f.context;});await assert.rejects(f.adapter.readShareContext(shareInput()));}
+});
+test('Magazine invitation metadata keeps honest reference states and excludes uncontracted content',async()=>{
+ const row={path:'Workflow/6-Feedback/FEEDBACK - Clay.md',kind:'FEEDBACK',registeredHash:H,currentHash:H,state:'current',readable:true,changedSinceRegistration:false,body:'Uncontracted private copy'};
+ const f=shareFixture();f.context.references.feedback=[row];f.context.body='Uncontracted private copy';const value=await f.adapter.readShareContext(shareInput());assert.equal(value.references.feedback.length,1);assert.equal(JSON.stringify(value).includes('Uncontracted'),false);
+ for(const mutate of [r=>r.kind='DEV',r=>r.state='made-up',r=>r.readable=false,r=>r.currentHash=R,r=>r.registeredHash='invalid']){const g=shareFixture();g.context.references.feedback=[{...row}];mutate(g.context.references.feedback[0]);await assert.rejects(g.adapter.readShareContext(shareInput()));}
+ const g=shareFixture();g.context.references.feedback=[{...row,currentHash:null,state:'missing',readable:false,changedSinceRegistration:true}];assert.equal((await g.adapter.readShareContext(shareInput())).references.feedback[0].state,'missing');
+});

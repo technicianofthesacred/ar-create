@@ -166,6 +166,11 @@ export function createRouteMap(services) {
       },
       '/api/magazine/working-draft/catalog': {GET:()=>magazineWorking.catalog(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/read': {GET:()=>magazineWorking.read(Object.fromEntries(url.searchParams))},
+      '/api/magazine/working-draft/share-context': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Use one exact value for each Magazine share reference.',400);
+        return magazineWorking.shareContext({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash')});
+      }},
       '/api/magazine/working-draft/prepare': {POST:input=>magazineWorking.prepare(input)},
       '/api/magazine/working-draft/save': {POST:async input=>{const result=await magazineWorking.save(input);if(result.scope)input.scope=result.scope;return result;}},
       '/api/magazine/working-draft/edit': {POST:async input=>{const result=await magazineWorking.edit(input);if(result.scope)input.scope=result.scope;return result;}},

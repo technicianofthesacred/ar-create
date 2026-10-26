@@ -358,3 +358,13 @@ test('Magazine download shares one guarded preparation across register and reade
  f.w.studyDraft.currentOwner=()=>({kind:'magazine'});f.w.studyOutputConnection.setMagazineAdapter({read:async()=>null,onAction:async()=>{},readWorkingEdition:async()=>structuredClone(value)});f.w.ArStudyOutputHost.prepareMagazineHtml=async()=>{preparations++;await new Promise(r=>release=r);return 'prepared';};f.w.ArStudyOutputHost.downloadMagazineHtml=(...args)=>downloads.push(args);const guard=()=>{if(!valid)throw Error('Current article changed');};
  try{await assert.rejects(f.w.studyOutputConnection.downloadMagazineEdition(query),/guard is required/);const first=f.w.studyOutputConnection.downloadMagazineEdition(query,{assertCurrent:guard});await tick();await assert.rejects(f.w.studyOutputConnection.downloadMagazineEdition(query,{assertCurrent:guard}),/already being prepared/);valid=false;const refused=assert.rejects(first,/changed/);release();await refused;assert.equal(downloads.length,0);valid=true;f.w.ArStudyOutputHost.prepareMagazineHtml=async()=>{preparations++;return 'prepared';};const result=await f.w.studyOutputConnection.downloadMagazineEdition(query,{assertCurrent:guard});assert.equal(result.status,'download-prepared');assert.equal(preparations,2);assert.equal(downloads.length,1);assert.equal(downloads[0][1].hash,hash);assert.equal(f.calls.some(c=>c.body),false);}finally{f.dom.window.close();}
 });
+
+test('Magazine invitation context uses the maintained Magazine adapter and refuses a native-owner fallback',async()=>{
+ const f=fixture();try{
+  const input={projectId:f.project.id,outputId:'magazine-working:invented:part',expectedHash:'a'.repeat(64)},calls=[],value={schema:'ar-create.magazine-share-context.v1'};
+  f.w.studyDraft.currentOwner=()=>({kind:'magazine'});
+  f.w.studyOutputConnection.setMagazineAdapter({read:async()=>null,onAction:async()=>{},readShareContext:async q=>{calls.push(q);return value;}});
+  const before=f.calls.length;assert.equal(await f.w.studyOutputConnection.readMagazineShareContext(input),value);assert.equal(calls.length,1);assert.equal(calls[0].outputId,input.outputId);assert.equal(f.calls.length,before);
+  f.w.studyDraft.currentOwner=()=>({kind:'native'});assert.throws(()=>f.w.studyOutputConnection.readMagazineShareContext(input));assert.equal(calls.length,1);
+ }finally{f.dom.window.close();}
+});
