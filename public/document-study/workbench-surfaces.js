@@ -2,11 +2,11 @@
    Never clone an editor or replace an owner's HTML: handlers, revisions and Undo stay with it. */
 (()=>{
  if(window.workbenchSurfaces)return;
- const doc=document,rooms=new Map(),opened=new WeakSet();
+ const doc=document,rooms=new Map(),opened=new WeakSet(),researchReaders=new WeakMap();
  const names={1:'inbox',8:'piece-media',2:'source',3:'research',4:'direction',9:'arrange',10:'audience',11:'share',12:'outputs'};
  const make=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;};
  const add=(host,selector,classes)=>host.querySelectorAll(selector).forEach(n=>n.classList.add(...classes.split(' ')));
- const reveal=n=>{if(!n)return;for(let p=n.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;n.scrollIntoView?.({block:'nearest'});const target=n.querySelector('summary,h2,h3,button,input,textarea')||n;if(!target.matches('button,input,textarea,summary'))target.tabIndex=-1;target.focus?.({preventScroll:true});};
+ const reveal=(n,block='nearest')=>{if(!n)return;for(let p=n.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;n.scrollIntoView?.({block});const target=n.querySelector('summary,h2,h3,button,input,textarea')||n;if(!target.matches('button,input,textarea,summary'))target.tabIndex=-1;target.focus?.({preventScroll:true});};
  function disclosure(parent,node,label,cls){if(!node||node.closest('.'+cls))return;const details=make('details',cls),summary=make('summary','',label);details.append(summary);node.before(details);details.append(node);return details;}
  function inbox(ws){
   const root=ws.querySelector('.material-surface');if(!root)return;root.classList.add('wb-inbox-owner');
@@ -76,8 +76,23 @@
   if(!details)return;const points=details.closest('.rpts');for(const other of points?.querySelectorAll('details.wb-point')||[])if(other!==details)other.open=false;details.open=true;
   const summary=details.querySelector(':scope>summary');if(summary&&points){const rect=summary.getBoundingClientRect(),top=rect.top-points.getBoundingClientRect().top;if(top<0)points.scrollTop+=top;else if(top+rect.height>points.clientHeight)points.scrollTop+=top+rect.height-points.clientHeight;summary.focus?.({preventScroll:true});}
  }
+ function closeResearchReader(ws,opener){
+  const prior=researchReaders.get(ws);if(prior?.retained.isConnected)prior.retained.open=prior.open;researchReaders.delete(ws);
+  ws.classList.remove('wb-research-reading');delete ws.dataset.wbResearchReaderProject;
+  ws.querySelector('.wb-research-back')?.remove();for(const record of ws.querySelectorAll('[data-wb-research-selected]'))record.removeAttribute('data-wb-research-selected');
+  if(opener?.isConnected)opener.focus?.({preventScroll:true});
+ }
+ function openResearchRecord(ws,p,record,opener){
+  const live=typeof current==='function'?current():null;if(live?.id!==p.id||live.view!=='record'||Number(live.viewedStage)!==3||!record.isConnected||record.closest('#workspace')!==ws||!opener.isConnected)return;
+  const retained=record.closest('.flow-retained');if(retained&&record.matches('.compactRecord')){
+   closeResearchReader(ws);researchReaders.set(ws,{retained,open:retained.open});const info=record.querySelector(':scope>.recordDetails>summary');if(info&&!info.hasAttribute('aria-label'))info.setAttribute('aria-label',info.textContent.trim()||'Document details');ws.dataset.wbResearchReaderProject=p.id;record.setAttribute('data-wb-research-selected','true');ws.classList.add('wb-research-reading');
+   const back=make('button','btn quiet wb-research-back','Back to research');back.type='button';back.onclick=()=>closeResearchReader(ws,opener);retained.before(back);
+  }
+  if(record.tagName==='DETAILS')record.open=true;reveal(record,'start');
+ }
  function researchRecords(ws){return [...ws.querySelectorAll('.research-standard-coverage>details:not([data-research-source-point]),.flow-retained .compactRecord,[data-disclosure="retained-research"],[data-disclosure="retained-brief"],[data-disclosure^="research-role:"]')].filter(n=>!n.closest('[data-research-point]'));}
  function research(ws,p){
+  if(ws.classList.contains('wb-research-reading')&&(ws.dataset.wbResearchReaderProject!==p.id||!ws.querySelector('.flow-retained [data-wb-research-selected]')))closeResearchReader(ws);
   const full=ws.querySelector('.research-standard'),shared=ws.querySelector('#material-human-direction');
   // The maintained notes decorator owns this mount as a direct lane child.
   // Disclose its original editor in place rather than moving the mount.
@@ -108,7 +123,7 @@
   const signature=records.map(recordLabel).join('\n');
   if(!records.length)access?.remove();else if(!access||access.dataset.records!==signature||access._wbRecords?.some((n,i)=>n!==records[i])||access._wbRecords?.length!==records.length){
    if(!access){access=make('div','acts wb-research-records');rh.append(access);}access.replaceChildren();access.dataset.records=signature;access._wbRecords=records;
-   records.forEach((record,i)=>{const button=make('button','btn quiet',recordLabel(record));button.type='button';button.dataset.wbResearchRecord=String(i);button.onclick=()=>{if(record.tagName==='DETAILS')record.open=true;reveal(record);};access.append(button);});
+   records.forEach((record,i)=>{const button=make('button','btn quiet',recordLabel(record));button.type='button';button.dataset.wbResearchRecord=String(i);button.onclick=()=>openResearchRecord(ws,p,record,button);access.append(button);});
   }
   // Findings lead the working surface. Record entrances remain direct when
   // there are no parsed points; otherwise keep the same buttons/handlers in
@@ -244,7 +259,7 @@
   const referenceOnly=[...root.querySelectorAll('.oo-row')].length>0&&[...root.querySelectorAll('.oo-row')].every(row=>row.querySelector('[data-output-action="publication-reference"]'));
   if(referenceOnly&&origin){const heading=root.querySelector('.wb-output-origin-heading'),name=origin.querySelector('b'),note=origin.querySelector('.small');if(heading&&heading.textContent!=='Article & working draft')heading.textContent='Article & working draft';if(name&&name.textContent!=='Working draft')name.textContent='Working draft';if(note&&note.textContent!=='Your editable manuscript.')note.textContent='Your editable manuscript.';const continuation=root.querySelector('.oo-heading [data-output-action="native"]');if(continuation)origin.append(continuation);}
  }
- function decorate(){const p=typeof current==='function'?current():null;for(const [id,room]of rooms)if(room.pending&&(id!==p?.id||Number(p?.viewedStage)!==3)){room.pending.abort();room.pending=null;}const ws=doc.getElementById('workspace'),stage=Number(p?.viewedStage),name=names[stage];if(!ws)return;
+ function decorate(){const p=typeof current==='function'?current():null;for(const [id,room]of rooms)if(room.pending&&(id!==p?.id||Number(p?.viewedStage)!==3)){room.pending.abort();room.pending=null;}const ws=doc.getElementById('workspace'),stage=Number(p?.viewedStage),name=names[stage];if(!ws)return;if((stage!==3||p?.view!=='record')&&ws.classList.contains('wb-research-reading'))closeResearchReader(ws);
   for(const n of Object.values(names))ws.classList.toggle('wb-'+n,!!name&&n===name&&p?.view==='record');
   ws.classList.toggle('wb-section-surface',!!name&&p?.view==='record');if(!name||p?.view!=='record')return;
   ({inbox,'piece-media':pieceMedia,source,research,direction,arrange,audience,share,outputs}[name])(ws,p);

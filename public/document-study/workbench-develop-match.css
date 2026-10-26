@@ -110,3 +110,25 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-research
  html body.wbf-on #app #workspace.wb-research #c3-surface-bar .sb-left{flex:1 1 0!important;min-width:0!important}
  html body.wbf-on #app #workspace.wb-research #c3-surface-bar .sb-where{min-width:0!important}
 }
+
+/* Opening a retained research document leads with its words below the shared frame. */
+#workspace.wb-research .flow-retained .compactRecord{scroll-margin-block-start:12px}
+
+/* A selected retained document uses the same reading area; its console and
+   point-list nodes stay mounted for Back, with no copy or alternative editor. */
+html body.wbf-on #app #workspace.wb-research.wb-research-reading>.phaseReader.flow-stage{display:flex!important;flex-direction:column;gap:0;overflow:hidden!important}
+html body.wbf-on #app #workspace.wb-research.wb-research-reading>.phaseReader.flow-stage>.flow-paper{display:none!important}
+#workspace.wb-research-reading .wb-research-back{align-self:flex-start;flex-shrink:0;width:fit-content!important;max-width:100%;padding:6px 10px!important;min-height:34px;margin:0 0 12px;font:400 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif)}
+html body.wbf-on #app #workspace.wb-research.wb-research-reading>.phaseReader.flow-stage>.flow-retained{flex:1;min-height:0;max-height:none!important;overflow:auto;margin:0!important;padding:0!important;border:0!important}
+#workspace.wb-research-reading>.phaseReader.flow-stage>.flow-retained>summary{display:none!important}
+html body.wbf-on #app #workspace.wb-research.wb-research-reading .flow-retained>.phaseReader{display:block!important;height:auto!important;margin:0!important;overflow:visible!important}
+#workspace.wb-research-reading .flow-retained .compactRecord:not([data-wb-research-selected]){display:none!important}
+
+@media(max-width:760px){
+ #workspace.wb-research-reading .compactRecord .recordBody>h1:first-child{padding-right:40px!important}
+ #workspace.wb-research-reading .compactRecord .recordDetails:not([open]){right:0;top:0}
+ #workspace.wb-research-reading .compactRecord .recordDetails:not([open])>summary{display:flex!important;align-items:center;justify-content:center;width:34px;height:34px;box-sizing:border-box;padding:0;font-size:0;text-decoration:none}
+ #workspace.wb-research-reading .compactRecord .recordDetails:not([open])>summary::before{content:"ⓘ"!important;font:400 20px/1 var(--ar-ui,sans-serif);transform:none!important}
+ #workspace.wb-research-reading .compactRecord .recordDetails:not([open])>summary::after{display:none!important}
+ #workspace.wb-research-reading .compactRecord .recordDetails>summary:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+}
