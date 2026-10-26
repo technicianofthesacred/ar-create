@@ -2,6 +2,8 @@
 
 Intent: help Adrian deeply understand unique points from his conversations, expand his knowledge and ground the eventual content. Reuse Magazine research and Tea Atlas where connected.
 
+Current typography follows [PRODUCT: Typography](../PRODUCT.md#typography): C Plus Jakarta Sans for explanations and retained guides, Lora for actual speech/evidence quotations. The later Source-only Atlas refinement does not redefine Research. A retained long guide may use the existing 16px/1.65 reading role; that adaptation is not proof of whole-screen reference parity.
+
 ## 16 October — Research is independently useful learning
 
 The author wants Research to be a place to become educated and understand a topic much more deeply, rather than only preparation for writing. Content creation remains the main product context, but Research must be useful without selecting or creating an output. Preserve direct access and return-to-learning context, substantial explanations, source/evidence context, discussion, follow-up questions and the ability to add and deepen inquiry. Choosing what enters an article/carousel is a separate optional editorial action; output needs must not reduce Research to extracted facts, a brief or summary cards.

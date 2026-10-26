@@ -2837,15 +2837,15 @@
     },
     {
       "path": "docs/product/HUMAN-EXPERIENCE.md",
-      "candidateSha256": "5dc76ad33c4399d413ef414c61e25db8a8232b9c7d61c258c9cb0e29c1a235e2"
+      "candidateSha256": "a5a075703f36dbe201cecd6e84efa822aa31e742f469d2281fea9578932a5441"
     },
     {
       "path": "docs/product/LOOK.md",
-      "candidateSha256": "c36489d9a0ed5505bccd1eb275a7f70a5848951e49eb5518de40083356cda487"
+      "candidateSha256": "0bb8f15e5f726907f23b3068dcdd1cb996711e2aff437a554cbcab53b67a78bf"
     },
     {
       "path": "docs/product/PRODUCT.md",
-      "candidateSha256": "4b0e0b8e24cb88128ed52e3f715574ab2b7908691685bb970ca6d494eb193423"
+      "candidateSha256": "8a37fdc2cbc24490bcc1b63cc1788d1037d99f6bd056fa2da209bb1a261edbb0"
     },
     {
       "path": "docs/product/sections/01-material.md",
@@ -2857,7 +2857,7 @@
     },
     {
       "path": "docs/product/sections/03-research.md",
-      "candidateSha256": "f87c37ebc80e0e1208459e28e71c97aab4db37fdf1256d720a6e79b864c899dd"
+      "candidateSha256": "8e64bf635a9d029fdcd46678e99a8af81fce3db3c27de97df3762f6ecd2d954a"
     },
     {
       "path": "docs/product/sections/04-direction.md",
@@ -2865,7 +2865,7 @@
     },
     {
       "path": "docs/product/sections/05-draft.md",
-      "candidateSha256": "112b8f38989b163bde672d0cfd2a0a2c5d1809a86b80549d98e60ca6a0c8529f"
+      "candidateSha256": "9027fde5e9f25704911c87db56a9d9acc4c3e5ceaf97ff5bda5b314a8bb0002e"
     },
     {
       "path": "docs/product/sections/06-read-refine.md",
