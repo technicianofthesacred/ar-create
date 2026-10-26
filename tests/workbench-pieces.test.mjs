@@ -277,3 +277,24 @@ test('phone header keeps named Folders and Back actions through repaint and clos
  f.d.querySelector('[data-wbp-close] svg').dispatchEvent(new f.w.MouseEvent('click',{bubbles:true}));await tick();assert.ok(f.calls.some(([kind])=>kind==='close'));assert.equal(f.dialog.open,false);
  }finally{f.close();}
 });
+
+test('phone rows separate title, truthful edition metadata and exact original-file action',async()=>{
+ const inventory=magazineInventory(),artifact=inventory.stories[0].artifacts[0];artifact.magazineWorkingTarget={kind:'magazine',storyId:'registered-owner',pieceId:'registered-piece',nativeProjectId:'p',partKey:'article',edition:'working',artifactId:artifact.artifactId,hash:artifact.hash,editable:true};
+ const f=boot({phone:true,projects:[{id:'p',name:'Owned parent',magazineDraft:{storyId:'registered-owner',pieceId:'registered-piece'}},{id:'q',name:'Browser carousel',slides:[{id:'one',text:'Invented words'},{id:'two',text:'More invented words'}]}],drafts:[draft('native','p','Native manuscript')],existingCatalog:inventory,read:async({projectId})=>({projectId,outputs:projectId==='p'?[{id:'published',title:'Published piece',format:'Article',edition:'English',status:'published'}]:[]})});
+ f.w.browserCarouselCopy={available:async()=>true};
+ try{await f.open();
+ for(const row of f.d.querySelectorAll('.wbp-row')){const title=row.querySelector('[data-wbp-open]'),meta=row.querySelector('.wbp-phone-meta');assert.ok(meta);assert.equal(meta.parentElement,title.parentElement);assert.equal(title.querySelector('.wbp-phone-meta'),null);assert.ok(meta.getAttribute('title').includes(meta.textContent));}
+ const byType=type=>[...f.d.querySelectorAll('[data-wbp-open]')].find(b=>JSON.parse(b.dataset.wbpOpen)[1]===type).parentElement;
+ assert.match(byType('native').querySelector('.wbp-phone-meta').textContent,/Saved working copy.*Manuscript.*Owned parent/);
+ assert.match(byType('output').querySelector('.wbp-phone-meta').textContent,/English · Published edition.*Article.*Owned parent/);
+ const browser=byType('browser-carousel');assert.match(browser.querySelector('.wbp-phone-meta').textContent,/Browser copy · 2 slides · Carousel · Browser carousel/);assert.equal(browser.querySelector('[data-wbp-copy-browser]').getAttribute('aria-label'),'Save project copy');assert.equal(browser.querySelector('[data-wbp-original]'),null);
+ const working=byType('magazine-working');assert.match(working.querySelector('.wbp-phone-meta').textContent,/Magazine working draft · Manuscript/);const original=working.querySelector('[data-wbp-original]');assert.equal(original.getAttribute('aria-label'),'Open original file');assert.equal(original.querySelector('svg').getAttribute('aria-hidden'),'true');original.querySelector('svg').dispatchEvent(new f.w.MouseEvent('click',{bubbles:true}));await tick();await tick();assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find(c=>c[0]==='existing-original'))),['existing-original','actual-one','actual-article']);assert.equal(f.calls.some(c=>c[0]==='existing-draft'),false);
+ }finally{f.close();}
+});
+
+test('phone retained carousel metadata preserves slide count and unique original edition',async()=>{
+ const inventory=magazineInventory(),item={projectId:'retained-project',documentId:'retained-document',outputId:'retained-output',kind:'carousel',title:'Synthetic earlier carousel',outputRevision:7,createdAt:'2026-10-22T10:00:00Z',slideCount:3,sourceHash:magazineHash,outputHash:changedMagazineHash};inventory.retainedCarousels={available:true,readOnly:true,items:[item]};
+ const f=boot({phone:true,existingCatalog:inventory,read:async({projectId})=>({projectId,outputs:[]})});f.w.eval(fs.readFileSync(new URL('../public/document-study/retained-carousel-reader.js',import.meta.url),'utf8'));
+ try{await f.open();const button=f.d.querySelector('[data-wbp-open*="retained-carousel"]'),meta=button.parentElement.querySelector('.wbp-phone-meta');assert.match(meta.textContent,/^Original · .* · v7 · 3 slides · Carousel · Earlier workspace/);assert.equal(meta.getAttribute('title'),meta.textContent);assert.deepEqual(JSON.parse(button.dataset.wbpOpen).slice(0,3),['retained-project','retained-carousel',JSON.stringify(['retained-project','retained-document','retained-output'])]);assert.equal(button.querySelector('.wbp-phone-meta'),null);
+ }finally{f.close();}
+});

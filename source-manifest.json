@@ -3501,11 +3501,11 @@
     },
     {
       "path": "public/document-study/workbench-pieces.css",
-      "candidateSha256": "38fac6774d740ea6f9aea76f9391d8f72be2ac209157fcadd6672a8db0f1afc4"
+      "candidateSha256": "ec47d1d0b1778007ad9bc9e841d413058c17490143bc98c5b9e375bbcba68e28"
     },
     {
       "path": "public/document-study/workbench-pieces.js",
-      "candidateSha256": "9d91362ee902b18fd0037b0b8bcc37697a0423b82ca4ee2005871f455c5b2894"
+      "candidateSha256": "ebe2bd01862322655c2a1c3426b16ec88d6aade532512245ac48e2e67d618fcb"
     },
     {
       "path": "public/document-study/workbench-read-match.css",
@@ -3593,7 +3593,7 @@
     },
     {
       "path": "tests/workbench-pieces.test.mjs",
-      "candidateSha256": "d867271185d1aac1dba163839c024ca0e59b38371fb521e0f00e5f29f60e732d"
+      "candidateSha256": "3fe290d56f03fa6705e39814dcfb870db4fa30907167ff5a764d8fb76b153472"
     },
     {
       "path": "tests/workbench-understanding.test.mjs",
