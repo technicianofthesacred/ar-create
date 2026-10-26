@@ -25,3 +25,8 @@ test('full-library thumbnail cannot claim another asset hash than its displayed 
  const changed={...previewScope,sourceHash:revision};
  assert.equal(m.project(input([{...raw,previewScope:changed,url:'/api/magazine/library-photos/preview?'+new URLSearchParams(changed)}])).data.sources[0].url,null);
 });
+
+test('placement navigation retains detached exact structural path and native origin',()=>{
+ const nativeOrigin={blockId:'protected-photo',blockHash:H,fileHash:H,blockOffset:17},raw=input([{...row(),placements:[{...placement,structuralPath:'opening/2/wide',nativeOrigin}]}]),p=m.project(raw),saved=m.placement(p,sourceRef.sourceId,'slot',state).placement;
+ assert.equal(saved.structuralPath,'opening/2/wide');assert.deepEqual(JSON.parse(JSON.stringify(saved.nativeOrigin)),nativeOrigin);assert.equal(Object.isFrozen(nativeOrigin),false);assert.equal(Object.isFrozen(saved.nativeOrigin),true);nativeOrigin.blockId='changed-after-projection';assert.equal(saved.nativeOrigin.blockId,'protected-photo');
+});
