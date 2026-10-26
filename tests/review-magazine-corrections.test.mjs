@@ -49,3 +49,14 @@ test('Magazine aspect permission does not expand the bound Study save operation 
  const input={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[{kind:'photoAspect',id:'magazine:invented:3',seenBlockHash:hash,aspect:'4/5'}]};
  assert.equal((await request(port,'/api/study-draft/save',{headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:JSON.stringify(input)})).status,400);assert.equal(calls.length,0);
 });
+
+test('replacement stays a single exact Magazine operation with no caller paths or Study permission expansion',async t=>{
+ const {send,calls,ownerPort}=await setup(t),op={kind:'photoReplace',id:'magazine:invented:3',seenBlockHash:hash,replacementId:'magazine:invented:5',seenReplacementHash:'b'.repeat(64)},payload={...inputs.prepare,operations:[op]};
+ assert.equal((await send('prepare',payload)).status,200);assert.deepEqual(JSON.parse(calls[0].bytes),payload);
+ for(const change of [{replacementId:op.id},{replacementId:''},{replacementId:'bad\0'},{seenReplacementHash:'bad'},{file:'foreign.png'},{alt:'caller description'},{sourceId:hash},{replacementPath:'elsewhere'}])assert.equal((await send('prepare',{...payload,operations:[{...op,...change}]})).status,400);
+ for(const key of Object.keys(op)){const partial={...op};delete partial[key];assert.equal((await send('prepare',{...payload,operations:[partial]})).status,400);}
+ assert.equal((await send('prepare',{...payload,operations:[op,op]})).status,400);assert.equal((await send('prepare',{...payload,operations:[op,operations[0]]})).status,400);assert.equal(calls.length,1);
+ const server=createReviewConnection({authorityURL:`http://127.0.0.1:${ownerPort}`,allowedAuthorityPort:ownerPort,actualWorkReview:true,studyDraftCorrections:true,magazineDraftCorrections:true}),port=await listen(server);t.after(()=>close(server));
+ const input={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[op]};
+ assert.equal((await request(port,'/api/study-draft/save',{headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:JSON.stringify(input)})).status,400);assert.equal(calls.length,1);
+});

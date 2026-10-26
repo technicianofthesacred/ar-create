@@ -92,3 +92,17 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-aspect summary:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 
 .magazine-arrange .ma-aspect-options button[aria-pressed="true"] .ma-aspect-preview::after{content:"✓";position:absolute;top:0;right:0;display:grid;place-items:center;width:18px;height:18px;border-radius:3px;background:var(--warm);color:var(--paper);font:600 12px/1 var(--ar-ui,sans-serif)}
+
+/* A temporary choice inside the existing photo adjustment, using article photos. */
+.magazine-arrange .ma-focus [hidden]{display:none!important}
+.magazine-arrange [data-ma-change-photo]{margin:0 0 8px;min-height:44px}
+.magazine-arrange .ma-photo-picker{max-width:340px;margin:0 0 8px}
+.magazine-arrange .ma-photo-picker p{margin:0 0 8px;font:inherit}
+.magazine-arrange .ma-replacement-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:216px;overflow-y:auto;overflow-x:hidden;padding:2px;margin:0 0 8px}
+.magazine-arrange .ma-replacement-options button{position:relative;display:block;min-width:0;min-height:44px;padding:3px}
+.magazine-arrange .ma-replacement-options img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:2px}
+.magazine-arrange .ma-replacement-options [aria-pressed="true"]{border-color:var(--warm);background:var(--warm-bg,var(--paper))}
+.magazine-arrange .ma-replacement-options [aria-pressed="true"]::after{content:"✓" / "";position:absolute;top:4px;right:4px;display:grid;place-items:center;width:20px;height:20px;border-radius:3px;background:var(--warm);color:var(--paper)}
+.magazine-arrange .ma-replacement-actions{display:flex;gap:6px;flex-wrap:wrap}
+.magazine-arrange .ma-replacement-actions button{min-height:44px}
+.magazine-arrange .ma-replacement-options button:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
