@@ -37,15 +37,28 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
  let latest=null,catalogPending=null;
  function catalog(){if(catalogPending)return catalogPending;const pending=buildCatalog();catalogPending=pending;pending.finally(()=>{if(catalogPending===pending)catalogPending=null;}).catch(()=>{});return pending;}
  async function buildCatalog(){
-  const original=await portfolio.list();
+  // Start only fresh reads here. allSettled owns every optional rejection even
+  // when the fatal portfolio read fails before the remaining owners finish.
+  const start=read=>Promise.resolve().then(read);
+  const originalPending=start(()=>portfolio.list());
+  const optionalReaders=[['/api/sources/tree','Library'],['/api/source-sessions','Conversations'],['/api/pieces','Workspace pieces'],['/api/study-draft/catalog','Native workspace identities']];
+  const readersPending=Promise.allSettled([
+   ...optionalReaders.map(([path])=>start(()=>readAuthority(path))),
+   start(()=>readAuthority('/api/magazine/working-draft/catalog')),
+   start(()=>Promise.all(roots.map(async root=>({...root,canonical:await realpath(root.path)})))),
+  ]);
+  const [original,results]=await Promise.all([originalPending,readersPending]);
   const diagnostics=[...(original.diagnostics||[])],excluded=[];
-  async function optional(path,label){try{return await readAuthority(path);}catch(error){diagnostics.push(label+' unavailable: '+error.message);return null;}}
-  const [tree,sessions,pieces,nativeCatalog]=await Promise.all([optional('/api/sources/tree','Library'),optional('/api/source-sessions','Conversations'),optional('/api/pieces','Workspace pieces'),optional('/api/study-draft/catalog','Native workspace identities')]);
+  const [tree,sessions,pieces,nativeCatalog]=results.slice(0,optionalReaders.length).map((result,index)=>{
+   if(result.status==='fulfilled')return result.value;
+   diagnostics.push(optionalReaders[index][1]+' unavailable: '+result.reason.message);return null;
+  });
   let magazineWorkingLinks={schema:'ar-create.review-magazine-working-links.v1',state:'unavailable',reason:'owner-catalog-unavailable',targets:[]};
   try{
-   const owner=await readAuthority('/api/magazine/working-draft/catalog');
-   const resolvedRoots=await Promise.all(roots.map(async root=>({...root,canonical:await realpath(root.path)})));
-   magazineWorkingLinks=resolveMagazineWorkingTargets({owner,roots:resolvedRoots,stories:original.stories.filter(story=>!exclusions.has(norm(story.name))),projectLinks});
+   const [ownerResult,rootsResult]=results.slice(optionalReaders.length);
+   if(ownerResult.status==='rejected')throw ownerResult.reason;
+   if(rootsResult.status==='rejected')throw rootsResult.reason;
+   magazineWorkingLinks=resolveMagazineWorkingTargets({owner:ownerResult.value,roots:rootsResult.value,stories:original.stories.filter(story=>!exclusions.has(norm(story.name))),projectLinks});
   }catch(error){diagnostics.push('Magazine working identities unavailable: '+error.message);}
   const workingTargets=new Map(magazineWorkingLinks.targets.map(target=>[target.artifactId,target]));
   const projectArtifact=a=>({...artifact(a),...(workingTargets.has(a.artifactId)?{magazineWorkingTarget:workingTargets.get(a.artifactId)}:{})});

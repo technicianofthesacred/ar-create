@@ -12,3 +12,45 @@ test('explicit question-reading links pin known artifact IDs/hashes using target
 test('unresolved explicit reading path remains unresolved rather than finding an artifact with a similar name',async()=>{const{reader,originals}=setup(),source=a('ask','ASK');originals.stories[0].artifacts.push(source);originals.stories[0].questions=[{artifact:source,reads:[{file:'Workflow/3-Develop/DEV - Missing exact file.md',label:'Private question label'}]}];const c=await reader.catalog(),s=c.stories[0];assert.deepEqual(s.referenceLinks,[]);assert.equal(s.unresolvedReferenceLinks.length,1);assert.equal(s.unresolvedReferenceLinks[0].reason,'explicit-reading-target-unresolved');assert.equal(s.unresolvedReferenceLinks[0].targetPath,'Workflow/3-Develop/DEV - Missing exact file.md');assert.equal(s.unresolvedReferenceLinks[0].toArtifactId,null);assert.ok(!JSON.stringify(c).includes('Private question label'));});
 test('cross-story and archived explicit targets retain their exact scope without becoming same-story records',async()=>{const{reader,originals}=setup(),source={...a('earlier-ask','ASK'),archived:true},target={...a('other-draft','DEV'),hash:'c'.repeat(64),archived:true,title:'Other retained scope'};originals.stories[0].artifacts.push(source);originals.stories[1].artifacts.push(target);originals.stories[0].questions=[{artifact:source,reads:[{file:target.relativePath,artifact:target}]}];const c=await reader.catalog(),link=c.stories[0].referenceLinks[0];assert.equal(link.toStoryId,'s2');assert.deepEqual(link.toStoryIds,['s2']);assert.equal(link.crossStory,true);assert.equal(link.fromArchived,true);assert.equal(link.toArchived,true);assert.equal(link.toHash,'c'.repeat(64));assert.ok(!c.stories[0].artifacts.some(x=>x.artifactId==='other-draft'));});
 test('stale, excluded and unowned relationship targets fail closed and repeated explicit pairs stay compact',async()=>{const{reader,originals}=setup(),source=a('ask','ASK'),draft=originals.stories[0].artifacts.find(x=>x.artifactId==='draft'),excluded=originals.stories[2].artifacts[0];originals.stories[0].artifacts.push(source);originals.stories[0].questions=[{artifact:source,reads:[{file:draft.relativePath,artifact:draft},{file:draft.relativePath,artifact:draft},{file:draft.relativePath,artifact:{...draft,hash:'d'.repeat(64)}},{file:excluded.relativePath,artifact:excluded},{file:'Workflow/Unowned.md',artifact:a('not-in-catalog')}]},{artifact:{...source,hash:'e'.repeat(64)},reads:[{file:draft.relativePath,artifact:draft}]}];const c=await reader.catalog(),s=c.stories[0];assert.equal(s.referenceLinks.length,1);assert.deepEqual(s.unresolvedReferenceLinks.map(x=>x.reason),['reading-target-hash-changed','reading-target-excluded','reading-target-unavailable','source-question-record-unavailable']);assert.equal(c.stories.length,2);});
+
+const authorityPaths=['/api/sources/tree','/api/source-sessions','/api/pieces','/api/study-draft/catalog','/api/magazine/working-draft/catalog'];
+const turn=()=>new Promise(resolve=>setImmediate(resolve));
+function deferredCatalog(){
+ const rounds=[],original={stories:[],guidance:[],unassigned:[],diagnostics:['Original diagnostic']};let current;
+ const defer=key=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});current.set(key,{resolve,reject});return promise;};
+ const reader=createExistingWorkReader({portfolio:{list(){current=new Map();rounds.push(current);return defer('portfolio');}},readAuthority:path=>defer(path)});
+ const values={'portfolio':original,'/api/sources/tree':{sources:[{id:'saved-source',title:'Saved source'}]},'/api/source-sessions':{sessions:[{id:'saved-conversation',sourceId:'saved-source',sourceHash:hash,version:3,turns:[{}]}]},'/api/pieces':{pieces:[{id:'saved-piece',title:'Saved piece'}]},'/api/study-draft/catalog':null,'/api/magazine/working-draft/catalog':{stories:[],registered:false}};
+ return {reader,rounds,values};
+}
+test('fresh catalog starts all independent readers before portfolio settles and stays pending for complete proof',async()=>{
+ const {reader,rounds,values}=deferredCatalog();let settled=false;const pending=reader.catalog();pending.then(()=>{settled=true;});
+ assert.equal(reader.catalog(),pending);await turn();const gates=rounds[0];
+ assert.deepEqual([...gates.keys()],['portfolio',...authorityPaths]);
+ for(const key of ['portfolio',...authorityPaths.slice(0,-1)])gates.get(key).resolve(values[key]);
+ await turn();assert.equal(settled,false);assert.equal(reader.catalog(),pending);
+ gates.get(authorityPaths.at(-1)).resolve(values[authorityPaths.at(-1)]);const catalog=await pending;
+ assert.equal(catalog.sources[0].id,'saved-source');assert.equal(catalog.conversations[0].version,3);assert.equal(catalog.workspacePieces[0].id,'saved-piece');assert.equal(settled,true);
+});
+test('reader completion order preserves the complete catalog and stable unavailable diagnostics',async()=>{
+ const orders=[['portfolio',...authorityPaths],[...authorityPaths].reverse().concat('portfolio')];const catalogs=[];
+ for(const order of orders){
+  const {reader,rounds,values}=deferredCatalog(),pending=reader.catalog();await turn();const gates=rounds[0];assert.deepEqual([...gates.keys()],['portfolio',...authorityPaths]);
+  for(const key of order){if(key==='/api/sources/tree'||key==='/api/pieces')gates.get(key).reject(Error(key+' offline'));else gates.get(key).resolve(values[key]);await turn();}
+  catalogs.push(await pending);
+ }
+ assert.deepEqual(catalogs[0],catalogs[1]);assert.deepEqual(catalogs[0].diagnostics,['Original diagnostic','Library unavailable: /api/sources/tree offline','Workspace pieces unavailable: /api/pieces offline']);
+ assert.equal(catalogs[0].conversations[0].id,'saved-conversation');assert.deepEqual(catalogs[0].sources,[]);
+});
+test('fatal portfolio failure rejects promptly while independent rejected readers are handled and retry reads afresh',async()=>{
+ const {reader,rounds,values}=deferredCatalog(),pending=reader.catalog(),failure=assert.rejects(pending,/portfolio unavailable/);await turn();
+ const started=[...rounds[0].keys()];rounds[0].get('portfolio').reject(Error('portfolio unavailable'));await failure;assert.deepEqual(started,['portfolio',...authorityPaths]);
+ for(const key of authorityPaths)rounds[0].get(key).reject(Error('late unavailable'));
+ await turn();const retry=reader.catalog();assert.notEqual(retry,pending);assert.equal(reader.catalog(),retry);await turn();assert.equal(rounds.length,2);
+ for(const [key,gate]of rounds[1])gate.resolve(values[key]);assert.equal((await retry).sources[0].id,'saved-source');
+ const refreshed=reader.catalog();await turn();assert.equal(rounds.length,3);for(const [key,gate]of rounds[2])gate.resolve(values[key]);assert.equal((await refreshed).sources[0].id,'saved-source');
+});
+test('synchronous reader failure stays optional and missing root resolution cannot confer working ownership',async()=>{
+ const {reader}=setup({roots:[{id:'unavailable',path:new URL('../fixtures/no-catalog-scheduling-root',import.meta.url).pathname}],readAuthority:path=>{if(path==='/api/sources/tree')throw Error('synchronous unavailable');return path==='/api/magazine/working-draft/catalog'?{stories:[],registered:true}:undefined;}});
+ const catalog=await reader.catalog();assert.equal(catalog.stories.length,2);assert.equal(catalog.magazineWorkingLinks.state,'unavailable');assert.deepEqual(catalog.magazineWorkingLinks.targets,[]);
+ assert.ok(catalog.diagnostics.some(message=>message==='Library unavailable: synchronous unavailable'));assert.ok(catalog.diagnostics.some(message=>message.startsWith('Magazine working identities unavailable: ')));
+});
