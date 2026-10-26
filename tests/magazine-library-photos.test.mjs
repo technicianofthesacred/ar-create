@@ -20,6 +20,7 @@ test('all existing Library roots, cross-story originals and unused publication p
  assert.deepEqual(new Set(catalog.items.map(row=>row.sourceLabel)),new Set(['My library','Connected photographs','Original photos','Publication photos']));
  assert.ok(catalog.items.some(row=>row.storyLabel==='Other story'));assert.ok(catalog.items.some(row=>row.name==='publication-unused.jpg'));
  for(const row of catalog.items){assert.match(row.rootId,/^[a-f0-9]{64}$/);const opened=await f.service.preview(pick(row));assert.equal(sha(opened.body),row.sourceHash);assert.equal(opened.contentType,row.contentType);assert.equal('path' in row,false);assert.equal('originalUrl' in row,false);assert.equal('body' in row,false);}
+ for(const row of catalog.items){assert.ok(row.originRef);assert.equal(row.originRef.rootId,row.rootId);if(row.sourceLabel==='Publication photos')assert.deepEqual(row.originRef,{kind:'publication',rootId:row.rootId,relativePath:row.relativePath});else assert.deepEqual(row.originRef,{kind:row.sourceLabel==='Original photos'?'originals':'library',rootId:row.rootId,sourceId:row.sourceId});}
  assert.deepEqual(snapshot(f.home),before,'catalog and previews do not create or rewrite Library/private files');
 });
 

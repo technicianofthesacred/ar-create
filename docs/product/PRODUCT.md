@@ -33,7 +33,7 @@ The current approved direction is [C workbench](../../design/three-directions/c-
 
 ### Typography
 
-Use Plus Jakarta Sans throughout the interface with the 13/15/16/17px token scale and shared A− / A+ control. Read and Write use the same document geometry. Lora is reserved for speech. This supersedes the previous split that assigned Atlas and display serifs to other long-form screens; template renderings retain their own design type. The approved design direction does not establish installed or verified behavior. See [C workbench](../../design/three-directions/c-workbench/index.html), its [revision notes](../../design/three-directions/c-workbench/NOTES.md), and the [Write brief](sections/05-draft.md).
+Use Plus Jakarta Sans throughout the interface with the 13/15/16/17px token scale and shared A− / A+ control. Read and Write use the same document geometry. Lora is reserved for speech. This supersedes the previous split that assigned Atlas and display serifs to other long-form screens; template renderings retain their own design type. Preserve the later adopted Source-only Atlas reading treatment and identical focus/edit geometry; this scoped refinement does not restore the old broad Atlas rule for Research, notes or the manuscript. The approved design direction does not establish installed or verified behavior. See [C workbench](../../design/three-directions/c-workbench/index.html), its [revision notes](../../design/three-directions/c-workbench/NOTES.md), and the [Write brief](sections/05-draft.md).
 
 ## Product pillars and shared acceptance
 

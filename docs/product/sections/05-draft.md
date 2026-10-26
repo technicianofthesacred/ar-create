@@ -5,7 +5,7 @@ Intent: develop the chosen piece with AI assistance while preserving Adrian's hu
 
 ## Work surface
 
-Continuous document, direct typing, compact toolbar, visible contextual margin and optional Focus. The writing typography follows [PRODUCT: Typography](../PRODUCT.md#typography) (system sans with A− / A+ in Write, Read and Check); the 15 October Atlas reference below is the history of that choice and still governs Source, Research and notes. Navigation, controls and assistance remain sans serif. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
+Continuous document, direct typing, compact toolbar, visible contextual margin and optional Focus. The writing typography follows [PRODUCT: Typography](../PRODUCT.md#typography) (Plus Jakarta Sans with A− / A+ and matching Write/Preview geometry). The 15 October Atlas reference below is historical where superseded by C; the later Source-specific Atlas treatment does not extend to Research, notes or the manuscript. Navigation, controls and assistance remain sans serif. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
 
 ## Editing and useful guidance
 
@@ -32,7 +32,7 @@ One durable working manuscript revision with source/decision references, recover
 
 ## Accepted writing appearance — 15 October 2026
 
-**Narrowed on 21 October 2026.** The shipped C3 manuscript in Write, Read and Check is the system sans with a remembered A− / A+ size, and Atlas applies to Source, Research, notes and shared prose. The rule is recorded once in [PRODUCT: Typography](../PRODUCT.md#typography); the original 15 October text follows unchanged.
+**Superseded by the accepted C Workbench direction on 21 October 2026.** The current interface and manuscript follow [PRODUCT: Typography](../PRODUCT.md#typography), with shared A− / A+ and matching Write/Preview geometry. The later Source-specific Atlas refinement remains scoped to Source. The original 15 October decision follows unchanged as history; it is not a current Research or manuscript font requirement.
 
 The author selected the look of the Tea Atlas article at https://www.teajia.com/atlas/read/1906-the-book-of-tea-p11-ii-the-schools-of-tea for writing: its font, spacing and calm continuous presentation, without the printed page numbers. This is a focused refinement of the working document, not a new reader shell or editor. It supersedes the earlier blanket sans-serif requirement for prose and document headings only; keep the surrounding interface in sans serif.
 

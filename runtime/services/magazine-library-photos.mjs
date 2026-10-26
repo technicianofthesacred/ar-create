@@ -45,6 +45,9 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
     const result=await open(),format=magazinePhotoFormat(result.body),sourceHash=hash(result.body);total+=result.body.length;
     const final={rootId:item.rootId,sourceId:item.sourceId,revision:kind==='library'?result.revision:item.revision,sourceHash,contentType:format.contentType,bytes:result.body.length,name:text(item.name,240),description:description(item.description),storyLabel:text(item.storyLabel,240),sourceLabel:text(item.sourceLabel,240),relativePath:text(item.relativePath,1024),selectable:true};
     if(!SHA.test(final.rootId)||!SHA.test(final.revision)||!final.sourceId)fail('Photo provider returned an invalid identity.',409);
+    // Recorded backing identity supports current-draft usage joins; equal bytes
+    // from unrelated origins never establish a publication or Library relation.
+    final.originRef=kind==='publication'?{kind,rootId:final.rootId,relativePath:final.relativePath}:{kind,rootId:final.rootId,sourceId:final.sourceId};
     const entry={kind,raw,item:final};if(next.has(key(final)))fail('Photo provider returned an ambiguous identity.',409);next.set(key(final),entry);items.push(final);
    }catch(error){issue(kind,error.status===415?'unsupported-photo':error.status===413?'photo-size-limit':'photo-unavailable-or-changed');}
   }

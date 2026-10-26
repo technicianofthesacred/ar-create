@@ -5,6 +5,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createLibraryReviewInspection} from './library-review-inspection.mjs';
 import {createMagazineMediaInspection} from './magazine-media-inspection.mjs';
+import {projectMagazineMediaUsage} from '../runtime/services/magazine-media-usage.mjs';
 import {fileURLToPath} from 'node:url';
 import {validateImportedTranscriptTranslation} from '../config.mjs';
 import {createReviewConnection} from './review-connection.mjs';
@@ -84,6 +85,15 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
   ...[...inspectPaths].map(([pathname,inspect])=>[pathname,result(async({url})=>({...await inspect(url),readOnly:true}))]),
   ['/api/review/magazine-publication-reference',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);return requirePublicationMedia().publicationReference(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);return requirePublicationMedia().inspect(Object.fromEntries(url.searchParams));})],
+  ['/api/review/magazine-media/library',result(async({url})=>{
+   exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);
+   const input=Object.fromEntries(url.searchParams),publication=requirePublicationMedia();
+   const catalog=await readAuthority('/api/magazine/library-photos'),media=await publication.inspect(input);
+   const usage=projectMagazineMediaUsage({catalog,inspection:media,expectedOwnerRef:media.ownerRef,expectedCatalogRevision:catalog.revision});
+   const current=await publication.inspect(input);
+   if(current.revision!==media.revision||JSON.stringify(current.ownerRef)!==JSON.stringify(media.ownerRef))throw Object.assign(Error('The working article changed while its photo library was read.'),{status:409});
+   return {schema:'ar-create.magazine-media-library.v1',catalog,media,usage};
+  })],
   ['/api/review/magazine-working-edition',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);return requirePublicationMedia().workingEdition(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/move-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','beforeId'],['storyId','pieceId','expectedHash','revision','placementId','beforeId']);return requirePublicationMedia().planMove(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/focus-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','x','y'],['storyId','pieceId','expectedHash','revision','placementId','x','y']);const input=Object.fromEntries(url.searchParams);return requirePublicationMedia().planFocus({...input,x:input.x.trim()?Number(input.x):NaN,y:input.y.trim()?Number(input.y):NaN});})],

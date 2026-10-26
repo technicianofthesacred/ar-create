@@ -2837,15 +2837,15 @@
     },
     {
       "path": "docs/product/HUMAN-EXPERIENCE.md",
-      "candidateSha256": "5dc76ad33c4399d413ef414c61e25db8a8232b9c7d61c258c9cb0e29c1a235e2"
+      "candidateSha256": "a5a075703f36dbe201cecd6e84efa822aa31e742f469d2281fea9578932a5441"
     },
     {
       "path": "docs/product/LOOK.md",
-      "candidateSha256": "c36489d9a0ed5505bccd1eb275a7f70a5848951e49eb5518de40083356cda487"
+      "candidateSha256": "0bb8f15e5f726907f23b3068dcdd1cb996711e2aff437a554cbcab53b67a78bf"
     },
     {
       "path": "docs/product/PRODUCT.md",
-      "candidateSha256": "4b0e0b8e24cb88128ed52e3f715574ab2b7908691685bb970ca6d494eb193423"
+      "candidateSha256": "8a37fdc2cbc24490bcc1b63cc1788d1037d99f6bd056fa2da209bb1a261edbb0"
     },
     {
       "path": "docs/product/sections/01-material.md",
@@ -2857,7 +2857,7 @@
     },
     {
       "path": "docs/product/sections/03-research.md",
-      "candidateSha256": "f87c37ebc80e0e1208459e28e71c97aab4db37fdf1256d720a6e79b864c899dd"
+      "candidateSha256": "8e64bf635a9d029fdcd46678e99a8af81fce3db3c27de97df3762f6ecd2d954a"
     },
     {
       "path": "docs/product/sections/04-direction.md",
@@ -2865,7 +2865,7 @@
     },
     {
       "path": "docs/product/sections/05-draft.md",
-      "candidateSha256": "112b8f38989b163bde672d0cfd2a0a2c5d1809a86b80549d98e60ca6a0c8529f"
+      "candidateSha256": "9027fde5e9f25704911c87db56a9d9acc4c3e5ceaf97ff5bda5b314a8bb0002e"
     },
     {
       "path": "docs/product/sections/06-read-refine.md",
@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "20c241a3a9e0f971c0df3e8279d8e948d0820b4e8ae6cbb8512ad28927ab1583"
+      "candidateSha256": "acee7328af003e7d2fe39a8f21778b143b46b27699a1315ffc50ec75d29ba890"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "0c05b2c6b86910a99bd849a27ed40ded0f9f348ee81cc04a0bf06ddc4f058aaa"
+      "candidateSha256": "e87fabaa1c45511607efcbd9b30ac9e783935e39a2f7e0af7e8bb4d15a4bebcf"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -3681,11 +3681,11 @@
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "7cb80b65fbb920d05c294aed27e67bd46e1a5f21e3f8617e92cc8cc6c5e893ac"
+      "candidateSha256": "9a3872a4760538aa27fd90b0fad1ce65b022cb7ec1489b2a217b555b4d7ea0b8"
     },
     {
       "path": "tests/existing-work.test.mjs",
-      "candidateSha256": "5898a5ae2355162cf2bbbf6cf20621800c409fee1fa460af1aec4bf35fdd1beb"
+      "candidateSha256": "2a065226ccd5cdfc677e18a08610db5b08ffaeb7c5239ae7022aaf5ee12f03fd"
     },
     {
       "path": "tests/review-connection.test.mjs",
@@ -3929,27 +3929,27 @@
     },
     {
       "path": "public/document-study/exact-media-metadata.js",
-      "candidateSha256": "8fa874a5dd63d343bb56f7e1e93cabfbe18bd26c19b153e619df20f6e3eb2f76"
+      "candidateSha256": "1bb1819846f257f64dd9fcdc6407bdcd6bfd69e3a5f3911774ef45fb4c095b43"
     },
     {
       "path": "scripts/magazine-media-inspection.mjs",
-      "candidateSha256": "05dadd0a7f7772cb50c51c667e4d052f995e5efa98ce9e04c625de3fba8fd9aa"
+      "candidateSha256": "d7358dd105ef9cd7953aa832e4691b031238b84a2ee469b8f70b129502588e1a"
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
-      "candidateSha256": "1ef129014808c09b6055c7b18867d4d9470a0ed173dd57243c6d3ade1817d3d6"
+      "candidateSha256": "bcff7df80f998be4c4c391ac73a6f21b509c68b2f3e0f5983c33e9d0daf9ed05"
     },
     {
       "path": "tests/exact-media-metadata.test.mjs",
-      "candidateSha256": "787ed4b96bad89d9e369866bbcebdc003f324cc070ad4e95248c678ecdef470f"
+      "candidateSha256": "61261cb55530c6b9aa85ead1abe84275898156bcceed07615a739b162966e66c"
     },
     {
       "path": "tests/magazine-media-http.test.mjs",
-      "candidateSha256": "ba8b0be92d95135fb5a4a6705ce137b027ceda3e6520827ea4b286ed6f9a5736"
+      "candidateSha256": "6246f681bf1c6139545f8d41dcc14ef6466a617d2f3c2ab9206f84bde1bfe82c"
     },
     {
       "path": "tests/magazine-media-inspection.test.mjs",
-      "candidateSha256": "9187b2e307b30918c0772913d0ee1fd1889273ddbad454617090c6a6992e77b8"
+      "candidateSha256": "35bb5354102841541a328d3d42e7db7d3c455b8fbd27758d3a6e3927932435bd"
     },
     {
       "path": "tests/mobile-section-header.test.mjs",
@@ -4277,7 +4277,7 @@
     },
     {
       "path": "runtime/services/magazine-library-photos.mjs",
-      "candidateSha256": "d2901002374f3766e859247c0f2381cbcb3a9ec0892b9bdeeb8e56a630699531"
+      "candidateSha256": "d39f1ae9bee38823c3b3b6e5d523a8bcb02bf2611d37ce97c6eef202d3327d56"
     },
     {
       "path": "tests/magazine-library-photo-http.test.mjs",
@@ -4285,11 +4285,19 @@
     },
     {
       "path": "tests/magazine-library-photos.test.mjs",
-      "candidateSha256": "d4a00ce430d614b50e0179b086251650a1c119a64e647b81250036922add09c3"
+      "candidateSha256": "26280ec22d18578fed86f59a40aac0b1c261e34896dfbe3e9231de1ae27f2328"
     },
     {
       "path": "tests/magazine-publication-photo-catalog.test.mjs",
       "candidateSha256": "4805341c4dee321ba390a6f81e5ad9ba74d7d342c63e48d89932f97194c9a5f2"
+    },
+    {
+      "path": "runtime/services/magazine-media-usage.mjs",
+      "candidateSha256": "9112bfea14ad5d29d9901cc7a42b278c446628f30489db0ad7d5705cc9819530"
+    },
+    {
+      "path": "tests/magazine-media-usage.test.mjs",
+      "candidateSha256": "21052f07b861a0d28b4b5fe4170f474ab3208e65409a166291c7cef5dc7ab61f"
     }
   ],
   "dependencyRepair": {

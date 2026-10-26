@@ -1,5 +1,7 @@
 # Make AR Create understandable when the human returns
 
+Current typography authority: [PRODUCT: Typography](PRODUCT.md#typography) and final C Workbench NOTES supersede the older broad Atlas assignments below. Preserve the later Source-specific Atlas treatment; Research, notes and Write/Preview retain their current C roles. Historical decisions below remain recorded without granting a global font replacement.
+
 Adopted 13 October 2026. These rules govern user-facing chats, interface text and result presentation. Technical code, developer documentation and saved evidence may retain precise engineering vocabulary. This is an experience requirement, not proof that every screen already meets it.
 
 ## Write for someone arriving without the history
