@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "7580f7cf812c245b2bef1f3dd6aa50586072c8b01ff337074373f24c1f7bdb11",
+      "candidateSha256": "070319f076b944d8177fe003223c1705bb987d931bdc50bf81050a6fca80ef1b",
       "adapted": true
     },
     {
@@ -768,7 +768,7 @@
     {
       "path": "public/document-study/draft-flow.js",
       "sourceSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "candidateSha256": "53242e9100a406b14411964802f329f7376d3689790661b776edc255141c3479",
+      "candidateSha256": "489bdf5709e8d37b1c13e1139c44e0f21e5dca813fe7e05d9b73b6254d2dead3",
       "adapted": true
     },
     {
@@ -792,7 +792,7 @@
     {
       "path": "public/document-study/draft-check-flow.js",
       "sourceSha256": "f3d5c3f4cb28a5ff66e7466de47b4ed0911931822c348d5b5909ae83e9757a76",
-      "candidateSha256": "5eb7f9e95453bed5b28ef6a1b0f138f6860f439451ec9f3d7d382519d996a1c2",
+      "candidateSha256": "8947f71a5acb1d628589ed11b8103348544277004efd3b50ae38b377a1d0ee67",
       "adapted": false
     },
     {
@@ -2133,11 +2133,11 @@
     },
     {
       "path": "config.example.json",
-      "candidateSha256": "23f3310e7ccae09e872cebbe7ea30a623182d171f926e55bf6bc247eecd375fb"
+      "candidateSha256": "6b4e42de3d7e805995bdf970a65edbe59cce4808c51da89487cc782b65f22aad"
     },
     {
       "path": "config.mjs",
-      "candidateSha256": "1ccdb73cfaa11e55bca7d1435c08049e559bc07a3b4dc394d8a405d7796c1b5a"
+      "candidateSha256": "dd8d252f0e6eaf400ee48cc5cfdaf70071f4750f21be36f6582a13a24ca3b630"
     },
     {
       "path": "package.json",
@@ -2145,7 +2145,7 @@
     },
     {
       "path": "serve.mjs",
-      "candidateSha256": "bf0de00e94a77fb044ed65461076f12343b9cc902b2887831fdba9ee0becef5e"
+      "candidateSha256": "fcb18c831125d48de5eb1733d3f9ab2f7ecd0634d0c82094a2249ed985b43c37"
     },
     {
       "path": "scripts/check-package.mjs",
@@ -2169,7 +2169,7 @@
     },
     {
       "path": "tests/config.test.mjs",
-      "candidateSha256": "79e1a04d487a0853b0c74326cee525ddda7723c2ca80b73518ec944b70c0bd17"
+      "candidateSha256": "bdb8ac5fefc7811a4ee34d2bf9afe94d0a55d0e2d1875e1809d880962d3f79b5"
     },
     {
       "path": "tests/package.test.mjs",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "bf5ca7353f77fe321b66fe7b04eeb4ecddb4abcb9237299a1f06b7271f391e11"
+      "candidateSha256": "10c1987af42b1506ccd8a39551102ae1170bb07fe878279212302a21dd3fb938"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -3129,7 +3129,7 @@
     },
     {
       "path": "runtime/services/magazine-vault/checks.mjs",
-      "candidateSha256": "7551add455dca6a5742a38d8a85e598b435ad52e157f344a294128fad7954153"
+      "candidateSha256": "b4798df805e40b6883d7a13d0c587fa23b2d96c120f873be1fb37e126b26d55b"
     },
     {
       "path": "runtime/services/magazine-vault/config.mjs",
@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "fb4908308fe03f401fbc8f6b00c9d31f95e2b9e5dc5b88466a22ae78a1ae8fe3"
+      "candidateSha256": "0c05b2c6b86910a99bd849a27ed40ded0f9f348ee81cc04a0bf06ddc4f058aaa"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -3677,11 +3677,11 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "26a54d9b0be50224e2b875949cf97c93dde2da8cada0b97cc54816a80ab2388a"
+      "candidateSha256": "c78e1a0683acc5bbf532b00b57f187baad5492acc0b06447920f483479269ef6"
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "3622570a90079c100ab986b217032fbbb4382ad2c0d5f267c418109c41ae1a22"
+      "candidateSha256": "07887fb4f1aa732829c8610c80559b850041f65a4aabde90cc2447bdd5633559"
     },
     {
       "path": "tests/existing-work.test.mjs",
@@ -3777,7 +3777,7 @@
     },
     {
       "path": "tests/magazine-native-editor.test.mjs",
-      "candidateSha256": "f018afbebec35800b3c8e0f2fc63cd6afe1c944ea1ac4ca915258ab362109c02"
+      "candidateSha256": "43a845008674e02151c534f5440000d9c2446b2ba827c489f8b001cc5d571b7c"
     },
     {
       "path": "tests/magazine-working-catalog.test.mjs",
@@ -3909,7 +3909,7 @@
     },
     {
       "path": "public/document-study/magazine-check-adapter.js",
-      "candidateSha256": "5d64f3bc0146c4f31b2527e45c141f5ef4901384f124424937e36116c51c06af"
+      "candidateSha256": "26ec55f6845059ad8f69e79cf9e8d35126b5f7dc76d69698f9629fbf061bd92e"
     },
     {
       "path": "public/document-study/magazine-check-registration.js",
@@ -3917,11 +3917,11 @@
     },
     {
       "path": "tests/magazine-check-adapter.test.mjs",
-      "candidateSha256": "0df9cdf3ec53b3d0eb0e704dad2cb5e2f5d4d164bef28165205603e94ff7ff6d"
+      "candidateSha256": "d52607d0a87c39af3fedac2f19b2098beda5d5848e85379c77e2559550330486"
     },
     {
       "path": "tests/magazine-check-flow.test.mjs",
-      "candidateSha256": "b6d7a600f36402784dc6d3507007e26925c52cf2fec05cded58e6a334d84b1de"
+      "candidateSha256": "77c5b57c2113088717e6173848c3860bfc5ecd6f0c8d473b5d5ea65f336765ac"
     },
     {
       "path": "tests/magazine-check-registration.test.mjs",
@@ -4254,6 +4254,22 @@
     {
       "path": "tests/native-photo-aspect.test.mjs",
       "candidateSha256": "dbc48837673af841110f47ef22c918ec33046d7ccf465132758ff14cd534f487"
+    },
+    {
+      "path": "runtime/services/magazine-mechanical-checks.mjs",
+      "candidateSha256": "aa8c8cfcacb60805d9997fa3ac2e49567b75a0baad7fbaf254d6ecfd88c0226e"
+    },
+    {
+      "path": "tests/magazine-check-receipt-wiring.test.mjs",
+      "candidateSha256": "b136f3c65e8da2505c9d98ab0a7b3693dcab5d1a0e45018882c14930674ef67b"
+    },
+    {
+      "path": "tests/magazine-mechanical-check-http.test.mjs",
+      "candidateSha256": "1eb9369bf1d25cfbea0b83baac4ba7b5a59720aa140cf50249d9c9e00eabd1bc"
+    },
+    {
+      "path": "tests/magazine-mechanical-checks.test.mjs",
+      "candidateSha256": "bca026977b4bad3440413f608643caca35828f9eefa8a92b56df8cdcb5928888"
     }
   ],
   "dependencyRepair": {

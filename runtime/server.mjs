@@ -46,6 +46,7 @@ import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILI
 import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
 import {createWorkingDraftBridge} from './services/magazine/working-draft-bridge.mjs';
+import {createMagazineMechanicalChecks} from './services/magazine-mechanical-checks.mjs';
 import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
@@ -188,7 +189,8 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
+  if(typeof magazineCheckReceipts!=='boolean')throw new TypeError('Magazine check receipt permission must be an explicit boolean.');
   // Host-selected read capability only. No request can choose a source path or
   // establish an association between an original and the current manuscript.
   const retainedCarouselSource=retainedCarouselState===undefined||retainedCarouselState===null?null:createRetainedCarouselReader({retainedCarouselState});
@@ -282,6 +284,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
   const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal});
+  const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
   function afterRequest(request,response,context){
@@ -322,7 +325,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);

@@ -13,10 +13,10 @@ const selection = {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:artic
 const DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
 const wait = async fn => { for (let n=0;n<150;n++){if(await fn())return;await new Promise(r=>setTimeout(r,10));}throw Error('native journey timed out'); };
 
-function editor(origin, windows, {storage,workflowBar=()=>''}={}) {
+function editor(origin, windows, {storage,project,workflowBar=()=>''}={}) {
   const dom = new JSDOM('<main id="app"></main>', {url: origin+'/document-study/', runScripts:'outside-only'}), w=dom.window;
   windows.push(dom);if(storage)w.localStorage.setItem('ar-document-study-owned-drafts-v1',storage);
-  const p={id:'browser-clay-story',name:'Invented current story',view:'record',viewedStage:1,blocks:[],title:'Invented story',history:[],note:null,originalNotes:[],rev:1};
+  const p=project?structuredClone(project):{id:'browser-clay-story',name:'Invented current story',view:'record',viewedStage:1,blocks:[],title:'Invented story',history:[],note:null,originalNotes:[],rev:1};
   w.state={projects:[p]};w.current=()=>p;w.selected=w.activeBlock=w.keyboardBlock=w.typingSession=null;w.structuredClone=structuredClone;w.crypto.randomUUID=randomUUID;Object.defineProperty(w.crypto,'subtle',{value:webcrypto.subtle});w.TextEncoder=TextEncoder;
   const renderedStages=[];let loseSave=false,loseUndo=false;
   w.fetch=async(url,options)=>{const response=await fetch(new URL(url,origin),options?.method==='POST'?{...options,headers:{...options.headers,Origin:origin}}:options);if(loseSave&&String(url).endsWith('/working-draft/save')){loseSave=false;throw Error('Synthetic lost response after owner commit');}if(loseUndo&&String(url).endsWith('/working-draft/undo')){loseUndo=false;throw Error('Synthetic lost Undo response after owner commit');}return response;};
@@ -341,4 +341,34 @@ test('shape changes reject stale, dirty, switched, unsupported and forged prepar
  else f.ui.w.fetch=async(url,options)=>{const result=await fetch(url,options);if(String(url).includes('/aspect-plan?')){if(mode==='navigation'){f.ui.w.viewPhase(8);return result;}const value=await result.json();if(mode==='hash')value.expectedContentHash='0'.repeat(64);if(mode==='owner')value.ownerRef.pieceId='wrong';if(mode==='aspect')value.operations[0].aspect='4/3';if(mode==='extra-field')value.operations[0].x=.9;if(mode==='unknown-operation')value.operations[0].kind='photoFocus';return {ok:true,json:async()=>value};}return result;};await assert.rejects(f.ui.w.studyDraft.aspectMagazinePlacement(f.input));assert.equal(fs.readFileSync(f.file,'utf8'),f.original);assert.equal(f.calls.some(c=>c.url.endsWith('/save')),false);
  }
  const f=await aspectEditor(t),gate=pauseResponse(f.ui,'prepare'),changing=f.ui.w.studyDraft.aspectMagazinePlacement(f.input);await gate.entered;f.ui.w.viewPhase(8);gate.release();await assert.rejects(changing,/current work changed/);assert.equal(fs.readFileSync(f.file,'utf8'),f.original);assert.equal(f.calls.some(c=>c.url.endsWith('/save')),false);
+});
+
+test('clean readonly Magazine Check reload flush stays clean and makes no manuscript request or write',async t=>{
+ const {f,origin,windows}=await nativeFixture(t,{writable:false}),before=treeHashes(f.vault),initial=editor(origin,windows);
+ await initial.w.studyDraft.openMagazine({...selection,parentStudyId:initial.p.id,presentationStage:7});
+ assert.equal(initial.w.studyDraft.currentProof().dirty,false);assert.equal(initial.w.studyDraft.currentProof().editable,false);
+ const storage=initial.w.localStorage.getItem('ar-document-study-owned-drafts-v1'),project=structuredClone(initial.p);initial.dom.window.close();
+ const restored=editor(origin,windows,{storage,project}),blocks=JSON.stringify(restored.p.blocks),requests=[],fetch=restored.w.fetch;
+ restored.w.fetch=async(url,options)=>{requests.push({url,method:options?.method||'GET'});return fetch(url,options);};
+ assert.equal(restored.w.studyDraft.currentProof().dirty,false,'retained read-only owner is initially clean');
+ assert.equal((await restored.w.studyDraft.flush()).dirty,false,'startup may flush an unchanged readonly owner before exact Check pickup');
+ assert.equal(requests.length,0);assert.equal(JSON.stringify(restored.p.blocks),blocks);assert.deepEqual(treeHashes(f.vault),before);
+ await restored.w.studyDraft.openMagazine({...selection,parentStudyId:restored.p.id,presentationStage:7});assert.equal(restored.p.viewedStage,7);assert.equal(restored.w.studyDraft.currentProof().dirty,false);
+});
+
+test('readonly no-op recovery preserves pending requests, rejected paste and changed words as unsaved',async t=>{
+ const {f,origin,windows}=await nativeFixture(t,{writable:false}),initial=editor(origin,windows);await initial.w.studyDraft.openMagazine({...selection,parentStudyId:initial.p.id,presentationStage:7});
+ const stored=JSON.parse(initial.w.localStorage.getItem('ar-document-study-owned-drafts-v1')),project=structuredClone(initial.p),before=treeHashes(f.vault);initial.dom.window.close();
+ for(const scenario of ['false-unavailable','pending','rejected','changed']){
+  const disk=structuredClone(stored),d=disk.documents[selection.pieceId];d.status='Save unavailable';d.error='An earlier read-only flush was unavailable.';
+  if(scenario==='pending')d.pending={request:{...selection,operationId:randomUUID(),expectedHash:d.expected.workflow.draft,content:d.serverRaw},sequence:d.sequence,blocks:structuredClone(d.blocks)};
+  if(scenario==='rejected')d.rejectedPaste=true;
+  if(scenario==='changed')d.blocks[0].html+=' Exact retained unsaved words.';
+  const ui=editor(origin,windows,{storage:JSON.stringify(disk),project}),requests=[];ui.w.fetch=async(...args)=>{requests.push(args);throw Error('Read-only flush must not send a write.');};
+  const words=JSON.stringify(ui.p.blocks),proof=await ui.w.studyDraft.flush(),after=JSON.parse(ui.w.localStorage.getItem('ar-document-study-owned-drafts-v1')).documents[selection.pieceId];
+  assert.equal(proof.dirty,scenario!=='false-unavailable',scenario);assert.equal(requests.length,0,scenario);assert.equal(JSON.stringify(ui.p.blocks),words,scenario);assert.deepEqual(treeHashes(f.vault),before,scenario);
+  if(scenario==='pending')assert.deepEqual(after.pending,d.pending);
+  if(scenario==='rejected')assert.equal(after.rejectedPaste,true);
+  ui.dom.window.close();
+ }
 });

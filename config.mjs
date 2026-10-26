@@ -59,6 +59,8 @@ export function loadConfig(env=process.env){
  if(home!==null&&config.publicDir!==undefined&&config.publicDir!==publicDir)throw Error('Explicit permanent local service configuration required.');
  let studyRelocation=null;
  if(config.relocationFile!==undefined&&config.relocationFile!==null){studyRelocation=JSON.parse(fs.readFileSync(optionalFile(config.relocationFile,'relocationFile'),'utf8'));if(home!==null)noSymlinks(config.relocationFile,'relocationFile');}
+ if(config.magazineCheckReceipts!==undefined&&typeof config.magazineCheckReceipts!=='boolean')throw Error('Magazine check receipts require an explicit boolean.');
+ const magazineCheckReceipts=config.magazineCheckReceipts===true;
  const roots=config.studyOriginalRoots;
  const studyOriginalRoots=roots?{vaultRoot:directory(roots.vaultRoot,'vaultRoot'),filesRoot:directory(roots.filesRoot,'filesRoot'),catalog:roots.catalog||{projects:{},drafts:{}}}:null;
  const hostRecord=(value,keys,label)=>{if(value===null||value===undefined)return null;if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==keys.length||keys.some(key=>!Object.hasOwn(value,key)))throw Error(label+' requires only its explicit supported fields.');return value;};
@@ -101,5 +103,5 @@ export function loadConfig(env=process.env){
  const magazine=validateMagazineVaultConfig({...(config.magazine||{}),vaultRoot:magazineVaultRoot,filesRoot:magazineFilesRoot,magSendRepo:magazineSendRepo});
  let editorialSkills=Array.isArray(config.editorialSkills)?config.editorialSkills:[];
  if(!editorialSkills.length&&editorialSkillsDir)editorialSkills=['arcreate/SKILL.md','mag/SKILL.md'].map(name=>path.join(editorialSkillsDir,name)).filter(file=>fs.existsSync(file));
- return {home,dataDir,publicDir,port,studyRelocation,transcriptLibrary,importedTranscriptOwner,retainedCarouselState,browserCarouselOrigins:[...browserCarouselOrigins],syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
+ return {home,dataDir,publicDir,port,magazineCheckReceipts,studyRelocation,transcriptLibrary,importedTranscriptOwner,retainedCarouselState,browserCarouselOrigins:[...browserCarouselOrigins],syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
 }

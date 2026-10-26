@@ -127,6 +127,11 @@ function validateNativeOperations(operations,fail,{photoAspect=false}={}){
  }
 }
 
+function validateMagazineMechanicalCheck(bytes){
+ const input=JSON.parse(bytes.toString('utf8')),keys=['parentStudyId','storyId','pieceId','expectedDraftHash','expectedInputRevision','operationId'];
+ const id=v=>typeof v==='string'&&v.length>0&&v.length<=256&&v.isWellFormed()&&!/[\x00-\x1f\x7f]/.test(v),hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||keys.slice(0,3).some(k=>!id(input[k]))||!hash(input.expectedDraftHash)||!hash(input.expectedInputRevision)||typeof input.operationId!=='string'||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(input.operationId))throw Object.assign(Error('Use the exact working piece and current saved-check proof.'),{status:400});
+}
 const MAGAZINE_DRAFT_CORRECTION_PATHS=new Set(['/api/magazine/working-draft/prepare','/api/magazine/working-draft/save','/api/magazine/working-draft/undo']);
 function validateMagazineCorrection(pathname,bytes){
  const input=JSON.parse(bytes.toString('utf8'));
@@ -155,7 +160,7 @@ async function staticRead(publicDir,pathname){
   return {bytes:await fs.readFile(current),type:TYPES[path.extname(current).toLowerCase()]||'application/octet-stream'};
  }catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return null;throw error;}
 }
-export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
+export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
  const upstream=authority(authorityURL,allowedAuthorityPort);
  const translationPolicy=validateImportedTranscriptTranslation(translationProposals);
  const admitTranslation=createTranslationOneRunAdmission({oneRunId:translationPolicy?.keptConversations?.oneRunId,dataDir:translationAdmissionDataDir,scope:'proxy'});
@@ -165,7 +170,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
  // Browser HTTP/1 pools commonly permit six sockets per origin. Keep live
  // review events from occupying that entire pool across older open clients.
  const eventStreams=new Map(),maxEventStreams=2;
- if(typeof sourceCorrections!=='boolean'||typeof studyDraftCorrections!=='boolean'||typeof studyDraftApprovals!=='boolean'||typeof browserCarouselCorrections!=='boolean'||typeof nativeCarouselCorrections!=='boolean'||typeof magazineDraftCorrections!=='boolean')throw Error('Correction permissions must be explicit booleans.');
+ if(typeof sourceCorrections!=='boolean'||typeof studyDraftCorrections!=='boolean'||typeof studyDraftApprovals!=='boolean'||typeof browserCarouselCorrections!=='boolean'||typeof nativeCarouselCorrections!=='boolean'||typeof magazineDraftCorrections!=='boolean'||typeof magazineCheckReceipts!=='boolean')throw Error('Correction permissions must be explicit booleans.');
  if(studyDraftApprovals&&!studyDraftCorrections)throw Error('Marked wording approval requires the existing guarded manuscript corrections.');
  if(!Array.isArray(readPostPaths)||readPostPaths.some(name=>!READ_POST_PATHS.has(name)))throw Error('Only declared maintained POST read paths may be configured.');
  const postReads=new Set(readPostPaths);
@@ -194,6 +199,12 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(!translationEnabled){req.resume();res.writeHead(503,{'Content-Type':'application/json; charset=utf-8'});return res.end(JSON.stringify({state:'unavailable',gate:'kept-conversation-execution-disabled',message:'English proposals are not enabled for this review.',applied:false,proposals:[]}));}
   }
   const translationProposal=translationPath&&translationEnabled;
+  const mechanicalPath=pathname==='/api/magazine/mechanical-check';
+  if(mechanicalPath&&['GET','HEAD'].includes(req.method)){
+   const query=new URL(req.url,upstream).searchParams,keys=['parentStudyId','storyId','pieceId','checkId'];if([...query.keys()].some(k=>!keys.includes(k))||keys.some(k=>query.getAll(k).length>1)||keys.slice(0,3).some(k=>query.getAll(k).length!==1))return fail(400,'Use one exact saved check owner.');
+  }
+  const mechanicalCheck=mechanicalPath&&magazineCheckReceipts&&req.method==='POST';
+  if(mechanicalCheck){if(req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved checks require the author’s local workspace.');}if(req.url!==pathname)return fail(400,'Use the exact check path without a query.');if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'){req.resume();return fail(403,'Checks must originate from this exact local review page.');}}
   const correctionPath=SOURCE_CORRECTION_PATHS.has(pathname);
   const draftCorrectionPath=STUDY_DRAFT_CORRECTION_PATHS.has(pathname);
   const magazineCorrectionPath=MAGAZINE_DRAFT_CORRECTION_PATHS.has(pathname);
@@ -207,7 +218,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const draftCorrection=studyDraftCorrections&&draftCorrectionPath&&req.method==='POST';
   const magazineCorrection=magazineDraftCorrections&&magazineCorrectionPath&&req.method==='POST';
   const carouselCorrection=nativeCarouselCorrections&&carouselCorrectionPath&&req.method==='POST';
-  const correction=sourceCorrection||draftCorrection||magazineCorrection||carouselCorrection;
+  const correction=sourceCorrection||draftCorrection||magazineCorrection||carouselCorrection||mechanicalCheck;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
@@ -226,9 +237,10 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(sourceCorrection)validateCorrection(pathname,readBody);
    if(draftCorrection)validateDraftCorrection(pathname,readBody,{approvals:studyDraftApprovals});
    if(magazineCorrection)validateMagazineCorrection(pathname,readBody);
+   if(mechanicalCheck)validateMagazineMechanicalCheck(readBody);
    if(carouselCorrection)validateCarouselCorrection(pathname,readBody);
    if(actualWorkReview===true&&pathname==='/document-study/package-config.js'){
-    const bytes=Buffer.from('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify({syntheticFixtures:false,originalReaderBaseUrl:upstream.origin})+';window.AR_CREATE_REVIEW_MODE='+JSON.stringify({actualWork:true,readOnly:true,...(sourceCorrections?{sourceCorrections:true}:{}),...(translationEnabled?{translationProposals:true}:{}),...(studyDraftCorrections?{studyDraftCorrections:true}:{}),...(studyDraftApprovals?{studyDraftApprovals:true}:{}),...(browserCarouselCorrections?{browserCarouselCorrections:true}:{}),...(nativeCarouselCorrections?{nativeCarouselCorrections:true}:{}),...(magazineDraftCorrections?{magazineDraftCorrections:true}:{}),...(typeof catalogCacheScope==='string'&&/^[a-f0-9]{64}$/.test(catalogCacheScope)?{catalogCacheScope}:{}),authorityOrigin:upstream.origin})+';');
+    const bytes=Buffer.from('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify({syntheticFixtures:false,originalReaderBaseUrl:upstream.origin})+';window.AR_CREATE_REVIEW_MODE='+JSON.stringify({actualWork:true,readOnly:true,...(sourceCorrections?{sourceCorrections:true}:{}),...(translationEnabled?{translationProposals:true}:{}),...(studyDraftCorrections?{studyDraftCorrections:true}:{}),...(studyDraftApprovals?{studyDraftApprovals:true}:{}),...(browserCarouselCorrections?{browserCarouselCorrections:true}:{}),...(nativeCarouselCorrections?{nativeCarouselCorrections:true}:{}),...(magazineDraftCorrections?{magazineDraftCorrections:true}:{}),...(magazineCheckReceipts?{magazineCheckReceipts:true}:{}),...(typeof catalogCacheScope==='string'&&/^[a-f0-9]{64}$/.test(catalogCacheScope)?{catalogCacheScope}:{}),authorityOrigin:upstream.origin})+';');
     res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Content-Length':bytes.length});return res.end(req.method==='HEAD'?undefined:bytes);
    }
    if(!postRead&&overrides.has(pathname)){
