@@ -4,7 +4,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {createRequire} from 'node:module';
-import {planMagazinePlacementMove,planMagazinePlacementFocus} from '../runtime/services/magazine-placement-plan.mjs';
+import {planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect} from '../runtime/services/magazine-placement-plan.mjs';
 import * as native from '../runtime/services/draft-correspondence.mjs';
 const require = createRequire(new URL('../runtime/package.json', import.meta.url));
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -315,6 +315,30 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     guardCode(code);const current=await working(selection);if(!current.supportedNativeOperations?.includes('photoFocus'))fail('The working editor no longer supports photo focus.');
     return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
   }
+  async function planAspect(input) {
+    fields(input,['storyId','pieceId','expectedHash','revision','placementId','aspect']);
+    if(!['4/3','4/5','1/1'].includes(input.aspect))fail('Choose a supported photo shape.',400);
+    const selection={storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash},inspection=await inspect(selection);
+    const {resolved,api,spec,code}=await publicationContext(selection),plan=planMagazinePlacementAspect({inspection,working:resolved,request:input});
+    const model=native.capture(resolved.document.text,input.pieceId);model.blocks.forEach((block,i)=>{block.id='magazine:'+encodeURIComponent(input.pieceId)+':'+i;});
+    const candidate=native.apply(model,resolved.document.text,plan.operations),selectedId=plan.operations[0].id;
+    if(candidate.reworks?.length||candidate.snapshot.prefix!==model.prefix||candidate.snapshot.blocks.length!==model.blocks.length||candidate.snapshot.blocks.some((b,i)=>b.id!==model.blocks[i].id||b.separator!==model.blocks[i].separator||b.id!==selectedId&&b.raw!==model.blocks[i].raw))fail('The shape adjustment would change other draft content.');
+    const original=api.parseDraft(api.draftBody(resolved.document.text).body,api.memoryOf(spec)),reparsed=api.parseDraft(api.draftBody(candidate.raw).body,api.memoryOf(original));
+    const selected=inspection.sources.flatMap(s=>s.placements).find(p=>p.placementId===input.placementId),before=placements(original),after=placements(reparsed);
+    const wanted=structuredClone(before),at=wanted.findIndex(p=>p.structuralPath===selected.structuralPath);
+    if(at<0)fail('The selected photo occurrence changed.');wanted[at].crop={...wanted[at].crop,aspect:input.aspect};
+    if(!isDeepStrictEqual(wanted,after))fail('The shape adjustment would change another photo, caption or layout.');
+    // Compare the entire maintained article as well as its occurrence view.
+    // Only this top-level wide block's aspect may differ after reparsing.
+    const expected=structuredClone(original),match=selected.structuralPath.match(/^(opening|parts\/(\d+)\/blocks)\/(\d+)\/wide$/);
+    const block=match&&(match[1]==='opening'?expected.opening:expected.parts[Number(match[2])]?.blocks)?.[Number(match[3])];
+    if(!block||block.kind!=='wide')fail('The selected photo layout changed.');
+    block.aspect=input.aspect;
+    if(!isDeepStrictEqual(expected,reparsed))fail('The shape adjustment would change article words or layout.');
+    guardCode(code);const current=await working(selection);
+    if(!current.supportedNativeOperations?.includes('photoAspect')||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The working editor or photo owner changed.');
+    return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
+  }
   async function preview(input) {
     fields(input,['storyId','pieceId','expectedHash','sourceId','sourceHash','revision']);
     const s = snapshot;
@@ -338,5 +362,5 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       throw Object.assign(new Error('Publication photographs are unavailable; inspect the working draft again.'), {status:409, cause:error});
     }
   };
-  return {inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus)};
+  return {inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus),planAspect:safe(planAspect)};
 }

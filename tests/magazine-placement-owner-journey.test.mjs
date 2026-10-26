@@ -224,6 +224,37 @@ test('S08/S09: focal change uses the same real DEV owner, persists through resta
  t.diagnostic(JSON.stringify({inventedOnly:true,sameDEV:true,focalChangedOnlyOneOccurrence:true,ownerRestart:restart,sameOperationIdReplay:true,exactUndo:true,sourceAndPublishedBytesPreserved:true}));
 });
 
+test('S09/C01/C04: photo aspect saves through the real owner, survives process restart and operation replay, and restores exact Undo',async t=>{
+ const h=await fixture(t),beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication),first=await h.read(),inspection=await h.inspect();
+ const placements=inspection.sources.flatMap(s=>s.placements),photo=placements.find(p=>p.alt==='Invented wide');
+ assert.ok(first.supportedNativeOperations.includes('photoAspect'));
+ assert.equal(photo.crop?.aspect??'4/3','4/3');assert.equal(photo.crop.x,.2);assert.equal(photo.crop.y,.8);
+ const request={storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:first.document.hash,revision:inspection.revision,placementId:photo.placementId,aspect:'1/1'},count=h.resolveCount,plan=await h.media.planAspect(request);
+ assert.ok(h.resolveCount>count,'shape planning resolves the current registered owner');
+ assert.equal(plan.schema,'ar-create.magazine-placement-plan.v1');assert.deepEqual(plan.ownerRef,inspection.ownerRef);assert.equal(plan.expectedHash,first.document.hash);
+ assert.deepEqual(plan.operations,[{kind:'photoAspect',id:photo.nativeOrigin.blockId,seenBlockHash:photo.nativeOrigin.blockHash,aspect:'1/1'}]);assert.deepEqual(plan.placementIds,[photo.placementId]);assert.equal(Object.hasOwn(plan,'content'),false);
+ assert.deepEqual(treeHashes(h.f.vault),beforeVault,'shape inspection and planning are read-only');
+ const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepared.status,200,JSON.stringify(prepared.body));assert.equal(sha(prepared.body.content),plan.expectedContentHash);
+ const expected=original.replace('Invented wide · wide x=0.2 y=0.8%%','Invented wide · wide x=0.2 y=0.8 aspect=1/1%%');assert.equal(prepared.body.content,expected);assert.deepEqual(treeHashes(h.f.vault),beforeVault,'shape preparation does not save');
+ const operationId=randomUUID(),payload={...selection,expectedHash:plan.expectedHash,content:prepared.body.content,operationId},saved=await h.post('save',payload);assert.equal(saved.status,200,JSON.stringify(saved.body));
+ // Restart immediately after the save response; recovery must use persisted
+ // owner receipts without a confirming read from the process that saved it.
+ const restart=await h.restart(),replayed=await h.post('save',payload);assert.equal(replayed.status,200,JSON.stringify(replayed.body));
+ const reopened=await h.read();assert.deepEqual(reopened.authority,first.authority);assert.equal(reopened.document.path,DEV);assert.equal(reopened.document.text,expected);assert.equal(reopened.document.hash,plan.expectedContentHash);
+ assert.equal(reopened.history.filter(r=>r.operationId===operationId).length,1);assert.equal(reopened.history.find(r=>r.operationId===operationId)?.canUndo,true);assert.equal(reopened.history.find(r=>r.operationId===operationId)?.actor,'human:adrian');
+ assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(expected));onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+ const fresh=await h.inspect(),afterPlacements=fresh.sources.flatMap(s=>s.placements),afterPhoto=afterPlacements.find(p=>p.alt==='Invented wide');assert.notEqual(fresh.revision,inspection.revision);assert.deepEqual(afterPhoto.crop,{...photo.crop,aspect:'1/1'});
+ assert.deepEqual(afterPlacements.map(p=>[p.structuralPath,p.alt,p.slot,p.sourceRef]),placements.map(p=>[p.structuralPath,p.alt,p.slot,p.sourceRef]),'all existing photo occurrences keep their order, caption, identity and source');
+ for(const p of placements.filter(p=>p.placementId!==photo.placementId))assert.deepEqual(afterPlacements.find(n=>n.structuralPath===p.structuralPath).crop,p.crop,'other photograph crops stay exact');
+ const expectedStory=parser.parseDraft(parser.draftBody(original).body);expectedStory.opening.find(b=>b.shot?.alt==='Invented wide').aspect='1/1';assert.deepEqual(parser.parseDraft(parser.draftBody(reopened.document.text).body),expectedStory,'only the selected aspect changes in the maintained parser');
+ const currentVault=treeHashes(h.f.vault);await assert.rejects(h.media.planAspect(request),e=>e.status===409);await assert.rejects(h.media.planAspect({...request,expectedHash:reopened.document.hash}),e=>e.status===409,'an old occurrence revision cannot borrow the current hash');
+ assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations})).status,409);assert.deepEqual(treeHashes(h.f.vault),currentVault,'refused stale plans preserve current bytes');
+ assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);
+ const undone=await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()});assert.equal(undone.status,200,JSON.stringify(undone.body));assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(original),'Undo restores exact original words, metadata, notes and CRLF bytes');
+ assert.equal((await h.read()).document.text,original);assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
+ t.diagnostic(JSON.stringify({inventedOnly:true,sameDEV:true,aspectChangedOnlyOneOccurrence:true,focalCoordinatesPreserved:true,ownerRestart:restart,sameOperationIdReplay:true,stalePlanRefused:true,exactUndo:true,sourcePhotosPublishedAndSiblingPreserved:true}));
+});
+
 test('committed owner receipts expose exact Undo after save response and immediate child restart without journal discovery',async t=>{
  const h=await fixture(t),first=await h.read(),row=first.projection.find(p=>p.raw==='Invented opening 瓷 😀.'),prepared=await h.post('prepare',{...selection,expectedHash:first.document.hash,operations:[{kind:'text',id:row.id,from:0,to:8,insert:'Changed',seenBlockHash:row.blockHash}]});
  assert.equal(prepared.status,200);const operationId=randomUUID(),saved=await h.post('save',{...selection,expectedHash:first.document.hash,content:prepared.body.content,operationId});assert.equal(saved.status,200);

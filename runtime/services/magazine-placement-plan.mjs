@@ -15,9 +15,9 @@ const simple=group=>['wide','bleed','photos'].includes(group.origin.role)&&['pho
  * owner resolver result, not browser-supplied projection or occurrence metadata.
  * Cover/opener/ending/side/on-photo arrangements retain their specialized owner.
  */
-function placementContext({inspection,working,request}={},focus=false) {
- const keys=['storyId','pieceId','expectedHash','revision','placementId',...(focus?['x','y']:['beforeId'])];
- if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y'].includes(k)).every(k=>identity(request[k]))||focus&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
+function placementContext({inspection,working,request}={},mode='move') {
+ const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='focus'?['x','y']:mode==='aspect'?['aspect']:['beforeId'])];
+ if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
  const {storyId,pieceId,expectedHash,revision,placementId,beforeId}=request;
  const {document,authority,target,projection}=working||{};
  if(authority?.kind!=='magazine'||authority.storyId!==storyId||authority.pieceId!==pieceId||typeof document?.text!=='string'||Buffer.byteLength(document.text)>2*1024*1024||document.hash!==expectedHash||sha(document.text)!==expectedHash||target?.hash!==expectedHash||!identity(target?.artifactId)||!identity(target?.nativeProjectId)) refuse('stale-owner','This working draft changed. Reopen it before moving a photo.');
@@ -51,7 +51,7 @@ function placementContext({inspection,working,request}={},focus=false) {
  if(placements.size!==inspection.originTrace.occurrences||groups.size!==inspection.originTrace.blocks||[...groups.values()].some(g=>g.indexes.size!==g.origin.groupSize)) refuse('invalid-origins','The photo positions are incomplete. Refresh the photos.');
  const selected=placements.get(placementId),destination=rows.get(beforeId);
  if(!selected) refuse('unknown-placement','This photo is no longer in the selected draft.');
- if(focus)return {selected,ownerRef,expectedHash,revision,scope:inspection.scope};
+ if(mode!=='move')return {selected,ownerRef,expectedHash,revision,scope:inspection.scope};
  if(!simple(selected.group)) refuse('unsupported-placement','This photo belongs to a cover, opener, ending or composed layout. Its arrangement needs its existing layout tools.');
  if(!destination) refuse('unknown-destination','Choose an existing position in this draft.');
  const source=selected.row;
@@ -78,9 +78,17 @@ function placementContext({inspection,working,request}={},focus=false) {
 export function planMagazinePlacementMove(input){return placementContext(input);}
 export function planMagazinePlacementFocus(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoFocus'))refuse('unsupported-owner','This working editor does not support photo focus yet.');
- const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,true),o=selected.group.origin,p=selected.placement;
+ const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'focus'),o=selected.group.origin,p=selected.placement;
  if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Adjust the focus of a standalone article photo.');
  if((p.crop?.x??0.5)===input.request.x&&(p.crop?.y??0.5)===input.request.y)refuse('unchanged-focus','Choose a different photo focus before saving.');
  const operations=Object.freeze([Object.freeze({kind:'photoFocus',id:selected.row.id,seenBlockHash:selected.row.blockHash,x:input.request.x,y:input.request.y})]);
+ return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
+}
+export function planMagazinePlacementAspect(input){
+ if(!input?.working?.supportedNativeOperations?.includes('photoAspect'))refuse('unsupported-owner','This working editor does not support photo shape yet.');
+ const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'aspect'),o=selected.group.origin,p=selected.placement;
+ if(o.kind!=='photo'||o.role!=='wide'||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Adjust the shape of a standalone wide article photo.');
+ if((p.crop?.aspect??'4/3')===input.request.aspect)refuse('unchanged-aspect','Choose a different photo shape before saving.');
+ const operations=Object.freeze([Object.freeze({kind:'photoAspect',id:selected.row.id,seenBlockHash:selected.row.blockHash,aspect:input.request.aspect})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
 }

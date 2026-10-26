@@ -31,3 +31,21 @@ test('review proxy forwards only the bounded single native focal operation and r
  for(const change of [{x:-.1},{y:1.1},{x:'0.5'},{x:null},{seenBlockHash:'bad'},{file:'other.png'},{caption:'not alt'}])assert.equal((await send('prepare',{...payload,operations:[{...op,...change}]})).status,400);
  assert.equal((await send('prepare',{...payload,operations:[op,op]})).status,400);assert.equal(calls.length,1);
 });
+test('review proxy forwards one exact Magazine aspect operation and refuses unsupported, mixed or forged requests',async t=>{
+ const {send,calls}=await setup(t),op={kind:'photoAspect',id:'magazine:invented:3',seenBlockHash:hash,aspect:'4/5'},payload={...inputs.prepare,operations:[op]};
+ for(const aspect of ['4/3','4/5','1/1']){const exact={...payload,operations:[{...op,aspect}]},body=Buffer.from(' \n'+JSON.stringify(exact,null,2)+'\n');assert.equal((await send('prepare',exact,{body})).status,200);assert.deepEqual(calls.at(-1).bytes,body);assert.equal(calls.at(-1).url,prefix+'prepare');}
+ for(const change of [{aspect:'16/9'},{aspect:'4/5 '},{aspect:'4:5'},{aspect:'8/10'},{aspect:''},{aspect:4/5},{aspect:null},{aspect:[]},{id:''},{id:'bad\0'},{seenBlockHash:'bad'},{x:.2},{y:.8},{file:'other.png'},{caption:'not alt'},{content:'substitute'}])assert.equal((await send('prepare',{...payload,operations:[{...op,...change}]})).status,400);
+ for(const missing of ['aspect','id','seenBlockHash']){const incomplete={...op};delete incomplete[missing];assert.equal((await send('prepare',{...payload,operations:[incomplete]})).status,400);}
+ for(const batch of [[op,op],[op,operations[0]],[operations[0],op],[op,{kind:'photoFocus',id:op.id,seenBlockHash:hash,x:.2,y:.8}]])assert.equal((await send('prepare',{...payload,operations:batch})).status,400);
+ for(const change of [{storyId:''},{pieceId:'other\0'},{edition:'published'},{expectedHash:'stale'},{path:'/private'},{sourceHash:hash}])assert.equal((await send('prepare',{...payload,...change})).status,400);
+ assert.equal(calls.length,3);
+});
+test('aspect preparation preserves the current owner refusal without forwarding a save or retry',async t=>{
+ const message=' {"error":"The exact photo owner changed."}\n',s=await setup(t,{respond:(_entry,res)=>{res.writeHead(409,{'content-type':'application/json'});res.end(message);}}),payload={...inputs.prepare,operations:[{kind:'photoAspect',id:'magazine:invented:3',seenBlockHash:hash,aspect:'1/1'}]},response=await s.send('prepare',payload);
+ assert.equal(response.status,409);assert.equal(response.body,message);assert.equal(s.calls.length,1);assert.equal(s.calls[0].url,prefix+'prepare');assert.deepEqual(JSON.parse(s.calls[0].bytes),payload);
+});
+test('Magazine aspect permission does not expand the bound Study save operation set',async t=>{
+ const {ownerPort,calls}=await setup(t),server=createReviewConnection({authorityURL:`http://127.0.0.1:${ownerPort}`,allowedAuthorityPort:ownerPort,actualWorkReview:true,studyDraftCorrections:true,magazineDraftCorrections:true}),port=await listen(server);t.after(()=>close(server));
+ const input={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[{kind:'photoAspect',id:'magazine:invented:3',seenBlockHash:hash,aspect:'4/5'}]};
+ assert.equal((await request(port,'/api/study-draft/save',{headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:JSON.stringify(input)})).status,400);assert.equal(calls.length,0);
+});
