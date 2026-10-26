@@ -50,7 +50,7 @@ if (!prior) {
   url = s.url;
 } else {
   fixture = prior;
-  server = await createServer({dataDir:fixture.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,magazineVault:{vaultRoot:fixture.vault,filesRoot:fixture.files,drops:fixture.drops,writable:true,machine:'synthetic-placement-owner',exportStaging:path.join(fixture.dir,'staging')}});
+  server = await createServer({dataDir:fixture.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,magazineVault:{vaultRoot:fixture.vault,filesRoot:fixture.files,drops:fixture.drops,writable:true,machine:'synthetic-placement-owner',exportStaging:path.join(fixture.dir,'staging'),magSendRepo:path.join(fixture.dir,'publication')}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   url = 'http://127.0.0.1:'+server.address().port;
 }
@@ -95,7 +95,7 @@ async function fixture(t) {
   fs.mkdirSync(path.join(conversation,'pieces'),{recursive:true});
   fs.writeFileSync(path.join(conversation,'magSend.ts'),parserCode);
   fs.writeFileSync(path.join(conversation,'spec.ts'),specCode);
-  fs.writeFileSync(path.join(conversation,'pieces/index.ts'),"export const CONVERSATIONS=[{path:'/read/synthetic',slug:'synthetic',images:'/read/synthetic/',opening:[],parts:[],ending:{blocks:[]}}];");
+  fs.writeFileSync(path.join(conversation,'pieces/index.ts'),"export const CONVERSATIONS=[{path:'/read/synthetic',slug:'synthetic',images:'/read/synthetic/',title:['Invented placement journey'],credit:[],opening:[],parts:[],ending:{blocks:[]}}];");
   fs.mkdirSync(path.join(publication,'public/read/synthetic'),{recursive:true});
   fs.writeFileSync(path.join(publication,'public/read/synthetic/same.png'),Buffer.from([137,80,78,71,13,10,26,10,1,2,3]));
   fs.writeFileSync(path.join(publication,'public/read/synthetic/replacement.png'),Buffer.from([137,80,78,71,13,10,26,10,4,5,6]));
@@ -132,7 +132,8 @@ async function fixture(t) {
     if (value.document.hash!==expectedHash || value.document.path!==artifact.relativePath || value.authority.storyId!==storyId || value.authority.pieceId!==pieceId) throw Object.assign(Error('Exact owner read changed.'),{status:409});
     return {document:value.document,authority:value.authority,projection:value.projection,supportedNativeOperations:value.supportedNativeOperations,target,rootIdentity:registered.rootIdentity};
   };
-  const media = createMagazineMediaInspection({repoRoot:publication,resolveWorking,originTrace:{parserHash:sha(parserCode),specHash:sha(specCode),loadParser:async()=>parser}});
+  const libraryPhotoRead=async(route,input)=>{const response=await fetch(new URL(route+'?'+new URLSearchParams(input),owner.url));if(!response.ok)throw Object.assign(Error((await response.json()).error),{status:response.status});const body=Buffer.from(await response.arrayBuffer());return {body,hash:response.headers.get('x-content-sha256'),contentType:response.headers.get('content-type'),rootId:response.headers.get('x-ar-photo-root-id'),sourceId:response.headers.get('x-ar-photo-source-id')};};
+  const media = createMagazineMediaInspection({repoRoot:publication,resolveWorking,libraryPhotos:{preview:input=>libraryPhotoRead('/api/magazine/library-photos/preview',input),resolve:input=>libraryPhotoRead('/api/magazine/library-photos/asset',input)},originTrace:{parserHash:sha(parserCode),specHash:sha(specCode),loadParser:async()=>parser}});
   const read = () => get('/api/magazine/working-draft/read',selection);
   const inspect = async () => { const current=await read();return media.inspect({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:current.document.hash}); };
   const moveRequest = inspection => {
@@ -295,4 +296,25 @@ test('S09: replacing one photo uses exact current source file and description, p
  await assert.rejects(h.media.planReplace(request),e=>e.status===409);assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations})).status,409);
  assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,200);assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(original));assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);
  t.diagnostic(JSON.stringify({inventedOnly:true,photoAndDescriptionFromExactOwnedOccurrence:true,targetCropAndLayoutPreserved:true,ownerRestart:restart,exactUndo:true,originalAssetsAndPublicationPreserved:true}));
+});
+
+
+test('S08/S09 full library: an unused cross-story original saves into the same DEV, survives owner restart, renders/exports exact retained bytes and exactly undoes',async t=>{
+ const h=await fixture(t);let count=0;const baseline=original.replaceAll('same.png',()=>`local-photo-${count++}.png`);fs.writeFileSync(path.join(h.f.vault,DEV),baseline);for(let i=0;i<count;i++)fs.copyFileSync(path.join(h.publication,'public/read/synthetic/same.png'),path.join(h.publication,`public/read/synthetic/local-photo-${i}.png`));
+ const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6ioAAAAASUVORK5CYII=','base64'),foreign=path.join(h.f.files,'Another Story/Photos/unused-original.png');fs.mkdirSync(path.dirname(foreign),{recursive:true});fs.writeFileSync(foreign,bytes);await h.restart();
+ const beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication),first=await h.read(),inspection=await h.inspect(),target=inspection.sources.flatMap(s=>s.placements).find(p=>p.alt==='Invented wide');
+ const catalog=await h.get('/api/magazine/library-photos'),asset=catalog.items.find(item=>item.relativePath==='Another Story/Photos/unused-original.png');assert.ok(asset,'the full server-owned union includes a different story’s unused original');assert.ok(!baseline.includes(asset.name));
+ const request={storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:first.document.hash,revision:inspection.revision,placementId:target.placementId,assetRootId:asset.rootId,assetSourceId:asset.sourceId,assetRevision:asset.revision,assetHash:asset.sourceHash,description:''},plan=await h.media.planLibraryReplace(request);
+ assert.equal(plan.operations[0].kind,'photoReplaceAsset');assert.deepEqual(treeHashes(h.f.vault),beforeVault);
+ const libraryBytes=()=>fs.existsSync(path.join(h.f.data,'library-index.json'))?fs.readFileSync(path.join(h.f.data,'library-index.json'),'utf8'):null,libraryBefore=libraryBytes();
+ for(const mutate of [op=>op.file='arbitrary.png',op=>op.path=foreign,op=>op.id='magazine:foreign:1',op=>op.seenBlockHash='0'.repeat(64),op=>op.rootId='0'.repeat(64)]){const op={...plan.operations[0]};mutate(op);assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:[op]})).status,409);assert.equal(libraryBytes(),libraryBefore,'forged preparations never retain a photo');}
+ const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepared.status,200,JSON.stringify(prepared.body));assert.equal(sha(prepared.body.content),plan.expectedContentHash);const token='library-photo-'+sha(bytes)+'.png',expected=baseline.replace(/local-photo-\d+\.png · Invented wide ·/,token+' ·  ·');assert.equal(prepared.body.content,expected);
+ const afterRetain=fs.readFileSync(path.join(h.f.data,'library-index.json'),'utf8'),again=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(again.status,200);assert.equal(fs.readFileSync(path.join(h.f.data,'library-index.json'),'utf8'),afterRetain,'repeat prepare reuses the same owned original');
+ const operationId=randomUUID(),payload={...selection,content:prepared.body.content,expectedHash:plan.expectedHash,operationId};assert.equal((await h.post('save',payload)).status,200);const restart=await h.restart();const reopened=await h.read();assert.equal(reopened.document.text,expected);assert.equal(reopened.history.find(r=>r.operationId===operationId)?.canUndo,true);onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+ const edition=await h.media.workingEdition({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:reopened.document.hash}),retained=edition.media.sources.find(s=>s.name===token);assert.ok(retained);const preview=await h.media.preview({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:reopened.document.hash,sourceId:retained.id,sourceHash:retained.sourceRef.hash,revision:edition.revision});assert.deepEqual(preview.body,bytes);assert.equal(retained.placements[0].crop.x,.2);assert.equal(retained.placements[0].crop.y,.8);
+ const built=await require('esbuild').build({entryPoints:['public/document-study/mountMagazineAudience.tsx'],bundle:true,write:false,format:'cjs',platform:'node',packages:'external',loader:{'.css':'empty'},jsx:'automatic'}),module={exports:{}};new Function('require','module','exports',built.outputFiles[0].text)(require,module,module.exports);
+ const html=await module.exports.prepareMagazineHtml(edition,{origin:'http://127.0.0.1:8859',readAsset:async input=>{const url=new URL(input,'http://127.0.0.1:8859');if(url.pathname.endsWith('.css'))return new Response('.ar-output-reader{color:black}');const image=await h.media.preview(Object.fromEntries(url.searchParams));return new Response(image.body,{headers:{'Content-Type':image.contentType}});}});assert.ok(html.includes('data:image/png;base64,'+bytes.toString('base64')));assert.doesNotMatch(html,/src="\/api\//);
+ await assert.rejects(h.media.planLibraryReplace(request));assert.equal((await h.post('save',{...payload,operationId:randomUUID()})).status,409);
+ assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,200);assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(baseline));assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);
+ t.diagnostic(JSON.stringify({inventedOnly:true,fullCatalogCrossStoryUnusedOriginal:true,noGETcopy:true,forgedPrepareNoCopy:true,privateLibraryImmutableRetention:true,repeatPrepareReuses:true,ownerRestart:restart,renderAndHtmlExactBytes:true,targetCropPreserved:true,exactUndo:true,originalAndPublicationBytesPreserved:true}));
 });

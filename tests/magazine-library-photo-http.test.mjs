@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {createServer} from '../runtime/server.mjs';
+import {createLibrary} from '../runtime/services/library.mjs';
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const tree=root=>Object.fromEntries(fs.readdirSync(root,{recursive:true}).map(p=>[p,path.join(root,p)]).filter(([,p])=>fs.lstatSync(p).isFile()).map(([p,f])=>[p,hash(fs.readFileSync(f))]));
+test('normal photo HTTP catalog/preview/immutable bytes stay read-only and preserve expected error status',async t=>{
+ const dataDir=fs.mkdtempSync(path.join(os.tmpdir(),'ar-photo-http-')),photo=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5xQAAAAASUVORK5CYII=','base64'),library=createLibrary({dataDir,connections:[]});
+ await library.retainAlbumPhoto({folder:'Unused photographs',name:'unused.png',bytes:photo,provenance:{kind:'magazine-library-photo',originalHash:hash(photo),description:'An invented unused photo'}});
+ const server=await createServer({dataDir,connections:[],magazineRoots:[],researchEnabled:false});await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
+ t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));fs.rmSync(dataDir,{recursive:true,force:true});});
+ const before=tree(dataDir),catalog=await(await fetch(origin+'/api/magazine/library-photos')).json();assert.equal(catalog.schema,'ar-create.magazine-library-photos.v1');assert.equal(catalog.items.length,1);const row=catalog.items[0],selector=Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,row[k]])),preview=origin+'/api/magazine/library-photos/preview?'+new URLSearchParams(selector);
+ const good=await fetch(preview);assert.equal(good.status,200);assert.equal(good.headers.get('content-type'),'image/png');assert.equal(good.headers.get('x-content-sha256'),hash(photo));assert.deepEqual(Buffer.from(await good.arrayBuffer()),photo);
+ const file='library-photo-'+hash(photo)+'.png',owned=await fetch(origin+'/api/magazine/library-photos/asset?'+new URLSearchParams({file}));assert.equal(owned.status,200);assert.match(owned.headers.get('x-ar-photo-root-id'),/^[a-f0-9]{64}$/);assert.match(owned.headers.get('x-ar-photo-source-id'),/^[a-f0-9-]{36}$/i);assert.deepEqual(Buffer.from(await owned.arrayBuffer()),photo);
+ for(const [url,status]of [['/api/magazine/library-photos?path=elsewhere',400],['/api/magazine/library-photos/asset?file=../private',400],['/api/magazine/library-photos/asset?file=library-photo-'+ 'a'.repeat(64)+'.png',404],['/api/magazine/library-photos/preview?'+new URLSearchParams({...selector,revision:'a'.repeat(64)}),409],['/api/magazine/library-photos/preview?'+new URLSearchParams(selector)+'&rootId=duplicate',400]])assert.equal((await fetch(origin+url)).status,status,url);
+ assert.equal((await fetch(preview,{method:'POST'})).status,405);assert.deepEqual(tree(dataDir),before,'catalog/preview/errors must not retain or rewrite data');
+ const cap=await(await fetch(origin+'/api/capabilities')).json(),prepare=cap.commands.find(c=>c.route==='/api/magazine/working-draft/prepare'&&c.method==='POST');assert.equal(prepare.readOnly,false);assert.deepEqual(prepare.actors,['human']);
+});

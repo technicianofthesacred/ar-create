@@ -34,7 +34,7 @@ function workingOnly(input) {
 }
 const select = input => Object.fromEntries(BASE.filter(k => input[k] !== undefined).map(k => [k, input[k]]));
 
-export function createWorkingDraftBridge({magazine, editions = null, journal = null} = {}) {
+export function createWorkingDraftBridge({magazine, editions = null, journal = null, photoLibrary = null} = {}) {
   if (!magazine?.projects || !magazine.read || !magazine.write || !magazine.edit || !magazine.operation || !magazine.undo) throw new TypeError('Supply the maintained Magazine owner.');
 
   function registrationRoot(status = magazine.status()) {
@@ -112,7 +112,7 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     // publication IDs or a second persisted correspondence/binding authority.
     model.blocks.forEach((block, i) => { block.id = 'magazine:' + encodeURIComponent(authority.pieceId) + ':' + i; });
     const projection = native.projection(model).map((row, i) => ({...row, raw: model.blocks[i].raw}));
-    return {selection: select(input), authority, editable: !unavailableReason, unavailableReason, document, paragraphs, projection, supportedNativeOperations: native.supportedNativeOperations || [], history: await historyFor(authority)};
+    return {selection: select(input), authority, editable: !unavailableReason, unavailableReason, document, paragraphs, projection, supportedNativeOperations: (native.supportedNativeOperations || []).filter(kind=>kind!=='photoReplaceAsset'||photoLibrary), history: await historyFor(authority)};
   }
   async function prepare(input) {
     workingOnly(input); fields(input, ['expectedHash', 'operations']);
@@ -125,7 +125,25 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     const model = native.capture(document.text, authority.pieceId);
     model.blocks.forEach((block, i) => { block.id = 'magazine:' + encodeURIComponent(authority.pieceId) + ':' + i; });
     let candidate;
-    try { candidate = native.apply(model, document.text, input.operations); }
+    try {
+      const selected=input.operations.filter(op=>op?.kind==='photoReplaceAsset');let trusted;
+      if(selected.length){
+        if(selected.length!==1||input.operations.length!==1||!photoLibrary?.preview||!photoLibrary?.retain)throw new StateError('The maintained photo library is unavailable for this native edit.',409);
+        const op=selected[0],selector=Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,op[k]])),photo=await photoLibrary.preview(selector);
+        const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/avif':'avif'}[photo.contentType];
+        if(!extension||photo.hash!==op.sourceHash)throw new StateError('The selected library photograph changed.',409);
+        trusted={photoAssets:[{...op,file:'library-photo-'+photo.hash+'.'+extension}]};
+        // Validate the exact target, syntax and full operation before retaining
+        // any bytes. Only explicit Use/prepare reaches the existing Library owner.
+        candidate=native.apply(model,document.text,input.operations,trusted);
+        const current=magazine.read({path:authority.path});
+        if(current.hash!==document.hash||current.conflicts?.length)throw new StateError('The working draft changed before retaining the photo.',409);
+        const retained=await photoLibrary.retain(selector);
+        if(retained.file!==trusted.photoAssets[0].file||retained.hash!==photo.hash)throw new StateError('The retained Library photo identity changed.',409);
+        const after=magazine.read({path:authority.path});
+        if(after.hash!==document.hash||after.conflicts?.length)throw new StateError('The working draft changed before photo preparation. Refresh before saving.',409);
+      } else candidate = native.apply(model, document.text, input.operations);
+    }
     catch (error) { throw new StateError(error.message, 409); }
     if (candidate.reworks?.length) throw new StateError('Slash rework requests need the maintained Magazine paragraph action; your words are retained.', 409);
     return {selection: select(input), content: candidate.raw, expectedHash: document.hash};

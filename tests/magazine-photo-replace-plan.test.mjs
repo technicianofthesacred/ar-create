@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
-import {createMagazineMediaInspection} from '../scripts/magazine-media-inspection.mjs';
+import {createMagazineMediaInspection,createPublicationPhotoCatalog} from '../scripts/magazine-media-inspection.mjs';
 import {planMagazinePlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
 import * as native from '../runtime/services/draft-correspondence.mjs';
 const sha=v=>createHash('sha256').update(v).digest('hex');
@@ -32,17 +32,18 @@ async function fixture(t,{crlf=false,body=BODY,parseCode=parserCode}={}){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'magazine-photo-aspect-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  const conv=path.join(root,'src/pages/read/conversation');fs.mkdirSync(path.join(conv,'pieces'),{recursive:true});fs.writeFileSync(path.join(conv,'magSend.ts'),parseCode);fs.writeFileSync(path.join(conv,'spec.ts'),specCode);
  fs.writeFileSync(path.join(conv,'pieces/index.ts'),"export const CONVERSATIONS=[{path:'/read/synthetic',slug:'synthetic',images:'/read/synthetic/',opening:[],parts:[],ending:{blocks:[]}}];");
- const image=path.join(root,'public/read/synthetic/same.png');fs.mkdirSync(path.dirname(image),{recursive:true});fs.writeFileSync(image,Buffer.from([137,80,78,71,13,10,26,10,1,2,3]));fs.writeFileSync(path.join(path.dirname(image),'replacement.png'),Buffer.from([137,80,78,71,13,10,26,10,4,5,6]));
+ const image=path.join(root,'public/read/synthetic/same.png');fs.mkdirSync(path.dirname(image),{recursive:true});fs.writeFileSync(image,Buffer.from([137,80,78,71,13,10,26,10,1,2,3]));fs.writeFileSync(path.join(path.dirname(image),'replacement.png'),Buffer.from([137,80,78,71,13,10,26,10,4,5,6]));fs.writeFileSync(path.join(path.dirname(image),'unplaced.png'),Buffer.from([137,80,78,71,13,10,26,10,8,9,7]));
  const text=['---','type: DEV','published: https://www.teajia.com/read/synthetic','---','Invented metadata.','','---','',body.join('\n\n'),'','---','','Invented retained notes.'].join('\n').replaceAll('\n',crlf?'\r\n':'\n');
  const storyId='mag-synthetic',pieceId=storyId+':article',hash=sha(text),model=native.capture(text,pieceId);model.blocks.forEach((b,i)=>b.id='magazine:'+encodeURIComponent(pieceId)+':'+i);
- const working={supportedNativeOperations:['photoFocus','photoAspect','photoReplace'],document:{text,hash},authority:{kind:'magazine',storyId,pieceId},target:{nativeProjectId:'synthetic-native',artifactId:'synthetic-working',hash},projection:native.projection(model).map((r,i)=>({...r,raw:model.blocks[i].raw}))};
+ const working={supportedNativeOperations:['photoFocus','photoAspect','photoReplace','photoReplaceAsset'],document:{text,hash},authority:{kind:'magazine',storyId,pieceId},target:{nativeProjectId:'synthetic-native',artifactId:'synthetic-working',hash},projection:native.projection(model).map((r,i)=>({...r,raw:model.blocks[i].raw}))};
  let reads=0,mutateRead=()=>{};
  const tracedParser=parseCode===parserCode?parser:await import('data:text/javascript;base64,'+Buffer.from((await require('esbuild').transform(parseCode,{loader:'ts',format:'esm'})).code).toString('base64'));
- const media=createMagazineMediaInspection({repoRoot:root,resolveWorking:async()=>{reads++;mutateRead(reads);return structuredClone(working);},originTrace:{parserHash:sha(parseCode),specHash:sha(specCode),loadParser:async()=>tracedParser}});
+ const photoCatalog=createPublicationPhotoCatalog({repoRoot:root});
+ const media=createMagazineMediaInspection({repoRoot:root,libraryPhotos:photoCatalog,resolveWorking:async()=>{reads++;mutateRead(reads);return structuredClone(working);},originTrace:{parserHash:sha(parseCode),specHash:sha(specCode),loadParser:async()=>tracedParser}});
  const selection={storyId,pieceId,expectedHash:hash},inspection=await media.inspect(selection),photo=alt=>inspection.sources.flatMap(s=>s.placements).find(p=>p.alt===alt);
  assert.equal(inspection.originTrace.status,'ready');
  const replacement=photo('Actual source description');const request={...selection,revision:inspection.revision,placementId:photo('Invented chosen').placementId,replacementPlacementId:replacement.placementId,sourceId:replacement.sourceRef.sourceId,sourceHash:replacement.sourceRef.hash};
- return {root,image,text,model,working,media,inspection,selection,photo,request,input:()=>({inspection,working,request}),onRead:fn=>{reads=0;mutateRead=fn;}};
+ return {root,image,text,model,working,media,photoCatalog,inspection,selection,photo,request,input:()=>({inspection,working,request}),onRead:fn=>{reads=0;mutateRead=fn;}};
 }
 test('replacement planning preserves every other byte and uses actual source alt under LF and CRLF',async t=>{
  for(const crlf of [false,true]){
@@ -93,4 +94,22 @@ test('ambiguous descriptions refuse; exact Unicode description and target spacin
 test('full maintained article comparison refuses unrelated parser changes in replacement candidate',async t=>{
  const parseCode=parserCode.replace('export function parseDraft(', 'function parseDraftInner(')+`\nexport function parseDraft(body,...args){const result=parseDraftInner(body,...args);if(body.includes('replacement.png · Actual source description · wide'))result.intro+=' Changed.';return result;}\n`;
  const f=await fixture(t,{parseCode});await assert.rejects(f.media.planReplace(f.request),{status:409});
+});
+
+test('native library replacement requires trusted owner-resolved asset capability and changes only chosen file/description',async t=>{
+ const f=await fixture(t),target=f.photo('Invented chosen'),sourceHash='a'.repeat(64),file='library-photo-'+sourceHash+'.png',op={kind:'photoReplaceAsset',id:target.nativeOrigin.blockId,seenBlockHash:target.nativeOrigin.blockHash,rootId:'b'.repeat(64),sourceId:'c'.repeat(64),revision:'d'.repeat(64),sourceHash,description:'A newly chosen library photograph'};
+ assert.throws(()=>native.apply(f.model,f.text,[op]),/trusted|Unknown/);
+ const context={photoAssets:[{...op,file}]},result=native.apply(f.model,f.text,[op],context);
+ assert.equal(result.raw,f.text.replace('same.png · Invented chosen ·',file+' · A newly chosen library photograph ·'));
+ assert.equal(native.undo(result.snapshot,result.raw,result.inverse).raw,f.text);
+ for(const mutate of [o=>o.file='arbitrary.png',o=>o.path='/tmp/photo.png',o=>o.description='unsafe · description',o=>o.sourceHash='0'.repeat(64)]){const bad={...op};mutate(bad);assert.throws(()=>native.apply(f.model,f.text,[bad],context));}
+ assert.throws(()=>native.apply(f.model,f.text,[op],{photoAssets:[{...op,file:'../arbitrary.png'}]}));
+});
+
+test('full-library plan chooses a genuinely unplaced photo without copying, preserves exact target composition and hashes native preparation',async t=>{
+ const f=await fixture(t),catalog=await f.photoCatalog.catalog(),asset=catalog.items.find(item=>item.name==='unplaced.png'),target=f.photo('Invented chosen'),request={...f.selection,revision:f.inspection.revision,placementId:target.placementId,assetRootId:asset.rootId,assetSourceId:asset.sourceId,assetRevision:asset.revision,assetHash:asset.sourceHash,description:''};
+ const plan=await f.media.planLibraryReplace(request),file='library-photo-'+asset.sourceHash+'.png',candidate=native.apply(f.model,f.text,plan.operations,{photoAssets:[{...plan.operations[0],file}]});
+ assert.equal(candidate.raw,f.text.replace('same.png · Invented chosen ·',file+' ·  ·'));assert.equal(sha(candidate.raw),plan.expectedContentHash);assert.equal(fs.existsSync(path.join(f.root,'library')),false);
+ for(const mutate of [r=>r.assetRootId='0'.repeat(64),r=>r.assetSourceId='0'.repeat(64),r=>r.assetHash='0'.repeat(64),r=>r.assetRevision='0'.repeat(64),r=>r.revision='0'.repeat(64),r=>r.file='unplaced.png',r=>r.description='unsafe · delimiter',r=>r.description='no%%delimiter']){const bad={...request};mutate(bad);await assert.rejects(f.media.planLibraryReplace(bad));}
+ fs.appendFileSync(path.join(f.root,'public/read/synthetic/unplaced.png'),Buffer.from([9]));await assert.rejects(f.media.planLibraryReplace(request),{status:409});
 });
