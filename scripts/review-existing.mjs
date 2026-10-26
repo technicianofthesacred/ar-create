@@ -49,8 +49,21 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
  const existingReader=createExistingWorkReader({...config,roots:config.magazineRoots,readAuthority});
  const reader={...existingReader,catalog:async()=>{let retained;try{retained=await retainedCarousels.list();}catch(error){retained={readOnly:true,available:false,items:[],error:error.message||'The retained original could not be read.'};}const catalog=await existingReader.catalog();return config.retainedCarouselState===undefined?catalog:{...catalog,retainedCarousels:retained};}};
  const media=config.filesRoot?createReviewMedia({filesRoot:config.filesRoot,limits:config.mediaLimits}):null;
+ const libraryPhotos={
+  preview:input=>readLibraryPhoto('/api/magazine/library-photos/preview',input),
+  resolve:input=>readLibraryPhoto('/api/magazine/library-photos/asset',input),
+ };
+ async function readLibraryPhoto(route,input){
+  const response=await fetchImpl(new URL(route+'?'+new URLSearchParams(input),upstream),{redirect:'error'});
+  if(!response.ok)throw Object.assign(Error('This library photograph changed or is unavailable. Reopen the photo library.'),{status:response.status});
+  const length=Number(response.headers.get('content-length'));if(!Number.isSafeInteger(length)||length<=0||length>20*1024*1024)throw Error('This photograph exceeds the supported preview limit.');
+  const body=Buffer.from(await response.arrayBuffer()),hash=response.headers.get('x-content-sha256'),contentType=response.headers.get('content-type'),rootId=response.headers.get('x-ar-photo-root-id'),sourceId=response.headers.get('x-ar-photo-source-id');
+  if(body.length!==length||!/^[a-f0-9]{64}$/.test(hash||'')||createHash('sha256').update(body).digest('hex')!==hash||!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(contentType))throw Error('This photograph’s exact bytes could not be confirmed.');
+  if(route.endsWith('/asset')&&(!/^[a-f0-9]{64}$/.test(rootId||'')||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(sourceId||'')))throw Error('The saved library photograph identity could not be confirmed.');
+  return {body,hash,contentType,rootId,sourceId};
+ }
  const publicationTargets=new Map();
- const publicationMedia=libraryInspection?.publicationRepoRoot?createMagazineMediaInspection({repoRoot:libraryInspection.publicationRepoRoot,resolveWorking:async({storyId,pieceId,expectedHash})=>{
+ const publicationMedia=libraryInspection?.publicationRepoRoot?createMagazineMediaInspection({libraryPhotos,repoRoot:libraryInspection.publicationRepoRoot,resolveWorking:async({storyId,pieceId,expectedHash})=>{
   libraryInspection.assertCurrent?.();
   const key=JSON.stringify([storyId,pieceId,expectedHash]);let proof=publicationTargets.get(key);
   if(!proof){
@@ -74,6 +87,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
   ['/api/review/magazine-working-edition',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);return requirePublicationMedia().workingEdition(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/move-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','beforeId'],['storyId','pieceId','expectedHash','revision','placementId','beforeId']);return requirePublicationMedia().planMove(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/focus-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','x','y'],['storyId','pieceId','expectedHash','revision','placementId','x','y']);const input=Object.fromEntries(url.searchParams);return requirePublicationMedia().planFocus({...input,x:input.x.trim()?Number(input.x):NaN,y:input.y.trim()?Number(input.y):NaN});})],
+  ['/api/review/magazine-media/library-replace-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','assetRootId','assetSourceId','assetRevision','assetHash','description'],['storyId','pieceId','expectedHash','revision','placementId','assetRootId','assetSourceId','assetRevision','assetHash']);if(url.searchParams.getAll('description').length!==1)throw Object.assign(Error('Use one photo description, which may be empty.'),{status:400});return requirePublicationMedia().planLibraryReplace(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/replace-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','replacementPlacementId','sourceId','sourceHash'],['storyId','pieceId','expectedHash','revision','placementId','replacementPlacementId','sourceId','sourceHash']);return requirePublicationMedia().planReplace(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/aspect-plan',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','revision','placementId','aspect'],['storyId','pieceId','expectedHash','revision','placementId','aspect']);return requirePublicationMedia().planAspect(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media/file',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash','sourceId','sourceHash','revision'],['storyId','pieceId','expectedHash','sourceId','sourceHash','revision']);return requirePublicationMedia().preview(Object.fromEntries(url.searchParams));},{binary:true})],

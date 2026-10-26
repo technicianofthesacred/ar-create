@@ -4,14 +4,14 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {createRequire} from 'node:module';
-import {planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect,planMagazinePlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
+import {planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect,planMagazinePlacementReplace,planMagazineLibraryPlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
 import * as native from '../runtime/services/draft-correspondence.mjs';
 const require = createRequire(new URL('../runtime/package.json', import.meta.url));
 const sha = value => createHash('sha256').update(value).digest('hex');
 const digest = value => sha(JSON.stringify(value));
 const HEX = /^[a-f0-9]{64}$/;
 const MAX_ASSET = 20 * 1024 * 1024;
-const MIME = {'.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.gif':'image/gif'};
+const MIME = {'.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp','.gif':'image/gif','.avif':'image/avif'};
 function fail(message, status = 409) { throw Object.assign(new Error(message), {status}); }
 function fields(input, keys) {
   if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(k => !keys.includes(k)) || keys.some(k => typeof input[k] !== 'string' || !input[k] || input[k].length > 500)) fail('Send exact Magazine selection and revision fields.', 400);
@@ -60,6 +60,7 @@ function imageType(bytes, extension) {
   const valid = type === 'image/jpeg' ? bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255
     : type === 'image/png' ? bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
     : type === 'image/webp' ? bytes.toString('ascii',0,4) === 'RIFF' && bytes.toString('ascii',8,12) === 'WEBP'
+    : type === 'image/avif' ? bytes.toString('ascii',4,8)==='ftyp'&&/avif|avis/.test(bytes.toString('ascii',8,32))
     : type === 'image/gif' ? /^GIF8[79]a$/.test(bytes.toString('ascii',0,6)) : false;
   if (!valid) fail('Unsupported publication image bytes.');
   return type;
@@ -140,7 +141,7 @@ function exactOrigins(resolved, body, range, observations) {
   for(const group of groups.values()) if(group.indexes.size!==group.size) throw Error('group-mismatch');
   return origins;
 }
-export function createMagazineMediaInspection({repoRoot, resolveWorking, originTrace}) {
+export function createMagazineMediaInspection({repoRoot, resolveWorking, originTrace, libraryPhotos = null}) {
   if (typeof repoRoot !== 'string' || !path.isAbsolute(repoRoot) || typeof resolveWorking !== 'function') throw new TypeError('Supply a trusted checkout and exact working resolver.');
   if (fs.lstatSync(repoRoot).isSymbolicLink()) throw new TypeError('The configured checkout must be a direct directory.');
   // Trusted constructor-only test capability. It is never read from a request,
@@ -149,7 +150,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
   if (!tracing || Object.keys(tracing).some(k=>!['parserHash','specHash','loadParser'].includes(k)) || !HEX.test(tracing.parserHash) || !HEX.test(tracing.specHash) || typeof tracing.loadParser!=='function') throw new TypeError('Supply trusted origin parser code and pins.');
   const traceCapability=Object.freeze({parserHash:tracing.parserHash,specHash:tracing.specHash,loadParser:tracing.loadParser});
   const root = fs.realpathSync(repoRoot), rootStat = fs.lstatSync(root), rootId = digest(['magazine-publication',root]);
-  let snapshot = null;
+  let snapshot = null, librarySnapshot = null;
   function guardRoot() { const current = fs.lstatSync(root); if (fs.lstatSync(repoRoot).isSymbolicLink() || fs.realpathSync(repoRoot) !== root || current.isSymbolicLink() || !current.isDirectory() || current.dev !== rootStat.dev || current.ino !== rootStat.ino) fail('Publication checkout changed.'); }
   async function working(input) {
     guardRoot();
@@ -179,6 +180,65 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     return {api,code:[...checked.values()].sort((a,b)=>a.relative<b.relative?-1:a.relative>b.relative?1:0)};
   }
   function guardCode(code) { for (const r of code) { const current = regular(root,r.relative,1024*1024); if (stamp(current.stat) !== r.stamp && readChecked(root,r.relative,1024*1024).hash !== r.hash) fail('Publication code changed; inspect again.'); } }
+  // Same reviewed publication-root/code authority, expanded to every explicitly
+  // registered image directory. No request may choose a directory or filename.
+  async function libraryCatalog() {
+    guardRoot();const {api,code}=await modules();
+    if(!Array.isArray(api.CONVERSATIONS)||api.CONVERSATIONS.length>256)fail('Publication photograph catalog exceeds its supported bounds.');
+    const items=[],files=new Map(),directories=new Set();let total=0,skipped=0;
+    for(const spec of api.CONVERSATIONS){
+      if(!spec||typeof spec.slug!=='string'||!/^[-a-z0-9]+$/.test(spec.slug)||spec.path!=='/read/'+spec.slug||spec.images!==spec.path+'/')fail('Publication photograph directory identity is invalid.');
+      if(directories.has(spec.images))fail('Publication photograph directory identity is ambiguous.');directories.add(spec.images);
+      const relativeDirectory='public'+spec.images.slice(0,-1),directory=path.join(root,relativeDirectory);
+      // An empty image directory may be absent; every existing ancestor still
+      // must be a direct directory within the constructor-owned checkout.
+      let current=root,missing=false;
+      for(const part of relativeDirectory.split('/')){current=path.join(current,part);const st=fs.lstatSync(current,{throwIfNoEntry:false});if(!st){missing=true;break;}if(st.isSymbolicLink()||!st.isDirectory())fail('Publication photograph folder is unsafe.');}
+      if(missing)continue;
+      let meanings=[];try{meanings=placements(spec);}catch{/* Asset descriptions are optional; files remain selectable. */}
+      for(const entry of fs.readdirSync(directory,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){
+        if(entry.name.startsWith('.')||!MIME[path.extname(entry.name).toLowerCase()]||!entry.isFile()||entry.isSymbolicLink()){skipped++;continue;}
+        if(items.length>=5000)fail('Publication photograph catalog exceeds its supported bounds.',413);
+        const relative=relativeDirectory+'/'+entry.name,record=readChecked(root,relative,MAX_ASSET),contentType=imageType(record.bytes,path.extname(entry.name).toLowerCase());
+        total+=record.bytes.length;if(total>200*1024*1024)fail('Publication photograph catalog exceeds its supported byte bound.',413);
+        const descriptions=[...new Set(meanings.filter(p=>p.file===entry.name&&p.alt?.trim()).map(p=>p.alt.trim()))],description=descriptions.length===1?descriptions[0]:'';
+        const sourceId=digest([rootId,relative]),name=entry.name;
+        const item={rootId,sourceId,sourceHash:record.hash,name,description,contentType,bytes:record.bytes.length,storyLabel:spec.slug,relativePath:relative.replace(/^public\//,'')};
+        items.push(item);files.set(sourceId,{...record,bytes:undefined,contentType,name,description});
+      }
+    }
+    guardCode(code);guardRoot();
+    for(const r of files.values())if(readChecked(root,r.relative,MAX_ASSET).hash!==r.hash)fail('Publication photograph changed during catalog reading.');
+    const revision=digest([rootId,code.map(r=>[r.relative,r.hash]),[...files.values()].map(r=>[r.relative,r.hash,r.stamp])]);
+    const scopedItems=items.map(item=>{const record=files.get(item.sourceId),assetRevision=digest([rootId,code.map(r=>[r.relative,r.hash]),record.relative,record.hash,record.stamp]);record.revision=assetRevision;return {...item,revision:assetRevision};});
+    librarySnapshot={revision,code,files};
+    return {schema:'ar-create.publication-photo-catalog.v1',rootId,revision,items:scopedItems,coverage:{complete:true,truncated:false,skipped}};
+  }
+  async function libraryPreview(input){
+    fields(input,['rootId','sourceId','revision','sourceHash']);
+    // Catalog discovery is explicit. Individual thumbnails and native prepare
+    // validate one exact asset without rescanning unrelated photographs.
+    if(!librarySnapshot)await libraryCatalog();const s=librarySnapshot;
+    guardRoot();guardCode(s.code);
+    if(input.rootId!==rootId)fail('The publication photo root changed. Refresh before choosing.');
+    const r=s.files.get(input.sourceId);if(!r||r.hash!==input.sourceHash||r.revision!==input.revision)fail('Choose the exact publication photograph.');
+    const current=readChecked(root,r.relative,MAX_ASSET);if(current.hash!==r.hash||current.stamp!==r.stamp)fail('Publication photograph changed.');
+    guardCode(s.code);guardRoot();
+    return {body:current.bytes,hash:r.hash,contentType:r.contentType,contentLength:current.bytes.length,name:r.name,description:r.description};
+  }
+  const ownedPattern=/^library-photo-([a-f0-9]{64})\.(jpg|png|webp|gif|avif)$/;
+  async function ownedPhoto(file){
+    const token=ownedPattern.exec(file);if(!token||!libraryPhotos?.resolve)fail('This retained Library photograph cannot be resolved by its maintained owner.');
+    const value=await libraryPhotos.resolve({file}),bytes=value.body??value.bytes;
+    if(!Buffer.isBuffer(bytes)||bytes.length<1||bytes.length>MAX_ASSET||sha(bytes)!==token[1]||value.hash!==token[1]||!HEX.test(value.rootId)||typeof value.sourceId!=='string')fail('The retained Library photograph identity changed.');
+    const contentType=imageType(bytes,'.'+token[2]);if(value.contentType!==contentType)fail('The retained Library photograph format changed.');
+    return {...value,bytes,contentType};
+  }
+  async function checkedAsset(asset){
+    if(!asset.owned)return readChecked(root,asset.relative,MAX_ASSET);
+    const value=await ownedPhoto(asset.file);if(value.hash!==asset.hash||value.rootId!==asset.rootId||value.sourceId!==asset.librarySourceId||value.contentType!==asset.contentType)fail('The retained Library photograph changed.');
+    return {bytes:value.bytes,hash:value.hash};
+  }
   async function publicationContext(input,{allowMissing=false}={}) {
     fields(input,['storyId','pieceId','expectedHash']);
     const resolved = await working(input);
@@ -231,21 +291,27 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     let bytesTotal = 0;
     for (const row of rows) if (!files.has(row.file)) {
       if (path.basename(row.file) !== row.file) fail('Unsafe publication asset name.');
-      const relative = `public${spec.images}${row.file}`, record = readChecked(root,relative,MAX_ASSET);
-      bytesTotal += record.bytes.length; if (bytesTotal > 200*1024*1024) fail('Publication images exceed bounded reader limits.',413);
-      const contentType = imageType(record.bytes,path.extname(row.file).toLowerCase());
-      files.set(row.file,{...record,bytes:undefined,contentType,sourceId:digest([rootId,relative]),size:record.bytes.length});
+      if(ownedPattern.test(row.file)){
+        const value=await ownedPhoto(row.file),sourceId=digest([value.rootId,value.sourceId,row.file]);
+        bytesTotal+=value.bytes.length;if(bytesTotal>200*1024*1024)fail('Article photographs exceed bounded reader limits.',413);
+        files.set(row.file,{owned:true,file:row.file,relative:'library/'+row.file,hash:value.hash,stamp:value.hash,rootId:value.rootId,librarySourceId:value.sourceId,contentType:value.contentType,sourceId,size:value.bytes.length});
+      }else{
+        const relative = `public${spec.images}${row.file}`, record = readChecked(root,relative,MAX_ASSET);
+        bytesTotal += record.bytes.length; if (bytesTotal > 200*1024*1024) fail('Publication images exceed bounded reader limits.',413);
+        const contentType = imageType(record.bytes,path.extname(row.file).toLowerCase());
+        files.set(row.file,{...record,bytes:undefined,contentType,sourceId:digest([rootId,relative]),size:record.bytes.length});
+      }
     }
     guardCode(code);
     await working(input);
     const scope = digest([rootId,input.storyId,input.pieceId,input.expectedHash,ownerRef.artifactId]);
     const revision = digest([scope,code.map(r=>[r.relative,r.hash]),[...files.values()].map(r=>[r.sourceId,r.hash]),rows]);
     const sources = [...files.entries()].map(([name,r]) => {
-      const sourceRef = {rootId,sourceId:r.sourceId,relativePath:r.relative.replace(/^public\//,''),hash:r.hash};
-      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,previewKind:'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
+      const sourceRef = {rootId:r.rootId||rootId,sourceId:r.sourceId,relativePath:r.relative.replace(/^public\//,''),hash:r.hash};
+      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
     });
     snapshot = {input:{...input},scope,revision,code,files:new Map([...files.values()].map(r=>[r.sourceId,r])),ownerRef};
-    const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,limitations:['Publication photographs; original camera files and album provenance are not established.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is not a caption or credit.']};
+    const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,limitations:['Photographs resolve through the maintained publication or private Library owner; original camera and album provenance depend on that owner’s recorded evidence.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is not a caption or credit.']};
     return {media,parsed,spec,code,files};
   }
   async function workingEdition(input) {
@@ -272,9 +338,9 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     // Story fields come exclusively from this parse. In particular, absent
     // portrait/hook/closing never fall back to a previous publication's words.
     const currentSpec={...metadata,...pick(parsed,['portrait','intro','hook','opening','parts','ending','closing'])};
-    for(const asset of files.values())if(readChecked(root,asset.relative,MAX_ASSET).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
+    for(const asset of files.values())if((await checkedAsset(asset)).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
     guardCode(code);await working(input);guardCode(code);
-    for(const asset of files.values())if(readChecked(root,asset.relative,MAX_ASSET).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
+    for(const asset of files.values())if((await checkedAsset(asset)).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
     return {schema:'ar-create.magazine-working-edition.v1',revision:media.revision,ownerRef:media.ownerRef,spec:currentSpec,media};
   }
   // Read-only preparation: final prepare/save/Undo still use the maintained
@@ -355,9 +421,32 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     if(!isDeepStrictEqual(expected,reparsed))fail('The replacement would change article words, layout, crop or other photographs.');
     const files=snapshot?.files;
     if(!files||snapshot.revision!==inspection.revision)fail('The photo catalog changed; inspect again.');
-    const guardAssets=()=>{for(const asset of files.values())if(readChecked(root,asset.relative,MAX_ASSET).hash!==asset.hash)fail('Publication photograph changed; inspect again.');};
-    guardAssets();guardCode(code);const current=await working(selection);guardCode(code);guardAssets();
+    const guardAssets=async()=>{for(const asset of files.values())if((await checkedAsset(asset)).hash!==asset.hash)fail('Publication photograph changed; inspect again.');};
+    await guardAssets();guardCode(code);const current=await working(selection);guardCode(code);await guardAssets();
     if(!current.supportedNativeOperations?.includes('photoReplace')||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The working editor or photo owner changed.');
+    return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
+  }
+  async function planLibraryReplace(input){
+    if(!input||typeof input.description!=='string')fail('Use a plain photo description, or leave it empty.',400);
+    const {description,...proof}=input;fields(proof,['storyId','pieceId','expectedHash','revision','placementId','assetRootId','assetSourceId','assetRevision','assetHash']);
+    const selection={storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash},inspection=await inspect(selection);
+    const {resolved,api,spec,code}=await publicationContext(selection),plan=planMagazineLibraryPlacementReplace({inspection,working:resolved,request:input});
+    if(!libraryPhotos?.preview)fail('The maintained photograph library is unavailable.');
+    const op=plan.operations[0],selector=Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,op[k]])),photo=await libraryPhotos.preview(selector),bytes=photo.body??photo.bytes;
+    const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/avif':'avif'}[photo.contentType];
+    if(!extension||!Buffer.isBuffer(bytes)||bytes.length<1||bytes.length>MAX_ASSET||sha(bytes)!==input.assetHash||photo.hash!==input.assetHash||imageType(bytes,'.'+extension)!==photo.contentType)fail('Choose the exact supported library photograph.');
+    const file='library-photo-'+photo.hash+'.'+extension,model=native.capture(resolved.document.text,input.pieceId);model.blocks.forEach((block,i)=>{block.id='magazine:'+encodeURIComponent(input.pieceId)+':'+i;});
+    const candidate=native.apply(model,resolved.document.text,plan.operations,{photoAssets:[{...op,file}]});
+    if(candidate.reworks?.length||candidate.snapshot.prefix!==model.prefix||candidate.snapshot.blocks.length!==model.blocks.length||candidate.snapshot.blocks.some((b,i)=>b.id!==model.blocks[i].id||b.separator!==model.blocks[i].separator||b.id!==op.id&&b.raw!==model.blocks[i].raw))fail('The replacement would change other draft content.');
+    const original=api.parseDraft(api.draftBody(resolved.document.text).body,api.memoryOf(spec)),reparsed=api.parseDraft(api.draftBody(candidate.raw).body,api.memoryOf(original)),expected=structuredClone(original);
+    const selected=inspection.sources.flatMap(s=>s.placements).find(p=>p.placementId===input.placementId),match=selected.structuralPath.match(/^(opening|parts\/(\d+)\/blocks)\/(\d+)\/(wide|bleed)$/),block=match&&(match[1]==='opening'?expected.opening:expected.parts[Number(match[2])]?.blocks)?.[Number(match[3])];
+    if(!block?.shot)fail('The selected standalone photo layout changed.');
+    block.shot.file=file;block.shot.alt=description;block.shot.slot=api.memoryOf(original).slots.get(file)||file.replace(/\.[a-z]+$/i,'');
+    if(!isDeepStrictEqual(expected,reparsed))fail('The replacement would change words, crop, layout or another photo.');
+    guardCode(code);const current=await working(selection);guardCode(code);
+    if(!current.supportedNativeOperations?.includes('photoReplaceAsset')||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The working editor or photo owner changed.');
+    const again=await libraryPhotos.preview(selector),afterBytes=again.body??again.bytes;
+    if(again.hash!==photo.hash||again.contentType!==photo.contentType||!Buffer.isBuffer(afterBytes)||sha(afterBytes)!==photo.hash)fail('The library photo changed during preparation.');
     return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
   }
   async function preview(input) {
@@ -366,12 +455,11 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     if (!s || s.revision !== input.revision || ['storyId','pieceId','expectedHash'].some(k=>s.input[k]!==input[k])) fail('Inspect this exact Magazine photo revision again.');
     await working(input); guardCode(s.code);
     for (const asset of s.files.values()) {
-      const current = regular(root,asset.relative,MAX_ASSET);
-      if (stamp(current.stat) !== asset.stamp && readChecked(root,asset.relative,MAX_ASSET).hash !== asset.hash) fail('Publication photo revision changed; inspect again.');
+      if((await checkedAsset(asset)).hash!==asset.hash)fail('Article photograph changed; inspect again.');
     }
     const r = s.files.get(input.sourceId);
     if (!r || r.hash !== input.sourceHash) fail('Photograph is not in this exact revision.');
-    const current = readChecked(root,r.relative,MAX_ASSET);
+    const current = await checkedAsset(r);
     if (current.hash !== r.hash) fail('Publication photograph changed; inspect again.');
     await working(input);
     return {body:current.bytes,contentType:r.contentType,contentLength:current.bytes.length,hash:r.hash,revision:s.revision};
@@ -383,5 +471,13 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       throw Object.assign(new Error('Publication photographs are unavailable; inspect the working draft again.'), {status:409, cause:error});
     }
   };
-  return {inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus),planAspect:safe(planAspect),planReplace:safe(planReplace)};
+  return {libraryCatalog:safe(libraryCatalog),libraryPreview:safe(libraryPreview),inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus),planAspect:safe(planAspect),planReplace:safe(planReplace),planLibraryReplace:safe(planLibraryReplace)};
+}
+
+
+/** Catalog capability reuses the maintained publication reader without granting
+ * any manuscript selection, writer or caller-selected filesystem path. */
+export function createPublicationPhotoCatalog({repoRoot}={}){
+ const reader=createMagazineMediaInspection({repoRoot,resolveWorking:async()=>fail('No working manuscript resolver was supplied.')});
+ return Object.freeze({catalog:reader.libraryCatalog,preview:reader.libraryPreview});
 }

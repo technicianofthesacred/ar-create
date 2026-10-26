@@ -7,15 +7,31 @@ import {saveDownload} from '../../runtime/src/workspaces/exportOutput';
 import ConversationCanvas from '../../runtime/src/donors/teajia/conversation/ConversationCanvas';
 import {LocalStoryProvider} from '../../runtime/src/donors/teajia/storyEdit';
 const hash=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
-function magazineView(read:any){
+/** Rendering aliases are per occurrence and never replace the saved parser slots. */
+function occurrenceView(read:any){
  const owner=read?.ownerRef,media=read?.media;
- if(read?.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||read.revision!==media?.revision||JSON.stringify(owner)!==JSON.stringify(media?.ownerRef)||!hash(owner?.hash)||owner.editionId!=='working'||!read.spec||!Array.isArray(media.sources)||media.sources.length>256)throw Error('The current Magazine preview could not be verified.');
- const slots=new Set<string>(),placements=media.sources.flatMap((source:any)=>{
-  if(!hash(source.id)||!hash(source.sourceRef?.hash)||!Array.isArray(source.placements))throw Error('A saved article photograph could not be verified.');
-  const url='/api/review/magazine-media/file?'+new URLSearchParams({storyId:owner.projectId,pieceId:owner.pieceId,expectedHash:owner.hash,sourceId:source.id,sourceHash:source.sourceRef.hash,revision:read.revision});
-  return source.placements.map((p:any)=>{if(p.projectId!==owner.projectId||p.pieceId!==owner.pieceId||p.hash!==owner.hash||typeof p.slot!=='string'||!p.slot||slots.has(p.slot))throw Error('A saved article placement changed.');slots.add(p.slot);return{id:p.placementId,slot:p.slot,url,x:p.crop?.x??.5,y:p.crop?.y??.5,zoom:1};});
+ if(read?.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||read.revision!==media?.revision||media?.schema!=='ar-create.magazine-media-inspection.v1'||JSON.stringify(owner)!==JSON.stringify(media?.ownerRef)||!hash(owner?.hash)||owner.editionId!=='working'||!read.spec||!Array.isArray(media.sources)||media.sources.length>256)throw Error('The current Magazine preview could not be verified.');
+ const spec=structuredClone(read.spec),shots=new Map<string,{shot:any;block:any}>();
+ const add=(shot:any,path:string,block:any={})=>{if(!shot||typeof shot.file!=='string'||!shot.file||typeof shot.slot!=='string'||!shot.slot||typeof shot.alt!=='string'||shots.has(path)||shots.size>=256)throw Error('A saved article photograph could not be verified.');shots.set(path,{shot,block});};
+ const walk=(blocks:any,path:string,depth=0)=>{if(!Array.isArray(blocks)||blocks.length>2000||depth>8)throw Error('The saved article structure changed.');blocks.forEach((block:any,i:number)=>{if(!block||typeof block.kind!=='string')throw Error('The saved article structure changed.');const key=path+'/'+i+'/'+block.kind;if(block.shot)add(block.shot,key,block);if(block.kind==='photos'){if(!Array.isArray(block.shots)||block.shots.length>256)throw Error('The saved photo group changed.');block.shots.forEach((shot:any,n:number)=>add(shot,key+'/'+n,block));}if(block.kind==='side'||block.kind==='glyph')walk(block.blocks,key,depth+1);});};
+ if(spec.portrait)add(spec.portrait,'portrait');walk(spec.opening,'opening');if(!Array.isArray(spec.parts)||spec.parts.length>256||!spec.ending)throw Error('The saved article structure changed.');spec.parts.forEach((part:any,i:number)=>{if(part.opener)add(part.opener,'parts/'+i+'/opener');walk(part.blocks,'parts/'+i+'/blocks');});walk(spec.ending.blocks,'ending/blocks');if(spec.ending.shot)add(spec.ending.shot,'ending/shot',spec.ending);
+ const paths=new Set<string>(),ids=new Set<string>(),sources=new Set<string>(),sameRef=(a:any,b:any)=>['rootId','sourceId','relativePath','hash'].every(key=>a?.[key]===b?.[key]);
+ const placements=media.sources.flatMap((source:any)=>{
+  const ref=source?.sourceRef;
+  if(!hash(source?.id)||sources.has(source.id)||ref?.sourceId!==source.id||!hash(ref?.rootId)||!hash(ref?.hash)||typeof ref?.relativePath!=='string'||ref.relativePath.startsWith('/')||/[\\\x00-\x1f]/.test(ref.relativePath)||ref.relativePath.split('/').some((part:string)=>!part||part==='.'||part==='..')||!Array.isArray(source.placements))throw Error('A saved article photograph could not be verified.');sources.add(source.id);
+  const url='/api/review/magazine-media/file?'+new URLSearchParams({storyId:owner.projectId,pieceId:owner.pieceId,expectedHash:owner.hash,sourceId:source.id,sourceHash:ref.hash,revision:read.revision});
+  return source.placements.map((p:any)=>{
+   const at=shots.get(p?.structuralPath),crop=p?.crop||{};
+   if(!p||p.projectId!==owner.projectId||p.pieceId!==owner.pieceId||p.editionId!=='working'||p.hash!==owner.hash||!hash(p.placementId)||ids.has(p.placementId)||typeof p.structuralPath!=='string'||paths.has(p.structuralPath)||!sameRef(p.sourceRef,ref)||!at||p.slot!==at.shot.slot||ref.relativePath.split('/').at(-1)!==at.shot.file||(p.alt??'')!==at.shot.alt.slice(0,2000)||['x','y'].some(key=>!Number.isFinite(crop[key]??.5)||(crop[key]??.5)<0||(crop[key]??.5)>1||(crop[key]??.5)!==(at.shot[key]??.5))||crop.aspect!==at.block.aspect)throw Error('A saved article placement changed.');
+   ids.add(p.placementId);paths.add(p.structuralPath);const slot='magazine-occurrence-'+p.placementId;at.shot.slot=slot;return{id:p.placementId,slot,url,x:crop.x??.5,y:crop.y??.5,zoom:1};
+  });
  });
- const view=<div className="ar-donor-workspace"><main className="ar-output-reader" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={read.spec}/></LocalStoryProvider></main></div>;
+ if(paths.size!==shots.size)throw Error('The saved article photo coverage is incomplete.');
+ return {spec,placements};
+}
+function magazineView(read:any){
+ const {spec,placements}=occurrenceView(read),owner=read.ownerRef;
+ const view=<div className="ar-donor-workspace"><main className="ar-output-reader" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec}/></LocalStoryProvider></main></div>;
  return{view,placements};
 }
 export function mountMagazineAudience(element:HTMLElement,read:any){

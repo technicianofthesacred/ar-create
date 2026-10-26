@@ -106,3 +106,18 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-replacement-actions{display:flex;gap:6px;flex-wrap:wrap}
 .magazine-arrange .ma-replacement-actions button{min-height:44px}
 .magazine-arrange .ma-replacement-options button:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+
+/* Library controls stay in the temporary picker beside the current photograph. */
+.magazine-arrange .ma-library-search{display:flex;gap:6px;margin:0 0 8px;min-width:0}
+.magazine-arrange .ma-library-search input{flex:1 1 130px;width:0;min-width:0}
+.magazine-arrange .ma-library-search select{flex:0 1 46%;max-width:160px;min-width:0;text-overflow:ellipsis}
+.magazine-arrange .ma-library-search :is(input,select),.magazine-arrange .ma-photo-description input{box-sizing:border-box;min-height:40px;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit}
+.magazine-arrange .ma-photo-description{display:block;margin:8px 0}
+.magazine-arrange .ma-photo-description span{color:var(--dim)}
+.magazine-arrange .ma-photo-description input{display:block;width:100%;margin-top:4px}
+.magazine-arrange [data-ma-library-more]{margin:0 0 8px;min-height:40px}
+.magazine-arrange .ma-library-search :is(input,select):focus-visible,.magazine-arrange .ma-photo-description input:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
+.magazine-arrange .ma-focus .ma-photo-description{display:block;max-width:none;white-space:normal;flex:none}
+.magazine-arrange .ma-library-search :is(input,select),.magazine-arrange .ma-photo-description input,.magazine-arrange [data-ma-library-more]{min-height:44px}
+.magazine-arrange .ma-library-unavailable{display:grid;place-items:center;aspect-ratio:4/3;min-height:58px;width:100%;padding:4px;box-sizing:border-box;background:var(--wash,var(--paper));color:var(--dim);font:400 11px/1.35 var(--ar-ui,sans-serif);white-space:normal;text-align:center}
+.magazine-arrange .ma-replacement-options button.is-unavailable{cursor:default;opacity:.75}

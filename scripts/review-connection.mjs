@@ -107,13 +107,13 @@ function validateDraftCorrection(pathname,bytes,{approvals=false}={}){
  }
  validateNativeOperations(input.operations,fail);
 }
-function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false}={}){
+function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false,photoLibrary=false}={}){
  const object=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
  const fields=(value,required,optional=[])=>object(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>required.includes(key)||optional.includes(key));
  const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  // Prose/structure and one exact photo adjustment; aspect is Magazine-only,
  // and markup approval keeps its separate gate.
- const shapes={photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
+ const shapes={photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
  for(const op of operations){
   if(!object(op)||typeof op.kind!=='string'||!Object.hasOwn(shapes,op.kind)||!fields(op,shapes[op.kind],op.kind==='blockKind'?['level']:[]))fail();
   for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\x00-\x1f]/.test(op[key])))fail();
@@ -121,6 +121,7 @@ function validateNativeOperations(operations,fail,{photoAspect=false,photoReplac
   for(const key of ['from','to','at'])if(key in op&&(!Number.isSafeInteger(op[key])||op[key]<0))fail();
   for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))fail();
   if('seenBlockHash' in op&&!hash(op.seenBlockHash))fail();
+  if(op.kind==='photoReplaceAsset'&&(!photoLibrary||operations.length!==1||!hash(op.rootId)||!hash(op.revision)||!hash(op.sourceHash)||typeof op.sourceId!=='string'||!(/^[a-f0-9]{64}$/.test(op.sourceId)||/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(op.sourceId))||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
   if(op.kind==='photoReplace'&&(!photoReplace||operations.length!==1||op.id===op.replacementId||!hash(op.seenReplacementHash)))fail();
   if(op.kind==='photoAspect'&&(!photoAspect||operations.length!==1||!['4/3','4/5','1/1'].includes(op.aspect)))fail();
   if(op.kind==='photoFocus'&&(operations.length!==1||![op.x,op.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)))fail();
@@ -146,7 +147,7 @@ function validateMagazineCorrection(pathname,bytes){
  if(action==='undo'){if(!uuid(input.undoOperationId))fail();return;}
  if(action==='save'){if(typeof input.content!=='string'||!input.content.isWellFormed()||input.content.includes('\0'))fail();return;}
  if(!Array.isArray(input.operations)||!input.operations.length||input.operations.length>500)fail();
- validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true});
+ validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true,photoLibrary:true});
 }
 const fixtureImage=p=>/^\/(?:document-study\/assets\/photos|porcelain-assets)\/[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:jpg|jpeg|png|webp|gif|avif)$/i.test(p);
 const upstreamOnly=p=>p.startsWith('/api/')||p.startsWith('/transcription/')||fixtureImage(p)||['/document-study/synthetic-study-data.js','/document-study/package-config.js'].includes(p);
@@ -219,6 +220,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const draftCorrection=studyDraftCorrections&&draftCorrectionPath&&req.method==='POST';
   const magazineCorrection=magazineDraftCorrections&&magazineCorrectionPath&&req.method==='POST';
   const carouselCorrection=nativeCarouselCorrections&&carouselCorrectionPath&&req.method==='POST';
+  if(magazineCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Photo and manuscript changes require the author’s local workspace.');}
   const correction=sourceCorrection||draftCorrection||magazineCorrection||carouselCorrection||mechanicalCheck;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}

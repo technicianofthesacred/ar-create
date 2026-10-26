@@ -16,8 +16,8 @@ const simple=group=>['wide','bleed','photos'].includes(group.origin.role)&&['pho
  * Cover/opener/ending/side/on-photo arrangements retain their specialized owner.
  */
 function placementContext({inspection,working,request}={},mode='move') {
- const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:['beforeId'])];
- if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
+ const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:mode==='library'?['assetRootId','assetSourceId','assetRevision','assetHash','description']:['beforeId'])];
+ if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y','description'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
  const {storyId,pieceId,expectedHash,revision,placementId,beforeId}=request;
  const {document,authority,target,projection}=working||{};
  if(authority?.kind!=='magazine'||authority.storyId!==storyId||authority.pieceId!==pieceId||typeof document?.text!=='string'||Buffer.byteLength(document.text)>2*1024*1024||document.hash!==expectedHash||sha(document.text)!==expectedHash||target?.hash!==expectedHash||!identity(target?.artifactId)||!identity(target?.nativeProjectId)) refuse('stale-owner','This working draft changed. Reopen it before moving a photo.');
@@ -109,4 +109,14 @@ export function planMagazinePlacementReplace(input){
  if(selected.placement.sourceRef?.sourceId===ref.sourceId)refuse('unchanged-photo','Choose a different photograph.');
  const operations=Object.freeze([Object.freeze({kind:'photoReplace',id:selected.row.id,seenBlockHash:selected.row.blockHash,replacementId:source.row.id,seenReplacementHash:source.row.blockHash})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([selected.placement.placementId]),replacementPlacementId:source.placement.placementId,sourceId:ref.sourceId,sourceHash:ref.hash,operations});
+}
+
+
+export function planMagazineLibraryPlacementReplace(input){
+ if(!input?.working?.supportedNativeOperations?.includes('photoReplaceAsset'))refuse('unsupported-owner','This working editor does not support library photographs yet.');
+ const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'library'),o=selected.group.origin,r=input.request;
+ if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||selected.placement.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Replace a standalone wide or bleed article photo.');
+ if(!['assetRootId','assetRevision','assetHash'].every(k=>HEX.test(r[k]))||!/^([a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(r.assetSourceId)||typeof r.description!=='string'||r.description.length>2000||!r.description.isWellFormed()||r.description!==r.description.trim()||/[\x00-\x1f\x7f%]/.test(r.description)||r.description.includes(' · '))refuse('invalid-source','Choose a current library photo and a plain single-line description.');
+ const operations=Object.freeze([Object.freeze({kind:'photoReplaceAsset',id:selected.row.id,seenBlockHash:selected.row.blockHash,rootId:r.assetRootId,sourceId:r.assetSourceId,revision:r.assetRevision,sourceHash:r.assetHash,description:r.description})]);
+ return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([selected.placement.placementId]),operations});
 }

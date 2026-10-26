@@ -463,6 +463,51 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     catch(error){try{index=readJson(indexFile,loaded.value);}catch{index=loaded.value;}throw error;}
     return {value:next,bytes,hash:digest(bytes)};
   }});
+  // Narrow, non-mutating photo reads for composition. These use the saved
+  // Library identities and immutable original copies; they never discover files.
+  const photoExtensions=new Set(['.jpg','.jpeg','.png','.gif','.webp','.avif']);
+  const binaryDataStat=fs.lstatSync(dataDir),binaryDataIdentity=`${binaryDataStat.dev}:${binaryDataStat.ino}`;
+  const binaryRoots=new Map(roots.map(root=>{try{const st=fs.lstatSync(root.path);return [root.id,`${root.path}:${st.dev}:${st.ino}`];}catch{return [root.id,null];}}));
+  const binaryRoot=root=>{
+    const dataStat=fs.lstatSync(dataDir);resolveInside(dataDir,'',{directory:true});if(`${dataStat.dev}:${dataStat.ino}`!==binaryDataIdentity)throw new StateError('Library data root changed; reopen the library.',409);
+    const st=fs.lstatSync(root.path);resolveInside(root.path,'',{directory:true});
+    const identity=`${root.path}:${st.dev}:${st.ino}`;
+    if(binaryRoots.get(root.id)!==identity)throw new StateError('Library photo root changed; reopen the library.',409);
+    return digest(identity);
+  };
+  const photoMetadata=source=>({id:source.id,rootId:source.rootId,name:path.basename(source.rel_path),relativePath:source.rel_path,description:typeof source.provenance?.description==='string'?source.provenance.description:typeof source.description==='string'?source.description:'',retainedPhoto:source.provenance?.kind==='magazine-library-photo',originalHash:source.provenance?.originalHash||null});
+  const photosSnapshot=()=>serial(()=>{
+    const {value,hash:indexHash}=loadTyped(),items=[],issues=[];
+    for(const root of roots){
+      let rootHash;try{rootHash=binaryRoot(root);}catch{issues.push({rootId:root.id,reason:'root-unavailable-or-changed'});continue;}
+      for(const source of value.sources.filter(row=>row.rootId===root.id&&!row.managedTerminalSnapshot&&photoExtensions.has(path.extname(row.rel_path).toLowerCase())))
+        items.push({...photoMetadata(source),rootHash,rootName:root.name,missing:!!source.missing});
+    }
+    return {revision:value.revision,indexHash,items,coverage:{complete:issues.length===0,issues}};
+  });
+  const binarySnapshot=input=>serial(()=>{
+    if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!['id','expectedHash','rootHash','original'].includes(key))||!UUID.test(input.id||'')||input.expectedHash!==undefined&&!HASH.test(input.expectedHash)||input.rootHash!==undefined&&!HASH.test(input.rootHash)||input.original!==undefined&&typeof input.original!=='boolean')throw new StateError('Choose an existing Library photo identity and hash.',400);
+    const {value,hash:indexHash}=loadTyped(),matches=value.sources.filter(row=>row.id===input.id);
+    if(matches.length!==1)throw new StateError('Library photo identity is unavailable or ambiguous.',404);
+    const source=matches[0],root=rootById(source.rootId),rootHash=binaryRoot(root);
+    if(input.rootHash!==undefined&&input.rootHash!==rootHash)throw new StateError('Library photo root changed.',409);
+    if(!photoExtensions.has(path.extname(source.rel_path).toLowerCase())||source.managedTerminalSnapshot)throw new StateError('Choose a supported Library photo.',415);
+    let file;
+    if(input.original){
+      if(!source.originalFile||!HASH.test(input.expectedHash||''))throw new StateError('A pinned Library original hash is required.',400);
+      const originals=path.join(dataDir,'source-originals'),ext=path.extname(source.originalFile).toLowerCase();
+      if(path.basename(source.originalFile)!==`${digest(source.id)}-${input.expectedHash}${ext}`||path.resolve(source.originalFile)!==path.join(originals,path.basename(source.originalFile)))throw new StateError('Pinned Library original does not match this identity.',409);
+      file=resolveInside(originals,path.basename(source.originalFile));
+    }else{
+      if(source.missing)throw new StateError('Library photo is unavailable.',404);
+      file=checkedFile(source);
+    }
+    const before=regular(file);if(before.size>20*1024*1024)throw new StateError('Photo exceeds the 20 MB read limit.',413);
+    const fd=fs.openSync(file,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);let body;
+    try{if(fileStamp(fs.fstatSync(fd))!==fileStamp(before))throw new StateError('Library photo changed before reading.',409);body=Buffer.alloc(before.size);let offset=0;while(offset<body.length){const count=fs.readSync(fd,body,offset,body.length-offset,offset);if(!count)throw new StateError('Library photo changed during reading.',409);offset+=count;}if(fileStamp(fs.fstatSync(fd))!==fileStamp(before))throw new StateError('Library photo changed during reading.',409);}finally{fs.closeSync(fd);}
+    const hash=digest(body);if(fileStamp(regular(file))!==fileStamp(before)||input.expectedHash!==undefined&&hash!==input.expectedHash||binaryRoot(root)!==rootHash||loadTyped().hash!==indexHash)throw new StateError('Library photo changed; refresh the library.',409);
+    return {...photoMetadata(source),rootHash,hash,body,bytes:body.length,indexHash,revision:digest(`${rootHash}:${source.id}:${fileStamp(before)}:${hash}:${JSON.stringify(photoMetadata(source))}`)};
+  });
   if (inspectionOnly) {
     // Only registered identities are projected. There is no refresh, discovery,
     // import, directory creation, index publication or authoring method here.
@@ -568,6 +613,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     });
   }
   return {
+    photosSnapshot, binarySnapshot,
     folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog||root.originalCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),

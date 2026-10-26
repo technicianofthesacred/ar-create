@@ -60,3 +60,15 @@ test('replacement stays a single exact Magazine operation with no caller paths o
  const input={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[op]};
  assert.equal((await request(port,'/api/study-draft/save',{headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:JSON.stringify(input)})).status,400);assert.equal(calls.length,1);
 });
+
+test('full library replacement preserves exact asset selectors and refuses arbitrary paths, agents and Study expansion',async t=>{
+ const {send,calls,ownerPort}=await setup(t),op={kind:'photoReplaceAsset',id:'magazine:invented:3',seenBlockHash:hash,rootId:'b'.repeat(64),sourceId:'c'.repeat(64),revision:'d'.repeat(64),sourceHash:'e'.repeat(64),description:''},payload={...inputs.prepare,operations:[op]};
+ assert.equal((await send('prepare',payload)).status,200);assert.deepEqual(JSON.parse(calls[0].bytes),payload);
+ for(const change of [{rootId:'bad'},{sourceId:'/private/file.jpg'},{revision:'bad'},{sourceHash:'bad'},{description:'bad\nline'},{description:'untrimmed '},{description:'native · syntax'},{description:'hidden%syntax'},{description:'x'.repeat(2001)},{file:'arbitrary.jpg'},{path:'/elsewhere'},{photoAssets:[]}])assert.equal((await send('prepare',{...payload,operations:[{...op,...change}]})).status,400);
+ for(const k of Object.keys(op)){const bad={...op};delete bad[k];assert.equal((await send('prepare',{...payload,operations:[bad]})).status,400);}
+ for(const actor of ['agent:codex','agent:claude','unknown',''])assert.equal((await send('prepare',payload,{headers:{'x-ar-actor':actor}})).status,403);
+ assert.equal((await send('prepare',{...payload,operations:[op,op]})).status,400);assert.equal(calls.length,1);
+ const server=createReviewConnection({authorityURL:`http://127.0.0.1:${ownerPort}`,allowedAuthorityPort:ownerPort,actualWorkReview:true,studyDraftCorrections:true,magazineDraftCorrections:true}),port=await listen(server);t.after(()=>close(server));
+ const input={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[op]};
+ assert.equal((await request(port,'/api/study-draft/save',{headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:JSON.stringify(input)})).status,400);assert.equal(calls.length,1);
+});

@@ -47,6 +47,9 @@ import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
 import {createWorkingDraftBridge} from './services/magazine/working-draft-bridge.mjs';
 import {createMagazineMechanicalChecks} from './services/magazine-mechanical-checks.mjs';
+import {createMagazineLibraryPhotos} from './services/magazine-library-photos.mjs';
+import {createReviewMedia} from './services/review-media.mjs';
+import {createPublicationPhotoCatalog} from '../scripts/magazine-media-inspection.mjs';
 import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
 import http from 'node:http';
 import { readFile, lstat, realpath } from 'node:fs/promises';
@@ -279,11 +282,16 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
   // Agent coordination routes (mounted below, before the route map).
-  const extraCommands=[['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
+  const extraCommands=[['GET','/api/magazine/library-photos/preview',['rootId','sourceId','revision','sourceHash']],['GET','/api/magazine/library-photos/asset',['file']],['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
   const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
-  const magazineVault=createMagazineVault({...await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions}),dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
-  const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal});
+  const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
+  const magazineVault=createMagazineVault({...magazineConfig,dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
+  let originalPhotoProvider,publicationPhotoProvider;
+  const originalPhotos=magazineConfig.filesRoot?{list:()=> (originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).list(),open:input=>(originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).open(input)}:null;
+  const publicationPhotos=magazineConfig.magSendRepo?{catalog:()=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
+  const magazineLibraryPhotos=createMagazineLibraryPhotos({library,originals:originalPhotos,publication:publicationPhotos});
+  const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal,photoLibrary:magazineLibraryPhotos});
   const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
@@ -325,7 +333,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);
@@ -557,6 +565,15 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         response.writeHead(request.headers.range ? 206 : 200, { ...headers, 'Content-Length': Math.max(0, end - start + 1) });
         if (request.method === 'HEAD' || !size) return response.end();
         const stream = createReadStream(file, { start, end }); stream.on('error', () => response.destroy()); response.on('close', () => stream.destroy()); stream.pipe(response); return;
+      }
+      if (['/api/magazine/library-photos/preview','/api/magazine/library-photos/asset'].includes(pathname)) {
+        if(request.method!=='GET'){response.setHeader('Allow','GET');throw new StateError('Method is not supported.',405);}
+        const asset=pathname.endsWith('/asset'),keys=asset?['file']:['rootId','sourceId','revision','sourceHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1||!url.searchParams.get(key)))throw new StateError('Choose one exact photo library reference.',400);
+        const input=Object.fromEntries(keys.map(key=>[key,url.searchParams.get(key)]));
+        let preview;try{preview=await(asset?magazineLibraryPhotos.resolve(input):magazineLibraryPhotos.preview(input));}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<500?error.status:500);}
+        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
+        return response.end(preview.body);
       }
       if (pathname === '/api/study/photos/preview') {
         if(request.method!=='GET'){response.setHeader('Allow','GET');throw new StateError('Method is not supported.',405);}
