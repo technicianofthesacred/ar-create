@@ -107,20 +107,21 @@ function validateDraftCorrection(pathname,bytes,{approvals=false}={}){
  }
  validateNativeOperations(input.operations,fail);
 }
-function validateNativeOperations(operations,fail,{photoAspect=false}={}){
+function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false}={}){
  const object=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
  const fields=(value,required,optional=[])=>object(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>required.includes(key)||optional.includes(key));
  const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  // Prose/structure and one exact photo adjustment; aspect is Magazine-only,
  // and markup approval keeps its separate gate.
- const shapes={photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
+ const shapes={photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
  for(const op of operations){
   if(!object(op)||typeof op.kind!=='string'||!Object.hasOwn(shapes,op.kind)||!fields(op,shapes[op.kind],op.kind==='blockKind'?['level']:[]))fail();
-  for(const key of ['id','leftId','rightId','newId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\x00-\x1f]/.test(op[key])))fail();
+  for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\x00-\x1f]/.test(op[key])))fail();
   if('beforeId' in op&&op.beforeId!==null&&(typeof op.beforeId!=='string'||!op.beforeId))fail();
   for(const key of ['from','to','at'])if(key in op&&(!Number.isSafeInteger(op[key])||op[key]<0))fail();
   for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))fail();
   if('seenBlockHash' in op&&!hash(op.seenBlockHash))fail();
+  if(op.kind==='photoReplace'&&(!photoReplace||operations.length!==1||op.id===op.replacementId||!hash(op.seenReplacementHash)))fail();
   if(op.kind==='photoAspect'&&(!photoAspect||operations.length!==1||!['4/3','4/5','1/1'].includes(op.aspect)))fail();
   if(op.kind==='photoFocus'&&(operations.length!==1||![op.x,op.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)))fail();
   if(op.kind==='blockKind'&&(!['paragraph','heading','blockquote'].includes(op.blockKind)||op.blockKind==='heading'&&![1,2,3].includes(op.level)||op.blockKind!=='heading'&&op.level!==undefined))fail();
@@ -145,7 +146,7 @@ function validateMagazineCorrection(pathname,bytes){
  if(action==='undo'){if(!uuid(input.undoOperationId))fail();return;}
  if(action==='save'){if(typeof input.content!=='string'||!input.content.isWellFormed()||input.content.includes('\0'))fail();return;}
  if(!Array.isArray(input.operations)||!input.operations.length||input.operations.length>500)fail();
- validateNativeOperations(input.operations,fail,{photoAspect:true});
+ validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true});
 }
 const fixtureImage=p=>/^\/(?:document-study\/assets\/photos|porcelain-assets)\/[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:jpg|jpeg|png|webp|gif|avif)$/i.test(p);
 const upstreamOnly=p=>p.startsWith('/api/')||p.startsWith('/transcription/')||fixtureImage(p)||['/document-study/synthetic-study-data.js','/document-study/package-config.js'].includes(p);

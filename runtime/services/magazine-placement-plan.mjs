@@ -16,7 +16,7 @@ const simple=group=>['wide','bleed','photos'].includes(group.origin.role)&&['pho
  * Cover/opener/ending/side/on-photo arrangements retain their specialized owner.
  */
 function placementContext({inspection,working,request}={},mode='move') {
- const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='focus'?['x','y']:mode==='aspect'?['aspect']:['beforeId'])];
+ const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:['beforeId'])];
  if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
  const {storyId,pieceId,expectedHash,revision,placementId,beforeId}=request;
  const {document,authority,target,projection}=working||{};
@@ -51,7 +51,7 @@ function placementContext({inspection,working,request}={},mode='move') {
  if(placements.size!==inspection.originTrace.occurrences||groups.size!==inspection.originTrace.blocks||[...groups.values()].some(g=>g.indexes.size!==g.origin.groupSize)) refuse('invalid-origins','The photo positions are incomplete. Refresh the photos.');
  const selected=placements.get(placementId),destination=rows.get(beforeId);
  if(!selected) refuse('unknown-placement','This photo is no longer in the selected draft.');
- if(mode!=='move')return {selected,ownerRef,expectedHash,revision,scope:inspection.scope};
+ if(mode!=='move')return {selected,placements,ownerRef,expectedHash,revision,scope:inspection.scope};
  if(!simple(selected.group)) refuse('unsupported-placement','This photo belongs to a cover, opener, ending or composed layout. Its arrangement needs its existing layout tools.');
  if(!destination) refuse('unknown-destination','Choose an existing position in this draft.');
  const source=selected.row;
@@ -91,4 +91,22 @@ export function planMagazinePlacementAspect(input){
  if((p.crop?.aspect??'4/3')===input.request.aspect)refuse('unchanged-aspect','Choose a different photo shape before saving.');
  const operations=Object.freeze([Object.freeze({kind:'photoAspect',id:selected.row.id,seenBlockHash:selected.row.blockHash,aspect:input.request.aspect})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
+}
+
+
+export function planMagazinePlacementReplace(input){
+ if(!input?.working?.supportedNativeOperations?.includes('photoReplace'))refuse('unsupported-owner','This working editor does not support replacing photos yet.');
+ const {selected,placements,ownerRef,expectedHash,revision,scope}=placementContext(input,'replace');
+ for(const asset of input.inspection.sources){
+  const ref=asset.sourceRef;
+  if(!HEX.test(asset.id)||ref?.sourceId!==asset.id||!HEX.test(ref?.hash)||!HEX.test(ref?.rootId)||typeof ref?.relativePath!=='string'||asset.placements.some(p=>['rootId','sourceId','relativePath','hash'].some(k=>p.sourceRef?.[k]!==ref[k])))refuse('invalid-source','The draft’s photo catalog changed. Refresh the photos.');
+ }
+ const source=placements.get(input.request.replacementPlacementId);
+ const standalone=hit=>hit&&hit.group.origin.kind==='photo'&&['wide','bleed'].includes(hit.group.origin.role)&&hit.group.origin.depth===0&&hit.group.origin.groupSize===1&&hit.group.origin.groupIndex===0&&hit.group.origin.directiveEnd===hit.group.origin.chunkEnd&&!hit.placement.structuralPath.startsWith('ending/');
+ if(!standalone(selected)||!standalone(source))refuse('unsupported-placement','Choose two standalone article photos in this draft.');
+ const ref=source.placement.sourceRef;
+ if(!HEX.test(input.request.sourceId)||!HEX.test(input.request.sourceHash)||ref?.sourceId!==input.request.sourceId||ref?.hash!==input.request.sourceHash||!input.inspection.sources.some(s=>s.id===input.request.sourceId&&s.sourceRef?.hash===input.request.sourceHash&&s.placements.includes(source.placement)))refuse('unknown-source','This replacement photo is not in the current draft’s photo catalog.');
+ if(selected.placement.sourceRef?.sourceId===ref.sourceId)refuse('unchanged-photo','Choose a different photograph.');
+ const operations=Object.freeze([Object.freeze({kind:'photoReplace',id:selected.row.id,seenBlockHash:selected.row.blockHash,replacementId:source.row.id,seenReplacementHash:source.row.blockHash})]);
+ return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([selected.placement.placementId]),replacementPlacementId:source.placement.placementId,sourceId:ref.sourceId,sourceHash:ref.hash,operations});
 }

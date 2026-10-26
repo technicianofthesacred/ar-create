@@ -4,7 +4,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {createRequire} from 'node:module';
-import {planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect} from '../runtime/services/magazine-placement-plan.mjs';
+import {planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect,planMagazinePlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
 import * as native from '../runtime/services/draft-correspondence.mjs';
 const require = createRequire(new URL('../runtime/package.json', import.meta.url));
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -339,6 +339,27 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     if(!current.supportedNativeOperations?.includes('photoAspect')||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The working editor or photo owner changed.');
     return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
   }
+  async function planReplace(input) {
+    fields(input,['storyId','pieceId','expectedHash','revision','placementId','replacementPlacementId','sourceId','sourceHash']);
+    const selection={storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash},inspection=await inspect(selection);
+    const {resolved,api,spec,code}=await publicationContext(selection),plan=planMagazinePlacementReplace({inspection,working:resolved,request:input});
+    const model=native.capture(resolved.document.text,input.pieceId);model.blocks.forEach((block,i)=>{block.id='magazine:'+encodeURIComponent(input.pieceId)+':'+i;});
+    const candidate=native.apply(model,resolved.document.text,plan.operations),selectedId=plan.operations[0].id;
+    if(candidate.reworks?.length||candidate.snapshot.prefix!==model.prefix||candidate.snapshot.blocks.length!==model.blocks.length||candidate.snapshot.blocks.some((b,i)=>b.id!==model.blocks[i].id||b.separator!==model.blocks[i].separator||b.id!==selectedId&&b.raw!==model.blocks[i].raw))fail('The replacement would change other draft content.');
+    const original=api.parseDraft(api.draftBody(resolved.document.text).body,api.memoryOf(spec)),reparsed=api.parseDraft(api.draftBody(candidate.raw).body,api.memoryOf(original));
+    const all=inspection.sources.flatMap(s=>s.placements),selected=all.find(p=>p.placementId===input.placementId),source=all.find(p=>p.placementId===input.replacementPlacementId);
+    const expected=structuredClone(original),blockAt=(story,structuralPath)=>{const match=structuralPath.match(/^(opening|parts\/(\d+)\/blocks)\/(\d+)\/(wide|bleed)$/);return match&&(match[1]==='opening'?story.opening:story.parts[Number(match[2])]?.blocks)?.[Number(match[3])];};
+    const block=blockAt(expected,selected.structuralPath),donor=blockAt(original,source.structuralPath);
+    if(!block?.shot||!donor?.shot)fail('The selected photo layout changed.');
+    block.shot.file=donor.shot.file;block.shot.alt=donor.shot.alt;block.shot.slot=donor.shot.slot;
+    if(!isDeepStrictEqual(expected,reparsed))fail('The replacement would change article words, layout, crop or other photographs.');
+    const files=snapshot?.files;
+    if(!files||snapshot.revision!==inspection.revision)fail('The photo catalog changed; inspect again.');
+    const guardAssets=()=>{for(const asset of files.values())if(readChecked(root,asset.relative,MAX_ASSET).hash!==asset.hash)fail('Publication photograph changed; inspect again.');};
+    guardAssets();guardCode(code);const current=await working(selection);guardCode(code);guardAssets();
+    if(!current.supportedNativeOperations?.includes('photoReplace')||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The working editor or photo owner changed.');
+    return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
+  }
   async function preview(input) {
     fields(input,['storyId','pieceId','expectedHash','sourceId','sourceHash','revision']);
     const s = snapshot;
@@ -362,5 +383,5 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       throw Object.assign(new Error('Publication photographs are unavailable; inspect the working draft again.'), {status:409, cause:error});
     }
   };
-  return {inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus),planAspect:safe(planAspect)};
+  return {inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planFocus:safe(planFocus),planAspect:safe(planAspect),planReplace:safe(planReplace)};
 }

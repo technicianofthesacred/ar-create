@@ -768,7 +768,7 @@
     {
       "path": "public/document-study/draft-flow.js",
       "sourceSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "candidateSha256": "489bdf5709e8d37b1c13e1139c44e0f21e5dca813fe7e05d9b73b6254d2dead3",
+      "candidateSha256": "3469d5889baf039cd7d2eb6bd08efd7298b9c66be388c36446f79ad83e8e8ef4",
       "adapted": true
     },
     {
@@ -936,7 +936,7 @@
     {
       "path": "runtime/src/native/correspondence.ts",
       "sourceSha256": "b9416361b8ee4fa8f55d4f9dd3816cc3b39dbcf3ee3bed5414b459d6605723a4",
-      "candidateSha256": "428d1d728e2b2a1238285d4387a271a4acddd1eb95d04df24a18bdb76d14d1b0",
+      "candidateSha256": "a4fe54c5d680192a97d56dfbd43b09998ef64de189fc2b8e1e67cf1b1653bfc0",
       "adapted": true
     },
     {
@@ -3677,11 +3677,11 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "c78e1a0683acc5bbf532b00b57f187baad5492acc0b06447920f483479269ef6"
+      "candidateSha256": "e7d9c0734d1284a085ce791b4912710e42af7b18b564699b3798d63ecee7fe1d"
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "07887fb4f1aa732829c8610c80559b850041f65a4aabde90cc2447bdd5633559"
+      "candidateSha256": "59b60689f0951c904beebd14c2d2fb889ac8a3f2cd2749d4118dd689016f8d4d"
     },
     {
       "path": "tests/existing-work.test.mjs",
@@ -3777,7 +3777,7 @@
     },
     {
       "path": "tests/magazine-native-editor.test.mjs",
-      "candidateSha256": "43a845008674e02151c534f5440000d9c2446b2ba827c489f8b001cc5d571b7c"
+      "candidateSha256": "890a5891aa22c15884d97f49e7d43fc33b2027d00c0cd32fbd44952f26a64f25"
     },
     {
       "path": "tests/magazine-working-catalog.test.mjs",
@@ -3793,7 +3793,7 @@
     },
     {
       "path": "tests/review-magazine-corrections.test.mjs",
-      "candidateSha256": "41e7ae7253892631c320e0575d8f8f4c6082807b2c5520bad2abd5aeebb175d2"
+      "candidateSha256": "361a027a7cb66845aab9950ede4562c3c8ad11aff914bee29d33067605e56890"
     },
     {
       "path": "tests/review-magazine-working-links.test.mjs",
@@ -3933,7 +3933,7 @@
     },
     {
       "path": "scripts/magazine-media-inspection.mjs",
-      "candidateSha256": "1d5c450fa84637898f228695f82187367d0be58f97024ccd4ad4161b859670ee"
+      "candidateSha256": "5bad1457a8b1dd14ea0b2a3a798e34c501cf22205ed7cf10faa6a10bd3f2d9c7"
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
@@ -3981,7 +3981,7 @@
     },
     {
       "path": "runtime/services/magazine-placement-plan.mjs",
-      "candidateSha256": "7acd3f8cc6852efb415d9ef8f7040b46cdf88792f0ba56c90ee761bf91cc40fe"
+      "candidateSha256": "5f6b083f093eb77368087901f62c3f0e8dafaf33ba6fb66428aeac6d2b96e145"
     },
     {
       "path": "tests/magazine-placement-plan.test.mjs",
@@ -3989,19 +3989,19 @@
     },
     {
       "path": "tests/magazine-placement-owner-journey.test.mjs",
-      "candidateSha256": "373f369678a2abc7871258a4cf5f425efeebdf9182086a9755ccf5be44f36fe3"
+      "candidateSha256": "e70bee9d8c07c6b35c9408102397fadfdc3b33245692b293663ff7c4a565d70e"
     },
     {
       "path": "public/document-study/magazine-arrange.js",
-      "candidateSha256": "2fafc8ec3f3031b3186c0cbe460bbfb0406b9278eea988286ec76d1b4c18063c"
+      "candidateSha256": "b207c06b839be26ccf32d5adf1f0108b4f646bcf4e962dfd3796b3998c9a56c6"
     },
     {
       "path": "public/document-study/magazine-arrange.css",
-      "candidateSha256": "d1de45c6142e683f1974ab88f4aba35f649425093623dac7e2758c048575d6ce"
+      "candidateSha256": "acb78199003bae42eb5e7467301f8f16100268b2bc3cb49f031d0d7e0cd4a001"
     },
     {
       "path": "tests/magazine-arrange.test.mjs",
-      "candidateSha256": "af5aeea64a364cdc39118e131ec4f1e866b7507278421ee92dda9be4055d21e0"
+      "candidateSha256": "f96b625a9785ecc40e4c93e3ffc66bf82672f47253cef59cdff0df274625b9e8"
     },
     {
       "path": "tests/research-retained-reader-layout.test.mjs",
@@ -4270,6 +4270,10 @@
     {
       "path": "tests/magazine-mechanical-checks.test.mjs",
       "candidateSha256": "bca026977b4bad3440413f608643caca35828f9eefa8a92b56df8cdcb5928888"
+    },
+    {
+      "path": "tests/magazine-photo-replace-plan.test.mjs",
+      "candidateSha256": "defa44efafe74f355c903bc800891baae98793aae2cfc3b0ff6930b1c54a7764"
     }
   ],
   "dependencyRepair": {

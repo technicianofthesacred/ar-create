@@ -31,6 +31,7 @@ const original = [
   'Invented opening 瓷 😀.', '',
   '%%photo: same.png · Invented wide · wide x=0.2 y=0.8%%', '',
   'Invented words between photographs.', '',
+  '%%photo: replacement.png · Invented replacement description · bleed x=0.1 y=0.9%%', '',
   '%%photos: same.png · First group member | same.png · Second group member · aspect=4/5%%', '',
   'Invented words after the group.', '', '%%ending%%', '', '%%saying%%', '> "An invented closing saying."', '', 'Invented closing words.', '', '---', '', 'Invented retained author notes.', ''
 ].join('\r\n');
@@ -97,6 +98,7 @@ async function fixture(t) {
   fs.writeFileSync(path.join(conversation,'pieces/index.ts'),"export const CONVERSATIONS=[{path:'/read/synthetic',slug:'synthetic',images:'/read/synthetic/',opening:[],parts:[],ending:{blocks:[]}}];");
   fs.mkdirSync(path.join(publication,'public/read/synthetic'),{recursive:true});
   fs.writeFileSync(path.join(publication,'public/read/synthetic/same.png'),Buffer.from([137,80,78,71,13,10,26,10,1,2,3]));
+  fs.writeFileSync(path.join(publication,'public/read/synthetic/replacement.png'),Buffer.from([137,80,78,71,13,10,26,10,4,5,6]));
   fs.writeFileSync(path.join(publication,'published.html'),'<article>Invented immutable published edition.</article>\n');
   const get = async (route, input={}, headers={}) => {
     const url=new URL(route,owner.url);for(const [key,value] of Object.entries(input))url.searchParams.set(key,value);
@@ -274,4 +276,23 @@ test('committed owner receipts expose exact Undo after save response and immedia
  assert.equal((await h.post('undo',{...selection,undoOperationId:newerId,operationId:randomUUID()})).status,200);assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,200);assert.equal(fs.readFileSync(path.join(h.f.vault,DEV),'utf8'),original);
  const undone=await h.read();assert.equal(undone.history.find(r=>r.operationId===operationId).canUndo,false);assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,409);
  t.diagnostic(JSON.stringify({inventedOnly:true,saveResponseThenImmediateRestart:restart,durableReceiptWithoutJournal:true,scopedHistory:true,staleAndUndoneRefused:true,exactUndo:true}));
+});
+
+
+test('S09: replacing one photo uses exact current source file and description, persists through owner restart and exact Undo',async t=>{
+ const h=await fixture(t),beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication),first=await h.read(),inspection=await h.inspect();
+ const all=inspection.sources.flatMap(s=>s.placements),target=all.find(p=>p.alt==='Invented wide'),source=all.find(p=>p.alt==='Invented replacement description'),asset=inspection.sources.find(s=>s.id===source.sourceRef.sourceId);
+ const request={storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:first.document.hash,revision:inspection.revision,placementId:target.placementId,replacementPlacementId:source.placementId,sourceId:asset.id,sourceHash:asset.sourceRef.hash};
+ assert.ok(first.supportedNativeOperations.includes('photoReplace'));
+ const plan=await h.media.planReplace(request);assert.equal(plan.sourceId,asset.id);assert.equal(plan.sourceHash,asset.sourceRef.hash);assert.equal(plan.replacementPlacementId,source.placementId);
+ assert.deepEqual(plan.operations,[{kind:'photoReplace',id:target.nativeOrigin.blockId,seenBlockHash:target.nativeOrigin.blockHash,replacementId:source.nativeOrigin.blockId,seenReplacementHash:source.nativeOrigin.blockHash}]);
+ for(const mutate of [op=>op.file='/tmp/unrelated.png',op=>op.alt='forged description',op=>op.path='../replacement.png',op=>op.replacementId='magazine:foreign:1',op=>op.seenReplacementHash='0'.repeat(64)]){const op={...plan.operations[0]};mutate(op);assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:[op]})).status,409);}
+ const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepared.status,200,JSON.stringify(prepared.body));assert.equal(sha(prepared.body.content),plan.expectedContentHash);
+ const expected=original.replace('same.png · Invented wide · wide x=0.2 y=0.8','replacement.png · Invented replacement description · wide x=0.2 y=0.8');assert.equal(prepared.body.content,expected);assert.deepEqual(treeHashes(h.f.vault),beforeVault);
+ const operationId=randomUUID(),payload={...selection,expectedHash:plan.expectedHash,content:prepared.body.content,operationId};assert.equal((await h.post('save',payload)).status,200);const restart=await h.restart();assert.equal((await h.post('save',payload)).status,200);
+ const reopened=await h.read();assert.equal(reopened.document.text,expected);assert.equal(reopened.history.find(r=>r.operationId===operationId)?.canUndo,true);onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+ const fresh=await h.inspect(),changed=fresh.sources.flatMap(s=>s.placements).find(p=>p.structuralPath===target.structuralPath);assert.equal(changed.sourceRef.hash,source.sourceRef.hash);assert.equal(changed.alt,source.alt);assert.deepEqual(changed.crop,target.crop);
+ await assert.rejects(h.media.planReplace(request),e=>e.status===409);assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations})).status,409);
+ assert.equal((await h.post('undo',{...selection,undoOperationId:operationId,operationId:randomUUID()})).status,200);assert.deepEqual(fs.readFileSync(path.join(h.f.vault,DEV)),Buffer.from(original));assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);
+ t.diagnostic(JSON.stringify({inventedOnly:true,photoAndDescriptionFromExactOwnedOccurrence:true,targetCropAndLayoutPreserved:true,ownerRestart:restart,exactUndo:true,originalAssetsAndPublicationPreserved:true}));
 });
