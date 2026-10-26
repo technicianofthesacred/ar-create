@@ -3933,7 +3933,7 @@
     },
     {
       "path": "scripts/magazine-media-inspection.mjs",
-      "candidateSha256": "05dadd0a7f7772cb50c51c667e4d052f995e5efa98ce9e04c625de3fba8fd9aa"
+      "candidateSha256": "d7358dd105ef9cd7953aa832e4691b031238b84a2ee469b8f70b129502588e1a"
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
@@ -3949,7 +3949,7 @@
     },
     {
       "path": "tests/magazine-media-inspection.test.mjs",
-      "candidateSha256": "9187b2e307b30918c0772913d0ee1fd1889273ddbad454617090c6a6992e77b8"
+      "candidateSha256": "35bb5354102841541a328d3d42e7db7d3c455b8fbd27758d3a6e3927932435bd"
     },
     {
       "path": "tests/mobile-section-header.test.mjs",
@@ -4277,7 +4277,7 @@
     },
     {
       "path": "runtime/services/magazine-library-photos.mjs",
-      "candidateSha256": "d2901002374f3766e859247c0f2381cbcb3a9ec0892b9bdeeb8e56a630699531"
+      "candidateSha256": "d39f1ae9bee38823c3b3b6e5d523a8bcb02bf2611d37ce97c6eef202d3327d56"
     },
     {
       "path": "tests/magazine-library-photo-http.test.mjs",
@@ -4285,11 +4285,19 @@
     },
     {
       "path": "tests/magazine-library-photos.test.mjs",
-      "candidateSha256": "d4a00ce430d614b50e0179b086251650a1c119a64e647b81250036922add09c3"
+      "candidateSha256": "26280ec22d18578fed86f59a40aac0b1c261e34896dfbe3e9231de1ae27f2328"
     },
     {
       "path": "tests/magazine-publication-photo-catalog.test.mjs",
       "candidateSha256": "4805341c4dee321ba390a6f81e5ad9ba74d7d342c63e48d89932f97194c9a5f2"
+    },
+    {
+      "path": "runtime/services/magazine-media-usage.mjs",
+      "candidateSha256": "9112bfea14ad5d29d9901cc7a42b278c446628f30489db0ad7d5705cc9819530"
+    },
+    {
+      "path": "tests/magazine-media-usage.test.mjs",
+      "candidateSha256": "21052f07b861a0d28b4b5fe4170f474ab3208e65409a166291c7cef5dc7ab61f"
     }
   ],
   "dependencyRepair": {

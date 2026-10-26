@@ -5,9 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createMagazineMediaInspection} from '../scripts/magazine-media-inspection.mjs';
+import {createMagazineLibraryPhotos} from '../runtime/services/magazine-library-photos.mjs';
+import {projectMagazineMediaUsage} from '../runtime/services/magazine-media-usage.mjs';
 const sha = v => createHash('sha256').update(v).digest('hex');
 const PNG = Buffer.from([137,80,78,71,13,10,26,10,1,2,3]);
-function fixture(t,{duplicate=false,unsafe=false,symlink=false,noPublication=false}={}) {
+function fixture(t,{duplicate=false,unsafe=false,symlink=false,noPublication=false,libraryPhotos=null}={}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(),'magazine-publication-reader-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
   const conv = path.join(root,'src/pages/read/conversation');fs.mkdirSync(path.join(conv,'pieces'),{recursive:true});
@@ -22,12 +24,13 @@ export function parseDraft(body, spec) { const files = body.trim().replace(/^%%p
   const imageRoot = path.join(root,'public/read/synthetic');fs.mkdirSync(imageRoot,{recursive:true});
   const names=Array.from({length:25},(_,i)=>`photo-${i}.png`);
   for(const name of names)fs.writeFileSync(path.join(imageRoot,name),PNG);
+  if(libraryPhotos)names[0]='library-photo-'+sha(PNG)+'.png';
   if(unsafe)names[0]='../elsewhere.png';
   if(symlink){fs.unlinkSync(path.join(imageRoot,names[0]));fs.symlinkSync(path.join(imageRoot,names[1]),path.join(imageRoot,names[0]));}
   const text=`---\ntype: DEV\n${noPublication?'':'published: https://www.teajia.com/read/synthetic (historical annotation)\n'}---\n%%photos: ${names.join(' | ')}%%`;
   const input={storyId:'mag-synthetic',pieceId:'mag-synthetic:article',expectedHash:sha(text)};
   let stale=false,wrongOwner=false;
-  const reader=createMagazineMediaInspection({repoRoot:root,resolveWorking:async()=>({document:{text,path:'Workflow/3-Develop/DEV - Synthetic.md',hash:stale?'0'.repeat(64):sha(text)},authority:{kind:'magazine',storyId:wrongOwner?'other':input.storyId,pieceId:input.pieceId},target:{nativeProjectId:'native-synthetic',artifactId:'working-artifact',hash:sha(text)}})});
+  const reader=createMagazineMediaInspection({repoRoot:root,libraryPhotos,resolveWorking:async()=>({document:{text,path:'Workflow/3-Develop/DEV - Synthetic.md',hash:stale?'0'.repeat(64):sha(text)},authority:{kind:'magazine',storyId:wrongOwner?'other':input.storyId,pieceId:input.pieceId},target:{nativeProjectId:'native-synthetic',artifactId:'working-artifact',hash:sha(text)}})});
   return {root,conv,imageRoot,input,reader,stale:()=>stale=true,wrongOwner:()=>wrongOwner=true};
 }
 const previewInput=(f,view,row=view.sources[0])=>({...f.input,sourceId:row.id,sourceHash:row.sourceRef.hash,revision:view.revision});
@@ -37,6 +40,7 @@ test('one grouped directive projects 25 exact publication assets and placements 
   assert.equal(view.ownerRef.artifactId,'working-artifact');assert.equal(view.sources[0].title,'Photograph 0');
   assert.deepEqual(view.sources[0].placements[0].crop,{x:0.4,y:0.6,aspect:'4/5'});
   assert.equal(view.sources[0].placements[0].structuralPath,'opening/0/photos/0');
+  assert.deepEqual(view.sources[0].originRef,{kind:'publication',rootId:view.sources[0].sourceRef.rootId,relativePath:view.sources[0].sourceRef.relativePath});
   assert.equal(view.sources[0].sourceRef.hash,sha(PNG));assert.ok(!JSON.stringify(view).includes(f.root));
   const result=await f.reader.preview(previewInput(f,view));assert.deepEqual(result.body,PNG);assert.equal(result.contentType,'image/png');
   assert.deepEqual(fs.readdirSync(f.imageRoot),before);
@@ -131,4 +135,25 @@ test('unchanged photo and publication revisions do not depend on parallel module
  assert.equal(new Set(inspections.map(v=>v.revision)).size,1,'the same exact code/working/photo bytes must retain one revision');
  const references=await Promise.all(Array.from({length:6},()=>f.reader.publicationReference(f.input)));
  assert.equal(new Set(references.map(v=>v.revision)).size,1,'unchanged publication references must also remain stable');
+});
+
+ test('retained usage identity preserves the maintained Library source rather than its derived placement source',async t=>{
+  const libraryRoot=sha('invented-library-root'),libraryId='invented-retained-photo',libraryPhotos={resolve:async()=>({body:PNG,hash:sha(PNG),rootId:libraryRoot,sourceId:libraryId,contentType:'image/png'})};
+  const f=fixture(t,{libraryPhotos}),view=await f.reader.inspect(f.input),row=view.sources.find(row=>row.previewKind==='library-owned');
+  assert.deepEqual(row.originRef,{kind:'library',rootId:libraryRoot,sourceId:libraryId});
+  assert.notEqual(row.sourceRef.sourceId,libraryId);assert.equal(row.placements.length,1);
+  assert.deepEqual(row.placements[0].sourceRef,row.sourceRef);
+  assert.deepEqual((await f.reader.preview(previewInput(f,view,row))).body,PNG);
+ });
+
+test('real publication catalog and working inspection join identities without marking equal-byte unused asset as placed',async t=>{
+ const f=fixture(t);fs.writeFileSync(path.join(f.imageRoot,'unused.png'),PNG);
+ const library={photosSnapshot:async()=>({items:[],coverage:{complete:true,issues:[]}}),binarySnapshot:async()=>{throw Error('No Library photo expected');},retainAlbumPhoto:async()=>{throw Error('Read-only usage must not retain');}};
+ const photos=createMagazineLibraryPhotos({library,publication:{catalog:f.reader.libraryCatalog,preview:f.reader.libraryPreview}});
+ const catalog=await photos.catalog(),inspection=await f.reader.inspect(f.input),result=projectMagazineMediaUsage({catalog,inspection,expectedOwnerRef:inspection.ownerRef,expectedCatalogRevision:catalog.revision});
+ assert.equal(result.status,'complete');assert.equal(result.items.length,26);
+ assert.equal(result.items.filter(row=>row.usage.status==='used').length,25);
+ assert.equal(result.items.find(row=>row.name==='unused.png').usage.status,'not-used-in-article');
+ assert.equal(new Set(result.items.map(row=>row.sourceHash)).size,1,'identical bytes do not collapse distinct publication files');
+ assert.equal(result.items.reduce((n,row)=>n+(row.usage.count||0),0),25);
 });
