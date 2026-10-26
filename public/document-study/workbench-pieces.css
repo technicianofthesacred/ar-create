@@ -23,7 +23,7 @@ html body.wbf-on #project-library[data-workbench-pieces="true"]{inset:48px 0 0 6
 #project-library .wbp-folder-toggle{display:none}
 .wbp-searchbar{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .wbp-search{display:flex;align-items:center;gap:6px;min-width:0;max-width:22rem;flex:1;height:32px;padding:0 8px;background:var(--paper);border:1px solid var(--line);border-radius:7px;color:var(--dim)}
-#project-library .wbp-search input{width:100%;min-width:0;height:30px;margin:0;padding:0;border:0;background:none;color:var(--ink);font:inherit;box-shadow:none;outline:none}
+#project-library .wbp-search input{width:100%;min-width:0;min-height:0;height:30px;margin:0;padding:0;border:0;background:none;color:var(--ink);font:inherit;box-shadow:none;outline:none}
 #project-library [data-wbp-filters]{height:32px;border:1px solid var(--line);padding:0 10px}
 .wbp-filters{display:flex;align-items:end;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)}
 .wbp-filters label{display:grid;gap:3px;min-width:0;flex:1 1 115px;max-width:200px;color:var(--dim)}
@@ -156,4 +156,18 @@ html body.wbf-on #project-library .wbp-root .wbp-filter-button{border:1px solid 
  #project-library .wbp-heading>[data-wbp-close]{order:4;display:flex;align-items:center;justify-content:center;width:34px;height:34px;margin-left:0;padding:0}
  #project-library .wbp-back-icon{display:block;flex:none}
  #project-library .wbp-back-label{display:none}
+}
+
+/* Piece titles own the first phone line; exact edition and actions share the second. */
+#project-library .wbp-title-cell-working{display:flex;align-items:center;gap:8px}
+#project-library .wbp-title-cell-working>[data-wbp-original]{flex-shrink:0}
+#project-library .wbp-piece-action-icon{display:none}
+@media(max-width:760px){
+ #project-library .wbp-title-cell{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:26px 26px;gap:0 4px;align-items:center;overflow:hidden}
+ #project-library .wbp-title-cell>[data-wbp-open]{grid-column:1 / -1;grid-row:1;width:100%;min-height:26px;line-height:26px}
+ #project-library .wbp-title-cell>[data-wbp-open]>small{display:none}
+ #project-library .wbp-title-cell>.wbp-phone-meta{grid-column:1;grid-row:2;min-width:0;line-height:22px;font-size:var(--t-label,13px)}
+ #project-library .wbp-title-cell>:is([data-wbp-original],[data-wbp-copy-browser]){display:flex;grid-column:2;grid-row:2;align-items:center;justify-content:center;width:28px;height:28px;min-height:28px;padding:0;overflow:visible}
+ #project-library .wbp-piece-action-icon{display:block;flex:none}
+ #project-library .wbp-piece-action-label{display:none}
 }
