@@ -2,6 +2,12 @@
 // and ~/builds/mag-check-splits.mjs (2026-10-21). Same rules, same printed lines; text in, results out.
 // tests/magazine-checks.test.mjs holds them to the scripts' own output.
 import {StateError} from '../../store.mjs';
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+
+// Attest the source loaded for these functions, once at module evaluation. A
+// later disk edit must never relabel the still-running functions as new code.
+export const MAGAZINE_CHECKER_REVISION = createHash('sha256').update(fs.readFileSync(new URL(import.meta.url))).digest('hex');
 
 const MAX_SKIP = 4, MAX_SPAN = 6;
 const words = t => t.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9'\[\]\s]/g, ' ').split(/\s+/).map(w => w.replace(/^'+|'+$/g, '')).filter(Boolean);
@@ -80,7 +86,7 @@ export function checkSplits(devText, srcText) {
 /** magazine.check: both checks on a draft against its transcript (and Adrian's CONTEXT note). */
 export function createMagazineChecks({vault}) {
   const text = rel => { const r = vault.read({path: rel}); if (!r.exists || r.text === null) throw new StateError(`${rel} is not a readable text file in the magazine.`, 404); return r; };
-  return {
+  const checks = {
     run(input = {}) {
       if (!input || typeof input !== 'object' || Object.keys(input).some(k => !['draft', 'source', 'context'].includes(k))) throw new StateError('Use draft, source (the SRC) and optional context (CONTEXT paths).', 400);
       const dev = text(input.draft);
@@ -96,4 +102,6 @@ export function createMagazineChecks({vault}) {
       return {draft: {path: dev.path, hash: dev.hash}, source: {path: src.path, hash: src.hash}, context: extras.map(e => ({path: e.path, hash: e.hash})), quotes: checkQuotes(dev.text, src.text, extras.map(e => e.text)), splits: checkSplits(dev.text, src.text)};
     },
   };
+  Object.defineProperty(checks, 'checkerRevision', {value: MAGAZINE_CHECKER_REVISION, enumerable: true});
+  return checks;
 }

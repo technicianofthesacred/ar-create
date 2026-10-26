@@ -393,12 +393,13 @@
  window.existingWork={load,decorate,openStory,openCheckSource,openArtifact,openSource,openConversation,openRetained,openWorkspace,openWorkspaceTarget,openWorkingDraft,rememberCarousel,openMedia,openPlacement,savedPlacements,loadMedia,loadPublicationMedia,artifactsAt,referenceModel,catalog:()=>catalog,quarantinedProjects:()=>[...quarantined.values()],contextStage};
  window.c3Shell?.register('existing work access',decorate,{order:125,ignore:'.ew-context,.ew-primary,.ew-source-library,.ew-media,.ew-route-error,.ew-document-reader'});
  if(typeof window.createMagazineCheckAdapter==='function'&&typeof window.resolveMagazineCheckRegistration==='function'&&typeof window.studyDraftCheck?.setMagazineAdapter==='function'){
+  const runCheck=async(path,input)=>{const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)}),result=await response.json();if(!response.ok)throw Object.assign(Error(result.error||'The saved manuscript could not be checked.'),{status:response.status});return result;};
   window.studyDraftCheck.setMagazineAdapter(window.createMagazineCheckAdapter({origin:location.origin,actor:'human:adrian',resolve:async snapshot=>{
    const inputQuery=new URLSearchParams({parentStudyKey:snapshot.parentStudyId,partKey:window.magazineCheckInputPartKey(snapshot.owner),draftPath:snapshot.owner.path,expectedDraftHash:snapshot.proof.draftHash});
    const configuredInputs=read('/api/study-originals/check-inputs?'+inputQuery).catch(error=>{if([404,503].includes(error.status))return null;throw error;});
    const [fresh,ownerCatalog,originalInputs]=await Promise.all([read('/api/review/catalog'),read('/api/magazine/working-draft/catalog'),configuredInputs]);
    return window.resolveMagazineCheckRegistration({catalog:fresh,ownerCatalog,snapshot,originalInputs});
-  },read:path=>read('/api/magazine/read?'+new URLSearchParams({path})),run:async input=>{const response=await fetch('/api/magazine/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)}),result=await response.json();if(!response.ok)throw Error(result.error||'The saved manuscript could not be checked.');return result;}}));
+  },read:path=>read('/api/magazine/read?'+new URLSearchParams({path})),run:input=>runCheck('/api/magazine/check',input),readSaved:input=>read('/api/magazine/mechanical-check?'+new URLSearchParams(input)),runSaved:window.AR_CREATE_REVIEW_MODE?.magazineCheckReceipts===true?input=>runCheck('/api/magazine/mechanical-check',input):undefined}));
  }
  if(typeof window.createMagazineOutputAdapter==='function'&&typeof window.studyOutputConnection?.setMagazineAdapter==='function'){
   window.studyOutputConnection.setMagazineAdapter(window.createMagazineOutputAdapter({

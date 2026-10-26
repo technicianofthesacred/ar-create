@@ -81,7 +81,13 @@
  async function flushMagazine(d,retry=false){
   if(d.pendingUndo){const p=state.projects.find(p=>p.id===d.parentStudyId);if(p)return undoMagazine(p,d.pendingUndo.request.undoOperationId);return;}
   const id=d.owner.pieceId;clearTimeout(timers.get(id));if(inflight.has(id)||!retry&&['Conflict','Recover save','Save unavailable'].includes(d.status))return;
-  if(!d.editable){d.status='Save unavailable';d.error=d.unavailableReason||'Magazine is read-only.';persist();cue();updateRecovery(d);return;}
+  if(!d.editable){
+   // Opening another section flushes the retained owner, even when no words
+   // changed. A read-only no-op is clean; pending or changed words still refuse.
+   let clean=false;try{clean=!d.pending&&!d.rejectedPaste&&!operationsFor(d.base,d.blocks).length;}catch{}
+   if(clean){d.status='Saved to working file';delete d.error;persist();cue();return;}
+   d.status='Save unavailable';d.error=d.unavailableReason||'Magazine is read-only.';persist();cue();updateRecovery(d);return;
+  }
   let submitted=d.pending?.sequence;
   inflight.add(id);
   try{

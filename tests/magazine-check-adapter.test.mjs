@@ -11,3 +11,49 @@ test('dirty and switched/inflight owners never apply a check; unavailable explic
 test('actual maintained backend with invented files changes no file bytes or service receipts around checks.run',t=>{const f=buildMagazineFixture();t.after(f.cleanup);const vault=createMagazineVault({vaultRoot:f.vault,dataDir:f.data,writable:false});const scan=base=>{const out={};const walk=p=>{for(const e of fs.readdirSync(p,{withFileTypes:true})){const file=path.join(p,e.name);if(e.isDirectory())walk(file);else if(e.isFile())out[path.relative(base,file)]=hash(fs.readFileSync(file));}};walk(base);return out;};const before=scan(f.dir),checked=vault.extra.checks.run({draft:'Workflow/3-Develop/DEV - Clay Teacher (story).md',source:'Workflow/1-Source/SRC - Clay Teacher (Kiln Day).md',context:['Workflow/1-Source/CONTEXT - Clay Teacher.md']});assert.equal(checked.quotes.ok,false);assert.deepEqual(scan(f.dir),before);});
 
 test('source evidence uses the first split passage independently of its combined finding display',async()=>{const files=reads(),pair={a:'An invented unmatched quotation',b:'Another invented continuation'};const adapter=make({origin,actor,resolve:async()=>record(),read:async p=>files.get(p),run:async()=>({...result(),splits:{ok:false,splits:[pair],lines:[]}})});const value=await adapter.execute(snapshot(),{isCurrent:()=>true});assert.equal(value.issues[1].sourcePassage,pair.a);assert.match(value.issues[1].words,/Another invented continuation/);assert.equal(value.issues[0].sourcePassage,'An invented unmatched quotation');});
+
+const ID='60ea7627-b25a-47d6-84bf-ab104667a165';
+window.crypto={randomUUID:()=>ID};
+function receipt(overrides={}){return {schema:'ar-create.magazine-mechanical-check.v1',checkId:ID,operationId:ID,status:'needs-review',persisted:true,createdAt:'2026-10-26T00:00:00.000Z',finishedAt:'2026-10-26T00:00:01.000Z',proof:{rootIdentity:{scheme:'canonical-directory-sha256-v1',fingerprint:R},parentStudyId:'parent',storyId:owner.storyId,pieceId:owner.pieceId,partKey:owner.partKey,draft:{path:draft,hash:H},source:{path:src,hash:S},context:[{path:context,hash:C}],inputRevision:R,checkerRevision:R},result:result(),scope:{mechanicalOnly:true},...overrides};}
+const savedResponse=record=>({schema:'ar-create.magazine-mechanical-check-response.v1',available:true,record});
+test('saved receipt pickup reads exact owner without running, reanchors from current paragraphs and ignores unrelated catalog revisions',async()=>{
+ const saved=receipt();saved.issues=[{locator:{kind:'native-paragraph',nativeId:'forged'}}];let runs=0;const r=record();r.catalogRevision=C;r.target.artifactId=r.artifact.artifactId='fresh-artifact';
+ const a=make({origin,actor,resolve:async()=>r,readSaved:async selectors=>{assert.deepEqual(JSON.parse(JSON.stringify(selectors)),{parentStudyId:'parent',storyId:owner.storyId,pieceId:owner.pieceId});return savedResponse(saved);},runSaved:async()=>{runs++;}});
+ const current=await a.readReceipt(snapshot(),{isCurrent:()=>true});assert.equal(current.persisted,true);assert.equal(current.status,'needs-review');assert.equal(current.issues[0].locator.nativeId,'exact-paragraph');assert.equal(current.proof.catalogRevision,C);assert.equal(current.proof.artifactId,'fresh-artifact');assert.equal(runs,0);
+});
+test('saved pickup refuses forged or foreign proof; changed revisions become earlier results without trusted anchors',async()=>{
+ for(const mutate of [r=>r.proof.rootIdentity.fingerprint=C,r=>r.proof.parentStudyId='foreign',r=>r.proof.pieceId='foreign',r=>r.proof.partKey='foreign',r=>r.proof.draft.path='Workflow/3-Develop/DEV - Foreign.md',r=>r.schema='forged',r=>r.persisted=false]){
+  const saved=receipt();mutate(saved);const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(saved)});await assert.rejects(()=>a.readReceipt(snapshot(),{isCurrent:()=>true}));
+ }
+ for(const mutate of [r=>r.proof.draft.hash=C,r=>r.proof.source.hash=C,r=>r.proof.source.path='Workflow/1-Source/SRC - Other.md',r=>r.proof.context=[],r=>r.proof.inputRevision=C]){
+  const saved=receipt();mutate(saved);const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(saved)});const value=await a.readReceipt(snapshot(),{isCurrent:()=>true});assert.equal(value.status,'stale');assert.equal(value.issues.length,0);
+ }
+ const forged=receipt();forged.result.source.hash=C;const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(forged)});await assert.rejects(()=>a.readReceipt(snapshot(),{isCurrent:()=>true}),/different saved/);
+});
+test('saved failed and interrupted records stay incomplete and cannot restore findings or jump locators',async()=>{
+ for(const status of ['failed','interrupted','running']){const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(receipt({status,result:null}))});const value=await a.readReceipt(snapshot(),{isCurrent:()=>true});assert.equal(value.status,status);assert.equal(value.persisted,true);assert.equal(value.issues.length,0);assert.equal(value.notRun,true);}
+});
+test('dirty or switched receipt reads never apply results and refresh registration after the read',async()=>{
+ let reads=0,live=true;const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>{reads++;live=false;return savedResponse(receipt());}});const dirty=snapshot();dirty.proof.dirty=true;await assert.rejects(()=>a.readReceipt(dirty,{isCurrent:()=>true}),/Save or resolve/);assert.equal(reads,0);await assert.rejects(()=>a.readReceipt(snapshot(),{isCurrent:()=>live}),/changed/);
+ let resolutions=0;const changed=make({origin,actor,resolve:async()=>{const r=record();if(resolutions++)r.story.vaultRecords.src[0].currentHash=C;return r;},readSaved:async()=>savedResponse(receipt())});assert.equal((await changed.readReceipt(snapshot(),{isCurrent:()=>true})).status,'stale');
+});
+test('explicit saved run sends only selectors, expected revisions and one fresh UUID; persistence failure never falls back',async()=>{
+ const files=reads(),posts=[],a=make({origin,actor,resolve:async()=>record(),read:async p=>files.get(p),readSaved:async()=>savedResponse(null),runSaved:async body=>{posts.push(body);return savedResponse(receipt());},run:async()=>{assert.fail('Must not run ephemeral checker');}});
+ assert.equal((await a.execute(snapshot(),{isCurrent:()=>true})).persisted,true);assert.deepEqual(JSON.parse(JSON.stringify(posts)),[{parentStudyId:'parent',storyId:owner.storyId,pieceId:owner.pieceId,expectedDraftHash:H,expectedInputRevision:R,operationId:ID}]);
+ const failed=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(null),runSaved:async()=>{throw Error('Receipt could not be saved');},run:async()=>{assert.fail('Persistence failure cannot fall back');}});await assert.rejects(()=>failed.execute(snapshot(),{isCurrent:()=>true}),/could not be saved/);
+});
+test('unavailable receipt support preserves ephemeral checking and receipt reads never run checks',async()=>{
+ for(const readSaved of [async()=>({schema:'ar-create.magazine-mechanical-check-response.v1',available:false,record:null}),async()=>{throw Object.assign(Error('Not available'),{status:404});}]){
+  let runs=0;const files=reads(),a=make({origin,actor,resolve:async()=>record(),read:async p=>files.get(p),readSaved,runSaved:async()=>assert.fail('Unavailable saved route'),run:async()=>{runs++;return result();}});assert.equal(await a.readReceipt(snapshot(),{isCurrent:()=>true}),null);assert.equal(runs,0);assert.equal((await a.execute(snapshot(),{isCurrent:()=>true})).persisted,false);assert.equal(runs,1);
+ }
+});
+
+test('held receipts retain explicit missing context/source proof without claiming a result',async()=>{
+ const r=record();r.story.vaultRecords.src[0].currentHash=null;r.story.vaultRecords.context[0].currentHash=null;const saved=receipt({status:'held',notRun:true,result:null,reason:'An explicit input is unavailable.'});saved.proof.source.hash=null;saved.proof.context[0].hash=null;
+ const a=make({origin,actor,resolve:async()=>r,readSaved:async()=>savedResponse(saved)}),value=await a.readReceipt(snapshot(),{isCurrent:()=>true});assert.equal(value.status,'held');assert.equal(value.notRun,true);assert.equal(value.issues.length,0);assert.match(value.limitations.join(' '),/explicit input is unavailable/);
+});
+test('receipt scope and evidence must be well-formed; valid earlier proof stays visible as earlier proof',async()=>{
+ for(const mutate of [r=>r.scope={mechanicalOnly:false},r=>r.proof.source.hash='forged',r=>r.proof.context[0].path='../private.md',r=>r.proof.context.push(r.proof.context[0])]){const saved=receipt();mutate(saved);const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(saved)});await assert.rejects(()=>a.readReceipt(snapshot(),{isCurrent:()=>true}),/could not be confirmed/);}
+ const saved=receipt();saved.proof.draft.hash=C;const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>savedResponse(saved)}),value=await a.readReceipt(snapshot(),{isCurrent:()=>true});assert.equal(value.status,'stale');assert.equal(value.proof.draftHash,C);assert.equal(value.proof.references[0].hash,C);
+});
+test('disabled execution support can still return a read-only saved receipt',async()=>{const a=make({origin,actor,resolve:async()=>record(),readSaved:async()=>({...savedResponse(receipt()),available:false})});assert.equal((await a.readReceipt(snapshot(),{isCurrent:()=>true})).persisted,true);});
