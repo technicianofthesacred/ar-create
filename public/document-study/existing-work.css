@@ -54,3 +54,13 @@ html body.wbf-on #app #workspace>#ew-document-reader .ew-prose h3{font-size:20px
 
 /* Keep maintained Media owners visible beside the folder browser. */
 #workspace.wfb-showing>#owned-photo-stage{display:block!important}
+
+/* Saved Media records remain available in the existing secondary actions menu. */
+.wfb-browser.k-media .wfb-folder-actions>.ew-context{margin:0;padding:0 4px;border:0;min-width:min(340px,calc(100vw - 48px));max-width:min(340px,calc(100vw - 48px));max-height:55vh;overflow:auto}
+.wfb-browser.k-media .wfb-folder-actions>.ew-context :is(p,small){overflow-wrap:anywhere}
+@media(max-width:650px){
+ .wfb-browser.k-media{position:relative}
+ .wfb-browser.k-media .wfb-tools{position:static}
+ .wfb-browser.k-media .wfb-folder-actions{top:auto;left:12px;right:12px;min-width:0;width:auto}
+}
+.wfb-browser.k-media .wfb-folder-actions:has(>.ew-context){max-height:min(65vh,calc(100dvh - 280px));overflow:auto;overscroll-behavior:contain}
