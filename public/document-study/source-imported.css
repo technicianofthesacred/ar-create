@@ -103,7 +103,7 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
   width:100%;max-width:none!important;min-width:0;box-sizing:border-box;margin:24px 0 28px!important;padding:0;
 }
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group{
-  display:block!important;grid-template-columns:none!important;margin:0 0 22px!important;padding:0!important;border:0!important;
+  display:block!important;grid-template-columns:none!important;margin:0 0 22px!important;padding:0!important;border:0!important;background:none;
 }
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group>.source-speaker{
   display:block!important;width:auto!important;margin:0 0 6px!important;padding:0!important;color:var(--dim);font:400 12px/1.5 var(--ar-ui,system-ui,sans-serif)!important;

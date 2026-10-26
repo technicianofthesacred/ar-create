@@ -2361,11 +2361,11 @@
     },
     {
       "path": "public/document-study/source-imported.css",
-      "candidateSha256": "ce6f9757b05bee71b1edde9a7a2e48db01842e0040a41e68a5a4f8e4f8ecc2ef"
+      "candidateSha256": "df35eae3f7af44b61983fab468f4470e5e640497fcb10da56a64f7eaee6dafd6"
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "5046c302fb6fdccedebfbbf0a1ab4bb920117f109e43ed9e90b1476429b81825"
+      "candidateSha256": "650c7297a2a474ac44ac39ec094bb3c49648f2ded765d2da81e20369c203e14c"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -3725,7 +3725,7 @@
     },
     {
       "path": "tests/source-inline-editing.test.mjs",
-      "candidateSha256": "a2ef9af0adbc784b95ed5cb8d41f231638f5f7a65e03db43067fbf51d358112e"
+      "candidateSha256": "b44aba7a7e088fc4590e1e053aa1f349fb4698ffd381e654df14ae578510deaa"
     },
     {
       "path": "tests/review-source-corrections.test.mjs",
