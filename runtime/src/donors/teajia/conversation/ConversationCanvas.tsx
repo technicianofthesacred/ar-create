@@ -122,7 +122,7 @@ const BlockView: React.FC<{ spec: ConversationSpec; block: Block | Block[] }> = 
       return (
         <section className="tj-conv-side" data-flip={b.flip ? '' : undefined} data-bleed={b.bleed ? '' : undefined}>
           <div data-reveal="text" className="tj-conv-side-words"><Words blocks={b.blocks} /></div>
-          <div data-reveal="photo" className="tj-conv-side-photo"><Photo spec={spec} shot={b.shot} /></div>
+          <CaptionedPhotoFrame shot={b.shot} className="tj-conv-side-photo"><Photo spec={spec} shot={b.shot} /></CaptionedPhotoFrame>
         </section>
       );
     case 'photos':

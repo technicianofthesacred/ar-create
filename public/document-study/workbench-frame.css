@@ -347,6 +347,8 @@ html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-dra
 
 /* Proposal alternatives sit beside the same editor, leaving its text reachable. */
 @media(min-width:761px){
+ /* Project identity already remains in the top switcher, manuscript and drawer heading. */
+ html body.wbf-on[data-wbf-drawer-tool="proposals"] #c3-surface-bar .sb-piece{display:none!important}
  html body.wbf-on[data-wbf-drawer-tool="proposals"] #app #workspace .desk{box-sizing:border-box;width:calc(100% - 380px)!important;grid-template-columns:minmax(0,var(--measure))!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-wbf-drawer-tool="proposals"] #app #workspace .desk>#margin{display:none!important}
 }

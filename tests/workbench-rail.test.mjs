@@ -57,7 +57,7 @@ test('Library occupies canonical step one; Inbox keeps its real handler and All 
  const foot=d.createElement('div');foot.className='tr-find';foot.innerHTML='<button data-tr-topics>Learning library</button>';d.querySelector('.workflowNavigation').append(foot);
  let ingests=0,libraries=0;owner.onclick=()=>ingests++;foot.firstElementChild.onclick=()=>libraries++;
  w.c3Workbench.decorate();
- assert.equal(owner.querySelector('.stepName').textContent,'Library');assert.equal(owner.querySelector('.stepNumber').textContent,'1');assert.equal(owner.getAttribute('aria-label'),'View step 1: Library');
+ assert.equal(owner.querySelector('.stepName').textContent,'Library');assert.equal(owner.querySelector('.stepNumber').textContent,'1');assert.equal(owner.getAttribute('aria-label'),'Library');
  const rows=[...d.querySelectorAll('[data-wb-row]')];assert.deepEqual(rows.map(n=>n.querySelector('.wbp-l').textContent),['Inbox','All sources']);assert.equal(rows[0].getAttribute('aria-current'),'true');assert.equal(rows[1].hasAttribute('aria-current'),false);
  rows[0].click();assert.equal(ingests,1);assert.ok(d.querySelector('#wb-panel'),'forwarding to the Inbox owner does not collapse the panel');
  d.querySelector('[data-wb-row="lib:all"]').click();assert.equal(libraries,1);assert.equal(d.querySelector('[data-wb-row*="unsorted"]'),null);close();
@@ -154,4 +154,15 @@ test('Source panel lists real conversation identities only and preserves owner o
 
 test('phone Pieces choice dismisses Make without swallowing or duplicating its maintained action',async()=>{
  const {w,d,close}=boot(5,{phone:true});try{const nav=d.querySelector('.workflowNavigation'),pieces=d.createElement('button');pieces.dataset.wbfPieces='';pieces.textContent='Pieces';nav.querySelector('.wn-family[data-family="make"]').prepend(pieces);let calls=0;pieces.addEventListener('click',()=>calls++);d.querySelector('button[data-wb-group="make"]').click();assert.ok(nav.classList.contains('cr-open'));pieces.click();await tick();assert.equal(calls,1);assert.equal(nav.classList.contains('cr-open'),false);assert.equal(nav.querySelector('.cr-picker').getAttribute('aria-expanded'),'false');assert.equal(d.querySelector('button[data-wb-group="make"]').getAttribute('aria-expanded'),'false');}finally{close();}
+});
+
+test('all twelve entrances use canonical unnumbered names without changing owner handlers or status',()=>{
+ const {w,d,close}=boot(5);try{
+  const names=['Library','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
+  const owners=[...d.querySelectorAll('.workflowStep')];let calls=0;
+  owners.forEach((owner,i)=>{owner.setAttribute('aria-label','View step '+(i+1)+': Old snapshot (read-only)');owner.title='snapshot connection gap';owner.onclick=()=>calls++;});
+  owners[11].disabled=true;w.c3Workbench.decorate();
+  owners.forEach((owner,i)=>{assert.equal(d.querySelectorAll('.workflowStep')[i],owner);assert.equal(owner.getAttribute('aria-label'),names[i]);assert.equal(owner.title,'Open '+names[i]);assert.equal(owner.querySelector('.stepNumber').textContent,String(i+1));});
+  assert.equal(owners[4].getAttribute('aria-current'),'step');assert.equal(owners[11].disabled,true);owners[4].click();assert.equal(calls,1);
+ }finally{close();}
 });

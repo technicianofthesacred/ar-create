@@ -127,13 +127,16 @@
   if(bar.dataset.render!==html){bar.innerHTML=html;bar.dataset.render=html;}
  }
  function rail(nav){
-  // The step number and the state word stay inside each button for screen readers (visually hidden by the CSS); the rail
-  // itself shows only the icon and the name.
+  // Keep original step nodes/handlers and owner state. Navigation names describe entrances,
+  // not legacy snapshot capability or a claim that a section is finished.
   nav.classList.add('wb-rail');
-  // Keep the canonical first-step button and its ingestion handler; Library's Inbox is that existing surface.
-  const inbox=[...nav.querySelectorAll('.workflowStep')].find(b=>Number(text(b.querySelector('.stepNumber')))===1);
-  const label=inbox?.querySelector('.stepName');if(label&&label.textContent!=='Library')label.textContent='Library';
-  if(inbox){const aria=inbox.getAttribute('aria-label');if(aria&&/^View step 1:/.test(aria)&&!aria.includes('Library'))inbox.setAttribute('aria-label',aria.replace(/^View step 1:[^,]*/, 'View step 1: Library'));}
+  const names=['Library','Source','Research','Direction','Write','Read','Check','Media','Arrange','Audience','Share','Outputs'];
+  for(const owner of nav.querySelectorAll('.workflowStep')){
+   const n=Number(text(owner.querySelector('.stepNumber'))),name=names[n-1];if(!name)continue;
+   const label=owner.querySelector('.stepName');if(label&&label.textContent!==name)label.textContent=name;
+   if(owner.getAttribute('aria-label')!==name)owner.setAttribute('aria-label',name);
+   if(owner.getAttribute('title')!=='Open '+name)owner.setAttribute('title','Open '+name);
+  }
   // Read remains a real entrance; its owner may present the same writing surface.
   bottomBar(nav);
  }
