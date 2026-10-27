@@ -59,7 +59,7 @@ const BODY = {
   '/api/study/human-direction/select': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'title'],
   '/api/study/human-direction/write': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'body'],
   '/api/study/human-direction/undo': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'undoOperationId'],
-  '/api/study-ai/prepare': ['sourceIds'], '/api/study-ai/propose': ['requestId', 'replacements'],
+  '/api/study-ai/prepare': ['sourceIds', 'answerIds?'], '/api/study-ai/propose': ['requestId', 'replacements'],
   '/api/study-ai/accept': ['requestId', '...'], '/api/study-ai/reject': ['requestId', 'reason?'],
   '/api/pieces': ['expectedProjectId', 'expectedRevision', 'title'], '/api/pieces/switch': ['expectedProjectId', 'expectedRevision', 'projectId'],
   '/api/presence': ['stage', 'scope:{kind,id}', 'dirty', 'sequence'],

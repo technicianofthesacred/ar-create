@@ -270,7 +270,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices}):null;
   const studyPlanContext=studyDrafts?createStudyFirstFlowPlanContext({dataDir,savedPlan:studyEditorialPlan,firstFlow}):null;
   const studyProjectMaterial=studyDrafts?createStudyProjectMaterialContext({dataDir,firstFlow}):null;
-  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,guidance}):null;
+  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,learning:researchAnswers.study,guidance}):null;
   const draftCall=async fn=>{if(!studyDrafts)throw new StateError('Current manuscript originals are not configured.',503);try{return await fn();}catch(error){throw Object.assign(new StateError(error.message,error.status||500),error.outcome?{outcome:error.outcome}:{});}};
   const originalRead=fn=>{if(!studyOriginals)throw new StateError('Current original records are not configured; retained snapshots remain available.',503);try{return fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const researchAction=fn=>input=>{if(!researchEnabled)throw new StateError('Fresh research is being validated. Existing story records are ready to read.',503);return fn(input);};
