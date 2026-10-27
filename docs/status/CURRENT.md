@@ -1,3 +1,14 @@
+## 28 October — PR82 installed; exact goal checkoffs
+
+Signed main `52a4e0423374d7d7a8f41fbfc077942cafb029a1`, build2026-10-27T21:41:43.051Z, is verified live in installed8841 and main59958.521 relevant checks/28 files, build/package929,84 served hashes and complete installed-manifest/generated-byte proof pass. API content, canonical dirty files and configuration are preserved. Final verification corrected a source-module HTTP probe: installed source modules are verified by the complete manifest and their generated browser bundle, while review source bytes are checked separately. No merge/install was repeated and no permission/CSP change was made.
+
+- [x] Literal kept-Source lookup with fresh exact passage verification, exclusive sheets and retained prior reading/unsaved corrections.
+- [x] Nested side, words-on-photo and closing-saying captions through the canonical writer, restart, Audience, retained HTML and exact History recovery.
+- [ ] Complete manual-language-edition handoff on main59958: the normal installed owner’s native Article/Carousel lifecycle and exports are verified, but the review proxy still refuses its new create/refresh/export paths. Narrow admission under the already enabled grants is being connected; do not call that main-review flow complete yet.
+- [ ] Carousel Check, new-photo insertion/explicit placement, full Direction/whole C/NOTES, phone, populated all12/interaction and complete journey acceptance.
+
+The candidate entries below now describe installed code; their full remaining gates stay open. Native verification used invented content and left real wording decisions for explicit human clicks.
+
 ## 28 October — Linked manual editions and composed captions ready for release
 
 521 relevant checks across28 files and the generated build pass. The pre-existing native-output HTTP fixture still fails its initial original-open request on an unchanged parent checkout; it is excluded from this result, not labelled green.
@@ -29,9 +40,9 @@ Completion means verified running behavior and approved-design evidence. A passi
 | Choose an unused indexed Library photo in the existing replacement flow | Verified installed, PR72; insertion remains open |
 | Output-specific Direction briefs | Verified installed, PR81; does not generate translations |
 | Nested photographs/group captions and saved Media folder projection | Verified installed, PR81; full filing remains open |
-| Nested side, on-photo and saying captions | Native Save/restart/Audience/export/reverse Undo verified; installation pending |
-| Literal passage lookup in saved kept Source speech | Integrated `5ef1856`; native search/return/recovery verified; installation pending |
-| Independent linked manual language editions | Native Article/Carousel own-word/restart/Read/export/history verified; installation pending |
+| Nested side, on-photo and saying captions | Verified installed, PR82; full visual/phone acceptance remains open |
+| Literal passage lookup in saved kept Source speech | Verified installed, PR82 |
+| Independent linked manual language editions | Normal-owner lifecycle installed/verified, PR82; main59958 review admission unfinished |
 | Whole creative journey and Bench/Library/Pieces/all twelve sections | Open |
 | Full approved C/NOTES desktop/phone light/dark and interaction match | Open; bounded desktop evidence does not close this gate |
 
