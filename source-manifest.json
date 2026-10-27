@@ -1129,7 +1129,7 @@
     {
       "path": "public/document-study/output-connection.js",
       "sourceSha256": "413cdf1a2bd186ec81d31db05215eff82dc63ca6b63ff8f1c70931b7aaf35403",
-      "candidateSha256": "c5e38387a65f1dea0bb7e3f7289d1ecf64e4ccfebb0d5175029d329838b6a9a8",
+      "candidateSha256": "3cad2d6d1189447ec4f3d46a5c75d3d644c853d6f22fa33e3d79bc21c889e454",
       "adapted": true
     },
     {
@@ -1807,7 +1807,7 @@
     {
       "path": "public/document-study/output-connection.test.mjs",
       "sourceSha256": "f18c1855e87e786d3dfe13434129185b0c9ce4342411eada7fbc070b4b7d2a2e",
-      "candidateSha256": "9233f4f8cdca057337204bb8bd7f05eb6c83f4d47bc2aaca54a35c73fce3c953",
+      "candidateSha256": "4b8942483e6c0914b71d96a5e0878147f59bfa71da14195a5f099850a3aa109c",
       "adapted": false
     },
     {
@@ -1921,7 +1921,7 @@
     {
       "path": "public/document-study/output-stage-surfaces.js",
       "sourceSha256": "9427da7f0a5ccf8acb2b603fb98937dd54b65578b9f6b766da72300f69d84418",
-      "candidateSha256": "7ca8d45ffb4c188a84a4f3d4a812845bcedb6ec6968e643482119f18a3b9a32c",
+      "candidateSha256": "8a13e95d6eb3afc5b693c068b25055375b88d39a6bd49c205d0b7174a4585c7b",
       "adapted": false
     },
     {
@@ -2237,7 +2237,7 @@
     },
     {
       "path": "public/document-study/output-stage-surfaces.test.mjs",
-      "candidateSha256": "ad7bb006a9280c8996cb53038434392c16b0df1c66b2b5dacb6d1c7414117dc6"
+      "candidateSha256": "d8cef9e4a88a44a97dbb853453b1a890f0a86e3b1db903450b1fd2cb53d93baa"
     },
     {
       "path": "tests/source-note-navigation.test.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "bb31603807d9f5a1a1f448475f2d3226efba6f73b1184c079fd5a065b1d56762"
+      "candidateSha256": "abc601712e3ab9aeaf618c9e403a1101a357e588c215d2d46089160278df4e1a"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3661,7 +3661,7 @@
     },
     {
       "path": "public/document-study/review-mode.js",
-      "candidateSha256": "2f9a600593de9a710bf80d16b87d4673fd556c9796191f7f656ddb08c6e9f9cb"
+      "candidateSha256": "7eba248dd11a1a6d771b36e07ec0e8397c4ceee8789deecf502f164c0684bc8b"
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
@@ -4029,7 +4029,7 @@
     },
     {
       "path": "tests/existing-work-startup.test.mjs",
-      "candidateSha256": "70bed2fbe1de397e3829f54a65e4cdb099d18947d652ecb4ff5f1a67d0e5619d"
+      "candidateSha256": "46659938d324b1ba8784909c7ddfd22678cb54d1f3d744e0f9971dbaa75789ac"
     },
     {
       "path": "tests/retained-carousel-reader.test.mjs",
