@@ -31,6 +31,11 @@ async function fixture(t){
 }
 const edit=(w,key,value)=>{const field=w.document.querySelector('[data-dwt-plan="'+key+'"]');field.value=value;field.dispatchEvent(new w.Event('input',{bubbles:true}));};
 const click=(w,action)=>w.document.querySelector('[data-dwt-action="'+action+'"]').click();
+test('Undo refuses to discard an unsaved plan or its recovery copy',async t=>{
+ const f=await fixture(t),w=await f.boot();edit(w,'audience','My unsaved audience');const before=await f.read(),recovery=w.localStorage.getItem('ar-study-human-direction-recovery-v1');
+ assert.equal(w.document.querySelector('[data-dwt-action="undo-plan"]').disabled,true);
+ await assert.rejects(()=>w.studyHumanDirection.planUndo(f.scope),/unsaved/i);assert.equal((await f.read()).body,before.body);assert.equal(w.localStorage.getItem('ar-study-human-direction-recovery-v1'),recovery);assert.equal(w.document.querySelector('[data-dwt-plan="audience"]').value,'My unsaved audience');
+});
 
 test('all six plan choices survive physical save, page reopening and scoped agent context without altering original prose or manuscripts',async t=>{
  const f=await fixture(t),w=await f.boot(),values={title:'An invented beginning',audience:'Curious readers',language:'English / 中文',output:'Article and short post',opening:'Start with my question — not certainty.',closing:'Leave an honest question open. <!-- ar-create:direction-plan:v1 -->'};
