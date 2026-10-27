@@ -72,3 +72,9 @@ test('full library replacement preserves exact asset selectors and refuses arbit
  const input={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[op]};
  assert.equal((await request(port,'/api/study-draft/save',{headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:JSON.stringify(input)})).status,400);assert.equal(calls.length,1);
 });
+
+test('description operation preserves exact words, stays Magazine-only, and rejects caption or unsafe syntax',async t=>{
+ const {send,calls}=await setup(t),op={kind:'photoDescription',id:'magazine:invented:3',seenBlockHash:hash,description:'Exact 瓷 😀'};assert.equal((await send('prepare',{...inputs.prepare,operations:[op]})).status,200);assert.deepEqual(JSON.parse(calls[0].bytes).operations,[op]);
+ for(const change of [{caption:'Visible caption'},{description:'100%'},{description:'one · two'},{description:' padded '},{description:'line\nline'},{description:'\ud800'},{description:'x'.repeat(2001)}])assert.equal((await send('prepare',{...inputs.prepare,operations:[{...op,...change}]})).status,400);
+ const native={bindingId:uuid,parentStudyId:'synthetic-parent',operationId:uuid,expected:{workflow:{draft:hash,edits:null},bindingHash:hash,correspondenceHash:hash},operations:[op]};assert.equal((await send('/api/study-draft/native/save',native)).status,423);
+});
