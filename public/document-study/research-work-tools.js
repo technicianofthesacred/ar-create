@@ -2,15 +2,22 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.ArResearchWorkTools=api;})(typeof window!=='undefined'?window:null,function(){
  const tools=[['learning','Learn more','History, terms, teachings and useful next questions.'],['evidence','Review evidence','Separate usable, qualified and held claims; inspect the exact supporting sources.'],['speaker','Review speaker wording','Compare suggested wording with what was said, without silently correcting a quotation.']];
  function install({document:doc,getProject,getRecords=()=>null,getResearch=()=>null}){
-  let browser=null,browserPoint=null,storage=null;const STATE='ar-study-research-view-v1';try{storage=doc.defaultView?.localStorage;}catch{}let views={};try{views=JSON.parse(storage?.getItem(STATE)||'{}')||{};}catch{}
+  let browser=null,browserPoint=null,browserPanel=null,lastHost=null,lastScope=null,storage=null;const disclosures=new Map();const STATE='ar-study-research-view-v1';try{storage=doc.defaultView?.localStorage;}catch{}let views={};try{views=JSON.parse(storage?.getItem(STATE)||'{}')||{};}catch{}
   const viewKey=scope=>JSON.stringify(scope);
-  function remember(){const value=browser?.getViewState?.();if(!value)return;views[viewKey(value.scope)]={...value,openPointId:browserPoint};try{storage?.setItem(STATE,JSON.stringify(views));}catch{/* Browser memory retains the unsaved inquiry when device storage is unavailable. */}}
+  function capture(){
+   if(!lastHost||!lastScope)return;
+   const state=new Map();
+   lastHost.querySelectorAll('[data-research-point] details').forEach(el=>{const key=disclosureKey(el);if(key)state.set(key,el.open);});
+   disclosures.set(lastScope,state);
+  }
+  function disclosureKey(el){const point=el.closest('[data-research-point]');if(!point)return null;const kind=el.dataset.disclosure||['wb-point','wb-point-more','research-work-tools','research-standard-placement'].find(name=>el.classList.contains(name))||(el.hasAttribute('data-research-source-point')?'source':null);return kind?JSON.stringify([point.dataset.researchPoint,kind]):null;}
+  function remember(){const value=browser?.getViewState?.();if(!value)return;views[viewKey(value.scope)]={...value,openPointId:browserPanel?.closest('.research-work-tools')?.open?browserPoint:null};try{storage?.setItem(STATE,JSON.stringify(views));}catch{/* Browser memory retains the unsaved inquiry when device storage is unavailable. */}}
   doc.addEventListener('input',event=>{if(event.target.closest?.('.research-work-panel'))remember();});
   doc.defaultView?.addEventListener('pagehide',remember);
  function make(tag,text,cls){const el=doc.createElement(tag);if(text)el.textContent=text;if(cls)el.className=cls;return el;}
   function openDepth(point,panel,p){
    const api=doc.defaultView?.ArResearchPointBrowser,snapshot=getResearch(p);if(!api||!snapshot||!snapshot.points.some(n=>n.id===point.dataset.researchPoint))return false;
-   remember();browser?.destroy();browser=null;browserPoint=point.dataset.researchPoint;panel.replaceChildren();
+   remember();browser?.destroy();browser=null;browserPoint=point.dataset.researchPoint;browserPanel=panel;panel.replaceChildren();
    const points=snapshot.points.map(n=>({id:n.id,title:n.title,kind:n.kind,stale:n.stale,canDecide:n.canDecide===true,decision:n.decision,quotes:(n.spoken||[]).map(q=>({text:q.quote,speaker:q.speaker,location:q.location})),explanation:n.explanation||n.clarity?.recordedStatement||n.clarity?.supported||n.clarity?.rawNote||'',history:n.history||[],teachings:n.teachings||[],learning:n.learning||[],questions:n.questions||[],discussions:n.discussions||[],speakerIssues:n.speakerIssues||[],related:n.related||[],evidence:n.evidence||{status:'held',reason:n.clarity?.evidenceNeeded||n.clarity?.uncertain||'No independent evidence assessment is attached to this retained point.'},sources:(n.sources||[]).filter(s=>s.id||s.recordPath||s.path).map(s=>({id:s.id||s.recordPath||s.path,title:s.name||s.title||'Recorded source',target:s.recordPath||s.path||s.id,quality:s.quality||'',excerpt:s.excerpt||''}))}));
    const brief=snapshot.records.find(r=>/^BRIEF\b/i.test(r.name||r.path?.split('/').pop()||''));
    const model={scope:snapshot.scope,title:'Research',outputTitle:snapshot.outputTitle,showContext:false,points,brief:brief?{scope:{...snapshot.scope,outputId:'shared'},revision:brief.hash||'',status:'Existing shared record · no new verification',updatedAt:brief.modifiedAt||brief.date||'',content:brief.raw||brief.text||''}:null};
@@ -25,6 +32,11 @@
   function decorate(){
    const p=getProject();if(p?.viewedStage!==3){remember();browser?.destroy();browser=null;browserPoint=null;return;}
    const host=doc.querySelector('.research-standard');if(!host)return;
+   const scope=viewKey(getResearch(p)?.scope);
+   // An in-place scope change leaves existing callbacks guarded until its owner repaints.
+   if(lastHost===host&&lastScope!==scope)return;
+   if(lastHost!==host){capture();remember();browser?.destroy();browser=null;browserPanel=null;browserPoint=null;lastHost=host;lastScope=scope;}
+   const disclosed=disclosures.get(scope);
    host.querySelectorAll('[data-research-point]').forEach(point=>{
     if(point.querySelector('.research-work-tools'))return;
     const controls=point.querySelector('.research-standard-controls');if(!controls)return;
@@ -36,7 +48,7 @@
      const origin=point.querySelector('[data-research-quote]');if(origin){panel.append(make('blockquote',origin.textContent),make('small','Source words shown above; attribution remains with this finding.'));}
      panel.append(make('p',id==='depth'?'The current research projection is unavailable. Existing findings and sources above remain readable.':id==='learning'?'New explanations and teaching traces are not connected here yet. Existing findings above are retained work, not a fresh research run.':id==='evidence'?'External verification and Tea Atlas lookup are not connected here yet. Use Context & sources to inspect the evidence already attached.':'The Suggested / As said / Cut / My words review is not connected here yet. Existing source quotations remain unchanged.'));
      const context=point.querySelector('[data-research-source-point]');if(context){const open=make('button','Show existing sources');open.type='button';open.onclick=()=>{context.open=true;context.scrollIntoView?.({block:'center'})};panel.append(open);}
-    };actions.append(button);});if(depth){details.append(panel);details.addEventListener('toggle',()=>{if(details.open&&!panel.querySelector('.rpb')){if(!openDepth(point,panel,p))panel.textContent='The current research projection is unavailable. Existing findings and sources remain readable.';}});}else details.append(actions,panel);controls.append(details);
+    };actions.append(button);});if(depth){details.append(panel);details.addEventListener('toggle',()=>{if(!details.isConnected)return;if(details.open&&!panel.querySelector('.rpb')){if(!openDepth(point,panel,p))panel.textContent='The current research projection is unavailable. Existing findings and sources remain readable.';}});}else details.append(actions,panel);controls.append(details);
    });
    const heading=host.querySelector('.research-standard-heading');if(heading&&!host.querySelector('[data-research-brief]')){
     const details=make('details',null,'research-work-brief');details.dataset.researchBrief='true';details.append(make('summary','Shared brief · optional editorial reuse'));
@@ -45,15 +57,17 @@
     else details.append(make('p','No shared brief is connected in this view. Preparing or updating it through AI is not connected yet.'));
     const scope=make('details');scope.append(make('summary','What the brief carries forward'),make('p','Central line, meaningful moments, exact usable quotations, qualified additions, teaching points, held items and their reasons, and the sources used. One shared brief can support an article and a carousel, with separate writing plans.'));details.append(scope);heading.after(details);
    }
-   const saved=views[viewKey(getResearch(p)?.scope)];if(saved?.openPointId&&!browser){const point=[...host.querySelectorAll('[data-research-point]')].find(n=>n.dataset.researchPoint===saved.openPointId),details=point?.querySelector('.research-work-tools');if(details&&!details.open)details.open=true;}
+   if(disclosed)host.querySelectorAll('[data-research-point] details').forEach(el=>{const key=disclosureKey(el);if(disclosed.has(key)&&el.open!==disclosed.get(key))el.open=disclosed.get(key);});
+   const saved=views[viewKey(getResearch(p)?.scope)];if(saved?.openPointId&&!browser){const point=[...host.querySelectorAll('[data-research-point]')].find(n=>n.dataset.researchPoint===saved.openPointId),details=point?.querySelector('.research-work-tools');if(details&&(!disclosed||!disclosed.has(disclosureKey(details)))&&!details.open)details.open=true;}
   }
+  doc.addEventListener('toggle',event=>{const el=event.target;if(!el.isConnected||!lastHost?.contains(el))return;const key=disclosureKey(el);if(!key)return;let state=disclosures.get(lastScope);if(!state)disclosures.set(lastScope,state=new Map());state.set(key,el.open);},true);
   let pending=false;
   const observer=doc.defaultView?.MutationObserver?new doc.defaultView.MutationObserver(()=>{if(pending)return;pending=true;Promise.resolve().then(()=>{pending=false;decorate()})}):null;
   observer?.observe(doc.getElementById('app')||doc.body,{childList:true,subtree:true});
-  return {decorate,disconnect:()=>{remember();observer?.disconnect();browser?.destroy();browser=null}};
+  return {decorate,capture,disconnect:()=>{remember();observer?.disconnect();browser?.destroy();browser=null}};
  }
  if(typeof document!=='undefined'&&typeof current==='function'){
-  const adapter=install({document,getProject:()=>current(),getRecords:p=>typeof WORKFLOW_RECORDS==='object'?WORKFLOW_RECORDS[p.id]:null,getResearch:p=>window.ResearchStandard?.snapshot?.(p?.id)});const prior=render;render=function(){const result=prior.apply(this,arguments);adapter.decorate();return result};adapter.decorate();
+  const adapter=install({document,getProject:()=>current(),getRecords:p=>typeof WORKFLOW_RECORDS==='object'?WORKFLOW_RECORDS[p.id]:null,getResearch:p=>window.ResearchStandard?.snapshot?.(p?.id)});const prior=render;render=function(){adapter.capture();const result=prior.apply(this,arguments);adapter.decorate();return result};adapter.decorate();
  }
  return {install};
 });

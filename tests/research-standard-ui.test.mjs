@@ -31,3 +31,23 @@ test('initial empty planning controls are disclosed inside sources while availab
 test('quotation framing is visual and authored written context remains Adrian’s words',async()=>{const f=await fixture(),quote='My exact **written** reflection.';const html=f.w.ResearchStandard.pointHTML({id:'reflection',title:'Reflection',spoken:[{speaker:'Adrian',location:'Written context',quotationKind:'written-source-words',quote}],clarity:{supported:'An authored reflection.',uncertain:'An editorial choice.',storyImplication:'Keep it in Adrian’s voice.'}});const host=f.w.document.createElement('div');host.innerHTML=html;assert.match(host.textContent,/Your words/);assert.match(host.textContent,/Adrian · Written context/);assert.equal(host.querySelector('blockquote').textContent,'“'+quote+'”');assert.equal(host.querySelector('[data-research-quote]').textContent,quote);assert.deepEqual([...host.querySelectorAll('blockquote [aria-hidden]')].map(el=>el.textContent),['“','”']);assert.doesNotMatch(host.textContent,/What was said/);f.dom.window.close();});
 
 test('initial read-only findings use static shift-before-controls order without changing available proposal layout',async()=>{const f=await fixture({findings:syntheticFindings()}),d=f.w.document,initial=d.querySelector('[data-research-point="derived-0"]');assert.equal(initial.classList.contains('research-standard-point-static'),true);assert.ok(initial.querySelector('.research-standard-said'));const html=f.w.ResearchStandard.pointHTML({id:'available',title:'Available narration',spoken:[{speaker:'Speaker',quote:'Exact quote'}],clarity:{supported:'Recorded account',uncertain:'Open detail',storyImplication:'Story consequence'}},{actions:'<textarea>Existing narration</textarea>'});const host=d.createElement('div');host.innerHTML=html;assert.equal(host.firstElementChild.classList.contains('research-standard-point-static'),false);assert.ok(host.querySelector('.research-standard-controls').compareDocumentPosition(host.querySelector('.research-standard-shift'))&f.w.Node.DOCUMENT_POSITION_FOLLOWING);const css=fs.readFileSync(new URL('../public/document-study/research-standard.css',import.meta.url),'utf8');assert.match(css,/\.research-standard-point-static>h2\{order:0\}/);assert.match(css,/\.research-standard-point-static>\.research-standard-said\{order:1\}/);assert.match(css,/\.research-standard-point-static>\.research-standard-shift\{order:3;border:0;padding:0\}/);assert.match(css,/\.research-standard-point-static>\.research-standard-controls\{order:4\}/);f.dom.window.close();});
+
+
+test('saving a depth choice keeps current point disclosures and the updated plan visible through busy and saved repaint',async t=>{
+ const f=await fixture(),{w}=f,d=w.document;t.after(()=>w.close());
+ const retainedRender=w.render;
+ // The workbench adds these nested disclosures around the existing owner nodes.
+ w.render=()=>{retainedRender();for(const point of d.querySelectorAll('[data-research-point]')){const details=d.createElement('details');details.className='wb-point-more';details.innerHTML='<summary>Findings &amp; preparation</summary>';point.append(details);details.append(point.querySelector('.research-standard-controls'));}};
+ w.eval(fs.readFileSync(new URL('../public/document-study/research-point-browser.js',import.meta.url),'utf8'));
+ w.eval(fs.readFileSync(new URL('../public/document-study/research-work-tools.js',import.meta.url),'utf8'));w.render();await tick();
+ const more=()=>d.querySelector('.wb-point-more'),depth=()=>d.querySelector('.research-work-tools');
+ more().open=true;depth().open=true;await tick();assert.ok(d.querySelector('.rpb'));
+ const originalFetch=w.fetch;let finishSave;w.fetch=async(url,options)=>{if(options)await new Promise(resolve=>{finishSave=resolve;});return originalFetch(url,options);};
+ d.querySelector('[data-rpb-decision="include"]').click();await tick();
+ assert.equal(more().open,true);assert.equal(depth().open,true);assert.ok(d.querySelector('.rpb'));assert.equal(d.querySelector('[data-rpb-decision="include"]').disabled,true);
+ finishSave();await tick();
+ assert.equal(more().open,true);assert.equal(depth().open,true);assert.equal(d.querySelectorAll('.rpb').length,1);assert.match(d.querySelector('.rpb-detail').textContent,/Included/);assert.equal(f.calls.filter(c=>c.body).length,1);
+ // A deliberately closed panel must stay closed, even with a remembered browser.
+ depth().open=false;w.render();await tick();assert.equal(depth().open,false);
+ more().open=false;w.render();await tick();assert.equal(more().open,false);
+});
