@@ -158,13 +158,13 @@ function validateDraftCorrection(pathname,bytes,{approvals=false}={}){
  }
  validateNativeOperations(input.operations,fail);
 }
-function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false,photoLibrary=false}={}){
+function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false,photoLibrary=false,photoInsert=false}={}){
  const object=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
  const fields=(value,required,optional=[])=>object(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>required.includes(key)||optional.includes(key));
  const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  // Prose/structure and one exact photo adjustment; aspect is Magazine-only,
  // and markup approval keeps its separate gate.
- const shapes={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
+ const shapes={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
  for(const op of operations){
   if(!object(op)||typeof op.kind!=='string'||!Object.hasOwn(shapes,op.kind)||!fields(op,shapes[op.kind],op.kind==='blockKind'?['level']:[]))fail();
   for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\x00-\x1f]/.test(op[key])))fail();
@@ -172,7 +172,7 @@ function validateNativeOperations(operations,fail,{photoAspect=false,photoReplac
   for(const key of ['from','to','at'])if(key in op&&(!Number.isSafeInteger(op[key])||op[key]<0))fail();
   for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))fail();
   if('seenBlockHash' in op&&!hash(op.seenBlockHash))fail();
-  if(op.kind==='photoReplaceAsset'&&(!photoLibrary||operations.length!==1||!hash(op.rootId)||!hash(op.revision)||!hash(op.sourceHash)||typeof op.sourceId!=='string'||!(/^[a-f0-9]{64}$/.test(op.sourceId)||/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(op.sourceId))||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
+  if(['photoReplaceAsset','photoInsertAsset'].includes(op.kind)&&(!photoLibrary||op.kind==='photoInsertAsset'&&!photoInsert||operations.length!==1||!hash(op.rootId)||!hash(op.revision)||!hash(op.sourceHash)||typeof op.sourceId!=='string'||!(/^[a-f0-9]{64}$/.test(op.sourceId)||/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(op.sourceId))||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
   if(['photoAnnotation','articleCredits'].includes(op.kind)){if(!photoAspect||operations.length!==1)fail();try{if(op.kind==='photoAnnotation')validatePhotoAnnotation(op.annotation);else validateArticleCredits(op.credits);}catch{fail();}}
   if(op.kind==='photoDescription'&&(!photoAspect||operations.length!==1||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
   if(op.kind==='photoReplace'&&(!photoReplace||operations.length!==1||op.id===op.replacementId||!hash(op.seenReplacementHash)))fail();
@@ -212,7 +212,7 @@ function validateMagazineCorrection(pathname,bytes){
  if(action==='undo'){if(!uuid(input.undoOperationId))fail();return;}
  if(action==='save'){if(typeof input.content!=='string'||!input.content.isWellFormed()||input.content.includes('\0'))fail();return;}
  if(!Array.isArray(input.operations)||!input.operations.length||input.operations.length>500)fail();
- validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true,photoLibrary:true});
+ validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true,photoLibrary:true,photoInsert:true});
 }
 const fixtureImage=p=>/^\/(?:document-study\/assets\/photos|porcelain-assets)\/[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:jpg|jpeg|png|webp|gif|avif)$/i.test(p);
 const upstreamOnly=p=>p.startsWith('/api/')||p.startsWith('/transcription/')||fixtureImage(p)||['/document-study/synthetic-study-data.js','/document-study/package-config.js'].includes(p);
