@@ -311,7 +311,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       if(!row.nativeOrigin)continue;
       const source=(resolved.projection||[]).find(b=>b.id===row.nativeOrigin.blockId);if(!source)continue;
       const annotation=splitPhotoAnnotation(source.raw).annotation;
-      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['wide','bleed','photos'].includes(row.nativeOrigin.role)||row.nativeOrigin.depth!==0||row.structuralPath.startsWith('ending/'))fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
+      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['wide','bleed','photos'].includes(row.nativeOrigin.role)||row.nativeOrigin.depth!==0)fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
     }
     if(annotationRows.length!==seenAnnotations.size)fail('A canonical caption has no exact supported photo occurrence.');
     const annotations={schema:'ar-create.magazine-annotations.v1',credits:readArticleCredits(originalBody),publicationCredits:Array.isArray(spec.credit)?structuredClone(spec.credit):[]};
@@ -354,8 +354,8 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     const annotatedPaths=new Set();
     for(const placement of media.sources.flatMap(source=>source.placements)){
       if(!placement.annotation||annotatedPaths.has(placement.structuralPath))continue;
-      const match=placement.structuralPath.match(/^(opening|parts\/(\d+)\/blocks)\/(\d+)\/(wide|bleed|photos)(?:\/\d+)?$/);
-      const block=match&&(match[1]==='opening'?currentSpec.opening:currentSpec.parts[Number(match[2])]?.blocks)?.[Number(match[3])];
+      const match=placement.structuralPath.match(/^(opening|ending\/blocks|parts\/(\d+)\/blocks)\/(\d+)\/(wide|bleed|photos)(?:\/\d+)?$/);
+      const block=match&&(match[1]==='opening'?currentSpec.opening:match[1]==='ending/blocks'?currentSpec.ending.blocks:currentSpec.parts[Number(match[2])]?.blocks)?.[Number(match[3])];
       if(!block||!['wide','bleed','photos'].includes(block.kind))fail('The canonical caption target changed before rendering.');
       block.caption={id:'ar-create-caption:'+placement.nativeOrigin.blockId,text:placement.annotation.caption,literal:true};block.photoCredit=placement.annotation.credit;annotatedPaths.add(placement.structuralPath);
     }

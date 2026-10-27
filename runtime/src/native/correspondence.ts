@@ -103,9 +103,8 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    const b=get(op.id);if(ops.length!==1||hash(b.raw)!==op.seenBlockHash||next.blocks.filter(row=>row.id===op.id).length!==1)conflict('Use one current exact photo occurrence for caption and credit.');
    const raw=render(next),offset=next.prefix.length+next.blocks.slice(0,next.blocks.indexOf(b)).reduce((n,row)=>n+row.raw.length+row.separator.length,0),trimmed=b.raw.trim(),start=offset+b.raw.indexOf(trimmed);
    let range:any;const body=draftBody(raw,r=>{range=r;}),observations:any[]=[];
-   const story=parseDraft(body.body,undefined,(shot,origin)=>observations.push({shot,origin}));const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length),o=matches[0]?.origin;
-   const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
-   if(!matches.length||!o||matches.some(({shot})=>contains(story.ending,shot))||!['photo','photos'].includes(o.kind)||!['wide','bleed','photos'].includes(o.role)||o.depth!==0||matches.length!==o.groupSize||!photoDirectiveComplete(b.raw,o)||matches.some(({origin:v})=>v.directiveStart!==o.directiveStart||v.groupSize!==o.groupSize||v.depth!==0))conflict('Caption and credit require an exact standalone article photo or photo group.');
+   parseDraft(body.body,undefined,(shot,origin)=>observations.push({shot,origin}));const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length),o=matches[0]?.origin;
+   if(!matches.length||!o||!['photo','photos'].includes(o.kind)||!['wide','bleed','photos'].includes(o.role)||o.depth!==0||matches.length!==o.groupSize||!photoDirectiveComplete(b.raw,o)||matches.some(({origin:v})=>v.directiveStart!==o.directiveStart||v.groupSize!==o.groupSize||v.depth!==0))conflict('Caption and credit require an exact standalone article photo or photo group.');
    b.raw=writePhotoAnnotation(b.raw,op.annotation,newline);
   }else if(op.kind==='photoReplaceAsset'){
    const b=get(op.id),assets=trusted?.photoAssets?.filter(asset=>['rootId','sourceId','revision','sourceHash','description'].every(k=>(asset as any)[k]===(op as any)[k]));

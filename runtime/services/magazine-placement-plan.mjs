@@ -134,7 +134,7 @@ export function planMagazineLibraryPlacementReplace(input){
 export function planMagazinePlacementAnnotation(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoAnnotation'))refuse('unsupported-owner','This working editor does not support canonical captions and credits yet.');
  const annotation=validatePhotoAnnotation(input.request?.annotation),context=placementContext(input,'annotation'),{selected,ownerRef,expectedHash,revision,scope}=context,o=selected.group.origin;
- if(!simple(selected.group)||o.depth!==0)refuse('unsupported-placement','Edit a standalone article photo or its complete photo group.');
+ if(!['wide','bleed','photos'].includes(o.role)||!['photo','photos'].includes(o.kind)||o.depth!==0||!photoDirectiveComplete(selected.row.raw,o))refuse('unsupported-placement','Edit a standalone article photo or its complete photo group.');
  if(JSON.stringify(splitPhotoAnnotation(selected.row.raw).annotation)===JSON.stringify(annotation))refuse('unchanged-annotation','Caption and credit already match the saved photo.');
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([...selected.group.placements].sort((a,b)=>a.nativeOrigin.groupIndex-b.nativeOrigin.groupIndex).map(p=>p.placementId)),operations:Object.freeze([Object.freeze({kind:'photoAnnotation',id:selected.row.id,seenBlockHash:selected.row.blockHash,annotation})])});
 }
