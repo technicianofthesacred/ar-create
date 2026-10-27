@@ -1,3 +1,9 @@
+## 28 October — All-Library photograph insertion verified natively
+
+Media All photos → unused photograph → Place in article → explicit after-introduction choice → Save now works through the exact review connection. Actual owner restart/reload retains the inserted photo. Media derives one use for the selected record and zero for the other equal-byte record. Audience loads both photographs; private retained HTML contains both images and verifies its recorded byte hash. Exact arrangement Undo restores the complete original manuscript hash; Media returns to zero uses for both Library records. No wording approval or publication occurs.56 focused integrated insertion/Check/navigation/review checks pass.
+
+This closes the bounded native candidate lifecycle, not its installed checkbox or whole Arrange. Exact release verification is pending. Explicit position choice in independently created native Articles, whole C/final NOTES desktop/phone/all12 and full creative journey remain open.
+
 ## 28 October — Exact Check passages and immediate output navigation verified
 
 The selected Carousel now targets repeated quoted caption occurrences independently: native first1–25 and second34–58, with exact saved-field hashes and fresh receipt verification. An own-word Undo restores both original canonical Markdown and words hashes. Older receipts remain immutable; changed wording is still explicitly outdated. The earlier whole-field selection defect is fixed in4cab155.
