@@ -190,6 +190,7 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     const mapping = parsed.structured && !targetMatches
       ? {structured: false, metadata: parsed.metadata, projection: [], reason: 'The saved recipient mapping targets another piece or an earlier working revision. The full FEEDBACK remains readable.'}
       : {structured: parsed.structured, metadata: parsed.metadata, projection: parsed.projection, reason: parsed.reason};
+    mapping.targetState = parsed.structured ? (targetMatches ? 'current' : 'mismatch') : 'unverified';
     const currentFeedback = await exactDocument(record.rel, 'FEEDBACK', feedbackHash);
     const currentDraft = await exactDocument(authority.path, 'DEV', draftHash);
     const currentAuthority = resolve(input);

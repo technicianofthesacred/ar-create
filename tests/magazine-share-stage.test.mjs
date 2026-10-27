@@ -14,7 +14,7 @@ test('Magazine Share opens its registered canonical correspondence without nativ
  const f=fixture();t.after(f.close);await f.loaded();const text=f.w.document.querySelector('[data-output-stage-surface]').textContent;
  assert.equal(f.w.document.querySelector('[data-magazine-correspondence]').getAttribute('aria-label'),'Saved correspondence');assert.match(text,/Hello/);assert.match(text,/read-only/i);assert.doesNotMatch(text,/ar-create-share|FEEDBACK - Invented/);
  assert.equal(f.calls.filter(c=>c.feedback).length,1);assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find(c=>c.feedback).feedback)),{projectId:'project',outputId:'working',expectedHash:H,registeredFeedbackPath:'Workflow/6-Feedback/FEEDBACK - Invented.md',expectedFeedbackHash:F});
- assert.equal(f.w.document.querySelector('script'),null);assert.equal(f.w.document.querySelector('textarea'),null);assert.equal(f.w.sessionStorage.length,0);
+ assert.equal(f.w.document.querySelector('[data-magazine-target-warning]'),null);assert.equal(f.w.document.querySelector('script'),null);assert.equal(f.w.document.querySelector('textarea'),null);assert.equal(f.w.sessionStorage.length,0);
 });
 test('Magazine Share requires explicit choice between registered feedback files',async t=>{
  const f=fixture({references:[{path:'one',currentHash:F,readable:true,state:'current'},{path:'two',currentHash:F,readable:true,state:'current'}]});t.after(f.close);await f.loaded();assert.equal(f.calls.some(c=>c.feedback),false);
@@ -100,7 +100,7 @@ function mappedFixture(){
  const model=()=>{const parsed=parseFeedbackShare(document),{parts}=splitBlocks(document);return {rootIdentity:{fingerprint:'d'.repeat(64)},feedback:{path:'Workflow/6-Feedback/FEEDBACK - Invented.md',hash:sha(document)},document:{text:document},mapping:parsed,editable:true,paragraphs:parts.filter((_,i)=>i%2===0).map((raw,index)=>({index,seen:hash(raw),raw,text:plain(raw),editable:editable(raw)}))};};
  w.AR_CREATE_REVIEW_MODE={magazineFeedbackCorrections:true};w.studyOutputConnection.readMagazineShareFeedbackEditModel=async()=>model();w.studyOutputConnection.readMagazineShareFeedbackHistory=async()=>({history:[]});
  w.studyOutputConnection.prepareMagazineShareFeedbackParagraph=async()=>{throw Error('View switching must never prepare a write.');};
- return {...f,document:()=>document,model,unmap(){w.studyOutputConnection.readMagazineShareFeedbackEditModel=async()=>({...model(),mapping:{structured:false,projection:[],reason:'The saved mapping targets an earlier working revision.'}});}};
+ return {...f,document:()=>document,model,unmap(){w.studyOutputConnection.readMagazineShareFeedbackEditModel=async()=>({...model(),mapping:{structured:false,targetState:'mismatch',projection:[],reason:'The saved mapping targets an earlier working revision.'}});}};
 }
 const selectView=(f,selector,value)=>{const el=f.w.document.querySelector(selector);assert.ok(el,selector+' must exist');el.value=value;el.dispatchEvent(new f.w.Event('change',{bubbles:true}));};
 test('mapped recipient and language views use only their canonical anchored sections without saving',async t=>{
@@ -112,7 +112,7 @@ test('mapped recipient and language views use only their canonical anchored sect
 test('mapped views survive remount and full-record fallback explains stale mappings without guessing recipients',async t=>{
  const f=mappedFixture();t.after(f.close);await f.loaded();selectView(f,'[data-magazine-recipient]',recipientA);selectView(f,'[data-magazine-language]','zh');
  f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]').value,recipientA);assert.equal(f.w.document.querySelector('[data-magazine-language]').value,'zh');assert.doesNotMatch(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
- f.unmap();f.w.document.querySelector('[data-share-action="magazine-refresh"]').click();await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]'),null);assert.match(f.w.document.body.textContent,/earlier working revision/);assert.match(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
+ f.unmap();f.w.document.querySelector('[data-share-action="magazine-refresh"]').click();await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]'),null);assert.match(f.w.document.body.textContent,/earlier working revision/);const warning=f.w.document.querySelector('[data-magazine-target-warning]');assert.ok(warning);assert.equal(warning.closest('details'),null,'changed-target warning must be visible without opening Record options');assert.match(warning.textContent,/different piece or saved revision/);assert.match(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
 });
 test('scoped paragraph editing preserves canonical positions and prevents view changes from hiding entered words',async t=>{
  const f=mappedFixture();t.after(f.close);await f.loaded();selectView(f,'[data-magazine-recipient]',recipientA);selectView(f,'[data-magazine-language]','zh');f.w.document.querySelector('[data-share-action="magazine-edit-mode"]').click();
