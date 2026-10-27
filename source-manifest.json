@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "944083f6bcd0c5812691356388e0157e16cca163e6865b4cac6a6f687abf4dcf"
+      "candidateSha256": "6cb9bc7fcf227b7ffd1c1639ee8f84c07fbdffd64595f111adb1c8f182d4ad08"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "ce73c85f87415d676fe9262a54b827f034d890e6ff9c2a0826d82fa3b4f94502"
+      "candidateSha256": "e2ad5587875774bdcfa318617ef7c4c466336cc3a475c553a3ee105e1f2401a3"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3605,7 +3605,7 @@
     },
     {
       "path": "docs/verification/workbench-folders/README.md",
-      "candidateSha256": "4054fe6fa44173e070d58d03355df63902ee787acc71155f9ad5ab259a662cea"
+      "candidateSha256": "77ac6a9b4f45f3993df80e71ca46288345995fbc4e9d9f68ae70640a03c151de"
     },
     {
       "path": "runtime/services/library-folders.mjs",

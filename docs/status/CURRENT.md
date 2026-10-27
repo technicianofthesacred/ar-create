@@ -1,3 +1,12 @@
+## 28 October — Audience, nested photos and Media folders installed
+
+PR81 signed main `11b3fa4c79ed43b9ca67ec911592800c74223c05`, build 2026-10-27T20:46:53.125Z, is verified live in installed8841 and main59958.351 checks across thirteen files, build/package926,76 served hashes and API/canonical/config preservation pass. Installed-byte proof covers629 manifest files and10 generated files. The candidate notes below now describe installed bounded behavior; earlier candidate-status statements are historical.
+
+- [x] Output-specific existing Direction briefs through native Save/switch/restart/reopen/CLI/exact Undo.
+- [x] Nested composition rendering and exact standalone/group captions through restart, Audience, retained HTML and reverse exact Undo.
+- [x] Saved Media folders projected through exact Library photo identities, child reload, scoped empty states and agent filing Undo; review writes remain refused.
+- [ ] Linked language editions, the complete creative journey and whole C/phone/all12 acceptance.
+
 ## 28 October — Audience, nested composition and Media hierarchy verified candidate
 
 351 focused checks across thirteen files and the generated build pass. Native invented proof covers separate output Direction briefs through Save/switch/restart/reopen/CLI/exact Undo; nested single/group captions through Save/restart/Audience/actual retained HTML/reverse exact Undo; and agent-created nested Media filing through restart, exact Library UUID projection, saved child-folder reload and exact membership Undo. Original manuscripts, output words/composition/register and photo/source identities are preserved; test setup/cleanup is recorded separately.
