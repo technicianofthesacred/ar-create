@@ -28,7 +28,7 @@ test('Save question uses exact shared note scope and reopens its attributed reta
  const f=fixture(t),q=connectQuestions(f);f.d.querySelector('[data-research-work-tool="depth"]').click();await tick();f.d.querySelector('[data-rpb-tool="question"]').click();
  assert.equal(f.d.querySelector('[data-rpb-submit="question"]').textContent,'Save question');f.d.querySelector('[data-rpb-input]').value='My lived question.\nExact words.';f.d.querySelector('[data-rpb-submit="question"]').click();await tick();
  assert.equal(q.calls.length,1);assert.equal(q.calls[0].parentStudyId,'synthetic');assert.equal(q.calls[0].origin.recordPath,'source-first');assert.equal(q.calls[0].origin.recordHash,'b'.repeat(64));assert.equal(q.calls[0].sourceSelections,undefined);
- assert.match(f.d.querySelector('[data-saved-question]').textContent,/My lived question/);assert.match(f.d.querySelector('[data-saved-question]').textContent,/human:adrian/);assert.match(f.d.querySelector('[data-saved-question]').textContent,/Retained origin/);
+ assert.match(f.d.querySelector('[data-saved-question]').textContent,/My lived question/);assert.match(f.d.querySelector('[data-saved-question]').textContent,/Adrian/);assert.doesNotMatch(f.d.querySelector('[data-saved-question]').textContent,/human:adrian|T\d{2}:\d{2}:\d{2}/);assert.match(f.d.querySelector('[data-saved-question]').textContent,/Retained origin/);
  f.d.querySelector('[data-rpb-point="second"]').click();f.d.querySelector('[data-rpb-tool="question"]').click();assert.equal(f.d.querySelector('[data-saved-question]'),null);
  f.d.querySelector('[data-rpb-point="first"]').click();f.d.querySelector('[data-rpb-tool="question"]').click();assert.match(f.d.querySelector('[data-saved-question]').textContent,/Exact words/);
 });

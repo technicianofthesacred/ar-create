@@ -1,3 +1,9 @@
+## 27 October — Saved point questions and Arrange reading candidate; not installed
+
+Research now saves labelled human questions/comments into the existing shared project Markdown notes, preserving the exact retained origin and its unverified status. Native invented Save → actual owner restart → reload retains the question; exact retry deduplicates it. An ordinary prose edit preserves its hidden metadata, and Undo restores the complete question-only notes. Both manuscripts remain unchanged. Readable attribution uses Adrian and a local date; malformed metadata stays visible for repair. Provider discussion and brief updates remain unfinished.
+
+The same candidate preserves open source-picker/preview disclosures and aligns native Arrange reading with the adopted Workbench typography. Same-viewport1280×720 desktop light/dark comparison verifies16px/26.4px paragraphs,15px/600 headings,640px reading measure and18px/29.7px at112.5%. Native content starts earlier than reference Read and uses continuous article/photos; this is bounded reading-role proof, not identical Arrange geometry. Phone, whole layout, all12 interaction and full creative/delivery gates remain open. PR70 remains installed until this candidate has its own exact release proof.
+
 ## 27 October — Research/Direction handoff installed; source-picker follow-up candidate
 
 PR70 signed main `144e19bf29010e7055a26693f75a737f660110a4`, build2026-10-27T16:16:09.230Z, is verified live in the installed app and main review.163 affected checks, build/package910,46 served frontend hashes and API/canonical/config preservation pass. The handoff entry below now describes installed behavior, including native selected-part restart/exact Undo/context and explicit context connection without prose writes.
