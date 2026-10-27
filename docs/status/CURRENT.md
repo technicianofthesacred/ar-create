@@ -1,3 +1,9 @@
+## 28 October — Whole-app phone checks enabled; candidate repairs integrated
+
+The entire app now has a supported390×640 same-origin review frame without changing CSP. Media was compared with the approved reference in both themes, including folder-sheet open/close. Its phone grid now matches the reference’s three columns; desktop sizing stays unchanged. This is bounded whole-app phone proof, distinct from the earlier article-only preview. Remaining sections, populated panels and interactions are still open.
+
+Historical invitation wording passes native creation/read/actual restart and exact metadata Undo. Original-photo selection passes Save/restart, distinct source usage, repaired thumbnails/folders and exact Undo. Publication return/save/restart checks remain pending. The initial combined verification failure is preserved; its stale fixture and the newly found preview/return defects have targeted repairs and passing checks. Final coherent verification and release are pending. PR83 remains installed; no full completion gate is closed.
+
 ## 28 October — Invitation-time wording verified; next release held
 
 A new invented invitation records the exact correspondence hash. Native Read original message returns only its selected English section, remains identical after an actual owner restart, and leaves current correspondence unchanged. Exact invitation-metadata Undo restores the full prior record. Legacy invitations without the required evidence report unavailable; no wording was approved and no message or correspondence fact was sent or saved.
