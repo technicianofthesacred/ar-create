@@ -475,7 +475,10 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if(binaryRoots.get(root.id)!==identity)throw new StateError('Library photo root changed; reopen the library.',409);
     return digest(identity);
   };
-  const photoMetadata=source=>({id:source.id,rootId:source.rootId,name:path.basename(source.rel_path),relativePath:source.rel_path,description:typeof source.provenance?.description==='string'?source.provenance.description:typeof source.description==='string'?source.description:'',retainedPhoto:source.provenance?.kind==='magazine-library-photo',originalHash:source.provenance?.originalHash||null});
+  // Existing immutable-retention provenance, projected as bounded identities only.
+  const photoOrigin=value=>value&&typeof value==='object'&&['rootId','revision','sourceHash'].every(k=>HASH.test(value[k]||''))&&typeof value.sourceId==='string'&&/^(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(value.sourceId)?Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,value[k]])):null;
+  const photoOriginRef=value=>value&&['library','originals'].includes(value.kind)&&HASH.test(value.rootId||'')&&typeof value.sourceId==='string'&&/^(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(value.sourceId)?{kind:value.kind,rootId:value.rootId,sourceId:value.sourceId}:null;
+  const photoMetadata=source=>({id:source.id,rootId:source.rootId,name:path.basename(source.rel_path),relativePath:source.rel_path,description:typeof source.provenance?.description==='string'?source.provenance.description:typeof source.description==='string'?source.description:'',retainedPhoto:source.provenance?.kind==='magazine-library-photo',originalHash:source.provenance?.originalHash||null,...(source.provenance?.kind==='magazine-library-photo'?{retainedOrigin:photoOrigin(source.provenance.origin),retainedOriginRef:photoOriginRef(source.provenance.originRef)}:{})});
   const photosSnapshot=()=>serial(()=>{
     const {value,hash:indexHash}=loadTyped(),items=[],issues=[];
     for(const root of roots){

@@ -5,7 +5,7 @@
  const room=new Map();
  const currentView=()=>typeof current==='function'?current():null;
  const eligible=()=>{const p=currentView();if(p&&document.querySelector('#wbf-drawer .dr-body[data-tool="check"] #current-draft-check'))return {...p,view:'record',viewedStage:7};return p&&p.view==='record'&&[1,2,7].includes(p.viewedStage)?p:null};
- const stateFor=p=>{const key=JSON.stringify([p.id,p.viewedStage]);if(!room.has(key))room.set(key,{values:{},open:{}});return room.get(key)};
+ const stateFor=p=>{const scope=p.viewedStage===7?checkScope(p):null,key=JSON.stringify([p.id,p.viewedStage,...(scope?.kind==='carousel'?[scope.key]:[])]);if(!room.has(key))room.set(key,{values:{},open:{}});return room.get(key)};
  const tool=(id,label,body)=>`<details class="sws-tool" data-sws-tool="${id}"><summary>${label}</summary>${body}</details>`;
  const status=text=>`<p class="sws-status" role="status">${text}</p>`;
  const input=(key,label,placeholder='')=>`<label class="sws-field">${label}<input data-sws-input="${key}" placeholder="${placeholder}"></label>`;
@@ -40,15 +40,26 @@
  }
  const versionRooms=new Map();
  function checkScope(p){
+  const selection=window.studyOutputConnection?.selection?.();
+  if(selection?.projectId===p.id&&selection.output?.kind==='carousel'){
+   const value=window.studyOutputConnection?.carouselCheckSnapshot?.(),snapshot=value?.targetKind==='carousel'&&value.parentStudyId===p.id&&value.bindingId===selection.rootBindingId&&value.outputId===selection.output.id&&value.output?.id===selection.output.id?value:null;
+   const revision=snapshot?.output.outputRevision,label=snapshot?(snapshot.title||'Current Carousel')+(Number.isSafeInteger(revision)&&revision>=0?' · revision '+revision:' · Saved words')+(snapshot.dirty?' · Unsaved changes':''):'Selected Carousel · saved words unavailable';
+   return {kind:'carousel',key:JSON.stringify(['carousel',p.id,selection.rootBindingId,selection.output.id,!!snapshot]),snapshot,label};
+  }
   const proof=window.studyDraft?.currentProof?.(),binding=window.studyDraft?.currentBinding?.(),scoped=proof?.parentStudyId===p.id;
   const owner=window.studyDraft?.currentOwner?.(),magazine=scoped&&owner?.kind==='magazine'&&proof.owner?.kind==='magazine'&&owner.storyId===proof.owner.storyId&&owner.pieceId===proof.owner.pieceId&&owner.path===proof.owner.path&&typeof proof.draftHash==='string'&&/^[a-f0-9]{64}$/.test(proof.draftHash)&&proof.expected?.workflow?.draft===proof.draftHash;
   const revision=scoped&&!magazine?proof.expected?.revision??proof.sequence:null;
   const scopeLabel=magazine?(owner.title||'Current Magazine manuscript'):(binding&&scoped?binding.title||'Selected manuscript':'Choose a saved manuscript above');
-  return {proof,scoped,label:scopeLabel+(magazine?(proof.dirty?' · Unsaved changes':' · Saved wording'):revision!==null&&revision!==undefined?' · revision '+revision:'')};
+  return {kind:'manuscript',key:'manuscript',proof,scoped,label:scopeLabel+(magazine?(proof.dirty?' · Unsaved changes':' · Saved wording'):revision!==null&&revision!==undefined?' · revision '+revision:'')};
  }
  function checkedPanel(p){
-  const {proof,scoped,label}=checkScope(p);
-  const panel=document.createElement('section');panel.className='sws-check-tools sws-work-tools';panel.dataset.swsCheck='true';panel.setAttribute('aria-label','Changes and editorial questions');
+  const scope=checkScope(p),{proof,scoped,label}=scope;
+  const panel=document.createElement('section');panel.className='sws-check-tools sws-work-tools';panel.dataset.swsCheck='true';panel.dataset.swsCheckOwner=scope.key;panel.setAttribute('aria-label','Changes and editorial questions');
+  if(scope.kind==='carousel'){
+   panel.setAttribute('aria-label','Current Carousel wording and review');
+   panel.innerHTML=`<div class="sws-check-scope"><strong>Carousel wording & review</strong><span>${esc(label)}</span></div>`+(scope.snapshot?tool('carousel-words','Review this Carousel’s own words',`<p>The findings above belong to this Carousel’s saved slide words, headings, credits and caption. Editorial decisions remain yours.</p><div class="sws-fields"><button type="button" data-sws-action="carousel-write">Write Carousel</button><button type="button" data-sws-action="carousel-read">Read Carousel</button></div>${status('Use the existing Write view to review words and continue, or its exact wording Undo when available. This panel does not compare Article edits, run editorial review or grant approval.')}`):status('This Carousel’s saved words are unavailable. Reopen its exact Read or Write view before checking. A parent Article cannot supply its revision or decisions.'));
+   return panel;
+  }
   panel.innerHTML=`<div class="sws-check-scope"><strong>Changes & decisions</strong><span>${esc(label)}</span></div>`+tool('change-review','Compare edits & pending proposals',`<p>${scoped&&proof.dirty?'There are unsaved edits. Save or resolve them in Draft before checking this revision.':'Direct edits belong to the current manuscript. Existing proposal review remains in Draft and Read.'}</p><div class="sws-fields"><button type="button" data-sws-action="draft">Open the draft & proposals</button><button type="button" data-sws-action="read">Read current wording</button></div>${status('A before/after change-history connection is not available in this surface. No applied-edit count, accepted proposal or earlier wording has been inferred.')}`)+tool('editorial-check','Editorial & evidence questions',`<p>Mechanical quote and split results above do not verify meaning, narration, evidence or your creative decisions.</p><label class="sws-field">What should be checked?<select data-sws-input="editorial-kind"><option>Were my decisions carried through?</option><option>Evidence for a claim</option><option>Meaning or tone</option><option>Protected wording</option></select></label><label class="sws-field">Passage or question<textarea data-sws-input="editorial-question" placeholder="Identify the words and the decision or source to compare."></textarea></label><button type="button" data-sws-action="editorial">Review check preparation</button>${status('Preparation fields are not saved. Editorial/evidence checking is not connected. No editorial check has run and no approval is recorded.')}`);
   return panel;
  }
@@ -56,6 +67,7 @@
  function decorate(){
   const p=eligible();if(!p)return;
   const host=p.viewedStage===7?document.getElementById('current-draft-check'):document.getElementById('stage-working-lane');if(!host)return;
+  const previousPanel=host.querySelector('[data-sws-check]'),scope=p.viewedStage===7?checkScope(p):null;if(previousPanel&&scope&&previousPanel.dataset.swsCheckOwner!==scope.key)previousPanel.replaceWith(checkedPanel(p));
   if(p.viewedStage===7&&!host.querySelector('[data-sws-check]')){host.append(checkedPanel(p));const status=host.querySelector('.draft-check-status');if(status&&host.querySelector('.draft-check-proof')&&!host.querySelector('.draft-check-finding')){const cue=document.createElement('p');cue.className='sws-finding-empty';cue.textContent=/Mechanical checks complete/.test(status.textContent)?'No findings recorded by these named mechanical checks. Editorial review remains separate.':'No current findings to show. Run or recheck the saved revision before treating the manuscript as checked.';host.querySelector('.draft-check-results')?.after(cue)}}
   const checkLabel=host.querySelector('[data-sws-check] .sws-check-scope span');if(checkLabel){const label=checkScope(p).label;if(checkLabel.textContent!==label)checkLabel.textContent=label;}
   restore(p,host);
@@ -65,6 +77,11 @@
   const p=eligible();if(!p)return;
   const source=event.target.closest?.('[data-sws-open-source]');if(source){queueMicrotask(()=>{if(currentView()?.id===p.id&&currentView()?.viewedStage===1&&typeof viewPhase==='function')viewPhase(2)});return}
   const b=event.target.closest?.('[data-sws-action]');if(!b)return;const tool=b.closest('[data-sws-tool]'),s=stateFor(p),action=b.dataset.swsAction;
+  if(action==='carousel-write'||action==='carousel-read'){
+   const scope=checkScope(p),panel=b.closest('[data-sws-check]');if(scope.kind!=='carousel'||!scope.snapshot||panel?.dataset.swsCheckOwner!==scope.key)return;
+   if(typeof window.workspaceNavigation?.changeMode!=='function'){message(tool,'This exact Carousel view is unavailable. Keep its saved words selected.');return;}
+   try{Promise.resolve(window.workspaceNavigation.changeMode(action==='carousel-write'?'write':'read')).catch(error=>{if(tool.isConnected&&checkScope(p).key===scope.key)message(tool,error.message);});}catch(error){message(tool,error.message);}return;
+  }
   if(action==='draft'||action==='read'){if(typeof window.studyDraft?.[action==='draft'?'edit':'read']==='function')window.studyDraft[action==='draft'?'edit':'read']();else message(tool,'The manuscript connection is unavailable. Choose a saved working part above.');return}
   if(action==='group'){const selected=[...tool.querySelectorAll('[data-sws-name]:checked')].map(n=>n.dataset.swsName);message(tool,selected.length?`Prepared ${selected.length} resource${selected.length===1?'':'s'} for ${s.values.group||'an unnamed group'} · ${s.values.role||'Supporting context'}. Grouping is not connected; nothing has been saved.`:'Select whole resources above to prepare a group. Nothing has been saved.');}
   if(action==='correction')message(tool,s.values.term?`Proposed: “${s.values.term}” → “${s.values.replacement||'unresolved'}”. Scope: ${s.values['correction-scope']||'not chosen'}. Replacement is not connected; no occurrences were changed.`:'Enter the existing term and proposed correction. No source words have changed.');

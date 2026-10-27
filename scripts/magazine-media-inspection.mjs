@@ -227,7 +227,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     guardCode(s.code);guardRoot();
     return {body:current.bytes,hash:r.hash,contentType:r.contentType,contentLength:current.bytes.length,name:r.name,description:r.description};
   }
-  const ownedPattern=/^library-photo-([a-f0-9]{64})\.(jpg|png|webp|gif|avif)$/;
+  const ownedPattern=/^library-photo-([a-f0-9]{64})(?:-[a-f0-9]{64})?\.(jpg|png|webp|gif|avif)$/;
   async function ownedPhoto(file){
     const token=ownedPattern.exec(file);if(!token||!libraryPhotos?.resolve)fail('This retained Library photograph cannot be resolved by its maintained owner.');
     const value=await libraryPhotos.resolve({file}),bytes=value.body??value.bytes;
@@ -296,7 +296,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       if(ownedPattern.test(row.file)){
         const value=await ownedPhoto(row.file),sourceId=digest([value.rootId,value.sourceId,row.file]);
         bytesTotal+=value.bytes.length;if(bytesTotal>200*1024*1024)fail('Article photographs exceed bounded reader limits.',413);
-        files.set(row.file,{owned:true,file:row.file,relative:'library/'+row.file,hash:value.hash,stamp:value.hash,rootId:value.rootId,librarySourceId:value.sourceId,contentType:value.contentType,sourceId,size:value.bytes.length});
+        files.set(row.file,{owned:true,file:row.file,relative:'library/'+row.file,hash:value.hash,stamp:value.hash,rootId:value.rootId,librarySourceId:value.sourceId,originRef:value.originRef,contentType:value.contentType,sourceId,size:value.bytes.length});
       }else{
         const relative = `public${spec.images}${row.file}`, record = readChecked(root,relative,MAX_ASSET);
         bytesTotal += record.bytes.length; if (bytesTotal > 200*1024*1024) fail('Publication images exceed bounded reader limits.',413);
@@ -321,7 +321,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     const revision = digest([scope,code.map(r=>[r.relative,r.hash]),[...files.values()].map(r=>[r.sourceId,r.hash]),rows]);
     const sources = [...files.entries()].map(([name,r]) => {
       const sourceRef = {rootId:r.rootId||rootId,sourceId:r.sourceId,relativePath:r.relative.replace(/^public\//,''),hash:r.hash};
-      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,originRef:r.owned?{kind:'library',rootId:r.rootId,sourceId:r.librarySourceId}:{kind:'publication',rootId,relativePath:sourceRef.relativePath},previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.annotation?{annotation:structuredClone(p.annotation)}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
+      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,originRef:r.owned?(r.originRef||{kind:'library',rootId:r.rootId,sourceId:r.librarySourceId}):{kind:'publication',rootId,relativePath:sourceRef.relativePath},previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.annotation?{annotation:structuredClone(p.annotation)}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
     });
     snapshot = {input:{...input},scope,revision,code,files:new Map([...files.values()].map(r=>[r.sourceId,r])),ownerRef};
     const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,annotations,limitations:['Photographs resolve through the maintained publication or private Library owner; original camera and album provenance depend on that owner’s recorded evidence.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is separate from canonical working caption and credit annotations.']};

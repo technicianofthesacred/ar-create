@@ -1,3 +1,5 @@
+import {articleCompositionIssue} from '../runtime/src/workspaces/article-composition.mjs';
+import {assertOutputEditorialReady} from '../runtime/src/workspaces/editorial-state.mjs';
 import {validatePhotoAnnotation,validateArticleCredits} from '../runtime/services/magazine-annotations.mjs';
 // A code-only review entrance over one existing loopback authority. No app backend,
 // store or private directory is imported or initialized here. Optional human source and manuscript
@@ -42,6 +44,54 @@ function validateCarouselCorrection(pathname,bytes){
  if(copy){if(!uuid(input.destinationProjectId)||!uuid(input.destinationDocumentId)||!object(input.expectedNative)||!object(input.browser||input.source))fail();}
  else{if(!uuid(input.selectedOutputId))fail();if(pathname.endsWith('/save')&&(!object(input.changes)||Object.keys(input.changes).some(k=>!['slides','caption','name'].includes(k))))fail();if(pathname.includes('/undo')&&!uuid(input.undoOperationId))fail();if(pathname.endsWith('review-words')&&(!object(input.expectedWords)||!hash(input.wordsHash)))fail();}
 }
+// These are existing owner operations, admitted only by the two installed native grants.
+const NATIVE_EDITION_PATHS=new Set(['/api/study/outputs/create','/api/study/outputs/refresh','/api/study/outputs/export']);
+const NATIVE_EXPORT_BODY=32*1024*1024,NATIVE_EXPORT_REQUEST=33*1024*1024;
+function validateNativeReview(pathname,bytes,{articleSave=false,view=null}={}){
+ const input=JSON.parse(bytes.toString('utf8')),object=v=>!!v&&typeof v==='object'&&!Array.isArray(v),fields=(v,required,optional=[])=>object(v)&&required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k)),uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),nullable=v=>v===null||hash(v),revision=v=>Number.isSafeInteger(v)&&v>=0,id=v=>typeof v==='string'&&v.trim()===v&&!!v&&v.length<=256&&!/[\x00-\x1f\x7f]/.test(v),fail=()=>{throw Object.assign(Error('Use the exact saved native output and complete current owner proof.'),{status:400});};
+ const outputProof=v=>fields(v,['revision','hash'])&&revision(v.revision)&&hash(v.hash);
+ const nativeProof=v=>fields(v,['workflow','bindingHash','correspondenceHash'])&&nullable(v.bindingHash)&&nullable(v.correspondenceHash)&&fields(v.workflow,['draft','edits'],['ask','map'])&&Object.values(v.workflow).every(nullable);
+ const carouselProof=(v,outputId)=>fields(v,['projectId','documentId','outputId','projectHash','outputHash','markdownHash','companionHash'])&&uuid(v.projectId)&&uuid(v.documentId)&&v.outputId===outputId&&hash(v.projectHash)&&hash(v.outputHash)&&nullable(v.markdownHash)&&hash(v.companionHash);
+ if(pathname==='/api/study-draft/check'){
+  if(!fields(input,['targetKind','bindingId','parentStudyId','outputId','expected','operationId'])||input.targetKind!=='carousel'||!uuid(input.bindingId)||!id(input.parentStudyId)||!uuid(input.outputId)||!uuid(input.operationId)||!fields(input.expected,['expectedOutput','expectedWords'])||!outputProof(input.expected.expectedOutput)||!carouselProof(input.expected.expectedWords,input.outputId))fail();return input;
+ }
+ const base=['rootBindingId','parentStudyId','expectedOutput'],mutation=[...base,'operationId'];
+ if(!object(input)||!uuid(input.rootBindingId)||!id(input.parentStudyId)||!outputProof(input.expectedOutput))fail();
+ if(pathname.endsWith('/create')){
+  if(!fields(input,[...mutation,'kind','sourceOutputId','targetLanguage','expectedSourceWords'])||!uuid(input.operationId)||!['article','carousel'].includes(input.kind)||!uuid(input.sourceOutputId)||input.sourceOutputId===input.operationId||typeof input.targetLanguage!=='string'||input.targetLanguage.length>48)fail();
+  try{if(Intl.getCanonicalLocales(input.targetLanguage)[0]!==input.targetLanguage)fail();}catch{fail();}
+  const p=input.expectedSourceWords;
+  if(input.kind==='article'){if(!fields(p,['kind','bindingId','parentStudyId','expected','rawHash','capturedRawHash'])||p.kind!=='native'||!uuid(p.bindingId)||p.parentStudyId!==input.parentStudyId||!nativeProof(p.expected)||!hash(p.rawHash)||!hash(p.capturedRawHash))fail();}
+  else if(!fields(p,['kind','projectId','documentId','outputId','expected','wordsHash'])||p.kind!=='carousel-words'||!uuid(p.projectId)||!uuid(p.documentId)||p.outputId!==input.sourceOutputId||!carouselProof(p.expected,p.outputId)||p.expected.projectId!==p.projectId||p.expected.documentId!==p.documentId||!hash(p.wordsHash))fail();
+ }else if(pathname.endsWith('/save')){
+  if(!fields(input,[...mutation,'selectedOutputId','changes'],['expectedNative'])||!uuid(input.operationId)||!uuid(input.selectedOutputId)||!object(input.changes)||Object.keys(input.changes).some(k=>!['placements','articleComposition','name','slides','caption'].includes(k))||Object.hasOwn(input,'expectedNative')&&!object(input.expectedNative))fail();
+  if(articleSave){
+   if(!nativeProof(input.expectedNative)||!Object.keys(input.changes).length||Object.keys(input.changes).some(k=>!['placements','articleComposition','name'].includes(k)))fail();
+   if(Object.hasOwn(input.changes,'name')&&(typeof input.changes.name!=='string'||!input.changes.name.isWellFormed()||input.changes.name.length>256||/[\x00-\x1f\x7f]/.test(input.changes.name)))fail();
+   const placements=input.changes.placements??view.output.placements;
+   if(!Array.isArray(placements)||placements.length>5000||placements.some(p=>!fields(p,['slot','url'],['x','y','zoom','alt','caption','paragraphId'])||!id(p.slot)||typeof p.url!=='string'||p.url!==''&&!/^\/api\/sources\/blob\?id=(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(p.url)||['x','y'].some(k=>p[k]!==undefined&&(!Number.isFinite(p[k])||p[k]<0||p[k]>1))||p.zoom!==undefined&&(!Number.isFinite(p.zoom)||p.zoom<=0)||['alt','caption'].some(k=>p[k]!==undefined&&(typeof p[k]!=='string'||!p[k].isWellFormed()||p[k].length>100000))||p.paragraphId!==undefined&&p.paragraphId!==null&&!id(p.paragraphId)))fail();
+   if(articleCompositionIssue(input.changes.articleComposition??view.output.articleComposition,view.output.manuscript,placements))fail();
+   try{assertOutputEditorialReady({...view.output,...input.changes});}catch{fail();}
+  }
+ }else if(pathname.endsWith('/refresh')){
+  if(!fields(input,[...mutation,'selectedOutputId','expectedNative'])||!uuid(input.operationId)||!uuid(input.selectedOutputId)||!nativeProof(input.expectedNative))fail();
+ }else if(pathname.endsWith('/export')){
+  if(!['article','carousel'].includes(input.kind)||!uuid(input.selectedOutputId))fail();
+  if(input.kind==='article'){
+   if(!fields(input,[...base,'kind','selectedOutputId','expectedNative','manuscriptRevision','name','mimeType','body'])||!nativeProof(input.expectedNative)||!revision(input.manuscriptRevision)||typeof input.name!=='string'||!input.name.trim()||input.name.length>240||/[/\\:\x00-\x1f\x7f]/.test(input.name)||input.name.startsWith('.')||!['text/html','text/markdown','application/json'].includes(input.mimeType)||typeof input.body!=='string'||!input.body.isWellFormed())fail();
+   if(Buffer.byteLength(input.body)>NATIVE_EXPORT_BODY)throw Object.assign(Error('Export exceeds 32 MB.'),{status:413});
+   if(input.mimeType==='application/json')try{JSON.parse(input.body);}catch{fail();}
+  }else if(!fields(input,[...base,'kind','selectedOutputId','outputRevision'])||!revision(input.outputRevision))fail();
+ }else fail();
+ return input;
+}
+function nativeOutputSnapshot(upstream,timeoutMs,input){
+ const query=new URLSearchParams({rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId});
+ return new Promise((resolve,reject)=>{const fail=()=>reject(Object.assign(Error('The selected native output could not be verified. Reopen it before continuing.'),{status:503})),pending=http.get(new URL('/api/study/outputs?'+query,upstream),{headers:{accept:'application/json'}},owner=>{
+  if(owner.statusCode!==200){owner.resume();return fail();}let size=0;const chunks=[];owner.on('data',chunk=>{size+=chunk.length;if(size>8*1024*1024){owner.destroy();fail();}else chunks.push(chunk);});owner.once('error',fail);owner.once('end',()=>{try{resolve(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))));}catch{fail();}});
+ });pending.setTimeout(timeoutMs,()=>pending.destroy(Error('timeout')));pending.once('error',fail);});
+}
+
 const MAX_READ_BODY=1024*1024;
 async function readJSON(req,{correction=false,maxBytes=MAX_READ_BODY}={}){
  const reject=(status,message)=>{throw Object.assign(Error(message),{status});};
@@ -108,13 +158,13 @@ function validateDraftCorrection(pathname,bytes,{approvals=false}={}){
  }
  validateNativeOperations(input.operations,fail);
 }
-function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false,photoLibrary=false}={}){
+function validateNativeOperations(operations,fail,{photoAspect=false,photoReplace=false,photoLibrary=false,photoInsert=false}={}){
  const object=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
  const fields=(value,required,optional=[])=>object(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>required.includes(key)||optional.includes(key));
  const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  // Prose/structure and one exact photo adjustment; aspect is Magazine-only,
  // and markup approval keeps its separate gate.
- const shapes={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
+ const shapes={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
  for(const op of operations){
   if(!object(op)||typeof op.kind!=='string'||!Object.hasOwn(shapes,op.kind)||!fields(op,shapes[op.kind],op.kind==='blockKind'?['level']:[]))fail();
   for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\x00-\x1f]/.test(op[key])))fail();
@@ -122,7 +172,7 @@ function validateNativeOperations(operations,fail,{photoAspect=false,photoReplac
   for(const key of ['from','to','at'])if(key in op&&(!Number.isSafeInteger(op[key])||op[key]<0))fail();
   for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))fail();
   if('seenBlockHash' in op&&!hash(op.seenBlockHash))fail();
-  if(op.kind==='photoReplaceAsset'&&(!photoLibrary||operations.length!==1||!hash(op.rootId)||!hash(op.revision)||!hash(op.sourceHash)||typeof op.sourceId!=='string'||!(/^[a-f0-9]{64}$/.test(op.sourceId)||/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(op.sourceId))||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
+  if(['photoReplaceAsset','photoInsertAsset'].includes(op.kind)&&(!photoLibrary||op.kind==='photoInsertAsset'&&!photoInsert||operations.length!==1||!hash(op.rootId)||!hash(op.revision)||!hash(op.sourceHash)||typeof op.sourceId!=='string'||!(/^[a-f0-9]{64}$/.test(op.sourceId)||/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(op.sourceId))||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
   if(['photoAnnotation','articleCredits'].includes(op.kind)){if(!photoAspect||operations.length!==1)fail();try{if(op.kind==='photoAnnotation')validatePhotoAnnotation(op.annotation);else validateArticleCredits(op.credits);}catch{fail();}}
   if(op.kind==='photoDescription'&&(!photoAspect||operations.length!==1||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
   if(op.kind==='photoReplace'&&(!photoReplace||operations.length!==1||op.id===op.replacementId||!hash(op.seenReplacementHash)))fail();
@@ -162,7 +212,7 @@ function validateMagazineCorrection(pathname,bytes){
  if(action==='undo'){if(!uuid(input.undoOperationId))fail();return;}
  if(action==='save'){if(typeof input.content!=='string'||!input.content.isWellFormed()||input.content.includes('\0'))fail();return;}
  if(!Array.isArray(input.operations)||!input.operations.length||input.operations.length>500)fail();
- validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true,photoLibrary:true});
+ validateNativeOperations(input.operations,fail,{photoAspect:true,photoReplace:true,photoLibrary:true,photoInsert:true});
 }
 const fixtureImage=p=>/^\/(?:document-study\/assets\/photos|porcelain-assets)\/[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:jpg|jpeg|png|webp|gif|avif)$/i.test(p);
 const upstreamOnly=p=>p.startsWith('/api/')||p.startsWith('/transcription/')||fixtureImage(p)||['/document-study/synthetic-study-data.js','/document-study/package-config.js'].includes(p);
@@ -226,6 +276,13 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   }
   const mechanicalCheck=mechanicalPath&&magazineCheckReceipts&&req.method==='POST';
   if(mechanicalCheck){if(req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved checks require the author’s local workspace.');}if(req.url!==pathname)return fail(400,'Use the exact check path without a query.');if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'){req.resume();return fail(403,'Checks must originate from this exact local review page.');}}
+  const nativeReviewPath=NATIVE_EDITION_PATHS.has(pathname)||pathname==='/api/study-draft/check',nativeReviewEnabled=actualWorkReview&&studyDraftCorrections&&nativeCarouselCorrections;
+  if(nativeReviewPath&&nativeReviewEnabled&&req.method!=='GET'&&req.method!=='HEAD'){
+   if(req.url!==pathname){req.resume();return fail(400,'Use the exact native output operation path without a query.');}
+   if(req.method!=='POST'){req.resume();return fail(405,'Native output operations require an explicit POST.');}
+   if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Native output operations require the author’s exact local workspace.');}
+  }
+  const nativeReview=nativeReviewEnabled&&nativeReviewPath&&req.method==='POST';
   const correctionPath=SOURCE_CORRECTION_PATHS.has(pathname);
   const draftCorrectionPath=STUDY_DRAFT_CORRECTION_PATHS.has(pathname);
   const magazineCorrectionPath=MAGAZINE_DRAFT_CORRECTION_PATHS.has(pathname);
@@ -240,14 +297,16 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const draftCorrection=studyDraftCorrections&&draftCorrectionPath&&req.method==='POST';
   const magazineCorrection=magazineDraftCorrections&&magazineCorrectionPath&&req.method==='POST';
   const carouselCorrection=nativeCarouselCorrections&&carouselCorrectionPath&&req.method==='POST';
+  const nativeSave=carouselCorrection&&pathname==='/api/study/outputs/save';let nativeArticleSave=false;
+  if(nativeSave&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved composition changes require the author’s exact local workspace.');}
   const magazineFeedbackCorrection=magazineFeedbackCorrections&&magazineFeedbackPath&&req.method==='POST';
   if(magazineFeedbackCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Feedback wording changes require the author’s local workspace.');}
   if(magazineCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Photo and manuscript changes require the author’s local workspace.');}
-  const correction=guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport;
+  const correction=guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport||nativeReview;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
-   const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport?33*1024*1024:MAX_READ_BODY}):null;
+   const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport||nativeReview&&pathname==='/api/study/outputs/export'?NATIVE_EXPORT_REQUEST:MAX_READ_BODY}):null;
    if(guidanceCorrection){
     const input=JSON.parse(readBody.toString('utf8')),keys=['key','acceptedRegions','expectedRevision','expectedHash','operationId'];
     if(!input||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!['voice','positions','recipe'].includes(input.key)||!Array.isArray(input.acceptedRegions)||input.acceptedRegions.length>128||input.acceptedRegions.some(v=>typeof v!=='string')||!['expectedRevision','expectedHash'].every(k=>/^[a-f0-9]{64}$/.test(input[k]||''))||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(input.operationId||''))throw Object.assign(Error('Use the current shared sheet and its exact guarded text edit.'),{status:400});
@@ -263,12 +322,29 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     if(current.revision!==input.expectedRevision||sessions[0].sourceHash!==input.expectedSourceHash)throw Object.assign(Error('The conversation changed before translation. Refresh its current wording.'),{status:409});
     translationPermissionCurrent?.();admitTranslation();
    }
+   if(nativeSave){
+    const input=validateNativeReview(pathname,readBody),view=await nativeOutputSnapshot(upstream,timeoutMs,input);
+    if(view?.scope?.rootBindingId!==input.rootBindingId||view.scope.parentStudyId!==input.parentStudyId||view.output?.id!==input.selectedOutputId)throw Object.assign(Error('Select this exact saved output before changing its composition.'),{status:409});
+    if(view.output.kind==='article'){
+     if(!nativeReviewEnabled)throw Object.assign(Error('Native Article composition requires both existing correction grants.'),{status:423});
+     if(view.writingProof?.kind!=='native')throw Object.assign(Error('Use the selected Article’s native wording owner.'),{status:409});
+     validateNativeReview(pathname,readBody,{articleSave:true,view});nativeArticleSave=true;
+    }else if(view.output.kind==='carousel')validateCarouselCorrection(pathname,readBody);
+    else throw Object.assign(Error('Only the selected native Article or Carousel composition may change.'),{status:409});
+   }
+   if(nativeReview){
+    const input=validateNativeReview(pathname,readBody);
+    if(pathname.endsWith('/refresh')||pathname.endsWith('/export')){
+     const view=await nativeOutputSnapshot(upstream,timeoutMs,input),kind=pathname.endsWith('/refresh')?'article':input.kind;
+     if(view?.scope?.rootBindingId!==input.rootBindingId||view.scope.parentStudyId!==input.parentStudyId||view.output?.id!==input.selectedOutputId||view.output.kind!==kind||kind==='article'&&view.writingProof?.kind!=='native')throw Object.assign(Error('Select this exact saved native Article or Carousel before continuing.'),{status:409});
+    }
+   }
    if(sourceCorrection)validateCorrection(pathname,readBody);
    if(draftCorrection)validateDraftCorrection(pathname,readBody,{approvals:studyDraftApprovals});
    if(magazineCorrection)validateMagazineCorrection(pathname,readBody);
    if(magazineFeedbackCorrection)validateMagazineFeedbackCorrection(pathname,readBody);
    if(mechanicalCheck)validateMagazineMechanicalCheck(readBody);
-   if(carouselCorrection)validateCarouselCorrection(pathname,readBody);
+   if(carouselCorrection&&!nativeSave)validateCarouselCorrection(pathname,readBody);
    if(actualWorkReview===true&&pathname==='/document-study/package-config.js'){
     const bytes=Buffer.from('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify({syntheticFixtures:false,originalReaderBaseUrl:upstream.origin})+';window.AR_CREATE_REVIEW_MODE='+JSON.stringify({actualWork:true,readOnly:true,...(sourceCorrections?{sourceCorrections:true}:{}),...(translationEnabled?{translationProposals:true}:{}),...(studyDraftCorrections?{studyDraftCorrections:true}:{}),...(studyDraftApprovals?{studyDraftApprovals:true}:{}),...(browserCarouselCorrections?{browserCarouselCorrections:true}:{}),...(nativeCarouselCorrections?{nativeCarouselCorrections:true}:{}),...(magazineDraftCorrections?{magazineDraftCorrections:true}:{}),...(magazineFeedbackCorrections?{magazineFeedbackCorrections:true}:{}),...(magazineCheckReceipts?{magazineCheckReceipts:true}:{}),...(typeof catalogCacheScope==='string'&&/^[a-f0-9]{64}$/.test(catalogCacheScope)?{catalogCacheScope}:{}),authorityOrigin:upstream.origin})+';');
     res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Content-Length':bytes.length});return res.end(req.method==='HEAD'?undefined:bytes);
@@ -289,6 +365,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     if(!/^\/(assets|ig-assets)\//.test(pathname))return fail(404,'This review file is unavailable.');
    }
    const headers={};if(postRead||correction||translationProposal){headers['content-type']='application/json';headers['content-length']=readBody.length;if(req.headers.origin!==undefined)headers.origin=upstream.origin;}for(const key of ['accept','accept-language','range','if-range'])if(typeof req.headers[key]==='string')headers[key]=req.headers[key];if(pathname==='/api/events'&&req.method==='GET'&&/^\d{1,16}$/.test(req.headers['last-event-id']||'')&&Number.isSafeInteger(Number(req.headers['last-event-id'])))headers['last-event-id']=req.headers['last-event-id'];
+   if(nativeReview||nativeArticleSave){headers['x-ar-actor']='human:adrian';headers['x-ar-client']='ui';}
    const pending=http.request(upstream,{method:req.method,path:req.url,headers},owner=>{
     if(owner.statusCode>=300&&owner.statusCode<400){owner.resume();return fail(502,'The existing work authority returned a redirect; review did not follow it.');}
     const selected={};for(const key of ['content-type','content-length','content-range','accept-ranges','content-disposition',...(actualWorkReview===true&&pathname==='/api/study/photos/preview'?['x-content-sha256']:[])])if(owner.headers[key]!==undefined)selected[key]=owner.headers[key];

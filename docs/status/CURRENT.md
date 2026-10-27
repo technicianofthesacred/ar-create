@@ -1,3 +1,66 @@
+## 28 October — Coherent photo and Carousel Check milestone verified candidate
+
+658 relevant checks across27 files and the generated build pass after the six integration failures were repaired. Native invented-content proof covers all-Library explicit paragraph insertion, independent Article position/asset selection, actual owner restart/reload, exact Media used-where, private retained HTML/file hashes, scoped Undo and added-occurrence removal with its own exact Undo. Original placements and canonical wording are restored. Internal retention leaves no longer create extra gallery choices; explicitly selected parent identities remain available and used-where stays exact.
+
+Carousel Check now uses the selected Carousel’s own canonical words/source/photo evidence, fresh receipt and exact repeated-passage targets. Immediate Write/Read intent, delayed Export and saved Check continuation preserve the selected owner; opening an Article no longer flashes a false empty/create screen. Compact Direction preserves the approved field geometry in both desktop themes.
+
+This is a verified candidate awaiting exact-revision publication; installed PR82 remains live. No installed completion checkbox has been advanced yet. Whole Bench/Library/Pieces/all-twelve creative journey, populated C/final NOTES desktop/phone interactions and human editorial acceptance remain open. The390px Article reading preview is output-only proof inside a desktop viewport.
+
+## 28 October — Independent Article photo positions and integration repairs
+
+Explicit after-introduction placement now passes actual native Library selection, saved own output, owner restart/reload and retained HTML export in an existing independent language Article. Export ordering is introduction → image → next thought, with exact receipt/file hash. Canonical wording stays byte-identical. Asset-selection Undo restores the exact prior empty-slot state; adding the slot and selecting its asset are separate saved operations. Empty added-slot removal is being connected; do not claim a single Undo removes the entire insertion.
+
+The combined642-check run exposed6 delayed Export/navigation failures. Those were reproduced before repair;165 related checks pass after e46218a. The temporary false-empty Arrange opening is separately repaired in58785ba with138 checks. No release has started. A final coherent verification is pending, so the broad run is not labelled all green.
+
+Internal immutable photo retention copies are now filtered from the candidate gallery only with exact validated parent/content proof, while explicitly selected retained parents and independent same-byte originals keep their identities.33 focused checks/build pass; actual-screen gallery confirmation remains open. Installed PR82 remains the live milestone. Full journey, C/final NOTES, phone and all-twelve-section finish gates stay open.
+
+## 28 October — All-Library photograph insertion verified natively
+
+Media All photos → unused photograph → Place in article → explicit after-introduction choice → Save now works through the exact review connection. Actual owner restart/reload retains the inserted photo. Media derives one use for the selected record and zero for the other equal-byte record. Audience loads both photographs; private retained HTML contains both images and verifies its recorded byte hash. Exact arrangement Undo restores the complete original manuscript hash; Media returns to zero uses for both Library records. No wording approval or publication occurs.56 focused integrated insertion/Check/navigation/review checks pass.
+
+This closes the bounded native candidate lifecycle, not its installed checkbox or whole Arrange. Exact release verification is pending. Explicit position choice in independently created native Articles, whole C/final NOTES desktop/phone/all12 and full creative journey remain open.
+
+## 28 October — Exact Check passages and immediate output navigation verified
+
+The selected Carousel now targets repeated quoted caption occurrences independently: native first1–25 and second34–58, with exact saved-field hashes and fresh receipt verification. An own-word Undo restores both original canonical Markdown and words hashes. Older receipts remain immutable; changed wording is still explicitly outdated. The earlier whole-field selection defect is fixed in4cab155.
+
+Immediate independent-output selection followed by Write or Read now retains the requested mode through mounting. Native switching between existing Chinese and Japanese Carousel copies opens the correct editable/read-only owner; no wording approval occurs. Six delayed/superseded race regressions cover stale selection, older Arrange restoration, exact textarea/caret/scroll preservation.50 integrated Check/navigation/review-layout tests pass. Native Article layout-save review admission is also integrated with84 isolated proxy/owner/restart/export checks.
+
+These are uninstalled candidates, so their installed checkboxes stay open. Library-photo insertion still needs its exact review operation admission and actual native Save/restart/export/Undo. Native Article photo-position guessing is separately being replaced by an explicit choice through existing placements.
+
+Same1280×720 Direction reference/live comparison confirms614×74 text fields, equal x111 and less than1px vertical difference. The live empty Angles heading is18px lower than the populated chosen-angle reference; populated comparison, whole C/phone/all12 remain open.
+
+## 28 October — Native acceptance found two remaining connections
+
+Actual invented-content testing confirms selected Carousel Check reads its own canonical saved words without wording approval, shows its own supplementary tools, and invalidates findings after exact own-word Undo. The stale receipt survives an actual owner restart and exposes no stale passage actions. Exact original words and canonical Markdown hashes are restored. Repeated identical caption quotes still fall back to whole-field selection; exact occurrence mapping is under repair, so Check remains unchecked.24 focused integrated Check/proxy tests and build pass.
+
+Media All photos shows two distinct indexed records, friendly names, unused-photo detail, Place in article and explicit after-intro placement. Save currently refuses at the review operation validator, which has not admitted the new exact insertion action. This is a real main-flow gap, assigned for a narrow repair under the existing grant; the manuscript hash stays exact after cancellation. Do not claim insertion complete.
+
+Compact Direction is readable at1280×720 in both themes, with its secondary tools opening/closing and no horizontal overflow. Populated Angles, final same-viewport reference acceptance and phone remain open. Human writing tabs and wording approvals were untouched.
+
+## 28 October — Goal checklist refreshed during Build
+
+The existing goal remains active. Installed PR82 stays the verified running milestone; integrated work below remains unchecked until its native acceptance and exact release proof. Earlier dated candidate notes are history, not the current state.
+
+- [ ] Canonical Carousel Check: integrated; an actual saved-carousel check now reports its own words, source and photos with explicit held limits. Passage targeting, restart/stale handling and release acceptance remain open.
+- [ ] All-Library photo insertion: integrated with an explicit after-paragraph choice and distinct origins for equal-byte photographs.346 focused specialist checks and build pass; actual-screen acceptance and release remain open. Installed replacement remains a separate completed result.
+- [ ] Compact Direction controls and narrow main-review language/export/Check connections: integrated; populated screen/main-flow and release verification remain open. Native Article layout-save admission is still being finished.
+- [ ] Output selection followed immediately by Write/Read: an observed asynchronous mounting race is under bounded investigation; do not mark navigation complete.
+- [ ] Whole creative journey, Bench/Library/Pieces/all twelve sections and approved C/final NOTES desktop/phone light/dark interactions remain open.
+
+The goal checklist records source-built, native-verified and installed/live-verified separately. No real wording approval or human writing tab was touched.
+
+## 28 October — PR82 installed; exact goal checkoffs
+
+Signed main `52a4e0423374d7d7a8f41fbfc077942cafb029a1`, build2026-10-27T21:41:43.051Z, is verified live in installed8841 and main59958.521 relevant checks/28 files, build/package929,84 served hashes and complete installed-manifest/generated-byte proof pass. API content, canonical dirty files and configuration are preserved. Final verification corrected a source-module HTTP probe: installed source modules are verified by the complete manifest and their generated browser bundle, while review source bytes are checked separately. No merge/install was repeated and no permission/CSP change was made.
+
+- [x] Literal kept-Source lookup with fresh exact passage verification, exclusive sheets and retained prior reading/unsaved corrections.
+- [x] Nested side, words-on-photo and closing-saying captions through the canonical writer, restart, Audience, retained HTML and exact History recovery.
+- [ ] Complete manual-language-edition handoff on main59958: the normal installed owner’s native Article/Carousel lifecycle and exports are verified, but the review proxy still refuses its new create/refresh/export paths. Narrow admission under the already enabled grants is being connected; do not call that main-review flow complete yet.
+- [ ] Carousel Check, new-photo insertion/explicit placement, full Direction/whole C/NOTES, phone, populated all12/interaction and complete journey acceptance.
+
+The candidate entries below now describe installed code; their full remaining gates stay open. Native verification used invented content and left real wording decisions for explicit human clicks.
+
 ## 28 October — Linked manual editions and composed captions ready for release
 
 521 relevant checks across28 files and the generated build pass. The pre-existing native-output HTTP fixture still fails its initial original-open request on an unchanged parent checkout; it is excluded from this result, not labelled green.
@@ -29,9 +92,9 @@ Completion means verified running behavior and approved-design evidence. A passi
 | Choose an unused indexed Library photo in the existing replacement flow | Verified installed, PR72; insertion remains open |
 | Output-specific Direction briefs | Verified installed, PR81; does not generate translations |
 | Nested photographs/group captions and saved Media folder projection | Verified installed, PR81; full filing remains open |
-| Nested side, on-photo and saying captions | Native Save/restart/Audience/export/reverse Undo verified; installation pending |
-| Literal passage lookup in saved kept Source speech | Integrated `5ef1856`; native search/return/recovery verified; installation pending |
-| Independent linked manual language editions | Native Article/Carousel own-word/restart/Read/export/history verified; installation pending |
+| Nested side, on-photo and saying captions | Verified installed, PR82; full visual/phone acceptance remains open |
+| Literal passage lookup in saved kept Source speech | Verified installed, PR82 |
+| Independent linked manual language editions | Normal-owner lifecycle installed/verified, PR82; main59958 review admission unfinished |
 | Whole creative journey and Bench/Library/Pieces/all twelve sections | Open |
 | Full approved C/NOTES desktop/phone light/dark and interaction match | Open; bounded desktop evidence does not close this gate |
 

@@ -153,7 +153,7 @@
    if(![5,6,7].includes(stage())||connected?.output?.kind==='carousel'){
     if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected output’s checking connection is unavailable.');
     await window.workspaceNavigation.changeMode('check');
-    if(current().id!==id||selectedScopeKey()!==scope||![5,6,7].includes(stage()))throw Error('The selected work changed before Check could open.');
+    if(current().id!==id||selectedScopeKey()!==scope||(![5,6,7].includes(stage())&&!window.workspaceNavigation?.isCarouselCheck?.()))throw Error('The selected work changed before Check could open.');
    }
    closeTool();tool='check';mounted=null;decorate();document.querySelector('#wbf-drawer [data-wbf-close]')?.focus({preventScroll:true});return;
   }
@@ -255,8 +255,8 @@
    }
    const undo=w.querySelector('#c3-surface-bar .sb-right>.sb-icon[aria-label="Undo"]'),ask=w.querySelector('#c3-surface-bar .sb-primary'),menu=w.querySelector('#c3-surface-bar .sb-menu');
    if(menu)for(const [name,owner]of [['undo',undo],['ask',ask]])if(owner&&!menu.querySelector('[data-wbf-menu="'+name+'"]')){const copy=owner.cloneNode(true);copy.dataset.wbfMenu=name;copy.className='sb-item';copy.textContent=name==='undo'?'Undo typing':owner.textContent;menu.append(copy);}
-  }else{tools?.remove();w.querySelector('#wbf-document-actions')?.remove();if(tool&&tool!=='understanding')closeTool();}
-  document.body.classList.toggle('wbf-check-open',n===7);
+  }else{tools?.remove();w.querySelector('#wbf-document-actions')?.remove();if(tool&&tool!=='understanding'&&!(tool==='check'&&window.workspaceNavigation?.isCarouselCheck?.()))closeTool();}
+  document.body.classList.toggle('wbf-check-open',n===7||!!window.workspaceNavigation?.isCarouselCheck?.());
   const picker=w.querySelector('.draft-bar>.draft-part-picker,.draft-bar>[data-draft-action="parts"]');
   if(picker){let part=w.querySelector('#wbf-parts');if(!part){part=document.createElement('details');part.id='wbf-parts';part.dataset.c3RetainControl='';part.innerHTML='<summary>Parts</summary><div></div>';w.querySelector('#c3-surface-bar .sb-right')?.append(part);}part.querySelector('div').append(picker);}
   const margin=w.querySelector('#margin');if(margin)margin.classList.add('wbf-margin');
@@ -354,7 +354,7 @@
  }
  function decorate(){
   if(!ws())return;
-  document.body.classList.add('wbf-on');const home=document.getElementById('project-library'),mode=home?.open&&!home.dataset.plContext?homeMode:'';if(document.body.dataset.wbfHome!==mode)document.body.dataset.wbfHome=mode;const n=stage();if(tool==='proposals'&&!window.studyAIProposals?.isOpen?.())closeTool();if(n===7&&decoratedStage!==7){restore();tool='check';mounted=null;}if(![5,6,7].includes(n)&&tool==='check')closeTool();decoratedStage=n;header();documents();bench();
+  document.body.classList.add('wbf-on');const home=document.getElementById('project-library'),mode=home?.open&&!home.dataset.plContext?homeMode:'';if(document.body.dataset.wbfHome!==mode)document.body.dataset.wbfHome=mode;const n=stage();if(tool==='proposals'&&!window.studyAIProposals?.isOpen?.())closeTool();if(n===7&&decoratedStage!==7){restore();tool='check';mounted=null;}if(![5,6,7].includes(n)&&!window.workspaceNavigation?.isCarouselCheck?.()&&tool==='check')closeTool();decoratedStage=n;header();documents();bench();
  }
  // Home and Pieces share the existing library dialog. Leave through its
  // guarded owner before replaying the exact rail control, including the native

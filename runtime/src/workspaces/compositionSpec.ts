@@ -6,6 +6,31 @@ export type RecordedConversationSpec=ConversationSpec & {
  recordedParagraphs:Pick<Paragraph,'id'|'doc'>[];
  recordedFields:{hookId?:string;introId?:string;closingId?:string;partTitleIds:string[]};
 };
+export type ArticlePhotoPosition={paragraphId:string|null;label:string};
+function photoLayout(doc:Manuscript,output:Output){
+ if(output.kind!=='article')throw Error('Choose this saved Article before placing a photograph.');
+ const paragraphs=output.manuscript||doc.paragraphs,layout=output.articleComposition||inferArticleComposition(paragraphs);
+ validateArticleComposition(layout,paragraphs,output.placements);return {paragraphs,layout};
+}
+export function articlePhotoPositions(doc:Manuscript,output:Output):ArticlePhotoPosition[]{
+ const {paragraphs,layout}=photoLayout(doc,output),positions:ArticlePhotoPosition[]=[];
+ const label=(id:string,prefix:string)=>{const paragraph=paragraphs.find(p=>p.id===id)!;const words=acceptedText(paragraph).replace(/\s+/g,' ').trim();return prefix+(words?' · '+words.slice(0,76)+(words.length>76?'…':''):'');};
+ if(layout.introId)positions.push({paragraphId:layout.introId,label:label(layout.introId,'After introduction')});
+ // These are complete ordinary thoughts. A nested frame, pulled line, heading
+ // or closing role cannot be represented as an ordinary paragraph boundary.
+ for(const blocks of [layout.opening,...layout.parts.map(p=>p.blocks),layout.ending.blocks])for(const block of blocks)if(['q','a','n'].includes(block.kind)&&'paragraphId' in block)positions.push({paragraphId:block.paragraphId,label:label(block.paragraphId,'After paragraph '+(paragraphs.findIndex(p=>p.id===block.paragraphId)+1))});
+ // Old flat outputs keep their historical unanchored placement rule. Do not
+ // offer End there: null is not an explicit end boundary in that older model.
+ if(output.articleComposition)positions.push({paragraphId:null,label:layout.ending.sayingId||layout.closingId?'End of main text · before closing words':'End of main text'});return positions;
+}
+export function articlePhotoPositionBaseline(doc:Manuscript,output:Output):string{
+ const {paragraphs,layout}=photoLayout(doc,output);return JSON.stringify([doc.id,output.id,output.manuscriptRevision,paragraphs.map(p=>({id:p.id,doc:p.doc})),layout]);
+}
+export function articlePhotoSlotIsComposed(doc:Manuscript,output:Output,slot:string):boolean{
+ const {layout}=photoLayout(doc,output);if(slot==='cover'||slot===layout.portraitSlot||slot===layout.ending.photoSlot||layout.parts.some(p=>p.openerSlot===slot))return true;
+ const has=(blocks:ArticleBlock[]):boolean=>blocks.some(block=>'slot' in block&&block.slot===slot||block.kind==='photos'&&block.slots.includes(slot)||(block.kind==='side'||block.kind==='glyph')&&has(block.blocks));
+ return has(layout.opening)||layout.parts.some(p=>has(p.blocks))||has(layout.ending.blocks);
+}
 // One-way renderer adapter: layout is references to the captured accepted JSON.
 // The original DEV receipt is never read here, even when later words change.
 export function outputSpec(doc:Manuscript,output:Output):RecordedConversationSpec {
@@ -54,7 +79,8 @@ export function outputSpec(doc:Manuscript,output:Output):RecordedConversationSpe
   const photos=extra.filter(p=>p.paragraphId&&ids.includes(p.paragraphId)&&!placed.has(p.slot));
   photos.forEach(p=>placed.add(p.slot));return [b,...photos.map(photoBlock)];
  });
- const anchoredOpening=append(opening);parts.forEach(p=>{p.blocks=append(p.blocks);});ending.blocks=append(ending.blocks);
+ const introPhotos=extra.filter(p=>layout.introId&&p.paragraphId===layout.introId);introPhotos.forEach(p=>placed.add(p.slot));
+ const anchoredOpening=[...introPhotos.map(photoBlock),...append(opening)];parts.forEach(p=>{p.blocks=append(p.blocks);});ending.blocks=append(ending.blocks);
  // Preserve the legacy order-based placement rule only for old flat outputs.
  if(!(output as any).articleComposition&&!parts.length){
   for(const [i,p] of extra.entries())if(!p.paragraphId&&!placed.has(p.slot)){

@@ -534,6 +534,34 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       });
     }).then(async result=>({...result,view:await read({...group(input),selectedOutputId:input.operationId})}));
   }
+  // Read-only Check inspection deliberately precedes wordsReview/export admission.
+  // Sources come only from this output's immutable capture, never its parent Article.
+  async function inspectCheckSnapshot(input) {
+    const t=await target(input);t.input=input;
+    const selected=record(t,input.selectedOutputId),output=selected.output,capture=validateCapture(selected.private,output),owner=selected.record.wordOwner;
+    if(output.kind!=="carousel"||owner?.kind!=="carousel-words"||owner.projectId!==t.projectId||owner.documentId!==t.documentId||owner.outputId!==output.id)fail("Check requires this exact carousel's canonical words owner.");
+    const w=await store.readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:output.id,allowEditedMarkdown:true});
+    const current=await currentProof(input,output.id,capture,output),sources=[];
+    if(!independentCopy(capture))for(const row of capture.privateSidecar.nativeSnapshot.context?.records||[]){
+      if(!["source","context"].includes(row.role)||row.missing||typeof row.raw!=="string")continue;
+      const actual=current.sources.filter(s=>s.id===row.id&&s.role===row.role&&!s.missing&&s.hash===hash(row.raw));
+      if(typeof row.raw==="string"&&actual.length===1&&row.copiedHash===hash(row.raw))sources.push({id:row.id,role:row.role,hash:hash(row.raw),raw:row.raw});
+    }
+    const issues=[];
+    if(w.missing||w.externalEdit)issues.push({type:"integrity",severity:"held",message:"The canonical carousel words file is missing or differs from its saved owner. Resolve it in Write before checking words."});
+    for(const [index,slide]of output.slides.entries()){
+      const count=IG.T[slide.template]?.photos;
+      if(!Number.isInteger(count)){issues.push({type:"photo",severity:"held",message:"Slide "+(index+1)+" has an unavailable layout; required photographs cannot be checked.",slideId:slide.id});continue;}
+      for(let slot=0;slot<count;slot++){const src=slide.photos?.[slot]?.src;
+        if(!src)issues.push({type:"photo",severity:"review",message:"Slide "+(index+1)+" is missing photograph "+(slot+1)+".",slideId:slide.id});
+      }
+    }
+    for(const asset of current.assets||[])if(asset.missing||!asset.hash)issues.push({type:"photo",severity:"held",message:"A selected Library photograph is unavailable. Reconnect that exact photograph in Media."});
+    if(!same(current,selected.private.proof))issues.push({type:"source",severity:"held",message:"Captured source, decision or photograph evidence has changed; this is a check of current available evidence, not renewed approval."});
+    const fields=output.slides.flatMap((slide,index)=>["text","label","credit"].map(field=>({slideId:slide.id,slideNumber:index+1,field,raw:field==="label"?(slide.label??output.importedDraft?.label??output.title??""):(slide[field]??"")}))).concat([{slideId:null,field:"caption",raw:output.caption??""}]);
+    if(fields.some(f=>typeof f.raw!=="string"))fail("Unsupported carousel field content.");
+    return {output:clone(output),raw:w.raw??"",expected:{expectedOutput:outputRecordsExpected(t.document),expectedWords:clone(w.expected)},sources,fields,issues,proof:{targetKind:"carousel",bindingId:input.rootBindingId,parentStudyId:input.parentStudyId,outputId:output.id,projectId:t.projectId,documentId:t.documentId,outputHash:hash(output),markdownHash:w.expected.markdownHash,wordsHash:await helpers.carouselWordsHash(output),missing:!!w.missing,externalEdit:!!w.externalEdit,sourceProof:current,sources:sources.map(({id,role,hash})=>({id,role,hash}))}};
+  }
   async function withExportSnapshot(input, fn) {
     if (typeof fn !== "function") fail("Trusted export publication callback required.");
     const t = await target(input);
@@ -569,7 +597,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     };
     return textKind(selected.output.kind) ? native.withSnapshotLease({ bindingId: selected.record.wordOwner.bindingId, parentStudyId: input.parentStudyId, expected: input.expectedNative }, run) : run(null);
   }
-  return { read, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), save: (i) => mutate("save", i), reviewCarouselWords: (i) => mutate("review", i), refreshSelectedArticle: (i) => mutate("refresh", i), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
+  return { read, inspectCheckSnapshot, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), save: (i) => mutate("save", i), reviewCarouselWords: (i) => mutate("review", i), refreshSelectedArticle: (i) => mutate("refresh", i), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
 }
 export {
   createNativeOutputOwner

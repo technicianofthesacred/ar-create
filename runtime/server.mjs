@@ -48,7 +48,7 @@ import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
 import {createWorkingDraftBridge} from './services/magazine/working-draft-bridge.mjs';
 import {createMagazineMechanicalChecks} from './services/magazine-mechanical-checks.mjs';
-import {createMagazineLibraryPhotos} from './services/magazine-library-photos.mjs';
+import {createMagazineLibraryPhotos,magazinePhotoOriginHeader} from './services/magazine-library-photos.mjs';
 import {createReviewMedia} from './services/review-media.mjs';
 import {createPublicationPhotoCatalog} from '../scripts/magazine-media-inspection.mjs';
 import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
@@ -250,12 +250,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   // Kept-conversation edits are journaled by the transcript owner; who made each is kept here.
   const provenanceLedger=createProvenanceLedger({dataDir});
   const stampSourceSession=async(action,input)=>{const out=await sourceSessions[action](input);if(typeof input?.operationId==='string'&&typeof input?.sessionId==='string'){try{provenanceLedger.stamp({area:'source-session',scopeId:input.sessionId,key:input.operationId,action});}catch(error){console.error('Source edit provenance was not recorded:',error.message);}}return out;};
-  const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts}):null;
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
   const createStudyCollection=async input=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};};
   const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
   const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings,retainedSource:retainedCarouselSource,browserOrigins:browserCarouselOrigins}):null;
   const studyOutputs=studyOutputFactory?.owner;
+  const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts,outputs:studyOutputs}):null;
   const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
   const studyShare=studyOutputs?createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix}):null;
   const studyOutputExports=studyOutputFactory?createNativeOutputExports({dataDir,store,outputs:studyOutputs,resolveScope:studyOutputFactory.scope.resolve,library,exports,carousel}):null;
@@ -580,7 +580,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1||!url.searchParams.get(key)))throw new StateError('Choose one exact photo library reference.',400);
         const input=Object.fromEntries(keys.map(key=>[key,url.searchParams.get(key)]));
         let preview;try{preview=await(asset?magazineLibraryPhotos.resolve(input):magazineLibraryPhotos.preview(input));}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<500?error.status:500);}
-        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
+        const photoOrigin=asset?magazinePhotoOriginHeader(preview):null;
+        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(photoOrigin?{'X-AR-Photo-Origin':photoOrigin}:{}),...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.body);
       }
       if (pathname === '/api/study/photos/preview') {

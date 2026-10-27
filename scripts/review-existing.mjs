@@ -1,3 +1,4 @@
+import {readMagazinePhotoOriginHeader} from '../runtime/services/magazine-library-photos.mjs';
 // Candidate UI + maintained local readers; explicit human source/manuscript corrections use
 // only the existing guarded authority. No private writer/store is created here.
 import fs from 'node:fs/promises';
@@ -61,7 +62,8 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
   const body=Buffer.from(await response.arrayBuffer()),hash=response.headers.get('x-content-sha256'),contentType=response.headers.get('content-type'),rootId=response.headers.get('x-ar-photo-root-id'),sourceId=response.headers.get('x-ar-photo-source-id');
   if(body.length!==length||!/^[a-f0-9]{64}$/.test(hash||'')||createHash('sha256').update(body).digest('hex')!==hash||!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(contentType))throw Error('This photograph’s exact bytes could not be confirmed.');
   if(route.endsWith('/asset')&&(!/^[a-f0-9]{64}$/.test(rootId||'')||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(sourceId||'')))throw Error('The saved library photograph identity could not be confirmed.');
-  return {body,hash,contentType,rootId,sourceId};
+  const retainedOrigin=readMagazinePhotoOriginHeader(response.headers.get('x-ar-photo-origin'),hash);
+  return {body,hash,contentType,rootId,sourceId,...(retainedOrigin?{originRef:{kind:'library',rootId:retainedOrigin.rootId,sourceId:retainedOrigin.sourceId}}:{})};
  }
  const publicationTargets=new Map();
  const publicationMedia=libraryInspection?.publicationRepoRoot?createMagazineMediaInspection({libraryPhotos,repoRoot:libraryInspection.publicationRepoRoot,resolveWorking:async({storyId,pieceId,expectedHash})=>{
