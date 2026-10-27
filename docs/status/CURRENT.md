@@ -1,3 +1,11 @@
+## 27 October — Share editing milestone installed; full completion open
+
+PR66, signed main `a850f1a50bc57d8864bdf49b6adea1c8d7a58af4`, is verified live on the installed owner and existing main review. The 901-source manifest, generated build and served Share/Research assets match the recorded release. Owner API projections preserve all four independent carousel copies, current article, registered source/correspondence records and source sessions; the separate canonical checkout's 26 changed files remain exact. Installed configuration is unchanged; the review configuration adds only the approved feedback-editing flag.
+
+A fresh agent-owned review tab mounts the actual saved correspondence with Feedback editing and Edit correspondence visible. No actual wording was saved, undone, approved or sent, and the other writing tabs were left alone. The invented-data paragraph Save/restart/reload/exact Undo/conflict/recovery proof below remains the behavioral evidence.
+
+Still open: mapped recipient/language views, target published editions and correspondence facts, legacy internal-note/raw-template presentation, complete approved-C Share geometry and phone proof, and the full Bench/Library/Pieces/twelve-section finish gates. The following candidate entries describe the behavior now included in PR66; their historical uninstalled labels are superseded by this entry.
+
 ## 27 October — Share paragraph editing connected in candidate
 
 Saved Magazine correspondence can now be edited one paragraph at a time using the existing Magazine editor’s rules. Words stay free of Markdown controls; preparation preserves frontmatter, marks, notes and unrelated paragraphs. Valid bilingual recipient mappings keep their exact targets and update only the affected section hash. Canonical save, reloadable history and exact Undo use the same writer, lock and context-bound receipts. A separate review permission is off by default; the mounted exact-owner proof controls the Feedback editing badge. Agents still propose prose rather than accepting it.
