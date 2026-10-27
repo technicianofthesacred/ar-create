@@ -1,3 +1,9 @@
+## 28 October — Audience, nested composition and Media hierarchy verified candidate
+
+351 focused checks across thirteen files and the generated build pass. Native invented proof covers separate output Direction briefs through Save/switch/restart/reopen/CLI/exact Undo; nested single/group captions through Save/restart/Audience/actual retained HTML/reverse exact Undo; and agent-created nested Media filing through restart, exact Library UUID projection, saved child-folder reload and exact membership Undo. Original manuscripts, output words/composition/register and photo/source identities are preserved; test setup/cleanup is recorded separately.
+
+Media hierarchy browsing remains read-only. Its folder selection waits for authoritative loading, and empty/filtered/article-use states describe their actual scope; the review POST refusal is unchanged. Actual1280×720 light/dark captures have no horizontal overflow. Three bounded results are verified candidates, not installed yet; PR80 remains live. Linked language editions/manual translation are separate ongoing work, and the complete creative journey, whole C/phone/all12 acceptance stay open.
+
 ## 28 October — Durable Audience preparation and nested composition candidate
 
 Audience now edits the selected native output’s existing Direction notes as its translation brief. Two invented independent Article/Carousel briefs passed native Save/switch → actual owner restart → exact reopen → CLI read of the same owner → exact saved Undo. Output words, composition, register/bindings and owned manuscripts stay exact. Initial loading is read-only until the saved owner is verified; stale/pending/conflict/recovery cases have focused owner/UI proof. This prepares instructions; translation generation and linked language editions remain unfinished.
