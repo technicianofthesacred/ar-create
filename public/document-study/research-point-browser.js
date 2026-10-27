@@ -21,8 +21,8 @@
    if(evidenceStatus!=='held'&&!reason){evidenceStatus='held';limits.push('No evidence reason is supplied.');}
    if(evidenceStatus==='qualified'&&!qualification){evidenceStatus='held';limits.push('Exact limiting wording is missing.');}
    if(point.stale){evidenceStatus='held';limits.push('This point refers to an earlier source revision. Reload its current records before acting.');}
-   const decision=!point.decision?.scope||same(context,scope(point.decision.scope))?point.decision:null;
-   return {id:point.id,title:str(point.title)||'Untitled point',kind:str(point.kind),stale:!!point.stale,sources,
+   const decision=!point.decision?.stale&&(!point.decision?.scope||same(context,scope(point.decision.scope)))?point.decision:null;
+   return {id:point.id,title:str(point.title)||'Untitled point',kind:str(point.kind),stale:!!point.stale,canDecide:point.canDecide!==false,sources,
     quotes:arr(point.quotes).map(q=>({text:str(q?.text),speaker:str(q?.speaker),location:str(q?.location),sourceId:str(q?.sourceId)})).filter(q=>q.text),
     explanation:str(point.explanation),history:blocks(point.history),teachings:blocks(point.teachings),learning:blocks(point.learning),questions:arr(point.questions).map(str).filter(Boolean),
     evidence:{status:evidenceStatus,recordedStatus:requested,reason,qualification,recordedAt:str(supplied.recordedAt),limits},
@@ -97,7 +97,7 @@
    if(point.questions.length){const questions=el('section',null,'rpb-prose');questions.append(el('h3','Next questions'));const list=el('ul');point.questions.forEach(q=>list.append(el('li',q)));questions.append(list);article.append(questions);}
    if(!point.explanation&&!point.history.length&&!point.teachings.length&&!point.learning.length&&!point.questions.length)article.append(el('p','No deeper learning is supplied for this point. Develop it through the existing research tools when connected.'));
    sourceRows(article,point);
-   const choices=el('div',null,'rpb-actions');choices.append(button('Include','rpbDecision','include',!canAct(point)||typeof handlers.onDecision!=='function'),button('Leave out','rpbDecision','leave-out',!canAct(point)||typeof handlers.onDecision!=='function'));
+   const choices=el('div',null,'rpb-actions');choices.append(button('Include','rpbDecision','include',!canAct(point)||!point.canDecide||typeof handlers.onDecision!=='function'),button('Leave out','rpbDecision','leave-out',!canAct(point)||!point.canDecide||typeof handlers.onDecision!=='function'));
    if(point.decision.value)article.append(el('p',({include:'Included','leave-out':'Left out'}[point.decision.value]||'Recorded choice: '+point.decision.value)+(point.decision.reason?' · '+point.decision.reason:''),'rpb-meta'));
    if(typeof handlers.onDecision!=='function')article.append(el('p','Saving Include / Leave out is not connected here.','rpb-meta'));
    article.append(choices);const actions=el('div',null,'rpb-actions');for(const id of ['discuss','atlas','speaker'])actions.append(button(tools[id].label,'rpbTool',id,!canAct(point)));article.append(actions);toolPanel(article,point);
@@ -138,7 +138,7 @@
    if('rpbTool'in attrs){tool=attrs.rpbTool;message='';render();host.querySelector('[data-rpb-input]')?.focus();return;}
    if('rpbClose'in attrs){tool='';render();return;}
    if('rpbSource'in attrs){const source=point?.sources.find(s=>s.id===attrs.rpbSource);if(!source||!canAct(point))return;if(typeof handlers.onOpenSource==='function')return dispatch(handlers.onOpenSource,{...payload(point),source:{...source}},point);message='Opening this source is not connected. Its supplied reference remains available above.';render();return;}
-   if('rpbDecision'in attrs&&typeof handlers.onDecision==='function')return dispatch(handlers.onDecision,{...payload(point),decision:attrs.rpbDecision},point);
+   if('rpbDecision'in attrs&&point.canDecide&&typeof handlers.onDecision==='function')return dispatch(handlers.onDecision,{...payload(point),decision:attrs.rpbDecision},point);
    if('rpbSubmit'in attrs&&actionHandler(tool)){const text=host.querySelector('[data-rpb-input]')?.value||'';drafts.set((tab==='brief'?'brief':selected)+':'+tool,text);return dispatch(actionHandler(tool),{...payload(tab==='brief'?null:point),action:tool,input:text,...(tool==='speaker'?{issueId:host.querySelector('[data-rpb-issue]')?.value||'',handling:host.querySelector('[data-rpb-handling]')?.value||''}:{})},tab==='brief'?null:point);}
    if('rpbDirection'in attrs&&typeof handlers.onDirection==='function')return dispatch(handlers.onDirection,payload(null),null);
   }
