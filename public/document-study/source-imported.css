@@ -200,3 +200,16 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.wb-panel-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{left:338px}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-reader-dialogue]{margin-bottom:68px!important}
 @media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary,html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.wb-panel-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{left:16px;right:16px;bottom:60px;gap:6px 16px}}
+
+/* Literal lookup remains a compact entrance and an independently scrolling sheet. */
+.source-reader-lookup-sheet{box-sizing:border-box}
+.source-reader-lookup-sheet form{display:flex;align-items:end;gap:8px}
+.source-reader-lookup-sheet label{display:grid;gap:6px;flex:1;min-width:0}
+.source-reader-lookup-sheet input{width:100%;box-sizing:border-box;min-height:44px}
+.source-reader-lookup-sheet button,.source-reader-lookup-sheet summary{min-height:44px}
+.source-reader-lookup-results{padding-left:20px}
+.source-reader-lookup-results li{margin:10px 0}
+.source-reader-lookup-results button{display:grid;gap:6px;text-align:left;width:100%;white-space:normal;overflow-wrap:anywhere}
+.source-reader-lookup-results button span{font-weight:400}
+.source-reader>.source-reader-lookup-sheet[open]{position:fixed;z-index:86;top:64px;right:16px;bottom:16px;width:min(380px,calc(100vw - 32px));box-sizing:border-box;overflow:auto;overscroll-behavior:contain;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:16px}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-lookup-sheet>summary,html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-lookup-sheet button{min-height:44px}
