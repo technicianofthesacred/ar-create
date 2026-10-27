@@ -37,6 +37,7 @@ const UNDO = {
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
   '/api/magazine/working-draft/share-feedback/prepare-paragraph': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','block','seen','text'],
+  '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId','recipientName','sections'],
   '/api/magazine/working-draft/share-feedback/prepare': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content'],
   '/api/magazine/working-draft/share-feedback/save': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content','operationId','reason?'],
   '/api/magazine/working-draft/share-feedback/undo': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','undoOperationId','operationId'],
@@ -101,7 +102,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
+const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -187,6 +188,7 @@ export function createRouteMap(services) {
         return magazineWorking.readShareFeedbackEditModel({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash')});
       }},
       '/api/magazine/working-draft/share-feedback/prepare-paragraph': {POST:input=>magazineWorking.prepareShareFeedbackParagraph(input)},
+      '/api/magazine/working-draft/share-feedback/prepare-mapping': {POST:input=>magazineWorking.prepareShareFeedbackMapping(input)},
       '/api/magazine/working-draft/share-feedback/prepare': {POST:input=>magazineWorking.prepareShareFeedback(input)},
       '/api/magazine/working-draft/share-feedback/save': {POST:async input=>{const result=await magazineWorking.saveShareFeedback(input);if(result.scope)input.scope=result.scope;return result;}},
       '/api/magazine/working-draft/share-feedback/history': {GET:()=>{

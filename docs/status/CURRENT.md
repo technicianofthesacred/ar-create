@@ -1,3 +1,25 @@
+## 27 October — Recipient setup and compact Share candidate
+
+Humans can name a recipient and explicitly select existing language sections in the canonical Magazine correspondence. The metadata-only preparation preserves every message word and unrelated field, uses the existing writer/lock/save/history/Undo, refuses stale owners and remains human-only. Setup and interrupted-save recovery persist in the existing browser record. Refresh reopens the exact selected file even when multiple records reorder, preserving entered setup and exact retry.
+
+Record options now holds secondary refresh/Undo/provenance controls. Default unmapped reading removes the empty view row, duplicate heading and implementation-status paragraph. Native invented 1280×720 light/dark keeps x98/640px and 15px/22.5px text without horizontal overflow. Compared with C's All-project reference note at y225, the selected-project candidate begins at y174; the reference includes an All-project chooser and explanatory note. This is a concrete remaining geometry/content-state difference, not full visual acceptance. Duplicate retained-work panels, legacy comment/template presentation, phone/interaction proof and edition/follow-up facts remain open.
+
+191 final affected checks and build pass. Earlier native invented mapping save/restart/reload/exact Undo preserved message/article bytes; today's native refresh retains setup and Cancel restores the clean view. This candidate is not installed; live remains PR66 below. The comprehensive 27 October audit reconciles every S01–S12 and C01–C07 requirement against installed evidence; complete product/function/visual gates remain open.
+
+## 27 October — Mapped Share views connected in candidate
+
+Explicitly mapped Magazine correspondence now offers recipient, language and all-language views over the same canonical sections. A visible target label identifies the working article. View choices survive reopening in the existing browser recovery record; entered or pending paragraph edits lock view changes, retaining the exact original paragraph position and save request. Missing, stale or unavailable mappings keep the complete readable record and explain the mapping state. Recipient names are not inferred from prose or headings.
+
+Native invented verification proves scoped Chinese editing, entered-text and selected-view recovery after reload, save preserving the article/other recipient/other language, and exact Undo restoring the complete mapped file. Desktop 1280×720 light/dark keeps the 640px correspondence measure and 15px body text without horizontal overflow. The same-viewport approved-C comparison still shows additional controls/explanations and duplicate retained-work disclosures; whole visual acceptance and phone proof remain open. Mapping creation, recipient names, published-edition selection and correspondence facts remain unfinished. This candidate is not installed; live main remains PR66 below.
+
+## 27 October — Share editing milestone installed; full completion open
+
+PR66, signed main `a850f1a50bc57d8864bdf49b6adea1c8d7a58af4`, is verified live on the installed owner and existing main review. The 901-source manifest, generated build and served Share/Research assets match the recorded release. Owner API projections preserve all four independent carousel copies, current article, registered source/correspondence records and source sessions; the separate canonical checkout's 26 changed files remain exact. Installed configuration is unchanged; the review configuration adds only the approved feedback-editing flag.
+
+A fresh agent-owned review tab mounts the actual saved correspondence with Feedback editing and Edit correspondence visible. No actual wording was saved, undone, approved or sent, and the other writing tabs were left alone. The invented-data paragraph Save/restart/reload/exact Undo/conflict/recovery proof below remains the behavioral evidence.
+
+Still open: mapped recipient/language views, target published editions and correspondence facts, legacy internal-note/raw-template presentation, complete approved-C Share geometry and phone proof, and the full Bench/Library/Pieces/twelve-section finish gates. The following candidate entries describe the behavior now included in PR66; their historical uninstalled labels are superseded by this entry.
+
 ## 27 October — Share paragraph editing connected in candidate
 
 Saved Magazine correspondence can now be edited one paragraph at a time using the existing Magazine editor’s rules. Words stay free of Markdown controls; preparation preserves frontmatter, marks, notes and unrelated paragraphs. Valid bilingual recipient mappings keep their exact targets and update only the affected section hash. Canonical save, reloadable history and exact Undo use the same writer, lock and context-bound receipts. A separate review permission is off by default; the mounted exact-owner proof controls the Feedback editing badge. Agents still propose prose rather than accepting it.

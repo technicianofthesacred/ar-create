@@ -20,7 +20,7 @@
   // Keep only contract metadata. Resolver extras can never become file bodies or delivery proof.
   return freeze({schema:r.schema,revision:r.revision,nativeProjectId:r.nativeProjectId,workingOwnerRef:{projectId:w.projectId,pieceId:w.pieceId,editionId:'working',artifactId:w.artifactId,hash:w.hash},publication:r.publication===null?null:{id:r.publication.id,url:r.publication.url,title:r.publication.title,recordedBy:r.publication.recordedBy,edition:null,date:null}});
  }
- function createMagazineOutputAdapter({current,resolve,openWorking,openPublication,readWorking,readShareContext:readShare,readShareFeedback:readFeedback,readShareFeedbackEditModel:readEditModel,prepareShareFeedbackParagraph:prepareParagraph,saveShareFeedback:saveFeedback,undoShareFeedback:undoFeedback,readShareFeedbackHistory:readFeedbackHistory,openArrangement,openAudience,downloadWorking}={}){
+ function createMagazineOutputAdapter({current,resolve,openWorking,openPublication,readWorking,readShareContext:readShare,readShareFeedback:readFeedback,readShareFeedbackEditModel:readEditModel,prepareShareFeedbackParagraph:prepareParagraph,prepareShareFeedbackMapping:prepareMapping,saveShareFeedback:saveFeedback,undoShareFeedback:undoFeedback,readShareFeedbackHistory:readFeedbackHistory,openArrangement,openAudience,downloadWorking}={}){
   if(typeof current!=='function'||typeof resolve!=='function')throw Error('The Magazine reference reader is not connected.');
   const state=id=>snapshot(current(),id);
   const unchanged=s=>{if(stable(state(s.projectId))!==stable(s))throw Error('The selected working part changed. Read its references again.');};
@@ -61,12 +61,13 @@
    const entries=value.entries.map(entry=>{
     const t=entry?.target;
     if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(entry?.recipientId||'')||!t||!['storyId','pieceId'].every(k=>text(t[k])&&t[k].length<=256&&!/[\x00-\x1f\x7f]/.test(t[k]))||t.edition!=='working'||!sha(t.hash)||!Array.isArray(entry.sections)||!entry.sections.length||entry.sections.length>12)throw Error('FEEDBACK recipient/edition mapping is invalid.');
+    if(entry.recipientName!==undefined&&(typeof entry.recipientName!=='string'||!entry.recipientName.trim()||entry.recipientName.length>200||/[\x00-\x1f\x7f]/.test(entry.recipientName)))throw Error('The saved recipient name is invalid.');
     const owner=stable([entry.recipientId.toLowerCase(),t.storyId,t.pieceId,t.hash]);if(owners.has(owner))throw Error('FEEDBACK recipient/edition mapping is ambiguous.');owners.add(owner);const languages=new Set();
     const sections=entry.sections.map(anchor=>{
      if(typeof anchor?.language!=='string'||!/^[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*$/.test(anchor.language)||typeof anchor.heading!=='string'||anchor.heading.length>512||!/^#{1,6} [^\r\n]+$/.test(anchor.heading)||!sha(anchor.hash)||languages.has(anchor.language.toLowerCase())||headings.has(anchor.heading))throw Error('FEEDBACK language section mapping is invalid or ambiguous.');
      languages.add(anchor.language.toLowerCase());headings.add(anchor.heading);return {language:anchor.language,heading:anchor.heading,hash:anchor.hash};
     });
-    return {recipientId:entry.recipientId,target:{storyId:t.storyId,pieceId:t.pieceId,edition:'working',hash:t.hash},sections};
+    return {recipientId:entry.recipientId,...entry.recipientName!==undefined?{recipientName:entry.recipientName}:{},target:{storyId:t.storyId,pieceId:t.pieceId,edition:'working',hash:t.hash},sections};
    });
    return {schema:value.schema,entries};
   }
@@ -93,14 +94,14 @@
     const ranges=[];
     for(let i=0;i<metadata.entries.length;i++){
      const entry=metadata.entries[i],p=m.projection[i],t=entry.target;
-     if(t.storyId!==s.owner.storyId||t.pieceId!==s.owner.pieceId||t.hash!==s.hash||p?.recipientId!==entry.recipientId||stable(p.target)!==stable(t)||!Array.isArray(p.sections)||p.sections.length!==entry.sections.length)throw Error('FEEDBACK projection belongs to another recipient, piece or revision.');
+     if(t.storyId!==s.owner.storyId||t.pieceId!==s.owner.pieceId||t.hash!==s.hash||p?.recipientId!==entry.recipientId||p.recipientName!==entry.recipientName||stable(p.target)!==stable(t)||!Array.isArray(p.sections)||p.sections.length!==entry.sections.length)throw Error('FEEDBACK projection belongs to another recipient, piece or revision.');
      const sections=[];
      for(let j=0;j<entry.sections.length;j++){
       const anchor=entry.sections[j],section=p.sections[j];
       if(!section||section.language!==anchor.language||section.heading!==anchor.heading||section.hash!==anchor.hash||!Number.isSafeInteger(section.start)||!Number.isSafeInteger(section.end)||section.start<0||section.end<=section.start||section.end>doc.text.length||typeof section.markdown!=='string'||section.markdown!==doc.text.slice(section.start,section.end)||!section.markdown.startsWith(anchor.heading+'\n')&&!section.markdown.startsWith(anchor.heading+'\r\n')||ranges.some(([start,end])=>section.start<end&&section.end>start)||await digestText(section.markdown)!==anchor.hash)throw Error('FEEDBACK language section is stale or outside the canonical document.');
       unchanged(s);ranges.push([section.start,section.end]);sections.push({...anchor,start:section.start,end:section.end,markdown:section.markdown});
      }
-     projection.push({recipientId:entry.recipientId,target:{...t},sections});
+     projection.push({recipientId:entry.recipientId,...entry.recipientName!==undefined?{recipientName:entry.recipientName}:{},target:{...t},sections});
     }
    }
    const after=await readShareContext({projectId:q.projectId,outputId:q.outputId,expectedHash:q.expectedHash});unchanged(s);
@@ -124,7 +125,8 @@
     if(row?.index!==i||row.raw!==parts[i*2]||typeof row.text!=='string'||typeof row.editable!=='boolean'||typeof row.seen!=='string'||row.seen!==(await digestText(row.raw,'SHA-1')).slice(0,12))throw Error('The saved paragraph words or identity changed.');
     paragraphs.push({index:i,seen:row.seen,text:row.text,raw:row.raw,editable:row.editable});
    }
-   unchanged(s);return freeze({...base,schema:value.schema,editable:value.editable,unavailableReason:value.unavailableReason,paragraphs});
+   const mappingSections=[];if(value.mappingSections!==undefined){if(!Array.isArray(value.mappingSections)||value.mappingSections.length>5000)throw Error('Correspondence section choices exceed their limit.');const seen=new Set();for(const row of value.mappingSections){if(typeof row?.heading!=='string'||!/^#{1,6} [^\r\n]+$/.test(row.heading)||!sha(row.hash)||!Number.isSafeInteger(row.start)||!Number.isSafeInteger(row.end)||row.start<0||row.end<=row.start||row.end>base.document.text.length||seen.has(row.heading)||!base.document.text.slice(row.start,row.end).startsWith(row.heading+'\n')&&!base.document.text.slice(row.start,row.end).startsWith(row.heading+'\r\n')||await digestText(base.document.text.slice(row.start,row.end))!==row.hash)throw Error('A correspondence section choice changed.');seen.add(row.heading);mappingSections.push({heading:row.heading,hash:row.hash,start:row.start,end:row.end});}}
+   unchanged(s);return freeze({...base,schema:value.schema,editable:value.editable,unavailableReason:value.unavailableReason,paragraphs,mappingSections});
   }
   async function prepareShareFeedbackParagraph(input={}){
    const q=copy(input),s=state(q.projectId),request=feedbackSelection(q,s),model=await readShareFeedbackEditModel(q);unchanged(s);
@@ -132,6 +134,19 @@
    if(typeof prepareParagraph!=='function'||!model.editable||!row?.editable||row.seen!==q.seen||typeof q.text!=='string'||q.rootFingerprint!==undefined&&q.rootFingerprint!==model.rootIdentity.fingerprint)throw Error('This paragraph is unavailable or changed. Keep your words and compare the saved record.');
    const value=copy(await prepareParagraph(freeze({...request,block:q.block,seen:q.seen,text:q.text})));unchanged(s);
    if(value?.expectedHash!==q.expectedHash||value.expectedFeedbackHash!==q.expectedFeedbackHash||value.registeredFeedbackPath!==q.registeredFeedbackPath||stable(value.selection)!==stable(model.selection)||stable(value.rootIdentity)!==stable(model.rootIdentity)||value.authority?.storyId!==s.owner.storyId||value.authority.pieceId!==s.owner.pieceId||typeof value.content!=='string'||!value.content.isWellFormed()||value.content.includes('\0')||new TextEncoder().encode(value.content).length>2097152)throw Error('Paragraph preparation returned different or unavailable words.');
+   return freeze({selection:copy(model.selection),rootIdentity:copy(model.rootIdentity),expectedHash:q.expectedHash,expectedFeedbackHash:q.expectedFeedbackHash,registeredFeedbackPath:q.registeredFeedbackPath,content:value.content});
+  }
+  async function prepareShareFeedbackMapping(input={}){
+   const q=copy(input),s=state(q.projectId),request=feedbackSelection(q,s),model=await readShareFeedbackEditModel(q);unchanged(s);
+   if(typeof prepareMapping!=='function'||!model.editable||!uuid(q.recipientId)||typeof q.recipientName!=='string'||!q.recipientName.trim()||q.recipientName.length>200||/[\x00-\x1f\x7f]/.test(q.recipientName)||!Array.isArray(q.sections)||!q.sections.length||q.sections.length>12||q.rootFingerprint!==model.rootIdentity.fingerprint)throw Error('Choose a named recipient and exact language sections.');
+   const languages=new Set(),headings=new Set(),sections=q.sections.map(row=>{const offered=model.mappingSections.find(choice=>choice.heading===row.heading&&choice.hash===row.hash);if(!offered||typeof row.language!=='string'||!/^[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*$/.test(row.language)||languages.has(row.language.toLowerCase())||headings.has(row.heading))throw Error('Choose each exact section and language once.');languages.add(row.language.toLowerCase());headings.add(row.heading);return {heading:row.heading,hash:row.hash,language:row.language};});
+   const value=copy(await prepareMapping(freeze({...request,recipientId:q.recipientId,recipientName:q.recipientName,sections})));unchanged(s);
+   if(value?.expectedHash!==q.expectedHash||value.expectedFeedbackHash!==q.expectedFeedbackHash||value.registeredFeedbackPath!==q.registeredFeedbackPath||stable(value.selection)!==stable(model.selection)||stable(value.rootIdentity)!==stable(model.rootIdentity)||value.authority?.storyId!==s.owner.storyId||value.authority.pieceId!==s.owner.pieceId||typeof value.content!=='string'||new TextEncoder().encode(value.content).length>2097152||!value.content.isWellFormed()||value.content.includes('\0')||value.mapping?.structured!==true)throw Error('Recipient preparation returned another owner or unavailable mapping.');
+   const before=model.document.text,header=before.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0],strip=text=>text.replace(/^(---\r?\n[\s\S]*?)(?=---(?:\r?\n|$))/,fm=>fm.replace(/^ar-create-share: .*\r?\n/m,''));
+   if(header?strip(value.content)!==strip(before):value.content.replace(/^---\r?\nar-create-share: [^\r\n]*\r?\n---\r?\n/,'')!==before)throw Error('Recipient preparation changed message words or unrelated metadata.');
+   const metadata=feedbackMetadata(value.mapping.metadata),front=value.content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1],line=front?.split(/\r?\n/).filter(row=>row.startsWith('ar-create-share: '));if(line?.length!==1||stable(JSON.parse(line[0].slice(17)))!==stable(metadata))throw Error('Prepared recipient metadata is not canonical.');
+   const entry=metadata.entries.find(row=>row.recipientId===q.recipientId&&row.target.storyId===s.owner.storyId&&row.target.pieceId===s.owner.pieceId&&row.target.hash===s.hash);if(!entry||entry.recipientName!==q.recipientName||stable(entry.sections)!==stable(sections)||metadata.entries.some(row=>row.target.storyId!==s.owner.storyId||row.target.pieceId!==s.owner.pieceId||row.target.hash!==s.hash))throw Error('Prepared recipient selection changed.');
+   const other=rows=>rows.filter(row=>row.recipientId!==q.recipientId);if(stable(other(metadata.entries))!==stable(other(model.mapping.metadata?.entries||[])))throw Error('Recipient preparation changed another saved mapping.');
    return freeze({selection:copy(model.selection),rootIdentity:copy(model.rootIdentity),expectedHash:q.expectedHash,expectedFeedbackHash:q.expectedFeedbackHash,registeredFeedbackPath:q.registeredFeedbackPath,content:value.content});
   }
   async function feedbackCommand(action,input={}){
@@ -190,7 +205,7 @@
    if(stable(after)!==stable(r))throw Error('The recorded reference changed while opening. Read its current metadata again.');
    return result;
   }
-  return Object.freeze({read,onAction,readWorkingEdition,readShareContext,readShareEntry,readShareFeedback,readShareFeedbackEditModel,prepareShareFeedbackParagraph,saveShareFeedback,undoShareFeedback,shareFeedbackHistory});
+  return Object.freeze({read,onAction,readWorkingEdition,readShareContext,readShareEntry,readShareFeedback,readShareFeedbackEditModel,prepareShareFeedbackParagraph,prepareShareFeedbackMapping,saveShareFeedback,undoShareFeedback,shareFeedbackHistory});
  }
  globalThis.createMagazineOutputAdapter=createMagazineOutputAdapter;
 })();

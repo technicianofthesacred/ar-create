@@ -19,6 +19,17 @@ function setup(t,{writable=true,markdown=initial}={}){
  const magazine=createMagazineVault({vaultRoot:f.vault,filesRoot:f.files,dataDir:f.data,writable,machine:'invented-paragraph'}),bridge=createWorkingDraftBridge({magazine});
  const input=()=>({storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',edition:'working',expectedHash:magazine.read({path:DEV}).hash,registeredFeedbackPath:FEEDBACK,expectedFeedbackHash:magazine.read({path:FEEDBACK}).hash});return {f,magazine,bridge,input};
 }
+test('human recipient mapping prepares metadata only and saves/reloads/undoes through the same FEEDBACK owner',async t=>{
+ const s=setup(t),before=treeHashes(s.f.dir),model=await s.bridge.readShareFeedbackEditModel(s.input());assert.ok(model.mappingSections.length===2);
+ const q={...s.input(),recipientId:'11111111-1111-4111-8111-111111111111',recipientName:'Invented Maker',sections:model.mappingSections.map((row,i)=>({heading:row.heading,hash:row.hash,language:i?'en':'zh'}))};
+ const prepared=await human(()=>s.bridge.prepareShareFeedbackMapping(q));assert.deepEqual(treeHashes(s.f.dir),before);assert.equal(prepared.content.replace(/^ar-create-share: .*\n/m,''),initial);
+ const save=await human(()=>s.bridge.saveShareFeedback({...s.input(),content:prepared.content,operationId:randomUUID()})),current=await s.bridge.readShareFeedbackEditModel(s.input());assert.equal(current.mapping.projection[0].recipientName,'Invented Maker');assert.equal(current.mapping.projection[0].sections.length,2);
+ await human(()=>s.bridge.undoShareFeedback({...s.input(),undoOperationId:save.operationId,operationId:randomUUID()}));assert.equal(fs.readFileSync(path.join(s.f.vault,FEEDBACK),'utf8'),initial);
+});
+test('recipient mapping refuses agents, stale section hashes and unsupported caller targets without touching words',async t=>{
+ const s=setup(t),q={...s.input(),recipientId:'11111111-1111-4111-8111-111111111111',recipientName:'Invented Maker',sections:[{language:'zh',heading:'## Chinese',hash:'a'.repeat(64)}]},before=treeHashes(s.f.dir);
+ await assert.rejects(agent(()=>s.bridge.prepareShareFeedbackMapping(q)),e=>e.status===403);await assert.rejects(human(()=>s.bridge.prepareShareFeedbackMapping(q)),e=>e.status===409);await assert.rejects(human(()=>s.bridge.prepareShareFeedbackMapping({...q,target:{edition:'published'}})),e=>e.status===400);assert.deepEqual(treeHashes(s.f.dir),before);
+});
 test('native paragraph model uses exact donor block identities and preparation leaves canonical files/logs/receipts untouched',async t=>{
  const s=setup(t),before=treeHashes(s.f.dir),model=await s.bridge.readShareFeedbackEditModel(s.input());assert.equal(model.schema,'ar-create.magazine-share-feedback-edit-model.v1');assert.equal(model.editable,true);assert.equal(model.unavailableReason,null);
  const {parts}=splitBlocks(initial);assert.deepEqual(model.paragraphs,parts.filter((_p,k)=>k%2===0).map((raw,index)=>({index,seen:hash(raw),text:plain(raw),raw,editable:editable(raw)})));

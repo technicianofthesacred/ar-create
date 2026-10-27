@@ -413,6 +413,7 @@
    readShareFeedback:input=>read('/api/magazine/working-draft/share-feedback?'+new URLSearchParams(input)),
    readShareFeedbackEditModel:input=>read('/api/magazine/working-draft/share-feedback/edit-model?'+new URLSearchParams(input)),
    prepareShareFeedbackParagraph:input=>sendFeedback('prepare-paragraph',input),
+   prepareShareFeedbackMapping:input=>sendFeedback('prepare-mapping',input),
    saveShareFeedback:input=>sendFeedback('save',input),
    undoShareFeedback:input=>sendFeedback('undo',input),
    readShareFeedbackHistory:input=>read('/api/magazine/working-draft/share-feedback/history?'+new URLSearchParams(input)),

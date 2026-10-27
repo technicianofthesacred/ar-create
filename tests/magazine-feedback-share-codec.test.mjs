@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {buildMagazineFixture} from './helpers/magazine-fixture.mjs';
 import {splitBlocks, edit, hash as paragraphHash} from '../runtime/reference/mag-edit.mjs';
+import * as codec from '../runtime/services/magazine/feedback-share-codec.mjs';
 import {parseFeedbackShare, updateFeedbackShare, updateFeedbackShareSection} from '../runtime/services/magazine/feedback-share-codec.mjs';
 const sha=s=>createHash('sha256').update(s).digest('hex');
 const ids=['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222'];
@@ -95,4 +96,67 @@ test('the maintained paragraph editor preserves namespace bytes, exposes changed
  assert.ok(newer.includes('你好，乙。'));assert.ok(newer.includes('Hello B.'));
  // The original owner receipt's before-bytes remain a complete restorable source.
  assert.equal(parseFeedbackShare(saved.markdown).structured,true);assert.equal(splitBlocks(saved.markdown).fm,fm);
+});
+
+
+test('optional explicit recipient names project unchanged and reject invalid names',()=>{
+ const metadata=meta();metadata.entries[0].recipientName='甲 · Invented recipient';
+ const saved=updateFeedbackShare(original,{expectedHash:sha(original),metadata}), parsed=parseFeedbackShare(saved.markdown);
+ assert.equal(parsed.projection[0].recipientName,metadata.entries[0].recipientName);
+ assert.equal(Object.hasOwn(parsed.projection[1],'recipientName'),false);
+ assert.deepEqual(parsed.metadata,metadata);
+ for(const recipientName of ['', '   ', 'x'.repeat(201), 'A\nB', 'A\rB', 'A\tB', 'A\u007fB', 'A\u0085B', 'A\u2028B', null, 5, {}]){
+  const invalid=meta();invalid.entries[0].recipientName=recipientName;
+  assert.throws(()=>updateFeedbackShare(original,{expectedHash:sha(original),metadata:invalid}));
+ }
+});
+
+test('section choices expose exact raw section hashes and exclude fenced and commented headings',()=>{
+ assert.equal(typeof codec.feedbackShareSectionChoices,'function');
+ const md=original+'\n```md\n## Fenced\n```\n<!--\n## Hidden\n-->\n<!-- ## Inline hidden -->\n~~~\n## Tilde hidden\n~~~\n# Last\nFinal.\n';
+ const choices=codec.feedbackShareSectionChoices(md);
+ assert.deepEqual(choices.map(row=>row.heading),['# Invitations','## A Chinese','## A English','## B Chinese','## B English','# Last']);
+ for(const choice of choices){assert.deepEqual(Object.keys(choice).sort(),['end','hash','heading','start']);assert.equal(choice.hash,sha(md.slice(choice.start,choice.end)));assert.ok(md.slice(choice.start).startsWith(choice.heading));}
+ assert.equal(choices.at(-1).end,md.length);
+});
+
+test('mapping one explicit recipient appends or replaces its exact target while retaining every other mapping and source byte',()=>{
+ assert.equal(typeof codec.mapFeedbackShareRecipient,'function');
+ const metadata=meta(), initial=structuredClone(metadata);initial.entries.pop();
+ const saved=updateFeedbackShare(original,{expectedHash:sha(original),metadata:initial});
+ const result=codec.mapFeedbackShareRecipient(saved.markdown,{expectedHash:saved.hash,recipientId:ids[1],recipientName:'Invented B',target:metadata.entries[1].target,sections:metadata.entries[1].sections});
+ const parsed=parseFeedbackShare(result.markdown);
+ assert.equal(parsed.projection[1].recipientName,'Invented B');assert.deepEqual(parsed.metadata.entries[0],initial.entries[0]);
+ assert.equal(result.markdown.replace(/^ar-create-share: .*\n/m,''),original);
+ const replaced=codec.mapFeedbackShareRecipient(result.markdown,{expectedHash:result.hash,recipientId:ids[1],target:metadata.entries[1].target,sections:[metadata.entries[1].sections[1]]});
+ const next=parseFeedbackShare(replaced.markdown);
+ assert.equal(next.metadata.entries.length,2);assert.deepEqual(next.metadata.entries[0],initial.entries[0]);
+ assert.equal(next.metadata.entries[1].recipientName,'Invented B');
+ assert.deepEqual(next.metadata.entries[1].sections,[metadata.entries[1].sections[1]]);
+ const fresh=codec.mapFeedbackShareRecipient(original,{expectedHash:sha(original),...metadata.entries[0]});
+ assert.deepEqual(parseFeedbackShare(fresh.markdown).metadata.entries,[metadata.entries[0]]);
+});
+
+test('mapping refuses stale, malformed, foreign and overlapping identities through existing validation',()=>{
+ assert.equal(typeof codec.mapFeedbackShareRecipient,'function');
+ const metadata=meta(), saved=updateFeedbackShare(original,{expectedHash:sha(original),metadata});
+ const base={expectedHash:saved.hash,...metadata.entries[0]};
+ for(const changes of [{expectedHash:'b'.repeat(64)},{recipientId:'foreign'},{recipientName:''},{target:{...base.target,edition:'published'}},{target:{...base.target,extra:true}},{sections:[{...base.sections[0],hash:'b'.repeat(64)}]},{sections:[{...base.sections[0],heading:'## Foreign'}]},{sections:[base.sections[0],{...base.sections[1],language:'ZH'}]},{sections:[base.sections[0],{...base.sections[0],language:'fr'}]},{sections:[metadata.entries[1].sections[0]]},{sections:[{...base.sections[0],markdown:'copied prose'}]}]){
+  assert.throws(()=>codec.mapFeedbackShareRecipient(saved.markdown,{...base,...changes}));
+ }
+ for(const md of [saved.markdown.replace('Hello A.','Changed.'),saved.markdown.replace('ar-create-share: {','ar-create-share: {bad'),saved.markdown+'\n## A English\nDuplicate.\n']){
+  assert.throws(()=>codec.mapFeedbackShareRecipient(md,{...base,expectedHash:sha(md)}));
+ }
+});
+
+
+test('section choices omit every ambiguous exact heading while preserving unique raw sections',()=>{
+ const md=original+'\n## A English\nDuplicate.\n\n## Unique\nKeep this exact.\n';
+ const choices=codec.feedbackShareSectionChoices(md);
+ assert.equal(choices.some(choice=>choice.heading==='## A English'),false);
+ assert.equal(choices.length,5);
+ for(const choice of choices) assert.equal(choice.hash,sha(md.slice(choice.start,choice.end)));
+ assert.equal(choices.at(-1).heading,'## Unique');
+ const metadata=meta(md);
+ assert.throws(()=>updateFeedbackShare(md,{expectedHash:sha(md),metadata}),/missing or ambiguous/);
 });

@@ -10,6 +10,7 @@ const HASH = /^[a-f0-9]{64}$/;
 const digest = value => createHash('sha256').update(value,'utf8').digest('hex');
 const fail = message => { throw new StateError(message,409); };
 const exact = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every(key=>Object.hasOwn(value,key));
+const recipientNameValid = value => typeof value === 'string' && value.trim().length > 0 && value.length <= 200 && !/[\x00-\x1f\x7f-\x9f\u2028\u2029]/.test(value);
 const identity = value => typeof value === 'string' && value.length > 0 && value.length <= 256 && !/[\x00-\x1f\x7f]/.test(value);
 function source(markdown) {
   if (typeof markdown !== 'string' || Buffer.byteLength(markdown,'utf8') > 2*1024*1024 || markdown.includes('\0')) fail('Feedback must be bounded readable Markdown.');
@@ -58,7 +59,8 @@ function validate(metadata, parsed, markdown) {
   if (!exact(metadata,['schema','entries']) || metadata.schema !== SCHEMA || !Array.isArray(metadata.entries) || metadata.entries.length > 200) fail('Feedback Share metadata has an unsupported shape.');
   const seenEntries = new Set(), seenSections = new Set();
   return metadata.entries.map(entry=>{
-    if (!exact(entry,['recipientId','target','sections']) || !UUID.test(entry.recipientId||'') || !exact(entry.target,['storyId','pieceId','edition','hash']) || !identity(entry.target.storyId) || !identity(entry.target.pieceId) || entry.target.edition !== 'working' || !HASH.test(entry.target.hash||'') || !Array.isArray(entry.sections) || !entry.sections.length || entry.sections.length > 12) fail('Feedback needs explicit recipient, working piece/hash and language section references.');
+    const named = Object.hasOwn(entry || {},'recipientName');
+    if (!exact(entry,named?['recipientId','recipientName','target','sections']:['recipientId','target','sections']) || (named && !recipientNameValid(entry.recipientName)) || !UUID.test(entry.recipientId||'') || !exact(entry.target,['storyId','pieceId','edition','hash']) || !identity(entry.target.storyId) || !identity(entry.target.pieceId) || entry.target.edition !== 'working' || !HASH.test(entry.target.hash||'') || !Array.isArray(entry.sections) || !entry.sections.length || entry.sections.length > 12) fail('Feedback needs explicit recipient, working piece/hash and language section references.');
     const entryKey = JSON.stringify([entry.recipientId.toLowerCase(),entry.target.storyId,entry.target.pieceId,entry.target.hash]);
     if (seenEntries.has(entryKey)) fail('Feedback has duplicate recipient/edition mappings.');
     seenEntries.add(entryKey); const languages = new Set();
@@ -75,7 +77,7 @@ function validate(metadata, parsed, markdown) {
       seenSections.add(anchor.heading);
       return {...anchor,start:section.start,end:section.end,markdown:raw};
     });
-    return {recipientId:entry.recipientId,target:structuredClone(entry.target),sections};
+    return {recipientId:entry.recipientId,...(named?{recipientName:entry.recipientName}:{}),target:structuredClone(entry.target),sections};
   });
 }
 
@@ -116,6 +118,27 @@ export function updateFeedbackShare(markdown,{expectedHash,metadata}={}) {
   const parsed = guard(markdown,expectedHash);
   validate(metadata,parsed,markdown);
   return patchMetadata(markdown,parsed,metadata);
+}
+
+/** Exact authoritative heading sections only; hashes cover the entire raw section. */
+export function feedbackShareSectionChoices(markdown) {
+  const sections = source(markdown).sections, counts = new Map();
+  for (const section of sections) counts.set(section.heading,(counts.get(section.heading)||0)+1);
+  return sections.filter(section=>counts.get(section.heading)===1).map(section=>({...section,hash:digest(markdown.slice(section.start,section.end))}));
+}
+
+/** Map explicit identities to existing sections, changing only Share metadata.
+ * The maintained owner must establish the target's current working identity/hash. */
+export function mapFeedbackShareRecipient(markdown,options={}) {
+  const {expectedHash,recipientId,target,sections} = options;
+  const parsed = guard(markdown,expectedHash);
+  const metadata = parsed.metadata ? structuredClone(parsed.metadata) : {schema:SCHEMA,entries:[]};
+  const index = metadata.entries.findIndex(entry=>typeof recipientId==='string' && entry.recipientId.toLowerCase()===recipientId.toLowerCase() && exact(target,['storyId','pieceId','edition','hash']) && ['storyId','pieceId','edition','hash'].every(key=>entry.target[key]===target[key]));
+  const entry = {...(index<0?{}:metadata.entries[index]),recipientId,target,sections};
+  if (Object.hasOwn(options,'recipientName')) entry.recipientName=options.recipientName;
+  if (index<0) metadata.entries.push(entry);
+  else metadata.entries[index]=entry;
+  return updateFeedbackShare(markdown,{expectedHash,metadata});
 }
 
 /** Replace exactly one mapped canonical section and its reference in one candidate. */
