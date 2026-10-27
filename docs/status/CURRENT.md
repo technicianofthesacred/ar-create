@@ -1,3 +1,11 @@
+## 27 October — Research/Direction handoff candidate, not installed
+
+Expanded Research decisions now retain the current point, Findings, Explore, sources and placement disclosure states through busy/saved repaint. Detached depth panels remount the current saved decision, isolated by project/part/source revision. Native invented Include remains open and shows Included after Save.
+
+Moving from project-only Research notes to Direction now loads the explicitly chosen part, including an in-flight transition. Native invented part prose and all six planning fields Save, carry with the selected transcript into the matching prepared writing context, survive an actual owner restart and reopen, and Undo restores the exact original part body/hash. Manuscript bytes and the project record remain unchanged; the old prepared context refuses after Undo. No provider runs.
+
+An unbound ready manuscript now offers explicit Connect source context instead of an endless conflict/reload message. The click uses the existing guarded part-selection owner, then reloads sources; navigation alone does not write. Native verification on an untouched second invented manuscript confirms sources become available, Direction remains empty at revision zero, and manuscript guards stay identical. No backend/store or prose authority was added. Full learning/assisted authoring/edition/follow-up and full C/phone visual gates remain open. PR69 remains installed until this candidate’s own release proof.
+
 ## 27 October — Shared guidance and photo descriptions installed
 
 PR69 signed main `3ba3425f0eb135c28c6a8630ea605632e34c43ef`, build2026-10-27T15:55:42.968Z, is verified live on the installed owner and main review.149 affected checks, build and package909 pass;42 served frontend hashes match. API content, canonical changed source files, configuration and four independent carousel copies are preserved. The candidate entry below now describes installed bounded behavior. Native invented guidance also survives actual owner restart and reopening.
