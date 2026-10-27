@@ -80,17 +80,43 @@ function locator(raw,passage,projection,{quote=false,truncated=false}={}) {
   const native=blocks.length===1 && projection.filter(p=>p.id===blocks[0].id).length===1?blocks[0]:null;
   return {kind:native?'native-paragraph':'markdown-offset',...(native?{nativeId:native.id,blockHash:native.blockHash}:{}),line:raw.slice(0,start).split('\n').length,startOffset:start,endOffset:end,passage:selected,...(truncated?{truncated:true}: {})};
 }
-function issuesFor(result,type,draft) {
+// Carousel-only presentation mapping. The pinned guard decides failures; its
+// ordered messages may identify repeated quoted chunks only when every matching
+// candidate has a corresponding failure. Never guess among a truncated prefix,
+// ignored heading or other quote that the guard may not have reported.
+function carouselQuoteLocators(raw,messages){
+ // These constructs let the Article guard discard quoted lines or introduce
+ // unquoted speaker passages. Its plain-text output cannot prove correspondence.
+ if(/<!--|^\s*#|^\s*\*\*[^*]+\*\*\s*$/m.test(raw))return new Map();
+ const view=quoteView(raw),chunks=[];
+ for(const match of view.text.matchAll(/["“]([^"”]*)["”]/g)){
+  const content=match[1],base=match.index+1;let cursor=0;
+  for(const cut of [...content.matchAll(/…|\.\.\./g),{index:content.length,0:''}]){
+   const fragment=content.slice(cursor,cut.index),value=fragment.trim(),start=base+cursor+fragment.length-fragment.trimStart().length;
+   if(value)chunks.push({value,start});cursor=cut.index+cut[0].length;
+  }
+ }
+ const groups=new Map(),locations=new Map();
+ messages.forEach((message,index)=>{const passage=/^NOT FOUND: "(.*)"$/.exec(message)?.[1];if(passage===undefined)return;const truncated=passage.length===141&&passage.endsWith('…'),needle=(truncated?passage.slice(0,-1):passage).replace(/\s+/g,' '),key=JSON.stringify([needle,truncated]);const group=groups.get(key)||{needle,truncated,indices:[]};group.indices.push(index);groups.set(key,group);});
+ for(const {needle,truncated,indices}of groups.values()){
+  const matching=chunks.filter(chunk=>truncated?chunk.value.startsWith(needle):chunk.value===needle);
+  if(!needle||matching.length!==indices.length)continue;
+  indices.forEach((index,occurrence)=>{const at=matching[occurrence].start,start=view.chars[at].start,end=view.chars[at+needle.length-1].end;locations.set(index,{kind:'markdown-offset',line:raw.slice(0,start).split('\n').length,startOffset:start,endOffset:end,passage:raw.slice(start,end),...(truncated?{truncated:true}:{})});});
+ }
+ return locations;
+}
+function issuesFor(result,type,draft,{carouselQuotes=false}={}) {
   // Split guards emit one multiline issue containing two raw block prefixes.
   // Bracket/unsupported messages have no passage: retain output-only locators.
   const messages=result.output.match(/^(?:NOT FOUND:|INVALID BRACKET:|UNSUPPORTED:)[^\n]*|^SPLIT \([^\n]*\n  A: [\s\S]*?\n  B: [\s\S]*?(?=\n\n|(?![\s\S]))/gm)||[];
+  const occurrences=carouselQuotes?carouselQuoteLocators(draft.raw,messages):null;
   return messages.map((message,i)=>{
     const quoted=/^NOT FOUND: "(.*)"$/.exec(message)?.[1];
     const truncated=quoted?.length===141 && quoted.endsWith('…');
     const passage=truncated?quoted.slice(0,-1):quoted;
     const split=/\n  A: ([\s\S]*?)\n  B: ([\s\S]*)$/.exec(message);
     const relatedLocators=split?split.slice(1).map(p=>locator(draft.raw,p,draft.projection,{truncated:p.length===70})):undefined;
-    return {id:`${type}-${i+1}`,type,severity:message.startsWith('UNSUPPORTED')?'held':'review',message,locator:relatedLocators?.[0]??locator(draft.raw,passage,draft.projection,{quote:true,truncated}),...(relatedLocators?{relatedLocators}: {})};
+    return {id:`${type}-${i+1}`,type,severity:message.startsWith('UNSUPPORTED')?'held':'review',message,locator:relatedLocators?.[0]??(carouselQuotes&&quoted!==undefined?occurrences.get(i)||{kind:'check-output',reason:'The quote failed, but its exact occurrence cannot be proven from this check output; review the saved field manually.'}:locator(draft.raw,passage,draft.projection,{quote:true,truncated})),...(relatedLocators?{relatedLocators}: {})};
   });
 }
 export function createStudyDraftChecks({dataDir,drafts,outputs}) {
@@ -124,7 +150,7 @@ export function createStudyDraftChecks({dataDir,drafts,outputs}) {
           // removal cannot certify those same visible bytes in a slide.
           if(/^\uFEFF?---(?:\r?\n|$)/.test(field.raw)||/%%|==|\[\[term:/.test(field.raw)){results.push({status:'unsupported',output:'UNSUPPORTED: Literal carousel field contains Article-only metadata or held-mark syntax.'});record.issues.push({id:'field-'+index+'-grammar',type:'quote',severity:'held',message:'UNSUPPORTED: Review the literal metadata or marked wording in this carousel field manually.',locator:{kind:'carousel-field',slideId:field.slideId,field:field.field,fieldHash:hash(field.raw),startOffset:0,endOffset:field.raw.length,wholeField:true,reason:'The existing Article quote grammar cannot certify these literal slide bytes.'}});continue;}
           const checked=await guard('mag-check-quotes.mjs',[file,primary.path,...sourceFiles.filter(s=>s!==primary).map(s=>s.path)]),view=coverage(checked,'QUOTE');results.push(view);
-          for(const issue of issuesFor(checked,'quote',{raw:field.raw})){const local=issue.locator;record.issues.push({...issue,id:'field-'+index+'-'+issue.id,slideNumber:field.slideNumber,locator:['markdown-offset','native-paragraph'].includes(local.kind)?{...local,kind:'carousel-field',slideId:field.slideId,field:field.field,fieldHash:hash(field.raw)}:field.raw.length?{kind:'carousel-field',slideId:field.slideId,field:field.field,fieldHash:hash(field.raw),startOffset:0,endOffset:field.raw.length,wholeField:true,reason:local.reason}:{...local,slideId:field.slideId,field:field.field}});}
+          for(const issue of issuesFor(checked,'quote',{raw:field.raw},{carouselQuotes:true})){const local=issue.locator;record.issues.push({...issue,id:'field-'+index+'-'+issue.id,slideNumber:field.slideNumber,locator:['markdown-offset','native-paragraph'].includes(local.kind)?{...local,kind:'carousel-field',slideId:field.slideId,field:field.field,fieldHash:hash(field.raw)}:issue.message.startsWith('NOT FOUND:')?{...local,slideId:field.slideId,field:field.field}:field.raw.length?{kind:'carousel-field',slideId:field.slideId,field:field.field,fieldHash:hash(field.raw),startOffset:0,endOffset:field.raw.length,wholeField:true,reason:local.reason}:{...local,slideId:field.slideId,field:field.field}});}
         }
         record.quote={status:results.some(r=>r.status==='failed')?'failed':results.some(r=>r.status==='unsupported')?'unsupported':results.some(r=>r.status==='checked-pass')?'checked-pass':'not-applicable',output:results.map((r,i)=>(before.fields[i].field==='caption'?'Caption':'Slide '+before.fields[i].slideNumber+' · '+before.fields[i].field)+'\n'+r.output).join('\n'),fields:results.length};
         // Only adjacent slide Words form the split projection, with explicit stable
