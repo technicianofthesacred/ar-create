@@ -1,3 +1,9 @@
+## 27 October — Research type roles verified on desktop; candidate only
+
+Research point explanations now use the approved C sans-serif body role at 15px/22.5px, quoted speech uses Lora at 15px/24.75px, and source attribution uses the compact 13px/19.5px label role. The Source-only Atlas refinement and retained long-document reading role stay scoped to their existing surfaces.
+
+A native candidate and the immutable C reference were compared at the same 1280×720 viewport in light and dark themes. Computed text roles match those values, and 132 affected Research/Workbench checks pass. Whole Research visual acceptance remains open: the project-notes disclosure reduces the split-panel height, and the connected findings and source controls differ from the reference prototype. The responsive browser control did not change the actual viewport, including in a new test tab; no phone proof is claimed from those captures. This change is not installed and does not establish all-twelve-section completion.
+
 ## 26 October — Magazine sharing context candidate, not installed
 
 S11/C01/C04/C06: the maintained working-draft bridge now exposes read-only sharing context for an exact registered Magazine story/piece and current DEV hash. It identifies the existing registered feedback, relationship context and research records by current hashes, with missing, unreadable and changed-since-registration states. It returns references rather than copying prose, creating messages or claiming a published edition. The GET connection rejects caller paths, duplicate selectors, stale articles and ambiguous ownership.

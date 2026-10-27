@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "a3ab1f8f8ed789d9dd7a71a27e82074323d4a454febda5db499ba7bbeed18b2d"
+      "candidateSha256": "5a0ecfa6a61688fdab168514fb3ab2f1ab6b54081d58f1bfaa313780dd6495f9"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3481,7 +3481,7 @@
     },
     {
       "path": "public/document-study/workbench-develop-match.css",
-      "candidateSha256": "ff2a20ff2dfcc11f7703a43f277094462bdcecb237020dddfc1271fab7f8ab9d"
+      "candidateSha256": "07859940145647ae2a4411c0cc0f1f3d61d971d30f65bd1ba5119a3c03061b48"
     },
     {
       "path": "public/document-study/workbench-exports-match.css",
@@ -4306,6 +4306,10 @@
     {
       "path": "tests/magazine-share-context-http.test.mjs",
       "candidateSha256": "6299d66eea2a4eca74a34fa3f837c3acc3f53d8606c751ac9ea4391e9cbad51d"
+    },
+    {
+      "path": "tests/research-point-typography-role.test.mjs",
+      "candidateSha256": "a510b25bbeea9696a348300a60562edb2f5659c3c8987ce8d759ba901f591fe6"
     }
   ],
   "dependencyRepair": {
