@@ -18,8 +18,8 @@ function boot({native=true,initialStage=5,surfaceBar=false}={}){
  w.eval(read('workspace-navigation.js'));if(surfaceBar)w.eval(read('surface-bar.js'));w.eval(read('workbench-frame.js'));
  return {w,d,p,calls,editor,close(){observers.forEach(o=>o.disconnect());w.close();}};
 }
-test('one visible Write entrance retains hidden legacy Read action and omits the Read piece-mode tab',()=>{
- const f=boot();try{const visible=[...f.d.querySelectorAll('.workflowStep:not([hidden])')];assert.equal(visible.length,11);assert.equal(visible.filter(b=>b.querySelector('.stepName').textContent==='Write').length,1);assert.equal(f.d.querySelector('[data-wn-mode="read"]'),null);assert.ok(f.d.querySelector('.workflowStep[hidden] [class=stepNumber]').textContent==='6');assert.equal(f.d.querySelector('.sb-mode').hidden,true);}finally{f.close();}
+test('all twelve entrances include Read of the same selected manuscript',()=>{
+ const f=boot();try{const visible=[...f.d.querySelectorAll('.workflowStep:not([hidden])')];assert.equal(visible.length,12);assert.equal(visible.filter(b=>b.querySelector('.stepName').textContent==='Write').length,1);assert.ok(f.d.querySelector('[data-wn-mode="read"]'));assert.ok(visible.some(b=>b.querySelector('.stepNumber').textContent==='6'));assert.equal(f.d.querySelector('.sb-mode').hidden,true);}finally{f.close();}
 });
 for(const native of [true,false])test(`Edit and Preview use the current ${native?'native':'browser'} editor without a save gate or reopening`,async()=>{
  const f=boot({native});try{const {w,d,editor}=f;editor.focus();const text=editor.firstElementChild.firstChild,range=d.createRange();range.setStart(text,7);range.setEnd(text,12);w.getSelection().removeAllRanges();w.getSelection().addRange(range);const preview=d.querySelector('[data-wbf-mode="preview"]'),edit=d.querySelector('[data-wbf-mode="edit"]');
@@ -42,3 +42,5 @@ test('pointer press and release reach Preview with the maintained surface bar an
   assert.equal(preview.isConnected,true);assert.deepEqual(f.calls,['preview']);assert.equal(w.studyDraft.viewMode(),'preview');assert.equal(d.querySelector('[data-wbf-mode="preview"]').getAttribute('aria-pressed'),'true');assert.strictEqual(d.querySelector('#manuscript'),editor);assert.equal(editor.textContent,'Unsent exact words');assert.equal(w.getSelection().toString(),'exact');
  }finally{f.close();}
 });
+
+test('current article Preview continuation keeps its presentation on return through the same native manuscript',async()=>{const f=boot();try{await f.w.workspaceNavigation.changeMode('read');f.w.workspaceNavigation.capture();const location=f.w.workspaceNavigation.lastLocation();assert.equal(location.item.stage,5);assert.equal(location.item.mode,'read');f.w.studyOutputConnection.flush=async()=>{};f.w.studyDraft.openBinding=async()=>{};await f.w.workspaceNavigation.resumeLast(location);assert.equal(f.w.studyDraft.viewMode(),'preview');assert.strictEqual(f.d.querySelector('#manuscript'),f.editor);assert.equal(f.editor.textContent,'Unsent exact words');}finally{f.close();}});
