@@ -142,9 +142,10 @@
  async function openWorkspaceTarget(id,index,{readMode=false,stage=null,storyId}={}){
   if(stage!==null&&(!Number.isInteger(stage)||stage<1||stage>12))throw Error('Choose an existing section from 1 to 12.');
   const token=++openEpoch,links=(catalog?.workspaceLinks?.pieces||[]).filter(p=>p.workspaceId===id),link=links.length===1?links[0]:null,target=Number.isInteger(index)&&index>=0?link?.targets?.[index]:null,entries=(catalog?.workspacePieces||[]).filter(p=>p.id===id),entry=entries.length===1?entries[0]:null;
-  if(!target||!entry||target.workspaceId!==entry.id||target.documentId!==entry.documentId||typeof target.rootBindingId!=='string'||!target.rootBindingId||target.outputId)throw Error('The exact workspace target is unavailable. Refresh before opening.');
+  if(!target||!entry||target.workspaceId!==entry.id||target.documentId!==entry.documentId||typeof target.rootBindingId!=='string'||!target.rootBindingId)throw Error('The exact workspace target is unavailable. Refresh before opening.');
   const p=state.projects.find(p=>p.id===target.parentStudyId),story=storyId===undefined?null:catalog.stories.find(s=>s.id===storyId);
   if(!p||storyId!==undefined&&story?.nativeProjectId!==p.id)throw Error('The exact native project is not available in this browser.');
+  if(target.outputId&&(window.AR_CREATE_REVIEW_MODE?.studyDraftCorrections!==true||!['output-owned-workspace'].includes(target.role)||!target.outputBindingId||typeof window.studyOutputConnection?.openWorkspaceOutput!=='function'||stage!==null&&![5,6,9].includes(stage)))throw Error('The exact saved output entrance is unavailable for this section.');
   const collection=target.partKey==='collection',writing=window.AR_CREATE_REVIEW_MODE?.studyDraftCorrections===true,section=stage??(collection?1:writing&&!readMode?5:6),needsBinding=!collection||[5,6,7].includes(section);
   if(collection&&(p.collectionKind!=='collection-root'||p.collectionBindingId!==target.rootBindingId))throw Error('The exact collection root is unavailable. Refresh before opening.');
   if(needsBinding&&!writing&&section!==6)throw Error('This read-only manuscript pickup supports Read only; its section editor is unavailable.');
@@ -158,6 +159,12 @@
    if(!exact()||project()!==p||p.viewedStage!==targetStage||p.view!==targetView)throw Error('The native project or section changed before its workspace opened.');
   }
   if(!exact()||project()!==p)throw Error('The native project did not open.');
+  if(target.outputId){
+   const outputStage=p.viewedStage,outputView=p.view;const opened=await window.studyOutputConnection.openWorkspaceOutput(target,{mode:readMode||stage===6?'read':stage===9?'arrange':'write',originGuard:()=>{if(!exact()||project()!==p||p.viewedStage!==outputStage||p.view!==outputView)throw Error('The selected work changed before its saved output opened.');}});
+   if(opened===null)return null;
+   if(!exact()||project()!==p||window.studyOutputConnection.selection?.()?.output?.id!==target.outputId||window.studyOutputConnection.selection?.()?.rootBindingId!==target.rootBindingId)throw Error('The exact saved output did not open. No substitute was selected.');
+   rememberRoute({reviewWorkspace:id,reviewBinding:target.rootBindingId});decorate();return;
+  }
   if(needsBinding&&writing){
    if(typeof window.studyDraft?.openBinding!=='function')throw Error('The maintained working manuscript editor is unavailable. No replacement was opened.');
    const outputScope=value=>JSON.stringify([value?.projectId,value?.rootBindingId,value?.output?.id]),beforeOutput=window.studyOutputConnection?.selection?.(),beforeStage=p.viewedStage,beforeView=p.view,opened=await (window.arCreateReviewStartup?.phase?.('open-binding'),window.studyDraft.openBinding({bindingId:target.rootBindingId,parentStudyId:target.parentStudyId}));
@@ -202,7 +209,7 @@
   const excluded=new Set(catalog.excludedProjectIds||[]);for(const b of d.querySelectorAll('[data-pl-open]'))if(excluded.has(b.dataset.plOpen)){const row=b.closest('.pl-library-row')||b;row.hidden=true;}
  }
  const benchScope=()=>window.AR_CREATE_REVIEW_MODE?.catalogCacheScope;
- function benchCapabilities(){const kinds=['story','draft','workspace-record'],outputs=(catalog?.stories||[]).flatMap(story=>(story.retainedOutputs||[]).map(output=>({story,output})));if(outputs.every(({story,output})=>output.kind!=='carousel'||window.retainedCarouselSnapshot?.(story.nativeProjectId)?.slides?.length===output.slideCount))kinds.push('carousel');if((catalog?.workspaceLinks?.pieces||[]).every(link=>(link.targets||[]).every(target=>!target.outputId)))kinds.push('workspace');return kinds;}
+ function benchCapabilities(){const kinds=['story','draft','workspace-record'],outputs=(catalog?.stories||[]).flatMap(story=>(story.retainedOutputs||[]).map(output=>({story,output})));if(outputs.every(({story,output})=>output.kind!=='carousel'||window.retainedCarouselSnapshot?.(story.nativeProjectId)?.slides?.length===output.slideCount))kinds.push('carousel');if((catalog?.workspaceLinks?.pieces||[]).every(link=>(link.targets||[]).every(target=>!target.outputId||window.AR_CREATE_REVIEW_MODE?.studyDraftCorrections===true&&target.role==='output-owned-workspace'&&target.outputBindingId&&typeof window.studyOutputConnection?.openWorkspaceOutput==='function')))kinds.push('workspace');return kinds;}
  function benchModel(){return window.arCreateBenchProjection.project({catalog,scope:benchScope(),ready:!!catalog,capabilities:benchCapabilities()});}
  // The projection folds an original-linked native manuscript into its article row.
  // Recover that connection by identities, never by the article/workspace title.

@@ -1,3 +1,9 @@
+## 27 October — Saved output Bench pickup candidate; native acceptance pending
+
+Registered output-owned workspace rows now delegate to the existing output editor after re-reading the ready primary root, exact output binding and saved physical workspace/document mapping. Independent article wording is opened with its canonical output ID; Read and Arrange retain the selected output. Dirty work, changed navigation, foreign identities and cancelled opening refuse. No original import or output creation is performed by pickup.
+
+226 focused checks pass across existing-work, output connection and Bench tests. This is a source candidate, **not installed or checked off as complete**. The current invented native review has a carousel held by its existing root, with no output-owned workspace registration; that screen cannot prove the new registered-workspace path. A representative independent-article native pickup/reload comparison and exact release proof remain required. PR73 remains the verified installed milestone. Semantic Next moves/history, full C/phone and the overall goal stay open.
+
 ## 27 October — Current Read and exact continuation milestone installed
 
 PR73 signed main `3de47f2d86fa0da78abebea3878de41aa61fbfab`, build2026-10-27T17:55:54.494Z, is verified live in the installed app and main review.427affected checks/build/package913 and64servedhashes (including generated browser modules) pass; APIcontent, four original carousel copies, canonical changed files and configuration remain exact. The candidate entry below now describes installed bounded behavior.

@@ -1129,7 +1129,7 @@
     {
       "path": "public/document-study/output-connection.js",
       "sourceSha256": "413cdf1a2bd186ec81d31db05215eff82dc63ca6b63ff8f1c70931b7aaf35403",
-      "candidateSha256": "b742b93646654b54f253d0958c53bb7694e4e9a10dc2d03112ea3aecb3148c03",
+      "candidateSha256": "c5e38387a65f1dea0bb7e3f7289d1ecf64e4ccfebb0d5175029d329838b6a9a8",
       "adapted": true
     },
     {
@@ -1807,7 +1807,7 @@
     {
       "path": "public/document-study/output-connection.test.mjs",
       "sourceSha256": "f18c1855e87e786d3dfe13434129185b0c9ce4342411eada7fbc070b4b7d2a2e",
-      "candidateSha256": "f6321ea5aaf95d985dac0eb1af15eb49604bd0aa3d2b57f569fc7568de1876cb",
+      "candidateSha256": "9233f4f8cdca057337204bb8bd7f05eb6c83f4d47bc2aaca54a35c73fce3c953",
       "adapted": false
     },
     {
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "e6ad54c7e7dcc2fb5212d32ec16a4cf3e00a629b777698a69eda55650c2d8808"
+      "candidateSha256": "1c6b1f57971e177744707a12dfff80102ee2c0bf254af34e3cec919b2ffd21fc"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "b161ea9ffdd9dc5681cc6a47ad14866c7726d3dc4568d81d2b56ea0072c9f52e"
+      "candidateSha256": "6a03072139c0689c6cae10c43fbccadb2802ff6038d1de3e0fced81e5036839e"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -3685,7 +3685,7 @@
     },
     {
       "path": "tests/existing-work.test.mjs",
-      "candidateSha256": "512650e6e97db79f2dac4014707014f9d3c223062be6f1f3f9d96bb2c6e0979d"
+      "candidateSha256": "62d5289f9719d7d7c9fe1795d3c1d6a22e4401f1f97349b0860d010020d1d64f"
     },
     {
       "path": "tests/review-connection.test.mjs",
