@@ -24,7 +24,7 @@
  function annotationSuffix(group){const value=annotationValue(group?.[0]?.placement),match=/\r?\n[ \t]*%%ar-create-photo:[ \t]*(\{[^\r\n]*\})%%\s*$/.exec(group?.[0]?.raw||'');if(!value||!match)return null;try{const parsed=JSON.parse(match[1]);return annotationOK(parsed)&&parsed?.caption===value.caption&&parsed?.credit===value.credit?match:null;}catch{return null;}}
  const photoRaw=group=>{const match=annotationSuffix(group);return match?group[0].raw.slice(0,match.index):group?.[0]?.raw||'';};
  const photoChunkComplete=group=>group?.[0]?.placement.nativeOrigin?.directiveEnd===group?.[0]?.placement.nativeOrigin?.chunkEnd||!!annotationSuffix(group);
- function captionable(group){const o=group?.[0]?.placement.nativeOrigin;return !!o&&['wide','bleed','photos','cover','opener','side'].includes(o.role)&&['photo','photos','side'].includes(o.kind)&&o.depth===0&&photoChunkComplete(group);}
+ function captionable(group){const o=group?.[0]?.placement.nativeOrigin;return !!o&&['wide','bleed','photos','cover','opener','side'].includes(o.role)&&['photo','photos','side'].includes(o.kind)&&(o.depth===0||['wide','bleed','photos'].includes(o.role))&&photoChunkComplete(group);}
  const wordingScope=scope=>({parentStudyId:scope.p.id,storyId:scope.owner.storyId,pieceId:scope.owner.pieceId});
  function restoreWording(scope,r){
   try{const buffer=window.studyDraft.getMagazineWordingDraft(wordingScope(scope));r.wordingToken=buffer?.token??null;r.recoveryError='';if(!buffer){if(!r.annotationDraft&&!r.creditsDraft)r.recovery=null;return;}
