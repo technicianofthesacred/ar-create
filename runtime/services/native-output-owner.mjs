@@ -180,8 +180,8 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     });
     return { sources, photos, assets, decisionsHash: p.decisionsHash };
   }
-  async function currentProof(i, outputId, captureValue, output) {
-    const value=scopedProof(await proofCatalogue(i, outputId), captureValue, output);
+  async function currentProof(i, outputId, captureValue, output, catalogue=null) {
+    const value=scopedProof(catalogue||await proofCatalogue(i, outputId), captureValue, output);
     if(retained(captureValue)){try{await resolveRetained(captureValue.source);}catch{return {...value,retainedSourceUnavailable:true};}}
     return value;
   }
@@ -244,21 +244,27 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     return {sourceOutputId:edition.sourceOutputId,sourceTitle:parent.output.name||parent.output.title||"Linked source",stale,reason:stale?"Linked source changed; review this independent language edition.":null,currentSourceOutputRevision:parent.output.outputRevision||0,currentSourceWordsHash:currentWordsHash,basis:"observed-parent-state-not-translation-approval"};
   }
   async function freshness(i, t, selected, includeProof=false) {
-    const p = await currentProof(i, selected.output.id, selected.private.capture, selected.output);
+    const catalogue=await proofCatalogue(i,selected.output.id);
+    const p = await currentProof(i, selected.output.id, selected.private.capture, selected.output,catalogue);
     const sourceStale=!same(p,selected.private.proof);
-    let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false;
+    let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false,canRefreshUnchangedWriting=false;
     if(textKind(selected.output.kind)){
       const c=validateCapture(selected.private,selected.output),s=await native.read({bindingId:selected.record.wordOwner.bindingId,parentStudyId:i.parentStudyId});
       writingProof={kind:'native',bindingId:s.binding.id,parentStudyId:s.binding.parentStudyId,expected:clone(s.expected),rawHash:hash(s.raw),capturedRawHash:c.nativeProof.rawHash};
       writingStale=writingProof.rawHash!==writingProof.capturedRawHash||!same(s.expected,c.nativeProof.expected);
       if(mapper.freshness(c,s,p.sources,p.photos).stale)reason="This output native wording or exact source proof changed.";
+      // This is recapture eligibility, never a waiver of stale evidence or approval.
+      if(selected.output.kind==='article'&&(sourceStale||writingStale)&&same({...p,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof))try{
+        const liveProof=scopedProof(catalogue,c,selected.output,{captureMappings:true}),current=mapper.capture(s,c.scope,{photoBindings:liveProof.photos});
+        canRefreshUnchangedWriting=same({...liveProof,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof)&&current.ready===true&&current.mediaReady===true&&current.nativeProof.bindingId===c.nativeProof.bindingId&&current.nativeProof.parentStudyId===c.nativeProof.parentStudyId&&current.nativeProof.rawHash===c.nativeProof.rawHash&&current.nativeProof.projectionHash===c.nativeProof.projectionHash&&!mapper.freshness(current,s,liveProof.sources,liveProof.photos).stale;
+      }catch{/* Unready, marked or unsupported current wording stays held. */}
     }else{
       const w=await store.readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,allowEditedMarkdown:true});
       writingProof={kind:'carousel-words',projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,expected:clone(w.expected),wordsHash:await helpers.carouselWordsHash(w.output)};
       writingStale=!!w.externalEdit||!!w.missing;
       if(writingStale)reason='This carousel canonical words file changed outside its saved output.';
     }
-    return {writingProof,freshness:{stale:sourceStale||writingStale,reason,writingStale,sourceStale},...(includeProof?{currentProof:p}:{})};
+    return {writingProof,freshness:{stale:sourceStale||writingStale,reason,writingStale,sourceStale,canRefreshUnchangedWriting},...(includeProof?{currentProof:p}:{})};
   }
   async function read(input) {
     const t = await target(input);
