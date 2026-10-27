@@ -118,12 +118,17 @@ export function createStudyDraftCopies({dataDir,originals,afterCopyFile,afterCom
  }
  async function withSnapshotLease(input,fn){
   const captured=structuredClone(input);
-  if(!captured||typeof captured!=='object'||Array.isArray(captured)||Object.keys(captured).some(key=>!['bindingId','parentStudyId','expected'].includes(key))||!uuid.test(captured.bindingId||'')||!readable(captured.parentStudyId)||typeof fn!=='function')fail('Trusted exact native snapshot lease fields and callback required.',400);
+  if(!captured||typeof captured!=='object'||Array.isArray(captured)||Object.keys(captured).some(key=>!['bindingId','parentStudyId','expected','related'].includes(key))||!uuid.test(captured.bindingId||'')||!readable(captured.parentStudyId)||typeof fn!=='function')fail('Trusted exact native snapshot lease fields and callback required.',400);
   return serial(async()=>{
    const b=binding(captured),snapshot=readOwned(b);
    if(snapshot.readiness?.ready!==true||!snapshot.projection||stable(snapshot.expected)!==stable(captured.expected))fail('Exact ready current native expected proof required for snapshot lease.');
+   const related=captured.related;
+   if(Object.hasOwn(captured,'related')&&(!related||typeof related!=='object'||Array.isArray(related)||Object.keys(related).sort().join(',')!=='bindingId,expected,parentStudyId'||related.parentStudyId!==captured.parentStudyId||!uuid.test(related.bindingId||'')||b.kind!=='output-fork'||b.derivedFrom?.bindingId!==related.bindingId))fail('Related native source must be the exact authorized fork parent.',400);
+   const readRelated=()=>{if(!related)return null;const value=readOwned(binding(related));if(value.readiness?.ready!==true||!value.projection||stable(value.expected)!==stable(related.expected))fail('Related native source changed; preserve the prepared fork.');return value;};
+   if(related)readRelated();
    let active=true;const reread=()=>{if(!active)fail('Native snapshot lease has ended; use a fresh exact lease.');return readOwned(b);};
-   try{return await fn({snapshot,reread});}finally{active=false;}
+   const rereadRelated=()=>{if(!active)fail('Related native source lease ended.');return readRelated();};
+   try{return await fn({snapshot,reread,...(related?{rereadRelated}:{})});}finally{active=false;}
   });
  }
  function rootRecovery(input){const b=binding(input);capture(b);return createStudyRootRecovery({copyRoot:root,bindingId:b.id,parentStudyId:b.parentStudyId,originalId:b.originalId});}

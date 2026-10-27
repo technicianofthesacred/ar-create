@@ -86,6 +86,16 @@ export function validateDocument(document, label = 'document') {
   });
   if (!Array.isArray(document.outputs) || document.outputs.length > 100) throw new StateError(`${label}.outputs must be an array under 100 entries.`);
   for (const [outputIndex, output] of document.outputs.entries()) {
+    if(output?.languageEdition!==undefined){
+      if(!['article','carousel'].includes(output.kind)||typeof output.language!=='string'||output.language.length>48)throw new StateError('Language editions require an Article/Carousel and explicit language.');
+      let language;try{language=Intl.getCanonicalLocales(output.language)[0];}catch{}if(!language||language!==output.language)throw new StateError('Language editions require a canonical language tag.');
+      const edition=output.languageEdition;shape(edition,['sourceOutputId','sourceOutputRevision','sourceOutputHash','sourceWordsHash','sourceProofHash','sourceWordOwner'],'languageEdition');
+      if(!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(edition.sourceOutputId||'')||edition.sourceOutputId===output.id||!Number.isSafeInteger(edition.sourceOutputRevision)||edition.sourceOutputRevision<0||['sourceOutputHash','sourceWordsHash','sourceProofHash'].some(key=>!/^[a-f0-9]{64}$/.test(edition[key]||'')))throw new StateError('Language edition lineage requires an exact distinct source output/revision/hash.');
+      const owner=edition.sourceWordOwner;
+      if(output.kind==='article'){shape(owner,['kind','bindingId','parentStudyId'],'languageEdition.sourceWordOwner');if(owner.kind!=='native'||typeof owner.bindingId!=='string'||!owner.bindingId||typeof owner.parentStudyId!=='string'||!owner.parentStudyId)throw new StateError('Article language source requires its native words owner.');}
+      else{shape(owner,['kind','projectId','documentId','outputId'],'languageEdition.sourceWordOwner');if(owner.kind!=='carousel-words'||owner.outputId!==edition.sourceOutputId||['projectId','documentId'].some(key=>typeof owner[key]!=='string'||!owner[key]))throw new StateError('Carousel language source requires its exact own words owner.');}
+    }
+
     if(output?.articleComposition!==undefined){if(output.kind!=='article')throw new StateError('Only an article can carry article composition.');const issue=articleCompositionIssue(output.articleComposition,output.manuscript||document.paragraphs,output.placements||[]);if(issue)throw new StateError(issue);}
     if(output?.articleCompositionNotice!==undefined)text(output.articleCompositionNotice,'articleCompositionNotice',1000);
     if(output?.articleVisualMake!==undefined){
