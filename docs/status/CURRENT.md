@@ -1,3 +1,17 @@
+## 27 October — All photos to Arrange connection candidate; not installed
+
+Media's All photos now opens an unused indexed Library photo into the current exact article: Choose place in article → explicitly select an existing standalone photo → confirm Use photo. It reuses the existing guarded replacement writer, retaining the target position/crop. Cancel makes no manuscript change; stale sources/owners refuse. Default titles use descriptions or Photo labels; exact filenames remain searchable and secondary.
+
+Native invented contact-sheet selection/preselected exact asset/Cancel/Use → actual owner restart → reload → exact whole-manuscript Undo pass.186 integrated affected checks pass. This connects replacement of an existing eligible position; insertion, covers/openers/closing/composed controls and full Library organization remain open. Actual desktop screen checked; phone and full C/all12 visual gates remain open. PR71 remains live until this candidate's exact release proof.
+
+## 27 October — Saved questions and Arrange reading milestone installed
+
+PR71 signed main `7321cb2015963367894fb236122d694577dd5c0b`, build2026-10-27T16:48:38.867Z, is verified live in the installed app and main review.137 affected checks, build/package910 and46 served frontend hashes pass; API content, four independent carousel copies, canonical changed files and configuration are preserved. A conservative stop timeout was recovered after confirming the old owner had terminated; no force kill, second install or remerge.
+
+Checked off only the named bounded results below: saved human point questions with exact retained origin and retry/prose/Undo preservation; stable source-picker disclosures; actual desktop Arrange reading roles and text scaling. AI discussion/brief updates and full visual acceptance stay open.
+
+The all-photo replacement pool already includes unused indexed Library and cross-story photos. Media's unplaced contact-sheet rows still lack a direct explicit placement handoff into Arrange; that same-writer connection is next. New insertion, composed/cover controls, captions/credits, independent audience editions, correspondence facts and full source-to-delivery/all12 C/phone gates remain unfinished.
+
 ## 27 October — Saved point questions and Arrange reading candidate; not installed
 
 Research now saves labelled human questions/comments into the existing shared project Markdown notes, preserving the exact retained origin and its unverified status. Native invented Save → actual owner restart → reload retains the question; exact retry deduplicates it. An ordinary prose edit preserves its hidden metadata, and Undo restores the complete question-only notes. Both manuscripts remain unchanged. Readable attribution uses Adrian and a local date; malformed metadata stays visible for repair. Provider discussion and brief updates remain unfinished.
