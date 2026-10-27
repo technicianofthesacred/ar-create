@@ -14,7 +14,7 @@ import {currentActor, isHuman, requireHuman, requireWriteActor} from '../actor.m
 import {classify, frontmatter} from '../magazine-vault/kinds.mjs';
 import {expected, sha256, textBytes} from '../magazine-vault/write.mjs';
 import {splitBlocks, hash, plain, editable} from '../../reference/mag-edit.mjs';
-import {parseFeedbackShare, updateFeedbackShareSection} from './feedback-share-codec.mjs';
+import {parseFeedbackShare, updateFeedbackShareSection, feedbackShareSectionChoices, mapFeedbackShareRecipient} from './feedback-share-codec.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -237,7 +237,17 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     const paragraphs=[];
     for(let k=0;k<parts.length;k+=2)paragraphs.push({index:k/2,seen:hash(parts[k]),text:plain(parts[k]),raw:parts[k],editable:editable(parts[k])});
     const available=!!magazine.configured&&!!magazine.writable&&!unsupported;
-    return {...view,schema:'ar-create.magazine-share-feedback-edit-model.v1',paragraphs,editable:available,unavailableReason:unsupported?'The existing paragraph editor cannot preserve this frontmatter representation.':available?null:'Magazine is read-only. Its designated owner must enable editing.'};
+    let mappingSections=[];try{mappingSections=feedbackShareSectionChoices(view.document.text);}catch{}
+    return {...view,schema:'ar-create.magazine-share-feedback-edit-model.v1',paragraphs,mappingSections,editable:available,unavailableReason:unsupported?'The existing paragraph editor cannot preserve this frontmatter representation.':available?null:'Magazine is read-only. Its designated owner must enable editing.'};
+  }
+  async function prepareShareFeedbackMapping(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'recipientId','recipientName','sections']);input=structuredClone(input);requireWriteActor();requireHuman('Mapping FEEDBACK recipients');writable();
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);uuid(input.recipientId);
+    const document=magazine.read({path:selection.context.feedback.path}),parsed=parseFeedbackShare(document.text);
+    if(parsed.structured&&parsed.projection.some(entry=>entry.target.storyId!==input.storyId||entry.target.pieceId!==input.pieceId||entry.target.hash!==input.expectedHash))throw new StateError('This mapping includes another piece or working revision. Keep the complete record and repair its explicit targets first.',409);
+    const result=mapFeedbackShareRecipient(document.text,{expectedHash:input.expectedFeedbackHash,recipientId:input.recipientId,recipientName:input.recipientName,target:{storyId:input.storyId,pieceId:input.pieceId,edition:'working',hash:input.expectedHash},sections:input.sections});
+    assertFeedbackCurrent(input,selection);
+    return prepareShareFeedback({...Object.fromEntries([...BASE,...feedbackFields].filter(key=>input[key]!==undefined).map(key=>[key,input[key]])),content:result.markdown});
   }
   async function prepareShareFeedbackParagraph(input) {
     workingOnly(input);fields(input,[...feedbackFields,'block','seen','text']);input=structuredClone(input);requireWriteActor();requireHuman('Preparing FEEDBACK paragraph corrections');writable();
@@ -439,5 +449,5 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     if (!eligible.eligible) throw new StateError(eligible.reason, isHuman(currentActor()?.actor) ? 409 : 403);
     return magazine.undo({undoOperationId: input.undoOperationId, operationId: input.operationId});
   }
-  return {catalog, read, shareContext, readShareFeedback, readShareFeedbackEditModel, prepareShareFeedback, prepareShareFeedbackParagraph, saveShareFeedback, eligibleUndoShareFeedback, undoShareFeedback, shareFeedbackHistory, prepare, edit, save, operation, eligibleUndo, undo};
+  return {catalog, read, shareContext, readShareFeedback, readShareFeedbackEditModel, prepareShareFeedback, prepareShareFeedbackParagraph, prepareShareFeedbackMapping, saveShareFeedback, eligibleUndoShareFeedback, undoShareFeedback, shareFeedbackHistory, prepare, edit, save, operation, eligibleUndo, undo};
 }

@@ -1,24 +1,42 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {createRequire} from 'node:module';
-import {createHash} from 'node:crypto';import {parseFeedbackShare} from '../runtime/services/magazine/feedback-share-codec.mjs';import {splitBlocks,plain,editable,hash} from '../runtime/reference/mag-edit.mjs';
+import {createHash} from 'node:crypto';import {parseFeedbackShare,feedbackShareSectionChoices,mapFeedbackShareRecipient} from '../runtime/services/magazine/feedback-share-codec.mjs';import {splitBlocks,plain,editable,hash} from '../runtime/reference/mag-edit.mjs';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('../public/document-study/share-stage.js',import.meta.url),'utf8');
 const tick=()=>new Promise(resolve=>setTimeout(resolve,15)),H='a'.repeat(64),F='b'.repeat(64);
 function fixture({references=[{path:'Workflow/6-Feedback/FEEDBACK - Invented.md',currentHash:F,readable:true,state:'current'}],gate=null,legacy=null}={}){
  const dom=new JSDOM('<div id="app"><section class="oss-surface" data-output-stage-surface="11"></section></div>',{runScripts:'outside-only',url:'http://localhost'}),w=dom.window,calls=[];
  let state={id:'project',view:'record',viewedStage:11};const output={id:'working',kind:'magazine-working',title:'Invented article',format:'Working article',workingHash:H};
- w.current=()=>state;w.studyDraft={currentOwner:()=>({kind:'magazine'})};w.realOutputOverview={read:async()=>{throw Error('Publication/photo preview is unavailable; Share must not depend on it.');}};w.studyReadableMarkdown={render:md=>'<p>'+md.replaceAll('<','&lt;')+'</p>'};w.viewPhase=stage=>calls.push({stage});
+ w.structuredClone=structuredClone;w.current=()=>state;w.studyDraft={currentOwner:()=>({kind:'magazine'})};w.realOutputOverview={read:async()=>{throw Error('Publication/photo preview is unavailable; Share must not depend on it.');}};w.studyReadableMarkdown={render:md=>'<p>'+md.replaceAll('<','&lt;')+'</p>'};w.viewPhase=stage=>calls.push({stage});
  w.fetch=()=>{throw Error('Magazine must never use native Study Share APIs.');};
  w.studyOutputConnection={readMagazineShareEntry:async q=>({output,context:{draft:{hash:H},references:{feedback:references,context:[],research:[]}}}),selectOutput:()=>{throw Error('Magazine must not select a native UUID output.');},readMagazineShareContext:async q=>{calls.push({context:q});return {draft:{hash:H},references:{feedback:references,context:[],research:[]}};},readMagazineShareFeedback:async q=>{calls.push({feedback:q});if(gate)await gate;return {feedback:{hash:q.expectedFeedbackHash,changedSinceRegistration:false},document:{text:'---\ntype: FEEDBACK\n---\n\n## Invented invitation\n\nHello <script>bad</script>.'},mapping:{structured:false,reason:'No explicit mapping.'},readOnly:true};}};
  if(legacy)w.document.querySelector('section').innerHTML='<textarea data-oss-field="message"></textarea>';if(legacy)w.document.querySelector('textarea').value=legacy;w.eval(code);return {w,calls,change:()=>state={id:'another',view:'record',viewedStage:5},async loaded(){await tick();await tick();},close:()=>w.close()};
 }
 test('Magazine Share opens its registered canonical correspondence without native output coercion or copies',async t=>{
  const f=fixture();t.after(f.close);await f.loaded();const text=f.w.document.querySelector('[data-output-stage-surface]').textContent;
- assert.match(text,/Saved correspondence/);assert.match(text,/Hello/);assert.match(text,/Editing.*not connected/i);assert.doesNotMatch(text,/ar-create-share|FEEDBACK - Invented/);
+ assert.equal(f.w.document.querySelector('[data-magazine-correspondence]').getAttribute('aria-label'),'Saved correspondence');assert.match(text,/Hello/);assert.match(text,/read-only/i);assert.doesNotMatch(text,/ar-create-share|FEEDBACK - Invented/);
  assert.equal(f.calls.filter(c=>c.feedback).length,1);assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find(c=>c.feedback).feedback)),{projectId:'project',outputId:'working',expectedHash:H,registeredFeedbackPath:'Workflow/6-Feedback/FEEDBACK - Invented.md',expectedFeedbackHash:F});
  assert.equal(f.w.document.querySelector('script'),null);assert.equal(f.w.document.querySelector('textarea'),null);assert.equal(f.w.sessionStorage.length,0);
 });
 test('Magazine Share requires explicit choice between registered feedback files',async t=>{
  const f=fixture({references:[{path:'one',currentHash:F,readable:true,state:'current'},{path:'two',currentHash:F,readable:true,state:'current'}]});t.after(f.close);await f.loaded();assert.equal(f.calls.some(c=>c.feedback),false);
  const select=f.w.document.querySelector('[data-magazine-feedback]');assert.ok(select);select.value='1';select.dispatchEvent(new f.w.Event('change'));await f.loaded();assert.equal(f.calls.find(c=>c.feedback).feedback.registeredFeedbackPath,'two');
+});
+test('refresh keeps the exact selected correspondence and recipient setup, including an interrupted save',async t=>{
+ for(const interrupted of [false,true]){
+  const refs=[{path:'one',currentHash:F,readable:true},{path:'two',currentHash:F,readable:true}],f=fixture({references:refs}),w=f.w,reads=[],saves=[];t.after(f.close);
+  w.AR_CREATE_REVIEW_MODE={magazineFeedbackCorrections:true};
+  w.studyOutputConnection.readMagazineShareFeedbackEditModel=async q=>{reads.push(q.registeredFeedbackPath);return {rootIdentity:{fingerprint:'d'.repeat(64)},feedback:{path:q.registeredFeedbackPath,hash:F},document:{text:'## English\n\nInvented words.'},mapping:{structured:false},mappingSections:[{heading:'## English',hash:H}],editable:true,paragraphs:[]};};
+  w.studyOutputConnection.readMagazineShareFeedbackHistory=async()=>({history:[]});
+  w.studyOutputConnection.prepareMagazineShareFeedbackMapping=async()=>({content:'Prepared metadata and unchanged invented words.'});
+  w.studyOutputConnection.saveMagazineShareFeedback=async q=>{saves.push(q);throw Error('Invented lost response');};
+  await f.loaded();const choose=w.document.querySelector('[data-magazine-feedback]');choose.value='1';choose.dispatchEvent(new w.Event('change'));await f.loaded();
+  w.document.querySelector('[data-share-action="magazine-map-new"]').click();const name=w.document.querySelector('[data-recipient-name]');name.value='Invented Maker';name.dispatchEvent(new w.Event('input'));
+  selectView(f,'[data-map-language="0"]','en');selectView(f,'[data-map-section="0"]','## English');
+  if(interrupted){w.document.querySelector('[data-share-action="magazine-save-mapping"]').click();await f.loaded();assert.equal(saves.length,1);}
+  refs.reverse();w.document.querySelector('[data-share-action="magazine-refresh"]').click();await f.loaded();
+  assert.equal(reads.at(-1),'two');assert.equal(w.document.querySelector('[data-magazine-feedback]').value,'0');assert.equal(w.document.querySelector('[data-recipient-name]').value,'Invented Maker');
+  if(interrupted){w.document.querySelector('[data-share-action="magazine-retry"]').click();await f.loaded();assert.deepEqual(saves[1],saves[0]);}
+  else{w.document.querySelector('[data-share-action="magazine-map-cancel"]').click();assert.equal(w.document.querySelector('[data-magazine-feedback]').disabled,false);}
+ }
 });
 test('Magazine Share keeps unavailable references explicit and ignores delayed reads after navigation',async t=>{
  const missing=fixture({references:[{path:'missing',currentHash:null,readable:false,state:'missing'}]});t.after(missing.close);await missing.loaded();assert.equal(missing.calls.some(c=>c.feedback),false);assert.match(missing.w.document.body.textContent,/unavailable/i);
@@ -29,6 +47,10 @@ test('Magazine Share keeps unavailable references explicit and ignores delayed r
 test('earlier tab invitation text remains separate and visible without being saved into Magazine',async t=>{
  const f=fixture({legacy:'Exact earlier <words> from this tab'});t.after(f.close);await f.loaded();
  assert.match(f.w.document.body.textContent,/Exact earlier <words> from this tab/);assert.match(f.w.document.body.textContent,/Kept separately/);assert.equal(f.w.document.querySelector('words'),null);assert.equal(f.w.sessionStorage.length,0);
+});
+test('correspondence keeps secondary record controls behind a closed disclosure',async t=>{
+ const f=editorFixture();t.after(f.close);await f.loaded();const root=f.w.document.querySelector('[data-output-stage-surface]'),options=root.querySelector('[data-magazine-record-options]');
+ assert.ok(options);assert.equal(options.open,false);assert.ok(options.querySelector('[data-share-action="magazine-refresh"]'));assert.equal(root.querySelector('[data-share-action="magazine-edit-mode"]').closest('details'),null);assert.equal(root.querySelector('.mag-feedback-views'),null);assert.equal(root.querySelector('h3'),null);assert.doesNotMatch(root.textContent,/Published-edition choices and reply tracking remain unfinished/);
 });
 
 function editorFixture({lostSave=false}={}){
@@ -102,4 +124,18 @@ test('a retained language that is no longer mapped falls back to the complete ca
  const f=mappedFixture();t.after(f.close);await f.loaded();selectView(f,'[data-magazine-recipient]',recipientA);
  const storage='ar-create.share-browser-drafts.v1',retained=JSON.parse(f.w.sessionStorage.getItem(storage));Object.values(retained)[0].view.language='unavailable';f.w.sessionStorage.setItem(storage,JSON.stringify(retained));
  f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]').value,'');assert.equal(f.w.document.querySelector('[data-magazine-language]'),null);assert.match(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
+});
+test('a human can explicitly name and map existing language sections with retained form, exact save and Undo',async t=>{
+ const f=fixture(),w=f.w,sha=s=>createHash('sha256').update(s).digest('hex'),original='## English\n\nHello invented maker.\n\n## Chinese\n\n你好。\n';let document=original,last=null;const calls=[];
+ w.AR_CREATE_REVIEW_MODE={magazineFeedbackCorrections:true};
+ w.studyOutputConnection.readMagazineShareEntry=async()=>({output:{id:'working',kind:'magazine-working',title:'Invented article',workingHash:H},context:{references:{feedback:[{path:'Workflow/6-Feedback/FEEDBACK - Invented.md',currentHash:sha(document),readable:true}]}}});
+ w.studyOutputConnection.readMagazineShareFeedbackEditModel=async()=>{const {parts}=splitBlocks(document);return {rootIdentity:{fingerprint:'d'.repeat(64)},feedback:{path:'Workflow/6-Feedback/FEEDBACK - Invented.md',hash:sha(document)},document:{text:document},mapping:parseFeedbackShare(document),mappingSections:feedbackShareSectionChoices(document),editable:true,paragraphs:parts.filter((_,i)=>i%2===0).map((raw,index)=>({index,seen:hash(raw),raw,text:plain(raw),editable:editable(raw)}))};};
+ w.studyOutputConnection.readMagazineShareFeedbackHistory=async()=>({history:last?[{operationId:last,canUndo:true}]:[]});
+ w.studyOutputConnection.prepareMagazineShareFeedbackMapping=async q=>{calls.push(q);return {content:mapFeedbackShareRecipient(document,{expectedHash:q.expectedFeedbackHash,recipientId:q.recipientId,recipientName:q.recipientName,target:{storyId:'story',pieceId:'piece',edition:'working',hash:H},sections:q.sections}).markdown};};
+ w.studyOutputConnection.saveMagazineShareFeedback=async q=>{document=q.content;last=q.operationId;};w.studyOutputConnection.undoMagazineShareFeedback=async()=>{document=original;last=null;};
+ t.after(f.close);await f.loaded();w.document.querySelector('[data-share-action="magazine-map-new"]').click();const name=w.document.querySelector('[data-recipient-name]');name.value='Invented Maker';name.dispatchEvent(new w.Event('input',{bubbles:true}));selectView(f,'[data-map-language="0"]','en');selectView(f,'[data-map-section="0"]','## English');
+ w.document.querySelector('[data-share-action="magazine-map-add-language"]').click();selectView(f,'[data-map-language="1"]','zh');selectView(f,'[data-map-section="1"]','## Chinese');
+ w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(w.document.querySelector('[data-recipient-name]').value,'Invented Maker');assert.equal(document,original);assert.equal(calls.length,0);
+ w.document.querySelector('[data-share-action="magazine-save-mapping"]').click();await f.loaded();assert.equal(calls.length,1);assert.match(w.document.querySelector('[data-magazine-recipient]').textContent,/Invented Maker/);assert.equal(parseFeedbackShare(document).projection[0].sections.length,2);assert.equal(document.replace(/^---\nar-create-share: .*\n---\n/,''),original);
+ w.document.querySelector('[data-share-action="magazine-undo"]').click();await f.loaded();assert.equal(document,original);
 });
