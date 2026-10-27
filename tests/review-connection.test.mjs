@@ -159,3 +159,15 @@ test('recipient mapping preparation uses the independent human FEEDBACK permissi
  const f=await setup(t,{actualWorkReview:true,magazineFeedbackCorrections:true}),route='/api/magazine/working-draft/share-feedback/prepare-mapping',origin='http://127.0.0.1:'+f.port,q={storyId:'mag-invented',pieceId:'mag-invented:article',edition:'working',expectedHash:'a'.repeat(64),registeredFeedbackPath:'Workflow/6-Feedback/FEEDBACK - Invented.md',expectedFeedbackHash:'b'.repeat(64),recipientId:randomUUID(),recipientName:'Invented Maker',sections:[{language:'zh',heading:'## Chinese',hash:'c'.repeat(64)}]},post=(body=q,headers={origin})=>request(f.port,route,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body)});
  assert.equal((await post()).status,200);const count=f.calls.length;for(const invalid of [{...q,target:{edition:'published'}},{...q,recipientName:'Bad\nname'},{...q,sections:[{...q.sections[0],path:'elsewhere'}]}])assert.equal((await post(invalid)).status,400);assert.equal((await post(q,{origin,'x-ar-actor':'agent:codex'})).status,403);assert.equal(f.calls.length,count);
 });
+
+
+test('guarded shared guidance forwards only accepted-region human edits in an enabled actual-work review',async t=>{
+ const enabled=await setup(t,{actualWorkReview:true,magazineDraftCorrections:true}),off=await setup(t,{actualWorkReview:true});
+ const input={key:'voice',acceptedRegions:['Invented plain guidance.'],expectedRevision:'a'.repeat(64),expectedHash:'b'.repeat(64),operationId:randomUUID()};
+ const post=(f,body=input,extra={})=>request(f.port,'/api/guidance',{method:'POST',headers:{origin:'http://127.0.0.1:'+f.port,'content-type':'application/json','x-ar-actor':'human:adrian',...extra},body:JSON.stringify(body)});
+ assert.equal((await post(off)).status,423);assert.equal(off.calls.length,0);
+ assert.equal((await post(enabled,input,{origin:'http://foreign.invalid'})).status,403);
+ assert.equal((await post(enabled,input,{'x-ar-actor':'agent:test'})).status,403);
+ assert.equal((await post(enabled,{...input,body:'Replace entire file'})).status,400);assert.equal(enabled.calls.length,0);
+ assert.equal((await post(enabled)).status,200);assert.deepEqual(JSON.parse(enabled.calls[0].body),input);
+});

@@ -19,3 +19,45 @@ test('unavailable Versions offers honest action state',t=>{const w=setup(t);clic
 test('leaving Draft removes tools and does not alter Focus or navigation',async t=>{const w=setup(t);w.document.body.dataset.draftFocus='true';w.p.viewedStage=6;w.studyDirectionWritingTools.mount();await tick();assert.equal(w.document.getElementById('direction-writing-tools'),null);assert.equal(w.document.body.dataset.draftFocus,'true');assert.equal(w.document.querySelector('#manuscript').textContent,'My exact words');});
 test('fresh-page recovery opens exact text and explicitly rebases after current-sheet comparison',async t=>{const w=setup(t);w.localStorage.setItem('ar-create:shared-guidance:voice',JSON.stringify({revision:'old',hash:'hash-old',values:['Recovered exact words'],dirty:true,busy:true,request:null}));w.fetch=async()=>({ok:true,json:async()=>sheet('new','Current shared words')});click(w,'voice');await tick();assert.equal(w.document.querySelector('[data-dwt-guidance]').value,'Recovered exact words');assert.equal(w.document.querySelector('[data-dwt-guidance]').disabled,false);assert.match(w.document.querySelector('.dwt-panel').textContent,/Current shared words/);click(w,'rebase-guidance');assert.equal(w.document.querySelector('[data-dwt-guidance]').value,'Recovered exact words');assert.ok(w.document.querySelector('[data-dwt-action="save-guidance"]'));assert.equal(JSON.parse(w.localStorage.getItem('ar-create:shared-guidance:voice')).revision,'new');});
 test('Perspective and Recipe use the same shared owner with independent recoveries',async t=>{const w=setup(t);w.fetch=async()=>({ok:true,json:async()=>sheet()});for(const key of ['positions','recipe']){click(w,key);await tick();const input=w.document.querySelector('[data-dwt-guidance]');input.value='New '+key;input.dispatchEvent(new w.Event('input',{bubbles:true}));click(w,'close');}click(w,'positions');await tick();assert.equal(w.document.querySelector('[data-dwt-guidance]').value,'New positions');assert.match(w.localStorage.getItem('ar-create:shared-guidance:recipe'),/New recipe/);assert.equal(w.document.querySelector('#manuscript').textContent,'My exact words');});
+test('successful shared guidance save clears recovery and supports a second independent edit',async t=>{
+ const w=setup(t),requests=[];let value=sheet();
+ w.fetch=async(url,options)=>{if(options){const request=JSON.parse(options.body);requests.push(request);value=sheet('saved-'+requests.length,request.acceptedRegions[0]);}return {ok:true,json:async()=>value};};
+ click(w,'voice');await tick();
+ for(const words of ['First saved voice','Second saved voice']){
+  const field=w.document.querySelector('[data-dwt-guidance]');assert.equal(field.disabled,false);field.value=words;field.dispatchEvent(new w.Event('input',{bubbles:true}));
+  click(w,'save-guidance');await tick();
+  assert.equal(w.localStorage.getItem('ar-create:shared-guidance:voice'),null);assert.equal(w.document.querySelector('[data-dwt-action="rebase-guidance"]'),null);assert.equal(w.document.querySelector('[data-dwt-action="save-guidance"]').disabled,true);assert.equal(w.document.querySelector('[data-dwt-guidance]').value,words);
+ }
+ assert.equal(requests.length,2);assert.equal(requests[1].expectedRevision,'saved-1');assert.notEqual(requests[0].operationId,requests[1].operationId);assert.equal(value.voice,'Second saved voice');
+});
+test('definitive guidance validation rejection permits correction with a new operation',async t=>{
+ const w=setup(t),requests=[];let value=sheet();
+ w.fetch=async(url,options)=>{if(options){const request=JSON.parse(options.body);requests.push(request);if(requests.length===1)return {ok:false,status:400,json:async()=>({error:'Pending queue markers belong to the read-only suggestions.'})};value=sheet('corrected',request.acceptedRegions[0]);}return {ok:true,json:async()=>value};};
+ click(w,'voice');await tick();let field=w.document.querySelector('[data-dwt-guidance]');field.value='## Strengthenings queue\nInvalid edit';field.dispatchEvent(new w.Event('input',{bubbles:true}));click(w,'save-guidance');await tick();
+ field=w.document.querySelector('[data-dwt-guidance]');assert.equal(field.disabled,false);assert.equal(field.value,'## Strengthenings queue\nInvalid edit');assert.equal(JSON.parse(w.localStorage.getItem('ar-create:shared-guidance:voice')).request,null);assert.equal(w.document.querySelector('[data-dwt-action="save-guidance"]').textContent,'Save shared guidance');
+ field.value='Corrected accepted guidance';field.dispatchEvent(new w.Event('input',{bubbles:true}));click(w,'save-guidance');await tick();assert.equal(value.voice,'Corrected accepted guidance');assert.notEqual(requests[0].operationId,requests[1].operationId);
+});
+test('uncertain server errors retain the exact guidance operation for retry',async t=>{
+ for(const status of [408,500]){
+  const w=setup(t),requests=[];w.fetch=async(url,options)=>{if(options){requests.push(options.body);return {ok:false,status,json:async()=>({error:'Save outcome unavailable'})};}return {ok:true,json:async()=>sheet()};};
+  click(w,'voice');await tick();const field=w.document.querySelector('[data-dwt-guidance]');field.value='Retain these exact words';field.dispatchEvent(new w.Event('input',{bubbles:true}));click(w,'save-guidance');await tick();assert.equal(w.document.querySelector('[data-dwt-guidance]').disabled,true);click(w,'save-guidance');await tick();assert.equal(requests[0],requests[1]);
+ }
+});
+test('owned Magazine Write exposes shared guidance only for the exact current owner proof',async t=>{
+ const w=setup(t);w.p.view='record';w.binding=null;const owner={kind:'magazine',storyId:'story-one',pieceId:'piece-one'};let currentOwner=owner,proof={parentStudyId:w.p.id,owner:{...owner}};
+ w.studyDraft.currentOwner=()=>currentOwner;w.studyDraft.currentProof=()=>proof;w.fetch=async()=>({ok:true,json:async()=>sheet()});
+ const mount=async()=>{w.studyDirectionWritingTools.mount();await tick();};
+ await mount();assert.ok(w.document.querySelector('[data-dwt-action="voice"]'));click(w,'voice');await tick();assert.ok(w.document.querySelector('[data-dwt-guidance]'));
+ for(const denied of [
+  {owner:null,proof:null},
+  {owner,proof:null},
+  {owner,proof:{parentStudyId:'foreign-project',owner}},
+  {owner,proof:{parentStudyId:w.p.id,owner:{...owner,kind:'history'}}},
+  {owner,proof:{parentStudyId:w.p.id,owner:{...owner,storyId:'old-story'}}},
+  {owner,proof:{parentStudyId:w.p.id,owner:{...owner,pieceId:'old-piece'}}},
+  {owner:{kind:'magazine'},proof:{parentStudyId:w.p.id,owner:{kind:'magazine'}}},
+  {owner:{...owner,kind:'history'},proof:{parentStudyId:w.p.id,owner:{...owner,kind:'history'}}}
+ ]){currentOwner=denied.owner;proof=denied.proof;await mount();assert.equal(w.document.getElementById('direction-writing-tools'),null);}
+ currentOwner=owner;proof={parentStudyId:w.p.id,owner};w.p.referenceOnly=true;await mount();assert.equal(w.document.getElementById('direction-writing-tools'),null);
+ w.p.referenceOnly=false;await mount();assert.ok(w.document.querySelector('[data-dwt-action="voice"]'));assert.equal(w.document.querySelector('#manuscript').textContent,'My exact words');
+});
