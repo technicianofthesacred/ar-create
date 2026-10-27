@@ -1,3 +1,9 @@
+## 28 October — Visible Magazine captions and credits installed
+
+PR75 signed main `92425a948d64789250af909bf08a77dd7e147f3d`, build2026-10-27T18:43:53.467Z, is verified live in installed8841 and main59958.198checks/14files/build/package917/64servedhashes and API/canonical/config preservation pass. The candidate entry below now describes installed bounded behavior.
+
+Checked only body-wide/bleed/group captions/photo credits and working article credit overrides through existing Arrange save, restart, Audience, actual retained HTML and exact History/Undo. Pre-Save field recovery across reload, special/composed roles, whole C/all12/phone/interaction proof and the broader functional gates remain open.
+
 ## 28 October — Visible Magazine captions and credits candidate
 
 Arrange now edits visible caption/photo credit wording for exact body-wide, bleed and photo-group occurrences, plus working article credits. Captions stay with their exact group through existing focus/shape/replacement/move controls. Original publication credits remain separate; an explicit empty override and restoring the original are different actions. All wording lives in the same canonical DEV file and uses existing prepare/save/recovery/history/Undo. The upstream publication parser, pins and publication metadata are unchanged.
