@@ -1,3 +1,11 @@
+## 28 October — Durable Audience preparation and nested composition candidate
+
+Audience now edits the selected native output’s existing Direction notes as its translation brief. Two invented independent Article/Carousel briefs passed native Save/switch → actual owner restart → exact reopen → CLI read of the same owner → exact saved Undo. Output words, composition, register/bindings and owned manuscripts stay exact. Initial loading is read-only until the saved owner is verified; stale/pending/conflict/recovery cases have focused owner/UI proof. This prepares instructions; translation generation and linked language editions remain unfinished.
+
+The existing nested article renderer now renders supported child photographs, groups, side/glyph/on-photo blocks and line follow text through its maintained components, instead of silently omitting them. Native invented nested single/group captions passed Save → actual owner restart → Audience → actual retained HTML with every expected image once → reverse exact Undo through Arrangement/History. Original fixture setup and cleanup are recorded separately; original bytes restored. Nested side/on-photo/closing-saying caption editing remains refused and open. Known-kind/depth guards reject malformed trees before recursive rendering.
+
+112 integrated checks across eight files and build pass. Native actual1280×720 light/dark proof is bounded; whole C/phone/all12 remains open. This candidate is not installed; PR80 remains live. The old “folders not installed” TODO was corrected from source/release proof: storage/browser are installed, while read-only exact Media hierarchy projection is still being connected.
+
 ## 28 October — Side captions and navigation cleanup installed
 
 PR80 signed main `41fc8d757fa177faf3c6c7f467e6438f4e99964c`, build 2026-10-27T20:17:35.132Z, is verified live in installed8841 and main59958.159 checks/build/package923/72 served hashes and API/canonical/config preservation pass. The candidate below now describes installed bounded behavior; earlier candidate statements are historical.
