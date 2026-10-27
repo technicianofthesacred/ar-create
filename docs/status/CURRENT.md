@@ -1,3 +1,15 @@
+## 27 October — Shared guidance and photo descriptions integrated; not installed
+
+The candidate connects editable shared Voice/Perspective/Recipe sheets to the existing guidance file owner and request freshness checks. Magazine Write exposes the same tools only for its exact current owner. The existing guarded review forwards accepted-region edits only; metadata and pending suggestions remain outside that edit. Native invented guidance saves twice successfully without changing the manuscript. Integration review repaired obsolete recovery restoration after successful Save and the locked editor after determinate rejection; uncertain delivery retains exact retry.
+
+Standalone wide/bleed article photos now have accessibility description editing through the existing guarded placement writer. Native invented Arrange Save → actual owner restart → reload retains the description, and Undo restores the complete original manuscript hash. Visible captions, credits and composed/cover/opener/closing controls remain unfinished. These are candidate results, not installed completion; PR68 remains the live release. The full visual and end-to-end gates stay open.
+
+## 27 October — Authoring/export milestone installed; whole goal open
+
+PR68 signed main `12071c4955a7496ed4baa1ea97aa54364494a60a`, build2026-10-27T15:39:31.481Z, is verified live on the installed owner and main review. The907-source manifest, generated build and38 served frontend hashes match the release; API content projections, four independent carousel copies, canonical changed source files and configuration are preserved.491 affected checks pass with no failures/skips.
+
+The following integrated authoring/export entry now describes installed behavior. Native invented project-plan/prose retention, Material read/Keep/set-aside/reload/Restore, maintained-parser HTML creation/hash/Outputs pickup and cold exact-output routing are verified bounded results. Full native-part and expanded-Research screen acceptance, whole source-to-expression-to-delivery continuity, true captions/composed layouts, edition/follow-up facts and all12 C/phone/light-dark interaction gates remain open. No real wording decision, provider execution or sending occurred. Shared guidance editing and standalone accessibility descriptions remain separate uninstalled candidates.
+
 ## 27 October — Integrated authoring and export milestone, not installed
 
 Direction's six planning fields now use the existing scoped Markdown owner, recovery, expected revision/hash, comparison and Undo. They remain planning intent, separate from adopted prose. The normal prose editor/readers no longer expose valid metadata blocks; editing prose preserves the exact plan, malformed blocks remain reviewable, and Undo refuses to discard unsaved direction. Native invented project Save/reload and subsequent prose editing retain all six fields. Repainting replaces the current saved-status line instead of accumulating old revisions. Exact native-part persistence/context/conflict/Undo has service-backed proof; native-screen part acceptance remains open.

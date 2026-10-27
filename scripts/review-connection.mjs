@@ -113,7 +113,7 @@ function validateNativeOperations(operations,fail,{photoAspect=false,photoReplac
  const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  // Prose/structure and one exact photo adjustment; aspect is Magazine-only,
  // and markup approval keeps its separate gate.
- const shapes={photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
+ const shapes={photoDescription:['kind','id','seenBlockHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','seenBlockHash']};
  for(const op of operations){
   if(!object(op)||typeof op.kind!=='string'||!Object.hasOwn(shapes,op.kind)||!fields(op,shapes[op.kind],op.kind==='blockKind'?['level']:[]))fail();
   for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\x00-\x1f]/.test(op[key])))fail();
@@ -122,6 +122,7 @@ function validateNativeOperations(operations,fail,{photoAspect=false,photoReplac
   for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))fail();
   if('seenBlockHash' in op&&!hash(op.seenBlockHash))fail();
   if(op.kind==='photoReplaceAsset'&&(!photoLibrary||operations.length!==1||!hash(op.rootId)||!hash(op.revision)||!hash(op.sourceHash)||typeof op.sourceId!=='string'||!(/^[a-f0-9]{64}$/.test(op.sourceId)||/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(op.sourceId))||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
+  if(op.kind==='photoDescription'&&(!photoAspect||operations.length!==1||typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · ')))fail();
   if(op.kind==='photoReplace'&&(!photoReplace||operations.length!==1||op.id===op.replacementId||!hash(op.seenReplacementHash)))fail();
   if(op.kind==='photoAspect'&&(!photoAspect||operations.length!==1||!['4/3','4/5','1/1'].includes(op.aspect)))fail();
   if(op.kind==='photoFocus'&&(operations.length!==1||![op.x,op.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)))fail();
@@ -213,6 +214,8 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(!translationEnabled){req.resume();res.writeHead(503,{'Content-Type':'application/json; charset=utf-8'});return res.end(JSON.stringify({state:'unavailable',gate:'kept-conversation-execution-disabled',message:'English proposals are not enabled for this review.',applied:false,proposals:[]}));}
   }
   const translationProposal=translationPath&&translationEnabled;
+  const guidanceCorrection=actualWorkReview&&(studyDraftCorrections||magazineDraftCorrections)&&pathname==='/api/guidance'&&req.method==='POST';
+  if(guidanceCorrection&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!=='human:adrian')){req.resume();return fail(403,'Guidance edits require the author’s exact local workspace.');}
   const magazineExport=actualWorkReview&&pathname==='/api/magazine/working-draft/export'&&req.method==='POST';
   if(magazineExport&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site')){req.resume();return fail(403,'Exports must originate from this exact local workspace.');}
   const mechanicalPath=pathname==='/api/magazine/mechanical-check';
@@ -238,11 +241,15 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const magazineFeedbackCorrection=magazineFeedbackCorrections&&magazineFeedbackPath&&req.method==='POST';
   if(magazineFeedbackCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Feedback wording changes require the author’s local workspace.');}
   if(magazineCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Photo and manuscript changes require the author’s local workspace.');}
-  const correction=sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport;
+  const correction=guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
    const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport?33*1024*1024:MAX_READ_BODY}):null;
+   if(guidanceCorrection){
+    const input=JSON.parse(readBody.toString('utf8')),keys=['key','acceptedRegions','expectedRevision','expectedHash','operationId'];
+    if(!input||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(k=>!Object.hasOwn(input,k))||!['voice','positions','recipe'].includes(input.key)||!Array.isArray(input.acceptedRegions)||input.acceptedRegions.length>128||input.acceptedRegions.some(v=>typeof v!=='string')||!['expectedRevision','expectedHash'].every(k=>/^[a-f0-9]{64}$/.test(input[k]||''))||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(input.operationId||''))throw Object.assign(Error('Use the current shared sheet and its exact guarded text edit.'),{status:400});
+   }
    if(postRead&&pathname==='/api/magazine/check'){
     const input=JSON.parse(readBody.toString('utf8')),path=(value,kind)=>typeof value==='string'&&new RegExp('^Workflow/'+(kind==='DEV'?'3-Develop':'1-Source')+'/'+kind+' - [^/]+\\.md$').test(value)&&!/[\\\x00-\x1f]/.test(value)&&!value.split('/').some(p=>p==='.'||p==='..');
     if(req.url!==pathname||!input||Array.isArray(input)||Object.keys(input).length!==3||!path(input.draft,'DEV')||!path(input.source,'SRC')||!Array.isArray(input.context)||input.context.length>64||new Set(input.context).size!==input.context.length||input.context.some(p=>!path(p,'CONTEXT')))throw Object.assign(Error('Use the exact saved draft, explicitly linked transcript and context notes.'),{status:400});

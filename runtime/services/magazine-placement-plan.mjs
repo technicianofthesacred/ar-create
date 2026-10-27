@@ -16,7 +16,7 @@ const simple=group=>['wide','bleed','photos'].includes(group.origin.role)&&['pho
  * Cover/opener/ending/side/on-photo arrangements retain their specialized owner.
  */
 function placementContext({inspection,working,request}={},mode='move') {
- const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:mode==='library'?['assetRootId','assetSourceId','assetRevision','assetHash','description']:['beforeId'])];
+ const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='description'?['description']:mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:mode==='library'?['assetRootId','assetSourceId','assetRevision','assetHash','description']:['beforeId'])];
  if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y','description'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
  const {storyId,pieceId,expectedHash,revision,placementId,beforeId}=request;
  const {document,authority,target,projection}=working||{};
@@ -76,6 +76,15 @@ function placementContext({inspection,working,request}={},mode='move') {
 }
 
 export function planMagazinePlacementMove(input){return placementContext(input);}
+export function planMagazinePlacementDescription(input){
+ if(!input?.working?.supportedNativeOperations?.includes('photoDescription'))refuse('unsupported-owner','This working editor does not support photo description yet.');
+ if(typeof input.request?.description!=='string'||input.request.description.length>2000||!input.request.description.isWellFormed()||input.request.description!==input.request.description.trim()||/[\x00-\x1f\x7f%]/.test(input.request.description)||input.request.description.includes(' · '))refuse('invalid-description','Use a one-line description without native separators.');
+ const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'description'),o=selected.group.origin,p=selected.placement;
+ if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Edit the description of a standalone article photo.');
+ if(p.alt===input.request.description)refuse('unchanged-description','Choose a different photo description before saving.');
+ const operations=Object.freeze([Object.freeze({kind:'photoDescription',id:selected.row.id,seenBlockHash:selected.row.blockHash,description:input.request.description})]);
+ return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
+}
 export function planMagazinePlacementFocus(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoFocus'))refuse('unsupported-owner','This working editor does not support photo focus yet.');
  const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'focus'),o=selected.group.origin,p=selected.placement;
