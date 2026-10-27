@@ -22,3 +22,25 @@ test('repaint restores depth only for the exact project, manuscript part and sou
   const previous=f.snapshot.scope[field];f.snapshot.scope[field]=value;repaint();await tick();assert.equal(f.d.querySelector('.research-work-tools').open,false);assert.equal(f.d.querySelector('.rpb'),null);f.snapshot.scope[field]=previous;repaint();await tick();assert.equal(f.d.querySelector('.research-work-tools').open,true);
  }
 });
+
+function connectQuestions(f){const entries=[],calls=[];for(const point of f.snapshot.points){point.originalText='Exact retained '+point.id;point.sources[0].recordHash='b'.repeat(64);}f.w.studyHumanDirection={questionState:()=>({available:true,entries}),appendQuestion:async(input,assertCurrent)=>{assertCurrent();calls.push(input);const entry={...input,author:'human:adrian',createdAt:'2026-10-27'};entries.push(entry);return {entry,message:'Question saved in shared project notes. No AI answer has run.'};}};return{entries,calls};}
+test('Save question uses exact shared note scope and reopens its attributed retained origin',async t=>{
+ const f=fixture(t),q=connectQuestions(f);f.d.querySelector('[data-research-work-tool="depth"]').click();await tick();f.d.querySelector('[data-rpb-tool="question"]').click();
+ assert.equal(f.d.querySelector('[data-rpb-submit="question"]').textContent,'Save question');f.d.querySelector('[data-rpb-input]').value='My lived question.\nExact words.';f.d.querySelector('[data-rpb-submit="question"]').click();await tick();
+ assert.equal(q.calls.length,1);assert.equal(q.calls[0].parentStudyId,'synthetic');assert.equal(q.calls[0].origin.recordPath,'source-first');assert.equal(q.calls[0].origin.recordHash,'b'.repeat(64));assert.equal(q.calls[0].sourceSelections,undefined);
+ assert.match(f.d.querySelector('[data-saved-question]').textContent,/My lived question/);assert.match(f.d.querySelector('[data-saved-question]').textContent,/Adrian/);assert.doesNotMatch(f.d.querySelector('[data-saved-question]').textContent,/human:adrian|T\d{2}:\d{2}:\d{2}/);assert.match(f.d.querySelector('[data-saved-question]').textContent,/Retained origin/);
+ f.d.querySelector('[data-rpb-point="second"]').click();f.d.querySelector('[data-rpb-tool="question"]').click();assert.equal(f.d.querySelector('[data-saved-question]'),null);
+ f.d.querySelector('[data-rpb-point="first"]').click();f.d.querySelector('[data-rpb-tool="question"]').click();assert.match(f.d.querySelector('[data-saved-question]').textContent,/Exact words/);
+});
+test('question refuses a changed retained point even when the surrounding scope is unchanged',async t=>{
+ const f=fixture(t),q=connectQuestions(f);f.d.querySelector('[data-research-work-tool="depth"]').click();await tick();f.d.querySelector('[data-rpb-tool="question"]').click();f.d.querySelector('[data-rpb-input]').value='Keep my unsaved question';
+ f.snapshot.points[0].sources[0].recordHash='c'.repeat(64);f.d.querySelector('[data-rpb-submit="question"]').click();await tick();assert.equal(q.calls.length,0);assert.match(f.d.querySelector('.rpb-status').textContent,/point changed|context changed/);assert.equal(f.d.querySelector('[data-rpb-input]').value,'Keep my unsaved question');
+});
+test('unavailable shared notes disable Save question with the owner reason',async t=>{
+ const f=fixture(t);connectQuestions(f);f.w.studyHumanDirection.questionState=()=>({available:false,reason:'Save your pending shared notes first.',entries:[]});f.d.querySelector('[data-research-work-tool="depth"]').click();await tick();f.d.querySelector('[data-rpb-tool="question"]').click();assert.equal(f.d.querySelector('[data-rpb-submit="question"]').disabled,true);assert.match(f.d.querySelector('[data-rpb-tool-panel]').textContent,/pending shared notes/);
+});
+
+
+test('question keeps the captured project identity when the current project object changes',async t=>{
+ const f=fixture(t),q=connectQuestions(f);f.d.querySelector('[data-research-work-tool="depth"]').click();await tick();f.d.querySelector('[data-rpb-tool="question"]').click();f.d.querySelector('[data-rpb-input]').value='Original project question';f.project.id='different-project';f.d.querySelector('[data-rpb-submit="question"]').click();await tick();assert.equal(q.calls.length,0);assert.match(f.d.querySelector('.rpb-status').textContent,/context changed/);assert.equal(f.d.querySelector('[data-rpb-input]').value,'Original project question');
+});

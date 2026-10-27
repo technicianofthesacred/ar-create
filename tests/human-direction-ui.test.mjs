@@ -1,6 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url));const {JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('../public/document-study/human-direction.js',import.meta.url),'utf8');const tick=()=>new Promise(r=>setTimeout(r,20));
-async function fixture(t,seed=null,{parts=true,initialStage=1,readGate=null}={}){const d=new JSDOM('<div id="app"><div class="material-surface"><div class="material-layout"></div></div></div>',{url:'http://localhost',runScripts:'outside-only'}),w=d.window;t.after(()=>d.window.close());let writeGate=null,p={id:'ref-an-cha',view:'record',viewedStage:initialStage};const records={project:{bound:true,body:'',hash:'empty',revision:0,history:[]},part:{bound:true,body:'Part One only.',hash:'part',revision:1,history:[]}},calls=[];w.current=()=>p;w.state={projects:[{id:p.id,name:'An Cha'}]};w.studyDraft={currentBinding:()=>({id:'part',parentStudyId:'ref-an-cha'})};w.render=()=>w.document.getElementById('app').innerHTML=p.viewedStage<=2?'<div class="material-surface"><div class="material-layout"></div></div>':p.viewedStage===5?'<div class="workspace"><div class="desk"></div></div>':'<div id="stage-working-lane"></div>';w.fetch=async(url,init)=>{const body=init&&JSON.parse(init.body);calls.push({url,body});if(!init&&readGate)await readGate(url);let out;if(url.includes('catalog'))out={drafts:parts?[{bindingId:'part',parentStudyId:'ref-an-cha',bindingStatus:'ready',partKey:'1',title:'Part One'}]:[]};else{const k=body?.bindingId||new URL(url,'http://localhost').searchParams.get('bindingId')||'project';if(body){if(url.endsWith('/write'))records[k]={...records[k],body:body.body,hash:'new',revision:records[k].revision+1};else if(url.endsWith('/undo'))records[k]={...records[k],body:'',hash:'empty',revision:records[k].revision+1};}out=records[k]||{bound:false,body:'',hash:'empty',revision:0,history:[]};}if(url.endsWith('/write')&&writeGate)await writeGate(body);return {ok:true,json:async()=>out}};if(seed)w.localStorage.setItem('ar-study-human-direction-recovery-v1',seed);w.eval(code);await tick();return {dom:d,w,calls,records,setWriteGate(gate){writeGate=gate;},setStage(n){p.viewedStage=n;w.render()},setProject(id){p.id=id;w.render()}};}
+async function fixture(t,seed=null,{parts=true,initialStage=1,readGate=null}={}){const d=new JSDOM('<div id="app"><div class="material-surface"><div class="material-layout"></div></div></div>',{url:'http://localhost',runScripts:'outside-only'}),w=d.window;t.after(()=>d.window.close());let writeGate=null,p={id:'ref-an-cha',view:'record',viewedStage:initialStage};const records={project:{bound:true,body:'',hash:'empty',revision:0,history:[]},part:{bound:true,body:'Part One only.',hash:'part',revision:1,history:[]}},calls=[];w.current=()=>p;w.state={projects:[{id:p.id,name:'An Cha'}]};w.studyDraft={currentBinding:()=>({id:'part',parentStudyId:'ref-an-cha'})};w.render=()=>w.document.getElementById('app').innerHTML=p.viewedStage<=2?'<div class="material-surface"><div class="material-layout"></div></div>':p.viewedStage===5?'<div class="workspace"><div class="desk"></div></div>':'<div id="stage-working-lane"></div>';w.fetch=async(url,init)=>{const body=init&&JSON.parse(init.body);calls.push({url,body});if(!init&&readGate)await readGate(url);let out;if(url.includes('catalog'))out={drafts:parts?[{bindingId:'part',parentStudyId:'ref-an-cha',bindingStatus:'ready',partKey:'1',title:'Part One'}]:[]};else{const k=body?.bindingId||new URL(url,'http://localhost').searchParams.get('bindingId')||'project';if(body){if(url.endsWith('/write')||url.endsWith('/concept/save'))records[k]={...records[k],body:body.body,hash:'new',revision:records[k].revision+1};else if(url.endsWith('/undo'))records[k]={...records[k],body:'',hash:'empty',revision:records[k].revision+1};}out=records[k]||{bound:false,body:'',hash:'empty',revision:0,history:[]};if(url.startsWith('/api/concept?'))out={...out,parentStudyId:p.id};}if((url.endsWith('/write')||url.endsWith('/concept/save'))&&writeGate)await writeGate(body);return {ok:true,json:async()=>out}};if(seed)w.localStorage.setItem('ar-study-human-direction-recovery-v1',seed);w.render();w.eval(code);await tick();return {dom:d,w,calls,records,setWriteGate(gate){writeGate=gate;},setStage(n){p.viewedStage=n;w.render()},setProject(id){p.id=id;w.render()}};}
 test('explicit save sends exact human wording and scope/revision; editor is above source reader',async t=>{const f=await fixture(t),d=f.w.document;const field=d.querySelector('[data-human-direction]');field.value='My words.\n保留疑问';field.dispatchEvent(new f.w.Event('input'));d.querySelector('[data-direction-save]').click();await tick();const save=f.calls.find(c=>c.url.endsWith('/write'));assert.equal(save.body.body,'My words.\n保留疑问');assert.equal(save.body.scope,'project');assert.equal(save.body.expectedRevision,0);assert.equal(save.body.expectedHash,'empty');assert.ok(d.querySelector('#material-human-direction').compareDocumentPosition(d.querySelector('.material-layout'))&4);f.dom.window.close();});
 test('part direction stays outside shared research and appears only beside its matching manuscript; undo restores',async t=>{const f=await fixture(t);f.setStage(3);await tick();assert.equal(f.w.document.querySelector('#downstream-human-direction'),null);assert.doesNotMatch(f.w.document.querySelector('#material-human-direction').textContent,/Part One only/);assert.equal(f.calls.some(c=>c.body),false);f.setStage(5);await tick();assert.match(f.w.document.querySelector('#downstream-human-direction').textContent,/Part One only/);f.setProject('hk');await tick();assert.doesNotMatch(f.w.document.querySelector('#downstream-human-direction').textContent,/Part One only/);f.setProject('ref-an-cha');f.setStage(1);await tick();f.w.document.querySelector('[data-direction-scope]').value='part';f.w.document.querySelector('[data-direction-scope]').dispatchEvent(new f.w.Event('change'));f.w.document.querySelector('[data-direction-undo]').click();await tick();assert.equal(f.w.document.querySelector('[data-human-direction]').value,'');f.dom.window.close();});
 
@@ -75,4 +75,81 @@ test('Direction requested during the Research read waits for Direction scope rea
  owner.planEdit(input,'opening','Opening after the view changed');await owner.planSave(input);
  assert.equal((await owner.planRead(input)).values.opening,'Opening after the view changed');
  assert.equal(f.calls.find(c=>c.url.endsWith('/write')).body.bindingId,'part');
+});
+
+const questionInput={parentStudyId:'ref-an-cha',pointId:'retained-one',title:'A retained point',text:'Why does this matter?\n保留问题',origin:{recordPath:'Workflow/RESEARCH - Invented.md',recordHash:'a'.repeat(64),originalText:'Exact retained research words.'}};
+test('point questions save to the shared owner and reopen without replacing plan metadata',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),owner=f.w.studyHumanDirection;
+ owner.planEdit({parentStudyId:questionInput.parentStudyId},'title','Existing project title');await owner.planSave({parentStudyId:questionInput.parentStudyId});await tick();
+ const before=f.records.project.body;let checks=0;await owner.appendQuestion(questionInput,()=>checks++);await tick();
+ assert.equal(checks>0,true);assert.match(f.records.project.body,/Why does this matter/);assert.match(f.records.project.body,/Retained origin/);assert.match(f.records.project.body,/Exact retained research words/);
+ assert.equal(owner.planState({parentStudyId:questionInput.parentStudyId}).values.title,'Existing project title');assert.equal(f.records.project.body.includes(before),true);
+ const saved=f.records.project.body;f.setProject('another');await tick();assert.equal(owner.questionState({parentStudyId:'another'}).entries.length,0);f.setProject(questionInput.parentStudyId);f.setStage(3);await tick();
+ assert.equal(owner.questionState({parentStudyId:questionInput.parentStudyId}).entries[0].text,questionInput.text);
+ const fresh=await fixture(t,null,{initialStage:3});fresh.records.project={...fresh.records.project,body:saved,hash:'reloaded',revision:3};fresh.w.dispatchEvent(new fresh.w.Event('focus'));await tick();
+ assert.equal(fresh.w.studyHumanDirection.questionState({parentStudyId:questionInput.parentStudyId}).entries[0].origin.recordHash,questionInput.origin.recordHash);
+ assert.equal(f.calls.some(c=>c.url.endsWith('/select')),false);
+});
+test('point question refuses unsaved/conflicting notes and stale context without changing either record',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),owner=f.w.studyHumanDirection,input=f.w.document.querySelector('[data-human-direction]');input.value='My pending exact notes.';input.dispatchEvent(new f.w.Event('input'));
+ await assert.rejects(owner.appendQuestion(questionInput,()=>{}),/unsaved|pending/);assert.equal(input.value,'My pending exact notes.');assert.equal(f.records.project.body,'');
+ f.records.project={...f.records.project,body:'Incoming saved words.',hash:'incoming',revision:1};f.w.dispatchEvent(new f.w.Event('focus'));await tick();
+ await assert.rejects(owner.appendQuestion(questionInput,()=>{}),/Compare|conflict/);assert.equal(f.w.document.querySelector('[data-human-direction]').value,'My pending exact notes.');
+ f.w.document.querySelector('[data-direction-use-saved]').click();const saved=f.records.project.body;
+ await assert.rejects(owner.appendQuestion(questionInput,()=>{throw Error('The research point changed.');}),/point changed/);assert.equal(f.records.project.body,saved);assert.equal(f.calls.some(c=>c.url.endsWith('/write')||c.url.endsWith('/save')),false);
+});
+test('point question requires a ready shared concept and does not initialize another owner',async t=>{
+ const f=await fixture(t,null,{initialStage:3});f.records.project={...f.records.project,bound:false};f.w.dispatchEvent(new f.w.Event('focus'));await tick();
+ assert.equal(f.w.studyHumanDirection.questionState({parentStudyId:questionInput.parentStudyId}).available,false);
+ await assert.rejects(f.w.studyHumanDirection.appendQuestion(questionInput,()=>{}),/shared project|connected/);assert.equal(f.calls.some(c=>c.body),false);
+});
+
+test('point question rechecks its origin after the shared record refresh before staging any words',async t=>{
+ let hold=false,release;const gate=new Promise(resolve=>release=resolve);const f=await fixture(t,null,{initialStage:3,readGate:url=>hold&&url.includes('catalog')?gate:undefined});hold=true;let current=true;
+ const saving=f.w.studyHumanDirection.appendQuestion(questionInput,()=>{if(!current)throw Error('The research point changed.');});await tick();current=false;release();await assert.rejects(saving,/point changed/);assert.equal(f.records.project.body,'');assert.equal(f.calls.some(c=>c.body),false);assert.equal(f.w.localStorage.getItem('ar-study-human-direction-recovery-v1'),null);
+});
+
+test('native question controls save through the existing notes owner and show the retained human wording',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),w=f.w,d=w.document;
+ const snapshot={scope:{projectId:questionInput.parentStudyId,outputId:'',revision:'exact-origin-version'},outputTitle:'Project learning',points:[{id:questionInput.pointId,title:questionInput.title,originalText:questionInput.origin.originalText,sources:[{...questionInput.origin,name:'Retained research'}]}],records:[]};
+ w.ResearchStandard={snapshot:()=>snapshot};d.getElementById('stage-working-lane').insertAdjacentHTML('beforeend','<div class="research-standard"><header class="research-standard-heading"></header><section data-research-point="retained-one"><div class="research-standard-controls"></div></section></div>');
+ w.eval(fs.readFileSync(new URL('../public/document-study/research-point-browser.js',import.meta.url),'utf8'));w.eval(fs.readFileSync(new URL('../public/document-study/research-work-tools.js',import.meta.url),'utf8'));
+ d.querySelector('[data-research-work-tool="depth"]').click();await tick();d.querySelector('[data-rpb-tool="question"]').click();d.querySelector('[data-rpb-input]').value=questionInput.text;d.querySelector('[data-rpb-submit="question"]').click();await tick();await tick();
+ assert.match(d.querySelector('[data-saved-question]').textContent,/Why does this matter/);assert.match(d.querySelector('[data-saved-question]').textContent,/Adrian/);assert.doesNotMatch(d.querySelector('[data-saved-question]').textContent,/human:adrian|T\d{2}:\d{2}:\d{2}/);assert.match(f.records.project.body,/Why does this matter/);assert.equal(f.calls.filter(c=>c.body).length,1);assert.equal(f.calls.find(c=>c.body).url,'/api/concept/save');assert.equal(f.calls.find(c=>c.body).body.parentStudyId,questionInput.parentStudyId);
+});
+
+
+test('lost question save response refreshes and retries without duplicating the saved question or revision',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),owner=f.w.studyHumanDirection,project={parentStudyId:questionInput.parentStudyId};
+ owner.planEdit(project,'title','Preserved title');await owner.planSave(project);await tick();const before=f.records.project.body,partBefore=JSON.stringify(f.records.part);let lost=true;
+ f.setWriteGate(async()=>{if(lost){lost=false;throw Error('The response was lost.');}});
+ await assert.rejects(owner.appendQuestion(questionInput,()=>{}),/response was lost/);
+ const savedBody=f.records.project.body,savedRevision=f.records.project.revision,writes=f.calls.filter(c=>c.body).length;
+ assert.match(savedBody,/Why does this matter/);assert.equal(savedBody.split('<!-- ar-create:research-question:v1 ').length-1,1);
+ const retry=await owner.appendQuestion(questionInput,()=>{});await tick();
+ assert.match(retry.message,/already saved/);assert.equal(f.records.project.body,savedBody);assert.equal(f.records.project.revision,savedRevision);assert.equal(f.calls.filter(c=>c.body).length,writes);assert.equal(owner.questionState(project).entries.length,1);
+ assert.equal(f.records.project.body.includes(before),true);assert.equal(owner.planState(project).values.title,'Preserved title');assert.equal(JSON.stringify(f.records.part),partBefore);
+ assert.equal(f.w.localStorage.getItem('ar-study-human-direction-recovery-v1'),'{}');
+ await owner.appendQuestion({...questionInput,text:questionInput.text+' A different question.'},()=>{});await tick();assert.equal(owner.questionState(project).entries.length,2);
+ await owner.appendQuestion({...questionInput,origin:{...questionInput.origin,recordHash:'b'.repeat(64)}},()=>{});await tick();assert.equal(owner.questionState(project).entries.length,3);
+});
+
+test('shared prose hides helper metadata and preserves the exact question blocks through normal editing',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),owner=f.w.studyHumanDirection,project={parentStudyId:questionInput.parentStudyId};owner.planEdit(project,'audience','Preserved audience');await owner.planSave(project);await tick();await owner.appendQuestion(questionInput,()=>{});await tick();
+ const savedBlock=f.records.project.body.match(/<!-- ar-create:research-question:v1 [\s\S]*?<!-- \/ar-create:research-question:v1 -->/)[0];
+ assert.doesNotMatch(f.w.document.querySelector('[data-human-direction]').value,/ar-create:research-question|recordHash|Exact retained research words/);
+ assert.match(f.w.document.querySelector('[data-readable-research-questions]').textContent,/Why does this matter/);
+ f.setStage(4);await tick();const field=f.w.document.querySelector('[data-human-direction]');assert.doesNotMatch(field.value,/ar-create:research-question|recordHash/);field.value='My edited shared prose.';field.dispatchEvent(new f.w.Event('input'));f.w.document.querySelector('[data-direction-save]').click();await tick();
+ assert.equal(f.records.project.body.includes(savedBlock),true);assert.equal(owner.planState(project).values.audience,'Preserved audience');assert.equal(owner.questionState(project).entries[0].text,questionInput.text);assert.match(f.records.project.body,/My edited shared prose/);
+});
+
+test('only complete emitted question metadata is hidden; malformed blocks remain editable without losing bytes',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),owner=f.w.studyHumanDirection;await owner.appendQuestion(questionInput,()=>{});await tick();const valid=f.records.project.body,meta=JSON.parse(valid.match(/^<!-- ar-create:research-question:v1 (.*) -->/)[1]);
+ assert.doesNotMatch(f.w.document.querySelector('[data-human-direction]').value,/ar-create:research-question/);
+ const invalid=[{...meta,origin:{}},{...meta,origin:'manual origin'},{...meta,origin:{...meta.origin,recordHash:'invalid'}},{...meta,id:undefined},{...meta,createdAt:undefined},{...meta,createdAt:'yesterday'},{...meta,pointId:42},{...meta,extra:'unsupported metadata'},{...meta,origin:{...meta.origin,originalText:''}}];
+ for(const [index,value]of invalid.entries()){
+  const block=valid.replace(/^<!-- ar-create:research-question:v1 .* -->/, '<!-- ar-create:research-question:v1 '+JSON.stringify(value)+' -->');f.records.project={...f.records.project,body:block,hash:'manual-'+index,revision:10+index};f.w.dispatchEvent(new f.w.Event('focus'));await tick();
+  const field=f.w.document.querySelector('[data-human-direction]');assert.equal(field.value,block);assert.equal(owner.questionState({parentStudyId:questionInput.parentStudyId}).entries.length,0);
+  field.value=block+'\nMy additional prose.';field.dispatchEvent(new f.w.Event('input'));f.w.document.querySelector('[data-direction-save]').click();await tick();assert.equal(f.records.project.body,block+'\nMy additional prose.');
+ }
 });

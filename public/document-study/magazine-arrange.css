@@ -1,33 +1,33 @@
 /* The existing C Workbench frame surrounds one continuous native article. */
 #workspace [data-magazine-arrange-covered="true"],.workspace [data-magazine-arrange-covered="true"]{display:none!important}
-#workspace .magazine-arrange,.workspace .magazine-arrange{margin:0 32px 32px;color:var(--ink);font:400 15px/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);min-width:0}
+#workspace .magazine-arrange,.workspace .magazine-arrange{margin:0 32px 32px;color:var(--ink);font:400 var(--t-body,.9375rem)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);min-width:0}
 .magazine-arrange *{box-sizing:border-box}
 .magazine-arrange .ma-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:none;margin:0 0 12px}
-.magazine-arrange .ma-toolbar>span{color:var(--dim);font-size:13px}
+.magazine-arrange .ma-toolbar>span{color:var(--dim);font-size:var(--t-label,.8125rem)}
 .magazine-arrange .ma-toolbar>div{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .magazine-arrange button{min-height:44px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);padding:6px 10px;font:400 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif);cursor:pointer}
 .magazine-arrange button:disabled{opacity:.45;cursor:default}
 .magazine-arrange button:focus-visible{outline:2px solid var(--warm);outline-offset:3px}
-.magazine-arrange .ma-document{max-width:680px;margin:0;padding:0;background:transparent;border:0;border-radius:0;font:400 18px/1.8 var(--shared-prose-font,Lora,Georgia,serif);overflow-wrap:anywhere}
+.magazine-arrange .ma-document{max-width:var(--measure,40rem);margin:0;padding:0;background:transparent;border:0;border-radius:0;font-family:var(--ar-ui,'Plus Jakarta Sans',sans-serif);font-size:var(--t-reading,1rem);font-weight:400;line-height:var(--lh-read,1.65);overflow-wrap:anywhere}
 .magazine-arrange .ma-block{position:relative;margin:0;min-width:0}
 .magazine-arrange .ma-block:last-child{margin-bottom:0}
 .magazine-arrange .ma-block :is(p,li,blockquote){font:inherit}
-.magazine-arrange .ma-block :is(h1,h2,h3){font-family:var(--shared-prose-heading,'Cormorant Garamond',Georgia,serif);font-weight:500;line-height:1.25;margin:1.4em 0 .6em}
-.magazine-arrange .ma-block h1{font-size:30px}.magazine-arrange .ma-block h2{font-size:30px}.magazine-arrange .ma-block h3{font-size:26px}
+.magazine-arrange .ma-block :is(h1,h2,h3,h4,h5,h6){font-family:var(--ar-ui,'Plus Jakarta Sans',sans-serif);font-size:var(--t-head,.9375rem);font-weight:600;line-height:1.5;margin:24px 0 8px}
+.magazine-arrange .ma-block h1{font-size:var(--t-title,1.0625rem);line-height:1.35}
 .magazine-arrange .ma-photo-group{position:relative;margin:0;min-width:0}
 .magazine-arrange .ma-photo-group[draggable=true]{cursor:grab}
 .magazine-arrange .ma-photo-group.is-moving{opacity:.45}
 .magazine-arrange .ma-photo-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:10px}
 .magazine-arrange .ma-photo-images img{display:block;width:100%;max-width:100%;height:auto;object-fit:cover;border-radius:3px}
-.magazine-arrange .ma-move{position:absolute;top:8px;right:8px;box-shadow:0 1px 8px #0002;font:400 13px/1.4 var(--ar-ui,sans-serif)}
-.magazine-arrange .ma-fixed{display:block;font:400 12px/1.5 var(--ar-ui,sans-serif);color:var(--dim);margin:4px 0}
-.magazine-arrange .ma-place{position:relative;display:block;width:100%;margin:0 0 8px;border:1px dashed var(--warm);color:var(--warm);font:400 13px/1.4 var(--ar-ui,sans-serif)}
-.magazine-arrange .ma-limits{max-width:var(--measure,640px);margin:16px 0;color:var(--dim);font-size:13px}
-@media(max-width:760px){#workspace .magazine-arrange,.workspace .magazine-arrange{margin:0 16px 24px}.magazine-arrange .ma-document{padding:0;font-size:18px;line-height:1.8}.magazine-arrange .ma-toolbar{align-items:flex-start;gap:8px}.magazine-arrange .ma-toolbar>div{gap:4px}.magazine-arrange .ma-toolbar button{font-size:13px;padding:6px 8px}.magazine-arrange .ma-photo-images{grid-template-columns:1fr}}
+.magazine-arrange .ma-move{position:absolute;top:8px;right:8px;box-shadow:0 1px 8px #0002;font:400 var(--t-label,.8125rem)/1.4 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-fixed{display:block;font:400 var(--t-label,.8125rem)/1.5 var(--ar-ui,sans-serif);color:var(--dim);margin:4px 0}
+.magazine-arrange .ma-place{position:relative;display:block;width:100%;margin:0 0 8px;border:1px dashed var(--warm);color:var(--warm);font:400 var(--t-label,.8125rem)/1.4 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-limits{max-width:var(--measure,640px);margin:16px 0;color:var(--dim);font-size:var(--t-label,.8125rem)}
+@media(max-width:760px){#workspace .magazine-arrange,.workspace .magazine-arrange{margin:0 16px 24px}.magazine-arrange .ma-document{padding:0}.magazine-arrange .ma-toolbar{align-items:flex-start;gap:8px}.magazine-arrange .ma-toolbar>div{gap:4px}.magazine-arrange .ma-toolbar button{font-size:var(--t-label,.8125rem);padding:6px 8px}.magazine-arrange .ma-photo-images{grid-template-columns:1fr}}
 
 body.wbf-on #workspace.wb-arrange #magazine-arrange .ma-document :is(p,li,blockquote,strong,em,a){font-family:inherit!important;font-size:inherit!important;line-height:inherit!important}
-body.wbf-on #workspace.wb-arrange #magazine-arrange .ma-document :is(h1,h2,h3){font-family:var(--shared-prose-heading,'Cormorant Garamond',Georgia,serif)!important}
-.magazine-arrange .ma-unavailable{max-width:680px;margin:0 auto 16px;font-size:13px;color:var(--dim)}
+body.wbf-on #workspace.wb-arrange #magazine-arrange .ma-document :is(h1,h2,h3,h4,h5,h6){font-family:var(--ar-ui,'Plus Jakarta Sans',sans-serif)!important}
+.magazine-arrange .ma-unavailable{max-width:var(--measure,40rem);margin:0 auto 16px;font-size:var(--t-label,.8125rem);color:var(--dim)}
 
 .magazine-arrange .ma-block.is-drop-target{outline:2px dashed var(--warm);outline-offset:6px}
 
@@ -39,8 +39,10 @@ body.c3-tabs[data-c3-stage="9"] #app #workspace.workspace > #magazine-arrange{ma
 .magazine-arrange .ma-document blockquote p{margin:0}
 @media(max-width:760px){body.c3-tabs[data-c3-stage="9"] #app #workspace.workspace > #magazine-arrange{margin:0 16px 24px!important}}
 
-/* C05 later accepted Atlas reading metrics; compact controls keep C sans. */
-.magazine-arrange .ma-document .ma-block p{margin:0 0 1.1em}
+/* Native manuscript prose follows the adopted C reading role. Platform template
+   artwork remains owned by its separate renderers; generic Markdown quotations
+   carry no speech attribution and keep the manuscript face. */
+.magazine-arrange .ma-document .ma-block p{margin:0 0 var(--t-reading,1rem)}
 .magazine-arrange .ma-document .ma-photo-group{margin:24px 0}
 
 /* Native composition actions use the existing section bar. Other output owners
@@ -91,7 +93,7 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-aspect-preview img{height:64px;width:auto;max-width:100%;object-fit:cover;border-radius:2px}
 .magazine-arrange .ma-aspect summary:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 
-.magazine-arrange .ma-aspect-options button[aria-pressed="true"] .ma-aspect-preview::after{content:"✓";position:absolute;top:0;right:0;display:grid;place-items:center;width:18px;height:18px;border-radius:3px;background:var(--warm);color:var(--paper);font:600 12px/1 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-aspect-options button[aria-pressed="true"] .ma-aspect-preview::after{content:"✓";position:absolute;top:0;right:0;display:grid;place-items:center;width:18px;height:18px;border-radius:3px;background:var(--warm);color:var(--paper);font:600 var(--t-label,.8125rem)/1 var(--ar-ui,sans-serif)}
 
 /* A temporary choice inside the existing photo adjustment, using article photos. */
 .magazine-arrange .ma-focus [hidden]{display:none!important}
@@ -119,5 +121,5 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-library-search :is(input,select):focus-visible,.magazine-arrange .ma-photo-description input:focus-visible{outline:2px solid var(--warm);outline-offset:1px}
 .magazine-arrange .ma-focus .ma-photo-description{display:block;max-width:none;white-space:normal;flex:none}
 .magazine-arrange .ma-library-search :is(input,select),.magazine-arrange .ma-photo-description input,.magazine-arrange [data-ma-library-more]{min-height:44px}
-.magazine-arrange .ma-library-unavailable{display:grid;place-items:center;aspect-ratio:4/3;min-height:58px;width:100%;padding:4px;box-sizing:border-box;background:var(--wash,var(--paper));color:var(--dim);font:400 11px/1.35 var(--ar-ui,sans-serif);white-space:normal;text-align:center}
+.magazine-arrange .ma-library-unavailable{display:grid;place-items:center;aspect-ratio:4/3;min-height:58px;width:100%;padding:4px;box-sizing:border-box;background:var(--wash,var(--paper));color:var(--dim);font:400 var(--t-label,.8125rem)/1.35 var(--ar-ui,sans-serif);white-space:normal;text-align:center}
 .magazine-arrange .ma-replacement-options button.is-unavailable{cursor:default;opacity:.75}

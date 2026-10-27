@@ -20,11 +20,11 @@ async function fixture(t){
  const select=await request('/api/study/human-direction/select',{...scope,title:'Invented part',operationId:randomUUID()});
  const exact='My exact original words.\n保留我的疑问。\n\n';
  await request('/api/study/human-direction/write',{...scope,expectedRevision:select.revision,expectedHash:select.hash,operationId:randomUUID(),body:exact});
- async function boot(recovery,{malformed=false}={}){
+ async function boot(recovery,{malformed=false,stage=4}={}){
   const dom=new JSDOM('<div id="app"><div id="stage-working-lane"></div></div>',{url,runScripts:'outside-only'}),w=dom.window;windows.push(w);Object.defineProperty(w,'crypto',{value:webcrypto});if(recovery)w.localStorage.setItem('ar-study-human-direction-recovery-v1',recovery);
-  w.p={id:'hk',name:'Invented project',view:'record',viewedStage:4};w.current=()=>w.p;w.state={projects:[w.p]};w.binding=opened.binding;w.studyDraft={currentBinding:()=>w.binding};w.studySourceContinuation={selection:()=>({parentStudyId:'hk',bindingId:w.binding?.id||''})};w.render=()=>{w.document.getElementById('app').innerHTML=w.p.viewedStage===5?'<div class="workspace"><div class="desk"></div></div>':'<div id="stage-working-lane"></div>';};
+  w.p={id:'hk',name:'Invented project',view:'record',viewedStage:stage};w.current=()=>w.p;w.state={projects:[w.p]};w.binding=opened.binding;w.studyDraft={currentBinding:()=>w.binding};w.studySourceContinuation={selection:()=>({parentStudyId:'hk',bindingId:w.binding?.id||''})};w.render=()=>{w.document.getElementById('app').innerHTML=w.p.viewedStage===5?'<div class="workspace"><div class="desk"></div></div>':'<div id="stage-working-lane"></div>';};
   w.fetch=(route,options)=>{calls.push({route,body:options?.body&&JSON.parse(options.body)});return fetch(url+route,{...options,headers:{...options?.headers,'X-AR-Actor':'human:adrian'}});};
-  w.eval(script('human-direction.js'));w.eval(script('direction-writing-tools.js'));await until(()=>malformed?w.document.querySelector('.dwt-context [role=alert]')?.textContent.includes('needs review'):!w.document.querySelector('[data-dwt-plan="title"]')?.disabled);return w;
+  w.eval(script('human-direction.js'));w.eval(script('direction-writing-tools.js'));await until(()=>stage===3?w.studyHumanDirection.questionState({parentStudyId:'hk'}).available:malformed?w.document.querySelector('.dwt-context [role=alert]')?.textContent.includes('needs review'):!w.document.querySelector('[data-dwt-plan="title"]')?.disabled);return w;
  }
  const read=()=>request('/api/study/human-direction?'+new URLSearchParams(scope));
  return {boot,read,request,scope,exact,calls,opened,home};
@@ -110,4 +110,19 @@ test('conflict comparison retains the incoming saved plan as readable fields and
 test('mixed concept context exposes planning intent separately and never promotes provisional prose to adopted direction',()=>{
  const concept=renderConcept({authorThoughts:'My exact memory.',adoptedDirection:'Keep my uncertainty.',aiInterpretation:'An unadopted interpretation.',suggestions:'An unadopted title.',sourceSelections:[]}),block='<!-- ar-create:direction-plan:v1 -->\n## Planning intent — not approval of wording or publication\n\n```json\n'+JSON.stringify({title:'My planning title'})+'\n```\n<!-- /ar-create:direction-plan:v1 -->';
  const full=concept+'\n\n'+block,projection=conceptContextProjection(full);assert.deepEqual(projection.planningIntent.values,{title:'My planning title'});assert.equal(projection.body,'Keep my uncertainty.');assert.equal(projection.personalThoughts.body,'My exact memory.');assert.equal(projection.suggestions.body,'An unadopted title.');assert.equal(projection.sourceSnapshot.body,full);
+});
+
+
+test('native project question uses its ready human direction owner when the authored concept route returns 404',async t=>{
+ const f=await fixture(t),w=await f.boot(null,{stage:3}),project={parentStudyId:'hk',scope:'project'},before=await f.request('/api/study/human-direction?'+new URLSearchParams(project)),manuscriptBefore=fs.readFileSync(f.opened.paths.draft,'utf8');
+ assert.equal(before.bound,true);assert.equal(before.scope.parentStudyId,'hk');assert.equal((await fetch(w.location.origin+'/api/concept?parentStudyId=hk')).status,404);
+ w.studyHumanDirection.planEdit(project,'title','Native project intent');await w.studyHumanDirection.planSave(project);await until(()=>w.studyHumanDirection.questionState(project).available);const planned=await f.request('/api/study/human-direction?'+new URLSearchParams(project));
+ const input={parentStudyId:'hk',pointId:'native-retained-point',title:'A native retained point',text:'My exact native project question.',origin:{recordPath:'Workflow/RESEARCH - Invented.md',recordHash:'a'.repeat(64),originalText:'Exact retained invented research.'}};
+ await w.studyHumanDirection.appendQuestion(input,()=>{});await until(()=>w.studyHumanDirection.questionState(project).available);
+ const saved=await f.request('/api/study/human-direction?'+new URLSearchParams(project));assert.equal(saved.path,planned.path);assert.deepEqual(saved.scope,before.scope);assert.equal(fs.readFileSync(saved.path,'utf8'),saved.body);assert.match(saved.body,/My exact native project question/);assert.equal(directionPlanProjection(saved.body).values.title,'Native project intent');assert.equal(fs.readFileSync(f.opened.paths.draft,'utf8'),manuscriptBefore);
+ assert.equal(f.calls.some(c=>c.route.endsWith('/select')||c.route.endsWith('/concept/save')),false);const writes=f.calls.filter(c=>c.body&&c.route.endsWith('/write'));assert.equal(writes.length,2);assert.equal(writes[1].body.scope,'project');assert.equal(writes[1].body.parentStudyId,'hk');
+ const reopened=await f.boot(null,{stage:3});assert.equal(reopened.studyHumanDirection.questionState(project).entries[0].text,input.text);assert.doesNotMatch(reopened.document.querySelector('[data-human-direction]').value,/research-question|recordHash/);
+ const unsafe=saved.body+'\n\nSource ID: `12345678-1234-1234-1234-123456789abc` · SHA-256: `'+ 'b'.repeat(64)+'` · character 0';
+ await f.request('/api/study/human-direction/write',{...project,operationId:randomUUID(),expectedRevision:saved.revision,expectedHash:saved.hash,body:unsafe});reopened.dispatchEvent(new reopened.Event('focus'));await until(()=>reopened.studyHumanDirection.questionState(project).reason.includes('source connections'));
+ await assert.rejects(reopened.studyHumanDirection.appendQuestion({...input,text:'Blocked linked-source question'},()=>{}),/source connections/);assert.equal((await f.request('/api/study/human-direction?'+new URLSearchParams(project))).body,unsafe);
 });
