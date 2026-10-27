@@ -1,3 +1,9 @@
+## 27 October — Mapped Share views connected in candidate
+
+Explicitly mapped Magazine correspondence now offers recipient, language and all-language views over the same canonical sections. A visible target label identifies the working article. View choices survive reopening in the existing browser recovery record; entered or pending paragraph edits lock view changes, retaining the exact original paragraph position and save request. Missing, stale or unavailable mappings keep the complete readable record and explain the mapping state. Recipient names are not inferred from prose or headings.
+
+Native invented verification proves scoped Chinese editing, entered-text and selected-view recovery after reload, save preserving the article/other recipient/other language, and exact Undo restoring the complete mapped file. Desktop 1280×720 light/dark keeps the 640px correspondence measure and 15px body text without horizontal overflow. The same-viewport approved-C comparison still shows additional controls/explanations and duplicate retained-work disclosures; whole visual acceptance and phone proof remain open. Mapping creation, recipient names, published-edition selection and correspondence facts remain unfinished. This candidate is not installed; live main remains PR66 below.
+
 ## 27 October — Share editing milestone installed; full completion open
 
 PR66, signed main `a850f1a50bc57d8864bdf49b6adea1c8d7a58af4`, is verified live on the installed owner and existing main review. The 901-source manifest, generated build and served Share/Research assets match the recorded release. Owner API projections preserve all four independent carousel copies, current article, registered source/correspondence records and source sessions; the separate canonical checkout's 26 changed files remain exact. Installed configuration is unchanged; the review configuration adds only the approved feedback-editing flag.

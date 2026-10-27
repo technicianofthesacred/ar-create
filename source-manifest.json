@@ -2449,7 +2449,7 @@
     },
     {
       "path": "public/document-study/share-stage.js",
-      "candidateSha256": "a6f4aea9062fda19a3c9184077bfc710e34b16e61437cd62a623a4963c50946e"
+      "candidateSha256": "1edf32e5908bf5ced37e98d68915ef367f14de656b05c68e27f4142eaff923ba"
     },
     {
       "path": "public/document-study/media-usage.js",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "15f4c2d1f14573b5cc2467d763f0a35605a09402a3730084f6ca242c4d30163f"
+      "candidateSha256": "1fb3ce355166627a243b167a84555e0bd9f176ef5042af87797ad5ae51ae84b5"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4321,7 +4321,7 @@
     },
     {
       "path": "tests/magazine-share-stage.test.mjs",
-      "candidateSha256": "81115289a5b06e02ef38089778446272b7c91051bd939617bb4d3b268bead8eb"
+      "candidateSha256": "07125c7e707acab0312531994b1792e44a17abaada60455010340670b1575c37"
     },
     {
       "path": "tests/magazine-share-feedback-write.test.mjs",

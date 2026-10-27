@@ -1,4 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';import {parseFeedbackShare} from '../runtime/services/magazine/feedback-share-codec.mjs';import {splitBlocks,plain,editable,hash} from '../runtime/reference/mag-edit.mjs';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('../public/document-study/share-stage.js',import.meta.url),'utf8');
 const tick=()=>new Promise(resolve=>setTimeout(resolve,15)),H='a'.repeat(64),F='b'.repeat(64);
 function fixture({references=[{path:'Workflow/6-Feedback/FEEDBACK - Invented.md',currentHash:F,readable:true,state:'current'}],gate=null,legacy=null}={}){
@@ -65,4 +66,40 @@ test('unavailable browser recovery storage blocks submission and leaves entered 
 
 test('retained entered words stay visible when the owner becomes read-only on remount',async t=>{
  const f=editorFixture();t.after(f.close);await enterParagraph(f);typeParagraph(f,'Retain this separate unsaved paragraph.');f.readOnly();f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(f.w.document.querySelector('[data-feedback-text]').value,'Retain this separate unsaved paragraph.');assert.equal(f.w.document.querySelector('[data-share-action="magazine-save-paragraph"]').disabled,true);assert.equal(f.saves.length,0);
+});
+
+const recipientA='11111111-1111-4111-8111-111111111111',recipientB='22222222-2222-4222-8222-222222222222';
+function mappedFixture(){
+ const f=fixture(),w=f.w;let body='## First English\n\nFirst English words.\n\n## First Chinese\n\n第一位中文。\n\n## Second English\n\nSecond recipient words.\n';
+ const sha=s=>createHash('sha256').update(s).digest('hex'),target={storyId:'story',pieceId:'piece',edition:'working',hash:H};
+ const section=(language,heading,next)=>{const start=body.indexOf(heading),end=next?body.indexOf(next):body.length;return {language,heading,hash:sha(body.slice(start,end))};};
+ const metadata={schema:'ar-create.magazine-feedback-share.v1',entries:[{recipientId:recipientA,target,sections:[section('en','## First English','## First Chinese'),section('zh','## First Chinese','## Second English')]},{recipientId:recipientB,target,sections:[section('en','## Second English')]}]};
+ let document='---\nar-create-share: '+JSON.stringify(metadata)+'\n---\n'+body;
+ const model=()=>{const parsed=parseFeedbackShare(document),{parts}=splitBlocks(document);return {rootIdentity:{fingerprint:'d'.repeat(64)},feedback:{path:'Workflow/6-Feedback/FEEDBACK - Invented.md',hash:sha(document)},document:{text:document},mapping:parsed,editable:true,paragraphs:parts.filter((_,i)=>i%2===0).map((raw,index)=>({index,seen:hash(raw),raw,text:plain(raw),editable:editable(raw)}))};};
+ w.AR_CREATE_REVIEW_MODE={magazineFeedbackCorrections:true};w.studyOutputConnection.readMagazineShareFeedbackEditModel=async()=>model();w.studyOutputConnection.readMagazineShareFeedbackHistory=async()=>({history:[]});
+ w.studyOutputConnection.prepareMagazineShareFeedbackParagraph=async()=>{throw Error('View switching must never prepare a write.');};
+ return {...f,document:()=>document,model,unmap(){w.studyOutputConnection.readMagazineShareFeedbackEditModel=async()=>({...model(),mapping:{structured:false,projection:[],reason:'The saved mapping targets an earlier working revision.'}});}};
+}
+const selectView=(f,selector,value)=>{const el=f.w.document.querySelector(selector);assert.ok(el,selector+' must exist');el.value=value;el.dispatchEvent(new f.w.Event('change',{bubbles:true}));};
+test('mapped recipient and language views use only their canonical anchored sections without saving',async t=>{
+ const f=mappedFixture();t.after(f.close);await f.loaded();const before=f.document();
+ selectView(f,'[data-magazine-recipient]',recipientA);let prose=f.w.document.querySelector('[data-magazine-correspondence]').textContent;assert.match(prose,/First English words/);assert.match(prose,/第一位中文/);assert.doesNotMatch(prose,/Second recipient words/);
+ selectView(f,'[data-magazine-language]','zh');prose=f.w.document.querySelector('[data-magazine-correspondence]').textContent;assert.match(prose,/第一位中文/);assert.doesNotMatch(prose,/First English words/);assert.match(f.w.document.querySelector('[data-magazine-edition]').textContent,/working article/i);
+ selectView(f,'[data-magazine-recipient]',recipientB);prose=f.w.document.querySelector('[data-magazine-correspondence]').textContent;assert.match(prose,/Second recipient words/);assert.doesNotMatch(prose,/First English words|第一位中文/);assert.equal(f.document(),before);
+});
+test('mapped views survive remount and full-record fallback explains stale mappings without guessing recipients',async t=>{
+ const f=mappedFixture();t.after(f.close);await f.loaded();selectView(f,'[data-magazine-recipient]',recipientA);selectView(f,'[data-magazine-language]','zh');
+ f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]').value,recipientA);assert.equal(f.w.document.querySelector('[data-magazine-language]').value,'zh');assert.doesNotMatch(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
+ f.unmap();f.w.document.querySelector('[data-share-action="magazine-refresh"]').click();await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]'),null);assert.match(f.w.document.body.textContent,/earlier working revision/);assert.match(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
+});
+test('scoped paragraph editing preserves canonical positions and prevents view changes from hiding entered words',async t=>{
+ const f=mappedFixture();t.after(f.close);await f.loaded();selectView(f,'[data-magazine-recipient]',recipientA);selectView(f,'[data-magazine-language]','zh');f.w.document.querySelector('[data-share-action="magazine-edit-mode"]').click();
+ const row=f.model().paragraphs.find(row=>row.text.includes('第一位中文'));assert.ok(row);const edit=f.w.document.querySelector('[data-feedback-edit]');assert.equal(edit.dataset.feedbackEdit,String(row.index));assert.equal(f.w.document.querySelectorAll('[data-feedback-edit]').length,1);edit.click();typeParagraph(f,'Entered Chinese review.');
+ assert.equal(f.w.document.querySelector('[data-magazine-recipient]').disabled,true);assert.equal(f.w.document.querySelector('[data-magazine-language]').disabled,true);assert.equal(f.w.document.querySelector('[data-feedback-text]').value,'Entered Chinese review.');
+ f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(f.w.document.querySelector('[data-feedback-text]').value,'Entered Chinese review.');assert.equal(f.w.document.querySelector('[data-magazine-language]').value,'zh');
+});
+test('a retained language that is no longer mapped falls back to the complete canonical record',async t=>{
+ const f=mappedFixture();t.after(f.close);await f.loaded();selectView(f,'[data-magazine-recipient]',recipientA);
+ const storage='ar-create.share-browser-drafts.v1',retained=JSON.parse(f.w.sessionStorage.getItem(storage));Object.values(retained)[0].view.language='unavailable';f.w.sessionStorage.setItem(storage,JSON.stringify(retained));
+ f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();assert.equal(f.w.document.querySelector('[data-magazine-recipient]').value,'');assert.equal(f.w.document.querySelector('[data-magazine-language]'),null);assert.match(f.w.document.querySelector('[data-magazine-correspondence]').textContent,/Second recipient words/);
 });
