@@ -1,3 +1,11 @@
+## 28 October — Visible Magazine captions and credits candidate
+
+Arrange now edits visible caption/photo credit wording for exact body-wide, bleed and photo-group occurrences, plus working article credits. Captions stay with their exact group through existing focus/shape/replacement/move controls. Original publication credits remain separate; an explicit empty override and restoring the original are different actions. All wording lives in the same canonical DEV file and uses existing prepare/save/recovery/history/Undo. The upstream publication parser, pins and publication metadata are unchanged.
+
+Native invented caption Save → article credits Save → actual owner restart/reload → Audience → actual retained HTML export → credits Undo (caption retained) → caption Undo through existing History restored the exact original manuscript. Export bytes contain literal wording, embedded photo/fonts and no internal annotation markup. Original source/publication bytes remain exact. Readable 640px desktop controls at1280×720 light/dark are verified; full C/all12/phone acceptance stays open. Oversized Unicode planning input is retained with a friendly refusal before transport; no server request limit was relaxed.
+
+This candidate is **not installed** until exact release proof. Caption fields retain failed words in the open review, but unsaved pre-Save field recovery across browser reload is not yet proven. Covers/openers/closing/composed-role caption controls and full composition acceptance remain separate open gates. PR74 remains live. No real wording, provider run, approval, send or human writing tab was touched.
+
 ## 28 October — Exact saved output Bench handoff installed
 
 PR74 signed main `2a2dc8bc692b1047a17033b26cffd6a9fcfca8f1`, build2026-10-27T18:17:00.912Z, is live-verified in installed8841 and main59958.286focused checks/build/package913/64servedhashes and API/canonical/config preservation pass. The entry below now describes installed bounded behavior.
