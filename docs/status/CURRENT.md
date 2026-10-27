@@ -1,3 +1,15 @@
+## 28 October — Goal checklist refreshed during Build
+
+The existing goal remains active. Installed PR82 stays the verified running milestone; integrated work below remains unchecked until its native acceptance and exact release proof. Earlier dated candidate notes are history, not the current state.
+
+- [ ] Canonical Carousel Check: integrated; an actual saved-carousel check now reports its own words, source and photos with explicit held limits. Passage targeting, restart/stale handling and release acceptance remain open.
+- [ ] All-Library photo insertion: integrated with an explicit after-paragraph choice and distinct origins for equal-byte photographs.346 focused specialist checks and build pass; actual-screen acceptance and release remain open. Installed replacement remains a separate completed result.
+- [ ] Compact Direction controls and narrow main-review language/export/Check connections: integrated; populated screen/main-flow and release verification remain open. Native Article layout-save admission is still being finished.
+- [ ] Output selection followed immediately by Write/Read: an observed asynchronous mounting race is under bounded investigation; do not mark navigation complete.
+- [ ] Whole creative journey, Bench/Library/Pieces/all twelve sections and approved C/final NOTES desktop/phone light/dark interactions remain open.
+
+The goal checklist records source-built, native-verified and installed/live-verified separately. No real wording approval or human writing tab was touched.
+
 ## 28 October — PR82 installed; exact goal checkoffs
 
 Signed main `52a4e0423374d7d7a8f41fbfc077942cafb029a1`, build2026-10-27T21:41:43.051Z, is verified live in installed8841 and main59958.521 relevant checks/28 files, build/package929,84 served hashes and complete installed-manifest/generated-byte proof pass. API content, canonical dirty files and configuration are preserved. Final verification corrected a source-module HTTP probe: installed source modules are verified by the complete manifest and their generated browser bundle, while review source bytes are checked separately. No merge/install was repeated and no permission/CSP change was made.
