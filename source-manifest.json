@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "92d9bb4209f662a2604e3ed270dd106da754b3d617f7eb606aa209aa4a765c8c"
+      "candidateSha256": "d7bd178241a036075fbbae73fce14185924d390de4baf1ef7cd75f2a8e3e8d5b"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "24e9e54807511d007c0a14fd2a2923bcbe2e15e81f7b307ecfae8d7dc6556332"
+      "candidateSha256": "69ee9251f34cf48a511a9afdb7d36360d0dd50b4ffec67c2fd69dd2f3ded01bf"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -3685,7 +3685,7 @@
     },
     {
       "path": "tests/existing-work.test.mjs",
-      "candidateSha256": "077efa410ccbc79811d89474dff22ad1908017ab9d6e0e515360b37c9c0f53c5"
+      "candidateSha256": "5d8e52bf8f13c32059188464002283c4fc03dcbf287163b418c8c29c569fd202"
     },
     {
       "path": "tests/review-connection.test.mjs",
@@ -3937,7 +3937,7 @@
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
-      "candidateSha256": "8fe370d8ae5698798da22ffd5971e3f864d6cac8221f64e1c13a03a4a42446b8"
+      "candidateSha256": "3d50215e07d7acf0e38f44840a5f0b4e6f994fc4f4667adbd3dfc1b63c0590df"
     },
     {
       "path": "tests/exact-media-metadata.test.mjs",
@@ -3989,11 +3989,11 @@
     },
     {
       "path": "tests/magazine-placement-owner-journey.test.mjs",
-      "candidateSha256": "a313fd6006937aacc58e851c3874915e3ef17074c22003be28a9aa390f5238aa"
+      "candidateSha256": "340089cb9015b51098c4bd5e991f2f3332e1efe63924ede2def7d7051c5b3be5"
     },
     {
       "path": "public/document-study/magazine-arrange.js",
-      "candidateSha256": "4e21cb35788536076323530cde0fbbf64b18195084251f9453d5f59fde589e83"
+      "candidateSha256": "9dfbac4cda30e9e2956c2f1b2072cf2a0154fc20b5663db3ce5aa12a0714da50"
     },
     {
       "path": "public/document-study/magazine-arrange.css",
@@ -4001,7 +4001,7 @@
     },
     {
       "path": "tests/magazine-arrange.test.mjs",
-      "candidateSha256": "4ede6bafbca602fbba151db76aeb956d8bb00f0c90099645ef8cb26ae9ce80be"
+      "candidateSha256": "ecff2a3fe7697d3f78e8dd692094c55f085f49c4170504e59bbe572eb718b4ed"
     },
     {
       "path": "tests/research-retained-reader-layout.test.mjs",
