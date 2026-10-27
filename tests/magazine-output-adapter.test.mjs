@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {createHash,webcrypto} from 'node:crypto';
+import {parseFeedbackShare,updateFeedbackShare} from '../runtime/services/magazine/feedback-share-codec.mjs';
 const code=fs.readFileSync(new URL('../public/document-study/magazine-output-adapter.js',import.meta.url),'utf8');
 const H='a'.repeat(64),R='b'.repeat(64),ID='c'.repeat(64);
 function fixture(){const ctx=vm.createContext({structuredClone,URL});vm.runInContext(code,ctx);const f={state:{projectId:'native-project',owner:{kind:'magazine',storyId:'story',pieceId:'article:1',path:'Workflow/3-Develop/DEV - Clay.md'},hash:H,dirty:false},record:{schema:'ar-create.magazine-publication-reference.v1',revision:R,nativeProjectId:'native-project',workingOwnerRef:{projectId:'story',pieceId:'article:1',editionId:'working',artifactId:'registered-dev',hash:H},publication:{id:ID,url:'https://www.teajia.com/read/clay-1',title:'Clay',recordedBy:'working-draft-frontmatter',edition:null,date:null}},calls:[],resolves:[]};f.resolve=async q=>{f.resolves.push(q);return f.record;};f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),openWorking:async(p,g)=>{g();f.calls.push(p);},openPublication:async(p,g)=>{g();f.calls.push(p);}});return f;}
@@ -69,4 +71,77 @@ test('Magazine invitation metadata keeps honest reference states and excludes un
  const f=shareFixture();f.context.references.feedback=[row];f.context.body='Uncontracted private copy';const value=await f.adapter.readShareContext(shareInput());assert.equal(value.references.feedback.length,1);assert.equal(JSON.stringify(value).includes('Uncontracted'),false);
  for(const mutate of [r=>r.kind='DEV',r=>r.state='made-up',r=>r.readable=false,r=>r.currentHash=R,r=>r.registeredHash='invalid']){const g=shareFixture();g.context.references.feedback=[{...row}];mutate(g.context.references.feedback[0]);await assert.rejects(g.adapter.readShareContext(shareInput()));}
  const g=shareFixture();g.context.references.feedback=[{...row,currentHash:null,state:'missing',readable:false,changedSinceRegistration:true}];assert.equal((await g.adapter.readShareContext(shareInput())).references.feedback[0].state,'missing');
+});
+
+const feedbackPath='Workflow/6-Feedback/FEEDBACK - Clay.md',feedbackMarkdown='# Invented invitation\n';
+const feedbackHash=createHash('sha256').update(feedbackMarkdown).digest('hex');
+function feedbackFixture(options={}){
+ const f=shareFixture(),ctx=vm.createContext({structuredClone,URL,crypto:webcrypto,TextEncoder});vm.runInContext(code,ctx);f.context.references.feedback=[{path:feedbackPath,kind:'FEEDBACK',registeredHash:H,currentHash:feedbackHash,state:'changed-since-registration',readable:true,changedSinceRegistration:true}];
+ f.feedback={schema:'ar-create.magazine-share-feedback.v1',selection:{storyId:'story',pieceId:'article:1',edition:'working'},authority:structuredClone(f.state.owner),rootIdentity:structuredClone(f.context.rootIdentity),draft:structuredClone(f.context.draft),feedback:{path:feedbackPath,hash:feedbackHash,registeredHash:H,changedSinceRegistration:true},document:{path:feedbackPath,kind:'FEEDBACK',hash:feedbackHash,text:feedbackMarkdown},mapping:{structured:false,metadata:null,projection:[],reason:'No explicit recipient/language mapping is saved.'},readOnly:true};f.feedbackCalls=[];f.contextCalls=[];
+ f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),readShareContext:async q=>{f.contextCalls.push(q);return options.context?options.context(f,q):f.context;},readShareFeedback:async q=>{f.feedbackCalls.push(q);return options.feedback?options.feedback(f,q):f.feedback;}});return f;
+}
+const feedbackInput=()=>({...shareInput(),registeredFeedbackPath:feedbackPath,expectedFeedbackHash:feedbackHash});
+test('registered FEEDBACK transport returns canonical Markdown and frozen fallback without native output selection',async()=>{
+ const f=feedbackFixture(),result=await f.adapter.readShareFeedback(feedbackInput());
+ assert.equal(result.schema,'ar-create.magazine-share-feedback.v1');assert.equal(result.document.text,feedbackMarkdown);assert.equal(result.mapping.structured,false);assert.equal(result.readOnly,true);assert.ok(Object.isFrozen(result.document));assert.ok(Object.isFrozen(f.feedbackCalls[0]));
+ assert.deepEqual(JSON.parse(JSON.stringify(f.feedbackCalls[0])),{storyId:'story',pieceId:'article:1',edition:'working',expectedHash:H,registeredFeedbackPath:feedbackPath,expectedFeedbackHash:feedbackHash});
+});
+
+const wireHash=value=>createHash('sha256').update(value).digest('hex');
+function mappedTransport(f){
+ const md='## Chinese\n\n你好。\n\n## English\n\nHello.\n',split=md.indexOf('## English');
+ const metadata={schema:'ar-create.magazine-feedback-share.v1',entries:[{recipientId:'11111111-1111-4111-8111-111111111111',target:{storyId:'story',pieceId:'article:1',edition:'working',hash:H},sections:[{language:'zh',heading:'## Chinese',hash:wireHash(md.slice(0,split))},{language:'en',heading:'## English',hash:wireHash(md.slice(split))}]}]};
+ const saved=updateFeedbackShare(md,{expectedHash:wireHash(md),metadata}),parsed=parseFeedbackShare(saved.markdown);
+ f.feedback.document.text=saved.markdown;f.feedback.document.hash=saved.hash;f.feedback.feedback.hash=saved.hash;f.context.references.feedback[0].currentHash=saved.hash;
+ f.feedback.mapping={structured:true,metadata:parsed.metadata,projection:parsed.projection,reason:null};return {...feedbackInput(),expectedFeedbackHash:saved.hash};
+}
+test('FEEDBACK transport verifies canonical mapped language ranges and freezes the complete projected result',async()=>{
+ const f=feedbackFixture(),q=mappedTransport(f),result=await f.adapter.readShareFeedback(q);
+ assert.equal(result.mapping.structured,true);assert.equal(result.mapping.projection[0].sections.length,2);assert.match(result.mapping.projection[0].sections[0].markdown,/你好/);
+ assert.ok(Object.isFrozen(result.mapping.metadata.entries[0].target));assert.ok(Object.isFrozen(result.mapping.projection[0].sections[0]));assert.equal(f.contextCalls.length,2);
+ assert.throws(()=>result.mapping.projection[0].sections[0].markdown='Overwritten',TypeError);
+ f.feedback.document.text='New callback text';assert.notEqual(result.document.text,f.feedback.document.text);
+});
+test('FEEDBACK transport refuses foreign paths, missing/duplicate/unreadable references and wrong input hashes before callback',async()=>{
+ for(const alter of [q=>q.registeredFeedbackPath='../private.md',q=>q.registeredFeedbackPath='Workflow/1-Source/CONTEXT - Clay.md',q=>q.registeredFeedbackPath='Workflow/6-Feedback/FEEDBACK - Elsewhere.md',q=>q.expectedFeedbackHash=H,q=>q.expectedHash=R,q=>q.outputId='native-uuid',q=>q.projectId='elsewhere']){
+  const f=feedbackFixture(),q=feedbackInput();alter(q);await assert.rejects(f.adapter.readShareFeedback(q));assert.equal(f.feedbackCalls.length,0);
+ }
+ for(const alter of [f=>f.context.references.feedback=[],f=>f.context.references.feedback.push(f.context.references.feedback[0]),f=>Object.assign(f.context.references.feedback[0],{currentHash:null,state:'missing',readable:false,changedSinceRegistration:true}),f=>Object.assign(f.context.references.feedback[0],{state:'unreadable',readable:false})]){
+  const f=feedbackFixture();alter(f);await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));assert.equal(f.feedbackCalls.length,0);
+ }
+ const f=feedbackFixture();f.state.dirty=true;await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));assert.equal(f.contextCalls.length,0);assert.equal(f.feedbackCalls.length,0);
+});
+test('FEEDBACK response must preserve exact current owner, registered root, hashes and canonical document bytes',async()=>{
+ for(const alter of [r=>r.schema='other',r=>r.readOnly=false,r=>r.selection.storyId='other',r=>r.selection.edition='published',r=>r.selection.editionId='old',r=>r.authority.path='Workflow/3-Develop/DEV - Other.md',r=>r.authority.pieceId='other',r=>r.rootIdentity.fingerprint=H,r=>r.draft.hash=R,r=>r.feedback.path='Workflow/6-Feedback/FEEDBACK - Other.md',r=>r.feedback.hash=R,r=>r.feedback.registeredHash=R,r=>r.feedback.changedSinceRegistration=false,r=>r.document.kind='DEV',r=>r.document.hash=R,r=>r.document.text+='Tampered words.']){
+  const f=feedbackFixture();alter(f.feedback);await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));
+ }
+});
+test('FEEDBACK projection refuses foreign targets, stale language ranges, unbounded metadata and inconsistent fallback',async()=>{
+ for(const alter of [r=>r.mapping.projection[0].target.hash=R,r=>r.mapping.metadata.entries[0].target.storyId='other',r=>r.mapping.projection[0].sections[0].start=-1,r=>r.mapping.projection[0].sections[0].end=9999999,r=>r.mapping.projection[0].sections[0].markdown='Invented substitute.',r=>r.mapping.projection[0].sections[0].hash=R,r=>r.mapping.projection[0].sections[0].language='fr',r=>r.mapping.metadata.entries.push(...Array(201).fill(r.mapping.metadata.entries[0])),r=>r.mapping.metadata.entries[0].sections[0].hash=R,r=>r.mapping.structured=false,r=>r.mapping.reason='Claimed reason despite structured true',r=>r.mapping.metadata=null]){
+  const f=feedbackFixture(),q=mappedTransport(f);alter(f.feedback);await assert.rejects(f.adapter.readShareFeedback(q));
+ }
+ const f=feedbackFixture();f.feedback.mapping.reason='';await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));
+});
+test('delayed FEEDBACK context/result and final registered-reference changes refuse switched work',async()=>{
+ for(const stage of ['context','feedback'])for(const alter of [f=>f.state.dirty=true,f=>f.state.hash=R,f=>f.state.owner.pieceId='other',f=>f.state.projectId='elsewhere']){
+  let release;const f=feedbackFixture({[stage]:()=>new Promise(resolve=>release=resolve)}),pending=f.adapter.readShareFeedback(feedbackInput());await new Promise(resolve=>setImmediate(resolve));alter(f);release(stage==='context'?f.context:f.feedback);await assert.rejects(pending);if(stage==='context')assert.equal(f.feedbackCalls.length,0);
+ }
+ for(const change of ['root','feedback']){
+  const f=feedbackFixture({context:f=>{if(f.contextCalls.length===2){if(change==='root')f.context.rootIdentity.fingerprint=H;else Object.assign(f.context.references.feedback[0],{currentHash:R});}return f.context;}});await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));
+ }
+});
+test('FEEDBACK input is captured across awaits and uncontracted result extras do not enter the frozen projection',async()=>{
+ let release;const f=feedbackFixture({context:f=>f.contextCalls.length===1?new Promise(resolve=>release=resolve):f.context}),q=feedbackInput();
+ f.feedback.secret='Uncontracted payload';f.feedback.document.secret='Uncontracted payload';f.feedback.mapping.secret='Uncontracted payload';
+ const pending=f.adapter.readShareFeedback(q);q.registeredFeedbackPath='Workflow/6-Feedback/FEEDBACK - Other.md';q.expectedFeedbackHash=R;release(f.context);
+ const result=await pending;assert.equal(result.feedback.path,feedbackPath);assert.equal(f.feedbackCalls[0].registeredFeedbackPath,feedbackPath);assert.ok(!JSON.stringify(result).includes('Uncontracted payload'));
+});
+test('a recorded foreign target remains a readable explicit fallback without becoming the current mapping',async()=>{
+ const f=feedbackFixture();mappedTransport(f);
+ const metadata=structuredClone(f.feedback.mapping.metadata);metadata.entries[0].target.hash=R;
+ const saved=updateFeedbackShare(f.feedback.document.text,{expectedHash:f.feedback.document.hash,metadata});
+ f.feedback.document.text=saved.markdown;f.feedback.document.hash=saved.hash;f.feedback.feedback.hash=saved.hash;f.context.references.feedback[0].currentHash=saved.hash;
+ f.feedback.mapping={structured:false,metadata,projection:[],reason:'Earlier working revision; full FEEDBACK remains readable.'};
+ const result=await f.adapter.readShareFeedback({...feedbackInput(),expectedFeedbackHash:saved.hash});
+ assert.equal(result.mapping.structured,false);assert.equal(result.mapping.projection.length,0);assert.equal(result.mapping.metadata.entries[0].target.hash,R);assert.equal(result.draft.hash,H);assert.equal(result.document.text,saved.markdown);
 });

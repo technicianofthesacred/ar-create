@@ -1,3 +1,9 @@
+## 27 October — Magazine Share reading connected in candidate
+
+The Share screen now branches to the selected Magazine working article before native Study output selection. It opens an exact registered feedback file with independent draft/file hashes and the registered root identity. Multiple files require an explicit choice. Saved Markdown stays canonical; recipient/language mappings reference exact sections in that same file, and stale or ambiguous mappings fall back to the complete readable record. Existing tab text remains separate. No invitation, recipient record, manuscript or sending fact is created by reading.
+
+The same read-only connection is exposed through HTTP, the command registry, CLI and MCP. The frontend verifies canonical text and section hashes, refuses delayed owner changes, and rechecks the selected reference. Focused integrated service, transport, Share screen and review-connection checks pass. This is an uninstalled candidate, with native Share screen proof still open. Feedback editing/save/reload/restart/conflict/exact Undo, recipient/language/edition choices, actual correspondence facts and complete approved-C visual acceptance remain unfinished.
+
 ## 27 October — Research type roles verified on desktop; candidate only
 
 Research point explanations now use the approved C sans-serif body role at 15px/22.5px, quoted speech uses Lora at 15px/24.75px, and source attribution uses the compact 13px/19.5px label role. The Source-only Atlas refinement and retained long-document reading role stay scoped to their existing surfaces.

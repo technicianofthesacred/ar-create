@@ -171,6 +171,11 @@ export function createRouteMap(services) {
         if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Use one exact value for each Magazine share reference.',400);
         return magazineWorking.shareContext({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash')});
       }},
+      '/api/magazine/working-draft/share-feedback': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Choose one exact registered feedback reference and its current hashes.',400);
+        return magazineWorking.readShareFeedback({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash')});
+      }},
       '/api/magazine/working-draft/prepare': {POST:input=>magazineWorking.prepare(input)},
       '/api/magazine/working-draft/save': {POST:async input=>{const result=await magazineWorking.save(input);if(result.scope)input.scope=result.scope;return result;}},
       '/api/magazine/working-draft/edit': {POST:async input=>{const result=await magazineWorking.edit(input);if(result.scope)input.scope=result.scope;return result;}},

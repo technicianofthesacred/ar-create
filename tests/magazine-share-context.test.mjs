@@ -6,6 +6,8 @@ import {buildMagazineFixture, treeHashes} from './helpers/magazine-fixture.mjs';
 import {planRegistration, INDEX_SCHEMA} from '../runtime/services/magazine-vault/projects.mjs';
 import {createMagazineVault} from '../runtime/services/magazine-vault/index.mjs';
 import {createWorkingDraftBridge} from '../runtime/services/magazine/working-draft-bridge.mjs';
+import {updateFeedbackShare} from '../runtime/services/magazine/feedback-share-codec.mjs';
+import {sha256} from '../runtime/services/magazine-vault/write.mjs';
 const DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
 const FEEDBACK = 'Workflow/6-Feedback/FEEDBACK - Clay Teacher.md';
 const CONTEXT = 'Workflow/1-Source/CONTEXT - Clay Teacher.md';
@@ -88,4 +90,79 @@ test('a missing registered reference with a surviving sync-conflict still refuse
   const s=fixture(t), file=path.join(s.f.vault,FEEDBACK);
   fs.rmSync(file); fs.writeFileSync(file.replace(/\.md$/,'.sync-conflict-20261026-test.md'),'Invented surviving conflicting message.');
   await assert.rejects(s.bridge.shareContext(s.input),e=>e.status===409);
+});
+test('registered FEEDBACK read returns canonical Markdown and an honest legacy fallback without writes', async t => {
+  const s=fixture(t), expectedFeedbackHash=s.magazine.read({path:FEEDBACK}).hash, before=treeHashes(s.f.dir);
+  const result=await s.bridge.readShareFeedback({...s.input,registeredFeedbackPath:FEEDBACK,expectedFeedbackHash});
+  assert.equal(result.schema,'ar-create.magazine-share-feedback.v1');
+  assert.equal(result.authority.path,DEV);assert.equal(result.feedback.path,FEEDBACK);assert.equal(result.feedback.hash,expectedFeedbackHash);
+  assert.equal(result.document.text,fs.readFileSync(path.join(s.f.vault,FEEDBACK),'utf8'));assert.equal(result.document.hash,expectedFeedbackHash);
+  assert.equal(result.mapping.structured,false);assert.deepEqual(result.mapping.projection,[]);assert.equal(result.readOnly,true);
+  assert.equal(result.rootIdentity.fingerprint,(await s.bridge.shareContext(s.input)).rootIdentity.fingerprint);
+  assert.deepEqual(treeHashes(s.f.dir),before);
+});
+
+function mappedFeedback(s,alter=()=>{}) {
+  const markdown='# Invented invitations\n\n## A Chinese\n\n你好，甲。\n\n## A English\n\nHello A.\n\n## B Chinese\n\n你好，乙。\n\n## B English\n\nHello B.\n';
+  const headings=['## A Chinese','## A English','## B Chinese','## B English'];
+  const metadata={schema:'ar-create.magazine-feedback-share.v1',entries:['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222'].map((recipientId,i)=>({recipientId,target:{storyId:s.input.storyId,pieceId:s.input.pieceId,edition:'working',hash:s.input.expectedHash},sections:headings.slice(i*2,i*2+2).map((heading,j)=>{const start=markdown.indexOf(heading),next=markdown.indexOf('\n## ',start+1);return {language:j?'en':'zh',heading,hash:sha256(Buffer.from(markdown.slice(start,next<0?markdown.length:next+1)))};})}))};
+  alter(metadata);
+  const saved=updateFeedbackShare(markdown,{expectedHash:sha256(Buffer.from(markdown)),metadata});
+  fs.writeFileSync(path.join(s.f.vault,FEEDBACK),saved.markdown);
+  return {...s.input,registeredFeedbackPath:FEEDBACK,expectedFeedbackHash:saved.hash};
+}
+test('registered feedback projects both explicit recipients/languages on the exact current owner with no new files',async t=>{
+ const s=fixture(t), input=mappedFeedback(s), before=treeHashes(s.f.dir), result=await s.bridge.readShareFeedback(input);
+ assert.equal(result.mapping.structured,true);assert.equal(result.mapping.projection.length,2);assert.equal(result.mapping.projection[0].sections[0].language,'zh');assert.match(result.mapping.projection[1].sections[1].markdown,/Hello B/);
+ assert.equal(result.feedback.changedSinceRegistration,true);assert.equal(result.draft.hash,input.expectedHash);assert.equal(result.document.hash,input.expectedFeedbackHash);
+ assert.ok(!JSON.stringify(result).includes(s.f.vault));assert.deepEqual(treeHashes(s.f.dir),before);
+ const restarted=createWorkingDraftBridge({magazine:createMagazineVault({vaultRoot:s.f.vault,filesRoot:s.f.files,dataDir:s.f.data,writable:false})});
+ assert.deepEqual(await restarted.readShareFeedback(input),result);
+});
+test('foreign owner/earlier revision mappings stay full readable fallback without implicit rebinding',async t=>{
+ for(const alter of [m=>m.entries[0].target.storyId='mag-foreign',m=>m.entries[0].target.pieceId='mag-clay-teacher:part-9',m=>m.entries[0].target.hash='b'.repeat(64)]){
+  const s=fixture(t), input=mappedFeedback(s,alter), result=await s.bridge.readShareFeedback(input);
+  assert.equal(result.mapping.structured,false);assert.deepEqual(result.mapping.projection,[]);assert.ok(result.mapping.metadata);assert.equal(result.document.text,fs.readFileSync(path.join(s.f.vault,FEEDBACK),'utf8'));
+ }
+});
+test('malformed metadata, ambiguous headings and independently changed sections remain readable fallback',async t=>{
+ for(const alter of [md=>md.replace('ar-create-share: {','ar-create-share: malformed {'),md=>md+'\n## A English\nDuplicate.\n',md=>md.replace('Hello A.','Newer A.')]){
+  const s=fixture(t), input=mappedFeedback(s), file=path.join(s.f.vault,FEEDBACK), changed=alter(fs.readFileSync(file,'utf8'));fs.writeFileSync(file,changed);input.expectedFeedbackHash=s.magazine.read({path:FEEDBACK}).hash;
+  const result=await s.bridge.readShareFeedback(input);assert.equal(result.document.text,changed);assert.equal(result.mapping.structured,false);assert.deepEqual(result.mapping.projection,[]);
+ }
+});
+test('feedback selector is explicitly registered, independently hashed and never substitutes another reference',async t=>{
+ const s=fixture(t), input=mappedFeedback(s), foreign='Workflow/6-Feedback/FEEDBACK - River Potter.md';fs.writeFileSync(path.join(s.f.vault,foreign),'Invented other message.');
+ for(const change of [{registeredFeedbackPath:foreign},{registeredFeedbackPath:CONTEXT},{registeredFeedbackPath:'../private.md'},{expectedFeedbackHash:'a'.repeat(64)},{expectedHash:'c'.repeat(64)},{path:FEEDBACK},{expectedFeedbackHash:null},{edition:'published',editionId:'old'}])await assert.rejects(s.bridge.readShareFeedback({...input,...change}));
+ const project=JSON.parse(fs.readFileSync(s.projectFile));project.vaultRecords.feedback=[project.vaultRecords.feedback,project.vaultRecords.feedback];fs.writeFileSync(s.projectFile,JSON.stringify(project));
+ await assert.rejects(s.bridge.readShareFeedback(input),e=>e.status===409);
+});
+test('selected feedback refuses unreadable/missing/conflicting/symlinked bytes and unsupported canonical decoding',async t=>{
+ for(const state of ['unreadable','missing','conflict','symlink','bom']){
+  const s=fixture(t), input=mappedFeedback(s), file=path.join(s.f.vault,FEEDBACK);
+  if(state==='unreadable')fs.writeFileSync(file,Buffer.from([0xff,0xfe]));
+  if(state==='missing')fs.rmSync(file);
+  if(state==='conflict')fs.writeFileSync(file.replace(/\.md$/,'.sync-conflict-20261027-test.md'),'Invented conflict.');
+  if(state==='symlink'){fs.renameSync(file,file+'.target');fs.symlinkSync(file+'.target',file);}
+  if(state==='bom')fs.writeFileSync(file,Buffer.concat([Buffer.from([0xef,0xbb,0xbf]),fs.readFileSync(file)]));
+  if(['unreadable','bom'].includes(state))input.expectedFeedbackHash=s.magazine.read({path:FEEDBACK}).hash;
+  await assert.rejects(s.bridge.readShareFeedback(input));
+ }
+});
+test('draft, feedback, registration or canonical root drift during read refuses a mixed projection',async t=>{
+ for(const target of ['draft','feedback','registration','root']){
+  const s=fixture(t), input=mappedFeedback(s);let changed=false;
+  const owner={...s.magazine,read(q){const document=s.magazine.read(q);if(q.path===FEEDBACK&&!changed){changed=true;if(target==='draft'||target==='feedback')fs.appendFileSync(path.join(s.f.vault,target==='draft'?DEV:FEEDBACK),'\nConcurrent change.\n');if(target==='registration'){const p=JSON.parse(fs.readFileSync(s.projectFile));p.vaultRecords.feedback=[];fs.writeFileSync(s.projectFile,JSON.stringify(p));}if(target==='root'){const file=path.join(s.f.data,'magazine/index.json'),index=JSON.parse(fs.readFileSync(file));index.vaultRoot=s.f.files;fs.writeFileSync(file,JSON.stringify(index));}}return document;}};
+  await assert.rejects(createWorkingDraftBridge({magazine:owner}).readShareFeedback(input),e=>e.status===409);
+ }
+});
+test('an unrelated research conflict cannot block reading the exact chosen feedback owner',async t=>{
+ const s=fixture(t),input=mappedFeedback(s);fs.writeFileSync(path.join(s.f.vault,RESEARCH.replace(/\.md$/,'.sync-conflict-20261027-test.md')),'Invented research conflict.');
+ const result=await s.bridge.readShareFeedback(input);assert.equal(result.mapping.structured,true);assert.equal(result.feedback.path,FEEDBACK);
+});
+
+
+test('Share feedback preserves the maintained reader size limit before projecting a file',async t=>{
+ const s=fixture(t),text='Invented feedback.\n'.repeat(120000);fs.writeFileSync(path.join(s.f.vault,FEEDBACK),text);
+ await assert.rejects(s.bridge.readShareFeedback({...s.input,registeredFeedbackPath:FEEDBACK,expectedFeedbackHash:sha256(Buffer.from(text))}),error=>error.status===409);
 });

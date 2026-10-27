@@ -59,3 +59,30 @@ test('Claude/Codex entrances discover and read the same Magazine context without
  await assert.rejects(tools.callTool('ar_create_call',{name:command.name,input:{...input,expectedHash:'0'.repeat(64)}}),e=>e.status===409);
  assert.deepEqual(treeHashes(f.vault),beforeVault);assert.deepEqual(treeHashes(f.data),beforeData);
 });
+
+test('registered FEEDBACK HTTP and agent entrances return the same canonical owner without writes',async t=>{
+ const {f,origin,input}=await fixture(t),body=fs.readFileSync(path.join(f.vault,feedback),'utf8');
+ const query={...input,registeredFeedbackPath:feedback,expectedFeedbackHash:hash(body)},feedbackRoute='/api/magazine/working-draft/share-feedback';
+ const beforeVault=treeHashes(f.vault),beforeData=treeHashes(f.data);
+ const response=await fetch(origin+feedbackRoute+'?'+new URLSearchParams(query));assert.equal(response.status,200);
+ const value=await response.json();assert.equal(value.schema,'ar-create.magazine-share-feedback.v1');assert.equal(value.document.text,body);assert.equal(value.document.hash,query.expectedFeedbackHash);assert.equal(value.draft.hash,input.expectedHash);assert.equal(value.mapping.structured,false);assert.equal(value.readOnly,true);
+ const command=(await(await fetch(origin+'/api/capabilities')).json()).commands.find(c=>c.route===feedbackRoute);
+ assert.ok(command);assert.equal(command.readOnly,true);assert.deepEqual(command.schema.query,Object.keys(query));
+ const cli=await runCLI(['--url',origin,'--actor','agent:codex','call',command.name,'--input','-'],{stdin:async()=>JSON.stringify(query)});assert.equal(cli.exitCode,0);
+ const tools=createTools({url:origin,actor:'agent:claude-code'});assert.deepEqual(await tools.callTool('ar_create_call',{name:command.name,input:query}),cli.result);assert.deepEqual(cli.result,value);
+ assert.deepEqual(treeHashes(f.vault),beforeVault);assert.deepEqual(treeHashes(f.data),beforeData);
+});
+
+test('registered FEEDBACK HTTP rejects independent hash drift, guessed paths, duplicate selectors and mutation',async t=>{
+ const {f,origin,input}=await fixture(t),beforeVault=treeHashes(f.vault),beforeData=treeHashes(f.data),feedbackRoute='/api/magazine/working-draft/share-feedback';
+ const query={...input,registeredFeedbackPath:feedback,expectedFeedbackHash:hash(fs.readFileSync(path.join(f.vault,feedback)))};
+ const get=q=>fetch(origin+feedbackRoute+'?'+new URLSearchParams(q));
+ assert.equal((await get({...query,expectedFeedbackHash:'0'.repeat(64)})).status,409);
+ assert.equal((await get({...query,expectedHash:'0'.repeat(64)})).status,409);
+ assert.equal((await get({...query,registeredFeedbackPath:'Workflow/6-Feedback/FEEDBACK - Other.md'})).status,404);
+ assert.equal((await get({...query,path:feedback})).status,400);
+ assert.equal((await fetch(origin+feedbackRoute+'?'+new URLSearchParams(query)+'&registeredFeedbackPath=other')).status,400);
+ const incomplete={...query};delete incomplete.expectedFeedbackHash;assert.equal((await get(incomplete)).status,400);
+ assert.ok([404,405].includes((await fetch(origin+feedbackRoute,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(query)})).status));
+ assert.deepEqual(treeHashes(f.vault),beforeVault);assert.deepEqual(treeHashes(f.data),beforeData);
+});

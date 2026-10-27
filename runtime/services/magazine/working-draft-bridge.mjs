@@ -14,6 +14,7 @@ import {currentActor, isHuman, requireHuman, requireWriteActor} from '../actor.m
 import {classify, frontmatter} from '../magazine-vault/kinds.mjs';
 import {expected, sha256} from '../magazine-vault/write.mjs';
 import {splitBlocks, hash, plain, editable} from '../../reference/mag-edit.mjs';
+import {parseFeedbackShare} from './feedback-share-codec.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -159,6 +160,46 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
       rootIdentity: {scheme: 'canonical-directory-sha256-v1', fingerprint: sha256(Buffer.from(root, 'utf8'))},
       draft: {path: authority.path, hash: draft.hash}, references};
   }
+  // An exact registered reference selector, never a caller-granted file path.
+  // This read grants no FEEDBACK write, proposal acceptance or sending authority.
+  async function readShareFeedback(input) {
+    workingOnly(input); fields(input, ['expectedHash', 'registeredFeedbackPath', 'expectedFeedbackHash']);
+    const draftHash = expected(input.expectedHash), feedbackHash = expected(input.expectedFeedbackHash);
+    if (draftHash === null || feedbackHash === null) throw new StateError('Read the exact current working draft and FEEDBACK hashes first.', 400);
+    const authority = resolve(input), root = registrationRoot();
+    const project = magazine.projects.project(input.storyId), registration = JSON.stringify(project);
+    const records = [].concat(project.vaultRecords.feedback || []);
+    if (records.length > 512) throw new StateError('The registered FEEDBACK list exceeds its bounded limit.', 413);
+    const matches = records.filter(record => record?.rel === input.registeredFeedbackPath);
+    if (typeof input.registeredFeedbackPath !== 'string' || matches.length !== 1) throw new StateError('Choose one exact registered FEEDBACK reference.', matches.length > 1 ? 409 : 404);
+    const record = matches[0];
+    if (classify(record.rel).kind !== 'FEEDBACK' || !/^[a-f0-9]{64}$/.test(record.sha256 || '')) throw new StateError('The registered FEEDBACK identity is inconsistent.', 409);
+    async function exactDocument(rel, kind, currentHash) {
+      const document = await magazine.read({path: rel});
+      if (document.path !== rel || !document.exists || document.kind !== kind || typeof document.text !== 'string' || document.hash !== currentHash || document.conflicts?.length || magazine._roots().mag.conflictCopies(rel).length) throw new StateError('The selected working draft or FEEDBACK changed, is unreadable or has conflicts. Read its current references again.', 409);
+      return document;
+    }
+    const draft = await exactDocument(authority.path, 'DEV', draftHash);
+    const document = await exactDocument(record.rel, 'FEEDBACK', feedbackHash);
+    // A full canonical Markdown read must round-trip to the owner's byte hash.
+    // The maintained public reader strips a UTF-8 BOM; refuse that unsupported
+    // representation rather than silently returning changed canonical bytes.
+    if (sha256(Buffer.from(document.text, 'utf8')) !== feedbackHash) throw new StateError('The FEEDBACK reader did not return the exact canonical Markdown bytes.', 409);
+    const parsed = parseFeedbackShare(document.text);
+    const targetMatches = parsed.structured && parsed.projection.every(entry => entry.target.storyId === authority.storyId && entry.target.pieceId === authority.pieceId && entry.target.edition === 'working' && entry.target.hash === draftHash);
+    const mapping = parsed.structured && !targetMatches
+      ? {structured: false, metadata: parsed.metadata, projection: [], reason: 'The saved recipient mapping targets another piece or an earlier working revision. The full FEEDBACK remains readable.'}
+      : {structured: parsed.structured, metadata: parsed.metadata, projection: parsed.projection, reason: parsed.reason};
+    const currentFeedback = await exactDocument(record.rel, 'FEEDBACK', feedbackHash);
+    const currentDraft = await exactDocument(authority.path, 'DEV', draftHash);
+    const currentAuthority = resolve(input);
+    if (currentFeedback.text !== document.text || currentDraft.text !== draft.text || registrationRoot() !== root || JSON.stringify(currentAuthority) !== JSON.stringify(authority) || JSON.stringify(magazine.projects.project(input.storyId)) !== registration) throw new StateError('The FEEDBACK registration or selected files changed while reading. Read the exact references again.', 409);
+    return {schema: 'ar-create.magazine-share-feedback.v1', selection: select(input), authority,
+      rootIdentity: {scheme: 'canonical-directory-sha256-v1', fingerprint: sha256(Buffer.from(root, 'utf8'))},
+      draft: {path: authority.path, hash: draftHash},
+      feedback: {path: record.rel, hash: feedbackHash, registeredHash: record.sha256, changedSinceRegistration: record.sha256 !== feedbackHash},
+      document: {path: record.rel, kind: 'FEEDBACK', hash: feedbackHash, text: document.text}, mapping, readOnly: true};
+  }
   async function prepare(input) {
     workingOnly(input); fields(input, ['expectedHash', 'operations']);
     requireHuman('Preparing a native draft edit');
@@ -276,5 +317,5 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     if (!eligible.eligible) throw new StateError(eligible.reason, isHuman(currentActor()?.actor) ? 409 : 403);
     return magazine.undo({undoOperationId: input.undoOperationId, operationId: input.operationId});
   }
-  return {catalog, read, shareContext, prepare, edit, save, operation, eligibleUndo, undo};
+  return {catalog, read, shareContext, readShareFeedback, prepare, edit, save, operation, eligibleUndo, undo};
 }
