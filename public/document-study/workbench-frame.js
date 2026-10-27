@@ -92,12 +92,13 @@
   })();
   return{ready,cleanup(){if(disposed)return;disposed=true;abort.abort();root.remove();}};
  }
- function closeTool(){compareIntent++;stopSources(document.getElementById('wbf-drawer'));stopUnderstanding(document.getElementById('wbf-drawer'));restore();tool='';const d=document.getElementById('wbf-drawer');d?.wbfEmptyObserver?.disconnect();d?.remove();document.body.classList.remove('wbf-drawer-open');returnFocus?.isConnected&&returnFocus.focus?.({preventScroll:true});}
+ function closeTool(){compareIntent++;stopSources(document.getElementById('wbf-drawer'));stopUnderstanding(document.getElementById('wbf-drawer'));restore();if(tool==='proposals')window.studyAIProposals?.closeForDrawer?.();tool='';delete document.body.dataset.wbfDrawerTool;const d=document.getElementById('wbf-drawer');d?.wbfEmptyObserver?.disconnect();d?.remove();document.body.classList.remove('wbf-drawer-open');returnFocus?.isConnected&&returnFocus.focus?.({preventScroll:true});}
  function drawer(){
   if(!tool)return;
   let d=document.getElementById('wbf-drawer');if(!d){d=document.createElement('aside');d.id='wbf-drawer';d.setAttribute('aria-label','Tools beside the writing');d.innerHTML='<div class="dr-head"><h2></h2><button class="btn quiet" data-wbf-close aria-label="Close tools">'+ic('close')+'</button></div><div class="dr-tabs" role="tablist"></div><div class="dr-body"></div>';document.body.append(d);}
-  setHTML(d.querySelector('h2'),esc(({understanding:'Understanding',check:'Check',history:'History',sources:'Sources',recovery:'Earlier writing & recovery'})[tool])+' <span class="sub">· '+esc(current().name)+'</span>');
-  setHTML(d.querySelector('.dr-tabs'),['understanding','check','history','sources'].map(k=>`<button type="button" role="tab" data-wbf-tool="${k}" aria-selected="${tool===k}" class="${tool===k?'on':''}">${({understanding:'Understanding',check:'Check',history:'History',sources:'Sources'})[k]}</button>`).join(''));
+  setHTML(d.querySelector('h2'),esc(({understanding:'Understanding',check:'Check',history:'History',sources:'Sources',proposals:'AI proposals',recovery:'Earlier writing & recovery'})[tool])+' <span class="sub">· '+esc(current().name)+'</span>');
+  setHTML(d.querySelector('.dr-tabs'),(tool==='proposals'?['understanding','proposals','history','sources']:['understanding','check','history','sources']).map(k=>`<button type="button" role="tab" data-wbf-tool="${k}" aria-selected="${tool===k}" class="${tool===k?'on':''}">${({understanding:'Understanding',check:'Check',history:'History',sources:'Sources',proposals:'Proposals'})[k]}</button>`).join(''));
+  d.dataset.tool=tool;document.body.dataset.wbfDrawerTool=tool;
   const host=d.querySelector('.dr-body'),ownerKey=tool==='sources'?(()=>{try{return sourceContext().stamp;}catch{return current().id+':unavailable';}})():current().id+':'+(window.studyDraft?.currentBinding?.()?.id||'');
   if(tool!=='sources')stopSources(d);
   const understanding=window.workbenchUnderstanding?.mount;
@@ -113,12 +114,12 @@
    document.body.classList.add('wbf-drawer-open');return;
   }
   stopUnderstanding(d);
-  const found=tool==='recovery'?document.querySelector('.draft-bar'):tool==='check'?document.querySelector('.wn-check-findings'):tool==='understanding'?document.querySelector('#c3-insp-decisions #downstream-human-direction,#downstream-human-direction'):tool==='sources'?document.querySelector('.draft-surface-source'):tool==='history'?[...document.querySelectorAll('.draft-bar>.draft-inspect')].find(n=>n.querySelector('summary')?.textContent.trim()==='History'):null;
+  const found=tool==='proposals'?document.getElementById('study-ai-proposals'):tool==='recovery'?document.querySelector('.draft-bar'):tool==='check'?document.querySelector('.wn-check-findings'):tool==='understanding'?document.querySelector('#c3-insp-decisions #downstream-human-direction,#downstream-human-direction'):tool==='sources'?document.querySelector('.draft-surface-source'):tool==='history'?[...document.querySelectorAll('.draft-bar>.draft-inspect')].find(n=>n.querySelector('summary')?.textContent.trim()==='History'):null;
   const target=(found&&(!found.closest('#wbf-drawer')||host.dataset.ownerKey===ownerKey)?found:null)||(host.dataset.ownerKey===ownerKey&&host.contains(host.wbfOwner)?host.wbfOwner:null);
   // A replaced owner or a story switch must never leave another piece's controls in this drawer.
   if(host.dataset.tool!==tool||mounted!==ws()||host.dataset.ownerKey!==ownerKey||host.wbfOwner!==target){
    stopSources(d);restore();host.replaceChildren();host.dataset.tool=tool;host.dataset.ownerKey=ownerKey;host.wbfOwner=target;mounted=ws();
-   if(target){move(target,host);if(target.tagName==='DETAILS')target.open=true;}
+   if(target){move(target,host);if(tool==='proposals')target.hidden=false;if(target.tagName==='DETAILS')target.open=true;}
    else if(tool==='check'&&window.studyDraftCheck?.mount){host.wbfOwner=window.studyDraftCheck.mount(host);}
    else{const p=document.createElement('p');p.className='dim wbf-drawer-empty';p.textContent=tool==='sources'?'No retained working-file source context is connected to this piece.':tool==='history'?'No earlier saved versions are available for this piece yet.':tool==='understanding'?'No saved direction for this piece yet. Write your thoughts in Direction.':'Checks appear beside the saved manuscript.';host.append(p);}
   }
@@ -157,7 +158,7 @@
    closeTool();tool='check';mounted=null;decorate();document.querySelector('#wbf-drawer [data-wbf-close]')?.focus({preventScroll:true});return;
   }
   if(tool===k){closeTool();return;}
-  restore();tool=k;mounted=null;
+  restore();if(tool==='proposals')window.studyAIProposals?.closeForDrawer?.();if(k==='proposals'){if(typeof window.studyAIProposals?.openForDrawer!=='function')throw Error('Proposal review is unavailable for this working part.');if(document.body.dataset.draftFocus==='true'){const margin=document.querySelector('.workspace>.topbar [data-surface-mode="margin"]');if(!margin)throw Error('Leave Focus before opening proposal review.');margin.click();}window.studyAIProposals.openForDrawer();}tool=k;mounted=null;
   if(k==='history'&&[5,6,7].includes(stage()))await window.studyDraft?.showHistory?.();
   decorate();document.querySelector('#wbf-drawer [data-wbf-close]')?.focus({preventScroll:true});
  }
@@ -353,7 +354,7 @@
  }
  function decorate(){
   if(!ws())return;
-  document.body.classList.add('wbf-on');const home=document.getElementById('project-library'),mode=home?.open&&!home.dataset.plContext?homeMode:'';if(document.body.dataset.wbfHome!==mode)document.body.dataset.wbfHome=mode;const n=stage();if(n===7&&decoratedStage!==7){restore();tool='check';mounted=null;}if(![5,6,7].includes(n)&&tool==='check')closeTool();decoratedStage=n;header();documents();bench();
+  document.body.classList.add('wbf-on');const home=document.getElementById('project-library'),mode=home?.open&&!home.dataset.plContext?homeMode:'';if(document.body.dataset.wbfHome!==mode)document.body.dataset.wbfHome=mode;const n=stage();if(tool==='proposals'&&!window.studyAIProposals?.isOpen?.())closeTool();if(n===7&&decoratedStage!==7){restore();tool='check';mounted=null;}if(![5,6,7].includes(n)&&tool==='check')closeTool();decoratedStage=n;header();documents();bench();
  }
  // Home and Pieces share the existing library dialog. Leave through its
  // guarded owner before replaying the exact rail control, including the native

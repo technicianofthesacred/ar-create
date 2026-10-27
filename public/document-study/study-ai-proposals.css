@@ -8,3 +8,12 @@
 body.draft-surface-active .study-ai-proposals button,.study-ai-proposals button,[data-ai-entry]{min-height:44px}.study-ai-proposals button:disabled{opacity:.6;cursor:default}.study-ai-proposals :is(button,textarea):focus-visible{outline:2px solid var(--green);outline-offset:2px}
 @media(max-width:650px){.study-ai-proposals{margin:0 12px 12px}.study-ai-change{grid-template-columns:minmax(0,1fr);gap:8px}}
 body.draft-surface-active #study-ai-proposals [data-ai-action="apply"]{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600}
+
+/* The existing reviewer fits the Workbench tool column, independently of desktop viewport width. */
+#wbf-drawer #study-ai-proposals{margin:0;padding:0;border:0;font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)}
+#wbf-drawer #study-ai-proposals .study-ai-head h3{display:none}
+#wbf-drawer #study-ai-proposals .study-ai-change{grid-template-columns:minmax(0,1fr);gap:10px}
+#wbf-drawer #study-ai-proposals :is(p,textarea){max-width:100%;overflow-wrap:anywhere}
+#wbf-drawer #study-ai-proposals :is(button,textarea){font:inherit}
+#wbf-drawer #study-ai-proposals .study-ai-actions{gap:8px}
+#wbf-drawer #study-ai-proposals [data-ai-action="close"]{display:none}

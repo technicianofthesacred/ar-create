@@ -5,6 +5,7 @@
  const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x);
  function scope(){if(disposed||typeof document==='undefined')return null;const p=typeof current==='function'?current():null,b=window.studyDraft?.currentBinding?.();return p?.view==='article'&&p.viewedStage===5&&!p.referenceOnly&&b?.id&&b.parentStudyId===p.id?{bindingId:b.id,parentStudyId:b.parentStudyId,title:b.title||p.title||'Current part',partKey:b.partKey}:null;}
  const key=s=>s.bindingId+'\0'+s.parentStudyId;
+ const panelMatches=(el,s)=>{const panel=el.closest('#study-ai-proposals');return !panel||panel.dataset.bindingId===s.bindingId&&panel.dataset.parentStudyId===s.parentStudyId;};
  function room(s){const k=key(s);if(!rooms.has(k))rooms.set(k,{open:false,items:[],loaded:false,busy:false,error:'',notice:'',review:null,needsRefresh:false,reasons:{},finished:new Set()});return rooms.get(k);}
  function sameScope(s){const now=scope();return !!now&&key(now)===key(s);}
  function proof(s){const p=window.studyDraft?.currentProof?.();if(!sameScope(s)||!p||p.bindingId!==s.bindingId||p.parentStudyId!==s.parentStudyId)throw Error('This proposal belongs to another part.');return structuredClone(p);}
@@ -20,7 +21,7 @@
   const r=room(s);if(r.acceptedSequence!==undefined){try{if(proof(s).sequence!==r.acceptedSequence){r.notice='The manuscript changed after acceptance. Review Draft history for the current revision.';r.acceptedSequence=undefined;}}catch{}}control.setAttribute('aria-expanded',String(r.open));
   if(!r.open){panel?.remove();return;}
   let host=panel;if(!host){host=document.createElement('section');host.id='study-ai-proposals';host.className='study-ai-proposals';host.setAttribute('aria-label','AI proposal review');const bar=row.closest('.workbar')||row.closest('.draft-bar');bar?.after(host);}
-  host.dataset.bindingId=s.bindingId;host.dataset.parentStudyId=s.parentStudyId;
+  host.dataset.bindingId=s.bindingId;host.dataset.parentStudyId=s.parentStudyId;host.hidden=!!window.c3WorkbenchFrame&&!host.closest('#wbf-drawer');
   let dirty=true;try{dirty=proof(s).dirty}catch{}
   const v=r.review,terminal=v&&(['accepted','rejected','committing'].includes(v.status)||r.finished.has(v.id)),canApply=v&&v.status==='pending'&&!v.stale&&!dirty&&!terminal;
   const status=i=>i.status==='accepted'?'Applied earlier':i.status==='rejected'?'Rejected':i.stale?'Stale · review only':i.status==='pending'?'Pending review':i.status==='prepared'?'Awaiting assistant proposal':i.status;
@@ -28,7 +29,7 @@
   // Do not disturb an in-progress rejection reason when the native adapter emits a status event.
   if(host.dataset.markup!==markup){const focused=host.contains(document.activeElement)&&document.activeElement.matches('[data-ai-reason]');if(!focused){host.innerHTML=markup;host.dataset.markup=markup;}}
  }
- async function run(s,fn){const r=room(s);if(r.busy)return;r.busy=true;r.error='';r.notice='';const token=generation;paint();try{await fn(r,token)}catch(e){r.error=e.message}finally{r.busy=false;if(sameScope(s))paint();}}
+ async function run(s,fn){const r=room(s);if(r.busy)return;r.busy=true;r.error='';r.notice='';const token=generation;paint();try{await fn(r,token)}catch(e){r.error=e.message}finally{r.busy=false;const reopen=r.reloadAfterBusy;r.reloadAfterBusy=false;if(sameScope(s)){paint();if(reopen&&r.open&&!r.loaded)void load(s);}}}
  async function load(s){await run(s,async(r,token)=>{const result=await api(s,'requests');if(!sameScope(s)||token!==generation)return;r.items=result.items||[];r.loaded=true;r.review=null;});}
  async function review(s,id){await run(s,async(r,token)=>{const result=await api(s,'review',undefined,id);if(!sameScope(s)||token!==generation)return;if(result.id!==id)throw Error('Review returned another proposal.');r.review=result;});}
  async function decide(s,action){await run(s,async(r,token)=>{
@@ -40,13 +41,16 @@
   unchanged(s,p);const result=await api(s,action==='apply'?'accept':'reject',body);r.finished.add(v.id);if(action==='apply'&&(result.binding?.id!==s.bindingId||result.binding?.parentStudyId!==s.parentStudyId))throw Error('Saved response belongs to another part. Inspect the saved copy in Draft.');r.review=action==='apply'?{...fresh,status:'accepted'}:result;r.items=r.items.map(i=>i.id===v.id?{...i,status:r.review.status,stale:false}:i);
   if(action==='apply'){unchanged(s,p);await window.studyDraft.refreshSaved({bindingId:s.bindingId,parentStudyId:s.parentStudyId,sequence:p.sequence});r.acceptedSequence=proof(s).sequence;r.notice='Proposal applied to this part.';}else r.notice='Proposal rejected.';
  });}
- document.addEventListener('input',event=>{const el=event.target.closest?.('[data-ai-reason]'),s=scope();if(el&&s)room(s).reasons[el.dataset.aiReason]=el.value;});
- document.addEventListener('click',event=>{const el=event.target.closest?.('[data-ai-action]'),s=scope();if(!el||!s||el.disabled)return;const action=el.dataset.aiAction,r=room(s);if(action==='toggle'||action==='close'){r.open=action==='toggle'?!r.open:false;generation++;paint();if(r.open&&!r.loaded)load(s);}else if(action==='load-saved')run(s,async(r)=>{const p=clean(s);await window.studyDraft.refreshSaved({bindingId:s.bindingId,parentStudyId:s.parentStudyId,sequence:p.sequence});r.needsRefresh=false;r.notice='Current saved draft loaded. Review the proposal before applying.';});else if(action==='refresh')load(s);else if(action.startsWith('review:'))review(s,action.slice(7));else if(action==='apply'||action==='reject')decide(s,action);});
- let lastScope='';function mount(){if(disposed||typeof document==='undefined')return;const s=scope(),next=s?key(s):'';if(next!==lastScope){generation++;lastScope=next;document.getElementById('study-ai-proposals')?.remove();}paint();}
+ // The Workbench moves this exact owner node; proposal records and decisions remain here.
+ function openForDrawer(){const s=scope();if(!s)throw Error('Open the exact working part before reviewing its proposals.');const r=room(s);r.open=true;paint();if(!r.loaded){if(r.busy)r.reloadAfterBusy=true;else void load(s);}return document.getElementById('study-ai-proposals');}
+ function closeForDrawer(){const s=scope();if(s)room(s).open=false;generation++;document.getElementById('study-ai-proposals')?.remove();paint();}
+ document.addEventListener('input',event=>{const el=event.target.closest?.('[data-ai-reason]'),s=scope();if(el&&s&&panelMatches(el,s))room(s).reasons[el.dataset.aiReason]=el.value;});
+ document.addEventListener('click',event=>{const el=event.target.closest?.('[data-ai-action]'),s=scope();if(!el||!s||el.disabled||!panelMatches(el,s))return;const action=el.dataset.aiAction,r=room(s);if(action==='toggle'||action==='close'){const frame=window.c3WorkbenchFrame;if(frame?.openTool){if(action==='close')frame.closeTool();else void frame.openTool('proposals').catch(error=>{r.error=error.message;paint();});}else{r.open=action==='toggle'?!r.open:false;generation++;paint();if(r.open&&!r.loaded)load(s);}}else if(action==='load-saved')run(s,async(r)=>{const p=clean(s);await window.studyDraft.refreshSaved({bindingId:s.bindingId,parentStudyId:s.parentStudyId,sequence:p.sequence});r.needsRefresh=false;r.notice='Current saved draft loaded. Review the proposal before applying.';});else if(action==='refresh')load(s);else if(action.startsWith('review:'))review(s,action.slice(7));else if(action==='apply'||action==='reject')decide(s,action);});
+ let lastScope='',lastRoom=null;function mount(){if(disposed||typeof document==='undefined')return;const s=scope(),next=s?key(s):'';if(next!==lastScope){if(lastRoom)lastRoom.open=false;generation++;lastScope=next;lastRoom=s?room(s):null;document.getElementById('study-ai-proposals')?.remove();}paint();}
  window.addEventListener('study-draft-change',mount);
  const root=document.getElementById('app')||document.body;const observer=new MutationObserver(()=>{if(disposed||typeof document==='undefined'||scheduled)return;scheduled=true;queueMicrotask(()=>{scheduled=false;if(!disposed&&typeof document!=='undefined')mount()})});observer.observe(root,{childList:true,subtree:true});window.addEventListener('pagehide',()=>{disposed=true;observer.disconnect();},{once:true});
   // Live sync (review F-25): a proposal an agent makes for the open part appears in the open panel without pressing Refresh.
   const liveHook=()=>window.c3Shell?.live?.on({},event=>{const s=scope();if(!s)return;const r=room(s);if(!r.open||r.busy||r.review)return;if(!event.reset&&!(event.scope?.kind==='draft'&&event.scope.id===s.bindingId&&/^study-ai\./.test(event.kind||'')))return;void load(s);});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',liveHook,{once:true});else setTimeout(liveHook,0);
- window.studyAIProposals={mount};mount();
+ window.studyAIProposals={mount,openForDrawer,closeForDrawer,isOpen:()=>{const s=scope();return !!s&&room(s).open;}};mount();
 })();
