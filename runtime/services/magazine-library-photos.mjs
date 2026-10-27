@@ -47,7 +47,7 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
   return {body:result.body,hash:digest,contentType:format.contentType,contentLength:result.body.length,name:entry.item.name,description:entry.item.description,sourceId:entry.item.sourceId,rootId:entry.item.rootId,file:token(digest,format)};
  }
  async function catalog(){
-  const next=new Map(),items=[],coverage={complete:true,truncated:false,skipped:0,issues:[],limits:{maxItems:MAX_ITEMS,maxPhotoBytes:MAX_BYTES,maxCatalogBytes:MAX_CATALOG_BYTES}};let total=0;
+  const next=new Map(),items=[],coverage={complete:true,truncated:false,skipped:0,issues:[],limits:{maxItems:MAX_ITEMS,maxPhotoBytes:MAX_BYTES,maxCatalogBytes:MAX_CATALOG_BYTES}};let total=0,retentionRows=[];
   const issue=(source,reason)=>{coverage.complete=false;coverage.skipped++;if(coverage.issues.length<50)coverage.issues.push({source,reason});};
   async function add(kind,raw,item,open){
    if(items.length>=MAX_ITEMS||total>=MAX_CATALOG_BYTES){coverage.truncated=true;issue(kind,'catalog-limit');return;}
@@ -63,7 +63,7 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
    }catch(error){issue(kind,error.status===415?'unsupported-photo':error.status===413?'photo-size-limit':'photo-unavailable-or-changed');}
   }
   try{
-   const saved=await library.photosSnapshot();if(!saved.coverage.complete)for(const item of saved.coverage.issues)issue('library',item.reason);
+   const saved=await library.photosSnapshot();retentionRows=saved.items.filter(row=>row.retainedPhoto);if(!saved.coverage.complete)for(const item of saved.coverage.issues)issue('library',item.reason);
    for(const row of saved.items){if(row.missing){issue('library','current-photo-missing');continue;}
     await add('library',row,{rootId:hash('library\0'+row.rootId+'\0'+row.rootHash),sourceId:row.id,revision:hash('library\0'+saved.indexHash+'\0'+row.rootHash+'\0'+row.id),name:row.name,description:row.description,storyLabel:'',sourceLabel:row.rootName,relativePath:row.relativePath},()=>library.binarySnapshot({id:row.id,rootHash:row.rootHash}));
    }
@@ -78,8 +78,29 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
    const published=await publication.catalog();if(published.coverage?.complete===false||published.coverage?.truncated)issue('publication','catalog-incomplete');
    for(const row of published.items)await add('publication',row,{...row,sourceLabel:'Publication photos'},()=>publication.preview({rootId:row.rootId,sourceId:row.sourceId,revision:row.revision,sourceHash:row.sourceHash}));
   }catch(error){issue('publication','catalog-unavailable');}
-  items.sort((a,b)=>a.sourceLabel.localeCompare(b.sourceLabel)||a.relativePath.localeCompare(b.relativePath));entries=next;
-  return {schema:'ar-create.magazine-library-photos.v1',revision:hash(plain(items)),items,coverage};
+  // Immutable internal retention is a derivative, not another imported choice.
+  // Preserve any derivative that itself became a selected parent identity: its
+  // canonical placements still point to that UUID, even after the child is unused
+  // or its mutable copy disappears. No byte-only identity joins or usage store.
+  const identity=value=>plain([value.rootId,value.sourceId]),available=new Map(items.map(item=>[identity(item),item])),relations=[];
+  for(const row of retentionRows){
+   const origin=row.retainedOrigin,rootId=hash('library\0'+row.rootId+'\0'+row.rootHash),self=identity({rootId,sourceId:row.id});
+   if(!origin||!SHA.test(row.originalHash||'')||origin.sourceHash!==row.originalHash||identity(origin)===self||row.retainedOriginRef&&(row.retainedOriginRef.rootId!==origin.rootId||row.retainedOriginRef.sourceId!==origin.sourceId))continue;
+   const match=new RegExp('^'+row.originalHash+'(?:-('+insertionIdentity(origin)+'))?\\.(jpg|png|webp|gif|avif)$').exec(row.name);
+   if(!match)continue;
+   relations.push({row,origin,self,extension:match[2]});
+  }
+  const parentIdentities=new Set(relations.filter(({row,origin})=>available.get(identity(origin))?.sourceHash===row.originalHash).map(({origin})=>identity(origin))),hidden=new Set();
+  let retainedBytes=0;
+  for(const {row,origin,self,extension}of relations){
+   const own=available.get(self),parent=available.get(identity(origin));
+   if(!own||parentIdentities.has(self)||!parent||own.sourceHash!==row.originalHash||parent.sourceHash!==row.originalHash||parent.revision!==origin.revision)continue;
+   if(retainedBytes+own.bytes>MAX_CATALOG_BYTES)continue;
+   try{const original=await library.binarySnapshot({id:row.id,expectedHash:row.originalHash,original:true});retainedBytes+=original.body.length;if(magazinePhotoFormat(original.body).extension===extension&&original.hash===row.originalHash)hidden.add(self);}catch{/* Unproved retention stays visible; it never replaces an original. */}
+  }
+  const visible=items.filter(item=>!hidden.has(identity(item)));
+  visible.sort((a,b)=>a.sourceLabel.localeCompare(b.sourceLabel)||a.relativePath.localeCompare(b.relativePath));entries=next;
+  return {schema:'ar-create.magazine-library-photos.v1',revision:hash(plain(visible)),items:visible,coverage};
  }
  async function preview(input){selector(input);const entry=entries.get(key(input));if(!entry)fail('Photo selection is stale or unavailable; reopen the photo library.',409);return read(entry);}
  async function retainedSources(){const saved=await library.photosSnapshot();return saved.items.filter(row=>row.retainedPhoto&&SHA.test(row.originalHash||''));}
