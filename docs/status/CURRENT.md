@@ -1,3 +1,9 @@
+## 27 October — Shared guidance and photo descriptions installed
+
+PR69 signed main `3ba3425f0eb135c28c6a8630ea605632e34c43ef`, build2026-10-27T15:55:42.968Z, is verified live on the installed owner and main review.149 affected checks, build and package909 pass;42 served frontend hashes match. API content, canonical changed source files, configuration and four independent carousel copies are preserved. The candidate entry below now describes installed bounded behavior. Native invented guidance also survives actual owner restart and reopening.
+
+Expanded Research Include, reload and Leave out were verified on screen against the same saved editorial plan without manuscript changes. Saving collapses the expanded point and preparation panel; that interaction fix and native continuation acceptance remain open. Whole-source-to-delivery, assisted learning/writing, visible captions/composed layouts, editions/follow-up and full C/phone gates remain unfinished. No real wording decision, provider execution or sending occurred.
+
 ## 27 October — Shared guidance and photo descriptions integrated; not installed
 
 The candidate connects editable shared Voice/Perspective/Recipe sheets to the existing guidance file owner and request freshness checks. Magazine Write exposes the same tools only for its exact current owner. The existing guarded review forwards accepted-region edits only; metadata and pending suggestions remain outside that edit. Native invented guidance saves twice successfully without changing the manuscript. Integration review repaired obsolete recovery restoration after successful Save and the locked editor after determinate rejection; uncertain delivery retains exact retry.
