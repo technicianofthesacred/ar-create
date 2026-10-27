@@ -1,3 +1,26 @@
+## 28 October — Integrated candidates; native lookup repaired
+
+Remaining composed-photo caption roles and literal kept-Source lookup are integrated candidates;177 focused checks and build pass. Independent manual language editions are also integrated from their isolated193-check candidate;139 combined output/edition checks pass. None is installed or checked complete yet.
+
+Actual native Source lookup searched two existing invented kept conversations, opened the exact garden remark and returned to the previous cup conversation without losing its unsaved correction. Opening lookup while Notes is already open revealed overlapping fixed sheets intercepting clicks. The repair now passes native actual-button search/result/Back checks with Notes restored and lookup collapsed, plus light/dark desktop proof. All15 protected source/owner/notes files stay exact; the invented local correction was cancelled. No source wording was saved or approved.
+
+A48-capture desktop audit covers twelve sections, both themes, reference and live at1280×720. Top48px strip,66px rail,240px panel allocation and theme backgrounds match; no document horizontal overflow was measured. Concrete differences remain in writing rhythm, Direction controls/angle placement, populated Library/Media/Source states and Arrange composition. Carousel Check remains explicitly disconnected. Different records and adopted output/Save/Undo controls prevent claiming pixel equality. Bench/Pieces, phone and full interaction/journey acceptance remain open.
+
+## Goal progress — maintained during Build
+
+Completion means verified running behavior and approved-design evidence. A passing source change stays unfinished until integration, native screen/lifecycle checks and exact release verification. Each completed item retains its revision and proof; bounded results do not close an entire section. This is a summary of the existing goal checklist, not another backlog.
+
+| Result | Current state |
+| --- | --- |
+| Choose an unused indexed Library photo in the existing replacement flow | Verified installed, PR72; insertion remains open |
+| Output-specific Direction briefs | Verified installed, PR81; does not generate translations |
+| Nested photographs/group captions and saved Media folder projection | Verified installed, PR81; full filing remains open |
+| Nested side, on-photo and saying captions | Built candidate `bc8f6ba`; native screen/integration/release acceptance pending |
+| Literal passage lookup in saved kept Source speech | Integrated `5ef1856`; native search/return/recovery verified; installation pending |
+| Independent linked manual language editions | Built candidate `c77a2c8`; native integration/release acceptance pending |
+| Whole creative journey and Bench/Library/Pieces/all twelve sections | Open |
+| Full approved C/NOTES desktop/phone light/dark and interaction match | Open; bounded desktop evidence does not close this gate |
+
 ## 28 October — Audience, nested photos and Media folders installed
 
 PR81 signed main `11b3fa4c79ed43b9ca67ec911592800c74223c05`, build 2026-10-27T20:46:53.125Z, is verified live in installed8841 and main59958.351 checks across thirteen files, build/package926,76 served hashes and API/canonical/config preservation pass. Installed-byte proof covers629 manifest files and10 generated files. The candidate notes below now describe installed bounded behavior; earlier candidate-status statements are historical.
@@ -405,12 +428,12 @@ The filesystem-first requirement remains the adopted Library/Collections/Pieces/
 
 ## Not started
 
-These briefs describe features with no code behind them. Treat them as plans.
+These briefs retain full requirements. The current bounded implementation and remaining gaps are distinguished below; later installed checkpoints supersede older snapshot claims.
 
-- **S01 Material first review**: Keep, Remove from working view, Permanently delete, Needs review with a reason. Only a "prepared, not connected" panel exists (`stage-work-surfaces.js`); there is no service or route, and permanent delete is not built.
-- **S02 review cards**: Worth keeping, Needs your judgment, Removal candidates. No code.
-- **S02 readable bilingual dialogue**: no Source-screen code; the dormant magazine translation services are not wired to it.
-- **S05 voice and expression sheet** editable from the writing surface. No code.
+- **S01 Material first review**: attached-Library Keep/Needs review/Set aside/Restore is installed with bounded lifecycle proof. Full mixed-owner/grouping intake and permanent-delete semantics remain unfinished; do not equate Set aside with deletion.
+- **S02 review cards**: Worth keeping, Needs your judgment and Removal candidates remain unfinished in the maintained Source surface. Historical separate-manager primitives are deliberately unexposed; retained-history exclusion is not permanent deletion.
+- **S02 readable dialogue**: maintained kept-Source reader supports English-first/current wording, optional original wording, supplied speaker grouping, timing and reviewed factual notes. Translation preparation, saved proposals and human acceptance are connected behind explicit availability gates. Provider availability, ASR and audio alignment are unproved.
+- **S05 voice and expression**: shared Voice/Perspective/Recipe editing is installed through the existing guidance owner. Full passage assistance and informed alternatives/acceptance remain open.
 
 ## Installed checkpoints, 20 October
 

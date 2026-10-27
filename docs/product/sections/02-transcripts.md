@@ -20,7 +20,7 @@ The initial recommendation card supplies enough subject, context and meaningful 
 
 Where an imported conversation uses the established Chinese-source/English-response turn convention, render its back-and-forth as natural dialogue with stable, concise labels. Do not repeat a translation explanation on every turn or insert timestamps that break the reading flow; keep genuine timing available as secondary detail or playback navigation. This convention is scoped to that source format, not a universal language-to-person identification rule. Preserve actual/unknown speaker attribution separately and do not fabricate timing or translation.
 
-**Status: Not started** (checked 21 October 2026). The Source screen has no bilingual dialogue reading; the dormant magazine translation services are not wired to it.
+**Status: Bounded maintained implementation; full acceptance open** (checked 28 October 2026). The kept-Source reader supports current/English-first dialogue, supplied speaker grouping, optional original wording, timing, reviewed factual notes and exact passage navigation. Translation preparation, saved proposal review and human acceptance routes are connected behind availability gates. Provider availability, ASR and audio alignment are not established.
 
 ## Saved result and handoff
 
@@ -38,7 +38,7 @@ This section prepares and organizes conversations that survived the initial Mate
 
 Use compact one-column review cards grouped by recommendation: Worth keeping, Needs your judgment and Removal candidates. The default card shows the subject, a short description, one short decision reason and clear Keep/Remove actions. Optional Read/Expand supports uncertain judgments or deliberate inspection; it is not a routine prerequisite for every decision. Full reasons, dates, media days, companion links and provenance stay behind Why. Short chats expand in place; no passage-selection tasks return. Limit the initial visible batch to reduce scanning. Clearly distinguish earlier recommendations from human decisions and from recorded analysis checks; never infer full-read or product-check completion from an imported source or a generic confidence label. Preserve full explanations and complete dialogue. This is the isolated8927 candidate, not shared activation.
 
-**Status: Not started** (checked 21 October 2026). There is no code for the Worth keeping, Needs your judgment or Removal candidates cards.
+**Status: Not implemented in the maintained Source surface** (checked 28 October 2026). Worth keeping, Needs your judgment and Removal candidates with whole-conversation decisions remain an owner-contract gap. Historical separate-manager decision primitives stay unexposed; retained-history exclusion is not permanent deletion.
 
 
 ## Distinct Source surface — 15 October clarification
