@@ -311,7 +311,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       if(!row.nativeOrigin)continue;
       const source=(resolved.projection||[]).find(b=>b.id===row.nativeOrigin.blockId);if(!source)continue;
       const annotation=splitPhotoAnnotation(source.raw).annotation;
-      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['cover','opener','wide','bleed','photos','side'].includes(row.nativeOrigin.role)||row.nativeOrigin.depth!==0)fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
+      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['cover','opener','wide','bleed','photos','side'].includes(row.nativeOrigin.role)||(row.nativeOrigin.depth!==0&&!['wide','bleed','photos'].includes(row.nativeOrigin.role)))fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
     }
     if(annotationRows.length!==seenAnnotations.size)fail('A canonical caption has no exact supported photo occurrence.');
     const annotations={schema:'ar-create.magazine-annotations.v1',credits:readArticleCredits(originalBody),publicationCredits:Array.isArray(spec.credit)?structuredClone(spec.credit):[]};
@@ -329,14 +329,13 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
   }
   async function workingEdition(input) {
     const {media,parsed,spec,code,files}=await inspectEdition(input);
-    // The maintained canvas's nested Words surface supports only these forms.
-    // Refuse anything it would omit rather than showing an incomplete edition.
-    const walk=(blocks,nested=false,depth=0)=>{
+    // Nested Words delegates the same known blocks to BlockView; keep its
+    // bounded tree contract before constructing a working edition.
+    const walk=(blocks,depth=0)=>{
       if(!Array.isArray(blocks)||depth>8)fail('Unsupported working article blocks.');
       for(const b of blocks){
         if(!b||!['q','a','n','line','side','glyph','photos','wide','bleed','on-photo'].includes(b.kind))fail('Unsupported working article block.');
-        if(nested&&(!['q','a','n','line'].includes(b.kind)||b.kind==='line'&&b.follow))fail('This nested article layout cannot be rendered completely.');
-        if(b.kind==='side'||b.kind==='glyph')walk(b.blocks,true,depth+1);
+        if(b.kind==='side'||b.kind==='glyph')walk(b.blocks,depth+1);
       }
     };
     walk(parsed.opening);for(const p of parsed.parts)walk(p.blocks);walk(parsed.ending.blocks);
@@ -351,12 +350,25 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     // Story fields come exclusively from this parse. In particular, absent
     // portrait/hook/closing never fall back to a previous publication's words.
     const currentSpec={...metadata,...pick(parsed,['portrait','intro','hook','opening','parts','ending','closing'])};
+    const captionBlock=path=>{
+      const tokens=path.split('/');let blocks;
+      if(tokens[0]==='opening'){blocks=currentSpec.opening;tokens.shift();}
+      else if(tokens[0]==='ending'&&tokens[1]==='blocks'){blocks=currentSpec.ending.blocks;tokens.splice(0,2);}
+      else if(tokens[0]==='parts'&&/^\d+$/.test(tokens[1])&&tokens[2]==='blocks'){blocks=currentSpec.parts[Number(tokens[1])]?.blocks;tokens.splice(0,3);}
+      else return null;
+      for(let depth=0;depth<=8;depth++){
+        const index=tokens.shift(),kind=tokens.shift();if(!/^\d+$/.test(index||'')||!Array.isArray(blocks))return null;
+        const block=blocks[Number(index)];if(!block||block.kind!==kind)return null;
+        if(!tokens.length)return block;
+        if(kind==='photos'&&tokens.length===1&&/^\d+$/.test(tokens[0])&&Number(tokens[0])<block.shots.length)return block;
+        if(!['side','glyph'].includes(kind))return null;blocks=block.blocks;
+      }
+      return null;
+    };
     const annotatedPaths=new Set();
     for(const placement of media.sources.flatMap(source=>source.placements)){
       if(!placement.annotation||annotatedPaths.has(placement.structuralPath))continue;
-      const match=placement.structuralPath.match(/^(opening|ending\/blocks|parts\/(\d+)\/blocks)\/(\d+)\/(wide|bleed|photos|side)(?:\/\d+)?$/);
-      const opener=placement.structuralPath.match(/^parts\/(\d+)\/opener$/);
-      const block=match&&(match[1]==='opening'?currentSpec.opening:match[1]==='ending/blocks'?currentSpec.ending.blocks:currentSpec.parts[Number(match[2])]?.blocks)?.[Number(match[3])];
+      const opener=placement.structuralPath.match(/^parts\/(\d+)\/opener$/),block=captionBlock(placement.structuralPath);
       const shot=placement.structuralPath==='portrait'?currentSpec.portrait:opener?currentSpec.parts[Number(opener[1])]?.opener:block?.kind==='side'?block.shot:null;
       const shotRole=placement.structuralPath==='portrait'?'cover':opener?'opener':'side',target=shot||block;
       if(!target||(!shot&&!['wide','bleed','photos'].includes(block.kind))||shot&&shotRole!==placement.nativeOrigin.role)fail('The canonical caption target changed before rendering.');

@@ -77,7 +77,7 @@ test('existing canvas save proof invalidates cached usage through shell decorati
 
 test('read-only UI candidate browses real sources but never submits an unwired folder change',async()=>{
  const x=await setup({...view([source('s1','Actual source')]),readOnly:true,revision:null,indexHash:null,undoOperationId:null});try{
- assert.equal(x.d.querySelector('.wfb-title').textContent,'Actual source');x.d.querySelector('[data-wfb-select="s1"]').click();x.d.querySelector('[data-wfb-action="link"]').click();x.d.querySelector('[data-wfb-action="apply"]').click();await new Promise(r=>setTimeout(r,5));assert.equal(x.calls.filter(c=>c.opts.method==='POST').length,0);assert.match(x.d.querySelector('[role="alert"]').textContent,/not connected/);assert.equal(x.d.querySelector('[data-wfb-select="s1"]').checked,true);
+ assert.equal(x.d.querySelector('.wfb-title').textContent,'Actual source');x.d.querySelector('[data-wfb-select="s1"]').click();x.d.querySelector('[data-wfb-action="link"]').click();x.d.querySelector('[data-wfb-action="apply"]').click();await new Promise(r=>setTimeout(r,5));assert.equal(x.calls.filter(c=>c.opts.method==='POST').length,0);assert.match(x.d.querySelector('[role="alert"]').textContent,/read-only/);assert.equal(x.d.querySelector('[data-wfb-select="s1"]').checked,true);
  }finally{x.close();}
 });
 

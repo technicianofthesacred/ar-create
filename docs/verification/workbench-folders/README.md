@@ -1,5 +1,11 @@
 # Step 2: persistent nested Library and Media folders
 
+## Status clarification — 28 October
+
+The storage and browser code described below was integrated independently and is installed (PR80 signed `41fc8d757fa177faf3c6c7f467e6438f4e99964c` includes the same folder storage bytes). The older open PR21 and its historical candidate status do not mean this code is absent. The old named native receipts below are historical and are not current acceptance proof.
+
+Current native invented CLI parent/child/link → actual owner restart → exact photo-folder projection → browser reload → exact membership Undo is recorded outside Git. The new read-only Media projection is a separately verified candidate until its exact release. Main-review folder writes remain refused; complete filing and whole C/phone acceptance stay open. See [CURRENT](../../status/CURRENT.md) for the current installed revision and precise checkoffs.
+
 Requirements C02/C04/C05/C06, S01/S08. This is stacked on the full Workbench interface correction. Neither PR installs anything.
 
 Folders and memberships live in the existing Library index and use existing command, journal, actor and lease paths. Library and Media are separate domains. Filing preserves the original source ID and bytes; move/link/unlink alter memberships, never original files. Media recognizes image/video metadata without rewriting legacy source kinds. Empty-folder removal, cycle refusal, exact revision/hash guards, idempotence and eligible exact Undo are tested.

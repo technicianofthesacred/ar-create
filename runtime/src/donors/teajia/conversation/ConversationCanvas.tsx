@@ -75,11 +75,13 @@ const Line: React.FC<{ id: string; text: string; size: LineSize; follow?: { id: 
 };
 
 /** Words inside a column, a side or a glyph block. Each turn carries its speaker's name. */
-const Words: React.FC<{ blocks: Block[] }> = ({ blocks }) => {
+const Words: React.FC<{spec: ConversationSpec;blocks: Block[];depth?:number}> = ({spec,blocks,depth=0}) => {
+  if(!Array.isArray(blocks)||blocks.length>2000||depth>8)throw Error('Unsupported nested article blocks.');
   const { author, subject, starts, named } = useContext(SpeakerCtx);
   return (
     <>
       {blocks.map((b, i) => {
+        if(!b||typeof b.kind!=='string')throw Error('Unsupported article block.');
         if (b.kind === 'q') {
           return (
             <div key={b.id} className="tj-conv-turn tj-conv-q">
@@ -95,8 +97,8 @@ const Words: React.FC<{ blocks: Block[] }> = ({ blocks }) => {
         }
         // Adrian telling the story: his own voice, set apart from the subject's words by tone, not by a name.
         if (b.kind === 'n') return <Passage key={b.id} id={b.id} text={b.text} className="tj-conv-told" />;
-        if (b.kind === 'line') return <Line key={b.id} id={b.id} text={b.text} size={b.size} />;
-        return <React.Fragment key={i} />;
+        if (b.kind === 'line') return <Line key={b.id} id={b.id} text={b.text} size={b.size} follow={b.follow} />;
+        return <BlockView key={i} spec={spec} block={b} depth={depth}/>;
       })}
     </>
   );
@@ -110,18 +112,20 @@ const CaptionedPhotoFrame: React.FC<{shot: Shot;className: string;style?: React.
   ? <figure data-reveal="photo" data-annotated-photo="true" className={className} style={style}><div className="tj-conv-annotated-photo-frame">{children}</div><PhotoCaption caption={shot.caption} credit={shot.photoCredit}/></figure>
   : <div data-reveal="photo" className={className} style={style}>{children}</div>;
 
-const BlockView: React.FC<{ spec: ConversationSpec; block: Block | Block[] }> = ({ spec, block }) => {
+const BlockView: React.FC<{spec: ConversationSpec;block: Block | Block[];depth?:number}> = ({spec,block,depth=0}) => {
+  if(depth>8)throw Error('Unsupported nested article blocks.');
   if (Array.isArray(block)) {
-    return <section data-reveal="text" className="tj-conv-col"><Words blocks={block} /></section>;
+    return <section data-reveal="text" className="tj-conv-col"><Words spec={spec} blocks={block} depth={depth} /></section>;
   }
   const b = block;
+  if(!b||typeof b.kind!=='string')throw Error('Unsupported article block.');
   switch (b.kind) {
     case 'line':
       return <div data-reveal="text" className="tj-conv-spine"><Line id={b.id} text={b.text} size={b.size} follow={b.follow} /></div>;
     case 'side':
       return (
         <section className="tj-conv-side" data-flip={b.flip ? '' : undefined} data-bleed={b.bleed ? '' : undefined}>
-          <div data-reveal="text" className="tj-conv-side-words"><Words blocks={b.blocks} /></div>
+          <div data-reveal="text" className="tj-conv-side-words"><Words spec={spec} blocks={b.blocks} depth={depth+1} /></div>
           <CaptionedPhotoFrame shot={b.shot} className="tj-conv-side-photo"><Photo spec={spec} shot={b.shot} /></CaptionedPhotoFrame>
         </section>
       );
@@ -156,12 +160,12 @@ const BlockView: React.FC<{ spec: ConversationSpec; block: Block | Block[] }> = 
         <section data-reveal="text" className="tj-conv-col">
           <div className="tj-conv-glyph">
             <div aria-hidden="true" className="tj-conv-glyph-mark">{b.glyph}</div>
-            <div><Words blocks={b.blocks} /></div>
+            <div><Words spec={spec} blocks={b.blocks} depth={depth+1} /></div>
           </div>
         </section>
       );
     default:
-      return null;
+      throw Error('Unsupported article block.');
   }
 };
 
@@ -237,6 +241,9 @@ const Cover: React.FC<{ spec: ConversationSpec }> = ({ spec }) => (!spec.portrai
 
 
 export default function ConversationCanvas({spec,paragraphs}:{spec:ConversationSpec|RecordedConversationSpec;paragraphs?:{id:string;doc:JSONContent}[]}) {
+ // Check the bounded tree before turnStarts or any recursive reader walks it.
+ const check=(blocks:Block[],depth=0)=>{if(!Array.isArray(blocks)||blocks.length>2000||depth>8)throw Error('Unsupported nested article blocks.');for(const block of blocks){if(!block||!['q','a','n','line','side','glyph','photos','wide','bleed','on-photo'].includes(block.kind))throw Error('Unsupported article block.');if(block.kind==='side'||block.kind==='glyph')check(block.blocks,depth+1);}};
+ if(!Array.isArray(spec.parts)||spec.parts.length>256)throw Error('Unsupported article parts.');check(spec.opening);for(const part of spec.parts)check(part.blocks);check(spec.ending.blocks);
  const recorded=spec as Partial<RecordedConversationSpec>,fields=recorded.recordedFields;
  const recordedRows=paragraphs||recorded.recordedParagraphs||[];
  const hasSaying=Boolean(spec.ending.saying.text||recordedRows.some(p=>p.id===spec.ending.saying.id));
