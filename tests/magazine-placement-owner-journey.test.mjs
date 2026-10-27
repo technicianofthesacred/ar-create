@@ -57,9 +57,9 @@ if (!prior) {
 process.send({fixture,url,pid:process.pid});
 `;
 
-async function startOwner(fixture) {
+async function startOwner(fixture,{endingPhotos=false}={}) {
   const options = {extra:{
-    [DEV]:original,
+    [DEV]:endingPhotos?original.replace('%%saying%%',[ '%%photo: same.png · Closing wide · wide x=0.3%%', '', '%%photo: replacement.png · Closing bleed · bleed%%', '', '%%photos: same.png · Closing group first | replacement.png · Closing group second · aspect=4/5%%', '', '%%saying%%' ].join('\r\n')):original,
     '_archive/DEV - Clay Teacher (earlier).md':'---\ntype: DEV\nstory: Clay Teacher\n---\n\nInvented earlier published words.\n',
     'Workflow/3-Develop/DEV - River Potter (story).md':'---\ntype: DEV\nstory: River Potter\n---\n\nInvented independent sibling words.\n'
   }};
@@ -84,8 +84,8 @@ async function stopOwner(owner) {
   owner.child.kill('SIGTERM');
   await stopped;
 }
-async function fixture(t) {
-  let owner = await startOwner();
+async function fixture(t,options) {
+  let owner = await startOwner(undefined,options);
   const f = owner.fixture;
   t.after(async () => { await stopOwner(owner); fs.rmSync(f.dir,{recursive:true,force:true}); });
   const registration = await register({mag:f.vault,files:f.files,data:f.data,verification:path.join(f.dir,'verification')});
@@ -356,5 +356,22 @@ test('canonical caption and credits use existing HTTP prepare/save/receipts, act
  const creditOperationId=randomUUID(),saveCredits={...selection,content:preparedCredits.body.content,expectedHash:creditPlan.expectedHash,operationId:creditOperationId,reason:'Human invented article credits'};assert.equal((await h.post('save',saveCredits)).status,200);
  await h.restart();assert.equal((await h.post('save',saveCredits)).body.replay,true);const final=await h.inspect();assert.deepEqual(final.annotations.credits,['Words: Invented author','Photographs: Invented Maker']);
  for(const undoOperationId of [creditOperationId,photoOperationId]){const undone=await h.post('undo',{...selection,undoOperationId,operationId:randomUUID()});assert.equal(undone.status,200,JSON.stringify(undone.body));}
+ assert.equal((await h.read()).document.text,first.document.text);assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
+});
+
+
+test('closing standalone and group caption saves restart through the existing owner and exact Undo preserves ending/publication/source files',async t=>{
+ const h=await fixture(t,{endingPhotos:true}),beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication),first=await h.read(),operations=[];
+ const upstreamBefore=parser.parseDraft(parser.draftBody(first.document.text).body);
+ for(const alt of ['Closing wide','Closing bleed','Closing group first']){
+  const read=await h.read(),inspection=await h.inspect(),photo=inspection.sources.flatMap(s=>s.placements).find(p=>p.alt===alt);
+  const plan=await h.media.planAnnotation({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:read.document.hash,revision:inspection.revision,placementId:photo.placementId,annotation:{caption:'Closing words '+alt+' 瓷 😀',credit:'Photo: Invented Maker'}});
+  const prepare=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepare.status,200,JSON.stringify(prepare.body));assert.equal(sha(prepare.body.content),plan.expectedContentHash);
+  const operationId=randomUUID(),save={...selection,content:prepare.body.content,expectedHash:plan.expectedHash,operationId,reason:'Invented closing-caption proof'};operations.push(operationId);assert.equal((await h.post('save',save)).status,200);onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+  await h.restart();assert.equal((await h.post('save',save)).body.replay,true);
+  const current=await h.inspect(),saved=current.sources.flatMap(s=>s.placements).find(p=>p.alt===alt);assert.ok(saved.structuralPath.startsWith('ending/blocks/'));assert.equal(saved.annotation.caption,'Closing words '+alt+' 瓷 😀');assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations})).status,409);
+  const next=await h.read();assert.deepEqual(parser.parseDraft(parser.draftBody(next.document.text).body),upstreamBefore);
+ }
+ for(const undoOperationId of operations.reverse()){const undo=await h.post('undo',{...selection,undoOperationId,operationId:randomUUID()});assert.equal(undo.status,200,JSON.stringify(undo.body));}
  assert.equal((await h.read()).document.text,first.document.text);assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
 });
