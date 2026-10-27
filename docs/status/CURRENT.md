@@ -1,3 +1,9 @@
+## 28 October — Cover/opener captions connected candidate
+
+Exact live cover and section-opener photo occurrences now expose Caption & credit in Arrange through the existing canonical writer. Working Audience and retained HTML render literal wording beneath its own photo; unannotated frames keep their previous composition. Native invented cover Save → opener Save → actual owner restart/reload → Audience → actual retained HTML with embedded photo/fonts → opener Undo (cover retained) → cover Undo through existing History restores the exact augmented manuscript. Original source/publication/photo bytes stay exact. External invented fixture setup/cleanup is recorded separately from native Undo.
+
+211 affected checks across fourteen files pass; generated build passes. Actual1280×720 dark preview showed the cover caption clipping under the fixed frame; the reviewed fix keeps the existing520px photo height and adds the73px caption row, with no horizontal overflow. Full light-caption/phone/all12/C acceptance remains open; a light-theme shell capture alone is not caption proof. The Audience startup error flash was reproduced and is being repaired separately. This candidate is **not installed**; PR76 remains live. Side, nested, words-on-photo and closing-saying captions remain open.
+
 ## 28 October — Unfinished wording recovery and closing captions installed
 
 PR76 signed main `7be7c69afcd0a75102f363177c07249c6314006f`, build2026-10-27T19:05:14.562Z, is verified live in installed8841 and main59958.204 affected checks/build/package918/64 served hashes and API/canonical/config preservation pass. The candidate entry below now describes installed bounded behavior. Earlier candidate-status statements are historical.
