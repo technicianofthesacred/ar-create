@@ -1,3 +1,11 @@
+## 28 October — Unopened connected photo flow verified; candidate not installed
+
+The metadata-first Gallery now lists an unopened connected photo with no claimed byte hash. Native selection checks that exact photo before placement. Save → actual owner restart → exact usage → Audience → retained HTML → Undo passed; original manuscript and zero usage return exactly, while the earlier HTML remains retrievable with its recorded hash.240 integrated Gallery checks pass. Original/publication-specific native checks, cancellation and actual large-library performance remain open.
+
+Pinned Read geometry now matches approved C at1280×720 in light/dark: titlex98/y126/w640 and first paragraphx94/y190/w644, with the same typography. Retained history stays below the desk and adopted Edit/Preview controls remain. This is bounded geometry proof; full toolbar/navigation, phone and all12 gates remain open.
+
+The Share second-recipient check passes Refresh, invitation Save and actual owner restart; exact invitation Undo and separate setup Undo restore the original complete FEEDBACK. No correspondence fact, send or wording approval occurred. Readable invitation-time wording remains in progress. PR83 below is still the verified installed milestone.
+
 ## 28 October — Writing history placement repaired; next candidate remains uninstalled
 
 Article Write/Read now keeps retained original-record access below the primary writing desk.184 existing-work/surface checks pass, including late mounting, disclosure reuse, exact original links and untouched editor text/focus/selection. Native1280×720 light/dark checks confirm history follows the desk and no horizontal overflow. The earlier60px obstruction is removed; exact same-mode reference comparison and a remaining2px difference stay open. This does not close the full visual gate.
