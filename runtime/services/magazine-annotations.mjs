@@ -18,14 +18,14 @@ function decode(text,validate){let value;try{value=JSON.parse(text);}catch{fail(
 export function splitPhotoAnnotation(raw){
  if(typeof raw!=='string')fail('The exact photo block is unavailable.');
  if(!raw.includes(PHOTO))return {base:raw,annotation:null,suffix:''};
- const m=/^(\s*%%(?:photo|photos):[^\r\n]*?%%[ \t]*)(\r?\n)%%ar-create-photo: ([^\r\n]*)%%([ \t]*)$/.exec(raw);
+ const m=/^(\s*%%(?:photo|photos|side):[^\r\n]*?%%[ \t]*)(\r?\n)%%ar-create-photo: ([^\r\n]*)%%([ \t]*)$/.exec(raw);
  if(!m||m[1].includes(PHOTO)||m[3].includes('%%')||raw.split(PHOTO).length!==2)fail('Malformed or duplicate canonical photo annotation.');
  const annotation=decode(m[3],validatePhotoAnnotation);if(annotation===null)fail('A canonical photo annotation must contain caption and credit.');
  return {base:m[1],annotation,suffix:m[2]+PHOTO+' '+m[3]+'%%'+m[4]};
 }
 export function writePhotoAnnotation(raw,value,newline='\n'){
  const {base}=splitPhotoAnnotation(raw),annotation=validatePhotoAnnotation(value);
- if(!/^\s*%%(?:photo|photos):[^\r\n]*%%\s*$/.test(base))fail('An exact standalone photo or group directive is required.');
+ if(!/^\s*%%(?:photo|photos|side):[^\r\n]*%%\s*$/.test(base))fail('An exact standalone photo or group directive is required.');
  return annotation===null?base:base+newline+PHOTO+' '+encode(annotation)+'%%';
 }
 export function readCreditsBlock(raw){
