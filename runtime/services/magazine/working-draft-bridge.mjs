@@ -14,7 +14,7 @@ import {currentActor, isHuman, requireHuman, requireWriteActor} from '../actor.m
 import {classify, frontmatter} from '../magazine-vault/kinds.mjs';
 import {expected, sha256, textBytes} from '../magazine-vault/write.mjs';
 import {splitBlocks, hash, plain, editable} from '../../reference/mag-edit.mjs';
-import {parseFeedbackShare, updateFeedbackShareSection, feedbackShareSectionChoices, mapFeedbackShareRecipient} from './feedback-share-codec.mjs';
+import {parseFeedbackShare, changeFeedbackInvitation, guardFeedbackInvitations, updateFeedbackShareSection, feedbackShareSectionChoices, mapFeedbackShareRecipient} from './feedback-share-codec.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -191,6 +191,8 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
       ? {structured: false, metadata: parsed.metadata, projection: [], reason: 'The saved recipient mapping targets another piece or an earlier working revision. The full FEEDBACK remains readable.'}
       : {structured: parsed.structured, metadata: parsed.metadata, projection: parsed.projection, reason: parsed.reason};
     mapping.targetState = parsed.structured ? (targetMatches ? 'current' : 'mismatch') : 'unverified';
+    mapping.invitations=(parsed.metadata?.invitations||[]).map(row=>({...structuredClone(row),workingChanged:row.target.storyId!==input.storyId||row.target.pieceId!==input.pieceId||row.target.hash!==draftHash,messageChanged:row.sections.some(anchor=>!parsed.projection.some(entry=>entry.sections.some(section=>section.heading===anchor.heading&&section.hash===anchor.hash)))}));
+    mapping.publishedReadiness={available:false,reason:'An immutable published-edition reader is not connected. A recorded publication URL is not edition proof.'};
     const currentFeedback = await exactDocument(record.rel, 'FEEDBACK', feedbackHash);
     const currentDraft = await exactDocument(authority.path, 'DEV', draftHash);
     const currentAuthority = resolve(input);
@@ -228,6 +230,7 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
   async function prepareShareFeedback(input) {
     workingOnly(input);fields(input,[...feedbackFields,'content']);requireWriteActor();writable();
     const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);textBytes(input.content);
+    const prior=magazine.read({path:selection.context.feedback.path});guardFeedbackInvitations(prior.text,input.content,{human:isHuman(currentActor()?.actor),target:{storyId:input.storyId,pieceId:input.pieceId,edition:'working',hash:input.expectedHash}});
     const parsed=parseFeedbackShare(input.content),current=parsed.structured&&parsed.projection.every(entry=>entry.target.storyId===selection.authority.storyId&&entry.target.pieceId===selection.authority.pieceId&&entry.target.hash===input.expectedHash);
     return {selection:select(input),rootIdentity:selection.context.rootIdentity,authority:selection.authority,registeredFeedbackPath:selection.context.feedback.path,expectedHash:input.expectedHash,expectedFeedbackHash:input.expectedFeedbackHash,content:input.content,mapping:{structured:!!current,metadata:parsed.metadata,projection:current?parsed.projection:[],reason:parsed.structured&&!current?'The mapping targets another piece or earlier working revision. Full Markdown editing remains available.':parsed.reason}};
   }
@@ -242,9 +245,15 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     return {...view,schema:'ar-create.magazine-share-feedback-edit-model.v1',paragraphs,mappingSections,editable:available,unavailableReason:unsupported?'The existing paragraph editor cannot preserve this frontmatter representation.':available?null:'Magazine is read-only. Its designated owner must enable editing.'};
   }
   async function prepareShareFeedbackMapping(input) {
-    workingOnly(input);fields(input,[...feedbackFields,'recipientId','recipientName','sections']);input=structuredClone(input);requireWriteActor();requireHuman('Mapping FEEDBACK recipients');writable();
-    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);uuid(input.recipientId);
+    workingOnly(input);fields(input,[...feedbackFields,'recipientId','recipientName','sections','invitationChange']);input=structuredClone(input);requireWriteActor();requireHuman('Mapping FEEDBACK recipients');writable();
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);
     const document=magazine.read({path:selection.context.feedback.path}),parsed=parseFeedbackShare(document.text);
+    if(input.invitationChange!==undefined){
+      if(['recipientId','recipientName','sections'].some(k=>input[k]!==undefined))throw new StateError('Invitation actions cannot mix recipient mapping edits.',400);
+      const result=changeFeedbackInvitation(document.text,{expectedHash:input.expectedFeedbackHash,change:input.invitationChange,target:{storyId:input.storyId,pieceId:input.pieceId,edition:'working',hash:input.expectedHash}});
+      return prepareShareFeedback({...Object.fromEntries([...BASE,...feedbackFields].filter(key=>input[key]!==undefined).map(key=>[key,input[key]])),content:result.markdown});
+    }
+    uuid(input.recipientId);
     if(parsed.structured&&parsed.projection.some(entry=>entry.target.storyId!==input.storyId||entry.target.pieceId!==input.pieceId||entry.target.hash!==input.expectedHash))throw new StateError('This mapping includes another piece or working revision. Keep the complete record and repair its explicit targets first.',409);
     const result=mapFeedbackShareRecipient(document.text,{expectedHash:input.expectedFeedbackHash,recipientId:input.recipientId,recipientName:input.recipientName,target:{storyId:input.storyId,pieceId:input.pieceId,edition:'working',hash:input.expectedHash},sections:input.sections});
     assertFeedbackCurrent(input,selection);

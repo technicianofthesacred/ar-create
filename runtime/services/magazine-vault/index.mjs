@@ -1,3 +1,4 @@
+import {guardFeedbackInvitations} from '../magazine/feedback-share-codec.mjs';
 // magazine-vault: AR Create as the one writer of the Teajia magazine (D1, 2026-10-21).
 //
 // The bytes stay in the vault (MAG) and the Files folder (FILES). Every change goes through here:
@@ -114,6 +115,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
           const target = io(root);
           if (root === 'mag') { const conflicts = target.conflictCopies(r); if (conflicts.length) throw new StateError(`Syncthing left a conflict copy beside ${r} (${conflicts[0]}). Adrian chooses between them first; nothing was written.`, 409); }
           const before = target.read(r);
+          if(root==='mag'&&classify(r).kind==='FEEDBACK'&&command!=='magazine.undo')guardFeedbackInvitations(before.exists?before.bytes.toString('utf8'):'',bytes===null?'':bytes.toString('utf8'),{human:isHuman(who.actor),target:context?{storyId:context.selection.storyId,pieceId:context.selection.pieceId,edition:'working',hash:context.draft.hash}:null});
           if (expectedHash === null ? before.exists : before.hash !== expectedHash) throw Object.assign(new StateError(`${r} changed since it was read. Read it again; nothing was written.`, 409), {current: {path: r, hash: before.hash}});
           const change = {root, rel: r, beforeHash: before.hash, before: before.exists ? before.bytes.toString('base64') : null, afterHash: bytes === null ? null : sha256(bytes), applied: false};
           record.changes.push(change); save();
@@ -222,6 +224,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
       // made universally atomic by this process's Magazine lock.
       if (trusted) assertFeedbackGuard(trusted);
       const human = isHuman(ctx().actor);
+      if(c.kind==='FEEDBACK'){const cur=tx.read('mag',c.rel);guardFeedbackInvitations(cur.exists?cur.bytes.toString('utf8'):'',input.content,{human,target:trusted?{storyId:trusted.context.selection.storyId,pieceId:trusted.context.selection.pieceId,edition:'working',hash:trusted.context.draft.hash}:null});}
       let needsYes = c.class === 'prose' && !human;
       if (c.class === 'social' && !human) { const cur = tx.read('mag', c.rel); needsYes = madeStatus(input.content) !== 'for-your-yes' || (cur.exists && madeStatus(cur.bytes.toString('utf8')) === 'approved'); }
       if (needsYes) { const cur = tx.read('mag', c.rel); if ((cur.hash || null) !== base) throw new StateError(`${c.rel} changed since it was read. Read it again; nothing was proposed.`, 409); return propose({rel: c.rel, kind: c.kind, content: input.content, baseHash: base, reason: input.reason, operationId: input.operationId}); }

@@ -38,7 +38,7 @@ const UNDO = {
 const BODY = {
   '/api/first-flow/material-triage': ['projectId','operationId','sourceId','expectedRevision','expectedHash','expectedSourceHash','decision','reason','humanDecision'],
   '/api/magazine/working-draft/share-feedback/prepare-paragraph': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','block','seen','text'],
-  '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId','recipientName','sections'],
+  '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId?','recipientName?','sections?','invitationChange?'],
   '/api/magazine/working-draft/share-feedback/prepare': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content'],
   '/api/magazine/working-draft/share-feedback/save': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content','operationId','reason?'],
   '/api/magazine/working-draft/share-feedback/undo': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','undoOperationId','operationId'],
