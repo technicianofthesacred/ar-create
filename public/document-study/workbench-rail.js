@@ -134,9 +134,7 @@
   const inbox=[...nav.querySelectorAll('.workflowStep')].find(b=>Number(text(b.querySelector('.stepNumber')))===1);
   const label=inbox?.querySelector('.stepName');if(label&&label.textContent!=='Library')label.textContent='Library';
   if(inbox){const aria=inbox.getAttribute('aria-label');if(aria&&/^View step 1:/.test(aria)&&!aria.includes('Library'))inbox.setAttribute('aria-label',aria.replace(/^View step 1:[^,]*/, 'View step 1: Library'));}
-  const steps=[...nav.querySelectorAll('.workflowStep')],legacy=steps.find(b=>Number(text(b.querySelector('.stepNumber')))===6),write=steps.find(b=>Number(text(b.querySelector('.stepNumber')))===5);
-  if(legacy){if(!legacy.hasAttribute('data-wn-legacy-read'))legacy.dataset.wnLegacyRead='';if(!legacy.hidden)legacy.hidden=true;if(legacy.hasAttribute('aria-current'))legacy.removeAttribute('aria-current');legacy.classList.remove('isViewed');}
-  if(stage()===6&&write){if(!write.hasAttribute('aria-current'))write.setAttribute('aria-current','step');if(!write.classList.contains('isViewed'))write.classList.add('isViewed');}
+  // Read remains a real entrance; its owner may present the same writing surface.
   bottomBar(nav);
  }
  // ---------- the panel ----------

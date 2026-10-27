@@ -52,7 +52,8 @@
   mounts.get(host)?.destroy();
   const doc=host.ownerDocument;
   let data=normalize(input),handlers=callbacks||{},selected=data.points[0]?.id||'',tab='points',tool='',message='',busy=false,dead=false,epoch=0;
-  const drafts=new Map();
+  const drafts=new Map();let discussionMount=null;
+  function closeDiscussion(){discussionMount?.destroy?.();discussionMount=null;}
   function el(tag,text,cls){const node=doc.createElement(tag);if(text!==undefined&&text!==null)node.textContent=text;if(cls)node.className=cls;return node;}
   function button(label,key,value,disabled=false){const node=el('button',label);node.type='button';node.dataset[key]=value;node.disabled=disabled;return node;}
   function prose(parent,text){for(const paragraph of paragraphs(text))parent.append(el('p',paragraph));}
@@ -84,8 +85,10 @@
    }
    const questionState=tool==='question'&&typeof handlers.questions==='function'?handlers.questions(payload(point)):null;
    if(tool==='question')for(const entry of questionState?.entries||[]){const item=el('section',null,'rpb-prose');item.dataset.savedQuestion='';item.append(el('p',[entry.author==='human:adrian'?'Adrian':'Human note',Number.isFinite(Date.parse(entry.createdAt))?new Date(entry.createdAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'',entry.stale?'Earlier source revision':'Saved'].filter(Boolean).join(' · '),'rpb-meta'));prose(item,entry.text);const origin=el('details');origin.append(el('summary','Retained origin · not independently verified'),el('p',entry.origin?.recordPath||''),el('p','SHA-256 '+(entry.origin?.recordHash||'')),el('blockquote',entry.origin?.originalText||''));item.append(origin);panel.append(item);}
-   const connected=!!actionHandler(tool);panel.append(el('p',tool==='question'?(questionState?.available?'Questions save to shared project notes; human wording, not an AI reply.':questionState?.reason||'Shared project notes are unavailable. Your question remains here.'):(connected?'Connected action · its result must be reviewed before use.':config.label+' is not connected. This input stays in this view; no research or update is run.'),'rpb-meta'));
+   const nativeDiscussion=tool==='discuss'&&typeof handlers.mountDiscussion==='function';
+   const connected=nativeDiscussion||!!actionHandler(tool);panel.append(el('p',tool==='question'?(questionState?.available?'Questions save to shared project notes; human wording, not an AI reply.':questionState?.reason||'Shared project notes are unavailable. Your question remains here.'):(connected?'Connected action · its result must be reviewed before use.':config.label+' is not connected. This input stays in this view; no research or update is run.'),'rpb-meta'));
    const label=el('label',config.field),input=el('textarea');input.rows=3;input.dataset.rpbInput='';input.value=drafts.get((point?.id||'brief')+':'+tool)||'';label.append(input);panel.append(label);
+   if(nativeDiscussion){parent.append(panel);discussionMount=handlers.mountDiscussion(panel,payload(point),input);panel.append(button('Close','rpbClose',''));return;}
    panel.append(button(tool==='question'?'Save question':connected?'Send for review':config.label+' · not connected','rpbSubmit',tool,!connected||tool==='question'&&!questionState?.available||!canAct(point)||(tool==='speaker'&&!point?.speakerIssues.some(i=>i.id))),button('Close','rpbClose',''));parent.append(panel);
   }
   function renderPoint(parent){
@@ -115,6 +118,7 @@
    article.append(el('p','Direction uses the selected sources, shared brief and human choices. Existing output wording changes only through its own review.','rpb-meta'));if(typeof handlers.onDirection!=='function')article.append(el('p','Opening Direction from this panel is not connected.','rpb-meta'));toolPanel(article,null);parent.append(article);
   }
   function render(focusPoint){
+   closeDiscussion();
    if(dead)return;const root=el('section',null,'rpb');root.setAttribute('aria-label','Research points and shared brief');
    const header=el('header',null,'rpb-heading');header.append(el('p',data.title+' · '+data.outputTitle,'rpb-meta'));
    const tabs=el('nav',null,'rpb-actions');tabs.setAttribute('aria-label','Research view');for(const [id,label] of [['points','Research points'],['brief','Shared brief']]){const b=button(label,'rpbTab',id);b.setAttribute('aria-pressed',String(tab===id));tabs.append(b);}header.append(tabs);root.append(header);
@@ -154,7 +158,7 @@
    getSelection:()=>selected,
    getViewState:()=>{captureInput();return {scope:{...data.scope},selected,tab,tool,drafts:[...drafts]};},
    restoreViewState(value){if(dead||!same(data.scope,scope(value?.scope))||!data.points.some(p=>p.id===value.selected))return false;selected=value.selected;tab=value.tab==='brief'?'brief':'points';tool=Object.hasOwn(tools,value.tool)?value.tool:'';drafts.clear();for(const entry of arr(value.drafts))if(Array.isArray(entry)&&typeof entry[0]==='string'&&(typeof entry[1]==='string'||entry[1]&&typeof entry[1]==='object'))drafts.set(entry[0],entry[1]);render();return true;},
-   destroy(){if(dead)return;dead=true;epoch++;drafts.clear();host.removeEventListener('click',onClick);host.removeEventListener('keydown',onKey);if(mounts.get(host)===instance){mounts.delete(host);host.replaceChildren();}}
+   destroy(){closeDiscussion();if(dead)return;dead=true;epoch++;drafts.clear();host.removeEventListener('click',onClick);host.removeEventListener('keydown',onKey);if(mounts.get(host)===instance){mounts.delete(host);host.replaceChildren();}}
   };mounts.set(host,instance);render();return instance;
  }
  return {mount,normalize};

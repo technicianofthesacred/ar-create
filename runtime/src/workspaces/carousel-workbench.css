@@ -317,3 +317,15 @@ body.wbf-on #app #study-output-canvas .ar-composition-workbench .slide2 .tx2:foc
 body.wbf-on #app .car-workspace .car-tools .car-more-menu button[aria-selected=true]{color:var(--warm);font-weight:600}
 body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar :is(button,summary){min-height:30px;padding:0 9px;font-size:var(--t-label);background:none!important}
 @media(max-width:560px){body.wbf-on #app .car-workspace>.car-tools{padding-right:154px!important;min-height:38px!important}body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar{gap:4px!important}body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar .cwb-back{max-width:84px;line-height:1.3;padding:0 5px}body.wbf-on #app .car-workspace .car-tbar-kind{display:none}}
+
+/* Current wording uses the shared manuscript scale; template artboards keep their own fonts. */
+.car-workspace .car-writing-page textarea,.car-workspace .car-writing-page input{font:400 var(--t-reading,16px)/var(--lh-read,1.65) var(--ar-ui,'Plus Jakarta Sans',sans-serif)}
+.car-workspace .car-writing-caption{font:400 var(--t-label,13px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif)}
+
+/* The continuous wording surface follows C's manuscript column, not the template artboard. */
+.car-workspace .car-writing-page{padding:0}
+.car-workspace .car-writing-page>header,.car-workspace .car-writing-page>footer,.car-workspace .car-writing-sequence,.car-workspace .car-writing-caption{max-width:var(--measure,640px);margin-left:0;margin-right:auto}
+.car-workspace .car-writing-page textarea{width:calc(100% + 8px);margin-left:-4px;padding:1px 4px;border:0;background:transparent;resize:none;field-sizing:content;min-height:calc(var(--t-reading,16px) * var(--lh-read,1.65) * 2 + 2px)}
+.car-workspace .car-writing-page textarea:focus-visible{outline:1px solid var(--warm,#796b52);outline-offset:1px}
+/* Keep identical passage positions while quieting editing controls in Read. */
+.car-workspace .car-writing-page[data-writing-view=read] .car-writing-slide>header>div{visibility:hidden}

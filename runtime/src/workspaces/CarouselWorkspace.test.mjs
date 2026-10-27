@@ -58,6 +58,37 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   const firstWords=document.querySelector('.car-sequence-words');
   await act(async()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype,'value').set.call(firstWords,'First revised below the portrait');firstWords.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});
   assert.equal(current.outputs[0].slides[0].text,'First revised below the portrait');
+  // Read is a presentation of this independently edited current sequence.
+  await act(async()=>[...document.querySelectorAll('.car-more-menu button')].find(b=>b.textContent==='Writing content').click());
+  const writing=document.querySelector('.car-writing-page'),second=document.querySelector('[aria-label="Writing for slide 2"]');
+  second.focus();second.setSelectionRange(7,14);second.blur();document.documentElement.scrollTop=417;
+  const beforeRead=structuredClone(current),changesBeforeRead=changes;
+  assert.equal(typeof window.studyCompositionFocus.setView,'function');
+  await act(async()=>window.studyCompositionFocus.setView('read',{documentId:current.id,outputId:'carousel'}));
+  assert.strictEqual(document.querySelector('.car-writing-page'),writing);
+  assert.strictEqual(document.querySelector('[aria-label="Writing for slide 2"]'),second);
+  assert.equal(second.readOnly,true);assert.equal(second.value,'Second revised inline');
+  assert.equal(writing.querySelector('h2').textContent,'Read carousel');
+  assert.equal(writing.querySelector('[aria-label="Edit slide 2 details"]').disabled,true);
+  await click('Edit slide 2 details');assert.equal(second.closest('section').querySelector('details').open,false,'Read cannot open editing controls');assert.equal(document.querySelector('[aria-label="Carousel draft Markdown"]').disabled,true);
+  assert.ok([...writing.querySelectorAll('textarea,input')].every(field=>field.readOnly));
+  assert.equal(writing.dataset.writingView,'read');assert.equal(document.documentElement.scrollTop,417);
+  assert.deepEqual(current,beforeRead);assert.equal(changes,changesBeforeRead);
+  await assert.rejects(async()=>window.studyCompositionFocus.setView('write',{documentId:current.id,outputId:'sibling-output'}),/changed|match/i);
+  await act(async()=>window.studyCompositionFocus.setView('write',{documentId:current.id,outputId:'carousel'}));
+  assert.strictEqual(document.querySelector('[aria-label="Writing for slide 2"]'),second);
+  assert.equal(second.readOnly,false);assert.equal(second.selectionStart,7);assert.equal(second.selectionEnd,14);
+  const details=second.closest('section').querySelector('details');assert.equal(details.open,false);
+  await click('Edit slide 2 details');assert.equal(details.open,true,'Details visibly opens the current slide heading and credit');assert.equal(document.activeElement.getAttribute('aria-label'),'Heading for slide 2');
+  details.open=false;second.focus();second.setSelectionRange(7,14);
+  await act(async()=>window.studyCompositionFocus.setView('arrange',{documentId:current.id,outputId:'carousel'}));
+  assert.ok(document.querySelector('.car-stage'));document.documentElement.scrollTop=231;
+  await act(async()=>window.studyCompositionFocus.setView('read',{documentId:current.id,outputId:'carousel'}));
+  assert.equal(document.documentElement.scrollTop,417);assert.equal(document.querySelector('[aria-label="Writing for slide 2"]').value,'Second revised inline');
+  assert.deepEqual(current,beforeRead);assert.equal(changes,changesBeforeRead,'navigation does not approve stale words or create a revision');
+  await act(async()=>window.studyCompositionFocus.setView('arrange',{documentId:current.id,outputId:'carousel'}));
+  assert.equal(document.documentElement.scrollTop,231);
+  await act(async()=>window.studyCompositionFocus.setView('write',{documentId:current.id,outputId:'carousel'}));await click('Show slide controls');assert.ok(document.querySelector('.car-inspector'));assert.equal(document.querySelector('.car-body').dataset.panel,'inspector','Writing menu opens the maintained actual inspector');assert.deepEqual(current,beforeRead);
   await click('Change template for slide 2');
   const template=[...document.querySelectorAll('.car-layout-option')].find(el=>!el.disabled&&el.getAttribute('aria-pressed')==='false');
   assert.ok(template);
@@ -227,4 +258,13 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   for(const [key,descriptor]of previous)descriptor?Object.defineProperty(globalThis,key,descriptor):delete globalThis[key];
   await rm(temp,{recursive:true,force:true});
  }
+});
+
+test('all carousel writing fields share the adopted manuscript font and scale, leaving template artwork typography separate',async()=>{const css=(await readFile(new URL('./carousel-workbench.css',import.meta.url),'utf8')).replace(/var\(--ar-ui(?:,[^)]*)?\)/g,"'Plus Jakarta Sans',sans-serif").replace(/var\(--t-reading(?:,[^)]*)?\)/g,'16px').replace(/var\(--t-label(?:,[^)]*)?\)/g,'13px').replace(/var\(--lh-read(?:,[^)]*)?\)/g,'1.65');const dom=new JSDOM('<style>'+css+'</style><div class="car-workspace"><main class="car-writing-page"><section class="car-writing-slide"><textarea>Slide</textarea><details><label>Heading<input></label><label>Credit<input></label></details></section><label class="car-writing-caption">Caption<textarea>Caption</textarea></label></main><div class="car-frame" style="font-family:Georgia">Template artwork</div></div>');try{for(const field of dom.window.document.querySelectorAll('.car-writing-page textarea,.car-writing-page input')){const style=dom.window.getComputedStyle(field);assert.match(style.fontFamily,/Plus Jakarta Sans/);assert.equal(style.fontSize,'16px');assert.equal(style.lineHeight,'1.65');}assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.car-frame')).fontFamily,'Georgia');}finally{dom.window.close();}});
+
+test('carousel reading and writing use the approved left manuscript measure instead of the wide centered donor form',async()=>{
+ const css=(await readFile(new URL('./carousel-workbench.css',import.meta.url),'utf8')).replace(/var\(--measure(?:,[^)]*)?\)/g,'640px');
+ const dom=new JSDOM('<style>'+css+'</style><div class="car-workspace"><main class="car-writing-page"><header><h2>Read carousel</h2></header><div class="car-writing-sequence"><section class="car-writing-slide"><textarea>Current words</textarea></section></div><label class="car-writing-caption">Caption<textarea>Caption</textarea></label><footer>Same current words</footer></main></div>');
+ try{const w=dom.window,d=w.document;assert.equal(w.getComputedStyle(d.querySelector('.car-writing-page')).padding,'0px');for(const node of d.querySelectorAll('.car-writing-page>header,.car-writing-page>footer,.car-writing-sequence,.car-writing-caption')){const s=w.getComputedStyle(node);assert.equal(s.maxWidth,'640px');assert.equal(s.marginLeft,'0px');}for(const field of d.querySelectorAll('.car-writing-page textarea')){const s=w.getComputedStyle(field);assert.equal(s.borderWidth,'0px');assert.equal(s.paddingLeft,'4px');assert.equal(s.marginLeft,'-4px');}}
+ finally{dom.window.close();}
 });

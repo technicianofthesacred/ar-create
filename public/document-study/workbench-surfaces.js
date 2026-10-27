@@ -158,7 +158,7 @@
  }
  function consolePanel(p){
   const panel=make('section','cons wb-console');panel.setAttribute('aria-label','Research console');
-  const head=make('div','ch'),title=make('b','', 'Research console');head.append(title,make('span','','· '+(p.name||'This project')),make('span','tag',window.workbenchLibraryResearch?'AI not connected · Library search works':'AI not connected · project search works'));
+  const head=make('div','ch'),title=make('b','', 'Research console');head.append(title,make('span','','· '+(p.name||'This project')),make('span','tag',window.workbenchLibraryResearch?'Library recall · literal search':'Project recall · literal search'));
   const hints=make('div','hints');for(const command of ['/search ','/point ','/sources','/help']){const b=make('button','',command.trim());b.type='button';b.onclick=()=>{input.value=command;input.focus();};hints.append(b);}
   const log=make('div','clog');log.setAttribute('role','log');log.setAttribute('aria-live','polite');log.setAttribute('aria-label','Console results');
   const form=make('form','cin'),label=make('label','','research ›'),input=make('input');input.setAttribute('aria-label','Research command');input.autocomplete='off';input.spellcheck=false;input.placeholder='/search words, /point 2, or ask a question';input.id='wb-research-command';label.htmlFor=input.id;const submit=make('button','','Run');submit.type='submit';form.append(label,input,submit);
