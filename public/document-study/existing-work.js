@@ -33,9 +33,9 @@
  async function openRequestedWork(){const params=new URLSearchParams(location.search),keys=['reviewSource','reviewStory','reviewStage','reviewArtifact','reviewHash','reviewWorkspace','reviewBinding','reviewCarousel','reviewMagazineStory','reviewMagazinePiece','reviewMagazineParent'];for(const key of keys)if(params.getAll(key).length>1)throw Error('Use one exact value for each saved-work reference.');if(['reviewMagazineStory','reviewMagazinePiece','reviewMagazineParent'].some(k=>params.has(k))){
    if(['reviewSource','reviewArtifact','reviewHash','reviewWorkspace','reviewBinding','reviewCarousel'].some(k=>params.has(k)))throw Error('Choose the Magazine working draft or another saved-work reference, not both.');
    if(['reviewStory','reviewStage','reviewMagazineStory','reviewMagazinePiece','reviewMagazineParent'].some(k=>!params.get(k))||!['5','6','7','8','9','10','11','12'].includes(params.get('reviewStage')))throw Error('A Magazine working draft needs its exact story, piece, native parent and Make or Deliver section.');
-   const story=catalog.stories.find(s=>s.id===params.get('reviewStory')),matches=(story?.artifacts||[]).filter(a=>{const target=magazineTarget(story,a);return target&&target.storyId===params.get('reviewMagazineStory')&&target.pieceId===params.get('reviewMagazinePiece')&&target.nativeProjectId===params.get('reviewMagazineParent');});
+   const story=catalog.stories.find(s=>s.id===params.get('reviewStory')),matches=(story?.artifacts||[]).filter(a=>{const target=magazineTarget(story,a)||coldMagazineTarget(story,a);return target&&target.storyId===params.get('reviewMagazineStory')&&target.pieceId===params.get('reviewMagazinePiece')&&target.nativeProjectId===params.get('reviewMagazineParent');});
    if(matches.length!==1)throw Error('The exact Magazine working draft reference is unavailable. No substitute was opened.');
-   const opened=await openMagazineTarget(story,matches[0],{write:params.get('reviewStage')==='5',presentationStage:Number(params.get('reviewStage'))});if(opened===null)throw Error('The exact draft did not finish opening. Your current work is retained.');return;
+   const opened=await openMagazineTarget(story,matches[0],{write:params.get('reviewStage')==='5',presentationStage:Number(params.get('reviewStage')),hydrateParent:true});if(opened===null)throw Error('The exact draft did not finish opening. Your current work is retained.');return;
   }if(params.has('reviewCarousel')){if(keys.some(k=>k!=='reviewCarousel'&&params.has(k)))throw Error('Choose the browser carousel or another saved-work reference, not both.');const id=params.get('reviewCarousel'),edition=window.workbenchPieces?.carouselEdition?.(id);if(!edition||edition.origin!==location.origin||typeof window.workbenchPieces?.openCarousel!=='function')throw Error('This exact browser carousel is unavailable at this origin. No substitute was opened.');if(!await window.workbenchPieces.openCarousel(edition))throw Error('Save or resolve the current work before opening this carousel.');rememberCarousel(id);return;}if(params.has('reviewSource')){if(keys.slice(1).some(k=>params.has(k)))throw Error('Choose a transcript or a story reference, not both.');await openRequestedSource();return;}if(params.has('reviewWorkspace')){
    if(params.has('reviewArtifact')||params.has('reviewHash'))throw Error('Choose one saved workspace or original file reference.');
    const stage=params.has('reviewStage')?params.get('reviewStage'):null;
@@ -90,25 +90,28 @@
  function recordRows(story,records){return records.map(a=>{const source=(catalog.sources||[]).find(s=>s.artifactId===a.artifactId&&s.hash===a.hash&&s.storyId===story.id);if(source)return sourceRow(source);const working=kind(a)==='DEV'&&!a.archived;return `<div class="ew-record"><div>${working?workingLink(story,a):recordLink(story,a)}<small>${esc(shownKind(a))}${a.archived?' · Earlier work':''}</small></div>${working?magazineWrite(story,a):''}</div>`;}).join('');}
 
  function storyWriter(story){if(window.AR_CREATE_REVIEW_MODE?.studyDraftCorrections!==true||story.parts?.length)return null;const candidates=(catalog.workspaceLinks?.pieces||[]).flatMap(link=>(link.targets||[]).map((target,index)=>({link,target,index}))).filter(x=>x.target.parentStudyId===story.nativeProjectId&&x.target.partKey==='article'&&!x.target.outputId&&x.target.originalHash===story.latestDraft?.hash);if(new Set(candidates.map(x=>x.target.rootBindingId)).size!==1)return null;return candidates.find(x=>x.target.role==='parent-study-workspace')||candidates[0]||null;}
- function magazineTarget(story,a){
+ function catalogMagazineTarget(story,a){
   const t=a?.magazineWorkingTarget;
-  if(!t||t.kind!=='magazine'||t.edition!=='working'||kind(a)!=='DEV'||a.archived||t.artifactId!==a.artifactId||t.hash!==a.hash||t.nativeProjectId!==story.nativeProjectId||!state.projects.some(p=>p.id===t.nativeProjectId)||typeof t.editable!=='boolean'||['nativeProjectId','storyId','pieceId','partKey'].some(k=>typeof t[k]!=='string'||!t[k]))return null;
+  if(!t||t.kind!=='magazine'||t.edition!=='working'||kind(a)!=='DEV'||a.archived||t.artifactId!==a.artifactId||t.hash!==a.hash||t.nativeProjectId!==story.nativeProjectId||typeof t.editable!=='boolean'||['nativeProjectId','storyId','pieceId','partKey'].some(k=>typeof t[k]!=='string'||!t[k]))return null;
   const matches=catalog.stories.flatMap(s=>s.artifacts.map(a=>({s,a,t:a.magazineWorkingTarget}))).filter(x=>x.t?.storyId===t.storyId&&x.t?.pieceId===t.pieceId);
   return matches.length===1&&matches[0].s===story&&matches[0].a===a?t:null;
  }
+ // Cold URLs may hydrate only the catalog story itself, never a guessed native owner.
+ function coldMagazineTarget(story,a){const t=catalogMagazineTarget(story,a);return t&&t.nativeProjectId===story.id&&!mappedProject(story)&&!(catalog.excludedProjectIds||[]).includes(t.nativeProjectId)&&catalog.stories.filter(s=>s.id===t.nativeProjectId||s.nativeProjectId===t.nativeProjectId).length===1?t:null;}
+ function magazineTarget(story,a){const t=catalogMagazineTarget(story,a);return t&&state.projects.some(p=>p.id===t.nativeProjectId)?t:null;}
  const magazineRoute=(story,t,stage)=>({reviewStory:story.id,reviewStage:String(stage),reviewMagazineStory:t.storyId,reviewMagazinePiece:t.pieceId,reviewMagazineParent:t.nativeProjectId});
  function magazineWrite(story,a){const t=magazineTarget(story,a);return t?.editable&&typeof window.studyDraft?.openMagazine==='function'&&window.AR_CREATE_REVIEW_MODE?.magazineDraftCorrections===true?`<button type="button" data-ew-magazine-write="${esc(story.id)}" data-ew-working-artifact="${esc(a.artifactId)}">Write</button>`:'';}
- async function openMagazineTarget(story,artifact,{write=false,presentationStage=write?5:6}={}){
+ async function openMagazineTarget(story,artifact,{write=false,presentationStage=write?5:6,hydrateParent=false}={}){
   if(![5,6,7,8,9,10,11,12].includes(presentationStage)||write!==(presentationStage===5))throw Error('Choose the exact Make or Deliver presentation for this working draft.');
-  const target=magazineTarget(story,artifact);if(!target)throw Error('The exact Magazine working draft is unavailable. No substitute was opened.');
+  const resolveTarget=()=>magazineTarget(story,artifact)||(hydrateParent&&coldMagazineTarget(story,artifact)),target=resolveTarget();if(!target)throw Error('The exact Magazine working draft is unavailable. No substitute was opened.');
   if(write&&(!target.editable||window.AR_CREATE_REVIEW_MODE?.magazineDraftCorrections!==true))throw Error('Magazine writing is not enabled for this read-only pickup.');
   if(typeof window.studyDraft?.openMagazine!=='function')throw Error('The maintained Magazine editor is unavailable. No replacement was opened.');
-  const token=++openEpoch,origin=project(),stage=origin?.viewedStage,view=origin?.view,unchanged=()=>token===openEpoch&&project()===origin&&origin?.viewedStage===stage&&origin?.view===view&&magazineTarget(story,artifact)===target;
+  const token=++openEpoch,origin=project(),stage=origin?.viewedStage,view=origin?.view,unchanged=()=>token===openEpoch&&project()===origin&&origin?.viewedStage===stage&&origin?.view===view&&resolveTarget()===target;
   const proof=await window.studyDraft?.flush?.();if(proof?.dirty||!unchanged())throw Error('Save or resolve the current writing before switching; the selected work may have changed.');
   await window.projectLibrary?.close?.();if(document.getElementById('project-library')?.open||!unchanged())throw Error('The selected work changed. Open the exact draft again.');
-  const p=state.projects.find(p=>p.id===target.nativeProjectId);if(!p)throw Error('The exact native parent is unavailable.');
+  let p=state.projects.find(p=>p.id===target.nativeProjectId);if(!p&&hydrateParent&&coldMagazineTarget(story,artifact)===target){p=referenceModel(story);state.projects.push(p);}if(!p)throw Error('The exact native parent is unavailable.');
   selected.set(p.id,story.id);p.existingWorkStoryId=story.id;
-  if(project()!==p){
+  if(!project()){state.project=p.id;window.render();}else if(project()!==p){
    const explicit=typeof window.projectDestination==='function',targetStage=explicit?6:p.viewedStage,targetView=explicit?'record':p.view;
    await window.switchProject(p.id,explicit?{destination:'retained-read',originProjectId:origin?.id}:undefined);
    if(project()!==p||token!==openEpoch||p.viewedStage!==targetStage||p.view!==targetView)throw Error('The native project or section changed before its draft opened.');

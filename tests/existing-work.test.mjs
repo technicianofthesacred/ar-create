@@ -111,6 +111,32 @@ function magazineOwner(w,{enabled=false,open=null}={}){
 const settle=async()=>{for(let i=0;i<8;i++)await new Promise(resolve=>setTimeout(resolve,0));};
 const magazineQuery=(extra={})=>new URLSearchParams({reviewStory:'story-a',reviewStage:'6',reviewMagazineStory:'registered-valley-independent',reviewMagazinePiece:'registered-piece-1',reviewMagazineParent:'native-a',...extra}).toString();
 
+function coldMagazineData(){const catalog=magazineData();catalog.stories[0].nativeProjectId='story-a';for(const a of catalog.stories[0].artifacts)if(a.magazineWorkingTarget)a.magazineWorkingTarget.nativeProjectId='story-a';return catalog;}
+const coldMagazineURL='http://localhost/document-study/index.html?'+magazineQuery({reviewStage:'12',reviewMagazineParent:'story-a'});
+test('cold exact Magazine entry hydrates only its catalog-proven same-story reference parent',async()=>{
+ const {dom,w,calls}=await setup({catalog:coldMagazineData(),url:coldMagazineURL,beforeLoad:w=>magazineOwner(w)});
+ try{assert.equal(w.magazineOpens.length,1);assert.equal(w.current().id,'story-a');assert.equal(w.current().viewedStage,12);assert.equal(w.state.projects.length,2);assert.equal(w.state.projects[0].blocks[0].html,'Invented saved human words');assert.match(w.current().blocks[0].html,/Current maintained Magazine words/);assert.equal(new URL(w.location.href).searchParams.get('reviewMagazineParent'),'story-a');assert.equal(calls.length,1);assert.ok(calls.every(c=>!c.options?.method||c.options.method==='GET'));}finally{dom.window.close();}
+});
+test('cold Magazine entry refuses forged, foreign, excluded, ambiguous and duplicate parents without adding browser state',async()=>{
+ const variants={foreign:c=>{c.stories[0].nativeProjectId='foreign';for(const a of c.stories[0].artifacts)if(a.magazineWorkingTarget)a.magazineWorkingTarget.nativeProjectId='foreign';},forged:c=>{c.stories[0].artifacts[4].magazineWorkingTarget.nativeProjectId='foreign';},duplicate:c=>{c.stories[1].artifacts[0].magazineWorkingTarget={...c.stories[0].artifacts[4].magazineWorkingTarget};},ambiguous:c=>{c.stories[1].nativeProjectId='story-a';},excluded:c=>{c.excludedProjectIds=['story-a'];},stale:c=>{c.stories[0].artifacts[4].magazineWorkingTarget.hash=otherHash;}};
+ for(const [name,change]of Object.entries(variants)){const catalog=coldMagazineData();change(catalog);const {dom,w}=await setup({catalog,url:name==='foreign'?coldMagazineURL.replace('reviewMagazineParent=story-a','reviewMagazineParent=foreign'):coldMagazineURL,beforeLoad:w=>magazineOwner(w)});try{assert.equal(w.magazineOpens.length,0,name);assert.equal(w.current().id,'native-a',name);assert.equal(w.state.projects.length,1,name);assert.equal(w.current().blocks[0].html,'Invented saved human words',name);}finally{dom.window.close();}}
+});
+test('cold Magazine dirty flush or navigation refuses hydration before creating any reference',async()=>{
+ for(const changed of [false,true]){const {dom,w}=await setup({catalog:coldMagazineData(),url:coldMagazineURL,beforeLoad:w=>{magazineOwner(w);w.studyDraft.flush=async()=>{if(changed)await w.viewPhase(3);return {dirty:!changed};};}});try{assert.equal(w.magazineOpens.length,0);assert.equal(w.state.projects.length,1);assert.equal(w.current().id,'native-a');assert.equal(w.current().blocks[0].html,'Invented saved human words');assert.equal(w.current().viewedStage,changed?3:5);}finally{dom.window.close();}}
+});
+test('cold Magazine pending flush yields to later navigation without creating a parent',async()=>{
+ const {dom,w}=await setup({catalog:coldMagazineData(),url:coldMagazineURL,beforeLoad:w=>{magazineOwner(w);w.studyDraft.flush=()=>new Promise(resolve=>w.setTimeout(async()=>{await w.viewPhase(3);resolve({dirty:false});},0));}});try{assert.equal(w.magazineOpens.length,0);assert.equal(w.state.projects.length,1);assert.equal(w.current().viewedStage,3);}finally{dom.window.close();}
+});
+test('cold Magazine unknown story and duplicate route values never hydrate a parent',async()=>{
+ for(const url of [coldMagazineURL.replace('reviewStory=story-a','reviewStory=unknown'),coldMagazineURL+'&reviewMagazineParent=story-a']){const {dom,w}=await setup({catalog:coldMagazineData(),url,beforeLoad:w=>magazineOwner(w)});try{assert.equal(w.magazineOpens.length,0);assert.equal(w.state.projects.length,1);assert.equal(w.current().id,'native-a');}finally{dom.window.close();}}
+});
+test('cold Magazine hydration supports an empty browser project list and keeps parent reference wording empty until its owner opens',async()=>{
+ const {dom,w}=await setup({catalog:coldMagazineData(),url:coldMagazineURL,beforeLoad:w=>{w.state.projects=[];w.state.project=null;magazineOwner(w,{open:async(input,w)=>{assert.equal(w.current().id,'story-a');assert.equal(w.current().referenceOnly,true);assert.equal(w.current().blocks.length,0);assert.equal(w.current().slides.length,0);w.current().view='record';w.current().viewedStage=12;return {owner:{kind:'magazine',storyId:input.storyId,pieceId:input.pieceId,partKey:'article'},parentStudyId:input.parentStudyId,expected:{workflow:{draft:otherHash}},dirty:false};}});}});try{assert.equal(w.magazineOpens.length,1);assert.equal(w.state.projects.length,1);}finally{dom.window.close();}
+});
+test('cold Magazine delayed catalog opens once or yields to intervening navigation',async()=>{
+ for(const navigate of [false,true]){let openedBeforeCatalog;const {dom,w}=await setup({catalog:coldMagazineData(),url:coldMagazineURL,beforeLoad:w=>{magazineOwner(w);const fetch=w.fetch;w.fetch=(url,...args)=>url==='/api/review/catalog'?new Promise(resolve=>{w.setTimeout(async()=>{openedBeforeCatalog=w.magazineOpens.length;if(navigate)await w.viewPhase(1);resolve({ok:true,json:async()=>coldMagazineData()});},0);}):fetch(url,...args);}});try{assert.equal(openedBeforeCatalog,0);assert.equal(w.magazineOpens.length,navigate?0:1);assert.equal(w.state.projects.length,navigate?1:2);assert.equal(w.current().viewedStage,navigate?1:12);await w.existingWork.load();assert.equal(w.magazineOpens.length,navigate?0:1);}finally{dom.window.close();}}
+});
+
 test('exact Magazine title and Read pickup use current native owner words and preserve their reload identity',async()=>{
  const {dom,w,calls}=await setup({catalog:magazineData(),beforeLoad:w=>magazineOwner(w)});
  const link=w.document.querySelector('.ew-story [data-ew-working="story-a"]'),url=new URL(link.href);
