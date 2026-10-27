@@ -14,7 +14,7 @@ import {currentActor, isHuman, requireHuman, requireWriteActor} from '../actor.m
 import {classify, frontmatter} from '../magazine-vault/kinds.mjs';
 import {expected, sha256, textBytes} from '../magazine-vault/write.mjs';
 import {splitBlocks, hash, plain, editable} from '../../reference/mag-edit.mjs';
-import {parseFeedbackShare} from './feedback-share-codec.mjs';
+import {parseFeedbackShare, updateFeedbackShareSection} from './feedback-share-codec.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -230,6 +230,44 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     const parsed=parseFeedbackShare(input.content),current=parsed.structured&&parsed.projection.every(entry=>entry.target.storyId===selection.authority.storyId&&entry.target.pieceId===selection.authority.pieceId&&entry.target.hash===input.expectedHash);
     return {selection:select(input),rootIdentity:selection.context.rootIdentity,authority:selection.authority,registeredFeedbackPath:selection.context.feedback.path,expectedHash:input.expectedHash,expectedFeedbackHash:input.expectedFeedbackHash,content:input.content,mapping:{structured:!!current,metadata:parsed.metadata,projection:current?parsed.projection:[],reason:parsed.structured&&!current?'The mapping targets another piece or earlier working revision. Full Markdown editing remains available.':parsed.reason}};
   }
+  async function readShareFeedbackEditModel(input) {
+    const view=await readShareFeedback(structuredClone(input)),{fm,parts}=splitBlocks(view.document.text);
+    if((parts.length+1)/2>5000)throw new StateError('FEEDBACK exceeds the bounded paragraph limit.',413);
+    const unsupported=view.document.text.startsWith('---\r\n')&&!fm;
+    const paragraphs=[];
+    for(let k=0;k<parts.length;k+=2)paragraphs.push({index:k/2,seen:hash(parts[k]),text:plain(parts[k]),raw:parts[k],editable:editable(parts[k])});
+    const available=!!magazine.configured&&!!magazine.writable&&!unsupported;
+    return {...view,schema:'ar-create.magazine-share-feedback-edit-model.v1',paragraphs,editable:available,unavailableReason:unsupported?'The existing paragraph editor cannot preserve this frontmatter representation.':available?null:'Magazine is read-only. Its designated owner must enable editing.'};
+  }
+  async function prepareShareFeedbackParagraph(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'block','seen','text']);input=structuredClone(input);requireWriteActor();requireHuman('Preparing FEEDBACK paragraph corrections');writable();
+    if(!Number.isSafeInteger(input.block)||input.block<0||!/^[a-f0-9]{12}$/.test(input.seen||'')||typeof input.text!=='string'||input.text.length>200000)throw new StateError('Use an exact donor paragraph index/hash and bounded text.',400);
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);
+    if(typeof magazine.prepareFeedbackParagraph!=='function')throw new StateError('The maintained FEEDBACK paragraph preparation owner is unavailable.',503);
+    const document=magazine.read({path:selection.context.feedback.path}),original=document.text,{fm,parts}=splitBlocks(original);
+    const k=input.block*2,raw=parts[k];
+    if(raw===undefined||hash(raw)!==input.seen||!editable(raw))throw new StateError('The selected FEEDBACK paragraph changed or cannot be edited.',409);
+    let start=fm.length;for(let i=0;i<k;i++)start+=parts[i].length;
+    const end=start+raw.length,parsed=parseFeedbackShare(original);
+    const candidate=magazine.prepareFeedbackParagraph({path:selection.context.feedback.path,expectedHash:input.expectedFeedbackHash,block:input.block,seen:input.seen,text:input.text});
+    let content=candidate.content;
+    if(content!==original&&parsed.structured){
+      const anchored=parsed.projection.flatMap(entry=>entry.sections.map(section=>({entry,section}))).filter(({section})=>start<section.end&&end>section.start);
+      if(anchored.length){
+        if(anchored.length!==1||start<anchored[0].section.start||end>anchored[0].section.end||start===anchored[0].section.start)throw new StateError('Recipient/language headings keep their recorded identity. Edit the message paragraph instead.',409);
+        const {entry,section}=anchored[0],sectionContent=content.slice(section.start,section.end+content.length-original.length);
+        const updated=updateFeedbackShareSection(original,{expectedHash:input.expectedFeedbackHash,recipientId:entry.recipientId,target:entry.target,language:section.language,expectedSectionHash:section.hash,content:sectionContent});
+        const change=updated.metadataChange;
+        const donorOnly=updated.markdown.slice(0,change.start)+change.before+updated.markdown.slice(change.start+change.after.length);
+        if(donorOnly!==candidate.content)throw new StateError('The mapped paragraph would change bytes outside its exact donor section.',409);
+        // The codec may change only the metadata line in addition to the exact
+        // donor section. It does not introduce another wording representation.
+        content=updated.markdown;
+      }
+    }
+    assertFeedbackCurrent(input,selection);
+    return prepareShareFeedback({...Object.fromEntries([...BASE,...feedbackFields].filter(key=>input[key]!==undefined).map(key=>[key,input[key]])),content});
+  }
   async function saveShareFeedback(input) {
     workingOnly(input);fields(input,[...feedbackFields,'content','operationId','reason']);input=structuredClone(input);requireWriteActor();writable();uuid(input.operationId);
     const selection=feedbackWriteSelection(input);
@@ -401,5 +439,5 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     if (!eligible.eligible) throw new StateError(eligible.reason, isHuman(currentActor()?.actor) ? 409 : 403);
     return magazine.undo({undoOperationId: input.undoOperationId, operationId: input.operationId});
   }
-  return {catalog, read, shareContext, readShareFeedback, prepareShareFeedback, saveShareFeedback, eligibleUndoShareFeedback, undoShareFeedback, shareFeedbackHistory, prepare, edit, save, operation, eligibleUndo, undo};
+  return {catalog, read, shareContext, readShareFeedback, readShareFeedbackEditModel, prepareShareFeedback, prepareShareFeedbackParagraph, saveShareFeedback, eligibleUndoShareFeedback, undoShareFeedback, shareFeedbackHistory, prepare, edit, save, operation, eligibleUndo, undo};
 }

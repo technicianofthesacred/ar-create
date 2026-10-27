@@ -78,7 +78,7 @@ const feedbackHash=createHash('sha256').update(feedbackMarkdown).digest('hex');
 function feedbackFixture(options={}){
  const f=shareFixture(),ctx=vm.createContext({structuredClone,URL,crypto:webcrypto,TextEncoder});vm.runInContext(code,ctx);f.context.references.feedback=[{path:feedbackPath,kind:'FEEDBACK',registeredHash:H,currentHash:feedbackHash,state:'changed-since-registration',readable:true,changedSinceRegistration:true}];
  f.feedback={schema:'ar-create.magazine-share-feedback.v1',selection:{storyId:'story',pieceId:'article:1',edition:'working'},authority:structuredClone(f.state.owner),rootIdentity:structuredClone(f.context.rootIdentity),draft:structuredClone(f.context.draft),feedback:{path:feedbackPath,hash:feedbackHash,registeredHash:H,changedSinceRegistration:true},document:{path:feedbackPath,kind:'FEEDBACK',hash:feedbackHash,text:feedbackMarkdown},mapping:{structured:false,metadata:null,projection:[],reason:'No explicit recipient/language mapping is saved.'},readOnly:true};f.feedbackCalls=[];f.contextCalls=[];
- f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),readShareContext:async q=>{f.contextCalls.push(q);return options.context?options.context(f,q):f.context;},readShareFeedback:async q=>{f.feedbackCalls.push(q);return options.feedback?options.feedback(f,q):f.feedback;}});return f;
+ f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),readShareContext:async q=>{f.contextCalls.push(q);return options.context?options.context(f,q):f.context;},readShareFeedback:async q=>{f.feedbackCalls.push(q);return options.feedback?options.feedback(f,q):f.feedback;},readShareFeedbackEditModel:q=>options.model(f,q),prepareShareFeedbackParagraph:q=>options.prepare(f,q),saveShareFeedback:q=>options.save(f,q),undoShareFeedback:q=>options.undo(f,q),readShareFeedbackHistory:q=>options.history(f,q)});return f;
 }
 const feedbackInput=()=>({...shareInput(),registeredFeedbackPath:feedbackPath,expectedFeedbackHash:feedbackHash});
 test('registered FEEDBACK transport returns canonical Markdown and frozen fallback without native output selection',async()=>{
@@ -151,4 +151,21 @@ test('Magazine Share entry resolves its selected working owner without publicati
  const value=await f.adapter.readShareEntry({projectId:'native-project'});
  assert.equal(value.output.id,'magazine-working:story:article:1');assert.equal(value.output.workingHash,H);assert.equal(value.output.title,'Clay');assert.equal(value.context.draft.hash,H);assert.ok(Object.isFrozen(value));
  f.state.dirty=true;await assert.rejects(f.adapter.readShareEntry({projectId:'native-project'}));
+});
+
+
+const editModel=f=>({...structuredClone(f.feedback),schema:'ar-create.magazine-share-feedback-edit-model.v1',editable:true,unavailableReason:null,paragraphs:[{index:0,seen:createHash('sha1').update(feedbackMarkdown).digest('hex').slice(0,12),text:'Invented invitation',raw:feedbackMarkdown,editable:true}]});
+test('Share paragraph model is checked against canonical bytes and owner before offering human edits',async()=>{
+ const f=feedbackFixture({model:f=>editModel(f)}),m=await f.adapter.readShareFeedbackEditModel(feedbackInput());assert.equal(m.paragraphs[0].text,'Invented invitation');assert.ok(Object.isFrozen(m.paragraphs));
+ for(const change of [m=>m.paragraphs[0].raw='Other words',m=>m.paragraphs[0].seen='0'.repeat(12),m=>m.document.hash=H,m=>m.rootIdentity.fingerprint=H]){const g=feedbackFixture({model:f=>{const m=editModel(f);change(m);return m;}});await assert.rejects(g.adapter.readShareFeedbackEditModel(feedbackInput()));}
+});
+test('paragraph preparation preserves exact owner scope and refuses delayed owner changes',async()=>{
+ let calls=0;const f=feedbackFixture({model:f=>editModel(f),prepare:(f,q)=>{calls++;return {...q,selection:f.feedback.selection,rootIdentity:f.feedback.rootIdentity,authority:f.feedback.authority,content:'# Changed invitation\n'};}});
+ const m=await f.adapter.readShareFeedbackEditModel(feedbackInput()),q={...feedbackInput(),block:0,seen:m.paragraphs[0].seen,text:'Changed invitation'};assert.match((await f.adapter.prepareShareFeedbackParagraph(q)).content,/Changed/);assert.equal(calls,1);
+ const g=feedbackFixture({model:f=>editModel(f),prepare:(f,q)=>{f.state.dirty=true;return {...q,selection:f.feedback.selection,rootIdentity:f.feedback.rootIdentity,authority:f.feedback.authority,content:'Changed'};}});await assert.rejects(g.adapter.prepareShareFeedbackParagraph(q));
+});
+test('Share save/Undo transport retains the exact operation and refuses foreign context or result',async()=>{
+ const id='22222222-2222-4222-8222-222222222222',content='Changed invitation',f=feedbackFixture({save:(f,q)=>({written:true,path:feedbackPath,hash:wireHash(q.content),beforeHash:feedbackHash,operationId:q.operationId}),undo:(f,q)=>({undone:q.undoOperationId,operationId:q.operationId})});
+ const q={...feedbackInput(),rootFingerprint:R,content,operationId:id};assert.equal((await f.adapter.saveShareFeedback(q)).operationId,id);await assert.rejects(f.adapter.saveShareFeedback({...q,rootFingerprint:H}));
+ assert.equal((await f.adapter.undoShareFeedback({...feedbackInput(),rootFingerprint:R,operationId:id,undoOperationId:'33333333-3333-4333-8333-333333333333'})).undone,'33333333-3333-4333-8333-333333333333');
 });

@@ -20,7 +20,7 @@
   // Keep only contract metadata. Resolver extras can never become file bodies or delivery proof.
   return freeze({schema:r.schema,revision:r.revision,nativeProjectId:r.nativeProjectId,workingOwnerRef:{projectId:w.projectId,pieceId:w.pieceId,editionId:'working',artifactId:w.artifactId,hash:w.hash},publication:r.publication===null?null:{id:r.publication.id,url:r.publication.url,title:r.publication.title,recordedBy:r.publication.recordedBy,edition:null,date:null}});
  }
- function createMagazineOutputAdapter({current,resolve,openWorking,openPublication,readWorking,readShareContext:readShare,readShareFeedback:readFeedback,openArrangement,openAudience,downloadWorking}={}){
+ function createMagazineOutputAdapter({current,resolve,openWorking,openPublication,readWorking,readShareContext:readShare,readShareFeedback:readFeedback,readShareFeedbackEditModel:readEditModel,prepareShareFeedbackParagraph:prepareParagraph,saveShareFeedback:saveFeedback,undoShareFeedback:undoFeedback,readShareFeedbackHistory:readFeedbackHistory,openArrangement,openAudience,downloadWorking}={}){
   if(typeof current!=='function'||typeof resolve!=='function')throw Error('The Magazine reference reader is not connected.');
   const state=id=>snapshot(current(),id);
   const unchanged=s=>{if(stable(state(s.projectId))!==stable(s))throw Error('The selected working part changed. Read its references again.');};
@@ -50,9 +50,9 @@
    return freeze({output:{id:workingId(s),kind:'magazine-working',title:context.authority.title||'Working article',format:'Working article',workingHash:s.hash},context});
   }
   const feedbackPath=value=>typeof value==='string'&&value.length<=600&&/^Workflow\/6-Feedback\/FEEDBACK - [^/\\\x00-\x1f\x7f]+\.md$/.test(value)&&!value.includes('.sync-conflict-');
-  async function digestText(value){
+  async function digestText(value,algorithm='SHA-256'){
    if(!globalThis.crypto?.subtle||typeof TextEncoder!=='function')throw Error('Canonical FEEDBACK verification is unavailable.');
-   return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+   return [...new Uint8Array(await crypto.subtle.digest(algorithm,new TextEncoder().encode(value)))].map(b=>b.toString(16).padStart(2,'0')).join('');
   }
   function feedbackMetadata(value){
    if(value===null)return null;
@@ -107,6 +107,54 @@
    if(stable(after.rootIdentity)!==stable(context.rootIdentity)||stable(after.references.feedback.filter(r=>r.path===registered.path))!==stable(selected))throw Error('The registered FEEDBACK reference changed while opening.');
    return freeze({schema:value.schema,selection:{storyId:s.owner.storyId,pieceId:s.owner.pieceId,edition:'working'},authority:{...s.owner},rootIdentity:{...context.rootIdentity},draft:{path:d.path,hash:d.hash},feedback:{path:f.path,hash:f.hash,registeredHash:f.registeredHash,changedSinceRegistration:f.changedSinceRegistration},document:{path:doc.path,kind:'FEEDBACK',hash:doc.hash,text:doc.text},mapping:{structured:m.structured,metadata,projection,reason:m.reason},readOnly:true});
   }
+  const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
+  function feedbackSelection(q,s){
+   if(q.outputId!==workingId(s)||q.expectedHash!==s.hash||!feedbackPath(q.registeredFeedbackPath)||!sha(q.expectedFeedbackHash))throw Error('Choose this exact feedback record and article before editing.');
+   return {storyId:s.owner.storyId,pieceId:s.owner.pieceId,edition:'working',expectedHash:s.hash,registeredFeedbackPath:q.registeredFeedbackPath,expectedFeedbackHash:q.expectedFeedbackHash};
+  }
+  async function readShareFeedbackEditModel(input={}){
+   const q=copy(input),s=state(q.projectId),request=feedbackSelection(q,s);
+   if(typeof readEditModel!=='function')throw Error('The correspondence paragraph editor is not connected.');
+   const base=await readShareFeedback(q),value=copy(await readEditModel(freeze(request)));unchanged(s);
+   if(value?.schema!=='ar-create.magazine-share-feedback-edit-model.v1'||value.readOnly!==true||['selection','rootIdentity','draft','feedback','document'].some(key=>stable(value[key])!==stable(base[key]))||typeof value.editable!=='boolean'||!(value.editable?value.unavailableReason===null:typeof value.unavailableReason==='string')||!Array.isArray(value.paragraphs)||value.paragraphs.length>5000)throw Error('The correspondence editor returned different or unavailable saved words.');
+   const body=base.document.text.replace(/^---\n[\s\S]*?\n---\n/,''),parts=body.split(/(\n\s*\n)/),paragraphs=[];
+   if(value.paragraphs.length!==Math.ceil(parts.length/2))throw Error('The saved paragraph positions changed.');
+   for(let i=0;i<value.paragraphs.length;i++){
+    const row=value.paragraphs[i];
+    if(row?.index!==i||row.raw!==parts[i*2]||typeof row.text!=='string'||typeof row.editable!=='boolean'||typeof row.seen!=='string'||row.seen!==(await digestText(row.raw,'SHA-1')).slice(0,12))throw Error('The saved paragraph words or identity changed.');
+    paragraphs.push({index:i,seen:row.seen,text:row.text,raw:row.raw,editable:row.editable});
+   }
+   unchanged(s);return freeze({...base,schema:value.schema,editable:value.editable,unavailableReason:value.unavailableReason,paragraphs});
+  }
+  async function prepareShareFeedbackParagraph(input={}){
+   const q=copy(input),s=state(q.projectId),request=feedbackSelection(q,s),model=await readShareFeedbackEditModel(q);unchanged(s);
+   const row=model.paragraphs.find(row=>row.index===q.block);
+   if(typeof prepareParagraph!=='function'||!model.editable||!row?.editable||row.seen!==q.seen||typeof q.text!=='string'||q.rootFingerprint!==undefined&&q.rootFingerprint!==model.rootIdentity.fingerprint)throw Error('This paragraph is unavailable or changed. Keep your words and compare the saved record.');
+   const value=copy(await prepareParagraph(freeze({...request,block:q.block,seen:q.seen,text:q.text})));unchanged(s);
+   if(value?.expectedHash!==q.expectedHash||value.expectedFeedbackHash!==q.expectedFeedbackHash||value.registeredFeedbackPath!==q.registeredFeedbackPath||stable(value.selection)!==stable(model.selection)||stable(value.rootIdentity)!==stable(model.rootIdentity)||value.authority?.storyId!==s.owner.storyId||value.authority.pieceId!==s.owner.pieceId||typeof value.content!=='string'||!value.content.isWellFormed()||value.content.includes('\0')||new TextEncoder().encode(value.content).length>2097152)throw Error('Paragraph preparation returned different or unavailable words.');
+   return freeze({selection:copy(model.selection),rootIdentity:copy(model.rootIdentity),expectedHash:q.expectedHash,expectedFeedbackHash:q.expectedFeedbackHash,registeredFeedbackPath:q.registeredFeedbackPath,content:value.content});
+  }
+  async function feedbackCommand(action,input={}){
+   const q=copy(input),s=state(q.projectId),request=feedbackSelection(q,s),context=await readShareContext({projectId:q.projectId,outputId:q.outputId,expectedHash:q.expectedHash});unchanged(s);
+   const refs=context.references.feedback.filter(ref=>ref.path===q.registeredFeedbackPath);
+   if(!uuid(q.operationId)||q.rootFingerprint!==context.rootIdentity.fingerprint||refs.length!==1||!refs[0].readable)throw Error('This exact feedback operation or root changed. Keep the unsaved copy.');
+   let payload,callback;
+   if(action==='save'){
+    if(typeof q.content!=='string'||!q.content.isWellFormed()||q.content.includes('\0')||new TextEncoder().encode(q.content).length>2097152)throw Error('Keep bounded readable correspondence.');
+    payload={...request,content:q.content,operationId:q.operationId};callback=saveFeedback;
+   }else{if(!uuid(q.undoOperationId))throw Error('Choose an exact saved correspondence change to undo.');payload={...request,operationId:q.operationId,undoOperationId:q.undoOperationId};callback=undoFeedback;}
+   if(typeof callback!=='function')throw Error('This correspondence action is not connected.');
+   const value=copy(await callback(freeze(payload)));unchanged(s);
+   if(value?.operationId!==q.operationId||(action==='save'?value.written!==true||value.path!==q.registeredFeedbackPath||value.beforeHash!==q.expectedFeedbackHash||value.hash!==await digestText(q.content):value.undone!==q.undoOperationId))throw Error(value?.proposed?'These words are a proposal awaiting the author’s decision.':'The correspondence action did not confirm the exact saved operation.');
+   unchanged(s);return freeze(value);
+  }
+  const saveShareFeedback=input=>feedbackCommand('save',input),undoShareFeedback=input=>feedbackCommand('undo',input);
+  async function shareFeedbackHistory(input={}){
+   const q=copy(input),s=state(q.projectId),request=feedbackSelection(q,s);if(typeof readFeedbackHistory!=='function')throw Error('Saved correspondence history is unavailable.');
+   await readShareFeedback(q);const value=copy(await readFeedbackHistory(freeze(request)));unchanged(s);
+   if(!Array.isArray(value?.history)||value.history.length>200)throw Error('The saved correspondence history is invalid.');
+   const history=value.history.map(row=>{if(!uuid(row.operationId)||!sha(row.beforeHash)||!sha(row.afterHash)||typeof row.modifiedAt!=='string'||typeof row.actor!=='string'||typeof row.canUndo!=='boolean')throw Error('A saved correspondence receipt is invalid.');return {operationId:row.operationId,modifiedAt:row.modifiedAt,actor:row.actor,beforeHash:row.beforeHash,afterHash:row.afterHash,canUndo:row.canUndo};});return freeze({history});
+  }
   async function read({projectId}={}){
    const selected=copy(current());if(selected?.projectId!==projectId||selected?.owner?.kind!=='magazine')return null;
    const s=snapshot(selected,projectId),r=await fresh(s),p=r.publication,existingDraft=working(s,r);
@@ -142,7 +190,7 @@
    if(stable(after)!==stable(r))throw Error('The recorded reference changed while opening. Read its current metadata again.');
    return result;
   }
-  return Object.freeze({read,onAction,readWorkingEdition,readShareContext,readShareEntry,readShareFeedback});
+  return Object.freeze({read,onAction,readWorkingEdition,readShareContext,readShareEntry,readShareFeedback,readShareFeedbackEditModel,prepareShareFeedbackParagraph,saveShareFeedback,undoShareFeedback,shareFeedbackHistory});
  }
  globalThis.createMagazineOutputAdapter=createMagazineOutputAdapter;
 })();

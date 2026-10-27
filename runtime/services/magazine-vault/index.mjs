@@ -12,7 +12,7 @@ import {randomUUID, createHash} from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {StateError} from '../../store.mjs';
 import {atomicWrite, ensurePrivateDirectory, readJson} from '../files.mjs';
-import {currentActor, isHuman, requireHuman, IN_PROCESS_ACTOR} from '../actor.mjs';
+import {currentActor, isHuman, requireHuman, requireWriteActor, IN_PROCESS_ACTOR} from '../actor.mjs';
 import * as askDonor from '../../reference/mag-ask.mjs';
 import * as editDonor from '../../reference/mag-edit.mjs';
 import {classify, storyFromName, storyId, cleanRelative} from './kinds.mjs';
@@ -243,6 +243,29 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
       for (const rel of rels) { const abs = path.join(tmp, rel), now = fs.existsSync(abs) ? fs.readFileSync(abs) : null, was = before.get(rel); if ((now ? sha256(now) : null) !== was.hash) changes.push({rel, expectedHash: was.hash, bytes: now}); }
       return {out, changes};
     } finally { fs.rmSync(tmp, {recursive: true, force: true}); }
+  }
+
+  /** Pure preparation through the unchanged paragraph donor; scratch log dies
+   * with the mirror. No canonical put, lock transaction or operation receipt. */
+  function prepareFeedbackParagraph(input) {
+    requireWriteActor(); requireHuman('Preparing FEEDBACK paragraph corrections'); requireWritable();
+    fields(input, ['path', 'expectedHash', 'block', 'seen', 'text'], ['path', 'expectedHash', 'block', 'seen', 'text']);
+    const c=classify(input.path),base=expected(input.expectedHash);
+    if(c.kind!=='FEEDBACK'||base===null)throw new StateError('Choose an existing exact FEEDBACK file.',400);
+    if(!Number.isSafeInteger(input.block)||input.block<0||!/^[a-f0-9]{12}$/.test(input.seen||'')||typeof input.text!=='string'||input.text.length>200000)throw new StateError('Use an exact donor paragraph index/hash and bounded text.',400);
+    textBytes(input.text);
+    const current=io('mag').read(c.rel);
+    if(!current.exists||current.hash!==base||io('mag').conflictCopies(c.rel).length)throw new StateError('FEEDBACK changed or has conflicts. Read it again before preparing.',409);
+    let original;try{original=new TextDecoder('utf-8',{fatal:true}).decode(current.bytes);}catch{throw new StateError('FEEDBACK is not readable UTF-8 Markdown.',409);}
+    if(sha256(Buffer.from(original,'utf8'))!==base||original.startsWith('---\r\n'))throw new StateError('The paragraph donor cannot preserve this FEEDBACK frontmatter representation. Full-file editing remains separate.',409);
+    if((editDonor.splitBlocks(original).parts.length+1)/2>5000)throw new StateError('FEEDBACK exceeds the bounded paragraph limit.',413);
+    const snapshot={read:(root,rel)=>{if(root!=='mag'||rel!==c.rel)throw new StateError('Unexpected preparation file.',403);return current;}};
+    const {out,changes}=viaMirror(snapshot,[c.rel],mag=>editDonor.edit(mag,c.rel,input.block,input.seen,input.text));
+    const changed=changes.find(change=>change.rel===c.rel),content=changed?changed.bytes.toString('utf8'):original;
+    textBytes(content);
+    const after=io('mag').read(c.rel);
+    if(after.hash!==base||io('mag').conflictCopies(c.rel).length)throw new StateError('FEEDBACK changed during paragraph preparation.',409);
+    return {content,expectedHash:base,changed:!!out.changed,removed:!!out.removed};
   }
 
   async function edit(input) {
@@ -529,7 +552,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     board, read, write, edit, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
     issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo, draftHistory,
-    feedbackOperations,
+    feedbackOperations, prepareFeedbackParagraph,
     operation: ({operationId}) => { if (!UUID.test(operationId || '')) throw new StateError('operationId must be a UUID.', 400); const r = readJson(opFile(operationId), null); if (!r) throw new StateError('No such operation.', 404); return {...r, changes: r.changes.map(({before, ...rest}) => rest)}; },
     lockStatus: () => roots().lock.status(),
     lockHold: async input => { fields(input || {}, ['doing', 'ttlMs']); requireWritable(); const who = ctx(); return roots().lock.hold({actor: who.actor, doing: typeof input?.doing === 'string' ? input.doing.slice(0, 120) : 'a /mag run on this Mac'}, input?.ttlMs ? {ttlMs: input.ttlMs} : {}); },

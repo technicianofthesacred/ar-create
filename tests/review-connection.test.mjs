@@ -141,3 +141,17 @@ test('C01/C04/C05/C06 S05/S06 real preview proxy approves one exact native span,
  const undo={...scope,expected:saved.expected,operationId:randomUUID(),undoOperationId:input.operationId},restored=decode(await post(port,'/api/study-draft/undo',undo,origin));assert.equal(restored.raw,raw);assert.deepEqual(restored.projection.map(row=>row.id),originalProjection.map(row=>row.id));assert.equal((await read()).raw,raw);assert.equal(decode(await post(port,'/api/study-draft/undo',undo,origin)).raw,raw);
  assert.equal(await fs.readFile(path.join(vault,draftRelative),'utf8'),raw);assert.equal(await fs.readFile(path.join(vault,sourceRelative),'utf8'),source);
 });
+
+test('FEEDBACK correction permission is independent, exact-origin, human-only and path bounded',async t=>{
+ const payload={storyId:'mag-invented',pieceId:'mag-invented:article',edition:'working',expectedHash:'a'.repeat(64),registeredFeedbackPath:'Workflow/6-Feedback/FEEDBACK - Invented.md',expectedFeedbackHash:'b'.repeat(64),content:'Invented unsent words.',operationId:'12345678-1234-4234-8234-123456789012'};
+ const f=await setup(t,{actualWorkReview:true,magazineFeedbackCorrections:true}),origin='http://127.0.0.1:'+f.port,route='/api/magazine/working-draft/share-feedback/save';
+ const flags=await request(f.port,'/document-study/package-config.js');assert.match(flags.body,/"magazineFeedbackCorrections":true/);
+ const post=(body=payload,headers={origin})=>request(f.port,route,{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify(body)});
+ const saved=await post();assert.equal(saved.status,200);assert.equal(f.calls.at(-1).body,JSON.stringify(payload));
+ const count=f.calls.length;assert.equal((await post(payload,{})).status,403);assert.equal((await post(payload,{origin:'http://unrelated.invalid'})).status,403);assert.equal((await post(payload,{origin,'x-ar-actor':'agent:codex'})).status,403);
+ assert.equal((await post({...payload,path:payload.registeredFeedbackPath})).status,400);assert.equal((await post({...payload,expectedFeedbackHash:'stale'})).status,400);assert.equal((await request(f.port,route,{headers:{origin}})).status,405);
+ assert.equal((await request(f.port,route+'?storyId=other',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(payload)})).status,400);
+ assert.equal((await request(f.port,'/api/magazine/write',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(payload)})).status,423);assert.equal(f.calls.length,count);
+ const off=await setup(t,{actualWorkReview:true,magazineDraftCorrections:true});assert.equal((await request(off.port,route,{method:'POST',headers:{origin:'http://127.0.0.1:'+off.port,'content-type':'application/json'},body:JSON.stringify(payload)})).status,423);assert.equal(off.calls.length,0);
+ assert.throws(()=>createReviewConnection({magazineFeedbackCorrections:'yes'}),/boolean/);
+});
