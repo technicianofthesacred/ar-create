@@ -1,3 +1,9 @@
+## 27 October — Research/Direction handoff installed; source-picker follow-up candidate
+
+PR70 signed main `144e19bf29010e7055a26693f75a737f660110a4`, build2026-10-27T16:16:09.230Z, is verified live in the installed app and main review.163 affected checks, build/package910,46 served frontend hashes and API/canonical/config preservation pass. The handoff entry below now describes installed behavior, including native selected-part restart/exact Undo/context and explicit context connection without prose writes.
+
+A subsequent candidate preserves the source picker and retained-preview disclosures during checkbox changes and refresh.53 affected checks and native open-selection/manual-close-refresh proof pass; it is not installed. Durable per-point human questions remain in progress through the existing shared-notes owner; provider discussion, brief updates, full creative/delivery and C/phone finish gates remain open.
+
 ## 27 October — Research/Direction handoff candidate, not installed
 
 Expanded Research decisions now retain the current point, Findings, Explore, sources and placement disclosure states through busy/saved repaint. Detached depth panels remount the current saved decision, isolated by project/part/source revision. Native invented Include remains open and shows Included after Save.
