@@ -1,3 +1,9 @@
+## 27 October — All photos replacement handoff installed
+
+PR72 signed main `a65f3993eac7242f86eb0bdec6996ae0c56532ea`, build2026-10-27T16:59:37.802Z, is live-verified in the installed app and main review.186 affected checks/build/package910/48 served frontend hashes and API/canonical/config preservation pass. The candidate entry below now describes installed bounded behavior. Native invented Media→unused indexed Library photo→explicit current replacement target→Use→actual owner restart/reload→exact Undo is verified. Default photo labels conceal filenames while preserving exact-name search and secondary details.
+
+Checked only existing-position replacement and its guards. New insertion, composed/cover/opener/closing controls, captions/credits, full Library organization, deeper Research/assisted expression, editions/follow-up and whole C/all12/phone acceptance remain open. No real wording approved, provider execution, external sending or human writing-tab change.
+
 ## 27 October — All photos to Arrange connection candidate; not installed
 
 Media's All photos now opens an unused indexed Library photo into the current exact article: Choose place in article → explicitly select an existing standalone photo → confirm Use photo. It reuses the existing guarded replacement writer, retaining the target position/crop. Cancel makes no manuscript change; stale sources/owners refuse. Default titles use descriptions or Photo labels; exact filenames remain searchable and secondary.
