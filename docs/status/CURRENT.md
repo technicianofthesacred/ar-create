@@ -1,3 +1,19 @@
+## 28 October — Kept learning to Direction/Write candidate
+
+The existing source chooser now lists kept Research answers separately as AI learning, not established fact. Inclusion is explicit, optional, scoped to the exact manuscript part and retained on this device. Questions stay concise; exact retained question/origin, answer, citations and hashes enter the existing prepared context. A successful Keep refreshes the chooser without automatically selecting anything. Ineligible or missing selected learning blocks preparation until removed or reviewed; sources-only continuation is unchanged.
+
+The existing answer owner resolves ready persisted parent/part identities without activating another project. Captures and later reads/proposals recheck the same finalization, receipt, source and parent/part references. Stale, foreign, unkept, unfinished, corrupt or rebound contexts refuse. No second manuscript, brief or learning store was added.
+
+Native invented existing kept answer → explicit selection → Research context preparation → Direction → exact manuscript → actual owner restart → exact captured context and selected-learning reopening passed. Both manuscripts and shared project-note bytes remain exact; no model ran. The native check also found a stale carousel title above the opened manuscript: the handoff now clears that prior output selection through its existing guarded owner. Desktop1280×720 light/dark readable controls use13px Plus Jakarta with no horizontal overflow; full C/phone acceptance remains open.
+
+64 integrated checks across five files and the generated build pass; specialist backend regression evidence is retained separately. This candidate is **not installed**; PR77 remains live. Full research/brief creation, factual checking, assisted wording approval, independent audience editions/follow-up and whole all12/C/phone/function acceptance remain open. Existing main-review write/provider restrictions are unchanged.
+
+## 28 October — Cover/opener and honest Audience loading installed
+
+PR77 signed main `98b11a3069cc975b4bc8ee418e5728b036930167`, build2026-10-27T19:20:15.776Z, is verified live in installed8841 and main59958.334 checks/build/package920/64 served hashes and API/canonical/config preservation pass. The candidate entry below now describes installed bounded behavior; earlier candidate-status statements are historical.
+
+Checked only exact cover/opener captions through the existing writer/preview/retained HTML/History Undo and correct cold Audience loading without false fallback/error. Full light-caption/phone/C/all12 and remaining creative/delivery gates stay open. Explicit kept Research learning → prepared Direction/Write context is now in progress; it is not installed or checked off.
+
 ## 28 October — Cover/opener captions connected candidate
 
 Exact live cover and section-opener photo occurrences now expose Caption & credit in Arrange through the existing canonical writer. Working Audience and retained HTML render literal wording beneath its own photo; unannotated frames keep their previous composition. Native invented cover Save → opener Save → actual owner restart/reload → Audience → actual retained HTML with embedded photo/fonts → opener Undo (cover retained) → cover Undo through existing History restores the exact augmented manuscript. Original source/publication/photo bytes stay exact. External invented fixture setup/cleanup is recorded separately from native Undo.

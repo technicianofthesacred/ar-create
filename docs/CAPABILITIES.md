@@ -2,7 +2,7 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It reads the code, so it cannot drift.
-> Generated 2026-10-27T15:35:42.337Z.
+> Generated 2026-10-27T19:45:36.792Z.
 
 **At a glance:** 7 commands · 277 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
