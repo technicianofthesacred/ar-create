@@ -1,3 +1,11 @@
+## 28 October — Invitation-time wording verified; next release held
+
+A new invented invitation records the exact correspondence hash. Native Read original message returns only its selected English section, remains identical after an actual owner restart, and leaves current correspondence unchanged. Exact invitation-metadata Undo restores the full prior record. Legacy invitations without the required evidence report unavailable; no wording was approved and no message or correspondence fact was sent or saved.
+
+Broader source testing repaired runtime publication continuity, Original-photo usage and saved folder membership. Native Original Save/restart now counts that exact source once while equal-byte connected and publication sources remain distinct. A used-photo thumbnail still rejects the differing catalogue and retained-asset roots; repair is in progress.
+
+The combined27-file verification currently has623 passing checks and1 publication HTTP usage failure under diagnosis. The failed result is preserved; this candidate is held. PR83 remains the verified installed release. Full journey, all12 visual/functional connections and phone proof stay open.
+
 ## 28 October — Unopened connected photo flow verified; candidate not installed
 
 The metadata-first Gallery now lists an unopened connected photo with no claimed byte hash. Native selection checks that exact photo before placement. Save → actual owner restart → exact usage → Audience → retained HTML → Undo passed; original manuscript and zero usage return exactly, while the earlier HTML remains retrievable with its recorded hash.240 integrated Gallery checks pass. Original/publication-specific native checks, cancellation and actual large-library performance remain open.
