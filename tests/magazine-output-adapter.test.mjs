@@ -145,3 +145,10 @@ test('a recorded foreign target remains a readable explicit fallback without bec
  const result=await f.adapter.readShareFeedback({...feedbackInput(),expectedFeedbackHash:saved.hash});
  assert.equal(result.mapping.structured,false);assert.equal(result.mapping.projection.length,0);assert.equal(result.mapping.metadata.entries[0].target.hash,R);assert.equal(result.draft.hash,H);assert.equal(result.document.text,saved.markdown);
 });
+
+test('Magazine Share entry resolves its selected working owner without publication or photo-preview setup',async()=>{
+ const f=shareFixture();f.resolve=()=>{throw Error('Publication photographs are not configured.');};
+ const value=await f.adapter.readShareEntry({projectId:'native-project'});
+ assert.equal(value.output.id,'magazine-working:story:article:1');assert.equal(value.output.workingHash,H);assert.equal(value.output.title,'Clay');assert.equal(value.context.draft.hash,H);assert.ok(Object.isFrozen(value));
+ f.state.dirty=true;await assert.rejects(f.adapter.readShareEntry({projectId:'native-project'}));
+});

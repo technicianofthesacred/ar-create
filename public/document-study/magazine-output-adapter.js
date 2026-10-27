@@ -43,7 +43,11 @@
      return {path:r.path,kind,registeredHash:r.registeredHash,currentHash:r.currentHash,state:r.state,readable:r.readable,changedSinceRegistration:r.changedSinceRegistration};
     });
    }
-   return freeze({schema:value.schema,selection:{storyId:selection.storyId,pieceId:selection.pieceId,edition:'working'},authority:{...s.owner},rootIdentity:{scheme:root.scheme,fingerprint:root.fingerprint},draft:{path:d.path,hash:d.hash},references});
+   return freeze({schema:value.schema,selection:{storyId:selection.storyId,pieceId:selection.pieceId,edition:'working'},authority:{...s.owner,...text(a.title)&&a.title.length<=512?{title:a.title}:{}},rootIdentity:{scheme:root.scheme,fingerprint:root.fingerprint},draft:{path:d.path,hash:d.hash},references});
+  }
+  async function readShareEntry({projectId}={}){
+   const s=state(projectId),context=await readShareContext({projectId,outputId:workingId(s),expectedHash:s.hash});unchanged(s);
+   return freeze({output:{id:workingId(s),kind:'magazine-working',title:context.authority.title||'Working article',format:'Working article',workingHash:s.hash},context});
   }
   const feedbackPath=value=>typeof value==='string'&&value.length<=600&&/^Workflow\/6-Feedback\/FEEDBACK - [^/\\\x00-\x1f\x7f]+\.md$/.test(value)&&!value.includes('.sync-conflict-');
   async function digestText(value){
@@ -138,7 +142,7 @@
    if(stable(after)!==stable(r))throw Error('The recorded reference changed while opening. Read its current metadata again.');
    return result;
   }
-  return Object.freeze({read,onAction,readWorkingEdition,readShareContext,readShareFeedback});
+  return Object.freeze({read,onAction,readWorkingEdition,readShareContext,readShareEntry,readShareFeedback});
  }
  globalThis.createMagazineOutputAdapter=createMagazineOutputAdapter;
 })();
