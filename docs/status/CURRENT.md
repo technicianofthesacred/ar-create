@@ -1,3 +1,11 @@
+## 28 October — Native acceptance found two remaining connections
+
+Actual invented-content testing confirms selected Carousel Check reads its own canonical saved words without wording approval, shows its own supplementary tools, and invalidates findings after exact own-word Undo. The stale receipt survives an actual owner restart and exposes no stale passage actions. Exact original words and canonical Markdown hashes are restored. Repeated identical caption quotes still fall back to whole-field selection; exact occurrence mapping is under repair, so Check remains unchecked.24 focused integrated Check/proxy tests and build pass.
+
+Media All photos shows two distinct indexed records, friendly names, unused-photo detail, Place in article and explicit after-intro placement. Save currently refuses at the review operation validator, which has not admitted the new exact insertion action. This is a real main-flow gap, assigned for a narrow repair under the existing grant; the manuscript hash stays exact after cancellation. Do not claim insertion complete.
+
+Compact Direction is readable at1280×720 in both themes, with its secondary tools opening/closing and no horizontal overflow. Populated Angles, final same-viewport reference acceptance and phone remain open. Human writing tabs and wording approvals were untouched.
+
 ## 28 October — Goal checklist refreshed during Build
 
 The existing goal remains active. Installed PR82 stays the verified running milestone; integrated work below remains unchecked until its native acceptance and exact release proof. Earlier dated candidate notes are history, not the current state.
