@@ -1,3 +1,9 @@
+## 27 October — Current Read and exact continuation milestone installed
+
+PR73 signed main `3de47f2d86fa0da78abebea3878de41aa61fbfab`, build2026-10-27T17:55:54.494Z, is verified live in the installed app and main review.427affected checks/build/package913 and64servedhashes (including generated browser modules) pass; APIcontent, four original carousel copies, canonical changed files and configuration remain exact. The candidate entry below now describes installed bounded behavior.
+
+Checked only exact Article Bench continuation, current nativecarousel Read/Write/Arrange and shared C reading column/type/content growth/Undo, normal-owner source-bounded discussion wiring with invented model-stub lifecycle proof, and native margin cleanup. Review Prepare/Run/Keep restrictions stay unchanged. General nativeoutput Bench pickup, semantic Next moves/history, full firstFlow learning/brief/Direction/assistedauthoring/checking, captions/credits/composedroles, audience editions/followup and wholeall12/phone visual acceptance remain open. No realprovider, wording approval or sending occurred; human writing tabs were untouched.
+
 ## 27 October — Bench continuation, current carousel Read and source-bounded discussion candidate
 
 The current-work Bench action can resume its exact existing location instead of reopening a generic project/manuscript. Native invented Article continuation preserves selected passage, exact words and scroll; labels distinguish Read/Write mode and selected output from a cached article. General native-output inventory pickup and full Bench next-action/history acceptance remain open.
