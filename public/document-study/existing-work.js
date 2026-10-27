@@ -143,16 +143,22 @@
   if(stage!==null&&(!Number.isInteger(stage)||stage<1||stage>12))throw Error('Choose an existing section from 1 to 12.');
   const token=++openEpoch,links=(catalog?.workspaceLinks?.pieces||[]).filter(p=>p.workspaceId===id),link=links.length===1?links[0]:null,target=Number.isInteger(index)&&index>=0?link?.targets?.[index]:null,entries=(catalog?.workspacePieces||[]).filter(p=>p.id===id),entry=entries.length===1?entries[0]:null;
   if(!target||!entry||target.workspaceId!==entry.id||target.documentId!==entry.documentId||typeof target.rootBindingId!=='string'||!target.rootBindingId)throw Error('The exact workspace target is unavailable. Refresh before opening.');
-  const p=state.projects.find(p=>p.id===target.parentStudyId),story=storyId===undefined?null:catalog.stories.find(s=>s.id===storyId);
-  if(!p||storyId!==undefined&&story?.nativeProjectId!==p.id)throw Error('The exact native project is not available in this browser.');
+  let p=state.projects.find(p=>p.id===target.parentStudyId);const story=storyId===undefined?null:catalog.stories.find(s=>s.id===storyId);
+  if((!p&&!target.outputId)||(catalog.excludedProjectIds||[]).includes(target.parentStudyId)||storyId!==undefined&&story?.nativeProjectId!==target.parentStudyId)throw Error('The exact native project is not available in this browser.');
   if(target.outputId&&(window.AR_CREATE_REVIEW_MODE?.studyDraftCorrections!==true||!['output-owned-workspace'].includes(target.role)||!target.outputBindingId||typeof window.studyOutputConnection?.openWorkspaceOutput!=='function'||stage!==null&&![5,6,9].includes(stage)))throw Error('The exact saved output entrance is unavailable for this section.');
   const collection=target.partKey==='collection',writing=window.AR_CREATE_REVIEW_MODE?.studyDraftCorrections===true,section=stage??(collection?1:writing&&!readMode?5:6),needsBinding=!collection||[5,6,7].includes(section);
-  if(collection&&(p.collectionKind!=='collection-root'||p.collectionBindingId!==target.rootBindingId))throw Error('The exact collection root is unavailable. Refresh before opening.');
+  if(collection&&!target.outputId&&(p.collectionKind!=='collection-root'||p.collectionBindingId!==target.rootBindingId))throw Error('The exact collection root is unavailable. Refresh before opening.');
   if(needsBinding&&!writing&&section!==6)throw Error('This read-only manuscript pickup supports Read only; its section editor is unavailable.');
   if(section===7&&typeof window.c3WorkbenchFrame?.openTool!=='function')throw Error('The maintained Check tool is unavailable. No replacement was opened.');
-  const exact=()=>token===openEpoch&&catalog?.workspaceLinks?.pieces?.includes(link)&&link.targets?.[index]===target&&catalog.workspacePieces.includes(entry)&&state.projects.includes(p),origin=project(),originStage=origin?.viewedStage,originView=origin?.view,unchanged=()=>exact()&&project()===origin&&origin?.viewedStage===originStage&&origin?.view===originView;
+  const exact=()=>token===openEpoch&&catalog?.workspaceLinks?.pieces?.includes(link)&&link.targets?.[index]===target&&catalog.workspacePieces.includes(entry)&&(p?state.projects.includes(p):!state.projects.some(row=>row.id===target.parentStudyId)),origin=project(),originStage=origin?.viewedStage,originView=origin?.view,unchanged=()=>exact()&&project()===origin&&origin?.viewedStage===originStage&&origin?.view===originView;
   window.arCreateReviewStartup?.phase?.('flush-current');const proof=await window.studyDraft?.flush?.();if(proof?.dirty||!unchanged())throw Error('Save or resolve the current writing before switching; the selected work may have changed.');
   window.arCreateReviewStartup?.phase?.('close-library');await window.projectLibrary?.close?.();if(document.getElementById('project-library')?.open||!unchanged())throw Error('The selected work changed. Resolve the open work before switching.');
+  if(!p){
+   // An exact registered output may outlive this browser's project shell.
+   // Restore its known identity with no words; the output owner supplies content.
+   const related=catalog.stories.filter(row=>row.nativeProjectId===target.parentStudyId),source=related.length===1?related[0]:{id:target.parentStudyId,name:entry.title||'Saved work'};
+   p={...referenceModel(source),id:target.parentStudyId,referenceOnly:false};state.projects.push(p);
+  }
   if(project()!==p){
    const explicit=typeof window.projectDestination==='function',targetStage=explicit?6:p.viewedStage,targetView=explicit?'record':p.view;
    window.arCreateReviewStartup?.phase?.('switch-project');await window.switchProject(p.id,explicit?{destination:'retained-read',originProjectId:origin?.id}:undefined);

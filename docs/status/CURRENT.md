@@ -1,8 +1,10 @@
-## 27 October — Saved output Bench pickup candidate; native acceptance pending
+## 28 October — Saved output Bench pickup verified; release pending
 
-Registered output-owned workspace rows now delegate to the existing output editor after re-reading the ready primary root, exact output binding and saved physical workspace/document mapping. Independent article wording is opened with its canonical output ID; Read and Arrange retain the selected output. Dirty work, changed navigation, foreign identities and cancelled opening refuse. No original import or output creation is performed by pickup.
+Registered output-owned workspace rows now reopen the exact existing editor after checking the ready root, output binding and physical workspace/document. A cold browser restores only the known parent shell, with no copied words; the output owner supplies its own content. Dirty work, changed navigation, mismatched identities and cancelled opening refuse.
 
-226 focused checks pass across existing-work, output connection and Bench tests. This is a source candidate, **not installed or checked off as complete**. The current invented native review has a carousel held by its existing root, with no output-owned workspace registration; that screen cannot prove the new registered-workspace path. A representative independent-article native pickup/reload comparison and exact release proof remain required. PR73 remains the verified installed milestone. Semantic Next moves/history, full C/phone and the overall goal stay open.
+Native invented independent Article: Bench pickup → edit only that output → saved words → Read/reload → actual owner restart/reopen → exact Undo passed. Original manuscript hash stayed exact. Read and Write share the same 640px document rectangle at1280×720, with light/dark captures and no horizontal overflow.286 focused checks pass across seven files. These prove the named handoff, not the whole Bench or full C/phone acceptance.
+
+This candidate is **not installed** until its exact release proof. PR73 remains the live milestone. Semantic Next moves/history, full Research/brief/checking, captions/credits/composed roles, editions/follow-up and all12 visual gates remain open. No real wording, provider execution, approval or writing tab was touched.
 
 ## 27 October — Current Read and exact continuation milestone installed
 
