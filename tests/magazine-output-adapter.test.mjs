@@ -176,3 +176,14 @@ test('recipient preparation accepts only offered sections and metadata-only owne
  const prepared=await f.adapter.prepareShareFeedbackMapping(q);assert.match(prepared.content,/Invented maker/);assert.ok(prepared.content.endsWith(feedbackMarkdown));assert.ok(Object.isFrozen(prepared));
  await assert.rejects(f.adapter.prepareShareFeedbackMapping({...q,sections:[{...q.sections[0],hash:H}]}));await assert.rejects(setup(true).adapter.prepareShareFeedbackMapping(q));
 });
+test('Outputs joins exact durable HTML receipts, retains earlier links after source or asset changes, never infers delivery',async()=>{
+ const f=fixture(),ctx=vm.createContext({structuredClone,URL});vm.runInContext(code,ctx);
+ const sourceHash=H,id='11111111-1111-4111-8111-111111111111',url='/api/magazine/working-draft/export-file?'+new URLSearchParams({storyId:f.state.owner.storyId,pieceId:f.state.owner.pieceId,expectedHash:sourceHash,exportId:id});
+ const artifact={id,exportKind:'magazine-working-html',mimeType:'text/html',deliveryState:'created',hash:'f'.repeat(64),sizeBytes:80,name:'invented.html',createdAt:'2026-10-27T01:00:00.000Z',url,sourceBinding:{sourceHash,renderRevision:R,owner:{...f.state.owner,rootFingerprint:'e'.repeat(64)}}};let revision=R,opened=null;
+ const adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:()=>f.record,readWorking:async()=>({revision}),readExports:async()=>({artifacts:[artifact]}),openExport:(a,g)=>{g();opened=a;}});
+ let row=(await adapter.read({projectId:f.state.projectId})).outputs[0];assert.equal(row.delivery.exported.hash,artifact.hash);assert.equal(row.exportReceipts[0].stale,false);assert.equal(row.delivery.published,undefined);assert.equal(row.status,'draft');
+ await adapter.onAction({projectId:f.state.projectId,outputId:row.id,expectedHash:H,kind:'export',edition:'working',export:{fileId:id}});assert.equal(opened.url,url);
+ revision='9'.repeat(64);row=(await adapter.read({projectId:f.state.projectId})).outputs[0];assert.equal(row.exportReceipts[0].stale,true);assert.equal(row.delivery.exported,undefined);assert.equal(row.exportReceipts[0].url,url);
+ f.state.hash='d'.repeat(64);f.record.workingOwnerRef.hash=f.state.hash;row=(await adapter.read({projectId:f.state.projectId})).outputs[0];assert.equal(row.exportReceipts[0].stale,true);assert.equal(row.exportReceipts[0].url,url);
+ artifact.sourceBinding.owner.pieceId='foreign-carousel';await assert.rejects(adapter.read({projectId:f.state.projectId}),/different or unavailable/);
+});

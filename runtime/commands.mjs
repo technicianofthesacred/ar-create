@@ -144,7 +144,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos} = services;
+    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -171,6 +171,8 @@ export function createRouteMap(services) {
         GET:()=>{const keys=['parentStudyId','storyId','pieceId','checkId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k))||keys.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact saved check owner.',400);if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);return magazineMechanicalChecks.read({parentStudyId:url.searchParams.get('parentStudyId'),storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})});},
         POST:async input=>{if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);const result=await magazineMechanicalChecks.run(input);input.scope={kind:'story',id:input.storyId};return result;}
       },
+      '/api/magazine/working-draft/export': {POST:input=>magazineOutputExports.save(input)},
+      '/api/magazine/working-draft/exports': {GET:()=>magazineOutputExports.list(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/catalog': {GET:()=>magazineWorking.catalog(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/read': {GET:()=>magazineWorking.read(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/share-context': {GET:()=>{

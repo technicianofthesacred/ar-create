@@ -22,8 +22,8 @@
   try{
    if(typeof window.studyOutputConnection?.downloadMagazineEdition!=='function')throw Error('Working HTML download is unavailable. Reopen Audience and try again.');
    await window.studyOutputConnection.downloadMagazineEdition({projectId,outputId,expectedHash:hash},{assertCurrent:()=>{if(!currentEdition())throw Error('The selected project or article changed. Reopen its preview before downloading.');}});
-   status(root,r,'Download prepared for this working article. Nothing was approved or published.');
-  }catch(error){status(root,r,'Download unavailable: '+(error.message||'Preparation failed.')+' No file was downloaded.');}
+   status(root,r,'Working HTML saved. Download requested. Delivery and publication remain unverified.');
+  }catch(error){status(root,r,'Download unavailable: '+(error.message||'Preparation failed.')+' No download was requested.');}
   finally{r.exportBusy=false;if(control)control.disabled=false;const latest=root.querySelector('[data-oss-action="export"]');if(latest)latest.disabled=false;}
  }
  async function action(root,p,r,kind){if(active()?.id!==p.id)return;const o=selected(r);try{

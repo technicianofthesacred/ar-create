@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import {provenance} from "./actor.mjs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { StateError } from "../store.mjs";
@@ -51,7 +52,14 @@ function createExports({ dataDir, store }) {
       };
       if (!trusted) return publish();
       artifact.contentVerification = "caller-supplied-bytes-not-render-verified";
-      artifact.publicationProof = "selected-output-writing-source-assets";
+      if (trusted.magazineBinding) {
+        artifact.exportKind = "magazine-working-html";
+        artifact.lineageVerification = "registered-magazine-working-source";
+        artifact.provenance = provenance();
+        artifact.sourceBinding = trusted.magazineBinding;
+        artifact.deliveryState = "created";
+        artifact.url = trusted.exportUrl(id);
+      } else artifact.publicationProof = "selected-output-writing-source-assets";
       artifact.publicationBinding = trusted.publicationBinding;
       artifact.outputRevision = trusted.output.outputRevision || 0;
       return (async () => {

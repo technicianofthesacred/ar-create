@@ -409,6 +409,8 @@
    current:()=>{const p=project(),owner=window.studyDraft?.currentOwner?.(),proof=window.studyDraft?.currentProof?.();if(owner?.kind!=='magazine')return null;const exact=proof?.owner?.kind==='magazine'&&proof.parentStudyId===p?.id&&proof.owner.storyId===owner.storyId&&proof.owner.pieceId===owner.pieceId&&proof.owner.path===owner.path&&proof.expected?.workflow?.draft===proof.draftHash;return {projectId:p?.id,owner,hash:exact?proof.draftHash:null,dirty:!!proof?.dirty};},
    resolve:input=>read('/api/review/magazine-publication-reference?'+new URLSearchParams(input)),
    readWorking:input=>read('/api/review/magazine-working-edition?'+new URLSearchParams(input)),
+   readExports:input=>read('/api/magazine/working-draft/exports?'+new URLSearchParams(input)),
+   openExport:(artifact,assertCurrent)=>{assertCurrent();const a=document.createElement('a');a.href=artifact.url;a.download=artifact.name;a.click();},
    readShareContext:input=>read('/api/magazine/working-draft/share-context?'+new URLSearchParams(input)),
    readShareFeedback:input=>read('/api/magazine/working-draft/share-feedback?'+new URLSearchParams(input)),
    readShareFeedbackEditModel:input=>read('/api/magazine/working-draft/share-feedback/edit-model?'+new URLSearchParams(input)),
