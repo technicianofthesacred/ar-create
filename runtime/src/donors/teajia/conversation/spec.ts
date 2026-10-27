@@ -52,10 +52,10 @@ export type Block =
   | { kind: 'line'; id: string; text: string; size: LineSize; follow?: { id: string; text: string } }
   /** A photograph beside words. `bleed` runs the photograph to the page edge and narrows the words; use it on a few, on purpose. */
   | { kind: 'side'; shot: Shot; flip?: boolean; bleed?: boolean; blocks: Block[] }
-  | { kind: 'photos'; shots: Shot[]; aspect?: string; caption?: { id: string; text: string }; stagger?: boolean; narrow?: boolean }
+  | { kind: 'photos'; shots: Shot[]; aspect?: string; caption?: { id: string; text: string; literal?: boolean }; photoCredit?: string; stagger?: boolean; narrow?: boolean }
   /** One photograph. `offset` pushes it to one edge of the page instead of the centre. */
-  | { kind: 'wide'; shot: Shot; aspect?: string; narrow?: boolean; offset?: 'left' | 'right' }
-  | { kind: 'bleed'; shot: Shot }
+  | { kind: 'wide'; shot: Shot; caption?: { id: string; text: string; literal?: boolean }; photoCredit?: string; aspect?: string; narrow?: boolean; offset?: 'left' | 'right' }
+  | { kind: 'bleed'; shot: Shot; caption?: { id: string; text: string; literal?: boolean }; photoCredit?: string }
   /** Words set on the photograph's empty space. `ink` and `accent` are measured against that one photo. */
   | { kind: 'on-photo'; id: string; shot: Shot; text: string; ink: string; accent: string; aspect: string }
   /** A large vertical Chinese word hung beside the words that explain it. */

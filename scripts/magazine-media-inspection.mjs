@@ -4,7 +4,8 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {createRequire} from 'node:module';
-import {planMagazinePlacementDescription,planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect,planMagazinePlacementReplace,planMagazineLibraryPlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
+import {planMagazinePlacementAnnotation,planMagazinePlacementDescription,planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect,planMagazinePlacementReplace,planMagazineLibraryPlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
+import {splitPhotoAnnotation,photoDirectiveComplete,readArticleCredits,validateArticleCredits} from '../runtime/services/magazine-annotations.mjs';
 import * as native from '../runtime/services/draft-correspondence.mjs';
 const require = createRequire(new URL('../runtime/package.json', import.meta.url));
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -268,6 +269,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     const {resolved,api,code,spec}=await publicationContext(input);
     const memory = api.memoryOf(spec), originalBody = api.draftBody(resolved.document.text).body;
     const parsed = api.parseDraft(originalBody,memory);
+    let tracedBodyRange=null;
     let rows = placements(parsed), originTrace={status:'unavailable',reason:'projection-unavailable'};
     if(Array.isArray(resolved.projection)&&resolved.projection.length) {
       try {
@@ -281,7 +283,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
         pinCode();
         const origins=exactOrigins(resolved,body,range,observations), tracedRows=placements(copy,origins);
         if(tracedRows.length!==observations.length||tracedRows.some(row=>!row.nativeOrigin)||JSON.stringify(tracedRows)!==JSON.stringify(rows)) throw Error('occurrence-coverage-mismatch');
-        rows=tracedRows;originTrace={status:'ready',offsetUnit:'utf16',occurrences:observations.length,blocks:new Set(tracedRows.map(r=>r.nativeOrigin.blockId)).size};
+        tracedBodyRange=range;rows=tracedRows;originTrace={status:'ready',offsetUnit:'utf16',occurrences:observations.length,blocks:new Set(tracedRows.map(r=>r.nativeOrigin.blockId)).size};
       } catch(error) {
         const known=['projection-unavailable','body-range-mismatch','projection-mismatch','occurrences-unavailable','occurrence-mismatch','protected-block-mismatch','directive-range-mismatch','group-mismatch','upstream-code-mismatch','parser-parity-mismatch','occurrence-coverage-mismatch'];
         originTrace={status:'unavailable',reason:known.includes(error.message)?error.message:'trace-unavailable'};
@@ -302,16 +304,27 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
         files.set(row.file,{...record,bytes:undefined,contentType,sourceId:digest([rootId,relative]),size:record.bytes.length});
       }
     }
+    if(originalBody.includes('%%ar-create-photo:')&&!tracedBodyRange)fail('Canonical captions require exact maintained photo origins.');
+    const annotationRows=(resolved.projection||[]).filter(row=>tracedBodyRange&&row.origin?.offset>=tracedBodyRange.start&&row.origin.offset+row.raw.length<=tracedBodyRange.end&&row.raw?.includes('%%ar-create-photo:'));
+    const seenAnnotations=new Set();
+    for(const row of rows){
+      if(!row.nativeOrigin)continue;
+      const source=(resolved.projection||[]).find(b=>b.id===row.nativeOrigin.blockId);if(!source)continue;
+      const annotation=splitPhotoAnnotation(source.raw).annotation;
+      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['wide','bleed','photos'].includes(row.nativeOrigin.role)||row.nativeOrigin.depth!==0||row.structuralPath.startsWith('ending/'))fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
+    }
+    if(annotationRows.length!==seenAnnotations.size)fail('A canonical caption has no exact supported photo occurrence.');
+    const annotations={schema:'ar-create.magazine-annotations.v1',credits:readArticleCredits(originalBody),publicationCredits:Array.isArray(spec.credit)?structuredClone(spec.credit):[]};
     guardCode(code);
     await working(input);
     const scope = digest([rootId,input.storyId,input.pieceId,input.expectedHash,ownerRef.artifactId]);
     const revision = digest([scope,code.map(r=>[r.relative,r.hash]),[...files.values()].map(r=>[r.sourceId,r.hash]),rows]);
     const sources = [...files.entries()].map(([name,r]) => {
       const sourceRef = {rootId:r.rootId||rootId,sourceId:r.sourceId,relativePath:r.relative.replace(/^public\//,''),hash:r.hash};
-      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,originRef:r.owned?{kind:'library',rootId:r.rootId,sourceId:r.librarySourceId}:{kind:'publication',rootId,relativePath:sourceRef.relativePath},previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
+      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,originRef:r.owned?{kind:'library',rootId:r.rootId,sourceId:r.librarySourceId}:{kind:'publication',rootId,relativePath:sourceRef.relativePath},previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.annotation?{annotation:structuredClone(p.annotation)}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
     });
     snapshot = {input:{...input},scope,revision,code,files:new Map([...files.values()].map(r=>[r.sourceId,r])),ownerRef};
-    const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,limitations:['Photographs resolve through the maintained publication or private Library owner; original camera and album provenance depend on that owner’s recorded evidence.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is not a caption or credit.']};
+    const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,annotations,limitations:['Photographs resolve through the maintained publication or private Library owner; original camera and album provenance depend on that owner’s recorded evidence.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is separate from canonical working caption and credit annotations.']};
     return {media,parsed,spec,code,files};
   }
   async function workingEdition(input) {
@@ -338,10 +351,20 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     // Story fields come exclusively from this parse. In particular, absent
     // portrait/hook/closing never fall back to a previous publication's words.
     const currentSpec={...metadata,...pick(parsed,['portrait','intro','hook','opening','parts','ending','closing'])};
+    const annotatedPaths=new Set();
+    for(const placement of media.sources.flatMap(source=>source.placements)){
+      if(!placement.annotation||annotatedPaths.has(placement.structuralPath))continue;
+      const match=placement.structuralPath.match(/^(opening|parts\/(\d+)\/blocks)\/(\d+)\/(wide|bleed|photos)(?:\/\d+)?$/);
+      const block=match&&(match[1]==='opening'?currentSpec.opening:currentSpec.parts[Number(match[2])]?.blocks)?.[Number(match[3])];
+      if(!block||!['wide','bleed','photos'].includes(block.kind))fail('The canonical caption target changed before rendering.');
+      block.caption={id:'ar-create-caption:'+placement.nativeOrigin.blockId,text:placement.annotation.caption,literal:true};block.photoCredit=placement.annotation.credit;annotatedPaths.add(placement.structuralPath);
+    }
+    if(media.annotations.credits!==null)currentSpec.credit=structuredClone(media.annotations.credits);
+
     for(const asset of files.values())if((await checkedAsset(asset)).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
     guardCode(code);await working(input);guardCode(code);
     for(const asset of files.values())if((await checkedAsset(asset)).hash!==asset.hash)fail('Publication photograph changed; inspect again.');
-    return {schema:'ar-create.magazine-working-edition.v1',revision:media.revision,ownerRef:media.ownerRef,spec:currentSpec,media};
+    return {schema:'ar-create.magazine-working-edition.v1',revision:media.revision,ownerRef:media.ownerRef,annotations:structuredClone(media.annotations),spec:currentSpec,media};
   }
   // Read-only preparation: final prepare/save/Undo still use the maintained
   // native owner. Expose a hash so the client can verify that owner's prepared
@@ -365,6 +388,24 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     guardCode(code);await working(selection);
     return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
   }
+  async function annotationCandidate(input,mode) {
+    const key=mode==='photo'?'annotation':'credits',{[key]:value,...proof}=input||{};
+    fields(proof,['storyId','pieceId','expectedHash','revision',...(mode==='photo'?['placementId']:[])]);
+    const selection={storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash},inspection=await inspect(selection);
+    if(input.revision!==inspection.revision)fail('The saved article changed. Refresh before editing its captions or credits.');
+    const {resolved,api,spec,code}=await publicationContext(selection),operation=mode==='photo'?'photoAnnotation':'articleCredits';
+    if(!resolved.supportedNativeOperations?.includes(operation))fail('The canonical caption or credit writer is unavailable.');
+    const plan=mode==='photo'?planMagazinePlacementAnnotation({inspection,working:resolved,request:input}):{ownerRef:inspection.ownerRef,expectedHash:input.expectedHash,revision:inspection.revision,scope:inspection.scope,placementIds:[],operations:[{kind:'articleCredits',credits:validateArticleCredits(value)}]};
+    if(mode!=='photo'&&JSON.stringify(inspection.annotations.credits)===JSON.stringify(value))fail('Article credits already match this saved override.');
+    const model=native.capture(resolved.document.text,input.pieceId);model.blocks.forEach((block,i)=>{block.id='magazine:'+encodeURIComponent(input.pieceId)+':'+i;});
+    const candidate=native.apply(model,resolved.document.text,plan.operations);
+    const original=api.parseDraft(api.draftBody(resolved.document.text).body,api.memoryOf(spec)),reparsed=api.parseDraft(api.draftBody(candidate.raw).body,api.memoryOf(original));
+    if(!isDeepStrictEqual(original,reparsed))fail('The annotation would change maintained story words or layout.');
+    if(mode==='photo'&&(candidate.snapshot.prefix!==model.prefix||candidate.snapshot.blocks.length!==model.blocks.length||candidate.snapshot.blocks.some((b,i)=>b.id!==model.blocks[i].id||b.separator!==model.blocks[i].separator||b.id!==plan.operations[0].id&&b.raw!==model.blocks[i].raw)))fail('The caption would change other canonical bytes.');
+    guardCode(code);const current=await working(selection);if(!current.supportedNativeOperations?.includes(operation)||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The caption or credit owner changed.');
+    return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});
+  }
+  const planAnnotation=input=>annotationCandidate(input,'photo'),planCredits=input=>annotationCandidate(input,'credits');
   async function planDescription(input) {
     const {description,...proof}=input||{};fields(proof,['storyId','pieceId','expectedHash','revision','placementId']);
     if(typeof description!=='string'||description.length>2000)fail('Use a bounded one-line photo description.',400);
@@ -491,7 +532,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       throw Object.assign(new Error('Publication photographs are unavailable; inspect the working draft again.'), {status:409, cause:error});
     }
   };
-  return {libraryCatalog:safe(libraryCatalog),libraryPreview:safe(libraryPreview),inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planDescription:safe(planDescription),planFocus:safe(planFocus),planAspect:safe(planAspect),planReplace:safe(planReplace),planLibraryReplace:safe(planLibraryReplace)};
+  return {libraryCatalog:safe(libraryCatalog),libraryPreview:safe(libraryPreview),inspect:safe(inspect),workingEdition:safe(workingEdition),preview:safe(preview),publicationReference:safe(publicationReference),planMove:safe(planMove),planAnnotation:safe(planAnnotation),planCredits:safe(planCredits),planDescription:safe(planDescription),planFocus:safe(planFocus),planAspect:safe(planAspect),planReplace:safe(planReplace),planLibraryReplace:safe(planLibraryReplace)};
 }
 
 

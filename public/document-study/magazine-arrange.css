@@ -123,3 +123,23 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-library-search :is(input,select),.magazine-arrange .ma-photo-description input,.magazine-arrange [data-ma-library-more]{min-height:44px}
 .magazine-arrange .ma-library-unavailable{display:grid;place-items:center;aspect-ratio:4/3;min-height:58px;width:100%;padding:4px;box-sizing:border-box;background:var(--wash,var(--paper));color:var(--dim);font:400 var(--t-label,.8125rem)/1.35 var(--ar-ui,sans-serif);white-space:normal;text-align:center}
 .magazine-arrange .ma-replacement-options button.is-unavailable{cursor:default;opacity:.75}
+
+/* Visible wording stays beside its exact use; secondary editing is disclosed. */
+.magazine-arrange .ma-caption{display:block;margin:10px 0 0;color:var(--ink);font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif);overflow-wrap:anywhere}
+.magazine-arrange .ma-caption>span,.magazine-arrange .ma-caption>small{display:block}
+.magazine-arrange .ma-caption>small{margin-top:3px;color:var(--dim);font:400 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif)}
+.magazine-arrange :is(.ma-annotation,.ma-credits){margin:4px 0 0;min-width:0;font:400 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif);color:var(--dim)}
+.magazine-arrange :is(.ma-annotation,.ma-credits)>summary{display:list-item;min-height:44px;padding:12px 0;cursor:pointer;color:var(--ink);width:fit-content;box-sizing:border-box}
+.magazine-arrange .ma-caption-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px}
+.magazine-arrange :is(.ma-annotation,.ma-credits) label{display:block;min-width:0;color:var(--dim)}
+.magazine-arrange :is(.ma-annotation input,.ma-credits textarea){display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-credits textarea{resize:vertical;min-height:104px}
+.magazine-arrange .ma-caption-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.magazine-arrange .ma-caption-actions button{min-height:44px}
+.magazine-arrange .ma-article-credits{margin:20px 0 4px;color:var(--dim);font:400 var(--t-label,13px)/1.5 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-article-credits p{margin:3px 0;font:inherit}
+.magazine-arrange :is(.ma-annotation input,.ma-credits textarea,.ma-annotation summary,.ma-credits summary):focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+@media(max-width:560px){.magazine-arrange .ma-caption-fields{grid-template-columns:minmax(0,1fr);gap:8px}}
+.magazine-arrange .ma-photo-controls{display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 20px;min-width:0}
+.magazine-arrange .ma-photo-controls>details{flex:0 0 auto;max-width:100%}
+.magazine-arrange .ma-photo-controls>details[open]{flex:1 0 100%}

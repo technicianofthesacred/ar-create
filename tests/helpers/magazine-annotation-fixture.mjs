@@ -1,0 +1,18 @@
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {createHash} from 'node:crypto';import {createRequire} from 'node:module';
+import {createMagazineMediaInspection} from '../../scripts/magazine-media-inspection.mjs';import * as native from '../../runtime/services/draft-correspondence.mjs';
+export const sha=v=>createHash('sha256').update(v).digest('hex');
+const require=createRequire(new URL('../../runtime/package.json',import.meta.url));
+export async function annotationFixture(t,{nl='\n',body}={}){
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'magazine-annotations-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const conv=path.join(root,'src/pages/read/conversation');fs.mkdirSync(path.join(conv,'pieces'),{recursive:true});
+ const parserCode=fs.readFileSync(new URL('../../runtime/src/donors/mag/mag-send.ts',import.meta.url),'utf8'),specCode=fs.readFileSync(new URL('../../runtime/src/donors/mag/spec.ts',import.meta.url),'utf8');fs.writeFileSync(path.join(conv,'magSend.ts'),parserCode);fs.writeFileSync(path.join(conv,'spec.ts'),specCode);
+ const parser=await import('data:text/javascript;base64,'+Buffer.from((await require('esbuild').transform(parserCode,{loader:'ts',format:'esm'})).code).toString('base64'));
+ fs.writeFileSync(path.join(conv,'pieces/index.ts'),`export const CONVERSATIONS=[{path:'/read/synthetic',slug:'synthetic',images:'/read/synthetic/',pageTitle:'Invented',title:['Invented','Story'],dek:'Context',subject:{name:'Maker',role:'Maker'},speakers:{author:'Author',subject:'Maker'},author:{name:'Author',links:[]},credit:['Published original credit'],next:[],opening:[],parts:[],ending:{blocks:[]}}];`);
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg==','base64');for(const name of ['same.png','other.png']){const image=path.join(root,'public/read/synthetic',name);fs.mkdirSync(path.dirname(image),{recursive:true});fs.writeFileSync(image,png);}
+ const BODY=body||['Invented opening 瓷 😀.','%%photo: same.png · First occurrence · wide x=0.2%%','Invented paragraph before the second frame.','%%photo: same.png · Second occurrence · bleed%%','%%photos: same.png · Group first | other.png · Group second · aspect=4/5%%','%%photo: other.png · Replacement · wide%%','%%ending%%','%%saying%%\n> "Invented closing saying."'];
+ const original=['---','type: DEV','published: https://www.teajia.com/read/synthetic','---','Invented metadata.','','---','',BODY.join('\n\n'),'','---','','Retained private notes.'].join('\n').replaceAll('\n',nl);
+ let text=original,working,model,reads=0,hook=()=>{};const pieceId='mag-synthetic:article',storyId='mag-synthetic';
+ function setText(value){text=value;model=native.capture(text,pieceId);model.blocks.forEach((b,i)=>b.id='magazine:'+encodeURIComponent(pieceId)+':'+i);working={supportedNativeOperations:native.supportedNativeOperations,document:{text,hash:sha(text)},authority:{kind:'magazine',storyId,pieceId},target:{nativeProjectId:'native-synthetic',artifactId:'working-exact',hash:sha(text)},projection:native.projection(model).map((r,i)=>({...r,raw:model.blocks[i].raw}))};}
+ setText(text);const media=createMagazineMediaInspection({repoRoot:root,resolveWorking:async()=>{hook(++reads);return structuredClone(working);},originTrace:{parserHash:sha(parserCode),specHash:sha(specCode),loadParser:async()=>parser}});
+ return {root,conv,media,parser,original,setText,text:()=>text,working:()=>working,model:()=>model,selection:()=>({storyId,pieceId,expectedHash:sha(text)}),onRead(fn){reads=0;hook=fn;},async photo(alt){const inspection=await media.inspect(this.selection());return {inspection,photo:inspection.sources.flatMap(s=>s.placements).find(p=>p.alt===alt)};}};
+}
