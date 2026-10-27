@@ -210,8 +210,14 @@
   if(!st.data)return st.error?'The source list is unavailable.':'Reading sources…';
   if(st.error)return st.error;
   if(!st.data)return 'Folders are unavailable. Refresh to try again.';
+  if(mediaMode(st)){
+   if(!st.data.sources.length)return 'No photographs are available in this Media catalog.';
+   if(st.folder!=='all'&&!folderRecords(st).length)return st.folder==='unsorted'?'No unfiled Library photographs in this view. Choose All media to browse.':'No photographs in this folder. Choose All media to browse the library.';
+   if(filtered||st.authority)return 'Nothing matches. Clear the filters to see more.';
+   if(st.view==='article')return 'No photographs from this view are used in this article. Choose All photos to browse.';
+   return 'No photographs in this view. Choose All media to browse.';
+  }
   if(filtered)return 'Nothing matches. Clear the filters to see more.';
-  if(mediaMode(st))return 'No publication photographs are connected to this saved draft.';
   return st.domain==='library'?'No sources here yet. Add sources through Inbox.':'No media in this view. Choose another folder or open This piece.';
  }
  // Keep the old rendered identity: a refreshed catalog may already differ from its DOM.
