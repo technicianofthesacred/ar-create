@@ -317,7 +317,8 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     return feedbackUndoEligibility(input,feedbackWriteSelection(input));
   }
   async function shareFeedbackHistory(input) {
-    workingOnly(input);fields(input,feedbackFields);input=structuredClone(input);
+    workingOnly(input);fields(input,[...feedbackFields,'invitationId']);input=structuredClone(input);
+    if(input.invitationId!==undefined){uuid(input.invitationId);const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);if(typeof magazine.feedbackInvitationMessage!=='function')throw new StateError('Exact invitation-time message reading is unavailable.',503);const value=magazine.feedbackInvitationMessage({context:selection.context,invitationId:input.invitationId});assertFeedbackCurrent(input,selection);return {...value,selection:select(input),rootIdentity:selection.context.rootIdentity,registeredFeedbackPath:selection.context.feedback.path,expectedHash:input.expectedHash,expectedFeedbackHash:input.expectedFeedbackHash};}
     const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);
     if(typeof magazine.feedbackOperations!=='function')throw new StateError('Maintained FEEDBACK receipt discovery is unavailable.',503);
     const discovered=await magazine.feedbackOperations({context:selection.context,limit:200}),history=[];

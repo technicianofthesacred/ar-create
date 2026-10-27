@@ -177,7 +177,7 @@ function validateInvitations(metadata){
  if(!Array.isArray(metadata.invitations)||metadata.invitations.length>100)fail('Invitations exceed their bounded contract.');
  const ids=new Set(),factIds=new Set();
  for(const row of metadata.invitations){
-  if(!exact(row,['id','recipientId','recipientName','target','sections','facts'])||!UUID.test(row.id||'')||ids.has(row.id.toLowerCase())||!workingTarget(row.target)||!Array.isArray(row.sections)||row.sections.length>12||!Array.isArray(row.facts)||row.facts.length>100)fail('Use a unique invitation and its exact working target. Published editions are not connected.');
+  if(!(exact(row,['id','recipientId','recipientName','target','sections','facts'])||exact(row,['id','recipientId','recipientName','target','sections','facts','messageRecordHash']))||row.messageRecordHash!==undefined&&!HASH.test(row.messageRecordHash||'')||!UUID.test(row.id||'')||ids.has(row.id.toLowerCase())||!workingTarget(row.target)||!Array.isArray(row.sections)||row.sections.length>12||!Array.isArray(row.facts)||row.facts.length>100)fail('Use a unique invitation and its exact working target. Published editions are not connected.');
   ids.add(row.id.toLowerCase());
   if(row.recipientId==='none'){if(row.recipientName!==null||row.sections.length)fail('No recipient cannot contain recipient message sections.');}
   else if(!UUID.test(row.recipientId||'')||!recipientNameValid(row.recipientName)||!row.sections.length||row.sections.some(a=>!sectionSnapshot(a))||new Set(row.sections.map(a=>a.language.toLowerCase())).size!==row.sections.length||new Set(row.sections.map(a=>a.heading)).size!==row.sections.length)fail('An invitation needs an explicit named recipient and exact language snapshots.');
@@ -192,7 +192,7 @@ export function changeFeedbackInvitation(markdown,{expectedHash,change,target}={
   if(!exact(change,['kind','id','recipientId'])||!UUID.test(change.id||'')||!workingTarget(target))fail('Choose an exact working invitation target. Published editions are not connected.');
   const entry=metadata.entries.find(e=>e.recipientId===change.recipientId);
   if(change.recipientId!=='none'&&(!entry?.recipientName||entry.target.storyId!==target.storyId||entry.target.pieceId!==target.pieceId))fail('Choose this piece’s explicit named recipient.');
-  metadata.invitations.push({id:change.id,recipientId:change.recipientId,recipientName:entry?.recipientName||null,target:structuredClone(target),sections:entry?structuredClone(entry.sections):[],facts:[]});
+  metadata.invitations.push({id:change.id,messageRecordHash:expectedHash,recipientId:change.recipientId,recipientName:entry?.recipientName||null,target:structuredClone(target),sections:entry?structuredClone(entry.sections):[],facts:[]});
  }else if(change?.kind==='fact'){
   if(!exact(change,['kind','invitationId','fact']))fail('Choose one saved invitation and exact fact.');
   const invitation=metadata.invitations.find(i=>i.id===change.invitationId);if(!invitation)fail('The selected invitation is unavailable.');invitation.facts.push(structuredClone(change.fact));
@@ -215,8 +215,11 @@ export function guardFeedbackInvitations(before,after,{human=false,target=null}=
   const a=old[i],b=rows[i];if(!b||JSON.stringify({...a,facts:[]})!==JSON.stringify({...b,facts:[]})||b.facts.length<a.facts.length||JSON.stringify(b.facts.slice(0,a.facts.length))!==JSON.stringify(a.facts))fail('Saved invitation targets, message snapshots and facts cannot be rewritten; use exact saved Undo.');
  }
  for(let i=0;i<old.length;i++)for(const fact of rows[i].facts.slice(old[i].facts.length)){if(old[i].target.storyId!==target.storyId||old[i].target.pieceId!==target.pieceId)fail('That invitation belongs to another working piece.');if(fact.kind==='reply'&&fact.correction&&JSON.stringify(fact.correction.affected)!==JSON.stringify(target))fail('A proposed correction must reference this exact current working piece and revision.');}
+ if(rows.length>old.length+1)fail('Create one explicit invitation at a time.');
  for(const row of rows.slice(old.length)){
   if(JSON.stringify(row.target)!==JSON.stringify(target)||row.facts.length)fail('A new invitation must name the current exact working target and start without facts.');
+  if(row.messageRecordHash!==digest(before))fail('Freeze the exact pre-save correspondence record hash.');
+  const creation=changeFeedbackInvitation(before,{expectedHash:digest(before),change:{kind:'new',id:row.id,recipientId:row.recipientId},target});if(creation.markdown!==after)fail('Creating an invitation may change only its exact metadata; preserve invitation-time message words.');
   if(row.recipientId==='none')continue;
   const entry=next.metadata.entries.find(e=>e.recipientId===row.recipientId);
   if(!entry||entry.recipientName!==row.recipientName||JSON.stringify(entry.sections)!==JSON.stringify(row.sections)||entry.target.storyId!==target.storyId||entry.target.pieceId!==target.pieceId)fail('Invitation snapshot must match the explicit current message sections.');
