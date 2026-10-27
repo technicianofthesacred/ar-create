@@ -1,3 +1,24 @@
+## 28 October — Unfinished caption recovery and closing-photo candidate
+
+Unfinished caption/photo credit and article-credit fields now use the existing editor's browser recovery, isolated by tab and exact article owner. Reload restores exact unfinished words without saving the article. A changed article/photo keeps earlier words in a separate review panel; explicit discard is required before editing another position. Invalid unfinished input remains exact for repair. Existing arrangement Undo cannot discard unrelated retained words.
+
+Native invented typing → reload → actual owner restart → reload retained exact caption/credit fields with the original manuscript hash unchanged. A simulated external fixture change produced the separate recovery panel; explicit discard changed only local recovery. Closing-section standalone wide/bleed/group photo annotations now use the same canonical writer. Native closing caption Save → reload → exact Undo restored the augmented fixture baseline; external fixture setup was then separately restored. No real words, providers, approvals or writing tabs were touched.
+
+This is verified candidate work, **not installed**. Covers/openers/side/on-photo/nested/saying compositions, full Arrange acceptance, all12 connections and whole C/phone/theme/interaction proof remain open. PR75 remains live. Proof: retained native lifecycle receipt and focused owner/UI/ending tests outside Git.
+
+## Completion tracking — 28 October
+
+The full goal remains active. Check off only the specific verified result, with its evidence and installed revision. A finished sub-item does not close its whole section. Candidate work, verified behavior, installed behavior and human acceptance are distinct.
+
+- [x] All Library photos → explicit existing article photo replacement, with restart/reload/exact Undo: installed PR72.
+- [x] Exact saved independent output → Bench pickup and cold parent restoration: installed PR74.
+- [x] Body photo captions/credits and working article credits → Save/restart/export/exact Undo: installed PR75.
+- [ ] Install verified candidate: unsaved caption/credit reload/restart recovery and standalone closing-photo captions. Source/native proof exists; installed acceptance remains open.
+- [ ] Remaining Bench/Library/Pieces/all12 connections and complete source-to-delivery journey.
+- [ ] Approved C/final NOTES whole-layout desktop/phone light/dark and interaction acceptance.
+
+Detailed bounded results and proof remain below. Open delivery work stays in [TODO](../../TODO.md); no parallel backlog is created.
+
 ## 28 October — Visible Magazine captions and credits installed
 
 PR75 signed main `92425a948d64789250af909bf08a77dd7e147f3d`, build2026-10-27T18:43:53.467Z, is verified live in installed8841 and main59958.198checks/14files/build/package917/64servedhashes and API/canonical/config preservation pass. The candidate entry below now describes installed bounded behavior.

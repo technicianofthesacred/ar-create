@@ -143,3 +143,10 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-photo-controls{display:flex;flex-wrap:wrap;align-items:flex-start;gap:0 20px;min-width:0}
 .magazine-arrange .ma-photo-controls>details{flex:0 0 auto;max-width:100%}
 .magazine-arrange .ma-photo-controls>details[open]{flex:1 0 100%}
+.magazine-arrange .ma-wording-recovery{margin:0 0 18px;padding:12px 14px;border:1px solid var(--line);border-radius:4px;background:var(--warm-bg,var(--paper));color:var(--ink);font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-wording-recovery>p{margin:0 0 8px;font:inherit}
+.magazine-arrange .ma-wording-recovery summary{min-height:44px;padding:10px 0;box-sizing:border-box;cursor:pointer;font:400 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-wording-recovery label{display:block;margin-top:8px;font:400 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif);color:var(--dim)}
+.magazine-arrange .ma-wording-recovery :is(textarea,input){display:block;box-sizing:border-box;width:100%;min-height:44px;max-height:200px;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)}
+.magazine-arrange .ma-wording-recovery textarea{min-height:86px;resize:vertical}
+.magazine-arrange .ma-wording-recovery button{min-height:44px}
