@@ -7,6 +7,21 @@
  const button=(label,action)=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.dataset.surfaceAction=action;return el};
  function setMode(next){focus=next;revealed=false;expanded=false;try{localStorage.setItem(UI_KEY,JSON.stringify({focus}))}catch{}state.variant=focus?'selection':'visible';marginOpen=!focus;decorate();}
  function showMargin(){revealed=true;expanded=true;marginOpen=true;decorateMargin();}
+ function ownedManuscript(){
+  const p=current(),owner=window.studyDraft;if(!p||!owner)return false;
+  try{const proof=owner.currentProof?.();if(proof?.parentStudyId===p.id&&(proof.bindingId||proof.owner?.kind==='magazine'))return true;
+   const binding=owner.currentBinding?.();if(binding?.id&&binding.parentStudyId===p.id)return true;
+   const magazine=owner.currentOwner?.();return magazine?.kind==='magazine'&&!!p.magazineDraft&&magazine.storyId===p.magazineDraft.storyId&&magazine.pieceId===p.magazineDraft.pieceId;
+  }catch{return false;}
+ }
+ function removeEmptySampleCue(margin){
+  if(!ownedManuscript()||current()?.note&&current().note.state!=='dismissed')return;
+  for(const cue of margin.querySelectorAll('.discussion:not([id])')){
+   // Recognize only the original empty demo prompt. Unknown or authored content stays.
+   const children=[...cue.children];
+   if(![...cue.childNodes].some(node=>node.nodeType===Node.TEXT_NODE&&node.textContent.trim())&&children.length===4&&children[0].textContent==='Alongside the words×'&&children[0].classList.contains('head')&&children[0].querySelector('strong')?.textContent==='Alongside the words'&&children[0].children.length===2&&children[1].matches('p.why')&&children[1].textContent==='Select a phrase and give a short instruction. The manuscript stays the author’s work.'&&children[2].matches('button[onclick="openInstruction()"]')&&children[2].textContent==='Start a sample discussion'&&children[3].classList.contains('sourceGuard')&&children[3].textContent==='Sample interaction only. No model or harness runs.')cue.remove();
+  }
+ }
  function decorateMargin(){
   const margin=document.getElementById('margin');if(!active()||!margin)return;
   if(!margin.querySelector('.draft-surface-margin-body')){
@@ -21,6 +36,7 @@
    const hint=body.querySelector('.marginHint');if(hint)hint.textContent='Recorded notes stay attached to their passages.';
    const status=document.createElement('p');status.className='draft-surface-ai-state';body.append(status);
   }
+  removeEmptySampleCue(margin);
   const status=margin.querySelector('.draft-surface-ai-state'),message='Live AI is not connected to this editor.'+(margin.querySelector('#discussion,.ci-sample-gate')?' Existing sample discussions remain labeled.':'');
   if(status&&status.textContent!==message)status.textContent=message;
   moveContext();
