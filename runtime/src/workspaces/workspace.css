@@ -172,3 +172,10 @@
  .ar-donor-workspace .ar-output-reader :is(.tj-conv-a,.tj-conv-told,.tj-conv-q-text),.ar-donor-workspace .ar-output-reader .tj-conv[data-form='story'] :is(.tj-conv-intro-text,.tj-conv-intro-told){font-size:20px;line-height:1.75}
  .ar-donor-workspace .ar-output-reader .tj-conv-caption{font-size:16px}
 }
+
+/* An annotated cover keeps the established photo height, with wording below it. */
+.ar-donor-workspace .ar-output-reader .tj-conv-cover-photo[data-annotated-photo]{height:auto;overflow:visible}
+.ar-donor-workspace .ar-output-reader .tj-conv-cover-photo[data-annotated-photo]>.tj-conv-annotated-photo-frame{flex:none;height:clamp(320px,54cqw,620px);min-height:0;overflow:hidden}
+@container ar-article (max-width:700px){
+ .ar-donor-workspace .ar-output-reader .tj-conv-cover-photo[data-annotated-photo]>.tj-conv-annotated-photo-frame{height:clamp(340px,108cqw,520px)}
+}

@@ -30,6 +30,9 @@ export type Shot = {
   /** File under the article's image folder. */
   file: string;
   alt: string;
+  /** Canonical working-article wording; original publication shots remain unchanged. */
+  caption?: { id: string; text: string; literal?: boolean };
+  photoCredit?: string;
   /** Focal point, 0..1. */
   x?: number;
   y?: number;

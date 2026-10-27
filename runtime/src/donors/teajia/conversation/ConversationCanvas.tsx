@@ -105,6 +105,11 @@ const Words: React.FC<{ blocks: Block[] }> = ({ blocks }) => {
 /** Canonical AR Create annotation strings stay literal; upstream rich captions keep their existing semantics. */
 const PhotoCaption=({caption,credit}:{caption?:{id:string;text:string;literal?:boolean};credit?:string})=>caption?.literal||credit?((caption?.text||credit)?<figcaption className="tj-conv-caption">{caption?.text&&<span>{caption.text}</span>}{caption?.text&&credit&&<br/>}{credit&&<span className="tj-conv-photo-credit">{credit}</span>}</figcaption>:null):caption?<Rich field={caption.id} text={caption.text} as="figcaption" className="tj-conv-caption"/>:null;
 
+/** Keep unannotated compositions identical; explicit wording stays below its own photo. */
+const CaptionedPhotoFrame: React.FC<{shot: Shot;className: string;style?: React.CSSProperties;children: React.ReactNode}> = ({shot,className,style,children}) => shot.caption?.text||shot.photoCredit
+  ? <figure data-reveal="photo" data-annotated-photo="true" className={className} style={style}><div className="tj-conv-annotated-photo-frame">{children}</div><PhotoCaption caption={shot.caption} credit={shot.photoCredit}/></figure>
+  : <div data-reveal="photo" className={className} style={style}>{children}</div>;
+
 const BlockView: React.FC<{ spec: ConversationSpec; block: Block | Block[] }> = ({ spec, block }) => {
   if (Array.isArray(block)) {
     return <section data-reveal="text" className="tj-conv-col"><Words blocks={block} /></section>;
@@ -166,7 +171,7 @@ const PartOpening: React.FC<{ spec: ConversationSpec; part: Part; n: number; tit
   if (!part.opener) return <ChapterHead part={n} id={`part-${n}`} title={part.title} titleId={titleId} />;
   return (
     <section id={`part-${n}`} className="tj-conv-spread" data-flip={n % 2 === 0 ? '' : undefined} aria-labelledby={`part-${n}-title`}>
-      <div data-reveal="photo" className="tj-conv-spread-photo"><Photo spec={spec} shot={part.opener} fill /></div>
+      <CaptionedPhotoFrame shot={part.opener} className="tj-conv-spread-photo"><Photo spec={spec} shot={part.opener} fill /></CaptionedPhotoFrame>
       <header data-reveal="text" className="tj-conv-spread-head">
         {spec.form !== 'story' && <span className="tj-conv-spread-part">Part {partWord(n)}</span>}
         <div id={`part-${n}-title`}><Passage id={titleId} text={part.title} as="h2" className="tj-conv-spread-title"/></div>
@@ -205,7 +210,7 @@ const TypesetCover: React.FC<{ spec: ConversationSpec }> = ({ spec }) => (
 
 const Cover: React.FC<{ spec: ConversationSpec }> = ({ spec }) => (!spec.portrait ? <TypesetCover spec={spec} /> : (
   <header className="tj-cover-dissolve tj-conv-cover">
-    <div className="tj-cover-photo tj-conv-cover-photo" style={{ background: 'linear-gradient(155deg,var(--tj-read-empty-from) 0%,var(--tj-read-bg) 80%)' }}>
+    <CaptionedPhotoFrame shot={spec.portrait} className="tj-cover-photo tj-conv-cover-photo" style={{ background: 'linear-gradient(155deg,var(--tj-read-empty-from) 0%,var(--tj-read-bg) 80%)' }}>
       <EditablePhoto
         slot={spec.portrait.slot}
         alt={spec.portrait.alt}
@@ -213,7 +218,7 @@ const Cover: React.FC<{ spec: ConversationSpec }> = ({ spec }) => (!spec.portrai
         defaultPhoto={{ url: spec.images + spec.portrait.file, x: spec.portrait.x, y: spec.portrait.y }}
         placeholder={<div aria-hidden="true" style={{ ...grainCss('0.8', 150), opacity: 0.08 }} />}
       />
-    </div>
+    </CaptionedPhotoFrame>
     <div className="tj-cover-text tj-conv-cover-text">
       <h1 className="tj-conv-title">
         <EditableText field="title-1" as="span">{spec.title[0]}</EditableText>

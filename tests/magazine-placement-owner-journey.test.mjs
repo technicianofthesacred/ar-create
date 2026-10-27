@@ -57,9 +57,9 @@ if (!prior) {
 process.send({fixture,url,pid:process.pid});
 `;
 
-async function startOwner(fixture,{endingPhotos=false}={}) {
+async function startOwner(fixture,{endingPhotos=false,coverOpenerPhotos=false}={}) {
   const options = {extra:{
-    [DEV]:endingPhotos?original.replace('%%saying%%',[ '%%photo: same.png · Closing wide · wide x=0.3%%', '', '%%photo: replacement.png · Closing bleed · bleed%%', '', '%%photos: same.png · Closing group first | replacement.png · Closing group second · aspect=4/5%%', '', '%%saying%%' ].join('\r\n')):original,
+    [DEV]:coverOpenerPhotos?original.replace('Invented opening 瓷 😀.', 'Invented opening 瓷 😀.\r\n\r\n## Invented opener part\r\n\r\n%%photo: same.png · Invented opener · opener%%\r\n\r\nInvented opener words.'):endingPhotos?original.replace('%%saying%%',[ '%%photo: same.png · Closing wide · wide x=0.3%%', '', '%%photo: replacement.png · Closing bleed · bleed%%', '', '%%photos: same.png · Closing group first | replacement.png · Closing group second · aspect=4/5%%', '', '%%saying%%' ].join('\r\n')):original,
     '_archive/DEV - Clay Teacher (earlier).md':'---\ntype: DEV\nstory: Clay Teacher\n---\n\nInvented earlier published words.\n',
     'Workflow/3-Develop/DEV - River Potter (story).md':'---\ntype: DEV\nstory: River Potter\n---\n\nInvented independent sibling words.\n'
   }};
@@ -374,4 +374,14 @@ test('closing standalone and group caption saves restart through the existing ow
  }
  for(const undoOperationId of operations.reverse()){const undo=await h.post('undo',{...selection,undoOperationId,operationId:randomUUID()});assert.equal(undo.status,200,JSON.stringify(undo.body));}
  assert.equal((await h.read()).document.text,first.document.text);assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);assert.equal(fs.existsSync(path.join(h.f.data,'study-draft-copies')),false);
+});
+
+test('cover and opener captions use the existing owner across real restart, exact retry, stale refusal and reverse Undo',async t=>{
+ const h=await fixture(t,{coverOpenerPhotos:true}),beforeVault=treeHashes(h.f.vault),beforePhotos=treeHashes(h.f.files),beforePublication=treeHashes(h.publication),first=await h.read(),operations=[],upstream=parser.parseDraft(parser.draftBody(first.document.text).body);
+ for(const alt of ['Invented cover','Invented opener']){
+  const read=await h.read(),inspection=await h.inspect(),photo=inspection.sources.flatMap(s=>s.placements).find(p=>p.alt===alt),annotation={caption:'Exact '+alt+' 瓷 😀 100%',credit:'Photograph: Invented Maker'},plan=await h.media.planAnnotation({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:read.document.hash,revision:inspection.revision,placementId:photo.placementId,annotation});
+  const prepared=await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations});assert.equal(prepared.status,200,JSON.stringify(prepared.body));assert.equal(sha(prepared.body.content),plan.expectedContentHash);const operationId=randomUUID(),save={...selection,expectedHash:plan.expectedHash,content:prepared.body.content,operationId,reason:'Invented exact cover/opener caption proof'};operations.push(operationId);assert.equal((await h.post('save',save)).status,200);onlyDraftChanged(beforeVault,treeHashes(h.f.vault));
+  await h.restart();assert.equal((await h.post('save',save)).body.replay,true);assert.equal((await h.post('prepare',{...selection,expectedHash:plan.expectedHash,operations:plan.operations})).status,409);const current=await h.read(),edition=await h.media.workingEdition({storyId:selection.storyId,pieceId:selection.pieceId,expectedHash:current.document.hash}),shot=alt==='Invented cover'?edition.spec.portrait:edition.spec.parts[0].opener;assert.equal(shot.caption.text,annotation.caption);assert.equal(shot.photoCredit,annotation.credit);assert.deepEqual(parser.parseDraft(parser.draftBody(current.document.text).body),upstream);
+ }
+ for(const undoOperationId of operations.reverse())assert.equal((await h.post('undo',{...selection,undoOperationId,operationId:randomUUID()})).status,200);assert.equal((await h.read()).document.text,first.document.text);assert.deepEqual(treeHashes(h.f.vault),beforeVault);assert.deepEqual(treeHashes(h.f.files),beforePhotos);assert.deepEqual(treeHashes(h.publication),beforePublication);
 });

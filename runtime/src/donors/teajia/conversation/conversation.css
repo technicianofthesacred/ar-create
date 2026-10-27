@@ -404,3 +404,11 @@
   .ar-donor-workspace .tj-conv[data-form="story"] .tj-conv-intro-text,
   .ar-donor-workspace .tj-conv[data-form="story"] .tj-conv-intro-told { line-height: 1.65; }
 }
+/* Explicit working captions occupy their own row, never overlaying the photograph. */
+.ar-donor-workspace figure[data-annotated-photo] { margin: 0; min-width: 0; display: flex; flex-direction: column; }
+.ar-donor-workspace [data-annotated-photo] > .tj-conv-annotated-photo-frame { position: relative; flex: 1 1 auto; min-height: 0; }
+.ar-donor-workspace [data-annotated-photo] > .tj-conv-caption { flex: none; max-width: none; margin: 0; padding: 12px var(--conv-gutter) 16px; overflow-wrap: anywhere; }
+.ar-donor-workspace .tj-conv-cover-photo[data-annotated-photo] > .tj-conv-annotated-photo-frame { min-height: 480px; }
+@media (max-width: 700px) {
+ .ar-donor-workspace .tj-conv-cover-photo[data-annotated-photo] > .tj-conv-annotated-photo-frame { min-height: min(80svh, 560px); }
+}
