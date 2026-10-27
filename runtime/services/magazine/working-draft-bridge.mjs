@@ -12,7 +12,7 @@
 import {StateError} from '../../store.mjs';
 import {currentActor, isHuman, requireHuman, requireWriteActor} from '../actor.mjs';
 import {classify, frontmatter} from '../magazine-vault/kinds.mjs';
-import {expected, sha256} from '../magazine-vault/write.mjs';
+import {expected, sha256, textBytes} from '../magazine-vault/write.mjs';
 import {splitBlocks, hash, plain, editable} from '../../reference/mag-edit.mjs';
 import {parseFeedbackShare} from './feedback-share-codec.mjs';
 import fs from 'node:fs';
@@ -200,6 +200,90 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
       feedback: {path: record.rel, hash: feedbackHash, registeredHash: record.sha256, changedSinceRegistration: record.sha256 !== feedbackHash},
       document: {path: record.rel, kind: 'FEEDBACK', hash: feedbackHash, text: document.text}, mapping, readOnly: true};
   }
+  const feedbackFields = ['expectedHash', 'registeredFeedbackPath', 'expectedFeedbackHash'];
+  const feedbackContextKey = value => JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item);
+  const sameFeedbackContext = (a,b) => feedbackContextKey(a) === feedbackContextKey(b);
+  function feedbackWriteSelection(input) {
+    const draftHash=expected(input.expectedHash), feedbackHash=expected(input.expectedFeedbackHash);
+    if(draftHash===null||feedbackHash===null)throw new StateError('FEEDBACK editing requires existing exact draft and feedback hashes.',400);
+    const authority=resolve(input),root=registrationRoot(),project=magazine.projects.project(input.storyId);
+    const feedbackRecords=[].concat(project.vaultRecords.feedback||[]);
+    if(feedbackRecords.length>512)throw new StateError('Registered FEEDBACK exceeds its bounded limit.',413);
+    const matches=feedbackRecords.filter(record=>record?.rel===input.registeredFeedbackPath);
+    if(typeof input.registeredFeedbackPath!=='string'||matches.length!==1)throw new StateError('Choose one exact registered FEEDBACK reference.',matches.length>1?409:404);
+    const record=matches[0];
+    if(classify(record.rel).kind!=='FEEDBACK'||!/^[a-f0-9]{64}$/.test(record.sha256||''))throw new StateError('Registered FEEDBACK identity is inconsistent.',409);
+    return {authority,registration:JSON.stringify(project),context:{schema:'ar-create.magazine-feedback-write-context.v1',rootIdentity:{scheme:'canonical-directory-sha256-v1',fingerprint:sha256(Buffer.from(root,'utf8'))},selection:select(input),draft:{path:authority.path,hash:draftHash},feedback:{path:record.rel,hash:feedbackHash,registeredHash:record.sha256}}};
+  }
+  function assertFeedbackCurrent(input,selection) {
+    const current=feedbackWriteSelection(input);
+    if(!sameFeedbackContext(current.context,selection.context)||current.registration!==selection.registration)throw new StateError('FEEDBACK registration changed before saving.',409);
+    for(const [kind,ref]of [['DEV',selection.context.draft],['FEEDBACK',selection.context.feedback]]){
+      const document=magazine.read({path:ref.path});
+      if(document?.then)throw new StateError('FEEDBACK currentness requires the synchronous maintained reader.',503);
+      if(!document.exists||document.kind!==kind||document.path!==ref.path||typeof document.text!=='string'||document.hash!==ref.hash||document.conflicts?.length||magazine._roots().mag.conflictCopies(ref.path).length||kind==='FEEDBACK'&&sha256(Buffer.from(document.text,'utf8'))!==ref.hash)throw new StateError(kind+' changed, is unreadable or has conflicts. Compare before saving FEEDBACK.',409);
+    }
+  }
+  async function prepareShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'content']);requireWriteActor();writable();
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);textBytes(input.content);
+    const parsed=parseFeedbackShare(input.content),current=parsed.structured&&parsed.projection.every(entry=>entry.target.storyId===selection.authority.storyId&&entry.target.pieceId===selection.authority.pieceId&&entry.target.hash===input.expectedHash);
+    return {selection:select(input),rootIdentity:selection.context.rootIdentity,authority:selection.authority,registeredFeedbackPath:selection.context.feedback.path,expectedHash:input.expectedHash,expectedFeedbackHash:input.expectedFeedbackHash,content:input.content,mapping:{structured:!!current,metadata:parsed.metadata,projection:current?parsed.projection:[],reason:parsed.structured&&!current?'The mapping targets another piece or earlier working revision. Full Markdown editing remains available.':parsed.reason}};
+  }
+  async function saveShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'content','operationId','reason']);input=structuredClone(input);requireWriteActor();writable();uuid(input.operationId);
+    const selection=feedbackWriteSelection(input);
+    // The same owner binds context into its fingerprint before replay lookup,
+    // and rechecks it synchronously under its existing lock before propose/put.
+    return magazine.write({path:selection.context.feedback.path,content:input.content,expectedHash:input.expectedFeedbackHash,operationId:input.operationId,...(input.reason!==undefined?{reason:input.reason}:{})},{context:selection.context,assertCurrent:()=>assertFeedbackCurrent(input,selection)});
+  }
+  async function feedbackSaveReceipt(selection,operationId) {
+    uuid(operationId);const record=await magazine.operation({operationId});
+    const saved=record.context;
+    const comparable=saved&&{...saved,feedback:{...saved.feedback,hash:selection.context.feedback.hash}};
+    if(record.command!=='magazine.write'||record.result?.path!==selection.context.feedback.path||!sameFeedbackContext(comparable,selection.context))throw new StateError('That receipt belongs to another FEEDBACK selection or working revision.',403);
+    const changes=(record.changes||[]).filter(change=>change.applied!==false);
+    if(changes.some(change=>change.root!=='mag'||change.rel!==selection.context.feedback.path||change.move||change.large))throw new StateError('That receipt includes other work.',403);
+    return {record,changes};
+  }
+  async function feedbackUndoEligibility(input,selection) {
+    const {record,changes}=await feedbackSaveReceipt(selection,input.operationId);
+    if(!magazine.configured||!magazine.writable)return {eligible:false,reason:'Magazine is read-only.'};
+    if(currentActor()&&!isHuman(currentActor().actor))return {eligible:false,reason:'Only the author can undo FEEDBACK wording.'};
+    if(!['committed','failed'].includes(record.state)||record.undoneBy||changes.length!==1||changes[0].afterHash!==input.expectedFeedbackHash)return {eligible:false,reason:'That save has no exact current FEEDBACK change to undo.'};
+    assertFeedbackCurrent(input,selection);
+    return {eligible:true,operationId:input.operationId};
+  }
+  async function eligibleUndoShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'operationId']);input=structuredClone(input);
+    return feedbackUndoEligibility(input,feedbackWriteSelection(input));
+  }
+  async function shareFeedbackHistory(input) {
+    workingOnly(input);fields(input,feedbackFields);input=structuredClone(input);
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);
+    if(typeof magazine.feedbackOperations!=='function')throw new StateError('Maintained FEEDBACK receipt discovery is unavailable.',503);
+    const discovered=await magazine.feedbackOperations({context:selection.context,limit:200}),history=[];
+    for(const operationId of discovered.operationIds){
+      const {record,changes}=await feedbackSaveReceipt(selection,operationId);
+      const eligible=await feedbackUndoEligibility({...input,operationId},selection);
+      history.push({operationId,modifiedAt:record.at,actor:record.actor,beforeHash:changes[0].beforeHash,afterHash:changes[0].afterHash,canUndo:eligible.eligible});
+    }
+    assertFeedbackCurrent(input,selection);
+    return {history};
+  }
+  async function undoShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'operationId','undoOperationId']);input=structuredClone(input);requireWriteActor();requireHuman('Undoing FEEDBACK wording');writable();uuid(input.operationId);uuid(input.undoOperationId);
+    const selection=feedbackWriteSelection(input),target=await feedbackSaveReceipt(selection,input.undoOperationId);
+    if(target.changes.length!==1||target.changes[0].afterHash!==input.expectedFeedbackHash)throw new StateError('This Undo does not name the exact saved FEEDBACK hash.',409);
+    let prior;try{prior=await magazine.operation({operationId:input.operationId});}catch(error){if(error.status!==404)throw error;}
+    if(!prior){
+      const eligible=await feedbackUndoEligibility({...input,operationId:input.undoOperationId},selection);
+      if(!eligible.eligible)throw new StateError(eligible.reason,409);
+    }
+    // Same contextual owner fingerprint protects both initial Undo and replay;
+    // only the maintained owner restores bytes under its existing lock.
+    return magazine.undo({undoOperationId:input.undoOperationId,operationId:input.operationId},{context:selection.context,assertCurrent:()=>assertFeedbackCurrent(input,selection)});
+  }
   async function prepare(input) {
     workingOnly(input); fields(input, ['expectedHash', 'operations']);
     requireHuman('Preparing a native draft edit');
@@ -317,5 +401,5 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     if (!eligible.eligible) throw new StateError(eligible.reason, isHuman(currentActor()?.actor) ? 409 : 403);
     return magazine.undo({undoOperationId: input.undoOperationId, operationId: input.operationId});
   }
-  return {catalog, read, shareContext, readShareFeedback, prepare, edit, save, operation, eligibleUndo, undo};
+  return {catalog, read, shareContext, readShareFeedback, prepareShareFeedback, saveShareFeedback, eligibleUndoShareFeedback, undoShareFeedback, shareFeedbackHistory, prepare, edit, save, operation, eligibleUndo, undo};
 }

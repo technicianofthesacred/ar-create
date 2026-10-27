@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {createServer} from '../runtime/server.mjs';
+import {createReviewConnection} from '../scripts/review-connection.mjs';
 import {run as runCLI} from '../agents/cli/ar-create.mjs';
 import {createTools} from '../agents/mcp/server.mjs';
 import {buildMagazineFixture,treeHashes} from './helpers/magazine-fixture.mjs';
@@ -12,7 +13,7 @@ const hash=v=>createHash('sha256').update(v).digest('hex');
 const draft='Workflow/3-Develop/DEV - Clay Teacher (story).md';
 const feedback='Workflow/6-Feedback/FEEDBACK - Clay Teacher.md';
 const route='/api/magazine/working-draft/share-context';
-async function fixture(t){
+async function fixture(t,{writable=false}={}){
  const f=buildMagazineFixture();t.after(f.cleanup);
  fs.mkdirSync(path.dirname(path.join(f.vault,feedback)),{recursive:true});
  fs.writeFileSync(path.join(f.vault,feedback),'---\ntype: FEEDBACK\nstory: Clay Teacher\n---\n\n# A note to Mira\n\nThank you for showing me the kiln.\n');
@@ -20,7 +21,7 @@ async function fixture(t){
  fs.mkdirSync(path.join(f.data,'magazine/projects'),{recursive:true});
  fs.writeFileSync(path.join(f.data,'magazine/index.json'),JSON.stringify({schema:INDEX_SCHEMA,vaultRoot:f.vault,filesRoot:f.files,stories:plan.stories.map(p=>({storyId:p.storyId,name:p.name}))}));
  for(const p of plan.stories)fs.writeFileSync(path.join(f.data,'magazine/projects',p.storyId+'.json'),JSON.stringify(p));
- const server=await createServer({dataDir:f.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,magazineVault:{vaultRoot:f.vault,filesRoot:f.files,writable:false,machine:'synthetic-share-context'}});
+ const server=await createServer({dataDir:f.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,magazineVault:{vaultRoot:f.vault,filesRoot:f.files,writable,machine:'synthetic-share-context'}});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
  const origin='http://127.0.0.1:'+server.address().port;
  const input={storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',edition:'working',expectedHash:hash(fs.readFileSync(path.join(f.vault,draft)))};
@@ -84,5 +85,30 @@ test('registered FEEDBACK HTTP rejects independent hash drift, guessed paths, du
  assert.equal((await fetch(origin+feedbackRoute+'?'+new URLSearchParams(query)+'&registeredFeedbackPath=other')).status,400);
  const incomplete={...query};delete incomplete.expectedFeedbackHash;assert.equal((await get(incomplete)).status,400);
  assert.ok([404,405].includes((await fetch(origin+feedbackRoute,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(query)})).status));
+ assert.deepEqual(treeHashes(f.vault),beforeVault);assert.deepEqual(treeHashes(f.data),beforeData);
+});
+
+
+test('Share feedback HTTP uses the existing human save and exact Undo owner; agents only propose',async t=>{
+ const {f,origin,input}=await fixture(t,{writable:true}),route='/api/magazine/working-draft/share-feedback',before=fs.readFileSync(path.join(f.vault,feedback),'utf8'),content=before.replace('Thank you for showing me the kiln.','Thank you for the invented visit.');
+ const selection={...input,registeredFeedbackPath:feedback,expectedFeedbackHash:hash(before)};
+ const post=async(action,payload,actor='human:adrian')=>{const r=await fetch(origin+route+'/'+action,{method:'POST',headers:{'content-type':'application/json','x-ar-actor':actor},body:JSON.stringify(payload)});const v=await r.json();assert.equal(r.status,200,JSON.stringify(v));return v;};
+ const prepared=await post('prepare',{...selection,content});assert.equal(prepared.content,content);assert.equal(fs.readFileSync(path.join(f.vault,feedback),'utf8'),before);
+ const operationId=randomUUID(),saved=await post('save',{...selection,content,operationId});assert.equal(saved.written,true);assert.equal(saved.hash,hash(content));
+ const replay=await post('save',{...selection,content,operationId});assert.equal(replay.replay,true);
+ const current={...selection,expectedFeedbackHash:saved.hash},read=await(await fetch(origin+route+'?'+new URLSearchParams(current))).json();assert.equal(read.document.text,content);
+ const historyResponse=await fetch(origin+route+'/history?'+new URLSearchParams(current),{headers:{'x-ar-actor':'human:adrian'}});assert.equal(historyResponse.status,200);assert.equal((await historyResponse.json()).history.at(-1).operationId,operationId);
+ const eligibleResponse=await fetch(origin+route+'/undo-eligibility?'+new URLSearchParams({...current,operationId}));assert.equal(eligibleResponse.status,200);assert.equal((await eligibleResponse.json()).eligible,true);
+ const undoInput={...current,operationId:randomUUID(),undoOperationId:operationId},undone=await post('undo',undoInput);assert.equal(undone.undone,operationId);assert.equal(fs.readFileSync(path.join(f.vault,feedback),'utf8'),before);assert.equal((await post('undo',undoInput)).replay,true);
+ const proposed=await post('save',{...selection,content,operationId:randomUUID()},'agent:codex');assert.equal(proposed.proposed,true);assert.equal(fs.readFileSync(path.join(f.vault,feedback),'utf8'),before);
+ assert.equal(hash(fs.readFileSync(path.join(f.vault,draft))),input.expectedHash);
+});
+
+
+test('the existing manuscript correction permission does not implicitly enable FEEDBACK writes in review',async t=>{
+ const {f,origin,input}=await fixture(t,{writable:true}),review=createReviewConnection({authorityURL:origin,allowedAuthorityPort:Number(new URL(origin).port),actualWorkReview:true,magazineDraftCorrections:true});
+ await new Promise(resolve=>review.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>review.close(resolve)));
+ const reviewOrigin='http://127.0.0.1:'+review.address().port,beforeVault=treeHashes(f.vault),beforeData=treeHashes(f.data);
+ for(const action of ['prepare','save','undo']){const response=await fetch(reviewOrigin+'/api/magazine/working-draft/share-feedback/'+action,{method:'POST',headers:{origin:reviewOrigin,'content-type':'application/json'},body:JSON.stringify({...input,registeredFeedbackPath:feedback,expectedFeedbackHash:hash(fs.readFileSync(path.join(f.vault,feedback))),content:'Unsent invented words.',operationId:randomUUID(),undoOperationId:randomUUID()})});assert.equal(response.status,423);}
  assert.deepEqual(treeHashes(f.vault),beforeVault);assert.deepEqual(treeHashes(f.data),beforeData);
 });

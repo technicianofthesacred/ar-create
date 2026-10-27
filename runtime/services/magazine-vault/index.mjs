@@ -83,17 +83,30 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     records.sort((a,b) => b.at.localeCompare(a.at) || b.operationId.localeCompare(a.operationId));
     return {operationIds: records.slice(0, limit).map(r => r.operationId)};
   }
-  async function operation({command, operationId, input, rel = null, story = null, doing}, fn) {
+  async function operation({command, operationId, input, rel = null, story = null, doing, context = null}, fn) {
     requireWritable();
     if (typeof operationId !== 'string' || !UUID.test(operationId)) throw new StateError('operationId must be a fresh UUID for every write.', 400);
     const who = ctx(), inputHash = sha256(stable({command, input}));
     const prior = readJson(opFile(operationId), null);
+    if (context && prior && prior.actor !== who.actor) throw new StateError('That contextual write belongs to another actor.', 403);
     if (prior) { if (prior.inputHash !== inputHash) throw new StateError('That operationId was used for a different write.', 409); if (prior.state === 'committed') return {...prior.result, operationId, replay: true}; }
     const scope = story ? {kind: 'story', id: storyId(story)} : scopeFor(rel);
     if (scope && leases) leases.check(scope, who);
     const {lock} = roots();
     return lock.transaction({actor: who.actor, operation: operationId, doing: doing || command}, async () => {
-      const record = {schema: 'ar-create.magazine-operation.v1', operationId, command, inputHash, actor: who.actor, client: who.client, at: new Date(now()).toISOString(), scope, state: 'pending', changes: []};
+      // Two contextual retries may have queued before either receipt existed.
+      // Recheck inside the same lock so the second cannot erase/replace the
+      // first committed receipt after its FEEDBACK guard observes new bytes.
+      if (context) {
+        const queued = readJson(opFile(operationId), null);
+        if (queued) {
+          if (queued.actor !== who.actor) throw new StateError('That contextual write belongs to another actor.', 403);
+          if (queued.inputHash !== inputHash) throw new StateError('That operationId was used for a different write.', 409);
+          if (queued.state === 'committed') return {...queued.result, operationId, replay: true};
+          throw new StateError('This contextual write has an unfinished receipt. Inspect it before retrying or Undo.', 409);
+        }
+      }
+      const record = {schema: 'ar-create.magazine-operation.v1', operationId, command, inputHash, actor: who.actor, client: who.client, at: new Date(now()).toISOString(), scope, state: 'pending', changes: [], ...(context ? {context} : {})};
       const save = () => atomicWrite(opFile(operationId), JSON.stringify(record, null, 1) + '\n');
       const tx = {
         read: (root, r) => io(root).read(r),
@@ -154,14 +167,60 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
   }
 
   // ---- the generic write ----
-  async function write(input) {
+  // Only trusted in-process composition can supply the second argument. HTTP
+  // bodies still accept exactly the existing public write fields below.
+  function feedbackWriteOptions(options, rel, base) {
+    if (options === undefined) return null;
+    const exact = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every(k => Object.hasOwn(value, k));
+    const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+    const id = value => typeof value === 'string' && value.length > 0 && value.length <= 256 && !/[\x00-\x1f\x7f]/.test(value);
+    const c = options?.context;
+    if (!exact(options, ['context', 'assertCurrent']) || typeof options.assertCurrent !== 'function' || options.assertCurrent.constructor?.name === 'AsyncFunction' || !exact(c, ['schema', 'rootIdentity', 'selection', 'draft', 'feedback']) || c.schema !== 'ar-create.magazine-feedback-write-context.v1' || !exact(c.rootIdentity, ['scheme', 'fingerprint']) || c.rootIdentity.scheme !== 'canonical-directory-sha256-v1' || !hash(c.rootIdentity.fingerprint) || !exact(c.selection, ['storyId', 'pieceId', 'edition']) || !id(c.selection.storyId) || !id(c.selection.pieceId) || c.selection.edition !== 'working' || !exact(c.draft, ['path', 'hash']) || !hash(c.draft.hash) || !exact(c.feedback, ['path', 'hash', 'registeredHash']) || c.feedback.path !== rel || c.feedback.hash !== base || !hash(c.feedback.hash) || !hash(c.feedback.registeredHash) || classify(c.draft.path).kind !== 'DEV' || classify(rel).kind !== 'FEEDBACK') throw new StateError('Supply bounded trusted FEEDBACK context and a synchronous current guard.', 400);
+    return {context: structuredClone(c), assertCurrent: options.assertCurrent};
+  }
+  function assertFeedbackGuard(trusted) {
+    const result = trusted.assertCurrent();
+    if (result === false) throw new StateError('The trusted FEEDBACK current guard refused this write.', 409);
+    if (result && typeof result.then === 'function') {
+      Promise.resolve(result).catch(() => {});
+      throw new StateError('The trusted FEEDBACK guard must finish synchronously.', 400);
+    }
+  }
+  /** Bounded projection over the same receipts, never a parallel history file. */
+  function feedbackOperations(input) {
+    fields(input, ['context', 'limit'], ['context']);
+    const limit = input.limit ?? 200;
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 200) throw new StateError('Choose a FEEDBACK receipt limit between 1 and 200.', 400);
+    const context = feedbackWriteOptions({context: input.context, assertCurrent: () => {}}, input.context?.feedback?.path, input.context?.feedback?.hash).context;
+    // Anonymous local reads may display Adrian's recorded saves; they confer no
+    // write actor. Undo still requires an explicit human request context.
+    const actor = currentActor()?.actor || 'human:adrian';
+    const names = fs.readdirSync(dirs.operations).filter(name => name.endsWith('.json') && UUID.test(name.slice(0, -5)));
+    if (names.length > 10000) throw new StateError('FEEDBACK receipt discovery exceeds its bounded scan limit.', 413);
+    const found = [];
+    for (const name of names) {
+      const record = readJson(path.join(dirs.operations, name), null), saved = record?.context;
+      if (!saved || record.operationId !== name.slice(0, -5) || record.actor !== actor || record.command !== 'magazine.write' || record.state !== 'committed' || record.result?.path !== context.feedback.path || typeof record.at !== 'string') continue;
+      const comparable = {...saved, feedback: {...saved.feedback, hash: context.feedback.hash}};
+      if (stable(comparable) !== stable(context)) continue;
+      const changes = (record.changes || []).filter(change => change.applied !== false);
+      if (changes.length !== 1 || changes[0].root !== 'mag' || changes[0].rel !== context.feedback.path || changes[0].move || changes[0].large) continue;
+      found.push({operationId: record.operationId, at: record.at});
+    }
+    return {operationIds: found.sort((a,b) => a.at.localeCompare(b.at) || a.operationId.localeCompare(b.operationId)).slice(-limit).map(row => row.operationId)};
+  }
+  async function write(input, options) {
     fields(input, ['path', 'content', 'expectedHash', 'operationId', 'reason'], ['path', 'content', 'expectedHash', 'operationId']);
     const c = classify(input.path), bytes = textBytes(input.content), base = expected(input.expectedHash);
+    const trusted = feedbackWriteOptions(options, c.rel, base);
     if (c.class === 'log') throw new StateError(c.kind === 'EDITS' ? 'EDITS logs are written only by magazine.edit (Adrian\'s page edits).' : 'Exports are written only by magazine.export.save.', 403);
     if (c.class === 'board') throw new StateError('STATUS.md changes only through magazine.status.refresh (its story table).', 403);
     if (c.class === 'issue') throw new StateError('Issue indexes change through magazine.issue.write.', 403);
     if (c.class === 'raw' && base !== null) throw new StateError('RAW is written once and never overwritten.', 403);
-    return operation({command: 'magazine.write', operationId: input.operationId, input: {path: c.rel, hash: sha256(bytes), base}, rel: c.rel}, async tx => {
+    return operation({command: 'magazine.write', operationId: input.operationId, input: {path: c.rel, hash: sha256(bytes), base, ...(trusted ? {context: trusted.context} : {})}, rel: c.rel, context: trusted?.context}, async tx => {
+      // Serializes maintained-owner changes only. OS-external writers cannot be
+      // made universally atomic by this process's Magazine lock.
+      if (trusted) assertFeedbackGuard(trusted);
       const human = isHuman(ctx().actor);
       let needsYes = c.class === 'prose' && !human;
       if (c.class === 'social' && !human) { const cur = tx.read('mag', c.rel); needsYes = madeStatus(input.content) !== 'for-your-yes' || (cur.exists && madeStatus(cur.bytes.toString('utf8')) === 'approved'); }
@@ -342,19 +401,29 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
   }
 
   // ---- undo: exact, and only while the file still holds what the operation wrote ----
-  async function undo(input) {
+  async function undo(input, options) {
     fields(input, ['undoOperationId', 'operationId'], ['undoOperationId', 'operationId']);
     if (!UUID.test(input.undoOperationId || '')) throw new StateError('undoOperationId must be the UUID of the write to undo.', 400);
     const target = readJson(opFile(input.undoOperationId), null), who = ctx();
     if (!target || !['committed', 'failed'].includes(target.state)) throw new StateError('No magazine write has that operationId.', 404);
-    if (target.undoneBy) throw new StateError('That write was already undone.', 409);
     const applied = target.changes.filter(c => c.applied !== false);
     if (!applied.length) throw new StateError('That operation changed no file.', 409);
+    const trusted = feedbackWriteOptions(options, applied[0].rel, applied[0].afterHash);
+    if (trusted) {
+      const comparable = target.context && {...target.context, feedback: {...target.context.feedback, hash: trusted.context.feedback.hash}};
+      if (target.command !== 'magazine.write' || applied.length !== 1 || applied[0].root !== 'mag' || applied[0].move || applied[0].large || stable(comparable) !== stable(trusted.context)) throw new StateError('That Undo belongs to another contextual FEEDBACK save.', 403);
+    } else if (target.undoneBy) throw new StateError('That write was already undone.', 409);
     if (!isHuman(who.actor)) {
       if (target.actor !== who.actor) throw new StateError(`Only Adrian or ${target.actor} may undo that write.`, 403);
       for (const ch of applied) { if (ch.move) throw new StateError('Moves are undone by Adrian.', 403); if (ch.root === 'mag') { const c = classify(ch.rel); if (c.class !== 'note') throw new StateError(`${ch.rel} is ${c.class}; only Adrian undoes it.`, 403); } }
     }
-    const result = await operation({command: 'magazine.undo', operationId: input.operationId, input: {undoOperationId: input.undoOperationId}, rel: applied.find(c => c.rel)?.rel || null, doing: 'undo'}, async tx => {
+    const result = await operation({command: 'magazine.undo', operationId: input.operationId, input: {undoOperationId: input.undoOperationId, ...(trusted ? {context: trusted.context} : {})}, rel: applied.find(c => c.rel)?.rel || null, doing: 'undo', context: trusted?.context}, async tx => {
+      let currentTarget;
+      if (trusted) {
+        currentTarget = readJson(opFile(input.undoOperationId), null);
+        if (!currentTarget || currentTarget.undoneBy) throw new StateError('That FEEDBACK save was already undone or changed.', 409);
+        assertFeedbackGuard(trusted);
+      }
       for (const ch of [...applied].reverse()) {
         if (ch.move) { const at = io(ch.root).read(ch.move.to); if (at.hash !== ch.hash) throw new StateError(`${ch.move.to} changed after the move; nothing was undone.`, 409); tx.move(ch.root, ch.move.to, ch.move.from, ch.hash); continue; }
         if (ch.large) { const {abs} = io(ch.root).locate(ch.rel); if (!fs.existsSync(abs) || sha256File(abs) !== ch.afterHash) throw new StateError(`${ch.rel} changed after it was filed; nothing was undone.`, 409); const keep = path.join(dirs.undone, input.operationId); fs.mkdirSync(keep, {recursive: true, mode: 0o700}); try { fs.renameSync(abs, path.join(keep, path.basename(ch.rel))); } catch (error) { if (error.code !== 'EXDEV') throw error; fs.copyFileSync(abs, path.join(keep, path.basename(ch.rel)), fs.constants.COPYFILE_EXCL); fs.rmSync(abs); } continue; }
@@ -363,9 +432,10 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
         if (ch.before === null && cur.exists) { const keep = path.join(dirs.undone, input.operationId); fs.mkdirSync(keep, {recursive: true, mode: 0o700}); fs.writeFileSync(path.join(keep, path.basename(ch.rel)), cur.bytes, {mode: 0o600}); }
         tx.put(ch.root, ch.rel, ch.afterHash, ch.before === null ? null : Buffer.from(ch.before, 'base64'));
       }
+      if (trusted) atomicWrite(opFile(input.undoOperationId), JSON.stringify({...currentTarget, undoneBy: input.operationId}, null, 1) + '\n');
       return {undone: input.undoOperationId};
     });
-    atomicWrite(opFile(input.undoOperationId), JSON.stringify({...target, undoneBy: input.operationId}, null, 1) + '\n');
+    if (!trusted) atomicWrite(opFile(input.undoOperationId), JSON.stringify({...target, undoneBy: input.operationId}, null, 1) + '\n');
     return result;
   }
 
@@ -459,6 +529,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     board, read, write, edit, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
     issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo, draftHistory,
+    feedbackOperations,
     operation: ({operationId}) => { if (!UUID.test(operationId || '')) throw new StateError('operationId must be a UUID.', 400); const r = readJson(opFile(operationId), null); if (!r) throw new StateError('No such operation.', 404); return {...r, changes: r.changes.map(({before, ...rest}) => rest)}; },
     lockStatus: () => roots().lock.status(),
     lockHold: async input => { fields(input || {}, ['doing', 'ttlMs']); requireWritable(); const who = ctx(); return roots().lock.hold({actor: who.actor, doing: typeof input?.doing === 'string' ? input.doing.slice(0, 120) : 'a /mag run on this Mac'}, input?.ttlMs ? {ttlMs: input.ttlMs} : {}); },
