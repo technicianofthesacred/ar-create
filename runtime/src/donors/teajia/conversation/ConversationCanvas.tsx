@@ -102,6 +102,9 @@ const Words: React.FC<{ blocks: Block[] }> = ({ blocks }) => {
   );
 };
 
+/** Canonical AR Create annotation strings stay literal; upstream rich captions keep their existing semantics. */
+const PhotoCaption=({caption,credit}:{caption?:{id:string;text:string;literal?:boolean};credit?:string})=>caption?.literal||credit?((caption?.text||credit)?<figcaption className="tj-conv-caption">{caption?.text&&<span>{caption.text}</span>}{caption?.text&&credit&&<br/>}{credit&&<span className="tj-conv-photo-credit">{credit}</span>}</figcaption>:null):caption?<Rich field={caption.id} text={caption.text} as="figcaption" className="tj-conv-caption"/>:null;
+
 const BlockView: React.FC<{ spec: ConversationSpec; block: Block | Block[] }> = ({ spec, block }) => {
   if (Array.isArray(block)) {
     return <section data-reveal="text" className="tj-conv-col"><Words blocks={block} /></section>;
@@ -123,17 +126,17 @@ const BlockView: React.FC<{ spec: ConversationSpec; block: Block | Block[] }> = 
           <div className="tj-conv-photos" data-stagger={b.stagger ? '' : undefined}>
             {b.shots.map((s) => <div key={s.slot}><Photo spec={spec} shot={s} aspect={b.aspect} /></div>)}
           </div>
-          {b.caption && <Rich field={b.caption.id} text={b.caption.text} as="figcaption" className="tj-conv-caption" />}
+          <PhotoCaption caption={b.caption} credit={b.photoCredit}/>
         </figure>
       );
     case 'wide':
       return (
         <figure data-reveal="photo" className="tj-conv-figure" data-narrow={b.narrow ? '' : undefined} data-offset={b.offset}>
-          <Photo spec={spec} shot={b.shot} aspect={b.aspect ?? '3/2'} />
+          <Photo spec={spec} shot={b.shot} aspect={b.aspect ?? '3/2'} /><PhotoCaption caption={b.caption} credit={b.photoCredit}/>
         </figure>
       );
     case 'bleed':
-      return <figure data-reveal="photo" className="tj-conv-bleed"><Photo spec={spec} shot={b.shot} fill /></figure>;
+      return <figure data-reveal="photo" className="tj-conv-bleed"><Photo spec={spec} shot={b.shot} fill /><PhotoCaption caption={b.caption} credit={b.photoCredit}/></figure>;
     case 'on-photo':
       return (
         <figure data-reveal="photo" className="tj-conv-onphoto">

@@ -3,6 +3,7 @@ import {reworkSlashes} from '../../reference/mag-edit.mjs';
 import {createHash,randomUUID} from 'node:crypto';
 import {documentParts,plain,editable,readableBlock} from '../donors/mag/markdown-blocks';
 import {draftBody,parseDraft} from '../donors/mag/mag-send';
+import {splitPhotoAnnotation,writePhotoAnnotation,validatePhotoAnnotation,validateArticleCredits,readCreditsBlock,writeCreditsBlock,photoDirectiveComplete} from '../../services/magazine-annotations.mjs';
 import {markdownToDoc} from '../donors/wordforge/wf-block-markdown';
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const conflict=(reason:string):never=>{throw new Error(reason);};
@@ -72,7 +73,7 @@ export function capture(raw:string,sourceKey:string):Snapshot{
 export function projection(s:Snapshot){return s.blocks.map(b=>({id:b.id,origin:b.origin,blockHash:hash(b.raw),...inlineMap(b.raw)}));}
 type Edit={kind:'text';id:string;from:number;to:number;insert:string;seenBlockHash:string};
 type AssetPhotoOp={kind:'photoReplaceAsset';id:string;seenBlockHash:string;rootId:string;sourceId:string;revision:string;sourceHash:string;description:string};
-type Op=AssetPhotoOp|Edit|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
+type Op=AssetPhotoOp|Edit|{kind:'photoAnnotation';id:string;seenBlockHash:string;annotation:{caption:string;credit:string}|null}|{kind:'articleCredits';credits:string[]|null}|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
 const byteBoundary=(map:ReturnType<typeof inlineMap>,position:number,bias:'left'|'right'='right')=>{
  if(position>0&&position<map.words.length&&/[\uD800-\uDBFF]/.test(map.words[position-1])&&/[\uDC00-\uDFFF]/.test(map.words[position]))conflict('Native range divides a Unicode character.');
  if(!Number.isSafeInteger(position)||position<0||position>map.words.length)conflict('Invalid native range.');
@@ -91,7 +92,22 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
  if(!Array.isArray(ops)||ops.length>1000)conflict('Bounded operation array required.');
  for(const op of ops){
   validateOperation(op);
-  if(op.kind==='photoReplaceAsset'){
+  if(op.kind==='articleCredits'){
+   if(ops.length!==1)conflict('Save article credits separately from other edits.');
+   let range:any;draftBody(render(next),value=>{range=value;});if(!range)conflict('The canonical article body is unavailable.');
+   let cursor=next.prefix.length;const rows=next.blocks.filter(b=>{const start=cursor;cursor+=b.raw.length+b.separator.length;return start>=range.start&&start+b.raw.length<=range.end;}),existing=rows.filter(b=>readCreditsBlock(b.raw)!==undefined);
+   if(existing.length>1)conflict('Duplicate canonical article credits.');
+   if(existing.length){const b=existing[0];if(op.credits===null)next.blocks.splice(next.blocks.indexOf(b),1);else b.raw=writeCreditsBlock(op.credits);}
+   else if(op.credits!==null){const first=rows[0];if(!first)conflict('The article body has no exact insertion anchor.');next.blocks.splice(next.blocks.indexOf(first),0,{id:randomUUID(),raw:writeCreditsBlock(op.credits),separator:newline+newline,origin:null});}
+  }else if(op.kind==='photoAnnotation'){
+   const b=get(op.id);if(ops.length!==1||hash(b.raw)!==op.seenBlockHash||next.blocks.filter(row=>row.id===op.id).length!==1)conflict('Use one current exact photo occurrence for caption and credit.');
+   const raw=render(next),offset=next.prefix.length+next.blocks.slice(0,next.blocks.indexOf(b)).reduce((n,row)=>n+row.raw.length+row.separator.length,0),trimmed=b.raw.trim(),start=offset+b.raw.indexOf(trimmed);
+   let range:any;const body=draftBody(raw,r=>{range=r;}),observations:any[]=[];
+   const story=parseDraft(body.body,undefined,(shot,origin)=>observations.push({shot,origin}));const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length),o=matches[0]?.origin;
+   const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
+   if(!matches.length||!o||matches.some(({shot})=>contains(story.ending,shot))||!['photo','photos'].includes(o.kind)||!['wide','bleed','photos'].includes(o.role)||o.depth!==0||matches.length!==o.groupSize||!photoDirectiveComplete(b.raw,o)||matches.some(({origin:v})=>v.directiveStart!==o.directiveStart||v.groupSize!==o.groupSize||v.depth!==0))conflict('Caption and credit require an exact standalone article photo or photo group.');
+   b.raw=writePhotoAnnotation(b.raw,op.annotation,newline);
+  }else if(op.kind==='photoReplaceAsset'){
    const b=get(op.id),assets=trusted?.photoAssets?.filter(asset=>['rootId','sourceId','revision','sourceHash','description'].every(k=>(asset as any)[k]===(op as any)[k]));
    if(ops.length!==1||hash(b.raw)!==op.seenBlockHash||next.blocks.filter(row=>row.id===op.id).length!==1)conflict('Use one current exact photo occurrence for library replacement.');
    if(assets?.length!==1||!new RegExp('^library-photo-'+op.sourceHash+'\\.(jpg|png|webp|gif|avif)$').test(assets[0].file))conflict('A trusted owner-resolved library photograph is required.');
@@ -99,7 +115,7 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    let range:{start:number;end:number}|undefined;const body=draftBody(raw,r=>{range=r;}),observations:any[]=[];
    const story=parseDraft(body.body,undefined,(shot,origin)=>observations.push({shot,origin})),matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length),hit=matches[0],o=hit?.origin;
    const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
-   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||o.directiveEnd!==o.chunkEnd||contains(story.ending,hit.shot))conflict('Replace only a standalone wide or bleed article photo.');
+   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||!photoDirectiveComplete(b.raw,o)||contains(story.ending,hit.shot))conflict('Replace only a standalone wide or bleed article photo.');
    b.raw=photoReplaceRaw(b.raw,'%%photo: '+assets[0].file+' · '+op.description+' · wide%%');
   }else if(op.kind==='photoReplace'){
    const b=get(op.id),source=get(op.replacementId);
@@ -111,7 +127,7 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
     if(next.blocks.filter(row=>row.id===block.id).length!==1)conflict('Photo replacement requires unique native block IDs.');
     const offset=next.prefix.length+next.blocks.slice(0,next.blocks.indexOf(block)).reduce((n,row)=>n+row.raw.length+row.separator.length,0),trimmed=block.raw.trim(),start=offset+block.raw.indexOf(trimmed);
     const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length),hit=matches[0],o=hit?.origin;
-    if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||o.directiveEnd!==o.chunkEnd||contains(story.ending,hit.shot))conflict('Replace only standalone article photos with another standalone photo in this draft.');
+    if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||!photoDirectiveComplete(block.raw,o)||contains(story.ending,hit.shot))conflict('Replace only standalone article photos with another standalone photo in this draft.');
    }
    b.raw=photoReplaceRaw(b.raw,source.raw);
   }else if(op.kind==='photoAspect'){
@@ -123,7 +139,7 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length);
    const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
    const hit=matches[0],o=hit?.origin;
-   if(matches.length!==1||!o||o.kind!=='photo'||o.role!=='wide'||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||o.directiveEnd!==o.chunkEnd||contains(story.ending,hit.shot))conflict('Photo shape supports only a standalone wide article photo.');
+   if(matches.length!==1||!o||o.kind!=='photo'||o.role!=='wide'||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||!photoDirectiveComplete(b.raw,o)||contains(story.ending,hit.shot))conflict('Photo shape supports only a standalone wide article photo.');
    b.raw=photoAspectRaw(b.raw,op.aspect);
   }else if(op.kind==='photoDescription'){
    const b=get(op.id);if(ops.length!==1||hash(b.raw)!==op.seenBlockHash||next.blocks.filter(row=>row.id===op.id).length!==1)conflict('Use one current exact photo occurrence for its description.');
@@ -133,12 +149,12 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length);
    const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
    const hit=matches[0],o=hit?.origin;
-   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||o.directiveEnd!==o.chunkEnd||contains(story.ending,hit.shot))conflict('Description editing supports only a standalone article photo.');
-   const fields=b.raw.match(/^(\s*%%photo:[^\r\n%]*? · )([^\r\n%]*?)( · [^\r\n%]*)?(%%\s*)$/);
-   if(!fields||b.raw.split(' · ').length>3||fields[2].includes(' · '))conflict('Photo description needs an unambiguous native field.');
+   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||!photoDirectiveComplete(b.raw,o)||contains(story.ending,hit.shot))conflict('Description editing supports only a standalone article photo.');
+   const annotated=splitPhotoAnnotation(b.raw),fields=annotated.base.match(/^(\s*%%photo:[^\r\n%]*? · )([^\r\n%]*?)( · [^\r\n%]*)?(%%\s*)$/);
+   if(!fields||annotated.base.split(' · ').length>3||fields[2].includes(' · '))conflict('Photo description needs an unambiguous native field.');
    if(fields[2].trim()===op.description)conflict('Photo already has this description.');
    const padding=fields[2].match(/^(\s*)(.*?)(\s*)$/)!;
-   b.raw=fields[1]+padding[1]+op.description+padding[3]+(fields[3]||'')+fields[4];
+   b.raw=fields[1]+padding[1]+op.description+padding[3]+(fields[3]||'')+fields[4]+annotated.suffix;
   }else if(op.kind==='photoFocus'){
    const b=get(op.id);if(ops.length!==1||hash(b.raw)!==op.seenBlockHash)conflict('Use one current exact photo occurrence for its focal point.');
    const raw=render(next),offset=next.prefix.length+next.blocks.slice(0,next.blocks.indexOf(b)).reduce((n,row)=>n+row.raw.length+row.separator.length,0),trimmed=b.raw.trim(),start=offset+b.raw.indexOf(trimmed);
@@ -147,7 +163,7 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length);
    const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
    const hit=matches[0],o=hit?.origin;
-   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||o.directiveEnd!==o.chunkEnd||contains(story.ending,hit.shot))conflict('Focal adjustment supports only a standalone article photo.');
+   if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||!photoDirectiveComplete(b.raw,o)||contains(story.ending,hit.shot))conflict('Focal adjustment supports only a standalone article photo.');
    b.raw=photoFocusRaw(b.raw,op.x,op.y);
   }else if(op.kind==='approveMark'){
       const b=get(op.id),beforeFrame=envelope(b.raw);
@@ -235,7 +251,7 @@ export function undo(current:Snapshot,currentRaw:string,inverse:any){
  return {raw,snapshot:structuredClone(inverse.before),expectedOriginalHash:current.fileHash,nextOriginalHash:inverse.before.fileHash};
 }
 function validateOperation(op:any){
- const shapes:any={photoDescription:['kind','id','seenBlockHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
+ const shapes:any={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
  if(!op||typeof op!=='object'||Array.isArray(op)||!Object.hasOwn(shapes,op.kind))conflict('Unknown document operation kind.');
  const keys=shapes[op.kind];if(Object.keys(op).some(k=>!keys.includes(k))||keys.filter((k:string)=>k!=='level').some((k:string)=>!Object.hasOwn(op,k)))conflict('Malformed document operation fields.');
  for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\u0000-\u001f]/.test(op[key])))conflict('Malformed stable native ID.');
@@ -243,6 +259,8 @@ function validateOperation(op:any){
  for(const key of ['from','to','at'])if(key in op&&(!Number.isSafeInteger(op[key])||op[key]<0))conflict('Invalid native range.');
  for(const key of ['insert','raw'])if(key in op&&(typeof op[key]!=='string'||!op[key].isWellFormed()||op[key].includes('\0')))conflict('Well-formed Unicode text required.');
  if('seenBlockHash' in op&&(typeof op.seenBlockHash!=='string'||!/^[a-f0-9]{64}$/.test(op.seenBlockHash)))conflict('Malformed seen block hash.');
+ if(op.kind==='photoAnnotation')validatePhotoAnnotation(op.annotation);
+ if(op.kind==='articleCredits')validateArticleCredits(op.credits);
  if(op.kind==='photoReplaceAsset'){
   if(!['rootId','revision','sourceHash'].every(k=>typeof op[k]==='string'&&/^[a-f0-9]{64}$/.test(op[k]))||typeof op.sourceId!=='string'||!/^([a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(op.sourceId))conflict('Use the exact library photograph identity, revision and hash.');
   if(typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · '))conflict('Photo description must be one plain line without native separators.');
@@ -258,6 +276,7 @@ export function approvalSpans(raw:string){if(!editable(raw))return [];return exa
 
 /** Change coordinate tokens only, retaining original file, alt, layout and whitespace. */
 export function photoFocusRaw(raw:string,x:number,y:number){
+ const annotated=splitPhotoAnnotation(raw);if(annotated.annotation)return photoFocusRaw(annotated.base,x,y)+annotated.suffix;
  if(![x,y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1))conflict('Invalid focal coordinates.');
  const match=/^(\s*%%photo:[ \t]*)([^\r\n%]*)(%%\s*)$/.exec(raw),bits=match?.[2].split(' · ');
  if(!match||!bits||!bits[0].trim())conflict('An exact standalone photo directive is required.');
@@ -278,6 +297,7 @@ export function photoFocusRaw(raw:string,x:number,y:number){
 const supportedPhotoAspect=(aspect:unknown):aspect is string=>typeof aspect==='string'&&['4/3','4/5','1/1'].includes(aspect);
 /** Change one aspect token only; all existing spelling and whitespace stays owned. */
 export function photoAspectRaw(raw:string,aspect:string){
+ const annotated=splitPhotoAnnotation(raw);if(annotated.annotation)return photoAspectRaw(annotated.base,aspect)+annotated.suffix;
  if(!supportedPhotoAspect(aspect))conflict('Unsupported photo shape; use 4/3, 4/5 or 1/1.');
  const match=/^(\s*%%photo:[ \t]*)([^\r\n%]*)(%%\s*)$/.exec(raw),bits=match?.[2].split(' · ');
  if(!match||!bits||!bits[0].trim())conflict('An exact standalone photo directive is required.');
@@ -303,6 +323,7 @@ export function photoAspectRaw(raw:string,aspect:string){
 /** Derive asset and description only from another exact current native photo.
  * No path, filename or prose supplied by a caller can enter this operation. */
 function photoReplaceRaw(raw:string,sourceRaw:string){
+ const targetAnnotation=splitPhotoAnnotation(raw),sourceAnnotation=splitPhotoAnnotation(sourceRaw);if(targetAnnotation.annotation||sourceAnnotation.annotation)return photoReplaceRaw(targetAnnotation.base,sourceAnnotation.base)+targetAnnotation.suffix;
  const tokens=(value:string)=>{
   const match=/^(\s*%%photo:[ \t]*)([^\r\n%]*)(%%\s*)$/.exec(value),bits=match?.[2].split(' · ');
   if(!match||!bits||bits.length<2||bits.length>3)conflict('Replacement requires unambiguous photo file and description fields.');
@@ -319,4 +340,4 @@ function photoReplaceRaw(raw:string,sourceRaw:string){
 }
 
 // Advertised by the maintained owner read; absent on older installed engines.
-export const supportedNativeOperations=Object.freeze(['photoDescription','photoFocus','photoAspect','photoReplace','photoReplaceAsset']);
+export const supportedNativeOperations=Object.freeze(['photoAnnotation','articleCredits','photoDescription','photoFocus','photoAspect','photoReplace','photoReplaceAsset']);

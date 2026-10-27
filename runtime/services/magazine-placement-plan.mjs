@@ -1,5 +1,6 @@
 // Pure planning only: consumes the maintained read-only inspection and current
 // guarded owner projection. The existing native writer alone applies operations.
+import {splitPhotoAnnotation,photoDirectiveComplete,validatePhotoAnnotation} from './magazine-annotations.mjs';
 import {createHash} from 'node:crypto';
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const HEX=/^[a-f0-9]{64}$/;
@@ -9,15 +10,15 @@ const identity=v=>typeof v==='string'&&v.length>0&&v.length<=500;
 function refuse(code,message){throw Object.assign(new Error(message),{name:'MagazinePlacementPlanError',code,status:409});}
 const sameOwner=(a,b)=>a?.projectId===b.projectId&&a.pieceId===b.pieceId&&a.editionId===b.editionId&&a.artifactId===b.artifactId&&a.hash===b.hash;
 const roles={photo:['cover','opener','wide','bleed'],photos:['photos'],side:['side'],'on-photo':['on-photo'],saying:['ending']};
-const simple=group=>['wide','bleed','photos'].includes(group.origin.role)&&['photo','photos'].includes(group.origin.kind)&&group.origin.directiveEnd===group.origin.chunkEnd&&group.placements.every(p=>!p.structuralPath.startsWith('ending/'));
+const simple=group=>['wide','bleed','photos'].includes(group.origin.role)&&['photo','photos'].includes(group.origin.kind)&&photoDirectiveComplete(group.raw,group.origin)&&group.placements.every(p=>!p.structuralPath.startsWith('ending/'));
 /** Returns existing native move operations, never new manuscript/layout data.
  * Request revision must come from this exact inspection; working is the current
  * owner resolver result, not browser-supplied projection or occurrence metadata.
  * Cover/opener/ending/side/on-photo arrangements retain their specialized owner.
  */
 function placementContext({inspection,working,request}={},mode='move') {
- const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='description'?['description']:mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:mode==='library'?['assetRootId','assetSourceId','assetRevision','assetHash','description']:['beforeId'])];
- if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y','description'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
+ const keys=['storyId','pieceId','expectedHash','revision','placementId',...(mode==='annotation'?['annotation']:mode==='description'?['description']:mode==='focus'?['x','y']:mode==='aspect'?['aspect']:mode==='replace'?['replacementPlacementId','sourceId','sourceHash']:mode==='library'?['assetRootId','assetSourceId','assetRevision','assetHash','description']:['beforeId'])];
+ if(!object(request)||Object.keys(request).length!==keys.length||Object.keys(request).some(k=>!keys.includes(k))||!keys.filter(k=>!['x','y','description','annotation'].includes(k)).every(k=>identity(request[k]))||mode==='focus'&&![request.x,request.y].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1)||mode==='aspect'&&!['4/3','4/5','1/1'].includes(request.aspect)||!['expectedHash','revision','placementId'].every(k=>HEX.test(request[k]))) refuse('invalid-request','Choose a current photo and an existing destination.');
  const {storyId,pieceId,expectedHash,revision,placementId,beforeId}=request;
  const {document,authority,target,projection}=working||{};
  if(authority?.kind!=='magazine'||authority.storyId!==storyId||authority.pieceId!==pieceId||typeof document?.text!=='string'||Buffer.byteLength(document.text)>2*1024*1024||document.hash!==expectedHash||sha(document.text)!==expectedHash||target?.hash!==expectedHash||!identity(target?.artifactId)||!identity(target?.nativeProjectId)) refuse('stale-owner','This working draft changed. Reopen it before moving a photo.');
@@ -42,7 +43,7 @@ function placementContext({inspection,working,request}={},mode='move') {
    const trimmed=row.raw.trim(),start=row.origin.offset+row.raw.indexOf(trimmed);
    if(o.chunkStart!==start||o.chunkEnd!==start+trimmed.length||o.directiveStart!==o.chunkStart||o.directiveEnd<=o.directiveStart||o.directiveEnd>o.chunkEnd||!text.slice(o.directiveStart,o.directiveEnd).startsWith('%%'+o.kind+':')||!text.slice(o.directiveStart,o.directiveEnd).endsWith('%%')) refuse('invalid-origins','A photo’s exact draft position changed. Refresh the photos.');
    let group=groups.get(row.id);
-   if(!group){group={origin:o,placements:[],indexes:new Set()};groups.set(row.id,group);}
+   if(!group){group={origin:o,raw:row.raw,placements:[],indexes:new Set()};groups.set(row.id,group);}
    if(['fileHash','blockHash','blockOffset','chunkStart','chunkEnd','directiveStart','directiveEnd','kind','role','groupSize','depth','offsetUnit'].some(k=>group.origin[k]!==o[k])||group.indexes.has(o.groupIndex)) refuse('invalid-origins','The whole photo group could not be verified. Refresh the photos.');
    group.indexes.add(o.groupIndex);group.placements.push(p);placements.set(p.placementId,{placement:p,group,row});
    if(placements.size>256) refuse('invalid-origins','Too many photo positions were returned.');
@@ -80,7 +81,7 @@ export function planMagazinePlacementDescription(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoDescription'))refuse('unsupported-owner','This working editor does not support photo description yet.');
  if(typeof input.request?.description!=='string'||input.request.description.length>2000||!input.request.description.isWellFormed()||input.request.description!==input.request.description.trim()||/[\x00-\x1f\x7f%]/.test(input.request.description)||input.request.description.includes(' · '))refuse('invalid-description','Use a one-line description without native separators.');
  const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'description'),o=selected.group.origin,p=selected.placement;
- if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Edit the description of a standalone article photo.');
+ if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||!photoDirectiveComplete(selected.row.raw,o)||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Edit the description of a standalone article photo.');
  if(p.alt===input.request.description)refuse('unchanged-description','Choose a different photo description before saving.');
  const operations=Object.freeze([Object.freeze({kind:'photoDescription',id:selected.row.id,seenBlockHash:selected.row.blockHash,description:input.request.description})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
@@ -88,7 +89,7 @@ export function planMagazinePlacementDescription(input){
 export function planMagazinePlacementFocus(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoFocus'))refuse('unsupported-owner','This working editor does not support photo focus yet.');
  const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'focus'),o=selected.group.origin,p=selected.placement;
- if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Adjust the focus of a standalone article photo.');
+ if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||!photoDirectiveComplete(selected.row.raw,o)||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Adjust the focus of a standalone article photo.');
  if((p.crop?.x??0.5)===input.request.x&&(p.crop?.y??0.5)===input.request.y)refuse('unchanged-focus','Choose a different photo focus before saving.');
  const operations=Object.freeze([Object.freeze({kind:'photoFocus',id:selected.row.id,seenBlockHash:selected.row.blockHash,x:input.request.x,y:input.request.y})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
@@ -96,7 +97,7 @@ export function planMagazinePlacementFocus(input){
 export function planMagazinePlacementAspect(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoAspect'))refuse('unsupported-owner','This working editor does not support photo shape yet.');
  const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'aspect'),o=selected.group.origin,p=selected.placement;
- if(o.kind!=='photo'||o.role!=='wide'||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Adjust the shape of a standalone wide article photo.');
+ if(o.kind!=='photo'||o.role!=='wide'||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||!photoDirectiveComplete(selected.row.raw,o)||p.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Adjust the shape of a standalone wide article photo.');
  if((p.crop?.aspect??'4/3')===input.request.aspect)refuse('unchanged-aspect','Choose a different photo shape before saving.');
  const operations=Object.freeze([Object.freeze({kind:'photoAspect',id:selected.row.id,seenBlockHash:selected.row.blockHash,aspect:input.request.aspect})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([p.placementId]),operations});
@@ -111,7 +112,7 @@ export function planMagazinePlacementReplace(input){
   if(!HEX.test(asset.id)||ref?.sourceId!==asset.id||!HEX.test(ref?.hash)||!HEX.test(ref?.rootId)||typeof ref?.relativePath!=='string'||asset.placements.some(p=>['rootId','sourceId','relativePath','hash'].some(k=>p.sourceRef?.[k]!==ref[k])))refuse('invalid-source','The draft’s photo catalog changed. Refresh the photos.');
  }
  const source=placements.get(input.request.replacementPlacementId);
- const standalone=hit=>hit&&hit.group.origin.kind==='photo'&&['wide','bleed'].includes(hit.group.origin.role)&&hit.group.origin.depth===0&&hit.group.origin.groupSize===1&&hit.group.origin.groupIndex===0&&hit.group.origin.directiveEnd===hit.group.origin.chunkEnd&&!hit.placement.structuralPath.startsWith('ending/');
+ const standalone=hit=>hit&&hit.group.origin.kind==='photo'&&['wide','bleed'].includes(hit.group.origin.role)&&hit.group.origin.depth===0&&hit.group.origin.groupSize===1&&hit.group.origin.groupIndex===0&&photoDirectiveComplete(hit.row.raw,hit.group.origin)&&!hit.placement.structuralPath.startsWith('ending/');
  if(!standalone(selected)||!standalone(source))refuse('unsupported-placement','Choose two standalone article photos in this draft.');
  const ref=source.placement.sourceRef;
  if(!HEX.test(input.request.sourceId)||!HEX.test(input.request.sourceHash)||ref?.sourceId!==input.request.sourceId||ref?.hash!==input.request.sourceHash||!input.inspection.sources.some(s=>s.id===input.request.sourceId&&s.sourceRef?.hash===input.request.sourceHash&&s.placements.includes(source.placement)))refuse('unknown-source','This replacement photo is not in the current draft’s photo catalog.');
@@ -124,8 +125,16 @@ export function planMagazinePlacementReplace(input){
 export function planMagazineLibraryPlacementReplace(input){
  if(!input?.working?.supportedNativeOperations?.includes('photoReplaceAsset'))refuse('unsupported-owner','This working editor does not support library photographs yet.');
  const {selected,ownerRef,expectedHash,revision,scope}=placementContext(input,'library'),o=selected.group.origin,r=input.request;
- if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveEnd!==o.chunkEnd||selected.placement.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Replace a standalone wide or bleed article photo.');
+ if(o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||!photoDirectiveComplete(selected.row.raw,o)||selected.placement.structuralPath.startsWith('ending/'))refuse('unsupported-placement','Replace a standalone wide or bleed article photo.');
  if(!['assetRootId','assetRevision','assetHash'].every(k=>HEX.test(r[k]))||!/^([a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(r.assetSourceId)||typeof r.description!=='string'||r.description.length>2000||!r.description.isWellFormed()||r.description!==r.description.trim()||/[\x00-\x1f\x7f%]/.test(r.description)||r.description.includes(' · '))refuse('invalid-source','Choose a current library photo and a plain single-line description.');
  const operations=Object.freeze([Object.freeze({kind:'photoReplaceAsset',id:selected.row.id,seenBlockHash:selected.row.blockHash,rootId:r.assetRootId,sourceId:r.assetSourceId,revision:r.assetRevision,sourceHash:r.assetHash,description:r.description})]);
  return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([selected.placement.placementId]),operations});
+}
+
+export function planMagazinePlacementAnnotation(input){
+ if(!input?.working?.supportedNativeOperations?.includes('photoAnnotation'))refuse('unsupported-owner','This working editor does not support canonical captions and credits yet.');
+ const annotation=validatePhotoAnnotation(input.request?.annotation),context=placementContext(input,'annotation'),{selected,ownerRef,expectedHash,revision,scope}=context,o=selected.group.origin;
+ if(!simple(selected.group)||o.depth!==0)refuse('unsupported-placement','Edit a standalone article photo or its complete photo group.');
+ if(JSON.stringify(splitPhotoAnnotation(selected.row.raw).annotation)===JSON.stringify(annotation))refuse('unchanged-annotation','Caption and credit already match the saved photo.');
+ return Object.freeze({ownerRef:Object.freeze(ownerRef),expectedHash,revision,scope,placementIds:Object.freeze([...selected.group.placements].sort((a,b)=>a.nativeOrigin.groupIndex-b.nativeOrigin.groupIndex).map(p=>p.placementId)),operations:Object.freeze([Object.freeze({kind:'photoAnnotation',id:selected.row.id,seenBlockHash:selected.row.blockHash,annotation})])});
 }
