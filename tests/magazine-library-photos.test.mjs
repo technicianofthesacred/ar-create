@@ -68,3 +68,26 @@ test('oversized sources and unsafe descriptions are disclosed or blank without r
  const result=await f.service.catalog();assert.equal(result.coverage.complete,false);assert.ok(result.coverage.issues.some(row=>row.reason==='photo-size-limit'));assert.equal(result.items.some(row=>row.name==='too-big.png'),false);
  const published=result.items.find(row=>row.sourceLabel==='Publication photos');assert.equal(published.description,'');assert.equal('privatePath' in published,false);assert.equal('body' in published,false);
 });
+
+test('insertion preserves legacy exact origin and distinct equal-byte Library UUIDs with idempotent retained identities',async t=>{
+ const f=await fixture(t);await f.library.import({rootId:'library',files:[{name:'equal-bytes-other.png',base64:png.toString('base64')}]});const catalog=await f.service.catalog(),a=catalog.items.find(row=>row.name==='owned.png'),b=catalog.items.find(row=>row.name==='equal-bytes-other.png');assert.notEqual(a.sourceId,b.sourceId);assert.equal(a.sourceHash,b.sourceHash);
+ const legacy=await f.service.retain(pick(a)),againA=await f.service.retainInsertion(pick(a));assert.equal(againA.file,legacy.file);assert.equal(againA.sourceId,legacy.sourceId);assert.equal(await f.service.insertionFile(pick(a)),legacy.file);
+ const savedB=await f.service.retainInsertion(pick(b)),againB=await f.service.retainInsertion(pick(b));assert.notEqual(savedB.file,legacy.file);assert.notEqual(savedB.sourceId,legacy.sourceId);assert.equal(savedB.sourceId,againB.sourceId);assert.equal(savedB.file,againB.file);assert.match(savedB.file,/^library-photo-[a-f0-9]{64}-[a-f0-9]{64}\.png$/);assert.equal('body' in savedB,false);
+ const refreshed=await f.service.catalog(),newB=refreshed.items.find(row=>row.sourceId===b.sourceId);assert.equal((await f.service.retainInsertion(pick(newB))).sourceId,savedB.sourceId);
+ const reopened=createMagazineLibraryPhotos({library:createLibrary({dataDir:f.data,connections:f.connections}),originals:f.originals,publication:f.publication});for(const saved of [legacy,savedB]){const resolved=await reopened.resolve({file:saved.file});assert.equal(resolved.sourceId,saved.sourceId);assert.deepEqual(resolved.body,png);}
+ const index=JSON.parse(fs.readFileSync(path.join(f.data,'library-index.json'))),retained=index.sources.filter(row=>row.provenance?.kind==='magazine-library-photo');assert.equal(retained.length,2);assert.equal(retained.find(row=>row.id===legacy.sourceId).provenance.origin.sourceId,a.sourceId);assert.equal(retained.find(row=>row.id===savedB.sourceId).provenance.origin.sourceId,b.sourceId);
+});
+
+test('retained-origin metadata is bounded and immutable insertion bytes resolve after mutable copies change or disappear',async t=>{
+ const f=await fixture(t),catalog=await f.service.catalog(),asset=catalog.items.find(row=>row.name==='owned.png'),saved=await f.service.retainInsertion(pick(asset)),indexFile=path.join(f.data,'library-index.json'),index=JSON.parse(fs.readFileSync(indexFile)),retained=index.sources.find(row=>row.id===saved.sourceId),mutable=path.join(f.data,'library',retained.rel_path);
+ retained.provenance.origin.path='/private/unrelated';retained.provenance.origin.title='Never project';retained.provenance.originRef.path='/private/another';fs.writeFileSync(indexFile,JSON.stringify(index));
+ const metadata=(await f.library.photosSnapshot()).items.find(row=>row.id===saved.sourceId);assert.deepEqual(Object.keys(metadata.retainedOrigin).sort(),['revision','rootId','sourceHash','sourceId']);assert.deepEqual(Object.keys(metadata.retainedOriginRef).sort(),['kind','rootId','sourceId']);assert.equal(JSON.stringify(metadata).includes('/private/'),false);assert.equal(metadata.retainedOrigin.sourceId,asset.sourceId);
+ fs.writeFileSync(mutable,jpeg);let resolved=await f.service.resolve({file:saved.file});assert.deepEqual(resolved.body,png);assert.equal(resolved.originRef.sourceId,asset.sourceId);fs.unlinkSync(mutable);resolved=await f.service.resolve({file:saved.file});assert.deepEqual(resolved.body,png);assert.equal(resolved.originRef.sourceId,asset.sourceId);
+});
+
+test('an extended token refuses changed recorded origin and occupied unowned retained filenames without overwriting',async t=>{
+ const f=await fixture(t),catalog=await f.service.catalog(),a=catalog.items.find(r=>r.name==='owned.png'),selector=pick(a),filename=await f.service.insertionFile(selector),bare=filename.slice('library-photo-'.length);
+ // An unrelated existing owner record at the target name must stay unchanged.
+ await f.library.retainAlbumPhoto({folder:'Magazine photos',name:bare,bytes:png,provenance:{kind:'other-retention'}});await assert.rejects(f.service.retainInsertion(selector),/occupied/);
+ const other=await fixture(t),asset=(await other.service.catalog()).items.find(r=>r.name==='owned.png'),saved=await other.service.retainInsertion(pick(asset)),indexFile=path.join(other.data,'library-index.json'),index=JSON.parse(fs.readFileSync(indexFile));index.sources.find(r=>r.id===saved.sourceId).provenance.origin.sourceId='12345678-1234-1234-1234-123456789abc';fs.writeFileSync(indexFile,JSON.stringify(index));await assert.rejects(other.service.resolve({file:saved.file}),/origin changed/);
+});

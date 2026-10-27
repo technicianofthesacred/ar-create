@@ -72,8 +72,20 @@ export function capture(raw:string,sourceKey:string):Snapshot{
 }
 export function projection(s:Snapshot){return s.blocks.map(b=>({id:b.id,origin:b.origin,blockHash:hash(b.raw),...inlineMap(b.raw)}));}
 type Edit={kind:'text';id:string;from:number;to:number;insert:string;seenBlockHash:string};
-type AssetPhotoOp={kind:'photoReplaceAsset';id:string;seenBlockHash:string;rootId:string;sourceId:string;revision:string;sourceHash:string;description:string};
+type AssetPhotoOp={kind:'photoReplaceAsset'|'photoInsertAsset';id:string;seenBlockHash:string;rootId:string;sourceId:string;revision:string;sourceHash:string;description:string};
 type Op=AssetPhotoOp|Edit|{kind:'photoAnnotation';id:string;seenBlockHash:string;annotation:{caption:string;credit:string}|null}|{kind:'articleCredits';credits:string[]|null}|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
+/** Safe body boundaries only: no header, nested composition, ending or protected prose. */
+export function photoInsertionAnchors(s:Snapshot){
+ const raw=render(s);let range:any;try{const body=draftBody(raw,r=>{range=r;});parseDraft(body.body);}catch{return [];}if(!range)return [];
+ let offset=s.prefix.length,depth=0,ended=false,follow=false;const anchors:{id:string;blockHash:string}[]=[];
+ for(const b of s.blocks){const start=offset;offset+=b.raw.length+b.separator.length;if(start<range.start||start+b.raw.length>range.end)continue;
+  const t=b.raw.trim();if(/^%%(?:side|glyph):/.test(t))depth++;
+  else if(/^%%\/(?:side|glyph)%%$/.test(t))depth=Math.max(0,depth-1);
+  else if(t==='%%ending%%')ended=true;
+  else {const m=inlineMap(b.raw);if(!depth&&!ended&&!follow&&m.safe&&m.blockKind==='paragraph'&&!m.notes&&!m.runs.some(r=>r.locked)&&m.words&&!/^["“'‘]/.test(t))anchors.push({id:b.id,blockHash:hash(b.raw)});}
+  follow=/^%%pull:.*\bfollow\b/.test(t);
+ }return anchors;
+}
 const byteBoundary=(map:ReturnType<typeof inlineMap>,position:number,bias:'left'|'right'='right')=>{
  if(position>0&&position<map.words.length&&/[\uD800-\uDBFF]/.test(map.words[position-1])&&/[\uDC00-\uDFFF]/.test(map.words[position]))conflict('Native range divides a Unicode character.');
  if(!Number.isSafeInteger(position)||position<0||position>map.words.length)conflict('Invalid native range.');
@@ -106,6 +118,19 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    parseDraft(body.body,undefined,(shot,origin)=>observations.push({shot,origin}));const matches=observations.filter(({origin:o})=>range&&range.start+o.chunkStart===start&&range.start+o.chunkEnd===start+trimmed.length),o=matches[0]?.origin;
    if(!matches.length||!o||!['photo','photos','side','on-photo','saying'].includes(o.kind)||!['cover','opener','wide','bleed','photos','side','on-photo','ending'].includes(o.role)||o.depth>8||(o.depth!==0&&['cover','opener','ending'].includes(o.role))||matches.length!==o.groupSize||!photoDirectiveComplete(b.raw,o)||matches.some(({origin:v})=>v.directiveStart!==o.directiveStart||v.groupSize!==o.groupSize||v.depth!==o.depth))conflict('Caption and credit require an exact standalone article photo or photo group.');
    b.raw=writePhotoAnnotation(b.raw,op.annotation,newline);
+  }else if(op.kind==='photoInsertAsset'){
+   const b=get(op.id),assets=trusted?.photoAssets?.filter(asset=>['rootId','sourceId','revision','sourceHash','description'].every(k=>(asset as any)[k]===(op as any)[k]));
+   if(ops.length!==1||!photoInsertionAnchors(next).some(a=>a.id===op.id&&a.blockHash===op.seenBlockHash))conflict('Choose a current safe top-level ordinary paragraph boundary.');
+   if(assets?.length!==1||!new RegExp('^library-photo-'+op.sourceHash+'(?:-[a-f0-9]{64})?\\.(jpg|png|webp|gif|avif)$').test(assets[0].file))conflict('A trusted owner-resolved library photograph is required.');
+   const at=next.blocks.indexOf(b)+1,photo={id:randomUUID(),raw:'%%photo: '+assets[0].file+' · '+op.description+' · wide%%',separator:newline+newline,origin:null};
+   if(!b.separator)conflict('The paragraph boundary is unavailable.');
+   next.blocks.splice(at,0,photo);
+   // The maintained parser verifies the final placement, including composed and ending boundaries.
+   const candidate=render(next);let range:any;const body=draftBody(candidate,r=>{range=r;}),hits:any[]=[];
+   const offset=next.prefix.length+next.blocks.slice(0,at).reduce((n,row)=>n+row.raw.length+row.separator.length,0);
+   const story=parseDraft(body.body,undefined,(shot,origin)=>{if(range.start+origin.chunkStart===offset)hits.push({shot,origin});});
+   const contains=(value:any,shot:any):boolean=>value===shot||!!value&&typeof value==='object'&&Object.values(value).some(v=>contains(v,shot));
+   if(hits.length!==1||hits[0].origin.depth!==0||hits[0].origin.role!=='wide'||contains(story.ending,hits[0].shot))conflict('Photo insertion requires an ordinary top-level article boundary.');
   }else if(op.kind==='photoReplaceAsset'){
    const b=get(op.id),assets=trusted?.photoAssets?.filter(asset=>['rootId','sourceId','revision','sourceHash','description'].every(k=>(asset as any)[k]===(op as any)[k]));
    if(ops.length!==1||hash(b.raw)!==op.seenBlockHash||next.blocks.filter(row=>row.id===op.id).length!==1)conflict('Use one current exact photo occurrence for library replacement.');
@@ -250,7 +275,7 @@ export function undo(current:Snapshot,currentRaw:string,inverse:any){
  return {raw,snapshot:structuredClone(inverse.before),expectedOriginalHash:current.fileHash,nextOriginalHash:inverse.before.fileHash};
 }
 function validateOperation(op:any){
- const shapes:any={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
+ const shapes:any={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
  if(!op||typeof op!=='object'||Array.isArray(op)||!Object.hasOwn(shapes,op.kind))conflict('Unknown document operation kind.');
  const keys=shapes[op.kind];if(Object.keys(op).some(k=>!keys.includes(k))||keys.filter((k:string)=>k!=='level').some((k:string)=>!Object.hasOwn(op,k)))conflict('Malformed document operation fields.');
  for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\u0000-\u001f]/.test(op[key])))conflict('Malformed stable native ID.');
@@ -260,7 +285,7 @@ function validateOperation(op:any){
  if('seenBlockHash' in op&&(typeof op.seenBlockHash!=='string'||!/^[a-f0-9]{64}$/.test(op.seenBlockHash)))conflict('Malformed seen block hash.');
  if(op.kind==='photoAnnotation')validatePhotoAnnotation(op.annotation);
  if(op.kind==='articleCredits')validateArticleCredits(op.credits);
- if(op.kind==='photoReplaceAsset'){
+ if(op.kind==='photoReplaceAsset'||op.kind==='photoInsertAsset'){
   if(!['rootId','revision','sourceHash'].every(k=>typeof op[k]==='string'&&/^[a-f0-9]{64}$/.test(op[k]))||typeof op.sourceId!=='string'||!/^([a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(op.sourceId))conflict('Use the exact library photograph identity, revision and hash.');
   if(typeof op.description!=='string'||op.description.length>2000||!op.description.isWellFormed()||op.description!==op.description.trim()||/[\x00-\x1f\x7f%]/.test(op.description)||op.description.includes(' · '))conflict('Photo description must be one plain line without native separators.');
  }
@@ -339,4 +364,4 @@ function photoReplaceRaw(raw:string,sourceRaw:string){
 }
 
 // Advertised by the maintained owner read; absent on older installed engines.
-export const supportedNativeOperations=Object.freeze(['photoAnnotation','articleCredits','photoDescription','photoFocus','photoAspect','photoReplace','photoReplaceAsset']);
+export const supportedNativeOperations=Object.freeze(['photoAnnotation','articleCredits','photoDescription','photoFocus','photoAspect','photoReplace','photoReplaceAsset','photoInsertAsset']);

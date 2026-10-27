@@ -16,10 +16,21 @@ export function magazinePhotoFormat(body){
  if(body.length>=16&&body.subarray(4,8).toString('ascii')==='ftyp'&&['avif','avis'].includes(body.subarray(8,12).toString('ascii')))return {extension:'avif',contentType:'image/avif'};
  fail('This file is not a supported photo.',415);
 }
+const insertionIdentity=input=>hash(plain([input.rootId,input.sourceId]));
+const identityName=/^[a-f0-9]{64}-[a-f0-9]{64}\.(jpg|png|gif|webp|avif)$/;
 const token=(digest,format)=>`library-photo-${digest}.${format.extension}`;
 function selector(value){
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==4||Object.keys(value).some(key=>!['rootId','sourceId','revision','sourceHash'].includes(key))||!SHA.test(value.rootId||'')||typeof value.sourceId!=='string'||value.sourceId.length>128||!SHA.test(value.revision||'')||!SHA.test(value.sourceHash||''))fail('Select an exact current photo identity, revision and hash.');
  return value;
+}
+// Optional existing-asset transport proof; bytes remain the retained original.
+const originTuple=(value,expectedHash)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===4&&['rootId','sourceId','revision','sourceHash'].every(k=>Object.hasOwn(value,k))&&['rootId','revision','sourceHash'].every(k=>SHA.test(value[k]||''))&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value.sourceId||'')&&value.sourceHash===expectedHash?Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,value[k]])):null;
+export function magazinePhotoOriginHeader(preview){const value=originTuple(preview?.retainedOrigin,preview?.hash);return value?Buffer.from(JSON.stringify(value)).toString('base64url'):null;}
+export function readMagazinePhotoOriginHeader(header,expectedHash){
+ if(header===null||header===undefined)return null;
+ if(typeof header!=='string'||header.length>1024||!header.length||!/^[A-Za-z0-9_-]+$/.test(header))fail('The retained photograph origin proof is invalid.',409);
+ let value;try{value=JSON.parse(Buffer.from(header,'base64url').toString('utf8'));}catch{fail('The retained photograph origin proof is invalid.',409);}
+ const tuple=originTuple(value,expectedHash);if(!tuple||Buffer.from(JSON.stringify(tuple)).toString('base64url')!==header)fail('The retained photograph origin proof is invalid.',409);return tuple;
 }
 export function createMagazineLibraryPhotos({library,originals=null,publication=null}={}){
  if(!library?.photosSnapshot||!library?.binarySnapshot||!library?.retainAlbumPhoto)fail('The maintained Library photo owner is required.',503);
@@ -76,19 +87,43 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
   selector(input);const opened=await preview(input),format=magazinePhotoFormat(opened.body);
   // Replays reuse Library's original immutable copy; a changed mutable Library
   // file cannot silently become the saved placement's byte authority.
-  for(const source of await retainedSources())if(source.originalHash===opened.hash){const prior=await library.binarySnapshot({id:source.id,expectedHash:opened.hash,original:true});if(magazinePhotoFormat(prior.body).extension!==format.extension)fail('Retained photo format changed.',409);return {file:token(opened.hash,format),sourceId:source.id,rootId:opened.rootId,hash:opened.hash,contentType:format.contentType,contentLength:opened.contentLength,name:opened.name,description:opened.description};}
+  for(const source of await retainedSources())if(source.originalHash===opened.hash&&!identityName.test(source.name)){const prior=await library.binarySnapshot({id:source.id,expectedHash:opened.hash,original:true});if(magazinePhotoFormat(prior.body).extension!==format.extension)fail('Retained photo format changed.',409);return {file:token(opened.hash,format),sourceId:source.id,rootId:opened.rootId,hash:opened.hash,contentType:format.contentType,contentLength:opened.contentLength,name:opened.name,description:opened.description};}
   const saved=await library.retainAlbumPhoto({folder:'Magazine photos',name:opened.hash+'.'+format.extension,bytes:opened.body,provenance:{kind:'magazine-library-photo',originalHash:opened.hash,description:opened.description,origin:{...input}}});
   const proof=await library.binarySnapshot({id:saved.id,expectedHash:opened.hash,original:true});magazinePhotoFormat(proof.body);
   return {file:token(opened.hash,format),sourceId:saved.id,rootId:opened.rootId,hash:opened.hash,contentType:format.contentType,contentLength:opened.contentLength,name:opened.name,description:opened.description};
  });}
+ async function insertionTarget(input){
+  selector(input);const entry=entries.get(key(input));if(!entry)fail('Photo selection is stale or unavailable.',409);
+  const format=({'image/jpeg':'jpg','image/png':'png','image/gif':'gif','image/webp':'webp','image/avif':'avif'}[entry.item.contentType]);
+  // An existing legacy token keeps its original origin. Reuse only an exact
+  // prior owner-recorded origin, never an arbitrary equal-byte photograph.
+  const snapshot=await library.photosSnapshot(),saved=snapshot.items;
+  const legacy=saved.filter(source=>source.retainedPhoto&&source.originalHash===input.sourceHash&&source.retainedOrigin?.rootId===input.rootId&&source.retainedOrigin?.sourceId===input.sourceId&&!identityName.test(source.name));
+  if(legacy.length>1)fail('The retained photo origin is ambiguous.',409);
+  const name=input.sourceHash+'-'+insertionIdentity(input)+'.'+format;
+  if(!legacy.length&&saved.some(source=>source.relativePath==='Magazine photos/'+name&&(!source.retainedPhoto||source.originalHash!==input.sourceHash)))fail('The exact retained photo filename is already occupied; no file was overwritten.',409);
+  return {name,file:legacy.length?token(input.sourceHash,{extension:format}):'library-photo-'+name,legacy:legacy[0]};
+ }
+ async function retainInsertion(input){return serialize(async()=>{
+  const opened=await preview(input),format=magazinePhotoFormat(opened.body),target=await insertionTarget(input);
+  const prior=target.legacy?[target.legacy]:(await retainedSources()).filter(source=>source.originalHash===opened.hash&&source.name===target.name);
+  if(prior.length>1)fail('The retained photo identity is ambiguous.',409);
+  if(prior[0]&&!target.legacy&&(prior[0].retainedOrigin?.rootId!==input.rootId||prior[0].retainedOrigin?.sourceId!==input.sourceId||prior[0].retainedOrigin?.sourceHash!==input.sourceHash))fail('The retained photograph origin changed.',409);
+  let source=prior[0];if(!source)source=await library.retainAlbumPhoto({folder:'Magazine photos',name:target.name,bytes:opened.body,provenance:{kind:'magazine-library-photo',originalHash:opened.hash,description:opened.description,origin:{...input},originRef:entries.get(key(input)).item.originRef}});
+  const proof=await library.binarySnapshot({id:source.id,expectedHash:opened.hash,original:true});if(magazinePhotoFormat(proof.body).extension!==format.extension)fail('Retained photo format changed.',409);
+  await preview(input);const {body,...metadata}=opened;return {...metadata,file:target.file,sourceId:source.id};
+ });}
  async function resolve(input){
   if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==1||typeof input.file!=='string')fail('Use a retained photo token.');
-  const match=/^library-photo-([a-f0-9]{64})\.(jpg|png|gif|webp|avif)$/.exec(input.file);if(!match)fail('Use a retained photo token.');
-  for(const source of await retainedSources())if(source.originalHash===match[1]){
-   const result=await library.binarySnapshot({id:source.id,expectedHash:match[1],original:true}),format=magazinePhotoFormat(result.body);if(format.extension!==match[2])fail('Retained photo format does not match its token.',409);
-   return {body:result.body,hash:result.hash,contentType:format.contentType,contentLength:result.body.length,name:source.name,description:description(source.description),sourceId:source.id,rootId:hash('library\0'+source.rootId+'\0'+source.rootHash),file:input.file};
+  const match=/^library-photo-([a-f0-9]{64})(?:-([a-f0-9]{64}))?\.(jpg|png|gif|webp|avif)$/.exec(input.file);if(!match)fail('Use a retained photo token.');
+  for(const source of await retainedSources())if(source.originalHash===match[1]&&(match[2]?source.name===match[1]+'-'+match[2]+'.'+match[3]:!identityName.test(source.name))){
+   if(match[2]&&(!source.retainedOrigin||source.retainedOrigin.sourceHash!==match[1]||insertionIdentity(source.retainedOrigin)!==match[2]))fail('The retained photograph origin changed.',409);
+   const result=await library.binarySnapshot({id:source.id,expectedHash:match[1],original:true}),format=magazinePhotoFormat(result.body);if(format.extension!==match[3])fail('Retained photo format does not match its token.',409);
+   const recordedRef=source.retainedOriginRef&&source.retainedOriginRef.rootId===source.retainedOrigin?.rootId&&source.retainedOriginRef.sourceId===source.retainedOrigin?.sourceId?source.retainedOriginRef:null;
+   const originRef=recordedRef||[...entries.values()].find(entry=>entry.item.rootId===source.retainedOrigin?.rootId&&entry.item.sourceId===source.retainedOrigin?.sourceId)?.item.originRef;
+   return {body:result.body,hash:result.hash,contentType:format.contentType,contentLength:result.body.length,name:source.name,description:description(source.description),...(originRef?{originRef}:{}),...(source.retainedOrigin?{retainedOrigin:source.retainedOrigin}:{}),sourceId:source.id,rootId:hash('library\0'+source.rootId+'\0'+source.rootHash),file:input.file};
   }
   fail('Retained photo is unavailable in the existing Library.',404);
  }
- return {catalog,preview,retain,resolve};
+ return {catalog,preview,retain,retainInsertion,insertionFile:async input=>(await insertionTarget(input)).file,resolve};
 }

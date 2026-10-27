@@ -113,7 +113,7 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     // publication IDs or a second persisted correspondence/binding authority.
     model.blocks.forEach((block, i) => { block.id = 'magazine:' + encodeURIComponent(authority.pieceId) + ':' + i; });
     const projection = native.projection(model).map((row, i) => ({...row, raw: model.blocks[i].raw}));
-    return {selection: select(input), authority, editable: !unavailableReason, unavailableReason, document, paragraphs, projection, supportedNativeOperations: (native.supportedNativeOperations || []).filter(kind=>kind!=='photoReplaceAsset'||photoLibrary), history: await historyFor(authority)};
+    return {selection: select(input), authority, editable: !unavailableReason, unavailableReason, document, paragraphs, projection, photoInsertionAnchors: photoLibrary ? native.photoInsertionAnchors(model) : [], supportedNativeOperations: (native.supportedNativeOperations || []).filter(kind=>!['photoReplaceAsset','photoInsertAsset'].includes(kind)||photoLibrary), history: await historyFor(authority)};
   }
   // References only: Share reads the existing owners, never creates an edition,
   // recipient, message store or another copy of the working manuscript.
@@ -344,19 +344,20 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     model.blocks.forEach((block, i) => { block.id = 'magazine:' + encodeURIComponent(authority.pieceId) + ':' + i; });
     let candidate;
     try {
-      const selected=input.operations.filter(op=>op?.kind==='photoReplaceAsset');let trusted;
+      const selected=input.operations.filter(op=>['photoReplaceAsset','photoInsertAsset'].includes(op?.kind));let trusted;
       if(selected.length){
         if(selected.length!==1||input.operations.length!==1||!photoLibrary?.preview||!photoLibrary?.retain)throw new StateError('The maintained photo library is unavailable for this native edit.',409);
-        const op=selected[0],selector=Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,op[k]])),photo=await photoLibrary.preview(selector);
+        const op=selected[0],insertion=op.kind==='photoInsertAsset',selector=Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,op[k]])),photo=await photoLibrary.preview(selector);
         const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/avif':'avif'}[photo.contentType];
         if(!extension||photo.hash!==op.sourceHash)throw new StateError('The selected library photograph changed.',409);
-        trusted={photoAssets:[{...op,file:'library-photo-'+photo.hash+'.'+extension}]};
+        if(insertion&&(!photoLibrary.retainInsertion||!photoLibrary.insertionFile))throw new StateError('The maintained insertion photo owner is unavailable.',409);
+        trusted={photoAssets:[{...op,file:insertion?await photoLibrary.insertionFile(selector):'library-photo-'+photo.hash+'.'+extension}]};
         // Validate the exact target, syntax and full operation before retaining
         // any bytes. Only explicit Use/prepare reaches the existing Library owner.
         candidate=native.apply(model,document.text,input.operations,trusted);
         const current=magazine.read({path:authority.path});
         if(current.hash!==document.hash||current.conflicts?.length)throw new StateError('The working draft changed before retaining the photo.',409);
-        const retained=await photoLibrary.retain(selector);
+        const retained=await photoLibrary[insertion?'retainInsertion':'retain'](selector);
         if(retained.file!==trusted.photoAssets[0].file||retained.hash!==photo.hash)throw new StateError('The retained Library photo identity changed.',409);
         const after=magazine.read({path:authority.path});
         if(after.hash!==document.hash||after.conflicts?.length)throw new StateError('The working draft changed before photo preparation. Refresh before saving.',409);
@@ -364,7 +365,7 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     }
     catch (error) { throw new StateError(error.message, 409); }
     if (candidate.reworks?.length) throw new StateError('Slash rework requests need the maintained Magazine paragraph action; your words are retained.', 409);
-    return {selection: select(input), content: candidate.raw, expectedHash: document.hash};
+    return {selection: select(input), content: candidate.raw, expectedHash: document.hash,...(input.operations[0]?.kind==='photoInsertAsset'?{projection:native.projection(candidate.snapshot).map((row,i)=>({...row,raw:candidate.snapshot.blocks[i].raw}))}:{})};
   }
   async function edit(input) {
     const authority = mutation(input, ['block', 'seen', 'text', 'operationId']);
