@@ -1,3 +1,11 @@
+## 28 October — Coherent photo and Carousel Check milestone verified candidate
+
+658 relevant checks across27 files and the generated build pass after the six integration failures were repaired. Native invented-content proof covers all-Library explicit paragraph insertion, independent Article position/asset selection, actual owner restart/reload, exact Media used-where, private retained HTML/file hashes, scoped Undo and added-occurrence removal with its own exact Undo. Original placements and canonical wording are restored. Internal retention leaves no longer create extra gallery choices; explicitly selected parent identities remain available and used-where stays exact.
+
+Carousel Check now uses the selected Carousel’s own canonical words/source/photo evidence, fresh receipt and exact repeated-passage targets. Immediate Write/Read intent, delayed Export and saved Check continuation preserve the selected owner; opening an Article no longer flashes a false empty/create screen. Compact Direction preserves the approved field geometry in both desktop themes.
+
+This is a verified candidate awaiting exact-revision publication; installed PR82 remains live. No installed completion checkbox has been advanced yet. Whole Bench/Library/Pieces/all-twelve creative journey, populated C/final NOTES desktop/phone interactions and human editorial acceptance remain open. The390px Article reading preview is output-only proof inside a desktop viewport.
+
 ## 28 October — Independent Article photo positions and integration repairs
 
 Explicit after-introduction placement now passes actual native Library selection, saved own output, owner restart/reload and retained HTML export in an existing independent language Article. Export ordering is introduction → image → next thought, with exact receipt/file hash. Canonical wording stays byte-identical. Asset-selection Undo restores the exact prior empty-slot state; adding the slot and selecting its asset are separate saved operations. Empty added-slot removal is being connected; do not claim a single Undo removes the entire insertion.
