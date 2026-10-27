@@ -19,8 +19,10 @@
    margin.append(head,summary,body);
    const notes=body.querySelector('.originalNotes');if(notes){const details=document.createElement('details');details.className='draft-surface-retained-notes';const s=document.createElement('summary');s.textContent='Recorded editorial notes · '+notes.querySelectorAll('.originalNote').length;details.append(s,notes);body.append(details);}
    const hint=body.querySelector('.marginHint');if(hint)hint.textContent='Recorded notes stay attached to their passages.';
-   const status=document.createElement('p');status.className='draft-surface-ai-state';status.textContent='Live AI is not connected to this editor. Existing sample discussions remain labeled.';body.append(status);
+   const status=document.createElement('p');status.className='draft-surface-ai-state';body.append(status);
   }
+  const status=margin.querySelector('.draft-surface-ai-state'),message='Live AI is not connected to this editor.'+(margin.querySelector('#discussion,.ci-sample-gate')?' Existing sample discussions remain labeled.':'');
+  if(status&&status.textContent!==message)status.textContent=message;
   moveContext();
   margin.classList.toggle('expanded',expanded);margin.classList.toggle('revealed',revealed);
   document.body.dataset.draftFocus=String(focus);
