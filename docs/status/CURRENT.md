@@ -1,3 +1,9 @@
+## 28 October — Writing history placement repaired; next candidate remains uninstalled
+
+Article Write/Read now keeps retained original-record access below the primary writing desk.184 existing-work/surface checks pass, including late mounting, disclosure reuse, exact original links and untouched editor text/focus/selection. Native1280×720 light/dark checks confirm history follows the desk and no horizontal overflow. The earlier60px obstruction is removed; exact same-mode reference comparison and a remaining2px difference stay open. This does not close the full visual gate.
+
+Share invitations/facts are integrated but held for unsaved-fact recovery and displayed-recipient mismatch repairs. Full connected Library photo coverage remains in progress. PR83 below is still the latest verified installed release.
+
 ## 28 October — PR83 installed; bounded goal items checked off
 
 Signed main `a34ba054f33a3927af4d9577618bde0f2a185e29`, build `2026-10-27T22:48:10.124Z`, is verified live in installed8841 and main59958.658 relevant checks/27 files, build/package934 and92 served hashes pass, including generated runtime canvas JavaScript/CSS. API content, original editions, canonical dirty files and configuration are preserved. Earlier dated candidate notes below are historical; this entry is the current release state.
