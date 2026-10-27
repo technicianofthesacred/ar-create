@@ -479,13 +479,34 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   const photoOrigin=value=>value&&typeof value==='object'&&['rootId','revision','sourceHash'].every(k=>HASH.test(value[k]||''))&&typeof value.sourceId==='string'&&/^(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(value.sourceId)?Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,value[k]])):null;
   const photoOriginRef=value=>value&&['library','originals'].includes(value.kind)&&HASH.test(value.rootId||'')&&typeof value.sourceId==='string'&&/^(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(value.sourceId)?{kind:value.kind,rootId:value.rootId,sourceId:value.sourceId}:null;
   const photoMetadata=source=>({id:source.id,rootId:source.rootId,name:path.basename(source.rel_path),relativePath:source.rel_path,description:typeof source.provenance?.description==='string'?source.provenance.description:typeof source.description==='string'?source.description:'',retainedPhoto:source.provenance?.kind==='magazine-library-photo',originalHash:source.provenance?.originalHash||null,...(source.provenance?.kind==='magazine-library-photo'?{retainedOrigin:photoOrigin(source.provenance.origin),retainedOriginRef:photoOriginRef(source.provenance.originRef)}:{})});
-  const photosSnapshot=()=>serial(()=>{
-    const {value,hash:indexHash}=loadTyped(),items=[],issues=[];
+  const metadataRevision=(rootHash,source,stat)=>digest(`photo-metadata:${rootHash}:${source.id}:${fileStamp(stat)}:${JSON.stringify(photoMetadata(source))}`);
+  const photosSnapshot=(options={})=>serial(()=>{
+    if(!options||typeof options!=='object'||Array.isArray(options)||Object.keys(options).some(k=>k!=='byteMetadata')||options.byteMetadata!==undefined&&typeof options.byteMetadata!=='boolean')throw new StateError('Use the bounded photograph metadata projection.',400);
+    const {value,hash:indexHash}=loadTyped(),items=[],issues=[],retainedProofs=new Map();
+    if(options.byteMetadata)for(const row of value.sources){const origin=row.provenance?.kind==='magazine-library-photo'?photoOrigin(row.provenance.origin):null;if(!origin||row.provenance.originalHash!==origin.sourceHash)continue;const key=origin.rootId+'\0'+origin.sourceId,known=retainedProofs.get(key)||[];known.push(origin);retainedProofs.set(key,known);}
     for(const root of roots){
       let rootHash;try{rootHash=binaryRoot(root);}catch{issues.push({rootId:root.id,reason:'root-unavailable-or-changed'});continue;}
-      for(const source of value.sources.filter(row=>row.rootId===root.id&&!row.managedTerminalSnapshot&&photoExtensions.has(path.extname(row.rel_path).toLowerCase())))
-        items.push({...photoMetadata(source),rootHash,rootName:root.name,missing:!!source.missing});
+      for(const source of value.sources.filter(row=>row.rootId===root.id&&!row.managedTerminalSnapshot&&photoExtensions.has(path.extname(row.rel_path).toLowerCase()))){
+        const item={...photoMetadata(source),rootHash,rootName:root.name,missing:!!source.missing};
+        if(options.byteMetadata){
+          try{
+            if(source.missing)throw new StateError('Photograph is unavailable.',404);
+            const file=checkedFile(source),before=regular(file),stamp=fileStamp(before),fd=fs.openSync(file,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);let prefix;
+            try{if(fileStamp(fs.fstatSync(fd))!==stamp)throw new StateError('Photograph changed during metadata inspection.',409);prefix=Buffer.alloc(Math.min(16,before.size));if(fs.readSync(fd,prefix,0,prefix.length,0)!==prefix.length||fileStamp(fs.fstatSync(fd))!==stamp)throw new StateError('Photograph changed during metadata inspection.',409);}finally{fs.closeSync(fd);}
+            if(fileStamp(regular(file))!==stamp||binaryRoot(root)!==rootHash)throw new StateError('Photograph changed during metadata inspection.',409);
+            let hash=source.fileStamp===stamp&&HASH.test(source.hash||'')?source.hash:null,state=hash?'indexed-current-stat':'pending';
+            if(!hash){const rootId=digest('library\0'+source.rootId+'\0'+rootHash),proofs=retainedProofs.get(rootId+'\0'+source.id)||[],matches=[...new Set(proofs.filter(proof=>proof.revision===digest(`${rootHash}:${source.id}:${stamp}:${proof.sourceHash}:${JSON.stringify(photoMetadata(source))}`)).map(proof=>proof.sourceHash))];if(matches.length===1){hash=matches[0];state='retained-origin-current-stat';}}
+            const metadata=metadataRevision(rootHash,source,before);
+            item.byteMetadata={state,hash,bytes:before.size,prefix:prefix.toString('base64'),metadataRevision:metadata,revision:hash?digest(`${rootHash}:${source.id}:${stamp}:${hash}:${JSON.stringify(photoMetadata(source))}`):metadata,reason:hash?null:source.fileStamp===stamp?'Photograph bytes have not been checked.':'Photograph changed since its indexed hash; verify this exact file before choosing.'};
+          }catch{item.byteMetadata={state:'unavailable',hash:null,bytes:null,prefix:null,metadataRevision:digest(`unavailable:${rootHash}:${source.id}:${source.fileStamp||''}`),revision:digest(`unavailable:${rootHash}:${source.id}:${source.fileStamp||''}`),reason:'The indexed photograph is unavailable or changed during inspection.'};}
+        }
+        if(options.byteMetadata&&item.retainedPhoto){
+          try{const digestHash=item.originalHash,ext=path.extname(source.originalFile||'').toLowerCase(),originals=path.join(dataDir,'source-originals');if(!HASH.test(digestHash||'')||path.basename(source.originalFile||'')!==`${digest(source.id)}-${digestHash}${ext}`||path.resolve(source.originalFile)!==path.join(originals,path.basename(source.originalFile)))throw new StateError('Unproved retained original.',409);const stat=regular(resolveInside(originals,path.basename(source.originalFile)));item.originalMetadata={available:true,bytes:stat.size};}catch{item.originalMetadata={available:false,bytes:null};}
+        }
+        items.push(item);
+      }
     }
+    if(options.byteMetadata&&loadTyped().hash!==indexHash)throw new StateError('Library metadata changed during inspection.',409);
     return {revision:value.revision,indexHash,items,coverage:{complete:issues.length===0,issues}};
   });
   const binarySnapshot=input=>serial(()=>{
@@ -509,7 +530,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const fd=fs.openSync(file,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);let body;
     try{if(fileStamp(fs.fstatSync(fd))!==fileStamp(before))throw new StateError('Library photo changed before reading.',409);body=Buffer.alloc(before.size);let offset=0;while(offset<body.length){const count=fs.readSync(fd,body,offset,body.length-offset,offset);if(!count)throw new StateError('Library photo changed during reading.',409);offset+=count;}if(fileStamp(fs.fstatSync(fd))!==fileStamp(before))throw new StateError('Library photo changed during reading.',409);}finally{fs.closeSync(fd);}
     const hash=digest(body);if(fileStamp(regular(file))!==fileStamp(before)||input.expectedHash!==undefined&&hash!==input.expectedHash||binaryRoot(root)!==rootHash||loadTyped().hash!==indexHash)throw new StateError('Library photo changed; refresh the library.',409);
-    return {...photoMetadata(source),rootHash,hash,body,bytes:body.length,indexHash,revision:digest(`${rootHash}:${source.id}:${fileStamp(before)}:${hash}:${JSON.stringify(photoMetadata(source))}`)};
+    return {...photoMetadata(source),rootHash,hash,body,bytes:body.length,indexHash,metadataRevision:metadataRevision(rootHash,source,before),revision:digest(`${rootHash}:${source.id}:${fileStamp(before)}:${hash}:${JSON.stringify(photoMetadata(source))}`)};
   });
   if (inspectionOnly) {
     // Only registered identities are projected. There is no refresh, discovery,

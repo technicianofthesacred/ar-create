@@ -38,7 +38,7 @@ export function projectMagazineMediaUsage({catalog,inspection,expectedOwnerRef,e
   else if(!identity)usage={status:'unmapped',count:null,placements:[],reason:'no-owner-backed-identity'};
   else if(catalogKeys.get(identity)>1)usage=unavailable('ambiguous-catalog-identity');
   else if(match?.invalid)usage=unavailable('invalid-placement-owner');
-  else if(match&&row.sourceHash!==match.source.sourceRef?.hash)usage=unavailable('source-bytes-changed');
+  else if(match&&row.sourceHash!==match.source.sourceRef?.hash&&!(row.byteVerification==='pending'&&row.selectable===false&&row.sourceHash===null&&HEX.test(row.metadataRevision||'')&&row.metadataRevision===match.source.metadataRevision))usage=unavailable('source-bytes-changed');
   else if(match)usage={status:'used',count:match.placements.length,placements:clone(match.placements)};
   else if(!completeCatalog||invalid)usage=unavailable(invalid?'inspection-incomplete':'catalog-incomplete');
   else usage={status:'not-used-in-article',count:0,placements:[]};

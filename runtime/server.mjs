@@ -283,7 +283,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
   // Agent coordination routes (mounted below, before the route map).
-  const extraCommands=[['GET','/api/magazine/library-photos/preview',['rootId','sourceId','revision','sourceHash']],['GET','/api/magazine/library-photos/asset',['file']],['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
+  const extraCommands=[['GET','/api/magazine/library-photos/preview',['rootId','sourceId','revision','sourceHash?','verify?']],['GET','/api/magazine/library-photos/asset',['file']],['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
   const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
@@ -576,12 +576,13 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       }
       if (['/api/magazine/library-photos/preview','/api/magazine/library-photos/asset'].includes(pathname)) {
         if(request.method!=='GET'){response.setHeader('Allow','GET');throw new StateError('Method is not supported.',405);}
-        const asset=pathname.endsWith('/asset'),keys=asset?['file']:['rootId','sourceId','revision','sourceHash'];
+        const asset=pathname.endsWith('/asset'),base=asset?['file']:url.searchParams.has('sourceHash')?['rootId','sourceId','revision','sourceHash']:['rootId','sourceId','revision'],keys=!asset&&url.searchParams.has('verify')?[...base,'verify']:base;
+        if(!asset&&url.searchParams.has('verify')&&url.searchParams.get('verify')!=='1')throw new StateError('Use the bounded selected photograph verification.',400);
         if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1||!url.searchParams.get(key)))throw new StateError('Choose one exact photo library reference.',400);
-        const input=Object.fromEntries(keys.map(key=>[key,url.searchParams.get(key)]));
-        let preview;try{preview=await(asset?magazineLibraryPhotos.resolve(input):magazineLibraryPhotos.preview(input));}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<500?error.status:500);}
+        const input=Object.fromEntries(base.map(key=>[key,url.searchParams.get(key)]));
+        let preview;try{preview=await(asset?magazineLibraryPhotos.resolve(input):magazineLibraryPhotos.preview(input,{selection:url.searchParams.get('verify')==='1'}));}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<500?error.status:500);}
         const photoOrigin=asset?magazinePhotoOriginHeader(preview):null;
-        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(photoOrigin?{'X-AR-Photo-Origin':photoOrigin}:{}),...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
+        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(photoOrigin?{'X-AR-Photo-Origin':photoOrigin}:{}),...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),...(preview.revision?{'X-AR-Photo-Revision':preview.revision}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.body);
       }
       if (pathname === '/api/study/photos/preview') {

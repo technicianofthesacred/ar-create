@@ -183,10 +183,12 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
   function guardCode(code) { for (const r of code) { const current = regular(root,r.relative,1024*1024); if (stamp(current.stat) !== r.stamp && readChecked(root,r.relative,1024*1024).hash !== r.hash) fail('Publication code changed; inspect again.'); } }
   // Same reviewed publication-root/code authority, expanded to every explicitly
   // registered image directory. No request may choose a directory or filename.
-  async function libraryCatalog() {
+  async function libraryCatalog(options={}) {
+    if(!options||typeof options!=='object'||Array.isArray(options)||Object.keys(options).some(key=>key!=='retainedOrigins')||options.retainedOrigins!==undefined&&(!Array.isArray(options.retainedOrigins)||options.retainedOrigins.length>20000))fail('Use the bounded retained photograph metadata projection.',400);
+    const retainedBySource=new Map();for(const value of options.retainedOrigins||[]){if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).length!==4||!['rootId','sourceId','revision','sourceHash'].every(key=>HEX.test(value[key]||''))||value.rootId!==rootId)continue;const rows=retainedBySource.get(value.sourceId)||[];rows.push(value);retainedBySource.set(value.sourceId,rows);}
     guardRoot();const {api,code}=await modules();
     if(!Array.isArray(api.CONVERSATIONS)||api.CONVERSATIONS.length>256)fail('Publication photograph catalog exceeds its supported bounds.');
-    const items=[],files=new Map(),directories=new Set();let total=0,skipped=0;
+    const items=[],files=new Map(),directories=new Set();let skipped=0;
     for(const spec of api.CONVERSATIONS){
       if(!spec||typeof spec.slug!=='string'||!/^[-a-z0-9]+$/.test(spec.slug)||spec.path!=='/read/'+spec.slug||spec.images!==spec.path+'/')fail('Publication photograph directory identity is invalid.');
       if(directories.has(spec.images))fail('Publication photograph directory identity is ambiguous.');directories.add(spec.images);
@@ -200,32 +202,34 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       for(const entry of fs.readdirSync(directory,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){
         if(entry.name.startsWith('.')||!MIME[path.extname(entry.name).toLowerCase()]||!entry.isFile()||entry.isSymbolicLink()){skipped++;continue;}
         if(items.length>=5000)fail('Publication photograph catalog exceeds its supported bounds.',413);
-        const relative=relativeDirectory+'/'+entry.name,record=readChecked(root,relative,MAX_ASSET),contentType=imageType(record.bytes,path.extname(entry.name).toLowerCase());
-        total+=record.bytes.length;if(total>200*1024*1024)fail('Publication photograph catalog exceeds its supported byte bound.',413);
+        const relative=relativeDirectory+'/'+entry.name,checked=regular(root,relative,Number.MAX_SAFE_INTEGER),record={relative,stamp:stamp(checked.stat),hash:null,size:checked.stat.size},contentType=MIME[path.extname(entry.name).toLowerCase()];
         const descriptions=[...new Set(meanings.filter(p=>p.file===entry.name&&p.alt?.trim()).map(p=>p.alt.trim()))],description=descriptions.length===1?descriptions[0]:'';
         const sourceId=digest([rootId,relative]),name=entry.name;
-        const item={rootId,sourceId,sourceHash:record.hash,name,description,contentType,bytes:record.bytes.length,storyLabel:spec.slug,relativePath:relative.replace(/^public\//,'')};
+        const item={rootId,sourceId,sourceHash:record.hash,name,description,contentType,bytes:record.size,available:record.size<=MAX_ASSET,byteVerification:'pending',storyLabel:spec.slug,relativePath:relative.replace(/^public\//,'')};
         items.push(item);files.set(sourceId,{...record,bytes:undefined,contentType,name,description});
       }
     }
     guardCode(code);guardRoot();
-    for(const r of files.values())if(readChecked(root,r.relative,MAX_ASSET).hash!==r.hash)fail('Publication photograph changed during catalog reading.');
+    for(const r of files.values())if(stamp(regular(root,r.relative,Number.MAX_SAFE_INTEGER).stat)!==r.stamp)fail('Publication photograph changed during catalog reading.');
     const revision=digest([rootId,code.map(r=>[r.relative,r.hash]),[...files.values()].map(r=>[r.relative,r.hash,r.stamp])]);
-    const scopedItems=items.map(item=>{const record=files.get(item.sourceId),assetRevision=digest([rootId,code.map(r=>[r.relative,r.hash]),record.relative,record.hash,record.stamp]);record.revision=assetRevision;return {...item,revision:assetRevision};});
+    // Retained origin tuples are existing recorded proofs, not fresh byte reads.
+    // Recompute their exact owner revision from the current code/root/stat. A
+    // changed source stays pending; every selected use still reads and hashes it.
+    const scopedItems=items.map(item=>{const record=files.get(item.sourceId),metadataRevision=digest([rootId,code.map(r=>[r.relative,r.hash]),record.relative,null,record.stamp]),matches=[...new Set((retainedBySource.get(item.sourceId)||[]).filter(proof=>proof.revision===digest([rootId,code.map(r=>[r.relative,r.hash]),record.relative,proof.sourceHash,record.stamp])).map(proof=>proof.sourceHash))],known=matches.length===1?matches[0]:null,assetRevision=known?digest([rootId,code.map(r=>[r.relative,r.hash]),record.relative,known,record.stamp]):metadataRevision;record.revision=assetRevision;record.metadataRevision=metadataRevision;return {...item,sourceHash:known,byteVerification:known?'retained-origin-current-stat':'pending',revision:assetRevision,metadataRevision};});
     librarySnapshot={revision,code,files};
     return {schema:'ar-create.publication-photo-catalog.v1',rootId,revision,items:scopedItems,coverage:{complete:true,truncated:false,skipped}};
   }
   async function libraryPreview(input){
-    fields(input,['rootId','sourceId','revision','sourceHash']);
-    // Catalog discovery is explicit. Individual thumbnails and native prepare
-    // validate one exact asset without rescanning unrelated photographs.
+    fields(input,Object.hasOwn(input||{},'sourceHash')?['rootId','sourceId','revision','sourceHash']:['rootId','sourceId','revision']);
     if(!librarySnapshot)await libraryCatalog();const s=librarySnapshot;
     guardRoot();guardCode(s.code);
     if(input.rootId!==rootId)fail('The publication photo root changed. Refresh before choosing.');
-    const r=s.files.get(input.sourceId);if(!r||r.hash!==input.sourceHash||r.revision!==input.revision)fail('Choose the exact publication photograph.');
-    const current=readChecked(root,r.relative,MAX_ASSET);if(current.hash!==r.hash||current.stamp!==r.stamp)fail('Publication photograph changed.');
+    const r=s.files.get(input.sourceId);if(!r||!input.sourceHash&&r.metadataRevision!==input.revision)fail('Choose the exact publication photograph.');
+    const current=readChecked(root,r.relative,MAX_ASSET);if(current.stamp!==r.stamp)fail('Publication photograph changed.');
+    const revision=digest([rootId,s.code.map(v=>[v.relative,v.hash]),r.relative,current.hash,current.stamp]),contentType=imageType(current.bytes,path.extname(r.relative).toLowerCase());
+    if(input.sourceHash&&(current.hash!==input.sourceHash||revision!==input.revision))fail('Publication photograph changed.');
     guardCode(s.code);guardRoot();
-    return {body:current.bytes,hash:r.hash,contentType:r.contentType,contentLength:current.bytes.length,name:r.name,description:r.description};
+    return {body:current.bytes,hash:current.hash,revision,metadataRevision:r.metadataRevision,contentType,contentLength:current.bytes.length,name:r.name,description:r.description};
   }
   const ownedPattern=/^library-photo-([a-f0-9]{64})(?:-[a-f0-9]{64})?\.(jpg|png|webp|gif|avif)$/;
   async function ownedPhoto(file){
@@ -301,7 +305,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
         const relative = `public${spec.images}${row.file}`, record = readChecked(root,relative,MAX_ASSET);
         bytesTotal += record.bytes.length; if (bytesTotal > 200*1024*1024) fail('Publication images exceed bounded reader limits.',413);
         const contentType = imageType(record.bytes,path.extname(row.file).toLowerCase());
-        files.set(row.file,{...record,bytes:undefined,contentType,sourceId:digest([rootId,relative]),size:record.bytes.length});
+        files.set(row.file,{...record,bytes:undefined,contentType,sourceId:digest([rootId,relative]),metadataRevision:digest([rootId,code.map(r=>[r.relative,r.hash]),relative,null,record.stamp]),size:record.bytes.length});
       }
     }
     if(originalBody.includes('%%ar-create-photo:')&&!tracedBodyRange)fail('Canonical captions require exact maintained photo origins.');
@@ -321,7 +325,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     const revision = digest([scope,code.map(r=>[r.relative,r.hash]),[...files.values()].map(r=>[r.sourceId,r.hash]),rows]);
     const sources = [...files.entries()].map(([name,r]) => {
       const sourceRef = {rootId:r.rootId||rootId,sourceId:r.sourceId,relativePath:r.relative.replace(/^public\//,''),hash:r.hash};
-      return {id:r.sourceId,name,title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,originRef:r.owned?(r.originRef||{kind:'library',rootId:r.rootId,sourceId:r.librarySourceId}):{kind:'publication',rootId,relativePath:sourceRef.relativePath},previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.annotation?{annotation:structuredClone(p.annotation)}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
+      return {id:r.sourceId,name,...(r.metadataRevision?{metadataRevision:r.metadataRevision}:{}),title:rows.find(p=>p.file===name)?.alt || name,sourceRef,ownerRef,originRef:r.owned?(r.originRef||{kind:'library',rootId:r.rootId,sourceId:r.librarySourceId}):{kind:'publication',rootId,relativePath:sourceRef.relativePath},previewKind:r.owned?'library-owned':'magazine-publication',placements:rows.filter(p=>p.file===name).map(p=>({placementId:digest([scope,p.structuralPath,p.slot]),outputId:input.pieceId,editionId:'working',projectId:input.storyId,pieceId:input.pieceId,hash:input.expectedHash,sourceRef,label:p.label,slot:p.slot,structuralPath:p.structuralPath,...(p.crop?{crop:p.crop}:{}),...(p.alt?{alt:p.alt}:{}),...(p.annotation?{annotation:structuredClone(p.annotation)}:{}),...(p.nativeOrigin?{nativeOrigin:p.nativeOrigin}:{})}))};
     });
     snapshot = {input:{...input},scope,revision,code,files:new Map([...files.values()].map(r=>[r.sourceId,r])),ownerRef};
     const media={schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources,originTrace,annotations,limitations:['Photographs resolve through the maintained publication or private Library owner; original camera and album provenance depend on that owner’s recorded evidence.','Placements come from this exact working draft. Live publication photo overrides and retained browser editions are separate.','Alternative text is separate from canonical working caption and credit annotations.']};

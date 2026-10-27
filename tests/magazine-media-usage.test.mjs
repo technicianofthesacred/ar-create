@@ -80,3 +80,6 @@ test('incomplete captured owner and malformed revision are rejected',()=>{
  assert.throws(()=>project({...cat,revision:'short'},ins),TypeError);
  assert.throws(()=>project(cat,{...ins,revision:'short'}),TypeError);
 });
+
+
+test('pending publication discovery joins usage only with the exact current metadata revision and origin',()=>{const pending={...item('photo',publication,null),metadataRevision:C,byteVerification:'pending',selectable:false},inspected={...source('photo',publication,[placement('one','portrait')]),metadataRevision:C};const valid=project(catalog([pending]),inspection([inspected]));assert.equal(valid.items[0].usage.status,'used');assert.equal(valid.items[0].usage.count,1);assert.equal(valid.items[0].sourceHash,null);assert.equal(valid.items[0].selectable,false);for(const change of [{metadataRevision:B},{metadataRevision:null},{originRef:{...publication,rootId:C}}]){const result=project(catalog([pending]),inspection([{...inspected,...change}]));assert.notEqual(result.items[0].usage.status,'used');}const untyped=project(catalog([{...pending,byteVerification:'verified'}]),inspection([inspected]));assert.notEqual(untyped.items[0].usage.status,'used');});
