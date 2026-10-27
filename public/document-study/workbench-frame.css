@@ -326,7 +326,7 @@ html body.wbf-on #project-library.wbf-home .wbf-active-title>span{display:inline
 /* One Write entrance and a persistent view toggle for the current editor. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .workflowNavigation .workflowStep[data-wn-legacy-read][hidden],
 html body.wbf-on #c3-surface-bar .sb-mode[hidden]{display:none!important}
-html body.wbf-on #wbf-document-actions .wbf-mode-switch{display:inline-flex;flex:none;align-items:center;gap:2px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--rail)}
+html body.wbf-on #wbf-document-actions .wbf-mode-switch{display:inline-flex;flex:none;align-items:center;gap:2px;padding:1px 2px;border:1px solid var(--line);border-radius:8px;background:var(--rail)}
 html body.wbf-on #wbf-document-actions .wbf-mode-switch button{height:30px;min-height:30px;padding:0 10px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--dim);font:500 var(--t-label)/1.5 var(--ar-ui);white-space:nowrap;cursor:pointer}
 html body.wbf-on #wbf-document-actions .wbf-mode-switch button[aria-pressed="true"]{background:var(--paper);border-color:var(--line);color:var(--ink);box-shadow:0 1px 2px #0001}
 html body.wbf-on #wbf-document-actions .wbf-mode-switch button:hover{color:var(--ink)}
