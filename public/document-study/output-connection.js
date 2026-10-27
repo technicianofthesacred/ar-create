@@ -133,7 +133,9 @@
   validateRead(result.view,g,body.operationId);const made=result.view.output,newOwner=result.view.wordOwner||result.view.outputBindings.find(row=>row.outputId===made.id)?.wordOwner,expectedHash=source.writingProof.kind==='native'?source.writingProof.rawHash:source.writingProof.wordsHash;
   if(made.kind!==source.output.kind||made.language!==targetLanguage||made.languageEdition?.sourceOutputId!==outputId||made.languageEdition.sourceWordsHash!==expectedHash||made.kind==='article'&&(newOwner?.kind!=='native'||newOwner.bindingId===owner.bindingId)||made.kind==='carousel'&&(newOwner?.kind!=='carousel-words'||newOwner.outputId!==made.id))throw Error('The language copy did not confirm its independent own wording and exact source. Preserve the retained operation for recovery.');
   disk.groups[k].pending=null;room(projectId).groups.set(g.rootBindingId,result.view);persist();try{check();}catch{throw Error('The language copy was saved in Outputs. Your selected work changed, so it was not opened.');}
-  return onAction({projectId,outputId:made.id,kind:'native'});
+  const opened=await onAction({projectId,outputId:made.id,kind:'native'});
+  if(current().id===projectId&&selection()?.output?.id===made.id){if(typeof window.workspaceNavigation?.refreshOutputs==='function'){const catalog=await window.workspaceNavigation.refreshOutputs(projectId);if(!catalog?.outputs?.some(row=>row.id===made.id&&row.rootBindingId===g.rootBindingId))throw Error('The language copy was saved, but its exact output catalog is unavailable. Open Outputs to continue.');}if(current().id===projectId&&selection()?.output?.id===made.id)window.dispatchEvent(new CustomEvent('study-output-selection',{detail:{projectId,outputId:made.id}}));}
+  return opened;
  }
  async function enter(g,outputId,mode,originGuard=null){
   const commit=()=>{disk.selection[g.parentStudyId]={rootBindingId:g.rootBindingId,outputId,mode:mode||null};persist();notice='';held=false;};
