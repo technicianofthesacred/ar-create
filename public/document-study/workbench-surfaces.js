@@ -187,7 +187,12 @@
   if(ws.querySelector('.human-direction-editor')&&ws.querySelector('.c3-empty'))window.c3Empty?.reveal?.();
   add(ws,'.human-direction-editor','wb-direction-record');
   add(ws,'.human-direction-words','mine');add(ws,'.human-direction-actions','foot');
-  for(const editor of ws.querySelectorAll('.human-direction-editor')){const scope=editor.querySelector(':scope>header>label'),actions=editor.querySelector('.human-direction-actions');if(scope&&actions)actions.append(scope);}
+  for(const editor of ws.querySelectorAll('.human-direction-editor')){
+   const actions=editor.querySelector('.human-direction-actions');if(!actions?.querySelector('[data-direction-save]'))continue;actions.dataset.directionPrimaryActions='';
+   let more=actions.querySelector('[data-direction-more]');if(!more){more=make('details','wb-direction-more');more.dataset.directionMore='';const summary=make('summary','','More'),body=make('div','wb-direction-more-body');body.dataset.directionMoreBody='';summary.setAttribute('aria-label','Direction tools');const close=make('button','','Close');close.type='button';close.dataset.directionMoreClose='';close.onclick=()=>{more.open=false;summary.focus({preventScroll:true});};body.append(close);more.append(summary,body);more.open=editor.closest('#material-human-direction')?.dataset.directionMoreOpen==='true';more.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();more.open=false;summary.focus({preventScroll:true});}});actions.append(more);}
+   const body=more.querySelector('[data-direction-more-body]'),scope=editor.querySelector('[data-direction-scope]')?.closest('label'),undo=editor.querySelector('[data-direction-undo]');
+   for(const control of [scope,undo,...editor.querySelectorAll('.human-direction-edit>[data-direction-history],.human-direction-edit>p.small')])if(control&&control.parentElement!==body)body.append(control);
+  }
   // The actual saved record is the sole editable direction. Open its existing editor,
   // rather than rendering invented prototype angles or a competing text copy.
   for(const editor of ws.querySelectorAll('.human-direction-edit'))if(!opened.has(editor)){opened.add(editor);editor.open=true;}
@@ -195,14 +200,17 @@
   // rather than repeating its heading, source picker and part picker above the words.
   const continuation=ws.querySelector('.source-continuation');
   if(continuation){
-   let context=continuation.querySelector(':scope>.wb-direction-context');
+   let context=continuation.querySelector('.wb-direction-context');
    if(!context){context=make('details','wb-direction-context');const summary=make('summary','');summary.textContent='Sources & manuscript';context.append(summary);continuation.append(context);}
    for(const node of continuation.querySelectorAll(':scope>.source-continuation-header,:scope>.source-continuation-sources,:scope>footer'))context.append(node);
    const recordNotes=[...continuation.querySelectorAll('.human-direction-edit>p.small')];
-   if(recordNotes.length){for(const previous of context.querySelectorAll(':scope>p.small'))previous.remove();for(const note of recordNotes)context.append(note);}
+   const moreBody=ws.querySelector('.human-direction-editor [data-direction-more-body]'),notesHost=moreBody||context;
+   if(moreBody?.querySelector(':scope>p.small'))for(const previous of context.querySelectorAll(':scope>p.small'))previous.remove();
+   if(recordNotes.length){for(const previous of notesHost.querySelectorAll(':scope>p.small'))previous.remove();for(const note of recordNotes)notesHost.append(note);}
    const tools=ws.querySelector('#direction-writing-tools');if(tools&&tools.parentElement!==context)context.append(tools);
    const lane=ws.querySelector('#stage-working-lane');
    if(lane){for(const files of lane.querySelectorAll(':scope>.flow-details'))context.append(files);lane.classList.toggle('wb-direction-no-angles',!lane.querySelector('.flow-direction,.recordedDirection'));}
+   if(moreBody&&context.parentElement!==moreBody)moreBody.append(context);
 
   }
   for(const label of ws.querySelectorAll('.human-direction-words')){
