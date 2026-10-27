@@ -1,3 +1,5 @@
+import {articleCompositionIssue} from '../runtime/src/workspaces/article-composition.mjs';
+import {assertOutputEditorialReady} from '../runtime/src/workspaces/editorial-state.mjs';
 import {validatePhotoAnnotation,validateArticleCredits} from '../runtime/services/magazine-annotations.mjs';
 // A code-only review entrance over one existing loopback authority. No app backend,
 // store or private directory is imported or initialized here. Optional human source and manuscript
@@ -45,7 +47,7 @@ function validateCarouselCorrection(pathname,bytes){
 // These are existing owner operations, admitted only by the two installed native grants.
 const NATIVE_EDITION_PATHS=new Set(['/api/study/outputs/create','/api/study/outputs/refresh','/api/study/outputs/export']);
 const NATIVE_EXPORT_BODY=32*1024*1024,NATIVE_EXPORT_REQUEST=33*1024*1024;
-function validateNativeReview(pathname,bytes){
+function validateNativeReview(pathname,bytes,{articleSave=false,view=null}={}){
  const input=JSON.parse(bytes.toString('utf8')),object=v=>!!v&&typeof v==='object'&&!Array.isArray(v),fields=(v,required,optional=[])=>object(v)&&required.every(k=>Object.hasOwn(v,k))&&Object.keys(v).every(k=>required.includes(k)||optional.includes(k)),uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),nullable=v=>v===null||hash(v),revision=v=>Number.isSafeInteger(v)&&v>=0,id=v=>typeof v==='string'&&v.trim()===v&&!!v&&v.length<=256&&!/[\x00-\x1f\x7f]/.test(v),fail=()=>{throw Object.assign(Error('Use the exact saved native output and complete current owner proof.'),{status:400});};
  const outputProof=v=>fields(v,['revision','hash'])&&revision(v.revision)&&hash(v.hash);
  const nativeProof=v=>fields(v,['workflow','bindingHash','correspondenceHash'])&&nullable(v.bindingHash)&&nullable(v.correspondenceHash)&&fields(v.workflow,['draft','edits'],['ask','map'])&&Object.values(v.workflow).every(nullable);
@@ -61,6 +63,16 @@ function validateNativeReview(pathname,bytes){
   const p=input.expectedSourceWords;
   if(input.kind==='article'){if(!fields(p,['kind','bindingId','parentStudyId','expected','rawHash','capturedRawHash'])||p.kind!=='native'||!uuid(p.bindingId)||p.parentStudyId!==input.parentStudyId||!nativeProof(p.expected)||!hash(p.rawHash)||!hash(p.capturedRawHash))fail();}
   else if(!fields(p,['kind','projectId','documentId','outputId','expected','wordsHash'])||p.kind!=='carousel-words'||!uuid(p.projectId)||!uuid(p.documentId)||p.outputId!==input.sourceOutputId||!carouselProof(p.expected,p.outputId)||p.expected.projectId!==p.projectId||p.expected.documentId!==p.documentId||!hash(p.wordsHash))fail();
+ }else if(pathname.endsWith('/save')){
+  if(!fields(input,[...mutation,'selectedOutputId','changes'],['expectedNative'])||!uuid(input.operationId)||!uuid(input.selectedOutputId)||!object(input.changes)||Object.keys(input.changes).some(k=>!['placements','articleComposition','name','slides','caption'].includes(k))||Object.hasOwn(input,'expectedNative')&&!object(input.expectedNative))fail();
+  if(articleSave){
+   if(!nativeProof(input.expectedNative)||!Object.keys(input.changes).length||Object.keys(input.changes).some(k=>!['placements','articleComposition','name'].includes(k)))fail();
+   if(Object.hasOwn(input.changes,'name')&&(typeof input.changes.name!=='string'||!input.changes.name.isWellFormed()||input.changes.name.length>256||/[\x00-\x1f\x7f]/.test(input.changes.name)))fail();
+   const placements=input.changes.placements??view.output.placements;
+   if(!Array.isArray(placements)||placements.length>5000||placements.some(p=>!fields(p,['slot','url'],['x','y','zoom','alt','caption','paragraphId'])||!id(p.slot)||typeof p.url!=='string'||p.url!==''&&!/^\/api\/sources\/blob\?id=(?:[a-f0-9]{64}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.test(p.url)||['x','y'].some(k=>p[k]!==undefined&&(!Number.isFinite(p[k])||p[k]<0||p[k]>1))||p.zoom!==undefined&&(!Number.isFinite(p.zoom)||p.zoom<=0)||['alt','caption'].some(k=>p[k]!==undefined&&(typeof p[k]!=='string'||!p[k].isWellFormed()||p[k].length>100000))||p.paragraphId!==undefined&&p.paragraphId!==null&&!id(p.paragraphId)))fail();
+   if(articleCompositionIssue(input.changes.articleComposition??view.output.articleComposition,view.output.manuscript,placements))fail();
+   try{assertOutputEditorialReady({...view.output,...input.changes});}catch{fail();}
+  }
  }else if(pathname.endsWith('/refresh')){
   if(!fields(input,[...mutation,'selectedOutputId','expectedNative'])||!uuid(input.operationId)||!uuid(input.selectedOutputId)||!nativeProof(input.expectedNative))fail();
  }else if(pathname.endsWith('/export')){
@@ -285,6 +297,8 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const draftCorrection=studyDraftCorrections&&draftCorrectionPath&&req.method==='POST';
   const magazineCorrection=magazineDraftCorrections&&magazineCorrectionPath&&req.method==='POST';
   const carouselCorrection=nativeCarouselCorrections&&carouselCorrectionPath&&req.method==='POST';
+  const nativeSave=carouselCorrection&&pathname==='/api/study/outputs/save';let nativeArticleSave=false;
+  if(nativeSave&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved composition changes require the author’s exact local workspace.');}
   const magazineFeedbackCorrection=magazineFeedbackCorrections&&magazineFeedbackPath&&req.method==='POST';
   if(magazineFeedbackCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Feedback wording changes require the author’s local workspace.');}
   if(magazineCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Photo and manuscript changes require the author’s local workspace.');}
@@ -308,6 +322,16 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     if(current.revision!==input.expectedRevision||sessions[0].sourceHash!==input.expectedSourceHash)throw Object.assign(Error('The conversation changed before translation. Refresh its current wording.'),{status:409});
     translationPermissionCurrent?.();admitTranslation();
    }
+   if(nativeSave){
+    const input=validateNativeReview(pathname,readBody),view=await nativeOutputSnapshot(upstream,timeoutMs,input);
+    if(view?.scope?.rootBindingId!==input.rootBindingId||view.scope.parentStudyId!==input.parentStudyId||view.output?.id!==input.selectedOutputId)throw Object.assign(Error('Select this exact saved output before changing its composition.'),{status:409});
+    if(view.output.kind==='article'){
+     if(!nativeReviewEnabled)throw Object.assign(Error('Native Article composition requires both existing correction grants.'),{status:423});
+     if(view.writingProof?.kind!=='native')throw Object.assign(Error('Use the selected Article’s native wording owner.'),{status:409});
+     validateNativeReview(pathname,readBody,{articleSave:true,view});nativeArticleSave=true;
+    }else if(view.output.kind==='carousel')validateCarouselCorrection(pathname,readBody);
+    else throw Object.assign(Error('Only the selected native Article or Carousel composition may change.'),{status:409});
+   }
    if(nativeReview){
     const input=validateNativeReview(pathname,readBody);
     if(pathname.endsWith('/refresh')||pathname.endsWith('/export')){
@@ -320,7 +344,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(magazineCorrection)validateMagazineCorrection(pathname,readBody);
    if(magazineFeedbackCorrection)validateMagazineFeedbackCorrection(pathname,readBody);
    if(mechanicalCheck)validateMagazineMechanicalCheck(readBody);
-   if(carouselCorrection)validateCarouselCorrection(pathname,readBody);
+   if(carouselCorrection&&!nativeSave)validateCarouselCorrection(pathname,readBody);
    if(actualWorkReview===true&&pathname==='/document-study/package-config.js'){
     const bytes=Buffer.from('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify({syntheticFixtures:false,originalReaderBaseUrl:upstream.origin})+';window.AR_CREATE_REVIEW_MODE='+JSON.stringify({actualWork:true,readOnly:true,...(sourceCorrections?{sourceCorrections:true}:{}),...(translationEnabled?{translationProposals:true}:{}),...(studyDraftCorrections?{studyDraftCorrections:true}:{}),...(studyDraftApprovals?{studyDraftApprovals:true}:{}),...(browserCarouselCorrections?{browserCarouselCorrections:true}:{}),...(nativeCarouselCorrections?{nativeCarouselCorrections:true}:{}),...(magazineDraftCorrections?{magazineDraftCorrections:true}:{}),...(magazineFeedbackCorrections?{magazineFeedbackCorrections:true}:{}),...(magazineCheckReceipts?{magazineCheckReceipts:true}:{}),...(typeof catalogCacheScope==='string'&&/^[a-f0-9]{64}$/.test(catalogCacheScope)?{catalogCacheScope}:{}),authorityOrigin:upstream.origin})+';');
     res.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Content-Length':bytes.length});return res.end(req.method==='HEAD'?undefined:bytes);
@@ -341,7 +365,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     if(!/^\/(assets|ig-assets)\//.test(pathname))return fail(404,'This review file is unavailable.');
    }
    const headers={};if(postRead||correction||translationProposal){headers['content-type']='application/json';headers['content-length']=readBody.length;if(req.headers.origin!==undefined)headers.origin=upstream.origin;}for(const key of ['accept','accept-language','range','if-range'])if(typeof req.headers[key]==='string')headers[key]=req.headers[key];if(pathname==='/api/events'&&req.method==='GET'&&/^\d{1,16}$/.test(req.headers['last-event-id']||'')&&Number.isSafeInteger(Number(req.headers['last-event-id'])))headers['last-event-id']=req.headers['last-event-id'];
-   if(nativeReview){headers['x-ar-actor']='human:adrian';headers['x-ar-client']='ui';}
+   if(nativeReview||nativeArticleSave){headers['x-ar-actor']='human:adrian';headers['x-ar-client']='ui';}
    const pending=http.request(upstream,{method:req.method,path:req.url,headers},owner=>{
     if(owner.statusCode>=300&&owner.statusCode<400){owner.resume();return fail(502,'The existing work authority returned a redirect; review did not follow it.');}
     const selected={};for(const key of ['content-type','content-length','content-range','accept-ranges','content-disposition',...(actualWorkReview===true&&pathname==='/api/study/photos/preview'?['x-content-sha256']:[])])if(owner.headers[key]!==undefined)selected[key]=owner.headers[key];
