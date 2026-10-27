@@ -1,6 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url));const {JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('../public/document-study/human-direction.js',import.meta.url),'utf8');const tick=()=>new Promise(r=>setTimeout(r,20));
-async function fixture(t,seed=null,{parts=true}={}){const d=new JSDOM('<div id="app"><div class="material-surface"><div class="material-layout"></div></div></div>',{url:'http://localhost',runScripts:'outside-only'}),w=d.window;t.after(()=>d.window.close());let writeGate=null,p={id:'ref-an-cha',view:'record',viewedStage:1};const records={project:{bound:true,body:'',hash:'empty',revision:0,history:[]},part:{bound:true,body:'Part One only.',hash:'part',revision:1,history:[]}},calls=[];w.current=()=>p;w.state={projects:[{id:p.id,name:'An Cha'}]};w.studyDraft={currentBinding:()=>({id:'part',parentStudyId:'ref-an-cha'})};w.render=()=>w.document.getElementById('app').innerHTML=p.viewedStage<=2?'<div class="material-surface"><div class="material-layout"></div></div>':p.viewedStage===5?'<div class="workspace"><div class="desk"></div></div>':'<div id="stage-working-lane"></div>';w.fetch=async(url,init)=>{const body=init&&JSON.parse(init.body);calls.push({url,body});let out;if(url.includes('catalog'))out={drafts:parts?[{bindingId:'part',parentStudyId:'ref-an-cha',bindingStatus:'ready',partKey:'1',title:'Part One'}]:[]};else{const k=body?.bindingId||new URL(url,'http://localhost').searchParams.get('bindingId')||'project';if(body){if(url.endsWith('/write'))records[k]={...records[k],body:body.body,hash:'new',revision:records[k].revision+1};else if(url.endsWith('/undo'))records[k]={...records[k],body:'',hash:'empty',revision:records[k].revision+1};}out=records[k]||{bound:false,body:'',hash:'empty',revision:0,history:[]};}if(url.endsWith('/write')&&writeGate)await writeGate(body);return {ok:true,json:async()=>out}};if(seed)w.localStorage.setItem('ar-study-human-direction-recovery-v1',seed);w.eval(code);await tick();return {dom:d,w,calls,records,setWriteGate(gate){writeGate=gate;},setStage(n){p.viewedStage=n;w.render()},setProject(id){p.id=id;w.render()}};}
+async function fixture(t,seed=null,{parts=true,initialStage=1,readGate=null}={}){const d=new JSDOM('<div id="app"><div class="material-surface"><div class="material-layout"></div></div></div>',{url:'http://localhost',runScripts:'outside-only'}),w=d.window;t.after(()=>d.window.close());let writeGate=null,p={id:'ref-an-cha',view:'record',viewedStage:initialStage};const records={project:{bound:true,body:'',hash:'empty',revision:0,history:[]},part:{bound:true,body:'Part One only.',hash:'part',revision:1,history:[]}},calls=[];w.current=()=>p;w.state={projects:[{id:p.id,name:'An Cha'}]};w.studyDraft={currentBinding:()=>({id:'part',parentStudyId:'ref-an-cha'})};w.render=()=>w.document.getElementById('app').innerHTML=p.viewedStage<=2?'<div class="material-surface"><div class="material-layout"></div></div>':p.viewedStage===5?'<div class="workspace"><div class="desk"></div></div>':'<div id="stage-working-lane"></div>';w.fetch=async(url,init)=>{const body=init&&JSON.parse(init.body);calls.push({url,body});if(!init&&readGate)await readGate(url);let out;if(url.includes('catalog'))out={drafts:parts?[{bindingId:'part',parentStudyId:'ref-an-cha',bindingStatus:'ready',partKey:'1',title:'Part One'}]:[]};else{const k=body?.bindingId||new URL(url,'http://localhost').searchParams.get('bindingId')||'project';if(body){if(url.endsWith('/write'))records[k]={...records[k],body:body.body,hash:'new',revision:records[k].revision+1};else if(url.endsWith('/undo'))records[k]={...records[k],body:'',hash:'empty',revision:records[k].revision+1};}out=records[k]||{bound:false,body:'',hash:'empty',revision:0,history:[]};}if(url.endsWith('/write')&&writeGate)await writeGate(body);return {ok:true,json:async()=>out}};if(seed)w.localStorage.setItem('ar-study-human-direction-recovery-v1',seed);w.eval(code);await tick();return {dom:d,w,calls,records,setWriteGate(gate){writeGate=gate;},setStage(n){p.viewedStage=n;w.render()},setProject(id){p.id=id;w.render()}};}
 test('explicit save sends exact human wording and scope/revision; editor is above source reader',async t=>{const f=await fixture(t),d=f.w.document;const field=d.querySelector('[data-human-direction]');field.value='My words.\n保留疑问';field.dispatchEvent(new f.w.Event('input'));d.querySelector('[data-direction-save]').click();await tick();const save=f.calls.find(c=>c.url.endsWith('/write'));assert.equal(save.body.body,'My words.\n保留疑问');assert.equal(save.body.scope,'project');assert.equal(save.body.expectedRevision,0);assert.equal(save.body.expectedHash,'empty');assert.ok(d.querySelector('#material-human-direction').compareDocumentPosition(d.querySelector('.material-layout'))&4);f.dom.window.close();});
 test('part direction stays outside shared research and appears only beside its matching manuscript; undo restores',async t=>{const f=await fixture(t);f.setStage(3);await tick();assert.equal(f.w.document.querySelector('#downstream-human-direction'),null);assert.doesNotMatch(f.w.document.querySelector('#material-human-direction').textContent,/Part One only/);assert.equal(f.calls.some(c=>c.body),false);f.setStage(5);await tick();assert.match(f.w.document.querySelector('#downstream-human-direction').textContent,/Part One only/);f.setProject('hk');await tick();assert.doesNotMatch(f.w.document.querySelector('#downstream-human-direction').textContent,/Part One only/);f.setProject('ref-an-cha');f.setStage(1);await tick();f.w.document.querySelector('[data-direction-scope]').value='part';f.w.document.querySelector('[data-direction-scope]').dispatchEvent(new f.w.Event('change'));f.w.document.querySelector('[data-direction-undo]').click();await tick();assert.equal(f.w.document.querySelector('[data-human-direction]').value,'');f.dom.window.close();});
 
@@ -33,3 +33,46 @@ for(const [name,body] of [
 
 
 test('explicit adopted direction section keeps human intent distinct from unadopted proposals',async t=>{const f=await fixture(t),d=f.w.document;f.records.project={...f.records.project,body:'## Adopted human direction — explicit\n\nKeep my chosen opening.\n',hash:'adopted-direction',revision:1};f.setStage(4);await tick();assert.equal(d.querySelector('.human-direction-editor h3').textContent,'Shared concept notes');assert.match(d.querySelector('.human-direction-editor .small').textContent,/explicit direction/);assert.match(d.querySelector('.human-direction-editor .small').textContent,/AI proposals are not adopted decisions/);f.setStage(5);await tick();const connection=d.querySelector('.human-direction-banner details');assert.equal(connection.open,false);connection.querySelector('summary').click();assert.equal(connection.open,true);const context=connection.textContent;assert.match(context,/Explicit human direction guides work; proposals remain unadopted/);assert.doesNotMatch(context,/They are context, not adopted decisions/);f.dom.window.close();});
+
+
+for(const inFlight of [false,true])test('Research to Direction loads the ready part plan'+(inFlight?' while Research is in flight':''),async t=>{
+ let release;const gate=new Promise(resolve=>release=resolve);
+ const f=await fixture(t,null,{initialStage:3,readGate:inFlight?url=>url.startsWith('/api/concept?')?gate:undefined:null});
+ const owner=f.w.studyHumanDirection,input={parentStudyId:'ref-an-cha',bindingId:'part'};
+ assert.equal(f.calls.some(c=>c.url.includes('bindingId=part')),false);
+ const choosing=owner.choosePart(input);release();await choosing;
+ assert.equal(owner.currentProof(input)[1].hash,'part');f.setStage(4);
+ const plan=await owner.planRead(input);assert.equal(plan.revision,1);assert.equal(plan.conflict,false);
+ assert.equal(f.w.document.querySelector('[data-direction-scope]').value,'part');
+ owner.planEdit(input,'title','My ready part title');await owner.planSave(input);
+ const saved=f.calls.find(c=>c.url.endsWith('/write'));
+ assert.equal(saved.body.parentStudyId,input.parentStudyId);assert.equal(saved.body.bindingId,'part');assert.equal(saved.body.scope,'part');
+ assert.equal(saved.body.expectedRevision,1);assert.equal(saved.body.expectedHash,'part');assert.match(saved.body.body,/Part One only/);
+ assert.equal((await owner.planRead(input)).values.title,'My ready part title');assert.equal(f.records.project.body,'');
+ assert.equal(owner.currentProof(input)[0].scope,'project');assert.equal(owner.currentProof(input)[1].scope,'part');
+});
+
+test('Research to Direction retains recovered part wording and its conflict base',async t=>{
+ const local='Recovered exact part words.\n保留原话',seed=JSON.stringify({'ref-an-cha':{scope:'part',drafts:{part:local},bases:{part:'earlier-part'}}});
+ const f=await fixture(t,seed,{initialStage:3}),owner=f.w.studyHumanDirection,input={parentStudyId:'ref-an-cha',bindingId:'part'};
+ await owner.choosePart(input);assert.equal(owner.currentProof(input)[1].hash,'part');f.setStage(4);const plan=await owner.planRead(input);
+ assert.equal(plan.dirty,true);assert.equal(plan.conflict,true);
+ assert.equal(f.w.document.querySelector('[data-human-direction]').value,local);assert.equal(f.w.document.querySelector('[data-direction-save]').disabled,true);
+ assert.match(f.w.document.querySelector('[data-direction-current]').textContent,/Part One only/);
+ await assert.rejects(owner.planSave(input),/Compare the saved direction/);
+ assert.equal(JSON.parse(f.w.localStorage.getItem('ar-study-human-direction-recovery-v1'))['ref-an-cha'].bases.part,'earlier-part');
+ assert.equal(f.calls.some(c=>c.url.endsWith('/write')),false);
+});
+
+
+test('Direction requested during the Research read waits for Direction scope readiness',async t=>{
+ let release;const gate=new Promise(resolve=>release=resolve);
+ const f=await fixture(t,null,{initialStage:3,readGate:url=>url.startsWith('/api/concept?')?gate:undefined});
+ const owner=f.w.studyHumanDirection,input={parentStudyId:'ref-an-cha',bindingId:'part'};
+ f.setStage(4);const choosing=owner.choosePart(input),reading=owner.planRead(input);release();await choosing;
+ assert.equal((await reading).revision,1);assert.equal(owner.currentProof(input)[1].hash,'part');
+ assert.equal((await owner.planRead(input)).busy,false);
+ owner.planEdit(input,'opening','Opening after the view changed');await owner.planSave(input);
+ assert.equal((await owner.planRead(input)).values.opening,'Opening after the view changed');
+ assert.equal(f.calls.find(c=>c.url.endsWith('/write')).body.bindingId,'part');
+});
