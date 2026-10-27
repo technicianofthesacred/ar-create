@@ -48,7 +48,7 @@ import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
 import {createWorkingDraftBridge} from './services/magazine/working-draft-bridge.mjs';
 import {createMagazineMechanicalChecks} from './services/magazine-mechanical-checks.mjs';
-import {createMagazineLibraryPhotos} from './services/magazine-library-photos.mjs';
+import {createMagazineLibraryPhotos,magazinePhotoOriginHeader} from './services/magazine-library-photos.mjs';
 import {createReviewMedia} from './services/review-media.mjs';
 import {createPublicationPhotoCatalog} from '../scripts/magazine-media-inspection.mjs';
 import {loadMagazineVaultConfig} from './services/magazine-vault/config.mjs';
@@ -580,7 +580,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1||!url.searchParams.get(key)))throw new StateError('Choose one exact photo library reference.',400);
         const input=Object.fromEntries(keys.map(key=>[key,url.searchParams.get(key)]));
         let preview;try{preview=await(asset?magazineLibraryPhotos.resolve(input):magazineLibraryPhotos.preview(input));}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<500?error.status:500);}
-        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
+        const photoOrigin=asset?magazinePhotoOriginHeader(preview):null;
+        response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(photoOrigin?{'X-AR-Photo-Origin':photoOrigin}:{}),...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.body);
       }
       if (pathname === '/api/study/photos/preview') {
