@@ -1,3 +1,9 @@
+## 28 October — Side-photo captions and navigation cleanup candidate
+
+Top-level side-photo captions and credits now use the existing canonical annotation writer and captioned photo renderer. Native invented Save → actual owner restart → Audience → retained HTML → exact arrangement Undo restores the augmented test manuscript; external fixture setup/cleanup is recorded separately, with the original restored. Adjacent words, original photo/publication and composition flags stay exact. Light/dark desktop captions are readable; nested, on-photo and closing-saying roles remain refused and open.
+
+The proposal header now fits one row at1280×720 by hiding a repeated project label while retaining the top switcher, selected output, Parts and view controls. All twelve navigation entrances expose canonical unnumbered names and neutral opening hints instead of legacy snapshot-gap claims, preserving their original handlers and owner states.76 navigation/surface checks and83 caption/owner/render checks pass; build passes. This candidate is not installed; PR79 remains live. Whole C/phone/all12 and complete creative journey stay open.
+
 ## 28 October — Proposal review beside writing installed
 
 PR79 signed main `b67ad477474f67993f61f8ff3752cc3a36733719`, build 2026-10-27T20:08:44.514Z, is verified live in installed8841 and main59958.80 checks/build/package922/72 served hashes and API/canonical/config preservation pass. The candidate below now describes installed bounded desktop behavior; earlier candidate statements are historical.
