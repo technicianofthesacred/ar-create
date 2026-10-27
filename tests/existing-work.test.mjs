@@ -534,3 +534,22 @@ test('unused indexed Library photo insertion hands current exact article to safe
  try{await x.w.viewPhase(8);await x.w.existingWork.loadPublicationMedia();assert.equal(supplied.insertReady,true);const row=supplied.sources[0],value={mediaSourceId:row.id,revision:catalog.revision,sourceRef:row.sourceRef};assert.equal(row.catalogSourceId,photo.sourceId);assert.equal(row.catalogRelativePath,photo.relativePath);assert.deepEqual(JSON.parse(JSON.stringify(row.originRef)),photo.originRef);await supplied.chooseInsertion(value);assert.equal(chosen.asset.sourceId,photo.sourceId);assert.equal(chosen.exact.expectedHash,hash);assert.equal(chosen.exact.artifactId,'artifact-unused');assert.equal(chosen.exact.placementId,undefined);await returned();assert.equal(restored.id,row.id);assert.equal(x.w.current().viewedStage,8);const choose=x.w.magazineArrange.chooseInsertion;let notice;x.w.toast=message=>notice=message;x.w.magazineArrange.chooseInsertion=async()=>{throw Error('No safe paragraph position.');};await assert.rejects(supplied.chooseInsertion(value),/paragraph/);assert.equal(x.w.current().viewedStage,8);assert.match(notice,/paragraph/);x.w.magazineArrange.chooseInsertion=choose;proof.dirty=true;await assert.rejects(supplied.chooseInsertion(value),/changed|unresolved/i);proof.dirty=false;const original=x.w.fetch;x.w.fetch=async(url,options)=>String(url).startsWith('/api/review/magazine-media/library?')?{ok:true,json:async()=>({...combined,media:{...media,revision:otherHash}})}:original(url,options);await assert.rejects(supplied.chooseInsertion(value),/changed/i);assert.equal(x.w.current().viewedStage,8);const started=deferred(),release=deferred();x.w.fetch=async(url,options)=>{if(String(url).startsWith('/api/review/magazine-media/library?')){started.resolve();await release.promise;}return original(url,options);};const pending=supplied.chooseInsertion(value);await started.promise;await x.w.viewPhase(3);release.resolve();await assert.rejects(pending,/changed|Reopen/i);assert.equal(x.w.current().viewedStage,3);assert.ok(x.calls.every(c=>!c.options?.method||c.options.method==='GET'));
  }finally{x.dom.window.close();}
 });
+
+
+test('Article history follows the writing desk without rebuilding or disturbing entered words',async()=>{
+ const {dom,w,calls}=await setup();
+ try {
+  const ws=w.document.getElementById('workspace'),editor=w.document.getElementById('native-editor'),desk=w.document.createElement('section');desk.className='desk';editor.replaceWith(desk);desk.append(editor);
+  const input=w.document.createElement('textarea');input.value='Invented unfinished words';desk.append(input);input.focus();input.setSelectionRange(8,14);ws.scrollTop=11;
+  const before=JSON.stringify(w.current()),history=ws.querySelector('.ew-context');history.open=true;
+  w.existingWork.decorate();assert.strictEqual(desk.nextElementSibling,history);assert.strictEqual(w.document.activeElement,input);assert.equal(input.selectionStart,8);assert.equal(input.selectionEnd,14);assert.equal(input.value,'Invented unfinished words');assert.equal(ws.scrollTop,11);assert.equal(JSON.stringify(w.current()),before);
+  let mutations=0;const observer=new w.MutationObserver(rows=>mutations+=rows.length);observer.observe(ws,{childList:true,subtree:true});for(let i=0;i<6;i++)w.existingWork.decorate();await new Promise(r=>setTimeout(r,0));observer.disconnect();assert.equal(mutations,0);assert.equal(history.open,true);assert.strictEqual(w.document.getElementById('native-editor'),editor);
+  w.current().readonly=true;w.existingWork.decorate();const readHistory=ws.querySelector('.ew-context');assert.strictEqual(desk.nextElementSibling,readHistory);assert.match(readHistory.querySelector('summary').textContent,/Existing read work/);readHistory.querySelector('[data-ew-artifact="a-map"]').click();await new Promise(r=>setTimeout(r,0));assert.ok(calls.some(c=>c.url==='/api/review/artifact?id=a-map&hash='+hash));
+ }finally{dom.window.close();}
+});
+test('late Article desk mount relocates the same open historical disclosure once',async()=>{
+ const {dom,w}=await setup();try{
+  const ws=w.document.getElementById('workspace'),history=ws.querySelector('.ew-context');history.open=true;assert.strictEqual(ws.lastElementChild,history);
+  const desk=w.document.createElement('section');desk.className='desk';ws.append(desk);w.existingWork.decorate();assert.strictEqual(desk.nextElementSibling,history);assert.equal(history.open,true);assert.equal(ws.querySelectorAll('.ew-context').length,1);
+ }finally{dom.window.close();}
+});
