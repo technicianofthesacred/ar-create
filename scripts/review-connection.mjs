@@ -42,13 +42,13 @@ function validateCarouselCorrection(pathname,bytes){
  else{if(!uuid(input.selectedOutputId))fail();if(pathname.endsWith('/save')&&(!object(input.changes)||Object.keys(input.changes).some(k=>!['slides','caption','name'].includes(k))))fail();if(pathname.includes('/undo')&&!uuid(input.undoOperationId))fail();if(pathname.endsWith('review-words')&&(!object(input.expectedWords)||!hash(input.wordsHash)))fail();}
 }
 const MAX_READ_BODY=1024*1024;
-async function readJSON(req,{correction=false}={}){
+async function readJSON(req,{correction=false,maxBytes=MAX_READ_BODY}={}){
  const reject=(status,message)=>{throw Object.assign(Error(message),{status});};
  if(!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type']||'')){req.resume();reject(415,'Read requests require application/json.');}
- const length=req.headers['content-length'];if(length!==undefined&&(!/^\d+$/.test(length)||Number(length)>MAX_READ_BODY)){req.resume();reject(413,'Read request exceeds the 1 MB limit.');}
+ const length=req.headers['content-length'];if(length!==undefined&&(!/^\d+$/.test(length)||Number(length)>maxBytes)){req.resume();reject(413,'Request exceeds its byte limit.');}
  const chunks=[];let size=0;
  const bytes=await new Promise((resolve,rejectBody)=>{
-  const onData=chunk=>{size+=chunk.length;if(size>MAX_READ_BODY){req.off('data',onData);req.resume();rejectBody(Object.assign(Error('Read request exceeds the 1 MB limit.'),{status:413}));}else chunks.push(chunk);};
+  const onData=chunk=>{size+=chunk.length;if(size>maxBytes){req.off('data',onData);req.resume();rejectBody(Object.assign(Error('Request exceeds its byte limit.'),{status:413}));}else chunks.push(chunk);};
   req.on('data',onData);req.once('end',()=>resolve(Buffer.concat(chunks)));req.once('error',()=>rejectBody(Object.assign(Error('Read request was interrupted.'),{status:400})));
  });
  try{JSON.parse(correction?new TextDecoder('utf-8',{fatal:true}).decode(bytes):bytes.toString('utf8'));}catch{reject(400,'Request must contain valid UTF-8 JSON.');}
@@ -213,6 +213,8 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(!translationEnabled){req.resume();res.writeHead(503,{'Content-Type':'application/json; charset=utf-8'});return res.end(JSON.stringify({state:'unavailable',gate:'kept-conversation-execution-disabled',message:'English proposals are not enabled for this review.',applied:false,proposals:[]}));}
   }
   const translationProposal=translationPath&&translationEnabled;
+  const magazineExport=actualWorkReview&&pathname==='/api/magazine/working-draft/export'&&req.method==='POST';
+  if(magazineExport&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site')){req.resume();return fail(403,'Exports must originate from this exact local workspace.');}
   const mechanicalPath=pathname==='/api/magazine/mechanical-check';
   if(mechanicalPath&&['GET','HEAD'].includes(req.method)){
    const query=new URL(req.url,upstream).searchParams,keys=['parentStudyId','storyId','pieceId','checkId'];if([...query.keys()].some(k=>!keys.includes(k))||keys.some(k=>query.getAll(k).length>1)||keys.slice(0,3).some(k=>query.getAll(k).length!==1))return fail(400,'Use one exact saved check owner.');
@@ -236,11 +238,11 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const magazineFeedbackCorrection=magazineFeedbackCorrections&&magazineFeedbackPath&&req.method==='POST';
   if(magazineFeedbackCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Feedback wording changes require the author’s local workspace.');}
   if(magazineCorrection&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Photo and manuscript changes require the author’s local workspace.');}
-  const correction=sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck;
+  const correction=sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
-   const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal}):null;
+   const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport?33*1024*1024:MAX_READ_BODY}):null;
    if(postRead&&pathname==='/api/magazine/check'){
     const input=JSON.parse(readBody.toString('utf8')),path=(value,kind)=>typeof value==='string'&&new RegExp('^Workflow/'+(kind==='DEV'?'3-Develop':'1-Source')+'/'+kind+' - [^/]+\\.md$').test(value)&&!/[\\\x00-\x1f]/.test(value)&&!value.split('/').some(p=>p==='.'||p==='..');
     if(req.url!==pathname||!input||Array.isArray(input)||Object.keys(input).length!==3||!path(input.draft,'DEV')||!path(input.source,'SRC')||!Array.isArray(input.context)||input.context.length>64||new Set(input.context).size!==input.context.length||input.context.some(p=>!path(p,'CONTEXT')))throw Object.assign(Error('Use the exact saved draft, explicitly linked transcript and context notes.'),{status:400});

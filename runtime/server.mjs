@@ -1,3 +1,4 @@
+import {createMagazineOutputExports} from './services/magazine-output-exports.mjs';
 import {createInquiryProjectSelectors} from './services/inquiry-project-selectors.mjs';
 import {createNativeOutputExports} from './services/native-output-exports.mjs';
 import {createNativeOutputFactory} from './services/native-output-factory.mjs';
@@ -292,6 +293,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const publicationPhotos=magazineConfig.magSendRepo?{catalog:()=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
   const magazineLibraryPhotos=createMagazineLibraryPhotos({library,originals:originalPhotos,publication:publicationPhotos});
   const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal,photoLibrary:magazineLibraryPhotos});
+  const magazineOutputExports=createMagazineOutputExports({working:magazineWorking,exports});
   const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;
   // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
@@ -333,7 +335,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);
@@ -533,6 +535,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         const artifact=url.searchParams.has('rootBindingId')?await studyOutputExports.file({...outputQuery(),exportId:id,format:'carousel',name}):carousel.file(id,name);response.writeHead(200,{'Content-Type':artifact.mimeType,'Content-Length':artifact.sizeBytes,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(name)}`,'Cache-Control':'no-store'});
         if(request.method==='HEAD')return response.end();const stream=createReadStream(artifact.file);stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
       }
+      if(pathname==='/api/magazine/working-draft/export-file'){
+        if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
+        const {artifact,file}=await magazineOutputExports.file(Object.fromEntries(url.searchParams));
+        response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Content-Length':artifact.sizeBytes,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(artifact.name)}`,'Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; sandbox"});
+        if(request.method==='HEAD')return response.end();const stream=createReadStream(file);stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
+      }
       const exportMatch = pathname.match(/^\/api\/exports\/([a-f0-9-]{36})\/file$/);
       if (exportMatch) {
         if (!['GET','HEAD'].includes(request.method)) throw new StateError('Method is not supported.',405);
@@ -622,7 +630,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         if (['POST','DELETE'].includes(request.method)) {
           if (request.method === 'POST' && READ_ONLY_POSTS.has(pathname)) checkWriteOrigin(request, server); else checkWrite(request, server);
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
-          input = await body(request, pathname === '/api/study/outputs/copy-browser-carousel' ? 512 * 1024 : pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
+          input = await body(request, pathname === '/api/study/outputs/copy-browser-carousel' ? 512 * 1024 : pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export','/api/magazine/working-draft/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');
           if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
         }

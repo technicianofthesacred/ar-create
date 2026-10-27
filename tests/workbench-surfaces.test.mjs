@@ -4,6 +4,11 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
 const code=fs.readFileSync(new URL('../public/document-study/workbench-surfaces.js',import.meta.url),'utf8');
+test('Direction owner repaint replaces its saved status instead of accumulating earlier revisions',()=>{
+ const b=boot(4,'<article id="stage-working-lane"><section class="source-continuation"><div data-owned-editor></div></section></article>'),owner=b.d.querySelector('[data-owned-editor]');
+ for(let revision=1;revision<=20;revision++){owner.innerHTML='<section class="human-direction-editor"><details class="human-direction-edit"><textarea>Exact owned words</textarea><p class="small">Saved revision '+revision+' · human instruction</p></details></section>';b.run();const notes=b.d.querySelectorAll('.wb-direction-context>p.small');assert.equal(notes.length,1);assert.equal(notes[0].textContent,'Saved revision '+revision+' · human instruction');}
+ b.run();assert.equal(b.d.querySelectorAll('.wb-direction-context>p.small').length,1);b.close();
+});
 function boot(stage,html,configure=()=>{}){
  const dom=new JSDOM('<div id="app"><main id="workspace">'+html+'</main></div>',{url:'http://localhost',runScripts:'dangerously'}),w=dom.window,d=w.document;
  w.current=()=>({id:'invented-project',name:'Synthetic project',view:'record',viewedStage:stage});w.c3Shell={register(_name,fn){this.run=fn;}};configure(w);w.eval(code);

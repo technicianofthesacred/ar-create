@@ -36,6 +36,7 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/first-flow/material-triage': ['projectId','operationId','sourceId','expectedRevision','expectedHash','expectedSourceHash','decision','reason','humanDecision'],
   '/api/magazine/working-draft/share-feedback/prepare-paragraph': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','block','seen','text'],
   '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId','recipientName','sections'],
   '/api/magazine/working-draft/share-feedback/prepare': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content'],
@@ -65,7 +66,7 @@ const BODY = {
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
-  const rules = [[/^(concept|study\/human-direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
+  const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^(study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance)/, 'writing'],
@@ -77,6 +78,7 @@ const VERB = { GET: 'get', POST: 'post', PUT: 'put', DELETE: 'delete', HEAD: 'he
 
 /** Commands mounted by bespoke handlers in server.mjs (not the route map). */
 export const CUSTOM_COMMANDS = [
+  ['GET', '/api/magazine/working-draft/export-file', ['storyId','pieceId','expectedHash','exportId']],
   ['GET', '/api/study/photos/preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/state'], ['PUT', '/api/state'],
   ['GET', '/api/shared-articles/capabilities'], ['GET', '/api/shared-articles/current', ['projectId?', 'allowEditedMarkdown?']], ['GET', '/api/shared-articles/requests', ['projectId?', 'documentId?']],
@@ -102,7 +104,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
+const HUMAN_ONLY = new Set(['POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -143,7 +145,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos} = services;
+    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -170,6 +172,8 @@ export function createRouteMap(services) {
         GET:()=>{const keys=['parentStudyId','storyId','pieceId','checkId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k))||keys.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact saved check owner.',400);if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);return magazineMechanicalChecks.read({parentStudyId:url.searchParams.get('parentStudyId'),storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})});},
         POST:async input=>{if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);const result=await magazineMechanicalChecks.run(input);input.scope={kind:'story',id:input.storyId};return result;}
       },
+      '/api/magazine/working-draft/export': {POST:input=>magazineOutputExports.save(input)},
+      '/api/magazine/working-draft/exports': {GET:()=>magazineOutputExports.list(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/catalog': {GET:()=>magazineWorking.catalog(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/read': {GET:()=>magazineWorking.read(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/share-context': {GET:()=>{
@@ -301,6 +305,7 @@ export function createRouteMap(services) {
       '/api/first-flow/binding': {GET:()=>studyBindings.lookup({projectKey:url.searchParams.get('projectKey')})},
       '/api/first-flow/select': {POST:input=>studyBindings.select(input)},
       '/api/first-flow': {GET:async()=>({...await firstFlow.get({projectId:url.searchParams.get('projectId')||store.get().project.id}),researchAvailable:researchEnabled})},
+      '/api/first-flow/material-triage': {POST:input=>firstFlow.triageMaterial(input)},
       '/api/first-flow/source-review': {POST:input=>firstFlow.reviewSources(input)},
       '/api/first-flow/attach': {POST:input=>firstFlow.attach(input)},
       '/api/first-flow/prepare': {POST:researchAction(input=>firstFlow.prepare(input))},

@@ -198,7 +198,8 @@
    let context=continuation.querySelector(':scope>.wb-direction-context');
    if(!context){context=make('details','wb-direction-context');const summary=make('summary','');summary.textContent='Sources & manuscript';context.append(summary);continuation.append(context);}
    for(const node of continuation.querySelectorAll(':scope>.source-continuation-header,:scope>.source-continuation-sources,:scope>footer'))context.append(node);
-   for(const note of continuation.querySelectorAll('.human-direction-edit>p.small'))context.append(note);
+   const recordNotes=[...continuation.querySelectorAll('.human-direction-edit>p.small')];
+   if(recordNotes.length){for(const previous of context.querySelectorAll(':scope>p.small'))previous.remove();for(const note of recordNotes)context.append(note);}
    const tools=ws.querySelector('#direction-writing-tools');if(tools&&tools.parentElement!==context)context.append(tools);
    const lane=ws.querySelector('#stage-working-lane');
    if(lane){for(const files of lane.querySelectorAll(':scope>.flow-details'))context.append(files);lane.classList.toggle('wb-direction-no-angles',!lane.querySelector('.flow-direction,.recordedDirection'));}
