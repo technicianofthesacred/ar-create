@@ -1,3 +1,11 @@
+## 28 October — Independent Article photo positions and integration repairs
+
+Explicit after-introduction placement now passes actual native Library selection, saved own output, owner restart/reload and retained HTML export in an existing independent language Article. Export ordering is introduction → image → next thought, with exact receipt/file hash. Canonical wording stays byte-identical. Asset-selection Undo restores the exact prior empty-slot state; adding the slot and selecting its asset are separate saved operations. Empty added-slot removal is being connected; do not claim a single Undo removes the entire insertion.
+
+The combined642-check run exposed6 delayed Export/navigation failures. Those were reproduced before repair;165 related checks pass after e46218a. The temporary false-empty Arrange opening is separately repaired in58785ba with138 checks. No release has started. A final coherent verification is pending, so the broad run is not labelled all green.
+
+Internal immutable photo retention copies are now filtered from the candidate gallery only with exact validated parent/content proof, while explicitly selected retained parents and independent same-byte originals keep their identities.33 focused checks/build pass; actual-screen gallery confirmation remains open. Installed PR82 remains the live milestone. Full journey, C/final NOTES, phone and all-twelve-section finish gates stay open.
+
 ## 28 October — All-Library photograph insertion verified natively
 
 Media All photos → unused photograph → Place in article → explicit after-introduction choice → Save now works through the exact review connection. Actual owner restart/reload retains the inserted photo. Media derives one use for the selected record and zero for the other equal-byte record. Audience loads both photographs; private retained HTML contains both images and verifies its recorded byte hash. Exact arrangement Undo restores the complete original manuscript hash; Media returns to zero uses for both Library records. No wording approval or publication occurs.56 focused integrated insertion/Check/navigation/review checks pass.
