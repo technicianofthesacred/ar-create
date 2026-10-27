@@ -1,3 +1,10 @@
+## 28 October — Proposal review beside writing installed
+
+PR79 signed main `b67ad477474f67993f61f8ff3752cc3a36733719`, build 2026-10-27T20:08:44.514Z, is verified live in installed8841 and main59958.80 checks/build/package922/72 served hashes and API/canonical/config preservation pass. The candidate below now describes installed bounded desktop behavior; earlier candidate statements are historical.
+
+- [x] Existing proposal review beside unchanged manuscript, retained unfinished feedback and guarded decisions: installed PR79.
+- [ ] Complete creative journey, all12 and full C/phone acceptance.
+
 ## 28 October — Proposal review beside the manuscript candidate
 
 The existing AI proposal reviewer now opens in the existing Workbench tools drawer. The same reviewer and manuscript owners remain; Before/Proposed stack within the380px column, with44px actions and independent scrolling. Close/reopen retains unfinished feedback and selected review. Delayed loading, scope switches, History, Escape and dirty/stale Apply guards are covered.

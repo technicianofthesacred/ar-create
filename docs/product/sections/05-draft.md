@@ -15,7 +15,7 @@ Voice, perspective and recipe guidance must explain the current choice through t
 
 The existing voice/expression sheet must be easy to open from the writing surface, read and edit in ordinary language. Add, change or remove guidance in the same maintained record the assistant consumes; show which scope/revision applies to the selected piece. Do not hide it as terminal-only configuration or create a competing voice profile. Editing shared guidance flags affected proposals for review; it does not silently rewrite existing work.
 
-**Status: Not started** (checked 21 October 2026). The writing surface has no way to open or edit the voice and expression sheet.
+**Bounded installed result:** Write → More exposes the existing Voice, Perspective and Recipe records for reading and editing (PR69; exact revision and native proof in [CURRENT](../../status/CURRENT.md)). Full guidance usefulness and whole-section visual acceptance remain open.
 
 ## Decisions and AI
 

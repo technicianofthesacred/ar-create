@@ -254,7 +254,7 @@
   const singleMagazine=!!root.querySelector('.oo-row[data-output-kind="magazine-working"]')&&root.querySelectorAll('.oo-row:not([data-output-kind="publication-reference"])').length===1;
   let origin=root.querySelector(':scope>.origin');if(singleMagazine){origin?.remove();root.querySelector(':scope>.wb-output-origin-heading')?.remove();origin=null;}if(!singleMagazine&&!origin&&p.name){
    const heading=make('h2','sec wb-output-origin-heading','One project, edited separately');
-   origin=make('div','origin');const icon=doc.querySelector('[aria-label="View step 12: Outputs (private register)"] svg')?.cloneNode(true);if(icon){icon.setAttribute('aria-hidden','true');origin.append(icon);}
+   origin=make('div','origin');const icon=doc.querySelector('.workflowStep[aria-label="Outputs"] svg,[aria-label="View step 12: Outputs (private register)"] svg')?.cloneNode(true);if(icon){icon.setAttribute('aria-hidden','true');origin.append(icon);}
    const copy=make('div','wb-output-origin-copy');copy.append(make('b','',p.name),make('div','dim small','Each output below has its own text and its own state. Changing one does not change the others.'));origin.append(copy);root.querySelector('.oo-heading')?.after(heading,origin);
   }
   const referenceOnly=[...root.querySelectorAll('.oo-row')].length>0&&[...root.querySelectorAll('.oo-row')].every(row=>row.querySelector('[data-output-action="publication-reference"]'));
