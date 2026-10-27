@@ -2,7 +2,7 @@
 
 Article Write/Read now keeps retained original-record access below the primary writing desk.184 existing-work/surface checks pass, including late mounting, disclosure reuse, exact original links and untouched editor text/focus/selection. Native1280×720 light/dark checks confirm history follows the desk and no horizontal overflow. The earlier60px obstruction is removed; exact same-mode reference comparison and a remaining2px difference stay open. This does not close the full visual gate.
 
-Share invitations/facts are integrated but held for unsaved-fact recovery and displayed-recipient mismatch repairs. Full connected Library photo coverage remains in progress. PR83 below is still the latest verified installed release.
+Share repairs are integrated: unsaved facts hold conflicting actions, recipient/disclosure choices persist, and one explicitly chosen fact form appears. Native invented reply survives reload; Cancel clears only that form without recording a fact. Multi-recipient native/restart verification, readable invitation-time wording and published-edition authority remain open. Exact selected-photo proof-header transport has43 focused checks; full Library coverage awaits its pending Gallery integration. PR83 below is still the latest verified installed release.
 
 ## 28 October — PR83 installed; bounded goal items checked off
 
