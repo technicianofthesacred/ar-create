@@ -41,6 +41,7 @@
   return {scope:context,title:str(input?.title)||'Research',outputTitle:str(input?.outputTitle)||'Project learning',points,brief,valid:same(context,context),showContext:input?.showContext!==false};
  }
  const tools={
+  question:{label:'Your questions & comments',purpose:'Save your exact wording in shared project notes. No AI answer is requested.',field:'Your question or comment'},
   discuss:{label:'Discuss this point',purpose:'Ask about this point using its exact source words, evidence limits and supplied learning.',field:'Your question'},
   atlas:{label:'Look up in Tea Atlas',purpose:'Find relevant Atlas entries for this point. A connected adapter must confirm access and return attributable sources for review.',field:'Term or question'},
   speaker:{label:'Review speaker wording',purpose:'Review original wording, proposed handling and the reason. Include / Leave out is a separate decision.',field:'Your wording or review note'},
@@ -81,9 +82,11 @@
    if(tool==='discuss'){
     for(const turn of point?.discussions||[]){const item=el('section',null,'rpb-prose');item.append(el('p',[turn.author,turn.date,turn.status].filter(Boolean).join(' · '),'rpb-meta'));prose(item,turn.text);panel.append(item);}
    }
-   const connected=!!actionHandler(tool);panel.append(el('p',connected?'Connected action · its result must be reviewed before use.':config.label+' is not connected. This input stays in this view; no research or update is run.','rpb-meta'));
+   const questionState=tool==='question'&&typeof handlers.questions==='function'?handlers.questions(payload(point)):null;
+   if(tool==='question')for(const entry of questionState?.entries||[]){const item=el('section',null,'rpb-prose');item.dataset.savedQuestion='';item.append(el('p',[entry.author,entry.createdAt,entry.stale?'Saved human question / comment · earlier source revision':'Saved human question / comment'].filter(Boolean).join(' · '),'rpb-meta'));prose(item,entry.text);const origin=el('details');origin.append(el('summary','Retained origin · not independently verified'),el('p',entry.origin?.recordPath||''),el('p','SHA-256 '+(entry.origin?.recordHash||'')),el('blockquote',entry.origin?.originalText||''));item.append(origin);panel.append(item);}
+   const connected=!!actionHandler(tool);panel.append(el('p',tool==='question'?(questionState?.available?'Saved in the shared project notes; human wording, not an AI reply.':questionState?.reason||'Shared project notes are unavailable. Your question remains here.'):(connected?'Connected action · its result must be reviewed before use.':config.label+' is not connected. This input stays in this view; no research or update is run.'),'rpb-meta'));
    const label=el('label',config.field),input=el('textarea');input.rows=3;input.dataset.rpbInput='';input.value=drafts.get((point?.id||'brief')+':'+tool)||'';label.append(input);panel.append(label);
-   panel.append(button(connected?'Send for review':config.label+' · not connected','rpbSubmit',tool,!connected||!canAct(point)||(tool==='speaker'&&!point?.speakerIssues.some(i=>i.id))),button('Close','rpbClose',''));parent.append(panel);
+   panel.append(button(tool==='question'?'Save question':connected?'Send for review':config.label+' · not connected','rpbSubmit',tool,!connected||tool==='question'&&!questionState?.available||!canAct(point)||(tool==='speaker'&&!point?.speakerIssues.some(i=>i.id))),button('Close','rpbClose',''));parent.append(panel);
   }
   function renderPoint(parent){
    const point=current();if(!point){parent.append(el('p','No research points are connected in this view. Existing research may be available through the current record owner.'));return;}
@@ -100,7 +103,7 @@
    const choices=el('div',null,'rpb-actions');choices.append(button('Include','rpbDecision','include',!canAct(point)||!point.canDecide||typeof handlers.onDecision!=='function'),button('Leave out','rpbDecision','leave-out',!canAct(point)||!point.canDecide||typeof handlers.onDecision!=='function'));
    if(point.decision.value)article.append(el('p',({include:'Included','leave-out':'Left out'}[point.decision.value]||'Recorded choice: '+point.decision.value)+(point.decision.reason?' · '+point.decision.reason:''),'rpb-meta'));
    if(typeof handlers.onDecision!=='function')article.append(el('p','Saving Include / Leave out is not connected here.','rpb-meta'));
-   article.append(choices);const actions=el('div',null,'rpb-actions');for(const id of ['discuss','atlas','speaker'])actions.append(button(tools[id].label,'rpbTool',id,!canAct(point)));article.append(actions);toolPanel(article,point);
+   article.append(choices);const actions=el('div',null,'rpb-actions');for(const id of ['question','discuss','atlas','speaker'])actions.append(button(tools[id].label,'rpbTool',id,!canAct(point)));article.append(actions);toolPanel(article,point);
    const related=point.related.filter(r=>data.points.some(p=>p.id===r.pointId));if(related.length){const links=el('div',null,'rpb-actions');links.append(el('span','Related points','rpb-meta'));for(const relation of related)links.append(button(relation.label||data.points.find(p=>p.id===relation.pointId).title,'rpbRelated',relation.pointId));article.append(links);}parent.append(article);
   }
   function renderBrief(parent){
@@ -125,7 +128,7 @@
   function payload(point){return {scope:{...data.scope},pointId:point?.id||null,briefRevision:data.brief?.revision||null};}
   async function dispatch(callback,request,point){
    if(dead||!canAct(point))return;const version=epoch;busy=true;message='Request in progress…';render();
-   try{const result=await callback(request);if(dead||version!==epoch)return;captureInput();message=typeof result?.message==='string'?result.message:'Request returned. Refresh the supplied records to see any accepted changes.';}
+   try{const result=await callback(request);if(dead||version!==epoch)return;captureInput();if(request.action==='question'&&result?.entry&&drafts.get(selected+':question')===request.input)drafts.delete(selected+':question');message=typeof result?.message==='string'?result.message:'Request returned. Refresh the supplied records to see any accepted changes.';}
    catch(error){if(dead||version!==epoch)return;captureInput();message='The action could not finish. '+(str(error?.message)||'Try again through the existing owner.');}
    finally{if(!dead&&version===epoch){busy=false;render();}}
   }
@@ -146,6 +149,7 @@
   host.addEventListener('click',onClick);host.addEventListener('keydown',onKey);
   const instance={
    update(next,nextCallbacks){if(dead)return;const oldScope=data.scope;captureInput();epoch++;busy=false;data=normalize(next);if(nextCallbacks!==undefined)handlers=nextCallbacks||{};if(!same(oldScope,data.scope)){drafts.clear();selected=data.points[0]?.id||'';tool='';}if(!data.points.some(p=>p.id===selected))selected=data.points[0]?.id||'';message='';render();},
+   refresh(){if(dead)return;const input=host.querySelector('[data-rpb-input]'),active=doc.activeElement===input&&input?{start:input.selectionStart,end:input.selectionEnd}:null;captureInput();render();if(active){const next=host.querySelector('[data-rpb-input]');next?.focus();next?.setSelectionRange(active.start,active.end);}},
    select:id=>{if(!dead)select(id,false);},
    getSelection:()=>selected,
    getViewState:()=>{captureInput();return {scope:{...data.scope},selected,tab,tool,drafts:[...drafts]};},
