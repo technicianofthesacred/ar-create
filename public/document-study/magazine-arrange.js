@@ -21,10 +21,14 @@
  const annotationOK=value=>value===null||value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===2&&annotationLine(value.caption,4000)&&annotationLine(value.credit,1000);
  const creditsOK=value=>value===null||Array.isArray(value)&&value.length<=24&&value.every(line=>annotationLine(line,1000)&&line.length>0);
  const annotationValue=p=>annotationOK(p?.annotation)&&p.annotation?p.annotation:null;
- function annotationSuffix(group){const value=annotationValue(group?.[0]?.placement),match=/\r?\n[ \t]*%%ar-create-photo:[ \t]*(\{[^\r\n]*\})%%\s*$/.exec(group?.[0]?.raw||'');if(!value||!match)return null;try{const parsed=JSON.parse(match[1]);return annotationOK(parsed)&&parsed?.caption===value.caption&&parsed?.credit===value.credit?match:null;}catch{return null;}}
- const photoRaw=group=>{const match=annotationSuffix(group);return match?group[0].raw.slice(0,match.index):group?.[0]?.raw||'';};
- const photoChunkComplete=group=>group?.[0]?.placement.nativeOrigin?.directiveEnd===group?.[0]?.placement.nativeOrigin?.chunkEnd||!!annotationSuffix(group);
- function captionable(group){const o=group?.[0]?.placement.nativeOrigin;return !!o&&['wide','bleed','photos','cover','opener','side'].includes(o.role)&&['photo','photos','side'].includes(o.kind)&&(o.depth===0||['wide','bleed','photos'].includes(o.role))&&photoChunkComplete(group);}
+ const protectedPhotoQuote=value=>/^>\s*["“][\s\S]*["”][ \t\r\n]*$/.test(value)&&!/\r?\n[ \t]*\r?\n/.test(value);
+ function annotationSuffix(group){const value=annotationValue(group?.[0]?.placement),raw=group?.[0]?.raw||'';if(!value||raw.split('%%ar-create-photo:').length!==2)return null;
+  const inline=/^(\s*%%(?:on-photo|saying):[^%\r\n]*%%) %%ar-create-photo: (\{[^\r\n]*\})%%([ \t]*)(\r?\n)([\s\S]+)$/.exec(raw),match=inline||/\r?\n[ \t]*%%ar-create-photo:[ \t]*(\{[^\r\n]*\})%%\s*$/.exec(raw);if(!match||inline&&!protectedPhotoQuote(inline[5]))return null;
+  try{const parsed=JSON.parse(match[inline?2:1]);if(!annotationOK(parsed)||parsed?.caption!==value.caption||parsed?.credit!==value.credit)return null;return inline?{base:inline[1]+inline[3]+inline[4]+inline[5]}:match;}catch{return null;}
+ }
+ const photoRaw=group=>{const match=annotationSuffix(group);return match?match.base??group[0].raw.slice(0,match.index):group?.[0]?.raw||'';};
+ function photoChunkComplete(group){const o=group?.[0]?.placement.nativeOrigin;if(o?.directiveEnd===o?.chunkEnd||annotationSuffix(group))return true;const raw=photoRaw(group),quoted=/^(\s*%%(?:on-photo|saying):[^%\r\n]*%%)[ \t]*\r?\n(>[\s\S]+)$/.exec(raw);return !!quoted&&protectedPhotoQuote(quoted[2])&&['on-photo','saying'].includes(o?.kind)&&o.directiveEnd-o.directiveStart===quoted[1].trim().length;}
+ function captionable(group){const o=group?.[0]?.placement.nativeOrigin;return !!o&&['wide','bleed','photos','cover','opener','side','on-photo','ending'].includes(o.role)&&['photo','photos','side','on-photo','saying'].includes(o.kind)&&Number.isInteger(o.depth)&&o.depth>=0&&o.depth<=8&&(o.depth===0||!['cover','opener','ending'].includes(o.role))&&photoChunkComplete(group);}
  const wordingScope=scope=>({parentStudyId:scope.p.id,storyId:scope.owner.storyId,pieceId:scope.owner.pieceId});
  function restoreWording(scope,r){
   try{const buffer=window.studyDraft.getMagazineWordingDraft(wordingScope(scope));r.wordingToken=buffer?.token??null;r.recoveryError='';if(!buffer){if(!r.annotationDraft&&!r.creditsDraft)r.recovery=null;return;}

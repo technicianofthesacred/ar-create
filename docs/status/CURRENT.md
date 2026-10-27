@@ -1,3 +1,49 @@
+## 28 October — Linked manual editions and composed captions ready for release
+
+521 relevant checks across28 files and the generated build pass. The pre-existing native-output HTTP fixture still fails its initial original-open request on an unchanged parent checkout; it is excluded from this result, not labelled green.
+
+The native existing Article → explicit unchanged-writing refresh → independent Chinese copy → own saved wording → immediate Read → actual owner restart → private Markdown and HTML export flow is verified. The parent’s wording stays exact. Exact saved-edit Undo and initial-version restoration use the child’s existing History; earlier exported files remain retrievable. The HTML export’s maintained bundled-font path is now accepted exactly, without permitting foreign or unrelated resources. A separate Carousel copy passes immediate Write/Read/Arrange without reload; own-word Save/restart/Undo and distinct slide identities are verified. Initial source lineage remains immutable; no automated translation, wording approval, provider run or publication occurs.
+
+Source literal lookup and the remaining composed-caption roles retain their native lifecycle proof below. Passive stale Research discussion redraws now retire their invalid panel while retaining unfinished questions; explicit current-request guards remain strict. Audience avoids duplicate language labels. This is an uninstalled coherent candidate; PR81 remains the last verified live release. Full C/NOTES, phone, populated all12/interaction acceptance, Carousel Check and the complete creative journey remain open.
+
+## 28 October — Remaining composed captions verified natively
+
+Nested side, words-on-photo and closing-saying captions now pass actual Arrange Save → owner restart → Audience → retained private HTML → reverse Undo through Arrangement/History. Removing the three canonical annotations restores every other quote/prose/metadata byte exactly. Native Undo restored the exact augmented test baseline; separate fixture cleanup restored the original. The captioned export remains retrievable after another actual owner restart, even after the current original is restored. Desktop light/dark captions sit beneath their own images without clipping; tiny invented photos do not prove real-photo aesthetics or phone acceptance.
+
+The manual Chinese Carousel copy also passed own-word Save → actual restart → Read → own-word-hash Undo, with all three original outputs exact and new child slide identities. Native checks found a stale catalog/header that breaks immediate Read after creation, plus no explicit recovery route for byte-identical Article wording after Direction/Undo receipt changes. Those bounded connections are being repaired; no wording approval or provider runs. These candidates remain uninstalled; PR81 remains live.
+
+## 28 October — Integrated candidates; native lookup repaired
+
+Remaining composed-photo caption roles and literal kept-Source lookup are integrated candidates;177 focused checks and build pass. Independent manual language editions are also integrated from their isolated193-check candidate;139 combined output/edition checks pass. None is installed or checked complete yet.
+
+Actual native Source lookup searched two existing invented kept conversations, opened the exact garden remark and returned to the previous cup conversation without losing its unsaved correction. Opening lookup while Notes is already open revealed overlapping fixed sheets intercepting clicks. The repair now passes native actual-button search/result/Back checks with Notes restored and lookup collapsed, plus light/dark desktop proof. All15 protected source/owner/notes files stay exact; the invented local correction was cancelled. No source wording was saved or approved.
+
+A48-capture desktop audit covers twelve sections, both themes, reference and live at1280×720. Top48px strip,66px rail,240px panel allocation and theme backgrounds match; no document horizontal overflow was measured. Concrete differences remain in writing rhythm, Direction controls/angle placement, populated Library/Media/Source states and Arrange composition. Carousel Check remains explicitly disconnected. Different records and adopted output/Save/Undo controls prevent claiming pixel equality. Bench/Pieces, phone and full interaction/journey acceptance remain open.
+
+## Goal progress — maintained during Build
+
+Completion means verified running behavior and approved-design evidence. A passing source change stays unfinished until integration, native screen/lifecycle checks and exact release verification. Each completed item retains its revision and proof; bounded results do not close an entire section. This is a summary of the existing goal checklist, not another backlog.
+
+| Result | Current state |
+| --- | --- |
+| Choose an unused indexed Library photo in the existing replacement flow | Verified installed, PR72; insertion remains open |
+| Output-specific Direction briefs | Verified installed, PR81; does not generate translations |
+| Nested photographs/group captions and saved Media folder projection | Verified installed, PR81; full filing remains open |
+| Nested side, on-photo and saying captions | Native Save/restart/Audience/export/reverse Undo verified; installation pending |
+| Literal passage lookup in saved kept Source speech | Integrated `5ef1856`; native search/return/recovery verified; installation pending |
+| Independent linked manual language editions | Native Article/Carousel own-word/restart/Read/export/history verified; installation pending |
+| Whole creative journey and Bench/Library/Pieces/all twelve sections | Open |
+| Full approved C/NOTES desktop/phone light/dark and interaction match | Open; bounded desktop evidence does not close this gate |
+
+## 28 October — Audience, nested photos and Media folders installed
+
+PR81 signed main `11b3fa4c79ed43b9ca67ec911592800c74223c05`, build 2026-10-27T20:46:53.125Z, is verified live in installed8841 and main59958.351 checks across thirteen files, build/package926,76 served hashes and API/canonical/config preservation pass. Installed-byte proof covers629 manifest files and10 generated files. The candidate notes below now describe installed bounded behavior; earlier candidate-status statements are historical.
+
+- [x] Output-specific existing Direction briefs through native Save/switch/restart/reopen/CLI/exact Undo.
+- [x] Nested composition rendering and exact standalone/group captions through restart, Audience, retained HTML and reverse exact Undo.
+- [x] Saved Media folders projected through exact Library photo identities, child reload, scoped empty states and agent filing Undo; review writes remain refused.
+- [ ] Linked language editions, the complete creative journey and whole C/phone/all12 acceptance.
+
 ## 28 October — Audience, nested composition and Media hierarchy verified candidate
 
 351 focused checks across thirteen files and the generated build pass. Native invented proof covers separate output Direction briefs through Save/switch/restart/reopen/CLI/exact Undo; nested single/group captions through Save/restart/Audience/actual retained HTML/reverse exact Undo; and agent-created nested Media filing through restart, exact Library UUID projection, saved child-folder reload and exact membership Undo. Original manuscripts, output words/composition/register and photo/source identities are preserved; test setup/cleanup is recorded separately.
@@ -396,12 +442,12 @@ The filesystem-first requirement remains the adopted Library/Collections/Pieces/
 
 ## Not started
 
-These briefs describe features with no code behind them. Treat them as plans.
+These briefs retain full requirements. The current bounded implementation and remaining gaps are distinguished below; later installed checkpoints supersede older snapshot claims.
 
-- **S01 Material first review**: Keep, Remove from working view, Permanently delete, Needs review with a reason. Only a "prepared, not connected" panel exists (`stage-work-surfaces.js`); there is no service or route, and permanent delete is not built.
-- **S02 review cards**: Worth keeping, Needs your judgment, Removal candidates. No code.
-- **S02 readable bilingual dialogue**: no Source-screen code; the dormant magazine translation services are not wired to it.
-- **S05 voice and expression sheet** editable from the writing surface. No code.
+- **S01 Material first review**: attached-Library Keep/Needs review/Set aside/Restore is installed with bounded lifecycle proof. Full mixed-owner/grouping intake and permanent-delete semantics remain unfinished; do not equate Set aside with deletion.
+- **S02 review cards**: Worth keeping, Needs your judgment and Removal candidates remain unfinished in the maintained Source surface. Historical separate-manager primitives are deliberately unexposed; retained-history exclusion is not permanent deletion.
+- **S02 readable dialogue**: maintained kept-Source reader supports English-first/current wording, optional original wording, supplied speaker grouping, timing and reviewed factual notes. Translation preparation, saved proposals and human acceptance are connected behind explicit availability gates. Provider availability, ASR and audio alignment are unproved.
+- **S05 voice and expression**: shared Voice/Perspective/Recipe editing is installed through the existing guidance owner. Full passage assistance and informed alternatives/acceptance remain open.
 
 ## Installed checkpoints, 20 October
 

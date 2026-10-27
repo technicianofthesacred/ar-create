@@ -290,7 +290,10 @@
  function supplementalCreditNote(raw,match){
   const tag=match[1].match(/^ar-create-(photo|credits):[ \t]*([^\r\n]+)$/);if(!tag)return false;let value;try{value=JSON.parse(tag[2]);}catch{return false;}
   if(tag[1]==='credits')return magazineCreditsOK(value)&&value!==null&&raw.trim()===match[0];
-  return magazineAnnotationOK(value)&&value!==null&&/^\s*%%photos?:[^%\r\n]+%%[ \t]*\r?\n[ \t]*$/.test(raw.slice(0,match.index))&&!raw.slice(match.index+match[0].length).trim();
+  if(!magazineAnnotationOK(value)||value===null||raw.split('%%ar-create-photo:').length!==2)return false;
+  const before=raw.slice(0,match.index),after=raw.slice(match.index+match[0].length);
+  if(/^\s*%%(?:photo|photos|side):[^%\r\n]+%%[ \t]*\r?\n[ \t]*$/.test(before))return !after.trim();
+  return /^\s*%%(?:on-photo|saying):[^%\r\n]+%% $/.test(before)&&/^[ \t]*\r?\n>\s*["“][\s\S]*["”][ \t\r\n]*$/.test(after)&&!/\r?\n[ \t]*\r?\n/.test(after.trimStart());
  }
  function draftNotes(d){return (d.base||[]).flatMap(row=>{const raw=String(row.raw||'');return [...raw.matchAll(/%%([^%]*?)%%/g)].filter(m=>!compositionNote(raw,m)&&!(magazineDoc(d)&&supplementalCreditNote(raw,m))).map(m=>{const split=m[1].match(/^([a-z-]+):\s*([\s\S]*)$/i);return {anchor:row.id,kind:split?.[1]==='you'?'Author question':split?.[1]==='was'?'Earlier wording':split?.[1]==='pull'?'Layout note':'Working note',text:split?split[2]:m[1],path:d.paths?.draft||'Working copy'}});});}
 

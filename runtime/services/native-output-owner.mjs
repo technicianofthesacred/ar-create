@@ -180,8 +180,8 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     });
     return { sources, photos, assets, decisionsHash: p.decisionsHash };
   }
-  async function currentProof(i, outputId, captureValue, output) {
-    const value=scopedProof(await proofCatalogue(i, outputId), captureValue, output);
+  async function currentProof(i, outputId, captureValue, output, catalogue=null) {
+    const value=scopedProof(catalogue||await proofCatalogue(i, outputId), captureValue, output);
     if(retained(captureValue)){try{await resolveRetained(captureValue.source);}catch{return {...value,retainedSourceUnavailable:true};}}
     return value;
   }
@@ -218,22 +218,53 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     if (textKind(o.kind) && (o.kind!==c.output.kind||!same(words(o), words(c.output)))) fail("Article words changed outside its canonical native owner; refresh explicitly.");
     return c;
   }
-  async function freshness(i, t, selected) {
-    const p = await currentProof(i, selected.output.id, selected.private.capture, selected.output);
+  function languageTag(value){if(typeof value!=="string"||value.length>48||!value.trim())fail("Choose an explicit supported target language tag.");let tag;try{tag=Intl.getCanonicalLocales(value)[0];}catch{fail("Choose a valid target language tag, such as en or zh-Hans.");}if(!tag||tag!==value)fail("Use the canonical target language tag.");return tag;}
+  function copyArticleLayout(source,output){
+    if(source.manuscript?.length!==output.manuscript?.length)fail("The selected article paragraph structure changed before its language copy.");
+    const ids=new Map();for(const [i,row]of source.manuscript.entries()){const next=output.manuscript[i];if(!same({...row,id:null},{...next,id:null}))fail("The selected article wording changed before its language copy.");ids.set(row.id,next.id);}
+    const idKeys=new Set(["paragraphId","followId","titleId","hookId","introId","closingId","sayingId"]);
+    const map=(value,key)=>{if(idKeys.has(key)&&value!==undefined&&value!==null){if(!ids.has(value))fail("A selected article composition anchor has no exact child paragraph.");return ids.get(value);}if(Array.isArray(value))return value.map(item=>map(item));if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,map(v,k)]));return value;};
+    output.articleComposition=map(source.articleComposition);output.placements=source.placements.map(row=>map(row));
+  }
+  function carouselEditionCapture(source,id,createdAt){
+    const c=source.private.capture,scope={...c.scope,outputId:id};let captureValue;
+    if(independentCopy(c)){const derived=browserCopy(c)?browserOutput(c.original,id,createdAt):retainedOutput(c.original,id,createdAt),{captureHash,...payload}=clone(c);Object.assign(payload,{scope,output:derived.output,mapping:derived.mapping});captureValue={...payload,captureHash:hash(payload)};validateCapture({capture:captureValue},derived.output);}
+    else captureValue=mapper.capture(c.privateSidecar.nativeSnapshot,scope,{photoBindings:c.privateSidecar.photoBindings});
+    const output={...clone(source.output),id,createdAt,outputRevision:0,stage:"words",slides:source.output.slides.map((slide,index)=>({...clone(slide),id:derivedId("language-slide:"+id+":"+index+":"+slide.id),paragraphIds:[]}))};
+    delete output.wordsReview;delete output.language;delete output.languageEdition;resetVisual(output);
+    return {captureValue,output};
+  }
+  async function languageReview(i,t,output){
+    const edition=output.languageEdition;if(!edition)return null;let parent;
+    try{parent=record(t,edition.sourceOutputId);}catch{return {sourceOutputId:edition.sourceOutputId,stale:true,reason:"Linked source output is unavailable; independent wording is preserved."};}
+    let source;try{source=await freshness(i,t,parent,true);}catch{return {sourceOutputId:edition.sourceOutputId,stale:true,reason:"Linked source wording is unavailable; independent wording is preserved."};}
+    const currentWordsHash=source.writingProof.kind==="native"?source.writingProof.rawHash:source.writingProof.wordsHash;
+    const currentSourceProof=source.currentProof;
+    const stale=hash(parent.output)!==edition.sourceOutputHash||currentWordsHash!==edition.sourceWordsHash||source.freshness.writingStale||!same(parent.record.wordOwner,edition.sourceWordOwner)||hash(currentSourceProof)!==edition.sourceProofHash;
+    return {sourceOutputId:edition.sourceOutputId,sourceTitle:parent.output.name||parent.output.title||"Linked source",stale,reason:stale?"Linked source changed; review this independent language edition.":null,currentSourceOutputRevision:parent.output.outputRevision||0,currentSourceWordsHash:currentWordsHash,basis:"observed-parent-state-not-translation-approval"};
+  }
+  async function freshness(i, t, selected, includeProof=false) {
+    const catalogue=await proofCatalogue(i,selected.output.id);
+    const p = await currentProof(i, selected.output.id, selected.private.capture, selected.output,catalogue);
     const sourceStale=!same(p,selected.private.proof);
-    let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false;
+    let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false,canRefreshUnchangedWriting=false;
     if(textKind(selected.output.kind)){
       const c=validateCapture(selected.private,selected.output),s=await native.read({bindingId:selected.record.wordOwner.bindingId,parentStudyId:i.parentStudyId});
       writingProof={kind:'native',bindingId:s.binding.id,parentStudyId:s.binding.parentStudyId,expected:clone(s.expected),rawHash:hash(s.raw),capturedRawHash:c.nativeProof.rawHash};
       writingStale=writingProof.rawHash!==writingProof.capturedRawHash||!same(s.expected,c.nativeProof.expected);
       if(mapper.freshness(c,s,p.sources,p.photos).stale)reason="This output native wording or exact source proof changed.";
+      // This is recapture eligibility, never a waiver of stale evidence or approval.
+      if(selected.output.kind==='article'&&(sourceStale||writingStale)&&same({...p,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof))try{
+        const liveProof=scopedProof(catalogue,c,selected.output,{captureMappings:true}),current=mapper.capture(s,c.scope,{photoBindings:liveProof.photos});
+        canRefreshUnchangedWriting=same({...liveProof,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof)&&current.ready===true&&current.mediaReady===true&&current.nativeProof.bindingId===c.nativeProof.bindingId&&current.nativeProof.parentStudyId===c.nativeProof.parentStudyId&&current.nativeProof.rawHash===c.nativeProof.rawHash&&current.nativeProof.projectionHash===c.nativeProof.projectionHash&&!mapper.freshness(current,s,liveProof.sources,liveProof.photos).stale;
+      }catch{/* Unready, marked or unsupported current wording stays held. */}
     }else{
       const w=await store.readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,allowEditedMarkdown:true});
       writingProof={kind:'carousel-words',projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,expected:clone(w.expected),wordsHash:await helpers.carouselWordsHash(w.output)};
       writingStale=!!w.externalEdit||!!w.missing;
       if(writingStale)reason='This carousel canonical words file changed outside its saved output.';
     }
-    return {writingProof,freshness:{stale:sourceStale||writingStale,reason,writingStale,sourceStale}};
+    return {writingProof,freshness:{stale:sourceStale||writingStale,reason,writingStale,sourceStale,canRefreshUnchangedWriting},...(includeProof?{currentProof:p}:{})};
   }
   async function read(input) {
     const t = await target(input);
@@ -257,12 +288,13 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     const outputOrigins={};for(const output of outputs){const c=record(t,output.id).private.capture;if(independentCopy(c)){if(browserCopy(c))reopenBrowser(c);else reopenRetained(c);outputOrigins[output.id]={kind:browserCopy(c)?"browser-carousel-copy":"retained-original-copy",source:clone(c.source),mapping:clone(c.mapping),wordOrigin:browserCopy(c)?"browser-snapshot-not-destination-manuscript":"retained-original-not-destination-manuscript",...(browserCopy(c)?{sourceLiveVerification:false}:{})};}}
     const selectedFreshness=selected?await freshness(input,t,selected):null;
     if(selectedFreshness?.freshness.writingStale)wordsUndo=null;
-    return { scope: group(input), photoScope:{projectId:t.projectId,documentId:t.documentId}, documentId: input.rootBindingId, expectedOutput: outputRecordsExpected(t.document), outputBindings, outputs, outputOrigins, ...selected ? { document, arrangementUndo, wordsUndo, output: clone(selected.output), wordOwner: clone(selected.record.wordOwner), ...selectedFreshness } : {} };
+    const languageEditionReview=selected?await languageReview(input,t,selected.output):null;
+    return { ...(languageEditionReview?{languageEditionReview}:{}),scope: group(input), photoScope:{projectId:t.projectId,documentId:t.documentId}, documentId: input.rootBindingId, expectedOutput: outputRecordsExpected(t.document), outputBindings, outputs, outputOrigins, ...selected ? { document, arrangementUndo, wordsUndo, output: clone(selected.output), wordOwner: clone(selected.record.wordOwner), ...selectedFreshness } : {} };
   }
   async function mutate(action, input) {
     input = clone(input);
     if (!uuid.test(input.operationId || "")) fail("Output operation UUID required.");
-    const allowed = ["rootBindingId", "parentStudyId", "operationId", "expectedOutput", "expectedNative", "selectedOutputId", ...action === "create" ? ["kind", "sourceBindingId"] : action === "save" ? ["changes"] : ["undo","undo-words"].includes(action) ? ["undoOperationId"] : action === "review" ? ["expectedWords", "wordsHash"] : []];
+    const allowed = ["rootBindingId", "parentStudyId", "operationId", "expectedOutput", "expectedNative", "selectedOutputId", ...action === "create" ? ["kind", "sourceBindingId", "sourceOutputId", "targetLanguage", "expectedSourceWords"] : action === "save" ? ["changes"] : ["undo","undo-words"].includes(action) ? ["undoOperationId"] : action === "review" ? ["expectedWords", "wordsHash"] : []];
     if (Object.keys(input).some((k) => !allowed.includes(k))) fail("Unsupported output mutation fields.");
     const t = await target(input);
     t.input = input;
@@ -274,12 +306,24 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       return { ...result2, view: await read({ ...group(input), selectedOutputId: prior.value.outputId }) };
     }
     if (!same(input.expectedOutput, outputRecordsExpected(t.document))) fail("Outputs changed since this request.");
-    let selected = action === "create" ? null : record(t, input.selectedOutputId), snapshot, binding;
+    let selected = action === "create" ? null : record(t, input.selectedOutputId), snapshot, binding,languageSource=null,languageSourceProof=null,languageSourceFresh=null,lineage=null,related=null;
+    const languageFields=["sourceOutputId","targetLanguage","expectedSourceWords"];
+    if(action==="create"&&languageFields.some(key=>Object.hasOwn(input,key))){
+      if(!languageFields.every(key=>Object.hasOwn(input,key))||!["article","carousel"].includes(input.kind)||!uuid.test(input.sourceOutputId||"")||input.sourceOutputId===input.operationId||input.sourceBindingId!==undefined)fail("A language edition requires its exact selected source output, kind and own-word proof.");
+      languageTag(input.targetLanguage);languageSource=record(t,input.sourceOutputId);if(languageSource.output.kind!==input.kind)fail("A language edition must retain its selected source output kind.");
+      validateCapture(languageSource.private,languageSource.output);helpers.assertOutputEditorialReady(languageSource.output);
+      languageSourceFresh=await freshness(input,t,languageSource);if(languageSourceFresh.freshness.writingStale||!same(input.expectedSourceWords,languageSourceFresh.writingProof))fail("Selected source own words changed; reopen before creating a language edition.");
+      languageSourceProof=await currentProof(input,languageSource.output.id,languageSource.private.capture,languageSource.output);
+      if(!same({...languageSourceProof,decisionsHash:languageSource.private.proof.decisionsHash},languageSource.private.proof))fail("Selected source assets or source evidence changed; preserve its current output.");
+      lineage={sourceOutputId:languageSource.output.id,sourceOutputRevision:languageSource.output.outputRevision||0,sourceOutputHash:hash(languageSource.output),sourceWordsHash:languageSourceFresh.writingProof.kind==="native"?languageSourceFresh.writingProof.rawHash:languageSourceFresh.writingProof.wordsHash,sourceWordOwner:clone(languageSource.record.wordOwner),sourceProofHash:hash(languageSourceProof)};
+      if(input.kind==="article"){input.sourceBindingId=languageSource.record.wordOwner.bindingId;if(input.expectedNative!==undefined&&!same(input.expectedNative,languageSourceFresh.writingProof.expected))fail("The selected source native expected proof changed.");input.expectedNative=clone(languageSourceFresh.writingProof.expected);related={bindingId:input.sourceBindingId,parentStudyId:input.parentStudyId,expected:clone(input.expectedNative)};}
+    }
+
     if(retained(selected?.private.capture))await resolveRetained(selected.private.capture.source);
     if(["review","undo-words"].includes(action) && selected.output.kind !== "carousel")fail("Only an own carousel words file can be reviewed here.");
     if(action === "review" && (!input.expectedWords || typeof input.wordsHash !== "string" || !/^[a-f0-9]{64}$/.test(input.wordsHash)))fail("Exact current own carousel words proof required.");
     if (action === "refresh" && !textKind(selected.output.kind)) fail("Only a native text output refreshes from its own wording.");
-    if (action === "create") {
+    if (action === "create" && !(languageSource&&input.kind==="carousel")) {
       if (!["article", "carousel", "post", "product-listing"].includes(input.kind)) fail("Explicit supported output kind required.");
       if(shortKind(input.kind)){input.sourceBindingId=input.sourceBindingId||input.rootBindingId;}
       if (!input.sourceBindingId) fail("Explicit starting native binding required.");
@@ -290,7 +334,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const preflight=mapper.capture(start,{projectId:t.projectId,documentId:t.documentId,outputId:input.operationId},shortKind(input.kind)?{outputKind:input.kind}:{});
       if(!shortKind(input.kind)&&!preflight.ready)fail("Native layout is held before output registration: "+preflight.held.map(x=>x.reason).join("; "));
       if (textKind(input.kind)) {
-        if (input.kind === "article" && input.sourceBindingId === input.rootBindingId && (!start.binding.canonicalOutputId || start.binding.canonicalOutputId === input.operationId)) snapshot = await native.registerOutput({ bindingId: input.rootBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative });
+        if (!languageSource && input.kind === "article" && input.sourceBindingId === input.rootBindingId && (!start.binding.canonicalOutputId || start.binding.canonicalOutputId === input.operationId)) snapshot = await native.registerOutput({ bindingId: input.rootBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative });
         else snapshot = await native.fork({ sourceBindingId: input.sourceBindingId, parentStudyId: input.parentStudyId, outputId: input.operationId, operationId: derivedId(input.operationId), expected: input.expectedNative, ...(shortKind(input.kind)?{textOutputKind:input.kind}:{}) });
       } else {
         snapshot = start;
@@ -298,7 +342,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       }
       if (input.kind === "article" && snapshot.binding.id === input.rootBindingId && !same(snapshot.expected, input.expectedNative)) fail("Registered native words changed before output publication; exact pending request preserved.");
       binding = snapshot.binding.id;
-    } else if (textKind(selected.output.kind)) {
+    } else if (action!=="create" && textKind(selected.output.kind)) {
       binding = selected.record.wordOwner.bindingId;
       snapshot = await native.read({ bindingId: binding, parentStudyId: input.parentStudyId });
       if (!same(input.expectedNative, snapshot.expected)) fail("Exact own article native expected proof required.");
@@ -312,7 +356,10 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         if(action === "undo-words"&&!same(words(reviewedWords.output),words(selected.output)))fail("Own carousel words changed outside their saved owner; wording Undo held.");
       }
       let output, captureValue, privateValue, captureId = selected?.record.captureId;
-      if (action === "create" || action === "refresh") {
+      if(languageSource&&input.kind==="carousel"){
+        const copied=carouselEditionCapture(languageSource,id,new Date().toISOString());output=copied.output;captureValue=copied.captureValue;
+        proofNow=scopedProof(catalogue,captureValue,output);privateValue={schema:"ar-create.native-output-private.v1",group:group(input),capture:captureValue,proof:proofNow};captureId=hash(JSON.stringify(privateValue));
+      }else if (action === "create" || action === "refresh") {
         const s = lease.snapshot;
         const outputKind=shortKind(action==="create"?input.kind:selected.output.kind)?(action==="create"?input.kind:selected.output.kind):undefined;
         const basis = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id }, {outputKind});
@@ -338,8 +385,10 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
           output.id = id;
           output.createdAt = previous.createdAt;
           output.name = previous.name;
+          if(previous.languageEdition){output.language=previous.language;output.languageEdition=clone(previous.languageEdition);}
           output.outputRevision = (previous.outputRevision || 0) + 1;
         }
+        if(languageSource&&input.kind==="article")copyArticleLayout(languageSource.output,output);
         proofNow = scopedProof(catalogue, captureValue, output);
         privateValue = { schema: "ar-create.native-output-private.v1", group: group(input), capture: captureValue, proof: proofNow };
         captureId = hash(JSON.stringify(privateValue));
@@ -386,6 +435,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         privateValue = { ...clone(privateValue), proof: proofNow };
         captureId = hash(JSON.stringify(privateValue));
       }
+      if(lineage){output.language=input.targetLanguage;output.languageEdition=clone(lineage);const displayLanguage=new Intl.DisplayNames(["en"],{type:"language"}).of(input.targetLanguage)||input.targetLanguage,suffix=" · "+(displayLanguage.length<=100?displayLanguage:input.targetLanguage);let label=languageSource.output.name||languageSource.output.title||"Output";while(label.length+suffix.length>256)label=[...label].slice(0,-1).join("");output.name=label+suffix;}
       if(shortKind(output.kind)&&(output.placements?.length||output.articleComposition))fail("Short outputs support text content only.");
       if (output.name !== void 0 && (typeof output.name !== "string" || output.name.length > 256)) fail("Output name must be readable text.");
       resetVisual(output);
@@ -397,6 +447,12 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const extraFiles = [{ relativePath: privatePath(t, "history", input.operationId), contents: JSON.stringify(history), expectedHash: null }];
       if (action === "create" || action === "refresh" || captureId !== selected.record.captureId) extraFiles.push({ relativePath: privatePath(t, "captures", captureId), contents: JSON.stringify(privateValue), expectedHash: privateRead(t, "captures", captureId)?.hash ?? null });
       return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, finalCheck: async () => {
+        if(languageSource){
+          const currentSource=doc.outputs.find(row=>row.id===lineage.sourceOutputId);if(!currentSource||hash(currentSource)!==lineage.sourceOutputHash)fail("Selected source output changed before language edition publication; prepared copy is retained.");
+          if(related){const actual=lease.rereadRelated();if(hash(actual.raw)!==lineage.sourceWordsHash)fail("Selected source own words changed before language edition publication.");}
+          else {const actual=await readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:lineage.sourceOutputId});if(!same(actual.expected,languageSourceFresh.writingProof.expected)||await helpers.carouselWordsHash(actual.output)!==lineage.sourceWordsHash)fail("Selected carousel own words changed before language edition publication.");}
+          if(hash(await currentProof(input,lineage.sourceOutputId,languageSource.private.capture,languageSource.output))!==lineage.sourceProofHash)fail("Selected source decisions or assets changed during language edition publication.");
+        }
         if(retained(captureValue))await resolveRetained(captureValue.source);
         if(reviewedWords&&!same((await readCarouselWords({documentId:t.documentId,outputId:id})).expected,reviewedWords.expected))fail("Own carousel words changed before review publication.");
         if (!same(await currentProof(input, id, captureValue, output), proofNow)) fail("Source proof changed during output publication.");
@@ -406,7 +462,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         }
       } };
     });
-    const result = snapshot ? await native.withSnapshotLease({ bindingId: binding, parentStudyId: input.parentStudyId, expected: snapshot.expected }, run) : await run(null);
+    const result = snapshot ? await native.withSnapshotLease({ bindingId: binding, parentStudyId: input.parentStudyId, expected: snapshot.expected,...(related?{related}:{}) }, run) : await run(null);
     return { ...result, view: await read({ ...group(input), selectedOutputId: selected?.output.id || input.operationId }) };
   }
   // Trusted in-process copy boundary. There is intentionally no ambient file,
@@ -484,6 +540,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     t.input = input;
     const selected = record(t, input.selectedOutputId);
     if (!same(input.expectedOutput, outputRecordsExpected(t.document))) fail("Exact current output export revision/hash required.");
+    const languageEditionReview=await languageReview(input,t,selected.output);
     const capturedProof = await currentProof(input, selected.output.id, selected.private.capture, selected.output);
     if (!same(capturedProof, selected.private.proof)) fail("Shared proof changed; export held.");
     const captureValue = validateCapture(selected.private, selected.output);
@@ -505,7 +562,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       };
       try {
         await finalCheck();
-        return await fn({ projectId:t.projectId, documentId:t.documentId, output: clone(selected.output), wordOwner: clone(selected.record.wordOwner), expectedOutput: clone(input.expectedOutput), assetProof:clone(capturedProof.assets), sourceProofHash:hash(capturedProof), finalCheck });
+        return await fn({ projectId:t.projectId, documentId:t.documentId, output: clone(selected.output), wordOwner: clone(selected.record.wordOwner), expectedOutput: clone(input.expectedOutput), assetProof:clone(capturedProof.assets),...(languageEditionReview?{languageEditionReview}:{}),sourceProofHash:hash(capturedProof), finalCheck });
       } finally {
         active = false;
       }

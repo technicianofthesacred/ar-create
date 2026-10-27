@@ -15,16 +15,29 @@ export function validateArticleCredits(value){
 }
 const encode=value=>JSON.stringify(value).replaceAll('%','\\u0025');
 function decode(text,validate){let value;try{value=JSON.parse(text);}catch{fail('Malformed canonical AR Create annotation.');}return validate(value);}
+// Quoted photo chunks keep their complete quote tail byte-for-byte. A marker
+// can only occupy the directive's first line, which the maintained parser
+// already treats as photo metadata; it never enters protected quote lines.
+const protectedQuoteTail=value=>/^>\s*["“][\s\S]*["”][ \t\r\n]*$/.test(value)&&!/\r?\n[ \t]*\r?\n/.test(value);
+const quotedPhoto=raw=>/^(\s*%%(?:on-photo|saying):[^\r\n%]*%%)([ \t]*)(\r?\n)([\s\S]+)$/.exec(raw);
 export function splitPhotoAnnotation(raw){
  if(typeof raw!=='string')fail('The exact photo block is unavailable.');
  if(!raw.includes(PHOTO))return {base:raw,annotation:null,suffix:''};
+ if(raw.split(PHOTO).length!==2)fail('Malformed or duplicate canonical photo annotation.');
+ const inline=/^(\s*%%(?:on-photo|saying):[^\r\n%]*%%) %%ar-create-photo: ([^\r\n]*)%%([ \t]*)(\r?\n)([\s\S]+)$/.exec(raw);
+ if(inline){
+  if(inline[2].includes('%%')||!protectedQuoteTail(inline[5]))fail('A quoted photo annotation must stay on its directive line.');
+  const annotation=decode(inline[2],validatePhotoAnnotation);if(annotation===null)fail('A canonical photo annotation must contain caption and credit.');
+  return {base:inline[1]+inline[3]+inline[4]+inline[5],annotation,suffix:' '+PHOTO+' '+inline[2]+'%%',inline:true};
+ }
  const m=/^(\s*%%(?:photo|photos|side):[^\r\n]*?%%[ \t]*)(\r?\n)%%ar-create-photo: ([^\r\n]*)%%([ \t]*)$/.exec(raw);
- if(!m||m[1].includes(PHOTO)||m[3].includes('%%')||raw.split(PHOTO).length!==2)fail('Malformed or duplicate canonical photo annotation.');
+ if(!m||m[1].includes(PHOTO)||m[3].includes('%%'))fail('Malformed or duplicate canonical photo annotation.');
  const annotation=decode(m[3],validatePhotoAnnotation);if(annotation===null)fail('A canonical photo annotation must contain caption and credit.');
  return {base:m[1],annotation,suffix:m[2]+PHOTO+' '+m[3]+'%%'+m[4]};
 }
 export function writePhotoAnnotation(raw,value,newline='\n'){
- const {base}=splitPhotoAnnotation(raw),annotation=validatePhotoAnnotation(value);
+ const {base}=splitPhotoAnnotation(raw),annotation=validatePhotoAnnotation(value),quoted=quotedPhoto(base);
+ if(quoted){if(!protectedQuoteTail(quoted[4]))fail('An exact protected photo quote is required.');return annotation===null?base:quoted[1]+' '+PHOTO+' '+encode(annotation)+'%%'+quoted[2]+quoted[3]+quoted[4];}
  if(!/^\s*%%(?:photo|photos|side):[^\r\n]*%%\s*$/.test(base))fail('An exact standalone photo or group directive is required.');
  return annotation===null?base:base+newline+PHOTO+' '+encode(annotation)+'%%';
 }
@@ -42,4 +55,4 @@ export function readArticleCredits(body){
  if(!m)fail('Article credits must be a separate canonical annotation block.');
  return readCreditsBlock(m[1]);
 }
-export function photoDirectiveComplete(raw,origin){const {base}=splitPhotoAnnotation(raw);return origin.directiveEnd-origin.directiveStart===base.trim().length;}
+export function photoDirectiveComplete(raw,origin){const {base}=splitPhotoAnnotation(raw),quoted=quotedPhoto(base);return origin.directiveEnd-origin.directiveStart===(quoted?quoted[1].trim().length:base.trim().length);}

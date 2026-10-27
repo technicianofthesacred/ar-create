@@ -311,7 +311,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
       if(!row.nativeOrigin)continue;
       const source=(resolved.projection||[]).find(b=>b.id===row.nativeOrigin.blockId);if(!source)continue;
       const annotation=splitPhotoAnnotation(source.raw).annotation;
-      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['cover','opener','wide','bleed','photos','side'].includes(row.nativeOrigin.role)||(row.nativeOrigin.depth!==0&&!['wide','bleed','photos'].includes(row.nativeOrigin.role)))fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
+      if(annotation){if(!photoDirectiveComplete(source.raw,row.nativeOrigin)||!['cover','opener','wide','bleed','photos','side','on-photo','ending'].includes(row.nativeOrigin.role)||(row.nativeOrigin.depth!==0&&['cover','opener','ending'].includes(row.nativeOrigin.role)))fail('Caption belongs to an unsupported composed photo occurrence.');row.annotation=annotation;seenAnnotations.add(source.id);}
     }
     if(annotationRows.length!==seenAnnotations.size)fail('A canonical caption has no exact supported photo occurrence.');
     const annotations={schema:'ar-create.magazine-annotations.v1',credits:readArticleCredits(originalBody),publicationCredits:Array.isArray(spec.credit)?structuredClone(spec.credit):[]};
@@ -369,8 +369,8 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     for(const placement of media.sources.flatMap(source=>source.placements)){
       if(!placement.annotation||annotatedPaths.has(placement.structuralPath))continue;
       const opener=placement.structuralPath.match(/^parts\/(\d+)\/opener$/),block=captionBlock(placement.structuralPath);
-      const shot=placement.structuralPath==='portrait'?currentSpec.portrait:opener?currentSpec.parts[Number(opener[1])]?.opener:block?.kind==='side'?block.shot:null;
-      const shotRole=placement.structuralPath==='portrait'?'cover':opener?'opener':'side',target=shot||block;
+      const shot=placement.structuralPath==='portrait'?currentSpec.portrait:opener?currentSpec.parts[Number(opener[1])]?.opener:placement.structuralPath==='ending/shot'?currentSpec.ending.shot:['side','on-photo'].includes(block?.kind)?block.shot:null;
+      const shotRole=placement.structuralPath==='portrait'?'cover':opener?'opener':placement.structuralPath==='ending/shot'?'ending':block?.kind,target=shot||block;
       if(!target||(!shot&&!['wide','bleed','photos'].includes(block.kind))||shot&&shotRole!==placement.nativeOrigin.role)fail('The canonical caption target changed before rendering.');
       target.caption={id:'ar-create-caption:'+placement.nativeOrigin.blockId,text:placement.annotation.caption,literal:true};target.photoCredit=placement.annotation.credit;annotatedPaths.add(placement.structuralPath);
     }

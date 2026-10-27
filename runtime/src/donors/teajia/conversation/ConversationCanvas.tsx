@@ -153,6 +153,7 @@ const BlockView: React.FC<{spec: ConversationSpec;block: Block | Block[];depth?:
             <Photo spec={spec} shot={b.shot} fill />
             <Passage id={b.id} text={b.text} className="tj-conv-onphoto-words" style={{ color: b.ink, ['--tj-gold-lt' as string]: b.accent } as React.CSSProperties} />
           </div>
+          <PhotoCaption caption={b.shot.caption} credit={b.shot.photoCredit}/>
         </figure>
       );
     case 'glyph':
@@ -257,7 +258,7 @@ export default function ConversationCanvas({spec,paragraphs}:{spec:ConversationS
  {spec.parts.map((part,i)=><React.Fragment key={i}><PartOpening spec={spec} part={part} n={i+1} titleId={fields?.partTitleIds[i]}/>{groupRuns(part.blocks).map((block,j)=><BlockView key={j} spec={spec} block={block}/>)}</React.Fragment>)}
  {groupRuns(spec.ending.blocks).map((block,i)=><BlockView key={'e'+i} spec={spec} block={block}/>)}
  {hasSaying&&<section className="tj-conv-saying"><Line id={spec.ending.saying.id} text={spec.ending.saying.text} size="l"/>{!hasClosing&&<span aria-hidden="true" lang="zh-Hans" className="tj-conv-endmark">家</span>}</section>}
- {spec.ending.shot&&<figure className="tj-conv-close"><Photo spec={spec} shot={spec.ending.shot} aspect={spec.ending.aspect}/></figure>}
+ {spec.ending.shot&&<figure className="tj-conv-close"><Photo spec={spec} shot={spec.ending.shot} aspect={spec.ending.aspect}/><PhotoCaption caption={spec.ending.shot.caption} credit={spec.ending.shot.photoCredit}/></figure>}
  {hasClosing&&<section className="tj-conv-col tj-conv-closing"><Passage id={fields?.closingId} text={spec.closing||''} className="tj-conv-intro-text"/><span aria-hidden="true" lang="zh-Hans" className="tj-conv-endmark">家</span></section>}
  <footer className="tj-conv-credit">{spec.credit.map((line,i)=><p key={i}>{line}</p>)}</footer>
  </article></SpeakerCtx.Provider></RecordedPassages.Provider>;
