@@ -10,3 +10,15 @@ test('depth actions connect only exact current saved-plan choices and carry scop
  f.d.querySelector('[data-rpb-tab="brief"]').click();await tick();f.d.querySelector('[data-rpb-direction]').click();await tick();assert.deepEqual(opened,[4]);
  f.snapshot.scope.revision='newer';f.d.querySelector('[data-rpb-direction]').click();await tick();assert.deepEqual(opened,[4]);assert.match(f.d.querySelector('.rpb-status').textContent,/context changed/);
 });
+
+
+test('repaint restores depth only for the exact project, manuscript part and source revision',async t=>{
+ const f=fixture(t),copy=f.d.getElementById('app').cloneNode(true);copy.querySelectorAll('.research-work-tools,.research-work-brief').forEach(el=>el.remove());const original=copy.innerHTML;
+ const repaint=()=>{f.api.capture();f.d.getElementById('app').innerHTML=original;f.api.decorate();};
+ f.d.querySelector('[data-research-work-tool="depth"]').click();await tick();
+ f.d.querySelector('[data-rpb-point="second"]').click();await tick();repaint();await tick();
+ assert.equal(f.d.querySelector('.research-work-tools').open,true);assert.equal(f.d.querySelectorAll('.rpb').length,1);assert.match(f.d.querySelector('.rpb-detail').textContent,/Recorded explanation for second/);
+ for(const [field,value] of [['outputId','another-part'],['projectId','another-project'],['revision','changed-source']]){
+  const previous=f.snapshot.scope[field];f.snapshot.scope[field]=value;repaint();await tick();assert.equal(f.d.querySelector('.research-work-tools').open,false);assert.equal(f.d.querySelector('.rpb'),null);f.snapshot.scope[field]=previous;repaint();await tick();assert.equal(f.d.querySelector('.research-work-tools').open,true);
+ }
+});
