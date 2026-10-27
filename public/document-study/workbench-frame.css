@@ -344,3 +344,9 @@ html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-dra
  /* These tools remain immediately available in the open drawer tabs. */
  html body.wbf-on.wbf-drawer-open:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]) #c3-surface-bar [data-wbf-tool]{--wbf-header-control-display:none;display:none!important}
 }
+
+/* Proposal alternatives sit beside the same editor, leaving its text reachable. */
+@media(min-width:761px){
+ html body.wbf-on[data-wbf-drawer-tool="proposals"] #app #workspace .desk{box-sizing:border-box;width:calc(100% - 380px)!important;grid-template-columns:minmax(0,var(--measure))!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-wbf-drawer-tool="proposals"] #app #workspace .desk>#margin{display:none!important}
+}

@@ -942,13 +942,13 @@
     {
       "path": "public/document-study/study-ai-proposals.js",
       "sourceSha256": "615d265da7b3aec64baf86a8465ea1f5c46b897ace33ca69b5f82a1bad662c7a",
-      "candidateSha256": "9086b3fad6087df1d9e6e43f6dd9c6adbcac8fd180a3ecab624dd306f906960e",
+      "candidateSha256": "32d7d27071a956dfb0fa3a482daf143210fd629f4605e4761e204560b27d867f",
       "adapted": false
     },
     {
       "path": "public/document-study/study-ai-proposals.css",
       "sourceSha256": "d1d071ad06b7bb889febff0b440122a6d7b53adb425780777fce85e853e5701f",
-      "candidateSha256": "d1d071ad06b7bb889febff0b440122a6d7b53adb425780777fce85e853e5701f",
+      "candidateSha256": "91e7ee924d0d5692350bad0f7d2c975b4fdbfbd6a607aaff7cea27cf0a340eba",
       "adapted": false
     },
     {
@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "5dcb5479dc4e7634c837db070e0557d795f0ebf05f2670b39e34585127173c2c"
+      "candidateSha256": "ad3b3bc860e5c726d6d7a480b337e1423597d09002be8e5bd64480db8e90a557"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "1c2a50bfd7c270e0d1a32a61c8d66b150245217caeab64953459f33f2b6e5cc7"
+      "candidateSha256": "f6c48f0acdb44032878227abdce205e5c8b9e03a608f175f4bffa3baf6f9bc8d"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3413,11 +3413,11 @@
     },
     {
       "path": "public/document-study/workbench-frame.css",
-      "candidateSha256": "a23045ba3231cdade058d892341370d595d2fc0b5d8403988e9faa23d33f64a3"
+      "candidateSha256": "e530b310c69dddcc85cacabee2090909db69022d4ee7bc1eebc0d3e15434a4c0"
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "344c3b985e17e0f2df30acf33363a78d04717ee206077f99389bac1bc5597f5b"
+      "candidateSha256": "f8c25d453962e757ad23d2b5251f9e96ac17baf586c6cca3792c36f0e85b68de"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -4414,6 +4414,10 @@
     {
       "path": "tests/study-learning-context.test.mjs",
       "candidateSha256": "933cb2ef45f50a02959e0bee6338086112505ec7fa688487f5b63a4e438293ff"
+    },
+    {
+      "path": "tests/study-ai-proposal-drawer.test.mjs",
+      "candidateSha256": "d5d58cc934bd23ac32dceb953144bcf2c3742da5eebbeadcefc579fbc219b8d3"
     }
   ],
   "dependencyRepair": {

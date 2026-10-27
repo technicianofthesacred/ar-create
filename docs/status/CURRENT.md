@@ -1,3 +1,15 @@
+## 28 October — Proposal review beside the manuscript candidate
+
+The existing AI proposal reviewer now opens in the existing Workbench tools drawer. The same reviewer and manuscript owners remain; Before/Proposed stack within the380px column, with44px actions and independent scrolling. Close/reopen retains unfinished feedback and selected review. Delayed loading, scope switches, History, Escape and dirty/stale Apply guards are covered.
+
+80 checks across three files pass. Native invented1280×720 light/dark confirms the manuscript stays visible, no horizontal overflow, exact unchanged manuscript hash and pending/unaccepted proposal. Same-viewport C reference matches drawer geometry and type; concrete remaining differences include5px writing offset, live header wrapping and hidden obscured margin. Full C/phone/all12 and human wording approval remain open. This candidate is not installed; PR78 remains live.
+
+## 28 October — Kept learning connection installed; goal checkoff
+
+PR78 signed main `0711c4fdcfadb85b558f2eb92f0edb2153bd548c`, build 2026-10-27T19:52:25.664Z, is verified live in installed8841 and main59958.100 checks across ten files, build/package921 and66 served hashes pass; API, canonical files and configuration are preserved. The kept-learning candidate below now describes installed bounded behavior. Earlier candidate-status statements are historical.
+
+Explicit kept Research learning → prepared Direction/Write context is checked off with native invented selection/restart/reopen proof. No provider ran and no wording was accepted. Existing paragraph-proposal review works, but its oversized panel pushes the manuscript off screen; the beside-manuscript correction is in progress. Full creative journey, all12, whole C/phone visual acceptance and human wording decisions remain open.
+
 ## 28 October — Kept learning to Direction/Write candidate
 
 The existing source chooser now lists kept Research answers separately as AI learning, not established fact. Inclusion is explicit, optional, scoped to the exact manuscript part and retained on this device. Questions stay concise; exact retained question/origin, answer, citations and hashes enter the existing prepared context. A successful Keep refreshes the chooser without automatically selecting anything. Ineligible or missing selected learning blocks preparation until removed or reviewed; sources-only continuation is unchanged.
@@ -42,6 +54,8 @@ The full goal remains active. Check off only the specific verified result, with 
 - [x] Exact saved independent output → Bench pickup and cold parent restoration: installed PR74.
 - [x] Body photo captions/credits and working article credits → Save/restart/export/exact Undo: installed PR75.
 - [x] Unsaved caption/credit reload/restart recovery and standalone closing-photo captions: installed PR76, with exact live-byte/preservation proof.
+- [x] Exact cover/opener captions and correct cold Audience loading: installed PR77.
+- [x] Explicit kept Research learning → prepared Direction/Write context: installed PR78, with exact live-byte/preservation proof.
 - [ ] Remaining Bench/Library/Pieces/all12 connections and complete source-to-delivery journey.
 - [ ] Approved C/final NOTES whole-layout desktop/phone light/dark and interaction acceptance.
 
