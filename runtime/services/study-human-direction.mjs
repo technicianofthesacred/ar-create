@@ -1,4 +1,4 @@
-import {conceptContextProjection,CONCEPT_CONTEXT_ROLE,conceptReferences} from './concept-markdown.mjs';
+import {conceptContextProjection,CONCEPT_CONTEXT_ROLE,conceptReferences,directionPlanProjection} from './concept-markdown.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {StateError} from '../store.mjs';
@@ -345,7 +345,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   }
   const candidates=[{parentStudyId},...(bindingId?[{parentStudyId,scope:'part',bindingId}]:[]),...(outputId?[{parentStudyId,scope:'output',...(bindingId?{bindingId}:{}),outputId}]:[])];
   const records=[];
-  for(const input of candidates){const scope=await authority(input);if(!scope)fail('Ready direction parent or part binding is missing.');const item=current(scope);if(item.revision>0)records.push({role:ROLE,scope:item.scope,body:item.body,hash:item.hash,revision:item.revision,updatedAt:item.updatedAt,...(conceptContextProjection(item.body)||{})});}
+  for(const input of candidates){const scope=await authority(input);if(!scope)fail('Ready direction parent or part binding is missing.');const item=current(scope),plan=directionPlanProjection(item.body);if(item.revision>0)records.push({role:ROLE,scope:item.scope,body:item.body,hash:item.hash,revision:item.revision,updatedAt:item.updatedAt,...(plan?{planningIntent:plan}:{}),...(conceptContextProjection(item.body)||{})});}
   return {schema:'ar-create.study-human-direction-context.v1',role:records.some(item=>item.role===CONCEPT_CONTEXT_ROLE)?CONCEPT_CONTEXT_ROLE:ROLE,projectId,documentId:documentId??null,outputId:outputId||null,records,hash:digest(JSON.stringify(records))};
  }
  return {select:async input=>{const scope=await authority(structuredClone(input),{create:true});return current(scope);},read,write:input=>mutate(structuredClone(input),'write'),undo:input=>mutate(structuredClone(input),'undo'),context,readScopeReferences,proposeScopeReference:input=>referenceMutation(input,'propose'),changeScopeReference:input=>referenceMutation(input,'change'),undoScopeReference:input=>referenceMutation(input,'undo')};
