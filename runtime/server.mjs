@@ -290,7 +290,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const magazineVault=createMagazineVault({...magazineConfig,dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
   let originalPhotoProvider,publicationPhotoProvider;
   const originalPhotos=magazineConfig.filesRoot?{list:()=> (originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).list(),open:input=>(originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).open(input)}:null;
-  const publicationPhotos=magazineConfig.magSendRepo?{catalog:()=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
+  const publicationPhotos=magazineConfig.magSendRepo?{catalog:input=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(input),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
   const magazineLibraryPhotos=createMagazineLibraryPhotos({library,originals:originalPhotos,publication:publicationPhotos});
   const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal,photoLibrary:magazineLibraryPhotos});
   const magazineOutputExports=createMagazineOutputExports({working:magazineWorking,exports});

@@ -1,5 +1,7 @@
 // Read-only, current-working-article projection. Identity is supplied by the
 // catalog and exact Magazine inspector; matching bytes are never an asset join.
+import {createHash} from 'node:crypto';
+const ORIGINALS_ROOT=createHash('sha256').update('original-photos').digest('hex');
 const HEX=/^[a-f0-9]{64}$/;
 const validOwner=value=>value&&typeof value.projectId==='string'&&!!value.projectId&&typeof value.pieceId==='string'&&!!value.pieceId&&value.editionId==='working'&&typeof value.artifactId==='string'&&!!value.artifactId&&HEX.test(value.hash||'');
 const sameOwner=(a,b)=>validOwner(a)&&validOwner(b)&&a.projectId===b.projectId&&a.pieceId===b.pieceId&&a.artifactId===b.artifactId&&a.hash===b.hash;
@@ -8,6 +10,7 @@ function freeze(value){if(value&&typeof value==='object'){for(const child of Obj
 function key(ref){
  if(!ref||typeof ref!=='object'||typeof ref.rootId!=='string'||!ref.rootId)return null;
  if(ref.kind==='publication'&&typeof ref.relativePath==='string'&&ref.relativePath)return JSON.stringify(['publication',ref.rootId,ref.relativePath]);
+ if(ref.kind==='originals'&&ref.rootId===ORIGINALS_ROOT&&HEX.test(ref.sourceId||''))return JSON.stringify(['originals',ref.rootId,ref.sourceId]);
  if(ref.kind==='library'&&typeof ref.sourceId==='string'&&ref.sourceId)return JSON.stringify(['library',ref.rootId,ref.sourceId]);
  return null;
 }
