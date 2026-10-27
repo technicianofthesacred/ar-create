@@ -12,8 +12,9 @@
 import {StateError} from '../../store.mjs';
 import {currentActor, isHuman, requireHuman, requireWriteActor} from '../actor.mjs';
 import {classify, frontmatter} from '../magazine-vault/kinds.mjs';
-import {expected, sha256} from '../magazine-vault/write.mjs';
+import {expected, sha256, textBytes} from '../magazine-vault/write.mjs';
 import {splitBlocks, hash, plain, editable} from '../../reference/mag-edit.mjs';
+import {parseFeedbackShare, updateFeedbackShareSection} from './feedback-share-codec.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -113,6 +114,213 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     model.blocks.forEach((block, i) => { block.id = 'magazine:' + encodeURIComponent(authority.pieceId) + ':' + i; });
     const projection = native.projection(model).map((row, i) => ({...row, raw: model.blocks[i].raw}));
     return {selection: select(input), authority, editable: !unavailableReason, unavailableReason, document, paragraphs, projection, supportedNativeOperations: (native.supportedNativeOperations || []).filter(kind=>kind!=='photoReplaceAsset'||photoLibrary), history: await historyFor(authority)};
+  }
+  // References only: Share reads the existing owners, never creates an edition,
+  // recipient, message store or another copy of the working manuscript.
+  async function shareContext(input) {
+    workingOnly(input); fields(input, ['expectedHash']);
+    const expectedHash = expected(input.expectedHash);
+    if (expectedHash === null) throw new StateError('Share context requires the exact current working draft hash.', 400);
+    const authority = resolve(input), root = registrationRoot();
+    const project = magazine.projects.project(input.storyId), registration = JSON.stringify(project);
+    const kinds = {feedback: 'FEEDBACK', context: 'CONTEXT', research: 'RESEARCH'};
+    const references = {}, seen = new Set(), snapshots = [];
+    // The public reader omits conflict metadata when the primary is missing.
+    const hasConflicts = rel => magazine._roots().mag.conflictCopies(rel).length > 0;
+    async function inspect(rel, kind) {
+      const document = await magazine.read({path: rel});
+      if (document.path !== rel || document.kind !== kind || document.conflicts?.length || hasConflicts(rel)) throw new StateError('A registered Share file is inconsistent or has conflicting copies. Resolve it before continuing.', 409);
+      if (document.exists && !/^[a-f0-9]{64}$/.test(document.hash || '')) throw new StateError('A registered Share file has no exact current hash.', 409);
+      snapshots.push({rel, kind, document});
+      return document;
+    }
+    const draft = await inspect(authority.path, 'DEV');
+    if (!draft.exists || typeof draft.text !== 'string' || draft.hash !== expectedHash) throw new StateError('The working draft changed or is unreadable. Read it again before preparing Share.', 409);
+    for (const [key, kind] of Object.entries(kinds)) {
+      references[key] = [];
+      for (const record of [].concat(project.vaultRecords[key] || [])) {
+        if (!record || typeof record.rel !== 'string' || classify(record.rel).kind !== kind || !/^[a-f0-9]{64}$/.test(record.sha256 || '') || seen.has(record.rel)) throw new StateError('The registered Share references are inconsistent.', 409);
+        seen.add(record.rel);
+        if (seen.size > 512) throw new StateError('Share context exceeds its bounded registered-reference limit.', 413);
+        const current = await inspect(record.rel, kind), readable = current.exists && typeof current.text === 'string';
+        const currentHash = current.exists ? current.hash : null, changedSinceRegistration = currentHash !== record.sha256;
+        references[key].push({path: record.rel, kind, registeredHash: record.sha256, currentHash, readable, changedSinceRegistration,
+          state: !current.exists ? 'missing' : !readable ? 'unreadable' : changedSinceRegistration ? 'changed-since-registration' : 'current'});
+      }
+    }
+    // Re-read each selected file and registration after collecting references.
+    // A stable registration hash is historical evidence, never current authority.
+    for (const {rel, kind, document} of snapshots) {
+      const current = await magazine.read({path: rel});
+      if (current.path !== rel || current.kind !== kind || current.exists !== document.exists || current.hash !== document.hash || current.text !== document.text || current.conflicts?.length || hasConflicts(rel)) throw new StateError('A Share file changed while reading. Read it again before continuing.', 409);
+    }
+    const currentAuthority = resolve(input);
+    if (registrationRoot() !== root || JSON.stringify(currentAuthority) !== JSON.stringify(authority) || JSON.stringify(magazine.projects.project(input.storyId)) !== registration) throw new StateError('The Share registration changed while reading. Read it again before continuing.', 409);
+    return {schema: 'ar-create.magazine-share-context.v1', selection: select(input), authority,
+      rootIdentity: {scheme: 'canonical-directory-sha256-v1', fingerprint: sha256(Buffer.from(root, 'utf8'))},
+      draft: {path: authority.path, hash: draft.hash}, references};
+  }
+  // An exact registered reference selector, never a caller-granted file path.
+  // This read grants no FEEDBACK write, proposal acceptance or sending authority.
+  async function readShareFeedback(input) {
+    workingOnly(input); fields(input, ['expectedHash', 'registeredFeedbackPath', 'expectedFeedbackHash']);
+    const draftHash = expected(input.expectedHash), feedbackHash = expected(input.expectedFeedbackHash);
+    if (draftHash === null || feedbackHash === null) throw new StateError('Read the exact current working draft and FEEDBACK hashes first.', 400);
+    const authority = resolve(input), root = registrationRoot();
+    const project = magazine.projects.project(input.storyId), registration = JSON.stringify(project);
+    const records = [].concat(project.vaultRecords.feedback || []);
+    if (records.length > 512) throw new StateError('The registered FEEDBACK list exceeds its bounded limit.', 413);
+    const matches = records.filter(record => record?.rel === input.registeredFeedbackPath);
+    if (typeof input.registeredFeedbackPath !== 'string' || matches.length !== 1) throw new StateError('Choose one exact registered FEEDBACK reference.', matches.length > 1 ? 409 : 404);
+    const record = matches[0];
+    if (classify(record.rel).kind !== 'FEEDBACK' || !/^[a-f0-9]{64}$/.test(record.sha256 || '')) throw new StateError('The registered FEEDBACK identity is inconsistent.', 409);
+    async function exactDocument(rel, kind, currentHash) {
+      const document = await magazine.read({path: rel});
+      if (document.path !== rel || !document.exists || document.kind !== kind || typeof document.text !== 'string' || document.hash !== currentHash || document.conflicts?.length || magazine._roots().mag.conflictCopies(rel).length) throw new StateError('The selected working draft or FEEDBACK changed, is unreadable or has conflicts. Read its current references again.', 409);
+      return document;
+    }
+    const draft = await exactDocument(authority.path, 'DEV', draftHash);
+    const document = await exactDocument(record.rel, 'FEEDBACK', feedbackHash);
+    // A full canonical Markdown read must round-trip to the owner's byte hash.
+    // The maintained public reader strips a UTF-8 BOM; refuse that unsupported
+    // representation rather than silently returning changed canonical bytes.
+    if (sha256(Buffer.from(document.text, 'utf8')) !== feedbackHash) throw new StateError('The FEEDBACK reader did not return the exact canonical Markdown bytes.', 409);
+    const parsed = parseFeedbackShare(document.text);
+    const targetMatches = parsed.structured && parsed.projection.every(entry => entry.target.storyId === authority.storyId && entry.target.pieceId === authority.pieceId && entry.target.edition === 'working' && entry.target.hash === draftHash);
+    const mapping = parsed.structured && !targetMatches
+      ? {structured: false, metadata: parsed.metadata, projection: [], reason: 'The saved recipient mapping targets another piece or an earlier working revision. The full FEEDBACK remains readable.'}
+      : {structured: parsed.structured, metadata: parsed.metadata, projection: parsed.projection, reason: parsed.reason};
+    const currentFeedback = await exactDocument(record.rel, 'FEEDBACK', feedbackHash);
+    const currentDraft = await exactDocument(authority.path, 'DEV', draftHash);
+    const currentAuthority = resolve(input);
+    if (currentFeedback.text !== document.text || currentDraft.text !== draft.text || registrationRoot() !== root || JSON.stringify(currentAuthority) !== JSON.stringify(authority) || JSON.stringify(magazine.projects.project(input.storyId)) !== registration) throw new StateError('The FEEDBACK registration or selected files changed while reading. Read the exact references again.', 409);
+    return {schema: 'ar-create.magazine-share-feedback.v1', selection: select(input), authority,
+      rootIdentity: {scheme: 'canonical-directory-sha256-v1', fingerprint: sha256(Buffer.from(root, 'utf8'))},
+      draft: {path: authority.path, hash: draftHash},
+      feedback: {path: record.rel, hash: feedbackHash, registeredHash: record.sha256, changedSinceRegistration: record.sha256 !== feedbackHash},
+      document: {path: record.rel, kind: 'FEEDBACK', hash: feedbackHash, text: document.text}, mapping, readOnly: true};
+  }
+  const feedbackFields = ['expectedHash', 'registeredFeedbackPath', 'expectedFeedbackHash'];
+  const feedbackContextKey = value => JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item);
+  const sameFeedbackContext = (a,b) => feedbackContextKey(a) === feedbackContextKey(b);
+  function feedbackWriteSelection(input) {
+    const draftHash=expected(input.expectedHash), feedbackHash=expected(input.expectedFeedbackHash);
+    if(draftHash===null||feedbackHash===null)throw new StateError('FEEDBACK editing requires existing exact draft and feedback hashes.',400);
+    const authority=resolve(input),root=registrationRoot(),project=magazine.projects.project(input.storyId);
+    const feedbackRecords=[].concat(project.vaultRecords.feedback||[]);
+    if(feedbackRecords.length>512)throw new StateError('Registered FEEDBACK exceeds its bounded limit.',413);
+    const matches=feedbackRecords.filter(record=>record?.rel===input.registeredFeedbackPath);
+    if(typeof input.registeredFeedbackPath!=='string'||matches.length!==1)throw new StateError('Choose one exact registered FEEDBACK reference.',matches.length>1?409:404);
+    const record=matches[0];
+    if(classify(record.rel).kind!=='FEEDBACK'||!/^[a-f0-9]{64}$/.test(record.sha256||''))throw new StateError('Registered FEEDBACK identity is inconsistent.',409);
+    return {authority,registration:JSON.stringify(project),context:{schema:'ar-create.magazine-feedback-write-context.v1',rootIdentity:{scheme:'canonical-directory-sha256-v1',fingerprint:sha256(Buffer.from(root,'utf8'))},selection:select(input),draft:{path:authority.path,hash:draftHash},feedback:{path:record.rel,hash:feedbackHash,registeredHash:record.sha256}}};
+  }
+  function assertFeedbackCurrent(input,selection) {
+    const current=feedbackWriteSelection(input);
+    if(!sameFeedbackContext(current.context,selection.context)||current.registration!==selection.registration)throw new StateError('FEEDBACK registration changed before saving.',409);
+    for(const [kind,ref]of [['DEV',selection.context.draft],['FEEDBACK',selection.context.feedback]]){
+      const document=magazine.read({path:ref.path});
+      if(document?.then)throw new StateError('FEEDBACK currentness requires the synchronous maintained reader.',503);
+      if(!document.exists||document.kind!==kind||document.path!==ref.path||typeof document.text!=='string'||document.hash!==ref.hash||document.conflicts?.length||magazine._roots().mag.conflictCopies(ref.path).length||kind==='FEEDBACK'&&sha256(Buffer.from(document.text,'utf8'))!==ref.hash)throw new StateError(kind+' changed, is unreadable or has conflicts. Compare before saving FEEDBACK.',409);
+    }
+  }
+  async function prepareShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'content']);requireWriteActor();writable();
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);textBytes(input.content);
+    const parsed=parseFeedbackShare(input.content),current=parsed.structured&&parsed.projection.every(entry=>entry.target.storyId===selection.authority.storyId&&entry.target.pieceId===selection.authority.pieceId&&entry.target.hash===input.expectedHash);
+    return {selection:select(input),rootIdentity:selection.context.rootIdentity,authority:selection.authority,registeredFeedbackPath:selection.context.feedback.path,expectedHash:input.expectedHash,expectedFeedbackHash:input.expectedFeedbackHash,content:input.content,mapping:{structured:!!current,metadata:parsed.metadata,projection:current?parsed.projection:[],reason:parsed.structured&&!current?'The mapping targets another piece or earlier working revision. Full Markdown editing remains available.':parsed.reason}};
+  }
+  async function readShareFeedbackEditModel(input) {
+    const view=await readShareFeedback(structuredClone(input)),{fm,parts}=splitBlocks(view.document.text);
+    if((parts.length+1)/2>5000)throw new StateError('FEEDBACK exceeds the bounded paragraph limit.',413);
+    const unsupported=view.document.text.startsWith('---\r\n')&&!fm;
+    const paragraphs=[];
+    for(let k=0;k<parts.length;k+=2)paragraphs.push({index:k/2,seen:hash(parts[k]),text:plain(parts[k]),raw:parts[k],editable:editable(parts[k])});
+    const available=!!magazine.configured&&!!magazine.writable&&!unsupported;
+    return {...view,schema:'ar-create.magazine-share-feedback-edit-model.v1',paragraphs,editable:available,unavailableReason:unsupported?'The existing paragraph editor cannot preserve this frontmatter representation.':available?null:'Magazine is read-only. Its designated owner must enable editing.'};
+  }
+  async function prepareShareFeedbackParagraph(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'block','seen','text']);input=structuredClone(input);requireWriteActor();requireHuman('Preparing FEEDBACK paragraph corrections');writable();
+    if(!Number.isSafeInteger(input.block)||input.block<0||!/^[a-f0-9]{12}$/.test(input.seen||'')||typeof input.text!=='string'||input.text.length>200000)throw new StateError('Use an exact donor paragraph index/hash and bounded text.',400);
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);
+    if(typeof magazine.prepareFeedbackParagraph!=='function')throw new StateError('The maintained FEEDBACK paragraph preparation owner is unavailable.',503);
+    const document=magazine.read({path:selection.context.feedback.path}),original=document.text,{fm,parts}=splitBlocks(original);
+    const k=input.block*2,raw=parts[k];
+    if(raw===undefined||hash(raw)!==input.seen||!editable(raw))throw new StateError('The selected FEEDBACK paragraph changed or cannot be edited.',409);
+    let start=fm.length;for(let i=0;i<k;i++)start+=parts[i].length;
+    const end=start+raw.length,parsed=parseFeedbackShare(original);
+    const candidate=magazine.prepareFeedbackParagraph({path:selection.context.feedback.path,expectedHash:input.expectedFeedbackHash,block:input.block,seen:input.seen,text:input.text});
+    let content=candidate.content;
+    if(content!==original&&parsed.structured){
+      const anchored=parsed.projection.flatMap(entry=>entry.sections.map(section=>({entry,section}))).filter(({section})=>start<section.end&&end>section.start);
+      if(anchored.length){
+        if(anchored.length!==1||start<anchored[0].section.start||end>anchored[0].section.end||start===anchored[0].section.start)throw new StateError('Recipient/language headings keep their recorded identity. Edit the message paragraph instead.',409);
+        const {entry,section}=anchored[0],sectionContent=content.slice(section.start,section.end+content.length-original.length);
+        const updated=updateFeedbackShareSection(original,{expectedHash:input.expectedFeedbackHash,recipientId:entry.recipientId,target:entry.target,language:section.language,expectedSectionHash:section.hash,content:sectionContent});
+        const change=updated.metadataChange;
+        const donorOnly=updated.markdown.slice(0,change.start)+change.before+updated.markdown.slice(change.start+change.after.length);
+        if(donorOnly!==candidate.content)throw new StateError('The mapped paragraph would change bytes outside its exact donor section.',409);
+        // The codec may change only the metadata line in addition to the exact
+        // donor section. It does not introduce another wording representation.
+        content=updated.markdown;
+      }
+    }
+    assertFeedbackCurrent(input,selection);
+    return prepareShareFeedback({...Object.fromEntries([...BASE,...feedbackFields].filter(key=>input[key]!==undefined).map(key=>[key,input[key]])),content});
+  }
+  async function saveShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'content','operationId','reason']);input=structuredClone(input);requireWriteActor();writable();uuid(input.operationId);
+    const selection=feedbackWriteSelection(input);
+    // The same owner binds context into its fingerprint before replay lookup,
+    // and rechecks it synchronously under its existing lock before propose/put.
+    return magazine.write({path:selection.context.feedback.path,content:input.content,expectedHash:input.expectedFeedbackHash,operationId:input.operationId,...(input.reason!==undefined?{reason:input.reason}:{})},{context:selection.context,assertCurrent:()=>assertFeedbackCurrent(input,selection)});
+  }
+  async function feedbackSaveReceipt(selection,operationId) {
+    uuid(operationId);const record=await magazine.operation({operationId});
+    const saved=record.context;
+    const comparable=saved&&{...saved,feedback:{...saved.feedback,hash:selection.context.feedback.hash}};
+    if(record.command!=='magazine.write'||record.result?.path!==selection.context.feedback.path||!sameFeedbackContext(comparable,selection.context))throw new StateError('That receipt belongs to another FEEDBACK selection or working revision.',403);
+    const changes=(record.changes||[]).filter(change=>change.applied!==false);
+    if(changes.some(change=>change.root!=='mag'||change.rel!==selection.context.feedback.path||change.move||change.large))throw new StateError('That receipt includes other work.',403);
+    return {record,changes};
+  }
+  async function feedbackUndoEligibility(input,selection) {
+    const {record,changes}=await feedbackSaveReceipt(selection,input.operationId);
+    if(!magazine.configured||!magazine.writable)return {eligible:false,reason:'Magazine is read-only.'};
+    if(currentActor()&&!isHuman(currentActor().actor))return {eligible:false,reason:'Only the author can undo FEEDBACK wording.'};
+    if(!['committed','failed'].includes(record.state)||record.undoneBy||changes.length!==1||changes[0].afterHash!==input.expectedFeedbackHash)return {eligible:false,reason:'That save has no exact current FEEDBACK change to undo.'};
+    assertFeedbackCurrent(input,selection);
+    return {eligible:true,operationId:input.operationId};
+  }
+  async function eligibleUndoShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'operationId']);input=structuredClone(input);
+    return feedbackUndoEligibility(input,feedbackWriteSelection(input));
+  }
+  async function shareFeedbackHistory(input) {
+    workingOnly(input);fields(input,feedbackFields);input=structuredClone(input);
+    const selection=feedbackWriteSelection(input);assertFeedbackCurrent(input,selection);
+    if(typeof magazine.feedbackOperations!=='function')throw new StateError('Maintained FEEDBACK receipt discovery is unavailable.',503);
+    const discovered=await magazine.feedbackOperations({context:selection.context,limit:200}),history=[];
+    for(const operationId of discovered.operationIds){
+      const {record,changes}=await feedbackSaveReceipt(selection,operationId);
+      const eligible=await feedbackUndoEligibility({...input,operationId},selection);
+      history.push({operationId,modifiedAt:record.at,actor:record.actor,beforeHash:changes[0].beforeHash,afterHash:changes[0].afterHash,canUndo:eligible.eligible});
+    }
+    assertFeedbackCurrent(input,selection);
+    return {history};
+  }
+  async function undoShareFeedback(input) {
+    workingOnly(input);fields(input,[...feedbackFields,'operationId','undoOperationId']);input=structuredClone(input);requireWriteActor();requireHuman('Undoing FEEDBACK wording');writable();uuid(input.operationId);uuid(input.undoOperationId);
+    const selection=feedbackWriteSelection(input),target=await feedbackSaveReceipt(selection,input.undoOperationId);
+    if(target.changes.length!==1||target.changes[0].afterHash!==input.expectedFeedbackHash)throw new StateError('This Undo does not name the exact saved FEEDBACK hash.',409);
+    let prior;try{prior=await magazine.operation({operationId:input.operationId});}catch(error){if(error.status!==404)throw error;}
+    if(!prior){
+      const eligible=await feedbackUndoEligibility({...input,operationId:input.undoOperationId},selection);
+      if(!eligible.eligible)throw new StateError(eligible.reason,409);
+    }
+    // Same contextual owner fingerprint protects both initial Undo and replay;
+    // only the maintained owner restores bytes under its existing lock.
+    return magazine.undo({undoOperationId:input.undoOperationId,operationId:input.operationId},{context:selection.context,assertCurrent:()=>assertFeedbackCurrent(input,selection)});
   }
   async function prepare(input) {
     workingOnly(input); fields(input, ['expectedHash', 'operations']);
@@ -231,5 +439,5 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     if (!eligible.eligible) throw new StateError(eligible.reason, isHuman(currentActor()?.actor) ? 409 : 403);
     return magazine.undo({undoOperationId: input.undoOperationId, operationId: input.operationId});
   }
-  return {catalog, read, prepare, edit, save, operation, eligibleUndo, undo};
+  return {catalog, read, shareContext, readShareFeedback, readShareFeedbackEditModel, prepareShareFeedback, prepareShareFeedbackParagraph, saveShareFeedback, eligibleUndoShareFeedback, undoShareFeedback, shareFeedbackHistory, prepare, edit, save, operation, eligibleUndo, undo};
 }

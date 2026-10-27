@@ -465,3 +465,9 @@ test('Check source guards both fresh catalog and response decoding before reques
 test('Check source locates apostrophe typography without changing original words or guessing duplicate variants',async()=>{
  for(const ambiguous of [false,true]){const f=checkSourceFixture();f.descriptor.passage='It’s an invented account.';f.raw="It's an invented account."+(ambiguous?'\n\nIt’s an invented account.':'');const {w,dom}=await checkSourceSetup(f);const result=await w.existingWork.openCheckSource(f.descriptor,{isCurrent:()=>true});assert.equal(result.opened,true);assert.equal(result.anchored,!ambiguous);assert.equal(w.document.querySelectorAll('[data-check-source-highlight]').length,ambiguous?0:1);assert.equal(w.document.querySelector('.ew-original-text pre').textContent,f.raw);if(!ambiguous){assert.equal(w.document.querySelector('[data-check-source-highlight]').textContent,"It's an invented account.");assert.match(w.document.querySelector('.ew-read-status').textContent,/apostrophe style may differ/);}dom.window.close();}
 });
+
+test('existing work wires Magazine invitation metadata to the maintained read-only working owner',async()=>{
+ let options;const input={storyId:'invented',pieceId:'invented:article',edition:'working',expectedHash:hash};
+ const f=await setup({beforeLoad:w=>{w.createMagazineOutputAdapter=o=>{options=o;return {};};w.studyOutputConnection={setMagazineAdapter:()=>{}};}});
+ try{assert.equal(typeof options.readShareContext,'function');await options.readShareContext(input);const call=f.calls.find(c=>String(c.url).startsWith('/api/magazine/working-draft/share-context?'));assert.ok(call);assert.deepEqual(Object.fromEntries(new URL(call.url,'http://localhost').searchParams),input);assert.equal(call.options?.method,'GET');}finally{f.dom.window.close();}
+});

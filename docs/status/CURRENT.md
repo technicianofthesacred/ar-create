@@ -1,3 +1,33 @@
+## 27 October — Share paragraph editing connected in candidate
+
+Saved Magazine correspondence can now be edited one paragraph at a time using the existing Magazine editor’s rules. Words stay free of Markdown controls; preparation preserves frontmatter, marks, notes and unrelated paragraphs. Valid bilingual recipient mappings keep their exact targets and update only the affected section hash. Canonical save, reloadable history and exact Undo use the same writer, lock and context-bound receipts. A separate review permission is off by default; the mounted exact-owner proof controls the Feedback editing badge. Agents still propose prose rather than accepting it.
+
+Native invented-data verification proves paragraph save → full owner-process restart → reload → exact Undo restoring the complete original feedback bytes. The article and other language remain unchanged. A newer external file blocks the stale save; the newer file stays exact and entered words survive reload beside a saved-position comparison. UI/service checks also prove exact interrupted-save recovery, refusal to submit without recovery storage, and visible retention if the owner becomes read-only. No real correspondence was edited, approved or sent.
+
+Build and 502 affected checks pass; one existing native mobile-header check is skipped because no explicit owned Ego TaskSpace is supplied. Desktop light/dark editor captures preserve the 640px record measure and 15px body role. These changes are uninstalled. Full Share visual matching, recipient/language/edition choices, actual correspondence facts and phone proof remain open; the complete twelve-section functional and visual goal is not finished.
+
+## 27 October — Magazine Share reading connected in candidate
+
+The Share screen now enters through the selected Magazine working article before native Study output selection or publication/photo preview. A missing publication setup cannot block saved correspondence. It opens an exact registered feedback file with independent draft/file hashes and the registered root identity. Multiple files require an explicit choice. Saved Markdown stays canonical; recipient/language mappings reference exact sections in that same file, and stale or ambiguous mappings fall back to the complete readable record. Existing tab text remains separate. No invitation, recipient record, manuscript or sending fact is created by reading.
+
+The same read-only connection is exposed through HTTP, the command registry, CLI and MCP. The frontend verifies canonical text and section hashes, refuses delayed owner changes, and rechecks the selected reference. Focused integrated service, transport, Share screen and review-connection checks pass. This is an uninstalled candidate. Native invented-data verification proves the existing-work article → Share → English/Chinese saved correspondence → full reload journey at 1280×720 in both themes, with no horizontal overflow and no wording or sending changes. Complete approved-C Share matching and phone proof remain open. Feedback editing/save/reload/restart/conflict/exact Undo, recipient/language/edition choices, actual correspondence facts and complete approved-C visual acceptance remain unfinished.
+
+## 27 October — Research type roles verified on desktop; candidate only
+
+Research point explanations now use the approved C sans-serif body role at 15px/22.5px, quoted speech uses Lora at 15px/24.75px, and source attribution uses the compact 13px/19.5px label role. The Source-only Atlas refinement and retained long-document reading role stay scoped to their existing surfaces.
+
+A native candidate and the immutable C reference were compared at the same 1280×720 viewport in light and dark themes. Computed text roles match those values, and 132 affected Research/Workbench checks pass. Whole Research visual acceptance remains open: the project-notes disclosure reduces the split-panel height, and the connected findings and source controls differ from the reference prototype. The responsive browser control did not change the actual viewport, including in a new test tab; no phone proof is claimed from those captures. This change is not installed and does not establish all-twelve-section completion.
+
+## 26 October — Magazine sharing context candidate, not installed
+
+S11/C01/C04/C06: the maintained working-draft bridge now exposes read-only sharing context for an exact registered Magazine story/piece and current DEV hash. It identifies the existing registered feedback, relationship context and research records by current hashes, with missing, unreadable and changed-since-registration states. It returns references rather than copying prose, creating messages or claiming a published edition. The GET connection rejects caller paths, duplicate selectors, stale articles and ambiguous ownership.
+
+The same read-only context is discoverable through the existing command registry, CLI and MCP call tool with all four exact selectors. A synthetic real-server journey proves both agent entrances return the same registered message references and refuse a stale manuscript with conflict status, without import or new records.
+
+The existing frontend Magazine output adapter now has a guarded read-only invitation-context transport. It validates exact owner/hash and registered-reference states, refuses delayed owner changes, and strips uncontracted payload fields. This adds no Share controls or automatic selection/save. A recovered permanent isolated checkout passes221 affected checks; the original temporary checkout is no longer a source authority.
+
+This is a backend candidate only. The current Share screen still uses native Study output selection and cannot yet select a Magazine working article. Recipient/output/edition mapping, reuse of the existing feedback editor and native visual acceptance remain unfinished. No content, editorial approval, external delivery or installed configuration changed.
+
 ## 25 October — Workbench release candidate and remaining limits
 
 This is source-candidate status, not a statement that a release is installed. The release receipt and exact deployed revision remain separate from product completion.

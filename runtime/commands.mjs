@@ -22,6 +22,7 @@ const HUMAN = Object.freeze(['human']), ANY = Object.freeze(['any']);
 export const READ_ONLY_POSTS = new Set(['/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
 
 const UNDO = {
+  'POST /api/magazine/working-draft/share-feedback/save': 'magazine.working-draft.share-feedback.undo',
   'POST /api/magazine/working-draft/save': 'magazine.working-draft.undo', 'POST /api/magazine/working-draft/edit': 'magazine.working-draft.undo',
   'POST /api/library/folders': 'library.folders.post',
   'POST /api/study-draft/save': 'study-draft.undo', 'POST /api/study-draft/history-restore': 'study-draft.undo',
@@ -35,6 +36,10 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/magazine/working-draft/share-feedback/prepare-paragraph': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','block','seen','text'],
+  '/api/magazine/working-draft/share-feedback/prepare': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content'],
+  '/api/magazine/working-draft/share-feedback/save': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content','operationId','reason?'],
+  '/api/magazine/working-draft/share-feedback/undo': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','undoOperationId','operationId'],
   '/api/source-sessions/translation-accept': ['operationId','expectedRevision','expectedSourceHash','sessionId','turnId','speaker','text','receiptSha256'],
   '/api/magazine/mechanical-check': ['parentStudyId','storyId','pieceId','expectedDraftHash','expectedInputRevision','operationId'],
   '/api/magazine/working-draft/prepare': ['storyId','pieceId','edition','expectedHash','operations'],
@@ -96,7 +101,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
+const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -166,6 +171,35 @@ export function createRouteMap(services) {
       },
       '/api/magazine/working-draft/catalog': {GET:()=>magazineWorking.catalog(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/read': {GET:()=>magazineWorking.read(Object.fromEntries(url.searchParams))},
+      '/api/magazine/working-draft/share-context': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Use one exact value for each Magazine share reference.',400);
+        return magazineWorking.shareContext({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash')});
+      }},
+      '/api/magazine/working-draft/share-feedback': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Choose one exact registered feedback reference and its current hashes.',400);
+        return magazineWorking.readShareFeedback({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash')});
+      }},
+      '/api/magazine/working-draft/share-feedback/edit-model': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Choose one exact feedback file and its current owner hashes.',400);
+        return magazineWorking.readShareFeedbackEditModel({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash')});
+      }},
+      '/api/magazine/working-draft/share-feedback/prepare-paragraph': {POST:input=>magazineWorking.prepareShareFeedbackParagraph(input)},
+      '/api/magazine/working-draft/share-feedback/prepare': {POST:input=>magazineWorking.prepareShareFeedback(input)},
+      '/api/magazine/working-draft/share-feedback/save': {POST:async input=>{const result=await magazineWorking.saveShareFeedback(input);if(result.scope)input.scope=result.scope;return result;}},
+      '/api/magazine/working-draft/share-feedback/history': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Choose one exact registered feedback reference and its current owner hashes.',400);
+        return magazineWorking.shareFeedbackHistory({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash')});
+      }},
+      '/api/magazine/working-draft/share-feedback/undo-eligibility': {GET:()=>{
+        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','operationId'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Choose one exact feedback save and its current owner hashes.',400);
+        return magazineWorking.eligibleUndoShareFeedback({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash'),operationId:url.searchParams.get('operationId')});
+      }},
+      '/api/magazine/working-draft/share-feedback/undo': {POST:async input=>{const result=await magazineWorking.undoShareFeedback(input);if(result.scope)input.scope=result.scope;return result;}},
       '/api/magazine/working-draft/prepare': {POST:input=>magazineWorking.prepare(input)},
       '/api/magazine/working-draft/save': {POST:async input=>{const result=await magazineWorking.save(input);if(result.scope)input.scope=result.scope;return result;}},
       '/api/magazine/working-draft/edit': {POST:async input=>{const result=await magazineWorking.edit(input);if(result.scope)input.scope=result.scope;return result;}},

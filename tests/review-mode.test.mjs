@@ -162,3 +162,9 @@ test('current Check review badge suppresses only its visible matching surface st
   reason.remove();f.callbacks[0]();assert.equal(badge.hidden,false);assert.equal(f.w.document.querySelector('#other').getAttribute('contenteditable'),'false');assert.equal(f.w.document.querySelector('[data-draft-approve]').disabled,true);
  }finally{f.close();}
 });
+
+
+test('feedback badge follows the exact mounted paragraph owner without unlocking manuscript decisions',async()=>{
+ const hash='a'.repeat(64),owner={kind:'magazine',storyId:'s',pieceId:'p'},f=await reviewDOM('<header id="c3-surface-bar"></header><section data-output-stage-surface="11" data-feedback-editable="true" data-feedback-story="s" data-feedback-piece="p" data-feedback-draft="'+hash+'"></section><button data-draft-approve></button>');
+ try{f.w.current=()=>({id:'parent-a',view:'record',viewedStage:11});f.w.AR_CREATE_REVIEW_MODE.magazineFeedbackCorrections=true;f.w.studyDraft={currentOwner:()=>owner,currentProof:()=>({parentStudyId:'parent-a',draftHash:hash})};f.w.eval(code);assert.equal(f.w.document.querySelector('[data-review-state]').textContent,'Feedback editing');assert.equal(f.w.document.querySelector('[data-draft-approve]').disabled,true);f.w.studyDraft.currentProof=()=>({parentStudyId:'foreign',draftHash:hash});f.callbacks[0]();assert.equal(f.w.document.querySelector('[data-review-state]').textContent,'Read-only review');}finally{f.close();}
+});

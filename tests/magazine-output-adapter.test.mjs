@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {createHash,webcrypto} from 'node:crypto';
+import {parseFeedbackShare,updateFeedbackShare} from '../runtime/services/magazine/feedback-share-codec.mjs';
 const code=fs.readFileSync(new URL('../public/document-study/magazine-output-adapter.js',import.meta.url),'utf8');
 const H='a'.repeat(64),R='b'.repeat(64),ID='c'.repeat(64);
 function fixture(){const ctx=vm.createContext({structuredClone,URL});vm.runInContext(code,ctx);const f={state:{projectId:'native-project',owner:{kind:'magazine',storyId:'story',pieceId:'article:1',path:'Workflow/3-Develop/DEV - Clay.md'},hash:H,dirty:false},record:{schema:'ar-create.magazine-publication-reference.v1',revision:R,nativeProjectId:'native-project',workingOwnerRef:{projectId:'story',pieceId:'article:1',editionId:'working',artifactId:'registered-dev',hash:H},publication:{id:ID,url:'https://www.teajia.com/read/clay-1',title:'Clay',recordedBy:'working-draft-frontmatter',edition:null,date:null}},calls:[],resolves:[]};f.resolve=async q=>{f.resolves.push(q);return f.record;};f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),openWorking:async(p,g)=>{g();f.calls.push(p);},openPublication:async(p,g)=>{g();f.calls.push(p);}});return f;}
@@ -46,3 +48,124 @@ test('download gives callback the final guard without a fresh read after its irr
 });
 
 test('working export requires its projected exact hash while legacy navigation remains supported',async()=>{const f=workingActionsFixture();await assert.rejects(f.adapter.onAction({...currentAction('export'),expectedHash:undefined}),/Refresh Outputs/);assert.equal(f.calls.length,0);for(const kind of ['review','native'])await f.adapter.onAction({...currentAction(kind),expectedHash:undefined});await f.adapter.onAction(native);assert.equal(f.calls.length,3);f.state.hash='d'.repeat(64);f.record.workingOwnerRef.hash=f.state.hash;await assert.rejects(f.adapter.onAction(currentAction('export')),/Refresh Outputs/);assert.equal(f.calls.length,3);});
+
+function shareFixture(readContext){
+ const f=fixture(),ctx=vm.createContext({structuredClone,URL});vm.runInContext(code,ctx);
+ f.context={schema:'ar-create.magazine-share-context.v1',selection:{storyId:'story',pieceId:'article:1',edition:'working'},authority:{...f.state.owner,title:'Clay',partKey:'article'},rootIdentity:{scheme:'canonical-directory-sha256-v1',fingerprint:R},draft:{path:f.state.owner.path,hash:H},references:{feedback:[],context:[],research:[]}};
+ f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),readShareContext:async q=>{f.calls.push(q);return readContext?readContext(f,q):f.context;}});return f;
+}
+const shareInput=()=>({projectId:'native-project',outputId:'magazine-working:story:article:1',expectedHash:H});
+test('Magazine Share context reaches existing story/piece authority without native UUID selection or prose copies',async()=>{
+ const f=shareFixture(),value=await f.adapter.readShareContext(shareInput());
+ assert.deepEqual(JSON.parse(JSON.stringify(f.calls)),[{storyId:'story',pieceId:'article:1',edition:'working',expectedHash:H}]);assert.equal(value.draft.hash,H);assert.equal(value.authority.pieceId,'article:1');assert.ok(Object.isFrozen(value));assert.ok(Object.isFrozen(f.calls[0]));
+});
+test('Magazine Share context refuses stale, dirty and foreign work before reading',async()=>{
+ for(const change of [q=>q.outputId='another',q=>q.expectedHash=R,q=>q.projectId='another']){const f=shareFixture(),q=shareInput();change(q);await assert.rejects(f.adapter.readShareContext(q));assert.equal(f.calls.length,0);}
+ const f=shareFixture();f.state.dirty=true;await assert.rejects(f.adapter.readShareContext(shareInput()));assert.equal(f.calls.length,0);
+});
+test('Magazine Share context refuses delayed owner changes and mismatched backend ownership',async()=>{
+ for(const change of [f=>f.state.dirty=true,f=>f.state.hash=R,f=>f.context.authority.pieceId='other',f=>f.context.draft.hash=R,f=>f.context.selection.storyId='other']){const f=shareFixture((f)=>{change(f);return f.context;});await assert.rejects(f.adapter.readShareContext(shareInput()));}
+});
+test('Magazine invitation metadata keeps honest reference states and excludes uncontracted content',async()=>{
+ const row={path:'Workflow/6-Feedback/FEEDBACK - Clay.md',kind:'FEEDBACK',registeredHash:H,currentHash:H,state:'current',readable:true,changedSinceRegistration:false,body:'Uncontracted private copy'};
+ const f=shareFixture();f.context.references.feedback=[row];f.context.body='Uncontracted private copy';const value=await f.adapter.readShareContext(shareInput());assert.equal(value.references.feedback.length,1);assert.equal(JSON.stringify(value).includes('Uncontracted'),false);
+ for(const mutate of [r=>r.kind='DEV',r=>r.state='made-up',r=>r.readable=false,r=>r.currentHash=R,r=>r.registeredHash='invalid']){const g=shareFixture();g.context.references.feedback=[{...row}];mutate(g.context.references.feedback[0]);await assert.rejects(g.adapter.readShareContext(shareInput()));}
+ const g=shareFixture();g.context.references.feedback=[{...row,currentHash:null,state:'missing',readable:false,changedSinceRegistration:true}];assert.equal((await g.adapter.readShareContext(shareInput())).references.feedback[0].state,'missing');
+});
+
+const feedbackPath='Workflow/6-Feedback/FEEDBACK - Clay.md',feedbackMarkdown='# Invented invitation\n';
+const feedbackHash=createHash('sha256').update(feedbackMarkdown).digest('hex');
+function feedbackFixture(options={}){
+ const f=shareFixture(),ctx=vm.createContext({structuredClone,URL,crypto:webcrypto,TextEncoder});vm.runInContext(code,ctx);f.context.references.feedback=[{path:feedbackPath,kind:'FEEDBACK',registeredHash:H,currentHash:feedbackHash,state:'changed-since-registration',readable:true,changedSinceRegistration:true}];
+ f.feedback={schema:'ar-create.magazine-share-feedback.v1',selection:{storyId:'story',pieceId:'article:1',edition:'working'},authority:structuredClone(f.state.owner),rootIdentity:structuredClone(f.context.rootIdentity),draft:structuredClone(f.context.draft),feedback:{path:feedbackPath,hash:feedbackHash,registeredHash:H,changedSinceRegistration:true},document:{path:feedbackPath,kind:'FEEDBACK',hash:feedbackHash,text:feedbackMarkdown},mapping:{structured:false,metadata:null,projection:[],reason:'No explicit recipient/language mapping is saved.'},readOnly:true};f.feedbackCalls=[];f.contextCalls=[];
+ f.adapter=ctx.createMagazineOutputAdapter({current:()=>f.state,resolve:q=>f.resolve(q),readShareContext:async q=>{f.contextCalls.push(q);return options.context?options.context(f,q):f.context;},readShareFeedback:async q=>{f.feedbackCalls.push(q);return options.feedback?options.feedback(f,q):f.feedback;},readShareFeedbackEditModel:q=>options.model(f,q),prepareShareFeedbackParagraph:q=>options.prepare(f,q),saveShareFeedback:q=>options.save(f,q),undoShareFeedback:q=>options.undo(f,q),readShareFeedbackHistory:q=>options.history(f,q)});return f;
+}
+const feedbackInput=()=>({...shareInput(),registeredFeedbackPath:feedbackPath,expectedFeedbackHash:feedbackHash});
+test('registered FEEDBACK transport returns canonical Markdown and frozen fallback without native output selection',async()=>{
+ const f=feedbackFixture(),result=await f.adapter.readShareFeedback(feedbackInput());
+ assert.equal(result.schema,'ar-create.magazine-share-feedback.v1');assert.equal(result.document.text,feedbackMarkdown);assert.equal(result.mapping.structured,false);assert.equal(result.readOnly,true);assert.ok(Object.isFrozen(result.document));assert.ok(Object.isFrozen(f.feedbackCalls[0]));
+ assert.deepEqual(JSON.parse(JSON.stringify(f.feedbackCalls[0])),{storyId:'story',pieceId:'article:1',edition:'working',expectedHash:H,registeredFeedbackPath:feedbackPath,expectedFeedbackHash:feedbackHash});
+});
+
+const wireHash=value=>createHash('sha256').update(value).digest('hex');
+function mappedTransport(f){
+ const md='## Chinese\n\n你好。\n\n## English\n\nHello.\n',split=md.indexOf('## English');
+ const metadata={schema:'ar-create.magazine-feedback-share.v1',entries:[{recipientId:'11111111-1111-4111-8111-111111111111',target:{storyId:'story',pieceId:'article:1',edition:'working',hash:H},sections:[{language:'zh',heading:'## Chinese',hash:wireHash(md.slice(0,split))},{language:'en',heading:'## English',hash:wireHash(md.slice(split))}]}]};
+ const saved=updateFeedbackShare(md,{expectedHash:wireHash(md),metadata}),parsed=parseFeedbackShare(saved.markdown);
+ f.feedback.document.text=saved.markdown;f.feedback.document.hash=saved.hash;f.feedback.feedback.hash=saved.hash;f.context.references.feedback[0].currentHash=saved.hash;
+ f.feedback.mapping={structured:true,metadata:parsed.metadata,projection:parsed.projection,reason:null};return {...feedbackInput(),expectedFeedbackHash:saved.hash};
+}
+test('FEEDBACK transport verifies canonical mapped language ranges and freezes the complete projected result',async()=>{
+ const f=feedbackFixture(),q=mappedTransport(f),result=await f.adapter.readShareFeedback(q);
+ assert.equal(result.mapping.structured,true);assert.equal(result.mapping.projection[0].sections.length,2);assert.match(result.mapping.projection[0].sections[0].markdown,/你好/);
+ assert.ok(Object.isFrozen(result.mapping.metadata.entries[0].target));assert.ok(Object.isFrozen(result.mapping.projection[0].sections[0]));assert.equal(f.contextCalls.length,2);
+ assert.throws(()=>result.mapping.projection[0].sections[0].markdown='Overwritten',TypeError);
+ f.feedback.document.text='New callback text';assert.notEqual(result.document.text,f.feedback.document.text);
+});
+test('FEEDBACK transport refuses foreign paths, missing/duplicate/unreadable references and wrong input hashes before callback',async()=>{
+ for(const alter of [q=>q.registeredFeedbackPath='../private.md',q=>q.registeredFeedbackPath='Workflow/1-Source/CONTEXT - Clay.md',q=>q.registeredFeedbackPath='Workflow/6-Feedback/FEEDBACK - Elsewhere.md',q=>q.expectedFeedbackHash=H,q=>q.expectedHash=R,q=>q.outputId='native-uuid',q=>q.projectId='elsewhere']){
+  const f=feedbackFixture(),q=feedbackInput();alter(q);await assert.rejects(f.adapter.readShareFeedback(q));assert.equal(f.feedbackCalls.length,0);
+ }
+ for(const alter of [f=>f.context.references.feedback=[],f=>f.context.references.feedback.push(f.context.references.feedback[0]),f=>Object.assign(f.context.references.feedback[0],{currentHash:null,state:'missing',readable:false,changedSinceRegistration:true}),f=>Object.assign(f.context.references.feedback[0],{state:'unreadable',readable:false})]){
+  const f=feedbackFixture();alter(f);await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));assert.equal(f.feedbackCalls.length,0);
+ }
+ const f=feedbackFixture();f.state.dirty=true;await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));assert.equal(f.contextCalls.length,0);assert.equal(f.feedbackCalls.length,0);
+});
+test('FEEDBACK response must preserve exact current owner, registered root, hashes and canonical document bytes',async()=>{
+ for(const alter of [r=>r.schema='other',r=>r.readOnly=false,r=>r.selection.storyId='other',r=>r.selection.edition='published',r=>r.selection.editionId='old',r=>r.authority.path='Workflow/3-Develop/DEV - Other.md',r=>r.authority.pieceId='other',r=>r.rootIdentity.fingerprint=H,r=>r.draft.hash=R,r=>r.feedback.path='Workflow/6-Feedback/FEEDBACK - Other.md',r=>r.feedback.hash=R,r=>r.feedback.registeredHash=R,r=>r.feedback.changedSinceRegistration=false,r=>r.document.kind='DEV',r=>r.document.hash=R,r=>r.document.text+='Tampered words.']){
+  const f=feedbackFixture();alter(f.feedback);await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));
+ }
+});
+test('FEEDBACK projection refuses foreign targets, stale language ranges, unbounded metadata and inconsistent fallback',async()=>{
+ for(const alter of [r=>r.mapping.projection[0].target.hash=R,r=>r.mapping.metadata.entries[0].target.storyId='other',r=>r.mapping.projection[0].sections[0].start=-1,r=>r.mapping.projection[0].sections[0].end=9999999,r=>r.mapping.projection[0].sections[0].markdown='Invented substitute.',r=>r.mapping.projection[0].sections[0].hash=R,r=>r.mapping.projection[0].sections[0].language='fr',r=>r.mapping.metadata.entries.push(...Array(201).fill(r.mapping.metadata.entries[0])),r=>r.mapping.metadata.entries[0].sections[0].hash=R,r=>r.mapping.structured=false,r=>r.mapping.reason='Claimed reason despite structured true',r=>r.mapping.metadata=null]){
+  const f=feedbackFixture(),q=mappedTransport(f);alter(f.feedback);await assert.rejects(f.adapter.readShareFeedback(q));
+ }
+ const f=feedbackFixture();f.feedback.mapping.reason='';await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));
+});
+test('delayed FEEDBACK context/result and final registered-reference changes refuse switched work',async()=>{
+ for(const stage of ['context','feedback'])for(const alter of [f=>f.state.dirty=true,f=>f.state.hash=R,f=>f.state.owner.pieceId='other',f=>f.state.projectId='elsewhere']){
+  let release;const f=feedbackFixture({[stage]:()=>new Promise(resolve=>release=resolve)}),pending=f.adapter.readShareFeedback(feedbackInput());await new Promise(resolve=>setImmediate(resolve));alter(f);release(stage==='context'?f.context:f.feedback);await assert.rejects(pending);if(stage==='context')assert.equal(f.feedbackCalls.length,0);
+ }
+ for(const change of ['root','feedback']){
+  const f=feedbackFixture({context:f=>{if(f.contextCalls.length===2){if(change==='root')f.context.rootIdentity.fingerprint=H;else Object.assign(f.context.references.feedback[0],{currentHash:R});}return f.context;}});await assert.rejects(f.adapter.readShareFeedback(feedbackInput()));
+ }
+});
+test('FEEDBACK input is captured across awaits and uncontracted result extras do not enter the frozen projection',async()=>{
+ let release;const f=feedbackFixture({context:f=>f.contextCalls.length===1?new Promise(resolve=>release=resolve):f.context}),q=feedbackInput();
+ f.feedback.secret='Uncontracted payload';f.feedback.document.secret='Uncontracted payload';f.feedback.mapping.secret='Uncontracted payload';
+ const pending=f.adapter.readShareFeedback(q);q.registeredFeedbackPath='Workflow/6-Feedback/FEEDBACK - Other.md';q.expectedFeedbackHash=R;release(f.context);
+ const result=await pending;assert.equal(result.feedback.path,feedbackPath);assert.equal(f.feedbackCalls[0].registeredFeedbackPath,feedbackPath);assert.ok(!JSON.stringify(result).includes('Uncontracted payload'));
+});
+test('a recorded foreign target remains a readable explicit fallback without becoming the current mapping',async()=>{
+ const f=feedbackFixture();mappedTransport(f);
+ const metadata=structuredClone(f.feedback.mapping.metadata);metadata.entries[0].target.hash=R;
+ const saved=updateFeedbackShare(f.feedback.document.text,{expectedHash:f.feedback.document.hash,metadata});
+ f.feedback.document.text=saved.markdown;f.feedback.document.hash=saved.hash;f.feedback.feedback.hash=saved.hash;f.context.references.feedback[0].currentHash=saved.hash;
+ f.feedback.mapping={structured:false,metadata,projection:[],reason:'Earlier working revision; full FEEDBACK remains readable.'};
+ const result=await f.adapter.readShareFeedback({...feedbackInput(),expectedFeedbackHash:saved.hash});
+ assert.equal(result.mapping.structured,false);assert.equal(result.mapping.projection.length,0);assert.equal(result.mapping.metadata.entries[0].target.hash,R);assert.equal(result.draft.hash,H);assert.equal(result.document.text,saved.markdown);
+});
+
+test('Magazine Share entry resolves its selected working owner without publication or photo-preview setup',async()=>{
+ const f=shareFixture();f.resolve=()=>{throw Error('Publication photographs are not configured.');};
+ const value=await f.adapter.readShareEntry({projectId:'native-project'});
+ assert.equal(value.output.id,'magazine-working:story:article:1');assert.equal(value.output.workingHash,H);assert.equal(value.output.title,'Clay');assert.equal(value.context.draft.hash,H);assert.ok(Object.isFrozen(value));
+ f.state.dirty=true;await assert.rejects(f.adapter.readShareEntry({projectId:'native-project'}));
+});
+
+
+const editModel=f=>({...structuredClone(f.feedback),schema:'ar-create.magazine-share-feedback-edit-model.v1',editable:true,unavailableReason:null,paragraphs:[{index:0,seen:createHash('sha1').update(feedbackMarkdown).digest('hex').slice(0,12),text:'Invented invitation',raw:feedbackMarkdown,editable:true}]});
+test('Share paragraph model is checked against canonical bytes and owner before offering human edits',async()=>{
+ const f=feedbackFixture({model:f=>editModel(f)}),m=await f.adapter.readShareFeedbackEditModel(feedbackInput());assert.equal(m.paragraphs[0].text,'Invented invitation');assert.ok(Object.isFrozen(m.paragraphs));
+ for(const change of [m=>m.paragraphs[0].raw='Other words',m=>m.paragraphs[0].seen='0'.repeat(12),m=>m.document.hash=H,m=>m.rootIdentity.fingerprint=H]){const g=feedbackFixture({model:f=>{const m=editModel(f);change(m);return m;}});await assert.rejects(g.adapter.readShareFeedbackEditModel(feedbackInput()));}
+});
+test('paragraph preparation preserves exact owner scope and refuses delayed owner changes',async()=>{
+ let calls=0;const f=feedbackFixture({model:f=>editModel(f),prepare:(f,q)=>{calls++;return {...q,selection:f.feedback.selection,rootIdentity:f.feedback.rootIdentity,authority:f.feedback.authority,content:'# Changed invitation\n'};}});
+ const m=await f.adapter.readShareFeedbackEditModel(feedbackInput()),q={...feedbackInput(),block:0,seen:m.paragraphs[0].seen,text:'Changed invitation'};assert.match((await f.adapter.prepareShareFeedbackParagraph(q)).content,/Changed/);assert.equal(calls,1);
+ const g=feedbackFixture({model:f=>editModel(f),prepare:(f,q)=>{f.state.dirty=true;return {...q,selection:f.feedback.selection,rootIdentity:f.feedback.rootIdentity,authority:f.feedback.authority,content:'Changed'};}});await assert.rejects(g.adapter.prepareShareFeedbackParagraph(q));
+});
+test('Share save/Undo transport retains the exact operation and refuses foreign context or result',async()=>{
+ const id='22222222-2222-4222-8222-222222222222',content='Changed invitation',f=feedbackFixture({save:(f,q)=>({written:true,path:feedbackPath,hash:wireHash(q.content),beforeHash:feedbackHash,operationId:q.operationId}),undo:(f,q)=>({undone:q.undoOperationId,operationId:q.operationId})});
+ const q={...feedbackInput(),rootFingerprint:R,content,operationId:id};assert.equal((await f.adapter.saveShareFeedback(q)).operationId,id);await assert.rejects(f.adapter.saveShareFeedback({...q,rootFingerprint:H}));
+ assert.equal((await f.adapter.undoShareFeedback({...feedbackInput(),rootFingerprint:R,operationId:id,undoOperationId:'33333333-3333-4333-8333-333333333333'})).undone,'33333333-3333-4333-8333-333333333333');
+});
