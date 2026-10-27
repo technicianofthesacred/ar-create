@@ -1,3 +1,13 @@
+## 28 October — Exact Check passages and immediate output navigation verified
+
+The selected Carousel now targets repeated quoted caption occurrences independently: native first1–25 and second34–58, with exact saved-field hashes and fresh receipt verification. An own-word Undo restores both original canonical Markdown and words hashes. Older receipts remain immutable; changed wording is still explicitly outdated. The earlier whole-field selection defect is fixed in4cab155.
+
+Immediate independent-output selection followed by Write or Read now retains the requested mode through mounting. Native switching between existing Chinese and Japanese Carousel copies opens the correct editable/read-only owner; no wording approval occurs. Six delayed/superseded race regressions cover stale selection, older Arrange restoration, exact textarea/caret/scroll preservation.50 integrated Check/navigation/review-layout tests pass. Native Article layout-save review admission is also integrated with84 isolated proxy/owner/restart/export checks.
+
+These are uninstalled candidates, so their installed checkboxes stay open. Library-photo insertion still needs its exact review operation admission and actual native Save/restart/export/Undo. Native Article photo-position guessing is separately being replaced by an explicit choice through existing placements.
+
+Same1280×720 Direction reference/live comparison confirms614×74 text fields, equal x111 and less than1px vertical difference. The live empty Angles heading is18px lower than the populated chosen-angle reference; populated comparison, whole C/phone/all12 remain open.
+
 ## 28 October — Native acceptance found two remaining connections
 
 Actual invented-content testing confirms selected Carousel Check reads its own canonical saved words without wording approval, shows its own supplementary tools, and invalidates findings after exact own-word Undo. The stale receipt survives an actual owner restart and exposes no stale passage actions. Exact original words and canonical Markdown hashes are restored. Repeated identical caption quotes still fall back to whole-field selection; exact occurrence mapping is under repair, so Check remains unchecked.24 focused integrated Check/proxy tests and build pass.
