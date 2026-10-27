@@ -1,3 +1,15 @@
+## 28 October — PR83 installed; bounded goal items checked off
+
+Signed main `a34ba054f33a3927af4d9577618bde0f2a185e29`, build `2026-10-27T22:48:10.124Z`, is verified live in installed8841 and main59958.658 relevant checks/27 files, build/package934 and92 served hashes pass, including generated runtime canvas JavaScript/CSS. API content, original editions, canonical dirty files and configuration are preserved. Earlier dated candidate notes below are historical; this entry is the current release state.
+
+- [x] Choose an indexed Library photo and insert it after an explicit Magazine article paragraph; native Save/restart/Media usage/Audience/retained HTML/exact Undo.
+- [x] Choose an explicit position for a photo in an independent Article, save/restart/export, Undo the asset selection, remove the added occurrence and exactly Undo removal. Recorded layout slots keep their structure; original placements and wording are restored after testing.
+- [x] Canonical own-Carousel Check with fresh source/photo evidence, exact repeated-passage targeting, persisted stale refusal and exact wording Undo. Meaning, translation and unsupported checks remain held.
+- [x] Guarded manual language-edition/Article-composition/private-export review transport, retaining immutable parent lineage and human wording decisions.
+- [ ] Full Direction/populated approved C/final NOTES desktop/phone interactions, Bench/Library/Pieces/all12 and the complete creative journey. Compact controls have bounded desktop field measurements;390px Article Phone preview is not app phone-viewport proof.
+
+Share’s visible outdated-target warning is a separate uninstalled candidate. Magazine still needs canonical invitation/fact controls and a genuinely authoritative published-edition reader; a publication URL or retained private export does not establish a published edition. No real recipient, sending, reply or closure fact has been inferred. Large-library catalog cost/coverage is being checked against the all-photos requirement.
+
 ## 28 October — Coherent photo and Carousel Check milestone verified candidate
 
 658 relevant checks across27 files and the generated build pass after the six integration failures were repaired. Native invented-content proof covers all-Library explicit paragraph insertion, independent Article position/asset selection, actual owner restart/reload, exact Media used-where, private retained HTML/file hashes, scoped Undo and added-occurrence removal with its own exact Undo. Original placements and canonical wording are restored. Internal retention leaves no longer create extra gallery choices; explicitly selected parent identities remain available and used-where stays exact.
