@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It reads the code, so it cannot drift.
-> Generated 2026-10-21T03:26:15.507Z.
+> Generated 2026-10-27T15:35:42.337Z.
 
-**At a glance:** 7 commands · 243 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 277 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-243 commands from `runtime/commands.mjs`; the running app serves the same list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+277 commands from `runtime/commands.mjs`; the running app serves the same list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -129,7 +129,7 @@
 | `study-draft.save` | `POST /api/study-draft/save` | any | write · undo `study-draft.undo` |
 | `study-draft.undo` | `POST /api/study-draft/undo` | any | write |
 
-### library (23)
+### library (26)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -144,6 +144,8 @@
 | `evidence.get` | `GET /api/evidence` | any | read |
 | `evidence.post` | `POST /api/evidence` | any | write |
 | `icloud-albums` | `GET /api/icloud-albums` | any | read |
+| `library.folders.get` | `GET /api/library/folders` | any | read |
+| `library.folders.post` | `POST /api/library/folders` | any | write · undo `library.folders.post` |
 | `sources.blob` | `GET /api/sources/blob` | any | read |
 | `sources.file.get` | `GET /api/sources/file` | any | read |
 | `sources.file.post` | `POST /api/sources/file` | any | write |
@@ -155,23 +157,50 @@
 | `sources.tree` | `GET /api/sources/tree` | any | read |
 | `study-originals` | `GET /api/study-originals` | any | read |
 | `study-originals.audio` | `GET /api/study-originals/audio` | any | read |
+| `study-originals.check-inputs` | `GET /api/study-originals/check-inputs` | any | read |
 | `study.source-context` | `GET /api/study/source-context` | any | read |
 
-### magazine (2)
+### magazine (27)
 
 | name | route | who | kind |
 |---|---|---|---|
 | `magazine.artifact` | `GET /api/magazine/artifact` | any | read |
+| `magazine.library-photos` | `GET /api/magazine/library-photos` | any | read |
+| `magazine.library-photos.asset` | `GET /api/magazine/library-photos/asset` | any | read |
+| `magazine.library-photos.preview` | `GET /api/magazine/library-photos/preview` | any | read |
+| `magazine.mechanical-check.get` | `GET /api/magazine/mechanical-check` | any | read |
+| `magazine.mechanical-check.post` | `POST /api/magazine/mechanical-check` | human | write |
 | `magazine.portfolio` | `GET /api/magazine/portfolio` | any | read |
+| `magazine.working-draft.catalog` | `GET /api/magazine/working-draft/catalog` | any | read |
+| `magazine.working-draft.edit` | `POST /api/magazine/working-draft/edit` | human | write · undo `magazine.working-draft.undo` |
+| `magazine.working-draft.export` | `POST /api/magazine/working-draft/export` | any | write |
+| `magazine.working-draft.export-file` | `GET /api/magazine/working-draft/export-file` | any | read |
+| `magazine.working-draft.exports` | `GET /api/magazine/working-draft/exports` | any | read |
+| `magazine.working-draft.operation` | `GET /api/magazine/working-draft/operation` | any | read |
+| `magazine.working-draft.prepare` | `POST /api/magazine/working-draft/prepare` | human | write |
+| `magazine.working-draft.read` | `GET /api/magazine/working-draft/read` | any | read |
+| `magazine.working-draft.save` | `POST /api/magazine/working-draft/save` | any | write · undo `magazine.working-draft.undo` |
+| `magazine.working-draft.share-context` | `GET /api/magazine/working-draft/share-context` | any | read |
+| `magazine.working-draft.share-feedback` | `GET /api/magazine/working-draft/share-feedback` | any | read |
+| `magazine.working-draft.share-feedback.edit-model` | `GET /api/magazine/working-draft/share-feedback/edit-model` | any | read |
+| `magazine.working-draft.share-feedback.history` | `GET /api/magazine/working-draft/share-feedback/history` | any | read |
+| `magazine.working-draft.share-feedback.prepare` | `POST /api/magazine/working-draft/share-feedback/prepare` | any | write |
+| `magazine.working-draft.share-feedback.prepare-mapping` | `POST /api/magazine/working-draft/share-feedback/prepare-mapping` | human | write |
+| `magazine.working-draft.share-feedback.prepare-paragraph` | `POST /api/magazine/working-draft/share-feedback/prepare-paragraph` | human | write |
+| `magazine.working-draft.share-feedback.save` | `POST /api/magazine/working-draft/share-feedback/save` | any | write · undo `magazine.working-draft.share-feedback.undo` |
+| `magazine.working-draft.share-feedback.undo` | `POST /api/magazine/working-draft/share-feedback/undo` | human | write |
+| `magazine.working-draft.share-feedback.undo-eligibility` | `GET /api/magazine/working-draft/share-feedback/undo-eligibility` | any | read |
+| `magazine.working-draft.undo` | `POST /api/magazine/working-draft/undo` | human | write |
 
-### material (2)
+### material (3)
 
 | name | route | who | kind |
 |---|---|---|---|
+| `first-flow.material-triage` | `POST /api/first-flow/material-triage` | human | write |
 | `material.album` | `POST /api/material/album` | any | write |
 | `material.folder.open` | `POST /api/material/folder/open` | any | write |
 
-### media (8)
+### media (10)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -181,6 +210,8 @@
 | `study.photos` | `GET /api/study/photos` | any | read |
 | `study.photos.add` | `POST /api/study/photos/add` | any | write |
 | `study.photos.available` | `GET /api/study/photos/available` | any | read |
+| `study.photos.inspect` | `GET /api/study/photos/inspect` | any | read |
+| `study.photos.preview` | `GET /api/study/photos/preview` | any | read |
 | `study.photos.select` | `POST /api/study/photos/select` | any | write |
 | `study.photos.update` | `POST /api/study/photos/update` | any | write |
 
@@ -320,7 +351,7 @@
 | `presence.get` | `GET /api/presence` | any | read |
 | `presence.post` | `POST /api/presence` | any | write |
 
-### transcript (8)
+### transcript (11)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -330,6 +361,9 @@
 | `recordings` | `GET /api/recordings` | any | read |
 | `source-sessions` | `GET /api/source-sessions` | any | read |
 | `source-sessions.edit` | `POST /api/source-sessions/edit` | any | write · undo `source-sessions.undo` |
+| `source-sessions.translation-accept` | `POST /api/source-sessions/translation-accept` | human | write · undo `source-sessions.undo` |
+| `source-sessions.translation-proposals` | `POST /api/source-sessions/translation-proposals` | any | write |
+| `source-sessions.translation-review` | `GET /api/source-sessions/translation-review` | any | read |
 | `source-sessions.undo` | `POST /api/source-sessions/undo` | any | write |
 | `transcript-tools.connect` | `POST /api/transcript-tools/connect` | any | write |
 
