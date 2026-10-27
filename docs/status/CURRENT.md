@@ -1,3 +1,9 @@
+## 28 October — Exact saved output Bench handoff installed
+
+PR74 signed main `2a2dc8bc692b1047a17033b26cffd6a9fcfca8f1`, build2026-10-27T18:17:00.912Z, is live-verified in installed8841 and main59958.286focused checks/build/package913/64servedhashes and API/canonical/config preservation pass. The entry below now describes installed bounded behavior.
+
+Checked only registered independent-output Bench pickup and cold browser parent restoration, with native independent wording/Read/reload/actualrestart/exactUndo proof. Whole Bench semantic moves/history, Library organization, Research/brief/checking/assisted expression, visible captions/credits/composed roles, editions/followup and all12 C/phone visual gates remain open.
+
 ## 28 October — Saved output Bench pickup verified; release pending
 
 Registered output-owned workspace rows now reopen the exact existing editor after checking the ready root, output binding and physical workspace/document. A cold browser restores only the known parent shell, with no copied words; the output owner supplies its own content. Dirty work, changed navigation, mismatched identities and cancelled opening refuse.
