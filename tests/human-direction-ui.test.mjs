@@ -142,3 +142,14 @@ test('shared prose hides helper metadata and preserves the exact question blocks
  f.setStage(4);await tick();const field=f.w.document.querySelector('[data-human-direction]');assert.doesNotMatch(field.value,/ar-create:research-question|recordHash/);field.value='My edited shared prose.';field.dispatchEvent(new f.w.Event('input'));f.w.document.querySelector('[data-direction-save]').click();await tick();
  assert.equal(f.records.project.body.includes(savedBlock),true);assert.equal(owner.planState(project).values.audience,'Preserved audience');assert.equal(owner.questionState(project).entries[0].text,questionInput.text);assert.match(f.records.project.body,/My edited shared prose/);
 });
+
+test('only complete emitted question metadata is hidden; malformed blocks remain editable without losing bytes',async t=>{
+ const f=await fixture(t,null,{initialStage:3}),owner=f.w.studyHumanDirection;await owner.appendQuestion(questionInput,()=>{});await tick();const valid=f.records.project.body,meta=JSON.parse(valid.match(/^<!-- ar-create:research-question:v1 (.*) -->/)[1]);
+ assert.doesNotMatch(f.w.document.querySelector('[data-human-direction]').value,/ar-create:research-question/);
+ const invalid=[{...meta,origin:{}},{...meta,origin:'manual origin'},{...meta,origin:{...meta.origin,recordHash:'invalid'}},{...meta,id:undefined},{...meta,createdAt:undefined},{...meta,createdAt:'yesterday'},{...meta,pointId:42},{...meta,extra:'unsupported metadata'},{...meta,origin:{...meta.origin,originalText:''}}];
+ for(const [index,value]of invalid.entries()){
+  const block=valid.replace(/^<!-- ar-create:research-question:v1 .* -->/, '<!-- ar-create:research-question:v1 '+JSON.stringify(value)+' -->');f.records.project={...f.records.project,body:block,hash:'manual-'+index,revision:10+index};f.w.dispatchEvent(new f.w.Event('focus'));await tick();
+  const field=f.w.document.querySelector('[data-human-direction]');assert.equal(field.value,block);assert.equal(owner.questionState({parentStudyId:questionInput.parentStudyId}).entries.length,0);
+  field.value=block+'\nMy additional prose.';field.dispatchEvent(new f.w.Event('input'));f.w.document.querySelector('[data-direction-save]').click();await tick();assert.equal(f.records.project.body,block+'\nMy additional prose.');
+ }
+});
