@@ -1,3 +1,9 @@
+## 28 October — Unfinished wording recovery and closing captions installed
+
+PR76 signed main `7be7c69afcd0a75102f363177c07249c6314006f`, build2026-10-27T19:05:14.562Z, is verified live in installed8841 and main59958.204 affected checks/build/package918/64 served hashes and API/canonical/config preservation pass. The candidate entry below now describes installed bounded behavior. Earlier candidate-status statements are historical.
+
+Checked only exact-owner pre-Save caption/credit recovery and standalone closing-section photo captions. Special composed roles, full C/all12/phone interactions and the broader creative/delivery journey remain open.
+
 ## 28 October — Unfinished caption recovery and closing-photo candidate
 
 Unfinished caption/photo credit and article-credit fields now use the existing editor's browser recovery, isolated by tab and exact article owner. Reload restores exact unfinished words without saving the article. A changed article/photo keeps earlier words in a separate review panel; explicit discard is required before editing another position. Invalid unfinished input remains exact for repair. Existing arrangement Undo cannot discard unrelated retained words.
@@ -13,7 +19,7 @@ The full goal remains active. Check off only the specific verified result, with 
 - [x] All Library photos → explicit existing article photo replacement, with restart/reload/exact Undo: installed PR72.
 - [x] Exact saved independent output → Bench pickup and cold parent restoration: installed PR74.
 - [x] Body photo captions/credits and working article credits → Save/restart/export/exact Undo: installed PR75.
-- [ ] Install verified candidate: unsaved caption/credit reload/restart recovery and standalone closing-photo captions. Source/native proof exists; installed acceptance remains open.
+- [x] Unsaved caption/credit reload/restart recovery and standalone closing-photo captions: installed PR76, with exact live-byte/preservation proof.
 - [ ] Remaining Bench/Library/Pieces/all12 connections and complete source-to-delivery journey.
 - [ ] Approved C/final NOTES whole-layout desktop/phone light/dark and interaction acceptance.
 
