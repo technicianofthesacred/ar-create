@@ -1,3 +1,10 @@
+## 28 October — Side captions and navigation cleanup installed
+
+PR80 signed main `41fc8d757fa177faf3c6c7f467e6438f4e99964c`, build 2026-10-27T20:17:35.132Z, is verified live in installed8841 and main59958.159 checks/build/package923/72 served hashes and API/canonical/config preservation pass. The candidate below now describes installed bounded behavior; earlier candidate statements are historical.
+
+- [x] Exact top-level side-photo caption/credit Save/restart/preview/export/exact Undo: installed PR80.
+- [ ] Nested/on-photo/saying captions, full creative journey, editions and whole C/phone/all12 acceptance.
+
 ## 28 October — Side-photo captions and navigation cleanup candidate
 
 Top-level side-photo captions and credits now use the existing canonical annotation writer and captioned photo renderer. Native invented Save → actual owner restart → Audience → retained HTML → exact arrangement Undo restores the augmented test manuscript; external fixture setup/cleanup is recorded separately, with the original restored. Adjacent words, original photo/publication and composition flags stay exact. Light/dark desktop captions are readable; nested, on-photo and closing-saying roles remain refused and open.
