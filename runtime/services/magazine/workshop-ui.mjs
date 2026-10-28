@@ -8,18 +8,9 @@ const base = id => '/transcription/' + encodeURIComponent(id);
 const clock = seconds => { const s = Math.max(0, Math.floor(Number(seconds) || 0)); return [Math.floor(s / 3600), Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, '0')).join(':'); };
 
 const stageLabels = {join:'Joining conversation', queued:'Waiting to start', normalize:'Preparing audio', transcribe:'Transcribing', diarize:'Separating speakers', merge:'Combining transcript', ingest:'Saving transcript'};
-export function reviewIssues(result) {
-  return (result.segments || []).flatMap((segment,index,all)=>{
-    const reasons=[];
-    if(!segment.speaker)reasons.push('Missing speaker');
-    if(segment.confidence_unavailable|| (Number.isFinite(segment.avg_logprob)&&segment.avg_logprob < -1))reasons.push('Unclear speech');
-    if(!reasons.includes('Unclear speech')&&(segment.words||[]).some(w=>Number.isFinite(w.probability)&&w.probability<0.35))reasons.push('Unclear speech');
-    for(const flag of result.metadata?.quality_flags||[]){if(Number(flag.start)<segment.end&&Number(flag.end)>segment.start){const reason=flag.kind==='confidence'?'Unclear speech':'Possible repetition';if(!reasons.includes(reason))reasons.push(reason)}}
-    const text=segment.text.trim();
-    if(text && ((all[index-1]?.text.trim()===text&&all[index+1]?.text.trim()===text)||/(.{4,80}?)\1\1/u.test(text)))reasons.push('Repeated text');
-    return reasons.length?[{index,start:segment.start,end:segment.end,reasons}]:[];
-  });
-}
+export {reviewIssues} from '../../../public/lib/transcript-review-issues.js';
+import {reviewIssues} from '../../../public/lib/transcript-review-issues.js';
+
 function progressLine(job){
   const steps=[['join','Joining'],['diarize','Detecting speakers'],['transcribe','Transcribing'],['done','Ready']];
   const current=job.state==='done'?3:job.stage==='transcribe'?2:['merge','ingest','filing'].includes(job.stage)?2:job.stage==='diarize'?1:0;

@@ -73,12 +73,17 @@ export async function createArticlePersistence({dataDir,atomicWrite,StateError,f
   for(const entry of entries){const current=await bytes(entry.file);if(same(current,entry.next))continue;if(entry.next===null){await unlink(entry.file);}else await atomicWrite(entry.file,entry.next);}
   await unlink(journal);await syncDirectory();return {files:entries.map(entry=>[entry.file,entry.next])};
  }
- async function publish(files,{expectedFiles=new Map()}={}){
+ async function publish(files,{expectedFiles=new Map(),beforeIntent}={}){
+  if(beforeIntent!==undefined&&typeof beforeIntent!=='function')fail('Publication before-intent guard must be an internal synchronous function.');
   await assertOwner();if(existsSync(journal))fail('An interrupted article publication must recover before saving.');
   const prepared=[];
   for(const [file,value] of files){const relative=path.relative(dataDir,file).split(path.sep).join('/');if(!allowed(relative))fail('Publication path is outside the allowed bundle files.');const old=await bytes(file),next=value===null?null:Buffer.from(value);if(expectedFiles.has(file)){const expected=expectedFiles.get(file);if((old===null?null:articleHash(old))!==expected)fail('A bundle changed after inspection; existing files were preserved.');}prepared.push({path:relative,old:packed(old),next:packed(next)});}
+  // Read-only review artifacts are transaction dependencies too. Validate all
+  // pins after asynchronous final checks, even when their bytes are not written.
+  for(const [file,expected] of expectedFiles){const current=await bytes(file);if((current===null?null:articleHash(current))!==expected)fail('A bundle changed after inspection; existing files were preserved.');}
   const intent={schema:'ar-create.article-publication.v1',id:randomUUID(),files:prepared};
-  await atomicWrite(journal,json(intent),{exclusive:true});await fault?.('after-intent',intent);
+  await fault?.('before-intent',intent);
+  await atomicWrite(journal,json(intent),{exclusive:true,...(beforeIntent?{beforePublish:beforeIntent}:{})});await fault?.('after-intent',intent);
   for(const [index,entry] of prepared.entries()){
    const file=path.join(dataDir,entry.path);if(!same(await bytes(file),unpack(entry.old)))fail('A file changed during article publication; recovery requires inspection.');
    const next=unpack(entry.next);if(!same(unpack(entry.old),next)){if(next===null){if(entry.old!==null)await unlink(file);}else await atomicWrite(file,next);}

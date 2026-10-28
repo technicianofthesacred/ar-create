@@ -334,7 +334,11 @@ html body.wbf-on #wbf-document-actions .wbf-mode-switch button:hover{color:var(-
 
 /* Project-wide browsers cover the manuscript without disposing its tools.
    Keep mounted editor/check nodes intact, but out of the browser and tab order. */
-html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-drawer,#wbf-pull){display:none!important}
+/* decorate() maintains this state only while the project-wide browser is open. */
+html body.wbf-on[data-wbf-home="bench"] #wbf-drawer,
+html body.wbf-on[data-wbf-home="pieces"] #wbf-drawer,
+html body.wbf-on[data-wbf-home="bench"] #wbf-pull,
+html body.wbf-on[data-wbf-home="pieces"] #wbf-pull{display:none!important}
 
 /* The desktop tool drawer must leave the current writing controls reachable. */
 @media(min-width:761px){

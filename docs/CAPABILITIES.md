@@ -1,10 +1,10 @@
 # ar-create — Capabilities
 
 > **GENERATED — do not edit by hand.** Rerun
-> `npm run build` then `npm run capabilities`. It reads the code, so it cannot drift.
-> Generated 2026-10-27T19:45:36.792Z.
+> `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
+> Generated 2026-10-28T03:22:43.205Z.
 
-**At a glance:** 7 commands · 277 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 279 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-277 commands from `runtime/commands.mjs`; the running app serves the same list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+279 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -288,7 +288,7 @@
 | `state.get` | `GET /api/state` | any | read |
 | `state.put` | `PUT /api/state` | any | write |
 
-### research (29)
+### research (31)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -296,7 +296,9 @@
 | `first-flow.attach` | `POST /api/first-flow/attach` | any | write |
 | `first-flow.binding` | `GET /api/first-flow/binding` | any | read |
 | `first-flow.check` | `POST /api/first-flow/check` | any | write |
+| `first-flow.context` | `GET /api/first-flow/context` | any | read |
 | `first-flow.decide-line` | `POST /api/first-flow/decide-line` | any | write |
+| `first-flow.material-context` | `GET /api/first-flow/material-context` | any | read |
 | `first-flow.pick` | `POST /api/first-flow/pick` | any | write |
 | `first-flow.prepare` | `POST /api/first-flow/prepare` | any | write |
 | `first-flow.reinspect` | `POST /api/first-flow/reinspect` | any | write |
@@ -438,9 +440,9 @@ Exit codes: 0 = ok; 1 = failed; 2 = usage; 3 = conflict (re-read; never force); 
 - **`ar_create_call`** — Call one command by name with a JSON input. _(agents/mcp/server.mjs)_
 - **`ar_create_events`** — Events since a cursor: {kind, scope, revision, actor, client, at, operationId}. _(agents/mcp/server.mjs)_
 - **`study_draft_read`** — Read the latest saved manuscript part and its retained source catalog. _(agents/mcp/server.mjs)_
-- **`study_draft_prepare`** — Capture selected corrected source/context, current manuscript and human direction for a proposal. _(agents/mcp/server.mjs)_
+- **`study_draft_prepare`** — Capture selected corrected source/context, current manuscript and human direction. _(agents/mcp/server.mjs)_
 - **`study_draft_context`** — Read the hash-verified captured material and human editorial decisions for a known request. _(agents/mcp/server.mjs)_
-- **`study_draft_propose`** — Stage plain wording for existing paragraphs for human review. _(agents/mcp/server.mjs)_
+- **`study_draft_propose`** — Stage plain existing-paragraph replacements, prepared openingOptions or prepared article continuationParagraphs. _(agents/mcp/server.mjs)_
 - **`study_draft_review`** — Inspect a candidate, its decision and freshness. _(agents/mcp/server.mjs)_
 - **`study_draft_status`** — Current saved identity and request decisions, with an optional known review. _(agents/mcp/server.mjs)_
 

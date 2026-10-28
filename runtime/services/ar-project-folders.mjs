@@ -469,7 +469,7 @@ doing: AR Create explicit project action
     return {projectId,expected:s.expected,projection:projectDraft(model)};
   });}
   function metadataChange(b,before,snapshot){const after=JSON.stringify(draftMetadata(snapshot),null,2);return {area:'binding-metadata',relativePath:b.projectId+'.draft-correspondence.json',beforeHash:before===null?null:digest(before),after,afterHash:digest(after)};}
-  function nativeRequest(input,kind){
+  function nativeRequest(input,kind,internal={}){
     const fields=['projectId','operationId','expected',...(kind==='draft-operations'?['operations']:kind==='draft-undo'?['undoOperationId']:kind==='draft-restore'?['restoreOperationId','restorePosition']:kind==='draft-rebind'?['humanDecision']:[])];
     if(!input||typeof input!=='object'||Object.keys(input).some(k=>!fields.includes(k))||fields.some(k=>!Object.hasOwn(input,k)))fail('Malformed native draft request; caller snapshots are refused.',400);
     if(kind==='draft-rebind'&&input.humanDecision!==true)fail('Explicit human rebind decision required.',403);
@@ -519,6 +519,9 @@ doing: AR Create explicit project action
         const mc=metadataChange(b,s.metadataRaw,result.snapshot);if(mc.beforeHash!==mc.afterHash)changes.push(mc);
         if(!same(draftStatus(b).expected,s.expected))fail('Bound records changed during native preparation.');
         const r={schema:'ar-create.project-folder-operation.v1',projectId:b.projectId,operationId:input.operationId,requestHash,kind,state:'prepared',expectedBindingHash:s.expected.bindingHash,expectedWorkflow:s.expected.workflow,changes,...(result.inverse?{correspondenceInverse:result.inverse}:{}),correspondenceAffectedIds:affectedIds,correspondenceLedger:result.ledger||[{kind,ownedUndoOperationId:input.undoOperationId||null}]};
+        // Authorize dependencies once, immediately before durable intent. Recovery
+        // must complete this exact authorized receipt without a new context read.
+        if(internal.beforeIntent!==undefined){if(typeof internal.beforeIntent!=='function')fail('Native before-intent guard must be an internal synchronous function.');const checked=internal.beforeIntent();if(checked&&typeof checked.then==='function')fail('Native before-intent guard must be synchronous.');}
         atomic(op,JSON.stringify(r,null,2),true);return commit(b,r);
       });
     });
@@ -554,7 +557,7 @@ doing: AR Create explicit project action
     }
     return { projectId, ready: unresolved.length === 0, unresolved };
   }
-  return { bind,readDraftStatus,readDraftProjection,prepareDraftCorrespondence:input=>nativeRequest(input,'draft-prepare'),rebindDraftCorrespondence:input=>nativeRequest(input,'draft-rebind'),applyDraftOperations:input=>nativeRequest(input,'draft-operations'),undoDraftOperation:input=>nativeRequest(input,'draft-undo'),restoreDraftVersion:input=>nativeRequest(input,'draft-restore'), readBinding: (id) => structuredClone(load(id)), scan, add, reconnect, readWorkflow, workflowReadiness, answerQuestion: (input) => change(input, "answer"), reviseAnswer: (input) => change(input, "revise-answer"), editDraft: (input) => change(input, "edit"), inspectOperation, recoverOperation };
+  return { bind,readDraftStatus,readDraftProjection,prepareDraftCorrespondence:input=>nativeRequest(input,'draft-prepare'),rebindDraftCorrespondence:input=>nativeRequest(input,'draft-rebind'),applyDraftOperations:(input,internal)=>nativeRequest(input,'draft-operations',internal),undoDraftOperation:input=>nativeRequest(input,'draft-undo'),restoreDraftVersion:input=>nativeRequest(input,'draft-restore'), readBinding: (id) => structuredClone(load(id)), scan, add, reconnect, readWorkflow, workflowReadiness, answerQuestion: (input) => change(input, "answer"), reviseAnswer: (input) => change(input, "revise-answer"), editDraft: (input) => change(input, "edit"), inspectOperation, recoverOperation };
 }
 export {
   createBoundProjectFolders,

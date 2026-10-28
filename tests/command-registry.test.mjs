@@ -65,6 +65,15 @@ test('every app route belongs to runtime capabilities or an explicit read-only r
  assert.equal(f.capabilities.library,'file-backed');
 });
 
+test('agent Carousel review and decisions keep physical identity in the query and exact proof in the closed body',async t=>{
+ const f=await setup(t),scope={projectId:randomUUID(),documentId:randomUUID(),outputId:randomUUID()},id=randomUUID(),binding={requestId:id,proposalHash:'a'.repeat(64),reviewHash:'b'.repeat(64),contextHash:'c'.repeat(64),wordsIdentity:'d'.repeat(64)};
+ for(const action of ['review','accept','reject']){
+  const command=f.capabilities.commands.find(c=>c.route==='/api/shared-carousels/requests/{id}/'+action),body=action==='review'?{raw:'Invented complete carousel Markdown.'}:binding,request=buildRequest(command,{id,...scope,...body}),url=new URL(request.path,f.url);
+  assert.deepEqual(Object.fromEntries(url.searchParams),scope);assert.deepEqual(request.body,body,'the maintained review/decision owner refuses extra physical scope fields');assert.equal(url.pathname,'/api/shared-carousels/requests/'+id+'/'+action);if(action!=='review')assert.deepEqual(command.actors,['human']);
+ }
+ const prepare=f.capabilities.commands.find(c=>c.route==='/api/shared-carousels/prepare');assert.deepEqual(buildRequest(prepare,scope).body,scope,'preparation still requires repeated exact physical scope');
+});
+
 test('the route map mounts with identical behaviour: 405 with Allow, origin and actor guards',async t=>{
  const f=await setup(t);
  const wrong=await fetch(f.url+'/api/concept/save');assert.equal(wrong.status,405);assert.equal(wrong.headers.get('allow'),'POST');

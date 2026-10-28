@@ -139,10 +139,13 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
           }
           if(req.method==='GET'){
             if(action==='recovery'){send(res,200,corrections.recoveryInfo(id));return true;}
+            const readOnly=action==='snapshot'&&url.searchParams.get('readOnly')==='1';
+            if(action==='snapshot'&&([...url.searchParams.keys()].some(key=>key!=='readOnly')||url.searchParams.getAll('readOnly').length>1||url.searchParams.has('readOnly')&&!readOnly))throw new StateError('Choose the existing snapshot or its read-only inspection.',400);
+            if(readOnly)regular(path.join(dir,'.transcription-jobs',id+'.json'));
             const statusJob=readJson(path.join(dir,'.transcription-jobs',id+'.json'),null);
             if(statusJob?.transcriptReady){
               if(/^corrections\/[^/]+$/.test(action)){send(res,200,corrections.inspect(id,action.split('/')[1]));return true;}
-              const snapshot=corrections.read(id),job=readJson(path.join(dir,'.transcription-jobs',id+'.json'),null);
+              const snapshot=readOnly?corrections.peek(id):corrections.read(id),job=readJson(path.join(dir,'.transcription-jobs',id+'.json'),null);
               if(action==='snapshot'){send(res,200,snapshot);return true;}
               if(action==='view'){const translated=url.searchParams.has('language')?loadTranslation(job,snapshot.result,url.searchParams.get('language')):null;res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(transcriptPage({...withIsolatedConfig(config,()=>publicJob(job)),translationAvailable:translation.ready,correctionSnapshot:snapshot},snapshot.result,translated));return true;}
               if(/^transcript\.(md|json|txt)$/.test(action)){const file=path.join(job.output,action);regular(file);res.writeHead(200,{'Content-Type':action.endsWith('.json')?'application/json; charset=utf-8':'text/plain; charset=utf-8','Cache-Control':'no-store'});res.end(fs.readFileSync(file));return true;}
