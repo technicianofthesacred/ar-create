@@ -151,3 +151,8 @@ test('a late native Source identity cannot select into a different project',asyn
  w.fetch=()=>new Promise(resolve=>{finish=()=>resolve({ok:true,json:async()=>({sessions:[{id:'one',sourceId:uuid,sourceHash:'a'.repeat(64),version:1}]})});});w.studyImportedSource={selectSource:async()=>{selected++;}};
  s.start();w.state.projects.push({...w.current(),id:'changed'});w.state.project='changed';finish();await tick();await tick();assert.equal(selected,0);assert.equal(w.current().id,'changed');assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup]').getAttribute('role'),'alert');
 });
+
+test('a protected Source refusal reports its exact safe stage without exposing private error text',async t=>{
+ const uuid='11111111-1111-4111-8111-111111111111',s=setup(t,{query:'reviewSource='+uuid}),{w}=s;
+ w.eval(code('display-format'));w.fetch=async()=>({ok:true,json:async()=>({sessions:[{id:'one',sourceId:uuid,sourceHash:'a'.repeat(64),version:1}]})});w.studyDraft.flush=async()=>{throw new TypeError('Owner unavailable at '+['','Users','invented-protected','private-file.md'].join('/'));};s.start();await tick();await tick();const status=w.document.querySelector('[data-review-startup]');assert.equal(status.dataset.reviewFailureStage,'flush-current');assert.equal(status.dataset.reviewFailureType,'TypeError');assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.getElementById('app').getAttribute('aria-hidden'),'true');assert.doesNotMatch(status.outerHTML,/private-file|\/Users\/private/);
+});
