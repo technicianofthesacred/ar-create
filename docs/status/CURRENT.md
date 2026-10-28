@@ -1,3 +1,9 @@
+## 28 October — full Source startup and rail repair installed
+
+PR97 is independently live at signed `49fb13e4abf6f4fd1a85ca657f0807c466316819`, build `2026-10-28T12:35:59.156Z`. The original main Source URL now visibly opens all1100remarks and505speakercontrols; the startup guard is removed, the app is accessible, and speaker/text columns align. No real name/wording Save, approval or provider call ran.
+
+240 relevant checks/build/package964,124 served hashes and12 critical source proofs pass. All13 native sessions/revision175, source/original turns, four existing carousel editions, manuscripts, configuration and canonical dirty files remain unchanged. Candidate desktop light/dark and390×640 full-app iframe proof remains component verification, not physical-phone certification. The bounded startup repair is checked off:45 checked /9 broader gates open. Underlying global-catalogue slowness and wholeC/NOTES/all12 acceptance remain open; exact transcript opening no longer depends on it.
+
 ## 28 October — full Source opening repair candidate
 
 The full1100-remark Source could render behind a persistent startup veil while global work discovery waited. Source APIs remained healthy and exact; the wider catalogue timed out in16seconds. Exact kept-source entry now resolves/pins the native UUID/hash/version through the maintained reader before optional catalogue loading. Existing flush, project/intent and stale/ambiguous checks remain; a late catalogue response cannot replay the route or silently replace its project. Non-kept sources retain the existing catalogue path. Late discovery failure leaves the exact transcript visible with a specific notice.
