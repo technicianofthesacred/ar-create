@@ -1,3 +1,15 @@
+## 28 October — guarded Carousel, Direction and Bench candidate; not installed
+
+Exact native Carousel preparation now exposes immutable source/Direction context to agents before proposing, and carries proposals into the existing human reviewer and wording owner. Invented preparation → agent staging → actual owner restart → reopening is verified without approval or wording changes. Stale source proof refuses preparation. Paired publication recovery and captured dependency guards have regression proof; approval remains disabled by default.
+
+Inherited Collection Direction is captured through the maintained resolver for Article and Carousel. Source/Direction/Library changes are checked again at intent publication; overlaps are held. Focused services verify publication/recovery boundaries. This is not native human acceptance or the complete audio-to-export journey.
+
+Selected language Carousel ownership now survives direct entry and reload using an exact registered output identity. Bench discovery uses catalog-proven parents rather than browser aliases; the invented project settles without coverage errors and accurately has zero flagged moves.
+
+Same-viewport approved C/live panel comparisons prove a380px right tool column at1280×720 and full width at390×640, top48px, palette and15px UI type. Actions are44px;137.5% text fits; Escape returns focus; desktop controls remain reachable. Phone evidence uses whole-app iframe viewports, not a physical phone. Full Arrange composition/navigation and all12 desktop/phone interaction states remain open.
+
+Two integrated relevant batches passed942 checks; the final prepared-context follow-up has47 focused checks. Build passes. PR87 remains the installed milestone:42 bounded results checked and9 broader gates open. No new installed checkoff is closed by this candidate.
+
 ## 28 October — PR87 installed; phone identity checked off
 
 Signed main `8bf59eeafc1bb673a238053453fb8ad3b4313f90`, build `2026-10-28T02:08:54.822Z`, is independently verified live in8841/main59958.502 checks/25files/build/package939/96served hashes pass; original editions/API content/canonical dirty files/config are preserved. The Source/Direction phone identity repair is checked off:42 bounded completed results,9 broader gates open.

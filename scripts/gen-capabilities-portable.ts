@@ -287,8 +287,8 @@ async function main(): Promise<void> {
   L.push('> **GENERATED — do not edit by hand.** Rerun');
   L.push(
     pkg?.scripts.some((s) => s.name === 'capabilities')
-      ? '> `npm run build` then `npm run capabilities`. It reads the code, so it cannot drift.'
-      : '> `npx tsx scripts/gen-capabilities-portable.ts`. It reads the code, so it cannot drift.',
+      ? '> `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.'
+      : '> `npx tsx scripts/gen-capabilities-portable.ts`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.',
   );
   L.push(`> Generated ${new Date().toISOString()}.`);
   L.push('');
@@ -339,7 +339,7 @@ async function main(): Promise<void> {
     for (const c of registry) bySection.set(c.section, [...(bySection.get(c.section) ?? []), c]);
     L.push('## Command registry (routes shared by the app, the CLI and the MCP server)');
     L.push('');
-    L.push(`${registry.length} commands from \`runtime/commands.mjs\`; the running app serves the same list at \`GET /api/capabilities\`. Call one with \`node agents/cli/ar-create.mjs call <name> --input -\`. **who**: \`any\` actor, or \`human\` for a decision agents are refused (403). **kind**: \`read\` or \`write\`; a write names an \`undo\` command when it has one.`);
+    L.push(`${registry.length} commands from \`runtime/commands.mjs\`; the running app serves its complete enabled list at \`GET /api/capabilities\`. Call one with \`node agents/cli/ar-create.mjs call <name> --input -\`. **who**: \`any\` actor, or \`human\` for a decision agents are refused (403). **kind**: \`read\` or \`write\`; a write names an \`undo\` command when it has one.`);
     L.push('');
     for (const [section, list] of [...bySection].sort(([a], [b]) => a.localeCompare(b))) {
       L.push(`### ${section} (${list.length})`);
