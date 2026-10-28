@@ -20,5 +20,16 @@ export function createLibraryReviewInspection({configFile}={}){
  // A changed host configuration must be explicitly reopened, never retarget an
  // existing reader or continue serving metadata cached under its previous scope.
  const check=()=>{const current=fs.lstatSync(configFile);if(stamp(current)!==stamp(before)||current.isSymbolicLink())throw Object.assign(Error('The host Library connection changed. Reopen this preview connection.'),{status:409});};
- return Object.freeze({scope,assertCurrent:check,publicationRepoRoot:typeof config.magazine?.magSendRepo==='string'?config.magazine.magSendRepo:null,...Object.fromEntries(Object.entries(owner).map(([name,read])=>[name,async(...args)=>{check();const result=await read(...args);check();return result;}]))});
+ // Root paths establish owner parity; identical cloned index bytes are insufficient.
+ const verifyFolderOwner=async({tree,folders,domain})=>{
+  check();const localTree=await owner.tree(),localFolders=await owner.folders({domain});check();
+  const held=()=>{throw Object.assign(Error('The native folder authority is not the same inspected Library owner and revision.'),{status:409});};
+  for(const id of ['library','recordings']){
+   const native=tree?.roots?.filter(root=>root.id===id),local=localTree.roots.filter(root=>root.id===id);
+   if(native?.length!==1||local.length!==1||native[0].path!==local[0].path||native[0].writable!==local[0].writable)held();
+  }
+  if(folders?.schema!=='ar-create.library-folders.v1'||folders.domain!==domain||tree?.revision!==localTree.revision||tree?.indexHash!==undefined&&tree.indexHash!==localTree.indexHash||folders.revision!==localTree.revision||folders.indexHash!==localTree.indexHash||localFolders.revision!==folders.revision||localFolders.indexHash!==folders.indexHash||JSON.stringify(localFolders.folders)!==JSON.stringify(folders.folders)||localFolders.undoOperationId!==folders.undoOperationId)held();
+  return localFolders;
+ };
+ return Object.freeze({scope,assertCurrent:check,verifyFolderOwner,publicationRepoRoot:typeof config.magazine?.magSendRepo==='string'?config.magazine.magSendRepo:null,...Object.fromEntries(Object.entries(owner).map(([name,read])=>[name,async(...args)=>{check();const result=await read(...args);check();return result;}]))});
 }

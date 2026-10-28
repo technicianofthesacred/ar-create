@@ -47,6 +47,44 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
  function exactQuery(url,allowed,required=[]){if([...url.searchParams.keys()].some(key=>!allowed.includes(key)||url.searchParams.getAll(key).length!==1)||required.some(key=>!url.searchParams.get(key)))throw Object.assign(Error('Use the exact existing reader reference.'),{status:400});}
  if(libraryInspection&&['tree','folders','sourceText','collectionsSnapshot','collectionRelationships','evidence'].some(key=>typeof libraryInspection[key]!=='function'))throw Error('The maintained Library inspection capability is incomplete.');
  const readAuthority=async(p,{signal}={})=>{if(!p.startsWith('/api/'))throw Error('Only known reader paths are accepted.');const url=new URL(p,upstream),inspect=inspectPaths.get(url.pathname);if(inspect)return inspect(url);const response=await fetchImpl(new URL(p,upstream),{redirect:'error',signal});const value=await response.json();if(!response.ok)throw Error(value.error||'Owner unavailable.');return value;};
+ const libraryFolderCorrections=config.libraryFolderCorrections===true;
+ if(config.libraryFolderCorrections!==undefined&&typeof config.libraryFolderCorrections!=='boolean')throw Error('Library folder corrections require an explicit boolean.');
+ if(libraryFolderCorrections&&typeof libraryInspection?.verifyFolderOwner!=='function')throw Error('Library folder corrections require the same trusted host inspection.');
+ // This connection remembers only its own structural receipts, never a competing
+ // folder history. Restart deliberately loses Undo admission for prior receipts.
+ const structuralReceipts=new Map();
+ const folderFail=(message,status=409)=>{throw Object.assign(Error(message),{status});};
+ const folderNative=async(route,input)=>boundedReviewRead(async signal=>{
+  const response=await fetchImpl(new URL(route,upstream),{redirect:'error',signal,...(input?{method:'POST',headers:{'Content-Type':'application/json',Origin:upstream.origin,'X-AR-Actor':'human:adrian'},body:JSON.stringify(input)}:{})});
+  const value=await response.json();if(!response.ok)folderFail(value.error||'The native Library folder owner is unavailable.',response.status);return value;
+ },{timeoutMs:readTimeoutMs,label:'Native Library folders'});
+ const readNativeFolders=async domain=>{
+  const tree=await folderNative('/api/sources/tree'),folders=await folderNative('/api/library/folders?'+new URLSearchParams({domain}));
+  return libraryInspection.verifyFolderOwner({tree,folders,domain});
+ };
+ const structuralView=value=>({...value,readOnly:true,folderStructureWritable:true,folderStructureOnly:true,folderUndoOperationId:structuralReceipts.get(value.undoOperationId)?.action!=='undo'&&structuralReceipts.get(value.undoOperationId)?.domain===value.domain?value.undoOperationId:null});
+ const changeLibraryFolders=async input=>{
+  const uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),fields={create:['name'],rename:['folderId','name'],reparent:['folderId','parentId'],remove:['folderId'],undo:['undoOperationId']},required=Object.hasOwn(fields,input?.action)?fields[input.action]:null,base=['domain','action','operationId','expectedRevision','expectedHash'];
+  if(!input||typeof input!=='object'||Array.isArray(input)||!required||!['library','media'].includes(input.domain)||[...base,...required].some(key=>!Object.hasOwn(input,key))||Object.keys(input).some(key=>![...base,...required,...(input.action==='create'?['parentId']:[])].includes(key))||!uuid(input.operationId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!/^[a-f0-9]{64}$/.test(input.expectedHash||'')||Object.hasOwn(input,'folderId')&&!uuid(input.folderId)||Object.hasOwn(input,'parentId')&&input.parentId!==null&&!uuid(input.parentId)||input.action==='undo'&&!uuid(input.undoOperationId)||Object.hasOwn(input,'name')&&(typeof input.name!=='string'||!input.name.trim()||input.name.length>200||/[\\/\u0000-\u001f\u007f]/.test(input.name)||['.','..'].includes(input.name.trim())))folderFail('Use one exact empty-folder structural request without paths or source membership.',400);
+  const current=await readNativeFolders(input.domain),fingerprint=JSON.stringify(Object.fromEntries(Object.entries(input).sort(([a],[b])=>a.localeCompare(b)))),prior=structuralReceipts.get(input.operationId);
+  if(prior&&prior.fingerprint!==fingerprint)folderFail('The operation UUID already owns another structural request.');
+  if(!prior&&(current.revision!==input.expectedRevision||current.indexHash!==input.expectedHash))folderFail('Library changed; refresh its exact folder revision and hash.');
+  if(input.action==='undo'&&!prior){const receipt=structuralReceipts.get(input.undoOperationId);if(!receipt||receipt.domain!==input.domain||receipt.action==='undo'||current.undoOperationId!==input.undoOperationId)folderFail('Undo requires this connection’s exact current structural receipt.');}
+  if(input.folderId&&!prior){
+   const descendants=new Set([input.folderId]);let count;do{count=descendants.size;for(const row of current.folders)if(descendants.has(row.parentId))descendants.add(row.id);}while(count!==descendants.size);
+   const rows=current.folders.filter(row=>descendants.has(row.id));if(!rows.length||rows.some(row=>row.sourceIds.length))folderFail('Only empty groups can be reorganised through this entrance.');
+  }
+  if(!prior&&structuralReceipts.size>=10000)folderFail('This folder review connection is full. Reopen it before organising more groups.',503);
+  libraryInspection.assertCurrent();
+  const saved=await folderNative('/api/library/folders',input);
+  if(saved.receipt?.operationId!==input.operationId||saved.receipt.action!==input.action||saved.receipt.domain!==input.domain)folderFail('The native structural receipt could not be confirmed.');
+  // Recheck the same guarded owner after publication; never substitute cached rows.
+  const verified=await readNativeFolders(input.domain);
+  if(verified.revision!==saved.revision||verified.indexHash!==saved.indexHash)folderFail('Library changed after the structural operation; refresh its current folders.');
+  structuralReceipts.set(input.operationId,{fingerprint,domain:input.domain,action:input.action});
+  return structuralView({...saved,...verified});
+ };
+ if(libraryFolderCorrections)inspectPaths.set('/api/library/folders',async url=>{exactQuery(url,['domain'],['domain']);const domain=url.searchParams.get('domain');if(!['library','media'].includes(domain))folderFail('Choose library or media folders.',400);return structuralView(await readNativeFolders(domain));});
  const retainedCarousels=createRetainedCarouselReader({retainedCarouselState:config.retainedCarouselState});
  const existingReader=createExistingWorkReader({...config,roots:config.magazineRoots,readAuthority,readTimeoutMs});
  const reader={...existingReader,catalog:async()=>{
@@ -119,7 +157,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
   ['/api/magazine/portfolio',result(()=>reader.portfolio.list())],
   ['/api/magazine/artifact',result(({url})=>reader.portfolio.read({artifactId:url.searchParams.get('id'),expectedHash:url.searchParams.get('hash')}))],
  ]);
- const server=createReviewConnection({publicDir:path.join(root,'public'),authorityURL:config.authorityURL,allowedAuthorityPort:config.allowedAuthorityPort,actualWorkReview:true,catalogCacheScope,translationProposals,translationAdmissionDataDir,translationPermissionCurrent:translationProposals?()=>libraryInspection.assertCurrent():null,sourceCorrections:true,studyDraftCorrections:true,studyDraftApprovals:config.studyDraftApprovals??false,browserCarouselCorrections:true,nativeCarouselCorrections:config.nativeCarouselCorrections??false,magazineDraftCorrections:config.magazineDraftCorrections??false,magazineFeedbackCorrections:config.magazineFeedbackCorrections??false,magazineCheckReceipts:config.magazineCheckReceipts??false,readPostPaths:['/api/magazine/check','/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts'],readOverrides});
+ const server=createReviewConnection({publicDir:path.join(root,'public'),authorityURL:config.authorityURL,allowedAuthorityPort:config.allowedAuthorityPort,actualWorkReview:true,libraryFolderCorrections,changeLibraryFolders:libraryFolderCorrections?changeLibraryFolders:null,catalogCacheScope,translationProposals,translationAdmissionDataDir,translationPermissionCurrent:translationProposals?()=>libraryInspection.assertCurrent():null,sourceCorrections:true,studyDraftCorrections:true,studyDraftApprovals:config.studyDraftApprovals??false,browserCarouselCorrections:true,nativeCarouselCorrections:config.nativeCarouselCorrections??false,magazineDraftCorrections:config.magazineDraftCorrections??false,magazineFeedbackCorrections:config.magazineFeedbackCorrections??false,magazineCheckReceipts:config.magazineCheckReceipts??false,readPostPaths:['/api/magazine/check','/api/concept/sources/search','/api/study-draft/inspect','/api/study-draft/history-preview','/api/study/outputs/export-check','/api/work-continuity/read','/api/work-continuity/context','/api/work-continuity/understanding','/api/work-continuity/artifacts'],readOverrides});
  return{server,reader,media,retainedCarousels};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
