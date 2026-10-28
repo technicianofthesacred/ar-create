@@ -37,7 +37,10 @@
  function refreshLearning(id,bindingId){const p=part(id,bindingId);p.refreshLearning=true;p.loaded=false;if(!p.loading&&!p.busy&&visible(id,bindingId)){p.refreshLearning=false;void loadPart(id,bindingId,true);}}
  async function loadPart(id,bindingId,force=false){const p=part(id,bindingId);if(p.loading||(p.loaded&&!force))return;p.loading=true;p.refreshLearning=false;const version=p.version,query=scope(id,bindingId);paint();try{const [read,list]=await Promise.all([api('study-ai/read',query),api('study-ai/requests',query)]);if(read.binding&&(read.binding.id!==bindingId||read.binding.parentStudyId!==id))throw Error('Source context belongs to another part.');if(!Array.isArray(read.sourceCatalog)||!Array.isArray(list.items))throw Error('Source context is unavailable. Reload the current selection.');if(read.answerCatalog!==undefined&&(!Array.isArray(read.answerCatalog)||read.answerCatalog.length>1000||new Set(read.answerCatalog.map(a=>a?.id)).size!==read.answerCatalog.length||read.answerCatalog.some(a=>!a||!UUID.test(a.id||'')||typeof a.question!=='string'||a.question.length>16000||typeof a.eligible!=='boolean'||a.eligible&&(!HASH.test(a.answerHash||'')||typeof a.keptAt!=='string'||!Number.isFinite(Date.parse(a.keptAt))))))throw Error('Saved learning context is unavailable. Reload the current selection.');p.learningSupported=Array.isArray(read.answerCatalog);p.answerCatalog=read.answerCatalog||[];p.learningError=typeof read.learningError==='string'?read.learningError:'';p.catalog=read.sourceCatalog;p.records=Array.isArray(read.context?.records)?read.context.records:[];p.requests=list.items.filter(item=>(!item.bindingId||item.bindingId===bindingId)&&(!item.parentStudyId||item.parentStudyId===id));if(!p.hasBuffer&&p.version===version){const saved=latest(p);if(saved&&Array.isArray(saved.sourceIds)){p.sourceIds=[...saved.sourceIds];p.answerIds=Array.isArray(saved.answerIds)?[...new Set(saved.answerIds.filter(id=>UUID.test(id)))].slice(0,30):[];p.hasBuffer=true;persist(id);}}p.loaded=true;p.needsConnection=false;p.error='';}catch(e){p.needsConnection=e.status===409&&e.message===UNBOUND_CONTEXT;if(p.needsConnection)p.loaded=false;p.error=p.needsConnection?'Connect source context for this manuscript part.':friendly(e);}finally{p.loading=false;paint();if(p.refreshLearning)refreshLearning(id,bindingId);}}
  async function load(id){
-  const r=room(id);if(r.loading)return;r.loading=true;paint();
+  const r=room(id);if(r.loading)return;
+  // Redraws preserve explicit failure holds; only a clean navigation interruption resumes automatically.
+  if(r.loaded){const selected=r.bindingId?part(id,r.bindingId):null;if(!selected?.selectionInterrupted){if(selected&&!selected.selectionBlocked)await loadPart(id,r.bindingId);return;}}
+  r.loading=true;paint();
   try{
    if(!r.loaded){
     const catalog=await api('study-draft/catalog');r.parts=[];r.parts=readyParts(catalog,id);
@@ -45,10 +48,11 @@
     r.loaded=true;r.error='';
    }
    if(r.bindingId){
-    const bindingId=r.bindingId,selected=part(id,bindingId);selected.selectionBlocked=true;persist(id);await loadPart(id,bindingId);
-    if(!visible(id,bindingId))return;
+    const bindingId=r.bindingId,selected=part(id,bindingId);selected.selectionBlocked=true;selected.selectionInterrupted=false;persist(id);await loadPart(id,bindingId);
+    if(!selected.loaded||selected.error)return;
+    if(!visible(id,bindingId)){selected.selectionInterrupted=true;return;}
     await window.studyHumanDirection?.choosePart?.(scope(id,bindingId));
-    if(visible(id,bindingId)){selected.selectionBlocked=false;r.error='';}
+    if(visible(id,bindingId)){selected.selectionBlocked=false;r.error='';}else selected.selectionInterrupted=true;
    }
   }catch(e){r.error=friendly(e);}finally{r.loading=false;paint();}
  }
@@ -87,7 +91,7 @@
   if(r.bindingId&&part(id,r.bindingId).busy)throw Error('Wait for the current context preparation before changing parts.');
   if(typeof bindingId!=='string'||bindingId&&!r.parts.some(b=>b.bindingId===bindingId))throw Error('Choose a ready manuscript part in this project.');
   r.bindingId=bindingId;r.version++;epoch++;const version=r.version,token=epoch;persist(id);paint();window.dispatchEvent(new CustomEvent('study-source-continuation-part-change',{detail:{parentStudyId:id,bindingId,origin}}));
-  if(bindingId){const selected=part(id,bindingId);selected.selectionBlocked=true;
+  if(bindingId){const selected=part(id,bindingId);selected.selectionBlocked=true;selected.selectionInterrupted=false;
    try{await loadPart(id,bindingId,refresh);if(!visible(id,bindingId)||r.version!==version||epoch!==token)return false;if(!selected.loaded||selected.error)throw Error(selected.error||'The selected source context is unavailable.');await window.studyHumanDirection?.choosePart?.(scope(id,bindingId));if(!visible(id,bindingId)||r.version!==version||epoch!==token)return false;selected.selectionBlocked=false;selected.error='';window.dispatchEvent(new CustomEvent('study-source-continuation-part-change',{detail:{parentStudyId:id,bindingId,origin,ready:true}}));paint();}
    catch(error){selected.error=friendly(error);paint();throw Object.assign(error,{continuationCommitted:{parentStudyId:id,bindingId}});}
   }
