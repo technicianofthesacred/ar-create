@@ -177,6 +177,27 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    if(source.hash!==ref.sourceHash||typeof source.text!=='string'||!Number.isSafeInteger(ref.start)||ref.start<0||!ref.quote.trim()||source.text.slice(ref.start,ref.start+ref.quote.length)!==ref.quote)fail('Library source changed or exact passage quote/locator does not match.');
   }
  }
+ // The owner derives every path before callers enter another owner's queue.
+ // The returned synchronous capability performs no store reads or recovery.
+ async function captureReadGuard({records=[],references=[]}={}){
+  const pins=new Map();
+  function pin(relative){
+   function state(){let cursor=dataDir;const root=fs.lstatSync(dataDir);if(root.isSymbolicLink()||!root.isDirectory())fail('Direction dependency root changed.');const parts=relative.split('/'),chain=[[root.dev,root.ino,'directory']];
+    for(const [index,part]of parts.entries()){cursor=path.join(cursor,part);const stat=fs.lstatSync(cursor,{throwIfNoEntry:false});if(!stat)return {chain,missing:parts.slice(0,index+1).join('/')};if(stat.isSymbolicLink()||index<parts.length-1&&!stat.isDirectory())fail('Direction dependency path changed.');chain.push([stat.dev,stat.ino,stat.isDirectory()?'directory':'file']);if(index===parts.length-1&&!stat.isDirectory()){regular(cursor);return {chain,hash:digest(fs.readFileSync(cursor))};}}
+    return {chain,entries:fs.readdirSync(cursor).sort()};
+   }
+   const before=state();pins.set(relative,()=>{if(!equivalent(before,state()))fail('Captured Direction dependency changed before save.');});
+  }
+  const inputs=new Map();for(const item of records)inputs.set(canonical(item.input),item.input);for(const item of references)inputs.set(canonical(item.input.target),item.input.target);
+  for(const input of inputs.values()){
+   const scope=await authority(structuredClone(input));if(!scope)fail('Captured Direction owner is unavailable.');const record=current(scope);
+   for(const item of records.filter(r=>equivalent(r.input,input)))if(!equivalent(item.expected,{scope:record.scope,revision:record.revision,hash:record.hash,metadataHash:record.metadataHash??null}))fail('Captured Direction record changed before guard capture.');
+   for(const item of references.filter(r=>equivalent(r.input.target,input))){const view=await readScopeReferences({target:input});const expected={scope:view.target.scope,revision:view.target.revision,hash:view.target.hash,metadataHash:view.target.metadataHash??null,referencesHash:digest(canonical(view.references))};if(!equivalent(item.expected,expected))fail('Captured Direction references changed before guard capture.');}
+   if(scope.kind==='collection')pin('workspaces/collections/'+scope.collectionId+'.json');else{pin('study-project-bindings/'+digest(input.parentStudyId)+'.json');if(input.bindingId)pin('study-project-bindings/'+digest('owned-draft:'+input.bindingId)+'.json');}
+   const loc=locations(scope);if(loc){pin(path.relative(dataDir,loc.body));pin(path.relative(dataDir,loc.meta));pin(path.relative(dataDir,loc.journal));if(fs.existsSync(loc.journal))for(const name of fs.readdirSync(loc.journal).filter(name=>UUID.test(name.slice(0,-5))&&name.endsWith('.json')))pin(path.relative(dataDir,path.join(loc.journal,name)));}else if(scope.kind!=='collection')pin('workspaces/'+scope.projectId+(scope.kind==='output'?'/human-direction-outputs/'+digest(scope.outputId):''));
+  }
+  const validate=()=>{for(const check of pins.values())check();};validate();return Object.freeze({validate});
+ }
  async function read(input){const scope=await authority(structuredClone(input));return scope?current(scope):empty(null);}
  async function mutate(input,kind){
   selector(input,true);const scope=await authority(input,{create:true}),loc=locations(scope,true);ensurePrivateDirectory(loc.dir,'human-direction-history');
@@ -348,5 +369,5 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   for(const input of candidates){const scope=await authority(input);if(!scope)fail('Ready direction parent or part binding is missing.');const item=current(scope),plan=directionPlanProjection(item.body);if(item.revision>0)records.push({role:ROLE,scope:item.scope,body:item.body,hash:item.hash,revision:item.revision,updatedAt:item.updatedAt,...(plan?{planningIntent:plan}:{}),...(conceptContextProjection(item.body)||{})});}
   return {schema:'ar-create.study-human-direction-context.v1',role:records.some(item=>item.role===CONCEPT_CONTEXT_ROLE)?CONCEPT_CONTEXT_ROLE:ROLE,projectId,documentId:documentId??null,outputId:outputId||null,records,hash:digest(JSON.stringify(records))};
  }
- return {select:async input=>{const scope=await authority(structuredClone(input),{create:true});return current(scope);},read,write:input=>mutate(structuredClone(input),'write'),undo:input=>mutate(structuredClone(input),'undo'),context,readScopeReferences,proposeScopeReference:input=>referenceMutation(input,'propose'),changeScopeReference:input=>referenceMutation(input,'change'),undoScopeReference:input=>referenceMutation(input,'undo')};
+ return {select:async input=>{const scope=await authority(structuredClone(input),{create:true});return current(scope);},read,captureReadGuard,write:input=>mutate(structuredClone(input),'write'),undo:input=>mutate(structuredClone(input),'undo'),context,readScopeReferences,proposeScopeReference:input=>referenceMutation(input,'propose'),changeScopeReference:input=>referenceMutation(input,'change'),undoScopeReference:input=>referenceMutation(input,'undo')};
 }

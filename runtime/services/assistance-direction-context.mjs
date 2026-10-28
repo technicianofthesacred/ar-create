@@ -7,7 +7,7 @@ const hash=value=>createHash('sha256').update(typeof value==='string'?value:stab
 const fail=(message,status=409)=>{throw Object.assign(Error(message),{status});};
 const key=value=>stable(value);
 function requestOf(input){
- if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['scopes','selectedScope','piece'].includes(k))||!input.piece||Object.keys(input.piece).length!==3||!['rootBindingId','parentStudyId','selectedOutputId'].every(k=>typeof input.piece[k]==='string'))fail('Supply only explicit Direction selectors, selection and the exact native Piece tuple; caller text and word snapshots are refused.',400);
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['scopes','selectedScope','piece','manuscript'].includes(k))||!!input.piece===!!input.manuscript||input.piece&&(Object.keys(input.piece).length!==3||!['rootBindingId','parentStudyId','selectedOutputId'].every(k=>typeof input.piece[k]==='string'))||input.manuscript&&(Object.keys(input.manuscript).length!==2||!['bindingId','parentStudyId'].every(k=>typeof input.manuscript[k]==='string')))fail('Supply only exact Direction selectors and either a registered native Piece or pre-output manuscript owner; caller text and word snapshots are refused.',400);
  return copy(input);
 }
 function proof(record){
@@ -18,13 +18,18 @@ function proof(record){
 }
 /** Read-only assistance capture over the maintained resolver. This is neither
  * application authority nor an atomic multi-owner read/transaction lease. */
-export function createAssistanceDirectionContext({resolver}={}){
+export function createAssistanceDirectionContext({resolver,humanDirection,collectionDirection=humanDirection,library,drafts}={}){
  if(typeof resolver?.resolve!=='function')throw TypeError('Supply the existing current-understanding resolver.');
  async function capture(input){
-  const request=requestOf(input),view=await resolver.resolve(request);
+  const request=requestOf(input),{manuscript,...resolverRequest}=request,view=await resolver.resolve(manuscript?{...resolverRequest,manuscript}:resolverRequest);
   if(view.schema!=='ar-create.current-understanding.projection.v1'||view.readConsistency?.status!=='stable-reread'||!['current','empty'].includes(view.status)||!view.current||view.selection?.mode!=='explicit-scope')fail('Exact Direction selection is unavailable, ambiguous or changed during reading.');
-  const piece=view.piece;
-  if(piece?.status!=='current'||piece.words?.status!=='current'||!same(piece.selector,request.piece)||!piece.wordOwner||!piece.scope)fail('The exact registered Piece and its current owner are unavailable.');
+  let piece=manuscript?view.nativeManuscript:view.piece;
+  if(manuscript){
+   if(typeof drafts?.read!=='function')fail('Exact native manuscript owner is unavailable.');const owned=await drafts.read(manuscript),target=view.records.find(r=>same(r.selector,request.selectedScope));
+   if(owned.binding?.id!==manuscript.bindingId||owned.binding.parentStudyId!==manuscript.parentStudyId||owned.binding.authority!=='owned-working-copy'||owned.binding.status!=='ready'||!owned.readiness?.ready||owned.binding.canonicalOutputId||target?.scope?.kind!=='part'||target.scope.bindingId!==manuscript.bindingId||target.scope.parentStudyId!==manuscript.parentStudyId||request.scopes.some(s=>s.scope==='output'||s.scope==='part'&&s.bindingId!==manuscript.bindingId||s.parentStudyId!==manuscript.parentStudyId))fail('Pre-output manuscript context needs its exact ready native part and physical Project/document; registered outputs require exact Piece mode.');
+   if(piece?.status!=='current'||piece.scope?.projectId!==target.scope.projectId||piece.scope?.documentId!==target.scope.documentId)fail('Maintained native manuscript scope resolution is unavailable.');
+  }
+  if(piece?.status!=='current'||piece.words?.status!=='current'||!same(piece.selector,request.piece||request.manuscript)||!piece.wordOwner||!piece.scope)fail('The exact registered Piece and its current owner are unavailable.');
   const refs=view.scopeReferences;
   if(refs?.status!=='read'||!Array.isArray(refs.references)||!Array.isArray(refs.effective)||refs.reads.some(r=>r.status!=='read'))fail('Exact Direction reference reads are unavailable.');
   if(refs.references.some(r=>r.status==='accepted'&&(r.review?.needed!==false||r.resolverReview)))fail('An accepted Direction origin/reference changed or is unavailable; preserve the proposal for review.');
@@ -68,5 +73,23 @@ export function createAssistanceDirectionContext({resolver}={}){
   if(!input||typeof input!=='object'||Object.keys(input).some(k=>!['request','expectedFingerprint'].includes(k))||!HASH.test(input.expectedFingerprint||''))fail('Use the exact selector request and captured Direction fingerprint only.',400);
   const current=await capture(input.request);if(current.fingerprint!==input.expectedFingerprint)fail('Captured Direction, inheritance or override metadata changed; preserve proposed and human wording.');if(!current.acceptance.ready)fail(current.acceptance.reason);return current;
  }
- return {capture,assertCurrent};
+ async function captureForBinding(binding){
+  if(typeof drafts?.read!=='function')fail('Native manuscript Direction ownership is unavailable.');const current=await drafts.read(binding),owner=current.binding;if(owner?.id!==binding.bindingId||owner.parentStudyId!==binding.parentStudyId||owner.authority!=='owned-working-copy'||!current.readiness?.ready)fail('Exact native manuscript binding changed.');
+  const project={scope:'project',parentStudyId:binding.parentStudyId},part={scope:'part',parentStudyId:binding.parentStudyId,bindingId:binding.bindingId};
+  if(!owner.canonicalOutputId)return capture({scopes:[project,part],selectedScope:part,manuscript:copy(binding)});
+  const rootBindingId=owner.sourceBindingId||binding.bindingId,root={scope:'part',parentStudyId:binding.parentStudyId,bindingId:rootBindingId},output={scope:'output',parentStudyId:binding.parentStudyId,bindingId:rootBindingId,outputId:owner.canonicalOutputId};
+  const result=await capture({scopes:[project,root,...(rootBindingId!==binding.bindingId?[part]:[]),output],selectedScope:output,piece:{rootBindingId,parentStudyId:binding.parentStudyId,selectedOutputId:owner.canonicalOutputId}});
+  if(result.guards.pieceOwner.wordOwner.bindingId!==binding.bindingId)fail('Registered Piece has another native wording owner.');return result;
+ }
+ async function captureWriteGuard(captured){
+  const current=await assertCurrent({request:captured.request,expectedFingerprint:captured.fingerprint}),g=current.guards,checks=[];
+  for(const [owner,records]of [[humanDirection,g.records.filter(r=>r.reader==='humanDirection.read')],[collectionDirection,g.records.filter(r=>r.reader==='collectionDirection.read')]]){
+   if(!records.length&&owner!==humanDirection)continue;if(typeof owner?.captureReadGuard!=='function')fail('Direction owner final-read guard is unavailable.');checks.push(await owner.captureReadGuard({records,references:owner===humanDirection?g.references:[]}));
+  }
+  if(g.collections.length||g.sources.length){if(typeof library?.captureReadGuard!=='function')fail('Library final-read guard is unavailable.');checks.push(await library.captureReadGuard({collections:g.collections,sources:g.sources}));}
+  // Recheck the full resolver after asynchronous guard preparation, before any
+  // writer queue. Final publication uses only the synchronous owner capabilities.
+  await assertCurrent({request:captured.request,expectedFingerprint:captured.fingerprint});const validate=()=>{for(const guard of checks){const checked=guard.validate();if(checked&&typeof checked.then==='function')fail('Owner final-read guard must be synchronous.');}};validate();return Object.freeze({validate});
+ }
+ return {capture,assertCurrent,captureForBinding,captureWriteGuard};
 }

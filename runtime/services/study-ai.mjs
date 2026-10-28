@@ -5,7 +5,7 @@ const WRITES=['prepare','propose','accept','reject','humanContract'];
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 /** Route the existing native bridge by explicit owned study identity, never active piece. */
-export function createStudyAI({dataDir,drafts,humanDirection,editorialPlan,projectMaterial,learning,guidance,bridgeFactory=createStudyBridge}){
+export function createStudyAI({dataDir,drafts,humanDirection,editorialPlan,projectMaterial,learning,guidance,assistanceDirection,bridgeFactory=createStudyBridge}){
  const rooms=new Map(),ledger=createProvenanceLedger({dataDir});
  // Proposal records live in the bridge; who prepared, proposed and decided each is kept beside them.
  const who=(bindingId,key,action)=>{const found=ledger.lookup({area:'study-ai',scopeId:bindingId,key,action});return found.actor==='unknown(pre-provenance)'?null:found;};
@@ -18,7 +18,7 @@ export function createStudyAI({dataDir,drafts,humanDirection,editorialPlan,proje
   const current=await drafts.read({bindingId,parentStudyId});
   if(current.binding?.id!==bindingId||current.binding?.parentStudyId!==parentStudyId||current.binding?.authority!=='owned-working-copy'||current.readiness?.ready!==true)fail('Open a ready owned manuscript before preparing AI work.',409);
   const key=bindingId+'\0'+parentStudyId;
-  if(!rooms.has(key))rooms.set(key,bridgeFactory({dataDir,drafts,binding:{bindingId,parentStudyId},humanDirection,editorialPlan,projectMaterial,learning,guidance}));
+  if(!rooms.has(key))rooms.set(key,bridgeFactory({dataDir,drafts,binding:{bindingId,parentStudyId},humanDirection,editorialPlan,projectMaterial,learning,guidance,assistanceDirection}));
   const bridge=rooms.get(key);if(typeof bridge[action]!=='function')fail('This proposal action is not connected.',503);
   if(['read','list','contracts'].includes(action)&&Object.keys(args).length)fail('Read actions do not accept extra fields.');
   const result=await bridge[action](args);

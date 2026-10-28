@@ -1,3 +1,4 @@
+import {createAssistanceDirectionContext} from './services/assistance-direction-context.mjs';
 import {createMagazineOutputExports} from './services/magazine-output-exports.mjs';
 import {createInquiryProjectSelectors} from './services/inquiry-project-selectors.mjs';
 import {createNativeOutputExports} from './services/native-output-exports.mjs';
@@ -255,7 +256,6 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
   const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings,retainedSource:retainedCarouselSource,browserOrigins:browserCarouselOrigins}):null;
   const studyOutputs=studyOutputFactory?.owner;
-  sharedCarouselBridge=sharedArticles?createSharedCarouselBridge({dataDir,store,requests,guidance,writingTemplates,nativeOutputs:studyOutputs,humanDirection:studyHumanDirection,library}):null;
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts,outputs:studyOutputs}):null;
   const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
   const studyShare=studyOutputs?createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix}):null;
@@ -263,6 +263,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   libraryWorkReferences=createLibraryWorkReferences({store,outputs:studyOutputs||{read(){throw new StateError('Native output authority is unavailable.',503);}},mediaUsage:studyMediaUsage});
   projectMembership=studyDrafts&&studyOwnedPhotoBindings&&studyOutputs?createProjectMembership({store,bindings:studyBindings,drafts:studyDrafts,ownedPhotos:studyOwnedPhotoBindings,outputs:studyOutputs,library,workReferences:libraryWorkReferences}):null;
   const currentUnderstanding=createCurrentUnderstandingResolver({library,humanDirection:studyHumanDirection||collectionDirection,collectionDirection,nativeOutputs:studyOutputs,nativeWords:studyDrafts,carouselWords:store,conceptContextProjection,workReferences:libraryWorkReferences});
+  const assistanceDirection=studyDrafts&&studyHumanDirection?createAssistanceDirectionContext({resolver:currentUnderstanding,humanDirection:studyHumanDirection,collectionDirection,library,drafts:studyDrafts}):null;
+  sharedCarouselBridge=sharedArticles?createSharedCarouselBridge({dataDir,store,requests,guidance,writingTemplates,nativeOutputs:studyOutputs,humanDirection:studyHumanDirection,library,assistanceDirection}):null;
   const workContinuity=createWorkContinuity({dataDir,direction:studyHumanDirection||collectionDirection,outputs:studyOutputs,outputExports:studyOutputExports,understanding:currentUnderstanding});
   const inquiryInterface=createInquiryInterfaceRoutes({library,direction:collectionDirection,projectMembership:projectMembership||{read(){throw new StateError('Named Project authority is unavailable.',503);},readAuthority(){throw new StateError('Named Project authority is unavailable.',503);}},understanding:currentUnderstanding,listProjectSelectors:studyDrafts&&projectMembership?createInquiryProjectSelectors({drafts:studyDrafts,bindings:studyBindings,readAuthority:endpoint=>projectMembership.readAuthority(endpoint)}):async()=>[]});
   const continuityInterface=createContinuityInterfaceRoutes({continuity:workContinuity,understanding:currentUnderstanding,outputExports:studyOutputExports});
@@ -271,7 +273,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices}):null;
   const studyPlanContext=studyDrafts?createStudyFirstFlowPlanContext({dataDir,savedPlan:studyEditorialPlan,firstFlow}):null;
   const studyProjectMaterial=studyDrafts?createStudyProjectMaterialContext({dataDir,firstFlow}):null;
-  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,learning:researchAnswers.study,guidance}):null;
+  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,learning:researchAnswers.study,guidance,assistanceDirection}):null;
   const draftCall=async fn=>{if(!studyDrafts)throw new StateError('Current manuscript originals are not configured.',503);try{return await fn();}catch(error){throw Object.assign(new StateError(error.message,error.status||500),error.outcome?{outcome:error.outcome}:{});}};
   const originalRead=fn=>{if(!studyOriginals)throw new StateError('Current original records are not configured; retained snapshots remain available.',503);try{return fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const researchAction=fn=>input=>{if(!researchEnabled)throw new StateError('Fresh research is being validated. Existing story records are ready to read.',503);return fn(input);};

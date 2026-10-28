@@ -13,7 +13,7 @@ const stable=value=>JSON.stringify(value&&typeof value==='object'?Array.isArray(
 export const sharedCarouselWordsIdentity=(projectId,documentId,output)=>digest(stable(carouselWordsManifest(projectId,documentId,output).words));
 const fail=message=>{throw new StateError(message,409);};
 const utf8=bytes=>{const raw=bytes.toString('utf8');if(!Buffer.from(raw).equals(bytes))throw new StateError('External content is not valid UTF-8. Exact bytes remain available for download and explicit reset.');return raw;};
-export function createSharedCarouselBridge({dataDir,store,requests,guidance,writingTemplates,nativeOutputs,humanDirection,library}){
+export function createSharedCarouselBridge({dataDir,store,requests,guidance,writingTemplates,nativeOutputs,humanDirection,library,assistanceDirection}){
  const root=ensurePrivateDirectory(dataDir,'shared-carousel-requests');let pending=Promise.resolve();
  const queue=work=>{const op=pending.then(work);pending=op.catch(()=>{});return op;};
  function location(id,name,create=false){
@@ -33,12 +33,13 @@ export function createSharedCarouselBridge({dataDir,store,requests,guidance,writ
   const scopeReferences=[];for(const target of [{scope:'project',parentStudyId},{scope:'part',parentStudyId,bindingId:rootBindingId},{scope:'output',parentStudyId,bindingId:rootBindingId,outputId}]){
    if(typeof humanDirection.readScopeReferences!=='function')fail('Exact Direction scope-reference inspection is unavailable.');
    const refs=await humanDirection.readScopeReferences({target});scopeReferences.push(refs);
-   if(refs.references.some(r=>r.status==='accepted'))fail('Accepted linked Direction needs the shared inheritance resolver before Carousel proposals can proceed. Existing wording is preserved.');
+   if(!assistanceDirection&&refs.references.some(r=>r.status==='accepted'))fail('Accepted linked Direction needs the shared inheritance resolver before Carousel proposals can proceed. Existing wording is preserved.');
   }
   // The existing template reader checks the explicit saved project, never the
   // unrelated active Article. Re-reading this context rechecks the same owner.
   const state={project:article.project},template=await readAttachedWritingTemplate({store:{get:()=>state},library,state});
-  return {direction,scopeReferences,guidance:shared,writingTemplate:template.attachment?{attachment:template.attachment,raw:template.source.raw,hash:template.source.hash}:null};
+  const resolved=assistanceDirection?await assistanceDirection.capture({scopes:scopeReferences.map(r=>r.target.selector),selectedScope:scopeReferences.at(-1).target.selector,piece:{rootBindingId,parentStudyId,selectedOutputId:outputId}}):undefined;
+  return {...(resolved?{assistanceDirection:resolved}:{}),direction,scopeReferences,guidance:shared,writingTemplate:template.attachment?{attachment:template.attachment,raw:template.source.raw,hash:template.source.hash}:null};
  }
  async function nativeContext(scope){
   if(!nativeOutputs?.inspectCheckSnapshot||!humanDirection||!guidance||!library)fail('Exact native Carousel proposal context is unavailable.');
@@ -138,10 +139,12 @@ export function createSharedCarouselBridge({dataDir,store,requests,guidance,writ
    // pairs the existing shared-decision receipt with the native words save.
    const article=await store.readCarouselWords(options(record));assertCurrent(article,record);await validateContext(context);
    const candidate=parseCarouselWords(utf8(rawBytes),{projectId:record.projectId,documentId:record.documentId,output:article.output});if(!candidate.summary.changed)fail('The reviewed candidate has no wording changes.');
+   const directionGuard=assistanceDirection?await assistanceDirection.captureWriteGuard(context.manifest.assistanceDirection):null;if(assistanceDirection&&typeof directionGuard?.validate!=='function')fail('Direction final-read guard is unavailable.');
    const result=await nativeOutputs.acceptCarouselProposal({scope:record.nativeScope,expected:context.manifest.expected,candidate:candidate.output,requestId:id,binding},async()=>{
     if(stable(await acceptedGuidance())!==stable(context.manifest.guidance))fail('Accepted guidance changed during Carousel publication.');
     const template=context.manifest.writingTemplate;if(template){const source=await library.read(template.attachment.sourceId);if(source.hash!==template.hash||source.raw!==template.raw)fail('Writing template changed during Carousel publication.');}
-   });return {...result,receipt:receipt(id),alreadyDecided:!!result.alreadySaved};
+    directionGuard?.validate();
+   },directionGuard?{beforeIntent:directionGuard.validate}:undefined);return {...result,receipt:receipt(id),alreadyDecided:!!result.alreadySaved};
   }
   return store.decideSharedCarousel({requestId:id,decision,binding},async boundary=>{
    if(boundary.state.project.id!==record.projectId||boundary.state.project.document?.id!==record.documentId)fail('Open the carousel owning this request.');

@@ -447,8 +447,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const history = { schema: "ar-create.native-output-command.v1", provenance: provenance(), group: group(input), commandHash, outputId: id, captureId, beforeArrangement: selected ? arrangement(selected.output) : null, ...(selected?.output.kind==="carousel"&&["save","undo-words"].includes(action)?{beforeWords:wordSnapshot(selected.output)}:{}), beforeAssets: selected?.private.proof.assets ?? null, afterHash: hash(output) };
       const extraFiles = [{ relativePath: privatePath(t, "history", input.operationId), contents: JSON.stringify(history), expectedHash: null }];
       if (action === "create" || action === "refresh" || captureId !== selected.record.captureId) extraFiles.push({ relativePath: privatePath(t, "captures", captureId), contents: JSON.stringify(privateValue), expectedHash: privateRead(t, "captures", captureId)?.hash ?? null });
-      return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, ...(pairedReview?{sharedCarouselDecision:{requestId:pairedReview.requestId,binding:clone(pairedReview.binding),outputId:id}}:{}), finalCheck: async () => {
-        if(pairedReview){requireHuman("Accepting native Carousel wording");await pairedReview.finalCheck();}
+      return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, ...(pairedReview?.beforeIntent?{beforeIntent:pairedReview.beforeIntent}:{}), ...(pairedReview?{sharedCarouselDecision:{requestId:pairedReview.requestId,binding:clone(pairedReview.binding),outputId:id}}:{}), finalCheck: async () => {
         if(languageSource){
           const currentSource=doc.outputs.find(row=>row.id===lineage.sourceOutputId);if(!currentSource||hash(currentSource)!==lineage.sourceOutputHash)fail("Selected source output changed before language edition publication; prepared copy is retained.");
           if(related){const actual=lease.rereadRelated();if(hash(actual.raw)!==lineage.sourceWordsHash)fail("Selected source own words changed before language edition publication.");}
@@ -462,6 +461,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
           const s = lease.reread();
           if (!same(s.expected, lease.snapshot.expected) || mapper.freshness(captureValue, s, proofNow.sources, proofNow.photos).stale) fail("Own native snapshot changed before output publication.");
         }
+        if(pairedReview){requireHuman("Accepting native Carousel wording");await pairedReview.finalCheck();}
       } };
     });
     const result = snapshot ? await native.withSnapshotLease({ bindingId: binding, parentStudyId: input.parentStudyId, expected: snapshot.expected,...(related?{related}:{}) }, run) : await run(null);
@@ -599,13 +599,13 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     };
     return textKind(selected.output.kind) ? native.withSnapshotLease({ bindingId: selected.record.wordOwner.bindingId, parentStudyId: input.parentStudyId, expected: input.expectedNative }, run) : run(null);
   }
-  async function acceptCarouselProposal({scope:proposalScope,expected,candidate,requestId,binding},finalCheck){
+  async function acceptCarouselProposal({scope:proposalScope,expected,candidate,requestId,binding},finalCheck,{beforeIntent}={}){
     requireHuman("Accepting native Carousel wording");if(!currentActor())throw Object.assign(Error("An explicit human actor must accept native Carousel wording."),{status:403});if(!uuid.test(requestId||"")||typeof finalCheck!=="function"||candidate?.kind!=="carousel"||candidate.id!==proposalScope?.outputId||binding?.requestId!==requestId)fail("Exact reviewed native Carousel proposal required.");
     const input={rootBindingId:proposalScope.rootBindingId,parentStudyId:proposalScope.parentStudyId,selectedOutputId:proposalScope.outputId},snapshot=await inspectCheckSnapshot(input);
     if(snapshot.proof.projectId!==proposalScope.projectId||snapshot.proof.documentId!==proposalScope.documentId||!same(snapshot.expected,expected))fail("The reviewed native Carousel owner or words changed.");
     const before=snapshot.output;
     if(!same(before.slides.map(({text,credit,label,role,...slide})=>slide),candidate.slides.map(({text,credit,label,role,...slide})=>slide)))fail("A wording proposal cannot move photographs, slide IDs or arrangement.");
-    return mutate("save",{...input,operationId:requestId,expectedOutput:expected.expectedOutput,changes:{slides:clone(candidate.slides),caption:candidate.caption}},{requestId,binding,expectedWords:expected.expectedWords,finalCheck});
+    return mutate("save",{...input,operationId:requestId,expectedOutput:expected.expectedOutput,changes:{slides:clone(candidate.slides),caption:candidate.caption}},{requestId,binding,expectedWords:expected.expectedWords,finalCheck,...(beforeIntent?{beforeIntent}:{})});
   }
   return { read, inspectCheckSnapshot, acceptCarouselProposal, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), save: (i) => mutate("save", i), reviewCarouselWords: (i) => mutate("review", i), refreshSelectedArticle: (i) => mutate("refresh", i), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
 }

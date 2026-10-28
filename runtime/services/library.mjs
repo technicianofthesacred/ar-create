@@ -636,8 +636,16 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       sourceText
     });
   }
+  // Exact owner-issued dependency capability. No refresh, resolver or queued read
+  // occurs when validate runs inside a native writer's serialized transaction.
+  const captureReadGuard=({collections=[],sources=[]}={})=>serial(()=>{
+    const loaded=loadTyped(),pins=[];
+    for(const {expected}of collections){const matches=loaded.value.collections.filter(c=>c.id===expected.collectionId);if(expected.indexHash!==loaded.hash||expected.revision!==loaded.value.revision||matches.length!==1||JSON.stringify(matches[0].sourceIds)!==JSON.stringify(expected.sourceIds))throw new StateError('Captured Collection identity changed.',409);}
+    for(const {expected}of sources){const matches=loaded.value.sources.filter(s=>s.id===expected.id);if(matches.length!==1)throw new StateError('Captured Library source is unavailable.',409);const source=structuredClone(matches[0]),file=checkedFile(source),stat=regular(file);if(stat.size>MAX_BODY_BYTES)throw new StateError('Captured Direction passage exceeds the bounded source read.',413);const bytes=fs.readFileSync(file),text=splitFrontmatter(new TextDecoder('utf-8',{fatal:true}).decode(bytes)).body;if(digest(bytes)!==expected.hash||!Number.isSafeInteger(expected.start)||!Number.isSafeInteger(expected.end)||expected.start<0||expected.end<expected.start||digest(text.slice(expected.start,expected.end))!==expected.quoteHash)throw new StateError('Captured Library passage changed.',409);pins.push({source,file,hash:expected.hash,identity:[stat.dev,stat.ino]});}
+    const validate=()=>{if(loadTyped().hash!==loaded.hash)throw new StateError('Captured Library index or Collection metadata changed.',409);for(const pin of pins){const file=checkedFile(pin.source),stat=regular(file);if(file!==pin.file||stat.size>MAX_BODY_BYTES||stat.dev!==pin.identity[0]||stat.ino!==pin.identity[1]||digest(fs.readFileSync(file))!==pin.hash)throw new StateError('Captured Library source bytes changed.',409);}};validate();return Object.freeze({validate});
+  });
   return {
-    photosSnapshot, binarySnapshot,
+    photosSnapshot, binarySnapshot, captureReadGuard,
     folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog||root.originalCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),

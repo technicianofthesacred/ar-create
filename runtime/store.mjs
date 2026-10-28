@@ -217,7 +217,7 @@ async function assertRegularOrMissing(file) {
     if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`Refusing non-regular data file: ${file}`);
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
-async function atomicWrite(file, contents, {exclusive=false}={}) {
+async function atomicWrite(file, contents, {exclusive=false,beforePublish}={}) {
   const temporary = `${file}.${randomUUID()}.tmp`;
   let handle;
   try {
@@ -225,6 +225,7 @@ async function atomicWrite(file, contents, {exclusive=false}={}) {
     await handle.writeFile(contents);
     await handle.sync();
     await handle.close(); handle = undefined;
+    if(beforePublish){const result=beforePublish();if(result&&typeof result.then==='function')throw new StateError('Publication before-intent guard must be synchronous.');}
     if(exclusive)await link(temporary,file);else await rename(temporary, file);
     const directory = await open(path.dirname(file), 'r');
     try { await directory.sync(); } finally { await directory.close(); }
@@ -340,7 +341,7 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
     if(!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0)throw new StateError('expectedRevision must be a nonnegative safe integer.');
     if(input.expectedProjectId!==state.project.id||input.expectedRevision!==state.revision)throw new StateError('Active piece changed since this page loaded. Reload the latest state before continuing.',409);
   }
-  async function commit(next,metadata=null,{pieceProjects=[],expectedArticle,expectedCarousel,decisionFile,receipt,finalCheck,extraFiles=[],extraExpectedFiles=new Map(),preserveActive=false}={}){
+  async function commit(next,metadata=null,{pieceProjects=[],expectedArticle,expectedCarousel,decisionFile,receipt,finalCheck,beforeIntent,extraFiles=[],extraExpectedFiles=new Map(),preserveActive=false}={}){
     validateState(next);await checkDataDirectory();await assertRegularOrMissing(file);await assertRegularOrMissing(backup);
     if(articles){
       await initializePieces();const checked=preserveActive?null:await articles.checkArticle(state.project,expectedArticle);
@@ -363,7 +364,7 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
       files.push([file,preserveActive?disk:JSON.stringify(next)]);
       if(decisionFile){expectedFiles.set(decisionFile,null);files.push([decisionFile,JSON.stringify(receipt)]);}
       await finalCheck?.();
-      try{await articles.publish(files,{expectedFiles});}catch(error){needsRecovery=existsSync(articles.journal)||!!(decisionFile&&existsSync(decisionFile))||!(await readFile(file)).equals(knownStateBytes);if(needsRecovery)recoveryFiles=files;throw error;}
+      try{await articles.publish(files,{expectedFiles,beforeIntent});}catch(error){needsRecovery=existsSync(articles.journal)||!!(decisionFile&&existsSync(decisionFile))||!(await readFile(file)).equals(knownStateBytes);if(needsRecovery)recoveryFiles=files;throw error;}
       state=next;knownStateBytes=preserveActive?disk:Buffer.from(JSON.stringify(next));activeMetadata={id:state.project.id,...nextMeta};capturePublishedPieceBytes(files);notifySaved();return structuredClone(state);
     }
     await atomicWrite(backup,JSON.stringify(state));await atomicWrite(file,JSON.stringify(next));state=next;
@@ -420,7 +421,8 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         if(expected.revision!==incoming.expectedOutput.revision||expected.hash!==incoming.expectedOutput.hash)throw new StateError('Output records changed since inspection.',409);
         const outputReadProject=structuredClone(project);
         const prepared=await prepare({project:structuredClone(project),expectedOutput:structuredClone(expected),readArticle:options=>articles.readArticle(project,options),readCarouselWords:options=>articles.readCarouselWords(outputReadProject,options)});
-        shape(prepared,['outputs','nativeOutputIndex','finalCheck'],'prepared outputs',['extraFiles','sharedCarouselDecision']);
+        shape(prepared,['outputs','nativeOutputIndex','finalCheck'],'prepared outputs',['extraFiles','sharedCarouselDecision','beforeIntent']);
+        if(prepared.beforeIntent!==undefined&&typeof prepared.beforeIntent!=='function')throw new StateError('Publication before-intent guard must be an internal function.');
         if(typeof prepared.finalCheck!=='function')throw new StateError('Output save requires the native/source proof check.');
         const outputs=structuredClone(prepared.outputs),index=structuredClone(prepared.nativeOutputIndex);
         if(!Array.isArray(outputs)||outputs.length>100||outputs.some(output=>!output||!['article','carousel','post','product-listing'].includes(output.kind)||typeof output.id!=='string'||!output.id.trim())||new Set(outputs.map(output=>output.id)).size!==outputs.length)throw new StateError('Output saves require unique article or carousel records.');
@@ -464,7 +466,7 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
           extraFiles.push([file,JSON.stringify({schema:'ar-create.shared-carousel-decision.v1',requestId:request.id,projectId:project.id,documentId:project.document.id,outputId:decision.outputId,decision:'accepted',binding:decision.binding,proposalHash:decision.binding.proposalHash,contextHash:decision.binding.contextHash,wordsIdentity:decision.binding.wordsIdentity,reviewHash:decision.binding.reviewHash,decidedAt:timestamp(),committedRevision:next.revision,nativeOperationId:incoming.operationId,safetyVersionId:null})]);
         }
         publicationAttempted=true;
-        await commit(next,null,{preserveActive:!active,pieceProjects:active?[]:[{project,metadata:{createdAt:record.createdAt,updatedAt:timestamp()}}],extraFiles,extraExpectedFiles,decisionFile:receiptFile,receipt,finalCheck:async()=>{for(const [destination] of extraFiles)if(pairedDirectory&&path.dirname(destination)===pairedDirectory){await pairedDirectoryCheck(pairedDirectory);await assertRegularOrMissing(destination);}else await outputPrivateFile(destination);await outputOwnedDirectory(path.dirname(receiptFile));await prepared.finalCheck();}});
+        await commit(next,null,{preserveActive:!active,pieceProjects:active?[]:[{project,metadata:{createdAt:record.createdAt,updatedAt:timestamp()}}],extraFiles,extraExpectedFiles,decisionFile:receiptFile,receipt,beforeIntent:prepared.beforeIntent,finalCheck:async()=>{for(const [destination] of extraFiles)if(pairedDirectory&&path.dirname(destination)===pairedDirectory){await pairedDirectoryCheck(pairedDirectory);await assertRegularOrMissing(destination);}else await outputPrivateFile(destination);await outputOwnedDirectory(path.dirname(receiptFile));await prepared.finalCheck();}});
         return {receipt:structuredClone(receipt),alreadySaved:false};
       }catch(error){error.outcome=publicationAttempted&&(existsSync(articles?.journal||'')||(receiptFile&&existsSync(receiptFile)))?'unknown':'not-applied';throw error;}
     });},
