@@ -78,3 +78,22 @@ test('stalled exact workspace binding lookup stays unavailable rather than confe
  const catalog=await Promise.race([reader.catalog(),new Promise((_,reject)=>setTimeout(()=>reject(Error('binding pinned catalog')),200))]);
  assert.equal(calls,2);assert.equal(catalog.workspaceLinks.unavailableBindings.length,2);assert.ok(catalog.workspaceLinks.unavailableBindings.every(row=>row.reason==='binding-unavailable'));
 });
+
+
+test('an exhausted optional catalogue budget cannot start a second full binding timeout wave',async()=>{
+ const bindingId='11111111-1111-4111-8111-111111111111';let bindings=0,round=0;
+ const {reader}=setup({readTimeoutMs:30,readAuthority:(path,{signal}={})=>{
+  if(path==='/api/sources/tree')return ++round===1?new Promise(()=>{}):{sources:[]};
+  if(path==='/api/study-draft/catalog')return {drafts:[{bindingStatus:'ready',bindingId,parentStudyId:'invented-parent'}]};
+  if(path==='/api/pieces')return {pieces:[]};
+  if(path.startsWith('/api/first-flow/binding?')){bindings++;return {projectKey:new URL(path,'http://localhost').searchParams.get('projectKey'),projectId:'22222222-2222-4222-8222-222222222222',documentId:'33333333-3333-4333-8333-333333333333'};}
+  return {};
+ }});
+ const catalog=await reader.catalog();
+ assert.equal(bindings,0,'a slow optional Library reader must not grant native joins another whole timeout');
+ assert.ok(catalog.diagnostics.some(d=>/Library unavailable:.*timed out/.test(d)));
+ assert.equal(catalog.stories.length,2,'independent originals remain available');
+ assert.equal(catalog.workspaceLinks.unavailableBindings.length,2);
+ assert.ok(catalog.workspaceLinks.unavailableBindings.every(row=>row.reason==='binding-unavailable'));
+ const refreshed=await reader.catalog();assert.equal(bindings,2,'a deliberate refresh receives a fresh budget');assert.equal(refreshed.workspaceLinks.unavailableBindings.length,0);
+});

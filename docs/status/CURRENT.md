@@ -1,8 +1,14 @@
-## 28 October — exact native draft activity connected to Bench in candidate
+## 28 October — optional catalogue reads share one timeout budget in candidate
+
+An unavailable optional Library reader could consume its full deadline before native binding joins began, granting those joins another full timeout and delaying the work list beyond its caller’s budget. Optional authority reads and their dependent joins now share one monotonic deadline per catalogue build. Exhausted joins remain explicitly unavailable; a deliberate refresh receives a fresh budget. No cached replacement or guessed identity is introduced.
+
+A regression reproduced two new binding requests after the first deadline was already exhausted. The repaired reader starts none, retains independent originals and resolves fresh identities on the next successful cycle. An actual HTTP catalogue regression verifies the same unavailable result. Fatal portfolio reads and filesystem root resolution remain outside this bounded repair. No wording, source, provider, permission or store changes. Candidate only until exact release proof.
+
+## 28 October — exact native draft Bench activity connection installed
 
 The actual-work Bench previously supplied an empty activity list even when its maintained journal reader had saved changes for the open native draft. It now displays up to three committed events for the exact verified draft binding and refreshes when that reader changes. Foreign bindings, project-wide events, conflicts, ambiguous owners, selected outputs and unsupported Magazine histories are excluded. No second history store or manuscript write is added.
 
-A regression first reproduced the false empty state, then verified activity refresh, foreign/conflict exclusion and removal after an owner change while retaining the exact dirty manuscript node and words. An invented browser component shows the saved event and clears it on owner change. This is component evidence, not a new native save or full Bench acceptance. Candidate only until independent release proof.
+A regression first reproduced the false empty state, then verified activity refresh, foreign/conflict exclusion and removal after an owner change while retaining the exact dirty manuscript node and words. An invented browser component shows the saved event and clears it on owner change. This is component evidence, not a new native save or full Bench acceptance. PR101 is independently installed at signed `80018ea18061ca18472deea13077b98d166e573f`, build `2026-10-28T14:55:37.510Z`, with124 served hashes and13 critical Source paths verified. Sources, editions, configuration and existing dirty writing are unchanged. Full native human/Bench visual acceptance remains open.
 
 ## 28 October — Source tea-link refresh repair installed
 
