@@ -297,11 +297,24 @@
   const manuscript=document.querySelector('#workspace #manuscript');if(owned&&!row.target.outputId&&manuscript){const fullText=[...manuscript.querySelectorAll('p')].filter(node=>!node.closest('.draft-protected,.draft-surface-frontmatter')).slice(0,3).map(node=>node.textContent).join(' ').replace(/\s+/g,' ').trim(),text=fullText.length>330?fullText.slice(0,330).replace(/\s+\S*$/,'')+'…':fullText;if(text)result.excerpt={source:'loaded-owner',target:row.target,text};}return result;
  }
  // Activity is read from the maintained journal, only for an exact native
- // manuscript binding. Project-wide or Magazine story events cannot establish
+ // manuscript binding. Project-wide or Magazine story journal events cannot establish
  // which independent part/output changed, so they remain unavailable here.
+ function magazineBenchHistory(current,p,proof,owner){
+  const target=current.target,snapshot=window.studyDraft?.currentSavedHistory?.(),story=storyFor(p);
+  if(target.kind!=='draft'||!snapshot||snapshot.parentStudyId!==p.id||snapshot.savedHash!==proof.draftHash||target.hash!==proof.draftHash||target.storyId!==story?.id)return [];
+  const same=(a,b)=>['kind','storyId','pieceId','partKey','path'].every(key=>typeof a?.[key]==='string'&&a[key]===b?.[key]);
+  if(!same(owner,proof.owner)||!same(owner,snapshot.owner))return [];
+  const artifacts=story.artifacts.filter(a=>a.artifactId===target.artifactId&&a.hash===target.hash&&a.relativePath===owner.path);
+  if(artifacts.length!==1)return [];const registered=magazineTarget(story,artifacts[0]);
+  if(!registered||registered.nativeProjectId!==p.id||['storyId','pieceId','partKey'].some(key=>registered[key]!==owner[key])||registered.hash!==snapshot.savedHash||!Array.isArray(snapshot.rows))return [];
+  return snapshot.rows.filter(row=>row?.state==='committed'&&typeof row.operationId==='string'&&typeof row.actor==='string'&&/^[a-f0-9]{64}$/i.test(row.afterHash||'')&&Number.isFinite(Date.parse(row.modifiedAt)))
+   .sort((a,b)=>Date.parse(b.modifiedAt)-Date.parse(a.modifiedAt)).slice(0,3).map(row=>({id:row.operationId,target,label:'Saved working draft',actor:window.c3Shell?.actorName?.(row.actor)||row.actor,at:row.modifiedAt}));
+ }
  function benchHistory(current){
   const target=current?.target,p=project(),proof=window.studyDraft?.currentProof?.();
-  if(!target||!p||proof?.parentStudyId!==p.id||!proof.bindingId||window.studyDraft?.currentOwner?.()||proof.expected?.workflow?.draft!==proof.draftHash||!proof.draftHash)return [];
+  if(!target||!p||proof?.parentStudyId!==p.id||proof.expected?.workflow?.draft!==proof.draftHash||!proof.draftHash)return [];
+  const owner=window.studyDraft?.currentOwner?.();if(owner)return owner.kind==='magazine'?magazineBenchHistory(current,p,proof,owner):[];
+  if(!proof.bindingId)return [];
   const row=benchModel().rows.find(candidate=>window.arCreateBenchProjection.key(candidate.target)===window.arCreateBenchProjection.key(target));
   if(!row||target.outputId)return [];
   const native=target.kind==='draft'?nativeBenchDraft(row)?.target:target.kind==='workspace'?target:null;
@@ -504,6 +517,7 @@
   void(async()=>{guard();const reference=await window.studyOutputConnection.workspaceCarouselReference({projectId:p.id,rootBindingId:selection.rootBindingId,outputId:selection.output.id},{originGuard:guard});guard();const matches=(catalog?.workspaceLinks?.pieces||[]).flatMap(link=>(link.targets||[]).filter(t=>t.role==='root-owned-workspace'&&!t.outputId&&t.workspaceId===link.workspaceId&&t.workspaceId===reference.workspaceId&&t.documentId===reference.documentId&&t.rootBindingId===selection.rootBindingId&&t.parentStudyId===p.id));if(matches.length!==1||reference.outputId!==selection.output.id)throw Error('The exact Carousel root address is unavailable.');rememberRoute({reviewWorkspace:reference.workspaceId,reviewBinding:selection.rootBindingId,reviewOutput:selection.output.id});})().catch(()=>{});
  };
  window.addEventListener('c3-piece-state',feedBench);
+ window.addEventListener('study-draft-change',()=>{if(document.getElementById('project-library')?.open)feedBench();});
  window.addEventListener('study-output-selection',rememberCarouselSelection);
  window.addEventListener('study-output-owner-confirmed',rememberCarouselSelection);
  window.existingWork={load,decorate,placeMediaHistory:context,openStory,openCheckSource,openArtifact,openSource,openConversation,openRetained,openWorkspace,openWorkspaceTarget,openWorkingDraft,rememberCarousel,openMedia,openPlacement,savedPlacements,loadMedia,loadPublicationMedia,artifactsAt,referenceModel,catalog:()=>catalog,quarantinedProjects:()=>[...quarantined.values()],contextStage};

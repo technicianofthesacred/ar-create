@@ -1,8 +1,14 @@
+## 28 October — path-scoped Magazine history connected to Bench in candidate
+
+Magazine journal events identify a whole story, so Bench correctly excluded them from an independent article’s activity. The maintained writer already loads receipt history verified against the exact working-file path. A read-only metadata snapshot now connects those receipts to Bench only when current owner, parent, registered part, catalogue artifact and saved hash all agree. Foreign paths/parts, project/output fallback and conflicts cannot borrow the activity. Rows use the neutral label “Saved working draft”; no save-versus-Undo action is inferred.
+
+The snapshot clones owner and metadata rows, omits prose/Undo actions and performs no fetch, write or activation. Writer changes update an open Bench; a closed Bench does not rebuild on typing cues. Native invented service save/reopen/Undo and clone-isolation checks plus exact/foreign snapshot and dirty-node regressions verify the connection. The actual read-only current article still has no displayed saved history; no activity was invented to fill it. 271 relevant checks/build/package964 pass. Six obsolete photo fixtures now follow the real picker byte-verification step; the same failures were confirmed against the previously installed code. Production photo guards are unchanged. Full Bench visual/human acceptance remains open. Candidate only until exact release proof.
+
 ## 28 October — optional catalogue reads share one timeout budget in candidate
 
 An unavailable optional Library reader could consume its full deadline before native binding joins began, granting those joins another full timeout and delaying the work list beyond its caller’s budget. Optional authority reads and their dependent joins now share one monotonic deadline per catalogue build. Exhausted joins remain explicitly unavailable; a deliberate refresh receives a fresh budget. No cached replacement or guessed identity is introduced.
 
-A regression reproduced two new binding requests after the first deadline was already exhausted. The repaired reader starts none, retains independent originals and resolves fresh identities on the next successful cycle. An actual HTTP catalogue regression verifies the same unavailable result. Fatal portfolio reads and filesystem root resolution remain outside this bounded repair. No wording, source, provider, permission or store changes. Candidate only until exact release proof.
+A regression reproduced two new binding requests after the first deadline was already exhausted. The repaired reader starts none, retains independent originals and resolves fresh identities on the next successful cycle. An actual HTTP catalogue regression verifies the same unavailable result. Fatal portfolio reads and filesystem root resolution remain outside this bounded repair. No wording, source, provider, permission or store changes. PR102 is independently installed at signed `64a59129a13e1e57a11eded087be59c9d3a0ef03`, build `2026-10-28T15:23:20.679Z`, with124 served hashes/14 critical paths and preservation verified.
 
 ## 28 October — exact native draft Bench activity connection installed
 
