@@ -56,7 +56,8 @@ function source(markdown) {
   return {lines,hasFrontmatter,closing,metadataLine,metadata,sections,newline:lines[0]?.raw.endsWith('\r\n')?'\r\n':'\n'};
 }
 function validate(metadata, parsed, markdown) {
-  if (!exact(metadata,['schema','entries']) || metadata.schema !== SCHEMA || !Array.isArray(metadata.entries) || metadata.entries.length > 200) fail('Feedback Share metadata has an unsupported shape.');
+  if (!(exact(metadata,['schema','entries']) || exact(metadata,['schema','entries','invitations'])) || metadata.schema !== SCHEMA || !Array.isArray(metadata.entries) || metadata.entries.length > 200) fail('Feedback Share metadata has an unsupported shape.');
+  validateInvitations(metadata);
   const seenEntries = new Set(), seenSections = new Set();
   return metadata.entries.map(entry=>{
     const named = Object.hasOwn(entry || {},'recipientName');
@@ -158,4 +159,75 @@ export function updateFeedbackShareSection(markdown,{expectedHash,recipientId,ta
   validate(metadata,next,updated);
   const result = patchMetadata(updated,next,metadata);
   return {...result,beforeHash:digest(markdown),hash:digest(result.markdown)};
+}
+
+
+const sectionSnapshot = row => exact(row,['language','heading','hash']) && typeof row.language==='string' && /^[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*$/.test(row.language) && typeof row.heading==='string' && row.heading.length<=512 && /^#{1,6} [^\r\n]+$/.test(row.heading) && HASH.test(row.hash||'');
+const factText = value => typeof value==='string' && value.trim().length>0 && value.length<=8000 && value.isWellFormed() && !value.includes('\0');
+const workingTarget = t => exact(t,['storyId','pieceId','edition','hash']) && identity(t.storyId) && identity(t.pieceId) && t.edition==='working' && HASH.test(t.hash||'');
+function validateFact(f,recipientId){
+ if(!f||!UUID.test(f.id||'')||f.recordedBy!=='human')fail('Correspondence facts require an explicit human record and UUID.');
+ if(f.kind==='sent'){if(recipientId==='none'||!exact(f,['id','kind','recordedBy','sentAt','channel'])||!factText(f.sentAt)||f.sentAt.length>128||!factText(f.channel)||f.channel.length>256)fail('Record the actual sent date and channel.');}
+ else if(f.kind==='reply'){if(recipientId==='none'||!exact(f,['id','kind','recordedBy','receivedAt','original','translation','correction'])||f.receivedAt!==null&&(!factText(f.receivedAt)||f.receivedAt.length>128)||!factText(f.original)||f.translation!==null&&!factText(f.translation))fail('Record the original reply and optional reviewed translation.');if(f.correction!==null&&(!exact(f.correction,['text','affected'])||!factText(f.correction.text)||!workingTarget(f.correction.affected)))fail('A proposed correction needs an exact affected piece and revision.');}
+ else if(['closed','not-applicable'].includes(f.kind)){if(!exact(f,['id','kind','recordedBy','reason'])||!factText(f.reason))fail('Closing or not applicable needs a human reason.');}
+ else fail('Unsupported correspondence fact.');
+}
+function validateInvitations(metadata){
+ if(!Object.hasOwn(metadata,'invitations'))return;
+ if(!Array.isArray(metadata.invitations)||metadata.invitations.length>100)fail('Invitations exceed their bounded contract.');
+ const ids=new Set(),factIds=new Set();
+ for(const row of metadata.invitations){
+  if(!(exact(row,['id','recipientId','recipientName','target','sections','facts'])||exact(row,['id','recipientId','recipientName','target','sections','facts','messageRecordHash']))||row.messageRecordHash!==undefined&&!HASH.test(row.messageRecordHash||'')||!UUID.test(row.id||'')||ids.has(row.id.toLowerCase())||!workingTarget(row.target)||!Array.isArray(row.sections)||row.sections.length>12||!Array.isArray(row.facts)||row.facts.length>100)fail('Use a unique invitation and its exact working target. Published editions are not connected.');
+  ids.add(row.id.toLowerCase());
+  if(row.recipientId==='none'){if(row.recipientName!==null||row.sections.length)fail('No recipient cannot contain recipient message sections.');}
+  else if(!UUID.test(row.recipientId||'')||!recipientNameValid(row.recipientName)||!row.sections.length||row.sections.some(a=>!sectionSnapshot(a))||new Set(row.sections.map(a=>a.language.toLowerCase())).size!==row.sections.length||new Set(row.sections.map(a=>a.heading)).size!==row.sections.length)fail('An invitation needs an explicit named recipient and exact language snapshots.');
+  for(const fact of row.facts){validateFact(fact,row.recipientId);if(factIds.has(fact.id.toLowerCase()))fail('Fact UUID is already recorded.');factIds.add(fact.id.toLowerCase());}
+ }
+}
+/** Frozen invitation facts live only in the canonical FEEDBACK namespace. */
+export function changeFeedbackInvitation(markdown,{expectedHash,change,target}={}){
+ validateFeedbackInvitationChange(change);const parsed=guard(markdown,expectedHash);if(!parsed.metadataLine&&!(change.kind==='new'&&change.recipientId==='none'))fail('Map an explicit recipient and language section first.');
+ const metadata=parsed.metadata?structuredClone(parsed.metadata):{schema:SCHEMA,entries:[]};metadata.invitations||=[];
+ if(change?.kind==='new'){
+  if(!exact(change,['kind','id','recipientId'])||!UUID.test(change.id||'')||!workingTarget(target))fail('Choose an exact working invitation target. Published editions are not connected.');
+  const entry=metadata.entries.find(e=>e.recipientId===change.recipientId);
+  if(change.recipientId!=='none'&&(!entry?.recipientName||entry.target.storyId!==target.storyId||entry.target.pieceId!==target.pieceId))fail('Choose this piece’s explicit named recipient.');
+  metadata.invitations.push({id:change.id,messageRecordHash:expectedHash,recipientId:change.recipientId,recipientName:entry?.recipientName||null,target:structuredClone(target),sections:entry?structuredClone(entry.sections):[],facts:[]});
+ }else if(change?.kind==='fact'){
+  if(!exact(change,['kind','invitationId','fact']))fail('Choose one saved invitation and exact fact.');
+  const invitation=metadata.invitations.find(i=>i.id===change.invitationId);if(!invitation)fail('The selected invitation is unavailable.');invitation.facts.push(structuredClone(change.fact));
+ }else fail('Choose New invitation or one explicit correspondence fact.');
+ return updateFeedbackShare(markdown,{expectedHash,metadata});
+}
+/** Applied under the existing owner lock for every FEEDBACK write path. Undo
+ * alone may restore its own retained before-bytes through its receipt guard. */
+export function guardFeedbackInvitations(before,after,{human=false,target=null}={}){
+ const prior=parseFeedbackShare(before||''),next=parseFeedbackShare(after||''),old=prior.metadata?.invitations||[],rows=next.metadata?.invitations||[];
+ const mentions=text=>/ar-create-share: .*"invitations"/.test(text||'');
+ if(!human&&(mentions(before)||mentions(after))&&(!prior.structured||!next.structured)&&before!==after)throw new StateError('Only the human author can record invitation or correspondence facts.',403);
+ if((old.length||mentions(before))&&!prior.structured)fail('Existing invitation metadata is unreadable; preserve its bytes.');
+ if((old.length||mentions(after))&&!next.structured)fail('Invitation metadata cannot be removed or damaged.');
+ if(JSON.stringify(old)===JSON.stringify(rows))return;
+ if(!human)throw new StateError('Only the human author can record invitation or correspondence facts.',403);
+ if(!workingTarget(target))fail('Invitation changes require the exact current contextual FEEDBACK owner.');
+ if(rows.length<old.length)fail('Saved invitations cannot be removed; use exact saved Undo.');
+ for(let i=0;i<old.length;i++){
+  const a=old[i],b=rows[i];if(!b||JSON.stringify({...a,facts:[]})!==JSON.stringify({...b,facts:[]})||b.facts.length<a.facts.length||JSON.stringify(b.facts.slice(0,a.facts.length))!==JSON.stringify(a.facts))fail('Saved invitation targets, message snapshots and facts cannot be rewritten; use exact saved Undo.');
+ }
+ for(let i=0;i<old.length;i++)for(const fact of rows[i].facts.slice(old[i].facts.length)){if(old[i].target.storyId!==target.storyId||old[i].target.pieceId!==target.pieceId)fail('That invitation belongs to another working piece.');if(fact.kind==='reply'&&fact.correction&&JSON.stringify(fact.correction.affected)!==JSON.stringify(target))fail('A proposed correction must reference this exact current working piece and revision.');}
+ if(rows.length>old.length+1)fail('Create one explicit invitation at a time.');
+ for(const row of rows.slice(old.length)){
+  if(JSON.stringify(row.target)!==JSON.stringify(target)||row.facts.length)fail('A new invitation must name the current exact working target and start without facts.');
+  if(row.messageRecordHash!==digest(before))fail('Freeze the exact pre-save correspondence record hash.');
+  const creation=changeFeedbackInvitation(before,{expectedHash:digest(before),change:{kind:'new',id:row.id,recipientId:row.recipientId},target});if(creation.markdown!==after)fail('Creating an invitation may change only its exact metadata; preserve invitation-time message words.');
+  if(row.recipientId==='none')continue;
+  const entry=next.metadata.entries.find(e=>e.recipientId===row.recipientId);
+  if(!entry||entry.recipientName!==row.recipientName||JSON.stringify(entry.sections)!==JSON.stringify(row.sections)||entry.target.storyId!==target.storyId||entry.target.pieceId!==target.pieceId)fail('Invitation snapshot must match the explicit current message sections.');
+ }
+}
+
+export function validateFeedbackInvitationChange(change){
+ if(change?.kind==='new'&&exact(change,['kind','id','recipientId'])&&UUID.test(change.id||'')&&(UUID.test(change.recipientId||'')||change.recipientId==='none'))return;
+ if(change?.kind==='fact'&&exact(change,['kind','invitationId','fact'])&&UUID.test(change.invitationId||'')){validateFact(change.fact,'selected-recipient');return;}
+ fail('Choose one explicit invitation action with exact identifiers.');
 }

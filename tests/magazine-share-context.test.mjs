@@ -97,7 +97,7 @@ test('registered FEEDBACK read returns canonical Markdown and an honest legacy f
   assert.equal(result.schema,'ar-create.magazine-share-feedback.v1');
   assert.equal(result.authority.path,DEV);assert.equal(result.feedback.path,FEEDBACK);assert.equal(result.feedback.hash,expectedFeedbackHash);
   assert.equal(result.document.text,fs.readFileSync(path.join(s.f.vault,FEEDBACK),'utf8'));assert.equal(result.document.hash,expectedFeedbackHash);
-  assert.equal(result.mapping.structured,false);assert.deepEqual(result.mapping.projection,[]);assert.equal(result.readOnly,true);
+  assert.equal(result.mapping.structured,false);assert.equal(result.mapping.targetState,'unverified');assert.deepEqual(result.mapping.projection,[]);assert.equal(result.readOnly,true);
   assert.equal(result.rootIdentity.fingerprint,(await s.bridge.shareContext(s.input)).rootIdentity.fingerprint);
   assert.deepEqual(treeHashes(s.f.dir),before);
 });
@@ -113,7 +113,7 @@ function mappedFeedback(s,alter=()=>{}) {
 }
 test('registered feedback projects both explicit recipients/languages on the exact current owner with no new files',async t=>{
  const s=fixture(t), input=mappedFeedback(s), before=treeHashes(s.f.dir), result=await s.bridge.readShareFeedback(input);
- assert.equal(result.mapping.structured,true);assert.equal(result.mapping.projection.length,2);assert.equal(result.mapping.projection[0].sections[0].language,'zh');assert.match(result.mapping.projection[1].sections[1].markdown,/Hello B/);
+ assert.equal(result.mapping.structured,true);assert.equal(result.mapping.targetState,'current');assert.equal(result.mapping.projection.length,2);assert.equal(result.mapping.projection[0].sections[0].language,'zh');assert.match(result.mapping.projection[1].sections[1].markdown,/Hello B/);
  assert.equal(result.feedback.changedSinceRegistration,true);assert.equal(result.draft.hash,input.expectedHash);assert.equal(result.document.hash,input.expectedFeedbackHash);
  assert.ok(!JSON.stringify(result).includes(s.f.vault));assert.deepEqual(treeHashes(s.f.dir),before);
  const restarted=createWorkingDraftBridge({magazine:createMagazineVault({vaultRoot:s.f.vault,filesRoot:s.f.files,dataDir:s.f.data,writable:false})});
@@ -121,8 +121,8 @@ test('registered feedback projects both explicit recipients/languages on the exa
 });
 test('foreign owner/earlier revision mappings stay full readable fallback without implicit rebinding',async t=>{
  for(const alter of [m=>m.entries[0].target.storyId='mag-foreign',m=>m.entries[0].target.pieceId='mag-clay-teacher:part-9',m=>m.entries[0].target.hash='b'.repeat(64)]){
-  const s=fixture(t), input=mappedFeedback(s,alter), result=await s.bridge.readShareFeedback(input);
-  assert.equal(result.mapping.structured,false);assert.deepEqual(result.mapping.projection,[]);assert.ok(result.mapping.metadata);assert.equal(result.document.text,fs.readFileSync(path.join(s.f.vault,FEEDBACK),'utf8'));
+  const s=fixture(t), input=mappedFeedback(s,alter), before=treeHashes(s.f.dir), result=await s.bridge.readShareFeedback(input);
+  assert.equal(result.mapping.structured,false);assert.equal(result.mapping.targetState,'mismatch');assert.deepEqual(result.mapping.projection,[]);assert.ok(result.mapping.metadata);assert.equal(result.document.text,fs.readFileSync(path.join(s.f.vault,FEEDBACK),'utf8'));assert.deepEqual(treeHashes(s.f.dir),before,'reading a changed target must retain invitation-time target metadata and correspondence bytes');
  }
 });
 test('malformed metadata, ambiguous headings and independently changed sections remain readable fallback',async t=>{

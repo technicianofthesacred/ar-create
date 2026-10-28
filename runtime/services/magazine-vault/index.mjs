@@ -1,3 +1,4 @@
+import {guardFeedbackInvitations,parseFeedbackShare,changeFeedbackInvitation,feedbackShareSectionChoices} from '../magazine/feedback-share-codec.mjs';
 // magazine-vault: AR Create as the one writer of the Teajia magazine (D1, 2026-10-21).
 //
 // The bytes stay in the vault (MAG) and the Files folder (FILES). Every change goes through here:
@@ -114,6 +115,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
           const target = io(root);
           if (root === 'mag') { const conflicts = target.conflictCopies(r); if (conflicts.length) throw new StateError(`Syncthing left a conflict copy beside ${r} (${conflicts[0]}). Adrian chooses between them first; nothing was written.`, 409); }
           const before = target.read(r);
+          if(root==='mag'&&classify(r).kind==='FEEDBACK'&&command!=='magazine.undo')guardFeedbackInvitations(before.exists?before.bytes.toString('utf8'):'',bytes===null?'':bytes.toString('utf8'),{human:isHuman(who.actor),target:context?{storyId:context.selection.storyId,pieceId:context.selection.pieceId,edition:'working',hash:context.draft.hash}:null});
           if (expectedHash === null ? before.exists : before.hash !== expectedHash) throw Object.assign(new StateError(`${r} changed since it was read. Read it again; nothing was written.`, 409), {current: {path: r, hash: before.hash}});
           const change = {root, rel: r, beforeHash: before.hash, before: before.exists ? before.bytes.toString('base64') : null, afterHash: bytes === null ? null : sha256(bytes), applied: false};
           record.changes.push(change); save();
@@ -209,6 +211,34 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     }
     return {operationIds: found.sort((a,b) => a.at.localeCompare(b.at) || a.operationId.localeCompare(b.operationId)).slice(-limit).map(row => row.operationId)};
   }
+  /** Read selected invitation words from the sole owner's retained receipts.
+   * No raw before-bytes, arbitrary operation selectors or second prose store. */
+  function feedbackInvitationMessage(input){
+    fields(input,['context','invitationId'],['context','invitationId']);
+    if(!UUID.test(input.invitationId||''))throw new StateError('Choose one exact invitation UUID.',400);
+    const context=feedbackWriteOptions({context:input.context,assertCurrent:()=>{}},input.context?.feedback?.path,input.context?.feedback?.hash).context;
+    const check=()=>{const root=roots().mag,feedback=root.read(context.feedback.path),draft=root.read(context.draft.path);if(sha256(Buffer.from(fs.realpathSync(vaultRoot),'utf8'))!==context.rootIdentity.fingerprint||!feedback.exists||feedback.hash!==context.feedback.hash||!draft.exists||draft.hash!==context.draft.hash||root.conflictCopies(context.feedback.path).length||root.conflictCopies(context.draft.path).length)throw new StateError('The current registered correspondence or working piece changed.',409);return feedback;};
+    const current=check(),parsed=parseFeedbackShare(current.bytes.toString('utf8')),invitation=parsed.metadata?.invitations?.find(i=>i.id===input.invitationId);
+    if(!parsed.structured||!invitation||invitation.target.storyId!==context.selection.storyId||invitation.target.pieceId!==context.selection.pieceId)throw new StateError('That invitation is not owned by this exact correspondence and piece.',409);
+    const result={schema:'ar-create.magazine-invitation-message.v1',invitationId:invitation.id,messageRecordHash:invitation.messageRecordHash||null,target:structuredClone(invitation.target),sections:[],available:false,reason:null};
+    if(!invitation.messageRecordHash)return {...result,reason:'This legacy invitation has no frozen correspondence record hash. Its exact original message is unavailable.'};
+    let original=current.hash===invitation.messageRecordHash?current.bytes:null;
+    if(!original){const names=fs.readdirSync(dirs.operations).filter(n=>n.endsWith('.json')&&UUID.test(n.slice(0,-5)));if(names.length>10000)throw new StateError('Invitation receipt discovery exceeds its bounded scan limit.',413);
+      for(const name of names){const record=readJson(path.join(dirs.operations,name),null),saved=record?.context,changes=Array.isArray(record?.changes)?record.changes.filter(c=>c.applied!==false):null;
+       if(record?.schema!=='ar-create.magazine-operation.v1'||record.operationId!==name.slice(0,-5)||record.command!=='magazine.write'||record.state!=='committed'||record.result?.path!==context.feedback.path||!saved||stable(saved.rootIdentity)!==stable(context.rootIdentity)||stable(saved.selection)!==stable(context.selection)||saved.draft?.path!==context.draft.path||saved.draft.hash!==invitation.target.hash||saved.feedback?.path!==context.feedback.path||saved.feedback.hash!==invitation.messageRecordHash||saved.feedback.registeredHash!==context.feedback.registeredHash||changes?.length!==1)continue;
+       const change=changes[0];if(change.root!=='mag'||change.rel!==context.feedback.path||change.beforeHash!==invitation.messageRecordHash||change.move||change.large||typeof change.before!=='string'||change.before.length>3*1024*1024||change.afterHash!==record.result.hash)continue;
+       const bytes=Buffer.from(change.before,'base64');if(bytes.toString('base64')!==change.before||sha256(bytes)!==invitation.messageRecordHash||!Buffer.from(bytes.toString('utf8'),'utf8').equals(bytes))continue;
+       let creation;try{creation=changeFeedbackInvitation(bytes.toString('utf8'),{expectedHash:invitation.messageRecordHash,target:invitation.target,change:{kind:'new',id:invitation.id,recipientId:invitation.recipientId}});}catch{continue;}
+       const created=parseFeedbackShare(creation.markdown).metadata?.invitations?.at(-1);if(creation.hash!==change.afterHash||stable(created)!==stable(invitationWithNoFacts(invitation)))continue;
+       original=bytes;break;
+      }
+    }
+    if(!original)return {...result,reason:'The exact invitation-time correspondence is not available from its retained creation receipt.'};
+    const markdown=original.toString('utf8'),choices=feedbackShareSectionChoices(markdown);let total=0;
+    result.sections=invitation.sections.map(anchor=>{const matching=choices.filter(s=>s.heading===anchor.heading&&s.hash===anchor.hash);if(matching.length!==1)throw new StateError('Invitation-time message section proof changed or is ambiguous.',409);const section=markdown.slice(matching[0].start,matching[0].end);total+=Buffer.byteLength(section,'utf8');if(total>256*1024)throw new StateError('The selected original invitation exceeds its bounded reading limit.',413);return {...anchor,markdown:section};});
+    check();return {...result,available:true,reason:null};
+  }
+  const invitationWithNoFacts=i=>({...i,facts:[]});
   async function write(input, options) {
     fields(input, ['path', 'content', 'expectedHash', 'operationId', 'reason'], ['path', 'content', 'expectedHash', 'operationId']);
     const c = classify(input.path), bytes = textBytes(input.content), base = expected(input.expectedHash);
@@ -222,6 +252,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
       // made universally atomic by this process's Magazine lock.
       if (trusted) assertFeedbackGuard(trusted);
       const human = isHuman(ctx().actor);
+      if(c.kind==='FEEDBACK'){const cur=tx.read('mag',c.rel);guardFeedbackInvitations(cur.exists?cur.bytes.toString('utf8'):'',input.content,{human,target:trusted?{storyId:trusted.context.selection.storyId,pieceId:trusted.context.selection.pieceId,edition:'working',hash:trusted.context.draft.hash}:null});}
       let needsYes = c.class === 'prose' && !human;
       if (c.class === 'social' && !human) { const cur = tx.read('mag', c.rel); needsYes = madeStatus(input.content) !== 'for-your-yes' || (cur.exists && madeStatus(cur.bytes.toString('utf8')) === 'approved'); }
       if (needsYes) { const cur = tx.read('mag', c.rel); if ((cur.hash || null) !== base) throw new StateError(`${c.rel} changed since it was read. Read it again; nothing was proposed.`, 409); return propose({rel: c.rel, kind: c.kind, content: input.content, baseHash: base, reason: input.reason, operationId: input.operationId}); }
@@ -552,7 +583,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     board, read, write, edit, askAnswer, askSet, requestsAdd, pageFeedback, lineupSave, approve, exportSave, albumLink,
     statusRefresh, statusInstall, statusTable: () => { const cur = io('mag').read('STATUS.md'); return {hash: cur.hash, ...findTable(cur.exists ? cur.bytes.toString('utf8') : '')}; },
     issueWrite, proposalList, proposalRead, proposalAccept, proposalReject, undo, draftHistory,
-    feedbackOperations, prepareFeedbackParagraph,
+    feedbackOperations, feedbackInvitationMessage, prepareFeedbackParagraph,
     operation: ({operationId}) => { if (!UUID.test(operationId || '')) throw new StateError('operationId must be a UUID.', 400); const r = readJson(opFile(operationId), null); if (!r) throw new StateError('No such operation.', 404); return {...r, changes: r.changes.map(({before, ...rest}) => rest)}; },
     lockStatus: () => roots().lock.status(),
     lockHold: async input => { fields(input || {}, ['doing', 'ttlMs']); requireWritable(); const who = ctx(); return roots().lock.hold({actor: who.actor, doing: typeof input?.doing === 'string' ? input.doing.slice(0, 120) : 'a /mag run on this Mac'}, input?.ttlMs ? {ttlMs: input.ttlMs} : {}); },

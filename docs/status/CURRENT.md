@@ -1,3 +1,51 @@
+## 28 October — Photo origins and invitation history verified candidate
+
+630 relevant checks across27 files and the generated build pass on cfbc74f after the duplicate-origin repair. Native invented-content checks now cover unopened connected Library, Original and publication photographs: explicit byte verification and placement, Save, actual owner restart, exact used-where locations and Undo. Two physical assets with one explicitly proven publication origin keep their separate placement identities; equal-byte unrelated origins remain distinct. Useful photo titles survive retained-copy ordering. The connected-photo flow also verifies Audience and actual retained HTML bytes. Canonical wording and usage were restored after testing.
+
+Share invitation selection, unsaved-reply recovery and exact invitation-time message reading pass native restart and metadata Undo. Historical reading returns only the selected language sections and leaves current correspondence unchanged. Legacy invitations without retained proof honestly report unavailable. No actual correspondence fact, send or human wording approval occurred; authoritative published-edition reading remains unfinished.
+
+Bounded approved-C proof covers desktop Read geometry in both themes and the whole-app390×640 Media grid/folder sheet in light/dark. Full populated navigation, remaining sections, phone interactions and the complete creative journey remain open. The candidate is not installed. PR83 remains the verified running milestone; the existing checklist retains33 completed bounded results and9 open broader gates. Earlier candidate failures and native findings remain preserved with their repaired verification receipts.
+
+## 28 October — Whole-app phone checks enabled; candidate repairs integrated
+
+The entire app now has a supported390×640 same-origin review frame without changing CSP. Media was compared with the approved reference in both themes, including folder-sheet open/close. Its phone grid now matches the reference’s three columns; desktop sizing stays unchanged. This is bounded whole-app phone proof, distinct from the earlier article-only preview. Remaining sections, populated panels and interactions are still open.
+
+Historical invitation wording passes native creation/read/actual restart and exact metadata Undo. Original-photo selection passes Save/restart, distinct source usage, repaired thumbnails/folders and exact Undo. Publication return/save/restart checks remain pending. The initial combined verification failure is preserved; its stale fixture and the newly found preview/return defects have targeted repairs and passing checks. Final coherent verification and release are pending. PR83 remains installed; no full completion gate is closed.
+
+## 28 October — Invitation-time wording verified; next release held
+
+A new invented invitation records the exact correspondence hash. Native Read original message returns only its selected English section, remains identical after an actual owner restart, and leaves current correspondence unchanged. Exact invitation-metadata Undo restores the full prior record. Legacy invitations without the required evidence report unavailable; no wording was approved and no message or correspondence fact was sent or saved.
+
+Broader source testing repaired runtime publication continuity, Original-photo usage and saved folder membership. Native Original Save/restart now counts that exact source once while equal-byte connected and publication sources remain distinct. A used-photo thumbnail still rejects the differing catalogue and retained-asset roots; repair is in progress.
+
+The combined27-file verification currently has623 passing checks and1 publication HTTP usage failure under diagnosis. The failed result is preserved; this candidate is held. PR83 remains the verified installed release. Full journey, all12 visual/functional connections and phone proof stay open.
+
+## 28 October — Unopened connected photo flow verified; candidate not installed
+
+The metadata-first Gallery now lists an unopened connected photo with no claimed byte hash. Native selection checks that exact photo before placement. Save → actual owner restart → exact usage → Audience → retained HTML → Undo passed; original manuscript and zero usage return exactly, while the earlier HTML remains retrievable with its recorded hash.240 integrated Gallery checks pass. Original/publication-specific native checks, cancellation and actual large-library performance remain open.
+
+Pinned Read geometry now matches approved C at1280×720 in light/dark: titlex98/y126/w640 and first paragraphx94/y190/w644, with the same typography. Retained history stays below the desk and adopted Edit/Preview controls remain. This is bounded geometry proof; full toolbar/navigation, phone and all12 gates remain open.
+
+The Share second-recipient check passes Refresh, invitation Save and actual owner restart; exact invitation Undo and separate setup Undo restore the original complete FEEDBACK. No correspondence fact, send or wording approval occurred. Readable invitation-time wording remains in progress. PR83 below is still the verified installed milestone.
+
+## 28 October — Writing history placement repaired; next candidate remains uninstalled
+
+Article Write/Read now keeps retained original-record access below the primary writing desk.184 existing-work/surface checks pass, including late mounting, disclosure reuse, exact original links and untouched editor text/focus/selection. Native1280×720 light/dark checks confirm history follows the desk and no horizontal overflow. The earlier60px obstruction is removed; exact same-mode reference comparison and a remaining2px difference stay open. This does not close the full visual gate.
+
+Share repairs are integrated: unsaved facts hold conflicting actions, recipient/disclosure choices persist, and one explicitly chosen fact form appears. Native invented reply survives reload; Cancel clears only that form without recording a fact. Multi-recipient native/restart verification, readable invitation-time wording and published-edition authority remain open. Exact selected-photo proof-header transport has43 focused checks; full Library coverage awaits its pending Gallery integration. PR83 below is still the latest verified installed release.
+
+## 28 October — PR83 installed; bounded goal items checked off
+
+Signed main `a34ba054f33a3927af4d9577618bde0f2a185e29`, build `2026-10-27T22:48:10.124Z`, is verified live in installed8841 and main59958.658 relevant checks/27 files, build/package934 and92 served hashes pass, including generated runtime canvas JavaScript/CSS. API content, original editions, canonical dirty files and configuration are preserved. Earlier dated candidate notes below are historical; this entry is the current release state.
+
+- [x] Choose an indexed Library photo and insert it after an explicit Magazine article paragraph; native Save/restart/Media usage/Audience/retained HTML/exact Undo.
+- [x] Choose an explicit position for a photo in an independent Article, save/restart/export, Undo the asset selection, remove the added occurrence and exactly Undo removal. Recorded layout slots keep their structure; original placements and wording are restored after testing.
+- [x] Canonical own-Carousel Check with fresh source/photo evidence, exact repeated-passage targeting, persisted stale refusal and exact wording Undo. Meaning, translation and unsupported checks remain held.
+- [x] Guarded manual language-edition/Article-composition/private-export review transport, retaining immutable parent lineage and human wording decisions.
+- [ ] Full Direction/populated approved C/final NOTES desktop/phone interactions, Bench/Library/Pieces/all12 and the complete creative journey. Compact controls have bounded desktop field measurements;390px Article Phone preview is not app phone-viewport proof.
+
+Share’s visible outdated-target warning is a separate uninstalled candidate. Magazine still needs canonical invitation/fact controls and a genuinely authoritative published-edition reader; a publication URL or retained private export does not establish a published edition. No real recipient, sending, reply or closure fact has been inferred. Large-library catalog cost/coverage is being checked against the all-photos requirement.
+
 ## 28 October — Coherent photo and Carousel Check milestone verified candidate
 
 658 relevant checks across27 files and the generated build pass after the six integration failures were repaired. Native invented-content proof covers all-Library explicit paragraph insertion, independent Article position/asset selection, actual owner restart/reload, exact Media used-where, private retained HTML/file hashes, scoped Undo and added-occurrence removal with its own exact Undo. Original placements and canonical wording are restored. Internal retention leaves no longer create extra gallery choices; explicitly selected parent identities remain available and used-where stays exact.

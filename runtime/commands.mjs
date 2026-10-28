@@ -38,7 +38,7 @@ const UNDO = {
 const BODY = {
   '/api/first-flow/material-triage': ['projectId','operationId','sourceId','expectedRevision','expectedHash','expectedSourceHash','decision','reason','humanDecision'],
   '/api/magazine/working-draft/share-feedback/prepare-paragraph': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','block','seen','text'],
-  '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId','recipientName','sections'],
+  '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId?','recipientName?','sections?','invitationChange?'],
   '/api/magazine/working-draft/share-feedback/prepare': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content'],
   '/api/magazine/working-draft/share-feedback/save': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','content','operationId','reason?'],
   '/api/magazine/working-draft/share-feedback/undo': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','undoOperationId','operationId'],
@@ -196,9 +196,9 @@ export function createRouteMap(services) {
       '/api/magazine/working-draft/share-feedback/prepare': {POST:input=>magazineWorking.prepareShareFeedback(input)},
       '/api/magazine/working-draft/share-feedback/save': {POST:async input=>{const result=await magazineWorking.saveShareFeedback(input);if(result.scope)input.scope=result.scope;return result;}},
       '/api/magazine/working-draft/share-feedback/history': {GET:()=>{
-        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash'];
-        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Choose one exact registered feedback reference and its current owner hashes.',400);
-        return magazineWorking.shareFeedbackHistory({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash')});
+        const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','invitationId'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==(key==='invitationId'&&!url.searchParams.has(key)?0:1)))throw new StateError('Choose one exact registered feedback reference and its current owner hashes.',400);
+        return magazineWorking.shareFeedbackHistory({storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),edition:url.searchParams.get('edition'),expectedHash:url.searchParams.get('expectedHash'),registeredFeedbackPath:url.searchParams.get('registeredFeedbackPath'),expectedFeedbackHash:url.searchParams.get('expectedFeedbackHash'),...(url.searchParams.has('invitationId')?{invitationId:url.searchParams.get('invitationId')}:{})});
       }},
       '/api/magazine/working-draft/share-feedback/undo-eligibility': {GET:()=>{
         const keys=['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','operationId'];

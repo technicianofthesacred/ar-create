@@ -63,7 +63,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
   if(body.length!==length||!/^[a-f0-9]{64}$/.test(hash||'')||createHash('sha256').update(body).digest('hex')!==hash||!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(contentType))throw Error('This photograph’s exact bytes could not be confirmed.');
   if(route.endsWith('/asset')&&(!/^[a-f0-9]{64}$/.test(rootId||'')||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(sourceId||'')))throw Error('The saved library photograph identity could not be confirmed.');
   const retainedOrigin=readMagazinePhotoOriginHeader(response.headers.get('x-ar-photo-origin'),hash);
-  return {body,hash,contentType,rootId,sourceId,...(retainedOrigin?{originRef:{kind:'library',rootId:retainedOrigin.rootId,sourceId:retainedOrigin.sourceId}}:{})};
+  return {body,hash,contentType,rootId,sourceId,...(retainedOrigin?{originRef:(retainedOrigin.kind==='publication'?{kind:'publication',rootId:retainedOrigin.rootId,relativePath:retainedOrigin.relativePath}:{kind:retainedOrigin.kind||'library',rootId:retainedOrigin.rootId,sourceId:retainedOrigin.sourceId})}:{})};
  }
  const publicationTargets=new Map();
  const publicationMedia=libraryInspection?.publicationRepoRoot?createMagazineMediaInspection({libraryPhotos,repoRoot:libraryInspection.publicationRepoRoot,resolveWorking:async({storyId,pieceId,expectedHash})=>{
