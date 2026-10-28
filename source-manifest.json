@@ -336,7 +336,7 @@
     {
       "path": "runtime/services/recordings.mjs",
       "sourceSha256": "2bbe6c1a5619e0f8bdcecebf53bc7b8cb6fb75c13004bdfe8d03107dbfc8bb7a",
-      "candidateSha256": "e5b93421a613102862c4867a779d3409cc6beebe76154bfcd6b1dc793a9dc5a3",
+      "candidateSha256": "c9d18931eeb6b5f44945d0eb113b22845477e9aa300eaa69d5cdd2fa3f87c5a9",
       "adapted": true
     },
     {
@@ -2313,7 +2313,7 @@
     },
     {
       "path": "runtime/services/recording-library-availability.test.mjs",
-      "candidateSha256": "c79a8b8373cf1a7fe59d33fdaa4fbc1973202396dcb75cb2669c96225598502e"
+      "candidateSha256": "05da0c2a02cb4bff9237757d8bdf922b978bd9bc52f1b007a83c41b9e42123f1"
     },
     {
       "path": "tests/concept-cli.test.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "1342f4607d1b854a53f9b70ed4e58ce2d6a0594482c730ace2daafd3c1a91277"
+      "candidateSha256": "0b7da253e2c1cb2b75b04a973452258595aa8acc3434aa1bfeeb6cce4dc8e8fc"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",

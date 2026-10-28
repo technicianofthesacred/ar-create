@@ -1,3 +1,21 @@
+## 28 October — Conditional transcription readiness repair integrated
+
+Explicit Sherpa now requires its own dependency set; explicit Community requires its own. Auto/default retains both engines’ requirements. Missing/non-boolean required flags, incomplete local models and offline restrictions still refuse readiness/Start. Eight integrated recording-availability and transcript-to-concept checks pass; the specialist’s broader25-check result is separate source proof. No audio inference, download or provider execution occurred. The installed runtime already reports every dependency present, so this is conditional correctness, not a demonstrated installed blocker. This source change is not installed; PR84 below remains live.
+
+## 28 October — PR84 live; four bounded completion checkoffs
+
+Signed main `972d0ca1c640f31cfe9c9f23b8970289788ab8d0`, build `2026-10-28T00:08:44.520Z`, is verified live in installed8841 and main59958.630 relevant checks/27 files, build/package935 and92 served hashes pass. API content, original editions, canonical dirty files and configuration are preserved. The candidate notes below are historical; this is the current installed milestone.
+
+- [x] Unopened connected Library, Original and publication photograph verification/placement through Save, actual restart, exact usage locations and Undo. Equal-byte unrelated origins stay distinct; explicit same-origin physical placements keep their own identities.
+- [x] Working invitation selection, unsaved-reply recovery and exact invitation-time message sections through actual restart and metadata Undo. This does not claim sending, actual correspondence facts acceptance or authoritative published-edition reading.
+- [x] Bounded approved-C Article Read geometry in desktop light/dark with adopted view controls and history below the writing desk.
+- [x] Bounded entire-app390×640 Media three-column grid and folder-sheet interactions in light/dark.
+- [ ] Real-library scale and full source/format coverage, actual human Share/facts acceptance and published-edition authority, full creative journey and Bench/Library/Pieces/all12 approved-C/final-NOTES desktop/phone interactions.
+
+The installed catalogue currently returns26 publication photos in52ms, with no truncation. Its39 indexed Library sources contain no photos and there are no connected folders. This verifies current configured scope, not every photo on the Mac/iCloud or2000-photo performance. Installed transcription reports ready with all dependencies and local models configured; no inference or download was run.
+
+The existing checklist now has37 completed bounded results and9 broader open gates. Additional whole-app phone Arrange inspection confirms header controls and caption/credit form fit in light/dark. Its rendered full Article preserves adopted refinements, while reference C shows section-order cards and different navigation: that difference remains explicit, not labelled an exact match. No wording was approved or saved during this phone inspection; temporary review wrappers were removed.
+
 ## 28 October — Photo origins and invitation history verified candidate
 
 630 relevant checks across27 files and the generated build pass on cfbc74f after the duplicate-origin repair. Native invented-content checks now cover unopened connected Library, Original and publication photographs: explicit byte verification and placement, Save, actual owner restart, exact used-where locations and Undo. Two physical assets with one explicitly proven publication origin keep their separate placement identities; equal-byte unrelated origins remain distinct. Useful photo titles survive retained-copy ordering. The connected-photo flow also verifies Audience and actual retained HTML bytes. Canonical wording and usage were restored after testing.
