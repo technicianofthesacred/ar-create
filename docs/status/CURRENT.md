@@ -1,8 +1,8 @@
-## 28 October — strict offline model-loading repair; candidate only
+## 28 October — PR91 installed; actual offline recognition verified
 
 Configured offline transcription could still enter Sherpa's downloader if an installed speaker model disappeared after startup. The candidate refuses before network access or directory creation, or reads the complete existing local model pair without writes. Online provisioning behavior is preserved. Eight focused checks, including deterministic no-network/no-write offline regressions, pass.
 
-A separate bounded real recognition check completed in7.5seconds: wholly invented locally synthesized speech, inherited operating-system network denial, existing local MLX/Sherpa weights,4segments/1speaker. The normalized recognized text matches the invented script exactly; model metadata stayed unchanged. No production import, external provider, download or installed configuration change. This proves one local recording, not real multi-speaker accuracy or native-screen acceptance. PR90 remains installed; full gates remain open.
+A separate bounded real recognition check completed in7.5seconds: wholly invented locally synthesized speech, inherited operating-system network denial, existing local MLX/Sherpa weights,4segments/1speaker. The normalized recognized text matches the invented script exactly; model metadata stayed unchanged. No production import, external provider, download or installed configuration change. This proves one local recording, not real multi-speaker accuracy or native-screen acceptance. Signed713346a010633f56527c068d592dc4bf10fb250c, build2026-10-28T05:15:15.581Z, is independently live in8841/main59958.9coherent checks/build/package954/99servedhashes and content/config preservation pass. Full gates remain open.
 
 ## 28 October — one coherent transcript-to-export journey verified
 
