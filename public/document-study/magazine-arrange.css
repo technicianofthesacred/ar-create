@@ -167,4 +167,7 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface
 .magazine-arrange .ma-document [data-ma-quote="saying"]{max-width:30ch;margin-left:auto;margin-right:auto;text-align:center}
 .magazine-arrange .ma-document .ma-article-quote blockquote{border:0;padding:0;margin:0}
 .magazine-arrange .ma-document .ma-article-quote p{margin:0}
-.magazine-arrange .ma-document .ma-article-quote strong{font-weight:400}
+/* Native gold emphasis stays local to marked quotations. Light paper uses the
+   workbench's existing warm ink so the emphasis remains readable. */
+.magazine-arrange .ma-document .ma-article-quote strong{font-weight:400;color:var(--tj-gold-lt,var(--tj-read-gold-lt-default,#d4b78c))}
+html[data-theme="light"] .magazine-arrange .ma-document .ma-article-quote strong{color:var(--warm,#7a5a30)}
