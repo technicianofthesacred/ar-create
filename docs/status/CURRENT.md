@@ -1,3 +1,25 @@
+## 28 October — Article continuation and phone identity verified candidate
+
+Candidate d174b79 adds explicit Article continuation after the exact recorded human opening choice through the existing Study request/proposal, donor insert, writer/journal and exact Undo. Saved Research Include/Leave out choices retain their original identities and bytes through that proven opening write; source/choice/Direction/guidance/learning drift and unrelated same-raw history still refuse. The initially reproduced saved-choice409 is repaired.502 relevant checks across25files pass, including actual invented service acceptance/restart/exact Undo and strict proxy/agent/caller-proof guards. The full assisted Article/Carousel journey is not complete.
+
+Fresh preserved native review on the integrated candidate keeps both opening options pending, exposes no continuation action before a human choice, refuses agent preparation409 without creating a request, and preserves both manuscript hashes. No native wording approval, provider or model execution occurred. Native post-choice screen acceptance remains unproved. Source/Direction phone title/readable-name repairs have same390×640 reference/live lightdark and enlarged-text evidence with remaining mismatches explicitly recorded. This candidate is not installed; PR86 remains live and no new checkoff is closed before exact release proof. Carousel assistance, inherited-Collection resolution and Source/Research Bench moves are separate ongoing connections.
+
+## 28 October — Article continuation held; Direction phone header candidate
+
+Native Article continuation is integrated in79f04c0 but held before release: saved Research choices become stale after the accepted opening changes the native draft receipt. Existing tests covered choice-free contexts; an independent review found the normal selected-choice path was blocked. A focused trusted-lineage repair is in progress; research decision identities/content/source guards must remain exact. Native post-choice visual proof and full assisted Article/Carousel acceptance remain open.
+
+Directionphone6cce260 preserves the section title, selected-output chooser and review notice at390px/100%/137.5% in both themes. The title is restored fromx−16.54 tox16. Existing nested tools expose six313px-wide/44px-high planning fields; no words/fields were edited or saved. Reference comparisons retain concrete differences in project/output scope, extra history/review presentation and missing actual chosen/rejected angles. Full visual acceptance remains open. PR86 is still installed with41 bounded results checked and9 broader gates open.
+
+## 28 October — Source phone identity candidate
+
+Candidate853065d, not installed: Source now keeps its section heading visible at390px beside the adopted output chooser; a repeated review badge had pushed the heading tox−50.76. The corrected heading starts atx16 in both themes, fits at137.5% text size without horizontal overflow, and the Source sessions sheet remains reachable with visible keyboard focus. Retained-source headings/inventory use the existing readable display title while exact original names and paths remain in details.136 relevant checks across6files pass, and both protected invented manuscripts remain byte-exact.
+
+Same390×640 whole-app reference/live lightdark captures and geometry record six remaining differences: adopted output selection versus reference project label, retained-record availability/tools/history versus editable timestamped speech/audio, heading vertical offset, labelled versus icon panel control, plain retained transcript versus dialogue grid, and incomplete full Source/all12 interaction proof. No hover proof is claimed where the supported locator has no hover method. This is measured progress, not full C/NOTES acceptance. Temporary phone tabs/wrappers were removed; no wording approval/provider ran. PR86 remains the verified installed milestone with41 bounded completed results and9 broader gates open.
+
+## 28 October — PR86 installed; exact checkoffs
+
+Signed main `238ab7ce142e3799d7b5e0f63cfc2c82cd798fef`, build `2026-10-28T01:21:43.628Z`, is independently verified live in installed8841 and main59958.384 relevant checks across17files, build/package937 and96 served hashes pass; API content/original editions/canonical dirty files/config are preserved. Three bounded results are checked: native opening prepare/stage/review/restart without wording approval, retained Research scope settling, and cold exact registered root pickup. The existing goal checklist has41 completed bounded results and9 broader gates open. The candidate notes below now describe installed behavior. Full assisted drafting, all12 connections, complete C/NOTES desktop/phone visual acceptance and the whole creative journey remain open.
+
 ## 28 October — PR85 live; native opening and Research candidate verified
 
 Signed main `b56e95cd2bb7b42bd1cac3543073479e953c0e78`, build `2026-10-28T00:30:56.056Z`, remains the independently verified installed8841/main59958 milestone. The existing acceptance checklist has38 completed bounded results and9 broader gates open.
@@ -161,18 +183,24 @@ A48-capture desktop audit covers twelve sections, both themes, reference and liv
 
 ## Goal progress — maintained during Build
 
-Completion means verified running behavior and approved-design evidence. A passing source change stays unfinished until integration, native screen/lifecycle checks and exact release verification. Each completed item retains its revision and proof; bounded results do not close an entire section. This is a summary of the existing goal checklist, not another backlog.
+The original goal is active. The existing detailed acceptance checklist records **41 bounded installed results complete and9 broader gates open**. Each result retains its exact release/native proof. Built, native-verified, installed and human-accepted are separate states; a bounded result does not close its whole section. This table summarizes that checklist, rather than creating another backlog.
 
-| Result | Current state |
-| --- | --- |
-| Choose an unused indexed Library photo in the existing replacement flow | Verified installed, PR72; insertion remains open |
-| Output-specific Direction briefs | Verified installed, PR81; does not generate translations |
-| Nested photographs/group captions and saved Media folder projection | Verified installed, PR81; full filing remains open |
-| Nested side, on-photo and saying captions | Verified installed, PR82; full visual/phone acceptance remains open |
-| Literal passage lookup in saved kept Source speech | Verified installed, PR82 |
-| Independent linked manual language editions | Normal-owner lifecycle installed/verified, PR82; main59958 review admission unfinished |
-| Whole creative journey and Bench/Library/Pieces/all twelve sections | Open |
-| Full approved C/NOTES desktop/phone light/dark and interaction match | Open; bounded desktop evidence does not close this gate |
+| Area | Verified running behavior | Still required |
+| --- | --- | --- |
+| Library and photographs | Indexed unused photos can enter the same replacement/insertion flow; distinct origins, exact saved usage, restart and Undo verified through PR84 | Actual full-library coverage and large-library performance; current configured catalogue does not include all Mac/iCloud Photos |
+| Source | Saved transcript corrections, retained translation review and literal saved-passage lookup | Complete recording/transcript-to-two-output journey; no new transcription or provider run claimed |
+| Research | Retained points, saved questions, source-bound discussion, selected kept learning and settled reader/scope | Full informed alternatives, assistance and continuation acceptance |
+| Direction | Six project/part fields, prose, recovery/conflict/Undo, shared guidance and separate output translation briefs | Populated final design acceptance and complete downstream assisted drafting |
+| Write and proposals | Exact native owner, stable paragraph/caret recovery, cold registered-root pickup and opening alternatives prepared/staged/reviewed across restart (PR86) | Assisted full Article and Carousel continuation; real wording remains an explicit human choice |
+| Bench and Pieces | Exact current-passage and registered-output continuation, saved output next moves | Recording/research next moves, complete cross-project counts and semantic/history acceptance |
+| Read and Check | Shared desktop reading geometry; independent Carousel reading and canonical output-specific checks | Full phone/header/navigation/interaction match and complete journey |
+| Media and Arrange | Saved nested folder projection; explicit Magazine/Article photo placement; captions/credits/composed roles; actual retained HTML and exact Undo | Full filing/scale and whole Article/Carousel visual acceptance |
+| Audience and editions | Separate output briefs and independent manually worded linked editions with lifecycle proof | Complete translated-output generation/acceptance and published-edition authority |
+| Share | Canonical guarded paragraph editing; explicit recipient/language sections; working invitations/recovery and exact invitation-time message history | Human correspondence facts acceptance and complete published recipient/edition workflow |
+| Outputs | Independent output owners and retained real export receipts | Continuous provenance through the complete two-output creative journey |
+| Full design | Bounded desktop Read/Write and whole-app390×640 Media/Arrange/Research comparisons; phone row correction installed | Every applicable section in desktop/phone light/dark with interaction evidence against C/NOTES; recorded mismatches remain open |
+
+PR86 signed `238ab7ce142e3799d7b5e0f63cfc2c82cd798fef`, build `2026-10-28T01:21:43.628Z`, is the latest verified running milestone.384 relevant checks/build/package937/96served hashes and content/config preservation passed. No provider or native wording approval occurred in that verification.
 
 ## 28 October — Audience, nested photos and Media folders installed
 

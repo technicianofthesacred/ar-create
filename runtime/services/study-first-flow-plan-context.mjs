@@ -21,8 +21,8 @@ export function createStudyFirstFlowPlanContext({dataDir,savedPlan,firstFlow}){
   const {hash,...payload}=context;if(hash!==digest(stable(payload)))fail('First-flow context authority capture hash changed.');
   return {scope,binding:{projectKey:key,projectId:owned.projectId,documentId:owned.documentId},available:context.available,context:structuredClone(context)};
  }
- return {async context(binding){
-  const plan=await savedPlan.context(binding),{hash:oldHash,...base}=plan;
+ return {async context(binding,options){
+  const plan=await savedPlan.context(binding,options),{hash:oldHash,...base}=plan;
   if(oldHash!==digest(stable(base)))fail('Editorial context authority capture hash changed.');
   const project=await captured(binding.parentStudyId,{kind:'project-shared-research',parentStudyId:binding.parentStudyId,role:'potentially-multiple-story-research-not-part-direction-or-approved-part-prose'});
   const part=await captured('owned-draft:'+binding.bindingId,{kind:'matching-part-research',parentStudyId:binding.parentStudyId,bindingId:binding.bindingId,role:'research-and-editorial-intent-for-this-exact-owned-part-not-shared-project-direction-or-approved-prose'});
