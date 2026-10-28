@@ -228,3 +228,10 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group:not(.source-dialogue-boundary){grid-template-columns:40px minmax(0,1fr)!important;column-gap:8px}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group:not(.source-dialogue-boundary)>.source-speaker{width:40px!important;min-width:40px!important}
 }
+
+/* The full Workbench wraps remarks in its maintained .tx owner; keep it in the same rail grid. */
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group:not(.source-dialogue-boundary)>.source-speaker{grid-column:1!important;grid-row:1 / span var(--source-group-rows,1)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-dialogue-group:not(.source-dialogue-boundary)>.tx{grid-column:2!important;grid-row:1!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved.source-reader-show-timing .source-dialogue-group:not(.source-dialogue-boundary)>:is(.tm,time){grid-column:2!important;grid-row:1!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved.source-reader-show-timing .source-dialogue-group:has(>.tm,>time):not(.source-dialogue-boundary)>.source-speaker{grid-row:2 / span var(--source-group-rows,1)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved.source-reader-show-timing .source-dialogue-group:has(>.tm,>time):not(.source-dialogue-boundary)>.tx{grid-row:2!important}

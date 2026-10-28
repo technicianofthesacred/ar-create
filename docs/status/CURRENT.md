@@ -1,3 +1,9 @@
+## 28 October — full Source opening repair candidate
+
+The full1100-remark Source could render behind a persistent startup veil while global work discovery waited. Source APIs remained healthy and exact; the wider catalogue timed out in16seconds. Exact kept-source entry now resolves/pins the native UUID/hash/version through the maintained reader before optional catalogue loading. Existing flush, project/intent and stale/ambiguous checks remain; a late catalogue response cannot replay the route or silently replace its project. Non-kept sources retain the existing catalogue path. Late discovery failure leaves the exact transcript visible with a specific notice.
+
+The full-screen check also caught legacy Workbench .who/.tx grid declarations overriding the new reserved speaker rail. Their maintained nodes now occupy the intended two columns, including timestamp mode.240 relevant checks/build/package964 pass. Actual read-only full Workbench verifies1100remarks/505speakercontrols at1280×720light/dark and390×640iframeboth themes with catalogue deliberately held and all nativePOSTs blocked. No name/prose/approval/provider writes. Candidate only; wholeC/NOTES/physicalphone and underlying slow-catalogue dependency remain open. Existing44checked/9broadergates unchanged until independent installation.
+
 ## 28 October — Source speaker controls installed and independently verified
 
 PR96 is live in the installed app and main review at signed `b86880345264816b0d2be623199bf4de50336000`, build `2026-10-28T12:10:48.852Z`. The rotated boxed speaker labels open the existing correction panel for the group's first remark only. Separate English remarks, editorial boundaries, native source revision/hash and recovery/history remain intact.
