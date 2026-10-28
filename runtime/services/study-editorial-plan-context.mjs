@@ -25,6 +25,14 @@ export function createStudyEditorialPlanContext({drafts,originals,choices}={}){
   const draft=await drafts.read(binding),b=draft?.binding;
   if(b?.id!==binding.bindingId||b.parentStudyId!==binding.parentStudyId||b.authority!=='owned-working-copy'||b.status!=='ready'||draft.readiness?.ready!==true||!draft.expected||!Array.isArray(draft.context?.records))fail('Exact ready owned manuscript is required for editorial context.');
   const openingPreimage=acceptedOpening===undefined?null:await acceptedOpeningTransition(drafts,binding,draft,acceptedOpening);
+  if(b.kind==='collection-root'||b.origin==='authored-collection'){
+   if(b.kind!=='collection-root'||b.origin!=='authored-collection'||b.originalId!=='collection:'+binding.parentStudyId||b.partKey!=='collection'||PARENTS[b.parentStudyId]||draft.context.records.some(record=>record.role!=='draft'))fail('Authored root has contradictory original-plan identity or retained original support; preserve existing context for review.');
+   // This root was authored here, so there is no original-part plan or legacy
+   // research-choice history. Parent Research and Direction retain their own
+   // captured authorities in the existing composition; they are not empty evidence.
+   const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:'exact-authored-collection-root',expected:structuredClone(draft.expected),originalPlan:{status:'not-applicable',reason:'Authored working root has no legacy original-part plan or original-backed Research choices. Parent Research, selected material and scoped Direction remain separate maintained context.'},choiceSourceExpected:null,originalSourceRecords:[],records:[],selections:[]};
+   return {...payload,hash:digest(stable(payload))};
+  }
   const original=await originals.readDraft(b.originalId);
   if(original?.id!==b.originalId||original.parentStudyKey!==b.parentStudyId||original.partKey!==b.partKey||!Array.isArray(original.records))fail('Editorial records belong to a different original part.');
   const originalSourceRecords=original.records.filter(r=>r.role!=='draft').map(r=>{
