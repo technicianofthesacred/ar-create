@@ -3,7 +3,7 @@
 (()=>{
  if(!window.AR_CREATE_REVIEW_MODE?.actualWork)return;
  // Mount owners normally, but do not expose a cached piece while an exact URL is resolving.
- const routeKeys=['reviewSource','reviewStory','reviewStage','reviewArtifact','reviewHash','reviewWorkspace','reviewBinding','reviewCarousel','reviewMagazineStory','reviewMagazinePiece','reviewMagazineParent'];
+ const routeKeys=['reviewSource','reviewStory','reviewStage','reviewArtifact','reviewHash','reviewWorkspace','reviewBinding','reviewOutput','reviewCarousel','reviewMagazineStory','reviewMagazinePiece','reviewMagazineParent'];
  if(window.location&&document.body&&routeKeys.some(key=>new URLSearchParams(window.location.search).has(key))){
   const requestedURL=window.location.href,root=document.documentElement,held=new Map(),status=document.createElement('section'),style=document.createElement('style');
   root.setAttribute('data-review-startup-pending','');
