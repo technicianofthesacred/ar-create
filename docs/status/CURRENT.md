@@ -1,3 +1,11 @@
+## 28 October — Source speaker controls installed and independently verified
+
+PR96 is live in the installed app and main review at signed `b86880345264816b0d2be623199bf4de50336000`, build `2026-10-28T12:10:48.852Z`. The rotated boxed speaker labels open the existing correction panel for the group's first remark only. Separate English remarks, editorial boundaries, native source revision/hash and recovery/history remain intact.
+
+191 relevant checks, build/package964,124 served hashes and11 critical source paths pass, including7 independent served comparisons for the four Source assets. All13 kept sessions retain exact source hashes, ordered dialogue, original turns and speaker labels; manuscripts, four existing carousel editions, configuration and canonical dirty files are unchanged. No native name/wording Save, approval or provider call ran. The bounded installed presentation result is checked off:44 checked /9 broader gates open.
+
+Candidate native desktop light/dark and390×640 component click/type/Cancel, caret geometry and owner restart proof remains valid. A post-install revisit of the real Source screen was unavailable through supported browser ownership, so no actual post-install interaction or physical-phone/full C/NOTES acceptance is claimed. Existing writing tabs were untouched. Release verification is terminal; no reinstallation is needed.
+
 ## 28 October — editable Source speaker rail candidate
 
 Source now exposes each supplied speaker label as a rotated boxed control in a reserved column, retaining separate English remarks and editorial boundaries. Clicking it stages the existing correction editor for the group's first remark only; the panel states that scope. No bulk identity inference or second save/history store is introduced. Native source revision/hash, recovery and human Save remain authoritative.
