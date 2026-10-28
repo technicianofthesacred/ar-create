@@ -1,3 +1,11 @@
+## 28 October — article album picker installed and independently verified
+
+PR94 is live in the installed app and main review at signed `71172a8cd8e05a390e3a72c2b0c32474275e7a52`, build `2026-10-28T10:59:01.722Z`. Arrange → Adjust photo → Photo library offers the complete connected photo catalogue and saved nested albums, including empty albums. Empty albums also have a separate structure-only capability through the existing native folder owner.
+
+The exact release passed 237 coherent checks, build/package963 and 121 served-byte comparisons. Native owner metadata proves read-only photo records plus explicit structural capability. Original editions, article/source content, canonical dirty files and installed configuration are unchanged; only the approved review album flag changed. The initial preview-readiness deadline expired, but the service was subsequently healthy; verification resumed without another install or restart and all preservation checks passed.
+
+All 26 currently connected photos were verified in the candidate picker in desktop light/dark themes, with selection and safe Cancel. Isolated native empty-album and hierarchy lifecycle proof is retained. Photos from unconnected locations, actual filing into albums, full Library controls and whole C/NOTES/phone acceptance remain open. No real article photo placement or wording was saved during verification. This bounded milestone extends existing photo-library evidence; the broader checklist remains 42 checked / 9 open.
+
 ## 28 October — albums connected to the article photo picker; release candidate
 
 Arrange → Adjust photo → Photo library now offers All photos and the saved nested Media albums, including empty groups. Search and source filters operate within the chosen album; All photos keeps the complete connected catalogue. Album membership uses the maintained Library identity/hash projection. Unavailable album metadata leaves the catalogue usable and offers a retry. Changing albums clears the temporary choice and invalidates pending photo verification, so a hidden earlier choice cannot be saved.
