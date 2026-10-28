@@ -3,6 +3,7 @@ import {researchPointId} from './study-research-choices.mjs';
 const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.entries(x).sort(([a],[b])=>a.localeCompare(b))):x);
 const same=(a,b)=>stable(a)===stable(b);
 const fail=message=>{throw Object.assign(Error(message),{status:409});};
+const uuidPin=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value),hashPin=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const PARENTS={hk:'hk','ref-an-cha':'ancha','ref-collector':'collector'};
 export const EDITORIAL_PLAN_ROLE='saved-editorial-plan-not-evidence-source-quotation-or-approved-prose';
 /** Internal capability only: the bridge supplies the accepted opening preimage.
@@ -26,11 +27,17 @@ export function createStudyEditorialPlanContext({drafts,originals,choices}={}){
   if(b?.id!==binding.bindingId||b.parentStudyId!==binding.parentStudyId||b.authority!=='owned-working-copy'||b.status!=='ready'||draft.readiness?.ready!==true||!draft.expected||!Array.isArray(draft.context?.records))fail('Exact ready owned manuscript is required for editorial context.');
   const openingPreimage=acceptedOpening===undefined?null:await acceptedOpeningTransition(drafts,binding,draft,acceptedOpening);
   if(b.kind==='collection-root'||b.origin==='authored-collection'){
-   if(b.kind!=='collection-root'||b.origin!=='authored-collection'||b.originalId!=='collection:'+binding.parentStudyId||b.partKey!=='collection'||PARENTS[b.parentStudyId]||draft.context.records.some(record=>record.role!=='draft'))fail('Authored root has contradictory original-plan identity or retained original support; preserve existing context for review.');
-   // This root was authored here, so there is no original-part plan or legacy
+   if(!['collection-root','output-fork'].includes(b.kind)||b.origin!=='authored-collection'||b.originalId!=='collection:'+binding.parentStudyId||b.partKey!=='collection'||PARENTS[b.parentStudyId]||draft.context.records.some(record=>record.role!=='draft'))fail('Authored root has contradictory original-plan identity or retained original support; preserve existing context for review.');
+   let outputLineage;
+   if(b.kind==='output-fork'){
+    const from=b.derivedFrom,expected=from?.expected;
+    if(!uuidPin(b.id)||!uuidPin(b.outputId)||b.canonicalOutputId!==b.outputId||!uuidPin(b.sourceBindingId)||new Set([b.id,b.outputId,b.sourceBindingId]).size!==3||from?.bindingId!==b.sourceBindingId||from.relationship!=='archival-starting-edition-not-continuous-wording-or-freshness-authority'||!hashPin(from.rawHash)||!hashPin(from.captureHash)||!hashPin(expected?.bindingHash)||!hashPin(expected?.correspondenceHash)||!expected.workflow||Array.isArray(expected.workflow)||expected.workflow.draft!==from.rawHash||Object.values(expected.workflow).some(value=>value!==null&&!hashPin(value))||b.seedWorkingHash!==from.rawHash||b.textOutputKind!==undefined)fail('Authored independent Article has incomplete or contradictory canonical archival fork proof.');
+    outputLineage={outputId:b.outputId,canonicalOutputId:b.canonicalOutputId,sourceBindingId:b.sourceBindingId,seedWorkingHash:b.seedWorkingHash,derivedFrom:structuredClone(from)};
+   }
+   // Authored roots and their exact archived Article forks have no original-part plan or legacy
    // research-choice history. Parent Research and Direction retain their own
    // captured authorities in the existing composition; they are not empty evidence.
-   const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:'exact-authored-collection-root',expected:structuredClone(draft.expected),originalPlan:{status:'not-applicable',reason:'Authored working root has no legacy original-part plan or original-backed Research choices. Parent Research, selected material and scoped Direction remain separate maintained context.'},choiceSourceExpected:null,originalSourceRecords:[],records:[],selections:[]};
+   const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:outputLineage?'exact-authored-independent-output':'exact-authored-collection-root',...(outputLineage?{outputLineage}:{}),expected:structuredClone(draft.expected),originalPlan:{status:'not-applicable',reason:'Authored working root has no legacy original-part plan or original-backed Research choices. Parent Research, selected material and scoped Direction remain separate maintained context.'},choiceSourceExpected:null,originalSourceRecords:[],records:[],selections:[]};
    return {...payload,hash:digest(stable(payload))};
   }
   const original=await originals.readDraft(b.originalId);
