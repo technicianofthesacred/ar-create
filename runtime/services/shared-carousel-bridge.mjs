@@ -28,7 +28,7 @@ export function createSharedCarouselBridge({dataDir,store,requests,guidance,writ
  const wordsIdentity=article=>sharedCarouselWordsIdentity(article.project.id,article.document.id,article.output);
  async function acceptedGuidance(){const shared=await guidance.get();return Object.fromEntries(['voice','positions','recipe'].map(key=>{if(typeof shared[key]!=='string')fail('Accepted writing guidance is unavailable.');const body=acceptedGuidanceBody(shared[key]);return [key,{body,hash:digest(body)}];}));}
  async function nativeResources({projectId,documentId,outputId,rootBindingId,parentStudyId}){
-  const article=await store.readArticle({projectId});if(article.document.id!==documentId)fail('The exact native Carousel document changed.');
+  const article=await store.readCarouselWords({projectId,documentId,outputId});if(article.document.id!==documentId)fail('The exact native Carousel document changed.');
   const direction=await humanDirection.context(projectId,{documentId,outputId}),shared=await acceptedGuidance();
   const scopeReferences=[];for(const target of [{scope:'project',parentStudyId},{scope:'part',parentStudyId,bindingId:rootBindingId},{scope:'output',parentStudyId,bindingId:rootBindingId,outputId}]){
    if(typeof humanDirection.readScopeReferences!=='function')fail('Exact Direction scope-reference inspection is unavailable.');
