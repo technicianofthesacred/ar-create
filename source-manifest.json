@@ -2365,7 +2365,7 @@
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "b9177859c8be2c58fc6210c78a66582088fabf7fa102b527718fbfe40aaaf40d"
+      "candidateSha256": "d7491b220250d03399b2eec2333ace34927ad5185509e387e6956027e6a5f9f4"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "d768e3b2174e28fdcffa5a919a8cc342984e00d402de9df66917160f4f0bd9a4"
+      "candidateSha256": "61bf0d84a5c0631643d07de558fa7ee057b39fe9125793b25839e1230da62948"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3725,7 +3725,7 @@
     },
     {
       "path": "tests/source-inline-editing.test.mjs",
-      "candidateSha256": "c5571eaab41bb1c03e09e6641380d11d0c20b24e3027ce522f0c3bf1eec0d84a"
+      "candidateSha256": "d917a2d18eb9cfccfd2bbb141c6626b0772441914048615c5ec07ceaa39c60d3"
     },
     {
       "path": "tests/review-source-corrections.test.mjs",
