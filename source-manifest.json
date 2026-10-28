@@ -984,7 +984,7 @@
     {
       "path": "runtime/services/study-editorial-plan-context.mjs",
       "sourceSha256": "eb2267f0c0d59390d69b81b946c208d630faf17eefcdd53e6746a1de89b32f61",
-      "candidateSha256": "2f478cc5166e27d5a02ae0c71a2d5bdf2403af5fb030f6c59dd3c7aa35172c1e",
+      "candidateSha256": "ef91d36464df580182589c5ffc78004049c369d5dbc53664bfe55fcb75ef80cc",
       "adapted": false
     },
     {
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "cc2a8f291123625bf1c12799398d35215c34b7df49b4efa5261e8ccdda93a951"
+      "candidateSha256": "5669228a219bdec8ed17ca8d22629a0e96d6d8fda68a912d26faf7eab84cdb0e"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4537,7 +4537,7 @@
     },
     {
       "path": "tests/collection-source-continuation.test.mjs",
-      "candidateSha256": "70333e4848ea66325149edfa0f77f9f1512122cf803720df92bc592c96ca85dc"
+      "candidateSha256": "dc2179032a671ec06f1ff3e6b1257b73edca37ff5e112bb53887110115f6259c"
     }
   ],
   "dependencyRepair": {
