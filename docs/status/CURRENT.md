@@ -1,3 +1,9 @@
+## 28 October — published article layout correction installed
+
+PR93 is independently live in the installed app and main review at signed `6e841b1c97fb8a2b9d14cd5048a1eade0b5ba4d3`, build `2026-10-28T09:06:02.152Z`. The actual published article now supplies the Magazine preview’s split cover, viewport type scale, printed palette, genuine licensed fonts, byline and photo-quotation layout. The hidden inspector gutter is removed. Final evidence includes 120 coherent checks, the 963-file package, 121 served hashes and original/content/configuration preservation.
+
+Desktop comparisons used the actual public story and full workbench at 1280×720. The 390×640 iframe checks establish a readable narrow workbench, not physical-phone or public-mobile certification. Workbench chrome and available reading width still differ. Full C/all12, native human creative-journey and other broader finish gates remain open; the checklist stays at 42 bounded results checked and 9 broader gates open. The goal controller still reports blocked; authorized bounded Build work continues.
+
 ## 28 October — actual published Magazine fidelity candidate
 
 Human rejected the local preview as different from the live story. Direct comparison with teajia.com/read/porcelain-and-tea found generic authoring CSS stacking the cover, reducing viewport-based type to container size, changing the printed palette, omitting the byline and synthesizing italics. The candidate uses the retained native conversation layout, actual published type scale/palette, genuine local licensed font faces, retained author/subject/derived length metadata and full reading width. It also composes exact protected on-photo quotations while keeping controls and captions outside.
