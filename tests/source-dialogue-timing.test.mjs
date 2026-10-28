@@ -10,3 +10,7 @@ test('supplied first-remark timestamps reach the Source grid without changing sp
 test('missing and invalid timing stays absent rather than inferred from another remark',()=>{
  for(const timestamp of [undefined,'','unverified','25:99:99','<script>']){const html=renderSourceGroups({id:'s',turns:[{id:'a',speaker:'Visitor',text:'Untimed.',timestamp},{id:'b',speaker:'Visitor',text:'Later timed.',timestamp:'00:00:08'}]});assert.doesNotMatch(html,/<time /);}
 });
+
+test('speaker buttons target only exact first remarks and editorial boundaries remain read-only',()=>{
+ const html=renderSourceGroups({id:'source',turns:[{id:'first',speaker:'Speaker <one>',text:'First.'},{id:'second',speaker:'Speaker <one>',text:'Second.'},{id:'editorial-x',kind:'editorial',speaker:'Editor',text:'A boundary.'}]});assert.match(html,/<button[^>]*data-source-speaker-turn="first"/);assert.doesNotMatch(html,/data-source-speaker-turn="second"|data-source-speaker-turn="editorial-x"/);assert.match(html,/Speaker &lt;one&gt;/);assert.equal((html.match(/class="source-remark"/g)||[]).length,3);
+});

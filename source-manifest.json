@@ -2357,19 +2357,19 @@
     },
     {
       "path": "public/document-study/source-dialogue.mjs",
-      "candidateSha256": "7e10a22894a0a341085d1617016b3bf33a053fd3510ee240af6553363d0d7dbc"
+      "candidateSha256": "bec3cedcbb118a349f44b1dc6c6f1bb6d06e1037931bb055481ad8d06d73a18f"
     },
     {
       "path": "public/document-study/source-imported.css",
-      "candidateSha256": "3db4f44233b069945e412ea4bae34dfef50d0e1fc6bc84d07f1d984938c228b6"
+      "candidateSha256": "3a98917f95f5dabb5c65b72de1f1cc1c61bfff21c649d7e0fe7e9925af13e1fb"
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "4b64d6e3931a13be8004cb7442475c0530ad116c8a011dd177e362510f3dc0ef"
+      "candidateSha256": "b9177859c8be2c58fc6210c78a66582088fabf7fa102b527718fbfe40aaaf40d"
     },
     {
       "path": "public/document-study/source-dialogue.js",
-      "candidateSha256": "dbe6db542b19dfeea783d794a40fbad1119e6b04f4655aad2f66dc39bca2a3f3"
+      "candidateSha256": "bec3cedcbb118a349f44b1dc6c6f1bb6d06e1037931bb055481ad8d06d73a18f"
     },
     {
       "path": "tests/learning-shared-notes.test.mjs",
@@ -2853,7 +2853,7 @@
     },
     {
       "path": "docs/product/sections/02-transcripts.md",
-      "candidateSha256": "538614c1ced600f91084f2553f496d3b5d623416e83afa035c0495c99651e859"
+      "candidateSha256": "6a23d933973c62bf5067e2bf6f5dfaf8addc4dbed5b4bcea6eae94136765ceda"
     },
     {
       "path": "docs/product/sections/03-research.md",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "0b9b3555e7e5a21d522836e1573959eba2a26801d1cd8288ae63892c2411eeb5"
+      "candidateSha256": "eaa7e88aed62f126351b4cad8be966280ef213aac799ed4e70a636dd3750cc4a"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3573,7 +3573,7 @@
     },
     {
       "path": "tests/source-dialogue-timing.test.mjs",
-      "candidateSha256": "7ba6d58dc1d449242f2e54f0e321ca06f7a24cb524969dc35a303f3093da2ee5"
+      "candidateSha256": "fb182c47c1c050437d58c3c331901d7f6e68431c587a4b2e368cb5a0773b562f"
     },
     {
       "path": "tests/workbench-audience-match.test.mjs",
@@ -3725,7 +3725,7 @@
     },
     {
       "path": "tests/source-inline-editing.test.mjs",
-      "candidateSha256": "b44aba7a7e088fc4590e1e053aa1f349fb4698ffd381e654df14ae578510deaa"
+      "candidateSha256": "c5571eaab41bb1c03e09e6641380d11d0c20b24e3027ce522f0c3bf1eec0d84a"
     },
     {
       "path": "tests/review-source-corrections.test.mjs",

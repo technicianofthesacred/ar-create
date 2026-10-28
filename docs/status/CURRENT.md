@@ -1,3 +1,15 @@
+## 28 October — editable Source speaker rail candidate
+
+Source now exposes each supplied speaker label as a rotated boxed control in a reserved column, retaining separate English remarks and editorial boundaries. Clicking it stages the existing correction editor for the group's first remark only; the panel states that scope. No bulk identity inference or second save/history store is introduced. Native source revision/hash, recovery and human Save remain authoritative.
+
+191 relevant Source, interpretation, translation-reader, correction and continuation checks pass. An isolated native six-remark owner verifies desktop light/dark1280×720 and narrow390×640 click/type/Cancel, exact caret geometry and source/original/turn/projection preservation across a real owner restart. No native name was saved; all verification POSTs are blocked. Narrow component proof is not physical-phone certification. Earlier C uses horizontal labels; this bounded rotated-rail clarification is not whole C/NOTES approval. Candidate only until exact publication proof.
+
+## 28 October — photo album membership installed and independently verified
+
+PR95 is live in the installed app and main review at signed `ce434fbb58a296605daae88b64024b29df691aa3`, build `2026-10-28T11:43:47.232Z`. Media and Arrange's article photo picker share Add to album, Remove and eligible exact Undo using the existing native Library records. Empty albums remain visible. Filing creates no photo/source copies and preserves original identities.
+
+262 coherent checks, build/package964,121 served hashes and10 critical source proofs pass. Native invented article/Media Add, Remove, reload, exact Undo and owner restart are verified; narrow390×640 controls fit. Production source/article content, original editions, canonical dirty files and configuration remain exact. The bounded album-filing result is checked off:43 checked /9 broader gates open. Unconnected photo origins, whole Library/mixed-media controls, C/NOTES and physical-phone acceptance remain open.
+
 ## 28 October — photo album membership candidate; native component verified
 
 Media and the article photo picker now offer Add to album and Remove, sharing the existing Library folder records and exact native revision/hash guards. Indexed Library photographs retain their source UUID memberships. Publication/original catalogue photographs use exact origin/revision/hash references in the same folder rows and operation history; filing creates no photo copies or source records. Native leases, receipt replay and eligible exact Undo remain in force.
