@@ -36,6 +36,11 @@
   const matches=new Map();raw.forEach((item,i)=>{if(item.originRef?.kind!=='library')return;const id=item.catalogSourceId,origin=item.originRef,preview=item.previewScope,source=sources.get(id);if(item.previewKind!=='magazine-library'||!uuid.test(id||'')||origin.sourceId!==id||origin.rootId!==preview?.rootId||preview.sourceId!==id||!hash.test(origin.rootId||'')||matches.has(id)||!source||(source.missing||source.sourceUnavailable||source.available===false)||!deferredIds.has(id)&&!(source.hash===null&&members.get(id)?.rootId===source.rootId)&&(source.hash!==preview.sourceHash||source.hash!==item.sourceRef.hash)||members.has(id)&&preview.sourceHash!==item.sourceRef.hash||!relative(item.catalogRelativePath)||source.rel_path!==item.catalogRelativePath)throw Error('A Library photograph changed before its saved Media folders could be confirmed. Refresh Media.');matches.set(id,rows[i].id);});
   return {revision:value.revision,indexHash:value.indexHash,...(value.folderStructureWritable===true&&value.folderStructureOnly===true?{folderStructureWritable:true,folderStructureOnly:true,folderUndoOperationId:uuid.test(value.folderUndoOperationId||'')?value.folderUndoOperationId:null}:{}),eligibleIds:[...matches.values()],folders:[...folders.values()].map(folder=>({id:folder.id,name:folder.name,parentId:folder.parentId,sourceIds:folder.sourceIds.filter(id=>matches.has(id)).map(id=>matches.get(id))}))};
  }
+ function libraryAlbums({catalog,folderData}={}){
+  if(catalog?.schema!=='ar-create.magazine-library-photos.v1'||!hash.test(catalog.revision||'')||!Array.isArray(catalog.items)||catalog.items.length>20000)throw Error('The photo library could not be confirmed.');
+  const raw=catalog.items.map(item=>({id:JSON.stringify([item.rootId,item.sourceId]),previewKind:'magazine-library',originRef:item.originRef,byteVerification:item.byteVerification,selectable:item.selectable,libraryMembership:item.libraryMembership,catalogSourceId:item.sourceId,catalogRelativePath:item.relativePath,previewScope:{rootId:item.rootId,sourceId:item.sourceId,sourceHash:item.sourceHash},sourceRef:{hash:item.sourceHash}}));
+  return savedFolders(folderData,raw,raw);
+ }
  function project({scope,revision,sources,currentOwnerRef=null,folderData=null}={}){
   const currentOwner=owner(currentOwnerRef);
   if(!hash.test(scope||'')||!hash.test(revision||'')||!Array.isArray(sources)||sources.length>20000)throw Error('The Media list needs a confirmed scope and revision.');
@@ -71,5 +76,5 @@
   if(body.byteLength!==bytes||actual!==sum||!isCurrent())throw Error('The photograph changed while its bytes were checked. Refresh Media.');
   return {...item,sourceHash:sum,revision,contentType:mime,bytes,selectable:true,available:true,byteVerification:'verified'};
  }
- window.arCreateExactMedia=Object.freeze({project,descriptor,placement,previewURL,verifyLibraryPhoto});
+ window.arCreateExactMedia=Object.freeze({project,libraryAlbums,descriptor,placement,previewURL,verifyLibraryPhoto});
 })();

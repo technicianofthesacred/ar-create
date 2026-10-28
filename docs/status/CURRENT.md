@@ -1,3 +1,11 @@
+## 28 October — albums connected to the article photo picker; release candidate
+
+Arrange → Adjust photo → Photo library now offers All photos and the saved nested Media albums, including empty groups. Search and source filters operate within the chosen album; All photos keeps the complete connected catalogue. Album membership uses the maintained Library identity/hash projection. Unavailable album metadata leaves the catalogue usable and offers a retry. Changing albums clears the temporary choice and invalidates pending photo verification, so a hidden earlier choice cannot be saved.
+
+Verified 237 coherent checks. The actual candidate workbench shows all 26 currently connected publication photos at 1280×720 in light/dark themes; selection enables Use photo, and Cancel restores the original preview. An isolated native folder owner plus maintained article picker verifies a saved empty album, zero photos and disabled Use photo. No actual article placement or wording was saved during verification. This is not proof that unconnected photo locations have been indexed, nor full C/NOTES/mobile acceptance.
+
+The coherent release will enable only the existing review connection's structure-only empty-album capability. Existing Library owner, originals, membership protections, canonical writing and session-limited structural Undo remain authoritative. Source verified; publishing/installed status must be proven separately.
+
 ## 28 October — empty album hierarchy candidate; photos are not a prerequisite
 
 The same Library owner now has an opt-in, structure-only review transport for empty nested groups. It verifies the inspected native owner and exact revision/hash, retains operation UUID replay, rejects source membership/file/path writes and protects nonempty branches. Media keeps its photo catalogue read-only while exposing a separate structural capability with native folder pins. Album creation and nesting work with no photos; returned folder metadata is reprojected without replacing the photo catalogue or dirty writing controls.

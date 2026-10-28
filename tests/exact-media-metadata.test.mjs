@@ -54,3 +54,10 @@ test('empty albums admit explicit structure-only capability without granting sou
  const p=m.project({...input([]),folderData});assert.equal(p.data.readOnly,true);assert.equal(p.data.folderStructureWritable,true);assert.equal(p.data.folderStructureOnly,true);assert.equal(p.data.folderUndoOperationId,FOLDER_A);assert.equal(p.data.folderRevision,7);assert.equal(p.data.sources.length,0);assert.equal(p.data.folders[1].parentId,FOLDER_A);
  const held=m.project({...input([]),folderData:{...folderData,folderStructureOnly:false}});assert.notEqual(held.data.folderStructureWritable,true);assert.notEqual(held.data.folderUndoOperationId,FOLDER_A);
 });
+
+test('article albums reuse exact Library memberships and preserve empty nested groups',()=>{
+ const id='11111111-1111-4111-8111-111111111111',parent='22222222-2222-4222-8222-222222222222',child='33333333-3333-4333-8333-333333333333';
+ const catalog={schema:'ar-create.magazine-library-photos.v1',revision,items:[{rootId:scope,sourceId:id,sourceHash:H,relativePath:'tea.png',originRef:{kind:'library',rootId:scope,sourceId:id},selectable:true,byteVerification:'indexed-current-stat'}]};
+ const folderData={schema:'ar-create.library-folders.v1',domain:'media',revision:2,indexHash:H,sources:[{id,rootId:'library',kind:'image',rel_path:'tea.png',hash:H}],folders:[{id:parent,name:'Tea',parentId:null,sourceIds:[id]},{id:child,name:'Future visit',parentId:parent,sourceIds:[]}]};
+ const result=m.libraryAlbums({catalog,folderData});assert.equal(result.folders[1].parentId,parent);assert.equal(result.folders[1].sourceIds.length,0);assert.equal(result.folders[0].sourceIds[0],JSON.stringify([scope,id]));assert.throws(()=>m.libraryAlbums({catalog,folderData:{...folderData,sources:[{...folderData.sources[0],hash:revision}]}}),/changed/);
+});

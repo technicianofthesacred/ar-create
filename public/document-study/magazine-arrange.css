@@ -182,3 +182,7 @@ html[data-theme] .magazine-arrange .ma-document .ma-onphoto-frame .ma-article-qu
 .magazine-arrange .ma-document .ma-onphoto-frame[data-ma-image-failed="true"]>img{position:static;height:auto}
 .magazine-arrange .ma-document .ma-onphoto-frame[data-ma-image-failed="true"]>.ma-article-quote{margin:28px 0;padding:0;color:var(--ink);pointer-events:auto}
 html[data-theme] .magazine-arrange .ma-document .ma-onphoto-frame[data-ma-image-failed="true"] .ma-article-quote strong{color:var(--warm)}
+
+/* Saved album metadata filters the same catalogue, including empty groups. */
+.magazine-arrange .ma-library-albums{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.magazine-arrange .ma-library-albums select{flex:1;min-width:0;max-width:100%;min-height:40px;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;text-overflow:ellipsis}
