@@ -1,4 +1,4 @@
-import {inlineMap,capture,openingBoundary} from './draft-correspondence.mjs';
+import {inlineMap,capture,render,openingBoundary,continuationBoundary} from './draft-correspondence.mjs';
 
 // The native donor owns syntax and byte mapping. Proposal edits support only a
 // contiguous plain prose span; edge comments are retained by its text operation.
@@ -26,4 +26,13 @@ export function openingProposalTarget(baseline){
  let boundary;try{boundary=openingBoundary(model);}catch(error){throw Object.assign(error,{status:409});}
  if(boundary.kind==='existing'){const row=baseline.projection.find(r=>r.id===boundary.id);if(!proposalEditable(row))throw Object.assign(Error('The opening is protected, nested or unsupported. Keep its exact words.'),{status:409});return {kind:'replace',id:row.id,seenBlockHash:row.blockHash};}
  return {kind:'insert',beforeId:boundary.beforeId,seenBoundaryHash:boundary.beforeId?baseline.projection.find(r=>r.id===boundary.beforeId).blockHash:null};
+}
+
+export function continuationProposalTarget(baseline,opening,model){
+ const retained=!!model;model=model?structuredClone(model):capture(baseline.raw,'native-continuation');
+ if(render(model)!==baseline.raw||model.blocks.length!==baseline.projection?.length)throw Object.assign(Error('Continuation donor topology changed.'),{status:409});
+ model.blocks.forEach((b,i)=>{const row=baseline.projection[i];if(b.raw!==row.raw||retained&&b.id!==row.id)throw Object.assign(Error('Continuation stable block bytes changed.'),{status:409});b.id=row.id;});
+ const row=baseline.projection.find(r=>r.id===opening?.id);if(!proposalEditable(row)||row.words!==opening.words||row.blockHash!==opening.blockHash)throw Object.assign(Error('The chosen opening words changed or are unsupported.'),{status:409});
+ let boundary;try{boundary=continuationBoundary(model,opening.id);}catch(error){throw Object.assign(error,{status:409});}
+ return {...boundary,seenOpeningHash:row.blockHash,seenBoundaryHash:boundary.beforeId?baseline.projection.find(r=>r.id===boundary.beforeId).blockHash:null};
 }

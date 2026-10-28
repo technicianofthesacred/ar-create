@@ -367,13 +367,24 @@ function photoReplaceRaw(raw:string,sourceRaw:string){
 export const supportedNativeOperations=Object.freeze(['photoAnnotation','articleCredits','photoDescription','photoFocus','photoAspect','photoReplace','photoReplaceAsset','photoInsertAsset']);
 
 /** Exact opening boundary from the maintained donor; no insertion/write authority. */
-export function openingBoundary(s:Snapshot){
+function openingBody(s:Snapshot){
  const raw=render(s);let range:{start:number;end:number}|undefined;
  try{draftBody(raw,r=>{range=r;});}catch{}
  let offset=s.prefix.length;const rows=s.blocks.map(b=>{const start=offset;offset+=b.raw.length+b.separator.length;return {id:b.id,raw:b.raw,start,end:start+b.raw.length};});
  if(!range&&rows.some(b=>/^---[ \t]*$/.test(b.raw.trim())))conflict('Ambiguous native body separators require their own review.');
  if(range&&rows.some(b=>b.raw.trim()&&b.start<range!.end&&b.end>range!.start&&(b.start<range!.start||b.end>range!.end)))conflict('The native body boundary crosses a retained block.');
- const body=range?rows.filter(b=>b.start>=range!.start&&b.end<=range!.end):rows,first=body.find(b=>b.raw.trim());
+ const body=range?rows.filter(b=>b.start>=range!.start&&b.end<=range!.end):rows;return {rows,body,range};
+}
+export function openingBoundary(s:Snapshot){
+ const {rows,body,range}=openingBody(s),first=body.find(b=>b.raw.trim());
  if(first)return {kind:'existing' as const,id:first.id};
  return {kind:'empty' as const,beforeId:body[0]?.id||(range?rows.find(b=>b.start>=range!.end)?.id:null)||null};
+}
+
+/** Only the exact chosen opening may precede a bounded continuation. */
+export function continuationBoundary(s:Snapshot,openingId:string){
+ const {rows,body}=openingBody(s),visible=body.filter(b=>b.raw.trim());
+ if(visible.length!==1||visible[0].id!==openingId)conflict('Article continuation requires only the exact chosen opening; additional or ambiguous body blocks are held.');
+ const at=rows.findIndex(b=>b.id===openingId);if(at<0)conflict('The chosen opening boundary is unavailable.');
+ return {openingId,beforeId:rows[at+1]?.id||null};
 }
