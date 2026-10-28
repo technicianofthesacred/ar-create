@@ -53,7 +53,10 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
     try {
       if (!path.isAbsolute(python) || !fs.statSync(python).isFile()) throw new Error('Python must name an installed interpreter.');
       dependencies = JSON.parse(execFileSync(python, ['-c', 'import importlib.util,json,shutil; print(json.dumps({**{n:importlib.util.find_spec(n) is not None for n in ["mlx_whisper","torch","pyannote","sherpa_onnx"]},"ffmpeg":bool(shutil.which("ffmpeg"))}))'], { timeout: 5000, cwd: repoRoot, env: { ...process.env, ...config.runtimeEnvironment }, encoding: 'utf8' }));
-      ready = Object.values(dependencies).every(Boolean); problem = ready ? null : 'The isolated runner is missing transcription dependencies.';
+      // Explicit engines do not load the other diarizer. Auto keeps both the
+      // Community path and its maintained Sherpa fallback available.
+      const engine=config.diarizationEngine||'auto',required=['mlx_whisper','ffmpeg',...(engine==='sherpa'?['sherpa_onnx']:engine==='community'?['torch','pyannote']:['torch','pyannote','sherpa_onnx'])];
+      ready = required.every(name=>dependencies?.[name]===true); problem = ready ? null : 'The isolated runner is missing transcription dependencies.';
     } catch (error) { problem = `The isolated runner is unavailable: ${error.message}`; }
   }
   if (modelProblem) { ready = false; problem = modelProblem; }
