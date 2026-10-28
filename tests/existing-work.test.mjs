@@ -603,3 +603,14 @@ test('Magazine Bench activity uses only the exact loaded path-scoped saved-histo
   assert.strictEqual(x.w.document.querySelector('#native-editor'),editor);assert.equal(JSON.stringify(x.w.current().blocks),words);
  }finally{x.dom.window.close();}
 });
+
+test('workspace Read deep link accepts the exact native preview representation and refuses foreign or editable views',async()=>{
+ for(const variant of ['exact-preview','foreign-binding','foreign-parent','editable']){
+  const {dom,w}=await setup({catalog:workspaceData(),url:workspaceURL(6),beforeLoad:w=>{
+   nativePickup(w);w.studyDraft.currentBinding=()=>({id:variant==='foreign-binding'?'foreign-binding':'pickup-binding',parentStudyId:variant==='foreign-parent'?'foreign-parent':'native-a'});w.studyDraft.viewMode=()=>variant==='editable'?'edit':'preview';
+   const previous=w.viewPhase;w.viewPhase=async stage=>{if(stage!==6)return previous(stage);w.current().view='article';w.current().viewedStage=5;w.render();};
+  }});
+  try{if(variant==='exact-preview'){assert.equal(w.document.querySelector('.ew-route-error'),null);assert.equal(w.studyDraft.viewMode(),'preview');assert.equal(new URL(w.location.href).searchParams.get('reviewWorkspace'),'pickup-piece');assert.equal(new URL(w.location.href).searchParams.get('reviewStage'),'6');assert.equal(w.current().blocks[0].html,'Invented saved human words');}else assert.match(w.document.querySelector('.ew-route-error')?.textContent||'',/changed before its section opened/);}
+  finally{dom.window.close();}
+ }
+});

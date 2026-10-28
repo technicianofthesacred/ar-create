@@ -225,7 +225,8 @@
   }
   if(story){selected.set(p.id,story.id);p.existingWorkStoryId=story.id;}
   window.arCreateReviewStartup?.phase?.('open-section');await window.viewPhase(section===7?6:section);
-  if(!exact()||project()!==p||Number(p.viewedStage)!==(section===7?6:section))throw Error('The selected work changed before its section opened.');
+  const readBinding=window.studyDraft?.currentBinding?.(),nativeRead=section===6&&needsBinding&&writing&&p.view==='article'&&Number(p.viewedStage)===5&&window.studyDraft?.viewMode?.()==='preview'&&readBinding?.id===target.rootBindingId&&readBinding.parentStudyId===target.parentStudyId;
+  if(!exact()||project()!==p||!nativeRead&&Number(p.viewedStage)!==(section===7?6:section))throw Error('The selected work changed before its section opened.');
   if(section===7){const view=p.view;window.arCreateReviewStartup?.phase?.('open-check');await window.c3WorkbenchFrame.openTool('check');if(!exact()||project()!==p||p.viewedStage!==6||p.view!==view)throw Error('The selected work changed before Check opened.');}
   if(needsBinding&&!writing){
    const d=reader(),readToken=++readEpoch,view=p.view,readStage=p.viewedStage;d.querySelector('h2').textContent='Working '+(target.partKey==='article'?'article':'part '+target.partKey);d.querySelector('.ew-read-status').textContent='Opening exact saved manuscript · read-only';d.querySelector('.ew-read-body').replaceChildren();if(!d.open)d.showModal();

@@ -1,3 +1,9 @@
+## 28 October — exact saved native Read route accepts its maintained preview view in candidate
+
+Reopening the retained invented transcript workspace at Read successfully opened its native manuscript, then failed the route's final stage check: the current reader represents Read as stage5/article with preview mode. The guard now accepts only that representation for the exact current binding and parent. Foreign bindings/parents and editable views remain refused; no words, stages or approvals are fabricated. A failing route regression reproduced the refusal before the change; focused route/startup verification and native original-linked transcript plus exact independent Article opening are recorded privately in the28October native-workspace-resume receipt. This is a source candidate, not an installed release.
+
+The retained same-record owner is reopened on isolated8859 with a separate59963 review, preserving the authored root/capture paths and identities. The next actual-screen blocker is Research: saved source-analysis artifacts are available through the exact first-flow context owner, but this native Research surface shows0connected points. No second repair, regenerated findings, native wording approval or new export was performed. Full creative-journey acceptance remains open.
+
 ## 28 October — path-scoped Magazine history connected to Bench in candidate
 
 Magazine journal events identify a whole story, so Bench correctly excluded them from an independent article’s activity. The maintained writer already loads receipt history verified against the exact working-file path. A read-only metadata snapshot now connects those receipts to Bench only when current owner, parent, registered part, catalogue artifact and saved hash all agree. Foreign paths/parts, project/output fallback and conflicts cannot borrow the activity. Rows use the neutral label “Saved working draft”; no save-versus-Undo action is inferred.
