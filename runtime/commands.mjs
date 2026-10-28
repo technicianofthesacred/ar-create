@@ -25,6 +25,7 @@ const UNDO = {
   'POST /api/magazine/working-draft/share-feedback/save': 'magazine.working-draft.share-feedback.undo',
   'POST /api/magazine/working-draft/save': 'magazine.working-draft.undo', 'POST /api/magazine/working-draft/edit': 'magazine.working-draft.undo',
   'POST /api/library/folders': 'library.folders.post',
+  'POST /api/magazine/library-photos/album': 'library.folders.post',
   'POST /api/study-draft/save': 'study-draft.undo', 'POST /api/study-draft/history-restore': 'study-draft.undo',
   'POST /api/study/human-direction/write': 'study.human-direction.undo', 'POST /api/concept/save': 'study.human-direction.undo',
   'POST /api/study/share/save': 'study.share.undo', 'POST /api/study/outputs/save': 'study.outputs.undo',
@@ -48,6 +49,7 @@ const BODY = {
   '/api/magazine/working-draft/save': ['storyId','pieceId','edition','expectedHash','content','operationId'],
   '/api/magazine/working-draft/edit': ['storyId','pieceId','edition','block','seen','text','operationId'],
   '/api/magazine/working-draft/undo': ['storyId','pieceId','edition','undoOperationId','operationId'],
+  '/api/magazine/library-photos/album': ['action','folderId','operationId','expectedRevision','expectedHash','photo:{rootId,sourceId,revision,sourceHash}'],
   '/api/library/folders': ['domain', 'action', 'operationId', 'expectedRevision', 'expectedHash', 'folderId?', 'parentId?', 'name?', 'sourceIds?', 'undoOperationId?'],
   '/api/concepts': ['parentStudyId', 'title', 'operationId'],
   '/api/concept/save': ['parentStudyId', 'operationId', 'expectedRevision', 'expectedHash', 'authorThoughts', 'adoptedDirection?', 'aiInterpretation', 'suggestions', 'sourceSelections', 'body?', 'replaceExistingDirection?'],
@@ -168,6 +170,7 @@ export function createRouteMap(services) {
       '/api/writing-template/snapshot': {POST:input=>writingTemplates.snapshot(input)},
       '/api/writing-template/restore-copy': {POST:input=>writingTemplates.restoreCopy(input)},
       '/api/magazine/library-photos': {GET:async()=>{if([...url.searchParams].length)throw new StateError('Photo library browsing accepts no paths or selectors.',400);try{return await magazineLibraryPhotos.catalog();}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<500?error.status:500);}}},
+      '/api/magazine/library-photos/album': {POST:async input=>{if([...url.searchParams].length)throw new StateError('Photo filing accepts only its exact route without query selectors.',400);try{const result=await magazineLibraryPhotos.changeAlbum(input);input.scope={kind:'library',id:'folders-media'};return result;}catch(error){throw new StateError(error.message,Number.isInteger(error.status)&&error.status>=400&&error.status<=599?error.status:500);}}},
       '/api/magazine/mechanical-check': {
         GET:()=>{const keys=['parentStudyId','storyId','pieceId','checkId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k))||keys.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact saved check owner.',400);if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);return magazineMechanicalChecks.read({parentStudyId:url.searchParams.get('parentStudyId'),storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})});},
         POST:async input=>{if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);const result=await magazineMechanicalChecks.run(input);input.scope={kind:'story',id:input.storyId};return result;}

@@ -144,6 +144,20 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
   const proof=await library.binarySnapshot({id:saved.id,expectedHash:opened.hash,original:true});magazinePhotoFormat(proof.body);
   return {file:token(opened.hash,format),sourceId:saved.id,rootId:opened.rootId,hash:opened.hash,contentType:format.contentType,contentLength:opened.contentLength,name:opened.name,description:opened.description};
  });}
+ // Membership is a zero-copy reference in Library's existing folder registry.
+ // Replay is checked before current-byte reads: an old receipt cannot mutate
+ // anything, even when the original later changes or disappears.
+ async function changeAlbum(input){return serialize(async()=>{
+  const keys=['action','folderId','operationId','expectedRevision','expectedHash','photo'],UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==keys.length||keys.some(key=>!Object.hasOwn(input,key))||!['link','unlink'].includes(input.action)||!UUID.test(input.folderId||'')||!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!SHA.test(input.expectedHash||''))fail('Use one exact album, photo selection, operation UUID and Library revision/hash.');
+  selector(input.photo);if(typeof library.changePhotoFolders!=='function')fail('The maintained Library photo filing owner is unavailable.',503);
+  const request={domain:'media',...input,action:input.action==='link'?'linkPhoto':'unlinkPhoto'},replay=await library.changePhotoFolders(request,{replayOnly:true});if(replay)return replay;
+  await catalog();await preview(input.photo);
+  const entry=entries.get(key(input.photo));if(!entry)fail('The exact selected photo proof is unavailable; refresh the catalogue.',409);
+  const librarySourceId=entry.kind==='library'&&UUID.test(entry.raw.id||'')&&entry.raw.id===input.photo.sourceId&&entry.item.originRef?.kind==='library'&&entry.item.originRef.sourceId===entry.raw.id?entry.raw.id:null;
+  if(entry.kind==='library'&&!librarySourceId)fail('The canonical Library photo identity could not be proven.',409);
+  return library.changePhotoFolders(request,{photoRef:{...input.photo,relativePath:entry.item.relativePath},librarySourceId});
+ });}
  async function insertionTarget(input){
   selector(input);const entry=entries.get(key(input));if(!entry)fail('Photo selection is stale or unavailable.',409);
   const format=({'image/jpeg':'jpg','image/png':'png','image/gif':'gif','image/webp':'webp','image/avif':'avif'}[entry.item.contentType]);
@@ -177,5 +191,5 @@ export function createMagazineLibraryPhotos({library,originals=null,publication=
   }
   fail('Retained photo is unavailable in the existing Library.',404);
  }
- return {catalog,preview,retain,retainInsertion,insertionFile:async input=>(await insertionTarget(input)).file,resolve};
+ return {catalog,preview,retain,retainInsertion,changeAlbum,insertionFile:async input=>(await insertionTarget(input)).file,resolve};
 }

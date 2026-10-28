@@ -637,7 +637,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
           if (!(request.headers['content-type'] || '').toLowerCase().startsWith('application/json')) throw new StateError('Use Content-Type: application/json.', 415);
           input = await body(request, pathname === '/api/study/outputs/copy-browser-carousel' ? 512 * 1024 : pathname === '/api/sources/import' ? 90 * 1024 * 1024 : ['/api/exports','/api/study/outputs/export','/api/magazine/working-draft/export'].includes(pathname) ? MAX_EXPORT_BYTES + 1024 * 1024 : MAX_BODY_BYTES);
           if (!input || typeof input !== 'object' || Array.isArray(input)) throw new StateError('Request body must be an object.');
-          if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
+          if (!READ_ONLY_POSTS.has(pathname)) { const command = findCommand(commandList(), request.method, pathname); leases.check(pathname==='/api/magazine/library-photos/album'?{kind:'library',id:'folders-media'}:scopeOf({ input, query: url.searchParams, section: command?.section }), request.arActor); }
         }
         return json(response, 200, await handler(input));
       }

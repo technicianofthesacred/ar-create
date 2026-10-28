@@ -186,3 +186,10 @@ html[data-theme] .magazine-arrange .ma-document .ma-onphoto-frame[data-ma-image-
 /* Saved album metadata filters the same catalogue, including empty groups. */
 .magazine-arrange .ma-library-albums{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .magazine-arrange .ma-library-albums select{flex:1;min-width:0;max-width:100%;min-height:40px;padding:7px 8px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;text-overflow:ellipsis}
+
+.magazine-arrange .ma-photo-albums{margin:0 0 10px;border-top:1px solid var(--line);padding-top:8px}
+.magazine-arrange .ma-photo-albums p{font-size:13px}
+.magazine-arrange .ma-album-add{display:flex;align-items:end;gap:6px}
+.magazine-arrange .ma-album-add label{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px;font-size:13px}
+.magazine-arrange .ma-album-add select{width:100%;min-width:0;box-sizing:border-box;min-height:40px;padding:7px 8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit}
+.magazine-arrange .ma-album-add button,.magazine-arrange [data-ma-album-unlink]{min-height:40px}

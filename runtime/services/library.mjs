@@ -646,7 +646,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   });
   return {
     photosSnapshot, binarySnapshot, captureReadGuard,
-    folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),
+    folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),changePhotoFolders:(input,options)=>filing.changePhoto(input,options),
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog||root.originalCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),
     // Existing indexed identity + current physical bytes; no scan, index save or extraction.
