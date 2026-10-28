@@ -17,3 +17,5 @@ body.draft-surface-active #study-ai-proposals [data-ai-action="apply"]{backgroun
 #wbf-drawer #study-ai-proposals :is(button,textarea){font:inherit}
 #wbf-drawer #study-ai-proposals .study-ai-actions{gap:8px}
 #wbf-drawer #study-ai-proposals [data-ai-action="close"]{display:none}
+
+.study-ai-openings{min-width:0;margin:12px 0;padding:0;border:0}.study-ai-openings label{display:block;min-height:44px;padding:8px 0;cursor:pointer}.study-ai-openings p{margin:6px 0 12px;overflow-wrap:anywhere;white-space:pre-wrap}
