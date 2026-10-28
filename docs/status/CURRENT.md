@@ -1,3 +1,11 @@
+## 28 October — Photo origins and invitation history verified candidate
+
+630 relevant checks across27 files and the generated build pass on cfbc74f after the duplicate-origin repair. Native invented-content checks now cover unopened connected Library, Original and publication photographs: explicit byte verification and placement, Save, actual owner restart, exact used-where locations and Undo. Two physical assets with one explicitly proven publication origin keep their separate placement identities; equal-byte unrelated origins remain distinct. Useful photo titles survive retained-copy ordering. The connected-photo flow also verifies Audience and actual retained HTML bytes. Canonical wording and usage were restored after testing.
+
+Share invitation selection, unsaved-reply recovery and exact invitation-time message reading pass native restart and metadata Undo. Historical reading returns only the selected language sections and leaves current correspondence unchanged. Legacy invitations without retained proof honestly report unavailable. No actual correspondence fact, send or human wording approval occurred; authoritative published-edition reading remains unfinished.
+
+Bounded approved-C proof covers desktop Read geometry in both themes and the whole-app390×640 Media grid/folder sheet in light/dark. Full populated navigation, remaining sections, phone interactions and the complete creative journey remain open. The candidate is not installed. PR83 remains the verified running milestone; the existing checklist retains33 completed bounded results and9 open broader gates. Earlier candidate failures and native findings remain preserved with their repaired verification receipts.
+
 ## 28 October — Whole-app phone checks enabled; candidate repairs integrated
 
 The entire app now has a supported390×640 same-origin review frame without changing CSP. Media was compared with the approved reference in both themes, including folder-sheet open/close. Its phone grid now matches the reference’s three columns; desktop sizing stays unchanged. This is bounded whole-app phone proof, distinct from the earlier article-only preview. Remaining sections, populated panels and interactions are still open.
