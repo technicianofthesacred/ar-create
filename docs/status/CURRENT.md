@@ -1,3 +1,11 @@
+## 28 October — actual published Magazine fidelity candidate
+
+Human rejected the local preview as different from the live story. Direct comparison with teajia.com/read/porcelain-and-tea found generic authoring CSS stacking the cover, reducing viewport-based type to container size, changing the printed palette, omitting the byline and synthesizing italics. The candidate uses the retained native conversation layout, actual published type scale/palette, genuine local licensed font faces, retained author/subject/derived length metadata and full reading width. It also composes exact protected on-photo quotations while keeping controls and captions outside.
+
+Actual1280×720 public-reference/full-workbench comparisons verify cover, quotation geometry/font/colour and photo composition in both shell themes. Full-app390×640 iframe checks verify readable mobile dissolve/return/overlay and no horizontal overflow; no physical-phone or full public-mobile certification. Workbench chrome and a31px available-width difference remain explicit. No real wording, approval, provider, sending or publication action ran. Source candidate only until exact release receipt.
+
+During fresh verification the main catalog could wait indefinitely. Fresh authority/retained reads now have bounded deadlines, explicit unavailable states and fresh retry; retained reads run concurrently. Regression tests reproduce three holds; no stale identity fallback or original mutation. Exact live stalled reader remains unproven, and synchronous filesystem blocking cannot be interrupted. Existing broader finish gates remain open.
+
 ## 28 October — on-photo composition source candidate, not installed
 
 The next bounded Arrange correction composes only complete traced single-photo quotations inside their image frame using the maintained native role, aspect, crop and measured ink/accent. Caption/credit/controls remain outside; ambiguous layouts retain readable fallback and image failure restores paper/ink text.79affected checks and build pass. Actual-screen reference comparisons are still required before publishing; supported preserved review control is unavailable. PR92 remains the installed revision; full finish gates stay open.
