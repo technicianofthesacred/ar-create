@@ -768,7 +768,7 @@
     {
       "path": "public/document-study/draft-flow.js",
       "sourceSha256": "11575e71ae7146b77378dfb840694b661f52fbdebd338d6b1e065fd05c0b1e5d",
-      "candidateSha256": "502bcc00abda0c1ca3ea34b038fa2ca20e5d51f7c034fd8ec2bf773c43d3f462",
+      "candidateSha256": "5ab713dbcfae7ca55ab42a737663f8adf31eb52b75f7358ea93f070826b11b1b",
       "adapted": true
     },
     {
@@ -828,7 +828,7 @@
     {
       "path": "public/document-study/human-direction.js",
       "sourceSha256": "243a94ede4c89ad5a0de458ac008255bc01e7d902a8df8e9928bd40909047b61",
-      "candidateSha256": "8e63165b7b0e52b3bf6ef1255522c0559f3582c862968e304fb63eea4c77e05d",
+      "candidateSha256": "e3850a1e7417c1b31e3d5ccd12854f7924df15a21f1679876a4f76e3534f0dec",
       "adapted": true
     },
     {
@@ -984,7 +984,7 @@
     {
       "path": "runtime/services/study-editorial-plan-context.mjs",
       "sourceSha256": "eb2267f0c0d59390d69b81b946c208d630faf17eefcdd53e6746a1de89b32f61",
-      "candidateSha256": "a99ff08a6c7b912d85c9c398eb6bf47eaf38311112d35db19fb6518e3e01a3b6",
+      "candidateSha256": "2f478cc5166e27d5a02ae0c71a2d5bdf2403af5fb030f6c59dd3c7aa35172c1e",
       "adapted": false
     },
     {
@@ -1032,7 +1032,7 @@
     {
       "path": "public/document-study/source-continuation.js",
       "sourceSha256": "41ac3bffe9a1c472baf41be312d4086343d5ef522626810d5aa9e0ffb2706196",
-      "candidateSha256": "4408181c8b497c71f9807a71171b2436add666cef82457d4b90f43dcdf9b7c50",
+      "candidateSha256": "4e85a702f056c8dea9cc998f811c0f5d516162993f0c43bcca53e95f1952b81d",
       "adapted": false
     },
     {
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "fa2923ad96b07f3da52a41fb455b20a99d51e665405357e4292094dc79c3e69f"
+      "candidateSha256": "cc2a8f291123625bf1c12799398d35215c34b7df49b4efa5261e8ccdda93a951"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4045,7 +4045,7 @@
     },
     {
       "path": "tests/research-direction-continuity.test.mjs",
-      "candidateSha256": "c4552c1e2533cfe5e231d7e94b11fb6428547249cc092fa82237dbebcc8cc50c"
+      "candidateSha256": "6545744e380af8663299805548a654caae0c9e4a7df258a606670f262f2252f9"
     },
     {
       "path": "tests/retained-carousel-copy-owner.test.mjs",
@@ -4534,6 +4534,10 @@
     {
       "path": "tests/transcript-readonly-snapshot.test.mjs",
       "candidateSha256": "84ab495a88a9b6fee65ad666bff2b18cfa45a3699a5fa950637d1706f065220b"
+    },
+    {
+      "path": "tests/collection-source-continuation.test.mjs",
+      "candidateSha256": "70333e4848ea66325149edfa0f77f9f1512122cf803720df92bc592c96ca85dc"
     }
   ],
   "dependencyRepair": {

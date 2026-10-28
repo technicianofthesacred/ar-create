@@ -1,4 +1,10 @@
-## 28 October — guarded Carousel, Direction and Bench candidate; not installed
+## 28 October — new-project source handoff repair; candidate only
+
+A newly authored project had a ready working root, but Research/Direction only listed original-backed manuscript parts. The source chooser, scoped Direction selection and Draft entrance now admit the exact registered authored root. A second original-only editorial adapter blocker is repaired for proven new roots with no imported original support; actual Research, selected sources and Direction retain their existing owners. Contradictory, foreign, pending, ambiguous and locked identities remain held.
+
+Disposable real HTTP-owner plus mounted actual-caller checks reach opening preparation and the existing reviewer entrance, retain selection across reload/switch, and preserve words. Leaving during source loading and returning no longer strands the selection. Native browser control is currently unavailable; this is not actual-screen or human-choice acceptance. Original-backed behavior remains under regression verification. PR88 stays the installed authority; full journey and visual gates remain open.
+
+## 28 October — PR88 installed; full completion remains open
 
 Exact native Carousel preparation now exposes immutable source/Direction context to agents before proposing, and carries proposals into the existing human reviewer and wording owner. Invented preparation → agent staging → actual owner restart → reopening is verified without approval or wording changes. Stale source proof refuses preparation. Paired publication recovery and captured dependency guards have regression proof; approval remains disabled by default.
 
@@ -8,7 +14,9 @@ Selected language Carousel ownership now survives direct entry and reload using 
 
 Same-viewport approved C/live panel comparisons prove a380px right tool column at1280×720 and full width at390×640, top48px, palette and15px UI type. Actions are44px;137.5% text fits; Escape returns focus; desktop controls remain reachable. Phone evidence uses whole-app iframe viewports, not a physical phone. Full Arrange composition/navigation and all12 desktop/phone interaction states remain open.
 
-Two integrated relevant batches passed942 checks; the final prepared-context follow-up has47 focused checks. Build passes. PR87 remains the installed milestone:42 bounded results checked and9 broader gates open. No new installed checkoff is closed by this candidate.
+Signed main78846ae3a1eca20944a58c932641ab224f3100df, build2026-10-28T03:25:56.593Z, is independently live in8841/main59958. Two integrated batches passed942 checks and48 overlapping final affected checks passed. Build/package951 and99 served hashes pass; original editions/API content/canonical dirty files/config are preserved. The existing checklist remains42 bounded results checked and9 broader gates open; evidence was extended within existing items. Full audio-to-export, all12 and complete visual acceptance remain open.
+
+Controller status correction: a fresh goal read returned BLOCKED despite the earlier ACTIVE narrative. Authorized Build integration and release continued successfully; controller resumption and full completion are not claimed.
 
 ## 28 October — PR87 installed; phone identity checked off
 

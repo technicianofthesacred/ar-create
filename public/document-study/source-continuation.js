@@ -1,5 +1,15 @@
 /* Human source selection for existing Research → Direction → Draft. No model execution. */
 (()=>{
+ // Catalog rows remain identities from the existing owner; names and paths never select a substitute.
+ function readyParts(catalog,parentStudyId){
+  if(!Array.isArray(catalog?.drafts)||catalog.collections!==undefined&&!Array.isArray(catalog.collections))throw Error('The manuscript catalog is unavailable.');
+  const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v),rows=new Map();
+  for(const row of [...catalog.drafts,...(catalog.collections||[])]){
+   if(!row||typeof row.bindingId!=='string'||!row.bindingId)continue;
+   const prior=rows.get(row.bindingId);if(prior&&stable(prior)!==stable(row))throw Error('The manuscript catalog has ambiguous bindings.');rows.set(row.bindingId,row);
+  }
+  return [...rows.values()].filter(row=>row.parentStudyId===parentStudyId&&row.bindingStatus==='ready'&&row.kind!=='output-fork'&&(!(catalog.collections||[]).includes(row)||row.kind==='collection-root'));
+ }
  const UNBOUND_CONTEXT='Exact ready persisted parent and part bindings required for material context.';
  const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/;
  const KEY='ar-study-source-continuation-v1',rooms=new Map();let buffers={};try{const saved=JSON.parse(localStorage.getItem(KEY)||'{}');if(saved&&typeof saved==='object'&&!Array.isArray(saved))buffers=saved;}catch{}
@@ -26,7 +36,26 @@
  const same=(a,b)=>a.length===b.length&&a.every(id=>b.includes(id));
  function refreshLearning(id,bindingId){const p=part(id,bindingId);p.refreshLearning=true;p.loaded=false;if(!p.loading&&!p.busy&&visible(id,bindingId)){p.refreshLearning=false;void loadPart(id,bindingId,true);}}
  async function loadPart(id,bindingId,force=false){const p=part(id,bindingId);if(p.loading||(p.loaded&&!force))return;p.loading=true;p.refreshLearning=false;const version=p.version,query=scope(id,bindingId);paint();try{const [read,list]=await Promise.all([api('study-ai/read',query),api('study-ai/requests',query)]);if(read.binding&&(read.binding.id!==bindingId||read.binding.parentStudyId!==id))throw Error('Source context belongs to another part.');if(!Array.isArray(read.sourceCatalog)||!Array.isArray(list.items))throw Error('Source context is unavailable. Reload the current selection.');if(read.answerCatalog!==undefined&&(!Array.isArray(read.answerCatalog)||read.answerCatalog.length>1000||new Set(read.answerCatalog.map(a=>a?.id)).size!==read.answerCatalog.length||read.answerCatalog.some(a=>!a||!UUID.test(a.id||'')||typeof a.question!=='string'||a.question.length>16000||typeof a.eligible!=='boolean'||a.eligible&&(!HASH.test(a.answerHash||'')||typeof a.keptAt!=='string'||!Number.isFinite(Date.parse(a.keptAt))))))throw Error('Saved learning context is unavailable. Reload the current selection.');p.learningSupported=Array.isArray(read.answerCatalog);p.answerCatalog=read.answerCatalog||[];p.learningError=typeof read.learningError==='string'?read.learningError:'';p.catalog=read.sourceCatalog;p.records=Array.isArray(read.context?.records)?read.context.records:[];p.requests=list.items.filter(item=>(!item.bindingId||item.bindingId===bindingId)&&(!item.parentStudyId||item.parentStudyId===id));if(!p.hasBuffer&&p.version===version){const saved=latest(p);if(saved&&Array.isArray(saved.sourceIds)){p.sourceIds=[...saved.sourceIds];p.answerIds=Array.isArray(saved.answerIds)?[...new Set(saved.answerIds.filter(id=>UUID.test(id)))].slice(0,30):[];p.hasBuffer=true;persist(id);}}p.loaded=true;p.needsConnection=false;p.error='';}catch(e){p.needsConnection=e.status===409&&e.message===UNBOUND_CONTEXT;if(p.needsConnection)p.loaded=false;p.error=p.needsConnection?'Connect source context for this manuscript part.':friendly(e);}finally{p.loading=false;paint();if(p.refreshLearning)refreshLearning(id,bindingId);}}
- async function load(id){const r=room(id);if(r.loading)return;if(r.loaded){if(r.bindingId)await loadPart(id,r.bindingId);return;}r.loading=true;paint();try{const catalog=await api('study-draft/catalog');if(!Array.isArray(catalog.drafts))throw Error('The manuscript catalog is unavailable.');r.parts=catalog.drafts.filter(p=>p.parentStudyId===id&&p.bindingStatus==='ready'&&p.bindingId);if(!r.parts.some(p=>p.bindingId===r.bindingId)){const currentBinding=window.studyDraft?.currentBinding?.();r.bindingId=r.parts.find(p=>p.bindingId===currentBinding?.id&&currentBinding.parentStudyId===id)?.bindingId||(r.parts.length===1?r.parts[0].bindingId:'');}r.loaded=true;r.error='';if(r.bindingId){persist(id);await loadPart(id,r.bindingId);if(visible(id,r.bindingId))await window.studyHumanDirection?.choosePart?.(scope(id,r.bindingId));}}catch(e){r.error=friendly(e);}finally{r.loading=false;paint();}}
+ async function load(id){
+  const r=room(id);if(r.loading)return;
+  // Redraws preserve explicit failure holds; only a clean navigation interruption resumes automatically.
+  if(r.loaded){const selected=r.bindingId?part(id,r.bindingId):null;if(!selected?.selectionInterrupted){if(selected&&!selected.selectionBlocked)await loadPart(id,r.bindingId);return;}}
+  r.loading=true;paint();
+  try{
+   if(!r.loaded){
+    const catalog=await api('study-draft/catalog');r.parts=[];r.parts=readyParts(catalog,id);
+    if(!r.parts.some(p=>p.bindingId===r.bindingId)){const currentBinding=window.studyDraft?.currentBinding?.();r.bindingId=r.parts.find(p=>p.bindingId===currentBinding?.id&&currentBinding.parentStudyId===id)?.bindingId||(r.parts.length===1?r.parts[0].bindingId:'');}
+    r.loaded=true;r.error='';
+   }
+   if(r.bindingId){
+    const bindingId=r.bindingId,selected=part(id,bindingId);selected.selectionBlocked=true;selected.selectionInterrupted=false;persist(id);await loadPart(id,bindingId);
+    if(!selected.loaded||selected.error)return;
+    if(!visible(id,bindingId)){selected.selectionInterrupted=true;return;}
+    await window.studyHumanDirection?.choosePart?.(scope(id,bindingId));
+    if(visible(id,bindingId)){selected.selectionBlocked=false;r.error='';}else selected.selectionInterrupted=true;
+   }
+  }catch(e){r.error=friendly(e);}finally{r.loading=false;paint();}
+ }
  function sourceRow(s,p){const name=title(s);return `<div class="source-continuation-row"><label class="source-continuation-include"><input type="checkbox" aria-label="${esc('Include '+name)}" data-continuation-source="${esc(s.id)}" ${p.sourceIds.includes(s.id)?'checked':''} ${p.busy?'disabled':''}></label><div class="source-continuation-copy">${s.missing?`<span>${esc(name)}</span>`:`<button type="button" class="source-continuation-title" aria-label="${esc((reviewable(s)?'Review ':'Open ')+name)}" data-continuation-read="${esc(s.id)}" ${p.busy?'disabled':''}>${esc(name)}</button>`}<small>${esc(reason(s))}${library(s)?' · Library':''}</small></div></div>${p.reader===s.id?retainedReader(p):''}`;}
  // Hide leading record metadata only in the reading view; keep the original bytes below.
  function readingBody(raw){return String(raw).replace(/^---\r?\n(?=[\s\S]*?\r?\n---(?:\r?\n|$))([\s\S]*?)\r?\n---(?:\r?\n|$)/,(whole,metadata)=>/^[A-Za-z_][\w-]*\s*:/m.test(metadata)?'':whole);}
@@ -46,7 +75,7 @@
   if(!unchanged()||!p.needsConnection||p.busy||p.loading||!r.parts.some(b=>b.bindingId===bindingId&&b.parentStudyId===id&&b.bindingStatus==='ready'))return;
   p.busy=true;p.connecting=true;p.error='';paint();
   try{
-   const catalog=await api('study-draft/catalog'),matches=catalog.drafts?.filter(b=>b.bindingId===bindingId&&b.parentStudyId===id&&b.bindingStatus==='ready');
+   const catalog=await api('study-draft/catalog'),matches=readyParts(catalog,id).filter(b=>b.bindingId===bindingId);
    if(!unchanged())return;
    if(matches?.length!==1)throw Error('This manuscript part is no longer ready. Reload sources.');
    const result=await api('study/human-direction/select',null,{...scope(id,bindingId),scope:'part',title:matches[0].title,operationId:crypto.randomUUID()});
@@ -62,7 +91,7 @@
   if(r.bindingId&&part(id,r.bindingId).busy)throw Error('Wait for the current context preparation before changing parts.');
   if(typeof bindingId!=='string'||bindingId&&!r.parts.some(b=>b.bindingId===bindingId))throw Error('Choose a ready manuscript part in this project.');
   r.bindingId=bindingId;r.version++;epoch++;const version=r.version,token=epoch;persist(id);paint();window.dispatchEvent(new CustomEvent('study-source-continuation-part-change',{detail:{parentStudyId:id,bindingId,origin}}));
-  if(bindingId){const selected=part(id,bindingId);selected.selectionBlocked=true;
+  if(bindingId){const selected=part(id,bindingId);selected.selectionBlocked=true;selected.selectionInterrupted=false;
    try{await loadPart(id,bindingId,refresh);if(!visible(id,bindingId)||r.version!==version||epoch!==token)return false;if(!selected.loaded||selected.error)throw Error(selected.error||'The selected source context is unavailable.');await window.studyHumanDirection?.choosePart?.(scope(id,bindingId));if(!visible(id,bindingId)||r.version!==version||epoch!==token)return false;selected.selectionBlocked=false;selected.error='';window.dispatchEvent(new CustomEvent('study-source-continuation-part-change',{detail:{parentStudyId:id,bindingId,origin,ready:true}}));paint();}
    catch(error){selected.error=friendly(error);paint();throw Object.assign(error,{continuationCommitted:{parentStudyId:id,bindingId}});}
   }
