@@ -1,3 +1,9 @@
+## 28 October — strict offline model-loading repair; candidate only
+
+Configured offline transcription could still enter Sherpa's downloader if an installed speaker model disappeared after startup. The candidate refuses before network access or directory creation, or reads the complete existing local model pair without writes. Online provisioning behavior is preserved. Eight focused checks, including deterministic no-network/no-write offline regressions, pass.
+
+A separate bounded real recognition check completed in7.5seconds: wholly invented locally synthesized speech, inherited operating-system network denial, existing local MLX/Sherpa weights,4segments/1speaker. The normalized recognized text matches the invented script exactly; model metadata stayed unchanged. No production import, external provider, download or installed configuration change. This proves one local recording, not real multi-speaker accuracy or native-screen acceptance. PR90 remains installed; full gates remain open.
+
 ## 28 October — one coherent transcript-to-export journey verified
 
 The saved-transcript path now passes one connected isolated HTTP journey: canonical transcript review/save, Library source, Research/Direction, captured opening choice, Article continuation, independent Article/Carousel wording, arrangement, real Markdown and four1080×1350 PNG downloads, and actual service restart with exact words and exported bytes preserved. Research and transcript contents were authored fixtures; no ASR/provider/native approval/publication ran. This is stronger connected functional evidence, not full on-screen or visual acceptance.
