@@ -352,3 +352,9 @@ html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-dra
  html body.wbf-on[data-wbf-drawer-tool="proposals"] #app #workspace .desk{box-sizing:border-box;width:calc(100% - 380px)!important;grid-template-columns:minmax(0,var(--measure))!important}
  html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on[data-wbf-drawer-tool="proposals"] #app #workspace .desk>#margin{display:none!important}
 }
+
+/* Source already discloses read-only status beside the retained record. On a
+   phone the repeated badge must not push the section heading off the left edge. */
+@media(max-width:760px){
+ html body.wbf-on #app #workspace.wb-source>#c3-surface-bar>[data-review-state]{display:none!important}
+}
