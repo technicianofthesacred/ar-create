@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "5a7bdf7f6816895ae50fbaae4a2eb0cd5a162029d861ca2174e13466ace1b3d0"
+      "candidateSha256": "37fffe2efd5048b90e9cf296fc83bd24687525c823e6fd1080b0e903e75c92ee"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "4c31b570ca6529e6b4591f5abc4df5e38f5b085be7d015105321b35386560aed"
+      "candidateSha256": "d698615b14bc36e85485100d8b13bfedfe8ceba05092557a67384721cd3c6c9d"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3937,7 +3937,7 @@
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
-      "candidateSha256": "4ad8bc894e3bb0c6176e106020bd21fcd0ec74b8cb55172c340043fe5e130692"
+      "candidateSha256": "f064c475c4b26b43478229b5bebee0084f1530937536096006ada16f73c30fd3"
     },
     {
       "path": "tests/exact-media-metadata.test.mjs",

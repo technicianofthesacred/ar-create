@@ -53,3 +53,9 @@ test('empty Media albums can be nested with exact folder pins while the photo ca
  assert.equal(saved.folders[1].parentId,PARENT_UUID);assert.equal(spec.rows().data.readOnly,true);assert.equal(spec.rows().data.sources.length,0);assert.equal(spec.rows().folder,CHILD_UUID);assert.match(x.d.querySelector('.wfb-empty').textContent,/album is empty/);assert.equal(x.d.querySelector('#original textarea').value,'Unsaved words');const posts=x.calls.filter(c=>c.options.method==='POST');assert.equal(posts.length,2);assert.equal(posts[0].options.headers['X-AR-Actor'],'human:adrian');
  }finally{x.close();}
 });
+
+test('a late initial folder read cannot label the connected album hierarchy unavailable',async()=>{
+ let release;const gate=new Promise(resolve=>release=resolve),folders={...hierarchy(),folders:[],sources:[],folderStructureWritable:true,folderStructureOnly:true,folderUndoOperationId:null};
+ const x=await setup({catalogRows:[],folderRead:async()=>{await gate;return folders;}});
+ try{release();await settle();assert.equal(x.w.workbenchFolderBrowser.panelSpec('media').rows().data.folderStructureWritable,true);assert.doesNotMatch(x.d.querySelector('.k-media').textContent,/folder changes are not connected/);}finally{x.close();}
+});

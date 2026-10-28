@@ -2,7 +2,9 @@
 
 The same Library owner now has an opt-in, structure-only review transport for empty nested groups. It verifies the inspected native owner and exact revision/hash, retains operation UUID replay, rejects source membership/file/path writes and protects nonempty branches. Media keeps its photo catalogue read-only while exposing a separate structural capability with native folder pins. Album creation and nesting work with no photos; returned folder metadata is reprojected without replacing the photo catalogue or dirty writing controls.
 
-Build verified 113 integrated owner/projection/browser checks and build. The transport worker separately passed 48 affected checks after one existing oversized-request socket reset on an earlier run. The real configuration remains unchanged and the feature defaults off. Native screen/lifecycle verification and publication are still pending. Structural Undo admission is limited to operations known to the current review connection; native history remains authoritative across restarts. This is a bounded candidate, not full hierarchy completion or proof that all photo origins can be filed.
+Build verified 114 integrated owner/projection/browser checks and build. An isolated native browser using the maintained Media module and real folder owner verified empty parent/child creation, reload, exact structural Undo and owner restart. It also exposed and fixed a late initial folder-read message that incorrectly said connected albums were unavailable. This is a component lifecycle proof with invented records, not a full Workbench visual comparison. No original photos or writing were connected.
+
+The real configuration remains unchanged and the feature defaults off; publication is pending. Structural Undo admission is limited to operations known to the current review connection; after owner/review restart the retained parent remains and unknown Undo is disabled. Native history stays authoritative. Library hierarchy controls, folder-aware article picker continuity and full visual gates remain open.
 
 ## 28 October — published article layout correction installed
 
