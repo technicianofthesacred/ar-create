@@ -91,3 +91,20 @@ Current private originals, source selections and working history remain with the
 The maintained Teajia Read site composes its coded article/layout defaults with the existing `story_content` published record. Its public `GET /api/story-content/:slug` returns field overrides, photograph/crop overrides and plate order; it does not return a complete replacement manuscript or an immutable edition identifier. Preserve exact field IDs and the site's rendering rules. A similarly named legacy field must not be assigned to a different current field, and a source-code or Markdown comparison alone cannot establish the effective published wording or media arrangement.
 
 The same maintained owner keeps outgoing publication snapshots in `story_content_versions`. Listing versions is owner-only, and the inspected restore route writes a snapshot into the draft. Never invoke restore to obtain a read-only historical preview. A historical reader needs an authorized exact read capability from that owner; neither a public URL, local source commit nor a newly captured hash is a substitute publication registry. Current public observations and retained local copies remain separately attributed until the exact edition join is available. This source audit introduces no network/provider setup, private upload, data migration or new content authority.
+
+
+## 28 October — hierarchy before connecting the full photo library
+
+Adrian clarified that photo availability is not the prerequisite: Build owns a useful hierarchy that exists before all photographs are connected. Withdraw the pending request for a photo-folder location as a blocker to this work. Reuse the adopted Library, Collection, Project and Piece identities and the existing nested folder/album owners.
+
+The user-facing organisation is:
+
+- **Library**: every original asset or note has one identity. Photos, video, audio, transcripts and notes are type views over those records.
+- **Collections**: reusable topics/inquiries relating Library sources and learning. They work independently of a Project or Piece.
+- **Albums**: reusable media groups, including empty groups and subgroups. Membership refers to existing Library assets; an album link can remain connected-but-not-imported.
+- **Projects**: optional links to selected Collections, albums and sources, plus the Pieces being made.
+- **Pieces**: independently edited articles, carousels, videos or notes. Each photo placement refers to its original asset and owns its occurrence crop/caption/credit; editions and exports belong to the selected Piece.
+
+For example, one invented photograph can appear in a Studio Visit album, support a Craft Collection, and be used independently in an Article and Carousel. There is still one original identity. An empty Future Visit album is a valid place to organise before any photos arrive. Availability, selection and actual saved placement remain separate states.
+
+Existing-to-extended mapping: retain Library UUIDs and its nested `library`/`media` folder records; retain existing Collection learning records, project bindings, album intake references, Piece/output IDs and placement owners. The remaining interface work is to make these relationships and empty groups understandable and usable across Library/Media and the same article photo picker. Do not invent physical stage folders, migrate originals, seed demonstration content or mark an empty album as imported. This clarification establishes the organisational contract; it does not claim the full hierarchy interface is installed.
