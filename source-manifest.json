@@ -402,7 +402,7 @@
     {
       "path": "runtime/services/runtime/transcription/sherpa.py",
       "sourceSha256": "84fda3f76570f713ba9f1d2e27aacb3ae7f0046b42c5eed16fdd1c144809e77b",
-      "candidateSha256": "84fda3f76570f713ba9f1d2e27aacb3ae7f0046b42c5eed16fdd1c144809e77b",
+      "candidateSha256": "7daa8dbbfc43b8d47f3936d55dfd8cf0ccbc9b6676000ace893f2f5a3aff8b00",
       "adapted": false
     },
     {
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "5669228a219bdec8ed17ca8d22629a0e96d6d8fda68a912d26faf7eab84cdb0e"
+      "candidateSha256": "cc31c327bbc9f4169c9de6874f80d811b5efbc9527ba5d39d5663c25848e1450"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4538,6 +4538,14 @@
     {
       "path": "tests/collection-source-continuation.test.mjs",
       "candidateSha256": "dc2179032a671ec06f1ff3e6b1257b73edca37ff5e112bb53887110115f6259c"
+    },
+    {
+      "path": "tests/transcript-to-independent-outputs-journey.test.mjs",
+      "candidateSha256": "62276284f5bc59bd5da997d68daff74e60d7501a05d618171b0dcead46a88c62"
+    },
+    {
+      "path": "tests/transcription-offline-models.test.mjs",
+      "candidateSha256": "ae03de159ec31ed4b8f7938873e4a3cdd4a5b45eaea2816e7a8bc605a33b7242"
     }
   ],
   "dependencyRepair": {

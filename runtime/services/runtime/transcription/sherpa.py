@@ -21,6 +21,12 @@ def model_paths():
 
 def ensure_models(progress):
     folder, segmentation, embedding = model_paths()
+    offline = any(os.environ.get(flag, "").strip().lower() in ("1", "true", "yes", "on")
+                  for flag in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"))
+    if offline:
+        if not segmentation.is_file() or not embedding.is_file():
+            raise RuntimeError("Offline speaker models are unavailable; reconnect the complete local model directory before retrying.")
+        return segmentation, embedding
     folder.mkdir(parents=True, exist_ok=True)
     def download(url, target):
         part = target.with_suffix(target.suffix + ".part")
