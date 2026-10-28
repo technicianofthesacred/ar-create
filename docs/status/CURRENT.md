@@ -1,3 +1,11 @@
+## 28 October — photo album membership candidate; native component verified
+
+Media and the article photo picker now offer Add to album and Remove, sharing the existing Library folder records and exact native revision/hash guards. Indexed Library photographs retain their source UUID memberships. Publication/original catalogue photographs use exact origin/revision/hash references in the same folder rows and operation history; filing creates no photo copies or source records. Native leases, receipt replay and eligible exact Undo remain in force.
+
+262 coherent checks and build pass. Native invented article Add → reload → selected-album membership → Undo, and Media Add → reload → Remove → Add use one real isolated owner. An actual owner/review restart retains membership and does not adopt old Undo admission. A 390×640 component iframe verifies usable membership controls with no horizontal overflow; it is not physical-phone or full Workbench certification. No real photo placement, wording, source name, approval, provider or production record was changed.
+
+First-use photo verification now updates its exact Media projection, and nullable-hash Library membership proofs advance only across the captured folder CAS. Stored references from another photo revision remain explicitly unavailable; their links are retained. Publication is pending. Full Library/mixed-media filing, unconnected photo origins and whole C/NOTES/desktop-phone acceptance remain open.
+
 ## 28 October — article album picker installed and independently verified
 
 PR94 is live in the installed app and main review at signed `71172a8cd8e05a390e3a72c2b0c32474275e7a52`, build `2026-10-28T10:59:01.722Z`. Arrange → Adjust photo → Photo library offers the complete connected photo catalogue and saved nested albums, including empty albums. Empty albums also have a separate structure-only capability through the existing native folder owner.

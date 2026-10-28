@@ -2,18 +2,25 @@ import {randomUUID} from 'node:crypto';
 import {StateError} from '../store.mjs';
 import {digest} from './files.mjs';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/;
-const domains=['library','media'],actions=['create','rename','reparent','link','move','unlink','remove','undo'];
+const domains=['library','media'],actions=['create','rename','reparent','link','move','unlink','remove','undo'],photoActions=['linkPhoto','unlinkPhoto'];
 const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const fail=(message,status=409)=>{throw new StateError(message,status);};
 const fields=(input,allowed)=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!allowed.includes(k)))fail('Unsupported folder fields; use explicit filing identities.',400);};
 function name(value){if(typeof value!=='string'||!value.trim()||value.length>200||/[\\/\u0000-\u001f\u007f]/.test(value)||['.','..'].includes(value.trim()))fail('Use a short folder name without paths or control characters.',400);return value.trim();}
 const mediaKind=source=>['image','video'].includes(source.kind)?source.kind:/^video\//i.test(source.mimeType||source.mime||'')||/\.(mp4|mov|webm|m4v|mkv)$/i.test(source.rel_path||'')?'video':/^image\//i.test(source.mimeType||source.mime||'')?'image':null;
 const media=source=>mediaKind(source)!==null;
+const photoIdentity=ref=>stable([ref.rootId,ref.sourceId]);
+function validatePhoto(ref,{selector=false,status=409}={}){
+ const keys=['rootId','sourceId','revision','sourceHash',...(selector?[]:['relativePath'])];
+ if(!ref||typeof ref!=='object'||Array.isArray(ref)||Object.keys(ref).length!==keys.length||keys.some(key=>!Object.hasOwn(ref,key))||!['rootId','revision','sourceHash'].every(key=>HASH.test(ref[key]||''))||!HASH.test(ref.sourceId||'')&&!UUID.test(ref.sourceId||'')||!selector&&(typeof ref.relativePath!=='string'||!ref.relativePath||ref.relativePath.length>1024||/^(?:[a-z]:|[\\/])/i.test(ref.relativePath)||/[\\\x00-\x1f\x7f]/.test(ref.relativePath)||ref.relativePath.split('/').some(part=>!part||part==='.'||part==='..')))fail('Use an exact current catalogue photo reference without caller paths.',status);
+ return ref;
+}
 function validateRows(rows){
  if(!Array.isArray(rows)||rows.length>5000||new Set(rows.map(r=>r?.id)).size!==rows.length)fail('Invalid or full folder registry; existing bytes preserved.');
  const byId=new Map(rows.map(r=>[r?.id,r]));
  for(const row of rows){
   if(!row||!UUID.test(row.id||'')||!domains.includes(row.domain)||row.name!==name(row.name)||row.parentId!==null&&!UUID.test(row.parentId||'')||!Array.isArray(row.sourceIds)||row.sourceIds.length>20000||row.sourceIds.some(id=>!UUID.test(id||''))||new Set(row.sourceIds).size!==row.sourceIds.length)fail('Invalid folder record; existing bytes preserved.');
+  if(row.photoRefs!==undefined){if(row.domain!=='media'||!Array.isArray(row.photoRefs)||row.photoRefs.length>20000)fail('Invalid Media photo references; existing bytes preserved.');for(const ref of row.photoRefs)validatePhoto(ref);if(new Set(row.photoRefs.map(photoIdentity)).size!==row.photoRefs.length)fail('Ambiguous Media photo references; existing bytes preserved.');}
   const seen=new Set([row.id]);let parent=row.parentId;
   while(parent!==null){const ancestor=byId.get(parent);if(!ancestor||ancestor.domain!==row.domain)fail('Folder parent is unavailable or belongs to another domain.');if(seen.has(parent))fail('Folder cycle is not allowed.');seen.add(parent);parent=ancestor.parentId;}
  }
@@ -22,7 +29,7 @@ export function validateLibraryFolders(value){
  validateRows(value.folders??[]);
  const ops=value.folderOperations??[];
  if(!Array.isArray(ops)||ops.length>10000||new Set(ops.map(o=>o?.operationId)).size!==ops.length)fail('Invalid or full folder operation history; existing bytes preserved.');
- for(const op of ops){if(!UUID.test(op?.operationId||'')||!HASH.test(op.fingerprint||'')||!domains.includes(op.domain)||!actions.includes(op.action)||!Number.isSafeInteger(op.resultRevision)||op.resultRevision<1)fail('Invalid folder operation receipt; existing bytes preserved.');validateRows(op.before);validateRows(op.after);if([...op.before,...op.after].some(r=>r.domain!==op.domain))fail('Invalid folder Undo domain.');}
+ for(const op of ops){if(!UUID.test(op?.operationId||'')||!HASH.test(op.fingerprint||'')||!domains.includes(op.domain)||![...actions,...photoActions].includes(op.action)||photoActions.includes(op.action)&&op.domain!=='media'||!Number.isSafeInteger(op.resultRevision)||op.resultRevision<1)fail('Invalid folder operation receipt; existing bytes preserved.');validateRows(op.before);validateRows(op.after);if([...op.before,...op.after].some(r=>r.domain!==op.domain))fail('Invalid folder Undo domain.');}
  return value;
 }
 /** Uses Library's existing queue and exact-byte publication. Never owns source files. */
@@ -34,16 +41,19 @@ export function createLibraryFolders({serial,load,publish,publicSource}){
   return {schema:'ar-create.library-folders.v1',domain,revision:value.revision,indexHash:loaded.hash,folders:structuredClone(rows.map(({domain:_,...row})=>row)),sources:[...sourceMap.values()],undoOperationId:last&&last.action!=='undo'&&stable(last.after)===stable(rows)?last.operationId:null};
  }
  function read(input={}){fields(input,['domain']);if(!domains.includes(input.domain))fail('Choose library or media folders.',400);return serial(()=>{const loaded=load();validateLibraryFolders(loaded.value);return view(loaded,input.domain);});}
- function change(input){
+ function change(input,{photoOperation=false,photoRef=null,librarySourceId=null,replayOnly=false}={}){
   input=structuredClone(input);
   return serial(()=>{
-   fields(input,['domain','action','operationId','expectedRevision','expectedHash','folderId','parentId','name','sourceIds','undoOperationId']);
+   fields(input,['domain','action','operationId','expectedRevision','expectedHash','folderId','parentId','name','sourceIds','undoOperationId',...(photoOperation?['photo']:[])]);
    const {domain,action}=input;
-   if(!domains.includes(domain)||!actions.includes(action)||!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!HASH.test(input.expectedHash||''))fail('Choose a domain/action, operation UUID and exact Library revision/hash.',400);
-   const required={create:['name'],rename:['folderId','name'],reparent:['folderId','parentId'],link:['folderId','sourceIds'],move:['folderId','sourceIds'],unlink:['folderId','sourceIds'],remove:['folderId'],undo:['undoOperationId']}[action],optional=action==='create'?['parentId']:[];
+   if(!domains.includes(domain)||!(photoOperation?photoActions:actions).includes(action)||!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!HASH.test(input.expectedHash||''))fail('Choose a domain/action, operation UUID and exact Library revision/hash.',400);
+   const required={create:['name'],rename:['folderId','name'],reparent:['folderId','parentId'],link:['folderId','sourceIds'],move:['folderId','sourceIds'],unlink:['folderId','sourceIds'],remove:['folderId'],undo:['undoOperationId'],linkPhoto:['photo','folderId'],unlinkPhoto:['photo','folderId']}[action],optional=action==='create'?['parentId']:[];
    if(required.some(k=>!Object.hasOwn(input,k))||Object.keys(input).some(k=>!['domain','action','operationId','expectedRevision','expectedHash',...required,...optional].includes(k)))fail('Use the exact fields required for this folder action.',400);
+   if(photoOperation){if(domain!=='media')fail('Catalogue photo references belong only to Media albums.',400);validatePhoto(input.photo,{selector:true,status:400});}
    const loaded=load(),value=validateLibraryFolders(loaded.value),fingerprint=digest(stable(input)),prior=(value.folderOperations??[]).find(op=>op.operationId===input.operationId);
    if(prior){if(prior.fingerprint!==fingerprint)fail('Operation UUID already owns a different exact folder request.');return {...view(loaded,domain),receipt:receipt(prior),...(prior.selectedFolderId?{selectedFolderId:prior.selectedFolderId}:{}),replayed:true};}
+   if(replayOnly)return null;
+   if(photoOperation){validatePhoto(photoRef,{status:400});if(['rootId','sourceId','revision','sourceHash'].some(key=>photoRef[key]!==input.photo[key]))fail('The selected photo proof differs from its filing request.');}
    if(input.expectedRevision!==value.revision||input.expectedHash!==loaded.hash)fail('Library changed; refresh its exact revision and hash before filing.');
    if((value.folderOperations??[]).length>=10000)fail('Folder operation history is full; existing bytes preserved.');
    const next=structuredClone(value);next.folders??=[];next.folderOperations??=[];
@@ -60,8 +70,17 @@ export function createLibraryFolders({serial,load,publish,publicSource}){
     const row=folder(input.folderId);
     if(action==='rename')row.name=name(input.name);
     else if(action==='reparent')row.parentId=parent(input.parentId);
-    else if(action==='remove'){if(row.sourceIds.length||next.folders.some(r=>r.parentId===row.id))fail('Remove only an empty folder without child folders.');next.folders=next.folders.filter(r=>r.id!==row.id);selectedFolderId=row.parentId;}
-    else{
+    else if(action==='remove'){if(row.sourceIds.length||row.photoRefs?.length||next.folders.some(r=>r.parentId===row.id))fail('Remove only an empty folder without child folders.');next.folders=next.folders.filter(r=>r.id!==row.id);selectedFolderId=row.parentId;}
+    else if(photoOperation&&librarySourceId!==null){
+     const matches=value.sources.filter(source=>source.id===librarySourceId&&!source.managedTerminalSnapshot&&!source.missing);
+     if(!UUID.test(librarySourceId)||input.photo.sourceId!==librarySourceId||matches.length!==1||mediaKind(matches[0])!=='image'||matches[0].rel_path!==photoRef.relativePath)fail('The canonical Library photograph identity is unavailable or changed.');
+     if(action==='unlinkPhoto'){if(!row.sourceIds.includes(librarySourceId))fail('The exact Library photo membership was not found.',404);row.sourceIds=row.sourceIds.filter(id=>id!==librarySourceId);}
+     else row.sourceIds=[...new Set([...row.sourceIds,librarySourceId])];
+    }else if(photoOperation){
+     const refs=row.photoRefs??[],existing=refs.find(ref=>photoIdentity(ref)===photoIdentity(photoRef));
+     if(action==='unlinkPhoto'){if(!existing||stable(existing)!==stable(photoRef))fail('The exact catalogue photo membership was not found.',404);row.photoRefs=refs.filter(ref=>photoIdentity(ref)!==photoIdentity(photoRef));}
+     else{if(existing&&stable(existing)!==stable(photoRef))fail('This album retains another revision of the same photo; remove its exact membership before changing it.');if(!existing)row.photoRefs=[...refs,structuredClone(photoRef)];}
+    }else{
      if(!Array.isArray(input.sourceIds)||!input.sourceIds.length||input.sourceIds.length>20000||new Set(input.sourceIds).size!==input.sourceIds.length||input.sourceIds.some(id=>!UUID.test(id||'')))fail('Select unique existing source UUIDs.',400);
      for(const id of input.sourceIds){const matches=value.sources.filter(s=>s.id===id&&!s.managedTerminalSnapshot);if(action==='unlink'){if(!row.sourceIds.includes(id))fail('Source membership was not found.',404);}else if(matches.length!==1||domain==='media'&&!media(matches[0]))fail('Source was not found or is unsupported in this domain.',404);}
      const ids=new Set(input.sourceIds);
@@ -76,5 +95,5 @@ export function createLibraryFolders({serial,load,publish,publicSource}){
   });
  }
  const receipt=({before,after,...op})=>structuredClone(op);
- return {read,change};
+ return {read,change:input=>change(input),changePhoto:(input,options={})=>change(input,{...options,photoOperation:true})};
 }

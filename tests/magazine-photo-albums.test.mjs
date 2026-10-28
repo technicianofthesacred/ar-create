@@ -1,0 +1,60 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {randomUUID,createHash} from 'node:crypto';
+import {createLibrary} from '../runtime/services/library.mjs';
+import {createMagazineLibraryPhotos} from '../runtime/services/magazine-library-photos.mjs';
+import {createPublicationPhotoCatalog} from '../scripts/magazine-media-inspection.mjs';
+const sha=v=>createHash('sha256').update(v).digest('hex'),PNG=Buffer.from([137,80,78,71,13,10,26,10,1,2,3]);
+const pick=row=>Object.fromEntries(['rootId','sourceId','revision','sourceHash'].map(k=>[k,row[k]]));
+async function fixture(t){
+ const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'arc-photo-albums-')));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const dataDir=path.join(root,'data'),repo=path.join(root,'publication'),dir=path.join(repo,'src/pages/read/conversation');fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'magSend.ts'),'export const draftBody=x=>({body:x});export const parseDraft=x=>x;export const memoryOf=x=>x;');fs.mkdirSync(path.join(dir,'pieces'));fs.writeFileSync(path.join(dir,'pieces/index.ts'),`export const CONVERSATIONS=['one','two'].map(slug=>({slug,path:'/read/'+slug,images:'/read/'+slug+'/',portrait:{slot:'cover',file:'same.png',alt:'Invented '+slug},opening:[],parts:[],ending:{blocks:[]}}));`);for(const slug of ['one','two']){fs.mkdirSync(path.join(repo,'public/read',slug),{recursive:true});fs.writeFileSync(path.join(repo,'public/read',slug,'same.png'),PNG);}
+ const library=createLibrary({dataDir}),publication=createPublicationPhotoCatalog({repoRoot:repo}),service=createMagazineLibraryPhotos({library,publication});const v=await library.folders({domain:'media'}),album=await library.changeFolders({domain:'media',action:'create',name:'Before photos',operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash});
+ const catalog=await service.catalog(),photos=[];for(const row of catalog.items){const opened=await service.preview(pick(row),{selection:true});photos.push({rootId:opened.rootId,sourceId:opened.sourceId,revision:opened.revision,sourceHash:opened.hash});}
+ const request=async(photo,action='link')=>{const v=await library.folders({domain:'media'});return {action,folderId:album.selectedFolderId,operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash,photo};};
+ return {root,dataDir,repo,library,service,photos,album,request};
+}
+test('zero-copy publication membership uses folder CAS, exact replay/Undo and keeps equal-byte origins separate across restart',async t=>{
+ const f=await fixture(t),before=JSON.parse(fs.readFileSync(path.join(f.dataDir,'library-index.json'))),input=await f.request(f.photos[0]),a=await f.service.changeAlbum(input);assert.equal(a.receipt.action,'linkPhoto');assert.equal(a.receipt.domain,'media');assert.equal(a.folders[0].photoRefs.length,1);assert.equal((await f.service.changeAlbum(input)).replayed,true);const repeated=await f.service.changeAlbum(await f.request(f.photos[0]));assert.equal(repeated.folders[0].photoRefs.length,1,'another operation never duplicates the same exact origin');
+ await assert.rejects(f.service.changeAlbum({...input,photo:f.photos[1]}),/UUID/);await assert.rejects(f.service.changeAlbum({...input,operationId:randomUUID()}),/changed/);
+ const b=await f.service.changeAlbum(await f.request(f.photos[1]));assert.equal(b.folders[0].photoRefs.length,2);assert.notEqual(b.folders[0].photoRefs[0].sourceId,b.folders[0].photoRefs[1].sourceId);assert.equal(b.folders[0].photoRefs[0].sourceHash,b.folders[0].photoRefs[1].sourceHash);
+ const reopened=createLibrary({dataDir:f.dataDir}),service=createMagazineLibraryPhotos({library:reopened,publication:createPublicationPhotoCatalog({repoRoot:f.repo})});fs.unlinkSync(path.join(f.repo,'public/read/one/same.png'));assert.equal((await service.changeAlbum(input)).replayed,true,'exact replay is a no-op even after original disappears');
+ const current=await reopened.folders({domain:'media'});assert.deepEqual(current.folders,b.folders);const undone=await reopened.changeFolders({domain:'media',action:'undo',operationId:randomUUID(),undoOperationId:b.receipt.operationId,expectedRevision:current.revision,expectedHash:current.indexHash});assert.equal(undone.folders[0].photoRefs.length,1);
+ const after=JSON.parse(fs.readFileSync(path.join(f.dataDir,'library-index.json')));for(const key of ['sources','collections','evidence','legacyImported'])assert.deepEqual(after[key],before[key]);assert.deepEqual(fs.readdirSync(path.join(f.dataDir,'library')),[]);assert.equal(fs.existsSync(path.join(f.dataDir,'source-originals')),false);assert.deepEqual(fs.readFileSync(path.join(f.repo,'public/read/two/same.png')),PNG);
+});
+test('forged refs and generic photo actions cannot bypass selected proof; unlink and its exact Undo use native history',async t=>{
+ const f=await fixture(t),input=await f.request(f.photos[0]),before=fs.readFileSync(path.join(f.dataDir,'library-index.json'),'utf8');
+ for(const photo of [{...input.photo,sourceHash:'0'.repeat(64)},{...input.photo,rootId:'0'.repeat(64)},{...input.photo,path:'../same.png'}])await assert.rejects(f.service.changeAlbum({...input,photo}));
+ await assert.rejects(f.library.changeFolders({...input,domain:'media',action:'linkPhoto',photoRef:{...input.photo,relativePath:'read/one/same.png'}}));assert.equal(fs.readFileSync(path.join(f.dataDir,'library-index.json'),'utf8'),before);
+ await f.service.changeAlbum(input);const removed=await f.service.changeAlbum(await f.request(f.photos[0],'unlink'));assert.deepEqual(removed.folders[0].photoRefs,[]);const undo=await f.library.changeFolders({domain:'media',action:'undo',operationId:randomUUID(),undoOperationId:removed.receipt.operationId,expectedRevision:removed.revision,expectedHash:removed.indexHash});assert.equal(undo.folders[0].photoRefs.length,1);
+});
+test('native HTTP exposes exact zero-copy filing, actor attribution, lease refusal and 4xx stale selections',async t=>{
+ const {createServer}=await import('../runtime/server.mjs'),f=await fixture(t),server=await createServer({dataDir:f.dataDir,connections:[],magazineRoots:[],magazineVault:{magSendRepo:f.repo},researchEnabled:false});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>{server.closeAllConnections();server.close(r);}));const origin='http://127.0.0.1:'+server.address().port;
+ const get=async route=>{const r=await fetch(origin+route);assert.equal(r.status,200);return r.json();},post=async(route,input,actor='agent:codex')=>{const r=await fetch(origin+route,{method:'POST',headers:{'Content-Type':'application/json','X-AR-Actor':actor},body:JSON.stringify(input)});return {status:r.status,...await r.json()};};
+ const catalog=await get('/api/magazine/library-photos'),row=catalog.items[0],selected=await fetch(origin+'/api/magazine/library-photos/preview?'+new URLSearchParams({rootId:row.rootId,sourceId:row.sourceId,revision:row.revision,verify:'1'}));assert.equal(selected.status,200);await selected.arrayBuffer();const photo={rootId:row.rootId,sourceId:row.sourceId,revision:selected.headers.get('x-ar-photo-revision'),sourceHash:selected.headers.get('x-content-sha256')};
+ const v=await get('/api/library/folders?domain=media'),input={action:'link',folderId:f.album.selectedFolderId,photo,operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash};
+ const lease=await post('/api/leases/acquire',{scope:{kind:'library',id:'folders-media'},reason:'Isolated fixture lease'},'agent:claude-code');assert.equal(lease.status,200);assert.equal((await post('/api/magazine/library-photos/album',input)).status,423);
+ const release=await post('/api/leases/release',{scope:{kind:'library',id:'folders-media'}},'agent:claude-code');assert.equal(release.status,200);
+ const result=await post('/api/magazine/library-photos/album',input);assert.equal(result.status,200,JSON.stringify(result));assert.equal(result.folders[0].photoRefs[0].sourceId,photo.sourceId);assert.equal((await post('/api/magazine/library-photos/album',input)).replayed,true);
+ const current=await get('/api/library/folders?domain=media');assert.equal((await post('/api/magazine/library-photos/album',{...input,operationId:randomUUID(),expectedRevision:current.revision,expectedHash:current.indexHash,photo:{...photo,rootId:'0'.repeat(64)}})).status,409);
+ assert.equal((await post('/api/library/folders',{domain:'media',action:'linkPhoto',folderId:input.folderId,operationId:randomUUID(),expectedRevision:current.revision,expectedHash:current.indexHash,photo})).status,400);
+ const journal=fs.readdirSync(path.join(f.dataDir,'journal')).flatMap(name=>fs.readFileSync(path.join(f.dataDir,'journal',name),'utf8').split('\n').filter(Boolean).map(JSON.parse)),line=journal.find(r=>r.operationId===input.operationId&&r.status==='committed');assert.equal(line.actor,'agent:codex');assert.deepEqual(line.scope,{kind:'library',id:'folders-media'});
+ assert.deepEqual(fs.readdirSync(path.join(f.dataDir,'library')),[]);assert.equal(fs.existsSync(path.join(f.dataDir,'source-originals')),false);
+});
+
+test('changed selected bytes and malformed persisted photo refs fail closed without modifying index or originals',async t=>{
+ const f=await fixture(t),input=await f.request(f.photos[0]),file=path.join(f.dataDir,'library-index.json'),before=fs.readFileSync(file,'utf8');fs.appendFileSync(path.join(f.repo,'public/read/one/same.png'),'changed');await assert.rejects(f.service.changeAlbum(input));assert.equal(fs.readFileSync(file,'utf8'),before);
+ const good={...f.photos[0],relativePath:'read/one/same.png'},base=JSON.parse(before);
+ for(const ref of [{...good,relativePath:'../same.png'},{...good,sourceHash:'bad'},{...good,unexpected:true}]){const invalid=structuredClone(base);invalid.folders[0].photoRefs=[ref];const bytes=JSON.stringify(invalid);fs.writeFileSync(file,bytes);assert.throws(()=>createLibrary({dataDir:f.dataDir}));assert.equal(fs.readFileSync(file,'utf8'),bytes);}
+ const wrongDomain=structuredClone(base);wrongDomain.folders[0].domain='library';wrongDomain.folders[0].photoRefs=[];fs.writeFileSync(file,JSON.stringify(wrongDomain));assert.throws(()=>createLibrary({dataDir:f.dataDir}));
+});
+test('proven Library UUID photos use canonical sourceIds for new Add and existing generic membership Remove/Undo',async t=>{
+ const f=await fixture(t),imported=await f.library.import({rootId:'library',files:[{name:'existing.png',base64:PNG.toString('base64')}]}),id=imported.receipts[0].source.id,catalog=await f.service.catalog(),row=catalog.items.find(item=>item.sourceId===id),proof=await f.service.preview(pick(row),{selection:true}),photo={rootId:proof.rootId,sourceId:proof.sourceId,revision:proof.revision,sourceHash:proof.hash};
+ let v=await f.library.folders({domain:'media'});const linked=await f.library.changeFolders({domain:'media',action:'link',folderId:f.album.selectedFolderId,sourceIds:[id],operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash});
+ const removed=await f.service.changeAlbum(await f.request(photo,'unlink'));assert.deepEqual(removed.folders[0].sourceIds,[]);assert.equal(removed.folders[0].photoRefs,undefined);
+ const undone=await f.library.changeFolders({domain:'media',action:'undo',operationId:randomUUID(),undoOperationId:removed.receipt.operationId,expectedRevision:removed.revision,expectedHash:removed.indexHash});assert.deepEqual(undone.folders[0].sourceIds,[id]);assert.equal(undone.folders[0].photoRefs,undefined);
+ v=await f.library.folders({domain:'media'});await f.library.changeFolders({domain:'media',action:'unlink',folderId:f.album.selectedFolderId,sourceIds:[id],operationId:randomUUID(),expectedRevision:v.revision,expectedHash:v.indexHash});
+ const added=await f.service.changeAlbum(await f.request(photo));assert.deepEqual(added.folders[0].sourceIds,[id]);assert.equal(added.folders[0].photoRefs,undefined);assert.equal(added.receipt.action,'linkPhoto');assert.equal(linked.folders[0].sourceIds[0],id);
+});

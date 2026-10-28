@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "570a62092181ca520081bebc246883bfd716b50c20be76229f6e326bf2f19970",
+      "candidateSha256": "009198f242159ce1b0cd5f88382c84a18abb512ac021d385cd4acb4f1ec83a97",
       "adapted": true
     },
     {
@@ -216,7 +216,7 @@
     {
       "path": "runtime/services/library.mjs",
       "sourceSha256": "affb24c911e41b3bd98e90dd60fe6bc4e9ecca4445fb67106e113a20beab5bb6",
-      "candidateSha256": "bb90c78b6b1a189b4efb40a2a5df9be36bb6148d4e13ef9827ad708fa352fb6a",
+      "candidateSha256": "1189506b7ca4dcd26815ab2abc88e79c12a1657530628e20519736af6c567145",
       "adapted": true
     },
     {
@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "27095b04d2a2866b580c06ec3beb71db9fee10e73572033e0c57486a686e462e"
+      "candidateSha256": "b28d290f90357190ae11a55111d641da99384b0582a6e7cace9803425620955f"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "20817348452f928a56b8d70757455c1bf29251a3aa10c287a48d361a35701020"
+      "candidateSha256": "6a87ff109687400d31f751dc5400eb89a026f9c06f5908f37f9de18de1d8f08b"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -2829,7 +2829,7 @@
     },
     {
       "path": "docs/product/FILE-CONTRACT-MAP.md",
-      "candidateSha256": "6773ee251491b20b54aab65c1b871b2f6dcc470f4b8e3e048e6ef77fadfc027a"
+      "candidateSha256": "41ee81cdc110b718cc6f1183fb768a234acb9bf3186623afe0c81bd666408d60"
     },
     {
       "path": "docs/product/FUNCTION-FLOW.md",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "73e72a8b7e67e7dc377a67ffbc3275c23698310120edc6716932dceee4dae2f2"
+      "candidateSha256": "0b9b3555e7e5a21d522836e1573959eba2a26801d1cd8288ae63892c2411eeb5"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3449,11 +3449,11 @@
     },
     {
       "path": "public/document-study/folder-browser.css",
-      "candidateSha256": "0bc10fcd520239ab2fe8f5bb36150b59e73f8685664e62429d0162f68e4fa406"
+      "candidateSha256": "8a428cff3c174b4baa778e3a7f21b98ef4ad55ba510431ce2618e26fb998fa1d"
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "d698615b14bc36e85485100d8b13bfedfe8ceba05092557a67384721cd3c6c9d"
+      "candidateSha256": "c0decc9959056c573257c00cf6c32616f296f82ba478996b0b92fc304b43833d"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3605,11 +3605,11 @@
     },
     {
       "path": "docs/verification/workbench-folders/README.md",
-      "candidateSha256": "77ac6a9b4f45f3993df80e71ca46288345995fbc4e9d9f68ae70640a03c151de"
+      "candidateSha256": "1fca0615905eb910a43e8503d83954a6b17c85ce91b9737983efe7bdc5a2e316"
     },
     {
       "path": "runtime/services/library-folders.mjs",
-      "candidateSha256": "672721454f061ae5883b8a516f597433c464fba7ffede15e51dbaf0a1e918f15"
+      "candidateSha256": "05966129202ea3396d0ae973700e8901021c002a630ce5fa7493e2b1071361c6"
     },
     {
       "path": "runtime/services/study-original-source-catalog.mjs",
@@ -3677,11 +3677,11 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "37be91c0c6f7b4d38c1b1bafdbaa08bd9a2e996e6180445ab06199e225b68e24"
+      "candidateSha256": "5645e0bd79ecd4fee2ae76589059fdba3d77512f66006069d8b4b553c7c31833"
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "48b0676a11c7f17dd44410ce1e074901a990f6dca8a2c1db6cb10114fac21694"
+      "candidateSha256": "990ad2c18da8f7da2efdcc4e5339efd15db8452b69bffe65e5f6413cddabecb3"
     },
     {
       "path": "tests/existing-work.test.mjs",
@@ -3689,7 +3689,7 @@
     },
     {
       "path": "tests/review-connection.test.mjs",
-      "candidateSha256": "c15fe548a14ee404a19888ce1dc4dacd423ef159d30b70a4c6322faaeb17ffa0"
+      "candidateSha256": "a54622fbd23262e2eb925b940a57286277c7caadfe929eee522c39a67c5aecb1"
     },
     {
       "path": "tests/review-discovery.test.mjs",
@@ -3861,7 +3861,7 @@
     },
     {
       "path": "tests/review-library-inspection.test.mjs",
-      "candidateSha256": "b9b162fe85540b0e8892b5230ec7bd29ad2728afe989b4ffc6e104f78884440b"
+      "candidateSha256": "e9f7d142a8ea7240674c1ea6c8fb81607b791ffc53af71ac33ebea0c6716e149"
     },
     {
       "path": "tests/source-list-cache.test.mjs",
@@ -3929,7 +3929,7 @@
     },
     {
       "path": "public/document-study/exact-media-metadata.js",
-      "candidateSha256": "2195de9a6cf87c9c3ae57dfecf1c76f5f5925a70cfa6d0b129b86ee9e1601f65"
+      "candidateSha256": "845282a6906e3ad8658a56a3cf417f8c407b641e86439bc07d960d641beb4322"
     },
     {
       "path": "scripts/magazine-media-inspection.mjs",
@@ -3937,11 +3937,11 @@
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
-      "candidateSha256": "f064c475c4b26b43478229b5bebee0084f1530937536096006ada16f73c30fd3"
+      "candidateSha256": "569bc9d8cadfb03f726ec800933c65878d2a4d5a5414d1acad899c1ff58fdb90"
     },
     {
       "path": "tests/exact-media-metadata.test.mjs",
-      "candidateSha256": "9ec16bdf8b1d61c99a1384b1783141cf6a8652c44db9114fe833083b376e4dba"
+      "candidateSha256": "d0a39948f7f1bb29e75051d4088be98b8f8222b669c850033a5aa9e52aacc9cc"
     },
     {
       "path": "tests/magazine-media-http.test.mjs",
@@ -3993,15 +3993,15 @@
     },
     {
       "path": "public/document-study/magazine-arrange.js",
-      "candidateSha256": "08cc4ba860b18cad8f6c5092ab38f9c5c8f31662937894cbb15188dda2a25899"
+      "candidateSha256": "83247a82f66757a90c4f4e8d8b6a6ea03df48d1c790777280d5ec5fa311180d5"
     },
     {
       "path": "public/document-study/magazine-arrange.css",
-      "candidateSha256": "f53d4ea1e32816acc5966adcefc1990e5abaf84497710a386b4229c3ec1c2a13"
+      "candidateSha256": "52e193aa26d51664ca95b1f067b2bd82cf3535537437be93c95645b7dc11cc6b"
     },
     {
       "path": "tests/magazine-arrange.test.mjs",
-      "candidateSha256": "ac0083bec8ad07e01c2b9bd1688910b4a24641d5d3ea99a58f72cfb566865d6a"
+      "candidateSha256": "200115fb20442605829e790cce7adad24ba60caba0befe2861344bd50cecd6a2"
     },
     {
       "path": "tests/research-retained-reader-layout.test.mjs",
@@ -4277,7 +4277,7 @@
     },
     {
       "path": "runtime/services/magazine-library-photos.mjs",
-      "candidateSha256": "5ec70d251578cb593717dbc732f36961dc14b4541f7feb6322c60d0978203b4b"
+      "candidateSha256": "7e6906a40c31c514f9b1919d9284adacdafd77d969df718c9194ece319291010"
     },
     {
       "path": "tests/magazine-library-photo-http.test.mjs",
@@ -4582,6 +4582,10 @@
     {
       "path": "runtime/src/donors/teajia/conversation/byline.css",
       "candidateSha256": "4b6bee6e843f48cb537bba47bf7bb944e6b239773d21666757cda79f334dc805"
+    },
+    {
+      "path": "tests/magazine-photo-albums.test.mjs",
+      "candidateSha256": "7d868056b6e1f24aadf29cbb09067006ae24ae37a4a04b6823f4a2247361bc07"
     }
   ],
   "dependencyRepair": {

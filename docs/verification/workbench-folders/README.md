@@ -1,3 +1,9 @@
+## 28 October — photo filing continuation
+
+PR94 installed album browsing and empty-group structure. The next candidate connects photo Add/Remove in Media and the article picker through the same native Library folder owner. Indexed Library UUIDs remain canonical; other catalogue photos add exact versioned references to the existing folder rows/history without creating files or source records. Session-admitted Undo uses native receipts; restart retains memberships but does not invent admission for a prior connection's Undo.
+
+262 coherent checks plus invented same-owner native Add/Remove/reload/Undo/restart and 390×640 component proof pass. This is not yet installed proof. Whole Library/mixed-media filing and C/NOTES/physical-phone acceptance remain open. See [CURRENT](../../status/CURRENT.md).
+
 # Step 2: persistent nested Library and Media folders
 
 ## Status clarification — 28 October

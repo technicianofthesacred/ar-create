@@ -229,8 +229,9 @@ async function staticRead(publicDir,pathname){
   return {bytes:await fs.readFile(current),type:TYPES[path.extname(current).toLowerCase()]||'application/octet-stream'};
  }catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return null;throw error;}
 }
-export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,libraryFolderCorrections=false,changeLibraryFolders=null,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,magazineFeedbackCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
+export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,libraryFolderCorrections=false,changeLibraryFolders=null,changePhotoAlbums=null,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,magazineFeedbackCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
  const upstream=authority(authorityURL,allowedAuthorityPort);
+ if(changePhotoAlbums!==null&&typeof changePhotoAlbums!=='function')throw Error('Photo album corrections require a trusted callback.');
  if(typeof libraryFolderCorrections!=='boolean'||libraryFolderCorrections&&(!actualWorkReview||typeof changeLibraryFolders!=='function'))throw Error('Library folder corrections require a trusted actual-work structural transport.');
  const translationPolicy=validateImportedTranscriptTranslation(translationProposals);
  const admitTranslation=createTranslationOneRunAdmission({oneRunId:translationPolicy?.keptConversations?.oneRunId,dataDir:translationAdmissionDataDir,scope:'proxy'});
@@ -311,18 +312,19 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const carouselProposalGranted=actualWorkReview&&studyDraftCorrections&&nativeCarouselCorrections&&(!carouselProposalDecision||studyDraftApprovals),carouselProposal=carouselProposalGranted&&carouselProposalPath&&req.method==='POST';
   if(carouselProposal&& (req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian')){req.resume();return fail(403,'Carousel proposal review requires the author’s exact local workspace.');}
   if(pathname.startsWith('/api/shared-carousels')&&!['GET','HEAD'].includes(req.method)&&!carouselProposal){req.resume();return fail(423,'This Carousel proposal operation is unavailable in this review.');}
+  const photoAlbumCorrection=actualWorkReview&&libraryFolderCorrections&&typeof changePhotoAlbums==='function'&&pathname==='/api/magazine/library-photos/album'&&!['GET','HEAD'].includes(req.method);
   const folderCorrection=actualWorkReview&&libraryFolderCorrections&&pathname==='/api/library/folders'&&!['GET','HEAD'].includes(req.method);
-  if(folderCorrection){
+  if(folderCorrection||photoAlbumCorrection){
    if(req.url!==pathname){req.resume();return fail(400,'Use the exact Library folder path without a query.');}
    if(req.method!=='POST'){req.resume();return fail(405,'Folder changes require an explicit POST.');}
    if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Folder changes require the author’s exact local workspace.');}
   }
-  const correction=folderCorrection||carouselProposal||studyPrepare||openingAccept||guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport||nativeReview;
+  const correction=photoAlbumCorrection||folderCorrection||carouselProposal||studyPrepare||openingAccept||guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport||nativeReview;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
    const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport||nativeReview&&pathname==='/api/study/outputs/export'?NATIVE_EXPORT_REQUEST:MAX_READ_BODY}):null;
-   if(folderCorrection){const value=await changeLibraryFolders(JSON.parse(readBody.toString('utf8'))),bytes=Buffer.from(JSON.stringify(value));res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Content-Length':bytes.length});return res.end(bytes);}
+   if(folderCorrection||photoAlbumCorrection){const value=await (photoAlbumCorrection?changePhotoAlbums:changeLibraryFolders)(JSON.parse(readBody.toString('utf8'))),bytes=Buffer.from(JSON.stringify(value));res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Content-Length':bytes.length});return res.end(bytes);}
    if(carouselProposal){
     const q=new URL(req.url,upstream).searchParams,keys=['projectId','documentId','outputId'],uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),sha=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),closed=(value,fields)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===fields.length&&fields.every(key=>Object.hasOwn(value,key)),bad=message=>{throw Object.assign(Error(message||'Choose one exact native Carousel proposal and owner.'),{status:400});},held=()=>{throw Object.assign(Error('The exact native Carousel proposal or saved words owner changed.'),{status:409});};
     if([...q.keys()].some(key=>!keys.includes(key))||keys.some(key=>q.getAll(key).length!==1||!uuid(q.get(key))))bad();
