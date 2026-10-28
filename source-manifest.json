@@ -1032,7 +1032,7 @@
     {
       "path": "public/document-study/source-continuation.js",
       "sourceSha256": "41ac3bffe9a1c472baf41be312d4086343d5ef522626810d5aa9e0ffb2706196",
-      "candidateSha256": "c32fcb10e06797cf95542ec7a27abbc825a2e8af5965f645aa79852b83a90265",
+      "candidateSha256": "4e85a702f056c8dea9cc998f811c0f5d516162993f0c43bcca53e95f1952b81d",
       "adapted": false
     },
     {
@@ -4045,7 +4045,7 @@
     },
     {
       "path": "tests/research-direction-continuity.test.mjs",
-      "candidateSha256": "c4552c1e2533cfe5e231d7e94b11fb6428547249cc092fa82237dbebcc8cc50c"
+      "candidateSha256": "6545744e380af8663299805548a654caae0c9e4a7df258a606670f262f2252f9"
     },
     {
       "path": "tests/retained-carousel-copy-owner.test.mjs",
