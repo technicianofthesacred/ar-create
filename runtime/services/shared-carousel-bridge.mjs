@@ -59,7 +59,7 @@ export function createSharedCarouselBridge({dataDir,store,requests,guidance,writ
  function captured(id){
   const record=readJson(id,'request.json');if(record.schema!=='ar-create.shared-carousel-request.v1'||record.id!==id)fail('Carousel request identity changed.');
   const context=readJson(id,'context.json',record.context.hash),baseline=readJson(id,'baseline.json',record.baselineOutput.hash),raw=utf8(read(id,'baseline.md',record.baseline.hash));
-  read(id,'context.md',record.contextMarkdown.hash);
+  const assembledContext=utf8(read(id,'context.md',record.contextMarkdown.hash));if(context.assembledContext!==assembledContext)fail('Captured assembled context differs from its exact artifact bytes.');
   if(context.manifest.projectId!==record.projectId||context.manifest.documentId!==record.documentId||baseline.id!==record.outputId||sharedCarouselWordsIdentity(record.projectId,record.documentId,baseline)!==record.wordsIdentity||renderCarouselWords(record.projectId,record.documentId,baseline)!==raw)fail('Captured baseline or context belongs to another carousel.');
   if(context.manifest.schema==='ar-create.native-carousel-proposal-context.v1'&&(!record.nativeScope||stable(record.nativeScope)!==stable(context.manifest.nativeScope)||context.manifest.outputId!==record.outputId))fail('Captured native Carousel root or output identity changed.');
   if(record.external&&!record.external.missing)read(id,'external.bin',record.external.hash);
@@ -109,15 +109,18 @@ export function createSharedCarouselBridge({dataDir,store,requests,guidance,writ
   return binding;
  }
  async function review(id,input={}){
-  const {record,context,baseline}=captured(id),{proposal,bytes}=proposed(id,record);let article,unavailable;
+  const {record,context,baseline}=captured(id),hasProposal=fs.existsSync(location(id,'proposal.json'));
+  if(!hasProposal&&input.raw!==undefined)fail('Stage an immutable proposal before reviewing replacement Markdown.');
+  let article,unavailable;
   try{article=await store.readCarouselWords(options(record));}catch(error){unavailable=error.message;article={project:{id:record.projectId},document:{id:record.documentId},output:baseline.output,expected:null};}
-  let raw=bytes.toString('utf8'),candidate=null,unsupported=proposal.unsupported;
+  if(!hasProposal)return {request:record,proposal:null,raw:baseline.raw,candidate:null,baseline,output:article.output,expected:article.expected,context:context.manifest,assembledContext:context.assembledContext,freshness:unavailable?{ok:false,reason:unavailable}:await fresh(record,context,article),binding:null,status:'prepared',receipt:null};
+  const {proposal,bytes}=proposed(id,record);let raw=bytes.toString('utf8'),candidate=null,unsupported=proposal.unsupported;
   if(input.raw!==undefined){if(typeof input.raw!=='string'||Buffer.byteLength(input.raw)>1024*1024)throw new StateError('Provide complete review Markdown under 1 MB.');raw=input.raw;unsupported=undefined;}
   try{if(unsupported)throw new StateError(unsupported.reason);candidate=parseCarouselWords(input.raw===undefined?utf8(bytes):raw,{projectId:record.projectId,documentId:record.documentId,output:baseline.output});}
   catch(error){if(input.raw!==undefined)throw error;unsupported={reason:error.message};}
   const freshness=unavailable?{ok:false,reason:unavailable}:await fresh(record,context,article);if(unsupported){freshness.ok=false;freshness.reason=unsupported.reason;}if(candidate&&freshness.ok)candidate=parseCarouselWords(raw,{projectId:record.projectId,documentId:record.documentId,output:article.output});
   const binding=reviewBytes(id,record,proposal,input.raw===undefined?bytes:Buffer.from(raw)),decision=receipt(id);
-  return {request:record,proposal,raw,candidate,baseline,output:article.output,expected:article.expected,context:context.manifest,freshness,binding,status:decision?.decision||(freshness.ok?'pending':'stale'),receipt:decision,...(unsupported?{unsupported}:{}),...(record.external?{externalArtifact:{missing:record.external.missing,hash:record.external.hash,bytes:record.external.bytes,url:'/api/shared-carousels/requests/'+id+'/external'}}:{})};
+  return {request:record,proposal,raw,candidate,baseline,output:article.output,expected:article.expected,context:context.manifest,assembledContext:context.assembledContext,freshness,binding,status:decision?.decision||(freshness.ok?'pending':'stale'),receipt:decision,...(unsupported?{unsupported}:{}),...(record.external?{externalArtifact:{missing:record.external.missing,hash:record.external.hash,bytes:record.external.bytes,url:'/api/shared-carousels/requests/'+id+'/external'}}:{})};
  }
  async function captureSafety(state){
   if(!guidance||!writingTemplates)fail('Verified guidance and writing template snapshots are required.');
