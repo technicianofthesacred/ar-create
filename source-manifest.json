@@ -2829,7 +2829,7 @@
     },
     {
       "path": "docs/product/FILE-CONTRACT-MAP.md",
-      "candidateSha256": "44c34604eb6deb7a781673287f8690a4dbd7545780dff4a97e427accecb7fb18"
+      "candidateSha256": "6773ee251491b20b54aab65c1b871b2f6dcc470f4b8e3e048e6ef77fadfc027a"
     },
     {
       "path": "docs/product/FUNCTION-FLOW.md",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "5803d2e0ae994f069440d07a8c86b1507714a377c709f5038cde4f8aede16428"
+      "candidateSha256": "4a01dad238c53d519cd8c84c8f815cae9c90571502dbfffe38451e9fa0834f5b"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "fe9d910635bd6dbc71fc9e80b320e0d38de20b064ec006ee78aad778255a87a9"
+      "candidateSha256": "d698615b14bc36e85485100d8b13bfedfe8ceba05092557a67384721cd3c6c9d"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3677,11 +3677,11 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "a5d079f43c77c6cb02e68564360abcd5d118d391f97f8dda4baa84a257655822"
+      "candidateSha256": "37be91c0c6f7b4d38c1b1bafdbaa08bd9a2e996e6180445ab06199e225b68e24"
     },
     {
       "path": "scripts/review-existing.mjs",
-      "candidateSha256": "a227dff802bbdc0ef5319ed77288ee338695880c1c1841b316675b1a5aae3d7b"
+      "candidateSha256": "48b0676a11c7f17dd44410ce1e074901a990f6dca8a2c1db6cb10114fac21694"
     },
     {
       "path": "tests/existing-work.test.mjs",
@@ -3841,7 +3841,7 @@
     },
     {
       "path": "scripts/library-review-inspection.mjs",
-      "candidateSha256": "f667855dfbd632d564615e7f184b2903424e02fffb437cf76b133214cc910fe9"
+      "candidateSha256": "6db1c530a9ded85b650f961a3dcefef0fc064696df5638039b66642f7e62097d"
     },
     {
       "path": "tests/display-format.test.mjs",
@@ -3861,7 +3861,7 @@
     },
     {
       "path": "tests/review-library-inspection.test.mjs",
-      "candidateSha256": "495fbeb9f2647f95604161b406fec2dc6f1983fef49723a7a978cfb2ddf8deaa"
+      "candidateSha256": "b9b162fe85540b0e8892b5230ec7bd29ad2728afe989b4ffc6e104f78884440b"
     },
     {
       "path": "tests/source-list-cache.test.mjs",
@@ -3929,7 +3929,7 @@
     },
     {
       "path": "public/document-study/exact-media-metadata.js",
-      "candidateSha256": "b8c16bfb41387da1bd823c310e95611e9633490c3ad63dc6e437c48ea5d6a779"
+      "candidateSha256": "2195de9a6cf87c9c3ae57dfecf1c76f5f5925a70cfa6d0b129b86ee9e1601f65"
     },
     {
       "path": "scripts/magazine-media-inspection.mjs",
@@ -3937,11 +3937,11 @@
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
-      "candidateSha256": "ae603ee43a3e7aa65772b63b02f68ec56dce5a1c6a31b2f9501357253548a7ee"
+      "candidateSha256": "f064c475c4b26b43478229b5bebee0084f1530937536096006ada16f73c30fd3"
     },
     {
       "path": "tests/exact-media-metadata.test.mjs",
-      "candidateSha256": "0faf97c46e09c00162b1411d6ee23dc160d98b0875ebc738de8ca49704db68e6"
+      "candidateSha256": "9ec16bdf8b1d61c99a1384b1783141cf6a8652c44db9114fe833083b376e4dba"
     },
     {
       "path": "tests/magazine-media-http.test.mjs",
@@ -3993,15 +3993,15 @@
     },
     {
       "path": "public/document-study/magazine-arrange.js",
-      "candidateSha256": "456c83cf05c69e1057d94c7218609749f5b5d0abc383a949a50fe13eeabfcffe"
+      "candidateSha256": "08cc4ba860b18cad8f6c5092ab38f9c5c8f31662937894cbb15188dda2a25899"
     },
     {
       "path": "public/document-study/magazine-arrange.css",
-      "candidateSha256": "e5bb11ed41e42cb09d5547e81911d3ee63b1c90811fbf7b9f277eff20496d95e"
+      "candidateSha256": "f53d4ea1e32816acc5966adcefc1990e5abaf84497710a386b4229c3ec1c2a13"
     },
     {
       "path": "tests/magazine-arrange.test.mjs",
-      "candidateSha256": "afeec09348c4a875fb7de4438d9765d19b8eee77a1518200e3d033b9806971fb"
+      "candidateSha256": "ac0083bec8ad07e01c2b9bd1688910b4a24641d5d3ea99a58f72cfb566865d6a"
     },
     {
       "path": "tests/research-retained-reader-layout.test.mjs",

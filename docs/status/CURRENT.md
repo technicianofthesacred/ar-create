@@ -1,3 +1,25 @@
+## 28 October — albums connected to the article photo picker; release candidate
+
+Arrange → Adjust photo → Photo library now offers All photos and the saved nested Media albums, including empty groups. Search and source filters operate within the chosen album; All photos keeps the complete connected catalogue. Album membership uses the maintained Library identity/hash projection. Unavailable album metadata leaves the catalogue usable and offers a retry. Changing albums clears the temporary choice and invalidates pending photo verification, so a hidden earlier choice cannot be saved.
+
+Verified 237 coherent checks. The actual candidate workbench shows all 26 currently connected publication photos at 1280×720 in light/dark themes; selection enables Use photo, and Cancel restores the original preview. An isolated native folder owner plus maintained article picker verifies a saved empty album, zero photos and disabled Use photo. No actual article placement or wording was saved during verification. This is not proof that unconnected photo locations have been indexed, nor full C/NOTES/mobile acceptance.
+
+The coherent release will enable only the existing review connection's structure-only empty-album capability. Existing Library owner, originals, membership protections, canonical writing and session-limited structural Undo remain authoritative. Source verified; publishing/installed status must be proven separately.
+
+## 28 October — empty album hierarchy candidate; photos are not a prerequisite
+
+The same Library owner now has an opt-in, structure-only review transport for empty nested groups. It verifies the inspected native owner and exact revision/hash, retains operation UUID replay, rejects source membership/file/path writes and protects nonempty branches. Media keeps its photo catalogue read-only while exposing a separate structural capability with native folder pins. Album creation and nesting work with no photos; returned folder metadata is reprojected without replacing the photo catalogue or dirty writing controls.
+
+Build verified 114 integrated owner/projection/browser checks and build. An isolated native browser using the maintained Media module and real folder owner verified empty parent/child creation, reload, exact structural Undo and owner restart. It also exposed and fixed a late initial folder-read message that incorrectly said connected albums were unavailable. This is a component lifecycle proof with invented records, not a full Workbench visual comparison. No original photos or writing were connected.
+
+The real configuration remains unchanged and the feature defaults off; publication is pending. Structural Undo admission is limited to operations known to the current review connection; after owner/review restart the retained parent remains and unknown Undo is disabled. Native history stays authoritative. Library hierarchy controls, folder-aware article picker continuity and full visual gates remain open.
+
+## 28 October — published article layout correction installed
+
+PR93 is independently live in the installed app and main review at signed `6e841b1c97fb8a2b9d14cd5048a1eade0b5ba4d3`, build `2026-10-28T09:06:02.152Z`. The actual published article now supplies the Magazine preview’s split cover, viewport type scale, printed palette, genuine licensed fonts, byline and photo-quotation layout. The hidden inspector gutter is removed. Final evidence includes 120 coherent checks, the 963-file package, 121 served hashes and original/content/configuration preservation.
+
+Desktop comparisons used the actual public story and full workbench at 1280×720. The 390×640 iframe checks establish a readable narrow workbench, not physical-phone or public-mobile certification. Workbench chrome and available reading width still differ. Full C/all12, native human creative-journey and other broader finish gates remain open; the checklist stays at 42 bounded results checked and 9 broader gates open. The goal controller still reports blocked; authorized bounded Build work continues.
+
 ## 28 October — actual published Magazine fidelity candidate
 
 Human rejected the local preview as different from the live story. Direct comparison with teajia.com/read/porcelain-and-tea found generic authoring CSS stacking the cover, reducing viewport-based type to container size, changing the printed palette, omitting the byline and synthesizing italics. The candidate uses the retained native conversation layout, actual published type scale/palette, genuine local licensed font faces, retained author/subject/derived length metadata and full reading width. It also composes exact protected on-photo quotations while keeping controls and captions outside.
