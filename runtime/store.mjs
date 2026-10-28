@@ -6,6 +6,8 @@ import {existsSync} from 'node:fs';
 import {createArticlePersistence,articleHash,articlePaths} from './article-persistence.mjs';
 import {outputRecordsExpected,validateOutputIndex,outputPrivatePrefix,outputOperationInputHash} from './output-records.mjs';
 import {articleCompositionIssue} from './src/workspaces/article-composition.mjs';
+import {requireHuman,currentActor} from './services/actor.mjs';
+import {parseCarouselWords} from './src/workspaces/shared-carousel-words.mjs';
 
 export const MAX_BODY_BYTES = 2 * 1024 * 1024;
 
@@ -418,7 +420,7 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         if(expected.revision!==incoming.expectedOutput.revision||expected.hash!==incoming.expectedOutput.hash)throw new StateError('Output records changed since inspection.',409);
         const outputReadProject=structuredClone(project);
         const prepared=await prepare({project:structuredClone(project),expectedOutput:structuredClone(expected),readArticle:options=>articles.readArticle(project,options),readCarouselWords:options=>articles.readCarouselWords(outputReadProject,options)});
-        shape(prepared,['outputs','nativeOutputIndex','finalCheck'],'prepared outputs',['extraFiles']);
+        shape(prepared,['outputs','nativeOutputIndex','finalCheck'],'prepared outputs',['extraFiles','sharedCarouselDecision']);
         if(typeof prepared.finalCheck!=='function')throw new StateError('Output save requires the native/source proof check.');
         const outputs=structuredClone(prepared.outputs),index=structuredClone(prepared.nativeOutputIndex);
         if(!Array.isArray(outputs)||outputs.length>100||outputs.some(output=>!output||!['article','carousel','post','product-listing'].includes(output.kind)||typeof output.id!=='string'||!output.id.trim())||new Set(outputs.map(output=>output.id)).size!==outputs.length)throw new StateError('Output saves require unique article or carousel records.');
@@ -442,8 +444,27 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         }
         const next=active?{revision:state.revision+1,project}:structuredClone(state);
         const receipt={schema:'ar-create.output-save-receipt.v1',operationId:incoming.operationId,inputHash,commandHash:incoming.commandHash,projectId:project.id,documentId:project.document.id,expectedOutput:incoming.expectedOutput,savedOutput:outputRecordsExpected(project.document),savedAt:timestamp(),committedRevision:next.revision};
+        let pairedDirectory=null;
+        const pairedDirectoryCheck=async directory=>{for(const dir of [path.dirname(directory),directory]){const stat=await lstat(dir);if(!stat.isDirectory()||stat.isSymbolicLink())throw new StateError('Shared request must be an owned real directory.',403);}};
+        if(prepared.sharedCarouselDecision){
+          requireHuman('Accepting native Carousel wording');if(!currentActor())throw new StateError('An explicit human actor must accept native Carousel wording.',403);const decision=prepared.sharedCarouselDecision;shape(decision,['requestId','binding','outputId'],'paired Carousel decision');
+          if(decision.requestId!==incoming.operationId)throw new StateError('The paired decision must use its exact native operation UUID.',409);
+          shape(decision.binding,['requestId','proposalHash','reviewHash','contextHash','wordsIdentity'],'paired Carousel review');
+          if(decision.binding.requestId!==decision.requestId||['proposalHash','reviewHash','contextHash','wordsIdentity'].some(k=>!/^[a-f0-9]{64}$/.test(decision.binding[k])))throw new StateError('Exact paired Carousel review hashes required.',409);
+          const directory=path.join(dataDir,'shared-carousel-requests',decision.requestId);await pairedDirectoryCheck(directory);pairedDirectory=directory;
+          const artifact=async(name,expected)=>{const file=path.join(directory,name);await assertRegularOrMissing(file);const bytes=await readFile(file);if(bytes.length>12*1024*1024||expected&&articleHash(bytes)!==expected)throw new StateError('Paired Carousel review artifact changed.',409);extraExpectedFiles.set(file,articleHash(bytes));return bytes.toString('utf8');};
+          const request=JSON.parse(await artifact('request.json')),proposal=JSON.parse(await artifact('proposal.json'));
+          if(request.schema!=='ar-create.shared-carousel-request.v1'||request.id!==decision.requestId||request.projectId!==project.id||request.documentId!==project.document.id||request.outputId!==decision.outputId||!request.nativeScope||request.context.hash!==decision.binding.contextHash||request.wordsIdentity!==decision.binding.wordsIdentity||proposal.requestId!==request.id||proposal.rawHash!==decision.binding.proposalHash)throw new StateError('Paired Carousel request belongs to another exact owner.',409);
+          await artifact('context.json',decision.binding.contextHash);await artifact('proposal.md',decision.binding.proposalHash);
+          const raw=await artifact('review-'+decision.binding.reviewHash+'.md',decision.binding.reviewHash),review=JSON.parse(await artifact('review-'+decision.binding.reviewHash+'.json'));
+          if(JSON.stringify(review)!==JSON.stringify(decision.binding))throw new StateError('Paired Carousel review binding changed.',409);
+          const original=outputReadProject.document.outputs.find(o=>o.id===decision.outputId),saved=project.document.outputs.find(o=>o.id===decision.outputId),candidate=parseCarouselWords(raw,{projectId:project.id,documentId:project.document.id,output:original}).output;
+          if(!saved||JSON.stringify(saved.slides)!==JSON.stringify(candidate.slides)||saved.caption!==candidate.caption)throw new StateError('The native save differs from the exact reviewed Carousel candidate.',409);
+          const file=path.join(directory,'decision.json');await assertRegularOrMissing(file);extraExpectedFiles.set(file,null);
+          extraFiles.push([file,JSON.stringify({schema:'ar-create.shared-carousel-decision.v1',requestId:request.id,projectId:project.id,documentId:project.document.id,outputId:decision.outputId,decision:'accepted',binding:decision.binding,proposalHash:decision.binding.proposalHash,contextHash:decision.binding.contextHash,wordsIdentity:decision.binding.wordsIdentity,reviewHash:decision.binding.reviewHash,decidedAt:timestamp(),committedRevision:next.revision,nativeOperationId:incoming.operationId,safetyVersionId:null})]);
+        }
         publicationAttempted=true;
-        await commit(next,null,{preserveActive:!active,pieceProjects:active?[]:[{project,metadata:{createdAt:record.createdAt,updatedAt:timestamp()}}],extraFiles,extraExpectedFiles,decisionFile:receiptFile,receipt,finalCheck:async()=>{for(const [destination] of extraFiles)await outputPrivateFile(destination);await outputOwnedDirectory(path.dirname(receiptFile));await prepared.finalCheck();}});
+        await commit(next,null,{preserveActive:!active,pieceProjects:active?[]:[{project,metadata:{createdAt:record.createdAt,updatedAt:timestamp()}}],extraFiles,extraExpectedFiles,decisionFile:receiptFile,receipt,finalCheck:async()=>{for(const [destination] of extraFiles)if(pairedDirectory&&path.dirname(destination)===pairedDirectory){await pairedDirectoryCheck(pairedDirectory);await assertRegularOrMissing(destination);}else await outputPrivateFile(destination);await outputOwnedDirectory(path.dirname(receiptFile));await prepared.finalCheck();}});
         return {receipt:structuredClone(receipt),alreadySaved:false};
       }catch(error){error.outcome=publicationAttempted&&(existsSync(articles?.journal||'')||(receiptFile&&existsSync(receiptFile)))?'unknown':'not-applied';throw error;}
     });},
@@ -522,12 +543,18 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
       let decisionFile,publicationAttempted=false;
       try {
       if(!articles)throw new StateError('Shared article persistence is not enabled.',409);
-      const {requestId,decision,binding}=input;
+      const {requestId,decision,binding,nativeScope}=input;
+      if(nativeScope){
+        shape(input,['requestId','decision','binding','nativeScope'],'native Carousel decision');shape(nativeScope,['rootBindingId','parentStudyId','projectId','documentId','outputId'],'native Carousel owner');
+        requireHuman('Rejecting native Carousel wording');if(!currentActor())throw new StateError('An explicit human actor must reject native Carousel wording.',403);if(decision!=='rejected')throw new StateError('Explicit native shared decisions may only reject; acceptance uses the native word writer.',403);
+      }
       if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(requestId)||!['accepted','rejected'].includes(decision))throw new StateError('Invalid shared carousel decision.');
       shape(binding,['requestId','proposalHash','reviewHash','contextHash','wordsIdentity'],'decision binding');
       if(binding.requestId!==requestId||['proposalHash','reviewHash','contextHash','wordsIdentity'].some(key=>!/^[a-f0-9]{64}$/.test(binding[key])))throw new StateError('Decision requires the exact reviewed proposal and context hashes.');
       const directory=path.join(dataDir,'shared-carousel-requests',requestId);
       for(const dir of [path.dirname(directory),directory]){const stat=await lstat(dir);if(!stat.isDirectory()||stat.isSymbolicLink())throw new StateError('Shared request must be an owned real directory.',403);}
+      const requestFile=path.join(directory,'request.json');await assertRegularOrMissing(requestFile);let savedRequest;try{savedRequest=JSON.parse(await readFile(requestFile,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
+      if(savedRequest?.nativeScope&&(!nativeScope||Object.keys(savedRequest.nativeScope).length!==Object.keys(nativeScope).length||Object.keys(nativeScope).some(k=>savedRequest.nativeScope[k]!==nativeScope[k])))throw new StateError('A native Carousel decision requires its exact registered request owner.',403);
       decisionFile=path.join(directory,'decision.json');await assertRegularOrMissing(decisionFile);
       let prior;try{prior=JSON.parse(await readFile(decisionFile,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
       // Receipt FIRST: later writing, restored Versions or guidance changes may
@@ -536,16 +563,27 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         if(prior.schema!=='ar-create.shared-carousel-decision.v1'||prior.requestId!==requestId||prior.decision!==decision||Object.keys(binding).some(key=>prior.binding?.[key]!==binding[key]))throw new StateError('This request already has a different terminal decision or review identity.',409);
         return {state:structuredClone(state),receipt:prior,alreadyDecided:true};
       }
-      const prepared=await prepare({state:structuredClone(state),readArticle:options=>articles.readArticle(state.project,options),readCarouselWords:options=>articles.readCarouselWords(state.project,options)});
+      let ownerState=state;const decisionExpectedFiles=new Map([[decisionFile,null]]);
+      if(nativeScope){
+        const artifact=async(name,hash)=>{const file=path.join(directory,name);await assertRegularOrMissing(file);const bytes=await readFile(file);if(bytes.length>12*1024*1024||hash&&articleHash(bytes)!==hash)throw new StateError('Exact native Carousel rejection artifact changed.',409);decisionExpectedFiles.set(file,articleHash(bytes));return bytes.toString('utf8');};
+        const request=JSON.parse(await artifact('request.json')),proposal=JSON.parse(await artifact('proposal.json')),context=JSON.parse(await artifact('context.json',binding.contextHash));
+        if(request.schema!=='ar-create.shared-carousel-request.v1'||request.id!==requestId||request.projectId!==nativeScope.projectId||request.documentId!==nativeScope.documentId||request.outputId!==nativeScope.outputId||!request.nativeScope||Object.keys(nativeScope).some(k=>request.nativeScope[k]!==nativeScope[k])||context.manifest?.schema!=='ar-create.native-carousel-proposal-context.v1'||Object.keys(nativeScope).some(k=>context.manifest.nativeScope?.[k]!==nativeScope[k])||request.context.hash!==binding.contextHash||request.wordsIdentity!==binding.wordsIdentity||proposal.requestId!==requestId||proposal.rawHash!==binding.proposalHash)throw new StateError('Native Carousel rejection belongs to another exact registered owner.',409);
+        await artifact('proposal.md',binding.proposalHash);await artifact('review-'+binding.reviewHash+'.md',binding.reviewHash);const review=JSON.parse(await artifact('review-'+binding.reviewHash+'.json'));if(Object.keys(binding).some(k=>review[k]!==binding[k])||Object.keys(review).length!==Object.keys(binding).length)throw new StateError('Exact reviewed native Carousel rejection required.',409);
+        const project=nativeScope.projectId===state.project.id?state.project:(await readPiece(nativeScope.projectId)).project,output=project.document?.outputs.find(o=>o.id===nativeScope.outputId),pointer=project.document?.nativeOutputIndex?.records.find(r=>r.outputId===nativeScope.outputId)?.wordOwner;
+        if(project.document?.id!==nativeScope.documentId||output?.kind!=='carousel'||pointer?.kind!=='carousel-words'||pointer.projectId!==nativeScope.projectId||pointer.documentId!==nativeScope.documentId||pointer.outputId!==nativeScope.outputId)throw new StateError('The native Carousel rejection has no exact saved words owner.',409);
+        ownerState={...state,project};
+      }
+      const prepared=await prepare({state:structuredClone(ownerState),readArticle:options=>articles.readArticle(ownerState.project,options),readCarouselWords:options=>articles.readCarouselWords(ownerState.project,options)});
       const next=prepared.next||state;
-      if(prepared.projectId!==state.project.id||prepared.documentId!==state.project.document?.id)throw new StateError('Carousel decision belongs to another active document.',409);
+      if(nativeScope&&(prepared.next||prepared.outputId!==nativeScope.outputId))throw new StateError('Rejecting a native Carousel proposal must not save wording or another output.',403);
+      if(prepared.projectId!==ownerState.project.id||prepared.documentId!==ownerState.project.document?.id)throw new StateError('Carousel decision belongs to another active document.',409);
       if(prepared.next&&(next.project.id!==state.project.id||next.project.document?.id!==state.project.document?.id))throw new StateError('Carousel decision cannot change piece identity.',409);
       const receipt={schema:'ar-create.shared-carousel-decision.v1',requestId,projectId:prepared.projectId,documentId:prepared.documentId,outputId:prepared.outputId,decision,binding:structuredClone(binding),proposalHash:binding.proposalHash,contextHash:binding.contextHash,wordsIdentity:binding.wordsIdentity,reviewHash:binding.reviewHash,decidedAt:timestamp(),committedRevision:next.revision,safetyVersionId:prepared.safetyVersionId||null,...(prepared.externalMissing!==undefined?{externalHash:prepared.externalHash??null,externalMissing:prepared.externalMissing}:{})};
       publicationAttempted=true;
       if(prepared.next)await commit(prepared.next,null,{expectedArticle:prepared.expectedArticle,expectedCarousel:prepared.expectedCarousel,decisionFile,receipt,finalCheck:prepared.finalCheck});
       else {
         const files=[[decisionFile,JSON.stringify(receipt)]];await prepared.finalCheck?.();
-        try{await articles.publish(files,{expectedFiles:new Map([[decisionFile,null]])});}catch(error){needsRecovery=existsSync(articles.journal);if(needsRecovery)recoveryFiles=files;throw error;}
+        try{await articles.publish(files,{expectedFiles:decisionExpectedFiles});}catch(error){needsRecovery=existsSync(articles.journal);if(needsRecovery)recoveryFiles=files;throw error;}
       }
       return {state:structuredClone(state),receipt,alreadyDecided:false};
       }catch(error){error.outcome=publicationAttempted&&(existsSync(articles.journal)||(decisionFile&&existsSync(decisionFile)))?'unknown':'not-applied';throw error;}

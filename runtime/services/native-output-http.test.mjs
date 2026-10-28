@@ -11,7 +11,7 @@ test('HTTP connection creates exact independent outputs and retains local write 
  const vault=path.join(dataDir,'original-vault'),files=path.join(dataDir,'original-files');fs.mkdirSync(vault);fs.mkdirSync(files);
  const originals=[['Workflow/3-Develop/DEV - An Cha 1 (story).md','---\ntype: DEV\ntitle: Synthetic HTTP\n---\n\nExact original words.\n'],['Workflow/1-Source/SRC - An Cha Master (Dark Tea & Organic Farming).md','Synthetic source, not a private fixture.']];
  for(const [rel,body]of originals){const file=path.join(vault,rel);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,body);}
- const server=await createServer({dataDir,publicDir:path.join(dataDir,'public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files},sharedArticles:true,researchEnabled:false});
+ const server=await createServer({dataDir,publicDir:path.join(dataDir,'public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files,catalog:{projects:{},drafts:{'ancha-1':{parentStudyKey:'ref-an-cha',partKey:'1',title:'Synthetic HTTP',path:originals[0][0],contextScope:'Invented HTTP fixture only.',support:[[originals[1][0],'source']]}}}},sharedArticles:true,researchEnabled:false});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>server.close(r));fs.rmSync(dataDir,{recursive:true,force:true});});
  const base='http://127.0.0.1:'+server.address().port;
  const get=async route=>{const r=await fetch(base+route);const value=await r.json();assert.equal(r.status,200,JSON.stringify(value));return value;};

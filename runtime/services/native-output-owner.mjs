@@ -3,7 +3,7 @@ import {validateCarouselTypography} from "../src/workspaces/carousel-typography.
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { outputRecordsExpected, outputPrivatePrefix } from "../output-records.mjs";
-import { provenance } from "./actor.mjs";
+import { provenance, requireHuman, currentActor } from "./actor.mjs";
 import IG from "../src/donors/mag/carousel/ig-templates.js";
 const stable = (v) => JSON.stringify(v, (_, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
 const hash = (v) => createHash("sha256").update(typeof v === "string" ? v : stable(v)).digest("hex");
@@ -291,14 +291,14 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     const languageEditionReview=selected?await languageReview(input,t,selected.output):null;
     return { ...(languageEditionReview?{languageEditionReview}:{}),scope: group(input), photoScope:{projectId:t.projectId,documentId:t.documentId}, documentId: input.rootBindingId, expectedOutput: outputRecordsExpected(t.document), outputBindings, outputs, outputOrigins, ...selected ? { document, arrangementUndo, wordsUndo, output: clone(selected.output), wordOwner: clone(selected.record.wordOwner), ...selectedFreshness } : {} };
   }
-  async function mutate(action, input) {
+  async function mutate(action, input, pairedReview = null) {
     input = clone(input);
     if (!uuid.test(input.operationId || "")) fail("Output operation UUID required.");
     const allowed = ["rootBindingId", "parentStudyId", "operationId", "expectedOutput", "expectedNative", "selectedOutputId", ...action === "create" ? ["kind", "sourceBindingId", "sourceOutputId", "targetLanguage", "expectedSourceWords"] : action === "save" ? ["changes"] : ["undo","undo-words"].includes(action) ? ["undoOperationId"] : action === "review" ? ["expectedWords", "wordsHash"] : []];
     if (Object.keys(input).some((k) => !allowed.includes(k))) fail("Unsupported output mutation fields.");
     const t = await target(input);
     t.input = input;
-    const commandHash = hash({ action, input }), prior = privateRead(t, "history", input.operationId);
+    const commandHash = hash({ action, input, ...(pairedReview?{review:pairedReview.binding}:{}) }), prior = privateRead(t, "history", input.operationId);
     const request = { projectId: t.projectId, documentId: t.documentId, operationId: input.operationId, expectedOutput: input.expectedOutput, commandHash };
     if (prior) {
       if (prior.value.commandHash !== commandHash || !same(prior.value.group, group(input))) fail("Operation ID already owns another exact output request.");
@@ -350,8 +350,9 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     const run = async (lease) => store.saveOutputRecords(request, async ({ project, readCarouselWords }) => {
       const doc = project.document, id = selected?.output.id || input.operationId, catalogue = await proofCatalogue(input, id);
       let proofNow,reviewedWords;
-      if(action === "review" || action === "undo-words"){
+      if(action === "review" || action === "undo-words" || pairedReview){
         reviewedWords=await readCarouselWords({documentId:t.documentId,outputId:id});
+        if(pairedReview&&!same(reviewedWords.expected,pairedReview.expectedWords))fail("Own Carousel words changed after proposal review.");
         if(action === "review" && (!same(reviewedWords.expected,input.expectedWords)||await helpers.carouselWordsHash(reviewedWords.output)!==input.wordsHash))fail("Own carousel words changed since human review.");
         if(action === "undo-words"&&!same(words(reviewedWords.output),words(selected.output)))fail("Own carousel words changed outside their saved owner; wording Undo held.");
       }
@@ -446,7 +447,8 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const history = { schema: "ar-create.native-output-command.v1", provenance: provenance(), group: group(input), commandHash, outputId: id, captureId, beforeArrangement: selected ? arrangement(selected.output) : null, ...(selected?.output.kind==="carousel"&&["save","undo-words"].includes(action)?{beforeWords:wordSnapshot(selected.output)}:{}), beforeAssets: selected?.private.proof.assets ?? null, afterHash: hash(output) };
       const extraFiles = [{ relativePath: privatePath(t, "history", input.operationId), contents: JSON.stringify(history), expectedHash: null }];
       if (action === "create" || action === "refresh" || captureId !== selected.record.captureId) extraFiles.push({ relativePath: privatePath(t, "captures", captureId), contents: JSON.stringify(privateValue), expectedHash: privateRead(t, "captures", captureId)?.hash ?? null });
-      return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, finalCheck: async () => {
+      return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, ...(pairedReview?{sharedCarouselDecision:{requestId:pairedReview.requestId,binding:clone(pairedReview.binding),outputId:id}}:{}), finalCheck: async () => {
+        if(pairedReview){requireHuman("Accepting native Carousel wording");await pairedReview.finalCheck();}
         if(languageSource){
           const currentSource=doc.outputs.find(row=>row.id===lineage.sourceOutputId);if(!currentSource||hash(currentSource)!==lineage.sourceOutputHash)fail("Selected source output changed before language edition publication; prepared copy is retained.");
           if(related){const actual=lease.rereadRelated();if(hash(actual.raw)!==lineage.sourceWordsHash)fail("Selected source own words changed before language edition publication.");}
@@ -597,7 +599,15 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     };
     return textKind(selected.output.kind) ? native.withSnapshotLease({ bindingId: selected.record.wordOwner.bindingId, parentStudyId: input.parentStudyId, expected: input.expectedNative }, run) : run(null);
   }
-  return { read, inspectCheckSnapshot, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), save: (i) => mutate("save", i), reviewCarouselWords: (i) => mutate("review", i), refreshSelectedArticle: (i) => mutate("refresh", i), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
+  async function acceptCarouselProposal({scope:proposalScope,expected,candidate,requestId,binding},finalCheck){
+    requireHuman("Accepting native Carousel wording");if(!currentActor())throw Object.assign(Error("An explicit human actor must accept native Carousel wording."),{status:403});if(!uuid.test(requestId||"")||typeof finalCheck!=="function"||candidate?.kind!=="carousel"||candidate.id!==proposalScope?.outputId||binding?.requestId!==requestId)fail("Exact reviewed native Carousel proposal required.");
+    const input={rootBindingId:proposalScope.rootBindingId,parentStudyId:proposalScope.parentStudyId,selectedOutputId:proposalScope.outputId},snapshot=await inspectCheckSnapshot(input);
+    if(snapshot.proof.projectId!==proposalScope.projectId||snapshot.proof.documentId!==proposalScope.documentId||!same(snapshot.expected,expected))fail("The reviewed native Carousel owner or words changed.");
+    const before=snapshot.output;
+    if(!same(before.slides.map(({text,credit,label,role,...slide})=>slide),candidate.slides.map(({text,credit,label,role,...slide})=>slide)))fail("A wording proposal cannot move photographs, slide IDs or arrangement.");
+    return mutate("save",{...input,operationId:requestId,expectedOutput:expected.expectedOutput,changes:{slides:clone(candidate.slides),caption:candidate.caption}},{requestId,binding,expectedWords:expected.expectedWords,finalCheck});
+  }
+  return { read, inspectCheckSnapshot, acceptCarouselProposal, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), save: (i) => mutate("save", i), reviewCarouselWords: (i) => mutate("review", i), refreshSelectedArticle: (i) => mutate("refresh", i), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
 }
 export {
   createNativeOutputOwner

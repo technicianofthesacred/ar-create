@@ -234,7 +234,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   let researchAnswers;const answerContext={projectContext:(...args)=>researchAnswers.projectContext(...args)};
   const requests = createRequestPreviews({ dataDir, store, library, guidance, researchMaterial, researchAnswers:answerContext,...(studyHumanDirection?{humanDirection:studyHumanDirection}:{}) });
   const sharedArticleBridge=sharedArticles?createSharedArticleBridge({dataDir,store,requests,parseArticle,guidance,writingTemplates}):null;
-  const sharedCarouselBridge=sharedArticles?createSharedCarouselBridge({dataDir,store,requests,guidance,writingTemplates}):null;
+  let sharedCarouselBridge=null;
   const exports = createExports({ dataDir, store });
   const carousel = createCarouselExports({dataDir,store,library});
   const terminal = createTerminal({ dataDir, store, requests });
@@ -255,6 +255,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
   const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings,retainedSource:retainedCarouselSource,browserOrigins:browserCarouselOrigins}):null;
   const studyOutputs=studyOutputFactory?.owner;
+  sharedCarouselBridge=sharedArticles?createSharedCarouselBridge({dataDir,store,requests,guidance,writingTemplates,nativeOutputs:studyOutputs,humanDirection:studyHumanDirection,library}):null;
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts,outputs:studyOutputs}):null;
   const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
   const studyShare=studyOutputs?createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix}):null;
