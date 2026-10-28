@@ -1,3 +1,9 @@
+## 28 October — optional catalogue reads share one timeout budget in candidate
+
+An unavailable optional Library reader could consume its full deadline before native binding joins began, granting those joins another full timeout and delaying the work list beyond its caller’s budget. Optional authority reads and their dependent joins now share one monotonic deadline per catalogue build. Exhausted joins remain explicitly unavailable; a deliberate refresh receives a fresh budget. No cached replacement or guessed identity is introduced.
+
+A regression reproduced two new binding requests after the first deadline was already exhausted. The repaired reader starts none, retains independent originals and resolves fresh identities on the next successful cycle. An actual HTTP catalogue regression verifies the same unavailable result. Fatal portfolio reads and filesystem root resolution remain outside this bounded repair. No wording, source, provider, permission or store changes. Candidate only until exact release proof.
+
 ## 28 October — exact native draft Bench activity connection installed
 
 The actual-work Bench previously supplied an empty activity list even when its maintained journal reader had saved changes for the open native draft. It now displays up to three committed events for the exact verified draft binding and refreshes when that reader changes. Foreign bindings, project-wide events, conflicts, ambiguous owners, selected outputs and unsupported Magazine histories are excluded. No second history store or manuscript write is added.

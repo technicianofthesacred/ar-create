@@ -19,3 +19,20 @@ test('stalled host Library inspection times out without substituting the upstrea
  const {reader}=await createExistingWorkReview({readTimeoutMs:20,libraryInspection:inspection,config:{authorityURL:'http://127.0.0.1:8841',allowedAuthorityPort:8841,magazineRoots:[]},fetchImpl:async url=>{upstreamPaths.push(url.pathname);return {ok:true,json:async()=>({})};}});
  const catalog=await reader.catalog();assert.equal(treeCalls,1);assert.equal(upstreamPaths.includes('/api/sources/tree'),false);assert.ok(catalog.diagnostics.some(d=>/Library unavailable:.*timed out/.test(d)));assert.deepEqual(catalog.sources,[]);
 });
+
+test('HTTP catalogue returns explicit missing identities without a second timeout wave after stalled Library',async t=>{
+ let joins=0;
+ const {server}=await createExistingWorkReview({readTimeoutMs:30,config:{authorityURL:'http://127.0.0.1:8841',allowedAuthorityPort:8841,magazineRoots:[]},fetchImpl:async url=>({ok:true,json:async()=>{
+  if(url.pathname==='/api/sources/tree')return new Promise(()=>{});
+  if(url.pathname==='/api/study-draft/catalog')return {drafts:[{bindingStatus:'ready',bindingId:'11111111-1111-4111-8111-111111111111',parentStudyId:'invented-parent'}]};
+  if(url.pathname==='/api/first-flow/binding'){joins++;return new Promise(()=>{});}
+  return {};
+ }})});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ t.after(()=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);}));
+ const response=await fetch('http://127.0.0.1:'+server.address().port+'/api/review/catalog');
+ assert.equal(response.status,200);const catalog=await response.json();
+ assert.equal(joins,0);assert.equal(catalog.workspaceLinks.unavailableBindings.length,2);
+ assert.ok(catalog.workspaceLinks.unavailableBindings.every(row=>row.reason==='binding-unavailable'));
+ assert.ok(catalog.diagnostics.some(d=>/Library unavailable:.*timed out/.test(d)));
+});

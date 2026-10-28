@@ -44,11 +44,18 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
  if(typeof readAuthority!=='function')throw Error('An explicit read-only authority reader is required.');
  const exclusions=new Map(excludedStoryNames.map(n=>[norm(n),'Recorded test recording; excluded from real work, original retained.']));
  if(!Number.isFinite(readTimeoutMs)||readTimeoutMs<=0)throw Error('Use a positive review read timeout.');
- const readCatalogAuthority=path=>boundedReviewRead(signal=>readAuthority(path,{signal}),{timeoutMs:readTimeoutMs,label:path});
  const sourceExclusions=new Set(excludedSourceIds),pieceExclusions=new Set(excludedPieceIds);
  let latest=null,catalogPending=null;
  function catalog(){if(catalogPending)return catalogPending;const pending=buildCatalog();catalogPending=pending;pending.finally(()=>{if(catalogPending===pending)catalogPending=null;}).catch(()=>{});return pending;}
  async function buildCatalog(){
+  // Optional metadata owners and dependent identity joins share one deadline.
+  // A stalled first reader cannot grant a second wave another full timeout.
+  const deadline=performance.now()+readTimeoutMs;
+  const readCatalogAuthority=path=>{
+   const remaining=deadline-performance.now();
+   if(remaining<1)return Promise.reject(Object.assign(Error(path+' read timed out.'),{status:503}));
+   return boundedReviewRead(signal=>readAuthority(path,{signal}),{timeoutMs:remaining,label:path});
+  };
   // Start only fresh reads here. allSettled owns every optional rejection even
   // when the fatal portfolio read fails before the remaining owners finish.
   const start=read=>Promise.resolve().then(read);
