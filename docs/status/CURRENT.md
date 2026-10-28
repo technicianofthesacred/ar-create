@@ -1,3 +1,9 @@
+## 28 October — new-project source handoff repair; candidate only
+
+A newly authored project had a ready working root, but Research/Direction only listed original-backed manuscript parts. The source chooser, scoped Direction selection and Draft entrance now admit the exact registered authored root. A second original-only editorial adapter blocker is repaired for proven new roots with no imported original support; actual Research, selected sources and Direction retain their existing owners. Contradictory, foreign, pending, ambiguous and locked identities remain held.
+
+Disposable real HTTP-owner plus mounted actual-caller checks reach opening preparation and the existing reviewer entrance, retain selection across reload/switch, and preserve words. Leaving during source loading and returning no longer strands the selection. Native browser control is currently unavailable; this is not actual-screen or human-choice acceptance. Original-backed behavior remains under regression verification. PR88 stays the installed authority; full journey and visual gates remain open.
+
 ## 28 October — PR88 installed; full completion remains open
 
 Exact native Carousel preparation now exposes immutable source/Direction context to agents before proposing, and carries proposals into the existing human reviewer and wording owner. Invented preparation → agent staging → actual owner restart → reopening is verified without approval or wording changes. Stale source proof refuses preparation. Paired publication recovery and captured dependency guards have regression proof; approval remains disabled by default.
