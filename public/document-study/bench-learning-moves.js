@@ -27,10 +27,10 @@ export function sourceMoves(base,material,snapshot){
   return row({...base,kind:'source',sourceId:material.sourceId,jobId:material.job.id,segmentIndex:issue.index,label:'Review source passage',title:material.title||'Recording',reasons:issue.reasons},[material.sourceId,material.hash,material.job.id,snapshot.expected,s,issue.reasons]);
  });
 }
-export async function readMoves(projectId,{get,maxRecordings=12}={}){
+export async function readMoves(projectId,{get,maxRecordings=12,expectedOwner}={}){
  if(typeof projectId!=='string'||!projectId||typeof get!=='function')fail('Choose an exact existing project.');
  const binding=await get('/api/first-flow/binding?projectKey='+encodeURIComponent(projectId));
- if(binding.projectKey!==projectId||!UUID.test(binding.projectId||'')||!UUID.test(binding.documentId||''))fail('The saved project binding is unavailable.');
+ if(binding.projectKey!==projectId||!UUID.test(binding.projectId||'')||!UUID.test(binding.documentId||'')||expectedOwner&&(binding.projectId!==expectedOwner.projectId||binding.documentId!==expectedOwner.documentId))fail('The saved project binding is unavailable.');
  const [materialRead,researchRead]=await Promise.allSettled([get('/api/first-flow/material-context?projectId='+encodeURIComponent(binding.projectId)),get('/api/first-flow/context?projectId='+encodeURIComponent(binding.projectId))]);
  const unavailable=[],flow={projectId:binding.projectId,materials:[]};
  const verify=(value,schema)=>{if(value?.schema!==schema||value.projectId!==binding.projectId||value.documentId!==binding.documentId||!SHA.test(value.hash||''))fail('The saved project/document context changed.');};
