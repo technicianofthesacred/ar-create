@@ -168,3 +168,12 @@ test('feedback badge follows the exact mounted paragraph owner without unlocking
  const hash='a'.repeat(64),owner={kind:'magazine',storyId:'s',pieceId:'p'},f=await reviewDOM('<header id="c3-surface-bar"></header><section data-output-stage-surface="11" data-feedback-editable="true" data-feedback-story="s" data-feedback-piece="p" data-feedback-draft="'+hash+'"></section><button data-draft-approve></button>');
  try{f.w.current=()=>({id:'parent-a',view:'record',viewedStage:11});f.w.AR_CREATE_REVIEW_MODE.magazineFeedbackCorrections=true;f.w.studyDraft={currentOwner:()=>owner,currentProof:()=>({parentStudyId:'parent-a',draftHash:hash})};f.w.eval(code);assert.equal(f.w.document.querySelector('[data-review-state]').textContent,'Feedback editing');assert.equal(f.w.document.querySelector('[data-draft-approve]').disabled,true);f.w.studyDraft.currentProof=()=>({parentStudyId:'foreign',draftHash:hash});f.callbacks[0]();assert.equal(f.w.document.querySelector('[data-review-state]').textContent,'Read-only review');}finally{f.close();}
 });
+
+test('concealed startup never measures1100 Source remarks for a hidden editing badge',async()=>{
+ const f=await sourceBadgeFixture();try{
+  const workspace=f.w.document.querySelector('#workspace'),panel=f.turn.parentElement;workspace.style.visibility='hidden';f.w.arCreateReviewStartup={pending:true};let layoutReads=0;
+  for(let i=0;i<1100;i++){const node=i?f.turn.cloneNode(true):f.turn;node.dataset.sourceReaderTurn='turn-'+i;node.getClientRects=()=>{layoutReads++;return [{}];};if(i)panel.append(node);}
+  f.state.data.sessions[0].turns=Array.from({length:1100},(_,i)=>({id:'turn-'+i}));f.w.eval(code);assert.equal(layoutReads,0,'the startup guard already proves the entire reader is concealed');assert.equal(f.badge(),'Read-only review');
+  f.w.arCreateReviewStartup.pending=false;workspace.style.visibility='';f.callbacks[0]();assert.equal(layoutReads,1,'normal visibility/freshness checks resume for the first visible exact remark');assert.equal(f.badge(),'Transcript editing');
+ }finally{f.close();}
+});

@@ -1,3 +1,15 @@
+## 28 October — concealed Source layout saturation reproduced; candidate repair
+
+The affected saved browser’s live diagnostic identifies read-transcript/Error, with no mounted writer, no current writing proof and no dirty words. Its CPU sample is dominated by getClientRects. The review badge was measuring every editable remark while startup CSS already concealed the entire reader; visibility:hidden still has layout rectangles, so none could satisfy visibility and every lock pass walked all1100 remarks.
+
+A pending-startup shortcut now returns the hidden badge’s read-only state before any Source layout read. This changes badge presentation only. Exact source identity, writer, recovery and startup guards remain intact, and normal visible-remark checks resume after readiness. The red regression observes1100 geometry reads; the candidate observes zero. An independent probe also reduces1100 style reads tozero and preserves the ready-state badge.214 relevant review/startup/route/reader checks pass. The affected saved browser still needs the exact installed repair and native reopening proof; no whole-context completion is claimed. No real words, names, approvals, provider or recovery changes.
+
+## 28 October — protected Source refusal diagnostics installed
+
+PR98 is independently live at signed `5f7ec9989847576f3b2becf92932c67f2e88492b`, build `2026-10-28T12:55:43.014Z`.179checks/build/package964,124servedhashes and13criticalsourcepaths pass; native sessions/revision175/originalturns/manuscripts/editions/configuration/canonicaldirty writing remain exact. The existing startup alert now carries safe refusal-stage/type/status and writer-presence/dirty metadata, with progress messages for each Source opening boundary. No raw error/private path/wording is exposed, no guard or recovery is cleared.
+
+The other saved An Cha/Porcelain browser context remains unresolved until its actual failure metadata is observed. Build’s prior full-source opening proof does not establish that profile works. No new checkoff:45 bounded checked /9 broader gates open.
+
 ## 28 October — persisted Source-context refusal remains under diagnosis
 
 PR97 opens the full transcript in Build's verified context, but another saved An Cha browser context still reports a protected startup refusal. This is not established as an object-hydration race and no identity/dirty/recovery guard is weakened. A bounded diagnostic candidate records the opening stage, exception type/status and readable writer-presence/dirty flags on the startup alert. It exposes no source words, paths, hashes or raw error details and keeps the exact Retry address and retained app concealed on refusal.
