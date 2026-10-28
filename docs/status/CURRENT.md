@@ -1,3 +1,9 @@
+## 28 October — PR87 installed; phone identity checked off
+
+Signed main `8bf59eeafc1bb673a238053453fb8ad3b4313f90`, build `2026-10-28T02:08:54.822Z`, is independently verified live in8841/main59958.502 checks/25files/build/package939/96served hashes pass; original editions/API content/canonical dirty files/config are preserved. The Source/Direction phone identity repair is checked off:42 bounded completed results,9 broader gates open.
+
+Guarded ordinary Article continuation and saved Research-choice lineage are now installed with invented service acceptance/restart/exactUndo proof. Native pending choices remain unapproved and cannot continue; native post-choice screen acceptance, inherited Direction, full Article/Carousel journey and whole C/NOTES/all12 gates remain open. No provider/native wording approval occurred. Carousel proposals and read-only Source/Research Bench moves are integrated in the next candidate, not installed. Review found paired-publication recovery and immutable-review proof checks needing repair; native review admission and inherited Direction remain in progress. Earlier candidate/held notes below are history.
+
 ## 28 October — Article continuation and phone identity verified candidate
 
 Candidate d174b79 adds explicit Article continuation after the exact recorded human opening choice through the existing Study request/proposal, donor insert, writer/journal and exact Undo. Saved Research Include/Leave out choices retain their original identities and bytes through that proven opening write; source/choice/Direction/guidance/learning drift and unrelated same-raw history still refuse. The initially reproduced saved-choice409 is repaired.502 relevant checks across25files pass, including actual invented service acceptance/restart/exact Undo and strict proxy/agent/caller-proof guards. The full assisted Article/Carousel journey is not complete.
@@ -183,7 +189,7 @@ A48-capture desktop audit covers twelve sections, both themes, reference and liv
 
 ## Goal progress — maintained during Build
 
-The original goal is active. The existing detailed acceptance checklist records **41 bounded installed results complete and9 broader gates open**. Each result retains its exact release/native proof. Built, native-verified, installed and human-accepted are separate states; a bounded result does not close its whole section. This table summarizes that checklist, rather than creating another backlog.
+The original goal is active. The existing detailed acceptance checklist records **42 bounded installed results complete and9 broader gates open**. Each result retains its exact release/native proof. Built, native-verified, installed and human-accepted are separate states; a bounded result does not close its whole section. This table summarizes that checklist, rather than creating another backlog.
 
 | Area | Verified running behavior | Still required |
 | --- | --- | --- |
@@ -191,16 +197,18 @@ The original goal is active. The existing detailed acceptance checklist records 
 | Source | Saved transcript corrections, retained translation review and literal saved-passage lookup | Complete recording/transcript-to-two-output journey; no new transcription or provider run claimed |
 | Research | Retained points, saved questions, source-bound discussion, selected kept learning and settled reader/scope | Full informed alternatives, assistance and continuation acceptance |
 | Direction | Six project/part fields, prose, recovery/conflict/Undo, shared guidance and separate output translation briefs | Populated final design acceptance and complete downstream assisted drafting |
-| Write and proposals | Exact native owner, stable paragraph/caret recovery, cold registered-root pickup and opening alternatives prepared/staged/reviewed across restart (PR86) | Assisted full Article and Carousel continuation; real wording remains an explicit human choice |
+| Write and proposals | Exact native owner, stable paragraph/caret recovery, cold registered-root pickup and opening alternatives prepared/staged/reviewed across restart; guarded ordinary Article continuation with saved Research-choice lineage installed (PR87) | Assisted full Article and Carousel continuation; real wording remains an explicit human choice |
 | Bench and Pieces | Exact current-passage and registered-output continuation, saved output next moves | Recording/research next moves, complete cross-project counts and semantic/history acceptance |
 | Read and Check | Shared desktop reading geometry; independent Carousel reading and canonical output-specific checks | Full phone/header/navigation/interaction match and complete journey |
 | Media and Arrange | Saved nested folder projection; explicit Magazine/Article photo placement; captions/credits/composed roles; actual retained HTML and exact Undo | Full filing/scale and whole Article/Carousel visual acceptance |
 | Audience and editions | Separate output briefs and independent manually worded linked editions with lifecycle proof | Complete translated-output generation/acceptance and published-edition authority |
 | Share | Canonical guarded paragraph editing; explicit recipient/language sections; working invitations/recovery and exact invitation-time message history | Human correspondence facts acceptance and complete published recipient/edition workflow |
 | Outputs | Independent output owners and retained real export receipts | Continuous provenance through the complete two-output creative journey |
-| Full design | Bounded desktop Read/Write and whole-app390×640 Media/Arrange/Research comparisons; phone row correction installed | Every applicable section in desktop/phone light/dark with interaction evidence against C/NOTES; recorded mismatches remain open |
+| Full design | Bounded desktop Read/Write and whole-app390×640 Media/Arrange/Research/Source/Direction comparisons; readable Source/Direction phone headings installed | Every applicable section in desktop/phone light/dark with interaction evidence against C/NOTES; recorded mismatches remain open |
 
-PR86 signed `238ab7ce142e3799d7b5e0f63cfc2c82cd798fef`, build `2026-10-28T01:21:43.628Z`, is the latest verified running milestone.384 relevant checks/build/package937/96served hashes and content/config preservation passed. No provider or native wording approval occurred in that verification.
+PR87 signed `8bf59eeafc1bb673a238053453fb8ad3b4313f90`, build `2026-10-28T02:08:54.822Z`, is the latest verified running milestone.502 relevant checks/build/package939/96 served hashes and content/config preservation passed. No provider or native wording approval occurred in that verification.
+
+The next candidate has scoped native Carousel proposals and read-only Source/Research Bench links integrated, but neither is checked off. Paired-publication recovery and captured-review proof repairs, narrow review admission, native screen checks and exact release proof remain required. Wording approval stays disabled in review mode unless its separate explicit grant is present. The full goal remains active.
 
 ## 28 October — Audience, nested photos and Media folders installed
 
