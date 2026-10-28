@@ -56,7 +56,9 @@
  };
  // Availability follows the selected maintained reader, never the workspace feature flag alone.
  const writableSource=()=>{
-  if(window.AR_CREATE_REVIEW_MODE.sourceCorrections!==true)return false;
+  // The startup veil already conceals every remark. Measuring them all here can
+  // starve the exact-source read while the hidden badge waits for visibility.
+  if(window.arCreateReviewStartup?.pending||window.AR_CREATE_REVIEW_MODE.sourceCorrections!==true)return false;
   try{
    const p=current(),workspace=document.querySelector('#workspace.wb-source');
    if(!workspace||p?.view!=='record'||Number(p.viewedStage)!==2)return false;
