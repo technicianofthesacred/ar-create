@@ -1,3 +1,9 @@
+## 28 October — independent authored Article assistance repair; candidate only
+
+A second Article or manual language Article created from a new project has its own canonical fork, but the original-plan adapter still treated its inherited authored origin as a contradictory root. The candidate admits only exact canonical Article forks with complete archival lineage into existing preparation, using their own saved words and Direction. Later source-manuscript edits do not become a new freshness authority over independent words. Missing/foreign/contradictory lineage, original-backed parent ambiguity and imported support remain held.
+
+Real disposable HTTP owner tests cover second Article and Simplified Chinese Article preparation, exact captured context reread and independence after later parent edits. No native browser proof, provider execution or wording approval. PR89 remains installed; full creative journey and visual acceptance remain open.
+
 ## 28 October — PR89 installed; new-project source handoff repaired
 
 A newly authored project had a ready working root, but Research/Direction only listed original-backed manuscript parts. The source chooser, scoped Direction selection and Draft entrance now admit the exact registered authored root. A second original-only editorial adapter blocker is repaired for proven new roots with no imported original support; actual Research, selected sources and Direction retain their existing owners. Contradictory, foreign, pending, ambiguous and locked identities remain held.
