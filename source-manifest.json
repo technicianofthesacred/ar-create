@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "1735b35ff16c46ad9c25de139ae216b8a319ecf36e0ac89ab9821647cbd2dbf5"
+      "candidateSha256": "2eef89a00b2bee959cb737cdfb043ffd3fd3f7cde21b72c13e7d2cddf18daf90"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3657,11 +3657,11 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "66f6436a350bd2718b4bc65c6d341c62f1fd542143fd1f02ec955f4cdb4033da"
+      "candidateSha256": "61bebc4aa07b92a9bd470abccd2a6d855e7d3b739b87962e5ecb6d617ec25953"
     },
     {
       "path": "public/document-study/review-mode.js",
-      "candidateSha256": "cc87704622a5adbd2c5300eb8d3f610ceb397e40870022abec17b3b7b142a27d"
+      "candidateSha256": "35935be0e4e5ffbf8b08610d4a359574d9ef5c87caecde0c54c193e00ed85c8e"
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
@@ -4029,7 +4029,7 @@
     },
     {
       "path": "tests/existing-work-startup.test.mjs",
-      "candidateSha256": "22225434a7bd6920f2662a818d1c38a7b82d724612a7bae65f1b852fcafce2d5"
+      "candidateSha256": "71083354b0864089c0faf84c77d3246129801d138c6f8ddc2da932bf6bf0ace6"
     },
     {
       "path": "tests/retained-carousel-reader.test.mjs",
