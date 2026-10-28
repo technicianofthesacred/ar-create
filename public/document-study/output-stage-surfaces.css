@@ -24,3 +24,9 @@ html body.wbf-on #app #workspace.wb-share .wb-invitation [data-magazine-correspo
 .carousel-proposal-panel section{min-width:0}.carousel-proposal-panel article{padding:12px 0;border-top:1px solid var(--line)}.carousel-proposal-panel article h4{font:600 var(--t-body,15px)/1.5 var(--ar-ui,var(--sans,sans-serif));margin:0 0 8px}.carousel-proposal-panel article p{white-space:pre-wrap}.carousel-proposal-panel .oss-muted{color:var(--dim);font-size:var(--t-label,13px);margin:0 0 4px}
 .carousel-proposal-panel [data-carousel-accept],.carousel-proposal-panel [data-carousel-reject]{width:100%;margin:0 0 8px}.carousel-proposal-panel .cpp-status{color:var(--dim);margin:12px 0 0}.carousel-proposal-panel .cpp-status:empty{display:none}.carousel-proposal-panel ::selection{background:var(--hl,var(--sel))}
 @media(max-width:760px){.carousel-proposal-panel{width:100%;max-width:none;border-left:0}.carousel-proposal-panel .cpp-head{padding:12px 16px}.carousel-proposal-panel .cpp-body{padding:16px 16px 32px}}
+
+/* Leave the current output controls reachable beside desktop review. */
+@media(min-width:761px){
+ html body.wbf-on:has(.carousel-proposal-panel) #app #workspace #c3-surface-bar{margin-right:412px!important}
+ html body.wbf-on:has(.carousel-proposal-panel) #c3-surface-bar>.sb-right{max-width:100%;min-width:0;flex-wrap:wrap!important;overflow:visible!important}
+}
