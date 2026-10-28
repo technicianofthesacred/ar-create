@@ -1,3 +1,15 @@
+## 28 October — Source tea-link refresh race repaired in candidate
+
+Cancel during a pending Source refresh could paint without the tea link and with a busy readiness message. If the saved response was unchanged, the preserved-reader completion path updated only review controls and never restored those controls. The candidate reconciles link, readiness and pure local translation context for the current exact clean source after refresh, without repainting remarks. Draft, pending, error, UUID/hash and current-project guards remain.
+
+130 relevant checks, including deferred-read restoration, other unsaved correction retention and source-switch guards. Invented native desktop/narrow held-refresh→Cancel→completion→visible exact link and six-record preservation are verified with all nativePOSTs blocked. Actual full1100remark/505label candidate shows the exact link in desktoplight/dark and390×640full-appiframeboth themes, without horizontaloverflow. No real word/name staging, save, approval, provider or tea writes. Candidate only; actual affected-source handoff remains to be retested after installation. Existing45boundedchecks/9broadergates unchanged.
+
+## 28 October — hidden Source badge layout repair installed
+
+PR99 is independently live at signed `221c71f095f60b16f6e964bd9417f940b0b881b0`, build `2026-10-28T13:05:28.358Z`.214relevant checks/build/package964,124servedhashes and13criticalsourcepaths pass; all native sources/revision175/original turns/editions/configuration/canonical dirty writing remain exact. The hidden startup badge no longer scans1100remark layouts; normal visible-session checks resume after readiness. This changes badge calculation only.
+
+Build’s actual main reader shows1100remarks/505labels, no startup guard and the normal editing badge. The previously affected saved browser also opens when its existing tab is activated. A later apparent selection stall was background-tab suspension, not evidence for another app repair; the optional unshipped selection candidate was parked and removed. Final affected-context desktop/narrow click/Cancel/link checks are pending. No names/words/approval/provider/recovery changes;45boundedchecked/9broadergates remain.
+
 ## 28 October — concealed Source layout saturation reproduced; candidate repair
 
 The affected saved browser’s live diagnostic identifies read-transcript/Error, with no mounted writer, no current writing proof and no dirty words. Its CPU sample is dominated by getClientRects. The review badge was measuring every editable remark while startup CSS already concealed the entire reader; visibility:hidden still has layout rectangles, so none could satisfy visibility and every lock pass walked all1100 remarks.

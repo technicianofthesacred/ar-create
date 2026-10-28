@@ -155,3 +155,22 @@ test('boxed speaker entry stages only its explicit remark and Cancel preserves t
  const owner=server();owner.state.sessions[0].turns.splice(1,0,{id:'remark-same',speaker:'Speaker 1',text:'A separate short English remark.'});const x=await setup(owner);
  try{const first=x.turn('remark-a'),second=x.turn('remark-same'),label=x.q('[data-source-reader-speaker-turn="remark-a"]');assert.ok(label);assert.equal(label.tagName,'BUTTON');label.click();const input=x.q('[data-source-reader-field="speaker"]');assert.ok(input);assert.equal(x.window.document.activeElement,input);assert.match(input.closest('details').textContent,/this remark/i);assert.strictEqual(x.turn('remark-a'),first);assert.strictEqual(x.turn('remark-same'),second);input.value='Invented host';input.dispatchEvent(new x.window.Event('input',{bubbles:true}));assert.equal(owner.requests.length,0);assert.equal(owner.state.sessions[0].turns[0].speaker,'Speaker 1');assert.equal(owner.state.sessions[0].turns[1].speaker,'Speaker 1');assert.equal(x.api.getState().drafts[JSON.stringify(['synthetic-project','visit-a','remark-a'])].speaker,'Invented host');x.click('cancel');assert.deepEqual(x.api.getState().drafts,{});assert.equal(x.turn('remark-a').textContent,first.textContent);assert.equal(x.turn('remark-same').textContent,second.textContent);assert.equal(owner.requests.length,0);}finally{x.close();}
 });
+
+test('Cancel during an unchanged refresh restores the verified tea link after loading without replacing remarks',async()=>{
+ const owner=server(),read=owner.fetch;let held=false,finish;
+ owner.fetch=(url,options={})=>held&&!options.method?new Promise(resolve=>{finish=async()=>{held=false;resolve(await read(url,options));};}):read(url,options);
+ const x=await setup(owner);try{
+  assert.ok(x.q('[data-source-tea-link]'));x.q('[data-source-reader-speaker-turn="remark-a"]').click();assert.equal(x.q('[data-source-tea-link]'),null);
+  held=true;const refreshing=x.api.refresh();x.click('cancel');const nodes=[x.turn('remark-a'),x.turn('remark-next')];assert.equal(x.q('[data-source-tea-link]'),null,'no link is presented while the exact source read is still in flight');
+  await finish();await refreshing;await settle();const link=x.q('[data-source-tea-link]');assert.ok(link,'fresh verified source link must return after Cancel, even when the source bytes did not change');assert.equal(new URL(link.href).searchParams.get('arSource'),sourceId);assert.notEqual(x.q('[data-source-translation-readiness]').dataset.sourceTranslationReadiness,'busy');assert.equal(x.api.getTranslationBatch().expectedRevision,owner.state.revision);assert.strictEqual(x.turn('remark-a'),nodes[0]);assert.strictEqual(x.turn('remark-next'),nodes[1]);assert.deepEqual(x.api.getState().drafts,{});assert.equal(owner.requests.length,0);
+ }finally{x.close();}
+});
+
+test('refresh completion keeps another unsaved correction and its tea-link guard intact',async()=>{
+ const owner=server(),read=owner.fetch;let held=false,finish;owner.fetch=(url,options={})=>held&&!options.method?new Promise(resolve=>{finish=async()=>{held=false;resolve(await read(url,options));};}):read(url,options);
+ const x=await setup(owner);try{x.enter('remark-next');x.input(x.turn('remark-next'),'Retained invented words.');x.q('[data-source-reader-speaker-turn="remark-a"]').click();held=true;const pending=x.api.refresh();x.click('cancel');await finish();await pending;await settle();assert.equal(x.q('[data-source-tea-link]'),null);assert.equal(x.turn('remark-next').textContent,'Retained invented words.');assert.equal(Object.keys(x.api.getState().drafts).length,1);assert.throws(()=>x.api.getTranslationBatch(),/Save or cancel/);assert.equal(owner.requests.length,0);}finally{x.close();}
+});
+test('late refresh completion restores the current selected source link instead of the earlier source',async()=>{
+ const owner=server(),read=owner.fetch;let held=false,finish;owner.fetch=(url,options={})=>held&&!options.method?new Promise(resolve=>{finish=async()=>{held=false;resolve(await read(url,options));};}):read(url,options);
+ const x=await setup(owner);try{held=true;const pending=x.api.refresh();x.choose('visit-b');await finish();await pending;await settle();const link=x.q('[data-source-tea-link]');assert.equal(new URL(link.href).searchParams.get('arSource'),fixture.sessions[1].sourceId);assert.equal(x.turn('remark-b').textContent,fixture.sessions[1].turns[0].text);assert.equal(x.turn('remark-a'),null);assert.equal(owner.requests.length,0);}finally{x.close();}
+});
