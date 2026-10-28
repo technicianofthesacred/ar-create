@@ -1,8 +1,8 @@
-## 28 October — new-project source handoff repair; candidate only
+## 28 October — PR89 installed; new-project source handoff repaired
 
 A newly authored project had a ready working root, but Research/Direction only listed original-backed manuscript parts. The source chooser, scoped Direction selection and Draft entrance now admit the exact registered authored root. A second original-only editorial adapter blocker is repaired for proven new roots with no imported original support; actual Research, selected sources and Direction retain their existing owners. Contradictory, foreign, pending, ambiguous and locked identities remain held.
 
-Disposable real HTTP-owner plus mounted actual-caller checks reach opening preparation and the existing reviewer entrance, retain selection across reload/switch, and preserve words. Leaving during source loading and returning no longer strands the selection. Native browser control is currently unavailable; this is not actual-screen or human-choice acceptance. Original-backed behavior remains under regression verification. PR88 stays the installed authority; full journey and visual gates remain open.
+Disposable real HTTP-owner plus mounted actual-caller checks reach opening preparation and the existing reviewer entrance, retain selection across reload/switch, and preserve words. Leaving during source loading and returning no longer strands the selection. Native browser control is currently unavailable; this is not actual-screen or human-choice acceptance. Final175/175 relevant checks, build/package952 and99servedhashes pass. Signed4d21d61b824bb94361b8469bae9a7b28f96015d5, build2026-10-28T03:46:17.749Z, is independently live in8841/main59958 with API content/original editions/canonical dirty files/config preserved. The existing creative-journey evidence is extended;42boundedcheckoffs/9broadergates remain. Full journey and visual gates remain open.
 
 ## 28 October — PR88 installed; full completion remains open
 
