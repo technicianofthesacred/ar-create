@@ -1,3 +1,9 @@
+## 28 October — article quote fidelity candidate; same actual ASR record reaches real exports
+
+Arrange previously flattened explicitly marked article quotations to body text. The candidate retains hook/pull/on-photo/saying roles and the maintained Audience display face, container-relative sizes and emphasis, without scaling the page or changing ordinary body text. Actual-screen comparisons at1280×720 and whole-app390×640 iframe widths cover light/dark. The screen check also caught the global600-weight override; marked quotations now retain native400 emphasis. On-photo composition, reading measure, straight quotation marks and full C/all12/physical-phone acceptance remain open. This is source-built and screen-verified, not installed yet.
+
+The actual offline invented-speech ASR job now continues through the same canonical source into Research/Direction, independent Article/Carousel, arrangement, real Markdown/four PNG downloads and owner restart. No replacement transcript/import/retranscription; source audio, RAW, alignment and recognized segments preserved. Isolated service-human decisions and authored Research fixtures were used; no native wording approval or real provider. Full on-screen creative journey remains open. Existing42boundedchecked/9broaderopen unchanged.
+
 ## 28 October — PR91 installed; actual offline recognition verified
 
 Configured offline transcription could still enter Sherpa's downloader if an installed speaker model disappeared after startup. The candidate refuses before network access or directory creation, or reads the complete existing local model pair without writes. Online provisioning behavior is preserved. Eight focused checks, including deterministic no-network/no-write offline regressions, pass.
