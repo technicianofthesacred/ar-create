@@ -1,3 +1,9 @@
+## 28 October — one coherent transcript-to-export journey verified
+
+The saved-transcript path now passes one connected isolated HTTP journey: canonical transcript review/save, Library source, Research/Direction, captured opening choice, Article continuation, independent Article/Carousel wording, arrangement, real Markdown and four1080×1350 PNG downloads, and actual service restart with exact words and exported bytes preserved. Research and transcript contents were authored fixtures; no ASR/provider/native approval/publication ran. This is stronger connected functional evidence, not full on-screen or visual acceptance.
+
+PR90 is independently installed at signedb477ece807e5ef0b17973f1cceef62d3b78b9caf, build2026-10-28T04:30:45.751Z:58relevant checks/build/package952/99servedhashes and content/canonical/config preservation. Independent authored Article/manual language Article preparation is installed. Existing checklist remains42boundedchecked/9broaderopen. Supported browser claim is unavailable, so actual walkthrough and full desktop/phone C/all12 gates stay open.
+
 ## 28 October — independent authored Article assistance repair; candidate only
 
 A second Article or manual language Article created from a new project has its own canonical fork, but the original-plan adapter still treated its inherited authored origin as a contradictory root. The candidate admits only exact canonical Article forks with complete archival lineage into existing preparation, using their own saved words and Direction. Later source-manuscript edits do not become a new freshness authority over independent words. Missing/foreign/contradictory lineage, original-backed parent ambiguity and imported support remain held.
