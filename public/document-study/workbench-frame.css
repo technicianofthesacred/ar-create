@@ -358,3 +358,11 @@ html body.wbf-on:has(#project-library[open]:not([data-pl-context])) :is(#wbf-dra
 @media(max-width:760px){
  html body.wbf-on #app #workspace.wb-source>#c3-surface-bar>[data-review-state]{display:none!important}
 }
+/* Direction has no repeated record-level review notice. Keep that notice visible
+   below the compact title/actions rather than clipping the title or output. */
+@media(max-width:760px){
+ html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;row-gap:4px!important}
+ html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>.sb-left{grid-column:1;grid-row:1}
+ html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>.sb-right{grid-column:2;grid-row:1}
+ html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>[data-review-state]{grid-column:1/-1;grid-row:2;justify-self:start;margin-left:0!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important}
+}
