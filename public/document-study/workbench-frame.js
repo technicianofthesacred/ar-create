@@ -32,6 +32,7 @@
  }
  function renderCatalogBench(section,d){
   for(const selector of ['.ht-homebar','.pl-results-head','[data-pl-results]','.pl-more']){const owner=d.querySelector(selector);if(owner&&!section.contains(owner)){if(!benchHidden.has(owner))benchHidden.set(owner,{hidden:owner.hidden,style:owner.style.cssText});if(!owner.hidden)owner.hidden=true;if(owner.style.getPropertyValue('display')!=='none')owner.style.setProperty('display','none','important');}}
+  loadMoves(d);
   const entry=benchCatalog,model=entry?.projection,connected=!!entry?.ready&&!!model?.ready&&typeof entry.open==='function';
   const action=(row,label,primary=false)=>`<button type="button" class="${primary?'btn primary':'lnk'}" data-wbf-bench-open="${esc(row.key)}" ${connected&&row.available&&!benchActionBusy?'':'disabled'}>${esc(label)}${primary?' '+ic('chev'):''}</button>`;
   const title='<div class="thead"><h1>The bench<span class="sub"> · All projects</span></h1></div>';
@@ -40,7 +41,7 @@
   const row=model.current;
   const excerpt=entry.current?.excerpt,exactExcerpt=row&&excerpt?.source==='loaded-owner'&&window.arCreateBenchProjection.key(excerpt.target)===row.key&&typeof excerpt.text==='string'?excerpt.text.slice(0,330):'';
   const current=row?`<h2>${esc(benchTitle(row))}<span class="sub"> · ${esc(row.kind)}</span></h2><div class="meta">${esc(row.projectTitle)} · ${esc(row.saveLabel)}</div>${exactExcerpt?`<blockquote>${esc(exactExcerpt)}</blockquote>`:''}<div class="acts">${action(row,row.resumeLabel,true)}</div><div class="since"><div class="lab">Recent saved activity</div>${model.history.length?`<ul>${model.history.map(e=>`<li><i></i><span>${esc(e.label)}<small>${esc(e.actor)} · ${esc(new Date(e.at).toLocaleString())}</small></span></li>`).join('')}</ul>`:'<p class="dim small">No saved activity is available for this piece.</p>'}</div>`:'<h2>Choose work to continue</h2><p class="dim">Find a project or piece below. Its saved location and history stay with its owner.</p>';
-  const moves=`<section class="block"><h2 class="sec">Next moves</h2>${model.moves.length?`<ol class="moves">${model.moves.map(move=>`<li><button type="button" class="move" data-wbf-bench-open="${esc(move.key)}" ${connected&&!benchActionBusy?'':'disabled'}>${ic('pieces')}<span><span class="t">${esc((move.target.kind==='draft'?'Read ':move.target.kind==='carousel'?'View ':'Open ')+benchTitle(move))}</span><br><span class="w">${esc(move.projectTitle)} · ${esc(move.kind)}</span></span>${ic('chev')}</button></li>`).join('')}</ol>`:'<p class="dim small">No connected next move is recorded. Your saved work remains below.</p>'}</section>`;
+  const moves=`<section class="block"><h2 class="sec">Next moves</h2>${model.moves.length?`<ol class="moves">${model.moves.map(move=>`<li><button type="button" class="move" data-wbf-bench-open="${esc(move.key)}" ${connected&&!benchActionBusy?'':'disabled'}>${ic('pieces')}<span><span class="t">${esc((move.target.kind==='draft'?'Read ':move.target.kind==='carousel'?'View ':'Open ')+benchTitle(move))}</span><br><span class="w">${esc(move.projectTitle)} · ${esc(move.kind)}</span></span>${ic('chev')}</button></li>`).join('')}</ol>`:'<p class="dim small">No connected output move is recorded. Your saved work remains below.</p>'}${movesHTML({learningOnly:true,heading:false})}</section>`;
   setHTML(section.querySelector('.wbf-bench-story'),title+notice+`<section class="pickup" aria-label="Pick up where you left off"><div class="lab">Pick up where you left off</div>${current}</section>`+moves);
   const q=benchQuery.toLocaleLowerCase(),filtered=model.rows.filter(row=>!q||[benchTitle(row),row.projectTitle,row.kind].join(' ').toLocaleLowerCase().includes(q)),shown=filtered.slice(0,benchLimit);
   const inventory=section.querySelector('.wbf-active'),search=inventory.querySelector('[data-wbf-bench-search]'),focused=search===document.activeElement,cursor=focused?search.selectionStart:null;
@@ -268,10 +269,10 @@
  // stores task status, changes project to inspect it, or marks a move complete.
  let nextSerial=0,nextIntent=0,nextMoves=null,nextBusy=false;
  const nextProjects=()=>state.projects.filter(p=>typeof p.id==='string'&&!p.archived);
- const nextKey=row=>JSON.stringify([row.projectId,row.output.id,row.output.rootBindingId,row.output.edition??null]);
+ const nextKey=row=>row.output?JSON.stringify([row.projectId,row.output.id,row.output.rootBindingId,row.output.edition??null]):row.key;
  const nextProof=output=>JSON.stringify([output.id,output.rootBindingId,output.edition??null,output.kind,output.format,output.status,output.nextAction]);
  const nextLive=(d,serial)=>serial===nextSerial&&d?.isConnected&&d.open&&!d.dataset.plContext&&d.dataset.workbenchPieces!=='true';
- async function readMoves(projectId){
+ async function readOutputMoves(projectId){
   if(typeof window.realOutputOverview?.read!=='function'||typeof window.realOutputOverview?.onAction!=='function')throw Error('Saved output actions are unavailable.');
   const data=await window.realOutputOverview.read({projectId});
   if(data?.projectId!==projectId||!Array.isArray(data.outputs)||data.outputs.some(o=>typeof o?.id!=='string')||new Set(data.outputs.map(o=>o.id)).size!==data.outputs.length)throw Error('The output reader did not confirm this project’s exact pieces.');
@@ -279,27 +280,35 @@
   const rows=[],unknown=[];
   for(const output of data.outputs){
    if(['ready','published','complete','completed'].includes(output.status))continue;
-   if(!['correction-needed','review-needed','in-progress','draft'].includes(output.status)||typeof output.rootBindingId!=='string'||!output.rootBindingId||!['native','words','arrange','review'].includes(output.nextAction?.kind)||!output.nextAction.label||output.nextAction.disabled){unknown.push(output.id);continue;}
+   if(!['correction-needed','review-needed','in-progress','draft'].includes(output.status)||typeof output.rootBindingId!=='string'||!output.rootBindingId||!['native','words','arrange','review'].includes(output.nextAction?.kind)||!output.nextAction.label||output.nextAction.disabled){unknown.push('A saved output has no current next-action proof.');continue;}
    rows.push({projectId,output,proof:nextProof(output)});
   }
   return {rows,unknown};
  }
- function movesHTML(){
-  const m=nextMoves;
-  return `<div data-wbf-next-list><h2 class="sec">Next moves <span class="sub">· ${m?.rows.length||0}${m?.loading?' found':m?.errors.length?' available':''} across active projects</span></h2><p class="dim small">Saved output work. Recording and research tasks are not counted.</p>${m?.loading?'<p role="status">Reading saved outputs…</p>':''}${m?.message?'<p role="status">'+esc(m.message)+'</p>':''}<ol class="moves">${(m?.rows||[]).map(row=>`<li><button type="button" class="move" data-wbf-next="${esc(nextKey(row))}" ${nextBusy?'disabled':''}>${ic('pieces')}<span><span class="t">${esc(row.output.nextAction.label)} · ${esc(row.output.title||row.output.format||'Untitled output')}</span><br><span class="w">${esc(nextProjects().find(p=>p.id===row.projectId)?.name||'Project')} · ${esc(row.output.format||'Output')}</span></span>${ic('chev')}</button></li>`).join('')}</ol>${m&&!m.loading&&!m.rows.length?'<p class="dim">'+(m.errors.length?'Next moves are unavailable for some projects.':'No saved output moves are recorded for active projects.')+'</p>':''}${m?.errors.length?'<details><summary>'+m.errors.length+' project'+(m.errors.length===1?'':'s')+' unavailable</summary>'+m.errors.map(issue=>'<p>'+esc(issue.name)+': '+esc(issue.message)+'</p>').join('')+'</details>':''}<button type="button" class="lnk" data-wbf-next-refresh ${m?.loading||nextBusy?'disabled':''}>Refresh moves</button></div>`;
+ async function readMoves(projectId){
+  const rows=[],unknown=[];
+  const readers=[...(actualBench()?[]:[()=>readOutputMoves(projectId)]),async()=>{if(typeof window.studyBenchMoves?.read!=='function')throw Error('Source and Research moves are unavailable.');return window.studyBenchMoves.read(projectId);}];
+  const results=await Promise.allSettled(readers.map(read=>read()));
+  for(const result of results)if(result.status==='fulfilled'){rows.push(...result.value.rows);unknown.push(...result.value.unknown);}else unknown.push(result.reason.message);
+  return{rows,unknown};
+ }
+ function movesHTML({learningOnly=false,heading=true}={}){
+  const m=nextMoves,rows=(m?.rows||[]).filter(row=>!learningOnly||!row.output);
+  return `<div data-wbf-next-list>${heading?'<h2 class="sec">Next moves</h2>':''}<p class="dim small">${rows.length} current ${learningOnly?'Source and Research':'saved'} moves across active projects. Counts come from saved records; unavailable work is not counted.</p>${m?.loading?'<p role="status">Reading current work…</p>':''}${m?.message?'<p role="status">'+esc(m.message)+'</p>':''}<ol class="moves">${rows.map(row=>`<li><button type="button" class="move" data-wbf-next="${esc(nextKey(row))}" ${nextBusy?'disabled':''}>${ic('pieces')}<span><span class="t">${esc(row.output?row.output.nextAction.label:row.label)} · ${esc(row.output?.title||row.title||row.output?.format||'Saved work')}</span><br><span class="w">${esc(nextProjects().find(p=>p.id===row.projectId)?.name||'Project')} · ${esc(row.output?.format||(row.kind==='source'?'Source passage':'Research point'))}${row.reasons?' · '+esc(row.reasons.join(', ')):''}</span></span>${ic('chev')}</button></li>`).join('')}</ol>${m&&!m.loading&&!rows.length?'<p class="dim">'+(m.errors.length?'Some current moves could not be read.':'No current '+(learningOnly?'Source or Research':'saved')+' move is recorded for active projects.')+'</p>':''}${m?.errors.length?'<details><summary>Coverage · '+m.errors.length+' unavailable</summary>'+m.errors.map(issue=>'<p>'+esc(issue.name)+': '+esc(issue.message)+'</p>').join('')+'</details>':''}<button type="button" class="lnk" data-wbf-next-refresh ${m?.loading||nextBusy?'disabled':''}>Refresh moves</button></div>`;
  }
  function loadMoves(d,force=false){
-  const projects=nextProjects().map(p=>({id:p.id,name:p.name})),signature=JSON.stringify(projects.map(p=>p.id));
+  const projects=nextProjects().map(p=>({id:p.id,name:p.name})),signature=JSON.stringify([projects.map(p=>p.id),actualBench(),typeof window.studyBenchMoves?.read]);
   if(!force&&nextMoves?.dialog===d&&nextMoves.signature===signature)return;
   const serial=++nextSerial;nextMoves={dialog:d,signature,rows:[],errors:[],loading:true,message:''};
   if(!d.wbfNextCleanup){d.wbfNextCleanup=true;d.addEventListener('close',()=>{nextSerial++;nextMoves=null;});}
+  if(actualBench()&&typeof window.studyBenchMoves?.read!=='function'){nextMoves.loading=false;nextMoves.errors.push({name:'Source and Research',message:'Current move readers are unavailable.'});return;}
   let at=0;
   void Promise.all(Array.from({length:Math.min(3,projects.length)},async()=>{
    while(at<projects.length&&nextLive(d,serial)){const p=projects[at++];try{
     const result=await readMoves(p.id);if(!nextLive(d,serial))return;
-    nextMoves.rows.push(...result.rows);if(result.unknown.length)nextMoves.errors.push({name:p.name,message:'Current next-action proof is unavailable for '+result.unknown.length+' output'+(result.unknown.length===1?'':'s')+'.'});
+    nextMoves.rows.push(...result.rows);if(result.unknown.length)nextMoves.errors.push({name:p.name,message:result.unknown.join(' ')});
    }catch(error){if(nextLive(d,serial))nextMoves.errors.push({name:p.name,message:error.message});}}
-  })).then(()=>{if(!nextLive(d,serial))return;nextMoves.loading=false;nextMoves.rows.sort((a,b)=>['correction-needed','review-needed','in-progress','draft'].indexOf(a.output.status)-['correction-needed','review-needed','in-progress','draft'].indexOf(b.output.status)||nextKey(a).localeCompare(nextKey(b)));bench();});
+  })).then(()=>{if(!nextLive(d,serial))return;nextMoves.loading=false;nextMoves.rows.sort((a,b)=>(a.output?2:a.kind==='source'?0:1)-(b.output?2:b.kind==='source'?0:1)||(a.output&&b.output?['correction-needed','review-needed','in-progress','draft'].indexOf(a.output.status)-['correction-needed','review-needed','in-progress','draft'].indexOf(b.output.status):0)||nextKey(a).localeCompare(nextKey(b)));bench();});
  }
  async function openMove(key){
   const m=nextMoves,row=m?.rows.find(row=>nextKey(row)===key),d=m?.dialog;
@@ -310,14 +319,17 @@
   const exact=async()=>{const fresh=await readMoves(row.projectId);if(!fresh.rows.some(item=>nextKey(item)===key&&item.proof===row.proof))throw Error('This move changed. Refresh moves before opening it.');};
   nextBusy=true;bench();
   try{
+   if(!row.output)window.studyBenchMoves?.assertCanLeave?.();
    await exact();if(!sameOrigin()||!nextLive(d,serial)||!activeTarget())throw Error('The selected work changed. Choose the move again.');
    await window.projectLibrary.close();if(d.open||document.getElementById('project-library')?.open)throw Error('Return from the open work before continuing.');
    if(!sameOrigin()||!activeTarget())throw Error('The selected work changed. Choose the move again.');
+   if(!row.output){if(typeof window.studyBenchMoves?.prepareNavigation!=='function')throw Error('The exact Source or Research entrance is unavailable.');window.studyBenchMoves.prepareNavigation(row);}
    if(current().id!==row.projectId)await window.switchProject(row.projectId);
    if(intent!==nextIntent||current().id!==row.projectId||!activeTarget())throw Error('The selected project changed.');
    await exact();if(intent!==nextIntent||current().id!==row.projectId||!activeTarget())throw Error('The selected project changed.');
-   await window.realOutputOverview.onAction({projectId:row.projectId,outputId:row.output.id,edition:row.output.edition??null,kind:row.output.nextAction.kind});
-  }catch(error){if(intent===nextIntent){if(d.open&&nextMoves===m){m.message=error.message;bench();}else{const status=document.getElementById('wn-message');if(status&&[origin.id,row.projectId].includes(current().id)){status.textContent=error.message;status.hidden=false;}}}}
+   if(row.output)await window.realOutputOverview.onAction({projectId:row.projectId,outputId:row.output.id,edition:row.output.edition??null,kind:row.output.nextAction.kind});
+   else {if(typeof window.studyBenchMoves?.open!=='function')throw Error('The exact saved move entrance is unavailable.');const chosen=current(),chosenStage=stage();await window.studyBenchMoves.open(row,{originGuard:()=>{if(intent!==nextIntent||current()!==chosen||stage()!==chosenStage||!activeTarget())throw Error('The selected move changed.');}});}
+  }catch(error){if(!row.output)window.studyBenchMoves?.cancelNavigation?.(row);if(intent===nextIntent){if(d.open&&nextMoves===m){m.message=error.message;bench();}else{const status=document.getElementById('wn-message');if(status&&[origin.id,row.projectId].includes(current().id)){status.textContent=error.message;status.hidden=false;}}}}
   finally{nextBusy=false;if(d.open)bench();}
  }
  window.addEventListener('study-carousel-view',()=>decorate());window.addEventListener('study-write-view',()=>decorate());

@@ -304,6 +304,7 @@ export function createRouteMap(services) {
       '/api/material/album': {POST:input=>materialAlbums.add(input)},
       '/api/first-flow/binding': {GET:()=>studyBindings.lookup({projectKey:url.searchParams.get('projectKey')})},
       '/api/first-flow/select': {POST:input=>studyBindings.select(input)},
+      ...Object.fromEntries([['context','context'],['material-context','materialContext']].map(([route,method])=>['/api/first-flow/'+route,{GET:()=>{if([...url.searchParams.keys()].some(key=>key!=='projectId')||url.searchParams.getAll('projectId').length!==1)throw new StateError('Choose one exact saved project context.',400);return firstFlow[method]({projectId:url.searchParams.get('projectId')});}}])),
       '/api/first-flow': {GET:async()=>({...await firstFlow.get({projectId:url.searchParams.get('projectId')||store.get().project.id}),researchAvailable:researchEnabled})},
       '/api/first-flow/material-triage': {POST:input=>firstFlow.triageMaterial(input)},
       '/api/first-flow/source-review': {POST:input=>firstFlow.reviewSources(input)},

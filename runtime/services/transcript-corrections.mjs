@@ -46,18 +46,21 @@ function apply(result,corrections){
  next.metadata={...next.metadata,review:{status:'unreviewed',reviewedAt:null}};return next;
 }
 export function createTranscriptCorrections({dir,config,afterPublishFile=null}){
- function files(id){
+ function existingPrivateDirectory(root,name){for(const file of [root,path.join(root,name)]){let stat;try{stat=fs.lstatSync(file);}catch{fail('Existing transcript mapping directory is unavailable.');}if(!stat.isDirectory()||stat.isSymbolicLink())fail('Existing transcript mapping directory is unavailable.');}return path.join(root,name);}
+ function files(id,readOnly=false){
   if(!/^[a-f0-9-]{36}$/.test(id))throw new StateError('Unknown recording.',404);
-  const jobs=ensurePrivateDirectory(dir,'.transcription-jobs'),jobFile=path.join(jobs,id+'.json'),job=readJson(jobFile,null);
+  const jobs=readOnly?existingPrivateDirectory(dir,'.transcription-jobs'):ensurePrivateDirectory(dir,'.transcription-jobs'),jobFile=path.join(jobs,id+'.json');
+  if(readOnly)regular(jobFile);
+  const jobRaw=readOnly?text(jobFile):null,job=readOnly?JSON.parse(jobRaw):readJson(jobFile,null);
   if(!job||job.id!==id||job.state!=='done'||!job.transcriptReady||typeof job.output!=='string')throw new StateError('Transcript is not ready.',404);
   const output=resolveInside(dir,path.relative(dir,job.output),{directory:true});
-  const receipts=ensurePrivateDirectory(output,'.corrections');
-  return {job,output,receipts,paths:{json:path.join(output,'transcript.json'),md:path.join(output,'transcript.md'),txt:path.join(output,'transcript.txt'),job:jobFile,base:path.join(receipts,'base.json')}};
+  const receipts=readOnly?existingPrivateDirectory(output,'.corrections'):ensurePrivateDirectory(output,'.corrections');
+  return {job,output,receipts,readOnly,...(readOnly?{jobInputHash:digest(jobRaw)}:{}),paths:{json:path.join(output,'transcript.json'),md:path.join(output,'transcript.md'),txt:path.join(output,'transcript.txt'),job:jobFile,base:path.join(receipts,'base.json')}};
  }
  function target(f,role){if(f.paths[role])return f.paths[role];if(/^(?:translation\.[a-z]{2,3}(?:-[A-Za-z]{2,4})?\.(?:json|md|txt)|bilingual\.[a-z]{2,3}(?:-[A-Za-z]{2,4})?\.md)$/.test(role))return path.join(f.output,role);fail('Unknown publication file.');}
  function protectedFiles(f){
   const audio=resolveInside(dir,path.relative(dir,f.job.source));
-  const rawRoot=ensurePrivateDirectory(dir,'vault/Workflow/0-Inbox');
+  const rawRoot=f.readOnly?resolveInside(dir,'vault/Workflow/0-Inbox',{directory:true}):ensurePrivateDirectory(dir,'vault/Workflow/0-Inbox');
   if(typeof f.job.raw!=='string')fail('Immutable RAW is missing; correction requires recovery.');
   const raw=resolveInside(rawRoot,path.relative(rawRoot,f.job.raw));const rawHash=hash(raw);
   if(f.job.rawCandidateSha256&&rawHash!==f.job.rawCandidateSha256)fail('Immutable RAW changed; correction requires recovery.');
@@ -139,6 +142,8 @@ export function createTranscriptCorrections({dir,config,afterPublishFile=null}){
     return {managed:true,coherent,reviewStatus:coherent?result.metadata?.review?.status||'unreviewed':'unreviewed',jobId:id,expected,reason:coherent?null:'Physical transcript edits need inspection in the recording workshop.'};
    }catch(error){return {managed:true,coherent:false,reviewStatus:'unreviewed',reason:error.message};}
   },
+  // Inspection never initializes, recovers or acquires the writer's lock.
+  peek(id){const f=files(id,true);if(!fs.existsSync(f.paths.base))fail('Open the canonical Source transcript to initialize its mapping before read-only inspection.');const mappingHash=hash(f.paths.base),guard=()=>{if(hash(f.paths.base)!==mappingHash||hash(f.paths.job)!==f.jobInputHash)fail('Transcript mapping or recording changed during inspection.');if(fs.existsSync(path.join(f.receipts,'writer.lock'))||fs.existsSync(path.join(f.receipts,'publication.json')))fail('Transcript writer or publication recovery is in progress.');for(const name of fs.readdirSync(f.receipts).filter(name=>name.endsWith('.proposal.json')))regular(path.join(f.receipts,name));};guard();const before=snapshot(f);guard();const after=snapshot(f);guard();if(JSON.stringify(before)!==JSON.stringify(after))fail('Transcript changed during read-only inspection.');return before;},
   read:id=>lock(id,f=>{initialize(f);return snapshot(f);}),
   propose:(id,input)=>lock(id,f=>{initialize(f);return proposal(f,input);}),
   proposeMarkdown:(id,{expected,markdown})=>lock(id,f=>{initialize(f);const current=clean(f,expected);if(typeof markdown!=='string'||Buffer.byteLength(markdown)>2*1024*1024)throw new StateError('Markdown exceeds the supported size.');const changes=correctionsFromMarkdown(f.job,current.result,readJson(f.paths.base,null).markdown,markdown,config);return proposal(f,{expected,corrections:changes,kind:'visual-markdown',reason:'Same-file Markdown correction'});}),
