@@ -129,7 +129,9 @@ export function createSharedCarouselBridge({dataDir,store,requests,guidance,writ
   const binding=bindingFor(record,proposal,input.reviewHash);bindingCheck(input,binding);
   const rawBytes=read(id,'review-'+binding.reviewHash+'.md',binding.reviewHash);bindingCheck(readJson(id,'review-'+binding.reviewHash+'.json'),binding);
   if(record.nativeScope){
-   requireHuman('Deciding native Carousel wording');if(!currentActor())throw new StateError('An explicit human actor must decide native Carousel wording.',403);const prior=receipt(id);if(prior){if(prior.decision!==decision||stable(prior.binding)!==stable(binding))fail('This native Carousel request already has another decision.');return {receipt:prior,alreadyDecided:true};}
+   // Recover a paired journal before acknowledging a terminal receipt. This
+   // serialized metadata read neither reapproves context nor selects its owner.
+   requireHuman('Deciding native Carousel wording');if(!currentActor())throw new StateError('An explicit human actor must decide native Carousel wording.',403);await store.listPieces();const prior=receipt(id);if(prior){if(prior.decision!==decision||stable(prior.binding)!==stable(binding))fail('This native Carousel request already has another decision.');return {receipt:prior,alreadyDecided:true};}
    if(decision==='rejected')return store.decideSharedCarousel({requestId:id,decision,binding,nativeScope:record.nativeScope},async()=>({projectId:record.projectId,documentId:record.documentId,outputId:record.outputId}));
    if(!nativeOutputs?.acceptCarouselProposal)fail('The exact native Carousel proposal writer is unavailable.');
    // Native history is the sole wording Undo authority. Its publication journal
