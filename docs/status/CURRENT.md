@@ -1,3 +1,9 @@
+## 28 October — empty album hierarchy candidate; photos are not a prerequisite
+
+The same Library owner now has an opt-in, structure-only review transport for empty nested groups. It verifies the inspected native owner and exact revision/hash, retains operation UUID replay, rejects source membership/file/path writes and protects nonempty branches. Media keeps its photo catalogue read-only while exposing a separate structural capability with native folder pins. Album creation and nesting work with no photos; returned folder metadata is reprojected without replacing the photo catalogue or dirty writing controls.
+
+Build verified 113 integrated owner/projection/browser checks and build. The transport worker separately passed 48 affected checks after one existing oversized-request socket reset on an earlier run. The real configuration remains unchanged and the feature defaults off. Native screen/lifecycle verification and publication are still pending. Structural Undo admission is limited to operations known to the current review connection; native history remains authoritative across restarts. This is a bounded candidate, not full hierarchy completion or proof that all photo origins can be filed.
+
 ## 28 October — published article layout correction installed
 
 PR93 is independently live in the installed app and main review at signed `6e841b1c97fb8a2b9d14cd5048a1eade0b5ba4d3`, build `2026-10-28T09:06:02.152Z`. The actual published article now supplies the Magazine preview’s split cover, viewport type scale, printed palette, genuine licensed fonts, byline and photo-quotation layout. The hidden inspector gutter is removed. Final evidence includes 120 coherent checks, the 963-file package, 121 served hashes and original/content/configuration preservation.
