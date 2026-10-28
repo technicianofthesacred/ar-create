@@ -5,13 +5,26 @@ const same=(a,b)=>stable(a)===stable(b);
 const fail=message=>{throw Object.assign(Error(message),{status:409});};
 const PARENTS={hk:'hk','ref-an-cha':'ancha','ref-collector':'collector'};
 export const EDITORIAL_PLAN_ROLE='saved-editorial-plan-not-evidence-source-quotation-or-approved-prose';
+/** Internal capability only: the bridge supplies the accepted opening preimage.
+ * Re-read the native receipt here; neither a flag nor caller hashes grant lineage. */
+async function acceptedOpeningTransition(drafts,binding,draft,lineage){
+ if(!lineage||lineage.schema!=='ar-create.accepted-opening-plan-lineage.v1'||!same(lineage.binding,binding)||typeof drafts.inspect!=='function'||! /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(lineage.operationId||''))fail('Exact accepted opening lineage is unavailable.');
+ const inspected=await drafts.inspect({...binding,operationId:lineage.operationId}),receipt=inspected?.receipt,changes=receipt?.changes;
+ if(inspected?.bindingId!==binding.bindingId||receipt?.projectId!==binding.bindingId||receipt.operationId!==lineage.operationId||receipt.kind!=='draft-operations'||receipt.state!=='committed'||!Array.isArray(changes)||changes.length!==3||changes.some(c=>c.state!=='applied'))fail('Only the exact committed opening operation can carry saved research choices.');
+ const writing=changes.filter(c=>!c.area&&c.relativePath.startsWith('Workflow/3-Develop/')),edits=changes.filter(c=>!c.area&&c.relativePath.startsWith('Workflow/4-Review/')),metadata=changes.filter(c=>c.area==='binding-metadata'&&c.relativePath===binding.bindingId+'.draft-correspondence.json');
+ if(writing.length!==1||edits.length!==1||metadata.length!==1)fail('The opening operation changed unsupported records.');
+ const before={workflow:receipt.expectedWorkflow,bindingHash:receipt.expectedBindingHash,correspondenceHash:metadata[0].beforeHash},after={workflow:{...receipt.expectedWorkflow,draft:writing[0].afterHash,edits:edits[0].afterHash},bindingHash:receipt.expectedBindingHash,correspondenceHash:metadata[0].afterHash};
+ if(!same(lineage.beforeExpected,before)||!same(lineage.afterExpected,after)||!same(draft.expected,after)||writing[0].beforeHash!==before.workflow?.draft||edits[0].beforeHash!==before.workflow?.edits||lineage.beforeHash!==before.workflow?.draft||lineage.afterHash!==writing[0].afterHash||digest(draft.raw)!==lineage.afterHash)fail('Saved choices do not match the exact opening preimage and current receipt result.');
+ return before;
+}
 /** Read only existing authorities. No active-project reads, saves, source analysis,
  * guessed attribution, insertion, stage transitions, providers or new storage. */
 export function createStudyEditorialPlanContext({drafts,originals,choices}={}){
  if(!drafts?.read||!originals?.readDraft||!choices?.read)throw TypeError('Supply existing owned drafts, original part catalog and saved research choices.');
- return {async context(binding){
+ return {async context(binding,{acceptedOpening}={}){
   const draft=await drafts.read(binding),b=draft?.binding;
   if(b?.id!==binding.bindingId||b.parentStudyId!==binding.parentStudyId||b.authority!=='owned-working-copy'||b.status!=='ready'||draft.readiness?.ready!==true||!draft.expected||!Array.isArray(draft.context?.records))fail('Exact ready owned manuscript is required for editorial context.');
+  const openingPreimage=acceptedOpening===undefined?null:await acceptedOpeningTransition(drafts,binding,draft,acceptedOpening);
   const original=await originals.readDraft(b.originalId);
   if(original?.id!==b.originalId||original.parentStudyKey!==b.parentStudyId||original.partKey!==b.partKey||!Array.isArray(original.records))fail('Editorial records belong to a different original part.');
   const originalSourceRecords=original.records.filter(r=>r.role!=='draft').map(r=>{
@@ -32,7 +45,8 @@ export function createStudyEditorialPlanContext({drafts,originals,choices}={}){
   const saved=await choices.read({projectKey,parentStudyId:b.parentStudyId,bindingId:b.id});
   if(saved?.bindingId!==b.id||saved.parentStudyId!==b.parentStudyId||saved.projectKey!==projectKey||saved.authority!=='owned-working-copy'||saved.purpose!=='editorial-plan-only'||!same(saved.expected,draft.expected)||!Array.isArray(saved.choices)||!Array.isArray(saved.sourceRecords))fail('Saved choices belong to another owned part or revision.');
   const selections=saved.choices.map(c=>{
-   if(c.stale||c.sourceStale||c.draftStale||!same(c.expected,draft.expected)||c.sourceExpected!==saved.sourceExpected||c.pointId!==researchPointId(c.recordPath,c.originalText)||!['include','leave-out'].includes(c.decision)||typeof c.narration!=='string')fail('Saved research choice is stale or its exact identity changed; refresh the choice.');
+   const currentChoice=!c.stale&&!c.sourceStale&&!c.draftStale&&same(c.expected,draft.expected),openingChoice=openingPreimage&&c.stale===true&&c.draftStale===true&&c.sourceStale===false&&same(c.expected,openingPreimage);
+   if(!(currentChoice||openingChoice)||c.sourceExpected!==saved.sourceExpected||c.pointId!==researchPointId(c.recordPath,c.originalText)||!['include','leave-out'].includes(c.decision)||typeof c.narration!=='string')fail('Saved research choice is stale or its exact identity changed; refresh the choice.');
    const record=original.records.find(r=>r.path===c.recordPath&&r.role==='research');
    const source=saved.sourceRecords.find(r=>r.path===c.recordPath);
    if(!record||record.hash!==c.recordHash||digest(record.raw)!==record.hash||source?.hash!==record.hash||source.missing||!record.raw.includes(c.originalText)||record.raw.indexOf(c.originalText)!==record.raw.lastIndexOf(c.originalText))fail('Research selection must match the exact original part research record and source hash.');
