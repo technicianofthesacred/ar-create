@@ -10,6 +10,8 @@ import {EditableText} from '../storyEdit';
 import {Rich} from './RichText';
 import {type Block,type ConversationSpec,type LineSize,type Part,type Shot,turnStarts} from './spec';
 import './conversation.css';
+import {ConversationByline} from './Byline';
+import {readingMinutes,photoCount} from './spec';
 const partWord=(n:number)=>String(n);
 const grainCss=(_a:string,_b:number)=>({});
 const ChapterHead=({id,title,titleId}:{part:number;id:string;title:string;titleId?:string})=><header id={id} className="tj-conv-col"><Passage id={titleId} text={title} className="tj-conv-spread-title" as="h2"/></header>;
@@ -241,7 +243,7 @@ const Cover: React.FC<{ spec: ConversationSpec }> = ({ spec }) => (!spec.portrai
 ));
 
 
-export default function ConversationCanvas({spec,paragraphs}:{spec:ConversationSpec|RecordedConversationSpec;paragraphs?:{id:string;doc:JSONContent}[]}) {
+export default function ConversationCanvas({spec,paragraphs,showByline=false}:{spec:ConversationSpec|RecordedConversationSpec;paragraphs?:{id:string;doc:JSONContent}[];showByline?:boolean}) {
  // Check the bounded tree before turnStarts or any recursive reader walks it.
  const check=(blocks:Block[],depth=0)=>{if(!Array.isArray(blocks)||blocks.length>2000||depth>8)throw Error('Unsupported nested article blocks.');for(const block of blocks){if(!block||!['q','a','n','line','side','glyph','photos','wide','bleed','on-photo'].includes(block.kind))throw Error('Unsupported article block.');if(block.kind==='side'||block.kind==='glyph')check(block.blocks,depth+1);}};
  if(!Array.isArray(spec.parts)||spec.parts.length>256)throw Error('Unsupported article parts.');check(spec.opening);for(const part of spec.parts)check(part.blocks);check(spec.ending.blocks);
@@ -253,6 +255,7 @@ export default function ConversationCanvas({spec,paragraphs}:{spec:ConversationS
  return <RecordedPassages.Provider value={new Map(recordedRows.map(p=>[p.id,p.doc]))}><SpeakerCtx.Provider value={speakers}><article className="tj-conv" data-form={spec.form||'story'}>
  <style>{recordedStyle}</style>
  <Cover spec={spec}/>
+ {showByline&&<ConversationByline people={[spec.subject]} by={{name:spec.author.name,href:spec.author.links.find(l=>l.href.startsWith('/'))?.href}} minutes={readingMinutes(spec)} photos={photoCount(spec)}/>}
  {(spec.intro||fields?.introId)&&<section className="tj-conv-col tj-conv-intro"><Passage id={fields?.introId} text={spec.intro} className="tj-conv-intro-text"/></section>}
  {groupRuns(spec.opening).map((block,i)=><BlockView key={i} spec={spec} block={block}/>)}
  {spec.parts.map((part,i)=><React.Fragment key={i}><PartOpening spec={spec} part={part} n={i+1} titleId={fields?.partTitleIds[i]}/>{groupRuns(part.blocks).map((block,j)=><BlockView key={j} spec={spec} block={block}/>)}</React.Fragment>)}

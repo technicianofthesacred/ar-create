@@ -54,3 +54,27 @@ test('synchronous reader failure stays optional and missing root resolution cann
  const catalog=await reader.catalog();assert.equal(catalog.stories.length,2);assert.equal(catalog.magazineWorkingLinks.state,'unavailable');assert.deepEqual(catalog.magazineWorkingLinks.targets,[]);
  assert.ok(catalog.diagnostics.some(message=>message==='Library unavailable: synchronous unavailable'));assert.ok(catalog.diagnostics.some(message=>message.startsWith('Magazine working identities unavailable: ')));
 });
+
+// A missing optional owner must not pin the shared catalog promise forever.
+test('stalled optional catalog read expires, ignores late proof and retries every owner afresh',async()=>{
+ let release,round=0,aborted=false;
+ const {reader}=setup({readTimeoutMs:20,readAuthority:(path,{signal}={})=>{
+  if(path==='/api/sources/tree'){round++;if(round===1){signal?.addEventListener('abort',()=>{aborted=true;});return new Promise(resolve=>{release=resolve;});}return {sources:[{id:'fresh-source'}]};}
+  return {};
+ }});
+ const pending=reader.catalog();assert.equal(reader.catalog(),pending);
+ const first=await Promise.race([pending,new Promise((_,reject)=>setTimeout(()=>reject(Error('catalog stayed pinned')),200))]);
+ assert.equal(aborted,true);assert.ok(first.diagnostics.some(d=>/Library unavailable:.*timed out/.test(d)));assert.equal(first.sources.some(s=>s.id==='late-source'),false);
+ release({sources:[{id:'late-source'}]});await turn();assert.equal(first.sources.some(s=>s.id==='late-source'),false);
+ const second=await reader.catalog();assert.equal(round,2);assert.equal(second.sources.some(s=>s.id==='fresh-source'),true);assert.notEqual(second.revision,first.revision);
+});
+test('stalled exact workspace binding lookup stays unavailable rather than conferring an identity',async()=>{
+ const bindingId='11111111-1111-4111-8111-111111111111';let calls=0;
+ const {reader}=setup({readTimeoutMs:20,readAuthority:path=>{
+  if(path==='/api/study-draft/catalog')return {drafts:[{bindingStatus:'ready',bindingId,parentStudyId:'invented-parent'}]};
+  if(path==='/api/pieces')return {pieces:[]};
+  if(path.startsWith('/api/first-flow/binding?')){calls++;return new Promise(()=>{});}return {};
+ }});
+ const catalog=await Promise.race([reader.catalog(),new Promise((_,reject)=>setTimeout(()=>reject(Error('binding pinned catalog')),200))]);
+ assert.equal(calls,2);assert.equal(catalog.workspaceLinks.unavailableBindings.length,2);assert.ok(catalog.workspaceLinks.unavailableBindings.every(row=>row.reason==='binding-unavailable'));
+});

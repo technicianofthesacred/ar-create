@@ -73,3 +73,8 @@ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-
 
 /* Working-draft readiness below names this state; avoid a third header row. */
 #workspace.wb-audience:has([data-output-kind="magazine-working"]) #c3-surface-bar>[data-review-state]{display:none!important}
+
+/* A full Magazine page has no right inspector. The legacy stage rule counts
+   both excluded inspector IDs; keep the real reader's gutter authoritative. */
+html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience:has(.ar-magazine-reader){margin:0 32px 32px!important;max-width:1056px!important}
+@media(max-width:650px){html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience:has(.ar-magazine-reader){margin:0 16px 24px!important}}

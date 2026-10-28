@@ -1,5 +1,6 @@
 /* Read-only Magazine snapshot: its maintained parser and renderer share one spec. */
 import React from 'react';
+import './magazine-published.css';
 import {createRoot} from 'react-dom/client';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {standaloneArticleHtml} from '../../runtime/src/workspaces/standaloneArticleHtml';
@@ -31,7 +32,7 @@ function occurrenceView(read:any){
 }
 function magazineView(read:any){
  const {spec,placements}=occurrenceView(read),owner=read.ownerRef;
- const view=<div className="ar-donor-workspace"><main className="ar-output-reader" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec}/></LocalStoryProvider></main></div>;
+ const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader" data-template-render="magazine" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} showByline/></LocalStoryProvider></main></div>;
  return{view,placements};
 }
 export function mountMagazineAudience(element:HTMLElement,read:any){
