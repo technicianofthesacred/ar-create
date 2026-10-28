@@ -30,9 +30,21 @@ function questionReferences(story,original,excludedNames){
  }
  return {referenceLinks:links,unresolvedReferenceLinks:unresolved};
 }
-export function createExistingWorkReader({roots=[],portfolio=createMagazinePortfolio({roots}),readAuthority,projectLinks={},seedProjects=[],excludedStoryNames=DEFAULT_ARCHIVED,excludedSourceIds=[],excludedPieceIds=[],excludedProjectIds=[]}={}){
+// A timed-out optional reader contributes no proof. Late completion is ignored;
+// the next catalog call starts new reads, never a cached substitute.
+export async function boundedReviewRead(read,{timeoutMs=10000,label='Review owner'}={}){
+ if(!Number.isFinite(timeoutMs)||timeoutMs<=0)throw Error('Use a positive review read timeout.');
+ const controller=new AbortController();let timer;
+ try{return await Promise.race([
+  Promise.resolve().then(()=>read(controller.signal)),
+  new Promise((_,reject)=>{timer=setTimeout(()=>{const error=Object.assign(Error(label+' read timed out.'),{status:503});reject(error);controller.abort(error);},timeoutMs);}),
+ ]);}finally{clearTimeout(timer);}
+}
+export function createExistingWorkReader({roots=[],portfolio=createMagazinePortfolio({roots}),readAuthority,readTimeoutMs=10000,projectLinks={},seedProjects=[],excludedStoryNames=DEFAULT_ARCHIVED,excludedSourceIds=[],excludedPieceIds=[],excludedProjectIds=[]}={}){
  if(typeof readAuthority!=='function')throw Error('An explicit read-only authority reader is required.');
  const exclusions=new Map(excludedStoryNames.map(n=>[norm(n),'Recorded test recording; excluded from real work, original retained.']));
+ if(!Number.isFinite(readTimeoutMs)||readTimeoutMs<=0)throw Error('Use a positive review read timeout.');
+ const readCatalogAuthority=path=>boundedReviewRead(signal=>readAuthority(path,{signal}),{timeoutMs:readTimeoutMs,label:path});
  const sourceExclusions=new Set(excludedSourceIds),pieceExclusions=new Set(excludedPieceIds);
  let latest=null,catalogPending=null;
  function catalog(){if(catalogPending)return catalogPending;const pending=buildCatalog();catalogPending=pending;pending.finally(()=>{if(catalogPending===pending)catalogPending=null;}).catch(()=>{});return pending;}
@@ -43,8 +55,8 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
   const originalPending=start(()=>portfolio.list());
   const optionalReaders=[['/api/sources/tree','Library'],['/api/source-sessions','Conversations'],['/api/pieces','Workspace pieces'],['/api/study-draft/catalog','Native workspace identities']];
   const readersPending=Promise.allSettled([
-   ...optionalReaders.map(([path])=>start(()=>readAuthority(path))),
-   start(()=>readAuthority('/api/magazine/working-draft/catalog')),
+   ...optionalReaders.map(([path])=>start(()=>readCatalogAuthority(path))),
+   start(()=>readCatalogAuthority('/api/magazine/working-draft/catalog')),
    start(()=>Promise.all(roots.map(async root=>({...root,canonical:await realpath(root.path)})))),
   ]);
   const [original,results]=await Promise.all([originalPending,readersPending]);
@@ -78,7 +90,7 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
   for(const s of tree?.sources||[]){if(sourceExclusions.has(s.id)){excluded.push({id:s.id,name:s.name||s.title,reason:'Explicitly inventoried test resource; original retained.'});continue;}sources.push({...s,title:s.title||s.name||s.rel_path,authority:'library',readOnly:true});}
   const allPieces=Array.isArray(pieces)?pieces:pieces?.pieces||[];
   const workspacePieces=allPieces.filter(p=>{if(!pieceExclusions.has(p.id))return true;excluded.push({id:p.id,name:p.title,reason:'Explicitly inventoried demonstration workspace; original retained.'});return false;});
-  let workspaceLinks=null;if(nativeCatalog){try{const queries=reviewPieceBindingQueries(nativeCatalog);if(queries.length>128)throw Error('Native binding catalog exceeds the bounded review lookup.');const bindings=await Promise.all(queries.map(async q=>{try{return{...await readAuthority(q.path),requestedProjectKey:q.projectKey,httpStatus:200};}catch{return{requestedProjectKey:q.projectKey,httpStatus:503};}}));workspaceLinks=resolveReviewPieceLinks({pieces:workspacePieces,catalog:nativeCatalog,bindings});}catch(error){diagnostics.push('Workspace identity joins unavailable: '+error.message);}}
+  let workspaceLinks=null;if(nativeCatalog){try{const queries=reviewPieceBindingQueries(nativeCatalog);if(queries.length>128)throw Error('Native binding catalog exceeds the bounded review lookup.');const bindings=await Promise.all(queries.map(async q=>{try{return{...await readCatalogAuthority(q.path),requestedProjectKey:q.projectKey,httpStatus:200};}catch{return{requestedProjectKey:q.projectKey,httpStatus:503};}}));workspaceLinks=resolveReviewPieceLinks({pieces:workspacePieces,catalog:nativeCatalog,bindings});}catch(error){diagnostics.push('Workspace identity joins unavailable: '+error.message);}}
   const conversations=(sessions?.sessions||[]).map(s=>({id:s.id,title:s.title||s.name||'Retained conversation',sourceId:s.sourceId||null,sourceHash:s.sourceHash||null,version:s.version??null,date:s.date||null,turnCount:s.turns?.length??s.turnCount??null,authority:'source-sessions'}));
   const sourceGroups=[{id:'magazine-original',label:'Magazine source and research files',count:sources.filter(s=>s.authority==='magazine-original').length},{id:'library',label:'Retained Library resources',count:sources.filter(s=>s.authority==='library').length}];
   latest={mode:'existing-work-read-only',excludedProjectIds:[...excludedProjectIds],stories,sources,sourceGroups,conversations,workspacePieces,workspaceLinks,magazineWorkingLinks,guidance:original.guidance.map(artifact),unassigned:original.unassigned.map(artifact),exclusions:excluded,diagnostics,limits:['Read-only local review; no private writer is started.','Authority counts overlap; separately authored versions remain separate.','Browser-only edits at other origins are not imported or overwritten.']};

@@ -11,7 +11,7 @@ import {fileURLToPath} from 'node:url';
 import {validateImportedTranscriptTranslation} from '../config.mjs';
 import {createReviewConnection} from './review-connection.mjs';
 import {createReviewMedia} from '../runtime/services/review-media.mjs';
-import {createExistingWorkReader} from '../runtime/services/review-existing-work.mjs';
+import {boundedReviewRead,createExistingWorkReader} from '../runtime/services/review-existing-work.mjs';
 import {createRetainedCarouselReader} from '../runtime/services/review-retained-carousels.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 // Reuse the explicitly selected host file; review JSON cannot grant generation.
@@ -31,7 +31,7 @@ async function readReviewTranslationHost(configFile,inspection){
  inspection.assertCurrent();return {translation,dataDir};
 }
 export async function readReviewTranslationPermission(configFile,inspection){return (await readReviewTranslationHost(configFile,inspection)).translation;}
-export async function createExistingWorkReview({config,fetchImpl=fetch,libraryInspection=null,libraryInspectionConfigFile=null}={}){
+export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeoutMs=10000,libraryInspection=null,libraryInspectionConfigFile=null}={}){
  if(!config||typeof config!=='object'||!Array.isArray(config.magazineRoots))throw Error('Explicit read-only review configuration required.');
  const {translation:translationProposals,dataDir:translationAdmissionDataDir}=await readReviewTranslationHost(libraryInspectionConfigFile,libraryInspection);
  const upstream=new URL(config.authorityURL);if(upstream.origin!==config.authorityURL.replace(/\/$/,'')||upstream.protocol!=='http:'||!['127.0.0.1','localhost'].includes(upstream.hostname)||upstream.port!==String(config.allowedAuthorityPort))throw Error('Fixed explicit loopback authority required.');
@@ -46,10 +46,14 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,libraryIn
  ]:[]);
  function exactQuery(url,allowed,required=[]){if([...url.searchParams.keys()].some(key=>!allowed.includes(key)||url.searchParams.getAll(key).length!==1)||required.some(key=>!url.searchParams.get(key)))throw Object.assign(Error('Use the exact existing reader reference.'),{status:400});}
  if(libraryInspection&&['tree','folders','sourceText','collectionsSnapshot','collectionRelationships','evidence'].some(key=>typeof libraryInspection[key]!=='function'))throw Error('The maintained Library inspection capability is incomplete.');
- const readAuthority=async p=>{if(!p.startsWith('/api/'))throw Error('Only known reader paths are accepted.');const url=new URL(p,upstream),inspect=inspectPaths.get(url.pathname);if(inspect)return inspect(url);const response=await fetchImpl(new URL(p,upstream),{redirect:'error'});const value=await response.json();if(!response.ok)throw Error(value.error||'Owner unavailable.');return value;};
+ const readAuthority=async(p,{signal}={})=>{if(!p.startsWith('/api/'))throw Error('Only known reader paths are accepted.');const url=new URL(p,upstream),inspect=inspectPaths.get(url.pathname);if(inspect)return inspect(url);const response=await fetchImpl(new URL(p,upstream),{redirect:'error',signal});const value=await response.json();if(!response.ok)throw Error(value.error||'Owner unavailable.');return value;};
  const retainedCarousels=createRetainedCarouselReader({retainedCarouselState:config.retainedCarouselState});
- const existingReader=createExistingWorkReader({...config,roots:config.magazineRoots,readAuthority});
- const reader={...existingReader,catalog:async()=>{let retained;try{retained=await retainedCarousels.list();}catch(error){retained={readOnly:true,available:false,items:[],error:error.message||'The retained original could not be read.'};}const catalog=await existingReader.catalog();return config.retainedCarouselState===undefined?catalog:{...catalog,retainedCarousels:retained};}};
+ const existingReader=createExistingWorkReader({...config,roots:config.magazineRoots,readAuthority,readTimeoutMs});
+ const reader={...existingReader,catalog:async()=>{
+  const retainedPending=boundedReviewRead(()=>retainedCarousels.list(),{timeoutMs:readTimeoutMs,label:'Retained originals'}).catch(error=>({readOnly:true,available:false,items:[],error:error.message||'The retained original could not be read.'}));
+  const [catalog,retained]=await Promise.all([existingReader.catalog(),retainedPending]);
+  return config.retainedCarouselState===undefined?catalog:{...catalog,retainedCarousels:retained};
+ }};
  const media=config.filesRoot?createReviewMedia({filesRoot:config.filesRoot,limits:config.mediaLimits}):null;
  const libraryPhotos={
   preview:input=>readLibraryPhoto('/api/magazine/library-photos/preview',input),
