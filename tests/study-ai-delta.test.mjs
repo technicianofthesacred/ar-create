@@ -37,6 +37,13 @@ test('opening options reuse exact nonempty paragraph replacements and refuse sta
  fs.appendFileSync(f.opened.paths.draft,'\nExternal invented change.');const stale=await f.api('/api/study-ai/review?'+new URLSearchParams({...f.binding,requestId:request.id}));assert.equal(stale.status,409);assert.match(stale.result.error,/changed|rebind|external/i);
  const refused=await f.ai('accept',{requestId:request.id,operationId:randomUUID(),optionId:options[0].id});assert.equal(refused.status,409);assert.match(fs.readFileSync(f.opened.paths.draft,'utf8'),/External invented change/);assert.equal(fs.readFileSync(f.original,'utf8'),f.raw);
 });
+test('edge-newline opening alternatives retain exact separators through native acceptance and Undo',async t=>{
+ const writing='---\ntitle: Invented edge-separated article\n---\n\nInvented opening words.\n\nUnchanged second paragraph.\n',f=await setup(t,{writing}),read=await f.adapter.callTool('study_draft_read',{}),target=read.projection.find(p=>p.words==='Invented opening words.');
+ assert.equal(target.proposalEditable,true);const sourceIds=read.sourceCatalog.filter(s=>s.canPrepare).map(s=>s.id),request=await f.adapter.callTool('study_draft_prepare',{sourceIds,purpose:'opening-options'}),options=openingOptions();
+ assert.equal(request.opening.target.id,target.id);await f.adapter.callTool('study_draft_propose',{requestId:request.id,openingOptions:options});assert.equal(fs.readFileSync(f.opened.paths.draft,'utf8'),writing);
+ const operationId=randomUUID(),accepted=await f.ai('accept',{requestId:request.id,operationId,optionId:options[0].id});assert.equal(accepted.status,200,JSON.stringify(accepted.result));assert.equal(accepted.result.raw,writing.replace('Invented opening words.',options[0].words));
+ const undone=await f.api('/api/study-draft/undo',{...f.binding,operationId:randomUUID(),undoOperationId:operationId,expected:accepted.result.expected});assert.equal(undone.status,200);assert.equal(undone.result.raw,writing);assert.equal(fs.readFileSync(f.original,'utf8'),writing);
+});
 test('protected or ambiguous native opening scaffolds never gain raw replacement insertion',async t=>{
  for(const writing of ['---\nkind: draft\n---\n# Protected heading','---\nkind: draft\n---\n> Quoted opening.','---\nkind: draft\n---\n---\nAmbiguous separator.']){const f=await setup(t,{writing}),read=await f.adapter.callTool('study_draft_read',{}),sourceIds=read.sourceCatalog.filter(s=>s.canPrepare).map(s=>s.id);await assert.rejects(f.adapter.callTool('study_draft_prepare',{sourceIds,purpose:'opening-options'}),/opening|boundary|separator/i);assert.equal(fs.readFileSync(f.opened.paths.draft,'utf8'),writing);}
 });
