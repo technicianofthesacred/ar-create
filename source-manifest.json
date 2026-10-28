@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "5669228a219bdec8ed17ca8d22629a0e96d6d8fda68a912d26faf7eab84cdb0e"
+      "candidateSha256": "eaba410dfe22255aaaf3b38e2f515876fb0b35acae26b2034082a30c11b97a40"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4538,6 +4538,10 @@
     {
       "path": "tests/collection-source-continuation.test.mjs",
       "candidateSha256": "dc2179032a671ec06f1ff3e6b1257b73edca37ff5e112bb53887110115f6259c"
+    },
+    {
+      "path": "tests/transcript-to-independent-outputs-journey.test.mjs",
+      "candidateSha256": "62276284f5bc59bd5da997d68daff74e60d7501a05d618171b0dcead46a88c62"
     }
   ],
   "dependencyRepair": {
