@@ -1,3 +1,9 @@
+## 28 October — exact native draft activity connected to Bench in candidate
+
+The actual-work Bench previously supplied an empty activity list even when its maintained journal reader had saved changes for the open native draft. It now displays up to three committed events for the exact verified draft binding and refreshes when that reader changes. Foreign bindings, project-wide events, conflicts, ambiguous owners, selected outputs and unsupported Magazine histories are excluded. No second history store or manuscript write is added.
+
+A regression first reproduced the false empty state, then verified activity refresh, foreign/conflict exclusion and removal after an owner change while retaining the exact dirty manuscript node and words. An invented browser component shows the saved event and clears it on owner change. This is component evidence, not a new native save or full Bench acceptance. Candidate only until independent release proof.
+
 ## 28 October — Source tea-link refresh repair installed
 
 Cancel during a pending Source refresh could paint without the tea link and with a busy readiness message. If the saved response was unchanged, the preserved-reader completion path updated only review controls and never restored those controls. The candidate reconciles link, readiness and pure local translation context for the current exact clean source after refresh, without repainting remarks. Draft, pending, error, UUID/hash and current-project guards remain.

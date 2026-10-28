@@ -45,3 +45,26 @@ test('ambiguous parent workspace ownership and excluded scopes are held without 
 test('late native-scope discovery cannot paint over a changed catalog owner',async()=>{let release,entered;const gate=new Promise(r=>release=r),started=new Promise(r=>entered=r),x=boot(w=>{w.studyBenchMoves={read:async(projectId,{expectedOwner})=>{if(expectedOwner.documentId==='00000002-1111-4111-8111-111111111111'){entered();await gate;}return{rows:[{kind:'research',projectId,key:'same-point',proof:expectedOwner.documentId,label:'Review flagged wording',title:expectedOwner.documentId==='00000002-1111-4111-8111-111111111111'?'Earlier scoped finding':'Current scoped finding'}],unknown:[]};}};});try{const nc=nativeBenchCatalog();x.w.c3WorkbenchFrame.setBenchCatalog(payload({catalog:nc,open:async()=>{}}));await started;const changed=structuredClone(nc);changed.workspacePieces[0].documentId='00000009-1111-4111-8111-111111111111';changed.workspaceLinks.pieces[0].targets[0].documentId=changed.workspacePieces[0].documentId;x.w.c3WorkbenchFrame.setBenchCatalog(payload({catalog:changed,open:async()=>{}}));await tick();release();await tick();assert.match(x.d.querySelector('[data-wbf-next-list]').textContent,/Current scoped finding/);assert.doesNotMatch(x.d.querySelector('[data-wbf-next-list]').textContent,/Earlier scoped finding/);}finally{release?.();x.close();}});
 
 test('actual Bench preserves explicitly archived canonical scopes without hiding unrelated same-title aliases',async()=>{const reads=[],x=boot(w=>{w.studyBenchMoves={read:async id=>{reads.push(id);return{rows:[],unknown:[]};}};});try{x.p.id='hk';x.p.archived=true;x.w.state.projects.push({id:'unrelated-alias',name:'Project One',view:'record',viewedStage:3});x.w.c3WorkbenchFrame.setBenchCatalog(payload({catalog:nativeBenchCatalog(),open:async()=>{}}));await tick();assert.equal(reads.length,0);assert.equal(x.w.state.projects.length,2);}finally{x.close();}});
+
+
+test('actual Bench shows only committed activity for the verified native draft and drops it after owner changes',async()=>{
+ const events=[
+  {operationId:'native-save',actor:'human:adrian',kind:'study-draft.save',status:'committed',ts:'2026-10-28T12:00:00Z',scope:{kind:'draft',id:'binding-one'}},
+  {operationId:'foreign',actor:'human:adrian',kind:'study-draft.undo',status:'committed',ts:'2026-10-28T13:00:00Z',scope:{kind:'draft',id:'other-binding'}},
+  {operationId:'failed',actor:'human:adrian',kind:'study-draft.undo',status:'conflict',ts:'2026-10-28T14:00:00Z',scope:{kind:'draft',id:'binding-one'}},
+  {operationId:'parent',actor:'human:adrian',kind:'concept.save',status:'committed',ts:'2026-10-28T15:00:00Z',scope:{kind:'project',id:'native-project'}}
+ ];
+ const x=await ownedBench({dirty:true,change:({w})=>{w.arLive={state:()=>({humanLines:events}),label:r=>r.kind==='study-draft.save'?'Saved the draft':'Foreign or unsaved activity'};}});
+ try{
+  const manuscript=x.d.querySelector('#manuscript');
+  assert.match(x.d.querySelector('.since').textContent,/Saved the draft/);
+  assert.doesNotMatch(x.d.querySelector('.since').textContent,/Foreign or unsaved activity/);
+  events.push({operationId:'later',actor:'human:adrian',kind:'study-draft.save',status:'committed',ts:'2026-10-28T16:00:00Z',scope:{kind:'draft',id:'binding-one'}});
+  x.w.dispatchEvent(new x.w.Event('c3-piece-state'));await tick();
+  assert.equal(x.d.querySelectorAll('.since li').length,2,'new journal snapshots update the same Bench owner');
+  x.proof.bindingId='unmatched-binding';x.w.dispatchEvent(new x.w.Event('c3-piece-state'));await tick();
+  assert.doesNotMatch(x.d.querySelector('.since').textContent,/Saved the draft/);
+  assert.strictEqual(x.d.querySelector('#manuscript'),manuscript);
+  assert.equal(manuscript.textContent,'Exact unsaved owner words');
+ }finally{x.close();}
+});
