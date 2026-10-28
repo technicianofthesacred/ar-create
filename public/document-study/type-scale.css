@@ -67,8 +67,8 @@ html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.
 html:not(#wb):not(#wb):not(#wb) body #app .workspace :is(.shared-prose-surface,.recordBody) :is(h1,h2,h3,h4,h5,h6).shared-prose-block{font-size:var(--t-title)!important;font-weight:600!important;line-height:1.35!important}
 
 /* ---------- weights: 400, 500, 600 only ---------- */
-body :is(b,strong,th,h1,h2,h3,h4,h5,h6,dt,legend):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-weight:600}
-html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(b,strong):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render]) *){font-weight:600!important}
+body :is(b,strong,th,h1,h2,h3,h4,h5,h6,dt,legend):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render],.ma-article-quote) *){font-weight:600}
+html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog,.ht-menu) :is(b,strong):not(:where(.car-single-slide,.car-lineup,.car-stage,.ig-render,.c3-template,[data-template-render],.ma-article-quote) *){font-weight:600!important}
 
 /* ---------- the interface: every remaining size on one of the tokens ---------- */
 html:not(#wb):not(#wb):not(#wb) body :is(#app,dialog) :is(small,.small,.c3t-line,.ce-step,.ce-n,.ce-arr,.docfooter span,.sws-revision,.material-boundary,.material-intake span,.flow-lane-head span,.sourceGuard,.why,.draft-surface-ai-state,.c3-tool-d,.sb-why,.draft-check-status span,.flow-row>.small,.c3-sr){font-size:var(--t-label)!important;line-height:var(--lh-ui)!important}
