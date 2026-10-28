@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "b28d290f90357190ae11a55111d641da99384b0582a6e7cace9803425620955f"
+      "candidateSha256": "a9ce7e4a9efef94f5d7fadb868c58f3266d5238137f195bac50b61dbcb3880dd"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "61bf0d84a5c0631643d07de558fa7ee057b39fe9125793b25839e1230da62948"
+      "candidateSha256": "5269c046ba12a868220fcea3c680d6f41ae8804f39e9c44818f2c5be26e1622d"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "61bebc4aa07b92a9bd470abccd2a6d855e7d3b739b87962e5ecb6d617ec25953"
+      "candidateSha256": "8f3f74cc5aa029849cdec3143a0ec90abbc82c8e379a0f7a047b80fe45e8c7a2"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -3901,7 +3901,7 @@
     },
     {
       "path": "tests/bench-catalog-ui.test.mjs",
-      "candidateSha256": "1199e29581bb1f0d9f8823cdb346fa0d9fd4c3c1a84aac7e9fc4b9d585e88425"
+      "candidateSha256": "07dd1bfe69fbec725ac329fb80d3456a2ee087c9880ddaa164a24dfa1beb755b"
     },
     {
       "path": "tests/bench-projection.test.mjs",

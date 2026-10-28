@@ -1,8 +1,14 @@
-## 28 October — Source tea-link refresh race repaired in candidate
+## 28 October — exact native draft activity connected to Bench in candidate
+
+The actual-work Bench previously supplied an empty activity list even when its maintained journal reader had saved changes for the open native draft. It now displays up to three committed events for the exact verified draft binding and refreshes when that reader changes. Foreign bindings, project-wide events, conflicts, ambiguous owners, selected outputs and unsupported Magazine histories are excluded. No second history store or manuscript write is added.
+
+A regression first reproduced the false empty state, then verified activity refresh, foreign/conflict exclusion and removal after an owner change while retaining the exact dirty manuscript node and words. An invented browser component shows the saved event and clears it on owner change. This is component evidence, not a new native save or full Bench acceptance. Candidate only until independent release proof.
+
+## 28 October — Source tea-link refresh repair installed
 
 Cancel during a pending Source refresh could paint without the tea link and with a busy readiness message. If the saved response was unchanged, the preserved-reader completion path updated only review controls and never restored those controls. The candidate reconciles link, readiness and pure local translation context for the current exact clean source after refresh, without repainting remarks. Draft, pending, error, UUID/hash and current-project guards remain.
 
-130 relevant checks, including deferred-read restoration, other unsaved correction retention and source-switch guards. Invented native desktop/narrow held-refresh→Cancel→completion→visible exact link and six-record preservation are verified with all nativePOSTs blocked. Actual full1100remark/505label candidate shows the exact link in desktoplight/dark and390×640full-appiframeboth themes, without horizontaloverflow. No real word/name staging, save, approval, provider or tea writes. Candidate only; actual affected-source handoff remains to be retested after installation. Existing45boundedchecks/9broadergates unchanged.
+130 relevant checks, including deferred-read restoration, other unsaved correction retention and source-switch guards. Invented native desktop/narrow held-refresh→Cancel→completion→visible exact link and six-record preservation are verified with all nativePOSTs blocked. Actual full1100remark/505label candidate shows the exact link in desktoplight/dark and390×640full-appiframeboth themes, without horizontaloverflow. No real word/name staging, save, approval, provider or tea writes. PR100 is independently installed at signed `4b01a64ef0b05ddbf59049bb52bd703bd82a3b40`, build `2026-10-28T13:39:09.382Z`, with124 served hashes and13 critical Source paths verified. Original turns, source content, canonical dirty writing and configuration are unchanged. The affected saved-source handoff remains to be retested in its existing foreground browser. Existing45boundedchecks/9broadergates unchanged.
 
 ## 28 October — hidden Source badge layout repair installed
 
