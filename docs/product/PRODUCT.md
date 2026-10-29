@@ -14,6 +14,14 @@ One workspace should make that collaboration visible and enjoyable. Open a proje
 
 Projects can begin with a recording, supplied transcript, typed idea, photo, link or collection. Material remains useful even when it never becomes an article. A project can produce independently edited articles, carousels, scripts and other requested expressions from shared origins. No recording-first, article-first or every-format requirement is implied.
 
+## Review the result against the purpose — 29 October
+
+The existing seven pillars and section requirements are judged by the author capability they produce. Returning to the right saved work, useful preparation and contextual proposals, decisions that carry forward, and faithful requested outputs are the result; tests and releases are supporting evidence. The independent review and its limits are summarised in [the review guide](../reviews/2026-10-29-intention-review.md). Its recommendations do not replace adopted direction or authorise another architecture.
+
+A working draft download may preserve unresolved marks and notes without publication approval. An audience-facing export must also faithfully render the intended typography, quotes, photographs, captions and ordering. File hashes alone do not prove visual fidelity. Preserve the distinction between a synthetic test, actual main-app behaviour, installed bytes and human acceptance. Successful individual reloads do not close an intermittent startup failure.
+
+Routine technical blockers remain Build's responsibility. Genuine wording, direction, publication and sending decisions remain the author's. Do not make the author repeatedly resume engineering or carry context between agents.
+
 ## Priorities made explicit from the author's feedback
 
 - **Author-led production:** AI should do most preparation and structuring so the author can concentrate on editorial judgment, lived experience and final polish. Do not require manual quote extraction, repeated answers or assembly chores merely to make agent work visible. Deliver useful content before expanding the workspace into an unrelated project/commerce system.

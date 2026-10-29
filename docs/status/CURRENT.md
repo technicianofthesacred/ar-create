@@ -1,3 +1,15 @@
+## 29 October — installed state and current author journey
+
+Installed release: `600d4d09e8ff0b55df864f678f01a1f4386ffdd9`, build `2026-10-29T13:08:29.327Z` (PR108), independently live-byte/preservation verified. These exact facts are a dated checkpoint; a newer release requires its own proof.
+
+- Main-app Source, retained Research and Direction open for the selected existing workspace after the project-scope repair. The earlier cross-project selection is not a reason to regenerate saved work.
+- The working Article has actual Markdown and formatted HTML downloads. The newer HTML passes source-word/receipt checks, retains the ten pending marked passages and three notes, and renders four pull quotes. The actual downloaded file was opened and visually compared with the app at the same desktop viewport: headings and body typography match, pending markers remain, and no horizontal overflow is present. The standalone canvas uses the available width; this is not a phone or complete whole-document visual acceptance. This is private working content, not an approved publication.
+- Carousel inline headings, words and credits plus drag reordering are installed. The authorised words-only changes for the two photo-less slides are saved. Wording review is a separate human gate; no final main-app Carousel export is claimed.
+- A main-app catalogue abort was diagnosed at 10,004 ms: the enclosing 10-second request raced the optional metadata budget. The bounded repair allows 15 seconds for that request, preserves all owner and dirty-writing guards, and passes the causal regression and candidate opening without Retry. Installed reopening still needs its own proof; individual successful opens do not establish universal reliability.
+- Whole-workbench visual acceptance, useful contextual assistance and the broader existing TODO remain unfinished.
+
+Current purpose and review questions: [PRODUCT](../product/PRODUCT.md) and [independent review guide](../reviews/2026-10-29-intention-review.md). Existing execution mirror: [TODO](../../TODO.md). Historical entries below retain their original scope; candidate language there is not the current installation authority.
+
 ## 28 October — exact saved native Read route accepts its maintained preview view in candidate
 
 Reopening the retained invented transcript workspace at Read successfully opened its native manuscript, then failed the route's final stage check: the current reader represents Read as stage5/article with preview mode. The guard now accepts only that representation for the exact current binding and parent. Foreign bindings/parents and editable views remain refused; no words, stages or approvals are fabricated. A failing route regression reproduced the refusal before the change; focused route/startup verification and native original-linked transcript plus exact independent Article opening are recorded privately in the28October native-workspace-resume receipt. This is a source candidate, not an installed release.
