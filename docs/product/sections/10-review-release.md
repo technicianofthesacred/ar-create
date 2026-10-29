@@ -35,3 +35,9 @@ Audience view shares exact selected output/edition context with Arrange and retu
 A text-only saved Magazine manuscript can be previewed and downloaded as private working HTML without a publication URL. Use its exact native reading projection, retain pending markup and opaque notes visibly, and preserve the existing working-owner export receipt and hash checks. Do not guess publication metadata, a designed edition or a photo directory. Unresolved media or malformed explicit publication references remain held. This is portable draft recovery under C03/C04/C07, not editorial acceptance or publication proof.
 
 Working HTML interprets saved Markdown and pull-quote layout instructions through the existing DEV codec and Article layout capture. It keeps unresolved wording marks in the rendered paragraphs and shows retained editorial notes separately. Formatted credits come from the saved source; no publication metadata or editorial acceptance is invented. App and downloaded Article typography require separate actual-screen comparison.
+
+## 29 October — Work with available media and verify the actual file
+
+Use a suitable words-only layout when a requested photograph is absent. Keep photo-capable layouts and later photo selection available; a current absence must not permanently constrain the piece. This layout choice is not approval of wording.
+
+Under C03/C04/C05/C06, S09/S10 acceptance includes opening the actual downloaded file and comparing its typography, quotations, available photographs, ordering, captions and credits with the selected saved output. Distinguish faithful working recovery from an approved audience edition.

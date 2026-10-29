@@ -186,10 +186,16 @@ test('catalogue refusal and invalid response retain safe startup cause without e
  }
 });
 test('catalogue timeout records bounded elapsed proof while a late response cannot reveal cached work',async t=>{
- const s=setup(t),{w}=s;let expire;const real=w.setTimeout.bind(w);w.setTimeout=(fn,ms,...args)=>ms===10000?(expire=fn,123456):real(fn,ms,...args);s.start();await tick();expire();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');assert.equal(e.dataset.reviewFailureReason,'catalog-read-timeout');assert.ok(Number.isInteger(Number(e.dataset.reviewFailureElapsedMs)));s.catalog();await tick();assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+ const s=setup(t),{w}=s;let expire;const real=w.setTimeout.bind(w);w.setTimeout=(fn,ms,...args)=>ms>=10000&&ms<=15000?(expire=fn,123456):real(fn,ms,...args);s.start();await tick();expire();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');assert.equal(e.dataset.reviewFailureReason,'catalog-read-timeout');assert.ok(Number.isInteger(Number(e.dataset.reviewFailureElapsedMs)));s.catalog();await tick();assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
 });
 test('a post-catalog Magazine dirty-writing refusal is diagnosed at flush rather than blamed on discovery',async t=>{
  const query=new URLSearchParams({reviewStory:'story',reviewStage:'5',reviewMagazineStory:'mag-story',reviewMagazinePiece:'piece',reviewMagazineParent:'previous'}).toString(),s=setup(t,{query}),{w}=s,hash='a'.repeat(64);w.AR_CREATE_REVIEW_MODE.magazineDraftCorrections=true;
  const target={kind:'magazine',edition:'working',artifactId:'draft',hash,nativeProjectId:'previous',storyId:'mag-story',pieceId:'piece',partKey:'one',editable:true};w.fetch=async()=>({ok:true,json:async()=>({mode:'existing-work-read-only',sources:[],stories:[{id:'story',name:'Requested story',nativeProjectId:'previous',artifacts:[{artifactId:'draft',hash,kind:'DEV',magazineWorkingTarget:target}]}]})});
  w.studyDraft.flush=async()=>({dirty:true});w.studyDraft.openMagazine=()=>{throw Error('Must not open over dirty work');};s.start();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');assert.equal(e.dataset.reviewFailureStage,'flush-current');assert.equal(e.dataset.reviewFailureReason,'startup-writing-dirty');assert.equal(w.current().id,'previous');assert.equal(w.arCreateReviewStartup.pending,true);
+});
+test('catalogue transport lets the bounded metadata budget finish before abandoning exact startup',async t=>{
+ const s=setup(t),{w}=s,timers=[];const real=w.setTimeout.bind(w);w.setTimeout=(fn,ms,...args)=>ms>=10000?(timers.push({fn,ms}),100000+timers.length):real(fn,ms,...args);
+ s.start();await tick();assert.equal(timers.length,1);assert.ok(timers[0].ms<=15000,'Transport remains finite');for(const timer of timers)if(timer.ms<=10000)timer.fn();await tick();await tick();
+ assert.notEqual(w.document.querySelector('[data-review-startup]').getAttribute('role'),'alert','The optional-owner deadline must not also abandon its enclosing HTTP response');
+ s.catalog();await tick();s.owner();await tick();assert.equal(w.arCreateReviewStartup.pending,false);assert.equal(w.current().id,'target');
 });

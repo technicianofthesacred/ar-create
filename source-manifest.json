@@ -2845,7 +2845,7 @@
     },
     {
       "path": "docs/product/PRODUCT.md",
-      "candidateSha256": "a9365a181b7806a88d834c8bb950f6103669d5537ae47ba1122f4bb9c41230ab"
+      "candidateSha256": "079e847d2c35a59c216af141562a08818c7e24b4275742765a15a27064af8302"
     },
     {
       "path": "docs/product/sections/01-material.md",
@@ -2885,7 +2885,7 @@
     },
     {
       "path": "docs/product/sections/10-review-release.md",
-      "candidateSha256": "2d3dfa94b05c30001465f147ee03d2e17ec4517b2c4fc443a7b0e93219281b23"
+      "candidateSha256": "734d655b0a5f91fda88f70d01b49d9575b78c0914609f3eafee4bb1c4ac3fbf5"
     },
     {
       "path": "docs/product/sections/11-share-celebrate.md",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "a68a3adeefd2911823de33a9eee71e58e2f34cbb9eb4749cb276381c03b9d19a"
+      "candidateSha256": "20ba43d8965b187c397eb2de7b6c4aaeb0d5c7f122b21f459e2a3563b3df01a4"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3657,7 +3657,7 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "7ff6d80a979661238de0520095246bb68f295ef811fe4dc0d61dee2e47a02e18"
+      "candidateSha256": "1745b0578a1895c421c08ad715bc85cb83a352da9f3cbef92a6942cd9e277f60"
     },
     {
       "path": "public/document-study/review-mode.js",
@@ -4029,7 +4029,7 @@
     },
     {
       "path": "tests/existing-work-startup.test.mjs",
-      "candidateSha256": "932746ca3ce31fbf90e5a012e6ae4c169b3663c22c88dd785021be97c59276a8"
+      "candidateSha256": "77ac49cf5034be47543d68b5e47e8072a38a933f49a3502415315dc2d644bfd2"
     },
     {
       "path": "tests/retained-carousel-reader.test.mjs",
@@ -4590,6 +4590,10 @@
     {
       "path": "tests/retained-source-scope.test.mjs",
       "candidateSha256": "913da169eb06ab05177b971d54db07f3f39784c0f65908b042e201116e202183"
+    },
+    {
+      "path": "docs/reviews/2026-10-29-intention-review.md",
+      "candidateSha256": "c0c999d671a02bda6b197f0a417c91f289fa09a6e83b3c89b04767461e6064e7"
     }
   ],
   "dependencyRepair": {
