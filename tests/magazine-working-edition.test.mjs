@@ -31,8 +31,8 @@ test('working edition carries one exact parse/media owner and drops earlier opti
  assert.equal(r.spec.subject.secret,undefined);assert.equal(r.spec.speakers.secret,undefined);assert.equal(r.spec.author.links[0].secret,undefined);assert.equal(r.spec.credit[0],'Invented credit');
  assert.equal(JSON.stringify(r).includes(f.root),false);assert.equal(r.media.sources[0].placements[0].crop.x,.7);
 });
-test('refuses nested forms the maintained canvas would omit',async t=>{
- for(const options of [{nested:true},{nested:true,follow:true}]){const f=fixture(t,options);await assert.rejects(f.reader.workingEdition(f.input),/nested article layout/);}
+test('working edition preserves supported nested photos and follow-on lines with their exact owner',async t=>{
+ for(const options of [{nested:true},{nested:true,follow:true}]){const f=fixture(t,options),r=await f.reader.workingEdition(f.input);assert.deepEqual(r.spec.opening,f.parsed.opening);assert.equal(r.ownerRef.hash,f.input.expectedHash);assert.equal(r.media.sources[0].placements.length,options.follow?1:2);assert.equal(new Set(r.media.sources[0].placements.map(p=>p.placementId)).size,r.media.sources[0].placements.length);}
 });
 test('exact request rejects foreign fields and hash, and current owner failure propagates',async t=>{
  const f=fixture(t);await assert.rejects(f.reader.workingEdition({...f.input,path:'/elsewhere'}));await assert.rejects(f.reader.workingEdition({...f.input,expectedHash:'a'.repeat(64)}));

@@ -98,3 +98,7 @@
 /* Recorded heading documents inherit the maintained layout's display role in
    both the app and standalone HTML, rather than the surrounding UI's H2 size. */
 .ar-working-article .tj-conv-spread-title .ar-recorded-prose :is(h1,h2,h3){font:inherit!important;line-height:inherit!important;color:inherit;margin:0!important}
+
+/* Pending wording is visible in Audience and the same standalone working HTML. */
+:is(.ar-magazine-reader,.ar-working-manuscript) .ar-audience-pending{color:inherit;background:rgb(198 166 103 / .25);box-decoration-break:clone;-webkit-box-decoration-break:clone;border-radius:.12em;padding:.03em .08em}
+.ar-working-manuscript .ar-working-records{margin-top:2em;padding-top:1em;border-top:1px solid currentColor;font:400 15px/1.6 sans-serif}

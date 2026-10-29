@@ -1,3 +1,15 @@
+## 29 October — dependable return accepted for the selected Article
+
+C01/C02/C06: the existing review process was explicitly assigned macOS Background resource policy. A controlled comparison of the same code, configuration and files reproduced roughly seven-second metadata awaits under Background and a sub-second catalogue under Interactive. The maintained review job now uses Interactive, retaining its owner, program and application configuration. The required portfolio deadline and cancelled-scan protection remain installed at `7d5c0f8cdf990b736aa5af809e6420f0cd95aa36`, build `2026-10-29T14:57:23.233Z` (PR113).
+
+Ten consecutive main-app Article openings after separate native and review service restarts passed without Retry. Each opening reached the visibly rendered saved Article in 1.9–2.9 seconds, with one client discovery request; every timed reader fulfilled and no recovery scan was needed. Timestamped native-screen frames are compiled into a video with matching restart PID/readiness receipts, AX snapshots and reader timings. This is a recorded screen sequence, not continuous desktop capture. Earlier incomplete recordings and a stale-receipt harness error remain separate and are not acceptance proof. Original words, editions, application flags and the dirty human checkout are unchanged.
+
+Two Direction interaction alternatives have been shown before implementation: inline decisions beside the full explanations, or a compact comparison table. The human layout choice is pending. The saved map already records the current title from an earlier dated decision; later choices must preserve that history. The explicitly approved Audience display/export projection continues independently. Wider interface restyling, current wording approval, Carousel file acceptance and whole-product completion remain open.
+
+## 29 October — scoped Audience projection candidate
+
+The existing Article renderer now has one display-only projection for mounted Audience and prepared working HTML: semantic pending highlights, readable delimiter-free editorial end notes, maintained curly punctuation, and omission of the exact placeholder publication line. Saved Markdown, source/owner hashes, approval state, paragraph order, pull quotes, source annotations, photo/crop mapping and actual publication credits remain under their existing owners. Focused synthetic checks and an actual-owner read-only candidate opening pass; exact installed download and 1440/390 CSS-pixel comparison are still acceptance work. Direction implementation awaits the presented layout choice; no wider interface restyling is included.
+
 ## 29 October — required catalogue recovery under verification
 
 Shared discovery, lazy folder reads and real waiting decisions are installed at `15e7fc62c8d23106557b1058853610874f99ebcc` (PR112). Its first post-install Article opening failed after 15 seconds: every optional reader settled within about three seconds, while the required Magazine portfolio remained unresolved. That unresolved read held the shared catalogue promise. The original stalled filesystem await has not been identified.
