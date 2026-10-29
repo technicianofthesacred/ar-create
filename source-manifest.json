@@ -2885,7 +2885,7 @@
     },
     {
       "path": "docs/product/sections/10-review-release.md",
-      "candidateSha256": "226261668fda3803eda397fc2997624362e80d6b7540f3b0c842e462d90ed3f0"
+      "candidateSha256": "2d3dfa94b05c30001465f147ee03d2e17ec4517b2c4fc443a7b0e93219281b23"
     },
     {
       "path": "docs/product/sections/11-share-celebrate.md",
@@ -3657,11 +3657,11 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "33c75b6c8a6434e8aa41d8654f2fa093ed0354628ae3b307d40ef649f6678c18"
+      "candidateSha256": "7ff6d80a979661238de0520095246bb68f295ef811fe4dc0d61dee2e47a02e18"
     },
     {
       "path": "public/document-study/review-mode.js",
-      "candidateSha256": "847025be8e8f3a6b81f141bf762f11954e2b41585c5d7d17c9efd9b4c073e867"
+      "candidateSha256": "9beec2c3da72f1ca6c1e42c5c49c2959ef3313cee3d1c7b7bf2037a2be546f12"
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
@@ -3933,7 +3933,7 @@
     },
     {
       "path": "scripts/magazine-media-inspection.mjs",
-      "candidateSha256": "ee5176b44114204b5abdde928053303e92b912de3853bc1e245bdb0a38e5af21"
+      "candidateSha256": "0bbb284f156378bda1eb16bc52289b9776ca0852b642a603c2424ea2c5f1eb65"
     },
     {
       "path": "tests/exact-media-browser.test.mjs",
@@ -4029,7 +4029,7 @@
     },
     {
       "path": "tests/existing-work-startup.test.mjs",
-      "candidateSha256": "26d1e1da23a0b2c80b8fe8a0490bdea05847394d0b3640fb944028c9052579bd"
+      "candidateSha256": "6ff4ed045cc9f7e8c2ed82e5286c7294000ae180402e30bf46c4f502ecc8e76e"
     },
     {
       "path": "tests/retained-carousel-reader.test.mjs",
@@ -4221,7 +4221,7 @@
     },
     {
       "path": "public/document-study/mountMagazineAudience.tsx",
-      "candidateSha256": "bc39719348e44ed307c99af123eb7d9931ba85e6f32b09d28a1bcadd76cf6933"
+      "candidateSha256": "e2d83fa5b349f6f54f3ca513b1b03647930594b76bdac7fac14d2a1d91ea9631"
     },
     {
       "path": "tests/magazine-working-edition.test.mjs",
@@ -4237,7 +4237,7 @@
     },
     {
       "path": "tests/magazine-article-html.test.mjs",
-      "candidateSha256": "1c5d942951c5779a43b1a80901ac40170f681c0613130d68c6564d5cbfd6fb59"
+      "candidateSha256": "272d31c1f9c2c571102398bd7e53cc903352619ddd076b9e5f3dfed3b7518901"
     },
     {
       "path": "tests/standalone-article-html.test.mjs",
@@ -4549,7 +4549,7 @@
     },
     {
       "path": "public/document-study/magazine-published.css",
-      "candidateSha256": "fb0f2a66add1822f27246c73bda1ad95d8be46ad7bceb969fecc9aca6ede188f"
+      "candidateSha256": "0d1bbe48fc329285fe34273e923bbc031012dbc4bf217d07b3f51b0b62a6c24d"
     },
     {
       "path": "runtime/public/assets/fonts/cormorant-garamond-300-italic-latin-ext.woff2",

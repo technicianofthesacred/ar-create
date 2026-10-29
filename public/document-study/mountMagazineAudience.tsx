@@ -6,6 +6,11 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {standaloneArticleHtml} from '../../runtime/src/workspaces/standaloneArticleHtml';
 import {saveDownload} from '../../runtime/src/workspaces/exportOutput';
 import {AcceptedProse} from '../../runtime/src/workspaces/AcceptedProse';
+import {parseWholeDraft} from '../../runtime/src/workspaces/article-codec';
+import {captureArticleComposition} from '../../runtime/src/workspaces/articleComposition';
+import {outputSpec} from '../../runtime/src/workspaces/compositionSpec';
+import {documentParts} from '../../runtime/src/donors/mag/markdown-blocks';
+import {markdownToDoc} from '../../runtime/src/donors/wordforge/wf-block-markdown';
 import ConversationCanvas from '../../runtime/src/donors/teajia/conversation/ConversationCanvas';
 import {LocalStoryProvider} from '../../runtime/src/donors/teajia/storyEdit';
 const hash=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
@@ -35,6 +40,22 @@ function magazineView(read:any){
  if(read?.renderKind==='manuscript'){
   const owner=read.ownerRef,media=read.media,blocks=read.manuscript?.blocks;
   if(read.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||!hash(owner?.hash)||owner.editionId!=='working'||media?.schema!=='ar-create.magazine-media-inspection.v1'||media.revision!==read.revision||JSON.stringify(media.ownerRef)!==JSON.stringify(owner)||!Array.isArray(media.sources)||media.sources.length||!Array.isArray(blocks)||blocks.length>4096||blocks.some((b:any)=>typeof b.id!=='string'||typeof b.raw!=='string')||new Set(blocks.map((b:any)=>b.id)).size!==blocks.length)throw Error('The saved manuscript could not be verified.');
+  if(typeof read.manuscript.raw==='string'){
+   // Projection only: reuse the existing DEV reader and layout capture without
+   // accepting, creating or saving another Article or manuscript.
+   const raw=read.manuscript.raw,base:any={id:owner.artifactId,title:read.spec.title,revision:0,paragraphs:[],outputs:[]};
+   const parsed=parseWholeDraft(raw,base),paragraphs=parsed.paragraphs.map((p:any,i:number)=>({...p,id:'working:'+i}));
+   const captured=captureArticleComposition(paragraphs,raw);if(captured.placements.length||captured.photoRequests.length)throw Error('Unpublished photographs need their exact connected owner.');
+   const doc:any={...base,paragraphs},output:any={id:owner.pieceId,kind:'article',title:read.spec.title,manuscriptRevision:0,manuscript:paragraphs,placements:[],articleComposition:captured.composition};
+   const spec=outputSpec(doc,output);spec.credit=[];
+   const sourceBlocks=documentParts(raw,false).blocks,separator=sourceBlocks.findIndex(b=>b.raw.trim()==='---');
+   const header=(s:string)=>!s.trim()||/^#\s/.test(s.trim())||/^\*\*(?:Conversations over Tea|Story Subject|Interview by|Interview Date|Photography, Words, Translation|Location|By|Published)\b/.test(s.trim());
+   let firstStory=0;while(firstStory<sourceBlocks.length&&header(sourceBlocks[firstStory].raw))firstStory++;
+   const credits=sourceBlocks.slice(0,separator>=0&&sourceBlocks.slice(0,separator).every(b=>header(b.raw))?separator:firstStory).filter(b=>b.raw.trim());
+   const notes=[...raw.matchAll(/%%[\s\S]*?%%/g)].map(m=>m[0]).filter(note=>!/^%%\/?(?:pull|photo|photos|side|glyph|on-photo|saying|ending|close)(?::|%%)/.test(note));
+   const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader ar-working-article" data-template-render="magazine" data-manuscript-preview={owner.hash}><p className="ar-working-notice">Working draft · pending wording remains marked.</p><LocalStoryProvider placements={[]} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} paragraphs={paragraphs}/></LocalStoryProvider>{!!credits.length&&<section className="ar-working-records" data-working-credits aria-label="Saved credits">{credits.map((b,i)=><AcceptedProse key={i} paragraphId={'credits:'+i} document={markdownToDoc(b.raw,{links:true})}/>)}</section>}{!!notes.length&&<section className="ar-working-records" data-working-notes><h2>Editorial notes · retained for review</h2>{notes.map((text,i)=><pre key={i}>{text}</pre>)}</section>}</main></div>;
+   return {view,placements:[]};
+  }
   const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={b.doc}/>:<pre key={b.id} style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',font:'inherit'}}>{b.raw}</pre>)}</main>;
   return {view,placements:[]};
  }
