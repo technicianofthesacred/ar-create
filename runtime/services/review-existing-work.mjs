@@ -72,7 +72,17 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
   // Start only fresh reads here. allSettled owns every optional rejection even
   // when the fatal portfolio read fails before the remaining owners finish.
   const start=read=>Promise.resolve().then(read);
-  const originalPending=start(()=>timed('portfolio',()=>portfolio.list()));
+  // A required read must not pin the shared opening promise forever. A single
+  // fresh recovery shares this same deadline; abandoned bytes supply no proof.
+  const originalPending=start(async()=>{
+   const firstBudget=Math.min(4000,readTimeoutMs/2);
+   try{return await timed('portfolio',()=>boundedReviewRead(signal=>portfolio.list({signal}),{timeoutMs:firstBudget,label:'Magazine portfolio'}));}
+   catch(error){
+    const remaining=deadline-performance.now();
+    if(error?.code!=='REVIEW_READ_TIMEOUT'||remaining<1)throw error;
+    return timed('portfolio-recovery',()=>boundedReviewRead(signal=>portfolio.list({signal}),{timeoutMs:remaining,label:'Fresh Magazine portfolio'}));
+   }
+  });
   const optionalReaders=[['/api/sources/tree','Library','library'],['/api/source-sessions','Conversations','conversations'],['/api/pieces','Workspace pieces','workspace-pieces'],['/api/study-draft/catalog','Native workspace identities','native-workspace-identities']];
   const readersPending=Promise.allSettled([
    ...optionalReaders.map(([path,,reader])=>start(()=>readCatalogAuthority(path,reader))),
