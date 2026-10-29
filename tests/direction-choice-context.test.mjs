@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
+import {readDirectionChoices,applyDirectionChoice} from '../public/lib/direction-choice.js';
+const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+const code=fs.readFileSync(new URL('../public/document-study/direction-choice-context.js',import.meta.url),'utf8').replace("import {readDirectionChoices} from '../lib/direction-choice.js';",'const readDirectionChoices=window.__codec;');
+const understanding=fs.readFileSync(new URL('../public/document-study/workbench-understanding.js',import.meta.url),'utf8');
+const tick=()=>new Promise(r=>setTimeout(r,5)),hash=s=>createHash('sha256').update(s).digest('hex');
+const event=(kind,action,n,text,reason='')=>({operationId:`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,kind,action,optionId:kind+':'+n,text,reason,source:{artifactId:'invented/map.md',hash:'a'.repeat(64)}});
+function record(body=''){return {bound:true,scope:{kind:'project',parentStudyId:'invented',projectId:'33333333-3333-4333-8333-333333333333'},hash:hash(body),revision:1,body};}
+function fixture(saved=record()){
+ const dom=new JSDOM('<div id="app"><header id="c3-surface-bar"><h1>Independent manuscript title</h1></header><div id="manuscript">Exact independent words</div><div id="drawer"></div></div>',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window,calls=[];
+ let project={id:'invented',viewedStage:5,view:'article'},selected=null;
+ w.current=()=>project;w.studyOutputConnection={selection:()=>selected};w.__codec=readDirectionChoices;
+ w.fetch=async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>saved};};w.eval(code);
+ return {w,dom,calls,setProject:id=>project={...project,id},setSelection:s=>selected=s,setSaved:s=>saved=s,loadUnderstanding:()=>w.eval(understanding)};
+}
+test('one coalesced exact project reader projects separate saved angle/title without editing independent words',async()=>{
+ let body=applyDirectionChoice('Invented subject notes',event('angle','use',1,'A quiet railway journey'));body=applyDirectionChoice(body,event('title','use',2,'The last carriage'));
+ const f=fixture(record(body));try{await Promise.all([f.w.directionChoiceContext.read('invented'),f.w.directionChoiceContext.read('invented')]);await tick();assert.equal(f.calls.length,1);assert.match(f.calls[0].url,/parentStudyId=invented&scope=project/);assert.match(f.w.document.querySelector('[data-direction-choice-context]').textContent,/A quiet railway journey.*The last carriage/);assert.equal(f.w.document.querySelector('h1').textContent,'Independent manuscript title');assert.equal(f.w.document.querySelector('#manuscript').textContent,'Exact independent words');}finally{f.dom.window.close();}
+});
+test('empty explicit source never infers old memo choices; fresh read and reload reflect owner',async()=>{
+ const f=fixture(record('Old MAP says picked direction: a scenic journey'));try{const empty=await f.w.directionChoiceContext.read('invented');assert.equal(empty.selectedAngle,null);assert.equal(empty.selectedTitle,null);const body=applyDirectionChoice('',event('title','use',1,'An invented title'));f.setSaved(record(body));const current=await f.w.directionChoiceContext.read('invented',{fresh:true});assert.equal(current.selectedAngle,null);assert.equal(current.selectedTitle.text,'An invented title');const reload=fixture(record(body));try{assert.equal((await reload.w.directionChoiceContext.read('invented')).selectedTitle.text,'An invented title');}finally{reload.dom.window.close();}}finally{f.dom.window.close();}
+});
+for(const mutate of [r=>r.scope.parentStudyId='foreign',r=>r.scope.kind='part',r=>r.scope.projectId='bad',r=>r.hash='bad',r=>r.revision=-1,r=>r.externalEdit=true])test('foreign or unconfirmed record refuses projection',async()=>{const r=record();mutate(r);const f=fixture(r);try{await assert.rejects(f.w.directionChoiceContext.read('invented'));await tick();assert.match(f.w.document.querySelector('[data-direction-choice-context]').textContent,/not connected/);}finally{f.dom.window.close();}});
+test('late read never paints another selected project or piece and invalidation aborts the superseded read',async()=>{
+ const f=fixture();try{await tick();let release;f.w.fetch=async(_url,options)=>{f.calls.push({options});return {ok:true,json:()=>new Promise(r=>release=r)};};f.w.directionChoiceContext.invalidate('invented');const pending=f.w.directionChoiceContext.decorate();await tick();f.setSelection({projectId:'invented',output:{id:'different-piece'}});release(record(applyDirectionChoice('',event('angle','use',1,'Late rejected paint'))));await pending;assert.doesNotMatch(f.w.document.querySelector('[data-direction-choice-context]').textContent,/Late rejected paint/);f.w.directionChoiceContext.invalidate('invented');assert.equal(f.calls.at(-1).options.signal.aborted,true);}finally{f.dom.window.close();}
+});
+test('Understanding shows explicit rejected angle reasons and current choices in an ordinary visible section',async()=>{
+ let body=applyDirectionChoice('',event('angle','reject',1,'Invented crowded journey','Keep the reflective focus'));body=applyDirectionChoice(body,event('angle','use',2,'A quiet walk'));body=applyDirectionChoice(body,event('title','use',3,'Along the platform'));
+ const f=fixture(record(body));try{await tick();f.loadUnderstanding();const route=f.w.fetch;f.w.fetch=async(url,options)=>url==='/api/work-continuity/understanding'?{ok:true,json:async()=>({schema:'ar-create.current-understanding.projection.v1',fingerprint:'f'.repeat(64),readConsistency:{status:'stable-reread'},status:'empty',selection:{scope:{scope:'project',parentStudyId:'invented'}},records:[{selector:{scope:'project',parentStudyId:'invented'},status:'empty'}]})}:route(url,options);const controller=f.w.workbenchUnderstanding.mount(f.w.document.querySelector('#drawer'),{projectId:'invented'});await controller.ready;const section=f.w.document.querySelector('[data-understanding="rejected"]');assert.equal(section.tagName,'SECTION');assert.match(section.textContent,/A quiet walk.*Along the platform.*Rejected angles.*Invented crowded journey.*Keep the reflective focus/);assert.match(f.w.document.querySelector('[data-understanding="protected"]').textContent,/Not connected/);assert.match(f.w.document.querySelector('[data-understanding="corrections"]').textContent,/Not connected/);controller.cleanup();}finally{f.dom.window.close();}
+});
+test('saved choice events invalidate cache and update the same subject without touching manuscript words',async()=>{
+ const f=fixture();try{await tick();const body=applyDirectionChoice('',event('angle','use',1,'The riverside evening'));f.setSaved(record(body));f.w.dispatchEvent(new f.w.CustomEvent('study-direction-choice-change',{detail:{parentStudyId:'invented'}}));await tick();assert.equal(f.calls.length,2);assert.equal(f.calls[0].options.signal.aborted,true);assert.match(f.w.document.querySelector('[data-direction-choice-context]').textContent,/The riverside evening/);assert.equal(f.w.document.querySelector('#manuscript').textContent,'Exact independent words');}finally{f.dom.window.close();}
+});

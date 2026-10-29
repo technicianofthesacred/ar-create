@@ -2,7 +2,7 @@
 
 ## Current Combined presentation — adopted 30 October
 
-S04, C01/C03/C05/C06. Your thoughts and direction places the author’s own page beside prepared angles and titles, with a grid showing which decisions affect each piece. Agents never rewrite that page. The Combined drawing places angles inline, but expressly does not settle the separately pending Direction A/B choice; implementation of that choice still waits for Adrian. Preserve previous dated decisions, rejection reasons and independently scoped output plans. Carousel wording/photos and the ten marked passages remain unresolved human decisions.
+S04, C01/C03/C04/C05/C06. Your thoughts and direction places the author’s own page beside prepared angles and titles, with a grid showing which decisions affect each piece. Agents never rewrite that page. Adrian subsequently adopted A: inline choices beside the full prepared angle and title explanations. Choose angles and titles separately; rejecting an option retains its exact text and the author’s reason in the existing human-direction record. The layout decision does not choose an angle or title. Preserve previous dated decisions, rejection reasons and independently scoped output plans. Carousel wording/photos and the ten marked passages remain unresolved human decisions.
 
 
 Intent: choose what Adrian wants to express after understanding the material, without discarding other possible stories.
@@ -24,6 +24,8 @@ Adrian selects/edits direction, title, intended audience/language and requested 
 Dated scoped decisions, retained alternatives and a plan per requested piece/output. Continue opens the matching manuscript part. Later changes visibly supersede earlier decisions and identify affected drafts/translations without automatic regeneration. No extra source import or repeated answers across stages. A choice is not approval of prose or publication.
 
 ## Decision history
+
+- 30 October: A inline choices adopted. Saved subject choices and rejected angles carry to Write, Understanding and Arrange from the same human-direction owner. Keep prior dated history; no historical MAP wording implies a new choice. Finish criterion: explicit choices and rejection reasons survive reload/restart for the same subject and selected piece without changing independently edited output words. Actual screen and release acceptance remain separate.
 
 - 13 October: Confirmed local-by-default decisions, broader scope when intended, and clarification only when consequential. This preserves output independence without requiring repeated scope choices. Requirement recorded; implementation is not asserted.
 

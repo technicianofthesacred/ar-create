@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {StateError} from '../store.mjs';
 import {atomicWrite,readJson,digest,ensurePrivateDirectory,regular,resolveInside} from './files.mjs';
-import {provenance,authorOf} from './actor.mjs';
+import {provenance,authorOf,currentActor,isHuman} from './actor.mjs';
+import {readDirectionChoices,stripDirectionChoices} from '../../public/lib/direction-choice.js';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const ROLE='human-authored-editorial-direction-not-evidence-or-source-quotation';
@@ -14,6 +15,8 @@ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const canonical=value=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item);
 const equivalent=(a,b)=>canonical(a)===canonical(b);
 const HASH=/^[a-f0-9]{64}$/;
+const choiceBytes=body=>{const start=body.indexOf('<!-- ar-create:direction-choices:v1 -->'),end='<!-- /ar-create:direction-choices:v1 -->',last=body.lastIndexOf(end);return start<0&&last<0?'':body.slice(Math.max(0,start),last<0?undefined:last+end.length);};
+const choiceStateChanged=(before,after)=>choiceBytes(before)!==choiceBytes(after)||readDirectionChoices(before).available!==readDirectionChoices(after).available||['<!-- ar-create:direction-choices:v1 -->','<!-- /ar-create:direction-choices:v1 -->'].some(marker=>before.split(marker).length!==after.split(marker).length);
 const empty=scope=>({schema:'ar-create.study-human-direction.v1',role:ROLE,bound:!!scope,scope:scope||null,body:'',hash:digest(''),revision:0,updatedAt:null,operationId:null,history:[],path:null});
 function serial(key,fn){const work=(queues.get(key)||Promise.resolve()).then(fn);queues.set(key,work.catch(()=>{}));return work;}
 
@@ -128,7 +131,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   if(m)metadataSnapshots.set(m,digest(raw));
   return m;
  }
- function metaValue(snapshot){const {body,history,path:unusedPath,externalEdit,metadataHash,...meta}=snapshot;return meta;}
+ function metaValue(snapshot){const {body,history,path:unusedPath,externalEdit,metadataHash,directionChoices,...meta}=snapshot;return meta;}
  const metaBytes=snapshot=>JSON.stringify(metaValue(snapshot),null,2)+'\n';
  function persistMeta(loc,snapshot,expectedHash=null){atomicWrite(loc.meta,metaBytes(snapshot),expectedHash===null?{exclusive:true}:{expectedHash});}
  function metaHash(loc){if(!fs.lstatSync(loc.meta,{throwIfNoEntry:false}))return null;regular(loc.meta);return digest(fs.readFileSync(loc.meta));}
@@ -160,7 +163,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   if(m&&raw===null)fail('Saved human direction file is missing; recovery history preserved.');
   const history=ops(loc).map(({record:o})=>({operationId:o.operationId,...authorOf(o),kind:o.kind,status:o.status,createdAt:o.createdAt,before:{body:o.before.body,hash:o.before.hash,revision:o.before.revision,updatedAt:o.before.updatedAt,...(o.before.scopeReferences?{scopeReferences:structuredClone(o.before.scopeReferences)}:{})},after:{body:o.after.body,hash:o.after.hash,revision:o.after.revision,updatedAt:o.after.updatedAt,...(o.after.scopeReferences?{scopeReferences:structuredClone(o.after.scopeReferences)}:{})},...(o.undoOperationId?{undoOperationId:o.undoOperationId}:{}),...(o.reason?{reason:o.reason}:{})})).sort((a,b)=>a.after.revision-b.after.revision||a.createdAt.localeCompare(b.createdAt));
   if(!m)return {...empty(scope),history,path:loc.body,metadataHash:null};
-  return {...m,body:raw,hash:digest(raw),externalEdit:digest(raw)!==m.hash,history,path:loc.body,metadataHash:metadataSnapshots.get(m)};
+  return {...m,directionChoices:readDirectionChoices(raw),body:raw,hash:digest(raw),externalEdit:digest(raw)!==m.hash,history,path:loc.body,metadataHash:metadataSnapshots.get(m)};
  }
  async function validateCollectionReferences(scope,before,body){
   if(scope.kind!=='collection')return;
@@ -205,11 +208,12 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    const before=current(scope),beforeMetadataHash=before.metadataHash,file=path.join(loc.journal,input.operationId+'.json');
    const fingerprint=digest(JSON.stringify({scope,kind,body:kind==='write'?input.body:null,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash,undoOperationId:input.undoOperationId||null}));
    const prior=readJson(file,null);
+   if(prior&&choiceStateChanged(prior.before?.body||'',prior.after?.body||'')&&!isHuman(currentActor()?.actor))fail('Direction choices are human-only; agents may propose but not decide.',403);
    if(prior){if(prior.fingerprint!==fingerprint)fail('Operation UUID already names a different direction decision.');if(prior.status==='committed')return {...prior.after,history:current(scope).history,path:loc.body};fail('This direction operation was rejected; recover its snapshots and use a new operation UUID.');}
    if(input.expectedRevision!==before.revision||input.expectedHash!==before.hash){
     if(kind==='write'&&typeof input.body==='string'&&Buffer.byteLength(input.body)<=1024*1024&&!input.body.includes('\0')){
      const rejected={...empty(scope),bound:true,body:input.body,hash:digest(input.body),revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};
-     atomicWrite(file,JSON.stringify({schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'rejected',createdAt:rejected.updatedAt,before:{...before,history:undefined,path:undefined},after:rejected,reason:'Stale revision or body hash; submitted wording preserved without applying it.'},null,2)+'\n',{exclusive:true});
+     atomicWrite(file,JSON.stringify({schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'rejected',createdAt:rejected.updatedAt,before:{...before,history:undefined,path:undefined,directionChoices:undefined},after:rejected,reason:'Stale revision or body hash; submitted wording preserved without applying it.'},null,2)+'\n',{exclusive:true});
     }
     fail('Human direction changed. Refresh and preserve both versions before saving.');
    }
@@ -224,10 +228,21 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
     body=target.before.body;undoOperationId=target.operationId;
    }
    if(typeof body!=='string'||Buffer.byteLength(body)>1024*1024||body.includes('\0'))fail('Human direction must be verbatim readable text under 1 MiB.',400);
+   const oldChoices=readDirectionChoices(before.body),newChoices=readDirectionChoices(body);
+   // An unchanged malformed section can survive a notes-only save. Editing it
+   // cannot silently discard the retained decisions or become an agent decision.
+   const choicesChanged=choiceStateChanged(before.body,body);
+   if(choicesChanged){
+    if(!isHuman(currentActor()?.actor))fail('Direction choices are human-only; agents may propose but not decide.',403);
+    if(kind==='write'){
+     if(!oldChoices.available||!newChoices.available||newChoices.events.length!==oldChoices.events.length+1||!equivalent(newChoices.events.slice(0,-1),oldChoices.events)||newChoices.events.at(-1).operationId!==input.operationId)fail('Append exactly one current direction choice; earlier decisions remain unchanged.',400);
+     if(stripDirectionChoices(before.body)!==stripDirectionChoices(body))fail('Save your notes separately before choosing a direction.',400);
+    }
+   }
    // Undo restores exact owner-journal bytes; it does not introduce a new source claim.
    if(kind==='write'&&scope.kind==='collection')await validateCollectionReferences(scope,before,body);
-   const after={...before,...empty(scope),bound:true,body,hash:digest(body),revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};delete after.history;delete after.path;delete after.externalEdit;delete after.metadataHash;
-   const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',beforeMetadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined},after,...(undoOperationId?{undoOperationId}:{})};
+   const after={...before,...empty(scope),bound:true,body,hash:digest(body),revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};delete after.history;delete after.path;delete after.externalEdit;delete after.metadataHash;delete after.directionChoices;
+   const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',beforeMetadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined,directionChoices:undefined},after,...(undoOperationId?{undoOperationId}:{})};
    atomicWrite(file,JSON.stringify(op,null,2)+'\n',{exclusive:true});
    const expectedMetaHash=beforeMetadataHash;
    try{
@@ -338,12 +353,12 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
     const target=ops(loc).map(row=>row.record).find(op=>op.operationId===input.undoOperationId);if(!target||!target.kind.startsWith('reference-')||target.status!=='committed'||target.after.revision!==before.revision||target.afterMetadataHash!==before.metadataHash)fail('Only current unchanged reference metadata can be undone.');
     const restored=structuredClone(target.before.scopeReferences||[]);for(const ref of restored)if(ref.status==='accepted'&&(await reviewReference(ref,before,restored)).needed)fail('Restored adopted reference changed; retain history and review.');rows.splice(0,rows.length,...restored);referenceId=target.referenceId;
    }
-   const after={...before,scopeReferences:rows,revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};delete after.history;delete after.path;delete after.externalEdit;delete after.metadataHash;referenceRows(after);
+   const after={...before,scopeReferences:rows,revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};delete after.history;delete after.path;delete after.externalEdit;delete after.metadataHash;delete after.directionChoices;referenceRows(after);
    // Re-read both body and metadata after asynchronous origin resolution.
    if(digest(bytes(loc.body)||'')!==before.hash||metaHash(loc)!==before.metadataHash)fail('Target direction changed during reference preparation.');
    for(const ref of rows)if(ref.id===referenceId&&ref.status==='accepted'&&(await reviewReference(ref,before,rows)).needed)fail('Accepted origin changed before reference publication.');
    if(digest(bytes(loc.body)||'')!==before.hash||metaHash(loc)!==before.metadataHash)fail('Target direction changed before metadata commit.');
-   ensurePrivateDirectory(loc.dir,'human-direction-history');const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',referenceId,beforeMetadataHash:before.metadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined},after,...(action==='undo'?{undoOperationId:input.undoOperationId}:{})};
+   ensurePrivateDirectory(loc.dir,'human-direction-history');const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',referenceId,beforeMetadataHash:before.metadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined,directionChoices:undefined},after,...(action==='undo'?{undoOperationId:input.undoOperationId}:{})};
    atomicWrite(file,JSON.stringify(op,null,2)+'\n',{exclusive:true});persistMeta(loc,after,before.metadataHash);atomicWrite(file,JSON.stringify({...op,status:'committed'},null,2)+'\n');
    return {operationId:input.operationId,reference:structuredClone(rows.find(r=>r.id===referenceId)||null),record:current(scope),replayed:false};
   });
@@ -366,7 +381,7 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   }
   const candidates=[{parentStudyId},...(bindingId?[{parentStudyId,scope:'part',bindingId}]:[]),...(outputId?[{parentStudyId,scope:'output',...(bindingId?{bindingId}:{}),outputId}]:[])];
   const records=[];
-  for(const input of candidates){const scope=await authority(input);if(!scope)fail('Ready direction parent or part binding is missing.');const item=current(scope),plan=directionPlanProjection(item.body);if(item.revision>0)records.push({role:ROLE,scope:item.scope,body:item.body,hash:item.hash,revision:item.revision,updatedAt:item.updatedAt,...(plan?{planningIntent:plan}:{}),...(conceptContextProjection(item.body)||{})});}
+  for(const input of candidates){const scope=await authority(input);if(!scope)fail('Ready direction parent or part binding is missing.');const item=current(scope),plan=directionPlanProjection(item.body);if(item.revision>0)records.push({role:ROLE,scope:item.scope,body:item.body,directionChoices:readDirectionChoices(item.body),hash:item.hash,revision:item.revision,updatedAt:item.updatedAt,...(plan?{planningIntent:plan}:{}),...(conceptContextProjection(item.body)||{})});}
   return {schema:'ar-create.study-human-direction-context.v1',role:records.some(item=>item.role===CONCEPT_CONTEXT_ROLE)?CONCEPT_CONTEXT_ROLE:ROLE,projectId,documentId:documentId??null,outputId:outputId||null,records,hash:digest(JSON.stringify(records))};
  }
  return {select:async input=>{const scope=await authority(structuredClone(input),{create:true});return current(scope);},read,captureReadGuard,write:input=>mutate(structuredClone(input),'write'),undo:input=>mutate(structuredClone(input),'undo'),context,readScopeReferences,proposeScopeReference:input=>referenceMutation(input,'propose'),changeScopeReference:input=>referenceMutation(input,'change'),undoScopeReference:input=>referenceMutation(input,'undo')};

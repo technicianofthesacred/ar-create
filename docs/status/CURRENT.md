@@ -1,10 +1,16 @@
+## 30 October — saved Direction choices candidate
+
+C01/C03/C04/C05/C06, S04/S05/S09. Adrian adopted A: inline choices beside the full prepared angle and title explanations. The candidate saves separate explicit angle/title choices and rejected options with reasons in the existing human-direction owner, preserving dated history and author notes. Write and Arrange show that saved subject context beside the existing title; Understanding shows the current choices and rejected angles in a visible section. Manuscript titles, independently edited output words and existing protection/correction owners retain their authority. No actual angle or title has been chosen by an agent.
+
+HTTP owner restart and focused synthetic checks pass. These verify saved records and guarded projections, not the actual finished screen. Finish criterion remains the same explicit choices and reasons after reload/restart for the same subject and selected piece, with stale/foreign responses refused and independent words preserved. Integrated native screen verification, exact release proof and human acceptance remain pending; this is not installed or whole-Combined acceptance.
+
 ## 30 October — Combined Home and subject-board candidate
 
 C01/C02/C04/C05/C06, S01–S12. Combined is the approved presentation direction and the earlier visual hold is lifted. This first bounded candidate supplies Home with truthful decision/optional/committed-agent lists, exact saved paragraph pickup, a twelve-item desktop rail and ordinary phone navigation. Subjects shows the existing origins, understanding and independently owned pieces. The current Article and registered eight-slide native Carousel open through their maintained owners; earlier/browser/native-source editions remain separately labelled. Small grey preview-not-connected labels identify the unimplemented board thumbnails. No drawing sample content is installed.
 
 Native candidate checks confirm the selected Hong Kong Article/Carousel identities and Home’s return to the same ten highlighted passages without approval. Selection-aware Write/Read/Check still uses the maintained piece-mode owner. Read-only group discovery closes this board entrance gap without changing the older shared Outputs selector dispatch. Saved pickup checks require a matching manuscript hash and explicit Magazine owner; legacy unverifiable positions remain available without a fabricated sentence. Viewing never advances pickup.
 
-This is a source candidate checkpoint, not installed or whole-Combined acceptance. Exact publication, phone/theme proof and preservation are recorded separately. Piece tabs/full-screen composition, source/research/media/arrange sheets and the visual Outputs register remain subsequent work. Direction A/B, Carousel words/photos and ten marked passages remain human decisions.
+This is a source candidate checkpoint, not installed or whole-Combined acceptance. Exact publication, phone/theme proof and preservation are recorded separately. Piece tabs/full-screen composition, source/research/media/arrange sheets and the visual Outputs register remain subsequent work. The actual angle/title choices, Carousel words/photos and ten marked passages remain human decisions.
 
 ## 29 October — dependable return accepted for the selected Article
 
@@ -12,7 +18,7 @@ C01/C02/C06: the existing review process was explicitly assigned macOS Backgroun
 
 Ten consecutive main-app Article openings after separate native and review service restarts passed without Retry. Each opening reached the visibly rendered saved Article in 1.9–2.9 seconds, with one client discovery request; every timed reader fulfilled and no recovery scan was needed. Timestamped native-screen frames are compiled into a video with matching restart PID/readiness receipts, AX snapshots and reader timings. This is a recorded screen sequence, not continuous desktop capture. Earlier incomplete recordings and a stale-receipt harness error remain separate and are not acceptance proof. Original words, editions, application flags and the dirty human checkout are unchanged.
 
-Two Direction interaction alternatives have been shown before implementation: inline decisions beside the full explanations, or a compact comparison table. The human layout choice is pending. The saved map already records the current title from an earlier dated decision; later choices must preserve that history. The explicitly approved Audience display/export projection continues independently. Wider interface restyling, current wording approval, Carousel file acceptance and whole-product completion remain open.
+Two Direction interaction alternatives have been shown before implementation: inline decisions beside the full explanations, or a compact comparison table. At that 29 October checkpoint the human layout choice was pending; A inline choices was subsequently adopted on 30 October. The saved map already records the current title from an earlier dated decision; later choices must preserve that history. The explicitly approved Audience display/export projection continues independently. Wider interface restyling, current wording approval, Carousel file acceptance and whole-product completion remain open.
 
 ## 29 October — scoped Audience projection candidate
 

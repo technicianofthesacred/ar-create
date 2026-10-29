@@ -1,3 +1,4 @@
+import {stripDirectionChoices,readDirectionChoices} from '../../public/lib/direction-choice.js';
 import {digest} from './files.mjs';
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export const CONCEPT_CONTEXT_ROLE='mixed-concept-contributions-with-separate-explicit-direction';
@@ -21,6 +22,7 @@ export function directionPlanProjection(body){
 
 /** Read-only attribution projection; the existing Markdown remains the sole saved authority. */
 export function conceptContextProjection(body){
+ const originalBody=body,choices=readDirectionChoices(body);if(choices.available)body=stripDirectionChoices(body);
  const plan=directionPlanProjection(body),planStart=body.indexOf('<!-- ar-create:direction-plan:v1 -->'),planEnd='<!-- /ar-create:direction-plan:v1 -->';
  // The UI appends a planning section after the existing brief. Decode its exact
  // untouched prefix for attribution while the full body/hash remain authoritative.
@@ -30,5 +32,5 @@ export function conceptContextProjection(body){
  const explicitManual=body.split(adoptedHeading).length===2&&body.split(headings[1]).length===2&&adoptedStart>=0&&adoptedEnd>adoptedStart?body.slice(adoptedStart+adoptedHeading.length,adoptedEnd):'';
  const adoptedDirection=parsed.structured?parsed.adoptedDirection:explicitManual;
  if(!/^# Concept(?:\s|$)/m.test(body)&&!/^## (?:Author thoughts|Adopted human direction|AI interpretation|Suggestions — unadopted|Selected Library passages)/m.test(body)&&!parsed.sourceSelections.length)return null;
- return {...(plan?{planningIntent:plan}:{}),role:CONCEPT_CONTEXT_ROLE,body:adoptedDirection,bodyRole:'human-authored-editorial-direction-not-evidence-or-source-quotation',personalThoughts:{role:'human-personal-contribution-not-adopted-editorial-direction',body:parsed.structured?parsed.authorThoughts:''},attribution:parsed.structured?'labeled-contributions':'mixed-content-unclassified',sourceSnapshot:{role:CONCEPT_CONTEXT_ROLE,body,hash:digest(body)},...(parsed.structured?{aiInterpretation:{role:'ai-interpretation-provisional-not-human-direction',body:parsed.aiInterpretation},suggestions:{role:'ai-suggestions-unadopted-not-human-direction',body:parsed.suggestions}}:{unclassifiedMixedContent:{role:'mixed-concept-content-unclassified-not-human-direction',body}}),libraryReferences:{role:'library-passages-not-personal-beliefs-or-verified-factual-support',records:parsed.sourceSelections}};
+ return {directionChoices:choices,...(plan?{planningIntent:plan}:{}),role:CONCEPT_CONTEXT_ROLE,body:adoptedDirection,bodyRole:'human-authored-editorial-direction-not-evidence-or-source-quotation',personalThoughts:{role:'human-personal-contribution-not-adopted-editorial-direction',body:parsed.structured?parsed.authorThoughts:''},attribution:parsed.structured?'labeled-contributions':'mixed-content-unclassified',sourceSnapshot:{role:CONCEPT_CONTEXT_ROLE,body:originalBody,hash:digest(originalBody)},...(parsed.structured?{aiInterpretation:{role:'ai-interpretation-provisional-not-human-direction',body:parsed.aiInterpretation},suggestions:{role:'ai-suggestions-unadopted-not-human-direction',body:parsed.suggestions}}:{unclassifiedMixedContent:{role:'mixed-concept-content-unclassified-not-human-direction',body:originalBody}}),libraryReferences:{role:'library-passages-not-personal-beliefs-or-verified-factual-support',records:parsed.sourceSelections}};
 }

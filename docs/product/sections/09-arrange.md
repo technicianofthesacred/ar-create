@@ -5,6 +5,10 @@
 S09, C01/C03/C04/C05. Arrange remains on the rail and opens as a sheet over an Article. Carousel is an actual piece tab with its continuous sequence, templates and one toolbar; Post and Listing images move to their corresponding piece tabs. Preserve all existing layouts, inline wording/credits, exact asset/crop identities and saved Undo. Reordering uses a drag grip, never Earlier/Later or arrow buttons. Do not implement a pictured format or invent saved content merely to fill a tab; unconnected actions carry a grey not connected label.
 
 
+## Saved Direction context — adopted 30 October
+
+S09, C01/C03/C04/C05/C06. Following the adopted A inline choices, show the saved subject angle and chosen title separately beside the existing piece heading. Both come from the existing human-direction owner; neither replaces the manuscript title, words, layout or independent output decisions. An empty record means no choice, and a failed read remains visibly not connected. Finish criterion: the same explicit subject choices return after reload/restart and a selected-piece switch cannot display a late response for another piece. Native screen and release acceptance remain pending.
+
 Intent: compose words and real media into the selected output, with an overview instead of repeated item-opening clicks.
 
 ## Work surface

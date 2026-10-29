@@ -26,7 +26,7 @@ Routine technical blockers remain Build's responsibility. Genuine wording, direc
 
 Finish one existing selected project through useful author decisions and faithful Article/Carousel files. First clean live discovery and the activity record: processing files and fixtures are not sources; agent actions retain their actor; viewing is not a committed edit; pickup advances on an edit or explicit Continue. Then diagnose optional discovery readers and prove ten cold returns without Retry, rather than widening a deadline alone.
 
-Next connect the Direction choice to the same piece’s Write, Understanding and Arrange views, showing two or three focused alternatives before implementation. Audience must distinguish highlighted pending passages and readable end notes from literal editing syntax. Carousel files follow the author’s wording and photo choices. Preserve the seven pillars and existing authorities. The 29 October restyling hold is lifted by the approved Combined direction on 30 October below. The Direction A/B choice, Carousel wording/photo decisions and ten marked passages remain human decisions. These are acceptance requirements, not completion proof.
+Connect the Direction choice to the same piece’s Write, Understanding and Arrange views. The focused alternatives have been shown and Adrian adopted A inline choices on 30 October. Audience must distinguish highlighted pending passages and readable end notes from literal editing syntax. Carousel files follow the author’s wording and photo choices. Preserve the seven pillars and existing authorities. The 29 October restyling hold is lifted by the approved Combined direction on 30 October below. The actual angle/title choices, Carousel wording/photo decisions and ten marked passages remain human decisions. These are acceptance requirements, not completion proof.
 
 ## Priorities made explicit from the author's feedback
 
@@ -61,7 +61,7 @@ A piece occupies the screen. Its tabs represent actual Article, Carousel, Post, 
 
 Outputs shows every actual piece as it looks, grouped by subject, with delivery facts and one next step. Each bounded step keeps all 35 existing functions reachable. Use one toolbar per screen, visible work instead of disclosures, drag grips rather than reorder arrows, small rectangular buttons with 5px corners, and no pills, gradients, emoji or icons beyond rail squares. Unconnected operations carry a small grey `not connected` tag in place. Agents propose; the author's own words remain attributed and unchanged.
 
-The separately supplied drawings contain invented demonstration content: do not add it to the app. The inline angles pictured in Combined do not answer the pending Direction A/B question. Carousel word approval, photo choices and the ten marked passages remain Adrian's. Install only when author capability changes; report “You can now ___ on Hong Kong Day 1” with a main-app screenshot beside the matching Combined reference. This records adopted intent, not completed behavior.
+The separately supplied drawings contain invented demonstration content: do not add it to the app. Adrian subsequently adopted A inline choices beside the full prepared explanations. Save angle and title choices separately, with explicit rejection reasons, through the existing human-direction owner; show the same saved subject context in Write, Understanding and Arrange without replacing manuscript wording or independent output decisions. Carousel word approval, photo choices and the ten marked passages remain Adrian's. Install only when author capability changes; report “You can now ___ on Hong Kong Day 1” with a main-app screenshot beside the matching Combined reference. This records adopted intent, not completed behavior.
 
 ## Product pillars and shared acceptance
 
@@ -508,3 +508,8 @@ Acceptance must include the actual retained cases: An Cha sessions/context, Hong
 #### 30 October — Combined approved for implementation
 
 Adrian approved sending Combined to Build. This lifts the 29 October UI restyling hold and adopts Home/Subjects/subject boards, piece tabs and Write/Read/Check modes, contextual sheets, visible Outputs and the shared rules above. Journey-first on Hong Kong Day 1 and all existing data/approval protections remain. Direction A/B, Carousel words/photos and the ten marked passages are expressly unresolved. Approval is not implementation, installed proof or editorial acceptance.
+
+
+#### 30 October — Direction A inline choices adopted
+
+C01/C03/C04/C05/C06, S04/S05/S09. Adrian chose the inline interaction after seeing A/B alternatives. This resolves the earlier pending layout decision only; the actual angle and title remain his separate editorial choices. Retain rejected options and reasons, prior dated history and the author’s notes in the existing human-direction record. Reuse that saved owner for subject-context projections in Write, Understanding and Arrange; no inferred historical MAP choice, replacement manuscript authority or automatic output rewrite. Finish criterion: explicit decisions survive reload/restart for the same subject and piece with exact independent output words preserved. Candidate tests, native screen acceptance and release proof remain distinct.

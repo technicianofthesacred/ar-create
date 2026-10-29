@@ -184,6 +184,8 @@
   panel.append(head,hints,log,form);return panel;
  }
  function direction(ws){
+  if(window.directionChoiceSurface){window.directionChoiceSurface.decorate();if(ws.classList.contains('combined-direction'))return;}
+
   if(ws.querySelector('.human-direction-editor')&&ws.querySelector('.c3-empty'))window.c3Empty?.reveal?.();
   add(ws,'.human-direction-editor','wb-direction-record');
   add(ws,'.human-direction-words','mine');add(ws,'.human-direction-actions','foot');
