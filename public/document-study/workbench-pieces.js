@@ -180,7 +180,75 @@
  function resizeRows(){if(root?.isConnected){windowStart=windowEnd=-1;renderRows(true);}}
  function decorate(){if(dialog?.open&&dialog.dataset.workbenchPieces==='true'&&root&&!root.isConnected)dialog.append(root);}
  async function open({dialog:target=document.getElementById('project-library')}={}){navigation++;if(!target?.open)return;cleanup();dialog=target;dialog.dataset.workbenchPieces='true';dialog.setAttribute('aria-labelledby','wbp-title');root=document.createElement('div');dialog.append(root);window.addEventListener('resize',resizeRows);root.addEventListener('scroll',event=>{if(event.target.matches('.wbp-rows')&&event.target.scrollTop!==lastAppliedOffset){scrollOffset=event.target.scrollTop;renderRows();}},true);root.addEventListener('keydown',event=>{const target=event.target.closest('[data-wbp-open]'),viewport=root.querySelector('.wbp-rows');if(!target&&event.target!==viewport)return;const currentIndex=target?visibleRows.findIndex(r=>key(r)===target.dataset.wbpOpen):Math.floor(scrollOffset/rowHeight()),page=Math.max(1,Math.floor((viewport.clientHeight||480)/rowHeight())),delta={ArrowDown:1,ArrowUp:-1,PageDown:page,PageUp:-page}[event.key];if(delta===undefined&&!['Home','End'].includes(event.key))return;if(!visibleRows.length)return;event.preventDefault();const index=Math.max(0,Math.min(visibleRows.length-1,event.key==='Home'?0:event.key==='End'?visibleRows.length-1:currentIndex+delta));if(index*rowHeight()<scrollOffset)scrollOffset=index*rowHeight();else if((index+1)*rowHeight()>scrollOffset+(viewport.clientHeight||480))scrollOffset=(index+1)*rowHeight()-(viewport.clientHeight||480);renderRows();[...root.querySelectorAll('[data-wbp-open]')].find(el=>el.dataset.wbpOpen===key(visibleRows[index]))?.focus({preventScroll:true});});root.addEventListener('click',event=>{const checkbox=event.target.closest('[data-wbp-select]');if(checkbox){const id=checkbox.dataset.wbpSelect,index=visibleRows.findIndex(r=>key(r)===id),anchor=visibleRows.findIndex(r=>key(r)===selectionAnchor);const targets=event.shiftKey&&anchor>=0?visibleRows.slice(Math.min(index,anchor),Math.max(index,anchor)+1):visibleRows.slice(index,index+1);for(const row of targets){if(checkbox.checked)selected.add(key(row));else selected.delete(key(row));}selectionAnchor=id;paint();return;}const b=event.target.closest('button');if(!b||b.disabled)return;if(b.hasAttribute('data-wbp-copy-browser')){const row=rows.find(r=>key(r)===b.dataset.wbpCopyBrowser);if(row?.type==='browser-carousel')copyBrowserPiece(row);return;}if(b.hasAttribute('data-wbp-original')){const row=rows.find(r=>key(r)===b.dataset.wbpOriginal);if(row)void openPiece({...row,originalOnly:true});return;}if(b.hasAttribute('data-wbp-open')){const row=rows.find(r=>key(r)===b.dataset.wbpOpen);if(row)void openPiece({...row});return;}if(b.hasAttribute('data-wbp-select-all')){for(const row of matching())selected.add(key(row));paint();return;}if(b.hasAttribute('data-wbp-clear-selection')){selected.clear();selectionAnchor=null;selectionOnly=false;resetWindow();paint();return;}if(b.hasAttribute('data-wbp-show-selected')){selectionOnly=!selectionOnly;resetWindow();paint();return;}if(b.hasAttribute('data-wbp-close')){void window.projectLibrary.close().catch(e=>{message=humanError(e,'This piece could not close. Your work is retained.');paint();});return;}if(b.hasAttribute('data-wbp-retry')){void load({refreshExisting:true});return;}if(b.hasAttribute('data-wbp-folders')){if(window.matchMedia?.('(max-width:760px)').matches)sheet=!sheet;else{collapsed=!collapsed;try{localStorage.setItem(PREF,collapsed?'collapsed':'open');}catch{}}}else if(b.hasAttribute('data-wbp-folder')){folder=b.dataset.wbpFolder;sheet=false;resetWindow();}else if(b.hasAttribute('data-wbp-filters'))filters=!filters;else if(b.hasAttribute('data-wbp-view')){resetWindow();selectionOnly=false;view=b.dataset.wbpView;status='';folder='';kind='';project='';query='';}else if(b.hasAttribute('data-wbp-chip')){resetWindow();if(b.dataset.wbpChip==='kind')kind='';if(b.dataset.wbpChip==='status')status='';if(b.dataset.wbpChip==='project')project='';view='custom';}else if(b.hasAttribute('data-wbp-clear')){resetWindow();query=folder=kind=status=project='';view='all';}paint();});root.addEventListener('input',event=>{if(event.target.hasAttribute('data-wbp-search')){query=event.target.value;resetWindow();paint();}});root.addEventListener('change',event=>{const el=event.target;if(el.hasAttribute('data-wbp-kind'))kind=el.value;else if(el.hasAttribute('data-wbp-status'))status=el.value;else if(el.hasAttribute('data-wbp-project'))project=el.value;else if(el.hasAttribute('data-wbp-sort'))sort=el.value;else return;resetWindow();view='custom';paint();});if(!dialog.dataset.wbpCleanup){dialog.dataset.wbpCleanup='true';dialog.addEventListener('close',cleanup);dialog.addEventListener('toggle',()=>{if(!dialog.open)cleanup();});}paint();await load();}
- window.workbenchPieces={open,close:()=>{navigation++;cleanup();},decorate,carouselEdition,assertCarouselPickup,
+ // Subject boards and piece tabs reuse these exact readers and guarded opening.
+ // Tokens stay in this page only: no wording, signatures or paths enter DOM/storage.
+ const subjectReferences=new Map();let subjectReferenceSequence=0,subjectReferenceIntent=0;
+ async function subjectWorkspaceRows(existing,projectId,{fresh=false}={}){
+  const found=[],problems=[],links=existing?.workspaceLinks?.pieces||[],entries=existing?.workspacePieces||[],seen=new Set();
+  for(const link of links){
+   if(link.state!=='verified'||links.filter(other=>other.workspaceId===link.workspaceId).length!==1)continue;
+   const matching=entries.filter(entry=>entry.id===link.workspaceId&&entry.documentId===link.documentId);if(matching.length!==1)continue;
+   for(const [index,target] of (link.targets||[]).entries()){
+    if(target.parentStudyId!==projectId||target.workspaceId!==link.workspaceId||target.documentId!==link.documentId||!target.rootBindingId||!['root-owned-workspace','output-owned-workspace'].includes(target.role))continue;
+    if(target.role==='output-owned-workspace'&&(!target.outputId||!target.outputBindingId))continue;
+    try{
+     if(typeof window.studyOutputConnection?.readWorkspaceGroup!=='function')throw Error('Exact workspace output discovery is not connected.');
+     const saved=await window.studyOutputConnection.readWorkspaceGroup({parentStudyId:projectId,rootBindingId:target.rootBindingId},{fresh});
+     for(const output of saved.outputs){
+      if(target.outputId&&output.id!==target.outputId||!target.outputId&&output.kind!=='carousel')continue;
+      const owners=saved.outputBindings.filter(owner=>owner.outputId===output.id),owner=owners.length===1?owners[0].wordOwner:null;
+      if(target.role==='root-owned-workspace'&&(owner?.kind!=='carousel-words'||owner.projectId!==link.workspaceId||owner.documentId!==link.documentId||owner.outputId!==output.id))continue;
+      const identity=JSON.stringify([projectId,target.rootBindingId,output.id]);if(seen.has(identity))continue;seen.add(identity);
+      const format=({article:'Article',carousel:'Carousel',post:'Post','product-listing':'Product listing'})[output.kind];if(!format)continue;
+      found.push({type:'workspace-reference',id:output.id,projectId,projectName:projects().find(p=>p.id===projectId)?.name||'Saved subject',title:output.name||output.title||format,format,status:output.stage==='words'?'review-needed':output.stage||'not-recorded',edition:[output.edition,output.language,output.kind==='carousel'&&Array.isArray(output.slides)?output.slides.length+' slides':null,'Native saved edition'].filter(Boolean).join(' · '),rootBindingId:target.rootBindingId,workspaceId:link.workspaceId,documentId:link.documentId,targetIndex:index,target:JSON.parse(JSON.stringify(target)),explicitOutputId:target.outputId?null:output.id,revision:JSON.stringify([output,saved.output?.id===output.id?saved.writingProof:null,owner])});
+     }
+    }catch(error){problems.push(humanError(error,'Saved workspace outputs could not be read.'));}
+   }
+  }
+  return {rows:found,errors:problems};
+ }
+ async function subjectRows(projectId,{fresh=false}={}){
+  if(typeof projectId!=='string'||!projectId)throw Error('Choose a saved subject first.');
+  const p=projects().find(p=>p.id===projectId),existing=await existingCatalog({refresh:fresh});
+  if(!p&&!(existing?.stories||[]).some(s=>s.id===projectId||s.nativeProjectId===projectId||'magazine-story:'+s.id===projectId))throw Error('This subject is no longer available.');
+  const name=p?.name||existing.stories.find(s=>s.id===projectId||s.nativeProjectId===projectId||'magazine-story:'+s.id===projectId)?.name||'Saved subject',base={projectId,projectName:name,folder:p?.folder||'Projects'},found=p?retainedPieces(p):[],problems=[];
+  const recorded=magazinePieces(existing),earlier=retainedCarouselPieces(existing);
+  found.push(...recorded.rows.filter(r=>r.projectId===projectId),...earlier.rows.filter(r=>r.projectId===projectId));problems.push(...recorded.errors,...earlier.errors);
+  if(p){
+   let discovery;
+   try{discovery=await catalog({withExclusions:true,fresh});}catch(error){problems.push(humanError(error,'Saved manuscripts could not be read.'));}
+   if(discovery){
+    if(discovery.excludedProjectIds.includes(projectId))throw Error('This subject is excluded from the live list.');
+    const unique=new Set();for(const d of discovery.drafts){if(d.parentStudyId!==projectId||unique.has(d.bindingId))continue;unique.add(d.bindingId);found.push({...base,type:'native',id:d.bindingId,title:d.title||'Untitled manuscript',format:'Manuscript',status:'draft',edition:null,canonicalOutputId:d.canonicalOutputId||null,originalHash:d.originalHash||null,originalId:d.originalId||null,partKey:d.partKey||'article'});}
+    try{if(typeof window.realOutputOverview?.read!=='function')throw Error('Saved outputs are not connected.');const value=await window.realOutputOverview.read({projectId});found.push(...outputs(value,projectId).map(o=>({...o,...base,type:'output',title:o.title||'Untitled output',format:o.format||'Output',status:o.status||'not-recorded'})));}catch(error){problems.push(humanError(error,'Saved outputs could not be read.'));}
+   }
+  }
+  if(excludedProject(projectId)||p&&(projects().find(q=>q.id===projectId)!==p))throw Error('This subject changed while its pieces were read.');
+  const workspaces=await subjectWorkspaceRows(existing,projectId,{fresh});found.push(...workspaces.rows);problems.push(...workspaces.errors);
+  const canonical=new Set(found.filter(r=>r.type==='output').map(r=>r.id)),seen=new Set(),workspaceIds=new Set(workspaces.rows.map(row=>JSON.stringify([row.id,row.rootBindingId])));
+  // Merge only an explicit Magazine working-owner identity, never matching titles/hashes alone.
+  const magazineOwners=new Map();for(const story of existing?.stories||[])for(const artifact of story.artifacts||[]){const owner=artifact.magazineWorkingTarget;if(owner?.kind==='magazine'&&owner.nativeProjectId===projectId&&owner.artifactId===artifact.artifactId&&owner.hash===artifact.hash)magazineOwners.set(artifact.artifactId,'magazine-working:'+owner.storyId+':'+owner.pieceId);}
+  for(const row of found.filter(row=>row.type==='output')){const artifactId=[...magazineOwners].find(([,ownerId])=>ownerId===row.id)?.[0],sameOwner=artifactId&&found.find(item=>item.type==='magazine-working'&&item.artifactId===artifactId);if(sameOwner){row.title=sameOwner.title;row.format='Article';}}
+  const linkedMagazineRoots=new Set((existing?.workspaceLinks?.pieces||[]).flatMap(link=>(link.targets||[]).filter(target=>target.parentStudyId===projectId&&!target.outputId&&[...magazineOwners.keys()].some(id=>{const artifact=(existing.stories||[]).flatMap(story=>story.artifacts||[]).find(a=>a.artifactId===id);return target.originalHash===artifact?.hash&&target.partKey===(artifact?.magazineWorkingTarget?.partKey||'article');})).map(target=>target.rootBindingId)));
+  const current=found.filter(row=>!(row.type==='native'&&row.canonicalOutputId&&canonical.has(row.canonicalOutputId))).filter(row=>!(row.type==='output'&&workspaceIds.has(JSON.stringify([row.id,row.rootBindingId])))).filter(row=>!(row.type==='output'&&[...magazineOwners].some(([artifactId,ownerId])=>ownerId===row.id&&found.some(item=>item.type==='magazine-working'&&item.artifactId===artifactId)))).filter(row=>{const id=key(row);if(seen.has(id))return false;seen.add(id);return true;}).map(row=>({...row,editionRole:['browser-carousel','browser-words','retained-carousel','retained-words'].includes(row.type)?'earlier':row.type==='native'&&linkedMagazineRoots.has(row.id)?'alternate':'current'}));
+  return {rows:current,errors:problems};
+ }
+ async function listForProject(projectId){
+  const value=await subjectRows(projectId),out=[];
+  for(const row of value.rows){const reference='subject-piece-'+(++subjectReferenceSequence);subjectReferences.set(reference,{row,stamp:JSON.stringify(row)});out.push({reference,projectId:row.projectId,title:row.title,format:row.format,status:statusLabel(row.status),edition:editionLabel(row)||'',kind:row.type,editionRole:row.editionRole||'current'});}
+  while(subjectReferences.size>1000)subjectReferences.delete(subjectReferences.keys().next().value);
+  return JSON.parse(JSON.stringify({projectId,pieces:out,errors:value.errors}));
+ }
+ async function openReference(reference){
+  const intent=++subjectReferenceIntent,origin=current(),originStage=origin?.viewedStage,originView=origin?.view;
+  const saved=subjectReferences.get(reference);if(!saved)throw Error('This piece reference expired. Reopen its subject board.');
+  const value=await subjectRows(saved.row.projectId,{fresh:true}),matches=value.rows.filter(row=>key(row)===key(saved.row));
+  if(intent!==subjectReferenceIntent||current()!==origin||origin?.viewedStage!==originStage||origin?.view!==originView)throw Error('The selected work changed. Reopen its subject board before continuing.');
+  if(matches.length!==1||JSON.stringify(matches[0])!==saved.stamp)throw Error('This saved piece changed. Reopen its subject board before continuing.');
+  const row=matches[0];if(row.type==='workspace-reference'){if(typeof window.existingWork?.openWorkspaceTarget!=='function')throw Error('The exact saved workspace entrance is unavailable.');await window.existingWork.openWorkspaceTarget(row.workspaceId,row.targetIndex,{stage:row.format==='Carousel'?9:5,...(row.explicitOutputId?{outputId:row.explicitOutputId}:{})});return true;}
+  return openPiece({...row});
+ }
+ window.workbenchPieces={open,listForProject,openReference,close:()=>{navigation++;cleanup();},decorate,carouselEdition,assertCarouselPickup,
   async openCarousel(expected){
    if(busy)return false;
    const row=projects().flatMap(retainedPieces).find(r=>r.type==='browser-carousel'&&r.projectId===expected?.projectId);

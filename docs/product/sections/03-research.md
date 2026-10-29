@@ -1,5 +1,10 @@
 # 3 — Research
 
+## Current Combined presentation — adopted 30 October
+
+S03, C01/C04/C05/C06. Research remains independently useful from the rail and opens as a contextual sheet over a piece. Show one findings list with Supported/Uncertain evidence and citations, with the existing console at the foot. Keep learning and the shared brief visible in place. A sheet returns to the same piece/line on Esc; changing presentation does not rerun research, contact a provider or replace the saved brief.
+
+
 Intent: help Adrian deeply understand unique points from his conversations, expand his knowledge and ground the eventual content. Reuse Magazine research and Tea Atlas where connected.
 
 Current typography follows [PRODUCT: Typography](../PRODUCT.md#typography): C Plus Jakarta Sans for explanations and retained guides, Lora for actual speech/evidence quotations. The later Source-only Atlas refinement does not redefine Research. A retained long guide may use the existing 16px/1.65 reading role; that adaptation is not proof of whole-screen reference parity.

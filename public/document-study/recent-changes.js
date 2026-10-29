@@ -15,7 +15,7 @@
  const CLIENT={ui:'in the app',cli:'from the command line',mcp:'through a connected assistant',http:'over the local connection',file:'from a file'};
  const canFetch=()=>typeof fetch==='function';
  async function get(url){if(url.split('?')[0]==='/api/study-draft/catalog'&&window.nativeDraftCatalog)return window.nativeDraftCatalog.read();const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json();}
- let presence=[],leases=[],asks=[],handoffs=[],humanLines=[],bindings=new Map(),loaded=false,ttlMs=120000,openAsk=null,askError='',answering=false;
+ let presence=[],leases=[],asks=[],handoffs=[],humanLines=[],committedLines=[],committedStatus='pending',bindings=new Map(),loaded=false,ttlMs=120000,openAsk=null,askError='',answering=false;
  // ---------- the open piece: which records count as "here"
  function piece(){try{return typeof current==='function'?current():null;}catch{return null;}}
  function scopes(){
@@ -40,12 +40,13 @@
  // ---------- reading the records
  async function refreshNow(){
   if(!canFetch())return;
-  const [pr,le,ask,hand,mine]=await Promise.allSettled([get('/api/presence'),get('/api/leases'),get('/api/journal?status=needs-decision&limit=100'),get('/api/journal?status=handoff&limit=200'),get('/api/journal?'+new URLSearchParams({actor:'human:adrian',limit:'300'}))]);
+  const [pr,le,ask,hand,mine,committed]=await Promise.allSettled([get('/api/presence'),get('/api/leases'),get('/api/journal?status=needs-decision&limit=100'),get('/api/journal?status=handoff&limit=200'),get('/api/journal?'+new URLSearchParams({actor:'human:adrian',limit:'300'})),get('/api/journal?status=committed&limit=300')]);
   if(pr.status==='fulfilled'){presence=pr.value.presence||[];ttlMs=pr.value.ttlMs||ttlMs;}
   if(le.status==='fulfilled')leases=le.value.leases||[];
   if(ask.status==='fulfilled')asks=ask.value.lines||[];
   if(hand.status==='fulfilled')handoffs=hand.value.lines||[];
   if(mine.status==='fulfilled')humanLines=mine.value.lines||[];
+  if(committed.status==='fulfilled'&&Array.isArray(committed.value.lines)){committedLines=committed.value.lines.filter(line=>line?.status==='committed');committedStatus='ready';}else committedStatus='unavailable';
   loaded=true;changed();
  }
  async function learnBindings(){if(!canFetch())return;try{const c=await get('/api/study-draft/catalog');const next=new Map();for(const r of c.drafts||[])if(r.bindingId)next.set(r.bindingId,r.parentStudyId||r.parentStudyKey);for(const r of c.collections||[])if(r.bindingId)next.set(r.bindingId,r.parentStudyId);bindings=next;changed();}catch{}}
@@ -171,7 +172,7 @@
   const live=window.c3Shell?.live;if(!live)return;
   live.on({},event=>{
    if(event.reset){void learnBindings();refresh(50);if(recentOpen)void loadRecent();return;}
-   if(['presence','handoff','needs-decision'].includes(event.kind)||/^lease\./.test(event.kind||'')||human(event.actor))refresh();
+   if(['presence','handoff','needs-decision'].includes(event.kind)||/^lease\./.test(event.kind||'')||human(event.actor)||agent(event.actor)&&event.status==='committed')refresh();
    if(/^study-draft\./.test(event.kind||'')&&event.scope?.kind!=='draft')void learnBindings();
    if(recentOpen&&(recentAll||here(event.scope))&&event.kind!=='presence'){clearTimeout(hook.t);hook.t=setTimeout(()=>void loadRecent(),300);}
   });
@@ -180,5 +181,5 @@
  // Presence fades after two minutes without a heartbeat; repaint the bar line when it may have.
  if(typeof EventSource==='function')setInterval(()=>{if(document.visibilityState!=='hidden'&&(presence.length||leases.length))changed();},30000);
  if(canFetch()){void learnBindings();void refreshNow();}
- window.arLive={note,question,waiting,answer,showAsk,closeAsk,openRecent,closeRecent,openRecord,refresh:refreshNow,label,state:()=>({loaded,presence,leases,asks,handoffs,humanLines})};
+ window.arLive={note,question,waiting,answer,showAsk,closeAsk,openRecent,closeRecent,openRecord,refresh:refreshNow,label,state:()=>({loaded,presence,leases,asks,handoffs,humanLines,committedLines,committedStatus})};
 })();

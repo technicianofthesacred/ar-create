@@ -1,5 +1,10 @@
 # 2 — Transcripts & sources
 
+## Current Combined presentation — adopted 30 October
+
+S02, C01/C04/C05/C06. Source remains a rail reader and opens as a sheet over the current piece at its exact source moment. Esc returns to the same writing line and preserves unsaved work. Keep recording playback, transcripts/speakers, corrections, find and Original/Current wording/Translation reachable through the maintained source owners. Plus Jakarta Sans is the UI face; Lora is reserved for spoken transcript words.
+
+
 Intent: understand and correct source material, including multiple transcripts/recordings within one project. A transcript can be imported directly or produced from a recording added in Material.
 
 ## Work surface

@@ -1,5 +1,10 @@
 # 10 — Review & release
 
+## Current Combined presentation — adopted 30 October
+
+S10, C01/C03/C04/C05/C06. Audience remains on the rail, showing the actual whole piece/Carousel sequence, its working-draft downloads and independently reviewed translations. Retain the accepted Article display/export projection and all source/owner/hash guards. Keep one toolbar and visible essential actions, without disclosure toggles. Carousel PNGs/caption still wait for Adrian’s wording and photo decisions; the ten marked passages stay unresolved. A working download is not publication approval.
+
+
 Intent: see and control what each audience receives, including translated and platform-specific expressions.
 
 ## Work surface

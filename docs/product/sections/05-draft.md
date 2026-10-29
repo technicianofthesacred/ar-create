@@ -1,6 +1,11 @@
 # 5 — Draft
 
-Current approved appearance: the full repository Workbench prototype and final NOTES govern the isolated review candidate. Write and Read share paragraph positions, measure and type at each size; the original editor, saved history, exact Undo, part selection and meaningful read-only states stay authoritative. See [CURRENT](../../status/CURRENT.md) for proof; older typography notes below are historical where they conflict.
+## Current Combined presentation — adopted 30 October
+
+S05, C01/C03/C04/C05. A piece is the working screen: subject, actual piece tabs, Write / Read / Check, Saved, Focus, Understanding and Board in one toolbar. Show inherited board decisions in a thin strip, and retain the current continuous editor, margin notes, protected wording, proposals, saved Undo and revision guards. Voice/recipe/source guidance opens as a sheet from Write. Source, Research, Media and Arrange sheets preserve the same line and unsaved text when Esc returns. Uncreated formats are creation choices, never invented output tabs or saved drafts.
+
+
+Historical 21 October appearance, superseded by Combined above where they differ: the full repository Workbench prototype and final NOTES governed that isolated review candidate. Write and Read share paragraph positions, measure and type at each size; the original editor, saved history, exact Undo, part selection and meaningful read-only states stay authoritative. See [CURRENT](../../status/CURRENT.md) for proof; older typography notes below are historical where they conflict.
 Intent: develop the chosen piece with AI assistance while preserving Adrian's human authorship.
 
 ## Work surface

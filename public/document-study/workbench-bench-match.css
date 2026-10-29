@@ -2,7 +2,7 @@
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 24px;max-width:calc(var(--measure) + 16rem)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup h2{margin:4px 0 2px}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .meta{font-size:var(--t-label);color:var(--dim)}
-html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:2px solid var(--warm);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{margin:14px 0 16px;padding:0 0 0 14px;border-left:1px solid var(--warm);font-size:var(--t-reading);line-height:var(--lh-read);max-width:var(--measure)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since ul{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
@@ -58,3 +58,46 @@ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .
 /* Final reference: section labels use a 10px lead; only leading move icons are 18px. */
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story .sec{margin-bottom:10px!important}
 html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move>.ic:first-child{width:18px;height:18px}
+
+/* Combined Home. Catalogue, saved pickup and activity retain their existing owners. */
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{display:grid!important;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);gap:16px 20px;padding:16px 24px 40px!important;max-width:1440px!important;align-items:start}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story{display:contents}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story>.thead{grid-column:1;grid-row:1;margin:0!important;min-height:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench-story>.thead h1{font-size:18px!important;line-height:1.5;margin:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup{grid-column:1;grid-row:2;min-width:0;max-width:none;border-color:var(--warm);border-radius:8px;padding:12px 14px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup h2{font-size:15px;line-height:1.5;margin:3px 0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote{display:flex;align-items:baseline;gap:6px;background:var(--sel);margin:12px 0;padding:7px 9px;border:0;border-radius:4px;font-size:15.5px;line-height:1.6;max-width:none;overflow-wrap:anywhere}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup blockquote>span:last-child{min-width:0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-paragraph{font-family:Georgia,serif;font-size:1.1em}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .acts{gap:8px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .pickup .btn,html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .lnk{border-radius:5px;min-height:30px;font-size:13px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since{padding-top:10px;margin-top:10px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li{display:block;font-size:12.5px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li i{display:none}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .since li small{display:inline;margin-left:5px;font-size:12px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-active{grid-column:1;grid-row:3;min-width:0;max-width:none;margin-top:0!important}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-lists{grid-column:2;grid-row:1/span 4;display:grid;gap:12px;min-width:0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list h2{font-size:15px;font-weight:600;line-height:1.5;margin:0 0 6px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-list p{margin:6px 0;font-size:12.5px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move{display:block;padding:8px 0;border-radius:5px;min-width:0;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .move .w{display:block;font-size:12px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled{list-style:none;padding:0;margin:0}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-handled time{flex:none;color:var(--dim);font-size:12px}
+html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-coverage{border-top:1px solid var(--line);padding-top:6px}
+@media(max-width:900px){
+ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap{grid-template-columns:minmax(0,1fr);gap:14px;padding:16px!important}
+ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .combined-home-lists{display:contents!important}
+ html body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-active{grid-row:4}
+ html body.wbf-on #project-library.wbf-home [data-home-decisions]{grid-column:1;grid-row:3}
+ html body.wbf-on #project-library.wbf-home [data-home-optional]{grid-column:1;grid-row:5}
+ html body.wbf-on #project-library.wbf-home [data-home-handled]{grid-column:1;grid-row:6}
+}
+html body.wbf-on #project-library .combined-home-subjects{display:grid;gap:10px}
+.combined-home-subject{padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);min-width:0}
+.combined-home-subject>header{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.combined-home-subject>header strong{font-weight:600;overflow-wrap:anywhere}
+.combined-home-pieces{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+html body.wbf-on #project-library .combined-home-pieces button{border:1px solid var(--line);border-radius:5px;padding:3px 7px;min-height:30px;text-align:left;font:400 12.5px/1.5 var(--ar-ui);color:var(--dim);background:transparent;overflow-wrap:anywhere}
+html body.wbf-on #project-library .combined-home-pieces button:hover{color:var(--ink);border-color:var(--warm)}

@@ -1,5 +1,10 @@
 # 8 — Media
 
+## Current Combined presentation — adopted 30 October
+
+S08, C03/C04/C05/C06. Media remains on the rail and opens as a contextual sheet over the selected piece. Keep albums, folders, upload, membership, usage and source identity reachable through existing owners. Sheet dismissal with Esc preserves the underlying writing line and unsaved text. Photo selection, placement and crop remain separate explicit actions; no photo is selected merely because it appears in a drawing or album.
+
+
 Intent agreed 13 October: an interactive contact sheet of photos AND videos, with two-way visibility into where they are used. This is the visual view of the same assets collected in Material.
 
 ## Work surface

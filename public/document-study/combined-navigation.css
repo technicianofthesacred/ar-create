@@ -1,0 +1,39 @@
+/* Approved Combined: twelve ordinary entrances; piece modes belong to the piece. */
+html body.combined-on .workflowNavigation.wb-rail>:not(.combined-rail):not(.combined-phonebar){display:none!important}
+html body.combined-on .workflowNavigation.wb-rail{width:66px!important;padding:8px 3px!important;overflow-y:auto!important}
+.combined-rail{display:flex;flex-direction:column;gap:3px;align-items:center;min-height:0;width:100%}
+html body.combined-on .combined-rail button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:58px;min-height:39px;padding:3px 0;border:0;border-radius:5px;background:transparent;color:var(--dim);font:400 11px/1.3 var(--ar-ui);cursor:pointer}
+.combined-rail button i{display:block;width:14px;height:14px;border:1.5px solid var(--dim);border-radius:3px;box-sizing:border-box}
+html body.combined-on .combined-rail button:hover{background:var(--sel);color:var(--ink)}
+html body.combined-on .combined-rail button[aria-current]{background:var(--sel);color:var(--ink)}
+.combined-rail button[aria-current] i{background:var(--warm);border-color:var(--warm)}
+.combined-rail-divider{width:34px;border-top:1px solid var(--line);margin:2px 0}
+.combined-phonebar{display:none}
+#combined-phone-sheet{display:none}
+.combined-piece-switch{display:flex;align-items:center;order:1;border:1px solid var(--line);border-radius:5px;flex:none;margin-left:auto}
+html body.combined-on .combined-piece-switch button{padding:4px 10px;min-height:30px;border:0;border-radius:4px;background:transparent;color:var(--dim);font:400 13px/1.5 var(--ar-ui);cursor:pointer}
+html body.combined-on .combined-piece-switch button[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
+html body.combined-on:has(.combined-piece-switch) .wbf-top-actions{margin-left:4px}
+html body.combined-on #c3-surface-bar #wbf-document-actions .wbf-mode-switch,html body.combined-on #c3-surface-bar #wbf-tools>[data-wbf-tool="check"]{display:none!important}
+html body.combined-on .wbf-top-actions svg{display:none}
+html body.combined-on :is(.wbf-top-actions .tbtn,.wbf-top-actions .sizer,#c3-surface-bar .sb-btn,#c3-surface-bar .sb-icon){border-radius:5px!important}
+#combined-navigation-status{position:absolute;top:48px;right:12px;max-width:min(32rem,calc(100vw - 90px));padding:8px 12px;background:var(--paper);color:var(--ink);border:1px solid var(--line);font:400 13px/1.5 var(--ar-ui)}
+@media(max-width:760px){
+ html body.combined-on #app>.shell{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;padding-bottom:0!important}
+ html body.wb-on.combined-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open){position:fixed!important;inset:auto 0 0!important;height:58px!important;width:100%!important;max-height:none!important;border-right:0;border-top:1px solid var(--line)!important;display:block!important;background:var(--rail)!important;padding:0!important;z-index:90}
+ html body.combined-on .combined-rail{display:none}
+ html body.wb-on.combined-on #app>.shell>.workflowNavigation.wb-rail:not(.cr-open)>.combined-phonebar{display:flex!important;align-items:center;justify-content:space-around;height:100%;width:100%}
+ html body.combined-on .combined-phonebar button{border:0;background:transparent;color:var(--dim);font:400 12px/1.3 var(--ar-ui);min-height:44px;padding:8px}
+ html body.combined-on .combined-phonebar button:hover,html body.combined-on .combined-phonebar button:focus-visible{color:var(--ink);background:var(--sel)}
+ #combined-phone-sheet{display:flex;position:fixed;bottom:58px;left:0;right:0;z-index:94;background:var(--paper);border-top:1px solid var(--line);padding:12px;gap:8px;flex-wrap:wrap}
+ #combined-phone-sheet button{flex:1;border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--ink);font:400 13px/1.5 var(--ar-ui);min-height:40px;padding:6px 10px}
+ html body.combined-on #workspace{grid-column:1!important;grid-row:1!important;min-width:0}
+ html body.combined-on #project-library.wbf-home{inset:48px 0 58px!important;width:100vw!important;height:calc(100dvh - 106px)!important}
+ html body.combined-on #c3-tabstrip.wbf-top{gap:4px!important;padding:0 8px!important}
+ html body.combined-on #c3-tabstrip.wbf-top>.ht-switch{max-width:38vw}
+ html body.combined-on #c3-tabstrip.wbf-top .ht-switch-label{max-width:26vw}
+ html body.combined-on:has(.combined-piece-switch) .wbf-top-actions{display:none}
+ html body.combined-on .wbf-top-actions :is([data-wbf-thought],[data-wbf-tool]){display:none}
+ .combined-piece-switch{margin-left:auto}
+ html body.combined-on .combined-piece-switch button{padding:4px 7px;min-height:34px;font-size:12px}
+}

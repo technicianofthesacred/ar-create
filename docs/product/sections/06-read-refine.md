@@ -1,6 +1,11 @@
 # 6 — Read & refine
 
-Current approved appearance: the full repository Workbench prototype and final NOTES govern the isolated review candidate. Write and Read share paragraph positions, measure and type at each size; the original editor, saved history, exact Undo, part selection and meaningful read-only states stay authoritative. See [CURRENT](../../status/CURRENT.md) for proof; older typography notes below are historical where they conflict.
+## Current Combined presentation — adopted 30 October
+
+S06, C01/C03/C04/C05. Read leaves the rail and becomes the current piece’s Read switch beside Write / Check. Reuse the same selected output and document geometry, preserving passage position, independent wording, meaningful read-only states and exact saved Undo. Context sheets return to that same line on Esc. Existing deep-link and requirement identities remain available; moving Read must not make retained earlier/original writing unreachable.
+
+
+Historical 21 October appearance, superseded by Combined above where they differ: the full repository Workbench prototype and final NOTES governed that isolated review candidate. Write and Read share paragraph positions, measure and type at each size; the original editor, saved history, exact Undo, part selection and meaningful read-only states stay authoritative. See [CURRENT](../../status/CURRENT.md) for proof; older typography notes below are historical where they conflict.
 Intent: let Adrian read as an author/editor and give the last human polish; this is a mode of the same manuscript, not a copy.
 
 ## Work surface and actions

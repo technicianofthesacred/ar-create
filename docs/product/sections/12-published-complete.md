@@ -1,5 +1,10 @@
 # 12 — Published & complete
 
+## Current Combined presentation — adopted 30 October
+
+S12, C02/C03/C04/C05/C06. Home replaces Bench with the actual saved pickup sentence and three truthful lists: Needs your decision, Optional and Handled by agents. Pickup advances on editing or explicit Continue, never viewing. Subjects preserves folders, pin/search/filter/create/archive/restore; its board shows origins → understanding → actual pieces. Pieces leave the rail and remain reachable through subject boards, actual piece tabs and Outputs. Outputs groups actual visual editions by subject, with delivery facts and one next action. Each bounded transition must retain all 35 functions and exact independent output/edition identities.
+
+
 Intent agreed 13 October: a useful, rewarding register of ALL requested expressions of a project, not a bare Confirmed label.
 
 ## Work surface
