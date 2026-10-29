@@ -474,7 +474,7 @@
     {
       "path": "runtime/services/study-human-direction.mjs",
       "sourceSha256": "55c79d5b59d54347bb0828f50e3520f869d20285b53526c19cee9a7a9260511a",
-      "candidateSha256": "03344a35f575bf53cbf26dbd50def71fd65d96dc16d8c1fa5539017aa0cb62ce",
+      "candidateSha256": "ab471a43d6ea664426b3ba8b523c19e29a6555d725754b3bfbe5fdac14bd3931",
       "adapted": true
     },
     {
@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "09fd11675198b106f48360ef23146946fffa230b1471528f0f8c2fe60f5247cf",
-      "candidateSha256": "ae2e723d2d7095912602d2d6db96e862a65a42a2b46e0b6f4dbd938aea73d619",
+      "candidateSha256": "264e821c52ce6498c7bded42f911999508ac6dfcca2c001e825dd86f22b3e64a",
       "adapted": true
     },
     {
@@ -828,7 +828,7 @@
     {
       "path": "public/document-study/human-direction.js",
       "sourceSha256": "243a94ede4c89ad5a0de458ac008255bc01e7d902a8df8e9928bd40909047b61",
-      "candidateSha256": "944a90a9f823cc2fcafa77ee731114c70407b5b597e68a4f7d4d0ce51e7c4cbd",
+      "candidateSha256": "c2fdad14c7fc4b5e50a51c4c3d794acd3a03fc34997ce889f3216e6128e86e8c",
       "adapted": true
     },
     {
@@ -2289,7 +2289,7 @@
     },
     {
       "path": "runtime/services/concept-markdown.mjs",
-      "candidateSha256": "0019a3a6a985288699a19637e27e33ebe0e87e3add27d526737cbf7da729c19e"
+      "candidateSha256": "0b1676f3af2aa27c70b77beb357189e310b18c744b79b1336424bf79b02d281d"
     },
     {
       "path": "tools/concept-cli.mjs",
@@ -2845,7 +2845,7 @@
     },
     {
       "path": "docs/product/PRODUCT.md",
-      "candidateSha256": "5f43d58333b7b20c07967d7c96c480e4d07612c07597bbdd50b274502b84a495"
+      "candidateSha256": "fc915955bb2c5c2f35b38d08f11cdad4daf62709f6b2ed9251128805a608c4f2"
     },
     {
       "path": "docs/product/sections/01-material.md",
@@ -2861,11 +2861,11 @@
     },
     {
       "path": "docs/product/sections/04-direction.md",
-      "candidateSha256": "ae51c8395c7b8b730f0d49d76833cd06be002bc778dbbb2c5e4bf34ac7e6c836"
+      "candidateSha256": "2a4dccf469e0d8bed8b69daa6b70cd02423cc49855ea41c1d72e75467f4321d9"
     },
     {
       "path": "docs/product/sections/05-draft.md",
-      "candidateSha256": "ae549b6d1e12b964be0b8234c5b2a0c79cd90a2a204c351cd037d7415b5bc66c"
+      "candidateSha256": "41f10ddb0e796553781327625844394daf100d820b73fffcd03dcac371d43047"
     },
     {
       "path": "docs/product/sections/06-read-refine.md",
@@ -2881,7 +2881,7 @@
     },
     {
       "path": "docs/product/sections/09-arrange.md",
-      "candidateSha256": "7e1000b730d25366abe30fc6e84ae2aa417f5af376cc0fe5fbaedfb9af64379e"
+      "candidateSha256": "9607bf24140f6590ad38ef5afbe0aae596dc8ddd237ea09d515f8ccbe4d6b2ce"
     },
     {
       "path": "docs/product/sections/10-review-release.md",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "188848dc0d9cc364f4206856c8c044ec79c41d6046b1eb5c240e207b7934fe52"
+      "candidateSha256": "383712c737a409a75d4b3b49a9a14f0a1a23fd90097443ecd6a29e91cbcbe8b2"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3425,7 +3425,7 @@
     },
     {
       "path": "public/document-study/workbench-surfaces.js",
-      "candidateSha256": "5b3fc4c9809f2519bd9a7fac0e38304ebf30beda0c505455468f58e1b1b4e591"
+      "candidateSha256": "7acfebfa85e81fa46a4e1ebf0ffbb96da7c76b9ee21c8d618b129c577f3282ed"
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.test.mjs",
@@ -3521,7 +3521,7 @@
     },
     {
       "path": "public/document-study/workbench-understanding.js",
-      "candidateSha256": "7fd1f7d42f48b7e4330cac08a533bd27b010a2d415ae19b1ae1c37a91a77155a"
+      "candidateSha256": "24e59744882407356b420a4a58247f4945fd6cf2484434e0f340f7674a4c83f0"
     },
     {
       "path": "public/document-study/workbench-write-match.css",
@@ -4662,6 +4662,58 @@
     {
       "path": "tests/workspace-output-discovery.test.mjs",
       "candidateSha256": "91fd02a83655913e26859a8ba94968895ff4e9fef76d0395b5cebd8d3a06c810"
+    },
+    {
+      "path": "public/document-study/direction-choice-context.css",
+      "candidateSha256": "3eb78c59e5f184d57044a824efaa4366a49d0bac92ee28f4dddb4362cbc85180"
+    },
+    {
+      "path": "public/document-study/direction-choice-context.js",
+      "candidateSha256": "f1015473b39521a1f0fb80a16d57b1eaad36ca8005ed6642ebccd061035be2fc"
+    },
+    {
+      "path": "public/document-study/direction-choice-surface.css",
+      "candidateSha256": "87677b7594faaf450117db25bd447bf15dcb95525806990752e4ae4193a97c80"
+    },
+    {
+      "path": "public/document-study/direction-choice-surface.js",
+      "candidateSha256": "5d2b4ec889bf9e2cb6d1de3df2eb1c937ed75f620eb1d38d7d9047196dd5f546"
+    },
+    {
+      "path": "public/document-study/inline-direction-choices.css",
+      "candidateSha256": "d92604d24833fe9e31b63f36b5c08b61537724fa8389849bb6ac679768e1eb46"
+    },
+    {
+      "path": "public/document-study/inline-direction-choices.js",
+      "candidateSha256": "41118612faa48a95925efc27c49e0708fe09c79b22168b8fdfcad55ab368c9bb"
+    },
+    {
+      "path": "public/lib/direction-choice.js",
+      "candidateSha256": "d68d3ff9991a6ce3274ba5f5247a8244c7e08ed830e1b473893ddb2305f97239"
+    },
+    {
+      "path": "tests/direction-choice-context.test.mjs",
+      "candidateSha256": "343ae4c58f6cbcfad2e12a4b4f7d5298e93c33c9508508bcd3b6c548af79d462"
+    },
+    {
+      "path": "tests/direction-choice-http.test.mjs",
+      "candidateSha256": "3a0523528f78d9f6a3e21c759978d7ded2188bee8376cf9ad792fd8dd00fb3f9"
+    },
+    {
+      "path": "tests/direction-choice-layout.test.mjs",
+      "candidateSha256": "12d489021f52ec7450bde0720e6372978f4d82bd521cc1393725153bffbaf2da"
+    },
+    {
+      "path": "tests/direction-choice-surface.test.mjs",
+      "candidateSha256": "9c281ba95f827a92b2ba15a9749aceff324d20ad5f3936cc1eac86b409954ae6"
+    },
+    {
+      "path": "tests/direction-choice.test.mjs",
+      "candidateSha256": "d8296418236f98953ab25d6bfeda7d841598dbfc9db6924f0970eab29d455701"
+    },
+    {
+      "path": "tests/inline-direction-choices-ui.test.mjs",
+      "candidateSha256": "5669f0e842b93c74684f5b28e64b99e04f8f16d2516c18cdaf8cafece3b88907"
     }
   ],
   "dependencyRepair": {

@@ -54,9 +54,10 @@
  function mount(host,options={}){
   if(!host?.isConnected)throw Error('Open the Understanding drawer before mounting it.');
   const root=node('section');root.className='wbu-understanding';root.style.minWidth='0';root.setAttribute('aria-label','Current understanding and direction');host.append(root);
+  const choicesSection=node('section');choicesSection.dataset.understanding='rejected';choicesSection.style.marginBottom='16px';
   const projectionHost=node('div'),editorHost=node('div'),protectedDetails=node('details'),protectedSummary=node('summary','Protected phrases'),protectedBody=node('div');
-  protectedDetails.dataset.understanding='protected';protectedDetails.style.marginBottom='8px';protectedDetails.append(protectedSummary,protectedBody);root.append(projectionHost,protectedDetails,editorHost);
-  let disposed=false,invalidated=false,epoch=0,abort=null,captured=null,borrowed=null,ownedContext=false,contractsAbort=null,contractsEpoch=0;
+  protectedDetails.dataset.understanding='protected';protectedDetails.style.marginBottom='8px';protectedDetails.append(protectedSummary,protectedBody);root.append(projectionHost,protectedDetails,choicesSection,editorHost);
+  let disposed=false,invalidated=false,epoch=0,abort=null,captured=null,borrowed=null,ownedContext=false,contractsAbort=null,contractsEpoch=0,choicesEpoch=0;
 
   function endEditor(){if(borrowed){const {element,placeholder,parent}=borrowed;if(placeholder.isConnected)placeholder.replaceWith(element);else parent.append(element);borrowed=null;}if(ownedContext){ownedContext=false;window.studyHumanDirection?.closeContext?.();}editorHost.replaceChildren();}
   function currentScope(){return context(options);}
@@ -64,7 +65,7 @@
   function section(id,title){const el=node('section');el.dataset.understanding=id;el.style.marginBottom='16px';const heading=node('h3',title);heading.style.font='600 var(--t-head,15px)/1.5 var(--ar-ui,sans-serif)';heading.style.margin='0 0 6px';el.append(heading);projectionHost.append(el);return el;}
   // Keep the independent reader mounted when the main projection is pending
   // or unavailable; successful rendering places this same node in C's order.
-  function retainProtectionSection(){if(protectedDetails.parentElement!==root)projectionHost.after(protectedDetails);}
+  function retainProtectionSection(){if(protectedDetails.parentElement!==root)projectionHost.after(protectedDetails);if(choicesSection.parentElement!==root)protectedDetails.after(choicesSection);}
   function unavailable(message){retainProtectionSection();projectionHost.replaceChildren();const p=node('p','Unavailable · '+message);p.setAttribute('role','status');projectionHost.append(p);}
   function protectionStatus(state,message){protectedSummary.textContent='Protected phrases'+(state?' · '+state:'');protectedBody.replaceChildren(node('p',message));}
   async function refreshProtections(token=epoch){
@@ -81,6 +82,14 @@
     if(!rows.length)protectedBody.append(node('p','No active protected phrases for this manuscript part.'));
     for(const row of rows){const entry=node('section');entry.className='wbu-protection';const words=node('p',row.text);words.style.whiteSpace='pre-wrap';words.style.overflowWrap='anywhere';entry.append(words);if(row.reason)entry.append(node('small',row.reason));protectedBody.append(entry);}
    }catch(error){if(!disposed&&ticket===contractsEpoch&&active(token))protectionStatus('Unavailable','Unavailable · '+error.message);else requestAbort.abort();}
+  }
+  async function refreshChoices(token=epoch){
+   const ticket=++choicesEpoch,owner=window.directionChoiceContext;
+   const status=message=>{choicesSection.classList.toggle('direction-choice-unavailable',/not connected/i.test(message));choicesSection.replaceChildren(node('h3','Rejected angles'),node('p',message));};
+   if(!owner){status('Not connected · Saved subject choices are unavailable here.');return;}
+   status('Reading saved subject choices…');
+   try{const value=await owner.read(options.projectId);if(!active(token)||ticket!==choicesEpoch)return;owner.render(choicesSection,value,{rejections:true});}
+   catch{if(active(token)&&ticket===choicesEpoch)status('Subject direction · not connected');}
   }
   function scopeLabel(record){return record.selector.scope==='project'?'Whole project':record.selector.scope==='output'?'This output':record.selector.scope==='part'?'This manuscript part':'This collection';}
   function entry(parent,record,label,text){const row=node('div');row.className='wbu-entry';row.append(node('small',scopeLabel(record)+(record.applicability==='inherited-direction'?' · inherited direction':record.applicability==='separate-scope'?' · separate scope':'')+' · '+label));const body=node('p',text);body.style.whiteSpace='pre-wrap';body.style.overflowWrap='anywhere';row.append(body);parent.append(row);}
@@ -105,7 +114,8 @@
    if(decisions.querySelector('.wbu-entry'))decisions.append(node('small','These are saved instructions; individual decision events are not connected.'));
    if(value.assistance?.scopeResolution==='unresolved-overlap')current.append(node('p','Direction overlaps across scopes. No automatic precedence has been chosen.'));
    projectionHost.append(protectedDetails);
-   for(const [id,title,copy]of [['corrections','Corrections','Not connected · Dated Source corrections are not connected to this drawer.'],['rejected','Rejected angles','Not connected · A scoped rejected-angle record is unavailable here.']]){const details=node('details');details.dataset.understanding=id;details.style.marginBottom='8px';details.append(node('summary',title+' · Not connected'),node('p',copy));projectionHost.append(details);}
+   for(const [id,title,copy]of [['corrections','Corrections','Not connected · Dated Source corrections are not connected to this drawer.']]){const details=node('details');details.dataset.understanding=id;details.style.marginBottom='8px';details.append(node('summary',title+' · Not connected'),node('p',copy));projectionHost.append(details);}
+   projectionHost.append(choicesSection);
    const history=node('details');history.dataset.understanding='history';history.append(node('summary','Saved direction history'));projectionHost.append(history);
    for(const record of usable)if(record.history?.length)history.append(node('p',scopeLabel(record)+' · '+record.history.length+' earlier saved changes. Use the existing notes editor for saved Undo.'));
    if(!history.querySelector('p'))history.append(node('p',bad.length?'Unavailable · History could not be read.':'No earlier saved direction changes for this scope.'));
@@ -120,17 +130,18 @@
    };thoughts.append(button);
   }
   async function refresh(){
-   const token=++epoch;abort?.abort();contractsAbort?.abort();const requestAbort=new AbortController();abort=requestAbort;let protectionRead=Promise.resolve();
-   try{captured=currentScope();invalidated=false;retainProtectionSection();projectionHost.replaceChildren(node('p','Reading saved understanding…'));const pending=fetch('/api/work-continuity/understanding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({request:captured.request}),signal:requestAbort.signal});protectionRead=refreshProtections(token);const response=await pending,value=await response.json();if(!active(token)){requestAbort.abort();return;}if(!response.ok)throw Error(value.error||'The saved understanding could not be read.');render(validate(value,captured.request));}
+   const token=++epoch;abort?.abort();contractsAbort?.abort();const requestAbort=new AbortController();abort=requestAbort;let protectionRead=Promise.resolve(),choicesRead=Promise.resolve();
+   try{captured=currentScope();invalidated=false;retainProtectionSection();projectionHost.replaceChildren(node('p','Reading saved understanding…'));const pending=fetch('/api/work-continuity/understanding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({request:captured.request}),signal:requestAbort.signal});protectionRead=refreshProtections(token);choicesRead=refreshChoices(token);const response=await pending,value=await response.json();if(!active(token)){requestAbort.abort();return;}if(!response.ok)throw Error(value.error||'The saved understanding could not be read.');render(validate(value,captured.request));}
    catch(error){if(!disposed&&token===epoch&&root.isConnected){if(captured&&!active(token)){requestAbort.abort();return;}unavailable(error.message);}}
-   await protectionRead;
+   await Promise.all([protectionRead,choicesRead]);
   }
-  function changed(){if(disposed||invalidated||!captured)return;if(!active(epoch)){invalidated=true;abort?.abort();contractsAbort?.abort();contractsEpoch++;endEditor();unavailable('The selected project or output changed. Reopen Understanding for this work.');protectionStatus('Unavailable','The selected writing changed. Reopen Understanding for this work.');}}
+  function changed(){if(disposed||invalidated||!captured)return;if(!active(epoch)){invalidated=true;abort?.abort();contractsAbort?.abort();contractsEpoch++;choicesEpoch++;choicesSection.replaceChildren(node('h3','Rejected angles'),node('p','The selected subject or piece changed. Reopen Understanding.'));endEditor();unavailable('The selected project or output changed. Reopen Understanding for this work.');protectionStatus('Unavailable','The selected writing changed. Reopen Understanding for this work.');}}
   const observer=new MutationObserver(changed);observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
   const events=['study-output-selection','study-draft-change'];for(const event of events)window.addEventListener(event,changed);
   const saved=event=>{if(event.detail?.parentStudyId===options.projectId&&active(epoch))void refresh();};window.addEventListener('study-human-direction-change',saved);
+  const choiceChanged=event=>{if((!event.detail?.parentStudyId||event.detail.parentStudyId===options.projectId)&&active(epoch))void refreshChoices();};for(const name of ['study-direction-choice-change','ar-live-change'])window.addEventListener(name,choiceChanged);
   const wordingChanged=event=>{if(active(epoch)&&captured?.wordingBinding&&key(event.detail)===key(captured.wordingBinding))void refreshProtections();};window.addEventListener('study-wording-contract-change',wordingChanged);
-  function cleanup(){if(disposed)return;disposed=true;epoch++;abort?.abort();contractsAbort?.abort();contractsEpoch++;window.removeEventListener('study-wording-contract-change',wordingChanged);observer.disconnect();for(const event of events)window.removeEventListener(event,changed);window.removeEventListener('study-human-direction-change',saved);endEditor();root.remove();}
+  function cleanup(){if(disposed)return;disposed=true;epoch++;choicesEpoch++;for(const name of ['study-direction-choice-change','ar-live-change'])window.removeEventListener(name,choiceChanged);abort?.abort();contractsAbort?.abort();contractsEpoch++;window.removeEventListener('study-wording-contract-change',wordingChanged);observer.disconnect();for(const event of events)window.removeEventListener(event,changed);window.removeEventListener('study-human-direction-change',saved);endEditor();root.remove();}
   protectionStatus('Not connected','Protected phrases are not connected for this writing view.');
   const ready=refresh();return {ready,refresh,cleanup};
  }

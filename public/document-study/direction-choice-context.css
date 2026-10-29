@@ -1,0 +1,5 @@
+#c3-surface-bar:has(>[data-direction-choice-context]){flex-wrap:wrap}
+.direction-choice-context{flex:1 1 100%;min-width:0;font:400 13px/1.5 var(--ar-ui,sans-serif);overflow-wrap:anywhere;color:var(--text-muted,#777)}
+.direction-choice-line{margin:0}.direction-choice-line strong{font-weight:600}.direction-choice-unavailable{color:var(--text-muted,#888)}
+.direction-choice-rejection p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+[data-understanding="rejected"] h3{font:600 var(--t-head,15px)/1.5 var(--ar-ui,sans-serif);margin:12px 0 6px}
