@@ -4029,7 +4029,7 @@
     },
     {
       "path": "tests/existing-work-startup.test.mjs",
-      "candidateSha256": "6ff4ed045cc9f7e8c2ed82e5286c7294000ae180402e30bf46c4f502ecc8e76e"
+      "candidateSha256": "932746ca3ce31fbf90e5a012e6ae4c169b3663c22c88dd785021be97c59276a8"
     },
     {
       "path": "tests/retained-carousel-reader.test.mjs",
