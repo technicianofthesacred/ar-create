@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "383712c737a409a75d4b3b49a9a14f0a1a23fd90097443ecd6a29e91cbcbe8b2"
+      "candidateSha256": "ffa5dc4c8b4f2afed349c5a19fa6f1a745473916fe3a705e7bac36379e6a646d"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3661,7 +3661,7 @@
     },
     {
       "path": "public/document-study/review-mode.js",
-      "candidateSha256": "cf5b57abd30a1e89fc1a1d7df3b0a4741f3c28dd3a20726087ee8385c1f29e12"
+      "candidateSha256": "dba2c5d1314f30a34d8e148784e1b18a5fbe3e3c199b53623a446b2b6c6761b2"
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
@@ -3677,7 +3677,7 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "6757cefd4560934e86a6df0713d1928618e8d26bbe92a7830d80e03dd4a49102"
+      "candidateSha256": "aa86b59a9cd7fc5c19458f13bf5682a46883bdc23b1f4b547fd20922039e276c"
     },
     {
       "path": "scripts/review-existing.mjs",
@@ -3709,7 +3709,7 @@
     },
     {
       "path": "tests/review-mode.test.mjs",
-      "candidateSha256": "088e07ac9556c6c36195b74114b04ffc4e55a72764637c91e8755f018afa59f1"
+      "candidateSha256": "1427dc295b79653437d6eb6081cfa043380bd4ee960e7de65eb190aa4038207c"
     },
     {
       "path": "tests/review-piece-links.test.mjs",
@@ -4697,7 +4697,7 @@
     },
     {
       "path": "tests/direction-choice-http.test.mjs",
-      "candidateSha256": "3a0523528f78d9f6a3e21c759978d7ded2188bee8376cf9ad792fd8dd00fb3f9"
+      "candidateSha256": "3831668dda2382e6315cb4fffac44a15d0104f5145deb94034b4af103a1486b1"
     },
     {
       "path": "tests/direction-choice-layout.test.mjs",

@@ -1,3 +1,7 @@
+## 30 October — Direction main-review save connection
+
+C01/C03/C04/C05/C06, S04/S05/S09. PR116 installed inline choices and saved-owner projections, but main-review transport did not admit Direction save/Undo. That prevents calling the choice loop usable there. A bounded repair admits only exact local-author project/part Direction save and Undo under the existing writing-correction grant, with current owner identity/revision guards and idempotent replay. Manuscript approvals remain disabled; no provider, publication or other mutation is admitted. Finish with actual proxy-to-owner synthetic choice/rejection/restart/Undo, refusal cases and exact installed transport proof. Actual Hong Kong angle/title, words and originals remain untouched.
+
 ## 30 October — saved Direction choices candidate
 
 C01/C03/C04/C05/C06, S04/S05/S09. Adrian adopted A: inline choices beside the full prepared angle and title explanations. The candidate saves separate explicit angle/title choices and rejected options with reasons in the existing human-direction owner, preserving dated history and author notes. Write and Arrange show that saved subject context beside the existing title; Understanding shows the current choices and rejected angles in a visible section. Manuscript titles, independently edited output words and existing protection/correction owners retain their authority. No actual angle or title has been chosen by an agent.

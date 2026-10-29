@@ -190,3 +190,12 @@ test('actor remains tab-scoped on reload and applies to the native main entrance
  const f=await reviewDOM('<div></div>');try{delete f.w.AR_CREATE_REVIEW_MODE;f.w.sessionStorage.setItem('ar-create-ui-actor','agent:codex');f.w.Headers=Headers;let headers;f.w.fetch=async(_,options)=>{headers=options.headers;return {ok:true};};f.w.eval(code);await f.w.fetch('/api/study-draft/open',{method:'POST',headers:{'X-AR-Actor':'human:adrian'}});assert.equal(headers.get('x-ar-actor'),'agent:codex');assert.equal(f.w.arCreateUiActor.actor,'agent:codex');assert.equal(f.w.localStorage.getItem('ar-create-ui-actor'),null);}finally{f.close();}
  const human=await reviewDOM('<div></div>');try{human.w.Headers=Headers;let headers;human.w.fetch=async(_,options)=>{headers=options.headers;return {ok:true};};human.w.eval(code);await human.w.fetch('/api/source-sessions');assert.equal(headers.get('x-ar-actor'),'human:adrian');}finally{human.close();}
 });
+
+
+test('Direction editing badge follows human enabled choices while wording approval remains disabled',async()=>{
+ const {createRequire}=await import('node:module'),require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
+ for(const [actor,enabled,grant] of [['human:adrian',true,true],['agent:codex',true,true],['human:adrian',false,true],['human:adrian',true,false]]){
+  const dom=new JSDOM('<body><div id="c3-surface-bar"></div><main id="workspace" class="combined-direction-ready"><section id="inline-direction-choices"><button data-choice-action="use" '+(enabled?'':'disabled')+'>Use this</button></section><button data-draft-approve></button></main>',{runScripts:'outside-only',url:'http://127.0.0.1/?reviewActor='+encodeURIComponent(actor)}),w=dom.window;
+  try{w.AR_CREATE_REVIEW_MODE={actualWork:true,studyDraftCorrections:grant,studyDraftApprovals:false};w.current=()=>({id:'invented',view:'record',viewedStage:4});w.eval(code);assert.equal(w.document.querySelector('[data-review-state]').textContent,actor==='human:adrian'&&enabled&&grant?'Direction editing':'Read-only review');assert.equal(w.document.querySelector('[data-draft-approve]').disabled,true);}finally{w.close();}
+ }
+});
