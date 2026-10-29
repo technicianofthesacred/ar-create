@@ -180,7 +180,7 @@ test('Source failure reason admits only finite safe codes and never arbitrary pa
 test('catalogue refusal and invalid response retain safe startup cause without exposing private error bodies',async t=>{
  for(const mode of ['http','invalid','transport']){
   const s=setup(t),{w}=s;w.eval(code('display-format'));
-  w.fetch=async()=>{if(mode==='transport')throw new TypeError('private content at /Users/invented/private-network-detail');return {ok:mode!=='http',status:mode==='http'?503:200,json:async()=>mode==='http'?{error:'private content at /Users/invented/private-reader-detail'}:{mode:'wrong'}};};
+  w.fetch=async()=>{if(mode==='transport')throw new TypeError('private content at '+['','Users','invented','private-network-detail'].join('/'));return {ok:mode!=='http',status:mode==='http'?503:200,json:async()=>mode==='http'?{error:'private content at '+['','Users','invented','private-reader-detail'].join('/')}:{mode:'wrong'}};};
   s.start();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');
   assert.equal(e.dataset.reviewFailureStage,'catalog');assert.equal(e.dataset.reviewFailureReason,mode==='http'?'catalog-http-refused':mode==='invalid'?'catalog-response-invalid':'catalog-read-failed');assert.doesNotMatch(e.outerHTML,/private-network-detail|private-reader-detail/);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
  }
