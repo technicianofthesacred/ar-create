@@ -9,11 +9,42 @@ import {AcceptedProse} from '../../runtime/src/workspaces/AcceptedProse';
 import {parseWholeDraft} from '../../runtime/src/workspaces/article-codec';
 import {captureArticleComposition} from '../../runtime/src/workspaces/articleComposition';
 import {outputSpec} from '../../runtime/src/workspaces/compositionSpec';
-import {documentParts} from '../../runtime/src/donors/mag/markdown-blocks';
+import {smarten} from '../../runtime/src/donors/mag/mag-send';
+import {documentParts,plain} from '../../runtime/src/donors/mag/markdown-blocks';
 import {markdownToDoc} from '../../runtime/src/donors/wordforge/wf-block-markdown';
 import ConversationCanvas from '../../runtime/src/donors/teajia/conversation/ConversationCanvas';
 import {LocalStoryProvider} from '../../runtime/src/donors/teajia/storyEdit';
 const hash=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
+// Audience-only typography and review presentation. Input remains the exact
+// owner snapshot; only React's already escaped, read-only markup is projected.
+const layoutNote=/^%%\/?(?:pull|photo|photos|side|glyph|on-photo|saying|ending|close)(?::|%%)/;
+const editorialNotes=(raw:string)=>[...raw.matchAll(/%%([\s\S]*?)%%/g)].filter(m=>!layoutNote.test(m[0])).map(m=>m[1].trim()).filter(Boolean);
+const withoutNotes=(raw:string)=>raw.replace(/%%[\s\S]*?%%/g,note=>layoutNote.test(note)?note:'');
+const withoutPlaceholder=(raw:string)=>raw.split('\n').filter(line=>plain(line).trim()!=='Published: on the day it goes live').join('\n');
+function noteDocument(text:string){try{return markdownToDoc(text,{links:true});}catch{return {type:'doc',content:[{type:'paragraph',content:[{type:'text',text}]}]};}}
+function notesView(notes:string[]){return !!notes.length&&<section className="ar-working-records" data-working-notes><h2>Editorial notes · retained for review</h2>{notes.map((text,i)=><AcceptedProse key={i} paragraphId={'note:'+i} document={noteDocument(text)}/>)}</section>;}
+function proseDocument(document:any):any{
+ const copy=structuredClone(document),leaves:{node:any;from:number;to:number}[]=[];let text='';
+ const walk=(node:any)=>{if(typeof node.text==='string'){const from=text.length;text+=node.text;leaves.push({node,from,to:text.length});}for(const child of node.content||[])walk(child);};walk(copy);
+ const notes=[...text.matchAll(/%%[\s\S]*?%%/g)].filter(m=>!layoutNote.test(m[0])).map(m=>({from:m.index!,to:m.index!+m[0].length}));
+ for(const leaf of leaves){let cursor=leaf.from,value='';for(const note of notes){if(note.to<=cursor||note.from>=leaf.to)continue;value+=text.slice(cursor,Math.max(cursor,note.from));cursor=Math.min(leaf.to,note.to);}value+=text.slice(cursor,leaf.to);leaf.node.text=value;}
+ return copy;
+}
+
+function audienceMarkup(markup:string){
+ // Preserve attributes, CSS, code and markup exactly. Inline formatting may
+ // split one pending phrase; each of its text runs receives a semantic mark.
+ const tokens=markup.match(/<(style|script|pre|code)\b[^>]*>[\s\S]*?<\/\1\s*>|<!--[\s\S]*?-->|<[^>]*>|[^<]+/gi)||[],out:string[]=[];let group:string[]=[];
+ const flush=()=>{if(!group.length)return;const count=(group.filter(t=>!t.startsWith('<')).join('').match(/==/g)||[]).length;let pending=false,previous='';
+  for(const token of group){if(token.startsWith('<')){out.push(token);continue;}
+   const parts=count%2===0?token.split(/(==)/):[token];for(const part of parts){if(part==='=='&&count%2===0){pending=!pending;continue;}if(!part)continue;
+    const text=part.replace(/&#x27;|&#39;|&apos;/gi,"'").replace(/&quot;|&#34;/gi,'"'),words=smarten(previous+text).slice(previous.length);previous=(previous+text).slice(-1);
+    out.push(pending?'<mark data-pending-wording="true" class="ar-audience-pending">'+words+'</mark>':words);
+   }
+  }group=[];
+ };
+ for(const token of tokens){if(/^<\/?(?:address|article|aside|blockquote|div|dl|dt|dd|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|section|table|tbody|td|th|tr|ul)\b/i.test(token)||/^<(?:style|script|pre)\b/i.test(token)){flush();out.push(token);}else group.push(token);}flush();return out.join('');
+}
 /** Rendering aliases are per occurrence and never replace the saved parser slots. */
 function occurrenceView(read:any){
  const owner=read?.ownerRef,media=read?.media;
@@ -36,7 +67,7 @@ function occurrenceView(read:any){
  if(paths.size!==shots.size)throw Error('The saved article photo coverage is incomplete.');
  return {spec,placements};
 }
-function magazineView(read:any){
+function magazineSourceView(read:any){
  if(read?.renderKind==='manuscript'){
   const owner=read.ownerRef,media=read.media,blocks=read.manuscript?.blocks;
   if(read.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||!hash(owner?.hash)||owner.editionId!=='working'||media?.schema!=='ar-create.magazine-media-inspection.v1'||media.revision!==read.revision||JSON.stringify(media.ownerRef)!==JSON.stringify(owner)||!Array.isArray(media.sources)||media.sources.length||!Array.isArray(blocks)||blocks.length>4096||blocks.some((b:any)=>typeof b.id!=='string'||typeof b.raw!=='string')||new Set(blocks.map((b:any)=>b.id)).size!==blocks.length)throw Error('The saved manuscript could not be verified.');
@@ -51,18 +82,19 @@ function magazineView(read:any){
    const sourceBlocks=documentParts(raw,false).blocks,separator=sourceBlocks.findIndex(b=>b.raw.trim()==='---');
    const header=(s:string)=>!s.trim()||/^#\s/.test(s.trim())||/^\*\*(?:Conversations over Tea|Story Subject|Interview by|Interview Date|Photography, Words, Translation|Location|By|Published)\b/.test(s.trim());
    let firstStory=0;while(firstStory<sourceBlocks.length&&header(sourceBlocks[firstStory].raw))firstStory++;
-   const credits=sourceBlocks.slice(0,separator>=0&&sourceBlocks.slice(0,separator).every(b=>header(b.raw))?separator:firstStory).filter(b=>b.raw.trim());
-   const notes=[...raw.matchAll(/%%[\s\S]*?%%/g)].map(m=>m[0]).filter(note=>!/^%%\/?(?:pull|photo|photos|side|glyph|on-photo|saying|ending|close)(?::|%%)/.test(note));
-   const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader ar-working-article" data-template-render="magazine" data-manuscript-preview={owner.hash}><p className="ar-working-notice">Working draft · pending wording remains marked.</p><LocalStoryProvider placements={[]} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} paragraphs={paragraphs}/></LocalStoryProvider>{!!credits.length&&<section className="ar-working-records" data-working-credits aria-label="Saved credits">{credits.map((b,i)=><AcceptedProse key={i} paragraphId={'credits:'+i} document={markdownToDoc(b.raw,{links:true})}/>)}</section>}{!!notes.length&&<section className="ar-working-records" data-working-notes><h2>Editorial notes · retained for review</h2>{notes.map((text,i)=><pre key={i}>{text}</pre>)}</section>}</main></div>;
+   const credits=sourceBlocks.slice(0,separator>=0&&sourceBlocks.slice(0,separator).every(b=>header(b.raw))?separator:firstStory).map(b=>({...b,raw:withoutPlaceholder(b.raw)})).filter(b=>b.raw.trim());
+   const notes=editorialNotes(raw);
+   const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader ar-working-article" data-template-render="magazine" data-manuscript-preview={owner.hash}><p className="ar-working-notice">Working draft · pending wording remains marked.</p><LocalStoryProvider placements={[]} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} paragraphs={paragraphs}/></LocalStoryProvider>{!!credits.length&&<section className="ar-working-records" data-working-credits aria-label="Saved credits">{credits.map((b,i)=><AcceptedProse key={i} paragraphId={'credits:'+i} document={markdownToDoc(b.raw,{links:true})}/>)}</section>}{notesView(notes)}</main></div>;
    return {view,placements:[]};
   }
-  const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={b.doc}/>:<pre key={b.id} style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',font:'inherit'}}>{b.raw}</pre>)}</main>;
+  const view=<main className="ar-working-manuscript" data-manuscript-preview={owner.hash} style={{maxWidth:760,margin:'0 auto',boxSizing:'border-box',padding:'32px 24px',background:'var(--bg,#151b18)',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{!blocks.some((b:any)=>b.doc?.content?.some((n:any)=>n.type==='heading'&&n.attrs?.level===1))&&<h1>{read.spec.title}</h1>}{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={proseDocument(b.doc)}/>:withoutNotes(b.raw).trim()?<AcceptedProse key={b.id} paragraphId={b.id} document={markdownToDoc(withoutPlaceholder(withoutNotes(b.raw)),{links:true})}/>:null)}{notesView(blocks.flatMap((b:any)=>editorialNotes(b.raw)))}</main>;
   return {view,placements:[]};
  }
- const {spec,placements}=occurrenceView(read),owner=read.ownerRef;
+ const {spec,placements}=occurrenceView(read),owner=read.ownerRef;spec.credit=spec.credit.filter((line:string)=>plain(line).trim()!=='Published: on the day it goes live');
  const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader" data-template-render="magazine" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} showByline/></LocalStoryProvider></main></div>;
  return{view,placements};
 }
+function magazineView(read:any){const {view,placements}=magazineSourceView(read);return {view:<div data-audience-projection dangerouslySetInnerHTML={{__html:audienceMarkup(renderToStaticMarkup(view))}}/>,placements};}
 export function mountMagazineAudience(element:HTMLElement,read:any){
  const {view}=magazineView(read),root=createRoot(element);root.render(view);return{destroy(){root.unmount();}};
 }
