@@ -1,6 +1,24 @@
 /* Actual-work review keeps old demo/browser recovery intact in a separate cache namespace.
    This is a view cache only; the existing authority remains the only saved manuscript owner. */
 (()=>{
+ // Actor labels belong to this tab, never the shared recovery cache. Agent
+ // sessions override older owners' human literals rather than impersonating them.
+ const actors=['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt'];
+ const actorValues=window.location?new URLSearchParams(window.location.search).getAll('reviewActor'):[];
+ let requestedActor=actorValues.length>1?'invalid:duplicate':actorValues[0]??null;
+ try{if(requestedActor===null)requestedActor=window.sessionStorage.getItem('ar-create-ui-actor');else window.sessionStorage.setItem('ar-create-ui-actor',requestedActor);}catch{}
+ const actor=requestedActor===null?'human:adrian':actors.includes(requestedActor)?requestedActor:null;
+ window.arCreateUiActor=Object.freeze({actor,explicit:requestedActor!==null});
+ if(typeof window.fetch==='function'&&(window.AR_CREATE_REVIEW_MODE?.actualWork||requestedActor!==null)){
+  const originalFetch=window.fetch.bind(window);
+  window.fetch=(input,options)=>{
+   const url=new URL(typeof input?.url==='string'?input.url:String(input),location.href);
+   if(url.origin!==location.origin||!url.pathname.startsWith('/api/'))return originalFetch(input,options);
+   if(!actor)return Promise.reject(Error('Choose a valid UI actor before using this workspace.'));
+   const headers=new Headers(options?.headers??input?.headers);headers.set('X-AR-Actor',actor);headers.set('X-AR-Client','ui');
+   return originalFetch(input,{...options,headers});
+  };
+ }
  if(!window.AR_CREATE_REVIEW_MODE?.actualWork)return;
  // Mount owners normally, but do not expose a cached piece while an exact URL is resolving.
  const routeKeys=['reviewSource','reviewStory','reviewStage','reviewArtifact','reviewHash','reviewWorkspace','reviewBinding','reviewOutput','reviewCarousel','reviewMagazineStory','reviewMagazinePiece','reviewMagazineParent'];
@@ -40,7 +58,7 @@
  // Native retained marks keep their existing exact-span handler. Permission never supplies wording.
  const approvalPins=new WeakMap(),reviewTitles=new WeakMap();
  const nativeApprovalAllowed=button=>{
-  if(window.AR_CREATE_REVIEW_MODE.studyDraftApprovals!==true||window.AR_CREATE_REVIEW_MODE.studyDraftCorrections!==true)return false;
+  if(actor!=='human:adrian'||window.AR_CREATE_REVIEW_MODE.studyDraftApprovals!==true||window.AR_CREATE_REVIEW_MODE.studyDraftCorrections!==true)return false;
   try{
    const p=current(),draft=window.studyDraft,proof=draft?.currentProof?.(),binding=draft?.currentBinding?.(),review=draft?.reviewState?.(),hash=proof?.expected?.workflow?.draft;
    if(p?.view!=='article'||Number(p.viewedStage)!==5||document.body.dataset.writeView==='preview'||proof?.owner||proof?.dirty!==false||review?.dirty!==false||binding?.authority!=='owned-working-copy'||binding.status!=='ready')return false;

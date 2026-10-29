@@ -1,3 +1,11 @@
+## 29 October — clean-record candidate under verification
+
+The journey-first work order is now the finishing priority; this does not close the broader product. Source candidate only: managed transcription job files and exact fixture namespaces are excluded from discovery; retained transcript/original identities remain. Agent review tabs carry their own tab-scoped actor, the proxy preserves it and human-only approval remains refused to agents. Navigation/selection no longer append authored activity; recent activity shows committed changes only; view capture preserves the pickup snapshot until editing or explicit Continue.
+
+Focused regressions and a synthetic native twelve-section walk pass: chosen paragraph/Continue and activity unchanged, journal unchanged. Main installation and the same selected-project walk still require their own proof. Read-only metadata predicts 104 to 36 visible Library rows, with 68 hidden; ordinary recordings are deliberately preserved. No deletion or broad title-based fixture rule is claimed.
+
+Cold-reader timing, one shared client catalogue and lazy folder reads remain next. Ten cold starts on video are not accepted yet. Direction choice alternatives, faithful audience typography at the requested widths, and human Carousel wording/photo decisions retain their order. UI restyling beyond the scoped Audience change is held.
+
 ## 29 October — installed state and current author journey
 
 Latest installed behavior checkpoint: `203c5edd5ad02f3055b6dfde0997853f1f355b8e`, build `2026-10-29T13:27:34.149Z` (PR109), independently live-byte/preservation verified. Its Article reopened without Retry after activation. These exact facts are a dated checkpoint; later source or installed revisions require their own proof.

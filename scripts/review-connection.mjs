@@ -1,3 +1,4 @@
+import {parseActor} from '../runtime/services/actor.mjs';
 import {validateFeedbackInvitationChange} from '../runtime/services/magazine/feedback-share-codec.mjs';
 import {articleCompositionIssue} from '../runtime/src/workspaces/article-composition.mjs';
 import {assertOutputEditorialReady} from '../runtime/src/workspaces/editorial-state.mjs';
@@ -260,6 +261,8 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)||!hosts.includes(req.headers.host)||req.headers.origin!==undefined&&!hosts.map(h=>'http://'+h).includes(req.headers.origin))return fail(403,'Only this local review entrance may read existing work.');
   if(port===allowedAuthorityPort)return fail(503,'Review must use a separate port from the existing authority.');
   const pathname=validPath(req.url);if(!pathname)return fail(400,'This review path is not allowed.');
+  const requestActor=req.headers['x-ar-actor']===undefined?'human:adrian':parseActor(req.headers['x-ar-actor']);
+  if(!requestActor)return fail(400,'Use one valid actor label for this review session.');
   if(actualWorkReview===true&&pathname==='/api/sources/blob'&&['GET','HEAD'].includes(req.method)){
    req.resume();const query=new URL(req.url,upstream).searchParams,id=query.get('id'),hash=photoReads.get(id);
    if([...query.keys()].length!==1||query.getAll('id').length!==1||!hash)return fail(403,'Original blob reads are unavailable without an exact photo grant.');
@@ -299,7 +302,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(nativeReviewPath&&nativeReviewEnabled&&req.method!=='GET'&&req.method!=='HEAD'){
    if(req.url!==pathname){req.resume();return fail(400,'Use the exact native output operation path without a query.');}
    if(req.method!=='POST'){req.resume();return fail(405,'Native output operations require an explicit POST.');}
-   if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Native output operations require the author’s exact local workspace.');}
+   if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&requestActor!=='human:adrian'&&pathname!=='/api/study/outputs/export'){req.resume();return fail(403,'Native output operations require the author’s exact local workspace.');}
   }
   const nativeReview=nativeReviewEnabled&&nativeReviewPath&&req.method==='POST';
   const articleCompositionPath=actualWorkReview&&studyDraftCorrections&&nativeArticleComposition&&pathname==='/api/study/outputs/save';
@@ -340,7 +343,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
    const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport||nativeReview&&pathname==='/api/study/outputs/export'?NATIVE_EXPORT_REQUEST:MAX_READ_BODY}):null;
-   if(folderCorrection||photoAlbumCorrection){const value=await (photoAlbumCorrection?changePhotoAlbums:changeLibraryFolders)(JSON.parse(readBody.toString('utf8'))),bytes=Buffer.from(JSON.stringify(value));res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Content-Length':bytes.length});return res.end(bytes);}
+   if(folderCorrection||photoAlbumCorrection){const value=await (photoAlbumCorrection?changePhotoAlbums:changeLibraryFolders)(JSON.parse(readBody.toString('utf8')),{actor:requestActor,client:'ui'}),bytes=Buffer.from(JSON.stringify(value));res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Content-Length':bytes.length});return res.end(bytes);}
    if(carouselProposal){
     const q=new URL(req.url,upstream).searchParams,keys=['projectId','documentId','outputId'],uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),sha=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v),closed=(value,fields)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===fields.length&&fields.every(key=>Object.hasOwn(value,key)),bad=message=>{throw Object.assign(Error(message||'Choose one exact native Carousel proposal and owner.'),{status:400});},held=()=>{throw Object.assign(Error('The exact native Carousel proposal or saved words owner changed.'),{status:409});};
     if([...q.keys()].some(key=>!keys.includes(key))||keys.some(key=>q.getAll(key).length!==1||!uuid(q.get(key))))bad();
@@ -414,7 +417,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     }
    }
    if(sourceCorrection)validateCorrection(pathname,readBody);
-   if(draftCorrection)validateDraftCorrection(pathname,readBody,{approvals:studyDraftApprovals});
+   if(draftCorrection){validateDraftCorrection(pathname,readBody,{approvals:studyDraftApprovals});if(requestActor!=='human:adrian'&&JSON.parse(readBody).operations?.some(operation=>operation.kind==='approveMark'))return fail(403,'Only the author can approve marked wording.');}
    if(magazineCorrection)validateMagazineCorrection(pathname,readBody);
    if(magazineFeedbackCorrection)validateMagazineFeedbackCorrection(pathname,readBody);
    if(mechanicalCheck)validateMagazineMechanicalCheck(readBody);
@@ -439,7 +442,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
     if(!/^\/(assets|ig-assets)\//.test(pathname))return fail(404,'This review file is unavailable.');
    }
    const headers={};if(postRead||correction||translationProposal){headers['content-type']='application/json';headers['content-length']=readBody.length;if(req.headers.origin!==undefined)headers.origin=upstream.origin;}for(const key of ['accept','accept-language','range','if-range'])if(typeof req.headers[key]==='string')headers[key]=req.headers[key];if(pathname==='/api/events'&&req.method==='GET'&&/^\d{1,16}$/.test(req.headers['last-event-id']||'')&&Number.isSafeInteger(Number(req.headers['last-event-id'])))headers['last-event-id']=req.headers['last-event-id'];
-   if(carouselProposal||nativeReview||nativeArticleSave||studyPrepare||openingAccept){headers['x-ar-actor']='human:adrian';headers['x-ar-client']='ui';}
+   if(postRead||correction||translationProposal||req.headers['x-ar-actor']!==undefined){headers['x-ar-actor']=requestActor;headers['x-ar-client']='ui';}
    const pending=http.request(upstream,{method:req.method,path:req.url,headers},owner=>{
     if(owner.statusCode>=300&&owner.statusCode<400){owner.resume();return fail(502,'The existing work authority returned a redirect; review did not follow it.');}
     const selected={};for(const key of ['content-type','content-length','content-range','accept-ranges','content-disposition',...(actualWorkReview===true&&pathname==='/api/study/photos/preview'?['x-content-sha256']:[]),...(actualWorkReview===true&&pathname==='/api/magazine/library-photos/preview'?['x-content-sha256','x-ar-photo-root-id','x-ar-photo-source-id','x-ar-photo-revision']:[])])if(owner.headers[key]!==undefined)selected[key]=owner.headers[key];

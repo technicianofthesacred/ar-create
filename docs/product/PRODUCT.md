@@ -22,6 +22,12 @@ A working draft download may preserve unresolved marks and notes without publica
 
 Routine technical blockers remain Build's responsibility. Genuine wording, direction, publication and sending decisions remain the author's. Do not make the author repeatedly resume engineering or carry context between agents.
 
+## Journey-first finishing order — 29 October
+
+Finish one existing selected project through useful author decisions and faithful Article/Carousel files. First clean live discovery and the activity record: processing files and fixtures are not sources; agent actions retain their actor; viewing is not a committed edit; pickup advances on an edit or explicit Continue. Then diagnose optional discovery readers and prove ten cold returns without Retry, rather than widening a deadline alone.
+
+Next connect the Direction choice to the same piece’s Write, Understanding and Arrange views, showing two or three focused alternatives before implementation. Audience must distinguish highlighted pending passages and readable end notes from literal editing syntax. Carousel files follow the author’s wording and photo choices. Preserve the seven pillars and existing authorities. UI restyling outside this scoped Audience work is held while the author chooses the next visual direction. These are acceptance requirements, not completion proof.
+
 ## Priorities made explicit from the author's feedback
 
 - **Author-led production:** AI should do most preparation and structuring so the author can concentrate on editorial judgment, lived experience and final polish. Do not require manual quote extraction, repeated answers or assembly chores merely to make agent work visible. Deliver useful content before expanding the workspace into an unrelated project/commerce system.

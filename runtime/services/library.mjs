@@ -1,3 +1,4 @@
+import {isLiveLibrarySource} from './live-records.mjs';
 import {createLibraryFolders,validateLibraryFolders} from './library-folders.mjs';
 import {collectionPair,liveCollectionLink,resolvedCollectionLinks} from './donors/study/collection-relationships.mjs';
 import fs from 'node:fs';
@@ -341,6 +342,9 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
         const prune = folder => { folder.files = folder.files.filter(file => !managedSnapshots.has(path.join(root.path, file.rel_path))); for (const child of folder.folders) prune(child); folder.file_count = folder.files.length; folder.total_count = folder.file_count + folder.folders.reduce((total, child) => total + child.total_count, 0); };
         prune(tree);
       }
+      // Exclude processing/fixture rows from discovery, without deleting their files.
+      const pruneNonContent=folder=>{folder.files=folder.files.filter(file=>isLiveLibrarySource({...file,rootId:root.id}));for(const child of folder.folders)pruneNonContent(child);folder.folders=folder.folders.filter(child=>isLiveLibrarySource({rootId:root.id,rel_path:child.rel_path+'/.folder'}));folder.file_count=folder.files.length;folder.total_count=folder.file_count+folder.folders.reduce((total,child)=>total+child.total_count,0);};
+      pruneNonContent(tree);
       if (root.id === 'recordings') { tree.files = tree.files.filter(file => !['runner-config.json', 'source-links.json'].includes(file.rel_path)); tree.file_count = tree.files.length; tree.total_count = tree.file_count + tree.folders.reduce((total, folder) => total + folder.total_count, 0); }
       if (tree.truncated) incompleteRoots.add(root.id);
       const flat = [];
@@ -394,9 +398,9 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       }
       trees.push({ ...root, tree });
     }
-    for (const source of index.sources) if (!seen.has(source.id) && !incompleteRoots.has(source.rootId)) source.missing = true;
+    for (const source of index.sources) if (isLiveLibrarySource(source)&&!seen.has(source.id) && !incompleteRoots.has(source.rootId)) source.missing = true;
     if (JSON.stringify(index) !== before) persist();
-    return { revision: index.revision, roots: trees, sources: index.sources.filter(s => !s.missing && !s.managedTerminalSnapshot).map(publicSource), collections: index.collections, missingSources: index.sources.filter(s => s.missing&&!s.managedTerminalSnapshot).map(missingSummary), unavailableSources: index.sources.filter(s => !s.missing&&!s.managedTerminalSnapshot&&roots.find(root=>root.id===s.rootId)?.available===false).map(missingSummary) };
+    return { revision: index.revision, roots: trees, sources: index.sources.filter(s => !s.missing && !s.managedTerminalSnapshot && isLiveLibrarySource(s)).map(publicSource), collections: index.collections, missingSources: index.sources.filter(s => s.missing&&!s.managedTerminalSnapshot&&isLiveLibrarySource(s)).map(missingSummary), unavailableSources: index.sources.filter(s => !s.missing&&!s.managedTerminalSnapshot&&isLiveLibrarySource(s)&&roots.find(root=>root.id===s.rootId)?.available===false).map(missingSummary) };
   }
   const externalRoot = root => root && !root.retainedCatalog && !root.originalCatalog && !['library','recordings'].includes(root.id) && !root.writable;
   function missingSummary(source) {
@@ -451,7 +455,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     return { ...publicSource(source), raw, text, body: text, breadcrumbs, blobUrl: `/api/sources/blob?id=${encodeURIComponent(id)}` };
   }
   function expected(source, hash) { if (typeof hash !== 'string' || hash !== source.hash || digest(fs.readFileSync(checkedFile(source))) !== hash) throw new StateError('Source changed outside this edit. Refresh before saving.', 409); }
-  const filing=createLibraryFolders({serial,load:loadTyped,publicSource:source=>{
+  const filing=createLibraryFolders({serial,visibleSource:isLiveLibrarySource,load:loadTyped,publicSource:source=>{
     let metadata;try{metadata=publicSource(source);}catch(error){if(error.status!==404)throw error;metadata={...source,sourceUnavailable:true,writable:false};delete metadata.originalFile;}
     let available=!source.missing&&!metadata.sourceUnavailable;
     if(available){try{regular(resolveInside(rootById(source.rootId).path,source.rel_path));}catch{available=false;}}
@@ -583,7 +587,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       const trees=roots.map(root=>({...root,tree:{rel_path:'',name:root.name,file_count:0,total_count:0,conflict_count:0,folders:[],files:[]},...(root.available?{}:{connectionError:'Folder unavailable. Reconnect it before reading.'})}));
       const byRoot=new Map(trees.map(root=>[root.id,root]));
       const availableById=new Map();
-      for(const source of value.sources.filter(source=>!source.missing&&!source.managedTerminalSnapshot)){
+      for(const source of value.sources.filter(source=>!source.missing&&!source.managedTerminalSnapshot&&isLiveLibrarySource(source))){
         const root=byRoot.get(source.rootId),parts=source.rel_path.split('/');let folder=root.tree;
         let available=root.available;
         if(available)try{regular(resolveInside(root.path,source.rel_path));}catch{available=false;}
@@ -597,7 +601,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       }
       const count=folder=>{folder.file_count=folder.files.length;folder.total_count=folder.file_count+folder.folders.reduce((n,child)=>n+count(child),0);return folder.total_count;};
       for(const root of trees)count(root.tree);
-      return {revision:value.revision,indexHash:loaded.hash,roots:trees,sources:value.sources.filter(source=>!source.missing&&!source.managedTerminalSnapshot).map(source=>({...publicSource(source),sourceUnavailable:!availableById.get(source.id),...availableById.get(source.id)?{}:{cardEligibility:{eligible:false,reason:'Saved file is unavailable or unsafe.'}}})),collections:structuredClone(value.collections),missingSources:value.sources.filter(source=>source.missing&&!source.managedTerminalSnapshot).map(missingSummary),unavailableSources:value.sources.filter(source=>!source.missing&&!source.managedTerminalSnapshot&&!availableById.get(source.id)).map(source=>({...missingSummary(source),reason:byRoot.get(source.rootId).available?'Saved file is unavailable or unsafe.':'Source folder is unavailable.'}))};
+      return {revision:value.revision,indexHash:loaded.hash,roots:trees,sources:value.sources.filter(source=>!source.missing&&!source.managedTerminalSnapshot&&isLiveLibrarySource(source)).map(source=>({...publicSource(source),sourceUnavailable:!availableById.get(source.id),...availableById.get(source.id)?{}:{cardEligibility:{eligible:false,reason:'Saved file is unavailable or unsafe.'}}})),collections:structuredClone(value.collections),missingSources:value.sources.filter(source=>source.missing&&!source.managedTerminalSnapshot&&isLiveLibrarySource(source)).map(missingSummary),unavailableSources:value.sources.filter(source=>!source.missing&&!source.managedTerminalSnapshot&&isLiveLibrarySource(source)&&!availableById.get(source.id)).map(source=>({...missingSummary(source),reason:byRoot.get(source.rootId).available?'Saved file is unavailable or unsafe.':'Source folder is unavailable.'}))};
     };
     const sourceText=async input=>guarded((value,loaded)=>{
       if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(key=>!['id','expectedIndexHash','expectedHash','expectedStamp'].includes(key))||typeof input.id!=='string')throw new StateError('Select an indexed Library source ID.',400);

@@ -86,3 +86,7 @@ C02/C04/C06: point at explicitly configured existing folders/catalogs; discover 
 ## 22 October — Open a Library document directly
 
 S01/C02/C04/C05/C06: the source title/row is the normal accessible opening target; no separate Read button is required for the same action. Exact source identity and owning story determine the reader and applicable section. A research file opens in that story's Research workspace rather than over an unrelated story. Keep Library return/search position and unsaved work safe. Research reading uses semantic headings/lists, comfortable measure and disclosure of long file-reference metadata; preserve complete source text. This is adopted intent; installation and actual navigation/rendering proof are separate.
+
+## 29 October — Keep processing records out of live discovery
+
+C02/C04/C06: managed transcription job working files and explicitly identified fixtures stay out of Library and project/Pieces lists. Do not delete their files, identities or membership, mislabel hidden files as missing, or hide genuine kept transcripts and ordinary recordings. Verify source counts and the actual list; a similarly named real project remains available.

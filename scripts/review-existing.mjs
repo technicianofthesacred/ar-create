@@ -1,3 +1,4 @@
+import {parseActor} from '../runtime/services/actor.mjs';
 import {readMagazinePhotoOriginHeader} from '../runtime/services/magazine-library-photos.mjs';
 // Candidate UI + maintained local readers; explicit human source/manuscript corrections use
 // only the existing guarded authority. No private writer/store is created here.
@@ -55,8 +56,8 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
  const folderReceipts=new Map();
  const folderFingerprint=input=>JSON.stringify(input,(_,value)=>value&&typeof value==='object'&&!Array.isArray(value)?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b))):value);
  const folderFail=(message,status=409)=>{throw Object.assign(Error(message),{status});};
- const folderNative=async(route,input)=>boundedReviewRead(async signal=>{
-  const response=await fetchImpl(new URL(route,upstream),{redirect:'error',signal,...(input?{method:'POST',headers:{'Content-Type':'application/json',Origin:upstream.origin,'X-AR-Actor':'human:adrian'},body:JSON.stringify(input)}:{})});
+ const folderNative=async(route,input,context)=>boundedReviewRead(async signal=>{
+  const response=await fetchImpl(new URL(route,upstream),{redirect:'error',signal,...(input?{method:'POST',headers:{'Content-Type':'application/json',Origin:upstream.origin,'X-AR-Actor':context.actor,'X-AR-Client':context.client},body:JSON.stringify(input)}:{})});
   const value=await response.json();if(!response.ok)folderFail(value.error||'The native Library folder owner is unavailable.',response.status);return value;
  },{timeoutMs:readTimeoutMs,label:'Native Library folders'});
  const readNativeFolders=async domain=>{
@@ -64,7 +65,8 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
   return libraryInspection.verifyFolderOwner({tree,folders,domain});
  };
  const folderView=value=>({...value,readOnly:true,folderStructureWritable:true,folderStructureOnly:true,...(value.domain==='media'?{folderMembershipWritable:true}:{}),folderUndoOperationId:folderReceipts.get(value.undoOperationId)?.action!=='undo'&&folderReceipts.get(value.undoOperationId)?.domain===value.domain?value.undoOperationId:null});
- const changeLibraryFolders=async input=>{
+ const changeLibraryFolders=async(input,context)=>{
+  if(!parseActor(context?.actor)||context?.client!=='ui')folderFail('Folder changes require their current UI actor.',400);
   const uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),fields={create:['name'],rename:['folderId','name'],reparent:['folderId','parentId'],remove:['folderId'],link:['folderId','sourceIds'],unlink:['folderId','sourceIds'],undo:['undoOperationId']},required=Object.hasOwn(fields,input?.action)?fields[input.action]:null,base=['domain','action','operationId','expectedRevision','expectedHash'];
   const membership=['link','unlink'].includes(input?.action);
   if(!input||typeof input!=='object'||Array.isArray(input)||!required||!['library','media'].includes(input.domain)||[...base,...required].some(key=>!Object.hasOwn(input,key))||Object.keys(input).some(key=>![...base,...required,...(input.action==='create'?['parentId']:[])].includes(key))||membership&&(input.domain!=='media'||!Array.isArray(input.sourceIds)||!input.sourceIds.length||input.sourceIds.length>20000||new Set(input.sourceIds).size!==input.sourceIds.length||input.sourceIds.some(id=>!uuid(id)))||!uuid(input.operationId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!/^[a-f0-9]{64}$/.test(input.expectedHash||'')||Object.hasOwn(input,'folderId')&&!uuid(input.folderId)||Object.hasOwn(input,'parentId')&&input.parentId!==null&&!uuid(input.parentId)||input.action==='undo'&&!uuid(input.undoOperationId)||Object.hasOwn(input,'name')&&(typeof input.name!=='string'||!input.name.trim()||input.name.length>200||/[\\/\u0000-\u001f\u007f]/.test(input.name)||['.','..'].includes(input.name.trim())))folderFail('Use one exact folder request; photo membership requires existing media source UUIDs without paths.',400);
@@ -83,7 +85,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
   }
   if(!prior&&folderReceipts.size>=10000)folderFail('This folder review connection is full. Reopen it before organising more groups.',503);
   libraryInspection.assertCurrent();
-  const saved=await folderNative('/api/library/folders',input);
+  const saved=await folderNative('/api/library/folders',input,context);
   if(saved.receipt?.operationId!==input.operationId||saved.receipt.action!==input.action||saved.receipt.domain!==input.domain)folderFail('The native folder receipt could not be confirmed.');
   // Recheck the same guarded owner after publication; never substitute cached rows.
   const verified=await readNativeFolders(input.domain);
@@ -91,7 +93,8 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
   folderReceipts.set(input.operationId,{fingerprint,domain:input.domain,action:input.action});
   return folderView({...saved,...verified});
  };
- const changePhotoAlbums=async input=>{
+ const changePhotoAlbums=async(input,context)=>{
+  if(!parseActor(context?.actor)||context?.client!=='ui')folderFail('Album changes require their current UI actor.',400);
   const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value),sha=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value),closed=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
   if(!closed(input,['action','folderId','operationId','expectedRevision','expectedHash','photo'])||!['link','unlink'].includes(input.action)||!uuid(input.folderId)||!uuid(input.operationId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!sha(input.expectedHash)||!closed(input.photo,['rootId','sourceId','revision','sourceHash'])||!sha(input.photo.rootId)||!(uuid(input.photo.sourceId)||sha(input.photo.sourceId))||!sha(input.photo.revision)||!sha(input.photo.sourceHash))folderFail('Use one exact album and catalog photo identity without paths.',400);
   const current=await readNativeFolders('media'),fingerprint=folderFingerprint(input),prior=folderReceipts.get(input.operationId),action=input.action==='link'?'linkPhoto':'unlinkPhoto';
@@ -100,7 +103,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
   if(!prior&&!current.folders.some(row=>row.id===input.folderId))folderFail('Album was not found in this media domain.',404);
   if(!prior&&folderReceipts.size>=10000)folderFail('This folder review connection is full. Reopen it before organising more groups.',503);
   libraryInspection.assertCurrent();
-  const saved=await folderNative('/api/magazine/library-photos/album',input);
+  const saved=await folderNative('/api/magazine/library-photos/album',input,context);
   if(saved.receipt?.operationId!==input.operationId||saved.receipt.action!==action||saved.receipt.domain!=='media')folderFail('The native photo album receipt could not be confirmed.');
   const verified=await readNativeFolders('media');
   if(verified.revision!==saved.revision||verified.indexHash!==saved.indexHash)folderFail('Library changed after the album operation; refresh its current folders.');

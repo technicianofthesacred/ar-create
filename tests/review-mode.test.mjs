@@ -177,3 +177,16 @@ test('concealed startup never measures1100 Source remarks for a hidden editing b
   f.w.arCreateReviewStartup.pending=false;workspace.style.visibility='';f.callbacks[0]();assert.equal(layoutReads,1,'normal visibility/freshness checks resume for the first visible exact remark');assert.equal(f.badge(),'Transcript editing');
  }finally{f.close();}
 });
+
+
+test('explicit agent UI session stamps same-origin API calls and retains actor after route reconstruction',async()=>{
+ const f=await reviewDOM('<div></div>');try{f.w.history.replaceState(null,'','?reviewActor=agent:codex');f.w.Headers=Headers;const calls=[];f.w.fetch=async(input,options)=>{calls.push({input,options});return {ok:true};};f.w.eval(code);await f.w.fetch('/api/source-sessions/edit',{method:'POST',headers:{'X-AR-Actor':'human:adrian','Content-Type':'application/json'},body:'{}'});assert.equal(calls[0].options.headers.get('x-ar-actor'),'agent:codex');assert.equal(calls[0].options.headers.get('x-ar-client'),'ui');assert.equal(calls[0].options.body,'{}');f.w.history.replaceState(null,'','?reviewStage=2');assert.equal(f.w.sessionStorage.getItem('ar-create-ui-actor'),'agent:codex');await f.w.fetch('/api/source-sessions');assert.equal(calls[1].options.headers.get('x-ar-actor'),'agent:codex');await f.w.fetch('https://example.invalid/api/read');assert.equal(calls[2].options,undefined);assert.equal(f.w.localStorage.getItem('ar-create-ui-actor'),null);}finally{f.close();}
+});
+test('invalid explicit UI actor cannot fall back to a human request',async()=>{
+ const f=await reviewDOM('<div></div>');try{f.w.history.replaceState(null,'','?reviewActor=not-an-actor');f.w.Headers=Headers;let calls=0;f.w.fetch=async()=>{calls++;return {ok:true};};f.w.eval(code);await assert.rejects(f.w.fetch('/api/source-sessions/edit',{method:'POST',body:'{}'}),/actor/i);assert.equal(calls,0);}finally{f.close();}
+});
+
+test('actor remains tab-scoped on reload and applies to the native main entrance too',async()=>{
+ const f=await reviewDOM('<div></div>');try{delete f.w.AR_CREATE_REVIEW_MODE;f.w.sessionStorage.setItem('ar-create-ui-actor','agent:codex');f.w.Headers=Headers;let headers;f.w.fetch=async(_,options)=>{headers=options.headers;return {ok:true};};f.w.eval(code);await f.w.fetch('/api/study-draft/open',{method:'POST',headers:{'X-AR-Actor':'human:adrian'}});assert.equal(headers.get('x-ar-actor'),'agent:codex');assert.equal(f.w.arCreateUiActor.actor,'agent:codex');assert.equal(f.w.localStorage.getItem('ar-create-ui-actor'),null);}finally{f.close();}
+ const human=await reviewDOM('<div></div>');try{human.w.Headers=Headers;let headers;human.w.fetch=async(_,options)=>{headers=options.headers;return {ok:true};};human.w.eval(code);await human.w.fetch('/api/source-sessions');assert.equal(headers.get('x-ar-actor'),'human:adrian');}finally{human.close();}
+});

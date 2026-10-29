@@ -100,7 +100,7 @@ test('native marked wording approval requires its explicit flag and forwards one
  const disabled=await setup(t,{studyDraftCorrections:true}),enabled=await setup(t,{actualWorkReview:true,studyDraftCorrections:true,studyDraftApprovals:true}),input=approvalRequest();
  const send=(f,path=approvalSavePath,body=JSON.stringify(input),headers={})=>request(f.port,path,{method:'POST',headers:{origin:'http://127.0.0.1:'+f.port,'content-type':'application/json',...headers},body});
  assert.equal((await send(disabled)).status,400);assert.equal(disabled.calls.length,0);
- const bytes=' \n'+JSON.stringify(input,null,2)+'\n',saved=await send(enabled,approvalSavePath,bytes,{'x-ar-actor':'agent:codex',authorization:'Bearer discarded',cookie:'discarded=true'});assert.equal(saved.status,200);assert.equal(enabled.calls[0].body,bytes);assert.equal(enabled.calls[0].headers.origin,'http://127.0.0.1:'+enabled.authorityPort);assert.equal(enabled.calls[0].headers['x-ar-actor'],undefined);assert.equal(enabled.calls[0].headers.authorization,undefined);assert.equal(enabled.calls[0].headers.cookie,undefined);
+ const bytes=' \n'+JSON.stringify(input,null,2)+'\n',saved=await send(enabled,approvalSavePath,bytes,{'x-ar-actor':'human:adrian',authorization:'Bearer discarded',cookie:'discarded=true'});assert.equal(saved.status,200);assert.equal(enabled.calls[0].body,bytes);assert.equal(enabled.calls[0].headers.origin,'http://127.0.0.1:'+enabled.authorityPort);assert.equal(enabled.calls[0].headers['x-ar-actor'],'human:adrian');assert.equal(enabled.calls[0].headers.authorization,undefined);assert.equal(enabled.calls[0].headers.cookie,undefined);assert.equal((await send(enabled,approvalSavePath,bytes,{'x-ar-actor':'agent:codex'})).status,403);assert.equal(enabled.calls.length,1);
  const flags=await request(enabled.port,'/document-study/package-config.js');assert.match(flags.body,/"studyDraftApprovals":true/);assert.match(flags.body,/"studyDraftCorrections":true/);assert.doesNotMatch((await request(disabled.port,'/document-study/package-config.js')).body,/"studyDraftApprovals":true/);
  const count=enabled.calls.length,operation=input.operations[0];
  for(const change of [{humanDecision:false},{humanDecision:'true'},{rawFrom:-1},{rawFrom:.5},{rawTo:operation.rawFrom+4},{rawTo:Number.MAX_SAFE_INTEGER+1},{seenBlockHash:'bad'},{seenMarkupHash:'bad'},{id:'bad\nidentity'},{id:'\ud800'},{preview:'invented wording'},{insert:'replacement words'},{path:'/outside'},{kind:'approveAll'}])assert.equal((await send(enabled,approvalSavePath,JSON.stringify({...input,operations:[{...operation,...change}]}))).status,400,JSON.stringify(change));
@@ -167,7 +167,7 @@ test('guarded shared guidance forwards only accepted-region human edits in an en
  const post=(f,body=input,extra={})=>request(f.port,'/api/guidance',{method:'POST',headers:{origin:'http://127.0.0.1:'+f.port,'content-type':'application/json','x-ar-actor':'human:adrian',...extra},body:JSON.stringify(body)});
  assert.equal((await post(off)).status,423);assert.equal(off.calls.length,0);
  assert.equal((await post(enabled,input,{origin:'http://foreign.invalid'})).status,403);
- assert.equal((await post(enabled,input,{'x-ar-actor':'agent:test'})).status,403);
+ assert.equal((await post(enabled,input,{'x-ar-actor':'agent:test'})).status,400);
  assert.equal((await post(enabled,{...input,body:'Replace entire file'})).status,400);assert.equal(enabled.calls.length,0);
  assert.equal((await post(enabled)).status,200);assert.deepEqual(JSON.parse(enabled.calls[0].body),input);
 });
@@ -185,3 +185,15 @@ test('opt-in photo album route invokes only its trusted callback with exact loca
 });
 
  test('exact photo read grants verify bytes and refuse other originals',async t=>{const id=randomUUID(),url='/api/sources/blob?id='+id,body=Buffer.from([137,80,78,71,0,255]),sha256=createHash('sha256').update(body).digest('hex');const {port,calls}=await setup(t,{actualWorkReview:true,reviewPhotoReads:[{sourceId:id,sha256}]});assert.deepEqual(Buffer.from(await (await fetch('http://127.0.0.1:'+port+url)).arrayBuffer()),body);assert.equal((await request(port,url,{method:'HEAD'})).status,200);for(const bad of [url+'&original=1',url+'&id='+id,'/api/sources/blob?id='+randomUUID()])assert.equal((await request(port,bad)).status,403);assert.equal(calls.length,2);const changed=await setup(t,{actualWorkReview:true,reviewPhotoReads:[{sourceId:id,sha256:'0'.repeat(64)}]});assert.equal((await request(changed.port,url)).status,409);});
+
+
+test('explicit valid agent actor survives the review proxy without human attribution',async t=>{
+ const f=await setup(t,{sourceCorrections:true}),body=JSON.stringify({operationId:'agent-operation',expectedRevision:0,expectedSourceHash:'a'.repeat(64),sessionId:'synthetic-session',turnId:'turn-a',speaker:'Speaker',text:'Invented proposed correction'});
+ const response=await request(f.port,'/api/source-sessions/edit',{method:'POST',headers:{origin:'http://127.0.0.1:'+f.port,'content-type':'application/json','x-ar-actor':'agent:codex','x-ar-client':'ui'},body});assert.equal(response.status,200);assert.equal(f.calls[0].headers['x-ar-actor'],'agent:codex');assert.equal(f.calls[0].headers['x-ar-client'],'ui');
+ const count=f.calls.length;assert.equal((await request(f.port,'/api/stories',{headers:{'x-ar-actor':'agent:made-up'}})).status,400);assert.equal(f.calls.length,count);
+});
+
+test('agent file export retains its actor while native creation and wording approval remain held',async t=>{
+ const f=await setup(t,{actualWorkReview:true,studyDraftCorrections:true,nativeOutputExports:true,nativeCarouselCorrections:true}),id=randomUUID(),body={rootBindingId:id,parentStudyId:'synthetic-parent',selectedOutputId:randomUUID(),expectedOutput:{revision:0,hash:'a'.repeat(64)},kind:'carousel',outputRevision:0},headers={origin:'http://127.0.0.1:'+f.port,'content-type':'application/json','x-ar-actor':'agent:codex'};
+ const result=await request(f.port,'/api/study/outputs/export',{method:'POST',headers,body:JSON.stringify(body)});assert.equal(result.status,200);assert.equal(f.calls.at(-1).headers['x-ar-actor'],'agent:codex');assert.equal(f.calls.at(-1).headers['x-ar-client'],'ui');assert.equal((await request(f.port,'/api/study/outputs/create',{method:'POST',headers,body:'{}'})).status,403);
+});

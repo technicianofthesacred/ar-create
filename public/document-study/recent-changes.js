@@ -126,7 +126,7 @@
   try{
    const list=recentAll?[null]:scopes().filter((s,i,a)=>a.findIndex(x=>x.kind===s.kind&&x.id===s.id)===i&&s.kind!=='piece');
    const parts=await Promise.all(list.map(s=>get('/api/journal?'+new URLSearchParams(s?{kind:s.kind,id:s.id,limit:'100'}:{limit:'150'})).then(v=>v.lines||[])));
-   const seen=new Set();recentLines=parts.flat().filter(l=>{const k=l.ts+'|'+l.operationId+'|'+l.kind+'|'+l.status;if(seen.has(k))return false;seen.add(k);return true;}).sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,150);
+   const seen=new Set();recentLines=parts.flat().filter(l=>{if(l.status!=='committed'||['first-flow.select','study.photos.select','study.human-direction.select','study-draft.open'].includes(l.kind))return false;const k=l.ts+'|'+l.operationId+'|'+l.kind+'|'+l.status;if(seen.has(k))return false;seen.add(k);return true;}).sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,150);
   }catch(error){recentError='Recent changes could not be read. Nothing was changed.';}
   finally{recentLoading=false;paintRecent();}
  }
