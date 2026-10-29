@@ -2513,7 +2513,7 @@
     },
     {
       "path": "public/document-study/c3-theme.css",
-      "candidateSha256": "13907477e245f6a8932d7bd567ecdefdb75d5f6bb238917051fbb439a5b24196"
+      "candidateSha256": "5b7af5128c8f16807d93bdbaf868ccbb10e2a66ee32392cad109c48267c2593a"
     },
     {
       "path": "public/document-study/c3-theme.test.mjs",
@@ -4237,7 +4237,7 @@
     },
     {
       "path": "tests/magazine-article-html.test.mjs",
-      "candidateSha256": "272d31c1f9c2c571102398bd7e53cc903352619ddd076b9e5f3dfed3b7518901"
+      "candidateSha256": "043b1cb1cb5a2cd65701c578ff7b310d381e9bf9d866bc15e1372a6174d37cd1"
     },
     {
       "path": "tests/standalone-article-html.test.mjs",

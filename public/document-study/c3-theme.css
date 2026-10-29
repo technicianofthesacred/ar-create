@@ -152,7 +152,7 @@ body.c3-tabs #app .workspace>.draft-bar .draft-explanation{margin:0 0 6px;color:
 
 /* One quiet heading scale for everything that is not the manuscript. */
 body.c3-tabs #app .workspace :is(h2,h3):not(.shared-prose-block):not(#manuscript *):not(.document>h1){letter-spacing:0}
-body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h2:not(.shared-prose-block){font:600 var(--c3-t2)/1.35 var(--ar-ui)!important;margin:0 0 8px!important}
+body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h2:not(.shared-prose-block):not(:where([data-template-render]) *){font:600 var(--c3-t2)/1.35 var(--ar-ui)!important;margin:0 0 8px!important}
 body.c3-tabs #app .workspace :is(.material-surface,.mot-surface,.oss-surface,.oo-stage,#owned-photo-stage,#study-source-continuation,#direction-writing-tools,.human-direction-editor,.sws-work-tools,.flow-paper,.wn-check-findings,.photos-stage-room) h3:not(.shared-prose-block){font:600 var(--c3-t1)/1.35 var(--ar-ui)!important;margin:0 0 6px!important}
 /* The manuscript title: still the Atlas face, one step smaller so the page starts sooner. */
 body.c3-tabs #app .workspace :is(.document,.recordPage).prose-document>:is(h1,h2):first-of-type,body.c3-tabs #app .workspace .recordBody.shared-prose-surface>h1.shared-prose-block:first-child{font-size:38px!important;line-height:1.15!important;margin:0 0 12px!important}
