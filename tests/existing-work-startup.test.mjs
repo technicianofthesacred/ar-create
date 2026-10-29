@@ -110,7 +110,7 @@ test('concealed startup restores saved output words mode without waiting for vis
  w.ArStudyOutputHost={mountStudyOutputHost:async element=>{element.innerHTML='<button>Writing content</button>';element.querySelector('button').onclick=()=>{modeClicks++;};return {model:{selectedOutputId:outputId,outputs:[output],expectedOutput:view.expectedOutput,writingProof:view.writingProof},flush:async()=>{hostFlushes++;await held;},destroy(){}};}};
  w.eval(code('output-connection'));await tick();await tick();
  assert.equal(modeClicks,1,'mode restoration clicks the exact enabled control even behind the startup veil');assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
- s.start();await tick();await tick();assert.ok(hostFlushes>0);assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup]').dataset.reviewOpeningStep,'catalog');
+ s.start();await tick();await tick();assert.ok(hostFlushes>0);assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.querySelector('[data-review-startup]').dataset.reviewOpeningStep,'resolve-route');
  release();await w.existingWork.load();await tick();assert.equal(w.arCreateReviewStartup.pending,false);assert.equal(p.viewedStage,5);assert.equal(p.id,'hk');
 });
 
@@ -175,4 +175,21 @@ test('Source list finite deadline identifies timeout while preserving the hidden
 });
 test('Source failure reason admits only finite safe codes and never arbitrary path or error text',async t=>{
  const s=setup(t,{query:'reviewSource=11111111-1111-4111-8111-111111111111'}),{w}=s;w.eval(code('display-format'));const inventedPath=['','Users','invented','private.md'].join('/');w.fetch=async()=>{throw Object.assign(Error('private content at '+inventedPath),{openingReason:inventedPath});};s.start();await tick();await tick();const status=w.document.querySelector('[data-review-startup]');assert.equal(status.dataset.reviewFailureReason,undefined);assert.doesNotMatch(status.outerHTML,/private content|private.md/);assert.equal(status.outerHTML.includes(inventedPath),false);
+});
+
+test('catalogue refusal and invalid response retain safe startup cause without exposing private error bodies',async t=>{
+ for(const mode of ['http','invalid','transport']){
+  const s=setup(t),{w}=s;w.eval(code('display-format'));
+  w.fetch=async()=>{if(mode==='transport')throw new TypeError('private content at /Users/invented/private-network-detail');return {ok:mode!=='http',status:mode==='http'?503:200,json:async()=>mode==='http'?{error:'private content at /Users/invented/private-reader-detail'}:{mode:'wrong'}};};
+  s.start();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');
+  assert.equal(e.dataset.reviewFailureStage,'catalog');assert.equal(e.dataset.reviewFailureReason,mode==='http'?'catalog-http-refused':mode==='invalid'?'catalog-response-invalid':'catalog-read-failed');assert.doesNotMatch(e.outerHTML,/private-network-detail|private-reader-detail/);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+ }
+});
+test('catalogue timeout records bounded elapsed proof while a late response cannot reveal cached work',async t=>{
+ const s=setup(t),{w}=s;let expire;const real=w.setTimeout.bind(w);w.setTimeout=(fn,ms,...args)=>ms===10000?(expire=fn,123456):real(fn,ms,...args);s.start();await tick();expire();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');assert.equal(e.dataset.reviewFailureReason,'catalog-read-timeout');assert.ok(Number.isInteger(Number(e.dataset.reviewFailureElapsedMs)));s.catalog();await tick();assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.getComputedStyle(w.document.getElementById('app')).visibility,'hidden');
+});
+test('a post-catalog Magazine dirty-writing refusal is diagnosed at flush rather than blamed on discovery',async t=>{
+ const query=new URLSearchParams({reviewStory:'story',reviewStage:'5',reviewMagazineStory:'mag-story',reviewMagazinePiece:'piece',reviewMagazineParent:'previous'}).toString(),s=setup(t,{query}),{w}=s,hash='a'.repeat(64);w.AR_CREATE_REVIEW_MODE.magazineDraftCorrections=true;
+ const target={kind:'magazine',edition:'working',artifactId:'draft',hash,nativeProjectId:'previous',storyId:'mag-story',pieceId:'piece',partKey:'one',editable:true};w.fetch=async()=>({ok:true,json:async()=>({mode:'existing-work-read-only',sources:[],stories:[{id:'story',name:'Requested story',nativeProjectId:'previous',artifacts:[{artifactId:'draft',hash,kind:'DEV',magazineWorkingTarget:target}]}]})});
+ w.studyDraft.flush=async()=>({dirty:true});w.studyDraft.openMagazine=()=>{throw Error('Must not open over dirty work');};s.start();await tick();await tick();const e=w.document.querySelector('[data-review-startup]');assert.equal(e.dataset.reviewFailureStage,'flush-current');assert.equal(e.dataset.reviewFailureReason,'startup-writing-dirty');assert.equal(w.current().id,'previous');assert.equal(w.arCreateReviewStartup.pending,true);
 });
