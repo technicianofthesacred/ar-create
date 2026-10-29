@@ -156,3 +156,23 @@ test('a protected Source refusal reports its exact safe stage without exposing p
  const uuid='11111111-1111-4111-8111-111111111111',s=setup(t,{query:'reviewSource='+uuid}),{w}=s;
  w.eval(code('display-format'));w.fetch=async()=>({ok:true,json:async()=>({sessions:[{id:'one',sourceId:uuid,sourceHash:'a'.repeat(64),version:1}]})});w.studyDraft.flush=async()=>{throw new TypeError('Owner unavailable at '+['','Users','invented-protected','private-file.md'].join('/'));};s.start();await tick();await tick();const status=w.document.querySelector('[data-review-startup]');assert.equal(status.dataset.reviewFailureStage,'flush-current');assert.equal(status.dataset.reviewFailureType,'TypeError');assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(w.document.getElementById('app').getAttribute('aria-hidden'),'true');assert.doesNotMatch(status.outerHTML,/private-file|\/Users\/private/);
 });
+
+for(const cause of ['source-context-replaced','source-project-changed','source-navigation-superseded','source-url-changed'])test('Source held-read refusal distinguishes '+cause+' without weakening its selection guard',async t=>{
+ const uuid='11111111-1111-4111-8111-111111111111',s=setup(t,{query:'reviewSource='+uuid}),{w}=s;let finish,selected=0,flushed=0;
+ const original=w.current(),originalWords=JSON.stringify(original.blocks);
+ w.fetch=()=>new Promise(resolve=>{finish=()=>resolve({ok:true,json:async()=>({sessions:[{id:'one',sourceId:uuid,sourceHash:'a'.repeat(64),version:2}]})});});w.studyImportedSource={selectSource:async()=>{selected++;}};w.studyDraft.flush=async()=>{flushed++;return {dirty:false};};s.start();
+ if(cause==='source-context-replaced')w.state.projects[w.state.projects.indexOf(original)]={...original};
+ else if(cause==='source-project-changed'){w.state.projects.push({...original,id:'changed'});w.state.project='changed';}
+ else if(cause==='source-navigation-superseded')await w.viewPhase(3);
+ else w.history.replaceState(null,'','?reviewSource='+uuid+'#changed-position');
+ const cacheAtResponse=w.localStorage.getItem('ar-create-packaged-document-study-v1');finish();await tick();await tick();const status=w.document.querySelector('[data-review-startup]');assert.equal(status.dataset.reviewFailureStage,'read-transcript');assert.equal(status.dataset.reviewFailureReason,cause);assert.equal(selected,0);assert.equal(flushed,0);assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(JSON.stringify(original.blocks),originalWords);assert.equal(w.localStorage.getItem('ar-create-packaged-document-study-v1'),cacheAtResponse);
+});
+test('Source list finite deadline identifies timeout while preserving the hidden owner and exact retry URL',async t=>{
+ const uuid='11111111-1111-4111-8111-111111111111',s=setup(t,{query:'reviewSource='+uuid}),{w}=s;let deadline,selected=0,aborted=false;const url=w.location.href,original=w.current(),words=JSON.stringify(original.blocks),set=w.setTimeout;
+ w.setTimeout=(fn,ms,...args)=>ms===8000?(deadline=fn,88):set(fn,ms,...args);w.clearTimeout=()=>{};
+ w.fetch=async(url,options)=>{options.signal.addEventListener('abort',()=>{aborted=true;});return new Promise(()=>{});};w.studyImportedSource={selectSource:async()=>{selected++;}};s.start();assert.equal(typeof deadline,'function');deadline();await tick();await tick();
+ const status=w.document.querySelector('[data-review-startup]');assert.equal(status.dataset.reviewFailureReason,'source-read-timeout');assert.equal(status.dataset.reviewFailureStage,'read-transcript');assert.equal(aborted,true);assert.equal(selected,0);assert.equal(w.current(),original);assert.equal(JSON.stringify(original.blocks),words);assert.equal(w.arCreateReviewStartup.pending,true);assert.equal(status.querySelector('a').href,url);
+});
+test('Source failure reason admits only finite safe codes and never arbitrary path or error text',async t=>{
+ const s=setup(t,{query:'reviewSource=11111111-1111-4111-8111-111111111111'}),{w}=s;w.eval(code('display-format'));const inventedPath=['','Users','invented','private.md'].join('/');w.fetch=async()=>{throw Object.assign(Error('private content at '+inventedPath),{openingReason:inventedPath});};s.start();await tick();await tick();const status=w.document.querySelector('[data-review-startup]');assert.equal(status.dataset.reviewFailureReason,undefined);assert.doesNotMatch(status.outerHTML,/private content|private.md/);assert.equal(status.outerHTML.includes(inventedPath),false);
+});

@@ -756,7 +756,7 @@
     {
       "path": "public/document-study/stage-flow.js",
       "sourceSha256": "50355aceafb6f15df37640c20c821311edaa50ce356590b1f4632993f827ff49",
-      "candidateSha256": "07b756f0a2cfb00fa1779a4b29113dd18b3bdfcb58b7e5f0947ba87851f28a15",
+      "candidateSha256": "da117c54fa826503f7216314fa783cd15a0cd654ce7f0e83465da00ef36aa477",
       "adapted": true
     },
     {
@@ -3657,11 +3657,11 @@
     },
     {
       "path": "public/document-study/existing-work.js",
-      "candidateSha256": "81c03993732e378734db5329c608c70d6729adb081413ebeb9c83f329577872e"
+      "candidateSha256": "33c75b6c8a6434e8aa41d8654f2fa093ed0354628ae3b307d40ef649f6678c18"
     },
     {
       "path": "public/document-study/review-mode.js",
-      "candidateSha256": "a8187a1204d3700633bf428fd55d0707c65d9bf6d8ef7c9cac9dd55770ebf192"
+      "candidateSha256": "847025be8e8f3a6b81f141bf762f11954e2b41585c5d7d17c9efd9b4c073e867"
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
@@ -4029,7 +4029,7 @@
     },
     {
       "path": "tests/existing-work-startup.test.mjs",
-      "candidateSha256": "71083354b0864089c0faf84c77d3246129801d138c6f8ddc2da932bf6bf0ace6"
+      "candidateSha256": "26d1e1da23a0b2c80b8fe8a0490bdea05847394d0b3640fb944028c9052579bd"
     },
     {
       "path": "tests/retained-carousel-reader.test.mjs",
@@ -4586,6 +4586,10 @@
     {
       "path": "tests/magazine-photo-albums.test.mjs",
       "candidateSha256": "7d868056b6e1f24aadf29cbb09067006ae24ae37a4a04b6823f4a2247361bc07"
+    },
+    {
+      "path": "tests/retained-source-scope.test.mjs",
+      "candidateSha256": "913da169eb06ab05177b971d54db07f3f39784c0f65908b042e201116e202183"
     }
   ],
   "dependencyRepair": {
