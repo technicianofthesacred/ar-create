@@ -7,6 +7,7 @@ import {validatePhotoAnnotation,validateArticleCredits} from '../runtime/service
 // corrections forward only to that existing owner; this entrance never owns writes.
 import {createTranslationOneRunAdmission} from '../runtime/services/translation-one-run-admission.mjs';
 import http from 'node:http';
+import {createHash} from 'node:crypto';
 import {validateImportedTranscriptTranslation} from '../config.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -229,7 +230,7 @@ async function staticRead(publicDir,pathname){
   return {bytes:await fs.readFile(current),type:TYPES[path.extname(current).toLowerCase()]||'application/octet-stream'};
  }catch(error){if(['ENOENT','ENOTDIR'].includes(error.code))return null;throw error;}
 }
-export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,libraryFolderCorrections=false,changeLibraryFolders=null,changePhotoAlbums=null,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,magazineDraftCorrections=false,magazineFeedbackCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
+export function createReviewConnection({publicDir=path.join(root,'public'),runtimePublicDir=path.join(root,'runtime/public'),authorityURL='http://127.0.0.1:8841',allowedAuthorityPort=8841,timeoutMs=10000,readOverrides=new Map(),actualWorkReview=false,readPostPaths=[],sourceCorrections=false,libraryFolderCorrections=false,changeLibraryFolders=null,changePhotoAlbums=null,studyDraftCorrections=false,studyDraftApprovals=false,browserCarouselCorrections=false,nativeCarouselCorrections=false,nativeOutputExports=false,nativeArticleComposition=false,reviewPhotoReads=[],magazineDraftCorrections=false,magazineFeedbackCorrections=false,magazineCheckReceipts=false,catalogCacheScope=null,translationProposals=null,translationPermissionCurrent=null,translationAdmissionDataDir=null}={}){
  const upstream=authority(authorityURL,allowedAuthorityPort);
  if(changePhotoAlbums!==null&&typeof changePhotoAlbums!=='function')throw Error('Photo album corrections require a trusted callback.');
  if(typeof libraryFolderCorrections!=='boolean'||libraryFolderCorrections&&(!actualWorkReview||typeof changeLibraryFolders!=='function'))throw Error('Library folder corrections require a trusted actual-work structural transport.');
@@ -241,11 +242,14 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
  // Browser HTTP/1 pools commonly permit six sockets per origin. Keep live
  // review events from occupying that entire pool across older open clients.
  const eventStreams=new Map(),maxEventStreams=2;
- if(typeof sourceCorrections!=='boolean'||typeof studyDraftCorrections!=='boolean'||typeof studyDraftApprovals!=='boolean'||typeof browserCarouselCorrections!=='boolean'||typeof nativeCarouselCorrections!=='boolean'||typeof magazineDraftCorrections!=='boolean'||typeof magazineFeedbackCorrections!=='boolean'||typeof magazineCheckReceipts!=='boolean')throw Error('Correction permissions must be explicit booleans.');
+ if(typeof sourceCorrections!=='boolean'||typeof studyDraftCorrections!=='boolean'||typeof studyDraftApprovals!=='boolean'||typeof browserCarouselCorrections!=='boolean'||typeof nativeCarouselCorrections!=='boolean'||typeof nativeOutputExports!=='boolean'||typeof nativeArticleComposition!=='boolean'||typeof magazineDraftCorrections!=='boolean'||typeof magazineFeedbackCorrections!=='boolean'||typeof magazineCheckReceipts!=='boolean')throw Error('Correction permissions must be explicit booleans.');
  if(studyDraftApprovals&&!studyDraftCorrections)throw Error('Marked wording approval requires the existing guarded manuscript corrections.');
  if(!Array.isArray(readPostPaths)||readPostPaths.some(name=>!READ_POST_PATHS.has(name)))throw Error('Only declared maintained POST read paths may be configured.');
  const postReads=new Set(readPostPaths);
  if(!(readOverrides instanceof Map))throw Error('Review read overrides must be an explicit Map.');
+ if(!Array.isArray(reviewPhotoReads)||reviewPhotoReads.length>100||reviewPhotoReads.some(item=>!item||Object.keys(item).sort().join(',')!=='sha256,sourceId'||!/^([a-f0-9]{8}-)([a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(item.sourceId||'')||!/^[a-f0-9]{64}$/.test(item.sha256||'')))throw Error('Photo reads require exact source IDs and reviewed byte hashes.');
+ const photoReads=new Map(reviewPhotoReads.map(item=>[item.sourceId,item.sha256]));
+ if(photoReads.size!==reviewPhotoReads.length)throw Error('Photo read identities must be unique.');
  const overrides=new Map(readOverrides);
  for(const [name,handler] of overrides)if(typeof handler!=='function'||!(/^\/api\/review\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/.test(name)||['/api/magazine/portfolio','/api/magazine/artifact',...(actualWorkReview?['/api/sources/tree','/api/library/folders','/api/sources/file','/api/collections','/api/collection-relationships','/api/evidence']:[])].includes(name)))throw Error('Review overrides must name a permitted exact read path.');
  if(!Number.isFinite(timeoutMs)||timeoutMs<=0)throw Error('Use a positive upstream timeout.');
@@ -256,7 +260,18 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   if(!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)||!hosts.includes(req.headers.host)||req.headers.origin!==undefined&&!hosts.map(h=>'http://'+h).includes(req.headers.origin))return fail(403,'Only this local review entrance may read existing work.');
   if(port===allowedAuthorityPort)return fail(503,'Review must use a separate port from the existing authority.');
   const pathname=validPath(req.url);if(!pathname)return fail(400,'This review path is not allowed.');
-  if(actualWorkReview===true&&pathname==='/api/sources/blob'&&['GET','HEAD'].includes(req.method)){req.resume();return fail(403,'Original blob reads are unavailable in this read-only review.');}
+  if(actualWorkReview===true&&pathname==='/api/sources/blob'&&['GET','HEAD'].includes(req.method)){
+   req.resume();const query=new URL(req.url,upstream).searchParams,id=query.get('id'),hash=photoReads.get(id);
+   if([...query.keys()].length!==1||query.getAll('id').length!==1||!hash)return fail(403,'Original blob reads are unavailable without an exact photo grant.');
+   try{const response=await fetch(new URL('/api/sources/blob?id='+encodeURIComponent(id),upstream),{redirect:'manual',signal:AbortSignal.timeout(timeoutMs)});
+    if(response.status!==200)return fail(409,'The reviewed photograph is unavailable.');
+    const chunks=[];let length=0;for await(const chunk of response.body){length+=chunk.length;if(length>32*1024*1024)return fail(413,'The reviewed photograph exceeds its byte limit.');chunks.push(chunk);}
+    const bytes=Buffer.concat(chunks);
+    if(createHash('sha256').update(bytes).digest('hex')!==hash)return fail(409,'The reviewed photograph bytes changed.');
+    const type=response.headers.get('content-type')?.split(';')[0];if(!['image/png','image/jpeg','image/webp','image/gif','image/avif'].includes(type))return fail(415,'The reviewed photograph type is unsupported.');
+    res.writeHead(200,{'Content-Type':type,'Content-Length':bytes.length,'X-Content-Sha256':hash});return res.end(req.method==='HEAD'?undefined:bytes);
+   }catch{return fail(502,'The reviewed photograph could not be read.');}
+  }
   if(pathname==='/api/source-sessions/translation-review'){
    if(!['GET','HEAD'].includes(req.method)){req.resume();res.setHeader('Allow','GET, HEAD');return fail(405,'Saved English proposals are read-only.');}
    const query=new URL(req.url,upstream).searchParams,keys=['sessionId','expectedRevision','expectedSourceHash'];
@@ -280,19 +295,20 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   }
   const mechanicalCheck=mechanicalPath&&magazineCheckReceipts&&req.method==='POST';
   if(mechanicalCheck){if(req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved checks require the author’s local workspace.');}if(req.url!==pathname)return fail(400,'Use the exact check path without a query.');if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'){req.resume();return fail(403,'Checks must originate from this exact local review page.');}}
-  const nativeReviewPath=NATIVE_EDITION_PATHS.has(pathname)||pathname==='/api/study-draft/check',nativeReviewEnabled=actualWorkReview&&studyDraftCorrections&&nativeCarouselCorrections;
+  const nativeReviewPath=NATIVE_EDITION_PATHS.has(pathname)||pathname==='/api/study-draft/check',nativeReviewEnabled=actualWorkReview&&studyDraftCorrections&&(nativeCarouselCorrections||nativeOutputExports&&pathname==='/api/study/outputs/export');
   if(nativeReviewPath&&nativeReviewEnabled&&req.method!=='GET'&&req.method!=='HEAD'){
    if(req.url!==pathname){req.resume();return fail(400,'Use the exact native output operation path without a query.');}
    if(req.method!=='POST'){req.resume();return fail(405,'Native output operations require an explicit POST.');}
    if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Native output operations require the author’s exact local workspace.');}
   }
   const nativeReview=nativeReviewEnabled&&nativeReviewPath&&req.method==='POST';
+  const articleCompositionPath=actualWorkReview&&studyDraftCorrections&&nativeArticleComposition&&pathname==='/api/study/outputs/save';
   const correctionPath=SOURCE_CORRECTION_PATHS.has(pathname);
   const draftCorrectionPath=STUDY_DRAFT_CORRECTION_PATHS.has(pathname);
   const magazineCorrectionPath=MAGAZINE_DRAFT_CORRECTION_PATHS.has(pathname);
   const carouselCorrectionPath=NATIVE_CAROUSEL_PATHS.has(pathname);
   const magazineFeedbackPath=MAGAZINE_FEEDBACK_CORRECTION_PATHS.has(pathname);
-  if(correctionPath&&sourceCorrections||draftCorrectionPath&&studyDraftCorrections||magazineCorrectionPath&&magazineDraftCorrections||magazineFeedbackPath&&magazineFeedbackCorrections||carouselCorrectionPath&&nativeCarouselCorrections){
+  if(correctionPath&&sourceCorrections||draftCorrectionPath&&studyDraftCorrections||magazineCorrectionPath&&magazineDraftCorrections||magazineFeedbackPath&&magazineFeedbackCorrections||carouselCorrectionPath&&nativeCarouselCorrections||articleCompositionPath){
    if(req.url!==pathname)return fail(400,'Use the exact correction path without a query.');
    if(req.method!=='POST'){req.resume();res.setHeader('Allow','POST');return fail(405,'Corrections require an explicit POST.');}
    if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'){req.resume();return fail(403,'Corrections must originate from this exact local review page.');}
@@ -300,7 +316,7 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const sourceCorrection=sourceCorrections&&correctionPath&&req.method==='POST';
   const draftCorrection=studyDraftCorrections&&draftCorrectionPath&&req.method==='POST';
   const magazineCorrection=magazineDraftCorrections&&magazineCorrectionPath&&req.method==='POST';
-  const carouselCorrection=nativeCarouselCorrections&&carouselCorrectionPath&&req.method==='POST';
+  const carouselCorrection=(nativeCarouselCorrections&&carouselCorrectionPath||articleCompositionPath)&&req.method==='POST';
   const nativeSave=carouselCorrection&&pathname==='/api/study/outputs/save';let nativeArticleSave=false;
   if(nativeSave&&req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Saved composition changes require the author’s exact local workspace.');}
   const magazineFeedbackCorrection=magazineFeedbackCorrections&&magazineFeedbackPath&&req.method==='POST';
@@ -378,8 +394,13 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(nativeSave){
     const input=validateNativeReview(pathname,readBody),view=await nativeOutputSnapshot(upstream,timeoutMs,input);
     if(view?.scope?.rootBindingId!==input.rootBindingId||view.scope.parentStudyId!==input.parentStudyId||view.output?.id!==input.selectedOutputId)throw Object.assign(Error('Select this exact saved output before changing its composition.'),{status:409});
+    if(articleCompositionPath&&!nativeCarouselCorrections){
+     const denied=()=>{throw Object.assign(Error('This connection supports Article layout only; wording and other outputs are unchanged.'),{status:423});};
+     if(view.output.kind!=='article'||Object.keys(input.changes).some(k=>!['placements','articleComposition'].includes(k)))denied();
+     for(const photo of input.changes.placements||[]){const prior=view.output.placements?.find(row=>row.slot===photo.slot),defaultAlt=photo.slot==='cover'?'Cover photograph':'Article photograph';if((photo.caption||'')!==(prior?.caption||'')||photo.alt!==(prior?.alt??defaultAlt))denied();}
+    }
     if(view.output.kind==='article'){
-     if(!nativeReviewEnabled)throw Object.assign(Error('Native Article composition requires both existing correction grants.'),{status:423});
+     if(!nativeReviewEnabled&&!articleCompositionPath)throw Object.assign(Error('Native Article composition requires both existing correction grants.'),{status:423});
      if(view.writingProof?.kind!=='native')throw Object.assign(Error('Use the selected Article’s native wording owner.'),{status:409});
      validateNativeReview(pathname,readBody,{articleSave:true,view});nativeArticleSave=true;
     }else if(view.output.kind==='carousel')validateCarouselCorrection(pathname,readBody);

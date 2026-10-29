@@ -90,7 +90,7 @@
   }
   if(record.tagName==='DETAILS')record.open=true;reveal(record,'start');
  }
- function researchRecords(ws){return [...ws.querySelectorAll('.research-standard-coverage>details:not([data-research-source-point]),.flow-retained .compactRecord,[data-disclosure="retained-research"],[data-disclosure="retained-brief"],[data-disclosure^="research-role:"]')].filter(n=>!n.closest('[data-research-point]'));}
+ function researchRecords(ws){return [...ws.querySelectorAll('.research-standard-coverage>details:not([data-research-source-point]),.flow-retained .compactRecord,[data-disclosure="retained-research"],[data-disclosure="retained-brief"],[data-disclosure="report"],[data-disclosure="brief"],[data-disclosure^="research-role:"]')].filter(n=>!n.closest('[data-research-point]'));}
  function research(ws,p){
   if(ws.classList.contains('wb-research-reading')&&(ws.dataset.wbResearchReaderProject!==p.id||!ws.querySelector('.flow-retained [data-wb-research-selected]')))closeResearchReader(ws);
   const full=ws.querySelector('.research-standard'),shared=ws.querySelector('#material-human-direction');
@@ -100,10 +100,10 @@
   // Shared intent is context, never the findings surface or a second Direction editor.
   let host=full||ws.querySelector('.wb-research-empty');
   if(full){const previous=ws.querySelector('.wb-research-empty');if(previous){const tools=previous.querySelector('.wb-research-tools');if(tools)full.append(tools);const notes=previous.querySelector('.wb-research-shared');if(notes&&shared)shared.append(notes);previous.remove();}}
-  if(!host){host=make('section','wb-research-empty');host.setAttribute('aria-label','Research work surface');const paper=ws.querySelector('.flow-paper'),title=ws.querySelector(':scope>.c3-ctitle');if(shared)shared.prepend(host);else if(paper)paper.prepend(host);else if(title)title.after(host);else ws.append(host);}
+  if(!host){host=make('section','wb-research-empty');host.setAttribute('aria-label','Research work surface');const paper=ws.querySelector('.flow-paper'),title=ws.querySelector(':scope>.c3-ctitle');if(paper)paper.prepend(host);else if(shared)shared.before(host);else if(title)title.after(host);else ws.append(host);}
   let split=host.querySelector(':scope>.rsplit');
   if(!split){split=make('div','rsplit wb-research-split');const points=make('div','rpts');points.setAttribute('aria-label','Connected research points');split.append(points);const before=host.querySelector(':scope>[data-research-point]');if(before)before.before(split);else host.append(split);split.append(consolePanel(p));}
-  const points=split.querySelector('.rpts');if(shared&&!full){const notes=shared.querySelector('.wb-research-shared');if(notes&&notes.parentElement!==points)points.append(notes);}const retainedTools=host.querySelector(':scope>.wb-research-tools');if(retainedTools)points.append(retainedTools);
+  const points=split.querySelector('.rpts');const retainedTools=host.querySelector(':scope>.wb-research-tools');if(retainedTools)points.append(retainedTools);
   const records=researchRecords(ws),hasPoints=!!host.querySelector('[data-research-point]');
   if(!hasPoints&&!records.length&&!points.querySelector('.wb-research-no-points')){const empty=make('p','dim wb-research-no-points','No connected research points yet. Saved findings and their source evidence appear here. Use /search in the console to explore the Library.');points.append(empty);}
   if(hasPoints||records.length)points.querySelector('.wb-research-no-points')?.remove();

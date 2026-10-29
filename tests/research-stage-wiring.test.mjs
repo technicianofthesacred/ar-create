@@ -11,3 +11,15 @@ test('Research reads maintained current findings without a legacy WORKFLOW_RECOR
  await new Promise(resolve=>setTimeout(resolve,80));
  assert.equal(w.eval('Object.keys(WORKFLOW_RECORDS).length'),0);assert.ok(calls.some(u=>u.startsWith('/api/study-research/findings?')));assert.equal(w.document.querySelector('[data-research-point="source-backed-fixture"] h2')?.textContent,point.title);assert.equal(w.document.querySelector('[data-research-quote]')?.textContent,point.spoken[0].quote);assert.equal(w.document.querySelector('[data-research-decision="include"]').disabled,true,'missing manuscript context never enables a decision');assert.ok(calls.every(u=>!u.includes('/run')&&!u.includes('/select')&&!u.includes('/write')));
 });
+
+
+test('opening an existing source-analysis project reads its saved research without selecting or creating a binding',async t=>{
+ for(const prior of [undefined,'My unsaved question.','']){
+ const dom=new JSDOM('<div id="app"><main id="workspace"></main></div>',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window,calls=[];t.after(()=>w.close());
+ w.fetch=async(url,options={})=>{calls.push({url,method:options.method||'GET'});const data=options.method?null:url.startsWith('/api/first-flow/binding?')?{projectKey:'invented',projectId:'backend-one',documentId:'document-one'}:url==='/api/first-flow?projectId=backend-one'?{projectId:'backend-one',sourceIds:['source-one'],materials:[],researchAvailable:false,research:{requestId:'saved-request',status:'result-ready',question:'Saved source question.',body:'# Saved source analysis\n\nExact earlier invented analysis.',brief:'Retain the invented origin.',sourceIds:['source-one'],hash:'saved-hash'},directions:[]}:null;return {ok:data!==null,status:data?200:423,json:async()=>data||{error:'Review writes are blocked'}};};
+ w.eval(`var state={projects:[{id:'invented',name:'Invented project',view:'record',viewedStage:3}]};function current(){return state.projects[0]}var WORKFLOW_RECORDS={},ORIGINAL_STEPS=['Material','Source','Research','Direction'];function esc(s){return String(s??'')}function shortRecordName(s){return s}function retainedSection(){return ''}function originalURL(){return '#'}function createLocalProject(){}function modalHTML(){return ''}var modal=null;function workflowBar(){return ''}function historicalNotice(){return ''}function phaseReader(){return ''}function render(){document.getElementById('workspace').innerHTML=phaseReader(current())}function save(){}function viewPhase(n){current().viewedStage=n;render()}function toast(){}`);
+ if(prior!==undefined)w.localStorage.setItem('ar-document-study-stage-flow-v1',JSON.stringify({invented:{drafts:{question:prior},selected:[],reviews:{}}}));
+ w.eval(read('stage-flow.js'));await new Promise(resolve=>setTimeout(resolve,60));
+ assert.match(w.document.getElementById('workspace').textContent,/Exact earlier invented analysis/);assert.ok(calls.every(c=>c.method==='GET'));assert.equal(w.document.querySelector('[data-draft="question"]').value,prior??'Saved source question.');assert.equal(w.document.querySelector('[data-flow-action="analyze"]').disabled,true);
+ }
+});
