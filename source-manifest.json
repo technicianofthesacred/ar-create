@@ -1129,7 +1129,7 @@
     {
       "path": "public/document-study/output-connection.js",
       "sourceSha256": "413cdf1a2bd186ec81d31db05215eff82dc63ca6b63ff8f1c70931b7aaf35403",
-      "candidateSha256": "49f6c06ab256708e13d5b48bb9d67fa373cee29e90e2d0ebb3699df259ab5eae",
+      "candidateSha256": "798505b379112afdff891083c052386697a3b389c30458a564a447bc9fe4df88",
       "adapted": true
     },
     {
@@ -1807,7 +1807,7 @@
     {
       "path": "public/document-study/output-connection.test.mjs",
       "sourceSha256": "f18c1855e87e786d3dfe13434129185b0c9ce4342411eada7fbc070b4b7d2a2e",
-      "candidateSha256": "c2a832b4d4151e1a0213a38eaf5862dc71617b3f91bc699051406844d977bc01",
+      "candidateSha256": "1a3ade7a6a1c64addc70f7017e420cb718feb13d21fbd4b371e573fe2c80ef70",
       "adapted": false
     },
     {
@@ -2693,7 +2693,7 @@
     },
     {
       "path": "TODO.md",
-      "candidateSha256": "a9ce7e4a9efef94f5d7fadb868c58f3266d5238137f195bac50b61dbcb3880dd"
+      "candidateSha256": "e57517824b0a0789acc7aa02c9caab86698e888135d679ad45f75607b43ed31a"
     },
     {
       "path": "fixture-overlay.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "20ba43d8965b187c397eb2de7b6c4aaeb0d5c7f122b21f459e2a3563b3df01a4"
+      "candidateSha256": "03c0ea7e560401de25acef45bb627bed2cafa911983c6d5e6331ab1dd487a6ba"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
