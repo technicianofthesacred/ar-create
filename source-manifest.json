@@ -4221,7 +4221,7 @@
     },
     {
       "path": "public/document-study/mountMagazineAudience.tsx",
-      "candidateSha256": "31e95a10ff4fb3e2c972bd46f665107765cfe67fee749285fa02b5c7346f9985"
+      "candidateSha256": "bc39719348e44ed307c99af123eb7d9931ba85e6f32b09d28a1bcadd76cf6933"
     },
     {
       "path": "tests/magazine-working-edition.test.mjs",
