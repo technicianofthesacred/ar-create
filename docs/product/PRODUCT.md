@@ -35,6 +35,10 @@ The current approved direction is [C workbench](../../design/three-directions/c-
 
 Use Plus Jakarta Sans throughout the interface with the 13/15/16/17px token scale and shared A− / A+ control. Read and Write use the same document geometry. Lora is reserved for speech. This supersedes the previous split that assigned Atlas and display serifs to other long-form screens; template renderings retain their own design type. Preserve the later adopted Source-only Atlas reading treatment and identical focus/edit geometry; this scoped refinement does not restore the old broad Atlas rule for Research, notes or the manuscript. The approved design direction does not establish installed or verified behavior. See [C workbench](../../design/three-directions/c-workbench/index.html), its [revision notes](../../design/three-directions/c-workbench/NOTES.md), and the [Write brief](sections/05-draft.md).
 
+## Interface simplification — 29 October
+
+Never use accordions, expandable cards or details/summary disclosures. Keep essential information and actions visible; simplify the structure rather than concealing it. Use focused editing screens for tasks and ordinary navigation for history. This adopted instruction supersedes earlier disclosure-based presentation guidance; existing unconverted surfaces remain unfinished, not implicitly accepted. Preserve their underlying files, editing, recovery and scoped actions during conversion.
+
 ## Product pillars and shared acceptance
 
 These requirements apply across section boundaries. Each scoped delivery names the relevant IDs and proves the affected behavior; none is complete merely because a button or record exists.

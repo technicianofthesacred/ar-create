@@ -329,3 +329,20 @@ body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar :is
 .car-workspace .car-writing-page textarea:focus-visible{outline:1px solid var(--warm,#796b52);outline-offset:1px}
 /* Keep identical passage positions while quieting editing controls in Read. */
 .car-workspace .car-writing-page[data-writing-view=read] .car-writing-slide>header>div{visibility:hidden}
+
+/* Inline writing blocks keep all wording visible beside a quiet reorder grip. */
+.car-workspace .car-writing-slide>header{gap:7px;margin-bottom:3px;color:var(--dim);font:400 var(--t-label,13px)/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif)}
+.car-workspace .car-writing-slide .car-writing-grip{display:grid;place-items:center;min-width:28px;min-height:28px;margin-left:-4px;padding:0;border:0;background:transparent;color:var(--dim);font-size:20px;cursor:grab;touch-action:none;user-select:none}
+.car-workspace .car-writing-slide .car-writing-grip:disabled{cursor:default}
+.car-workspace .car-writing-slide .car-writing-grip.car-drag-source{opacity:.3}
+.car-workspace .car-writing-slide.car-drop-target{outline:1px solid var(--warm);outline-offset:3px}
+.car-workspace .car-writing-page .car-writing-heading,.car-workspace .car-writing-page .car-writing-credit{display:block;box-sizing:border-box;width:calc(100% + 8px);margin:0 0 2px -4px;padding:1px 4px;min-height:28px;border:0;border-radius:0;background:transparent;color:inherit}
+.car-workspace .car-writing-page .car-writing-heading{font-weight:600}
+.car-workspace .car-writing-page .car-writing-credit{color:var(--dim)}
+.car-workspace .car-writing-page input::placeholder{color:var(--dim);opacity:1}
+.car-workspace .car-writing-page input:focus-visible{outline:1px solid var(--warm,#796b52);outline-offset:1px}
+.car-workspace .car-writing-page[data-writing-view=read] .car-writing-grip{visibility:hidden}
+
+.car-workspace .car-writing-slide>header .car-writing-heading{flex:1;min-width:0;width:auto;margin:0}
+.car-workspace .car-writing-slide>header .car-writing-number{flex:none;min-width:14px;color:var(--dim);font-size:var(--t-label,13px)}
+.car-workspace .car-writing-slide>textarea{min-height:calc(var(--t-reading,16px) * var(--lh-read,1.65) + 2px)}
