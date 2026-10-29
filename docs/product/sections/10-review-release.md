@@ -29,3 +29,7 @@ Look removes composition handles and presents what this audience will receive, w
 ## 16 October — Adopted return to the same audience edition
 
 Audience view shares exact selected output/edition context with Arrange and returns to that composition through existing owners. Preserve truthful current/earlier/save/readiness and delivery state, with meaningful position where supported. New navigation cannot approve wording, create a real output or export/publish automatically. Supported synthetic and actual proof must be distinguished; missing connections remain explicit.
+
+## 29 October — Unpublished working Article download
+
+A text-only saved Magazine manuscript can be previewed and downloaded as private working HTML without a publication URL. Use its exact native reading projection, retain pending markup and opaque notes visibly, and preserve the existing working-owner export receipt and hash checks. Do not guess publication metadata, a designed edition or a photo directory. Unresolved media or malformed explicit publication references remain held. This is portable draft recovery under C03/C04/C07, not editorial acceptance or publication proof.

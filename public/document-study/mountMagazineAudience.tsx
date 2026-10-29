@@ -5,6 +5,7 @@ import {createRoot} from 'react-dom/client';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {standaloneArticleHtml} from '../../runtime/src/workspaces/standaloneArticleHtml';
 import {saveDownload} from '../../runtime/src/workspaces/exportOutput';
+import {AcceptedProse} from '../../runtime/src/workspaces/AcceptedProse';
 import ConversationCanvas from '../../runtime/src/donors/teajia/conversation/ConversationCanvas';
 import {LocalStoryProvider} from '../../runtime/src/donors/teajia/storyEdit';
 const hash=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
@@ -31,6 +32,12 @@ function occurrenceView(read:any){
  return {spec,placements};
 }
 function magazineView(read:any){
+ if(read?.renderKind==='manuscript'){
+  const owner=read.ownerRef,media=read.media,blocks=read.manuscript?.blocks;
+  if(read.schema!=='ar-create.magazine-working-edition.v1'||!hash(read.revision)||!hash(owner?.hash)||owner.editionId!=='working'||media?.schema!=='ar-create.magazine-media-inspection.v1'||media.revision!==read.revision||JSON.stringify(media.ownerRef)!==JSON.stringify(owner)||!Array.isArray(media.sources)||media.sources.length||!Array.isArray(blocks)||blocks.length>4096||blocks.some((b:any)=>typeof b.id!=='string'||typeof b.raw!=='string')||new Set(blocks.map((b:any)=>b.id)).size!==blocks.length)throw Error('The saved manuscript could not be verified.');
+  const view=<main className="ar-output-reader" data-manuscript-preview={owner.hash} style={{maxWidth:760,padding:'32px 24px',color:'var(--ink,#f1efe8)',fontFamily:'sans-serif',fontSize:17,lineHeight:1.65}}><p style={{fontSize:13}}>Working draft · pending marks and retained notes remain visible.</p>{blocks.map((b:any)=>b.doc?<AcceptedProse key={b.id} paragraphId={b.id} document={b.doc}/>:<pre key={b.id} style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',font:'inherit'}}>{b.raw}</pre>)}</main>;
+  return {view,placements:[]};
+ }
  const {spec,placements}=occurrenceView(read),owner=read.ownerRef;
  const view=<div className="ar-donor-workspace"><main className="ar-magazine-reader" data-template-render="magazine" data-magazine-working-preview={owner.hash}><LocalStoryProvider placements={placements} editing={false} onPlacements={()=>{}}><ConversationCanvas spec={spec} showByline/></LocalStoryProvider></main></div>;
  return{view,placements};

@@ -41,7 +41,7 @@ export async function standaloneArticleHtml({title,markup,imageAssets=[],readAss
  const allowed=new Set(imageAssets.map(value=>local(value).href));
  const embedded=new Map<string,string>();for(const value of allowed)embedded.set(value,await asset(value,'image'));
  // Maintained React markup uses quoted attributes. Refuse other resource forms.
- if(/<(?:script|iframe|object|embed|video|audio|source|base|svg)\b|\bsrcset\s*=|\bon[a-z]+\s*=|url\s*\(|@import\b/i.test(markup))throw Error('The rendered article contains unsupported active assets.');
+ if(/<(?:script|iframe|object|embed|video|audio|source|base|svg)\b|\bsrcset\s*=|<[^>]*\bon[a-z]+\s*=|url\s*\(|@import\b/i.test(markup))throw Error('The rendered article contains unsupported active assets.');
  markup=markup.replace(/<[^>]+>/g,tag=>tag.replace(/\b(src|href)="([^"]*)"/g,(whole,name,value)=>{
   if(name==='href'&&!/^<link\b/i.test(tag))return whole;
   const data=embedded.get(local(decoded(value)).href);if(!data)throw Error('A rendered photograph was not in the inspected article assets.');return name+'="'+data+'"';

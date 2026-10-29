@@ -332,6 +332,21 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     return {media,parsed,spec,code,files};
   }
   async function workingEdition(input) {
+    // A private, text-only manuscript has no publication identity to resolve.
+    // Read the existing native projection; never guess a publication or photo root.
+    fields(input,['storyId','pieceId','expectedHash']);
+    const current=await working(input),raw=current.document.text;
+    const front=raw.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1]||'';
+    if(!/^published:/m.test(front)){
+      const captured=native.capture(raw,input.pieceId),body=raw.slice(captured.prefix.length);
+      if(/%%\s*(?:photo|photos|cover|opener|wide|bleed|side|on-photo|ending|saying)\s*:|!\[|<(?:img|picture|video|audio|source)\b/i.test(body))fail('An unpublished manuscript with media needs its exact connected layout before HTML export.');
+      const projected=native.projection(captured),ownerRef={projectId:input.storyId,pieceId:input.pieceId,editionId:'working',artifactId:current.target.artifactId,hash:input.expectedHash};
+      const blocks=captured.blocks.filter(b=>b.raw.trim()).map((b,i)=>({id:'manuscript:'+i,raw:b.raw,doc:b.raw.includes('==')?null:projected.find(p=>p.id===b.id)?.doc||null}));
+      const title=typeof current.authority.title==='string'&&current.authority.title.trim()?current.authority.title:'Working article';
+      const revision=digest(['unpublished-manuscript-v1',ownerRef,blocks,title]);
+      const after=await working(input);if(after.authority.path!==current.authority.path||after.target.artifactId!==current.target.artifactId||after.authority.title!==current.authority.title)fail('The exact working manuscript changed.');
+      return {schema:'ar-create.magazine-working-edition.v1',renderKind:'manuscript',revision,ownerRef,spec:{title},manuscript:{blocks},media:{schema:'ar-create.magazine-media-inspection.v1',revision,ownerRef,sources:[]}};
+    }
     const {media,parsed,spec,code,files}=await inspectEdition(input);
     // Nested Words delegates the same known blocks to BlockView; keep its
     // bounded tree contract before constructing a working edition.
