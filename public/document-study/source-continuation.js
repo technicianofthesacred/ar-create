@@ -20,7 +20,7 @@
  const room=id=>{if(!rooms.has(id))rooms.set(id,{parts:[],bindingId:buffers[id]?.bindingId||'',loaded:false,loading:false,version:0,error:'',partsState:new Map()});return rooms.get(id)};
  const part=(id,bindingId)=>{const r=room(id);if(!r.partsState.has(bindingId)){const local=buffers[id]?.parts?.[bindingId];r.partsState.set(bindingId,{sourceIds:Array.isArray(local?.sourceIds)?local.sourceIds.filter(x=>typeof x==='string'):[],answerIds:Array.isArray(local?.answerIds)?[...new Set(local.answerIds.filter(x=>typeof x==='string'&&UUID.test(x)))].slice(0,30):[],hasBuffer:!!local,catalog:[],answerCatalog:[],learningSupported:false,learningError:'',records:[],reader:null,disclosures:new Map(),requests:[],loaded:false,loading:false,busy:false,connecting:false,needsConnection:false,version:0,error:'',notice:''});}return r.partsState.get(bindingId)};
  function persist(id){const r=room(id);buffers[id]??={parts:{}};buffers[id].bindingId=r.bindingId;for(const [bindingId,p]of r.partsState)if(p.hasBuffer)buffers[id].parts[bindingId]={sourceIds:[...p.sourceIds],answerIds:[...p.answerIds]};try{localStorage.setItem(KEY,JSON.stringify(buffers));}catch{r.error='Device recovery is unavailable. Keep this page open until context is prepared.';}}
- async function api(route,s,body){const response=await fetch('/api/'+route+(s?'?'+new URLSearchParams(s):''),body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'Context could not be prepared.'),{status:response.status});return value;}
+ async function api(route,s,body,{freshCatalog=false}={}){if(body===undefined&&route==='study-draft/catalog'&&window.nativeDraftCatalog)return window.nativeDraftCatalog.read({fresh:freshCatalog});const response=await fetch('/api/'+route+(s?'?'+new URLSearchParams(s):''),body===undefined?undefined:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'Context could not be prepared.'),{status:response.status});if(body!==undefined)window.nativeDraftCatalog?.mutationSucceeded?.('/api/'+route);return value;}
  const visible=(id,bindingId)=>!disposed&&current().id===id&&[3,4].includes(current().viewedStage)&&(!bindingId||room(id).bindingId===bindingId);
  const selected=p=>p.sourceIds.map(id=>p.catalog.find(s=>s.id===id));
  const learningReady=p=>p.answerIds.length<=30&&p.answerIds.every(id=>p.learningSupported&&p.answerCatalog.some(a=>a.id===id&&a.eligible===true));
@@ -75,7 +75,7 @@
   if(!unchanged()||!p.needsConnection||p.busy||p.loading||!r.parts.some(b=>b.bindingId===bindingId&&b.parentStudyId===id&&b.bindingStatus==='ready'))return;
   p.busy=true;p.connecting=true;p.error='';paint();
   try{
-   const catalog=await api('study-draft/catalog'),matches=readyParts(catalog,id).filter(b=>b.bindingId===bindingId);
+   const catalog=await api('study-draft/catalog',undefined,undefined,{freshCatalog:true}),matches=readyParts(catalog,id).filter(b=>b.bindingId===bindingId);
    if(!unchanged())return;
    if(matches?.length!==1)throw Error('This manuscript part is no longer ready. Reload sources.');
    const result=await api('study/human-direction/select',null,{...scope(id,bindingId),scope:'part',title:matches[0].title,operationId:crypto.randomUUID()});

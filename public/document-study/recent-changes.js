@@ -14,7 +14,7 @@
  const when=at=>{const t=Date.parse(at);if(!Number.isFinite(t))return '';const d=new Date(t),today=new Date();return d.toDateString()===today.toDateString()?clock(at):d.toLocaleDateString([],{day:'numeric',month:'short'})+' '+clock(at);};
  const CLIENT={ui:'in the app',cli:'from the command line',mcp:'through a connected assistant',http:'over the local connection',file:'from a file'};
  const canFetch=()=>typeof fetch==='function';
- async function get(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json();}
+ async function get(url){if(url.split('?')[0]==='/api/study-draft/catalog'&&window.nativeDraftCatalog)return window.nativeDraftCatalog.read();const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json();}
  let presence=[],leases=[],asks=[],handoffs=[],humanLines=[],bindings=new Map(),loaded=false,ttlMs=120000,openAsk=null,askError='',answering=false;
  // ---------- the open piece: which records count as "here"
  function piece(){try{return typeof current==='function'?current():null;}catch{return null;}}

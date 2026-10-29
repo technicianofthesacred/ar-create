@@ -1,3 +1,13 @@
+## 29 October — measured discovery candidate; clean record installed
+
+Clean-record behavior is installed at `63ecdb3767eb6a74bf7d8e7bc14c9edc6f1b6390`, build `2026-10-29T14:10:21.629Z` (PR111), with exact live-byte and preservation proof. The main-app twelve-section agent walk left the journal and pickup unchanged; original turns, Article and four Carousel editions are unchanged. Native Library discovery shows 36 sources; the combined Library shows those plus 50 retained story documents. Identified processing/fixture rows are hidden without deletion, and genuine recordings remain.
+
+The next source candidate gives all twelve native-catalogue consumers one validated memory-only discovery snapshot. An exact existing Article opened in the actual-owner read-only candidate with one discovery request; operation-time registration/revision checks still request fresh data. Folder indexes load on active Library/Media or picker demand. Next moves uses recorded waiting questions, review/correction states and confirmed Source/Research issues; ordinary saved drafts are not invented tasks. Unavailable decision coverage remains explicit.
+
+Safe per-reader timing is observational and exposes no record identifiers, paths or prose. A first actual service-restart diagnostic completed in 717 ms: Conversations was the slowest optional reader at 682 ms. This did not reproduce or establish the cause of the prior ten-second failure. Ten consecutive final-installed cold starts on video remain required; neither a warm probe nor a wider deadline closes that criterion.
+
+Direction alternatives before implementation, faithful downloaded Audience comparison at the requested widths, and human Carousel wording/photo decisions remain in their adopted order. No UI restyling outside the scoped Audience work, wording approval, provider activation or publication is inferred.
+
 ## 29 October — clean-record candidate under verification
 
 The journey-first work order is now the finishing priority; this does not close the broader product. Source candidate only: managed transcription job files and exact fixture namespaces are excluded from discovery; retained transcript/original identities remain. Agent review tabs carry their own tab-scoped actor, the proxy preserves it and human-only approval remains refused to agents. Navigation/selection no longer append authored activity; recent activity shows committed changes only; view capture preserves the pickup snapshot until editing or explicit Continue.

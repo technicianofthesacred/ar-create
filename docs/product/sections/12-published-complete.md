@@ -61,3 +61,7 @@ Applies the adopted return-to-work requirements, C01–C06; stated once in [PROD
 ## 29 October — Honest activity and pickup
 
 C01/C02/C04/C06: every entrance retains its actual actor. Navigation and selection are not authored changes and do not append edit activity. The activity feed shows committed changes; refused operations remain in the technical audit and are never presented as completed work. Pickup advances on actual editing or explicit Continue, with its retained paragraph/output identity; browsing sections must not replace it. Acceptance includes before/after main-app screenshots and an unchanged journal and pickup after an agent walks every section.
+
+## 29 October — Decisions, not generic draft tasks
+
+Next moves comes from current saved questions and explicit review/correction states. A draft’s mere presence does not create a waiting decision. Keep ordinary available work in the existing inventory and report unavailable decision coverage honestly. Re-read a question or output’s current identity before opening it; stale questions must not become a new decision or approval.
