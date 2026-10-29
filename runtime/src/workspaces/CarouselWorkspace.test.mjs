@@ -15,6 +15,7 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
  const keys=['window','document','navigator','HTMLElement','Element','Node','requestAnimationFrame','IS_REACT_ACT_ENVIRONMENT','MessageChannel'];
  const previous=new Map(keys.map(key=>[key,Object.getOwnPropertyDescriptor(globalThis,key)]));
  for(const key of keys)Object.defineProperty(globalThis,key,{configurable:true,writable:true,value:key==='IS_REACT_ACT_ENVIRONMENT'?true:key==='requestAnimationFrame'?(fn)=>setTimeout(fn,0):dom.window[key]});
+ dom.window.requestAnimationFrame=fn=>dom.window.setTimeout(fn,0);dom.window.cancelAnimationFrame=id=>dom.window.clearTimeout(id);
  const channels=[];globalThis.MessageChannel=class extends MessageChannel{constructor(){super();channels.push(this);}};
  let root;
  try{
@@ -69,8 +70,8 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   assert.strictEqual(document.querySelector('[aria-label="Writing for slide 2"]'),second);
   assert.equal(second.readOnly,true);assert.equal(second.value,'Second revised inline');
   assert.equal(writing.querySelector('h2').textContent,'Read carousel');
-  assert.equal(writing.querySelector('[aria-label="Edit slide 2 details"]').disabled,true);
-  await click('Edit slide 2 details');assert.equal(second.closest('section').querySelector('details').open,false,'Read cannot open editing controls');assert.equal(document.querySelector('[aria-label="Carousel draft Markdown"]').disabled,true);
+  assert.equal(writing.querySelector('[aria-label="Reorder slide 2"]').disabled,true);
+  assert.equal(second.closest('section').querySelector('details'),null,'Heading and credit stay inline in Read');assert.equal(document.querySelector('[aria-label="Carousel draft Markdown"]').disabled,true);
   assert.ok([...writing.querySelectorAll('textarea,input')].every(field=>field.readOnly));
   assert.equal(writing.dataset.writingView,'read');assert.equal(document.documentElement.scrollTop,417);
   assert.deepEqual(current,beforeRead);assert.equal(changes,changesBeforeRead);
@@ -78,9 +79,8 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   await act(async()=>window.studyCompositionFocus.setView('write',{documentId:current.id,outputId:'carousel'}));
   assert.strictEqual(document.querySelector('[aria-label="Writing for slide 2"]'),second);
   assert.equal(second.readOnly,false);assert.equal(second.selectionStart,7);assert.equal(second.selectionEnd,14);
-  const details=second.closest('section').querySelector('details');assert.equal(details.open,false);
-  await click('Edit slide 2 details');assert.equal(details.open,true,'Details visibly opens the current slide heading and credit');assert.equal(document.activeElement.getAttribute('aria-label'),'Heading for slide 2');
-  details.open=false;second.focus();second.setSelectionRange(7,14);
+  assert.equal(second.closest('section').querySelector('details'),null);assert.equal(writing.querySelector('[aria-label="Heading for slide 2"]').closest('details'),null);assert.equal(writing.querySelector('[aria-label="Credit for slide 2"]').closest('details'),null);assert.ok(![...writing.querySelectorAll('button')].some(button=>['Details','Earlier','Later'].includes(button.textContent)));
+  second.focus();second.setSelectionRange(7,14);
   await act(async()=>window.studyCompositionFocus.setView('arrange',{documentId:current.id,outputId:'carousel'}));
   assert.ok(document.querySelector('.car-stage'));document.documentElement.scrollTop=231;
   await act(async()=>window.studyCompositionFocus.setView('read',{documentId:current.id,outputId:'carousel'}));
@@ -171,6 +171,24 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   assert.match(photoFree.textContent,/No photo in this template/);
   assert.equal(photoFree.querySelectorAll('button').length,0);
   await act(async()=>{current.outputs[0].slides[0].template=photoTemplate;render();});
+  // Pending inline edits and every slide field survive pointer and keyboard reorder.
+  await act(async()=>window.studyCompositionFocus.setView('write',{documentId:current.id,outputId:'carousel'}));
+  const editedId=current.outputs[0].slides[0].id,originalOrder=current.outputs[0].slides.map(row=>row.id),siblingBefore=structuredClone(current.outputs[1]);
+  const edit=async(label,value)=>{const field=document.querySelector('[aria-label="'+label+'"]'),proto=field.tagName==='INPUT'?dom.window.HTMLInputElement.prototype:dom.window.HTMLTextAreaElement.prototype;await act(async()=>{Object.getOwnPropertyDescriptor(proto,'value').set.call(field,value);field.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});return field;};
+  await edit('Heading for slide 1','Pending inline heading');const editedWords=await edit('Writing for slide 1','Pending inline words before drag');await edit('Credit for slide 1','Pending inline credit');await edit('Writing caption','Whole sequence caption stays exact');
+  const editedBefore=structuredClone(current.outputs[0].slides),captionBefore=current.outputs[0].caption;
+  editedWords.focus();editedWords.setSelectionRange(3,10);
+  const grip=document.querySelector('.car-writing-slide [aria-label="Reorder slide 1"]'),targetRow=document.querySelectorAll('.car-writing-slide')[1];
+  const pointer=(type,values)=>{const event=new dom.window.Event(type,{bubbles:true,cancelable:true});for(const [key,value]of Object.entries({button:0,pointerId:77,clientX:20,clientY:20,...values}))Object.defineProperty(event,key,{value});return event;};
+  const oldHit=document.elementFromPoint;document.elementFromPoint=()=>targetRow;
+  await act(async()=>grip.dispatchEvent(pointer('pointerdown',{})));await act(async()=>window.dispatchEvent(pointer('pointermove',{clientY:110})));await act(async()=>window.dispatchEvent(pointer('pointerup',{clientY:110})));document.elementFromPoint=oldHit;
+  assert.deepEqual(current.outputs[0].slides.map(row=>row.id),[originalOrder[1],editedId,...originalOrder.slice(2)]);assert.deepEqual(current.outputs[0].slides.find(row=>row.id===editedId),editedBefore[0]);assert.deepEqual(current.outputs[0].slides.find(row=>row.id===originalOrder[1]),editedBefore[1]);assert.equal(current.outputs[0].caption,captionBefore);assert.deepEqual(current.outputs[1],siblingBefore);assert.equal(current.outputs[0].stage,'words');assert.equal(current.outputs[0].wordsReview,undefined);
+  assert.strictEqual(document.activeElement,editedWords);assert.equal(editedWords.selectionStart,3);assert.equal(editedWords.selectionEnd,10);
+  const movedGrip=document.querySelectorAll('.car-writing-slide')[1].querySelector('[aria-label="Reorder slide 2"]');movedGrip.focus();await act(async()=>movedGrip.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowUp',altKey:true,bubbles:true})));assert.deepEqual(current.outputs[0].slides,editedBefore);assert.strictEqual(document.activeElement,movedGrip);
+  await act(async()=>window.studyCompositionFocus.setView('read',{documentId:current.id,outputId:'carousel'}));const readBefore=structuredClone(current),readChanges=changes;
+  for(const field of document.querySelectorAll('.car-writing-slide input,.car-writing-slide textarea'))assert.equal(field.readOnly,true);
+  await edit('Heading for slide 1','Forbidden Read heading');await edit('Writing for slide 1','Forbidden Read words');await edit('Credit for slide 1','Forbidden Read credit');const readGrip=document.querySelector('.car-writing-slide [aria-label="Reorder slide 1"]');assert.equal(readGrip.disabled,true);await act(async()=>readGrip.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowDown',altKey:true,bubbles:true})));assert.deepEqual(current,readBefore);assert.equal(changes,readChanges);
+  await act(async()=>window.studyCompositionFocus.setView('arrange',{documentId:current.id,outputId:'carousel'}));
   await click('Choose photograph 1 for slide 1');
   const stalePicker=pickerCallbacks.at(-1),beforeSwitch=structuredClone(current),beforeSwitchChanges=changes;
   await act(async()=>{selectedOutput=1;render();});
@@ -260,7 +278,7 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
  }
 });
 
-test('all carousel writing fields share the adopted manuscript font and scale, leaving template artwork typography separate',async()=>{const css=(await readFile(new URL('./carousel-workbench.css',import.meta.url),'utf8')).replace(/var\(--ar-ui(?:,[^)]*)?\)/g,"'Plus Jakarta Sans',sans-serif").replace(/var\(--t-reading(?:,[^)]*)?\)/g,'16px').replace(/var\(--t-label(?:,[^)]*)?\)/g,'13px').replace(/var\(--lh-read(?:,[^)]*)?\)/g,'1.65');const dom=new JSDOM('<style>'+css+'</style><div class="car-workspace"><main class="car-writing-page"><section class="car-writing-slide"><textarea>Slide</textarea><details><label>Heading<input></label><label>Credit<input></label></details></section><label class="car-writing-caption">Caption<textarea>Caption</textarea></label></main><div class="car-frame" style="font-family:Georgia">Template artwork</div></div>');try{for(const field of dom.window.document.querySelectorAll('.car-writing-page textarea,.car-writing-page input')){const style=dom.window.getComputedStyle(field);assert.match(style.fontFamily,/Plus Jakarta Sans/);assert.equal(style.fontSize,'16px');assert.equal(style.lineHeight,'1.65');}assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.car-frame')).fontFamily,'Georgia');}finally{dom.window.close();}});
+test('all carousel writing fields share the adopted manuscript font and scale, leaving template artwork typography separate',async()=>{const css=(await readFile(new URL('./carousel-workbench.css',import.meta.url),'utf8')).replace(/var\(--ar-ui(?:,[^)]*)?\)/g,"'Plus Jakarta Sans',sans-serif").replace(/var\(--t-reading(?:,[^)]*)?\)/g,'16px').replace(/var\(--t-label(?:,[^)]*)?\)/g,'13px').replace(/var\(--lh-read(?:,[^)]*)?\)/g,'1.65');const dom=new JSDOM('<style>'+css+'</style><div class="car-workspace"><main class="car-writing-page"><section class="car-writing-slide"><input class="car-writing-heading" placeholder="Heading"><textarea>Slide</textarea><input class="car-writing-credit" placeholder="Credit"></section><label class="car-writing-caption">Caption<textarea>Caption</textarea></label></main><div class="car-frame" style="font-family:Georgia">Template artwork</div></div>');try{for(const field of dom.window.document.querySelectorAll('.car-writing-page textarea,.car-writing-page input')){const style=dom.window.getComputedStyle(field);assert.match(style.fontFamily,/Plus Jakarta Sans/);assert.equal(style.fontSize,'16px');assert.equal(style.lineHeight,'1.65');}assert.equal(dom.window.getComputedStyle(dom.window.document.querySelector('.car-frame')).fontFamily,'Georgia');}finally{dom.window.close();}});
 
 test('carousel reading and writing use the approved left manuscript measure instead of the wide centered donor form',async()=>{
  const css=(await readFile(new URL('./carousel-workbench.css',import.meta.url),'utf8')).replace(/var\(--measure(?:,[^)]*)?\)/g,'640px');

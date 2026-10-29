@@ -58,18 +58,22 @@ export function CarouselWorkspace({doc,output,change,options,onSelectOutput,onAr
  const view=useRef({mode,reading});view.current={mode,reading};
  const positions=useRef(new Map<string,{scrolls:{node:Element;top:number;left:number}[];field?:{label:string;start:number|null;end:number|null}}>());
  const restorePosition=useRef<any>(null),writingSelection=useRef<{label:string;start:number|null;end:number|null}|null>(null);
- function rememberWritingSelection(field:HTMLTextAreaElement){if(field.matches('.car-writing-page textarea'))writingSelection.current={label:field.getAttribute('aria-label')||'',start:field.selectionStart,end:field.selectionEnd};}
+ function rememberWritingSelection(field:HTMLTextAreaElement|HTMLInputElement){if(field.matches('.car-writing-page textarea,.car-writing-page input'))writingSelection.current={label:field.getAttribute('aria-label')||'',start:field.selectionStart,end:field.selectionEnd};}
  const positionOwner=useRef(output.id);if(positionOwner.current!==output.id){positionOwner.current=output.id;positions.current.clear();writingSelection.current=null;restorePosition.current=null;}
  function setWritingView(next:'write'|'read'|'arrange',expected={documentId:doc.id,outputId:output.id}){
   if(!['write','read','arrange'].includes(next)||expected.documentId!==latest.current.id||expected.outputId!==activeOutput.current||!latest.current.outputs.some(o=>o.id===expected.outputId))throw Error('The carousel selection changed. Keep the current output open and try again.');
   const before=view.current.mode==='words'?'words':'slide',after=next==='arrange'?'slide':'words',active=document.activeElement as HTMLTextAreaElement|null;
-  const location={scrolls:[document.scrollingElement||document.documentElement,document.getElementById('workspace')].filter(Boolean).map(node=>({node:node!,top:node!.scrollTop,left:node!.scrollLeft})),...(active?.matches('.car-writing-page textarea')?{field:{label:active.getAttribute('aria-label')||'',start:active.selectionStart,end:active.selectionEnd}}:writingSelection.current?{field:writingSelection.current}:{})};
+  const location={scrolls:[document.scrollingElement||document.documentElement,document.getElementById('workspace')].filter(Boolean).map(node=>({node:node!,top:node!.scrollTop,left:node!.scrollLeft})),...(active?.matches('.car-writing-page textarea,.car-writing-page input')?{field:{label:active.getAttribute('aria-label')||'',start:active.selectionStart,end:active.selectionEnd}}:writingSelection.current?{field:writingSelection.current}:{})};
   positions.current.set(before,location);restorePosition.current=before===after?location:positions.current.get(after)||location;
   setReading(next==='read');setMode(next==='arrange'?'slide':'words');
  }
- useLayoutEffect(()=>{const saved=restorePosition.current;if(!saved)return;restorePosition.current=null;if(mode==='words'&&saved.field){const field=[...document.querySelectorAll<HTMLTextAreaElement>('.car-writing-page textarea')].find(n=>n.getAttribute('aria-label')===saved.field.label);if(field){field.focus({preventScroll:true});field.setSelectionRange(saved.field.start,saved.field.end);}}for(const {node,top,left}of saved.scrolls){node.scrollTop=top;node.scrollLeft=left;}window.dispatchEvent(new window.CustomEvent('study-carousel-view',{detail:{outputId:output.id,mode:mode==='words'?(reading?'read':'write'):'arrange'}}));},[mode,reading,output.id]);
+ useLayoutEffect(()=>{const saved=restorePosition.current;if(!saved)return;restorePosition.current=null;if(mode==='words'&&saved.field){const field=[...document.querySelectorAll<HTMLTextAreaElement|HTMLInputElement>('.car-writing-page textarea,.car-writing-page input')].find(n=>n.getAttribute('aria-label')===saved.field.label);if(field){field.focus({preventScroll:true});field.setSelectionRange(saved.field.start,saved.field.end);}}for(const {node,top,left}of saved.scrolls){node.scrollTop=top;node.scrollLeft=left;}window.dispatchEvent(new window.CustomEvent('study-carousel-view',{detail:{outputId:output.id,mode:mode==='words'?(reading?'read':'write'):'arrange'}}));},[mode,reading,output.id]);
  const importInput=useRef<HTMLInputElement>(null),imported=(output as any).importedDraft;
  const dragCleanup=useRef<(()=>void)|null>(null),ignorePointerClick=useRef(false);
+ const reorderFocus=useRef<{node:HTMLElement;start?:number|null;end?:number|null}|null>(null);
+ const captureReorderFocus=()=>{const node=document.activeElement as HTMLElement|null;if(!node?.closest('.car-writing-page'))return null;return {node,...(node.matches('input,textarea')?{start:(node as HTMLInputElement).selectionStart,end:(node as HTMLInputElement).selectionEnd}:{})};};
+ useLayoutEffect(()=>{const saved=reorderFocus.current;reorderFocus.current=null;if(saved?.node.isConnected){saved.node.focus({preventScroll:true});if(saved.start!==undefined)(saved.node as HTMLInputElement|HTMLTextAreaElement).setSelectionRange(saved.start??null,saved.end??null);}},[output.slides]);
+ useEffect(()=>{dragCleanup.current?.();},[mode,reading,busy]);
  useEffect(()=>()=>{dragCleanup.current?.();},[output.id]);
  useEffect(()=>{if(!focused)return;const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!(event.target instanceof Element&&event.target.closest('[contenteditable]')))setFocused(false);};window.addEventListener('keydown',escape);return()=>window.removeEventListener('keydown',escape);},[focused]);
  const latest=useRef(doc);latest.current=doc;const slides=output.slides||[],slide=slides.find(s=>s.id===selected)||slides[0],index=slides.findIndex(s=>s.id===slide?.id);
@@ -104,24 +108,25 @@ export function CarouselWorkspace({doc,output,change,options,onSelectOutput,onAr
  function photo(slot:number,src:string,id=slide?.id){if(!id)return;update(o=>({...o,slides:o.slides!.map(s=>{if(s.id!==id)return s;const next=s.photos.map(p=>({...p}));while(next.length<=slot)next.push({src:'',x:50,y:50});next[slot]={src,x:50,y:50};return {...s,photos:next};})}));}
  function crop(slot:number,x:number,y:number,id=slide.id){update(o=>({...o,slides:o.slides!.map(s=>s.id===id?{...s,photos:s.photos.map((p,i)=>i===slot?{...p,x,y}:p)}:s)}));}
  function move(from:number,to:number){if(to<0||to>=slides.length||from===to)return;update(o=>{const rows=[...o.slides!],[s]=rows.splice(from,1);rows.splice(to,0,s);return {...o,slides:rows,stage:'words',wordsReview:undefined};});}
+ function moveWritingSlide(id:string,delta:number){if(busy||view.current.mode!=='words'||view.current.reading)return;const owner=latest.current.outputs.find(row=>row.id===activeOutput.current),from=owner?.slides?.findIndex(row=>row.id===id)??-1,to=from+delta;if(from<0||to<0||to>=(owner?.slides?.length||0))return;reorderFocus.current=captureReorderFocus();move(from,to);}
  // Donor pointer reorder: a short movement is a tap; lifting creates a ghost.
  function dragSlide(event:React.PointerEvent<HTMLButtonElement>,id:string){
-  if(event.button!==0||slides.length<2)return;
+  if(event.button!==0||slides.length<2||busy||mode==='words'&&reading)return;
   dragCleanup.current?.();event.preventDefault();
-  const source=event.currentTarget,rail=source.closest<HTMLElement>('.car-lineup')!;
+  const source=event.currentTarget,rail=source.closest<HTMLElement>('.car-lineup,.car-writing-sequence')!,writing=rail.classList.contains('car-writing-sequence'),scrollHost=writing?rail.closest<HTMLElement>('.car-writing-page')!:rail,focusBefore=writing?captureReorderFocus():null,ownerId=output.id,documentId=doc.id,startMode=mode,startRead=reading;
   const x0=event.clientX,y0=event.clientY,pointerId=event.pointerId;
   let ghost:HTMLElement|null=null,over:HTMLElement|null=null,x=x0,y=y0,frame=0;
-  source.focus({preventScroll:true});
+  if(!writing)source.focus({preventScroll:true});
   const target=()=>{
    const hit=document.elementFromPoint?.(x,y)?.closest<HTMLElement>('[data-slide-id]');
-   const next=hit&&hit!==source&&rail.contains(hit)?hit:null;
+   const next=hit&&hit.dataset.slideId!==id&&rail.contains(hit)?hit:null;
    if(over!==next){over?.classList.remove('car-drop-target');over=next;over?.classList.add('car-drop-target');}
   };
   const scroll=()=>{
-   if(!ghost)return;const rect=rail.getBoundingClientRect();
+   if(!ghost)return;const rect=scrollHost.getBoundingClientRect();
    if(x>=rect.left-16&&x<=rect.right+16&&y>=rect.top-36&&y<=rect.bottom+36){
     const delta=y<rect.top+32?-Math.ceil((rect.top+32-y)/5):y>rect.bottom-32?Math.ceil((y-rect.bottom+32)/5):0;
-    if(delta){rail.scrollTop+=Math.max(-12,Math.min(12,delta));target();}
+    if(delta){scrollHost.scrollTop+=Math.max(-12,Math.min(12,delta));target();}
    }
    frame=window.requestAnimationFrame(scroll);
   };
@@ -144,7 +149,8 @@ export function CarouselWorkspace({doc,output,change,options,onSelectOutput,onAr
    const lifted=!!ghost,dropId=over?.dataset.slideId;cleanup();
    ignorePointerClick.current=true;window.setTimeout(()=>{ignorePointerClick.current=false;},0);
    if(!lifted){setSelected(id);setPanel('canvas');return;}
-   if(!dropId)return;
+   if(!dropId||activeOutput.current!==ownerId||latest.current.id!==documentId||view.current.mode!==startMode||view.current.reading!==startRead)return;
+   if(writing)reorderFocus.current=focusBefore;
    update(o=>{const rows=[...o.slides!],from=rows.findIndex(s=>s.id===id),to=rows.findIndex(s=>s.id===dropId);if(from<0||to<0||from===to)return o;const [moved]=rows.splice(from,1);rows.splice(to,0,moved);return {...o,slides:rows,stage:'words',wordsReview:undefined};});
   };
   const cancel=(e:PointerEvent)=>{if(e.pointerId===pointerId)cleanup();};
@@ -172,8 +178,13 @@ export function CarouselWorkspace({doc,output,change,options,onSelectOutput,onAr
   </nav>;
  return <div className={'car-workspace'+(focused?' is-focused':'')}>
   {actionTarget?createPortal(tools,actionTarget):tools}
-  {mode==='words'?<main className="car-writing-page" data-writing-view={reading?'read':'write'} aria-label="Carousel writing content" onSelectCapture={e=>rememberWritingSelection(e.target as HTMLTextAreaElement)} onBlurCapture={e=>rememberWritingSelection(e.target as HTMLTextAreaElement)}><header><div><h2>{reading?'Read carousel':'Writing content'}</h2><p>{reading?'Current words · switch to Write to edit or review.':'Read the whole sequence before arranging the slides.'}</p></div><div className="car-writing-guides"><button onClick={()=>options.onShelfRequest?.('voice')}>Voice</button><button onClick={()=>options.onShelfRequest?.('recipe')}>Recipe</button><button onClick={()=>options.onShelfRequest?.('sources')}>Sources</button></div></header>
-   <div className="car-writing-sequence">{slides.map((row,i)=><section className="car-writing-slide" key={row.id}><header><strong>Slide {i+1}</strong><span>{row.role}</span><div><button aria-label={'Edit slide '+(i+1)+' details'} disabled={reading||busy} onClick={e=>{setSelected(row.id);const details=e.currentTarget.closest('section')?.querySelector('details');if(details){details.open=true;details.querySelector('input')?.focus({preventScroll:true});}}}>Details</button><button aria-label={'Move slide '+(i+1)+' earlier'} disabled={reading||i===0||busy} onClick={()=>move(i,i-1)}>Earlier</button><button aria-label={'Move slide '+(i+1)+' later'} disabled={reading||i===slides.length-1||busy} onClick={()=>move(i,i+1)}>Later</button></div></header><textarea aria-label={'Writing for slide '+(i+1)} value={row.text} readOnly={reading} disabled={busy} rows={Math.max(2,Math.ceil(row.text.length/80))} onChange={e=>{if(!reading)patchSlide(row.id,{text:e.target.value});}}/><details><summary>Heading and credit</summary><label>Small heading<input aria-label={'Heading for slide '+(i+1)} maxLength={240} value={row.label??imported?.label??output.title??''} readOnly={reading} disabled={busy} onChange={e=>{if(!reading)patchSlide(row.id,{label:e.target.value});}}/></label><label>Credit<input aria-label={'Credit for slide '+(i+1)} value={row.credit} readOnly={reading} disabled={busy} onChange={e=>{if(!reading)patchSlide(row.id,{credit:e.target.value});}}/></label></details></section>)}</div>
+  {mode==='words'?<main className="car-writing-page" data-writing-view={reading?'read':'write'} aria-label="Carousel writing content" onSelectCapture={e=>rememberWritingSelection(e.target as HTMLTextAreaElement)} onBlurCapture={e=>rememberWritingSelection(e.target as HTMLTextAreaElement)}><header><div><h2>{reading?'Read carousel':'Writing content'}</h2></div><div className="car-writing-guides"><button onClick={()=>options.onShelfRequest?.('voice')}>Voice</button><button onClick={()=>options.onShelfRequest?.('recipe')}>Recipe</button><button onClick={()=>options.onShelfRequest?.('sources')}>Sources</button></div></header>
+   <div className="car-writing-sequence">{slides.map((row,i)=><section className="car-writing-slide" data-slide-id={row.id} key={row.id}>
+    <header><button type="button" className="car-writing-grip" data-slide-id={row.id} aria-label={'Reorder slide '+(i+1)} title="Drag to reorder, or Alt + Up / Down" disabled={reading||busy||slides.length<2} onPointerDown={e=>dragSlide(e,row.id)} onKeyDown={e=>{if(e.altKey&&(e.key==='ArrowUp'||e.key==='ArrowDown')){e.preventDefault();moveWritingSlide(row.id,e.key==='ArrowUp'?-1:1);}}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg></button><span className="car-writing-number" aria-hidden="true">{i+1}</span>
+    <input className="car-writing-heading" aria-label={'Heading for slide '+(i+1)} placeholder="Heading" maxLength={240} value={row.label??imported?.label??output.title??''} readOnly={reading} disabled={busy} onChange={e=>{if(!reading)patchSlide(row.id,{label:e.target.value});}}/></header>
+    <textarea aria-label={'Writing for slide '+(i+1)} placeholder="Write this slide…" value={row.text} readOnly={reading} disabled={busy} rows={Math.max(1,row.text.split('\n').length)} onChange={e=>{if(!reading)patchSlide(row.id,{text:e.target.value});}}/>
+    <input className="car-writing-credit" aria-label={'Credit for slide '+(i+1)} placeholder="Credit" value={row.credit} readOnly={reading} disabled={busy} onChange={e=>{if(!reading)patchSlide(row.id,{credit:e.target.value});}}/>
+   </section>)}</div>
    <label className="car-writing-caption">Caption<textarea aria-label="Writing caption" rows={4} value={output.caption||''} readOnly={reading} disabled={busy} onChange={e=>{if(!reading)update(o=>({...o,caption:e.target.value,stage:'words',wordsReview:undefined}));}}/></label><footer><span>{reading?'Reading does not approve or change these words.':'Visual choices keep these words and their order.'}</span><button className="cwb-primary" disabled={reading||busy||!slides.some(row=>row.text.trim())} onClick={()=>void reviewWriting()}>{busy?'Preparing…':'Review words and continue'}</button></footer>
   </main>:<>
   <div className="car-body" data-panel={panel}>

@@ -32,3 +32,9 @@ Placed/Arrange must visibly offer composition: the selected article or whole car
 ## 16 October — Adopted shared composition/audience context
 
 Arrange and Audience view retain the same selected output and edition through the existing composition owner. Preserve meaningful location where supported, independent words/media placements and approval/revision/Undo guards. Persistent Outputs/selected-piece context should resume actual work; when selection is absent, expose existing outputs before proposing creation. Do not manufacture an edition, reset selection silently or introduce a replacement composition engine.
+
+## 29 October — direct Carousel writing blocks
+
+Adopted S05/S06/S09, C01/C03/C04/C05: the Carousel writing view is a continuous sequence of directly editable blocks. Show each heading, words and credit in place, without Details, Earlier/Later buttons or a Heading and credit disclosure. A six-dot handle reorders the block by dragging; keyboard reordering remains available on that handle. Reordering preserves the entire slide, including wording, role, photo references, crops and attribution, and the normal writer saves changes. No per-field Save step or new writing authority.
+
+Empty heading and credit fields stay available as quiet inline placeholders. Reading the sequence does not change it or approve its wording. Word/order changes retain the existing review guards. Words-only layouts are valid with the material available now; photo insertion and the existing photo-capable templates remain available for later use. Acceptance: actual wide/narrow screens in both themes, inline edits and pointer/keyboard reorder, preservation of focus/selection and sibling outputs, saved reload/Undo and explicit human review.

@@ -71,3 +71,8 @@ When feedback reveals a reusable problem, update these rules or the shared colla
 The author wants the whole intended workflow visible for Claude Design while unfinished connections are built in parallel. Place each already-agreed tool beside its actual work, with its inputs and review path, even if its operation is not connected yet. Clearly explain that state when the person tries it. Do not hide missing tools until implementation finishes or substitute another generic record display. Equally, do not fabricate research, findings, saved edits, delivered outputs or successful actions to fill the design. Keep existing working controls and data intact. A design-ready surface is not a claim of functional completion.
 
 Apply the one typography rule in [PRODUCT](PRODUCT.md#typography) consistently across the long-form views. Keep control labels and compact metadata readable in sans serif and preserve approved platform templates. Arrange offers composition tools; Look presents the audience edition and review/export actions. Checked must explain whether checks have run, which revision they concern, and where the person can work next; an empty screen is not an acceptable interaction.
+
+
+## 29 October — visible editing instead of disclosures
+
+Adrian explicitly rejects accordions, expandable cards and details/summary disclosures. Keep essential content and actions visible, use direct inline editing, and simplify repeated controls. Use focused editing screens for tasks and ordinary navigation for history. This supersedes earlier advice to hide working content behind disclosures.
