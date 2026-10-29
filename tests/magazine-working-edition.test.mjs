@@ -41,3 +41,26 @@ test('exact request rejects foreign fields and hash, and current owner failure p
 test('final recheck refuses changed parser, asset bytes, and substituted symlink',async t=>{
  for(const kind of ['code','asset','symlink']){const f=fixture(t);f.onRead(n=>{if(n!==3)return;if(kind==='code')fs.appendFileSync(path.join(f.conv,'magSend.ts'),'\n// changed');else if(kind==='asset')fs.writeFileSync(f.image,Buffer.concat([PNG,Buffer.from('new')]));else{fs.unlinkSync(f.image);fs.symlinkSync(path.join(f.conv,'magSend.ts'),f.image);}});await assert.rejects(f.reader.workingEdition(f.input));}
 });
+
+test('unpublished text-only manuscript exports its own saved projection without publication metadata or parser',async t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'unpublished-edition-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ let text='---\ntitle: Invented unfinished article\n---\n# Invented unfinished article\n\nOne ==pending== line.\n\nOrdinary words.\n\n%%private annotation%%';
+ const input={storyId:'invented',pieceId:'invented:article',expectedHash:sha(text)};let reads=0;
+ const reader=createMagazineMediaInspection({repoRoot:root,resolveWorking:async()=>{reads++;return {document:{text,hash:sha(text)},authority:{kind:'magazine',storyId:input.storyId,pieceId:input.pieceId,title:'Invented unfinished article'},target:{nativeProjectId:'invented',artifactId:'exact',hash:sha(text)}};}});
+ const result=await reader.workingEdition(input);
+ assert.equal(result.renderKind,'manuscript');assert.equal(result.spec.title,'Invented unfinished article');assert.equal(result.ownerRef.hash,input.expectedHash);assert.deepEqual(result.media.sources,[]);assert.equal(result.spec.path,undefined);assert.equal(result.spec.author,undefined);
+ assert.ok(result.manuscript.blocks.some(b=>b.raw==='One ==pending== line.'&&b.doc===null));assert.ok(result.manuscript.blocks.some(b=>b.raw==='%%private annotation%%'));assert.ok(reads>=2);
+ text+='\nChanged';await assert.rejects(reader.workingEdition(input),/owner or draft hash changed/);
+});
+test('unpublished fallback refuses unresolved photo syntax and malformed explicit publication instead of dropping media',async t=>{
+ for(const addition of ['\n\n%%photo: absent.png%%','\n\n![A photo](absent.png)','\n\n<img src="absent.png">']){
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'unpublished-held-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const text='---\ntitle: Invented\n---\nText'+addition,input={storyId:'i',pieceId:'i:article',expectedHash:sha(text)};
+  const reader=createMagazineMediaInspection({repoRoot:root,resolveWorking:async()=>({document:{text,hash:sha(text)},authority:{kind:'magazine',storyId:input.storyId,pieceId:input.pieceId},target:{nativeProjectId:'i',artifactId:'i',hash:sha(text)}})});
+  await assert.rejects(reader.workingEdition(input),/unpublished.*media|publication|Publication/);
+ }
+});
+test('an explicit malformed publication reference never falls back to an unpublished manuscript',async t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'malformed-publication-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const text='---\npublished: not-a-url\n---\nSaved words',input={storyId:'i',pieceId:'i:article',expectedHash:sha(text)};
+ const reader=createMagazineMediaInspection({repoRoot:root,resolveWorking:async()=>({document:{text,hash:sha(text)},authority:{kind:'magazine',storyId:input.storyId,pieceId:input.pieceId},target:{nativeProjectId:'i',artifactId:'i',hash:sha(text)}})});
+ await assert.rejects(reader.workingEdition(input));
+});
