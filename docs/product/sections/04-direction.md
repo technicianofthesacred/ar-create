@@ -1,5 +1,10 @@
 # 4 — Direction
 
+## Current Combined presentation — adopted 30 October
+
+S04, C01/C03/C05/C06. Your thoughts and direction places the author’s own page beside prepared angles and titles, with a grid showing which decisions affect each piece. Agents never rewrite that page. The Combined drawing places angles inline, but expressly does not settle the separately pending Direction A/B choice; implementation of that choice still waits for Adrian. Preserve previous dated decisions, rejection reasons and independently scoped output plans. Carousel wording/photos and the ten marked passages remain unresolved human decisions.
+
+
 Intent: choose what Adrian wants to express after understanding the material, without discarding other possible stories.
 
 ## Work surface

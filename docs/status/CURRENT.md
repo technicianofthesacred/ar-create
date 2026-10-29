@@ -1,3 +1,11 @@
+## 30 October — Combined Home and subject-board candidate
+
+C01/C02/C04/C05/C06, S01–S12. Combined is the approved presentation direction and the earlier visual hold is lifted. This first bounded candidate supplies Home with truthful decision/optional/committed-agent lists, exact saved paragraph pickup, a twelve-item desktop rail and ordinary phone navigation. Subjects shows the existing origins, understanding and independently owned pieces. The current Article and registered eight-slide native Carousel open through their maintained owners; earlier/browser/native-source editions remain separately labelled. Small grey preview-not-connected labels identify the unimplemented board thumbnails. No drawing sample content is installed.
+
+Native candidate checks confirm the selected Hong Kong Article/Carousel identities and Home’s return to the same ten highlighted passages without approval. Selection-aware Write/Read/Check still uses the maintained piece-mode owner. Read-only group discovery closes this board entrance gap without changing the older shared Outputs selector dispatch. Saved pickup checks require a matching manuscript hash and explicit Magazine owner; legacy unverifiable positions remain available without a fabricated sentence. Viewing never advances pickup.
+
+This is a source candidate checkpoint, not installed or whole-Combined acceptance. Exact publication, phone/theme proof and preservation are recorded separately. Piece tabs/full-screen composition, source/research/media/arrange sheets and the visual Outputs register remain subsequent work. Direction A/B, Carousel words/photos and ten marked passages remain human decisions.
+
 ## 29 October — dependable return accepted for the selected Article
 
 C01/C02/C06: the existing review process was explicitly assigned macOS Background resource policy. A controlled comparison of the same code, configuration and files reproduced roughly seven-second metadata awaits under Background and a sub-second catalogue under Interactive. The maintained review job now uses Interactive, retaining its owner, program and application configuration. The required portfolio deadline and cancelled-scan protection remain installed at `7d5c0f8cdf990b736aa5af809e6420f0cd95aa36`, build `2026-10-29T14:57:23.233Z` (PR113).

@@ -1,5 +1,10 @@
 # 11 — Share & celebrate
 
+## Current Combined presentation — adopted 30 October
+
+S11, C01/C03/C04/C05/C06. Share remains a rail entrance with one visible composer for note, recipient and language, and replies beside their proposed corrections. Replace disclosures with visible essential fields and ordinary navigation where needed. Preserve exact recipient/output scope and the existing human sending/approval guards; adopting the appearance authorizes no message, provider connection or publication.
+
+
 Intent agreed 13 October: a personal invitation and celebration sent to people involved, also asking whether the piece feels good and represents them accurately. This is more than an administrative feedback request.
 
 ## Work surface

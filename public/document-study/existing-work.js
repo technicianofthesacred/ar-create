@@ -279,12 +279,14 @@
   return canonical[0];
  }
  function exactBenchTarget(descriptor){const scope=benchScope();if(!catalog||descriptor?.scope!==scope||descriptor.catalogRevision!==catalog.revision)throw Error('The work list changed. Refresh before opening this work.');const model=benchModel(),key=window.arCreateBenchProjection.key(descriptor),row=model.rows.find(row=>row.key===key);if(!row)throw Error('This exact work reference changed. Refresh before opening.');const exact=window.arCreateBenchProjection.descriptor(model,key,{scope,revision:catalog.revision,ready:true});for(const field of ['kind','storyId','artifactId','hash','workspaceId','rootBindingId','parentStudyId','outputId','edition','targetIndex'])if((exact[field]??null)!==(descriptor[field]??null))throw Error('This exact work reference changed. Refresh before opening.');return exact;}
+ const samePickupOwner=(a,b)=>!!a&&!!b&&['kind','storyId','pieceId','partKey','path'].every(key=>typeof a[key]==='string'&&a[key]===b[key]);
  function benchContinuation(p=project()){
   const navigation=window.workspaceNavigation;if(!p||typeof navigation?.lastLocation!=='function'||typeof navigation.resumeLast!=='function')return null;
   const location=navigation.lastLocation(p.id);if(location?.projectId!==p.id||location.last?.stage!==location.item?.stage)return null;
   const proof=window.studyDraft?.currentProof?.(),selection=window.studyOutputConnection?.selection?.();
   if(location.last.outputId&&(selection?.projectId!==p.id||selection.output?.id!==location.last.outputId))return null;
   if(location.last.bindingId&&(proof?.parentStudyId!==p.id||proof.bindingId!==location.last.bindingId))return null;
+  if(location.item?.proof?.owner&&!samePickupOwner(location.item.proof.owner,proof?.owner))return null;
   return location;
  }
  async function openBenchWork(descriptor){const target=exactBenchTarget(descriptor),origin=project(),originStage=origin?.viewedStage,originView=origin?.view,proof=await window.studyDraft?.flush?.();if(proof?.dirty||project()!==origin||origin?.viewedStage!==originStage||origin?.view!==originView)throw Error('Save or resolve the current writing before switching work.');exactBenchTarget(descriptor);const continuation=benchContinuation(origin),currentTarget=benchCurrent()?.target;if(continuation&&currentTarget&&window.arCreateBenchProjection.key(currentTarget)===window.arCreateBenchProjection.key(target)){
@@ -299,7 +301,18 @@
    if(!row)row=model.rows.find(candidate=>{if(candidate.target.kind!=='workspace'||candidate.target.rootBindingId!==proof.bindingId||candidate.target.parentStudyId!==p.id)return false;const links=(catalog.workspaceLinks?.pieces||[]).filter(link=>link.workspaceId===candidate.target.workspaceId),target=links.length===1?links[0].targets?.[candidate.targetIndex]:null;return target&&!target.originalHash;});
   }
   const owned=!!row;row||=model.rows.find(row=>row.target.kind==='story'&&row.target.storyId===story.id);if(!row)return null;const continuation=benchContinuation(p),pickupStage=continuation?.item?.stage??contextStage(p),result={target:row.target,stage:pickupStage,saveLabel:owned?(row.target.outputId?'Selected output':proof.dirty?'Unsaved changes':'Working draft'):'Current project',resumeLabel:benchContinuation(p)?(({read:'Continue reading',write:'Continue writing',check:'Continue checking'})[benchContinuation(p).item?.mode]||({3:'Continue in Research',4:'Continue in Direction',5:'Continue writing',6:'Continue reading',7:'Continue checking',8:'Continue in Media',9:'Continue arranging',10:'Continue in Audience',11:'Continue sharing'}[pickupStage]||'Continue current work')):owned?'Open saved draft':'Open project'};
-  const manuscript=document.querySelector('#workspace #manuscript');if(owned&&!row.target.outputId&&manuscript){const fullText=[...manuscript.querySelectorAll('p')].filter(node=>!node.closest('.draft-protected,.draft-surface-frontmatter')).slice(0,3).map(node=>node.textContent).join(' ').replace(/\s+/g,' ').trim(),text=fullText.length>330?fullText.slice(0,330).replace(/\s+\S*$/,'')+'…':fullText;if(text)result.excerpt={source:'loaded-owner',target:row.target,text};}return result;
+  // Home quotes the retained edit/Continue pointer, never whichever paragraph is
+  // visible now. A matching current proof prevents an older sentence being shown
+  // as the current wording after an external edit. Reading does not capture.
+  const item=continuation?.item,anchor=item?.anchor,passage=item?.selection||(anchor?.kind==='passage'?anchor:null),savedProof=item?.proof,matchingProof=/^[a-f0-9]{64}$/i.test(proof?.draftHash||'')&&savedProof?.draftHash===proof.draftHash&&(typeof proof.bindingId==='string'&&!!proof.bindingId&&savedProof.bindingId===proof.bindingId||proof.bindingId===null&&savedProof.bindingId===null&&owner?.kind==='magazine'&&samePickupOwner(savedProof.owner,owner)&&samePickupOwner(proof.owner,owner));
+  if(owned&&passage?.id&&typeof passage.text==='string'&&passage.text.trim()&&matchingProof){
+   const nodes=[...document.querySelectorAll('#workspace #manuscript [data-block],#workspace [data-draft-passage]')],matching=nodes.find(node=>(node.dataset.block||node.dataset.draftPassage)===passage.id),savedIndex=Number.isInteger(passage.index)&&passage.index>=0?passage.index:anchor?.id===passage.id&&Number.isInteger(anchor.index)&&anchor.index>=0?anchor.index:null,index=savedIndex??(matching?nodes.indexOf(matching):null);
+   result.excerpt={source:'saved-pickup',target:row.target,text:passage.text,passageId:passage.id,index};
+   if(index!==null)result.resumeLabel='Continue at ¶'+(index+1);
+  }
+  const audience=owned&&!outputSelection&&owner?.kind==='magazine'&&contextStage(p)===10&&samePickupOwner(owner,proof?.owner)&&/^[a-f0-9]{64}$/i.test(proof?.draftHash||'')?document.querySelector('#workspace [data-output-stage-surface="10"]'):null,preview=audience?.querySelector('[data-manuscript-preview],[data-magazine-working-preview]'),selectedAudience=document.querySelector('#workspace [data-oss-output]')?.value;
+  if(audience&&selectedAudience==='magazine-working:'+owner.storyId+':'+owner.pieceId&&(preview?.dataset.manuscriptPreview||preview?.dataset.magazineWorkingPreview)===proof.draftHash){const count=preview.querySelectorAll('[data-pending-wording="true"]').length;if(count)result.wordingReview={target:row.target,parentStudyId:p.id,owner:{...owner},hash:proof.draftHash,count};}
+  return result;
  }
  // Activity is read from the maintained journal, only for an exact native
  // manuscript binding. Project-wide or Magazine story journal events cannot establish

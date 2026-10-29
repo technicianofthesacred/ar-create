@@ -1,6 +1,6 @@
 # AR Create living section briefs
 
-Updated 21 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
+Updated 30 October 2026 from Adrian's direct feedback. These are evolving product/design briefs, not claims that the capabilities are implemented. They refine the existing Magazine process inside Document Study. No new app, migration, account connection or publication is authorized by writing them.
 
 Read [the product overview](../PRODUCT.md) for the shared purpose and S01–S12 / C01–C07 requirement map. This directory defines detailed intent; Delivery’s private checklist records current implementation and verification. Each assignment references both its brief and current checklist row.
 
@@ -25,7 +25,7 @@ Design and implementation handoffs cite the brief(s), name the bounded change, a
 | 11 | [Share](11-share-celebrate.md) | How do I invite the people involved to enjoy and respond to the piece? |
 | 12 | [Outputs](12-published-complete.md) | Where are all the expressions of this work, and what remains? |
 
-These labels are the canonical names, the ones the app shows. Older names are aliases listed once in [START.md](../../START.md#sections-one-name-each). Preserve the twelve checkpoint IDs and their historical meanings. Sections can be modes of one continuous workspace: Material/Transcript and Arrange/Preview need not be separate shells. Collection and media remain accessible at any time. Do not create unnecessary gates for text-only projects or outputs with no follow-up recipients.
+These labels retain the canonical requirement identities. Combined changes visible entrances: Material moves into Library intake; Write/Read become piece modes; the rail contains Home, Subjects, Library, Source, Research, Direction, Check, Media, Arrange, Audience, Share and Outputs. Older names are aliases listed once in [START.md](../../START.md#sections-one-name-each). Preserve the twelve checkpoint IDs and their historical meanings. Sections can be modes of one continuous workspace: Material/Transcript and Arrange/Preview need not be separate shells. Collection and media remain accessible at any time. Do not create unnecessary gates for text-only projects or outputs with no follow-up recipients.
 
 ## Preserve what the author has already developed
 
@@ -33,7 +33,7 @@ Use the existing Magazine process/commands/prompts and AR editing/recovery/portr
 
 ## Shared design and data rules
 
-- Compact sans-serif controls, shared document typography, persistent project/part/output orientation, continuous editing, purposeful controls beside their content. Avoid repeated headers and horizontal page scrolling. Keep secondary paths/provenance under disclosure. AI discussion belongs beside the relevant passage, source or media item.
+- Compact sans-serif controls, shared document typography, persistent project/part/output orientation, continuous editing, purposeful controls beside their content. Avoid repeated headers and horizontal page scrolling. Keep secondary paths/provenance in focused screens with ordinary navigation; no disclosure toggles. AI discussion belongs beside the relevant passage, source or media item.
 - Shared origins, independently editable outputs. Article, carousel, script, print, WeChat article and Twitter/X post are requested expressions of a project, not separate source imports. Never assume every format is required. Source changes flag affected outputs for human review without overwriting their independently edited text; applying a resulting text change requires explicit human acceptance.
 - Preserve human experience attribution, exact phrases, corrections, chosen direction, rejection reasons, direct edits and later changes of mind. Scope each to project, part or output. Stale downstream work is identified, not silently regenerated.
 - Original files retain their identity. Transcript versions, translations, media derivatives, compositions and published editions link to their origin. Device paths are locations, not identities. Local/cloud availability is visible without dominating the workspace.
@@ -95,6 +95,11 @@ Provide all twelve briefs with the next Claude Design handoff, including their p
 
 ## 21 October — Approved C workbench direction and review sequence
 
-The current visual authority is the [C workbench preview](../../../design/three-directions/c-workbench/index.html) and [NOTES revisions 2–5](../../../design/three-directions/c-workbench/NOTES.md), including Adrian's final instruction to remove numbers from navigation. Use an unnumbered 66px icon rail, an adjacent 240px current-owner panel where needed, Plus Jakarta Sans at 13/15/16/17px with shared A−/A+, matching Read/Write geometry, and Lora only for speech. Phone navigation uses group sheets. These are design requirements, not installed-functionality claims.
+Historical authority, superseded by Combined on 30 October where they differ: the visual authority for the 21 October candidate was the [C workbench preview](../../../design/three-directions/c-workbench/index.html) and [NOTES revisions 2–5](../../../design/three-directions/c-workbench/NOTES.md), including Adrian's final instruction to remove numbers from navigation. Use an unnumbered 66px icon rail, an adjacent 240px current-owner panel where needed, Plus Jakarta Sans at 13/15/16/17px with shared A−/A+, matching Read/Write geometry, and Lora only for speech. Phone navigation uses group sheets. These are design requirements, not installed-functionality claims.
 
 The bounded sequence is: step 1, review the current UI candidate; then nested Library/Media storage, real Library research, and Arrange templates/photo picker. Human review applies to every PR; this sequence does not install a candidate. Requirements in scope are C02, C05, C06 and S01–S12. Keep each section's established purpose and connection state in its brief and Delivery checklist.
+
+
+## 30 October — Combined adopted; all functions retained
+
+[PRODUCT's Combined direction](../PRODUCT.md#combined-workspace--adopted-30-october-2026) is current visual intent and lifts the 29 October restyling hold. Preserve S01–S12 identities and all 35 functions while moving entrances into Home/Subjects, subject boards, piece tabs/modes and contextual sheets. Build journey-first on Hong Kong Day 1; each bounded step requires actual-screen/function proof before capability-based installation. The prior reference remains history, not competing current authority. Direction A/B, Carousel wording/photos and the ten passages remain human decisions; the drawings' sample content is never application data. No implementation or acceptance is asserted here.

@@ -1,5 +1,10 @@
 # 1 — Material
 
+## Current Combined presentation — adopted 30 October
+
+S01, C02/C04/C06. Material intake belongs inside Library, retaining original attachment/source identities and its actual Transcribing, Failed with Retry and Ready states. Subject boards show gathered origins beside understanding and independently edited pieces. Keep Add, source review, organizing, folders, transcription and recovery reachable; moving the entrance does not imply a new processing provider or deletion permission.
+
+
 Intent agreed 13 October: an active place to bring material in, explore what is available, organize it and bring selected resources together. This is more than a record of what was already dropped.
 
 ## First decision: does this belong here?

@@ -1,5 +1,10 @@
 # 7 — Check changes
 
+## Current Combined presentation — adopted 30 October
+
+S07, C01/C04/C05/C06. Check remains a rail entrance and is also a piece mode beside Write / Read. Keep findings anchored to the actual selected piece/revision, with a source jump and a Check note in the margin where supported. One toolbar and clear not-run/stale/unavailable states replace repeated explanatory chrome; a mechanical pass never implies evidence, wording or publication approval.
+
+
 Intent: reconcile Adrian's changes and verify the resulting manuscript, rather than redirect him to initialize Draft.
 
 ## Work surface and actions

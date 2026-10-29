@@ -1,6 +1,6 @@
 # Make AR Create understandable when the human returns
 
-Current typography authority: [PRODUCT: Typography](PRODUCT.md#typography) and final C Workbench NOTES supersede the older broad Atlas assignments below. Preserve the later Source-specific Atlas treatment; Research, notes and Write/Preview retain their current C roles. Historical decisions below remain recorded without granting a global font replacement.
+Current visual and typography authority: the approved 30 October **Combined** direction in [PRODUCT](PRODUCT.md#combined-workspace--adopted-30-october-2026). Earlier C Workbench/Atlas instructions below are historical where they conflict. Preserve original content, owners and editing/recovery while changing presentation.
 
 Adopted 13 October 2026. These rules govern user-facing chats, interface text and result presentation. Technical code, developer documentation and saved evidence may retain precise engineering vocabulary. This is an experience requirement, not proof that every screen already meets it.
 
@@ -38,7 +38,7 @@ Keep task completion, human acceptance, chat unread state and chat archival sepa
 
 A stage should show the relevant material and the tools needed to work with it. People should see their sources, words, photos and progress rather than encounter generic record placeholders or agent command instructions. Distinguish a recording, its transcripts/corrections, research, authored wording and requested output; connect them visibly without inventing missing material or progress.
 
-Keep the document-first foundation, the typography rule in [PRODUCT](PRODUCT.md#typography), sans-serif controls, project navigation, direct editing and appropriate margin discussion. Preserve each surface's purpose rather than imposing one layout everywhere. Put paths, provenance and technical details behind clear secondary disclosure. Avoid unnecessary top headers, repeated information and horizontal scrolling.
+Keep the document-first foundation, the typography rule in [PRODUCT](PRODUCT.md#typography), sans-serif controls, project navigation, direct editing and appropriate margin discussion. Preserve each surface's purpose rather than imposing one layout everywhere. Keep paths, provenance and technical details in focused secondary screens with ordinary navigation, never accordions or disclosure toggles. Avoid unnecessary top headers, repeated information and horizontal scrolling.
 
 The person must be able to find and resume a story, identify the selected output and see what needs attention. Use human descriptions for empty, processing, failed, read-only and changed-since-review states. Explain what can be done next; do not imply AI ran, sources were verified, work was saved or an output was published without the corresponding evidence.
 
@@ -76,3 +76,10 @@ Apply the one typography rule in [PRODUCT](PRODUCT.md#typography) consistently a
 ## 29 October — visible editing instead of disclosures
 
 Adrian explicitly rejects accordions, expandable cards and details/summary disclosures. Keep essential content and actions visible, use direct inline editing, and simplify repeated controls. Use focused editing screens for tasks and ordinary navigation for history. This supersedes earlier advice to hide working content behind disclosures.
+
+
+## 30 October — Combined and useful result reports
+
+Home shows the actual saved sentence, with three honest lists: Needs your decision, Optional and Handled by agents. A subject board shows origins, understanding and actual pieces. A piece is the working screen, with tabs and Write / Read / Check; context sheets return to the same line on Esc. Keep all 35 functions reachable as entrances move. Use one toolbar, direct visible work, drag grips, Plus Jakarta Sans UI, Lora only for transcript speech, a serif paragraph sign and 5px rectangular buttons. Unconnected controls carry a small grey `not connected` label; agents' proposals and the author's words remain distinct.
+
+Start with Hong Kong Day 1. When a bounded step changes what the author can do, report “You can now ___ on Hong Kong Day 1” and show a main-app screenshot beside the corresponding Combined reference. Do not install a label-only change or present a prototype as installed work. Never copy the reference drawings' invented content. Combined does not settle Direction A/B, Carousel words/photos or the ten marked passages; no new human attention is required merely to receive this adopted direction.
