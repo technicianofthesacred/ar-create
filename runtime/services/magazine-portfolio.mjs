@@ -13,6 +13,7 @@ const STAGE_DIR={RAW:'0-Inbox',CONTEXT:'1-Source',SRC:'1-Source',MAP:'2-Guidance
 const authoritative=a=>!a.archived&&(a.kind==='ASK'?/^Workflow\/ASK - [^/]+\.md$/.test(a.relativePath):STAGE_DIR[a.kind]&&a.relativePath===`Workflow/${STAGE_DIR[a.kind]}/${a.fileName}`);
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const fail=(status,message)=>Object.assign(new Error(message),{status});
+const checkAbort=signal=>signal?.throwIfAborted();
 const clean=value=>String(value||'').trim().replace(/^(['"])([\s\S]*)\1$/,'$2');
 const norm=value=>clean(value).normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 const lead=value=>norm(value).split(/\s+/).slice(0,2).join(' ');
@@ -63,68 +64,78 @@ function publicArtifact(a) {
  const {raw,meta,aliases,fm,...result}=a;return result;
 }
 
-async function rootInfo(root) {
- const info=await lstat(root.path).catch(()=>{throw fail(400,`Configured Magazine root unavailable: ${root.id}`);});
+async function rootInfo(root,signal) {
+ checkAbort(signal);
+ const info=await lstat(root.path).catch(()=>{checkAbort(signal);throw fail(400,`Configured Magazine root unavailable: ${root.id}`);});
+ checkAbort(signal);
  if(info.isSymbolicLink()||!info.isDirectory())throw fail(400,`Configured Magazine root must be a real directory (no symlink): ${root.id}`);
- return {...root,canonical:await realpath(root.path),dev:info.dev,ino:info.ino};
+ const canonical=await realpath(root.path);checkAbort(signal);
+ return {...root,canonical,dev:info.dev,ino:info.ino};
 }
-async function checkedPath(root,relativePath) {
+async function checkedPath(root,relativePath,signal) {
+ checkAbort(signal);
  const pieces=relativePath.split('/');
  if(!relativePath||pieces.some(p=>!p||p==='.'||p==='..'||p.startsWith('.'))||path.isAbsolute(relativePath)||relativePath.includes('\\'))throw fail(400,'Invalid Magazine artifact path.');
- const currentRoot=await lstat(root.path);
- if(currentRoot.isSymbolicLink()||currentRoot.dev!==root.dev||currentRoot.ino!==root.ino||await realpath(root.path)!==root.canonical)throw fail(409,'Magazine root changed. Refresh the portfolio.');
+ const currentRoot=await lstat(root.path);checkAbort(signal);
+ if(currentRoot.isSymbolicLink()||currentRoot.dev!==root.dev||currentRoot.ino!==root.ino)throw fail(409,'Magazine root changed. Refresh the portfolio.');
+ const currentCanonical=await realpath(root.path);checkAbort(signal);
+ if(currentCanonical!==root.canonical)throw fail(409,'Magazine root changed. Refresh the portfolio.');
  let abs=root.path;for(let i=0;i<pieces.length;i++){
-  abs=path.join(abs,pieces[i]);const stat=await lstat(abs);
+  checkAbort(signal);abs=path.join(abs,pieces[i]);const stat=await lstat(abs);checkAbort(signal);
   if(stat.isSymbolicLink())throw fail(409,'Magazine symlink rejected. Refresh the portfolio.');
   if(i<pieces.length-1&&!stat.isDirectory())throw fail(409,'Magazine directory changed. Refresh the portfolio.');
  }
- const real=await realpath(abs);
+ const real=await realpath(abs);checkAbort(signal);
  if(!real.startsWith(root.canonical+path.sep))throw fail(409,'Magazine artifact escaped its configured root.');
  return abs;
 }
-async function readBounded(root,relativePath) {
- const abs=await checkedPath(root,relativePath);
+async function readBounded(root,relativePath,signal) {
+ checkAbort(signal);const abs=await checkedPath(root,relativePath,signal);checkAbort(signal);
  const handle=await open(abs,constants.O_RDONLY|constants.O_NOFOLLOW);
  try{
-  const before=await handle.stat();
+  checkAbort(signal);const before=await handle.stat();checkAbort(signal);
   if(!before.isFile()||before.size>LIMITS.fileBytes)throw fail(413,'Magazine file size/type limit exceeded.');
   // A bounded buffer remains bounded even if another process grows the file.
   const buffer=Buffer.alloc(LIMITS.fileBytes+1);let length=0;
-  while(length<buffer.length){const {bytesRead}=await handle.read(buffer,length,buffer.length-length,length);if(!bytesRead)break;length+=bytesRead;}
+  while(length<buffer.length){checkAbort(signal);const {bytesRead}=await handle.read(buffer,length,buffer.length-length,length);checkAbort(signal);if(!bytesRead)break;length+=bytesRead;}
   if(length>LIMITS.fileBytes)throw fail(413,'Magazine file size limit exceeded.');
-  const after=await handle.stat(),visible=await lstat(await checkedPath(root,relativePath));
+  const after=await handle.stat();checkAbort(signal);
+  const visiblePath=await checkedPath(root,relativePath,signal);checkAbort(signal);
+  const visible=await lstat(visiblePath);checkAbort(signal);
   if(before.dev!==visible.dev||before.ino!==visible.ino||before.size!==after.size||before.mtimeMs!==after.mtimeMs||before.ctimeMs!==after.ctimeMs)throw fail(409,'Magazine artifact changed while reading. Refresh the portfolio.');
   const bytes=buffer.subarray(0,length);
   let raw;try{raw=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);}catch{throw fail(415,'Magazine artifact is not UTF-8 text.');}
   if(raw.includes('\0'))throw fail(415,'Magazine artifact is not text.');
-  return {raw,hash:sha(bytes),bytes:length,mtime:new Date(after.mtimeMs).toISOString()};
- }finally{await handle.close();}
+  checkAbort(signal);return {raw,hash:sha(bytes),bytes:length,mtime:new Date(after.mtimeMs).toISOString()};
+ }finally{await handle.close();checkAbort(signal);}
 }
 
-async function scan(roots) {
+async function scan(roots,signal) {
+ checkAbort(signal);
  const artifacts=[],diagnostics=[];let entries=0,totalBytes=0,stopped=false;
  for(const root of roots){
+  checkAbort(signal);
   async function walk(relative='',depth=0){
-   if(stopped)return;if(depth>LIMITS.depth){diagnostics.push(`Depth limit reached: ${root.id}/${relative}`);return;}
-   let children;try{if(relative)await checkedPath(root,relative);children=await readdir(path.join(root.path,relative),{withFileTypes:true});}catch(e){diagnostics.push(`Cannot read directory ${root.id}/${relative}: ${e.message}`);return;}
+   checkAbort(signal);if(stopped)return;if(depth>LIMITS.depth){diagnostics.push(`Depth limit reached: ${root.id}/${relative}`);return;}
+   let children;try{if(relative)await checkedPath(root,relative,signal);checkAbort(signal);children=await readdir(path.join(root.path,relative),{withFileTypes:true});checkAbort(signal);}catch(e){checkAbort(signal);diagnostics.push(`Cannot read directory ${root.id}/${relative}: ${e.message}`);return;}
    children.sort((a,b)=>a.name.localeCompare(b.name));
-   for(const child of children){if(stopped)return;if(++entries>LIMITS.entries){diagnostics.push('Magazine entry limit reached; portfolio is incomplete.');stopped=true;return;}
+   for(const child of children){checkAbort(signal);if(stopped)return;if(++entries>LIMITS.entries){diagnostics.push('Magazine entry limit reached; portfolio is incomplete.');stopped=true;return;}
     if(child.name.startsWith('.'))continue;
     const rel=[relative,child.name].filter(Boolean).join('/');
     if(child.isSymbolicLink()){diagnostics.push(`Skipped symlink: ${root.id}/${rel}`);continue;}
-    if(child.isDirectory()){await walk(rel,depth+1);continue;}
+    if(child.isDirectory()){await walk(rel,depth+1);checkAbort(signal);continue;}
     if(!child.isFile()||!(/\.(md|txt)$/i.test(child.name)))continue;
     try{
-     const content=await readBounded(root,rel);totalBytes+=content.bytes;
+     const content=await readBounded(root,rel,signal);checkAbort(signal);totalBytes+=content.bytes;
      if(totalBytes>LIMITS.totalBytes){diagnostics.push('Magazine total size limit reached; portfolio is incomplete.');stopped=true;return;}
      const fm=frontmatter(content.raw);const kind=child.name.match(/^([A-Z]+) - /)?.[1]||(/^\w+$/.test(fm.meta.type||'')?fm.meta.type.toUpperCase():'FILE');
      artifacts.push({artifactId:'mag_'+sha(root.id+'\0'+root.canonical+'\0'+rel),hash:content.hash,fileName:child.name,relativePath:rel,kind,archived:rel.startsWith('_archive/'),mtime:content.mtime,title:fm.meta.title||'',part:fm.meta.part||'',provenance:{rootId:root.id,rootLabel:root.label,rootPath:root.path,relativePath:rel,sha256:content.hash,readOnly:true},raw:content.raw,...fm});
-    }catch(e){diagnostics.push(`Skipped ${root.id}/${rel}: ${e.message}`);}
+    }catch(e){checkAbort(signal);diagnostics.push(`Skipped ${root.id}/${rel}: ${e.message}`);}
    }
   }
-  await walk();
+  await walk();checkAbort(signal);
  }
- return {artifacts,diagnostics};
+ checkAbort(signal);return {artifacts,diagnostics};
 }
 
 function portfolio(artifacts,roots,diagnostics) {
@@ -219,14 +230,17 @@ export function createMagazinePortfolio({roots}={}) {
  });
  if(new Set(configured.map(r=>r.id)).size!==configured.length)throw fail(400,'Duplicate Magazine root id.');
  let catalog=new Map();
- async function collect(){
-  const resolved=await Promise.all(configured.map(rootInfo));
+ async function collect(signal){
+  checkAbort(signal);const resolved=await Promise.all(configured.map(root=>rootInfo(root,signal)));checkAbort(signal);
   if(resolved.some((r,i)=>resolved.some((x,j)=>i!==j&&(r.canonical===x.canonical||r.canonical.startsWith(x.canonical+path.sep)))))throw fail(400,'Overlapping configured Magazine roots.');
-  const result=await scan(resolved);catalog=new Map(result.artifacts.map(a=>[a.artifactId,{a,root:resolved.find(r=>r.id===a.provenance.rootId)}]));
-  return portfolio(result.artifacts,resolved,result.diagnostics);
+  const result=await scan(resolved,signal);checkAbort(signal);
+  const next=new Map(result.artifacts.map(a=>[a.artifactId,{a,root:resolved.find(r=>r.id===a.provenance.rootId)}]));
+  const view=portfolio(result.artifacts,resolved,result.diagnostics);
+  // An abandoned scan must never replace a later fresh artifact lookup map.
+  checkAbort(signal);catalog=next;return view;
  }
  return {
-  async list(){const result=await collect();if(!configured.length)result.diagnostics.push('No Magazine workflow root configured.');return result;},
+  async list({signal}={}){const result=await collect(signal);checkAbort(signal);if(!configured.length)result.diagnostics.push('No Magazine workflow root configured.');return result;},
   async read({artifactId,expectedHash}={}){
    if(typeof artifactId!=='string'||!/^mag_[a-f0-9]{64}$/.test(artifactId))throw fail(404,'Unknown Magazine artifact.');
    if(typeof expectedHash!=='string'||!/^[a-f0-9]{64}$/.test(expectedHash))throw fail(400,'Expected artifact hash required.');

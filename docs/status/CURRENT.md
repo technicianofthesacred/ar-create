@@ -1,3 +1,11 @@
+## 29 October — required catalogue recovery under verification
+
+Shared discovery, lazy folder reads and real waiting decisions are installed at `15e7fc62c8d23106557b1058853610874f99ebcc` (PR112). Its first post-install Article opening failed after 15 seconds: every optional reader settled within about three seconds, while the required Magazine portfolio remained unresolved. That unresolved read held the shared catalogue promise. The original stalled filesystem await has not been identified.
+
+C01/C02/C06 return repair candidate: bound the required first scan and permit one fresh scan within the same original ten-second server budget. Cooperatively cancelled scans cannot publish partial results or replace the fresh artifact map later. A double stall rejects and releases the shared opening so a later attempt can start fresh; no cached catalogue substitutes for current files. Focused regression and actual-owner candidate opening pass. Installation and ten consecutive service-restart openings on video remain required; this is not dependable-return acceptance.
+
+No interface restyling or wording approval is included. Direction alternatives remain next after return acceptance, followed by the scoped Audience edition comparison and human Carousel words/photo decisions.
+
 ## 29 October — measured discovery candidate; clean record installed
 
 Clean-record behavior is installed at `63ecdb3767eb6a74bf7d8e7bc14c9edc6f1b6390`, build `2026-10-29T14:10:21.629Z` (PR111), with exact live-byte and preservation proof. The main-app twelve-section agent walk left the journal and pickup unchanged; original turns, Article and four Carousel editions are unchanged. Native Library discovery shows 36 sources; the combined Library shows those plus 50 retained story documents. Identified processing/fixture rows are hidden without deletion, and genuine recordings remain.

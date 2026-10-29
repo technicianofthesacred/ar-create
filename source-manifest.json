@@ -306,7 +306,7 @@
     {
       "path": "runtime/services/magazine-portfolio.mjs",
       "sourceSha256": "01a0e7de56eec87e98643ebca931962455a8e7518bfe18c8c21cd70805eb0231",
-      "candidateSha256": "01a0e7de56eec87e98643ebca931962455a8e7518bfe18c8c21cd70805eb0231",
+      "candidateSha256": "fd580e2236c721f582090bc3eb711f2bf34035a8b49221531b76ef1a337d71be",
       "adapted": false
     },
     {
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "99bf2a89c1b5efc51c47c8850a386e4974bd4f830a5cdd3f5d64f40d3cfbfc20"
+      "candidateSha256": "e85eae9a1ac4007209bcd982f8725271ae77e851ef3855043bb6b15adbf928c1"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3665,7 +3665,7 @@
     },
     {
       "path": "runtime/services/review-existing-work.mjs",
-      "candidateSha256": "a5f182f9c2ff14174b0b5289a1f590ceb8ceaaeb4e5d00d383e79be07ce32880"
+      "candidateSha256": "44f694c6bfd5878662e21bcd54aad58689df049fa2889f8164ee296b66067a83"
     },
     {
       "path": "runtime/services/review-media.mjs",
@@ -4625,7 +4625,11 @@
     },
     {
       "path": "tests/review-existing-work-timing.test.mjs",
-      "candidateSha256": "a5a8b67d4e15bc6aa56efd34af36aa4c4cb2ee09cd910508a7032529a2516ecc"
+      "candidateSha256": "8413f80add1639fb03ac8e227f77871adaac647f82ba1fe2decff9325dd3fc01"
+    },
+    {
+      "path": "tests/magazine-portfolio-abort.test.mjs",
+      "candidateSha256": "09a00d68774fd748aff9b43e3da9a807e04bde9dbd17dc67abdb84af9d44c7aa"
     }
   ],
   "dependencyRepair": {
