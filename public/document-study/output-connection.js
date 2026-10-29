@@ -190,7 +190,9 @@
   if(t.role==='root-owned-workspace'&&!t.outputBindingId){
    const before=JSON.stringify(disk.selection[p.id]||null),rootCheck=()=>{check();if(JSON.stringify(disk.selection[p.id]||null)!==before)throw Error('The selected output changed before its exact Carousel opened.');},reference=await workspaceCarouselReference({projectId:t.parentStudyId,rootBindingId:t.rootBindingId,outputId:t.outputId},{originGuard:rootCheck});rootCheck();
    if(reference.workspaceId!==t.workspaceId||reference.documentId!==t.documentId)throw Error('The exact Carousel workspace changed.');const selected=disk.selection[p.id],resume=mode==='arrange'&&selected?.rootBindingId===t.rootBindingId&&selected.outputId===t.outputId?selected.mode:null;
-   return onAction({projectId:t.parentStudyId,outputId:t.outputId,kind:mode==='read'?'read':mode==='write'?'words':resume==='read'?'read':resume==='words'?'words':'arrange'});
+   // The registry and exact native words tuple above establish this owner.
+   // Do not redispatch through a previously opened Magazine article.
+   return enter(group(t.parentStudyId,t.rootBindingId),t.outputId,mode==='read'||resume==='read'?'read':mode==='write'||resume==='words'?'words':'slide',rootCheck);
   }
   const registered=await catalogRequest();check();
   const roots=[...(registered.drafts||[]),...(registered.collections||[])].filter(row=>row.bindingId===t.rootBindingId&&row.parentStudyId===t.parentStudyId&&row.bindingStatus==='ready'&&row.kind!=='output-fork');
