@@ -32,7 +32,7 @@ async function readReviewTranslationHost(configFile,inspection){
  inspection.assertCurrent();return {translation,dataDir};
 }
 export async function readReviewTranslationPermission(configFile,inspection){return (await readReviewTranslationHost(configFile,inspection)).translation;}
-export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeoutMs=10000,libraryInspection=null,libraryInspectionConfigFile=null}={}){
+export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeoutMs=10000,libraryInspection=null,libraryInspectionConfigFile=null,onCatalogTiming=null}={}){
  if(!config||typeof config!=='object'||!Array.isArray(config.magazineRoots))throw Error('Explicit read-only review configuration required.');
  const {translation:translationProposals,dataDir:translationAdmissionDataDir}=await readReviewTranslationHost(libraryInspectionConfigFile,libraryInspection);
  const upstream=new URL(config.authorityURL);if(upstream.origin!==config.authorityURL.replace(/\/$/,'')||upstream.protocol!=='http:'||!['127.0.0.1','localhost'].includes(upstream.hostname)||upstream.port!==String(config.allowedAuthorityPort))throw Error('Fixed explicit loopback authority required.');
@@ -112,11 +112,30 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
  };
  if(libraryFolderCorrections)inspectPaths.set('/api/library/folders',async url=>{exactQuery(url,['domain'],['domain']);const domain=url.searchParams.get('domain');if(!['library','media'].includes(domain))folderFail('Choose library or media folders.',400);return folderView(await readNativeFolders(domain));});
  const retainedCarousels=createRetainedCarouselReader({retainedCarouselState:config.retainedCarouselState});
- const existingReader=createExistingWorkReader({...config,roots:config.magazineRoots,readAuthority,readTimeoutMs});
- const reader={...existingReader,catalog:async()=>{
-  const retainedPending=boundedReviewRead(()=>retainedCarousels.list(),{timeoutMs:readTimeoutMs,label:'Retained originals'}).catch(error=>({readOnly:true,available:false,items:[],error:error.message||'The retained original could not be read.'}));
-  const [catalog,retained]=await Promise.all([existingReader.catalog(),retainedPending]);
-  return config.retainedCarouselState===undefined?catalog:{...catalog,retainedCarousels:retained};
+ const existingReader=createExistingWorkReader({...config,roots:config.magazineRoots,readAuthority,readTimeoutMs,onTiming:onCatalogTiming});
+ let catalogPending=null,catalogTiming=null;
+ const reader={...existingReader,lastTiming(){
+  const timing=existingReader.lastTiming();if(!timing||timing.run!==catalogTiming?.run)return timing;
+  return {...timing,completed:catalogTiming.completed,failed:catalogTiming.failed,rows:[...timing.rows,...(catalogTiming.row?[{...catalogTiming.row}]:[])]};
+ },catalog(){
+  if(catalogPending)return catalogPending;
+  const originalPending=existingReader.catalog(),timing={run:existingReader.lastTiming().run,completed:false,failed:false,row:null};catalogTiming=timing;
+  const started=performance.now();
+  const report=outcome=>{
+   // A previous fatal run may leave its bounded optional reader finishing later.
+   // It must never append a row to, or notify an observer for, a newer run.
+   if(catalogTiming!==timing||existingReader.lastTiming()?.run!==timing.run)return;
+   const elapsed=performance.now()-started;
+   timing.row=Object.freeze({reader:'retained-carousels',elapsedMs:Math.max(0,Math.round(elapsed)),remainingMs:Math.max(0,Math.round(readTimeoutMs-elapsed)),outcome});
+   if(typeof onCatalogTiming==='function')try{Promise.resolve(onCatalogTiming(timing.row)).catch(()=>{});}catch{/* Observation cannot change retained availability. */}
+  };
+  const retainedPending=boundedReviewRead(()=>retainedCarousels.list(),{timeoutMs:readTimeoutMs,label:'Retained originals'}).then(retained=>{report('fulfilled');return retained;},error=>{
+   report(error?.code==='REVIEW_READ_TIMEOUT'?'timed-out':'rejected');
+   return {readOnly:true,available:false,items:[],error:error.message||'The retained original could not be read.'};
+  });
+  const pending=Promise.all([originalPending,retainedPending]).then(([catalog,retained])=>config.retainedCarouselState===undefined?catalog:{...catalog,retainedCarousels:retained});catalogPending=pending;
+  pending.then(()=>{timing.completed=true;},()=>{timing.completed=true;timing.failed=true;});
+  pending.finally(()=>{if(catalogPending===pending)catalogPending=null;}).catch(()=>{});return pending;
  }};
  const media=config.filesRoot?createReviewMedia({filesRoot:config.filesRoot,limits:config.mediaLimits}):null;
  const libraryPhotos={
@@ -152,6 +171,7 @@ export async function createExistingWorkReview({config,fetchImpl=fetch,readTimeo
  const requireMedia=()=>{if(!media)throw Object.assign(Error('Original Photos are not configured for this read-only review.'),{status:503});return media;};
  const result=(fn,{binary=false}={})=>async input=>{try{const value=await fn(input);return binary?value:{body:value};}catch(error){return{status:[400,403,404,405,409,413,415,423,503].includes(error.status)?error.status:503,body:{error:error.message||'Existing work could not be read.'}};}};
  const readOverrides=new Map([
+  ['/api/review/discovery-timing',result(({url})=>{exactQuery(url,[]);return reader.lastTiming();})],
   ...[...inspectPaths].map(([pathname,inspect])=>[pathname,result(async({url})=>({...await inspect(url),readOnly:true}))]),
   ['/api/review/magazine-publication-reference',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);return requirePublicationMedia().publicationReference(Object.fromEntries(url.searchParams));})],
   ['/api/review/magazine-media',result(({url})=>{exactQuery(url,['storyId','pieceId','expectedHash'],['storyId','pieceId','expectedHash']);return requirePublicationMedia().inspect(Object.fromEntries(url.searchParams));})],

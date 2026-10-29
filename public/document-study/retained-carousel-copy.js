@@ -61,7 +61,7 @@
    if(chosen)section.append(button('Create working copy','create',busy||!proof));
    if(note)message(note);
   }
-  async function get(url){const response=await fetch(url,{signal:reads.signal});if(!response.ok)throw Error('This working-copy connection is unavailable. No destination was changed.');return response.json();}
+  async function get(url){if(url.split('?')[0]==='/api/study-draft/catalog'&&window.nativeDraftCatalog)return window.nativeDraftCatalog.read();const response=await fetch(url,{signal:reads.signal});if(!response.ok)throw Error('This working-copy connection is unavailable. No destination was changed.');return response.json();}
   async function capability(replay=false){
    const value=(await get('/api/capabilities'))?.retainedCarouselCopy;
    if(!value||value.configured!==true||value.readOnly!==true||value.requiresExplicitDestination!==true||value.requiresOriginalValidation!==true)return false;
@@ -122,7 +122,7 @@
       // Deliberately no AbortSignal: closing a reader cannot cancel a committed write.
       const response=await fetch('/api/study/outputs/copy-retained-carousel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
       if(!response.ok){let reason='';try{const detail=await response.json();if(detail.outcome==='not-applied'&&/unsupported|photograph correspondence/.test(detail.error||''))reason='This original has an unsupported layout, photograph slot or formatting. No copy was made; the original is unchanged.';}catch{}throw Error(reason||(response.status===409?'The source or destination changed. The exact request is retained; inspect it before retrying.':'The copy was not confirmed. The exact request is retained for inspection and retry.'));}
-      const result=validatedResult(await response.json(),request,retry),complete={schema:'ar-create.retained-carousel-copy.v1',state:'complete',request,...result};storeReceipt(key,complete);return complete;
+      window.nativeDraftCatalog?.mutationSucceeded?.('/api/study/outputs/copy-retained-carousel');const result=validatedResult(await response.json(),request,retry),complete={schema:'ar-create.retained-carousel-copy.v1',state:'complete',request,...result};storeReceipt(key,complete);return complete;
      })();active.set(key,job);job.then(()=>active.delete(key),()=>active.delete(key));
     }
     const result=await job;if(!live()||token!==epoch||chosen!==row)return;receipt=result;paint();

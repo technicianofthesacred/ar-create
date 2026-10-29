@@ -34,7 +34,8 @@
   if(current?.target&&!selected)throw Error('The selected piece is not in this exact work list.');
   const currentRow=selected?{...selected,stage:Number.isInteger(current.stage)?current.stage:null,saveLabel:text(current.saveLabel,'Current work'),resumeLabel:text(current.resumeLabel,'Open current work')}:null;
   const events=selected?(history||[]).filter(event=>event&&typeof event.id==='string'&&typeof event.label==='string'&&typeof event.actor==='string'&&Number.isFinite(Date.parse(event.at))&&(!event.target||key(event.target)===selected.key)).slice(0,3).map(e=>({id:e.id,label:e.label,actor:e.actor,at:e.at})):[];
-  const moves=rows.filter(row=>row.available&&!row.archived&&row.kind!=='Project'&&row.key!==selected?.key).slice(0,4).map(row=>({...row,label:(row.target.kind==='draft'?'Read ':row.target.kind==='carousel'?'View ':'Open ')+row.title}));
+  // A saved output is available work, not evidence of a waiting decision.
+  const moves=[];
   return freeze({scope,revision,ready:!!ready&&!!revision,rows,moves,current:currentRow,history:events,state:rows.length?'available':'empty'});
  }
  function descriptor(projection,targetKey,{scope,revision,ready}={}){
