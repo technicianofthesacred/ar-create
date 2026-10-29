@@ -298,8 +298,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal,photoLibrary:magazineLibraryPhotos});
   const magazineOutputExports=createMagazineOutputExports({working:magazineWorking,exports});
   const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;
-  // Writes that are not operations on a record (heartbeats) emit their own events and are not journaled.
-  const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask']);
+  // Coordination and navigation/selection are not authored changes. Keep them out of edit activity.
+  const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask','first-flow.select','study.photos.select','study.human-direction.select','study-draft.open']);
   function afterRequest(request,response,context){
    if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return;
    let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return;}

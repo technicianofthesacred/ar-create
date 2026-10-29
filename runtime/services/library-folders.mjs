@@ -33,12 +33,12 @@ export function validateLibraryFolders(value){
  return value;
 }
 /** Uses Library's existing queue and exact-byte publication. Never owns source files. */
-export function createLibraryFolders({serial,load,publish,publicSource}){
+export function createLibraryFolders({serial,load,visibleSource=()=>true,publish,publicSource}){
  function view(loaded,domain){
-  const value=loaded.value,rows=(value.folders??[]).filter(row=>row.domain===domain),ops=(value.folderOperations??[]).filter(op=>op.domain===domain),last=ops.at(-1);
-  const sourceMap=new Map(value.sources.filter(s=>!s.managedTerminalSnapshot&&(domain==='library'||media(s))).map(s=>[s.id,{...publicSource(s),...(mediaKind(s)?{mediaKind:mediaKind(s)}:{})}]));
+  const value=loaded.value,hidden=new Set(value.sources.filter(source=>!visibleSource(source)).map(source=>source.id)),ownedRows=(value.folders??[]).filter(row=>row.domain===domain),rows=ownedRows.map(row=>({...row,sourceIds:row.sourceIds.filter(id=>!hidden.has(id))})),ops=(value.folderOperations??[]).filter(op=>op.domain===domain),last=ops.at(-1);
+  const sourceMap=new Map(value.sources.filter(s=>visibleSource(s)&&!s.managedTerminalSnapshot&&(domain==='library'||media(s))).map(s=>[s.id,{...publicSource(s),...(mediaKind(s)?{mediaKind:mediaKind(s)}:{})}]));
   for(const row of rows)for(const id of row.sourceIds)if(!sourceMap.has(id))sourceMap.set(id,{id,title:'Unavailable source',name:'Unavailable source',sourceUnavailable:true,missing:true,blobUrl:`/api/sources/blob?id=${encodeURIComponent(id)}`});
-  return {schema:'ar-create.library-folders.v1',domain,revision:value.revision,indexHash:loaded.hash,folders:structuredClone(rows.map(({domain:_,...row})=>row)),sources:[...sourceMap.values()],undoOperationId:last&&last.action!=='undo'&&stable(last.after)===stable(rows)?last.operationId:null};
+  return {schema:'ar-create.library-folders.v1',domain,revision:value.revision,indexHash:loaded.hash,folders:structuredClone(rows.map(({domain:_,...row})=>row)),sources:[...sourceMap.values()],undoOperationId:last&&last.action!=='undo'&&stable(last.after)===stable(ownedRows)?last.operationId:null};
  }
  function read(input={}){fields(input,['domain']);if(!domains.includes(input.domain))fail('Choose library or media folders.',400);return serial(()=>{const loaded=load();validateLibraryFolders(loaded.value);return view(loaded,input.domain);});}
  function change(input,{photoOperation=false,photoRef=null,librarySourceId=null,replayOnly=false}={}){

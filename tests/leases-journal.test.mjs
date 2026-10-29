@@ -88,3 +88,5 @@ test('journal: one line per operation (committed, conflict, rejected), with acto
  const waiting=await f.cli(['history'],{status:'needs-decision'});assert.equal(waiting.result.lines.length,1);
  assert.equal(f.journalLines().length-startLines,operations+2);
 });
+
+test('navigation and selection never append edit activity, including a refused opening',async t=>{const f=await setup(t),before=f.journalLines().length;const selected=await f.app('/api/first-flow/select',{projectKey:'navigation-fixture',title:'Navigation fixture',operationId:randomUUID()});assert.equal(selected.status,200,JSON.stringify(selected.body));await f.app('/api/study-draft/open',{parentStudyId:'absent',originalId:randomUUID(),originalHash:'a'.repeat(64),operationId:randomUUID()});await f.app('/api/study/photos/select',{parentStudyId:'absent',bindingId:randomUUID(),operationId:randomUUID()});await fetch(f.url+'/api/journal');assert.equal(f.journalLines().length,before,'viewing and selection are not saved editorial changes');});

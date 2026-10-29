@@ -57,3 +57,7 @@ First acceptance: independently edit/save Post and Product listing drafts, switc
 ## 20 October — Current understanding and useful return
 
 Applies the adopted return-to-work requirements, C01–C06; stated once in [PRODUCT, resume creative work without reconstructing its history](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), including the finish criterion.
+
+## 29 October — Honest activity and pickup
+
+C01/C02/C04/C06: every entrance retains its actual actor. Navigation and selection are not authored changes and do not append edit activity. The activity feed shows committed changes; refused operations remain in the technical audit and are never presented as completed work. Pickup advances on actual editing or explicit Continue, with its retained paragraph/output identity; browsing sections must not replace it. Acceptance includes before/after main-app screenshots and an unchanged journal and pickup after an agent walks every section.

@@ -239,10 +239,10 @@ test('assistant line, question as the primary, answer written back, Home order a
  assert.ok(await until(()=>w.arLive.question(5)===null),'answered questions leave the bar');
  assert.equal(w.document.getElementById('ar-ask'),null);
  // Recent changes: grouped by who did it, provenance in words, each row opening its record.
- w.arLive.openRecent();assert.ok(await until(()=>w.document.querySelectorAll('#ar-recent .ar-rc-group').length===2));
- assert.deepEqual(plain([...w.document.querySelectorAll('#ar-recent .ar-rc-who')].map(n=>n.textContent)),['You','Claude']);
+ w.arLive.openRecent();assert.ok(await until(()=>w.document.querySelectorAll('#ar-recent .ar-rc-group').length===1));
+ assert.deepEqual(plain([...w.document.querySelectorAll('#ar-recent .ar-rc-who')].map(n=>n.textContent)),['Claude']);
  const text=w.document.getElementById('ar-recent').textContent;
- assert.match(text,/Saved the draftby Claude from the command line/);assert.match(text,/by You in the app .* not applied: a newer version existed/);
+ assert.match(text,/Saved the draftby Claude from the command line/);assert.doesNotMatch(text,/not applied|by You in the app/);assert.equal(w.document.querySelector('#ar-recent [data-status=conflict]'),null);
  assert.equal(w.document.querySelector('#ar-recent [data-ar-rc-open]').textContent.length>0,true);
 });
 
