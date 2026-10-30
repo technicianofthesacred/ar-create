@@ -78,7 +78,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     for (const name of fs.readdirSync(dirs.operations)) {
       if (!name.endsWith('.json') || !UUID.test(name.slice(0, -5))) continue;
       const record = readJson(path.join(dirs.operations, name), null);
-      if (record?.schema !== 'ar-create.magazine-operation.v1' || record.operationId !== name.slice(0, -5) || record.state !== 'committed' || !['magazine.write', 'magazine.edit'].includes(record.command) || record.scope?.kind !== 'story' || record.scope.id !== input.storyId || record.result?.path !== rel || typeof record.at !== 'string' || !record.changes?.some(c => c.applied !== false && c.root === 'mag' && c.rel === rel)) continue;
+      if (record?.schema !== 'ar-create.magazine-operation.v1' || record.operationId !== name.slice(0, -5) || record.state !== 'committed' || !['magazine.write', 'magazine.edit', 'magazine.proposal.accept'].includes(record.command) || record.scope?.kind !== 'story' || record.scope.id !== input.storyId || record.result?.path !== rel || typeof record.at !== 'string' || !record.changes?.some(c => c.applied !== false && c.root === 'mag' && c.rel === rel)) continue;
       records.push({operationId: record.operationId, at: record.at});
     }
     records.sort((a,b) => b.at.localeCompare(a.at) || b.operationId.localeCompare(a.operationId));
@@ -428,11 +428,20 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
   }
 
   // ---- proposals decided by Adrian ----
-  async function proposalAccept(input) {
+  async function proposalAccept(input, options) {
     requireHuman('Accepting proposed words');
     fields(input, ['proposalId', 'operationId'], ['proposalId', 'operationId']);
     const file = propFile(input.proposalId), p = readJson(file, null);
     if (!p) throw new StateError('No such proposal.', 404);
+    if(p.sourced){
+      if(typeof options?.assertSourcedCurrent!=='function')throw new StateError('Sourced paragraphs require their exact source and Direction review.',403);
+      const result=await operation({command:'magazine.proposal.accept',operationId:input.operationId,input:{proposalId:p.proposalId,proposalHash:options.proposalHash,contextHash:options.contextHash},rel:p.path,context:{schema:'ar-create.sourced-paragraph-accept.v1',proposalId:p.proposalId},doing:'The author accepts a sourced paragraph'},async tx=>{
+        const latest=readJson(file,null);if(!latest||latest.status!=='open'||!latest.sourced)throw new StateError('That sourced proposal is no longer pending.',409);
+        await options.assertSourcedCurrent(latest);
+        const result={written:true,path:latest.path,hash:tx.put('mag',latest.path,latest.baseHash,textBytes(latest.content)).afterHash,proposalId:latest.proposalId,proposedBy:latest.actor};
+        atomicWrite(file,JSON.stringify({...latest,status:'accepted',decidedBy:ctx().actor,decidedAt:new Date(now()).toISOString(),appliedOperationId:input.operationId},null,1)+'\n');return result;
+      });return result;
+    }
     if (p.status !== 'open') throw new StateError(`That proposal is ${p.status}.`, 409);
     try {
       const result = await operation({command: 'magazine.proposal.accept', operationId: input.operationId, input: {proposalId: p.proposalId}, rel: p.path, doing: 'Adrian accepts proposed words'}, async tx => ({written: true, path: p.path, hash: tx.put('mag', p.path, p.baseHash, textBytes(p.content)).afterHash, proposalId: p.proposalId, proposedBy: p.actor}));

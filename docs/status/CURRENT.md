@@ -1,3 +1,15 @@
+## 30 October — sourced ending proposals in Write, candidate
+
+C01/C03/C04/C05/C06, S04/S05/S07. The exact existing Magazine Article can request one sourced ending paragraph through the configured output-only assistant. Every proposed claim retains an exact captured-source quotation and locator; unsupported points remain separate questions and supply no manuscript words. The author’s page is read-only to this flow. Proposals stay outside the Article until the human accepts; rejection, source/Direction freshness, direct later editing, reload, and exact existing Undo retain their maintained owners. Native mark approvals remain disabled.
+
+166 affected checks, build and a live assistant run over invented material pass. That run produced a pending sourced paragraph and an unresolved question, changed no original words, and reopened after restart without resending. Actual-source relationship/root preflight succeeds for the existing Hong Kong Article. Final native/main installation proof remains separate. This is the bounded AI-help step, not full Combined frame, sheets, Outputs or phone acceptance.
+
+## 30 October — sourced AI help decision; not connected
+
+C01/C03/C04/C05/C06, S03/S04/S05/S07. Adrian adopted “How AI helps”: paragraph drafts from the subject’s own material, with every claim linked to an exact source, transcript moment or passage on the author’s own page. No source means no sentence; leave a marked gap with the question and a supported answerer, or state that the answerer is unknown. Never invent a person. Drafts and edits wait in the margin for human-only Accept/Reject; nothing enters the manuscript automatically. Accepted paragraphs remain editable under the existing owner. AI never edits the author’s own page.
+
+This is the next connection after the Direction choice loop is complete. It is not connected today. No research/drafting execution, provider setup, implementation completion, installation or human acceptance is claimed. Finish with an actual sourced proposal, an honest unsupported gap, guarded human acceptance/rejection and editable accepted wording, preserving exact source identity and existing Undo. Combined’s accounting remains 35 functions: 14 kept, 16 made better (including this help), 5 moved.
+
 ## 30 October — Direction main-review save connection
 
 C01/C03/C04/C05/C06, S04/S05/S09. PR116 installed inline choices and saved-owner projections, but main-review transport did not admit Direction save/Undo. That prevents calling the choice loop usable there. A bounded repair admits only exact local-author project/part Direction save and Undo under the existing writing-correction grant, with current owner identity/revision guards and idempotent replay. Manuscript approvals remain disabled; no provider, publication or other mutation is admitted. Finish with actual proxy-to-owner synthetic choice/rejection/restart/Undo, refusal cases and exact installed transport proof. Actual Hong Kong angle/title, words and originals remain untouched.

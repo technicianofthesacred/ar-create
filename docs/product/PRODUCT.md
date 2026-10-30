@@ -28,6 +28,12 @@ Finish one existing selected project through useful author decisions and faithfu
 
 Connect the Direction choice to the same piece’s Write, Understanding and Arrange views. The focused alternatives have been shown and Adrian adopted A inline choices on 30 October. Audience must distinguish highlighted pending passages and readable end notes from literal editing syntax. Carousel files follow the author’s wording and photo choices. Preserve the seven pillars and existing authorities. The 29 October restyling hold is lifted by the approved Combined direction on 30 October below. The actual angle/title choices, Carousel wording/photo decisions and ten marked passages remain human decisions. These are acceptance requirements, not completion proof.
 
+## Sourced AI help in Write — adopted 30 October 2026
+
+C01/C03/C04/C05/C06, S03/S04/S05/S07. After completing the Direction choice loop, connect AI help inside the selected piece. AI researches, finds sources and connects the subject’s own material, then proposes paragraph drafts. Every claim must link to its exact source, transcript moment or passage on the author’s own page. No source means no sentence: leave a marked gap with the open question and who could answer it when supported by the material; otherwise say the answerer is unknown. Never invent a person.
+
+Drafts and edits wait in the margin with human-only Accept and Reject. Nothing is inserted automatically. After human acceptance, the paragraph belongs to the author and remains directly editable under the existing manuscript owner. AI never edits the author’s own page, including “What I want this to say.” This is adopted intent, not a connected or executed capability today; it grants no provider setup or execution. Combined retains all 35 functions: 14 kept, 16 made better (including AI help in Write), and 5 moved.
+
 ## Priorities made explicit from the author's feedback
 
 - **Author-led production:** AI should do most preparation and structuring so the author can concentrate on editorial judgment, lived experience and final polish. Do not require manual quote extraction, repeated answers or assembly chores merely to make agent work visible. Deliver useful content before expanding the workspace into an unrelated project/commerce system.
@@ -513,3 +519,8 @@ Adrian approved sending Combined to Build. This lifts the 29 October UI restylin
 #### 30 October — Direction A inline choices adopted
 
 C01/C03/C04/C05/C06, S04/S05/S09. Adrian chose the inline interaction after seeing A/B alternatives. This resolves the earlier pending layout decision only; the actual angle and title remain his separate editorial choices. Retain rejected options and reasons, prior dated history and the author’s notes in the existing human-direction record. Reuse that saved owner for subject-context projections in Write, Understanding and Arrange; no inferred historical MAP choice, replacement manuscript authority or automatic output rewrite. Finish criterion: explicit decisions survive reload/restart for the same subject and piece with exact independent output words preserved. Candidate tests, native screen acceptance and release proof remain distinct.
+
+
+#### 30 October — sourced AI help adopted; connection follows Direction
+
+Adrian’s “How AI helps” answers adopt paragraph drafts from the subject’s own material, exact claim-to-source links, marked questions instead of unsupported sentences, and human-only margin Accept/Reject before insertion. Accepted paragraphs remain editable; the author’s own page is never AI-edited. Build connects this after the completed Direction choice loop. Today it is not connected. The 35-function accounting is 14 kept, 16 made better and 5 moved; this records a decision, not implementation, provider execution or acceptance.

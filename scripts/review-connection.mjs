@@ -1,3 +1,4 @@
+import {validateSourcedWriting} from './review-sourced-writing.mjs';
 import {parseActor} from '../runtime/services/actor.mjs';
 import {validateFeedbackInvitationChange} from '../runtime/services/magazine/feedback-share-codec.mjs';
 import {articleCompositionIssue} from '../runtime/src/workspaces/article-composition.mjs';
@@ -338,14 +339,22 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
    if(req.method!=='POST'){req.resume();return fail(405,'Folder changes require an explicit POST.');}
    if(req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!==undefined&&req.headers['x-ar-actor']!=='human:adrian'){req.resume();return fail(403,'Folder changes require the author’s exact local workspace.');}
   }
+  const sourcedAction=pathname.match(/^\/api\/magazine\/working-draft\/ai\/(run|propose|accept|reject)$/)?.[1];
+  const sourcedCorrection=actualWorkReview&&magazineDraftCorrections&&!!sourcedAction&&req.method==='POST';
+  if(sourcedCorrection&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||sourcedAction!=='propose'&&requestActor!=='human:adrian')){req.resume();return fail(403,'Sourced writing requires the exact local workspace; only the author requests or decides proposals.');}
   const directionPath=['/api/study/human-direction/write','/api/study/human-direction/undo'].includes(pathname);
   const directionCorrection=actualWorkReview&&studyDraftCorrections&&directionPath&&req.method==='POST';
   if(directionCorrection&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||requestActor!=='human:adrian')){req.resume();return fail(403,'Direction changes require the author’s exact local workspace and path.');}
-  const correction=directionCorrection||photoAlbumCorrection||folderCorrection||carouselProposal||studyPrepare||openingAccept||guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport||nativeReview;
+  const correction=sourcedCorrection||directionCorrection||photoAlbumCorrection||folderCorrection||carouselProposal||studyPrepare||openingAccept||guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport||nativeReview;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
    const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport||nativeReview&&pathname==='/api/study/outputs/export'?NATIVE_EXPORT_REQUEST:MAX_READ_BODY}):null;
+   if(sourcedCorrection){
+    const input=validateSourcedWriting(sourcedAction,JSON.parse(readBody.toString('utf8'))),scope={storyId:input.storyId,pieceId:input.pieceId,edition:input.edition,parentStudyId:input.parentStudyId},decision=['accept','reject'].includes(sourcedAction),query={...scope,...(decision?{proposalId:input.proposalId}:{expectedHash:input.expectedHash})},record=await ownedStudyRead(upstream,timeoutMs,'/api/magazine/working-draft/ai/'+(decision?'proposal':'context')+'?'+new URLSearchParams(query));
+    const selection=record.selection;
+    if(selection?.storyId!==input.storyId||selection.pieceId!==input.pieceId||selection.edition!=='working'||record.parentStudyId!==input.parentStudyId||record.contextHash!==input.contextHash||decision&&(record.proposalId!==input.proposalId||record.proposalHash!==input.proposalHash)||!decision&&record.draftHash!==input.expectedHash)throw Object.assign(Error('The sourced paragraph or selected piece context changed.'),{status:409});
+   }
    if(directionCorrection){
     const input=JSON.parse(readBody.toString('utf8')),undo=pathname.endsWith('/undo'),uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value),hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value),required=['parentStudyId','scope','expectedRevision','expectedHash','operationId',...(undo?[]:['body'])],allowed=[...required,'expectedMetadataHash',...(undo?['undoOperationId']:[]),...(input?.scope==='part'?['bindingId']:[])],bad=()=>{throw Object.assign(Error('Use the exact saved project or part direction and current revision guards.'),{status:400});};
     if(!input||typeof input!=='object'||Array.isArray(input)||required.some(key=>!Object.hasOwn(input,key))||Object.keys(input).some(key=>!allowed.includes(key))||!['project','part'].includes(input.scope)||typeof input.parentStudyId!=='string'||!input.parentStudyId.trim()||input.parentStudyId.length>256||/[\x00-\x1f\x7f]/.test(input.parentStudyId)||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!hash(input.expectedHash)||!uuid(input.operationId)||input.scope==='part'&&!uuid(input.bindingId)||Object.hasOwn(input,'expectedMetadataHash')&&input.expectedMetadataHash!==null&&!hash(input.expectedMetadataHash)||undo&&Object.hasOwn(input,'undoOperationId')&&!uuid(input.undoOperationId)||!undo&&(typeof input.body!=='string'||!input.body.isWellFormed()||Buffer.byteLength(input.body)>1024*1024||input.body.includes('\0')))bad();
