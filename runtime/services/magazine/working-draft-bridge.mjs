@@ -401,7 +401,7 @@ export function createWorkingDraftBridge({magazine, editions = null, journal = n
     const record = await magazine.operation({operationId});
     if (record.command === 'magazine.undo' && undo) {
       if (!changesFor(record, authority).some(c => c.rel === authority.path)) throw new StateError('That Undo belongs to other work.', 403);
-    } else if (!['magazine.edit', 'magazine.write'].includes(record.command) || record.result?.path !== authority.path) throw new StateError('That receipt belongs to other work.', 403);
+    } else if (!['magazine.edit', 'magazine.write', 'magazine.proposal.accept'].includes(record.command) || record.result?.path !== authority.path) throw new StateError('That receipt belongs to other work.', 403);
     changesFor(record, authority);
     return record;
   }

@@ -48,6 +48,8 @@ import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILI
 import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
 import {createWorkingDraftBridge} from './services/magazine/working-draft-bridge.mjs';
+import {createSourcedParagraphs} from './services/magazine/sourced-paragraphs.mjs';
+import {createSourcedSubjectGuard} from './services/magazine/sourced-subject.mjs';
 import {createMagazineMechanicalChecks} from './services/magazine-mechanical-checks.mjs';
 import {createMagazineLibraryPhotos,magazinePhotoOriginHeader} from './services/magazine-library-photos.mjs';
 import {createReviewMedia} from './services/review-media.mjs';
@@ -296,6 +298,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const publicationPhotos=magazineConfig.magSendRepo?{catalog:input=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(input),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
   const magazineLibraryPhotos=createMagazineLibraryPhotos({library,originals:originalPhotos,publication:publicationPhotos});
   const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal,photoLibrary:magazineLibraryPhotos});
+  const sourcedParagraphs=createSourcedParagraphs({magazine:magazineVault,working:magazineWorking,humanDirection:studyHumanDirection,execution,dataDir,validateSubject:createSourcedSubjectGuard({originals:studyOriginals,working:magazineWorking})});
   const magazineOutputExports=createMagazineOutputExports({working:magazineWorking,exports});
   const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;
   // Coordination and navigation/selection are not authored changes. Keep them out of edit activity.
@@ -338,7 +341,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);

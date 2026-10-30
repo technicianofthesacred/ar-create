@@ -1,0 +1,59 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {createServer} from '../runtime/server.mjs';
+import {createReviewConnection} from '../scripts/review-connection.mjs';
+import {buildMagazineFixture,treeHashes} from './helpers/magazine-fixture.mjs';
+import {planRegistration,INDEX_SCHEMA} from '../runtime/services/magazine-vault/projects.mjs';
+const selection={storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',edition:'working'},DEV='Workflow/3-Develop/DEV - Clay Teacher (story).md',SRC='Workflow/1-Source/SRC - Clay Teacher (Kiln Day).md';
+const AI='/api/magazine/working-draft/ai/',WORK='/api/magazine/working-draft/';
+const query=(route,input)=>route+'?'+new URLSearchParams(input);
+async function fixture(t){
+ const f=buildMagazineFixture(),parentStudyId='synthetic-sourced-http-'+randomUUID(),scope={...selection,parentStudyId},plan=planRegistration({vault:f.vault,files:f.files});
+ fs.mkdirSync(path.join(f.data,'magazine/projects'),{recursive:true});fs.writeFileSync(path.join(f.data,'magazine/index.json'),JSON.stringify({schema:INDEX_SCHEMA,vaultRoot:f.vault,filesRoot:f.files,stories:plan.stories.map(p=>({storyId:p.storyId,name:p.name}))}));for(const p of plan.stories)fs.writeFileSync(path.join(f.data,'magazine/projects',p.storyId+'.json'),JSON.stringify(p));
+ const launches=[],execution={dispose:()=>{},capabilities:()=>({available:true,starts:'explicit-only'}),launch:(id,packet,finish,failure)=>launches.push({id,packet,finish,failure})},options={dataDir:f.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,execution,sharedArticles:true,magazineVault:{vaultRoot:f.vault,filesRoot:f.files,writable:true,machine:'synthetic-sourced-http'},studyOriginalRoots:{vaultRoot:f.vault,filesRoot:f.files,catalog:{projects:{[parentStudyId]:{docs:[[SRC,'source']]}},drafts:{'synthetic-clay-draft':{parentStudyKey:parentStudyId,partKey:'article',path:DEV,support:[[SRC,'source']]}}}}};
+ let server,proxy,base,ownerBase;const mutations=[];
+ async function start(){server=await createServer(options);server.on('request',req=>{if(req.method==='POST')mutations.push(req.url);});await new Promise(r=>server.listen(0,'127.0.0.1',r));ownerBase='http://127.0.0.1:'+server.address().port;proxy=createReviewConnection({publicDir:options.publicDir,authorityURL:ownerBase,allowedAuthorityPort:server.address().port,actualWorkReview:true,magazineDraftCorrections:true,studyDraftCorrections:true,studyDraftApprovals:false});await new Promise(r=>proxy.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+proxy.address().port;}
+ async function stop(){for(const running of [proxy,server]){running.closeAllConnections();await new Promise((r,j)=>running.close(e=>e?j(e):r()));}server=proxy=null;}
+ t.after(async()=>{if(server)await stop();f.cleanup();});await start();
+ async function request(route,input,{status=200,actor='human:adrian',origin=base,direct=false}={}){const target=direct?ownerBase:base,response=await fetch(target+route,{headers:{'X-AR-Actor':actor,'X-AR-Client':'http',...(input===undefined?{}:{Origin:direct?ownerBase:origin,'Content-Type':'application/json'})},...(input===undefined?{}:{method:'POST',body:JSON.stringify(input)})}),value=await response.json();assert.equal(response.status,status,JSON.stringify({route,value}));return value;}
+ await request('/api/concepts',{parentStudyId,title:'Synthetic kiln inquiry',operationId:randomUUID()},{direct:true});
+ const directionRoute=query('/api/study/human-direction',{parentStudyId,scope:'project'}),initial=await request(directionRoute),ownPage='My invented intention is to understand patient hands.';
+ await request('/api/study/human-direction/write',{parentStudyId,scope:'project',expectedRevision:initial.revision,expectedHash:initial.hash,operationId:randomUUID(),body:ownPage});
+ const read=()=>request(query(WORK+'read',selection)),context=async()=>{const view=await read();return request(query(AI+'context',{...scope,expectedHash:view.document.hash}));};
+ return {f,scope,request,read,context,launches,mutations,directionRoute,ownPage,restart:async()=>{await stop();await start();}};
+}
+function claims(c){const source=c.sources.find(s=>s.kind==='source'),quote='The clay remembers every hand that pressed it',start=source.text.indexOf(quote);assert.ok(start>=0);return [{text:'The maker described clay as remembering the hands that pressed it.',citations:[{sourceId:source.id,sourceHash:source.hash,start,end:start+quote.length,quote}]}];}
+const propose=(x,c,extra={})=>({...x.scope,expectedHash:c.draftHash,contextHash:c.contextHash,operationId:randomUUID(),claims:claims(c),gaps:[{question:'How long has this practice continued?',answerableBy:null}],...extra});
+const decide=(x,p,extra={})=>({...x.scope,proposalId:p.id,proposalHash:p.proposalHash,contextHash:p.contextHash,expectedHash:p.draftHash,operationId:randomUUID(),...extra});
+
+test('actual owner and review proxy stage sourced claims/gaps, human accepts into same DEV, direct editing/history/reload and exact Undo preserve originals and own page',async t=>{
+ const x=await fixture(t),before=treeHashes(x.f.vault),view=await x.read(),c=await x.context(),input=propose(x,c),p=await x.request(AI+'propose',input,{actor:'agent:codex'});
+ assert.equal(p.status,'pending');assert.equal(p.actor,'agent:codex');assert.equal(p.gaps[0].answerableBy,null);assert.deepEqual(treeHashes(x.f.vault),before);assert.ok((await x.request(query(AI+'proposals',x.scope))).items.some(item=>item.id===p.id));assert.equal((await x.request(query(AI+'proposal',{...x.scope,proposalId:p.id}))).proposalHash,p.proposalHash);
+ const accept=decide(x,p);await x.request(AI+'accept',accept);const accepted=await x.read(),expected=view.document.text.slice(0,c.target.offset)+'\n\n'+p.text+view.document.text.slice(c.target.offset);assert.equal(accepted.document.text,expected);assert.ok(accepted.history.some(row=>row.operationId===accept.operationId&&row.canUndo));
+ const editId=randomUUID(),editedWords='The maker described patient hands shaping clay.',saved=await x.request(WORK+'save',{...selection,expectedHash:accepted.document.hash,content:accepted.document.text.replace(p.text,editedWords),operationId:editId});assert.ok(saved.written);await x.restart();const reopened=await x.read();assert.match(reopened.document.text,/patient hands shaping clay/);assert.ok(reopened.history.some(row=>row.operationId===editId&&row.canUndo));assert.equal((await x.request(x.directionRoute)).body,x.ownPage);
+ await x.request(WORK+'undo',{...selection,undoOperationId:editId,operationId:randomUUID()});assert.equal((await x.read()).document.text,expected);await x.request(WORK+'undo',{...selection,undoOperationId:accept.operationId,operationId:randomUUID()});assert.equal((await x.read()).document.text,view.document.text);assert.deepEqual(treeHashes(x.f.vault),before);assert.equal((await x.request(x.directionRoute)).body,x.ownPage);
+});
+
+test('actual proxy and owner refuse foreign scope, actors, cross-site paths, stale/citation-free/gap-only acceptance; marks remain held with approvals false',async t=>{
+ const x=await fixture(t),before=treeHashes(x.f.vault),c=await x.context(),input=propose(x,c),p=await x.request(AI+'propose',input,{actor:'agent:codex'}),decision=decide(x,p);
+ for(const [route,body,options]of [[AI+'accept',decision,{actor:'agent:codex',status:403}],[AI+'reject',{...decision,reason:'Do not use this.'},{actor:'agent:codex',status:403}],[AI+'run',{...x.scope,expectedHash:c.draftHash,contextHash:c.contextHash,operationId:randomUUID(),instruction:'Prepare one paragraph.'},{actor:'agent:codex',status:403}],[AI+'propose',{...input,operationId:randomUUID()},{origin:'https://synthetic-cross-site.invalid',status:403}],[AI+'accept?extra=1',decision,{status:403}]]){const n=x.mutations.length;await x.request(route,body,options);assert.equal(x.mutations.length,n,'proxy refusal cannot mutate owner');}
+ await x.request(query(AI+'proposal',{...x.scope,pieceId:'foreign-piece',proposalId:p.id}),undefined,{status:403});await x.request(query(AI+'context',{...x.scope,parentStudyId:'foreign-parent',expectedHash:c.draftHash}),undefined,{status:409});
+ await x.request(AI+'propose',propose(x,c,{claims:[{text:'An unsupported claim.',citations:[]}]}),{actor:'agent:codex',status:400});await x.request(AI+'propose',propose(x,c,{contextHash:'b'.repeat(64)}),{actor:'agent:codex',status:409});
+ const gap=await x.request(AI+'propose',propose(x,c,{claims:[]}),{actor:'agent:codex'});assert.equal(gap.text,'');await x.request(AI+'accept',decide(x,gap),{status:400});await x.request(AI+'reject',decide(x,gap,{reason:'Wait for a supported answer.'}));
+ const snapshot=await x.read(),marked=snapshot.projection.find(row=>row.raw?.includes('=='));assert.ok(marked);
+ const approval={kind:'approveMark',id:marked.id,rawFrom:0,rawTo:marked.raw.length,seenBlockHash:snapshot.document.hash,seenMarkupHash:snapshot.document.hash,humanDecision:true},n=x.mutations.length;
+ await x.request(WORK+'prepare',{...selection,expectedHash:snapshot.document.hash,operations:[approval]},{status:400});
+ await x.request('/api/study-draft/save',{bindingId:randomUUID(),parentStudyId:x.scope.parentStudyId,operationId:randomUUID(),expected:{workflow:{draft:snapshot.document.hash,edits:null,ask:null,map:null},bindingHash:snapshot.document.hash,correspondenceHash:snapshot.document.hash},operations:[approval]},{status:400});assert.equal(x.mutations.length,n,'approvals:false cannot forward a marked approval');
+ const badCitation=claims(c);badCitation[0].citations[0].sourceHash='b'.repeat(64);await x.request(AI+'propose',propose(x,c,{claims:badCitation}),{actor:'agent:codex',status:400});
+ const sourceFile=path.join(x.f.vault,SRC),sourceBefore=fs.readFileSync(sourceFile,'utf8');fs.appendFileSync(sourceFile,'\nSynthetic source changed after review.\n');
+ const staleRefusal=await x.request(AI+'accept',decision,{status:403});assert.match(staleRefusal.error,/registered source.*exact selected subject/);assert.equal((await x.read()).document.hash,snapshot.document.hash);assert.equal((await x.request(query(AI+'proposal',{...x.scope,proposalId:p.id}))).stale,true);await x.request(AI+'reject',decide(x,p,{reason:'Source changed after the captured proposal.'}));fs.writeFileSync(sourceFile,sourceBefore);
+ await x.request('/api/study-ai/accept',{requestId:randomUUID()},{status:423});assert.deepEqual(treeHashes(x.f.vault),before);assert.equal((await x.request(x.directionRoute)).body,x.ownPage);assert.equal(x.launches.length,0);
+});
+
+test('actual review run uses injected execution and completes only a validated pending proposal without writing DEV',async t=>{
+ const x=await fixture(t),before=treeHashes(x.f.vault),c=await x.context(),running=await x.request(AI+'run',{...x.scope,expectedHash:c.draftHash,contextHash:c.contextHash,operationId:randomUUID(),instruction:'Prepare one sourced paragraph and leave unsupported claims as questions.'});assert.equal(running.status,'running');assert.equal(x.launches.length,1);assert.deepEqual(x.launches[0].packet.names,['proposal.json']);assert.deepEqual(treeHashes(x.f.vault),before);
+ await x.launches[0].finish({response:{artifacts:{'proposal.json':JSON.stringify({claims:claims(c),gaps:[{question:'What remains uncertain?',answerableBy:null}]})}},model:'synthetic-no-provider'});const ready=await x.request(query(AI+'proposal',{...x.scope,proposalId:running.id}));assert.equal(ready.status,'pending');assert.equal(ready.execution.state,'complete');assert.equal(ready.actor,'agent:codex');assert.deepEqual(treeHashes(x.f.vault),before);await x.request(AI+'reject',decide(x,ready,{reason:'Synthetic verification only.'}));assert.equal((await x.request(query(AI+'proposal',{...x.scope,proposalId:ready.id}))).status,'rejected');assert.equal((await x.request(x.directionRoute)).body,x.ownPage);
+});

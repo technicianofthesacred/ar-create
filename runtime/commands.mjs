@@ -22,6 +22,7 @@ const HUMAN = Object.freeze(['human']), ANY = Object.freeze(['any']);
 export const READ_ONLY_POSTS = new Set(['/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
 
 const UNDO = {
+  'POST /api/magazine/working-draft/ai/accept': 'magazine.working-draft.undo',
   'POST /api/magazine/working-draft/share-feedback/save': 'magazine.working-draft.share-feedback.undo',
   'POST /api/magazine/working-draft/save': 'magazine.working-draft.undo', 'POST /api/magazine/working-draft/edit': 'magazine.working-draft.undo',
   'POST /api/library/folders': 'library.folders.post',
@@ -37,6 +38,11 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/magazine/working-draft/ai/run': ['storyId','pieceId','edition','parentStudyId','expectedHash','contextHash','operationId','instruction?'],
+  '/api/magazine/working-draft/ai/propose': ['storyId','pieceId','edition','parentStudyId','expectedHash','contextHash','operationId','claims','gaps'],
+  '/api/magazine/working-draft/ai/accept': ['storyId','pieceId','edition','parentStudyId','expectedHash','contextHash','operationId','proposalId','proposalHash'],
+  '/api/magazine/working-draft/ai/reject': ['storyId','pieceId','edition','parentStudyId','expectedHash','contextHash','operationId','proposalId','proposalHash','reason?'],
+
   '/api/first-flow/material-triage': ['projectId','operationId','sourceId','expectedRevision','expectedHash','expectedSourceHash','decision','reason','humanDecision'],
   '/api/magazine/working-draft/share-feedback/prepare-paragraph': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','block','seen','text'],
   '/api/magazine/working-draft/share-feedback/prepare-mapping': ['storyId','pieceId','edition','expectedHash','registeredFeedbackPath','expectedFeedbackHash','recipientId?','recipientName?','sections?','invitationChange?'],
@@ -106,7 +112,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
+const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -147,7 +153,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -177,6 +183,13 @@ export function createRouteMap(services) {
       },
       '/api/magazine/working-draft/export': {POST:input=>magazineOutputExports.save(input)},
       '/api/magazine/working-draft/exports': {GET:()=>magazineOutputExports.list(Object.fromEntries(url.searchParams))},
+      '/api/magazine/working-draft/ai/context': {GET:()=>sourcedParagraphs.context(Object.fromEntries(url.searchParams))},
+      '/api/magazine/working-draft/ai/proposals': {GET:()=>sourcedParagraphs.list(Object.fromEntries(url.searchParams))},
+      '/api/magazine/working-draft/ai/proposal': {GET:()=>sourcedParagraphs.review(Object.fromEntries(url.searchParams))},
+      '/api/magazine/working-draft/ai/propose': {POST:input=>sourcedParagraphs.propose(input)},
+      '/api/magazine/working-draft/ai/run': {POST:input=>sourcedParagraphs.run(input)},
+      '/api/magazine/working-draft/ai/accept': {POST:input=>sourcedParagraphs.accept(input)},
+      '/api/magazine/working-draft/ai/reject': {POST:input=>sourcedParagraphs.reject(input)},
       '/api/magazine/working-draft/catalog': {GET:()=>magazineWorking.catalog(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/read': {GET:()=>magazineWorking.read(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/share-context': {GET:()=>{

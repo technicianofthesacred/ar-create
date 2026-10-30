@@ -12,6 +12,12 @@ S05, C01/C03/C04/C05/C06. Following the adopted A inline choices, show the saved
 Historical 21 October appearance, superseded by Combined above where they differ: the full repository Workbench prototype and final NOTES governed that isolated review candidate. Write and Read share paragraph positions, measure and type at each size; the original editor, saved history, exact Undo, part selection and meaningful read-only states stay authoritative. See [CURRENT](../../status/CURRENT.md) for proof; older typography notes below are historical where they conflict.
 Intent: develop the chosen piece with AI assistance while preserving Adrian's human authorship.
 
+## Sourced paragraph proposals — adopted 30 October
+
+S05/S07, C01/C03/C04/C05/C06; shared material and direction retain S03/S04. Connect this after the Direction choice loop is complete. AI may draft paragraphs from the subject’s own material, with each claim linked to an exact source, transcript moment or passage on the author’s own page. If no source supports a sentence, write no sentence: show a marked gap, the open question and a supported answerer. If no answerer is known, say so; never invent a person.
+
+Keep proposed drafts and edits in the margin with human-only Accept and Reject. Nothing enters the manuscript automatically. Human acceptance passes the paragraph through the existing manuscript owner, and the author can then edit it normally. The author’s own page (“What I want this to say”) is never AI-edited. Finish criterion: exact source links and honest gaps are visible beside a proposal; acceptance alone inserts the proposed paragraph, rejection leaves words intact, and accepted wording remains editable with existing guards and Undo. This connection is not present today; no provider execution, implementation completion or human acceptance is claimed.
+
 ## Work surface
 
 Continuous document, direct typing, compact toolbar, visible contextual margin and optional Focus. The writing typography follows [PRODUCT: Typography](../PRODUCT.md#typography) (Plus Jakarta Sans with A− / A+ and matching Write/Preview geometry). The 15 October Atlas reference below is historical where superseded by C; the later Source-specific Atlas treatment does not extend to Research, notes or the manuscript. Navigation, controls and assistance remain sans serif. Keep project/part/output navigation available. Reuse existing save, recovery, exact-wording and proposal controls. No generic boxes that split prose into a form.
