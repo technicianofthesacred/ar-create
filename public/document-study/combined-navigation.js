@@ -6,7 +6,7 @@
  const ITEMS=[['home','Home'],['subjects','Subjects'],['library','Library',1],['source','Source',2],['research','Research',3],['direction','Direction',4],['check','Check',7],['media','Media',8],['arrange','Arrange',9],['audience','Audience',10],['share','Share',11],['outputs','Outputs',12]];
  let busy=false,phoneGroup='',phoneReturn=null;
  const PHONE_GROUPS={develop:['library','source','research','direction'],make:['check','media','arrange'],deliver:['audience','share','outputs']};
- function closePhone(){phoneGroup='';document.getElementById('combined-phone-sheet')?.remove();phoneReturn?.isConnected&&phoneReturn.focus({preventScroll:true});}
+ function closePhone({restoreFocus=true}={}){phoneGroup='';document.getElementById('combined-phone-sheet')?.remove();if(restoreFocus&&phoneReturn?.isConnected)phoneReturn.focus({preventScroll:true});}
  function openPhone(key,button){
   if(phoneGroup===key)return closePhone();closePhone();phoneGroup=key;phoneReturn=button;
   const panel=document.createElement('nav');panel.id='combined-phone-sheet';panel.setAttribute('aria-label',key==='develop'?'Develop':key==='make'?'Make':'Deliver');
@@ -68,6 +68,8 @@
  document.addEventListener('keydown',event=>{if(!event.target.closest?.('.combined-rail')||!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;const list=[...document.querySelectorAll('.combined-rail button:not(:disabled)')],i=list.indexOf(event.target);if(i<0)return;event.preventDefault();list[event.key==='Home'?0:event.key==='End'?list.length-1:(i+(event.key==='ArrowDown'?1:-1)+list.length)%list.length]?.focus();});
  document.addEventListener('toggle',event=>{if(event.target.id==='project-library')decorate();},true);
  window.addEventListener('c3-header-painted',decorate);
+ // Context sheets intercept the group click before its normal navigation handler.
+ const sheetOpenObserver=new MutationObserver(records=>{if(phoneGroup&&records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1&&node.id==='combined-sheet')))closePhone({restoreFocus:false});});sheetOpenObserver.observe(document.body,{childList:true});window.addEventListener('pagehide',()=>sheetOpenObserver.disconnect(),{once:true});
  window.combinedNavigation={go,decorate};
  window.c3Shell?.register('Combined navigation',decorate,{order:125,ignore:'.combined-rail,.combined-piece-switch,#combined-navigation-status'});
  decorate();
