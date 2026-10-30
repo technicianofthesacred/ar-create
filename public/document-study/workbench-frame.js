@@ -122,8 +122,8 @@
   if(tool!=='sources')stopSources(d);
   const understanding=window.workbenchUnderstanding?.mount;
   if(tool==='understanding'&&typeof understanding==='function'){
-   const binding=[5,6,7].includes(stage())?window.studyDraft?.currentBinding?.():null,selection=window.studyOutputConnection?.selection?.();
-   const contextKey=JSON.stringify([current().id,binding?.id,binding?.parentStudyId,binding?.sourceBindingId,binding?.canonicalOutputId,selection?.projectId,selection?.rootBindingId,selection?.output?.id]);
+   const binding=[5,6,7].includes(stage())?window.studyDraft?.currentBinding?.():null,selection=window.studyOutputConnection?.selection?.(),owner=window.studyDraft?.currentOwner?.(),proof=window.studyDraft?.currentProof?.();
+   const contextKey=JSON.stringify([current().id,binding?.id,binding?.parentStudyId,binding?.sourceBindingId,binding?.canonicalOutputId,owner?.kind,owner?.storyId,owner?.pieceId,owner?.path,proof?.parentStudyId,selection?.projectId,selection?.rootBindingId,selection?.output?.id]);
    d.wbfEmptyObserver?.disconnect();d.wbfEmptyObserver=null;
    if(host.dataset.tool!==tool||mounted!==ws()||host.wbfUnderstandingKey!==contextKey||host.wbfUnderstandingMount!==understanding){
     stopUnderstanding(d);restore();host.replaceChildren();host.dataset.tool=tool;host.dataset.ownerKey=ownerKey;host.wbfOwner=null;mounted=ws();host.wbfUnderstandingKey=contextKey;host.wbfUnderstandingMount=understanding;
@@ -151,7 +151,7 @@
   document.body.classList.add('wbf-drawer-open');
  }
  function toolError(error){let status=document.getElementById('wn-message')||document.getElementById('wbf-tool-message');if(!status){status=document.createElement('p');status.id='wbf-tool-message';status.className='dim small';status.setAttribute('role','status');ws()?.prepend(status);}if(status){status.textContent=error.message||'This tool is unavailable. Your current work is retained.';status.hidden=false;}}
- function selectedScopeKey(){const s=window.studyOutputConnection?.selection?.();return JSON.stringify([current().id,s?.projectId,s?.rootBindingId,s?.output?.id]);}
+ function selectedScopeKey(){const p=current(),proof=window.studyDraft?.currentProof?.(),owner=window.studyDraft?.currentOwner?.(),binding=window.studyDraft?.currentBinding?.();if([5,6,7].includes(stage())&&proof?.parentStudyId===p.id){if(owner?.kind==='magazine'&&proof.owner?.kind==='magazine'&&['storyId','pieceId','path'].every(key=>owner[key]&&owner[key]===proof.owner[key]))return JSON.stringify(['magazine',p.id,owner.storyId,owner.pieceId,owner.path]);if(binding?.id&&binding.parentStudyId===p.id&&proof.bindingId===binding.id)return JSON.stringify(['native',p.id,binding.id,binding.canonicalOutputId]);}const s=window.studyOutputConnection?.selection?.();return JSON.stringify([p.id,s?.projectId,s?.rootBindingId,s?.output?.id]);}
  async function openThought(){
   const id=current().id,n=stage(),scope=selectedScopeKey(),same=()=>current().id===id&&stage()===n&&selectedScopeKey()===scope;
   try{
@@ -168,8 +168,9 @@
  async function openTool(k){
   returnFocus=document.activeElement;
   if(k==='check'){
-   const id=current().id,scope=selectedScopeKey(),connected=window.studyOutputConnection?.selection?.();
-   if(![5,6,7].includes(stage())||connected?.output?.kind==='carousel'){
+   const id=current().id,scope=selectedScopeKey(),connected=window.studyOutputConnection?.selection?.(),proof=window.studyDraft?.currentProof?.(),owner=window.studyDraft?.currentOwner?.(),binding=window.studyDraft?.currentBinding?.();
+   const checkedArticle=stage()===7&&proof?.parentStudyId===id&&(owner?.kind==='magazine'&&proof.owner?.kind==='magazine'&&['storyId','pieceId','path'].every(key=>owner[key]&&owner[key]===proof.owner[key])||binding?.id&&binding.parentStudyId===id&&proof.bindingId===binding.id);
+   if(![5,6,7].includes(stage())||connected?.output?.kind==='carousel'&&!checkedArticle){
     if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected output’s checking connection is unavailable.');
     await window.workspaceNavigation.changeMode('check');
     if(current().id!==id||selectedScopeKey()!==scope||(![5,6,7].includes(stage())&&!window.workspaceNavigation?.isCarouselCheck?.()))throw Error('The selected work changed before Check could open.');

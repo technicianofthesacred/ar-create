@@ -40,8 +40,9 @@
  }
  const versionRooms=new Map();
  function checkScope(p){
-  const selection=window.studyOutputConnection?.selection?.();
-  if(selection?.projectId===p.id&&selection.output?.kind==='carousel'){
+  const selection=window.studyOutputConnection?.selection?.(),currentProof=window.studyDraft?.currentProof?.(),currentBinding=window.studyDraft?.currentBinding?.(),currentOwner=window.studyDraft?.currentOwner?.();
+  const exactArticle=currentView()?.id===p.id&&[5,6,7].includes(Number(currentView()?.viewedStage))&&currentProof?.parentStudyId===p.id&&(currentOwner?.kind==='magazine'&&currentProof.owner?.kind==='magazine'&&['storyId','pieceId','path'].every(key=>typeof currentOwner[key]==='string'&&currentOwner[key]&&currentOwner[key]===currentProof.owner[key])||currentBinding?.id&&currentBinding.parentStudyId===p.id&&currentProof.bindingId===currentBinding.id);
+  if(!exactArticle&&selection?.projectId===p.id&&selection.output?.kind==='carousel'){
    const value=window.studyOutputConnection?.carouselCheckSnapshot?.(),snapshot=value?.targetKind==='carousel'&&value.parentStudyId===p.id&&value.bindingId===selection.rootBindingId&&value.outputId===selection.output.id&&value.output?.id===selection.output.id?value:null;
    const revision=snapshot?.output.outputRevision,label=snapshot?(snapshot.title||'Current Carousel')+(Number.isSafeInteger(revision)&&revision>=0?' · revision '+revision:' · Saved words')+(snapshot.dirty?' · Unsaved changes':''):'Selected Carousel · saved words unavailable';
    return {kind:'carousel',key:JSON.stringify(['carousel',p.id,selection.rootBindingId,selection.output.id,!!snapshot]),snapshot,label};

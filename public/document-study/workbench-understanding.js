@@ -29,7 +29,11 @@
  }
  function context(options){
   const p=typeof current==='function'?current():null;if(!p||p.id!==options.projectId)throw Error('The selected project changed.');
-  const selected=window.studyOutputConnection?.selection?.(),binding=window.studyDraft?.currentBinding?.(),native=[5,6,7].includes(Number(p.viewedStage))?binding:null;
+  const proof=window.studyDraft?.currentProof?.(),owner=window.studyDraft?.currentOwner?.(),article=[5,6,7].includes(Number(p.viewedStage));
+  if(article&&owner?.kind==='magazine'){if(proof?.owner?.kind!=='magazine'||proof.parentStudyId!==p.id||!['storyId','pieceId','path'].every(name=>owner[name]&&owner[name]===proof.owner[name]))throw Error('The current Article proof is unavailable.');if(options.outputId||options.rootBindingId)throw Error('This Magazine Article uses its shared project understanding.');const scope={scope:'project',parentStudyId:p.id};return {project:p,wordingBinding:null,signature:key({id:p.id,magazine:{storyId:owner.storyId,pieceId:owner.pieceId,path:owner.path}}),request:{scopes:[scope],selectedScope:scope}};}
+  let selected=window.studyOutputConnection?.selection?.();const binding=window.studyDraft?.currentBinding?.(),native=article?binding:null;
+  const exactNative=article&&native?.id&&native.parentStudyId===p.id&&proof?.bindingId===native.id&&proof.parentStudyId===p.id&&proof.owner?.kind!=='magazine';
+  if(exactNative&&selected&&(selected.projectId!==p.id||selected.output?.id!==native.canonicalOutputId||selected.owner?.kind==='carousel-words'||selected.owner?.bindingId&&selected.owner.bindingId!==native.id))selected=null;
   if(native?.parentStudyId&&native.parentStudyId!==p.id)throw Error('The writing scope belongs to another project.');
   if(selected&&selected.projectId!==p.id)throw Error('The selected output scope is unavailable.');
   const nativeOutput=native?.parentStudyId===p.id?native.canonicalOutputId:null;

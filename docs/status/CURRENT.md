@@ -1,3 +1,9 @@
+## 30 October — piece screen candidate
+
+C01/C02/C03/C04/C05/C06, S05/S06/S07/S09. The selected existing Article or Carousel uses one piece toolbar, actual independently owned piece tabs, the maintained Write/Read/Check modes and a saved Direction strip. Uncreated formats remain choices under +. Existing editing, saved Undo, parts, guidance, history, sources, theme and sizing remain reachable through their maintained controls. No author decisions are made by this presentation change.
+
+306 affected checks pass. Native Article/Carousel mode switching, exact Article Check/Understanding scope, and retained finder/theme controls are verified in the read-only candidate. Saved/Unsaved and refusal guards use existing writers; no real words or decisions changed. A pre-existing Magazine check-registration restriction rejects related configured RAW/SRC records and remains separate repair work with the source sheets. Finish with exact installed screen proof beside Combined C05. Supporting sheets, visual Outputs and final phone work remain subsequent steps.
+
 ## 30 October — sourced ending proposals in Write, candidate
 
 C01/C03/C04/C05/C06, S04/S05/S07. The exact existing Magazine Article can request one sourced ending paragraph through the configured output-only assistant. Every proposed claim retains an exact captured-source quotation and locator; unsupported points remain separate questions and supply no manuscript words. The author’s page is read-only to this flow. Proposals stay outside the Article until the human accepts; rejection, source/Direction freshness, direct later editing, reload, and exact existing Undo retain their maintained owners. Native mark approvals remain disabled.
