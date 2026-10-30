@@ -7,7 +7,7 @@
  const room=p=>{if(!rooms.has(p.id))rooms.set(p.id,{fields:{},selected:null,data:null,error:'',status:''});return rooms.get(p.id);};
  const button=(action,label)=>`<button type="button" class="oss-action" data-oss-action="${action}">${label}</button>`;
  const field=(r,key,label,{area=false,placeholder='',type='text'}={})=>`<label class="oss-field">${label}<${area?'textarea':'input'} data-oss-field="${key}" ${area?'rows="4"':`type="${type}" value="${escape(r.fields[key]||'')}"`} placeholder="${escape(placeholder)}">${area?escape(r.fields[key]||'')+'</textarea>':''}</label>`;
- const disclosure=(name,body)=>`<details class="oss-disclosure"><summary>${name}</summary><div class="oss-disclosed">${body}</div></details>`;
+ const disclosure=(name,body)=>`<section class="oss-disclosure"><h3>${name}</h3><div class="oss-disclosed">${body}</div></section>`;
  const nativeLanguage=o=>nativeBrief(o)&&['article','carousel'].includes(o.kind);
  const languageLabel=code=>{try{return new Intl.DisplayNames(['en'],{type:'language'}).of(code)||code;}catch{return code;}};
  const nativeBrief=o=>!!o?.rootBindingId&&!['magazine-working','publication-reference'].includes(o.kind);

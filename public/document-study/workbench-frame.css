@@ -370,3 +370,5 @@ html body.wbf-on[data-wbf-home="pieces"] #wbf-pull{display:none!important}
  html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>.sb-right{grid-column:2;grid-row:1}
  html body.wbf-on #app #workspace.wb-direction>#c3-surface-bar>[data-review-state]{grid-column:1/-1;grid-row:2;justify-self:start;margin-left:0!important;font:400 var(--t-label)/1.5 var(--ar-ui)!important}
 }
+
+[data-wbf-check-decisions]{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}[data-wbf-check-decisions]>h3{font:600 15px/1.5 var(--ar-ui);margin:0 0 8px}

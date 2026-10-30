@@ -346,3 +346,9 @@ body.wbf-on #app .ar-composition-workbench:has(>.car-workspace)>.cwb-toolbar :is
 .car-workspace .car-writing-slide>header .car-writing-heading{flex:1;min-width:0;width:auto;margin:0}
 .car-workspace .car-writing-slide>header .car-writing-number{flex:none;min-width:14px;color:var(--dim);font-size:var(--t-label,13px)}
 .car-workspace .car-writing-slide>textarea{min-height:calc(var(--t-reading,16px) * var(--lh-read,1.65) + 2px)}
+
+/* Tools stay in place rather than opening a disclosure menu. */
+.car-workspace .car-tools-visible{min-width:0;flex:1}
+.car-workspace .car-tools-visible .car-more-menu{position:static;width:auto;display:flex;flex-wrap:wrap;gap:4px;padding:0;background:transparent;border:0;box-shadow:none}
+.ar-donor-workspace .car-workspace .car-tools-visible .car-more-menu button{width:auto;min-height:34px;padding:0 8px}
+.car-workspace .car-tools-visible .car-more-help{flex-basis:100%;margin:0;font-size:12px}

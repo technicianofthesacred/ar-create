@@ -29,3 +29,9 @@ test('unrecognized human content in an empty discussion wrapper is never removed
  const ownerAPI={currentProof:()=>({parentStudyId:'exact-parent',bindingId:'binding'}),currentBinding:()=>null},f=fixture(manuscript+'<aside id="margin"><div class="discussion"><p>Exact human margin wording.</p><button onclick="openInstruction()">Start a sample discussion</button></div></aside>',{stage:5,ownerAPI});
  try{assert.match(f.w.document.querySelector('#margin').textContent,/Exact human margin wording/);}finally{f.w.close();}
 });
+
+test('recorded editorial notes remain visible sections with original passage actions and no disclosure toggle',()=>{
+ const notes=Array.from({length:8},(_,i)=>'<article class="originalNote"><strong>Synthetic note '+(i+1)+'</strong><button data-note-anchor="b'+i+'">Show passage</button></article>').join('');
+ const f=fixture('<article class="document"><h1>Story</h1><div id="manuscript"><p>Exact words.</p></div></article><aside id="margin"><div class="originalNotes">'+notes+'</div></aside>',{stage:5});
+ try{const section=f.w.document.querySelector('.draft-surface-retained-notes');assert.equal(section.tagName,'SECTION');assert.equal(section.querySelector('h3').textContent,'Recorded editorial notes · 8');assert.equal(section.querySelectorAll('.originalNote').length,8);assert.equal(section.querySelectorAll('details,summary').length,0);assert.equal(section.querySelectorAll('[data-note-anchor]').length,8);assert.equal(f.root.innerHTML,f.before);f.w.render();assert.equal(f.w.document.querySelector('.draft-surface-retained-notes'),section);}finally{f.w.close();}
+});
