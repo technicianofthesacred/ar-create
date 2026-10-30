@@ -1,3 +1,7 @@
+## 30 October — Arrange control labels candidate
+
+S09, C01/C03/C04/C05. Replace the Article arrangement explanation with Move · Focus · Shape · Replace from library, plus separate not-connected tags for Covers, Openers, Closing photos and Composed layouts. Retain the existing conditional Focus availability tag. Existing controls, guards and editing owners are unchanged. Finish: affected Arrange checks, native1440/390, package and exact installed/preservation proof. Human decisions remain pending; no Share sending, provider execution or approval.
+
 ## 30 October — final small Combined review candidate
 
 C01/C03/C04/C05/C06, S05/S09/S10/S11. Article Arrange credits and arrangement controls, plus Audience original-record metadata, remain visible in place. Share loses its repeated introduction; Voice/Recipe guidance uses one short line; the working HTML label separates Translation and Platform adaptation as not connected. Existing editors, exact ownership, recovery and saved Undo remain unchanged. Finish criterion: focused affected checks, synthetic preserved credit controls, native Hong Kong Arrange/Audience/Share/Voice at1440/390, package check and one exact signed installation with preservation proof. Human decisions stay pending; no Share sending, provider execution or word approval.
