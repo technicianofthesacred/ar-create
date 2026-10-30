@@ -56,3 +56,27 @@
 .research-standard-point-static>.research-standard-controls{order:4}
 /* Keep donor control text from inheriting the shell's compact record summaries. */
 .flow-paper .research-standard summary{font:inherit}
+
+/* Combined Research: one readable findings flow, with the existing console at its foot. */
+html body.wbf-on #app #workspace.wb-research .rsplit{display:flex!important;flex-direction:column!important;height:auto!important;min-height:0!important;overflow:visible!important}
+html body.wbf-on #app #workspace.wb-research .rpts{width:100%!important;max-height:none!important;overflow:visible!important;border-right:0!important;min-width:0}
+html body.wbf-on #app #workspace.wb-research .rsplit>.cons{width:100%;min-height:300px;max-height:540px;border-top:1px solid var(--line)}
+html body.wbf-on #app #workspace.wb-research .wb-point>.rp{display:flex;align-items:baseline;cursor:default;gap:8px;background:none;box-shadow:none}
+html body.wbf-on #app #workspace.wb-research .wb-point>.rp>.cl{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-weight:600}
+html body.wbf-on #app #workspace.wb-research .wb-point>.rp>.wb-level-unrecorded{display:none}
+html body.wbf-on #app #workspace.wb-research .wb-point>.rpd{display:block!important}
+.research-standard-controls>section{flex:1 1 100%;min-width:0;max-width:100%}
+.research-standard-controls section>h3,.research-standard-coverage>h3{font:600 13px/1.5 var(--ar-ui,system-ui,sans-serif);margin:10px 0 6px;color:var(--dim)}
+.research-standard-provenance{font-size:12px!important}
+html body.wbf-on #app #workspace.wb-research :is(.wb-point-more,.wb-research-tools,.wb-research-shared)>h3{font:600 13px/1.5 var(--ar-ui,system-ui,sans-serif);margin:12px 0 6px}
+html body.wbf-on #app #workspace.wb-research .phaseReader{height:auto!important;min-height:0!important;display:block!important}
+html body.wbf-on #app #workspace.wb-research .flow-paper{display:block!important;flex:none!important}
+html body.wbf-on #app #workspace.wb-research .research-standard{display:block!important;flex:none!important}
+html body.wbf-on #app #workspace.wb-research .cons .clog{max-height:320px;overflow:auto}
+.research-evidence-status{font:600 12px/1.5 var(--ar-ui,system-ui,sans-serif)!important;color:var(--warnc,var(--dim))}
+.research-evidence-status[data-research-evidence-status=supported]{color:var(--good,var(--ink))}
+
+/* Plain retained-record sections use the existing focused reader rather than details[open]. */
+html body.wbf-on #app #workspace.wb-research.wb-research-reading>.phaseReader.flow-stage>.flow-retained{display:block!important}
+html body.wbf-on #app #workspace.wb-research.wb-research-reading .flow-retained .recordDetails{display:block!important;position:static!important;inset:auto!important;width:auto!important;height:auto!important;overflow:visible!important;margin:0 0 16px}
+html body.wbf-on #app #workspace.wb-research .flow-retained section.recordDetails>h3{font:600 12px/1.5 var(--ar-ui,system-ui,sans-serif);margin:0 0 6px}

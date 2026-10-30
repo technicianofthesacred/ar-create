@@ -15,13 +15,14 @@ const text=(v,max=100000)=>typeof v==='string'&&v.length<=max&&!v.includes('\0')
 function fields(value,allowed){if(!plain(value)||Object.keys(value).some(k=>!allowed.includes(k)))fail('Unsupported fields; caller paths and output snapshots are refused.',400);}
 
 /** Local human preparation only. Inject existing trusted output/files owners at composition time. */
-export function createSharePreparation({dataDir,outputs,files,outputPrivatePrefix}={}){
- if(!outputs?.read||!files?.atomicWrite||!files?.resolveInside||!files?.ensurePrivateDirectory||!files?.digest||typeof outputPrivatePrefix!=='function')throw Error('Existing trusted native output and private filesystem owners are required.');
+export function createSharePreparation({dataDir,outputs,magazine,files,outputPrivatePrefix}={}){
+ if(!outputs?.read&&!magazine?.read||!files?.atomicWrite||!files?.resolveInside||!files?.ensurePrivateDirectory||!files?.digest||typeof outputPrivatePrefix!=='function')throw Error('Existing trusted native output and private filesystem owners are required.');
  const {digest,regular,atomicWrite,ensurePrivateDirectory,resolveInside}=files;
  const hash=v=>digest(typeof v==='string'?v:JSON.stringify(v));
  function validate(input,action){
-  fields(input,['rootBindingId','parentStudyId','selectedOutputId','recipientId','targetEdition',...(action?['expected','expectedEdition','operationId',...action==='save'?['changes']:action==='fact'?['fact']:['undoOperationId']]:[])]);
-  if(!UUID.test(input.rootBindingId||'')||!text(input.parentStudyId,256)||!input.parentStudyId||!UUID.test(input.selectedOutputId||'')||!(UUID.test(input.recipientId||'')||input.recipientId==='none'))fail('Exact native root, parent, output and recipient identities required.',400);
+  fields(input,[...(input?.ownerKind==='magazine'?['ownerKind','storyId','pieceId','expectedWorkingHash']:['rootBindingId']),'parentStudyId','selectedOutputId','recipientId','targetEdition',...(action?['expected','expectedEdition','operationId',...action==='save'?['changes']:action==='fact'?['fact']:['undoOperationId']]:[])]);
+  const magazineOwner=input.ownerKind==='magazine',id=v=>typeof v==='string'&&/^[A-Za-z0-9:_-]{1,256}$/.test(v);
+  if(!text(input.parentStudyId,256)||!input.parentStudyId||!(UUID.test(input.recipientId||'')||input.recipientId==='none')||(magazineOwner?!id(input.storyId)||!id(input.pieceId)||!HASH.test(input.expectedWorkingHash||'')||input.selectedOutputId!=='magazine-working:'+input.storyId+':'+input.pieceId:!UUID.test(input.rootBindingId||'')||!UUID.test(input.selectedOutputId||'')))fail('Exact registered piece, parent, revision and recipient identities required.',400);
   if(input.targetEdition!==undefined&&!HASH.test(input.targetEdition))fail('Exact retained edition hash required.',400);
   if(action&&(!UUID.test(input.operationId||'')||!HASH.test(input.expectedEdition||'')||!plain(input.expected)||!Number.isSafeInteger(input.expected.revision)||input.expected.revision<0||!HASH.test(input.expected.hash||'')))fail('Operation UUID and expected record revision/hash and edition required.',400);
  }
@@ -36,6 +37,16 @@ export function createSharePreparation({dataDir,outputs,files,outputPrivatePrefi
  }
  async function authority(input){
   ownedChain(dataDir);
+  if(input.ownerKind==='magazine'){
+   if(!magazine?.read)fail('Magazine Share preparation is not connected.',503);
+   const view=await magazine.read({storyId:input.storyId,pieceId:input.pieceId,parentStudyId:input.parentStudyId,expectedWorkingHash:input.expectedWorkingHash});
+   const owner=view?.authority,root=view?.rootIdentity;
+   if(owner?.kind!=='magazine'||owner.storyId!==input.storyId||owner.pieceId!==input.pieceId||view.parentStudyId!==input.parentStudyId||view.document?.hash!==input.expectedWorkingHash||root?.scheme!=='canonical-directory-sha256-v1'||!HASH.test(root.fingerprint||''))fail('Exact registered Magazine Share ownership is unavailable.');
+   const projectId='magazine:'+root.fingerprint+':'+input.parentStudyId,documentId='magazine:'+owner.storyId+':'+owner.pieceId;
+   const identity={ownerKind:'magazine',parentStudyId:input.parentStudyId,storyId:owner.storyId,pieceId:owner.pieceId,rootFingerprint:root.fingerprint,projectId,documentId,outputId:input.selectedOutputId,recipientId:input.recipientId};
+   const currentEdition=hash({owner:{kind:owner.kind,storyId:owner.storyId,pieceId:owner.pieceId,path:owner.path,rootFingerprint:root.fingerprint},workingHash:view.document.hash});
+   return {identity,currentEdition,freshness:{stale:false},relative:outputPrivatePrefix(projectId,documentId)+'share/'+hash(input.selectedOutputId)};
+  }
   const scope={rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId};
   const view=await outputs.read({...scope,selectedOutputId:input.selectedOutputId});
   if(!same(view.scope,scope)||view.output?.id!==input.selectedOutputId||!view.photoScope?.projectId||!view.photoScope?.documentId||!view.wordOwner||!view.writingProof||!view.freshness||!view.outputBindings?.some(b=>b.outputId===input.selectedOutputId&&same(b.wordOwner,view.wordOwner)))fail('Exact maintained output ownership is unavailable.');
@@ -147,7 +158,7 @@ export function createSharePreparation({dataDir,outputs,files,outputPrivatePrefi
   }finally{releaseOwnedLock();}
  }
  async function list(input){
-  fields(input,['rootBindingId','parentStudyId','selectedOutputId']);
+  fields(input,[...(input?.ownerKind==='magazine'?['ownerKind','storyId','pieceId','expectedWorkingHash']:['rootBindingId']),'parentStudyId','selectedOutputId']);
   const selector={...input,recipientId:'none'};validate(selector);const a=await authority(selector),file=location(a);
   if(!file)return {currentEdition:a.currentEdition,records:[]};
   const names=fs.readdirSync(path.dirname(file)).filter(name=>/^[a-f0-9]{64}\.json$/.test(name));

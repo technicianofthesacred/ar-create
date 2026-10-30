@@ -16,7 +16,7 @@ for(const native of [false,true])test((native?'native findings':'actual-review r
  w.c3Shell.register=(name,fn,options)=>register(name,()=>{if(++passes<=40)fn();},options);
  w.eval(source('canvas-c3.js'));w.eval(source('workbench-surfaces.js'));
  await new Promise(resolve=>w.setTimeout(resolve,20));
- assert.ok(passes<20,'the combined mounts must settle, not reach the loop bound');assert.equal(d.querySelectorAll('.c3-scope').length,1);
+ assert.ok(passes<20,'the combined mounts must settle, not reach the loop bound');if(native){assert.equal(d.querySelectorAll('.research-standard details,.research-standard summary').length,0);assert.equal(d.querySelector('.wb-point').tagName,'SECTION');assert.match(d.querySelector('.wb-point .rpd').textContent,/Exact retained evidence/);}assert.equal(d.querySelectorAll('.c3-scope').length,1);
  const scope=d.querySelector('.c3-scope'),parent=scope.parentElement;
  assert.ok(parent.matches('.rh'),'the scope retains its adopted Workbench heading');assert.equal(reader.contains(scope),native,'retained-reader fallback is outside the original reader');
  assert.strictEqual(d.querySelector('.phaseReader'),reader);assert.strictEqual(reader.firstElementChild===record?record:reader.querySelector(native?'.flow-paper':'.recordPage'),record);assert.match(record.textContent,/Exact retained evidence|Research originals/);

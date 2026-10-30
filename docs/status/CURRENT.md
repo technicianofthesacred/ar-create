@@ -1,3 +1,9 @@
+## 30 October — final Combined rail review candidate
+
+C01–C06, S01/S02/S03/S05/S07/S09/S11/S12. Check and Arrange resolve the exact selected Article from rail screens, retaining independent Carousel owners. Research findings, source tools, receipts, feedback and Check controls are visible sections; ordinary menus remain menus. Outputs separates verified earlier editions, Audience loses introductory interface prose, and Home keeps a short self-refreshing optional empty state. Share prepares a private invitation for the existing Article under the existing owner; Library exposes the recording service’s Material intake states and human-only failed Retry. No new manuscript authority, provider, publication, sending or human wording approval is introduced.
+
+Finish criterion: affected tests and package/build, native Audience→Arrange and rail Check, 1440/390 screen verification, author Share/Voice/Recipe plus controlled synthetic Transcribing/Failed Retry/Ready, then one exact signed installation and original/configuration preservation proof. Actual angle/title, ten passages, Carousel words and photos stay pending. Candidate is not installation proof.
+
 ## 30 October — Direction per-piece grid candidate
 
 C01/C03–C06, S04/S05/S09. The Combined Direction grid uses actual current Article/Carousel references and the exact saved subject choice owner. Angle/title rows show shared contextual choices, or Not chosen; foreign/unavailable context is Not connected. Independently edited words retain their owners. Piece overrides remain explicitly not connected. Choice changes refresh only this read-only projection, retaining author editor state and exact piece entrances. 35 affected checks pass; native Hong Kong grid shows two actual pieces and unchosen angle/title without adopting anything. Finish with exact signed installation and original/configuration preservation proof.

@@ -260,7 +260,6 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyOutputs=studyOutputFactory?.owner;
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts,outputs:studyOutputs}):null;
   const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
-  const studyShare=studyOutputs?createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix}):null;
   const studyOutputExports=studyOutputFactory?createNativeOutputExports({dataDir,store,outputs:studyOutputs,resolveScope:studyOutputFactory.scope.resolve,library,exports,carousel}):null;
   libraryWorkReferences=createLibraryWorkReferences({store,outputs:studyOutputs||{read(){throw new StateError('Native output authority is unavailable.',503);}},mediaUsage:studyMediaUsage});
   projectMembership=studyDrafts&&studyOwnedPhotoBindings&&studyOutputs?createProjectMembership({store,bindings:studyBindings,drafts:studyDrafts,ownedPhotos:studyOwnedPhotoBindings,outputs:studyOutputs,library,workReferences:libraryWorkReferences}):null;
@@ -298,6 +297,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const publicationPhotos=magazineConfig.magSendRepo?{catalog:input=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(input),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
   const magazineLibraryPhotos=createMagazineLibraryPhotos({library,originals:originalPhotos,publication:publicationPhotos});
   const magazineWorking=createWorkingDraftBridge({magazine:magazineVault,journal,photoLibrary:magazineLibraryPhotos});
+  const shareSubjectGuard=createSourcedSubjectGuard({originals:studyOriginals,working:magazineWorking});
+  const studyShare=createSharePreparation({dataDir,outputs:studyOutputs,files:studyPhotoFiles,outputPrivatePrefix,magazine:{read:async input=>{const value=await magazineWorking.read({storyId:input.storyId,pieceId:input.pieceId,edition:'working'});if(value.document.hash!==input.expectedWorkingHash)throw new StateError('The working Article changed before Share preparation.',409);shareSubjectGuard({parentStudyId:input.parentStudyId,authority:value.authority,draftHash:value.document.hash});return {...value,parentStudyId:input.parentStudyId,rootIdentity:magazineWorking.catalog().rootIdentity};}}});
   const sourcedParagraphs=createSourcedParagraphs({magazine:magazineVault,working:magazineWorking,humanDirection:studyHumanDirection,execution,dataDir,validateSubject:createSourcedSubjectGuard({originals:studyOriginals,working:magazineWorking})});
   const magazineOutputExports=createMagazineOutputExports({working:magazineWorking,exports});
   const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;

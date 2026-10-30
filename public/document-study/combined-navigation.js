@@ -30,6 +30,8 @@
     if(home())await window.projectLibrary.close();
     if(home())throw Error('Save or resolve the current changes before leaving.');
     const owner=original(item[2]);if(!owner||owner.disabled)throw Error(item[1]+' is not available for this piece.');
+    if(key==='check'){if(typeof window.c3WorkbenchFrame?.openTool==='function')await window.c3WorkbenchFrame.openTool('check');else if(typeof window.workspaceNavigation?.changeMode==='function')await window.workspaceNavigation.changeMode('check');else throw Error('The selected piece checking connection is unavailable.');return true;}
+    if(key==='arrange'){if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected piece arrangement connection is unavailable.');await window.workspaceNavigation.changeMode('arrange');return true;}
     // Forward through the actual button: selection-aware Carousel admission,
     // dirty writing and all stage-specific guards remain in one owner.
     owner.click();

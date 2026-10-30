@@ -74,7 +74,7 @@
  }
  function selectResearchPoint(details){
   if(!details)return;const points=details.closest('.rpts');for(const other of points?.querySelectorAll('details.wb-point')||[])if(other!==details)other.open=false;details.open=true;
-  const summary=details.querySelector(':scope>summary');if(summary&&points){const rect=summary.getBoundingClientRect(),top=rect.top-points.getBoundingClientRect().top;if(top<0)points.scrollTop+=top;else if(top+rect.height>points.clientHeight)points.scrollTop+=top+rect.height-points.clientHeight;summary.focus?.({preventScroll:true});}
+  const summary=details.querySelector(':scope>summary,:scope>.rp');if(details.tagName!=='DETAILS'){details.scrollIntoView?.({block:'start'});return;}if(summary&&points){const rect=summary.getBoundingClientRect(),top=rect.top-points.getBoundingClientRect().top;if(top<0)points.scrollTop+=top;else if(top+rect.height>points.clientHeight)points.scrollTop+=top+rect.height-points.clientHeight;summary.focus?.({preventScroll:true});}
  }
  function closeResearchReader(ws,opener){
   const prior=researchReaders.get(ws);if(prior?.retained.isConnected)prior.retained.open=prior.open;researchReaders.delete(ws);
@@ -91,12 +91,14 @@
   if(record.tagName==='DETAILS')record.open=true;reveal(record,'start');
  }
  function researchRecords(ws){return [...ws.querySelectorAll('.research-standard-coverage>details:not([data-research-source-point]),.flow-retained .compactRecord,[data-disclosure="retained-research"],[data-disclosure="retained-brief"],[data-disclosure="report"],[data-disclosure="brief"],[data-disclosure^="research-role:"]')].filter(n=>!n.closest('[data-research-point]'));}
+ const currentResearchRecords=ws=>[...new Set([...researchRecords(ws),...ws.querySelectorAll('.research-standard-coverage>section:not([data-research-source-point])')])];
+ const researchRecordLabel=n=>{const title=[...n.children].find(child=>child.matches('summary,h3'))||n.querySelector('.recordBody h1,.recordBody h2');const label=title?.textContent.trim()||'Retained research record';return window.arCreateDisplay?.recordTitle?.(label)||label;};
  function research(ws,p){
   if(ws.classList.contains('wb-research-reading')&&(ws.dataset.wbResearchReaderProject!==p.id||!ws.querySelector('.flow-retained [data-wb-research-selected]')))closeResearchReader(ws);
   const full=ws.querySelector('.research-standard'),shared=ws.querySelector('#material-human-direction');
   // The maintained notes decorator owns this mount as a direct lane child.
   // Disclose its original editor in place rather than moving the mount.
-  if(shared){const lane=ws.querySelector('#stage-working-lane')||shared.closest('.flow-paper')||ws;if(shared.parentElement!==lane)lane.prepend(shared);let context=shared.querySelector('.wb-research-shared');if(!context){context=make('details','wb-research-shared');context.append(make('summary','','Shared project notes'));for(const child of [...shared.childNodes])context.append(child);shared.append(context);}}
+  if(shared){const lane=ws.querySelector('#stage-working-lane')||shared.closest('.flow-paper')||ws;if(shared.parentElement!==lane)lane.prepend(shared);let context=shared.querySelector('.wb-research-shared');if(!context){context=make('section','wb-research-shared');context.append(make('h3','','Shared project notes'));for(const child of [...shared.childNodes])context.append(child);shared.append(context);}}
   // Shared intent is context, never the findings surface or a second Direction editor.
   let host=full||ws.querySelector('.wb-research-empty');
   if(full){const previous=ws.querySelector('.wb-research-empty');if(previous){const tools=previous.querySelector('.wb-research-tools');if(tools)full.append(tools);const notes=previous.querySelector('.wb-research-shared');if(notes&&shared)shared.append(notes);previous.remove();}}
@@ -104,58 +106,59 @@
   let split=host.querySelector(':scope>.rsplit');
   if(!split){split=make('div','rsplit wb-research-split');const points=make('div','rpts');points.setAttribute('aria-label','Connected research points');split.append(points);const before=host.querySelector(':scope>[data-research-point]');if(before)before.before(split);else host.append(split);split.append(consolePanel(p));}
   const points=split.querySelector('.rpts');const retainedTools=host.querySelector(':scope>.wb-research-tools');if(retainedTools)points.append(retainedTools);
-  const records=researchRecords(ws),hasPoints=!!host.querySelector('[data-research-point]');
+  const records=currentResearchRecords(ws),hasPoints=!!host.querySelector('[data-research-point]');
   if(!hasPoints&&!records.length&&!points.querySelector('.wb-research-no-points')){const empty=make('p','dim wb-research-no-points','No connected research points yet. Saved findings and their source evidence appear here. Use /search in the console to explore the Library.');points.append(empty);}
   if(hasPoints||records.length)points.querySelector('.wb-research-no-points')?.remove();
   for(const point of [...host.querySelectorAll(':scope>[data-research-point]')])points.append(point);
   for(const point of points.querySelectorAll(':scope>[data-research-point]')){
    if(point.querySelector(':scope>.wb-point'))continue;
    const heading=point.querySelector(':scope>h2');if(!heading)continue;
-   const details=make('details','wb-point'),summary=make('summary','rp'),body=make('div','rpd pdet'),number=make('span','n',String([...points.querySelectorAll(':scope>[data-research-point]')].indexOf(point)+1));heading.classList.add('cl');const level=make('span','lv wb-level-unrecorded');level.title='Read the recorded evidence and uncertainty below';level.setAttribute('aria-hidden','true');summary.append(number,level,heading);details.append(summary,body);
+   const details=make('section','wb-point'),summary=make('div','rp'),body=make('div','rpd pdet'),number=make('span','n',String([...points.querySelectorAll(':scope>[data-research-point]')].indexOf(point)+1));heading.classList.add('cl');const level=make('span','lv wb-level-unrecorded');level.title='Read the recorded evidence and uncertainty below';level.setAttribute('aria-hidden','true');summary.append(number,level,heading);details.append(summary,body);
    for(const n of [...point.childNodes])if(n!==heading)body.append(n);
-   point.append(details);details.setAttribute('name','wb-research-points');summary.addEventListener('click',event=>{if(!details.open){event.preventDefault();selectResearchPoint(details);}});if(!points.querySelector('details.wb-point[open]'))details.open=true;
+   point.append(details);details.setAttribute('name','wb-research-points');if(!points.querySelector('details.wb-point[open]'))details.open=true;
    const action=make('button','btn primary wb-discuss-console','Discuss in console');action.type='button';action.onclick=()=>{const command=split.querySelector('.cin input');if(command){command.value='/point '+([...points.querySelectorAll(':scope>[data-research-point]')].indexOf(point)+1);command.focus();}};const acts=make('div','acts');acts.append(action);body.append(acts);
   }
-  let rh=points.querySelector(':scope>.rh');if(!rh){rh=make('div','rh');points.prepend(rh);}let counter=rh.querySelector(':scope>.wb-research-count');if(!counter){counter=make('span','wb-research-count');rh.prepend(counter);}const scope=ws.querySelector('.c3-scope');if(scope&&scope.parentElement!==rh)rh.append(scope);const count=points.querySelectorAll(':scope>[data-research-point]').length,label=count+' point'+(count===1?'':'s')+(records.length?' · '+records.length+' record'+(records.length===1?'':'s'):'');if(counter.textContent!==label)counter.textContent=label;const ownerHeading=host.querySelector(':scope>.research-standard-heading');if(ownerHeading){if(!points.querySelector('.wb-research-tools')){const details=make('details','wb-research-tools');details.append(make('summary','','Sources & research tools'));points.append(details);}points.querySelector('.wb-research-tools').append(ownerHeading);}const brief=host.querySelector(':scope>.research-work-brief');if(brief&&brief.nextElementSibling===split)split.after(brief);
+  let rh=points.querySelector(':scope>.rh');if(!rh){rh=make('div','rh');points.prepend(rh);}let counter=rh.querySelector(':scope>.wb-research-count');if(!counter){counter=make('span','wb-research-count');rh.prepend(counter);}const scope=ws.querySelector('.c3-scope');if(scope&&scope.parentElement!==rh)rh.append(scope);const count=points.querySelectorAll(':scope>[data-research-point]').length,label=count+' point'+(count===1?'':'s')+(records.length?' · '+records.length+' record'+(records.length===1?'':'s'):'');if(counter.textContent!==label)counter.textContent=label;const ownerHeading=host.querySelector(':scope>.research-standard-heading');if(ownerHeading){if(!points.querySelector('.wb-research-tools')){const details=make('section','wb-research-tools');details.append(make('h3','','Sources & research tools'));points.append(details);}points.querySelector('.wb-research-tools').append(ownerHeading);}const brief=host.querySelector(':scope>.research-work-brief');if(brief&&brief.nextElementSibling===split)split.after(brief);
   // These entrances open the maintained record node, including its source/status disclosure.
   let access=points.querySelector('.wb-research-records');
-  const recordLabel=n=>{const label=n.querySelector(':scope>summary,.recordBody h1,.recordBody h2')?.textContent.trim()||'Retained research record';return window.arCreateDisplay?.recordTitle?.(label)||label;};
+  const recordLabel=researchRecordLabel;
   const signature=records.map(recordLabel).join('\n');
   if(!records.length)access?.remove();else if(!access||access.dataset.records!==signature||access._wbRecords?.some((n,i)=>n!==records[i])||access._wbRecords?.length!==records.length){
    if(!access){access=make('div','acts wb-research-records');rh.append(access);}access.replaceChildren();access.dataset.records=signature;access._wbRecords=records;
    records.forEach((record,i)=>{const button=make('button','btn quiet',recordLabel(record));button.type='button';button.dataset.wbResearchRecord=String(i);button.onclick=()=>openResearchRecord(ws,p,record,button);access.append(button);});
   }
+  if(access){access.dataset.researchProject=p.id;for(const button of access.querySelectorAll('[data-wb-research-record]')){const record=records[Number(button.dataset.wbResearchRecord)];if(record)button.onclick=()=>openResearchRecord(ws,p,record,button);}}
   // Findings lead the working surface. Record entrances remain direct when
   // there are no parsed points; otherwise keep the same buttons/handlers in
   // the existing source disclosure rather than duplicating the rail at top.
-  if(access&&hasPoints){let tools=points.querySelector(':scope>.wb-research-tools');if(!tools){tools=make('details','wb-research-tools');tools.append(make('summary','','Sources & research tools'));points.append(tools);}if(access.parentElement!==tools)tools.append(access);}else if(access&&access.parentElement!==rh)rh.append(access);
+  if(access&&hasPoints){let tools=points.querySelector(':scope>.wb-research-tools');if(!tools){tools=make('section','wb-research-tools');tools.append(make('h3','','Sources & research tools'));points.append(tools);}if(access.parentElement!==tools)tools.append(access);}else if(access&&access.parentElement!==rh)rh.append(access);
   // Original preparation/source/file controls stay available inside the work area,
   // rather than creating a second scrolling page beneath the full-height console.
   const coverage=[...host.querySelectorAll(':scope>.research-standard-coverage,:scope>.research-work-brief')];
-  if(coverage.length){let tools=points.querySelector(':scope>.wb-research-tools');if(!tools){tools=make('details','wb-research-tools');tools.append(make('summary','','Sources & research tools'));points.append(tools);}for(const node of coverage)tools.append(node);}
+  if(coverage.length){let tools=points.querySelector(':scope>.wb-research-tools');if(!tools){tools=make('section','wb-research-tools');tools.append(make('h3','','Sources & research tools'));points.append(tools);}for(const node of coverage)tools.append(node);}
   const paper=host.closest('.flow-paper');
   const extra=paper?[...paper.children].filter(n=>n!==host&&n!==shared&&!n.contains(host)&&!n.matches('.c3-ctitle,.c3-scope')):[];
 
   let more=points.querySelector(':scope>.wb-research-tools');
-  if(extra.length){if(!more){more=make('details','wb-research-tools');more.append(make('summary','','Sources & research tools'));points.append(more);}for(const child of extra)if(child!==more&&!more.contains(child))more.append(child);}
+  if(extra.length){if(!more){more=make('section','wb-research-tools');more.append(make('h3','','Sources & research tools'));points.append(more);}for(const child of extra)if(child!==more&&!more.contains(child))more.append(child);}
   // Retain the original file readers in the existing tools disclosure. Their
   // banner must not push the findings offscreen. The phase owner retains its history.
   const history=[ws.querySelector(':scope>.ew-context')].filter(Boolean);
-  if(history.length){if(!more){more=make('details','wb-research-tools');more.append(make('summary','','Sources & research tools'));points.append(more);}for(const record of history)more.append(record);}
+  if(history.length){if(!more){more=make('section','wb-research-tools');more.append(make('h3','','Sources & research tools'));points.append(more);}for(const record of history)more.append(record);}
   const originalHeading=points.querySelector('.research-standard-heading');if(originalHeading&&more&&originalHeading.parentElement!==more)more.prepend(originalHeading);
   // Keep the source quote and recorded findings readable; the original planning,
   // provenance and additional preparation controls retain their own nodes below.
-  for(const body of points.querySelectorAll('.wb-point>.rpd')){
-   const secondary=[...body.children].filter(n=>n.matches('.research-standard-controls,.research-standard-shift'));
-   if(secondary.length){let details=body.querySelector(':scope>.wb-point-more');if(!details){details=make('details','wb-point-more');details.append(make('summary','','Findings & preparation'));const discussion=body.querySelector(':scope>.acts:last-child');if(discussion)discussion.before(details);else body.append(details);}for(const n of secondary)details.append(n);}
-  }
   add(points,'.research-standard-said blockquote,.research-standard-point [data-research-quote]','quote');
   add(points,'.research-standard-controls','acts');add(points,'.research-standard-said','ev wb-evidence');add(points,'.research-standard-location','src');
 
   const notes=points.querySelector(':scope>.wb-research-shared');if(notes&&points.lastElementChild!==notes)points.append(notes);
 
   if(ws.querySelector('.c3-empty'))window.c3Empty?.reveal?.();
+  for(const old of [...new Set([...host.querySelectorAll('details'),...(shared?.querySelectorAll('details')||[]),...ws.querySelectorAll('.flow-retained details.recordDetails')])]){const section=document.createElement('section');for(const attr of old.attributes)if(!['open','name'].includes(attr.name))section.setAttribute(attr.name,attr.value);const title=old.querySelector(':scope>summary');if(title){const heading=make('h3',title.className);while(title.firstChild)heading.append(title.firstChild);title.replaceWith(heading);}while(old.firstChild)section.append(old.firstChild);old.replaceWith(section);for(const access of host.querySelectorAll('.wb-research-records')){const index=access._wbRecords?.indexOf(old)??-1;if(index>=0){access._wbRecords[index]=section;const button=access.querySelector('[data-wb-research-record="'+index+'"]');if(button)button.onclick=()=>openResearchRecord(ws,p,section,button);}}}
+
  }
+ // A later presentation pass may clone a record entrance. Resolve its existing physical owner at click time.
+ doc.addEventListener('click',event=>{const button=event.target.closest?.('[data-wb-research-record]');if(!button)return;const ws=button.closest('#workspace'),access=button.closest('.wb-research-records');if(!ws||!access||!ws.contains(access))return;event.preventDefault();event.stopImmediatePropagation();const p=typeof current==='function'?current():null;if(p?.id!==access.dataset.researchProject||p.view!=='record'||Number(p.viewedStage)!==3||!button.isConnected)return;const records=currentResearchRecords(ws),index=Number(button.dataset.wbResearchRecord);if(!Number.isSafeInteger(index)||index<0||!records[index]||records.map(researchRecordLabel).join('\n')!==access.dataset.records)return;openResearchRecord(ws,p,records[index],button);},true);
  function consolePanel(p){
   const panel=make('section','cons wb-console');panel.setAttribute('aria-label','Research console');
   const head=make('div','ch'),title=make('b','', 'Research console');head.append(title,make('span','','· '+(p.name||'This project')),make('span','tag',window.workbenchLibraryResearch?'Library recall · literal search':'Project recall · literal search'));
@@ -239,7 +242,7 @@
   const readiness=root.querySelector('[data-oss-readiness]');
   const purpose=root.querySelector(':scope>.wb-audience-purpose');
   if(root.dataset.outputKind==='magazine-working')purpose?.remove();
-  if(readiness&&root.dataset.outputKind!=='magazine-working'&&!root.querySelector(':scope>.wb-audience-purpose')){const note=make('p','aud-note wb-audience-purpose'),lead=make('b','','Audience is for looking, not editing.');note.append(lead,doc.createTextNode(' This is how a reader meets the piece. Arrange is where you compose it; Outputs is where files leave.'));readiness.before(note);}
+  purpose?.remove();
   add(ws,'[data-oss-reader]','wb-audience-edition');
   add(ws,'[data-oss-reader] .ar-donor-workspace:has(>.oss-sequence)','phone');add(ws,'[data-oss-reader] .oss-sequence','swipe');add(ws,'[data-oss-reader] .oss-reader','cap2');add(ws,'[data-oss-reader] .ar-output-reader','page');
  }
@@ -252,7 +255,7 @@
   let intro=root.querySelector(':scope>.wb-share-intro');if(!intro){intro=make('p','wb-share-intro dim','Share a readable note of one piece with one person — for a quote check or a read-through. Only you can see this preparation.');root.prepend(intro);}
   let link=root.querySelector(':scope>.wb-share-link');if(!link){link=make('p','wb-share-link');const button=make('button','btn primary','Create a read-only link');button.type='button';button.disabled=true;button.title='Read-only link creation is not connected. Saving or copying an invitation never sends it.';link.append(button);field.after(link);}
   let privacy=root.querySelector(':scope>.wb-share-privacy');if(!privacy){privacy=make('p','wb-share-privacy dim small','Who can see it: only you. Read-only links are not connected.');link.after(privacy);}
-  let recipients=root.querySelector(':scope>.wb-share-recipient');if(!recipients){recipients=make('details','oss-disclosure wb-correspondence wb-share-recipient');recipients.append(make('summary','','Recipient & piece'));const body=make('div','oss-disclosed');recipients.append(body);for(const node of [...root.children])if(node.matches('.oss-field-row,.oss-muted')||node.matches('.oss-tool-row')&&node.querySelector('[data-share-output]'))body.append(node);privacy.after(recipients);}
+  let recipients=root.querySelector(':scope>.wb-share-recipient');if(!recipients){recipients=make('section','oss-disclosure wb-correspondence wb-share-recipient');recipients.append(make('h3','','Recipient & piece'));const body=make('div','oss-disclosed');recipients.append(body);for(const node of [...root.children])if(node.matches('.oss-field-row,.oss-muted')||node.matches('.oss-tool-row')&&node.querySelector('[data-share-output]'))body.append(node);privacy.after(recipients);}
   const actions=[...root.querySelectorAll(':scope>.oss-tool-row')].find(n=>n.querySelector('[data-share-action="save"],[data-oss-action="copy"]'));if(actions){actions.classList.add('wb-share-actions');if(link.previousElementSibling!==actions)field.after(actions);const review=root.querySelector('.oss-heading [data-share-action="look"],.oss-heading [data-oss-action="look"]');if(review)actions.append(review);}
   add(root,'.oss-tool-row','tbar');add(root,'.oss-disclosure','wb-correspondence');
  }
