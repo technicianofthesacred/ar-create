@@ -40,3 +40,10 @@ html body.wbf-on #workspace.combined-direction .direction-own-page .human-direct
 html body.wbf-on #workspace.combined-direction .direction-planning-scope{font:400 12px/1.5 var(--ar-ui);border-top:1px solid var(--line);padding:12px 0;margin-top:16px}
 html body.wbf-on #workspace.combined-direction .direction-planning-scope>h3{font:600 13px/1.5 var(--ar-ui);margin:0 0 8px}
 html body.wbf-on #workspace.combined-direction .direction-planning-scope .source-continuation-header{display:block;margin:10px 0;padding:0}
+
+.direction-piece-grid table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;line-height:1.5}
+.direction-piece-grid caption{text-align:left;color:var(--dim);padding:0 0 10px}
+.direction-piece-grid th,.direction-piece-grid td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:9px 8px;overflow-wrap:anywhere}
+.direction-piece-grid th:first-child,.direction-piece-grid thead td{width:20%}
+.direction-piece-grid th button{padding:0;border:0;background:transparent;text-align:left;font:inherit;min-height:32px}
+@media(max-width:650px){.direction-piece-grid thead{display:none}.direction-piece-grid tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:1px solid var(--line)}.direction-piece-grid tbody th{grid-column:1/-1;width:auto!important;border:0;padding-bottom:0}.direction-piece-grid td{border:0}.direction-piece-grid td::before{content:attr(data-piece);display:block;color:var(--dim);font-size:11px}}

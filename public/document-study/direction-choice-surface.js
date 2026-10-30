@@ -16,12 +16,18 @@ export function createPreparedDirectionReader({catalog,refresh,request,hash,isCu
   const options=parsePreparedDirections(read.raw,source);if(!options.angles.length||!options.titles.length)throw Error('The prepared map has no supported angle and title list.');return options;
  };
 }
-export function createDirectionPieceGrid({document:doc,pieces=[],open}){
+export function createDirectionPieceGrid({document:doc,projectId,pieces=[],context=null,open}){
  const grid=doc.createElement('section');grid.className='direction-piece-grid';grid.setAttribute('aria-label','Direction and your pieces');
  const heading=doc.createElement('h3');heading.textContent='Which decisions go into each piece';grid.append(heading);
- const help=doc.createElement('p');help.textContent='Saved subject choices are available to each piece. Existing words and piece-specific decisions stay independent; application has not been checked here.';grid.append(help);
  if(!pieces.length){const empty=doc.createElement('p');empty.textContent='No current connected pieces are available in this subject.';grid.append(empty);return grid;}
- const list=doc.createElement('ul');for(const piece of pieces){const row=doc.createElement('li'),button=doc.createElement('button'),label=({'Manuscript':'Article','Product listing':'Listing'}[piece.format]||piece.format||'Piece');button.type='button';button.textContent=label+' · '+piece.title;button.addEventListener('click',()=>open(piece.reference,button));const state=doc.createElement('span');state.textContent='Shared direction · piece overrides not checked';row.append(button,state);list.append(row);}grid.append(list);return grid;
+ const table=doc.createElement('table'),caption=doc.createElement('caption');caption.textContent='Shared subject direction · piece wording stays independent';table.append(caption);
+ const head=table.createTHead().insertRow();head.append(doc.createElement('td'));
+ const labels=pieces.map(piece=>({'Manuscript':'Article','Product listing':'Listing'}[piece.format]||piece.format||'Piece'));
+ for(const [i,piece]of pieces.entries()){const cell=doc.createElement('th'),button=doc.createElement('button');cell.scope='col';button.type='button';button.textContent=labels[i]+' · '+piece.title;button.addEventListener('click',()=>open(piece.reference,button));cell.append(button);head.append(cell);}
+ const valid=context&&context.available!==false&&typeof projectId==='string'&&context.parentStudyId===projectId;
+ const rows=[['Angle',valid?(context.selectedAngle?.text||'Not chosen'):'Not connected'],['Title',valid?(context.selectedTitle?.text||'Not chosen'):'Not connected'],['Piece overrides','Not connected']];
+ const body=table.createTBody();for(const [label,value]of rows){const row=body.insertRow(),name=doc.createElement('th');name.scope='row';name.textContent=label;row.append(name);for(const piece of labels){const cell=row.insertCell();cell.dataset.piece=piece;cell.textContent=value;if(value==='Not connected'||value==='Not chosen')cell.className='direction-page-empty';}}
+ grid.append(table);return grid;
 }
 export function showDirectionRecords(workspace){
  for(const details of workspace.querySelectorAll('details.flow-retained,details.recordDetails')){
@@ -36,6 +42,8 @@ if(typeof window!=='undefined'){
  const currentId=()=>{try{return current().id;}catch{return null;}};
  const hash=async raw=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw)))].map(b=>b.toString(16).padStart(2,'0')).join('');
  const loadOptions=createPreparedDirectionReader({catalog:()=>window.existingWork?.catalog?.(),refresh:async()=>{if(!await window.existingWork?.load?.())throw Error('The prepared map could not refresh.');},request:(...args)=>fetch(...args),hash,isCurrent:id=>stage()===4&&currentId()===id});
+ async function refreshGrid(snapshot){const layout=snapshot.layout;
+const token=++snapshot.gridEpoch;try{const [result,context]=await Promise.all([window.workbenchPieces?.listForProject?.(snapshot.id),window.directionChoiceContext?.read?.(snapshot.id).catch(()=>null)]);if(mounted!==snapshot||token!==snapshot.gridEpoch||!layout.isConnected||currentId()!==snapshot.id||stage()!==4)return;layout.querySelector('.direction-piece-grid')?.remove();const pieces=result?.projectId===snapshot.id?result.pieces.filter(p=>p.projectId===snapshot.id&&p.editionRole==='current'&&p.reference):[];layout.append(createDirectionPieceGrid({document,projectId:snapshot.id,pieces,context,open:async(reference,button)=>{if(mounted!==snapshot||currentId()!==snapshot.id)return;if(window.studyHumanDirection?.isDirty?.({parentStudyId:snapshot.id})){button.textContent='Save or compare your direction first';return;}button.disabled=true;try{if(await window.workbenchPieces.openReference(reference,{mode:'read'})===false)throw Error('This piece could not open.');}catch(error){let message=layout.querySelector('[data-direction-piece-error]');if(!message){message=document.createElement('p');message.dataset.directionPieceError='';message.setAttribute('role','alert');layout.append(message);}message.textContent=error.message;}finally{button.disabled=false;}}}));}catch{if(mounted===snapshot&&token===snapshot.gridEpoch&&layout.isConnected&&stage()===4&&currentId()===snapshot.id){const error=document.createElement('p');error.textContent='Current pieces could not load. Use Board to open their existing records.';layout.append(error);}}}
  function decorate(){
   const workspace=document.getElementById('workspace'),lane=workspace?.querySelector('#stage-working-lane'),ui=window.inlineDirectionChoices;
   if(stage()!==4||!lane||!ui){if(mounted&&!mounted.host.isConnected){ui?.unmount();mounted=null;}return;}
@@ -51,12 +59,13 @@ if(typeof window!=='undefined'){
   if(!original){original=document.createElement('button');original.type='button';original.dataset.directionOriginalMap='';original.textContent='Original map and earlier decisions';original.onclick=()=>{const stories=window.existingWork?.catalog?.()?.stories?.filter(s=>s.nativeProjectId===currentId()),maps=stories?.length===1?stories[0].artifacts.filter(a=>a.kind==='MAP'&&!a.archived):[];if(maps.length===1)void window.existingWork.openArtifact(stories[0].id,maps[0].artifactId);};left.append(original);}
   if(!left.querySelector('[data-direction-source-context]')){const sources=document.createElement('button');sources.type='button';sources.dataset.directionSourceContext='';sources.textContent='Research and source context';sources.onclick=()=>viewPhase(3);left.append(sources);}
   if(mounted?.host===host&&mounted.id===currentId())return;
-  mounted={host,id:currentId()};const snapshot=mounted;
-  void (async()=>{try{const result=await window.workbenchPieces?.listForProject?.(snapshot.id);if(mounted!==snapshot||!layout.isConnected||currentId()!==snapshot.id||stage()!==4)return;layout.querySelector('.direction-piece-grid')?.remove();const pieces=result?.projectId===snapshot.id?result.pieces.filter(p=>p.projectId===snapshot.id&&p.editionRole==='current'&&p.reference):[];layout.append(createDirectionPieceGrid({document,pieces,open:async(reference,button)=>{if(mounted!==snapshot||currentId()!==snapshot.id)return;if(window.studyHumanDirection?.isDirty?.({parentStudyId:snapshot.id})){button.textContent='Save or compare your direction first';return;}button.disabled=true;try{if(await window.workbenchPieces.openReference(reference,{mode:'read'})===false)throw Error('This piece could not open.');}catch(error){let message=layout.querySelector('[data-direction-piece-error]');if(!message){message=document.createElement('p');message.dataset.directionPieceError='';message.setAttribute('role','alert');layout.append(message);}message.textContent=error.message;}finally{button.disabled=false;}}}));}catch{if(mounted===snapshot){const error=document.createElement('p');error.textContent='Current pieces could not load. Use Board to open their existing records.';layout.append(error);}}})();
+  mounted={host,id:currentId(),layout,gridEpoch:0};const snapshot=mounted;
+  void refreshGrid(snapshot);
   void ui.mount({container:host,parentStudyId:snapshot.id,loadOptions,canMutate:()=>window.arCreateUiActor?.actor==='human:adrian',isCurrent:()=>mounted===snapshot&&host.isConnected&&stage()===4&&currentId()===snapshot.id}).then(ready=>{if(mounted===snapshot&&host.isConnected)workspace.classList.toggle('combined-direction-ready',ready===true);});
  }
  window.directionChoiceSurface={decorate};
  window.addEventListener('study-inline-direction-ready',decorate);
+ for(const name of ['study-direction-choice-change','study-human-direction-change'])window.addEventListener(name,()=>{if(mounted&&stage()===4&&currentId()===mounted.id)void refreshGrid(mounted);});
  window.c3Shell?.register('inline Direction owner layout',decorate,{order:98,ignore:'.combined-direction-layout'});
  decorate();
 }

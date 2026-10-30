@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "693b2452c06505c22c46f2597d2999901b2437e8f7dabcf6091996c4af36afdd"
+      "candidateSha256": "f6debc9ad161732b03eacaa1001aa2a7dfdf31e4dde79d30094e2efbc595afcd"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4673,11 +4673,11 @@
     },
     {
       "path": "public/document-study/direction-choice-surface.css",
-      "candidateSha256": "5d06540c0b5488ccf2a6ebcaa7b2d2af4e976a71f713b73a3ccf7374f34228cd"
+      "candidateSha256": "18b84b6d1debc1b34b99ba82960f1cc7bf26dc26515a157d8611acdab3163562"
     },
     {
       "path": "public/document-study/direction-choice-surface.js",
-      "candidateSha256": "1792dff636ad440996078398bcb3301cfec37e9ac260e71fda63521a7e58e1f5"
+      "candidateSha256": "98a11317ce4735754642bfbb2d3b996615fd578d9cada41ecb2ae5e1b794a2d6"
     },
     {
       "path": "public/document-study/inline-direction-choices.css",
@@ -4705,7 +4705,7 @@
     },
     {
       "path": "tests/direction-choice-surface.test.mjs",
-      "candidateSha256": "c55e129be5a78b0a28bad009476db851f9dca0af054527cc4a4e6cf8d9d0f7d2"
+      "candidateSha256": "d6e198b46752de45f346a238c73ad631057faa943db4ac81ea6e54282a2136ff"
     },
     {
       "path": "tests/direction-choice.test.mjs",
