@@ -16,6 +16,20 @@ export function createPreparedDirectionReader({catalog,refresh,request,hash,isCu
   const options=parsePreparedDirections(read.raw,source);if(!options.angles.length||!options.titles.length)throw Error('The prepared map has no supported angle and title list.');return options;
  };
 }
+export function createDirectionPieceGrid({document:doc,pieces=[],open}){
+ const grid=doc.createElement('section');grid.className='direction-piece-grid';grid.setAttribute('aria-label','Direction and your pieces');
+ const heading=doc.createElement('h3');heading.textContent='Which decisions go into each piece';grid.append(heading);
+ const help=doc.createElement('p');help.textContent='Saved subject choices are available to each piece. Existing words and piece-specific decisions stay independent; application has not been checked here.';grid.append(help);
+ if(!pieces.length){const empty=doc.createElement('p');empty.textContent='No current connected pieces are available in this subject.';grid.append(empty);return grid;}
+ const list=doc.createElement('ul');for(const piece of pieces){const row=doc.createElement('li'),button=doc.createElement('button'),label=({'Manuscript':'Article','Product listing':'Listing'}[piece.format]||piece.format||'Piece');button.type='button';button.textContent=label+' · '+piece.title;button.addEventListener('click',()=>open(piece.reference,button));const state=doc.createElement('span');state.textContent='Shared direction · piece overrides not checked';row.append(button,state);list.append(row);}grid.append(list);return grid;
+}
+export function showDirectionRecords(workspace){
+ for(const details of workspace.querySelectorAll('details.flow-retained,details.recordDetails')){
+  const section=workspace.ownerDocument.createElement('section');for(const attr of details.attributes)if(attr.name!=='open')section.setAttribute(attr.name,attr.value);
+  for(const child of [...details.childNodes]){if(child.nodeType===1&&child.tagName==='SUMMARY'){const heading=workspace.ownerDocument.createElement(details.classList.contains('recordDetails')?'h4':'h3');heading.textContent=details.classList.contains('recordDetails')?'Original record':child.textContent;section.append(heading);}else section.append(child);}
+  details.replaceWith(section);
+ }
+}
 if(typeof window!=='undefined'){
  let mounted=null;
  const stage=()=>{try{return current().view==='record'&&Number(current().viewedStage);}catch{return 0;}};
@@ -25,6 +39,7 @@ if(typeof window!=='undefined'){
  function decorate(){
   const workspace=document.getElementById('workspace'),lane=workspace?.querySelector('#stage-working-lane'),ui=window.inlineDirectionChoices;
   if(stage()!==4||!lane||!ui){if(mounted&&!mounted.host.isConnected){ui?.unmount();mounted=null;}return;}
+  showDirectionRecords(workspace);
   const continuation=workspace.querySelector('#study-source-continuation');if(!continuation?.querySelector('.source-continuation'))return;
   workspace.classList.add('combined-direction');
   let layout=lane.querySelector(':scope>.combined-direction-layout');
@@ -37,6 +52,7 @@ if(typeof window!=='undefined'){
   if(!left.querySelector('[data-direction-source-context]')){const sources=document.createElement('button');sources.type='button';sources.dataset.directionSourceContext='';sources.textContent='Research and source context';sources.onclick=()=>viewPhase(3);left.append(sources);}
   if(mounted?.host===host&&mounted.id===currentId())return;
   mounted={host,id:currentId()};const snapshot=mounted;
+  void (async()=>{try{const result=await window.workbenchPieces?.listForProject?.(snapshot.id);if(mounted!==snapshot||!layout.isConnected||currentId()!==snapshot.id||stage()!==4)return;layout.querySelector('.direction-piece-grid')?.remove();const pieces=result?.projectId===snapshot.id?result.pieces.filter(p=>p.projectId===snapshot.id&&p.editionRole==='current'&&p.reference):[];layout.append(createDirectionPieceGrid({document,pieces,open:async(reference,button)=>{if(mounted!==snapshot||currentId()!==snapshot.id)return;if(window.studyHumanDirection?.isDirty?.({parentStudyId:snapshot.id})){button.textContent='Save or compare your direction first';return;}button.disabled=true;try{if(await window.workbenchPieces.openReference(reference,{mode:'read'})===false)throw Error('This piece could not open.');}catch(error){let message=layout.querySelector('[data-direction-piece-error]');if(!message){message=document.createElement('p');message.dataset.directionPieceError='';message.setAttribute('role','alert');layout.append(message);}message.textContent=error.message;}finally{button.disabled=false;}}}));}catch{if(mounted===snapshot){const error=document.createElement('p');error.textContent='Current pieces could not load. Use Board to open their existing records.';layout.append(error);}}})();
   void ui.mount({container:host,parentStudyId:snapshot.id,loadOptions,canMutate:()=>window.arCreateUiActor?.actor==='human:adrian',isCurrent:()=>mounted===snapshot&&host.isConnected&&stage()===4&&currentId()===snapshot.id}).then(ready=>{if(mounted===snapshot&&host.isConnected)workspace.classList.toggle('combined-direction-ready',ready===true);});
  }
  window.directionChoiceSurface={decorate};

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {createPreparedDirectionReader} from '../public/document-study/direction-choice-surface.js';
+import {createPreparedDirectionReader,createDirectionPieceGrid,showDirectionRecords} from '../public/document-study/direction-choice-surface.js';
 const sha=raw=>createHash('sha256').update(raw).digest('hex');
 const raw='## Pick a direction\n\n**1. Invented garden.** Exact invented explanation.\n\n## Pick a title\n1. **Invented garden title**\n';
 const artifact=(extra={})=>({kind:'MAP',archived:false,artifactId:'synthetic-map-one',hash:sha(raw),...extra});
@@ -34,4 +34,12 @@ test('reader refuses subject, map hash, artifact identity or story changes while
 test('cold empty catalog refreshes before connecting the exact prepared map',async()=>{
  const f=fixture({stories:[],refresh:api=>api.setCatalog([story()])}),result=await f.load({parentStudyId:'synthetic-subject-one'});assert.equal(f.calls[0],'refresh');assert.equal(f.calls.length,2);assert.deepEqual(result.source,{artifactId:'synthetic-map-one',hash:sha(raw)});
  const failed=fixture({stories:[],refresh:()=>{throw Error('Synthetic refresh unavailable.');}});await assert.rejects(failed.load({parentStudyId:'synthetic-subject-one'}),/refresh unavailable/);assert.deepEqual(failed.calls,['refresh']);
+});
+
+test('Direction piece grid uses only exact supplied references and never claims wording adoption',async()=>{
+ const {createRequire}=await import('node:module'),require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),dom=new JSDOM('<main></main>');try{const calls=[],grid=createDirectionPieceGrid({document:dom.window.document,pieces:[{format:'Manuscript',title:'Same invented title',reference:'exact-article'},{format:'Carousel',title:'Same invented title',reference:'exact-carousel'}],open:reference=>calls.push(reference)});dom.window.document.querySelector('main').append(grid);const buttons=grid.querySelectorAll('button');assert.equal(buttons[0].textContent,'Article · Same invented title');buttons[1].click();assert.deepEqual(calls,['exact-carousel']);assert.match(grid.textContent,/application has not been checked/);assert.doesNotMatch(grid.textContent,/✓|Approved|Chosen by you/);assert.equal(grid.querySelectorAll('details,summary').length,0);const empty=createDirectionPieceGrid({document:dom.window.document});assert.match(empty.textContent,/No current connected pieces/);assert.equal(empty.querySelectorAll('button').length,0);}finally{dom.window.close();}
+});
+
+test('Direction historical context and original records stay in place with exact links and controls',async()=>{
+ const {createRequire}=await import('node:module'),require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),dom=new JSDOM('<main><details class="flow-retained"><summary>Earlier records</summary><article>Exact retained words<details class="recordDetails"><summary>Details</summary><a href="/exact-original">Original</a><button>Read</button></details></article></details></main>');try{const main=dom.window.document.querySelector('main'),link=main.querySelector('a'),button=main.querySelector('button');let clicks=0;button.onclick=()=>clicks++;showDirectionRecords(main);assert.equal(main.querySelectorAll('details,summary').length,0);assert.equal(main.querySelector('a'),link);assert.equal(main.querySelector('button'),button);button.click();assert.equal(clicks,1);assert.match(main.textContent,/Exact retained words/);assert.match(main.querySelector('.recordDetails h4').textContent,/Original record/);showDirectionRecords(main);assert.equal(main.querySelectorAll('.flow-retained').length,1);}finally{dom.window.close();}
 });

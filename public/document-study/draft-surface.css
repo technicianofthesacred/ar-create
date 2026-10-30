@@ -319,3 +319,9 @@ body .workspace .prose-document :is(#manuscript,.draft-read-words,.manuscript-pr
 body .workspace .recordBody.manuscript-prose>h1:first-child{font-size:46px;line-height:1.1;letter-spacing:.23px;margin:0 0 20px}
 .workspace .phaseReader:has(.recordBody.manuscript-prose){max-width:840px;margin-inline:auto}
 @media(max-width:560px){body .workspace .recordBody.manuscript-prose>h1:first-child{font-size:34px;line-height:1.1}}
+
+/* Recorded decisions and mark provenance stay visible beside their existing controls. */
+body.draft-surface-active .workspace #margin .draft-surface-retained-notes>h3{font:600 12px/1.5 var(--font-ui,system-ui,sans-serif);margin:12px 0 8px;color:var(--dim)}
+body.draft-surface-active .workspace .draft-mark-context>h4{font:600 12px/1.5 var(--font-ui,system-ui,sans-serif);margin:8px 0 4px;color:var(--dim)}
+body.draft-surface-active .workspace #margin .draft-surface-margin-body{display:block}
+body.draft-surface-active .workspace #margin .draft-surface-margin-summary{display:none}

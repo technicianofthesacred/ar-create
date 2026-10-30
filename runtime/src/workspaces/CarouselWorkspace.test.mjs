@@ -227,7 +227,8 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   assert.ok(titleActions,'actual composition controls share the existing title line');
   assert.equal(titleActions.parentElement.dataset.cwbDocumentId,current.id);assert.equal(titleActions.parentElement.dataset.cwbOutputId,'carousel');
   assert.match(titleActions.querySelector('.cwb-new-output>summary').textContent,/Output tools/);
-  assert.match(titleActions.querySelector('.car-more>summary').textContent,/Carousel tools/);
+  assert.ok(titleActions.querySelector('.car-tools-visible[aria-label="Carousel tools"]'));
+  assert.equal(document.querySelector('.car-workspace details'),null,'Carousel controls and provenance remain visible without disclosures');
   assert.equal(document.querySelector('.car-workspace>.car-tools'),null,'no second action tier');
   const oldSibling=structuredClone(current.outputs[1]);
   const outputName=document.querySelector('[aria-label="Output name"]');

@@ -30,3 +30,5 @@ html body.wbf-on #app #workspace.wb-share .wb-invitation [data-magazine-correspo
  html body.wbf-on:has(.carousel-proposal-panel) #app #workspace #c3-surface-bar{margin-right:412px!important}
  html body.wbf-on:has(.carousel-proposal-panel) #c3-surface-bar>.sb-right{max-width:100%;min-width:0;flex-wrap:wrap!important;overflow:visible!important}
 }
+
+.oss-disclosure>h3{padding:12px 0;margin:0;font:600 14px/1.5 var(--sans,Arial,sans-serif)}

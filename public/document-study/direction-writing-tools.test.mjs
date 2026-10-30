@@ -61,3 +61,5 @@ test('owned Magazine Write exposes shared guidance only for the exact current ow
  currentOwner=owner;proof={parentStudyId:w.p.id,owner};w.p.referenceOnly=true;await mount();assert.equal(w.document.getElementById('direction-writing-tools'),null);
  w.p.referenceOnly=false;await mount();assert.ok(w.document.querySelector('[data-dwt-action="voice"]'));assert.equal(w.document.querySelector('#manuscript').textContent,'My exact words');
 });
+
+test('Direction Title and intent is visible in place with existing save and Undo controls',async t=>{const w=setup(t,4);await tick();const section=w.document.querySelector('.dwt-notes');assert.equal(section.tagName,'SECTION');assert.equal(section.querySelector('h3').textContent,'Title & intent');assert.equal(section.querySelectorAll('details,summary').length,0);assert.ok(section.querySelector('[data-dwt-action=save-plan]'));assert.ok(section.querySelector('[data-dwt-action=undo-plan]'));assert.ok(section.querySelector('[data-dwt-plan=closing]'));});
