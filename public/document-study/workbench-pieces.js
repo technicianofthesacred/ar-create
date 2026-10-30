@@ -235,7 +235,7 @@
  }
  async function listForProject(projectId){
   const value=await subjectRows(projectId),out=[];
-  for(const row of value.rows){const reference='subject-piece-'+(++subjectReferenceSequence);subjectReferences.set(reference,{row,stamp:JSON.stringify(row)});out.push({reference,projectId:row.projectId,title:row.title,format:row.format,status:statusLabel(row.status),edition:editionLabel(row)||'',kind:row.type,editionRole:row.editionRole||'current'});}
+  for(const row of value.rows){const reference='subject-piece-'+(++subjectReferenceSequence);subjectReferences.set(reference,{row,stamp:JSON.stringify(row)});const artifact=(window.existingWork?.catalog?.()?.stories||[]).flatMap(story=>story.artifacts||[]).find(a=>a.artifactId===row.artifactId),owner=artifact?.magazineWorkingTarget,overviewId=row.type==='magazine-working'&&owner?'magazine-working:'+owner.storyId+':'+owner.pieceId:row.type==='output'?row.id:null;out.push({reference,projectId:row.projectId,title:row.title,format:row.format,status:statusLabel(row.status),rawStatus:row.status,edition:editionLabel(row)||'',kind:row.type,editionRole:row.editionRole||'current',overviewId,delivery:row.delivery||null,nextAction:row.nextAction||null,followUp:row.followUp||null});}
   while(subjectReferences.size>1000)subjectReferences.delete(subjectReferences.keys().next().value);
   return JSON.parse(JSON.stringify({projectId,pieces:out,errors:value.errors}));
  }
@@ -248,7 +248,29 @@
   const row=matches[0];if(row.type==='workspace-reference'){if(typeof window.existingWork?.openWorkspaceTarget!=='function')throw Error('The exact saved workspace entrance is unavailable.');await window.existingWork.openWorkspaceTarget(row.workspaceId,row.targetIndex,{stage:row.format==='Carousel'?9:5,...(row.explicitOutputId?{outputId:row.explicitOutputId}:{})});return true;}
   return openPiece({...row});
  }
- window.workbenchPieces={open,listForProject,openReference,close:()=>{navigation++;cleanup();},decorate,carouselEdition,assertCarouselPickup,
+ async function readPreviewReference(reference){
+  const saved=subjectReferences.get(reference);if(!saved)throw Error('This piece reference expired. Reopen its subject board.');
+  const row=saved.row,stamp=saved.stamp,check=()=>{if(subjectReferences.get(reference)!==saved||JSON.stringify(saved.row)!==stamp||excludedProject(row.projectId))throw Error('The saved piece changed. Reopen its preview.');};check();
+  const read=async route=>{const response=await fetch(route),value=await response.json();if(!response.ok)throw Error(value?.error||'This saved preview is unavailable.');check();return value;};
+  const digest=async value=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(value))))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(row.type==='magazine-working'){
+   const stories=window.existingWork?.catalog?.()?.stories?.filter(s=>s.id===row.storyId),artifacts=stories?.length===1?stories[0].artifacts.filter(a=>a.artifactId===row.artifactId&&a.hash===row.hash&&!a.archived):[],owner=artifacts.length===1?artifacts[0].magazineWorkingTarget:null;
+   if(!owner||owner.nativeProjectId!==row.projectId||owner.hash!==row.hash||owner.artifactId!==row.artifactId||owner.edition!=='working')throw Error('The current Article owner changed. Reopen its subject board.');
+   const value=await read('/api/review/magazine-working-edition?'+new URLSearchParams({storyId:owner.storyId,pieceId:owner.pieceId,expectedHash:row.hash})),o=value.ownerRef;
+   if(o?.projectId!==owner.storyId||o.pieceId!==owner.pieceId||o.editionId!=='working'||o.hash!==row.hash||o.artifactId!==owner.artifactId)throw Error('The Article preview returned another edition.');
+   const after=(window.existingWork?.catalog?.()?.stories||[]).filter(s=>s.id===row.storyId).flatMap(s=>s.artifacts.filter(a=>a.artifactId===row.artifactId&&a.hash===row.hash&&JSON.stringify(a.magazineWorkingTarget)===JSON.stringify(owner)));if(after.length!==1)throw Error('The Article changed while its preview opened.');
+   return {kind:'magazine',identity:{projectId:row.projectId,storyId:owner.storyId,pieceId:owner.pieceId,edition:'working',hash:row.hash},hash:row.hash,read:value};
+  }
+  if(['workspace-reference','output'].includes(row.type)&&row.rootBindingId){
+   if(row.type==='workspace-reference'){const links=window.existingWork?.catalog?.()?.workspaceLinks?.pieces?.filter(link=>link.workspaceId===row.workspaceId&&link.documentId===row.documentId&&link.state==='verified');if(links?.length!==1||JSON.stringify(links[0].targets?.[row.targetIndex])!==JSON.stringify(row.target))throw Error('The saved output owner changed.');}
+   const value=await read('/api/study/outputs?'+new URLSearchParams({parentStudyId:row.projectId,rootBindingId:row.rootBindingId,selectedOutputId:row.id}));
+   if(value.scope?.parentStudyId!==row.projectId||value.scope.rootBindingId!==row.rootBindingId||value.documentId!==row.rootBindingId||value.output?.id!==row.id||!['article','carousel'].includes(value.output.kind))throw Error('The saved preview returned another output.');
+   if(row.type==='workspace-reference'&&JSON.stringify(JSON.parse(row.revision)[0])!==JSON.stringify(value.output))throw Error('This saved edition changed. Reopen its subject board.');
+   const outputHash=await digest(value.output);check();return {kind:'native',identity:{projectId:row.projectId,parentStudyId:row.projectId,rootBindingId:row.rootBindingId,outputId:row.id,outputHash},hash:outputHash,read:value};
+  }
+  throw Error('A saved visual preview is not connected for this edition. Open its existing reader.');
+ }
+ window.workbenchPieces={open,listForProject,readPreviewReference,openReference,close:()=>{navigation++;cleanup();},decorate,carouselEdition,assertCarouselPickup,
   async openCarousel(expected){
    if(busy)return false;
    const row=projects().flatMap(retainedPieces).find(r=>r.type==='browser-carousel'&&r.projectId===expected?.projectId);
