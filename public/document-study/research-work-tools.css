@@ -15,3 +15,6 @@
 .research-work-panel .rpb-heading{margin-bottom:12px}
 .research-work-panel>.rpb{margin-bottom:12px}
 [data-research-point-active="true"]>h2{scroll-margin-block:70px}
+
+.research-work-tools>button{font:inherit;min-height:36px}.research-work-brief>h2{font:600 16px/1.5 var(--ar-ui,system-ui,sans-serif);margin:12px 0 6px}
+.research-work-panel :is(.rpb-sources,[data-discussion-disclosure])>h3{font:600 13px/1.5 var(--ar-ui,system-ui,sans-serif);margin:12px 0 6px}

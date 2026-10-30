@@ -6,10 +6,10 @@
  const currentView=()=>typeof current==='function'?current():null;
  const eligible=()=>{const p=currentView();if(p&&document.querySelector('#wbf-drawer .dr-body[data-tool="check"] #current-draft-check'))return {...p,view:'record',viewedStage:7};return p&&p.view==='record'&&[1,2,7].includes(p.viewedStage)?p:null};
  const stateFor=p=>{const scope=p.viewedStage===7?checkScope(p):null,key=JSON.stringify([p.id,p.viewedStage,...(scope?.kind==='carousel'?[scope.key]:[])]);if(!room.has(key))room.set(key,{values:{},open:{}});return room.get(key)};
- const tool=(id,label,body)=>`<details class="sws-tool" data-sws-tool="${id}"><summary>${label}</summary>${body}</details>`;
+ const tool=(id,label,body)=>`<section class="sws-tool" data-sws-tool="${id}"><h3>${label}</h3>${body}</section>`;
  const status=text=>`<p class="sws-status" role="status">${text}</p>`;
  const input=(key,label,placeholder='')=>`<label class="sws-field">${label}<input data-sws-input="${key}" placeholder="${placeholder}"></label>`;
- function wrap(node,label,id){if(!node)return null;const d=document.createElement('details');d.className='sws-secondary';d.dataset.disclosure=id;const s=document.createElement('summary');s.textContent=label;d.append(s,node.cloneNode(true));return d}
+ function wrap(node,label,id){if(!node)return null;const d=document.createElement('section');d.className='sws-secondary';d.dataset.disclosure=id;const s=document.createElement('h3');s.textContent=label;d.append(s,node.cloneNode(true));return d}
  function materialRender(base,c,stage,h){
   if(![1,2].includes(stage))return base(c,stage,h);
   const box=document.createElement('div');box.innerHTML=base(c,stage,h);const root=box.querySelector('.material-surface');if(!root)return box.innerHTML;
@@ -68,6 +68,8 @@
  function decorate(){
   const p=eligible();if(!p)return;
   const host=p.viewedStage===7?document.getElementById('current-draft-check'):document.getElementById('stage-working-lane');if(!host)return;
+  if(p.viewedStage===7&&currentView()?.viewedStage===7)for(const old of document.querySelectorAll('#workspace .draft-protected details, #workspace details.recordDetails')){const section=document.createElement('section');for(const attr of old.attributes)if(attr.name!=='open')section.setAttribute(attr.name,attr.value);for(const child of [...old.childNodes]){if(child.nodeType===1&&child.tagName==='SUMMARY'){const heading=document.createElement('h3');heading.textContent=child.textContent;section.append(heading);}else section.append(child);}old.replaceWith(section);}
+
   const previousPanel=host.querySelector('[data-sws-check]'),scope=p.viewedStage===7?checkScope(p):null;if(previousPanel&&scope&&previousPanel.dataset.swsCheckOwner!==scope.key)previousPanel.replaceWith(checkedPanel(p));
   if(p.viewedStage===7&&!host.querySelector('[data-sws-check]')){host.append(checkedPanel(p));const status=host.querySelector('.draft-check-status');if(status&&host.querySelector('.draft-check-proof')&&!host.querySelector('.draft-check-finding')){const cue=document.createElement('p');cue.className='sws-finding-empty';cue.textContent=/Mechanical checks complete/.test(status.textContent)?'No findings recorded by these named mechanical checks. Editorial review remains separate.':'No current findings to show. Run or recheck the saved revision before treating the manuscript as checked.';host.querySelector('.draft-check-results')?.after(cue)}}
   const checkLabel=host.querySelector('[data-sws-check] .sws-check-scope span');if(checkLabel){const label=checkScope(p).label;if(checkLabel.textContent!==label)checkLabel.textContent=label;}

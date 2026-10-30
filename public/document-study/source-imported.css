@@ -235,3 +235,11 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved.source-reader-show-timing .source-dialogue-group:not(.source-dialogue-boundary)>:is(.tm,time){grid-column:2!important;grid-row:1!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved.source-reader-show-timing .source-dialogue-group:has(>.tm,>time):not(.source-dialogue-boundary)>.source-speaker{grid-row:2 / span var(--source-group-rows,1)!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved.source-reader-show-timing .source-dialogue-group:has(>.tm,>time):not(.source-dialogue-boundary)>.tx{grid-row:2!important}
+
+/* Source tools are ordinary sections beside the complete dialogue. */
+.source-reader .source-reader-secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.source-reader .source-reader-secondary>section{min-width:0;max-width:100%;border-top:1px solid var(--line);padding-top:12px}
+.source-reader section>h3{font:600 14px/1.5 var(--ar-ui,system-ui,sans-serif);margin:0 0 10px}
+@media(max-width:700px){.source-reader .source-reader-secondary{grid-template-columns:minmax(0,1fr)}}
+
+.source-reader>section.source-reader-lookup-sheet[open]{position:static;inset:auto;width:auto;max-height:none;overflow:visible;border-radius:0}

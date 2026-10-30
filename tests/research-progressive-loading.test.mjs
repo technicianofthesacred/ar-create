@@ -37,8 +37,8 @@ function fixture(t,{holdCatalog=false,holdDraft=false,holdChoices=false,holdFind
   return {ok:status===200,status,json:async()=>data};
  };
  w.eval(`var state={projects:[{id:'hk',name:'Invented project',view:'record',viewedStage:3}]};function current(){return state.projects[0]}var WORKFLOW_RECORDS={},ORIGINAL_STEPS=['Material','Source','Research','Direction'];function esc(s){return String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]))}function shortRecordName(s){return s}function retainedSection(){return ''}function originalURL(){return '#'}function createLocalProject(){}function modalHTML(){return ''}var modal=null;function workflowBar(){return ''}function historicalNotice(){return ''}function phaseReader(){return ''}function render(){document.getElementById('workspace').innerHTML=phaseReader(current())}function save(){}function viewPhase(n){current().viewedStage=n;render()}function toast(){}`);
- for(const name of ['research-standard-adapter.js','research-standard.js','stage-flow.js'])w.eval(read(name));
- const finding=()=>w.document.querySelector('[data-research-point="finding-hk"]');
+ for(const name of ['research-standard-adapter.js','research-standard.js','stage-flow.js','research-point-browser.js','research-work-tools.js'])w.eval(read(name));
+ const finding=()=>{const row=w.document.querySelector('[data-research-point="finding-hk"]');if(row&&!row.querySelector('[data-research-narration]'))row.querySelector('[data-research-work-tool=depth]')?.click();return row;};
  const decision=()=>finding()?.querySelector('[data-research-decision="include"]');
  return {w,calls,gates,finding,decision};
 }

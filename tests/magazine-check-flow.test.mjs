@@ -79,24 +79,24 @@ test('Check view handoff uncovers exact phone Edit/Preview only after maintained
 });
 
 
-test('deferred same-owner inspection preserves open Check options; switched owner starts closed',async t=>{
+test('deferred inspection and owner changes keep Check options visible',async t=>{
  const x=await setup(t,{initialStage:7});try{
   let release;x.w.studyDraftCheck.setMagazineAdapter({inspect:async()=>{await new Promise(resolve=>release=resolve);return {source:{hash:H},signature:'deferred-options'};}});
-  const host=x.w.document.querySelector('#current-draft-check');host.querySelector('[data-check-options]').open=true;
+  const host=x.w.document.querySelector('#current-draft-check');assert.equal(host.querySelector('[data-check-options]').tagName,'SECTION');assert.equal(host.querySelector('[data-check-options] summary'),null);
   release();await tick();await tick();
-  assert.equal(host.querySelector('[data-check-options]').open,true);assert.ok(host.querySelector('[data-check-options][open] [data-current-check="draft"]'));assert.ok(host.querySelector('[data-check-options][open] [data-current-check="read"]'));
+  assert.equal(host.querySelector('[data-check-options]').tagName,'SECTION');assert.ok(host.querySelector('[data-check-options] [data-current-check="draft"]'));assert.ok(host.querySelector('[data-check-options] [data-current-check="read"]'));
   x.p.id='another-parent';x.proof.parentStudyId='another-parent';x.owner.pieceId='another-piece';x.proof.owner.pieceId='another-piece';x.proof.dirty=true;x.w.dispatchEvent(new x.w.Event('study-draft-change'));
-  assert.equal(host.querySelector('[data-check-options]').open,false);assert.equal(x.calls.includes('FLUSH'),false);assert.equal(x.calls.some(c=>c.body),false);
+  assert.ok(host.querySelector('[data-check-options] [data-current-check="draft"]'));assert.equal(x.calls.includes('FLUSH'),false);assert.equal(x.calls.some(c=>c.body),false);
  }finally{x.close();}
 });
 
 
-test('full Check render and following inspection retain open Options only for the same owner',async t=>{
+test('full Check render and inspection retain ordinary visible Options for each owner',async t=>{
  const x=await setup(t,{initialStage:7,mount:false,standaloneDOM:true});try{
-  const options=x.w.document.querySelector('[data-check-options]');options.querySelector('summary').click();assert.equal(options.open,true);
+  const options=x.w.document.querySelector('[data-check-options]');assert.equal(options.querySelector('summary'),null);assert.equal(options.tagName,'SECTION');
   x.w.render();await tick();await tick();
-  const currentOptions=x.w.document.querySelector('[data-check-options]');assert.notEqual(currentOptions,options);assert.equal(currentOptions.open,true);assert.ok(currentOptions.querySelector('[data-current-check="draft"]'));assert.ok(currentOptions.querySelector('[data-current-check="read"]'));
-  x.p.id='another-parent';x.proof.parentStudyId='another-parent';x.owner.pieceId='another-piece';x.proof.owner.pieceId='another-piece';x.w.render();await tick();await tick();assert.equal(x.w.document.querySelector('[data-check-options]').open,false);
+  const currentOptions=x.w.document.querySelector('[data-check-options]');assert.notEqual(currentOptions,options);assert.equal(currentOptions.tagName,'SECTION');assert.ok(currentOptions.querySelector('[data-current-check="draft"]'));assert.ok(currentOptions.querySelector('[data-current-check="read"]'));
+  x.p.id='another-parent';x.proof.parentStudyId='another-parent';x.owner.pieceId='another-piece';x.proof.owner.pieceId='another-piece';x.w.render();await tick();await tick();assert.ok(x.w.document.querySelector('[data-check-options] [data-current-check="read"]'));
   assert.equal(x.calls.includes('FLUSH'),false);assert.equal(x.calls.some(c=>c.body),false);
  }finally{x.close();}
 });
@@ -106,14 +106,14 @@ test('focus inspection preserves the actual Options controls until activation an
  const x=await setup(t,{initialStage:7});try{
   let release,deferred=false;x.w.studyDraftCheck.setMagazineAdapter({inspect:async(...args)=>{if(deferred)await new Promise(resolve=>release=resolve);return x.adapter.inspect(...args);},execute:(...args)=>x.adapter.execute(...args)});await tick();await tick();
   x.w.document.querySelector('[data-current-check="run"]').click();await tick();await tick();assert.equal(x.w.studyDraftCheck.state().current,true);deferred=true;
-  const options=x.w.document.querySelector('[data-check-options]'),summary=options.querySelector('summary'),button=options.querySelector('[data-current-check="draft"]');
+  const options=x.w.document.querySelector('[data-check-options]'),heading=options.querySelector('h3'),button=options.querySelector('[data-current-check="draft"]');
   fs.appendFileSync(path.join(x.f.vault,x.src),'\nA newly captured invented source revision.\n');
   x.w.dispatchEvent(new x.w.Event('focus'));
-  assert.equal(summary.isConnected,true);assert.equal(button.isConnected,true);assert.strictEqual(x.w.document.querySelector('[data-check-options]'),options);
+  assert.equal(heading.isConnected,true);assert.equal(button.isConnected,true);assert.strictEqual(x.w.document.querySelector('[data-check-options]'),options);
   assert.equal(x.w.studyDraftCheck.state().current,false,'An inspection in progress must still invalidate old passage routes');
-  summary.click();assert.equal(options.open,true);
+  assert.equal(options.querySelector('summary'),null);
   release();await tick();await tick();
-  assert.equal(x.w.document.querySelector('[data-check-options]').open,true);assert.match(x.w.document.querySelector('#drawer').textContent,/Outdated result/);assert.equal(x.w.document.querySelector('[data-magazine-issue]'),null);
+  assert.equal(x.w.document.querySelector('[data-check-options]').tagName,'SECTION');assert.match(x.w.document.querySelector('#drawer').textContent,/Outdated result/);assert.equal(x.w.document.querySelector('[data-magazine-issue]'),null);
   assert.equal(x.calls.includes('FLUSH'),false);
  }finally{x.close();}
 });

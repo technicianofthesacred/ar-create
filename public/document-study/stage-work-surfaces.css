@@ -15,3 +15,5 @@
 .sws-check-scope{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:space-between;align-items:center;flex-basis:100%;font:13px/1.5 var(--sans,system-ui,sans-serif)}
 [data-sws-comparison]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;min-width:0}[data-sws-comparison] pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font:18px/1.8 var(--atlas-prose-font,'AR Atlas Lora',Georgia,serif)}[data-sws-comparison] h4{font:600 13px/1.5 var(--sans,system-ui,sans-serif)}
 @media(max-width:700px){.sws-source .material-layout{grid-template-columns:1fr}.sws-source .material-index{max-height:none}.sws-work-tools{gap:6px}.sws-tool{flex-basis:100%}[data-sws-comparison]{grid-template-columns:1fr}.sws-check-scope{display:block}.sws-check-scope span{display:block}}
+
+.sws-tool>h3,.sws-secondary>h3{font:600 13px/1.45 var(--sans,system-ui,sans-serif);margin:0 0 10px}.sws-tool,.sws-secondary{min-width:0}
