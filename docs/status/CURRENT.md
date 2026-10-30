@@ -1,3 +1,9 @@
+## 30 October — visual board and Outputs candidate
+
+C01/C02/C03/C04/C05/C06, S01/S05/S09/S12. Subject-board previews and Outputs use the existing saved Article/Carousel audience renderers in inert thumbnails. Outputs groups actual pieces by subject, keeps prior editions and delivery facts distinct, and retains maintained Open/export/review actions. Discovery references, exact owner/hash checks and the shared catalogue retain their owners; browsing cannot activate a writer or infer publication/approval.
+
+Finish with actual Hong Kong Article/eight-slide Carousel thumbnails, guarded reopening, truthful waiting-wording cues, no active-writer/global-focus changes, wide/theme and narrow screen proof, package/build and exact installed comparison beside Combined. Phone remains the final step.
+
 ## 30 October — context sheets candidate
 
 C01/C02/C03/C04/C05/C06, S02/S03/S05/S08/S09. Source, Research, Media and Arrange open above the selected piece through their maintained readers and guarded editors. Esc returns to the retained writer, line, selection and scroll. Source corrections, Research choices, photo albums/placements, Article credits and Carousel templates remain under existing owners. No navigation stage spoof, new manuscript store or editor engine is introduced.
