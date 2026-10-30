@@ -1,3 +1,9 @@
+## 30 October — context sheets candidate
+
+C01/C02/C03/C04/C05/C06, S02/S03/S05/S08/S09. Source, Research, Media and Arrange open above the selected piece through their maintained readers and guarded editors. Esc returns to the retained writer, line, selection and scroll. Source corrections, Research choices, photo albums/placements, Article credits and Carousel templates remain under existing owners. No navigation stage spoof, new manuscript store or editor engine is introduced.
+
+562 affected checks pass. Native Hong Kong sheets read the exact configured originals, retained Research and 26 available Library photographs without choosing photos; optional missing subject sources remain visibly unavailable beside readable verified sources. Carousel Arrange exposes all 66 templates at the top, direct controls/Cut and drag grips, while retaining its exact writing field/caret on Esc. An invented native Article credit Save changed only its working file; exact Undo restored every original file byte and the same cursor. Source/Research/Media use the visible piece owner, never a retained sibling. Magazine/Carousel editorial reuse remains honestly not connected; several check sources remain held without guessing a primary transcript. No real words, photos, source files, provider jobs or approvals changed. Finish with exact installed proof beside Combined. Visual previews/Outputs and final phone work remain next.
+
 ## 30 October — piece screen candidate
 
 C01/C02/C03/C04/C05/C06, S05/S06/S07/S09. The selected existing Article or Carousel uses one piece toolbar, actual independently owned piece tabs, the maintained Write/Read/Check modes and a saved Direction strip. Uncreated formats remain choices under +. Existing editing, saved Undo, parts, guidance, history, sources, theme and sizing remain reachable through their maintained controls. No author decisions are made by this presentation change.
