@@ -1,3 +1,7 @@
+## 30 October — Direction per-piece grid candidate
+
+C01/C03–C06, S04/S05/S09. The Combined Direction grid uses actual current Article/Carousel references and the exact saved subject choice owner. Angle/title rows show shared contextual choices, or Not chosen; foreign/unavailable context is Not connected. Independently edited words retain their owners. Piece overrides remain explicitly not connected. Choice changes refresh only this read-only projection, retaining author editor state and exact piece entrances. 35 affected checks pass; native Hong Kong grid shows two actual pieces and unchosen angle/title without adopting anything. Finish with exact signed installation and original/configuration preservation proof.
+
 ## 30 October — six approved Combined review fixes, candidate
 
 C01–C06, S01/S02/S04/S05/S06/S07/S09/S12. Default entrances resolve the exact current registered Article; original and older copies remain separately reachable. Piece tabs keep format order, exact owner and Write/Read/Check intent across asynchronous mounting. Direction presents the existing author record and attributed source/proposal context, retains planning controls, and opens the current Article without preparing AI work. Notes, retained work and Carousel controls are ordinary visible sections. Home and boards distinguish current pieces from earlier saved references, name source/understanding records by available facts, and show verified pending author decisions and saved writing context.
