@@ -2557,7 +2557,7 @@
     },
     {
       "path": "public/document-study/empty-states.js",
-      "candidateSha256": "379574cb9c7ba8772bae8bbeb587a997b84d93b96d670f5782f9d276704cccc3"
+      "candidateSha256": "d70980d0007854b848902c5a9f9a367541892f2df18db4a1f6dbb3ae73f82d49"
     },
     {
       "path": "public/document-study/empty-states.test.mjs",
@@ -4677,7 +4677,7 @@
     },
     {
       "path": "public/document-study/direction-choice-surface.js",
-      "candidateSha256": "dc703de1784b1562bb3f471b76b0ffbf7ca88b754f8ad8b1557caa103258fc22"
+      "candidateSha256": "1792dff636ad440996078398bcb3301cfec37e9ac260e71fda63521a7e58e1f5"
     },
     {
       "path": "public/document-study/inline-direction-choices.css",
@@ -4705,7 +4705,7 @@
     },
     {
       "path": "tests/direction-choice-surface.test.mjs",
-      "candidateSha256": "c8faa28be15f0651a8c6687c38003a30215be00861b4089fc73d98ded4cc9b34"
+      "candidateSha256": "c55e129be5a78b0a28bad009476db851f9dca0af054527cc4a4e6cf8d9d0f7d2"
     },
     {
       "path": "tests/direction-choice.test.mjs",
