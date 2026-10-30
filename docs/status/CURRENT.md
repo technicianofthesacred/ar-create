@@ -1,3 +1,7 @@
+## Combined phone — candidate 30 October
+
+Requirement C01–C06/S01/S05/S09/S12: retain all12entrances and35functions through five phone groups; actual piece tabs/modes and bottom sheets fit390/768 without horizontal scroll. Finish criterion: native Home/piece/sheet/Outputs at390/768, Esc return, desktop preservation, focusedtests/package and exact installed-source proof. Editorial choices remain pending in app, no questions or approval/provider/publication.
+
 ## 30 October — visual board and Outputs candidate
 
 C01/C02/C03/C04/C05/C06, S01/S05/S09/S12. Subject-board previews and Outputs use the existing saved Article/Carousel audience renderers in inert thumbnails. Outputs groups actual pieces by subject, keeps prior editions and delivery facts distinct, and retains maintained Open/export/review actions. Discovery references, exact owner/hash checks and the shared catalogue retain their owners; browsing cannot activate a writer or infer publication/approval.

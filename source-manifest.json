@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "09fd11675198b106f48360ef23146946fffa230b1471528f0f8c2fe60f5247cf",
-      "candidateSha256": "d5ae72d24dfeba8cd90329cf832d0958c52bcd8181237172a5ef2657baf3fe9e",
+      "candidateSha256": "45ecf60e4ccb60be2e0ea80e36d0eda5e875106834082edf87b005b783c6b5d4",
       "adapted": true
     },
     {
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "7b744467dc594e90d88df50cff05a31cdcfc2efb1662ec8624063646f3bef763"
+      "candidateSha256": "b7ea794aa5fcc8a14e99a52ba1618d873c182c36f4de1d8359374e57dc492771"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -4637,7 +4637,7 @@
     },
     {
       "path": "public/document-study/combined-navigation.js",
-      "candidateSha256": "cb357ab02f71bd669235cfbb1529a942f235a551fdc9ab09f5575e3c213a1edf"
+      "candidateSha256": "122cbaeea3e227f501087d84d076666b5bee164744665de3414ac0a6d328d73f"
     },
     {
       "path": "public/document-study/combined-subjects.css",
@@ -4653,7 +4653,7 @@
     },
     {
       "path": "tests/combined-navigation.test.mjs",
-      "candidateSha256": "09baaed943c0dafff0c08a94cba89689ec9394c650c45c0ef179372c9332f916"
+      "candidateSha256": "b46805b0ca87baa8155c8607ed27c19accd65972b09eb15784f6313290dcfe9b"
     },
     {
       "path": "tests/combined-subjects.test.mjs",
@@ -4753,11 +4753,11 @@
     },
     {
       "path": "public/document-study/combined-piece.js",
-      "candidateSha256": "668b6ce135a0326f976d1e82b9e6676b97e4dea50e7407946a85bfcbbd19acda"
+      "candidateSha256": "4af22811413e7663dcd28db05d01236933484b87f6442db9cdde577ccbe9f524"
     },
     {
       "path": "tests/combined-piece.test.mjs",
-      "candidateSha256": "f3e105a5683c089eb1e4ea930a06e48ec0eaee86b2963e40d3a381d433880534"
+      "candidateSha256": "f1a4c048ff3cae0dbdce08a986f7d9bdb5301750294b33ecbe16e9d8f8cd03c4"
     },
     {
       "path": "public/document-study/combined-sheets.css",
@@ -4786,6 +4786,14 @@
     {
       "path": "tests/combined-previews.test.mjs",
       "candidateSha256": "bf550832133cd21ae2321c42bbb2e7682deb188e26e7a4d7ffcad86678fc9e8d"
+    },
+    {
+      "path": "public/document-study/combined-phone.css",
+      "candidateSha256": "6057316fb9cad09eff04e160da05b3cc9947eed0d09e2563b31239ebd377c86b"
+    },
+    {
+      "path": "tests/combined-phone.test.mjs",
+      "candidateSha256": "a2245a00d13759594a2f7f78235bf72bef3f508f880805c30b92c657f9914728"
     }
   ],
   "dependencyRepair": {
