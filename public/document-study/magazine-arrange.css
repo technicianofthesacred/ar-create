@@ -195,3 +195,5 @@ html[data-theme] .magazine-arrange .ma-document .ma-onphoto-frame[data-ma-image-
 .magazine-arrange .ma-album-add button,.magazine-arrange [data-ma-album-unlink]{min-height:40px}
 
 .magazine-arrange :is(.ma-credits,.ma-limits)>h3{margin:12px 0 6px;font:600 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif);color:var(--ink)}
+
+.magazine-arrange .ma-control-label{margin:6px 0}.magazine-arrange .ma-connection-tags{display:flex;flex-wrap:wrap;gap:6px}.magazine-arrange .ma-connection-tags>span{padding:2px 7px;border:1px solid var(--line);border-radius:4px;color:var(--dim);font-size:12px;line-height:1.5}
