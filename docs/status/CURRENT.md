@@ -1,3 +1,7 @@
+## 30 October — final small Combined review candidate
+
+C01/C03/C04/C05/C06, S05/S09/S10/S11. Article Arrange credits and arrangement controls, plus Audience original-record metadata, remain visible in place. Share loses its repeated introduction; Voice/Recipe guidance uses one short line; the working HTML label separates Translation and Platform adaptation as not connected. Existing editors, exact ownership, recovery and saved Undo remain unchanged. Finish criterion: focused affected checks, synthetic preserved credit controls, native Hong Kong Arrange/Audience/Share/Voice at1440/390, package check and one exact signed installation with preservation proof. Human decisions stay pending; no Share sending, provider execution or word approval.
+
 ## 30 October — final Combined rail review candidate
 
 C01–C06, S01/S02/S03/S05/S07/S09/S11/S12. Check and Arrange resolve the exact selected Article from rail screens, retaining independent Carousel owners. Research findings, source tools, receipts, feedback and Check controls are visible sections; ordinary menus remain menus. Outputs separates verified earlier editions, Audience loses introductory interface prose, and Home keeps a short self-refreshing optional empty state. Share prepares a private invitation for the existing Article under the existing owner; Library exposes the recording service’s Material intake states and human-only failed Retry. No new manuscript authority, provider, publication, sending or human wording approval is introduced.

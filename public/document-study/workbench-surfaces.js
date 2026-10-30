@@ -252,7 +252,7 @@
   // A recorded recipient makes the real invitation applicable, even for words-only work.
   if(root.querySelector('[data-share-field="recipient"]')?.value.trim()&&ws.querySelector('.c3-empty'))window.c3Empty?.reveal?.();
   if(!field.querySelector('.who')){const label=make('span','who','Note to go with it');for(const node of [...field.childNodes])if(node.nodeType===3)node.remove();field.prepend(label);}
-  let intro=root.querySelector(':scope>.wb-share-intro');if(!intro){intro=make('p','wb-share-intro dim','Share a readable note of one piece with one person — for a quote check or a read-through. Only you can see this preparation.');root.prepend(intro);}
+  root.querySelector(':scope>.wb-share-intro')?.remove();
   let link=root.querySelector(':scope>.wb-share-link');if(!link){link=make('p','wb-share-link');const button=make('button','btn primary','Create a read-only link');button.type='button';button.disabled=true;button.title='Read-only link creation is not connected. Saving or copying an invitation never sends it.';link.append(button);field.after(link);}
   let privacy=root.querySelector(':scope>.wb-share-privacy');if(!privacy){privacy=make('p','wb-share-privacy dim small','Who can see it: only you. Read-only links are not connected.');link.after(privacy);}
   let recipients=root.querySelector(':scope>.wb-share-recipient');if(!recipients){recipients=make('section','oss-disclosure wb-correspondence wb-share-recipient');recipients.append(make('h3','','Recipient & piece'));const body=make('div','oss-disclosed');recipients.append(body);for(const node of [...root.children])if(node.matches('.oss-field-row,.oss-muted')||node.matches('.oss-tool-row')&&node.querySelector('[data-share-output]'))body.append(node);privacy.after(recipients);}

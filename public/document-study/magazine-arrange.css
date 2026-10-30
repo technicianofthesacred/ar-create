@@ -193,3 +193,5 @@ html[data-theme] .magazine-arrange .ma-document .ma-onphoto-frame[data-ma-image-
 .magazine-arrange .ma-album-add label{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px;font-size:13px}
 .magazine-arrange .ma-album-add select{width:100%;min-width:0;box-sizing:border-box;min-height:40px;padding:7px 8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit}
 .magazine-arrange .ma-album-add button,.magazine-arrange [data-ma-album-unlink]{min-height:40px}
+
+.magazine-arrange :is(.ma-credits,.ma-limits)>h3{margin:12px 0 6px;font:600 var(--t-label,13px)/1.45 var(--ar-ui,sans-serif);color:var(--ink)}
