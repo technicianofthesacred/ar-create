@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {isDeepStrictEqual} from 'node:util';
 import {createRequire} from 'node:module';
 import {planMagazinePlacementAnnotation,planMagazinePlacementDescription,planMagazinePlacementMove,planMagazinePlacementFocus,planMagazinePlacementAspect,planMagazinePlacementReplace,planMagazineLibraryPlacementReplace} from '../runtime/services/magazine-placement-plan.mjs';
-import {splitPhotoAnnotation,photoDirectiveComplete,readArticleCredits,validateArticleCredits} from '../runtime/services/magazine-annotations.mjs';
+import {splitPhotoAnnotation,photoDirectiveComplete,readArticleCredits,readCreditsBlock,validateArticleCredits} from '../runtime/services/magazine-annotations.mjs';
 import * as native from '../runtime/services/draft-correspondence.mjs';
 const require = createRequire(new URL('../runtime/package.json', import.meta.url));
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -270,7 +270,18 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
   }
   async function inspect(input) { return (await inspectEdition(input)).media; }
   async function inspectEdition(input) {
-    const {resolved,api,code,spec}=await publicationContext(input);
+    const {resolved,api,code,spec}=await publicationContext(input,{allowMissing:true});
+    if(!spec){
+      // Absence of a publication link does not make an exact working manuscript
+      // unavailable in Media. Admit only a proven empty placement inventory;
+      // filenames and asset roots are never inferred from prose or a title.
+      const captured=native.capture(resolved.document.text,input.pieceId),body=resolved.document.text.slice(captured.prefix.length);
+      if(/%%\s*(?:photo|photos|cover|opener|wide|bleed|side|on-photo|ending|saying)\s*:|!\[|<(?:img|picture|video|audio|source)\b/i.test(body))fail('This unpublished manuscript’s photographs need an explicit publication source or exact connected layout before photo inspection.');
+      const ownerRef={projectId:input.storyId,pieceId:input.pieceId,editionId:'working',artifactId:resolved.target.artifactId,hash:input.expectedHash},scope=digest([rootId,input.storyId,input.pieceId,input.expectedHash,ownerRef.artifactId]),annotations={schema:'ar-create.magazine-annotations.v1',credits:readArticleCredits(body),publicationCredits:[]},revision=digest(['unpublished-manuscript-empty-media-v1',scope,annotations]);
+      guardRoot();const after=await working(input);if(after.authority.path!==resolved.authority.path||after.target.artifactId!==ownerRef.artifactId||after.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The exact working manuscript changed during photo inspection.');
+      const files=new Map();snapshot={input:{...input},scope,revision,code:[],files,ownerRef};
+      return {media:{schema:'ar-create.magazine-media-inspection.v1',scope,revision,ownerRef,sources:[],originTrace:{status:'not-applicable',reason:'no-photo-placements',occurrences:0,blocks:0},annotations,limitations:['This exact unpublished working manuscript has no connected photograph placements.','Library photographs, albums and future intake remain available through their existing owners; this inventory does not select, place or approve them.']},parsed:null,spec:null,code:[],files};
+    }
     const memory = api.memoryOf(spec), originalBody = api.draftBody(resolved.document.text).body;
     const parsed = api.parseDraft(originalBody,memory);
     let tracedBodyRange=null;
@@ -427,14 +438,19 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     fields(proof,['storyId','pieceId','expectedHash','revision',...(mode==='photo'?['placementId']:[])]);
     const selection={storyId:input.storyId,pieceId:input.pieceId,expectedHash:input.expectedHash},inspection=await inspect(selection);
     if(input.revision!==inspection.revision)fail('The saved article changed. Refresh before editing its captions or credits.');
-    const {resolved,api,spec,code}=await publicationContext(selection),operation=mode==='photo'?'photoAnnotation':'articleCredits';
+    const {resolved,api,spec,code}=await publicationContext(selection,{allowMissing:mode==='credits'}),operation=mode==='photo'?'photoAnnotation':'articleCredits';
     if(!resolved.supportedNativeOperations?.includes(operation))fail('The canonical caption or credit writer is unavailable.');
     const plan=mode==='photo'?planMagazinePlacementAnnotation({inspection,working:resolved,request:input}):{ownerRef:inspection.ownerRef,expectedHash:input.expectedHash,revision:inspection.revision,scope:inspection.scope,placementIds:[],operations:[{kind:'articleCredits',credits:validateArticleCredits(value)}]};
     if(mode!=='photo'&&JSON.stringify(inspection.annotations.credits)===JSON.stringify(value))fail('Article credits already match this saved override.');
     const model=native.capture(resolved.document.text,input.pieceId);model.blocks.forEach((block,i)=>{block.id='magazine:'+encodeURIComponent(input.pieceId)+':'+i;});
     const candidate=native.apply(model,resolved.document.text,plan.operations);
-    const original=api.parseDraft(api.draftBody(resolved.document.text).body,api.memoryOf(spec)),reparsed=api.parseDraft(api.draftBody(candidate.raw).body,api.memoryOf(original));
-    if(!isDeepStrictEqual(original,reparsed))fail('The annotation would change maintained story words or layout.');
+    if(!spec&&mode==='credits'){
+      const kept=snapshot=>snapshot.blocks.filter(block=>readCreditsBlock(block.raw)===undefined).map(({id,raw,separator})=>({id,raw,separator}));
+      if(candidate.snapshot.prefix!==model.prefix||!isDeepStrictEqual(kept(model),kept(candidate.snapshot)))fail('The credit annotation would change manuscript words or layout.');
+    }else{
+      const original=api.parseDraft(api.draftBody(resolved.document.text).body,api.memoryOf(spec)),reparsed=api.parseDraft(api.draftBody(candidate.raw).body,api.memoryOf(original));
+      if(!isDeepStrictEqual(original,reparsed))fail('The annotation would change maintained story words or layout.');
+    }
     if(mode==='photo'&&(candidate.snapshot.prefix!==model.prefix||candidate.snapshot.blocks.length!==model.blocks.length||candidate.snapshot.blocks.some((b,i)=>b.id!==model.blocks[i].id||b.separator!==model.blocks[i].separator||b.id!==plan.operations[0].id&&b.raw!==model.blocks[i].raw)))fail('The caption would change other canonical bytes.');
     guardCode(code);const current=await working(selection);if(!current.supportedNativeOperations?.includes(operation)||current.target.artifactId!==plan.ownerRef.artifactId||current.target.nativeProjectId!==resolved.target.nativeProjectId)fail('The caption or credit owner changed.');
     return Object.freeze({...plan,schema:'ar-create.magazine-placement-plan.v1',expectedContentHash:sha(candidate.raw)});

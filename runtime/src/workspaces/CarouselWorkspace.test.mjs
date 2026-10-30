@@ -141,12 +141,14 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   assert.equal(current.outputs[0].slides[0].photos[0].src,'/api/sources/blob?id=synthetic-photo');
 
 
-  await click('Move slide 2 earlier');
+  assert.equal(document.querySelector('.car-sequence-actions details,.car-sequence-actions summary'),null);
+  assert.ok(![...document.querySelectorAll('.car-sequence-actions button')].some(button=>['Details','Earlier','Later'].includes(button.textContent)));
+  await act(async()=>document.querySelector('[aria-label="Reorder slide 2"]').dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowUp',altKey:true,bubbles:true})));
   assert.deepEqual(current.outputs[0].slides.map(s=>s.id),['two','one']);
   assert.ok(changes>=4);
   assert.equal(current.id,original.id);
   assert.deepEqual(current.paragraphs,original.paragraphs);
-  await click('Edit slide 1 details');
+  await click('Slide controls for slide 1');
   await click('Close slide controls');
   assert.equal(document.querySelector('.car-body').dataset.panel,'canvas');
   dom.window.HTMLElement.prototype.scrollIntoView=function(){};
