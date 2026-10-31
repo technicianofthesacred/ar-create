@@ -14,6 +14,14 @@
   return out;
  }
  function close(){sequence++;root?.remove();root=null;if(dialog){delete dialog.dataset.combinedSubjects;dialog=null;}selected=null;pieces=null;}
+ function decorate(){
+  if(!dialog?.open||!root?.isConnected||root.parentElement===dialog)return;
+  // Home may wrap every direct child on its first mount. Keep this same owner
+  // outside the inherited body, which the Combined surface deliberately hides.
+  const active=document.activeElement,focused=root.contains(active),selection=focused&&typeof active.selectionStart==='number'?{start:active.selectionStart,end:active.selectionEnd,direction:active.selectionDirection}:null;
+  dialog.append(root);
+  if(focused){active.focus({preventScroll:true});if(selection)try{active.setSelectionRange(selection.start,selection.end,selection.direction);}catch{}}
+ }
  function status(error){message=window.arCreateDisplay?.error(error,'This saved work could not open. Your current words are retained.')||error?.message||'This saved work could not open.';paint();}
  function button(label,attr,value='',extra=''){return `<button type="button" ${attr}="${esc(value)}" ${busy?'disabled':''} ${extra}>${esc(label)}</button>`;}
  const title=a=>window.arCreateDisplay?.title(a,'Saved record')||a.title||a.fileName||'Saved record';
@@ -75,5 +83,6 @@
  async function open({projectId}={}){
   await window.projectLibrary.open();const target=document.getElementById('project-library');if(!target?.open)throw Error('The subject browser could not open.');window.workbenchPieces?.close?.();close();dialog=target;dialog.dataset.combinedSubjects='true';dialog.addEventListener('close',close,{once:true});root=document.createElement('section');root.className='combined-subjects';root.setAttribute('aria-label','Subjects');dialog.append(root);subjects=directory();mode='all';message='';root.addEventListener('click',e=>{void action(e).catch(status);});root.addEventListener('input',e=>{if(e.target.matches('[data-cs-search]')){query=e.target.value;paint();}});paint();if(projectId){const subject=subjects.find(s=>s.id===projectId||s.storyId===projectId);if(!subject)throw Error('This subject is no longer in the saved list.');await openBoard(subject);}root.querySelector('h1')?.setAttribute('tabindex','-1');root.querySelector('h1')?.focus({preventScroll:true});
  }
- window.combinedSubjects={open,close,isOpen:()=>!!dialog?.open&&!!root?.isConnected};
+ window.c3Shell?.register('Combined Subjects owner',decorate,{order:110,ignore:'.combined-subjects'});
+ window.combinedSubjects={open,close,decorate,isOpen:()=>!!dialog?.open&&!!root?.isConnected};
 })();
