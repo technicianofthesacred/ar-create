@@ -22,6 +22,9 @@ export function exactApprovalSpans(raw){
 }
 export function approveExactSpan(raw,operation){
  if(operation.humanDecision!==true)fail('Explicit human approval decision required.');
+ return reviewExactSpan(raw,operation);
+}
+export function reviewExactSpan(raw,operation){
  if(!Number.isSafeInteger(operation.rawFrom)||!Number.isSafeInteger(operation.rawTo)||operation.rawFrom<0||operation.rawTo<=operation.rawFrom||typeof operation.seenMarkupHash!=='string'||!/^[a-f0-9]{64}$/.test(operation.seenMarkupHash))fail('Exact native markup span/hash required.');
  const span=exactApprovalSpans(raw).find(s=>s.rawFrom===operation.rawFrom&&s.rawTo===operation.rawTo&&s.seenMarkupHash===operation.seenMarkupHash);
  if(!span)fail('Approval span changed, is incomplete, protected or ambiguous; preserve source bytes.');
