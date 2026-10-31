@@ -3,6 +3,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {readAttachedWritingTemplate} from './writing-template.mjs';
 import { StateError } from '../store.mjs';
+import {readDirectionChoices,effectiveDirectionChoices} from '../../public/lib/direction-choice.js';
 import {normalizeContextSelection,captureSelectedContext,selectedContextLines} from './request-context.mjs';
 import { atomicWrite, readJson, digest, ensurePrivateDirectory, regular } from './files.mjs';
 
@@ -64,6 +65,41 @@ function ids(value, label, required = false) { if (!Array.isArray(value) || valu
 function captureEditorialFrame(document) {
   const body = document?.editorialFrame ?? '';
   return { documentId: document?.id ?? null, role: 'piece-editorial-direction-not-factual-evidence', body, hash: digest(body) };
+}
+// Accept only the additive derived Direction projection introduced after an
+// immutable legacy request. Authored records and every other context field stay exact.
+export function equivalentRequestHumanDirection(captured,current){
+ const encoded=value=>JSON.stringify(value),same=(a,b)=>encoded(a)===encoded(b),has=(value,key)=>Object.hasOwn(value||{},key);
+ function valid(context){return context&&typeof context==='object'&&!Array.isArray(context)&&Array.isArray(context.records)&&context.hash===digest(encoded(context.records))&&context.records.every(record=>record&&typeof record.body==='string'&&record.hash===digest(record.body));}
+ if(!valid(captured)||!valid(current))return false;
+ if(same(captured,current))return true;
+ const modern=context=>has(context,'effectiveDirection')||context.records.some(record=>has(record,'effectiveDirection')||has(record.directionChoices,'subjectDecisions')||has(record.directionChoices,'pieceDecisions'));
+ if(modern(captured)||captured.records.length!==current.records.length)return false;
+ function derivedMatches(value,choices,parentStudyId){
+  if(!value||typeof value!=='object'||!value.scope||!['subject','native','output'].includes(value.scope.kind))return false;
+  const scope=value.scope;if(parentStudyId!==undefined&&scope.parentStudyId!==parentStudyId)return false;
+  const input={...(scope.parentStudyId!==undefined?{parentStudyId:scope.parentStudyId}:{}),...(scope.kind==='native'?{bindingId:scope.bindingId}:{}),...(scope.kind==='output'?{outputId:scope.outputId,...(scope.nativeBindingId!==undefined?{bindingId:scope.nativeBindingId}:{})}:{})};
+  return same(value,effectiveDirectionChoices(choices,input));
+ }
+ const projected=structuredClone(current);
+ for(let index=0;index<projected.records.length;index++){
+  const record=projected.records[index],original=captured.records[index],choices=readDirectionChoices(record.body);
+  if(has(record.directionChoices,'subjectDecisions')||has(record.directionChoices,'pieceDecisions')){
+   if(!same(record.directionChoices,choices))return false;
+   for(const key of ['subjectDecisions','pieceDecisions'])if(!has(original.directionChoices,key))delete record.directionChoices[key];
+  }
+  if(has(record,'effectiveDirection')){
+   if(record.scope?.kind!=='project'||!derivedMatches(record.effectiveDirection,choices,record.scope.parentStudyId))return false;
+   delete record.effectiveDirection;
+  }
+ }
+ if(has(projected,'effectiveDirection')){
+  const project=current.records.find(record=>record.scope?.kind==='project'),choices=project?readDirectionChoices(project.body):readDirectionChoices('');
+  if(!derivedMatches(projected.effectiveDirection,choices,project?.scope?.parentStudyId))return false;
+  delete projected.effectiveDirection;
+ }
+ projected.hash=digest(encoded(projected.records));
+ return same(captured,projected);
 }
 export function createRequestPreviews({ dataDir, store, library, guidance, researchMaterial, researchAnswers, humanDirection }) {
   const dir = ensurePrivateDirectory(dataDir, 'requests');
@@ -143,7 +179,7 @@ export function createRequestPreviews({ dataDir, store, library, guidance, resea
     const current=await humanDirection.context(record.manifest.projectId,{documentId:record.manifest.documentId,...(captured?.outputId?{outputId:captured.outputId}:{})});
     // A legacy preview may proceed only while there are no human decisions to omit.
     if (!captured&&!current.records.length) return;
-    if (!captured||digest(JSON.stringify(captured))!==digest(JSON.stringify(current))) throw new StateError('Scoped human direction changed. Build and review a current request before sending.',409);
+    if (!captured||!equivalentRequestHumanDirection(captured,current)) throw new StateError('Scoped human direction changed. Build and review a current request before sending.',409);
   }
   async function captureWritingTemplate(state) {
     const {attachment,source}=await readAttachedWritingTemplate({store,library,state});
