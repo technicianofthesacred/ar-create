@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "f44be41ca5333b4ff19c555722620aef5cb0392016cc248249d65f7eb8b9fd89"
+      "candidateSha256": "e386565dd16fcde7d478d89f958fdbbb94e89b1d8af1545abb1f4faacd0bf8a5"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -5193,7 +5193,7 @@
     },
     {
       "path": "tests/library-topics-ui.test.mjs",
-      "candidateSha256": "5af4904d15ef50772f8985081c478e61513c073cf5847e73b646ab64cd38e4fe"
+      "candidateSha256": "ea3a5cbe07b8f3193e307659811a3bbc3fc0451d9d8c9b2df8fb795b4c342120"
     },
     {
       "path": "tests/library-topics.test.mjs",
