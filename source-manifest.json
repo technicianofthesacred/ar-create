@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "ce5f19fc45b8686511ea853bb1a2ed6852da25e5a3067c017f393083f061a83f",
+      "candidateSha256": "88f40b5ba862f067df5fd5ac642acb09206eff62f5557a2a9afe2fe59b95b6bf",
       "adapted": true
     },
     {
@@ -5070,6 +5070,10 @@
     {
       "path": "tests/study-saved-writing-direction-refresh.test.mjs",
       "candidateSha256": "c543d8638ab79c7648b104050fd42206f3a4f3ac2e2b89c556e7e0c2cb11b294"
+    },
+    {
+      "path": "tests/native-output-export-urls.test.mjs",
+      "candidateSha256": "6cf3a4b91f33328e73c6b4b0b2bcb519334ed14dff10bb49284a5b6feb5b3471"
     }
   ],
   "dependencyRepair": {

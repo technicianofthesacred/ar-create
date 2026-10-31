@@ -543,7 +543,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         throw new StateError('Method is not supported.',405);
       }
       function outputQuery(){return {rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),selectedOutputId:url.searchParams.get('selectedOutputId')};}
-      function decorateOutputExports(result,input){const copy=structuredClone(result),q=new URLSearchParams({rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId});const add=value=>{if(value?.url)value.url+='?'+q;for(const f of value?.files||[])if(f.url)f.url+='?'+q;};add(copy.artifact);add(copy.export);for(const item of copy.artifacts||[])add(item);for(const item of copy.exports||[])add(item);return copy;}
+
       const carouselMatch=pathname.match(/^\/api\/carousel\/exports\/([a-f0-9-]{36})\/(render|file)\/(.+)$/);
       if(carouselMatch){
         if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
@@ -731,4 +731,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const server = await createServer({ dataDir: process.env.AR_CREATE_DATA_DIR || path.join(root, 'data'), connections, connectionsEditable:connections===undefined, extraction, sharedArticles:sharedArticlesEnabled(process.env.AR_CREATE_DATA_DIR || path.join(root, 'data')) });
   server.on('error', error => { console.error(error.message); process.exitCode = 1; });
   server.listen(port, '127.0.0.1', () => console.log(`ar-create local workspace: http://127.0.0.1:${port}`));
+}
+
+export function decorateOutputExports(result,input){
+ const copy=structuredClone(result),scope={rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId};
+ const scoped=value=>{const url=new URL(value,'http://local.invalid');for(const [key,entry] of Object.entries(scope))url.searchParams.set(key,entry);return url.pathname+url.search+url.hash;};
+ const add=value=>{if(value?.url)value.url=scoped(value.url);for(const file of value?.files||[])if(file.url)file.url=scoped(file.url);};
+ add(copy.artifact);add(copy.export);for(const item of copy.artifacts||[])add(item);for(const item of copy.exports||[])add(item);return copy;
 }
