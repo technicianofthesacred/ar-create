@@ -88,9 +88,9 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
     if (!same(m.ownedIdentity, identity(root.binding))) fail("Owned photo and native provenance disagree.");
     const verified = await ownedPhotos.resolve(m.projectId);
     if (verified.bindingId !== input.rootBindingId || verified.parentStudyId !== input.parentStudyId || verified.projectId !== m.projectId || verified.documentId !== m.documentId) fail("Exact owned physical output scope changed.");
-    const parent = registry(input.parentStudyId), s = { ...input, projectId: m.projectId, documentId: m.documentId, parent, mapping: m, originalId: root.binding.originalId, partKey: root.binding.partKey, authoredCollection:root.binding.origin==="authored-collection", authoredOriginal:root.binding.origin==="authored-collection"?{parentStudyKey:root.binding.parentStudyKey,partKey:root.binding.partKey,records:root.context.records.map(r=>({...r,path:r.sourcePath,hash:r.copiedHash??r.hash})),missing:[]}:null, sourceIdentities: root.context.records.filter((r) => r.role !== "draft").map((r) => ({ id: r.id, role: r.role, sourcePath: r.sourcePath })) };
+    const parent = registry(input.parentStudyId), s = { ...input, projectId: m.projectId, documentId: m.documentId, parent, mapping: m, originalId: root.binding.originalId, partKey: root.binding.partKey, capturedRoot:["authored-collection","structure-test"].includes(root.binding.origin), capturedOriginal:["authored-collection","structure-test"].includes(root.binding.origin)?{parentStudyKey:root.binding.parentStudyKey,partKey:root.binding.partKey,records:root.context.records.filter(r=>!r.missing).map(r=>({...r,path:r.sourcePath,hash:r.copiedHash??r.hash})),missing:root.context.records.filter(r=>r.missing).map(r=>({role:r.role,path:r.sourcePath}))}:null, sourceIdentities: root.context.records.filter((r) => r.role !== "draft").map((r) => ({ id: r.id, role: r.role, sourcePath: r.sourcePath })) };
     validateScope(s);
-    const original = s.authoredCollection ? s.authoredOriginal : originals.readDraft(s.originalId);
+    const original = s.capturedRoot ? s.capturedOriginal : originals.readDraft(s.originalId);
     if (original.parentStudyKey !== s.parentStudyId || original.partKey !== s.partKey) fail("Original source belongs to another parent/part; inheritance held.");
     scopes.set(stable(input), s);
     return { projectId: s.projectId, documentId: s.documentId };
@@ -143,7 +143,7 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
     const key = stable({ rootBindingId: input.rootBindingId, parentStudyId: input.parentStudyId }), s = scopes.get(key);
     if (!s || !UUID.test(input.outputId || "")) fail("Resolve this exact trusted root scope before proof reads.");
     validateScope(s);
-    const original = s.authoredCollection ? s.authoredOriginal : originals.readDraft(s.originalId);
+    const original = s.capturedRoot ? s.capturedOriginal : originals.readDraft(s.originalId);
     if (original.parentStudyKey !== s.parentStudyId || original.partKey !== s.partKey) fail("Unsupported original source/part inheritance.");
     const sources = [];
     for (const r of original.records.filter((r2) => r2.role !== "draft")) {

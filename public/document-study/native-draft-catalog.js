@@ -27,7 +27,7 @@
  function invalidate(){epoch++;snapshot=null;pending=null;}
  function mutationSucceeded(route){
   const pathname=String(route||'').split('?')[0];
-  const relevant=/^\/api\/study-draft\/(?:open|create-collection|fork|register-output|recover-roots|reconnect|recover)$/.test(pathname)||/^\/api\/study\/outputs\/(?:create|copy-retained-carousel|copy-browser-carousel)$/.test(pathname)||/^\/api\/magazine\/working-draft\/(?:save|undo|history-restore)$/.test(pathname);
+  const relevant=pathname==='/api/study/structure-tests'||/^\/api\/study-draft\/(?:open|create-collection|fork|register-output|recover-roots|reconnect|recover)$/.test(pathname)||/^\/api\/study\/outputs\/(?:create|copy-retained-carousel|copy-browser-carousel)$/.test(pathname)||/^\/api\/magazine\/working-draft\/(?:save|undo|history-restore)$/.test(pathname);
   if(relevant)invalidate();return relevant;
  }
  async function read({fresh=false}={}){

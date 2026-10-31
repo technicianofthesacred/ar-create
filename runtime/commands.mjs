@@ -60,6 +60,7 @@ const BODY = {
   '/api/concepts': ['parentStudyId', 'title', 'operationId'],
   '/api/concept/save': ['parentStudyId', 'operationId', 'expectedRevision', 'expectedHash', 'authorThoughts', 'adoptedDirection?', 'aiInterpretation', 'suggestions', 'sourceSelections', 'body?', 'replaceExistingDirection?'],
   '/api/concept/sources/search': ['parentStudyId?', 'query', 'limit?'],
+  '/api/study/structure-tests': ['sourceBindingId','sourceParentStudyId','expected','title','operationId'],
   '/api/study-draft/create-collection': ['parentStudyId', 'title', 'operationId'],
   '/api/study-draft/open': ['parentStudyId', 'originalId', 'originalHash', 'operationId'],
   '/api/study-draft/save': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'operations'],
@@ -122,7 +123,7 @@ function entry(method, route, { query, mode, mount }) {
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
   const pattern = new RegExp('^' + route.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\w+)\\?\}/g, '([^/]+)') + '$');
   return { name: '', section: section(route), method, route, schema: method === 'GET' || mode === 'scope' || mode === 'scope-copy' ? { query: query || [], ...(mode === 'scope-copy' ? { body: 'object (repeats the query scope)' } : mode === 'scope' && method !== 'GET' ? { body: BODY[route] || 'object (identity stays in the query)' } : {}), ...(mode === 'input-json' ? { encoding: 'input-json' } : {}) } : { body: BODY[route] || 'object' },
-    readOnly, actors: HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
+    readOnly, actors: key==='POST /api/study/structure-tests'?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
 }
 /** Query fields a GET handler reads, recovered from its source. */
 const queryFields = fn => [...new Set([...String(fn).matchAll(/searchParams\.(?:get|getAll|has)\('([\w-]+)'\)/g)].map(m => m[1]))];
@@ -153,7 +154,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -298,6 +299,7 @@ export function createRouteMap(services) {
       '/api/study/outputs/refresh': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.refreshSelectedArticle(input);})},
       '/api/study/outputs/undo': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.undo(input);})},
       '/api/study/outputs/export-check': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.assertExport(input);})},
+      '/api/study/structure-tests': {GET:()=>draftCall(()=>{if(!structureTests)throw new StateError('Structure-test copies are unavailable.',503);if([...url.searchParams.keys()].join(',')!=='parentStudyId')throw new StateError('Use one exact structure-test identity.',400);return structureTests.read({parentStudyId:url.searchParams.get('parentStudyId')});}),POST:input=>draftCall(()=>{if(!structureTests)throw new StateError('Structure-test copies are unavailable.',503);if([...url.searchParams].length)throw new StateError('Use the exact structure-test copy command without a query.',400);return structureTests.create(input);})},
       '/api/study-draft/catalog': {GET:()=>draftCall(()=>studyDrafts.catalog())},
       '/api/study-draft/read': {GET:()=>draftCall(()=>studyDrafts.read({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study-draft/create-collection': {POST:input=>draftCall(()=>createStudyCollection(input))},

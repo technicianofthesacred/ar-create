@@ -22,6 +22,12 @@ A working draft download may preserve unresolved marks and notes without publica
 
 Routine technical blockers remain Build's responsibility. Genuine wording, direction, publication and sending decisions remain the author's. Do not make the author repeatedly resume engineering or carry context between agents.
 
+## Whole-structure test program — approved 31 October 2026
+
+Adrian approved completing the installed recording → Library → Source → Research → Direction → Write → Check → Media/Arrange → Audience → Share → Outputs structure. First create Hong Kong Day 1 · structure test from the real subject material under independent owned working files. Preserve the original and prove it with before/after hashes; its editorial decisions remain pending. Stand-in decisions are allowed only on the explicitly registered test copy, visibly labelled stand-in and attributed to the agent, never human:adrian. This is a copy-scoped testing exception, not general agent editorial authority.
+
+Reuse existing owners and finish available not-connected functions stage by stage: Write AI/protection/Focus/versions/overrides; Research; Direction decisions; local production/media/Video; reviewed language tools; Gather; Home. Existing signed-in AI connections may prepare sourced proposals, with exact citations or marked gaps and no automatic author-page edits. No invented sample content enters the installed app. Outside posting/publication, public URLs, Share sending, new keys/accounts/paid services remain excluded. A private reader confined to this Mac is allowed. If genuine media, access or a human permission is missing, record the gate and continue independent work. Follow the approved Combined rules and report each installed capability on the structure test copy. Details and acceptance sequence are in [the structure-test program](../plans/2026-10-31-structure-test-program.md).
+
 ## Journey-first finishing order — 29 October
 
 Finish one existing selected project through useful author decisions and faithful Article/Carousel files. First clean live discovery and the activity record: processing files and fixtures are not sources; agent actions retain their actor; viewing is not a committed edit; pickup advances on an edit or explicit Continue. Then diagnose optional discovery readers and prove ten cold returns without Retry, rather than widening a deadline alone.

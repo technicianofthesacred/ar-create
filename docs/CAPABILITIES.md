@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-28T03:22:43.205Z.
+> Generated 2026-10-31T04:56:28.695Z.
 
-**At a glance:** 7 commands · 279 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 289 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-279 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+289 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -160,17 +160,25 @@
 | `study-originals.check-inputs` | `GET /api/study-originals/check-inputs` | any | read |
 | `study.source-context` | `GET /api/study/source-context` | any | read |
 
-### magazine (27)
+### magazine (35)
 
 | name | route | who | kind |
 |---|---|---|---|
 | `magazine.artifact` | `GET /api/magazine/artifact` | any | read |
 | `magazine.library-photos` | `GET /api/magazine/library-photos` | any | read |
+| `magazine.library-photos.album` | `POST /api/magazine/library-photos/album` | any | write · undo `library.folders.post` |
 | `magazine.library-photos.asset` | `GET /api/magazine/library-photos/asset` | any | read |
 | `magazine.library-photos.preview` | `GET /api/magazine/library-photos/preview` | any | read |
 | `magazine.mechanical-check.get` | `GET /api/magazine/mechanical-check` | any | read |
 | `magazine.mechanical-check.post` | `POST /api/magazine/mechanical-check` | human | write |
 | `magazine.portfolio` | `GET /api/magazine/portfolio` | any | read |
+| `magazine.working-draft.ai.accept` | `POST /api/magazine/working-draft/ai/accept` | human | write · undo `magazine.working-draft.undo` |
+| `magazine.working-draft.ai.context` | `GET /api/magazine/working-draft/ai/context` | any | read |
+| `magazine.working-draft.ai.proposal` | `GET /api/magazine/working-draft/ai/proposal` | any | read |
+| `magazine.working-draft.ai.proposals` | `GET /api/magazine/working-draft/ai/proposals` | any | read |
+| `magazine.working-draft.ai.propose` | `POST /api/magazine/working-draft/ai/propose` | any | write |
+| `magazine.working-draft.ai.reject` | `POST /api/magazine/working-draft/ai/reject` | human | write |
+| `magazine.working-draft.ai.run` | `POST /api/magazine/working-draft/ai/run` | human | write |
 | `magazine.working-draft.catalog` | `GET /api/magazine/working-draft/catalog` | any | read |
 | `magazine.working-draft.edit` | `POST /api/magazine/working-draft/edit` | human | write · undo `magazine.working-draft.undo` |
 | `magazine.working-draft.export` | `POST /api/magazine/working-draft/export` | any | write |
@@ -331,10 +339,10 @@
 | `study.share` | `GET /api/study/share` | any | read |
 | `study.share.fact` | `POST /api/study/share/fact` | human | write |
 | `study.share.recipients` | `GET /api/study/share/recipients` | any | read |
-| `study.share.save` | `POST /api/study/share/save` | any | write · undo `study.share.undo` |
-| `study.share.undo` | `POST /api/study/share/undo` | any | write |
+| `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
+| `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (14)
+### system (16)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -352,6 +360,8 @@
 | `leases.release` | `POST /api/leases/release` | any | write |
 | `presence.get` | `GET /api/presence` | any | read |
 | `presence.post` | `POST /api/presence` | any | write |
+| `study.structure-tests.get` | `GET /api/study/structure-tests` | any | read |
+| `study.structure-tests.post` | `POST /api/study/structure-tests` | agent | write |
 
 ### transcript (11)
 
