@@ -69,7 +69,10 @@ const BODY = {
   '/api/study/human-direction/select': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'title'],
   '/api/study/human-direction/write': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'body'],
   '/api/study/human-direction/undo': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'undoOperationId'],
-  '/api/study-ai/prepare': ['sourceIds', 'answerIds?', 'purpose?', 'openingRequestId?', 'selectedOptionId?'], '/api/study-ai/propose': ['requestId', 'replacements?', 'openingOptions?', 'continuationParagraphs?'],
+  '/api/study-ai/run': ['bindingId','parentStudyId','requestId','operationId'],
+  '/api/study/structure-tests/proposal-contract': ['bindingId','parentStudyId','kind','operationId','expectedContractHash','...'],
+  '/api/study/structure-tests/proposal-review': ['bindingId','parentStudyId','action','requestId','operationId','reason?'],
+  '/api/study-ai/prepare': ['sourceIds', 'answerIds?', 'purpose?', 'openingRequestId?', 'selectedOptionId?','instruction?'], '/api/study-ai/propose': ['requestId', 'replacements?', 'openingOptions?', 'continuationParagraphs?','sourcedParagraph?','sourcedEvidence?'],
   '/api/study-ai/accept': ['requestId', '...'], '/api/study-ai/reject': ['requestId', 'reason?'],
   '/api/pieces': ['expectedProjectId', 'expectedRevision', 'title'], '/api/pieces/switch': ['expectedProjectId', 'expectedRevision', 'projectId'],
   '/api/presence': ['stage', 'scope:{kind,id}', 'dirty', 'sequence'],
@@ -120,11 +123,12 @@ const HUMAN_ONLY = new Set(['POST /api/magazine/working-draft/ai/run', 'POST /ap
 
 function entry(method, route, { query, mode, mount }) {
   // Manuscript proposals take their identity from the query only; the body must not repeat it.
-  if (route.startsWith('/api/study-ai/')) { mode = 'scope'; query = ['bindingId', 'parentStudyId', 'requestId?']; }
+  if (route.startsWith('/api/study-ai/')&&route!=='/api/study-ai/run') { mode = 'scope'; query = ['bindingId', 'parentStudyId', 'requestId?']; }
+  if(route==='/api/study-ai/run'&&method==='GET')query=['bindingId','parentStudyId','requestId?','operationId'];
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
   const pattern = new RegExp('^' + route.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\w+)\\?\}/g, '([^/]+)') + '$');
   return { name: '', section: section(route), method, route, schema: method === 'GET' || mode === 'scope' || mode === 'scope-copy' ? { query: query || [], ...(mode === 'scope-copy' ? { body: 'object (repeats the query scope)' } : mode === 'scope' && method !== 'GET' ? { body: BODY[route] || 'object (identity stays in the query)' } : {}), ...(mode === 'input-json' ? { encoding: 'input-json' } : {}) } : { body: BODY[route] || 'object' },
-    readOnly, actors: ['POST /api/study/structure-tests','POST /api/study/structure-tests/review-mark'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
+    readOnly, actors: ['POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
 }
 /** Query fields a GET handler reads, recovered from its source. */
 const queryFields = fn => [...new Set([...String(fn).matchAll(/searchParams\.(?:get|getAll|has)\('([\w-]+)'\)/g)].map(m => m[1]))];
@@ -258,6 +262,9 @@ export function createRouteMap(services) {
       '/api/terminal/sessions': { GET: () => terminal.list(), POST: input => terminal.start(input) },
       '/api/pieces': {GET:()=>store.listPieces(),POST:input=>store.createPiece(input)},
       '/api/i64os/health': {GET:()=>{if(!studyDrafts)throw new StateError('Document study is not configured.',503);return {service:'ar-create-document-study',ready:true};}},
+      '/api/study-ai/run': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact execution path.',400);return studyAI.call('run',input);}),GET:()=>draftCall(()=>{const input=Object.fromEntries(url.searchParams);if([...url.searchParams.keys()].some(key=>!['bindingId','parentStudyId','requestId','operationId'].includes(key))||Object.keys(input).some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Use one exact execution scope.',400);return studyAI.call('runStatus',input);})},
+      '/api/study/structure-tests/proposal-contract': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact stand-in contract path.',400);return studyAI.standInContract(input);})},
+      '/api/study/structure-tests/proposal-review': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact stand-in decision path.',400);return studyAI.standInReview(input);})},
       '/api/study-ai/contracts': {GET:()=>studyAICall('contracts')},
       '/api/study-ai/human-contract': {POST:input=>studyAICall('humanContract',input)},
       '/api/study-ai/read': {GET:()=>studyAICall('read')},

@@ -20,12 +20,19 @@ async function acceptedOpeningTransition(drafts,binding,draft,lineage){
 }
 /** Read only existing authorities. No active-project reads, saves, source analysis,
  * guessed attribution, insertion, stage transitions, providers or new storage. */
-export function createStudyEditorialPlanContext({drafts,originals,choices}={}){
+export function createStudyEditorialPlanContext({drafts,originals,choices,validateStandInTarget}={}){
  if(!drafts?.read||!originals?.readDraft||!choices?.read)throw TypeError('Supply existing owned drafts, original part catalog and saved research choices.');
  return {async context(binding,{acceptedOpening}={}){
   const draft=await drafts.read(binding),b=draft?.binding;
   if(b?.id!==binding.bindingId||b.parentStudyId!==binding.parentStudyId||b.authority!=='owned-working-copy'||b.status!=='ready'||draft.readiness?.ready!==true||!draft.expected||!Array.isArray(draft.context?.records))fail('Exact ready owned manuscript is required for editorial context.');
   const openingPreimage=acceptedOpening===undefined?null:await acceptedOpeningTransition(drafts,binding,draft,acceptedOpening);
+  if(b.origin==='structure-test'||b.parentStudyId.startsWith('structure-test-')){
+   if(typeof validateStandInTarget!=='function')fail('Registered structure-test plan authority is unavailable.');
+   const verified=await validateStandInTarget(binding);if(!same(verified.document.expected,draft.expected)||verified.document.raw!==draft.raw)fail('Structure-test writing changed while capturing its plan.');
+   const originalSourceRecords=draft.context.records.filter(record=>record.role!=='draft').map(record=>{if(record.missing||typeof record.raw!=='string'||record.copiedHash!==digest(record.raw))fail('Copied support capture is unavailable or changed.');return {id:record.id,role:record.role,sourcePath:record.sourcePath,hash:record.copiedHash};}).sort((a,b)=>a.id.localeCompare(b.id));
+   const records=draft.context.records.filter(record=>['brief','plan','map'].includes(record.role)).map(record=>({id:record.id,role:EDITORIAL_PLAN_ROLE,recordKind:record.role,sourcePath:record.sourcePath,hash:record.copiedHash,body:record.raw,authority:'immutable-structure-test-support-capture',scope:{bindingId:b.id,parentStudyId:b.parentStudyId,originalId:b.originalId,partKey:b.partKey},interpretation:'Retained plan material; original human decisions remain with the original subject. This capture is not factual evidence or accepted prose.'}));
+   const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:'exact-registered-structure-test-copy',expected:structuredClone(draft.expected),originalPlan:{status:'captured-support-only',source:structuredClone(verified.view.source),decisions:'Original human decisions remain pending on the original subject.'},choiceSourceExpected:null,originalSourceRecords,records,selections:[]};return {...payload,hash:digest(stable(payload))};
+  }
   if(b.kind==='collection-root'||b.origin==='authored-collection'){
    if(!['collection-root','output-fork'].includes(b.kind)||b.origin!=='authored-collection'||b.originalId!=='collection:'+binding.parentStudyId||b.partKey!=='collection'||PARENTS[b.parentStudyId]||draft.context.records.some(record=>record.role!=='draft'))fail('Authored root has contradictory original-plan identity or retained original support; preserve existing context for review.');
    let outputLineage;

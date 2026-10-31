@@ -1,3 +1,9 @@
+## 31 October — native sourced Write connection in progress
+
+C01/C03/C04/C05/C06/C07, S01/S04/S05/S07/S09/S12. Stage 0 is installed: the independent original-backed test subject and Article open from Subjects with truthful agent stand-in decisions; originals and captured material remain exact. The native route owner must also replace an earlier original workspace address when entering the copy.
+
+Stage 1 connects explicit source selection to the existing logged-in output-only AI transport, persists one execution attempt per request, validates exact claim citations and leaves unsupported questions as gaps. The existing proposal owner keeps wording pending until an explicit human decision, or a registered-copy-only agent stand-in decision. Protected phrases and per-piece writing guidance retain their own exact scoped contract history; they do not become evidence, alter shared guidance or overwrite the author page. Finish: focused owner/proxy/UI and source-preservation checks, native margin/Focus/history/guidance and fresh reload on the copy, one actual sourced execution through the maintained connection, exact installed revision and main screenshots. Original author decisions remain pending; no sending/publication.
+
 ## 31 October — structure-test Stage0 in progress
 
 S01/S02/S03/S04/S05/S08/S09/S12, C01/C03/C04/C05/C06/C07. New approved whole-structure program starts with an independent real-material Hong Kong test subject. Existing owned copies, captures, project/photo/output bindings and history remain the authorities. Stage0 is not yet installed: finish with isolated owned bytes, visible stand-in/agent context, restart/replay, original-before/after hashes and main-app proof. Original decisions stay open; no human impersonation, outside sending/publication, new provider setup or invented live samples. See the program and Stage0 plans.

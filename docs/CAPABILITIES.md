@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-31T04:56:28.695Z.
+> Generated 2026-10-31T05:52:27.190Z.
 
-**At a glance:** 7 commands · 289 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 294 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-289 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+294 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -99,7 +99,7 @@
 | `study.human-direction.undo` | `POST /api/study/human-direction/undo` | any | write |
 | `study.human-direction.write` | `POST /api/study/human-direction/write` | any | write · undo `study.human-direction.undo` |
 
-### draft (25)
+### draft (27)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -113,6 +113,8 @@
 | `study-ai.reject` | `POST /api/study-ai/reject` | human | write |
 | `study-ai.requests` | `GET /api/study-ai/requests` | any | read |
 | `study-ai.review` | `GET /api/study-ai/review` | any | read |
+| `study-ai.run.get` | `GET /api/study-ai/run` | any | read |
+| `study-ai.run.post` | `POST /api/study-ai/run` | any | write |
 | `study-draft.catalog` | `GET /api/study-draft/catalog` | any | read |
 | `study-draft.check.get` | `GET /api/study-draft/check` | any | read |
 | `study-draft.check.post` | `POST /api/study-draft/check` | any | write |
@@ -342,7 +344,7 @@
 | `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
 | `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (16)
+### system (19)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -362,6 +364,9 @@
 | `presence.post` | `POST /api/presence` | any | write |
 | `study.structure-tests.get` | `GET /api/study/structure-tests` | any | read |
 | `study.structure-tests.post` | `POST /api/study/structure-tests` | agent | write |
+| `study.structure-tests.proposal-contract` | `POST /api/study/structure-tests/proposal-contract` | agent | write |
+| `study.structure-tests.proposal-review` | `POST /api/study/structure-tests/proposal-review` | agent | write |
+| `study.structure-tests.review-mark` | `POST /api/study/structure-tests/review-mark` | agent | write |
 
 ### transcript (11)
 

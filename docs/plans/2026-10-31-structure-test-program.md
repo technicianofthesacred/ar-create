@@ -1,14 +1,14 @@
-# Installed structure-test program — approved 31 October
+# Structure-test program — approved 31 October
 
 ## Goal and authority
 
-Adrian approved building the whole recording-to-Outputs structure, using a separate real-material subject named Hong Kong Day 1 · structure test. This supersedes the earlier stop-after-bounded-review scope. It does not approve changes to the original subject, genuine editorial decisions, external publication/sending/public links, new accounts/keys/services, or invented live sample content. Use the existing signed-in agent connection; current Codex ChatGPT login is available, Claude CLI login is not.
+Adrian approved building the whole recording-to-Outputs structure, using a separate real-material subject named Hong Kong Day 1 · structure test. This supersedes the earlier stop-after-bounded-review scope. It does not approve changes to the original subject, genuine editorial decisions, external publication/sending/public links, new accounts/keys/services, or invented live sample content. Use an existing signed-in local agent connection. Account and tool configuration stay outside the source checkout.
 
 C01–C07 and S01–S12 retain their authorities. Combined remains the design: visible work, drag grips, one toolbar, honest connection labels, Lora only for spoken words, 5px buttons and no interface-explainer paragraphs. The inventory was posted in the working chat before Stage0. Existing bounded sourced proposals, manual language editions, local exports, Collections, private Share and Home machinery are reused.
 
 ## Delivery sequence and finish criteria
 
-- [ ] Stage0: independent original-backed test subject, immutable capture lineage, visible test/stand-in actor context, and before/after original hashes; install and prove in main app.
+- [x] Stage0: independent original-backed test subject, immutable capture lineage, visible test/stand-in actor context, and before/after original hashes; install and prove in main app.
 - [ ] Stage1: sourced Write proposals, gaps, explicit review, protected phrases, Focus, version comparison and per-piece guidance. Test-copy stand-in actions use an explicit copy-scoped operation, never human impersonation.
 - [ ] Stage2: point questions, durable notebook/questions, AI brief/discussion, broader Library retrieval and available cited outside research. Keep source words separate from claims and editorial use.
 - [ ] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
@@ -22,3 +22,11 @@ Each stage gets proportionate affected checks and a native screen/file journey, 
 ## Human and outside boundaries
 
 Original angle/title, ten passages, Carousel words and photos stay pending. Missing genuine media cannot be invented. Microphone permission or unavailable account/source access is recorded and skipped while other work continues. Posting, external Share sending, public URLs and outside-Mac hosting remain not connected. A local read-only snapshot reader is allowed. No new paid provider or credentials. AI uses only captured authorized context and returns source-linked proposals or explicit gaps; it never writes the author page automatically.
+
+## Stage 0 installed · 31 October
+
+The independent Hong Kong structure-test Article opens from Subjects with an agent stand-in strip. Ten copied marks were reviewed as stand-ins under the agent actor; captured material and visible wording are retained. Original words, history, decisions, Carousel and shared guidance match the saved before/after hashes. Native reload-route correction follows in Stage 1; the whole journey is not yet accepted.
+
+## Stage 1 verification checkpoint
+
+The native source-selected proposal owner, copy-scoped stand-in review and protected/guidance contracts pass the affected integration checks. The synthetic screen journey proves exact source quotation reading, a separate unsupported gap, unchanged pending words, explicit stand-in insertion, protected phrases and scoped guidance across reload, automatic completion updates without resend, Focus exit, and 1440/390 fit. The exact main-app installation and real-material execution remain separate proof obligations. The native History and Versions entrances now open the maintained comparison drawer; closing it and leaving Focus retain the same manuscript.

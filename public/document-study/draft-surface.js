@@ -37,7 +37,7 @@
    const status=document.createElement('p');status.className='draft-surface-ai-state';body.append(status);
   }
   removeEmptySampleCue(margin);
-  const status=margin.querySelector('.draft-surface-ai-state'),message='Live AI is not connected to this editor.'+(margin.querySelector('#discussion,.ci-sample-gate')?' Existing sample discussions remain labeled.':'');
+  const status=margin.querySelector('.draft-surface-ai-state'),message=window.studyAIProposals?.hasExecution?.()===true?'AI drafts · proposals only':'Live AI is not connected to this editor.'+(margin.querySelector('#discussion,.ci-sample-gate')?' Existing sample discussions remain labeled.':'');
   if(status&&status.textContent!==message)status.textContent=message;
   moveContext();
   margin.classList.toggle('expanded',expanded);margin.classList.toggle('revealed',revealed);
@@ -62,7 +62,7 @@
  }
  function decorate(){
   decorateProse();
-  const enabled=active();document.body.classList.toggle('draft-surface-active',enabled);if(!enabled){delete document.body.dataset.draftFocus;return;}
+  const enabled=active();document.body.classList.toggle('draft-surface-active',enabled);let exit=document.getElementById('draft-focus-exit');if(enabled&&!exit){exit=button('Exit Focus','exit-focus');exit.id='draft-focus-exit';exit.className='draft-focus-exit';exit.title='Exit Focus · Esc';document.body.append(exit);}if(exit)exit.hidden=!enabled||!focus;if(!enabled){delete document.body.dataset.draftFocus;return;}
   const top=document.querySelector('.workspace>.topbar');if(top&&!top.querySelector('.draft-surface-modes')){
    const modes=document.createElement('div');modes.className='draft-surface-modes';modes.setAttribute('aria-label','Writing view');
    for(const mode of ['margin','focus']){const b=button(mode==='margin'?'Margin':'Focus','mode');b.dataset.surfaceMode=mode;modes.append(b)}
@@ -94,7 +94,8 @@
  const oldPositionMargin=positionMargin;positionMargin=function(){if(!active())return oldPositionMargin();const card=document.querySelector('#margin .discussion');if(card)card.style.marginTop='0';};
  const oldPositionNotes=positionOriginalNotes;positionOriginalNotes=function(){if(!active())return oldPositionNotes();document.querySelectorAll('#margin [data-note-anchor]').forEach(el=>{el.style.position='static';el.style.top='auto';el.style.marginTop='0';});};
  const oldClose=closeMargin;closeMargin=function(){if(!active())return oldClose();revealed=false;expanded=false;marginOpen=!focus;decorateMargin()};
- document.addEventListener('click',event=>{const el=event.target.closest?.('[data-surface-action]');if(!el||!active())return;const action=el.dataset.surfaceAction;if(action==='mode')setMode(el.dataset.surfaceMode==='focus');else if(action==='open-margin')showMargin();else if(action==='close-margin'){revealed=false;expanded=false;marginOpen=!focus;decorateMargin();}});
+ document.addEventListener('click',event=>{const el=event.target.closest?.('[data-surface-action]');if(!el||!active())return;const action=el.dataset.surfaceAction;if(action==='exit-focus')setMode(false);else if(action==='mode')setMode(el.dataset.surfaceMode==='focus');else if(action==='open-margin')showMargin();else if(action==='close-margin'){revealed=false;expanded=false;marginOpen=!focus;decorateMargin();}});
+ document.addEventListener('keydown',event=>{if(event.key!=='Escape'||!active()||!focus||event.defaultPrevented||document.querySelector('dialog[open],#wbf-drawer'))return;event.preventDefault();event.stopImmediatePropagation();setMode(false);},true);
  document.addEventListener('selectionchange',()=>{if(!active()||!focus)return;const selection=window.getSelection();if(selection?.isCollapsed)return;const node=selection?.anchorNode,editor=document.getElementById('manuscript');if(node&&editor?.contains(node)){revealed=true;expanded=true;decorateMargin();}});
  window.addEventListener('study-draft-change',()=>{if(active()){const status=document.querySelector('.draft-surface-save-state');if(status)status.setAttribute('role',status.getAttribute('role')||'status');}});
  let queued=false;new MutationObserver(()=>{if(queued||(!active()&&!document.querySelector('#manuscript,.draft-read-words,.manuscript-prose')))return;queued=true;queueMicrotask(()=>{queued=false;decorate()})}).observe(app,{childList:true,subtree:true});
