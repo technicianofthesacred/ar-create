@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {randomUUID} from 'node:crypto';
+import {createServer} from '../runtime/server.mjs';
+import {digest} from '../runtime/services/files.mjs';
+
+test('marked copies wait for exact agent stand-in reviews; originals and human approvals remain unchanged',async t=>{
+ const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'ar-standin-http-'))),vault=path.join(dataDir,'vault'),files=path.join(dataDir,'files');fs.mkdirSync(vault);fs.mkdirSync(files);
+ const DEV='Workflow/3-Develop/DEV - Original.md',SRC='Workflow/1-Source/SRC - Original.md',raw='---\ntitle: Original article\n---\n\nExact ==pending one== words and ==pending two==.\n';
+ for(const [rel,body] of [[DEV,raw],[SRC,'Original captured source.']]){const file=path.join(vault,rel);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,body);}
+ const catalog={projects:{parent:{title:'Original',docs:[[SRC,'source']]}},drafts:{'original-article':{parentStudyKey:'parent',partKey:'article',title:'Original article',path:DEV,support:[[SRC,'source']]}}};
+ const options={dataDir,publicDir:path.join(dataDir,'public'),studyOriginalRoots:{vaultRoot:vault,filesRoot:files,catalog},sharedArticles:true,researchEnabled:false};let server=await createServer(options);await new Promise(r=>server.listen(0,'127.0.0.1',r));let base='http://127.0.0.1:'+server.address().port;
+ t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));fs.rmSync(dataDir,{recursive:true,force:true});});
+ const post=async(route,input,actor='agent:codex')=>{const r=await fetch(base+route,{method:'POST',headers:{Origin:base,'Content-Type':'application/json','X-AR-Actor':actor,'X-AR-Client':'cli'},body:JSON.stringify(input)});return {status:r.status,value:await r.json()};};
+ const read=async(bindingId,parentStudyId)=>(await (await fetch(base+'/api/study-draft/read?'+new URLSearchParams({bindingId,parentStudyId}))).json());
+ const source=await post('/api/study-draft/open',{parentStudyId:'parent',originalId:'original-article',originalHash:digest(raw),operationId:randomUUID()});assert.equal(source.status,200);
+ const input={sourceBindingId:source.value.binding.id,sourceParentStudyId:'parent',expected:source.value.expected,title:'Original · structure test',operationId:randomUUID()};
+ const created=await post('/api/study/structure-tests',input);assert.equal(created.status,200,JSON.stringify(created.value));const copy=created.value;assert.equal(copy.status,'pending-stand-in');assert.equal(copy.article,null);assert.equal(copy.pendingMarks,2);
+ assert.equal((await (await fetch(base+'/api/study/structure-tests?'+new URLSearchParams({parentStudyId:copy.parentStudyId}))).json()).status,'pending-stand-in');
+ let document=await read(copy.bindingId,copy.parentStudyId),first,last;
+ for(let i=0;i<2;i++){
+  const block=document.approvalReview.blocks[0],span=block.spans[0],request={bindingId:copy.bindingId,parentStudyId:copy.parentStudyId,expected:document.expected,operationId:randomUUID(),id:block.id,seenBlockHash:block.seenBlockHash,rawFrom:span.rawFrom,rawTo:span.rawTo,seenMarkupHash:span.seenMarkupHash};
+  if(!i){first=request;for(const bad of [{...request,parentStudyId:'parent',bindingId:source.value.binding.id},{...request,humanDecision:true},{...request,rawFrom:999},{...request,expected:{}}])assert.ok((await post('/api/study/structure-tests/review-mark',bad)).status>=400);assert.equal((await post('/api/study/structure-tests/review-mark',request,'human:adrian')).status,403);}
+  last=request;const reviewed=await post('/api/study/structure-tests/review-mark',request);assert.equal(reviewed.status,200,JSON.stringify(reviewed.value));assert.equal(reviewed.value.decision.role,'stand-in');assert.equal(reviewed.value.decision.actor,'agent:codex');document=await read(copy.bindingId,copy.parentStudyId);assert.equal((await post('/api/study/structure-tests/review-mark',request)).status,200);
+ }
+ const undo=await post('/api/study-draft/undo',{bindingId:copy.bindingId,parentStudyId:copy.parentStudyId,expected:document.expected,operationId:randomUUID(),undoOperationId:last.operationId});assert.equal(undo.status,200,JSON.stringify(undo.value));assert.equal(undo.value.raw,raw.replace('==pending one==','pending one'));
+ document=undo.value;const block=document.approvalReview.blocks[0],span=block.spans[0];const redone=await post('/api/study/structure-tests/review-mark',{bindingId:copy.bindingId,parentStudyId:copy.parentStudyId,expected:document.expected,operationId:randomUUID(),id:block.id,seenBlockHash:block.seenBlockHash,rawFrom:span.rawFrom,rawTo:span.rawTo,seenMarkupHash:span.seenMarkupHash});assert.equal(redone.status,200,JSON.stringify(redone.value));document=await read(copy.bindingId,copy.parentStudyId);
+ assert.equal(document.raw,raw.replaceAll('==',''));const history=document.history.find(h=>h.operationId===first.operationId);assert.equal(history.actor,'agent:codex');
+ const done=await post('/api/study/structure-tests',input);assert.equal(done.status,200,JSON.stringify(done.value));assert.equal(done.value.status,'ready');assert.ok(done.value.article.outputId);
+ const original=await read(source.value.binding.id,'parent');assert.equal(original.raw,raw);assert.equal(original.history.length,source.value.history.length);assert.equal(fs.readFileSync(path.join(vault,DEV),'utf8'),raw);
+ const ordinary=await post('/api/study-draft/save',{bindingId:source.value.binding.id,parentStudyId:'parent',expected:source.value.expected,operationId:randomUUID(),operations:[{kind:'standInReviewMark',decisionRole:'stand-in',id:source.value.approvalReview.blocks[0].id,seenBlockHash:source.value.approvalReview.blocks[0].seenBlockHash,rawFrom:source.value.approvalReview.blocks[0].spans[0].rawFrom,rawTo:source.value.approvalReview.blocks[0].spans[0].rawTo,seenMarkupHash:source.value.approvalReview.blocks[0].spans[0].seenMarkupHash}]});assert.ok(ordinary.status>=400);
+ server.closeAllConnections();await new Promise(r=>server.close(r));server=await createServer(options);await new Promise(r=>server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+server.address().port;assert.equal((await post('/api/study/structure-tests',input)).status,200);
+});
+test('target validation admits only the immutable registered root or exact native output descendant',async()=>{
+ const {createStructureTests}=await import('../runtime/services/structure-tests.mjs');
+ const rootId=randomUUID(),childId=randomUUID(),outputId=randomUUID(),parentStudyId='structure-test-'+randomUUID(),root={binding:{id:rootId,parentStudyId,title:'Stand-in',kind:'collection-root',origin:'structure-test',status:'ready',structureTest:{role:'structure-test',label:'stand-in',createdBy:'agent:codex',sourceBindingId:randomUUID(),sourceParentStudyId:'original',draftHash:'a'.repeat(64),captureHash:'b'.repeat(64)}},readiness:{ready:true}},child={binding:{id:childId,parentStudyId,parentStudyKey:parentStudyId,authority:'owned-working-copy',status:'ready',sourceBindingId:rootId,canonicalOutputId:outputId},readiness:{ready:true}},bindings=[{outputId,wordOwner:{kind:'native',bindingId:childId}}];
+ const service=createStructureTests({drafts:{cloneStructureTest(){},catalog:async()=>({collections:[{bindingId:rootId,parentStudyId,origin:'structure-test'}]}),read:async input=>input.bindingId===rootId?root:child},bindings:{select(){}},photos:{select(){}},outputs:{read:async()=>({outputBindings:bindings}),create(){}}});
+ assert.equal((await service.validateTarget({bindingId:rootId,parentStudyId})).root,root);assert.equal((await service.validateTarget({bindingId:childId,parentStudyId})).document,child);
+ child.binding.sourceBindingId=randomUUID();await assert.rejects(service.validateTarget({bindingId:childId,parentStudyId}),/descendant/);child.binding.sourceBindingId=rootId;bindings[0].wordOwner.bindingId=randomUUID();await assert.rejects(service.validateTarget({bindingId:childId,parentStudyId}),/descendant/);
+ await assert.rejects(service.validateTarget({bindingId:rootId,parentStudyId:'original'}),/structure-test/);bindings[0].wordOwner.bindingId=childId;child.readiness.ready=false;await assert.rejects(service.validateTarget({bindingId:childId,parentStudyId}),/descendant/);
+});

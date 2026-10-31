@@ -1,4 +1,4 @@
-import {exactApprovalSpans,approveExactSpan} from '../../services/draft-approval.mjs';
+import {exactApprovalSpans,approveExactSpan,reviewExactSpan} from '../../services/draft-approval.mjs';
 import {reworkSlashes} from '../../reference/mag-edit.mjs';
 import {createHash,randomUUID} from 'node:crypto';
 import {documentParts,plain,editable,readableBlock} from '../donors/mag/markdown-blocks';
@@ -73,7 +73,7 @@ export function capture(raw:string,sourceKey:string):Snapshot{
 export function projection(s:Snapshot){return s.blocks.map(b=>({id:b.id,origin:b.origin,blockHash:hash(b.raw),...inlineMap(b.raw)}));}
 type Edit={kind:'text';id:string;from:number;to:number;insert:string;seenBlockHash:string};
 type AssetPhotoOp={kind:'photoReplaceAsset'|'photoInsertAsset';id:string;seenBlockHash:string;rootId:string;sourceId:string;revision:string;sourceHash:string;description:string};
-type Op=AssetPhotoOp|Edit|{kind:'photoAnnotation';id:string;seenBlockHash:string;annotation:{caption:string;credit:string}|null}|{kind:'articleCredits';credits:string[]|null}|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
+type Op=AssetPhotoOp|Edit|{kind:'photoAnnotation';id:string;seenBlockHash:string;annotation:{caption:string;credit:string}|null}|{kind:'articleCredits';credits:string[]|null}|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'standInReviewMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;decisionRole:'stand-in'}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
 /** Safe body boundaries only: no header, nested composition, ending or protected prose. */
 export function photoInsertionAnchors(s:Snapshot){
  const raw=render(s);let range:any;try{const body=draftBody(raw,r=>{range=r;});parseDraft(body.body);}catch{return [];}if(!range)return [];
@@ -95,7 +95,7 @@ const byteBoundary=(map:ReturnType<typeof inlineMap>,position:number,bias:'left'
  return (bias==='left'?left?.rawTo??right?.rawFrom:right?.rawFrom??left?.rawTo)??conflict('Unmapped native boundary.');
 };
 /** Pure candidate only. No path access, store, provider, original writer or dual-write. */
-export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAssets?:Array<AssetPhotoOp&{file:string}>}){
+export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{structureTestStandIn?:true;photoAssets?:Array<AssetPhotoOp&{file:string}>}){
  if(hash(currentRaw)!==s.fileHash||currentRaw!==render(s))conflict('External file change: reload and explicitly rebind; never rematch repeated text by position.');
  const next=structuredClone(s),ledger:any[]=[],reworkLog:string[]=[];
  const get=(id:string)=>next.blocks.find(b=>b.id===id)??conflict('Unknown stable block ID.');
@@ -189,11 +189,12 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{photoAsset
    const hit=matches[0],o=hit?.origin;
    if(matches.length!==1||!o||o.kind!=='photo'||!['wide','bleed'].includes(o.role)||o.depth!==0||o.groupSize!==1||o.groupIndex!==0||o.directiveStart!==o.chunkStart||!photoDirectiveComplete(b.raw,o)||contains(story.ending,hit.shot))conflict('Focal adjustment supports only a standalone article photo.');
    b.raw=photoFocusRaw(b.raw,op.x,op.y);
-  }else if(op.kind==='approveMark'){
+  }else if(op.kind==='approveMark'||op.kind==='standInReviewMark'){
+      if(op.kind==='standInReviewMark'&&(trusted?.structureTestStandIn!==true||op.decisionRole!=='stand-in'||ops.length!==1))conflict('Stand-in mark review requires one trusted isolated structure-test operation.');
       const b=get(op.id),beforeFrame=envelope(b.raw);
       if(hash(b.raw)!==op.seenBlockHash)conflict('Block changed since exact human approval capture.');
       if(!editable(b.raw))conflict('Opaque source structure requires its own decision, not prose approval.');
-      const changed=approveExactSpan(b.raw,op),afterFrame=envelope(changed);
+      const changed=op.kind==='approveMark'?approveExactSpan(b.raw,op):reviewExactSpan(b.raw,op),afterFrame=envelope(changed);
       if(beforeFrame.kind!==afterFrame.kind||beforeFrame.level!==afterFrame.level)conflict('Approval cannot change source words or native block kind.');
       const beforeParts=documentParts(b.raw,false),afterParts=documentParts(changed,false);
       if(beforeParts.prefix!==afterParts.prefix||beforeParts.parts.length!==afterParts.parts.length||JSON.stringify([...beforeParts.separators])!==JSON.stringify([...afterParts.separators]))conflict('Approval cannot change native topology.');
@@ -275,7 +276,7 @@ export function undo(current:Snapshot,currentRaw:string,inverse:any){
  return {raw,snapshot:structuredClone(inverse.before),expectedOriginalHash:current.fileHash,nextOriginalHash:inverse.before.fileHash};
 }
 function validateOperation(op:any){
- const shapes:any={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
+ const shapes:any={photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],standInReviewMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','decisionRole'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
  if(!op||typeof op!=='object'||Array.isArray(op)||!Object.hasOwn(shapes,op.kind))conflict('Unknown document operation kind.');
  const keys=shapes[op.kind];if(Object.keys(op).some(k=>!keys.includes(k))||keys.filter((k:string)=>k!=='level').some((k:string)=>!Object.hasOwn(op,k)))conflict('Malformed document operation fields.');
  for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\u0000-\u001f]/.test(op[key])))conflict('Malformed stable native ID.');

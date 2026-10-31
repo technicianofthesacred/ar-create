@@ -76,3 +76,19 @@ test('Origins and Understanding lead with record kinds and show only supplied da
 test('Subjects shows an exact saved writing excerpt and only an evidenced matching last editor',async()=>{
  const f=boot();try{const owner={kind:'magazine',storyId:'owner',pieceId:'piece',partKey:'article',path:'Workflow/DEV.md'},a=f.catalog.stories[0].artifacts.find(a=>a.kind==='DEV');a.magazineWorkingTarget={...owner};f.w.workspaceNavigation.lastLocation=id=>({projectId:id,excerpt:'Actual last saved words.',item:{proof:{owner,draftHash:hash},anchor:{index:2}}});f.w.arLive={state:()=>({committedLines:[{status:'committed',kind:'study-draft.save',scope:{kind:'draft',id:'foreign'},actor:'agent:codex',ts:'2026-10-29T10:00:00Z'}]})};await f.w.combinedSubjects.open();assert.match(f.d.querySelector('.cs-subject-row').textContent,/Actual last saved words/);assert.match(f.d.querySelector('.cs-subject-row').textContent,/Last editor not recorded/);assert.doesNotMatch(f.d.querySelector('.cs-subject-row').textContent,/Codex/);f.w.arLive.state=()=>({committedLines:[{status:'committed',kind:'magazine.working-draft.save',scope:{kind:'draft',id:'piece'},actor:'human:adrian',ts:'2026-10-29T10:00:00Z'}]});await f.w.combinedSubjects.open();assert.equal(f.d.querySelector('[data-cs-last-actor]').dataset.csLastActor,'human:adrian');assert.match(f.d.querySelector('.cs-subject-row').textContent,/Last editor · Adrian/);}finally{f.close();}
 });
+
+
+test('first inherited Home mount cannot conceal the same Subjects owner or lose its search selection',async()=>{
+ const f=boot();try{
+  await f.w.combinedSubjects.open();const dialog=f.d.querySelector('dialog'),root=f.d.querySelector('.combined-subjects'),input=root.querySelector('[data-cs-search]');
+  input.value='Invented';input.focus();input.setSelectionRange(1,6,'backward');const original=f.d.getElementById('original');
+  // Reproduce home-tabs decorateHome's first-mount wrapping after Subjects opens.
+  const body=f.d.createElement('div');body.className='ht-home-body';body.hidden=true;const main=f.d.createElement('section');main.className='ht-home-main';for(const child of [...dialog.children])main.append(child);body.append(main);dialog.append(body);dialog.classList.add('wbf-home','c3-home');dialog.dataset.wbfHome='bench';
+  assert.equal(root.closest('.ht-home-body'),body);f.w.combinedSubjects.decorate();
+  assert.equal(root.parentElement,dialog);assert.equal(f.d.querySelector('.combined-subjects'),root);assert.equal(root.closest('[hidden]'),null);assert.equal(root.querySelector('[data-cs-search]'),input);assert.equal(input.value,'Invented');assert.equal(input.selectionStart,1);assert.equal(input.selectionEnd,6);assert.equal(input.selectionDirection,'backward');assert.equal(original.value,'Unsent human words');assert.equal(original.parentElement,main);
+  f.w.combinedSubjects.decorate();assert.equal(root.parentElement,dialog);assert.equal(f.calls.some(c=>['action','switch','story','draft'].includes(c[0])),false);
+ }finally{f.close();}
+});
+test('Subjects owner repair mounts after inherited Home and does not revive a closed view',async()=>{
+ const f=boot();try{await f.w.combinedSubjects.open();await f.w.projectLibrary.close();f.w.combinedSubjects.decorate();assert.equal(f.d.querySelector('.combined-subjects'),null);assert.equal(f.d.querySelector('dialog').dataset.combinedSubjects,undefined);const source=code.match(/register\('Combined Subjects owner',decorate,\{order:(\d+)/);assert.ok(source);assert.ok(Number(source[1])>25);assert.ok(Number(source[1])>95);}finally{f.close();}
+});

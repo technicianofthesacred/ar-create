@@ -350,14 +350,18 @@ export function createReviewConnection({publicDir=path.join(root,'public'),runti
   const recordingRetryMatch=pathname.match(/^\/transcription\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})\/retry$/i);
   const recordingRetry=actualWorkReview&&studyDraftCorrections&&!!recordingRetryMatch&&req.method==='POST';
   if(recordingRetry&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||req.headers['x-ar-actor']!=='human:adrian')){req.resume();return fail(403,'Retry requires the author’s exact local workspace.');}
-  const structureTestCopy=actualWorkReview&&studyDraftCorrections&&pathname==='/api/study/structure-tests'&&req.method==='POST';
+  const structureTestCopy=actualWorkReview&&studyDraftCorrections&&['/api/study/structure-tests','/api/study/structure-tests/review-mark'].includes(pathname)&&req.method==='POST';
   if(structureTestCopy&&(req.url!==pathname||req.headers.origin!=='http://'+req.headers.host||req.headers['sec-fetch-site']==='cross-site'||!AGENT_ACTORS.includes(req.headers['x-ar-actor']))){req.resume();return fail(403,'Structure-test copying requires an explicit agent in this local workspace.');}
   const correction=structureTestCopy||shareCorrection||recordingRetry||sourcedCorrection||directionCorrection||photoAlbumCorrection||folderCorrection||carouselProposal||studyPrepare||openingAccept||guidanceCorrection||sourceCorrection||draftCorrection||magazineCorrection||magazineFeedbackCorrection||carouselCorrection||mechanicalCheck||magazineExport||nativeReview;
   const postRead=req.method==='POST'&&postReads.has(pathname);
   if(!['GET','HEAD'].includes(req.method)&&!postRead&&!correction&&!translationProposal){req.resume();res.setHeader('Allow','GET, HEAD');return fail(423,'This is a read-only review. Changes, saves and execution are unavailable here.');}
   try{
    const readBody=postRead||correction||translationProposal?await readJSON(req,{correction:correction||translationProposal,maxBytes:magazineExport||nativeReview&&pathname==='/api/study/outputs/export'?NATIVE_EXPORT_REQUEST:MAX_READ_BODY}):null;
-   if(structureTestCopy){
+   if(structureTestCopy&&pathname.endsWith('/review-mark')){
+    const input=JSON.parse(readBody.toString('utf8')),keys=['bindingId','parentStudyId','expected','operationId','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash'],uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v),hash=v=>typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
+    if(!input||Array.isArray(input)||Object.keys(input).sort().join('|')!==keys.sort().join('|')||!uuid(input.bindingId)||!uuid(input.operationId)||typeof input.parentStudyId!=='string'||!input.parentStudyId.startsWith('structure-test-')||typeof input.id!=='string'||!input.id||!input.expected||Array.isArray(input.expected)||typeof input.expected!=='object'||!Number.isSafeInteger(input.rawFrom)||!Number.isSafeInteger(input.rawTo)||input.rawFrom<0||input.rawTo<=input.rawFrom||!hash(input.seenBlockHash)||!hash(input.seenMarkupHash))throw Object.assign(Error('Use one exact copied markup span and current revision for stand-in review.'),{status:400});
+   }
+   if(structureTestCopy&&pathname==='/api/study/structure-tests'){
     const input=JSON.parse(readBody.toString('utf8')),allowed=['sourceBindingId','sourceParentStudyId','expected','title','operationId'],uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
     if(!input||Array.isArray(input)||typeof input!=='object'||Object.keys(input).length!==allowed.length||Object.keys(input).some(key=>!allowed.includes(key))||!uuid(input.sourceBindingId)||!uuid(input.operationId)||typeof input.sourceParentStudyId!=='string'||!input.sourceParentStudyId.trim()||input.sourceParentStudyId.length>256||typeof input.title!=='string'||!input.title.trim()||input.title.length>256||/[\x00-\x1f\x7f]/.test(input.title)||!input.expected||Array.isArray(input.expected)||typeof input.expected!=='object')throw Object.assign(Error('Use the exact saved source, title and operation for a structure-test copy.'),{status:400});
    }

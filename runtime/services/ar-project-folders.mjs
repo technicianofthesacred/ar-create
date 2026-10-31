@@ -489,7 +489,7 @@ doing: AR Create explicit project action
         }else{
           if(s.metadataRaw===null)fail('Prepare trusted correspondence first.');
           model=draftSnapshot(s.workflow.draft,JSON.parse(workflowText(s.metadataRaw)),sourceKey(b));
-          if(kind==='draft-operations')result=applyDraft(model,s.workflow.draft,input.operations);
+          if(kind==='draft-operations')result=applyDraft(model,s.workflow.draft,input.operations,internal.structureTestStandIn===true?{structureTestStandIn:true}:undefined);
           else if(kind==='draft-restore'){
             const prior=inspectOperation({projectId:b.projectId,operationId:input.restoreOperationId});
             if(prior.state!=='committed')fail('Only committed owned history can be restored.');
