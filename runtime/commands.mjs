@@ -372,6 +372,7 @@ export function createRouteMap(services) {
       '/api/study-draft/check': {GET:()=>draftCall(()=>{const keys=['bindingId','parentStudyId','checkId','targetKind','outputId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k)||url.searchParams.getAll(k).length!==1))throw new StateError('Select one exact saved Check target.',400);return studyDraftChecks.read(Object.fromEntries(url.searchParams));}),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
 
       '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
+      '/api/study/language/edition-review': {GET:()=>languageCall(studyLanguage,'editionReview',languageScope())},
       '/api/study/language/capabilities': {GET:()=>languageCall(studyLanguage,'capabilities',languageScope())},
       '/api/study/language/review': {GET:()=>languageCall(studyLanguage,'review',languageScope())},
       '/api/study/language/prepare': {POST:input=>languageCall(studyLanguage,'prepare',input)},

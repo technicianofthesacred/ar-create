@@ -1921,7 +1921,7 @@
     {
       "path": "public/document-study/output-stage-surfaces.js",
       "sourceSha256": "9427da7f0a5ccf8acb2b603fb98937dd54b65578b9f6b766da72300f69d84418",
-      "candidateSha256": "d0dc8575c2eabdc205e79c92c680b6d66430a69734af76996a2e5565d8dbbb93",
+      "candidateSha256": "3f78e7adf3fa89368fd9e88ec26a6ebd226b0272d104babbd0fe3b4369457b97",
       "adapted": false
     },
     {
@@ -2201,7 +2201,7 @@
     },
     {
       "path": "docs/CAPABILITIES.md",
-      "candidateSha256": "dcaecc1970c2fd7eff52099e05d6572e8ee7527e30ab564778283ad8e462f501"
+      "candidateSha256": "1f0ddc9e964be993fc23a2972de9cd55c5332028022a41a3436ff4be56685a09"
     },
     {
       "path": "AGENTS.md",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "595970f36f91652f33dda34cdadd293405ada5f63f94a0c752da9e7b0d2492b3"
+      "candidateSha256": "e86142247793b80f13bfdd6a68954cafcb93e32424edf3e42648dda9d38552b6"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -5077,11 +5077,11 @@
     },
     {
       "path": "public/document-study/audience-language-connection.js",
-      "candidateSha256": "0c3acb80e1c1b9ea86b6df36acaca6afade2e648826daf45513c204f9e89aebd"
+      "candidateSha256": "b8ef4ed24edd56d7b5d324667553cc0c996a52d58f5d7d28e710c0c352967c96"
     },
     {
       "path": "public/document-study/audience-language-connection.test.mjs",
-      "candidateSha256": "53bfd4d608fea4a204ad75da1716e912dd4711c0986b80344b2bd95d274ad6b1"
+      "candidateSha256": "576c43e197f24ad925ff0d3d70ba6480dcbd7afc8f9acd8a0fcd3016591daa00"
     },
     {
       "path": "public/document-study/audience-language-drawer.js",
@@ -5129,7 +5129,7 @@
     },
     {
       "path": "runtime/services/native-language-proposal-owner.mjs",
-      "candidateSha256": "9623287d72b02d41d9dc5ce20e90a4f2464f9dae40aacdf66c1dfb08e33dcce1"
+      "candidateSha256": "115e709212187c8e867b00fb522a169dff6506cd0cd82451568b8e3b08abda23"
     },
     {
       "path": "runtime/services/native-language-proposal-owner.test.mjs",
@@ -5165,15 +5165,15 @@
     },
     {
       "path": "runtime/services/study-language-connection.mjs",
-      "candidateSha256": "e3310c3ab1ed00bbf30a091561e105a7c99bf25fd4bbb8d8dc7259b7f7afadd6"
+      "candidateSha256": "8909ee2d66bda531e6e1b25611aba4af5c2d3fcf1a6d52e5c8a08ea7ca015c29"
     },
     {
       "path": "runtime/services/study-language-connection.test.mjs",
-      "candidateSha256": "6bf209cd5f7fe3d1b1491831326517ea10d6446ebaba7fac3dae5cad09e9537d"
+      "candidateSha256": "8290d2c4b21038c325c63e5dd70e2c196633b081b3516428cb254fd583cfaf0d"
     },
     {
       "path": "runtime/services/study-language-proposals.mjs",
-      "candidateSha256": "f513123e0c8bab4749568b851b296d01a05d302c124770db629c685368d7f71f"
+      "candidateSha256": "aa20bea53c89228af6079761009f87fd3a6b1ceefd3672599b1aadcff4c8de22"
     },
     {
       "path": "runtime/services/study-language-proposals.test.mjs",
@@ -5181,7 +5181,7 @@
     },
     {
       "path": "tests/language-connection-http.test.mjs",
-      "candidateSha256": "c231643eb0f06cadad8917a9b147ab5bb1c7f0d886174a902fa4c40ee139091e"
+      "candidateSha256": "a44842afcf422fd521c9074dcbcb4f7a04a56007a959a541da721d683daad4aa"
     }
   ],
   "dependencyRepair": {

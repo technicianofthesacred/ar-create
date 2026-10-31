@@ -75,5 +75,11 @@ export function createNativeLanguageProposalOwner({dataDir,outputs,drafts,valida
   if(!intent.refresh){const now=await outputs.read({...scopeCheck(source.scope),selectedOutputId:child.output.id});intent.refresh={...scopeCheck(source.scope),selectedOutputId:child.output.id,expectedOutput:now.expectedOutput,expectedNative:saved.expected,operationId:operation(operationId,'refresh')};persist();}
   await check();const refreshed=await outputs.refreshSelectedArticle(intent.refresh);intent.result={outputId:child.output.id,bindingId:child.wordOwner.bindingId,language:targetLanguage,decisionRole:decision.role,actor:decision.actor,view:refreshed.view};persist();return structuredClone(intent.result);
  }
- return {readSource,applyReviewedTranslation};
+ function verifyAcceptedRecord(record){
+  const d=record?.decision;if(!uuid.test(d?.operationId||'')||record.status!=='accepted'||d.action!=='accepted'||!['human','stand-in'].includes(d.role)||(d.role==='human'?!HUMAN_ACTORS.includes(d.actor):!AGENT_ACTORS.includes(d.actor)))fail('The accepted language decision is not verifiable.');
+  const file=path.join(root,d.operationId+'.json');regular(file);if(fs.statSync(file).size>2*1024*1024)fail('The accepted language receipt exceeds its read bound.',413);const intent=readJson(file,null);
+  if(intent?.schema!=='ar-create.native-language-acceptance.v1'||intent.binding?.requestId!==record.id||intent.binding.operationId!==d.operationId||intent.binding.sourceHash!==record.captureHash||intent.binding.proposalHash!==record.proposalHash||!same(intent.binding.decision,d)||!same(intent.result,record.result)||intent.save?.sourceCaptureHash!==record.captureHash||intent.save?.requestId!==record.id||intent.save?.targetOutputId!==record.result?.outputId||intent.candidateHash!==record.result?.view?.writingProof?.rawHash||intent.save?.sourceRawHash!==record.source?.proof?.writingProof?.rawHash||!same(intent.save?.sourceExpected,record.source?.proof?.expected)||!same(intent.save?.sourceUnits,record.source?.units)||!same(intent.save?.decision,d))fail('The accepted language capture, proposal or result receipt changed.');
+  return {acceptanceResultHash:digest(stable(intent.result)),decisionHash:digest(stable(d))};
+ }
+ return {readSource,applyReviewedTranslation,verifyAcceptedRecord};
 }

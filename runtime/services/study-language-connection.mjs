@@ -1,9 +1,10 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import {createLanguageProposals} from './study-language-proposals.mjs';
 import {createNativeLanguageProposalOwner} from './native-language-proposal-owner.mjs';
 import {createShareLanguageProposalOwner} from './share-language-proposal-owner.mjs';
 import {AGENT_ACTORS,currentActor} from './actor.mjs';
-import {ensurePrivateDirectory,readJson} from './files.mjs';
+import {ensurePrivateDirectory,readJson,digest,regular} from './files.mjs';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v),stable=v=>JSON.stringify(v,(_,x)=>object(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x),same=(a,b)=>stable(a)===stable(b);
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
@@ -45,7 +46,20 @@ export function createStudyLanguageConnection({dataDir,outputs,drafts,share,stru
  const service=createLanguageProposals({dataDir,readSource:value=>owner(value).readSource(value),applyReviewedTranslation:packet=>owner(packet.source.scope).applyReviewedTranslation(packet),validateStandInTarget:registered,...(execution?{execution}:{})});
  async function decorated(record,selected){if(!same(record.source?.scope,selected))fail('Language owner returned another source scope.',409);let canStandInReview=false;if(AGENT_ACTORS.includes(currentActor()?.actor)){try{await registered(selected);canStandInReview=true;}catch(error){if(![403,404,409].includes(error.status))throw error;}}return {...record,canStandInReview};}
  async function decision(action,value){const standIn=action.startsWith('standIn'),keys=['scope','requestId','operationId',...(standIn?[]:['humanDecision'])],selected=own(value,keys);if(standIn)await registered(selected);const {scope:unused,...args}=value;return decorated(await service[action](args),selected);}
+ async function editionReview(value){
+  const selected=input(value,['scope']);if(selected.kind!=='audience-article')fail('Choose one exact native Chinese Article edition.');
+  const current=await outputs.read({rootBindingId:selected.bindingId,parentStudyId:selected.parentStudyId,selectedOutputId:selected.outputId}),edition=current.output?.languageEdition;
+  if(current.output?.id!==selected.outputId||current.output.kind!=='article'||current.output.language!=='zh-Hans'||current.wordOwner?.kind!=='native'||!UUID.test(edition?.sourceOutputId||''))fail('This output is not a linked native Chinese Article edition.',404);
+  const names=fs.readdirSync(records,{withFileTypes:true}).filter(e=>e.name.endsWith('.json'));if(names.length>5000)fail('Language receipt lookup exceeds its bounded journal scan.',413);const candidates=[];
+  for(const entry of names){if(!entry.isFile()||!UUID.test(entry.name.slice(0,-5)))continue;const file=path.join(records,entry.name);regular(file);if(fs.statSync(file).size>2*1024*1024)fail('Language journal entry exceeds its bounded read.',413);const r=readJson(file,null);if(r?.status==='accepted'&&r.result?.outputId===selected.outputId&&r.source?.scope?.kind==='audience-article'&&r.source.scope.bindingId===selected.bindingId&&r.source.scope.parentStudyId===selected.parentStudyId&&r.source.scope.outputId===edition.sourceOutputId){if(r.id!==entry.name.slice(0,-5))fail('Accepted language journal identity changed.',409);candidates.push(r.id);}}
+  if(!candidates.length)return {state:'unavailable',reason:'No accepted translation review receipt is recorded for this exact edition.'};if(candidates.length!==1)fail('Several accepted language receipts claim this edition.',409);
+  const r=await service.readAccepted({requestId:candidates[0]}),proof=native.verifyAcceptedRecord(r),saved=r.result?.view;
+  if(!same(r.source.scope,{...selected,outputId:edition.sourceOutputId})||r.targetLanguage!=='zh-Hans'||r.result?.outputId!==selected.outputId||r.result?.bindingId!==current.wordOwner.bindingId||r.result?.language!=='zh-Hans'||r.result?.actor!==r.decision.actor||r.result?.decisionRole!==r.decision.role||saved?.output?.id!==selected.outputId||!same(saved.output.languageEdition,edition)||!same(saved.wordOwner,current.wordOwner)||r.source.proof.writingProof?.rawHash!==edition.sourceWordsHash||digest(stable(r.source.proof.output))!==edition.sourceOutputHash||!same(r.source.proof.wordOwner,edition.sourceWordOwner))fail('Accepted language result does not match this exact edition lineage.',409);
+  const stale=!!current.languageEditionReview?.stale||!!current.writingStale||!same(saved.writingProof,current.writingProof);
+  return {state:'reviewed',requestId:r.id,actor:r.decision.actor,decisionRole:r.decision.role,reviewedAt:r.decision.at,operationId:r.decision.operationId,outputId:selected.outputId,sourceOutputId:edition.sourceOutputId,sourceWordsHash:edition.sourceWordsHash,sourceCaptureHash:r.captureHash,proposalHash:r.proposalHash,...proof,stale};
+ }
  return {
+  editionReview,
   async capabilities(value){const selected=input(value,['scope']);await owner(selected).readSource(selected);let canStandInReview=false;if(AGENT_ACTORS.includes(currentActor()?.actor)){try{await registered(selected);canStandInReview=true;}catch(error){if(![403,404,409].includes(error.status))throw error;}}return {...service.capabilities(),scope:selected,canStandInReview};},
   async prepare(value){const selected=input(value,['scope','targetLanguage','retainedTerms']);return decorated(await service.prepare({scope:selected,targetLanguage:value.targetLanguage,...(value.retainedTerms!==undefined?{retainedTerms:value.retainedTerms}:{})}),selected);},
   async run(value){const selected=own(value,['scope','requestId']);return decorated(await service.run({requestId:value.requestId}),selected);},

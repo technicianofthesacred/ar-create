@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-31T16:26:00.215Z.
+> Generated 2026-10-31T16:31:22.850Z.
 
-**At a glance:** 7 commands · 345 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 346 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-345 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+346 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -367,7 +367,7 @@
 | `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
 | `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (47)
+### system (48)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -404,6 +404,7 @@
 | `source-transcript.terms.propose` | `POST /api/source-transcript/terms/propose` | any | write |
 | `study.language.accept` | `POST /api/study/language/accept` | human | write |
 | `study.language.capabilities` | `GET /api/study/language/capabilities` | any | read |
+| `study.language.edition-review` | `GET /api/study/language/edition-review` | any | read |
 | `study.language.prepare` | `POST /api/study/language/prepare` | any | write |
 | `study.language.reject` | `POST /api/study/language/reject` | human | write |
 | `study.language.review` | `GET /api/study/language/review` | any | read |

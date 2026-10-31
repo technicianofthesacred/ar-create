@@ -31,6 +31,13 @@ export function createAudienceLanguageConnection({window:win,createDrawer=create
   return drawer.open({requestId:pointer(scope)});
  }
  function close(){epoch++;drawer?.close();drawer=null;context=null;}
- return {open,close,get state(){return drawer?.state||null;}};
+ async function readEditionReview({rootBindingId,parentStudyId,outputId,sourceOutputId}){
+  const scope={kind:'audience-article',bindingId:rootBindingId,parentStudyId,outputId};if(!selected(scope))throw Error('The selected Chinese edition changed.');
+  const response=await win.fetch('/api/study/language/edition-review?'+new URLSearchParams({bindingId:rootBindingId,parentStudyId,outputId}),{cache:'no-store'}),value=await response.json();
+  if(!response.ok)throw Error(value.error||'Translation review unavailable.');if(!selected(scope))throw Error('The selected Chinese edition changed.');
+  if(value.state==='unavailable')return value;
+  if(value.state!=='reviewed'||value.outputId!==outputId||value.sourceOutputId!==sourceOutputId||!['human','stand-in'].includes(value.decisionRole)||! /^(?:agent|human):[a-z0-9._-]+$/i.test(value.actor||'')||typeof value.stale!=='boolean')throw Error('Translation review belongs to another edition.');return value;
+ }
+ return {open,close,readEditionReview,get state(){return drawer?.state||null;}};
 }
 if(typeof window!=='undefined')window.studyAudienceLanguage=createAudienceLanguageConnection({window});
