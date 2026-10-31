@@ -27,6 +27,7 @@
    if(key==='home'){const owner=document.querySelector('.workflowNavigation [data-tr-home]');if(!owner||owner.disabled)throw Error('Home is not connected.');window.combinedSubjects?.close?.();owner.click();}
    else if(key==='subjects'){if(typeof window.combinedSubjects?.open!=='function')throw Error('Subjects is not connected.');await window.combinedSubjects.open();}
    else {
+    if(window.combinedSubjects?.currentSubject?.()){if(typeof window.combinedSubjects.openStage!=='function')throw Error('The visible subject board cannot open its section.');return await window.combinedSubjects.openStage(item[2]);}
     if(home())await window.projectLibrary.close();
     if(home())throw Error('Save or resolve the current changes before leaving.');
     const owner=original(item[2]);if(!owner||owner.disabled)throw Error(item[1]+' is not available for this piece.');
