@@ -75,6 +75,7 @@ const BODY = {
   '/api/study-draft/open': ['parentStudyId', 'originalId', 'originalHash', 'operationId'],
   '/api/study-draft/save': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'operations'],
   '/api/study-draft/undo': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'undoOperationId'],
+  '/api/study/direction-decision':['parentStudyId','bindingId','operationId','expectedRevision','expectedHash','target','kind','action','optionId?','text?','reason?','source?'],
   '/api/study/human-direction/select': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'title'],
   '/api/study/human-direction/write': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'body'],
   '/api/study/human-direction/undo': ['parentStudyId', 'scope', 'bindingId?', 'outputId?', 'operationId', 'expectedRevision', 'expectedHash', 'undoOperationId'],
@@ -88,7 +89,7 @@ const BODY = {
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
-  const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
+  const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^(study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance)/, 'writing'],
@@ -168,7 +169,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -293,6 +294,8 @@ export function createRouteMap(services) {
       '/api/study-ai/requests': {GET:()=>studyAICall('list')},
       '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},
       '/api/study-ai/reject': {POST:input=>studyAICall('reject',input)},
+      '/api/study/direction-options': {GET:()=>draftCall(async()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose an exact native Direction subject.',400);const scope=Object.fromEntries(url.searchParams),options=await studyDirectionOptions(scope),proof=await studyDirectionTarget({...scope,target:{kind:'subject'}});return {...options,canDecide:currentActor()?.actor==='human:adrian'||proof.canStandInReview,standIn:proof.canStandInReview};})},
+      '/api/study/direction-decision': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact saved Direction decision path.',400);return studyHumanDirection.decide(input);})},
       '/api/study/human-direction': {GET:()=>draftCall(async()=>{const parentStudyId=url.searchParams.get('parentStudyId'),kind=url.searchParams.get('scope')||'project',bindingId=url.searchParams.get('bindingId'),record=await studyHumanDirection.read({parentStudyId,scope:kind,...(bindingId&&kind!=='project'?{bindingId}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})});if(kind==='project'&&bindingId&&AGENT_ACTORS.includes(currentActor()?.actor)){try{await structureTests.validateTarget({bindingId,parentStudyId});return {...record,canStandInResearchNotes:true};}catch(error){if(![403,404,409].includes(error.status))throw error;}}return record;})},
       '/api/study/human-direction/select': {POST:input=>draftCall(()=>studyHumanDirection.select(input))},
       '/api/study/human-direction/write': {POST:input=>draftCall(()=>studyHumanDirection.write(input))},

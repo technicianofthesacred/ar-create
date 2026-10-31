@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {StateError} from '../store.mjs';
 import {atomicWrite,readJson,digest,ensurePrivateDirectory,regular,resolveInside} from './files.mjs';
-import {provenance,authorOf,currentActor,isHuman} from './actor.mjs';
-import {readDirectionChoices,stripDirectionChoices} from '../../public/lib/direction-choice.js';
+import {provenance,authorOf,currentActor,isHuman,AGENT_ACTORS,HUMAN_ACTORS} from './actor.mjs';
+import {readDirectionChoices,stripDirectionChoices,applyDirectionChoice,directionDecisionTargetKey,effectiveDirectionChoices} from '../../public/lib/direction-choice.js';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const ROLE='human-authored-editorial-direction-not-evidence-or-source-quotation';
@@ -21,7 +21,7 @@ const empty=scope=>({schema:'ar-create.study-human-direction.v1',role:ROLE,bound
 function serial(key,fn){const work=(queues.get(key)||Promise.resolve()).then(fn);queues.set(key,work.catch(()=>{}));return work;}
 
 /** Explicit human decisions only. Manuscripts and source files remain owned by their existing services. */
-export function createStudyHumanDirection({dataDir,store,bindings,drafts,library,readOutputDocument}={}){
+export function createStudyHumanDirection({dataDir,store,bindings,drafts,library,readOutputDocument,validateDecisionTarget,loadDirectionOptions}={}){
  const legacyAvailable=!!(store?.listPieces&&bindings?.select&&drafts?.read);
  if(!legacyAvailable&&typeof library?.collections!=='function'&&typeof library?.collectionsSnapshot!=='function')throw Error('Supply the existing piece store, study bindings and owned drafts, or existing Library for collection scope.');
  const collectionNames=new Map(),metadataSnapshots=new WeakMap();
@@ -202,13 +202,44 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
   const validate=()=>{for(const check of pins.values())check();};validate();return Object.freeze({validate});
  }
  async function read(input){const scope=await authority(structuredClone(input));return scope?current(scope):empty(null);}
- async function mutate(input,kind){
+ function decisionInput(input){
+  explicitFields(input,['parentStudyId','bindingId','operationId','expectedRevision','expectedHash','target','kind','action'],['optionId','text','reason','source']);
+  if(!readable(input.parentStudyId)||!UUID.test(input.bindingId||'')||!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!HASH.test(input.expectedHash||'')||!['angle','title'].includes(input.kind)||!['use','reject','inherit','not-applicable'].includes(input.action))fail('An exact scoped Direction decision is required.',400);
+  if(!input.target||typeof input.target!=='object'||Array.isArray(input.target))fail('Choose an exact decision target.',400);
+  if(input.target.kind==='subject'){explicitFields(input.target,['kind']);if(!['use','reject'].includes(input.action))fail('Inheritance and not-applicable apply only to individual pieces.',400);}else{try{directionDecisionTargetKey(input.target);}catch{fail('Choose an exact native or output target.',400);}}
+  const words=(value,blank=false)=>typeof value==='string'&&value.length<=2048&&(blank||!!value.trim())&&!/[\x00-\x1f\x7f]/.test(value);
+  if(input.reason!==undefined&&!words(input.reason,true)||input.action==='reject'&&!words(input.reason))fail('An explicit readable rejection reason is required.',400);
+  if(['use','reject'].includes(input.action)){if(!new RegExp('^'+input.kind+':[1-9][0-9]{0,3}$').test(input.optionId||'')||input.text!==undefined&&!words(input.text))fail('Choose one exact prepared option and readable wording.',400);explicitFields(input.source,['artifactId','hash']);if(typeof input.source.artifactId!=='string'||!input.source.artifactId.trim()||input.source.artifactId.length>512||/[\x00-\x1f\x7f]/.test(input.source.artifactId)||!HASH.test(input.source.hash||''))fail('Use the exact current prepared source.',400);}
+  else if(['source','text','optionId'].some(key=>Object.hasOwn(input,key)))fail('Inheritance and not-applicable pin existing subject choices without invented option words.',400);
+ }
+ async function decisionTarget(input){
+  if(typeof validateDecisionTarget!=='function')fail('Scoped Direction decisions are not connected.',503);
+  const proof=await validateDecisionTarget({parentStudyId:input.parentStudyId,bindingId:input.bindingId,target:structuredClone(input.target)});
+  if(!proof||!HASH.test(proof.fingerprint||''))fail('Exact decision target authority is unavailable.');
+  const actor=currentActor()?.actor;if(!HUMAN_ACTORS.includes(actor)&&(!AGENT_ACTORS.includes(actor)||proof.canStandInReview!==true))fail('Only the actual human or an agent on its registered stand-in copy may decide Direction.',403);
+  return structuredClone(proof);
+ }
+ async function preparedOption(input){
+  if(typeof loadDirectionOptions!=='function')fail('Current prepared Direction options are not connected.',503);
+  const options=await loadDirectionOptions({parentStudyId:input.parentStudyId,bindingId:input.bindingId}),rows=options?.[input.kind==='angle'?'angles':'titles'];
+  if(!equivalent(options?.source,input.source)||!Array.isArray(rows))fail('Prepared Direction source changed; reopen the current options.');const matches=rows.filter(row=>row.id===input.optionId);
+  if(matches.length!==1||typeof matches[0].text!=='string'||!matches[0].text.trim()||matches[0].text.length>2048||/[\x00-\x1f\x7f]/.test(matches[0].text))fail('The exact prepared Direction option changed or is ambiguous.');
+  return {source:structuredClone(options.source),text:matches[0].text};
+ }
+ async function decide(input){
+  input=structuredClone(input);decisionInput(input);await decisionTarget(input);
+  return mutate({parentStudyId:input.parentStudyId,scope:'project',operationId:input.operationId,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash},'write',{input,actor:currentActor()?.actor});
+ }
+ async function mutate(input,kind,decision=null){
   selector(input,true);const scope=await authority(input,{create:true}),loc=locations(scope,true);ensurePrivateDirectory(loc.dir,'human-direction-history');
   return serial(loc.body,async()=>{
    const before=current(scope),beforeMetadataHash=before.metadataHash,file=path.join(loc.journal,input.operationId+'.json');
-   const fingerprint=digest(JSON.stringify({scope,kind,body:kind==='write'?input.body:null,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash,undoOperationId:input.undoOperationId||null}));
+   const fingerprint=decision?digest(canonical({scope,decision:decision.input,actor:decision.actor})):digest(JSON.stringify({scope,kind,body:kind==='write'?input.body:null,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash,undoOperationId:input.undoOperationId||null}));
+   const targetProof=decision?await decisionTarget(decision.input):null;
+   if(decision&&!equivalent(scope,await authority({parentStudyId:input.parentStudyId,scope:'project'})))fail('Direction owner scope changed before deciding.');
    const prior=readJson(file,null);
-   if(prior&&choiceStateChanged(prior.before?.body||'',prior.after?.body||'')&&!isHuman(currentActor()?.actor))fail('Direction choices are human-only; agents may propose but not decide.',403);
+   if(prior&&decision&&prior.decisionTargetFingerprint!==targetProof.fingerprint)fail('Decision target changed since this exact saved operation.');
+   if(prior&&!decision&&choiceStateChanged(prior.before?.body||'',prior.after?.body||'')&&!isHuman(currentActor()?.actor))fail('Direction choices are human-only; agents may propose but not decide.',403);
    if(prior){if(prior.fingerprint!==fingerprint)fail('Operation UUID already names a different direction decision.');if(prior.status==='committed')return {...prior.after,history:current(scope).history,path:loc.body};fail('This direction operation was rejected; recover its snapshots and use a new operation UUID.');}
    if(input.expectedRevision!==before.revision||input.expectedHash!==before.hash){
     if(kind==='write'&&typeof input.body==='string'&&Buffer.byteLength(input.body)<=1024*1024&&!input.body.includes('\0')){
@@ -219,6 +250,17 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    }
    if(input.expectedMetadataHash!==undefined&&input.expectedMetadataHash!==beforeMetadataHash)fail('Direction metadata changed; preserve outside fields.');
    let body=input.body,undoOperationId;
+   if(decision){
+    const args=decision.input,choices=readDirectionChoices(before.body);if(!choices.available)fail('Saved Direction choices need review; preserve their history.');
+    const event={operationId:args.operationId,kind:args.kind,action:args.action,optionId:null,text:null,reason:args.reason||'',source:null,actor:decision.actor,decisionRole:HUMAN_ACTORS.includes(decision.actor)?'human':'stand-in',at:new Date().toISOString(),targetFingerprint:targetProof.fingerprint,...(args.target.kind==='subject'?{}:{target:structuredClone(args.target)})};
+    if(['use','reject'].includes(args.action)){
+     const option=await preparedOption(args),words=args.text??option.text;if(!HUMAN_ACTORS.includes(decision.actor)&&words!==option.text)fail('Agent stand-in choices use exact prepared wording; human edits remain human.',403);
+     event.optionId=args.optionId;event.text=words;event.source=option.source;if(words!==option.text)event.preparedText=option.text;
+     if(!equivalent(option,await preparedOption(args)))fail('Prepared Direction option changed before save.');
+    }else event.basis={subjectOperationId:choices[args.kind==='angle'?'selectedAngle':'selectedTitle']?.operationId||null,revision:before.revision,hash:before.hash};
+    if((await decisionTarget(args)).fingerprint!==targetProof.fingerprint||!equivalent(scope,await authority({parentStudyId:input.parentStudyId,scope:'project'})))fail('Decision target or owner scope changed before save.');
+    body=applyDirectionChoice(before.body,event);
+   }
    if(kind==='undo'){
     const eligible=ops(loc).map(x=>x.record).filter(o=>o.status==='committed'&&o.after.revision===before.revision&&o.after.hash===before.hash);
     const target=input.undoOperationId?eligible.find(o=>o.operationId===input.undoOperationId):eligible[0];
@@ -233,16 +275,17 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    // cannot silently discard the retained decisions or become an agent decision.
    const choicesChanged=choiceStateChanged(before.body,body);
    if(choicesChanged){
-    if(!isHuman(currentActor()?.actor))fail('Direction choices are human-only; agents may propose but not decide.',403);
+    if(!decision&&!isHuman(currentActor()?.actor))fail('Direction choices are human-only; agents may propose but not decide.',403);
     if(kind==='write'){
      if(!oldChoices.available||!newChoices.available||newChoices.events.length!==oldChoices.events.length+1||!equivalent(newChoices.events.slice(0,-1),oldChoices.events)||newChoices.events.at(-1).operationId!==input.operationId)fail('Append exactly one current direction choice; earlier decisions remain unchanged.',400);
      if(stripDirectionChoices(before.body)!==stripDirectionChoices(body))fail('Save your notes separately before choosing a direction.',400);
+     const event=newChoices.events.at(-1);if(!decision&&(event.actor!==undefined||event.target!==undefined))fail('Scoped or attributed Direction choices require the exact decide action.',403);
     }
    }
    // Undo restores exact owner-journal bytes; it does not introduce a new source claim.
    if(kind==='write'&&scope.kind==='collection')await validateCollectionReferences(scope,before,body);
    const after={...before,...empty(scope),bound:true,body,hash:digest(body),revision:before.revision+1,updatedAt:new Date().toISOString(),operationId:input.operationId};delete after.history;delete after.path;delete after.externalEdit;delete after.metadataHash;delete after.directionChoices;
-   const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',beforeMetadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined,directionChoices:undefined},after,...(undoOperationId?{undoOperationId}:{})};
+   const op={schema:'ar-create.study-human-direction-operation.v1',provenance:provenance(),operationId:input.operationId,scope,kind,fingerprint,status:'pending',beforeMetadataHash,afterMetadataHash:digest(metaBytes(after)),createdAt:after.updatedAt,before:{...before,history:undefined,path:undefined,directionChoices:undefined},after,...(decision?{decisionInput:structuredClone(decision.input),decisionTargetFingerprint:targetProof.fingerprint}:{}),...(undoOperationId?{undoOperationId}:{})};
    atomicWrite(file,JSON.stringify(op,null,2)+'\n',{exclusive:true});
    const expectedMetaHash=beforeMetadataHash;
    try{
@@ -379,10 +422,22 @@ export function createStudyHumanDirection({dataDir,store,bindings,drafts,library
    parentStudyId=meta?.scope?.parentStudyId||mapping?.parentStudyId;
    if(!readable(parentStudyId))fail('Owned part context has no explicit parent mapping; direction cannot be inferred.',404);
   }
+  let effectiveBindingId=bindingId,effectiveOutputId=outputId;
+  if(bindingId){
+   const owned=await drafts.read({parentStudyId,bindingId}),b=owned?.binding;
+   if(b?.id!==bindingId||b.parentStudyId!==parentStudyId||b.authority!=='owned-working-copy'||b.status!=='ready'||owned.readiness?.ready!==true)fail('Effective Direction requires its exact current native owner.');
+   const canonical=b.canonicalOutputId||b.outputId||null;
+   if(outputId===undefined){if(canonical)effectiveOutputId=canonical;}
+   else if(canonical!==outputId)effectiveBindingId=null;
+  }
   const candidates=[{parentStudyId},...(bindingId?[{parentStudyId,scope:'part',bindingId}]:[]),...(outputId?[{parentStudyId,scope:'output',...(bindingId?{bindingId}:{}),outputId}]:[])];
   const records=[];
   for(const input of candidates){const scope=await authority(input);if(!scope)fail('Ready direction parent or part binding is missing.');const item=current(scope),plan=directionPlanProjection(item.body);if(item.revision>0)records.push({role:ROLE,scope:item.scope,body:item.body,directionChoices:readDirectionChoices(item.body),hash:item.hash,revision:item.revision,updatedAt:item.updatedAt,...(plan?{planningIntent:plan}:{}),...(conceptContextProjection(item.body)||{})});}
-  return {schema:'ar-create.study-human-direction-context.v1',role:records.some(item=>item.role===CONCEPT_CONTEXT_ROLE)?CONCEPT_CONTEXT_ROLE:ROLE,projectId,documentId:documentId??null,outputId:outputId||null,records,hash:digest(JSON.stringify(records))};
+  const projectRecord=records.find(record=>record.scope.kind==='project'),choices=projectRecord?.directionChoices||readDirectionChoices(''),effectiveDirection=effectiveDirectionChoices(choices,{parentStudyId,...(effectiveBindingId?{bindingId:effectiveBindingId}:{}),...(effectiveOutputId?{outputId:effectiveOutputId}:{})});
+  // Contextual metadata is hashed with an existing record. Its exact authored
+  // body, body hash, revision and attribution remain unchanged.
+  if(projectRecord)projectRecord.effectiveDirection=structuredClone(effectiveDirection);
+  return {schema:'ar-create.study-human-direction-context.v1',role:records.some(item=>item.role===CONCEPT_CONTEXT_ROLE)?CONCEPT_CONTEXT_ROLE:ROLE,projectId,documentId:documentId??null,outputId:outputId||null,effectiveDirection,records,hash:digest(JSON.stringify(records))};
  }
- return {select:async input=>{const scope=await authority(structuredClone(input),{create:true});return current(scope);},read,captureReadGuard,write:input=>mutate(structuredClone(input),'write'),undo:input=>mutate(structuredClone(input),'undo'),context,readScopeReferences,proposeScopeReference:input=>referenceMutation(input,'propose'),changeScopeReference:input=>referenceMutation(input,'change'),undoScopeReference:input=>referenceMutation(input,'undo')};
+ return {decide,select:async input=>{const scope=await authority(structuredClone(input),{create:true});return current(scope);},read,captureReadGuard,write:input=>mutate(structuredClone(input),'write'),undo:input=>mutate(structuredClone(input),'undo'),context,readScopeReferences,proposeScopeReference:input=>referenceMutation(input,'propose'),changeScopeReference:input=>referenceMutation(input,'change'),undoScopeReference:input=>referenceMutation(input,'undo')};
 }
