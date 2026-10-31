@@ -1,3 +1,4 @@
+import {AGENT_ACTORS,currentActor} from './services/actor.mjs';
 import {StateError} from './store.mjs';
 import {isICloudAlbum} from './services/icloud-albums.mjs';
 import {INQUIRY_METHODS} from './services/inquiry-interface-routes.mjs';
@@ -19,7 +20,7 @@ export const SCHEMA = 'ar-create.capabilities.v1';
 const HUMAN = Object.freeze(['human']), ANY = Object.freeze(['any']);
 
 /** POST routes that only read. They need no actor. */
-export const READ_ONLY_POSTS = new Set(['/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
+export const READ_ONLY_POSTS = new Set(['/api/research/atlas/search','/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
 
 const UNDO = {
   'POST /api/magazine/working-draft/ai/accept': 'magazine.working-draft.undo',
@@ -60,6 +61,14 @@ const BODY = {
   '/api/concepts': ['parentStudyId', 'title', 'operationId'],
   '/api/concept/save': ['parentStudyId', 'operationId', 'expectedRevision', 'expectedHash', 'authorThoughts', 'adoptedDirection?', 'aiInterpretation', 'suggestions', 'sourceSelections', 'body?', 'replaceExistingDirection?'],
   '/api/concept/sources/search': ['parentStudyId?', 'query', 'limit?'],
+  '/api/study/structure-tests/research-note':['bindingId','parentStudyId','operationId','expectedRevision','expectedHash','kind','pointId','title','text','origin'],
+  '/api/research/atlas/search':['query','limit?'],
+  '/api/study/research/brief/prepare':['bindingId','parentStudyId','operationId','question','sourceIds','sourceReviews?','humanDecision?'],
+  '/api/study/research/brief/run':['bindingId','parentStudyId','operationId','requestId'],
+  '/api/study/research/brief/reinspect':['bindingId','parentStudyId','operationId','requestId'],
+  '/api/study/research/prepare':['bindingId','parentStudyId','question','sourceIds','cardIds?'],
+  '/api/study/research/run':['bindingId','parentStudyId','id'],
+  '/api/study/research/keep':['bindingId','parentStudyId','id'],
   '/api/study/structure-tests/review-mark':['bindingId','parentStudyId','expected','operationId','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash'],
   '/api/study/structure-tests': ['sourceBindingId','sourceParentStudyId','expected','title','operationId'],
   '/api/study-draft/create-collection': ['parentStudyId', 'title', 'operationId'],
@@ -81,7 +90,7 @@ function section(route) {
   const r = route.replace(/^\/api\//, '');
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^(study\/photos|study\/media-usage|media)/, 'media'],
-    [/^(study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
+    [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
   return rules.find(([pattern]) => pattern.test(r))?.[1] || 'system';
@@ -128,7 +137,7 @@ function entry(method, route, { query, mode, mount }) {
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
   const pattern = new RegExp('^' + route.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\w+)\\?\}/g, '([^/]+)') + '$');
   return { name: '', section: section(route), method, route, schema: method === 'GET' || mode === 'scope' || mode === 'scope-copy' ? { query: query || [], ...(mode === 'scope-copy' ? { body: 'object (repeats the query scope)' } : mode === 'scope' && method !== 'GET' ? { body: BODY[route] || 'object (identity stays in the query)' } : {}), ...(mode === 'input-json' ? { encoding: 'input-json' } : {}) } : { body: BODY[route] || 'object' },
-    readOnly, actors: ['POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
+    readOnly, actors: ['POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark','POST /api/study/structure-tests/research-note'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
 }
 /** Query fields a GET handler reads, recovered from its source. */
 const queryFields = fn => [...new Set([...String(fn).matchAll(/searchParams\.(?:get|getAll|has)\('([\w-]+)'\)/g)].map(m => m[1]))];
@@ -159,7 +168,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -263,6 +272,15 @@ export function createRouteMap(services) {
       '/api/pieces': {GET:()=>store.listPieces(),POST:input=>store.createPiece(input)},
       '/api/i64os/health': {GET:()=>{if(!studyDrafts)throw new StateError('Document study is not configured.',503);return {service:'ar-create-document-study',ready:true};}},
       '/api/study-ai/run': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact execution path.',400);return studyAI.call('run',input);}),GET:()=>draftCall(()=>{const input=Object.fromEntries(url.searchParams);if([...url.searchParams.keys()].some(key=>!['bindingId','parentStudyId','requestId','operationId'].includes(key))||Object.keys(input).some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Use one exact execution scope.',400);return studyAI.call('runStatus',input);})},
+      '/api/study/structure-tests/research-note': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact test-note path.',400);return structureTests.researchNote(input);})},
+      '/api/research/atlas/capabilities': {GET:()=>localAtlas.capabilities()},
+      '/api/research/atlas/search': {POST:input=>localAtlas.search(input)},
+      '/api/research/atlas/article': {GET:()=>localAtlas.read(Object.fromEntries(url.searchParams))},
+      '/api/study/research/brief': {GET:()=>draftCall(async()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose one exact native Research brief.',400);const binding=Object.fromEntries(url.searchParams),document=await studyDrafts.read(binding);if(document.binding.parentStudyId!==binding.parentStudyId)throw new StateError('The Research subject changed.',409);const parent=await studyBindings.lookup({projectKey:binding.parentStudyId}),scope={...binding,projectId:parent.projectId,documentId:parent.documentId},flow=await firstFlow.study.read(scope);let agentStandIn=false;if(AGENT_ACTORS.includes(currentActor()?.actor)){try{await structureTests.validateTarget(binding);agentStandIn=true;}catch(error){if(![403,404,409].includes(error.status))throw error;}}return {...flow,...binding,canPrepare:currentActor()?.actor==='human:adrian'||agentStandIn,canRun:execution.capabilities().available===true,agentStandIn};})},
+      ...Object.fromEntries(['prepare','run','reinspect'].map(action=>['/api/study/research/brief/'+action,{POST:input=>draftCall(async()=>{if(url.search||!input||Object.keys(input).some(k=>!(action==='prepare'?['bindingId','parentStudyId','question','sourceIds','operationId','sourceReviews','humanDecision']:['bindingId','parentStudyId','requestId','operationId']).includes(k)))throw new StateError('Use one exact native Research brief request.',400);const {bindingId,parentStudyId,...args}=input,binding={bindingId,parentStudyId},document=await studyDrafts.read(binding);if(document.binding.parentStudyId!==parentStudyId)throw new StateError('The Research subject changed.',409);const parent=await studyBindings.lookup({projectKey:parentStudyId});return {...await firstFlow.study[action]({...binding,projectId:parent.projectId,documentId:parent.documentId},args),...binding};})}])),
+      '/api/study/research': {GET:()=>draftCall(()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose one exact native Research subject.',400);return researchAnswers.study.sources(Object.fromEntries(url.searchParams));})},
+      '/api/study/research/answer': {GET:()=>draftCall(()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,id,parentStudyId')throw new StateError('Choose one exact native Research answer.',400);return researchAnswers.study.get({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')},url.searchParams.get('id'));})},
+      ...Object.fromEntries(['prepare','run','keep'].map(action=>['/api/study/research/'+action,{POST:input=>draftCall(()=>{if(url.search||!input||Object.keys(input).some(k=>!(action==='prepare'?['bindingId','parentStudyId','question','sourceIds','cardIds']:['bindingId','parentStudyId','id']).includes(k)))throw new StateError('Use exact native Research scope and request fields.',400);const {bindingId,parentStudyId,...args}=input;return researchAnswers.study[action==='prepare'?'preview':action]({bindingId,parentStudyId},action==='prepare'?args:args.id);})}])),
       '/api/study/structure-tests/proposal-contract': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact stand-in contract path.',400);return studyAI.standInContract(input);})},
       '/api/study/structure-tests/proposal-review': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact stand-in decision path.',400);return studyAI.standInReview(input);})},
       '/api/study-ai/contracts': {GET:()=>studyAICall('contracts')},
@@ -275,11 +293,11 @@ export function createRouteMap(services) {
       '/api/study-ai/requests': {GET:()=>studyAICall('list')},
       '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},
       '/api/study-ai/reject': {POST:input=>studyAICall('reject',input)},
-      '/api/study/human-direction': {GET:()=>draftCall(()=>studyHumanDirection.read({parentStudyId:url.searchParams.get('parentStudyId'),scope:url.searchParams.get('scope')||'project',...(url.searchParams.has('bindingId')?{bindingId:url.searchParams.get('bindingId')}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})}))},
+      '/api/study/human-direction': {GET:()=>draftCall(async()=>{const parentStudyId=url.searchParams.get('parentStudyId'),kind=url.searchParams.get('scope')||'project',bindingId=url.searchParams.get('bindingId'),record=await studyHumanDirection.read({parentStudyId,scope:kind,...(bindingId&&kind!=='project'?{bindingId}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})});if(kind==='project'&&bindingId&&AGENT_ACTORS.includes(currentActor()?.actor)){try{await structureTests.validateTarget({bindingId,parentStudyId});return {...record,canStandInResearchNotes:true};}catch(error){if(![403,404,409].includes(error.status))throw error;}}return record;})},
       '/api/study/human-direction/select': {POST:input=>draftCall(()=>studyHumanDirection.select(input))},
       '/api/study/human-direction/write': {POST:input=>draftCall(()=>studyHumanDirection.write(input))},
       '/api/study/human-direction/undo': {POST:input=>draftCall(()=>studyHumanDirection.undo(input))},
-      '/api/study-originals': {GET:()=>originalRead(()=>studyOriginals.list(url.searchParams.get('projectKey')))},
+      '/api/study-originals': {GET:()=>{const key=url.searchParams.get('projectKey');return key?.startsWith('structure-test-')?draftCall(()=>structureTestRecords.list({parentStudyId:key})):originalRead(()=>studyOriginals.list(key));}},
       '/api/study-originals/check-inputs': {GET:()=>{const keys=['parentStudyKey','partKey','draftPath','expectedDraftHash'];if([...url.searchParams.keys()].length!==keys.length||keys.some(k=>url.searchParams.getAll(k).length!==1))throw new StateError('Use one exact current part and draft revision.',400);return originalRead(()=>studyOriginals.checkInputs(Object.fromEntries(url.searchParams)));}},
       '/api/study/photos/select': {POST:input=>draftCall(()=>studyOwnedPhotoBindings.select(input))},
       '/api/study/photos/inspect': {GET:()=>draftCall(()=>studyPhotos.inspect({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
@@ -287,7 +305,7 @@ export function createRouteMap(services) {
       '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
       '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
       '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
-      '/api/study-research/findings': {GET:()=>draftCall(()=>studyDerivedFindings.read({projectKey:url.searchParams.get('projectKey'),parentStudyId:url.searchParams.get('parentStudyId')}))},
+      '/api/study-research/findings': {GET:()=>draftCall(()=>{const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId');if(projectKey?.startsWith('structure-test-')){if(projectKey!==parentStudyId)throw new StateError('Choose the exact copy Research scope.',400);return structureTestRecords.findings({parentStudyId});}return studyDerivedFindings.read({projectKey,parentStudyId});})},
       '/api/study-research/choices': {GET:()=>draftCall(()=>studyResearchChoices.read({projectKey:url.searchParams.get('projectKey'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyResearchChoices.save(input))},
       '/api/study-draft/root-recovery': {GET:()=>draftCall(()=>studyDrafts.inspectRoots({bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})),POST:input=>draftCall(()=>studyDrafts.recoverRoots(input))},
       '/api/study/source-context': {GET:async()=>{if([...url.searchParams.keys()].some(key=>key!=='id')||url.searchParams.getAll('id').length!==1)throw new StateError('Select one existing Library source.',400);const source=await library.snapshot(url.searchParams.get('id'),{includeBody:true});return {sourceId:source.id,hash:source.hash,title:source.title||source.name||'Source',text:typeof source.text==='string'?source.text:null,missing:!!source.missing};}},
