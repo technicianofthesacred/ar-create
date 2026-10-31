@@ -74,6 +74,10 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
       start:(story,file)=>withIsolatedConfig(config,()=>startLocalIntake(story,file,{})),
       job:id=>withIsolatedConfig(config,()=>{const job=localJobs().find(j=>j.id===id);return job?{id:job.id,state:job.state,stage:job.stage,error:job.error||null,raw:job.raw||null,rawSha256:job.rawCandidateSha256||null,transcriptReady:!!job.transcriptReady}:null;}),
     },
+    // Trusted in-process candidate reader. No request can supply an executable,
+    // model directory, source file path, or alternate canonical job.
+    candidateRuntime:()=>({ready:ready&&!!config.asrModelDirectory,problem:!ready?problem:!config.asrModelDirectory?'Reconnect the preinstalled local speech model before generating a candidate.':null,python:config.python,repoRoot:config.repoRoot,asrModelDirectory:config.asrModelDirectory||null,environment:{...config.runtimeEnvironment,HF_HUB_OFFLINE:'1',TRANSFORMERS_OFFLINE:'1'}}),
+    captureCandidateAudio({jobId,expected}){const snapshot=corrections.peek(jobId);if(snapshot.external?.changed||JSON.stringify(Object.entries(snapshot.expected).sort())!==JSON.stringify(Object.entries(expected||{}).sort()))throw new StateError('Selected recording baseline changed.',409);const audioPath=resolveInside(dir,path.relative(dir,snapshot.provenance.audio));regular(audioPath);if(digest(fs.readFileSync(audioPath))!==snapshot.expected.audioHash)throw new StateError('Selected recording audio changed.',409);return {snapshot,audioPath};},
     transcriptCorrections:corrections,
     sourceSnapshot:source=>corrections.sourceSnapshot(source),
     async readTranscriptSource(sourceId){const {source}=await library.blob(sourceId);const managed=corrections.sourceSnapshot(source);if(!managed.managed)throw new StateError('Choose this recording’s canonical transcript.',400);const snapshot=corrections.read(managed.jobId);return {...snapshot,sourceId};},

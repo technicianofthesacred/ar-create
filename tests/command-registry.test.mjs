@@ -41,7 +41,13 @@ test('every app route belongs to runtime capabilities or an explicit read-only r
  const reviewRoutes=[...reviewSource.matchAll(/\['(\/api\/review\/[A-Za-z0-9_./-]+)',result\(/g)].map(match=>match[1]);
  assert.ok(reviewRoutes.length>0,'the maintained review-host route table is inspected');
  const matches=(ui,registered)=>registered.some(route=>route===ui||pattern(route).test(ui)||route.startsWith(ui));
- const missing=uiRoutes().filter(ui=>!matches(ui,routes)&&!matches(ui,reviewRoutes));
+ // This browser-only boundary action never reaches HTTP: the native host
+ // selects the genuine human or registered-copy visual review route.
+ const boundarySource=fs.readFileSync(path.join(repo,'public/document-study/study-output-boundary.mjs'),'utf8'),hostSource=fs.readFileSync(path.join(repo,'public/document-study/study-output-host.mjs'),'utf8');
+ const boundaryActions=['/api/carousel/visual-review'];
+ for(const alias of boundaryActions){assert.ok(boundarySource.includes("path==='"+alias+"'"));assert.ok(boundarySource.includes('transport.reviewVisual'));}
+ for(const destination of ['/api/study/outputs/visual-review','/api/study/structure-tests/visual-review']){assert.ok(hostSource.includes(destination));assert.ok(routes.includes(destination));}
+ const missing=uiRoutes().filter(ui=>!matches(ui,routes)&&!matches(ui,reviewRoutes)&&!boundaryActions.includes(ui));
  assert.deepEqual(missing,[],'UI routes missing from the registry');
  const {server:review}=await createExistingWorkReview({config:{authorityURL:f.url,allowedAuthorityPort:Number(new URL(f.url).port),magazineRoots:[]}});
  await new Promise(resolve=>review.listen(0,'127.0.0.1',resolve));

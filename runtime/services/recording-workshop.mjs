@@ -130,5 +130,7 @@ export function transcriptPage(job, result, translation = null) {
   });
   const correction=correctionUI(job.correctionSnapshot);
   markup=markup.replace('<article class="transcript-editor">',correction.markup+'<article class="transcript-editor">');
-  return markup + correction.script + script;
+  const termsContext=JSON.stringify({sourceId:job.sourceId||null,jobId:job.id,expected:job.correctionSnapshot?.expected,segments:job.correctionSnapshot?.segments||[],external:job.correctionSnapshot?.external}).replace(/</g,'\\u003c');
+  const termsScript=!translation&&job.correctionSnapshot?`<script type="module">import {createSourceTermsReview} from '/document-study/source-terms-review.js';const termsContext=${termsContext};const host=document.createElement('section');document.querySelector('[data-correction-review]').after(host);const terms=createSourceTermsReview({window,root:host,context:()=>({...termsContext,actor:window.arCreateUiActor?.actor||'human:adrian'}),onProposed:receipt=>{let button=document.querySelector('[data-correction-inspect="'+receipt.receiptId+'"]');if(!button){button=document.createElement('button');button.type='button';button.className='ar-correction-action';button.dataset.correctionInspect=receipt.receiptId;button.textContent='Inspect correction';document.querySelector('.ar-correction-bar').append(button);}button.click();document.querySelector('[data-correction-detail]').scrollIntoView({block:'nearest'});}});await terms.open();</script>`:'';
+  return markup + correction.script + termsScript + script;
 }

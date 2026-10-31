@@ -12,7 +12,7 @@ C01–C07 and S01–S12 retain their authorities. Combined remains the design: v
 - [x] Stage1: sourced Write proposals, gaps, explicit review, protected phrases, Focus, version comparison and per-piece guidance. Test-copy stand-in actions use an explicit copy-scoped operation, never human impersonation.
 - [x] Stage2: point questions, durable notebook/questions, AI brief/discussion, broader Library retrieval and available cited outside research. Keep source words separate from claims and editorial use.
 - [x] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
-- [ ] Stage4: copy-only stand-in Carousel word/visual review and faithful PNG/caption files; Article role composition, captions/descriptions/grouping; Post/Listing and Video source ranges/playback.
+- [x] Stage4: copy-only stand-in Carousel word/visual review and faithful PNG/caption files; Article role composition, captions/descriptions/grouping; Post/Listing and Video source ranges/playback.
 - [ ] Stage5: reviewable AI translation for Source/conversation/Share/Audience Chinese edition, isolated retranscription candidates and reviewed repeated-term correction.
 - [ ] Stage6: microphone intake, tags, global usage, original reader, Collections and existing-folder connection repair.
 - [ ] Stage7: exact saved-sentence pickup/Continue and useful agent questions on Home; complete the copy’s recording-to-Outputs traversal and list genuine remaining outside/human gates.
@@ -51,3 +51,10 @@ The 31 October visitor checks require visible-subject navigation before decision
 ## Review continuity installed; Make in progress
 
 PR133 / c429ba6df773eab0b438e942d00a547b48bc7b97, build 2026-10-31T08:41:59.612Z, restores visible-subject routing, retained copy board records, cold original decisions and accepted source links across reload/Read/Write. The existing saved Research response finalized successfully without another inference run. Actual copy angle/title choices are agent stand-ins; Write inherits them after reload while original decisions and hashes remain unchanged. Stage4 is still a candidate: complete newly created piece return, exact subject source inheritance, scoped photographs, saved local Carousel files/visual receipt and native Post/Listing/Video proof before installation. Language/Gather/Home and the finished-screen smaller-board pass remain open.
+
+
+## Make installed · 31 October, 16:08 UTC
+
+PR134 / a5ea8f45ca6522fdd01c802beb6d0ea67fc23662, build 2026-10-31T16:08:46.563Z, connects copy-owned Article/Carousel/Post/Listing, photograph composition and Video source ranges. Exact synthetic native proof covers a real unbound Library image, saved inline credit without crop change, four actual 1080 × 1350 PNGs/caption and explicit agent visual review surviving reload. The actual Hong Kong test Article updated in place from saved writing and Direction; its seven accepted citations remain visible. Original content/configuration and canonical WIP match baseline.
+
+The cold-copy Article → Home decision catalogue path remains a separate prepared Home repair (295 focused checks), not part of Make. Language is next; Gather, Home and the finished-screen smaller-board pass remain unfinished. No Share message was sent.

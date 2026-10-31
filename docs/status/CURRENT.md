@@ -1,3 +1,6 @@
+<!-- Structure program current checkpoint: 2026-10-31T16:08:46.563Z -->
+Make is installed at signed main a5ea8f45ca6522fdd01c802beb6d0ea67fc23662 (PR134). Find it at Subjects → Hong Kong Day 1 · structure test → Article → Arrange, or + for another piece. Local PNG/caption review is connected; original decisions remain pending. Language, Gather, Home and the remaining smaller-screen layout pass are still open. The exact cold-copy Article → Home failure is prepared separately, not installed yet.
+
 ## 31 October — continuity installed; Make journey under native verification
 
 C01–C07, S01/S03/S04/S05/S07/S08/S09/S12. PR133 is independently live at c429ba6df773eab0b438e942d00a547b48bc7b97, build 2026-10-31T08:41:59.612Z. The copy board lists its retained sources/research, Home reads the original’s four decisions without reopening, and accepted sourced wording retains seven citation links and its actual agent stand-in label beside the paragraph after reload. The saved Research response was finalized by its existing owner without another AI request. Copy-only angle/title stand-ins now persist into Write; originals, four Carousels, kept Source sessions and configuration match baseline hashes.

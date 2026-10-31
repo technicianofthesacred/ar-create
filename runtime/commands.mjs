@@ -20,7 +20,7 @@ export const SCHEMA = 'ar-create.capabilities.v1';
 const HUMAN = Object.freeze(['human']), ANY = Object.freeze(['any']);
 
 /** POST routes that only read. They need no actor. */
-export const READ_ONLY_POSTS = new Set(['/api/research/atlas/search','/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
+export const READ_ONLY_POSTS = new Set(['/api/source-transcript/candidate/review','/api/source-language/capabilities','/api/source-language/review','/api/source-transcript/terms/preview','/api/source-transcript/candidate/compare','/api/research/atlas/search','/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
 
 const UNDO = {
   'POST /api/magazine/working-draft/ai/accept': 'magazine.working-draft.undo',
@@ -138,7 +138,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
+const HUMAN_ONLY = new Set(['POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -146,10 +146,11 @@ function entry(method, route, { query, mode, mount }) {
   // Manuscript proposals take their identity from the query only; the body must not repeat it.
   if (route.startsWith('/api/study-ai/')&&route!=='/api/study-ai/run') { mode = 'scope'; query = ['bindingId', 'parentStudyId', 'requestId?']; }
   if(route==='/api/study-ai/run'&&method==='GET')query=['bindingId','parentStudyId','requestId?','operationId'];
+  if(route.startsWith('/api/study/language/')&&method==='GET')query=['kind?','bindingId','parentStudyId','outputId','recipientId?',...(route.endsWith('/review')?['requestId']:[])];
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
   const pattern = new RegExp('^' + route.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\w+)\\?\}/g, '([^/]+)') + '$');
   return { name: '', section: section(route), method, route, schema: method === 'GET' || mode === 'scope' || mode === 'scope-copy' ? { query: query || [], ...(mode === 'scope-copy' ? { body: 'object (repeats the query scope)' } : mode === 'scope' && method !== 'GET' ? { body: BODY[route] || 'object (identity stays in the query)' } : {}), ...(mode === 'input-json' ? { encoding: 'input-json' } : {}) } : { body: BODY[route] || 'object' },
-    readOnly, actors: ['POST /api/study/outputs/stand-in-refresh','POST /api/study/outputs/stand-in-create','POST /api/study/outputs/stand-in-review-words','POST /api/study/outputs/stand-in-save','POST /api/study/structure-tests/visual-review','POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark','POST /api/study/structure-tests/research-note'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
+    readOnly, actors: (route.startsWith('/api/study/language/')||route.startsWith('/api/source-language/'))&&route.includes('/stand-in-')?['agent']:['POST /api/study/outputs/stand-in-refresh','POST /api/study/outputs/stand-in-create','POST /api/study/outputs/stand-in-review-words','POST /api/study/outputs/stand-in-save','POST /api/study/structure-tests/visual-review','POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark','POST /api/study/structure-tests/research-note'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
 }
 /** Query fields a GET handler reads, recovered from its source. */
 const queryFields = fn => [...new Set([...String(fn).matchAll(/searchParams\.(?:get|getAll|has)\('([\w-]+)'\)/g)].map(m => m[1]))];
@@ -180,7 +181,15 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const languageScope=()=>{
+      const allowed=['kind','bindingId','parentStudyId','outputId','recipientId','requestId'];
+      if([...url.searchParams.keys()].some(k=>!allowed.includes(k))||allowed.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact language source scope.',400);
+      const scope={kind:url.searchParams.get('kind')||'audience-article',bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId'),outputId:url.searchParams.get('outputId')};
+      if(url.searchParams.has('recipientId'))scope.recipientId=url.searchParams.get('recipientId');
+      return {scope,...(url.searchParams.has('requestId')?{requestId:url.searchParams.get('requestId')}:{})};
+    };
+    const languageCall=async(owner,action,input)=>{if(!owner)throw new StateError('The maintained language owner is unavailable.',503);if(request.method==='POST'&&url.search)throw new StateError('Use the exact language route without a query.',400);try{return await owner[action](input);}catch(error){throw new StateError(error.message,error.status||500);}};
     const studyAICall=(action,input={})=>draftCall(()=>{
       const scope={};
       for(const key of ['bindingId','parentStudyId']){const values=url.searchParams.getAll(key);if(values.length!==1||!values[0])throw new StateError('Select one exact owned manuscript and parent project.',400);scope[key]=values[0];}
@@ -363,6 +372,32 @@ export function createRouteMap(services) {
       '/api/study-draft/check': {GET:()=>draftCall(()=>{const keys=['bindingId','parentStudyId','checkId','targetKind','outputId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k)||url.searchParams.getAll(k).length!==1))throw new StateError('Select one exact saved Check target.',400);return studyDraftChecks.read(Object.fromEntries(url.searchParams));}),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
 
       '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
+      '/api/study/language/edition-review': {GET:()=>languageCall(studyLanguage,'editionReview',languageScope())},
+      '/api/study/language/capabilities': {GET:()=>languageCall(studyLanguage,'capabilities',languageScope())},
+      '/api/study/language/review': {GET:()=>languageCall(studyLanguage,'review',languageScope())},
+      '/api/study/language/prepare': {POST:input=>languageCall(studyLanguage,'prepare',input)},
+      '/api/study/language/run': {POST:input=>languageCall(studyLanguage,'run',input)},
+      '/api/study/language/accept': {POST:input=>languageCall(studyLanguage,'accept',input)},
+      '/api/study/language/reject': {POST:input=>languageCall(studyLanguage,'reject',input)},
+      '/api/study/language/stand-in-accept': {POST:input=>languageCall(studyLanguage,'standInAccept',input)},
+      '/api/study/language/stand-in-reject': {POST:input=>languageCall(studyLanguage,'standInReject',input)},
+      '/api/source-language/prepare': {POST:input=>languageCall(sourceLanguage,'prepare',input)},
+      '/api/source-language/run': {POST:input=>languageCall(sourceLanguage,'run',input)},
+      '/api/source-language/accept': {POST:input=>languageCall(sourceLanguage,'accept',input)},
+      '/api/source-language/reject': {POST:input=>languageCall(sourceLanguage,'reject',input)},
+      '/api/source-language/stand-in-accept': {POST:input=>languageCall(sourceLanguage,'standInAccept',input)},
+      '/api/source-language/stand-in-reject': {POST:input=>languageCall(sourceLanguage,'standInReject',input)},
+      '/api/source-language/capabilities': {POST:input=>languageCall(sourceLanguage,'capabilities',input)},
+      '/api/source-language/review': {POST:input=>languageCall(sourceLanguage,'review',input)},
+      '/api/source-transcript/candidate/capabilities': {GET:()=>localTranscriptCandidates.capabilities()},
+      '/api/source-transcript/candidate/prepare': {POST:input=>languageCall(localTranscriptCandidates,'prepare',input)},
+      '/api/source-transcript/candidate/start': {POST:input=>languageCall(localTranscriptCandidates,'start',input)},
+      '/api/source-transcript/candidate/review': {POST:input=>languageCall(localTranscriptCandidates,'review',input)},
+      '/api/source-transcript/capabilities': {GET:()=>sourceTranscript.capabilities()},
+      '/api/source-transcript/terms/preview': {POST:input=>languageCall(sourceTranscript,'previewTerms',input)},
+      '/api/source-transcript/terms/propose': {POST:input=>languageCall(sourceTranscript,'proposeTerms',input)},
+      '/api/source-transcript/candidate/compare': {POST:input=>languageCall(sourceTranscript,'compareCandidate',input)},
+      '/api/source-transcript/candidate/propose': {POST:input=>languageCall(sourceTranscript,'proposeCandidate',input)},
       '/api/source-sessions/translation-review': {GET:()=>{const keys=['sessionId','expectedRevision','expectedSourceHash'];if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length!==1)||!/^(0|[1-9][0-9]*)$/.test(url.searchParams.get('expectedRevision')||''))throw new StateError('Select the exact saved conversation review.',400);if(typeof sourceSessions?.readTranslationReview!=='function')throw new StateError('Saved conversation review is not connected in this workspace.',503);return sourceSessions.readTranslationReview({sessionId:url.searchParams.get('sessionId'),expectedRevision:Number(url.searchParams.get('expectedRevision')),expectedSourceHash:url.searchParams.get('expectedSourceHash')});}},
       '/api/source-sessions/translation-proposals': {POST:input=>{if(typeof sourceSessions?.proposeTranslation!=='function')throw new StateError('Kept-conversation proposals are not connected in this workspace.',503);return sourceSessions.proposeTranslation(input);}},
       '/api/source-sessions/edit': {POST:input=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return stampSourceSession('edit',input);}},
