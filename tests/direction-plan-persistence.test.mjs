@@ -82,7 +82,7 @@ const block=body=>body.slice(body.indexOf('<!-- ar-create:direction-plan:v1 -->'
 
 test('normal prose editor stays clean while all six plan fields survive prose edits, concurrent plan edits and device recovery',async t=>{
  const f=await fixture(t),w=await f.boot();for(const [key,value] of Object.entries(sixFields))edit(w,key,value);click(w,'save-plan');await until(()=>w.document.querySelector('.dwt-context').textContent.includes('Saved revision 2'));
- const saved=await f.read();click(w,'angle');assert.equal(w.document.querySelector('[data-human-direction]').value,f.exact);assert.equal(w.document.querySelector('.human-direction-preview').textContent,f.exact);
+ const saved=await f.read();click(w,'angle');assert.equal(w.document.querySelector('[data-human-direction]').value,f.exact);assert.equal(w.document.querySelector('[aria-label="Your page"] [data-human-direction]').value,f.exact,'the saved prose is shown directly in Your page');assert.equal(w.document.querySelector('.human-direction-preview'),null,'Direction avoids a repeated preview beside its editor');
  const prose='My replacement prose.\nExact second line — 保留疑问。\n\n';typeProse(w,prose);
  let recovery=JSON.parse(w.localStorage.getItem('ar-study-human-direction-recovery-v1')).hk.drafts[f.scope.bindingId];assert.equal(block(recovery),block(saved.body),'editing prose preserves the saved planning block byte for byte');
  edit(w,'closing','A concurrent unsaved ending.');assert.equal(w.document.querySelector('[data-human-direction]').value,prose,'editing a plan keeps exact unsaved prose');

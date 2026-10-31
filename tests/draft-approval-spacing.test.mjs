@@ -41,13 +41,13 @@ test('approval space outranks stylesheet important margins and stays stable thro
 
 test('a retained mark explains its origin and missing comparison instead of pretending to be a replacement',t=>{
  const {w,doc,paragraph}=setup(t);w.renderApprovals();
- const row=w.document.querySelector('.draft-mark-approval'),context=row.querySelector('details');
- assert.ok(context,'review context must be available');assert.equal(context.open,false);
+ const row=w.document.querySelector('.draft-mark-approval'),context=row.querySelector('section.draft-mark-context');
+ assert.ok(context,'review context is shown in place');assert.equal(row.querySelector('details'),null);
  assert.match(context.textContent,/Marked in the saved draft/);
  assert.match(context.textContent,/Earlier wording and suggestion author were not recorded with this mark/);
  assert.match(context.textContent,/removes the review highlight/);
  assert.equal(row.querySelector('.draft-mark-preview').textContent,'Pending words');
- assert.ok(context.contains(row.querySelector('.draft-mark-preview')),'repeated wording belongs in optional context');
+ assert.ok(context.contains(row.querySelector('.draft-mark-preview')),'exact wording stays with its visible context');
  assert.equal(paragraph.textContent,'Original words.');
  assert.equal(doc.approvalReview.blocks.length,1,'rendering never approves or invents a proposal');
  let history=0;w.studyDraft={showHistory:()=>history++};row.querySelector('[data-draft-mark-history]').click();

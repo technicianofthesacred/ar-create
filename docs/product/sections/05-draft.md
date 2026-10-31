@@ -1,5 +1,9 @@
 # 5 — Draft
 
+## Sourced native Write · approved 31 October
+
+C01/C03–C07, S05: prepare from explicitly selected current subject sources, then run the existing logged-in output-only AI connection. Persist a single bounded attempt and exact source/revision proof; no automatic resend after restart. Every proposed claim has exact source quotation links. Unsupported points remain separate open questions and add no words. The margin keeps proposals until Accept/Reject and preserves the existing editor, direct edits, revision guards, recovery and exact saved Undo. Protected phrases and per-piece voice/recipe/direction instructions are scoped writing constraints, never factual evidence; shared sheets and the author page stay under their existing owners. Registered test-copy stand-ins have distinct agent decisions and schemas; original human approval requirements stay intact.
+
 ## Copy-scoped stand-in verification — approved 31 October
 
 The whole-structure program starts with Hong Kong Day 1 · structure test, using the existing owned-copy authority and real captured source material. Its working files, project/output identities and history are independent. Stand-in choices are confined to the registered copy and carry the agent actor and stand-in label; original human decisions stay open. Preserve original/source hashes, exact guarded editing, recovery and Undo. No invented live samples or general human-only bypass. See [the program](../../plans/2026-10-31-structure-test-program.md).
