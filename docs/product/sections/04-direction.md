@@ -91,3 +91,8 @@ The interface makes meaningful changes and reasons inspectable and distinguishes
 ## 20 October — Current understanding and useful return
 
 Applies the adopted return-to-work requirements, C01–C06; stated once in [PRODUCT, resume creative work without reconstructing its history](../PRODUCT.md#20-october--resume-creative-work-without-reconstructing-its-history), including the finish criterion.
+
+
+## 31 October — structure-test decision grid
+
+C01/C03/C04/C05/C06, S04/S05/S07/S09/S12. The approved whole-structure program permits explicit agent-labelled stand-in choices on the registered copy only. Subject and per-piece use, reject, inherit and not-applicable events use the existing HUMAN-DIRECTION owner and revision/hash guards. Independent Article and Carousel wording stays independent. Exact inherited choices carry their subject basis; a later subject choice requires review. The actual Write request captures the effective piece choices and rejected reasons as editorial direction, never as factual evidence. Finish criterion: save/reload the inline grid on the structure-test copy, observe the same effective choices in Write/Understanding/Arrange and an AI request capture, and prove original words/history/decisions unchanged.

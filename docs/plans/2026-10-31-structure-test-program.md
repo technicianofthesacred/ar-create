@@ -34,3 +34,10 @@ The native source-selected proposal owner, copy-scoped stand-in review and prote
 ## Stage 1 installed · 31 October
 
 The structure-test Article now reopens with its exact native route. One actual sourced execution produced three attributed claims with seven exact quotations and two unsupported questions. Its pending words stayed outside the manuscript; an explicit agent-labelled stand-in acceptance appended only the reviewed paragraph to the copy. Original/source/configuration preservation checks pass. Protected phrases, piece guidance, Focus return and version comparison retain their existing owners. Stage 2 continues Research; the original editorial decisions remain open.
+
+
+## Stage 2 installed; Stage 3 verification
+
+Research owners and local read-only Atlas retrieval are installed at PR131 / 942c47521522723b63bc97acb7574befc46ea7de. The actual brief returned once and stayed held after a combined fact-use label failed validation. The reviewed repair interprets only that exact unconfirmed-fact alias conservatively as held, preserves raw artifact bytes and records normalization provenance; all source/held-quote validators still apply. Full saved-artifact validation succeeds in memory; installation and existing-owner reinspection remain required. No repeated AI request.
+
+Stage 3 affected proof covers typed subject/piece choices, not-applicable events, explicit inheritance basis, actual native AI context capture, revision/replay and original-word preservation. Native checks also repaired asynchronous Direction visibility, save-event context ordering, canonical Article decision identity and native return from Direction. Exact install and actual-copy proof remain pending.
