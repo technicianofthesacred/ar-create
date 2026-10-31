@@ -55,3 +55,13 @@ test('actual outline handles keyboard and pointer moves; cross-role, stale and c
   assert.deepEqual(current.outputs[0].placements,original.outputs[0].placements);assert.deepEqual(current.outputs[1],original.outputs[1]);
  }finally{if(root)await act(async()=>root.unmount());for(const channel of channels){channel.port1.close();channel.port2.close();}dom.window.close();for(const [key,descriptor]of previous){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}await rm(temp,{recursive:true,force:true});}
 });
+
+test('layout labels show words without quotation or emphasis marks, leaving the manuscript unchanged',async()=>{
+ const temp=await mkdtemp(join(tmpdir(),'ar-layout-label-'));
+ try{
+  const outfile=join(temp,'labels.cjs');await build({entryPoints:[fileURLToPath(new URL('./article-layout-order.ts',import.meta.url))],bundle:true,platform:'node',format:'cjs',outfile});const {articleOrderGroups}=createRequire(import.meta.url)(outfile);
+  const doc=fixture();doc.outputs[0].manuscript[0]={...doc.outputs[0].manuscript[0],text:'> "It\'s not the tea, **it\'s the storage.**"'};const before=JSON.stringify(doc);
+  const labels=articleOrderGroups(doc,doc.outputs[0]).flatMap(g=>g.rows.map(r=>r.label));
+  assert.ok(labels.includes('"It\'s not the tea, it\'s the storage."'),labels.join(' | '));assert.ok(!labels.some(l=>/\*\*|^>/.test(l)));assert.equal(JSON.stringify(doc),before);
+ }finally{await rm(temp,{recursive:true,force:true});}
+});

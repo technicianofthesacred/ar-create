@@ -8,7 +8,7 @@ import {ensurePrivateDirectory,readJson,digest,regular} from './files.mjs';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v),stable=v=>JSON.stringify(v,(_,x)=>object(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x),same=(a,b)=>stable(a)===stable(b);
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
-export const LANGUAGE_CONNECTION_ROUTES=Object.freeze({capabilities:'/api/study/language/capabilities',prepare:'/api/study/language/prepare',run:'/api/study/language/run',review:'/api/study/language/review',accept:'/api/study/language/accept',reject:'/api/study/language/reject',standInAccept:'/api/study/language/stand-in-accept',standInReject:'/api/study/language/stand-in-reject'});
+export const LANGUAGE_CONNECTION_ROUTES=Object.freeze({requests:'/api/study/language/requests',capabilities:'/api/study/language/capabilities',prepare:'/api/study/language/prepare',run:'/api/study/language/run',review:'/api/study/language/review',accept:'/api/study/language/accept',reject:'/api/study/language/reject',standInAccept:'/api/study/language/stand-in-accept',standInReject:'/api/study/language/stand-in-reject'});
 /** Composition seam only: no HTTP installation, new store or provider setup.
  * Root supplies retained outputs/drafts/share/structureTests and optional existing
  * execution. Default transport remains the common service's installed Codex.
@@ -60,6 +60,7 @@ export function createStudyLanguageConnection({dataDir,outputs,drafts,share,stru
  }
  return {
   editionReview,
+  async requests(value){const selected=input(value,['scope']);return service.requests({scope:selected});},
   async capabilities(value){const selected=input(value,['scope']);await owner(selected).readSource(selected);let canStandInReview=false;if(AGENT_ACTORS.includes(currentActor()?.actor)){try{await registered(selected);canStandInReview=true;}catch(error){if(![403,404,409].includes(error.status))throw error;}}return {...service.capabilities(),scope:selected,canStandInReview};},
   async prepare(value){const selected=input(value,['scope','targetLanguage','retainedTerms']);return decorated(await service.prepare({scope:selected,targetLanguage:value.targetLanguage,...(value.retainedTerms!==undefined?{retainedTerms:value.retainedTerms}:{})}),selected);},
   async run(value){const selected=own(value,['scope','requestId']);return decorated(await service.run({requestId:value.requestId}),selected);},

@@ -278,8 +278,14 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     return tree;
   }
   function rootById(id = 'library', write = false) { const root = roots.find(r => r.id === id); if (!root) throw new StateError('Unknown configured library root.', 404); if (write && !root.writable) throw new StateError('Connected original roots are read-only.', 403); return root; }
-  function publicSource(source) { const root = rootById(source.rootId); const { originalFile, ...metadata } = source; return { ...metadata, sourceUnavailable:root.available===false, ...(root.available===false?{cardEligibility:{eligible:false,reason:'The connected folder is unavailable. Reconnect it before reading or keeping a passage.'}}:{}), originalUrl: originalFile ? `/api/sources/blob?id=${encodeURIComponent(source.id)}&original=1` : null, path: path.join(root.path, source.rel_path), writable: root.writable, url: source.source_url || '', body: undefined }; }
-  function sourceById(id) { const source = index.sources.find(s => s.id === id && !s.missing && !s.managedTerminalSnapshot); if (!source) throw new StateError('Source was not found. Refresh the library.', 404); return source; }
+  function currentRecordingSource(source){
+    if(source.provenance?.kind!=='canonical-recording-source')return source;
+    const file=checkedFile(source),stat=regular(file);if(stat.size>MAX_BODY_BYTES)throw new StateError('Canonical transcript exceeds the reader limit.',413);
+    const managed=recordingSourceSnapshot?.({...source,path:file});if(!managed?.managed||managed.jobId!==source.recordingId)throw new StateError('Canonical recording identity changed.',409);
+    return {...source,hash:digest(fs.readFileSync(file)),transcriptState:{managed:true,coherent:managed.coherent,reviewStatus:managed.reviewStatus,jobId:managed.jobId},cardEligibility:{eligible:!!managed.coherent,reason:managed.reason||'Canonical recording transcript; review stays with its recording owner.'}};
+  }
+  function publicSource(source) { source=currentRecordingSource(source); const root = rootById(source.rootId); const { originalFile, ...metadata } = source; return { ...metadata, sourceUnavailable:root.available===false, ...(root.available===false?{cardEligibility:{eligible:false,reason:'The connected folder is unavailable. Reconnect it before reading or keeping a passage.'}}:{}), originalUrl: originalFile ? `/api/sources/blob?id=${encodeURIComponent(source.id)}&original=1` : null, path: path.join(root.path, source.rel_path), writable: root.writable, url: source.source_url || '', body: undefined }; }
+  function sourceById(id) { const source = index.sources.find(s => s.id === id && !s.missing && !s.managedTerminalSnapshot); if (!source) throw new StateError('Source was not found. Refresh the library.', 404); return currentRecordingSource(source); }
   function checkedFile(source, write = false) { const root = rootById(source.rootId, write);if(root.retainedCatalog||root.originalCatalog){try{const tree=catalogTree(root),find=folder=>folder.files.some(item=>(root.originalCatalog||item.providedUUID===source.id)&&item.rel_path===source.rel_path)||folder.folders.some(find);if(!find(tree))throw new StateError('Source is no longer kept in the catalog.',404);root.available=true;}catch(error){root.available=false;throw new StateError('Retained transcript catalog is unavailable or changed. Refresh the library.',503);}}if(root.available===false)throw new StateError('The source folder is unavailable. Reconnect it and refresh the library.',503); const file = resolveInside(root.path, source.rel_path); if (write) regular(file); else { const stat = fs.lstatSync(file); if (!stat.isFile()) throw new StateError('Source must be a regular file.'); } return file; }
   function makeFolder(rootId, folder) { const root = rootById(rootId, true); safeRel(folder, false); resolveInside(root.path, folder, { directory: true, createParents: true }); }
   function savedFile(rootId, folder, name, bytes, provenance, legacyId) {
@@ -632,7 +638,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       if(input.expectedIndexHash!==undefined&&input.expectedIndexHash!==loaded.hash)throw new StateError('Library index changed; refresh the source.',409);
       const matches=value.sources.filter(source=>source.id===input.id);
       if(matches.length!==1||matches[0].missing||matches[0].managedTerminalSnapshot)throw new StateError('Source is unavailable in the saved catalog.',404);
-      const source=matches[0],root=rootById(source.rootId);
+      const source=currentRecordingSource(matches[0]),root=rootById(source.rootId);
       if(!root.available)throw new StateError('Source folder is unavailable.',503);
       const file=resolveInside(root.path,source.rel_path),extension=path.extname(file).toLowerCase();
       if(!TEXT.has(extension))throw new StateError('This source is not readable text.',415);
@@ -673,7 +679,23 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const validate=()=>{if(loadTyped().hash!==loaded.hash)throw new StateError('Captured Library index or Collection metadata changed.',409);for(const pin of pins){const file=checkedFile(pin.source),stat=regular(file);if(file!==pin.file||stat.size>MAX_BODY_BYTES||stat.dev!==pin.identity[0]||stat.ino!==pin.identity[1]||digest(fs.readFileSync(file))!==pin.hash)throw new StateError('Captured Library source bytes changed.',409);}};validate();return Object.freeze({validate});
   });
   return {
-    photosSnapshot, binarySnapshot, captureReadGuard, readTopics, saveTopics,
+    photosSnapshot, binarySnapshot, captureReadGuard,
+    // Trusted recording-owner handoff: identity only; canonical bytes stay with their job.
+    registerRecordingSource: ({jobId,file,title,expected,operationId,validate,provenance}) => serial(() => {
+      refresh();validate();const rel=path.relative(recordingShelf,file);const physical=resolveInside(recordingShelf,rel);regular(physical);
+      const managed=recordingSourceSnapshot?.({rootId:'recordings',rel_path:rel,path:physical});
+      if(!managed?.managed||!managed.coherent||managed.jobId!==jobId||managed.expected.markdownHash!==expected.markdownHash||path.basename(physical)!=='transcript.md')throw new StateError('Choose the current canonical recording transcript.',409);
+      const matches=index.sources.filter(source=>source.rootId==='recordings'&&source.rel_path===rel);
+      if(matches.length>1||matches.some(source=>source.recordingId&&source.recordingId!==jobId))throw new StateError('Canonical transcript identity is ambiguous.',409);
+      let source=matches[0];const fingerprint=digest(JSON.stringify({jobId,expected}));
+      if(source?.recordingSourceOperations?.[operationId]){if(source.recordingSourceOperations[operationId].hash!==fingerprint)throw new StateError('Operation ID already belongs to another Source registration.',409);return {source:publicSource(source),operation:source.recordingSourceOperations[operationId]};}
+      const reused=index.sources.find(row=>row.recordingSourceOperations?.[operationId]);if(reused)throw new StateError('Operation ID already belongs to another recording.',409);
+      const bytes=fs.readFileSync(physical);if(bytes.length>MAX_BODY_BYTES||digest(bytes)!==expected.markdownHash)throw new StateError('Canonical transcript bytes changed or exceed the reader limit.',409);validate();
+      if(!source){source={id:randomUUID(),rootId:'recordings',rel_path:rel,provenance:{kind:'canonical-recording-source',jobId,...provenance}};index.sources.push(source);}
+      const operation={hash:fingerprint,jobId,sourceId:source.id,expected:structuredClone(expected),...provenance};
+      Object.assign(source,{provenance:{...source.provenance,kind:'canonical-recording-source',jobId,...provenance},name:path.basename(file),title,kind:'transcript',recordingId:jobId,hash:expected.markdownHash,hashStatus:'verified',status:'ready',missing:false,cardEligibility:{eligible:true,reason:'Canonical recording transcript; review stays with its recording owner.'},transcriptState:{managed:true,coherent:true,reviewStatus:managed.reviewStatus,jobId},recordingSourceOperations:{...source.recordingSourceOperations,[operationId]:operation}});persist();return {source:publicSource(source),operation};
+    }),
+ readTopics, saveTopics,
     folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),changePhotoFolders:(input,options)=>filing.changePhoto(input,options),
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog||root.originalCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),

@@ -20,7 +20,7 @@ export function createAudienceLanguageConnection({window:win,createDrawer=create
   drawer=createDrawer({window:win,request:async packet=>{
    const response=await win.fetch(packet.url,{method:packet.method,cache:'no-store',signal:packet.signal,headers:{Accept:'application/json','X-AR-Actor':by,'X-AR-Client':'ui',...(packet.body?{'Content-Type':'application/json'}:{})},...(packet.body?{body:JSON.stringify(packet.body)}:{})}),value=await response.json();
    if(!response.ok)throw Error(value.error||'Translation could not finish.');
-   if(value.id&&(!same(value.source?.scope,scope)||!same(value.source?.proof?.writingProof,context.sourceProof)))throw Error('The saved source words changed. Reopen this Article’s translation.');
+   if(value.id&&(!same(value.source?.scope,scope)||value.stale!==true&&!same(value.source?.proof?.writingProof,context.sourceProof)))throw Error('The saved source words changed. Reopen this Article’s translation.');
    return value;
   },context:()=>selected(scope)&&actor()===by?context:null,onRequestPrepared:remember,onClose:remember,onOpenEdition:async edition=>{
    if(!selected(scope)||actor()!==by||edition.rootBindingId!==scope.bindingId||edition.parentStudyId!==scope.parentStudyId||edition.selectedOutputId===scope.outputId)throw Error('The selected source Article changed. The Chinese edition remains in Outputs.');

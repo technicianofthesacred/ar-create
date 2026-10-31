@@ -14,7 +14,7 @@ C01–C07 and S01–S12 retain their authorities. Combined remains the design: v
 - [x] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
 - [x] Stage4: copy-only stand-in Carousel word/visual review and faithful PNG/caption files; Article role composition, captions/descriptions/grouping; Post/Listing and Video source ranges/playback.
 - [x] Stage5: reviewable AI translation for Source/conversation/Share/Audience Chinese edition, isolated retranscription candidates and reviewed repeated-term correction.
-- [ ] Stage6: microphone intake, tags, global usage, original reader, Collections and existing-folder connection repair.
+- [x] Stage6: microphone intake, tags, global usage, original reader, Collections and existing-folder connection repair.
 - [ ] Stage7: exact saved-sentence pickup/Continue and useful agent questions on Home; complete the copy’s recording-to-Outputs traversal and list genuine remaining outside/human gates.
 
 Each stage gets proportionate affected checks and a native screen/file journey, then exact signed installation, byte/configuration/original-preservation proof and a main-app screenshot. Report “You can now … on the structure test copy” and continue. Do not repeat unchanged passed stages, poll releases with agents, or claim whole-program completion from one stage.
@@ -65,3 +65,12 @@ The cold-copy Article → Home decision catalogue path remains a separate prepar
 PR135 / 0bf61e9bcc032f621999bcb50e2a580317c324ab, build 2026-10-31T16:36:14.215Z, connects Chinese Article proposals/independent editions, Source/conversation reader translations, invitation translation, literal occurrence-selected correction proposals and offline local retranscription candidates. Accepted Chinese editions expose their verified actor/source receipt after reopening. Reader-span mapping covers the actual Hong Kong copy while preserving metadata, annotations, quotes and locked terms. Pending proposals never enter accepted text automatically.
 
 Exact synthetic screen proof covers Chinese pending → stand-in acceptance → separate child/reload/receipt and selected captured Source review with canonical Source unchanged. Local candidate tests use synthetic audio/fake ASR, including detached worker restart; no private audio was retranscribed. Native Share has no saved invitation/recipient on the copy, so the author preparation remains pending; real-owner HTTP checks cover translation without sending. The earlier canonical recording discoverability test fails identically on the installed baseline and belongs to Gather. Gather/Home and the twelve smaller-screen pass remain open.
+
+
+## Gather installed · 31 October, 16:59 UTC
+
+PR136 / 52c41d852d852b1a601e5f808e03d9d8b7ae2324, build 2026-10-31T16:59:02.332Z, connects bounded microphone intake through retained Library audio and guarded Start/Retry, index-only topic editing/filtering, existing Library locations and measured native photo uses with exact Read entrances. Topic writes retain the actual author; read-only agent review cannot submit. Physical microphone permission is not exercised automatically.
+
+The final journey repair explicitly registers a canonical transcript Source identity without populating generated processing files in live Library lists. That repair, edit-only Home pickup, cold-copy decisions and durable cross-reader language discovery are the next coherent candidate; the twelve smaller boards and phone remain the final visual pass.
+
+The real HK Chinese request completed once with 20 visible ambiguities. It remains pending, with no translated text accepted into the English page and no inference retry.

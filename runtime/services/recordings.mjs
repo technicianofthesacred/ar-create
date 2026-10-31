@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {currentActor,provenance} from './actor.mjs';
 import path from 'node:path';
 import {createTranscriptCorrections} from './transcript-corrections.mjs';
 import {correctionRecoveryPage} from './transcript-correction-ui.mjs';
@@ -13,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import {codexTranslationAvailable,TRANSLATION_MODEL} from './magazine/openai-translation.mjs';
 
 /** Actual Magazine saved jobs and workshop, with no original config or writable proxy. */
+const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 export function createRecordings({ dataDir, library, transcriptionRuntime = null }) {
   const dir = ensurePrivateDirectory(dataDir, 'recordings');
   const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runtime');
@@ -79,6 +81,15 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
     candidateRuntime:()=>({ready:ready&&!!config.asrModelDirectory,problem:!ready?problem:!config.asrModelDirectory?'Reconnect the preinstalled local speech model before generating a candidate.':null,python:config.python,repoRoot:config.repoRoot,asrModelDirectory:config.asrModelDirectory||null,environment:{...config.runtimeEnvironment,HF_HUB_OFFLINE:'1',TRANSFORMERS_OFFLINE:'1'}}),
     captureCandidateAudio({jobId,expected}){const snapshot=corrections.peek(jobId);if(snapshot.external?.changed||JSON.stringify(Object.entries(snapshot.expected).sort())!==JSON.stringify(Object.entries(expected||{}).sort()))throw new StateError('Selected recording baseline changed.',409);const audioPath=resolveInside(dir,path.relative(dir,snapshot.provenance.audio));regular(audioPath);if(digest(fs.readFileSync(audioPath))!==snapshot.expected.audioHash)throw new StateError('Selected recording audio changed.',409);return {snapshot,audioPath};},
     transcriptCorrections:corrections,
+    async registerSource(input={}) {
+      if(currentActor()?.actor!=='human:adrian')throw new StateError('Using a recording transcript as Source requires the author.',403);
+      if(!input||Object.keys(input).some(key=>!['jobId','expected','operationId'].includes(key))||!UUID.test(input.jobId||'')||!UUID.test(input.operationId||'')||!input.expected||typeof input.expected!=='object')throw new StateError('Choose one recording, its exact saved proof and an operation UUID.',400);
+      const validate=()=>{const snapshot=corrections.peek(input.jobId),keys=object=>JSON.stringify(Object.entries(object||{}).sort(([a],[b])=>a.localeCompare(b)));if(snapshot.external?.changed||keys(snapshot.expected)!==keys(input.expected))throw new StateError('Recording transcript or audio changed. Open its current Source before using it.',409);return snapshot;};
+      const snapshot=validate(),job=readJson(path.join(dir,'.transcription-jobs',input.jobId+'.json'),null);if(!job||job.id!==input.jobId||job.state!=='done'||job.transcriptReady!==true)throw new StateError('This recording transcript is not ready.',409);
+      const file=resolveInside(dir,path.relative(dir,path.join(job.output,'transcript.md')));regular(file);
+      const result=await library.registerRecordingSource({jobId:job.id,file,title:job.story||job.file||'Recording transcript',expected:snapshot.expected,operationId:input.operationId,validate,provenance:provenance()});return {...result,jobId:job.id,canonicalSourceChanged:false,reviewStatus:snapshot.reviewStatus};
+    },
+
     sourceSnapshot:source=>corrections.sourceSnapshot(source),
     async readTranscriptSource(sourceId){const {source}=await library.blob(sourceId);const managed=corrections.sourceSnapshot(source);if(!managed.managed)throw new StateError('Choose this recording’s canonical transcript.',400);const snapshot=corrections.read(managed.jobId);return {...snapshot,sourceId};},
     async proposeTranscriptSource({sourceId,expected,corrections:changes,reason}){const selected=await this.readTranscriptSource(sourceId);return {...corrections.propose(selected.jobId,{expected,corrections:changes,reason}),sourceId};},

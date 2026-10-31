@@ -34,6 +34,8 @@
    if(row.authority!=='library'&&indexed.has(row.id))fail('Foreign source location authority.');
    if(row.authority==='library'){
     const saved=indexed.get(row.id);if(!saved)continue;
+    // A deferred hash on both sides is not a changed revision; it waits outside the folders until it is hashed.
+    if(row.hash==null&&saved.hash==null)continue;
     if(!HASH.test(row.hash||'')||row.hash!==saved.hash||row.rootId!==undefined&&row.rootId!==saved.rootId||row.rel_path!==undefined&&row.rel_path!==saved.rel_path)fail('Source location identity or revision changed.');
     const root=roots.get(saved.rootId);if(!root||files.get(JSON.stringify([saved.rootId,saved.rel_path]))!==row.id)fail('Source location does not match its existing owner.');
     add({authority:'library',rootId:root.id,name:typeof root.name==='string'?root.name:'Library'},saved.rel_path,row.id);

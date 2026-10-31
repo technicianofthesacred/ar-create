@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-31T16:50:10.938Z.
+> Generated 2026-10-31T17:10:57.907Z.
 
-**At a glance:** 7 commands · 349 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 352 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-349 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+352 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -370,7 +370,7 @@
 | `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
 | `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (48)
+### system (50)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -392,6 +392,7 @@
 | `source-language.capabilities` | `POST /api/source-language/capabilities` | any | read |
 | `source-language.prepare` | `POST /api/source-language/prepare` | any | write |
 | `source-language.reject` | `POST /api/source-language/reject` | human | write |
+| `source-language.requests` | `POST /api/source-language/requests` | any | read |
 | `source-language.review` | `POST /api/source-language/review` | any | read |
 | `source-language.run` | `POST /api/source-language/run` | any | write |
 | `source-language.stand-in-accept` | `POST /api/source-language/stand-in-accept` | agent | write |
@@ -410,6 +411,7 @@
 | `study.language.edition-review` | `GET /api/study/language/edition-review` | any | read |
 | `study.language.prepare` | `POST /api/study/language/prepare` | any | write |
 | `study.language.reject` | `POST /api/study/language/reject` | human | write |
+| `study.language.requests` | `GET /api/study/language/requests` | any | read |
 | `study.language.review` | `GET /api/study/language/review` | any | read |
 | `study.language.run` | `POST /api/study/language/run` | any | write |
 | `study.language.stand-in-accept` | `POST /api/study/language/stand-in-accept` | agent | write |
@@ -423,7 +425,7 @@
 | `study.structure-tests.review-mark` | `POST /api/study/structure-tests/review-mark` | agent | write |
 | `study.structure-tests.visual-review` | `POST /api/study/structure-tests/visual-review` | agent | write |
 
-### transcript (11)
+### transcript (12)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -431,6 +433,7 @@
 | `ingestion.raw` | `GET /api/ingestion/raw` | any | read |
 | `ingestion.retry` | `POST /api/ingestion/retry` | any | write |
 | `recordings` | `GET /api/recordings` | any | read |
+| `recordings.source` | `POST /api/recordings/source` | human | write |
 | `source-sessions` | `GET /api/source-sessions` | any | read |
 | `source-sessions.edit` | `POST /api/source-sessions/edit` | any | write · undo `source-sessions.undo` |
 | `source-sessions.translation-accept` | `POST /api/source-sessions/translation-accept` | human | write · undo `source-sessions.undo` |

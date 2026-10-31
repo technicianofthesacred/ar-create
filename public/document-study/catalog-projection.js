@@ -2,7 +2,7 @@
 (()=>{
  'use strict';
  const HASH=/^[a-f0-9]{64}$/i;
- const fields=['id','title','name','fileName','rel_path','relativePath','kind','type','authority','artifactId','storyId','hash','archived','readOnly','missing','sourceUnavailable','available','publication','channel','source_url','modifiedAt','updatedAt','createdAt','readingStatus','toReadLater','watched','usedInPiece','provenance'];
+ const fields=['id','title','name','fileName','rootId','rel_path','relativePath','kind','type','authority','artifactId','storyId','hash','archived','readOnly','missing','sourceUnavailable','available','publication','channel','source_url','modifiedAt','updatedAt','createdAt','readingStatus','toReadLater','watched','usedInPiece','provenance'];
  const blocked=/^(?:body|text|content|words|transcript|segments|turns|raw|manuscript|draft|caption|notes|discussion)$/i;
  const metadata=(value,depth=0)=>{if(depth>6)return undefined;if(value===null||['string','number','boolean'].includes(typeof value))return value;if(Array.isArray(value))return value.slice(0,100).map(x=>metadata(x,depth+1));if(value&&typeof value==='object'){const out={};for(const key of Object.keys(value).sort())if(!blocked.test(key)){const v=metadata(value[key],depth+1);if(v!==undefined)out[key]=v;}return out;}return undefined;};
  const freeze=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};

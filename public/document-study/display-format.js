@@ -3,13 +3,16 @@
  'use strict';
  const kinds={RAW:'Original source',SRC:'Original source',CONTEXT:'Context',NOTES:'Research notes',RESEARCH:'Research',BRIEF:'Research brief',READ:'Reading notes',MAP:'Direction',PLANS:'Plans',ASK:'Questions',IDEA:'Idea',MOMENTS:'Moments',DEV:'Draft',EDITS:'Editing history',CHECK:'Checks',BLIND:'Independent review',RATINGS:'Review',SENSE:'Review',SOCIAL:'Social post',PHOTO:'Photo',PHOTOS:'Photos',MEDIA:'Media',EXPORT:'Export',FEEDBACK:'Feedback',ISSUE:'Published issue',image:'Photo',video:'Video',audio:'Audio',note:'Note',text:'Text',transcript:'Transcript',pdf:'PDF',file:'File'};
  const filename=row=>String(row.fileName||row.name||row.rel_path||row.relativePath||'').split('/').pop();
+ // A trailing machine id is never words a person chose; search still reads the exact file path.
+ const UUID_TAIL=/[\s_-]*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\.[a-z0-9]{1,8})?$/i;
+ function readable(value){if(!UUID_TAIL.test(value))return value;const base=value.replace(UUID_TAIL,'').trim();return base?base.charAt(0).toLocaleUpperCase()+base.slice(1):value;}
  function title(row={},fallback='Untitled source'){
   const file=filename(row),value=String(row.title||file||fallback);
   // A supplied human title is authoritative, even when it resembles an internal prefix.
-  if(row.title&&value!==file&&!/\.md$/i.test(value))return value;
+  if(row.title&&value!==file&&!/\.md$/i.test(value))return readable(value);
   const bare=value.replace(/\.md$/i,'');
   const match=/^([A-Z]+)\s*-\s*(.+)$/.exec(bare);
-  return match&&Object.hasOwn(kinds,match[1])?match[2]:bare;
+  return readable(match&&Object.hasOwn(kinds,match[1])?match[2]:bare);
  }
  const kind=value=>kinds[value]||kinds[String(value).toUpperCase()]||'Saved record';
  const recordTitle=value=>{const name=String(value||'Saved record');if(!/\.md$/i.test(name))return name;const prefix=/^([A-Z]+)\s*-\s*/.exec(filename({name})),label=title({name});return prefix&&Object.hasOwn(kinds,prefix[1])?kind(prefix[1])+' · '+label:label;};

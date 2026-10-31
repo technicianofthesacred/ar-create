@@ -20,7 +20,7 @@ export const SCHEMA = 'ar-create.capabilities.v1';
 const HUMAN = Object.freeze(['human']), ANY = Object.freeze(['any']);
 
 /** POST routes that only read. They need no actor. */
-export const READ_ONLY_POSTS = new Set(['/api/source-transcript/candidate/review','/api/source-language/capabilities','/api/source-language/review','/api/source-transcript/terms/preview','/api/source-transcript/candidate/compare','/api/research/atlas/search','/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
+export const READ_ONLY_POSTS = new Set(['/api/source-transcript/candidate/review','/api/source-language/requests','/api/source-language/capabilities','/api/source-language/review','/api/source-transcript/terms/preview','/api/source-transcript/candidate/compare','/api/research/atlas/search','/api/concept/sources/search', '/api/study-draft/inspect', '/api/study-draft/history-preview', '/api/study/outputs/export-check', '/api/sources/reconnect/preview']);
 
 const UNDO = {
   'POST /api/magazine/working-draft/ai/accept': 'magazine.working-draft.undo',
@@ -138,7 +138,7 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
+const HUMAN_ONLY = new Set(['POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -281,6 +281,7 @@ export function createRouteMap(services) {
       '/api/sources/reconnect/preview': {POST:input=>library.reconnectPreview(input)},
       '/api/sources/reconnect': {POST:input=>library.reconnectMoved(input)},
       '/api/sources/folders': { POST: input => library.folder(input) },
+      '/api/recordings/source': {POST:input=>recordings.registerSource(input)},
       '/api/library/topics': {GET:()=>library.readTopics(),POST:input=>{if(Object.hasOwn(input,'actor'))throw new StateError('The command supplies the actual actor.',400);return library.saveTopics({...input,actor:currentActor()?.actor});}},
       '/api/library/usage': {GET:()=>{if([...url.searchParams.keys()].some(k=>k!=='sourceId'))throw new StateError('Choose exact Library source IDs.',400);if(!studyMediaUsage)throw new StateError('Library usage is unavailable.',503);return studyMediaUsage.readGlobal({sourceIds:url.searchParams.getAll('sourceId')});}},
       '/api/collections': { GET: () => library.collections(), POST: input => library.saveCollection(input) },
@@ -374,6 +375,8 @@ export function createRouteMap(services) {
       '/api/study-draft/check': {GET:()=>draftCall(()=>{const keys=['bindingId','parentStudyId','checkId','targetKind','outputId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k)||url.searchParams.getAll(k).length!==1))throw new StateError('Select one exact saved Check target.',400);return studyDraftChecks.read(Object.fromEntries(url.searchParams));}),POST:input=>draftCall(()=>studyDraftChecks.run(input))},
 
       '/api/source-sessions': {GET:()=>{if(!sourceSessions)throw new StateError('Kept conversation editing is not connected in this workspace.',503);return sourceSessions.list();}},
+      '/api/study/language/requests': {GET:()=>languageCall(studyLanguage,'requests',languageScope())},
+      '/api/source-language/requests': {POST:input=>languageCall(sourceLanguage,'requests',input)},
       '/api/study/language/edition-review': {GET:()=>languageCall(studyLanguage,'editionReview',languageScope())},
       '/api/study/language/capabilities': {GET:()=>languageCall(studyLanguage,'capabilities',languageScope())},
       '/api/study/language/review': {GET:()=>languageCall(studyLanguage,'review',languageScope())},
