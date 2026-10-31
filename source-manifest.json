@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "2f9902debe48aebe3526702ddc47f869a48f997bb24558710366237834bd5a58",
+      "candidateSha256": "ce5f19fc45b8686511ea853bb1a2ed6852da25e5a3067c017f393083f061a83f",
       "adapted": true
     },
     {
@@ -498,7 +498,7 @@
     {
       "path": "runtime/services/study-photos.mjs",
       "sourceSha256": "2ceaeb8adec0ee1f3510c00391d6c6fe5dc0d29f1ae303c838e773e028d502ba",
-      "candidateSha256": "1d9dd39af6d9968a875cc3cee759d34d63f6c8fb19f68a9572891ee2e0096279",
+      "candidateSha256": "00bdd4ef8cd78ff68eb195893016a8327c0d631b2f621fe7108438ced3b80209",
       "adapted": false
     },
     {
@@ -1153,13 +1153,13 @@
     {
       "path": "public/document-study/study-output-boundary.mjs",
       "sourceSha256": "13fbebc5f6d03addff7e5631cd6659079940741481563dc54c1b1c765b605307",
-      "candidateSha256": "2cece9879e2884e110cb14fbd7ee5f95e3d29e9d240d791fd0eef22ae6711812",
+      "candidateSha256": "5a9b938d320a656acd12388525e6fefc6b3548bc090e01ef95702921e05bac84",
       "adapted": false
     },
     {
       "path": "public/document-study/study-output-boundary.test.mjs",
       "sourceSha256": "a0bf0dd26cd5d9a56264d483b9887291222f1a71005a067ed11c9578bdbd7cc5",
-      "candidateSha256": "e6c9aa0119240dd90ecfe5540f54be2b565fc98f7b05d8072ffac0f967099cdb",
+      "candidateSha256": "d6be2bed4387a3207971fde1045971270a786044df2663b2802d2228b90555de",
       "adapted": false
     },
     {
@@ -1171,13 +1171,13 @@
     {
       "path": "public/document-study/study-output-host.mjs",
       "sourceSha256": "d636429529cb9423a8e3c38022e86764123c9ef4b31045c967c81bacdf9c469e",
-      "candidateSha256": "dbf28ed44d38e2ab8312193eda990f8658c68cdcd4391ca79cd5e2336323f943",
+      "candidateSha256": "ccb52252b77f6dd134de5d4185878cf19dc08821107bbd699ef67a3d4b86fd9d",
       "adapted": true
     },
     {
       "path": "public/document-study/study-output-host.test.mjs",
       "sourceSha256": "e4ad29effbdb1e92dd73442656f5de6ea013092099e726a60fca86fe327883b5",
-      "candidateSha256": "24e14eb1327d83273007d85aa824a5c94240b53630150ce7a61a32c78088be18",
+      "candidateSha256": "b971854eb47732bc1daa3aca3aa1b7b35c2c4097268ebf51a05118326947dc25",
       "adapted": true
     },
     {
@@ -1369,7 +1369,7 @@
     {
       "path": "runtime/services/native-output-factory.test.mjs",
       "sourceSha256": "c506daafd6cb38ad0b5ec63df043424bcb1507ba370c3e7c3413223b94634f16",
-      "candidateSha256": "eda5128dcaa42b1d180ebb194f2ae6b0e3139967d93e18f6a2a0c9d90c238549",
+      "candidateSha256": "37c96c54fcff8dcc74d36f2244c8fe8a75c99d0755c72574f083ce67f2a153db",
       "adapted": true
     },
     {
@@ -1387,7 +1387,7 @@
     {
       "path": "runtime/services/native-output-owner.mjs",
       "sourceSha256": "1436de89ae9bc2d0860fd715e434a7bd9a8bf73495f58e81b8092373047a8069",
-      "candidateSha256": "372341de53a5343a4ec9a4cfd873065d83b9eccd506b014e2a71f77c59aa892b",
+      "candidateSha256": "aa48050c9536064877cc68ef2755b6ca170183274152f00cb8fd8bb1bb5f3a5f",
       "adapted": true
     },
     {
@@ -1561,13 +1561,13 @@
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.tsx",
       "sourceSha256": "3c86ca3f393d32963210ac38860877364dda6057c84f1c3ebb37fde111447c59",
-      "candidateSha256": "46a4c4a46a6c61747a7dbcca892661cf162a34485c59305d3b3273c15fd4749a",
+      "candidateSha256": "85d1cd7f5dfd713c38eac7719913b16f49b0f7aa1e1ab4c0a3501dc86712e3d1",
       "adapted": false
     },
     {
       "path": "runtime/src/workspaces/CompositionWorkspace.tsx",
       "sourceSha256": "b3472c251403fd4a43d12b71efe76a8bb190916caec2bb9d84dfa09978d01077",
-      "candidateSha256": "cea519ae88cbd5b0650e32418bc44cb2a14a7c057119c641b55e964080ef0981",
+      "candidateSha256": "e18f8204931a6736b021941a37e6a2960b800685dca6610987384e2e5bebbf25",
       "adapted": false
     },
     {
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "d1ee3972f5c43ca39452a8a726204dde9010e7b48892ec487943c646ad934cf2"
+      "candidateSha256": "bdec93377bf25d9b701192ff0e148fd23f8c373d8799d081d9aab4db72f539b6"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "68d60cd3d6c11a08a034f4afe274a27d400f2ce6e570def0770f800d356ef549"
+      "candidateSha256": "26a72c8edbc4f1c5d9af0d28ffe1e0ace918a764ce3713890a483ed167ebcd8c"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3677,7 +3677,7 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "86e2c1a54925e4a17a3c0081e7933179cf97f5da3e50a31804aa5c4732a3fd85"
+      "candidateSha256": "81dc3e5bdeb1fd2b7459dedaaaeba8a3c872a596bab4eb2d19c46887a66ba57d"
     },
     {
       "path": "scripts/review-existing.mjs",
@@ -4465,7 +4465,7 @@
     },
     {
       "path": "runtime/src/workspaces/article-photo-position.test.mjs",
-      "candidateSha256": "f2a5c69f4eeae5c52dcb0c6321d8d706896b91a28539e660d7f2e038631db915"
+      "candidateSha256": "f9abbcf42702c9a03ad66c5612d63daed0115a49f167eddf2d0721fed3af9296"
     },
     {
       "path": "tests/magazine-share-invitations-http.test.mjs",
@@ -4753,11 +4753,11 @@
     },
     {
       "path": "public/document-study/combined-piece.js",
-      "candidateSha256": "e210d4fca1c290a6cef23212261c2dd6826944817c2edc920121ad7da374d708"
+      "candidateSha256": "b7904988d0168c822fb54f4c69ebe40475438bf75b45074032cf3b6add7854ef"
     },
     {
       "path": "tests/combined-piece.test.mjs",
-      "candidateSha256": "63b574342f450d56e7b5f5de3e785c80b4aa2ade6747e9ba315c65dcc8416b61"
+      "candidateSha256": "baca08c9650f5665dcbdb58c4f3a1de96fbff6be76d43a5ecb9889fc4ffeb8f7"
     },
     {
       "path": "public/document-study/combined-sheets.css",
@@ -4981,7 +4981,7 @@
     },
     {
       "path": "public/document-study/footage-ranges.js",
-      "candidateSha256": "efe2d3a1832d4e50074ad50d315f49030d3e96f52f3aca27226630276fb4a40b"
+      "candidateSha256": "e52046ef100f53ce1827f5cb32dcb545f1561070544aec7086fff5d5243f41e0"
     },
     {
       "path": "runtime/services/carousel-visual-review.mjs",
@@ -5029,11 +5029,11 @@
     },
     {
       "path": "tests/carousel-photo-preview-http.test.mjs",
-      "candidateSha256": "69fe6cf1b6c14bfb6e410995ef8e4899e5f0a534885245d4e1199221eee67704"
+      "candidateSha256": "684a297a934363273de5ab217f4c243618b73b3c142692f5ee9fbfd18738a816"
     },
     {
       "path": "tests/footage-ranges-ui.test.mjs",
-      "candidateSha256": "6d2708f840e63d088c64cca708a18e6a4cc19711fee064913633d31a7e8d3b5e"
+      "candidateSha256": "cef063e34ee2d4a9f25a0a15c4b4f2ab66a6aa886944301f7988986fd5e64fb5"
     },
     {
       "path": "tests/native-output-boundary-spans.test.mjs",
@@ -5066,6 +5066,10 @@
     {
       "path": "tests/study-short-output-context.test.mjs",
       "candidateSha256": "584bde2dc0bd32f167061c72be6365a5afea69beca4bfcdd4ea20df005b443ac"
+    },
+    {
+      "path": "tests/study-saved-writing-direction-refresh.test.mjs",
+      "candidateSha256": "c543d8638ab79c7648b104050fd42206f3a4f3ac2e2b89c556e7e0c2cb11b294"
     }
   ],
   "dependencyRepair": {

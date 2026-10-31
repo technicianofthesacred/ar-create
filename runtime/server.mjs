@@ -606,9 +606,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(photoOrigin?{'X-AR-Photo-Origin':photoOrigin}:{}),...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),...(preview.revision?{'X-AR-Photo-Revision':preview.revision}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.body);
       }
-      if (pathname === '/api/study/photos/preview') {
+      if (['/api/study/photos/preview','/api/study/photos/available-preview'].includes(pathname)) {
         if(request.method!=='GET'){response.setHeader('Allow','GET');throw new StateError('Method is not supported.',405);}
-        const preview=await draftCall(()=>studyPhotos.preview(studyPhotoPreviewInput(url)));
+        const preview=await draftCall(()=>studyPhotos[pathname.endsWith('/available-preview')?'availablePreview':'preview'](studyPhotoPreviewInput(url)));
         response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.contentLength,'X-Content-SHA256':preview.hash,'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.bytes);
       }

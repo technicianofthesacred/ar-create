@@ -247,7 +247,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     const catalogue=await proofCatalogue(i,selected.output.id);
     const p = await currentProof(i, selected.output.id, selected.private.capture, selected.output,catalogue);
     const sourceStale=!same(p,selected.private.proof);
-    let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false,canRefreshUnchangedWriting=false;
+    let reason=sourceStale?"Shared source, decision or photo proof changed.":null,writingProof,writingStale=false,canRefreshUnchangedWriting=false,canRefreshSavedWritingAndDirection=false;
     if(textKind(selected.output.kind)){
       const c=validateCapture(selected.private,selected.output),s=await native.read({bindingId:selected.record.wordOwner.bindingId,parentStudyId:i.parentStudyId});
       writingProof={kind:'native',bindingId:s.binding.id,parentStudyId:s.binding.parentStudyId,expected:clone(s.expected),rawHash:hash(s.raw),capturedRawHash:c.nativeProof.rawHash};
@@ -257,6 +257,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       if(selected.output.kind==='article'&&(sourceStale||writingStale)&&same({...p,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof))try{
         const liveProof=scopedProof(catalogue,c,selected.output,{captureMappings:true}),current=mapper.capture(s,c.scope,{photoBindings:liveProof.photos});
         canRefreshUnchangedWriting=same({...liveProof,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof)&&current.ready===true&&current.mediaReady===true&&current.nativeProof.bindingId===c.nativeProof.bindingId&&current.nativeProof.parentStudyId===c.nativeProof.parentStudyId&&current.nativeProof.rawHash===c.nativeProof.rawHash&&current.nativeProof.projectionHash===c.nativeProof.projectionHash&&!mapper.freshness(current,s,liveProof.sources,liveProof.photos).stale;
+        canRefreshSavedWritingAndDirection=sourceStale&&writingStale&&writingProof.rawHash!==c.nativeProof.rawHash&&liveProof.decisionsHash!==selected.private.proof.decisionsHash&&same({...liveProof,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof)&&current.ready===true&&current.mediaReady===true&&current.nativeProof.bindingId===c.nativeProof.bindingId&&current.nativeProof.parentStudyId===c.nativeProof.parentStudyId&&current.nativeProof.rawHash===hash(s.raw)&&same(current.nativeProof.expected,s.expected)&&!mapper.freshness(current,s,liveProof.sources,liveProof.photos).stale;
       }catch{/* Unready, marked or unsupported current wording stays held. */}
     }else{
       const w=await store.readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:selected.output.id,allowEditedMarkdown:true});
@@ -264,7 +265,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       writingStale=!!w.externalEdit||!!w.missing;
       if(writingStale)reason='This carousel canonical words file changed outside its saved output.';
     }
-    return {writingProof,freshness:{stale:sourceStale||writingStale,reason,writingStale,sourceStale,canRefreshUnchangedWriting},...(includeProof?{currentProof:p}:{})};
+    return {writingProof,freshness:{stale:sourceStale||writingStale,reason,writingStale,sourceStale,canRefreshUnchangedWriting,canRefreshSavedWritingAndDirection},...(includeProof?{currentProof:p}:{})};
   }
   async function read(input) {
     const t = await target(input);
@@ -390,11 +391,16 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         proofNow=scopedProof(catalogue,captureValue,output);privateValue={schema:"ar-create.native-output-private.v1",group:group(input),capture:captureValue,proof:proofNow};captureId=hash(JSON.stringify(privateValue));
       }else if (action === "create" || action === "refresh") {
         const s = lease.snapshot;
+        if(action==='refresh'&&selected.output.kind==='article'){
+          const previousProof=scopedProof(catalogue,selected.private.capture,selected.output,{captureMappings:true});
+          if(!same({...previousProof,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof))fail('Article source evidence or photographs changed; saved-writing and Direction update held.');
+        }
         const outputKind=shortKind(action==="create"?input.kind:selected.output.kind)?(action==="create"?input.kind:selected.output.kind):undefined;
         const basis = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id }, {outputKind});
         proofNow = scopedProof(catalogue, basis, null, { captureMappings: true });
         captureValue = mapper.capture(s, { projectId: t.projectId, documentId: t.documentId, outputId: id }, { photoBindings: proofNow.photos, outputKind });
         if (!captureValue.ready) fail("Native layout is held: " + captureValue.held.map((x) => x.reason).join("; "));
+        if(action==='refresh'&&selected.output.kind==='article'&&hash(s.raw)!==selected.private.capture.nativeProof.rawHash&&catalogue.decisionsHash!==selected.private.proof.decisionsHash&&!captureValue.mediaReady)fail('Saved-writing and Direction update requires exact ready current media.');
         if (mapper.freshness(captureValue, s, proofNow.sources, proofNow.photos).stale) fail("Native retained source proof differs from authoritative current sources.");
         output = clone(captureValue.output);
         if (action === "create" && input.kind === "carousel") {
@@ -482,6 +488,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
           else {const actual=await readCarouselWords({projectId:t.projectId,documentId:t.documentId,outputId:lineage.sourceOutputId});if(!same(actual.expected,languageSourceFresh.writingProof.expected)||await helpers.carouselWordsHash(actual.output)!==lineage.sourceWordsHash)fail("Selected carousel own words changed before language edition publication.");}
           if(hash(await currentProof(input,lineage.sourceOutputId,languageSource.private.capture,languageSource.output))!==lineage.sourceProofHash)fail("Selected source decisions or assets changed during language edition publication.");
         }
+        if(action==='refresh'&&selected.output.kind==='article'){const live=scopedProof(await proofCatalogue(input,id),selected.private.capture,selected.output,{captureMappings:true});if(!same({...live,decisionsHash:selected.private.proof.decisionsHash},selected.private.proof))fail('Article source evidence or photo mapping changed before update publication.');}
         if(retained(captureValue))await resolveRetained(captureValue.source);
         if(reviewedWords&&!same((await readCarouselWords({documentId:t.documentId,outputId:id})).expected,reviewedWords.expected))fail("Own carousel words changed before review publication.");
         if (!same(await currentProof(input, id, captureValue, output), proofNow)) fail("Source proof changed during output publication.");

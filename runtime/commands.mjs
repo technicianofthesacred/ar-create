@@ -112,6 +112,7 @@ const VERB = { GET: 'get', POST: 'post', PUT: 'put', DELETE: 'delete', HEAD: 'he
 export const CUSTOM_COMMANDS = [
   ['GET', '/api/magazine/working-draft/export-file', ['storyId','pieceId','expectedHash','exportId']],
   ['GET','/api/study/footage/preview',['bindingId','parentStudyId','sourceId','expectedHash']],
+  ['GET', '/api/study/photos/available-preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/study/photos/preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/state'], ['PUT', '/api/state'],
   ['GET', '/api/shared-articles/capabilities'], ['GET', '/api/shared-articles/current', ['projectId?', 'allowEditedMarkdown?']], ['GET', '/api/shared-articles/requests', ['projectId?', 'documentId?']],
@@ -320,7 +321,7 @@ export function createRouteMap(services) {
       '/api/study/photos/select': {POST:input=>draftCall(()=>studyOwnedPhotoBindings.select(input))},
       '/api/study/photos/inspect': {GET:()=>draftCall(()=>studyPhotos.inspect({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study/photos': {GET:()=>draftCall(()=>studyPhotos.list({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
-      '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')}))},
+      '/api/study/photos/available': {GET:()=>draftCall(()=>studyPhotos.available({projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId'),bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')}))},
       '/api/study/photos/add': {POST:input=>draftCall(()=>studyPhotos.add(input))},
       '/api/study/photos/update': {POST:input=>draftCall(()=>studyPhotos.update(input))},
       '/api/study-research/findings': {GET:()=>draftCall(()=>{const projectKey=url.searchParams.get('projectKey'),parentStudyId=url.searchParams.get('parentStudyId');if(projectKey?.startsWith('structure-test-')){if(projectKey!==parentStudyId)throw new StateError('Choose the exact copy Research scope.',400);return structureTestRecords.findings({parentStudyId});}return studyDerivedFindings.read({projectKey,parentStudyId});})},
