@@ -4645,7 +4645,7 @@
     },
     {
       "path": "public/document-study/combined-subjects.js",
-      "candidateSha256": "f9eb6cd48c78ca9a06e0574f01df2b84df819cbcf00d01b191334283e0ffa01a"
+      "candidateSha256": "944e43c3cb3642695171eab498e53dcc81199d74a7e5a415ac835c012e7befc8"
     },
     {
       "path": "tests/combined-home-activity.test.mjs",
@@ -4657,7 +4657,7 @@
     },
     {
       "path": "tests/combined-subjects.test.mjs",
-      "candidateSha256": "42a21193819c45c6290fa5bea550c5bfac02d42ffbd6660026efc8578075f948"
+      "candidateSha256": "8ada09232e0afd266fda60180ef67704cd50d5edac954d800b844462d0cd19ed"
     },
     {
       "path": "tests/workspace-output-discovery.test.mjs",
