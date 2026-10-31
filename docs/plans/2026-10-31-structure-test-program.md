@@ -10,8 +10,8 @@ C01–C07 and S01–S12 retain their authorities. Combined remains the design: v
 
 - [x] Stage0: independent original-backed test subject, immutable capture lineage, visible test/stand-in actor context, and before/after original hashes; install and prove in main app.
 - [x] Stage1: sourced Write proposals, gaps, explicit review, protected phrases, Focus, version comparison and per-piece guidance. Test-copy stand-in actions use an explicit copy-scoped operation, never human impersonation.
-- [ ] Stage2: point questions, durable notebook/questions, AI brief/discussion, broader Library retrieval and available cited outside research. Keep source words separate from claims and editorial use.
-- [ ] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
+- [x] Stage2: point questions, durable notebook/questions, AI brief/discussion, broader Library retrieval and available cited outside research. Keep source words separate from claims and editorial use.
+- [x] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
 - [ ] Stage4: copy-only stand-in Carousel word/visual review and faithful PNG/caption files; Article role composition, captions/descriptions/grouping; Post/Listing and Video source ranges/playback.
 - [ ] Stage5: reviewable AI translation for Source/conversation/Share/Audience Chinese edition, isolated retranscription candidates and reviewed repeated-term correction.
 - [ ] Stage6: microphone intake, tags, global usage, original reader, Collections and existing-folder connection repair.
@@ -46,3 +46,8 @@ Stage 3 affected proof covers typed subject/piece choices, not-applicable events
 ## Review continuity before Stage 4
 
 The 31 October visitor checks require visible-subject navigation before decisions can safely continue. A separate bounded release repairs subject/Article route ownership, copy board captures, cold Home decisions, accepted source links and legacy brief context compatibility. Make and Language are separate candidates, not installed capabilities in that release. The twelve smaller Combined boards added 31 October are adopted: apply the matching board during remaining structure work, then restyle previously completed screens after the structure stages. Each install pairs its reference on the left with the actual app on the right; use the twelve-item rail and real material only. Original angle/title, ten passages, Carousel words and photos stay pending; source facts are not approved by a test-copy stand-in.
+
+
+## Review continuity installed; Make in progress
+
+PR133 / c429ba6df773eab0b438e942d00a547b48bc7b97, build 2026-10-31T08:41:59.612Z, restores visible-subject routing, retained copy board records, cold original decisions and accepted source links across reload/Read/Write. The existing saved Research response finalized successfully without another inference run. Actual copy angle/title choices are agent stand-ins; Write inherits them after reload while original decisions and hashes remain unchanged. Stage4 is still a candidate: complete newly created piece return, exact subject source inheritance, scoped photographs, saved local Carousel files/visual receipt and native Post/Listing/Video proof before installation. Language/Gather/Home and the finished-screen smaller-board pass remain open.

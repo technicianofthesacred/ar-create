@@ -7,7 +7,7 @@ const hash=value=>createHash('sha256').update(typeof value==='string'?value:stab
 const fail=(message,status=409)=>{throw Object.assign(Error(message),{status});};
 const key=value=>stable(value);
 function requestOf(input){
- if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['scopes','selectedScope','piece','manuscript'].includes(k))||!!input.piece===!!input.manuscript||input.piece&&(Object.keys(input.piece).length!==3||!['rootBindingId','parentStudyId','selectedOutputId'].every(k=>typeof input.piece[k]==='string'))||input.manuscript&&(Object.keys(input.manuscript).length!==2||!['bindingId','parentStudyId'].every(k=>typeof input.manuscript[k]==='string')))fail('Supply only exact Direction selectors and either a registered native Piece or pre-output manuscript owner; caller text and word snapshots are refused.',400);
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['scopes','selectedScope','piece','manuscript','absentParts'].includes(k))||!!input.piece===!!input.manuscript||input.piece&&(Object.keys(input.piece).length!==3||!['rootBindingId','parentStudyId','selectedOutputId'].every(k=>typeof input.piece[k]==='string'))||input.manuscript&&(Object.keys(input.manuscript).length!==2||!['bindingId','parentStudyId'].every(k=>typeof input.manuscript[k]==='string')))fail('Supply only exact Direction selectors and either a registered native Piece or pre-output manuscript owner; caller text and word snapshots are refused.',400);
  return copy(input);
 }
 function proof(record){
@@ -21,7 +21,7 @@ function proof(record){
 export function createAssistanceDirectionContext({resolver,humanDirection,collectionDirection=humanDirection,library,drafts}={}){
  if(typeof resolver?.resolve!=='function')throw TypeError('Supply the existing current-understanding resolver.');
  async function capture(input){
-  const request=requestOf(input),{manuscript,...resolverRequest}=request,view=await resolver.resolve(manuscript?{...resolverRequest,manuscript}:resolverRequest);
+  const request=requestOf(input),{manuscript,absentParts=[],...resolverRequest}=request,view=await resolver.resolve(manuscript?{...resolverRequest,manuscript}:resolverRequest);
   if(view.schema!=='ar-create.current-understanding.projection.v1'||view.readConsistency?.status!=='stable-reread'||!['current','empty'].includes(view.status)||!view.current||view.selection?.mode!=='explicit-scope')fail('Exact Direction selection is unavailable, ambiguous or changed during reading.');
   let piece=manuscript?view.nativeManuscript:view.piece;
   if(manuscript){
@@ -30,6 +30,8 @@ export function createAssistanceDirectionContext({resolver,humanDirection,collec
    if(piece?.status!=='current'||piece.scope?.projectId!==target.scope.projectId||piece.scope?.documentId!==target.scope.documentId)fail('Maintained native manuscript scope resolution is unavailable.');
   }
   if(piece?.status!=='current'||piece.words?.status!=='current'||!same(piece.selector,request.piece||request.manuscript)||!piece.wordOwner||!piece.scope)fail('The exact registered Piece and its current owner are unavailable.');
+  const absent=[];if(!Array.isArray(absentParts)||absentParts.length>1)fail('Use at most one exact absent native part guard.');
+  for(const selector of absentParts){if(!selector||Object.keys(selector).sort().join(',')!=='bindingId,parentStudyId,scope'||selector.scope!=='part'||selector.parentStudyId!==piece.scope.parentStudyId||piece.wordOwner.kind!=='native'||selector.bindingId!==piece.wordOwner.bindingId||request.scopes.some(s=>same(s,selector))||typeof humanDirection?.read!=='function')fail('Absent Direction guard does not belong to this exact native child.');const record=await humanDirection.read(selector);if(record.scope!==null||record.bound!==false||record.revision!==0||record.hash!==hash('')||record.metadataHash!=null)fail('The previously absent native part Direction now has an owner. Prepare current context.');absent.push({reader:'humanDirection.read',input:copy(selector),expected:{scope:null,revision:0,hash:hash(''),metadataHash:null}});}
   const refs=view.scopeReferences;
   if(refs?.status!=='read'||!Array.isArray(refs.references)||!Array.isArray(refs.effective)||refs.reads.some(r=>r.status!=='read'))fail('Exact Direction reference reads are unavailable.');
   if(refs.references.some(r=>r.status==='accepted'&&(r.review?.needed!==false||r.resolverReview)))fail('An accepted Direction origin/reference changed or is unavailable; preserve the proposal for review.');
@@ -59,7 +61,7 @@ export function createAssistanceDirectionContext({resolver,humanDirection,collec
   const background=copy(refs.effective.filter(r=>r.kind==='linked-learning'));
   const references=refs.references.map(({readTarget,resolverReview,...owner})=>({target:copy(readTarget),record:copy(owner)}));
   const guards={
-   records:records.map(r=>({reader:r.selector.scope==='collection'?'collectionDirection.read':'humanDirection.read',input:copy(r.selector),expected:{scope:copy(r.scope),revision:r.revision,hash:r.hash,metadataHash:r.metadataHash}})),
+   records:[...records.map(r=>({reader:r.selector.scope==='collection'?'collectionDirection.read':'humanDirection.read',input:copy(r.selector),expected:{scope:copy(r.scope),revision:r.revision,hash:r.hash,metadataHash:r.metadataHash}})),...absent],
    references:refs.reads.map(r=>({reader:'humanDirection.readScopeReferences',input:{target:copy(r.target)},expected:{scope:copy(r.scope),revision:r.revision,hash:r.hash,metadataHash:r.metadataHash,referencesHash:hash(references.filter(x=>same(x.target,r.target)).map(x=>x.record))}})),
    collections:records.filter(r=>r.library).map(r=>({reader:'library.collectionsSnapshot',input:{},expected:copy(r.library)})),
    sources:records.flatMap(r=>r.sourceReferences.map(s=>({reader:'library.snapshot',args:[s.sourceId,{includeBody:true}],expected:{id:s.sourceId,hash:s.sourceHash,start:s.start,end:s.start+s.quote.length,quoteHash:hash(s.quote)}}))),
@@ -78,7 +80,9 @@ export function createAssistanceDirectionContext({resolver,humanDirection,collec
   const project={scope:'project',parentStudyId:binding.parentStudyId},part={scope:'part',parentStudyId:binding.parentStudyId,bindingId:binding.bindingId};
   if(!owner.canonicalOutputId)return capture({scopes:[project,part],selectedScope:part,manuscript:copy(binding)});
   const rootBindingId=owner.sourceBindingId||binding.bindingId,root={scope:'part',parentStudyId:binding.parentStudyId,bindingId:rootBindingId},output={scope:'output',parentStudyId:binding.parentStudyId,bindingId:rootBindingId,outputId:owner.canonicalOutputId};
-  const result=await capture({scopes:[project,root,...(rootBindingId!==binding.bindingId?[part]:[]),output],selectedScope:output,piece:{rootBindingId,parentStudyId:binding.parentStudyId,selectedOutputId:owner.canonicalOutputId}});
+  // Article editions retain their established part Direction. Short outputs
+  // have independent intent and must not inherit the Article part implicitly.
+  const child=rootBindingId!==binding.bindingId,independent=child&&['post','product-listing'].includes(owner.textOutputKind),partRecord=child?await humanDirection.read(part):null,absentPart=child&&partRecord.bound===false&&partRecord.scope===null;const result=await capture({scopes:[project,...(!independent?[root]:[]),...(child&&!absentPart?[part]:[]),output],...(absentPart?{absentParts:[part]}:{}),selectedScope:output,piece:{rootBindingId,parentStudyId:binding.parentStudyId,selectedOutputId:owner.canonicalOutputId}});
   if(result.guards.pieceOwner.wordOwner.bindingId!==binding.bindingId)fail('Registered Piece has another native wording owner.');return result;
  }
  async function captureWriteGuard(captured){

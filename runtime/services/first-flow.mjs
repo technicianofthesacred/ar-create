@@ -198,6 +198,12 @@ export function createFirstFlow({dataDir,store,library,recordings,requests,execu
   return createFirstFlow({dataDir,store:{get:()=>structuredClone(snapshot),readProject:input=>store.readProject(input),listPieces:options=>store.listPieces(options)},library,recordings,requests,execution,evidenceTools,validateStudyScope,_studyScope:scope,_serialize:serial});
  }
  const study={
+  attach:async input=>{
+   if(!input||Object.keys(input).sort().join(',')!=='bindingId,documentId,operationId,parentStudyId,projectId,sourceIds')fail('Attach exact Library sources to one validated Study scope.',400);
+   const {bindingId,parentStudyId,projectId,documentId,operationId,sourceIds}=input,scope={bindingId,parentStudyId,projectId,documentId};
+   if(ids(sourceIds).some(id=>!uuid.test(id)))fail('Choose retained Library source UUIDs.',400);
+   await guardStudy(scope);return (await scopedOwner(scope)).attach({projectId,operationId,sourceIds:structuredClone(sourceIds)});
+  },
   read:async scope=>(await scopedOwner(scope)).get({projectId:scope.projectId}),
   prepare:async(scope,input)=>{
    if(!input||Object.keys(input).some(key=>!['question','sourceIds','operationId','sourceReviews','humanDecision'].includes(key)))fail('Use an exact Study question and source selection.',400);
@@ -207,7 +213,7 @@ export function createFirstFlow({dataDir,store,library,recordings,requests,execu
   run:async(scope,input)=>{if(!input||Object.keys(input).sort().join(',')!=='operationId,requestId')fail('Run the exact prepared Study request.',400);return (await scopedOwner(scope)).run({...structuredClone(input),projectId:scope.projectId});},
   reinspect:async(scope,input)=>{if(!input||Object.keys(input).sort().join(',')!=='operationId,requestId')fail('Reinspect the exact completed Study request.',400);return (await scopedOwner(scope)).reinspect({...structuredClone(input),projectId:scope.projectId});}
  };
- function operation(input,kind,fn){return serial(async()=>{const projectId=current(input);if(_studyScope){await guardStudy(_studyScope);ensurePrivateDirectory(root,digest(projectId));}if(!uuid.test(input.operationId||''))fail('Operation UUID required.',400);const f=state(projectId),identity=digest(JSON.stringify({kind,input,...(_studyScope?{studyScope:_studyScope}:{})})),old=f.operations[input.operationId];if(old){if(old.hash!==identity)fail('Operation ID already belongs to another action.');return view({projectId});}await fn(f,projectId);current({projectId});if(_studyScope)await guardStudy(_studyScope);f.operations[input.operationId]={hash:identity,kind,at:new Date().toISOString()};f.revision++;save(f);return view({projectId});});}
+ function operation(input,kind,fn){return serial(async()=>{const projectId=current(input);if(_studyScope){await guardStudy(_studyScope);ensurePrivateDirectory(root,digest(projectId));}if(!uuid.test(input.operationId||''))fail('Operation UUID required.',400);const f=state(projectId);if(kind==='attach'&&f.currentRequestId)load(f.currentRequestId);const identity=digest(JSON.stringify({kind,input,...(_studyScope?{studyScope:_studyScope}:{})})),old=f.operations[input.operationId];if(old){if(old.hash!==identity)fail('Operation ID already belongs to another action.');return view({projectId});}await fn(f,projectId);current({projectId});if(_studyScope)await guardStudy(_studyScope);f.operations[input.operationId]={hash:identity,kind,at:new Date().toISOString()};f.revision++;save(f);return view({projectId});});}
  return {study,
   get:input=>serial(()=>view(input)),
   context:input=>serial(()=>context(structuredClone(input))),

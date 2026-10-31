@@ -1,3 +1,5 @@
+import {createStudyFootage} from './services/study-footage.mjs';
+import {createStudyFootageScope} from './services/study-footage-scope.mjs';
 import {createStudyResearchScope} from './services/study-research-scope.mjs';
 import {createStudyResearchSources} from './services/study-research-sources.mjs';
 import {createLocalAtlasRetrieval} from './services/local-atlas-retrieval.mjs';
@@ -46,7 +48,7 @@ import {createStudyHumanDirection} from './services/study-human-direction.mjs';
 import {createStudyResearchChoices} from './services/study-research-choices.mjs';
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
 import {createWorkspaceExecution} from './services/artifact-execution.mjs';
-import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger} from './services/actor.mjs';
+import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger,AGENT_ACTORS} from './services/actor.mjs';
 import {createEventBus,scopeOf,revisionOf} from './services/events.mjs';
 import {createPresence} from './services/presence.mjs';
 import {createLeases} from './services/leases.mjs';
@@ -263,13 +265,15 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyOwnedPhotoBindings=studyDrafts?createStudyOwnedPhotoBindings({dataDir,drafts:studyDrafts,bindings:studyBindings,store}):null;
   const createStudyCollection=async input=>{const document=await studyDrafts.createCollection(input);if(document.binding.status!=='ready'||document.readiness?.ready!==true)return document;const projectBinding=await studyBindings.select({projectKey:document.binding.parentStudyId,title:document.binding.title,operationId:input.operationId}),photoBinding=await studyOwnedPhotoBindings.select({bindingId:document.binding.id,parentStudyId:document.binding.parentStudyId,operationId:input.operationId});return {...document,projectBinding,photoBinding};};
   const conceptWork=studyHumanDirection?createConceptWork({drafts:studyDrafts,humanDirection:studyHumanDirection,bindings:studyBindings,library,createCollection:createStudyCollection}):null;
-  const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings,retainedSource:retainedCarouselSource,browserOrigins:browserCarouselOrigins}):null;
+  const validateOutputStandIn=async(input,{rootSnapshot}={})=>{let proof;if(rootSnapshot){const b=rootSnapshot.binding,m=b?.structureTest;if(b?.id!==input.rootBindingId||b.parentStudyId!==input.parentStudyId||b.kind!=='collection-root'||b.origin!=='structure-test'||b.status!=='ready'||rootSnapshot.readiness?.ready!==true||m?.role!=='structure-test'||m.label!=='stand-in'||!AGENT_ACTORS.includes(m.createdBy))throw new StateError('The exact verified test root changed during publication.',403);proof={root:rootSnapshot,view:{source:{parentStudyId:m.sourceParentStudyId,bindingId:m.sourceBindingId,draftHash:m.draftHash,captureHash:m.captureHash},createdBy:m.createdBy}};}else proof=await structureTests.validateTarget({bindingId:input.rootBindingId,parentStudyId:input.parentStudyId});if(proof.root.binding.id!==input.rootBindingId)throw new StateError('Choose the exact registered structure-test root.',403);return {canStandInReview:true,fingerprint:studyPhotoFiles.digest(JSON.stringify({rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId,source:proof.view.source,createdBy:proof.view.createdBy}))};};
+  const studyOutputFactory=studyDrafts&&sharedArticles?createNativeOutputFactory({dataDir,store,native:studyDrafts,originals:studyOriginals,library,ownedPhotos:studyOwnedPhotoBindings,retainedSource:retainedCarouselSource,browserOrigins:browserCarouselOrigins,validateStandInReview:validateOutputStandIn}):null;
   const studyOutputs=studyOutputFactory?.owner;
   const structureTests=studyDrafts&&studyOutputs?createStructureTests({drafts:studyDrafts,bindings:studyBindings,photos:studyOwnedPhotoBindings,outputs:studyOutputs,humanDirection:studyHumanDirection}):null;
+  const studyFootage=structureTests?createStudyFootage({dataDir,library,resolveScope:createStudyFootageScope({drafts:studyDrafts,bindings:studyBindings,firstFlow,structureTests})}):null;
   const structureTestRecords=structureTests&&studyOriginals&&studyDerivedFindings?createStructureTestRecords({structureTests,drafts:studyDrafts,originals:studyOriginals,derivedFindings:studyDerivedFindings}):null;
   const studyDraftChecks=studyDrafts?createStudyDraftChecks({dataDir,drafts:studyDrafts,outputs:studyOutputs}):null;
   const studyMediaUsage=studyOutputs?createMediaUsage({outputs:studyOutputs,library,articleSpec:mediaArticleSpec,carouselTemplates:mediaCarouselTemplates.T}):null;
-  const studyOutputExports=studyOutputFactory?createNativeOutputExports({dataDir,store,outputs:studyOutputs,resolveScope:studyOutputFactory.scope.resolve,library,exports,carousel}):null;
+  const studyOutputExports=studyOutputFactory?createNativeOutputExports({dataDir,store,outputs:studyOutputs,resolveScope:studyOutputFactory.scope.resolve,library,exports,carousel,validateStandInReview:validateOutputStandIn}):null;
   libraryWorkReferences=createLibraryWorkReferences({store,outputs:studyOutputs||{read(){throw new StateError('Native output authority is unavailable.',503);}},mediaUsage:studyMediaUsage});
   projectMembership=studyDrafts&&studyOwnedPhotoBindings&&studyOutputs?createProjectMembership({store,bindings:studyBindings,drafts:studyDrafts,ownedPhotos:studyOwnedPhotoBindings,outputs:studyOutputs,library,workReferences:libraryWorkReferences}):null;
   const currentUnderstanding=createCurrentUnderstandingResolver({library,humanDirection:studyHumanDirection||collectionDirection,collectionDirection,nativeOutputs:studyOutputs,nativeWords:studyDrafts,carouselWords:store,conceptContextProjection,workReferences:libraryWorkReferences});
@@ -282,7 +286,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyResearchChoices=studyDrafts?createStudyResearchChoices({dataDir,originals:studyOriginals,drafts:studyDrafts}):null;
   const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices,validateStandInTarget:input=>structureTests.validateTarget(input)}):null;
   const studyPlanContext=studyDrafts?createStudyFirstFlowPlanContext({dataDir,savedPlan:studyEditorialPlan,firstFlow}):null;
-  const studyProjectMaterial=studyDrafts?createStudyProjectMaterialContext({dataDir,firstFlow}):null;
+  const studyProjectMaterial=studyDrafts?createStudyProjectMaterialContext({dataDir,firstFlow,drafts:studyDrafts}):null;
   const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,execution:nativeAIExecution,onExecutionChange:event=>events.emit(event),validateStandInTarget:input=>structureTests.validateTarget(input),humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,learning:researchAnswers.study,guidance,assistanceDirection}):null;
   const draftCall=async fn=>{if(!studyDrafts)throw new StateError('Current manuscript originals are not configured.',503);try{return await fn();}catch(error){throw Object.assign(new StateError(error.message,error.status||500),error.outcome?{outcome:error.outcome}:{});}};
   const originalRead=fn=>{if(!studyOriginals)throw new StateError('Current original records are not configured; retained snapshots remain available.',503);try{return fn();}catch(error){throw new StateError(error.message,error.status||500);}};
@@ -352,7 +356,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    }
    return false;
   }
-  const maintainedCommandRoutes=createRouteMap({studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);
@@ -539,7 +543,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         throw new StateError('Method is not supported.',405);
       }
       function outputQuery(){return {rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),selectedOutputId:url.searchParams.get('selectedOutputId')};}
-      function decorateOutputExports(result,input){const copy=structuredClone(result),q=new URLSearchParams({rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId});const add=value=>{if(value?.url)value.url+='?'+q;for(const f of value?.files||[])if(f.url)f.url+='?'+q;};add(copy.artifact);add(copy.export);for(const item of copy.artifacts||[])add(item);for(const item of copy.exports||[])add(item);return copy;}
+
       const carouselMatch=pathname.match(/^\/api\/carousel\/exports\/([a-f0-9-]{36})\/(render|file)\/(.+)$/);
       if(carouselMatch){
         if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
@@ -602,11 +606,22 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
         response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.body.length,'X-Content-SHA256':preview.hash,...(photoOrigin?{'X-AR-Photo-Origin':photoOrigin}:{}),...(preview.rootId?{'X-AR-Photo-Root-Id':preview.rootId}:{}),...(preview.sourceId?{'X-AR-Photo-Source-Id':preview.sourceId}:{}),...(preview.revision?{'X-AR-Photo-Revision':preview.revision}:{}),'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.body);
       }
-      if (pathname === '/api/study/photos/preview') {
+      if (['/api/study/photos/preview','/api/study/photos/available-preview'].includes(pathname)) {
         if(request.method!=='GET'){response.setHeader('Allow','GET');throw new StateError('Method is not supported.',405);}
-        const preview=await draftCall(()=>studyPhotos.preview(studyPhotoPreviewInput(url)));
+        const preview=await draftCall(()=>studyPhotos[pathname.endsWith('/available-preview')?'availablePreview':'preview'](studyPhotoPreviewInput(url)));
         response.writeHead(200,{'Content-Type':preview.contentType,'Content-Length':preview.contentLength,'X-Content-SHA256':preview.hash,'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff','Content-Disposition':'inline'});
         return response.end(preview.bytes);
+      }
+      if (pathname === '/api/study/footage/preview') {
+        if (!['GET','HEAD'].includes(request.method)) throw new StateError('Use GET or HEAD for original footage playback.',405);
+        const keys=['bindingId','parentStudyId','sourceId','expectedHash'];if([...url.searchParams.keys()].length!==keys.length||keys.some(key=>url.searchParams.getAll(key).length!==1)||[...url.searchParams.keys()].some(key=>!keys.includes(key)))throw new StateError('Choose one exact attached footage original.',400);
+        if(!studyFootage)throw new StateError('Footage is unavailable.',503);
+        const {file,source,contentType,expectedHash}=await studyFootage.preview(Object.fromEntries(url.searchParams));
+        const size=(await lstat(file)).size,headers={'Content-Type':contentType,'Cache-Control':'no-store','Accept-Ranges':'bytes','X-Content-Sha256':expectedHash,'Content-Disposition':`inline; filename*=UTF-8''${encodeURIComponent(path.basename(source.rel_path))}`};
+        let start=0,end=size-1;
+        if(request.headers.range){const match=/^bytes=(\d*)-(\d*)$/.exec(request.headers.range);if(!match||(!match[1]&&!match[2]))throw new StateError('Invalid byte range.',416);if(!match[1])start=Math.max(0,size-Number(match[2]));else{start=Number(match[1]);if(match[2])end=Math.min(end,Number(match[2]));}if(start>end||start>=size||!Number.isSafeInteger(start)||!Number.isSafeInteger(end))throw new StateError('Byte range is unavailable.',416);headers['Content-Range']=`bytes ${start}-${end}/${size}`;}
+        response.writeHead(request.headers.range?206:200,{...headers,'Content-Length':Math.max(0,end-start+1)});if(request.method==='HEAD'||!size)return response.end();
+        const stream=createReadStream(file,{start,end});stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
       }
       if (pathname === '/api/sources/blob') {
         if (!['GET', 'HEAD'].includes(request.method)) throw new StateError('Method is not supported.', 405);
@@ -716,4 +731,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const server = await createServer({ dataDir: process.env.AR_CREATE_DATA_DIR || path.join(root, 'data'), connections, connectionsEditable:connections===undefined, extraction, sharedArticles:sharedArticlesEnabled(process.env.AR_CREATE_DATA_DIR || path.join(root, 'data')) });
   server.on('error', error => { console.error(error.message); process.exitCode = 1; });
   server.listen(port, '127.0.0.1', () => console.log(`ar-create local workspace: http://127.0.0.1:${port}`));
+}
+
+export function decorateOutputExports(result,input){
+ const copy=structuredClone(result),scope={rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId};
+ const scoped=value=>{const url=new URL(value,'http://local.invalid');for(const [key,entry] of Object.entries(scope))url.searchParams.set(key,entry);return url.pathname+url.search+url.hash;};
+ const add=value=>{if(value?.url)value.url=scoped(value.url);for(const file of value?.files||[])if(file.url)file.url=scoped(file.url);};
+ add(copy.artifact);add(copy.export);for(const item of copy.artifacts||[])add(item);for(const item of copy.exports||[])add(item);return copy;
 }

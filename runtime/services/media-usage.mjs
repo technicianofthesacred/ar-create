@@ -53,7 +53,7 @@ export function createMediaUsage({outputs,library,articleSpec,carouselTemplates}
   if(o.kind==='article'){
    // outputSpec includes captured layout, cover fallback and all post-capture anchored/ending extras.
    const spec=articleSpec(view.document,o),slots=new Map((o.placements||[]).map(p=>[p.slot,p]));
-   const photo=(shot,section,path)=>{if(!shot)return;const p=slots.get(shot.slot);if(!p||p.url!==shot.file)fail('Rendered photo no longer matches its saved placement.');add(assetId(p.url),{kind:'article',section,path,slot:p.slot,paragraphId:p.paragraphId??null},p.caption,null);};
+   const photo=(shot,section,path)=>{if(!shot)return;const p=slots.get(shot.slot);if(!p||p.url!==shot.file)fail('Rendered photo no longer matches its saved placement.');add(assetId(p.url),{kind:'article',section,path,slot:p.slot,paragraphId:p.paragraphId??null},p.caption,p.credit);};
    const walk=(blocks,section,prefix=[])=>{for(const [index,b]of blocks.entries()){const path=[...prefix,index];if(b.shot)photo(b.shot,section,path);if(b.shots)b.shots.forEach((shot,i)=>photo(shot,section,[...path,'photos',i]));if(b.blocks)walk(b.blocks,section,[...path,'blocks']);}};
    photo(spec.portrait,'cover',[]);walk(spec.opening,'opening');spec.parts.forEach((part,index)=>{photo(part.opener,'part-'+(index+1),['opener']);walk(part.blocks,'part-'+(index+1));});walk(spec.ending.blocks,'ending');photo(spec.ending.shot,'ending',['photo']);
   }else if(o.kind==='carousel'){

@@ -85,12 +85,30 @@ export function createStudyPhotos({dataDir,library,resolveBinding,runtime}){
   if(JSON.stringify(after)!==JSON.stringify(before)||indexBefore.indexHash!==indexAfter.indexHash||indexBefore.revision!==indexAfter.revision)fail('The saved photograph collection changed before previewing. Refresh before reading.',409);
   return {bytes:result.bytes,contentType:result.mimeType,contentLength:result.bytes.length,hash:input.expectedHash};
  }
+ async function available(input){
+  const before=await inspect(input),index=await library.photosSnapshot(),collections=await library.collectionsSnapshot(),photos=[];
+  for(const row of index.items.filter(row=>row.rootId==='library'&&!row.missing)){
+   try{const source=await library.snapshot(row.id);if(source.id!==row.id||source.rootId!=='library'||source.writable!==true)continue;const result=await library.binarySnapshot({id:row.id,expectedHash:source.hash,rootHash:row.rootHash});image(result.body,row.name);photos.push({sourceId:row.id,name:row.name,sha256:result.hash,url:'/api/sources/blob?id='+encodeURIComponent(row.id),previewUrl:'/api/study/photos/available-preview?'+new URLSearchParams({...input,sourceId:row.id,expectedHash:result.hash})});}catch(error){if(error.status===409)throw error;}
+  }
+  const after=await library.collectionsSnapshot();if(index.indexHash!==after.indexHash||index.revision!==after.revision||collections.indexHash!==after.indexHash||JSON.stringify(await inspect(input))!==JSON.stringify(before))fail('Library photographs or manuscript binding changed. Refresh before choosing.',409);
+  return {...input,collections:collections.collections.map(c=>({id:c.id,name:c.name,sourceIds:c.sourceIds})),photos};
+ }
+ async function availablePreview(input){
+  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==PHOTO_PREVIEW_KEYS.length||PHOTO_PREVIEW_KEYS.some(key=>!Object.hasOwn(input,key))||!uuid.test(input.sourceId||'')||!(/^[a-f0-9]{64}$/).test(input.expectedHash||''))fail('Use the exact available photograph and expected hash.');
+  const scope=Object.fromEntries(PHOTO_PREVIEW_KEYS.slice(0,4).map(key=>[key,input[key]])),before=await inspect(scope),index=await library.photosSnapshot(),matches=index.items.filter(row=>row.id===input.sourceId&&row.rootId==='library'&&!row.missing);
+  if(matches.length!==1)fail('Choose an indexed owned Library photograph.',404);
+  const source=await library.snapshot(input.sourceId);if(source.id!==input.sourceId||source.rootId!=='library'||source.writable!==true||source.hash!==input.expectedHash)fail('The available photograph changed. Refresh before choosing.',409);
+  const result=await library.binarySnapshot({id:input.sourceId,expectedHash:input.expectedHash,rootHash:matches[0].rootHash}),contentType=image(result.body,matches[0].name),after=await library.collectionsSnapshot();
+  if(index.indexHash!==after.indexHash||index.revision!==after.revision||JSON.stringify(await inspect(scope))!==JSON.stringify(before))fail('Library photographs or manuscript binding changed before previewing.',409);
+  return {bytes:result.body,contentType,contentLength:result.body.length,hash:result.hash};
+ }
  function revision(record,input){if(input.expectedRevision!==record.revision)fail('Photographs changed. Refresh before saving.',409);}
  return {
+  availablePreview:input=>{const captured=structuredClone(input);return serial(()=>availablePreview(captured));},
   preview:input=>{const captured=structuredClone(input);return serial(()=>preview(captured));},
   inspect:input=>{const captured=structuredClone(input);return serial(()=>inspect(captured));},
   list:input=>serial(async()=>view((await ensure(input)).record)),
-  available:input=>serial(async()=>{await authorize(input);load(input);const tree=await library.tree();return {collections:tree.collections.map(c=>({id:c.id,name:c.name,sourceIds:c.sourceIds})),photos:tree.sources.filter(s=>s.rootId==='library'&&/\.(jpe?g|png|webp)$/i.test(s.rel_path)).map(s=>({sourceId:s.id,name:path.basename(s.rel_path),url:'/api/sources/blob?id='+encodeURIComponent(s.id)}))};}),
+  available:input=>serial(async()=>{if(input.bindingId||input.parentStudyId)return available(structuredClone(input));await authorize(input);load(input);const tree=await library.tree();return {collections:tree.collections.map(c=>({id:c.id,name:c.name,sourceIds:c.sourceIds})),photos:tree.sources.filter(s=>s.rootId==='library'&&/\.(jpe?g|png|webp)$/i.test(s.rel_path)).map(s=>({sourceId:s.id,name:path.basename(s.rel_path),url:'/api/sources/blob?id='+encodeURIComponent(s.id)}))};}),
   add:input=>serial(async()=>{const {file,record}=await ensure(input);revision(record,input);if(record.photos.length>=200)fail('This collection holds at most 200 photographs.',413);let source;
    if(input.sourceId)source=await owned(input.sourceId);
    else{if(typeof input.base64!=='string'||input.base64.length>Math.ceil(PHOTO_LIMIT/3)*4||! /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(input.base64))fail('Invalid or oversized image bytes.',413);const bytes=Buffer.from(input.base64,'base64');image(bytes,input.name);source=await library.retainAlbumPhoto({folder:'Projects/'+record.projectId+'/Photos',name:input.name,bytes,provenance:{kind:'study-photo-upload',projectId:record.projectId,documentId:record.documentId}});}
@@ -102,10 +120,11 @@ export function createStudyPhotos({dataDir,library,resolveBinding,runtime}){
 }
 // Insert only these route entries into the existing authenticated local API table.
 export function studyPhotoRoutes(service,url){const binding={projectId:url.searchParams.get('projectId'),documentId:url.searchParams.get('documentId')};return {
+ '/api/study/photos/available-preview':{GET:()=>service.availablePreview(studyPhotoPreviewInput(url))},
  '/api/study/photos/preview':{GET:()=>service.preview(studyPhotoPreviewInput(url))},
  '/api/study/photos/inspect':{GET:()=>service.inspect({...binding,bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})},
  '/api/study/photos':{GET:()=>service.list(binding)},
- '/api/study/photos/available':{GET:()=>service.available(binding)},
+ '/api/study/photos/available':{GET:()=>service.available({...binding,bindingId:url.searchParams.get('bindingId'),parentStudyId:url.searchParams.get('parentStudyId')})},
  '/api/study/photos/add':{POST:input=>service.add(input)},
  '/api/study/photos/update':{POST:input=>service.update(input)}
 };}

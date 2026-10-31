@@ -13,10 +13,10 @@ export function CarouselPhotoPicker({slide,index,slot,count,api,mediaApi,onSlot,
   let active=true,cleanup:(()=>void)|undefined;
   const adapter=(window as any).workbenchFolderBrowser?.mountPhotoPicker;
   if(typeof adapter!=='function'){setError('The Media browser is unavailable. Close this sheet and use slide details to upload a photograph.');return;}
-  Promise.resolve(adapter({container:host.current,readNativePhotos:api?()=>api('/api/sources/tree'):undefined,maxPick:count-slot,onPickMany:count>1?(items:any[])=>{if(!active)return;const sources=items.map(item=>item?.url).filter((url:any)=>typeof url==='string'&&/^\/api\/sources\/blob\?id=/.test(url));if(sources.length)latest.current.onPickMany(latest.current.slot,sources);}:undefined,onPick:(item:any)=>{
+  Promise.resolve(adapter({container:host.current,readNativePhotos:api?()=>api('/api/sources/tree'):undefined,maxPick:count-slot,onPickMany:count>1?(items:any[])=>{if(!active)return;const sources=items.map(item=>item?.placementUrl??item?.url).filter((url:any)=>typeof url==='string'&&/^\/api\/sources\/blob\?id=[^&#]+$/.test(url));if(sources.length)latest.current.onPickMany(latest.current.slot,sources);}:undefined,onPick:(item:any)=>{
    if(!active)return;
-   if(typeof item?.url!=='string'||!/^\/api\/sources\/blob\?id=/.test(item.url)){setError('This item has no supported photograph source. Choose a photograph from Media.');return;}
-   latest.current.onPick(latest.current.slot,item.url);
+   const src=item?.placementUrl??item?.url;if(typeof src!=='string'||!/^\/api\/sources\/blob\?id=[^&#]+$/.test(src)){setError('This item has no supported photograph source. Choose a photograph from Media.');return;}
+   latest.current.onPick(latest.current.slot,src);
   }})).then(result=>{if(!active)result?.destroy?.();else{browser.current=result;result?.setMaxPick?.(latest.current.count-latest.current.slot);cleanup=()=>{browser.current=null;result?.destroy?.();};}}).catch(issue=>{if(active)setError(issue.message||'The Media browser could not be opened.');});
   return()=>{active=false;cleanup?.();};
  },[slide.id,api]);

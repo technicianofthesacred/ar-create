@@ -43,3 +43,8 @@ Carry the existing footage review's chosen calibration into the selection handof
 ## 20 October — Project folder and album entrance
 
 Use Material's permanent project folder and album-link entry as the same media intake, not another asset store. **Open material folder** must resolve that project's saved owned binding. Imported files retain one project/source identity and their original remains untouched. An album link is not a selected photo, completed import, continuous sync or approved output placement. Show actual provider access/import limits, including unavailable/private/unsupported and partial results. A supplied album does not authorize account setup, upstream edits or publishing. Keep existing video limitations honest. Follow the [Material acceptance](01-material.md#20-october--open-the-material-folder-and-connect-album-links) and [next-design additions record](../DESIGN-PASS-ADDITIONS.md).
+
+
+## 31 October — structure-test footage scope
+
+S08, C03/C04/C05/C06. The approved whole-structure journey adds ranges and playback using existing attached Library originals. Ranges reference exact source ID/hash and original timebase ticks; the original is never trimmed or copied. Preserve earlier proposed/reviewed range events, actual actors and explicit stand-in labels on a registered test copy. A missing video remains an honest empty state, with the Library entrance; no substitute footage or Premiere edits. Finish criterion: synthetic attached-original range save/reopen, exact bounded 206 playback, source/timebase stale refusal and unchanged original bytes. Real-copy coverage is a separate read result.

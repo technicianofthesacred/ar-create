@@ -98,6 +98,7 @@ export function validateDocument(document, label = 'document') {
       else{shape(owner,['kind','projectId','documentId','outputId'],'languageEdition.sourceWordOwner');if(owner.kind!=='carousel-words'||owner.outputId!==edition.sourceOutputId||['projectId','documentId'].some(key=>typeof owner[key]!=='string'||!owner[key]))throw new StateError('Carousel language source requires its exact own words owner.');}
     }
 
+    for(const photo of output?.placements||[])if(photo.credit!==undefined)text(photo.credit,'Photograph credit',300);
     if(output?.articleComposition!==undefined){if(output.kind!=='article')throw new StateError('Only an article can carry article composition.');const issue=articleCompositionIssue(output.articleComposition,output.manuscript||document.paragraphs,output.placements||[]);if(issue)throw new StateError(issue);}
     if(output?.articleCompositionNotice!==undefined)text(output.articleCompositionNotice,'articleCompositionNotice',1000);
     if(output?.articleVisualMake!==undefined){
