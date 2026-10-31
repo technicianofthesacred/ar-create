@@ -942,7 +942,7 @@
     {
       "path": "public/document-study/study-ai-proposals.js",
       "sourceSha256": "615d265da7b3aec64baf86a8465ea1f5c46b897ace33ca69b5f82a1bad662c7a",
-      "candidateSha256": "2eeceefa071f8a74a9c73169a2d4ff3c2201a1956c1faff75cf1f84a1db3c0c0",
+      "candidateSha256": "d531550b6056e09641d6a67e5ce61cf07a5eb77c618af705577d73069786e113",
       "adapted": false
     },
     {
@@ -4417,7 +4417,7 @@
     },
     {
       "path": "tests/study-ai-proposal-drawer.test.mjs",
-      "candidateSha256": "1a4a0f89df4e4dfd32fa8c1fd405e0ac3ce4e3ba2d6aace1c48189df2f81abe2"
+      "candidateSha256": "9b1676502bb1e27dcf3b67bbe8ebec58af28931b0e995e632ab221e039fb4124"
     },
     {
       "path": "tests/magazine-side-caption.test.mjs",
