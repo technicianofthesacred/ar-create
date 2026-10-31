@@ -17,7 +17,7 @@ function assetId(url){
 }
 
 /** Read-only projection. All records and renderer behavior remain with maintained owners. */
-export function createMediaUsage({outputs,library,articleSpec,carouselTemplates}={}){
+export function createMediaUsage({outputs,library,articleSpec,carouselTemplates,listScopes=null}={}){
  if(!outputs?.read||!library?.snapshot||typeof articleSpec!=='function'||!plain(carouselTemplates))throw Error('Supply existing native output, read-only Library snapshot and maintained render adapters.');
  function validate(input){
   fields(input,['rootBindingId','parentStudyId','sourceIds','selectedOutputId','expectedOutput']);
@@ -83,10 +83,23 @@ export function createMediaUsage({outputs,library,articleSpec,carouselTemplates}
   const usageHash=hash({scope:g,physical:base.photoScope,expectedOutput:base.expectedOutput,outputs:rows});
   return {schema:SCHEMA,scope:{...g,...base.photoScope},expectedOutput:clone(base.expectedOutput),selectedOutputId:input.selectedOutputId??null,usageHash,coverage:{complete,status:unavailable?'unavailable':complete?'complete':'partial',outputs:rows},sources:sourceViews.map(s=>{const used=all.filter(o=>o.sourceId===s.sourceId);return {...s,usageState:used.length?'used':unavailable?'unknown':complete?'unused':'unused-in-supported-outputs',occurrences:used};}),videoUsage:{status:'unsupported',reason:'The maintained Article/Carousel owners have no saved video occurrence or trim contract.'}};
  }
+ async function readGlobal(input){
+  fields(input,['sourceIds']);if(!Array.isArray(input.sourceIds)||input.sourceIds.length>200||input.sourceIds.some(x=>!id(x))||new Set(input.sourceIds).size!==input.sourceIds.length)fail('Unique bounded source IDs required.',400);
+  if(typeof listScopes!=='function')fail('Saved piece scope enumeration is unavailable.',503);
+  const scopes=await listScopes();if(!Array.isArray(scopes)||scopes.length>500)fail('Saved piece scope enumeration is unavailable.',503);
+  const normalized=scopes.map(s=>({parentStudyId:s.parentStudyId,rootBindingId:s.rootBindingId}));
+  if(normalized.some(s=>!id(s.parentStudyId)||!UUID.test(s.rootBindingId||'')))fail('Saved piece scope identity is unavailable.');
+  const unique=[...new Map(normalized.map(s=>[stable(s),s])).values()].sort((a,b)=>stable(a).localeCompare(stable(b))),views=[],roots=[];
+  for(const scope of unique){try{const v=await read({...scope,sourceIds:input.sourceIds});views.push(v);roots.push({scope,status:v.coverage.status,usageHash:v.usageHash});}catch(error){if(![400,403,404,409,503].includes(error.status))throw error;roots.push({scope,status:'unavailable'});}}
+  for(const view of views){const fresh=await read({parentStudyId:view.scope.parentStudyId,rootBindingId:view.scope.rootBindingId,sourceIds:input.sourceIds});if(fresh.usageHash!==view.usageHash||!same(fresh.sources,view.sources))fail('Saved placements changed during global usage read.');}
+  const current=await listScopes(),now=[...new Map(current.map(s=>{const g={parentStudyId:s.parentStudyId,rootBindingId:s.rootBindingId};return [stable(g),g];})).values()].sort((a,b)=>stable(a).localeCompare(stable(b)));
+  if(!same(unique,now))fail('Saved piece scope catalog changed during usage read.');
+  return {schema:'ar-create.library-usage.v1',usageHash:hash(roots),coverage:{complete:false,status:roots.some(r=>r.status==='unavailable')?'unavailable':'partial',roots,claim:'Known saved native Article/Carousel photo placements across indexed pieces. Source citations, Magazine uses, unsupported formats and unrecorded dependencies remain unknown.'},sources:input.sourceIds.map(sourceId=>({sourceId,status:views.find(v=>v.sources.some(s=>s.sourceId===sourceId&&s.status==='available'))?'available':'unsupported-or-unavailable',occurrences:views.flatMap(v=>v.sources.find(s=>s.sourceId===sourceId)?.occurrences.map(o=>({...o,rootUsageHash:v.usageHash}))||[])}))};
+ }
  async function resolve(input){
   fields(input,['rootBindingId','parentStudyId','sourceId','occurrenceId','expectedUsageHash']);if(!id(input.sourceId)||!HASH.test(input.occurrenceId||'')||!HASH.test(input.expectedUsageHash||''))fail('Exact current source, occurrence and usage hash required.',400);
   const view=await read({rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,sourceIds:[input.sourceId]});if(view.usageHash!==input.expectedUsageHash)fail('Media usage changed; refresh this occurrence before navigation.');
   const occurrence=view.sources[0].occurrences.find(o=>o.id===input.occurrenceId);if(!occurrence)fail('This saved occurrence is unavailable or no longer belongs to this output.',404);return occurrence;
  }
- return {read,resolve};
+ return {read,readGlobal,resolve};
 }

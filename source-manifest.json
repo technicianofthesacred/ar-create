@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "81f86f2b0035814efb191768e2aae00ffb53988f900bffa9455213db1db114a9",
+      "candidateSha256": "225a8b7f47590d81dda36c26b2d073c8056dcb206280835346c74e590041aa07",
       "adapted": true
     },
     {
@@ -216,7 +216,7 @@
     {
       "path": "runtime/services/library.mjs",
       "sourceSha256": "affb24c911e41b3bd98e90dd60fe6bc4e9ecca4445fb67106e113a20beab5bb6",
-      "candidateSha256": "3664375df51bbf65163b4b1704cedaf5ecbfa2a8a45549512dc541109c43f102",
+      "candidateSha256": "79e98a922520f2ac144072483e2163dd2b604dcea887b050c3a4a80815d276d2",
       "adapted": true
     },
     {
@@ -330,7 +330,7 @@
     {
       "path": "runtime/services/recording-workshop.mjs",
       "sourceSha256": "cee194231737d1bd36fd9802a4874668037dd3695bd00de9e37b01f7ff8f6a14",
-      "candidateSha256": "b83ce3d8732f68013a6a7bfd885e9d6db5f92f8037f27c6b079721a8b1d34b50",
+      "candidateSha256": "2574b92d4e54b6e4291767ef517d071e0b368609eafc5000537e9a4943a7e0f2",
       "adapted": false
     },
     {
@@ -2201,7 +2201,7 @@
     },
     {
       "path": "docs/CAPABILITIES.md",
-      "candidateSha256": "1f0ddc9e964be993fc23a2972de9cd55c5332028022a41a3436ff4be56685a09"
+      "candidateSha256": "67508723bde20372df4cbb7f5863aa1b7393ff6aefd5899fee3ba990d5a240f6"
     },
     {
       "path": "AGENTS.md",
@@ -2445,7 +2445,7 @@
     },
     {
       "path": "runtime/services/media-usage.mjs",
-      "candidateSha256": "8e33aa0a5ac65a15cf665a56e057216826896f4cd46b0bee596e93e95384cd68"
+      "candidateSha256": "032b4708f217c4530810d123616d76b0a585d606cb666f20d5b833173b9c6e00"
     },
     {
       "path": "public/document-study/share-stage.js",
@@ -2465,7 +2465,7 @@
     },
     {
       "path": "runtime/services/media-usage.test.mjs",
-      "candidateSha256": "84485d4a1c980f8cab2193a18d0a7df7e9561d625e0954907875eefa23b3d2f5"
+      "candidateSha256": "ccd5e56ce68fe97aaeb52e90aad12a78b9e74bd4b7ee51d86de37531fb192177"
     },
     {
       "path": "runtime/scripts/build-media-article-spec.mjs",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "e86142247793b80f13bfdd6a68954cafcb93e32424edf3e42648dda9d38552b6"
+      "candidateSha256": "d8c4de36a269d5bdb7cec28e95939f3a8ff937ac80e058afdfd3716ec2a201dd"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -2929,7 +2929,7 @@
     },
     {
       "path": "docs/status/CURRENT.md",
-      "candidateSha256": "415630f82fdae8eed6aa2ce6608402967af3504f29d617776919888e8330c568"
+      "candidateSha256": "b5e44d88763dc519fb89b71e1d4052f0999d36d038e7d2bf025b8b11b0ff6e68"
     },
     {
       "path": "docs/MAG-INTEGRATION-PLAN.md",
@@ -3449,11 +3449,11 @@
     },
     {
       "path": "public/document-study/folder-browser.css",
-      "candidateSha256": "8a428cff3c174b4baa778e3a7f21b98ef4ad55ba510431ce2618e26fb998fa1d"
+      "candidateSha256": "8dcdeddfe164d7b63fb4b7018e263a97ce7f7ed45739a094985b2d0bcbc2a8fb"
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "26a72c8edbc4f1c5d9af0d28ffe1e0ace918a764ce3713890a483ed167ebcd8c"
+      "candidateSha256": "f44be41ca5333b4ff19c555722620aef5cb0392016cc248249d65f7eb8b9fd89"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3541,7 +3541,7 @@
     },
     {
       "path": "tests/folder-browser.test.mjs",
-      "candidateSha256": "dc4f5037731c1aef81e24360b6436f927959cb5cd7b0b2b4f0ff783af4a06834"
+      "candidateSha256": "10d0f6ca5ce92ce34ff4602f0cc792ef82b82b6f7b1ada0f0b070dc237fa3a44"
     },
     {
       "path": "tests/media-entry.test.mjs",
@@ -3677,7 +3677,7 @@
     },
     {
       "path": "scripts/review-connection.mjs",
-      "candidateSha256": "7c086d9eb2a8bd04ca1bd3f5a8339a805e4bab3772d5ad4e5d7955ac2bebc498"
+      "candidateSha256": "8355117429a9021e4e8e21f42130b5fc0024322eb6605d17051772bb753da70b"
     },
     {
       "path": "scripts/review-existing.mjs",
@@ -4797,11 +4797,11 @@
     },
     {
       "path": "public/document-study/material-intake.css",
-      "candidateSha256": "b6df90c9ab5b5c4a28956856c3cb1bad94354dd315276984132140646f324276"
+      "candidateSha256": "3b32fe0aa1070a970139c03b37b516ee50125a18a5b05e7afce581af8d9c3d56"
     },
     {
       "path": "public/document-study/material-intake.js",
-      "candidateSha256": "cfbb71c944a7dde60c6a0d1c0d4fb2d81f3824f8cecd5e131dbdaa09d152afe0"
+      "candidateSha256": "e330a5fc978bc6c8f3dab271d8b9f3359246cda81486ef4d600cd32cdc287457"
     },
     {
       "path": "tests/magazine-share-preparation-http.test.mjs",
@@ -4817,7 +4817,7 @@
     },
     {
       "path": "docs/plans/2026-10-31-structure-test-program.md",
-      "candidateSha256": "b1980ca3091eec8eda49dea85d3eb974edd2d866da15c10a7878512ce28c241c"
+      "candidateSha256": "d38759147db1bff9cbb8b4c40d0141133bf7ecaad3dad4dc78a7334d8c6e7b2e"
     },
     {
       "path": "docs/plans/2026-10-31-structure-test-stage0.md",
@@ -5182,6 +5182,30 @@
     {
       "path": "tests/language-connection-http.test.mjs",
       "candidateSha256": "a44842afcf422fd521c9074dcbcb4f7a04a56007a959a541da721d683daad4aa"
+    },
+    {
+      "path": "tests/gather-connection-http.test.mjs",
+      "candidateSha256": "68d83fea4ea2ca9d9736084b90df964c8cca9f2cefd99e0e8a4d8e38ef314ac0"
+    },
+    {
+      "path": "tests/library-location-contract.test.mjs",
+      "candidateSha256": "d76cfddf5103f3cc1b9c2c54d2bfa65a1ae41e5ffa2fa73f12b5886f67a48018"
+    },
+    {
+      "path": "tests/library-topics-ui.test.mjs",
+      "candidateSha256": "5af4904d15ef50772f8985081c478e61513c073cf5847e73b646ab64cd38e4fe"
+    },
+    {
+      "path": "tests/library-topics.test.mjs",
+      "candidateSha256": "30ab780a04008cc0b5f3af55dd79e638c7329b439438ab71ad36892d7a613359"
+    },
+    {
+      "path": "tests/material-microphone.test.mjs",
+      "candidateSha256": "0863f2a8e48fff16be3879114fe483f1c27e5d0c04bd022d6c8f74899868ff63"
+    },
+    {
+      "path": "tests/recording-source-owner-journey.test.mjs",
+      "candidateSha256": "a3eb20d07495411f515dba401af37395f62c6fbadd1bffa77f00a6745d9f36db"
     }
   ],
   "dependencyRepair": {

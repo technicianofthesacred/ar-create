@@ -135,6 +135,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       if(!previous||!same(previous,{status:r.status,reason:r.reason}))typedFail('Typed relationship state no longer matches its saved history.');
     }
     for(const op of ops)if(!UUID.test(op?.operationId||'')||!UUID.test(op.relationshipId||'')||!HASH.test(op.fingerprint||'')||!Number.isSafeInteger(op.resultRevision))typedFail('Invalid typed operation receipt; existing bytes preserved.');
+    if(value.sources.some(s=>s.topics!==undefined&&(!Array.isArray(s.topics)||s.topics.length>30||s.topics.some(t=>typeof t!=='string'||!t.trim()||t!==t.trim()||t.length>80||/[\x00-\x1f\x7f]/.test(t))||new Set(s.topics.map(t=>t.toLocaleLowerCase())).size!==s.topics.length)))typedFail('Invalid source topics; existing bytes preserved.');
+    if(value.topicOperations!==undefined&&(!Array.isArray(value.topicOperations)||value.topicOperations.length>10000||new Set(value.topicOperations.map(o=>o?.operationId)).size!==value.topicOperations.length||value.topicOperations.some(o=>!UUID.test(o?.operationId||'')||!HASH.test(o.fingerprint||'')||typeof o.actor!=='string'||!Number.isSafeInteger(o.resultRevision))))typedFail('Invalid topic operation history; existing bytes preserved.');
     validateLibraryFolders(value);
     return value;
   }
@@ -371,7 +373,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
           if (changed || source.hasReadableBody === undefined) { const bytes=fs.readFileSync(file); hash=digest(bytes);body=splitFrontmatter(bytes.toString('utf8'));source.hasReadableBody=Boolean(body.body.trim());source.processingStatus=body.frontmatter.processing_status;source.reviewDeclaration=body.frontmatter.review_status; }
           else body={frontmatter:{processing_status:source.processingStatus,review_status:source.reviewDeclaration,source_url:source.source_url,recording_id:source.recordingId},body:source.hasReadableBody?'present':''};
         }
-        const {originalReferences,...sourceMeta}=meta;
+        // sourceId labels the tree leaf; it is derived transport metadata, not a new index field.
+        const {originalReferences,sourceId:treeSourceId,...sourceMeta}=meta;
         Object.assign(source, sourceMeta, { hash, fileStamp: stamp, hashStatus: hash ? 'verified' : 'deferred-until-open', inode, missing: false });
         delete source.providedUUID;
         source.status = textFile && stat.size > MAX_BODY_BYTES ? 'retained-text-too-large' : source.kind === 'audio' ? 'retained-needs-transcription' : source.kind === 'other' || source.kind === 'pdf' ? 'retained-needs-extraction' : ['link', 'web-extraction'].includes(source.provenance.kind) && body?.frontmatter.processing_status && body.frontmatter.processing_status !== 'ready' ? body.frontmatter.processing_status : 'ready';
@@ -394,13 +397,17 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
         if(recording?.state==='unavailable')source.cardEligibility={eligible:false,reason:recording.reason};
         if(transcript?.managed&&!transcript.coherent)source.cardEligibility={eligible:false,reason:transcript.reason||'Open this recording’s transcript to review outside edits before using it.'};
         if(originalReferences)source.originalReferences=structuredClone(originalReferences);
-        seen.add(source.id); Object.assign(meta, publicSource(source));
+        seen.add(source.id); Object.assign(meta, publicSource(source), {sourceId:source.id});
       }
       trees.push({ ...root, tree });
     }
     for (const source of index.sources) if (isLiveLibrarySource(source)&&!seen.has(source.id) && !incompleteRoots.has(source.rootId)) source.missing = true;
     if (JSON.stringify(index) !== before) persist();
-    return { revision: index.revision, roots: trees, sources: index.sources.filter(s => !s.missing && !s.managedTerminalSnapshot && isLiveLibrarySource(s)).map(publicSource), collections: index.collections, missingSources: index.sources.filter(s => s.missing&&!s.managedTerminalSnapshot&&isLiveLibrarySource(s)).map(missingSummary), unavailableSources: index.sources.filter(s => !s.missing&&!s.managedTerminalSnapshot&&isLiveLibrarySource(s)&&roots.find(root=>root.id===s.rootId)?.available===false).map(missingSummary) };
+    // Locations and saved filing readers pin the same persisted index bytes.
+    // Refresh must not advertise a tree paired with another process's revision.
+    const captured=index,loaded=loadTyped();
+    if(!same(captured,loaded.value))throw new StateError('Library index changed during the folder read; refresh.',409);
+    return { revision: index.revision, indexHash:loaded.hash, roots: trees, sources: index.sources.filter(s => !s.missing && !s.managedTerminalSnapshot && isLiveLibrarySource(s)).map(publicSource), collections: index.collections, missingSources: index.sources.filter(s => s.missing&&!s.managedTerminalSnapshot&&isLiveLibrarySource(s)).map(missingSummary), unavailableSources: index.sources.filter(s => !s.missing&&!s.managedTerminalSnapshot&&isLiveLibrarySource(s)&&roots.find(root=>root.id===s.rootId)?.available===false).map(missingSummary) };
   }
   const externalRoot = root => root && !root.retainedCatalog && !root.originalCatalog && !['library','recordings'].includes(root.id) && !root.writable;
   function missingSummary(source) {
@@ -467,6 +474,23 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     catch(error){try{index=readJson(indexFile,loaded.value);}catch{index=loaded.value;}throw error;}
     return {value:next,bytes,hash:digest(bytes)};
   }});
+  function topicsView(loaded){return {schema:'ar-create.library-topics.v1',revision:loaded.value.revision,indexHash:loaded.hash,sources:loaded.value.sources.filter(isLiveLibrarySource).map(s=>({sourceId:s.id,topics:[...(s.topics||[])]}))};}
+  const readTopics=()=>serial(()=>topicsView(loadTyped()));
+  const saveTopics=input=>serial(()=>{
+    if(inspectionOnly)typedFail('Topic changes are unavailable in inspection-only mode.',403);
+    typedFields(input,['operationId','expectedRevision','expectedHash','actor','sourceIds','topics']);
+    if(!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||!HASH.test(input.expectedHash||'')||typeof input.actor!=='string'||!/^(human|agent|cron|import):[a-zA-Z0-9_-]+$/.test(input.actor))typedFail('Exact revision/hash, operation UUID and named actor required.',400);
+    if(!Array.isArray(input.sourceIds)||!input.sourceIds.length||input.sourceIds.length>200||new Set(input.sourceIds).size!==input.sourceIds.length||input.sourceIds.some(id=>!UUID.test(id||'')))typedFail('Choose up to 200 exact Library sources.',400);
+    if(!Array.isArray(input.topics)||input.topics.length>30||input.topics.some(v=>typeof v!=='string'||!v.trim()||v.length>80||/[\x00-\x1f\x7f]/.test(v))||new Set(input.topics.map(v=>v.trim().toLocaleLowerCase())).size!==input.topics.length)typedFail('Use up to 30 distinct short topics.',400);
+    const loaded=loadTyped(),fingerprint=digest(JSON.stringify(input)),prior=(loaded.value.topicOperations||[]).find(op=>op.operationId===input.operationId);
+    if(prior){if(prior.fingerprint!==fingerprint)typedFail('Operation UUID belongs to another topic edit.');return {...topicsView(loaded),replayed:true};}
+    if(input.expectedRevision!==loaded.value.revision||input.expectedHash!==loaded.hash)typedFail('Library changed. Refresh topics before saving.');
+    if((loaded.value.topicOperations||[]).length>=10000)typedFail('Topic history is full; existing records preserved.');
+    const next=structuredClone(loaded.value),before=[];
+    for(const id of input.sourceIds){const source=next.sources.find(s=>s.id===id&&isLiveLibrarySource(s));if(!source)typedFail('This Library source is unavailable.',404);before.push({sourceId:id,topics:[...(source.topics||[])]});source.topics=input.topics.map(v=>v.trim());}
+    next.revision++;next.topicOperations??=[];next.topicOperations.push({operationId:input.operationId,fingerprint,actor:input.actor,at:now(),before,after:input.topics.map(v=>v.trim()),resultRevision:next.revision});
+    const bytes=JSON.stringify(next,null,2);atomicWrite(indexFile,bytes,loaded.bytes===null?{exclusive:true}:{expectedHash:loaded.hash});index=next;return topicsView({value:next,hash:digest(bytes)});
+  });
   // Narrow, non-mutating photo reads for composition. These use the saved
   // Library identities and immutable original copies; they never discover files.
   const photoExtensions=new Set(['.jpg','.jpeg','.png','.gif','.webp','.avif']);
@@ -649,7 +673,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const validate=()=>{if(loadTyped().hash!==loaded.hash)throw new StateError('Captured Library index or Collection metadata changed.',409);for(const pin of pins){const file=checkedFile(pin.source),stat=regular(file);if(file!==pin.file||stat.size>MAX_BODY_BYTES||stat.dev!==pin.identity[0]||stat.ino!==pin.identity[1]||digest(fs.readFileSync(file))!==pin.hash)throw new StateError('Captured Library source bytes changed.',409);}};validate();return Object.freeze({validate});
   });
   return {
-    photosSnapshot, binarySnapshot, captureReadGuard,
+    photosSnapshot, binarySnapshot, captureReadGuard, readTopics, saveTopics,
     folders: async(input={})=>{if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>k!=='domain'))throw new StateError('Unsupported folder fields; use explicit filing identities.',400);if(!['library','media'].includes(input.domain))throw new StateError('Choose library or media folders.',400);await serial(refresh);return filing.read(input);},changeFolders: input=>filing.change(input),changePhotoFolders:(input,options)=>filing.changePhoto(input,options),
     setConnections: (entries, beforeCommit = () => {}) => serial(() => { const configured=configuredRoots(entries);beforeCommit();roots.splice(2,roots.length-2,...configured,...roots.filter(root=>root.retainedCatalog||root.originalCatalog));folderMetadata.clear();return refresh(); }),
     reconnectPreview: input => serial(()=>reconnectPreview(input)), reconnectMoved: input => serial(()=>reconnectMoved(input)),

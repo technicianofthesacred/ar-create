@@ -1,3 +1,6 @@
+<!-- Structure program current checkpoint: 2026-10-31T16:36:14.215Z -->
+Language is installed at signed main 0bf61e9bcc032f621999bcb50e2a580317c324ab (PR135). Audience → 中文 · linked translation, Source → select passages → Translate, Share → Chinese invitation, and the recording workshop’s correction tools now use guarded review owners. Gather, Home and the remaining smaller-screen layout pass are still open. Original decisions and words remain unchanged.
+
 <!-- Structure program current checkpoint: 2026-10-31T16:08:46.563Z -->
 Make is installed at signed main a5ea8f45ca6522fdd01c802beb6d0ea67fc23662 (PR134). Find it at Subjects → Hong Kong Day 1 · structure test → Article → Arrange, or + for another piece. Local PNG/caption review is connected; original decisions remain pending. Language, Gather, Home and the remaining smaller-screen layout pass are still open. The exact cold-copy Article → Home failure is prepared separately, not installed yet.
 

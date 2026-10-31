@@ -13,7 +13,7 @@ C01–C07 and S01–S12 retain their authorities. Combined remains the design: v
 - [x] Stage2: point questions, durable notebook/questions, AI brief/discussion, broader Library retrieval and available cited outside research. Keep source words separate from claims and editorial use.
 - [x] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
 - [x] Stage4: copy-only stand-in Carousel word/visual review and faithful PNG/caption files; Article role composition, captions/descriptions/grouping; Post/Listing and Video source ranges/playback.
-- [ ] Stage5: reviewable AI translation for Source/conversation/Share/Audience Chinese edition, isolated retranscription candidates and reviewed repeated-term correction.
+- [x] Stage5: reviewable AI translation for Source/conversation/Share/Audience Chinese edition, isolated retranscription candidates and reviewed repeated-term correction.
 - [ ] Stage6: microphone intake, tags, global usage, original reader, Collections and existing-folder connection repair.
 - [ ] Stage7: exact saved-sentence pickup/Continue and useful agent questions on Home; complete the copy’s recording-to-Outputs traversal and list genuine remaining outside/human gates.
 
@@ -58,3 +58,10 @@ PR133 / c429ba6df773eab0b438e942d00a547b48bc7b97, build 2026-10-31T08:41:59.612Z
 PR134 / a5ea8f45ca6522fdd01c802beb6d0ea67fc23662, build 2026-10-31T16:08:46.563Z, connects copy-owned Article/Carousel/Post/Listing, photograph composition and Video source ranges. Exact synthetic native proof covers a real unbound Library image, saved inline credit without crop change, four actual 1080 × 1350 PNGs/caption and explicit agent visual review surviving reload. The actual Hong Kong test Article updated in place from saved writing and Direction; its seven accepted citations remain visible. Original content/configuration and canonical WIP match baseline.
 
 The cold-copy Article → Home decision catalogue path remains a separate prepared Home repair (295 focused checks), not part of Make. Language is next; Gather, Home and the finished-screen smaller-board pass remain unfinished. No Share message was sent.
+
+
+## Language installed · 31 October, 16:36 UTC
+
+PR135 / 0bf61e9bcc032f621999bcb50e2a580317c324ab, build 2026-10-31T16:36:14.215Z, connects Chinese Article proposals/independent editions, Source/conversation reader translations, invitation translation, literal occurrence-selected correction proposals and offline local retranscription candidates. Accepted Chinese editions expose their verified actor/source receipt after reopening. Reader-span mapping covers the actual Hong Kong copy while preserving metadata, annotations, quotes and locked terms. Pending proposals never enter accepted text automatically.
+
+Exact synthetic screen proof covers Chinese pending → stand-in acceptance → separate child/reload/receipt and selected captured Source review with canonical Source unchanged. Local candidate tests use synthetic audio/fake ASR, including detached worker restart; no private audio was retranscribed. Native Share has no saved invitation/recipient on the copy, so the author preparation remains pending; real-owner HTTP checks cover translation without sending. The earlier canonical recording discoverability test fails identically on the installed baseline and belongs to Gather. Gather/Home and the twelve smaller-screen pass remain open.

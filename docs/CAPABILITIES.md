@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-31T16:31:22.850Z.
+> Generated 2026-10-31T16:50:10.938Z.
 
-**At a glance:** 7 commands · 346 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 349 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-346 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+349 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -133,7 +133,7 @@
 | `study-draft.save` | `POST /api/study-draft/save` | any | write · undo `study-draft.undo` |
 | `study-draft.undo` | `POST /api/study-draft/undo` | any | write |
 
-### library (26)
+### library (29)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -150,6 +150,9 @@
 | `icloud-albums` | `GET /api/icloud-albums` | any | read |
 | `library.folders.get` | `GET /api/library/folders` | any | read |
 | `library.folders.post` | `POST /api/library/folders` | any | write · undo `library.folders.post` |
+| `library.topics.get` | `GET /api/library/topics` | any | read |
+| `library.topics.post` | `POST /api/library/topics` | any | write |
+| `library.usage` | `GET /api/library/usage` | any | read |
 | `sources.blob` | `GET /api/sources/blob` | any | read |
 | `sources.file.get` | `GET /api/sources/file` | any | read |
 | `sources.file.post` | `POST /api/sources/file` | any | write |
