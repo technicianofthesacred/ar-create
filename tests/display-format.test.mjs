@@ -33,3 +33,12 @@ test('research record labels distinguish purpose without exposing storage names'
  assert.equal(display.recordTitle('Research: Invented story'),'Research: Invented story');
  assert.equal(display.recordTitle('A chosen title'),'A chosen title');
 });
+
+test('a trailing machine id becomes readable display words while ordinary titles keep their casing',()=>{
+ const w={};vm.runInNewContext(fs.readFileSync(new URL('../public/document-study/display-format.js',import.meta.url),'utf8'),{window:w});const {title}=w.arCreateDisplay;
+ assert.equal(title({title:'Oracle recording 19063564-2a5d-41fc-98ea-2266d8bbc024',name:'RAW - Oracle recording 19063564-2a5d-41fc-98ea-2266d8bbc024.md'}),'Oracle recording');
+ assert.equal(title({title:'oracle-19063564-2a5d-41fc-98ea-2266d8bbc024',name:'oracle-19063564-2a5d-41fc-98ea-2266d8bbc024.m4a'}),'Oracle');
+ assert.equal(title({name:'oracle-19063564-2a5d-41fc-98ea-2266d8bbc024.m4a'}),'Oracle');
+ assert.equal(title({title:'iPhone notes'}),'iPhone notes');
+ assert.equal(title({title:'19063564-2a5d-41fc-98ea-2266d8bbc024'}),'19063564-2a5d-41fc-98ea-2266d8bbc024');
+});

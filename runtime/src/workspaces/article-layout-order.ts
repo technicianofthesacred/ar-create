@@ -27,7 +27,8 @@ export function moveArticleLayoutUnit(doc:Manuscript,outputId:string,from:Articl
 }
 export function articleOrderGroups(doc:Manuscript,output:Output):ArticleOrderGroup[]{
  const layout=layoutFor(doc,output),paragraphs=output.manuscript||doc.paragraphs;
- const text=(id:string)=>paragraphs.find(p=>p.id===id)?.text.replace(/^#{1,6}\s+/,'').slice(0,120)||'Passage';
+ // Labels show the words only: heading, quotation and emphasis marks stay in the manuscript.
+ const text=(id:string)=>paragraphs.find(p=>p.id===id)?.text.replace(/^#{1,6}\s+/,'').replace(/^>\s?/,'').replace(/\*\*(.+?)\*\*|__(.+?)__/g,(_m,a,b)=>a??b).slice(0,120)||'Passage';
  const blockLabel=(b:ArticleBlock):string=>{
   if(b.kind==='side'||b.kind==='glyph')return (b.kind==='side'?'Photo + words':'Framed words')+' · '+b.blocks.map(blockLabel).join(' / ');
   if('paragraphId' in b)return text(b.paragraphId)+(b.kind==='line'&&b.followId?' / '+text(b.followId):'')+(b.kind==='on-photo'?' · on photo':'');
