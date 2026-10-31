@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-31T06:37:29.041Z.
+> Generated 2026-10-31T16:26:00.215Z.
 
-**At a glance:** 7 commands · 307 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 345 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-307 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+345 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -83,7 +83,7 @@
 | `work-continuity.understanding` | `POST /api/work-continuity/understanding` | any | read |
 | `work-continuity.undo` | `POST /api/work-continuity/undo` | any | write |
 
-### direction (11)
+### direction (13)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -94,6 +94,8 @@
 | `concept.sources.search` | `POST /api/concept/sources/search` | any | read |
 | `concepts.get` | `GET /api/concepts` | any | read |
 | `concepts.post` | `POST /api/concepts` | any | write |
+| `study.direction-decision` | `POST /api/study/direction-decision` | any | write |
+| `study.direction-options` | `GET /api/study/direction-options` | any | read |
 | `study.human-direction` | `GET /api/study/human-direction` | any | read |
 | `study.human-direction.select` | `POST /api/study/human-direction/select` | any | write |
 | `study.human-direction.undo` | `POST /api/study/human-direction/undo` | any | write |
@@ -210,22 +212,26 @@
 | `material.album` | `POST /api/material/album` | any | write |
 | `material.folder.open` | `POST /api/material/folder/open` | any | write |
 
-### media (10)
+### media (14)
 
 | name | route | who | kind |
 |---|---|---|---|
 | `media` | `POST /api/media` | any | write |
+| `study.footage` | `GET /api/study/footage` | any | read |
+| `study.footage.preview` | `GET /api/study/footage/preview` | any | read |
+| `study.footage.ranges` | `POST /api/study/footage/ranges` | any | write |
 | `study.media-usage` | `GET /api/study/media-usage` | any | read |
 | `study.media-usage.resolve` | `GET /api/study/media-usage/resolve` | any | read |
 | `study.photos` | `GET /api/study/photos` | any | read |
 | `study.photos.add` | `POST /api/study/photos/add` | any | write |
 | `study.photos.available` | `GET /api/study/photos/available` | any | read |
+| `study.photos.available-preview` | `GET /api/study/photos/available-preview` | any | read |
 | `study.photos.inspect` | `GET /api/study/photos/inspect` | any | read |
 | `study.photos.preview` | `GET /api/study/photos/preview` | any | read |
 | `study.photos.select` | `POST /api/study/photos/select` | any | write |
 | `study.photos.update` | `POST /api/study/photos/update` | any | write |
 
-### outputs (58)
+### outputs (63)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -286,7 +292,12 @@
 | `study.outputs.refresh` | `POST /api/study/outputs/refresh` | any | write |
 | `study.outputs.review-words` | `POST /api/study/outputs/review-words` | any | write |
 | `study.outputs.save` | `POST /api/study/outputs/save` | any | write · undo `study.outputs.undo` |
+| `study.outputs.stand-in-create` | `POST /api/study/outputs/stand-in-create` | agent | write |
+| `study.outputs.stand-in-refresh` | `POST /api/study/outputs/stand-in-refresh` | agent | write |
+| `study.outputs.stand-in-review-words` | `POST /api/study/outputs/stand-in-review-words` | agent | write |
+| `study.outputs.stand-in-save` | `POST /api/study/outputs/stand-in-save` | agent | write |
 | `study.outputs.undo` | `POST /api/study/outputs/undo` | any | write |
+| `study.outputs.visual-review` | `POST /api/study/outputs/visual-review` | human | write |
 
 ### piece (5)
 
@@ -356,7 +367,7 @@
 | `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
 | `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (20)
+### system (47)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -374,12 +385,39 @@
 | `leases.release` | `POST /api/leases/release` | any | write |
 | `presence.get` | `GET /api/presence` | any | read |
 | `presence.post` | `POST /api/presence` | any | write |
+| `source-language.accept` | `POST /api/source-language/accept` | human | write |
+| `source-language.capabilities` | `POST /api/source-language/capabilities` | any | read |
+| `source-language.prepare` | `POST /api/source-language/prepare` | any | write |
+| `source-language.reject` | `POST /api/source-language/reject` | human | write |
+| `source-language.review` | `POST /api/source-language/review` | any | read |
+| `source-language.run` | `POST /api/source-language/run` | any | write |
+| `source-language.stand-in-accept` | `POST /api/source-language/stand-in-accept` | agent | write |
+| `source-language.stand-in-reject` | `POST /api/source-language/stand-in-reject` | agent | write |
+| `source-transcript.candidate.capabilities` | `GET /api/source-transcript/candidate/capabilities` | any | read |
+| `source-transcript.candidate.compare` | `POST /api/source-transcript/candidate/compare` | any | read |
+| `source-transcript.candidate.prepare` | `POST /api/source-transcript/candidate/prepare` | any | write |
+| `source-transcript.candidate.propose` | `POST /api/source-transcript/candidate/propose` | any | write |
+| `source-transcript.candidate.review` | `POST /api/source-transcript/candidate/review` | any | read |
+| `source-transcript.candidate.start` | `POST /api/source-transcript/candidate/start` | any | write |
+| `source-transcript.capabilities` | `GET /api/source-transcript/capabilities` | any | read |
+| `source-transcript.terms.preview` | `POST /api/source-transcript/terms/preview` | any | read |
+| `source-transcript.terms.propose` | `POST /api/source-transcript/terms/propose` | any | write |
+| `study.language.accept` | `POST /api/study/language/accept` | human | write |
+| `study.language.capabilities` | `GET /api/study/language/capabilities` | any | read |
+| `study.language.prepare` | `POST /api/study/language/prepare` | any | write |
+| `study.language.reject` | `POST /api/study/language/reject` | human | write |
+| `study.language.review` | `GET /api/study/language/review` | any | read |
+| `study.language.run` | `POST /api/study/language/run` | any | write |
+| `study.language.stand-in-accept` | `POST /api/study/language/stand-in-accept` | agent | write |
+| `study.language.stand-in-reject` | `POST /api/study/language/stand-in-reject` | agent | write |
+| `study.material.attach` | `POST /api/study/material/attach` | any | write |
 | `study.structure-tests.get` | `GET /api/study/structure-tests` | any | read |
 | `study.structure-tests.post` | `POST /api/study/structure-tests` | agent | write |
 | `study.structure-tests.proposal-contract` | `POST /api/study/structure-tests/proposal-contract` | agent | write |
 | `study.structure-tests.proposal-review` | `POST /api/study/structure-tests/proposal-review` | agent | write |
 | `study.structure-tests.research-note` | `POST /api/study/structure-tests/research-note` | agent | write |
 | `study.structure-tests.review-mark` | `POST /api/study/structure-tests/review-mark` | agent | write |
+| `study.structure-tests.visual-review` | `POST /api/study/structure-tests/visual-review` | agent | write |
 
 ### transcript (11)
 

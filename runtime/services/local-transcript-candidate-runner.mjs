@@ -1,0 +1,12 @@
+import fs from 'node:fs';import path from 'node:path';import {spawnSync} from 'node:child_process';import {fileURLToPath} from 'node:url';import {atomicWrite,regular,digest,readJson} from './files.mjs';
+const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,x[k]])):x);
+export function executeLocalTranscriptCandidate(manifest,{run=spawnSync}={}){
+ regular(manifest);const r=readJson(manifest,null),dir=path.dirname(manifest),save=()=>atomicWrite(manifest,JSON.stringify(r,null,2)+'\n');
+ if(!r||r.state!=='running'||r.captureHash!==digest(stable(r.capture))||r.runtimeHash!==digest(stable(r.runtime)))throw Error('The isolated candidate request changed.');
+ try{const c=r.capture,rt=r.runtime;regular(c.audioPath);if(digest(fs.readFileSync(c.audioPath))!==c.expected.audioHash)throw Error('Original audio changed before candidate execution.');if(!rt.ready||!path.isAbsolute(rt.python||'')||!path.isAbsolute(rt.asrModelDirectory||'')||!path.isAbsolute(rt.repoRoot||''))throw Error('Preinstalled local candidate runtime is unavailable.');
+  const result=run(rt.python,['-m','transcription.candidate',manifest],{cwd:rt.repoRoot,env:{PATH:process.env.PATH,HOME:process.env.HOME,...rt.environment,XDG_CACHE_HOME:path.join(dir,'cache'),HF_HOME:path.join(dir,'cache','huggingface'),HUGGINGFACE_HUB_CACHE:path.join(dir,'cache','huggingface','hub'),HF_HUB_OFFLINE:'1',TRANSFORMERS_OFFLINE:'1',PYTHONDONTWRITEBYTECODE:'1'},timeout:3600000,encoding:'utf8',maxBuffer:1024*1024});if(result.status!==0||result.error)throw Error('Local candidate transcription failed. The original transcript and audio are unchanged.');
+  if(digest(fs.readFileSync(c.audioPath))!==c.expected.audioHash)throw Error('Original audio changed during candidate execution.');const output=path.join(dir,'candidate.json');regular(output);const candidate=readJson(output,null);if(!candidate||candidate.id!==r.id||candidate.jobId!==c.jobId||candidate.sourceAudioHash!==c.expected.audioHash||candidate.baselineRevision!==c.expected.revision)throw Error('The local candidate output does not match its captured audio.');r.artifactHash=digest(fs.readFileSync(output));r.state='ready';r.completedAt=new Date().toISOString();save();
+ }catch(error){r.state='failed';r.error=error.message;r.completedAt=new Date().toISOString();save();}
+ return r;
+}
+if(process.argv[1]===fileURLToPath(import.meta.url))executeLocalTranscriptCandidate(process.argv[2]);

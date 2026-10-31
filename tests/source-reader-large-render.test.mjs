@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url));
 const {JSDOM}=require('jsdom');
 let source=await readFile(new URL('../public/document-study/source-imported.js',import.meta.url),'utf8');
-for(const [from,to] of [['source-dialogue.js','source-dialogue.mjs'],['translation-readiness.js','translation-readiness.js'],['interpretation-view.js','interpretation-view.js']])source=source.replace(`'./${from}'`,JSON.stringify(new URL(`../public/document-study/${to}`,import.meta.url).href));
+for(const [from,to] of [['source-dialogue.js','source-dialogue.mjs'],['translation-readiness.js','translation-readiness.js'],['interpretation-view.js','interpretation-view.js'],['source-language-review.js','source-language-review.js']])source=source.replace(`'./${from}'`,JSON.stringify(new URL(`../public/document-study/${to}`,import.meta.url).href));
 const {installSourceReader}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 
 test('large conversations bound DOM identity reads while preserving every editable remark and its evidence',async()=>{

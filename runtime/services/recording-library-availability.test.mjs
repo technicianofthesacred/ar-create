@@ -48,3 +48,5 @@ test('selected engine still refuses incomplete configured model files and incomp
 });
 
 test('missing and non-boolean required probe flags cannot report readiness',async t=>{for(const value of [undefined,null,'true',1]){const f=readinessFixture(t,{engine:'sherpa',dependencies:{sherpa_onnx:value,torch:false,pyannote:false}});assert.equal((await f.recordings.list()).capability.ready,false);}});
+
+test('local candidate runtime reuses only explicitly installed speech models with offline configuration',t=>{const f=readinessFixture(t,{engine:'sherpa',offline:true,dependencies:{torch:false,pyannote:false}}),r=f.recordings.candidateRuntime();assert.equal(r.ready,true);assert.equal(r.python,f.runtime.python);assert.equal(r.asrModelDirectory,f.runtime.asrModelDirectory);assert.equal(r.environment.HF_HUB_OFFLINE,'1');assert.equal(r.environment.TRANSFORMERS_OFFLINE,'1');const missing=readinessFixture(t,{models:false});assert.equal(missing.recordings.candidateRuntime().ready,false);});
