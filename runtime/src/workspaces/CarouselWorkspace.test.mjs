@@ -226,7 +226,7 @@ test('whole portrait sequence edits, templates and photos retain the actual outp
   const titleActions=document.querySelector('#c3-surface-bar .cwb-toolbar');
   assert.ok(titleActions,'actual composition controls share the existing title line');
   assert.equal(titleActions.parentElement.dataset.cwbDocumentId,current.id);assert.equal(titleActions.parentElement.dataset.cwbOutputId,'carousel');
-  assert.match(titleActions.querySelector('.cwb-new-output>summary').textContent,/Output tools/);
+  assert.match(titleActions.querySelector('.cwb-new-output>h3').textContent,/Output tools/);assert.equal(titleActions.querySelector('.cwb-new-output details,.cwb-new-output summary'),null,'output controls stay visible in place');
   assert.ok(titleActions.querySelector('.car-tools-visible[aria-label="Carousel tools"]'));
   assert.equal(document.querySelector('.car-workspace details'),null,'Carousel controls and provenance remain visible without disclosures');
   assert.equal(document.querySelector('.car-workspace>.car-tools'),null,'no second action tier');

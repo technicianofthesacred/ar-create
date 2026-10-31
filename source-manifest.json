@@ -3429,7 +3429,7 @@
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.test.mjs",
-      "candidateSha256": "c1ab301859a90e5553008a1b77345f6bc413707a08c0acf1aac8dec1fa0674af"
+      "candidateSha256": "8a99ffb4f98a600354d65094a97829c33a8f691998ccc8cef4b2f6310ef646b9"
     },
     {
       "path": "tests/workbench-frame.test.mjs",
@@ -4501,7 +4501,7 @@
     },
     {
       "path": "runtime/services/assistance-direction-context.mjs",
-      "candidateSha256": "1e6ed8b585ddb96c96aa87e8889820b8298970c3f9b3e8d6d3b08c5d0e7b2da6"
+      "candidateSha256": "378b1028ef9a3a2828430ea54bbde3cac0430f56a40da8841069db5a2f3dd098"
     },
     {
       "path": "runtime/services/assistance-direction-context.test.mjs",

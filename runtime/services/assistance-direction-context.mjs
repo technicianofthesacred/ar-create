@@ -80,7 +80,9 @@ export function createAssistanceDirectionContext({resolver,humanDirection,collec
   const project={scope:'project',parentStudyId:binding.parentStudyId},part={scope:'part',parentStudyId:binding.parentStudyId,bindingId:binding.bindingId};
   if(!owner.canonicalOutputId)return capture({scopes:[project,part],selectedScope:part,manuscript:copy(binding)});
   const rootBindingId=owner.sourceBindingId||binding.bindingId,root={scope:'part',parentStudyId:binding.parentStudyId,bindingId:rootBindingId},output={scope:'output',parentStudyId:binding.parentStudyId,bindingId:rootBindingId,outputId:owner.canonicalOutputId};
-  const independent=rootBindingId!==binding.bindingId,partRecord=independent?await humanDirection.read(part):null,absentPart=independent&&partRecord.bound===false&&partRecord.scope===null;const result=await capture({scopes:[project,...(!independent?[root]:!absentPart?[part]:[]),output],...(absentPart?{absentParts:[part]}:{}),selectedScope:output,piece:{rootBindingId,parentStudyId:binding.parentStudyId,selectedOutputId:owner.canonicalOutputId}});
+  // Article editions retain their established part Direction. Short outputs
+  // have independent intent and must not inherit the Article part implicitly.
+  const child=rootBindingId!==binding.bindingId,independent=child&&['post','product-listing'].includes(owner.textOutputKind),partRecord=child?await humanDirection.read(part):null,absentPart=child&&partRecord.bound===false&&partRecord.scope===null;const result=await capture({scopes:[project,...(!independent?[root]:[]),...(child&&!absentPart?[part]:[]),output],...(absentPart?{absentParts:[part]}:{}),selectedScope:output,piece:{rootBindingId,parentStudyId:binding.parentStudyId,selectedOutputId:owner.canonicalOutputId}});
   if(result.guards.pieceOwner.wordOwner.bindingId!==binding.bindingId)fail('Registered Piece has another native wording owner.');return result;
  }
  async function captureWriteGuard(captured){
