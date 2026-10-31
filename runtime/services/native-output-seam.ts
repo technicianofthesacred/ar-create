@@ -28,14 +28,47 @@ function sources(snapshot:any){return (snapshot.context?.records||[]).filter((r:
  const hash=r.copiedHash??r.hash??null;if(!r.missing&&(typeof r.raw!=='string'||!HASH.test(hash||'')||digest(r.raw)!==hash))fail('Native retained source capture hash changed.');
  return {id:r.id,role:r.role,sourcePath:r.sourcePath??r.path??null,hash,missing:!!r.missing};
 }).sort((a:any,b:any)=>String(a.id).localeCompare(String(b.id)));}
-function validate(snapshot:any,emptyBoundaries=false){
+function validate(snapshot:any,_emptyBoundaries=false){
  if(snapshot.binding?.authority!=='owned-working-copy'||snapshot.binding.status!=='ready'||snapshot.readiness?.ready!==true)fail('A ready exact owned native snapshot is required.');
  if(Buffer.byteLength(snapshot.raw||'')>2*1024*1024)fail('Native capture exceeds the existing two-megabyte document bound.');
  text(snapshot.binding.id,'Native binding');text(snapshot.binding.parentStudyId,'Native parent');text(snapshot.raw,'Native raw');
  if(snapshot.expected?.workflow?.draft!==digest(snapshot.raw)||!Array.isArray(snapshot.projection))fail('Native expected raw hash or projection changed.');
- const model=capture(snapshot.raw,'native-output-probe');const modelRows=emptyBoundaries?model.blocks.filter((b:any)=>b.raw.trim()):model.blocks,projectionRows=emptyBoundaries?snapshot.projection.filter((b:any)=>b.raw.trim()):snapshot.projection;if(render(model)!==snapshot.raw||modelRows.length!==projectionRows.length)fail('Native donor topology or exact raw bytes changed.');
- const ids=new Set();for(const row of snapshot.projection){
-  if(!row.id||ids.has(row.id)||(row.raw.trim()||!emptyBoundaries)&&row.raw!==modelRows[projectionRows.indexOf(row)]?.raw||row.blockHash!==digest(row.raw))fail('Native paragraph identity/raw/block hash changed.');ids.add(row.id);
+ const model=capture(snapshot.raw,'native-output-probe');
+ if(render(model)!==snapshot.raw||model.fileHash!==digest(snapshot.raw))fail('Native donor topology or exact raw bytes changed.');
+ // Native edits retain paragraph IDs and may allocate boundary line endings to a
+ // paragraph that a fresh donor capture allocates to its separator. Match only
+ // line-ending-free outer cores, then prove every retained raw span against the
+ // current complete file. Spaces and internal line endings are never normalized.
+ const edges=(raw:string)=>{
+  const lead=/^(?:\r\n|\n)*/.exec(raw)![0].length;
+  const tail=/(?:\r\n|\n)*$/.exec(raw.slice(lead))![0].length;
+  return {lead,tail,core:raw.slice(lead,raw.length-tail)};
+ };
+ const donor:any[]=[];let cursor=model.prefix.length;
+ for(const block of model.blocks){
+  if(typeof block.raw!=='string'||typeof block.separator!=='string'||block.origin?.offset!==cursor||block.origin.fileHash!==model.fileHash||block.origin.blockHash!==digest(block.raw)||snapshot.raw.slice(cursor,cursor+block.raw.length)!==block.raw)fail('Native donor current raw spans changed.');
+  const edge=edges(block.raw);if(edge.core)donor.push({...edge,start:cursor+edge.lead,end:cursor+block.raw.length-edge.tail});
+  cursor+=block.raw.length+block.separator.length;
+ }
+ if(cursor!==snapshot.raw.length)fail('Native donor current raw span budget changed.');
+ const rows=snapshot.projection,cores=rows.filter((row:any)=>typeof row.raw==='string'&&edges(row.raw).core);
+ if(cores.length!==donor.length)fail('Native donor topology or exact raw bytes changed.');
+ const spans=new Map();let previous=model.prefix.length;
+ for(let i=0;i<cores.length;i++){
+  const row=cores[i],edge=edges(row.raw),block=donor[i],start=block.start-edge.lead,end=block.end+edge.tail;
+  if(edge.core!==block.core||start<previous||start<model.prefix.length||end>snapshot.raw.length||snapshot.raw.slice(start,end)!==row.raw)fail('Native paragraph boundary/raw span changed.');
+  spans.set(row,{start,end});previous=end;
+ }
+ const ids=new Set();previous=model.prefix.length;
+ for(let i=0;i<rows.length;i++){
+  const row=rows[i];if(typeof row.raw!=='string'||typeof row.id!=='string'||!row.id||ids.has(row.id)||row.blockHash!==digest(row.raw))fail('Native paragraph identity/raw/block hash changed.');ids.add(row.id);
+  let span=spans.get(row);
+  if(!span){
+   const next=rows.slice(i+1).map((r:any)=>spans.get(r)).find(Boolean),end=previous+row.raw.length;
+   if(edges(row.raw).core||end>(next?.start??snapshot.raw.length)||snapshot.raw.slice(previous,end)!==row.raw)fail('Native empty boundary raw span changed.');
+   span={start:previous,end};
+  }
+  if(span.start<previous)fail('Native paragraph raw spans overlap.');previous=span.end;
   const mapped=inlineMap(row.raw);for(const key of ['safe','words','doc','blockKind','level','notes'])if(!same(row[key],mapped[key]))fail('Native projection differs from its authoritative donor mapping.');
  }
  return sources(snapshot);

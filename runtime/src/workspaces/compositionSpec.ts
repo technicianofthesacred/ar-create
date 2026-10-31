@@ -41,9 +41,9 @@ export function outputSpec(doc:Manuscript,output:Output):RecordedConversationSpe
  const text=(id?:string)=>id?acceptedText(byId.get(id)!):'';
  const owned=new Map(output.placements.map(p=>[p.slot,p]));
  const used=new Set<string>();
- const shot=(slot:string):Shot=>{const p=owned.get(slot)!;used.add(slot);return {slot,file:p.url,alt:p.alt,x:p.x,y:p.y};};
- const photoBlock=(p:Placement):Block=>p.caption
-  ? {kind:'photos',shots:[shot(p.slot)],aspect:'3/2',caption:{id:'photo-caption:'+p.slot,text:p.caption}}
+ const shot=(slot:string):Shot=>{const p=owned.get(slot)!;used.add(slot);return {slot,file:p.url,alt:p.alt,x:p.x,y:p.y,...(p.credit?{photoCredit:p.credit}:{}),...(p.caption?{caption:{id:'photo-caption:'+slot,text:p.caption||'',literal:true}}:{})};};
+ const photoBlock=(p:Placement):Block=>p.caption||p.credit
+  ? {kind:'photos',shots:[shot(p.slot)],aspect:'3/2',photoCredit:p.credit,caption:{id:'photo-caption:'+p.slot,text:p.caption||'',literal:true}}
   : {kind:'wide',shot:shot(p.slot),aspect:'3/2'};
  const block=(b:ArticleBlock):Block=>{
   switch(b.kind){
@@ -52,15 +52,15 @@ export function outputSpec(doc:Manuscript,output:Output):RecordedConversationSpe
    case 'side':return {kind:'side',shot:shot(b.slot),blocks:b.blocks.map(block),flip:b.flip,bleed:b.bleed};
    case 'glyph':return {kind:'glyph',glyph:b.glyph,blocks:b.blocks.map(block)};
    case 'photos':{
-    const captions=b.slots.map(slot=>owned.get(slot)!.caption).filter(Boolean);
-    return {kind:'photos',shots:b.slots.map(shot),aspect:b.aspect,stagger:b.stagger,narrow:b.narrow,...(captions.length?{caption:{id:'photo-caption:'+b.slots.join(':'),text:captions.join(' · ')}}:{})};
+    const captions=b.slots.map(slot=>owned.get(slot)!.caption).filter(Boolean),credits=b.slots.map(slot=>owned.get(slot)!.credit).filter(Boolean);
+    return {kind:'photos',shots:b.slots.map(shot),aspect:b.aspect,stagger:b.stagger,narrow:b.narrow,photoCredit:credits.join(' · '),...(captions.length?{caption:{id:'photo-caption:'+b.slots.join(':'),text:captions.join(' · '),literal:true}}:{})};
    }
    case 'wide':{
     const p=owned.get(b.slot)!;
-    if(p.caption)return {kind:'photos',shots:[shot(b.slot)],aspect:b.aspect||'3/2',narrow:b.narrow,caption:{id:'photo-caption:'+b.slot,text:p.caption}};
+    if(p.caption||p.credit)return {kind:'photos',shots:[shot(b.slot)],aspect:b.aspect||'3/2',narrow:b.narrow,photoCredit:p.credit,caption:{id:'photo-caption:'+b.slot,text:p.caption||'',literal:true}};
     return {kind:'wide',shot:shot(b.slot),aspect:b.aspect,narrow:b.narrow,offset:b.offset};
    }
-   case 'bleed':return {kind:'bleed',shot:shot(b.slot)};
+   case 'bleed':return {kind:'bleed',shot:shot(b.slot),photoCredit:owned.get(b.slot)?.credit,...(owned.get(b.slot)?.caption?{caption:{id:'photo-caption:'+b.slot,text:owned.get(b.slot)!.caption!,literal:true}}:{})};
    case 'on-photo':return {kind:'on-photo',id:b.paragraphId,text:text(b.paragraphId),shot:shot(b.slot),aspect:b.aspect,ink:b.ink,accent:b.accent};
   }
  };

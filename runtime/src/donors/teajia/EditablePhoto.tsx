@@ -62,6 +62,10 @@ const EditablePhoto: React.FC<Props> = ({
   const [showLibrary, setShowLibrary] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const pinchRef = useRef<{ startDist: number; startScale: number } | null>(null);
+  const focalTap = useRef<{pointerId:number;url:string;x:number;y:number;rect:{left:number;top:number;width:number;height:number}}|null>(null);
+
+  // Every gesture starts afresh, including gestures begun on sibling controls.
+  useEffect(()=>{const clear=()=>{focalTap.current=null;};window.addEventListener('pointerdown',clear,true);window.addEventListener('pointerup',clear);window.addEventListener('pointercancel',clear);return()=>{window.removeEventListener('pointerdown',clear,true);window.removeEventListener('pointerup',clear);window.removeEventListener('pointercancel',clear);};},[]);
 
   // Register this frame so the editor bar's "what needs a photo" list knows it.
   useEffect(() => {
@@ -124,18 +128,29 @@ const EditablePhoto: React.FC<Props> = ({
     setPhoto(slot, { ...photo, crop: { ...photo.crop, scale: Math.min(3, Math.max(1, scale)) } });
   };
 
-  // Tap anywhere on the photo to place the focal point there (touch-friendly,
-  // no precise dragging needed). Ignored if the tap was a pinch.
+  // A release over a photo is not itself a photo tap: controls can move the
+  // frame underneath a pointer while the user is editing its caption.
+  const photoTapTarget = (target:EventTarget|null) => target instanceof Element &&
+    !target.closest('[data-focal-dot],button,input,textarea,select,label,a,[contenteditable="true"],[role="slider"]');
+  const beginFocalTap = (e:React.PointerEvent<HTMLDivElement>) => {
+    focalTap.current=null;
+    if(!liveEdit||!photo||e.button!==0||e.isPrimary===false||!photoTapTarget(e.target)||!frameRef.current)return;
+    const r=frameRef.current.getBoundingClientRect();
+    if(r.width<=0||r.height<=0)return;
+    focalTap.current={pointerId:e.pointerId,url:photo.url,x:e.clientX,y:e.clientY,rect:{left:r.left,top:r.top,width:r.width,height:r.height}};
+  };
   const tapFocal = useCallback((e: React.PointerEvent) => {
-    if (!liveEdit || !photo || pinchRef.current) return;
-    // Don't hijack a tap on the dot itself (it has its own drag handler).
-    if ((e.target as HTMLElement).dataset.focalDot) return;
+    const start=focalTap.current;focalTap.current=null;
+    if (!start||!liveEdit||!photo||pinchRef.current||e.pointerId!==start.pointerId||e.button!==0||e.isPrimary===false||photo.url!==start.url||!photoTapTarget(e.target)||!frameRef.current) return;
+    const r=frameRef.current.getBoundingClientRect();
+    if(Math.hypot(e.clientX-start.x,e.clientY-start.y)>8||['left','top','width','height'].some(key=>Math.abs(r[key as keyof typeof start.rect]-start.rect[key as keyof typeof start.rect])>1))return;
     moveFocal(e.clientX, e.clientY);
   }, [liveEdit, photo, moveFocal]);
 
   // Pinch-to-zoom on touch.
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (!liveEdit || !photo || e.touches.length !== 2) return;
+    focalTap.current=null;
     const [a, b] = [e.touches[0], e.touches[1]];
     const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
     pinchRef.current = { startDist: dist, startScale: photo.crop.scale };
@@ -169,6 +184,10 @@ const EditablePhoto: React.FC<Props> = ({
         data-frame-slot={slot}
         tabIndex={liveEdit ? 0 : -1}
         onPaste={onPaste}
+        onPointerDown={beginFocalTap}
+        onPointerMove={e=>{const start=focalTap.current;if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>8)focalTap.current=null;}}
+        onPointerCancel={()=>{focalTap.current=null;}}
+        onPointerLeave={()=>{focalTap.current=null;}}
         onPointerUp={tapFocal}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
