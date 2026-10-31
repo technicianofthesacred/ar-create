@@ -281,6 +281,8 @@ export function createRouteMap(services) {
       '/api/sources/reconnect/preview': {POST:input=>library.reconnectPreview(input)},
       '/api/sources/reconnect': {POST:input=>library.reconnectMoved(input)},
       '/api/sources/folders': { POST: input => library.folder(input) },
+      '/api/library/topics': {GET:()=>library.readTopics(),POST:input=>{if(Object.hasOwn(input,'actor'))throw new StateError('The command supplies the actual actor.',400);return library.saveTopics({...input,actor:currentActor()?.actor});}},
+      '/api/library/usage': {GET:()=>{if([...url.searchParams.keys()].some(k=>k!=='sourceId'))throw new StateError('Choose exact Library source IDs.',400);if(!studyMediaUsage)throw new StateError('Library usage is unavailable.',503);return studyMediaUsage.readGlobal({sourceIds:url.searchParams.getAll('sourceId')});}},
       '/api/collections': { GET: () => library.collections(), POST: input => library.saveCollection(input) },
       '/api/collection-relationships': {GET:()=>library.collectionRelationships(url.searchParams.get('collectionId'))},
       '/api/collection-relationships/link': {POST:input=>library.linkCollections(input)},

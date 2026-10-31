@@ -115,7 +115,7 @@ export function transcriptPage(job, result, translation = null) {
     .replace('<article class="transcript-editor">', `${reviewContext(result)}<article class="transcript-editor">`)
     .replaceAll('href="/transcription">← Drop files', 'href="/#explore">← Source library')
     .replaceAll('href="/transcription">← Recordings', 'href="/#explore">← Source library')
-    .replace('<section class="save-mag">', '<section class="save-mag"><p class="ar-save-note">Save Markdown and JSON in this workspace’s recording storage. The transcript is available in the source library.</p>')
+    .replace('<section class="save-mag">', '<section class="save-mag"><p class="ar-save-note">Save Markdown and JSON with this recording. Open its transcript from Library’s Material intake.</p>')
     .replace('</style>', `${CONTINUITY_CSS}</style>`)
     .replace('<body>', '<body class="ar-recording-workshop"><header class="ar-workshop-header"><a class="ar-workshop-brand" href="/#explore">ar<span>·</span>create</a><span class="ar-workshop-context">Material / Recording workshop</span><a class="ar-workshop-return" href="/#explore">Return to source library ↗</a></header>');
   let statusIndex=0;

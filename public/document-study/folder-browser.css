@@ -398,3 +398,7 @@ html body.wbf-on #app #workspace.wfb-native>.wfb-browser.k-media{flex:1;min-heig
 .wfb-album-add label{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
 .wfb-album-add select{max-width:100%;min-width:0;min-height:40px;font:inherit;background:var(--paper,#fff);color:inherit;border:1px solid var(--line,#ccc);padding:7px}
 .wfb-album-add button,.wfb-photo-albums li button{min-height:40px}
+
+.wfb-inline-actions{position:static;display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0;padding:0;border:0;box-shadow:none;background:none}
+.wfb-ftool:has(.wfb-inline-actions){flex-wrap:wrap}
+.wfb-topics{font-size:12px;color:var(--wfb-muted);margin:5px 0}
