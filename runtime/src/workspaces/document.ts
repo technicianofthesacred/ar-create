@@ -4,6 +4,7 @@ import type {PreparedSource} from './prepared-source';
 import type { JSONContent } from '@tiptap/core';
 import {captureArticleComposition,reconcileArticleComposition,type ArticleComposition} from './articleComposition';
 import {structuredMarkdown} from './structured-markdown.mjs';
+import {CAROUSEL_WORDS_LIMITS} from './shared-carousel-words.mjs';
 export {structuredMarkdown} from './structured-markdown.mjs';
 import { markdownToDoc, docToMarkdown } from '../donors/wordforge/wf-block-markdown';
 export type Attribution = { id:string; sourceId:string; sourceTitle:string; excerpt:string; locator:string|Record<string,unknown>; author?:string; sourceHash?:string; form:'quote'|'inline'|'reference'|'paraphrase' };
@@ -202,7 +203,10 @@ export function recomposeOutput(doc:Manuscript,previous:Output):Output {
 export function snapshotCarousel(doc:Manuscript):Output {
  const base=snapshotOutput(doc);
  const slides:CarouselSlide[]=[{id:uid(),role:'cover',text:doc.title||'Untitled piece',credit:'',template:'H6',photos:[],paragraphIds:[]}];
- for(const p of base.manuscript||[]){const text=plainText(p.doc);if(text.trim())slides.push({id:uid(),role:'inner',text,credit:p.attributions.map(a=>a.author||a.sourceTitle).filter((v,i,a)=>a.indexOf(v)===i).join(' · '),template:'M12',photos:[],paragraphIds:[p.id]});}
+ const passages=(base.manuscript||[]).map(p=>({p,text:plainText(p.doc)})).filter(x=>x.text.trim());
+ // A long piece keeps every passage: consecutive passages share a slide so the cut fits the slide limit.
+ const per=Math.max(1,Math.ceil(passages.length/(CAROUSEL_WORDS_LIMITS.maxSlides-1)));
+ for(let i=0;i<passages.length;i+=per){const group=passages.slice(i,i+per);slides.push({id:uid(),role:'inner',text:group.map(x=>x.text).join('\n\n'),credit:group.flatMap(x=>x.p.attributions.map(a=>a.author||a.sourceTitle)).filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '),template:'M12',photos:[],paragraphIds:group.map(x=>x.p.id)});}
  const {articleComposition,articleCompositionNotice,...carouselBase}=base;
  return {...carouselBase,placements:[],kind:'carousel',outputRevision:0,slides,caption:'',stage:'words'};
 }

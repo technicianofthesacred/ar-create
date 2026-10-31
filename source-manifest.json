@@ -684,7 +684,7 @@
     {
       "path": "runtime/src/workspaces/document.ts",
       "sourceSha256": "7cbac71dba13137c430fa10cbb7a17fee2cf6243cfa0387c5a8bfecdbc1ff2b8",
-      "candidateSha256": "97928a791b33aeeb264b2e6db06f1d9da8c55c75ff0c51cc2edc63181d6bfdf3",
+      "candidateSha256": "1a74e2dfee869997b90334eb4fc00911846a522bd47e8f2611a32bd60c172da0",
       "adapted": false
     },
     {
