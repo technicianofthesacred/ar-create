@@ -5210,6 +5210,10 @@
     {
       "path": "tests/recording-source-registration.test.mjs",
       "candidateSha256": "8543ae0e48ad5759b93f6517b90e16c1f5ccb7d0a1f49c2ee1f166edaf2d61f2"
+    },
+    {
+      "path": "runtime/src/workspaces/snapshot-carousel.test.mjs",
+      "candidateSha256": "8dfcdc5079935bc01d83cb9fa5de29b0e0f40f8048f488afc408daacd20193fd"
     }
   ],
   "dependencyRepair": {
