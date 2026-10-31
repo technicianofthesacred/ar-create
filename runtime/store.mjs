@@ -605,6 +605,16 @@ export async function createStore({ dataDir, sharedArticles=false, publicationFa
         return commit(next,null,{expectedArticle});
       });
     },
+    readProject(input){
+      const scope=structuredClone(input);shape(scope,['projectId','documentId'],'readProject');id(scope.projectId,'projectId');id(scope.documentId,'documentId');
+      const operation=pending.then(async()=>{
+        if(closed||needsRecovery||articles&&existsSync(articles.journal))throw new StateError('Project publication requires owner recovery before a scoped read.',409);
+        if(articles?!(await readFile(file)).equals(knownStateBytes):JSON.stringify(JSON.parse(await readFile(file,'utf8')))!==JSON.stringify(state))throw new StateError('State changed outside its cooperating store owner.',409);
+        const project=scope.projectId===state.project.id?state.project:(await readPiece(scope.projectId)).project;
+        if(project.document?.id!==scope.documentId)throw new StateError('Scoped project document identity changed.',409);
+        return {revision:state.revision,project:structuredClone(project)};
+      });pending=operation.catch(()=>{});return operation;
+    },
     listPieces(options={}){
       if(!options||Array.isArray(options)||Object.keys(options).some(k=>k!=='readOnly')||options.readOnly!==undefined&&typeof options.readOnly!=='boolean')throw new StateError('Choose a supported piece catalog read.');
       const queue=options.readOnly?fn=>{const operation=pending.then(async()=>{if(closed||needsRecovery||articles&&existsSync(articles.journal))throw new StateError('Piece publication requires explicit owner recovery before a read-only catalog.',409);if(articles?!(await readFile(file)).equals(knownStateBytes):JSON.stringify(JSON.parse(await readFile(file,'utf8')))!==JSON.stringify(state))throw new StateError('State changed outside its cooperating store owner.',409);return fn();});pending=operation.catch(()=>{});return operation;}:serialized;

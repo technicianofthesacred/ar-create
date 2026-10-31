@@ -9,7 +9,7 @@ C01–C07 and S01–S12 retain their authorities. Combined remains the design: v
 ## Delivery sequence and finish criteria
 
 - [x] Stage0: independent original-backed test subject, immutable capture lineage, visible test/stand-in actor context, and before/after original hashes; install and prove in main app.
-- [ ] Stage1: sourced Write proposals, gaps, explicit review, protected phrases, Focus, version comparison and per-piece guidance. Test-copy stand-in actions use an explicit copy-scoped operation, never human impersonation.
+- [x] Stage1: sourced Write proposals, gaps, explicit review, protected phrases, Focus, version comparison and per-piece guidance. Test-copy stand-in actions use an explicit copy-scoped operation, never human impersonation.
 - [ ] Stage2: point questions, durable notebook/questions, AI brief/discussion, broader Library retrieval and available cited outside research. Keep source words separate from claims and editorial use.
 - [ ] Stage3: durable per-piece decision grid, not-applicable choices/events and inherited subject context in every view; preserve independent words.
 - [ ] Stage4: copy-only stand-in Carousel word/visual review and faithful PNG/caption files; Article role composition, captions/descriptions/grouping; Post/Listing and Video source ranges/playback.
@@ -30,3 +30,7 @@ The independent Hong Kong structure-test Article opens from Subjects with an age
 ## Stage 1 verification checkpoint
 
 The native source-selected proposal owner, copy-scoped stand-in review and protected/guidance contracts pass the affected integration checks. The synthetic screen journey proves exact source quotation reading, a separate unsupported gap, unchanged pending words, explicit stand-in insertion, protected phrases and scoped guidance across reload, automatic completion updates without resend, Focus exit, and 1440/390 fit. The exact main-app installation and real-material execution remain separate proof obligations. The native History and Versions entrances now open the maintained comparison drawer; closing it and leaving Focus retain the same manuscript.
+
+## Stage 1 installed · 31 October
+
+The structure-test Article now reopens with its exact native route. One actual sourced execution produced three attributed claims with seven exact quotations and two unsupported questions. Its pending words stayed outside the manuscript; an explicit agent-labelled stand-in acceptance appended only the reviewed paragraph to the copy. Original/source/configuration preservation checks pass. Protected phrases, piece guidance, Focus return and version comparison retain their existing owners. Stage 2 continues Research; the original editorial decisions remain open.

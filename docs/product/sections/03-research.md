@@ -1,5 +1,12 @@
 # 3 — Research
 
+## Whole-structure connection — approved 31 October
+
+C01/C03–C07, S03/S04/S05. Native Research resolves the exact persisted subject and part while another physical workspace may stay active. Reuse the existing request, learning-answer, shared human-direction and FirstFlow owners: source-selected questions, durable notebook notes, explicit model execution, exact excerpts, Keep, and reusable RESEARCH/BRIEF/MAP records. A new note or changed source invalidates affected captured work; reopening never resends it. Agent stand-ins on the registered structure copy use append-only attributed notes and distinct source-use review; the original author page and decisions remain unchanged.
+
+Broader Library retrieval uses its current permitted source identities. Tea Atlas reads an explicitly configured existing local export with exact article/block/page/hash citations, bounded literal coverage and no network or new index. Retrieved references and exact quotation matches are not factual verification. Unsupported source formats, unavailable outside access and publication/sending remain honest gates. Finish: native copy question/note/answer/brief/reload and cited local lookup, preserved original hashes, phone fit, package/affected checks and exact installed proof. Requirements are not completion proof.
+
+
 ## Current Combined presentation — adopted 30 October
 
 S03, C01/C04/C05/C06. Research remains independently useful from the rail and opens as a contextual sheet over a piece. Show one findings list with Supported/Uncertain evidence and citations, with the existing console at the foot. Keep learning and the shared brief visible in place. A sheet returns to the same piece/line on Esc; changing presentation does not rerun research, contact a provider or replace the saved brief.

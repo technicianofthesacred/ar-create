@@ -69,6 +69,15 @@ export function createRequestPreviews({ dataDir, store, library, guidance, resea
   const dir = ensurePrivateDirectory(dataDir, 'requests');
   const materialDir = ensurePrivateDirectory(dataDir, 'request-materials');
   let pending = Promise.resolve();
+  // A trusted owner supplies persisted project/document identity. Assembly and
+  // validation reuse the ordinary request contract over a read-only snapshot;
+  // the global store and its active-project guard remain untouched.
+  async function scopedResearch(scope,operation){
+    if(!scope||Object.keys(scope).sort().join(',')!=='documentId,projectId'||typeof store.readProject!=='function')throw new StateError('Exact persisted research project/document required.',409);
+    const snapshot=await store.readProject(scope);
+    const scoped=createRequestPreviews({dataDir,store:{get:()=>structuredClone(snapshot)},library,guidance,researchMaterial,researchAnswers,humanDirection});
+    const result=await operation(scoped);await store.readProject(scope);return result;
+  }
   async function assemble(input) {
     const research = input.scope === 'research';
     if (input.scope !== undefined && !['writing', 'research'].includes(input.scope)) throw new StateError('Choose writing or research request scope.');
@@ -206,6 +215,14 @@ export function createRequestPreviews({ dataDir, store, library, guidance, resea
       validateEditorialFrame(record);
       await validateHumanDirection(record);
       return true;
+    },
+    previewScopedResearch(scope,input){
+      if(!input||Object.keys(input).some(key=>!['question','sourceIds','cardIds'].includes(key)))throw new StateError('Scoped research accepts exact selected sources only.',400);
+      return scopedResearch(scope,owner=>owner.preview({scope:'research',paragraphIds:[],sourceIds:input.sourceIds,cardIds:input.cardIds||[],includeThoughts:false}));
+    },
+    validateScopedResearch(record,scope){
+      if(record?.manifest?.projectId!==scope?.projectId||record?.manifest?.documentId!==scope?.documentId)throw new StateError('Research capture belongs to another scoped project/document.',409);
+      return scopedResearch(scope,owner=>owner.validateResearch(record));
     },
     async validateResearch(record) {
       const manifest = record?.manifest, state = store.get();

@@ -2,9 +2,9 @@
 
 > **GENERATED — do not edit by hand.** Rerun
 > `npm run build` then `npm run capabilities`. It indexes discoverable source declarations; enabled runtime interfaces may add commands.
-> Generated 2026-10-31T05:52:27.190Z.
+> Generated 2026-10-31T06:37:29.041Z.
 
-**At a glance:** 7 commands · 294 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
+**At a glance:** 7 commands · 307 registry commands · 14 CLI command groups · 9 AR Create MCP tools.
 
 ## Commands (how to use it)
 
@@ -20,7 +20,7 @@
 
 ## Command registry (routes shared by the app, the CLI and the MCP server)
 
-294 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
+307 commands from `runtime/commands.mjs`; the running app serves its complete enabled list at `GET /api/capabilities`. Call one with `node agents/cli/ar-create.mjs call <name> --input -`. **who**: `any` actor, or `human` for a decision agents are refused (403). **kind**: `read` or `write`; a write names an `undo` command when it has one.
 
 ### agent-runtime (15)
 
@@ -298,7 +298,7 @@
 | `state.get` | `GET /api/state` | any | read |
 | `state.put` | `PUT /api/state` | any | write |
 
-### research (31)
+### research (43)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -330,9 +330,21 @@
 | `research.answers.id.run` | `POST /api/research/answers/{id}/run` | any | write |
 | `research.answers.preview` | `POST /api/research/answers/preview` | any | write |
 | `research.answers.recent` | `GET /api/research/answers/recent` | any | read |
+| `research.atlas.article` | `GET /api/research/atlas/article` | any | read |
+| `research.atlas.capabilities` | `GET /api/research/atlas/capabilities` | any | read |
+| `research.atlas.search` | `POST /api/research/atlas/search` | any | read |
 | `study-research.choices.get` | `GET /api/study-research/choices` | any | read |
 | `study-research.choices.post` | `POST /api/study-research/choices` | any | write |
 | `study-research.findings` | `GET /api/study-research/findings` | any | read |
+| `study.research` | `GET /api/study/research` | any | read |
+| `study.research.answer` | `GET /api/study/research/answer` | any | read |
+| `study.research.brief` | `GET /api/study/research/brief` | any | read |
+| `study.research.brief.prepare` | `POST /api/study/research/brief/prepare` | any | write |
+| `study.research.brief.reinspect` | `POST /api/study/research/brief/reinspect` | any | write |
+| `study.research.brief.run` | `POST /api/study/research/brief/run` | any | write |
+| `study.research.keep` | `POST /api/study/research/keep` | any | write |
+| `study.research.prepare` | `POST /api/study/research/prepare` | any | write |
+| `study.research.run` | `POST /api/study/research/run` | any | write |
 
 ### share (5)
 
@@ -344,7 +356,7 @@
 | `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
 | `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (19)
+### system (20)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -366,6 +378,7 @@
 | `study.structure-tests.post` | `POST /api/study/structure-tests` | agent | write |
 | `study.structure-tests.proposal-contract` | `POST /api/study/structure-tests/proposal-contract` | agent | write |
 | `study.structure-tests.proposal-review` | `POST /api/study/structure-tests/proposal-review` | agent | write |
+| `study.structure-tests.research-note` | `POST /api/study/structure-tests/research-note` | agent | write |
 | `study.structure-tests.review-mark` | `POST /api/study/structure-tests/review-mark` | agent | write |
 
 ### transcript (11)

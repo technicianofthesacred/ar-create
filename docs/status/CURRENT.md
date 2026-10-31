@@ -1,3 +1,7 @@
+## 31 October — sourced native Write installed; Research next
+
+C01/C03–C07, S01/S04/S05/S07/S09/S12. Stage 1 is installed through PR130. The real structure-test copy produced a source-linked proposal, kept its manuscript unchanged while pending, and accepted only the reviewed paragraph through an explicit agent stand-in decision. Seven exact quotations and two gaps remain readable. Subjects entry followed by fresh reload retains the copy’s exact native owner; originals and their decisions remain unchanged. Protected phrases, per-piece instructions, Focus exit and saved version comparison have affected and synthetic native proof. Stage2 now connects existing Research owners, copy captures, shared notes and local read-only references. Stages2–7 remain open; nothing is sent or published.
+
 ## 31 October — native sourced Write connection in progress
 
 C01/C03/C04/C05/C06/C07, S01/S04/S05/S07/S09/S12. Stage 0 is installed: the independent original-backed test subject and Article open from Subjects with truthful agent stand-in decisions; originals and captured material remain exact. The native route owner must also replace an earlier original workspace address when entering the copy.
