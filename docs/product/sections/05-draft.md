@@ -1,5 +1,9 @@
 # 5 — Draft
 
+## Copy-scoped stand-in verification — approved 31 October
+
+The whole-structure program starts with Hong Kong Day 1 · structure test, using the existing owned-copy authority and real captured source material. Its working files, project/output identities and history are independent. Stand-in choices are confined to the registered copy and carry the agent actor and stand-in label; original human decisions stay open. Preserve original/source hashes, exact guarded editing, recovery and Undo. No invented live samples or general human-only bypass. See [the program](../../plans/2026-10-31-structure-test-program.md).
+
 ## Current Combined presentation — adopted 30 October
 
 S05, C01/C03/C04/C05. A piece is the working screen: subject, actual piece tabs, Write / Read / Check, Saved, Focus, Understanding and Board in one toolbar. Show inherited board decisions in a thin strip, and retain the current continuous editor, margin notes, protected wording, proposals, saved Undo and revision guards. Voice/recipe/source guidance opens as a sheet from Write. Source, Research, Media and Arrange sheets preserve the same line and unsaved text when Esc returns. Uncreated formats are creation choices, never invented output tabs or saved drafts.

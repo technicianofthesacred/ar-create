@@ -1,3 +1,7 @@
+## 31 October — structure-test Stage0 in progress
+
+S01/S02/S03/S04/S05/S08/S09/S12, C01/C03/C04/C05/C06/C07. New approved whole-structure program starts with an independent real-material Hong Kong test subject. Existing owned copies, captures, project/photo/output bindings and history remain the authorities. Stage0 is not yet installed: finish with isolated owned bytes, visible stand-in/agent context, restart/replay, original-before/after hashes and main-app proof. Original decisions stay open; no human impersonation, outside sending/publication, new provider setup or invented live samples. See the program and Stage0 plans.
+
 ## 30 October — Arrange control labels candidate
 
 S09, C01/C03/C04/C05. Replace the Article arrangement explanation with Move · Focus · Shape · Replace from library, plus separate not-connected tags for Covers, Openers, Closing photos and Composed layouts. Retain the existing conditional Focus availability tag. Existing controls, guards and editing owners are unchanged. Finish: affected Arrange checks, native1440/390, package and exact installed/preservation proof. Human decisions remain pending; no Share sending, provider execution or approval.
