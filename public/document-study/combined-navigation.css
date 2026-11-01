@@ -37,3 +37,14 @@ html body.combined-on :is(.wbf-top-actions .tbtn,.wbf-top-actions .sizer,#c3-sur
  .combined-piece-switch{margin-left:auto}
  html body.combined-on .combined-piece-switch button{padding:4px 7px;min-height:34px;font-size:12px}
 }
+
+/* The Spine: each band has a thin labelled strip that turns gold while you are in one of its tools;
+   the selected tool is a solid gold block. Home, Subjects and Library sit above the bands. */
+.combined-rail-band{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:4px 0 4px 8px;box-sizing:border-box;border-top:1px solid var(--line)}
+.combined-rail-band:not([data-band]){padding-left:0;border-top:0}
+.combined-band-tools{display:flex;flex-direction:column;align-items:center;gap:3px}
+.combined-band-label{position:absolute;left:0;top:4px;bottom:4px;width:9px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:600 8px/1 var(--ar-ui,sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border-right:2px solid var(--line);opacity:.8}
+.combined-rail-band.is-active .combined-band-label{color:var(--warm);border-right-color:var(--warm);opacity:1}
+html body.combined-on .combined-rail button[aria-current]{background:var(--warm);color:var(--bg,#151310)}
+html body.combined-on .combined-rail button[aria-current] i{background:var(--bg,#151310);border-color:var(--bg,#151310)}
+html body.combined-on .combined-rail-band[data-band] .combined-band-tools button{width:50px;margin-left:4px}

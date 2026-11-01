@@ -3,9 +3,11 @@
 (()=>{
  'use strict';
  if(window.combinedNavigation)return;
- const ITEMS=[['home','Home'],['subjects','Subjects'],['library','Library',1],['source','Source',2],['research','Research',3],['direction','Direction',4],['check','Check',7],['media','Media',8],['arrange','Arrange',9],['audience','Audience',10],['share','Share',11],['outputs','Outputs',12]];
+ const ITEMS=[['home','Home'],['subjects','Subjects'],['library','Library',1],['source','Source',2],['research','Research',3],['direction','Direction',4],['write','Write',5],['check','Check',7],['media','Media',8],['arrange','Arrange',9],['audience','Audience',10],['share','Share',11],['outputs','Outputs',12]];
+ // The Spine: tools in four bands under Home, Subjects and Library. Read is a view of Write.
+ const BANDS=[['','',['home','subjects','library']],['gather','Gather',['source']],['develop','Develop',['research','direction']],['make','Make',['write','check','media','arrange']],['deliver','Deliver',['audience','share','outputs']]];
  let busy=false,phoneGroup='',phoneReturn=null;
- const PHONE_GROUPS={develop:['library','source','research','direction'],make:['check','media','arrange'],deliver:['audience','share','outputs']};
+ const PHONE_GROUPS={develop:['library','source','research','direction'],make:['write','check','media','arrange'],deliver:['audience','share','outputs']};
  function closePhone({restoreFocus=true}={}){phoneGroup='';document.getElementById('combined-phone-sheet')?.remove();if(restoreFocus&&phoneReturn?.isConnected)phoneReturn.focus({preventScroll:true});}
  function openPhone(key,button){
   if(phoneGroup===key)return closePhone();closePhone();phoneGroup=key;phoneReturn=button;
@@ -32,6 +34,7 @@
     if(home())throw Error('Save or resolve the current changes before leaving.');
     const owner=original(item[2]);if(!owner||owner.disabled)throw Error(item[1]+' is not available for this piece.');
     if(key==='check'){if(typeof window.c3WorkbenchFrame?.openTool==='function')await window.c3WorkbenchFrame.openTool('check');else if(typeof window.workspaceNavigation?.changeMode==='function')await window.workspaceNavigation.changeMode('check');else throw Error('The selected piece checking connection is unavailable.');return true;}
+    if(key==='write'){if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected piece writing connection is unavailable.');await window.workspaceNavigation.changeMode('write');return true;}
     if(key==='arrange'){if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected piece arrangement connection is unavailable.');await window.workspaceNavigation.changeMode('arrange');return true;}
     // Forward through the actual button: selection-aware Carousel admission,
     // dirty writing and all stage-specific guards remain in one owner.
@@ -53,16 +56,17 @@
   document.body.classList.add('combined-on');
   let rail=owner.querySelector(':scope>.combined-rail');
   if(!rail){rail=document.createElement('nav');rail.className='combined-rail';rail.setAttribute('aria-label','AR Create');
-   for(const [key,label]of ITEMS){if(['source','check','audience'].includes(key)){const line=document.createElement('div');line.className='combined-rail-divider';rail.append(line);}const button=document.createElement('button');button.type='button';button.dataset.combinedNav=key;button.innerHTML='<i aria-hidden="true"></i><span></span>';button.querySelector('span').textContent=label;button.title=label;rail.append(button);}owner.append(rail);
+   for(const [band,name,keys]of BANDS){const group=document.createElement('div');group.className='combined-rail-band';if(band){group.dataset.band=band;const strip=document.createElement('span');strip.className='combined-band-label';strip.setAttribute('aria-hidden','true');strip.textContent=name;group.append(strip);}const tools=document.createElement('div');tools.className='combined-band-tools';for(const [key,label]of ITEMS.filter(row=>keys.includes(row[0]))){const button=document.createElement('button');button.type='button';button.dataset.combinedNav=key;button.innerHTML='<i aria-hidden="true"></i><span></span>';button.querySelector('span').textContent=label;button.title=label;tools.append(button);}group.append(tools);rail.append(group);}owner.append(rail);
   }
   let phoneBar=owner.querySelector(':scope>.combined-phonebar');if(!phoneBar){phoneBar=document.createElement('nav');phoneBar.className='combined-phonebar';phoneBar.setAttribute('aria-label','AR Create');for(const [key,label]of [['home','Home'],['subjects','Subjects'],['develop','Develop'],['make','Make'],['deliver','Deliver']]){const b=document.createElement('button');b.type='button';if(PHONE_GROUPS[key])b.dataset.combinedGroup=key;else b.dataset.combinedNav=key;b.textContent=label;phoneBar.append(b);}owner.append(phoneBar);}
-  const subjects=!!document.querySelector('#project-library[data-combined-subjects]'),n=stage(),selected=home()?(subjects?'subjects':'home'):ITEMS.find(row=>row[2]===n)?.[0];
+  const subjects=!!document.querySelector('#project-library[data-combined-subjects]'),n=stage(),selected=home()?(subjects?'subjects':'home'):ITEMS.find(row=>row[2]===(n===6?5:n))?.[0];
   for(const b of rail.querySelectorAll('button')){const on=b.dataset.combinedNav===selected;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');if(b.disabled!==busy)b.disabled=busy;}
+  for(const band of rail.querySelectorAll('.combined-rail-band[data-band]'))band.classList.toggle('is-active',!!band.querySelector('[aria-current]'));
   for(const b of phoneBar.querySelectorAll('button')){const key=b.dataset.combinedNav||b.dataset.combinedGroup,on=key===selected||PHONE_GROUPS[key]?.includes(selected);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');if(b.dataset.combinedGroup)b.setAttribute('aria-expanded',String(phoneGroup===b.dataset.combinedGroup));if(b.disabled!==busy)b.disabled=busy;}
   let switcher=bar.querySelector(':scope>.combined-piece-switch');
-  const piece=!home()&&([5,6,7].includes(n)||n===9&&!!document.querySelector('#study-output-canvas .car-writing-page'));
+  const piece=!home()&&([5,6].includes(n)||n===9&&!!document.querySelector('#study-output-canvas .car-writing-page'));
   if(!piece){switcher?.remove();return;}
-  if(!switcher){switcher=document.createElement('div');switcher.className='combined-piece-switch';switcher.setAttribute('role','group');switcher.setAttribute('aria-label','Piece view');for(const [key,label]of [['write','Write'],['read','Read'],['check','Check']]){const b=document.createElement('button');b.type='button';b.dataset.combinedMode=key;b.textContent=label;switcher.append(b);}bar.insertBefore(switcher,bar.querySelector('.wbf-top-actions'));}
+  if(!switcher){switcher=document.createElement('div');switcher.className='combined-piece-switch';switcher.setAttribute('role','group');switcher.setAttribute('aria-label','Write view');for(const [key,label]of [['write','Edit'],['read','Read']]){const b=document.createElement('button');b.type='button';b.dataset.combinedMode=key;b.textContent=label;switcher.append(b);}bar.insertBefore(switcher,bar.querySelector('.wbf-top-actions'));}
   const carousel=document.querySelector('.car-writing-page'),view=n===7||window.workspaceNavigation?.isCarouselCheck?.()?'check':n===6||window.studyDraft?.viewMode?.()==='preview'||carousel?.dataset.writingView==='read'?'read':'write';
   for(const b of switcher.querySelectorAll('button')){const pressed=String(b.dataset.combinedMode===view);if(b.getAttribute('aria-pressed')!==pressed)b.setAttribute('aria-pressed',pressed);if(b.disabled!==busy)b.disabled=busy;}
  }
