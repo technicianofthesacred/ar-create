@@ -87,7 +87,7 @@ The immediate priority is a reviewed **design-ready handoff with this complete f
 
 ## Section and connection map
 
-Moved. The per-section status table is kept once, in [status/CURRENT.md](../status/CURRENT.md#section-by-section).
+Moved. The per-section status table is kept once, in [status/CURRENT.md](../history/status-log-2026-10.md#section-by-section).
 
 ## One contract across Claude, Codex and the app
 
