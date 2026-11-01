@@ -28,7 +28,12 @@ public/document-study/donor/layouts.js
 public/document-study/donor/catalog-browser.js
 public/document-study/donor/ig-templates.browser.js
 
+# The capabilities generator's source is scripts/gen-capabilities-portable.ts (tracked); `npm run build` bundles it to
+# scripts/gen-capabilities.mjs (a build product) and runs it, which rewrites docs/CAPABILITIES.md.
 scripts/gen-capabilities.mjs
+
+# Computed from the tracked files at release time (scripts/release.mjs) and written only into <home>/service/.
+source-manifest.json
 
 # Read-only projection rebuilt from maintained compositionSpec.ts.
 runtime/services/media-article-spec.mjs
