@@ -5049,7 +5049,7 @@
     },
     {
       "path": "tests/study-footage-http.test.mjs",
-      "candidateSha256": "f1ec9c1efa24d27d8b5f40a13167bad346db91dfa050ce0dc6527cd8fb50b850"
+      "candidateSha256": "ec0840f7315445642154090d95b0944f7b513580f1d503b251abe179eebaff36"
     },
     {
       "path": "tests/study-material-attach.test.mjs",
