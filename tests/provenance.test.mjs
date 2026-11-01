@@ -33,9 +33,11 @@ test('actor vocabulary is closed; legacy records read as unknown(pre-provenance)
 
 test('a mutation with no actor is refused (400); a bad actor is refused; same-origin browser is human:adrian via ui',async t=>{
  const f=await setup(t);
- for(const [route,input] of [['/api/concept/save',{}],['/api/study-draft/save',{}],['/api/study/human-direction/write',{}],['/api/work-continuity/assign',{}],['/api/inquiries/create',{}],['/api/sources/folders',{}],['/api/study/share/save',{}],['/api/study/outputs/save',{}]]){
+ for(const [route,input] of [['/api/concept/save',{}],['/api/study-draft/save',{}],['/api/study/human-direction/write',{}],['/api/work-continuity/assign',{}],['/api/inquiries/create',{}],['/api/sources/folders',{}],['/api/study/outputs/save',{}]]){
   const out=await f.call(route,input);assert.equal(out.status,400,route);assert.match(out.body.error,/X-AR-Actor/,route);
  }
+ // A human-only route refuses an unattributed caller with the stronger 403 before the actor check (Share save became human-only in 34fa6b9).
+ {const out=await f.call('/api/study/share/save',{});assert.equal(out.status,403);assert.match(out.body.error,/human-only/);}
  assert.equal((await f.call('/api/concept/save',{},{'X-AR-Actor':'agent:gemini'})).status,400);
  assert.equal((await f.call('/api/concept/save',{},{'X-AR-Actor':'agent:codex','X-AR-Client':'carrier-pigeon'})).status,400);
  // Reads need no actor.
