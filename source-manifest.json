@@ -1915,13 +1915,13 @@
     {
       "path": "public/document-study/output-stage-surfaces.css",
       "sourceSha256": "246eb68a6828acd6ae0994c7dc0cc5a3097a792b7a2a4793a6a23ce229373e7a",
-      "candidateSha256": "cc0df6ad76c615394f59fbdc747110a3ddc65532f2ae201433693b4af69322a4",
+      "candidateSha256": "1660195ef9f1195a2c0e8ebc6d64d5575a4a50edff05837a6ad35ed031f8a627",
       "adapted": false
     },
     {
       "path": "public/document-study/output-stage-surfaces.js",
       "sourceSha256": "9427da7f0a5ccf8acb2b603fb98937dd54b65578b9f6b766da72300f69d84418",
-      "candidateSha256": "3f78e7adf3fa89368fd9e88ec26a6ebd226b0272d104babbd0fe3b4369457b97",
+      "candidateSha256": "92d6eb4ada7718568f81e7b0f12753218c266cc6a183c21ba2475ac442b41783",
       "adapted": false
     },
     {
@@ -2237,7 +2237,7 @@
     },
     {
       "path": "public/document-study/output-stage-surfaces.test.mjs",
-      "candidateSha256": "c240471c124319589e38275625e0c0fd74775436d15e042f1a8190b07f56855b"
+      "candidateSha256": "78b3f0bca85a54543a27894a74fde59f1d6725c957313100d597a91634fffb19"
     },
     {
       "path": "tests/source-note-navigation.test.mjs",
