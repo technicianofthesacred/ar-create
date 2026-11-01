@@ -3953,7 +3953,7 @@
     },
     {
       "path": "tests/mobile-section-header.test.mjs",
-      "candidateSha256": "7854bde84b397e486cc6f15ac406d2333d7d3b85074b22be3d3b0ce5babcbd6c"
+      "candidateSha256": "213d75cfa368483a16ecc627518bfb50633b492159c8951f56bb209b2a34eebf"
     },
     {
       "path": "public/document-study/magazine-output-adapter.js",
