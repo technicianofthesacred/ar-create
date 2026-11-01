@@ -93,7 +93,23 @@ echo '{"scope":{"kind":"project","id":"<id>"}}' | node "$CLI" lease release --in
 
 ## Releasing
 
-`node scripts/release.mjs --home <dir> --dry-run`, then without `--dry-run`. It refuses a dirty tree or a stale `source-manifest.json` (refresh with `node scripts/refresh-manifest.mjs`), copies the manifest files only, builds, swaps `service/`, keeps `service.prev/`, writes `RELEASE.json`. `--rollback` and `--verify` exist. It never touches `data/`, `config/` or `state/`, and never restarts anything. Whoever runs it is recorded in `builtBy`.
+Only `scripts/release.mjs` writes the installed app. Run it from a clean worktree of `origin/main`:
+
+```sh
+node scripts/release.mjs --home "$HOME/Library/Application Support/i64os/ar-create" --tag vYYYY.MM.DD-N --deps-from "<that worktree>" --built-by agent:<name>
+```
+
+Add `--dry-run` first to see what it would do. The rules:
+
+- **`--tag <name>` is required.** It creates an annotated local tag and prints the push command; it never pushes.
+- **The file list is computed by the release.** `source-manifest.json` is no longer tracked, and `scripts/refresh-manifest.mjs` is a read-only viewer (`--out <file>`). Nothing needs refreshing before a release.
+- **CI must be green.** The release checks the GitHub check run named `ci` for the commit. `--no-ci-check "<reason>"` and `--hotfix "<reason>"` override it; both write the reason to the journal.
+- **At most two releases a day per home.**
+- **`--candidate`** builds a separate home for a trial and refuses 8841 and the permanent home.
+- **`--deps-from`** is accepted only from inside the checkout or the home.
+- `npm run build` regenerates `docs/CAPABILITIES.md`; commit the result.
+
+It builds, swaps `service/`, keeps `service.prev/` and writes `RELEASE.json`. `--rollback` and `--verify` exist. It never touches `data/`, `config/` or `state/`, and never restarts anything. Whoever runs it is recorded in `builtBy`.
 
 ## Rules that do not bend
 
