@@ -5221,7 +5221,7 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "candidateSha256": "356e08326cf1f21e40407e0c628d4dd4f492921a83587bece5349b76a2861ade"
+      "candidateSha256": "c7019f1d388365f94639e0f9c0e9b76bd5b8541e2fdffd88c5bdd7978de4e664"
     },
     {
       "path": "tests/helpers/ci-summary.mjs",
