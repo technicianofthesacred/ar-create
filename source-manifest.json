@@ -2005,7 +2005,7 @@
     {
       "path": "public/document-study/workspace-navigation.js",
       "sourceSha256": "b2f79f2bd738fcc7b381478340912b6dd5d708f3bc366ac2d91e16140e20fc6f",
-      "candidateSha256": "38c4cfe84619313429a310be70ecf452aa80da26c562881e9dd6e7c7ddb5012a",
+      "candidateSha256": "9ec72f450091a4a55fc66f7659bef60bc38825a16b90ddb67ab88cfe23918f9b",
       "adapted": true
     },
     {
@@ -2449,7 +2449,7 @@
     },
     {
       "path": "public/document-study/share-stage.js",
-      "candidateSha256": "abdb6eae00ca2e5eebe1d062112ab637f3c1ed25599b4c8ca0cdb586f20b6a34"
+      "candidateSha256": "3bfa1bd49c83ec0ef081d7b391ad329ca372b571cf6e5a75d569dad050cfe371"
     },
     {
       "path": "public/document-study/media-usage.js",
@@ -3425,7 +3425,7 @@
     },
     {
       "path": "public/document-study/workbench-surfaces.js",
-      "candidateSha256": "83e3d82d142120e098a7aa7ccb3c65d9b09cfa7b1f7d7c456cc71ea87cb1d8b1"
+      "candidateSha256": "218a8556c55eec4078bdbf826ac5a7a06e60ae2637f9738e201eab76279516b9"
     },
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.test.mjs",
@@ -3453,7 +3453,7 @@
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "81d1b652877b5744bf4f8164c8243da9fcb79b2438e783befac569c1dfe9ff2b"
+      "candidateSha256": "e6280b457c4482512e41ab9e985bbe5d9f8dd8879f6d6404814767ada192b746"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3513,7 +3513,7 @@
     },
     {
       "path": "public/document-study/workbench-share.css",
-      "candidateSha256": "4591cff965377c229d744ac4a25dbd8a674edf6ff90451e90b013e17bacf6fdf"
+      "candidateSha256": "cb130cc2a8fe9bc9d755f85ba62e3ad78e3e1912d1ce60d3047f8f4089972347"
     },
     {
       "path": "public/document-study/workbench-type-match.css",
@@ -4633,11 +4633,11 @@
     },
     {
       "path": "public/document-study/combined-navigation.css",
-      "candidateSha256": "e2f3ad2df1f88a87a7e6dc5b2e06226358e5de608307a9f591c4f1392cf003b4"
+      "candidateSha256": "9ed0abeea5d9f89a3be29d4d3be6105478e1b68e483c4bf2c25dd3bd318a621f"
     },
     {
       "path": "public/document-study/combined-navigation.js",
-      "candidateSha256": "c43d65849adb121a3f4b7b31fe449828b173b2aa0b8991983d8a5f53cc477f38"
+      "candidateSha256": "6a5de2163d1bfcfc35f31e63624a7f5e2f5826ff4d3a338e1e5bb0f2906c7a03"
     },
     {
       "path": "public/document-study/combined-subjects.css",
@@ -4653,7 +4653,7 @@
     },
     {
       "path": "tests/combined-navigation.test.mjs",
-      "candidateSha256": "f498085c37879fd94837bf589e02319d83ee1d504e5c40ee75df2803eed04055"
+      "candidateSha256": "1baf4b9ebbc658e2992795547c8273b3cddeb1637cf1352ea09942ad05c0df14"
     },
     {
       "path": "tests/combined-subjects.test.mjs",
