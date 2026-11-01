@@ -17,7 +17,7 @@ Owner clarification, 13 October: Material begins with incoming material, before 
 
 The assistant inspects incoming material and recommends Keep, Remove from working view, Permanently delete from review library, or Needs review, with a concrete lasting-value reason. Check story, knowledge, product information, supporting context and meaningful companion conversations before recommending permanent deletion. Adrian can review those recommendations together. Do not require an invented use or a metadata form. Reversible removal retains Restore; permanent review-library deletion has no ordinary Restore and clearly names its scope. Only retained material proceeds to cleaning, session organization and possible project use. Useful product information remains a reason to keep a conversation independently of story interest; it is not a reason to keep every buying exchange.
 
-**Status: Not started** (checked 21 October 2026). Only a "prepared, not connected" panel exists in the app; no service or route keeps, removes, reviews or deletes material, and permanent delete is not built. See [status](../../status/CURRENT.md#not-started).
+**Status: Not started** (checked 21 October 2026). Only a "prepared, not connected" panel exists in the app; no service or route keeps, removes, reviews or deletes material, and permanent delete is not built. See [status](../../history/status-log-2026-10.md#not-started).
 
 This is an intake decision in the existing Material workspace, not another mandatory stage or a new application. Discarding incoming/working material does not imply deleting existing independent backups or provider history. Any broader permanent deletion keeps its explicit scope. No new deletion operation has been implemented or performed by this clarification.
 

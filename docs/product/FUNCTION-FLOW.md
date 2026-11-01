@@ -6,7 +6,7 @@ Maintained 20 October 2026. Read this with the [function integration list](DESIG
 
 ## Current connection status
 
-Moved. Status is stated once, in [status/CURRENT.md](../status/CURRENT.md#installed-checkpoints-20-october). The diagrams below show intended and conditional connections only.
+Moved. Status is stated once, in [status/CURRENT.md](../history/status-log-2026-10.md#installed-checkpoints-20-october). The diagrams below show intended and conditional connections only.
 
 ## 1. Whole workspace
 
@@ -297,7 +297,7 @@ The designer needs one explicit existing-to-intended mapping before choosing new
 
 ## Coverage and maintenance
 
-The authoritative status, owner and finish criteria remain in [the section-by-section status](../status/CURRENT.md#section-by-section), with detailed proof on Delivery's existing checklist. All twelve sections appear above. Optional future Library, media, provider and private-access work remains visible with its actual limits rather than silently being omitted from the handoff.
+The authoritative status, owner and finish criteria remain in [the section-by-section status](../history/status-log-2026-10.md#section-by-section), with detailed proof on Delivery's existing checklist. All twelve sections appear above. Optional future Library, media, provider and private-access work remains visible with its actual limits rather than silently being omitted from the handoff.
 
 For every functional delivery, the owner supplies its changed nodes/edges, affected section IDs and proof/limits. Delivery updates the same integration list; the flowchart maintainer updates this file from that accepted result. Update connections and status before freezing a Claude handoff. Do not make a feature appear complete merely by changing a label or arrow.
 

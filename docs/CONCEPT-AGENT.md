@@ -6,7 +6,7 @@ Keep the person's exact contributions in `authorThoughts`. Put AI interpretation
 
 ## Connect explicitly
 
-Use the one CLI, `agents/cli/ar-create.mjs`, from the checkout with Node 22 or newer. Point it at the app you mean: a synthetic candidate from `npm run demo` (port 8854, or the port you gave it), or the installed app at `http://127.0.0.1:8841` when the task is real work. Only HTTP on `127.0.0.1`, `localhost` or `::1` with an explicit port is accepted; redirects and credentialed URLs are refused.
+Use the one CLI, `agents/cli/ar-create.mjs`, with Node 22 or newer. For real work run the installed copy, `$HOME/Library/Application Support/i64os/ar-create/service/agents/cli/ar-create.mjs`; it is the same release as the app. For a synthetic run, use a worktree of `origin/main`, never the stale local checkout `~/Documents/Files/4 Coding/ar-create`. Point it at the app you mean: a synthetic candidate from `npm run demo` (port 8854, or the port you gave it), or the installed app at `http://127.0.0.1:8841` when the task is real work. Only HTTP on `127.0.0.1`, `localhost` or `::1` with an explicit port is accepted; redirects and credentialed URLs are refused.
 
 ```sh
 export AR_CREATE_URL=http://127.0.0.1:8854 AR_CREATE_ACTOR=agent:claude-code
@@ -14,7 +14,9 @@ node agents/cli/ar-create.mjs status
 node agents/cli/ar-create.mjs project list
 ```
 
-Actor values: `agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`. The older `tools/concept-cli.mjs` is kept for one release as an alias with the same input fields; it also needs `--actor` or `AR_CREATE_ACTOR` to write. Keep input files outside Git.
+(The relative path assumes a worktree of `origin/main`; against the installed app use the installed CLI path above.)
+
+Actor values: `agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`. The older `tools/concept-cli.mjs` and `mcp/study` remain only as aliases for older callers (same input fields; they also need `--actor` or `AR_CREATE_ACTOR` to write); do not start from them. In a browser, open the page with `?reviewActor=agent:<name>` or its actions are stamped `human:adrian`. Keep input files outside Git.
 
 ## Read, connect sources, then save
 

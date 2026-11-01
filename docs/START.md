@@ -1,6 +1,6 @@
 # AR Create: start here
 
-Read [AGENTS.md](../AGENTS.md) first. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); what works today is in [status/CURRENT.md](status/CURRENT.md).
+Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); what works today is in [status/CURRENT.md](status/CURRENT.md).
 
 ## The product in one view
 
@@ -27,7 +27,7 @@ Read [AGENTS.md](../AGENTS.md) first. This page is enough to act. Intent lives i
 
 | Code name | Product concept |
 |---|---|
-| `study`, `document-study`, `donor/study` | The app itself. The page is `/document-study/index.html`; `runtime/` is the server. |
+| `study`, `document-study`, `donor/study` | The app itself. The page is `/document-study/index.html`; `runtime/` is the server. `mcp/study` and `tools/concept-cli.mjs` remain only as aliases for older callers; the entrance is `agents/cli/ar-create.mjs` (and `agents/mcp/server.mjs`). |
 | `donor` | Code copied in from other projects (`mag`, `study`, `teajia`, `wordforge`); not product vocabulary. |
 | `wordforge` | A markdown bridge copied from i64os. Unrelated to i64os's oracle writing tool. |
 | `mag`, `magazine` | The Teajia magazine services, being folded into AR Create as one writer over the vault. |
@@ -66,6 +66,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 
 Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok|chatgpt`, `cron:<name>`, `import:<source>`, `release:<sha>`. They are honest labels on this Mac, not authentication. Clients: `ui`, `cli`, `mcp`, `http`, `file`.
 
+- **Browser**: the page's default author is `human:adrian`. An agent opens `http://127.0.0.1:8841/document-study/index.html?reviewActor=agent:<name>` so its actions are stamped as its own; an unlisted name blocks every request.
 - **Lease**: `lease acquire --input '{"scope":{"kind":"project","id":"<parentStudyId>"},"reason":"..."}'`. Fifteen minutes, renewable. A live foreign lease answers 423 with the holder. Scope kinds: project, collection, draft, output, piece, source, share, concept, research, media, library.
 - **Journal**: every committed, rejected or conflicting write is one line. `history` reads it.
 - **Handoff**: `handoff --input '{"scope":{...},"to":"human:adrian","summary":"<=280 chars"}'` when you stop.
@@ -74,7 +75,9 @@ Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok
 
 ## Recipe: read a project and save a concept note
 
-With `AR_CREATE_URL`, `AR_CREATE_ACTOR` and `CLI` set as in AGENTS.md:
+With `AR_CREATE_URL`, `AR_CREATE_ACTOR` and `CLI` (the installed CLI path) set as in AGENTS.md:
+
+Everything down to `library search` is read-only and safe to run first; the lease and save lines are writes.
 
 ```sh
 node "$CLI" status
@@ -90,7 +93,23 @@ echo '{"scope":{"kind":"project","id":"<id>"}}' | node "$CLI" lease release --in
 
 ## Releasing
 
-`node scripts/release.mjs --home <dir> --dry-run`, then without `--dry-run`. It refuses a dirty tree or a stale `source-manifest.json` (refresh with `node scripts/refresh-manifest.mjs`), copies the manifest files only, builds, swaps `service/`, keeps `service.prev/`, writes `RELEASE.json`. `--rollback` and `--verify` exist. It never touches `data/`, `config/` or `state/`, and never restarts anything. Whoever runs it is recorded in `builtBy`.
+Only `scripts/release.mjs` writes the installed app. Run it from a clean worktree of `origin/main`:
+
+```sh
+node scripts/release.mjs --home "$HOME/Library/Application Support/i64os/ar-create" --tag vYYYY.MM.DD-N --deps-from "<that worktree>" --built-by agent:<name>
+```
+
+Add `--dry-run` first to see what it would do. The rules:
+
+- **`--tag <name>` is required.** It creates an annotated local tag and prints the push command; it never pushes.
+- **The file list is computed by the release.** `source-manifest.json` is no longer tracked, and `scripts/refresh-manifest.mjs` is a read-only viewer (`--out <file>`). Nothing needs refreshing before a release.
+- **CI must be green.** The release checks the GitHub check run named `ci` for the commit. `--no-ci-check "<reason>"` and `--hotfix "<reason>"` override it; both write the reason to the journal.
+- **At most two releases a day per home.**
+- **`--candidate`** builds a separate home for a trial and refuses 8841 and the permanent home.
+- **`--deps-from`** is accepted only from inside the checkout or the home.
+- `npm run build` regenerates `docs/CAPABILITIES.md`; commit the result.
+
+It builds, swaps `service/`, keeps `service.prev/` and writes `RELEASE.json`. `--rollback` and `--verify` exist. It never touches `data/`, `config/` or `state/`, and never restarts anything. Whoever runs it is recorded in `builtBy`.
 
 ## Rules that do not bend
 

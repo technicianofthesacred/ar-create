@@ -1,6 +1,6 @@
 # AR Create — what we are building
 
-Living product intent · reorganised 21 October 2026. Everything above the Decision log is current intent. The Decision log at the end holds every dated decision, in date order, with nothing deleted.
+Living product intent · reorganised 21 October 2026. Everything above the Decision log is current intent. The Decision log at the end holds every dated decision, in date order, with nothing deleted. Decisions of 29 to 31 October (the Combined workspace, sourced AI help, the whole-structure test program) were moved there on 1 November 2026; they remain in force.
 
 New here: read [AGENTS.md](../../AGENTS.md) and [START.md](../START.md) first. What works today is in [status/CURRENT.md](../status/CURRENT.md), never in this file. Requirements describe the intended product; they do not prove that it works.
 
@@ -14,31 +14,9 @@ One workspace should make that collaboration visible and enjoyable. Open a proje
 
 Projects can begin with a recording, supplied transcript, typed idea, photo, link or collection. Material remains useful even when it never becomes an article. A project can produce independently edited articles, carousels, scripts and other requested expressions from shared origins. No recording-first, article-first or every-format requirement is implied.
 
-## Review the result against the purpose — 29 October
 
-The existing seven pillars and section requirements are judged by the author capability they produce. Returning to the right saved work, useful preparation and contextual proposals, decisions that carry forward, and faithful requested outputs are the result; tests and releases are supporting evidence. The independent review and its limits are summarised in [the review guide](../reviews/2026-10-29-intention-review.md). Its recommendations do not replace adopted direction or authorise another architecture.
 
-A working draft download may preserve unresolved marks and notes without publication approval. An audience-facing export must also faithfully render the intended typography, quotes, photographs, captions and ordering. File hashes alone do not prove visual fidelity. Preserve the distinction between a synthetic test, actual main-app behaviour, installed bytes and human acceptance. Successful individual reloads do not close an intermittent startup failure.
 
-Routine technical blockers remain Build's responsibility. Genuine wording, direction, publication and sending decisions remain the author's. Do not make the author repeatedly resume engineering or carry context between agents.
-
-## Whole-structure test program — approved 31 October 2026
-
-Adrian approved completing the installed recording → Library → Source → Research → Direction → Write → Check → Media/Arrange → Audience → Share → Outputs structure. First create Hong Kong Day 1 · structure test from the real subject material under independent owned working files. Preserve the original and prove it with before/after hashes; its editorial decisions remain pending. Stand-in decisions are allowed only on the explicitly registered test copy, visibly labelled stand-in and attributed to the agent, never human:adrian. This is a copy-scoped testing exception, not general agent editorial authority.
-
-Reuse existing owners and finish available not-connected functions stage by stage: Write AI/protection/Focus/versions/overrides; Research; Direction decisions; local production/media/Video; reviewed language tools; Gather; Home. Existing signed-in AI connections may prepare sourced proposals, with exact citations or marked gaps and no automatic author-page edits. No invented sample content enters the installed app. Outside posting/publication, public URLs, Share sending, new keys/accounts/paid services remain excluded. A private reader confined to this Mac is allowed. If genuine media, access or a human permission is missing, record the gate and continue independent work. Follow the approved Combined rules and report each installed capability on the structure test copy. Details and acceptance sequence are in [the structure-test program](../plans/2026-10-31-structure-test-program.md).
-
-## Journey-first finishing order — 29 October
-
-Finish one existing selected project through useful author decisions and faithful Article/Carousel files. First clean live discovery and the activity record: processing files and fixtures are not sources; agent actions retain their actor; viewing is not a committed edit; pickup advances on an edit or explicit Continue. Then diagnose optional discovery readers and prove ten cold returns without Retry, rather than widening a deadline alone.
-
-Connect the Direction choice to the same piece’s Write, Understanding and Arrange views. The focused alternatives have been shown and Adrian adopted A inline choices on 30 October. Audience must distinguish highlighted pending passages and readable end notes from literal editing syntax. Carousel files follow the author’s wording and photo choices. Preserve the seven pillars and existing authorities. The 29 October restyling hold is lifted by the approved Combined direction on 30 October below. The actual angle/title choices, Carousel wording/photo decisions and ten marked passages remain human decisions. These are acceptance requirements, not completion proof.
-
-## Sourced AI help in Write — adopted 30 October 2026
-
-C01/C03/C04/C05/C06, S03/S04/S05/S07. After completing the Direction choice loop, connect AI help inside the selected piece. AI researches, finds sources and connects the subject’s own material, then proposes paragraph drafts. Every claim must link to its exact source, transcript moment or passage on the author’s own page. No source means no sentence: leave a marked gap with the open question and who could answer it when supported by the material; otherwise say the answerer is unknown. Never invent a person.
-
-Drafts and edits wait in the margin with human-only Accept and Reject. Nothing is inserted automatically. After human acceptance, the paragraph belongs to the author and remains directly editable under the existing manuscript owner. AI never edits the author’s own page, including “What I want this to say.” This is adopted intent, not a connected or executed capability today; it grants no provider setup or execution. Combined retains all 35 functions: 14 kept, 16 made better (including AI help in Write), and 5 moved.
 
 ## Priorities made explicit from the author's feedback
 
@@ -61,19 +39,7 @@ The current approved direction is **Combined**, adopted 30 October 2026 from the
 
 Use Plus Jakarta Sans for interface and authored working text, retaining the shared A− / A+ control and matching Write/Read document geometry. Lora is reserved for spoken transcript words. Render the paragraph sign in a serif so “¶6” remains distinguishable from “16”. Existing output-template typography remains its own authority. This Combined rule supersedes the earlier broad Atlas assignments and Source-only Atlas appearance where they conflict; source identities, speech attribution and correction behavior do not change.
 
-## Interface simplification — 29 October
 
-Never use accordions, expandable cards or details/summary disclosures. Keep essential information and actions visible; simplify the structure rather than concealing it. Use focused editing screens for tasks and ordinary navigation for history. This adopted instruction supersedes earlier disclosure-based presentation guidance; existing unconverted surfaces remain unfinished, not implicitly accepted. Preserve their underlying files, editing, recovery and scoped actions during conversion.
-
-## Combined workspace — adopted 30 October 2026
-
-Build toward the approved Combined screens, starting with Hong Kong Day 1. Home replaces Bench: show the actual saved pickup sentence and exact piece/paragraph Continue, advancing only on an edit or explicit Continue; group real work into Needs your decision, Optional and Handled by agents. Subjects retains folders, search, filters, pin, archive/restore and creation. Opening a subject shows origins → understanding → independently edited pieces, with actual previews rather than fabricated sample content.
-
-A piece occupies the screen. Its tabs represent actual Article, Carousel, Post, Listing and Video pieces, with one creation entrance; uncreated formats are choices, never fake output rows. Write / Read / Check are piece modes, not separate Write/Read rail items. Keep Saved, Focus, Understanding and Board in the piece's one toolbar. Show inherited decisions in a thin strip. Source, Research, Media and Arrange open as sheets above the existing piece; Esc returns to the same line and unsaved work. Material intake moves into Library and retains Transcribing, Failed with Retry and Ready. Voice/recipe/source guidance opens from Write. Post/listing images belong to their piece tabs. These moves reuse maintained authorities rather than creating stores or replacing the editor.
-
-Outputs shows every actual piece as it looks, grouped by subject, with delivery facts and one next step. Each bounded step keeps all 35 existing functions reachable. Use one toolbar per screen, visible work instead of disclosures, drag grips rather than reorder arrows, small rectangular buttons with 5px corners, and no pills, gradients, emoji or icons beyond rail squares. Unconnected operations carry a small grey `not connected` tag in place. Agents propose; the author's own words remain attributed and unchanged.
-
-The separately supplied drawings contain invented demonstration content: do not add it to the app. Adrian subsequently adopted A inline choices beside the full prepared explanations. Save angle and title choices separately, with explicit rejection reasons, through the existing human-direction owner; show the same saved subject context in Write, Understanding and Arrange without replacing manuscript wording or independent output decisions. Carousel word approval, photo choices and the ten marked passages remain Adrian's. Install only when author capability changes; report “You can now ___ on Hong Kong Day 1” with a main-app screenshot beside the matching Combined reference. This records adopted intent, not completed behavior.
 
 ## Product pillars and shared acceptance
 
@@ -96,9 +62,6 @@ The visible current decision accompanies relevant research, direction, draft, ar
 
 Browsing an earlier checkpoint is not a stage reset, approval or permission to overwrite later work. Show retained earlier material separately from the current editable version and give a clear route back.
 
-## Approved Workbench presentation — 21 October 2026
-
-Historical 21 October authority, superseded by Combined on 30 October where they differ: for that isolated four-PR sequence, the complete visual authority was `design/three-directions/c-workbench/` and its final NOTES. Apply the full section surfaces, not only navigation or fonts: 66px unnumbered rail, adjacent folder panel, Bench/Pieces pickup, common Plus Jakarta Sans 13/15/16/17px scale and A−/A+, Lora only for speech, identical Write/Read geometry, compact context tools and whole sequences. Preserve every maintained state/command/approval owner; honest empty or unavailable states replace demonstration records. This approved direction supersedes older conflicting visual wording below, without claiming functional completion. See CURRENT for implementation proof and the separately reviewed steps.
 
 ## How the work is organised
 
@@ -517,6 +480,32 @@ The author explicitly reiterates that the filesystem is the foundation. Existing
 Acceptance must include the actual retained cases: An Cha sessions/context, Hong Kong research and its existing carousel, and Porcelain media. An empty synthetic library cannot establish these connections. Projects remain projects; their sources are reusable Library material; saved research and outputs keep their respective owners. Retained/browser/original-file work must not be called missing merely because a newer output register is empty. The approved ZIP remains the complete visual authority independently of content wiring. No bulk file moves, automatic migration, new database, duplicate bodies, provider activation or runtime installation follows from this clarification.
 
 
+### Approved Workbench presentation — 21 October 2026
+
+Historical 21 October authority, superseded by Combined on 30 October where they differ: for that isolated four-PR sequence, the complete visual authority was `design/three-directions/c-workbench/` and its final NOTES. Apply the full section surfaces, not only navigation or fonts: 66px unnumbered rail, adjacent folder panel, Bench/Pieces pickup, common Plus Jakarta Sans 13/15/16/17px scale and A−/A+, Lora only for speech, identical Write/Read geometry, compact context tools and whole sequences. Preserve every maintained state/command/approval owner; honest empty or unavailable states replace demonstration records. This approved direction supersedes older conflicting visual wording below, without claiming functional completion. See CURRENT for implementation proof and the separately reviewed steps.
+
+### 29 October
+
+#### Review the result against the purpose — 29 October
+
+The existing seven pillars and section requirements are judged by the author capability they produce. Returning to the right saved work, useful preparation and contextual proposals, decisions that carry forward, and faithful requested outputs are the result; tests and releases are supporting evidence. The independent review and its limits are summarised in [the review guide](../reviews/2026-10-29-intention-review.md). Its recommendations do not replace adopted direction or authorise another architecture.
+
+A working draft download may preserve unresolved marks and notes without publication approval. An audience-facing export must also faithfully render the intended typography, quotes, photographs, captions and ordering. File hashes alone do not prove visual fidelity. Preserve the distinction between a synthetic test, actual main-app behaviour, installed bytes and human acceptance. Successful individual reloads do not close an intermittent startup failure.
+
+Routine technical blockers remain Build's responsibility. Genuine wording, direction, publication and sending decisions remain the author's. Do not make the author repeatedly resume engineering or carry context between agents.
+
+#### Journey-first finishing order — 29 October
+
+Finish one existing selected project through useful author decisions and faithful Article/Carousel files. First clean live discovery and the activity record: processing files and fixtures are not sources; agent actions retain their actor; viewing is not a committed edit; pickup advances on an edit or explicit Continue. Then diagnose optional discovery readers and prove ten cold returns without Retry, rather than widening a deadline alone.
+
+Connect the Direction choice to the same piece’s Write, Understanding and Arrange views. The focused alternatives have been shown and Adrian adopted A inline choices on 30 October. Audience must distinguish highlighted pending passages and readable end notes from literal editing syntax. Carousel files follow the author’s wording and photo choices. Preserve the seven pillars and existing authorities. The 29 October restyling hold is lifted by the approved Combined direction on 30 October below. The actual angle/title choices, Carousel wording/photo decisions and ten marked passages remain human decisions. These are acceptance requirements, not completion proof.
+
+#### Interface simplification — 29 October
+
+Never use accordions, expandable cards or details/summary disclosures. Keep essential information and actions visible; simplify the structure rather than concealing it. Use focused editing screens for tasks and ordinary navigation for history. This adopted instruction supersedes earlier disclosure-based presentation guidance; existing unconverted surfaces remain unfinished, not implicitly accepted. Preserve their underlying files, editing, recovery and scoped actions during conversion.
+
+### 30 October
+
 #### 30 October — Combined approved for implementation
 
 Adrian approved sending Combined to Build. This lifts the 29 October UI restyling hold and adopts Home/Subjects/subject boards, piece tabs and Write/Read/Check modes, contextual sheets, visible Outputs and the shared rules above. Journey-first on Hong Kong Day 1 and all existing data/approval protections remain. Direction A/B, Carousel words/photos and the ten marked passages are expressly unresolved. Approval is not implementation, installed proof or editorial acceptance.
@@ -530,3 +519,27 @@ C01/C03/C04/C05/C06, S04/S05/S09. Adrian chose the inline interaction after seei
 #### 30 October — sourced AI help adopted; connection follows Direction
 
 Adrian’s “How AI helps” answers adopt paragraph drafts from the subject’s own material, exact claim-to-source links, marked questions instead of unsupported sentences, and human-only margin Accept/Reject before insertion. Accepted paragraphs remain editable; the author’s own page is never AI-edited. Build connects this after the completed Direction choice loop. Today it is not connected. The 35-function accounting is 14 kept, 16 made better and 5 moved; this records a decision, not implementation, provider execution or acceptance.
+
+#### Sourced AI help in Write — adopted 30 October 2026
+
+C01/C03/C04/C05/C06, S03/S04/S05/S07. After completing the Direction choice loop, connect AI help inside the selected piece. AI researches, finds sources and connects the subject’s own material, then proposes paragraph drafts. Every claim must link to its exact source, transcript moment or passage on the author’s own page. No source means no sentence: leave a marked gap with the open question and who could answer it when supported by the material; otherwise say the answerer is unknown. Never invent a person.
+
+Drafts and edits wait in the margin with human-only Accept and Reject. Nothing is inserted automatically. After human acceptance, the paragraph belongs to the author and remains directly editable under the existing manuscript owner. AI never edits the author’s own page, including “What I want this to say.” This is adopted intent, not a connected or executed capability today; it grants no provider setup or execution. Combined retains all 35 functions: 14 kept, 16 made better (including AI help in Write), and 5 moved.
+
+#### Combined workspace — adopted 30 October 2026
+
+Build toward the approved Combined screens, starting with Hong Kong Day 1. Home replaces Bench: show the actual saved pickup sentence and exact piece/paragraph Continue, advancing only on an edit or explicit Continue; group real work into Needs your decision, Optional and Handled by agents. Subjects retains folders, search, filters, pin, archive/restore and creation. Opening a subject shows origins → understanding → independently edited pieces, with actual previews rather than fabricated sample content.
+
+A piece occupies the screen. Its tabs represent actual Article, Carousel, Post, Listing and Video pieces, with one creation entrance; uncreated formats are choices, never fake output rows. Write / Read / Check are piece modes, not separate Write/Read rail items. Keep Saved, Focus, Understanding and Board in the piece's one toolbar. Show inherited decisions in a thin strip. Source, Research, Media and Arrange open as sheets above the existing piece; Esc returns to the same line and unsaved work. Material intake moves into Library and retains Transcribing, Failed with Retry and Ready. Voice/recipe/source guidance opens from Write. Post/listing images belong to their piece tabs. These moves reuse maintained authorities rather than creating stores or replacing the editor.
+
+Outputs shows every actual piece as it looks, grouped by subject, with delivery facts and one next step. Each bounded step keeps all 35 existing functions reachable. Use one toolbar per screen, visible work instead of disclosures, drag grips rather than reorder arrows, small rectangular buttons with 5px corners, and no pills, gradients, emoji or icons beyond rail squares. Unconnected operations carry a small grey `not connected` tag in place. Agents propose; the author's own words remain attributed and unchanged.
+
+The separately supplied drawings contain invented demonstration content: do not add it to the app. Adrian subsequently adopted A inline choices beside the full prepared explanations. Save angle and title choices separately, with explicit rejection reasons, through the existing human-direction owner; show the same saved subject context in Write, Understanding and Arrange without replacing manuscript wording or independent output decisions. Carousel word approval, photo choices and the ten marked passages remain Adrian's. Install only when author capability changes; report “You can now ___ on Hong Kong Day 1” with a main-app screenshot beside the matching Combined reference. This records adopted intent, not completed behavior.
+
+### 31 October
+
+#### Whole-structure test program — approved 31 October 2026
+
+Adrian approved completing the installed recording → Library → Source → Research → Direction → Write → Check → Media/Arrange → Audience → Share → Outputs structure. First create Hong Kong Day 1 · structure test from the real subject material under independent owned working files. Preserve the original and prove it with before/after hashes; its editorial decisions remain pending. Stand-in decisions are allowed only on the explicitly registered test copy, visibly labelled stand-in and attributed to the agent, never human:adrian. This is a copy-scoped testing exception, not general agent editorial authority.
+
+Reuse existing owners and finish available not-connected functions stage by stage: Write AI/protection/Focus/versions/overrides; Research; Direction decisions; local production/media/Video; reviewed language tools; Gather; Home. Existing signed-in AI connections may prepare sourced proposals, with exact citations or marked gaps and no automatic author-page edits. No invented sample content enters the installed app. Outside posting/publication, public URLs, Share sending, new keys/accounts/paid services remain excluded. A private reader confined to this Mac is allowed. If genuine media, access or a human permission is missing, record the gate and continue independent work. Follow the approved Combined rules and report each installed capability on the structure test copy. Details and acceptance sequence are in [the structure-test program](../plans/2026-10-31-structure-test-program.md).
