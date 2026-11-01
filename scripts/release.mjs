@@ -1,20 +1,34 @@
 #!/usr/bin/env node
 // Make the installed app an exact, recorded release of one git commit.
 //
-//   node scripts/release.mjs --home <dir> [--dry-run]
+//   node scripts/release.mjs --home <dir> --tag <name> [--dry-run]
+//   node scripts/release.mjs --home <candidate-dir> --candidate [--tag <name>]
 //   node scripts/release.mjs --home <dir> --rollback
 //   node scripts/release.mjs --home <dir> --verify
 //
-// Options: --deps-from <dir> (a checkout or service folder whose runtime/node_modules and mcp/study/node_modules
-// match this commit's lockfiles), --tag <name>, --built-by <actor> (default: AR_CREATE_ACTOR or human:<user>),
-// --repo <dir> (tests only; default is the checkout this script lives in).
+// Options: --tag <name> (required for a release; an annotated local tag is created or verified at the sha),
+// --candidate (release a commit that is not on origin/main, into a home that is NOT the permanent one),
+// --no-ci-check "<reason>" and --hotfix "<reason>" (journaled overrides, see below), --deps-from <dir> (a folder inside
+// this checkout or the home whose runtime/node_modules and mcp/study/node_modules match this commit's lockfiles; anything
+// else is ignored and `npm ci` runs in the build folder), --built-by <actor> (default: AR_CREATE_ACTOR or
+// human:<user>), --repo <dir> (tests only; default is the checkout this script lives in).
 //
-// What it does: refuses a dirty tree or a stale source-manifest.json; copies exactly the manifest files into
-// <home>/service.next; installs the runtime dependencies; builds the generated files (npm run build) inside the staging folder;
-// removes tests and developer tooling; refuses any file that is not manifest or declared generated; smoke-imports the
-// server; swaps service.next in for <home>/service (the old one stays as <home>/service.prev) and writes
-// <home>/RELEASE.json. It never touches <home>/data, <home>/config or <home>/state, and it never starts or stops
-// anything: it prints the restart command instead.
+// Gates, all checked before anything is written (a refusal creates nothing):
+//   1. a clean tree;
+//   2. the sha is an ancestor of origin/main, as just fetched (offline refuses) -- unless --candidate, which refuses the
+//      permanent home (the documented path, or any home whose config port is 8841);
+//   3. a green `ci` check on the sha, read with `gh api` -- unless --no-ci-check "<reason>"; no gh, no check, or a red or
+//      running check refuses;
+//   4. --tag, annotated, local only (the script prints the push command);
+//   5. at most two releases per calendar day per home (read from <home>/RELEASES.jsonl) -- unless --hotfix "<reason>".
+// Overrides are recorded in RELEASE.json, RELEASES.jsonl and the data journal line.
+//
+// What it does: computes the source manifest from the clean checkout's tracked files (the manifest is not a committed
+// file); copies exactly those files into <home>/service.next; installs the runtime dependencies; builds the generated
+// files (npm run build) inside the staging folder; removes tests and developer tooling; refuses any file that is not in
+// the manifest or declared generated; smoke-imports the server; swaps service.next in for <home>/service (the old one stays
+// as <home>/service.prev) and writes <home>/RELEASE.json (with manifestSha256) and the manifest into <home>/service. It never
+// touches <home>/data, <home>/config or <home>/state, and it never starts or stops anything: it prints the restart command.
 // After the swap it also copies the repo's AGENTS.md (resolved through the CLAUDE.md symlink) to <home>/AGENTS.md
 // and appends one `release:<sha>` line to <home>/data/journal/<yyyy-mm>.jsonl (the only thing it ever writes in data/).
 import fs from 'node:fs';
@@ -23,13 +37,14 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createJournal} from '../runtime/services/journal.mjs';
-import {GENERATED,MANIFEST_FILE,NOT_SHIPPED,PRUNE_AFTER_BUILD,REQUIRED_GENERATED,compareManifest,git,manifestSha256,sha256} from './lib/manifest.mjs';
+import {GENERATED,MANIFEST_FILE,NOT_SHIPPED,PRUNE_AFTER_BUILD,REQUIRED_GENERATED,buildManifest,git,sha256} from './lib/manifest.mjs';
+import {assertGreen,assertOnMain,assertReason,assertUnderCap,checkTag,createTag,deleteTag,isInside,isPermanentHome} from './lib/release-gates.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const DEPENDENCY_DIRS=['runtime','mcp/study'];
 
 function parse(argv){
- const options={};const flags=new Set(['--dry-run','--rollback','--verify']);const values=new Set(['--home','--deps-from','--tag','--built-by','--repo']);
+ const options={};const flags=new Set(['--dry-run','--rollback','--verify','--candidate']);const values=new Set(['--home','--deps-from','--tag','--built-by','--repo','--no-ci-check','--hotfix']);
  for(let i=0;i<argv.length;i++){
   if(flags.has(argv[i]))options[argv[i].slice(2)]=true;
   else if(values.has(argv[i])&&argv[i+1]!==undefined)options[argv[i].slice(2)]=argv[++i];
@@ -80,13 +95,14 @@ function copyAgentsFile(repo,home,log){
  log(`  AGENTS.md copied to ${target}`);return true;
 }
 // One journal line, through the app's own journal writer, so history shows when each release happened.
-async function journalRelease({home,sha,tag,by,at,previousSha,log}){
+async function journalRelease({home,sha,tag,by,at,previousSha,overrides={},candidate=false,log}){
  const data=path.join(home,'data');
  try{
   fs.mkdirSync(data,{recursive:true,mode:0o700});
   const journal=createJournal({dataDir:data,now:()=>new Date(at)});
   const actor=/^(human|agent|cron|import):[A-Za-z0-9._-]+$/.test(by)?by:'human:release';
-  await journal.append({operationId:null,actor,client:'file',scope:{kind:'system',id:sha},kind:'release:'+sha,status:'committed',before:{revision:null,hash:previousSha},after:{revision:null,hash:sha},summary:`Released ${sha.slice(0,12)}${tag?` (${tag})`:''}.`});
+  const notes=[candidate?'candidate':null,overrides.noCiCheck?`without a CI check: ${overrides.noCiCheck}`:null,overrides.hotfix?`hotfix over the daily cap: ${overrides.hotfix}`:null].filter(Boolean);
+  await journal.append({operationId:null,actor,client:'file',scope:{kind:'system',id:sha},kind:'release:'+sha,status:'committed',before:{revision:null,hash:previousSha},after:{revision:null,hash:sha},summary:`Released ${sha.slice(0,12)}${tag?` (${tag})`:''}${notes.length?` [${notes.join('; ')}]`:''}.`});
   log('  journal: release line written');return true;
  }catch(error){log(`  journal: release line NOT written (${error.message})`);return false;}
 }
@@ -99,20 +115,49 @@ function cleanTree(repo){
 function plan(repo){
  cleanTree(repo);
  const sha=git(repo,'rev-parse','HEAD').trim();
- const {manifest,rows,stale,missing,unlisted}=compareManifest(repo);
- if(stale.length||missing.length||unlisted.length)throw new Error(`source-manifest.json does not match the commit (${stale.length} changed, ${missing.length} missing, ${unlisted.length} unlisted). Run: node scripts/refresh-manifest.mjs, review the diff, commit it, then release again.\n  ${[...stale.map(f=>'changed  '+f),...missing.map(f=>'missing  '+f),...unlisted.map(f=>'unlisted '+f)].slice(0,12).join('\n  ')}`);
+ return {sha};
+}
+// The manifest is computed here, from the clean checkout, and checked by verify:package; it is never read from a file.
+function computeManifest(repo){
+ const built=buildManifest(repo);
  const checker=path.join(repo,'scripts/check-package.mjs');
  if(fs.existsSync(checker)){try{execFileSync(process.execPath,[checker],{cwd:repo,encoding:'utf8',stdio:'pipe'});}catch(error){throw new Error('check-package refused this commit:\n'+String(error.stderr||error.message).split('\n').filter(line=>/Error:/.test(line)).join('\n'));}}
- const shipped=rows.map(row=>row.path).filter(file=>!NOT_SHIPPED(file));
- return {sha,manifest,rows,shipped,notShipped:rows.length-shipped.length};
+ const shipped=built.rows.map(row=>row.path).filter(file=>!NOT_SHIPPED(file));
+ return {...built,shipped,notShipped:built.rows.length-shipped.length};
 }
 
-function dependencySource({relative,staged,home,depsFrom}){
+// Every refusal that does not need the manifest, in the order a person would fix them.
+function gates({repo,home,sha,tag,candidate,noCiCheck,hotfix,log}){
+ const overrides={};
+ if(noCiCheck!==undefined&&noCiCheck!==null)overrides.noCiCheck=assertReason('--no-ci-check',noCiCheck);
+ if(hotfix!==undefined&&hotfix!==null)overrides.hotfix=assertReason('--hotfix',hotfix);
+ if(candidate){
+  if(isPermanentHome(home))throw new Error(`--candidate refuses the permanent home (${home}): a commit that is not on origin/main must go to a candidate home on its own port, for example --home ~/Library/Application\\ Support/i64os/ar-create-candidate.`);
+  log(`  origin/main: skipped (--candidate); candidate home ${home}`);
+ }else{
+  assertOnMain(repo,sha);log(`  origin/main: ${sha.slice(0,12)} is on origin/main`);
+ }
+ if(overrides.noCiCheck)log(`  ci check: SKIPPED (--no-ci-check: ${overrides.noCiCheck})`);
+ else{const green=assertGreen(repo,sha);log(`  ci check: ${green.conclusion} (${green.check})`);}
+ let tagState=null;
+ if(candidate&&!tag)log('  tag: none (candidate)');
+ else{tagState=checkTag(repo,tag,sha);log(`  tag: ${tag} (${tagState.exists?'exists, annotated, at this sha':'will be created, annotated, local'})`);}
+ if(overrides.hotfix)log(`  daily cap: bypassed (--hotfix: ${overrides.hotfix})`);
+ else assertUnderCap(home);
+ return {overrides,tagState};
+}
+
+function dependencySource({relative,staged,home,depsFrom,repo,log}){
  const lock=path.join(staged,relative,'package-lock.json');
  if(!fs.existsSync(path.join(staged,relative,'package.json')))return null;
  const lockSha=fs.existsSync(lock)?sha256(fs.readFileSync(lock)):null;
  const candidates=[];
- if(depsFrom)candidates.push({from:path.resolve(depsFrom),why:'--deps-from'});
+ // Only a folder inside the checkout being released or inside the home may supply node_modules; a scratch worktree
+ // somewhere else may be garbage-collected or built from other lockfiles (review F-06/F-07), so `npm ci` runs instead.
+ if(depsFrom){
+  if(isInside(repo,depsFrom)||isInside(home,depsFrom))candidates.push({from:path.resolve(depsFrom),why:'--deps-from'});
+  else if(relative===DEPENDENCY_DIRS[0])log?.(`  --deps-from ${path.resolve(depsFrom)} is outside the checkout and the home; ignored, npm ci will run in the build folder`);
+ }
  candidates.push({from:path.join(home,'service'),why:'the current service'});
  for(const candidate of candidates){
   const modules=path.join(candidate.from,relative,'node_modules'),otherLock=path.join(candidate.from,relative,'package-lock.json');
@@ -165,36 +210,40 @@ function smoke(staged,log){
  log('  smoke: server.mjs imports resolve and serve.mjs parses');
 }
 
-export async function release({home,repo=path.resolve(here,'..'),dryRun=false,depsFrom=null,tag=null,builtBy=null,log=console.log}={}){
+export async function release({home,repo=path.resolve(here,'..'),dryRun=false,depsFrom=null,tag=null,candidate=false,noCiCheck=null,hotfix=null,builtBy=null,log=console.log}={}){
  repo=fs.realpathSync(repo);home=checkHome(home,repo);
- const {sha,rows,shipped,notShipped}=plan(repo);
- const actualTag=tag||(()=>{try{return git(repo,'describe','--tags','--exact-match').trim();}catch{return null;}})();
+ const {sha}=plan(repo);
+ log(`release ${sha.slice(0,12)}${tag?` (${tag})`:''}${candidate?' as a CANDIDATE':''} from ${repo}`);
+ const {overrides,tagState}=gates({repo,home,sha,tag,candidate,noCiCheck,hotfix,log});
+ const {rows,text:manifestText,sha256:manifestHash,shipped,notShipped}=computeManifest(repo);
  const staged=path.join(home,'service.next'),live=path.join(home,'service'),previous=path.join(home,'service.prev');
  const current=readJson(path.join(home,'RELEASE.json'));
- const depsPreview=DEPENDENCY_DIRS.filter(relative=>fs.existsSync(path.join(repo,relative,'package.json'))).map(relative=>`${relative}: ${dependencySource({relative,staged:repo,home,depsFrom}).description}`);
- log(`release ${sha.slice(0,12)}${actualTag?` (${actualTag})`:''} from ${repo}`);
- log(`  reviewed manifest: ${rows.length} files; shipped ${shipped.length}; kept out (tests, todo, .gitignore) ${notShipped}`);
+ const depsPreview=DEPENDENCY_DIRS.filter(relative=>fs.existsSync(path.join(repo,relative,'package.json'))).map(relative=>`${relative}: ${dependencySource({relative,staged:repo,home,depsFrom,repo,log}).description}`);
+ log(`  manifest computed from the clean checkout: ${rows.length} files, sha256 ${manifestHash.slice(0,12)}; shipped ${shipped.length}; kept out (tests, todo, .gitignore) ${notShipped}`);
  log(`  currently installed: ${current?`${String(current.sha).slice(0,12)} built ${current.builtAt}`:'no RELEASE.json'}`);
  for(const line of depsPreview)log(`  dependencies ${line}`);
  if(dryRun){
-  log(`  would: stage ${staged}; build generated files; keep ${previous}; swap into ${live}; write ${path.join(home,'RELEASE.json')}; copy AGENTS.md to ${path.join(home,'AGENTS.md')}; append a release:${sha.slice(0,12)} line to ${path.join(home,'data/journal')}`);
-  log('  dry run: nothing written, nothing started or stopped.');
+  log(`  would: ${tag&&!tagState?.exists?`tag ${tag}; `:''}stage ${staged}; build generated files; keep ${previous}; swap into ${live}; write ${path.join(home,'RELEASE.json')}; copy AGENTS.md to ${path.join(home,'AGENTS.md')}; append a release:${sha.slice(0,12)} line to ${path.join(home,'data/journal')}`);
+  log('  dry run: nothing written, no tag made, nothing started or stopped.');
   return {dryRun:true,sha,shipped:shipped.length};
  }
  fs.mkdirSync(home,{recursive:true});
- const lock=path.join(home,'.release.lock');let lockFd;
+ const lock=path.join(home,'.release.lock');let lockFd,madeTag=false;
  try{lockFd=fs.openSync(lock,'wx');}catch{throw new Error(`Another release is in progress (${lock} exists). If none is, delete that file.`);}
  try{
+  if(tag&&!tagState.exists){createTag(repo,tag,sha);madeTag=true;}
   remove(staged);fs.mkdirSync(staged,{recursive:true});
-  for(const file of [...rows.map(row=>row.path),MANIFEST_FILE]){const target=path.join(staged,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(repo,file),target);fs.chmodSync(target,fs.statSync(path.join(repo,file)).mode&0o777);}
+  for(const file of rows.map(row=>row.path)){const target=path.join(staged,file);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(repo,file),target);fs.chmodSync(target,fs.statSync(path.join(repo,file)).mode&0o777);}
+  fs.writeFileSync(path.join(staged,MANIFEST_FILE),manifestText);
   log(`  staged ${rows.length+1} files in ${staged}`);
-  const dependencies=installDependencies({staged,home,depsFrom,log});
+  const dependencies=installDependencies({staged,home,depsFrom,repo,log});
   build(staged,log);
   for(const file of walk(staged))if(PRUNE_AFTER_BUILD(file))remove(path.join(staged,file));
   const generated=checkAllowlist({staged,shipped,rows});
   log(`  allowlist: ${shipped.length} manifest files + ${Object.keys(generated).length} generated, nothing else`);
   smoke(staged,log);
-  const record={schema:'ar-create.release.v1',sha,tag:actualTag,builtAt:new Date().toISOString(),builtBy:builtBy||process.env.AR_CREATE_ACTOR||`human:${os.userInfo().username}`,manifestSha256:manifestSha256(repo),shipped:shipped.length,generated,dependencies,previousSha:current?.sha||null};
+  const hasOverrides=Object.keys(overrides).length>0;
+  const record={schema:'ar-create.release.v1',sha,tag:tag||null,candidate:!!candidate,builtAt:new Date().toISOString(),builtBy:builtBy||process.env.AR_CREATE_ACTOR||`human:${os.userInfo().username}`,manifestSha256:manifestHash,shipped:shipped.length,generated,dependencies,previousSha:current?.sha||null,...(hasOverrides?{overrides}:{})};
   fs.writeFileSync(path.join(home,'RELEASE.json.next'),JSON.stringify(record,null,2)+'\n');
   // Swap. The old service is kept whole as service.prev (the one before it is dropped; it is code, never data).
   remove(previous);
@@ -203,14 +252,16 @@ export async function release({home,repo=path.resolve(here,'..'),dryRun=false,de
   try{safeRename(staged,live);}catch(error){if(hadLive)safeRename(previous,live);throw error;}
   if(fs.existsSync(path.join(home,'RELEASE.json')))safeRename(path.join(home,'RELEASE.json'),path.join(home,'RELEASE.prev.json'));
   safeRename(path.join(home,'RELEASE.json.next'),path.join(home,'RELEASE.json'));
-  appendLog(home,{action:'release',sha,tag:actualTag,at:record.builtAt,by:record.builtBy,previousSha:record.previousSha});
+  madeTag=false;
+  appendLog(home,{action:'release',sha,tag:record.tag,candidate:record.candidate,at:record.builtAt,by:record.builtBy,previousSha:record.previousSha,...(hasOverrides?{overrides}:{})});
   copyAgentsFile(repo,home,log);
-  await journalRelease({home,sha,tag:actualTag,by:record.builtBy,at:record.builtAt,previousSha:record.previousSha,log});
+  await journalRelease({home,sha,tag:record.tag,by:record.builtBy,at:record.builtAt,previousSha:record.previousSha,overrides,candidate:record.candidate,log});
   log(`released ${sha.slice(0,12)} into ${live}${hadLive?`; previous kept at ${previous}`:''}`);
+  if(tag)log(`tagged ${tag} locally (annotated, at ${sha.slice(0,12)}); publish it with: git -C ${JSON.stringify(repo)} push origin ${tag}`);
   log(`restart (not done by this script): ${restartHint(home)}`);
   return {dryRun:false,sha,record};
  }catch(error){
-  remove(staged);remove(path.join(home,'RELEASE.json.next'));throw error;
+  remove(staged);remove(path.join(home,'RELEASE.json.next'));if(madeTag)deleteTag(repo,tag);throw error;
  }finally{fs.closeSync(lockFd);remove(lock);}
 }
 
@@ -263,6 +314,6 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   const common={home:options.home,...(options.repo?{repo:options.repo}:{})};
   if(options.rollback)rollback(common);
   else if(options.verify)verify(common);
-  else await release({...common,dryRun:!!options['dry-run'],depsFrom:options['deps-from']||null,tag:options.tag||null,builtBy:options['built-by']||null});
+  else await release({...common,dryRun:!!options['dry-run'],depsFrom:options['deps-from']||null,tag:options.tag||null,candidate:!!options.candidate,noCiCheck:options['no-ci-check']??null,hotfix:options.hotfix??null,builtBy:options['built-by']||null});
  }catch(error){console.error('release refused: '+error.message);process.exit(1);}
 }
