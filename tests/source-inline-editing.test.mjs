@@ -174,3 +174,18 @@ test('late refresh completion restores the current selected source link instead 
  const owner=server(),read=owner.fetch;let held=false,finish;owner.fetch=(url,options={})=>held&&!options.method?new Promise(resolve=>{finish=async()=>{held=false;resolve(await read(url,options));};}):read(url,options);
  const x=await setup(owner);try{held=true;const pending=x.api.refresh();x.choose('visit-b');await finish();await pending;await settle();const link=x.q('[data-source-tea-link]');assert.equal(new URL(link.href).searchParams.get('arSource'),fixture.sessions[1].sourceId);assert.equal(x.turn('remark-b').textContent,fixture.sessions[1].turns[0].text);assert.equal(x.turn('remark-a'),null);assert.equal(owner.requests.length,0);}finally{x.close();}
 });
+
+test('Source edits like a document: leaving a changed line saves it, Enter moves on, Esc puts it back',async()=>{
+ const owner=server();const x=await setup(owner);try{
+  const KeyboardEvent=x.window.KeyboardEvent,FocusEvent=x.window.FocusEvent;
+  let node=x.enter('remark-a');x.input(node,'A fictional sample was handed over.');
+  node.dispatchEvent(new FocusEvent('focusout',{bubbles:true,relatedTarget:x.turn('remark-next')}));await settle();await settle();
+  assert.equal(owner.requests.length,1,'leaving the changed line saved it');assert.equal(owner.requests[0].url,'/api/source-sessions/edit');assert.equal(owner.requests[0].body.text,'A fictional sample was handed over.');
+  node=x.enter('remark-next');x.input(node,'Words I will take back.');
+  node.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await settle();
+  assert.equal(x.turn('remark-next').textContent,'No agreement was made.','Esc puts the saved words back');
+  node.dispatchEvent(new FocusEvent('focusout',{bubbles:true}));await settle();assert.equal(owner.requests.length,1,'an unchanged line saves nothing');
+  node=x.enter('remark-a');node.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+  assert.strictEqual(x.window.document.activeElement,x.turn('remark-next'),'Enter moves to the next line');
+ }finally{x.close();}
+});
