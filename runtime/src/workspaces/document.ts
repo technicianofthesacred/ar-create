@@ -206,7 +206,8 @@ export function snapshotCarousel(doc:Manuscript):Output {
  const passages=(base.manuscript||[]).map(p=>({p,text:plainText(p.doc)})).filter(x=>x.text.trim());
  // A long piece keeps every passage: consecutive passages share a slide so the cut fits the slide limit.
  const per=Math.max(1,Math.ceil(passages.length/(CAROUSEL_WORDS_LIMITS.maxSlides-1)));
- for(let i=0;i<passages.length;i+=per){const group=passages.slice(i,i+per);slides.push({id:uid(),role:'inner',text:group.map(x=>x.text).join('\n\n'),credit:group.flatMap(x=>x.p.attributions.map(a=>a.author||a.sourceTitle)).filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '),template:'M12',photos:[],paragraphIds:group.map(x=>x.p.id)});}
+ // Grouped passages can run long; fit their type so a new Carousel exports without hand-sizing.
+ for(let i=0;i<passages.length;i+=per){const group=passages.slice(i,i+per);slides.push({id:uid(),role:'inner',text:group.map(x=>x.text).join('\n\n'),credit:group.flatMap(x=>x.p.attributions.map(a=>a.author||a.sourceTitle)).filter((v,i,a)=>v&&a.indexOf(v)===i).join(' · '),template:'M12',photos:[],typography:{font:'original',scale:1,fit:'auto'},paragraphIds:group.map(x=>x.p.id)});}
  const {articleComposition,articleCompositionNotice,...carouselBase}=base;
  return {...carouselBase,placements:[],kind:'carousel',outputRevision:0,slides,caption:'',stage:'words'};
 }

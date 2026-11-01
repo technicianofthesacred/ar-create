@@ -684,7 +684,7 @@
     {
       "path": "runtime/src/workspaces/document.ts",
       "sourceSha256": "7cbac71dba13137c430fa10cbb7a17fee2cf6243cfa0387c5a8bfecdbc1ff2b8",
-      "candidateSha256": "1a74e2dfee869997b90334eb4fc00911846a522bd47e8f2611a32bd60c172da0",
+      "candidateSha256": "b4f98a97ae99bb22f405f5a9f8f7fe3c9685238e264eaa5c2398e99c343d1900",
       "adapted": false
     },
     {
@@ -5213,7 +5213,7 @@
     },
     {
       "path": "runtime/src/workspaces/snapshot-carousel.test.mjs",
-      "candidateSha256": "8dfcdc5079935bc01d83cb9fa5de29b0e0f40f8048f488afc408daacd20193fd"
+      "candidateSha256": "5567c5827add78cff649bfdac41831578d2bd300e5d4223fa49e9997246ab53a"
     },
     {
       "path": "runtime/src/workspaces/carousel-typography.test.mjs",
