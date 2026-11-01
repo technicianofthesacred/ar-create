@@ -1,10 +1,10 @@
 # Access: what an agent can reach
 
-Updated 21 October 2026. Start at [AGENTS.md](../AGENTS.md) and [START.md](START.md).
+Updated 1 November 2026. Start at [AGENTS.md](../AGENTS.md) and [START.md](START.md).
 
 ## One source
 
-GitHub `technicianofthesacred/ar-create`, branch `main` (MAIN), is canonical for code and for intent. The local checkout at `~/Documents/Files/4 Coding/ar-create` is a clone: it fast-forwards to MAIN and holds no work that MAIN lacks. If it shows uncommitted or untracked files, compare them with MAIN by hash before trusting them; the ones that were measured on 21 October were identical to MAIN or older than it. Work happens on a branch of MAIN and lands through a pull request.
+GitHub `technicianofthesacred/ar-create`, branch `main` (MAIN), is canonical for code and for intent. The local checkout at `~/Documents/Files/4 Coding/ar-create` is stale and not canonical: do not edit it, build from it or run its CLI. Work happens in a fresh worktree cut from `origin/main` (`git fetch && git worktree add /tmp/wt-<name> -b claude/<name> origin/main`, then `npm run setup`) and lands through a pull request. The CLI you run is the installed one (see below).
 
 ## What the repository supplies
 
@@ -18,6 +18,6 @@ The repository holds no private manuscripts, transcripts, photographs, recording
 
 ## App and agent work
 
-The app window may be closed while the service keeps running. Agents on this Mac use the one CLI (`agents/cli/ar-create.mjs --actor agent:<name>`) or the one MCP server (`agents/mcp/server.mjs`); both call the same command registry as the app and stamp the actor on every write. See [CONCEPT-AGENT](CONCEPT-AGENT.md) for the project concept brief and [AGENT-CONNECTIONS](AGENT-CONNECTIONS.md) for standalone Collection and continuity contracts. The older `tools/concept-cli.mjs` is kept as an alias for one release; it also needs an actor to write.
+The app window may be closed while the service keeps running. Agents on this Mac use the one CLI, run from the installed release (`$HOME/Library/Application Support/i64os/ar-create/service/agents/cli/ar-create.mjs --actor agent:<name>`), or the one MCP server (`agents/mcp/server.mjs` in the same place); both call the same command registry as the app and stamp the actor on every write. See [CONCEPT-AGENT](CONCEPT-AGENT.md) for the project concept brief and [AGENT-CONNECTIONS](AGENT-CONNECTIONS.md) for standalone Collection and continuity contracts. The older `tools/concept-cli.mjs` and `mcp/study` remain only as aliases. In a browser, open the page with `?reviewActor=agent:<name>`, or the page stamps your actions `human:adrian`.
 
 On a conflict, preserve both versions, exact source identities and unknown or manual text. Saved is not adopted, reviewed, exported or published. A fresh browser reading the same local owner is not proof of remote-device synchronization.

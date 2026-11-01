@@ -1,6 +1,6 @@
 # AR Create: start here
 
-Read [AGENTS.md](../AGENTS.md) first. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); what works today is in [status/CURRENT.md](status/CURRENT.md).
+Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); what works today is in [status/CURRENT.md](status/CURRENT.md).
 
 ## The product in one view
 
@@ -27,7 +27,7 @@ Read [AGENTS.md](../AGENTS.md) first. This page is enough to act. Intent lives i
 
 | Code name | Product concept |
 |---|---|
-| `study`, `document-study`, `donor/study` | The app itself. The page is `/document-study/index.html`; `runtime/` is the server. |
+| `study`, `document-study`, `donor/study` | The app itself. The page is `/document-study/index.html`; `runtime/` is the server. `mcp/study` and `tools/concept-cli.mjs` remain only as aliases for older callers; the entrance is `agents/cli/ar-create.mjs` (and `agents/mcp/server.mjs`). |
 | `donor` | Code copied in from other projects (`mag`, `study`, `teajia`, `wordforge`); not product vocabulary. |
 | `wordforge` | A markdown bridge copied from i64os. Unrelated to i64os's oracle writing tool. |
 | `mag`, `magazine` | The Teajia magazine services, being folded into AR Create as one writer over the vault. |
@@ -66,6 +66,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 
 Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok|chatgpt`, `cron:<name>`, `import:<source>`, `release:<sha>`. They are honest labels on this Mac, not authentication. Clients: `ui`, `cli`, `mcp`, `http`, `file`.
 
+- **Browser**: the page's default author is `human:adrian`. An agent opens `http://127.0.0.1:8841/document-study/index.html?reviewActor=agent:<name>` so its actions are stamped as its own; an unlisted name blocks every request.
 - **Lease**: `lease acquire --input '{"scope":{"kind":"project","id":"<parentStudyId>"},"reason":"..."}'`. Fifteen minutes, renewable. A live foreign lease answers 423 with the holder. Scope kinds: project, collection, draft, output, piece, source, share, concept, research, media, library.
 - **Journal**: every committed, rejected or conflicting write is one line. `history` reads it.
 - **Handoff**: `handoff --input '{"scope":{...},"to":"human:adrian","summary":"<=280 chars"}'` when you stop.
@@ -74,7 +75,9 @@ Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok
 
 ## Recipe: read a project and save a concept note
 
-With `AR_CREATE_URL`, `AR_CREATE_ACTOR` and `CLI` set as in AGENTS.md:
+With `AR_CREATE_URL`, `AR_CREATE_ACTOR` and `CLI` (the installed CLI path) set as in AGENTS.md:
+
+Everything down to `library search` is read-only and safe to run first; the lease and save lines are writes.
 
 ```sh
 node "$CLI" status
