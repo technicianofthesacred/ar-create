@@ -214,7 +214,10 @@ export function createFirstFlow({dataDir,store,library,recordings,requests,execu
   reinspect:async(scope,input)=>{if(!input||Object.keys(input).sort().join(',')!=='operationId,requestId')fail('Reinspect the exact completed Study request.',400);return (await scopedOwner(scope)).reinspect({...structuredClone(input),projectId:scope.projectId});}
  };
  function operation(input,kind,fn){return serial(async()=>{const projectId=current(input);if(_studyScope){await guardStudy(_studyScope);ensurePrivateDirectory(root,digest(projectId));}if(!uuid.test(input.operationId||''))fail('Operation UUID required.',400);const f=state(projectId);if(kind==='attach'&&f.currentRequestId)load(f.currentRequestId);const identity=digest(JSON.stringify({kind,input,...(_studyScope?{studyScope:_studyScope}:{})})),old=f.operations[input.operationId];if(old){if(old.hash!==identity)fail('Operation ID already belongs to another action.');return view({projectId});}await fn(f,projectId);current({projectId});if(_studyScope)await guardStudy(_studyScope);f.operations[input.operationId]={hash:identity,kind,at:new Date().toISOString()};f.revision++;save(f);return view({projectId});});}
- return {study,
+ // Read-only: which owned projects list which Library sources as their material. Library "Used in"
+ // names projects from this; it is not a citation or placement record.
+ function usedBy(){if(_studyScope||!fs.existsSync(root))return [];const out=[];for(const name of fs.readdirSync(root)){if(!/^[a-f0-9]{64}$/.test(name))continue;const f=readJson(path.join(root,name,'flow.json'),null);if(f?.schema==='ar-create.first-flow.v1'&&typeof f.projectId==='string'&&Array.isArray(f.sourceIds)){const sourceIds=f.sourceIds.filter(id=>typeof id==='string'&&!(f.materialDecisions?.[id]?.decision==='set-aside'));if(sourceIds.length)out.push({projectId:f.projectId,sourceIds});}}return out;}
+ return {study,usedBy,
   get:input=>serial(()=>view(input)),
   context:input=>serial(()=>context(structuredClone(input))),
   materialContext:input=>serial(()=>materialContext(structuredClone(input))),
