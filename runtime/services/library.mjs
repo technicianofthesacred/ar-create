@@ -145,6 +145,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if(inspectionOnly&&!fs.existsSync(file))typedFail('Library index is unavailable; no catalog was inferred.',503);
     const bytes=fs.existsSync(file)?(regular(file),fs.readFileSync(file,'utf8')):null;
     let value;try{value=bytes===null?structuredClone(index):JSON.parse(bytes);}catch{typedFail('Cannot read Library index; existing bytes preserved.');}
+    // Same default as startup: an index written before collectionRelationships existed reads as [] (not a concurrent change).
+    if(value&&typeof value==='object'&&value.collectionRelationships===undefined)value.collectionRelationships=[];
     validateTypedIndex(value);index=value;return {value,bytes,hash:digest(bytes??'')};
   }
   function endpointExists(value,endpoint){
