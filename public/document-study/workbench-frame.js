@@ -92,7 +92,7 @@
  function threadDetail(entry,t,nextHTML,connected){
   if(!t)return nextHTML+homeLists();
   const tracks=t.tracks.map(tr=>`<section class="thread-track"><header><span>${esc(tr.label)} · ${esc(benchTitle(tr.item))}</span><b>${tr.steps.filter(x=>x[1]).length} of ${tr.steps.length}</b></header><ol>${tr.steps.map(([label,done])=>`<li class="${done?'is-done':''}"><button type="button" data-wbf-thread-open="${esc(tr.item.key)}" ${connected&&tr.item.available&&!benchActionBusy?'':'disabled'}>${esc(label)}</button></li>`).join('')}</ol></section>`).join('');
-  return `<div class="thread-head"><h2>${esc(t.title)}</h2><span class="dim small">${t.done} of ${t.total} steps done</span></div>${nextHTML}${homeLists()}${tracks}<section class="thread-box"><div class="lab">Thread</div><div class="combined-home-row">${t.group.project?homeFlow(entry.catalog,t.group.project.target.storyId):''}</div>${t.group.project?`<button type="button" class="lnk" data-combined-home-board="${esc(t.group.project.target.storyId)}">Open the board</button>`:''}</section>`;
+  return `<div class="thread-head"><h2>${esc(t.title)}</h2><span class="dim small">${t.done} of ${t.total} steps done</span></div>${nextHTML}${tracks}<section class="thread-box"><div class="lab">Thread</div><div class="combined-home-row">${t.group.project?homeFlow(entry.catalog,t.group.project.target.storyId):''}</div>${t.group.project?`<button type="button" class="lnk" data-combined-home-board="${esc(t.group.project.target.storyId)}">Open the board</button>`:''}</section>${homeLists()}`;
  }
  // Each subject reads left to right: what was gathered, what was understood, what was made.
  function homeFlow(catalog,storyId){
