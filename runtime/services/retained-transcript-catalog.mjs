@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {systemAliasPath} from './files.mjs';
 const hash=raw=>createHash('sha256').update(raw).digest('hex');
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 function checked(root,rel){
@@ -16,7 +17,7 @@ export function createRetainedTranscriptCatalog({registryFile,indexFile,libraryR
  for(const p of [registryFile,indexFile,libraryRoot])if(typeof p!=='string'||!path.isAbsolute(p))throw Error('Explicit transcript catalog paths are required.');
  const jsonCache=new Map();
  return {id:'kept-transcripts',name:'Kept conversations',path:libraryRoot,entries(){
- const root=fs.lstatSync(libraryRoot);if(!root.isDirectory()||root.isSymbolicLink()||fs.realpathSync(libraryRoot)!==libraryRoot.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1'))throw Error('Transcript library must be an explicit real folder.');
+ const root=fs.lstatSync(libraryRoot);if(!root.isDirectory()||root.isSymbolicLink()||fs.realpathSync(libraryRoot)!==systemAliasPath(libraryRoot))throw Error('Transcript library must be an explicit real folder.');
   const registry=json(registryFile,jsonCache),index=json(indexFile,jsonCache);
   if(registry.schema!=='ar-create.transcript-manager.v1'||!Array.isArray(registry.sessions)||registry.sessions.length>10000||!Array.isArray(index.sources)||index.sources.length>20000)throw Error('Unsupported transcript catalog.');
   const sources=new Map();for(const row of index.sources){if(sources.has(row.id))throw Error('Ambiguous transcript source identity.');sources.set(row.id,row);}
