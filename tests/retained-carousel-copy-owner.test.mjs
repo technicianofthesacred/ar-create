@@ -1,3 +1,4 @@
+import {chromeSkip} from './helpers/headless-chrome.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -71,7 +72,7 @@ test('changed/missing source flags freshness, blocks copy/save/export, and exact
  await assert.rejects(f.owner.save({...f.group,selectedOutputId:id,operationId:randomUUID(),expectedOutput:view.expectedOutput,changes:{caption:'Do not overwrite'}}));await assert.rejects(f.owner.assertExport({...f.group,selectedOutputId:id,expectedOutput:view.expectedOutput}));
  fs.unlinkSync(f.sourceFile);view=await f.read(id);assert.equal(view.freshness.sourceStale,true);assert.equal(view.output.caption,result.view.output.caption);
 });
-test('exact thirteen-slide retained copy reviews its own words and renders thirteen real 1080 by 1350 PNGs',async t=>{
+test('exact thirteen-slide retained copy reviews its own words and renders thirteen real 1080 by 1350 PNGs',{skip:chromeSkip},async t=>{
  const f=await fixture(t);
  // A supported words-only original: no photograph is invented to fill a slot.
  f.original.slides=f.original.slides.map(slide=>({...slide,template:'M12'}));f.writeSource();
