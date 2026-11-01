@@ -71,7 +71,13 @@ const token=++snapshot.gridEpoch;try{const [result,context,options]=await Promis
   let layout=lane.querySelector(':scope>.combined-direction-layout');
   if(!layout){layout=document.createElement('section');layout.className='combined-direction-layout';layout.setAttribute('aria-label','Your thoughts and direction');const left=document.createElement('section');left.className='combined-direction-author';const title=document.createElement('h2');title.textContent='Your page';left.append(title);layout.append(left);lane.prepend(layout);}
   const left=layout.querySelector('.combined-direction-author');if(continuation.parentElement!==left)left.append(continuation);
-  let host=layout.querySelector('#inline-direction-choices');if(!host){host=document.createElement('section');host.id='inline-direction-choices';layout.append(host);}
+  let host=layout.querySelector('#inline-direction-choices');if(!host){
+   // A lane re-render rebuilds this layout; move the same mounted choices in rather than
+   // loading them again, which blanked the angles for seconds after they first appeared.
+   const kept=mounted&&mounted.id===currentId()&&!mounted.host.isConnected?mounted.host:null;
+   host=kept||document.createElement('section');host.id='inline-direction-choices';layout.append(host);
+   if(kept){mounted.layout=layout;void refreshGrid(mounted);}
+  }
   // Retain the original map entrance, including all dated decisions, separately.
   let original=left.querySelector('[data-direction-original-map]');
   if(!original){original=document.createElement('button');original.type='button';original.dataset.directionOriginalMap='';original.textContent='Original map and earlier decisions';original.onclick=()=>{const stories=window.existingWork?.catalog?.()?.stories?.filter(s=>s.nativeProjectId===currentId()),maps=stories?.length===1?stories[0].artifacts.filter(a=>a.kind==='MAP'&&!a.archived):[];if(maps.length===1)void window.existingWork.openArtifact(stories[0].id,maps[0].artifactId);};left.append(original);}
