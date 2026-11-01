@@ -1,3 +1,4 @@
+import {chromeSkip} from './helpers/headless-chrome.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -26,7 +27,7 @@ async function destination(f){
  const read=id=>f.get('/api/study/outputs?'+new URLSearchParams({...group,...id?{selectedOutputId:id}:{}}));
  return {native,physical,group,read};
 }
-test('C01/C04/C06/S12 exact HTTP retained copy reuses existing read/edit/review/export owner, replay and source/destination guards',async t=>{
+test('C01/C04/C06/S12 exact HTTP retained copy reuses existing read/edit/review/export owner, replay and source/destination guards',{skip:chromeSkip},async t=>{
  const f=await setup(t),d=await destination(f),sourceBytes=fs.readFileSync(f.sourceFile),nativeBefore=await f.get('/api/study-draft/read?'+new URLSearchParams({bindingId:d.group.rootBindingId,parentStudyId:d.group.parentStudyId}));
  const existing=await f.post('/api/study/outputs/create',{...d.group,kind:'carousel',sourceBindingId:d.group.rootBindingId,expectedNative:d.native.expected,expectedOutput:(await d.read()).expectedOutput,operationId:randomUUID()}),savedEight=await f.post('/api/study/outputs/save',{...d.group,selectedOutputId:existing.view.output.id,expectedOutput:existing.view.expectedOutput,operationId:randomUUID(),changes:{slides:Array.from({length:8},(_,i)=>({...existing.view.output.slides[0],id:randomUUID(),role:i?'inner':'cover',text:'Current eight '+i,template:'M12'}))}}),eight=structuredClone(savedEight.view.output);
  const body={...d.group,destinationProjectId:d.physical.projectId,destinationDocumentId:d.physical.documentId,expectedOutput:savedEight.view.expectedOutput,expectedNative:d.native.expected,operationId:randomUUID(),source:f.source};

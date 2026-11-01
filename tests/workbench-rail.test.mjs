@@ -138,7 +138,8 @@ test('Outputs panel forwards browser-copy owner without fabricating a native out
 test('Research rail opens the same selected point and keeps the original pending editor',()=>{
  const {w,d,close}=boot(3,{work:'<div class="research-standard"><section class="research-standard-point" data-research-point="a"><h2>First finding</h2><textarea>First</textarea></section><section class="research-standard-point" data-research-point="b"><h2>Second finding</h2><textarea>Second</textarea></section></div>'});
  w.current=()=>({id:'synthetic',view:'record',viewedStage:3});w.eval(fs.readFileSync(new URL('../public/document-study/workbench-surfaces.js',import.meta.url),'utf8'));w.c3Workbench.decorate();const input=d.querySelector('textarea');input.value='Unsaved learning';
- d.querySelector('[data-wb-row="rp:1"]').click();assert.equal(d.querySelector('[data-research-point="b"]>.wb-point').open,true);assert.equal(d.querySelector('[data-research-point="a"]>.wb-point').open,false);assert.strictEqual(d.querySelector('textarea'),input);assert.equal(input.value,'Unsaved learning');assert.equal(d.activeElement,d.querySelector('[data-research-point="b"] summary'));close();
+ // 34fa6b9: findings are always-visible sections; the rail scrolls to the selected one instead of toggling an accordion.
+ const shown=[],a=d.querySelector('[data-research-point="a"]>.wb-point'),b=d.querySelector('[data-research-point="b"]>.wb-point');a.scrollIntoView=()=>shown.push('a');b.scrollIntoView=o=>shown.push('b:'+o.block);d.querySelector('[data-wb-row="rp:1"]').click();assert.deepEqual(shown,['b:start']);assert.equal(a.tagName,'SECTION');assert.equal(b.tagName,'SECTION');assert.equal(d.querySelectorAll('.wb-point summary').length,0);assert.strictEqual(d.querySelector('textarea'),input);assert.equal(input.value,'Unsaved learning');close();
 });
 
 test('Source panel lists real conversation identities only and preserves owner option availability',async()=>{

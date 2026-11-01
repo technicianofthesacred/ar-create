@@ -102,9 +102,9 @@ async function fixture(t,options) {
   fs.writeFileSync(path.join(publication,'public/read/synthetic/same.png'),Buffer.from([137,80,78,71,13,10,26,10,1,2,3]));
   fs.writeFileSync(path.join(publication,'public/read/synthetic/replacement.png'),Buffer.from([137,80,78,71,13,10,26,10,4,5,6]));
   fs.writeFileSync(path.join(publication,'published.html'),'<article>Invented immutable published edition.</article>\n');
-  const get = async (route, input={}, headers={}) => {
+  const get = async (route, input={}, headers={}, signal) => {
     const url=new URL(route,owner.url);for(const [key,value] of Object.entries(input))url.searchParams.set(key,value);
-    const response = await fetch(url,{headers});
+    const response = await fetch(url,{headers,signal});
     const body = await response.json();
     if (!response.ok) throw Object.assign(Error(body.error),{status:response.status});
     return body;
@@ -119,7 +119,7 @@ async function fixture(t,options) {
   const portfolio = createMagazinePortfolio({roots});
   const story = (await portfolio.list()).stories.find(s=>s.artifacts.some(a=>a.relativePath===DEV && !a.archived));
   assert.ok(story);
-  const reader = createExistingWorkReader({roots,portfolio,projectLinks:{[story.id]:{nativeProjectId:'invented-native-project'}},readAuthority:get});
+  const reader = createExistingWorkReader({roots,portfolio,projectLinks:{[story.id]:{nativeProjectId:'invented-native-project'}},readAuthority:(route,{signal}={})=>get(route,{},{},signal)});
   let resolveCount = 0;
   const resolveWorking = async ({storyId,pieceId,expectedHash}) => {
     resolveCount++;

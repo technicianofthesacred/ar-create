@@ -58,11 +58,28 @@ const BODIES = {
   '/api/magazine/send': {path: DEV, piece: 1, expectedHash: H, operationId: U()},
   '/api/magazine/mark-published': {path: DEV, link: 'https://example.test/story', expectedHash: H, operationId: U()},
   '/api/magazine/reconcile/choose': {bindingId: U(), choice: 'vault', expectedVaultHash: H, expectedCopyHash: H, operationId: U()},
+  // Routes added after the sweep was written (shapes from runtime/commands.mjs BODY).
+  '/api/magazine/library-photos/album': {action: 'link', folderId: U(), operationId: U(), expectedRevision: 0, expectedHash: H, photo: {rootId: 'library', sourceId: U(), revision: 0, sourceHash: H}},
+  '/api/magazine/mechanical-check': {parentStudyId: 'p', storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', expectedDraftHash: H, expectedInputRevision: 0, operationId: U()},
+  '/api/magazine/working-draft/export': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', expectedHash: H, renderRevision: H, name: 'x.html', body: '<!doctype html><p>x</p>'},
+  '/api/magazine/working-draft/ai/propose': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', parentStudyId: 'p', expectedHash: H, contextHash: H, operationId: U(), claims: [], gaps: []},
+  '/api/magazine/working-draft/ai/run': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', parentStudyId: 'p', expectedHash: H, contextHash: H, operationId: U()},
+  '/api/magazine/working-draft/ai/accept': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', parentStudyId: 'p', expectedHash: H, contextHash: H, operationId: U(), proposalId: U(), proposalHash: H},
+  '/api/magazine/working-draft/ai/reject': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', parentStudyId: 'p', expectedHash: H, contextHash: H, operationId: U(), proposalId: U(), proposalHash: H},
+  '/api/magazine/working-draft/share-feedback/prepare-paragraph': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', expectedHash: H, registeredFeedbackPath: 'x.md', expectedFeedbackHash: H, block: 0, seen: 'a'.repeat(12), text: 'x'},
+  '/api/magazine/working-draft/share-feedback/prepare-mapping': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', expectedHash: H, registeredFeedbackPath: 'x.md', expectedFeedbackHash: H},
+  '/api/magazine/working-draft/share-feedback/prepare': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', expectedHash: H, registeredFeedbackPath: 'x.md', expectedFeedbackHash: H, content: 'x'},
+  '/api/magazine/working-draft/share-feedback/save': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', expectedHash: H, registeredFeedbackPath: 'x.md', expectedFeedbackHash: H, content: 'x', operationId: U()},
+  '/api/magazine/working-draft/share-feedback/undo': {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working', expectedHash: H, registeredFeedbackPath: 'x.md', expectedFeedbackHash: H, undoOperationId: U(), operationId: U()},
 };
 // Not writes: reads that happen to be POST, and releasing a lock nobody holds.
 const NOT_WRITES = new Set(['/api/magazine/working-draft/prepare', '/api/magazine/send-check', '/api/magazine/check', '/api/magazine/lock/release']);
 // These need something to already exist (an intake, a proposal, a past operation, a binding); with nothing there they answer 404 or 400 before the writable check.
-const NEEDS_EXISTING = new Set(['/api/magazine/working-draft/save', '/api/magazine/working-draft/edit', '/api/magazine/working-draft/undo', '/api/magazine/intake/file', '/api/magazine/proposal/accept', '/api/magazine/undo', '/api/magazine/reconcile/choose', '/api/magazine/mark-published', '/api/magazine/send', '/api/magazine/issue/write', '/api/magazine/ask/set', '/api/magazine/ask/answer', '/api/magazine/lineup/save', '/api/magazine/approve', '/api/magazine/export/save', '/api/magazine/album/link', '/api/magazine/edit']);
+const NEEDS_EXISTING = new Set(['/api/magazine/working-draft/save', '/api/magazine/working-draft/edit', '/api/magazine/working-draft/undo', '/api/magazine/intake/file', '/api/magazine/proposal/accept', '/api/magazine/undo', '/api/magazine/reconcile/choose', '/api/magazine/mark-published', '/api/magazine/send', '/api/magazine/issue/write', '/api/magazine/ask/set', '/api/magazine/ask/answer', '/api/magazine/lineup/save', '/api/magazine/approve', '/api/magazine/export/save', '/api/magazine/album/link', '/api/magazine/edit',
+  // No registered story, proposal, photo or connected Direction in this fixture, so these stop before the writable check.
+  // Vault writers among them still gate on writable: ai/run+propose need an editable (writable) draft, accept/reject go through requireWritable.
+  // album (Library membership), export (export register) and mechanical-check (receipts) write AR Create's own records, not the vault.
+  '/api/magazine/library-photos/album', '/api/magazine/working-draft/export', '/api/magazine/working-draft/ai/accept', '/api/magazine/working-draft/ai/reject', '/api/magazine/working-draft/ai/run', '/api/magazine/working-draft/ai/propose']);
 
 test('the configured magazine reaches the server: vault, Files folder and both drop folders in order; writable defaults to false', async t => {
   const s = await start(t);
@@ -90,7 +107,7 @@ test('writable:false (the default) refuses every magazine write and changes no b
     seen[c.route] = answer.status;
     assert.ok(answer.status >= 400, `${c.route} must not succeed (${answer.status})`);
     if (!NEEDS_EXISTING.has(c.route)) assert.equal(answer.status, 503, `${c.route}: ${JSON.stringify(answer.body)}`);
-    if (answer.status === 503) assert.match(answer.body.error, /read-only|magazine\.writable|not configured|Nothing was written/i);
+    if (answer.status === 503) assert.match(answer.body.error, /read-only|magazine\.writable|not configured|not connected|configured and writable|Nothing was written/i);
   }
   // As an agent too: the agent's own answer is 503 or 403 (a human-only decision), never a write.
   for (const route of ['/api/magazine/write', '/api/magazine/requests/add', '/api/magazine/lock/hold']) {
