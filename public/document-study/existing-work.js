@@ -392,7 +392,7 @@
    }));
  }
  // One selected subject only. These read projections never activate a writer.
- const authorDecisionRooms=new Map();let authorDecisionVersion=0;
+ const authorDecisionRooms=new Map(),authorDecisionSubjects=new Map();let authorDecisionVersion=0;
  // Read-only mark count uses the maintained editorial-state grammar and never
  // waits for the optional Audience editor bundle to mount.
  function homeApprovalMarks(raw){const text=String(raw||'').replace(/%%[\s\S]*?%%|<!--[\s\S]*?-->|`[^`\n]*`/g,'');const pairs=[...text.matchAll(/==(?=\S)([\s\S]*?\S)==/g)].length,remaining=text.replace(/==(?=\S)([\s\S]*?\S)==/g,'');return {pairs,tokens:pairs*2+[...remaining.matchAll(/(?:^|\n|\s)==(?=\S)|(?<=\S)==(?=$|\n)/g)].length};}
@@ -406,7 +406,7 @@
   return (catalog?.stories||[]).filter(story=>!(catalog.excludedProjectIds||[]).includes(story.nativeProjectId)).flatMap(story=>{
    const artifact=currentMagazineArtifact(story,{catalogOnly:true}),owner=artifact&&catalogMagazineTarget(story,artifact);
    if(!owner)return [];
-   const p={id:owner.nativeProjectId};return [{p,story,artifact,owner,key:JSON.stringify([p.id,catalog.revision,artifact.artifactId,artifact.hash,owner,authorDecisionVersion,!!window.directionChoiceContext?.read])}];
+   const p={id:owner.nativeProjectId};return [{p,story,artifact,owner,key:JSON.stringify([p.id,catalog.revision,artifact.artifactId,artifact.hash,owner,authorDecisionVersion,authorDecisionSubjects.get(p.id)||0,!!window.directionChoiceContext?.read])}];
   });
  }
  function authorDecisionState(){
@@ -612,7 +612,10 @@
   void(async()=>{guard();const reference=await window.studyOutputConnection.workspaceCarouselReference({projectId:p.id,rootBindingId:selection.rootBindingId,outputId:selection.output.id},{originGuard:guard});guard();const matches=(catalog?.workspaceLinks?.pieces||[]).flatMap(link=>(link.targets||[]).filter(t=>t.role==='root-owned-workspace'&&!t.outputId&&t.workspaceId===link.workspaceId&&t.workspaceId===reference.workspaceId&&t.documentId===reference.documentId&&t.rootBindingId===selection.rootBindingId&&t.parentStudyId===p.id));if(matches.length!==1||reference.outputId!==selection.output.id)throw Error('The exact Carousel root address is unavailable.');rememberRoute({reviewWorkspace:reference.workspaceId,reviewBinding:selection.rootBindingId,reviewOutput:selection.output.id});})().catch(()=>{});
  };
  window.addEventListener('c3-piece-state',feedBench);
- window.addEventListener('study-draft-change',()=>{rememberRoute();authorDecisionVersion++;if(document.getElementById('project-library')?.open)feedBench();});for(const name of ['study-direction-choice-change','study-human-direction-change','ar-live-change'])window.addEventListener(name,()=>{authorDecisionVersion++;if(document.getElementById('project-library')?.open)feedBench();});
+ // A change names its subject when it can; only that subject's decisions are read again.
+ // Opening one draft used to re-read every subject's working Article four times.
+ const decisionChanged=event=>{const id=event?.detail?.parentStudyId;if(typeof id==='string'&&id)authorDecisionSubjects.set(id,(authorDecisionSubjects.get(id)||0)+1);else authorDecisionVersion++;};
+ window.addEventListener('study-draft-change',event=>{rememberRoute();decisionChanged(event);if(document.getElementById('project-library')?.open)feedBench();});for(const name of ['study-direction-choice-change','study-human-direction-change','ar-live-change'])window.addEventListener(name,event=>{decisionChanged(event);if(document.getElementById('project-library')?.open)feedBench();});
  window.addEventListener('study-output-selection',rememberCarouselSelection);
  window.addEventListener('study-output-owner-confirmed',rememberCarouselSelection);
  window.addEventListener('study-output-owner-confirmed',()=>rememberRoute());

@@ -30,7 +30,7 @@
  function readable(){const order=recent(),list=pieces().filter(inScope);list.sort((a,b)=>{const i=order.indexOf(a.id),j=order.indexOf(b.id);return (i<0?1e9:i)-(j<0?1e9:j);});return list.slice(0,MAX_READ);}
  async function readPiece(p){
   const hit=cache.get(p.id);if(hit&&Date.now()-hit.at<TTL)return hit;
-  try{const data=await window.realOutputOverview.read({projectId:p.id});if(data?.projectId!==p.id)throw Error('Another piece answered.');const rows=(data.outputs||[]).filter(o=>WAITING[o.status]).map(o=>({id:o.id,title:o.title||'Untitled output',format:o.format||'Output',status:o.status,step:KIND_STEP[o.nextAction?.kind]||STATUS_STEP[o.status]}));const entry={at:Date.now(),ok:true,rows};cache.set(p.id,entry);return entry;}
+  try{const data=await window.realOutputOverview.read({projectId:p.id,shared:true});if(data?.projectId!==p.id)throw Error('Another piece answered.');const rows=(data.outputs||[]).filter(o=>WAITING[o.status]).map(o=>({id:o.id,title:o.title||'Untitled output',format:o.format||'Output',status:o.status,step:KIND_STEP[o.nextAction?.kind]||STATUS_STEP[o.status]}));const entry={at:Date.now(),ok:true,rows};cache.set(p.id,entry);return entry;}
   catch{const entry={at:Date.now(),ok:false,rows:[]};cache.set(p.id,entry);return entry;}
  }
  function load(){

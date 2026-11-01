@@ -79,7 +79,9 @@ const token=++snapshot.gridEpoch;try{const [result,context,options]=await Promis
   if(mounted?.host===host&&mounted.id===currentId())return;
   mounted={host,id:currentId(),layout,gridEpoch:0,drafts:new Map()};const snapshot=mounted;
   void refreshGrid(snapshot);
-  void ui.mount({container:host,parentStudyId:snapshot.id,bindingId:bindingFor(snapshot.id)?.id,loadOptions,canMutate:()=>window.arCreateUiActor?.actor==='human:adrian',isCurrent:()=>mounted===snapshot&&host.isConnected&&stage()===4&&currentId()===snapshot.id}).then(ready=>{if(mounted===snapshot&&host.isConnected){workspace.classList.toggle('combined-direction-ready',ready===true);window.c3Empty?.decorate?.();}});
+  // While saved choices load, Direction is not empty; the empty explainer waits for a real answer.
+  workspace.classList.add('combined-direction-loading');
+  void ui.mount({container:host,parentStudyId:snapshot.id,bindingId:bindingFor(snapshot.id)?.id,loadOptions,canMutate:()=>window.arCreateUiActor?.actor==='human:adrian',isCurrent:()=>mounted===snapshot&&host.isConnected&&stage()===4&&currentId()===snapshot.id}).then(ready=>{if(mounted===snapshot&&host.isConnected){workspace.classList.toggle('combined-direction-ready',ready===true);}},()=>{}).finally(()=>{if(mounted===snapshot){workspace.classList.remove('combined-direction-loading');window.c3Empty?.decorate?.();}});
  }
  window.directionChoiceSurface={decorate};
  window.addEventListener('study-inline-direction-ready',decorate);
