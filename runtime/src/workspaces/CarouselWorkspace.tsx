@@ -24,12 +24,16 @@ export function Frame({slide,title,width=420,interactive=false,onCrop,onPhoto,on
  const host=useRef<HTMLDivElement>(null),canvas=useRef<HTMLDivElement>(null),editing=useRef<HTMLElement|null>(null),cropCleanup=useRef<(()=>void)|null>(null),[size,setSize]=useState(width);
  const initialMarkup=useRef({__html:IG.render(slide.template,{...slide,label:slide.label??title},{})});
  const callbacks=useRef({onCrop,onPhoto,onOverflow,onText,onSelectPhoto,onFit});callbacks.current={onCrop,onPhoto,onOverflow,onText,onSelectPhoto,onFit};
- function measure(){const root=canvas.current?.firstElementChild as HTMLElement|null;if(root){const result=fitCarouselTypography(root,slide.typography);callbacks.current.onOverflow?.(result.overflow||(IG.T[slide.template] as any).textParts===0&&!!slide.text.trim());callbacks.current.onFit?.(result.scale);}}
+ function measure(){const root=canvas.current?.firstElementChild as HTMLElement|null;if(root){const result=fitCarouselTypography(root,slide.typography,{measure:!!(callbacks.current.onOverflow||callbacks.current.onFit)});callbacks.current.onOverflow?.(result.overflow||(IG.T[slide.template] as any).textParts===0&&!!slide.text.trim());callbacks.current.onFit?.(result.scale);}}
  useEffect(()=>{const el=host.current;if(!el||typeof ResizeObserver==='undefined')return;const observer=new ResizeObserver(([entry])=>setSize(Math.max(1,Math.min(width,entry.contentRect.width,entry.contentRect.height/1.25))));observer.observe(el);return()=>observer.disconnect();},[width]);
  useEffect(()=>{
   const element=canvas.current;if(!element)return;
-  if(!editing.current){element.innerHTML=IG.render(slide.template,{...slide,label:slide.label??title},{});
-   if(interactive)for(const field of element.querySelectorAll<HTMLElement>('[data-edit]')){field.contentEditable='plaintext-only';field.setAttribute('contenteditable','plaintext-only');field.setAttribute('role','textbox');field.tabIndex=0;field.setAttribute('aria-label',field.dataset.edit==='text'?'Slide words':field.dataset.edit==='label'?'Small heading':'Slide credit');field.setAttribute('aria-multiline','true');field.spellcheck=true;}
+  if(!editing.current){
+   // Prepare fields off the page: making a placed field editable forces a whole-page layout,
+   // which froze Arrange for seconds on a 39-slide Carousel.
+   const markup=document.createElement('template');markup.innerHTML=IG.render(slide.template,{...slide,label:slide.label??title},{});
+   if(interactive)for(const field of markup.content.querySelectorAll<HTMLElement>('[data-edit]')){field.contentEditable='plaintext-only';field.setAttribute('contenteditable','plaintext-only');field.setAttribute('role','textbox');field.tabIndex=0;field.setAttribute('aria-label',field.dataset.edit==='text'?'Slide words':field.dataset.edit==='label'?'Small heading':'Slide credit');field.setAttribute('aria-multiline','true');field.spellcheck=true;}
+   element.replaceChildren(markup.content);
   }
   measure();let alive=true;document.fonts?.ready.then(()=>{if(alive)measure();});return()=>{alive=false;};
  },[slide,title,interactive,size]);

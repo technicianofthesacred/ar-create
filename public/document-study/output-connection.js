@@ -309,10 +309,11 @@
   setCarouselView(mode);return true;
  }
  function carouselCheckSnapshot(){
-  const selected=selection(),proof=host?.model?.writingProof,id=current().id;
-  if(!isArrange(current())||!host||selected?.projectId!==id||selected.output.kind!=='carousel'||selected.owner?.kind!=='carousel-words'||hostScope?.parentStudyId!==id||hostScope.rootBindingId!==selected.rootBindingId||host.model.selectedOutputId!==selected.output.id||proof?.kind!=='carousel-words'||!['projectId','documentId','outputId'].every(k=>selected.owner[k]===proof[k])||!host.model.expectedOutput)return null;
-  const output=Array.isArray(host.model.outputs)?host.model.outputs.find(o=>o.id===selected.output.id):null;if(!output||output.kind!=='carousel')return null;
-  return {targetKind:'carousel',bindingId:selected.rootBindingId,parentStudyId:id,outputId:output.id,title:output.name||output.title||'Carousel',output:structuredClone(output),wordsHash:proof.wordsHash,expected:{expectedOutput:structuredClone(host.model.expectedOutput),expectedWords:structuredClone(proof.expected)},dirty:!!host.pending||!!readBrowserDraft(hostScope,output.id)};
+  // Each model read is a whole copy of every output; read it once per snapshot.
+  const selected=selection(),model=host?.model,proof=model?.writingProof,id=current().id;
+  if(!isArrange(current())||!host||selected?.projectId!==id||selected.output.kind!=='carousel'||selected.owner?.kind!=='carousel-words'||hostScope?.parentStudyId!==id||hostScope.rootBindingId!==selected.rootBindingId||model.selectedOutputId!==selected.output.id||proof?.kind!=='carousel-words'||!['projectId','documentId','outputId'].every(k=>selected.owner[k]===proof[k])||!model.expectedOutput)return null;
+  const output=Array.isArray(model.outputs)?model.outputs.find(o=>o.id===selected.output.id):null;if(!output||output.kind!=='carousel')return null;
+  return {targetKind:'carousel',bindingId:selected.rootBindingId,parentStudyId:id,outputId:output.id,title:output.name||output.title||'Carousel',output,wordsHash:proof.wordsHash,expected:{expectedOutput:model.expectedOutput,expectedWords:structuredClone(proof.expected)},dirty:!!host.pending||!!readBrowserDraft(hostScope,output.id)};
  }
  function waitForCarouselCheck({bindingId,parentStudyId,outputId},{isCurrent=()=>true,quietCancel=false}={}){return new Promise((resolve,reject)=>{
   let settled=false,timer,observer;const p=current();

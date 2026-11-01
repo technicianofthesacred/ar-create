@@ -23,7 +23,7 @@ export function normalizeTypography(value) {
 // This function deliberately contains its own validation and font map so the server
 // can inject fitCarouselTypography.toString() into its isolated capture browser.
 // It only reads/mutates descendants of root and is safe to call repeatedly.
-export function fitCarouselTypography(root, typography) {
+export function fitCarouselTypography(root, typography, options) {
   if (!root || typeof root.querySelectorAll !== 'function') return { overflow: false, scale: 1 };
   const font = typography?.font === 'serif' ? "'Source Serif 4',Georgia,serif"
     : typography?.font === 'sans' ? "'Instrument Sans',Arial,sans-serif"
@@ -96,6 +96,9 @@ export function fitCarouselTypography(root, typography) {
   };
 
   setScale(requested);
+  // A preview that reports nothing and does not auto-fit only needs its sizes;
+  // measuring every word on dozens of slides froze Arrange for seconds.
+  if (options?.measure === false && !auto) return { overflow: false, scale: requested };
   let overflow = excess();
   let scale = requested;
   let minScaleReached = false;

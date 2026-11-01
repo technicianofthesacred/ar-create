@@ -666,7 +666,7 @@
     {
       "path": "runtime/src/workspaces/carousel-typography.mjs",
       "sourceSha256": "02ec1fe50d66a1612223910efab34d3c3b1e87759620cfe591e02c757f36aa98",
-      "candidateSha256": "02ec1fe50d66a1612223910efab34d3c3b1e87759620cfe591e02c757f36aa98",
+      "candidateSha256": "31a6da73ad8b013f7347bd2b59e48bccb2cf3dee0c90790cb1562ea4db05f4a9",
       "adapted": false
     },
     {
@@ -1129,7 +1129,7 @@
     {
       "path": "public/document-study/output-connection.js",
       "sourceSha256": "413cdf1a2bd186ec81d31db05215eff82dc63ca6b63ff8f1c70931b7aaf35403",
-      "candidateSha256": "3747fef460786f2eba797ccb4f2704a1da717e4338a4148e35828f2c3b5eb2fa",
+      "candidateSha256": "2dcccc1694e9142a9c2e43744eb49b3d0d97c0cf7b1c4d2877353f15c4421ee5",
       "adapted": true
     },
     {
@@ -1561,7 +1561,7 @@
     {
       "path": "runtime/src/workspaces/CarouselWorkspace.tsx",
       "sourceSha256": "3c86ca3f393d32963210ac38860877364dda6057c84f1c3ebb37fde111447c59",
-      "candidateSha256": "85d1cd7f5dfd713c38eac7719913b16f49b0f7aa1e1ab4c0a3501dc86712e3d1",
+      "candidateSha256": "3690067229290d5adb040821286a8587ddbdda5cac3ff30b8c3d9d819d4c2607",
       "adapted": false
     },
     {
@@ -3417,7 +3417,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "a0bd6a27c0b5bfb8880264a2a197273f6449c6071f06df0078e743248707bda6"
+      "candidateSha256": "0517b9c3f59066428a002d78d231594e0a9945800727111f6ca71d383e19c179"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3473,7 +3473,7 @@
     },
     {
       "path": "public/document-study/workbench-bench-match.css",
-      "candidateSha256": "e07cc04bc6449c7f92f11f5741a83444377ec5c82935dee3caf3a26473d072ef"
+      "candidateSha256": "7d7bb6ac3d1d95ce12e975306543e0376e15eebc031540c5261628e04f7bacc3"
     },
     {
       "path": "public/document-study/workbench-check-match.css",
@@ -3901,7 +3901,7 @@
     },
     {
       "path": "tests/bench-catalog-ui.test.mjs",
-      "candidateSha256": "67ace7d41d8f17d45ac34e5da29f6110e29924a228adf2f88403381a46cd1287"
+      "candidateSha256": "02bcb9921fdf7872a384800ec5d3d8f490a3526c299dde064534820246d93ab8"
     },
     {
       "path": "tests/bench-projection.test.mjs",
@@ -5214,6 +5214,10 @@
     {
       "path": "runtime/src/workspaces/snapshot-carousel.test.mjs",
       "candidateSha256": "8dfcdc5079935bc01d83cb9fa5de29b0e0f40f8048f488afc408daacd20193fd"
+    },
+    {
+      "path": "runtime/src/workspaces/carousel-typography.test.mjs",
+      "candidateSha256": "a0dfec028c475d8b44f64703f20cbae81bcbcb9bc15603778caa270b872423f8"
     }
   ],
   "dependencyRepair": {
