@@ -2545,7 +2545,7 @@
     },
     {
       "path": "public/document-study/connected-workspace.mjs",
-      "candidateSha256": "6a4bed20ea3c3fed60d32360098cc4255a4a29a557c4b2223ab5eb3d62d8e80d"
+      "candidateSha256": "d34827e50efcfb205ebf5abce1f9289c0f65feda86425b3b9cbc716a2bc55f22"
     },
     {
       "path": "public/document-study/continuity-browser-recovery.mjs",
@@ -3533,7 +3533,7 @@
     },
     {
       "path": "tests/connected-workspace.test.mjs",
-      "candidateSha256": "fb9278c192569bc877ca9fd30c382f7bb7a1217b2b83c4c2c3c2ce2240ea4236"
+      "candidateSha256": "f4ff2f64b9fd61b277e4f6b7cc94390e1a3c11a8aaacbe557341cd8799ae8f80"
     },
     {
       "path": "tests/demo-fixture.test.mjs",
