@@ -34,7 +34,8 @@ function directory(p) {
 }
 function currentRoot(root) {
   const now = directory(root.path);
-  if (now.dev !== root.dev || now.ino !== root.ino) fail("Bound root changed. Rebind explicitly.");
+  // Compared by inode only: the path is already checked, and macOS can renumber the same disk (dev) after a restart.
+  if (now.ino !== root.ino) fail("Bound root changed. Rebind explicitly.");
 }
 function location(root, rel, missing = false) {
   relative(rel);
@@ -236,11 +237,11 @@ function createBoundProjectFolders({ dataDir, roots, ask, draft, writableWorking
       const materials = found.map((f) => {
         let old = b.materials.find((m) => !used.has(m.id) && m.relativePath === f.relativePath);
         if (!old) {
-          const matches = b.materials.filter((m) => !used.has(m.id) && !paths.has(m.relativePath) && m.dev === f.dev && m.ino === f.ino);
+          const matches = b.materials.filter((m) => !used.has(m.id) && !paths.has(m.relativePath) && m.ino === f.ino);
           if (matches.length === 1) old = matches[0];
         }
         if (old) used.add(old.id);
-        const change2 = !old ? "added" : old.relativePath !== f.relativePath ? "renamed" : old.dev !== f.dev || old.ino !== f.ino ? "replaced" : old.hash !== f.hash ? "modified" : "unchanged";
+        const change2 = !old ? "added" : old.relativePath !== f.relativePath ? "renamed" : old.ino !== f.ino ? "replaced" : old.hash !== f.hash ? "modified" : "unchanged";
         return { ...f, id: old?.id || randomUUID(), change: change2, missing: false };
       });
       const missing = b.materials.filter((m) => !used.has(m.id)).map((m) => ({ ...m, missing: true, change: "missing" }));

@@ -13,6 +13,9 @@ function canonical(p,directory=true){
  const s=fs.lstatSync(p);if(fs.realpathSync(p)!==p||(directory?!s.isDirectory():!s.isFile()||s.nlink!==1))fail();return s;
 }
 const stamp=(p)=>{const s=canonical(p);return {path:p,dev:s.dev,ino:s.ino};};
+// A saved folder is the same folder when its path and inode match. The disk number (dev) is left out on purpose:
+// macOS can renumber the same disk after a restart, which made every saved proof look moved and stopped startup.
+const sameFolder=(a,b)=>a.path===b.path&&a.ino===b.ino;
 const validStamp=r=>r&&typeof r.path==='string'&&Number.isSafeInteger(r.dev)&&Number.isSafeInteger(r.ino);
 const suffixes={'roots.media':'media','roots.workflow':'workflow',media:'media/Project',derived:'workflow/Derived'};
 /** Trusted startup-only capability. It preserves historical native metadata bytes and CAS.
@@ -26,7 +29,7 @@ export function createStudyOwnedRelocation({dataDir,manifest}={}){
  for(const e of m.bindings){
   if(!UUID.test(e.bindingId||'')||!SHA.test(e.bindingHash||'')||entries.has(e.bindingId)||!e.roots||Object.keys(e.roots).length!==4||!Array.isArray(e.captures))fail();
   for(const [k,suffix] of Object.entries(suffixes)){
-   const r=e.roots[k];if(!validStamp(r?.before)||!validStamp(r?.after)||r.before.path!==path.join(room(m.legacyDataRoot,e.bindingId),suffix)||r.after.path!==path.join(room(dataDir,e.bindingId),suffix)||stable(stamp(r.after.path))!==stable(r.after))fail();
+   const r=e.roots[k];if(!validStamp(r?.before)||!validStamp(r?.after)||r.before.path!==path.join(room(m.legacyDataRoot,e.bindingId),suffix)||r.after.path!==path.join(room(dataDir,e.bindingId),suffix)||!sameFolder(stamp(r.after.path),r.after))fail();
   }
   const used=new Set();for(const c of e.captures){
    const legacyCapture=path.join(room(m.legacyDataRoot,e.bindingId),'capture');
@@ -43,8 +46,8 @@ export function createStudyOwnedRelocation({dataDir,manifest}={}){
   if(!SHA.test(sourceKey))fail();
   for(const [k] of Object.entries(suffixes)){
    const prior=k.startsWith('roots.')?b.roots[k.slice(6)]:b[k],r=e.roots[k];
-   if(stable(prior)!==stable(r.before)||stable(stamp(r.after.path))!==stable(r.after))fail();
-   if(k.startsWith('roots.')){const kind=k.slice(6);if(stable(configured[kind])!==stable(r.after))fail();updated.roots[kind]=structuredClone(r.after);}else updated[k]=structuredClone(r.after);
+   if(stable(prior)!==stable(r.before)||!sameFolder(stamp(r.after.path),r.after))fail();
+   if(k.startsWith('roots.')){const kind=k.slice(6);if(!sameFolder(configured[kind],r.after))fail();updated.roots[kind]=structuredClone(r.after);}else updated[k]=structuredClone(r.after);
   }
   updated.draftSourceKey=sourceKey;return updated;
  }
@@ -54,7 +57,7 @@ export function createStudyOwnedRelocation({dataDir,manifest}={}){
   const bindingFile=path.join(room(dataDir,bindingId),'metadata/ar-project-folder-bindings',bindingId+'.json');canonical(bindingFile,false);if(digest(fs.readFileSync(bindingFile))!==e.bindingHash)fail();
   const c=e.captures.find(c=>c.copiedPath===record.copiedPath);
   if(!c||c.copiedHash!==record.copiedHash||path.dirname(c.relocatedPath)!==captureDir)fail();
-  for(const r of Object.values(e.roots))if(stable(stamp(r.after.path))!==stable(r.after))fail();
+  for(const r of Object.values(e.roots))if(!sameFolder(stamp(r.after.path),r.after))fail();
   canonical(c.relocatedPath,false);if(digest(fs.readFileSync(c.relocatedPath))!==c.copiedHash)fail();return c.relocatedPath;
  }
  return {binding,capture};
