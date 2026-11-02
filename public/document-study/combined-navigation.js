@@ -3,9 +3,10 @@
 (()=>{
  'use strict';
  if(window.combinedNavigation)return;
- const ITEMS=[['home','Home'],['subjects','Subjects'],['library','Library',1],['source','Source',2],['research','Research',3],['direction','Direction',4],['write','Write',5],['check','Check',7],['media','Media',8],['arrange','Arrange',9],['audience','Audience',10],['share','Share',11],['outputs','Outputs',12]];
+ const ITEMS=[['home','Home'],['subjects','Subjects'],['library','Library',1],['material','Material',1],['source','Source',2],['research','Research',3],['direction','Direction',4],['write','Write',5],['check','Check',7],['media','Media',8],['arrange','Arrange',9],['audience','Audience',10],['share','Share',11],['outputs','Outputs',12]];
  // The Spine: tools in four bands under Home, Subjects and Library. Read is a view of Write.
- const BANDS=[['','',['home','subjects','library']],['gather','Gather',['source']],['develop','Develop',['research','direction']],['make','Make',['write','check','media','arrange']],['deliver','Deliver',['audience','share','outputs']]];
+ const BANDS=[['','',['home','subjects','library']],['gather','Gather',['material','source']],['develop','Develop',['research','direction']],['make','Make',['write','check','media','arrange']],['deliver','Deliver',['audience','share','outputs']]];
+ const railWide=()=>{try{return localStorage.getItem('combined-rail-wide')!=='false';}catch{return true;}};
  let busy=false,phoneGroup='',phoneReturn=null;
  const PHONE_GROUPS={develop:['library','source','research','direction'],make:['write','check','media','arrange'],deliver:['audience','share','outputs']};
  function closePhone({restoreFocus=true}={}){phoneGroup='';document.getElementById('combined-phone-sheet')?.remove();if(restoreFocus&&phoneReturn?.isConnected)phoneReturn.focus({preventScroll:true});}
@@ -39,6 +40,8 @@
     // Forward through the actual button: selection-aware Carousel admission,
     // dirty writing and all stage-specific guards remain in one owner.
     owner.click();
+    // Material is the Library step's intake mode; Library is the same step without it.
+    if(key==='material'||key==='library'){await new Promise(r=>setTimeout(r,60));document.querySelector(key==='material'?'[data-mi-open]':'.mi-open [data-mi-back]')?.click();}
    }
    return true;
   }catch(error){status(error.message||'This work could not open. Your words are retained.');return false;}
@@ -59,9 +62,12 @@
    for(const [band,name,keys]of BANDS){const group=document.createElement('div');group.className='combined-rail-band';if(band){group.dataset.band=band;const strip=document.createElement('span');strip.className='combined-band-label';strip.setAttribute('aria-hidden','true');strip.textContent=name;group.append(strip);}const tools=document.createElement('div');tools.className='combined-band-tools';for(const [key,label]of ITEMS.filter(row=>keys.includes(row[0]))){const button=document.createElement('button');button.type='button';button.dataset.combinedNav=key;button.innerHTML='<i aria-hidden="true"></i><span></span>';button.querySelector('span').textContent=label;button.title=label;tools.append(button);}group.append(tools);rail.append(group);}owner.append(rail);
   }
   let phoneBar=owner.querySelector(':scope>.combined-phonebar');if(!phoneBar){phoneBar=document.createElement('nav');phoneBar.className='combined-phonebar';phoneBar.setAttribute('aria-label','AR Create');for(const [key,label]of [['home','Home'],['subjects','Subjects'],['develop','Develop'],['make','Make'],['deliver','Deliver']]){const b=document.createElement('button');b.type='button';if(PHONE_GROUPS[key])b.dataset.combinedGroup=key;else b.dataset.combinedNav=key;b.textContent=label;phoneBar.append(b);}owner.append(phoneBar);}
-  const subjects=!!document.querySelector('#project-library[data-combined-subjects]'),n=stage(),selected=home()?(subjects?'subjects':'home'):ITEMS.find(row=>row[2]===(n===6?5:n))?.[0];
+  const subjects=!!document.querySelector('#project-library[data-combined-subjects]'),n=stage(),selected=home()?(subjects?'subjects':'home'):n===1&&document.querySelector('.mi-open')?'material':ITEMS.find(row=>row[2]===(n===6?5:n))?.[0];
   for(const b of rail.querySelectorAll('button')){const on=b.dataset.combinedNav===selected;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');if(b.disabled!==busy)b.disabled=busy;}
   for(const band of rail.querySelectorAll('.combined-rail-band[data-band]'))band.classList.toggle('is-active',!!band.querySelector('[aria-current]'));
+  // The Spine's waiting counts: what is waiting on Adrian at each step.
+  const counts=window.c3WorkbenchFrame?.waitingCounts?.()||{};for(const b of rail.querySelectorAll('[data-combined-nav]')){const item=ITEMS.find(row=>row[0]===b.dataset.combinedNav),n=b.dataset.combinedNav==='home'?counts.home:item?.[2]?counts[item[2]]:0;let badge=b.querySelector(':scope>b');const name=item?.[1]||b.title;if(n){if(!badge){badge=document.createElement('b');badge.className='combined-count';badge.setAttribute('aria-hidden','true');b.append(badge);}if(badge.textContent!==String(n))badge.textContent=String(n);}else badge?.remove();const tip=n?name+' · '+n+' waiting on you':name;if(b.title!==tip)b.title=tip;}
+  let toggle=rail.querySelector(':scope>[data-combined-rail-toggle]');if(!toggle){toggle=document.createElement('button');toggle.type='button';toggle.dataset.combinedRailToggle='';rail.append(toggle);}const wide=railWide();document.body.classList.toggle('combined-rail-wide',wide);const label=wide?'Collapse to icons':'Show names';if(toggle.textContent!==label){toggle.textContent=label;toggle.title=label;}
   for(const b of phoneBar.querySelectorAll('button')){const key=b.dataset.combinedNav||b.dataset.combinedGroup,on=key===selected||PHONE_GROUPS[key]?.includes(selected);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');if(b.dataset.combinedGroup)b.setAttribute('aria-expanded',String(phoneGroup===b.dataset.combinedGroup));if(b.disabled!==busy)b.disabled=busy;}
   let switcher=bar.querySelector(':scope>.combined-piece-switch');
   const piece=!home()&&([5,6].includes(n)||n===9&&!!document.querySelector('#study-output-canvas .car-writing-page'));
@@ -70,6 +76,8 @@
   const carousel=document.querySelector('.car-writing-page'),view=n===7||window.workspaceNavigation?.isCarouselCheck?.()?'check':n===6||window.studyDraft?.viewMode?.()==='preview'||carousel?.dataset.writingView==='read'?'read':'write';
   for(const b of switcher.querySelectorAll('button')){const pressed=String(b.dataset.combinedMode===view);if(b.getAttribute('aria-pressed')!==pressed)b.setAttribute('aria-pressed',pressed);if(b.disabled!==busy)b.disabled=busy;}
  }
+ document.addEventListener('click',event=>{const t=event.target.closest?.('[data-combined-rail-toggle]');if(!t)return;event.preventDefault();try{localStorage.setItem('combined-rail-wide',String(!railWide()));}catch{}decorate();});
+ window.addEventListener('combined-counts',()=>decorate());
  document.addEventListener('click',event=>{const b=event.target.closest?.('[data-combined-nav],[data-combined-mode],[data-combined-group],[data-combined-home-board],[data-combined-tool]');if(!b||b.disabled)return;event.preventDefault();if(b.dataset.combinedTool){const original=document.querySelector('.wbf-top-actions '+b.dataset.combinedTool);closePhone();original&&!original.disabled&&original.click();return;}if(b.hasAttribute('data-combined-home-board')){void window.combinedSubjects.open(b.dataset.combinedHomeBoard?{projectId:b.dataset.combinedHomeBoard}:{}).then(decorate).catch(error=>status(error.message));return;}if(b.dataset.combinedGroup)openPhone(b.dataset.combinedGroup,b);else if(b.dataset.combinedMode)void mode(b.dataset.combinedMode);else void go(b.dataset.combinedNav);});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&phoneGroup){event.preventDefault();closePhone();}});
  document.addEventListener('keydown',event=>{if(!event.target.closest?.('.combined-rail')||!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;const list=[...document.querySelectorAll('.combined-rail button:not(:disabled)')],i=list.indexOf(event.target);if(i<0)return;event.preventDefault();list[event.key==='Home'?0:event.key==='End'?list.length-1:(i+(event.key==='ArrowDown'?1:-1)+list.length)%list.length]?.focus();});

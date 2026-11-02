@@ -400,15 +400,25 @@ export function installSourceReader({document:doc, window:win=doc.defaultView, g
     if(panel?.isConnected&&stamp===next){place();return;}
     savedReviewEpoch++;restoreContextualCopy();panel?.remove();panel=doc.createElement('section');panel.dataset.sourceReader='';panel.dataset.sourceReaderProject=p.id;panel.className='source-reader';panel.setAttribute('aria-label','Kept conversation reader');place();stamp=next;paint();if(!loaded&&!loading)void refresh();else if(!loading)void pickupSavedReview();
   }
+  // "Checked by you": Enter on an unchanged unclear line records that a person heard it as written.
+  // The mark lives beside the transcript and shows only while the line's words are unchanged.
+  let checkedTurns=new Set();
+  const unclear=text=>/\[(?:unclear|inaudible)[^\]]*\]|\(\?\)|\?\?/i.test(String(text||''));
+  const fingerprint=async text=>[...new Uint8Array(await (win.crypto?.subtle||globalThis.crypto.subtle).digest('SHA-256',new TextEncoder().encode(String(text))))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  let checkedShown=false;
+  function markChecked(){if(!checkedTurns.size&&!checkedShown)return;checkedShown=checkedTurns.size>0;const p=active(),s=p&&selected(p);if(!panel||!s)return;for(const node of panel.querySelectorAll('[data-source-reader-turn]')){const on=checkedTurns.has(s.id+'\n'+node.dataset.sourceReaderTurn);if(on&&node.dataset.sourceLineChecked!=='true')node.dataset.sourceLineChecked='true';else if(!on&&node.dataset.sourceLineChecked)delete node.dataset.sourceLineChecked;}}
+  async function loadChecks(){try{const response=await request('/api/source-sessions/checks',{headers:{Accept:'application/json'},cache:'no-store'});if(!response.ok)return;const value=await response.json(),next=new Set();for(const c of value?.checks||[]){const s=data?.sessions?.find(x=>x.id===c.sessionId),t=s?.turns?.find(x=>x.id===c.turnId);if(t&&await fingerprint(t.text)===c.textHash)next.add(c.sessionId+'\n'+c.turnId);}checkedTurns=next;markChecked();}catch{}}
+  async function checkLine(s,t){if(!unclear(t.text)||checkedTurns.has(s.id+'\n'+t.id)||win.arCreateUiActor?.actor&&win.arCreateUiActor.actor!=='human:adrian')return;try{const response=await request('/api/source-sessions/check',{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','X-AR-Client':'ui'},cache:'no-store',body:JSON.stringify({sessionId:s.id,turnId:t.id,textHash:await fingerprint(t.text),operationId:makeId()})});if(response.ok){checkedTurns.add(s.id+'\n'+t.id);markChecked();}}catch{}}
   // Source edits like a document: leaving a changed line saves it, Enter saves and moves to the
   // next line, Esc puts the line back. Moving into the same line's own tools does not save yet.
   function lineState(node){const p=active(),s=p&&selected(p),t=s?.turns.find(t=>t.id===node?.dataset.sourceReaderTurn),d=t&&drafts[draftKey(p,s,t)];return {p,s,t,d,changed:!!d&&(d.text!==d.baseText||d.speaker!==d.baseSpeaker)};}
   function saveLine(node){const {p,changed,d,s}=lineState(node);if(!p||!changed||!d.text.trim()||stale(d,s)||room(p).pending||!correctionsAllowed())return;void submit(p,'edit');}
   function onFocusOut(event){const node=event.target.closest?.('[data-source-reader-turn]');if(!node||!panel?.contains(node))return;const next=event.relatedTarget;if(next&&panel.querySelector('.source-reader-inline-tools')?.contains(next))return;saveLine(node);}
   function onLineKey(event){const node=event.target.closest?.('[data-source-reader-turn]');if(!node||!panel?.contains(node)||event.isComposing)return;
-   if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();const lines=[...panel.querySelectorAll('[data-source-reader-turn]')],next=lines[lines.indexOf(node)+1];if(next)next.focus();else{node.blur();saveLine(node);}return;}
+   if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();{const {s,t,changed}=lineState(node);if(s&&t&&!changed)void checkLine(s,t);}const lines=[...panel.querySelectorAll('[data-source-reader-turn]')],next=lines[lines.indexOf(node)+1];if(next)next.focus();else{node.blur();saveLine(node);}return;}
    if(event.key==='Escape'){const {p,s,t,d}=lineState(node);if(!d)return;event.preventDefault();event.stopPropagation();delete drafts[draftKey(p,s,t)];saveLocal();node.textContent=d.baseText;delete node.dataset.sourceReaderUnsaved;syncTools(p,s,null);paintReview(true);}
   }
+  {const basePaint=paint;paint=function(...args){const result=basePaint.apply(this,args);markChecked();return result;};const baseRefresh=runRefresh;runRefresh=async function(...args){const result=await baseRefresh.apply(this,args);if(loaded&&!disposed&&data?.sessions?.some(x=>x.turns?.some(t=>unclear(t.text))))void loadChecks();return result;};}
   doc.addEventListener('focusout',onFocusOut);doc.addEventListener('keydown',onLineKey);doc.addEventListener('focusin',onFocusIn);doc.addEventListener('click',onClick);doc.addEventListener('input',onInput);doc.addEventListener('change',onChange);doc.addEventListener('submit',onSubmit);
   const observer=observe?new win.MutationObserver(()=>mount()):null;observer?.observe(doc.getElementById('app')||doc.body,{childList:true,subtree:true});
   // Returning browser focus must not replace prose under the incoming pointer.

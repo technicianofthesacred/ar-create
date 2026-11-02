@@ -189,3 +189,17 @@ test('Source edits like a document: leaving a changed line saves it, Enter moves
   assert.strictEqual(x.window.document.activeElement,x.turn('remark-next'),'Enter moves to the next line');
  }finally{x.close();}
 });
+
+test('Enter on an unchanged unclear line marks it checked by you, beside the transcript',async()=>{
+ const owner=server();owner.state.sessions[0].turns[1].text='No [unclear] was made.';const checks=[],base=owner.fetch;
+ owner.fetch=async(url,options={})=>{if(url==='/api/source-sessions/checks')return {ok:true,status:200,json:async()=>({schema:'ar-create.source-line-checks.v1',checks:copy(checks)})};if(url==='/api/source-sessions/check'){const body=JSON.parse(options.body);assert.deepEqual(Object.keys(body).sort(),['operationId','sessionId','textHash','turnId']);assert.match(body.textHash,/^[a-f0-9]{64}$/);checks.push({...body,by:'human:adrian'});return {ok:true,status:200,json:async()=>checks.at(-1)};}return base(url,options);};
+ const x=await setup(owner);try{
+  const node=x.turn('remark-next');node.focus();node.dispatchEvent(new x.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+  for(let i=0;i<20&&x.turn('remark-next').dataset.sourceLineChecked!=='true';i++)await settle();
+  assert.equal(checks.length,1,'one check was recorded');assert.equal(checks[0].turnId,'remark-next');
+  assert.equal(x.turn('remark-next').dataset.sourceLineChecked,'true','the line shows checked by you');
+  assert.equal(owner.requests.length,0,'the transcript itself was not edited');
+  const clear=x.turn('remark-a');clear.focus();clear.dispatchEvent(new x.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await settle();await settle();
+  assert.equal(checks.length,1,'a clear line is not marked');
+ }finally{x.close();}
+});

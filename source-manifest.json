@@ -60,7 +60,7 @@
     {
       "path": "runtime/server.mjs",
       "sourceSha256": "93824f72768c5e97c80bb44644afbe1b7d9f8d8c63df9132052e7127df5235b4",
-      "candidateSha256": "225a8b7f47590d81dda36c26b2d073c8056dcb206280835346c74e590041aa07",
+      "candidateSha256": "ffb50fee38eb1716b067251e644801a72968da3caa593b7bed08250e94c4736a",
       "adapted": true
     },
     {
@@ -2361,11 +2361,11 @@
     },
     {
       "path": "public/document-study/source-imported.css",
-      "candidateSha256": "f3cb4afb955900926e3212f1fc19b3dde75a7350aef6b584b1775199fad865b3"
+      "candidateSha256": "050f8067457f5eace6d271bedc5fb6865540ca198ecdf805e2e5452427fc88a0"
     },
     {
       "path": "public/document-study/source-imported.js",
-      "candidateSha256": "bc044204e1b1a07c73f26a72c503cd404722bd5c4dc274f97ea3de053c5d2dcc"
+      "candidateSha256": "15a7a13b94d88a23723b9a2b0da0ddcb163e41901bdd85677ee0ec036d1a4ab5"
     },
     {
       "path": "public/document-study/source-dialogue.js",
@@ -2761,7 +2761,7 @@
     },
     {
       "path": "runtime/commands.mjs",
-      "candidateSha256": "4189459be7a6d4fb9375b839ec878e77e15dbbdb4352ec5a1a6c59b8ec629ad0"
+      "candidateSha256": "279e73b011d06904fd59d3a875d3e6d60a5e82c1bc8e0fbca548fbea0c1c4740"
     },
     {
       "path": "runtime/services/actor.mjs",
@@ -3417,7 +3417,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "4eb35a00457b42e8655abd73581ae1609f72a1769b6468c6da7deaa02a804cad"
+      "candidateSha256": "5c46418da5e03c16ecfbe6bcc0c4d20d1e470cfe4f93e41bdd741d358b29ba62"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3725,7 +3725,7 @@
     },
     {
       "path": "tests/source-inline-editing.test.mjs",
-      "candidateSha256": "6cbf06774f39c7dd832fb6126ddc79b05e13de30958c84d8731bde6428939879"
+      "candidateSha256": "52aebd46e708cffcd4483ecc4052854aeae4116938a01d1af0f52436ba38fdf5"
     },
     {
       "path": "tests/review-source-corrections.test.mjs",
@@ -4633,11 +4633,11 @@
     },
     {
       "path": "public/document-study/combined-navigation.css",
-      "candidateSha256": "9ed0abeea5d9f89a3be29d4d3be6105478e1b68e483c4bf2c25dd3bd318a621f"
+      "candidateSha256": "c4b06ad4927ca6b41103ad7d3e8e28ade3073a5871d25960c87bef4dcebf7ed4"
     },
     {
       "path": "public/document-study/combined-navigation.js",
-      "candidateSha256": "6a5de2163d1bfcfc35f31e63624a7f5e2f5826ff4d3a338e1e5bb0f2906c7a03"
+      "candidateSha256": "5a3b4a6c28662cfd6e2c24dbe35984a7baf0d1e4b66298b65074ee166538ba45"
     },
     {
       "path": "public/document-study/combined-subjects.css",
@@ -4653,7 +4653,7 @@
     },
     {
       "path": "tests/combined-navigation.test.mjs",
-      "candidateSha256": "1baf4b9ebbc658e2992795547c8273b3cddeb1637cf1352ea09942ad05c0df14"
+      "candidateSha256": "0d7dee4786e7cca2c696a645366cbc15151527c70a2cdea69931559e5635a722"
     },
     {
       "path": "tests/combined-subjects.test.mjs",
@@ -5218,6 +5218,14 @@
     {
       "path": "runtime/src/workspaces/carousel-typography.test.mjs",
       "candidateSha256": "a0dfec028c475d8b44f64703f20cbae81bcbcb9bc15603778caa270b872423f8"
+    },
+    {
+      "path": "runtime/services/source-line-checks.mjs",
+      "candidateSha256": "7a9e70c34a91107beb5f84a26c8dfd29316f8cb39b93e96a4b79cf2480685a8d"
+    },
+    {
+      "path": "tests/source-line-checks.test.mjs",
+      "candidateSha256": "51789c40f742fc06f01e7bb11837600acfed0903a4875fae71674fe8cb049c64"
     }
   ],
   "dependencyRepair": {
