@@ -10,7 +10,7 @@ function boot(n=5){
  w.workspaceNavigation={async changeMode(mode){calls.push(mode);}};d.querySelector('[data-tr-home]').onclick=()=>calls.push('home');[...d.querySelectorAll('.workflowStep')].forEach((b,i)=>b.onclick=()=>calls.push('stage:'+String(i+1)));w.eval(code);return {w,d,p,calls,close:()=>w.close()};
 }
 test('Combined rail exposes exactly twelve entrances while retaining every original handler',async()=>{
- const f=boot();assert.deepEqual([...f.d.querySelectorAll('.combined-rail [data-combined-nav]')].map(n=>n.textContent),['Home','Subjects','Library','Material','Source','Research','Direction','Write','Check','Media','Arrange','Audience','Share','Outputs']);assert.equal(f.d.querySelectorAll('.workflowStep').length,12);
+ const f=boot();assert.deepEqual([...f.d.querySelectorAll('.combined-rail [data-combined-nav]')].map(n=>n.textContent),['Home','Library','Material','Source','Research','Direction','Write','Check','Media','Arrange','Audience','Share','Outputs']);assert.equal(f.d.querySelectorAll('.workflowStep').length,12);
  await f.w.combinedNavigation.go('arrange');assert.deepEqual(f.calls,['arrange']);await f.w.combinedNavigation.go('subjects');assert.deepEqual(f.calls,['arrange','subjects']);assert.equal(f.d.querySelector('[data-combined-nav="subjects"]').getAttribute('aria-current'),'page');f.close();
 });
 test('piece Write and Read switch through the maintained selected-piece mode owner',async()=>{
@@ -21,7 +21,7 @@ test('failed Home close prevents section opening and preserves the dialog',async
  const f=boot();f.d.querySelector('dialog').setAttribute('open','');f.w.projectLibrary.close=async()=>{throw Error('Resolve current changes');};assert.equal(await f.w.combinedNavigation.go('source'),false);assert.deepEqual(f.calls,[]);assert.equal(f.d.querySelector('dialog').open,true);assert.match(f.d.querySelector('[role="status"]').textContent,/Resolve/);f.close();
 });
 test('rail keyboard navigation changes focus, never the selected work',()=>{
- const f=boot(),b=f.d.querySelector('[data-combined-nav="home"]');b.focus();b.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));assert.equal(f.d.activeElement.dataset.combinedNav,'subjects');assert.deepEqual(f.calls,[]);assert.equal(f.p.viewedStage,5);f.close();
+ const f=boot(),b=f.d.querySelector('[data-combined-nav="home"]');b.focus();b.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));assert.equal(f.d.activeElement.dataset.combinedNav,'library');assert.deepEqual(f.calls,[]);assert.equal(f.p.viewedStage,5);f.close();
 });
 
 test('phone groups expose the same guarded entrances and Escape returns focus',async()=>{
