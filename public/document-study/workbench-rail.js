@@ -116,7 +116,7 @@
   12:{name:'Outputs',open:'By kind',aria:'Outputs by kind',rows:outputRows,press:outputPress},
  };
  const panelFor=n=>homeOpen()?null:PANELS[n]||null;
- const isOpen=n=>phone()?sheet:prefs[n]!==false;
+ const isOpen=n=>phone()?sheet:[2,12].includes(n)?prefs[n]===true:prefs[n]!==false;
 
  // ---------- the rail ----------
  function bottomBar(nav){

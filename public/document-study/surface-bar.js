@@ -64,6 +64,7 @@
   return out;
  }
  function proxy(i,cls,inner,extra=''){const n=reals[i];if(n==null)return '';const dis=n.disabled?'disabled':'';const t=n.title||label(n);return `<button type="button" class="${cls}" data-sb="${i}" ${dis} title="${esc(t)}" ${n.getAttribute('aria-pressed')?`aria-pressed="${esc(n.getAttribute('aria-pressed'))}"`:''} ${n.getAttribute('aria-current')?'aria-current="page"':''} ${extra}>${inner}</button>`;}
+ function inTabs(i){const n=reals[i];if(n==null||n.options.length<2||n.options.length>8)return '';return `<nav class="sb-in" aria-label="In"><span class="sb-in-l">In:</span>${[...n.options].map(o=>`<button type="button" class="sb-in-t" data-sb-in="${i}" data-sb-in-value="${esc(o.value)}" aria-pressed="${o.selected}" title="${esc(o.textContent)}" ${o.disabled||n.disabled?'disabled':''}>${esc(o.textContent.includes(' · ')?o.textContent.split(' · ').pop():o.textContent)}</button>`).join('')}</nav>`;}
  function selectProxy(i,cls,aria){const n=reals[i];if(n==null)return '';return `<select class="${cls}" data-sb-select="${i}" aria-label="${esc(aria||n.getAttribute('aria-label')||'Choose')}" ${n.disabled?'disabled':''}>${[...n.options].map(o=>`<option value="${esc(o.value)}" ${o.selected?'selected':''} ${o.disabled?'disabled':''}>${esc(o.textContent)}</option>`).join('')}</select>`;}
  function noteText(){const s=document.querySelector('.workspace>.historicalToolbar>span');const t=s?label(s):'';return /read-only/i.test(t)?'Read-only':/retained|historical/i.test(t)?'Earlier record':'';}
  // Middle trim: names past the limit keep their start and end, e.g. "Seven Lessons from…the Kiln"; the full name is the tooltip.
@@ -93,7 +94,7 @@
   const sep='<span class="sb-sep2" aria-hidden="true">›</span>',parts=[];
   if(slots.ret!=null)parts.push(`<a class="sb-ret" href="${esc(reals[slots.ret].getAttribute('href')||'')}" title="Return to i64 OS">i64 OS</a>`);
   parts.push(`<span class="sb-piece" title="${esc(id.piece)}">${esc(mid(id.piece,32))}</span>`);
-  if(slots.piece!=null)parts.push(`<label class="sb-out"><span class="cb-sr">Output</span>${selectProxy(slots.piece,'sb-oselect','Choose output')}</label>`);
+  if(slots.piece!=null)parts.push(`${inTabs(slots.piece)}<label class="sb-out${inTabs(slots.piece)?' sb-out-tabs':''}"><span class="cb-sr">Output</span>${selectProxy(slots.piece,'sb-oselect','Choose output')}</label>`);
   else if(id.title)parts.push(`<span class="sb-on" title="${esc(id.title+(id.meta?' · '+id.meta:''))}">${esc(mid(id.title,28))}</span>`);
   if(cp)parts.push(`<span class="sb-cp"><span class="sb-cp-n">${String(cp.n).padStart(2,'0')}</span><span class="sb-cp-name">${esc(cp.name)}</span></span>`);
   let word='';
@@ -178,6 +179,7 @@
   }
   if(moreOpen&&!event.target.closest?.('#c3-surface-bar .sb-morew')){moreOpen=false;focusedOutput=null;lastSig='';schedule();}
  });
+ document.addEventListener('click',event=>{const t=event.target.closest?.('#c3-surface-bar [data-sb-in]');if(!t||t.disabled)return;const real=reals[Number(t.dataset.sbIn)];if(!real?.isConnected||real.value===t.dataset.sbInValue)return;real.value=t.dataset.sbInValue;real.dispatchEvent(new Event('change',{bubbles:true}));lastSig='';schedule();});
  document.addEventListener('change',event=>{
   const s=event.target.closest?.('#c3-surface-bar [data-sb-select],#c3-records [data-sb-select]');if(!s)return;
   const real=reals[Number(s.dataset.sbSelect)];if(!real?.isConnected)return;
