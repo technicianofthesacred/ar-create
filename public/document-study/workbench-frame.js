@@ -17,6 +17,7 @@
  function restoreBenchInventory(){for(const [node,old]of benchHidden){node.hidden=old.hidden;node.style.cssText=old.style;}benchHidden.clear();}
  function setBenchCatalog(payload={}){
   if(!actualBench())return false;
+  queueMicrotask(()=>window.dispatchEvent(new Event('combined-counts')));
   const old=benchCatalog;
   // Callbacks may be replaced without repainting the same metadata under an observer.
   const token=JSON.stringify([payload.scope,payload.ready,payload.error,payload.current,payload.history,payload.capabilities,payload.authorDecisions]);
@@ -92,7 +93,9 @@
  function threadDetail(entry,t,nextHTML,connected){
   if(!t)return nextHTML+homeLists();
   const tracks=t.tracks.map(tr=>`<section class="thread-track"><header><span>${esc(tr.label)} · ${esc(benchTitle(tr.item))}</span><b>${tr.steps.filter(x=>x[1]).length} of ${tr.steps.length}</b></header><ol>${tr.steps.map(([label,done])=>`<li class="${done?'is-done':''}"><button type="button" data-wbf-thread-open="${esc(tr.item.key)}" ${connected&&tr.item.available&&!benchActionBusy?'':'disabled'}>${esc(label)}</button></li>`).join('')}</ol></section>`).join('');
-  return `<div class="thread-head"><h2>${esc(t.title)}</h2><span class="dim small">${t.done} of ${t.total} steps done</span></div>${nextHTML}${tracks}<section class="thread-box"><div class="lab">Thread</div><div class="combined-home-row">${t.group.project?homeFlow(entry.catalog,t.group.project.target.storyId):''}</div>${t.group.project?`<button type="button" class="lnk" data-combined-home-board="${esc(t.group.project.target.storyId)}">Open the board</button>`:''}</section>${homeLists()}`;
+  const ids=new Set([t.story?.nativeProjectId,...t.group.items.map(i=>i.target?.parentStudyId)].filter(Boolean)),agents=(window.arLive?.state?.()?.committedLines||[]).filter(r=>r?.status==='committed'&&/^agent:/.test(r.actor||'')&&ids.has(r.scope?.id)).slice(0,5);
+  const ready=`<section class="thread-ready" aria-label="Ready for your eye"><header><span class="lab">Ready for your eye</span><span class="dim small">${t.decisions.length+agents.length}</span></header>${t.decisions.length||agents.length?`<ul>${t.decisions.map(d=>{const place=authorDecisionPlace(d);return `<li><button type="button" class="move" data-wbf-author-decision="${esc(authorDecisionKey(d))}" ${benchActionBusy||typeof benchCatalog?.openDecision!=='function'?'disabled':''}><span class="t">${esc(d.label)}</span>${place.step?`<span class="go">${place.step} ›</span>`:''}</button></li>`;}).join('')}${agents.map(r=>`<li><span>${esc(window.c3Shell?.actorName?.(r.actor)||r.actor)} · ${esc(window.arLive?.label?.(r)||'Saved change')}</span><time class="dim small">${esc(new Date(r.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'}))}</time></li>`).join('')}</ul>`:'<p class="dim small">Nothing here is waiting on you.</p>'}</section>`;
+  return `<div class="thread-head"><h2>${esc(t.title)}</h2><span class="dim small">${t.done} of ${t.total} steps done</span></div>${nextHTML}${ready}${tracks}<section class="thread-box"><div class="lab">Thread</div><div class="combined-home-row">${t.group.project?homeFlow(entry.catalog,t.group.project.target.storyId):''}</div>${t.group.project?`<button type="button" class="lnk" data-combined-home-board="${esc(t.group.project.target.storyId)}">Open the board</button>`:''}</section>${homeLists()}`;
  }
  // Each subject reads left to right: what was gathered, what was understood, what was made.
  function homeFlow(catalog,storyId){
@@ -544,7 +547,9 @@
  // Home keys: j and k move between threads, 1 to 5 pick one, Enter continues the chosen thread.
  document.addEventListener('keydown',event=>{const d=document.getElementById('project-library');if(!d?.open||d.dataset.plContext||!d.querySelector('.thread-list')||event.metaKey||event.ctrlKey||event.altKey||event.target.closest?.('input,textarea,select,[contenteditable="true"],[contenteditable="plaintext-only"]'))return;const rows=[...d.querySelectorAll('.thread-list [data-wbf-thread]')];if(!rows.length)return;const at=Math.max(0,rows.findIndex(r=>r.classList.contains('is-selected')));let next=null;if(event.key==='j')next=rows[Math.min(rows.length-1,at+1)];else if(event.key==='k')next=rows[Math.max(0,at-1)];else if(/^[1-5]$/.test(event.key))next=rows[Number(event.key)-1];else if(event.key==='Enter'){const go=d.querySelector('.wbf-bench-story .pickup .btn.primary');if(go&&!go.disabled){event.preventDefault();go.click();}return;}if(!next)return;event.preventDefault();benchThread=next.dataset.wbfThread;bench();});
  document.addEventListener('input',event=>{if(event.target.matches?.('[data-wbf-bench-search]')){benchQuery=event.target.value;benchLimit=30;bench();}});
- window.c3WorkbenchFrame={decorate,openTool,closeTool,setBenchCatalog};
+ // What is waiting on Adrian, per step, for the rail's counts.
+ const waitingCounts=()=>{const items=authorDecisionModel()?.items||[],out={home:items.length};for(const it of items)out[it.target.stage]=(out[it.target.stage]||0)+1;return out;};
+ window.c3WorkbenchFrame={decorate,openTool,closeTool,setBenchCatalog,waitingCounts};
  window.addEventListener('c3-header-painted',header);
  window.c3Shell.register('full Workbench frame',()=>{decorate();watchHome();},{order:95,ignore:'#wbf-tools,#wbf-drawer,.wbf-top-actions,.wbf-bench'});
  document.addEventListener('toggle',event=>{if(event.target.id==='project-library')decorate();},true);

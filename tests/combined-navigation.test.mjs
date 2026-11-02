@@ -10,7 +10,7 @@ function boot(n=5){
  w.workspaceNavigation={async changeMode(mode){calls.push(mode);}};d.querySelector('[data-tr-home]').onclick=()=>calls.push('home');[...d.querySelectorAll('.workflowStep')].forEach((b,i)=>b.onclick=()=>calls.push('stage:'+String(i+1)));w.eval(code);return {w,d,p,calls,close:()=>w.close()};
 }
 test('Combined rail exposes exactly twelve entrances while retaining every original handler',async()=>{
- const f=boot();assert.deepEqual([...f.d.querySelectorAll('.combined-rail [data-combined-nav]')].map(n=>n.textContent),['Home','Subjects','Library','Source','Research','Direction','Write','Check','Media','Arrange','Audience','Share','Outputs']);assert.equal(f.d.querySelectorAll('.workflowStep').length,12);
+ const f=boot();assert.deepEqual([...f.d.querySelectorAll('.combined-rail [data-combined-nav]')].map(n=>n.textContent),['Home','Subjects','Library','Material','Source','Research','Direction','Write','Check','Media','Arrange','Audience','Share','Outputs']);assert.equal(f.d.querySelectorAll('.workflowStep').length,12);
  await f.w.combinedNavigation.go('arrange');assert.deepEqual(f.calls,['arrange']);await f.w.combinedNavigation.go('subjects');assert.deepEqual(f.calls,['arrange','subjects']);assert.equal(f.d.querySelector('[data-combined-nav="subjects"]').getAttribute('aria-current'),'page');f.close();
 });
 test('piece Write and Read switch through the maintained selected-piece mode owner',async()=>{
