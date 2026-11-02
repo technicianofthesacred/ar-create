@@ -5,9 +5,7 @@ import './source-imported.js';
 const copy=value=>structuredClone(value),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b),HASH=/^[a-f0-9]{64}$/,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const inquiryApi=createInquiryInterfaceClient();
 async function api(path,body){const response=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined),value=await response.json();if(!response.ok)throw Object.assign(Error(value.error||'This local connection is unavailable.'),{status:response.status});return value;}
-// A piece's working history needs its saved Direction. Without one the server can only refuse (409), so ask first and say so plainly.
-const NO_DIRECTION='This piece has no saved Direction yet, so it has no working history. Saving its Direction starts one.';
-const continuityApi=async(operation,input)=>{if(operation==='read'&&input?.scope?.kind==='project'&&typeof input.scope.parentStudyId==='string'){const direction=await api('/api/study/human-direction?parentStudyId='+encodeURIComponent(input.scope.parentStudyId)+'&scope=project');if(direction?.bound===false)throw Object.assign(Error(NO_DIRECTION),{status:404,noDirection:true});}return api('/api/work-continuity/'+operation,input);};
+const continuityApi=(operation,input)=>api('/api/work-continuity/'+operation,input);
 let viewerId;try{viewerId=localStorage.getItem('ar-create.local-viewer.v1')||crypto.randomUUID();localStorage.setItem('ar-create.local-viewer.v1',viewerId);}catch{viewerId=crypto.randomUUID();}
 let panel=null,panelContext=null,contextVersion='',loading=null,lastRange=null,contextDialog=null,inquiry=null,inquiryContainer=null,activeInquiry=null,inquiryCollectionId=null,lastReturn=null;try{const value=sessionStorage.getItem('ar-create.last-inquiry.v1');if(UUID.test(value||''))activeInquiry=value;}catch{}
 const holds=new Map(),tools=document.createElement('section'),panelContainer=document.createElement('div');tools.className='sws-secondary';tools.id='connected-work-receipts';tools.open=true;const summary=document.createElement('h3');summary.textContent='Work receipts';tools.append(summary,panelContainer);
