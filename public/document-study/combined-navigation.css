@@ -39,12 +39,16 @@ html body.combined-on :is(.wbf-top-actions .tbtn,.wbf-top-actions .sizer,#c3-sur
 }
 
 /* The Spine: each band has a thin labelled strip that turns gold while you are in one of its tools;
-   the selected tool is a solid gold block. Home, Subjects and Library sit above the bands. */
+   the selected tool is a solid gold block. Home and Library sit above the bands; each band shows its waiting total under the label. */
 .combined-rail-band{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:4px 0 4px 8px;box-sizing:border-box;border-top:1px solid var(--line)}
 .combined-rail-band:not([data-band]){padding-left:0;border-top:0}
 .combined-band-tools{display:flex;flex-direction:column;align-items:center;gap:3px}
 .combined-band-label{position:absolute;left:0;top:4px;bottom:4px;width:9px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:600 8px/1 var(--ar-ui,sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border-right:2px solid var(--line);opacity:.8}
 .combined-rail-band.is-active .combined-band-label{color:var(--warm);border-right-color:var(--warm);opacity:1}
+.combined-band-count{position:absolute;left:0;bottom:5px;width:9px;text-align:center;font:600 9px/1 var(--ar-ui,sans-serif);color:var(--dim);font-variant-numeric:tabular-nums}
+.combined-band-count:empty{display:none}
+.combined-rail-band:has(.combined-band-count:not(:empty)) .combined-band-label{bottom:18px}
+.combined-rail-band.is-active .combined-band-count{color:var(--warm)}
 html body.combined-on .combined-rail button[aria-current]{background:var(--warm);color:var(--bg,#151310)}
 html body.combined-on .combined-rail button[aria-current] i{background:var(--bg,#151310);border-color:var(--bg,#151310)}
 html body.combined-on .combined-rail-band[data-band] .combined-band-tools button{width:50px;margin-left:4px}
