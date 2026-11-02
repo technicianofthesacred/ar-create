@@ -3417,7 +3417,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "5c46418da5e03c16ecfbe6bcc0c4d20d1e470cfe4f93e41bdd741d358b29ba62"
+      "candidateSha256": "48f2341422a537db001989f2e641ac78cc6afce246953eef392868c320875dfe"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3449,11 +3449,11 @@
     },
     {
       "path": "public/document-study/folder-browser.css",
-      "candidateSha256": "782fe1d57b0f3a4ad413c5f7b191fb42d90d1689547ae2ee5eba5910384be888"
+      "candidateSha256": "7e209e994152023e9fa676c7ded924b761faa979a3d4a0753750287683ba0722"
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "21edb24f964bc959ea5e1c3b8967623248f969a4899515c07e375c61be20a204"
+      "candidateSha256": "b613c7f19ee93ef1ff89607fa6ac74ecacb0a887376ca8648f8b1616435a97c0"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3473,7 +3473,7 @@
     },
     {
       "path": "public/document-study/workbench-bench-match.css",
-      "candidateSha256": "1c04f1830c1d8693b9f0a7f6da41d510b7388bf792922bd36ef326efb56f0557"
+      "candidateSha256": "a8101656b15afe4b51293d9d2257cc823c818660571f62e2480d5e2c15264dce"
     },
     {
       "path": "public/document-study/workbench-check-match.css",
@@ -3901,7 +3901,7 @@
     },
     {
       "path": "tests/bench-catalog-ui.test.mjs",
-      "candidateSha256": "d8ffbc3ebbee8694d5ed8e898bcd5bdc87f19826ebca9ae85fa936eef1fdb49a"
+      "candidateSha256": "d9e8906fd7624045f442dc96ff9cf22bce0b35fc37b1917877c2a77beda3b102"
     },
     {
       "path": "tests/bench-projection.test.mjs",

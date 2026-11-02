@@ -123,6 +123,17 @@ html body.wbf-on #project-library .thread-tabs button[aria-selected="true"]{colo
 html body.wbf-on #project-library .thread-list .thread-row.is-selected{border-left:2px solid var(--warm);background:var(--sel,rgba(255,255,255,.04))}
 .thread-n{color:var(--dim);font-size:13px;padding-top:3px;font-variant-numeric:tabular-nums}
 .thread-main{min-width:0}
+.thread-title{display:block;font-weight:600;font-size:14.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thread-list .thread-row{padding-top:10px;padding-bottom:10px}
+.thread-bars{padding-top:6px}
+.thread-bars{gap:5px;width:64px;justify-self:end}
+.thread-bars i{height:2px;width:100%;background:linear-gradient(90deg,var(--warm) var(--done),color-mix(in srgb,var(--dim) 45%,transparent) var(--done))}
+.thread-tabs{min-width:0}.thread-keys{min-width:0;overflow:hidden;text-overflow:ellipsis}
+html body.wbf-on #project-library .thread-row header button{border:0!important;background:none!important;padding:0!important;min-height:0!important;color:var(--ink)!important;font-weight:600;font-size:14.5px;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body.wbf-on #project-library .thread-row{min-height:0!important;padding-top:9px!important;padding-bottom:9px!important}
+.thread-keys{white-space:nowrap}
+.thread-box .thread-add{margin-left:14px}
+.wbf-active-title:not(:has(h2)){justify-content:flex-end}
 .thread-next{display:block;color:var(--dim);font-size:12.5px;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .thread-bars{display:grid;gap:4px;padding-top:8px}
 .thread-bars i{display:block;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--warm) var(--done),var(--line) var(--done))}
