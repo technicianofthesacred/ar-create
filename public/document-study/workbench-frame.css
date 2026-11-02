@@ -90,7 +90,9 @@ html body.wbf-on[data-draft-focus="true"] #app,html[data-draft-focus="true"] bod
 html body.wbf-on[data-draft-focus="true"] #c3-tabstrip,html[data-draft-focus="true"] body.wbf-on #c3-tabstrip{display:none!important}
 html body.wbf-on[data-draft-focus="true"] #app #workspace .desk,html[data-draft-focus="true"] body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important;margin:auto!important}
 html body.wbf-on[data-draft-focus="true"] #margin,html[data-draft-focus="true"] body.wbf-on #margin{display:none!important}
-@media(max-width:1100px){html body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important}html body.wbf-on #app #workspace .desk>#margin{grid-column:1;grid-row:2;padding-top:0!important;max-width:var(--measure)!important}}
+/* The text keeps its column and the margin stays beside it, narrow, down to 900px; below that the margin moves under the text.
+   (At 1100px this once dropped to one column while a later rule still pinned the margin beside it, splitting the page in half.) */
+@media(max-width:900px){html body.wbf-on #app #workspace .desk{grid-template-columns:minmax(0,var(--measure))!important}html body.wbf-on #app #workspace .desk>#margin{grid-column:1;grid-row:2;padding-top:0!important;max-width:var(--measure)!important}}
 @media(max-width:760px){
  html body.wbf-on{--wb-doc-left:16px;--gut:16px}
  html body.wbf-on #c3-tabstrip.wbf-top{padding:0 6px!important;gap:2px!important}
