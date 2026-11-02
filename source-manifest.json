@@ -4633,11 +4633,11 @@
     },
     {
       "path": "public/document-study/combined-navigation.css",
-      "candidateSha256": "c4b06ad4927ca6b41103ad7d3e8e28ade3073a5871d25960c87bef4dcebf7ed4"
+      "candidateSha256": "1eb88f158734181ec58728e1a70be403fa245e547c97b95531ee8723a8865eb8"
     },
     {
       "path": "public/document-study/combined-navigation.js",
-      "candidateSha256": "5a3b4a6c28662cfd6e2c24dbe35984a7baf0d1e4b66298b65074ee166538ba45"
+      "candidateSha256": "383347d8f14861a68badb06f3b8df4952f17f4940e9eb9daeca8ef0d735ead76"
     },
     {
       "path": "public/document-study/combined-subjects.css",
