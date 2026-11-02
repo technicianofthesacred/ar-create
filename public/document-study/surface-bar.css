@@ -105,3 +105,10 @@ body.c3-bar-on #app .c3-empty .ce-btn.pri{background:none!important;color:var(--
  body.c3-insp-sheet #app .workspace .desk.c3-insp-desk[data-insp="margin"]>#margin,body.c3-insp-sheet #app .workspace .desk>#margin:only-of-type,body.c3-insp-sheet #app .workspace .desk.c3-insp-desk[data-insp="decisions"]>#c3-insp-decisions,body.c3-insp-sheet #app #c3-read-insp{display:block!important;position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;width:auto!important;max-width:none!important;height:min(70dvh,560px)!important;max-height:none!important;overflow:auto!important;z-index:80!important;margin:0!important;padding:12px 16px 24px!important;background:var(--paper)!important;border:0!important;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)!important}
  body.c3-insp-sheet #app #c3-read-insp{border-radius:12px 12px 0 0!important}
 }
+/* Revision 4 tool header: "Tool · subject" with the actions on the first line, the In: tabs on their own line under it. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar{flex-wrap:wrap!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar>.sb-in{order:20!important;flex:1 1 100%!important;margin:2px 0 0 -8px}
+html:not(#wb):not(#wb) body.wbf-on #c3-surface-bar .sb-right{flex-wrap:nowrap!important;flex:none}
+html:not(#wb):not(#wb) body.wbf-on #c3-surface-bar .sb-piece{max-width:42ch}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar>.direction-choice-context{order:30!important;flex:1 1 100%!important;min-width:0}
+html:not(#wb):not(#wb) body.wbf-on[data-c3-stage="4"] #c3-surface-bar>.direction-choice-context{display:none!important}
