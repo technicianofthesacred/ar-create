@@ -76,3 +76,6 @@ html body.wbf-on.combined-rail-wide #project-library.wbf-home,html body.wbf-on.c
 html body.combined-rail-wide #combined-sheet{width:min(620px,calc(100vw - 196px))}
 html body.combined-rail-wide #combined-sheet[data-kind=source]{width:min(560px,calc(100vw - 196px))}
 }
+
+/* Rail line icons (Workbench Revision 4). */
+.combined-ic{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
