@@ -20,7 +20,8 @@ async function start(t, magazineExtra = {}) {
   fs.writeFileSync(config, JSON.stringify({dataDir: data, port, allowScratchRoots: true, magazine: {vaultRoot: f.vault, filesRoot: f.files, drops: f.drops, exportStaging: staging, ...magazineExtra}}));
   const child = spawn(process.execPath, [serve], {env: {PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, AR_CREATE_CONFIG: config}, stdio: ['ignore', 'pipe', 'pipe']});
   let stderr = ''; child.stderr.on('data', d => { stderr += d; });
-  t.after(() => { child.kill(); fs.rmSync(data, {recursive: true, force: true}); f.cleanup(); });
+  // Wait for serve.mjs to exit before removing its data folder: a server still writing there made rmSync fail with ENOTEMPTY in CI and skip f.cleanup().
+  t.after(async () => { if (child.exitCode === null && child.signalCode === null) { const exited = new Promise(resolve => child.once('exit', resolve)); child.kill(); await exited; } fs.rmSync(data, {recursive: true, force: true}); f.cleanup(); });
   await new Promise((resolve, reject) => { child.stdout.on('data', d => { if (String(d).includes('AR Create:')) resolve(); }); child.on('exit', code => reject(new Error('serve.mjs exited ' + code + ': ' + stderr))); });
   const url = 'http://127.0.0.1:' + port;
   const call = async (method, route, body, actor = 'human:adrian') => { const r = await fetch(url + route, {method, headers: {'Content-Type': 'application/json', 'X-AR-Actor': actor, 'X-AR-Client': 'mag-page'}, ...(body ? {body: JSON.stringify(body)} : {})}); return {status: r.status, body: await r.json().catch(() => null)}; };
