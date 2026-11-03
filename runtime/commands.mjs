@@ -41,6 +41,12 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/instagram/plan': ['id? (omit to create)', 'operationId', 'expectedRevision?', 'expectedHash?', 'subject?', 'title?', 'door?', 'material?:{transcripts:[{sourceId,sourceHash}],photos:[{sourceId,caption?}]}', 'stories?:[{id?,title,dish,readback,why,reader,format?,spine:[lineId],matches:[{photoId,lineId,why}]}]', 'gaps?:[{question,why,storyIds,status,finding?,sources?}]', 'heard?:{storyId,quote}', 'flags?:[{lineId,heard,kind,suggestion?,why?}]', 'coverage?:[{momentId,status:saved|skipped|null,why}]'],
+  '/api/instagram/layout': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'format', 'frames? (omit for the default)', 'caption? (text, or {parts:[{kind:quote,lineId,text}|{kind:suggested,lineId,text}|{kind:draft,text}]})'],
+  '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?'],
+  '/api/instagram/confirm': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'flagId', 'verdict (as-heard|corrected)', 'correction?'],
+  '/api/instagram/meaning': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'verdict (right|not-meant)', 'words (his exact words; required for not-meant)'],
+  '/api/instagram/ready': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'format', 'caption?'],
   '/api/study/material/attach':['bindingId','parentStudyId','operationId','sourceIds'],
 
   '/api/magazine/working-draft/ai/run': ['storyId','pieceId','edition','parentStudyId','expectedHash','contextHash','operationId','instruction?'],
@@ -122,7 +128,7 @@ function section(route) {
   const r = route.replace(/^\/api\//, '');
   if (/^words(\/|$)/.test(r)) return 'transcript';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
-    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
+    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels|instagram)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance|voice-corrections)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
@@ -161,6 +167,9 @@ export const CUSTOM_COMMANDS = [
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
   ['GET', '/api/simmer/material', ['subject']],
   ['POST', '/api/simmer/intake'], ['POST', '/api/simmer/propose'], ['POST', '/api/simmer/dish'],
+  ['GET', '/api/instagram/templates'], ['GET', '/api/instagram/plans', ['subject?']], ['GET', '/api/instagram/plan', ['id']],
+  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'],
+  ['GET', '/api/instagram/render', ['id', 'format', 'frame']], ['GET', '/api/instagram/sheet', ['id', 'format']], ['GET', '/api/instagram/captions', ['id']], ['GET', '/api/instagram/png', ['id', 'format', 'frame']],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];
@@ -179,7 +188,7 @@ export const PROSE_SAVES = Object.freeze(['POST /api/study-draft/save', 'POST /a
   'POST /api/study/outputs/save', 'POST /api/study/outputs/undo', 'POST /api/study/outputs/undo-words',
   'POST /api/study/human-direction/write', 'POST /api/study/human-direction/undo', 'POST /api/study-ai/finish']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/voice-corrections/decide', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
+const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/instagram/choose', 'POST /api/instagram/confirm', 'POST /api/instagram/meaning', 'POST /api/instagram/ready', 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/voice-corrections/decide', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/consent/people/sent', 'POST /api/consent/people/answer', 'POST /api/consent/people/remove', 'POST /api/consent/share/answer', 'POST /api/consent/share/override', 'POST /api/consent/share/release', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
