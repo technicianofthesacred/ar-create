@@ -43,7 +43,7 @@ function words(list){
 /** The photo files in the one folder Adrian named: top level only, image files only, never inside AR Create's data. */
 function photoFiles(folder,names,dataDir){
  if(folder===undefined){if(names!==undefined)fail('Name the folder the photos are in.');return [];}
- if(typeof folder!=='string'||!path.isAbsolute(folder)||folder.length>1024||folder.includes('\0'))fail('The folder is the full path Adrian named, for example /Users/adrian/Pictures/Kettle.');
+ if(typeof folder!=='string'||!path.isAbsolute(folder)||folder.length>1024||folder.includes('\0'))fail('The folder is the full path Adrian named, starting at the top of the disk.');
  let real;try{real=fs.realpathSync(folder);}catch{fail('That folder was not found.',404);}
  if(!fs.statSync(real).isDirectory())fail('That path is not a folder.');
  const data=fs.realpathSync(dataDir);if(real===data||real.startsWith(data+path.sep))fail('Photos come from Adrian\'s own folders, not from inside AR Create\'s data.',403);

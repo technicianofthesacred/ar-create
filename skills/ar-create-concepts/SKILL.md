@@ -48,7 +48,7 @@ Adrian gathers before he knows the form: photos, recordings, things he says. It 
 1. **Intake.** When he shares photos or says something for a piece, carry it in with `simmer intake`. Photos come from the folder he names (its full path; name files in `photos` to take only some). His words go in `words`, one entry per thing he said, exactly as he said or typed it: never tidy, shorten, translate, merge or reorder them. A voice transcript goes in as it came, with `"said":"spoken"`. Give a working `title` for a new subject, or the existing `subject`. They are saved as his, stamped `dictated` with your name as the carrier, in a Library note and a Collection; you can add more of his words later, never change or remove them.
 
    ```sh
-   echo '{"title":"Kettle at dawn","folder":"/Users/adrian/Pictures/Kettle","words":[{"text":"<his exact words>","said":"typed"}]}' | node "$CLI" simmer intake --input -
+   echo '{"title":"Kettle at dawn","folder":"<the full path of the folder he named>","words":[{"text":"<his exact words>","said":"typed"}]}' | node "$CLI" simmer intake --input -
    ```
 
 2. **Let it simmer. Do not choose the form.** Read `simmer material <subject>` (the board, the Collection's text, Direction), then send one `simmer propose` with the board's `expectedRevision` and `expectedHash`: groupings (`groups`, moving existing block ids into named groups), a reflection letter (`letter`: what recurs, where his voice changed, what is unresolved), two or three possible dishes with why (`dishes`), questions and feeling checks. Everything you propose shows as proposed by you; it is never his words, and you never answer, hold, pick or name for him. A 409 means the board moved: read it again and re-propose.
