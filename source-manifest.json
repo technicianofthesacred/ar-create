@@ -3449,11 +3449,11 @@
     },
     {
       "path": "public/document-study/folder-browser.css",
-      "candidateSha256": "7e209e994152023e9fa676c7ded924b761faa979a3d4a0753750287683ba0722"
+      "candidateSha256": "28748f297460bffc0ed96b3c17400f520f3825cba51ac4848c29a14a5da91e6f"
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "b613c7f19ee93ef1ff89607fa6ac74ecacb0a887376ca8648f8b1616435a97c0"
+      "candidateSha256": "28f125e12258729473535a4e10305ce34836e50064183a7097cce43c6e528360"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3541,7 +3541,7 @@
     },
     {
       "path": "tests/folder-browser.test.mjs",
-      "candidateSha256": "10d0f6ca5ce92ce34ff4602f0cc792ef82b82b6f7b1ada0f0b070dc237fa3a44"
+      "candidateSha256": "254c0a013adc60c677bc7d43562f309ff4a04b39b3e67cd962a5f64abf81692f"
     },
     {
       "path": "tests/media-entry.test.mjs",
