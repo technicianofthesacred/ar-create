@@ -78,7 +78,8 @@ import { createLibrary } from './services/library.mjs';
 import {createRetainedTranscriptCatalog} from './services/retained-transcript-catalog.mjs';
 import {createMaterialFolder} from './services/material-folder.mjs';
 import {createMaterialAlbums} from './services/material-albums.mjs';
-import { createGuidance } from './services/guidance.mjs';
+import { createGuidance, resolveVoiceSource } from './services/guidance.mjs';
+import { createVoiceCorrections } from './services/voice-corrections.mjs';
 import { createRecordings } from './services/recordings.mjs';
 import {createStudyLanguageConnection} from './services/study-language-connection.mjs';
 import {createSourceTranslationSelectionReader,createSourceTranslationProposals} from './services/source-translation-proposals.mjs';
@@ -212,7 +213,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
   if(typeof magazineCheckReceipts!=='boolean')throw new TypeError('Magazine check receipt permission must be an explicit boolean.');
   // Host-selected read capability only. No request can choose a source path or
   // establish an association between an original and the current manuscript.
@@ -239,7 +240,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const connectedFolders = createConnections({dataDir,library,connections,editable:connectionsEditable,...(!connectionsEditable?{reason:'Folders are managed by the server startup configuration.'}:{})});
   const researchMaterial = createResearchMaterial({dataDir,library});
   const researchInput = input => {if(input.projectId!==store.get().project.id)throw new StateError('Research belongs to another project.',409);return input;};
-  const guidance = createGuidance({ dataDir, referenceDir: path.join(root, 'reference', 'guidance') });
+  const guidance = createGuidance({ dataDir, referenceDir: path.join(root, 'reference', 'guidance'), voiceSource: resolveVoiceSource({ dataDir, option: i64osDirections }) });
+  const voiceCorrections = createVoiceCorrections({ dataDir });
   recordings = createRecordings({ dataDir, library, transcriptionRuntime });
   const transcriptTools=createTranscriptToolConnection({dataDir,library,recordings});
   const albums = createICloudAlbums({ dataDir, library, ...(ingestionOptions?.albumFetch ? { fetcher: ingestionOptions.albumFetch } : {}) });
@@ -294,7 +296,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const studyEditorialPlan=studyDrafts?createStudyEditorialPlanContext({drafts:studyDrafts,originals:studyOriginals,choices:studyResearchChoices,validateStandInTarget:input=>structureTests.validateTarget(input)}):null;
   const studyPlanContext=studyDrafts?createStudyFirstFlowPlanContext({dataDir,savedPlan:studyEditorialPlan,firstFlow}):null;
   const studyProjectMaterial=studyDrafts?createStudyProjectMaterialContext({dataDir,firstFlow,drafts:studyDrafts}):null;
-  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,execution:nativeAIExecution,onExecutionChange:event=>events.emit(event),validateStandInTarget:input=>structureTests.validateTarget(input),humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,learning:researchAnswers.study,guidance,assistanceDirection}):null;
+  const studyAI=studyDrafts?createStudyAI({dataDir,drafts:studyDrafts,execution:nativeAIExecution,onExecutionChange:event=>events.emit(event),validateStandInTarget:input=>structureTests.validateTarget(input),humanDirection:studyHumanDirection,editorialPlan:studyPlanContext,projectMaterial:studyProjectMaterial,learning:researchAnswers.study,guidance,assistanceDirection,voiceCorrections}):null;
   const draftCall=async fn=>{if(!studyDrafts)throw new StateError('Current manuscript originals are not configured.',503);try{return await fn();}catch(error){throw Object.assign(new StateError(error.message,error.status||500),error.outcome?{outcome:error.outcome}:{});}};
   const originalRead=fn=>{if(!studyOriginals)throw new StateError('Current original records are not configured; retained snapshots remain available.',503);try{return fn();}catch(error){throw new StateError(error.message,error.status||500);}};
   const localAtlas=createLocalAtlasRetrieval({root:localAtlasExportDir});
@@ -370,7 +372,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
   const sourceTranscript=createSourceTranscriptProposals({library,recordings,readCandidate:input=>localTranscriptCandidates.readCandidate(input)});
   const sourceLineChecks=createSourceLineChecks({dataDir});
-  const maintainedCommandRoutes=createRouteMap({sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk:createConsentDesk({dataDir,library}),terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk:createConsentDesk({dataDir,library}),terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);

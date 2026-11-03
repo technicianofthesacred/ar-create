@@ -95,6 +95,9 @@ const BODY = {
   '/api/study/structure-tests/proposal-review': ['bindingId','parentStudyId','action','requestId','operationId','reason?'],
   '/api/study-ai/prepare': ['sourceIds', 'answerIds?', 'purpose?', 'openingRequestId?', 'selectedOptionId?','instruction?'], '/api/study-ai/propose': ['requestId', 'replacements?', 'openingOptions?', 'continuationParagraphs?','sourcedParagraph?','sourcedEvidence?'],
   '/api/study-ai/accept': ['requestId', '...'], '/api/study-ai/reject': ['requestId', 'reason?'],
+  '/api/study-ai/finish': ['requestId', 'operationId', 'edits?:[{id,words}]', 'marks?:[{id,note?}]'],
+  '/api/voice-corrections/decide': ['id', 'decision', 'operationId', 'key?', 'note?', 'reason?'],
+  '/api/voice-corrections/sent': ['id', 'operationId', 'ref?'],
   '/api/pieces': ['expectedProjectId', 'expectedRevision', 'title'], '/api/pieces/switch': ['expectedProjectId', 'expectedRevision', 'projectId'],
   '/api/consent/claims/record': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','claim:{kind:claim|quote,text,where?,source?}'],
   '/api/consent/claims/link': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','claimId','source:{type:library|recording|photo,sourceId,sourceHash?,start?,quote?,atMs?,endMs?}'],
@@ -115,7 +118,7 @@ function section(route) {
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
-    [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance)/, 'writing'],
+    [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance|voice-corrections)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
   return rules.find(([pattern]) => pattern.test(r))?.[1] || 'system';
 }
@@ -154,6 +157,8 @@ export const CUSTOM_COMMANDS = [
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /**
+ * study-ai.finish (3 Nov 2026) closes Adrian's read-through of a machine draft: it saves his edits and the
+ * paragraphs he left alone, so it is his alone like every save below.
  * Prose saves (Adrian, 3 Nov 2026; review Track 3.1): agents never save prose directly, they propose it
  * (study-ai.propose, shared-articles.propose, magazine.working-draft.ai.propose, the stand-in paths, and
  * magazine.write, magazine.working-draft.save and its share-feedback save, which turn an agent's prose into a
@@ -162,9 +167,9 @@ const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/w
  */
 export const PROSE_SAVES = Object.freeze(['POST /api/study-draft/save', 'POST /api/study-draft/history-restore',
   'POST /api/study/outputs/save', 'POST /api/study/outputs/undo', 'POST /api/study/outputs/undo-words',
-  'POST /api/study/human-direction/write', 'POST /api/study/human-direction/undo']);
+  'POST /api/study/human-direction/write', 'POST /api/study/human-direction/undo', 'POST /api/study-ai/finish']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
+const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/voice-corrections/decide', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/consent/people/sent', 'POST /api/consent/people/answer', 'POST /api/consent/people/remove', 'POST /api/consent/share/answer', 'POST /api/consent/share/override', 'POST /api/consent/share/release', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
@@ -207,7 +212,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const languageScope=()=>{
       const allowed=['kind','bindingId','parentStudyId','outputId','recipientId','requestId'];
       if([...url.searchParams.keys()].some(k=>!allowed.includes(k))||allowed.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact language source scope.',400);
@@ -349,6 +354,11 @@ export function createRouteMap(services) {
       '/api/study-ai/requests': {GET:()=>studyAICall('list')},
       '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},
       '/api/study-ai/reject': {POST:input=>studyAICall('reject',input)},
+      '/api/study-ai/finish': {POST:input=>studyAICall('finish',input)},
+      '/api/voice-corrections': {GET:()=>voiceCorrections.list({status:url.searchParams.get('status')||undefined,parentStudyId:url.searchParams.get('parentStudyId')||undefined})},
+      '/api/voice-corrections/export': {GET:()=>voiceCorrections.export()},
+      '/api/voice-corrections/decide': {POST:input=>voiceCorrections.decide(input)},
+      '/api/voice-corrections/sent': {POST:input=>voiceCorrections.sent(input)},
       '/api/study/direction-options': {GET:()=>draftCall(async()=>{if([...url.searchParams.keys()].sort().join(',')!=='bindingId,parentStudyId')throw new StateError('Choose an exact native Direction subject.',400);const scope=Object.fromEntries(url.searchParams),options=await studyDirectionOptions(scope),proof=await studyDirectionTarget({...scope,target:{kind:'subject'}});return {...options,canDecide:currentActor()?.actor==='human:adrian'||proof.canStandInReview,standIn:proof.canStandInReview};})},
       '/api/study/direction-decision': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact saved Direction decision path.',400);return studyHumanDirection.decide(input);})},
       '/api/study/human-direction': {GET:()=>draftCall(async()=>{const parentStudyId=url.searchParams.get('parentStudyId'),kind=url.searchParams.get('scope')||'project',bindingId=url.searchParams.get('bindingId'),record=await studyHumanDirection.read({parentStudyId,scope:kind,...(bindingId&&kind!=='project'?{bindingId}:{}),...(url.searchParams.has('outputId')?{outputId:url.searchParams.get('outputId')}:{})});if(kind==='project'&&bindingId&&AGENT_ACTORS.includes(currentActor()?.actor)){try{await structureTests.validateTarget({bindingId,parentStudyId});return {...record,canStandInResearchNotes:true};}catch(error){if(![403,404,409].includes(error.status))throw error;}}return record;})},
