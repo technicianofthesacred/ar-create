@@ -93,7 +93,7 @@ function claimView(claim){
  return {...structuredClone(claim),status,...(fidelity?{fidelity}:{})};
 }
 
-export function createConsentDesk({dataDir,library}={}){
+export function createConsentDesk({dataDir,library,aliases=()=>[]}={}){
  if(!dataDir)throw Error('The consent desk needs the data folder.');
  const dir=path.join(dataDir,'consent-desk'),queues=new Map();
  const fileOf=scope=>path.join(dir,digest(scope.parentStudyId).slice(0,40),digest(scope.pieceKey).slice(0,40)+'.json');
@@ -123,10 +123,26 @@ export function createConsentDesk({dataDir,library}={}){
  function holdFor(scopes){
   for(const raw of scopes){
    if(!raw||typeof raw.parentStudyId!=='string'||!raw.parentStudyId)continue;
-   const scope=scopeOf({parentStudyId:raw.parentStudyId,pieceKey:raw.pieceKey}),state=releaseState(load(scope).desk);
-   if(state.publishHold.held)return {...state.publishHold,parentStudyId:scope.parentStudyId,pieceKey:scope.pieceKey};
+   // One piece can be known by more than one id (the app's project id, a Magazine story id). A desk saved under any of them holds.
+   let others=[];try{others=aliases(raw.parentStudyId)||[];}catch{/* an alias lookup that fails never hides the id that was asked */}
+   for(const id of [...new Set([raw.parentStudyId,...others])]){
+    if(typeof id!=='string'||!id)continue;
+    const scope=scopeOf({parentStudyId:id,pieceKey:raw.pieceKey}),state=releaseState(load(scope).desk);
+    if(state.publishHold.held)return {...state.publishHold,parentStudyId:scope.parentStudyId,pieceKey:scope.pieceKey};
+   }
   }
   return null;
+ }
+ /** The pieces whose consent desk links any of these Library sources: how a plan with no named project finds its own. */
+ function scopesLinkedTo(sourceIds){
+  const wanted=new Set((sourceIds||[]).filter(Boolean)),found=[];
+  if(!wanted.size||!fs.existsSync(dir))return found;
+  for(const project of fs.readdirSync(dir).filter(n=>/^[a-f0-9]{40}$/.test(n)))
+   for(const name of fs.readdirSync(path.join(dir,project)).filter(n=>/^[a-f0-9]{40}\.json$/.test(n))){
+    let desk;try{desk=JSON.parse(fs.readFileSync(path.join(dir,project,name),'utf8'));}catch{continue;}
+    if(desk?.schema===SCHEMA&&desk.claims.some(c=>c.source&&wanted.has(c.source.sourceId)))found.push({parentStudyId:desk.parentStudyId,pieceKey:desk.pieceKey});
+   }
+  return found;
  }
  /** Refuses (423, with the hold attached) while anyone is unanswered; says who, and where to answer. */
  function assertNotHeld(scopes,what='Publishing'){
@@ -283,5 +299,5 @@ export function createConsentDesk({dataDir,library}={}){
   }
   return {schema:'ar-create.consent-open.v1',pieces,count:items.length,items};
  }
- return {read,open,holdFor,assertNotHeld,recordClaim,linkClaim,flagClaim,clearFlag,recordPerson,draftRequest,recordSent,answer,removePerson,shareAnswer,override,release};
+ return {read,open,holdFor,scopesLinkedTo,assertNotHeld,recordClaim,linkClaim,flagClaim,clearFlag,recordPerson,draftRequest,recordSent,answer,removePerson,shareAnswer,override,release};
 }

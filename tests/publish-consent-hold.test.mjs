@@ -15,6 +15,7 @@ import {withActor} from '../runtime/services/actor.mjs';
 import {EXIT} from '../agents/lib/client.mjs';
 import {syntheticHome} from '../scripts/demo.mjs';
 import {magazineServer} from './helpers/magazine-server.mjs';
+import {buildMagazineFixture} from './helpers/magazine-fixture.mjs';
 import {planRegistration, INDEX_SCHEMA} from '../runtime/services/magazine-vault/projects.mjs';
 
 const ADRIAN = 'human:adrian', AGENT = 'agent:claude-code';
@@ -256,13 +257,80 @@ test('Instagram studio: Ready to post, the frame PNGs and the reel words refuse 
   assert.equal((await as(ADRIAN, () => studio.read({id: plan.id}))).publishHold, null);
 });
 
-test('Instagram studio: a plan with no project (no subject) is not tied to a consent desk, so nothing can hold it', async () => {
+test('Instagram studio: a plan with no named project finds its desk through its own sources, or refuses Ready to post until it is linked', async () => {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hold-ig-free-'));
   const consent = createConsentDesk({dataDir, library}), studio = createInstagramStudio({dataDir, library, consentDesk: consent});
-  const plan = await instagramPlan(dataDir, studio, '');
+  const UNLINKED = 'Link this to a piece first so consent can be checked.';
+  let plan = await instagramPlan(dataDir, studio, '');
+  assert.equal(plan.subject, '');
+  assert.deepEqual({held: plan.publishHold.held, unlinked: plan.publishHold.unlinked, summary: plan.publishHold.summary}, {held: true, unlinked: true, summary: UNLINKED});
+  const ready = () => as(ADRIAN, () => studio.ready({id: plan.id, operationId: randomUUID(), expectedRevision: plan.revision, expectedHash: plan.hash, format: 'post'}));
+  await assert.rejects(ready(), e => e.status === 423 && e.message === UNLINKED && e.hold?.unlinked === true);
+  // The files are held only by a real hold: with no desk to ask, they are not blocked by this rule.
+  await as(AGENT, () => studio.assertPostable({id: plan.id}, 'Saving this frame for posting'));
+  // A desk that links this plan's transcript is its project. Maya there has not been asked.
+  const scope = {parentStudyId: 'proj-from-source', pieceKey: 'main'};
+  const rec = (name, body, actor = AGENT) => as(actor, async () => { const d = await consent.read(scope); return consent[name]({...scope, operationId: randomUUID(), expectedRevision: d.revision, expectedHash: d.hash, ...body}); });
+  const quote = 'I think every crack is a record of the hands that used it.', start = TRANSCRIPT.indexOf(quote);
+  await rec('recordClaim', {claim: {kind: 'quote', text: quote, source: {type: 'library', sourceId: T_ID, sourceHash: T_HASH, start, quote}}});
+  const maya = (await rec('recordPerson', {person: {name: 'Maya', appears: ['quoted']}})).people[0].id;
+  plan = await as(ADRIAN, () => studio.read({id: plan.id}));
+  assert.equal(plan.publishHold.unlinked, undefined, 'it found a desk');
+  assert.equal(plan.publishHold.parentStudyId, 'proj-from-source'); assert.equal(plan.publishHold.summary, 'Maya has not been asked yet.');
+  await assert.rejects(ready(), e => e.status === 423 && /Maya has not been asked yet/.test(e.message));
+  await rec('answer', {personId: maya, state: 'yes'}, ADRIAN);
+  plan = await as(ADRIAN, () => studio.read({id: plan.id}));
   assert.equal(plan.publishHold, null);
-  const done = await as(ADRIAN, () => studio.ready({id: plan.id, operationId: randomUUID(), expectedRevision: plan.revision, expectedHash: plan.hash, format: 'post'}));
-  assert.ok(done.ready.post);
+  assert.ok((await ready()).ready.post, 'ready works once the desk it belongs to has answers');
+});
+
+test('the desk resolves every id a piece is known by, in both directions, and a failing lookup never hides the asked id', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hold-alias-'));
+  const links = {'app-project-1': ['mag-clay'], 'mag-clay': ['app-project-1']};
+  const consent = createConsentDesk({dataDir: dir, library, aliases: id => links[id] || []});
+  const write = async (scope, name, body, actor = AGENT) => { const d = await consent.read(scope); return consent[name]({...scope, operationId: randomUUID(), expectedRevision: d.revision, expectedHash: d.hash, ...body}); };
+  return (async () => {
+    const appScope = {parentStudyId: 'app-project-1', pieceKey: 'main'};
+    await as(AGENT, () => write(appScope, 'recordPerson', {person: {name: 'Maya', appears: ['named']}}));
+    assert.equal(consent.holdFor([{parentStudyId: 'mag-clay'}]).parentStudyId, 'app-project-1', 'a desk saved under the app id holds the story id');
+    assert.equal(consent.holdFor([{parentStudyId: 'app-project-1'}]).parentStudyId, 'app-project-1');
+    assert.equal(consent.holdFor([{parentStudyId: 'unrelated'}]), null);
+    const broken = createConsentDesk({dataDir: dir, library, aliases: () => { throw Error('lookup failed'); }});
+    assert.equal(broken.holdFor([{parentStudyId: 'app-project-1'}]).held, true, 'a failing alias lookup still checks the id it was asked');
+  })();
+});
+
+test('Magazine: a desk saved only under the app\'s own project id still holds Magazine send, mark-published and the exports', async t => {
+  // The app opens a story under its own project id (here "app-project-clay"), which the original catalog ties to the draft file.
+  const f = buildMagazineFixture(); t.after(f.cleanup);
+  const DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md', SRC = 'Workflow/1-Source/SRC - Clay Teacher (Kiln Day).md';
+  const plan = planRegistration({vault: f.vault, files: f.files}); fs.mkdirSync(path.join(f.data, 'magazine/projects'), {recursive: true});
+  fs.writeFileSync(path.join(f.data, 'magazine/index.json'), JSON.stringify({schema: INDEX_SCHEMA, vaultRoot: f.vault, filesRoot: f.files, stories: plan.stories.map(p => ({storyId: p.storyId, name: p.name}))}));
+  for (const p of plan.stories) fs.writeFileSync(path.join(f.data, 'magazine/projects', p.storyId + '.json'), JSON.stringify(p));
+  const server = await createServer({dataDir: f.data, publicDir: path.join(repo, 'public'), researchEnabled: false,
+    studyOriginalRoots: {vaultRoot: f.vault, filesRoot: f.files, catalog: {projects: {}, drafts: {'clay-1': {parentStudyKey: 'app-project-clay', partKey: '1', title: 'Clay Teacher', path: DEV, contextScope: 'Invented.', support: [[SRC, 'source']]}}}},
+    magazineVault: {vaultRoot: f.vault, filesRoot: f.files, drops: f.drops, writable: true, machine: 'studio-mac', exportStaging: path.join(f.dir, 'staging')}});
+  await new Promise(r => server.listen(0, '127.0.0.1', r)); t.after(async () => { await new Promise(r => server.close(r)); });
+  const url = 'http://127.0.0.1:' + server.address().port;
+  const cli = async (args, input, actor = AGENT) => run(['--url', url, '--actor', actor, ...args, ...(input ? ['--input', '-'] : [])], {stdin: async () => JSON.stringify(input)});
+  const hashOf = rel => sha(fs.readFileSync(path.join(f.vault, rel)));
+  // The desk exists ONLY under the app's project id. Nothing is saved under mag-clay-teacher.
+  const appScope = {parentStudyId: 'app-project-clay', pieceKey: 'main'}, d = desk(cli, appScope), maya = await d.addPerson('Maya', ['pictured']);
+  const underStory = await cli(['call', 'consent.desk'], {parentStudyId: 'mag-clay-teacher', pieceKey: 'main'}); assert.deepEqual([underStory.result.revision, underStory.result.people], [0, []], 'nothing is saved under the story id');
+  const send = () => cli(['call', 'magazine.send'], {path: DEV, piece: 'clay-teacher', expectedHash: hashOf(DEV), operationId: randomUUID()}, ADRIAN);
+  assertHeld(await send(), {who: ['Maya has not been asked yet'], scope: appScope});
+  const hash = hashOf(DEV);
+  assert.equal((await cli(['call', 'magazine.send.approval'], {path: DEV})).result.hold.parentStudyId, 'app-project-clay');
+  const exp = await fetch(url + '/api/magazine/working-draft/export', {method: 'POST', headers: {'content-type': 'application/json', origin: url, 'x-ar-actor': ADRIAN}, body: JSON.stringify({storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', expectedHash: hash, renderRevision: 'a'.repeat(64), name: 'x.html', body: '<!doctype html><p>x</p>'})});
+  assert.equal(exp.status, 423); assert.match((await exp.json()).error, /Maya has not been asked yet/);
+  await d.answer(maya, 'yes');
+  const sent = await send(); assert.equal(sent.exitCode, 0, JSON.stringify(sent.result));
+  // Mark-published is held the same way once someone new is on the app's desk, and Adrian's override there releases it.
+  await d.addPerson('Tom', ['quoted']);
+  const mark = () => cli(['call', 'magazine.mark-published'], {path: DEV, link: 'https://teajia.com/read/clay-teacher', expectedHash: hash, operationId: randomUUID()}, ADRIAN);
+  assertHeld(await mark(), {who: ['Tom has not been asked yet'], scope: appScope});
+  await d.override('Tom confirmed by voice note.');
+  const done = await mark(); assert.equal(done.exitCode, 0, JSON.stringify(done.result));
 });
 
 test('every held path is on the registry as a normal command and the CLI documents exit 4 for a hold', async t => {

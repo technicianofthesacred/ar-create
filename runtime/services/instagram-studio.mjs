@@ -62,14 +62,28 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  const load=id=>{if(!UUID.test(id||''))fail('Name the plan by its id.');try{const p=JSON.parse(fs.readFileSync(file(id),'utf8'));if(p.schema!==SCHEMA||p.id!==id)fail('This plan file is not readable.',409);return p;}catch(error){if(error.code==='ENOENT')fail('No Instagram plan has that id.',404);throw error;}};
  const asksFile=id=>path.join(dir,id+'.asks.json');
  const readAsks=id=>{try{return JSON.parse(fs.readFileSync(asksFile(id),'utf8'));}catch{return {asked:[],asks:[]};}};
- // The consent hold for the project this plan belongs to (its subject is the project id). Null when nothing holds it, or the plan
- // is not tied to a project. Shown on every read so the page can say why Ready to post is off; the same check refuses the yes.
- const holdOf=p=>{
-  if(!consentDesk||!p.subject)return null;
-  try{return consentDesk.holdFor([{parentStudyId:p.subject}]);}
-  catch(error){return {held:true,summary:error.message,link:'',who:[],parentStudyId:p.subject,pieceKey:'main'};}
+ // The consent desk this plan answers to: its subject (a project id), or, when it names none, the desk that already links the plan's
+ // own Library sources. A plan that can be tied to neither has no desk to check, so its yes is refused until it is linked.
+ const UNLINKED='Link this to a piece first so consent can be checked.';
+ const scopesOf=p=>{
+  if(p.subject)return [{parentStudyId:p.subject}];
+  return consentDesk?.scopesLinkedTo([...(p.material?.transcripts||[]),...(p.material?.photos||[])].map(x=>x.sourceId))||[];
  };
- const assertNotHeld=(p,what)=>{if(consentDesk&&p.subject)consentDesk.assertNotHeld([{parentStudyId:p.subject}],what);};
+ const unlinkedHold={held:true,unlinked:true,summary:UNLINKED,link:'',who:[],parentStudyId:'',pieceKey:'main'};
+ // Null when nothing holds it. Shown on every read so the page can say why Ready to post is off; the same check refuses the yes.
+ const holdOf=p=>{
+  if(!consentDesk)return null;
+  const scopes=scopesOf(p);if(!scopes.length)return unlinkedHold;
+  try{return consentDesk.holdFor(scopes);}
+  catch(error){return {held:true,summary:error.message,link:'',who:[],parentStudyId:scopes[0].parentStudyId,pieceKey:'main'};}
+ };
+ // requireLink: the yes needs a desk to check; the files that get posted are held only when a desk is found and holds them.
+ const assertNotHeld=(p,what,{requireLink=false}={})=>{
+  if(!consentDesk)return;
+  const scopes=scopesOf(p);
+  if(!scopes.length){if(requireLink)throw Object.assign(new StateError(UNLINKED,423),{hold:unlinkedHold});return;}
+  consentDesk.assertNotHeld(scopes,what);
+ };
  const view=p=>{const {operations,...rest}=withHash({...empty(),...p});const used=usedLines(rest);
   return {...rest,publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
  const write=p=>{fs.mkdirSync(dir,{recursive:true});const tmp=file(p.id)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(p,null,1));fs.renameSync(tmp,file(p.id));};
@@ -351,7 +365,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   requireAdrian('The final yes');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
-   assertNotHeld(before,'Marking this ready to post');
+   assertNotHeld(before,'Marking this ready to post',{requireLink:true});
    const format=input.format,l=before.layouts[format];if(!l)fail('Nothing is laid out as a '+format+' yet.');
    if(!before.chosen)fail('Pick or name the story first.');
    if(before.chosen.storyId&&before.chosen.storyId!==l.storyId)fail('This '+format+' was made for another story than the one you chose.',409);
