@@ -29,6 +29,10 @@ A brand's profile is also served by AR Create (`brand.read`, from `editorial/bra
 
 Steps 3 and 4 run once per recording, straight after the clean record, without being asked. Step 5 runs only on his request.
 
+## Gathered material, no form yet
+
+When Adrian brings photos, recordings or his own words and has not said what they will become, do not pick the form for him. Run the soup-to-dish order from the ar-create-concepts skill ("Soup to dish: Simmer from this chat"): carry the material in with `simmer intake`, propose onto the board with `simmer propose`, wait for him to name the dish, record his exact sentence with `simmer name`, and only then make anything (step 5 above) from that sentence.
+
 ## Brands
 
 Every recording belongs to one brand, and each brand has a profile in [brands/](brands/): where its files live, who narrates, words to avoid, where each kind of output goes, and how research feeds anything it publishes.

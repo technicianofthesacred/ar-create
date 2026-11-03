@@ -186,3 +186,11 @@ dialog.simmer::backdrop{background:var(--bg)}
 
 /* Home: the way into Simmer from a subject */
 .simmer-open-btn{margin-left:auto}
+
+/* Simmer from a chat: the reflection letter an agent proposes, and the dish he named in chat. */
+.sm-letter{display:grid;gap:.15rem}
+.sm-letter h4,.sm-named h4{margin:.35rem 0 0;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--sm-faint);font-weight:600}
+.sm-letter h4:first-child,.sm-named h4:first-child{margin-top:0}
+.sm-letter p{margin:0}
+.sm-named{border:1px solid var(--warm);border-radius:6px;padding:.5rem .6rem;margin:0 0 .6rem;display:grid;gap:.2rem}
+.sm-named .sm-speech{margin:0}

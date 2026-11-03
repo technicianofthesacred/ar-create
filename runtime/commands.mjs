@@ -112,6 +112,10 @@ const BODY = {
   '/api/consent/share/override': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','reason'],
   '/api/consent/share/release': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash'],
   '/api/presence': ['stage', 'scope:{kind,id}', 'dirty', 'sequence'],
+  '/api/simmer/board': ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board'],
+  '/api/simmer/intake': ['subject? (or title for a new subject)', 'title?', 'operationId', 'folder? (full path Adrian named)', 'photos? (file names in it)', 'words?:[{text,said?:typed|spoken}] (his exact words)', 'group?', 'collectionId?', 'expectedRevision?', 'expectedHash?'],
+  '/api/simmer/propose': ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'groups?:[{key?,title,sub?,blockIds?}]', 'letter?:{recurs,voice,unresolved,group?}', 'dishes?:[{title,why}] (two or three)', 'questions?:[text|{text,group?}]', 'feelings?:[text|{text,group?,options?}]'],
+  '/api/simmer/dish': ['subject', 'sentence (his exact words, never paraphrased)', 'said?:typed|spoken', 'operationId'],
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
@@ -151,6 +155,9 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
+  // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
+  ['GET', '/api/simmer/material', ['subject']],
+  ['POST', '/api/simmer/intake'], ['POST', '/api/simmer/propose'], ['POST', '/api/simmer/dish'],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];

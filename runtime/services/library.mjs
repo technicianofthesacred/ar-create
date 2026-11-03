@@ -715,6 +715,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     blob: (id, original = false) => serial(async () => { refresh(); const source = original ? index.sources.find(s => s.id === id) : sourceById(id); if (!source) throw new StateError('Source was not found.', 404); let file; if (original) { if (!source.originalFile) throw new StateError('This connected file remains at its original location.', 404); file = resolveInside(path.join(dataDir, 'source-originals'), path.basename(source.originalFile)); regular(file); } else { file = checkedFile(source); if (!source.hash) {source.hash=await streamHash(file);source.hashStatus='verified';if(source.pipelineStates)source.pipelineStates.retention.hash=source.hash;persist();} } return { file, source: publicSource(source) }; }),
     folder: input => serial(() => { makeFolder(input.rootId, input.folder); return refresh(); }),
     retainAlbumPhoto: input => serial(() => { refresh(); const source=savedFile('library',input.folder,input.name,input.bytes,input.provenance); persist(); refresh(); return publicSource(source); }),
+    // Simmer from a chat: one photo or one note of Adrian's words, kept in the Library folder with its provenance.
+    retainChatFile: input => serial(() => { refresh(); const source=savedFile('library',input.folder,input.name,input.bytes,input.provenance); persist(); refresh(); return publicSource(source); }),
     import: input => serial(async () => {
       refresh(); rootById(input.rootId, true); safeRel(input.folder || '');
       if (!Array.isArray(input.files || []) || !Array.isArray(input.urls || []) || (input.files?.length || 0) + (input.urls?.length || 0) > 100) throw new StateError('Import up to 100 files or URLs.');

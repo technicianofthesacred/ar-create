@@ -1,4 +1,4 @@
-import {conceptReferences as references,renderConcept as render,decodeConcept as decode} from './concept-markdown.mjs';
+import {conceptReferences as references,renderConcept as render,decodeConcept as decode,withAdoptedDirection} from './concept-markdown.mjs';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman} from './actor.mjs';
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -42,5 +42,24 @@ export function createConceptWork({drafts,humanDirection,bindings,library,create
   const direction=await humanDirection.write({parentStudyId:c.parentStudyId,scope:'project',operationId:input.operationId,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash,body:nextBody});return report(c,direction);
  }
 
- return {capabilities:()=>capabilities,list:async()=>({schema:'ar-create.concept-list.v1',concepts:(await drafts.catalog()).collections.filter(c=>c.bindingStatus==='ready').map(c=>({parentStudyId:c.parentStudyId,title:c.title,bindingId:c.bindingId})),capabilities}),read,save,source,sourcesSearch,create:async input=>{fields(input,['parentStudyId','title','operationId']);identity(input);if(!UUID.test(input.operationId||''))fail('Create requires an operation UUID.');text(input.title,'Collection title',256);if(!input.title.trim())fail('Supply a collection title.');const doc=await (createCollection?createCollection(input):drafts.createCollection(input));if(doc.binding.status!=='ready'||doc.readiness?.ready!==true)fail('Collection creation is incomplete; retry the exact creation operation.',409);if(!createCollection)await bindings.select({projectKey:input.parentStudyId,title:input.title,operationId:input.operationId});return read({parentStudyId:input.parentStudyId});}};
+ /**
+  * Simmer from a chat (3 Nov 2026): Adrian names the dish out loud and an agent carries his sentence here. Not an
+  * HTTP route; only the Simmer dish command calls it, after saving the sentence as his dictated Library note. The
+  * sentence must match that note exactly. It sets only the adopted direction; his thoughts, the interpretation,
+  * suggestions and links are kept byte for byte. It never replaces a direction he chose some other way: only an empty
+  * one, or the sentence he named earlier in a chat (replaces).
+  */
+ async function adoptDictated({parentStudyId,operationId,sentence,source,replaces=''}){
+  identity({parentStudyId});if(!UUID.test(operationId||''))fail('Adopting a dictated sentence needs an operation UUID.');text(sentence,'The named dish',600);
+  const c=await collection(parentStudyId),before=await humanDirection.read({parentStudyId:c.parentStudyId,scope:'project'}),current=decode(before.body);
+  const note=await library.snapshot(source?.sourceId,{includeBody:true});
+  if(note.hash!==source.sourceHash||typeof note.text!=='string'||note.text.slice(source.start,source.start+sentence.length)!==sentence)fail('The named dish does not match the note it was saved in.',409);
+  if(!current.structured)fail('Direction already has hand-written text, so nothing was changed there. The named dish waits on the board.',409);
+  const existing=current.adoptedDirection||'';
+  if(existing===sentence)return {...await report(c,before),unchanged:true};
+  if(existing&&existing!==replaces)fail('Direction already holds a sentence Adrian chose another way. It stays; the named dish waits on the board for him.',409);
+  const body=withAdoptedDirection(before.body,sentence);if(body===null)fail('Direction could not take the sentence without changing anything else, so nothing was changed.',409);
+  return report(c,await humanDirection.write({parentStudyId:c.parentStudyId,scope:'project',operationId,expectedRevision:before.revision,expectedHash:before.hash,body}));
+ }
+ return {capabilities:()=>capabilities,adoptDictated,list:async()=>({schema:'ar-create.concept-list.v1',concepts:(await drafts.catalog()).collections.filter(c=>c.bindingStatus==='ready').map(c=>({parentStudyId:c.parentStudyId,title:c.title,bindingId:c.bindingId})),capabilities}),read,save,source,sourcesSearch,create:async input=>{fields(input,['parentStudyId','title','operationId']);identity(input);if(!UUID.test(input.operationId||''))fail('Create requires an operation UUID.');text(input.title,'Collection title',256);if(!input.title.trim())fail('Supply a collection title.');const doc=await (createCollection?createCollection(input):drafts.createCollection(input));if(doc.binding.status!=='ready'||doc.readiness?.ready!==true)fail('Collection creation is incomplete; retry the exact creation operation.',409);if(!createCollection)await bindings.select({projectKey:input.parentStudyId,title:input.title,operationId:input.operationId});return read({parentStudyId:input.parentStudyId});}};
 }

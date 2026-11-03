@@ -41,6 +41,22 @@ The existing private project direction file is the shared brief. Do not write a 
 
 On a conflict, retain both contributions, read the latest record and resolve the difference deliberately. Do not remove guards, retry with a newer revision just to force success, or discard the author's unsaved app wording. After an uncertain response, inspect state/history before another write; preserve the operation ID to identify the attempt.
 
+## Soup to dish: Simmer from this chat
+
+Adrian gathers before he knows the form: photos, recordings, things he says. It simmers on a board, he names the dish, and only then is anything drafted. Run that order from the conversation; the Simmer board in AR Create shows the same records. Who decides what: his words, feeling checks, naming the dish, who it is for, consent and the final yes are only his. Groupings, angles and titles are yours to default and he steers. Filing and tidying you just do and report.
+
+1. **Intake.** When he shares photos or says something for a piece, carry it in with `simmer intake`. Photos come from the folder he names (its full path; name files in `photos` to take only some). His words go in `words`, one entry per thing he said, exactly as he said or typed it: never tidy, shorten, translate, merge or reorder them. A voice transcript goes in as it came, with `"said":"spoken"`. Give a working `title` for a new subject, or the existing `subject`. They are saved as his, stamped `dictated` with your name as the carrier, in a Library note and a Collection; you can add more of his words later, never change or remove them.
+
+   ```sh
+   echo '{"title":"Kettle at dawn","folder":"<the full path of the folder he named>","words":[{"text":"<his exact words>","said":"typed"}]}' | node "$CLI" simmer intake --input -
+   ```
+
+2. **Let it simmer. Do not choose the form.** Read `simmer material <subject>` (the board, the Collection's text, Direction), then send one `simmer propose` with the board's `expectedRevision` and `expectedHash`: groupings (`groups`, moving existing block ids into named groups), a reflection letter (`letter`: what recurs, where his voice changed, what is unresolved), two or three possible dishes with why (`dishes`), questions and feeling checks. Everything you propose shows as proposed by you; it is never his words, and you never answer, hold, pick or name for him. A 409 means the board moved: read it again and re-propose.
+
+3. **Wait for him to name the dish.** Do not ask again and again; the board is waiting for him. When he names it in the conversation, send his exact sentence with `simmer name` (`{"subject","sentence","said"}`): copy his words, do not fix grammar, combine sentences or add a reader he did not say. Only when he is clearly naming it; if you are unsure, ask him once. AR Create saves the sentence as his note and makes it Direction's commit sentence. Tell him what came back: `direction.status` is `saved`, or `held` with the reason (no project folder, hand-written Direction, or a sentence he chose another way, which is never replaced).
+
+4. **Then draft.** Read `project read`: the adopted direction is his sentence. Draft from it through the proposal paths only (`study-ai.propose`, `magazine propose`); agents never save prose.
+
 ## Return something usable
 
 After a successful save, read it back and report the saved concept, what changed and where to open it in AR Create. Use the actual returned identity and documented app navigation; do not invent a deep link. Keep technical paths and recovery details secondary. Say when lookup, client access or saving is unavailable. Shared file/tool continuity does not mean arbitrary chat histories or cloud assistants are automatically synchronized.

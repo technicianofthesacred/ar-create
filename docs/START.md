@@ -59,7 +59,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 | `workspaces/<projectId>/` | `HUMAN-DIRECTION.md` (the concept brief), its history |
 | `articles/`, `carousels/`, `native-outputs/` | Output wording, editions, exports |
 | `source-history/`, transcript owner | Transcript sessions and corrections |
-| `simmer-boards/` | Simmer board layout per project: groups, block order, notes and answers, the commit sentence. Photos and his exact words stay in Library; the sent sentence is saved as the project's human direction |
+| `simmer-boards/` | Simmer board layout per project: groups, block order, notes and answers, the commit sentence, the dish he named in chat and the Library Collection the board gathers into. Photos and his exact words stay in Library; the sent sentence is saved as the project's human direction |
 | `consent-desk/` | The truth and consent desk, one record per piece (`parentStudyId` + `pieceKey`, default `main`): claims and quotes with their source moment, people with how they appear and their consent, Share's comfort and accuracy answers, the override and the release. Agents use `consent desk|open|claim|link|flag|person|draft`; consent answers, recording a sent request, the Share answers, the override and the final yes are `human:adrian` only |
 | `voice-corrections/` | Adrian's rewrites of machine paragraphs from a finished read-through: before, after, piece, and whether he approved, dropped or sent each one |
 | `i64os-directions.json` | Optional `{"directionsDir": "<absolute path>"}`: where AR Create reads his voice (`voice-profile.md`, `body-of-work.md`) in one copy. Absent means the old local copies in `guidance/` |
@@ -95,6 +95,10 @@ echo '{"scope":{"kind":"project","id":"<id>"}}' | node "$CLI" lease release --in
 ```
 
 `project list` shows only projects that already have a concept. If `<id>` is missing, `project read` answers 404: run `project create` with `{"parentStudyId","title","operationId"}` first. Copy `expectedRevision` and `expectedHash` from the read. An agent's save may change only `aiInterpretation`, `suggestions` and `sourceSelections`; changing Adrian's thoughts or adopted direction answers 403 (exit 5). If the read says `structured:false`, save the exact text as `body` instead of the four fields. A `sourceSelections` entry needs `sourceId`, `sourceHash`, `quote` and `start` copied from `library read`. Exit codes: 3 is 409 (re-read), 4 is 423, 5 is 403. Concept saves without an actor answer 400.
+
+## Recipe: Simmer from a chat
+
+Adrian gathers, it simmers, he names the dish, then it is drafted. `simmer intake` carries photos from a folder he names and his exact words into a Library Collection and onto the board (a new subject from `title`, or an existing `subject`); his words are saved as his, stamped `dictated` with the carrier. `simmer material <subject>` reads the board, the Collection's text and Direction. `simmer propose` adds an agent's groupings, reflection letter, two or three possible dishes, questions and feeling checks, each shown as proposed by that agent (it needs the board's `expectedRevision` and `expectedHash`). `simmer name` records the sentence he says when he names the dish, exactly, and makes it Direction's adopted direction unless Direction already holds a sentence he chose another way. Cron and import writers cannot carry his words. The full run is in `skills/ar-create-concepts/SKILL.md`.
 
 ## Releasing
 
