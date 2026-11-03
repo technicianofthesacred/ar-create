@@ -53,6 +53,9 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
   // Optional metadata owners and dependent identity joins share one deadline.
   // A stalled first reader cannot grant a second wave another full timeout.
   const deadline=performance.now()+readTimeoutMs;
+  // A shared read whose timer fired has spent the deadline, even when the clock
+  // still shows a few ms left: a busy event loop fires timers early.
+  let spent=false;
   // Timing is an optional observer, never a source of identity or availability.
   // Labels below are fixed: paths, record IDs, content and owner errors stay out.
   const report=(reader,started,outcome)=>{
@@ -67,8 +70,8 @@ export function createExistingWorkReader({roots=[],portfolio=createMagazinePortf
   };
   const readCatalogAuthority=(path,reader)=>timed(reader,()=>{
    const remaining=deadline-performance.now();
-   if(remaining<1)throw Object.assign(Error(path+' read timed out.'),{status:503,code:'REVIEW_READ_BUDGET_EXHAUSTED'});
-   return boundedReviewRead(signal=>readAuthority(path,{signal}),{timeoutMs:remaining,label:path});
+   if(spent||remaining<1)throw Object.assign(Error(path+' read timed out.'),{status:503,code:'REVIEW_READ_BUDGET_EXHAUSTED'});
+   return boundedReviewRead(signal=>readAuthority(path,{signal}),{timeoutMs:remaining,label:path}).catch(error=>{if(error?.code==='REVIEW_READ_TIMEOUT')spent=true;throw error;});
   });
   // Start only fresh reads here. allSettled owns every optional rejection even
   // when the fatal portfolio read fails before the remaining owners finish.
