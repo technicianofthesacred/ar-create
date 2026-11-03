@@ -213,7 +213,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, voiceHome, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
   if(typeof magazineCheckReceipts!=='boolean')throw new TypeError('Magazine check receipt permission must be an explicit boolean.');
   // Host-selected read capability only. No request can choose a source path or
   // establish an association between an original and the current manuscript.
@@ -240,7 +240,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const connectedFolders = createConnections({dataDir,library,connections,editable:connectionsEditable,...(!connectionsEditable?{reason:'Folders are managed by the server startup configuration.'}:{})});
   const researchMaterial = createResearchMaterial({dataDir,library});
   const researchInput = input => {if(input.projectId!==store.get().project.id)throw new StateError('Research belongs to another project.',409);return input;};
-  const guidance = createGuidance({ dataDir, referenceDir: path.join(root, 'reference', 'guidance'), voiceSource: resolveVoiceSource({ dataDir, option: i64osDirections }) });
+  const guidance = createGuidance({ dataDir, referenceDir: path.join(root, 'reference', 'guidance'), voiceSource: resolveVoiceSource({ dataDir, option: i64osDirections, home: voiceHome }) });
   const voiceCorrections = createVoiceCorrections({ dataDir });
   recordings = createRecordings({ dataDir, library, transcriptionRuntime });
   const transcriptTools=createTranscriptToolConnection({dataDir,library,recordings});

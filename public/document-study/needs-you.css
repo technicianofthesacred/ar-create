@@ -12,6 +12,7 @@
 #project-library .ny-tag[data-status="defaulted"]::before{background:var(--green,var(--dim));border-color:var(--green,var(--dim))}
 #project-library .ny-tag[data-status="answered"]::before{border-color:var(--green,var(--dim))}
 #project-library .ny-about{color:var(--ink)}
+#project-library .ny-detail{color:var(--dim);font-weight:400}
 #project-library .ny-meta>span+span::before{content:"·";margin:0 8px;color:var(--dim)}
 #project-library .ny-q{margin:6px 0 10px;font-size:var(--c3-t2,15px);line-height:1.5;font-weight:500;color:var(--ink);max-width:72ch;overflow-wrap:anywhere}
 #project-library .ny-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}

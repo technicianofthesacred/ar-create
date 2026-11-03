@@ -8,15 +8,34 @@ import { atomicWrite, readJson, digest, resolveInside, regular } from './files.m
 // The i64os directions hold Adrian's voice in one copy (3 November 2026).
 const I64OS_FILES = { voice: 'voice-profile.md', positions: 'body-of-work.md' };
 
-/** Where AR Create reads the voice: a server option, else data/i64os-directions.json, else none. */
-export function resolveVoiceSource({ dataDir, option }) {
+// Where the i64os checkout keeps the directions, relative to the user's home, in the order they are tried.
+export const DEFAULT_DIRECTIONS_LOCATIONS = [
+  ['Documents', 'Files', '4 Coding', 'i64os', 'substrate', 'directions'],
+  ['Documents', 'Files', '2 Areas', 'Coding', 'i64os', 'substrate', 'directions']
+];
+
+/** The first known i64os directions folder under `home`. One holding both voice files wins; otherwise the first
+ * folder that exists, so a half-present checkout fails openly (503 on read) instead of silently using stale copies. */
+export function defaultDirectionsDir(home) {
+  if (typeof home !== 'string' || !path.isAbsolute(home)) return null;
+  const found = DEFAULT_DIRECTIONS_LOCATIONS.map(parts => path.join(home, ...parts)).filter(dir => fs.statSync(dir, { throwIfNoEntry: false })?.isDirectory());
+  const whole = found.find(dir => Object.values(I64OS_FILES).every(name => fs.statSync(path.join(dir, name), { throwIfNoEntry: false })?.isFile()));
+  return whole ?? found[0] ?? null;
+}
+
+/** Where AR Create reads the voice: a server option, else data/i64os-directions.json (the override), else the
+ * i64os checkout's substrate/directions at a known location under `home`, else none (the local copies). */
+export function resolveVoiceSource({ dataDir, option, home }) {
   let directionsDir = option;
   if (directionsDir === undefined) {
     const file = path.join(dataDir, 'i64os-directions.json');
     const stat = fs.lstatSync(file, { throwIfNoEntry: false });
-    if (!stat) return null;
-    if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('i64os directions config must be an owned regular file.');
-    directionsDir = JSON.parse(fs.readFileSync(file, 'utf8'))?.directionsDir ?? null;
+    if (stat) {
+      if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('i64os directions config must be an owned regular file.');
+      directionsDir = JSON.parse(fs.readFileSync(file, 'utf8'))?.directionsDir ?? null;
+    } else {
+      directionsDir = defaultDirectionsDir(home);
+    }
   }
   if (directionsDir === null || directionsDir === false) return null;
   if (typeof directionsDir !== 'string' || !path.isAbsolute(directionsDir)) throw new Error('i64os directionsDir must be an absolute path.');
