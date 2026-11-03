@@ -90,7 +90,7 @@ test('the route map mounts with identical behaviour: 405 with Allow, origin and 
  assert.equal((await fetch(f.url+'/api/concepts',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,400);
 });
 
-test('a CLI-created collection owns a draft, and the draft records the agent',async t=>{
+test('a CLI-created collection owns a draft; an agent cannot save its wording, Adrian\'s save records him',async t=>{
  const f=await setup(t),pid='cli-collection-'+randomUUID().slice(0,8);
  assert.equal((await run(['--url',f.url,'project','list'],{env:{}})).exitCode,2,'--actor is required');
  const created=await f.cli(['project','create'],{parentStudyId:pid,title:'Made by an agent',operationId:randomUUID()});
@@ -100,12 +100,16 @@ test('a CLI-created collection owns a draft, and the draft records the agent',as
  assert.equal(draft.exitCode,0,JSON.stringify(draft.result));
  assert.equal(draft.result.binding.authority,'owned-working-copy');assert.equal(draft.result.readiness.ready,true);
  const operationId=randomUUID();
- const saved=await f.cli(['draft','save'],{bindingId,parentStudyId:pid,expected:draft.result.expected,operationId,operations:[{kind:'insert',id:randomUUID(),beforeId:null,raw:'Words placed by the agent.'}]});
+ // Agents propose prose; they never save it (3 Nov 2026). The CLI exits 5 on 403.
+ const refused=await f.cli(['draft','save'],{bindingId,parentStudyId:pid,expected:draft.result.expected,operationId:randomUUID(),operations:[{kind:'insert',id:randomUUID(),beforeId:null,raw:'Words placed by the agent.'}]});
+ assert.equal(refused.exitCode,5,JSON.stringify(refused.result));
+ const saved=await f.cli(['draft','save'],{bindingId,parentStudyId:pid,expected:draft.result.expected,operationId,operations:[{kind:'insert',id:randomUUID(),beforeId:null,raw:'Words placed by Adrian.'}]},'human:adrian');
  assert.equal(saved.exitCode,0,JSON.stringify(saved.result));
- assert.match(fs.readFileSync(saved.result.paths.draft,'utf8'),/Words placed by the agent\./);
- assert.equal(saved.result.history.find(h=>h.operationId===operationId).actor,'agent:codex');
+ assert.match(fs.readFileSync(saved.result.paths.draft,'utf8'),/Words placed by Adrian\./);
+ assert.doesNotMatch(fs.readFileSync(saved.result.paths.draft,'utf8'),/Words placed by the agent/);
+ assert.equal(saved.result.history.find(h=>h.operationId===operationId).actor,'human:adrian');
  // A stale save is a conflict (exit 3), never a silent overwrite.
- const stale=await f.cli(['call','study-draft.save'],{bindingId,parentStudyId:pid,expected:draft.result.expected,operationId:randomUUID(),operations:[{kind:'insert',id:randomUUID(),beforeId:null,raw:'Stale.'}]});
+ const stale=await f.cli(['call','study-draft.save'],{bindingId,parentStudyId:pid,expected:draft.result.expected,operationId:randomUUID(),operations:[{kind:'insert',id:randomUUID(),beforeId:null,raw:'Stale.'}]},'human:adrian');
  assert.equal(stale.exitCode,3);
  // The same collection is visible to the concept list and to the app's catalog.
  const list=await f.cli(['call','study-draft.catalog']);assert.ok(list.result.collections.some(c=>c.parentStudyId===pid&&c.bindingId===bindingId));

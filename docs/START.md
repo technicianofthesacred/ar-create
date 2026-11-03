@@ -86,11 +86,11 @@ node "$CLI" project list
 echo '{"parentStudyId":"<id>"}' | node "$CLI" project read --input -
 echo '{"parentStudyId":"<id>","query":"<words>","limit":5}' | node "$CLI" library search --input -
 echo '{"scope":{"kind":"project","id":"<id>"},"reason":"saving a concept note"}' | node "$CLI" lease acquire --input -
-echo '{"parentStudyId":"<id>","operationId":"<new uuid>","expectedRevision":<n>,"expectedHash":"<hash>","authorThoughts":"<Adrian's words, exact>","aiInterpretation":"<yours, provisional>","suggestions":"","sourceSelections":[]}' | node "$CLI" project save --input -
+echo '{"parentStudyId":"<id>","operationId":"<new uuid>","expectedRevision":<n>,"expectedHash":"<hash>","authorThoughts":"<unchanged from the read>","aiInterpretation":"<yours, provisional>","suggestions":"","sourceSelections":[]}' | node "$CLI" project save --input -
 echo '{"scope":{"kind":"project","id":"<id>"}}' | node "$CLI" lease release --input -
 ```
 
-`project list` shows only projects that already have a concept. If `<id>` is missing, `project read` answers 404: run `project create` with `{"parentStudyId","title","operationId"}` first. Copy `expectedRevision` and `expectedHash` from the read. If the read says `structured:false`, save the exact text as `body` instead of the four fields. A `sourceSelections` entry needs `sourceId`, `sourceHash`, `quote` and `start` copied from `library read`. Exit codes: 3 is 409 (re-read), 4 is 423, 5 is 403. Concept saves without an actor answer 400.
+`project list` shows only projects that already have a concept. If `<id>` is missing, `project read` answers 404: run `project create` with `{"parentStudyId","title","operationId"}` first. Copy `expectedRevision` and `expectedHash` from the read. An agent's save may change only `aiInterpretation`, `suggestions` and `sourceSelections`; changing Adrian's thoughts or adopted direction answers 403 (exit 5). If the read says `structured:false`, save the exact text as `body` instead of the four fields. A `sourceSelections` entry needs `sourceId`, `sourceHash`, `quote` and `start` copied from `library read`. Exit codes: 3 is 409 (re-read), 4 is 423, 5 is 403. Concept saves without an actor answer 400.
 
 ## Releasing
 

@@ -9,7 +9,7 @@ export const MAGAZINE_HUMAN_ONLY = Object.freeze([
   'POST /api/magazine/ask/answer', 'POST /api/magazine/edit', 'POST /api/magazine/lineup/save', 'POST /api/magazine/approve',
   'POST /api/magazine/export/save', 'POST /api/magazine/album/link', 'POST /api/magazine/lock/recover', 'POST /api/magazine/status/install',
   'POST /api/magazine/proposal/accept', 'POST /api/magazine/proposal/reject', 'POST /api/magazine/tidy/apply', 'POST /api/magazine/send',
-  'POST /api/magazine/reconcile/choose',
+  'POST /api/magazine/reconcile/choose', 'POST /api/magazine/mark-published',
 ]);
 /** POST routes that only read (no actor needed, not journalled). */
 export const MAGAZINE_READ_ONLY_POSTS = Object.freeze(['/api/magazine/send-check', '/api/magazine/check']);
