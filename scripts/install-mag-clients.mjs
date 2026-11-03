@@ -19,6 +19,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {createHash, randomUUID} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 
 const repo = path.resolve(import.meta.dirname, '..');
@@ -26,6 +27,21 @@ const EDITORIAL = path.join(repo, 'editorial');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const hashOf = file => fs.existsSync(file) ? sha(fs.readFileSync(file)) : null;
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+
+/**
+ * Every committed version of a repo file, as sha256s. A file on disk that matches one of them was put there by an
+ * earlier run of this installer, so a newer version may replace it. Outside a git checkout this knows none.
+ */
+export function committedVersions(from, {repoDir = repo} = {}) {
+  const rel = path.relative(repoDir, from);
+  if (rel.startsWith('..')) return [];
+  try {
+    const commits = execFileSync('git', ['-C', repoDir, 'log', '--format=%H', '--', rel], {encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']}).split('\n').filter(Boolean);
+    const shas = new Set();
+    for (const c of commits) { try { shas.add(sha(execFileSync('git', ['-C', repoDir, 'show', `${c}:${rel}`], {stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 16 * 1024 * 1024}))); } catch {} }
+    return [...shas];
+  } catch { return []; }
+}
 
 /** Every file to install: {from (repo), to (absolute), originalSha (what it replaces, null for new), mode}. */
 export function plan({skillsDir, buildsDir}) {
@@ -42,14 +58,16 @@ export function plan({skillsDir, buildsDir}) {
   return files;
 }
 
-export function inspect(files) {
+export function inspect(files, {versions = committedVersions} = {}) {
   return files.map(f => {
     const current = hashOf(f.to), source = fs.existsSync(f.from) ? fs.readFileSync(f.from) : null, next = source ? sha(source) : null;
+    const ours = !f.keepOriginal && current !== null && current !== next && current !== f.originalSha && versions(f.from).includes(current);
     let action;
     if (!source) action = 'refuse: the new version is missing from the repo';
     else if (f.keepOriginal) action = current !== null ? (current === f.originalSha ? 'already installed' : 'refuse: a different legacy copy is already there') : next === f.originalSha ? 'copy original' : 'refuse: mag-intake.sh is not the original this was built for';
     else if (current === next) action = 'already installed';
     else if (current === null) action = f.isNew ? 'add' : 'refuse: the original is missing';
+    else if (ours) action = 'replace';
     else if (f.isNew) action = 'refuse: a file is already there that this did not make';
     else if (f.originalSha && current !== f.originalSha) action = 'refuse: changed since the new version was built';
     else action = 'replace';

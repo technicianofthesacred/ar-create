@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {install, restoreBackup, plan} from '../scripts/install-mag-clients.mjs';
+import {install, restoreBackup, plan, inspect, committedVersions} from '../scripts/install-mag-clients.mjs';
 import {treeHashes, SCRATCH} from './helpers/magazine-fixture.mjs';
 
 const sha = b => createHash('sha256').update(b).digest('hex');
@@ -57,4 +57,33 @@ test('install-mag-clients --apply refuses unless AR Create answers with the maga
   const c = scratchCopies(t); if (!c) return t.skip('originals unavailable');
   await assert.rejects(install({skillsDir: c.skills, buildsDir: c.builds, apply: true, arcUrl: 'http://127.0.0.1:9'}), /does not answer/);
   assert.ok(!fs.existsSync(path.join(c.builds, 'mag-arc.mjs')));
+});
+
+test('install-mag-clients replaces a file it installed itself earlier, and still refuses one someone else changed', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mag-clients-ours-')); t.after(() => fs.rmSync(dir, {recursive: true, force: true}));
+  const write = (name, text) => { const file = path.join(dir, name); fs.writeFileSync(file, text); return file; };
+  const original = 'the pre-switch original\n', earlier = 'the thin skill as installed this morning\n', next = 'the thin skill with the Simmer section\n';
+  const from = write('next.md', next);
+  const row = (to, extra = {}) => ({from, to, label: path.basename(to), originalSha: sha(original), isNew: false, mode: 0o644, ...extra});
+  const versions = file => (file === from ? [sha(earlier), sha(next)] : []);
+  const [ours, theirs, untouched, addedEarlier, addedByHand] = inspect([
+    row(write('ours.md', earlier)),
+    row(write('theirs.md', 'edited by hand since\n')),
+    row(write('untouched.md', original)),
+    row(write('added-earlier.md', earlier), {originalSha: null, isNew: true}),
+    row(write('added-by-hand.md', 'someone else\'s file\n'), {originalSha: null, isNew: true}),
+  ], {versions});
+  assert.equal(ours.action, 'replace');
+  assert.equal(theirs.action, 'refuse: changed since the new version was built');
+  assert.equal(untouched.action, 'replace');
+  assert.equal(addedEarlier.action, 'replace');
+  assert.equal(addedByHand.action, 'refuse: a file is already there that this did not make');
+});
+
+test('committedVersions knows every committed version of a shipped skill file', () => {
+  const from = path.resolve(import.meta.dirname, '..', 'editorial', 'skills-next', 'arcreate', 'SKILL.md');
+  const versions = committedVersions(from);
+  if (!versions.length) return; // not a git checkout (an installed copy)
+  assert.ok(versions.includes(sha(fs.readFileSync(from))), 'the committed file is one of its versions');
+  assert.deepEqual(committedVersions(path.join(os.tmpdir(), 'outside.md')), []);
 });
