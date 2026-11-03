@@ -49,3 +49,19 @@ test('a late earlier-project render cannot start an Outputs read or repaint the 
   assert.equal(f.w.document.querySelector('#output-overview').dataset.outputProject,'ref-an-cha');assert.match(f.w.document.body.textContent,/Invented empty ref-an-cha/);
  }finally{for(const render of f.renders)render.gate.resolve();await turn();f.dom.window.close();}
 });
+
+test('the last snapshot paints at once as Refreshing with actions disabled, then the fresh read enables them and render does not discard it',async()=>{
+ const f=fixture();try{
+  const row={id:'o1',kind:'post',title:'Saved post',format:'Post',status:'draft',nextAction:{kind:'native',label:'Open post'},workingHash:'a'.repeat(64)},snapshot={projectId:'hk',outputs:[row]},gate=deferred(),calls=[];
+  f.w.sessionStorage.setItem('ar-create:outputs-snapshot:hk',JSON.stringify(snapshot));
+  f.w.realOutputOverview.read=async input=>{calls.push(input);return gate.promise;};
+  f.setProject('hk');const first=f.w.render();f.renders[0].gate.resolve();await first;await turn();
+  const doc=f.w.document;assert.match(doc.body.textContent,/Saved post/);assert.match(doc.body.textContent,/Refreshing…/);
+  const live=()=>[...doc.querySelectorAll('#output-overview button')].filter(b=>!b.disabled);assert.equal(live().length,0,'no action is live on a cached snapshot');
+  const second=f.w.render();f.renders[1].gate.resolve();await second;await turn();
+  assert.deepEqual(calls.map(c=>c.shared),[true,true],'render-time loads share one read per project');
+  gate.resolve({projectId:'hk',outputs:[{...row}]});await turn();await turn();
+  assert.doesNotMatch(doc.body.textContent,/Refreshing…/);assert.ok(live().some(b=>b.dataset.outputAction==='native'),'actions return once the fresh read lands');
+  assert.equal(JSON.parse(f.w.sessionStorage.getItem('ar-create:outputs-snapshot:hk')).outputs[0].id,'o1');
+ }finally{for(const render of f.renders)render.gate.resolve();await turn();f.dom.window.close();}
+});

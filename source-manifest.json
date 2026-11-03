@@ -756,13 +756,13 @@
     {
       "path": "public/document-study/stage-flow.js",
       "sourceSha256": "50355aceafb6f15df37640c20c821311edaa50ce356590b1f4632993f827ff49",
-      "candidateSha256": "cce179e67c79d8609151e97c0811beba7af425d2a9e1f4383d35464773bb317a",
+      "candidateSha256": "6b5cac188fa536c1f7f4a5b7fde8fb976a127b915c7a19961daca7ecbb0a8099",
       "adapted": true
     },
     {
       "path": "public/document-study/stage-flow.css",
       "sourceSha256": "b5410d008b5515fab5f4778d701d45e4bf9eecc6c8e5ae561d2569f04f06a8e0",
-      "candidateSha256": "9f6ed4e99acffc65a7399cb3bb19e2b58264c79c41a6c3317535aa9e34427438",
+      "candidateSha256": "9ae454c4ed960aa8636f053b07e5693b2769b8476ef31b16808764303cabb046",
       "adapted": false
     },
     {
@@ -816,7 +816,7 @@
     {
       "path": "public/document-study/material-surface.js",
       "sourceSha256": "0951e41a205cc9c62103045f42da01a6596130dd753bec1d8e65b72c5cec8830",
-      "candidateSha256": "a7bec485ccd1cf315e2a48056827b5a2fff2730afed3ccd9e58d2ac63e231dbb",
+      "candidateSha256": "49e894ac4b65b8b708e335e2a648bed1cb251e9dbcb81e228f4e334c00aa99ac",
       "adapted": false
     },
     {
@@ -1147,7 +1147,7 @@
     {
       "path": "public/document-study/output-overview.js",
       "sourceSha256": "49d8cd5e74637e4dd512888d4d933186a32437a0e58addc9a2b59f761b2e015c",
-      "candidateSha256": "c15e9c085540c7c7e49d39065a16f9500dcc1390c0d493ef1ff530e30899043c",
+      "candidateSha256": "a531ef26184d12bf29ba5890d41dadaa66f75d5652469aab8cc6bfcce2e8f3db",
       "adapted": true
     },
     {
@@ -1363,7 +1363,7 @@
     {
       "path": "runtime/services/native-output-factory.mjs",
       "sourceSha256": "2acdcbe50a074e2f076a5f9acd5f7b3feabbee66b68c4675ec6224d45d9287be",
-      "candidateSha256": "cbe7c3ba9ae90b893e89791bb6827eca30cad2aaaf5eeb201fb7a75dfaee1ddc",
+      "candidateSha256": "cb58e4c47c4c67f5368d3d847cdda92690539cff6fa14475350ade94e4140dce",
       "adapted": false
     },
     {
@@ -3417,7 +3417,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "220c232a217efc35d2e7f839bdeacfbb9a9d07c3b1ea9f63a97b846dfd60399c"
+      "candidateSha256": "9559dab8a518a3b99ad8082418d494cc9bd1227205583b2072e70ff67a190eff"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3449,11 +3449,11 @@
     },
     {
       "path": "public/document-study/folder-browser.css",
-      "candidateSha256": "7e209e994152023e9fa676c7ded924b761faa979a3d4a0753750287683ba0722"
+      "candidateSha256": "28748f297460bffc0ed96b3c17400f520f3825cba51ac4848c29a14a5da91e6f"
     },
     {
       "path": "public/document-study/folder-browser.js",
-      "candidateSha256": "b613c7f19ee93ef1ff89607fa6ac74ecacb0a887376ca8648f8b1616435a97c0"
+      "candidateSha256": "28f125e12258729473535a4e10305ce34836e50064183a7097cce43c6e528360"
     },
     {
       "path": "public/document-study/project-destination.test.mjs",
@@ -3473,7 +3473,7 @@
     },
     {
       "path": "public/document-study/workbench-bench-match.css",
-      "candidateSha256": "c8c695c77f99e659b8bf2ac8c03c095d60f1f14a676b48f32f603ccaa9486ad4"
+      "candidateSha256": "82243f9f05ee81ea78bfaa86765807719c57427e1492d4907a16ee50af5a88bd"
     },
     {
       "path": "public/document-study/workbench-check-match.css",
@@ -3541,7 +3541,7 @@
     },
     {
       "path": "tests/folder-browser.test.mjs",
-      "candidateSha256": "10d0f6ca5ce92ce34ff4602f0cc792ef82b82b6f7b1ada0f0b070dc237fa3a44"
+      "candidateSha256": "254c0a013adc60c677bc7d43562f309ff4a04b39b3e67cd962a5f64abf81692f"
     },
     {
       "path": "tests/media-entry.test.mjs",
@@ -3901,7 +3901,7 @@
     },
     {
       "path": "tests/bench-catalog-ui.test.mjs",
-      "candidateSha256": "d9e8906fd7624045f442dc96ff9cf22bce0b35fc37b1917877c2a77beda3b102"
+      "candidateSha256": "79384402346224c559507ac5fb2d5d75d96873e5c38bea5ab154a9a636c06bd6"
     },
     {
       "path": "tests/bench-projection.test.mjs",
@@ -4109,7 +4109,7 @@
     },
     {
       "path": "tests/output-render-lifecycle.test.mjs",
-      "candidateSha256": "deb06a756d9ffeef3dc726c984a90b7963e028bf5ceb9880a46d52cb1d42c19d"
+      "candidateSha256": "c2e506289828c18cc9520ccae567cd8ceeccbde7ce8b9560618298c562d3e0e1"
     },
     {
       "path": "tests/source-location-browser.test.mjs",
@@ -4781,11 +4781,11 @@
     },
     {
       "path": "public/document-study/combined-previews.js",
-      "candidateSha256": "ef5e8b56a979fdaccda817ae448b25af43e857c081ef54040902a5d480f4825c"
+      "candidateSha256": "9e5ef1fbf96eb12c1f8026e1db0f21335a45b369e2978c095fce244ddceb6dbf"
     },
     {
       "path": "tests/combined-previews.test.mjs",
-      "candidateSha256": "e129f8c43752c03010eb9f5d01f613dfa1834c6e6a64e74141064a812a82871f"
+      "candidateSha256": "78a38e7f3165f8102ed86242d23d864608ff4554c37c70d625dffb72b13192b0"
     },
     {
       "path": "public/document-study/combined-phone.css",
@@ -4797,11 +4797,11 @@
     },
     {
       "path": "public/document-study/material-intake.css",
-      "candidateSha256": "2c3aa2c3bd46bf581723aa212cb56f25c27c5748dbfe5086bfcc6f4dc7d820e0"
+      "candidateSha256": "daa2e857eb2dbfd4ff15b703b69b427aba0b41d74f1cee87c6083bc550d85f59"
     },
     {
       "path": "public/document-study/material-intake.js",
-      "candidateSha256": "7a65419a1f5a9fdae0d3a08a8e85f2bc012857cf23a32d505e9ae8b4ff0a6664"
+      "candidateSha256": "e97daa03444b18b6a8b3e79bb1ebdc5a56e20144504012d7067e0101806135f4"
     },
     {
       "path": "tests/magazine-share-preparation-http.test.mjs",
@@ -5201,7 +5201,7 @@
     },
     {
       "path": "tests/material-microphone.test.mjs",
-      "candidateSha256": "a19e248cbd04e0298c0c8d1f1ecb7a9b1dee615fc00c3e5cc69fb2a52011f0b0"
+      "candidateSha256": "6d91972a8f96f40d1f77530841f731a423333301e7d60195de4ee46fc08f80ab"
     },
     {
       "path": "tests/recording-source-owner-journey.test.mjs",
@@ -5238,6 +5238,22 @@
     {
       "path": "public/document-study/margin-fold.test.mjs",
       "candidateSha256": "94a518a2bcc376a83e2d9784b5c229ef109f63073c49c279f74cd26569d4446b"
+    },
+    {
+      "path": "tests/material-bring-in.test.mjs",
+      "candidateSha256": "7ffb62c78a0779a8a1ef9d89323b69c44df81185971d6aa128ebb1879c892518"
+    },
+    {
+      "path": "runtime/services/native-output-asset-pass.mjs",
+      "candidateSha256": "640eda262df0e470bae6c788d997387a1c245a23cb4cd39be24f808d983ab162"
+    },
+    {
+      "path": "tests/native-output-asset-pass.test.mjs",
+      "candidateSha256": "1420c6cadd21522c9e382940f2101ef7a240d48cebeb9750e7e8194cbca30fab"
+    },
+    {
+      "path": "tests/source-timed-lines.test.mjs",
+      "candidateSha256": "0a9dc13491fb999905368e5bef7fc58eebc362037954f3c36089fdaaf231c7c6"
     }
   ],
   "dependencyRepair": {

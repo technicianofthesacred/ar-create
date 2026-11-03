@@ -232,3 +232,34 @@ html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-active{grid-column:1!important;grid-row:1!important}
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story{grid-column:1!important;grid-row:2!important}
 }
+
+/* Home, option A: one toolbar (tabs + find + quiet actions), quiet rows, the idea line, the step waiting on you. */
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tools{display:flex;align-items:center;gap:4px;margin-left:auto;align-self:center;min-width:0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]{width:210px;max-width:100%;height:28px;box-sizing:border-box;padding:0 9px;border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--ink);font:400 var(--t-label,12.5px)/1 var(--ar-ui);margin-right:6px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]::placeholder{color:var(--dim)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool{width:auto;padding:5px 8px!important;margin:0!important;border:0!important;border-radius:5px!important;background:none!important;color:var(--dim)!important;font:400 var(--t-label,12.5px)/1.2 var(--ar-ui)!important;white-space:nowrap;cursor:pointer;min-height:0!important;align-self:center}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool:hover{color:var(--ink)!important;background:var(--sel)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next{display:flex;align-items:baseline;min-width:0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .tn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .tw{flex:none;white-space:pre;color:var(--ink)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-next .thread-eye{flex:none;align-self:center}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-eye.is-q,html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-ready li.is-question::before{background:var(--warm)!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head{gap:3px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-idea{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim);font:400 var(--t-body,14.5px)/1.4 var(--ar-ui)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-head>.dim{font-size:var(--t-label,12.5px)}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-more{display:flex;align-items:baseline;gap:8px;margin:-4px 0 0;padding:0 2px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-more .lnk{padding:0;border:0;background:none;color:var(--warm);font:inherit;cursor:pointer;min-height:0}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-now button{color:var(--warm)!important;background:color-mix(in srgb,var(--warm) 9%,transparent)!important;font-weight:600}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list)>.wbf-bench-story .thread-track li.is-now button::before{background:color-mix(in srgb,var(--warm) 50%,transparent)}
+@media(max-width:900px){
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs{flex-wrap:wrap;gap:0 11px!important;padding:0 16px}html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs button{font-size:13px!important;padding-left:0!important;padding-right:0!important}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tools{flex:1 1 100%;margin:0 0 8px;order:5;flex-wrap:wrap;row-gap:4px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs input[data-wbf-bench-search]{flex:1 1 100%;width:auto;margin:0 0 2px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool{padding-left:0!important;margin-right:6px!important}
+}
+@media(max-width:900px){.thread-tabs .ed{display:none}}
+/* The waiting count never gets cut: the next-step words shorten instead. */
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next:has(.tn){display:flex!important;align-items:center;min-width:0;white-space:nowrap}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next>.tn{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next>.tw{flex:none;padding-left:4px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next>.thread-eye{flex:none}

@@ -3,6 +3,7 @@ import path from "node:path";
 import { digest, regular, resolveInside } from "./files.mjs";
 import { PHOTO_LIMIT } from "./study-photos.mjs";
 import { createNativeOutputOwner } from "./native-output-owner.mjs";
+import { createAssetPassCache } from "./native-output-asset-pass.mjs";
 import { mapper, helpers } from "./native-output-helpers.mjs";
 const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i, HASH = /^[a-f0-9]{64}$/;
 const ROLE = "human-authored-editorial-direction-not-evidence-or-source-quotation";
@@ -139,6 +140,29 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
     const ext = path.extname(s.rel_path).toLowerCase();
     return [".jpg", ".jpeg"].includes(ext) && bytes.length > 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 || ext === ".png" && bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) && bytes.toString("ascii", 12, 16) === "IHDR" || ext === ".webp" && bytes.length >= 16 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
   }
+  // One overview pass asks for the proof of every output; the Library image list does not depend on
+  // the output, so it is hashed once per short window (and re-hashed at once if the index changes).
+  const assetPass = createAssetPassCache();
+  function libraryAssets(index) {
+    return assetPass.get(JSON.stringify(index ?? null), async () => {
+      const assets = [];
+      if (index) {
+        if (!Array.isArray(index.sources) || new Set(index.sources.map((r) => r.id)).size !== index.sources.length) fail("Existing Library source identities are corrupt.");
+        for (const record of index.sources) {
+          if (record.rootId !== "library" || record.missing || !/\.(jpe?g|png|webp)$/i.test(record.rel_path || "")) continue;
+          try {
+            const current = await library.snapshot(record.id);
+            if (current.id !== record.id || current.rel_path !== record.rel_path || !HASH.test(current.hash || "") || !eligibleImage(current)) continue;
+            assets.push({ id: current.id, hash: current.hash });
+          } catch (error) {
+            if (error.status === 403 || error.status === 404 || error.code === "ENOENT") continue;
+            throw error;
+          }
+        }
+      }
+      return assets;
+    });
+  }
   const proof = { async read(input) {
     const key = stable({ rootBindingId: input.rootBindingId, parentStudyId: input.parentStudyId }), s = scopes.get(key);
     if (!s || !UUID.test(input.outputId || "")) fail("Resolve this exact trusted root scope before proof reads.");
@@ -154,21 +178,8 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
       if (!(original.missing || []).some((m) => m.role === wanted.role && m.path === wanted.sourcePath)) fail("Captured source is not owned by this original part; unsupported inheritance held.");
       sources.push({ ...wanted, hash: null, missing: true });
     }
-    const index = read("library-index.json"), assets = [];
-    if (index) {
-      if (!Array.isArray(index.sources) || new Set(index.sources.map((r) => r.id)).size !== index.sources.length) fail("Existing Library source identities are corrupt.");
-      for (const record of index.sources) {
-        if (record.rootId !== "library" || record.missing || !/\.(jpe?g|png|webp)$/i.test(record.rel_path || "")) continue;
-        try {
-          const current = await library.snapshot(record.id);
-          if (current.id !== record.id || current.rel_path !== record.rel_path || !HASH.test(current.hash || "") || !eligibleImage(current)) continue;
-          assets.push({ id: current.id, hash: current.hash });
-        } catch (error) {
-          if (error.status === 403 || error.status === 404 || error.code === "ENOENT") continue;
-          throw error;
-        }
-      }
-    }
+    const index = read("library-index.json");
+    const assets = await libraryAssets(index);
     return { sources: sources.sort((a, b) => a.id.localeCompare(b.id)), photos: [], assets: assets.sort((a, b) => a.id.localeCompare(b.id)), decisionsHash: decisionProof(s, input.outputId) };
   } };
   return { owner: createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scope, proof, retainedSource, browserOrigins, validateStandInReview }), scope, proof };
