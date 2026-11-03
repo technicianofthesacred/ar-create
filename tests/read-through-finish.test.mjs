@@ -97,7 +97,9 @@ test('voice corrections: only Adrian approves or drops; approved ones export in 
  const f=await setup(t),{requestId,rows}=await f.draft(['A machine sentence about tea.','A machine sentence about clay.']);
  const done=await f.ai('finish',{requestId,operationId:randomUUID(),edits:[{id:rows[0].id,words:'Tea, the way my teacher poured it.'},{id:rows[1].id,words:'Clay that remembers the hand.'}]});
  assert.equal(done.status,200,JSON.stringify(done.result));
- const [first,second]=(await f.api('/api/voice-corrections?status=pending')).result.items;
+ // Two corrections saved in the same millisecond list in id order, which is a digest, so find each by its words.
+ const pending=(await f.api('/api/voice-corrections?status=pending')).result.items,first=pending.find(i=>i.before==='A machine sentence about tea.'),second=pending.find(i=>i.before==='A machine sentence about clay.');
+ assert.equal(pending.length,2);assert.ok(first&&second,JSON.stringify(pending));
  const agent=await f.api('/api/voice-corrections/decide',{id:first.id,decision:'approve',operationId:randomUUID()},'agent:claude-code');
  assert.equal(agent.status,403);assert.match(agent.result.error,/human-only/);
  const approved=await f.api('/api/voice-corrections/decide',{id:first.id,decision:'approve',key:'body-of-work',note:'I write from the teacher, not about her.',operationId:randomUUID()});
