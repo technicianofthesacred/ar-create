@@ -6,7 +6,7 @@ Read [AGENTS.md](../AGENTS.md) and [START.md](START.md) first, then the relevant
 
 Canonical repository: `technicianofthesacred/ar-create`, branch `main`, is the only source of code and intent. i64 OS provides the entrance (`/ar-create`, in i64os PR #208) and no longer carries a copy of the app. Use an authorized local checkout, or Claude's GitHub integration for a code-only read. This document provides code/design context; it does not configure a provider account or share real content.
 
-The packaged baseline includes the completed Material, Study AI continuity, and source-review → matching direction → exact native request checkpoints. Newer live work may still be in progress; use `source-manifest.json` to identify the exact copied code and hashes. Do not copy a live application's whole folder to update it. Bring in only a reviewed stable code delta, retain the private exclusions and keep the repaired runtime dependency overlay.
+The packaged baseline includes the completed Material, Study AI continuity, and source-review → matching direction → exact native request checkpoints. Newer live work may still be in progress; the installed home's `RELEASE.json` names the exact released commit, and `node scripts/refresh-manifest.mjs` lists the copied files and their hashes. Do not copy a live application's whole folder to update it. Bring in only a reviewed stable code delta, retain the private exclusions and keep the repaired runtime dependency overlay.
 
 From the repository root, use Node 22 or newer and run these commands in order:
 
@@ -106,7 +106,7 @@ Private content lives in the home's `data/`, never in this repository and never 
 
 Never add real interviews/transcripts, manuscript copies, photographs/audio, immutable source captures, saved decisions/request histories, provider payloads, model weights, personal guidance, proof screenshots/logs or backups. In particular, `workflow-records.js` and `reference-data.js` were content bundles, not safe application code. Use invented fixtures for design and tests.
 
-The runtime and the SDK have separate locks. Preserve the Tiptap/ProseMirror repair recorded in the source manifest. Runtime has a low Readability residual; the separate development SDK client has a high OAuth advisory. No OAuth/provider setup is included. SDK compatibility remediation and complete terminal/ASR/export acceptance remain separate work.
+The runtime and the SDK have separate locks. Preserve the Tiptap/ProseMirror repair pinned in the `overrides` of `runtime/package.json`. Runtime has a low Readability residual; the separate development SDK client has a high OAuth advisory. No OAuth/provider setup is included. SDK compatibility remediation and complete terminal/ASR/export acceptance remain separate work.
 
 ## Private storage and offline direction: planned, not installed
 

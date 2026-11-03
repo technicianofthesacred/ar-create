@@ -79,6 +79,33 @@ test('concept.save: an agent may propose an interpretation, but not write Adrian
  assert.equal(after.revision,proposal.body.revision);assert.equal(after.authorThoughts,'My words.');
 });
 
+test('concept.save: an agent may append Adrian\'s dictated words, stamped as dictated, and never change what is there',async t=>{
+ const f=await setup(t),pid='dictation-concept';
+ await f.call('/api/concepts',{parentStudyId:pid,title:'Dictation',operationId:randomUUID()},f.as('human:adrian'));
+ const start=(await f.call('/api/concept?'+new URLSearchParams({parentStudyId:pid}))).body;
+ const save=(base,input,actor)=>f.call('/api/concept/save',{parentStudyId:pid,operationId:randomUUID(),expectedRevision:base.revision,expectedHash:base.hash,aiInterpretation:'',suggestions:'',sourceSelections:[],...input},f.as(actor));
+ const mine=await save(start,{authorThoughts:'The kiln was cold.'},'human:adrian');assert.equal(mine.status,200,JSON.stringify(mine.body));
+ // Appending without saying it is dictation is refused, and so is any change to what is there.
+ assert.equal((await save(mine.body,{authorThoughts:'The kiln was cold.\n\nWe waited.'},'agent:claude-code')).status,403);
+ for(const changed of ['The kiln was warm.\n\nWe waited.','We waited.\n\nThe kiln was cold.','We waited.']){
+  const out=await save(mine.body,{authorThoughts:changed,dictated:true},'agent:claude-code');
+  assert.ok([400,403].includes(out.status),changed+' '+out.status);
+ }
+ // dictated:true with nothing appended is a usage error, not a silent save.
+ assert.equal((await save(mine.body,{authorThoughts:'The kiln was cold.',dictated:true},'agent:claude-code')).status,400);
+ const operationId=randomUUID(),dictated=await f.call('/api/concept/save',{parentStudyId:pid,operationId,expectedRevision:mine.body.revision,expectedHash:mine.body.hash,authorThoughts:'The kiln was cold.\n\nWe waited two days for the wood.',aiInterpretation:'',suggestions:'',sourceSelections:[],dictated:true},f.as('agent:claude-code'));
+ assert.equal(dictated.status,200,JSON.stringify(dictated.body));
+ assert.equal(dictated.body.authorThoughts,'The kiln was cold.\n\nWe waited two days for the wood.');
+ const row=dictated.body.history.find(h=>h.operationId===operationId);
+ assert.deepEqual([row.actor,row.dictated],['agent:claude-code',{by:'agent:claude-code',client:'cli'}]);
+ assert.ok(dictated.body.history.filter(h=>h.operationId!==operationId).every(h=>!h.dictated),'only the dictated append is stamped');
+ // The stamp survives a fresh read.
+ const reread=(await f.call('/api/concept?'+new URLSearchParams({parentStudyId:pid}))).body;
+ assert.deepEqual(reread.history.find(h=>h.operationId===operationId).dictated,{by:'agent:claude-code',client:'cli'});
+ // Adrian may still rewrite his own words freely.
+ assert.equal((await save(reread,{authorThoughts:'Cold kiln. Two days.'},'human:adrian')).status,200);
+});
+
 test('study-draft.undo: an agent may not undo draft wording outside a structure-test copy',async t=>{
  const f=await setup(t);
  const raw=fs.readFileSync(path.join(f.vault,'Workflow/3-Develop/DEV - Synthetic One.md'),'utf8');
