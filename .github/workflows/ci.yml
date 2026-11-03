@@ -43,7 +43,7 @@ jobs:
           set -o pipefail
           # The private-repo runner has 2 vCPUs, where node:test defaults to running one file at a
           # time (~30 min serial). Most files wait on local servers, so 4 at once fits the timeout.
-          npm test -- --test-concurrency=4 2>&1 | tee test-output.log
+          npm test -- --test-concurrency=4 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
       - name: Verify package
         if: ${{ !cancelled() && steps.test.outcome != 'skipped' }}
@@ -51,12 +51,12 @@ jobs:
 
       - name: Summary
         if: ${{ !cancelled() }}
-        run: node tests/helpers/ci-summary.mjs test-output.log ci-summary.json
+        run: node tests/helpers/ci-summary.mjs "$RUNNER_TEMP/test-output.log" "$RUNNER_TEMP/ci-summary.json"
 
       - name: Upload summary
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: ci-summary
-          path: ci-summary.json
+          path: ${{ runner.temp }}/ci-summary.json
           retention-days: 30
