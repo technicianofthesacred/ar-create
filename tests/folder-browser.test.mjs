@@ -226,3 +226,33 @@ test('correct-looking transcript provenance cannot relabel foreign sources, orig
  const x=await setup(view(rows));try{specs.forEach(([_authority,_kind,label],i)=>assert.equal(x.d.querySelector(`[data-wfb-id="s${i}"] .wfb-kind`).textContent,label));for(const row of rows.slice(specs.length))assert.equal(x.d.querySelector(`[data-wfb-id="${row.id}"] .wfb-kind`).textContent,'Note');x.d.querySelector('[data-wfb-action="filters"]').click();assert.doesNotMatch(x.d.querySelector('[data-wfb-facet="type"]').textContent,/Transcript/);}finally{x.close();}
 });
 test('Library intake ordinary navigation preserves existing browsing and exact writer owner',async()=>{const x=await setup();try{x.w.arCreateUiActor={actor:'human:adrian'};x.w.eval(await fs.readFile(new URL('../public/document-study/material-intake.js',import.meta.url),'utf8'));const jobs=[{id:'11111111-1111-4111-8111-111111111111',story:'Controlled synthetic recording',file:'tone.wav',state:'failed',transcriptReady:false,error:'Controlled failure'}];x.w.fetch=async url=>({ok:true,json:async()=>url==='/api/recordings'?{jobs}:view([source('s1','Alpha'),source('s2','Beta')])});await x.w.workbenchFolderBrowser.refresh();const editor=x.d.querySelector('#original textarea'),search=x.d.querySelector('[data-wfb-search]');search.value='Alpha';search.dispatchEvent(new x.w.Event('input',{bubbles:true}));x.d.querySelector('[data-mi-open]').click();await new Promise(r=>setTimeout(r,5));assert.equal(x.d.querySelector('.wfb-browser').classList.contains('mi-open'),true);assert.match(x.d.querySelector('[data-mi-root]').textContent,/Failed/);x.d.querySelector('[data-mi-back]').click();assert.equal(x.d.querySelector('[data-wfb-search]').value,'Alpha');assert.equal(x.d.querySelectorAll('.wfb-vrow').length,1);assert.strictEqual(x.d.querySelector('#original textarea'),editor);assert.equal(editor.value,'Unsaved words');assert.equal(x.d.querySelector('.wfb-browser').classList.contains('mi-open'),false);}finally{x.close();}});
+
+test('Use in a subject: human confirms inline, attaches through the material route, then Used in refreshes',async()=>{
+ const hash='c'.repeat(64),scope='a'.repeat(64),revision='b'.repeat(64),rows=[{...source('src1','Oracle'),authority:'library',hash}];
+ const A='11111111-1111-4111-8111-111111111111',B='22222222-2222-4222-8222-222222222222',BIND='33333333-3333-4333-8333-333333333333';
+ const run=async(actor,attach)=>{const x=await setup(view([]),undefined,{actualWork:true});x.w.eval(await fs.readFile(new URL('../public/document-study/catalog-projection.js',import.meta.url),'utf8'));
+  x.w.arCreateUiActor={actor};x.w.switchProject=async()=>{};x.w.studyStageOpenSource=async()=>{};x.w.crypto={randomUUID:()=>'44444444-4444-4444-8444-444444444444'};
+  x.w.existingWork={catalog:()=>({stories:[{id:'a',name:'Alpha subject',nativeProjectId:A},{id:'b',name:'Beta subject',nativeProjectId:B},{id:'p',name:'Old',published:'x',nativeProjectId:'p'}]})};
+  x.w.nativeDraftCatalog={read:async()=>({drafts:[],collections:[{kind:'collection-root',bindingStatus:'ready',parentStudyId:A,bindingId:BIND,title:'Alpha subject'}]})};
+  let used=[];const calls=[];x.w.fetch=async(url,opts={})=>{calls.push({url,opts});if(url==='/api/library/source-projects')return {ok:true,json:async()=>({schema:'ar-create.library-source-projects.v1',projects:used})};if(url==='/api/study/material/attach')return attach(opts,()=>{used=[{projectId:A,title:'Alpha subject',sourceIds:['src1']}];});return {ok:true,json:async()=>view([])};};
+  x.w.workbenchFolderBrowser.setLibraryCatalog({sources:rows,scope,revision,ready:true,openSource:async()=>{}});x.w.workbenchFolderBrowser.panelSpec('library').press('all');
+  await new Promise(r=>setTimeout(r,20));x.w.workbenchFolderBrowser.panelSpec('library').press('all');await new Promise(r=>setTimeout(r,20));return {x,calls};};
+ // human: confirm, cancel, confirm, add
+ let {x,calls}=await run('human:adrian',async(opts,ok)=>{ok();return {ok:true,json:async()=>({sourceIds:['src1']})};});
+ try{const d=x.d,use=()=>d.querySelector('.wfb-use');
+  assert.match(use().textContent,/Alpha subject/);assert.equal(d.querySelector('[data-wfb-use="'+B+'"]').disabled,true,'a subject with no binding is disabled');assert.equal(d.querySelector('[data-wfb-use="p"]'),null,'finished subjects are not offered');assert.equal(d.querySelector('.wfb-nc'),null);
+  d.querySelector('[data-wfb-use="'+A+'"]').click();assert.match(d.querySelector('.wfb-use li.ask').textContent,/Add to Alpha subject\?/);assert.equal(calls.some(c=>c.url==='/api/study/material/attach'),false);
+  d.querySelector('[data-wfb-use-no]').click();assert.equal(d.querySelector('.wfb-use li.ask'),null);
+  d.querySelector('[data-wfb-use="'+A+'"]').click();d.querySelector('[data-wfb-use-yes]').click();await new Promise(r=>setTimeout(r,40));
+  const post=calls.find(c=>c.url==='/api/study/material/attach'),body=JSON.parse(post.opts.body);
+  assert.equal(post.opts.method,'POST');assert.equal(post.opts.headers['X-AR-Actor'],'human:adrian');assert.equal(post.opts.headers['X-AR-Client'],'ui');assert.deepEqual({...body,operationId:0},{bindingId:BIND,parentStudyId:A,sourceIds:['src1'],operationId:0});assert.match(body.operationId,/^[0-9a-f-]{36}$/);
+  assert.match(use().textContent,/✓ Alpha subject/);assert.match(use().textContent,/Added/);assert.equal(d.querySelector('[data-wfb-use="'+A+'"]'),null,'ticked subject is not offered again');
+  assert.match(d.querySelector('.wfb-peek-box').textContent,/Alpha subject/);assert.ok(d.querySelector('[data-wfb-use-open="'+A+'"]'),'Used in offers Open in Source');
+ }finally{x.close();}
+ // failure shows the server message in the row
+ ({x,calls}=await run('human:adrian',async()=>({ok:false,json:async()=>({error:'Source changed. Refresh and try again.'})})));
+ try{const d=x.d;d.querySelector('[data-wfb-use="'+A+'"]').click();d.querySelector('[data-wfb-use-yes]').click();await new Promise(r=>setTimeout(r,40));assert.match(d.querySelector('.wfb-use-err').textContent,/Source changed/);assert.equal(d.querySelector('.wfb-use li.done'),null);}finally{x.close();}
+ // non-human: disabled, honest wording, no write
+ ({x,calls}=await run('agent:claude-code',async()=>({ok:true,json:async()=>({sourceIds:['src1']})})));
+ try{const d=x.d;assert.match(d.querySelector('.wfb-use').textContent,/Read-only in this view/);assert.ok([...d.querySelectorAll('[data-wfb-use]')].every(b=>b.disabled));d.querySelector('[data-wfb-use="'+A+'"]').click();assert.equal(d.querySelector('.wfb-use li.ask'),null);assert.equal(calls.some(c=>c.url==='/api/study/material/attach'),false);}finally{x.close();}
+});
