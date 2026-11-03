@@ -5242,6 +5242,18 @@
     {
       "path": "tests/material-bring-in.test.mjs",
       "candidateSha256": "7ffb62c78a0779a8a1ef9d89323b69c44df81185971d6aa128ebb1879c892518"
+    },
+    {
+      "path": "runtime/services/native-output-asset-pass.mjs",
+      "candidateSha256": "640eda262df0e470bae6c788d997387a1c245a23cb4cd39be24f808d983ab162"
+    },
+    {
+      "path": "tests/native-output-asset-pass.test.mjs",
+      "candidateSha256": "1420c6cadd21522c9e382940f2101ef7a240d48cebeb9750e7e8194cbca30fab"
+    },
+    {
+      "path": "tests/source-timed-lines.test.mjs",
+      "candidateSha256": "0a9dc13491fb999905368e5bef7fc58eebc362037954f3c36089fdaaf231c7c6"
     }
   ],
   "dependencyRepair": {
