@@ -11,15 +11,20 @@ import {planRegistration, INDEX_SCHEMA} from '../runtime/services/magazine-vault
 const require = createRequire(new URL('../runtime/package.json', import.meta.url)), {JSDOM} = require('jsdom');
 const selection = {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', edition: 'working'};
 const DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
+// Let every window finish what it has in flight, and the editor code waiting on it, before teardown closes it.
+const settle = async windows => { const until=Date.now()+5000;for(let quiet=0;quiet<5&&Date.now()<until;){const busy=windows.flatMap(dom=>[...(dom.pending||[])]);if(busy.length){quiet=0;await Promise.race([Promise.allSettled(busy),new Promise(r=>setTimeout(r,Math.max(0,until-Date.now())))]);}else quiet++;await new Promise(r=>setTimeout(r,0));} };
 const wait = async fn => { for (let n=0;n<150;n++){if(await fn())return;await new Promise(r=>setTimeout(r,10));}throw Error('native journey timed out'); };
 
 function editor(origin, windows, {storage,project,wordingEntries,clientId,workflowBar=()=>''}={}) {
   const dom = new JSDOM('<main id="app"></main>', {url: origin+'/document-study/', runScripts:'outside-only'}), w=dom.window;
   windows.push(dom);if(storage)w.localStorage.setItem('ar-document-study-owned-drafts-v1',storage);if(wordingEntries)for(const [key,value]of Object.entries(wordingEntries))w.localStorage.setItem(key,value);if(clientId)w.sessionStorage.setItem('ar-study-output-browser-client-v1',clientId);
   const p=project?structuredClone(project):{id:'browser-clay-story',name:'Invented current story',view:'record',viewedStage:1,blocks:[],title:'Invented story',history:[],note:null,originalNotes:[],rev:1};
-  w.state={projects:[p]};w.current=()=>p;w.selected=w.activeBlock=w.keyboardBlock=w.typingSession=null;w.structuredClone=structuredClone;w.crypto.randomUUID=randomUUID;Object.defineProperty(w.crypto,'subtle',{value:webcrypto.subtle});w.TextEncoder=TextEncoder;
+  w.state={projects:[p]};w.current=()=>p;w.selected=w.activeBlock=w.keyboardBlock=w.typingSession=null;w.structuredClone=structuredClone;w.crypto.randomUUID=randomUUID;Object.defineProperty(w.crypto,'subtle',{value:{digest:(...args)=>alive(webcrypto.subtle.digest(...args))}});w.TextEncoder=TextEncoder;
+  // Requests, response bodies and hashes run in Node and outlive window.close(), which only stops the window's own timers.
+  // Teardown waits for the ones in flight (settle); any that still finish after close never settle, so editor code cannot run against a torn-down document.
+  const pending=dom.pending=new Set(),alive=promise=>{pending.add(promise);promise.then(()=>pending.delete(promise),()=>pending.delete(promise));return promise.then(value=>w.document?value:new Promise(()=>{}),error=>w.document?Promise.reject(error):new Promise(()=>{}));};
   const renderedStages=[];let loseSave=false,loseUndo=false;
-  w.fetch=async(url,options)=>{const response=await fetch(new URL(url,origin),options?.method==='POST'?{...options,headers:{...options.headers,Origin:origin}}:options);if(loseSave&&String(url).endsWith('/working-draft/save')){loseSave=false;throw Error('Synthetic lost response after owner commit');}if(loseUndo&&String(url).endsWith('/working-draft/undo')){loseUndo=false;throw Error('Synthetic lost Undo response after owner commit');}return response;};
+  w.fetch=async(url,options)=>{const response=await alive(fetch(new URL(url,origin),options?.method==='POST'?{...options,headers:{...options.headers,Origin:origin}}:options));for(const read of ['json','text','arrayBuffer','blob']){const body=response[read].bind(response);response[read]=()=>alive(body());}if(loseSave&&String(url).endsWith('/working-draft/save')){loseSave=false;throw Error('Synthetic lost response after owner commit');}if(loseUndo&&String(url).endsWith('/working-draft/undo')){loseUndo=false;throw Error('Synthetic lost Undo response after owner commit');}return response;};
   w.esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));w.readonlyHTML=x=>x;w.shortRecordName=x=>x;w.WORKFLOW_RECORDS={};
   for(const name of ['toast','commitTyping','rememberPosition','save','undo','refreshDiscussion','wireDocument','openInstruction'])w[name]=()=>{};
   w.blockHTML=b=>'<'+b.tag+' data-block="'+b.id+'">'+b.html+'</'+b.tag+'>';
@@ -38,7 +43,7 @@ async function nativeFixture(t,{writable=true,registered=true}={}){
   for(const p of plan.stories)fs.writeFileSync(path.join(f.data,'magazine/projects',p.storyId+'.json'),JSON.stringify(p));}
   const server=await createServer({dataDir:f.data,publicDir:path.resolve('public'),connections:[],magazineRoots:[],researchEnabled:false,magazineVault:{vaultRoot:f.vault,filesRoot:f.files,writable,machine:'synthetic-native'}});
   await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
-  t.after(async()=>{for(const dom of windows)dom.window.close();await new Promise(r=>server.close(r));f.cleanup();});
+  t.after(async()=>{await settle(windows);for(const dom of windows)dom.window.close();await new Promise(r=>server.close(r));f.cleanup();});
   return {f,origin,windows};
 }
 
