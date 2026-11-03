@@ -71,9 +71,9 @@ export function createKeyReader({ env = process.env, run = runInfisical, now = D
 /** Runs the Infisical CLI and returns only what it printed. Its errors are discarded: they can carry environment values. */
 function runInfisical(args) {
   const home = os.homedir();
-  const binary = process.env.INFISICAL_BIN || [path.join(home, '.local/bin/infisical'), '/opt/homebrew/bin/infisical', '/usr/local/bin/infisical'].find((file) => fs.existsSync(file)) || 'infisical';
+  const binary = process.env.INFISICAL_BIN || [path.join(home, '.local/bin/infisical')].find((file) => fs.existsSync(file)) || 'infisical';
   return new Promise((resolve, reject) => {
-    execFile(binary, args, { timeout: 15_000, maxBuffer: 16 * 1024, env: { HOME: home, USER: process.env.USER || '', PATH: `${path.join(home, '.local/bin')}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin` } }, (error, stdout) => error ? reject(new Error('The key store could not be read.')) : resolve(stdout));
+    execFile(binary, args, { timeout: 15_000, maxBuffer: 16 * 1024, env: { HOME: home, USER: process.env.USER || '', PATH: `${path.join(home, '.local/bin')}:${process.env.PATH || '/usr/local/bin:/usr/bin:/bin'}` } }, (error, stdout) => error ? reject(new Error('The key store could not be read.')) : resolve(stdout));
   });
 }
 
