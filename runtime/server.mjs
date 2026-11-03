@@ -315,7 +315,20 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
   // One consent desk for the whole server: the app, agents and every publish path read the same hold through it.
-  const consentDesk=createConsentDesk({dataDir,library});
+  // A piece is known by more than one id: the app's project id and, for the Magazine, the vault's story id (mag-<slug>). They meet at
+  // the draft file (the original catalog and the copies opened from it name the project; the registered story names its drafts).
+  // The desk asks this for every id it is given, so a desk saved under either id holds paths that know only the other.
+  const consentAliases=id=>{
+    const out=new Set(),links=studyDrafts?.draftLinks?.()||[];
+    if(/^mag-/.test(id)){
+      let story=null;try{story=magazineVault.projects.project(id);}catch{}
+      const rels=new Set([].concat(story?.vaultRecords?.draft||[]).map(d=>d.rel));
+      for(const link of links)if(rels.has(link.path))for(const x of link.ids)out.add(x);
+    }
+    for(const link of links)if(link.ids.includes(id)){let story=null;try{story=magazineVault.projects.byFile(link.path);}catch{}if(story?.storyId)out.add(story.storyId);}
+    out.delete(id);return [...out];
+  };
+  const consentDesk=createConsentDesk({dataDir,library,aliases:consentAliases});
   const magazineVault=createMagazineVault({...magazineConfig,dataDir,consentDesk,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
   let originalPhotoProvider,publicationPhotoProvider;
   const originalPhotos=magazineConfig.filesRoot?{list:()=> (originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).list(),open:input=>(originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).open(input)}:null;
