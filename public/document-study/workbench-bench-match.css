@@ -258,3 +258,8 @@ html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-
 html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-bench.wrap:has(.thread-list) .thread-tabs .thread-tool{padding-left:0!important;margin-right:6px!important}
 }
 @media(max-width:900px){.thread-tabs .ed{display:none}}
+/* The waiting count never gets cut: the next-step words shorten instead. */
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next:has(.tn){display:flex!important;align-items:center;min-width:0;white-space:nowrap}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next>.tn{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next>.tw{flex:none;padding-left:4px}
+html:not(#wb):not(#wb):not(#wb) body.wbf-on #project-library .thread-next>.thread-eye{flex:none}

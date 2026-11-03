@@ -3417,7 +3417,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "fc950a95cd9f4cabeafa9f1c1dbe0c9490c29d4bcb318756080ef1aaf176f171"
+      "candidateSha256": "9559dab8a518a3b99ad8082418d494cc9bd1227205583b2072e70ff67a190eff"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3473,7 +3473,7 @@
     },
     {
       "path": "public/document-study/workbench-bench-match.css",
-      "candidateSha256": "6971b51f1394a91d08cd26e6a20d5955b37f419e6248f5c1ca6c1db66a4d28fc"
+      "candidateSha256": "82243f9f05ee81ea78bfaa86765807719c57427e1492d4907a16ee50af5a88bd"
     },
     {
       "path": "public/document-study/workbench-check-match.css",
