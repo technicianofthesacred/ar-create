@@ -106,7 +106,7 @@ body.c3-bar-on #app .c3-empty .ce-btn.pri{background:none!important;color:var(--
  body.c3-insp-sheet #app #c3-read-insp{border-radius:12px 12px 0 0!important}
 }
 /* Revision 4 tool header: "Tool · subject" with the actions on the first line, the In: tabs on their own line under it. */
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar{flex-wrap:wrap!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar{flex-wrap:wrap!important;flex-shrink:0!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #c3-surface-bar>.sb-in{order:20!important;flex:1 1 100%!important;margin:2px 0 0 -8px}
 html:not(#wb):not(#wb) body.wbf-on #c3-surface-bar .sb-right{flex-wrap:nowrap!important;flex:none}
 html:not(#wb):not(#wb) body.wbf-on #c3-surface-bar .sb-piece{max-width:42ch}
