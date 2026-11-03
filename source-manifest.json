@@ -738,7 +738,7 @@
     {
       "path": "public/document-study/index.html",
       "sourceSha256": "09fd11675198b106f48360ef23146946fffa230b1471528f0f8c2fe60f5247cf",
-      "candidateSha256": "eaf1e50cdf379b4a21c4366ed14b636919cddb4f2538eb233db0c65a6456ed6c",
+      "candidateSha256": "5501a60b62760f4e965020385df8dea6bba8831ffa70b8fe4508c603346a055b",
       "adapted": true
     },
     {
@@ -5229,7 +5229,15 @@
     },
     {
       "path": "public/document-study/supporting-pane.css",
-      "candidateSha256": "5d1df77a0ce382a5be5a81f4f2e55c8c650c726a27f25eb929feae5705652089"
+      "candidateSha256": "3b2707c9b16fe343af82ff12554b0dd038985e41509a874f3a117075d394a8ec"
+    },
+    {
+      "path": "public/document-study/margin-fold.js",
+      "candidateSha256": "879abc14b0f20511cbff4229f18c59c06e5e5f9641d9178c95b5a6239739809a"
+    },
+    {
+      "path": "public/document-study/margin-fold.test.mjs",
+      "candidateSha256": "94a518a2bcc376a83e2d9784b5c229ef109f63073c49c279f74cd26569d4446b"
     }
   ],
   "dependencyRepair": {
