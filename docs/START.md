@@ -65,6 +65,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 | `voice-corrections/` | Adrian's rewrites of machine paragraphs from a finished read-through: before, after, piece, and whether he approved, dropped or sent each one |
 | `word-library/` | The shared word library (`library.json`: one entry per name or term with its mishearings and where it came from) and one record per checked recording (`recordings/<jobId>.json`: what was fixed and its receipt, the doubtful words, Adrian's answers). The transcription job reads `library.json` for its prompt; everything else goes through `words list|export|check|recognise|add`. Agents suggest words and never confirm them; answering a doubtful word and confirming a suggestion are `human:adrian` from the app only. See [WORDS](WORDS.md) |
 | `i64os-directions.json` | Optional override `{"directionsDir": "<absolute path>"}`: where AR Create reads his voice (`voice-profile.md`, `body-of-work.md`) in one copy. With no file it finds the i64os checkout's `substrate/directions` under `~/Documents/Files/4 Coding/` or `~/Documents/Files/2 Areas/Coding/`; with neither present it uses the old local copies in `guidance/` |
+| `phone-pickup/` | The phone pickup: `state.json` (last check) and one record per phone recording (where it got to, never audio or the key). See [PHONE-PICKUP](PHONE-PICKUP.md) |
 | `journal/<yyyy-mm>.jsonl`, `leases/<kind>/<id>.json` | Who did what; who holds what |
 | `provenance/`, `*-requests/` | Actor stamps, proposals awaiting a human |
 

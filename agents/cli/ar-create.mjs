@@ -23,6 +23,7 @@ export const SUGAR = Object.freeze({
   project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
   needs: { list: 'needs-you', raise: 'needs-you.raise' },
   words: { list: 'words', export: 'words.export', add: 'words.add', import: 'words.import', decide: 'words.decide', recognise: 'words.recognise', checks: 'words.checks', check: 'words.check', answer: 'words.answer' },
+  phone: { status: 'phone-pickup', setup: 'phone-pickup.setup', check: 'phone-pickup.check' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
   magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
   consent: { desk: 'consent.desk', open: 'consent.open', claim: 'consent.claims.record', link: 'consent.claims.link', flag: 'consent.claims.flag', person: 'consent.people.record', draft: 'consent.people.draft-request' },

@@ -213,7 +213,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, voiceHome, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [] } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, voiceHome, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [], phonePickup = null } = {}) {
   if(typeof magazineCheckReceipts!=='boolean')throw new TypeError('Magazine check receipt permission must be an explicit boolean.');
   // Host-selected read capability only. No request can choose a source path or
   // establish an association between an original and the current manuscript.
@@ -414,6 +414,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(await continuityInterface.handle(request,response))return;
       if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/words-http.mjs')).handleWords(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
+      if(await (await import('./services/phone-pickup-http.mjs')).handlePhonePickup(request,response,{dataDir,events,recordings,library,origin:()=>server.listening?'http://127.0.0.1:'+server.address().port:null,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;
       if(await (await import('./services/instagram-studio.mjs')).handleInstagram(request,response,{dataDir,library}))return;
       if(pathname.startsWith('/api/inquiries/')){
@@ -734,6 +735,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   };
   server.on('close',()=>execution.dispose());
   { const wordsHttp=await import('./services/words-http.mjs'); wordsHttp.wordsFor({dataDir,events,recordings}).shared.start(); server.on('close',()=>wordsHttp.stopWords(dataDir)); }
+  { // The phone pickup: built now so it can finish recordings left mid-way, and (installed app only) asks the phone site once at start.
+    const pickupHttp=await import('./services/phone-pickup-http.mjs');
+    const pickup=pickupHttp.pickupFor({dataDir,events,recordings,library,origin:()=>server.listening?'http://127.0.0.1:'+server.address().port:null,options:phonePickup||{}});
+    server.on('close',()=>pickupHttp.stopPickup(dataDir));
+    if(phonePickup?.checkOnStart===true)server.on('listening',()=>{const timer=setTimeout(()=>{pickup.checkOnStart().catch(()=>{});},5_000);timer.unref?.();server.on('close',()=>clearTimeout(timer));});
+  }
   const close=server.close;
   server.close=function(callback){for(const client of [...sseClients]){client.close();client.response.end();}return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
   server.closeWorkspace=()=>store.close();
