@@ -9,6 +9,16 @@ export function safeRel(value, allowEmpty = true) {
   if ((!allowEmpty && !value) || parts.some(p => p === '..' || p === '.' || p.startsWith('.') || p.includes('.sync-conflict-') || (!p && value))) throw new StateError('Hidden files, conflicts and traversal paths are not available.');
   return value;
 }
+// macOS exposes /tmp and /var as host-owned symlinks into /private; Linux has real
+// /tmp and /var directories. Expand only those two aliases, and only when this host
+// actually resolves them into /private, so a root still compares exactly to its
+// realpath and every other symlinked root is still refused on both platforms.
+export function systemAliasPath(file) {
+  const alias = /^\/(tmp|var)(?=\/|$)/.exec(file)?.[0];
+  if (!alias) return file;
+  let real; try { real = fs.realpathSync(alias); } catch { return file; }
+  return real === '/private' + alias ? real + file.slice(alias.length) : file;
+}
 export function regular(file) {
   const stat = fs.lstatSync(file);
   if (stat.isSymbolicLink() || !stat.isFile()) throw new StateError('Source must be a regular file.', 403);

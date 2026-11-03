@@ -114,7 +114,7 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
     // --input {since, kind, id} narrows presence and recent events to one record.
     const caps = await client.listCommands(), filter = { ...(input.kind ? { kind: input.kind } : {}), ...(input.id ? { id: input.id } : {}) };
     const presence = await client.call('presence.get', filter), changes = await client.call('events.since', { since: input.since ?? 0, limit: 20, ...filter });
-    return { exitCode: EXIT.ok, result: { url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort(), presence: presence.ok ? presence.body.presence : [], editor: editorOf(presence.ok ? presence.body.presence : []), events: changes.ok ? changes.body : null } };
+    return { exitCode: EXIT.ok, result: { release: caps.git?.sha ?? null, url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort(), presence: presence.ok ? presence.body.presence : [], editor: editorOf(presence.ok ? presence.body.presence : []), events: changes.ok ? changes.body : null } };
   }
   if (Object.hasOwn(SUGAR, command)) {
     const verb = rest[0], name = SUGAR[command][verb], key = `${command} ${verb}`, positional = SUGAR_POSITIONAL[key];

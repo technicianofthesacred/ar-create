@@ -53,7 +53,7 @@ The installed private editor uses port 8841. Candidate startup refuses that port
 | The shell: sidebar, bar, work column, inspector | `public/document-study/shell.js`, `piece-state.js`, `checkpoint-rail.*`, `surface-bar.*`, `inspector.*`, `empty-states.*`, `tree.js`; gate: `tests/shell-gate.test.mjs` |
 | One command registry, CLI and MCP for agents | `runtime/commands.mjs`, `agents/cli/ar-create.mjs`, `agents/mcp/server.mjs`, `agents/lib/` |
 | Actor, events, presence, leases, journal | `runtime/services/actor.mjs`, `events.mjs`, `presence.mjs`, `leases.mjs`, `journal.mjs` |
-| Recorded releases of the installed app | `scripts/release.mjs`, `scripts/refresh-manifest.mjs`, `source-manifest.json` |
+| Recorded releases of the installed app | `scripts/release.mjs` (computes the file list itself); `scripts/refresh-manifest.mjs` is a read-only viewer. See Releasing in [START](START.md#releasing) |
 | Synthetic inputs and focused checks | `fixtures/`, `scripts/demo.mjs`, `tests/` |
 
 Paths in this table are relative to this repository root. Edit maintained source, then rebuild generated correspondence, codecs and browser template wrappers with `npm run build`. Generated outputs are ignored; editing them directly loses work on rebuild.
@@ -98,7 +98,7 @@ npm run verify:package
 npm test
 ```
 
-Run only affected checks while editing, then a coherent verification and native synthetic screen/file journey. A visual-only edit does not need repeated unchanged backend suites. Refresh only the reviewed manifest entries for deliberately changed source; do not drop the allowlist scan to make it pass.
+Run only affected checks while editing, then a coherent verification and native synthetic screen/file journey. A visual-only edit does not need repeated unchanged backend suites. The release computes its own file list; do not drop its allowlist scan to make a release pass.
 
 ## Private content stays outside the code repository and the installed `service/`
 

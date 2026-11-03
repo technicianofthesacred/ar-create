@@ -1,5 +1,6 @@
-// The reviewed-source manifest (source-manifest.json): which files are the application, and their hashes.
-// Shared by scripts/check-package.mjs, scripts/refresh-manifest.mjs and scripts/release.mjs.
+// The source manifest: which files are the application, and their hashes. It is NOT committed (review R2-04): it is
+// computed from the git-tracked files of a clean checkout, written into <home>/service/ by scripts/release.mjs, and
+// recomputed on the fly by scripts/check-package.mjs. Shared by those two and scripts/refresh-manifest.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -17,21 +18,17 @@ export const NOT_SHIPPED=path=>/^(tests|todo)\//.test(path)||/(^|\/)[^/]+\.test\
 export const PRUNE_AFTER_BUILD=path=>NOT_SHIPPED(path)||path==='scripts/gen-capabilities.mjs';
 
 export const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
-export const readManifest=root=>JSON.parse(fs.readFileSync(path.join(root,MANIFEST_FILE),'utf8'));
 export const manifestRows=manifest=>[...manifest.included,...manifest.authored];
-export const manifestSha256=root=>sha256(fs.readFileSync(path.join(root,MANIFEST_FILE)));
 export const git=(root,...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',maxBuffer:64*1024*1024,stdio:['ignore','pipe','pipe']});
 export const trackedFiles=root=>git(root,'ls-files','-z').split('\0').filter(Boolean);
 
-// Compare the manifest with the checkout: stale hashes, missing files, tracked files nobody reviewed.
-export function compareManifest(root){
- const manifest=readManifest(root),rows=manifestRows(manifest),listed=new Set(rows.map(row=>row.path));
- const stale=[],missing=[];
- for(const row of rows){
-  const file=path.join(root,row.path);
-  if(!fs.existsSync(file)){missing.push(row.path);continue;}
-  if(sha256(fs.readFileSync(file))!==row.candidateSha256)stale.push(row.path);
- }
- const unlisted=trackedFiles(root).filter(file=>file!==MANIFEST_FILE&&!listed.has(file)&&fs.existsSync(path.join(root,file)));
- return {manifest,rows,stale,missing,unlisted};
+// Every tracked file that exists as a regular file (a symlink is hashed through, as the release copies it through),
+// sorted, hashed. Rows keep the `authored`/`candidateSha256` shape so `release.mjs --verify` still reads old homes.
+// The text is a pure function of the file contents, so the same tree always gives the same manifestSha256.
+export function buildManifest(root){
+ const rows=trackedFiles(root).filter(file=>file!==MANIFEST_FILE).filter(file=>{try{return fs.statSync(path.join(root,file)).isFile();}catch{return false;}}).sort()
+  .map(file=>({path:file,candidateSha256:sha256(fs.readFileSync(path.join(root,file)))}));
+ const manifest={schema:'ar-create.source-manifest.v2',note:'Computed from the git-tracked files of a clean checkout at release time. Not committed.',included:[],authored:rows};
+ const text=JSON.stringify(manifest,null,2)+'\n';
+ return {manifest,rows,text,sha256:sha256(text)};
 }

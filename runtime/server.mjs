@@ -98,6 +98,7 @@ import { createConnections } from './services/connections.mjs';
 import { createPassageRevisions } from './services/passage-revision.mjs';
 import { createICloudAlbums, isICloudAlbum } from './services/icloud-albums.mjs';
 import { createReadStream } from 'node:fs';
+import { releaseSha } from './services/release-sha.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const publicStudyModules=new Set(['/document-study/connected-workspace.mjs','/document-study/inquiry-workspace.mjs','/document-study/work-continuity-panel.mjs','/document-study/continuity-browser-recovery.mjs']);
@@ -394,7 +395,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   // Metadata only: no destination is selected/created here. The caller must
   // explicitly choose a ready existing root, then read /api/study/outputs for
   // photoScope + expectedOutput and /api/study-draft/read for expectedNative.
-  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))},commands:commandList().map(publicEntry),retainedCarouselCopy:await retainedCopyAvailability(),browserCarouselCopy:{available:!!studyOutputs,requiresExplicitDestination:true,requiresBrowserSnapshot:true}});
+  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))??releaseSha(path.dirname(root),release)},commands:commandList().map(publicEntry),retainedCarouselCopy:await retainedCopyAvailability(),browserCarouselCopy:{available:!!studyOutputs,requiresExplicitDestination:true,requiresBrowserSnapshot:true}});
   const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
   // Every request runs inside its actor context so services can stamp writes.
   async function routeRequest(request, response) {

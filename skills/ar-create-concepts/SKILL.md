@@ -9,15 +9,17 @@ Work through this conversation; AR Create need not be open. Help the author arti
 
 ## Use the shared connection
 
-On this Mac, the installed app runs at `http://127.0.0.1:8841` (its files live outside the repository at `$HOME/Library/Application Support/i64os/ar-create`; never edit or read them). Read `docs/CONCEPT-AGENT.md` in the checkout, or in the installed `service/docs/`, for exact current fields and connection limits. The one CLI is `agents/cli/ar-create.mjs`. Name yourself once; every write carries the actor, and a concept save without one fails with 400:
+On this Mac, the installed app runs at `http://127.0.0.1:8841` (its files live outside the repository at `$HOME/Library/Application Support/i64os/ar-create`; never edit them, and never read `data/` or `backups/`; the installed `service/` code and docs are fine to read). Read `docs/CONCEPT-AGENT.md` in the installed `service/docs/` (or a worktree of `origin/main`), for exact current fields and connection limits. The one CLI to run is the installed copy, `agents/cli/ar-create.mjs` under that home's `service/` directory; it matches the running app exactly. Do not run it from the local checkout `~/Documents/Files/4 Coding/ar-create`, which is stale and not canonical; code is only ever edited in a fresh worktree from `origin/main`. Name yourself once; every write carries the actor, and a concept save without one fails with 400:
 
 ```sh
 export AR_CREATE_URL=http://127.0.0.1:8841 AR_CREATE_ACTOR=agent:claude-code
-CLI="$HOME/Documents/Files/4 Coding/ar-create/agents/cli/ar-create.mjs"
+CLI="$HOME/Library/Application Support/i64os/ar-create/service/agents/cli/ar-create.mjs"
 node "$CLI" status
 ```
 
-Use `agent:codex` when you are Codex, and your own value (`agent:hermes`, `agent:grok`, `agent:chatgpt`) otherwise. Use Node 22 or newer. If a task explicitly supplies a synthetic candidate, use that exact URL instead; never silently fall back to the real app. If the documented connection is unavailable, say so instead of writing an arbitrary Markdown file and claiming it is connected. No account setup or new provider is part of this skill. The older `tools/concept-cli.mjs` still works for one release with `--actor`.
+`status` begins with `release`, the commit of the running app. To look at the app in a browser as yourself rather than as Adrian, open `http://127.0.0.1:8841/document-study/index.html?reviewActor=agent:<your-name>`; without it the page stamps your actions `human:adrian`.
+
+Use `agent:codex` when you are Codex, and your own value (`agent:hermes`, `agent:grok`, `agent:chatgpt`) otherwise. Use Node 22 or newer. If a task explicitly supplies a synthetic candidate, use that exact URL instead; never silently fall back to the real app. If the documented connection is unavailable, say so instead of writing an arbitrary Markdown file and claiming it is connected. No account setup or new provider is part of this skill. The older `tools/concept-cli.mjs` and `mcp/study` are only aliases; do not start from them.
 
 Use `project list` and `project read` to find and resume the intended project. Resolve genuinely ambiguous project identity before mutating; do not use whichever project happens to be open. `project create` makes a maintained collection with a provisional title and explicit identity; it does not require an article. Keep the returned identity for later work. Before a long edit take a lease (`lease acquire`), and when you stop write a `handoff` naming who goes next; a 423 means someone else holds the project.
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {StateError} from '../store.mjs';
-import {safeRel,resolveInside} from './files.mjs';
+import {safeRel,resolveInside,systemAliasPath} from './files.mjs';
 
 // This is an allowlist of existing paths, not a scan, content store or writer.
 // Manuscripts and output plans keep their existing editing authorities.
@@ -9,7 +9,7 @@ const ROLES=new Set(['source','raw','transcript','machine transcript','research'
 const outputName=/^(?:DEV|MAP|PLANS|CHECK|FEEDBACK|ARTICLE|CAROUSEL)\s*-/i;
 export function createStudyOriginalSourceCatalog({vaultRoot,catalog={}}={}){
  if(typeof vaultRoot!=='string'||!path.isAbsolute(vaultRoot))throw new StateError('Original discovery requires its explicit existing vault root.',400);
- const root=path.resolve(vaultRoot).replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1'),rows=new Map();
+ const root=systemAliasPath(path.resolve(vaultRoot)),rows=new Map();
  function add(docs,reference){
   if(!Array.isArray(docs)||docs.length>20000)throw new StateError('Original discovery requires a bounded configured file list.',400);
   for(const entry of docs){

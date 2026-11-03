@@ -11,16 +11,17 @@ import {loadConfig} from '../config.mjs';
 import {syntheticHome} from '../scripts/demo.mjs';
 const repo=path.resolve(import.meta.dirname,'..');
 function fixture(t){
- const f=syntheticHome();t.after(()=>fs.rmSync(f.dir,{recursive:true,force:true}));const host=JSON.parse(fs.readFileSync(f.config,'utf8'));
+ // Stop any server started on this home before removing it: removing first raced a server still writing (ENOTEMPTY in CI), and the throw left the server running so the file never ended.
+ const f=syntheticHome(),stops=[];t.after(async()=>{for(const stop of stops)await stop();fs.rmSync(f.dir,{recursive:true,force:true});});const host=JSON.parse(fs.readFileSync(f.config,'utf8'));
  const output={id:randomUUID(),kind:'carousel',title:'Synthetic retained thirteen',caption:'Synthetic caption.',stage:'look',wordsReview:{hash:'a'.repeat(64),reviewedAt:'2026-10-11T00:00:00Z'},outputRevision:2,createdAt:'2026-10-11T00:00:00Z',slides:Array.from({length:13},(_,i)=>({id:randomUUID(),role:i?'inner':'cover',text:'SYNTHETIC_BODY_ONLY '+i,credit:'Synthetic credit',label:'Synthetic label',template:'M12',photos:[],paragraphIds:[]}))};
  const unselected={...structuredClone(output),id:randomUUID(),title:'UNSELECTED_TITLE_ONLY'},state={revision:3,project:{id:randomUUID(),document:{schema:'ar-create.document.v1',id:randomUUID(),revision:1,outputs:[output,unselected]}}},sourceFile=path.join(f.dir,'retained-original.json');fs.writeFileSync(sourceFile,JSON.stringify(state));
  const descriptor={path:sourceFile,projectId:state.project.id,documentId:state.project.document.id,outputIds:[output.id]};
- const save=()=>fs.writeFileSync(f.config,JSON.stringify(host));return {...f,host,output,unselected,state,sourceFile,descriptor,save};
+ const save=()=>fs.writeFileSync(f.config,JSON.stringify(host));return {...f,host,output,unselected,state,sourceFile,descriptor,save,stops};
 }
 async function start(t,f){
  const reservation=http.createServer();await new Promise(resolve=>reservation.listen(0,'127.0.0.1',resolve));const port=reservation.address().port;await new Promise(resolve=>reservation.close(resolve));assert.notEqual(port,8841);f.host.port=port;f.save();
  const child=spawn(process.execPath,[path.join(repo,'serve.mjs'),'--config',f.config],{cwd:repo,env:{PATH:process.env.PATH,HOME:process.env.HOME},stdio:['ignore','pipe','pipe']});let log='',errors='';child.stdout.on('data',chunk=>log+=chunk);child.stderr.on('data',chunk=>errors+=chunk);
- t.after(async()=>{if(child.exitCode!==null||child.signalCode!==null)return;child.kill('SIGTERM');await once(child,'exit');});
+ f.stops.push(async()=>{if(child.exitCode!==null||child.signalCode!==null)return;child.kill('SIGTERM');await once(child,'exit');});
  await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Synthetic host startup timed out: '+errors)),8000);const observe=()=>{if(log.includes('AR Create:')){clearTimeout(timeout);child.stdout.off('data',observe);resolve();}};child.stdout.on('data',observe);child.once('exit',code=>{clearTimeout(timeout);reject(Error('Synthetic host exited '+code+': '+errors));});observe();});
  const base='http://127.0.0.1:'+port,get=async route=>{const response=await fetch(base+route),value=await response.json();assert.equal(response.status,200,JSON.stringify(value));return value;},post=async(route,body)=>{const response=await fetch(base+route,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body)}),value=await response.json();assert.equal(response.status,200,JSON.stringify(value));return value;};return {base,get,post};
 }

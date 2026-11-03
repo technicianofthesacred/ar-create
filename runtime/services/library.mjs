@@ -8,7 +8,7 @@ import { StateError, MAX_BODY_BYTES } from '../store.mjs';
 import { readFolder, splitFrontmatter, slugifyName, readMeta, kindFor } from './wordforge-sources.mjs';
 import { normalizeSourceUrl } from './source-identity.mjs';
 import { createScraper } from './wordforge-firecrawl.mjs';
-import { atomicWrite, readJson, digest, safeRel, regular, resolveInside, ensurePrivateDirectory } from './files.mjs';
+import { atomicWrite, readJson, digest, safeRel, regular, resolveInside, ensurePrivateDirectory, systemAliasPath } from './files.mjs';
 import {assertUnusedSourceId} from './source-references.mjs';
 
 // A repeated quartet regex exhausts V8's stack on large recordings. Scan the
@@ -47,11 +47,11 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
   roots.push(...configuredRoots(connections));
   if (retainedCatalog !== null) {
     if (!retainedCatalog || !/^[a-zA-Z0-9_-]+$/.test(retainedCatalog.id) || roots.some(root => root.id === retainedCatalog.id) || typeof retainedCatalog.path !== 'string' || !path.isAbsolute(retainedCatalog.path) || typeof retainedCatalog.entries !== 'function') throw new StateError('Invalid retained transcript catalog root.');
-    roots.push({id: retainedCatalog.id, name: retainedCatalog.name || retainedCatalog.id, path: retainedCatalog.path.replace(/^\/(tmp|var)(?=\/|$)/, '/private/$1'), writable: false, retainedCatalog: true});
+    roots.push({id: retainedCatalog.id, name: retainedCatalog.name || retainedCatalog.id, path: systemAliasPath(retainedCatalog.path), writable: false, retainedCatalog: true});
   }
   if(originalCatalog!==null){
     if(!originalCatalog||!/^[a-zA-Z0-9_-]+$/.test(originalCatalog.id)||roots.some(root=>root.id===originalCatalog.id)||typeof originalCatalog.path!=='string'||!path.isAbsolute(originalCatalog.path)||typeof originalCatalog.entries!=='function')throw new StateError('Invalid explicitly catalogued original root.');
-    roots.push({id:originalCatalog.id,name:originalCatalog.name||originalCatalog.id,path:originalCatalog.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1'),writable:false,originalCatalog:true});
+    roots.push({id:originalCatalog.id,name:originalCatalog.name||originalCatalog.id,path:systemAliasPath(originalCatalog.path),writable:false,originalCatalog:true});
   }
   const indexFile = path.join(dataDir, 'library-index.json');
   let index = inspectionOnly ? { revision: 0, sources: [], collections: [], evidence: [], legacyImported: [] } : readJson(indexFile, { revision: 0, sources: [], collections: [], evidence: [], legacyImported: [] });
@@ -145,6 +145,8 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     if(inspectionOnly&&!fs.existsSync(file))typedFail('Library index is unavailable; no catalog was inferred.',503);
     const bytes=fs.existsSync(file)?(regular(file),fs.readFileSync(file,'utf8')):null;
     let value;try{value=bytes===null?structuredClone(index):JSON.parse(bytes);}catch{typedFail('Cannot read Library index; existing bytes preserved.');}
+    // Same default as startup: an index written before collectionRelationships existed reads as [] (not a concurrent change).
+    if(value&&typeof value==='object'&&value.collectionRelationships===undefined)value.collectionRelationships=[];
     validateTypedIndex(value);index=value;return {value,bytes,hash:digest(bytes??'')};
   }
   function endpointExists(value,endpoint){
@@ -336,7 +338,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const unavailable=root=>{root.available=false;root.connectionError='Folder unavailable or its scan could not complete. Reconnect it and refresh.';incompleteRoots.add(root.id);trees.push({...root,tree:{rel_path:'',name:root.name,file_count:0,total_count:0,conflict_count:0,folders:[],files:[]}});};
     for (const root of roots) {
       let tree;
-      try{resolveInside(root.path, '', { directory: true });const lexical=root.path.replace(/^\/(tmp|var)(?=\/|$)/,'/private/$1');if(fs.realpathSync(root.path)!==lexical)throw new StateError('A connected folder path changed into a symlink.',403);tree = root.retainedCatalog||root.originalCatalog ? catalogTree(root) : readFolder(root.path, '', { count: 0, max: 20000, truncated: false, metadataCache: folderMetadata,throwOnReadError:true });root.available=true;delete root.connectionError;}
+      try{resolveInside(root.path, '', { directory: true });const lexical=systemAliasPath(root.path);if(fs.realpathSync(root.path)!==lexical)throw new StateError('A connected folder path changed into a symlink.',403);tree = root.retainedCatalog||root.originalCatalog ? catalogTree(root) : readFolder(root.path, '', { count: 0, max: 20000, truncated: false, metadataCache: folderMetadata,throwOnReadError:true });root.available=true;delete root.connectionError;}
       catch{unavailable(root);continue;}
       // A later overlapping connection must not mint another UUID for an
       // existing catalogued original. Its allowlist and original root still own
