@@ -314,7 +314,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
-  const magazineVault=createMagazineVault({...magazineConfig,dataDir,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
+  // One consent desk for the whole server: the app, agents and every publish path read the same hold through it.
+  const consentDesk=createConsentDesk({dataDir,library});
+  const magazineVault=createMagazineVault({...magazineConfig,dataDir,consentDesk,events,journal,leases,editorialRoot:path.join(root,'..','editorial'),intakeEngine:recordings.magazineIntake});
   let originalPhotoProvider,publicationPhotoProvider;
   const originalPhotos=magazineConfig.filesRoot?{list:()=> (originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).list(),open:input=>(originalPhotoProvider??=createReviewMedia({filesRoot:magazineConfig.filesRoot})).open(input)}:null;
   const publicationPhotos=magazineConfig.magSendRepo?{catalog:input=> (publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).catalog(input),preview:input=>(publicationPhotoProvider??=createPublicationPhotoCatalog({repoRoot:magazineConfig.magSendRepo})).preview(input)}:null;
@@ -372,7 +374,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
   const sourceTranscript=createSourceTranscriptProposals({library,recordings,readCandidate:input=>localTranscriptCandidates.readCandidate(input)});
   const sourceLineChecks=createSourceLineChecks({dataDir});
-  const maintainedCommandRoutes=createRouteMap({voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk:createConsentDesk({dataDir,library}),terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);
@@ -415,7 +417,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/words-http.mjs')).handleWords(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;
-      if(await (await import('./services/instagram-studio.mjs')).handleInstagram(request,response,{dataDir,library}))return;
+      if(await (await import('./services/instagram-studio.mjs')).handleInstagram(request,response,{dataDir,library,consentDesk}))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
         if(request.headers.origin&&request.headers.origin!==new URL(request.url,'http://'+request.headers.host).origin)throw new StateError('Foreign-origin inquiry request refused.',403);
@@ -563,6 +565,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
         throw new StateError('Method is not supported.',405);
       }
       function outputQuery(){return {rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),selectedOutputId:url.searchParams.get('selectedOutputId')};}
+      // A saved export file is what gets posted, so downloading it is held like making it: by the project in the query, or the
+      // workspace's own project for the older unscoped files.
+      const holdExportDownload=()=>{let id=url.searchParams.get('parentStudyId');if(!id){try{id=store.get().project.id;}catch{id=null;}}consentDesk.assertNotHeld([{parentStudyId:id}],'Downloading this export');};
 
       const carouselMatch=pathname.match(/^\/api\/carousel\/exports\/([a-f0-9-]{36})\/(render|file)\/(.+)$/);
       if(carouselMatch){
@@ -573,11 +578,13 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
           response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; frame-ancestors 'none'");
           const scoped=url.searchParams.has('rootBindingId');const html=scoped?await studyOutputExports.page({...outputQuery(),exportId:id,index:Number(name)}):carousel.page(id,Number(name));if(sharedCarouselBridge&&!scoped){const manifest=JSON.parse(await readFile(path.join(dataDir,'carousel-exports',id,'.manifest.json'),'utf8'));await guardCarouselOutput(manifest);}response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});response.end(request.method==='HEAD'?undefined:html);return;
         }
+        holdExportDownload();
         const artifact=url.searchParams.has('rootBindingId')?await studyOutputExports.file({...outputQuery(),exportId:id,format:'carousel',name}):carousel.file(id,name);response.writeHead(200,{'Content-Type':artifact.mimeType,'Content-Length':artifact.sizeBytes,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(name)}`,'Cache-Control':'no-store'});
         if(request.method==='HEAD')return response.end();const stream=createReadStream(artifact.file);stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
       }
       if(pathname==='/api/magazine/working-draft/export-file'){
         if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
+        consentDesk.assertNotHeld([{parentStudyId:url.searchParams.get('storyId')}],'Downloading this export');
         const {artifact,file}=await magazineOutputExports.file(Object.fromEntries(url.searchParams));
         response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Content-Length':artifact.sizeBytes,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(artifact.name)}`,'Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; sandbox"});
         if(request.method==='HEAD')return response.end();const stream=createReadStream(file);stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
@@ -585,6 +592,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       const exportMatch = pathname.match(/^\/api\/exports\/([a-f0-9-]{36})\/file$/);
       if (exportMatch) {
         if (!['GET','HEAD'].includes(request.method)) throw new StateError('Method is not supported.',405);
+        holdExportDownload();
         const { artifact, file } = url.searchParams.has('rootBindingId')?await studyOutputExports.file({...outputQuery(),exportId:exportMatch[1]}):exports.file(exportMatch[1]);
         response.writeHead(200, { 'Content-Type': `${artifact.mimeType}; charset=utf-8`, 'Content-Length': artifact.sizeBytes, 'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(artifact.name)}`, 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'none'; sandbox" });
         if (request.method === 'HEAD') return response.end();
@@ -716,7 +724,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if (['ENOENT', 'ENOTDIR', 'EISDIR'].includes(error.code)) return json(response, 404, { error: 'File was not found.' });
       const status = error instanceof StateError ? error.status : 500;
       if (status === 500) console.error('Local workspace request failed:', error.message);
-      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}),...(error.holder?{holder:error.holder}:{}) });
+      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}),...(error.holder?{holder:error.holder}:{}),...(error.hold?{code:'consent-hold',hold:error.hold}:{}) });
     } finally {
       // After the answer: tell watchers what changed (and, from B8, journal it).
       try { afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }

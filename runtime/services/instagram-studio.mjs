@@ -50,7 +50,7 @@ const usedLines=(p,format)=>{const out=new Set();for(const [f,l] of Object.entri
 const openFlags=(p,lineIds)=>(p.flags||[]).filter(f=>lineIds.has(f.lineId)&&!p.confirmations?.[f.id]);
 const layoutHash=l=>digest(JSON.stringify({storyId:l.storyId,format:l.format,frames:l.frames,caption:l.caption}));
 
-export function createInstagramStudio({dataDir,library,teaTerms}={}){
+export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null}={}){
  // The words to flag come from the shared word library (confirmed words and the mishearings Adrian taught it); with
  // nothing confirmed there yet, the Teajia tea-terms file is the fallback, as before.
  const libraryTerms=()=>{const lib=readLibraryFile(path.join(dataDir,'word-library','library.json')),words=(lib?.entries||[]).filter(e=>e.status==='confirmed');return words.length?libraryAsTerms(words):null;};
@@ -62,8 +62,16 @@ export function createInstagramStudio({dataDir,library,teaTerms}={}){
  const load=id=>{if(!UUID.test(id||''))fail('Name the plan by its id.');try{const p=JSON.parse(fs.readFileSync(file(id),'utf8'));if(p.schema!==SCHEMA||p.id!==id)fail('This plan file is not readable.',409);return p;}catch(error){if(error.code==='ENOENT')fail('No Instagram plan has that id.',404);throw error;}};
  const asksFile=id=>path.join(dir,id+'.asks.json');
  const readAsks=id=>{try{return JSON.parse(fs.readFileSync(asksFile(id),'utf8'));}catch{return {asked:[],asks:[]};}};
+ // The consent hold for the project this plan belongs to (its subject is the project id). Null when nothing holds it, or the plan
+ // is not tied to a project. Shown on every read so the page can say why Ready to post is off; the same check refuses the yes.
+ const holdOf=p=>{
+  if(!consentDesk||!p.subject)return null;
+  try{return consentDesk.holdFor([{parentStudyId:p.subject}]);}
+  catch(error){return {held:true,summary:error.message,link:'',who:[],parentStudyId:p.subject,pieceKey:'main'};}
+ };
+ const assertNotHeld=(p,what)=>{if(consentDesk&&p.subject)consentDesk.assertNotHeld([{parentStudyId:p.subject}],what);};
  const view=p=>{const {operations,...rest}=withHash({...empty(),...p});const used=usedLines(rest);
-  return {...rest,coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
+  return {...rest,publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
  const write=p=>{fs.mkdirSync(dir,{recursive:true});const tmp=file(p.id)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(p,null,1));fs.renameSync(tmp,file(p.id));};
  function begin(input,{create=false}={}){
   if(!input||typeof input!=='object'||Array.isArray(input))fail('Send a JSON object.');
@@ -235,6 +243,8 @@ export function createInstagramStudio({dataDir,library,teaTerms}={}){
   return {plans:out.sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))};
  }
  async function read({id}){return view(load(id));}
+ /** The files that get posted (frame PNGs, the reel's words) are held with the yes. */
+ async function assertPostable({id},what){assertNotHeld(load(id),what);}
  /** Create a plan, or change its proposals: material, stories, gaps and what Adrian was heard to say in chat. */
  async function propose(input){
   requireWriteActor();
@@ -341,6 +351,7 @@ export function createInstagramStudio({dataDir,library,teaTerms}={}){
   requireAdrian('The final yes');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
+   assertNotHeld(before,'Marking this ready to post');
    const format=input.format,l=before.layouts[format];if(!l)fail('Nothing is laid out as a '+format+' yet.');
    if(!before.chosen)fail('Pick or name the story first.');
    if(before.chosen.storyId&&before.chosen.storyId!==l.storyId)fail('This '+format+' was made for another story than the one you chose.',409);
@@ -366,7 +377,7 @@ export function createInstagramStudio({dataDir,library,teaTerms}={}){
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,propose,layout,choose,confirm,meaning,ready,render,sheet,captions,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,choose,confirm,meaning,ready,render,sheet,captions,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
@@ -405,9 +416,9 @@ async function raiseNeeds(request,studio,plan){
 }
 const instances=new Map();
 /** One registration line in the server hands requests here; returns false for any other path. */
-export async function handleInstagram(request,response,{dataDir,library}){
+export async function handleInstagram(request,response,{dataDir,library,consentDesk=null}){
  const url=new URL(request.url||'/','http://local.invalid');if(!url.pathname.startsWith(PREFIX))return false;
- let studio=instances.get(dataDir);if(!studio){studio=createInstagramStudio({dataDir,library});instances.set(dataDir,studio);}
+ let studio=instances.get(dataDir);if(!studio){studio=createInstagramStudio({dataDir,library,consentDesk});instances.set(dataDir,studio);}
  const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
  const send=(status,body)=>{response.writeHead(status,{...headers,'Content-Type':'application/json; charset=utf-8'});response.end(JSON.stringify(body));};
  const q=k=>url.searchParams.get(k)??undefined;
@@ -419,6 +430,7 @@ export async function handleInstagram(request,response,{dataDir,library}){
    if(GET[action])return send(200,await GET[action]()),true;
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
    if(action==='render'||action==='sheet'){const html=await (action==='render'?studio.render(args):studio.sheet(args));response.writeHead(200,{...headers,'Content-Type':'text/html; charset=utf-8',"Content-Security-Policy":"default-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'unsafe-inline'"});response.end(html);return true;}
+   if(action==='captions'||action==='png')await studio.assertPostable({id:q('id')},action==='png'?'Saving this frame for posting':'Saving the on-screen words for posting');
    if(action==='captions'){const srt=await studio.captions(args);response.writeHead(200,{...headers,'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="reel-captions.srt"'});response.end(srt);return true;}
    if(action==='png'){const port=request.socket?.localPort;if(!port)fail('PNG export needs the running app.',503);const bytes=await png('http://127.0.0.1:'+port,args,studio);response.writeHead(200,{...headers,'Content-Type':'image/png','Content-Disposition':'inline; filename="'+args.format+'-'+(args.frame+1)+'.png"'});response.end(bytes);return true;}
    fail('Unknown Instagram action.',404);
@@ -433,6 +445,6 @@ export async function handleInstagram(request,response,{dataDir,library}){
   const result=await POST[action](input);
   if((action==='plan'||action==='layout')&&!isHuman(actorNow()))result.asks=await raiseNeeds(request,studio,result).catch(()=>result.asks);
   send(200,result);
- }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The Instagram studio could not do that. Nothing was changed.'});}
+ }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The Instagram studio could not do that. Nothing was changed.',...(error.hold?{code:'consent-hold',hold:error.hold}:{})});}
  return true;
 }

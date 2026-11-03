@@ -232,6 +232,10 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
     const {voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    // The one publish check (consent desk): refuses with the reason while anyone on the piece is unanswered.
+    const holdPublish=(scopes,what)=>consentDesk.assertNotHeld(scopes,what);
+    // The older single-project export routes belong to the workspace's own project.
+    const workspaceScope=()=>{try{return [{parentStudyId:store.get().project.id}];}catch{return [];}};
     const languageScope=()=>{
       const allowed=['kind','bindingId','parentStudyId','outputId','recipientId','requestId'];
       if([...url.searchParams.keys()].some(k=>!allowed.includes(k))||allowed.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact language source scope.',400);
@@ -267,7 +271,7 @@ export function createRouteMap(services) {
         GET:()=>{const keys=['parentStudyId','storyId','pieceId','checkId'];if([...url.searchParams.keys()].some(k=>!keys.includes(k))||keys.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact saved check owner.',400);if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);return magazineMechanicalChecks.read({parentStudyId:url.searchParams.get('parentStudyId'),storyId:url.searchParams.get('storyId'),pieceId:url.searchParams.get('pieceId'),...(url.searchParams.has('checkId')?{checkId:url.searchParams.get('checkId')}:{})});},
         POST:async input=>{if(!magazineMechanicalChecks)throw new StateError('Saved Magazine checks are not configured.',503);const result=await magazineMechanicalChecks.run(input);input.scope={kind:'story',id:input.storyId};return result;}
       },
-      '/api/magazine/working-draft/export': {POST:input=>magazineOutputExports.save(input)},
+      '/api/magazine/working-draft/export': {POST:input=>{const {parentStudyId,...rest}=input||{};holdPublish([{parentStudyId:rest.storyId},{parentStudyId}],'Saving this export');return magazineOutputExports.save(rest);}},
       '/api/magazine/working-draft/exports': {GET:()=>magazineOutputExports.list(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/ai/context': {GET:()=>sourcedParagraphs.context(Object.fromEntries(url.searchParams))},
       '/api/magazine/working-draft/ai/proposals': {GET:()=>sourcedParagraphs.list(Object.fromEntries(url.searchParams))},
@@ -420,7 +424,7 @@ export function createRouteMap(services) {
       '/api/study/outputs': {GET:()=>draftCall(async()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);const input={rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('selectedOutputId')?{selectedOutputId:url.searchParams.get('selectedOutputId')}:{})};const view=await studyOutputs.read(input);if(AGENT_ACTORS.includes(currentActor()?.actor)&&view.output&&['article','carousel','post','product-listing'].includes(view.output.kind)){try{const proof=await structureTests.validateTarget({bindingId:input.rootBindingId,parentStudyId:input.parentStudyId});if(proof.root.binding.id===input.rootBindingId)return {...view,standInOutputEditing:true,standInWordsReview:view.output.kind==='carousel'};}catch(error){if(![403,404,409].includes(error.status))throw error;}}return view;})},
       '/api/study/outputs/review-words': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.reviewCarouselWords(input);})},
       '/api/study/outputs/stand-in-review-words': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact test-copy word review path.',400);if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.standInReviewCarouselWords(input);})},
-      '/api/study/outputs/export': {POST:input=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const {kind,...payload}=input;if(!['article','carousel','post','product-listing'].includes(kind))throw new StateError('Choose a supported output export.',400);const result=kind!=='carousel'?await studyOutputExports.saveArticle(payload):await studyOutputExports.saveCarousel(payload,'http://127.0.0.1:'+server.address().port);return decorateOutputExports(result,input);})},
+      '/api/study/outputs/export': {POST:input=>{holdPublish([{parentStudyId:input?.parentStudyId}],'Saving this export');return draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const {kind,...payload}=input;if(!['article','carousel','post','product-listing'].includes(kind))throw new StateError('Choose a supported output export.',400);const result=kind!=='carousel'?await studyOutputExports.saveArticle(payload):await studyOutputExports.saveCarousel(payload,'http://127.0.0.1:'+server.address().port);return decorateOutputExports(result,input);});}},
       '/api/study/outputs/exports': {GET:()=>draftCall(async()=>{if(!studyOutputExports)throw new StateError('Output exports are not enabled.',503);const input=outputQuery();return decorateOutputExports(await studyOutputExports.list(input),input);})},
       '/api/study/outputs/stand-in-refresh': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact test-copy writing update path.',400);if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.standInRefresh(input);})},
       '/api/study/outputs/stand-in-create': {POST:input=>draftCall(()=>{if(url.search)throw new StateError('Use the exact test-copy creation path.',400);if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.standInCreate(input);})},
@@ -507,7 +511,7 @@ export function createRouteMap(services) {
       '/api/research-material/review': {POST:input=>researchMaterial.review(researchInput(input))},
       '/api/requests/preview': { POST: input => requests.preview(input) },
       '/api/requests/recent': { GET: () => requests.recent() },
-      '/api/exports': { GET: () => exports.list(), POST: async input => {await guardCarouselOutput(input);return exports.save(input);} },
+      '/api/exports': { GET: () => exports.list(), POST: async input => {holdPublish(workspaceScope(),'Saving this export');await guardCarouselOutput(input);return exports.save(input);} },
       '/api/research/answers/recent': {GET:()=>researchAnswers.recent(url.searchParams.get('projectId')||store.get().project.id)},
       '/api/research/answers/preview': {POST:input=>researchAnswers.preview(researchInput(input))},
       '/api/ai/execution/capabilities': {GET:()=>execution.capabilities()},
@@ -519,7 +523,7 @@ export function createRouteMap(services) {
       '/api/article/make/preview': {POST: input => articleMake.preview(input, `http://${request.headers.host}`)},
       '/api/carousel/make/recent': {GET:()=>carouselMake.recent()},
       '/api/carousel/make/preview': {POST: async input => {if(input.stage==='look')await guardCarouselOutput(input);return carouselMake.preview(input);}},
-      '/api/carousel/exports': {GET:()=>carousel.list(),POST:async input=>{await guardCarouselOutput(input);return carousel.save(input,`http://${request.headers.host}`);}},
+      '/api/carousel/exports': {GET:()=>carousel.list(),POST:async input=>{holdPublish(workspaceScope(),'Saving this export');await guardCarouselOutput(input);return carousel.save(input,`http://${request.headers.host}`);}},
       '/api/ingestion': { GET: () => ingestion.list() },
       '/api/ingestion/retry': { POST: input => ingestion.retry(input.id) },
       '/api/transcript-tools/connect': {POST:input=>transcriptTools.connect(input,url.origin)},

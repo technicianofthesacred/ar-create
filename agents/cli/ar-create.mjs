@@ -46,7 +46,7 @@ export const USAGE = {
   commands: ['status', 'events', 'history', 'lease acquire|renew|release|list', 'handoff', 'ask', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
   actors: ACTOR_VALUES,
   env: { AR_CREATE_URL: 'default for --url', AR_CREATE_ACTOR: 'default for --actor' },
-  exitCodes: { 0: 'ok', 1: 'failed', 2: 'usage', 3: 'conflict (re-read; never force)', 4: 'locked by another actor', 5: 'forbidden (human-only)' },
+  exitCodes: { 0: 'ok', 1: 'failed', 2: 'usage', 3: 'conflict (re-read; never force)', 4: 'locked: by another actor, or held for consent (read the consent desk; never force)', 5: 'forbidden (human-only)' },
 };
 
 /** The human's editor state among presence rows: dirty/sequence/lastSeen. */
@@ -88,7 +88,7 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
   try { client = createClient({ url: options.url, actor: options.actor, client: 'cli', fetchImpl }); }
   catch (error) { return { exitCode: EXIT.usage, result: { ok: false, error: error.message } }; }
   const [command, ...rest] = options.positional, input = await readInput(options.input, stdin);
-  const answer = result => ({ exitCode: exitCodeFor(result.status), result: result.ok ? result.body : { ok: false, status: result.status, error: result.status === 409 ? 'revision_conflict' : result.status === 423 ? 'locked' : result.status === 403 ? 'forbidden' : 'request_failed', command: result.command, details: result.body } });
+  const answer = result => ({ exitCode: exitCodeFor(result.status), result: result.ok ? result.body : { ok: false, status: result.status, error: result.status === 409 ? 'revision_conflict' : result.status === 423 ? (result.body?.code === 'consent-hold' ? 'consent_hold' : 'locked') : result.status === 403 ? 'forbidden' : 'request_failed', command: result.command, details: result.body } });
   if (command === 'list-commands') {
     const caps = await client.listCommands();
     const commands = caps.commands.filter(item => !options.section || item.section === options.section);

@@ -56,3 +56,10 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body #app .workspace>.c3-empty.ce-na.cd
  .cd-desk :is(input:not([type=checkbox]),select){min-height:44px}
  .cd-share .cd-foot>.cd-btn.pri{flex:1 1 100%;justify-content:center}
 }
+
+/* The publish hold, shown beside every button it turns off (Outputs, Instagram studio). Reason first, then the way to answer it. */
+.ar-hold{display:block;flex:1 1 16rem;max-width:46rem;margin:.5rem 0 0;padding:.4rem .7rem;border:1px solid var(--c3-warn,#b7793d);border-radius:var(--c3-r,8px);color:var(--ink);font:400 var(--c3-t1,13px)/1.5 var(--ar-ui,var(--sans,sans-serif));overflow-wrap:anywhere}
+li>.ar-hold{margin:0;border:0;padding:0}
+.ar-hold-link{color:inherit;text-decoration:underline;white-space:nowrap}
+.ar-hold-link:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+button:disabled[aria-describedby$="hold-note"]{cursor:not-allowed}

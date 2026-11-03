@@ -518,7 +518,7 @@
 
 Actors: `human:adrian`, `agent:claude-code`, `agent:codex`, `agent:claude-design`, `agent:hermes`, `agent:grok`, `agent:chatgpt`, `cron:<name>`, `import:<source>`, `release:<sha>`.
 
-Exit codes: 0 = ok; 1 = failed; 2 = usage; 3 = conflict (re-read; never force); 4 = locked by another actor; 5 = forbidden (human-only).
+Exit codes: 0 = ok; 1 = failed; 2 = usage; 3 = conflict (re-read; never force); 4 = locked: by another actor, or held for consent (read the consent desk; never force); 5 = forbidden (human-only).
 
 | subcommand | does |
 |---|---|

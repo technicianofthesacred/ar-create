@@ -594,3 +594,7 @@ Adrian had four transcription setups (the phone oracle, Teajia, i64os, AR Create
 #### Agents propose prose, never save it — decided 3 November 2026
 
 Agents never save prose directly; they propose it, and Adrian's words, adopted direction and the mark that a story is published are his alone. Enforced in the registry from Track 3.1: prose save routes answer 403 to any agent, cron or import writer. This is the rule behind "His own words and notes" in the first band above.
+
+#### Every way out respects the consent hold — decided 3 November 2026
+
+The truth and consent desk holds release while anyone on a piece is unanswered, and that hold now stops every route that publishes, marks published, exports for posting or sets ready-to-post, not only the desk's own "release" button. One check (the desk's) answers for all of them: Outputs exports and their downloads, Magazine send, mark-published, saving the posting slides and the working-HTML export, and the Instagram studio's Ready to post, frame PNGs and reel words. A held path refuses in plain English, names who is unanswered and links to the desk; agents see HTTP 423 and CLI exit 4 (`consent_hold`). Adrian's override, with its journaled reason, still lifts it for the people it covered, and the final yes stays his alone. Each screen with such a button turns it off and shows the reason beside it.
