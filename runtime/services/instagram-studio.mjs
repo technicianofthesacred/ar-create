@@ -18,6 +18,8 @@ import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor} from './actor.mjs';
 import {FORMATS,CAPTION,FACTS,catalog,templateById,renderFrame,frameDocument,sheetDocument} from './instagram-templates.mjs';
 import {deriveLines,deriveMoments,wholeness,detectFlags,correctedText,quotedSegments,coverage,loadTeaTerms,clock} from './instagram-transcript.mjs';
+import {readLibraryFile} from './word-prompt.mjs';
+import {sharedWordLibrary,libraryAsTerms} from './word-library.mjs';
 export {deriveLines} from './instagram-transcript.mjs';
 
 const SCHEMA='ar-create.instagram-plan.v1',PREFIX='/api/instagram/',MAX_BODY=2*1024*1024;
@@ -49,7 +51,10 @@ const openFlags=(p,lineIds)=>(p.flags||[]).filter(f=>lineIds.has(f.lineId)&&!p.c
 const layoutHash=l=>digest(JSON.stringify({storyId:l.storyId,format:l.format,frames:l.frames,caption:l.caption}));
 
 export function createInstagramStudio({dataDir,library,teaTerms}={}){
- const terms=()=>teaTerms??loadTeaTerms();
+ // The words to flag come from the shared word library (confirmed words and the mishearings Adrian taught it); with
+ // nothing confirmed there yet, the Teajia tea-terms file is the fallback, as before.
+ const libraryTerms=()=>{const lib=readLibraryFile(path.join(dataDir,'word-library','library.json')),words=(lib?.entries||[]).filter(e=>e.status==='confirmed');return words.length?libraryAsTerms(words):null;};
+ const terms=()=>teaTerms??libraryTerms()??loadTeaTerms();
  if(!dataDir)throw Error('The Instagram studio needs the data folder.');
  const dir=path.join(dataDir,'instagram-plans'),queues=new Map();
  const file=id=>path.join(dir,id+'.json');
@@ -310,6 +315,11 @@ export function createInstagramStudio({dataDir,library,teaTerms}={}){
    const flag=(before.flags||[]).find(x=>x.id===input.flagId);if(!flag)fail('That word is not on the list to confirm.');
    const verdict=input.verdict;if(!['as-heard','corrected'].includes(verdict))fail('Confirm it as heard, or correct it.');
    const correction=verdict==='corrected'?text(input.correction,'Your correction',200,{required:true}):'';
+   // His correction is remembered by the shared word library, so every later recording and plan gets it right.
+   if(verdict==='corrected'&&['tea-term','name','place'].includes(flag.kind)){
+    try{await sharedWordLibrary({dataDir}).learn({heard:flag.heard,spelling:correction,category:flag.kind==='tea-term'?'tea-term':flag.kind==='place'?'place':'other',from:{story:before.title||'',sentence:lineOf(before,flag.lineId)?.text||''},operationId:input.operationId},currentActor());}
+    catch{/* the confirmation itself must never fail because the library could not be written */}
+   }
    return commit(before,{...before,confirmations:{...(before.confirmations||{}),[flag.id]:{verdict,correction,heard:flag.heard,by:actorNow(),at:new Date().toISOString()}}},input,'confirm '+flag.id);
   });
  }

@@ -136,10 +136,12 @@ function readSeedFile(file){
 }
 
 /** One library, one JSON file. `now` is injectable so tests control time. */
-export function createWordLibrary({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
+export function createWordLibrary({dataDir,now=()=>Date.now(),onChange=null}={}){
  if(!dataDir)throw Error('The word library needs the data folder.');
  const dir=path.join(dataDir,'word-library'),file=path.join(dir,'library.json');
  let queue=Promise.resolve();
+ const listeners=new Set(onChange?[onChange]:[]);
+ const notify=(kind,detail)=>{for(const listener of listeners){try{listener(kind,detail);}catch{/* a listener must never break a write */}}};
  const serial=fn=>{const run=queue.then(fn,fn);queue=run.catch(()=>{});return run;};
  const empty=()=>({schema:LIBRARY_SCHEMA,revision:0,updatedAt:null,entries:[],kept:{}});
  const load=()=>{
@@ -152,7 +154,7 @@ export function createWordLibrary({dataDir,now=()=>Date.now(),onChange=()=>{}}={
   const tmp=file+'.'+process.pid+'.'+crypto.randomUUID()+'.tmp';
   fs.writeFileSync(tmp,JSON.stringify(state,null,1),{mode:0o600});fs.renameSync(tmp,file);
  };
- const write=fn=>serial(async()=>{const state=load(),result=await fn(state);if(result?.dirty){store(state);onChange(result.kind||'changed',{revision:state.revision});}return result?.value??result;});
+ const write=fn=>serial(async()=>{const state=load(),result=await fn(state);if(result?.dirty){store(state);notify(result.kind||'changed',{revision:state.revision});}return result?.value??result;});
  const byKey=(state,spelling)=>state.entries.find(e=>norm(e.spelling)===norm(spelling));
  const summary=state=>{
   const confirmed=state.entries.filter(e=>e.status==='confirmed'),byCategory=Object.fromEntries(CATEGORIES.map(c=>[c,confirmed.filter(e=>e.category===c).length]));
@@ -367,5 +369,19 @@ export function createWordLibrary({dataDir,now=()=>Date.now(),onChange=()=>{}}={
   };
  }
 
- return {list,entries,snapshot,filePath,add,decide,learn,noteKept,importFrom,promptFor,exportSnapshot};
+ return {list,entries,snapshot,filePath,add,decide,learn,noteKept,importFrom,promptFor,exportSnapshot,subscribe:fn=>{listeners.add(fn);return ()=>listeners.delete(fn);}};
+}
+
+const shared=new Map();
+/** The one library for a data folder. Everything in the server that writes the library (the Words routes, the Instagram
+ *  studio remembering a correction) must use this instance, so the file is only ever written from one queue. */
+export function sharedWordLibrary({dataDir}){
+ if(!shared.has(dataDir))shared.set(dataDir,createWordLibrary({dataDir}));
+ return shared.get(dataDir);
+}
+
+/** The library in the shape the Instagram studio's flagging reads (the Teajia tea-terms shape): {en, zh, pinyin, cat, variants}.
+ *  Mishearings and aliases both become things to flag; the library's spelling is the suggestion, never applied. */
+export function libraryAsTerms(entries){
+ return entries.filter(e=>e.status==='confirmed').map(e=>({en:e.spelling,zh:e.zh||'',pinyin:e.pinyin||'',cat:e.topic||(e.category==='tea-term'?'tea':(CATEGORY_LABELS[e.category]||e.category).toLowerCase()),variants:(e.variants||[]).map(v=>v.text)}));
 }

@@ -3,7 +3,7 @@
 // other path.
 import {StateError} from '../store.mjs';
 import {currentActor,requireWriteActor} from './actor.mjs';
-import {createWordLibrary} from './word-library.mjs';
+import {sharedWordLibrary} from './word-library.mjs';
 import {createSharedWords} from './shared-words.mjs';
 import {sharedNeedsYou} from './needs-you.mjs';
 
@@ -17,7 +17,8 @@ export function wordsFor({dataDir,events,recordings}){
  let found=instances.get(dataDir);
  if(found)return found;
  const emit=(kind,detail={})=>{const who=currentActor();events?.emit({kind:'words.'+kind,scope:{kind:'words',id:detail.jobId||'library'},revision:null,actor:who?.actor||'cron:shared-words',client:who?.client||null,operationId:null});};
- const library=createWordLibrary({dataDir,onChange:emit});
+ const library=sharedWordLibrary({dataDir});
+ library.subscribe(emit);
  const shared=createSharedWords({dataDir,library,corrections:recordings.transcriptCorrections,needsYou:sharedNeedsYou({dataDir,events}),onChange:emit});
  found={library,shared};instances.set(dataDir,found);
  return found;

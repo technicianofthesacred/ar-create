@@ -48,6 +48,10 @@ After a transcript exists (a recording that finishes while the server is running
 
 Agents: `words recognise`, `words check`, `words checks`, `words list`, `words export`, `words add` (suggest). Human-only (exit 5 for anyone else, and the service also requires the app's own page for answers): `words answer`, `words decide`.
 
+## Other AR Create surfaces that use it
+
+The Instagram studio flags the words to confirm in a voice note from this library (confirmed words and the mishearings Adrian taught it; with nothing confirmed yet it still falls back to the tea-terms file), and when Adrian confirms a correction there, the library remembers it (`sharedWordLibrary`, one writer for the whole server). Its own "Needs you" ask is a different thing from the recording check: it is about words a piece is about to use, before they go on Instagram, so it stays Only Adrian and links to the plan.
+
 ## Export (for phase 2)
 
 `ar-create words export` (GET `/api/words/export`) prints a versioned snapshot; redirect it to a file at deploy.

@@ -387,3 +387,26 @@ test('running recognise again after the ask was settled raises a new ask only fo
  assert.equal(asks.length,1);assert.notEqual(asks[0].id,first.askId);assert.match(asks[0].question,/^1 word to check/);
  assert.ok(first.items.length>0);
 });
+
+// ---------- 11. the Instagram studio uses the same library ----------
+test('the Instagram studio flags words from the shared library and the correction Adrian confirms is remembered by it',async t=>{
+ const {createInstagramStudio}=await import('../runtime/services/instagram-studio.mjs'),{withActor}=await import('../runtime/services/actor.mjs'),{createHash}=await import('node:crypto');
+ const {libraryAsTerms}=await import('../runtime/services/word-library.mjs'),{sharedWordLibrary}=await import('../runtime/services/word-library.mjs');
+ const h=await seeded(t),T_ID='11111111-2222-4333-8444-555555555555',BODY='Invented fixture.\n\nMender: Lu Yo wrote about tea. We drank shaw puerh on a quiet day.',HASH=createHash('sha256').update(BODY).digest('hex');
+ const as=(actor,fn)=>withActor({actor,client:'http'},fn);
+ // the shared instance is the one the Words routes use, so there is only one writer
+ const lib=sharedWordLibrary({dataDir:h.dir});
+ await lib.add({operationId:op(),spelling:'Shou Puerh',variants:[{text:'shaw puerh',kind:'heard'}]},adrianCli);
+ assert.ok(libraryAsTerms(await lib.entries()).some(x=>x.en==='Shou Puerh'&&x.variants.includes('shaw puerh')));
+ const studio=createInstagramStudio({dataDir:h.dir,library:{snapshot:async(id,{includeBody}={})=>{if(id!==T_ID)throw Error('missing');return {id,hash:HASH,path:'/x/talk.md',text:includeBody?BODY:undefined};}}});
+ const plan=await as('agent:claude-code',()=>studio.propose({operationId:op(),subject:'proj-1',title:'The mender',door:'art',material:{transcripts:[{sourceId:T_ID,sourceHash:HASH}],photos:[]}}));
+ const flag=plan.flags.find(f=>f.heard.toLowerCase()==='shaw puerh');
+ assert.ok(flag,'a mishearing the library knows is flagged');assert.equal(flag.kind,'tea-term');assert.match(flag.suggestion,/^Shou Puerh/);
+ // Adrian corrects it in his own words; the library learns the spelling
+ const done=await as('human:adrian',()=>studio.confirm({id:plan.id,operationId:op(),expectedRevision:plan.revision,expectedHash:plan.hash,flagId:flag.id,verdict:'corrected',correction:'Shou Puerh'}));
+ assert.equal(done.confirmations[flag.id].verdict,'corrected');
+ const found=await lib.list({q:'shou puerh'});
+ assert.equal(found.entries[0].spelling,'Shou Puerh');
+ // an agent's confirmation is refused and remembers nothing
+ await assert.rejects(as('agent:codex',()=>studio.confirm({id:plan.id,operationId:op(),expectedRevision:done.revision,expectedHash:done.hash,flagId:flag.id,verdict:'as-heard'})),e=>e.status===403);
+});
