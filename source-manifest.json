@@ -4797,7 +4797,7 @@
     },
     {
       "path": "public/document-study/material-intake.css",
-      "candidateSha256": "bf072cca1cb2f847a88e1585a5c148ec7ed15be994f5b830ab8ec8a002733bfe"
+      "candidateSha256": "daa2e857eb2dbfd4ff15b703b69b427aba0b41d74f1cee87c6083bc550d85f59"
     },
     {
       "path": "public/document-study/material-intake.js",
@@ -5238,6 +5238,10 @@
     {
       "path": "public/document-study/margin-fold.test.mjs",
       "candidateSha256": "94a518a2bcc376a83e2d9784b5c229ef109f63073c49c279f74cd26569d4446b"
+    },
+    {
+      "path": "tests/material-bring-in.test.mjs",
+      "candidateSha256": "7ffb62c78a0779a8a1ef9d89323b69c44df81185971d6aa128ebb1879c892518"
     }
   ],
   "dependencyRepair": {

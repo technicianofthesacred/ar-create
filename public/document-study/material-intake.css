@@ -47,3 +47,10 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app{
  }
 }
 @keyframes mi-run{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+/* Material is its own page: the Library folder panel steps aside while it is open. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body .shell:has(> main .wfb-browser.mi-open) > aside.wb-panel{display:none!important}
+/* Quieter rows: the one action per row is outlined in gold, not filled; "+ Add to a subject" waits until a subject is open. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions .mi-primary{background:transparent!important;color:var(--warm)!important;border:1px solid color-mix(in srgb,var(--warm) 60%,var(--line))!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions .mi-primary:hover:not(:disabled){background:color-mix(in srgb,var(--warm) 12%,transparent)!important;filter:none}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions [data-mi-source-none]{display:none!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body .shell:has(> main .wfb-browser.mi-open) > main{grid-column:2 / -1!important}
