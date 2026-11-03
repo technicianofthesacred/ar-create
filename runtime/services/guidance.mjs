@@ -5,9 +5,29 @@ import {guidanceRegions} from '../public/lib/guidance-body.js';
 import { StateError } from '../store.mjs';
 import { atomicWrite, readJson, digest, resolveInside, regular } from './files.mjs';
 
+// The i64os directions hold Adrian's voice in one copy (3 November 2026).
+const I64OS_FILES = { voice: 'voice-profile.md', positions: 'body-of-work.md' };
+
+/** Where AR Create reads the voice: a server option, else data/i64os-directions.json, else none. */
+export function resolveVoiceSource({ dataDir, option }) {
+  let directionsDir = option;
+  if (directionsDir === undefined) {
+    const file = path.join(dataDir, 'i64os-directions.json');
+    const stat = fs.lstatSync(file, { throwIfNoEntry: false });
+    if (!stat) return null;
+    if (!stat.isFile() || stat.isSymbolicLink()) throw new Error('i64os directions config must be an owned regular file.');
+    directionsDir = JSON.parse(fs.readFileSync(file, 'utf8'))?.directionsDir ?? null;
+  }
+  if (directionsDir === null || directionsDir === false) return null;
+  if (typeof directionsDir !== 'string' || !path.isAbsolute(directionsDir)) throw new Error('i64os directionsDir must be an absolute path.');
+  return { kind: 'i64os', directionsDir };
+}
+
 // WordForge stack/template-files discipline: stable files, humanizing pointers,
 // whole-body revision fingerprints. Copies seed once; projects reference files.
-export function createGuidance({ dataDir, referenceDir }) {
+// With a voice source, voice and positions are read from the i64os directions
+// (read-only here) and the local copies are no longer used. Recipe stays local.
+export function createGuidance({ dataDir, referenceDir, voiceSource = null }) {
   const dir = path.join(dataDir, 'guidance');
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 }); resolveInside(dir, '', { directory: true });
   const names = { voice: 'voice-profile.md', positions: 'body-of-work.md', recipe: 'recipe.md' };
@@ -21,18 +41,30 @@ export function createGuidance({ dataDir, referenceDir }) {
       atomicWrite(paths[key], body, { exclusive: true });
     }
   }
+  const external = key => voiceSource?.kind === 'i64os' && Object.hasOwn(I64OS_FILES, key);
+  const sourceOf = key => external(key)
+    ? { kind: 'i64os', path: path.join(voiceSource.directionsDir, I64OS_FILES[key]), readOnly: true }
+    : { kind: key === 'recipe' ? 'ar-create' : 'ar-create-copy', path: paths[key], readOnly: false };
   let pending = Promise.resolve();
   function read() {
-    const bodies = {};
-    for (const key of Object.keys(paths)) { resolveInside(dir, names[key]); regular(paths[key]); bodies[key] = fs.readFileSync(paths[key], 'utf8'); }
+    const bodies = {}, sources = {}, readPaths = {};
+    for (const key of Object.keys(paths)) {
+      sources[key] = sourceOf(key); readPaths[key] = sources[key].path;
+      if (external(key)) {
+        try { regular(readPaths[key]); bodies[key] = fs.readFileSync(readPaths[key], 'utf8'); }
+        catch { throw new StateError(`Your voice lives in i64os, and ${I64OS_FILES[key]} could not be read at ${voiceSource.directionsDir}. Writing guidance is unavailable until it can.`, 503); }
+      } else { resolveInside(dir, names[key]); regular(paths[key]); bodies[key] = fs.readFileSync(paths[key], 'utf8'); }
+    }
     const revision = digest(JSON.stringify(bodies));
-    return { revision, ...bodies, paths, editable: Object.fromEntries(Object.entries(bodies).map(([key, body]) => [key, guidanceRegions(body)])), refs: Object.fromEntries(Object.keys(paths).map(key => [key, { id: `shared:${key}`, scope: 'shared', path: paths[key], hash: digest(bodies[key]) }])) };
+    return { revision, ...bodies, paths: readPaths, sources, editable: Object.fromEntries(Object.entries(bodies).map(([key, body]) => [key, guidanceRegions(body)])), refs: Object.fromEntries(Object.keys(paths).map(key => [key, { id: `shared:${key}`, scope: 'shared', path: readPaths[key], hash: digest(bodies[key]) }])) };
   }
   return {
     get: async () => read(),
     put(input) {
       const op = pending.then(() => {
         if (!Object.hasOwn(paths, input.key)) throw new StateError('Choose voice, positions or recipe.');
+        // One copy: AR Create never edits the i64os voice files. Draft edits queue as voice corrections instead.
+        if (external(input.key)) throw new StateError('Your voice lives in i64os and is read-only here. Changes to drafts queue as voice corrections you approve.', 409);
         const editing = input.acceptedRegions !== undefined;
         const current = read();
         let body = input.body, receiptFile, fingerprint, receipt;

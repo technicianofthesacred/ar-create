@@ -14,6 +14,12 @@ The validated `i64osReturn` parameter returns only to allowed loopback i64 Writi
 
 The 18 October bounded relocation is verified: installed runtime/dependencies/data now live at `~/Library/Application Support/i64os/ar-create`; i64 uses that guarded companion home. Controlled restart, native/browser preservation and actual open/validated return passed. This standalone repository still runs isolated synthetic candidates on a spare port and refuses8841. Source publication does not activate/reconfigure the companion. See [permanent home](PERMANENT-HOME.md).
 
+## Voice: one copy in i64os (3 November 2026)
+
+Adrian's voice lives in the i64os directions, `substrate/directions/voice-profile.md` and `body-of-work.md`. AR Create reads them straight from an i64os checkout on this Mac, read-only, with no credentials: set `directionsDir` in `data/i64os-directions.json` (or the `i64osDirections` server option). Then every agent draft request captures that voice, the Voice and Perspective sheets show it read-only, and AR Create's own copies in `data/guidance/` are no longer read. If the folder cannot be read, writing guidance answers 503 rather than falling back to a stale copy. Without the config, the local copies are used as before.
+
+Corrections travel the other way through a queue Adrian approves. When he finishes a read-through, each machine paragraph he rewrote becomes a voice correction in `data/voice-corrections/`. He approves (choosing How I sound or What I argue) or drops each one in the Write margin; `voice-corrections.decide` is human-only. `voice-corrections.export` lists the approved ones in the exact input shape of the i64os `voice_correct` tool, which only queues them in the voice file. An agent carries each one with `voice_correct` and then records `voice-corrections.sent`. Routing a correction into the voice itself stays Adrian's `voice_route` in i64os. AR Create has no direct route to the i64os voice queue: the copied Magazine i64 export needs i64os credentials and its worker was never copied in.
+
 ## Preservation for any later transition
 
 1. Freeze and verify the integrator's exact current code/data identities, private configuration, capture paths, browser-local state, direction/decision records and native Undo journals. Preserve recoverable snapshots outside Git.

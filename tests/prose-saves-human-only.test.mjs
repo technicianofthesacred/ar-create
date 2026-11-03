@@ -32,6 +32,8 @@ const ROUTES=[
  ['study.outputs.undo-words','/api/study/outputs/undo-words'],
  ['study.human-direction.write','/api/study/human-direction/write'],
  ['study.human-direction.undo','/api/study/human-direction/undo'],
+ // Finishing a read-through saves Adrian's rewrites and the paragraphs he left alone (3 Nov 2026).
+ ['study-ai.finish','/api/study-ai/finish'],
  ['magazine.mark-published','/api/magazine/mark-published'],
 ];
 

@@ -43,16 +43,44 @@ function continuationChanges(baseline,requestId,continuation,paragraphs,openingM
  const model=structuredClone(openingModel);model.blocks.forEach((b,i)=>{if(b.raw!==baseline.projection[i].raw)fail('Continuation baseline changed.');b.id=baseline.projection[i].id;});
  return {kind:'article-continuation',target,operations,replacements,candidateRaw:apply(model,baseline.raw,operations).raw};
 }
-function sourcedChanges(baseline,requestId,sourcedParagraph,sourcedEvidence){
- revalidateNativeSourcedProposal({payload:{sourcedParagraph,sourcedEvidence},context:baseline});
+function sourcedModel(baseline){
  const model=capture(baseline.raw,'native-sourced-ending');
  // A fresh parse may add a zero-byte terminal row after the native writer’s
  // trailing separator. It owns no bytes or words; retain the saved topology.
  while(model.blocks.length>baseline.projection.length&&model.blocks.at(-1).raw===''&&model.blocks.at(-1).separator==='')model.blocks.pop();
  if(model.blocks.length!==baseline.projection.length)fail('Sourced paragraph topology changed.');
  model.blocks.forEach((block,index)=>{if(block.raw!==baseline.projection[index].raw)fail('Sourced paragraph boundary changed.');block.id=baseline.projection[index].id;});
+ return model;
+}
+function sourcedChanges(baseline,requestId,sourcedParagraph,sourcedEvidence){
+ revalidateNativeSourcedProposal({payload:{sourcedParagraph,sourcedEvidence},context:baseline});
+ const model=sourcedModel(baseline);
  const id='sourced:'+requestId,operations=sourcedParagraph===null?[]:[{kind:'insert',id,beforeId:null,raw:sourcedParagraph}];
  return {kind:'sourced-paragraph',sourcedParagraph,sourcedEvidence:structuredClone(sourcedEvidence),operations,replacements:sourcedParagraph===null?[]:[{id,words:sourcedParagraph,before:'',sourcedInsertion:true}],candidateRaw:operations.length?apply(model,baseline.raw,operations).raw:baseline.raw};
+}
+/** Adrian's rewrite of a sourced paragraph lands where the proposal would have; the sourced claims remain the record of what was proposed. */
+function sourcedEditChanges(baseline,requestId,words){
+ const mapped=inlineMap(words);if(!mapped.safe||mapped.blockKind!=='paragraph'||mapped.words!==words||mapped.notes||mapped.reworks.length)fail('Keep your rewrite to one ordinary paragraph without structural markup.',400);
+ const model=sourcedModel(baseline),id='sourced:'+requestId,operations=[{kind:'insert',id,beforeId:null,raw:words}];
+ return {kind:'sourced-paragraph',operations,replacements:[{id,words,before:'',sourcedInsertion:true}],candidateRaw:apply(model,baseline.raw,operations).raw};
+}
+const READ_THROUGH_WORDS=w=>typeof w==='string'&&w.trim()&&w.length<=12000&&w.isWellFormed()&&!/[\r\n\x00-\x1f\[\]*_`<>=]/.test(w)&&!w.includes('%%');
+/**
+ * Adrian's read-through (3 November 2026). He reads the whole draft, rewrites or marks what is not him,
+ * and finishes. Paragraphs he left alone count as read; marked ones stay out of the writing.
+ */
+function readThroughSelection(proposed,args){
+ const edits=args.edits??[],marks=args.marks??[],ids=new Set(proposed.map(p=>p.id));
+ if(!Array.isArray(edits)||!Array.isArray(marks)||edits.length>30||marks.length>30)fail('Send up to 30 rewrites and 30 marks.',400);
+ const editBy=new Map(),markBy=new Map();
+ for(const edit of edits){fields(edit,['id','words']);if(!ids.has(edit.id)||editBy.has(edit.id))fail('Each rewrite names one paragraph of this draft, once.',400);if(!READ_THROUGH_WORDS(edit.words))fail('Use ordinary paragraph wording without Markdown syntax.',400);editBy.set(edit.id,edit.words);}
+ for(const mark of marks){fields(mark,['id','note']);if(!ids.has(mark.id)||markBy.has(mark.id))fail('Each mark names one paragraph of this draft, once.',400);if(editBy.has(mark.id))fail('A paragraph is either rewritten or marked as not you, not both.',400);if(mark.note!==undefined&&mark.note!==null&&(typeof mark.note!=='string'||mark.note.length>2000||!mark.note.isWellFormed()))fail('Keep a note under 2,000 characters.',400);markBy.set(mark.id,typeof mark.note==='string'&&mark.note.trim()?mark.note.trim():null);}
+ const changed=p=>editBy.has(p.id)&&editBy.get(p.id)!==p.words;
+ return {kept:proposed.filter(p=>!markBy.has(p.id)).map(p=>({...p,words:editBy.has(p.id)?editBy.get(p.id):p.words,edited:changed(p)})),
+  readThrough:{schema:'ar-create.read-through.v1',role:'human-read-through-of-ai-draft',
+   read:proposed.filter(p=>!markBy.has(p.id)&&!changed(p)).map(p=>p.id),
+   edited:proposed.filter(changed).map(p=>({id:p.id,before:p.words,after:editBy.get(p.id)})),
+   marked:proposed.filter(p=>markBy.has(p.id)).map(p=>({id:p.id,words:p.words,note:markBy.get(p.id)}))}};
 }
 export function createStudyBridge({dataDir,drafts,binding,humanDirection,editorialPlan,projectMaterial,learning,guidance,assistanceDirection,validateStandInTarget}){
  identifier(binding?.bindingId);if(typeof binding.parentStudyId!=='string'||!binding.parentStudyId)fail('Explicit parent study required.',400);binding=structuredClone(binding);
@@ -210,26 +238,55 @@ export function createStudyBridge({dataDir,drafts,binding,humanDirection,editori
  async function freshness(r){const now=await current();if(!same(now.expected,r.record.expected))fail('Draft changed: stale request; preserve candidate and human words.');await contextFreshness(r,now,r.record.purpose==='article-continuation'?r.record.continuation.planLineage:undefined);if(r.record.purpose==='article-continuation'){const proof=await continuationOrigin(r.record.continuation.openingRequestId,r.record.continuation.selectedOptionId,now);if(!same(proof,r.record.continuation))fail('The accepted opening continuation proof changed.');}return now;}
  async function review(id){const r=load(id);let stale=false,reason,continuationReadiness;if(r.record.purpose==='opening-options'&&r.decision?.status==='accepted'){try{const origin=await continuationOrigin(id,r.decision.selectedOptionId,await current());continuationReadiness={eligible:true,sourceIds:origin.sourceIds,answerIds:origin.answerIds};}catch(error){continuationReadiness={eligible:false,reason:error.message};}}try{await freshness(r)}catch(error){stale=true;reason=error.message;}return {id,...(r.record.purpose==='sourced-paragraph'?{purpose:'sourced-paragraph',instruction:r.baseline.request.instruction,sourcedEvidence:r.proposal?.payload.sourcedEvidence??null}:{}),...(continuationReadiness?{continuationReadiness}:{}),...(r.record.continuation?{purpose:r.record.purpose,continuation:r.record.continuation}:{}),status:r.decision?.status??(r.proposal?'pending':'prepared'),stale,reason,expected:r.record.expected,replacements:r.proposal?.payload.kind==='opening-options'?[]:r.proposal?.payload.replacements??[],...(r.record.purpose==='opening-options'?{purpose:r.record.purpose,opening:r.record.opening,openingOptions:r.proposal?.payload.options?.map(o=>({id:o.id,words:o.words,before:o.replacements[0].before,kind:r.proposal.payload.target.kind}))||[],selectedOptionId:r.decision?.selectedOptionId||null}:{}),...(r.baseline.guidance!==undefined?{guidance:structuredClone(r.baseline.guidance)}:{}),candidateRaw:r.proposal?.payload.candidateRaw??null,...(r.baseline.learning!==undefined?{learning:structuredClone(r.baseline.learning)}:{}),...(r.baseline.projectMaterial!==undefined?{projectMaterial:structuredClone(r.baseline.projectMaterial)}:{}),...(r.baseline.humanDirection!==undefined?{humanDirection:structuredClone(r.baseline.humanDirection)}:{}),...(r.baseline.humanContracts!==undefined?{humanContracts:structuredClone(r.baseline.humanContracts)}:{}),...(r.baseline.editorialPlan!==undefined?{editorialPlan:structuredClone(r.baseline.editorialPlan)}:{}),...(r.baseline.assistanceDirection!==undefined?{assistanceDirection:structuredClone(r.baseline.assistanceDirection)}:{}),decision:r.decision??null};}
  async function accept(args){fields(args,['requestId','operationId','replacements','optionId']);identifier(args.operationId);const r=load(args.requestId);if(r.record.purpose==='sourced-paragraph'&&(args.replacements!==undefined||args.optionId!==undefined||!r.proposal?.payload.operations.length))fail('Only the exact reviewed sourced paragraph can be accepted; open questions add no words.');if(r.record.purpose==='article-continuation'&&(args.replacements!==undefined||args.optionId!==undefined))fail('Use the immutable continuation proposal without caller replacements or another opening option.');if(r.proposal?.payload.kind==='opening-options'){if(args.replacements!==undefined)fail('Choose a reviewed opening option without replacement words.');identifier(args.optionId);if(!r.proposal.payload.options.some(o=>o.id===args.optionId))fail('Choose one exact reviewed opening option.');if(['accepted','committing'].includes(r.decision?.status)&&args.optionId!==r.decision.selectedOptionId)fail('This request already has another opening choice.');}if(r.decision?.status==='accepted'){if(args.optionId!==undefined&&args.optionId!==r.decision.selectedOptionId)fail('This request already has another opening choice.');return current();}if(r.decision?.status==='rejected')fail('Request was rejected. Prepare new work.');if(!r.proposal)fail('No proposal to review.');
-  if(r.decision?.status==='committing'){
-   let inspected;try{inspected=await drafts.inspect({...binding,operationId:r.decision.operationId});}catch(error){if(error.status!==404&&error.code!=='ENOENT')throw error;}
-   if(inspected){if(inspected.receipt.state!=='committed')fail('Interrupted acceptance requires explicit journal recovery; preserve candidate.');
-    const change=inspected.receipt.changes.find(c=>c.relativePath.startsWith('Workflow/3-Develop/'));if(change?.afterHash!==r.decision.candidateHash)fail('Committed journal differs from acceptance.');
-    write(path.join(r.dir,'decision.json'),{...r.decision,status:'accepted',finishedAt:new Date().toISOString()});return current();
-   }
-   if(args.operationId!==r.decision.operationId)fail('Resume the exact interrupted acceptance operation.');
-   // A crash between the decision and native intent is not authorization to
-   // recover words. Recheck freshness and exact payload before retrying below.
-  }
+  if(r.decision?.status==='committing'&&await resumeCommitting(r,args.operationId))return current();
   await freshness(r);let payload;if(r.proposal.payload.kind==='opening-options'){if(args.replacements!==undefined)fail('Choose a reviewed opening option without replacement words.');identifier(args.optionId);payload=r.proposal.payload.options.find(o=>o.id===args.optionId);if(!payload)fail('Choose one exact reviewed opening option.');}else{if(args.optionId!==undefined)fail('This is not an opening-options request.');payload=args.replacements?changes(r.baseline,args.replacements):r.proposal.payload;}enforceContracts(r.baseline,payload);
-  const decision={provenance:provenance(),...(AGENT_ACTORS.includes(currentActor()?.actor)?{decisionRole:'stand-in'}:{}),requestId:r.record.id,status:'committing',proposalHash:r.proposal.hash,...(args.optionId?{selectedOptionId:args.optionId}:{}),operationId:args.operationId,candidateHash:digest(payload.candidateRaw),...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),...(r.record.guidanceHash!==undefined?{guidanceHash:r.record.guidanceHash}:{}),...(r.record.learningHash!==undefined?{learningHash:r.record.learningHash}:{}),expected:r.record.expected,operations:payload.operations,reviewedReplacements:payload.replacements,createdAt:new Date().toISOString()};
+  return commit(r,args.operationId,payload,args.optionId?{selectedOptionId:args.optionId}:{});
+ }
+ /** True when an interrupted acceptance already committed; otherwise only its exact operation may retry. */
+ async function resumeCommitting(r,operationId){
+  let inspected;try{inspected=await drafts.inspect({...binding,operationId:r.decision.operationId});}catch(error){if(error.status!==404&&error.code!=='ENOENT')throw error;}
+  if(inspected){if(inspected.receipt.state!=='committed')fail('Interrupted acceptance requires explicit journal recovery; preserve candidate.');
+   const change=inspected.receipt.changes.find(c=>c.relativePath.startsWith('Workflow/3-Develop/'));if(change?.afterHash!==r.decision.candidateHash)fail('Committed journal differs from acceptance.');
+   write(path.join(r.dir,'decision.json'),{...r.decision,status:'accepted',finishedAt:new Date().toISOString()});return true;
+  }
+  if(operationId!==r.decision.operationId)fail('Resume the exact interrupted acceptance operation.');
+  // A crash between the decision and native intent is not authorization to
+  // recover words. Recheck freshness and exact payload before retrying.
+  return false;
+ }
+ async function commit(r,operationId,payload,extra){
+  const decision={provenance:provenance(),...(AGENT_ACTORS.includes(currentActor()?.actor)?{decisionRole:'stand-in'}:{}),requestId:r.record.id,status:'committing',proposalHash:r.proposal.hash,...extra,operationId,candidateHash:digest(payload.candidateRaw),...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),...(r.record.guidanceHash!==undefined?{guidanceHash:r.record.guidanceHash}:{}),...(r.record.learningHash!==undefined?{learningHash:r.record.learningHash}:{}),expected:r.record.expected,operations:payload.operations,reviewedReplacements:payload.replacements,createdAt:new Date().toISOString()};
   if(r.decision){const {createdAt:oldTime,provenance:oldProvenance,...prior}=r.decision,{createdAt:newTime,provenance:newProvenance,...retry}=decision;decision.provenance=oldProvenance||decision.provenance;if(!same(prior,retry))fail('Interrupted acceptance payload differs; preserve the original decision.');}
   const guard=assistanceDirection?await assistanceDirection.captureWriteGuard(r.baseline.assistanceDirection):null;if(assistanceDirection&&typeof guard?.validate!=='function')fail('Direction final-read guard is unavailable.');
   // Persist the existing decision only after owner guards pass at the native
   // intent boundary. Interrupted authorized intents keep their exact recovery.
   const beforeIntent=()=>{const checked=guard?.validate();if(checked&&typeof checked.then==='function')fail('Direction final-read guard must be synchronous.');if(!r.decision)write(path.join(r.dir,'decision.json'),decision,true);};
   if(!guard)beforeIntent();
-  const saved=await drafts.save({...binding,operationId:args.operationId,expected:r.record.expected,operations:payload.operations},guard?{beforeIntent}:undefined);
+  const saved=await drafts.save({...binding,operationId,expected:r.record.expected,operations:payload.operations},guard?{beforeIntent}:undefined);
   if(digest(saved.raw)!==decision.candidateHash)fail('Saved candidate bytes differ; inspect journal.');write(path.join(r.dir,'decision.json'),{...decision,status:'accepted',finishedAt:new Date().toISOString()});return saved;
+ }
+ // Adrian finishes reading a draft (3 November 2026). This replaces the per-paragraph Accept:
+ // his rewrites go in as his words, marked paragraphs stay out, and the rest counts as read.
+ async function finish(args){fields(args,['requestId','operationId','edits','marks']);identifier(args.operationId);const r=load(args.requestId);
+  if(!r.proposal)fail('There is no draft to read through yet.');
+  if(r.proposal.payload.kind==='opening-options')fail('An opening is a choice. Use the selected opening instead.',400);
+  if(r.decision&&r.decision.operationId===args.operationId&&r.decision.readThrough&&r.decision.status!=='committing')return {...(await current()),readThrough:r.decision.readThrough};
+  if(r.decision&&r.decision.status!=='committing')fail('This draft was already finished or decided. Prepare new work.');
+  if(r.decision?.status==='committing'&&await resumeCommitting(r,args.operationId))return {...(await current()),readThrough:r.decision.readThrough};
+  await freshness(r);
+  const {kept,readThrough}=readThroughSelection(r.proposal.payload.replacements||[],args);
+  let taken=kept;if(!r.proposal.payload.kind)taken=kept.filter(p=>p.words!==p.before);
+  if(!taken.length){
+   // Nothing of the draft is his: record the read-through and leave the writing as it is.
+   write(path.join(r.dir,'decision.json'),{provenance:provenance(),requestId:r.record.id,proposalHash:r.proposal.hash,...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),...(r.record.guidanceHash!==undefined?{guidanceHash:r.record.guidanceHash}:{}),...(r.record.learningHash!==undefined?{learningHash:r.record.learningHash}:{}),status:'rejected',operationId:args.operationId,readThrough,createdAt:new Date().toISOString()},true);
+   return {...(await current()),readThrough};
+  }
+  let payload;
+  if(r.record.purpose==='article-continuation')payload=continuationChanges(r.baseline,r.record.id,r.record.continuation,taken.map(p=>p.words),openingChoice(r.record.continuation.openingRequestId,r.record.continuation.selectedOptionId).model);
+  else if(r.record.purpose==='sourced-paragraph')payload=taken[0].edited?sourcedEditChanges(r.baseline,r.record.id,taken[0].words):r.proposal.payload;
+  else payload=changes(r.baseline,taken.map(p=>({id:p.id,words:p.words})));
+  enforceContracts(r.baseline,payload);
+  return {...(await commit(r,args.operationId,payload,{readThrough})),readThrough};
  }
  return {
   read:()=>serial(async()=>{
@@ -259,8 +316,9 @@ export function createStudyBridge({dataDir,drafts,binding,humanDirection,editori
   context:args=>serial(async()=>{fields(args,['requestId']);const r=load(args.requestId);if(r.record.purpose==='article-continuation'||learning||r.baseline.learning!==undefined||guidance||r.baseline.guidance!==undefined||projectMaterial||r.baseline.projectMaterial!==undefined||editorialPlan||r.baseline.editorialPlan!==undefined||assistanceDirection||r.baseline.assistanceDirection!==undefined||humanDirection||r.baseline.humanDirection!==undefined||r.baseline.humanContracts!==undefined||captureContracts()!==undefined)await freshness(r);else await current();return structuredClone({...r.baseline,...(r.record.opening?{opening:r.record.opening}:{}),...(r.record.continuation?{continuation:r.record.continuation}:{})});}),
   propose:args=>serial(async()=>{fields(args,['requestId','replacements','openingOptions','continuationParagraphs','sourcedParagraph','sourcedEvidence']);const r=load(args.requestId);await freshness(r);if(r.decision)fail('Request already has a decision.');if(args.openingOptions!==undefined&&(r.record.purpose!=='opening-options'||args.replacements!==undefined)||r.record.purpose==='opening-options'&&args.openingOptions===undefined)fail('Use the exact prepared opening-options contract.');if(args.continuationParagraphs!==undefined&&(r.record.purpose!=='article-continuation'||args.replacements!==undefined||args.openingOptions!==undefined)||r.record.purpose==='article-continuation'&&args.continuationParagraphs===undefined)fail('Use the exact prepared article-continuation contract.');if(r.record.purpose==='sourced-paragraph'&&(args.sourcedEvidence===undefined||args.replacements!==undefined||args.openingOptions!==undefined||args.continuationParagraphs!==undefined)||r.record.purpose!=='sourced-paragraph'&&(args.sourcedEvidence!==undefined||args.sourcedParagraph!==undefined))fail('Use the exact prepared sourced-paragraph contract.');const payload=r.record.purpose==='sourced-paragraph'?sourcedChanges(r.baseline,r.record.id,args.sourcedParagraph,args.sourcedEvidence):args.continuationParagraphs!==undefined?continuationChanges(r.baseline,r.record.id,r.record.continuation,args.continuationParagraphs,openingChoice(r.record.continuation.openingRequestId,r.record.continuation.selectedOptionId).model):args.openingOptions!==undefined?openingChanges(r.baseline,r.record.id,args.openingOptions):changes(r.baseline,args.replacements);enforceContracts(r.baseline,payload);const proposal={requestId:r.record.id,...(r.record.humanDirectionHash!==undefined?{humanDirectionHash:r.record.humanDirectionHash}:{}),...(r.record.humanContractsHash!==undefined?{humanContractsHash:r.record.humanContractsHash}:{}),...(r.record.editorialPlanHash!==undefined?{editorialPlanHash:r.record.editorialPlanHash}:{}),...(r.record.guidanceHash!==undefined?{guidanceHash:r.record.guidanceHash}:{}),...(r.record.learningHash!==undefined?{learningHash:r.record.learningHash}:{}),payload,hash:digest(stable(payload)),createdAt:new Date().toISOString()};if(r.proposal){if(r.proposal.hash!==proposal.hash)fail('Proposal already exists; inspect review rather than retry different words.');}else write(path.join(r.dir,'proposal.json'),proposal,true);return review(r.record.id);}),
   review:args=>serial(()=>{fields(args,['requestId']);return review(args.requestId);}),
-  list:()=>serial(async()=>({items:await Promise.all(fs.readdirSync(root).filter(id=>uuid.test(id)).filter(id=>same(readJson(path.join(root,id,'request.json'),null)?.binding,binding)).map(async id=>{const r=await review(id);return {id,...(load(id).record.purpose?{purpose:load(id).record.purpose}:{}),status:r.status,stale:r.stale,...(r.purpose==='sourced-paragraph'&&r.status==='accepted'?{appliedToParagraphIds:(r.decision?.operations||[]).filter(op=>['insert','replace'].includes(op.kind)&&typeof op.id==='string').map(op=>op.id),appliedDecisionRole:r.decision?.decisionRole||null,appliedActor:r.decision?.provenance?.actor||null}:{}),sourceIds:[...load(id).record.sourceIds],...(load(id).record.answerIds?{answerIds:[...load(id).record.answerIds]}:{}),createdAt:load(id).record.createdAt};}))})),
+  list:()=>serial(async()=>({items:await Promise.all(fs.readdirSync(root).filter(id=>uuid.test(id)).filter(id=>same(readJson(path.join(root,id,'request.json'),null)?.binding,binding)).map(async id=>{const r=await review(id);return {id,...(load(id).record.purpose?{purpose:load(id).record.purpose}:{}),status:r.status,stale:r.stale,...(r.decision?.readThrough?{readThrough:true}:{}),...(r.purpose==='sourced-paragraph'&&r.status==='accepted'?{appliedToParagraphIds:(r.decision?.operations||[]).filter(op=>['insert','replace'].includes(op.kind)&&typeof op.id==='string').map(op=>op.id),appliedDecisionRole:r.decision?.decisionRole||null,appliedActor:r.decision?.provenance?.actor||null}:{}),sourceIds:[...load(id).record.sourceIds],...(load(id).record.answerIds?{answerIds:[...load(id).record.answerIds]}:{}),createdAt:load(id).record.createdAt};}))})),
   accept:args=>serial(()=>accept(args)),
+  finish:args=>serial(()=>finish(structuredClone(args))),
   contracts:()=>serial(async()=>{await current();return contractsSnapshot();}),
   humanContract:args=>serial(()=>humanContract(structuredClone(args))),
   standInContract:args=>serial(()=>proposalContract(structuredClone(args),true)),

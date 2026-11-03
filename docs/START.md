@@ -61,6 +61,8 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 | `source-history/`, transcript owner | Transcript sessions and corrections |
 | `simmer-boards/` | Simmer board layout per project: groups, block order, notes and answers, the commit sentence. Photos and his exact words stay in Library; the sent sentence is saved as the project's human direction |
 | `consent-desk/` | The truth and consent desk, one record per piece (`parentStudyId` + `pieceKey`, default `main`): claims and quotes with their source moment, people with how they appear and their consent, Share's comfort and accuracy answers, the override and the release. Agents use `consent desk|open|claim|link|flag|person|draft`; consent answers, recording a sent request, the Share answers, the override and the final yes are `human:adrian` only |
+| `voice-corrections/` | Adrian's rewrites of machine paragraphs from a finished read-through: before, after, piece, and whether he approved, dropped or sent each one |
+| `i64os-directions.json` | Optional `{"directionsDir": "<absolute path>"}`: where AR Create reads his voice (`voice-profile.md`, `body-of-work.md`) in one copy. Absent means the old local copies in `guidance/` |
 | `journal/<yyyy-mm>.jsonl`, `leases/<kind>/<id>.json` | Who did what; who holds what |
 | `provenance/`, `*-requests/` | Actor stamps, proposals awaiting a human |
 
