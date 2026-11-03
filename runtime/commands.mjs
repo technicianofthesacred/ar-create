@@ -138,8 +138,18 @@ export const CUSTOM_COMMANDS = [
 ];
 /** POST routes in the custom families that only read. */
 const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
+/**
+ * Prose saves (Adrian, 3 Nov 2026; review Track 3.1): agents never save prose directly, they propose it
+ * (study-ai.propose, shared-articles.propose, magazine.working-draft.ai.propose, the stand-in paths, and
+ * magazine.write, magazine.working-draft.save and its share-feedback save, which turn an agent's prose into a
+ * proposal). These routes write the words themselves. study-draft.undo is gated in the draft service: an agent
+ * may undo only on a structure-test copy, where its stand-in marks live.
+ */
+export const PROSE_SAVES = Object.freeze(['POST /api/study-draft/save', 'POST /api/study-draft/history-restore',
+  'POST /api/study/outputs/save', 'POST /api/study/outputs/undo', 'POST /api/study/outputs/undo-words',
+  'POST /api/study/human-direction/write', 'POST /api/study/human-direction/undo']);
 /** Decisions only a human makes. Agents propose; the record says who decided. */
-const HUMAN_ONLY = new Set(['POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
+const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
   'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
