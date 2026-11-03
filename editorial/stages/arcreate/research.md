@@ -16,7 +16,7 @@ Within a finding, make the source evidence, attributed view, interpretation, unc
 
 Go through the clean record and list every fact, name, term, date and number, each with who said it and the time. Sort each into one kind:
 
-- **Fact**: checkable. Search for it (web search, or firecrawl). Give it a verdict and its sources.
+- **Fact**: checkable. Search for it through the Hunt (below), or web search and firecrawl when the Hunt is unavailable. Give it a verdict and its sources.
 - **Opinion**: their taste or reading. Not checked; it stays as their quote.
 - **Wisdom**: a teaching ("tea is about caring for the people you serve"). Not graded: expanded (section 3).
 
@@ -27,6 +27,21 @@ Verdict, and how anything made from it may use it (the same three states as the 
 | confirmed | usable: may be stated as fact |
 | corrected, or mixed | qualified: stated only with the limiting words, written down beside it |
 | unconfirmed | held back: not stated as fact; may stay as the speaker's own view in their quote |
+
+### Searching through the Hunt (adopted 2026-11-01)
+
+Facts are searched through the i64os Hunt, so research looks from several viewpoints at once and findings build up across recordings. Plan: `i64os/todo/plans/arcreate-hunt-link.md`.
+
+1. **Open the topic's folder** with `research_pile_open`, named by topic, not by recording ("Hong Kong storage", not "Hong Kong Day 1"). One folder per topic (Adrian, 2026-11-01): a second recording on the same topic reuses it and starts from what the first found. Pass the brand as `project_slug` (Teajia: `teajia`). A recording that spans topics opens one folder per topic.
+2. **Read what is already there**: `research_angles_list` for the viewpoints already searched, and `research_primer` for claims already sorted. Use those before searching again.
+3. **Propose viewpoints** with `research_angles_propose`, giving the facts to check as the premise. This writes nothing. Show Adrian the list in plain words, with the always-present "people who tried this and it failed", and wait. He approves the viewpoints every time (Adrian, 2026-11-01); there is no auto-approve.
+4. **Add only what he approved**, one `research_angle_add` per line, in his wording. Never add a proposal he has not seen.
+5. **Run it**: `research_hunt_start`, then `research_hunt_results` until the run's status is completed, stopped or failed. A failed or empty run is said plainly, then the facts it missed are searched by web search and firecrawl.
+6. **Judge each fact from the finds.** Each find carries its source and a verified passage. Rank sources by the quality list below, then give the verdict as before. Where the folder already has a primer, its labels guide the verdict: a settled concept usually means confirmed, a contested one usually qualified (with the limiting words written down), a thin one or a claim marked fringe (carried by only one or two sources) usually unconfirmed. Each claim's supporting and contesting sources are listed; read them. The verdict is still research's own judgement against the sources, never copied from a label.
+
+Keeping or rejecting finds into the folder is Adrian's action in i64os; research never does it. Name the finds worth keeping in the research file so he can.
+
+If the Hunt tools are not available in this session (no `research_*` tools), say so in one line and search by web search and firecrawl, as before.
 
 Note each source's quality, strongest first: scholarly work, a named person who was there, reputable press, reference works, then vendor and shop blogs and forums, which are leads only. A fact resting only on leads is qualified at best, and gets a "Read" line in section 5 pointing to a stronger source. Never present a shop used as a source as Adrian's supplier, and never carry one shop's claims about its product onto a different one.
 

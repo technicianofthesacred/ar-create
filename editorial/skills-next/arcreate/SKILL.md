@@ -34,6 +34,9 @@ Steps 3 and 4 run once per recording, straight after the clean record, without b
 Every recording belongs to one brand, and each brand has a profile in [brands/](brands/): where its files live, who narrates, words to avoid, where each kind of output goes, and how research feeds anything it publishes.
 
 - [brands/teajia.md](brands/teajia.md): tea, Teajia, the magazine, Instagram, the Tea Wisdom reference.
+- [brands/art.md](brands/art.md): the sculpture and spaces practice, the Universal Language series, the Writings on adrianrasmussen.com.
+- [brands/mandala-codes.md](brands/mandala-codes.md): the Mandala Codes oracle deck, its cards and mandalas.
+- [brands/personal.md](brands/personal.md): Adrian's own life and discoveries, written as reflection.
 - A recording for a brand with no profile: build one from [brands/_template.md](brands/_template.md) by asking Adrian its five questions, once, then keep it. Never guess a brand's voice.
 
 Keep brands apart: one brand's voice, links and calls to action never appear in another's output unless Adrian bridges them himself.

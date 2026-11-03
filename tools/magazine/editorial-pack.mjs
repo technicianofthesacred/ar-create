@@ -23,6 +23,9 @@ export const PACK = [
   ...['brief', 'make', 'research'].map(n => [`stages/arcreate/${n}.md`, `arcreate/stages/${n}.md`]),
   ['brands/teajia.md', 'arcreate/brands/teajia.md'], ['brands/_template.md', 'arcreate/brands/_template.md'],
 ];
+/** Brand profiles written outside the skills (i64os door notes, answered by Adrian on 3 Nov 2026). They are in the
+ * manifest with their own source; --copy keeps their entries instead of copying them from the skills. */
+export const REPO_ONLY = ['brands/art.md', 'brands/mandala-codes.md', 'brands/personal.md'];
 /** The skill entry files are replaced, not copied (editorial/skills-next); their hashes are kept so the installer can refuse a drifted original. */
 export const ENTRIES = ['mag/SKILL.md', 'arcreate/SKILL.md'];
 
@@ -34,6 +37,8 @@ export function copyPack({skills, now = new Date()}) {
     fs.writeFileSync(path.join(EDITORIAL, to), bytes);
     files.push({path: to, source: '~/.claude/skills/' + from, sha256: sha(bytes)});
   }
+  const prior = fs.existsSync(path.join(EDITORIAL, 'MANIFEST.json')) ? JSON.parse(fs.readFileSync(path.join(EDITORIAL, 'MANIFEST.json'), 'utf8')).files : [];
+  for (const to of REPO_ONLY) { const kept = prior.find(f => f.path === to); if (kept) files.push({...kept, sha256: sha(fs.readFileSync(path.join(EDITORIAL, to)))}); }
   for (const from of ENTRIES) entries.push({source: '~/.claude/skills/' + from, sha256: sha(fs.readFileSync(path.join(skills, from)))});
   const manifest = {schema: 'ar-create.editorial-manifest.v1', copiedAt: now.toISOString(), note: 'D5 (2026-10-21): copied from the installed skills; edit here, not there, once the thin skills are installed.', files, entries};
   fs.writeFileSync(path.join(EDITORIAL, 'MANIFEST.json'), JSON.stringify(manifest, null, 1) + '\n');

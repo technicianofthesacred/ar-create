@@ -1,116 +1,134 @@
 {
-  "schema": "ar-create.editorial-manifest.v1",
-  "copiedAt": "2026-10-21T02:38:21.630Z",
-  "note": "D5 (2026-10-21): copied from the installed skills; edit here, not there, once the thin skills are installed.",
-  "files": [
-    {
-      "path": "LESSONS.md",
-      "source": "~/.claude/skills/mag/LESSONS.md",
-      "sha256": "f61332f98d63ea1483ca2ef64f3a6209da5f587aa35f2aca04a257f452353c00"
-    },
-    {
-      "path": "stages/mag/ask.md",
-      "source": "~/.claude/skills/mag/stages/ask.md",
-      "sha256": "8ceb87ebaebf95ea4c0df376dbe0907f65fba1b4c9b1b5a4f325da6469790029",
-      "editedSha256": "53ff3355ff601f5cbb99d17074bfcd295d9a86f6e2105b8769e0ae7067a66051",
-      "editedBecause": "example names replaced with invented ones (private-content rule)"
-    },
-    {
-      "path": "stages/mag/develop.md",
-      "source": "~/.claude/skills/mag/stages/develop.md",
-      "sha256": "c88a77644dc6d7e47ee01df03eac45012b90b03904ab2f1c7a6f7f498c8f2440"
-    },
-    {
-      "path": "stages/mag/intake.md",
-      "source": "~/.claude/skills/mag/stages/intake.md",
-      "sha256": "7d2282a9467fcedacccc1f303e6c5942db34e5cfcabcac972b5dec8b52ecc82a"
-    },
-    {
-      "path": "stages/mag/map.md",
-      "source": "~/.claude/skills/mag/stages/map.md",
-      "sha256": "ed17a43f10db5dc7985c516301d1d39b36bd20e109dffaebca4bfc3f65c4fedb"
-    },
-    {
-      "path": "stages/mag/photos.md",
-      "source": "~/.claude/skills/mag/stages/photos.md",
-      "sha256": "36373c17cb0f26d09522ae9df9d86645553ad42e0190859d9a463b79ce1209ac"
-    },
-    {
-      "path": "stages/mag/preview.md",
-      "source": "~/.claude/skills/mag/stages/preview.md",
-      "sha256": "765cc33c064600276f3925b2fd764f475bd3ae795e57516979c31c8ecef7e8dc"
-    },
-    {
-      "path": "stages/mag/publish.md",
-      "source": "~/.claude/skills/mag/stages/publish.md",
-      "sha256": "48dfa2174637011c52e4a3bd4abaaf73fc599d2ef9d1bfc305f5eb630a1b227f"
-    },
-    {
-      "path": "stages/mag/research.md",
-      "source": "~/.claude/skills/mag/stages/research.md",
-      "sha256": "869b767421f619d70b50f2e987a9dae7e7f69ff588e2a6c2c288a8c9d81a7d54"
-    },
-    {
-      "path": "stages/mag/review.md",
-      "source": "~/.claude/skills/mag/stages/review.md",
-      "sha256": "4b064f3d1e6fab56d6cd44d21e2b97d7b529e068e8c61310589b7b34dd8f869d"
-    },
-    {
-      "path": "stages/mag/source.md",
-      "source": "~/.claude/skills/mag/stages/source.md",
-      "sha256": "a7a3cf0aa5ab8d8cc60d44504464449af619bf52f267660492a75793fda56295"
-    },
-    {
-      "path": "stages/mag/status.md",
-      "source": "~/.claude/skills/mag/stages/status.md",
-      "sha256": "eb548d60d0b18a8769124a7c9f3f0d1dbef1a1c21a38fe3d108c01c4c8d8e779"
-    },
-    {
-      "path": "stages/mag/terms.md",
-      "source": "~/.claude/skills/mag/stages/terms.md",
-      "sha256": "942d8b60397d8cbde42935a266221627ecb0b453b591f7d3c85bd2b5ba68d574"
-    },
-    {
-      "path": "stages/mag/tidy.md",
-      "source": "~/.claude/skills/mag/stages/tidy.md",
-      "sha256": "e5d6122ab51b7cd579f948df50c0204f2ddd75b4a53f145a7c05256866bc45ec"
-    },
-    {
-      "path": "stages/arcreate/brief.md",
-      "source": "~/.claude/skills/arcreate/stages/brief.md",
-      "sha256": "f073980b7a8ac1f5381c70301ed6218ebeea7f360a688e2f7007ae2c32f9acb5",
-      "editedSha256": "db9e30fcf54a6bc8d2464436cb42a6e8ce5b8e44831ac74a207f36a7e02593a7",
-      "editedBecause": "example names replaced with invented ones (private-content rule)"
-    },
-    {
-      "path": "stages/arcreate/make.md",
-      "source": "~/.claude/skills/arcreate/stages/make.md",
-      "sha256": "f954fefce0892173dbd2d476b0795bffcc9991cd203d5735db61927ea472ac6d"
-    },
-    {
-      "path": "stages/arcreate/research.md",
-      "source": "~/.claude/skills/arcreate/stages/research.md",
-      "sha256": "5bb3a0da5d61607ec8f3f623865b172f0cdb162cb4379aa5ed0611c8cebb5d73"
-    },
-    {
-      "path": "brands/teajia.md",
-      "source": "~/.claude/skills/arcreate/brands/teajia.md",
-      "sha256": "f8e3b8b5fbf0803dc29c89290180a564bd9aae7b97cc671b82d82b743bc83193"
-    },
-    {
-      "path": "brands/_template.md",
-      "source": "~/.claude/skills/arcreate/brands/_template.md",
-      "sha256": "0ddc56d4eb999808f90c2cff7aecf3d17bf0a981c993605d1ca6608c44829e04"
-    }
-  ],
-  "entries": [
-    {
-      "source": "~/.claude/skills/mag/SKILL.md",
-      "sha256": "ddc70f361c1679a32af533718dba76ba5ce409c1938ac9fcc62fecf3bf19125c"
-    },
-    {
-      "source": "~/.claude/skills/arcreate/SKILL.md",
-      "sha256": "bfad1fc50a5409879655a48015db90851a5cfd6f30f8bb29e3919925f012854a"
-    }
-  ]
+ "schema": "ar-create.editorial-manifest.v1",
+ "copiedAt": "2026-10-21T02:38:21.630Z",
+ "note": "D5 (2026-10-21): copied from the installed skills; edit here, not there, once the thin skills are installed.",
+ "files": [
+  {
+   "path": "LESSONS.md",
+   "source": "~/.claude/skills/mag/LESSONS.md",
+   "sha256": "132101c0f718e49eca96f888cc39dab526fe1b96a34a8f8731aeb369ecf7741c",
+   "editedSha256": "f61332f98d63ea1483ca2ef64f3a6209da5f587aa35f2aca04a257f452353c00",
+   "editedBecause": "lessons added in the repo on 2026-10-24 (484afb2: the map entry and \"Research and documents are for people and agents\"); the installed copy is the 6 Oct original"
+  },
+  {
+   "path": "stages/mag/ask.md",
+   "source": "~/.claude/skills/mag/stages/ask.md",
+   "sha256": "8ceb87ebaebf95ea4c0df376dbe0907f65fba1b4c9b1b5a4f325da6469790029",
+   "editedSha256": "53ff3355ff601f5cbb99d17074bfcd295d9a86f6e2105b8769e0ae7067a66051",
+   "editedBecause": "example names replaced with invented ones (private-content rule)"
+  },
+  {
+   "path": "stages/mag/develop.md",
+   "source": "~/.claude/skills/mag/stages/develop.md",
+   "sha256": "c88a77644dc6d7e47ee01df03eac45012b90b03904ab2f1c7a6f7f498c8f2440"
+  },
+  {
+   "path": "stages/mag/intake.md",
+   "source": "~/.claude/skills/mag/stages/intake.md",
+   "sha256": "7d2282a9467fcedacccc1f303e6c5942db34e5cfcabcac972b5dec8b52ecc82a"
+  },
+  {
+   "path": "stages/mag/map.md",
+   "source": "~/.claude/skills/mag/stages/map.md",
+   "sha256": "ed17a43f10db5dc7985c516301d1d39b36bd20e109dffaebca4bfc3f65c4fedb"
+  },
+  {
+   "path": "stages/mag/photos.md",
+   "source": "~/.claude/skills/mag/stages/photos.md",
+   "sha256": "36373c17cb0f26d09522ae9df9d86645553ad42e0190859d9a463b79ce1209ac"
+  },
+  {
+   "path": "stages/mag/preview.md",
+   "source": "~/.claude/skills/mag/stages/preview.md",
+   "sha256": "765cc33c064600276f3925b2fd764f475bd3ae795e57516979c31c8ecef7e8dc"
+  },
+  {
+   "path": "stages/mag/publish.md",
+   "source": "~/.claude/skills/mag/stages/publish.md",
+   "sha256": "48dfa2174637011c52e4a3bd4abaaf73fc599d2ef9d1bfc305f5eb630a1b227f"
+  },
+  {
+   "path": "stages/mag/research.md",
+   "source": "~/.claude/skills/mag/stages/research.md",
+   "sha256": "869b767421f619d70b50f2e987a9dae7e7f69ff588e2a6c2c288a8c9d81a7d54"
+  },
+  {
+   "path": "stages/mag/review.md",
+   "source": "~/.claude/skills/mag/stages/review.md",
+   "sha256": "4b064f3d1e6fab56d6cd44d21e2b97d7b529e068e8c61310589b7b34dd8f869d"
+  },
+  {
+   "path": "stages/mag/source.md",
+   "source": "~/.claude/skills/mag/stages/source.md",
+   "sha256": "a7a3cf0aa5ab8d8cc60d44504464449af619bf52f267660492a75793fda56295"
+  },
+  {
+   "path": "stages/mag/status.md",
+   "source": "~/.claude/skills/mag/stages/status.md",
+   "sha256": "eb548d60d0b18a8769124a7c9f3f0d1dbef1a1c21a38fe3d108c01c4c8d8e779"
+  },
+  {
+   "path": "stages/mag/terms.md",
+   "source": "~/.claude/skills/mag/stages/terms.md",
+   "sha256": "942d8b60397d8cbde42935a266221627ecb0b453b591f7d3c85bd2b5ba68d574"
+  },
+  {
+   "path": "stages/mag/tidy.md",
+   "source": "~/.claude/skills/mag/stages/tidy.md",
+   "sha256": "e5d6122ab51b7cd579f948df50c0204f2ddd75b4a53f145a7c05256866bc45ec"
+  },
+  {
+   "path": "stages/arcreate/brief.md",
+   "source": "~/.claude/skills/arcreate/stages/brief.md",
+   "sha256": "f073980b7a8ac1f5381c70301ed6218ebeea7f360a688e2f7007ae2c32f9acb5",
+   "editedSha256": "db9e30fcf54a6bc8d2464436cb42a6e8ce5b8e44831ac74a207f36a7e02593a7",
+   "editedBecause": "example names replaced with invented ones (private-content rule)"
+  },
+  {
+   "path": "stages/arcreate/make.md",
+   "source": "~/.claude/skills/arcreate/stages/make.md",
+   "sha256": "f954fefce0892173dbd2d476b0795bffcc9991cd203d5735db61927ea472ac6d"
+  },
+  {
+   "path": "stages/arcreate/research.md",
+   "source": "~/.claude/skills/arcreate/stages/research.md",
+   "sha256": "460e189a3c5cb9548b551f63485a5050eb1b4b88fe2ea1f9404a432153f6f163"
+  },
+  {
+   "path": "brands/teajia.md",
+   "source": "~/.claude/skills/arcreate/brands/teajia.md",
+   "sha256": "f8e3b8b5fbf0803dc29c89290180a564bd9aae7b97cc671b82d82b743bc83193"
+  },
+  {
+   "path": "brands/_template.md",
+   "source": "~/.claude/skills/arcreate/brands/_template.md",
+   "sha256": "0ddc56d4eb999808f90c2cff7aecf3d17bf0a981c993605d1ca6608c44829e04"
+  },
+  {
+   "path": "brands/art.md",
+   "source": "i64os:todo/plans/door-notes/art.md",
+   "sha256": "3418fe98baa023db47cd3dbccebca939b1c5c34352064eefdf38c7b3975ce1ea"
+  },
+  {
+   "path": "brands/mandala-codes.md",
+   "source": "i64os:todo/plans/door-notes/mandala-codes.md",
+   "sha256": "4f8d35a7b936d783e3a505959574ed8f74538fe803790d8ea4ecaf01503f7038"
+  },
+  {
+   "path": "brands/personal.md",
+   "source": "i64os:todo/plans/door-notes/personal.md",
+   "sha256": "3b628bd1bed3307a6c97119f62ae41b69cb069a7fde907f42f3c5ca16c8a667c"
+  }
+ ],
+ "entries": [
+  {
+   "source": "~/.claude/skills/mag/SKILL.md",
+   "sha256": "ddc70f361c1679a32af533718dba76ba5ce409c1938ac9fcc62fecf3bf19125c"
+  },
+  {
+   "source": "~/.claude/skills/arcreate/SKILL.md",
+   "sha256": "bfad1fc50a5409879655a48015db90851a5cfd6f30f8bb29e3919925f012854a"
+  }
+ ],
+ "refreshedAt": "2026-11-03T02:43:20.137Z"
 }
