@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { writeWorkingOutputs } from './outputs.mjs';
+import { promptFromFile } from '../word-prompt.mjs';
 
 export const isMedia = file => /\.(m4a|mp3|wav|mov|mp4|aac|flac|ogg|opus|webm|mkv|aiff|aif|m4v)$/i.test(file);
 export function safeStory(value) {
@@ -43,6 +44,18 @@ async function keep(source, folder) {
 export function rawDocument(story, source, result, text, terms = '', note = '') {
   const scalar = v => JSON.stringify(v); // JSON quoted strings are valid YAML scalars.
   return `---\ntype: RAW\ntitle: ${scalar(story)}\nrecorded: ${scalar(new Date(fs.statSync(source).mtimeMs).toISOString().slice(0, 10))}\naudio: ${scalar(source)}\nphotos: ${scalar(path.join(path.dirname(source), 'Photos'))}\ncredit: Adrian Rasmussen\nlanguage: ${scalar(result.language || 'unknown')}\ntranscribed: ${scalar(`${new Date().toISOString().slice(0, 10)} locally; ${result.metadata?.asr_adapter || 'Whisper Large V3 MLX'}; ${result.metadata?.diarization_adapter || 'local diarization'}`)}\n${terms}---\n\n# RAW – ${story}\n\nMachine transcript, preserved as first produced. Speaker labels are automatic; names and corrections belong in SRC. Every quote is checked against this record.\n\n## Interview\n\n${text.trim()}\n${note ? `\n## Adrian's voice note\n\n${note.trim()}\n` : ''}`;
+}
+/** The vocabulary the speech model is primed with: the shared word library first (confirmed names, places and terms,
+ *  per language, inside the token budget); with nothing confirmed in it yet, the Teajia tea-terms path stays the fallback. */
+export function vocabularyPrompt(config, job) {
+  const shared = config.wordLibrary ? promptFromFile(config.wordLibrary, { language: job.language === 'zh' ? 'zh' : 'en', prefer: job.terms ? String(job.terms).split(',') : [] }) : null;
+  if (shared?.prompt) return shared.prompt;
+  if (config.teaTerms && fs.existsSync(config.teaTerms)) {
+    const args = [path.join(config.buildsDir, 'tea-terms.mjs'), '--prompt', '--lang', job.language === 'zh' ? 'zh' : 'en'];
+    if (job.terms) args.push('--terms', job.terms);
+    return execFileSync(process.execPath, args, { encoding: 'utf8', env: { ...process.env, TEA_TERMS_FILE: config.teaTerms } }).trim();
+  }
+  return '';
 }
 export async function runIntake(config, job, save = () => {}) {
   const story = safeStory(job.story);
@@ -96,12 +109,7 @@ export async function runIntake(config, job, save = () => {}) {
     }
     return { result: JSON.parse(fs.readFileSync(path.join(output, 'transcript.json'), 'utf8')), text: fs.readFileSync(path.join(output, 'transcript.txt'), 'utf8') };
   };
-  let prompt = '';
-  if (config.teaTerms && fs.existsSync(config.teaTerms)) {
-    const args = [path.join(config.buildsDir, 'tea-terms.mjs'), '--prompt', '--lang', job.language === 'zh' ? 'zh' : 'en'];
-    if (job.terms) args.push('--terms', job.terms);
-    prompt = execFileSync(process.execPath, args, { encoding: 'utf8', env: { ...process.env, TEA_TERMS_FILE: config.teaTerms } }).trim();
-  }
+  const prompt = vocabularyPrompt(config, job);
   const { result, text } = await processFile(source, job.output, job.language, prompt);
   if (job.parts) {
     result.metadata.recording_parts = job.parts;

@@ -3,6 +3,7 @@ import {StateError} from './store.mjs';
 import {isICloudAlbum} from './services/icloud-albums.mjs';
 import {INQUIRY_METHODS} from './services/inquiry-interface-routes.mjs';
 import {NEEDS_YOU_COMMANDS, NEEDS_YOU_HUMAN_ONLY, NEEDS_YOU_BODY} from './commands/needs-you.mjs';
+import {WORDS_COMMANDS, WORDS_HUMAN_ONLY, WORDS_BODY} from './commands/words.mjs';
 
 /**
  * One command registry for every entrance: the app, the CLI (agents/cli/ar-create.mjs)
@@ -125,6 +126,7 @@ const BODY = {
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
+  if (/^words(\/|$)/.test(r)) return 'transcript';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels|instagram)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
@@ -160,6 +162,7 @@ export const CUSTOM_COMMANDS = [
   ['POST', '/api/media', ['image bytes (image/jpeg|png|webp)']],
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
+  ...WORDS_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
   ['GET', '/api/simmer/material', ['subject']],
@@ -537,3 +540,6 @@ Object.assign(BODY, MAGAZINE_BODY);
 // The needs-you list (runtime/commands/needs-you.mjs): agents raise and read; only Adrian answers.
 for (const key of NEEDS_YOU_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, NEEDS_YOU_BODY);
+// The shared word library (runtime/commands/words.mjs): agents read and suggest; only Adrian confirms or answers.
+for (const key of WORDS_HUMAN_ONLY) HUMAN_ONLY.add(key);
+Object.assign(BODY, WORDS_BODY);

@@ -587,6 +587,10 @@ What follows:
 
 **Status:** item 2 is built. The Write margin reads a draft through as a whole, and Finish (`study-ai.finish`, human-only) replaces the Accept and Reject on each proposal there; untouched paragraphs count as read. Each rewrite of a machine paragraph waits as a voice correction he approves. Item 1, the daily "needs you" list, is on Home (PR #179).
 
+#### One shared transcription process — decided 3 November 2026
+
+Adrian had four transcription setups (the phone oracle, Teajia, i64os, AR Create). They become one process, so that when one improves, all do: transcribe, recognise words, check they are right, place each piece. AR Create owns it. Phase 1 is built: one shared word library (names, places, tea terms, Gene Keys, hexagrams, with their known mishearings and where each came from) primes every transcription; after a transcript exists, known mishearings of confirmed words are fixed through the existing correction receipts (the first transcript is never overwritten) and doubtful words become one steer ask per recording on the Needs you list, defaulting to "keep as heard". Adrian's confirmed spelling is remembered, so the next recording in any project gets it right. Agents may suggest words, marked as theirs; confirming a suggestion and answering a doubtful word are his, from the app. A versioned export feeds the other projects in phase 2. Detail and the export shape: [WORDS](../WORDS.md).
+
 #### Agents propose prose, never save it — decided 3 November 2026
 
 Agents never save prose directly; they propose it, and Adrian's words, adopted direction and the mark that a story is published are his alone. Enforced in the registry from Track 3.1: prose save routes answer 403 to any agent, cron or import writer. This is the rule behind "His own words and notes" in the first band above.

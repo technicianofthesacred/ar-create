@@ -413,6 +413,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(pathname==='/api/i64os/health'&&['GET','HEAD'].includes(request.method)){if(!studyDrafts)throw new StateError('Document study is not configured.',503);const sha=typeof release?.sha==='string'&&/^[a-f0-9]{7,40}$/.test(release.sha)?release.sha:null;return json(response,200,{service:'ar-create-document-study',ready:true,release:{sha}});}
       if(await continuityInterface.handle(request,response))return;
       if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
+      if(await (await import('./services/words-http.mjs')).handleWords(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;
       if(await (await import('./services/instagram-studio.mjs')).handleInstagram(request,response,{dataDir,library}))return;
       if(pathname.startsWith('/api/inquiries/')){
@@ -732,6 +733,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
     return listen.apply(this, args);
   };
   server.on('close',()=>execution.dispose());
+  { const wordsHttp=await import('./services/words-http.mjs'); wordsHttp.wordsFor({dataDir,events,recordings}).shared.start(); server.on('close',()=>wordsHttp.stopWords(dataDir)); }
   const close=server.close;
   server.close=function(callback){for(const client of [...sseClients]){client.close();client.response.end();}return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
   server.closeWorkspace=()=>store.close();
