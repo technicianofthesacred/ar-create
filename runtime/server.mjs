@@ -414,6 +414,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(await continuityInterface.handle(request,response))return;
       if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;
+      if(await (await import('./services/instagram-studio.mjs')).handleInstagram(request,response,{dataDir,library}))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);
         if(request.headers.origin&&request.headers.origin!==new URL(request.url,'http://'+request.headers.host).origin)throw new StateError('Foreign-origin inquiry request refused.',403);
