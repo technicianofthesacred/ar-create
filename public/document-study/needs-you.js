@@ -68,21 +68,35 @@
   const r=a.resolution||{},more=changing.has(a.id),text=r.choice||r.text,mine=/^human:/.test(r.by||'');
   return `<li class="ny-done-row" data-ny-ask="${esc(a.id)}"><div><p class="ny-q">${esc(a.question)}</p><p class="ny-applied"><b>${esc(text)}</b> · ${esc(mine?'you':who(r.by))} · ${esc(ago(r.at))}</p></div>${a.choices.length?`<button type="button" class="ny-choice is-quiet" data-ny-change="${esc(a.id)}" aria-expanded="${more}"${off()}>Change it</button>`:''}${more?`<div class="ny-acts ny-others" role="group" aria-label="Change it to">${a.choices.filter(c=>c!==r.choice).map(c=>choiceBtn(a,c)).join('')}</div>`:''}</li>`;
  }
+ /* Decisions about his own editorial work (choose an angle or a title, review marked passages, carousel words, marked
+    wording) used to sit in a second box lower on Home. They are folded in here as "Only you" rows: nothing about them
+    has a default, so none applies on its own. The workbench owns what they are and how they open; a tap uses its
+    existing click handling (data-wbf-author-decision / data-wbf-wording-review). */
+ const decisions=()=>{try{const v=window.c3WorkbenchFrame?.decisionAsks?.();return v&&Array.isArray(v.items)?v:{state:'ready',items:[],note:''};}catch{return {state:'ready',items:[],note:''};}};
+ function decisionRow(d){
+  const hook=d.kind==='wording-review'?'data-wbf-wording-review':'data-wbf-author-decision';
+  return `<article class="ny-ask" data-ny-decision="${esc(d.kind)}" data-band="only-adrian"><div class="ny-meta"><span class="ny-tag" data-band="only-adrian" data-status="open">Only you</span>${d.subject?`<span class="ny-about">${esc(d.subject)}</span>`:''}<span class="ny-by">From your saved work</span></div><p class="ny-q">${esc(d.label)}${d.detail?` <span class="ny-detail">· ${esc(d.detail)}</span>`:''}</p><div class="ny-acts"><button type="button" class="ny-choice" ${hook}="${esc(d.key)}"${d.canOpen===false?' disabled':''}>${esc(d.step?'Open it in '+d.step:'Open it')} <span aria-hidden="true">›</span></button></div><p class="ny-foot">Waits for you. Nothing applies on its own.</p></article>`;
+ }
  const EMPTY='<div class="ny-empty"><p class="ny-empty-t">Nothing needs you right now.</p><p class="ny-empty-s">When an agent has a question only you can answer, or one it can carry on from with a default, it lands here with one tap to answer.</p></div>';
  function html(){
   const waiting=asks.filter(a=>a.status==='open'),applied=asks.filter(a=>a.status==='defaulted'),done=asks.filter(a=>a.status==='answered').slice(0,RECENT);
-  const only=waiting.filter(a=>a.band==='only-adrian').length,steer=waiting.length-only;
+  const mine=decisions(),mineRows=mine.items.map(decisionRow);
+  const onlyAsks=waiting.filter(a=>a.band==='only-adrian'),steerAsks=waiting.filter(a=>a.band!=='only-adrian');
+  const only=onlyAsks.length+mineRows.length,steer=steerAsks.length;
   const sub=[only?only+' only you can decide':'',steer?steer+' you can steer':'',applied.length?applied.length+' applied by default':''].filter(Boolean).join(' · ');
-  let body;
-  if(failed&&!loaded)body=`<div class="ny-empty"><p class="ny-empty-t">The list could not be read.</p><p class="ny-empty-s">${esc(failed)} Nothing was lost. <button type="button" class="ny-link" data-ny-retry>Try again</button></p></div>`;
-  else if(!loaded)body='<p class="ny-loading" role="status">Reading the list…</p>';
-  else if(!waiting.length&&!applied.length)body=EMPTY;
-  else{const rows=[...waiting.map(openRow),...applied.map(appliedRow)],shown=expanded?rows:rows.slice(0,SHOW);body=`<div class="ny-list">${shown.join('')}</div>${rows.length>SHOW?`<button type="button" class="ny-more" data-ny-all aria-expanded="${expanded}">${expanded?'Show fewer':'Show all '+rows.length}</button>`:''}`;}
+  const rows=[...onlyAsks.map(openRow),...mineRows,...steerAsks.map(openRow),...applied.map(appliedRow)];
+  let body='';
+  const status=mine.note?`<p class="ny-msg" role="status">${esc(mine.note)}</p>`:'';
+  if(rows.length){const shown=expanded?rows:rows.slice(0,SHOW);body=`<div class="ny-list">${shown.join('')}</div>${rows.length>SHOW?`<button type="button" class="ny-more" data-ny-all aria-expanded="${expanded}">${expanded?'Show fewer':'Show all '+rows.length}</button>`:''}`;}
+  if(failed&&!loaded)body+=`<div class="ny-empty"><p class="ny-empty-t">The list could not be read.</p><p class="ny-empty-s">${esc(failed)} Nothing was lost. <button type="button" class="ny-link" data-ny-retry>Try again</button></p></div>`;
+  else if(!loaded)body+='<p class="ny-loading" role="status">Reading the list…</p>';
+  else if(!rows.length&&!mine.note)body=EMPTY;
   const readonly=!human()?`<p class="ny-msg" role="status">You are signed in as ${esc(actor())}. Answers are Adrian's, so these buttons are off here.</p>`:'';
   const doneBlock=loaded&&done.length?`<details class="ny-done"${doneOpen?' open':''}><summary>Answered recently · ${done.length}</summary><ul>${done.map(doneRow).join('')}</ul></details>`:'';
-  return `<div class="ny-head"><span class="ny-title">Needs you</span>${sub?`<span class="ny-sub">${esc(sub)}</span>`:''}</div>${notice?`<p class="ny-msg is-bad" role="alert">${esc(notice)}</p>`:''}${readonly}${body}${doneBlock}`;
+  return `<div class="ny-head"><span class="ny-title">Needs you</span>${sub?`<span class="ny-sub">${esc(sub)}</span>`:''}</div>${notice?`<p class="ny-msg is-bad" role="alert">${esc(notice)}</p>`:''}${readonly}${status}${body}${doneBlock}`;
  }
  function paint(){
+  if(!window.document)return;
   const d=document.getElementById('project-library'),main=d?.querySelector('.ht-home-main');if(!d?.open||!main)return;
   let band=main.querySelector(':scope>.ny-band');
   if(!band){band=document.createElement('section');band.className='ny-band';band.setAttribute('aria-label','Needs you');main.prepend(band);}
@@ -118,5 +132,5 @@
  const tick=()=>{clearInterval(timer);timer=0;const d=document.getElementById('project-library');if(!d?.open)return;timer=setInterval(()=>{if(document.visibilityState==='hidden')return;if(!document.getElementById('project-library')?.open){clearInterval(timer);timer=0;return;}void load();},POLL);};
  new MutationObserver(()=>{const d=document.getElementById('project-library');if(d&&d!==watched){watched=d;const onOpen=()=>{if(d.open){notice='';paint();void load();tick();}else tick();};new MutationObserver(onOpen).observe(d,{attributes:true,attributeFilter:['open']});onOpen();}}).observe(document.body,{childList:true});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&document.getElementById('project-library')?.open)void load();});
- window.needsYou={load,paint,asks:()=>asks.slice()};
+ window.needsYou={load,paint,asks:()=>asks.slice(),html};
 })();

@@ -83,6 +83,13 @@
    <button type="button" class="cd-btn" data-cd-save-answer="${p.id}" ${disabled}>Save answer</button></div>
    <details class="cd-sent"${open.sent?' open':''} data-cd-sent-box="${p.id}"><summary>Record that I sent the request</summary><div class="cd-row"><label class="cd-field">Date<input type="date" data-cd-sent-at="${p.id}" value="${esc(open.sentAt||today())}" ${disabled}></label><label class="cd-field cd-grow">How<input data-cd-channel="${p.id}" placeholder="WeChat, email, in person" value="${esc(open.channel||'')}" ${disabled}></label><button type="button" class="cd-btn" data-cd-sent="${p.id}" ${disabled}>Record</button></div><p class="cd-muted">AR Create never sends it. Send it yourself, then record it here.</p></details>`;
  }
+
+ // The one sentence about sources. The verb follows the count it sits beside: "1 has", "2 have", "0 have".
+ const has=n=>n===1?'has':'have';
+ function accuracySentence(s){
+  const sourced=Number(s.sourced)||0,claims=Number(s.claims)||0,unsourced=Number(s.unsourced)||0,doubtful=Number(s.doubtful)||0;
+  return `${sourced} of ${claims} ${claims===1?'claim':'claims'} ${claims===1?'has':has(sourced)} a source${unsourced?`, ${unsourced} ${has(unsourced)} none`:''}${doubtful?`, ${doubtful} doubtful`:''}.`;
+ }
  function shareHTML(id){
   const r=room(id),d=r.desk;
   if(!d)return `<h3>Before you release</h3><p class="cd-muted" role="status">${esc(r.error||'Reading consent for this piece…')}</p>`;
@@ -90,7 +97,7 @@
   const status=rel.released?.current?`<p class="cd-status cd-ok" role="status">You said yes to release on ${esc(day(rel.released.at))}. Publishing still happens from Outputs.</p>`
    :rel.ready?`<p class="cd-status cd-ok" role="status">Ready. Nothing is holding the release.${rel.overridden?' You overrode the hold: '+esc(rel.override.reason):''}</p>`
    :`<p class="cd-status cd-held" role="status"><strong>On hold.</strong> ${rel.reasons.map(esc).join(' ')}</p>`;
-  const accuracyHint=s.claims?`${s.sourced} of ${s.claims} ${s.claims===1?'claim has':'claims have'} a source${s.unsourced?', '+s.unsourced+(s.unsourced===1?' has none':' have none'):''}${s.doubtful?', '+s.doubtful+' doubtful':''}. <button type="button" class="cd-link" data-cd-go-check>See them in Check</button>`:'No claims are recorded for this piece yet.';
+  const accuracyHint=s.claims?accuracySentence(s)+' <button type="button" class="cd-link" data-cd-go-check>See them in Check</button>':'No claims are recorded for this piece yet.';
   const people=d.people.length?`<ul class="cd-list">${d.people.map(p=>`<li class="cd-person"><div class="cd-person-head"><p><strong>${esc(p.name)}</strong> <span class="cd-muted">${esc(appearsWords(p.appears))}</span></p><p>${personState(p,d)}</p></div>
     ${p.request?`<details class="cd-request"><summary>Consent request drafted by ${esc(p.request.by==='human:adrian'?'you':p.request.by.replace('agent:',''))}</summary><p class="cd-request-text">${esc(p.request.text)}</p><button type="button" class="cd-btn" data-cd-copy="${p.id}">Copy request</button></details>`:''}
     ${p.sent.length?`<p class="cd-muted">Sent ${esc(p.sent.at(-1).sentAt)} by ${esc(p.sent.at(-1).channel)}</p>`:''}
@@ -173,6 +180,6 @@
  function start(){observer.observe(document.body,{childList:true,subtree:true});paintAll();}
  // Agents write to the same record; a change event from anyone refreshes what is on screen.
  window.addEventListener('ar-live-change',e=>{const v=e.detail||{};if(v.reset||String(v.kind||'').startsWith('consent.')){const id=project();if(id&&rooms.has(id)){room(id).at=0;void load(id,{force:true});}}});
- window.arConsentDesk={load,read:id=>room(id).desk,scopeFor};
+ window.arConsentDesk={load,read:id=>room(id).desk,scopeFor,accuracySentence};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
