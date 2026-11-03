@@ -3,6 +3,8 @@
      and every person with how they appear and where their consent stands.
    - Share: the two questions (comfortable, accurate), the release hold while anyone is unanswered, Adrian's
      consent answers, the override with a reason, and the final yes.
+   Every screen with a publish-like button asks window.arConsentDesk.hold(projectId) for the same hold the server enforces,
+   and links to the desk with window.arConsentDesk.open(projectId) (also the link #consent=<project id>).
    Reads and writes go through /api/consent/* (the same commands agents call). The page acts as its own actor
    (reviewActor); for anyone but Adrian, his decisions are shown, never offered. Nothing here sends a message. */
 (()=>{
@@ -168,6 +170,21 @@
   if(anchor&&anchor!==node&&anchor.nextElementSibling!==node)anchor.after(node);else if(!anchor)ws.prepend(node);
   paint(node,'share',id);
  }
+ // ---------- the publish hold, for the screens that have a publish-like button
+ const holdFrom=d=>{const h=d?.release?.publishHold;return h?.held?{held:true,summary:h.summary,link:h.link,who:h.who||[]}:null;};
+ /** The cached hold for a project (null when nothing holds it or it is not read yet); starts the read when there is none. */
+ function hold(id){if(!id)return null;const r=room(id);if(!r.desk&&!r.loading&&!r.error)void load(id);return holdFrom(r.desk);}
+ /** Opens that project's Share screen, where the desk lives. False when this browser does not know the project. */
+ async function openDesk(id){
+  try{
+   if(typeof state==='undefined'||!state.projects?.some(p=>p.id===id))return false;
+   if(project()!==id)await window.switchProject?.(id);
+   await window.viewPhase?.(11);return true;
+  }catch{return false;}
+ }
+ const fromHash=()=>{const m=/^#consent=(.+)$/.exec(location.hash||'');if(!m)return;let id;try{id=decodeURIComponent(m[1]);}catch{return;}
+  void openDesk(id).then(ok=>{if(ok)history.replaceState(null,'',location.pathname+location.search);});};
+ window.addEventListener('hashchange',fromHash);
  let scheduled=false;
  function paintAll(){
   const id=project();if(!id)return;
@@ -175,11 +192,15 @@
   if((wantsCheck||wantsShare)&&!room(id).desk&&!room(id).loading&&!room(id).error)void load(id);
   observer.disconnect();
   try{placeCheck(id);placeShare(id);}finally{observer.observe(document.body,{childList:true,subtree:true});}
+  // Tell the other screens only when the hold itself changed, so they repaint once and never in a loop.
+  const sig=JSON.stringify(holdFrom(room(id).desk)),r=room(id);
+  if(r.desk&&r.holdSig!==sig){r.holdSig=sig;window.dispatchEvent(new CustomEvent('ar-consent-hold',{detail:{projectId:id}}));}
  }
  const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;paintAll();});});
  function start(){observer.observe(document.body,{childList:true,subtree:true});paintAll();}
  // Agents write to the same record; a change event from anyone refreshes what is on screen.
  window.addEventListener('ar-live-change',e=>{const v=e.detail||{};if(v.reset||String(v.kind||'').startsWith('consent.')){const id=project();if(id&&rooms.has(id)){room(id).at=0;void load(id,{force:true});}}});
- window.arConsentDesk={load,read:id=>room(id).desk,scopeFor,accuracySentence};
+ window.arConsentDesk={load,read:id=>room(id).desk,scopeFor,accuracySentence,hold,open:openDesk};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+ if(document.readyState==='complete')setTimeout(fromHash,800);else window.addEventListener('load',()=>setTimeout(fromHash,800));
 })();

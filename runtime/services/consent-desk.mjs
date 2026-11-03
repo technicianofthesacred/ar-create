@@ -55,18 +55,34 @@ export function personBlocker(person){
  return null;
 }
 
+/** A blocker, in plain words: "Maya has not answered yet". The one place these sentences are written. */
+export function blockerWords({name,reason}){
+ if(reason==='not asked yet')return name+' has not been asked yet';
+ if(reason==='asked, no answer yet')return name+' has not answered yet';
+ if(reason==='said no')return name+' said no';
+ const more=/^now (.+) since answering$/.exec(reason);
+ return more?name+' agreed before they also appeared as '+more[1]:name+' has not given consent ('+reason+')';
+}
+const listWords=items=>items.length<2?items.join(''):items.slice(0,-1).join(', ')+' and '+items.at(-1);
+/** Where Adrian (or anyone) goes to answer: the app opens that project's Share screen, where the consent desk lives. */
+export const deskLink=parentStudyId=>'/document-study/index.html#consent='+encodeURIComponent(parentStudyId);
+
 /** The release hold, computed from the record. Never stored, so it cannot drift from the people list. */
 export function releaseState(desk){
  const blockers=desk.people.map(p=>({personId:p.id,name:p.name,reason:personBlocker(p)})).filter(b=>b.reason);
  const override=desk.share.override,covered=!!override&&blockers.every(b=>override.covers.includes(b.personId));
  const peopleHeld=blockers.length>0&&!covered;
+ // The publish hold: the same people hold as above, named in plain English with the link to answer it.
+ // Every route that publishes, marks published, exports for posting or sets ready-to-post reads this, nothing else.
+ const publishHold={held:peopleHeld,summary:peopleHeld?listWords(blockers.map(blockerWords))+'.':'',link:deskLink(desk.parentStudyId),
+  who:peopleHeld?blockers.map(b=>({personId:b.personId,name:b.name,reason:b.reason})):[]};
  const comfort=desk.share.comfort?.answer||null,accuracy=desk.share.accuracy?.answer||null;
  const reasons=[];
  if(peopleHeld)reasons.push(blockers.length===1?blockers[0].name+' has not given consent ('+blockers[0].reason+').':blockers.length+' people have not given consent.');
  if(comfort!=='yes')reasons.push('You have not said you are comfortable sharing this.');
  if(accuracy!=='yes')reasons.push('You have not said it is accurate.');
  const ready=reasons.length===0;
- return {ready,held:peopleHeld,blockers,overridden:!!override&&covered&&blockers.length>0,override:override?{...override}:null,questions:{comfort,accuracy},reasons,
+ return {ready,held:peopleHeld,publishHold,blockers,overridden:!!override&&covered&&blockers.length>0,override:override?{...override}:null,questions:{comfort,accuracy},reasons,
   released:desk.share.release?{...desk.share.release,current:ready&&desk.share.release.revisionAtRelease===desk.revision}:null};
 }
 
@@ -97,6 +113,26 @@ export function createConsentDesk({dataDir,library}={}){
    journal:operations.slice(-30).reverse().map(o=>({operationId:o.operationId,action:o.action,by:o.by,at:o.at,summary:o.summary,...(o.reason?{reason:o.reason}:{})}))};
  }
  async function read(input){fields(input,['parentStudyId','pieceKey']);const scope=scopeOf(input);return view(load(scope).desk);}
+
+ /**
+  * The one publish check. Every route that publishes, marks published, exports for posting or sets ready-to-post asks
+  * this, with the project (and piece) the thing belongs to. A piece with no consent record has nobody listed, so
+  * nothing holds it. Read only: it never creates a record. Adrian's override (with its journaled reason) lifts the hold
+  * for exactly the people it covered; anyone added or changed since holds it again.
+  */
+ function holdFor(scopes){
+  for(const raw of scopes){
+   if(!raw||typeof raw.parentStudyId!=='string'||!raw.parentStudyId)continue;
+   const scope=scopeOf({parentStudyId:raw.parentStudyId,pieceKey:raw.pieceKey}),state=releaseState(load(scope).desk);
+   if(state.publishHold.held)return {...state.publishHold,parentStudyId:scope.parentStudyId,pieceKey:scope.pieceKey};
+  }
+  return null;
+ }
+ /** Refuses (423, with the hold attached) while anyone is unanswered; says who, and where to answer. */
+ function assertNotHeld(scopes,what='Publishing'){
+  const hold=holdFor(scopes);
+  if(hold)throw Object.assign(new StateError(what+' is on hold for consent. '+hold.summary+' Ask them, or record their answers, in the consent desk: '+hold.link+' Only Adrian can release it without every answer, and he gives his reason there.',423),{hold});
+ }
 
  /** Library passages are checked against the source text, like Simmer's exact words; recordings and photos must exist. */
  async function checkSource(source){
@@ -247,5 +283,5 @@ export function createConsentDesk({dataDir,library}={}){
   }
   return {schema:'ar-create.consent-open.v1',pieces,count:items.length,items};
  }
- return {read,open,recordClaim,linkClaim,flagClaim,clearFlag,recordPerson,draftRequest,recordSent,answer,removePerson,shareAnswer,override,release};
+ return {read,open,holdFor,assertNotHeld,recordClaim,linkClaim,flagClaim,clearFlag,recordPerson,draftRequest,recordSent,answer,removePerson,shareAnswer,override,release};
 }

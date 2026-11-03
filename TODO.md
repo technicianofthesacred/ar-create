@@ -14,7 +14,6 @@ This is the public mirror of Delivery's work checklist: open items only, no priv
 - [ ] Docked panel beside the work: Find in Library, Where it's used (photos, quotes and saved items together) and History in one place _(band: agent-runnable)_ _(effort: deep)_
 - [ ] Verify an explicit human save over an active agent lease; PR17's implementation is now installed _(band: agent-runnable)_ _(effort: moderate)_
 - [ ] Give Hermes, Grok and ChatGPT a way in on this Mac: a short skill or connector that calls the one CLI with their own actor _(band: agent-runnable)_ _(effort: moderate)_
-- [ ] Make Outputs publishing and Magazine mark-published refuse while a piece's consent desk holds release; today the hold and Adrian's yes are recorded on the desk only _(band: agent-runnable)_ _(effort: moderate)_
 - [ ] Shared words phase 2: mandalacodes, Teajia and i64os import the word library export (`words export`) at deploy for their transcription prompts and fixes; decide where the snapshot is stored so no project reads the installed `data/` directly ([how it works](docs/WORDS.md)) _(band: agent-runnable)_ _(effort: moderate)_
 
 ## Future

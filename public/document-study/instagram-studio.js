@@ -63,22 +63,24 @@
   const [w,h]=SIZE[l.format],cw=l.format==='post'||l.format==='carousel'?220:180,scale=cw/w;let t=0;
   return l.frames.map((f,i)=>{const src='/api/instagram/render?'+new URLSearchParams({id:plan.id,format:l.format,frame:String(i)}),png='/api/instagram/png?'+new URLSearchParams({id:plan.id,format:l.format,frame:String(i)});
    const time=f.seconds?'<span>'+Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')+' · '+f.seconds+'s</span>':'';if(f.seconds)t+=f.seconds;
-   return '<figure class="igs-frame"><div class="igs-clip" style="width:'+cw+'px;height:'+Math.round(h*scale)+'px"><iframe title="Frame '+(i+1)+'" src="'+esc(src)+'" loading="lazy" tabindex="-1" style="width:'+w+'px;height:'+h+'px;transform:scale('+scale+')"></iframe></div><figcaption><span>'+(i+1)+'</span>'+time+'<a href="'+esc(src)+'" target="_blank" rel="noopener">Full size</a><a href="'+esc(png)+'" download>PNG</a></figcaption></figure>';}).join('');
+   return '<figure class="igs-frame"><div class="igs-clip" style="width:'+cw+'px;height:'+Math.round(h*scale)+'px"><iframe title="Frame '+(i+1)+'" src="'+esc(src)+'" loading="lazy" tabindex="-1" style="width:'+w+'px;height:'+h+'px;transform:scale('+scale+')"></iframe></div><figcaption><span>'+(i+1)+'</span>'+time+'<a href="'+esc(src)+'" target="_blank" rel="noopener">Full size</a>'+(plan.publishHold?'<span class="igs-off" title="On hold for consent">PNG</span>':'<a href="'+esc(png)+'" download>PNG</a>')+'</figcaption></figure>';}).join('');
  }
+ // The consent hold: the same check the server enforces on the yes, the PNGs and the reel words. Says who is unanswered and where to answer.
+ function holdHTML(hold,after){if(!hold)return '';return '<span class="ar-hold igs-hold" '+(after?'':'id="igs-hold-note" ')+'role="status">'+(after?'Held again for consent. ':'On hold for consent. ')+esc(hold.summary)+(hold.link?' <a class="ar-hold-link" href="'+esc(hold.link)+'" data-igs="consent">Open the consent desk ›</a>':'')+'</span>';}
  function madeHTML(){
   const made=Object.keys(plan.layouts);if(!made.length)return '<div class="igs-empty"><p><b>Nothing made yet.</b> Once you pick a story, Claude lays it out with one template per frame: your words exactly as you said them, a caption drafted for you to change.</p></div>';
   if(!made.includes(format)){const pick=plan.stories.find(x=>x.id===(plan.chosen?.storyId||plan.heard?.storyId));format=pick&&made.includes(pick.format)?pick.format:made[0];}
   const l=plan.layouts[format],story=plan.stories.find(s=>s.id===l.storyId),r=plan.ready?.[format];
   const otherStory=plan.chosen?.storyId&&plan.chosen.storyId!==l.storyId,caption=l.captionFinal??l.caption.text??'';
-  const reason=!isAdrian()?'Only Adrian gives the final yes':!plan.chosen?'Pick or name the story first':otherStory?'This was made for another story than the one you chose':'';
+  const hold=plan.publishHold,reason=hold?'On hold for consent':!isAdrian()?'Only Adrian gives the final yes':!plan.chosen?'Pick or name the story first':otherStory?'This was made for another story than the one you chose':'';
   return '<div class="igs-tabs" role="tablist">'+Object.keys(FORMAT).map(f=>'<button type="button" role="tab" data-igs="format" data-f="'+f+'" aria-selected="'+(f===format)+'" '+(plan.layouts[f]?'':'disabled title="Not made yet"')+'>'+FORMAT[f]+(plan.ready?.[f]?' · ready':'')+'</button>').join('')+'</div>'
-   +'<p class="igs-dim">'+esc(FORMAT[format])+' of “'+esc(story?.title||'a story')+'”, laid out by '+esc(who(l.builtBy))+'. '+l.frames.length+' frame'+(l.frames.length>1?'s':'')+(format==='reel'?' · '+Math.round(l.frames.reduce((a,f)=>a+(f.seconds||0),0))+' seconds · <a href="/api/instagram/captions?id='+esc(plan.id)+'" download>On-screen words (.srt)</a>':'')+'</p>'
+   +'<p class="igs-dim">'+esc(FORMAT[format])+' of “'+esc(story?.title||'a story')+'”, laid out by '+esc(who(l.builtBy))+'. '+l.frames.length+' frame'+(l.frames.length>1?'s':'')+(format==='reel'?' · '+Math.round(l.frames.reduce((a,f)=>a+(f.seconds||0),0))+' seconds · '+(plan.publishHold?'<span class="igs-off" title="On hold for consent">On-screen words (.srt)</span>':'<a href="/api/instagram/captions?id='+esc(plan.id)+'" download>On-screen words (.srt)</a>'):'')+'</p>'
    +'<div class="igs-strip">'+framesHTML(l)+'</div>'
    +'<details class="igs-said"><summary>On screen, word for word</summary><ol>'+l.frames.map((f,i)=>'<li><span class="igs-lab">Frame '+(i+1)+'</span>'+f.words.map(w=>'<p><span class="igs-speech">“'+esc(w.text)+'”</span> <span class="igs-who">'+esc(at(w.lineId))+(w.corrected?' · with your correction':'')+'</span></p>').join('')+'</li>').join('')+'</ol></details>'
    +((l.caption.parts||[]).length?'<div class="igs-parts"><span class="igs-lab">Caption, part by part</span>'+l.caption.parts.map(p=>p.kind==='quote'?'<p><span class="igs-tag">His words · '+esc(at(p.lineId))+'</span><span class="igs-speech">“'+esc(p.text)+'”</span></p>':p.kind==='suggested'?'<p><span class="igs-tag warn">Suggested wording</span>'+esc(p.text)+'<span class="igs-orig">Original, '+esc(at(p.lineId))+': <span class="igs-speech">“'+esc(p.original)+'”</span></span></p>':'<p><span class="igs-tag">Drafted by '+esc(who(l.caption.by))+'</span>'+esc(p.text)+'</p>').join('')+'</div>':'')
    +'<label class="igs-cap"><span class="igs-lab">Caption · '+(l.captionFinal!=null?'yours':l.caption.text?'drafted by '+esc(who(l.caption.by))+', yours to change':'not drafted yet')+'</span><textarea rows="5" maxlength="2200" data-igs="caption" '+(isAdrian()&&!r?'':'readonly')+'>'+esc(caption)+'</textarea><span class="igs-count" data-igs="count"></span></label>'
-   +(r?'<p class="igs-ready">You said yes '+esc(new Date(r.at).toLocaleString())+'. Nothing was posted from here: post it yourself when you are ready.</p>'
-     :'<div class="igs-go"><button type="button" class="igs-primary" data-igs="ready" '+(reason?'disabled title="'+esc(reason)+'"':'')+'>Ready to post</button><span class="igs-dim">'+esc(reason||'Ready records your yes with this caption. Nothing is posted from here.')+'</span></div>');
+   +(r?'<p class="igs-ready">You said yes '+esc(new Date(r.at).toLocaleString())+'. Nothing was posted from here: post it yourself when you are ready.</p>'+holdHTML(hold,true)
+     :'<div class="igs-go"><button type="button" class="igs-primary" data-igs="ready" '+(reason?'disabled title="'+esc(reason)+'"':'')+(hold?' aria-describedby="igs-hold-note"':'')+'>Ready to post</button>'+(hold?holdHTML(hold,false):'<span class="igs-dim">'+esc(reason||'Ready records your yes with this caption. Nothing is posted from here.')+'</span>')+'</div>');
  }
  function render(){
   const body=$('.igs-body');
@@ -99,6 +101,7 @@
  function onClick(e){
   const b=e.target.closest('[data-igs]');if(!b||b.disabled)return;const what=b.dataset.igs;
   if(what==='close')return close();
+  if(what==='consent'){e.preventDefault();const id=plan?.publishHold?.parentStudyId||plan?.subject||'';close();if(id)void window.arConsentDesk?.open?.(id);return;}
   if(what==='choose')return act('/api/instagram/choose',{storyId:b.dataset.id,forWhom:dlg.querySelector('[name=forWhom]')?.value||''},'Chosen. Claude can lay it out now.');
   if(what==='format'){format=b.dataset.f;return render();}
   if(what==='moment')return momentDetail(b.dataset.id);

@@ -42,11 +42,20 @@ const scopeFor = rel => { const s = rel && storyFromName(rel); return s ? {kind:
 const MAKE_DIRS = rel => /^Workflow\/4-Review\/_blind$/.test(rel) || /^Workflow\/5-Social\/[A-Z][A-Z ]{1,30} - [^/]+$/.test(rel) || /^_archive\/Superseded drafts(\/[^/]+)?$/.test(rel) || /^Issues\/[^/]+$/.test(rel);
 const FILES_DIRS = rel => /^[^/]+$/.test(rel) && rel !== 'Drop' || /^[^/]+\/Photos$/.test(rel);
 
-export function createMagazineVault({vaultRoot = null, filesRoot = null, drops = [], writable = false, exportStaging = null, dataDir, machine, bootId, now = () => Date.now(), events = null, journal = null, leases = null, editorialRoot = null, magSendRepo = null, previewPort = 8766, intakeEngine = null} = {}) {
+export function createMagazineVault({vaultRoot = null, filesRoot = null, drops = [], writable = false, exportStaging = null, dataDir, machine, bootId, now = () => Date.now(), events = null, journal = null, leases = null, editorialRoot = null, magSendRepo = null, previewPort = 8766, intakeEngine = null, consentDesk = null} = {}) {
   const configured = typeof vaultRoot === 'string' && vaultRoot.length > 0;
   const home = ensurePrivateDirectory(dataDir, 'magazine');
   const dirs = Object.fromEntries(['operations', 'proposals', 'undone', 'tmp', 'sends', 'recovered-locks', 'intake'].map(d => [d, ensurePrivateDirectory(home, d)]));
   const projects = createMagazineProjects({dataDir});
+  // The consent desk's one publish check, by the story a working file belongs to: the registered story id, and the id its file name
+  // gives (they match for a draft; a made file's name can carry more). Publishing, marking published and saving the posting files
+  // all stop here while anyone on the story is unanswered.
+  const holdStory = (rel, what) => {
+    if (!consentDesk) return;
+    let registered = null; try { registered = projects.byFile(rel)?.storyId ?? null; } catch { /* an unreadable index never hides the name-derived id */ }
+    const ids = [...new Set([registered, scopeFor(rel)?.id].filter(Boolean))];
+    if (ids.length) consentDesk.assertNotHeld(ids.map(parentStudyId => ({parentStudyId})), what);
+  };
   let state = null;
   function roots() {
     if (!configured) throw new StateError('No magazine folder is configured in this AR Create (magazine.vaultRoot).', 503);
@@ -373,6 +382,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     requireHuman('Saving the approved slides');
     fields(input, ['path', 'staged', 'files', 'caption', 'operationId'], ['path', 'staged', 'files', 'operationId']);
     const rel = socialFile(input.path), folder = rel.replace(/\.md$/, '');
+    holdStory(rel, 'Saving the slides for posting');
     if (!exportStaging) throw new StateError('No export staging folder is configured (magazine.exportStaging).', 503);
     if (typeof input.staged !== 'string' || !/^[A-Za-z0-9._-]{1,80}$/.test(input.staged) || input.staged.startsWith('.')) throw new StateError('staged must name a folder in the export staging area.', 400);
     if (!Array.isArray(input.files) || !input.files.length || input.files.length > 30) throw new StateError('files lists 1 to 30 staged slides.', 400);
@@ -530,7 +540,9 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     requireHuman('Publishing');
     fields(input, ['path', 'piece', 'expectedHash', 'operationId'], ['path', 'piece', 'expectedHash', 'operationId']);
     requireWritable();
-    const rel = devFile(input.path), cur = io('mag').read(rel);
+    const rel = devFile(input.path);
+    holdStory(rel, 'Publishing');
+    const cur = io('mag').read(rel);
     if (cur.hash !== expected(input.expectedHash)) throw new StateError('The draft changed since you read it; read it again before saying publish.', 409);
     const record = {schema: 'ar-create.magazine-send.v1', path: rel, piece: input.piece, hash: cur.hash, approvedBy: ctx().actor, at: new Date(now()).toISOString(), operationId: input.operationId};
     atomicWrite(path.join(dirs.sends, input.operationId + '.json'), JSON.stringify(record, null, 1) + '\n', {exclusive: true});
@@ -539,13 +551,16 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
   function sendApproval({path: value}) {
     const rel = devFile(value), cur = io('mag').read(rel);
     const rows = fs.readdirSync(dirs.sends).map(n => readJson(path.join(dirs.sends, n), null)).filter(r => r && r.path === rel).sort((a, b) => b.at.localeCompare(a.at));
-    return {path: rel, hash: cur.hash, approval: rows.find(r => r.hash === cur.hash) || null, older: rows.filter(r => r.hash !== cur.hash).length};
+    let registered = null; try { registered = projects.byFile(rel)?.storyId ?? null; } catch { /* name-derived id below */ }
+    const hold = consentDesk ? consentDesk.holdFor([...new Set([registered, scopeFor(rel)?.id].filter(Boolean))].map(parentStudyId => ({parentStudyId}))) : null;
+    return {path: rel, hash: cur.hash, approval: rows.find(r => r.hash === cur.hash) || null, older: rows.filter(r => r.hash !== cur.hash).length, hold};
   }
   async function markPublished(input) {
     requireHuman('Marking a draft published');
     fields(input, ['path', 'link', 'expectedHash', 'operationId'], ['path', 'link', 'expectedHash', 'operationId']);
     const rel = devFile(input.path);
     if (!/^https:\/\/(www\.)?teajia\.com\/[\w/.-]+$/.test(String(input.link))) throw new StateError('link is the live teajia.com page.', 400);
+    holdStory(rel, 'Marking this published');
     const approval = sendApproval({path: rel}).approval;
     if (!approval || approval.hash !== input.expectedHash) throw new StateError('Adrian has not said publish for this exact draft (magazine.send).', 403);
     return transform({command: 'magazine.mark-published', rel, operationId: input.operationId, input: {path: rel, link: input.link}, expectedHash: expected(input.expectedHash), doing: 'marking the draft published'}, text => {

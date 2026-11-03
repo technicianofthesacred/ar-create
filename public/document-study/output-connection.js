@@ -103,7 +103,7 @@
    const fresh=await readMagazineEdition(q);if(JSON.stringify(fresh)!==exact)throw Error('The saved article changed while its download was prepared.');
    assertCurrent();const title=Array.isArray(read.spec?.title)?read.spec.title.join(' '):read.spec?.title||'Working article';
    const name=(String(title).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'article')+'-working-'+read.ownerRef.hash.slice(0,8)+'.html';
-   const result=await api('/api/magazine/working-draft/export',{storyId:read.ownerRef.projectId,pieceId:read.ownerRef.pieceId,expectedHash:read.ownerRef.hash,renderRevision:read.revision,name,body});
+   const result=await api('/api/magazine/working-draft/export',{parentStudyId:q.projectId,storyId:read.ownerRef.projectId,pieceId:read.ownerRef.pieceId,expectedHash:read.ownerRef.hash,renderRevision:read.revision,name,body});
    const artifact=result.artifact,bytes=new TextEncoder().encode(body),bodyHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
    if(artifact?.exportKind!=='magazine-working-html'||artifact.hash!==bodyHash||artifact.sizeBytes!==bytes.length||artifact.sourceBinding?.sourceHash!==q.expectedHash||artifact.sourceBinding?.renderRevision!==read.revision||artifact.sourceBinding?.owner?.storyId!==read.ownerRef.projectId||artifact.sourceBinding?.owner?.pieceId!==read.ownerRef.pieceId||artifact.deliveryState!=='created')throw Error('The saved export receipt could not be confirmed. No download was requested.');
    assertCurrent();const after=await readMagazineEdition(q);if(JSON.stringify(after)!==exact)throw Error('The article changed. Its earlier export is retained; no download was requested.');assertCurrent();
