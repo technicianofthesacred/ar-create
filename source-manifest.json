@@ -1147,7 +1147,7 @@
     {
       "path": "public/document-study/output-overview.js",
       "sourceSha256": "49d8cd5e74637e4dd512888d4d933186a32437a0e58addc9a2b59f761b2e015c",
-      "candidateSha256": "c15e9c085540c7c7e49d39065a16f9500dcc1390c0d493ef1ff530e30899043c",
+      "candidateSha256": "a531ef26184d12bf29ba5890d41dadaa66f75d5652469aab8cc6bfcce2e8f3db",
       "adapted": true
     },
     {
@@ -1363,7 +1363,7 @@
     {
       "path": "runtime/services/native-output-factory.mjs",
       "sourceSha256": "2acdcbe50a074e2f076a5f9acd5f7b3feabbee66b68c4675ec6224d45d9287be",
-      "candidateSha256": "cbe7c3ba9ae90b893e89791bb6827eca30cad2aaaf5eeb201fb7a75dfaee1ddc",
+      "candidateSha256": "cb58e4c47c4c67f5368d3d847cdda92690539cff6fa14475350ade94e4140dce",
       "adapted": false
     },
     {
@@ -4109,7 +4109,7 @@
     },
     {
       "path": "tests/output-render-lifecycle.test.mjs",
-      "candidateSha256": "deb06a756d9ffeef3dc726c984a90b7963e028bf5ceb9880a46d52cb1d42c19d"
+      "candidateSha256": "c2e506289828c18cc9520ccae567cd8ceeccbde7ce8b9560618298c562d3e0e1"
     },
     {
       "path": "tests/source-location-browser.test.mjs",
@@ -4781,11 +4781,11 @@
     },
     {
       "path": "public/document-study/combined-previews.js",
-      "candidateSha256": "ef5e8b56a979fdaccda817ae448b25af43e857c081ef54040902a5d480f4825c"
+      "candidateSha256": "9e5ef1fbf96eb12c1f8026e1db0f21335a45b369e2978c095fce244ddceb6dbf"
     },
     {
       "path": "tests/combined-previews.test.mjs",
-      "candidateSha256": "e129f8c43752c03010eb9f5d01f613dfa1834c6e6a64e74141064a812a82871f"
+      "candidateSha256": "78a38e7f3165f8102ed86242d23d864608ff4554c37c70d625dffb72b13192b0"
     },
     {
       "path": "public/document-study/combined-phone.css",
