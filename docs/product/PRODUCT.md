@@ -585,7 +585,7 @@ What follows:
 3. Talking goes to one place: anything he says is filed by the agent into the right group, note or answer.
 4. Merging after green checks is automatic once his permission settings allow agent merges.
 
-**Status:** item 2 is built. The Write margin reads a draft through as a whole, and Finish (`study-ai.finish`, human-only) replaces the Accept and Reject on each proposal there; untouched paragraphs count as read. Each rewrite of a machine paragraph waits as a voice correction he approves. The daily "needs you" list (item 1) is not built.
+**Status:** item 2 is built. The Write margin reads a draft through as a whole, and Finish (`study-ai.finish`, human-only) replaces the Accept and Reject on each proposal there; untouched paragraphs count as read. Each rewrite of a machine paragraph waits as a voice correction he approves. Item 1, the daily "needs you" list, is on Home (PR #179).
 
 #### Agents propose prose, never save it — decided 3 November 2026
 
