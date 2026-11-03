@@ -70,7 +70,7 @@ const BODY = {
   '/api/magazine/library-photos/album': ['action','folderId','operationId','expectedRevision','expectedHash','photo:{rootId,sourceId,revision,sourceHash}'],
   '/api/library/folders': ['domain', 'action', 'operationId', 'expectedRevision', 'expectedHash', 'folderId?', 'parentId?', 'name?', 'sourceIds?', 'undoOperationId?'],
   '/api/concepts': ['parentStudyId', 'title', 'operationId'],
-  '/api/concept/save': ['parentStudyId', 'operationId', 'expectedRevision', 'expectedHash', 'authorThoughts', 'adoptedDirection?', 'aiInterpretation', 'suggestions', 'sourceSelections', 'body?', 'replaceExistingDirection?'],
+  '/api/concept/save': ['parentStudyId', 'operationId', 'expectedRevision', 'expectedHash', 'authorThoughts', 'adoptedDirection?', 'aiInterpretation', 'suggestions', 'sourceSelections', 'body?', 'replaceExistingDirection?', 'dictated? (true: an agent appends the author\'s words verbatim)'],
   '/api/concept/sources/search': ['parentStudyId?', 'query', 'limit?'],
   '/api/study/structure-tests/research-note':['bindingId','parentStudyId','operationId','expectedRevision','expectedHash','kind','pointId','title','text','origin'],
   '/api/research/atlas/search':['query','limit?'],
