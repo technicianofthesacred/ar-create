@@ -326,7 +326,7 @@ Adopted product direction from the author's conversation. Requirements C01/C02/C
 
 **Bounded delegation:** each assignment identifies the intended project, useful result, current direction, allowed changes and stopping conditions. The agent asks a few high-value questions, gathers permitted material, explains uncertainties and prepares alternatives. Learning/research can continue without an output or an adopted angle. Discover important questions beyond those already raised by the author; do not research only to confirm an existing position. Editorial suggestions remain provisional until the actual human choice; do not add an approval gate to every routine preparation action.
 
-**Attention states:** distinguish work that genuinely needs a human decision, work ready for optional input while preparation can continue, and routine work already handled. These meanings are adopted; exact labels/layout remain design choices. Show a specific question and the affected work when blocked, not a vague request to supervise. Critical guidance should be useful and explain its basis without interrupting every task.
+**Attention states:** distinguish work that genuinely needs a human decision, work ready for optional input while preparation can continue, and routine work already handled. These meanings are adopted; exact labels/layout remain design choices. Show a specific question and the affected work when blocked, not a vague request to supervise. Critical guidance should be useful and explain its basis without interrupting every task. The three states became three bands of asks on 3 November 2026: see "When to ask Adrian" under 3 November.
 
 **Continuous collection and learning:** new notes, recordings, passages, images and links can enter the same project later. Reuse existing Library/Material/source relationships, keep origins and processing status, and show affected downstream work without silent rewriting. Research can draw on personal material, books, Tea Atlas and outside references through authorized connections. Keep exact passages, real locations/edition or URL/date, conflicting evidence, uncertainty and the author's response distinct. Owning/AI-processing a book is not personal reading, endorsement or factual verification.
 
@@ -524,7 +524,7 @@ Adrian’s “How AI helps” answers adopt paragraph drafts from the subject’
 
 C01/C03/C04/C05/C06, S03/S04/S05/S07. After completing the Direction choice loop, connect AI help inside the selected piece. AI researches, finds sources and connects the subject’s own material, then proposes paragraph drafts. Every claim must link to its exact source, transcript moment or passage on the author’s own page. No source means no sentence: leave a marked gap with the open question and who could answer it when supported by the material; otherwise say the answerer is unknown. Never invent a person.
 
-Drafts and edits wait in the margin with human-only Accept and Reject. Nothing is inserted automatically. After human acceptance, the paragraph belongs to the author and remains directly editable under the existing manuscript owner. AI never edits the author’s own page, including “What I want this to say.” This is adopted intent, not a connected or executed capability today; it grants no provider setup or execution. Combined retains all 35 functions: 14 kept, 16 made better (including AI help in Write), and 5 moved.
+Drafts and edits wait in the margin with human-only Accept and Reject. (Changed on 3 November 2026: drafts are read and edited as a whole; see "When to ask Adrian". The per-paragraph Accept in the code is unchanged until the next code step.) Nothing is inserted automatically. After human acceptance, the paragraph belongs to the author and remains directly editable under the existing manuscript owner. AI never edits the author’s own page, including “What I want this to say.” This is adopted intent, not a connected or executed capability today; it grants no provider setup or execution. Combined retains all 35 functions: 14 kept, 16 made better (including AI help in Write), and 5 moved.
 
 #### Combined workspace — adopted 30 October 2026
 
@@ -543,3 +543,44 @@ The separately supplied drawings contain invented demonstration content: do not 
 Adrian approved completing the installed recording → Library → Source → Research → Direction → Write → Check → Media/Arrange → Audience → Share → Outputs structure. First create Hong Kong Day 1 · structure test from the real subject material under independent owned working files. Preserve the original and prove it with before/after hashes; its editorial decisions remain pending. Stand-in decisions are allowed only on the explicitly registered test copy, visibly labelled stand-in and attributed to the agent, never human:adrian. This is a copy-scoped testing exception, not general agent editorial authority.
 
 Reuse existing owners and finish available not-connected functions stage by stage: Write AI/protection/Focus/versions/overrides; Research; Direction decisions; local production/media/Video; reviewed language tools; Gather; Home. Existing signed-in AI connections may prepare sourced proposals, with exact citations or marked gaps and no automatic author-page edits. No invented sample content enters the installed app. Outside posting/publication, public URLs, Share sending, new keys/accounts/paid services remain excluded. A private reader confined to this Mac is allowed. If genuine media, access or a human permission is missing, record the gate and continue independent work. Follow the approved Combined rules and report each installed capability on the structure test copy. Details and acceptance sequence are in [the structure-test program](../plans/2026-10-31-structure-test-program.md).
+
+### 3 November
+
+#### When to ask Adrian — decided 3 November 2026
+
+Adrian does not want to be the middle man, waiting to say yes. In the conversation that set this up, about 35 asks reached him in one day and about 8 needed him. This turns the attention states above into three bands. Every agent and every AR Create screen sorts its asks into them.
+
+**Only Adrian.** He makes these; nobody waits on him to approve them.
+- Living it and talking it out.
+- His own words and notes.
+- Feeling checks: true for him, or borrowed.
+- Naming the dish.
+- Who a piece is for.
+- Consent for the people he shows.
+- The final yes to publish or send.
+
+**He steers, the agent defaults.** The agent picks and carries on; he changes it only if he cares.
+- Which group a fragment belongs in.
+- Draft paragraphs: he reads and edits them; no Accept click on each.
+- Design: one strong default, not three options.
+- Door-note details such as links and handles.
+- Angles and titles.
+
+**The agent handles it and reports after.** He sees these only when something breaks.
+- Transcripts and speaker names.
+- Fact checks, raising only the doubtful ones.
+- Merging after tests pass.
+- Waiting on checks and rebuilds.
+- Filing, tidying, captions.
+
+What follows:
+1. Asks arrive as one "needs you" list a day. Each carries a default that applies if he does not answer.
+2. Drafts are read and edited as a whole. This replaces per-paragraph Accept and Reject in the margin (30 October, "Sourced AI help in Write") and the August ruling that a piece cannot finish while any block is untouched machine prose: one read-through in which he marks what is not him; untouched text counts as read once he says finish.
+3. Talking goes to one place: anything he says is filed by the agent into the right group, note or answer.
+4. Merging after green checks is automatic once his permission settings allow agent merges.
+
+**Status:** adopted intent, documentation only. Nothing in the code changed with this entry. The next code step is item 2: replace the per-paragraph Accept in Write with the whole-draft read-through. The daily "needs you" list (item 1) is not built.
+
+#### Agents propose prose, never save it — decided 3 November 2026
+
+Agents never save prose directly; they propose it, and Adrian's words, adopted direction and the mark that a story is published are his alone. Enforced in the registry from Track 3.1: prose save routes answer 403 to any agent, cron or import writer. This is the rule behind "His own words and notes" in the first band above.
