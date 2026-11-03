@@ -3417,7 +3417,7 @@
     },
     {
       "path": "public/document-study/workbench-frame.js",
-      "candidateSha256": "220c232a217efc35d2e7f839bdeacfbb9a9d07c3b1ea9f63a97b846dfd60399c"
+      "candidateSha256": "fc950a95cd9f4cabeafa9f1c1dbe0c9490c29d4bcb318756080ef1aaf176f171"
     },
     {
       "path": "public/document-study/workbench-surfaces.css",
@@ -3473,7 +3473,7 @@
     },
     {
       "path": "public/document-study/workbench-bench-match.css",
-      "candidateSha256": "c8c695c77f99e659b8bf2ac8c03c095d60f1f14a676b48f32f603ccaa9486ad4"
+      "candidateSha256": "6971b51f1394a91d08cd26e6a20d5955b37f419e6248f5c1ca6c1db66a4d28fc"
     },
     {
       "path": "public/document-study/workbench-check-match.css",
@@ -3901,7 +3901,7 @@
     },
     {
       "path": "tests/bench-catalog-ui.test.mjs",
-      "candidateSha256": "d9e8906fd7624045f442dc96ff9cf22bce0b35fc37b1917877c2a77beda3b102"
+      "candidateSha256": "79384402346224c559507ac5fb2d5d75d96873e5c38bea5ab154a9a636c06bd6"
     },
     {
       "path": "tests/bench-projection.test.mjs",
