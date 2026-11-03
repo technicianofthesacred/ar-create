@@ -59,6 +59,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 | `workspaces/<projectId>/` | `HUMAN-DIRECTION.md` (the concept brief), its history |
 | `articles/`, `carousels/`, `native-outputs/` | Output wording, editions, exports |
 | `source-history/`, transcript owner | Transcript sessions and corrections |
+| `simmer-boards/` | Simmer board layout per project: groups, block order, notes and answers, the commit sentence. Photos and his exact words stay in Library; the sent sentence is saved as the project's human direction |
 | `journal/<yyyy-mm>.jsonl`, `leases/<kind>/<id>.json` | Who did what; who holds what |
 | `provenance/`, `*-requests/` | Actor stamps, proposals awaiting a human |
 

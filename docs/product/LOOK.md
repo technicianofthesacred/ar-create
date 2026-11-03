@@ -16,6 +16,7 @@ The look is a set of add-on modules loaded last in `public/document-study/index.
 | `research-tab.*` | Research across pieces as quote cards: speaker initial, the spoken words in serif, filled evidence chips, source (read-only; decisions open the piece's own Research) |
 | `waiting-band.*` | "Waiting on you" band on Home, from recorded output statuses |
 | `empty-states.*` | What every empty step shows: the shape of what comes (Arrange a filmstrip of 4:5 slide slots, Audience a phone frame), the real next step, how it fills |
+| `simmer.*` | Simmer: a subject's material on a pannable, zoomable board before it is named, opened from the subject on Home as its own full-width mode. Groups float; blocks snap inside them and make room when dragged; click a block to edit; Forming (held items, possible dishes, the commit sentence) on the right, shown by default and can be put away. Built from the approved board mockup of 3 Nov 2026. Layout saves through `/api/simmer/board`; photos go to Library; Send writes the project's human direction |
 | `c3-defaults.css` | Default look for any plain new button, field, disclosure or heading |
 | `c3-theme.css` | Palette, Plus Jakarta Sans for the interface (local files), scrollbars, dark default. Loaded last. On screen, the manuscript in Write / Read / Check uses Notion-style system sans (16px / 1.5, 40px title, 24px sections, about 700px wide) on full-width paper; the reader's own size (A− / A+ in the bottom bar, 87.5–137.5%) is kept on this device. Templates and exports keep their own type. |
 
