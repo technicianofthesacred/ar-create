@@ -434,3 +434,23 @@ html body .wfb-shelves button[aria-selected="true"]{color:var(--ink,#e7e1d3)!imp
 .wfb-project-table{width:100%;border-collapse:collapse;font-size:13.5px}
 .wfb-project-table th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim,#8f897c);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line,#3a362f)}
 .wfb-project-table td{padding:9px 10px;border-bottom:1px solid var(--line,#3a362f);vertical-align:baseline}
+/* Preview: quiet sections divided by thin lines, no boxes. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-peek-box,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use{border:0!important;border-radius:0!important;background:transparent!important;padding:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek header{padding:0 0 6px!important;font-size:var(--t-label,12px)!important;color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-peek-box ul,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-peek-box li,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:2px 10px;padding:8px 0!important;border:0!important;border-bottom:1px solid var(--line)!important;font:var(--t-body) var(--ar-ui);color:var(--ink)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-peek-box p,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use p{border:0!important;padding:6px 0 0!important;color:var(--dim)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>button[data-wfb-use]{flex:1;text-align:left;background:transparent!important;border:0!important;border-radius:5px;padding:0!important;font:inherit;color:var(--ink)!important;cursor:pointer;min-height:0}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>button[data-wfb-use]:hover:not(:disabled){color:var(--warm)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>button[data-wfb-use]:disabled{color:var(--dim)!important;opacity:1!important;cursor:default}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li.done{color:var(--dim)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li.done span:first-child{color:var(--good)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li.ask{background:var(--sel)!important;padding:8px 8px!important;margin:0 -8px;border-radius:5px}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-acts{display:flex;gap:4px}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-acts button,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-link{background:transparent!important;border:0!important;border-radius:5px;padding:2px 8px!important;font:var(--t-label) var(--ar-ui);color:var(--dim)!important;cursor:pointer}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-acts button.wfb-use-yes{color:var(--ink)!important;font-weight:600}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-acts button:hover:not(:disabled),html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-link:hover{color:var(--warm)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use-err{flex-basis:100%;color:var(--warm);font-size:var(--t-label)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-peek-box>header,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use>header{display:flex!important;justify-content:space-between;align-items:baseline;gap:8px;text-transform:none!important;letter-spacing:0!important;font:var(--t-label) var(--ar-ui)!important;color:var(--dim)!important;margin-top:4px}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>button[data-wfb-use]:disabled{color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>.small{white-space:nowrap;font-size:var(--t-label);color:var(--dim)}
