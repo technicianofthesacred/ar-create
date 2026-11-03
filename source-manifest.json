@@ -5226,6 +5226,10 @@
     {
       "path": "tests/source-line-checks.test.mjs",
       "candidateSha256": "51789c40f742fc06f01e7bb11837600acfed0903a4875fae71674fe8cb049c64"
+    },
+    {
+      "path": "public/document-study/supporting-pane.css",
+      "candidateSha256": "5d1df77a0ce382a5be5a81f4f2e55c8c650c726a27f25eb929feae5705652089"
     }
   ],
   "dependencyRepair": {
