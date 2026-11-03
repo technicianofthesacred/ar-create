@@ -1,0 +1,17 @@
+/* The supporting pane (Material 3 canonical layout) for Write, Read and Check on wide windows.
+   The margin docks to the right edge of the window at a fixed 360px and runs the full height of the work,
+   separated by one quiet divider; the document centres in the space that remains and keeps its reading
+   measure. Spacing stays on the 8px grid (24px pane padding, 24px minimum gutters). The heading row lines
+   up with the text column: the title starts where the words start, and its actions keep the full row.
+   Below 1280px the earlier layout applies unchanged (a narrow margin beside the text, then under it below
+   900px). An open tool drawer, Focus or a missing margin also leave the earlier layout in place. */
+@media(min-width:1280px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]):not(.wbf-drawer-open):not([data-draft-focus="true"]) #app #workspace>.desk:has(>#margin){max-width:none!important;width:auto!important;grid-template-columns:minmax(0,1fr) var(--ar-pane,360px)!important;gap:0!important;padding:0!important;align-items:stretch!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]):not(.wbf-drawer-open):not([data-draft-focus="true"]) #app #workspace>.desk:has(>#margin)>.document{grid-column:1!important;grid-row:1!important;justify-self:center!important;align-self:start!important;box-sizing:border-box;width:min(var(--measure),calc(100% - 48px))!important;max-width:var(--measure)!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]):not(.wbf-drawer-open):not([data-draft-focus="true"]) #app #workspace>.desk>#margin{grid-column:2!important;grid-row:1!important;align-self:stretch!important;box-sizing:border-box;width:auto!important;max-width:none!important;min-height:100%;padding:24px 24px 48px!important;border-left:1px solid var(--line)!important;background:color-mix(in srgb,var(--ink) 2.5%,transparent)!important}
+ /* The heading row starts where the text starts; its actions sit at the right edge, above the pane (a standard top bar). */
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on:is([data-c3-stage="5"],[data-c3-stage="6"],[data-c3-stage="7"]):not(.wbf-drawer-open):not([data-draft-focus="true"]):has(#workspace>.desk>#margin) #app #workspace>:is(#c3-surface-bar,#wbf-tools,#combined-piece-frame){box-sizing:border-box;max-width:none!important;width:auto!important;margin-left:max(24px,calc((100% - 360px - var(--measure)) / 2))!important;margin-right:24px!important;padding-left:0!important;padding-right:0!important}
+}
+@media(min-width:1280px) and (prefers-reduced-motion:no-preference){
+ html body.wbf-on #app #workspace>.desk>#margin{transition:background-color .18s ease,border-color .18s ease}
+}
