@@ -407,6 +407,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
       // i64 OS health (B3): which release this program is. The sha comes from <home>/RELEASE.json, which serve.mjs reads and passes in.
       if(pathname==='/api/i64os/health'&&['GET','HEAD'].includes(request.method)){if(!studyDrafts)throw new StateError('Document study is not configured.',503);const sha=typeof release?.sha==='string'&&/^[a-f0-9]{7,40}$/.test(release.sha)?release.sha:null;return json(response,200,{service:'ar-create-document-study',ready:true,release:{sha}});}
       if(await continuityInterface.handle(request,response))return;
+      if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library}))return;
       if(pathname.startsWith('/api/inquiries/')){
         if(!inquiryInterface)throw new StateError('Inquiry and named Project connection is unavailable in this configuration.',503);

@@ -21,6 +21,7 @@ export const SUGAR = Object.freeze({
   library: { tree: 'sources.tree', file: 'sources.file.get', search: 'concept.sources.search', read: 'concept.source', collections: 'collections.get' },
   collection: { list: 'inquiries.catalog', read: 'inquiries.read', create: 'inquiries.create', update: 'inquiries.update', save: 'inquiries.save', projects: 'inquiries.projects', undo: 'inquiries.learning.undo' },
   project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
+  needs: { list: 'needs-you', raise: 'needs-you.raise' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
   magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
   draft: { catalog: 'study-draft.catalog', read: 'study-draft.read', open: 'study-draft.open', create: 'study-draft.create-collection', save: 'study-draft.save', undo: 'study-draft.undo', check: 'study-draft.check.get', inspect: 'study-draft.inspect.get', proposals: 'study-ai.requests' },
@@ -29,7 +30,7 @@ export const SUGAR = Object.freeze({
 // `magazine story <id>`; `magazine propose --input {path, content, expectedHash}` (agents' prose becomes a proposal for Adrian;
 // the operationId is generated unless the input names one).
 export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id' });
-export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': () => ({ operationId: randomUUID() }) });
+export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': () => ({ operationId: randomUUID() }), 'needs raise': () => ({ operationId: randomUUID() }) });
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
