@@ -177,10 +177,9 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
 }
 
 const instances=new Map();
-/** One registration line in the server hands requests here; returns false for any other path. */
-export async function handleNeedsYou(request,response,{dataDir,events,checkWrite}){
- const url=new URL(request.url||'/','http://local.invalid');
- if(url.pathname!==PREFIX&&!url.pathname.startsWith(PREFIX+'/'))return false;
+/** The one list for a data folder. The HTTP handler and other services (the shared word check raises its asks here
+ *  in-process) must use the same instance, so the file is never written from two queues. */
+export function sharedNeedsYou({dataDir,events}){
  let list=instances.get(dataDir);
  if(!list){
   list=createNeedsYou({dataDir,onChange:(kind,ask)=>events?.emit({kind:'needs-you.'+kind,scope:{kind:'needs-you',id:ask.id},revision:null,actor:ask.resolution?.by||ask.raisedBy,client:ask.resolution?.client||ask.raisedClient,operationId:null})});
@@ -188,6 +187,13 @@ export async function handleNeedsYou(request,response,{dataDir,events,checkWrite
   const timer=setInterval(()=>{list.sweep().catch(()=>{});},30_000);timer.unref?.();
   instances.set(dataDir,list);
  }
+ return list;
+}
+/** One registration line in the server hands requests here; returns false for any other path. */
+export async function handleNeedsYou(request,response,{dataDir,events,checkWrite}){
+ const url=new URL(request.url||'/','http://local.invalid');
+ if(url.pathname!==PREFIX&&!url.pathname.startsWith(PREFIX+'/'))return false;
+ const list=sharedNeedsYou({dataDir,events});
  const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
   const route=url.pathname.slice(PREFIX.length);

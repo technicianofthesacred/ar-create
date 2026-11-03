@@ -44,6 +44,8 @@
  const tagOf=a=>a.status==='defaulted'?'Applied by default':a.status==='answered'?'Answered':a.band==='only-adrian'?'Only you':'You steer';
  const metaOf=a=>`<div class="ny-meta"><span class="ny-tag" data-band="${esc(a.band)}" data-status="${esc(a.status)}">${esc(tagOf(a))}</span>${a.about?`<span class="ny-about">${esc(a.about)}</span>`:''}<span class="ny-by">${esc(who(a.raisedBy))}, ${esc(ago(a.raisedAt))}</span></div>`;
  const off=()=>human()?'':' disabled aria-disabled="true"';
+ // A recording's doubtful words are one ask; "Go through them" opens the Words screen at that recording instead of answering.
+ const wordsLink=(a,c)=>a.scope?.kind==='recording-words'&&c==='Go through them'?`<a class="ny-open" href="#words/check/${esc(a.scope.id)}">Go through them <span aria-hidden="true">›</span></a>`:'';
  const choiceBtn=(a,c,{mark='',pressed=false,quiet=false}={})=>`<button type="button" class="ny-choice${mark?' is-default':''}${quiet?' is-quiet':''}" data-ny-choice="${esc(c)}" data-ny-id="${esc(a.id)}"${pressed?' aria-pressed="true"':''}${busy.has(a.id)?' disabled':off()}>${esc(c)}${mark?`<small>${esc(mark)}</small>`:''}</button>`;
  function freeForm(a){
   const field='ny-free-'+a.id,value=drafts.get(a.id)||'';
@@ -53,7 +55,7 @@
   let acts='',foot='';
   if(a.choices.length){
    const linked=!!a.link;
-   acts=(linked?`<a class="ny-open" href="${esc(a.link.href)}">${esc(a.link.label)} <span aria-hidden="true">›</span></a>`:'')+a.choices.map(c=>choiceBtn(a,c,{mark:a.default===c?'Default':'',quiet:linked})).join('');
+   acts=(linked?`<a class="ny-open" href="${esc(a.link.href)}">${esc(a.link.label)} <span aria-hidden="true">›</span></a>`:'')+a.choices.map(c=>wordsLink(a,c)||choiceBtn(a,c,{mark:a.default===c?'Default':'',quiet:linked})).join('');
    if(linked)foot='<p class="ny-foot">This is done on its own screen. Tap Done afterwards to take it off the list.</p>';
   }else acts=freeForm(a);
   if(a.band==='steer'&&a.default)foot=`<p class="ny-foot">If you do not answer, <b>${esc(a.default)}</b> applies ${esc(at(a.applyAt))} (${esc(within(a.applyAt))}).</p>`;

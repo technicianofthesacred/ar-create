@@ -22,6 +22,7 @@ export const SUGAR = Object.freeze({
   collection: { list: 'inquiries.catalog', read: 'inquiries.read', create: 'inquiries.create', update: 'inquiries.update', save: 'inquiries.save', projects: 'inquiries.projects', undo: 'inquiries.learning.undo' },
   project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
   needs: { list: 'needs-you', raise: 'needs-you.raise' },
+  words: { list: 'words', export: 'words.export', add: 'words.add', import: 'words.import', decide: 'words.decide', recognise: 'words.recognise', checks: 'words.checks', check: 'words.check', answer: 'words.answer' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
   magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
   consent: { desk: 'consent.desk', open: 'consent.open', claim: 'consent.claims.record', link: 'consent.claims.link', flag: 'consent.claims.flag', person: 'consent.people.record', draft: 'consent.people.draft-request' },
@@ -31,11 +32,14 @@ export const SUGAR = Object.freeze({
 // Sugar verbs that take one positional value (put into the input under that key) or need a fresh id for a single attempt.
 // `magazine story <id>`; `magazine propose --input {path, content, expectedHash}` (agents' prose becomes a proposal for Adrian;
 // the operationId is generated unless the input names one).
+// `words export` prints the versioned library snapshot (redirect it to a file); `words add|import|decide|answer --input` get a fresh
+// operationId; `words check <jobId>` and `words recognise <jobId>` name the recording. Agents suggest words (marked as theirs);
+// `words decide` and `words answer` are Adrian's alone (exit 5 for an agent).
 // `simmer board <subject>`, `simmer material <subject>`; `simmer intake|propose|name --input` get a fresh operationId
 // unless the input names one (name one yourself when you may retry: a retry with the same id adds nothing twice).
-export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject' });
+export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId' });
 const freshOperation = () => ({ operationId: randomUUID() });
-export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation });
+export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation });
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',

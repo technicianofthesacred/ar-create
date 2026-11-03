@@ -17,6 +17,8 @@ export function readIsolatedConfig() {
     const stat=fs.lstatSync(config[key]);if(!stat.isDirectory()||stat.isSymbolicLink())throw new Error('Runner output roots must be real owned directories.');
     const real=fs.realpathSync(config[key]);if(real!==own&&!real.startsWith(own+path.sep))throw new Error('Runner outputs must remain in the isolated recording root.');
   }
+  // The shared word library is read by the job to build its transcription prompt; it is never written from here.
+  if (config.wordLibrary !== undefined && (typeof config.wordLibrary !== 'string' || !path.isAbsolute(config.wordLibrary) || path.basename(config.wordLibrary) !== 'library.json')) throw new Error('The word library must be an absolute path to library.json.');
   if (config.i64Export?.enabled || config.magDrops?.length || config.teaTerms) throw new Error('Original export/drop integrations are disabled.');
   return {...config,__file:file};
 }
