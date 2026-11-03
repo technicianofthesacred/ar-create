@@ -2,6 +2,7 @@ import {AGENT_ACTORS,currentActor} from './services/actor.mjs';
 import {StateError} from './store.mjs';
 import {isICloudAlbum} from './services/icloud-albums.mjs';
 import {INQUIRY_METHODS} from './services/inquiry-interface-routes.mjs';
+import {NEEDS_YOU_COMMANDS, NEEDS_YOU_HUMAN_ONLY, NEEDS_YOU_BODY} from './commands/needs-you.mjs';
 
 /**
  * One command registry for every entrance: the app, the CLI (agents/cli/ar-create.mjs)
@@ -133,6 +134,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/api/exports/{id}/file', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']], ['GET', '/api/ingestion/raw', ['id', 'file']], ['GET', '/api/study-originals/audio', ['id']], ['GET', '/api/sources/blob', ['id', 'original?']],
   ['POST', '/api/media', ['image bytes (image/jpeg|png|webp)']],
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
+  ...NEEDS_YOU_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
@@ -480,3 +482,6 @@ import {MAGAZINE_HUMAN_ONLY, MAGAZINE_READ_ONLY_POSTS, MAGAZINE_BODY} from './co
 for (const key of MAGAZINE_HUMAN_ONLY) HUMAN_ONLY.add(key);
 for (const route of MAGAZINE_READ_ONLY_POSTS) READ_ONLY_POSTS.add(route);
 Object.assign(BODY, MAGAZINE_BODY);
+// The needs-you list (runtime/commands/needs-you.mjs): agents raise and read; only Adrian answers.
+for (const key of NEEDS_YOU_HUMAN_ONLY) HUMAN_ONLY.add(key);
+Object.assign(BODY, NEEDS_YOU_BODY);

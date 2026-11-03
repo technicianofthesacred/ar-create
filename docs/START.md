@@ -72,6 +72,7 @@ Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok
 - **Journal**: every committed, rejected or conflicting write is one line. `history` reads it.
 - **Handoff**: `handoff --input '{"scope":{...},"to":"human:adrian","summary":"<=280 chars"}'` when you stop.
 - **Ask**: `ask --input '{"scope":{...},"question":"<=280 chars","options":["a","b"]}'` for a decision only Adrian can make; it shows in the app.
+- **Needs you**: `needs raise --input '{"band":"only-adrian"|"steer","question":"<=280","choices":[...],"about":"..."}'` puts a question on Home's one "Needs you" list; `needs list` (or `call needs-you --input '{"status":"all"}'`) reads it, including what Adrian answered and any steer default that applied. Only Adrian asks never apply themselves. A steer ask also needs `default` (one of the choices) and `applyAt` (ISO time the default applies if he does not answer). A step only a human takes (publish, send, consent) carries `link:{label,href}` to its screen. You raise and read; you never answer: `needs-you.answer` is human-only, from the app's own page.
 - **Events**: `events --input '{"since":<cursor>}'` and the status `editor` field tell you whether Adrian has unsaved words.
 
 ## Recipe: read a project and save a concept note
