@@ -6,6 +6,9 @@ import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
 const read=name=>fs.readFileSync(new URL('../public/document-study/'+name,import.meta.url),'utf8');
 const tick=()=>new Promise(r=>setTimeout(r,0));
+// Opening an original digests it with webcrypto, which settles on the libuv pool: under CI load that
+// takes more than a fixed number of ticks, so wait for the visible result instead of counting ticks.
+const until=async(check,limit=2000)=>{for(let i=0;i<limit&&!check();i++)await tick();assert.ok(check(),'timed out waiting for the reader');};
 const digest=o=>createHash('sha256').update(JSON.stringify(o)).digest('hex');
 function fixture(id='one'){
  const output={id,kind:'carousel',title:'Synthetic <b>same</b>',outputRevision:3,createdAt:'2026-01-02T03:00:00Z',slides:[{id:'a',text:'<img src=x onerror="window.bad=1"> & original',template:'F1',role:'cover',photos:[{src:'https://invalid.example/private.jpg',x:22,y:65}]},{id:'b',text:'Second original slide',template:'M12',photos:[]}],caption:'Caption <script>bad()</script>'};
@@ -46,14 +49,14 @@ test('Pieces keeps distinct originals alongside current8 and preserves search an
  b.w.existingWork={catalog:()=>({mode:'existing-work-read-only',stories:[],retainedCarousels:{readOnly:true,available:true,items:[one.item,two.item]}})};
  b.w.eval(read('workbench-pieces.js'));await b.w.workbenchPieces.open();assert.equal(b.d.querySelectorAll('.wbp-row').length,3);
  const search=b.d.querySelector('[data-wbp-search]');search.value='Earlier workspace';search.dispatchEvent(new b.w.Event('input',{bubbles:true}));assert.equal(b.d.querySelectorAll('.wbp-row').length,2);
- b.d.querySelector('[data-wbp-select]').click();b.d.querySelector('[data-wbp-open]').click();await tick();await tick();await tick();assert.ok(b.d.querySelector('.retained-carousel-reader'));assert.equal(b.d.querySelector('#project-library').open,true);b.d.querySelector('[data-rc-back]').click();assert.equal(b.d.querySelector('[data-wbp-search]').value,'Earlier workspace');assert.equal(b.d.querySelectorAll('.wbp-row').length,2);assert.equal(b.d.querySelector('[data-wbp-select]').checked,true);assert.equal(JSON.stringify(b.original),b.before);b.close();
+ b.d.querySelector('[data-wbp-select]').click();b.d.querySelector('[data-wbp-open]').click();await until(()=>b.d.querySelector('.retained-carousel-reader')&&!b.d.querySelector('[data-wbp-open][disabled]'));assert.equal(b.d.querySelector('#project-library').open,true);b.d.querySelector('[data-rc-back]').click();assert.equal(b.d.querySelector('[data-wbp-search]').value,'Earlier workspace');assert.equal(b.d.querySelectorAll('.wbp-row').length,2);assert.equal(b.d.querySelector('[data-wbp-select]').checked,true);assert.equal(JSON.stringify(b.original),b.before);b.close();
 });
 test('only exact catalog identities become retained carousel rows; missing configuration adds nothing',async()=>{
  const f=fixture(),b=boot(()=>f.value);b.w.existingWork={catalog:()=>({mode:'existing-work-read-only',stories:[],retainedCarousels:{available:true,readOnly:true,items:[{...f.item,sourceHash:'bad'}]}})};b.w.eval(read('workbench-pieces.js'));await b.w.workbenchPieces.open();assert.equal(b.d.querySelectorAll('.wbp-row').length,1);assert.match(b.d.querySelector('.wbp-message').textContent,/invalid/);b.close();
 });
 
 test('failed original can retry its same exact reference without changing the workspace',async()=>{
- const f=fixture();let failed=true;const b=boot(()=>failed?{...f.value,sourceHash:'b'.repeat(64)}:structuredClone(f.value));assert.equal(await b.w.retainedCarouselReader.open(f.item),false);failed=false;b.d.querySelector('[data-rc-retry]').click();await tick();await tick();await tick();assert.ok(b.d.querySelector('.rc-words'));assert.equal(b.calls[0][0],b.calls[1][0]);assert.equal(JSON.stringify(b.original),b.before);b.close();
+ const f=fixture();let failed=true;const b=boot(()=>failed?{...f.value,sourceHash:'b'.repeat(64)}:structuredClone(f.value));assert.equal(await b.w.retainedCarouselReader.open(f.item),false);failed=false;b.d.querySelector('[data-rc-retry]').click();await until(()=>b.d.querySelector('.rc-words'));assert.equal(b.calls[0][0],b.calls[1][0]);assert.equal(JSON.stringify(b.original),b.before);b.close();
 });
 
 test('optional retained discovery failure remains visible while current pieces stay available',async()=>{
