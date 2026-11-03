@@ -26,3 +26,7 @@ Always show the selected project/part/output, the manuscript revision under revi
 ## 16 October — Adopted checking within continuous editing
 
 Check uses the same selected output/editor context as Write and Read, with revision-bound findings and exact passage routes where existing contracts support them. Retain selection/location on mode return where valid; changed or ambiguous anchors explain their limits, never select a guessed passage. Current-versus-earlier/save state remains truthful. Shared mode access does not imply checks ran, facts verified or human wording accepted; no new competing issue store/editor.
+
+## 3 November 2026: Truth and consent desk in Check
+
+How I Work step 6. Check shows every claim and quote in the piece with the source moment it rests on (a recording time, a Library passage or a photo). Claims with no source and claims an agent raised as doubtful come first; a quote that no longer matches its Library passage says so. Agents record claims, link sources (a Library passage is checked against the source text, a recording moment against its transcript) and raise only the doubtful ones; an agent may withdraw its own doubt, only Adrian clears someone else's. The same panel lists the people in the piece and where their consent stands. Record: `/api/consent/*`, one per piece.
