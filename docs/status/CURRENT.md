@@ -1,6 +1,6 @@
-Tests: 2,934 passed, 43 failed, 4 skipped, of 2,981 (2026-11-01 local run, pre-merge).
+Tests: 2,994 passed, 0 failed, 7 skipped, of 3,001 (commit 475b0ab, 2026-11-03 local run).
 
-Installed release: commit b949783, built 2026-11-01T03:16:28.413Z, by agent:claude-code, 706 files.
+Installed release: commit 3c21eb3, built 2026-11-03T00:12:32.989Z, by human:adrianrasmussen, 707 files. The tests above ran on a different commit (475b0ab) than the one installed.
 
 # AR Create: status
 
