@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom');
 const code=fs.readFileSync(new URL('../public/document-study/workbench-rail.js',import.meta.url),'utf8');
-function boot(stage=2,{phone=false,prefs='{}',work=''}={}){
+function boot(stage=2,{phone=false,prefs='{"2":true,"12":true}',work=''}={}){
  const dom=new JSDOM('<div id="app"><div class="shell"><nav class="workflowNavigation c3-rail"><button data-tr-home>Home</button><button class="cr-picker"></button><div class="workflowSteps">'+[['gather',[1,2]],['develop',[3,4]],['make',[5,6,7,8,9]],['deliver',[10,11,12]]].map(([g,ns])=>`<div class="wn-family" data-family="${g}">${ns.map(n=>`<button class="workflowStep" data-stage="${n}" ${n===stage?'aria-current="step"':''}><span class="stepNumber">${n}</span><span class="stepName">Section ${n}</span></button>`).join('')}</div>`).join('')+'</div></nav><main id="workspace" class="workspace"><h1 class="c3-ctitle">Section</h1>'+work+'</main></div></div>',{url:'http://localhost',runScripts:'dangerously'});
  const w=dom.window,d=w.document;w.localStorage.setItem('c3-workbench-panel-v1',prefs);
  w.current=()=>({view:'record',viewedStage:stage});w.matchMedia=()=>({matches:phone,addEventListener(){}});
@@ -167,3 +167,4 @@ test('all twelve entrances use canonical unnumbered names without changing owner
   assert.equal(owners[4].getAttribute('aria-current'),'step');assert.equal(owners[11].disabled,true);owners[4].click();assert.equal(calls,1);
  }finally{close();}
 });
+test('Source and Outputs open without the middle column until it is asked for; Library still opens with it',()=>{for(const n of [2,12]){const f=boot(n,{prefs:'{}'});try{assert.equal(f.d.querySelector('#wb-panel'),null);assert.equal(f.d.body.classList.contains('wb-panel-on'),false);}finally{f.close?.();}}const f=boot(1,{prefs:'{}'});try{assert.ok(f.d.querySelector('#wb-panel'));}finally{f.close?.();}});

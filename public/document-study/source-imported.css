@@ -243,3 +243,8 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 @media(max-width:700px){.source-reader .source-reader-secondary{grid-template-columns:minmax(0,1fr)}}
 
 .source-reader>section.source-reader-lookup-sheet[open]{position:static;inset:auto;width:auto;max-height:none;overflow:visible;border-radius:0}
+
+/* Lines save when you leave them; the Save button is kept only for a conflict that needs a choice. */
+.source-reader-actions.saves-on-leave [data-source-reader-action="save"]{display:none}
+/* A line a person confirmed as heard, unchanged. */
+[data-source-line-checked="true"]::after{content:" · checked by you";color:var(--dim,#8f897c);font-size:.8em;font-style:normal}

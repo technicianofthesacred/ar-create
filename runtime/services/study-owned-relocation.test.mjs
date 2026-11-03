@@ -48,3 +48,14 @@ test('relocation refuses missing capability, changed binding, changed roots, sym
   const before=fileHashes(m.dest);await assert.rejects(service.read(scope(f.opened)));assert.deepEqual(fileHashes(m.dest),before);
  }
 });
+test('a restart that renumbers the disk keeps both a bound piece and a relocated proof opening',async t=>{
+ // After a restart macOS can report the same disk under a new number (dev). Recorded folder stamps keep the old one.
+ const f=await fixture(t),old=path.join(path.dirname(f.dest),'old'),m=f.migrate(),original={};
+ for(const name of ['lstatSync','statSync','fstatSync']){original[name]=fs[name];fs[name]=(...a)=>{const s=original[name](...a);if(s&&Number.isSafeInteger(s.dev))Object.defineProperty(s,'dev',{value:s.dev+1});return s;};}
+ t.after(()=>Object.assign(fs,original));
+ const relocated=createStudyDraftCopies({dataDir:m.dest,originals:f.originals,studyRelocation:m.manifest});
+ assert.equal((await relocated.read(scope(f.opened))).binding.id,f.opened.binding.id);
+ fs.renameSync(old+'-unavailable',old);
+ const bound=createStudyDraftCopies({dataDir:old,originals:f.originals});
+ assert.equal((await bound.read(scope(f.opened))).binding.id,f.opened.binding.id);
+});

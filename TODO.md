@@ -17,9 +17,11 @@ This is the public mirror of Delivery's work checklist: open items only, no priv
 
 ## Future
 
+- [ ] Stop the page asking for a piece's working history before its Direction is saved (a harmless console 409); the first try looped a refused draft open on real data, so reproduce that before retrying _(band: agent-runnable)_ _(effort: moderate)_ → PR #160 reverted in #161
 - [ ] Verify the installed Magazine command/editorial paths against the remaining single-writer/shared-lock boundary for the Teajia Workflow folder _(band: agent-runnable)_ _(effort: deep)_
 
 ## Operational notes
 
+- Restarts no longer lock the app: saved folder records are compared by path and inode, not the disk number macOS can change (PR #157, 3 November). A release does not restart the app; run its stop then start scripts, and a stop can take longer than its 6-second wait.
 - Current design authority: Combined, approved 30 October, as recorded in [PRODUCT](docs/product/PRODUCT.md#the-design-baseline). Earlier C workbench references remain historical. Every PR receives human review; review does not install a candidate.
 - PR17 verification is author-reported as 312 tests / 307 passing / five baseline failures, not independently verified here. Fixture-overlay safety checks are 4/4 and the package check passed; the full suite is not all green. Recovered rebuild installed and verified on 21 October at release `34e7a267`; see CURRENT for exact preservation proof and remaining limits. Recovery focused checks passed; a parent-reproduced native pending/timer issue remains, so the full suite is not labelled green.
