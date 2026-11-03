@@ -542,6 +542,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     return {path: rel, hash: cur.hash, approval: rows.find(r => r.hash === cur.hash) || null, older: rows.filter(r => r.hash !== cur.hash).length};
   }
   async function markPublished(input) {
+    requireHuman('Marking a draft published');
     fields(input, ['path', 'link', 'expectedHash', 'operationId'], ['path', 'link', 'expectedHash', 'operationId']);
     const rel = devFile(input.path);
     if (!/^https:\/\/(www\.)?teajia\.com\/[\w/.-]+$/.test(String(input.link))) throw new StateError('link is the live teajia.com page.', 400);

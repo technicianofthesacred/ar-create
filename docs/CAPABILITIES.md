@@ -98,8 +98,8 @@
 | `study.direction-options` | `GET /api/study/direction-options` | any | read |
 | `study.human-direction` | `GET /api/study/human-direction` | any | read |
 | `study.human-direction.select` | `POST /api/study/human-direction/select` | any | write |
-| `study.human-direction.undo` | `POST /api/study/human-direction/undo` | any | write |
-| `study.human-direction.write` | `POST /api/study/human-direction/write` | any | write · undo `study.human-direction.undo` |
+| `study.human-direction.undo` | `POST /api/study/human-direction/undo` | human | write |
+| `study.human-direction.write` | `POST /api/study/human-direction/write` | human | write · undo `study.human-direction.undo` |
 
 ### draft (27)
 
@@ -122,7 +122,7 @@
 | `study-draft.check.post` | `POST /api/study-draft/check` | any | write |
 | `study-draft.create-collection` | `POST /api/study-draft/create-collection` | any | write |
 | `study-draft.history-preview` | `POST /api/study-draft/history-preview` | any | read |
-| `study-draft.history-restore` | `POST /api/study-draft/history-restore` | any | write · undo `study-draft.undo` |
+| `study-draft.history-restore` | `POST /api/study-draft/history-restore` | human | write · undo `study-draft.undo` |
 | `study-draft.inspect.get` | `GET /api/study-draft/inspect` | any | read |
 | `study-draft.inspect.post` | `POST /api/study-draft/inspect` | any | read |
 | `study-draft.open` | `POST /api/study-draft/open` | any | write |
@@ -130,7 +130,7 @@
 | `study-draft.recover` | `POST /api/study-draft/recover` | any | write |
 | `study-draft.root-recovery.get` | `GET /api/study-draft/root-recovery` | any | read |
 | `study-draft.root-recovery.post` | `POST /api/study-draft/root-recovery` | any | write |
-| `study-draft.save` | `POST /api/study-draft/save` | any | write · undo `study-draft.undo` |
+| `study-draft.save` | `POST /api/study-draft/save` | human | write · undo `study-draft.undo` |
 | `study-draft.undo` | `POST /api/study-draft/undo` | any | write |
 
 ### library (30)
@@ -295,12 +295,12 @@
 | `study.outputs.exports` | `GET /api/study/outputs/exports` | any | read |
 | `study.outputs.refresh` | `POST /api/study/outputs/refresh` | any | write |
 | `study.outputs.review-words` | `POST /api/study/outputs/review-words` | any | write |
-| `study.outputs.save` | `POST /api/study/outputs/save` | any | write · undo `study.outputs.undo` |
+| `study.outputs.save` | `POST /api/study/outputs/save` | human | write · undo `study.outputs.undo` |
 | `study.outputs.stand-in-create` | `POST /api/study/outputs/stand-in-create` | agent | write |
 | `study.outputs.stand-in-refresh` | `POST /api/study/outputs/stand-in-refresh` | agent | write |
 | `study.outputs.stand-in-review-words` | `POST /api/study/outputs/stand-in-review-words` | agent | write |
 | `study.outputs.stand-in-save` | `POST /api/study/outputs/stand-in-save` | agent | write |
-| `study.outputs.undo` | `POST /api/study/outputs/undo` | any | write |
+| `study.outputs.undo` | `POST /api/study/outputs/undo` | human | write |
 | `study.outputs.visual-review` | `POST /api/study/outputs/visual-review` | human | write |
 
 ### piece (5)

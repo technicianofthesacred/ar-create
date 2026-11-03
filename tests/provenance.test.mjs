@@ -33,11 +33,12 @@ test('actor vocabulary is closed; legacy records read as unknown(pre-provenance)
 
 test('a mutation with no actor is refused (400); a bad actor is refused; same-origin browser is human:adrian via ui',async t=>{
  const f=await setup(t);
- for(const [route,input] of [['/api/concept/save',{}],['/api/study-draft/save',{}],['/api/study/human-direction/write',{}],['/api/work-continuity/assign',{}],['/api/inquiries/create',{}],['/api/sources/folders',{}],['/api/study/outputs/save',{}]]){
+ for(const [route,input] of [['/api/concept/save',{}],['/api/work-continuity/assign',{}],['/api/inquiries/create',{}],['/api/sources/folders',{}]]){
   const out=await f.call(route,input);assert.equal(out.status,400,route);assert.match(out.body.error,/X-AR-Actor/,route);
  }
  // A human-only route refuses an unattributed caller with the stronger 403 before the actor check (Share save became human-only in 34fa6b9).
- {const out=await f.call('/api/study/share/save',{});assert.equal(out.status,403);assert.match(out.body.error,/human-only/);}
+ // Prose saves joined them on 3 Nov 2026 (agents propose prose, never save it).
+ for(const route of ['/api/study/share/save','/api/study-draft/save','/api/study/human-direction/write','/api/study/outputs/save']){const out=await f.call(route,{});assert.equal(out.status,403,route);assert.match(out.body.error,/human-only/,route);}
  assert.equal((await f.call('/api/concept/save',{},{'X-AR-Actor':'agent:gemini'})).status,400);
  assert.equal((await f.call('/api/concept/save',{},{'X-AR-Actor':'agent:codex','X-AR-Client':'carrier-pigeon'})).status,400);
  // Reads need no actor.
@@ -83,12 +84,14 @@ test('human-only decisions refuse agents with 403 before any write',async t=>{
  }
 });
 
-test('draft saves record their author beside the native receipt',async t=>{
+test('draft saves record their author beside the native receipt; an agent\'s save is refused',async t=>{
  const f=await setup(t);
  const operationId=randomUUID(),row=f.opened.projection.find(r=>r.blockKind==='paragraph')||f.opened.projection[0];
- const saved=await f.ok('/api/study-draft/save',{...f.binding,expected:f.opened.expected,operationId,operations:[{kind:'text',id:row.id,from:0,to:row.words.length,insert:'Changed by an agent proposal path.',seenBlockHash:row.blockHash}]},f.as('agent:claude-code','cli'));
+ const saved=await f.ok('/api/study-draft/save',{...f.binding,expected:f.opened.expected,operationId,operations:[{kind:'text',id:row.id,from:0,to:row.words.length,insert:'Changed by Adrian from the CLI.',seenBlockHash:row.blockHash}]},f.as('human:adrian','cli'));
  const entry=saved.history.find(h=>h.operationId===operationId);assert.ok(entry,'save appears in history');
- assert.equal(entry.actor,'agent:claude-code');assert.equal(entry.client,'cli');
+ assert.equal(entry.actor,'human:adrian');assert.equal(entry.client,'cli');
+ const refused=await f.call('/api/study-draft/save',{...f.binding,expected:saved.expected,operationId:randomUUID(),operations:[{kind:'text',id:row.id,from:0,to:1,insert:'x',seenBlockHash:row.blockHash}]},f.as('agent:claude-code','cli'));
+ assert.equal(refused.status,403);assert.match(refused.body.error,/human-only/);
  // Earlier receipts with no stamp read as legacy.
  assert.ok(saved.history.filter(h=>h.operationId!==operationId).every(h=>h.actor==='unknown(pre-provenance)'));
 });
