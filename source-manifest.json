@@ -4797,11 +4797,11 @@
     },
     {
       "path": "public/document-study/material-intake.css",
-      "candidateSha256": "2c3aa2c3bd46bf581723aa212cb56f25c27c5748dbfe5086bfcc6f4dc7d820e0"
+      "candidateSha256": "bf072cca1cb2f847a88e1585a5c148ec7ed15be994f5b830ab8ec8a002733bfe"
     },
     {
       "path": "public/document-study/material-intake.js",
-      "candidateSha256": "7a65419a1f5a9fdae0d3a08a8e85f2bc012857cf23a32d505e9ae8b4ff0a6664"
+      "candidateSha256": "e97daa03444b18b6a8b3e79bb1ebdc5a56e20144504012d7067e0101806135f4"
     },
     {
       "path": "tests/magazine-share-preparation-http.test.mjs",
@@ -5201,7 +5201,7 @@
     },
     {
       "path": "tests/material-microphone.test.mjs",
-      "candidateSha256": "a19e248cbd04e0298c0c8d1f1ecb7a9b1dee615fc00c3e5cc69fb2a52011f0b0"
+      "candidateSha256": "6d91972a8f96f40d1f77530841f731a423333301e7d60195de4ee46fc08f80ab"
     },
     {
       "path": "tests/recording-source-owner-journey.test.mjs",
