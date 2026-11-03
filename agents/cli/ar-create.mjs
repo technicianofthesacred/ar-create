@@ -24,6 +24,7 @@ export const SUGAR = Object.freeze({
   needs: { list: 'needs-you', raise: 'needs-you.raise' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
   magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
+  consent: { desk: 'consent.desk', open: 'consent.open', claim: 'consent.claims.record', link: 'consent.claims.link', flag: 'consent.claims.flag', person: 'consent.people.record', draft: 'consent.people.draft-request' },
   draft: { catalog: 'study-draft.catalog', read: 'study-draft.read', open: 'study-draft.open', create: 'study-draft.create-collection', save: 'study-draft.save', undo: 'study-draft.undo', check: 'study-draft.check.get', inspect: 'study-draft.inspect.get', proposals: 'study-ai.requests' },
 });
 // Sugar verbs that take one positional value (put into the input under that key) or need a fresh id for a single attempt.

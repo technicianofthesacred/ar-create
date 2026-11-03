@@ -1,0 +1,58 @@
+/* Truth and consent desk: claims in Check, the release questions and consent in Share. Theme tokens only. */
+.cd-desk{color:var(--ink);font:400 var(--c3-t1,13px)/1.5 var(--ar-ui,var(--sans,sans-serif));overflow-wrap:anywhere}
+.cd-desk h3{margin:0 0 8px;font:600 var(--t-head,15px)/1.4 var(--ar-ui,var(--sans,sans-serif))}
+.cd-desk h4{margin:14px 0 6px;font:600 var(--c3-t1,13px)/1.4 var(--ar-ui,var(--sans,sans-serif));color:var(--ink)}
+.cd-desk p{margin:0 0 6px}
+.cd-muted{color:var(--dim)}
+.cd-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cd-list>li{border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);padding:10px 12px;background:var(--c3-lift,transparent)}
+.cd-claim.cd-unsourced,.cd-claim.cd-doubtful{border-color:color-mix(in srgb,var(--c3-warn,#b7793d) 55%,var(--c3-line2,var(--line)))}
+.cd-said{color:var(--ink)}
+.cd-src{color:var(--dim);font-size:var(--t-label,12px)}
+.cd-tag{display:inline-block;padding:0 7px;border:1px solid var(--c3-line2,var(--line));border-radius:999px;font-size:var(--t-label,12px);line-height:18px;color:var(--ink);white-space:nowrap}
+.cd-tag.cd-warn{border-color:var(--c3-warn,#b7793d);color:var(--c3-warn,#b7793d)}
+.cd-btn{display:inline-flex;align-items:center;min-height:34px;padding:0 13px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:500 var(--c3-t1,13px) var(--ar-ui,var(--sans,sans-serif));cursor:pointer}
+.cd-btn:hover:not(:disabled){border-color:var(--c3-ink2,var(--ink))}
+.cd-btn.is-on{border-color:var(--warm);box-shadow:inset 0 0 0 1px var(--warm)}
+.cd-btn.pri{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.cd-btn:disabled{opacity:.45;cursor:default}
+.cd-btn:focus-visible,.cd-link:focus-visible,.cd-desk summary:focus-visible,.cd-desk :is(input,select,textarea):focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.cd-link{border:0;padding:0;background:none;color:var(--ink);font:inherit;text-decoration:underline;cursor:pointer}
+.cd-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}
+.cd-field{display:flex;flex-direction:column;gap:3px;font-size:var(--t-label,12px);color:var(--dim)}
+.cd-field.cd-grow{flex:1 1 180px}
+.cd-desk :is(input:not([type=checkbox]),select,textarea){min-height:32px;padding:4px 8px;border:1px solid var(--c3-line2,var(--line));border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);font:400 var(--c3-t1,13px) var(--ar-ui,var(--sans,sans-serif));box-sizing:border-box;max-width:100%}
+.cd-desk textarea{width:100%;resize:vertical}
+.cd-desk details{margin-top:6px}
+.cd-desk summary{cursor:pointer;color:var(--dim);font-size:var(--t-label,12px);padding:4px 0}
+.cd-request-text{white-space:pre-wrap;padding:8px 10px;border-left:2px solid var(--c3-line2,var(--line));color:var(--ink)}
+.cd-appears{display:flex;gap:10px;align-items:center;border:0;margin:0;padding:0;font-size:var(--t-label,12px);color:var(--dim)}
+.cd-appears legend{float:left;margin-right:4px;padding:0}
+.cd-person-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+.cd-q{padding:10px 0;border-bottom:1px solid var(--c3-line2,var(--line))}
+.cd-q-label{font-weight:600}
+.cd-status{margin:0;padding:8px 12px;border-radius:var(--c3-r,8px);border:1px solid var(--c3-line2,var(--line))}
+.cd-status.cd-held{border-color:var(--c3-warn,#b7793d)}
+.cd-status.cd-ok{border-color:var(--c3-good,#5f8a5a)}
+
+/* Check: inside the Check drawer, below the manuscript check. */
+.cd-check{margin-top:18px;padding-top:14px;border-top:1px solid var(--c3-line2,var(--line))}
+
+/* Share: in the work column above the invitation composer. */
+.cd-share{order:4;flex:1 1 100%;max-width:1120px;margin:14px auto 4px;padding:16px 26px;box-sizing:border-box}
+.cd-share .cd-head{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.cd-share .cd-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px}
+.cd-share .cd-grid>section>h4:first-child{margin-top:10px}
+.cd-share .cd-foot{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--c3-line2,var(--line))}
+.cd-share .cd-foot>.cd-override{flex:1 1 100%;margin:0}
+.cd-share .cd-foot>[data-cd-message]{margin:0}
+
+html:not(#wb):not(#wb):not(#wb):not(#wb) body #app .workspace>.c3-empty.ce-na.cd-covered{display:none!important}
+
+@media (max-width:760px){
+ .cd-share{padding:12px 16px;margin-top:8px}
+ .cd-share .cd-grid{grid-template-columns:1fr;gap:6px}
+ .cd-btn{min-height:44px}
+ .cd-desk :is(input:not([type=checkbox]),select){min-height:44px}
+ .cd-share .cd-foot>.cd-btn.pri{flex:1 1 100%;justify-content:center}
+}

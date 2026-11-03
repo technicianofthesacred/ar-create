@@ -96,12 +96,24 @@ const BODY = {
   '/api/study-ai/prepare': ['sourceIds', 'answerIds?', 'purpose?', 'openingRequestId?', 'selectedOptionId?','instruction?'], '/api/study-ai/propose': ['requestId', 'replacements?', 'openingOptions?', 'continuationParagraphs?','sourcedParagraph?','sourcedEvidence?'],
   '/api/study-ai/accept': ['requestId', '...'], '/api/study-ai/reject': ['requestId', 'reason?'],
   '/api/pieces': ['expectedProjectId', 'expectedRevision', 'title'], '/api/pieces/switch': ['expectedProjectId', 'expectedRevision', 'projectId'],
+  '/api/consent/claims/record': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','claim:{kind:claim|quote,text,where?,source?}'],
+  '/api/consent/claims/link': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','claimId','source:{type:library|recording|photo,sourceId,sourceHash?,start?,quote?,atMs?,endMs?}'],
+  '/api/consent/claims/flag': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','claimId','reason'],
+  '/api/consent/claims/clear-flag': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','claimId','note?'],
+  '/api/consent/people/record': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','person:{personId?,name,appears:[named|pictured|quoted],note?}'],
+  '/api/consent/people/draft-request': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','text'],
+  '/api/consent/people/sent': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','sentAt','channel'],
+  '/api/consent/people/answer': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','state:not-asked|asked|yes|yes-with-changes|no','changes?'],
+  '/api/consent/people/remove': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','reason'],
+  '/api/consent/share/answer': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','question:comfort|accuracy','answer:yes|not-yet','note?'],
+  '/api/consent/share/override': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','reason'],
+  '/api/consent/share/release': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash'],
   '/api/presence': ['stage', 'scope:{kind,id}', 'dirty', 'sequence'],
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
-    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
+    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
@@ -154,7 +166,7 @@ export const PROSE_SAVES = Object.freeze(['POST /api/study-draft/save', 'POST /a
 /** Decisions only a human makes. Agents propose; the record says who decided. */
 const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
-  'POST /api/article/make/{id}/accept', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
+  'POST /api/article/make/{id}/accept', 'POST /api/consent/people/sent', 'POST /api/consent/people/answer', 'POST /api/consent/people/remove', 'POST /api/consent/share/answer', 'POST /api/consent/share/override', 'POST /api/consent/share/release', 'POST /api/inquiries/association/change', 'POST /api/inquiries/references/change', 'POST /api/inquiries/direction-references/change']);
 
 function entry(method, route, { query, mode, mount }) {
   // Manuscript proposals take their identity from the query only; the body must not repeat it.
@@ -195,7 +207,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     const languageScope=()=>{
       const allowed=['kind','bindingId','parentStudyId','outputId','recipientId','requestId'];
       if([...url.searchParams.keys()].some(k=>!allowed.includes(k))||allowed.some(k=>url.searchParams.getAll(k).length>1))throw new StateError('Use one exact language source scope.',400);
@@ -361,6 +373,20 @@ export function createRouteMap(services) {
       '/api/study/share': {GET:()=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);if([...url.searchParams.keys()].some(key=>url.searchParams.getAll(key).length!==1))throw new StateError('Use one exact value per Share selector.',400);return studyShare.read(Object.fromEntries(url.searchParams));})},
       '/api/study/share/save': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.save(input);})},
       '/api/study/share/fact': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.appendFact(input);})},
+      '/api/consent/desk': {GET:()=>{if([...url.searchParams.keys()].some(k=>!['parentStudyId','pieceKey'].includes(k)||url.searchParams.getAll(k).length!==1))throw new StateError('Name the piece with one parentStudyId and, optionally, one pieceKey.',400);return consentDesk.read({parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('pieceKey')?{pieceKey:url.searchParams.get('pieceKey')}:{})});}},
+      '/api/consent/open': {GET:()=>{if([...url.searchParams.keys()].some(k=>k!=='parentStudyId'||url.searchParams.getAll(k).length!==1))throw new StateError('Filter open consent items by one parentStudyId, or none.',400);return consentDesk.open(url.searchParams.has('parentStudyId')?{parentStudyId:url.searchParams.get('parentStudyId')}:{});}},
+      '/api/consent/claims/record': {POST:input=>consentDesk.recordClaim(input)},
+      '/api/consent/claims/link': {POST:input=>consentDesk.linkClaim(input)},
+      '/api/consent/claims/flag': {POST:input=>consentDesk.flagClaim(input)},
+      '/api/consent/claims/clear-flag': {POST:input=>consentDesk.clearFlag(input)},
+      '/api/consent/people/record': {POST:input=>consentDesk.recordPerson(input)},
+      '/api/consent/people/draft-request': {POST:input=>consentDesk.draftRequest(input)},
+      '/api/consent/people/sent': {POST:input=>consentDesk.recordSent(input)},
+      '/api/consent/people/answer': {POST:input=>consentDesk.answer(input)},
+      '/api/consent/people/remove': {POST:input=>consentDesk.removePerson(input)},
+      '/api/consent/share/answer': {POST:input=>consentDesk.shareAnswer(input)},
+      '/api/consent/share/override': {POST:input=>consentDesk.override(input)},
+      '/api/consent/share/release': {POST:input=>consentDesk.release(input)},
       '/api/study/share/undo': {POST:input=>draftCall(()=>{if(!studyShare)throw new StateError('Local Share preparation is unavailable.',503);return studyShare.undo(input);})},
       '/api/study/outputs': {GET:()=>draftCall(async()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);const input={rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),...(url.searchParams.has('selectedOutputId')?{selectedOutputId:url.searchParams.get('selectedOutputId')}:{})};const view=await studyOutputs.read(input);if(AGENT_ACTORS.includes(currentActor()?.actor)&&view.output&&['article','carousel','post','product-listing'].includes(view.output.kind)){try{const proof=await structureTests.validateTarget({bindingId:input.rootBindingId,parentStudyId:input.parentStudyId});if(proof.root.binding.id===input.rootBindingId)return {...view,standInOutputEditing:true,standInWordsReview:view.output.kind==='carousel'};}catch(error){if(![403,404,409].includes(error.status))throw error;}}return view;})},
       '/api/study/outputs/review-words': {POST:input=>draftCall(()=>{if(!studyOutputs)throw new StateError('Output persistence is not enabled.',503);return studyOutputs.reviewCarouselWords(input);})},

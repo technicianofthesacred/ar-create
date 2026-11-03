@@ -45,6 +45,7 @@ import {outputPrivatePrefix} from './output-records.mjs';
 import {createStudyPhotos,studyPhotoPreviewInput} from './services/study-photos.mjs';
 import {createStudyOwnedPhotoBindings} from './services/study-owned-photo-bindings.mjs';
 import {createConceptWork} from './services/concept-work.mjs';
+import {createConsentDesk} from './services/consent-desk.mjs';
 import {createStudyHumanDirection} from './services/study-human-direction.mjs';
 import {createStudyResearchChoices} from './services/study-research-choices.mjs';
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
@@ -324,6 +325,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const magazineMechanicalChecks=studyOriginals&&magazineVault.extra.checks?createMagazineMechanicalChecks({dataDir,magazine:magazineVault,working:magazineWorking,originals:studyOriginals,enabled:magazineCheckReceipts}):null;
   // Coordination and navigation/selection are not authored changes. Keep them out of edit activity.
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask','first-flow.select','study.photos.select','study.human-direction.select','study-draft.open']);
+  // Decisions whose reason belongs in the journal line itself (Adrian overriding the consent hold, taking a person off).
+  const JOURNAL_REASONS=new Set(['consent.share.override','consent.people.remove']);
   function afterRequest(request,response,context){
    if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return;
    let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return;}
@@ -334,7 +337,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
    if(status>=200&&status<300)events.emit({kind:command.name,scope,revision:revisionOf(result),actor:context.actor,client:context.client,operationId});
    const expected=input&&typeof input==='object'?(Number.isSafeInteger(input.expectedRevision)||typeof input.expectedHash==='string'?{revision:input.expectedRevision??null,hash:input.expectedHash??null}:input.expected&&typeof input.expected==='object'?{revision:input.expected.revision??null,hash:input.expected.hash??null}:null):null;
    const ok=status>=200&&status<300,after=ok?{revision:revisionOf(result),hash:typeof result?.hash==='string'?result.hash:null}:null;
-   journal.append({operationId,actor:context.actor,client:context.client,scope,kind:command.name,status:ok?'committed':status===409||status===423?'conflict':'rejected',before:expected,after,reason:ok?null:String(result?.error||'HTTP '+status).slice(0,500),http:status}).catch(error=>console.error('Journal line was not written:',error.message));
+   journal.append({operationId,actor:context.actor,client:context.client,scope,kind:command.name,status:ok?'committed':status===409||status===423?'conflict':'rejected',before:expected,after,reason:ok?(JOURNAL_REASONS.has(command.name)&&typeof input?.reason==='string'?input.reason.slice(0,500):null):String(result?.error||'HTTP '+status).slice(0,500),http:status}).catch(error=>console.error('Journal line was not written:',error.message));
   }
   function eventFilter(url){const kind=url.searchParams.get('kind'),id=url.searchParams.get('id');return {...(kind?{kind}:{}),...(id?{id}:{})};}
   async function coordination(request,response,pathname,url){
@@ -367,7 +370,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), publicDi
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
   const sourceTranscript=createSourceTranscriptProposals({library,recordings,readCandidate:input=>localTranscriptCandidates.readCandidate(input)});
   const sourceLineChecks=createSourceLineChecks({dataDir});
-  const maintainedCommandRoutes=createRouteMap({sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
+  const maintainedCommandRoutes=createRouteMap({sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions:createStudyDirectionOptions({drafts:studyDrafts,bindings:studyBindings,firstFlow}),studyDirectionTarget:createStudyDirectionTarget({drafts:studyDrafts,bindings:studyBindings,outputs:studyOutputs,structureTests}),structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk:createConsentDesk({dataDir,library}),terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports,magazineRoutes:createMagazineRoutes(magazineVault,magazineVault.extra)});
   const commandRoutes=context=>({...maintainedCommandRoutes(context),'/api/study/outputs/copy-retained-carousel':{POST:input=>draftCall(()=>{
     if([...context.url.searchParams].length)throw new StateError('Use the exact retained copy command without a query.',400);
     if(!retainedCarouselSource||!studyOutputs)throw new StateError('Retained carousel copying is not configured for this workspace.',503);

@@ -52,7 +52,7 @@
   return `<div class="ce-card-wrap" role="region" aria-label="${esc(title)}"><div class="ce-icon">${icon(s.icon)}</div><div class="ce-copy"><h3>${esc(title)}</h3><p>${esc(text)}</p><div class="ce-acts">${primaryHTML(s)}${s.actions.map((a,i)=>[a,i]).filter(([a])=>!(st&&a[2])).map(([a,i])=>actionHTML(st?[a[0],a[1],false]:a,i)).join('')}</div>${steps}${s.compact?'':'<button type="button" class="ce-tools" data-ce-anyway>Show this step’s tools</button>'}</div></div>`;
  }
  let current_=null,revealed='';
- const KEEP='#c3-surface-bar,.c3-ctitle,.c3-ws-title,.c3-scope,#c3-next,#c3-records,.draft-bar,.topbar,.workbar,#work-context,.historicalToolbar,[role=alert],#c3-read-insp,#c3-insp-head,#margin,dialog,.flow-retained,details.oss-retained,script,style';
+ const KEEP='#c3-surface-bar,.c3-ctitle,.c3-ws-title,.c3-scope,#c3-next,#c3-records,.draft-bar,.topbar,.workbar,#work-context,.historicalToolbar,[role=alert],#c3-read-insp,#c3-insp-head,#margin,dialog,.flow-retained,details.oss-retained,.cd-desk,script,style';
  const key=()=>{const p=current();return p.id+':'+stage();};
  function clear(){document.querySelectorAll('#app [data-c3-empty-hidden]').forEach(n=>n.removeAttribute('data-c3-empty-hidden'));document.querySelectorAll('#app .c3-empty').forEach(n=>n.remove());current_=null;}
  // The empty card owns the screen (review A6): every tool block beside the path from the card up to the work column is

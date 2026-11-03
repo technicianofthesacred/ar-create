@@ -60,6 +60,7 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 | `articles/`, `carousels/`, `native-outputs/` | Output wording, editions, exports |
 | `source-history/`, transcript owner | Transcript sessions and corrections |
 | `simmer-boards/` | Simmer board layout per project: groups, block order, notes and answers, the commit sentence. Photos and his exact words stay in Library; the sent sentence is saved as the project's human direction |
+| `consent-desk/` | The truth and consent desk, one record per piece (`parentStudyId` + `pieceKey`, default `main`): claims and quotes with their source moment, people with how they appear and their consent, Share's comfort and accuracy answers, the override and the release. Agents use `consent desk|open|claim|link|flag|person|draft`; consent answers, recording a sent request, the Share answers, the override and the final yes are `human:adrian` only |
 | `journal/<yyyy-mm>.jsonl`, `leases/<kind>/<id>.json` | Who did what; who holds what |
 | `provenance/`, `*-requests/` | Actor stamps, proposals awaiting a human |
 

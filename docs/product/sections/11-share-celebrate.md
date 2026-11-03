@@ -18,3 +18,7 @@ AI drafts or translates a message grounded in the actual relationship and piece;
 ## Result and acceptance
 
 Save message versions, language, target published edition, per-recipient sent/replied state, replies and proposed corrections. A message drafted before publication remains a draft; outdated links/editions are flagged. No recipient means an explicit not-applicable route. No reply means waiting or deliberately closed with reason, not confirmed. Completing one recipient's conversation does not finish every output.
+
+## 3 November 2026: Before you release
+
+How I Work step 6. Share opens with two questions only Adrian answers: are you comfortable sharing this, and is it accurate (with the count of sourced, unsourced and doubtful claims beside it). Every person who appears is listed with how they appear (named, pictured, quoted) and their consent: not asked, asked, yes, yes with changes, no. Agents list people and draft the consent request; AR Create never sends it. Recording that a request was sent, setting a consent answer and the final yes are human-only. Release holds while anyone is unanswered, has said no, or now appears in more ways than they agreed to. Adrian can override with a reason, which is journaled; the override covers only the people open at that moment. The release records his yes; publishing still happens from Outputs. `consent.open` lists every open consent item read-only, for the needs-you list.
