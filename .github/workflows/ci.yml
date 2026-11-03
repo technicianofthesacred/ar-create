@@ -17,6 +17,8 @@ permissions:
 
 jobs:
   test:
+    # The release script reads a check run named `ci` on the commit it installs (scripts/lib/release-gates.mjs).
+    name: ci
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
