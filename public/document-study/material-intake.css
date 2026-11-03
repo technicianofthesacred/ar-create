@@ -54,3 +54,15 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions .mi-primary:hover:not(:disabled){background:color-mix(in srgb,var(--warm) 12%,transparent)!important;filter:none}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions [data-mi-source-none]{display:none!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body .shell:has(> main .wfb-browser.mi-open) > main{grid-column:2 / -1!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:8px 12px!important;padding:8px 0!important;margin:0!important;border:0!important;border-top:1px solid var(--line)!important;font-family:var(--ar-ui)!important;font-size:var(--t-label)!important;color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup>strong{font-weight:600!important;color:var(--ink)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button{padding:4px 12px!important;cursor:pointer;background:transparent!important;color:var(--ink)!important;border:1px solid var(--line)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button.mi-primary{background:var(--warm)!important;color:var(--paper)!important;border:0!important;font-weight:500}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button[data-mi-pickup-setup]{color:var(--warm)!important;border-color:color-mix(in srgb,var(--warm) 60%,var(--line))!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button:disabled{opacity:.55;cursor:default}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-tally{color:var(--dim)!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup{flex-basis:100%;display:grid;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:5px;color:var(--ink)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup p,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup ol{margin:0;padding-left:0}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup ol{padding-left:18px}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup code{display:block;padding:8px 10px;border-radius:5px;background:var(--sel);font-family:var(--ar-mono,ui-monospace,monospace);font-size:var(--t-label);overflow-wrap:anywhere;user-select:all}
+@media (pointer:coarse){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button{min-height:44px}}
