@@ -9,7 +9,7 @@
  const actor=()=>window.arCreateUiActor?.actor||'human:adrian',human=()=>/^human:/.test(actor());
  const headers=()=>({'Content-Type':'application/json','X-AR-Actor':actor(),'X-AR-Client':'ui'});
  const who=by=>{const m=/^agent:(.+)$/.exec(by||'');if(!m)return 'Claude';return /^claude/.test(m[1])?'Claude':m[1].replace(/^./,c=>c.toUpperCase());};
- const KIND={photo:'Photo',passage:'Passage',mine:'Your words',note:'Your note',concept:'Concept',question:'Question',choice:'Choice',feeling:'Feeling check',guidance:'Guidance',check:'To check',consent:'Consent',voice:'Voice moment',thread:'Open thread'};
+ const KIND={photo:'Photo',passage:'Passage',mine:'Your words',note:'Your note',concept:'Concept',question:'Question',choice:'Choice',feeling:'Feeling check',guidance:'Guidance',check:'To check',consent:'Consent',voice:'Voice moment',thread:'Open thread',letter:'Reflection letter'};
  const WIDE=new Set(['passage','mine','concept','question','choice','feeling','voice','thread','check']),NO_HOLD=new Set(['note','guidance','consent']);
  const FEELING=['Moves me','Not sure','Not mine'];
  let dlg=null,s=0.8,tx=10,ty=10,mode=null,lastTarget=null,current=null,ctx=null,board=null,saving=null,dirty=false,timer=0,stale=false,mobile=matchMedia('(max-width:860px)'),opener=null;
@@ -42,7 +42,7 @@
 
  /* ---------- rendering ---------- */
  const blobUrl=id=>'/api/sources/blob?id='+encodeURIComponent(id);
- function kindLabel(b){if(b.kind==='guidance'&&b.origin==='machine')return b.label||('From '+who(b.by));const base=b.label||(b.kind==='question'&&b.origin==='human'?'Question for yourself':KIND[b.kind]);return b.origin==='machine'?base+' · from '+who(b.by):base;}
+ function kindLabel(b){if(b.kind==='guidance'&&b.origin==='machine')return b.label||('From '+who(b.by));const base=b.label||(b.kind==='question'&&b.origin==='human'?'Question for yourself':KIND[b.kind]);return b.origin==='machine'?base+(b.proposal?' · proposed by ':' · from ')+who(b.by):base;}
  function holdHTML(b){if(NO_HOLD.has(b.kind))return '';return '<button class="sm-hold" type="button" aria-pressed="'+!!b.held+'">'+(b.held?'Held':'Hold')+'</button>';}
  function optsHTML(b){const opts=b.options?.length?b.options:b.kind==='feeling'?FEELING:[];if(!opts.length)return '';return '<div class="sm-opts">'+opts.map(o=>'<button type="button" data-pick="'+esc(o)+'" aria-pressed="'+(b.pick===o)+'">'+esc(o)+'</button>').join('')+'</div>';}
  function statusHTML(b){const t=b.status||(b.kind==='consent'?'Not asked':b.kind==='check'?'Not yet checked':'');if(!t)return '';return '<span class="sm-status'+(/^checked|^asked|agreed/i.test(t)?' ok':'')+'">'+esc(t)+'</span>';}
@@ -51,7 +51,8 @@
   switch(b.kind){
    case 'photo':return '<img src="'+(b.photo?esc(blobUrl(b.photo.sourceId)):'')+'" alt="'+esc(b.caption||'Photo')+'" loading="lazy"><span class="sm-who">'+esc(b.caption||'')+'</span>';
    case 'passage':return '<p class="sm-speech">“'+esc(b.text)+'”</p><span class="sm-who">'+esc(b.source?.speaker||b.source?.title||'Library')+' · exact words</span>';
-   case 'mine':return '<p class="sm-speech sm-empty-text">'+(b.text?'“'+esc(b.text)+'”':'')+'</p><span class="sm-who">You</span>';
+   case 'mine':return '<p class="sm-speech sm-empty-text">'+(b.text?'“'+esc(b.text)+'”':'')+'</p><span class="sm-who">You'+(b.dictated?' · said in chat':'')+'</span>';
+   case 'letter':{const l=b.letter||{},part=(h,t)=>t?'<h4>'+h+'</h4><p>'+esc(t)+'</p>':'';return '<div class="sm-letter">'+(b.letter?part('What keeps coming back',l.recurs)+part('Where your voice changed',l.voice)+part('Still unresolved',l.unresolved):'<p>'+esc(b.text)+'</p>')+'</div>';}
    case 'note':return '<p class="sm-clamp sm-empty-text">'+esc(b.text)+'</p>';
    case 'concept':return '<p class="sm-term">'+esc(b.term||'')+(b.termNative?' <span>'+esc(b.termNative)+'</span>':'')+'</p><p>'+esc(b.text)+'</p>';
    case 'question':return '<p class="sm-empty-text">'+esc(b.text)+'</p><p class="sm-answer">'+esc(b.answer||'')+'</p>';
@@ -121,6 +122,7 @@
   else if(b.kind==='passage')html+='<p class="sm-speech">“'+esc(b.text)+'”</p><p class="sm-who">'+esc(b.source?.speaker||b.source?.title||'')+' · exact words</p><p class="sm-protected">His exact words are protected. They can be quoted, never changed.</p>'+field('Your reading of it','reading',b.reading,'What do you hear in this?');
   else if(b.kind==='question')html+=(own?field('Question','text',b.text,'Write the question'):'<p>'+esc(b.text)+'</p>')+field('Your answer','answer',b.answer,'Type it');
   else if(b.kind==='concept')html+='<p class="sm-term">'+esc(b.term||'')+(b.termNative?' <span>'+esc(b.termNative)+'</span>':'')+'</p>'+field('What it means here','text',b.text);
+  else if(mine&&b.dictated)html+='<p class="sm-protected">You said this in chat and '+esc(who(b.dictated.carriedBy)==='Adrian'?'saved it':who(b.dictated.carriedBy)+' carried it here')+' word for word. The original stays in your Library; change it here and it becomes your typed words.</p>'+field('Your words','text',b.text,'Something you said or want to say');
   else if(mine)html+=field(b.kind==='mine'?'Your words (your own, so you can refine them)':'Note','text',b.text,b.kind==='mine'?'Something you said or want to say':'Type');
   else if(own&&(b.kind==='check'||b.kind==='feeling'))html+=field(b.kind==='check'?'What should be looked into?':'What are you checking?','text',b.text)+(b.kind==='feeling'?optsHTML(b):statusHTML(b));
   else html+=body(b);
@@ -137,7 +139,9 @@
  function hide(){const ed=editor();scrim().classList.remove('on');ed.hidden=true;scrim().hidden=true;ed.innerHTML='';}
  function writeBack(){
   if(!current)return;const found=blockOf(current.id);if(!found)return;const {b}=found;let changed=false;
-  editor().querySelectorAll('[data-bind]').forEach(f=>{const v=f.innerText.replace(/\n+$/,'').trim(),k=f.dataset.bind;if((b[k]||'')!==v){b[k]=v;changed=true;}});
+  editor().querySelectorAll('[data-bind]').forEach(f=>{const v=f.innerText.replace(/\n+$/,'').trim(),k=f.dataset.bind;if((b[k]||'')!==v){
+   // Words carried from a chat stay stamped only while they are exactly what he said; his own edit makes them typed words.
+   if(k==='text'&&b.dictated&&v===(b.text||'').trim())return;b[k]=v;if(k==='text'&&b.dictated&&b.kind==='mine'){delete b.dictated;delete b.source;}changed=true;}});
   if(changed){const old=current.el,el=blockEl(b);old.replaceWith(el);current.el=el;sizeBlock(el);layout(el.closest('.sm-inner'));renderForming();queueSave();}
  }
  function closeEditor(){if(!current){hide();return;}writeBack();const {el,id,isNew}=current,found=blockOf(id);current=null;hide();
@@ -154,6 +158,7 @@
   if(!dlg)return;const held=[];for(const g of board.groups)for(const b of g.blocks)if(b.held)held.push(b);
   const ul=$('.sm-held');ul.innerHTML=held.length?held.map(b=>'<li><span>'+esc(label(b))+'</span><button type="button" data-open="'+esc(b.id)+'">Open</button><button type="button" data-letgo="'+esc(b.id)+'">Let go</button></li>').join(''):'<li class="empty">Hold anything on the board and it lands here.</li>';
   const dishes=board.forming.dishes||[];$('.sm-dishes').innerHTML=dishes.length?dishes.map(d=>'<button type="button" data-dish="'+esc(d.id)+'" aria-pressed="'+(board.forming.dish===d.id)+'">'+esc(d.title)+(d.why?'<small>'+esc(d.why)+'</small>':'')+'</button>').join(''):'<p class="empty">Possible dishes show up here as the board fills. Or name it yourself in the sentence below.</p>';
+  const nm=$('.sm-named'),named=board.forming.named;if(nm){nm.hidden=!named;nm.innerHTML=named?'<h4>You named it in chat</h4><p class="sm-speech">“'+esc(named.text)+'”</p><p class="sm-who">'+(named.direction==='saved'?'Saved in Direction as your sentence.':esc(named.reason||'Not in Direction yet.'))+'</p>':'';}
   const sen=board.forming.sentence;for(const k of ['about','really','dish','reader']){const n=$('[data-sentence="'+k+'"]');if(n&&document.activeElement!==n&&n.textContent!==sen[k])n.textContent=sen[k]||'';}
   const ft=$('[data-sm="forming"]');ft.innerHTML='Forming'+(held.length?'<span class="n" aria-label="'+held.length+' held">'+held.length+'</span>':'');
  }
@@ -218,7 +223,7 @@
   d.innerHTML='<div class="sm-bar"><span class="sm-title"><b></b> · Simmer<span class="sm-save" role="status"></span></span><div class="sm-zoom" aria-label="Zoom"><button type="button" class="sm-tb" data-sm="zout" aria-label="Zoom out">−</button><span>80%</span><button type="button" class="sm-tb" data-sm="zin" aria-label="Zoom in">+</button></div><button type="button" class="sm-tb" data-sm="fit" title="Zoom out to see every group">Fit</button><span class="sm-sep" aria-hidden="true"></span><button type="button" class="sm-tb" data-sm="talk"><span class="dot"></span>Talk</button><button type="button" class="sm-tb" data-sm="forming" aria-pressed="true" aria-controls="sm-forming">Forming</button><span class="sm-sep" aria-hidden="true"></span><button type="button" class="sm-tb" data-sm="leave">Leave</button></div>'
    +'<nav class="sm-groups" aria-label="Groups"><span class="lbl">Go to</span></nav><div class="sm-note" hidden role="status"></div>'
    +'<div class="sm-body"><div class="sm-vp"><div class="sm-world"><svg class="sm-links" aria-hidden="true"></svg></div><div class="sm-scrim" hidden></div><div class="sm-editor" hidden role="dialog" aria-modal="true" aria-label="Edit block"></div></div>'
-   +'<aside class="sm-forming" id="sm-forming" aria-label="Forming"><div><h2>Forming</h2><p class="intro">What\'s holding, and the dish taking shape. Nothing here is decided until you send it.</p></div><div class="sm-fsec"><h3>Holding</h3><ul class="sm-held"></ul></div><div class="sm-fsec"><h3>It could become</h3><div class="sm-dishes"></div></div><div class="sm-fsec"><h3>When you can say it</h3><p class="sm-sentence">This is about <span contenteditable="true" data-sentence="about" data-ph="the situation"></span>. Really it\'s about <span contenteditable="true" data-sentence="really" data-ph="the story"></span>. It\'s <span contenteditable="true" data-sentence="dish" data-ph="the dish"></span> for <span contenteditable="true" data-sentence="reader" data-ph="which reader"></span>.</p><button type="button" class="sm-primary" data-sm="send">Send to Direction</button><p class="sm-msg" aria-live="polite"></p></div></aside></div>';
+   +'<aside class="sm-forming" id="sm-forming" aria-label="Forming"><div><h2>Forming</h2><p class="intro">What\'s holding, and the dish taking shape. Nothing here is decided until you send it.</p></div><div class="sm-fsec"><h3>Holding</h3><ul class="sm-held"></ul></div><div class="sm-fsec"><h3>It could become</h3><div class="sm-dishes"></div></div><div class="sm-fsec"><h3>When you can say it</h3><div class="sm-named" hidden></div><p class="sm-sentence">This is about <span contenteditable="true" data-sentence="about" data-ph="the situation"></span>. Really it\'s about <span contenteditable="true" data-sentence="really" data-ph="the story"></span>. It\'s <span contenteditable="true" data-sentence="dish" data-ph="the dish"></span> for <span contenteditable="true" data-sentence="reader" data-ph="which reader"></span>.</p><button type="button" class="sm-primary" data-sm="send">Send to Direction</button><p class="sm-msg" aria-live="polite"></p></div></aside></div>';
   d.addEventListener('pointerdown',e=>{if(e.target.closest('.sm-vp'))onDown(e);});
   d.addEventListener('pointermove',onMove);d.addEventListener('pointerup',onUp);d.addEventListener('pointercancel',onUp);
   d.addEventListener('wheel',e=>{if(!e.target.closest('.sm-vp')||mobile.matches||!editor().hidden)return;e.preventDefault();const r=vp().getBoundingClientRect();if(e.ctrlKey||e.metaKey)zoomAt(s*Math.exp(-e.deltaY*0.01),e.clientX-r.left,e.clientY-r.top);else{tx-=e.deltaX;ty-=e.deltaY;apply();}},{passive:false});

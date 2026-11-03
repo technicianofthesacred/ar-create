@@ -6,6 +6,19 @@ const adoptedHeading='\n\n## Adopted human direction — explicit\n\n';
 const headings=['# Concept\n\n## Author thoughts — supplied verbatim\n\n','\n\n## AI interpretation — provisional\n\n','\n\n## Suggestions — unadopted\n\n','\n\n## Selected Library passages — references, not approval\n\n'];
 export function conceptReferences(body){const refs=[];const pattern=/### ([^\n]+)\n\nSource ID: `([a-f0-9-]{36})` · SHA-256: `([a-f0-9]{64})` · character (\d+)\n\n((?:> [^\n]*\n)+)/g;for(const m of body.matchAll(pattern)){if(UUID.test(m[2]))refs.push({title:m[1],sourceId:m[2],sourceHash:m[3],start:Number(m[4]),quote:m[5].slice(0,-1).split('\n').map(line=>line.slice(2)).join('\n')});}return refs;}
 export function renderConcept(parts){return headings[0]+parts.authorThoughts+(parts.adoptedDirection?adoptedHeading+parts.adoptedDirection:'')+headings[1]+parts.aiInterpretation+headings[2]+parts.suggestions+headings[3]+parts.sourceSelections.map(s=>'### '+s.title.replace(/[\r\n]/g,' ')+'\n\nSource ID: `'+s.sourceId+'` · SHA-256: `'+s.sourceHash+'` · character '+s.start+'\n\n'+s.quote.split('\n').map(line=>'> '+line).join('\n')+'\n').join('\n');}
+/**
+ * The same brief with only its adopted direction set to sentence: every other byte is kept as it was. Returns null
+ * when the brief is not the recognized structure (hand-written Markdown is never rewritten here).
+ */
+export function withAdoptedDirection(body,sentence){
+ if(!body)return renderConcept({authorThoughts:'',adoptedDirection:sentence,aiInterpretation:'',suggestions:'',sourceSelections:[]});
+ const before=decodeConcept(body);if(!before.structured)return null;
+ const end=body.indexOf(headings[1]),start=body.indexOf(adoptedHeading),has=start>=headings[0].length&&start<end;
+ const next=has?body.slice(0,start)+adoptedHeading+sentence+body.slice(end):body.slice(0,end)+adoptedHeading+sentence+body.slice(end);
+ const after=decodeConcept(next);
+ if(!after.structured||after.adoptedDirection!==sentence||after.authorThoughts!==before.authorThoughts||after.aiInterpretation!==before.aiInterpretation||after.suggestions!==before.suggestions||JSON.stringify(after.sourceSelections)!==JSON.stringify(before.sourceSelections))return null;
+ return next;
+}
 export function decodeConcept(body){if(!body)return {structured:true,authorThoughts:'',adoptedDirection:'',aiInterpretation:'',suggestions:'',sourceSelections:[]};const sourceSelections=conceptReferences(body);if(body.startsWith(headings[0])&&headings.every(h=>body.split(h).length===2)){const first=body.indexOf(headings[1]),second=body.indexOf(headings[2]),third=body.indexOf(headings[3]);if(first>=headings[0].length&&second>first&&third>second){const adoptedIndex=body.indexOf(adoptedHeading),hasAdopted=adoptedIndex>=headings[0].length&&adoptedIndex<first&&body.split(adoptedHeading).length===2;const parts={authorThoughts:body.slice(headings[0].length,hasAdopted?adoptedIndex:first),adoptedDirection:hasAdopted?body.slice(adoptedIndex+adoptedHeading.length,first):'',aiInterpretation:body.slice(first+headings[1].length,second),suggestions:body.slice(second+headings[2].length,third),sourceSelections};if(renderConcept(parts)===body)return {structured:true,...parts};}}return {structured:false,authorThoughts:null,adoptedDirection:null,aiInterpretation:null,suggestions:null,sourceSelections,existingDirection:body};}
 
 /** Planning intent is read from its existing owned Markdown; it never approves prose. */

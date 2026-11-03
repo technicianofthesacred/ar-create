@@ -9,14 +9,21 @@ import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor} from './actor.mjs';
 
 const SCHEMA='ar-create.simmer-board.v1',PREFIX='/api/simmer/',MAX_BODY=2*1024*1024,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/,ID=/^[A-Za-z0-9._:-]{1,160}$/;
-export const KINDS=Object.freeze(['photo','passage','mine','note','concept','question','choice','feeling','guidance','check','consent','voice','thread']);
+export const KINDS=Object.freeze(['photo','passage','mine','note','concept','question','choice','feeling','guidance','check','consent','voice','thread','letter']);
+// Who may carry Adrian's words from a chat into the board: Adrian himself, or an agent he is talking to. Never a cron or import.
+export const CARRIERS=Object.freeze(['human:adrian','agent:claude-code','agent:codex','agent:claude-design','agent:hermes','agent:grok','agent:chatgpt']);
 // Adrian's own words: only a human writes these kinds, and only a human sets these fields on any block.
 const HUMAN_KINDS=new Set(['mine','note']),HUMAN_FIELDS=['answer','reading','people','pick','held'],SENTENCE=['about','really','dish','reader'];
 const fail=(message,status=400)=>{throw new StateError(message,status);};
+const LETTER=['recurs','voice','unresolved'];
+const ISO=/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/;
+/** The stamp on words Adrian said in a chat and someone carried here: who carried them, how, and when. */
+function cleanDictated(d){if(!d||typeof d!=='object'||Array.isArray(d)||!CARRIERS.includes(d.carriedBy)||d.via!=='chat'||!ISO.test(d.at||''))fail('A dictated stamp names its carrier, chat and the time.');return {carriedBy:d.carriedBy,via:'chat',at:d.at,...(d.said==='spoken'||d.said==='typed'?{said:d.said}:{})};}
+function cleanNamed(n){if(n===undefined||n===null)return null;if(typeof n!=='object'||Array.isArray(n))fail('The named dish is his sentence and where it was saved.');const text=str(n.text,'The named dish',600);if(!text||!text.trim())fail('The named dish is his exact sentence.');if(!UUID.test(n.sourceId||'')||!HASH.test(n.sourceHash||'')||!Number.isSafeInteger(n.start)||n.start<0)fail('The named dish keeps the Library note it was saved in.');return {text,sourceId:n.sourceId,sourceHash:n.sourceHash,start:n.start,dictated:cleanDictated(n.dictated),direction:n.direction==='saved'?'saved':n.direction==='held'?'held':'not-sent',...(typeof n.reason==='string'&&n.reason.length<=300?{reason:n.reason}:{})};}
 const str=(v,what,max=8000)=>{if(v===undefined)return undefined;if(typeof v!=='string'||v.length>max)fail(what+' must be text up to '+max+' characters.');return v;};
 const num=(v,what)=>{if(v===undefined)return undefined;if(typeof v!=='number'||!Number.isFinite(v)||Math.abs(v)>1e6)fail(what+' must be a finite number.');return Math.round(v);};
 const digest=value=>crypto.createHash('sha256').update(value).digest('hex');
-const empty=subject=>({schema:SCHEMA,subject,title:'',revision:0,groups:[],links:[],forming:{dishes:[],dish:null,sentence:{about:'',really:'',dish:'',reader:''},sentAt:null},operations:[]});
+const empty=subject=>({schema:SCHEMA,subject,title:'',revision:0,groups:[],links:[],forming:{dishes:[],dish:null,sentence:{about:'',really:'',dish:'',reader:''},sentAt:null,named:null},operations:[]});
 const content=board=>JSON.stringify({groups:board.groups,links:board.links,forming:board.forming,title:board.title});
 const withHash=board=>({...board,hash:digest(content(board))});
 
@@ -27,12 +34,17 @@ function cleanBlock(b){
  const out={id:b.id,kind:b.kind,origin:b.origin,by:str(b.by,'Author',80)||'',text:str(b.text,'Block text')??'',wide:!!b.wide};
  for(const k of ['answer','reading','caption','people','term','termNative','status','pick','label'])if(b[k]!==undefined)out[k]=str(b[k],k,4000);
  if(b.held!==undefined)out.held=!!b.held;
+ if(b.proposal!==undefined)out.proposal=!!b.proposal;
+ if(b.dictated!==undefined)out.dictated=cleanDictated(b.dictated);
+ if(b.letter!==undefined){const l=b.letter;if(!l||typeof l!=='object'||Array.isArray(l))fail('A reflection letter has its parts.');out.letter=Object.fromEntries(LETTER.map(k=>[k,str(l[k],'Letter part',4000)||'']));}
  if(b.reader!==undefined)out.reader=!!b.reader;
  if(b.options!==undefined){if(!Array.isArray(b.options)||b.options.length>8)fail('Options are a short list.');out.options=b.options.map(o=>str(o,'Option',120));}
  if(b.source!==undefined){const s=b.source;if(!s||typeof s!=='object'||!UUID.test(s.sourceId||''))fail('A passage names its Library source.');out.source={sourceId:s.sourceId,sourceHash:s.sourceHash,quote:str(s.quote,'Quote',16384),start:s.start,title:str(s.title,'Source title',300)||'',speaker:str(s.speaker,'Speaker',120)||''};if(!HASH.test(s.sourceHash||'')||!Number.isSafeInteger(s.start)||s.start<0||!s.quote)fail('A passage needs its exact source hash, start and quote.');}
  if(b.photo!==undefined){if(!b.photo||!UUID.test(b.photo.sourceId||''))fail('A photo names its Library source.');out.photo={sourceId:b.photo.sourceId};}
  if(b.audio!==undefined){if(!b.audio||!UUID.test(b.audio.sourceId||''))fail('A voice moment names its Library recording.');out.audio={sourceId:b.audio.sourceId,startMs:num(b.audio.startMs,'Start')??0,endMs:num(b.audio.endMs,'End')??0};}
  if(b.kind==='passage'){if(!out.source)fail('His exact words come from a Library passage.');if(out.text!==out.source.quote)fail('A passage shows the exact quote, unchanged.',403);}
+ if(out.dictated&&out.origin!=='human')fail('Only his own words are stamped dictated.',403);
+ if(out.dictated&&out.kind==='mine'&&(!out.source||out.source.quote!==out.text))fail('Dictated words keep the exact Library note they were saved in.',403);
  return out;
 }
 function cleanBoard(input,subject){
@@ -49,7 +61,7 @@ function cleanBoard(input,subject){
  for(const l of links){if(!Array.isArray(l)||l.length!==2||!l.every(id=>seen.has(id)))continue;out.links.push([l[0],l[1]]);}
  const f=input.forming||{},sentence=f.sentence||{};
  const dishes=f.dishes??[];if(!Array.isArray(dishes)||dishes.length>12)fail('Up to 12 possible dishes.');
- out.forming={dishes:dishes.map(d=>{if(!d||!ID.test(d.id||''))fail('Each dish needs an id.');return {id:d.id,title:str(d.title,'Dish',200)||'',why:str(d.why,'Why',600)||'',origin:d.origin==='machine'?'machine':'human',by:str(d.by,'Author',80)||''};}),dish:f.dish&&ID.test(f.dish)?f.dish:null,sentence:Object.fromEntries(SENTENCE.map(k=>[k,str(sentence[k],'Sentence',600)||''])),sentAt:typeof f.sentAt==='string'&&f.sentAt.length<40?f.sentAt:null};
+ out.forming={dishes:dishes.map(d=>{if(!d||!ID.test(d.id||''))fail('Each dish needs an id.');return {id:d.id,title:str(d.title,'Dish',200)||'',why:str(d.why,'Why',600)||'',origin:d.origin==='machine'?'machine':'human',by:str(d.by,'Author',80)||''};}),dish:f.dish&&ID.test(f.dish)?f.dish:null,sentence:Object.fromEntries(SENTENCE.map(k=>[k,str(sentence[k],'Sentence',600)||''])),sentAt:typeof f.sentAt==='string'&&f.sentAt.length<40?f.sentAt:null,named:cleanNamed(f.named)};
  return out;
 }
 const blocksOf=board=>{const m=new Map();for(const g of board.groups)for(const b of g.blocks)m.set(b.id,b);return m;};
@@ -65,14 +77,15 @@ function guardAgent(before,next,actor){
  }
  for(const [id,o] of old)if(!now.has(id)&&o.origin==='human')refuse('Removing a block he wrote');
  const og=new Map(before.groups.map(g=>[g.id,g]));for(const g of next.groups){const o=og.get(g.id);if(o&&o.origin==='human'&&o.title!==g.title)refuse('A group name he chose');if(!o&&g.origin!=='machine')refuse('A group he made');}
- if(!same(before.forming.sentence,next.forming.sentence))refuse('The sentence');if(before.forming.dish!==next.forming.dish)refuse('Naming the dish');if(before.forming.sentAt!==next.forming.sentAt)refuse('Sending to Direction');
+ if(!same(before.forming.sentence,next.forming.sentence))refuse('The sentence');if(before.forming.dish!==next.forming.dish)refuse('Naming the dish');if(before.forming.sentAt!==next.forming.sentAt)refuse('Sending to Direction');if(!same(before.forming.named??null,next.forming.named??null))refuse('The dish he named');
  const od=new Map(before.forming.dishes.map(d=>[d.id,d]));for(const d of next.forming.dishes){const o=od.get(d.id);if(o?.origin==='human'&&!same(o,d))refuse('A dish he named');if(!o&&d.origin!=='machine')refuse('A dish he named');}
  for(const [id,o] of od)if(o.origin==='human'&&!next.forming.dishes.some(d=>d.id===id))refuse('A dish he named');
 }
 // His exact words stay exact: an existing passage never changes, and a new one must match the Library text now.
 async function guardPassages(before,next,library){
  const old=blocksOf(before);
- for(const b of blocksOf(next).values()){if(b.kind!=='passage')continue;const o=old.get(b.id);
+ for(const b of blocksOf(next).values()){if(b.kind!=='passage'&&!(b.kind==='mine'&&b.dictated))continue;const o=old.get(b.id);
+  if(o&&b.kind==='mine'){if(!o.dictated||!same(o.source,b.source))fail('Dictated words keep the Library note they were saved in.',403);continue;}
   if(o){if(o.kind!=='passage'||!same(o.source,b.source)||o.text!==b.text)fail('His exact words are protected. They can be quoted, never changed.',403);continue;}
   if(!library?.snapshot)fail('Library is not connected, so a new passage cannot be checked against its source.',503);
   let s;try{s=await library.snapshot(b.source.sourceId,{includeBody:true});}catch{fail('That Library source is unavailable.',404);}
@@ -90,37 +103,61 @@ export function createSimmerBoards({dataDir,library}={}){
  function subjectOf(v){if(typeof v!=='string'||!ID.test(v))fail('Name the subject by its project id.');return v;}
  async function read({subject}){subject=subjectOf(subject);return view(load(subject));}
  async function save(input){
-  if(!input||typeof input!=='object')fail('Send a board save.');const subject=subjectOf(input.subject);
-  if(!UUID.test(input.operationId||'')||!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!HASH.test(input.expectedHash||''))fail('A save needs operationId, expectedRevision and expectedHash.');
+  if(!input||typeof input!=='object')fail('Send a board save.');
+  return commit(input,before=>cleanBoard(input.board,before.subject));
+ }
+ /**
+  * One write path for every board change. make(before) returns the next board (already cleaned). An agent's change
+  * passes the agent guard unless the change is a dictation: the server itself appended Adrian's exact words or
+  * photos, and dictation() proves nothing else moved. Revision and hash are required unless the change only appends.
+  */
+ async function commit(input,make,{appendOnly=false,dictation=null,extra=null}={}){
+  const subject=subjectOf(input.subject);
+  if(!UUID.test(input.operationId||''))fail('A change needs a fresh operationId.');
+  const pinned=input.expectedRevision!==undefined||input.expectedHash!==undefined;
+  if((pinned||!appendOnly)&&(!Number.isSafeInteger(input.expectedRevision)||input.expectedRevision<0||!HASH.test(input.expectedHash||'')))fail('A save needs operationId, expectedRevision and expectedHash.');
   return serial(subject,async()=>{
    const before=load(subject),current=withHash(before);
-   if(before.operations?.some(o=>o.operationId===input.operationId))return view(before);
-   if(current.revision!==input.expectedRevision||current.hash!==input.expectedHash)fail('This board changed since you opened it. Reload it; nothing was overwritten.',409);
-   const next=cleanBoard(input.board,subject),actor=currentActor()?.actor||'';
-   if(!isHuman(actor))guardAgent(before,next,actor||'an unattributed caller');
+   const replay=before.operations?.find(o=>o.operationId===input.operationId);if(replay)return {...view(before),replayed:true,...(replay.extra?{receipt:replay.extra}:{})};
+   if(pinned&&(current.revision!==input.expectedRevision||current.hash!==input.expectedHash))fail('This board changed since you opened it. Reload it; nothing was overwritten.',409);
+   const next=await make(before),actor=currentActor()?.actor||'';
+   if(dictation)dictation(before,next,actor);else if(!isHuman(actor))guardAgent(before,next,actor||'an unattributed caller');
    await guardPassages(before,next,library);
-   const board={schema:SCHEMA,subject,title:next.title||before.title,revision:before.revision+1,groups:next.groups,links:next.links,forming:next.forming,updatedAt:new Date().toISOString(),updatedBy:actor,operations:[{operationId:input.operationId,revision:before.revision+1,actor},...(before.operations||[])].slice(0,50)};
+   const receipt=typeof extra==='function'?extra(next):extra;
+   const board={schema:SCHEMA,subject,title:next.title||before.title,revision:before.revision+1,groups:next.groups,links:next.links,forming:next.forming,...(next.collectionId||before.collectionId?{collectionId:next.collectionId||before.collectionId}:{}),updatedAt:new Date().toISOString(),updatedBy:actor,operations:[{operationId:input.operationId,revision:before.revision+1,actor,...(receipt?{extra:receipt}:{})},...(before.operations||[])].slice(0,50)};
    fs.mkdirSync(dir,{recursive:true});const tmp=file(subject)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(board,null,1));fs.renameSync(tmp,file(subject));
-   return view(board);
+   return {...view(board),...(receipt?{receipt}:{})};
   });
  }
- return {read,save};
+ /** The raw stored board (for the chat commands, which build on what is there). */
+ const raw=subject=>{subject=subjectOf(subject);const b=load(subject);return {...withHash(b),operations:undefined};};
+ /** The receipt of an earlier change with this operationId, if there was one (so a retried chat command adds nothing twice). */
+ const seen=(subject,operationId)=>load(subjectOf(subject)).operations?.find(o=>o.operationId===operationId)||null;
+ return {read,save,commit,raw,seen,clean:cleanBoard};
 }
 
 const instances=new Map();
+/** The Simmer routes: GET/POST board, and the chat commands (intake, propose, dish; GET material). */
+export const SIMMER_ROUTES=Object.freeze({board:['GET','POST'],material:['GET'],intake:['POST'],propose:['POST'],dish:['POST']});
 /** One registration line in the server hands requests here; returns false for any other path. */
-export async function handleSimmer(request,response,{dataDir,library}){
+export async function handleSimmer(request,response,{dataDir,library,concepts,leases}){
  const url=new URL(request.url||'/','http://local.invalid');if(!url.pathname.startsWith(PREFIX))return false;
- let boards=instances.get(dataDir);if(!boards){boards=createSimmerBoards({dataDir,library});instances.set(dataDir,boards);}
- const send=(status,body)=>{response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
+ let entry=instances.get(dataDir);if(!entry){const boards=createSimmerBoards({dataDir,library});entry={boards,chat:null};instances.set(dataDir,entry);}
+ const {boards}=entry;
+ const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
-  if(url.pathname!==PREFIX+'board')fail('Unknown Simmer action.',404);
-  if(request.method==='GET')return send(200,await boards.read({subject:url.searchParams.get('subject')})),true;
-  if(request.method!=='POST')fail('Read with GET, save with POST.',405);
+  const action=url.pathname.slice(PREFIX.length),methods=SIMMER_ROUTES[action];
+  if(!methods)fail('Unknown Simmer action.',404);
+  if(!methods.includes(request.method))fail('This Simmer action takes '+methods.join(' or ')+'.',405);
+  if(action!=='board'&&!entry.chat){const {createSimmerChat}=await import('./simmer-chat.mjs');entry.chat=createSimmerChat({dataDir,library,boards,concepts});}
+  if(request.method==='GET')return send(200,action==='board'?await boards.read({subject:url.searchParams.get('subject')}):await entry.chat.material({subject:url.searchParams.get('subject')})),true;
   requireWriteActor();
   const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>MAX_BODY)fail('This board is too large to save.',413);chunks.push(chunk);}
-  let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{fail('Send the board as JSON.');}
-  send(200,await boards.save(input));
- }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The board could not be saved. Nothing was changed.'});}
+  let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{fail('Send the request as JSON.');}
+  // The journal and change notices read the subject as the project it belongs to.
+  request.arInput=input&&typeof input==='object'&&!Array.isArray(input)?{operationId:input.operationId,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash,...(typeof input.subject==='string'?{parentStudyId:input.subject}:{})}:null;
+  if(leases&&typeof input?.subject==='string')leases.check({kind:'project',id:input.subject},request.arActor);
+  send(200,action==='board'?await boards.save(input):await entry.chat[action](input));
+ }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The board could not be saved. Nothing was changed.',...(error.holder?{holder:error.holder}:{})});}
  return true;
 }
