@@ -133,6 +133,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/api/exports/{id}/file', ['rootBindingId?', 'parentStudyId?', 'selectedOutputId?']], ['GET', '/api/ingestion/raw', ['id', 'file']], ['GET', '/api/study-originals/audio', ['id']], ['GET', '/api/sources/blob', ['id', 'original?']],
   ['POST', '/api/media', ['image bytes (image/jpeg|png|webp)']],
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
+  ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];
