@@ -11,7 +11,10 @@ const hash='a'.repeat(64),otherHash='b'.repeat(64);
 const save={bindingId:'11111111-1111-1111-1111-111111111111',parentStudyId:'synthetic-parent:writing',operationId:'22222222-2222-2222-2222-222222222222',expected:{workflow:{draft:hash,edits:null,ask:otherHash,map:hash},bindingHash:hash,correspondenceHash:otherHash},operations:[{kind:'text',id:'stable-native-line',from:0,to:4,insert:'Saved synthetic words. 原话。',seenBlockHash:hash}]};
 const undo={bindingId:save.bindingId,parentStudyId:save.parentStudyId,operationId:'33333333-3333-3333-3333-333333333333',expected:save.expected,undoOperationId:save.operationId};
 function request(port,url,{method='POST',headers={},body}={}){
- return new Promise((resolve,reject)=>{const req=http.request({hostname:'127.0.0.1',port,path:url,method,headers,agent:false},res=>{const chunks=[];res.on('data',c=>chunks.push(c));res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString()}));});req.on('connect',(res,socket)=>{socket.destroy();resolve({status:res.statusCode});});req.on('error',reject);req.end(body);});
+ return new Promise((resolve,reject)=>{let answered=false;const req=http.request({hostname:'127.0.0.1',port,path:url,method,headers,agent:false},res=>{answered=true;const chunks=[];res.on('data',c=>chunks.push(c));res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString()}));res.on('error',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString()}));});req.on('connect',(res,socket)=>{socket.destroy();resolve({status:res.statusCode});});
+  // A server that refuses an oversized body answers and closes before the body is fully sent; the write then fails
+  // with ECONNRESET/EPIPE while the answer is still on its way. Give the answer a moment before calling it a failure.
+  req.on('error',error=>{if(answered)return;if(['ECONNRESET','EPIPE'].includes(error.code))setTimeout(()=>{if(!answered)reject(error);},500);else reject(error);});req.end(body);});
 }
 async function setup(t,{enabled=true,respond,existingReview=false}={}){
  const calls=[];
