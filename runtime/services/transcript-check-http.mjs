@@ -4,28 +4,29 @@ import {StateError} from '../store.mjs';
 import {requireWriteActor} from './actor.mjs';
 import {createTranscriptCheck} from './transcript-check.mjs';
 import {sharedWordLibrary} from './word-library.mjs';
+import {sharedNeedsYou} from './needs-you.mjs';
 
 const PREFIX='/api/transcript-check',MAX_BODY=256*1024;
 const instances=new Map();
 const fail=(message,status=400)=>{throw new StateError(message,status);};
 
-export function transcriptCheckFor({dataDir,recordings,options={}}){
+export function transcriptCheckFor({dataDir,recordings,events=null,options={}}){
  let found=instances.get(dataDir);if(found)return found;
  const library=sharedWordLibrary({dataDir});
  const vocabulary=async()=>{const snapshot=await library.exportSnapshot();return snapshot?.prompts?.en?String(snapshot.prompts.en).replace(/^[^:]*:\s*/,''):'';};
- found=createTranscriptCheck({dataDir,corrections:recordings.transcriptCorrections,vocabulary,...options});
+ found=createTranscriptCheck({dataDir,corrections:recordings.transcriptCorrections,vocabulary,needsYou:sharedNeedsYou({dataDir,events}),library,...options});
  instances.set(dataDir,found);return found;
 }
 export function stopTranscriptCheck(dataDir){instances.delete(dataDir);}
 
-export async function handleTranscriptCheck(request,response,{dataDir,recordings,checkWrite}){
+export async function handleTranscriptCheck(request,response,{dataDir,recordings,events,checkWrite}){
  const url=new URL(request.url||'/','http://local.invalid');
  if(url.pathname!==PREFIX&&!url.pathname.startsWith(PREFIX+'/'))return false;
  const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
-  const match=url.pathname.slice(PREFIX.length).match(/^\/([a-f0-9-]{36})(?:\/(suggest|decide|decide-group|undo))?$/);
+  const match=url.pathname.slice(PREFIX.length).match(/^\/([a-f0-9-]{36})(?:\/(suggest|decide|decide-group|undo|remember))?$/);
   if(!match)fail('Unknown transcript check action.',404);
-  const [,id,action]=match,check=transcriptCheckFor({dataDir,recordings});
+  const [,id,action]=match,check=transcriptCheckFor({dataDir,recordings,events});
   if([...url.searchParams.keys()].length)fail('This request takes no query fields.');
   if(!action){if(request.method!=='GET'&&request.method!=='HEAD'){response.setHeader('Allow','GET');fail('Use GET.',405);}send(200,check.view(id));return true;}
   if(request.method!=='POST'){response.setHeader('Allow','POST');fail('Use POST.',405);}
@@ -38,6 +39,7 @@ export async function handleTranscriptCheck(request,response,{dataDir,recordings
   if(action==='suggest')send(202,await check.suggest(id,{again:input.again===true}));
   else if(action==='decide')send(200,await check.decide(id,input));
   else if(action==='undo')send(200,await check.undo(id,input));
+  else if(action==='remember')send(200,await check.remember(id,input));
   else send(200,await check.decideGroup(id,input));
  }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The transcript check could not be read or saved. Nothing was changed.'});}
  return true;

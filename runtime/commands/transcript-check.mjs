@@ -8,13 +8,15 @@ export const TRANSCRIPT_CHECK_COMMANDS = Object.freeze([
   ['POST', '/api/transcript-check/{id}/decide'],
   ['POST', '/api/transcript-check/{id}/decide-group'],
   ['POST', '/api/transcript-check/{id}/undo'],
+  ['POST', '/api/transcript-check/{id}/remember'],
 ]);
 /** Decisions only Adrian makes. */
-export const TRANSCRIPT_CHECK_HUMAN_ONLY = Object.freeze(['POST /api/transcript-check/{id}/decide', 'POST /api/transcript-check/{id}/decide-group', 'POST /api/transcript-check/{id}/undo']);
+export const TRANSCRIPT_CHECK_HUMAN_ONLY = Object.freeze(['POST /api/transcript-check/{id}/decide', 'POST /api/transcript-check/{id}/decide-group', 'POST /api/transcript-check/{id}/undo', 'POST /api/transcript-check/{id}/remember']);
 /** Body fields agents most need, shown in /api/capabilities. */
 export const TRANSCRIPT_CHECK_BODY = Object.freeze({
   '/api/transcript-check/{id}/suggest': ['again? (read the transcript again)'],
   '/api/transcript-check/{id}/decide': ['problemId', 'action (use|keep|leave)', 'fixes? ([{index, text}] Adrian\'s own words)', 'expected (from the check)'],
   '/api/transcript-check/{id}/decide-group': ['tier (sure|notyou)', 'expected (from the check)'],
   '/api/transcript-check/{id}/undo': ['problemId', 'expected (from the check)'],
+  '/api/transcript-check/{id}/remember': ['problemId', 'spelling (a name this fix corrected)', 'category? (person|place|tea-term|gene-key|hexagram|other)'],
 });

@@ -18,7 +18,8 @@ const SCHEMA='ar-create.needs-you.v1',PREFIX='/api/needs-you',MAX_BODY=64*1024;
 export const BANDS=Object.freeze(['only-adrian','steer']);
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 // A link may only point back into the app, at the screen where a human-only click happens (publish, send, consent).
-const APP_LINK=/^\/document-study\/index\.html(?:\?[A-Za-z0-9=&%._~:+-]{1,800})?$/;
+// The document study page, or one recording's transcript check screen.
+const APP_LINK=/^(?:\/document-study\/index\.html(?:\?[A-Za-z0-9=&%._~:+-]{1,800})?|\/transcript-check\/index\.html\?job=[a-f0-9-]{36})$/;
 const LIMITS=Object.freeze({question:280,choice:80,choices:5,about:120,text:500,label:60,openAsks:100,keepDays:30,horizonDays:30});
 const DAY=24*60*60*1000;
 const fail=(message,status=400)=>{throw new StateError(message,status);};
@@ -111,7 +112,7 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
   let link=null;
   if(input.link!==undefined){
    const l=input.link;fields(l,['label','href']);
-   if(typeof l.href!=='string'||!APP_LINK.test(l.href))fail('A link points back into the app: /document-study/index.html with an optional ?query.');
+   if(typeof l.href!=='string'||!APP_LINK.test(l.href))fail('A link points back into the app: /document-study/index.html with an optional ?query, or a recording\'s /transcript-check/index.html?job=<id>.');
    link={label:text(l.label,'The link label',LIMITS.label,{required:true}),href:l.href};
   }
   let def=null,applyAt=null;
