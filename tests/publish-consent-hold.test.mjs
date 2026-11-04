@@ -133,6 +133,13 @@ test('Outputs: the older workspace export routes are held by the workspace proje
     const held = await cli(['call', command.name], {});
     assertHeld(held, {who: ['Maya'], scope});
   }
+  // The headless Carousel renderer is an HTML view of the exact slide words.
+  // A known export URL must not reveal those words while its piece is held.
+  const render = await fetch(url + '/api/carousel/exports/11111111-2222-4333-8444-555555555555/render/0');
+  assert.equal(render.status, 423);
+  assert.match((await render.json()).error, /Maya has not been asked yet/);
+  const forgedQuery = await fetch(url + '/api/carousel/exports/11111111-2222-4333-8444-555555555555/render/0?parentStudyId=unrelated');
+  assert.equal(forgedQuery.status, 423, 'an unscoped file cannot choose another project for its consent check');
   await d.answer(maya, 'yes');
   for (const route of ['/api/exports', '/api/carousel/exports']) {
     const r = await fetch(url + route, {method: 'POST', headers: {Origin: url, 'Content-Type': 'application/json', 'X-AR-Actor': AGENT}, body: '{}'});
