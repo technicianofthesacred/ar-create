@@ -45,14 +45,17 @@ jobs:
     name: ci
     needs: pick-runner
     runs-on: ${{ fromJSON(needs.pick-runner.outputs.runs_on) }}
-    timeout-minutes: 15
+    # 15 minutes on GitHub-hosted runners, which are metered. The Mac runner spends no GitHub minutes and takes
+    # about 14 minutes for the tests alone, so it gets 25: at 15 a passing run was cancelled while saving the cache.
+    timeout-minutes: ${{ needs.pick-runner.outputs.runs_on == '"ubuntu-latest"' && 15 || 25 }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          # The npm cache is GitHub storage; the Mac keeps its own, so it skips the upload that pushed runs past the limit.
+          cache: ${{ needs.pick-runner.outputs.runs_on == '"ubuntu-latest"' && 'npm' || '' }}
           cache-dependency-path: |
             runtime/package-lock.json
             mcp/study/package-lock.json
