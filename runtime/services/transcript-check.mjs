@@ -36,7 +36,8 @@ export function validateSuggestions(raw,segments,{strict=false}={}){
  for(const p of raw.problems.slice(0,MAX_PROBLEMS*2)){
   try{
   if(!p||typeof p!=='object'||!CHECK_TIERS.includes(p.tier))fail('A suggestion has no known kind.');
-  const tier=p.tier==='ear'&&p.certain===true&&Array.isArray(p.fixes)&&p.fixes.length?'sure':p.tier;
+  const quoted=typeof p.before==='string'&&typeof p.after==='string';
+  const tier=p.tier==='ear'&&p.certain===true&&(quoted||Array.isArray(p.fixes)&&p.fixes.length)?'sure':p.tier;
   const indexes=p.indexes;
   if(!Array.isArray(indexes)||!indexes.length||indexes.length>8||indexes.some(i=>!Number.isInteger(i)||!segments[i]))fail('A suggestion points at lines that do not exist.');
   for(let k=1;k<indexes.length;k++)if(indexes[k]!==indexes[k-1]+1)fail('A suggestion must cover lines in a row.');
@@ -44,7 +45,16 @@ export function validateSuggestions(raw,segments,{strict=false}={}){
   const reason=typeof p.reason==='string'?p.reason.trim():'';
   if(!reason||reason.length>MAX_REASON||/[\r\n\x00]/.test(reason))fail('A suggestion needs a one-line reason.');
   let fixes=null;
-  if(tier==='notyou'){if(p.fixes!=null&&!(Array.isArray(p.fixes)&&!p.fixes.length))fail('A line that is not the speaker takes no fix.');}
+  if(tier==='notyou'){if(quoted||p.fixes!=null&&!(Array.isArray(p.fixes)&&!p.fixes.length))fail('A line that is not the speaker takes no fix.');}
+  else if(quoted){
+   const lines=indexes.map(i=>({index:i,text:String(segments[i].text).trim()})),joined=lines.map(l=>l.text).join(' ');
+   if(!p.before.trim()||!joined.includes(p.before))fail('A fix must quote words that are in its lines.');
+   if(/[\r\n\x00]/.test(p.after)||p.after.length>MAX_TEXT)fail('A fix must be one line of words.');
+   const spread=spreadEdit(lines,joined.replace(p.before,p.after));
+   if(spread.emptied.length)fail('A fix cannot empty a whole line.');
+   fixes=spread.changed.map(i=>({index:i,text:spread.texts[i]}));
+   if(!fixes.length)fail('A fix must change something.');
+  }
   else if(p.fixes!=null){
    if(!Array.isArray(p.fixes)||!p.fixes.length)fail('A fix must name its lines.');
    fixes=p.fixes.map(f=>{if(!f||!indexes.includes(f.index)||typeof f.text!=='string'||!f.text.trim()||f.text.length>MAX_TEXT||/[\r\n\x00]/.test(f.text))fail('A fix must be one non-empty line for one of its own lines.');return {index:f.index,text:f.text.trim()};});
@@ -60,6 +70,75 @@ export function validateSuggestions(raw,segments,{strict=false}={}){
  return Object.assign(problems,{dropped:dropped+Math.max(0,out.length-MAX_PROBLEMS)});
 }
 
+/**
+ * Spreads one edit of a run of lines back over those lines. The edit is made to the lines' text read as one passage
+ * (what Adrian sees and types into, or a model's find-and-replace); the transcript keeps one text per line, so each
+ * word of the new passage is given to a line: a kept word stays with its line, a replacing word goes where the word it
+ * replaced was, an added word joins the line before it. A line no edit touched keeps its stored text exactly ("raw");
+ * a line left with no words is returned in "emptied", because a transcript line cannot be blank.
+ * lines: [{index, text, raw?}] in order. Returns {texts: {index: newText}, emptied: [index], changed: [index]}.
+ */
+export function spreadEdit(lines,newText){
+ const tokens=lines.flatMap(l=>String(l.text).split(/\s+/).filter(Boolean).map(w=>({w,owner:l.index})));
+ const next=String(newText).split(/\s+/).filter(Boolean);
+ if(tokens.length>1500||next.length>1500)fail('That passage is too long to change at once.');
+ const n=tokens.length,m=next.length,dp=Array.from({length:n+1},()=>new Uint16Array(m+1));
+ for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i][j]=tokens[i].w===next[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+ const owned=new Map(lines.map(l=>[l.index,[]])),touched=new Set();
+ // Inside a replaced stretch each new word goes to the line of the old word it most resembles ("Agate" joins the
+ // line that said "Aged"), words with no likeness follow their neighbour, and line order never runs backwards.
+ const norm=w=>w.toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+ const pairs=w=>{const t=norm(w),out=new Set();for(let k=0;k<t.length-1;k++)out.add(t.slice(k,k+2));if(t.length===1)out.add(t);return out;};
+ const like=(a,b)=>{const A=pairs(a),B=pairs(b);if(!A.size||!B.size)return 0;let both=0;for(const x of A)if(B.has(x))both++;return 2*both/(A.size+B.size)+(norm(a)[0]&&norm(a)[0]===norm(b)[0]?.2:0);};
+ let i=0,j=0,lastOwner=null;const deleted=[],added=[];
+ const resolve=nextOwner=>{
+  if(!added.length){deleted.length=0;return;}
+  let owners;
+  if(!deleted.length)owners=added.map(()=>lastOwner??nextOwner??lines[0]?.index);
+  else{
+   owners=added.map(w=>{let best=null,score=.45;for(const d of deleted){const v=like(w,d.w);if(v>score){score=v;best=d.owner;}}return best;});
+   const first=owners.find(o=>o!=null)??deleted[0].owner;
+   for(let k=0;k<owners.length;k++)owners[k]=owners[k]??(k?owners[k-1]:first);
+   for(let k=1;k<owners.length;k++)if(owners[k]<owners[k-1])owners[k]=owners[k-1];
+  }
+  added.forEach((w,k)=>{owned.get(owners[k]).push(w);touched.add(owners[k]);});
+  added.length=0;deleted.length=0;
+ };
+ while(i<n||j<m){
+  if(i<n&&j<m&&tokens[i].w===next[j]){resolve(tokens[i].owner);owned.get(tokens[i].owner).push(next[j]);lastOwner=tokens[i].owner;i++;j++;}
+  else if(i<n&&(j>=m||dp[i+1][j]>=dp[i][j+1])){deleted.push(tokens[i]);touched.add(tokens[i].owner);i++;}
+  else{added.push(next[j]);j++;}
+ }
+ resolve(null);
+ const texts={},emptied=[],changed=[];
+ for(const l of lines){
+  const words=owned.get(l.index);
+  if(!touched.has(l.index)){texts[l.index]=l.raw??l.text;continue;}
+  if(!words.length){emptied.push(l.index);continue;}
+  const text=words.join(' ');texts[l.index]=text;if(text!==(l.raw??l.text))changed.push(l.index);
+ }
+ return {texts,emptied,changed};
+}
+
+/**
+ * The talk as it reads: lines grouped into paragraphs where the speaker paused more than four seconds, and each line's
+ * text as shown (a line that carries on the one before loses its capital; a trailing "..." before it goes). Display only:
+ * a line is stored in its own words until an edit touches it.
+ */
+const KEEP_CAP=/^(I\b|I'm|I've|I'll|I'd)/;
+export function readingOf(segments){
+ const paragraphs=[];let cur=[];
+ segments.forEach((s,i)=>{if(cur.length&&s.start-segments[i-1].end>4){paragraphs.push(cur);cur=[];}cur.push(i);});
+ if(cur.length)paragraphs.push(cur);
+ const shown=segments.map(s=>String(s.text).trim());
+ for(const para of paragraphs)para.forEach((i,k)=>{
+  if(k===0){shown[i]=shown[i].charAt(0).toUpperCase()+shown[i].slice(1);return;}
+  const prev=String(segments[para[k-1]].text).trim(),open=prev.endsWith('...')||!/[.?!]$/.test(prev);
+  if(open){if(shown[para[k-1]].endsWith('...'))shown[para[k-1]]=shown[para[k-1]].slice(0,-3);if(!KEEP_CAP.test(shown[i]))shown[i]=shown[i].charAt(0).toLowerCase()+shown[i].slice(1);}
+ });
+ return {paragraphs,shown};
+}
+
 /** One prompt per recording: numbered lines with their time and the words the speech model was unsure of. */
 export function suggestionPrompt({title,segments,vocabulary=''}){
  const lines=segments.map((s,i)=>{const low=(s.words||[]).filter(w=>typeof w.probability==='number'&&w.probability<0.5).map(w=>String(w.word).trim()).filter(Boolean);return `${i} | ${mmss(s.start)} | ${s.text.trim()}${low.length?' | unsure: '+low.join(', '):''}`;});
@@ -71,11 +150,11 @@ export function suggestionPrompt({title,segments,vocabulary=''}){
   'Sort the lines that need attention into three kinds:',
   '- "sure": the correct words are certain from the passage or a well-known term, and a careful listener would not need the audio to agree (a misspelled well-known tradition or place name; "the bread came out of the oven" heard as "the bred came out of the oven"). Give the fix. Use sure whenever your fix is the only sensible reading of those sounds in this talk and you would bet on it: most misspelled names and sound-alike swaps that restore an obvious sentence are sure. Use ear only when two readings are plausible or the meaning stays unclear.',
   '- "notyou": a line that is probably not the speaker: another person, another language, a stray character, or a phrase speech models invent in silence ("thank you for watching", "thank you to all the listeners"). No fix.',
-  '- "ear": anything that looks wrong but needs the audio to settle. Give your best guess as the fix, chosen to fit the subject of the talk, and begin the reason with "A guess." when it is one; give "fixes": null when there is no sensible guess. Prefer flagging a line that reads as nonsense over leaving it.',
-  'Rules: never invent facts or content; keep the speaker\'s own words and style; do not flag a line only because it is a fragment or plain spoken grammar; do not correct grammar the speaker would say aloud. Fixes replace a line\'s whole text, one entry per line you change, every text non-empty; when a word belongs on another line of the same suggestion, fix each line separately. A suggestion covers lines in a row and no line twice. At most '+MAX_PROBLEMS+' suggestions. A fix must change the text; never return a line unchanged.',
+  '- "ear": anything that looks wrong but needs the audio to settle. Give your best guess as the fix, chosen to fit the subject of the talk, and begin the reason with "A guess." when it is one; leave out "before" and "after" when there is no sensible guess. Prefer flagging a line that reads as nonsense over leaving it.',
+  'Rules: never invent facts or content; keep the speaker\'s own words and style; do not flag a line only because it is a fragment or plain spoken grammar; do not correct grammar the speaker would say aloud. A fix quotes the exact words to replace as "before" (copied character for character from its lines, punctuation included, just long enough to be unique) and gives "after", the words that replace them; read across the line breaks, so a fix may run from one line into the next, and leave every other word as it is. A suggestion covers lines in a row and no line twice. At most '+MAX_PROBLEMS+' suggestions. A fix must change the text; never return a line unchanged.',
   'Reasons: one plain sentence under 25 words a non-technical person understands, no em dashes, no jargon.',
   'For every suggestion with a fix, also answer "certain": true when you would bet the fix is what was said, false otherwise. Be honest: a fix that only restores an obvious sentence or spelling is certain; a guess is not.',
-  'Return JSON only: {"problems":[{"indexes":[n,...],"tier":"sure|notyou|ear","fixes":[{"index":n,"text":"..."}] or null,"certain":true|false,"reason":"..."}]}',
+  'Return JSON only: {"problems":[{"indexes":[n,...],"tier":"sure|notyou|ear","before":"exact words","after":"replacement","certain":true|false,"reason":"..."}]} (no "before" or "after" for notyou, or for an ear check with no guess)',
   '<transcript>\n'+lines.join('\n')+'\n</transcript>',
  ].filter(Boolean).join('\n\n');
 }
@@ -163,10 +242,14 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
    if(decision?.action==='used'&&decision.fixes?.length&&decision.before?.length){const learned=new Set((decision.remembered||[]).map(r=>r.spelling));
     decision.names=nameCorrections(decision.before.map(b=>b.text).join(' '),decision.fixes.map(x=>x.text).join(' ')).map(n=>({...n,remembered:learned.has(n.spelling)}));}
    return {...p,decision};});
-  const leftOut=problems.filter(p=>p.decision?.action==='left-out').flatMap(p=>p.indexes);
+  const edits=record?.edits||[];
+  const leftOut=[...new Set([...problems.filter(p=>p.decision?.action==='left-out').flatMap(p=>p.indexes),...edits.flatMap(e=>e.emptied||[])])].sort((a,b)=>a-b);
+  const reading=readingOf(snap.segments);
   return {
    schema:'ar-create.transcript-check.v1',jobId:id,expected:snap.expected,reviewStatus:snap.reviewStatus,
-   segments:snap.segments.map(s=>({index:s.index,start:s.start,end:s.end,text:s.text})),
+   segments:snap.segments.map((s,i)=>{const words=(snap.result.segments[i]?.words||[]).filter(w=>Number.isFinite(w.start)).map(w=>[Math.round(w.start*100)/100,Math.round(w.end*100)/100]);return {index:s.index,start:s.start,end:s.end,text:s.text,shown:reading.shown[i],...(words.length?{words}:{})};}),
+   paragraphs:reading.paragraphs,
+   edits:edits.map(e=>({id:e.id,indexes:e.indexes,at:e.at})),
    check:record?{state:record.state,startedAt:record.startedAt,finishedAt:record.finishedAt||null,error:record.error||null,model:record.model||null,stale:record.state==='ready'&&record.basis!==snap.expected.revision&&!record.ownRevisions?.includes(snap.expected.revision)}:{state:'none'},
    problems,leftOut,available:available(),
   };
@@ -276,6 +359,47 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const story=titleOf(snap);
     await library.learn({heard:name.heard,spelling:name.spelling,category,from:{jobId:id,story,at:segment?.start,sentence:clip(first.text,300)},operationId:uuidFrom(id+':remember:'+problemId+':'+name.spelling)},currentActor()||undefined);
     decision.remembered=[...(decision.remembered||[]),{spelling:name.spelling,heard:name.heard,at:new Date().toISOString(),by:who()}];
+    save(id,record);return view(id);
+   });
+  },
+  /**
+   * Adrian types over any run of lines (usually a paragraph) as it reads on the page. The new words are spread over the
+   * lines and written through the correction boundary; a line he emptied is left out of the talk. Any suggestion on a
+   * line he changed is settled as edited, since his words now stand there.
+   */
+  async edit(id,{indexes,text,expected}={}){
+   const by=decider();
+   return serial(id,async()=>{
+    const snap=corrections.read(id);
+    if(!Array.isArray(indexes)||!indexes.length||indexes.length>400||indexes.some((i,k)=>!Number.isInteger(i)||!snap.segments[i]||(k&&i!==indexes[k-1]+1)))fail('Choose lines that follow each other.');
+    if(typeof text!=='string'||text.length>40000||/[\x00]/.test(text))fail('Send the passage as text.');
+    const clean=text.replace(/\s+/g,' ').trim();if(!clean)fail('To take a passage out, leave it out line by line; an empty passage is not saved.');
+    const reading=readingOf(snap.segments);
+    const spread=spreadEdit(indexes.map(i=>({index:i,text:reading.shown[i],raw:snap.segments[i].text})),clean);
+    if(!spread.changed.length&&!spread.emptied.length)return view(id);
+    const record=load(id)||{schema:'ar-create.transcript-check.v1',jobId:id,state:'none',problems:[],decisions:{}};
+    const before=[...spread.changed,...spread.emptied].map(i=>({index:i,text:snap.segments[i].text}));
+    const changes=spread.changed.map(i=>({index:i,text:spread.texts[i]}));
+    if(changes.length){const after=corrections.edit(id,{expected,corrections:changes});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
+    const edit={id:crypto.randomUUID(),indexes,changes,before,emptied:spread.emptied,at:new Date().toISOString(),by};
+    record.edits=[...(record.edits||[]),edit];
+    const touched=new Set([...spread.changed,...spread.emptied]);
+    record.decisions=record.decisions||{};
+    for(const p of record.problems||[])if(!record.decisions[p.id]&&p.indexes.some(i=>touched.has(i)))record.decisions[p.id]={action:'edited',byEdit:edit.id,at:edit.at,by};
+    save(id,await settleAsk(record));return {...view(id),lastEdit:edit.id};
+   });
+  },
+  /** Take one of Adrian's own edits back, while the lines still read as it left them. */
+  async undoEdit(id,{editId,expected}={}){
+   decider();
+   return serial(id,async()=>{
+    const record=load(id);const edit=record?.edits?.find(e=>e.id===editId);if(!edit)fail('That change is not in this check.',404);
+    const snap=corrections.read(id);
+    if(edit.changes.some(c=>snap.segments[c.index]?.text.trim()!==c.text))fail('Those lines were changed again since. Change them on the page.',409);
+    const back=edit.before.filter(b=>snap.segments[b.index]?.text!==b.text).map(b=>({index:b.index,text:b.text}));
+    if(back.length){const after=corrections.edit(id,{expected,corrections:back});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
+    record.edits=record.edits.filter(e=>e.id!==editId);
+    for(const [pid,d] of Object.entries(record.decisions||{}))if(d.byEdit===editId)delete record.decisions[pid];
     save(id,record);return view(id);
    });
   },
