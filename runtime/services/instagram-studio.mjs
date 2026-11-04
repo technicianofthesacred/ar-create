@@ -445,7 +445,8 @@ export function playwrightRoots(env=process.env,home=os.homedir()){
 function chrome(){
  for(const root of playwrightRoots()){
   let dirs=[];try{dirs=fs.readdirSync(root).filter(d=>d.startsWith('chromium_headless_shell-')).sort((a,b)=>+b.split('-')[1]-+a.split('-')[1]);}catch{}
-  for(const d of dirs)for(const sub of ['chrome-headless-shell-mac-arm64','chrome-headless-shell-mac-x64','chrome-headless-shell-linux64']){const bin=path.join(root,d,sub,'chrome-headless-shell');if(fs.existsSync(bin))return bin;}
+  // Linux builds of the headless shell have shipped as chrome-linux/headless_shell and as chrome-headless-shell-linux64.
+  for(const d of dirs)for(const [sub,name] of [['chrome-headless-shell-mac-arm64','chrome-headless-shell'],['chrome-headless-shell-mac-x64','chrome-headless-shell'],['chrome-headless-shell-linux64','chrome-headless-shell'],['chrome-linux','headless_shell']]){const bin=path.join(root,d,sub,name);if(fs.existsSync(bin))return bin;}
  }
  fail('PNG export is unavailable: no local headless Chrome was found. The frame still opens at full size.',503);
 }
@@ -454,7 +455,8 @@ async function png(origin,{id,format,frame},studio){
  const f=FORMATS[format],out=fs.mkdtempSync(path.join(os.tmpdir(),'ar-instagram-')),shot=path.join(out,'frame.png');
  try{
   const url=origin+PREFIX+'render?'+new URLSearchParams({id,format,frame:String(frame??0)});
-  await promisify(execFile)(chrome(),['--headless','--hide-scrollbars','--disable-gpu','--no-first-run','--force-device-scale-factor=1','--window-size='+f.width+','+f.height,'--virtual-time-budget=5000','--screenshot='+shot,url],{timeout:30000});
+  // Chrome refuses to start as root (the VPS feeder runs as root) unless its own sandbox is switched off.
+  await promisify(execFile)(chrome(),[...(process.getuid?.()===0?['--no-sandbox']:[]),'--headless','--hide-scrollbars','--disable-gpu','--no-first-run','--force-device-scale-factor=1','--window-size='+f.width+','+f.height,'--virtual-time-budget=5000','--screenshot='+shot,url],{timeout:30000});
   return fs.readFileSync(shot);
  }finally{fs.rmSync(out,{recursive:true,force:true});}
 }
