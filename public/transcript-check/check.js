@@ -68,6 +68,7 @@ function renderNotice() {
   const box = (html, btn) => { const d = document.createElement('div'); d.className = 'notice'; d.innerHTML = html; if (btn) d.append(btn); n.append(d); };
   if (c.state === 'running') box('<b>Reading your talk for anything that needs a look.</b> Usually about a minute. You can read the transcript meanwhile.');
   else if (c.state === 'failed') box('<b>The suggestions did not come through.</b> ' + esc(c.error || ''), B('Try again', 'main', async () => { state = await request('/suggest', { again: true }); render(); setTimeout(poll, 4000); }));
+  else if (c.state === 'ready' && !state.problems.length) box('<b>Nothing in this talk needs a look.</b> Every line reads as it should. The transcript is ready to use.');
   else if (c.state === 'none') box('<b>Suggestions are not available on this Mac.</b> ' + esc(error || 'The transcript is below to read.'));
   else if (c.stale) box('<b>The transcript was changed somewhere else since these suggestions were made.</b> They may not match every line.', B('Make new suggestions', '', async () => { state = await request('/suggest', { again: true }); render(); setTimeout(poll, 4000); }));
 }
@@ -99,7 +100,8 @@ function render() {
       if (!p) { acc.push(s.show); continue; }
       if (p.indexes[0] !== s.index) continue;
       flush();
-      html += '<span class="m ' + (p.decision ? p.decision.action : p.tier) + (p === open ? ' focus' : '') + '" data-id="' + p.id + '">' + esc(heard(p)) + '</span> ';
+      const said = (p.decision ? DONE[p.decision.action] : NAME[p.tier]) + ': ' + heard(p);
+      html += '<span class="m ' + (p.decision ? p.decision.action : p.tier) + (p === open ? ' focus' : '') + '" data-id="' + p.id + '" role="button" tabindex="0" aria-label="' + esc(said) + '">' + esc(heard(p)) + '</span> ';
     }
     flush();
     if (!html.trim()) return;
@@ -117,18 +119,31 @@ function decidedCard(p) {
   const acts = document.createElement('div'); acts.className = 'acts'; const row = document.createElement('div'); row.className = 'row';
   const errBox = document.createElement('div'); errBox.className = 'err';
   row.append(B('Undo', 'undo', () => undo(p.id, errBox)), B('Close', '', () => { open = null; render(); }));
+  for (const n of p.decision.names || []) {
+    const line = document.createElement('div'); line.className = 'learn';
+    if (n.remembered) line.innerHTML = '<span>' + esc(n.spelling) + ' is remembered for the next recordings.</span>';
+    else { line.innerHTML = '<span>Spell <b>' + esc(n.spelling) + '</b> this way in every recording from now on?</span>'; line.append(B('Remember ' + esc(n.spelling), 'small', () => remember(p.id, n.spelling, errBox))); }
+    c.append(line);
+  }
   acts.append(row); c.append(errBox, acts); return c;
 }
 
 async function undo(id, errBox) {
   if (busy) return; busy = true;
   try { state = await request('/undo', { problemId: id, expected: state.expected }); open = state.problems.find((p) => p.id === id) || null; hideToast(); render(); focus(); }
-  catch (e) { if (errBox) errBox.textContent = e.message; else showToast(e.message, null); }
+  catch (e) { if (errBox) errBox.textContent = e.message; else showToast(e.message); }
   finally { busy = false; }
 }
-function showToast(text, id) {
+async function remember(id, spelling, errBox) {
+  if (busy) return; busy = true;
+  try { state = await request('/remember', { problemId: id, spelling }); showToast(spelling + ' is remembered for the next recordings'); render(); }
+  catch (e) { if (errBox) errBox.textContent = e.message; else showToast(e.message); }
+  finally { busy = false; }
+}
+function showToast(text, { undoId = null, learn = null } = {}) {
   const t = $('toast'); t.innerHTML = '<span>' + esc(text) + '</span>';
-  if (id) t.append(B('Undo', 'small', () => undo(id, null)));
+  if (learn) t.append(B('Remember ' + esc(learn.spelling), 'small', () => remember(learn.id, learn.spelling, null)));
+  if (undoId) t.append(B('Undo', 'small', () => undo(undoId, null)));
   t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, 7000);
 }
 function hideToast() { $('toast').classList.remove('on'); }
@@ -137,7 +152,8 @@ function card(p) {
   if (p.decision) return decidedCard(p);
   const c = document.createElement('div'); c.className = 'card';
   const start = state.segments[p.indexes[0]].start, end = state.segments[p.indexes.at(-1)].end;
-  c.innerHTML = '<div class="head"><span class="chip ' + p.tier + '">' + NAME[p.tier] + '</span><span>' + mmss(start) + '</span></div><div class="heard">' + esc(heard(p)) + '</div>';
+  const order = state.problems.filter((x) => !x.decision), at = order.indexOf(p) + 1;
+  c.innerHTML = '<div class="head"><span class="chip ' + p.tier + '">' + NAME[p.tier] + '</span><span>' + (at ? at + ' of ' + order.length + ' · ' : '') + mmss(start) + '</span></div><div class="heard">' + esc(heard(p)) + '</div>';
   const fix = document.createElement('div'); fix.className = 'fix';
   const editing = p.tier !== 'notyou' && !p.fixes;
   if (p.tier === 'notyou') { fix.textContent = 'Leave this out of the talk'; fix.classList.add('leave'); }
@@ -150,7 +166,7 @@ function card(p) {
     if (busy) return; busy = true;
     const body = { problemId: p.id, action, expected: state.expected };
     if (action === 'use' && p.tier !== 'notyou') body.fixes = [...fix.querySelectorAll('.line')].map((l) => ({ index: Number(l.dataset.index), text: l.textContent.trim() })).filter((f) => f.text);
-    try { state = await request('/decide', body); last = p.id; showToast(action === 'use' ? 'Used' : action === 'keep' ? 'Kept as you said it' : 'Left out of the talk', p.id); go(); }
+    try { state = await request('/decide', body); last = p.id; const done = state.problems.find((x) => x.id === p.id); const name = (done?.decision?.names || []).find((n) => !n.remembered); showToast(action === 'use' ? 'Used' : action === 'keep' ? 'Kept as you said it' : 'Left out of the talk', { undoId: p.id, learn: name ? { id: p.id, spelling: name.spelling } : null }); go(); }
     catch (e) { errBox.textContent = e.message; }
     finally { busy = false; }
   };
@@ -171,11 +187,15 @@ async function applyEasy() {
     if (openProblems().some((p) => p.tier === 'notyou')) state = await request('/decide-group', { tier: 'notyou', expected: state.expected });
     if (open && open.decision) open = null;
     render();
+    const named = state.problems.flatMap((p) => (p.decision?.group && p.decision.names ? p.decision.names.filter((n) => !n.remembered).map((n) => ({ id: p.id, spelling: n.spelling })) : []));
+    if (named.length) showToast('Easy ones applied', { learn: named[0] });
   } catch (e) { $('notice').insertAdjacentHTML('afterbegin', '<div class="notice"><b>Those could not be applied.</b> ' + esc(e.message) + '</div>'); }
   finally { busy = false; }
 }
 
-function focus() { const el = document.querySelector('.card'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function focus() { const el = document.querySelector('.card'); if (el) { el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' }); el.querySelector('.btn.main, .undo')?.focus({ preventScroll: true }); } }
+$('text').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList?.contains('m')) { e.preventDefault(); e.stopPropagation(); e.target.click(); } });
 $('text').addEventListener('click', (e) => { const m = e.target.closest('.m'); if (!m) return; const p = state.problems.find((x) => x.id === m.dataset.id); if (!p) return; open = p; render(); focus(); });
 $('next').onclick = () => { open = nextOpen(); render(); focus(); };
 /* Keys for a keyboard, ignored while typing: Enter does the gold action, H hears, K keeps, N goes to the next, Z undoes the last, Esc closes. */

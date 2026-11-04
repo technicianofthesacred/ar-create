@@ -106,7 +106,45 @@ export function executeClaude({cwd,prompt,timeoutMs=600000,model='sonnet',claude
  });
 }
 
-export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'',execute=executeClaude,available=()=>!!installedClaude(),timeoutMs=600000}){
+const uuidFrom=seed=>{const h=crypto.createHash('sha256').update(seed).digest('hex');return h.slice(0,8)+'-'+h.slice(8,12)+'-4'+h.slice(13,16)+'-8'+h.slice(17,20)+'-'+h.slice(20,32);};
+const clip=(v,n)=>String(v).length>n?String(v).slice(0,n-1).trimEnd()+'…':String(v);
+const SYSTEM={actor:'cron:transcript-check',client:null};
+/** The recording's name as Adrian gave it: the audio file's name without its extension. */
+const titleOf=snap=>{const from=snap?.provenance?.audio||snap?.result?.metadata?.source;return from?path.basename(String(from)).replace(/\.[a-z0-9]{2,5}$/i,''):'A recording';};
+
+/**
+ * Names a use corrected: a capitalised word in the fix that replaced a different word at the same place in what was
+ * heard (Navari to Newari). These are offered to the shared word library so the next recording spells them right.
+ */
+export function nameCorrections(heardText,fixText){
+ const words=t=>String(t).split(/\s+/).map(w=>w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'')).filter(Boolean);
+ const a=words(heardText),b=words(fixText),out=[],seen=new Set();
+ let i=0;while(i<a.length&&i<b.length&&a[i]===b[i])i++;
+ let j=0;while(j<a.length-i&&j<b.length-i&&a[a.length-1-j]===b[b.length-1-j])j++;
+ const from=a.slice(i,a.length-j),to=b.slice(i,b.length-j);
+ if(from.length===to.length)for(let k=0;k<to.length;k++){const w=to[k];if(w!==from[k]&&/^\p{Lu}[\p{L}'’-]{2,}$/u.test(w)&&!seen.has(w)){seen.add(w);out.push({heard:from[k],spelling:w});}}
+ return out.slice(0,3);
+}
+
+export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'',execute=executeClaude,available=()=>!!installedClaude(),timeoutMs=600000,needsYou=null,library=null}){
+ /* One Needs you item per checked recording, with a link to the check screen. It never decides anything: it is
+    taken off the list when every suggestion has a decision. A list that cannot be reached never blocks the check. */
+ async function raiseAsk(id,record,title){
+  if(!needsYou)return record;
+  const open=record.problems.filter(p=>!record.decisions?.[p.id]);if(!open.length)return record;
+  const ear=open.filter(p=>p.tier==='ear').length,easy=open.length-ear;
+  const lead=(ear?ear+(ear===1?' line':' lines')+' in "'+clip(title,60)+'" may need your ear':'"'+clip(title,60)+'" is checked')+(easy?', and '+easy+' easy '+(easy===1?'one applies':'ones apply')+' in one tap.':'.');
+  try{
+   const ask=await needsYou.raise({operationId:uuidFrom(id+':check:'+record.startedAt),band:'only-adrian',question:clip(lead+' The rest of the talk needs nothing.',280),about:clip(title,120),
+    choices:['Done'],scope:{kind:'recording-check',id},link:{label:'Check it',href:'/transcript-check/index.html?job='+id}},SYSTEM);
+   return {...record,askId:ask?.id||ask?.ask?.id||null};
+  }catch{return record;}
+ }
+ async function settleAsk(record){
+  if(!needsYou||!record.askId||record.problems.some(p=>!record.decisions?.[p.id]))return record;
+  try{await needsYou.answer({operationId:uuidFrom(record.jobId+':check-done:'+record.askId),id:record.askId,choice:'Done'},currentActor()||SYSTEM);}catch{/* already answered or gone: the record is the truth */}
+  return {...record,askId:null};
+ }
  if(!corrections)throw new Error('The transcript check needs the recording owner\'s corrections.');
  const dir=()=>{ensurePrivateDirectory(dataDir,'transcript-checks');return path.join(dataDir,'transcript-checks');};
  const file=id=>{if(!UUID.test(id||''))fail('Unknown recording.',404);return path.join(dir(),id+'.json');};
@@ -121,7 +159,10 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
  function view(id){
   const snap=corrections.read(id),record=load(id);
   const decided=new Map(Object.entries(record?.decisions||{}));
-  const problems=(record?.problems||[]).map(p=>({...p,decision:decided.get(p.id)||null}));
+  const problems=(record?.problems||[]).map(p=>{const decision=decided.get(p.id)||null;
+   if(decision?.action==='used'&&decision.fixes?.length&&decision.before?.length){const learned=new Set((decision.remembered||[]).map(r=>r.spelling));
+    decision.names=nameCorrections(decision.before.map(b=>b.text).join(' '),decision.fixes.map(x=>x.text).join(' ')).map(n=>({...n,remembered:learned.has(n.spelling)}));}
+   return {...p,decision};});
   const leftOut=problems.filter(p=>p.decision?.action==='left-out').flatMap(p=>p.indexes);
   return {
    schema:'ar-create.transcript-check.v1',jobId:id,expected:snap.expected,reviewStatus:snap.reviewStatus,
@@ -145,11 +186,12 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const work=(async()=>{
      const cwd=fs.mkdtempSync(path.join(dir(),'.run-'));
      try{
-      const prompt=suggestionPrompt({title:snap.result?.metadata?.source?path.basename(String(snap.result.metadata.source)):'Recording',segments:snap.result.segments,vocabulary:await vocabulary().catch(()=>'')});
+      const prompt=suggestionPrompt({title:titleOf(snap),segments:snap.result.segments,vocabulary:await vocabulary().catch(()=>'')});
       const result=await execute({cwd,prompt,timeoutMs});
       let parsed;try{parsed=JSON.parse(result.text);}catch{fail('The suggestions came back unreadable. Try again.');}
       const problems=validateSuggestions(parsed,snap.result.segments);
-      save(id,{...record,state:'ready',finishedAt:new Date().toISOString(),model:result.model||null,problems:[...problems],dropped:problems.dropped});
+      const title=titleOf(snap);
+      save(id,await raiseAsk(id,{...record,state:'ready',finishedAt:new Date().toISOString(),model:result.model||null,problems:[...problems],dropped:problems.dropped},title));
      }catch(error){save(id,{...record,state:'failed',finishedAt:new Date().toISOString(),error:error.status?error.message:'The transcript could not be read for problems. Try again.'});}
      finally{fs.rmSync(cwd,{recursive:true,force:true});running.delete(id);}
     })();
@@ -178,7 +220,7 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
      applied=clean;
     }
     record.decisions[p.id]={action:action==='use'?'used':action==='keep'?'kept':'left-out',...(applied?{fixes:applied,before}:{}),at:new Date().toISOString(),by};
-    save(id,record);return view(id);
+    save(id,await settleAsk(record));return view(id);
    });
   },
   /** The two groups that need only a glance: every open sure fix in one correction, every open not-the-speaker line left out. */
@@ -197,7 +239,7 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
      if(all.length){const after=corrections.edit(id,{expected,corrections:all});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
      for(const p of open)record.decisions[p.id]={action:'used',fixes:changes.get(p.id),before:changes.get(p.id).map(f=>({index:f.index,text:snap.segments[f.index].text})),at,by,group:true};
     }else for(const p of open)record.decisions[p.id]={action:'left-out',at,by,group:true};
-    save(id,record);return view(id);
+    save(id,await settleAsk(record));return view(id);
    });
   },
   /**
@@ -218,6 +260,22 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     }
     delete record.decisions[problemId];
     record.undone=[...(record.undone||[]),{problemId,action:decision.action,at:new Date().toISOString(),by:who()}].slice(-200);
+    save(id,record);return view(id);
+   });
+  },
+  /** Teach the shared word library a spelling Adrian just corrected here: the next recording in any project gets it right. */
+  async remember(id,{problemId,spelling,category='other'}={}){
+   decider();
+   if(!library)fail('The word library is not available here.',503);
+   return serial(id,async()=>{
+    const record=load(id);const decision=record?.decisions?.[problemId];
+    if(!decision||decision.action!=='used'||!decision.before?.length)fail('Use the fix first, then remember the spelling.',409);
+    const name=nameCorrections(decision.before.map(b=>b.text).join(' '),decision.fixes.map(x=>x.text).join(' ')).find(n=>n.spelling===spelling);
+    if(!name)fail('That spelling is not one this fix corrected.',400);
+    const snap=corrections.read(id),first=decision.fixes[0],segment=snap.segments[first.index];
+    const story=titleOf(snap);
+    await library.learn({heard:name.heard,spelling:name.spelling,category,from:{jobId:id,story,at:segment?.start,sentence:clip(first.text,300)},operationId:uuidFrom(id+':remember:'+problemId+':'+name.spelling)},currentActor()||undefined);
+    decision.remembered=[...(decision.remembered||[]),{spelling:name.spelling,heard:name.heard,at:new Date().toISOString(),by:who()}];
     save(id,record);return view(id);
    });
   },

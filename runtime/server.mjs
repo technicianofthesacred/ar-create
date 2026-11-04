@@ -429,7 +429,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(await continuityInterface.handle(request,response))return;
       if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/words-http.mjs')).handleWords(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
-      if(await (await import('./services/transcript-check-http.mjs')).handleTranscriptCheck(request,response,{dataDir,recordings,checkWrite:()=>checkWrite(request,server)}))return;
+      if(await (await import('./services/transcript-check-http.mjs')).handleTranscriptCheck(request,response,{dataDir,recordings,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/phone-pickup-http.mjs')).handlePhonePickup(request,response,{dataDir,events,recordings,library,origin:()=>server.listening?'http://127.0.0.1:'+server.address().port:null,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;
       if(await (await import('./services/instagram-studio.mjs')).handleInstagram(request,response,{dataDir,library,consentDesk}))return;

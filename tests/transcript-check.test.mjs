@@ -184,3 +184,46 @@ test('the claude read gets no tools, no MCP servers and no settings, and only it
  await assert.rejects(executeClaude({cwd:'.',prompt:'P',claudePath:'/bin/claude',spawnChild:fake('not json').spawnChild}),/unreadable/);
  await assert.rejects(executeClaude({cwd:'.',prompt:'P',claudePath:null}),/not installed/);
 });
+
+test('a checked recording puts one item on Needs you with a link to the check, and takes it off when all is decided',async t=>{
+ const f=await setup(t);
+ const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
+ const check=transcriptCheckFor({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async()=>({text:JSON.stringify(GOOD)})}});
+ const base='/api/transcript-check/'+f.id;
+ await f.agent('POST',base+'/suggest',{});await check.wait(f.id);
+ const asks=async()=>(await f.agent('GET','/api/needs-you?status=all')).body.asks.filter(a=>a.scope?.kind==='recording-check'&&a.scope.id===f.id);
+ let mine=await asks();
+ assert.equal(mine.length,1);assert.equal(mine[0].status,'open');assert.equal(mine[0].band,'only-adrian');
+ assert.equal(mine[0].link.href,'/transcript-check/index.html?job='+f.id);
+ assert.match(mine[0].question,/^2 lines in "[^"]+" may need your ear, and 3 easy ones apply in one tap/);assert.doesNotMatch(mine[0].question,/A recording/);
+ // A second read of the same check does not raise a second item.
+ await check.suggest(f.id);assert.equal((await asks()).length,1);
+ let r=await f.page('GET',base);
+ r=await f.page('POST',base+'/decide-group',{tier:'sure',expected:r.body.expected});
+ r=await f.page('POST',base+'/decide-group',{tier:'notyou',expected:r.body.expected});
+ assert.equal((await asks())[0].status,'open','still open while the ear checks wait');
+ for(const p of r.body.problems.filter(x=>!x.decision))r=await f.page('POST',base+'/decide',{problemId:p.id,action:'keep',expected:r.body.expected});
+ mine=await asks();assert.equal(mine[0].status,'answered');assert.equal(mine[0].resolution.by,'human:adrian');
+});
+
+test('a corrected name can be remembered by the shared word library, only by Adrian, only a name this fix changed',async t=>{
+ const f=await setup(t);
+ const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
+ const check=transcriptCheckFor({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async()=>({text:JSON.stringify(GOOD)})}});
+ const base='/api/transcript-check/'+f.id;
+ await f.agent('POST',base+'/suggest',{});await check.wait(f.id);
+ let r=await f.page('GET',base);
+ r=await f.page('POST',base+'/decide-group',{tier:'sure',expected:r.body.expected});
+ const fixed=r.body.problems.find(p=>p.indexes[0]===1),color=r.body.problems.find(p=>p.indexes[0]===2);
+ assert.deepEqual(fixed.decision.names,[{heard:'Navari',spelling:'Newari',remembered:false}]);
+ assert.deepEqual(color.decision.names,[],'a plain word is not offered');
+ assert.equal((await f.agent('POST',base+'/remember',{problemId:fixed.id,spelling:'Newari'})).status,403);
+ assert.equal((await f.page('POST',base+'/remember',{problemId:fixed.id,spelling:'Kathmandu'})).status,400);
+ r=await f.page('POST',base+'/remember',{problemId:fixed.id,spelling:'Newari'});assert.equal(r.status,200,JSON.stringify(r.body));
+ assert.equal(r.body.problems.find(p=>p.id===fixed.id).decision.names[0].remembered,true);
+ const words=(await f.agent('GET','/api/words?q=Newari&status=all')).body;
+ const entry=(words.entries||words.words||[]).find(e=>e.spelling==='Newari');
+ assert.ok(entry,'Newari is in the library');assert.equal(entry.status,'confirmed');
+ assert.ok(entry.variants.some(v=>v.text==='Navari'&&v.kind==='heard'),'the mishearing is remembered as heard');
+ assert.equal(entry.source.recording,f.id);
+});
