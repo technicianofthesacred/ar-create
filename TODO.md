@@ -16,6 +16,11 @@ This is the public mirror of Delivery's work checklist: open items only, no priv
 - [ ] Give Hermes, Grok and ChatGPT a way in on this Mac: a short skill or connector that calls the one CLI with their own actor _(band: agent-runnable)_ _(effort: moderate)_
 - [ ] Shared words phase 2: mandalacodes, Teajia and i64os import the word library export (`words export`) at deploy for their transcription prompts and fixes; decide where the snapshot is stored so no project reads the installed `data/` directly ([how it works](docs/WORDS.md)) _(band: agent-runnable)_ _(effort: moderate)_
 
+- [ ] Codex cannot run the configured model on this login: `codex exec` returns "gpt-6.1-sol is not supported when using Codex with a ChatGPT account" (measured 4 Nov), so features that generate through codex-exec fail until the model or login changes. The transcript check moved to the claude command for this reason _(band: you-required)_ _(effort: quick)_
+- [ ] CI on the self-hosted Mac runner: the setup-node post step (cache save) hangs and is cancelled at 15 minutes, so a run whose tests all pass shows red (PRs #204 and #205: 3185 and 3187 pass, 0 fail) and runs on main are cancelled; the release then refuses for want of a green ci _(band: agent-runnable)_ _(effort: moderate)_
+- [ ] Transcript check on the phone: the screen is built phone-first but the app answers only on this Mac, so it waits on the phone or VPS route _(band: agent-runnable)_ _(effort: deep)_
+- [ ] Transcript check: how many fixes the model files as sure varies run to run (0 to 6 on the same 20-minute recording); try a second short pass that only grades the ear fixes, and measure before keeping it _(band: agent-runnable)_ _(effort: moderate)_
+
 ## Future
 
 - [ ] Stop the page asking for a piece's working history before its Direction is saved (a harmless console 409); the first try looped a refused draft open on real data, so reproduce that before retrying _(band: agent-runnable)_ _(effort: moderate)_ → PR #160 reverted in #161
