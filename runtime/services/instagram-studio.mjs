@@ -188,7 +188,9 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   if(!lines.length)fail('That story has no lines to lay out.');
   const strongest=(max)=>[...lines].sort((a,b)=>Math.abs(a.text.length-max*0.55)-Math.abs(b.text.length-max*0.55))[0];
   const frameFor=(templateId,line,i,role,extra={})=>{const t=templateById(templateId),ph=photoFor(p,story,line.id,i);return {templateId,role,words:[{lineId:line.id,text:fitLine(line,t.maxChars)}],label:'',credit:line.speaker||'',photos:ph?[{photoId:ph,x:50,y:50}]:[],...extra};};
-  if(format==='story')return lines.slice(0,6).map((l,i)=>frameFor('AR-S1',l,i,i?'inner':'cover',{label:i===0?captionOf(p,photoFor(p,story,l.id,i)).slice(0,60):''}));
+  // Stories for the Teajia door take the magazine look (cover card, then full-photo quotes); other doors keep his own.
+  const storyTemplate=i=>p.door==='teajia'?(i===0?'canvas-C04-cover-teajia-dark':'canvas-F01-full-quote'):'AR-S1';
+  if(format==='story')return lines.slice(0,6).map((l,i)=>frameFor(storyTemplate(i),l,i,i?'inner':'cover',{label:i===0?captionOf(p,photoFor(p,story,l.id,i)).slice(0,60):''}));
   if(format==='post'){const l=strongest(180);return [frameFor('AR-P1',l,0,'cover',{label:captionOf(p,photoFor(p,story,l.id,0)).slice(0,60)})];}
   if(format==='reel'){
    const cover=strongest(90),frames=[frameFor('AR-R2',cover,0,'cover',{credit:'',label:p.title.slice(0,60)})];let total=0;
@@ -423,7 +425,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  function slides(p,format){
   const l=p.layouts[format];if(!l)fail('Nothing is laid out as a '+format+' yet.',404);
   let start=0;
-  return l.frames.map((fr,i)=>{const ctx={index:i,total:l.frames.length,start};if(fr.seconds)start+=fr.seconds;
+  return l.frames.map((fr,i)=>{const ctx={index:i,total:l.frames.length,start,format};if(fr.seconds)start+=fr.seconds;
    return {templateId:fr.templateId,ctx,slide:{role:fr.role,text:fr.words.map(w=>w.text).join('\n\n'),label:fr.label,credit:fr.credit,photos:fr.photos.map(ph=>({src:'/api/sources/blob?id='+encodeURIComponent(p.material.photos.find(x=>x.id===ph.photoId)?.sourceId||''),x:ph.x,y:ph.y}))}};});
  }
  async function render({id,format,frame}){const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);return frameDocument(format,renderFrame(s[n].templateId,s[n].slide,s[n].ctx),(p.title||'Instagram')+' · '+(n+1));}
