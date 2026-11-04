@@ -4,6 +4,7 @@ import {isICloudAlbum} from './services/icloud-albums.mjs';
 import {INQUIRY_METHODS} from './services/inquiry-interface-routes.mjs';
 import {NEEDS_YOU_COMMANDS, NEEDS_YOU_HUMAN_ONLY, NEEDS_YOU_BODY} from './commands/needs-you.mjs';
 import {WORDS_COMMANDS, WORDS_HUMAN_ONLY, WORDS_BODY} from './commands/words.mjs';
+import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK_BODY} from './commands/transcript-check.mjs';
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
 
 /**
@@ -165,6 +166,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
   ...WORDS_COMMANDS,
+  ...TRANSCRIPT_CHECK_COMMANDS,
   ...PHONE_PICKUP_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
@@ -552,6 +554,8 @@ Object.assign(BODY, NEEDS_YOU_BODY);
 // The shared word library (runtime/commands/words.mjs): agents read and suggest; only Adrian confirms or answers.
 for (const key of WORDS_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, WORDS_BODY);
+for (const key of TRANSCRIPT_CHECK_HUMAN_ONLY) HUMAN_ONLY.add(key);
+Object.assign(BODY, TRANSCRIPT_CHECK_BODY);
 // The phone pickup (runtime/commands/phone-pickup.mjs): on demand only, never a timer.
 for (const key of PHONE_PICKUP_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, PHONE_PICKUP_BODY);
