@@ -13,7 +13,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {StateError} from '../store.mjs';
-import {currentActor,isHuman,requireHuman,provenance} from './actor.mjs';
+import {currentActor,isHuman,requireHuman,provenance,chatDecider} from './actor.mjs';
 import {atomicWrite,ensurePrivateDirectory} from './files.mjs';
 
 export const SCHEMA='ar-create.consent-desk.v1';
@@ -249,13 +249,14 @@ export function createConsentDesk({dataDir,library,aliases=()=>[]}={}){
   person.sent.push({sentAt,channel,...stamp()});if(person.consent.state==='not-asked')person.consent={state:'asked',...stamp()};
   return {summary:'You sent '+person.name+' the consent request ('+channel+').'};
  });};
- const answer=input=>{requireHuman('Setting a consent answer');return write('person.answer',input,['personId','state','changes'],async desk=>{
+ // Adrian may also tell an agent in chat what someone answered ("Lin said yes"); it carries his exact words (said).
+ const answer=input=>{const decider=chatDecider(input,'Setting a consent answer');return write('person.answer',input,['personId','state','changes','said'],async desk=>{
   const person=personIn(desk,input.personId);
   if(!CONSENT_STATES.includes(input.state))fail('Consent is one of: '+CONSENT_STATES.join(', ')+'.');
   const changes=text(input.changes,'The changes they asked for',4000,{required:input.state==='yes-with-changes'});
   if(input.state!=='yes-with-changes'&&changes!==undefined)fail('Changes go with yes-with-changes only.');
-  person.consent={state:input.state,...(changes?{changes}:{}),...(ANSWERED.has(input.state)?{appearsAtAnswer:[...person.appears]}:{}),...stamp()};
-  return {summary:person.name+': '+input.state.replace(/-/g,' ')+'.'};
+  person.consent={state:input.state,...(changes?{changes}:{}),...(ANSWERED.has(input.state)?{appearsAtAnswer:[...person.appears]}:{}),...stamp(),...decider};
+  return {summary:person.name+': '+input.state.replace(/-/g,' ')+'.'+(decider.carriedBy?' Adrian said so in chat.':'')};
  });};
  const removePerson=input=>{requireHuman('Taking a person off the piece');return write('person.remove',input,['personId','reason'],async desk=>{
   const person=personIn(desk,input.personId),reason=text(input.reason,'Why they no longer appear',1000);

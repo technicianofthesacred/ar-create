@@ -70,6 +70,24 @@ test('naming the dish and the final yes are Adrian\'s; an agent records only wha
  await assert.rejects(as(AGENT,()=>s.layout({...base(),storyId:'S1',format:'reel'})),e=>e.status===409,'an agent cannot change what he said yes to');
 });
 
+test('an agent may carry his decision from the chat, only with his exact words, and the record says so', async () => {
+ const s=fresh();let p=await start(s);
+ const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
+ const at=new Date().toISOString(),said=quote=>({said:{quote,via:'chat',at}});
+ await assert.rejects(as('cron:nightly',()=>s.choose({...base(),storyId:'S1',...said('the crack one')})),e=>e.status===403,'a cron never carries his words');
+ await assert.rejects(as(AGENT,()=>s.choose({...base(),storyId:'S1',said:{quote:'  ',via:'chat',at}})),e=>e.status===400,'empty words are not his words');
+ await assert.rejects(as(AGENT,()=>s.choose({...base(),storyId:'S1',said:{quote:'the crack one',via:'email',at}})),e=>e.status===400,'only from a chat');
+ p=await as(AGENT,()=>s.meaning({...base(),storyId:'S1',verdict:'right',...said('Yes, that is it.')}));
+ assert.deepEqual(p.stories[0].meaning,{verdict:'right',words:'',by:ADRIAN,carriedBy:AGENT,said:{quote:'Yes, that is it.',via:'chat',at},at:p.stories[0].meaning.at});
+ p=await as(AGENT,()=>s.choose({...base(),storyId:'S1',forWhom:'The maker',...said('Go with the crack one, for makers.')}));
+ assert.equal(p.chosen.by,ADRIAN);assert.equal(p.chosen.carriedBy,AGENT);assert.equal(p.chosen.said.quote,'Go with the crack one, for makers.');
+ p=await as(AGENT,()=>s.layout({...base(),storyId:'S1',format:'reel',caption:'Every crack is a record.'}));
+ p=await as(AGENT,()=>s.ready({...base(),format:'reel',...said('Ready, post it.')}));
+ assert.equal(p.ready.reel.by,ADRIAN);assert.equal(p.ready.reel.carriedBy,AGENT);assert.equal(p.ready.reel.posted,false);
+ const plan=JSON.parse(fs.readFileSync(path.join(s.asksFile(p.id),'..',p.id+'.json'),'utf8'));
+ assert.ok(plan.operations.some(o=>o.actor===AGENT&&o.what==='ready reel (said in chat)'),'the log keeps who carried it');
+});
+
 test('his words stay exactly as said on every frame', async () => {
  const s=fresh();let p=await start(s);
  const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
@@ -120,7 +138,13 @@ test('the four new templates keep their words inside each format\'s safe zone, i
 test('the studio is in the one command registry, with the two decisions marked human', () => {
  const list=describeRoutes({});
  for(const route of ['/api/instagram/templates','/api/instagram/plans','/api/instagram/plan','/api/instagram/layout','/api/instagram/choose','/api/instagram/ready','/api/instagram/render','/api/instagram/sheet','/api/instagram/captions','/api/instagram/png'])assert.ok(list.some(c=>c.route===route),route);
- for(const route of ['/api/instagram/choose','/api/instagram/ready'])assert.deepEqual(list.find(c=>c.route===route).actors,['human'],route);
+ for(const route of ['/api/instagram/choose','/api/instagram/ready']){assert.deepEqual(list.find(c=>c.route===route).actors,['human'],route);assert.equal(list.find(c=>c.route===route).relay,'chat',route);}
  assert.deepEqual(list.find(c=>c.route==='/api/instagram/layout').actors,['any']);
  assert.equal(list.find(c=>c.route==='/api/instagram/plan'&&c.method==='POST').section,'outputs');
+});
+
+test('PNG export looks for headless Chrome where Playwright keeps it on a Mac, on Linux, or where it is told', async () => {
+ const {playwrightRoots}=await import('../runtime/services/instagram-studio.mjs');
+ assert.deepEqual(playwrightRoots({},'/home/x'),['/home/x/Library/Caches/ms-playwright','/home/x/.cache/ms-playwright']);
+ assert.equal(playwrightRoots({PLAYWRIGHT_BROWSERS_PATH:'/opt/pw'},'/home/x')[0],'/opt/pw');
 });

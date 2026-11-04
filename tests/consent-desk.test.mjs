@@ -42,6 +42,7 @@ const ADRIAN='human:adrian';
 test('every consent route is a registered command; decisions are human-only, finding and drafting are open to agents',async t=>{
  const f=await setup(t),caps=await (await fetch(f.url+'/api/capabilities')).json(),by=name=>caps.commands.find(c=>c.name===name);
  for(const name of ['consent.people.sent','consent.people.answer','consent.people.remove','consent.share.answer','consent.share.override','consent.share.release'])assert.deepEqual(by(name)?.actors,['human'],name);
+ assert.equal(by('consent.people.answer')?.relay,'chat');for(const name of ['consent.people.sent','consent.people.remove','consent.share.answer','consent.share.override','consent.share.release'])assert.equal(by(name)?.relay,undefined,name);
  for(const name of ['consent.claims.record','consent.claims.link','consent.claims.flag','consent.claims.clear-flag','consent.people.record','consent.people.draft-request'])assert.deepEqual(by(name)?.actors,['any'],name);
  for(const name of ['consent.desk','consent.open']){assert.equal(by(name)?.readOnly,true,name);assert.equal(by(name)?.method,'GET');}
  assert.ok(caps.commands.filter(c=>c.route.startsWith('/api/consent/')).every(c=>c.section==='consent'));
@@ -112,6 +113,19 @@ test('agents list people and draft a request; agent cannot set consent or record
  const answered=await f.write('consent.people.answer',{personId:person.id,state:'yes-with-changes',changes:'Use my first name only.'},ADRIAN);
  assert.equal(answered.result.people[0].consent.state,'yes-with-changes');assert.equal(answered.result.people[0].consent.by,ADRIAN);
  assert.equal((await f.write('consent.people.answer',{personId:person.id,state:'yes-with-changes'},ADRIAN)).exitCode,1,'changes are required with yes-with-changes');
+});
+
+test('an agent may carry an answer Adrian gave in chat, in his exact words; never without them',async t=>{
+ const f=await setup(t);
+ const person=(await f.write('consent.people.record',{person:{name:'Invented Host',appears:['pictured']}})).result.people[0];
+ const at=new Date().toISOString();
+ assert.equal((await f.write('consent.people.answer',{personId:person.id,state:'yes',said:{quote:'',via:'chat',at}})).exitCode,1,'empty words are not his words');
+ const answered=await f.write('consent.people.answer',{personId:person.id,state:'yes',said:{quote:'Lin said yes, she is happy to be in it.',via:'chat',at}});
+ assert.equal(answered.exitCode,0,JSON.stringify(answered.result));
+ const consent=answered.result.people[0].consent;
+ assert.equal(consent.state,'yes');assert.equal(consent.by,ADRIAN);assert.equal(consent.carriedBy,'agent:claude-code');assert.equal(consent.said.quote,'Lin said yes, she is happy to be in it.');
+ assert.match(answered.result.journal[0].summary,/said so in chat/);
+ assert.equal((await f.write('consent.share.override',{reason:'post anyway',said:{quote:'post it',via:'chat',at}})).exitCode,5,'releasing without answers stays his, in the app');
 });
 
 test('release blocked while unanswered; Share asks comfort and accuracy; the final yes is Adrian\'s',async t=>{

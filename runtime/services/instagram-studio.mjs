@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {StateError} from '../store.mjs';
-import {currentActor,isHuman,requireWriteActor} from './actor.mjs';
+import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
 import {FORMATS,CAPTION,FACTS,catalog,templateById,renderFrame,frameDocument,sheetDocument} from './instagram-templates.mjs';
 import {deriveLines,deriveMoments,wholeness,detectFlags,correctedText,quotedSegments,coverage,loadTeaTerms,clock} from './instagram-transcript.mjs';
 import {readLibraryFile} from './word-prompt.mjs';
@@ -35,7 +35,6 @@ const text=(v,what,max,{required=false}={})=>{if(v===undefined||v===null){if(req
 const list=(v,what,max)=>{if(v===undefined)return [];if(!Array.isArray(v)||v.length>max)fail(what+' must be a list of up to '+max+'.');return v;};
 const actorNow=()=>currentActor()?.actor||'';
 const human=()=>isHuman(actorNow());
-function requireAdrian(what){const a=currentActor();if(!a||!isHuman(a.actor))fail(what+' is Adrian\'s alone. '+(a?.actor||'An unattributed caller')+' may propose, never decide.',403);}
 export const hashtags=caption=>[...String(caption||'').matchAll(/(^|\s)#[\p{L}\p{N}_]+/gu)].length;
 
 /** A spoken line's time on screen: about two and a half words a second, never under two seconds. */
@@ -322,18 +321,18 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  }
  /** Adrian picks a proposed story, or names his own dish in his own words, and may say who it is for. */
  async function choose(input){
-  requireAdrian('Naming the dish');begin(input);
+  const decider=chatDecider(input,'Naming the dish');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const storyId=input.storyId??null;if(storyId!==null&&!before.stories.some(s=>s.id===storyId))fail('That story is not in this plan.');
    const named=text(input.named,'Your name for it',400),forWhom=text(input.forWhom,'Who it is for',200);
    if(!storyId&&!named.trim())fail('Pick a story or name your own.');
-   return commit(before,{...before,chosen:{storyId,named,forWhom,by:actorNow(),at:new Date().toISOString()}},input,'choose');
+   return commit(before,{...before,chosen:{storyId,named,forWhom,...decider,at:new Date().toISOString()}},input,decider.carriedBy?'choose (said in chat)':'choose');
   });
  }
  /** Adrian confirms a word that was flagged: as heard, or corrected in his own words. The transcript never changes. */
  async function confirm(input){
-  requireAdrian('Confirming what was said');begin(input);
+  const decider=chatDecider(input,'Confirming what was said');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const flag=(before.flags||[]).find(x=>x.id===input.flagId);if(!flag)fail('That word is not on the list to confirm.');
@@ -344,25 +343,25 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
     try{await sharedWordLibrary({dataDir}).learn({heard:flag.heard,spelling:correction,category:flag.kind==='tea-term'?'tea-term':flag.kind==='place'?'place':'other',from:{story:before.title||'',sentence:lineOf(before,flag.lineId)?.text||''},operationId:input.operationId},currentActor());}
     catch{/* the confirmation itself must never fail because the library could not be written */}
    }
-   return commit(before,{...before,confirmations:{...(before.confirmations||{}),[flag.id]:{verdict,correction,heard:flag.heard,by:actorNow(),at:new Date().toISOString()}}},input,'confirm '+flag.id);
+   return commit(before,{...before,confirmations:{...(before.confirmations||{}),[flag.id]:{verdict,correction,heard:flag.heard,...decider,at:new Date().toISOString()}}},input,'confirm '+flag.id+(decider.carriedBy?' (said in chat)':''));
   });
  }
  /** Adrian answers a story's read-back: that's it, or not what he meant, in his exact words. Kept in a log. */
  async function meaning(input){
-  requireAdrian('Saying what you meant');begin(input);
+  const decider=chatDecider(input,'Saying what you meant');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const i=before.stories.findIndex(x=>x.id===input.storyId);if(i<0)fail('That story is not in this plan.');
    const verdict=input.verdict;if(!['right','not-meant'].includes(verdict))fail('Say "right" or "not-meant".');
    const words=text(input.words,'What you meant',1200,{required:verdict==='not-meant'});
-   const entry={storyId:before.stories[i].id,readback:before.stories[i].readback,verdict,words,by:actorNow(),at:new Date().toISOString()};
-   const stories=before.stories.map((x,j)=>j===i?{...x,meaning:{verdict,words,by:entry.by,at:entry.at}}:x);
-   return commit(before,{...before,stories,meaningLog:[...(before.meaningLog||[]),entry].slice(-200)},input,'meaning '+entry.storyId);
+   const entry={storyId:before.stories[i].id,readback:before.stories[i].readback,verdict,words,...decider,at:new Date().toISOString()};
+   const stories=before.stories.map((x,j)=>j===i?{...x,meaning:{verdict,words,by:entry.by,...(decider.carriedBy?{carriedBy:decider.carriedBy,said:decider.said}:{}),at:entry.at}}:x);
+   return commit(before,{...before,stories,meaningLog:[...(before.meaningLog||[]),entry].slice(-200)},input,'meaning '+entry.storyId+(decider.carriedBy?' (said in chat)':''));
   });
  }
  /** His final yes for one format, with the caption as he wants it. Records the yes; posts nothing. */
  async function ready(input){
-  requireAdrian('The final yes');begin(input);
+  const decider=chatDecider(input,'The final yes');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    assertNotHeld(before,'Marking this ready to post',{requireLink:true});
@@ -373,7 +372,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    if(unsure.length)fail(unsure.length+' word'+(unsure.length>1?'s':'')+' in this '+format+' still need your confirmation ('+unsure.slice(0,3).map(x=>'“'+x.heard+'”').join(', ')+'). Confirm them first; nothing is corrected without you.',409);
    const caption=input.caption===undefined?(l.captionFinal??l.caption.text):readCaption(input.caption);
    const layouts={...before.layouts,[format]:{...l,captionFinal:caption}};
-   return commit(before,{...before,layouts,ready:{...(before.ready||{}),[format]:{layoutHash:l.hash,caption,by:actorNow(),at:new Date().toISOString(),posted:false}}},input,'ready '+format);
+   return commit(before,{...before,layouts,ready:{...(before.ready||{}),[format]:{layoutHash:l.hash,caption,...decider,at:new Date().toISOString(),posted:false}}},input,'ready '+format+(decider.carriedBy?' (said in chat)':''));
   });
  }
  /* ---------- reading the made piece ---------- */
@@ -395,10 +394,15 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
+// Playwright keeps its browsers in ~/Library/Caches on a Mac and ~/.cache on Linux (the VPS feeder), unless told otherwise.
+export function playwrightRoots(env=process.env,home=os.homedir()){
+ return [env.PLAYWRIGHT_BROWSERS_PATH,path.join(home,'Library/Caches/ms-playwright'),path.join(home,'.cache/ms-playwright')].filter(Boolean);
+}
 function chrome(){
- const root=path.join(os.homedir(),'Library/Caches/ms-playwright');let dirs=[];
- try{dirs=fs.readdirSync(root).filter(d=>d.startsWith('chromium_headless_shell-')).sort((a,b)=>+b.split('-')[1]-+a.split('-')[1]);}catch{}
- for(const d of dirs)for(const sub of ['chrome-headless-shell-mac-arm64','chrome-headless-shell-mac-x64','chrome-headless-shell-linux64']){const bin=path.join(root,d,sub,'chrome-headless-shell');if(fs.existsSync(bin))return bin;}
+ for(const root of playwrightRoots()){
+  let dirs=[];try{dirs=fs.readdirSync(root).filter(d=>d.startsWith('chromium_headless_shell-')).sort((a,b)=>+b.split('-')[1]-+a.split('-')[1]);}catch{}
+  for(const d of dirs)for(const sub of ['chrome-headless-shell-mac-arm64','chrome-headless-shell-mac-x64','chrome-headless-shell-linux64']){const bin=path.join(root,d,sub,'chrome-headless-shell');if(fs.existsSync(bin))return bin;}
+ }
  fail('PNG export is unavailable: no local headless Chrome was found. The frame still opens at full size.',503);
 }
 async function png(origin,{id,format,frame},studio){
