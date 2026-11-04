@@ -582,18 +582,20 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       function outputQuery(){return {rootBindingId:url.searchParams.get('rootBindingId'),parentStudyId:url.searchParams.get('parentStudyId'),selectedOutputId:url.searchParams.get('selectedOutputId')};}
       // A saved export file is what gets posted, so downloading it is held like making it: by the project in the query, or the
       // workspace's own project for the older unscoped files.
-      const holdExportDownload=()=>{let id=url.searchParams.get('parentStudyId');if(!id){try{id=store.get().project.id;}catch{id=null;}}consentDesk.assertNotHeld([{parentStudyId:id}],'Downloading this export');};
+      const holdExportDownload=()=>{let id=url.searchParams.has('rootBindingId')?url.searchParams.get('parentStudyId'):null;if(!id){try{id=store.get().project.id;}catch{id=null;}}consentDesk.assertNotHeld([{parentStudyId:id}],'Downloading this export');};
 
       const carouselMatch=pathname.match(/^\/api\/carousel\/exports\/([a-f0-9-]{36})\/(render|file)\/(.+)$/);
       if(carouselMatch){
         if(!['GET','HEAD'].includes(request.method))throw new StateError('Method is not supported.',405);
         const [,id,action,name]=carouselMatch;
+        // The render page contains the exact slide words and is also a usable
+        // outward file. Hold it under the same consent decision as the PNG.
+        holdExportDownload();
         if(action==='render'){
           if(!/^\d+$/.test(name))throw new StateError('Slide not found.',404);
           response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; frame-ancestors 'none'");
           const scoped=url.searchParams.has('rootBindingId');const html=scoped?await studyOutputExports.page({...outputQuery(),exportId:id,index:Number(name)}):carousel.page(id,Number(name));if(sharedCarouselBridge&&!scoped){const manifest=JSON.parse(await readFile(path.join(dataDir,'carousel-exports',id,'.manifest.json'),'utf8'));await guardCarouselOutput(manifest);}response.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});response.end(request.method==='HEAD'?undefined:html);return;
         }
-        holdExportDownload();
         const artifact=url.searchParams.has('rootBindingId')?await studyOutputExports.file({...outputQuery(),exportId:id,format:'carousel',name}):carousel.file(id,name);response.writeHead(200,{'Content-Type':artifact.mimeType,'Content-Length':artifact.sizeBytes,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(name)}`,'Cache-Control':'no-store'});
         if(request.method==='HEAD')return response.end();const stream=createReadStream(artifact.file);stream.on('error',()=>response.destroy());response.on('close',()=>stream.destroy());stream.pipe(response);return;
       }
