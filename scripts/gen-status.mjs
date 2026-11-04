@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -100,7 +101,7 @@ export function generate(options, root = path.resolve(import.meta.dirname, '..')
   return buildStatus({ tests: parseTests(read(options.tests)), release: parseRelease(read(options.release)), works });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
     const options = parseArgs(process.argv.slice(2)), root = path.resolve(import.meta.dirname, '..');
     const out = options.out ?? path.join(root, 'docs/status/CURRENT.md'), page = generate(options, root);

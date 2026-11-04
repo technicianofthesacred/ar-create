@@ -13,6 +13,7 @@
 //        moves <data>/magazine to <data>/archive/magazine-<time>/ (nothing is deleted).
 //
 // Run --apply only through the release (B3), with Adrian's yes, never from a builder session.
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -76,7 +77,7 @@ export function rollback({data, now = () => new Date()}) {
   return {rolledBack: true, movedTo: target};
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
     const flags = parseFlags(process.argv.slice(2), {'dry-run': 'flag', apply: 'flag', rollback: 'flag', mag: 'value', files: 'value', data: 'value', verification: 'value', archive: 'value', out: 'value'});
     const modes = ['dry-run', 'apply', 'rollback'].filter(m => flags[m]);

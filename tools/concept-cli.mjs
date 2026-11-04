@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { validActor, actorHeaders } from '../agents/lib/actors.mjs';
@@ -108,7 +109,7 @@ export async function run(args, { fetchImpl = fetch, stdin = async () => {
   try { result = await response.json(); } catch { throw new Error(`Server returned non-JSON response (${response.status}).`); }
   return response.ok ? { exitCode: 0, result } : { exitCode: response.status === 409 ? 3 : 1, result: { ok: false, status: response.status, error: response.status === 409 ? 'revision_conflict' : 'request_failed', details: result } };
 }
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try { const { result, exitCode } = await run(process.argv.slice(2)); process.stdout.write(`${JSON.stringify(result)}\n`); process.exitCode = exitCode; }
   catch (error) { process.stdout.write(`${JSON.stringify({ ok: false, error: error.message })}\n`); process.exitCode = 1; }
 }
