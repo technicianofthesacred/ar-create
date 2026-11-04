@@ -188,7 +188,9 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   if(!lines.length)fail('That story has no lines to lay out.');
   const strongest=(max)=>[...lines].sort((a,b)=>Math.abs(a.text.length-max*0.55)-Math.abs(b.text.length-max*0.55))[0];
   const frameFor=(templateId,line,i,role,extra={})=>{const t=templateById(templateId),ph=photoFor(p,story,line.id,i);return {templateId,role,words:[{lineId:line.id,text:fitLine(line,t.maxChars)}],label:'',credit:line.speaker||'',photos:ph?[{photoId:ph,x:50,y:50}]:[],...extra};};
-  if(format==='story')return lines.slice(0,6).map((l,i)=>frameFor('AR-S1',l,i,i?'inner':'cover',{label:i===0?captionOf(p,photoFor(p,story,l.id,i)).slice(0,60):''}));
+  // Stories for the Teajia door take the magazine look (cover card, then full-photo quotes); other doors keep his own.
+  const storyTemplate=i=>p.door==='teajia'?(i===0?'canvas-C04-cover-teajia-dark':'canvas-F01-full-quote'):'AR-S1';
+  if(format==='story')return lines.slice(0,6).map((l,i)=>frameFor(storyTemplate(i),l,i,i?'inner':'cover',{label:i===0?captionOf(p,photoFor(p,story,l.id,i)).slice(0,60):''}));
   if(format==='post'){const l=strongest(180);return [frameFor('AR-P1',l,0,'cover',{label:captionOf(p,photoFor(p,story,l.id,0)).slice(0,60)})];}
   if(format==='reel'){
    const cover=strongest(90),frames=[frameFor('AR-R2',cover,0,'cover',{credit:'',label:p.title.slice(0,60)})];let total=0;

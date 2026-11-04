@@ -206,3 +206,13 @@ test('every magazine (Teajia) template is also a story: the 4:5 card whole insid
  assert.match(html,/filter:blur\(40px\)/);
  assert.doesNotMatch(renderFrame('canvas-C04-cover-teajia-dark',{text:'x'},{format:'carousel'}),/data-story-card/,'posts and carousels are unchanged');
 });
+
+test('a Teajia story defaults to the magazine look; other doors keep his own', async () => {
+ const s=fresh();let p=await start(s);
+ const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
+ p=await as(AGENT,()=>s.layout({...base(),storyId:'S2',format:'story'}));
+ assert.ok(p.layouts.story.frames.every(f=>f.templateId==='AR-S1'),'the art door keeps his own look');
+ p=await as(AGENT,()=>s.propose({...base(),door:'teajia'}));
+ p=await as(AGENT,()=>s.layout({...base(),storyId:'S1',format:'story'}));
+ assert.deepEqual(p.layouts.story.frames.map(f=>f.templateId),['canvas-C04-cover-teajia-dark','canvas-F01-full-quote','canvas-F01-full-quote']);
+});
