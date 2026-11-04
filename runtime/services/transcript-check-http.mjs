@@ -23,7 +23,7 @@ export async function handleTranscriptCheck(request,response,{dataDir,recordings
  if(url.pathname!==PREFIX&&!url.pathname.startsWith(PREFIX+'/'))return false;
  const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
-  const match=url.pathname.slice(PREFIX.length).match(/^\/([a-f0-9-]{36})(?:\/(suggest|decide|decide-group))?$/);
+  const match=url.pathname.slice(PREFIX.length).match(/^\/([a-f0-9-]{36})(?:\/(suggest|decide|decide-group|undo))?$/);
   if(!match)fail('Unknown transcript check action.',404);
   const [,id,action]=match,check=transcriptCheckFor({dataDir,recordings});
   if([...url.searchParams.keys()].length)fail('This request takes no query fields.');
@@ -37,6 +37,7 @@ export async function handleTranscriptCheck(request,response,{dataDir,recordings
   request.arInput=input;
   if(action==='suggest')send(202,await check.suggest(id,{again:input.again===true}));
   else if(action==='decide')send(200,await check.decide(id,input));
+  else if(action==='undo')send(200,await check.undo(id,input));
   else send(200,await check.decideGroup(id,input));
  }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The transcript check could not be read or saved. Nothing was changed.'});}
  return true;

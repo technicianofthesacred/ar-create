@@ -3,6 +3,9 @@
 // probably not the speaker (left out of the talk, never deleted from the transcript), and lines that need his ear (a
 // suggestion with its reason, or a blank to type into). Everything else needs nothing from him.
 //
+// The model is Sonnet through the signed-in `claude` command (the same login Adrian uses; no API key), with no tools,
+// no MCP servers and no settings: it reads the numbered lines and answers in JSON, nothing else.
+//
 // The model only proposes. Decisions are Adrian's, from the app's own page; a "use" writes through the recording
 // owner's correction boundary (transcript-corrections.edit), so the first transcript, RAW and the audio stay untouched
 // and a stale page is refused. "Leave out" changes no transcript bytes: it is recorded here and the check's corrected
@@ -13,7 +16,8 @@ import crypto from 'node:crypto';
 import {StateError} from '../store.mjs';
 import {currentActor,requireHuman} from './actor.mjs';
 import {atomicWrite,ensurePrivateDirectory,readJson} from './files.mjs';
-import {executeCodexArtifacts,installedCodex,outputOnlyPrompt} from './artifact-execution.mjs';
+import {spawn} from 'node:child_process';
+import {executionEnvironment} from './artifact-execution.mjs';
 
 export const CHECK_TIERS=Object.freeze(['sure','notyou','ear']);
 const MAX_PROBLEMS=60,MAX_REASON=300,MAX_TEXT=2000;
@@ -21,13 +25,18 @@ const UUID=/^[a-f0-9-]{36}$/;
 const fail=(message,status=400)=>{throw new StateError(message,status);};
 const mmss=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 
-/** The model's answer, checked against the transcript it was given. Throws on anything outside the contract. */
-export function validateSuggestions(raw,segments){
+/**
+ * The model's answer, checked against the transcript it was given. A wrong shape throws; one suggestion that breaks
+ * the contract is dropped and counted, so a single slip never costs the other suggestions. With {strict:true} any
+ * broken suggestion throws (used by the tests to name each rule).
+ */
+export function validateSuggestions(raw,segments,{strict=false}={}){
  if(!raw||typeof raw!=='object'||!Array.isArray(raw.problems))fail('The suggestions are not in the expected shape.');
- if(raw.problems.length>MAX_PROBLEMS)fail('Too many suggestions; at most '+MAX_PROBLEMS+'.');
- const used=new Set(),out=[];
- for(const p of raw.problems){
+ const used=new Set(),out=[];let dropped=0;
+ for(const p of raw.problems.slice(0,MAX_PROBLEMS*2)){
+  try{
   if(!p||typeof p!=='object'||!CHECK_TIERS.includes(p.tier))fail('A suggestion has no known kind.');
+  const tier=p.tier==='ear'&&p.certain===true&&Array.isArray(p.fixes)&&p.fixes.length?'sure':p.tier;
   const indexes=p.indexes;
   if(!Array.isArray(indexes)||!indexes.length||indexes.length>8||indexes.some(i=>!Number.isInteger(i)||!segments[i]))fail('A suggestion points at lines that do not exist.');
   for(let k=1;k<indexes.length;k++)if(indexes[k]!==indexes[k-1]+1)fail('A suggestion must cover lines in a row.');
@@ -35,17 +44,20 @@ export function validateSuggestions(raw,segments){
   const reason=typeof p.reason==='string'?p.reason.trim():'';
   if(!reason||reason.length>MAX_REASON||/[\r\n\x00]/.test(reason))fail('A suggestion needs a one-line reason.');
   let fixes=null;
-  if(p.tier==='notyou'){if(p.fixes!=null&&!(Array.isArray(p.fixes)&&!p.fixes.length))fail('A line that is not the speaker takes no fix.');}
+  if(tier==='notyou'){if(p.fixes!=null&&!(Array.isArray(p.fixes)&&!p.fixes.length))fail('A line that is not the speaker takes no fix.');}
   else if(p.fixes!=null){
    if(!Array.isArray(p.fixes)||!p.fixes.length)fail('A fix must name its lines.');
    fixes=p.fixes.map(f=>{if(!f||!indexes.includes(f.index)||typeof f.text!=='string'||!f.text.trim()||f.text.length>MAX_TEXT||/[\r\n\x00]/.test(f.text))fail('A fix must be one non-empty line for one of its own lines.');return {index:f.index,text:f.text.trim()};});
    if(new Set(fixes.map(f=>f.index)).size!==fixes.length)fail('A fix names the same line twice.');
    if(fixes.every(f=>segments[f.index].text.trim()===f.text))fail('A fix must change something.');
-  }else if(p.tier==='sure')fail('A sure fix must say what it changes.');
+  }else if(tier==='sure')fail('A sure fix must say what it changes.');
   indexes.forEach(i=>used.add(i));
-  out.push({id:crypto.randomUUID(),tier:p.tier,indexes,fixes,reason});
+  out.push({id:crypto.randomUUID(),tier,indexes,fixes,reason});
+  }catch(error){if(strict)throw error;dropped++;}
  }
- return out.sort((a,b)=>a.indexes[0]-b.indexes[0]);
+ if(!out.length&&dropped)fail('None of the suggestions fitted the transcript.');
+ const problems=out.sort((a,b)=>a.indexes[0]-b.indexes[0]).slice(0,MAX_PROBLEMS);
+ return Object.assign(problems,{dropped:dropped+Math.max(0,out.length-MAX_PROBLEMS)});
 }
 
 /** One prompt per recording: numbered lines with their time and the words the speech model was unsure of. */
@@ -55,18 +67,46 @@ export function suggestionPrompt({title,segments,vocabulary=''}){
   'You are checking a machine transcript of a recording so its speaker only has to listen where it matters. Recording: '+JSON.stringify(title||'Recording')+'.',
   'Each line below is "index | time | text", sometimes followed by words the speech model was unsure of. Lines are short pieces of speech; a sentence often runs across several lines, and long pauses are normal.',
   vocabulary?'Names and terms this speaker uses (spell them this way): '+vocabulary:'',
-  'Sort only the lines that need attention into three kinds:',
-  '- "sure": a clear mishearing whose correct words are certain from the same passage or a known term (a misspelled tradition name, "each can came from a rock" after crushing pigments meaning "each color"). Give the fix.',
+  'First read the whole talk to understand its subject, who is being talked about and the words its world uses. A speech model writes what a sound most resembles, not what makes sense, so look for every place a careful listener would stop: a word that makes no sense in this subject but sounds like one that does; a misspelled name of a person, place, tradition, technique or material; a phrase whose start was clipped; "you" or "I" where the speaker is plainly talking about someone else; a sentence split across lines with a word misheard at the join; a number or date that cannot be right.',
+  'Sort the lines that need attention into three kinds:',
+  '- "sure": the correct words are certain from the passage or a well-known term, and a careful listener would not need the audio to agree (a misspelled well-known tradition or place name; "the bread came out of the oven" heard as "the bred came out of the oven"). Give the fix. Use sure whenever your fix is the only sensible reading of those sounds in this talk and you would bet on it: most misspelled names and sound-alike swaps that restore an obvious sentence are sure. Use ear only when two readings are plausible or the meaning stays unclear.',
   '- "notyou": a line that is probably not the speaker: another person, another language, a stray character, or a phrase speech models invent in silence ("thank you for watching", "thank you to all the listeners"). No fix.',
-  '- "ear": anything uncertain. Give your best guess as the fix and begin the reason with "A guess." when it is one; give "fixes": null when there is no sensible guess.',
-  'Rules: never invent facts or content; keep the speaker\'s own words and style; do not flag a line only because it is a fragment or plain spoken grammar; do not correct grammar the speaker would say aloud. Fixes replace a line\'s whole text, one entry per line you change, every text non-empty; when a word belongs on another line of the same suggestion, fix each line separately. A suggestion covers lines in a row and no line twice. At most '+MAX_PROBLEMS+' suggestions; leave out anything doubtful but harmless.',
+  '- "ear": anything that looks wrong but needs the audio to settle. Give your best guess as the fix, chosen to fit the subject of the talk, and begin the reason with "A guess." when it is one; give "fixes": null when there is no sensible guess. Prefer flagging a line that reads as nonsense over leaving it.',
+  'Rules: never invent facts or content; keep the speaker\'s own words and style; do not flag a line only because it is a fragment or plain spoken grammar; do not correct grammar the speaker would say aloud. Fixes replace a line\'s whole text, one entry per line you change, every text non-empty; when a word belongs on another line of the same suggestion, fix each line separately. A suggestion covers lines in a row and no line twice. At most '+MAX_PROBLEMS+' suggestions. A fix must change the text; never return a line unchanged.',
   'Reasons: one plain sentence under 25 words a non-technical person understands, no em dashes, no jargon.',
-  'Return JSON only: {"problems":[{"indexes":[n,...],"tier":"sure|notyou|ear","fixes":[{"index":n,"text":"..."}] or null,"reason":"..."}]}',
+  'For every suggestion with a fix, also answer "certain": true when you would bet the fix is what was said, false otherwise. Be honest: a fix that only restores an obvious sentence or spelling is certain; a guess is not.',
+  'Return JSON only: {"problems":[{"indexes":[n,...],"tier":"sure|notyou|ear","fixes":[{"index":n,"text":"..."}] or null,"certain":true|false,"reason":"..."}]}',
   '<transcript>\n'+lines.join('\n')+'\n</transcript>',
  ].filter(Boolean).join('\n\n');
 }
 
-export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'',execute=executeCodexArtifacts,available=()=>!!installedCodex(),timeoutMs=600000}){
+/** The signed-in claude command: AR_CREATE_CLAUDE when set, else the first executable claude on PATH. */
+export function installedClaude(inherited=process.env){
+ const candidates=[...(inherited.AR_CREATE_CLAUDE?[inherited.AR_CREATE_CLAUDE]:[]),...(inherited.PATH||'').split(path.delimiter).filter(Boolean).map(dir=>path.join(dir,'claude')),...(inherited.HOME?[path.join(inherited.HOME,'.local/bin/claude')]:[])];
+ return candidates.find(file=>{try{fs.accessSync(file,fs.constants.X_OK);return fs.statSync(file).isFile();}catch{return false;}})||null;
+}
+/** One read with no tools: prompt on stdin, the model's answer text back. Never echoes the transcript or provider logs. */
+export function executeClaude({cwd,prompt,timeoutMs=600000,model='sonnet',claudePath=installedClaude(),spawnChild=spawn}){
+ if(!claudePath)return Promise.reject(new StateError('The claude command is not installed on this Mac.',503));
+ return new Promise((resolve,reject)=>{
+  const child=spawnChild(claudePath,['-p','--model',model,'--output-format','json','--no-session-persistence','--tools','','--strict-mcp-config','--setting-sources',''],{cwd,env:executionEnvironment(),stdio:['pipe','pipe','pipe']});
+  let out='',settled=false;const done=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);error?reject(error):resolve(value);};
+  const timer=setTimeout(()=>{child.kill('SIGTERM');done(new StateError('Reading the transcript took too long. Try again.',504));},timeoutMs);timer.unref?.();
+  child.stdout.on('data',d=>{out+=d;if(out.length>8*1024*1024){child.kill('SIGTERM');done(new StateError('The answer was too long.',502));}});
+  child.stderr.on('data',()=>{});child.stdin.on('error',()=>{});
+  child.on('error',()=>done(new StateError('The claude command could not start. Check that it is signed in.',503)));
+  child.on('close',code=>{
+   if(settled)return;
+   let envelope;try{envelope=JSON.parse(out);}catch{return done(new StateError('The claude command gave an unreadable answer. Check that it is signed in.',502));}
+   if(code!==0||envelope.is_error)return done(new StateError('The claude command could not finish this read. Check that it is signed in, then try again.',502));
+   const text=String(envelope.result||'').trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'');
+   done(null,{text,model:typeof envelope.model==='string'?envelope.model:model});
+  });
+  child.stdin.end(prompt);
+ });
+}
+
+export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'',execute=executeClaude,available=()=>!!installedClaude(),timeoutMs=600000}){
  if(!corrections)throw new Error('The transcript check needs the recording owner\'s corrections.');
  const dir=()=>{ensurePrivateDirectory(dataDir,'transcript-checks');return path.join(dataDir,'transcript-checks');};
  const file=id=>{if(!UUID.test(id||''))fail('Unknown recording.',404);return path.join(dir(),id+'.json');};
@@ -99,16 +139,17 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const existing=load(id);
     if(existing?.state==='running'&&running.has(id))return view(id);
     if(existing?.state==='ready'&&!again)return view(id);
-    if(!available())fail('The model that reads transcripts is not set up on this Mac. The transcript is still here to read and correct.',503);
+    if(!available())fail('The claude command is not set up on this Mac, so no suggestions can be made. The transcript is still here to read and correct.',503);
     const snap=corrections.read(id),record={schema:'ar-create.transcript-check.v1',jobId:id,state:'running',startedAt:new Date().toISOString(),startedBy:who(),basis:snap.expected.revision,problems:[],decisions:{}};
     save(id,record);
     const work=(async()=>{
      const cwd=fs.mkdtempSync(path.join(dir(),'.run-'));
      try{
       const prompt=suggestionPrompt({title:snap.result?.metadata?.source?path.basename(String(snap.result.metadata.source)):'Recording',segments:snap.result.segments,vocabulary:await vocabulary().catch(()=>'')});
-      const result=await execute({cwd,prompt:outputOnlyPrompt(prompt,['suggestions.json']),names:['suggestions.json'],timeoutMs});
-      const problems=validateSuggestions(JSON.parse(result.response.artifacts['suggestions.json']),snap.result.segments);
-      save(id,{...record,state:'ready',finishedAt:new Date().toISOString(),model:result.model||null,problems});
+      const result=await execute({cwd,prompt,timeoutMs});
+      let parsed;try{parsed=JSON.parse(result.text);}catch{fail('The suggestions came back unreadable. Try again.');}
+      const problems=validateSuggestions(parsed,snap.result.segments);
+      save(id,{...record,state:'ready',finishedAt:new Date().toISOString(),model:result.model||null,problems:[...problems],dropped:problems.dropped});
      }catch(error){save(id,{...record,state:'failed',finishedAt:new Date().toISOString(),error:error.status?error.message:'The transcript could not be read for problems. Try again.'});}
      finally{fs.rmSync(cwd,{recursive:true,force:true});running.delete(id);}
     })();
@@ -125,17 +166,18 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const p=record.problems.find(x=>x.id===problemId);if(!p)fail('That suggestion is not in this check.',404);
     if(!['use','keep','leave'].includes(action))fail('Choose use, keep or leave.');
     if(action==='leave'&&p.tier!=='notyou')fail('Only a line that is probably not the speaker can be left out.');
-    let applied=null;
+    let applied=null,before=null;
     if(action==='use'){
      if(p.tier==='notyou')fail('Leave this line out, or keep it.');
      const chosen=Array.isArray(fixes)?fixes:p.fixes;
      if(!Array.isArray(chosen)||!chosen.length)fail('Type the words you said first.');
      const snap=corrections.read(id);
      const clean=chosen.map(f=>{if(!f||!p.indexes.includes(f.index)||typeof f.text!=='string'||!f.text.trim()||f.text.length>MAX_TEXT||/[\r\n\x00]/.test(f.text))fail('Each change must be one non-empty line inside this suggestion.');return {index:f.index,text:f.text.trim()};}).filter(f=>snap.segments[f.index].text.trim()!==f.text);
+     before=clean.map(f=>({index:f.index,text:snap.segments[f.index].text}));
      if(clean.length){const after=corrections.edit(id,{expected,corrections:clean});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
      applied=clean;
     }
-    record.decisions[p.id]={action:action==='use'?'used':action==='keep'?'kept':'left-out',...(applied?{fixes:applied}:{}),at:new Date().toISOString(),by};
+    record.decisions[p.id]={action:action==='use'?'used':action==='keep'?'kept':'left-out',...(applied?{fixes:applied,before}:{}),at:new Date().toISOString(),by};
     save(id,record);return view(id);
    });
   },
@@ -150,10 +192,32 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const at=new Date().toISOString();
     if(tier==='sure'){
      const snap=corrections.read(id);
-     const all=open.flatMap(p=>p.fixes).filter(f=>snap.segments[f.index].text.trim()!==f.text);
+     const changes=new Map(open.map(p=>[p.id,p.fixes.filter(f=>snap.segments[f.index].text.trim()!==f.text)]));
+     const all=[...changes.values()].flat();
      if(all.length){const after=corrections.edit(id,{expected,corrections:all});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
-     for(const p of open)record.decisions[p.id]={action:'used',fixes:p.fixes,at,by,group:true};
+     for(const p of open)record.decisions[p.id]={action:'used',fixes:changes.get(p.id),before:changes.get(p.id).map(f=>({index:f.index,text:snap.segments[f.index].text})),at,by,group:true};
     }else for(const p of open)record.decisions[p.id]={action:'left-out',at,by,group:true};
+    save(id,record);return view(id);
+   });
+  },
+  /**
+   * Take one decision back. A use is reversed through the same correction boundary, and only while every line it
+   * changed still reads exactly as it left it; anything edited since is left alone and the undo is refused.
+   */
+  async undo(id,{problemId,expected}={}){
+   decider();
+   return serial(id,async()=>{
+    const record=load(id);if(!record||record.state!=='ready')fail('There is no finished check for this recording.',409);
+    const decision=record.decisions[problemId];if(!decision)fail('That suggestion has no decision to undo.',409);
+    if(decision.action==='used'&&decision.fixes?.length){
+     if(!Array.isArray(decision.before)||decision.before.length!==decision.fixes.length)fail('This change was made before undo existed; change it in the full transcript.',409);
+     const snap=corrections.read(id);
+     if(decision.fixes.some(f=>snap.segments[f.index]?.text.trim()!==f.text))fail('Those lines were changed again since. Change them in the full transcript.',409);
+     const after=corrections.edit(id,{expected,corrections:decision.before.map(b=>({index:b.index,text:b.text}))});
+     record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);
+    }
+    delete record.decisions[problemId];
+    record.undone=[...(record.undone||[]),{problemId,action:decision.action,at:new Date().toISOString(),by:who()}].slice(-200);
     save(id,record);return view(id);
    });
   },
