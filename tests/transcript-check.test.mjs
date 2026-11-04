@@ -227,3 +227,47 @@ test('a corrected name can be remembered by the shared word library, only by Adr
  assert.ok(entry.variants.some(v=>v.text==='Navari'&&v.kind==='heard'),'the mishearing is remembered as heard');
  assert.equal(entry.source.recording,f.id);
 });
+
+test('a model fix quotes the words it replaces, may cross a line break, and is spread back over the lines',()=>{
+ const lines=[{text:'Multi generations of...'},{text:"I'm painting in this traditional way."},{text:'Aged tea.'},{text:'Continue down this process.'}];
+ const ok=validateSuggestions({problems:[
+  {indexes:[0,1],tier:'sure',before:"of... I'm painting",after:'of painting',reason:'r'},
+  {indexes:[2,3],tier:'ear',before:'Aged tea. Continue',after:'As he aged, he continued',reason:'A guess.'},
+ ]},lines,{strict:true});
+ assert.deepEqual(ok[0].fixes,[{index:0,text:'Multi generations of'},{index:1,text:'painting in this traditional way.'}],'no doubled "of"');
+ assert.deepEqual(ok[1].fixes.map(f=>f.index),[2,3]);
+ assert.equal(ok[1].fixes.map(f=>f.text).join(' '),'As he aged, he continued down this process.');
+ assert.throws(()=>validateSuggestions({problems:[{indexes:[2],tier:'sure',before:'Aged coffee',after:'Agate',reason:'r'}]},lines,{strict:true}),/quote words that are in its lines/);
+ assert.throws(()=>validateSuggestions({problems:[{indexes:[2],tier:'sure',before:'Aged tea.',after:'',reason:'r'}]},lines,{strict:true}),/cannot empty a whole line/);
+});
+
+test('Adrian types over any paragraph: words are spread over its lines, an emptied line is left out, and it undoes',async t=>{
+ const f=await setup(t);
+ const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
+ const check=transcriptCheckFor({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async()=>({text:JSON.stringify(GOOD)})}});
+ const base='/api/transcript-check/'+f.id;
+ await f.agent('POST',base+'/suggest',{});await check.wait(f.id);
+ let r=await f.page('GET',base);
+ assert.ok(r.body.paragraphs.length>=1);assert.ok(r.body.segments.every(s=>typeof s.shown==='string'));
+ assert.ok(r.body.segments[0].words.length>0,'word times for tap-to-hear');
+ // Lines 3 to 4 ("Thank you to all the listeners too." "Aged tea and brush.") retyped: the first emptied, the second changed.
+ const indexes=[3,4];
+ assert.equal((await f.agent('POST',base+'/edit',{indexes,text:'Agate and brush.',expected:r.body.expected})).status,403,'agents never type over his words');
+ r=await f.page('POST',base+'/edit',{indexes,text:'Agate and brush.',expected:r.body.expected});
+ assert.equal(r.status,200,JSON.stringify(r.body));
+ assert.equal(r.body.segments[4].text,'Agate and brush.');
+ assert.ok(r.body.leftOut.includes(3),'the emptied line is left out of the talk');
+ assert.equal(r.body.segments[3].text,'Thank you to all the listeners too.','and kept in the transcript');
+ const settled=r.body.problems.filter(p=>p.indexes.some(i=>i===3||i===4));
+ assert.ok(settled.every(p=>p.decision?.action==='edited'),'suggestions on lines he changed are settled');
+ const editId=r.body.lastEdit;
+ // A stale page is refused; then the edit is taken back exactly.
+ const stale=await f.page('POST',base+'/edit',{indexes:[0],text:'So today I watched painters at work.',expected:{...r.body.expected,revision:'0'}});assert.equal(stale.status,409);
+ r=await f.page('POST',base+'/undo-edit',{editId,expected:r.body.expected});assert.equal(r.status,200,JSON.stringify(r.body));
+ assert.equal(r.body.segments[4].text,'Aged tea and brush.');assert.equal(r.body.leftOut.includes(3),false);
+ assert.ok(settled.every(s=>!r.body.problems.find(p=>p.id===s.id).decision),'the suggestions come back');
+ // An untouched line keeps its stored words exactly, even though the page shows it without its capital.
+ r=await f.page('POST',base+'/edit',{indexes:[5,6],text:'It just somehow fits well with each other.',expected:r.body.expected});
+ assert.deepEqual([r.body.segments[5].text,r.body.segments[6].text].join(' '),'It just somehow fits well with each other.');
+ assert.equal(r.body.segments[0].text,'So today I watched a painter at work.');
+});
