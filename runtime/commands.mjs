@@ -44,10 +44,11 @@ const UNDO = {
 const BODY = {
   '/api/instagram/plan': ['id? (omit to create)', 'operationId', 'expectedRevision?', 'expectedHash?', 'subject?', 'title?', 'door?', 'material?:{transcripts:[{sourceId,sourceHash}],photos:[{sourceId,caption?}]}', 'stories?:[{id?,title,dish,readback,why,reader,format?,spine:[lineId],matches:[{photoId,lineId,why}]}]', 'gaps?:[{question,why,storyIds,status,finding?,sources?}]', 'heard?:{storyId,quote}', 'flags?:[{lineId,heard,kind,suggestion?,why?}]', 'coverage?:[{momentId,status:saved|skipped|null,why}]'],
   '/api/instagram/layout': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'format', 'frames? (omit for the default)', 'caption? (text, or {parts:[{kind:quote,lineId,text}|{kind:suggested,lineId,text}|{kind:draft,text}]})'],
-  '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?'],
-  '/api/instagram/confirm': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'flagId', 'verdict (as-heard|corrected)', 'correction?'],
-  '/api/instagram/meaning': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'verdict (right|not-meant)', 'words (his exact words; required for not-meant)'],
-  '/api/instagram/ready': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'format', 'caption?'],
+  '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
+  '/api/instagram/confirm': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'flagId', 'verdict (as-heard|corrected)', 'correction?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
+  '/api/instagram/meaning': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'verdict (right|not-meant)', 'words (his exact words; required for not-meant)', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
+  '/api/instagram/handoff': ['id', 'memoId (the phone memo the plan was made from; the Mac takes it in at its next phone check)'],
+  '/api/instagram/ready': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'format', 'caption?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
   '/api/study/material/attach':['bindingId','parentStudyId','operationId','sourceIds'],
 
   '/api/magazine/working-draft/ai/run': ['storyId','pieceId','edition','parentStudyId','expectedHash','contextHash','operationId','instruction?'],
@@ -114,7 +115,7 @@ const BODY = {
   '/api/consent/people/record': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','person:{personId?,name,appears:[named|pictured|quoted],note?}'],
   '/api/consent/people/draft-request': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','text'],
   '/api/consent/people/sent': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','sentAt','channel'],
-  '/api/consent/people/answer': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','state:not-asked|asked|yes|yes-with-changes|no','changes?'],
+  '/api/consent/people/answer': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','state:not-asked|asked|yes|yes-with-changes|no','changes?','said? (an agent carrying his answer from chat: {quote, via:"chat", at})'],
   '/api/consent/people/remove': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','personId','reason'],
   '/api/consent/share/answer': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','question:comfort|accuracy','answer:yes|not-yet','note?'],
   '/api/consent/share/override': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash','reason'],
@@ -170,7 +171,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/api/simmer/material', ['subject']],
   ['POST', '/api/simmer/intake'], ['POST', '/api/simmer/propose'], ['POST', '/api/simmer/dish'],
   ['GET', '/api/instagram/templates'], ['GET', '/api/instagram/plans', ['subject?']], ['GET', '/api/instagram/plan', ['id']],
-  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'],
+  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'], ['POST', '/api/instagram/handoff'],
   ['GET', '/api/instagram/render', ['id', 'format', 'frame']], ['GET', '/api/instagram/sheet', ['id', 'format']], ['GET', '/api/instagram/captions', ['id']], ['GET', '/api/instagram/png', ['id', 'format', 'frame']],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
@@ -189,6 +190,8 @@ const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/w
 export const PROSE_SAVES = Object.freeze(['POST /api/study-draft/save', 'POST /api/study-draft/history-restore',
   'POST /api/study/outputs/save', 'POST /api/study/outputs/undo', 'POST /api/study/outputs/undo-words',
   'POST /api/study/human-direction/write', 'POST /api/study/human-direction/undo', 'POST /api/study-ai/finish']);
+/** Human-only decisions an agent may carry from a chat with Adrian, with his exact words (actor.mjs chatDecider). */
+export const CHAT_RELAYABLE = Object.freeze(new Set(['POST /api/instagram/choose', 'POST /api/instagram/confirm', 'POST /api/instagram/meaning', 'POST /api/instagram/ready', 'POST /api/consent/people/answer']));
 /** Decisions only a human makes. Agents propose; the record says who decided. */
 const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/instagram/choose', 'POST /api/instagram/confirm', 'POST /api/instagram/meaning', 'POST /api/instagram/ready', 'POST /api/source-sessions/check','POST /api/recordings/source','POST /api/study/language/accept','POST /api/study/language/reject','POST /api/source-language/accept','POST /api/source-language/reject','POST /api/study/outputs/visual-review','POST /api/magazine/working-draft/ai/run', 'POST /api/magazine/working-draft/ai/accept', 'POST /api/magazine/working-draft/ai/reject', 'POST /api/first-flow/material-triage', 'POST /api/magazine/working-draft/share-feedback/prepare-mapping', 'POST /api/magazine/working-draft/share-feedback/prepare-paragraph', 'POST /api/magazine/working-draft/share-feedback/undo', 'POST /api/magazine/mechanical-check', 'POST /api/source-sessions/translation-accept', 'POST /api/magazine/working-draft/prepare', 'POST /api/magazine/working-draft/edit', 'POST /api/magazine/working-draft/undo', 'POST /api/study-ai/accept', 'POST /api/study-ai/reject', 'POST /api/voice-corrections/decide', 'POST /api/study-ai/human-contract', 'POST /api/study/share/fact', 'POST /api/study/share/save', 'POST /api/study/share/undo',
   'POST /api/shared-articles/requests/{id}/accept', 'POST /api/shared-articles/requests/{id}/reject', 'POST /api/shared-carousels/requests/{id}/accept', 'POST /api/shared-carousels/requests/{id}/reject',
@@ -202,7 +205,7 @@ function entry(method, route, { query, mode, mount }) {
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
   const pattern = new RegExp('^' + route.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\w+)\\?\}/g, '([^/]+)') + '$');
   return { name: '', section: section(route), method, route, schema: method === 'GET' || mode === 'scope' || mode === 'scope-copy' ? { query: query || [], ...(mode === 'scope-copy' ? { body: 'object (repeats the query scope)' } : mode === 'scope' && method !== 'GET' ? { body: BODY[route] || 'object (identity stays in the query)' } : {}), ...(mode === 'input-json' ? { encoding: 'input-json' } : {}) } : { body: BODY[route] || 'object' },
-    readOnly, actors: (route.startsWith('/api/study/language/')||route.startsWith('/api/source-language/'))&&route.includes('/stand-in-')?['agent']:['POST /api/study/outputs/stand-in-refresh','POST /api/study/outputs/stand-in-create','POST /api/study/outputs/stand-in-review-words','POST /api/study/outputs/stand-in-save','POST /api/study/structure-tests/visual-review','POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark','POST /api/study/structure-tests/research-note'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
+    readOnly, actors: (route.startsWith('/api/study/language/')||route.startsWith('/api/source-language/'))&&route.includes('/stand-in-')?['agent']:['POST /api/study/outputs/stand-in-refresh','POST /api/study/outputs/stand-in-create','POST /api/study/outputs/stand-in-review-words','POST /api/study/outputs/stand-in-save','POST /api/study/structure-tests/visual-review','POST /api/study/structure-tests','POST /api/study/structure-tests/proposal-review','POST /api/study/structure-tests/proposal-contract','POST /api/study/structure-tests/review-mark','POST /api/study/structure-tests/research-note'].includes(key)?['agent']:HUMAN_ONLY.has(key) ? HUMAN : ANY, ...(CHAT_RELAYABLE.has(key) ? { relay: 'chat' } : {}), ...(UNDO[key] ? { undo: UNDO[key] } : {}), mount, ...(mode ? { mode } : {}), pattern };
 }
 /** Query fields a GET handler reads, recovered from its source. */
 const queryFields = fn => [...new Set([...String(fn).matchAll(/searchParams\.(?:get|getAll|has)\('([\w-]+)'\)/g)].map(m => m[1]))];

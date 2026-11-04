@@ -207,8 +207,54 @@ export function createPhonePickup({ dataDir, readKey, fetcher = globalThis.fetch
     if (s.waiting) bits.push(`${plural(s.waiting, 'recording is', 'recordings are')} waiting for transcription to be connected`);
     if (s.skipped) bits.push(`${plural(s.skipped, 'recording was', 'recordings were')} set aside`);
     if (s.failed) bits.push(`${plural(s.failed, 'recording', 'recordings')} will be tried again next time`);
+    if (s.plans) bits.push(`${plural(s.plans, 'Instagram plan', 'Instagram plans')} from the VPS taken in`);
+    if (s.plansHeld) bits.push(`${plural(s.plansHeld, 'Instagram plan was', 'Instagram plans were')} not taken in (see problems)`);
     return bits.length ? bits.join('. ') + '.' : s.found ? 'Everything on the phone is already handled.' : 'Nothing new on the phone.';
   };
+
+  const handoffFile = (id) => { if (!UUID.test(id || '')) throw new Error('Unknown memo.'); return path.join(dir, 'handoffs', `${id}.json`); };
+  /**
+   * Finished Instagram plans the VPS feeder left with a memo on the phone site, taken in one way (the laptop stays the
+   * source of record). The memo's own transcript and photos are filed into the Library first, once each; the plan is
+   * then adopted only if every file it names is here byte for byte (matched by hash) and every line still reads true.
+   */
+  async function takeHandoffs(key, summary) {
+    if (typeof local.importFile !== 'function' || typeof local.adoptPlan !== 'function') return;
+    const listed = await call(key, '/api/oracle/pickup/memos?waiting=handoff&by=mac');
+    if (!listed.ok) return; // a phone site without memos yet
+    const body = await listed.json().catch(() => ({}));
+    const memos = (Array.isArray(body.memos) ? body.memos : []).filter((m) => UUID.test(m?.id || '')).slice(0, MAX_NEW_PER_CHECK);
+    for (const memo of memos) {
+      const record = readJson(handoffFile(memo.id)) || { memoId: memo.id, files: {} };
+      try {
+        const bundleResponse = await call(key, `/api/oracle/pickup/memos/${memo.id}/files/handoff`);
+        if (!bundleResponse.ok) throw new Error('the plan could not be fetched');
+        const bundle = await bundleResponse.json();
+        const detail = await (await call(key, `/api/oracle/pickup/memos/${memo.id}`)).json();
+        const day = String(detail.memo?.createdAt || iso(now())).slice(0, 10), title = String(detail.memo?.title || 'memo').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'memo';
+        const folder = `Instagram/${day} ${title}`;
+        if (!record.files.transcript && typeof detail.transcript === 'string') record.files.transcript = await local.importFile({ folder, name: `${day} ${title}.md`, bytes: Buffer.from(detail.transcript, 'utf8') });
+        for (const photo of detail.files?.photos || []) {
+          if (record.files[photo.id] || !UUID.test(photo.id || '')) continue;
+          const response = await call(key, `/api/oracle/pickup/memos/${memo.id}/files/${photo.id}`);
+          if (!response.ok) throw new Error('a photo could not be fetched');
+          record.files[photo.id] = await local.importFile({ folder, name: String(photo.name || photo.id).slice(0, 120), bytes: Buffer.from(await response.arrayBuffer()) });
+        }
+        writeJson(handoffFile(memo.id), record);
+        const byHash = new Map(Object.values(record.files).map((f) => [f.hash, f]));
+        const outcome = await local.adoptPlan(bundle, (source) => byHash.get(source.hash) || null);
+        record.adopted = { planId: outcome.planId, revision: outcome.revision, at: iso(now()), outcome: outcome.state };
+        writeJson(handoffFile(memo.id), record);
+        if (outcome.state === 'adopted' || outcome.state === 'already-here') {
+          await call(key, `/api/oracle/pickup/memos/${memo.id}/picked`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ by: 'mac', what: 'handoff' }) });
+          if (outcome.state === 'adopted') summary.plans = (summary.plans || 0) + 1;
+        } else { summary.plansHeld = (summary.plansHeld || 0) + 1; summary.problems.add(outcome.why); }
+      } catch (error) {
+        writeJson(handoffFile(memo.id), { ...record, error: error.message });
+        summary.plansHeld = (summary.plansHeld || 0) + 1; summary.problems.add('An Instagram plan from the VPS could not be taken in: ' + error.message + '.');
+      }
+    }
+  }
 
   /** One pickup. `reason` is 'button', 'command' or 'start'. Returns a plain summary; never throws. */
   async function check({ reason = 'command' } = {}) {
@@ -239,6 +285,7 @@ export function createPhonePickup({ dataDir, readKey, fetcher = globalThis.fetch
               } else if (record.phase === 'failed') { record.phase = 'seen'; record.attempts = 0; record.error = null; }
               await advanceOne(record, key, summary);
             }
+            await takeHandoffs(key, summary);
           }
         }
       } catch (error) {

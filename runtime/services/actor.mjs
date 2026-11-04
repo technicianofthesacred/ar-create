@@ -53,6 +53,25 @@ export function requireHuman(what='This action'){
  if(ctx&&!isHuman(ctx.actor))throw new StateError(`${what} is human-only; ${ctx.actor} may propose but not decide.`,403);
 }
 
+// Who may carry Adrian's own decision from a chat he is having with them: an agent, never a cron or an import.
+export const CHAT_CARRIERS=Object.freeze([...AGENT_ACTORS]);
+const SAID_AT=/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/;
+/**
+ * The decider of a human-only decision. Adrian in the app decides as himself. An agent he is talking to may carry his
+ * decision only with his exact words from that chat ({said:{quote,via:'chat',at}}): the record then says Adrian
+ * decided, in those words, and which agent carried them. Anyone else is refused.
+ */
+export function chatDecider(input,what='This decision'){
+ const ctx=currentActor();
+ if(!ctx||isHuman(ctx.actor))return {by:ctx?.actor||IN_PROCESS_ACTOR};
+ const said=input?.said;
+ if(!CHAT_CARRIERS.includes(ctx.actor)||!said||typeof said!=='object'||Array.isArray(said))throw new StateError(`${what} is Adrian's alone. ${ctx.actor} may propose, never decide, unless it carries his exact words from the chat (said).`,403);
+ const quote=typeof said.quote==='string'?said.quote.trim():'';
+ if(!quote||quote.length>1200)throw new StateError('"said.quote" is Adrian\'s exact words from the chat, up to 1200 characters.',400);
+ if(said.via!=='chat'||!SAID_AT.test(said.at||''))throw new StateError('"said" names the chat (via:"chat") and when he said it (at, ISO time).',400);
+ return {by:HUMAN_ACTORS[0],carriedBy:ctx.actor,said:{quote,via:'chat',at:said.at}};
+}
+
 /**
  * Resolve the actor of an HTTP request.
  * - X-AR-Actor present: must be a known value (400 otherwise); X-AR-Client optional (default http).

@@ -70,6 +70,24 @@ test('naming the dish and the final yes are Adrian\'s; an agent records only wha
  await assert.rejects(as(AGENT,()=>s.layout({...base(),storyId:'S1',format:'reel'})),e=>e.status===409,'an agent cannot change what he said yes to');
 });
 
+test('an agent may carry his decision from the chat, only with his exact words, and the record says so', async () => {
+ const s=fresh();let p=await start(s);
+ const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
+ const at=new Date().toISOString(),said=quote=>({said:{quote,via:'chat',at}});
+ await assert.rejects(as('cron:nightly',()=>s.choose({...base(),storyId:'S1',...said('the crack one')})),e=>e.status===403,'a cron never carries his words');
+ await assert.rejects(as(AGENT,()=>s.choose({...base(),storyId:'S1',said:{quote:'  ',via:'chat',at}})),e=>e.status===400,'empty words are not his words');
+ await assert.rejects(as(AGENT,()=>s.choose({...base(),storyId:'S1',said:{quote:'the crack one',via:'email',at}})),e=>e.status===400,'only from a chat');
+ p=await as(AGENT,()=>s.meaning({...base(),storyId:'S1',verdict:'right',...said('Yes, that is it.')}));
+ assert.deepEqual(p.stories[0].meaning,{verdict:'right',words:'',by:ADRIAN,carriedBy:AGENT,said:{quote:'Yes, that is it.',via:'chat',at},at:p.stories[0].meaning.at});
+ p=await as(AGENT,()=>s.choose({...base(),storyId:'S1',forWhom:'The maker',...said('Go with the crack one, for makers.')}));
+ assert.equal(p.chosen.by,ADRIAN);assert.equal(p.chosen.carriedBy,AGENT);assert.equal(p.chosen.said.quote,'Go with the crack one, for makers.');
+ p=await as(AGENT,()=>s.layout({...base(),storyId:'S1',format:'reel',caption:'Every crack is a record.'}));
+ p=await as(AGENT,()=>s.ready({...base(),format:'reel',...said('Ready, post it.')}));
+ assert.equal(p.ready.reel.by,ADRIAN);assert.equal(p.ready.reel.carriedBy,AGENT);assert.equal(p.ready.reel.posted,false);
+ const plan=JSON.parse(fs.readFileSync(path.join(s.asksFile(p.id),'..',p.id+'.json'),'utf8'));
+ assert.ok(plan.operations.some(o=>o.actor===AGENT&&o.what==='ready reel (said in chat)'),'the log keeps who carried it');
+});
+
 test('his words stay exactly as said on every frame', async () => {
  const s=fresh();let p=await start(s);
  const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
@@ -120,7 +138,61 @@ test('the four new templates keep their words inside each format\'s safe zone, i
 test('the studio is in the one command registry, with the two decisions marked human', () => {
  const list=describeRoutes({});
  for(const route of ['/api/instagram/templates','/api/instagram/plans','/api/instagram/plan','/api/instagram/layout','/api/instagram/choose','/api/instagram/ready','/api/instagram/render','/api/instagram/sheet','/api/instagram/captions','/api/instagram/png'])assert.ok(list.some(c=>c.route===route),route);
- for(const route of ['/api/instagram/choose','/api/instagram/ready'])assert.deepEqual(list.find(c=>c.route===route).actors,['human'],route);
+ for(const route of ['/api/instagram/choose','/api/instagram/ready']){assert.deepEqual(list.find(c=>c.route===route).actors,['human'],route);assert.equal(list.find(c=>c.route===route).relay,'chat',route);}
  assert.deepEqual(list.find(c=>c.route==='/api/instagram/layout').actors,['any']);
  assert.equal(list.find(c=>c.route==='/api/instagram/plan'&&c.method==='POST').section,'outputs');
+});
+
+test('PNG export looks for headless Chrome where Playwright keeps it on a Mac, on Linux, or where it is told', async () => {
+ const {playwrightRoots}=await import('../runtime/services/instagram-studio.mjs');
+ assert.deepEqual(playwrightRoots({},'/home/x'),['/home/x/Library/Caches/ms-playwright','/home/x/.cache/ms-playwright']);
+ assert.equal(playwrightRoots({PLAYWRIGHT_BROWSERS_PATH:'/opt/pw'},'/home/x')[0],'/opt/pw');
+});
+
+test('a plan from the VPS feeder is taken in on the Mac only when every file and line is here exactly; decisions keep their record', async () => {
+ // The feeder and the Mac hold the same bytes under different Library ids.
+ const MAC_T='51111111-2222-4333-8444-555555555555',MAC_P=PHOTOS.map((_,i)=>'6'+i+'111111-2222-4333-8444-555555555555');
+ const feeder=fresh();let p=await start(feeder);
+ const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
+ const said=quote=>({said:{quote,via:'chat',at:new Date().toISOString()}});
+ p=await as(AGENT,()=>feeder.choose({...base(),storyId:'S1',...said('The crack one.')}));
+ const photoHash=i=>String(i).repeat(64).slice(0,64);
+ const feederLib={...library,snapshot:async(id,o)=>{const i=PHOTOS.indexOf(id);return i>=0?{id,hash:photoHash(i+1),path:'/x/photo-'+i+'.jpg'}:library.snapshot(id,o);}};
+ const bundle=await createInstagramStudio({dataDir:path.dirname(feeder.asksFile(p.id)).replace(/instagram-plans$/,''),library:feederLib}).handoffBundle({id:p.id});
+ assert.equal(bundle.sources.length,1+PHOTOS.length);
+ const macDir=fs.mkdtempSync(path.join(os.tmpdir(),'ig-mac-'));
+ const macLib={snapshot:async(id,{includeBody}={})=>{if(id===MAC_T)return {id,hash:T_HASH,text:includeBody?TRANSCRIPT:undefined};const i=MAC_P.indexOf(id);if(i>=0)return {id,hash:photoHash(i+1),path:'/m/p'+i+'.jpg'};throw Error('missing');}};
+ const mac=createInstagramStudio({dataDir:macDir,library:macLib});
+ const here=new Map([[T_HASH,{id:MAC_T,hash:T_HASH}],...MAC_P.map((id,i)=>[photoHash(i+1),{id,hash:photoHash(i+1)}])]);
+ assert.equal((await mac.adopt(bundle,src=>src.kind==='photo'&&src.hash===photoHash(2)?null:here.get(src.hash))).state,'held','a missing photo holds it');
+ const tampered=structuredClone(bundle);tampered.plan.title='Changed on the way';
+ assert.equal((await mac.adopt(tampered,src=>here.get(src.hash))).state,'held','a changed plan holds it');
+ const taken=await mac.adopt(bundle,src=>here.get(src.hash));
+ assert.equal(taken.state,'adopted');
+ const onMac=await mac.read({id:p.id});
+ assert.equal(onMac.material.transcripts[0].sourceId,MAC_T);assert.deepEqual(onMac.material.photos.map(x=>x.sourceId),MAC_P);
+ assert.ok(onMac.lines.every(l=>l.sourceId===MAC_T&&TRANSCRIPT.slice(l.start,l.end)===l.text));
+ assert.equal(onMac.chosen.by,ADRIAN);assert.equal(onMac.chosen.carriedBy,AGENT);assert.equal(onMac.chosen.said.quote,'The crack one.');
+ assert.equal((await mac.adopt(bundle,src=>here.get(src.hash))).state,'already-here');
+ // Changed on the Mac since: a newer VPS version is never laid over it.
+ const m=await as(ADRIAN,()=>mac.propose({id:onMac.id,operationId:op(),expectedRevision:onMac.revision,expectedHash:onMac.hash,title:'Renamed on the Mac'}));
+ const newer=structuredClone(bundle);newer.plan.revision+=5;
+ const again=await mac.adopt(newer,src=>here.get(src.hash));
+ assert.equal(again.state,'held');assert.match(again.why,/changed on this Mac/);
+ assert.equal((await mac.read({id:p.id})).title,'Renamed on the Mac');assert.ok(m.revision>onMac.revision);
+});
+
+test('the feeder hands a plan on through its memo, with the pickup key, and says plainly when it cannot', async () => {
+ const {handOn}=await import('../runtime/services/instagram-studio.mjs');
+ const s=fresh();const p=await start(s);
+ const studio={handoffBundle:async()=>({schema:'ar-create.instagram-handoff.v1',plan:{id:p.id,revision:p.revision},sources:[{sourceId:'a',hash:'b'.repeat(64)}]})};
+ const memoId='00000000-0000-4000-8000-0000000000aa',k='k'.repeat(40);let sent=null;
+ const fetcher=async(url,init)=>{sent={url,auth:init.headers.Authorization,body:JSON.parse(init.body)};return new Response(JSON.stringify({ok:true,memo:{handoff:{revision:p.revision}}}),{status:200});};
+ const withKey=async()=>({key:k}),noKey=async()=>({key:null});
+ const done=await handOn(studio,{id:p.id,memoId},{readKey:withKey,fetcher,baseUrl:'https://phone.invalid'});
+ assert.equal(sent.url,'https://phone.invalid/api/oracle/pickup/memos/'+memoId+'/handoff');assert.equal(sent.auth,'Bearer '+k);
+ assert.equal(done.files,1);assert.equal(sent.body.plan.id,p.id);
+ await assert.rejects(handOn(studio,{id:p.id,memoId},{readKey:noKey,fetcher}),e=>e.status===503);
+ await assert.rejects(handOn(studio,{id:p.id,memoId},{readKey:withKey,fetcher:async()=>new Response('{"error":"the memo has no transcript yet"}',{status:409})}),e=>e.status===409&&/no transcript yet/.test(e.message));
+ await assert.rejects(handOn(studio,{id:p.id},{}),e=>e.status===400);
 });

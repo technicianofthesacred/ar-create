@@ -50,7 +50,7 @@ import {createStudyHumanDirection} from './services/study-human-direction.mjs';
 import {createStudyResearchChoices} from './services/study-research-choices.mjs';
 import {createStudyDraftChecks} from './services/study-draft-checks.mjs';
 import {createWorkspaceExecution} from './services/artifact-execution.mjs';
-import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger,AGENT_ACTORS} from './services/actor.mjs';
+import {resolveRequestActor,withActor,isHuman,requireWriteActor,createProvenanceLedger,AGENT_ACTORS,CHAT_CARRIERS} from './services/actor.mjs';
 import {createEventBus,scopeOf,revisionOf} from './services/events.mjs';
 import {createPresence} from './services/presence.mjs';
 import {createLeases} from './services/leases.mjs';
@@ -416,7 +416,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   // explicitly choose a ready existing root, then read /api/study/outputs for
   // photoScope + expectedOutput and /api/study-draft/read for expectedNative.
   const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))??releaseSha(path.dirname(root),release)},commands:commandList().map(publicEntry),retainedCarouselCopy:await retainedCopyAvailability(),browserCarouselCopy:{available:!!studyOutputs,requiresExplicitDestination:true,requiresBrowserSnapshot:true}});
-  const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
+  const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(command.relay==='chat'&&CHAT_CARRIERS.includes(context?.actor))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
   // Every request runs inside its actor context so services can stamp writes.
   async function routeRequest(request, response) {
       let pathname;

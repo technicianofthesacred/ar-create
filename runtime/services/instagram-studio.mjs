@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {StateError} from '../store.mjs';
-import {currentActor,isHuman,requireWriteActor} from './actor.mjs';
+import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
 import {FORMATS,CAPTION,FACTS,catalog,templateById,renderFrame,frameDocument,sheetDocument} from './instagram-templates.mjs';
 import {deriveLines,deriveMoments,wholeness,detectFlags,correctedText,quotedSegments,coverage,loadTeaTerms,clock} from './instagram-transcript.mjs';
 import {readLibraryFile} from './word-prompt.mjs';
@@ -35,7 +35,6 @@ const text=(v,what,max,{required=false}={})=>{if(v===undefined||v===null){if(req
 const list=(v,what,max)=>{if(v===undefined)return [];if(!Array.isArray(v)||v.length>max)fail(what+' must be a list of up to '+max+'.');return v;};
 const actorNow=()=>currentActor()?.actor||'';
 const human=()=>isHuman(actorNow());
-function requireAdrian(what){const a=currentActor();if(!a||!isHuman(a.actor))fail(what+' is Adrian\'s alone. '+(a?.actor||'An unattributed caller')+' may propose, never decide.',403);}
 export const hashtags=caption=>[...String(caption||'').matchAll(/(^|\s)#[\p{L}\p{N}_]+/gu)].length;
 
 /** A spoken line's time on screen: about two and a half words a second, never under two seconds. */
@@ -322,18 +321,18 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  }
  /** Adrian picks a proposed story, or names his own dish in his own words, and may say who it is for. */
  async function choose(input){
-  requireAdrian('Naming the dish');begin(input);
+  const decider=chatDecider(input,'Naming the dish');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const storyId=input.storyId??null;if(storyId!==null&&!before.stories.some(s=>s.id===storyId))fail('That story is not in this plan.');
    const named=text(input.named,'Your name for it',400),forWhom=text(input.forWhom,'Who it is for',200);
    if(!storyId&&!named.trim())fail('Pick a story or name your own.');
-   return commit(before,{...before,chosen:{storyId,named,forWhom,by:actorNow(),at:new Date().toISOString()}},input,'choose');
+   return commit(before,{...before,chosen:{storyId,named,forWhom,...decider,at:new Date().toISOString()}},input,decider.carriedBy?'choose (said in chat)':'choose');
   });
  }
  /** Adrian confirms a word that was flagged: as heard, or corrected in his own words. The transcript never changes. */
  async function confirm(input){
-  requireAdrian('Confirming what was said');begin(input);
+  const decider=chatDecider(input,'Confirming what was said');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const flag=(before.flags||[]).find(x=>x.id===input.flagId);if(!flag)fail('That word is not on the list to confirm.');
@@ -344,25 +343,25 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
     try{await sharedWordLibrary({dataDir}).learn({heard:flag.heard,spelling:correction,category:flag.kind==='tea-term'?'tea-term':flag.kind==='place'?'place':'other',from:{story:before.title||'',sentence:lineOf(before,flag.lineId)?.text||''},operationId:input.operationId},currentActor());}
     catch{/* the confirmation itself must never fail because the library could not be written */}
    }
-   return commit(before,{...before,confirmations:{...(before.confirmations||{}),[flag.id]:{verdict,correction,heard:flag.heard,by:actorNow(),at:new Date().toISOString()}}},input,'confirm '+flag.id);
+   return commit(before,{...before,confirmations:{...(before.confirmations||{}),[flag.id]:{verdict,correction,heard:flag.heard,...decider,at:new Date().toISOString()}}},input,'confirm '+flag.id+(decider.carriedBy?' (said in chat)':''));
   });
  }
  /** Adrian answers a story's read-back: that's it, or not what he meant, in his exact words. Kept in a log. */
  async function meaning(input){
-  requireAdrian('Saying what you meant');begin(input);
+  const decider=chatDecider(input,'Saying what you meant');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const i=before.stories.findIndex(x=>x.id===input.storyId);if(i<0)fail('That story is not in this plan.');
    const verdict=input.verdict;if(!['right','not-meant'].includes(verdict))fail('Say "right" or "not-meant".');
    const words=text(input.words,'What you meant',1200,{required:verdict==='not-meant'});
-   const entry={storyId:before.stories[i].id,readback:before.stories[i].readback,verdict,words,by:actorNow(),at:new Date().toISOString()};
-   const stories=before.stories.map((x,j)=>j===i?{...x,meaning:{verdict,words,by:entry.by,at:entry.at}}:x);
-   return commit(before,{...before,stories,meaningLog:[...(before.meaningLog||[]),entry].slice(-200)},input,'meaning '+entry.storyId);
+   const entry={storyId:before.stories[i].id,readback:before.stories[i].readback,verdict,words,...decider,at:new Date().toISOString()};
+   const stories=before.stories.map((x,j)=>j===i?{...x,meaning:{verdict,words,by:entry.by,...(decider.carriedBy?{carriedBy:decider.carriedBy,said:decider.said}:{}),at:entry.at}}:x);
+   return commit(before,{...before,stories,meaningLog:[...(before.meaningLog||[]),entry].slice(-200)},input,'meaning '+entry.storyId+(decider.carriedBy?' (said in chat)':''));
   });
  }
  /** His final yes for one format, with the caption as he wants it. Records the yes; posts nothing. */
  async function ready(input){
-  requireAdrian('The final yes');begin(input);
+  const decider=chatDecider(input,'The final yes');begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    assertNotHeld(before,'Marking this ready to post',{requireLink:true});
@@ -373,7 +372,51 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    if(unsure.length)fail(unsure.length+' word'+(unsure.length>1?'s':'')+' in this '+format+' still need your confirmation ('+unsure.slice(0,3).map(x=>'“'+x.heard+'”').join(', ')+'). Confirm them first; nothing is corrected without you.',409);
    const caption=input.caption===undefined?(l.captionFinal??l.caption.text):readCaption(input.caption);
    const layouts={...before.layouts,[format]:{...l,captionFinal:caption}};
-   return commit(before,{...before,layouts,ready:{...(before.ready||{}),[format]:{layoutHash:l.hash,caption,by:actorNow(),at:new Date().toISOString(),posted:false}}},input,'ready '+format);
+   return commit(before,{...before,layouts,ready:{...(before.ready||{}),[format]:{layoutHash:l.hash,caption,...decider,at:new Date().toISOString(),posted:false}}},input,'ready '+format+(decider.carriedBy?' (said in chat)':''));
+  });
+ }
+ /* ---------- one way from the VPS feeder to the Mac ---------- */
+ const HANDOFF='ar-create.instagram-handoff.v1';
+ /** The plan as the VPS feeder hands it on: the whole plan, and each Library file it names with its hash. */
+ async function handoffBundle({id}){
+  const p=load(id),sources=[];
+  for(const t of p.material.transcripts)sources.push({sourceId:t.sourceId,hash:t.sourceHash,kind:'transcript'});
+  for(const ph of p.material.photos){let s;try{s=await library.snapshot(ph.sourceId);}catch{fail('A photo of this plan is no longer in Library.',409);}
+   let hash=s.hash;if(!HASH.test(hash||'')&&library.blob)hash=(await library.blob(ph.sourceId)).source.hash;if(!HASH.test(hash||''))fail('A photo of this plan has no hash yet.',409);sources.push({sourceId:ph.sourceId,hash,kind:'photo'});}
+  return {schema:HANDOFF,plan:withHash(p),sources};
+ }
+ /**
+  * On the Mac: take in a plan the VPS feeder handed on. `local(source)` gives this Library's copy of a file (by hash),
+  * or null. Nothing is adopted unless every file is here byte for byte and every line is still an exact slice of its
+  * transcript. Adrian's decisions in it keep their record (who decided, his words, who carried them). A plan already
+  * here at this revision or later is left alone; one changed here since is never overwritten.
+  */
+ async function adopt(bundle,local){
+  const held=why=>({state:'held',why,planId:bundle?.plan?.id||null,revision:bundle?.plan?.revision??null});
+  if(bundle?.schema!==HANDOFF||bundle.plan?.schema!==SCHEMA||!UUID.test(bundle.plan.id||'')||!Number.isSafeInteger(bundle.plan.revision))return held('That is not an Instagram plan from the VPS.');
+  const incoming=bundle.plan;
+  const map=new Map();
+  for(const src of Array.isArray(bundle.sources)?bundle.sources:[]){const mine=await local(src);if(!mine||mine.hash!==src.hash||!UUID.test(mine.id||''))return held('A file of the plan "'+(incoming.title||incoming.id)+'" is not on this Mac exactly as on the VPS.');map.set(src.sourceId,{id:mine.id,hash:mine.hash});}
+  const named=[...incoming.material.transcripts.map(t=>t.sourceId),...incoming.material.photos.map(ph=>ph.sourceId)];
+  if(named.some(x=>!map.has(x)))return held('The plan names a file the VPS did not hand on.');
+  const remap=x=>map.get(x).id;
+  const plan={...incoming,material:{transcripts:incoming.material.transcripts.map(t=>({...t,sourceId:remap(t.sourceId),sourceHash:map.get(t.sourceId).hash})),photos:incoming.material.photos.map(ph=>({...ph,sourceId:remap(ph.sourceId)}))},
+   lines:incoming.lines.map(l=>({...l,sourceId:remap(l.sourceId)})),moments:(incoming.moments||[]).map(m=>({...m,sourceId:remap(m.sourceId)}))};
+  delete plan.hash;
+  // Every line must still be an exact slice of this Mac's copy of its transcript.
+  for(const t of plan.material.transcripts){let s;try{s=await library.snapshot(t.sourceId,{includeBody:true});}catch{return held('The transcript did not reach this Library.');}
+   if(s.hash!==t.sourceHash||plan.lines.some(l=>l.sourceId===t.sourceId&&s.text.slice(l.start,l.end)!==l.text))return held('The plan\'s lines do not match the transcript on this Mac.');}
+  if(withHash(incoming).hash!==incoming.hash)return held('The plan was changed on the way.');
+  return serial(plan.id,async()=>{
+   let here=null;try{here=load(plan.id);}catch(error){if(error.status!==404)throw error;}
+   if(here){
+    if(here.revision>=plan.revision)return {state:'already-here',planId:plan.id,revision:here.revision};
+    if((here.operations||[]).some(o=>o.revision>(here.adoptedRevision||0)))return held('"'+(here.title||here.id)+'" was changed on this Mac since it came from the VPS; the newer VPS version was not taken in.');
+   }
+   const at=new Date().toISOString();
+   const out={...plan,adoptedRevision:plan.revision,adoptedAt:at,operations:[{operationId:crypto.randomUUID(),revision:plan.revision,actor:'import:vps-feeder',what:'taken in from the VPS'},...(plan.operations||[])].slice(0,80)};
+   write(out);
+   return {state:'adopted',planId:plan.id,revision:plan.revision};
   });
  }
  /* ---------- reading the made piece ---------- */
@@ -391,14 +434,20 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,assertPostable,propose,layout,choose,confirm,meaning,ready,render,sheet,captions,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
+// Playwright keeps its browsers in ~/Library/Caches on a Mac and ~/.cache on Linux (the VPS feeder), unless told otherwise.
+export function playwrightRoots(env=process.env,home=os.homedir()){
+ return [env.PLAYWRIGHT_BROWSERS_PATH,path.join(home,'Library/Caches/ms-playwright'),path.join(home,'.cache/ms-playwright')].filter(Boolean);
+}
 function chrome(){
- const root=path.join(os.homedir(),'Library/Caches/ms-playwright');let dirs=[];
- try{dirs=fs.readdirSync(root).filter(d=>d.startsWith('chromium_headless_shell-')).sort((a,b)=>+b.split('-')[1]-+a.split('-')[1]);}catch{}
- for(const d of dirs)for(const sub of ['chrome-headless-shell-mac-arm64','chrome-headless-shell-mac-x64','chrome-headless-shell-linux64']){const bin=path.join(root,d,sub,'chrome-headless-shell');if(fs.existsSync(bin))return bin;}
+ for(const root of playwrightRoots()){
+  let dirs=[];try{dirs=fs.readdirSync(root).filter(d=>d.startsWith('chromium_headless_shell-')).sort((a,b)=>+b.split('-')[1]-+a.split('-')[1]);}catch{}
+  // Linux builds of the headless shell have shipped as chrome-linux/headless_shell and as chrome-headless-shell-linux64.
+  for(const d of dirs)for(const [sub,name] of [['chrome-headless-shell-mac-arm64','chrome-headless-shell'],['chrome-headless-shell-mac-x64','chrome-headless-shell'],['chrome-headless-shell-linux64','chrome-headless-shell'],['chrome-linux','headless_shell']]){const bin=path.join(root,d,sub,name);if(fs.existsSync(bin))return bin;}
+ }
  fail('PNG export is unavailable: no local headless Chrome was found. The frame still opens at full size.',503);
 }
 async function png(origin,{id,format,frame},studio){
@@ -406,7 +455,8 @@ async function png(origin,{id,format,frame},studio){
  const f=FORMATS[format],out=fs.mkdtempSync(path.join(os.tmpdir(),'ar-instagram-')),shot=path.join(out,'frame.png');
  try{
   const url=origin+PREFIX+'render?'+new URLSearchParams({id,format,frame:String(frame??0)});
-  await promisify(execFile)(chrome(),['--headless','--hide-scrollbars','--disable-gpu','--no-first-run','--force-device-scale-factor=1','--window-size='+f.width+','+f.height,'--virtual-time-budget=5000','--screenshot='+shot,url],{timeout:30000});
+  // Chrome refuses to start as root (the VPS feeder runs as root) unless its own sandbox is switched off.
+  await promisify(execFile)(chrome(),[...(process.getuid?.()===0?['--no-sandbox']:[]),'--headless','--hide-scrollbars','--disable-gpu','--no-first-run','--force-device-scale-factor=1','--window-size='+f.width+','+f.height,'--virtual-time-budget=5000','--screenshot='+shot,url],{timeout:30000});
   return fs.readFileSync(shot);
  }finally{fs.rmSync(out,{recursive:true,force:true});}
 }
@@ -428,6 +478,23 @@ async function raiseNeeds(request,studio,plan){
  fs.writeFileSync(studio.asksFile(plan.id),JSON.stringify(next,null,1));
  return next.asks;
 }
+/**
+ * On the VPS feeder: hand a plan on to the Mac through the memo it came from, on the phone site, with the pickup key.
+ * The Mac takes it in at its next phone check. Nothing is posted anywhere else.
+ */
+export async function handOn(studio,input,{readKey=null,fetcher=globalThis.fetch,baseUrl=process.env.AR_PICKUP_BASE_URL||'https://mandalacodes.com'}={}){
+ if(!input||!UUID.test(input.id||'')||!UUID.test(input.memoId||''))fail('Name the plan (id) and the memo it came from (memoId).');
+ const bundle=await studio.handoffBundle({id:input.id});
+ const {createKeyReader}=await import('./phone-pickup.mjs');
+ const {key}=await (readKey||createKeyReader())();
+ if(!key)fail('The pickup key is not set on this machine.',503);
+ const body=JSON.stringify(bundle);
+ const response=await fetcher(new URL(baseUrl).origin+'/api/oracle/pickup/memos/'+input.memoId+'/handoff',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json','Content-Length':String(Buffer.byteLength(body))},body,redirect:'error',signal:AbortSignal.timeout(60_000)});
+ const answer=await response.json().catch(()=>({}));
+ if(!response.ok)fail('The phone site did not take the plan: '+(answer.error||'HTTP '+response.status)+'.',response.status===409?409:502);
+ return {ok:true,planId:bundle.plan.id,revision:bundle.plan.revision,memoId:input.memoId,files:bundle.sources.length,handoff:answer.memo?.handoff||null};
+}
+
 const instances=new Map();
 /** One registration line in the server hands requests here; returns false for any other path. */
 export async function handleInstagram(request,response,{dataDir,library,consentDesk=null}){
@@ -439,7 +506,7 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
  try{
   const action=url.pathname.slice(PREFIX.length);
   const GET={templates:()=>studio.templates(),plans:()=>studio.plans({subject:q('subject')}),plan:()=>studio.read({id:q('id')})};
-  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i)};
+  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
   if(request.method==='GET'||request.method==='HEAD'){
    if(GET[action])return send(200,await GET[action]()),true;
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
