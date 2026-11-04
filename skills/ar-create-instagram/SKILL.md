@@ -65,6 +65,11 @@ He sends a voice memo and photos from mandalacodes.com/memo/. The VPS transcribe
 3. Then the run above, from step 3. Read the PNGs from the feeder (`/api/instagram/png?…`) and show them in chat.
 The Mac's AR Create takes the finished plan one way when it wakes; never edit it on both.
 
+## Looks, and advanced layouts elsewhere
+
+Every magazine (Teajia) template also works as a story: the 4:5 card sits whole inside the safe band, its photo blurred behind it. When he wants to choose a look, render the same line in three genuinely different looks and show them side by side; remember what he picks for that door.
+For advanced layouts he often works in ChatGPT or Claude. When he asks, give him a **layout brief** to paste there: the format and size (story 1080 x 1920, keep words out of the top and bottom 250 px), each frame's words exactly as said, which photo goes with which frame (by file name, as on his phone), the caption, and the look in plain words (ground, type, accent). His words stay exact in the brief too.
+
 ## Captions
 
 A caption is your proposal; he edits it in the app. Write as a peer who was there: plain, specific, in his register, no hype, no emoji, no em dashes, no call to action, no "link in bio" unless he asks. His words go in `quote` parts, exactly; a reworded line is a `suggested` part, never passed off as his. At most five hashtags (Instagram's limit), and only ones that name what it is (a craft, a place); none is fine. Up to 2,200 characters, but most captions are short.

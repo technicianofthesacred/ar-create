@@ -423,7 +423,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  function slides(p,format){
   const l=p.layouts[format];if(!l)fail('Nothing is laid out as a '+format+' yet.',404);
   let start=0;
-  return l.frames.map((fr,i)=>{const ctx={index:i,total:l.frames.length,start};if(fr.seconds)start+=fr.seconds;
+  return l.frames.map((fr,i)=>{const ctx={index:i,total:l.frames.length,start,format};if(fr.seconds)start+=fr.seconds;
    return {templateId:fr.templateId,ctx,slide:{role:fr.role,text:fr.words.map(w=>w.text).join('\n\n'),label:fr.label,credit:fr.credit,photos:fr.photos.map(ph=>({src:'/api/sources/blob?id='+encodeURIComponent(p.material.photos.find(x=>x.id===ph.photoId)?.sourceId||''),x:ph.x,y:ph.y}))}};});
  }
  async function render({id,format,frame}){const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);return frameDocument(format,renderFrame(s[n].templateId,s[n].slide,s[n].ctx),(p.title||'Instagram')+' · '+(n+1));}

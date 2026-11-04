@@ -196,3 +196,13 @@ test('the feeder hands a plan on through its memo, with the pickup key, and says
  await assert.rejects(handOn(studio,{id:p.id,memoId},{readKey:withKey,fetcher:async()=>new Response('{"error":"the memo has no transcript yet"}',{status:409})}),e=>e.status===409&&/no transcript yet/.test(e.message));
  await assert.rejects(handOn(studio,{id:p.id},{}),e=>e.status===400);
 });
+
+test('every magazine (Teajia) template is also a story: the 4:5 card whole inside the safe band, its photo blurred behind', () => {
+ const teajia=catalog().filter(t=>t.look==='teajia');
+ assert.ok(teajia.length>40);assert.ok(teajia.every(t=>t.formats.includes('story')));
+ const html=renderFrame('canvas-C04-cover-teajia-dark',{text:'Every crack is a record.',photos:[{src:'/api/sources/blob?id=x',x:50,y:50}]},{format:'story'});
+ assert.match(html,/width:1080px;height:1920px/);assert.match(html,/data-story-card style="position:absolute;left:0;top:285px;width:1080px;height:1350px/);
+ assert.ok(285>=FORMATS.story.safe.top&&285+1350<=1920-FORMATS.story.safe.bottom,'the card stays out from under the profile bar and reply field');
+ assert.match(html,/filter:blur\(40px\)/);
+ assert.doesNotMatch(renderFrame('canvas-C04-cover-teajia-dark',{text:'x'},{format:'carousel'}),/data-story-card/,'posts and carousels are unchanged');
+});

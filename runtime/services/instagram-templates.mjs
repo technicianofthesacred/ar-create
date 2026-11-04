@@ -111,19 +111,28 @@ export const NEW_TEMPLATES = Object.freeze({
    label(s.label, 22, C.dim) + credit(s.credit, 22) + '</div>')},
 });
 
+// A magazine (Teajia) card is 4:5; in a story it sits whole on the dark ground, inside the band the profile bar and
+// reply field never cover (top 285 to 1635, the same band the feed shows of a reel), so every magazine look is also a story.
+const STORY_CARD_TOP = 285;
+// Above and below the card, the same photo, blurred and darkened, so the story is full-bleed rather than a card on a band.
+const storyBackdrop = src => src ? '<img src="' + esc(src) + '" alt="" aria-hidden="true" style="position:absolute;left:-80px;top:-80px;width:1240px;height:2080px;object-fit:cover;filter:blur(40px) brightness(.36) saturate(.9)">' : '';
+const onStoryGround = (card, src) => frame(1080, 1920, storyBackdrop(src) + '<div data-story-card style="position:absolute;left:0;top:' + STORY_CARD_TOP + 'px;width:1080px;height:1350px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)">' + card + '</div>');
+
 /** Every template the studio can use: the four new ones first, then the existing 4:5 catalog, tagged by format. */
 export function catalog() {
  const fresh = Object.entries(NEW_TEMPLATES).map(([id, t]) => ({id, name: t.name, formats: t.formats, photos: t.photos, roles: t.roles, textParts: t.textParts, maxChars: t.maxChars, look: t.look, group: 'New: his look', purpose: t.purpose, box: t.box, isNew: true}));
- const existing = Object.entries(IG.T).map(([id, t]) => ({id, name: t.name, formats: ['post', 'carousel'], photos: t.photos, roles: t.roles, textParts: t.textParts || 1, maxChars: 400, look: 'teajia', group: t.group || 'Teajia: first set', isNew: false}));
+ const existing = Object.entries(IG.T).map(([id, t]) => ({id, name: t.name, formats: ['post', 'carousel', 'story'], photos: t.photos, roles: t.roles, textParts: t.textParts || 1, maxChars: 400, look: 'teajia', group: t.group || 'Teajia: first set', isNew: false}));
  return [...fresh, ...existing];
 }
 export const templateById = id => catalog().find(t => t.id === id) || null;
 
-/** One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}]}; ctx: {index, total, start}. */
+/** One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}]}; ctx: {index, total, start, format}. */
 export function renderFrame(id, slide = {}, ctx = {}) {
  if (NEW_TEMPLATES[id]) return NEW_TEMPLATES[id].render(slide, ctx);
  if (!IG.T[id]) throw new Error('Unknown Instagram template ' + id);
- return IG.render(id, {...slide, photos: (slide.photos || []).map(p => ({...p, src: localImage(p?.src)}))}, ctx);
+ const photos = (slide.photos || []).map(p => ({...p, src: localImage(p?.src)}));
+ const card = IG.render(id, {...slide, photos}, ctx);
+ return ctx.format === 'story' ? onStoryGround(card, photos[0]?.src) : card;
 }
 const fontCss = () => FONT_FILES.map(([family, weight, style, file, format]) => '@font-face{font-family:"' + family + '";font-style:' + style + ';font-weight:' + weight + ';src:url(' + file + ') format("' + format + '")}').join('');
 /** A whole HTML page holding one frame at its real size, for the app preview and for PNG export. */
