@@ -22,6 +22,7 @@ This is the public mirror of Delivery's work checklist: open items only, no priv
 
 ## Future
 
+- [ ] Review the existing private footage-selection handoff as a whole before connecting approved source ranges to Media and Arrange; preserve originals and per-shot decisions, since approval of a calibration example does not approve the entire batch. _(band: human review)_ _(effort: deep)_
 - [ ] Stop the page asking for a piece's working history before its Direction is saved (a harmless console 409); the first try looped a refused draft open on real data, so reproduce that before retrying _(band: agent-runnable)_ _(effort: moderate)_ → PR #160 reverted in #161
 - [ ] Verify the installed Magazine command/editorial paths against the remaining single-writer/shared-lock boundary for the Teajia Workflow folder _(band: agent-runnable)_ _(effort: deep)_
 
