@@ -34,7 +34,7 @@ const GOOD={problems:[
 test('suggestions are held to the contract before anything is saved',()=>{
  const ok=validateSuggestions(GOOD,SEGS);
  assert.equal(ok.length,5);assert.ok(ok.every(p=>/^[a-f0-9-]{36}$/.test(p.id)));
- const bad=(change,message)=>assert.throws(()=>validateSuggestions({problems:[change]},SEGS),message);
+ const bad=(change,message)=>assert.throws(()=>validateSuggestions({problems:[change]},SEGS,{strict:true}),message);
  bad({indexes:[9],tier:'sure',fixes:[{index:9,text:'x'}],reason:'r'},/do not exist/);
  bad({indexes:[1,3],tier:'ear',fixes:null,reason:'r'},/in a row/);
  bad({indexes:[3],tier:'notyou',fixes:[{index:3,text:'x'}],reason:'r'},/takes no fix/);
@@ -42,7 +42,14 @@ test('suggestions are held to the contract before anything is saved',()=>{
  bad({indexes:[1],tier:'sure',fixes:[{index:1,text:'Dates this Nepalese method, Navari.'}],reason:'r'},/must change something/);
  bad({indexes:[1],tier:'sure',fixes:[{index:1,text:'two\nlines'}],reason:'r'},/one non-empty line/);
  bad({indexes:[1],tier:'maybe',fixes:null,reason:'r'},/no known kind/);
- assert.throws(()=>validateSuggestions({problems:[GOOD.problems[0],GOOD.problems[0]]},SEGS),/same line/);
+ assert.throws(()=>validateSuggestions({problems:[GOOD.problems[0],GOOD.problems[0]]},SEGS,{strict:true}),/same line/);
+ // Without strict, one slip is dropped and counted; the rest are kept.
+ const kept=validateSuggestions({problems:[...GOOD.problems,{indexes:[0],tier:'sure',fixes:[{index:0,text:SEGS[0].text}],reason:'no change'}]},SEGS);
+ assert.equal(kept.length,5);assert.equal(kept.dropped,1);
+ assert.throws(()=>validateSuggestions({problems:[{indexes:[99],tier:'sure',fixes:null,reason:'r'}]},SEGS),/None of the suggestions/);
+ // A fix the model would bet on is filed as sure; without a fix it stays an ear check.
+ const bet=validateSuggestions({problems:[{indexes:[4],tier:'ear',certain:true,fixes:[{index:4,text:'Agate and brush.'}],reason:'r'},{indexes:[5],tier:'ear',certain:true,fixes:null,reason:'r'}]},SEGS);
+ assert.deepEqual(bet.map(p=>p.tier),['sure','ear']);
  const prompt=suggestionPrompt({title:'Day one',segments:TALK,vocabulary:'Newari, Lu Yu'});
  assert.match(prompt,/4 \| 0:17 \| Aged tea and brush\. \| unsure: Aged, tea/);
  assert.match(prompt,/Newari, Lu Yu/);
@@ -72,7 +79,7 @@ test('the model proposes; Adrian decides on the page; uses go through correction
  // Swap in the stand-in model for this data folder before the first request creates the instance.
  const {transcriptCheckFor:forDir}=await import('../runtime/services/transcript-check-http.mjs');
  const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
- const check=forDir({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async({prompt})=>{assert.match(prompt,/OUTPUT-ONLY/);return {response:{artifacts:{'suggestions.json':JSON.stringify(GOOD)}},model:'stand-in'};}}});
+ const check=forDir({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async({prompt})=>{assert.match(prompt,/Return JSON only/);return {text:JSON.stringify(GOOD),model:'stand-in'};}}});
  const base='/api/transcript-check/'+f.id;
 
  let r=await f.agent('GET',base);assert.equal(r.status,200);assert.equal(r.body.check.state,'none');assert.equal(r.body.segments.length,7);
@@ -121,9 +128,9 @@ test('a failed read is recorded plainly and can be tried again',async t=>{
  const f=await setup(t);
  const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
  let calls=0;
- const check=createTranscriptCheck({dataDir:f.dataDir,corrections:recordings.transcriptCorrections,available:()=>true,execute:async()=>{calls++;if(calls===1)return {response:{artifacts:{'suggestions.json':'{"problems":[{"indexes":[99],"tier":"sure","fixes":null,"reason":"x"}]}'}}};return {response:{artifacts:{'suggestions.json':JSON.stringify(GOOD)}}};}});
+ const check=createTranscriptCheck({dataDir:f.dataDir,corrections:recordings.transcriptCorrections,available:()=>true,execute:async()=>{calls++;if(calls===1)return {text:'{"problems":[{"indexes":[99],"tier":"sure","fixes":null,"reason":"x"}]}'};return {text:JSON.stringify(GOOD)};}});
  await withActor({actor:'agent:claude-code',client:'cli'},()=>check.suggest(f.id));await check.wait(f.id);
- assert.equal(check.view(f.id).check.state,'failed');assert.match(check.view(f.id).check.error,/lines that do not exist/);
+ assert.equal(check.view(f.id).check.state,'failed');assert.match(check.view(f.id).check.error,/None of the suggestions fitted/);
  await check.suggest(f.id);await check.wait(f.id);
  assert.equal(check.view(f.id).check.state,'ready');assert.equal(calls,2);
  assert.equal(fs.readdirSync(path.join(f.dataDir,'transcript-checks')).filter(n=>n.startsWith('.run-')).length,0,'no scratch folders left behind');
@@ -133,7 +140,7 @@ test('a failed read is recorded plainly and can be tried again',async t=>{
 test('undo takes a decision back exactly, and refuses when the lines were changed since',async t=>{
  const f=await setup(t);
  const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
- const check=transcriptCheckFor({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async()=>({response:{artifacts:{'suggestions.json':JSON.stringify(GOOD)}}})}});
+ const check=transcriptCheckFor({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async()=>({text:JSON.stringify(GOOD)})}});
  const base='/api/transcript-check/'+f.id;
  await f.agent('POST',base+'/suggest',{});await check.wait(f.id);
  let r=await f.page('GET',base);
@@ -162,4 +169,18 @@ test('undo takes a decision back exactly, and refuses when the lines were change
  r=await f.page('POST',base+'/decide',{problemId:notyou.id,action:'leave',expected:r.body.expected});assert.deepEqual(r.body.leftOut,[3]);
  r=await f.page('POST',base+'/undo',{problemId:notyou.id,expected:r.body.expected});assert.deepEqual(r.body.leftOut,[]);
  const none=await f.page('POST',base+'/undo',{problemId:notyou.id,expected:r.body.expected});assert.equal(none.status,409);
+});
+
+test('the claude read gets no tools, no MCP servers and no settings, and only its answer comes back',async()=>{
+ const {executeClaude}=await import('../runtime/services/transcript-check.mjs');
+ const {EventEmitter}=await import('node:events');
+ const fake=(stdout,code=0)=>{let seen;const spawnChild=(file,args)=>{seen={file,args};const c=new EventEmitter();c.stdout=new EventEmitter();c.stderr=new EventEmitter();c.stdin={on(){},end(input){seen.input=input;setImmediate(()=>{c.stdout.emit('data',Buffer.from(stdout));c.emit('close',code);});}};c.kill=()=>{};return c;};return {spawnChild,seen:()=>seen};};
+ const ok=fake(JSON.stringify({type:'result',is_error:false,result:'```json\n{"problems":[]}\n```',model:'claude-sonnet'}));
+ const r=await executeClaude({cwd:'.',prompt:'P',claudePath:'/bin/claude',spawnChild:ok.spawnChild});
+ assert.equal(r.text,'{"problems":[]}');assert.equal(ok.seen().input,'P');
+ const args=ok.seen().args;for(const [flag,value] of [['--tools',''],['--setting-sources',''],['--model','sonnet'],['--output-format','json']])assert.equal(args[args.indexOf(flag)+1],value,flag);
+ assert.ok(args.includes('--strict-mcp-config')&&args.includes('--no-session-persistence')&&args.includes('-p'));
+ await assert.rejects(executeClaude({cwd:'.',prompt:'P',claudePath:'/bin/claude',spawnChild:fake(JSON.stringify({is_error:true,result:'login required'})).spawnChild}),/signed in/);
+ await assert.rejects(executeClaude({cwd:'.',prompt:'P',claudePath:'/bin/claude',spawnChild:fake('not json').spawnChild}),/unreadable/);
+ await assert.rejects(executeClaude({cwd:'.',prompt:'P',claudePath:null}),/not installed/);
 });
