@@ -9,7 +9,8 @@ const mmss = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padSta
 const NAME = { ear: 'Needs your ear', sure: 'Sure fix', notyou: 'Probably not you' };
 const KEEP_CAP = /^(I\b|I'm|I've|I'll|I'd)/;
 
-let state = null, open = null, stopAt = null, playing = null, heardOnce = false, busy = false, error = null;
+let state = null, open = null, stopAt = null, playing = null, heardOnce = false, busy = false, error = null, last = null, toastTimer = null;
+const DONE = { used: 'Used', kept: 'Kept as you said it', 'left-out': 'Left out of the talk' };
 
 audio.addEventListener('timeupdate', () => { if (stopAt !== null && audio.currentTime >= stopAt) { audio.pause(); stopAt = null; } });
 audio.addEventListener('pause', () => { if (playing) { playing.classList.remove('playing'); playing = null; } });
@@ -73,7 +74,7 @@ function renderNotice() {
 
 function render() {
   if (!state) return;
-  if (open) open = state.problems.find((p) => p.id === open.id && !p.decision) || null;
+  if (open) open = state.problems.find((p) => p.id === open.id) || null;
   const ps = state.problems, left = openProblems(), easy = left.filter((p) => p.tier !== 'ear');
   const total = state.segments.length, touched = ps.reduce((a, p) => a + p.indexes.length, 0);
   $('fill').style.width = ps.length ? ((ps.length - left.length) / ps.length * 100) + '%' : '0';
@@ -110,7 +111,30 @@ function render() {
   $('finish').classList.toggle('on', state.check.state === 'ready' && !left.length && ps.length > 0);
 }
 
+function decidedCard(p) {
+  const c = document.createElement('div'); c.className = 'card decided';
+  c.innerHTML = '<div class="head"><span class="chip ' + p.tier + '">' + NAME[p.tier] + '</span><span>' + DONE[p.decision.action] + '</span></div><div class="fix">' + esc(heard(p)) + '</div>';
+  const acts = document.createElement('div'); acts.className = 'acts'; const row = document.createElement('div'); row.className = 'row';
+  const errBox = document.createElement('div'); errBox.className = 'err';
+  row.append(B('Undo', 'undo', () => undo(p.id, errBox)), B('Close', '', () => { open = null; render(); }));
+  acts.append(row); c.append(errBox, acts); return c;
+}
+
+async function undo(id, errBox) {
+  if (busy) return; busy = true;
+  try { state = await request('/undo', { problemId: id, expected: state.expected }); open = state.problems.find((p) => p.id === id) || null; hideToast(); render(); focus(); }
+  catch (e) { if (errBox) errBox.textContent = e.message; else showToast(e.message, null); }
+  finally { busy = false; }
+}
+function showToast(text, id) {
+  const t = $('toast'); t.innerHTML = '<span>' + esc(text) + '</span>';
+  if (id) t.append(B('Undo', 'small', () => undo(id, null)));
+  t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, 7000);
+}
+function hideToast() { $('toast').classList.remove('on'); }
+
 function card(p) {
+  if (p.decision) return decidedCard(p);
   const c = document.createElement('div'); c.className = 'card';
   const start = state.segments[p.indexes[0]].start, end = state.segments[p.indexes.at(-1)].end;
   c.innerHTML = '<div class="head"><span class="chip ' + p.tier + '">' + NAME[p.tier] + '</span><span>' + mmss(start) + '</span></div><div class="heard">' + esc(heard(p)) + '</div>';
@@ -126,7 +150,7 @@ function card(p) {
     if (busy) return; busy = true;
     const body = { problemId: p.id, action, expected: state.expected };
     if (action === 'use' && p.tier !== 'notyou') body.fixes = [...fix.querySelectorAll('.line')].map((l) => ({ index: Number(l.dataset.index), text: l.textContent.trim() })).filter((f) => f.text);
-    try { state = await request('/decide', body); go(); }
+    try { state = await request('/decide', body); last = p.id; showToast(action === 'use' ? 'Used' : action === 'keep' ? 'Kept as you said it' : 'Left out of the talk', p.id); go(); }
     catch (e) { errBox.textContent = e.message; }
     finally { busy = false; }
   };
@@ -134,7 +158,7 @@ function card(p) {
   const row = document.createElement('div'); row.className = 'row';
   const h = B('<span class="tri"></span>Hear', 'hear', () => play(start, end, h)); row.append(h);
   row.append(p.tier !== 'notyou' && p.fixes ? B('Change', '', () => { const first = fix.querySelector('.line'); fix.querySelectorAll('.line').forEach((l) => { l.contentEditable = 'true'; }); first?.focus(); }) : B('Close', '', () => { open = null; render(); }));
-  row.append(B(p.tier === 'notyou' ? 'It is me' : 'Keep mine', '', () => decide('keep')));
+  row.append(B(p.tier === 'notyou' ? 'It is me' : 'Keep mine', 'keep', () => decide('keep')));
   acts.append(row);
   c.append(fix, why, errBox, acts);
   return c;
@@ -152,6 +176,18 @@ async function applyEasy() {
 }
 
 function focus() { const el = document.querySelector('.card'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-$('text').addEventListener('click', (e) => { const m = e.target.closest('.m'); if (!m) return; const p = state.problems.find((x) => x.id === m.dataset.id); if (!p || p.decision) return; open = p; render(); focus(); });
+$('text').addEventListener('click', (e) => { const m = e.target.closest('.m'); if (!m) return; const p = state.problems.find((x) => x.id === m.dataset.id); if (!p) return; open = p; render(); focus(); });
 $('next').onclick = () => { open = nextOpen(); render(); focus(); };
+/* Keys for a keyboard, ignored while typing: Enter does the gold action, H hears, K keeps, N goes to the next, Z undoes the last, Esc closes. */
+document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const cardEl = document.querySelector('.card'), click = (sel) => { const b = cardEl?.querySelector(sel); if (b) { e.preventDefault(); b.click(); } };
+  const key = e.key.toLowerCase();
+  if (key === 'enter') click('.btn.main');
+  else if (key === 'h') click('.hear');
+  else if (key === 'k') click('.keep');
+  else if (key === 'n') { e.preventDefault(); $('next').click(); }
+  else if (key === 'z' && last) { e.preventDefault(); undo(last, null); }
+  else if (key === 'escape' && open) { open = null; render(); }
+});
 load();

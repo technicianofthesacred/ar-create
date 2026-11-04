@@ -125,17 +125,18 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const p=record.problems.find(x=>x.id===problemId);if(!p)fail('That suggestion is not in this check.',404);
     if(!['use','keep','leave'].includes(action))fail('Choose use, keep or leave.');
     if(action==='leave'&&p.tier!=='notyou')fail('Only a line that is probably not the speaker can be left out.');
-    let applied=null;
+    let applied=null,before=null;
     if(action==='use'){
      if(p.tier==='notyou')fail('Leave this line out, or keep it.');
      const chosen=Array.isArray(fixes)?fixes:p.fixes;
      if(!Array.isArray(chosen)||!chosen.length)fail('Type the words you said first.');
      const snap=corrections.read(id);
      const clean=chosen.map(f=>{if(!f||!p.indexes.includes(f.index)||typeof f.text!=='string'||!f.text.trim()||f.text.length>MAX_TEXT||/[\r\n\x00]/.test(f.text))fail('Each change must be one non-empty line inside this suggestion.');return {index:f.index,text:f.text.trim()};}).filter(f=>snap.segments[f.index].text.trim()!==f.text);
+     before=clean.map(f=>({index:f.index,text:snap.segments[f.index].text}));
      if(clean.length){const after=corrections.edit(id,{expected,corrections:clean});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
      applied=clean;
     }
-    record.decisions[p.id]={action:action==='use'?'used':action==='keep'?'kept':'left-out',...(applied?{fixes:applied}:{}),at:new Date().toISOString(),by};
+    record.decisions[p.id]={action:action==='use'?'used':action==='keep'?'kept':'left-out',...(applied?{fixes:applied,before}:{}),at:new Date().toISOString(),by};
     save(id,record);return view(id);
    });
   },
@@ -150,10 +151,32 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     const at=new Date().toISOString();
     if(tier==='sure'){
      const snap=corrections.read(id);
-     const all=open.flatMap(p=>p.fixes).filter(f=>snap.segments[f.index].text.trim()!==f.text);
+     const changes=new Map(open.map(p=>[p.id,p.fixes.filter(f=>snap.segments[f.index].text.trim()!==f.text)]));
+     const all=[...changes.values()].flat();
      if(all.length){const after=corrections.edit(id,{expected,corrections:all});record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);}
-     for(const p of open)record.decisions[p.id]={action:'used',fixes:p.fixes,at,by,group:true};
+     for(const p of open)record.decisions[p.id]={action:'used',fixes:changes.get(p.id),before:changes.get(p.id).map(f=>({index:f.index,text:snap.segments[f.index].text})),at,by,group:true};
     }else for(const p of open)record.decisions[p.id]={action:'left-out',at,by,group:true};
+    save(id,record);return view(id);
+   });
+  },
+  /**
+   * Take one decision back. A use is reversed through the same correction boundary, and only while every line it
+   * changed still reads exactly as it left it; anything edited since is left alone and the undo is refused.
+   */
+  async undo(id,{problemId,expected}={}){
+   decider();
+   return serial(id,async()=>{
+    const record=load(id);if(!record||record.state!=='ready')fail('There is no finished check for this recording.',409);
+    const decision=record.decisions[problemId];if(!decision)fail('That suggestion has no decision to undo.',409);
+    if(decision.action==='used'&&decision.fixes?.length){
+     if(!Array.isArray(decision.before)||decision.before.length!==decision.fixes.length)fail('This change was made before undo existed; change it in the full transcript.',409);
+     const snap=corrections.read(id);
+     if(decision.fixes.some(f=>snap.segments[f.index]?.text.trim()!==f.text))fail('Those lines were changed again since. Change them in the full transcript.',409);
+     const after=corrections.edit(id,{expected,corrections:decision.before.map(b=>({index:b.index,text:b.text}))});
+     record.ownRevisions=[...(record.ownRevisions||[]),after.expected.revision].slice(-200);
+    }
+    delete record.decisions[problemId];
+    record.undone=[...(record.undone||[]),{problemId,action:decision.action,at:new Date().toISOString(),by:who()}].slice(-200);
     save(id,record);return view(id);
    });
   },

@@ -129,3 +129,37 @@ test('a failed read is recorded plainly and can be tried again',async t=>{
  assert.equal(fs.readdirSync(path.join(f.dataDir,'transcript-checks')).filter(n=>n.startsWith('.run-')).length,0,'no scratch folders left behind');
  await assert.rejects(withActor({actor:'agent:claude-code',client:'cli'},()=>check.decideGroup(f.id,{tier:'sure',expected:check.view(f.id).expected})),/human-only/);
 });
+
+test('undo takes a decision back exactly, and refuses when the lines were changed since',async t=>{
+ const f=await setup(t);
+ const recordings={transcriptCorrections:(await import('../runtime/services/transcript-corrections.mjs')).createTranscriptCorrections({dir:path.join(f.dataDir,'recordings'),config:{conversationTimestamps:true}})};
+ const check=transcriptCheckFor({dataDir:f.dataDir,recordings,options:{available:()=>true,execute:async()=>({response:{artifacts:{'suggestions.json':JSON.stringify(GOOD)}}})}});
+ const base='/api/transcript-check/'+f.id;
+ await f.agent('POST',base+'/suggest',{});await check.wait(f.id);
+ let r=await f.page('GET',base);
+ r=await f.page('POST',base+'/decide-group',{tier:'sure',expected:r.body.expected});
+ assert.equal(r.body.segments[1].text,'Dates this Nepalese method, Newari.');
+ const sure=r.body.problems.find(p=>p.indexes[0]===1);
+ const denied=await f.agent('POST',base+'/undo',{problemId:sure.id,expected:r.body.expected});assert.equal(denied.status,403);
+ r=await f.page('POST',base+'/undo',{problemId:sure.id,expected:r.body.expected});assert.equal(r.status,200,JSON.stringify(r.body));
+ assert.equal(r.body.segments[1].text,'Dates this Nepalese method, Navari.','a group fix is undone line by line');
+ assert.equal(r.body.problems.find(p=>p.id===sure.id).decision,null);
+ assert.equal(r.body.segments[2].text,'Each color came from a rock.','the rest of the group stays');
+ // A split sentence fixed in two lines comes back as both lines.
+ const split=r.body.problems.find(p=>p.indexes.length===2);
+ r=await f.page('POST',base+'/decide',{problemId:split.id,action:'use',expected:r.body.expected});
+ assert.deepEqual([r.body.segments[5].text,r.body.segments[6].text],['It just somehow','fits well with each other.']);
+ r=await f.page('POST',base+'/undo',{problemId:split.id,expected:r.body.expected});
+ assert.deepEqual([r.body.segments[5].text,r.body.segments[6].text],['It does some hell.','fit well with each other.']);
+ // Changed again somewhere else: the undo is refused and nothing moves.
+ r=await f.page('POST',base+'/decide',{problemId:split.id,action:'use',expected:r.body.expected});
+ const edited=recordings.transcriptCorrections.edit(f.id,{expected:r.body.expected,corrections:[{index:5,text:'It just somehow, truly'}]});
+ const refused=await f.page('POST',base+'/undo',{problemId:split.id,expected:edited.expected});
+ assert.equal(refused.status,409);assert.match(refused.body.error,/changed again/);
+ assert.equal((await f.page('GET',base)).body.segments[5].text,'It just somehow, truly');
+ // Keep and leave-out undo without touching the text.
+ r=await f.page('GET',base);const notyou=r.body.problems.find(p=>p.tier==='notyou');
+ r=await f.page('POST',base+'/decide',{problemId:notyou.id,action:'leave',expected:r.body.expected});assert.deepEqual(r.body.leftOut,[3]);
+ r=await f.page('POST',base+'/undo',{problemId:notyou.id,expected:r.body.expected});assert.deepEqual(r.body.leftOut,[]);
+ const none=await f.page('POST',base+'/undo',{problemId:notyou.id,expected:r.body.expected});assert.equal(none.status,409);
+});
