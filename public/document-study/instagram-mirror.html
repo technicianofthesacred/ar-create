@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instagram · mirror</title>
+<!-- The Instagram studio, read-only, one part at a time, for a chat to show as a picture: what Adrian sees in AR Create,
+     drawn by the same code. Opened as an agent, so no button here can act for him. Used by agents/memo/memo-show.mjs.
+     ?id=<plan id>&part=material|story|words|made|research[&story=S1] -->
+<link rel="stylesheet" href="study.css"><link rel="stylesheet" href="instagram-studio.css">
+<style>
+ html,body{margin:0;background:var(--paper)}
+ dialog.igs{position:static;height:auto;overflow:visible;outline:none}
+ dialog.igs::backdrop{display:none}
+ .igs-bar,.igs-note,.igs-name,.igs-go{display:none!important}
+ .igs-body{overflow:visible!important;height:auto!important}
+ .igs-stories{display:block!important}
+ /* Every frame in view, in rows, and no links: nothing in a picture can be opened. */
+ .igs-strip{flex-wrap:wrap!important;overflow:visible!important}
+ .igs-frame figcaption a,.igs-said{display:none!important}
+ .igs-mirror-hide,.igs [hidden]{display:none!important}
+ /* A picture cannot be pressed: show which story he chose, not the buttons he would press in the app. */
+ .igs [data-igs="choose"]:not([aria-pressed="true"]){display:none!important}
+</style></head>
+<body>
+<script src="instagram-mirror.js"></script>
+<script src="instagram-studio.js"></script>
+</body></html>
