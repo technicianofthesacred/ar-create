@@ -6,6 +6,7 @@
 //
 //   node tools/magazine/editorial-pack.mjs --copy  [--skills ~/.claude/skills]
 //   node tools/magazine/editorial-pack.mjs --verify [--skills ~/.claude/skills]
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -57,7 +58,7 @@ export function verifyPack({skills = null} = {}) {
   return {ok: problems.length === 0, files: manifest.files.length, problems, drift};
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
     const flags = parseFlags(process.argv.slice(2), {copy: 'flag', verify: 'flag', skills: 'value'});
     const skills = flags.skills || path.join(os.homedir(), '.claude', 'skills');

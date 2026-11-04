@@ -14,6 +14,7 @@
 //
 // Env: AR_CREATE_URL (default http://127.0.0.1:8841), AR_CREATE_ACTOR (default agent:claude-code).
 // Exit codes are the CLI's: 0 ok, 1 failed, 2 usage, 3 conflict (re-read), 4 locked, 5 human-only.
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
@@ -58,7 +59,7 @@ export async function main(argv, {env = process.env, fetchImpl = fetch, out = s 
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try { process.exitCode = await main(process.argv.slice(2)); }
   catch (error) { process.stdout.write(JSON.stringify({ok: false, error: error.message}) + '\n'); process.exitCode = EXIT.failed; }
 }

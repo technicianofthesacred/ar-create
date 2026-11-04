@@ -7,6 +7,7 @@
 //
 // stdout: a summary (counts per kind, stories, anything unparseable). --out: the full inventory, which
 // register.mjs compares before and after to prove registration changed no byte.
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -70,7 +71,7 @@ export function parseFlags(argv, allowed) {
   return out;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
     const flags = parseFlags(process.argv.slice(2), {mag: 'value', files: 'value', out: 'value'});
     const result = await inventory({mag: flags.mag, files: flags.files});

@@ -6,6 +6,7 @@
 // install over an original whose hash differs.
 //
 //   node tools/magazine/make-page-proxy.mjs [--from ~/builds/mag-preview.mjs]
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -116,7 +117,7 @@ export function buildProxy(original) {
   return text;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
     const flags = parseFlags(process.argv.slice(2), {from: 'value'});
     const from = flags.from || path.join(os.homedir(), 'builds', 'mag-preview.mjs');

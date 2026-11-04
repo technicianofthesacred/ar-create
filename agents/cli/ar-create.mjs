@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -135,7 +136,7 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
   return { exitCode: EXIT.usage, result: { ok: false, error: `Unknown command "${command}".`, ...USAGE } };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try { const { result, exitCode } = await run(process.argv.slice(2)); process.stdout.write(`${JSON.stringify(result)}\n`); process.exitCode = exitCode; }
   catch (error) { process.stdout.write(`${JSON.stringify({ ok: false, error: error.message })}\n`); process.exitCode = EXIT.failed; }
 }

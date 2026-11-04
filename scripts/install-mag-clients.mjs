@@ -15,6 +15,7 @@
 // from (someone changed it since: rebuild with tools/magazine/editorial-pack.mjs / make-page-proxy.mjs),
 // and --apply refuses unless AR Create answers with the magazine writable (the new page saves nothing
 // without it). The page is not restarted here: `launchctl kickstart -k gui/$(id -u)/com.teajia.mag-page`.
+import { realpathSync } from 'node:fs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -146,7 +147,7 @@ export function restoreBackup(backup) {
   return {restored: done};
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const argv = process.argv.slice(2), opt = {};
   for (let i = 0; i < argv.length; i++) { const a = argv[i]; if (['--dry-run', '--apply', '--skip-arc-check', '--retire-mag-local'].includes(a)) opt[a.slice(2)] = true; else if (['--restore', '--skills-dir', '--builds-dir', '--arc-url'].includes(a)) opt[a.slice(2)] = argv[++i]; else { console.error('Unknown option ' + a); process.exit(2); } }
   const skillsDir = opt['skills-dir'] || path.join(os.homedir(), '.claude', 'skills'), buildsDir = opt['builds-dir'] || path.join(os.homedir(), 'builds');
