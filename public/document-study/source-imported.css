@@ -162,7 +162,7 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved :is(.source-reader-title-tools,.source-reader-proposal-stepper) button:not(:disabled):hover{background:var(--c3-sel,var(--paper));color:var(--ink)}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved :is(.source-reader-title-tools,.source-reader-proposal-card) button:focus-visible{outline:2px solid var(--warm);outline-offset:3px}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{
-  display:flex;align-items:flex-start;gap:8px 24px;flex-wrap:wrap;border-top:1px solid var(--line);padding:8px 0;margin:20px 0 0;font:400 12px/1.6 var(--ar-ui,system-ui,sans-serif);
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:18px;border-top:1px solid var(--line);padding:8px 0;margin:20px 0 0;font:400 12px/1.6 var(--ar-ui,system-ui,sans-serif);
 }
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary>details{min-width:0;max-width:100%;margin:0;border:0;overflow-wrap:anywhere}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary>details[open]{flex:1 1 100%}
@@ -194,12 +194,6 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 /* Undo and source history stay available while reading a long conversation. */
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title{position:sticky;top:48px;z-index:12;background:var(--bg);padding:8px 0;align-items:center;flex-wrap:wrap}
 html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-title h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* The approved quiet footer remains reachable in a 1,100-remark conversation. */
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{position:fixed;left:98px;right:32px;bottom:0;z-index:20;background:var(--bg);margin:0;padding:6px 0;gap:6px 20px}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.wb-panel-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{left:338px}
-html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved [data-source-reader-dialogue]{margin-bottom:68px!important}
-@media(max-width:760px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary,html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.wb-panel-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary{left:16px;right:16px;bottom:60px;gap:6px 16px}}
 
 /* Literal lookup remains a compact entrance and an independently scrolling sheet. */
 .source-reader-lookup-sheet{box-sizing:border-box}
@@ -240,7 +234,7 @@ html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .
 .source-reader .source-reader-secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .source-reader .source-reader-secondary>section{min-width:0;max-width:100%;border-top:1px solid var(--line);padding-top:12px}
 .source-reader section>h3{font:600 14px/1.5 var(--ar-ui,system-ui,sans-serif);margin:0 0 10px}
-@media(max-width:700px){.source-reader .source-reader-secondary{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){html:not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-source .source-reader.source-reader-approved .source-reader-secondary,.source-reader .source-reader-secondary{grid-template-columns:minmax(0,1fr)}}
 
 .source-reader>section.source-reader-lookup-sheet[open]{position:static;inset:auto;width:auto;max-height:none;overflow:visible;border-radius:0}
 
