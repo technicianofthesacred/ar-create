@@ -6,6 +6,12 @@ const require=createRequire(new URL('../runtime/package.json',import.meta.url));
 const {JSDOM}=require('jsdom');
 const source=(await readFile(new URL('../public/document-study/source-imported.js',import.meta.url),'utf8')).replace("'./source-dialogue.js'",JSON.stringify(new URL('../public/document-study/source-dialogue.mjs',import.meta.url).href)).replace("'./translation-readiness.js'",JSON.stringify(new URL('../public/document-study/translation-readiness.js',import.meta.url).href)).replace("'./interpretation-view.js'",JSON.stringify(new URL('../public/document-study/interpretation-view.js',import.meta.url).href)).replace("'./source-language-review.js'",JSON.stringify(new URL('../public/document-study/source-language-review.js',import.meta.url).href));
 const {installSourceReader,teaLibraryURL}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+test('ordinary Source tools stay in the reading flow instead of covering sidebar navigation',async()=>{
+ const css=await readFile(new URL('../public/document-study/source-imported.css',import.meta.url),'utf8');
+ const dom=new JSDOM('<style>'+css+'</style><div id="app"><main id="workspace" class="wb-source"><section class="source-reader source-reader-approved"><div class="source-reader-secondary"><section><h3>Notes</h3></section></div></section></main></div>');
+ try{dom.window.document.body.className='wbf-on';const tools=dom.window.getComputedStyle(dom.window.document.querySelector('.source-reader-secondary'));assert.notEqual(tools.position,'fixed','Expanded Source sections must not intercept Outputs in the navigation rail');assert.equal(tools.display,'grid');}
+ finally{dom.window.close();}
+});
 const clone=x=>JSON.parse(JSON.stringify(x));
 const base={revision:3,sessions:[{id:'a',title:'First visit',date:'2026-01-01',sourceId:'source-a',sourceHash:'hash-a',version:1,turns:[{id:'a1',speaker:'Source',text:'A sample was offered.',originalText:'A sample was offered.'},{id:'a2',speaker:'Response',text:'The price remains unknown.'},{id:'a3',speaker:'Response',text:'No purchase yet.'}]},{id:'b',title:'Second visit',sourceId:'source-b',sourceHash:'hash-b',version:1,turns:[{id:'b1',speaker:'Unknown',text:'A different conversation.'}]}],notes:{a:{sourceHash:'hash-a',stories:[],interests:[],business:[{text:'Offer, price unresolved.',turnIds:['a1','a3']}]}}};
 const tick=()=>new Promise(r=>setTimeout(r,0));
