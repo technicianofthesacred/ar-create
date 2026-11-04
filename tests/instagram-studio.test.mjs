@@ -148,3 +148,51 @@ test('PNG export looks for headless Chrome where Playwright keeps it on a Mac, o
  assert.deepEqual(playwrightRoots({},'/home/x'),['/home/x/Library/Caches/ms-playwright','/home/x/.cache/ms-playwright']);
  assert.equal(playwrightRoots({PLAYWRIGHT_BROWSERS_PATH:'/opt/pw'},'/home/x')[0],'/opt/pw');
 });
+
+test('a plan from the VPS feeder is taken in on the Mac only when every file and line is here exactly; decisions keep their record', async () => {
+ // The feeder and the Mac hold the same bytes under different Library ids.
+ const MAC_T='51111111-2222-4333-8444-555555555555',MAC_P=PHOTOS.map((_,i)=>'6'+i+'111111-2222-4333-8444-555555555555');
+ const feeder=fresh();let p=await start(feeder);
+ const base=()=>({id:p.id,operationId:op(),expectedRevision:p.revision,expectedHash:p.hash});
+ const said=quote=>({said:{quote,via:'chat',at:new Date().toISOString()}});
+ p=await as(AGENT,()=>feeder.choose({...base(),storyId:'S1',...said('The crack one.')}));
+ const photoHash=i=>String(i).repeat(64).slice(0,64);
+ const feederLib={...library,snapshot:async(id,o)=>{const i=PHOTOS.indexOf(id);return i>=0?{id,hash:photoHash(i+1),path:'/x/photo-'+i+'.jpg'}:library.snapshot(id,o);}};
+ const bundle=await createInstagramStudio({dataDir:path.dirname(feeder.asksFile(p.id)).replace(/instagram-plans$/,''),library:feederLib}).handoffBundle({id:p.id});
+ assert.equal(bundle.sources.length,1+PHOTOS.length);
+ const macDir=fs.mkdtempSync(path.join(os.tmpdir(),'ig-mac-'));
+ const macLib={snapshot:async(id,{includeBody}={})=>{if(id===MAC_T)return {id,hash:T_HASH,text:includeBody?TRANSCRIPT:undefined};const i=MAC_P.indexOf(id);if(i>=0)return {id,hash:photoHash(i+1),path:'/m/p'+i+'.jpg'};throw Error('missing');}};
+ const mac=createInstagramStudio({dataDir:macDir,library:macLib});
+ const here=new Map([[T_HASH,{id:MAC_T,hash:T_HASH}],...MAC_P.map((id,i)=>[photoHash(i+1),{id,hash:photoHash(i+1)}])]);
+ assert.equal((await mac.adopt(bundle,src=>src.kind==='photo'&&src.hash===photoHash(2)?null:here.get(src.hash))).state,'held','a missing photo holds it');
+ const tampered=structuredClone(bundle);tampered.plan.title='Changed on the way';
+ assert.equal((await mac.adopt(tampered,src=>here.get(src.hash))).state,'held','a changed plan holds it');
+ const taken=await mac.adopt(bundle,src=>here.get(src.hash));
+ assert.equal(taken.state,'adopted');
+ const onMac=await mac.read({id:p.id});
+ assert.equal(onMac.material.transcripts[0].sourceId,MAC_T);assert.deepEqual(onMac.material.photos.map(x=>x.sourceId),MAC_P);
+ assert.ok(onMac.lines.every(l=>l.sourceId===MAC_T&&TRANSCRIPT.slice(l.start,l.end)===l.text));
+ assert.equal(onMac.chosen.by,ADRIAN);assert.equal(onMac.chosen.carriedBy,AGENT);assert.equal(onMac.chosen.said.quote,'The crack one.');
+ assert.equal((await mac.adopt(bundle,src=>here.get(src.hash))).state,'already-here');
+ // Changed on the Mac since: a newer VPS version is never laid over it.
+ const m=await as(ADRIAN,()=>mac.propose({id:onMac.id,operationId:op(),expectedRevision:onMac.revision,expectedHash:onMac.hash,title:'Renamed on the Mac'}));
+ const newer=structuredClone(bundle);newer.plan.revision+=5;
+ const again=await mac.adopt(newer,src=>here.get(src.hash));
+ assert.equal(again.state,'held');assert.match(again.why,/changed on this Mac/);
+ assert.equal((await mac.read({id:p.id})).title,'Renamed on the Mac');assert.ok(m.revision>onMac.revision);
+});
+
+test('the feeder hands a plan on through its memo, with the pickup key, and says plainly when it cannot', async () => {
+ const {handOn}=await import('../runtime/services/instagram-studio.mjs');
+ const s=fresh();const p=await start(s);
+ const studio={handoffBundle:async()=>({schema:'ar-create.instagram-handoff.v1',plan:{id:p.id,revision:p.revision},sources:[{sourceId:'a',hash:'b'.repeat(64)}]})};
+ const memoId='00000000-0000-4000-8000-0000000000aa',k='k'.repeat(40);let sent=null;
+ const fetcher=async(url,init)=>{sent={url,auth:init.headers.Authorization,body:JSON.parse(init.body)};return new Response(JSON.stringify({ok:true,memo:{handoff:{revision:p.revision}}}),{status:200});};
+ const withKey=async()=>({key:k}),noKey=async()=>({key:null});
+ const done=await handOn(studio,{id:p.id,memoId},{readKey:withKey,fetcher,baseUrl:'https://phone.invalid'});
+ assert.equal(sent.url,'https://phone.invalid/api/oracle/pickup/memos/'+memoId+'/handoff');assert.equal(sent.auth,'Bearer '+k);
+ assert.equal(done.files,1);assert.equal(sent.body.plan.id,p.id);
+ await assert.rejects(handOn(studio,{id:p.id,memoId},{readKey:noKey,fetcher}),e=>e.status===503);
+ await assert.rejects(handOn(studio,{id:p.id,memoId},{readKey:withKey,fetcher:async()=>new Response('{"error":"the memo has no transcript yet"}',{status:409})}),e=>e.status===409&&/no transcript yet/.test(e.message));
+ await assert.rejects(handOn(studio,{id:p.id},{}),e=>e.status===400);
+});

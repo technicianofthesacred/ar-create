@@ -10,7 +10,7 @@ const instances=new Map();
 const fail=(message,status=400)=>{throw new StateError(message,status);};
 
 /** The pickup's view of this AR Create: the Library, the recording owner and its own address for starting a saved job. */
-export function localEngine({library,recordings,origin}){
+export function localEngine({library,recordings,origin,dataDir}){
  return {
   async ready(){const {capability}=await recordings.list();return {ready:capability?.ready===true,problem:capability?.problem||null};},
   async importAudio({name,bytes}){
@@ -27,6 +27,14 @@ export function localEngine({library,recordings,origin}){
    if(!response.ok&&response.status!==409)throw new Error('The transcription could not be started.');
   },
   async readResult(jobId){return {result:recordings.transcriptCorrections.read(jobId).result};},
+  // A memo's transcript or photo for an Instagram plan handed on from the VPS, filed into the Library once.
+  async importFile({folder,name,bytes}){
+   const result=await library.import({rootId:'library',folder,files:[{name,base64:bytes.toString('base64')}],urls:[]});
+   const receipt=result.receipts?.[0];
+   if(!receipt?.ok||!receipt.source)throw new Error(receipt?.error||'A memo file could not be added to the Library.');
+   return {id:receipt.source.id,hash:receipt.source.hash||(await library.blob(receipt.source.id)).source.hash};
+  },
+  async adoptPlan(bundle,local){const {createInstagramStudio}=await import('./instagram-studio.mjs');return createInstagramStudio({dataDir,library}).adopt(bundle,local);},
  };
 }
 
@@ -42,7 +50,7 @@ export function pickupFor({dataDir,events,recordings,library,origin=()=>null,opt
   baseUrl:options.baseUrl,
   now:options.now,
   watchMs:options.watchMs,
-  local:options.local||localEngine({library,recordings,origin}),
+  local:options.local||localEngine({library,recordings,origin,dataDir}),
   words:options.words===undefined?wordsFor({dataDir,events,recordings}).shared:options.words,
  });
  instances.set(dataDir,found);

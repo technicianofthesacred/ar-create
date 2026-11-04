@@ -47,6 +47,7 @@ const BODY = {
   '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
   '/api/instagram/confirm': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'flagId', 'verdict (as-heard|corrected)', 'correction?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
   '/api/instagram/meaning': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'verdict (right|not-meant)', 'words (his exact words; required for not-meant)', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
+  '/api/instagram/handoff': ['id', 'memoId (the phone memo the plan was made from; the Mac takes it in at its next phone check)'],
   '/api/instagram/ready': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'format', 'caption?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
   '/api/study/material/attach':['bindingId','parentStudyId','operationId','sourceIds'],
 
@@ -170,7 +171,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/api/simmer/material', ['subject']],
   ['POST', '/api/simmer/intake'], ['POST', '/api/simmer/propose'], ['POST', '/api/simmer/dish'],
   ['GET', '/api/instagram/templates'], ['GET', '/api/instagram/plans', ['subject?']], ['GET', '/api/instagram/plan', ['id']],
-  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'],
+  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'], ['POST', '/api/instagram/handoff'],
   ['GET', '/api/instagram/render', ['id', 'format', 'frame']], ['GET', '/api/instagram/sheet', ['id', 'format']], ['GET', '/api/instagram/captions', ['id']], ['GET', '/api/instagram/png', ['id', 'format', 'frame']],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
