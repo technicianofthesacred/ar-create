@@ -1,6 +1,6 @@
 # AR Create: start here
 
-Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); what works today is in [status/CURRENT.md](status/CURRENT.md).
+Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); capabilities and revision evidence are in [status/CURRENT.md](status/CURRENT.md).
 
 ## The product in one view
 
@@ -41,11 +41,13 @@ Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may b
 | `project`, `parentStudyId` | A Project's identity in the older APIs. Agents pass `parentStudyId`. |
 | working root | `study-draft-copies/copies/<bindingUUID>/workflow/Workflow/`, holding `DEV - Collection.md` and the Piece's working text. |
 
-## The screen: approved workbench direction
+## The screen: approved Combined workspace
 
-The current design authority is the approved [C workbench preview](../design/three-directions/c-workbench/index.html) and its [revisions 2–5 and final notes](../design/three-directions/c-workbench/NOTES.md). The navigation is unnumbered: a 66px icon rail sits beside a 240px current-owner panel when that section has places to navigate, then the work area. On phones, navigation becomes group sheets. Do not imply that the twelve product sections form a numbered or compulsory sequence.
+The current design authority is the Combined workspace approved 30 October, recorded in [PRODUCT](product/PRODUCT.md#the-design-baseline) and its dated decision log. Home, Subjects, subject boards, piece tabs, Write/Read/Check modes, contextual sheets and visible Outputs are the approved direction. Earlier [C workbench previews](../design/three-directions/c-workbench/index.html) are historical references, not the current acceptance target.
 
-Use Plus Jakarta Sans throughout the interface with the approved 13/15/16/17px scale, shared A−/A+ sizing, and Lora only for speech. Read and Write share the same document geometry. This is the approved design direction. The Workbench is installed in bounded scope; full functional and visual acceptance remains open. Exact installed revisions, later candidates and their evidence are recorded in [CURRENT](status/CURRENT.md).
+Full desktop and phone, light and dark, functional and visual acceptance remains open. [CURRENT](status/CURRENT.md) separates source capabilities, recorded installed revision, measured test revision and acceptance limits. Regenerate it with fresh release and test inputs before using its snapshot to assess the running app; a source candidate or test run on another revision does not establish installed behavior.
+
+To inspect current evidence without replacing the committed snapshot, run `node scripts/gen-status.mjs --tests <summary.json> --release "<home>/RELEASE.json" --out /tmp/ar-create-current.md`. The summary records the actual run’s `tests`, `pass`, `fail`, `skipped`, full `sha` and optional `at`. Plain TAP remains a measured run but cannot establish its revision; a matching full revision still does not imply all tests passed or human acceptance. Typography and product conventions remain in [PRODUCT](product/PRODUCT.md#design-baseline-and-typography).
 
 ## Where data lives
 

@@ -1,7 +1,7 @@
-<!-- Hand-maintained. At most 40 lines. Reconciled 4 November with the installed release record, current product decisions and bounded export reads; scripts/gen-status.mjs copies it into CURRENT.md. -->
-## Works today
+<!-- Hand-maintained. At most 40 lines. Source capability summary; installed and measured revision evidence is supplied separately; scripts/gen-status.mjs copies it into CURRENT.md. -->
+## Source capabilities and bounded evidence
 
-Installed means shipped to the running app with a recorded commit. It does not mean human-accepted.
+These describe available source paths, not proof for whichever revision is installed. Installed means recorded in the running app’s release; full acceptance remains separate.
 
 - **Library and photographs**: sources, personal notes, locations, topics and known photo usage; indexed unused photos can enter the replace/insert flow, with Undo.
 - **Material intake**: microphone capture connects to the retained recording, Start and Retry owners.
@@ -19,10 +19,10 @@ Installed means shipped to the running app with a recorded commit. It does not m
 
 ## Open limits
 
-- **Not installed or unfinished**: the whole recording-to-Outputs journey, Home and final Source handoff, the smaller-screen and phone pass, proposal adapters and drawer, the Library folder repair (Stages 4 to 7 of the structure program).
+- **Acceptance incomplete**: the whole recording-to-Outputs journey, Home and final Source handoff, the smaller-screen and phone pass, proposal adapters and drawer, the Library folder repair (Stages 4 to 7 of the structure program).
 - **Human decisions pending**: the Hong Kong angle and title, the ten marked passages, Carousel words and photos, and the Chinese proposal's 20 ambiguities. Agents have not chosen any.
 - **Not connected or incomplete**: sending and publication, Share to a recipient, full composed layout and cover/opener/closing photo acceptance, piece-level Direction overrides.
 - **Coverage**: the configured catalogue is not all Mac and iCloud photos; large-library performance is unmeasured; search is literal text, not semantic.
-- **Design**: full desktop and phone, light and dark, interaction acceptance against the approved workbench is not complete.
-- **Process**: nine broader goal gates are open; built, native-verified, installed and human-accepted stay separate states.
-- **Evidence**: the installed commit is read from `RELEASE.json`; tests come only from a measured run.
+- **Design**: full desktop and phone, light and dark, interaction acceptance against the approved Combined workspace is not complete.
+- **Process**: broader delivery and acceptance gates remain open; built, native-verified, installed and human-accepted stay separate states.
+- **Evidence**: installed revision and test revision must both be recorded before attributing a measured run to the installed app. Missing inputs leave that claim unavailable.
