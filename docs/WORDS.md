@@ -80,4 +80,6 @@ The Instagram studio flags the words to confirm in a voice note from this librar
 
 ## Phase 2: what the other projects import
 
-Not built yet. mandalacodes (phone oracle), Teajia and i64os use Groq for transcription; each should read the export at deploy and prime its prompt with `prompts.en` or `prompts.zh` (or build its own from `entries`), and apply `heard` variants to its transcripts. Open design question for phase 2: where the snapshot is stored for deploy so that no project reads the installed AR Create's `data/` directly.
+Consumer imports are implemented. Each project vendors a committed, versioned export: `shared/words.snapshot.json` in mandalacodes and Teajia, and `packages/shared/words.snapshot.json` in i64os. Their existing transcription paths use the shared prompt and correction helpers; deployment consumes these source snapshots without reading the installed AR Create `data/` directly.
+
+Source qualification on 5 November found identical schema `ar-create.word-library.export.v1`, version `2.c0f92872`,473 entries and SHA-256 `264d8321f529aee8215642596956b09e2d5bbc507c11d24012628a783a7f3c7f` in all three copies. The qualified callers include Mandala memo/quick/authoring/reflection transcription, Teajia Curate voice transcription, and i64os Telegram transcription. Updating a snapshot is an explicit reviewed source update using the export contract above. This does not claim a fresh export from the private running library or live transcription acceptance.
