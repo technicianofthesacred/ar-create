@@ -105,6 +105,16 @@ test('Outputs: exporting, and downloading an export, refuse while a person is un
   assert.ok(fileUrl, 'the saved export has a file link: ' + JSON.stringify(saved.value).slice(0, 300));
   assert.equal((await fetch(base + fileUrl)).status, 200, 'the file downloads while nothing holds it');
 
+  // The earlier yes covered being pictured only. Naming Maya too must re-hold an
+  // already saved file and new exports, not merely change the desk's badge.
+  await d.ok('consent.people.record', {person: {personId: maya, name: 'Maya', appears: ['pictured', 'named']}});
+  const expandedDownload = await fetch(base + fileUrl);
+  assert.equal(expandedDownload.status, 423);
+  assert.match((await expandedDownload.json()).error, /Maya agreed before they also appeared as named/);
+  assertHeld(await cli(['call', 'study.outputs.export'], exportBody('expanded.md')), {who: ['Maya agreed before they also appeared as named'], scope});
+  await d.answer(maya, 'yes');
+  assert.equal((await fetch(base + fileUrl)).status, 200, 'a new answer for the expanded appearance releases the existing file');
+
   // A new person appears: the same file is held again for download, and a second export is refused.
   await d.addPerson('Tom', ['quoted']);
   const download = await fetch(base + fileUrl);

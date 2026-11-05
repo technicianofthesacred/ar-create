@@ -66,3 +66,24 @@ test('--out writes where it is told and --tests/--release are read from files',(
   assert.match(page,/commit 7dd235d/);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('installed test evidence is unavailable until both revisions are recorded',()=>{
+ const tests=parseTests(JSON.stringify({tests:1,pass:1,fail:0}));
+ const release=parseRelease(JSON.stringify({sha:SHA}));
+ for(const [input,reason] of [
+  [{},'installed release was not read'],
+  [{release},'tests were not measured'],
+  [{release,tests},'test revision was not recorded'],
+ ])assert.match(buildStatus({...input,works:'x'}),new RegExp('Installed test evidence: unavailable; '+reason+'\\.'));
+});
+
+test('installed test evidence distinguishes matching, different and ambiguous abbreviated revisions',()=>{
+ const measured=sha=>parseTests(JSON.stringify({tests:1,pass:1,fail:0,sha}));
+ const release=parseRelease(JSON.stringify({sha:SHA}));
+ assert.match(buildStatus({release,tests:measured(SHA),works:'x'}),/Installed test evidence: same recorded commit\./);
+ assert.match(buildStatus({release,tests:measured('abcdef1234567'),works:'x'}),/Installed test evidence: different commits; the measured run does not verify the installed release\./);
+ for(const [r,t] of [[release,measured(SHA.slice(0,7))],[parseRelease(JSON.stringify({sha:SHA.slice(0,7)})),measured(SHA)]])assert.match(buildStatus({release:r,tests:t,works:'x'}),/Installed test evidence: unavailable; a full commit revision is required for an exact match\./);
+ const failing=measured(SHA);failing.pass=0;failing.fail=1;
+ assert.match(buildStatus({release,tests:failing,works:'x'}),/Read the measured failures and skips above; this is not human acceptance\./);
+});
