@@ -40,6 +40,15 @@ test('a human save under an agent lease succeeds and tells the holder once per l
  const first=await f.app('/api/concept/save',conceptSave(pid,made.result,{authorThoughts:'My own words.'}));
  assert.equal(first.status,200,JSON.stringify(first.body));
  const read=await f.cli(['project','read'],{parentStudyId:pid});assert.equal(read.result.authorThoughts,'My own words.');
+ // The original holder's lease is advisory, never permission to overwrite a newer human save.
+ const humanBytes=fs.readFileSync(read.result.path);
+ const staleHolder=await f.cli(['project','save'],conceptSave(pid,made.result,{aiInterpretation:'Prepared before the human save.'}));
+ assert.equal(staleHolder.exitCode,3,JSON.stringify(staleHolder.result));
+ assert.deepEqual(fs.readFileSync(read.result.path),humanBytes,'stale holder preserves the exact saved human bytes');
+ const afterStale=await f.cli(['project','read'],{parentStudyId:pid});
+ assert.equal(afterStale.result.revision,first.body.revision);
+ assert.equal(afterStale.result.hash,first.body.hash);
+ assert.equal(afterStale.result.authorThoughts,'My own words.');
  await settle();
  let notices=(await f.journal({kind:'project',id:pid,status:'conflict'})).filter(l=>l.kind==='lease.override');
  assert.equal(notices.length,1,'one notice for the holder');
@@ -48,7 +57,7 @@ test('a human save under an agent lease succeeds and tells the holder once per l
  assert.equal(notices[0].after.revision,first.body.revision);
  // Order in the journal (newest first): the notice follows the human's committed save.
  const lines=await f.journal({kind:'project',id:pid});
- assert.deepEqual(lines.slice(0,2).map(l=>[l.kind,l.status,l.actor]),[['lease.override','conflict','human:adrian'],['concept.save','committed','human:adrian']]);
+ assert.deepEqual(lines.filter(l=>l.actor==='human:adrian').slice(0,2).map(l=>[l.kind,l.status,l.actor]),[['lease.override','conflict','human:adrian'],['concept.save','committed','human:adrian']]);
  // The holder can see it as an event too, addressed to it.
  const since=(await (await fetch(f.url+'/api/events/since?since='+cursor+'&kind=project&id='+pid)).json()).events;
  const override=since.find(e=>e.kind==='lease.override');assert.ok(override,'lease.override event');assert.equal(override.to,'agent:claude-code');assert.equal(override.lease.actor,'agent:claude-code');
