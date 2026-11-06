@@ -140,8 +140,8 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
     const ext = path.extname(s.rel_path).toLowerCase();
     return [".jpg", ".jpeg"].includes(ext) && bytes.length > 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 || ext === ".png" && bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) && bytes.toString("ascii", 12, 16) === "IHDR" || ext === ".webp" && bytes.length >= 16 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
   }
-  // One overview pass asks for the proof of every output; the Library image list does not depend on
-  // the output, so it is hashed once per short window (and re-hashed at once if the index changes).
+  // Output proofs queued before hashing starts can share one future Library image pass.
+  // Later reads, including export final checks, always rehash: the index is not a byte version.
   const assetPass = createAssetPassCache();
   function libraryAssets(index) {
     return assetPass.get(JSON.stringify(index ?? null), async () => {
