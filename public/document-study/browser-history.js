@@ -31,7 +31,8 @@
   if(Number(p.viewedStage)===9){const canvas=w.studyOutputConnection?.canvasProof?.();if(!canvas||canvas.scope?.parentStudyId!==p.id||(canvas.selectedOutputId||null)!==(selected?.output?.id||null))return null;if(selected?.output?.kind==='carousel'&&(canvas.writingProof?.kind!=='carousel-words'||canvas.writingProof.outputId!==selected.output.id))return null;}
   if([5,6].includes(Number(p.viewedStage))&&selected?.owner?.kind==='native'&&selected.owner.bindingId!==proof?.bindingId)return null;
   const route={projectId:p.id,stage:Number(p.viewedStage)||(p.view==='article'?5:0),view:p.view,mode:w.studyDraft?.viewMode?.()==='preview'?'read':w.workspaceNavigation?.isCarouselCheck?.()?'check':d.querySelector('.car-writing-page')?.dataset.writingView||(Number(p.viewedStage)===9?'arrange':'write'),owner:selected?.projectId===p.id&&selected.output?.id?{kind:'output',rootBindingId:selected.rootBindingId,outputId:selected.output.id}:owner||(b?.parentStudyId===p.id?{kind:'native',bindingId:b.id}:null),output:selected?.projectId===p.id?{rootBindingId:selected.rootBindingId,outputId:selected.output?.id,kind:selected.output?.kind}:null,overlay:w.c3Research?.isOpen?.()?'research':sheet?.projectId===p.id?sheet.kind:null,home:!!home};
-  return {key:JSON.stringify(route),route,position:position()};
+  const browser=w.workbenchFolderBrowser?.captureNavigation?.();if(browser?.ready===false)return null;route.browser=browser?.key||null;
+  return {key:JSON.stringify(route),route,browser,position:position()};
  }
  function position(){const editor=d.getElementById('manuscript'),ws=d.getElementById('workspace'),selection=w.getSelection(),range=selection?.rangeCount&&editor?.contains(selection.anchorNode)?selection.getRangeAt(0).cloneRange():null;let passage=null;
   if(range){const block=(range.startContainer.nodeType===1?range.startContainer:range.startContainer.parentElement)?.closest('[data-block]'),end=(range.endContainer.nodeType===1?range.endContainer:range.endContainer.parentElement)?.closest('[data-block]');if(block&&block===end){const before=range.cloneRange();before.selectNodeContents(block);before.setEnd(range.startContainer,range.startOffset);passage={id:block.dataset.block,text:block.textContent,start:before.toString().length,length:range.toString().length};}}
@@ -41,7 +42,7 @@
   if(saved.range&&saved.editor===editor&&editor?.contains(saved.range.commonAncestorContainer)){editor.focus({preventScroll:true});const selection=w.getSelection();selection.removeAllRanges();selection.addRange(saved.range);return;}
   const p=saved.passage,block=p&&[...d.querySelectorAll('#manuscript [data-block]')].find(node=>node.dataset.block===p.id&&node.textContent===p.text);if(!block)return;const walker=d.createTreeWalker(block,NodeFilter.SHOW_TEXT);let node,offset=0,start=null,end=null;while(node=walker.nextNode()){if(!start&&p.start<=offset+node.length)start=[node,p.start-offset];if(p.start+p.length<=offset+node.length){end=[node,p.start+p.length-offset];break;}offset+=node.length;}if(start&&end){const range=d.createRange();range.setStart(...start);range.setEnd(...end);editor.focus({preventScroll:true});const selection=w.getSelection();selection.removeAllRanges();selection.addRange(range);}
  }
- const baseKey=route=>JSON.stringify({...route,overlay:null});
+ const baseKey=route=>JSON.stringify({...route,overlay:null,browser:null});
  function settled(test){if(test())return Promise.resolve();return new Promise((resolve,reject)=>{let timer;const observer=new MutationObserver(check);const events=['study-output-owner-confirmed','study-output-selection','study-draft-change','study-write-view','study-carousel-view'];function clear(){clearTimeout(timer);observer.disconnect();for(const event of events)w.removeEventListener(event,check);}function check(){try{if(test()){clear();resolve();}}catch(error){clear();reject(error);}}observer.observe(d.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});for(const event of events)w.addEventListener(event,check);timer=setTimeout(()=>{clear();reject(Error('The exact saved navigation context did not become ready. Current words are retained.'));},5000);check();});}
  async function restore(target){const wanted=target.route;let actual=view()?.route;if(!actual)throw Error('The current work is not ready for browser navigation.');
   const sameBase=baseKey(actual)===baseKey(wanted);if(!sameBase){const proof=await w.studyOutputConnection?.flush?.()||await w.studyDraft?.flush?.();if(proof?.dirty||w.studyDraft?.currentProof?.()?.dirty)throw Error('Save or resolve your current writing before going back or forward.');}
@@ -64,6 +65,7 @@
   }
   await settled(()=>{if(current().id!==wanted.projectId)throw Error('The selected project changed during browser navigation.');const actual=view()?.route;return actual&&baseKey(actual)===baseKey(wanted);});
   if(wanted.overlay==='research'&&!w.c3Research.isOpen())await w.c3Research.openLearning({parentStudyId:wanted.projectId});else if(wanted.overlay&&wanted.overlay!=='research'&&w.combinedSheets?.state?.()?.kind!==wanted.overlay){if(await w.combinedSheets.open(wanted.overlay)===false)throw Error('The saved source context could not reopen.');}
+  if(target.browser){if(typeof w.workbenchFolderBrowser?.restoreNavigation!=='function')throw Error('This file browser cannot reopen its saved navigation.');await w.workbenchFolderBrowser.restoreNavigation(target.browser);}
   await settled(()=>view()?.key===target.key);restorePosition(target.position);
  }
  const error=error=>{const node=d.getElementById('wn-message');if(node){node.textContent=error.message;node.hidden=false;}w.toast?.(error.message);};
@@ -73,5 +75,6 @@
  for(const [owner,names]of [[w.combinedNavigation,['go']],[w.c3Research,['openLearning','show','hide']],[w.combinedSheets,['open','close']],[w.studyDraft,['openBinding','openMagazine','read','edit']],[w.studyOutputConnection,['onAction','openNavigationOutput']],[w.realOutputOverview,['onAction']],[w.projectLibrary,['open','close']]])for(const name of names)wrap(owner,name);
  const observer=new MutationObserver(()=>navigation.schedule());observer.observe(d.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
  for(const event of ['study-output-owner-confirmed','study-output-selection','c3-header-painted','study-write-view','study-carousel-view','study-draft-change'])w.addEventListener(event,()=>navigation.schedule());
+ w.addEventListener('workbench-folder-navigation-start',()=>navigation.begin());w.addEventListener('workbench-folder-navigation-end',()=>navigation.end());
  navigation.schedule();w.addEventListener('pagehide',()=>{observer.disconnect();navigation.dispose();},{once:true});
 })(typeof window!=='undefined'?window:globalThis);
