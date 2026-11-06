@@ -89,7 +89,7 @@
  window.addEventListener('c3-header-painted',decorate);
  // Context sheets intercept the group click before its normal navigation handler.
  const sheetOpenObserver=new MutationObserver(records=>{if(phoneGroup&&records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1&&node.id==='combined-sheet')))closePhone({restoreFocus:false});});sheetOpenObserver.observe(document.body,{childList:true});window.addEventListener('pagehide',()=>sheetOpenObserver.disconnect(),{once:true});
- window.combinedNavigation={go,decorate};
+ window.combinedNavigation={go,decorate,closePhone};
  window.c3Shell?.register('Combined navigation',decorate,{order:125,ignore:'.combined-rail,.combined-piece-switch,#combined-navigation-status'});
  decorate();
 })();
