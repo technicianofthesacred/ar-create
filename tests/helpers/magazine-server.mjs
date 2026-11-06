@@ -8,9 +8,9 @@ import {buildMagazineFixture} from './magazine-fixture.mjs';
 
 const repo = path.resolve(import.meta.dirname, '..', '..');
 const sha = b => createHash('sha256').update(b).digest('hex');
-export async function magazineServer(t, {writable = true, fixture} = {}) {
+export async function magazineServer(t, {writable = true, fixture, exportRootId} = {}) {
   const f = buildMagazineFixture(fixture);
-  const server = await createServer({dataDir: f.data, publicDir: path.join(repo, 'public'), researchEnabled: false, magazineVault: {vaultRoot: f.vault, filesRoot: f.files, drops: f.drops, writable, machine: 'studio-mac', exportStaging: path.join(f.dir, 'staging')}});
+  const server = await createServer({dataDir: f.data, publicDir: path.join(repo, 'public'), researchEnabled: false, ...(exportRootId?{magazineRoots:[{id:exportRootId,path:f.vault}]}:{}), magazineVault: {vaultRoot: f.vault, filesRoot: f.files, drops: f.drops, writable, machine: 'studio-mac', exportStaging: path.join(f.dir, 'staging'), ...(exportRootId?{magSendRepo:path.join(f.dir,'publication')}:{})}});
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   t.after(async () => { await new Promise(r => server.close(r)); f.cleanup(); });
   const url = 'http://127.0.0.1:' + server.address().port;

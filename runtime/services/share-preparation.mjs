@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {constants} from 'node:fs';
 import {provenance} from './actor.mjs';
+import {createDeliveredEditions} from './delivered-edition.mjs';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const HASH=/^[a-f0-9]{64}$/;
@@ -15,14 +16,16 @@ const text=(v,max=100000)=>typeof v==='string'&&v.length<=max&&!v.includes('\0')
 function fields(value,allowed){if(!plain(value)||Object.keys(value).some(k=>!allowed.includes(k)))fail('Unsupported fields; caller paths and output snapshots are refused.',400);}
 
 /** Local human preparation only. Inject existing trusted output/files owners at composition time. */
-export function createSharePreparation({dataDir,outputs,magazine,files,outputPrivatePrefix}={}){
+export function createSharePreparation({dataDir,outputs,magazine,files,outputPrivatePrefix,exportOwners}={}){
  if(!outputs?.read&&!magazine?.read||!files?.atomicWrite||!files?.resolveInside||!files?.ensurePrivateDirectory||!files?.digest||typeof outputPrivatePrefix!=='function')throw Error('Existing trusted native output and private filesystem owners are required.');
  const {digest,regular,atomicWrite,ensurePrivateDirectory,resolveInside}=files;
+ const delivered=createDeliveredEditions({exportOwners});
  const hash=v=>digest(typeof v==='string'?v:JSON.stringify(v));
  function validate(input,action){
-  fields(input,[...(input?.ownerKind==='magazine'?['ownerKind','storyId','pieceId','expectedWorkingHash']:['rootBindingId']),'parentStudyId','selectedOutputId','recipientId','targetEdition',...(action?['expected','expectedEdition','operationId',...action==='save'?['changes']:action==='fact'?['fact']:['undoOperationId']]:[])]);
+  fields(input,[...(input?.ownerKind==='magazine'?['ownerKind','storyId','pieceId','expectedWorkingHash']:['rootBindingId']),'parentStudyId','selectedOutputId','recipientId','targetEdition','deliveredExportId',...(action?['expected','expectedEdition','operationId',...action==='save'?['changes']:action==='fact'?['fact']:['undoOperationId']]:[])]);
   const magazineOwner=input.ownerKind==='magazine',id=v=>typeof v==='string'&&/^[A-Za-z0-9:_-]{1,256}$/.test(v);
   if(!text(input.parentStudyId,256)||!input.parentStudyId||!(UUID.test(input.recipientId||'')||input.recipientId==='none')||(magazineOwner?!id(input.storyId)||!id(input.pieceId)||!HASH.test(input.expectedWorkingHash||'')||input.selectedOutputId!=='magazine-working:'+input.storyId+':'+input.pieceId:!UUID.test(input.rootBindingId||'')||!UUID.test(input.selectedOutputId||'')))fail('Exact registered piece, parent, revision and recipient identities required.',400);
+  if(input.deliveredExportId!==undefined&&!UUID.test(input.deliveredExportId))fail('Choose one exact retained export UUID.',400);
   if(input.targetEdition!==undefined&&!HASH.test(input.targetEdition))fail('Exact retained edition hash required.',400);
   if(action&&(!UUID.test(input.operationId||'')||!HASH.test(input.expectedEdition||'')||!plain(input.expected)||!Number.isSafeInteger(input.expected.revision)||input.expected.revision<0||!HASH.test(input.expected.hash||'')))fail('Operation UUID and expected record revision/hash and edition required.',400);
  }
@@ -77,17 +80,35 @@ export function createSharePreparation({dataDir,outputs,magazine,files,outputPri
   return {file,bytes,record};
  }
  const expected=s=>({revision:s.record.revision,hash:hash(s.bytes??'')});
- function render(a,s,input,receipt){
+ function render(a,s,input,receipt,selection={}){
   const current=s.record.editions.find(e=>e.edition===a.currentEdition);
   const edition=input.targetEdition||current?.edition||s.record.editions.at(-1)?.edition||a.currentEdition;
   const selected=s.record.editions.find(e=>e.edition===edition);
-  if(input.targetEdition&&!selected)fail('Requested earlier edition is not retained.',404);
-  const outdated=edition!==a.currentEdition||a.freshness.stale;
+  if(input.targetEdition&&!selected&&!selection.delivery)fail('Requested earlier edition is not retained.',404);
+  const outdated=(selection.delivery?(selected?selected.workingEdition!==a.currentEdition:false):edition!==a.currentEdition)||a.freshness.stale;
   const last=s.record.operations.filter(o=>o.edition===edition&&['save','undo'].includes(o.action)).at(-1);
   const preparationUndo=last?.action==='save'&&hash(selected?.preparation??null)===last.afterPreparationHash?{operationId:last.operationId}:null;
-  return {schema:SCHEMA,identity:clone(a.identity),expected:expected(s),currentEdition:a.currentEdition,targetEdition:edition,preparationUndo,preparation:clone(selected?.preparation??null),facts:clone(selected?.facts??[]),editions:clone(s.record.editions),review:{outdated,linkNeedsReview:!!selected?.preparation?.link&&outdated,reason:outdated?(a.freshness.reason||'This invitation concerns an earlier edition.'):null},...receipt?{receipt:clone(receipt)}:{}};
+  return {schema:SCHEMA,identity:clone(a.identity),expected:expected(s),currentEdition:a.currentEdition,targetEdition:edition,delivery:clone(selection.delivery??null),deliveries:clone(selection.deliveries??{available:false,reason:'Retained export ownership has not been read.',editions:[]}),preparationUndo,preparation:clone(selected?.preparation??null),facts:clone(selected?.facts??[]),editions:clone(s.record.editions),review:{outdated,currentWorkCorrespondence:selection.delivery?'not-assessed':'working-edition-guard',linkNeedsReview:!!selected?.preparation?.link&&outdated,reason:outdated?(a.freshness.reason||(selected?.delivery?'Current working text differs; this invitation retains its selected exported edition.':'This invitation concerns an earlier edition.')):null},...receipt?{receipt:clone(receipt)}:{}};
  }
- async function read(input){validate(input);const a=await authority(input);return render(a,snapshot(a),input);}
+ async function selection(a,s,input,{write=false}={}){
+  const deliveries=await delivered.list(input);
+  let target=input.targetEdition,delivery=null;
+  if(input.deliveredExportId){
+   delivery=await delivered.read(input,a.identity,input.deliveredExportId);
+   if(target&&target!==delivery.edition)fail('The retained export and target edition differ; read the selected delivery again.');
+   target=delivery.edition;
+  }
+  const selected=s.record.editions.find(e=>e.edition===(target||a.currentEdition))||(!target?s.record.editions.at(-1):null);
+  if(selected?.delivery){
+   if(write&&!input.targetEdition&&!input.deliveredExportId)fail('Choose the retained delivery or explicitly choose the current working edition before saving.');
+   const verified=await delivered.read(input,a.identity,selected.delivery.exportId);
+   if(!same(verified,selected.delivery)||verified.edition!==selected.edition)fail('The retained delivery manifest changed; the earlier invitation remains unchanged.');
+   if(delivery&&!same(delivery,verified))fail('The selected delivery changed before it could be read.');
+   delivery=verified;target=selected.edition;
+  }
+  return {input:target?{...input,targetEdition:target}:input,delivery,deliveries};
+ }
+ async function read(input){validate(input);const a=await authority(input),s=snapshot(a),chosen=await selection(a,s,input);return render(a,s,chosen.input,null,chosen);}
  function validateFact(fact,recipientId){
   const common=['kind','recordedBy'];
   if(!plain(fact)||fact.recordedBy!=='human')fail('Actual facts require an explicit human record.',400);
@@ -127,24 +148,27 @@ export function createSharePreparation({dataDir,outputs,magazine,files,outputPri
    if(!ownsLock())fail('Share lock ownership changed during acquisition.');
   }catch(error){releaseOwnedLock();if(error.code==='EEXIST')fail('Share record is busy; retry this same operation after the other writer finishes.');throw error;}
   try{
-   const before=snapshot(a),record=clone(before.record),fingerprint=hash({action,input}),prior=record.operations.find(o=>o.operationId===input.operationId);
-   if(prior){if(prior.fingerprint!==fingerprint)fail('Operation ID already belongs to another exact preparation request.');return render(a,before,input,prior.receipt);}
+   const before=snapshot(a),record=clone(before.record),fingerprint=hash({action,input}),prior=record.operations.find(o=>o.operationId===input.operationId),chosen=await selection(a,before,input,{write:true});
+   if(prior){if(prior.fingerprint!==fingerprint)fail('Operation ID already belongs to another exact preparation request.');return render(a,before,chosen.input,prior.receipt,chosen);}
    if(!same(input.expected,expected(before)))fail('Share record changed; refresh before saving.');
    if(input.expectedEdition!==a.currentEdition)fail('Output edition changed; review the retained invitation before saving.');
-   const target=input.targetEdition||a.currentEdition;let entry=record.editions.find(e=>e.edition===target);
-   if(!entry){if(target!==a.currentEdition)fail('Unknown earlier output edition cannot be created.');entry={edition:target,preparation:null,facts:[]};record.editions.push(entry);}
+   const target=chosen.input.targetEdition||a.currentEdition;let entry=record.editions.find(e=>e.edition===target);
+   if(!entry){if(target!==a.currentEdition&&!chosen.delivery)fail('Unknown earlier output edition cannot be created.');entry={edition:target,preparation:null,facts:[],...(chosen.delivery?{delivery:clone(chosen.delivery),workingEdition:a.currentEdition}:{})};record.editions.push(entry);}else if(chosen.delivery&&!same(entry.delivery,chosen.delivery))fail('The retained edition cannot be rebound to another delivery.');
    const previous=clone(entry.preparation);
    if(action==='save'){
     fields(input.changes,PREPARATION);if(!Object.keys(input.changes).length||Object.values(input.changes).some(v=>!text(v))||input.recipientId==='none')fail('Preparation changes require readable fields for an actual recipient.',400);
     entry.preparation={...entry.preparation,...clone(input.changes)};
    }else if(action==='fact'){
-    validateFact(input.fact,input.recipientId);entry.facts.push({...clone(input.fact),operationId:input.operationId,affectedOutput:{outputId:a.identity.outputId,edition:target}});
+    validateFact(input.fact,input.recipientId);entry.facts.push({...clone(input.fact),operationId:input.operationId,affectedOutput:{outputId:a.identity.outputId,edition:target,...(entry.delivery?{deliveredExportId:entry.delivery.exportId,delivery:clone(entry.delivery)}:{})}});
    }else{
     const op=record.operations.find(o=>o.operationId===input.undoOperationId),last=record.operations.filter(o=>o.edition===target&&['save','undo'].includes(o.action)).at(-1);
     if(!op||op.action!=='save'||op.edition!==target||op!==last||hash(entry.preparation)!==op.afterPreparationHash)fail('Saved preparation Undo no longer matches the exact current preparation.');
     entry.preparation=clone(op.beforePreparation);
    }
+   let deliveryGuard;
+   if(entry.delivery){const inspected=await delivered.inspect(input,a.identity,entry.delivery.exportId);if(!same(inspected.delivery,entry.delivery))fail('The delivered edition changed during save; preparation was not applied.');deliveryGuard=inspected.verify;}
    const latest=await authority(input);if(latest.currentEdition!==a.currentEdition||!same(latest.identity,a.identity))fail('Output edition changed during save; preparation was not applied.');
+   deliveryGuard?.();
    // Re-resolve after the asynchronous owner read; never follow a replaced sidecar or parent.
    if(location(a)!==file)fail('Share file ownership changed during save.');
    if(!ownsLock())fail('Share lock ownership changed during save; preparation was not applied.');
@@ -154,23 +178,24 @@ export function createSharePreparation({dataDir,outputs,magazine,files,outputPri
    record.operations.push({operationId:input.operationId,provenance:provenance(),fingerprint,action,edition:target,beforePreparation:previous,afterPreparationHash:hash(entry.preparation),receipt});
    const bytes=JSON.stringify(record,null,2)+'\n';if(Buffer.byteLength(bytes)>8*1024*1024)fail('Share history has reached the bounded local record limit; no bytes changed.');
    atomicWrite(file,bytes,before.bytes===null?{exclusive:true}:{expectedHash:hash(before.bytes)});
-   return render(latest,{file,bytes,record},input,receipt);
+   return render(latest,{file,bytes,record},chosen.input,receipt,chosen);
   }finally{releaseOwnedLock();}
  }
  async function list(input){
   fields(input,[...(input?.ownerKind==='magazine'?['ownerKind','storyId','pieceId','expectedWorkingHash']:['rootBindingId']),'parentStudyId','selectedOutputId']);
   const selector={...input,recipientId:'none'};validate(selector);const a=await authority(selector),file=location(a);
-  if(!file)return {currentEdition:a.currentEdition,records:[]};
+  const deliveries=await delivered.list(input);
+  if(!file)return {currentEdition:a.currentEdition,deliveries,records:[]};
   const names=fs.readdirSync(path.dirname(file)).filter(name=>/^[a-f0-9]{64}\.json$/.test(name));
   if(names.length>200)fail('Recipient register exceeds the bounded local list size.');
-  const records=names.sort().map(name=>{
+  const records=await Promise.all(names.sort().map(async name=>{
    const found=resolveInside(dataDir,a.relative+'/'+name);const stat=ownedStat(found);if(stat.size>8*1024*1024)fail('Share record exceeds the bounded local record size.');
    let value;try{value=JSON.parse(fs.readFileSync(found,'utf8'));}catch{fail('Recipient register contains an unreadable record; existing bytes preserved.');}
    const recipientId=value.identity?.recipientId;
    if(!(UUID.test(recipientId||'')||recipientId==='none')||name!==hash(recipientId)+'.json')fail('Recipient register ownership is invalid.');
-   const own={...a,identity:{...a.identity,recipientId}};return render(own,snapshot(own),{...input,recipientId});
-  });
-  return {currentEdition:a.currentEdition,records};
+   const own={...a,identity:{...a.identity,recipientId}},s=snapshot(own),chosen=await selection(own,s,{...input,recipientId});return render(own,s,chosen.input,null,chosen);
+  }));
+  return {currentEdition:a.currentEdition,deliveries,records};
  }
  return {read,list,save:i=>mutate('save',i),appendFact:i=>mutate('fact',i),undo:i=>mutate('undo',i)};
 }

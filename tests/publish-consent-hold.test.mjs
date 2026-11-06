@@ -1,3 +1,6 @@
+import {outputMarkdown,prepareMagazineHtml} from '../runtime/services/render-helper.mjs';
+import {createExportAssetReader} from '../runtime/services/exports.mjs';
+import {createMagazineMediaInspection} from '../scripts/magazine-media-inspection.mjs';
 // Every way out of AR Create (publish, mark published, export for posting, ready to post) asks the consent desk's one hold
 // check first. While anyone on the piece is unanswered the path refuses in plain English, naming who and linking to the desk
 // (HTTP 423, CLI exit 4). Adrian's answer, or his override with a reason, lets it through again. Invented content only.
@@ -84,7 +87,7 @@ test('Outputs: exporting, and downloading an export, refuse while a person is un
   const empty = (await get('/api/study/outputs?' + new URLSearchParams(group))).value;
   const created = await okPost('/api/study/outputs/create', {...group, kind: 'article', sourceBindingId: native.binding.id, expectedNative: native.expected, expectedOutput: empty.expectedOutput, operationId: randomUUID()});
   const selected = (await get('/api/study/outputs?' + new URLSearchParams({...group, selectedOutputId: created.view.output.id}))).value;
-  const exportBody = name => ({...group, kind: 'article', selectedOutputId: selected.output.id, expectedOutput: selected.expectedOutput, expectedNative: selected.writingProof.expected, manuscriptRevision: selected.output.manuscriptRevision, name, mimeType: 'text/markdown', body: 'Exact original words.\n'});
+  const exportBody = name => ({...group, kind: 'article', selectedOutputId: selected.output.id, expectedOutput: selected.expectedOutput, expectedNative: selected.writingProof.expected, manuscriptRevision: selected.output.manuscriptRevision, name, mimeType: 'text/markdown', body: outputMarkdown(selected.document,selected.output)});
 
   const cli = async (args, input, actor = AGENT) => run(['--url', base, '--actor', actor, ...args, ...(input ? ['--input', '-'] : [])], {stdin: async () => JSON.stringify(input)});
   const scope = {parentStudyId: 'ref-an-cha', pieceKey: 'main'}, d = desk(cli, scope);
@@ -158,7 +161,7 @@ test('Outputs: the older workspace export routes are held by the workspace proje
 });
 
 test('Magazine: Adrian\'s publish yes (magazine.send) refuses while a person is unanswered and works after their consent', async t => {
-  const m = await magazineServer(t), DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
+  const m = await magazineServer(t,{exportRootId:'consent-export'}), DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
   const scope = {parentStudyId: 'mag-clay-teacher', pieceKey: 'main'}, d = desk(m.cli, scope), maya = await d.addPerson('Maya', ['named', 'quoted']);
   const send = () => m.cli(['call', 'magazine.send'], {path: DEV, piece: 'clay-teacher', expectedHash: m.hashOf(DEV), operationId: randomUUID()}, ADRIAN);
   assertHeld(await send(), {who: ['Maya has not been asked yet'], scope});
@@ -170,7 +173,7 @@ test('Magazine: Adrian\'s publish yes (magazine.send) refuses while a person is 
 });
 
 test('Magazine: marking a draft published refuses while held and works after Adrian\'s override', async t => {
-  const m = await magazineServer(t), DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
+  const m = await magazineServer(t,{exportRootId:'consent-export'}), DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
   const scope = {parentStudyId: 'mag-clay-teacher', pieceKey: 'main'}, d = desk(m.cli, scope);
   // His publish yes came first, while nobody was listed.
   const hash = m.hashOf(DEV), approved = await m.cli(['call', 'magazine.send'], {path: DEV, piece: 'clay-teacher', expectedHash: hash, operationId: randomUUID()}, ADRIAN);
@@ -205,12 +208,13 @@ test('Magazine: saving the approved slides for posting is held through the story
 });
 
 test('Magazine: the article\'s HTML export and its download are held by the story', async t => {
-  const m = await magazineServer(t), DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
+  const m = await magazineServer(t,{exportRootId:'consent-export'}), DEV = 'Workflow/3-Develop/DEV - Clay Teacher (story).md';
   const plan = planRegistration({vault: m.f.vault, files: m.f.files}); fs.mkdirSync(path.join(m.f.data, 'magazine/projects'), {recursive: true});
   fs.writeFileSync(path.join(m.f.data, 'magazine/index.json'), JSON.stringify({schema: INDEX_SCHEMA, vaultRoot: m.f.vault, filesRoot: m.f.files, stories: plan.stories.map(p => ({storyId: p.storyId, name: p.name}))}));
   for (const p of plan.stories) fs.writeFileSync(path.join(m.f.data, 'magazine/projects', p.storyId + '.json'), JSON.stringify(p));
   const scope = {parentStudyId: 'mag-clay-teacher', pieceKey: 'main'}, d = desk(m.cli, scope), maya = await d.addPerson('Maya');
-  const payload = {storyId: 'mag-clay-teacher', pieceId: 'mag-clay-teacher:article', expectedHash: m.hashOf(DEV), renderRevision: 'a'.repeat(64), name: 'invented.html', body: '<!doctype html><html><p>Invented.</p></html>'};
+  const publication=path.join(m.f.dir,'publication');fs.mkdirSync(publication);const selection={storyId:'mag-clay-teacher',pieceId:'mag-clay-teacher:article',expectedHash:m.hashOf(DEV)},media=createMagazineMediaInspection({repoRoot:publication,resolveWorking:async q=>({...await (await fetch(m.url+'/api/magazine/working-draft/read?'+new URLSearchParams({storyId:q.storyId,pieceId:q.pieceId,edition:'working'}))).json(),target:{nativeProjectId:q.storyId,artifactId:'mag_'+sha('consent-export'+'\0'+fs.realpathSync(m.f.vault)+'\0'+DEV),hash:q.expectedHash}})}),edition=await media.workingEdition(selection);
+  const payload={...selection,renderRevision:edition.revision,name:'invented.html',body:await prepareMagazineHtml(edition,{origin:'http://localhost',readAsset:createExportAssetReader()})};
   const send = (extra = {}) => fetch(m.url + '/api/magazine/working-draft/export', {method: 'POST', headers: {'content-type': 'application/json', origin: m.url, 'x-ar-actor': ADRIAN}, body: JSON.stringify({...payload, ...extra})});
   const held = await send(); assert.equal(held.status, 423); assert.match((await held.json()).error, /Maya has not been asked yet/);
   // The page also names its own project; that desk holds the export as well.

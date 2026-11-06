@@ -27,7 +27,7 @@ test('durable invitation and reviewed translation resume; recipients and own out
  const f=await fixture(t);const before=JSON.stringify(f.store.get());const v=await f.save({recipient:'Invented friend',message:'Our original invitation',translatedMessage:'Reviewed translation',language:'en → zh',link:'https://example.invalid/invented'});
  assert.equal(v.preparation.message,'Our original invitation');assert.equal((await f.fresh().read(f.selector)).preparation.translatedMessage,'Reviewed translation');
  assert.equal((await f.service.read({...f.selector,recipientId:randomUUID()})).preparation,null);assert.equal((await f.service.read({...f.selector,selectedOutputId:f.b.view.output.id})).preparation,null);
- assert.equal(JSON.stringify(f.store.get()),before);assert.equal(v.facts.length,0);assert.equal(v.review.outdated,false);
+ assert.equal(JSON.stringify(f.store.get()),before);assert.equal(v.facts.length,0);assert.equal(v.review.outdated,false);assert.equal(v.delivery,null);assert.equal(v.deliveries.available,false,'ordinary Share remains usable without an export adapter');
 });
 test('stale writes, same operation retry and simultaneous instances preserve the winning contribution',async t=>{
  const f=await fixture(t),v=await f.read(),operationId=randomUUID();const input={...f.selector,expected:v.expected,expectedEdition:v.currentEdition,operationId,changes:{message:'First'}};
