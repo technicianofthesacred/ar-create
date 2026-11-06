@@ -456,7 +456,7 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wf
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>.small{white-space:nowrap;font-size:var(--t-label);color:var(--dim)}
 
 /* Library source: read the material, then use its saved connections. */
-.k-library .wfb-source-detail{max-width:1180px;margin-inline:auto;min-width:0}
+.k-library .wfb-source-detail{width:100%;max-width:1180px;margin-inline:auto;min-width:0}
 .wfb-source-heading h1{font-size:25px;line-height:1.25;margin:0 0 8px;font-weight:650;overflow-wrap:anywhere}
 .wfb-source-heading p{margin:0;color:var(--dim);font-size:13px;overflow-wrap:anywhere}
 .wfb-source-nav{display:flex;gap:8px;margin:20px 0 24px;padding-bottom:12px;border-bottom:1px solid var(--line)}
