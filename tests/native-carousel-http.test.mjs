@@ -34,7 +34,7 @@ test('native Carousel HTTP mounts preserve source and sibling, register once and
  const selector={...group,requestId:input.operationId},read=()=>request('/api/study/carousel-make?'+new URLSearchParams(selector));
  const commands=(await request('/api/capabilities')).commands;
  for(const action of ['preview','run','register','cancel']){
-  const command=commands.find(c=>c.route==='/api/study/carousel-make/'+action);assert.ok(command);assert.equal(command.readOnly,false);assert.deepEqual(command.actors,['any']);
+  const command=commands.find(c=>c.route==='/api/study/carousel-make/'+action);assert.ok(command);assert.equal(command.section,'outputs');assert.equal(command.readOnly,false);assert.deepEqual(command.actors,['any']);
   const body=action==='preview'?input:selector;assert.deepEqual(buildRequest(command,body),{method:'POST',path:command.route,body});
  }
  await request('/api/study/carousel-make?'+new URLSearchParams({...group,unexpected:'no'}),undefined,400);

@@ -257,7 +257,7 @@
 | `study.photos.select` | `POST /api/study/photos/select` | any | write |
 | `study.photos.update` | `POST /api/study/photos/update` | any | write |
 
-### outputs (77)
+### outputs (82)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -324,6 +324,11 @@
 | `shared-carousels.requests.id.external` | `GET /api/shared-carousels/requests/{id}/external` | any | read |
 | `shared-carousels.requests.id.reject` | `POST /api/shared-carousels/requests/{id}/reject` | human | write |
 | `shared-carousels.requests.id.review` | `POST /api/shared-carousels/requests/{id}/review` | any | read |
+| `study.carousel-make` | `GET /api/study/carousel-make` | any | read |
+| `study.carousel-make.cancel` | `POST /api/study/carousel-make/cancel` | any | write |
+| `study.carousel-make.preview` | `POST /api/study/carousel-make/preview` | any | write |
+| `study.carousel-make.register` | `POST /api/study/carousel-make/register` | any | write |
+| `study.carousel-make.run` | `POST /api/study/carousel-make/run` | any | write |
 | `study.outputs` | `GET /api/study/outputs` | any | read |
 | `study.outputs.create` | `POST /api/study/outputs/create` | any | write |
 | `study.outputs.export` | `POST /api/study/outputs/export` | any | write |
@@ -407,7 +412,7 @@
 | `study.share.save` | `POST /api/study/share/save` | human | write · undo `study.share.undo` |
 | `study.share.undo` | `POST /api/study/share/undo` | human | write |
 
-### system (76)
+### system (71)
 
 | name | route | who | kind |
 |---|---|---|---|
@@ -456,11 +461,6 @@
 | `source-transcript.capabilities` | `GET /api/source-transcript/capabilities` | any | read |
 | `source-transcript.terms.preview` | `POST /api/source-transcript/terms/preview` | any | read |
 | `source-transcript.terms.propose` | `POST /api/source-transcript/terms/propose` | any | write |
-| `study.carousel-make` | `GET /api/study/carousel-make` | any | read |
-| `study.carousel-make.cancel` | `POST /api/study/carousel-make/cancel` | any | write |
-| `study.carousel-make.preview` | `POST /api/study/carousel-make/preview` | any | write |
-| `study.carousel-make.register` | `POST /api/study/carousel-make/register` | any | write |
-| `study.carousel-make.run` | `POST /api/study/carousel-make/run` | any | write |
 | `study.language.accept` | `POST /api/study/language/accept` | human | write |
 | `study.language.capabilities` | `GET /api/study/language/capabilities` | any | read |
 | `study.language.edition-review` | `GET /api/study/language/edition-review` | any | read |
