@@ -1,6 +1,6 @@
-Tests: 67 passed, 0 failed, 0 skipped, of 67 (commit 3fa7121, 2026-11-06T04:08:10.470761+00:00).
+Tests: 43 passed, 0 failed, 0 skipped, of 43 (commit 818d4ba, 2026-11-06T04:42:12.766875+00:00).
 
-Installed release: commit ad40b12, built 2026-11-06T03:43:30.288Z, by agent:codex, 766 files. The tests above ran on a different commit (3fa7121) than the one installed.
+Installed release: commit ad40b12, built 2026-11-06T03:43:30.288Z, by agent:codex, 766 files. The tests above ran on a different commit (818d4ba) than the one installed.
 
 Installed test evidence: different commits; the measured run does not verify the installed release.
 
@@ -27,6 +27,8 @@ These describe available source paths, not proof for whichever revision is insta
 - **Release**: the installed app is a recorded commit (`RELEASE.json`), built only by `scripts/release.mjs`, with the previous build kept for rollback.
 
 ## Current delivery checkpoint
+
+- **Reliability integrated**: candidate `818d4bae025c966e38f2d3f881da3a3c004bbe31` retains both tabs’ unsaved writing, ordered change catch-up and explicit interrupted-intake recovery. Combined pre-menu-repair source `491d288` passed 296 focused tests; the final bounded menu repair passed 43 affected tests and the full native recovery matrix with six forced live repaints. Native Simmer desktop/phone light/dark and package checks pass. Exactly-once restart activity is proven for the registered receipt/projection families, not every mutation. Proof is in the 6 November execution pack. This candidate is not installed or human-accepted; W4 context/decision work starts next.
 
 - **6 November baseline**: source `3fa7121a0b10b1c6016be2d75fb9ee0453ebd7c6`; focused baseline only (67 tests), not a full-suite claim. Installed metadata and running CLI report `ad40b129e722056047864c5b413e45f60e909f16` (`v2026.11.06-pr214`); tracked trees match. PR213 lease qualification and PR214 saved-layout exports are preserved. This comparison is not new live-byte or human acceptance proof. W1–W8 ownership and next gates are in TODO.
 
