@@ -50,3 +50,9 @@ These describe available source paths, not proof for whichever revision is insta
 - [PRODUCT](../product/PRODUCT.md): intent, then the dated decision log.
 - [CAPABILITIES](../CAPABILITIES.md): generated list of commands and tools. [TODO](../../TODO.md): open work.
 - [Status log, October 2026](../history/status-log-2026-10.md): the old running log of candidates and checkpoints, frozen.
+
+## Final combined Write release candidate — 6 November
+
+PR216 now contains the verified Write fixes, qualified layout/Back changes and one bounded renderer cleanup repair. It replaces the planned intermediate PR217 install plus chained successor with one exact-revision release. The synthetic native Article → Enter/Shift+Enter → save/reload → exact Undo → independent Carousel journey remains qualified on d1d711c; generation, editor and correspondence source is unchanged. Application differences are the 13 qualified UI/navigation files and the separately qualified renderer process file. The renderer proof has 16 passing checks, including a real 13-PNG export with matching hashes and preserved owner/source/sibling state.
+
+Installation remains pending final combined-head CI and the durable publisher. The installed Material and Back checks must pass on that same final head before the completion hook opens the app. The previous failed release receipts remain terminal; no CI or publication gate is bypassed.
