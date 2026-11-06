@@ -1,5 +1,11 @@
 # 8 — Media
 
+## 6 November — content-first browsing repair
+
+S08, C03/C04/C05/C06. Preserve the adopted Graphite controls. Put actual photographs near the top, with one search/sort/filter/view toolbar and readable piece context. Keep file management on an ordinary File actions screen; do not repeat folders, views and unavailable filters across stacked toolbar rows. Titles and thumbnails open the exact original-linked item. Selection remains separate from placement, and Back retains search and selection. Keep usage coverage truthful and existing upload, folder, saved Undo and exact placement owners intact.
+
+Finish criterion: focused Media/browser/navigation checks plus actual synthetic native screens at 390, 900, 1000, 1100 and 1440 pixels in both themes, enlarged text, a readable piece selector, exact thumbnail opening and unchanged manuscript bytes. These checks establish the bounded candidate; installation and human visual acceptance remain separate.
+
 ## Current Combined presentation — adopted 30 October
 
 S08, C03/C04/C05/C06. Media remains on the rail and opens as a contextual sheet over the selected piece. Keep albums, folders, upload, membership, usage and source identity reachable through existing owners. Sheet dismissal with Esc preserves the underlying writing line and unsaved text. Photo selection, placement and crop remain separate explicit actions; no photo is selected merely because it appears in a drawing or album.
