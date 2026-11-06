@@ -32,9 +32,10 @@
    if(key==='home'){const owner=document.querySelector('.workflowNavigation [data-tr-home]');if(!owner||owner.disabled)throw Error('Home is not connected.');window.combinedSubjects?.close?.();owner.click();}
    else if(key==='subjects'){if(typeof window.combinedSubjects?.open!=='function')throw Error('Subjects is not connected.');await window.combinedSubjects.open();}
    else {
-    if(window.combinedSubjects?.currentSubject?.()){if(typeof window.combinedSubjects.openStage!=='function')throw Error('The visible subject board cannot open its section.');return await window.combinedSubjects.openStage(item[2]);}
+    if(window.combinedSubjects?.currentSubject?.()){if(typeof window.combinedSubjects.openStage!=='function')throw Error('The visible subject board cannot open its section.');const result=await window.combinedSubjects.openStage(item[2]);if(result!==false&&key==='research'&&typeof window.c3Research?.openLearning==='function')await window.c3Research.openLearning({parentStudyId:current().id});return result;}
     if(home())await window.projectLibrary.close();
     if(home())throw Error('Save or resolve the current changes before leaving.');
+    if(key==='research'&&typeof window.c3Research?.openLearning==='function'){await window.c3Research.openLearning({parentStudyId:current().id});return true;}
     const owner=original(item[2]);if(!owner||owner.disabled)throw Error(item[1]+' is not available for this piece.');
     if(key==='check'){if(typeof window.c3WorkbenchFrame?.openTool==='function')await window.c3WorkbenchFrame.openTool('check');else if(typeof window.workspaceNavigation?.changeMode==='function')await window.workspaceNavigation.changeMode('check');else throw Error('The selected piece checking connection is unavailable.');return true;}
     if(key==='write'){if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected piece writing connection is unavailable.');await window.workspaceNavigation.changeMode('write');return true;}
