@@ -5,7 +5,7 @@ import {captureArticleRules} from './article-make.mjs';
 import {validateNativeSourcedResponse} from './native-sourced-proposal.mjs';
 import {createArtifactExecution,outputOnlyPrompt,executionFailureDetails} from './artifact-execution.mjs';
 import {currentActor,parseActor,withActor} from './actor.mjs';
-import {atomicWrite,digest,ensurePrivateDirectory,readJson,regular} from './files.mjs';
+import {atomicWrite,digest,ensurePrivateDirectory,readJson,regular,resolveInside} from './files.mjs';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const HASH=/^[a-f0-9]{64}$/;
 const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
@@ -66,21 +66,24 @@ export function createStudyAIExecution({dataDir,service,execution=createArtifact
  const view=record=>({bindingId:record.bindingId,parentStudyId:record.parentStudyId,requestId:record.requestId,operationId:record.operationId,state:record.state,...(record.purpose?{purpose:record.purpose}:{}),contextHash:record.contextHash,createdBy:record.createdBy,startedAt:record.startedAt,...(record.finishedAt?{finishedAt:record.finishedAt}:{}),modelExecuted:record.modelExecuted,...(record.generatedBy?{generatedBy:record.generatedBy}:{}),...(record.message?{message:record.message}:{}),...(record.errorCode?{errorCode:record.errorCode}:{}),...(record.execution?{execution:structuredClone(record.execution)}:{})});
  const scope=record=>({bindingId:record.bindingId,parentStudyId:record.parentStudyId,requestId:record.requestId});
  async function context(record){const captured=await service.call('context',scope(record));if(!object(captured)||!nativeExecutionPurpose(captured)||captured.binding?.id!==record.bindingId||captured.binding?.parentStudyId!==record.parentStudyId)fail('Only an exact prepared supported editorial request can execute.');return captured;}
+ function retainedResult(input){const record=observe(load(input));if(!record.returnedArtifact)return null;const info=record.returnedArtifact,target=resolveInside(root,record.operationId+'/returned-proposal.json');if(!HASH.test(info.hash||'')||regular(target).size!==info.bytes||info.bytes>128*1024)fail('Retained result changed; preserve this attempt for inspection.');const raw=fs.readFileSync(target,'utf8');if(digest(raw)!==info.hash)fail('Retained result changed; preserve this attempt for inspection.');return {filename:'proposal.json',raw,hash:info.hash,validation:record.state==='complete'?'staged':'held',readOnly:true};}
  async function complete(id,result){return serial(async()=>{
   const record=load(id);if(record.state!=='running')return;
   record.execution={...record.execution,...(result.model?{model:result.model}:{}),...(result.provider?{provider:result.provider}:{}),...(result.usage?{usage:result.usage}:{})};
+  let phase='response';
   try{
    const artifacts=result?.response?.artifacts;if(!object(result?.response)||Object.keys(result.response).join(',')!=='artifacts'||!object(artifacts)||Object.keys(artifacts).join(',')!=='proposal.json'||typeof artifacts['proposal.json']!=='string'||Buffer.byteLength(artifacts['proposal.json'])>128*1024)fail('Invalid bounded proposal artifact.');
-   const raw=artifacts['proposal.json'];if(!raw.isWellFormed()||raw.includes('\0'))fail('Invalid proposal text.');const candidate=JSON.parse(raw);
+   const raw=artifacts['proposal.json'];if(!raw.isWellFormed()||raw.includes('\0'))fail('Invalid proposal text.');const target=path.join(ensurePrivateDirectory(root,record.operationId),'returned-proposal.json');atomicWrite(target,raw,{exclusive:true});record.returnedArtifact={hash:digest(raw),bytes:Buffer.byteLength(raw)};const candidate=JSON.parse(raw);
+   phase='context';
    if(record.rulesHash&&digest(stable(editorialRules()))!==record.rulesHash)fail('Maintained editorial rules changed.');
    const current=await context(record);if(digest(stable(current))!==record.contextHash)fail('Prepared context changed.');
-   const payload=await validateResponse(candidate,current);if(!object(payload)||Buffer.byteLength(stable(payload))>256*1024||!exact(payload,({'sourced-paragraph':['sourcedEvidence','sourcedParagraph'],'opening-options':['openingOptions'],'article-continuation':['continuationParagraphs'],'article-draft':['draftParagraphs'],'scoped-revision':['replacements']})[nativeExecutionPurpose(current)]))fail('Invalid validated sourced payload.');
+   phase='response';const payload=await validateResponse(candidate,current);if(!object(payload)||Buffer.byteLength(stable(payload))>256*1024||!exact(payload,({'sourced-paragraph':['sourcedEvidence','sourcedParagraph'],'opening-options':['openingOptions'],'article-continuation':['continuationParagraphs'],'article-draft':['draftParagraphs'],'scoped-revision':['replacements']})[nativeExecutionPurpose(current)]))fail('Invalid validated sourced payload.');
    // Recheck immediately before the maintained propose call; that owner enforces
    // its own current revisions, protections and immutable request capture.
-   if(digest(stable(await context(record)))!==record.contextHash)fail('Prepared context changed.');
+   phase='context';if(digest(stable(await context(record)))!==record.contextHash)fail('Prepared context changed.');
    await withActor({actor:'agent:codex',client:'http'},()=>service.call('propose',{...scope(record),...structuredClone(payload)}));
    record.state='complete';record.modelExecuted=true;record.generatedBy='agent:codex';record.proposalHash=digest(stable(payload));record.message='Proposal staged for review.';
-  }catch{record.state='failed';record.modelExecuted=true;record.errorCode='invalid-response';record.message='The response could not be validated against the prepared sources. Prepare a fresh request; existing words are unchanged.';}
+  }catch{record.state='failed';record.modelExecuted=true;record.errorCode=phase==='context'?'stale-context':'invalid-response';record.message=phase==='context'?'The captured writing or guidance changed. The returned result is retained for reading only; existing words are unchanged.':'The response could not be validated against the prepared request. Existing words are unchanged.';}
   record.finishedAt=new Date().toISOString();persist(record);
  });}
  async function failed(id,error){return serial(()=>{const record=load(id);if(record.state!=='running')return;const detail=executionFailureDetails(error);record.state=detail.code==='interrupted'?'interrupted':'failed';record.errorCode=detail.code;record.modelExecuted=null;record.finishedAt=new Date().toISOString();record.message=detail.message;record.execution={...record.execution,...(error?.model?{model:error.model}:{}),...(error?.provider?{provider:error.provider}:{}),...(error?.usage?{usage:error.usage}:{})};persist(record);});}
@@ -103,5 +106,5 @@ export function createStudyAIExecution({dataDir,service,execution=createArtifact
   const items=[];for(const name of fs.readdirSync(root).filter(name=>UUID.test(name.slice(0,-5))&&name.endsWith('.json'))){const saved=readJson(path.join(root,name),null);if(saved?.bindingId!==input.bindingId||saved.parentStudyId!==input.parentStudyId)continue;items.push(view(observe(load({...input,operationId:name.slice(0,-5)}))));}
   if(new Set(items.map(item=>item.requestId)).size!==items.length)fail('A prepared request has contradictory execution attempts. Preserve them for review.');return {items};
  }
- return {cancel:input=>serial(()=>cancel(structuredClone(input))),list:input=>serial(()=>list(structuredClone(input))),run:input=>serial(()=>run(structuredClone(input))),status:input=>serial(()=>view(observe(load(input)))),wait:operationId=>{if(!UUID.test(operationId||''))fail('Exact operation UUID required.',400);return execution.wait(operationId);},capabilities:()=>execution.capabilities()};
+ return {retainedResult:input=>serial(()=>retainedResult(structuredClone(input))),cancel:input=>serial(()=>cancel(structuredClone(input))),list:input=>serial(()=>list(structuredClone(input))),run:input=>serial(()=>run(structuredClone(input))),status:input=>serial(()=>view(observe(load(input)))),wait:operationId=>{if(!UUID.test(operationId||''))fail('Exact operation UUID required.',400);return execution.wait(operationId);},capabilities:()=>execution.capabilities()};
 }
