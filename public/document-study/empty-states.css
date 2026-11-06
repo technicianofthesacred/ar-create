@@ -71,6 +71,4 @@ body.c3-tabs #app .material-surface>.c3-empty{flex:1 1 100%}
 #project-library [data-c3-empty-hidden]{display:none!important}
 #c3-read-insp .ci-empty,.ci-panel .ci-empty{border:1px dashed var(--c3-line2,var(--line));border-radius:10px;padding:14px;color:var(--c3-ink2,var(--dim))!important;background:none}
 
-/* Every tool the empty card hides stays one quiet click away. */
-#app .c3-empty .ce-tools{margin-top:10px;padding:0;min-height:32px;border:0!important;background:none!important;color:var(--dim);font:500 13px/1.3 var(--ar-ui);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-#app .c3-empty .ce-tools:hover{color:var(--ink)}
+/* Secondary section tools share the existing button family and action row. */
