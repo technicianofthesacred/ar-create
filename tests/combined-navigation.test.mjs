@@ -45,3 +45,9 @@ for(const refused of [false,true])test('leaving Research through Write respects 
  assert.equal(f.d.querySelector('.combined-rail [aria-current="page"]').dataset.combinedNav,refused?'research':'write');
  }finally{f.close();}
 });
+
+test('Research to its already mounted Write editor does not refocus or scroll it through a second mode transition',async()=>{
+ const f=boot(5);try{let open=true;const editor=f.d.createElement('div');editor.id='manuscript';editor.textContent='Retained unsaved words.';f.d.body.append(editor);f.w.studyDraft={viewMode:()=> 'edit'};f.w.c3Research={isOpen:()=>open,hide(){f.calls.push('restore-research');open=false;}};
+ assert.equal(await f.w.combinedNavigation.go('write'),true);assert.deepEqual(f.calls,['restore-research']);assert.strictEqual(f.d.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Retained unsaved words.');
+ }finally{f.close();}
+});

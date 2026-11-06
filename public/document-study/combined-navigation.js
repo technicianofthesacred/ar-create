@@ -29,7 +29,9 @@
   closePhone();
   busy=true;status('');decorate();
   try{
-   if(key!=='research'&&window.c3Research?.isOpen?.()&&window.c3Research.hide()===false)return false;
+   const researchOpen=!!window.c3Research?.isOpen?.();
+   if(key!=='research'&&researchOpen&&window.c3Research.hide()===false)return false;
+   if(key==='write'&&researchOpen&&stage()===5&&document.getElementById('manuscript')&&window.studyDraft?.viewMode?.()==='edit')return true;
    if(key==='home'){const owner=document.querySelector('.workflowNavigation [data-tr-home]');if(!owner||owner.disabled)throw Error('Home is not connected.');window.combinedSubjects?.close?.();owner.click();}
    else if(key==='subjects'){if(typeof window.combinedSubjects?.open!=='function')throw Error('Subjects is not connected.');await window.combinedSubjects.open();}
    else {
