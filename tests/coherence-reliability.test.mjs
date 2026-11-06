@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {syntheticHome} from '../scripts/demo.mjs';
+import {createServer} from '../runtime/server.mjs';
+import {withActor} from '../runtime/services/actor.mjs';
+import {recoveryOwners} from './helpers/simmer-recovery-owners.mjs';
+
+test('real interrupted Simmer intake projects partial and committed activity once across HTTP retry and restart', async t => {
+  const home = syntheticHome(), config = JSON.parse(fs.readFileSync(home.config));
+  const input = {subject:'coherence-kettle',title:'Invented kettle',operationId:randomUUID(),words:[{text:'Invented exact note: “Keep the crack.”',said:'spoken'}]};
+  let server, base, failJournal = false;
+  const stop = async () => { if (server) { await new Promise(resolve => server.close(resolve)); server = null; } };
+  const start = async () => {
+    server = await createServer({...config,publicDir:path.resolve('public'),researchEnabled:false,journalBeforeAppend:line=>{
+      if (failJournal && line.operationId === input.operationId && line.status === 'committed') throw Error('Injected activity disk failure');
+    }});
+    await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
+    base = 'http://127.0.0.1:'+server.address().port;
+  };
+  t.after(async () => { await stop(); fs.rmSync(home.dir,{recursive:true,force:true}); });
+  const owners = await recoveryOwners(config, key => { if (key === 'membership') throw Error('Lost membership acknowledgement'); });
+  await assert.rejects(withActor({actor:'agent:codex',client:'cli'},()=>owners.chat.intake(input)), error => error.receipt?.status === 'partial');
+  await start();
+  const get = async route => { const response = await fetch(base+route); assert.equal(response.status,200); return response.json(); };
+  const history = async () => (await get('/api/journal?kind=project&id='+input.subject)).lines.filter(line=>line.operationId===input.operationId);
+  assert.deepEqual((await history()).map(line=>line.status),['partial'],'startup finds actual W3 owner transition');
+  const boardBefore = await get('/api/simmer/board?subject='+input.subject);
+  assert.equal(boardBefore.intakeOperations[0].steps.membership.status,'saved');
+  assert.equal(boardBefore.groups.flatMap(group=>group.blocks).length,0);
+  const post = () => fetch(base+'/api/simmer/intake',{method:'POST',headers:{'content-type':'application/json','x-ar-actor':'agent:codex','x-ar-client':'cli'},body:JSON.stringify(input)});
+  failJournal = true;
+  const response = await post(); assert.equal(response.status,200);
+  const saved = await response.json(); assert.equal(saved.operation.status,'complete');
+  await stop(); failJournal = false; await start();
+  const firstHistory = await history();
+  assert.deepEqual(firstHistory.map(line=>line.status),['committed','partial']);
+  assert.equal(new Set(firstHistory.map(line=>line.activityId)).size,2);
+  assert.ok(!JSON.stringify(firstHistory).includes(input.words[0].text),'activity contains metadata, not quoted private words');
+  const replay = await post(); assert.equal(replay.status,200); assert.equal((await replay.json()).replayed,true);
+  assert.deepEqual(await history(),firstHistory,'generic HTTP response and owner projection do not duplicate activity');
+  const board = await get('/api/simmer/board?subject='+input.subject), blocks = board.groups.flatMap(group=>group.blocks);
+  assert.equal(blocks.length,1); assert.equal(blocks[0].text,input.words[0].text);
+  const material = await get('/api/simmer/material?subject='+input.subject);
+  assert.equal(material.collection.sourceIds.length,1);
+  assert.equal(material.operations[0].status,'complete');
+  assert.deepEqual((await get('/api/simmer/board?subject=unrelated-coherence')).groups,[]);
+});
