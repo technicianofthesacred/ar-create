@@ -163,7 +163,7 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
       return assets;
     });
   }
-  const proof = { async read(input) {
+  function sourceProof(input) {
     const key = stable({ rootBindingId: input.rootBindingId, parentStudyId: input.parentStudyId }), s = scopes.get(key);
     if (!s || !UUID.test(input.outputId || "")) fail("Resolve this exact trusted root scope before proof reads.");
     validateScope(s);
@@ -178,10 +178,26 @@ function createNativeOutputFactory({ dataDir, store, native, originals, library,
       if (!(original.missing || []).some((m) => m.role === wanted.role && m.path === wanted.sourcePath)) fail("Captured source is not owned by this original part; unsupported inheritance held.");
       sources.push({ ...wanted, hash: null, missing: true });
     }
-    const index = read("library-index.json");
-    const assets = await libraryAssets(index);
-    return { sources: sources.sort((a, b) => a.id.localeCompare(b.id)), photos: [], assets: assets.sort((a, b) => a.id.localeCompare(b.id)), decisionsHash: decisionProof(s, input.outputId) };
-  } };
+    return { scope: s, sources: sources.sort((a, b) => a.id.localeCompare(b.id)) };
+  }
+  const proof = {
+    // Resolve through the same source owner as read(), without asynchronous
+    // Library work or owner reentry under the publication lease.
+    captureSourceReadGuard(input, expectedSources) {
+      const selector = structuredClone(input), expected = structuredClone(expectedSources);
+      const validate = () => {
+        if (!same(sourceProof(selector).sources, expected)) fail("Source dependency changed before registration.");
+      };
+      validate();
+      return { validate };
+    },
+    async read(input) {
+      const { scope: s, sources } = sourceProof(input);
+      const index = read("library-index.json");
+      const assets = await libraryAssets(index);
+      return { sources, photos: [], assets: assets.sort((a, b) => a.id.localeCompare(b.id)), decisionsHash: decisionProof(s, input.outputId) };
+    }
+  };
   return { owner: createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scope, proof, retainedSource, browserOrigins, validateStandInReview }), scope, proof };
 }
 export {

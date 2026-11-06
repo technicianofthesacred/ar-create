@@ -16,7 +16,7 @@ const selectorKeys=['rootBindingId','parentStudyId','requestId'];
 function shape(input,keys){if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!==keys.slice().sort().join(','))fail('Use the exact native Carousel request fields.',400);if(!uuid.test(input.rootBindingId)||typeof input.parentStudyId!=='string'||!input.parentStudyId||input.parentStudyId.length>240)fail('Exact root and parent required.',400);}
 function actor(){const a=currentActor();if(!a||!['human:adrian',...AGENT_ACTORS].includes(a.actor))fail('Native Carousel preparation requires explicit attribution.',403);return a;}
 export function createNativeCarouselMake({dataDir,native,outputs,scope,proof,guidance,humanDirection,assistanceDirection,library,execution,terminal,publicDir,skillRoot}){
- if(!native?.read||!outputs?.createGeneratedCarousel||!scope?.resolve||!proof?.read||!guidance?.get||!humanDirection?.context||!execution)throw Error('Supply the maintained native, output, context and execution owners.');
+ if(!native?.read||!outputs?.createGeneratedCarousel||!scope?.resolve||!proof?.read||!proof?.captureSourceReadGuard||!guidance?.get||!humanDirection?.context||!execution)throw Error('Supply the maintained native, output, context and execution owners.');
  // Caller UUIDs belong to this adapter, not the shared executor's other owners.
  const executionKey=id=>'native-carousel:'+id;
  const scopedExecution={capabilities:()=>execution.capabilities(),launch:(id,...args)=>execution.launch(executionKey(id),...args),observe(record,persist){const scoped={...record,id:executionKey(record.id)};execution.observe(scoped,value=>{const restored={...value,id:record.id};Object.assign(record,restored);persist(restored);});},cancel:id=>execution.cancel(executionKey(id))};
@@ -86,7 +86,8 @@ export function createNativeCarouselMake({dataDir,native,outputs,scope,proof,gui
   const directionGuard=record.resources.assistanceDirection?await assistanceDirection.captureWriteGuard(record.resources.assistanceDirection):await humanDirection.captureReadGuard({references:record.resources.scopeReferences.map(r=>({input:{target:r.target.selector},expected:{scope:r.target.scope,revision:r.target.revision,hash:r.target.hash,metadataHash:r.target.metadataHash??null,referencesHash:digest(stable(r.references))}}))});
   await validate(record);
   const finalCheck=async ({snapshot})=>{if(!same(snapshot.expected,record.input.expectedNative)||digest(snapshot.raw)!==record.rawHash)fail('Native Article changed before registration.');if(!same(await acceptedGuidance(),record.resources.guidance)||!same(await proof.read({...group(record.input),outputId:record.input.sourceOutputId}),record.resources.ownerProof))fail('Captured guidance or source proof changed before registration.');directionGuard.validate();const file=path.join(directory(input.requestId),'carousel-make',input.requestId,'result.md');regular(file);if(digest(fs.readFileSync(file))!==artifact.artifactHash)fail('Finalized artifact changed before native registration.');};
-  finalCheck.beforeIntent=()=>{directionGuard.validate();artifactGuard();};
+  const sourceGuard=proof.captureSourceReadGuard({...group(record.input),outputId:record.input.sourceOutputId},record.resources.ownerProof.sources);
+  finalCheck.beforeIntent=()=>{sourceGuard.validate();directionGuard.validate();artifactGuard();};
   const saved=await outputs.createGeneratedCarousel(ownerInput,artifact,finalCheck);
   return publicRecord(record,result,saved.view);
  }

@@ -70,6 +70,15 @@ test('interrupted running attempt never automatically resends or registers',asyn
 test('lost transaction reply recovers one registered output despite later source changes',async t=>{
  let armed=false;const f=await fixture(t,{publicationFault:phase=>{if(armed&&phase==='after-file:0'){armed=false;throw Error('Invented transaction interruption');}}}),{service}=await prepared(f);armed=true;await assert.rejects(agent(()=>service.register(f.selector)),/Invented transaction interruption/);await f.store.close();Object.assign(f.store,await createStore({dataDir:f.dataDir,sharedArticles:true}));f.setVoice('Changed after committed intent.');const recovered=await agent(()=>f.make().register(f.selector));assert.equal(recovered.status,'registered');assert.equal((await f.factory.owner.read(f.input)).outputs.length,2);assert.equal(f.count(),1);
 });
+test('source changes at transaction intent retain the artifact and refuse publication',async t=>{
+ let armed=false,changed=false;
+ const f=await fixture(t,{publicationFault:phase=>{if(armed&&phase==='before-intent'){armed=false;changed=true;fs.appendFileSync(f.source,'Concurrent invented source detail.');}}}),{service}=await prepared(f),before=fs.readFileSync(f.source,'utf8');
+ armed=true;
+ await assert.rejects(agent(()=>service.register(f.selector)),/Source dependency changed/);
+ assert.equal(changed,true);assert.equal(fs.readFileSync(f.source,'utf8'),before+'Concurrent invented source detail.');
+ assert.equal((await f.factory.owner.read(f.input)).outputs.length,1);
+ const held=await service.get(f.selector);assert.equal(held.status,'needs-attention');assert.equal(held.artifact.raw,raw);assert.equal(f.count(),1);
+});
 test('Direction and finalized bundle races at transaction intent refuse publication',async t=>{
  for(const damage of ['direction','artifact']){
   const f=await fixture(t),direction=await f.options.humanDirection.read({scope:'project',parentStudyId:f.input.parentStudyId}),directionPath=direction.path||path.join(f.dataDir,'workspaces',direction.scope.projectId,'HUMAN-DIRECTION.md'),{service}=await prepared(f),save=f.store.saveOutputRecords.bind(f.store);let changed=false;
