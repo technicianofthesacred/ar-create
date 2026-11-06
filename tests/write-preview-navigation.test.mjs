@@ -64,3 +64,20 @@ for(const change of ['dirty','revision','binding','subject'])test(`native Arrang
  await assert.rejects(w.workspaceNavigation.changeMode('arrange'),/changed|resolve|Save/);assert.equal(p.viewedStage,5);assert.deepEqual(f.calls,[]);assert.equal(f.editor.textContent,'Unsent exact words');
  }finally{f.close();}
 });
+
+function admittedNativeFixture(){
+ const f=boot({initialStage:9}),{w,p}=f;let binding={id:'b',parentStudyId:'p',canonicalOutputId:'output-one'},selected={projectId:'p',rootBindingId:'b',output:{id:'output-one',kind:'article'},owner:{kind:'native',bindingId:'b',parentStudyId:'p'}};
+ w.studyDraft.currentBinding=()=>({...binding});w.studyDraft.currentProof=()=>({bindingId:binding.id,parentStudyId:binding.parentStudyId,draftHash:'a'.repeat(64),dirty:false});w.studyOutputConnection.flush=async()=>{};w.studyOutputConnection.selection=()=>selected;
+ const handoffs=[];w.studyOutputConnection.openNavigationOutput=async(input,options)=>{handoffs.push(input);p.view='article';p.viewedStage=5;await (options?.nativeHandoff?options.nativeHandoff({bindingId:'b',parentStudyId:'p'}):w.workspaceNavigation.changeMode(input.mode,{bindingId:'b',parentStudyId:'p'}));return {kind:'native'};};
+ return {...f,handoffs,setBinding(value){binding=value;},setSelection(value){selected=value;}};
+}
+test('admitted native output completes its outer mode intent without manufacturing a competing request',async()=>{
+ const f=admittedNativeFixture();try{assert.equal(await f.w.workspaceNavigation.changeMode('write'),true);assert.equal(f.p.viewedStage,5);assert.equal(f.w.studyDraft.viewMode(),'edit');assert.equal(f.handoffs.length,1);assert.equal(f.d.querySelector('#wn-message')?.textContent||'','');assert.equal(f.editor.textContent,'Unsent exact words');}finally{f.close();}
+});
+test('a genuinely newer intent supersedes a delayed admitted native handoff',async()=>{
+ const f=admittedNativeFixture();let release,started;const waiting=new Promise(r=>release=r),atGuard=new Promise(r=>started=r),open=f.w.studyOutputConnection.openNavigationOutput;let calls=0;
+ try{f.w.studyOutputConnection.openNavigationOutput=async(...args)=>{if(++calls===1){started();await waiting;}return open(...args);};const older=f.w.workspaceNavigation.changeMode('write');await atGuard;await f.w.workspaceNavigation.changeMode('read');release();assert.equal(await older,false);assert.equal(f.w.studyDraft.viewMode(),'preview');assert.equal(f.p.viewedStage,5);}finally{release();f.close();}
+});
+for(const drift of ['project','owner','output'])test('admitted native continuation refuses actual '+drift+' drift',async()=>{
+ const f=admittedNativeFixture();try{f.w.studyOutputConnection.openNavigationOutput=async(input,options)=>{f.p.view='article';f.p.viewedStage=5;if(drift==='project')f.p.id='foreign';else if(drift==='owner')f.setBinding({id:'other',parentStudyId:'p',canonicalOutputId:'output-one'});else f.setSelection({projectId:'p',rootBindingId:'b',output:{id:'other',kind:'article'},owner:{kind:'native',bindingId:'b',parentStudyId:'p'}});await (options?.nativeHandoff?options.nativeHandoff({bindingId:'b',parentStudyId:'p'}):f.w.workspaceNavigation.changeMode(input.mode,{bindingId:'b',parentStudyId:'p'}));return {kind:'native'};};await assert.rejects(f.w.workspaceNavigation.changeMode('write'),/changed|match|owner|project|output/i);assert.deepEqual(f.calls,[]);}finally{f.close();}
+});
