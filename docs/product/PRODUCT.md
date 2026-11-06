@@ -616,3 +616,8 @@ The owner subsequently required proposed UI/UX improvements to be shown in a sep
 ### 6 November — consistent Graphite controls
 
 C05 across S01–S12. The owner selected option2 Graphite and explicitly asked for consistent buttons, dropdowns and boxes. The control family and compact geometry are recorded in HUMAN-EXPERIENCE; this supersedes earlier button-shape choices where they differ. Apply it consistently in the shared shell and section controls while preserving semantic states. Individual layout/workflow proposals still need their own acceptance; a preview is not installed proof.
+
+
+## Eight focused screens — adopted 6 November 2026
+
+C01–C06; S02/S03/S05/S06/S07/S09–S12 as scoped. After viewing all eight comparisons, Adrian said “yes do all”. This approves Source VR01v2, Research VR02v2, Write VR03v1, Article Check VR04v1, Share VR05v3, Outputs VR06v3, Carousel Check VR07v3 and Recovery VR08v2, with the adopted Graphite family also applied to the earlier four screens. It supersedes their earlier pending layout approval boundaries. Preserve original words, selected owners, editions, saved Undo, separate retained recovery records and source facts. Verify focused behavior and actual synthetic native desktop/phone light/dark journeys. Approval is implementation intent, not proof of working screens, installation, provider activation, sending or publication. Delivery ownership and remaining native gates are in TODO/CURRENT.
