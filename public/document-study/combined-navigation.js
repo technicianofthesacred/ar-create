@@ -19,7 +19,7 @@
   if(key==='make')for(const [selector,label]of [['[data-wbf-tool="understanding"]','Understanding'],['[data-wbf-thought]','Add a thought'],['[data-wbf-size="-1"]','Smaller text'],['[data-wbf-size="1"]','Larger text']]){const original=document.querySelector('.wbf-top-actions '+selector);if(!original)continue;const b=document.createElement('button');b.type='button';b.dataset.combinedTool=selector;b.textContent=label;b.disabled=original.disabled;panel.append(b);}
   document.body.append(panel);panel.querySelector('button')?.focus({preventScroll:true});
  }
- const stage=()=>{try{const p=current();return p.view==='article'?5:Number(p.viewedStage)||0;}catch{return 0;}};
+ const stage=()=>{try{if(window.c3Research?.isOpen?.())return 3;const p=current();return p.view==='article'?5:Number(p.viewedStage)||0;}catch{return 0;}};
  const home=()=>{const d=document.getElementById('project-library');return d?.open&&!d.dataset.plContext;};
  function status(message){let el=document.getElementById('combined-navigation-status');if(!el){el=document.createElement('p');el.id='combined-navigation-status';el.setAttribute('role','status');document.getElementById('c3-tabstrip')?.append(el);}el.textContent=message;el.hidden=!message;}
  function original(n){return [...document.querySelectorAll('.workflowNavigation .workflowStep')].find(b=>Number(b.querySelector('.stepNumber')?.textContent)===n);}

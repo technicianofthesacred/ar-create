@@ -34,3 +34,7 @@ test('Combined Check awaits one existing drawer action and reports one refusal w
 test('Research rail opens independent learning without opening or creating a manuscript',async()=>{
  const f=boot(1);try{f.w.c3Research={async openLearning(input){f.calls.push(['learning',input.parentStudyId]);}};assert.equal(await f.w.combinedNavigation.go('research'),true);assert.deepEqual(f.calls,[['learning','kept']]);assert.equal(f.p.viewedStage,1);}finally{f.close();}
 });
+
+test('visible Research owns the rail selection while its underlying writing stage stays intact',()=>{
+ const f=boot(5);try{let open=true;f.w.c3Research={isOpen:()=>open};f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="research"]').getAttribute('aria-current'),'page');assert.equal(f.p.viewedStage,5);open=false;f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="write"]').getAttribute('aria-current'),'page');}finally{f.close();}
+});
