@@ -39,8 +39,9 @@ export function inlineMap(raw:string){
   if((m=/^\[([^\]]+)\]\(([^)]+)\)/.exec(rest))){add(plain(m[1]),i,i+m[0].length,true);i+=m[0].length;continue;}
   if((m=/^(\*\*|__)([^*_]+)\1/.exec(rest))){scan(i+m[1].length,i+m[0].length-m[1].length);i+=m[0].length;continue;}
   // The map intentionally does not claim support for nesting, escaped delimiters,
-  // emphasis, rework, code, HTML, or multiline hard-break syntax.
-  if(/[\n\r*_`<>{}\\]/.test(raw[i])||rest.startsWith('%%')||rest.startsWith('==')||rest.startsWith('[['))safe=false;
+  // emphasis, rework, code or HTML. Plain paragraph line breaks are donor-verified below.
+  if(rest.startsWith('\r\n')){add('\n',i,i+2);i+=2;continue;}
+  if(/[\r*_`<>{}\\]/.test(raw[i])||rest.startsWith('%%')||rest.startsWith('==')||rest.startsWith('[['))safe=false;
   add(raw[i],i,i+1);i++;
  }};const frame=envelope(raw);scan(frame.bodyStart,frame.end);
  const leading=words.length-words.trimStart().length,trailing=words.trimEnd().length;
@@ -48,10 +49,10 @@ export function inlineMap(raw:string){
  reworks=reworks.map(r=>({...r,from:r.from-leading,to:r.to-leading}));words=words.trim();
  const body=raw.slice(frame.bodyStart,frame.end);
  const knownWholeRequest=reworks.length===1&&reworks[0].from===0&&reworks[0].to===words.length&&!notes;
- safe=safe&&!/^(?: {4}|\t)/m.test(raw)&&(editable(raw)||knownWholeRequest)&&words===plain(body)&&!/^\s*[#>]|^\s*[-+*]\s|^\s*\d+[.)]\s/.test(body);
+ safe=safe&&!/^(?: {4}|\t)/m.test(raw)&&(editable(raw)||knownWholeRequest)&&words===plain(body).replace(/\r\n/g,'\n')&&(!/[\r\n]/.test(body)||frame.kind==='paragraph')&&!/^\s*[#>]|^\s*[-+*]\s|^\s*\d+[.)]\s/.test(body);
  let doc:any=null;
  if(safe){
-  doc=markdownToDoc(readableBlock(raw.slice(frame.start, frame.end)),{links:true});const nodes=doc.content||[],node=nodes[0];
+  doc=markdownToDoc(readableBlock(raw.slice(frame.start, frame.end)).replace(/\r\n/g,'\n'),{links:true});const nodes=doc.content||[],node=nodes[0];
   // The actual donor decides whether the prefix represents the expected native kind.
   // Closing ATX hashes, indented code, nested quotes, and extra donor nodes are opaque.
   safe=nodes.length===1&&treeWords(doc)===words&&(frame.kind==='paragraph'?node?.type==='paragraph':frame.kind==='heading'?node?.type==='heading'&&node.attrs?.level===frame.level:node?.type==='blockquote'&&node.content?.length===1&&node.content[0].type==='paragraph');
@@ -73,7 +74,7 @@ export function capture(raw:string,sourceKey:string):Snapshot{
 export function projection(s:Snapshot){return s.blocks.map(b=>({id:b.id,origin:b.origin,blockHash:hash(b.raw),...inlineMap(b.raw)}));}
 type Edit={kind:'text';id:string;from:number;to:number;insert:string;seenBlockHash:string};
 type AssetPhotoOp={kind:'photoReplaceAsset'|'photoInsertAsset';id:string;seenBlockHash:string;rootId:string;sourceId:string;revision:string;sourceHash:string;description:string};
-type Op=AssetPhotoOp|Edit|{kind:'reviewedLanguageText';id:string;from:number;to:number;insert:string;seenBlockHash:string}|{kind:'photoAnnotation';id:string;seenBlockHash:string;annotation:{caption:string;credit:string}|null}|{kind:'articleCredits';credits:string[]|null}|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'standInReviewMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;decisionRole:'stand-in'}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
+type Op=AssetPhotoOp|Edit|{kind:'lineBreakText';id:string;from:number;to:number;insert:string;seenBlockHash:string}|{kind:'reviewedLanguageText';id:string;from:number;to:number;insert:string;seenBlockHash:string}|{kind:'photoAnnotation';id:string;seenBlockHash:string;annotation:{caption:string;credit:string}|null}|{kind:'articleCredits';credits:string[]|null}|{kind:'photoDescription';id:string;seenBlockHash:string;description:string}|{kind:'photoReplace';id:string;seenBlockHash:string;replacementId:string;seenReplacementHash:string}|{kind:'photoAspect';id:string;seenBlockHash:string;aspect:string}|{kind:'photoFocus';id:string;seenBlockHash:string;x:number;y:number}|{kind:'standInReviewMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;decisionRole:'stand-in'}|{kind:'approveMark';id:string;rawFrom:number;rawTo:number;seenBlockHash:string;seenMarkupHash:string;humanDecision:true}|{kind:'move';id:string;beforeId:string|null}|{kind:'split';id:string;at:number;newId:string}|{kind:'join';leftId:string;rightId:string}|{kind:'insert';id:string;beforeId:string|null;raw:string}|{kind:'delete';id:string}|{kind:'blockKind';id:string;blockKind:BlockKind;level?:number;seenBlockHash:string};
 /** Safe body boundaries only: no header, nested composition, ending or protected prose. */
 export function photoInsertionAnchors(s:Snapshot){
  const raw=render(s);let range:any;try{const body=draftBody(raw,r=>{range=r;});parseDraft(body.body);}catch{return [];}if(!range)return [];
@@ -206,21 +207,23 @@ export function apply(s:Snapshot,currentRaw:string,ops:Op[],trusted?:{reviewedLa
       const beforeParts=documentParts(b.raw,false),afterParts=documentParts(changed,false);
       if(beforeParts.prefix!==afterParts.prefix||beforeParts.parts.length!==afterParts.parts.length||JSON.stringify([...beforeParts.separators])!==JSON.stringify([...afterParts.separators]))conflict('Approval cannot change native topology.');
       b.raw=changed;
-    }else if(op.kind==='text'){
+    }else if(op.kind==='text'||op.kind==='lineBreakText'){
    const b=get(op.id),m=inlineMap(b.raw);if(hash(b.raw)!==op.seenBlockHash)conflict('Block changed since native edit capture.');if(!m.safe)conflict('Unknown source syntax is read-only.');
-   if(op.from>op.to||/[\r\n\u0000]/.test(op.insert)||/[\[\]*_`<>=]|%%/.test(op.insert))conflict('Use explicit structure/format operations; text insert cannot invent syntax.');
+   if(op.kind==='lineBreakText'&&(m.blockKind!=='paragraph'||!/[\n]/.test(op.insert+m.words.slice(op.from,op.to))))conflict('Line-break edits require an exact ordinary paragraph line break.');
+   if(op.from>op.to||/[\r\u0000]/.test(op.insert)||op.kind==='text'&&/\n/.test(op.insert)||/[\[\]*_`<>=]|%%/.test(op.insert))conflict('Use explicit structure/format operations; text insert cannot invent syntax.');
    // A correction is not approval: allow a bounded ordinary-text edit inside
    // one exact plain ==span==, retaining both delimiters and every other lock.
    const offered=exactApprovalSpans(b.raw);
    const pendingRun=m.runs.find(r=>r.locked&&r.from<=op.from&&r.to>=op.to&&(op.from<op.to||op.from>r.from&&op.from<r.to)&&offered.some(span=>span.rawFrom===r.rawFrom&&span.rawTo===r.rawTo)&&b.raw.slice(r.rawFrom+2,r.rawTo-2)===m.words.slice(r.from,r.to)&&!/[\r\n\[\]*_`<>=\\]|%%/.test(b.raw.slice(r.rawFrom+2,r.rawTo-2)));
+   if(op.kind==='lineBreakText'&&pendingRun)conflict('Line breaks cannot change pending approval structure.');
    if(m.runs.some(r=>r.locked&&r!==pendingRun&&(r.from<op.to&&r.to>op.from||r.from===r.to&&op.from<r.from&&op.to>r.to)))conflict('Native edit touches protected source/term/pending/note bytes.');
    if(pendingRun)for(const position of [op.from,op.to])if(position>0&&position<m.words.length&&/[\uD800-\uDBFF]/.test(m.words[position-1])&&/[\uDC00-\uDFFF]/.test(m.words[position]))conflict('Native range divides a Unicode character.');
    if(op.insert===m.words.slice(op.from,op.to))continue;
    const completeRequest=m.reworks.find(r=>r.from===op.from&&r.to===op.to);
    const a=pendingRun?pendingRun.rawFrom+2+op.from-pendingRun.from:completeRequest?.rawFrom??byteBoundary(m,op.from),z=pendingRun?pendingRun.rawFrom+2+op.to-pendingRun.from:completeRequest?.rawTo??byteBoundary(m,op.to,'left');
    // Only a complete request replacement may traverse its synthetic slash boundaries.
-   if(!completeRequest&&z-a!==op.to-op.from)conflict('Native range crosses a formatting or request boundary; edit each text run or complete request separately.');
-   let changed=b.raw.slice(0,a)+op.insert+b.raw.slice(z);
+   if(!completeRequest&&b.raw.slice(a,z).replace(/\r\n/g,'\n')!==m.words.slice(op.from,op.to))conflict('Native range crosses a formatting or request boundary; edit each text run or complete request separately.');
+   let changed=b.raw.slice(0,a)+op.insert.replace(/\n/g,newline)+b.raw.slice(z);
    const mapped=inlineMap(changed);
    if(!mapped.safe||mapped.blockKind!==m.blockKind||mapped.level!==m.level)conflict('Edit would create unsupported or unbalanced source syntax or change block kind.');
    if(pendingRun&&exactApprovalSpans(changed).length!==offered.length)conflict('Pending wording correction must retain every review mark.');
@@ -283,7 +286,7 @@ export function undo(current:Snapshot,currentRaw:string,inverse:any){
  return {raw,snapshot:structuredClone(inverse.before),expectedOriginalHash:current.fileHash,nextOriginalHash:inverse.before.fileHash};
 }
 function validateOperation(op:any){
- const shapes:any={reviewedLanguageText:['kind','id','from','to','insert','seenBlockHash'],photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],standInReviewMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','decisionRole'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
+ const shapes:any={reviewedLanguageText:['kind','id','from','to','insert','seenBlockHash'],photoAnnotation:['kind','id','seenBlockHash','annotation'],articleCredits:['kind','credits'],photoDescription:['kind','id','seenBlockHash','description'],photoInsertAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplaceAsset:['kind','id','seenBlockHash','rootId','sourceId','revision','sourceHash','description'],photoReplace:['kind','id','seenBlockHash','replacementId','seenReplacementHash'],photoAspect:['kind','id','seenBlockHash','aspect'],photoFocus:['kind','id','seenBlockHash','x','y'],standInReviewMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','decisionRole'],approveMark:['kind','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash','humanDecision'],text:['kind','id','from','to','insert','seenBlockHash'],lineBreakText:['kind','id','from','to','insert','seenBlockHash'],move:['kind','id','beforeId'],split:['kind','id','at','newId'],join:['kind','leftId','rightId'],insert:['kind','id','beforeId','raw'],delete:['kind','id'],blockKind:['kind','id','blockKind','level','seenBlockHash']};
  if(!op||typeof op!=='object'||Array.isArray(op)||!Object.hasOwn(shapes,op.kind))conflict('Unknown document operation kind.');
  const keys=shapes[op.kind];if(Object.keys(op).some(k=>!keys.includes(k))||keys.filter((k:string)=>k!=='level').some((k:string)=>!Object.hasOwn(op,k)))conflict('Malformed document operation fields.');
  for(const key of ['id','leftId','rightId','newId','replacementId'])if(key in op&&(typeof op[key]!=='string'||!op[key]||op[key].length>256||!op[key].isWellFormed()||/[\u0000-\u001f]/.test(op[key])))conflict('Malformed stable native ID.');
