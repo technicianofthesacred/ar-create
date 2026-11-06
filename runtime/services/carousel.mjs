@@ -3,14 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { randomUUID } from "node:crypto";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import {renderCarouselProcess} from "./carousel-render-process.mjs";
 import IG from "../src/donors/mag/carousel/ig-templates.js";
 import { StateError } from "../store.mjs";
 import { ensurePrivateDirectory, atomicWrite, readJson, resolveInside, regular, digest } from "./files.mjs";
 import { outputOwnership } from "./output-ownership.mjs";
 import { fitCarouselTypography, validateCarouselTypography } from "../src/workspaces/carousel-typography.mjs";
-const run = promisify(execFile);
+
 function chrome() {
   const root = path.join(os.homedir(), "Library/Caches/ms-playwright");
   const dirs = (() => {
@@ -201,7 +200,7 @@ function createCarouselExports({ dataDir, store, library }) {
         for (let i = 0; i < output.slides.length; i++) {
           if (IG.T[output.slides[i].template].photos > output.slides[i].photos.slice(0, IG.T[output.slides[i].template].photos).filter((p) => p.src).length) throw new StateError(`Slide ${i + 1} needs a photograph. Choose one or use Words only.`, 422);
           const name = "slide-" + String(i + 1).padStart(2, "0") + ".png", file = path.join(work, name);
-          const { stdout } = await run(bin, ["--headless", "--user-data-dir=" + profile, "--disable-background-networking", "--disable-component-update", "--disable-extensions", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=1080,1350", "--virtual-time-budget=6000", "--dump-dom", "--screenshot=" + file, trusted?.renderUrl ? trusted.renderUrl(id, i) : origin + `/api/carousel/exports/${id}/render/${i}`], { timeout: 3e4, maxBuffer: 3 * 1024 * 1024 });
+          const { stdout } = await renderCarouselProcess(bin, ["--headless", "--user-data-dir=" + profile, "--disable-background-networking", "--disable-component-update", "--disable-extensions", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=1080,1350", "--virtual-time-budget=6000", "--dump-dom", "--screenshot=" + file, trusted?.renderUrl ? trusted.renderUrl(id, i) : origin + `/api/carousel/exports/${id}/render/${i}`], file);
           if (!stdout.includes('data-export-status="ready"')) throw new StateError(`Slide ${i + 1} ${stdout.includes('data-export-status="overflow"') ? "overflows its layout. Choose a roomier layout while keeping the reviewed words." : "could not load all its photographs or fonts."}`, 422);
           const bytes = fs.readFileSync(file);
           if (!bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) || bytes.readUInt32BE(16) !== 1080 || bytes.readUInt32BE(20) !== 1350) throw new Error("Chrome did not produce a 1080 \xD7 1350 PNG.");
