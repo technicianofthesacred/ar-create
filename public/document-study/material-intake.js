@@ -49,6 +49,7 @@
     const bits=[];if(added.length)bits.push('Added '+added.length+(added.length===1?' item':' items')+' to Library.');if(started)bits.push('Transcribing '+started+'.');if(waiting)bits.push('Transcription is not connected, so '+waiting+(waiting===1?' recording is':' recordings are')+' waiting.');view.message=[...bits,...problems].join(' ');
    }catch(error){view.message=error.message||'Nothing could be added. Try again.';}
    finally{view.busy=false;if(live()){paint();if(added.length)void reloadExtras();}}
+   return {added:added.length};
   }
   function dropFiles(event){const transfer=event.dataTransfer,files=[...transfer?.files||[]],text=transfer?.getData?.('text/uri-list')||'',urls=text.split(/\r?\n/).map(t=>t.trim()).filter(t=>t&&!t.startsWith('#')&&/^https?:\/\//i.test(t));return{files,urls};}
   const hasFiles=event=>[...event.dataTransfer?.types||[]].some(t=>t==='Files'||t==='text/uri-list');
@@ -57,7 +58,7 @@
   root.addEventListener('dragover',event=>{if(!view.open||!hasFiles(event))return;event.preventDefault();});
   root.addEventListener('dragleave',event=>{if(!view.open)return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)root.classList.remove('mi-drag');});
   root.addEventListener('drop',event=>{if(!view.open||!hasFiles(event))return;event.preventDefault();dragDepth=0;root.classList.remove('mi-drag');if(!human())return;const{files,urls}=dropFiles(event);void bringIn(files,urls);});
-  function addLink(){const text=String(view.link||'').trim();let url;try{url=new URL(text);}catch{}if(!url||!['http:','https:'].includes(url.protocol)){view.message='Paste a full web link starting with http.';paint();return;}view.link='';void bringIn([],[url.href]);}
+  async function addLink(){const submitted=view.link,text=String(submitted||'').trim();let url;try{url=new URL(text);}catch{}if(!url||!['http:','https:'].includes(url.protocol)){view.message='Paste a full web link starting with http.';paint();return;}const result=await bringIn([],[url.href]);if(result?.added&&view.link===submitted){view.link='';if(live())paint();}}
   function paintBringIn(bar){
    const input=d.createElement('input');input.type='file';input.multiple=true;input.hidden=true;input.setAttribute('data-mi-file','');input.onchange=()=>{const files=[...input.files];input.value='';void bringIn(files,[]);};
    const choose=button('Choose files','choose',()=>input.click());choose.disabled=view.busy||view.loading;

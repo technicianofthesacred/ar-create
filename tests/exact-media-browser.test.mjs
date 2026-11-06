@@ -75,3 +75,18 @@ test('Media files a publication photo into an album and removes membership while
  });
 
 test('history photo restore repeats freshness before changing list controls and refuses a changed owner',async()=>{const x=await setup();try{const api=x.w.workbenchFolderBrowser;x.d.querySelector('[data-wfb-preview="photo"]').click();await pause();const saved=api.captureNavigation();x.d.querySelector('[data-wfb-action="back"]').click();const q=x.d.querySelector('[data-wfb-search]');q.value='Unassigned';q.dispatchEvent(new x.w.Event('input',{bubbles:true}));x.setLive({scope,revision,ready:true,dirty:true});await assert.rejects(api.restoreNavigation(saved),/unsaved|dirty|Save|Resolve/i);assert.equal(api.captureNavigation().route.preview,null);assert.equal(api.captureNavigation().controls.query,'Unassigned');assert.ok(x.calls.every(c=>!c.options.method||c.options.method==='GET'));}finally{x.close();}});
+
+test('Media modes and exact row selection preserve focus without transferring it to a changed source',async()=>{
+ const x=await setup();try{
+  for(const action of ['filters','grid','list']){const control=x.d.querySelector('[data-wfb-action="'+action+'"]');control.focus();control.click();assert.equal(x.d.activeElement,x.d.querySelector('[data-wfb-action="'+action+'"]'));}
+  let checkbox=x.d.querySelector('[data-wfb-select=photo]');checkbox.focus();checkbox.click();assert.equal(x.d.activeElement,x.d.querySelector('[data-wfb-select=photo]'));assert.equal(x.d.activeElement.checked,true);
+  x.w.workbenchFolderBrowser.setMediaCatalog({...x.data,revision:H});assert.equal(x.d.activeElement,x.d.querySelector('[data-wfb-select=photo]'));
+  checkbox=x.d.activeElement;x.w.workbenchFolderBrowser.setMediaCatalog({...x.data,revision:H,sources:[{...row,ownerRef:null,placements:[],sourceRef:{...sourceRef,hash:revision}}]});assert.notEqual(x.d.activeElement,x.d.querySelector('[data-wfb-select=photo]'),'a reused id with different original bytes is not the focused source');assert.equal(checkbox.isConnected,false);
+ }finally{x.close();}
+});
+test('Media scope changes and delayed refreshes never reclaim focus from outside',async()=>{
+ const x=await setup();try{
+  const filters=x.d.querySelector('[data-wfb-action=filters]');filters.focus();x.w.workbenchFolderBrowser.setMediaCatalog({...x.data,scope:H});assert.equal(x.d.activeElement,x.d.body,'new scope is not the old focused toolbar');
+  const outside=x.d.querySelector('#original textarea');outside.focus();await x.w.workbenchFolderBrowser.refresh();assert.equal(x.d.activeElement,outside);assert.equal(x.opened.length,0);
+ }finally{x.close();}
+});

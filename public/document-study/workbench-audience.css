@@ -82,7 +82,7 @@ html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience:
 /* Audience has no legacy inspector. Use its real available width, then give
    the saved edition the primary column instead of squeezing two status cards. */
 html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience{
- margin:0 32px 32px!important;display:grid;grid-template-columns:minmax(0,1fr);gap:20px 24px;align-items:start;
+ margin:0 32px 32px!important;display:grid;grid-template-columns:minmax(0,1fr);gap:16px 24px;align-items:start;
 }
 #workspace.wb-audience{container:audience / inline-size}
 #workspace.wb-audience .oss-surface.wb-audience>.oss-heading{display:none}
@@ -111,3 +111,22 @@ html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience{
 }
 /* The caption is workspace text outside the printed slide's fixed palette. */
 #workspace.wb-audience [data-oss-reader] .phone>.cap2 :is(h3,p){color:var(--ink)}
+/* A phone sees the current hold/check before the full edition, without a second state. */
+.wb-audience-compact-readiness{display:none}
+@container audience (max-width:759px){
+ html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience{row-gap:12px}
+ #workspace.wb-audience .wb-audience-compact-readiness{display:flex;align-items:center;gap:8px;order:-1;min-width:0;font:400 var(--t-label)/1.5 var(--ar-ui);color:var(--ink)}
+ .wb-audience-compact-readiness span{flex:1;min-width:0}
+ .wb-audience-compact-readiness button{flex:none;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);min-height:44px;padding:6px 8px;font:600 13px/1.5 var(--ar-ui)}
+}
+html body.wbf-on #workspace.wb-audience #c3-surface-bar{margin:16px 32px 12px!important}
+/* The exact maintained edition selector already supplies current scope. */
+html body.wbf-on #workspace.wb-audience #c3-surface-bar>.sb-in,
+html body.wbf-on #workspace.wb-audience #c3-surface-bar>.direction-choice-context{display:none!important}
+@media(max-width:760px){
+ html body.wbf-on #workspace.wb-audience #c3-surface-bar{display:flex!important;flex-wrap:wrap;gap:8px!important;margin:12px 16px!important;padding-bottom:0!important}
+ html body.wbf-on #workspace.wb-audience #c3-surface-bar>.sb-left{flex:1 0 100%}
+ html body.wbf-on #workspace.wb-audience #c3-surface-bar>.sb-right{display:flex;align-items:center;flex-wrap:wrap;gap:6px;flex:1 1 100%;min-width:0}
+ html body.wbf-on #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools{flex:1 1 230px!important;gap:8px!important}
+ html body.wbf-on #workspace.wb-audience #c3-surface-bar .wb-audience-title-tools>.oss-output{flex:1 1 160px!important}
+}

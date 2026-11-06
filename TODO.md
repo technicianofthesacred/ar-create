@@ -76,3 +76,8 @@ Write proposal limit, 6 November (C04/C06, S05/S06): direct human Enter/Shift+En
 ### 6 November isolated interface refinement candidate
 
 C02/C04/C05/C06, S01–S12: candidate `codex/interface-complete-20261106` starts from main `9a514d8`. Library/Material, shared shell and section toolbar hierarchy are implemented in isolation; [verification and limits](docs/verification/interface-refinement-2026-11-06.md). Finish criterion: populated responsive light/dark screens, correct selection and exclusive Material transitions, preserved stage/identity/edit guards, then human review. Existing integrator retains activation ownership. This candidate has no installation authorization or installed-success claim.
+
+
+### 6 November detailed Impeccable follow-up
+
+C02/C04/C05/C06, S01–S12: isolated follow-up to PR218 covers actual keyboard focus/return, honest failed-versus-empty states, retained import URL, purposeful Piece tools groups, Direction comparison fit, early Audience readiness and measured spacing. Finish criterion: affected handler regressions, actual keyboard/normal-photo journey and same-state light/dark screen comparisons including intermediate widths; preserve exact owners/editor/templates and use existing integrator for any activation. Actual coverage and untested states must be recorded explicitly; do not call layout captures exhaustive workflow proof.

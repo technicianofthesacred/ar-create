@@ -635,3 +635,8 @@ Browser Back means the browser's real Back/Forward history. Internal navigation 
 ## 6 November — clear control hierarchy and responsive refinement
 
 C02/C04/C05/C06, S01–S12: direct feedback requires visibly different destinations, modes, actions and status; scoped compact toolbars; clear parent/child Library hierarchy; no reserved selection gutter in ordinary browsing; an exclusive normal-flow Material view; and full-height gold active-group labels with readable inverse text. Preserve Combined/Graphite, stage owners and all editorial guards. This records adopted intent; the isolated candidate and its verification do not establish human visual acceptance or installation. See [candidate evidence](../verification/interface-refinement-2026-11-06.md).
+
+
+## 6 November — detailed refinement and spacing acceptance
+
+C02/C04/C05/C06, S01–S12: the author requests several further detailed Impeccable passes and identifies spacing as a major issue. Inspect actual interactions, keyboard return, loading/error/empty distinctions and content at supported widths. Use deliberate separation between sections and tighter related controls; remove stacked empty chrome, repeated scope and clipped labels without reducing readable typography, hiding useful work or changing approved output geometry. Requirements, screenshots and passing checks are distinct from exhaustive workflow or human acceptance.

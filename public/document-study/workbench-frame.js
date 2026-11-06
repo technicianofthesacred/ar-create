@@ -8,7 +8,7 @@
  const ic=k=>`<svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[k]||paths.pieces}"/></svg>`;
  const railPaths={"1": "M5 4h4v16H5zM11 4h4v16h-4zM17 4l3 1v15l-3-1z", "2": "M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2", "3": "M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM16 16l4 4", "4": "M12 3v18M5 5h11l3 3-3 3H5zM9 15h-4", "5": "M4 20h4L19 9l-4-4L4 16zM14 6l4 4", "6": "M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z", "7": "M5 12l4 4L19 6", "8": "M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01", "9": "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z", "10": "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z", "11": "M4 12v7h16v-7M12 3v12M8 7l4-4 4 4", "12": "M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"};
  const stage=()=>{try{const p=current();return p.view==='article'?5:Number(p.viewedStage)||0}catch{return 0}};
- let tool='',mounted=null,homeMode='bench',returnFocus=null,restorations=[],benchReturn=null,decoratedStage=null,compareIntent=0,compareBusy=false;
+ let tool='',mounted=null,homeMode='bench',returnFocus=null,returnSelector=null,returnProject=null,restorations=[],benchReturn=null,decoratedStage=null,compareIntent=0,compareBusy=false;
  const ws=()=>document.querySelector('#app #workspace');
  const actualBench=()=>window.AR_CREATE_REVIEW_MODE?.actualWork===true;
  let benchCatalog=null,benchQuery='',benchLimit=30,benchEditionView='current',benchMessage='',benchActionBusy=false,benchThreadState='motion',benchThread='',ideaRev=null;const ideaCache=new Map();
@@ -207,7 +207,7 @@
   })();
   return{ready,cleanup(){if(disposed)return;disposed=true;abort.abort();root.remove();}};
  }
- function closeTool(){compareIntent++;stopSources(document.getElementById('wbf-drawer'));stopUnderstanding(document.getElementById('wbf-drawer'));restore();if(tool==='proposals')window.studyAIProposals?.closeForDrawer?.();tool='';delete document.body.dataset.wbfDrawerTool;const d=document.getElementById('wbf-drawer');d?.wbfEmptyObserver?.disconnect();d?.remove();document.body.classList.remove('wbf-drawer-open');returnFocus?.isConnected&&returnFocus.focus?.({preventScroll:true});}
+ function closeTool(){const open=!!tool,drawer=document.getElementById('wbf-drawer'),editing=document.activeElement?.closest?.('input,textarea,[contenteditable]'),keepEditor=editing&&!drawer?.contains(editing);compareIntent++;stopSources(document.getElementById('wbf-drawer'));stopUnderstanding(document.getElementById('wbf-drawer'));restore();if(tool==='proposals')window.studyAIProposals?.closeForDrawer?.();tool='';delete document.body.dataset.wbfDrawerTool;const d=document.getElementById('wbf-drawer');d?.wbfEmptyObserver?.disconnect();d?.remove();document.body.classList.remove('wbf-drawer-open');if(open&&!keepEditor){const target=returnFocus?.isConnected?returnFocus:returnProject===current()?.id&&returnSelector?document.querySelector(returnSelector):null;target?.focus?.({preventScroll:true});}returnFocus=null;returnSelector=null;returnProject=null;}
  function drawer(){
   if(!tool)return;
   let d=document.getElementById('wbf-drawer');if(!d){d=document.createElement('aside');d.id='wbf-drawer';d.setAttribute('aria-label','Tools beside the writing');d.innerHTML='<div class="dr-head"><h2></h2><button class="btn quiet" data-wbf-close aria-label="Close tools">'+ic('close')+'</button></div><div class="dr-tabs" role="tablist"></div><div class="dr-body"></div>';document.body.append(d);}
@@ -264,7 +264,7 @@
  }
  async function openTool(k){
   if(k==='recovery'){closeTool();return window.studyDraft?.openRecovery?.();}
-  returnFocus=document.activeElement;
+  returnFocus=document.activeElement;returnProject=current()?.id;const trigger=returnFocus?.closest?.('[data-wbf-thought],[data-wbf-tool],#wbf-pull,.cp-more');returnSelector=trigger?.hasAttribute('data-wbf-thought')?'#c3-tabstrip [data-wbf-thought]':trigger?.hasAttribute('data-wbf-tool')?'#c3-tabstrip [data-wbf-tool="'+trigger.dataset.wbfTool+'"]':trigger?.id==='wbf-pull'?'#wbf-pull':trigger?.classList.contains('cp-more')?'#combined-piece-frame .cp-more':null;
   if(k==='check'){
    if(typeof window.workspaceNavigation?.whenNavigationReady==='function')await window.workspaceNavigation.whenNavigationReady();
    const navigationOwner=window.workspaceNavigation?.navigationOwner?.(),navigationKey=value=>{if(!value)return null;if(value.kind==='magazine')return JSON.stringify([value.projectId,'magazine',value.owner.storyId,value.owner.pieceId,value.owner.path]);const selected=window.studyOutputConnection?.selection?.();if(value.outputId||value.owner?.outputId&&selected?.projectId===value.projectId&&selected.output?.id===value.owner.outputId)return JSON.stringify([value.projectId,'output',value.rootBindingId||selected?.rootBindingId,value.outputId||value.owner.outputId]);return JSON.stringify([value.projectId,'native',value.owner?.bindingId]);};const expectedNavigation=navigationKey(navigationOwner);
@@ -303,6 +303,7 @@
   const bar=w.querySelector('#c3-surface-bar'),menu=bar?.querySelector('.sb-menu');
   if(!bar)return;
   bar.dataset.wbfSectionActions='more';
+  bar.classList.toggle('wbf-register-tools',n===12);
   const more=bar.querySelector('.sb-morew>.sb-btn');if(more){const label=n===9?'Section tools':'More tools';more.setAttribute('aria-label',label);more.title=label;const text=more.querySelector('span'),visibleLabel=n===9?'Section tools':'More';if(text&&text.textContent!==visibleLabel)text.textContent=visibleLabel;}
   // Move the existing proxies, including disabled reasons, into the native menu.
   // Surface-bar owns repainting and dispatch: no second action or copied state.
