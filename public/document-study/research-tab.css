@@ -120,3 +120,6 @@ body.c3-research-open #c3-tabstrip [data-ht-research]{background:var(--paper);co
  body.c3-research-open #c3-tabstrip.wbf-top>.wbf-top-actions{display:flex!important;margin-left:auto!important}
  body.c3-research-open #c3-tabstrip.wbf-top>.ht-switch{display:block!important}
 }
+@layer research-learning-navigation {
+ @media(max-width:900px){body.c3-research-open #c3-tabstrip.wbf-top{height:44px!important;min-height:44px!important;max-height:44px!important;padding-block:0!important;align-items:center!important;box-sizing:border-box!important}}
+}

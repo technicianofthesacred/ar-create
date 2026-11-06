@@ -120,8 +120,8 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
   if(saved.range&&saved.editor.contains(saved.range.commonAncestorContainer)){saved.editor.focus({preventScroll:true});const selection=window.getSelection();selection.removeAllRanges();selection.addRange(saved.range);}else if(saved.focus?.isConnected)saved.focus.focus?.({preventScroll:true});
   for(const row of saved.scroll)if(row.node.isConnected){row.node.scrollTop=row.top;row.node.scrollLeft=row.left;}return true;
  }
- function show(){if(window.combinedSheets?.state?.()?.kind==='research')window.combinedSheets.close();open=true;ui.reader=null;paint();void load();}
- function hide(){if(!restoreLearningReturn())return false;nativeEpoch++;open=false;ui.reader=null;ui.moreOpen=false;paint();}
+ function show(){window.combinedNavigation?.closePhone?.({restoreFocus:false});if(window.combinedSheets?.state?.()?.kind==='research')window.combinedSheets.close();open=true;ui.reader=null;paint();window.combinedNavigation?.decorate?.();void load();}
+ function hide(){if(!restoreLearningReturn())return false;nativeEpoch++;open=false;ui.reader=null;ui.moreOpen=false;paint();window.combinedNavigation?.decorate?.();}
  async function decide(id){
   hide();
   await window.switchProject(id);
