@@ -1,0 +1,45 @@
+# Scoped remote connections
+
+W6 · C01/C04/C06/C07 · source implementation, not installed or real-cloud proof.
+
+The separate `agents/remote/server.mjs` listener translates nine schema-checked MCP tools into existing loopback owners. It creates no manuscript, source, media or approval authority. The [current-work](current-work.md) and [conversation authority](conversation-authority.md) contracts remain authoritative. [Setup and actual-client qualification](../REMOTE-CONNECTIONS.md) distinguish local evidence from external activation.
+
+## Transport and identity
+
+Streamable HTTP POST `/mcp`, JSON responses, stateless request-local MCP server and transport. GET/DELETE receive 405; use bounded scoped change polling and current-work reads. No generic registry call, terminal, filesystem tool, resource discovery or arbitrary proxy is exposed. Local CLI/STDIO interfaces remain unchanged. The SDK server/client are pinned at 2.4.0 in the separate `mcp/study` lock; runtime dependencies are untouched.
+
+The adapter binds only `127.0.0.1` on an explicitly configured spare port, never 8841. Public HTTPS routing is a separate W0 activation gate. The proxy must preserve the configured external Host. Unexpected Host/Origin and any X-AR-* header are rejected; forwarded identity never authenticates a caller. Every MCP HTTP request needs a bearer credential. A missing/expired/revoked credential returns actual 401 with protected-resource discovery. The MCP resource includes the exact `/mcp` path; issuer is its origin.
+
+OAuth authorization code with S256 PKCE and public-client dynamic registration are supported. Exact operator-approved redirects only; no wildcard, remote client metadata fetch, API-key paste, client credentials grant or public approval route. Bounded standard DCR descriptive metadata is inert, unverified and never fetched. Browser authorization creates a ten-minute ticket; a separate local operator command approves a configured principal. The browser checks again and receives one code redirect with state and issuer. A lost redirect requires a fresh authorization request. Approval binds Claude/ChatGPT callback families to configured provider/client; synthetic loopback callbacks work only for a loopback HTTP resource.
+
+A principal has explicit id, supported actor/provider/client, project IDs, tool names and expiry. Its identity comes from local configuration, never request arguments, client_name, MCP clientInfo, quotation roles or actor headers. It proves possession of the configured delegation, not the identity of a human or of a provider account. Configuration bytes changing holds the listener until restart; changed grants invalidate old tokens. Each owner request rechecks the credential, expiry and grant, including before replayed receipts are returned. A revocation cannot retract an owner write already in flight.
+
+Access tokens last at most 15 minutes; refresh grants last at most 24 hours and never outlive principal expiry. Codes are single-use for five minutes. Refresh rotates and refuses reuse. Reusing a retained spent code/refresh token revokes its grant; expired/pruned records remain invalid but cannot identify a family for revocation. Revoking either token revokes its whole grant. Principal revocation persists across restart. Only hashes of code/access/refresh secrets are stored. Pending authorization tickets and state are stored privately and expire.
+
+## Purposeful tools
+
+All input objects reject unknown fields, including forged actor, approval and filesystem selectors. Project scope is checked before owner access. Exact piece selectors include parentStudyId, rootBindingId and outputId together; native bindings are resolved through current-work and revalidated against the native owner. Grants can narrow this list.
+
+| Tool | Existing owner and effect |
+| --- | --- |
+| `ar_create_projects` | Explicit granted project IDs only; no catalogue scan. |
+| `ar_create_current_work` | W4 exact words, context, decisions, contributions and guards; native paragraph/source catalogue for a selected piece. |
+| `ar_create_validate_work` | Preserve supplied prepared text beside fresh context; changed fingerprint holds, never applies. |
+| `ar_create_capture_contribution` | W4 append-thought or gather-words only; original text remains exact. |
+| `ar_create_save_preparation` | Concept revision/hash guarded provisional interpretation/suggestions; human thoughts, adopted direction and source choices copied unchanged. |
+| `ar_create_prepare_proposal` | Capture selected retained native sources under fresh context; no provider run or manuscript edit. |
+| `ar_create_proposal_context` | Existing prepared native context and freshness for that exact piece/request. |
+| `ar_create_stage_proposal` | Existing native paragraph proposal owner; pending app review, no acceptance. |
+| `ar_create_changes` | One granted project event scope; oldest-first cursor/boot/reset semantics. Native/output changes also require current-work rereads. |
+
+The server assigns capture provider/client. It prefixes a reported conversation ID with the principal ID, or namespaces the provider for a captureId-only origin, preventing another delegated principal from claiming that origin. The result includes the original reported IDs and transformed owner origin. Origins remain caller-reported; history coverage is selected-only/upstream-unavailable. This is an exact-excerpt relay, not authenticated human instruction or complete upstream conversation import. Direction adoption, story selection, protection/rejection decisions, human review, Finish, export, sending and publication are not remote tools. Resume those actions in the existing authenticated local app; there is no remote human approval link or parity claim.
+
+## Delivery and failure behavior
+
+Each mutation requires an operation UUID. A private metadata-only ledger pins principal, operation, tool, project and canonical input hash before any owner call. Identical completed replay returns the historical receipt without reexecution; a changed input with the same operation ID refuses. Concurrent calls cannot both claim an operation. An interrupted/failed/unconfirmed call is held and never automatically reexecuted, including after restart. This conservative rule also holds a request whose preflight failed before mutation. Preserve prepared words client-side, inspect current work and native request/history, then deliberately issue a new operation only after reconciliation. Do not delete ledger records to force a retry. The adapter cannot promise exactly-once completion after losing an owner reply; it promises no blind second attempt. The native prepare owner has no caller operation ID, so uncertain preparation explicitly needs owner inspection.
+
+Source IDs must be retained eligible records of the exact native piece. Original media and export bytes are never served. Responses identify media as references-only, unavailable through this connector; app/owner access depends on the Mac being online. Technical path fields and test-only authority flags are removed from returned owner objects; authored text is preserved verbatim and may itself contain user-supplied locations. A grant to a project permits its selected text to leave the Mac when activated. No unrelated-project fallback is allowed.
+
+Request bodies are limited to 256 KiB; JSON batches, dangerous prototype keys and excessive nesting/entries refuse. Context responses are capped at 2 MiB. Registration, authorization state, active MCP requests and delivery count are bounded; a full store needs operator review. The authorization store uses an exclusive filesystem transaction lock. An unclean crash can leave a lock: stop all adapter/admin processes, preserve state, verify the recorded PID no longer owns a transaction, and only then remove that lock. Never automatically break it or clear state to make a request pass.
+
+Full external completion requires the named Claude and ChatGPT surfaces to run the same synthetic read/preparation/proposal/app-amendment/conflict/revocation/outage journey. Local SDK and owner tests do not establish account capability, public TLS routing, real provider interoperability or installed delivery.
