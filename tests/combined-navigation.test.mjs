@@ -38,3 +38,10 @@ test('Research rail opens independent learning without opening or creating a man
 test('visible Research owns the rail selection while its underlying writing stage stays intact',()=>{
  const f=boot(5);try{let open=true;f.w.c3Research={isOpen:()=>open};f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="research"]').getAttribute('aria-current'),'page');assert.equal(f.p.viewedStage,5);open=false;f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="write"]').getAttribute('aria-current'),'page');}finally{f.close();}
 });
+
+for(const refused of [false,true])test('leaving Research through Write respects its retained-writing return '+(refused?'refusal':'success'),async()=>{
+ const f=boot(5);try{let open=true;f.w.c3Research={isOpen:()=>open,hide(){f.calls.push('restore-research');if(refused)return false;open=false;}};
+ assert.equal(await f.w.combinedNavigation.go('write'),!refused);assert.deepEqual(f.calls,refused?['restore-research']:['restore-research','write']);assert.equal(open,refused);
+ assert.equal(f.d.querySelector('.combined-rail [aria-current="page"]').dataset.combinedNav,refused?'research':'write');
+ }finally{f.close();}
+});

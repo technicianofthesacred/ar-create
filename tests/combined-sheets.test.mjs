@@ -66,3 +66,10 @@ test('cold registered copy Source selects exact captured excerpt ranges without 
 test('Research entrance hands current subject to approved learning owner without replacing dirty editor',async()=>{
  const f=base();try{const editor=f.w.document.getElementById('manuscript'),calls=[];f.w.c3Research={async openLearning(input){calls.push(input.parentStudyId);}};await f.w.combinedSheets.open('research');assert.deepEqual(calls,[f.p.id]);assert.strictEqual(f.w.document.getElementById('manuscript'),editor);assert.equal(f.w.document.getElementById('combined-sheet'),null);assert.equal(f.p.viewedStage,5);}finally{f.close();}
 });
+
+for(const refused of [false,true])test('Source sheet waits for Research to release the retained editor '+(refused?'refusal':'success'),async()=>{
+ const f=base();try{const editor=f.w.document.getElementById('manuscript');let open=true,mounted=false;f.w.c3Research={isOpen:()=>open,hide(){if(refused)return false;open=false;}};
+ f.w.combinedSheets.registerOwner('source',()=>{assert.equal(open,false);mounted=true;return {};});assert.equal(await f.w.combinedSheets.open('source'),!refused);
+ assert.equal(mounted,!refused);assert.equal(open,refused);assert.strictEqual(f.w.document.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Exact unfinished words.');if(!refused)await f.w.combinedSheets.close();
+ }finally{f.close();}
+});
