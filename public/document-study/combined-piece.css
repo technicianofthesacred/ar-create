@@ -38,7 +38,9 @@ html body.wbf-on.combined-piece-on #combined-piece-inherits.cp-strip{order:-10!i
 html body.wbf-on.combined-piece-on.combined-piece-in-page #c3-tabstrip.wbf-top{height:46px!important;min-height:46px!important}
 html body.wbf-on.combined-piece-on.combined-piece-in-page #app{margin-top:46px!important;height:calc(100dvh - 46px)!important}
 html body.wbf-on.combined-piece-on.combined-piece-in-page #c3-tabstrip.wbf-top>.wbf-top-actions{margin-left:auto!important}
-html:not(#wb):not(#wb) body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{order:-11;flex:none;flex-wrap:wrap;height:auto;row-gap:6px;column-gap:8px;box-sizing:border-box;width:auto;max-width:1120px;margin:24px 32px 14px;padding:0}
+/* The piece actions stay reachable; the inherited-direction row scrolls normally below them. */
+html body.wbf-on.combined-piece-on #workspace>#combined-piece-inherits.cp-strip{position:static!important}
+html:not(#wb):not(#wb) body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{position:sticky;top:0;z-index:16;background:var(--bg);order:-11;flex:none;flex-wrap:wrap;height:auto;row-gap:6px;column-gap:8px;box-sizing:border-box;width:auto;max-width:1120px;margin:24px 32px 14px;padding:0}
 #workspace>#combined-piece-frame>.cp-tool{display:inline;font:600 var(--t-title,17px)/1.5 var(--ar-ui);color:var(--ink)}
 html:not(#wb):not(#wb) body.wbf-on.combined-piece-on #workspace>#combined-piece-frame>.cp-subject{font:400 var(--t-title,17px)/1.5 var(--ar-ui)!important;color:var(--dim)!important;max-width:42ch;margin-right:auto}
 #workspace>#combined-piece-frame>.cp-subject::before{content:'· '}
