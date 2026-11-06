@@ -82,6 +82,18 @@ test('authorization waits for local approval; callback and tokens retain exact b
  const tokens=f.api.token({grant_type:'authorization_code',client_id:f.client.client_id,redirect_uri:f.client.redirect_uris[0],code:u.searchParams.get('code'),code_verifier:start.verifier,resource:f.options.resourceUrl});assert.equal(tokens.token_type,'Bearer');assert.equal(tokens.expires_in,900);assert.deepEqual(f.api.verify(tokens.access_token),{...f.principals[0],expiresAt:new Date(f.principals[0].expiresAt).toISOString()});assert.equal(f.api.requests().length,0);
  const stored=fs.readFileSync(path.join(f.stateDir,'authorization.json'),'utf8');for(const value of [tokens.access_token,tokens.refresh_token,u.searchParams.get('code'),start.verifier])assert.equal(stored.includes(value),false,'plaintext credential is not stored');assert.equal(fs.statSync(path.join(f.stateDir,'authorization.json')).mode&0o077,0);
 });
+test('observed ChatGPT authorization accepts display-only ui_locales through local approval and PKCE',t=>{
+ const f=fixture(t),client=f.api.register({redirect_uris:[f.options.redirectUris[1]],token_endpoint_auth_method:'none'}),start=f.begin({client_id:client.client_id,redirect_uri:client.redirect_uris[0],ui_locales:'en-US'});
+ assert.equal(f.api.authorization(start.pending.ticket).status,'pending');assert.throws(()=>f.api.approve(start.pending.ticket,'claude-synthetic'),code('invalid_grant'));f.api.approve(start.pending.ticket,'chatgpt-synthetic');f.api.closeEnrollment();
+ const callback=new URL(f.api.authorization(start.pending.ticket).redirectUri);assert.equal(callback.searchParams.has('ui_locales'),false);const form={grant_type:'authorization_code',client_id:client.client_id,redirect_uri:client.redirect_uris[0],code:callback.searchParams.get('code'),code_verifier:start.verifier,resource:f.options.resourceUrl};
+ assert.throws(()=>f.api.token({...form,code_verifier:'x'.repeat(43)}),code('invalid_grant'));const tokens=f.api.token(form);assert.equal(f.api.verify(tokens.access_token).id,'chatgpt-synthetic');assert.equal(Object.hasOwn(tokens,'ui_locales'),false);assert.equal(fs.readFileSync(path.join(f.stateDir,'authorization.json'),'utf8').includes('ui_locales'),false);
+});
+test('authorization locale preferences are bounded and do not relax unknown-field or scope checks',t=>{
+ const f=fixture(t),base=f.begin().input,file=path.join(f.stateDir,'authorization.json'),before=fs.readFileSync(file);
+ for(const ui_locales of ['',null,['en-US'],{},'en_US','en-US\n',' en-US','en-US  fr-FR','en-US '+Array(8).fill('fr-FR').join(' '),'a'.repeat(129),'en-abcdefghi'])assert.throws(()=>f.api.requestAuthorization({...base,ui_locales}),code('invalid_request',400));
+ assert.throws(()=>f.api.requestAuthorization({...base,ui_locales:'en-US',principalId:'chatgpt-synthetic'}),code('invalid_request',400));assert.throws(()=>f.api.requestAuthorization({...base,ui_locales:'en-US',scope:'admin'}),code('invalid_request',400));assert.deepEqual(fs.readFileSync(file),before);
+ assert.equal(f.api.requestAuthorization({...base,ui_locales:'en-US fr-FR zh-Hant-TW'}).status,'pending');assert.equal(fs.readFileSync(file,'utf8').includes('ui_locales'),false);
+});
 test('authorization response is issued once and cannot remint a code after restart',t=>{
  const f=fixture(t),flow=f.approved();assert.throws(()=>f.api.authorization(flow.pending.ticket),code('invalid_request'));const restarted=createAuthorization(f.options);assert.throws(()=>restarted.authorization(flow.pending.ticket),code('invalid_request'));assert.equal(restarted.token(flow.form).token_type,'Bearer');
 });
