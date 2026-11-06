@@ -105,3 +105,8 @@ C05 across S01–S12. Adrian selected option 2, Graphite, and asked to apply it 
 ## Eight focused screens — adopted 6 November 2026
 
 C01–C06; S02/S03/S05/S06/S07/S09–S12 as scoped. After viewing all eight comparisons, Adrian said “yes do all”. This approves Source VR01v2, Research VR02v2, Write VR03v1, Article Check VR04v1, Share VR05v3, Outputs VR06v3, Carousel Check VR07v3 and Recovery VR08v2, with the adopted Graphite family also applied to the earlier four screens. It supersedes their earlier pending layout approval boundaries. Preserve original words, selected owners, editions, saved Undo, separate retained recovery records and source facts. Verify focused behavior and actual synthetic native desktop/phone light/dark journeys. Approval is implementation intent, not proof of working screens, installation, provider activation, sending or publication. Delivery ownership and remaining native gates are in TODO/CURRENT.
+
+
+## Reach actual content at the current width — 6 November 2026
+
+Keep the eight approved layouts and Graphite. Correct concrete remaining content and layout gaps without repeating accepted design work: the actual source/photo/piece preview dominates, current scope and next action read clearly, secondary metadata uses ordinary focused navigation, and displayed titles/thumbnails/files open the exact corresponding maintained content. Show before/after at real desktop,900/1000/1100CSSpx with sidebars open, and phone/light/dark; include enlarged text for affected rows. Avoid single-character wrapping, overlapping controls, duplicate scope/tool rows and large empty bands above the work. Verify browser Back/Forward separately from in-app Back/Esc and preserve existing editing/recovery authority.
