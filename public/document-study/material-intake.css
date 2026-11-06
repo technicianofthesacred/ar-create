@@ -75,3 +75,5 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-tit
 }
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:hover{text-decoration-color:currentColor!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:focus-visible{outline:2px solid var(--warm)!important;outline-offset:3px}
+/* The phone intake list scrolls inside the existing bounded Library workspace. */
+.wfb-browser.mi-open>[data-mi-root]{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-color:var(--line) transparent}
