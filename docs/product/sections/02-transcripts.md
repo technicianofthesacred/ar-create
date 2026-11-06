@@ -121,3 +121,10 @@ Intentional human corrections and exact eligible Undo may use only the establish
 ### 28 October — bounded speaker-label controls
 
 Supplied speaker labels have a rotated boxed button in a reserved rail. Consecutive same-label English remarks remain separate editable remarks. A rail button opens the maintained correction panel for the group's first remark only, explicitly disclosed; it does not rename a whole group/person. Long labels truncate in the rail and remain fully available through accessible name/title and the field. Editorial boundaries are not speaker controls. Native Save remains a human decision with the existing revision/hash/recovery history. Verification stages and cancels invented labels only.
+
+
+## Reconciled 25 October decisions — 6 November 2026
+
+The preserved working brief records approval of conversation-first Source review: keep the conversation dominant, the selected saved translation proposal beside its exact passage on desktop and immediately after it on narrow screens, compact Save/Next, and stable Undo/History. Primary work must not depend on accordions. Use the current Combined typography and navigation; the earlier C Workbench/Atlas treatment is superseded. Approval of that bounded hierarchy is not full visual or editorial acceptance.
+
+S02 / C01 / C04 / C06: sequential saved translation acceptance must reuse the same immutable prepared receipt and maintained correction owner. Save A → Save B → reload/owner restart → Undo B preserves A and restores B → Undo A restores the exact baseline and proposal availability. Advance eligibility only through proven exact-receipt human acceptance and eligible Undo operations; manual/foreign/stale changes remain held. Retain original preparation provenance, original source bytes, dirty corrections, operation replay and guarded revisions. No regeneration or automatic acceptance is implied. Verify this with invented proposals; private Save/Undo needs separate human action or test authorization.

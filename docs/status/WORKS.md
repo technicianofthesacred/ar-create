@@ -17,6 +17,10 @@ These describe available source paths, not proof for whichever revision is insta
 - **Coordination**: one CLI and one MCP for agents, actor stamped on every write, leases, handoff, ask, journal and events; Home lists decisions, optional work and committed agent work.
 - **Release**: the installed app is a recorded commit (`RELEASE.json`), built only by `scripts/release.mjs`, with the previous build kept for rollback.
 
+## Current delivery checkpoint
+
+- **6 November baseline**: source `3fa7121a0b10b1c6016be2d75fb9ee0453ebd7c6`; focused baseline only (67 tests), not a full-suite claim. Installed metadata and running CLI report `ad40b129e722056047864c5b413e45f60e909f16` (`v2026.11.06-pr214`); tracked trees match. PR213 lease qualification and PR214 saved-layout exports are preserved. This comparison is not new live-byte or human acceptance proof. W1–W8 ownership and next gates are in TODO.
+
 ## Open limits
 
 - **Acceptance incomplete**: the whole recording-to-Outputs journey, Home and final Source handoff, the smaller-screen and phone pass, proposal adapters and drawer, the Library folder repair (Stages 4 to 7 of the structure program).

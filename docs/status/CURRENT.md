@@ -1,8 +1,8 @@
-Tests: not measured.
+Tests: 67 passed, 0 failed, 0 skipped, of 67 (commit 3fa7121, 2026-11-06T04:08:10.470761+00:00).
 
-Installed release: not read.
+Installed release: commit ad40b12, built 2026-11-06T03:43:30.288Z, by agent:codex, 766 files. The tests above ran on a different commit (3fa7121) than the one installed.
 
-Installed test evidence: unavailable; installed release was not read.
+Installed test evidence: different commits; the measured run does not verify the installed release.
 
 # AR Create: status
 
@@ -25,6 +25,10 @@ These describe available source paths, not proof for whichever revision is insta
 - **Outputs**: Markdown and formatted HTML downloads, retained export receipts and prior editions kept distinct. Carousel PNG export exists for reviewed saved slides; a working draft or receipt does not mean publication approval.
 - **Coordination**: one CLI and one MCP for agents, actor stamped on every write, leases, handoff, ask, journal and events; Home lists decisions, optional work and committed agent work.
 - **Release**: the installed app is a recorded commit (`RELEASE.json`), built only by `scripts/release.mjs`, with the previous build kept for rollback.
+
+## Current delivery checkpoint
+
+- **6 November baseline**: source `3fa7121a0b10b1c6016be2d75fb9ee0453ebd7c6`; focused baseline only (67 tests), not a full-suite claim. Installed metadata and running CLI report `ad40b129e722056047864c5b413e45f60e909f16` (`v2026.11.06-pr214`); tracked trees match. PR213 lease qualification and PR214 saved-layout exports are preserved. This comparison is not new live-byte or human acceptance proof. W1–W8 ownership and next gates are in TODO.
 
 ## Open limits
 
