@@ -51,6 +51,19 @@ test('native own-word change flags old preparation, keeps drafts and independent
  assert.equal((await f.service.read({...f.selector,selectedOutputId:f.b.view.output.id})).currentEdition,sibling.currentEdition);await assert.rejects(f.save({message:'racing'},a),/edition|changed/i);
  const next=await f.save({message:'New edition'});assert.equal(next.editions.length,2);assert.equal((await f.service.read({...f.selector,targetEdition:a.currentEdition})).preparation.message,'Earlier invitation');
 });
+test('explicit current edition opens an empty invitation while retained earlier preparation remains intact',async t=>{
+ const f=await fixture(t),initial=await f.read();
+ const empty=await f.service.read({...f.selector,targetEdition:initial.currentEdition});
+ assert.equal(empty.targetEdition,initial.currentEdition);assert.equal(empty.preparation,null);assert.equal(empty.review.outdated,false);
+ const earlier=await f.save({message:'Keep this earlier invitation'});
+ const binding=f.a.view.wordOwner.bindingId,s=await f.native.read({bindingId:binding,parentStudyId:'parent'}),p=s.projection.find(p=>p.words.includes('native words.'));
+ await f.native.save({bindingId:binding,parentStudyId:'parent',expected:s.expected,operationId:randomUUID(),operations:[{kind:'text',id:p.id,from:0,to:8,insert:'Changed',seenBlockHash:p.blockHash}]});
+ const defaultView=await f.read();assert.equal(defaultView.preparation.message,'Keep this earlier invitation');
+ const current=await f.service.read({...f.selector,targetEdition:defaultView.currentEdition});
+ assert.equal(current.preparation,null);assert.equal(current.targetEdition,defaultView.currentEdition);assert.equal(current.review.outdated,(await f.owner.read({rootBindingId:f.selector.rootBindingId,parentStudyId:f.selector.parentStudyId,selectedOutputId:f.selector.selectedOutputId})).freshness.stale);assert.equal(current.editions.length,1);assert.deepEqual(current.expected,defaultView.expected);
+ assert.equal((await f.service.read({...f.selector,targetEdition:earlier.currentEdition})).preparation.message,'Keep this earlier invitation');
+ await assert.rejects(f.service.read({...f.selector,targetEdition:'a'.repeat(64)}),/not retained/);
+});
 test('unknown saved fields survive, caller paths/output snapshots and symlink/hardlink sidecars refuse',async t=>{
  const f=await fixture(t);await f.save({message:'Exact'});const dir=path.join(f.dataDir,outputPrivatePrefix('invented-project','invented-document'),'share',f.selector.selectedOutputId);const file=path.join(dir,hash(f.selector.recipientId)+'.json');
  const record=JSON.parse(fs.readFileSync(file));record.future={keep:['original']};record.editions[0].preparation.futureManual='Preserve this';fs.writeFileSync(file,JSON.stringify(record));await f.save({tone:'Warm'});assert.deepEqual(JSON.parse(fs.readFileSync(file)).future,{keep:['original']});assert.equal((await f.read()).preparation.futureManual,'Preserve this');

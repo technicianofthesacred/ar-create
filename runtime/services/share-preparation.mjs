@@ -84,7 +84,7 @@ export function createSharePreparation({dataDir,outputs,magazine,files,outputPri
   const current=s.record.editions.find(e=>e.edition===a.currentEdition);
   const edition=input.targetEdition||current?.edition||s.record.editions.at(-1)?.edition||a.currentEdition;
   const selected=s.record.editions.find(e=>e.edition===edition);
-  if(input.targetEdition&&!selected&&!selection.delivery)fail('Requested earlier edition is not retained.',404);
+  if(input.targetEdition&&edition!==a.currentEdition&&!selected&&!selection.delivery)fail('Requested earlier edition is not retained.',404);
   const outdated=(selection.delivery?(selected?selected.workingEdition!==a.currentEdition:false):edition!==a.currentEdition)||a.freshness.stale;
   const last=s.record.operations.filter(o=>o.edition===edition&&['save','undo'].includes(o.action)).at(-1);
   const preparationUndo=last?.action==='save'&&hash(selected?.preparation??null)===last.afterPreparationHash?{operationId:last.operationId}:null;
