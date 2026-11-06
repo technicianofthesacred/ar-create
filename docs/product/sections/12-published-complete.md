@@ -75,3 +75,9 @@ Next moves comes from current saved questions and explicit review/correction sta
 ## 6 November — adopted control family
 
 Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE](../HUMAN-EXPERIENCE.md#graphite-controls--adopted-6-november-2026). C05: this settles control styling only; section layout/workflow acceptance and native preservation proof remain separate.
+
+## 6 November — Approved aligned Outputs and focused creation
+
+S12 with S09–S11 continuation; C01/C03–C06. Adrian approved VR-06 v3 (Outputs packet v4): actual independent output rows retain matching previews, identity, review state, export facts and connected actions. Keep scope/filter/history navigation compact, remove instructional/prototype footers, and offer one New output entrance with Article, Carousel, Post and Product listing using existing supported creation owners. Uncreated choices remain distinct from real output rows. Apply the chosen Graphite family to controls and existing boxes.
+
+Finish criterion: each row/title/action opens its exact output/edition; reopen matching retained exports; verify current and earlier states and all four supported creation routes without inventing publication or altering sibling words. Focused functional tests and real native desktop/phone light/dark proof are required. Visual approval is implementation authority, not completion proof.

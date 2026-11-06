@@ -27,3 +27,9 @@ How I Work step 6. Share opens with two questions only Adrian answers: are you c
 ## 6 November — adopted control family
 
 Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE](../HUMAN-EXPERIENCE.md#graphite-controls--adopted-6-november-2026). C05: this settles control styling only; section layout/workflow acceptance and native preservation proof remain separate.
+
+## 6 November — Approved saved-edition invitation and focused history
+
+S11; C01/C03–C06. Adrian approved VR-05 v3 (Share packet v4): a compact invitation tied explicitly to the current or a retained saved edition, optional recipient correspondence, a visible separate release hold, and focused history. Graphite applies consistently to buttons, dropdowns and entry boxes. Preserve recipient/edition bindings, unsaved message recovery, guarded saves and exact eligible Undo. Copying or saving cannot record sending; replies and corrections cannot supply consent or alter the manuscript.
+
+Finish criterion: synthetic native current/retained-edition and history journeys, later edits preserve earlier correspondence/export bytes, actual actions retain human-only authority and stale guards, and desktop/phone light/dark controls remain readable. Visual approval does not prove implementation or authorize sending.

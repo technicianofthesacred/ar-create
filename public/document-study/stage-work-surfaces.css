@@ -17,3 +17,24 @@
 @media(max-width:700px){.sws-source .material-layout{grid-template-columns:1fr}.sws-source .material-index{max-height:none}.sws-work-tools{gap:6px}.sws-tool{flex-basis:100%}[data-sws-comparison]{grid-template-columns:1fr}.sws-check-scope{display:block}.sws-check-scope span{display:block}}
 
 .sws-tool>h3,.sws-secondary>h3{font:600 13px/1.45 var(--sans,system-ui,sans-serif);margin:0 0 10px}.sws-tool,.sws-secondary{min-width:0}
+
+/* Approved Check structure. The shared Graphite family owns control appearance. */
+.sws-check-tools{display:block;min-width:0}
+.sws-check-tools>.sws-tool{margin-top:16px}
+.sws-decision-coverage{margin-top:24px;padding-top:24px;border-top:1px solid var(--line)}
+.sws-coverage-heading,.sws-coverage-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sws-decision-coverage h3{font:600 20px/1.4 var(--ar-ui,var(--sans,system-ui));margin:0}
+.sws-coverage-heading button{flex:none}
+.sws-decision-coverage p,.sws-decision-coverage blockquote{font:16px/1.6 var(--ar-ui,var(--sans,system-ui));margin:8px 0 0;overflow-wrap:anywhere}
+.sws-decision-coverage .sws-coverage-version,.sws-coverage-state,.sws-coverage-note{font:12px/1.6 var(--ar-ui,var(--sans,system-ui));color:var(--dim)}
+.sws-coverage-status{margin:16px 0 24px!important}
+.sws-coverage-finding{padding:24px 0;border-top:1px solid var(--line)}
+.sws-coverage-finding h4{font:600 16px/1.5 var(--ar-ui,var(--sans,system-ui));margin:0}
+.sws-coverage-finding blockquote{padding-left:12px;border-left:2px solid var(--line);margin:12px 0}
+.sws-coverage-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px}
+.sws-coverage-note{display:block;margin-top:8px}
+.sws-decision-coverage .sws-coverage-boundary{font-size:13px;padding-top:16px;border-top:1px solid var(--line)}
+.sws-check-tools .sws-carousel-actions,.draft-check-room .sws-carousel-actions{display:flex!important;flex-flow:row wrap!important;align-items:center;gap:12px 8px!important;margin-block:12px!important}
+.sws-carousel-actions>*{flex:0 0 auto!important;width:auto!important;min-width:44px}
+.sws-check-tools .sws-carousel-actions button{padding-block:0}
+@media(max-width:600px){.sws-coverage-heading{align-items:flex-start}.sws-coverage-heading h3{flex:1 1 170px}.sws-carousel-actions button{margin-block:6px}}

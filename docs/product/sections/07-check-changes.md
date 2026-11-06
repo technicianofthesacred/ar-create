@@ -35,3 +35,9 @@ How I Work step 6. Check shows every claim and quote in the piece with the sourc
 ## 6 November — adopted control family
 
 Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE](../HUMAN-EXPERIENCE.md#graphite-controls--adopted-6-november-2026). C05: this settles control styling only; section layout/workflow acceptance and native preservation proof remain separate.
+
+## 6 November — Approved decision coverage and Carousel actions
+
+S07; C01/C03–C06. Adrian approved VR-04 v1 Article Check and VR-07 v3 Carousel Check in the eight-comparison review. Article Check presents the current selected work's retained decisions and mechanical findings with exact revision context; semantic accuracy remains an explicit human judgment. Open a passage only when the existing owner and anchor guards establish the exact target. Carousel Check retains its separate saved wording and checks rather than borrowing Article findings. Existing Write/Read and check/refresh actions use the adopted Graphite control family.
+
+Finish criterion: actual connected reads/actions and truthful stale/unavailable states on desktop/phone light/dark, exact selected owner and saved words preserved, no fabricated approvals, and focused race/navigation tests. The visual approval is implementation authority, not completion proof.

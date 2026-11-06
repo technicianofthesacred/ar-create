@@ -10,3 +10,18 @@
 /* Give the reused carousel a definite viewport budget in the document host. */
 #study-output-canvas .ar-composition-workbench:has(>.car-workspace){height:max(560px,calc(100dvh - 220px));min-height:0}
 #study-output-canvas .car-stage>.car-artboard-slot{align-self:start;align-items:flex-start}
+
+/* Approved Outputs: a focused creation/history screen beside the same owners. */
+#output-overview .oo-focused .oo-detail-body{position:static;width:auto;max-width:760px;border:0;padding:20px 0;background:transparent}
+#output-overview .oo-focused .oo-detail-body .oo-action{margin:6px 8px 6px 0}
+#output-overview .oo-heading p{margin:6px 0 0;font-size:14px;color:var(--muted,var(--dim))}
+#output-overview .oo-create{display:grid;grid-template-columns:1fr 1fr;gap:24px;border-block:1px solid var(--line);padding:24px 0}
+#output-overview .oo-create>section{display:flex;flex-direction:column;align-items:flex-start;gap:16px}
+#output-overview .oo-create h3{margin:0 0 8px;font-size:18px;font-weight:600}
+#output-overview .oo-create p{margin:0;max-width:310px;font-size:14px;color:var(--muted,var(--dim))}
+#output-overview .oo-create small{display:block;margin-top:8px;color:var(--dim)}
+#output-overview .oo-browser-note{font-size:12px;color:var(--dim);white-space:normal}
+@media(max-width:600px){#output-overview .oo-create{grid-template-columns:1fr}#output-overview .oo-create>section{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}#output-overview .oo-create p{font-size:13px}#output-overview .oo-create h3{font-size:17px}}
+#output-overview .oo-focused>:is(.origin,.wb-output-origin-heading){display:none!important}
+#output-overview .oo-create h3{font:600 18px/1.35 var(--ar-ui,var(--sans))!important}
+@media(max-width:600px){#output-overview .oo-create h3{font-size:17px!important}}
