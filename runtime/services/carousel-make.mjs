@@ -39,7 +39,7 @@ function adaptationGuidance(policy){return [
  'This is a draft awaiting human review. Structural validation checks the recorded slide range, format and permitted media; it cannot certify factual accuracy, voice, meaning or editorial quality.',
 ].join('\n\n');}
 function selectedIds(value,label){if(!Array.isArray(value)||value.length>100||value.some(id=>typeof id!=='string'||!id)||new Set(value).size!==value.length)throw new StateError(`${label} must contain up to 100 unique library IDs.`);return value;}
-export function createCarouselMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),publicDir,fitPreflight=createCarouselFit({publicDir}),skillRoot}){
+export function createCarouselMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),publicDir,fitPreflight=createCarouselFit({publicDir}),skillRoot,requestIdFactory=randomUUID}){
  const ruleFile=name=>{const {root,rel}=ruleLocation(name,{skillRoot});return path.join(root,rel);};
  const dir=ensurePrivateDirectory(dataDir,'carousel-make');let pending=Promise.resolve();
  const serial=fn=>{const op=pending.then(fn);pending=op.catch(()=>{});return op;};
@@ -66,7 +66,7 @@ export function createCarouselMake({dataDir,store,library,requests,terminal,exec
   if(!Number.isSafeInteger(input.outputRevision)||input.outputRevision<0||(output.outputRevision||0)!==input.outputRevision)throw new StateError('The saved carousel revision changed.',409);
   try{assertOutputEditorialReady(output);}catch(error){throw new StateError(error.message,409);}const frozenWords=carouselWordsRecord(output);validateFrozenWords(frozenWords);const wordsHash=await carouselWordsHash(output);
   if(typeof input.wordsHash!=='string'||!/^[a-f0-9]{64}$/.test(input.wordsHash)||input.wordsHash!==wordsHash||output.wordsReview?.hash!==wordsHash||typeof output.wordsReview.reviewedAt!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(output.wordsReview.reviewedAt)||!Number.isFinite(Date.parse(output.wordsReview.reviewedAt)))throw new StateError('Explicitly review the complete writing sequence before arranging visuals.',409);
-  const photoIds=selectedIds(input.photoIds||[],'photoIds'),sourceIds=selectedIds(input.sourceIds||[],'sourceIds'),id=randomUUID(),cwd=ensurePrivateDirectory(dir,id),tree=await library.tree(),photos=await capturePhotos(cwd,photoIds,tree),sources=[];
+  const photoIds=selectedIds(input.photoIds||[],'photoIds'),sourceIds=selectedIds(input.sourceIds||[],'sourceIds'),id=requestIdFactory(),cwd=ensurePrivateDirectory(dir,id),tree=await library.tree(),photos=await capturePhotos(cwd,photoIds,tree),sources=[];
   const sourcesDir=ensurePrivateDirectory(cwd,'sources');let sourceBytes=0;for(const sourceId of sourceIds){const source=await library.read(sourceId);if(typeof source.text!=='string'||!source.cardEligibility?.eligible)throw new StateError('Choose readable visual-reference sources.');sourceBytes+=Buffer.byteLength(source.text);if(sourceBytes>8*1024*1024)throw new StateError('Visual reference sources exceed 8 MB.',413);const snapshot=path.join(sourcesDir,(sources.length+1)+'.txt');atomicWrite(snapshot,source.text,{exclusive:true});fs.chmodSync(snapshot,0o400);sources.push({id:source.id,title:source.title||source.name,hash:source.hash,bodyHash:digest(source.text),snapshot});}
   const skillNames=CAROUSEL_RULES,skillFiles=skillNames.map(name=>{const source=ruleFile(name);regular(source);const body=fs.readFileSync(source,'utf8');return {name,body,hash:digest(body)};});
   const context=['# Reviewed carousel visual authority','Current manuscript text and shared writing guidance are NOT sent. The explicitly reviewed carousel sequence is the wording authority. Style guidance comes only from captured visual skill snapshots in request.md. Original sources and personal notes stay untouched.','Writing-review receipt: '+JSON.stringify(output.wordsReview),'Frozen ordered words file: '+JSON.stringify(path.join(cwd,'frozen-words.json')),'Available real photographs: '+JSON.stringify(photos),'Optional readable visual references: '+JSON.stringify(sources)].join('\n\n');
@@ -95,7 +95,7 @@ export function createCarouselMake({dataDir,store,library,requests,terminal,exec
   const skillFiles=skillNames.map(name=>{const source=ruleFile(name);regular(source);const body=fs.readFileSync(source,'utf8');return {name,hash:digest(body),body};});
   const context=await requests.preview({paragraphIds:doc.paragraphs.map(p=>p.id),sourceIds,includeThoughts:false,...(contextSelection?{contextSelection}:{})});
   if(!store.get().project.document||fingerprint(store.get().project.document)!==fingerprint(doc))throw new StateError('The manuscript changed while preparing Make. Try again.',409);
-  const id=randomUUID(),cwd=ensurePrivateDirectory(dir,id),photosDir=ensurePrivateDirectory(cwd,'photos');
+  const id=requestIdFactory(),cwd=ensurePrivateDirectory(dir,id),photosDir=ensurePrivateDirectory(cwd,'photos');
   const tree=photoIds.length?await library.tree():{sources:[]},photos=[];let total=0;
   for(const sourceId of photoIds){
    const source=tree.sources.find(s=>s.id===sourceId);if(!source||source.missing||!image.test(source.rel_path||source.name||''))throw new StateError('Choose real JPEG, PNG or WebP library photographs.');

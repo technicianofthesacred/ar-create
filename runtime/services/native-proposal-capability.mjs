@@ -36,3 +36,19 @@ export function continuationProposalTarget(baseline,opening,model){
  let boundary;try{boundary=continuationBoundary(model,opening.id);}catch(error){throw Object.assign(error,{status:409});}
  return {...boundary,seenOpeningHash:row.blockHash,seenBoundaryHash:boundary.beforeId?baseline.projection.find(r=>r.id===boundary.beforeId).blockHash:null};
 }
+
+/** A complete initial article can only fill an empty native body. Metadata is retained. */
+export function articleDraftProposalTarget(baseline){
+ if(baseline.binding?.textOutputKind&&baseline.binding.textOutputKind!=='article')throw Object.assign(Error('A complete article draft requires an article piece.'),{status:409});
+ const target=openingProposalTarget(baseline);
+ if(target.kind!=='insert')throw Object.assign(Error('A complete initial draft requires an empty article body. Revise selected paragraphs or continue a chosen opening instead.'),{status:409});
+ return target;
+}
+
+/** Capture exact editable IDs in document order; the model never chooses a wider scope. */
+export function scopedRevisionProposalTargets(baseline,ids){
+ if(!Array.isArray(ids)||!ids.length||ids.length>30||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=='string'||!id))throw Object.assign(Error('Choose 1–30 unique paragraph identities for revision.'),{status:400});
+ const rows=baseline.projection.filter(row=>ids.includes(row.id));
+ if(rows.length!==ids.length||rows.some(row=>!proposalEditable(row)))throw Object.assign(Error('Revision targets must be exact supported plain paragraphs; nested or protected formatting is retained.'),{status:409});
+ return rows.map(row=>({id:row.id,seenBlockHash:row.blockHash}));
+}

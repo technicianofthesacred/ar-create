@@ -99,6 +99,7 @@ export function createArtifactExecution({execute=executeCodexArtifacts,available
   observe(record,persist){if(record.execution?.state==='running'&&!active.has(record.id)){record.execution={...record.execution,state:'interrupted',finishedAt:new Date().toISOString(),error:'Execution was interrupted by a service restart. Prepare a fresh request; this attempt will not resend.'};record.status='needs-attention';record.error=record.execution.error;persist(record);}return record;},
   launch(id,packet,finish,fail){const controller=new AbortController();const operation=Promise.resolve().then(()=>execute({...packet,...(model?{model}:{}),...(reasoningEffort?{reasoningEffort}:{}),signal:controller.signal})).then(result=>{readiness={state:'ready',usable:true,authentication:'accepted',checkedAt:new Date().toISOString(),model:result.model||null,provider:result.provider||null};return finish(result);},error=>{const detail=executionFailureDetails(error);readiness={state:detail.code,code:detail.code,usable:false,authentication:detail.code==='authentication-required'?'required':'unverified',checkedAt:new Date().toISOString()};return fail(error);}).catch(error=>Promise.resolve().then(()=>fail(error)).catch(()=>undefined)).finally(()=>active.delete(id));active.set(id,{controller,operation});return operation;},
   wait:id=>active.get(id)?.operation||Promise.resolve(),
+  cancel(id){const entry=active.get(id);if(entry)entry.controller.abort();return !!entry;},
   dispose(){for(const entry of active.values())entry.controller.abort();},
  };
 }

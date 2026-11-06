@@ -53,6 +53,14 @@ function checkDraft(raw){
  if(!title||title.length>256)throw new StateError('The DEV draft needs a title of at most 256 characters in its frontmatter.');
  if(!match[2].trim())throw new StateError('The AI draft contains no story text.');
 }
+export function captureArticleRules({skillRoot,includeMagazineFiles=true}={}){
+  return ARTICLE_RULES.filter(name=>includeMagazineFiles||!['mag/TEMPLATE.md','mag/SYSTEM.md'].includes(name)).map(name=>{
+   const {root,rel}=ruleLocation(name,{skillRoot});
+   const full=boundedText(root,rel),body=name==='mag/SYSTEM.md'?['## 1: Source (SRC)','## 3: Develop (DEV)','### From draft to page (mag-send)'].map(heading=>systemSection(full,heading)).join('\n\n'):full;
+   return {name,root,rel,hash:digest(full),body};
+  });
+ }
+
 export function createArticleMake({dataDir,store,library,requests,terminal,execution=createArtifactExecution(),skillRoot}){
  const dir=ensurePrivateDirectory(dataDir,'article-make');let pending=Promise.resolve();
  const serial=fn=>{const op=pending.then(fn);pending=op.catch(()=>{});return op;};
@@ -72,13 +80,7 @@ export function createArticleMake({dataDir,store,library,requests,terminal,execu
    if(request?.projectId===projectId&&request?.documentId===documentId)throw new StateError('Another article proposal is waiting for human review. It is preserved; decide it before accepting a first draft.',409);
   }
  }
- function captureRules(){
-  return ARTICLE_RULES.map(name=>{
-   const {root,rel}=ruleLocation(name,{skillRoot});
-   const full=boundedText(root,rel),body=name==='mag/SYSTEM.md'?['## 1: Source (SRC)','## 3: Develop (DEV)','### From draft to page (mag-send)'].map(heading=>systemSection(full,heading)).join('\n\n'):full;
-   return {name,root,rel,hash:digest(full),body};
-  });
- }
+ const captureRules=()=>captureArticleRules({skillRoot});
  function researchRecord(record){
   if(!uuid.test(record.requestId))throw new StateError('Captured research request is invalid.',409);
   const root=resolveInside(dataDir,'requests',{directory:true}),raw=boundedText(root,record.requestId+'.json',32*1024*1024);

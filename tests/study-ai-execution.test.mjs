@@ -26,9 +26,9 @@ test('stale context, invalid response and validator refusal never propose and er
 test('restart interrupts unfinished attempt durably and never resends or stages its late result',async t=>{
  let resolve;const f=await setup(t,{execute:()=>new Promise(r=>resolve=r)});await actor(()=>f.owner.run(f.input));await new Promise(r=>setImmediate(r));const restarted=createStudyAIExecution({...f.config,execution:createArtifactExecution({available:()=>true,execute:()=>{throw Error('Must not resend');}})});assert.equal((await restarted.status(f.input)).state,'interrupted');await assert.rejects(actor(()=>restarted.run(f.input)),/interrupted|fresh/i);resolve({response:{artifacts:{'proposal.json':JSON.stringify(candidate)}}});await f.owner.wait(f.input.operationId);assert.equal(f.proposals.length,0);assert.equal((await restarted.status(f.input)).state,'interrupted');
 });
-test('requires explicit actor, exact sourced purpose/identity and refuses caller paths or injected payloads',async t=>{
+test('requires explicit actor, exact supported purpose/identity and refuses caller paths or injected payloads',async t=>{
  const f=await setup(t);await assert.rejects(f.owner.run(f.input),/actor/i);for(const patch of [{cwd:'/tmp'},{prompt:'caller prompt'},{response:candidate},{requestId:'../file'}])await assert.rejects(actor(()=>f.owner.run({...f.input,...patch})));
- f.context.purpose='opening-options';await assert.rejects(actor(()=>f.owner.run(f.input)),/sourced-paragraph/);assert.equal(f.sent(),0);
+ f.context.purpose='opening-options';await assert.rejects(actor(()=>f.owner.run(f.input)),/supported editorial/);assert.equal(f.sent(),0);
 });
 
 test('real citation validator stages exact source locators and gaps; uncited claims and oversized output refuse',async t=>{
