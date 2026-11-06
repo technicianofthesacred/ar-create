@@ -7,6 +7,7 @@
  const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;};
  function decorate(){
   const workspace=document.getElementById('workspace'),next=workspace?.classList.contains('wb-outputs')?workspace.querySelector('#output-overview .oo-panel'):null;
+  if(next?.hasAttribute('data-approved-outputs')){clear();return;}
   if(next!==panel){clear();panel=next;}if(!panel)return;
   const rows=[...panel.querySelectorAll('.oo-row[data-overview-output]')];
   if(entries.some(e=>!e.row.isConnected)){clear();panel=next;}
