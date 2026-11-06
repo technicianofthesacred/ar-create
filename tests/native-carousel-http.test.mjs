@@ -43,7 +43,7 @@ test('native Carousel HTTP mounts preserve source and sibling, register once and
  await request('/api/study/carousel-make/preview?rootBindingId='+group.rootBindingId,input,400);
  await request('/api/study/carousel-make/preview',{...input,raw:'Unrequested prose.'},400);
  const preview=await request('/api/study/carousel-make/preview',input);assert.equal(preview.status,'preview');assert.equal(launches,0);
- await request('/api/study/carousel-make/run',selector);await execution.wait('native-carousel:'+input.operationId);
+ await request('/api/study/carousel-make/run',selector);await execution.wait(input.operationId);
  const result=await read();assert.equal(result.status,'result-ready',JSON.stringify(result));assert.equal(result.finalizationVerified,true);assert.equal(result.artifact.raw,generated);assert.equal(launches,1);
  await request('/api/study/carousel-make/run',selector,409);
  await request('/api/study/carousel-make/register',{...selector,parentStudyId:'foreign'},404);
