@@ -52,3 +52,15 @@ test('direct native Carousel Check retains its exact Read canvas, editor locatio
  await w.workspaceNavigation.changeMode('write');w.c3WorkbenchFrame.decorate();assert.equal(w.workspaceNavigation.isCarouselCheck(),false);assert.equal(d.querySelector('#wbf-drawer'),null);assert.strictEqual(d.querySelector('#study-output-canvas'),canvas);
  }finally{f.close();}
 });
+
+test('settled native Write enters Arrange through the same saved owner without creating an output',async()=>{
+ const f=boot();try{const {w,p}=f,proof={bindingId:'b',parentStudyId:'p',draftHash:'a'.repeat(64),dirty:false};w.studyDraft.currentProof=()=>({...proof});w.studyOutputConnection.flush=async()=>{};
+ assert.deepEqual(JSON.parse(JSON.stringify(w.workspaceNavigation.navigationOwner().owner)),{kind:'native',bindingId:'b',outputId:null});
+ await w.workspaceNavigation.changeMode('arrange');assert.equal(p.viewedStage,9);assert.deepEqual(f.calls,[['stage',9]]);assert.equal(w.studyDraft.currentBinding().id,'b');assert.equal(w.studyDraft.currentProof().draftHash,proof.draftHash);assert.equal(f.editor.textContent,'Unsent exact words');assert.equal(w.studyOutputConnection.selection(),null);
+ }finally{f.close();}
+});
+for(const change of ['dirty','revision','binding','subject'])test(`native Arrange preserves the ${change} navigation refusal`,async()=>{
+ const f=boot();try{const {w,p}=f,proof={bindingId:'b',parentStudyId:'p',draftHash:'a'.repeat(64),dirty:change==='dirty'};let binding={id:'b',parentStudyId:'p'};w.studyDraft.currentProof=()=>({...proof});w.studyDraft.currentBinding=()=>({...binding});w.studyOutputConnection.flush=async()=>{if(change==='revision')proof.draftHash='b'.repeat(64);if(change==='binding'){binding={id:'other',parentStudyId:'p'};proof.bindingId='other';}if(change==='subject')p.id='unrelated';};
+ await assert.rejects(w.workspaceNavigation.changeMode('arrange'),/changed|resolve|Save/);assert.equal(p.viewedStage,5);assert.deepEqual(f.calls,[]);assert.equal(f.editor.textContent,'Unsent exact words');
+ }finally{f.close();}
+});
