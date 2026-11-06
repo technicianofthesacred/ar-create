@@ -78,3 +78,36 @@ html body.wbf-on #app #workspace.wb-audience #c3-surface-bar .wb-audience-title-
    both excluded inspector IDs; keep the real reader's gutter authoritative. */
 html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience:has(.ar-magazine-reader){margin:0 32px 32px!important;max-width:1056px!important}
 @media(max-width:650px){html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience:has(.ar-magazine-reader){margin:0 16px 24px!important}}
+
+/* Audience has no legacy inspector. Use its real available width, then give
+   the saved edition the primary column instead of squeezing two status cards. */
+html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience{
+ margin:0 32px 32px!important;display:grid;grid-template-columns:minmax(0,1fr);gap:20px 24px;align-items:start;
+}
+#workspace.wb-audience{container:audience / inline-size}
+#workspace.wb-audience .oss-surface.wb-audience>.oss-heading{display:none}
+#workspace.wb-audience .oss-surface.wb-audience>[data-oss-reader]{order:0;min-width:0}
+#workspace.wb-audience .oss-surface.wb-audience>[data-oss-readiness]{order:1;display:block;max-width:none;margin:0!important}
+#workspace.wb-audience .oss-surface.wb-audience>.oss-review-tools{order:2;width:100%;max-width:none;margin:0;min-width:0}
+#workspace.wb-audience .oss-surface.wb-audience>.oss-status{order:3}
+#workspace.wb-audience .oss-panels{grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:12px}
+#workspace.wb-audience .oss-panel{padding:12px 14px;overflow-wrap:normal}
+#workspace.wb-audience .oss-panel li{flex-wrap:wrap;align-items:center;gap:6px 12px;overflow-wrap:normal}
+#workspace.wb-audience .oss-panel li>span:first-child{flex:1 1 10rem;min-width:0}
+#workspace.wb-audience .oss-panel li>.oss-link{flex:0 1 auto;max-width:100%;white-space:normal;overflow-wrap:normal}
+#workspace.wb-audience .oss-panel li>.ar-hold{flex:1 1 100%;min-width:0}
+#workspace.wb-audience .oss-panel .oss-connection-tag{margin:0}
+#workspace.wb-audience [data-oss-reader] .page{box-sizing:border-box;width:100%;max-width:100%}
+@container audience (min-width:760px){
+ html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience{grid-template-columns:minmax(0,1fr) minmax(15rem,18rem)}
+ #workspace.wb-audience .oss-surface.wb-audience>[data-oss-reader]{grid-column:1;grid-row:1}
+ #workspace.wb-audience .oss-surface.wb-audience>[data-oss-readiness]{grid-column:2;grid-row:1}
+ #workspace.wb-audience .oss-surface.wb-audience>.oss-review-tools{grid-column:1/-1}
+ #workspace.wb-audience .oss-surface.wb-audience>.oss-status{grid-column:1/-1}
+ #workspace.wb-audience .oss-panels{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:650px){
+ html body.wbf-on #app #workspace#workspace.wb-audience>.oss-surface.wb-audience{margin:0 16px 24px!important}
+}
+/* The caption is workspace text outside the printed slide's fixed palette. */
+#workspace.wb-audience [data-oss-reader] .phone>.cap2 :is(h3,p){color:var(--ink)}
