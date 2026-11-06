@@ -104,3 +104,8 @@ C02/C04/C06: managed transcription job working files and explicitly identified f
 ## 6 November — approved content-first repair
 
 S01, C02/C04/C05/C06. Material titles open their exact retained source, photo or recording through the maintained owner. Text is primary; file metadata uses a focused details screen. Focus refresh preserves an active click and late responses cannot reopen another item. The phone list keeps every item reachable. Native before/after qualification covers 1440/900/1000/1100/390 CSS pixels, light/dark, with actual sidebar state recorded. Release and installed proof are separate.
+
+
+## 6 November — Library and Material control refinement
+
+S01, C02/C04/C05/C06: distinguish Sources/Projects navigation, query/filter/sort controls, explicit file organization and Add sources. Ordinary browsing must reclaim the selection column; Done ends selection and its range anchor. Separate folder actions, Type and Collection groups with meaningful hierarchy. Material takes the workspace exclusively and restores the retained Library on return. Keep exact source opening and existing filing/import/recording owners. Candidate evidence is separate from acceptance and release.

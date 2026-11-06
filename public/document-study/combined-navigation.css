@@ -1,6 +1,6 @@
 /* Approved Combined: twelve ordinary entrances; piece modes belong to the piece. */
 html body.combined-on .workflowNavigation.wb-rail>:not(.combined-rail):not(.combined-phonebar){display:none!important}
-html body.combined-on .workflowNavigation.wb-rail{width:66px!important;padding:8px 3px!important;overflow-y:auto!important}
+html body.combined-on .workflowNavigation.wb-rail{width:84px!important;padding:8px 3px!important;overflow-y:auto!important}
 .combined-rail{display:flex;flex-direction:column;gap:3px;align-items:center;min-height:0;width:100%}
 html body.combined-on .combined-rail button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:58px;min-height:39px;padding:3px 0;border:0;border-radius:5px;background:transparent;color:var(--dim);font:400 11px/1.3 var(--ar-ui);cursor:pointer}
 .combined-rail button i{display:block;width:14px;height:14px;border:1.5px solid var(--dim);border-radius:3px;box-sizing:border-box}
@@ -15,7 +15,7 @@ html body.combined-on .combined-piece-switch button{padding:4px 10px;min-height:
 html body.combined-on .combined-piece-switch button[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
 html body.combined-on:has(.combined-piece-switch) .wbf-top-actions{margin-left:4px}
 html body.combined-on #c3-surface-bar #wbf-document-actions .wbf-mode-switch,html body.combined-on #c3-surface-bar #wbf-tools>[data-wbf-tool="check"]{display:none!important}
-html body.combined-on .wbf-top-actions svg{display:none}
+html body.combined-on .wbf-top-actions svg{display:block;width:18px;height:18px;flex:none}
 html body.combined-on :is(.wbf-top-actions .tbtn,.wbf-top-actions .sizer,#c3-surface-bar .sb-btn,#c3-surface-bar .sb-icon){border-radius:5px!important}
 #combined-navigation-status{position:absolute;top:48px;right:12px;max-width:min(32rem,calc(100vw - 90px));padding:8px 12px;background:var(--paper);color:var(--ink);border:1px solid var(--line);font:400 13px/1.5 var(--ar-ui)}
 @media(max-width:760px){
@@ -32,33 +32,32 @@ html body.combined-on :is(.wbf-top-actions .tbtn,.wbf-top-actions .sizer,#c3-sur
  html body.combined-on #c3-tabstrip.wbf-top{gap:4px!important;padding:0 8px!important}
  html body.combined-on #c3-tabstrip.wbf-top>.ht-switch{max-width:38vw}
  html body.combined-on #c3-tabstrip.wbf-top .ht-switch-label{max-width:26vw}
- html body.combined-on:has(.combined-piece-switch) .wbf-top-actions{display:none}
- html body.combined-on .wbf-top-actions :is([data-wbf-thought],[data-wbf-tool]){display:none}
+ html body.combined-on:has(.combined-piece-switch) .wbf-top-actions{display:flex}
  .combined-piece-switch{margin-left:auto}
  html body.combined-on .combined-piece-switch button{padding:4px 7px;min-height:34px;font-size:12px}
 }
 
-/* The Spine: each band has a thin labelled strip that turns gold while you are in one of its tools;
-   the selected tool is a solid gold block. Home and Library sit above the bands; each band shows its waiting total under the label. */
-.combined-rail-band{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:4px 0 4px 8px;box-sizing:border-box;border-top:1px solid var(--line)}
-.combined-rail-band:not([data-band]){padding-left:0;border-top:0}
-.combined-band-tools{display:flex;flex-direction:column;align-items:center;gap:3px}
-.combined-band-label{position:absolute;left:0;top:4px;bottom:4px;width:9px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:600 8px/1 var(--ar-ui,sans-serif);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border-right:2px solid var(--line);opacity:.8}
-.combined-rail-band.is-active .combined-band-label{color:var(--warm);border-right-color:var(--warm);opacity:1}
-.combined-band-count{position:absolute;left:0;bottom:5px;width:9px;text-align:center;font:600 9px/1 var(--ar-ui,sans-serif);color:var(--dim);font-variant-numeric:tabular-nums}
+/* The Spine reserves a real label column. The whole active band is gold,
+   while its individual current destination retains its own gold row. */
+.combined-rail-band{display:grid;grid-template-columns:20px minmax(0,1fr);column-gap:8px;align-items:stretch;width:100%;padding:4px 0;box-sizing:border-box;border-top:1px solid var(--line)}
+.combined-rail-band:not([data-band]){display:block;border-top:0}
+.combined-band-tools{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.combined-band-label{grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:600 9px/1 var(--ar-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--sel);border-radius:3px}
+.combined-rail-band.is-active .combined-band-label{color:var(--ar-on-warm,#20231f);background:var(--warm);opacity:1}
+.combined-band-count{grid-column:1;grid-row:1;align-self:end;z-index:1;padding:3px 0;text-align:center;font:600 9px/1 var(--ar-ui,sans-serif);color:var(--dim);font-variant-numeric:tabular-nums}
 .combined-band-count:empty{display:none}
-.combined-rail-band:has(.combined-band-count:not(:empty)) .combined-band-label{bottom:18px}
-.combined-rail-band.is-active .combined-band-count{color:var(--warm)}
-html body.combined-on .combined-rail button[aria-current]{background:var(--warm);color:var(--bg,#151310)}
-html body.combined-on .combined-rail button[aria-current] i{background:var(--bg,#151310);border-color:var(--bg,#151310)}
-html body.combined-on .combined-rail-band[data-band] .combined-band-tools button{width:50px;margin-left:4px}
+.combined-rail-band:has(.combined-band-count:not(:empty)) .combined-band-label{padding-top:18px}
+.combined-rail-band.is-active .combined-band-count{color:var(--ar-on-warm,#20231f)}
+html body.combined-on .combined-rail button[aria-current]{background:var(--warm);color:var(--ar-on-warm,#20231f)}
+html body.combined-on .combined-rail button[aria-current] i{background:var(--ar-on-warm,#20231f);border-color:var(--ar-on-warm,#20231f)}
+html body.combined-on .combined-rail-band[data-band] .combined-band-tools button{width:100%;min-width:0;margin-left:0}
 
 /* Wide Spine (default): name and waiting count beside each tool; "Collapse to icons" keeps the band strips. */
 @media(min-width:901px){
 html body.combined-on.combined-rail-wide .workflowNavigation.wb-rail{width:196px!important}
 html body.combined-on.combined-rail-wide .combined-rail{align-items:stretch}
 html body.combined-on.combined-rail-wide .combined-band-tools{align-items:stretch;width:100%}
-html body.combined-on.combined-rail-wide .combined-rail button[data-combined-nav],html body.combined-on.combined-rail-wide .combined-rail-band[data-band] .combined-band-tools button{flex-direction:row;justify-content:flex-start;gap:10px;width:auto;margin-left:6px;padding:7px 10px;min-height:34px;font-size:13.5px}
+html body.combined-on.combined-rail-wide .combined-rail button[data-combined-nav],html body.combined-on.combined-rail-wide .combined-rail-band[data-band] .combined-band-tools button{flex-direction:row;justify-content:flex-start;gap:10px;width:auto;margin-left:0;padding:7px 10px;min-height:34px;font-size:13.5px}
 html body.combined-on.combined-rail-wide .combined-rail-band:not([data-band]) .combined-band-tools button{margin-left:0}
 }
 .combined-count{margin-left:auto;min-width:18px;padding:0 5px;border-radius:5px;font:600 11px/18px var(--ar-ui,sans-serif);text-align:center;background:var(--sel,rgba(255,255,255,.06));color:var(--dim)}
@@ -83,3 +82,15 @@ html body.combined-rail-wide #combined-sheet[data-kind=source]{width:min(560px,c
 
 /* Rail line icons (Workbench Revision 4). */
 .combined-ic{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+@media(min-width:801px){html body.combined-on:not(.combined-rail-wide){--wb-railw:84px}}
+@media(min-width:801px) and (max-width:900px){html body.combined-on{--wb-railw:84px}}
+@media(max-width:800px){
+ html body.combined-on .combined-phonebar button[aria-current]{background:var(--warm)!important;color:var(--ar-on-warm,#20231f)!important;font-weight:600}
+ html body.combined-on #combined-phone-sheet{display:grid!important;grid-template-columns:20px minmax(0,1fr);gap:8px!important}
+ .combined-phone-band-label{display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);background:var(--warm);color:var(--ar-on-warm,#20231f);font:600 10px/1 var(--ar-ui);letter-spacing:.06em;text-transform:uppercase;border-radius:3px}
+ .combined-phone-tools{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+}
+
+html body.combined-on{--ar-on-warm:#20231f}
+html[data-theme="light"] body.combined-on{--ar-on-warm:var(--bg,#efede6)}
