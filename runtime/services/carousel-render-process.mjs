@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
 import {inflateSync} from 'node:zlib';
 const SIGNATURE=Buffer.from([137,80,78,71,13,10,26,10]);
 const crcTable=Array.from({length:256},(_,i)=>{for(let j=0;j<8;j++)i=i&1?0xedb88320^(i>>>1):i>>>1;return i>>>0;});
@@ -26,17 +26,38 @@ export function validateCarouselPng(bytes,{width=1080,height=1350}={}){
  return bytes;
 }
 
+// macOS can refuse killpg while our exited child is still a zombie. Inspect
+// only that denial; a live or foreign-owned member must never become success.
+function retiredOwnedGroup(pid){
+ if(typeof process.getuid!=='function')return false;
+ try{
+  const rows=execFileSync('/bin/ps',['-axo','pid=,pgid=,uid=,stat='],{encoding:'utf8',timeout:1000,maxBuffer:1024*1024}).split('\n').filter(line=>line.trim()).map(line=>{
+   const match=/^\s*(\d+)\s+(\d+)\s+(-?\d+)\s+(\S+)\s*$/.exec(line);
+   if(!match)throw Error('Unverified process group');
+   return {pid:Number(match[1]),group:Number(match[2]),uid:Number(match[3]),status:match[4]};
+  }).filter(row=>row.group===pid);
+  return rows.every(row=>row.uid===process.getuid()&&row.status.startsWith('Z'));
+ }catch{return false;}
+}
+
 /** A completed render is distinct from Chrome shutdown. Own one isolated process
  * group, retain the 30s deadline, and never publish partial renderer output. */
 export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250,signal:abortSignal}={}){
  if(abortSignal?.aborted)return Promise.reject(Error('Carousel render cancelled.'));
  if(fs.existsSync(file))return Promise.reject(Error('Render target must be a fresh child-owned file.'));
  return new Promise((resolve,reject)=>{
-  const child=spawn(binary,args,{detached:true,stdio:['ignore','pipe','pipe']});let stdout='',stderr='',settling=false,done=false,failure=null;
-  const signal=value=>{if(!child.pid)return;try{process.kill(-child.pid,value);}catch(error){if(error.code!=='ESRCH')failure??=error;}};
+  const child=spawn(binary,args,{detached:true,stdio:['ignore','pipe','pipe']});let stdout='',stderr='',settling=false,done=false,failure=null,exited=false,retiredPermission=null;
+  const signal=value=>{
+   if(!child.pid||retiredPermission)return;
+   try{process.kill(-child.pid,value);}catch(error){
+    if(error.code==='ESRCH')return;
+    if(error.code==='EPERM'&&retiredOwnedGroup(child.pid)){retiredPermission=error;return;}
+    failure??=error;
+   }
+  };
   const finish=error=>{
    failure=error||failure;if(settling)return;settling=true;clearTimeout(deadline);clearInterval(fileCheck);signal('SIGTERM');
-   setTimeout(()=>{signal('SIGKILL');done=true;abortSignal?.removeEventListener('abort',cancel);child.stdout.destroy();child.stderr.destroy();failure?reject(failure):resolve({stdout,stderr});},grace);
+   setTimeout(()=>{signal('SIGKILL');if(retiredPermission&&!exited)failure??=retiredPermission;done=true;abortSignal?.removeEventListener('abort',cancel);child.stdout.destroy();child.stderr.destroy();failure?reject(failure):resolve({stdout,stderr});},grace);
   };
   const inspect=()=>{
    if(settling||!/<html\b[\s\S]*<\/html>\s*$/i.test(stdout))return;
@@ -55,7 +76,7 @@ export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250
   // Chrome on macOS may encode our SIGTERM/SIGKILL as 128 + signal.
   // Once completion initiated shutdown, those codes describe cleanup, not
   // rendering. Other failures (including an exit before completion) still hold.
-  const recordExit=code=>{if(code!==null&&code!==0&&!(settling&&[143,137].includes(code)))failure=Error('Carousel renderer failed with exit '+code+'.');};
+  const recordExit=code=>{exited=true;if(code!==null&&code!==0&&!(settling&&[143,137].includes(code)))failure=Error('Carousel renderer failed with exit '+code+'.');};
   child.on('error',finish);
   child.on('exit',recordExit);
   child.on('close',(code,reason)=>{if(done)return;if(settling){recordExit(code);return;}inspect();if(!settling)finish(Error('Carousel renderer stopped before a complete ready PNG.'+(lastInvalid?' '+lastInvalid.message:'')));});
