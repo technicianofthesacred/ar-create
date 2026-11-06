@@ -50,5 +50,5 @@
  window.addEventListener('study-draft-change',()=>{candidate=null;mount();});
  const root=document.getElementById('app')||document.body,observer=new MutationObserver(()=>{if(disposed||typeof document==='undefined'||queued)return;queued=true;queueMicrotask(()=>{queued=false;if(!disposed&&typeof document!=='undefined')mount()})});observer.observe(root,{childList:true,subtree:true});
  function dispose(){disposed=true;epoch++;observer.disconnect();}
- window.addEventListener('pagehide',dispose,{once:true});window.studyExactWording={mount,dispose};mount();
+ window.addEventListener('pagehide',event=>{if(!event.persisted)dispose();});window.studyExactWording={mount,dispose};mount();
 })();

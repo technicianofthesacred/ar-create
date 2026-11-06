@@ -115,5 +115,5 @@
 window.addEventListener('study-direction-choice-change',event=>{if(event.detail?.parentStudyId===current().id)reread();});
 window.addEventListener('focus',()=>{if(window.c3Shell?.live?.connected?.())return;reread();});
 let liveTimer=null;const liveHook=()=>window.c3Shell?.live?.on({},event=>{const p=current(),r=rooms.get(p?.id);if(!event.reset){if(/^(presence|lease\.|handoff|needs-decision)/.test(event.kind||''))return;const id=event.scope?.id;if(!(event.scope?.kind==='project'&&id===p.id||event.scope?.kind==='draft'&&r?.parts?.some(part=>part.bindingId===id)))return;}clearTimeout(liveTimer);liveTimer=setTimeout(reread,250);});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',liveHook,{once:true});else setTimeout(liveHook,0);window.addEventListener('pagehide',()=>{disposed=true;observer.disconnect();},{once:true});decorate();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',liveHook,{once:true});else setTimeout(liveHook,0);window.addEventListener('pagehide',event=>{if(event.persisted)return;disposed=true;observer.disconnect();});decorate();
 })(()=>current());

@@ -60,7 +60,7 @@
   });
   const app = document.getElementById('app');
   if (app) observer.observe(app, { childList: true, subtree: true });
-  window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
+  window.addEventListener('pagehide', event => { if (!event.persisted) observer.disconnect(); });
   window.SharedProseSurfaces = { decorate };
   decorate();
 })();

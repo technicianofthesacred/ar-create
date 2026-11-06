@@ -63,3 +63,13 @@ test('owned Magazine Write exposes shared guidance only for the exact current ow
 });
 
 test('Direction Title and intent is visible in place with existing save and Undo controls',async t=>{const w=setup(t,4);await tick();const section=w.document.querySelector('.dwt-notes');assert.equal(section.tagName,'SECTION');assert.equal(section.querySelector('h3').textContent,'Title & intent');assert.equal(section.querySelectorAll('details,summary').length,0);assert.ok(section.querySelector('[data-dwt-action=save-plan]'));assert.ok(section.querySelector('[data-dwt-action=undo-plan]'));assert.ok(section.querySelector('[data-dwt-plan=closing]'));});
+
+
+test('cached pagehide retains writing tools and later ordinary pagehide stops remounting',async t=>{
+ const w=setup(t),hide=persisted=>w.dispatchEvent(new w.PageTransitionEvent('pagehide',{persisted}));w.fetch=async()=>({ok:true,json:async()=>sheet()});
+ click(w,'voice');await tick();const field=w.document.querySelector('[data-dwt-guidance]');field.value='Retained exact guidance';field.dispatchEvent(new w.Event('input',{bubbles:true}));
+ hide(true);w.document.getElementById('direction-writing-tools').remove();await tick();await tick();
+ assert.equal(w.document.querySelector('[data-dwt-guidance]').value,'Retained exact guidance');
+ hide(false);w.document.getElementById('direction-writing-tools').remove();w.studyDirectionWritingTools.mount();await tick();
+ assert.equal(w.document.getElementById('direction-writing-tools'),null);
+});

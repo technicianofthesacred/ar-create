@@ -49,6 +49,6 @@
    mediaCheck();await window.studyPhotoStage.focusAsset({parentStudyId:value.parentStudyId,rootBindingId:value.rootBindingId,sourceId:value.sourceId,originGuard:mediaCheck});mediaCheck();sessionStorage.removeItem(KEY);
   }catch(e){button.textContent=e.message;button.disabled=false;}};bar.append(button);canvas.before(bar);
  }
- const observer=new MutationObserver(paintReturn);observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>observer.disconnect());
+ const observer=new MutationObserver(paintReturn);observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});window.addEventListener('pagehide',event=>{if(!event.persisted)observer.disconnect();});
  window.studyMediaUsage={read,open};
 })();
