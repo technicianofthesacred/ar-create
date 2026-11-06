@@ -53,3 +53,24 @@ test('Research to its already mounted Write editor does not refocus or scroll it
 });
 
 test('global Library does not mark the Develop phone group current merely because its menu links to Library',()=>{const f=boot(1);try{f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="library"]').getAttribute('aria-current'),'page');assert.equal(f.d.querySelector('.combined-phonebar [data-combined-group="develop"]').hasAttribute('aria-current'),false);assert.equal(f.d.querySelectorAll('.combined-phonebar [aria-current]').length,0);}finally{f.close();}});
+
+test('sidebar toggle names its action, reports its state and persists without navigating',()=>{
+ const f=boot();try{
+  const rail=f.d.querySelector('.combined-rail'),toggle=rail.querySelector('[data-combined-rail-toggle]');
+  assert.equal(toggle.getAttribute('aria-label'),'Collapse sidebar');
+  assert.equal(toggle.getAttribute('aria-expanded'),'true');
+  assert.equal(rail.firstElementChild,toggle);
+  toggle.focus();toggle.click();
+  assert.equal(toggle.getAttribute('aria-label'),'Expand sidebar');
+  assert.equal(toggle.getAttribute('aria-expanded'),'false');
+  assert.equal(f.w.localStorage.getItem('combined-rail-wide'),'false');
+  assert.equal(f.d.body.classList.contains('combined-rail-wide'),false);
+  f.w.combinedNavigation.decorate();
+  assert.equal(f.d.activeElement,toggle);
+  assert.deepEqual(f.calls,[]);assert.equal(f.p.id,'kept');
+  toggle.click();assert.equal(toggle.getAttribute('aria-expanded'),'true');
+  assert.equal(f.w.localStorage.getItem('combined-rail-wide'),'true');
+ }finally{f.close();}
+});
+
+test('cached pagehide retains sheet observation and ordinary hide disconnects it',async()=>{const f=boot();try{f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide',{persisted:true}));f.w.dispatchEvent(new f.w.PageTransitionEvent('pageshow',{persisted:true}));f.d.querySelector('[data-combined-group="develop"]').click();const sheet=f.d.createElement('div');sheet.id='combined-sheet';f.d.body.append(sheet);await new Promise(r=>setTimeout(r,0));assert.equal(f.d.getElementById('combined-phone-sheet'),null);sheet.remove();f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide'));f.d.querySelector('[data-combined-group="develop"]').click();f.d.body.append(sheet);await new Promise(r=>setTimeout(r,0));assert.ok(f.d.getElementById('combined-phone-sheet'));}finally{f.close();}});

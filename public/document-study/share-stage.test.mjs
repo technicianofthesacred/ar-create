@@ -22,3 +22,17 @@ test('Share interrupted decision retains exact operation across remount without 
 test('Share finds the saved recipient translation after clearing browser pointers and changing reader actor',async t=>{const f=languageFixture({actor:'agent:codex',standIn:true});t.after(f.close);await f.loaded();await f.click('prepare');await f.click('run');f.w.sessionStorage.removeItem('ar-create.share-language-selection.v1');f.w.arCreateUiActor={actor:'human:adrian'};await f.remount();assert.match(f.w.document.querySelector('[data-share-language]').textContent,/保存的邀请/);assert.match(f.w.document.querySelector('[data-share-language]').textContent,/Prepared by agent:codex/);assert.ok(f.w.document.querySelector('[data-share-language-request]'));assert.equal(f.languageCalls.filter(c=>c.action==='run').length,1);assert.equal(f.languageCalls.at(-1).headers['X-AR-Actor'],'human:adrian');});
 
  test('Share keeps exact context before compose actions and Correspondence in its secondary row',async t=>{const f=fixture();t.after(f.close);await f.loaded();const d=f.w.document,context=d.querySelector('.sp-edition');assert.deepEqual([...context.querySelectorAll('select')].map(node=>node.getAttribute('data-share-output')!==null?'output':'edition'),['output','edition']);assert.equal(d.querySelectorAll('[data-share-output]').length,1);assert.equal(context.querySelector('[data-share-action]').textContent,'Review piece');assert.equal(d.querySelector('[data-share-recipient]').closest('[hidden]')!==null,true,'single recipient picker remains hidden');const history=d.querySelector('[data-share-action="history"]');assert.ok(history.closest('.sp-secondary'));assert.match(history.textContent,/Correspondence/);history.click();await f.loaded();assert.equal(d.querySelector('.sp-heading h2').textContent,'Correspondence');assert.ok(d.querySelector('[data-share-action="record"]'));assert.equal(f.calls.some(call=>call.body),false);});
+
+test('Share remounts its saved invitation after cached pagehide and still cleans up on later unload',async t=>{
+ const f=fixture();t.after(f.close);await f.loaded();
+ const hide=persisted=>f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide',{persisted}));
+ hide(true);f.w.dispatchEvent(new f.w.PageTransitionEvent('pageshow',{persisted:true}));
+ f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();
+ assert.equal(f.w.document.querySelector('[data-share-field="message"]').value,'article saved');
+ assert.equal((await f.w.shareStageNavigation.whenNavigationReady()).outputId,'article');
+ const picker=f.w.document.querySelector('[data-share-output]');picker.value='carousel';picker.dispatchEvent(new f.w.Event('change'));await f.loaded();
+ assert.equal(f.w.document.querySelector('[data-share-field="message"]').value,'carousel saved');
+ assert.equal(f.w.shareStageNavigation.navigationSnapshot().outputId,'carousel');
+ hide(false);f.w.document.getElementById('app').innerHTML='<section data-output-stage-surface="11"></section>';await f.loaded();
+ assert.equal(f.w.document.querySelector('[data-share-field="message"]'),null);
+});

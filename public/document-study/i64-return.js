@@ -11,7 +11,7 @@
  function install(doc,href){const bar=doc.querySelector('.topbar');if(!bar||!href)return;let link=bar.querySelector('.i64-return');if(!link){link=doc.createElement('a');link.className='i64-return';link.textContent='i64 OS';link.setAttribute('aria-label','Return to i64 OS');bar.append(link);}if(link.getAttribute('href')!==href)link.setAttribute('href',href);}
  if(typeof window!=='undefined'&&typeof document!=='undefined'){
   const values=new URLSearchParams(window.location.search).getAll('i64osReturn'),href=values.length===1?validateReturnTarget(values[0]):null;
-  if(href){install(document,href);const observer=new MutationObserver(()=>install(document,href));observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>observer.disconnect(),{once:true});}
+  if(href){install(document,href);const observer=new MutationObserver(()=>install(document,href));observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});window.addEventListener('pagehide',event=>{if(!event.persisted)observer.disconnect();});}
  }
  return {validateReturnTarget,install};
 });

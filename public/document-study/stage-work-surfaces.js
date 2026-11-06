@@ -99,5 +99,5 @@
  install();const originalRender=typeof render==='function'?render:null;if(originalRender)render=function(){install();originalRender.apply(this,arguments);decorate()};
  document.addEventListener('click',onClick);document.addEventListener('input',remember);document.addEventListener('change',remember);document.addEventListener('toggle',e=>{const p=eligible();if(p&&e.target.matches?.('[data-sws-tool]'))stateFor(p).open[e.target.dataset.swsTool]=e.target.open},true);
  const observer=new MutationObserver(()=>{install();decorate()});const app=document.getElementById('app');if(app)observer.observe(app,{childList:true,subtree:true});
- window.addEventListener('pagehide',()=>observer.disconnect());window.studyStageWorkSurfaces={decorate};decorate();
+ window.addEventListener('pagehide',event=>{if(!event.persisted)observer.disconnect();});window.studyStageWorkSurfaces={decorate};decorate();
 })();
