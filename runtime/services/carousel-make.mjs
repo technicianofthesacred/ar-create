@@ -211,5 +211,5 @@ export function createCarouselMake({dataDir,store,library,requests,terminal,exec
   if(isNew(record)&&record.stage==='look')await validateLook(record);else{currentDocument(record);const request=requests.recent().records.find(item=>item.manifest.id===record.requestId);if(!request||request.manifest.contextHash!==record.contextHash)throw new StateError('Captured writing context is unavailable.',409);await requests.validateWriting(request);currentDocument(record);}
  }
  const automatic=automaticArtifacts({execution,load:getRecord,loadOwned:ownedRecord,isActive:record=>store.get().project.id===record.projectId,persist,workspace,validate:validateAutomatic,names:record=>[artifactName(record)],collect:id=>get(id,true),serial});
- return {run:(id,input)=>serial(()=>automatic.run(id,input)),preview:input=>serial(()=>preview(input)),send:(id,input)=>serial(()=>send(id,input)),get:id=>serial(()=>get(id)),recent:()=>serial(recent)};
+ return {run:(id,input)=>serial(()=>automatic.run(id,input)),cancel:(id,input)=>serial(()=>automatic.cancel(id,input)),preview:input=>serial(()=>preview(input)),send:(id,input)=>serial(()=>send(id,input)),get:id=>serial(()=>get(id)),recent:()=>serial(recent)};
 }

@@ -112,6 +112,6 @@ export function createNativeCarouselMake({dataDir,native,outputs,scope,proof,gui
   }
   return {schema:'ar-create.native-carousel-generation-list.v1',scope:group(input),items};
  }
- async function cancel(input){actor();const record=load(input);scopedExecution.cancel(input.requestId);return publicRecord(record,await generator(record).get(input.requestId));}
+ async function cancel(input){actor();const record=load(input);return publicRecord(record,await generator(record).cancel(input.requestId,{}));}
  return {list:i=>serial(()=>list(i)),preview:i=>serial(()=>prepare(i)),get:i=>serial(()=>get(i)),run:i=>serial(()=>run(i)),register:i=>serial(()=>register(i)),cancel:i=>serial(()=>cancel(i))};
 }

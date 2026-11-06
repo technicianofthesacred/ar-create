@@ -88,3 +88,20 @@ test('durable scoped discovery exposes no artifact and never executes or registe
  await agent(()=>service.run(f.selector));await f.execution.wait('native-carousel:'+f.input.operationId);listed=await f.make().list(group);assert.equal(listed.items[0].status,'result-ready');assert.equal(listed.items[0].freshness,'not-checked');assert.equal(f.count(),1);assert.equal((await f.factory.owner.read(group)).outputs.length,1);
  await agent(()=>service.register(f.selector));assert.equal((await f.make().list(group)).items[0].status,'registered');assert.equal(f.count(),1);
 });
+
+test('durable cancellation rejects a late signal-ignoring provider result and survives restart without resend',async t=>{
+ let release,returned=false,providerSignal,stateAtAbort;const gate=new Promise(r=>release=r),f=await fixture(t,{execute:async packet=>{providerSignal=packet.signal;packet.signal.addEventListener('abort',()=>{stateAtAbort=JSON.parse(fs.readFileSync(path.join(path.dirname(packet.cwd),path.basename(packet.cwd)+'.json'))).execution.state;});await gate;returned=true;return {response:{artifacts:{'result.md':raw}}};}}),service=f.make();
+ await agent(()=>service.preview(f.input));await agent(()=>service.run(f.selector));
+ let settled=false;const actualAttempt=f.execution.wait('native-carousel:'+f.input.operationId).then(()=>{settled=true;});
+ // Waiting on an unprefixed UUID is a no-op: prove the real attempt is still gated.
+ await f.execution.wait(f.input.operationId);await new Promise(r=>setImmediate(r));assert.equal(settled,false);assert.equal(returned,false);
+ await assert.rejects(agent(()=>service.cancel({...f.selector,parentStudyId:'foreign'})));assert.equal(providerSignal.aborted,false);
+ let cancelled;
+ try{cancelled=await agent(()=>service.cancel(f.selector));assert.equal(providerSignal.aborted,true);assert.equal(stateAtAbort,'interrupted');}finally{release();}
+ await actualAttempt;assert.equal(returned,true,'The deliberately uncooperative provider actually returned its late artifact.');assert.equal(settled,true);
+ assert.equal(cancelled.status,'needs-attention');assert.equal(cancelled.execution.state,'interrupted');assert.equal(cancelled.modelExecuted,null);assert.deepEqual((await agent(()=>service.cancel(f.selector))).execution,cancelled.execution);
+ const result=await service.get(f.selector);assert.equal(result.status,'needs-attention');assert.equal(result.execution.state,'interrupted');assert.equal(result.artifact,null);assert.equal(result.modelExecuted,null);
+ const artifactDirectory=path.join(f.dataDir,'native-carousel-make',f.input.operationId,'carousel-make',f.input.operationId);for(const name of ['result.md','complete.json'])assert.equal(fs.existsSync(path.join(artifactDirectory,name)),false,name+' must not be written after cancellation');
+ assert.equal((await f.factory.owner.read(f.input)).outputs.length,1);await assert.rejects(agent(()=>service.register(f.selector)));await assert.rejects(agent(()=>service.run(f.selector)),/already/);
+ const execution=createArtifactExecution({available:()=>true,execute:async()=>assert.fail('Cancelled attempts must not resend after restart')});t.after(()=>execution.dispose());const restarted=createNativeCarouselMake({...f.options,execution});assert.equal((await restarted.get(f.selector)).execution.state,'interrupted');assert.equal((await restarted.list({rootBindingId:f.input.rootBindingId,parentStudyId:f.input.parentStudyId})).items[0].execution.state,'interrupted');await assert.rejects(agent(()=>restarted.run(f.selector)),/already/);await assert.rejects(agent(()=>restarted.register(f.selector)));assert.equal(f.count(),1);
+});

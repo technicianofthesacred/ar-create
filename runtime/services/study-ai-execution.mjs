@@ -73,7 +73,7 @@ export function createStudyAIExecution({dataDir,service,execution=createArtifact
   let phase='response';
   try{
    const artifacts=result?.response?.artifacts;if(!object(result?.response)||Object.keys(result.response).join(',')!=='artifacts'||!object(artifacts)||Object.keys(artifacts).join(',')!=='proposal.json'||typeof artifacts['proposal.json']!=='string'||Buffer.byteLength(artifacts['proposal.json'])>128*1024)fail('Invalid bounded proposal artifact.');
-   const raw=artifacts['proposal.json'];if(!raw.isWellFormed()||raw.includes('\0'))fail('Invalid proposal text.');const target=path.join(ensurePrivateDirectory(root,record.operationId),'returned-proposal.json');atomicWrite(target,raw,{exclusive:true});record.returnedArtifact={hash:digest(raw),bytes:Buffer.byteLength(raw)};const candidate=JSON.parse(raw);
+   const raw=artifacts['proposal.json'];if(!raw.isWellFormed()||raw.includes('\0'))fail('Invalid proposal text.');const target=path.join(ensurePrivateDirectory(root,record.operationId),'returned-proposal.json');atomicWrite(target,raw,{exclusive:true});record.returnedArtifact={hash:digest(raw),bytes:Buffer.byteLength(raw)};persist(record);const candidate=JSON.parse(raw);
    phase='context';
    if(record.rulesHash&&digest(stable(editorialRules()))!==record.rulesHash)fail('Maintained editorial rules changed.');
    const current=await context(record);if(digest(stable(current))!==record.contextHash)fail('Prepared context changed.');
