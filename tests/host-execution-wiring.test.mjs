@@ -7,7 +7,7 @@ import {syntheticHome} from '../scripts/demo.mjs';
 import {createServer} from '../runtime/server.mjs';
 import {digest} from '../runtime/services/files.mjs';
 
-for(const scenario of ['configured','disabled','explicit-native-override'])test('native drafting respects '+scenario+' host execution without running a provider',async t=>{
+for(const scenario of ['configured','disabled','explicit-native-override'])test('native drafting and translation respect '+scenario+' host execution without running a provider',async t=>{
  const home=syntheticHome(),config=JSON.parse(fs.readFileSync(home.config,'utf8'));let launches=0;
  const adapter=(model,available)=>({capabilities:()=>({available,model,configuredProvider:'codex',readiness:{state:available?'unverified':'executable-missing',usable:available?null:false}}),launch(){launches++;throw Error('This read must not run a provider.');},wait:async()=>{},dispose(){}});
  const shared=adapter('host-selected-model',scenario!=='disabled'),override=scenario==='explicit-native-override'?adapter('explicit-native-test-model',true):undefined;
@@ -19,5 +19,10 @@ for(const scenario of ['configured','disabled','explicit-native-override'])test(
  const opened=await request('/api/study-draft/open',{parentStudyId:'hk',originalId:'hk-article',originalHash:digest(raw),operationId:randomUUID()});
  const copy=await request('/api/study/structure-tests',{sourceBindingId:opened.binding.id,sourceParentStudyId:'hk',expected:opened.expected,title:'Invented execution wiring',operationId:randomUUID()});
  const native=await request('/api/study-ai/read?'+new URLSearchParams({parentStudyId:copy.parentStudyId,bindingId:copy.article.bindingId}));
+ const audience=await request('/api/study/language/capabilities?'+new URLSearchParams({kind:'audience-article',bindingId:copy.bindingId,parentStudyId:copy.parentStudyId,outputId:copy.article.outputId}));
+ const owned=await request('/api/study-draft/read?'+new URLSearchParams({bindingId:copy.bindingId,parentStudyId:copy.parentStudyId}));
+ const record=owned.context.records.find(r=>r.raw.includes('Entirely invented source fixture.'));assert.ok(record);
+ const selectedSource=await request('/api/source-language/capabilities',{selection:{kind:'copy-capture-excerpts',bindingId:copy.bindingId,parentStudyId:copy.parentStudyId,recordId:record.id,expectedSourceHash:record.copiedHash,ranges:[{from:0,to:20}]}});
+ for(const result of [audience,selectedSource])for(const [key,value] of Object.entries((override||shared).capabilities()))assert.deepEqual(result[key],value);
  assert.deepEqual(native.aiExecution,(override||shared).capabilities());assert.deepEqual(await request('/api/ai/execution/capabilities'),shared.capabilities());assert.equal(launches,0);assert.equal(fs.readFileSync(path.join(home.vault,'Workflow/3-Develop/DEV - Synthetic One.md'),'utf8'),raw);
 });
