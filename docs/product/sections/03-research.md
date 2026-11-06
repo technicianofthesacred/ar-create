@@ -110,3 +110,11 @@ Finish criterion: an invented structured research document opens through its Lib
 ## 6 November — same retained context across clients
 
 C01/C02/C03/C04/C06, S03. Use the maintained [current-work contract](../../contracts/current-work.md) for exact current intent, selected source versions, captured human contributions and unresolved work. Missing upstream chat history remains explicit; a packet is a disposable owner projection, not a new research summary authority. Existing app changes invalidate prepared work without changing either version. Finish: a second client resumes the exact saved context and holds stale preparation; actual findings, provider usefulness and whole-section visual acceptance retain their separate proofs.
+
+## 6 November — approved independent question entrance v2
+
+C01/C04/C05/C06, S03. The human’s “yes do all” decision adopts VR-02 v2 with shared Graphite controls: one question, compact included sources, an ordinary source-selection/provenance screen and saved learning. Question history, notebook, shared brief, Atlas and retained findings remain available through focused Research tools. Source provenance verifies the exact selected source ID and hash through its maintained reader; it does not verify the source’s claims.
+
+Use the existing subject inquiry, notebook and prepare/run/keep owners. Exploring prepares a question; actual model execution remains explicit and unavailable connections stay visible. No output is created or required: an existing Collection binding can supply the question owner, while a subject without that connection can retain an unsent question and read its retained findings with an honest unavailable request. Returning from the question surface releases the existing native writing hold and restores the same editor, selection and scroll; changed owners cancel restoration rather than selecting another manuscript.
+
+Finish: exact source selection/full-source reading, question preparation without a provider run, saved question reopen, no-output fallback and native dirty-writing Back/Esc return; desktop/phone light/dark screens, affected checks and package proof. These are bounded candidate checks, not provider usefulness, installation or blanket acceptance of every research capability.
