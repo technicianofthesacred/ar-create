@@ -86,3 +86,27 @@ test('selected save then reload, owner restart and exact Undo permits a second g
  const next=await review({sessionId:f.session.id,expectedRevision:restored.revision,expectedSourceHash:restored.sessions[0].sourceHash});assert.equal(next.state,'proposal-ready');assert.equal(next.reusedUnchangedContext,true);assert.equal(next.sourceContext.expectedRevision,restored.revision);assert.deepEqual(next.preparedSourceContext,initial.preparedSourceContext);assert.equal(next.preparedSourceContext.expectedRevision,before.revision);
  const second={...edit,operationId:randomUUID(),expectedRevision:next.sourceContext.expectedRevision,expectedSourceHash:next.sourceContext.expectedSourceHash};await request('/api/source-sessions/edit',second);assert.equal((await read()).sessions[0].turns[0].text,selected.text);assert.equal(fs.existsSync(f.log),false);assert.equal(digest(fs.readFileSync(f.file)),f.descriptor.expectedSha256);
 });
+
+async function duringReceiptRead(action,read){
+ const original=fs.readSync;let injected=false;
+ fs.readSync=function(...args){const count=original.apply(this,args);if(!injected){injected=true;action();}return count;};
+ try{return await read();}finally{fs.readSync=original;assert.equal(injected,true);}
+}
+test('unrelated sibling directory activity during receipt read preserves exact review and provenance',async t=>{
+ const f=await fixture(t),bytes=fs.readFileSync(f.file),before=fs.statSync(f.file),review=createKeptSourceTranslationReview({read:()=>f.state,config:f.descriptor});
+ const result=await duringReceiptRead(()=>{const dir=fs.statSync(f.root);fs.writeFileSync(path.join(f.root,'unrelated-sibling'),'Invented independent work');fs.utimesSync(f.root,dir.atime,new Date(dir.mtimeMs+2000));},()=>review.read(f.input));
+ assert.equal(result.state,'proposal-ready');assert.deepEqual(result.sourceContext,{...f.input,sourceId:f.session.sourceId});assert.deepEqual(fs.readFileSync(f.file),bytes);
+ const after=fs.statSync(f.file);for(const key of ['dev','ino','size','mtimeMs','ctimeMs','mode'])assert.equal(after[key],before[key]);assert.equal(fs.existsSync(f.log),false);
+});
+test('receipt mutation and ancestor replacement or symlink during read still refuse proposals',async t=>{
+ for(const change of ['receipt','directory','symlink','mode']){
+  const f=await fixture(t),dir=path.join(f.root,'receipt-parent'),old=dir+'-old';fs.mkdirSync(dir,{mode:0o755});fs.chmodSync(dir,0o755);const file=path.join(dir,'review.json');fs.copyFileSync(f.file,file);
+  const review=createKeptSourceTranslationReview({read:()=>f.state,config:{...f.descriptor,file}});
+  await assert.rejects(duringReceiptRead(()=>{
+   if(change==='receipt'){fs.appendFileSync(file,' ');return;}
+   if(change==='mode'){fs.chmodSync(dir,0o700);return;}
+   fs.renameSync(dir,old);
+   if(change==='symlink')fs.symlinkSync(old,dir);else{fs.mkdirSync(dir);fs.copyFileSync(path.join(old,'review.json'),file);}
+  },()=>review.read(f.input)),{status:409},change);
+ }
+});
