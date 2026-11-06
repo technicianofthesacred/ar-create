@@ -30,8 +30,8 @@
   const relevant=pathname==='/api/study/structure-tests'||/^\/api\/study-draft\/(?:open|create-collection|fork|register-output|recover-roots|reconnect|recover)$/.test(pathname)||/^\/api\/study\/outputs\/(?:create|copy-retained-carousel|copy-browser-carousel)$/.test(pathname)||/^\/api\/magazine\/working-draft\/(?:save|undo|history-restore)$/.test(pathname);
   if(relevant)invalidate();return relevant;
  }
- async function read({fresh=false}={}){
-  if(!fresh&&snapshot)return copy(snapshot);
+ async function readOnce({fresh=false,settle=false}={}){
+  if(!fresh&&!settle&&snapshot)return copy(snapshot);
   if(pending&&(!fresh||pending.fresh))return copy(await pending.promise);
   if(fresh)snapshot=null;
   const ticket={fresh,epoch,sequence:++sequence,promise:null};
@@ -41,12 +41,21 @@
    if(!response.ok)throw Error('Saved manuscript discovery is unavailable. Retry when it is available.');
    let value;try{value=await response.json();}catch{throw Error('Saved manuscript discovery could not be verified.');}
    const checked=validate(value);
-   if(ticket.epoch!==epoch)throw Error('Saved manuscript discovery changed. Read it again before continuing.');
+   if(ticket.epoch!==epoch)throw Object.assign(Error('Saved manuscript discovery changed. Read it again before continuing.'),{catalogInvalidated:true});
    if(ticket.sequence===sequence)snapshot=checked;
    return checked;
   })();
   pending=ticket;
   try{return copy(await ticket.promise);}finally{if(pending===ticket)pending=null;}
+ }
+ async function read({fresh=false,settle=false}={}){
+  try{return await readOnce({fresh,settle});}catch(error){
+   // Discovery admits no operation. Discard invalidated bytes and settle once
+   // on the current GET, sharing it with other discovery consumers. Exact
+   // operation guards must still refuse rather than silently refresh or retry.
+   if(fresh||!error?.catalogInvalidated)throw error;
+   return readOnce();
+  }
  }
  // The live stream invalidates discovery once; its consumers keep their own
  // current-owner, revision, dirty-writing and navigation guards.
