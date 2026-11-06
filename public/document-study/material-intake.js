@@ -160,6 +160,6 @@
   const disconnect=new MutationObserver(()=>{if(view.mic&&(!container.isConnected||!view.current()))close();});disconnect.observe(d.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>{view.request++;stopMicrophone(false);stopAudio();});
   activeViews.add({container,close,refresh:()=>{if(live()&&!view.loading&&!view.busy)void refresh();}});paint();return api;
  }
- for(const name of ['ar-live-change','study-recording-change'])window.addEventListener(name,()=>{for(const entry of activeViews){if(!entry.container.isConnected){entry.close();activeViews.delete(entry);continue;}entry.refresh();}});
+ for(const name of ['ar-live-change','study-recording-change','focus'])window.addEventListener(name,()=>{for(const entry of activeViews){if(!entry.container.isConnected){entry.close();activeViews.delete(entry);continue;}entry.refresh();}});
  window.materialIntake=Object.freeze({mount});
 })();
