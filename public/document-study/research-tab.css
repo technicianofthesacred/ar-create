@@ -114,3 +114,9 @@ body.c3-research-open #c3-tabstrip [data-ht-research]{background:var(--paper);co
 @media(max-width:900px){#c3-research.rt-learning-open{left:0;bottom:50px}#c3-research .rt-learning{margin-top:16px;padding:0 16px 80px}#c3-research .rt-learning-heading{gap:12px}#c3-research .rt-learning-heading .rt-btn{padding-inline:10px;font-size:12px}#c3-research .rt-included{margin-top:16px;gap:12px}#c3-research .rt-included .rt-btn{padding-inline:0}#c3-research .rt-focus>h2{padding-top:8px;font-size:18px}#c3-research .rt-learning .rt-btn{min-height:44px}}
 #c3-research.rt-learning-open[hidden]{display:none!important}
 #c3-research .rt-learning>.rt-native-learning{padding-top:0;margin-top:24px}
+/* Research keeps the writer mounted, while its phone toolbar yields the header. */
+@layer research-learning-navigation {
+ body.c3-research-open #combined-piece-frame,body.c3-research-open #c3-surface-bar{display:none!important}
+ body.c3-research-open #c3-tabstrip.wbf-top>.wbf-top-actions{display:flex!important;margin-left:auto!important}
+ body.c3-research-open #c3-tabstrip.wbf-top>.ht-switch{display:block!important}
+}
