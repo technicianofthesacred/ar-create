@@ -2,6 +2,10 @@
 
 Integration addendum to the existing [CONCEPT-AGENT](CONCEPT-AGENT.md) guide, checked against the maintained source on 20 October 2026 and updated for the one CLI on 21 October. The bounded connected routes are now installed; synthetic mutation proof and installed read-only preservation remain distinct. This is not human editorial acceptance, provider execution or publication. Host authentication, origin checks and configuration still apply. An unavailable owner or route is a hold, not permission to invent a replacement.
 
+## Pick up a conversation's current work
+
+The W4 source candidate adds `current-work.read`, `current-work.validate` and `conversation.capture` to the same registry, CLI and MCP adapter. Read the [current-work contract](contracts/current-work.md) for exact selectors, machine-readable schemas, origin coverage and interrupted-capture recovery. It joins existing project/piece owners; it does not replace the independent inquiry paths below. The [authority table](contracts/conversation-authority.md) distinguishes supported quoted relays from native decisions and the still-unadopted authenticated remote-review mechanism. New source behavior is not a claim that this candidate is installed.
+
 ## Start with the actual inquiry
 
 An inquiry is an existing Library Collection and its shared learning record. It can have no sources, Project or output. Discover it through `catalog`, use its returned Collection UUID, and read/save through the inquiry interface. Names and titles are display text, not identity joins.

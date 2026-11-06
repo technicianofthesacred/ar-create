@@ -139,20 +139,26 @@ export function createSimmerBoards({dataDir,library}={}){
  return {read,save,commit,raw,seen,clean:cleanBoard};
 }
 
-const instances=new Map();
+const instances=new WeakMap();
+/** HTTP and conversation capture share the same owner and serialization queues. */
+export function sharedSimmerServices({dataDir,library,concepts}){
+ let homes=instances.get(library);if(!homes){homes=new Map();instances.set(library,homes);}
+ let owners=homes.get(dataDir);if(!owners){owners=new Map();homes.set(dataDir,owners);}
+ if(!owners.has(concepts)){const ready=import('./simmer-chat.mjs').then(({createSimmerChat})=>{const boards=createSimmerBoards({dataDir,library});return {boards,chat:createSimmerChat({dataDir,library,boards,concepts}),library,concepts};});owners.set(concepts,ready);}
+ return owners.get(concepts);
+}
 /** The Simmer routes: GET/POST board, and the chat commands (intake, propose, dish; GET material). */
 export const SIMMER_ROUTES=Object.freeze({board:['GET','POST'],material:['GET'],intake:['POST'],propose:['POST'],dish:['POST']});
 /** One registration line in the server hands requests here; returns false for any other path. */
 export async function handleSimmer(request,response,{dataDir,library,concepts,leases}){
  const url=new URL(request.url||'/','http://local.invalid');if(!url.pathname.startsWith(PREFIX))return false;
- let entry=instances.get(dataDir);if(!entry||entry.library!==library){const boards=createSimmerBoards({dataDir,library});entry={boards,chat:null,library};instances.set(dataDir,entry);}
+ const entry=await sharedSimmerServices({dataDir,library,concepts});
  const {boards}=entry;
  const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
   const action=url.pathname.slice(PREFIX.length),methods=SIMMER_ROUTES[action];
   if(!methods)fail('Unknown Simmer action.',404);
   if(!methods.includes(request.method))fail('This Simmer action takes '+methods.join(' or ')+'.',405);
-  if(action!=='board'&&!entry.chat){const {createSimmerChat}=await import('./simmer-chat.mjs');entry.chat=createSimmerChat({dataDir,library,boards,concepts});}
   if(request.method==='GET')return send(200,action==='board'?await boards.read({subject:url.searchParams.get('subject')}):await entry.chat.material({subject:url.searchParams.get('subject')})),true;
   requireWriteActor();
   const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>MAX_BODY)fail('This board is too large to save.',413);chunks.push(chunk);}

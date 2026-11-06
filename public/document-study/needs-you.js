@@ -41,7 +41,7 @@
  }
 
  /* ---------- rendering ---------- */
- const tagOf=a=>a.status==='defaulted'?'Applied by default':a.status==='answered'?'Answered':a.band==='only-adrian'?'Only you':'You steer';
+ const tagOf=a=>a.status==='defaulted'?'Default chosen':a.status==='answered'?'Answered':a.band==='only-adrian'?'Only you':'You steer';
  const metaOf=a=>`<div class="ny-meta"><span class="ny-tag" data-band="${esc(a.band)}" data-status="${esc(a.status)}">${esc(tagOf(a))}</span>${a.about?`<span class="ny-about">${esc(a.about)}</span>`:''}<span class="ny-by">${esc(who(a.raisedBy))}, ${esc(ago(a.raisedAt))}</span></div>`;
  const off=()=>human()?'':' disabled aria-disabled="true"';
  // A recording's doubtful words are one ask; "Go through them" opens the Words screen at that recording instead of answering.
@@ -64,7 +64,7 @@
  }
  function appliedRow(a){
   const r=a.resolution||{},more=changing.has(a.id);
-  return `<article class="ny-ask is-applied" data-ny-ask="${esc(a.id)}" data-band="steer">${metaOf(a)}<p class="ny-q">${esc(a.question)}</p><p class="ny-applied"><b>${esc(r.choice)}</b> was applied by default ${esc(at(r.at))}. ${esc(who(a.raisedBy))} carried on with it.</p><div class="ny-acts"><button type="button" class="ny-choice" data-ny-choice="${esc(r.choice)}" data-ny-id="${esc(a.id)}"${busy.has(a.id)?' disabled':off()}>Keep ${esc(r.choice)}</button><button type="button" class="ny-choice is-quiet" data-ny-change="${esc(a.id)}" aria-expanded="${more}"${off()}>Change it</button></div>${more?`<div class="ny-acts ny-others" role="group" aria-label="Change it to">${a.choices.filter(c=>c!==r.choice).map(c=>choiceBtn(a,c)).join('')}</div>`:''}</article>`;
+  return `<article class="ny-ask is-applied" data-ny-ask="${esc(a.id)}" data-band="steer">${metaOf(a)}<p class="ny-q">${esc(a.question)}</p><p class="ny-applied"><b>${esc(r.choice)}</b> became the default ${esc(at(r.at))}. The work result is not yet verified.</p><div class="ny-acts"><button type="button" class="ny-choice" data-ny-choice="${esc(r.choice)}" data-ny-id="${esc(a.id)}"${busy.has(a.id)?' disabled':off()}>Keep ${esc(r.choice)}</button><button type="button" class="ny-choice is-quiet" data-ny-change="${esc(a.id)}" aria-expanded="${more}"${off()}>Change it</button></div>${more?`<div class="ny-acts ny-others" role="group" aria-label="Change it to">${a.choices.filter(c=>c!==r.choice).map(c=>choiceBtn(a,c)).join('')}</div>`:''}</article>`;
  }
  function doneRow(a){
   const r=a.resolution||{},more=changing.has(a.id),text=r.choice||r.text,mine=/^human:/.test(r.by||'');
@@ -85,7 +85,7 @@
   const mine=decisions(),mineRows=mine.items.map(decisionRow);
   const onlyAsks=waiting.filter(a=>a.band==='only-adrian'),steerAsks=waiting.filter(a=>a.band!=='only-adrian');
   const only=onlyAsks.length+mineRows.length,steer=steerAsks.length;
-  const sub=[only?only+' only you can decide':'',steer?steer+' you can steer':'',applied.length?applied.length+' applied by default':''].filter(Boolean).join(' · ');
+  const sub=[only?only+' only you can decide':'',steer?steer+' you can steer':'',applied.length?applied.length+' default'+(applied.length===1?'':'s')+' chosen':''].filter(Boolean).join(' · ');
   const rows=[...onlyAsks.map(openRow),...mineRows,...steerAsks.map(openRow),...applied.map(appliedRow)];
   let body='';
   const status=mine.note?`<p class="ny-msg" role="status">${esc(mine.note)}</p>`:'';

@@ -1,3 +1,4 @@
+import {currentWorkSchemas} from './contracts/current-work.mjs';
 import {AGENT_ACTORS,currentActor} from './services/actor.mjs';
 import {StateError} from './store.mjs';
 import {isICloudAlbum} from './services/icloud-albums.mjs';
@@ -142,6 +143,7 @@ const VERB = { GET: 'get', POST: 'post', PUT: 'put', DELETE: 'delete', HEAD: 'he
 
 /** Commands mounted by bespoke handlers in server.mjs (not the route map). */
 export const CUSTOM_COMMANDS = [
+  ['GET','/api/current-work/contract'],['POST','/api/current-work/read'],['POST','/api/current-work/validate'],['POST','/api/conversation/capture'],
   ['GET', '/api/magazine/working-draft/export-file', ['storyId','pieceId','expectedHash','exportId']],
   ['GET','/api/study/footage/preview',['bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/study/photos/available-preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],
@@ -179,7 +181,7 @@ export const CUSTOM_COMMANDS = [
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];
 /** POST routes in the custom families that only read. */
-const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
+const CUSTOM_READ_ONLY = new Set(['POST /api/current-work/read','POST /api/current-work/validate','POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /**
  * study-ai.finish (3 Nov 2026) closes Adrian's read-through of a machine draft: it saves his edits and the
  * paragraphs he left alone, so it is his alone like every save below.
@@ -229,7 +231,7 @@ export function findCommand(list, method, pathname) {
   return list.find(e => e.method === method && e.route === pathname) || list.find(e => e.method === method && e.route.includes('{') && e.pattern.test(pathname)) || null;
 }
 /** The registry as JSON for /api/capabilities. */
-export const publicEntry = ({ pattern, ...rest }) => rest;
+export const publicEntry = ({ pattern, ...rest }) => {const schema=rest.route==='/api/conversation/capture'?currentWorkSchemas.capture:rest.route.startsWith('/api/current-work/')?currentWorkSchemas[rest.route.split('/').at(-1)]:null;return {...rest,...(schema?{inputSchema:schema}:{})};};
 
 /**
  * The HTTP route map, moved verbatim from server.mjs. bind() is called once per

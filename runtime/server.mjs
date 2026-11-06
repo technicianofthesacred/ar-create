@@ -1,3 +1,9 @@
+import {sharedSimmerServices} from './services/simmer-board.mjs';
+import {sharedInstagramStudio} from './services/instagram-studio.mjs';
+import {sharedNeedsYou} from './services/needs-you.mjs';
+import {createConversationCapture} from './services/conversation-capture.mjs';
+import {createCurrentWork} from './services/current-work.mjs';
+import {CURRENT_WORK_CONTRACT} from './contracts/current-work.mjs';
 import {createStudyFootage} from './services/study-footage.mjs';
 import {createSourceLineChecks} from './services/source-line-checks.mjs';
 import {createStudyFootageScope} from './services/study-footage-scope.mjs';
@@ -316,7 +322,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   // W3's owner projection is optional while source workstreams are isolated.
   // Once present, import failures are fatal rather than silently dropping history.
   const simmerActivity=fs.existsSync(path.join(root,'services/simmer-operations.mjs'))?(await import('./services/simmer-operations.mjs')).simmerOperations(dataDir):null;
-  const activity=createActivityRecovery({dataDir,journal,events,readNativeReceipt:input=>studyDrafts.inspect(input),ownerReceipts:()=>simmerActivity?.activityReceipts()||[],fault:activityFault});
+  const activity=createActivityRecovery({dataDir,journal,events,readNativeReceipt:input=>studyDrafts.inspect(input),ownerReceipts:()=>[...(simmerActivity?.activityReceipts()||[]),...conversationCaptures.activityReceipts()],fault:activityFault});
   let activityHealth;
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
@@ -362,7 +368,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   }
   async function afterRequest(request,response,context){
    const meta=activityMeta(request,response,context);if(!meta)return;
-   if(simmerActivity&&['simmer.intake','simmer.dish'].includes(meta.kind)){activityHealth=await activity.reconcile();return;}
+   if(simmerActivity&&['simmer.intake','simmer.dish'].includes(meta.kind)||meta.kind==='conversation.capture'&&(response.arResult?.id||response.arResult?.receipt)){activityHealth=await activity.reconcile();return;}
    const input=request.arInput,result=response.arResult,status=response.statusCode,ok=status>=200&&status<300;
    const after=ok?{revision:revisionOf(result),hash:typeof result?.hash==='string'?result.hash:null}:null;
    activity.recordResponse({...meta,status:ok?'committed':result?.receipt?.status==='partial'?'partial':status===409||status===423?'conflict':'rejected',after,reason:ok?(JOURNAL_REASONS.has(meta.kind)&&typeof input?.reason==='string'?input.reason.slice(0,500):null):String(result?.error||'HTTP '+status).slice(0,500),http:status});
@@ -397,6 +403,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
    }
    return false;
   }
+  const simmer=await sharedSimmerServices({dataDir,library,concepts:conceptWork});
+  const conversationCaptures=createConversationCapture({dataDir,concepts:conceptWork,...simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk})});
+  const currentWork=conceptWork?createCurrentWork({concepts:conceptWork,direction:studyHumanDirection,...simmer,understanding:currentUnderstanding,studyAI,presence,continuity:workContinuity,captures:conversationCaptures,needs:sharedNeedsYou({dataDir,events})}):null;
   const studyLanguage=studyOutputs&&studyDrafts?createStudyLanguageConnection({dataDir,outputs:studyOutputs,drafts:studyDrafts,share:studyShare,structureTests,execution:nativeAIExecution}):null;
   const sourceLanguage=createSourceTranslationProposals({dataDir,readSelection:createSourceTranslationSelectionReader({sourceSessions,drafts:studyDrafts,validateCopyTarget:input=>structureTests?.validateTarget(input)}),validateCopyTarget:input=>structureTests?.validateTarget(input),execution:nativeAIExecution});
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
@@ -437,6 +446,16 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       let pathname;
       try { pathname = decodeURIComponent((request.url || '/').split('?')[0]); }
       catch { throw new StateError('Invalid request path.'); }
+      if(pathname==='/api/current-work/contract'){if(request.method!=='GET')throw new StateError('Use GET.',405);return json(response,200,CURRENT_WORK_CONTRACT);}
+      if(['/api/current-work/read','/api/current-work/validate','/api/conversation/capture'].includes(pathname)){
+        if(request.method!=='POST')throw new StateError('Use POST.',405);
+        if(!currentWork)throw new StateError('Current work requires the native Document Study owners.',503);
+        const capturing=pathname==='/api/conversation/capture';if(capturing)checkWrite(request,server);else checkWriteOrigin(request,server);
+        if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);
+        const input=await body(request,256*1024);
+        if(capturing){request.arInput={operationId:input?.operationId,parentStudyId:input?.target?.parentStudyId};if(typeof input?.target?.parentStudyId==='string')leases.check({kind:'project',id:input.target.parentStudyId},request.arActor);}
+        return json(response,200,capturing?await conversationCaptures.capture(input):await currentWork[pathname.endsWith('/validate')?'validate':'read'](input));
+      }
       if(pathname.startsWith('/api/work-continuity/')&&request.method==='POST'&&!findCommand(commandList(),'POST',pathname)?.readOnly&&!(request.headers.origin&&!localAuthorities(server).some(host=>request.headers.origin===`http://${host}`)))requireWriteActor();
       if(pathname.startsWith('/api/events')||pathname==='/api/presence'||pathname.startsWith('/api/leases')||pathname.startsWith('/api/journal')){const coordinationUrl=new URL(request.url,'http://'+request.headers.host);if(await coordination(request,response,pathname,coordinationUrl))return;}
       // i64 OS health (B3): which release this program is. The sha comes from <home>/RELEASE.json, which serve.mjs reads and passes in.

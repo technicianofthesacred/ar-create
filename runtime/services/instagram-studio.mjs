@@ -497,11 +497,12 @@ export async function handOn(studio,input,{readKey=null,fetcher=globalThis.fetch
  return {ok:true,planId:bundle.plan.id,revision:bundle.plan.revision,memoId:input.memoId,files:bundle.sources.length,handoff:answer.memo?.handoff||null};
 }
 
-const instances=new Map();
+const instances=new WeakMap();
+export function sharedInstagramStudio(options){let homes=instances.get(options.library);if(!homes){homes=new Map();instances.set(options.library,homes);}let owners=homes.get(options.dataDir);if(!owners){owners=new Map();homes.set(options.dataDir,owners);}if(!owners.has(options.consentDesk))owners.set(options.consentDesk,createInstagramStudio(options));return owners.get(options.consentDesk);}
 /** One registration line in the server hands requests here; returns false for any other path. */
 export async function handleInstagram(request,response,{dataDir,library,consentDesk=null}){
  const url=new URL(request.url||'/','http://local.invalid');if(!url.pathname.startsWith(PREFIX))return false;
- let studio=instances.get(dataDir);if(!studio){studio=createInstagramStudio({dataDir,library,consentDesk});instances.set(dataDir,studio);}
+ const studio=sharedInstagramStudio({dataDir,library,consentDesk});
  const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
  const send=(status,body)=>{response.writeHead(status,{...headers,'Content-Type':'application/json; charset=utf-8'});response.end(JSON.stringify(body));};
  const q=k=>url.searchParams.get(k)??undefined;
