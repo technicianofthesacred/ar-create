@@ -56,3 +56,10 @@ test('reload uses this tab snapshot instead of another tab browser cache, even w
  const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared});a.setOffline(true);a.type('This tab exact reload words.');await a.w.studyDraft.flush();const session=a.w.sessionStorage.getItem(SESSION),project=structuredClone(a.p);project.blocks[0].html='Other tab global browser cache.';project.ownedDraft.sequence=0;a.w.close();shared.fail=true;
  const reopened=await fixture(o,{shared,session,project,saveError:true});assert.ok(reopened.w.studyDraft);assert.match(reopened.w.document.getElementById('manuscript').textContent,/This tab exact reload words/);assert.match(reopened.w.document.body.textContent,/Device recovery is unavailable/);assert.match(shared.getItem(PREFIX+session),/This tab exact reload words/);
 });
+
+test('equal wording keeps each distinct retained tab identity and exact request',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared}),b=await fixture(o,{shared});
+ a.setOffline(true);b.setOffline(true);a.type('Same words, separate unfinished requests.');await a.w.studyDraft.flush();b.type('Same words, separate unfinished requests.');await b.w.studyDraft.flush();
+ const ar=JSON.parse(a.saved()).documents[o.bindingId],br=JSON.parse(b.saved()).documents[o.bindingId];assert.notEqual(ar.pending.request.operationId,br.pending.request.operationId);
+ a.w.close();b.w.close();const reopened=await fixture(o,{shared});assert.equal(variants(reopened).length,2);assert.equal(reopened.w.studyDraft.recoveryState().count>=2,true);
+});
