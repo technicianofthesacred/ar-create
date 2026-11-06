@@ -88,7 +88,7 @@
    const lead=node('span');lead.className='mi-kind';lead.append(svg(kindClass(kind)));
    const main=node('div');main.className='mi-main';const top=node('div');top.className='mi-top';const titleText=job?shownTitle(job):shownTitle({story:source.title||source.name,file:source.name,started:source.modified_at||source.createdAt});let title;
    if(job?.transcriptReady){title=node('a',titleText);title.href='/transcription/'+encodeURIComponent(job.id)+'/view';title.target='_blank';title.rel='noopener';title.dataset.miItemOpen='';}
-   else if(job?.originalAvailable===true&&job.sourceId){title=node('a',titleText);title.href='/api/sources/blob?id='+encodeURIComponent(job.sourceId);title.target='_blank';title.rel='noopener';title.dataset.miItemOpen='';}
+   else if(job?.originalAvailable===true&&job.sourceId){title=node('a',titleText);title.href='/api/sources/blob?id='+encodeURIComponent(job.sourceId);title.target='_self';title.rel='noopener';title.dataset.miItemOpen='';}
    else{title=button(titleText,'item-open',()=>{if(job&&(!job.sourceId||job.originalAvailable===false)){view.message=job.reason||(job.originalAvailable===false?'The original recording is unavailable. Reconnect it and refresh Material.':'This recording has no available audio or transcript yet. Refresh to check again.');paint();return;}void openSource(job?job.sourceId:source.id);});}
    title.classList.add('mi-item-title');if(job&&job.file&&job.file!==job.story)title.title=job.file;top.append(title);
    const projects=job?subjectsFor(job):null,names=job?(projects||[]).map(p=>p.title).filter(Boolean):(view.sourceSubjects.get(source.id)||[]);
