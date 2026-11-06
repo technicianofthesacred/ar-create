@@ -24,3 +24,12 @@ for(const entry of ['openNavigationOutput','openWorkspaceOutput'])for(const chan
 test('dirty writing refuses saved-output admission before discovery or any fresh operation',async()=>{
  const f=boot();try{f.w.studyDraft={flush:async()=>({dirty:true})};f.w.nativeDraftCatalog.read=async()=>assert.fail('No discovery after dirty refusal');await assert.rejects(f.w.studyOutputConnection.openNavigationOutput({projectId:'current',rootBindingId:'root',outputId:'article',mode:'write'}),/Save or resolve/);assert.equal(f.w.localStorage.length,0);}finally{f.close();}
 });
+
+test('verified native output hands its admitted writer to the existing navigation intent',async()=>{
+ const f=boot(),handoffs=[],opens=[];
+ try{f.w.nativeDraftCatalog.read=async()=>({drafts:[{bindingId:'root',parentStudyId:'current',bindingStatus:'ready'}]});f.w.fetch=async url=>{assert.match(url,/^\/api\/study\/outputs\?/);return {ok:true,json:async()=>({scope:{rootBindingId:'root',parentStudyId:'current'},documentId:'root',outputs:[{id:'article',kind:'article'}],output:{id:'article',kind:'article'},outputBindings:[{outputId:'article',wordOwner:{kind:'native',bindingId:'root',parentStudyId:'current'}}]})};};
+ f.w.studyDraft={flush:async()=>({dirty:false}),openBinding:async args=>{opens.push(args);return {bindingId:'root',parentStudyId:'current',dirty:false};}};f.w.workspaceNavigation={changeMode:()=>assert.fail('An admitted handoff must retain the existing intent')};
+ const result=await f.w.studyOutputConnection.openNavigationOutput({projectId:'current',rootBindingId:'root',outputId:'article',mode:'write'},{nativeHandoff:async owner=>handoffs.push(JSON.parse(JSON.stringify(owner)))});
+ assert.equal(result.kind,'native');assert.deepEqual(handoffs,[{bindingId:'root',parentStudyId:'current'}]);assert.deepEqual(JSON.parse(JSON.stringify(opens)),[{bindingId:'root',parentStudyId:'current',canonicalOutputId:'article'}]);assert.equal(f.w.studyOutputConnection.selection().output.id,'article');
+ }finally{f.close();}
+});
