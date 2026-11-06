@@ -1,5 +1,13 @@
 # 5 — Draft
 
+## Focused native writing Help — adopted 6 November
+
+S05/S06, C01/C02/C04/C05/C06. The author approved Write VR-03 v1 with “yes do all” in the eight-surface review; shared Graphite controls supersede its older button treatment. Help stays beside the piece heading and remains reachable on a long phone manuscript. The focused request shows included material, Work on, the request and Prepare proposal. Source/provenance and piece guidance use ordinary navigation; Back preserves the exact manuscript DOM, unsaved words, selection and scroll.
+
+Supported native tasks reuse the existing owners: sourced paragraph, opening alternatives, initial Article on an empty page, continuation of an accepted opening, revision of selected ordinary paragraphs, and independent Carousel adaptation of the saved Article. A request runs at most once; cancellation and failed/interrupted results stay discoverable without automatic resend. An unavailable connection is explicit. Proposals remain separate until the existing human review/Finish; stale results cannot overwrite current words. Generated Carousels are independent unreviewed drafts, not wording approval.
+
+Finish criterion: actual synthetic app controls prepare/run/review an initial Article, preserve exact personal/source context, permit direct editing and saved Undo, create/reopen an independent Carousel and retain the original Article. Verify desktop/phone light/dark, reachable Help, exact dirty-text/caret/scroll return, stale/actor guards and durable cancellation. Configured live execution, deterministic fixture replies, installation and human editorial acceptance remain separate proof claims.
+
 ## Sourced native Write · approved 31 October
 
 C01/C03–C07, S05: prepare from explicitly selected current subject sources, then run the existing logged-in output-only AI connection. Persist a single bounded attempt and exact source/revision proof; no automatic resend after restart. Every proposed claim has exact source quotation links. Unsupported points remain separate open questions and add no words. The margin keeps proposals until Accept/Reject and preserves the existing editor, direct edits, revision guards, recovery and exact saved Undo. Protected phrases and per-piece voice/recipe/direction instructions are scoped writing constraints, never factual evidence; shared sheets and the author page stay under their existing owners. Registered test-copy stand-ins have distinct agent decisions and schemas; original human approval requirements stay intact.
