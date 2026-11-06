@@ -3,6 +3,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {readAttachedWritingTemplate} from './writing-template.mjs';
 import { StateError } from '../store.mjs';
+import {conceptContextProjection,CONCEPT_CONTEXT_ROLE} from './concept-markdown.mjs';
 import {readDirectionChoices,effectiveDirectionChoices} from '../../public/lib/direction-choice.js';
 import {normalizeContextSelection,captureSelectedContext,selectedContextLines} from './request-context.mjs';
 import { atomicWrite, readJson, digest, ensurePrivateDirectory, regular } from './files.mjs';
@@ -70,7 +71,17 @@ function captureEditorialFrame(document) {
 // immutable legacy request. Authored records and every other context field stay exact.
 export function equivalentRequestHumanDirection(captured,current){
  const encoded=value=>JSON.stringify(value),same=(a,b)=>encoded(a)===encoded(b),has=(value,key)=>Object.hasOwn(value||{},key);
- function valid(context){return context&&typeof context==='object'&&!Array.isArray(context)&&Array.isArray(context.records)&&context.hash===digest(encoded(context.records))&&context.records.every(record=>record&&typeof record.body==='string'&&record.hash===digest(record.body));}
+ const sourceBody=record=>record.role===CONCEPT_CONTEXT_ROLE?record.sourceSnapshot?.body:record.body;
+ function validRecord(record){
+  if(!record||typeof record.body!=='string')return false;
+  if(record.role!==CONCEPT_CONTEXT_ROLE)return record.hash===digest(record.body);
+  // A mixed concept retains its full authored file as the hash authority. Its
+  // body is only the separately adopted direction, never the personal notes.
+  const snapshot=record.sourceSnapshot;if(!snapshot||typeof snapshot.body!=='string'||snapshot.hash!==record.hash||record.hash!==digest(snapshot.body))return false;
+  const projection=conceptContextProjection(snapshot.body);
+  return !!projection&&Object.entries(projection).every(([key,value])=>same(record[key],value))&&['aiInterpretation','suggestions','unclassifiedMixedContent','planningIntent'].every(key=>has(record,key)===has(projection,key));
+ }
+ function valid(context){return context&&typeof context==='object'&&!Array.isArray(context)&&Array.isArray(context.records)&&context.hash===digest(encoded(context.records))&&context.records.every(validRecord);}
  if(!valid(captured)||!valid(current))return false;
  if(same(captured,current))return true;
  const modern=context=>has(context,'effectiveDirection')||context.records.some(record=>has(record,'effectiveDirection')||has(record.directionChoices,'subjectDecisions')||has(record.directionChoices,'pieceDecisions'));
@@ -83,7 +94,7 @@ export function equivalentRequestHumanDirection(captured,current){
  }
  const projected=structuredClone(current);
  for(let index=0;index<projected.records.length;index++){
-  const record=projected.records[index],original=captured.records[index],choices=readDirectionChoices(record.body);
+  const record=projected.records[index],original=captured.records[index],choices=readDirectionChoices(sourceBody(record));
   if(has(record.directionChoices,'subjectDecisions')||has(record.directionChoices,'pieceDecisions')){
    if(!same(record.directionChoices,choices))return false;
    for(const key of ['subjectDecisions','pieceDecisions'])if(!has(original.directionChoices,key))delete record.directionChoices[key];
@@ -94,7 +105,7 @@ export function equivalentRequestHumanDirection(captured,current){
   }
  }
  if(has(projected,'effectiveDirection')){
-  const project=current.records.find(record=>record.scope?.kind==='project'),choices=project?readDirectionChoices(project.body):readDirectionChoices('');
+  const project=current.records.find(record=>record.scope?.kind==='project'),choices=project?readDirectionChoices(sourceBody(project)):readDirectionChoices('');
   if(!derivedMatches(projected.effectiveDirection,choices,project?.scope?.parentStudyId))return false;
   delete projected.effectiveDirection;
  }
