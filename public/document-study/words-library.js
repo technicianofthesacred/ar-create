@@ -1,6 +1,6 @@
 /* Words: the shared word library on its own screen (a full-screen layer over Home).
    One list of names and terms every transcription of Adrian's voice should get right, shared by all his projects.
-     To check       words a finished recording left in doubt, one card per recording, default "keep as heard"
+     To check       words a finished recording left in doubt, one card per recording, explicit per-word decisions
      Suggested      words an agent proposed; they wait for his yes and never reach a prompt before it
      Recently       spellings he confirmed lately, so he sees the library learn
      All words      search, category filter, where each word came from
@@ -63,14 +63,17 @@
  function itemCard(rec,item){
   const key=rec.jobId+'|'+item.key,f=S.form.get(key),busy=S.busy.has(key);
   const meta=`<div class="wl-meta"><span class="wl-kind" data-kind="${esc(item.kind)}">${esc(item.kindLabel)}</span><span>at ${esc(item.time)}</span>${item.occurrences>1?`<span>${item.occurrences} times</span>`:''}</div>`;
-  const head=`${meta}<p class="wl-sentence">${sentence(item)}</p>`;
+  const range=/#t=([\d.]+),([\d.]+)/.exec(item.audioUrl||'');
+  const from=range?Number(range[1]):Math.max(0,Number(item.start||0)-1),to=range?Number(range[2]):Number(item.end||0)+1;
+  const listen=item.audioUrl?`<div class="wl-listen"><audio controls preload="none" data-wl-audio="${esc(key)}" data-audio-start="${from}" data-audio-end="${to}" aria-label="Hear ${esc(item.word)} in context" src="${esc(item.audioUrl)}"></audio><span class="wl-audio-status" role="status"></span></div>`:'<p class="wl-audio-status">Audio unavailable for this passage.</p>';
+  const head=`${meta}<p class="wl-sentence">${sentence(item)}</p>${item.reason?`<p class="wl-sugg">${esc(item.reason)}</p>`:''}${listen}`;
   if(item.status!=='open')return `<li class="wl-item" data-wl-item="${esc(item.key)}" data-status="${esc(item.status)}">${head}<p class="wl-done">${outcome(item)}</p></li>`;
   const sugg=item.suggestion?`<p class="wl-sugg">The library has <b>${esc(item.suggestion)}</b>${item.category?' ('+esc(CAT_ONE[item.category]||item.category)+')':''}.</p>`:'';
   const dis=busy||!human()?' disabled':'';
   let form='';
   if(f?.mode==='spell')form=`<form class="wl-form" data-wl-spell="${esc(key)}"><label class="grow">How it is spelled<input type="text" maxlength="120" value="${esc(f.value??item.word)}" data-wl-spelling="${esc(key)}"${off()}></label>${item.kind==='number'?'':catSelect(key,f.cat||'other')}<button type="submit" class="wl-btn is-warm"${dis}>${item.kind==='number'?'Fix it in this recording':'Fix it and remember it'}</button></form>`;
   if(f?.mode==='right')form=`<form class="wl-form" data-wl-right="${esc(key)}">${catSelect(key,f.cat||'other')}<button type="submit" class="wl-btn is-warm"${dis}>Add ${esc(item.word)} to the library</button></form>`;
-  const acts=`<div class="wl-acts"><button type="button" class="wl-btn is-default" data-wl-keep="${esc(key)}"${dis}>Keep as heard <small>Default</small></button>`
+  const acts=`<div class="wl-acts"><button type="button" class="wl-btn is-default" data-wl-keep="${esc(key)}"${dis}>Keep as heard</button>`
    +(item.suggestion?`<button type="button" class="wl-btn is-warm" data-wl-use="${esc(key)}"${dis}>Use ${esc(item.suggestion)}</button>`:'')
    +`<button type="button" class="wl-btn" data-wl-mode="spell" data-wl-key="${esc(key)}"${dis}>Spell it another way</button>`
    +(item.kind==='number'?'':`<button type="button" class="wl-btn" data-wl-mode="right" data-wl-key="${esc(key)}"${dis}>That is right, remember it</button>`)+'</div>';
@@ -78,11 +81,12 @@
  }
  function checkCard(c){
   const rec=S.records.get(c.jobId);if(!rec)return '';
-  const open=S.opened.has(c.jobId)||(S.focus===c.jobId);
   const fixed=rec.fixes?.applied?.length;
   const note=rec.open?plural(rec.open,'word','words')+' to check':'All checked';
+  const date=rec.recordedAt?day(rec.recordedAt):'';
+  const source=/^[a-f0-9-]{36}$/.test(c.jobId)?`<a class="wl-recording-link" href="/transcription/${esc(c.jobId)}/view">Open recording</a>`:'';
   const fixes=fixed?`<p class="wl-fixed">Fixed automatically before you saw it: ${[...new Set(rec.fixes.applied.map(x=>'<b>'+esc(x.heard)+'</b> to <b>'+esc(x.spelling)+'</b>'))].join(', ')}. The first wording is kept in the receipt.</p>`:'';
-  return `<details class="wl-card" data-wl-rec="${esc(c.jobId)}"${open?' open':''}><summary><b>${esc(rec.story)}</b><span class="wl-note">${esc(note)}${rec.dropped?' · '+rec.dropped+' more were left out':''}</span></summary>${fixes}<ul class="wl-list" style="border-top:0">${rec.items.map(i=>itemCard(rec,i)).join('')}</ul></details>`;
+  return `<section class="wl-card" data-wl-rec="${esc(c.jobId)}"><header class="wl-recording-head"><b>${esc(rec.title||rec.story)}</b>${date?`<span class="wl-note">${esc(date)}</span>`:''}<span class="wl-note">${esc(note)}${rec.dropped?' · '+rec.dropped+' more were left out':''}</span>${source}</header>${fixes}<ul class="wl-list" style="border-top:0">${rec.items.map(i=>itemCard(rec,i)).join('')}</ul></section>`;
  }
  function sourceOf(e){
   const s=e.source||{};
@@ -142,6 +146,7 @@
  }
  function paint(){
   const d=document.getElementById('words-library');if(!d?.open)return;
+  if([...d.querySelectorAll('audio[data-wl-audio]')].some(a=>!a.paused&&!a.ended))return;
   const next=html();if(d.dataset.render===next)return;
   // A re-render must not eat what he is typing or move the page under him.
   const scroller=d.querySelector('.wl-scroll'),top=scroller?.scrollTop||0,a=document.activeElement;
@@ -159,6 +164,7 @@
  };
  function updateButton(){const card=document.querySelector('#project-library [data-home-words]');if(card){const html=cardHtml();if(card.dataset.render!==html){card.innerHTML=html;card.dataset.render=html;}}}
  function decorate(){
+  if(!window.document)return;
   const aside=document.querySelector('#project-library .combined-home-lists');
   if(!aside)return;
   if(!aside.querySelector(':scope>[data-home-words]')){
@@ -190,6 +196,22 @@
  }
 
  /* ---------- events ---------- */
+ document.addEventListener('play',event=>{
+  const a=event.target;if(!a?.matches?.('#words-library audio[data-wl-audio]'))return;
+  const from=Number(a.dataset.audioStart),to=Number(a.dataset.audioEnd);
+  if(a.currentTime<from||a.currentTime>=to)a.currentTime=from;
+ },true);
+ document.addEventListener('timeupdate',event=>{
+  const a=event.target;if(!a?.matches?.('#words-library audio[data-wl-audio]'))return;
+  if(a.currentTime>=Number(a.dataset.audioEnd)&&!a.paused)a.pause();
+ },true);
+ document.addEventListener('error',event=>{
+  const a=event.target;if(!a?.matches?.('#words-library audio[data-wl-audio]'))return;
+  const status=a.parentElement.querySelector('.wl-audio-status');if(status)status.textContent='Audio could not be played. Open the recording to check its availability.';
+ },true);
+ for(const name of ['pause','ended'])document.addEventListener(name,event=>{
+  if(event.target?.matches?.('#words-library audio[data-wl-audio]'))setTimeout(paint,0);
+ },true);
  const itemOf=key=>{const [jobId,k]=key.split('|');return {jobId,key:k,item:S.records.get(jobId)?.items.find(i=>i.key===k)};};
  const reply=(jobId,v)=>{if(v&&v.items){S.records.set(jobId,v);S.touched.add(jobId);}};
  document.addEventListener('click',event=>{

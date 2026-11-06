@@ -635,3 +635,7 @@ Browser Back means the browser's real Back/Forward history. Internal navigation 
 ## 6 November — clear control hierarchy and responsive refinement
 
 C02/C04/C05/C06, S01–S12: direct feedback requires visibly different destinations, modes, actions and status; scoped compact toolbars; clear parent/child Library hierarchy; no reserved selection gutter in ordinary browsing; an exclusive normal-flow Material view; and full-height gold active-group labels with readable inverse text. Preserve Combined/Graphite, stage owners and all editorial guards. This records adopted intent; the isolated candidate and its verification do not establish human visual acceptance or installation. See [candidate evidence](../verification/interface-refinement-2026-11-06.md).
+
+### 6 November — Only decision-ready real work reaches Home
+
+The author requests test-recording exclusion, evidence-based transcript suggestions, one combined request per recording, and enough source context and audio to decide. S02 / C01 / C02 / C04 / C06: Home shows the actual passage, proposed wording, reason and relevant audio with links to the existing review owners. Unreviewed recording suggestions do not become accepted by a timer or a generic Done click. Preserve human answers, original recordings and transcript correction history; unrelated agent steer defaults are unchanged. See the Source brief for the bounded finish criterion. This adopted direction is not installation proof.
