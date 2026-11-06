@@ -47,7 +47,7 @@ export function createRecordingAttention({dataDir,corrections,library}){
  return async asks=>{
   const groups=new Map(),out=[];
   for(const ask of asks){
-   if(!recordingAsk(ask)||ask.status!=='open'){out.push(ask);continue;}
+   if(!recordingAsk(ask)||!['open','defaulted'].includes(ask.status)){out.push(ask);continue;}
    const id=ask.scope.id;if(!UUID.test(id||''))continue;
    if(!groups.has(id))groups.set(id,[]);groups.get(id).push(ask);
   }
@@ -69,7 +69,7 @@ export function createRecordingAttention({dataDir,corrections,library}){
     ];
     const distinct=[];for(const item of items){const same=distinct.find(i=>i.text===item.text&&i.start===item.start&&i.end===item.end&&(!i.proposed||!item.proposed||i.proposed===item.proposed));if(same){if(item.reason!==same.reason)same.reason+=' '+item.reason;if(!same.proposed)same.proposed=item.proposed;}else distinct.push(item);}
     const row=rows.find(a=>a.scope.kind==='recording-check')||rows[0];
-    out.push({...row,band:'only-adrian',default:null,applyAt:null,choices:[],about:title,
+    out.push({...row,status:'open',resolution:null,band:'only-adrian',default:null,applyAt:null,choices:[],about:title,
      question:'Review '+(passages.length?passages.length+' passage'+(passages.length===1?'':'s'):'')+(passages.length&&wordItems.length?' and ':'')+(wordItems.length?wordItems.length+' word'+(wordItems.length===1?'':'s'):'')+' in this recording.',
      recording:{jobId:id,title,recordedAt:job.recordedAt||null,wordCount:wordItems.length,passageCount:passages.length,items:distinct,
       wordsHref:wordItems.length?'/document-study/index.html#words/check/'+id:null,

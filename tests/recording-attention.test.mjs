@@ -86,3 +86,8 @@ test('equal sentences at separate moments and distinct proposed corrections are 
  assert.equal(row.recording.passageCount,2);assert.equal(row.recording.items.length,2);
  assert.ok(row.recording.items.some(i=>i.proposed.includes('pot')));
 });
+
+test('open and legacy defaulted checks for the same current recording remain one contextual pending card',async t=>{
+ const f=fixture(t);f.asks[0].status='defaulted';f.asks[0].resolution={via:'default',choice:'Keep all as heard',by:'default'};
+ const [row,...extra]=await f.project(f.asks);assert.equal(extra.length,0);assert.equal(row.status,'open');assert.equal(row.recording.wordCount,1);assert.equal(row.recording.passageCount,1);assert.equal(row.resolution,null);assert.deepEqual(row.choices,[]);
+});

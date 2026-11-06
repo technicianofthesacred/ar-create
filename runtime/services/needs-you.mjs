@@ -64,7 +64,8 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{},recor
    changed.push(ask);
   }
   const cutoff=at-LIMITS.keepDays*DAY,before=state.asks.length;
-  state.asks=state.asks.filter(a=>a.status==='open'||Date.parse(a.resolution?.at||a.raisedAt)>cutoff);
+  // An old recording default is not proof its underlying review finished; keep that queue receipt/history.
+  state.asks=state.asks.filter(a=>a.status==='open'||(recordingAsk(a)&&a.status==='defaulted')||Date.parse(a.resolution?.at||a.raisedAt)>cutoff);
   return {changed,pruned:state.asks.length!==before};
  }
  // Run a read or write against a fresh, swept state; persist only when something moved.
@@ -216,6 +217,10 @@ export async function handleNeedsYou(request,response,{dataDir,events,recordings
   const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>MAX_BODY)fail('That is too large for one ask.',413);chunks.push(chunk);}
   let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{fail('Send the ask as JSON.');}
   request.arInput=input;
+  // Home is navigation for recording reviews, including stale pages that still carry old bulk buttons.
+  // Domain owners settle their own asks in-process after actual review; this HTTP shortcut cannot do that.
+  const who=currentActor();
+  if(route==='/answer'&&isHuman(who?.actor)&&who?.client==='ui'&&recordingAsk(list.peek().asks.find(a=>a.id===input?.id)||{}))fail('Open the recording review to decide about its words or passages. Home cannot approve a recording.',409);
   send(200,route==='/raise'?await list.raise(input):await list.answer(input));
  }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The list could not be read or saved. Nothing was changed.'});}
  return true;
