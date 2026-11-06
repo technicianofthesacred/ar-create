@@ -8,7 +8,7 @@ const clientFile=new URL('../public/document-study/native-draft-catalog.js',impo
 const consumers=['recent-changes','output-connection','project-library','retained-carousel-copy','browser-carousel-copy','human-direction','workbench-pieces','photos-stage','research-standard','draft-check-flow','draft-flow','source-continuation'];
 const valid=()=>({drafts:[{originalId:'one',bindingId:'binding-one',parentStudyId:'project-one',bindingStatus:'ready',title:'Saved manuscript'}],collections:[],outputBindings:[]});
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
-function boot(fetch){const dom=new JSDOM('',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;w.structuredClone=structuredClone;w.fetch=fetch;w.eval(fs.readFileSync(clientFile,'utf8'));return {dom,owner:w.nativeDraftCatalog};}
+function boot(fetch){const dom=new JSDOM('',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;w.structuredClone=structuredClone;w.fetch=fetch;const listeners=[];w.c3Shell={live:{on:(_filter,fn)=>listeners.push(fn)}};w.eval(fs.readFileSync(clientFile,'utf8'));w.document.dispatchEvent(new w.Event('DOMContentLoaded'));return {dom,owner:w.nativeDraftCatalog,emit:event=>listeners.forEach(fn=>fn(event))};}
 const plain=value=>JSON.parse(JSON.stringify(value));
 
 test('all twelve catalogue consumers use the page owner, installed before consumers',()=>{
@@ -42,9 +42,35 @@ test('successful registration invalidates discovery, ordinary reads do not, and 
  }finally{f.dom.window.close();}
 });
 
-test('invalidation refuses a late pre-mutation catalogue and cannot replace the new snapshot',async()=>{
+test('invalidated discovery discards late bytes and joins current discovery before returning',async()=>{
  const old=deferred();let calls=0;const f=boot(async()=>{const n=++calls;if(n===1)await old.promise;return {ok:true,json:async()=>({...valid(),sequence:n})};});
- try{const earlier=f.owner.read(),held=assert.rejects(earlier,/changed/);f.owner.invalidate();assert.equal((await f.owner.read()).sequence,2);old.resolve();await held;assert.equal((await f.owner.read()).sequence,2);assert.equal(calls,2);}finally{f.dom.window.close();}
+ try{const earlier=f.owner.read();f.owner.invalidate();assert.equal((await f.owner.read()).sequence,2);old.resolve();assert.equal((await earlier).sequence,2);assert.equal((await f.owner.read()).sequence,2);assert.equal(calls,2);}finally{f.dom.window.close();}
 });
 
 test('fresh operation checks coalesce together and an earlier discovery cannot replace their snapshot',async()=>{const old=deferred();let calls=0;const f=boot(async()=>{const n=++calls;if(n===1)await old.promise;return {ok:true,json:async()=>({...valid(),sequence:n})};});try{const discovery=f.owner.read(),first=f.owner.read({fresh:true}),second=f.owner.read({fresh:true});assert.equal((await first).sequence,2);assert.equal((await second).sequence,2);old.resolve();assert.equal((await discovery).sequence,1);assert.equal((await f.owner.read()).sequence,2);assert.equal(calls,2);assert.equal(f.dom.window.document.documentElement.dataset.nativeCatalogDiscoveryReads,'1');assert.equal(f.dom.window.document.documentElement.dataset.nativeCatalogFreshReads,'1');}finally{f.dom.window.close();}});
+
+
+test('startup reset settles one shared discovery GET without admitting an invalid snapshot',async()=>{
+ const old=deferred();let calls=0;const f=boot(async()=>{const n=++calls;if(n===1)await old.promise;return {ok:true,json:async()=>({...valid(),sequence:n})};});
+ try{const reads=consumers.map(()=>f.owner.read());f.emit({reset:true,cursor:17});old.resolve();const results=await Promise.all(reads);assert.ok(results.every(row=>row.sequence===2));assert.equal(calls,2);assert.equal((await f.owner.read()).sequence,2);}finally{f.dom.window.close();}
+});
+test('fresh operation checks never retry an invalidated response',async()=>{
+ const old=deferred();let calls=0;const f=boot(async()=>{calls++;await old.promise;return {ok:true,json:async()=>valid()};});
+ try{const read=f.owner.read({fresh:true}),held=assert.rejects(read,/changed/);f.owner.invalidate();old.resolve();await held;assert.equal(calls,1);}finally{f.dom.window.close();}
+});
+test('discovery settling is bounded when its replacement GET is also invalidated',async()=>{
+ const gates=[deferred(),deferred()];let calls=0;const f=boot(async()=>{const n=calls++;await gates[n].promise;return {ok:true,json:async()=>valid()};});
+ try{const read=f.owner.read(),held=assert.rejects(read,/changed/);f.owner.invalidate();gates[0].resolve();await new Promise(r=>setImmediate(r));assert.equal(calls,2);f.owner.invalidate();gates[1].resolve();await held;assert.equal(calls,2);}finally{f.dom.window.close();}
+});
+
+
+test('self registration while discovery is pending requires a replacement verified GET',async()=>{
+ const old=deferred();let calls=0;const f=boot(async()=>{const n=++calls;if(n===1)await old.promise;return {ok:true,json:async()=>({...valid(),sequence:n})};});
+ try{const read=f.owner.read();f.emit({kind:'study-draft.register-output'});old.resolve();assert.equal((await read).sequence,2);assert.equal(calls,2);}finally{f.dom.window.close();}
+});
+
+
+test('explicit discovery settling reads past a cached snapshot without becoming a fresh operation',async()=>{
+ let calls=0;const f=boot(async()=>({ok:true,json:async()=>({...valid(),sequence:++calls})}));
+ try{assert.equal((await f.owner.read()).sequence,1);assert.equal((await f.owner.read({settle:true})).sequence,2);assert.equal((await f.owner.read()).sequence,2);assert.equal(calls,2);assert.equal(f.dom.window.document.documentElement.dataset.nativeCatalogFreshReads,'0');}finally{f.dom.window.close();}
+});
