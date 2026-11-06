@@ -492,3 +492,8 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wf
  html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .k-library:has(.wfb-source-detail)>.wfb-thead button{width:auto!important;flex:none!important;margin:0!important}
  .k-library .wfb-source-detail{width:100%;margin:0}
 }
+/* Sidebars can leave a narrow reading pane even on a desktop viewport. */
+@container (max-width:740px){
+ .wfb-source-layout{grid-template-columns:minmax(0,1fr);gap:28px}
+ .wfb-source-context{border-left:0;border-top:1px solid var(--line);padding:24px 0 0}
+}
