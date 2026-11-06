@@ -58,3 +58,5 @@ html body.wbf-on #app #workspace #draft-recovery-task button{background:transpar
   #draft-recovery-task select{height:44px!important;min-height:44px!important;background:transparent!important;border:0!important}
  }
 }
+
+#draft-recovery-task .draft-action{margin:4px 8px 4px 0}
