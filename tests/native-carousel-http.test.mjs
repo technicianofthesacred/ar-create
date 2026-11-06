@@ -12,8 +12,9 @@ import {buildRequest} from '../agents/lib/client.mjs';
 const generated='---\nkind: CAROUSEL\nstage: words\nstatus: for-your-yes\nstory: Invented workshop\n---\n\n## Slides\n1. [hook] What does the invented record say?\n2. [teach] It describes a synthetic opening.\n3. [teach] Its source is explicitly invented.\n4. [close] Keep the remaining uncertainty visible.\n\n## Caption\nThis is an invented integration fixture.\n';
 
 test('native Carousel HTTP mounts preserve source and sibling, register once and retain unreviewed words',async t=>{
- const home=syntheticHome(),config=JSON.parse(fs.readFileSync(home.config,'utf8'));let launches=0;
- const execution=createArtifactExecution({available:()=>true,execute:async()=>{launches++;return {response:{artifacts:{'result.md':generated}}};}});
+ const home=syntheticHome(),config=JSON.parse(fs.readFileSync(home.config,'utf8'));let launches=0,hold=false,releaseLate;
+ const late=new Promise(resolve=>{releaseLate=resolve;});
+ const execution=createArtifactExecution({available:()=>true,execute:async()=>{launches++;if(hold)await late;return {response:{artifacts:{'result.md':generated}}};}});
  const server=await createServer({...config,publicDir:path.resolve('public'),sharedArticles:true,researchEnabled:false,connections:[],magazineRoots:[],execution});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  t.after(async()=>{execution.dispose();await new Promise(resolve=>server.close(resolve));fs.rmSync(home.dir,{recursive:true,force:true});});
@@ -43,7 +44,7 @@ test('native Carousel HTTP mounts preserve source and sibling, register once and
  await request('/api/study/carousel-make/preview?rootBindingId='+group.rootBindingId,input,400);
  await request('/api/study/carousel-make/preview',{...input,raw:'Unrequested prose.'},400);
  const preview=await request('/api/study/carousel-make/preview',input);assert.equal(preview.status,'preview');assert.equal(launches,0);
- await request('/api/study/carousel-make/run',selector);await execution.wait(input.operationId);
+ await request('/api/study/carousel-make/run',selector);await execution.wait('native-carousel:'+input.operationId);
  const result=await read();assert.equal(result.status,'result-ready',JSON.stringify(result));assert.equal(result.finalizationVerified,true);assert.equal(result.artifact.raw,generated);assert.equal(launches,1);
  await request('/api/study/carousel-make/run',selector,409);
  await request('/api/study/carousel-make/register',{...selector,parentStudyId:'foreign'},404);
@@ -54,4 +55,15 @@ test('native Carousel HTTP mounts preserve source and sibling, register once and
  assert.equal((await request('/api/study-draft/read?'+new URLSearchParams(scope))).raw,native.raw);
  assert.equal(fs.readFileSync(originalFile,'utf8'),original);
  assert.equal((await request('/api/study/outputs?'+new URLSearchParams(group))).outputs.filter(output=>output.id===saved.outputId).length,1);
+ const beforeCancel=await request('/api/study/outputs?'+new URLSearchParams(selected));
+ const later={...input,expectedOutput:beforeCancel.expectedOutput,operationId:randomUUID()},cancelScope={...group,requestId:later.operationId};
+ hold=true;await request('/api/study/carousel-make/preview',later);await request('/api/study/carousel-make/run',cancelScope);
+ let cancelled,finished=false;const completion=execution.wait('native-carousel:'+later.operationId).then(()=>{finished=true;});
+ try{await new Promise(resolve=>setImmediate(resolve));assert.equal(finished,false,'the execution wait must track the blocked provider');cancelled=await request('/api/study/carousel-make/cancel',cancelScope);}finally{releaseLate();await completion;}
+ assert.equal(cancelled.execution.state,'interrupted','cancellation must be durable before a late provider reply');
+ const held=await request('/api/study/carousel-make?'+new URLSearchParams(cancelScope));assert.equal(held.execution.state,'interrupted');assert.equal(held.artifact,null);
+ await request('/api/study/carousel-make/register',cancelScope,409);
+ await request('/api/study/carousel-make/run',cancelScope,409);
+ assert.equal(launches,2);assert.deepEqual((await request('/api/study/outputs?'+new URLSearchParams(selected))).output,article.output);
+
 });
