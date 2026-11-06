@@ -1,5 +1,11 @@
 # 5 — Draft
 
+## Document keyboard rules — adopted 6 November
+
+S05/S06, C01/C04/C05/C06. Writing follows document rules: Enter starts a paragraph and Shift+Enter starts a line inside the same paragraph. Neither key submits a writing request or finishes a review. Help requests and editable review wording remain multiline fields with explicit action buttons. Preserve the writer’s exact words, passage identity and caret; guarded saves, reopen and saved Undo retain the paragraph/line distinction. An empty paragraph while the author pauses must not create a failed save or a misleading newer-version conflict.
+
+Finish criterion: actual synthetic keyboard input, including a pause after Enter, continues on the next paragraph/line, saves and reopens with the same structure, preserves exact saved Undo and originals, and sends no AI request or editorial decision merely from Enter.
+
 ## Focused native writing Help — adopted 6 November
 
 S05/S06, C01/C02/C04/C05/C06. The author approved Write VR-03 v1 with “yes do all” in the eight-surface review; shared Graphite controls supersede its older button treatment. Help stays beside the piece heading and remains reachable on a long phone manuscript. The focused request shows included material, Work on, the request and Prepare proposal. Source/provenance and piece guidance use ordinary navigation; Back preserves the exact manuscript DOM, unsaved words, selection and scroll.
