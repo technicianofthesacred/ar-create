@@ -29,6 +29,10 @@ Projects can begin with a recording, supplied transcript, typed idea, photo, lin
 - **Reward useful effort through clarity:** the project browser shows one concise project title and its current step, supports new projects and filing, and follows the selected light/dark theme. Resume the author's own work; don't substitute a generic file tree. Show how a contribution changed the current work and what meaningful action is next, without invented progress or gamification.
 - **Prove the direction visually:** before implementing a consequential unresolved major-section direction, show focused alternatives for that choice. Alternatives are not a compulsory exercise for every section or each delivery. Existing chosen aspects remain respected; do not repeatedly reopen them. The current document-first foundation is an evolving direction, not blanket acceptance of every surface. Use targeted Impeccable critique when useful; verify actual screen interactions as well as file behavior.
 
+## Editorial discussion refinement — 6 November 2026
+
+C01/C04/C05/C06; S05/S06. The author requests a quieter, simpler editorial discussion: faint rounded passage emphasis, no decorative framing lines, shared sans-serif type and Graphite buttons, and fuller use of desktop width. Preserve all editorial decisions, exact wording and recovery. The S05/S06 briefs define acceptance. Audit the remaining site for the same issues and record follow-up fixes; broader redesign is not authorized by that inventory.
+
 ## Design baseline and typography
 
 ### The design baseline
