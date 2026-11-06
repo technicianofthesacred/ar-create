@@ -30,3 +30,14 @@ Check uses the same selected output/editor context as Write and Read, with revis
 ## 3 November 2026: Truth and consent desk in Check
 
 How I Work step 6. Check shows every claim and quote in the piece with the source moment it rests on (a recording time, a Library passage or a photo). Claims with no source and claims an agent raised as doubtful come first; a quote that no longer matches its Library passage says so. Agents record claims, link sources (a Library passage is checked against the source text, a recording moment against its transcript) and raise only the doubtful ones; an agent may withdraw its own doubt, only Adrian clears someone else's. The same panel lists the people in the piece and where their consent stands. Record: `/api/consent/*`, one per piece.
+
+
+## 6 November — adopted control family
+
+Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE](../HUMAN-EXPERIENCE.md#graphite-controls--adopted-6-november-2026). C05: this settles control styling only; section layout/workflow acceptance and native preservation proof remain separate.
+
+## 6 November — Approved decision coverage and Carousel actions
+
+S07; C01/C03–C06. Adrian approved VR-04 v1 Article Check and VR-07 v3 Carousel Check in the eight-comparison review. Article Check presents the current selected work's retained decisions and mechanical findings with exact revision context; semantic accuracy remains an explicit human judgment. Open a passage only when the existing owner and anchor guards establish the exact target. Carousel Check retains its separate saved wording and checks rather than borrowing Article findings. Existing Write/Read and check/refresh actions use the adopted Graphite control family.
+
+Finish criterion: actual connected reads/actions and truthful stale/unavailable states on desktop/phone light/dark, exact selected owner and saved words preserved, no fabricated approvals, and focused race/navigation tests. The visual approval is implementation authority, not completion proof.

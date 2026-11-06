@@ -3,6 +3,7 @@ import path from 'node:path';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {StateError} from '../store.mjs';
 import {atomicWrite,ensurePrivateDirectory,readJson} from './files.mjs';
+import {originOf} from './conversation-origin.mjs';
 
 /**
  * Who wrote a record. Every mutation carries an actor and a client, resolved
@@ -36,11 +37,11 @@ export const isHuman=actor=>typeof actor==='string'&&actor.startsWith('human:');
 
 const storage=new AsyncLocalStorage();
 /** Run fn with an actor context. Nested calls inherit it. */
-export function withActor(context,fn){return storage.run(Object.freeze({actor:context.actor,client:context.client}),fn);}
+export function withActor(context,fn){return storage.run(Object.freeze({actor:context.actor,client:context.client,...(context.origin?{origin:originOf(context.origin)}:{})}),fn);}
 /** The actor of the current request, or null when called in-process (tests, startup). */
 export function currentActor(){return storage.getStore()||null;}
 /** Fields stamped into an operation record. */
-export function provenance(){const ctx=currentActor();return {actor:ctx?.actor||IN_PROCESS_ACTOR,client:ctx?.client||null,at:new Date().toISOString()};}
+export function provenance(){const ctx=currentActor();return {actor:ctx?.actor||IN_PROCESS_ACTOR,client:ctx?.client||null,at:new Date().toISOString(),...(ctx?.origin?{origin:ctx.origin}:{})};}
 /** Read a stored record's author; records written before stamping read as legacy. */
 export function authorOf(record){
  const p=record&&typeof record==='object'?(record.provenance&&typeof record.provenance==='object'?record.provenance:record):null;
@@ -66,10 +67,10 @@ export function chatDecider(input,what='This decision'){
  if(!ctx||isHuman(ctx.actor))return {by:ctx?.actor||IN_PROCESS_ACTOR};
  const said=input?.said;
  if(!CHAT_CARRIERS.includes(ctx.actor)||!said||typeof said!=='object'||Array.isArray(said))throw new StateError(`${what} is Adrian's alone. ${ctx.actor} may propose, never decide, unless it carries his exact words from the chat (said).`,403);
- const quote=typeof said.quote==='string'?said.quote.trim():'';
- if(!quote||quote.length>1200)throw new StateError('"said.quote" is Adrian\'s exact words from the chat, up to 1200 characters.',400);
+ const quote=typeof said.quote==='string'?said.quote:'';
+ if(!quote.trim()||quote.length>1200)throw new StateError('"said.quote" is Adrian\'s exact words from the chat, up to 1200 characters.',400);
  if(said.via!=='chat'||!SAID_AT.test(said.at||''))throw new StateError('"said" names the chat (via:"chat") and when he said it (at, ISO time).',400);
- return {by:HUMAN_ACTORS[0],carriedBy:ctx.actor,said:{quote,via:'chat',at:said.at}};
+ return {by:HUMAN_ACTORS[0],carriedBy:ctx.actor,said:{quote,via:'chat',at:said.at,...(said.origin?{origin:originOf(said.origin)}:{})},identityVerification:'carrier-reported-not-authenticated'};
 }
 
 /**

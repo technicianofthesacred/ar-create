@@ -66,7 +66,7 @@ Paths in this table are relative to this repository root. Edit maintained source
 - Keep source speech/evidence distinct from human direction and proposed prose. Project research and matching-part research have different scopes. Adding material never regenerates approved text.
 - Suggestions remain pending until a person explicitly applies or rejects them. Protection/rejection intent is part of captured context. Stale, switched, dirty or unsupported work must refuse mutation rather than pretend success.
 - Keep the six assistant tools limited to read, prepare, context, propose, review and status. They expose no Apply/Reject or human-protection mutation. Synthetic proof is not live model execution.
-- Keep compact defaults, readable actions, theme coherence and usable desktop/phone hit targets. Hide secondary provenance under disclosure, avoid horizontal overflow and needless vertical stacking. Inspect rendered light/dark/narrow screens for the changed surface.
+- Keep compact defaults, readable actions, theme coherence and usable desktop/phone hit targets. Keep secondary provenance in focused screens with ordinary navigation; never use accordions or details/summary disclosures. Avoid horizontal overflow and needless vertical stacking. Inspect rendered light/dark/narrow screens for the changed surface.
 
 ## Verify proportionately
 

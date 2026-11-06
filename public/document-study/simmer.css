@@ -194,3 +194,13 @@ dialog.simmer::backdrop{background:var(--bg)}
 .sm-letter p{margin:0}
 .sm-named{border:1px solid var(--warm);border-radius:6px;padding:.5rem .6rem;margin:0 0 .6rem;display:grid;gap:.2rem}
 .sm-named .sm-speech{margin:0}
+
+/* Recoverable chat imports stay visible beside the same board, including on phones. */
+.sm-intake[hidden]{display:none}
+.sm-intake{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;padding:.55rem .8rem;border-bottom:1px solid var(--sm-amber);background:var(--sm-card);font-size:13px;line-height:1.45;max-height:35vh;overflow-y:auto}
+.sm-intake>div{flex:1 1 20rem;min-width:0}
+.sm-intake strong{color:var(--ink);font-weight:600}
+.sm-intake p{color:var(--dim)}
+.sm-intake nav{display:flex;flex-wrap:wrap;gap:.25rem .9rem}
+.sm-intake a{color:var(--ink);padding:.2rem 0;text-underline-offset:3px}
+.sm-intake button{min-height:32px}

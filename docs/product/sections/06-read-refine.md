@@ -36,3 +36,7 @@ Select one existing margin note or its Show passage action to reach and highligh
 ## 16 October — Adopted continuous reading mode
 
 Read is a mode of the same selected output used by Write and Check. Return to its current passage/selection/position where supported; preserve notes and exact words rather than reopening a different copy. An earlier/retained edition must remain explicitly identified, with a reliable return to current work. Reading/navigation never implies approval; existing editor and recovery remain authoritative.
+
+## Recovery comparison — adopted 6 November 2026
+
+S05/S06, C01/C04/C05/C06. VR-08 v2 is approved for implementation by the all-eight approval. Recover writing opens a focused workspace comparison, with Saved manuscript and the selected retained copy side by side on desktop and a dedicated stacked phone task above ordinary bottom navigation. One native selector preserves every distinct unsaved tab identity and the earlier browser copy, even when their words match. Native Recover these words and legacy Bring it in / Discard earlier writing retain their existing separate meanings. Nothing applies on entry, selection or return. Back to Write / Esc returns to the held editor and position. Revision guards, exact interrupted request IDs and saved Undo remain under the existing manuscript owner. Implementation and native synthetic evidence are separate from installed release or acceptance.

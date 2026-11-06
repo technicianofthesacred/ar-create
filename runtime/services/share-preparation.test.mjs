@@ -27,7 +27,7 @@ test('durable invitation and reviewed translation resume; recipients and own out
  const f=await fixture(t);const before=JSON.stringify(f.store.get());const v=await f.save({recipient:'Invented friend',message:'Our original invitation',translatedMessage:'Reviewed translation',language:'en → zh',link:'https://example.invalid/invented'});
  assert.equal(v.preparation.message,'Our original invitation');assert.equal((await f.fresh().read(f.selector)).preparation.translatedMessage,'Reviewed translation');
  assert.equal((await f.service.read({...f.selector,recipientId:randomUUID()})).preparation,null);assert.equal((await f.service.read({...f.selector,selectedOutputId:f.b.view.output.id})).preparation,null);
- assert.equal(JSON.stringify(f.store.get()),before);assert.equal(v.facts.length,0);assert.equal(v.review.outdated,false);
+ assert.equal(JSON.stringify(f.store.get()),before);assert.equal(v.facts.length,0);assert.equal(v.review.outdated,false);assert.equal(v.delivery,null);assert.equal(v.deliveries.available,false,'ordinary Share remains usable without an export adapter');
 });
 test('stale writes, same operation retry and simultaneous instances preserve the winning contribution',async t=>{
  const f=await fixture(t),v=await f.read(),operationId=randomUUID();const input={...f.selector,expected:v.expected,expectedEdition:v.currentEdition,operationId,changes:{message:'First'}};
@@ -50,6 +50,19 @@ test('native own-word change flags old preparation, keeps drafts and independent
  const stale=await f.read();assert.equal(stale.review.outdated,true);assert.equal(stale.preparation.message,'Earlier invitation');assert.equal(stale.review.linkNeedsReview,true);assert.equal(stale.editions.length,1);
  assert.equal((await f.service.read({...f.selector,selectedOutputId:f.b.view.output.id})).currentEdition,sibling.currentEdition);await assert.rejects(f.save({message:'racing'},a),/edition|changed/i);
  const next=await f.save({message:'New edition'});assert.equal(next.editions.length,2);assert.equal((await f.service.read({...f.selector,targetEdition:a.currentEdition})).preparation.message,'Earlier invitation');
+});
+test('explicit current edition opens an empty invitation while retained earlier preparation remains intact',async t=>{
+ const f=await fixture(t),initial=await f.read();
+ const empty=await f.service.read({...f.selector,targetEdition:initial.currentEdition});
+ assert.equal(empty.targetEdition,initial.currentEdition);assert.equal(empty.preparation,null);assert.equal(empty.review.outdated,false);
+ const earlier=await f.save({message:'Keep this earlier invitation'});
+ const binding=f.a.view.wordOwner.bindingId,s=await f.native.read({bindingId:binding,parentStudyId:'parent'}),p=s.projection.find(p=>p.words.includes('native words.'));
+ await f.native.save({bindingId:binding,parentStudyId:'parent',expected:s.expected,operationId:randomUUID(),operations:[{kind:'text',id:p.id,from:0,to:8,insert:'Changed',seenBlockHash:p.blockHash}]});
+ const defaultView=await f.read();assert.equal(defaultView.preparation.message,'Keep this earlier invitation');
+ const current=await f.service.read({...f.selector,targetEdition:defaultView.currentEdition});
+ assert.equal(current.preparation,null);assert.equal(current.targetEdition,defaultView.currentEdition);assert.equal(current.review.outdated,(await f.owner.read({rootBindingId:f.selector.rootBindingId,parentStudyId:f.selector.parentStudyId,selectedOutputId:f.selector.selectedOutputId})).freshness.stale);assert.equal(current.editions.length,1);assert.deepEqual(current.expected,defaultView.expected);
+ assert.equal((await f.service.read({...f.selector,targetEdition:earlier.currentEdition})).preparation.message,'Keep this earlier invitation');
+ await assert.rejects(f.service.read({...f.selector,targetEdition:'a'.repeat(64)}),/not retained/);
 });
 test('unknown saved fields survive, caller paths/output snapshots and symlink/hardlink sidecars refuse',async t=>{
  const f=await fixture(t);await f.save({message:'Exact'});const dir=path.join(f.dataDir,outputPrivatePrefix('invented-project','invented-document'),'share',f.selector.selectedOutputId);const file=path.join(dir,hash(f.selector.recipientId)+'.json');

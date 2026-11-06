@@ -1,0 +1,73 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {syntheticHome} from '../../scripts/demo.mjs';
+import {createServer} from '../../runtime/server.mjs';
+import {createWorkspaceExecution} from '../../runtime/services/artifact-execution.mjs';
+import {digest} from '../../runtime/services/files.mjs';
+import {inventedPhoto} from './simmer-demo.mjs';
+
+export const sourceRevision=execFileSync('git',['rev-parse','HEAD'],{cwd:path.resolve(import.meta.dirname,'../..'),encoding:'utf8'}).trim();
+export const op=()=>randomUUID();
+export const words={note:'  Invented note: “Keep the crack.”\nI do not know when it was repaired.  ',phrase:'Keep the crack.',rejected:'Make this a triumphant restoration.',reason:'The invented evidence does not establish a successful repair.',uncertain:'The cup may be eighty years old; neither speaker knows.',article:'Keep the crack. I can see the seam, but I cannot date this invented cup. 瓷 😀',second:'An invented owl survey has no connection to the cup.'};
+
+// Human-labelled mutations below are authored fixture decisions inside a fresh
+// isolated server. They are not actual human approval or a cloud-client proof.
+export async function coherentFixture(t,{retain=false}={}){
+ const home=syntheticHome(),config=JSON.parse(fs.readFileSync(home.config));
+ const write=(rel,text)=>fs.writeFileSync(path.join(home.vault,rel),text);
+ const src1='Workflow/1-Source/SRC - Synthetic One.md',src2='Workflow/1-Source/SRC - Cup second session.md';
+ write(src1,'Invented supplied transcript 1. Mira: Keep the crack. I can see a seam.\n');
+ write(src2,'Invented supplied transcript 2. Noa: '+words.uncertain+'\n');
+ write('Workflow/1-Source/SRC - Synthetic Two.md',words.second+'\n');
+ const raw='---\ntitle: Invented cup, uncertain age\n---\n\n'+words.article+'\n\n'+words.uncertain+'\n';
+ write('Workflow/3-Develop/DEV - Synthetic One.md',raw);
+ write('Workflow/3-Develop/DEV - Synthetic Two.md','---\ntitle: Invented owl survey\n---\n\n'+words.second+'\n');
+ config.studyOriginalRoots.catalog.projects['hk'].docs.push([src2,'source']);
+ config.studyOriginalRoots.catalog.drafts['hk-article'].support.push([src2,'source']);
+ fs.writeFileSync(home.config,JSON.stringify(config));
+ const folder=path.join(home.dir,'invented-photos');fs.mkdirSync(folder);
+ for(let i=0;i<3;i++)fs.writeFileSync(path.join(folder,`cup-${i}.png`),inventedPhoto(i,64,80));
+ fs.writeFileSync(path.join(home.dir,'W8-SYNTHETIC'),'generated-by-coherent-journey-fixture-v1\n');
+ let server,url,execution;
+ const start=async()=>{execution=createWorkspaceExecution({codexPath:null,boundedEditorial:true});server=await createServer({dataDir:config.dataDir,publicDir:path.resolve('public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,execution});await new Promise(r=>server.listen(0,'127.0.0.1',r));url='http://127.0.0.1:'+server.address().port;};
+ const close=async()=>{if(server){server.closeAllConnections();await new Promise(r=>server.close(r));server=null;}execution?.dispose();};
+ const request=async(route,input,status=200,actor='agent:codex')=>{const r=await fetch(url+route,{headers:{Origin:url,'Content-Type':'application/json','X-AR-Actor':actor,'X-AR-Client':actor.startsWith('human:')?'ui':'cli'},...(input===undefined?{}:{method:'POST',body:JSON.stringify(input)})});const v=await r.json();assert.equal(r.status,status,route+': '+JSON.stringify(v));return v;};
+ const query=(route,scope)=>route+'?'+new URLSearchParams(scope);
+ await start();t.after(async()=>{await close();if(!retain)fs.rmSync(home.dir,{recursive:true,force:true});});
+ const concept=await request('/api/concepts',{parentStudyId:'hk',title:'Invented cup, uncertain age',operationId:op()});
+ await request('/api/concepts',{parentStudyId:'ref-an-cha',title:'Invented owl survey',operationId:op()});
+ const capture={operationId:op(),origin:{provider:'invented',client:'local-cli',conversationId:'w8-invented',messageId:'exact-note',historyCoverage:'selected-only'},action:'append-thought',target:{parentStudyId:'hk'},contribution:{role:'human',text:words.note},expected:{revision:concept.revision,hash:concept.hash}};
+ await request('/api/conversation/capture',capture);
+ const intake={subject:'hk',title:'Invented cup, uncertain age',folder,photos:['cup-0.png','cup-1.png','cup-2.png'],words:[{text:words.note,said:'spoken'}],operationId:op()};
+ const board=await request('/api/simmer/intake',intake);
+ const imported=await request('/api/sources/import',{rootId:'library',folder:'',urls:[],files:[{name:'Cup supplied transcript 1.md',content:fs.readFileSync(path.join(home.vault,src1),'utf8')},{name:'Cup supplied transcript 2.md',content:fs.readFileSync(path.join(home.vault,src2),'utf8')},{name:'Unrelated owl transcript.md',content:words.second}]});
+ const opened=await request('/api/study-draft/open',{parentStudyId:'hk',originalId:'hk-article',originalHash:digest(raw),operationId:op()});
+ const scope={parentStudyId:'hk',bindingId:opened.binding.id},group={parentStudyId:'hk',rootBindingId:scope.bindingId};
+ await request('/api/first-flow/select',{projectKey:'hk',title:'Invented cup, uncertain age',operationId:op()});
+ await request('/api/study/photos/select',{...scope,operationId:op()});
+ const ai=(action,input,status=200,actor='agent:codex')=>request(query('/api/study-ai/'+action,scope),input,status,actor);
+ const native=()=>request(query('/api/study-draft/read',scope));
+ const outputs=()=>request(query('/api/study/outputs',group));
+ const article=await request('/api/study/outputs/create',{...group,kind:'article',sourceBindingId:scope.bindingId,expectedNative:opened.expected,expectedOutput:(await outputs()).expectedOutput,operationId:op()});
+ const carousel=await request('/api/study/outputs/create',{...group,kind:'carousel',sourceBindingId:scope.bindingId,expectedNative:(await native()).expected,expectedOutput:article.view.expectedOutput,operationId:op()});
+ const selection={...group,selectedOutputId:carousel.view.output.id};
+ const carouselSaved=await request('/api/study/outputs/save',{...selection,expectedOutput:carousel.view.expectedOutput,operationId:op(),changes:{slides:carousel.view.output.slides.map((s,i)=>({...s,text:['Keep the crack.',words.uncertain,'An invented seam, not a restoration claim.'][i%3],template:'M12',photos:[]})),caption:'Invented cup study; age unverified.'}},200,'human:adrian');
+ const read=await ai('read'),paragraph=read.projection.find(p=>p.words===words.article),contracts=await ai('contracts');
+ await ai('human-contract',{kind:'protect',humanDecision:true,operationId:op(),expectedContractHash:contracts.hash,expected:read.expected,paragraphId:paragraph.id,seenBlockHash:paragraph.blockHash,from:0,to:words.phrase.length,text:words.phrase},200,'human:adrian');
+ const sources=read.sourceCatalog.filter(s=>s.canPrepare).map(s=>s.id);assert.ok(sources.length>=2);
+ const rejection=await ai('prepare',{sourceIds:sources});
+ await ai('propose',{requestId:rejection.id,replacements:[{id:paragraph.id,words:words.phrase+' '+words.rejected}]});
+ await ai('reject',{requestId:rejection.id,reason:words.reason,humanDecision:true,expectedContractHash:(await ai('contracts')).hash},200,'human:adrian');
+ const pending=await ai('prepare',{sourceIds:sources});
+ await ai('propose',{requestId:pending.id,replacements:[{id:paragraph.id,words:words.phrase+' The seam is visible; its history is uncertain. 瓷 😀'}]});
+ const consentScope={parentStudyId:'hk',pieceKey:'main'},consentRead=()=>request(query('/api/consent/desk',consentScope));
+ const consent=async(action,input,actor='agent:codex')=>{const d=await consentRead();return request('/api/consent/'+action,{...consentScope,operationId:op(),expectedRevision:d.revision,expectedHash:d.hash,...input},200,actor);};
+ await consent('claims/record',{claim:{kind:'claim',text:words.uncertain}});
+ await consent('people/record',{person:{name:'Mira (invented)',appears:['named','quoted'],note:'Synthetic consent fixture only.'}});
+ const person=(await consentRead()).people[0];
+ const result={home,config,raw,scope,group,article:article.view,carousel:carouselSaved.view,board,imported,capture,intake,pending,rejection,sources,paragraph,person,consent,consentRead,ai,native,request,query,start,close,get url(){return url;},get closed(){return !server;}};
+ return result;
+}

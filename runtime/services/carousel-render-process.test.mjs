@@ -30,7 +30,7 @@ test('wrong size, corrupt compressed bytes and truncated endings are refused',()
 
 test('child failure cannot turn otherwise valid output into a successful render',async t=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-process-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));const file=path.join(dir,'slide.png');
- await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e','process.exit(7)'],file,{timeout:150,grace:25}),/renderer (?:failed|stopped)/i);
+ for(const code of [7,143,137])await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e','process.exit('+code+')'],file,{timeout:150,grace:25}),/renderer (?:failed|stopped)/i);
 });
 
 test('cancellation stops the exact child group and never accepts a partial file',async t=>{
@@ -62,4 +62,12 @@ test('ready DOM before a silent later file write still completes, and abort duri
 test('terminal overflow DOM retains its layout diagnosis without waiting for the deadline',async t=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-process-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));const file=path.join(dir,'slide.png'),start=Date.now();
  await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e','process.stdout.write("<html data-export-status=\\"overflow\\"></html>");setInterval(()=>{},1000)'],file,{timeout:1500,grace:25}),/overflows/);assert.ok(Date.now()-start<1000);
+});
+
+// macOS Chrome may report a shell-style 143 for our own shutdown signal.
+test('owned shutdown exit 143 cannot replace validated ready PNG completion',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-process-test-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));const file=path.join(dir,'slide.png');
+ const script='const fs=require("fs");process.on("SIGTERM",()=>process.exit(143));fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ const result=await renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:100});
+ assert.match(result.stdout,/data-export-status="ready"/);renderer.validateCarouselPng(fs.readFileSync(file));
 });

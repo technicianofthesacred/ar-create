@@ -90,3 +90,18 @@ Start with Hong Kong Day 1. When a bounded step changes what the author can do, 
 C01/C03/C04/C05/C06, S03/S04/S05/S07. After the completed Direction choice loop, AI help in Write should offer paragraph drafts from the subject’s own material. Each claim opens its exact source, transcript moment or passage on the author’s own page. An unsupported sentence is not written: show a marked gap with the question and a supported person who could answer, or clearly say the answerer is unknown. Never invent a person to fill the gap.
 
 Drafts wait as one read-through (3 November 2026), read in the main reading column on a wide screen and in the margin panel on a narrow one: the author reads the whole draft, rewrites or marks Not me what is not him, and finishes; untouched paragraphs count as read. Nothing is inserted before he finishes; afterwards the author can edit the paragraphs directly. AI never edits the author’s own page (“What I want this to say”). Today this help is not connected: retain the small grey not connected label in place, and do not imply research, drafting or provider execution has occurred. All 35 functions remain: 14 kept, 16 made better, 5 moved. This adopted behavior is one of the 16 improvements, not a completion report.
+
+
+## Reconciled Source approval — 6 November 2026
+
+The preserved 25 October decision approved conversation-first Source review, with each selected translation proposal beside its passage on desktop and immediately after it on narrow screens. Keep Save/Next compact, Undo/History stable and primary work free of accordions. Use current Combined typography and navigation. Functional Save/Undo proof does not establish readable visual acceptance; inspect the actual connected screen. This recovers the bounded approved hierarchy without reviving superseded C Workbench/Atlas styling or authorizing real proposal acceptance.
+
+
+## Graphite controls — adopted 6 November 2026
+
+C05 across S01–S12. Adrian selected option 2, Graphite, and asked to apply it consistently with matching dropdowns and boxes. Use compact 6px rounded rectangles, 13px/600 button text, flat neutral secondary actions and solid graphite primary actions. Selects, fields, textareas and existing boxes share the neutral border/palette and 6px corners; keep semantic hold/warning colors. Preview geometry uses 28px desktop/32px phone visible controls with usable 44px phone targets. These are adopted web design choices informed by Apple guidance, not claimed Apple-mandated dimensions. This adopts the control family; it does not accept unrelated layouts, workflows or installation. Actual native screen proof remains required.
+
+
+## Eight focused screens — adopted 6 November 2026
+
+C01–C06; S02/S03/S05/S06/S07/S09–S12 as scoped. After viewing all eight comparisons, Adrian said “yes do all”. This approves Source VR01v2, Research VR02v2, Write VR03v1, Article Check VR04v1, Share VR05v3, Outputs VR06v3, Carousel Check VR07v3 and Recovery VR08v2, with the adopted Graphite family also applied to the earlier four screens. It supersedes their earlier pending layout approval boundaries. Preserve original words, selected owners, editions, saved Undo, separate retained recovery records and source facts. Verify focused behavior and actual synthetic native desktop/phone light/dark journeys. Approval is implementation intent, not proof of working screens, installation, provider activation, sending or publication. Delivery ownership and remaining native gates are in TODO/CURRENT.

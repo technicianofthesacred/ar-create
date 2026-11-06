@@ -1,0 +1,85 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {randomUUID} from 'node:crypto';import {createRequire} from 'node:module';import {createStudyDraftCopies} from '../runtime/services/study-draft-copies.mjs';
+const require=createRequire(new URL('../runtime/package.json',import.meta.url)),{JSDOM}=require('jsdom'),code=fs.readFileSync(new URL('../public/document-study/draft-flow.js',import.meta.url),'utf8'),tick=()=>new Promise(r=>setTimeout(r,35));
+async function owner(t,parentStudyId='invented-ui'){const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'one-copy-ui-'))),service=createStudyDraftCopies({dataDir,originals:{catalog:()=>({drafts:[]}),readDraft:()=>null}});const d=await service.createCollection({parentStudyId,title:'Invented piece',operationId:randomUUID()});const windows=[];t.after(()=>{for(const dom of windows)dom.window.close();fs.rmSync(dataDir,{recursive:true,force:true});});return {service,parentStudyId,bindingId:d.binding.id,windows};}
+async function fixture(o,{storage,delay=false,shared,session,project,saveError=false,bindingKind}={}){const dom=new JSDOM('<main id="app"></main>',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window,calls=[];let offline=false,release,saveGate=null,saveRelease;const gate=delay?new Promise(r=>release=r):Promise.resolve();const p={id:o.parentStudyId,title:'Invented piece',collectionKind:'collection-root',collectionBindingId:o.bindingId,view:'article',viewedStage:5,blocks:[{id:'initial',tag:'p',html:'<br>'}],history:[],note:null,positions:{}};
+ Object.assign(w,{state:{projects:[p]},current:()=>p,selected:null,activeBlock:null,keyboardBlock:null,typingSession:null,WORKFLOW_RECORDS:{},esc:s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),readonlyHTML:s=>s,shortRecordName:s=>s,toast:()=>{},rememberPosition:()=>{},commitTyping:()=>{},save:()=>{if(saveError)throw Error('quota exceeded');},onTyping:el=>{p.blocks=[...el.children].map(c=>({id:c.dataset.block,tag:c.tagName.toLowerCase(),html:c.innerHTML}));},viewPhase:n=>{p.viewedStage=n;w.render();},setView:v=>{p.view=v;w.render();},blockHTML:b=>'<'+b.tag+' data-block="'+b.id+'">'+b.html+'</'+b.tag+'>',article:()=>'<div class="workbar"><span class="saved"></span></div><div id="manuscript" contenteditable="true">'+p.blocks.map(b=>w.blockHTML(b)).join('')+'</div>',undo:()=>{},workflowBar:()=>'',refreshDiscussion:()=>{},phaseReader:()=>'',historicalNotice:()=>'',wireDocument:()=>{},openInstruction:()=>{},render:()=>{w.document.getElementById('app').innerHTML='<section id="workspace">'+w.article(p)+'</section>';w.wireDocument();}});
+ w.fetch=async(url,init)=>{const input=init?JSON.parse(init.body):Object.fromEntries(new URL(url,'http://localhost').searchParams);calls.push({url,input});if(url.includes('/catalog'))await gate;if(offline&&url.endsWith('/save'))throw Error('Offline');try{const route=url.split('/').at(-1).split('?')[0],value=route==='catalog'?await o.service.catalog():route==='read'?await o.service.read(input):route==='inspect'?await o.service.inspect(input):route==='save'?await o.service.save(input):route==='history-preview'?await o.service.previewVersion(input):route==='history-restore'?await o.service.restoreVersion(input):route==='undo'?await o.service.undo(input):await o.service.openCopy(input);if(bindingKind&&value.binding)value.binding.kind=bindingKind;if(route==='save'&&saveGate)await saveGate;return {ok:true,json:async()=>value};}catch(error){return {ok:false,status:error.status||500,json:async()=>({error:error.message})};}};
+ if(project)Object.assign(p,structuredClone(project));if(shared)Object.defineProperty(w,'localStorage',{value:shared});if(session)w.sessionStorage.setItem('ar-document-study-owned-drafts-v1:current',session);o.windows.push(dom);if(storage)w.localStorage.setItem('ar-document-study-owned-drafts-v1',storage);w.eval(code);if(!delay)await tick();return {w,p,dom,calls,release,setOffline:v=>offline=v,holdSave(){saveGate=new Promise(r=>saveRelease=r);},releaseSave(){saveRelease();saveGate=null;},type(words){const editor=w.document.getElementById('manuscript');editor.firstElementChild.textContent=words;w.onTyping(editor);},saved:()=>w.localStorage.getItem(PREFIX+w.sessionStorage.getItem(SESSION))};}
+
+const LEGACY='ar-document-study-owned-drafts-v1',PREFIX=LEGACY+':session:',SESSION=LEGACY+':current';
+function sharedStore(){const m=new Map();return {m,fail:false,get length(){return m.size},key:i=>[...m.keys()][i]??null,getItem:k=>m.get(k)??null,setItem(k,v){if(this.fail)throw Error('quota exceeded');m.set(k,String(v));},removeItem:k=>m.delete(k)};}
+const variants=f=>[...f.w.document.querySelectorAll('[data-draft-action^="tab-preview:"]')];
+async function recover(f,words){f.w.render();for(const key of variants(f).map(b=>b.dataset.draftAction)){variants(f).find(b=>b.dataset.draftAction===key).click();if(f.w.document.querySelector('[aria-label="Retained writing comparison"]')?.textContent.includes(words)){f.w.document.querySelector('[data-draft-action="tab-restore"]').click();await tick();assert.match(f.w.document.getElementById('manuscript').textContent,new RegExp(words));return;}}assert.fail('Missing recovery '+words);}
+
+test('same-piece offline writers retain separate exact requests across closed tabs; explicit recovery and guarded save preserve Undo',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared}),b=await fixture(o,{shared});
+ const before=await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId});
+ a.setOffline(true);b.setOffline(true);a.type('Unsaved A exact words.');await a.w.studyDraft.flush();b.type('Unsaved B exact words.');await b.w.studyDraft.flush();
+ const ar=JSON.parse(a.saved()).documents[o.bindingId],br=JSON.parse(b.saved()).documents[o.bindingId];assert.notEqual(ar.pending.request.operationId,br.pending.request.operationId);assert.match(a.saved(),/Unsaved A/);assert.match(b.saved(),/Unsaved B/);
+ a.w.close();b.w.close();const reopened=await fixture(o,{shared});assert.equal(variants(reopened).length,2);assert.doesNotMatch((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,/Unsaved/);
+ await recover(reopened,'Unsaved A exact words.');assert.deepEqual(JSON.parse(reopened.saved()).documents[o.bindingId].pending.request,ar.pending.request);await reopened.w.studyDraft.flush();assert.match((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,/Unsaved A/);
+ reopened.w.document.querySelector('[data-draft-action="disk-undo"]').click();await tick();assert.equal((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,before.raw);
+ await recover(reopened,'Unsaved B exact words.');await reopened.w.studyDraft.flush();assert.equal(JSON.parse(reopened.saved()).documents[o.bindingId].status,'Conflict');assert.match(reopened.w.document.getElementById('manuscript').textContent,/Unsaved B/);
+});
+test('different pieces and a stale v1 whole-object writer cannot erase another page recovery',async t=>{
+ const x=await owner(t,'piece-a'),y=await owner(t,'piece-b'),shared=sharedStore(),a=await fixture(x,{shared}),b=await fixture(y,{shared});a.setOffline(true);b.setOffline(true);
+ a.type('Independent A retained.');await a.w.studyDraft.flush();const stale=JSON.parse(a.saved());delete stale.recoverySession;
+ b.type('Independent B retained.');await b.w.studyDraft.flush();shared.setItem(LEGACY,JSON.stringify(stale));a.type('Independent A newer.');await a.w.studyDraft.flush();assert.match(b.saved(),/Independent B retained/);
+ a.w.close();b.w.close();const reopenB=await fixture(y,{shared});await recover(reopenB,'Independent B retained');assert.equal(reopenB.w.studyDraft.currentBinding().id,y.bindingId);
+});
+test('late older save completion keeps newer typing and pending base, then retry saves exact words',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared});a.holdSave();a.type('Older request words.');const pending=a.w.studyDraft.flush();await tick();a.type('Newer exact words remain.');const before=JSON.parse(a.saved()).documents[o.bindingId];assert.match(before.pending.blocks[0].html,/Older/);assert.match(before.blocks[0].html,/Newer/);
+ a.releaseSave();await pending;assert.match(a.saved(),/Newer exact words remain/);assert.match(a.w.document.getElementById('manuscript').textContent,/Newer exact/);await a.w.studyDraft.flush();assert.match((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,/Newer exact words remain/);
+});
+test('quota failure leaves current DOM and prior durable words, warns, and can retry after storage returns',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared});a.setOffline(true);a.type('Durable before quota.');await a.w.studyDraft.flush();shared.fail=true;a.type('Only in this open window.');await a.w.studyDraft.flush();assert.match(a.saved(),/Durable before quota/);assert.match(a.w.document.body.textContent,/Device recovery is unavailable/);assert.match(a.w.document.getElementById('manuscript').textContent,/Only in this open window/);
+ shared.fail=false;a.setOffline(false);await a.w.studyDraft.flush();await a.w.studyDraft.flush();assert.match((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,/Only in this open window/);assert.doesNotMatch(a.w.document.querySelector('[data-draft-status]').textContent,/Device recovery is unavailable/);
+});
+test('legacy migration preserves exact pending request and malformed bytes without replacing them',async t=>{
+ const o=await owner(t),seed=await fixture(o);seed.setOffline(true);seed.type('Legacy exact pending words.');await seed.w.studyDraft.flush();const legacy=JSON.parse(seed.saved());delete legacy.recoverySession;seed.w.close();const shared=sharedStore();shared.setItem(LEGACY,JSON.stringify(legacy));const f=await fixture(o,{shared});assert.match(f.saved(),/Legacy exact pending words/);assert.ok([...shared.m.entries()].some(([k,v])=>k.startsWith(PREFIX+'legacy:')&&v===JSON.stringify(legacy)));
+ f.w.close();const broken=sharedStore();broken.setItem(LEGACY,'{bad JSON exact bytes');const g=await fixture(o,{shared:broken});assert.equal(broken.getItem(LEGACY),'{bad JSON exact bytes');assert.ok([...broken.m.entries()].some(([k,v])=>k.startsWith(PREFIX+'legacy:')&&v==='{bad JSON exact bytes'));assert.match(g.w.document.body.textContent,/older recovery record could not be read/);
+});
+
+
+test('an old client that retained a v2 marker still has its changed whole snapshot archived exactly',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared});a.setOffline(true);a.type('New writer exact words.');await a.w.studyDraft.flush();
+ const old=JSON.parse(a.saved());old.documents[o.bindingId].blocks[0].html='Old client exact words.';const raw=JSON.stringify(old);shared.setItem(LEGACY,raw);a.type('New writer newer words.');await a.w.studyDraft.flush();
+ assert.ok([...shared.m.entries()].some(([k,v])=>k.includes(':legacy:')&&v===raw));a.w.render();assert.ok(variants(a).length);await recover(a,'Old client exact words.');
+});
+
+
+test('a malformed retained entry cannot hide a valid later recovery',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared});a.setOffline(true);a.type('Valid later recovered words.');await a.w.studyDraft.flush();const good=JSON.parse(a.saved()),bad=structuredClone(good);delete bad.recoverySession;delete bad.documents[o.bindingId].pending;bad.documents[o.bindingId].blocks[0].html='<table><tr><td>Unsupported retained words.</td></tr></table>';
+ const first=sharedStore();first.setItem(PREFIX+'broken',JSON.stringify(bad));first.setItem(PREFIX+'valid',JSON.stringify(good));const f=await fixture(o,{shared:first});await recover(f,'Valid later recovered words.');assert.equal(first.getItem(PREFIX+'broken'),JSON.stringify(bad));
+});
+test('reload uses this tab snapshot instead of another tab browser cache, even when all writes fail at startup',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared});a.setOffline(true);a.type('This tab exact reload words.');await a.w.studyDraft.flush();const session=a.w.sessionStorage.getItem(SESSION),project=structuredClone(a.p);project.blocks[0].html='Other tab global browser cache.';project.ownedDraft.sequence=0;a.w.close();shared.fail=true;
+ const reopened=await fixture(o,{shared,session,project,saveError:true});assert.ok(reopened.w.studyDraft);assert.match(reopened.w.document.getElementById('manuscript').textContent,/This tab exact reload words/);assert.match(reopened.w.document.body.textContent,/Device recovery is unavailable/);assert.match(shared.getItem(PREFIX+session),/This tab exact reload words/);
+});
+
+test('equal wording keeps each distinct retained tab identity and exact request',async t=>{
+ const o=await owner(t),shared=sharedStore(),a=await fixture(o,{shared}),b=await fixture(o,{shared});
+ a.setOffline(true);b.setOffline(true);a.type('Same words, separate unfinished requests.');await a.w.studyDraft.flush();b.type('Same words, separate unfinished requests.');await b.w.studyDraft.flush();
+ const ar=JSON.parse(a.saved()).documents[o.bindingId],br=JSON.parse(b.saved()).documents[o.bindingId];assert.notEqual(ar.pending.request.operationId,br.pending.request.operationId);
+ a.w.close();b.w.close();const reopened=await fixture(o,{shared});assert.equal(variants(reopened).length,2);assert.equal(reopened.w.studyDraft.recoveryState().count>=2,true);
+});
+
+
+test('focused recovery hides foreign-original and output-fork legacy actions and refuses synthetic discard',async t=>{
+ for(const mode of ['foreign-original','output-fork']){
+  const o=await owner(t,mode),storage=JSON.stringify({projects:{[o.parentStudyId]:{active:null,browser:{blocks:[{id:'legacy',tag:'p',html:'Foreign earlier words remain exact.'}],history:[],note:null,...(mode==='foreign-original'?{originalId:'another-original'}:{})}}},documents:{}}),f=await fixture(o,{storage,...(mode==='output-fork'?{bindingKind:'output-fork'}:{})});
+  const before=JSON.parse(f.saved()).projects[o.parentStudyId].browser,raw=(await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw;
+  assert.equal(f.w.studyDraft.openRecovery(),true);assert.equal(f.w.document.querySelector('#rp-version option[value="legacy-browser"]'),null);assert.equal(f.w.document.querySelector('#draft-recovery-task [data-recovery-task-action="discard-earlier"]'),null);
+  const attempted=f.w.document.createElement('button');attempted.dataset.draftAction='discard-earlier';f.w.document.getElementById('draft-recovery-task').append(attempted);attempted.click();await tick();
+  assert.deepEqual(JSON.parse(f.saved()).projects[o.parentStudyId].browser,before);assert.equal((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,raw);assert.match(f.w.document.getElementById('draft-recovery-task').textContent,/belongs to its original piece/);
+ }
+});
+
+test('focused failed-save recovery reads latest saved comparison and renders inspection failures in the task',async t=>{
+ const o=await owner(t),f=await fixture(o);f.setOffline(true);f.type('Unsent exact current words.');await f.w.studyDraft.flush();
+ const before=JSON.parse(f.saved()).documents[o.bindingId].pending.request,saved=await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId});
+ await o.service.save({bindingId:o.bindingId,parentStudyId:o.parentStudyId,expected:saved.expected,operationId:randomUUID(),operations:[{kind:'insert',id:randomUUID(),beforeId:null,raw:'New outside saved words.'}]});
+ f.w.studyDraft.openRecovery();f.w.document.querySelector('#draft-recovery-task [data-draft-action="read"]').click();await tick();
+ assert.match(f.w.document.querySelector('#draft-recovery-task .rp-saved').textContent,/New outside saved words/);assert.ok(f.w.document.querySelector('#draft-recovery-task [data-draft-action="use-saved"]'));assert.deepEqual(JSON.parse(f.saved()).documents[o.bindingId].pending.request,before);
+ f.w.document.querySelector('#draft-recovery-task [data-draft-action="inspect"]').click();await tick();assert.match(f.w.document.querySelector('#draft-recovery-task .draft-error').textContent,/Save receipt|unavailable|not found|Unknown|expected/i);
+});

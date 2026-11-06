@@ -19,12 +19,20 @@ export function createEventBus({limit=1000}={}){
    for(const listener of listeners){try{listener(value);}catch{}}
    return value;
   },
-  since(since=0,filter={},max=200){
+  since(since=0,filter={},max=200,previousBoot=null){
    const from=Number.isSafeInteger(since)&&since>=0?since:0;
    const oldest=buffer.length?buffer[0].cursor:cursor+1;
-   const reset=from>cursor||(from>0&&from<oldest-1);
-   const events=buffer.filter(event=>event.cursor>(reset?0:from)&&matches(event,filter));
-   return {schema:'ar-create.events.v1',bootId,cursor,reset,events:events.slice(-Math.max(1,Math.min(max,1000)))};
+   // Numeric cursors alone cannot distinguish boots. Never silently claim that
+   // such a resume is complete; old clients can still read events, but must reread.
+   const resetReason=previousBoot&&previousBoot!==bootId?'boot-changed':!previousBoot&&from>0?'boot-required':from>cursor?'cursor-ahead':from<oldest-1?'buffer-expired':null;
+   const reset=!!resetReason;
+   const size=Number.isSafeInteger(max)?Math.max(1,Math.min(max,1000)):200;
+   const matching=buffer.filter(event=>event.cursor>(reset?0:from)&&matches(event,filter));
+   const events=matching.slice(0,size),hasMore=matching.length>events.length;
+   // A reset is an instruction to reread canonical state at the current head.
+   // Otherwise only advance past delivered matches, safely skipping nonmatches.
+   const delivered=reset?cursor:hasMore?events.at(-1).cursor:cursor;
+   return {schema:'ar-create.events.v1',bootId,cursor:delivered,headCursor:cursor,oldestCursor:oldest,hasMore:reset?false:hasMore,reset,resetReason,events:reset?[]:events};
   },
   subscribe(listener,filter={}){const wrapped=event=>{if(matches(event,filter))listener(event);};listeners.add(wrapped);return ()=>listeners.delete(wrapped);},
  };

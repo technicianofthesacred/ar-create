@@ -1,5 +1,5 @@
 // Browser check for the "Needs you" list on Home: Only you and You steer asks, one tap to answer (recorded as
-// human:adrian from this page), "applied by default, change it", a link to a human-only screen, read-only when opened
+// human:adrian from this page), "default chosen, change it", a link to a human-only screen, read-only when opened
 // as an agent, an empty state, and a phone with no sideways scroll and 44px taps. Not part of `npm test` (no browser is a
 // dependency of this repo). Run it against a synthetic demo (`npm run demo`, or AR_CREATE_PORT=8855 npm run demo), never the
 // installed app on 8841:
@@ -66,11 +66,11 @@ try{
  await page.locator(`[data-ny-ask="${send.id}"] [data-ny-choice="Done"]`).click();
  await page.waitForFunction(id=>!document.querySelector(`.ny-ask[data-ny-ask="${id}"]`),send.id,{timeout:5000});
 
- // A default applies on its own and shows as "applied by default", with Change it.
+ // A default applies on its own and shows as "default chosen", with Change it.
  await page.waitForTimeout(Math.max(0,Date.parse(soon.applyAt)-Date.now())+800);
  await page.evaluate(()=>window.needsYou.load());
  const applied=page.locator(`[data-ny-ask="${soon.id}"]`);await applied.waitFor({timeout:5000});
- assert.match(await applied.innerText(),/Applied by default[\s\S]*Link it was applied by default[\s\S]*Keep Link it[\s\S]*Change it/);
+ assert.match(await applied.innerText(),/Default chosen[\s\S]*Link it became the default[\s\S]*The work result is not yet verified[\s\S]*Keep Link it[\s\S]*Change it/);
  await shot(page,'needs-you-desktop-applied.png');
  await applied.locator('[data-ny-change]').click();
  await applied.locator('[data-ny-choice="Leave it"]').click();
@@ -119,4 +119,4 @@ try{
  }
 }finally{await browser.close();}
 assert.deepEqual(errors,[],'no page errors');
-console.log('Needs-you browser check passed: list order, one-tap answers as human:adrian, applied by default and Change it, link to a human-only screen, read-only as an agent, empty state, phone.');
+console.log('Needs-you browser check passed: list order, one-tap answers as human:adrian, default chosen and Change it, link to a human-only screen, read-only as an agent, empty state, phone.');

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import {parseCarouselDraft} from "../src/workspaces/carousel-import.mjs";
 import {validateCarouselTypography} from "../src/workspaces/carousel-typography.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -307,7 +308,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     }
     return null;
   }
-  async function mutate(action, input, pairedReview = null, standIn = false) {
+  async function mutate(action, input, pairedReview = null, standIn = false, generated = null) {
     if (action === "review" && !standIn) requireHuman("Reviewing Carousel words");
     const actor = currentActor();
     let standInProof;
@@ -327,7 +328,8 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     if(standIn&&action==="create"&&(!["article","carousel","post","product-listing"].includes(input.kind)||!uuid.test(input.sourceBindingId||"")||!input.expectedNative||["selectedOutputId","sourceOutputId","targetLanguage","expectedSourceWords"].some(key=>Object.hasOwn(input,key))))fail("Stand-in creation requires exact copy-native source fields.");
     const t = await target(input);
     t.input = input;
-    const commandHash = hash({ action, input, ...(pairedReview?{review:pairedReview.binding}:{}), ...(standIn?{standIn:standInProof}:{}) }), prior = privateRead(t, "history", input.operationId);
+    if(generated){const source=record(t,generated.proof.sourceOutputId);if(source.output.kind!=="article"||source.record.wordOwner.kind!=="native"||source.record.wordOwner.bindingId!==input.sourceBindingId)fail("Generated source must be this exact Article word owner.");}
+    const commandHash = hash({ action, input, ...(pairedReview?{review:pairedReview.binding}:{}), ...(standIn?{standIn:standInProof}:{}), ...(generated?{generation:generated.proof}:{}) }), prior = privateRead(t, "history", input.operationId);
     const request = { projectId: t.projectId, documentId: t.documentId, operationId: input.operationId, expectedOutput: input.expectedOutput, commandHash };
     if (prior) {
       if (prior.value.commandHash !== commandHash || !same(prior.value.group, group(input))) fail("Operation ID already owns another exact output request.");
@@ -407,6 +409,12 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
           output = helpers.snapshotCarousel(mapper.renderDocument(captureValue));
           output.id = id;
           output.adaptation = { method: "deterministic-existing-snapshotCarousel", generated: false };
+          if(generated){
+            output.slides=generated.parsed.slides.map((slide,index)=>({id:derivedId("generated-slide:"+id+":"+index),role:slide.role,text:slide.text,credit:slide.credit,label:generated.parsed.label,template:"M12",photos:[],paragraphIds:[]}));
+            output.caption=generated.parsed.caption;
+            output.stage="words";output.status="for-your-yes";delete output.wordsReview;
+            output.adaptation={method:"existing-carousel-make",generated:true,reviewed:false,...clone(generated.proof)};
+          }
         }
         if (action === "refresh") {
           if (!textKind(selected.output.kind)) fail("Only a native text output refreshes from its own wording.");
@@ -481,7 +489,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
       const history = { schema: "ar-create.native-output-command.v1", provenance: provenance(), ...(standIn?{decisionRole:"stand-in",decision:{schema:action==="review"?"ar-create.carousel-words-stand-in-review.v1":action==="create"?"ar-create.output-stand-in-create.v1":action==="refresh"?"ar-create.output-stand-in-refresh.v1":"ar-create.output-stand-in-save.v1",...clone(standInProof),operationId:input.operationId,scope:{...group(input),outputId:id},review:clone(output.wordsReview)}}:{}), group: group(input), commandHash, outputId: id, captureId, beforeArrangement: selected ? arrangement(selected.output) : null, ...(selected?.output.kind==="carousel"&&["save","undo-words"].includes(action)?{beforeWords:wordSnapshot(selected.output)}:{}), beforeAssets: selected?.private.proof.assets ?? null, afterHash: hash(output) };
       const extraFiles = [{ relativePath: privatePath(t, "history", input.operationId), contents: JSON.stringify(history), expectedHash: null }];
       if (action === "create" || action === "refresh" || captureId !== selected.record.captureId) extraFiles.push({ relativePath: privatePath(t, "captures", captureId), contents: JSON.stringify(privateValue), expectedHash: privateRead(t, "captures", captureId)?.hash ?? null });
-      return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, ...(pairedReview?.beforeIntent?{beforeIntent:pairedReview.beforeIntent}:{}), ...(pairedReview?{sharedCarouselDecision:{requestId:pairedReview.requestId,binding:clone(pairedReview.binding),outputId:id}}:{}), finalCheck: async () => {
+      return { outputs, nativeOutputIndex: { schema: index.schema, revision: input.expectedOutput.revision + 1, records: selected ? index.records.map((r) => r.outputId === id ? nextRecord : r) : index.records.concat(nextRecord) }, extraFiles, ...(pairedReview?.beforeIntent?{beforeIntent:pairedReview.beforeIntent}:{}), ...(generated?.finalCheck.beforeIntent?{beforeIntent:generated.finalCheck.beforeIntent}:{}), ...(pairedReview?{sharedCarouselDecision:{requestId:pairedReview.requestId,binding:clone(pairedReview.binding),outputId:id}}:{}), finalCheck: async () => {
         if(languageSource){
           const currentSource=doc.outputs.find(row=>row.id===lineage.sourceOutputId);if(!currentSource||hash(currentSource)!==lineage.sourceOutputHash)fail("Selected source output changed before language edition publication; prepared copy is retained.");
           if(related){const actual=lease.rereadRelated();if(hash(actual.raw)!==lineage.sourceWordsHash)fail("Selected source own words changed before language edition publication.");}
@@ -498,6 +506,7 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
         }
         if(standIn) await verifyStandIn(lease?{rootSnapshot:lease.snapshot.binding.id===input.rootBindingId?lease.reread():lease.rereadRelated()}:undefined);
         if(pairedReview){requireHuman("Accepting native Carousel wording");await pairedReview.finalCheck();}
+        if(generated)await generated.finalCheck({snapshot:lease.reread()});
       } };
     });
     if(standIn&&snapshot&&snapshot.binding.id!==input.rootBindingId){const root=await native.read({bindingId:input.rootBindingId,parentStudyId:input.parentStudyId});related={bindingId:input.rootBindingId,parentStudyId:input.parentStudyId,expected:clone(root.expected)};}
@@ -645,7 +654,17 @@ function createNativeOutputOwner({ dataDir, store, native, mapper, helpers, scop
     if(!same(before.slides.map(({text,credit,label,role,...slide})=>slide),candidate.slides.map(({text,credit,label,role,...slide})=>slide)))fail("A wording proposal cannot move photographs, slide IDs or arrangement.");
     return mutate("save",{...input,operationId:requestId,expectedOutput:expected.expectedOutput,changes:{slides:clone(candidate.slides),caption:candidate.caption}},{requestId,binding,expectedWords:expected.expectedWords,finalCheck,...(beforeIntent?{beforeIntent}:{})});
   }
-  return { read, inspectCheckSnapshot, acceptCarouselProposal, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), standInCreate: (i) => mutate("create", i, null, true), save: (i) => mutate("save", i), standInSave: (i) => mutate("save", i, null, true), reviewCarouselWords: (i) => mutate("review", i), standInReviewCarouselWords: (i) => mutate("review", i, null, true), refreshSelectedArticle: (i) => mutate("refresh", i), standInRefresh: (i) => mutate("refresh", i, null, true), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
+  // Internal preparation boundary: caller supplies a finalized Make artifact,
+  // never an approval. The same native lease/transaction owns registration.
+  async function createGeneratedCarousel(input, artifact, finalCheck) {
+    if(!currentActor()||!['human:adrian',...AGENT_ACTORS].includes(currentActor().actor))throw Object.assign(Error('Generated preparation requires explicit attribution.'),{status:403});
+    if(input.kind!=="carousel"||input.operationId!==artifact?.requestId||typeof finalCheck!=="function"||!artifact||Object.keys(artifact).sort().join(',')!=="artifactHash,contextHash,raw,requestId,sourceOutputId"||hash(artifact.raw)!==artifact.artifactHash||!/^[a-f0-9]{64}$/.test(artifact.contextHash||"")||!uuid.test(artifact.sourceOutputId||""))fail("Exact finalized generated Carousel artifact required.");
+    const parsed=parseCarouselDraft(artifact.raw,"result.md");
+    if(parsed.stage!=="words"||parsed.sourceStatus!=="for-your-yes"||parsed.pillar!==undefined||parsed.slides.length<4||parsed.slides.length>10)fail("Generated Carousel must remain an unreviewed words-stage adaptation.");
+    const {raw,...generationProof}=artifact;
+    return mutate("create",input,null,false,{parsed,proof:generationProof,finalCheck});
+  }
+  return { read, createGeneratedCarousel, inspectCheckSnapshot, acceptCarouselProposal, copyRetainedCarousel, copyBrowserCarousel, create: (i) => mutate("create", i), standInCreate: (i) => mutate("create", i, null, true), save: (i) => mutate("save", i), standInSave: (i) => mutate("save", i, null, true), reviewCarouselWords: (i) => mutate("review", i), standInReviewCarouselWords: (i) => mutate("review", i, null, true), refreshSelectedArticle: (i) => mutate("refresh", i), standInRefresh: (i) => mutate("refresh", i, null, true), undo: (i) => mutate("undo", i), undoCarouselWords: (i) => mutate("undo-words", i), withExportSnapshot, assertExport: (i) => withExportSnapshot(i, async ({ output, wordOwner, expectedOutput }) => ({ output, wordOwner, expectedOutput })) };
 }
 export {
   createNativeOutputOwner

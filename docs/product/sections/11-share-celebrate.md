@@ -22,3 +22,14 @@ Save message versions, language, target published edition, per-recipient sent/re
 ## 3 November 2026: Before you release
 
 How I Work step 6. Share opens with two questions only Adrian answers: are you comfortable sharing this, and is it accurate (with the count of sourced, unsourced and doubtful claims beside it). Every person who appears is listed with how they appear (named, pictured, quoted) and their consent: not asked, asked, yes, yes with changes, no. Agents list people and draft the consent request; AR Create never sends it. Recording that a request was sent, setting a consent answer and the final yes are human-only. Release holds while anyone is unanswered, has said no, or now appears in more ways than they agreed to. Adrian can override with a reason, which is journaled; the override covers only the people open at that moment. The release records his yes; publishing still happens from Outputs. The same hold stops every way out while anyone is unanswered: Outputs exports and their downloads, Magazine publish, mark-published and the posting files, and the Instagram studio's Ready to post, frame PNGs and reel words. Each refuses in plain English naming who is unanswered, with a link to this desk (agents get HTTP 423, CLI exit 4); each screen turns its button off with the reason beside it. Adrian's override, with its reason, lifts it for the people it covered. `consent.open` lists every open consent item read-only, for the needs-you list.
+
+
+## 6 November — adopted control family
+
+Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE](../HUMAN-EXPERIENCE.md#graphite-controls--adopted-6-november-2026). C05: this settles control styling only; section layout/workflow acceptance and native preservation proof remain separate.
+
+## 6 November — Approved saved-edition invitation and focused history
+
+S11; C01/C03–C06. Adrian approved VR-05 v3 (Share packet v4): a compact invitation tied explicitly to the current or a retained saved edition, optional recipient correspondence, a visible separate release hold, and focused history. Graphite applies consistently to buttons, dropdowns and entry boxes. Preserve recipient/edition bindings, unsaved message recovery, guarded saves and exact eligible Undo. Copying or saving cannot record sending; replies and corrections cannot supply consent or alter the manuscript.
+
+Finish criterion: synthetic native current/retained-edition and history journeys, later edits preserve earlier correspondence/export bytes, actual actions retain human-only authority and stale guards, and desktop/phone light/dark controls remain readable. Visual approval does not prove implementation or authorize sending.

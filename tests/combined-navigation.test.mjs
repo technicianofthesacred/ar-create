@@ -30,3 +30,24 @@ test('phone groups expose the same guarded entrances and Escape returns focus',a
 test('a Source sheet captured before group navigation closes that group and Escape returns directly to the writer',async()=>{const f=boot();try{f.p.view='article';f.p.viewedStage=5;const owner={kind:'magazine',storyId:'saved-story',pieceId:'saved-piece',path:'Workflow/3-Develop/DEV - Synthetic.md'},H='a'.repeat(64);f.w.studyDraft={currentOwner:()=>owner,currentProof:()=>({owner,parentStudyId:f.p.id,draftHash:H,expected:{workflow:{draft:H}},sequence:2,dirty:true}),holdForContext:()=>({bufferToken:'kept-buffer'}),releaseContext:()=>({sameEditorNode:true})};const app=f.d.createElement('div');app.id='app';app.innerHTML='<main id="workspace"><div id="manuscript" contenteditable="true"><p>Exact unsaved writer words.</p></div></main>';f.d.body.append(app);const editor=f.d.getElementById('manuscript');f.w.eval(fs.readFileSync(new URL('../public/document-study/combined-sheets.js',import.meta.url),'utf8'));f.w.combinedSheets.registerOwner('source',({container})=>{container.textContent='Retained source reading';return {};});f.d.querySelector('[data-combined-group="develop"]').click();assert.ok(f.d.getElementById('combined-phone-sheet'));f.d.querySelector('#combined-phone-sheet [data-combined-nav="source"]').click();await new Promise(resolve=>setTimeout(resolve,0));assert.ok(f.d.getElementById('combined-sheet'));assert.equal(f.d.getElementById('combined-phone-sheet'),null);assert.equal(f.d.activeElement.hasAttribute('data-combined-sheet-close'),true);f.d.dispatchEvent(new f.w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));await new Promise(resolve=>setTimeout(resolve,0));assert.equal(f.d.getElementById('combined-sheet'),null);assert.equal(f.d.getElementById('combined-phone-sheet'),null);assert.equal(f.d.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Exact unsaved writer words.');assert.deepEqual(f.calls,[]);}finally{f.close();}});
 
 test('Combined Check awaits one existing drawer action and reports one refusal without redispatching the old stage button',async()=>{const f=boot(10);try{let called=0;f.w.c3WorkbenchFrame={openTool:async key=>{assert.equal(key,'check');called++;throw Error('Exact selected revision changed');}};assert.equal(await f.w.combinedNavigation.go('check'),false);assert.equal(called,1);assert.deepEqual(f.calls,[]);assert.equal(f.d.querySelectorAll('#combined-navigation-status').length,1);assert.equal(f.d.querySelector('#combined-navigation-status').textContent,'Exact selected revision changed');assert.equal(f.p.viewedStage,10);}finally{f.close();}});
+
+test('Research rail opens independent learning without opening or creating a manuscript',async()=>{
+ const f=boot(1);try{f.w.c3Research={async openLearning(input){f.calls.push(['learning',input.parentStudyId]);}};assert.equal(await f.w.combinedNavigation.go('research'),true);assert.deepEqual(f.calls,[['learning','kept']]);assert.equal(f.p.viewedStage,1);}finally{f.close();}
+});
+
+test('visible Research owns the rail selection while its underlying writing stage stays intact',()=>{
+ const f=boot(5);try{let open=true;f.w.c3Research={isOpen:()=>open};f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="research"]').getAttribute('aria-current'),'page');assert.equal(f.p.viewedStage,5);open=false;f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="write"]').getAttribute('aria-current'),'page');}finally{f.close();}
+});
+
+for(const refused of [false,true])test('leaving Research through Write respects its retained-writing return '+(refused?'refusal':'success'),async()=>{
+ const f=boot(5);try{let open=true;f.w.c3Research={isOpen:()=>open,hide(){f.calls.push('restore-research');if(refused)return false;open=false;}};
+ assert.equal(await f.w.combinedNavigation.go('write'),!refused);assert.deepEqual(f.calls,refused?['restore-research']:['restore-research','write']);assert.equal(open,refused);
+ assert.equal(f.d.querySelector('.combined-rail [aria-current="page"]').dataset.combinedNav,refused?'research':'write');
+ }finally{f.close();}
+});
+
+test('Research to its already mounted Write editor does not refocus or scroll it through a second mode transition',async()=>{
+ const f=boot(5);try{let open=true;const editor=f.d.createElement('div');editor.id='manuscript';editor.textContent='Retained unsaved words.';f.d.body.append(editor);f.w.studyDraft={viewMode:()=> 'edit'};f.w.c3Research={isOpen:()=>open,hide(){f.calls.push('restore-research');open=false;}};
+ assert.equal(await f.w.combinedNavigation.go('write'),true);assert.deepEqual(f.calls,['restore-research']);assert.strictEqual(f.d.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Retained unsaved words.');
+ }finally{f.close();}
+});

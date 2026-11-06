@@ -2,14 +2,58 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import vm from 'node:vm';
+import {EventEmitter} from 'node:events';
 import {createReviewConnection} from '../scripts/review-connection.mjs';
 
 const editPath='/api/source-sessions/edit',undoPath='/api/source-sessions/undo';
 const listen=server=>new Promise(resolve=>server.listen(0,'127.0.0.1',()=>resolve(server.address().port)));
 const close=server=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve);});
-function request(port,url,{method='POST',headers={},body}={}){
- return new Promise((resolve,reject)=>{const req=http.request({hostname:'127.0.0.1',port,path:url,method,headers,agent:false},res=>{const chunks=[];res.on('data',c=>chunks.push(c));res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString()}));});req.on('connect',(res,socket)=>{socket.destroy();resolve({status:res.statusCode});});req.on('error',reject);req.end(body);});
+function request(port,url,{method='POST',headers={},body,requestFactory=http.request}={}){
+ return new Promise((resolve,reject)=>{
+  let response;
+  const req=requestFactory({hostname:'127.0.0.1',port,path:url,method,headers,agent:false},res=>{
+   response=res;if(!req.writableEnded&&typeof req.write==='function')req.end();const chunks=[];res.on('data',c=>chunks.push(c));
+   res.on('error',reject);res.on('aborted',()=>reject(Error('Correction response was interrupted.')));
+   res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body:Buffer.concat(chunks).toString()}));
+  });
+  req.on('connect',(res,socket)=>{socket.destroy();resolve({status:res.statusCode});});
+  req.on('error',error=>{
+   // An early refusal may close the upload while its complete HTTP response
+   // is still arriving. Require that exact 413 response, including its end.
+   if(error.code==='EPIPE'&&response?.statusCode===413)return;
+   reject(error);
+  });
+  const bytes=typeof body==='string'?Buffer.from(body):body;
+  if(bytes?.length>64*1024){
+   // Exercise the streaming byte bound without queueing the whole rejected
+   // upload into the socket. Yield between chunks so an early HTTP refusal
+   // can be read, and stop uploading once that response starts.
+   let offset=0;
+   const upload=()=>{
+    if(response||req.destroyed)return;
+    const chunk=bytes.subarray(offset,offset+64*1024);offset+=chunk.length;
+    if(offset===bytes.length){req.end(chunk);return;}
+    if(req.write(chunk))setImmediate(upload);else req.once('drain',()=>setImmediate(upload));
+   };
+   req.flushHeaders();setImmediate(upload);
+  }else req.end(body);
+ });
 }
+test('request helper retains a complete early 413 but rejects unrelated transport failures',async()=>{
+ const simulated=({status=413,code='EPIPE',beforeResponse=false,aborted=false}={})=>(_options,respond)=>{
+  const req=new EventEmitter();req.end=()=>{
+   const res=new EventEmitter();res.statusCode=status;res.headers={};
+   if(beforeResponse)req.emit('error',Object.assign(Error('upload failed'),{code}));
+   respond(res);
+   if(!beforeResponse)req.emit('error',Object.assign(Error('upload failed'),{code}));
+   if(aborted)res.emit('aborted');else{res.emit('data',Buffer.from('exact refusal'));res.emit('end');}
+  };return req;
+ };
+ assert.deepEqual(await request(0,editPath,{requestFactory:simulated()}),{status:413,headers:{},body:'exact refusal'});
+ for(const options of [{status:200},{code:'ECONNRESET'},{beforeResponse:true}])await assert.rejects(request(0,editPath,{requestFactory:simulated(options)}),/upload failed/);
+ await assert.rejects(request(0,editPath,{requestFactory:simulated({aborted:true})}),/interrupted/);
+});
+
 const edit={operationId:'human:synthetic.correct-1',expectedRevision:7,expectedSourceHash:'a'.repeat(64),sessionId:'synthetic-session',turnId:'turn with supplied identity',speaker:'Visitor',text:'A corrected synthetic line.\n另一行。'};
 async function setup(t,{sourceCorrections=true,respond}={}){
  const calls=[];

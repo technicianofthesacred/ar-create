@@ -151,13 +151,16 @@ test('agents/mcp/server.mjs over real STDIO: registry tools plus the six manuscr
  const client=new Client({name:'codex-mcp-client',version:'1.0.0'}),transport=new StdioClientTransport({command:process.execPath,args:[path.join(repo,'agents/mcp/server.mjs'),'--url',f.url],env,stderr:'pipe'});
  await client.connect(transport);t.after(()=>client.close());
  const names=(await client.listTools()).tools.map(tool=>tool.name).sort();
- assert.deepEqual(names,['ar_create_call','ar_create_events','ar_create_list_commands','study_draft_context','study_draft_prepare','study_draft_propose','study_draft_read','study_draft_review','study_draft_status']);
+ assert.deepEqual(names,['ar_create_call','ar_create_capture_contribution','ar_create_current_work','ar_create_events','ar_create_list_commands','ar_create_validate_work','study_draft_context','study_draft_prepare','study_draft_propose','study_draft_read','study_draft_review','study_draft_status']);
  const listed=await client.callTool({name:'ar_create_list_commands',arguments:{section:'draft'}});assert.equal(listed.isError,undefined);assert.ok(listed.structuredContent.count>5);
  const pid='mcp-'+randomUUID().slice(0,8),made=await client.callTool({name:'ar_create_call',arguments:{name:'concepts.post',input:{parentStudyId:pid,title:'Made over MCP',operationId:randomUUID()}}});
  assert.equal(made.isError,undefined,JSON.stringify(made.content));
  const start=made.structuredContent,saved=await client.callTool({name:'ar_create_call',arguments:{name:'concept.save',input:{parentStudyId:pid,operationId:randomUUID(),expectedRevision:start.revision,expectedHash:start.hash,authorThoughts:'',aiInterpretation:'A reading.',suggestions:'',sourceSelections:[]}}});
  assert.equal(saved.isError,undefined,JSON.stringify(saved.content));
  assert.deepEqual([saved.structuredContent.history.at(-1).actor,saved.structuredContent.history.at(-1).client],['agent:codex','mcp']);
+ const schemas=(await client.listTools()).tools;for(const name of ['ar_create_current_work','ar_create_validate_work','ar_create_capture_contribution']){assert.equal(schemas.find(t=>t.name===name).inputSchema.additionalProperties,false);}
+ const current=await client.callTool({name:'ar_create_current_work',arguments:{selector:{parentStudyId:pid}}});assert.equal(current.isError,undefined,JSON.stringify(current.content));assert.equal(current.structuredContent.intent.agentInterpretation,'A reading.');assert.equal(current.structuredContent.authority.mayApply,false);
+ const origin={provider:'invented',client:'codex-mcp-client',captureId:randomUUID(),historyCoverage:'upstream-unavailable'},capture=await client.callTool({name:'ar_create_capture_contribution',arguments:{operationId:randomUUID(),origin,action:'append-thought',target:{parentStudyId:pid},contribution:{role:'human',text:'  Exact STDIO words.  '},expected:{revision:saved.structuredContent.revision,hash:saved.structuredContent.hash}}});assert.equal(capture.isError,undefined,JSON.stringify(capture.content));assert.equal(capture.structuredContent.carrier.client,'mcp');const resumed=await client.callTool({name:'ar_create_current_work',arguments:{selector:{parentStudyId:pid}}});assert.equal(resumed.structuredContent.intent.authorThoughts,'  Exact STDIO words.  ');
  const refused=await client.callTool({name:'ar_create_call',arguments:{name:'study-ai.reject',input:{bindingId:randomUUID(),parentStudyId:pid,requestId:randomUUID()}}});
  assert.equal(refused.isError,true);assert.equal(JSON.parse(refused.content[0].text).status,403);
 });

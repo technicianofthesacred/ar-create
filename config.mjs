@@ -1,3 +1,4 @@
+import {validateExecutionConfig} from './runtime/services/artifact-execution.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';import {fileURLToPath} from 'node:url';
@@ -104,5 +105,5 @@ export function loadConfig(env=process.env){
  const magazine=validateMagazineVaultConfig({...(config.magazine||{}),vaultRoot:magazineVaultRoot,filesRoot:magazineFilesRoot,magSendRepo:magazineSendRepo});
  let editorialSkills=Array.isArray(config.editorialSkills)?config.editorialSkills:[];
  if(!editorialSkills.length&&editorialSkillsDir)editorialSkills=['arcreate/SKILL.md','mag/SKILL.md'].map(name=>path.join(editorialSkillsDir,name)).filter(file=>fs.existsSync(file));
- return {home,dataDir,publicDir,port,localAtlasExportDir,magazineCheckReceipts,studyRelocation,transcriptLibrary,importedTranscriptOwner,retainedCarouselState,browserCarouselOrigins:[...browserCarouselOrigins],syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
+ return {execution:validateExecutionConfig(config.execution),home,dataDir,publicDir,port,localAtlasExportDir,magazineCheckReceipts,studyRelocation,transcriptLibrary,importedTranscriptOwner,retainedCarouselState,browserCarouselOrigins:[...browserCarouselOrigins],syntheticFixtures:config.syntheticFixtures===true,studyOriginalRoots,connections:config.sourceRoots||[],transcriptionRuntime:config.transcriptionRuntime?{...config.transcriptionRuntime,python}:null,originalReaderBaseUrl:config.originalReaderBaseUrl||null,editorialSkills,editorialSkillsDir,fixturesDir,magazine,allowScratchRoots:allowScratch,tools:{...tools,python}};
 }

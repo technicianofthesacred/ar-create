@@ -1,3 +1,4 @@
+import {outputMarkdown} from './render-helper.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -27,9 +28,9 @@ test('HTTP connection creates exact independent outputs and retains local write 
  const b=await post('/api/study/outputs/create',{...group,kind:'article',sourceBindingId:native.binding.id,expectedNative:native.expected,expectedOutput:a.view.expectedOutput,operationId:randomUUID()});
  assert.notEqual(b.view.writingProof.bindingId,native.binding.id);
  const selected=await get('/api/study/outputs?'+new URLSearchParams({...group,selectedOutputId:a.view.output.id}));assert.equal(selected.writingProof.bindingId,native.binding.id);assert.equal(selected.documentId,native.binding.id);assert.equal(selected.outputs.length,2);assert.equal(selected.document.id,native.binding.id);assert.equal(selected.document.paragraphs[0].id,selected.output.manuscript[0].id);assert.equal('context' in selected.document,false);assert.equal('privateSidecar' in selected.document,false);
- const exported=await post('/api/study/outputs/export',{...group,kind:'article',selectedOutputId:selected.output.id,expectedOutput:selected.expectedOutput,expectedNative:selected.writingProof.expected,manuscriptRevision:selected.output.manuscriptRevision,name:'synthetic.md',mimeType:'text/markdown',body:'Exact original words.\n'});
+ const exported=await post('/api/study/outputs/export',{...group,kind:'article',selectedOutputId:selected.output.id,expectedOutput:selected.expectedOutput,expectedNative:selected.writingProof.expected,manuscriptRevision:selected.output.manuscriptRevision,name:'synthetic.md',mimeType:'text/markdown',body:outputMarkdown(selected.document,selected.output)});
  assert.ok(exported.artifact.url.includes('rootBindingId='));
- const download=await fetch(base+exported.artifact.url);assert.equal(download.status,200);assert.equal(await download.text(),'Exact original words.\n');
+ const download=await fetch(base+exported.artifact.url);assert.equal(download.status,200);assert.equal(await download.text(),outputMarkdown(selected.document,selected.output));
  const listed=await get('/api/study/outputs/exports?'+new URLSearchParams({...group,selectedOutputId:selected.output.id}));assert.equal(listed.artifacts.length,1);assert.equal(listed.artifacts[0].url,exported.artifact.url);
  const latest=await get('/api/study/outputs?'+query);
  const carousel=await post('/api/study/outputs/create',{...group,kind:'carousel',sourceBindingId:native.binding.id,expectedNative:native.expected,expectedOutput:latest.expectedOutput,operationId:randomUUID()});

@@ -40,3 +40,47 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #o
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .oo-row.cp-output-card>.cp-card-preview{order:0!important;position:relative!important;width:100%!important;min-width:0!important;max-width:100%!important;height:110px!important;min-height:110px!important;overflow:hidden!important;box-sizing:border-box!important}
 /* Hidden must also beat the card normalization immediately above. */
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .oo-row.cp-output-card[hidden]{display:none!important}
+
+/* Approved Outputs rows. Renderer and board previews above keep their owners. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview{max-width:1120px!important;margin:0 auto!important;padding:24px!important;width:100%!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .oo-panel{border:0!important;background:transparent!important;overflow:visible!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .oo-panel>.oo-heading{position:static!important;display:flex!important;justify-content:space-between!important;align-items:center!important;flex-wrap:nowrap!important;width:auto!important;height:auto!important;max-height:none!important;overflow:visible!important;clip:auto!important;clip-path:none!important;padding:0!important;margin:0 0 20px!important;border:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .oo-heading h2{font:600 24px/1.2 var(--ar-ui,var(--sans))!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-filters{display:flex!important;gap:8px!important;align-items:center!important;flex-wrap:nowrap!important;margin-bottom:8px!important}
+#output-overview .cp-filters select{max-width:180px;min-width:0}
+#output-overview .cp-editions-view{margin-left:0!important;color:inherit!important}
+#output-overview .cp-outputs{gap:20px;margin:0}
+#output-overview .cp-subject>header{display:none}
+#output-overview .oo-panel[data-cp-scope-view="all"] .cp-subject>header{display:flex}
+#output-overview .cp-shelf{display:block;border-top:1px solid var(--line)}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card{position:relative!important;display:grid!important;grid-template-columns:100px minmax(0,1fr) auto!important;grid-template-rows:auto auto auto!important;column-gap:20px!important;row-gap:0!important;align-items:center!important;max-width:none!important;width:100%!important;padding:24px 0!important;margin:0!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:transparent!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.cp-card-preview{grid-column:1!important;grid-row:1/4!important;width:100px!important;height:130px!important;min-height:130px!important;max-width:100px!important;border-radius:6px!important;margin:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.oo-identity{grid-column:2!important;grid-row:1!important;align-self:end!important;width:auto!important;order:initial!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.wb-output-facts{grid-column:2!important;grid-row:2/4!important;align-self:start!important;width:auto!important;gap:4px!important;order:initial!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.oo-actions{grid-column:3!important;grid-row:1/4!important;align-self:center!important;align-items:center!important;flex-wrap:nowrap!important;width:auto!important;margin:0!important;order:initial!important;gap:8px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card .oo-identity :is(h3,.oo-title){font:600 17px/1.35 var(--ar-ui,var(--sans))!important;min-height:0!important}
+#output-overview .cp-output-card>.oo-state{grid-column:2;grid-row:2}#output-overview .cp-output-card>.oo-delivery{grid-column:2;grid-row:3}
+#output-overview .cp-output-card>.cp-row-copy{grid-column:2;grid-row:1/4}
+#output-overview .cp-output-card>.cp-row-copy h4{font-size:17px}
+#output-overview .cp-reference-title{font:inherit;text-align:left;padding:0;border:0;background:transparent;color:inherit;white-space:normal}
+#output-overview .cp-output-card>button{grid-column:3;grid-row:1/4;align-self:center;margin:0}
+#output-overview .cp-output-card p{font-size:13px}
+#output-overview .cp-output-card .cp-fact{min-height:0;margin-top:4px}
+#output-overview .cp-records-title{margin-top:20px}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card[hidden]{display:none!important}
+@media(max-width:600px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview{padding:20px 16px 28px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .oo-heading h2{font-size:22px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-filters{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto!important;min-height:44px!important}
+ #output-overview .cp-filters select{width:100%;padding-inline:8px;font-size:13px}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card{grid-template-columns:72px minmax(0,1fr)!important;gap:0 16px!important;padding:20px 0!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.cp-card-preview{width:72px!important;max-width:72px!important;height:96px!important;min-height:96px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.oo-actions{grid-column:1/-1!important;grid-row:4!important;display:flex!important;margin-top:12px!important;justify-content:stretch!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card>.oo-actions button{flex:1!important;min-width:0!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-output-card .oo-identity :is(h3,.oo-title){font-size:16px!important}
+ #output-overview .cp-output-card>button{grid-column:1/-1;grid-row:4;margin-top:12px}
+}
+
+/* Readable title links for referenced outputs share the row typography. */
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-reference-title{font:600 17px/1.35 var(--ar-ui,var(--sans))!important;min-height:0!important;height:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:inherit!important;text-align:left!important;white-space:normal!important;box-shadow:none!important}
+@media(max-width:600px){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace #output-overview .cp-reference-title{font-size:16px!important}}

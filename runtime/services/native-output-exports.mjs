@@ -1,5 +1,9 @@
 import {createCarouselVisualReviews} from './carousel-visual-review.mjs';
-import { createExports } from "./exports.mjs";
+import fs from 'node:fs';
+import path from 'node:path';
+import {digest,regular} from './files.mjs';
+import {outputMarkdown,outputHtml} from './render-helper.mjs';
+import { createExports, createExportAssetReader, exportRendererHash } from "./exports.mjs";
 import { createCarouselExports } from "./carousel.mjs";
 const fail = (m) => {
   throw Object.assign(Error(m), { status: 409 });
@@ -20,11 +24,25 @@ function createNativeOutputExports({ dataDir, store, outputs, resolveScope, libr
     standInReviewCarouselVisual:async input=>({...await visuals().standInReview(input),view:await outputs.read({rootBindingId:input.rootBindingId,parentStudyId:input.parentStudyId,selectedOutputId:input.selectedOutputId})}),
     async saveArticle(input) {
       const s = await scope(input);
-      return outputs.withExportSnapshot(guard(input), async ({ projectId, documentId, output, wordOwner, expectedOutput, sourceProofHash, finalCheck,languageEditionReview }) => {
+      return outputs.withExportSnapshot(guard(input), async ({ projectId, documentId, output, wordOwner, expectedOutput, sourceProofHash, assetProof, finalCheck,languageEditionReview }) => {
         if (projectId !== s.projectId || documentId !== s.documentId) fail("Export scope changed across its snapshot lease.");
         if (!/^[a-f0-9]{64}$/.test(sourceProofHash||"")) fail("Trusted captured source proof digest required.");
         if (!["article","post","product-listing"].includes(output.kind) || output.id !== input.selectedOutputId || output.manuscriptRevision !== input.manuscriptRevision) fail("Exact selected article manuscript revision required.");
-        return articles.save({ name: input.name, mimeType: input.mimeType, body: input.body, outputId: output.id, manuscriptRevision: input.manuscriptRevision }, { ...s, output, finalCheck, publicationBinding: { ...(output.languageEdition?{language:output.language,languageEdition:structuredClone(output.languageEdition),languageEditionReview:structuredClone(languageEditionReview)}:{}),wordOwner, expectedOutput, ...sourceProofHash ? { sourceProofHash } : {} } });
+        const document={id:documentId,title:output.title,revision:output.manuscriptRevision,paragraphs:output.manuscript,outputs:[output]},assets=[],rendererHash=exportRendererHash();
+        const readAsset=createExportAssetReader({assets,image:async url=>{
+          if(url.pathname!=='/api/sources/blob'||[...url.searchParams.keys()].join()!=='id')fail('Choose a photograph saved in this workspace.');
+          const id=url.searchParams.get('id'),expected=assetProof?.find(p=>p.id===id&&!p.missing)?.hash;
+          if(!expected||!library?.snapshot)fail('Exact captured article asset proof required.');
+          const source=await library.snapshot(id),file=source.file||source.path;regular(file);
+          const body=fs.readFileSync(file),contentType={'.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.webp':'image/webp'}[path.extname(file).toLowerCase()];
+          if(!contentType||source.hash!==expected||digest(body)!==expected)fail('Exact captured Library photo bytes changed; export held.');
+          return {body,contentType,hash:expected};
+        }});
+        const body=input.mimeType==='text/markdown'?outputMarkdown(document,output):input.mimeType==='text/html'?await outputHtml(document,output,{stylesheetUrl:'/assets/study-output-canvas.css',readAsset}):input.mimeType==='application/json'?JSON.stringify(output,null,2):null;
+        if(body===null||input.body!==body)fail('Export bytes do not match the exact saved edition. Refresh the output and prepare its export again.');
+        const renderBinding={renderer:'maintained-output-renderer-v1',rendererHash,mimeType:input.mimeType,outputHash:digest(JSON.stringify(output)),bodyHash:digest(body),assets};
+        const check=async()=>{await finalCheck();await readAsset.assertCurrent();if(exportRendererHash()!==rendererHash)fail('The output renderer changed during export.');};
+        return articles.save({ name: input.name, mimeType: input.mimeType, body, outputId: output.id, manuscriptRevision: input.manuscriptRevision }, { ...s, output, finalCheck:check, renderBinding, publicationBinding: { ...(output.languageEdition?{language:output.language,languageEdition:structuredClone(output.languageEdition),languageEditionReview:structuredClone(languageEditionReview)}:{}),wordOwner, expectedOutput, ...sourceProofHash ? { sourceProofHash } : {} } });
       });
     },
     async saveCarousel(input, origin) {

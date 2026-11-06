@@ -69,6 +69,11 @@
  }
  async function open(kind){
   if(!names[kind])throw Error('Choose Source, Research, Media or Arrange.');
+  if(kind==='research'&&typeof window.c3Research?.openLearning==='function'){
+   if(active&&!await close())return false;
+   await window.c3Research.openLearning({parentStudyId:current().id});return true;
+  }
+  if(window.c3Research?.isOpen?.()&&window.c3Research.hide()===false)return false;
   if(active){if(active.kind===kind)return true;if(!await close())return false;}
   const c=context(),held=capture(c),sheet=node('aside');sheet.id='combined-sheet';sheet.dataset.kind=kind;sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','false');sheet.setAttribute('aria-label',names[kind]);
   const header=node('header'),title=node('h2',names[kind]),back=node('button','Back to writing');back.type='button';back.dataset.combinedSheetClose='';const hint=node('span','Esc returns to the same line');hint.className='combined-sheet-hint';header.append(title,hint,back);

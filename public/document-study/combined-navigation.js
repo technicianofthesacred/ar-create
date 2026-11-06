@@ -19,7 +19,7 @@
   if(key==='make')for(const [selector,label]of [['[data-wbf-tool="understanding"]','Understanding'],['[data-wbf-thought]','Add a thought'],['[data-wbf-size="-1"]','Smaller text'],['[data-wbf-size="1"]','Larger text']]){const original=document.querySelector('.wbf-top-actions '+selector);if(!original)continue;const b=document.createElement('button');b.type='button';b.dataset.combinedTool=selector;b.textContent=label;b.disabled=original.disabled;panel.append(b);}
   document.body.append(panel);panel.querySelector('button')?.focus({preventScroll:true});
  }
- const stage=()=>{try{const p=current();return p.view==='article'?5:Number(p.viewedStage)||0;}catch{return 0;}};
+ const stage=()=>{try{if(window.c3Research?.isOpen?.())return 3;const p=current();return p.view==='article'?5:Number(p.viewedStage)||0;}catch{return 0;}};
  const home=()=>{const d=document.getElementById('project-library');return d?.open&&!d.dataset.plContext;};
  function status(message){let el=document.getElementById('combined-navigation-status');if(!el){el=document.createElement('p');el.id='combined-navigation-status';el.setAttribute('role','status');document.getElementById('c3-tabstrip')?.append(el);}el.textContent=message;el.hidden=!message;}
  function original(n){return [...document.querySelectorAll('.workflowNavigation .workflowStep')].find(b=>Number(b.querySelector('.stepNumber')?.textContent)===n);}
@@ -29,12 +29,16 @@
   closePhone();
   busy=true;status('');decorate();
   try{
+   const researchOpen=!!window.c3Research?.isOpen?.();
+   if(key!=='research'&&researchOpen&&window.c3Research.hide()===false)return false;
+   if(key==='write'&&researchOpen&&stage()===5&&document.getElementById('manuscript')&&window.studyDraft?.viewMode?.()==='edit')return true;
    if(key==='home'){const owner=document.querySelector('.workflowNavigation [data-tr-home]');if(!owner||owner.disabled)throw Error('Home is not connected.');window.combinedSubjects?.close?.();owner.click();}
    else if(key==='subjects'){if(typeof window.combinedSubjects?.open!=='function')throw Error('Subjects is not connected.');await window.combinedSubjects.open();}
    else {
-    if(window.combinedSubjects?.currentSubject?.()){if(typeof window.combinedSubjects.openStage!=='function')throw Error('The visible subject board cannot open its section.');return await window.combinedSubjects.openStage(item[2]);}
+    if(window.combinedSubjects?.currentSubject?.()){if(typeof window.combinedSubjects.openStage!=='function')throw Error('The visible subject board cannot open its section.');const result=await window.combinedSubjects.openStage(item[2]);if(result!==false&&key==='research'&&typeof window.c3Research?.openLearning==='function')await window.c3Research.openLearning({parentStudyId:current().id});return result;}
     if(home())await window.projectLibrary.close();
     if(home())throw Error('Save or resolve the current changes before leaving.');
+    if(key==='research'&&typeof window.c3Research?.openLearning==='function'){await window.c3Research.openLearning({parentStudyId:current().id});return true;}
     const owner=original(item[2]);if(!owner||owner.disabled)throw Error(item[1]+' is not available for this piece.');
     if(key==='check'){if(typeof window.c3WorkbenchFrame?.openTool==='function')await window.c3WorkbenchFrame.openTool('check');else if(typeof window.workspaceNavigation?.changeMode==='function')await window.workspaceNavigation.changeMode('check');else throw Error('The selected piece checking connection is unavailable.');return true;}
     if(key==='write'){if(typeof window.workspaceNavigation?.changeMode!=='function')throw Error('The selected piece writing connection is unavailable.');await window.workspaceNavigation.changeMode('write');return true;}
@@ -88,7 +92,7 @@
  window.addEventListener('c3-header-painted',decorate);
  // Context sheets intercept the group click before its normal navigation handler.
  const sheetOpenObserver=new MutationObserver(records=>{if(phoneGroup&&records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1&&node.id==='combined-sheet')))closePhone({restoreFocus:false});});sheetOpenObserver.observe(document.body,{childList:true});window.addEventListener('pagehide',()=>sheetOpenObserver.disconnect(),{once:true});
- window.combinedNavigation={go,decorate};
+ window.combinedNavigation={go,decorate,closePhone};
  window.c3Shell?.register('Combined navigation',decorate,{order:125,ignore:'.combined-rail,.combined-piece-switch,#combined-navigation-status'});
  decorate();
 })();

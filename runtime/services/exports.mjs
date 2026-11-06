@@ -9,6 +9,33 @@ import { assertOutputEditorialReady } from "../src/workspaces/editorial-state.mj
 const MAX_EXPORT_BYTES = 32 * 1024 * 1024;
 const matches = (r, s) => !!r && r.projectId === s.projectId && r.documentId === s.documentId && r.outputId === s.outputId;
 const extensions = { "text/html": ".html", "text/markdown": ".md", "application/json": ".json" };
+// The renderers use the same packaged styles/fonts as the browser. Never fetch
+// a caller URL or accept caller-supplied assets as correspondence evidence.
+export function createExportAssetReader({image, assets = []} = {}) {
+  const root = new URL('../public/', import.meta.url);
+  const checks=new Map();
+  const read=async value => {
+    const url = new URL(value, 'http://localhost');
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash) throw new StateError('Unsupported export asset.', 409);
+    if (url.pathname.startsWith('/api/')) {
+      if (!image) throw new StateError('The exact article photograph is unavailable.', 409);
+      const result = await image(url), bytes = result.body;
+      if (!Buffer.isBuffer(bytes) || !bytes.length || digest(bytes) !== result.hash) throw new StateError('Exact article photograph bytes changed.', 409);
+      assets.push({url:url.pathname+url.search,hash:result.hash,sizeBytes:bytes.length});
+      checks.set(url.pathname+url.search,async()=>{const now=await image(url);if(now.hash!==result.hash||now.contentType!==result.contentType||!Buffer.isBuffer(now.body)||digest(now.body)!==result.hash)throw new StateError('Article asset changed during export.',409);});
+      return new Response(bytes,{headers:{'Content-Type':result.contentType}});
+    }
+    if (url.search || !/^\/(?:assets\/(?:study-output-canvas\.css|app\.css|fonts\/[a-zA-Z0-9_.-]+\.(?:css|ttf|woff2?|otf))|ig-assets\/[a-zA-Z0-9_.-]+\.ttf)$/.test(url.pathname)) throw new StateError('Unsupported export style or font.',409);
+    const file = new URL(url.pathname.slice(1),root);regular(file);
+    const bytes=fs.readFileSync(file),extension=path.extname(file.pathname),mime={'.css':'text/css','.ttf':'font/ttf','.woff':'font/woff','.woff2':'font/woff2','.otf':'font/otf'}[extension];
+    assets.push({url:url.pathname,hash:digest(bytes),sizeBytes:bytes.length});
+    checks.set(url.pathname,()=>{regular(file);if(digest(fs.readFileSync(file))!==digest(bytes))throw new StateError('Article styles or fonts changed during export.',409);});
+    return new Response(bytes,{headers:{'Content-Type':mime}});
+  };
+  read.assertCurrent=async()=>{for(const check of checks.values())await check();};
+  return read;
+}
+export const exportRendererHash=()=>digest(fs.readFileSync(new URL('./render-helper.mjs',import.meta.url)));
 function createExports({ dataDir, store }) {
   const dir = ensurePrivateDirectory(dataDir, "exports");
   const owns = outputOwnership({ dataDir, store });
@@ -28,6 +55,7 @@ function createExports({ dataDir, store }) {
       const state = trusted ? null : store.get();
       const documents = trusted ? [{ id: trusted.documentId, outputs: [trusted.output] }] : [state.project.document, ...state.project.versions.map((v) => v.document)].filter(Boolean);
       if (trusted && (!trusted.projectId || !trusted.documentId || typeof trusted.finalCheck !== "function")) throw new StateError("Trusted exact export snapshot and final check required.", 409);
+      if(trusted?.renderBinding&&trusted.renderBinding.bodyHash!==digest(input.body))throw new StateError('Rendered export proof does not match its bytes.',409);
       const output = documents.flatMap((d) => d.outputs || []).find((o) => o.id === input.outputId && o.manuscriptRevision === input.manuscriptRevision);
       if (!output) throw new StateError("Save this output and its manuscript revision before exporting.", 409);
       if (input.mimeType !== "application/json") {
@@ -51,7 +79,8 @@ function createExports({ dataDir, store }) {
         return { artifact };
       };
       if (!trusted) return publish();
-      artifact.contentVerification = "caller-supplied-bytes-not-render-verified";
+      artifact.contentVerification = trusted.renderBinding ? "server-rendered-exact-edition" : "caller-supplied-bytes-not-render-verified";
+      if (trusted.renderBinding) artifact.renderBinding = structuredClone(trusted.renderBinding);
       if (trusted.magazineBinding) {
         artifact.exportKind = "magazine-working-html";
         artifact.lineageVerification = "registered-magazine-working-source";

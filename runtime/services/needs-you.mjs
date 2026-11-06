@@ -77,7 +77,7 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
 
  const view=ask=>({id:ask.id,band:ask.band,question:ask.question,about:ask.about,choices:ask.choices,scope:ask.scope,link:ask.link,
   default:ask.default,applyAt:ask.applyAt,status:ask.status,raisedBy:ask.raisedBy,raisedClient:ask.raisedClient,raisedAt:ask.raisedAt,
-  resolution:ask.resolution,earlier:ask.history.length});
+  resolution:ask.resolution,earlier:ask.history.length,execution:{status:'unverified',complete:false,operationId:null,reason:'This queue records a choice, not a verified domain result. The responsible owner must report completion.'}});
  const rank=ask=>ask.status==='open'?(ask.band==='only-adrian'?0:1):ask.status==='defaulted'?2:3;
  const order=(a,b)=>rank(a)-rank(b)||(a.status==='open'&&a.band==='steer'?Date.parse(a.applyAt)-Date.parse(b.applyAt):Date.parse(b.resolution?.at||b.raisedAt)-Date.parse(a.resolution?.at||a.raisedAt)||Date.parse(a.raisedAt)-Date.parse(b.raisedAt));
 
@@ -174,7 +174,7 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
   });
  }
 
- return {list,raise,answer,sweep:()=>withState(()=>({value:null}))};
+ return {list,raise,answer,peek:()=>({asks:load().asks.map(view)}),sweep:()=>withState(()=>({value:null}))};
 }
 
 const instances=new Map();

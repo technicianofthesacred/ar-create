@@ -137,7 +137,9 @@ export function createWorkContinuity({dataDir,direction,outputs,outputExports,un
    }else{
     const result=await outputExports.file({...scope,exportId,format:'article'});artifact=result?.artifact;
     if(!artifact||!HASH.test(artifact.hash||'')||typeof artifact.name!=='string'||!['text/markdown','text/html','application/json'].includes(artifact.mimeType)||!Number.isSafeInteger(artifact.sizeBytes)||artifact.sizeBytes<0)fail('Exact retained Article export unavailable.');
-    regular(result.file);if(fs.statSync(result.file).size!==artifact.sizeBytes)fail('Retained Article file size changed.');
+    const binding=artifact.renderBinding;
+    if(artifact.contentVerification!=='server-rendered-exact-edition'||binding?.renderer!=='maintained-output-renderer-v1'||!HASH.test(binding.rendererHash||'')||binding.mimeType!==artifact.mimeType||binding.bodyHash!==artifact.hash||binding.outputHash!==digest(JSON.stringify(work.native.output)))fail('Article completion needs an export rendered from this exact saved edition. Earlier files remain available without correspondence verification.');
+    regular(result.file);const bytes=fs.readFileSync(result.file);if(bytes.length!==artifact.sizeBytes||digest(bytes)!==artifact.hash)fail('Retained Article file bytes changed.');
     files=[{name:artifact.name,mimeType:artifact.mimeType,sizeBytes:artifact.sizeBytes,hash:artifact.hash}];
    }
    if(!artifact||artifact.id!==exportId||artifact.projectId!==work.projectId||artifact.documentId!==work.documentId||artifact.outputId!==work.scope.outputId||artifact.publicationProof!=='selected-output-writing-source-assets'||artifact.lineageVerification!=='saved-output-record'||!HASH.test(artifact.publicationBinding?.sourceProofHash||'')||carousel&&artifact.contentVerification!=='existing-carousel-renderer-saved-output-snapshot')fail('Export receipt is foreign or lacks maintained selected-output proof.');

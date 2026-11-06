@@ -1,7 +1,13 @@
 import fs from 'node:fs';
+import {AsyncLocalStorage} from 'node:async_hooks';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { StateError } from '../store.mjs';
+// A request-scoped observer can prepare a recoverable activity pointer before
+// an owner's receipt commits. It never changes bytes or runs in other requests.
+const writeObserver=new AsyncLocalStorage();
+export const observeAtomicWrites=(observer,run)=>writeObserver.run(observer,run);
+export const withoutAtomicWriteObserver=run=>writeObserver.run(null,run);
 export const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 export function safeRel(value, allowEmpty = true) {
   if (typeof value !== 'string' || value.length > 1024 || value.includes('\\') || /[\x00-\x1f\x7f]/.test(value) || path.isAbsolute(value)) throw new StateError('Use a relative library path.');
@@ -55,8 +61,10 @@ export function atomicWrite(file, bytes, { exclusive = false, expectedHash = nul
   try {
     fd = fs.openSync(temporary, 'wx', 0o600); fs.writeFileSync(fd, bytes); fs.fsyncSync(fd); fs.closeSync(fd); fd = undefined;
     if (expectedHash !== null && (!fs.existsSync(file) || digest(fs.readFileSync(file)) !== expectedHash)) throw new StateError('File changed during save. Refresh before saving.', 409);
+    const observed=writeObserver.getStore()?.({file,bytes,phase:'before'});
     if (exclusive) fs.linkSync(temporary, file); else fs.renameSync(temporary, file);
     const dir = fs.openSync(path.dirname(file), 'r'); try { fs.fsyncSync(dir); } finally { fs.closeSync(dir); }
+    if(observed)writeObserver.getStore()?.({file,bytes,phase:'after',observed});
   } finally { if (fd !== undefined) fs.closeSync(fd); fs.rmSync(temporary, { force: true }); }
 }
 export function readJson(file, fallback) {

@@ -98,6 +98,18 @@ function placements(story, origins = null) {
 // maintained parser's original photo view, never an inferred editable placement.
 const UPSTREAM_PARSER = 'ffdb7750eef1bbd91b9e0ff22284c3d9ab019ed98f4e7aa999cac67e683772ef';
 const UPSTREAM_SPEC = '71bee216b1066f44392c82d691fffa43cb0d28d132fe15d038fb07f69e115eae';
+function includedOriginCode() {
+  const root=fs.realpathSync(new URL('../runtime/src/donors/mag/',import.meta.url));
+  return {parserHash:readChecked(root,'mag-send.ts',1024*1024).hash,specHash:readChecked(root,'spec.ts',1024*1024).hash};
+}
+const knownOriginPair=(parserHash,specHash,included)=>[
+  {parserHash:UPSTREAM_PARSER,specHash:UPSTREAM_SPEC},included
+].some(pair=>pair.parserHash===parserHash&&pair.specHash===specHash);
+// Code identity only; origin eligibility still requires parser parity, complete
+// source coverage and the before/after code guards below. No request pins.
+export function supportedMagazineOriginCode(parserHash,specHash) {
+  return knownOriginPair(parserHash,specHash,includedOriginCode());
+}
 async function loadOriginParser() {
   const donorRoot = fs.realpathSync(new URL('../runtime/src/donors/mag/', import.meta.url));
   const {build} = require('esbuild');
@@ -148,6 +160,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
   // Trusted constructor-only test capability. It is never read from a request,
   // route, environment or user configuration; production callers omit it.
   const tracing = originTrace === undefined ? Object.freeze({parserHash:UPSTREAM_PARSER,specHash:UPSTREAM_SPEC,loadParser:loadOriginParser}) : originTrace;
+  const includedCode=originTrace===undefined?includedOriginCode():null;
   if (!tracing || Object.keys(tracing).some(k=>!['parserHash','specHash','loadParser'].includes(k)) || !HEX.test(tracing.parserHash) || !HEX.test(tracing.specHash) || typeof tracing.loadParser!=='function') throw new TypeError('Supply trusted origin parser code and pins.');
   const traceCapability=Object.freeze({parserHash:tracing.parserHash,specHash:tracing.specHash,loadParser:tracing.loadParser});
   const root = fs.realpathSync(repoRoot), rootStat = fs.lstatSync(root), rootId = digest(['magazine-publication',root]);
@@ -288,7 +301,7 @@ export function createMagazineMediaInspection({repoRoot, resolveWorking, originT
     let rows = placements(parsed), originTrace={status:'unavailable',reason:'projection-unavailable'};
     if(Array.isArray(resolved.projection)&&resolved.projection.length) {
       try {
-        const pinCode=()=>{const parser=readChecked(root,'src/pages/read/conversation/magSend.ts',1024*1024),specCode=readChecked(root,'src/pages/read/conversation/spec.ts',1024*1024);if(parser.hash!==traceCapability.parserHash||specCode.hash!==traceCapability.specHash)throw Error('upstream-code-mismatch');};
+        const pinCode=()=>{const parser=readChecked(root,'src/pages/read/conversation/magSend.ts',1024*1024),specCode=readChecked(root,'src/pages/read/conversation/spec.ts',1024*1024);if(includedCode?(!knownOriginPair(parser.hash,specCode.hash,includedCode)||!isDeepStrictEqual(includedCode,includedOriginCode())):(parser.hash!==traceCapability.parserHash||specCode.hash!==traceCapability.specHash))throw Error('upstream-code-mismatch');};
         pinCode();
         const traced=await traceCapability.loadParser(), observations=[];let range;
         const body=traced.draftBody(resolved.document.text,value=>{if(range)throw Error('body-range-mismatch');range=value;}).body;

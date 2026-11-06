@@ -1,3 +1,4 @@
+import {currentWorkSchemas} from './contracts/current-work.mjs';
 import {AGENT_ACTORS,currentActor} from './services/actor.mjs';
 import {StateError} from './store.mjs';
 import {isICloudAlbum} from './services/icloud-albums.mjs';
@@ -43,6 +44,8 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/study/carousel-make/preview':['rootBindingId','parentStudyId','sourceBindingId','sourceOutputId','expectedNative','expectedOutput','operationId'],
+  ...Object.fromEntries(['run','register','cancel'].map(action=>['/api/study/carousel-make/'+action,['rootBindingId','parentStudyId','requestId']])),
   '/api/instagram/plan': ['id? (omit to create)', 'operationId', 'expectedRevision?', 'expectedHash?', 'subject?', 'title?', 'door?', 'material?:{transcripts:[{sourceId,sourceHash}],photos:[{sourceId,caption?}]}', 'stories?:[{id?,title,dish,readback,why,reader,format?,spine:[lineId],matches:[{photoId,lineId,why}]}]', 'gaps?:[{question,why,storyIds,status,finding?,sources?}]', 'heard?:{storyId,quote}', 'flags?:[{lineId,heard,kind,suggestion?,why?}]', 'coverage?:[{momentId,status:saved|skipped|null,why}]'],
   '/api/instagram/layout': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'format', 'frames? (omit for the default)', 'caption? (text, or {parts:[{kind:quote,lineId,text}|{kind:suggested,lineId,text}|{kind:draft,text}]})'],
   '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
@@ -103,7 +106,8 @@ const BODY = {
   '/api/study-ai/run': ['bindingId','parentStudyId','requestId','operationId'],
   '/api/study/structure-tests/proposal-contract': ['bindingId','parentStudyId','kind','operationId','expectedContractHash','...'],
   '/api/study/structure-tests/proposal-review': ['bindingId','parentStudyId','action','requestId','operationId','reason?'],
-  '/api/study-ai/prepare': ['sourceIds', 'answerIds?', 'purpose?', 'openingRequestId?', 'selectedOptionId?','instruction?'], '/api/study-ai/propose': ['requestId', 'replacements?', 'openingOptions?', 'continuationParagraphs?','sourcedParagraph?','sourcedEvidence?'],
+  '/api/study-ai/prepare': ['sourceIds', 'answerIds?', 'purpose?', 'openingRequestId?', 'selectedOptionId?','instruction?','targetParagraphIds?'], '/api/study-ai/propose': ['requestId', 'replacements?', 'openingOptions?', 'continuationParagraphs?','draftParagraphs?','sourcedParagraph?','sourcedEvidence?'],
+  '/api/study-ai/cancel': ['requestId?','operationId'],
   '/api/study-ai/accept': ['requestId', '...'], '/api/study-ai/reject': ['requestId', 'reason?'],
   '/api/study-ai/finish': ['requestId', 'operationId', 'edits?:[{id,words}]', 'marks?:[{id,note?}]'],
   '/api/voice-corrections/decide': ['id', 'decision', 'operationId', 'key?', 'note?', 'reason?'],
@@ -123,15 +127,15 @@ const BODY = {
   '/api/consent/share/release': ['parentStudyId','pieceKey?','operationId','expectedRevision','expectedHash'],
   '/api/presence': ['stage', 'scope:{kind,id}', 'dirty', 'sequence'],
   '/api/simmer/board': ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board'],
-  '/api/simmer/intake': ['subject? (or title for a new subject)', 'title?', 'operationId', 'folder? (full path Adrian named)', 'photos? (file names in it)', 'words?:[{text,said?:typed|spoken}] (his exact words)', 'group?', 'collectionId?', 'expectedRevision?', 'expectedHash?'],
+  '/api/simmer/intake': ['subject? (or title for a new subject)', 'title?', 'operationId', 'folder? (full path Adrian named)', 'photos? (file names in it)', 'words?:[{text,said?:typed|spoken}] (his exact words)', 'group?', 'collectionId?', 'expectedRevision?', 'expectedHash?', 'resume?:{expectedRevision,expectedHash} (identical interrupted operation only)'],
   '/api/simmer/propose': ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'groups?:[{key?,title,sub?,blockIds?}]', 'letter?:{recurs,voice,unresolved,group?}', 'dishes?:[{title,why}] (two or three)', 'questions?:[text|{text,group?}]', 'feelings?:[text|{text,group?,options?}]'],
-  '/api/simmer/dish': ['subject', 'sentence (his exact words, never paraphrased)', 'said?:typed|spoken', 'operationId'],
+  '/api/simmer/dish': ['subject', 'sentence (his exact words, never paraphrased)', 'said?:typed|spoken', 'operationId', 'expectedRevision?', 'expectedHash?', 'resume?:{expectedRevision,expectedHash} (identical interrupted operation only)'],
 };
 function section(route) {
   const r = route.replace(/^\/api\//, '');
   if (/^(words|phone-pickup)(\/|$)/.test(r)) return 'transcript';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
-    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/outputs|carousel|article|exports|shared-articles|shared-carousels|instagram)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
+    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance|voice-corrections)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
@@ -142,6 +146,7 @@ const VERB = { GET: 'get', POST: 'post', PUT: 'put', DELETE: 'delete', HEAD: 'he
 
 /** Commands mounted by bespoke handlers in server.mjs (not the route map). */
 export const CUSTOM_COMMANDS = [
+  ['GET','/api/current-work/contract'],['POST','/api/current-work/read'],['POST','/api/current-work/validate'],['POST','/api/conversation/capture'],
   ['GET', '/api/magazine/working-draft/export-file', ['storyId','pieceId','expectedHash','exportId']],
   ['GET','/api/study/footage/preview',['bindingId','parentStudyId','sourceId','expectedHash']],
   ['GET', '/api/study/photos/available-preview', ['projectId','documentId','bindingId','parentStudyId','sourceId','expectedHash']],
@@ -179,7 +184,7 @@ export const CUSTOM_COMMANDS = [
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];
 /** POST routes in the custom families that only read. */
-const CUSTOM_READ_ONLY = new Set(['POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
+const CUSTOM_READ_ONLY = new Set(['POST /api/current-work/read','POST /api/current-work/validate','POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /**
  * study-ai.finish (3 Nov 2026) closes Adrian's read-through of a machine draft: it saves his edits and the
  * paragraphs he left alone, so it is his alone like every save below.
@@ -202,6 +207,7 @@ const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/instagram/choose', 'POST 
 function entry(method, route, { query, mode, mount }) {
   // Manuscript proposals take their identity from the query only; the body must not repeat it.
   if (route.startsWith('/api/study-ai/')&&route!=='/api/study-ai/run') { mode = 'scope'; query = ['bindingId', 'parentStudyId', 'requestId?']; }
+  if(route==='/api/study/carousel-make'&&method==='GET')query=['rootBindingId','parentStudyId','requestId?'];
   if(route==='/api/study-ai/run'&&method==='GET')query=['bindingId','parentStudyId','requestId?','operationId'];
   if(route.startsWith('/api/study/language/')&&method==='GET')query=['kind?','bindingId','parentStudyId','outputId','recipientId?',...(route.endsWith('/review')?['requestId']:[])];
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
@@ -229,7 +235,7 @@ export function findCommand(list, method, pathname) {
   return list.find(e => e.method === method && e.route === pathname) || list.find(e => e.method === method && e.route.includes('{') && e.pattern.test(pathname)) || null;
 }
 /** The registry as JSON for /api/capabilities. */
-export const publicEntry = ({ pattern, ...rest }) => rest;
+export const publicEntry = ({ pattern, ...rest }) => {const schema=rest.route==='/api/conversation/capture'?currentWorkSchemas.capture:rest.route.startsWith('/api/current-work/')?currentWorkSchemas[rest.route.split('/').at(-1)]:null;return {...rest,...(schema?{inputSchema:schema}:{})};};
 
 /**
  * The HTTP route map, moved verbatim from server.mjs. bind() is called once per
@@ -238,7 +244,7 @@ export const publicEntry = ({ pattern, ...rest }) => rest;
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {nativeCarouselMake,voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     // The one publish check (consent desk): refuses with the reason while anyone on the piece is unanswered.
     const holdPublish=(scopes,what)=>consentDesk.assertNotHeld(scopes,what);
     // The older single-project export routes belong to the workspace's own project.
@@ -260,7 +266,18 @@ export function createRouteMap(services) {
       return studyAI.call(action,{...scope,...input});
     });
     const conceptCall=fn=>draftCall(()=>{if(!conceptWork)throw new StateError('Concept work requires configured collections.',503);return fn();});
+    const nativeCarouselCall=(action,input)=>draftCall(()=>{
+      if(request.method==='POST'&&url.search)throw new StateError('Use the exact native Carousel route without a query.',400);
+      if(!nativeCarouselMake)throw new StateError('Native Carousel generation is unavailable.',503);
+      return nativeCarouselMake[action](input);
+    });
     const routes = {
+      '/api/study/carousel-make': {GET:()=>{
+        const keys=['rootBindingId','parentStudyId','requestId'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length>1)||!url.searchParams.get('rootBindingId')||!url.searchParams.get('parentStudyId')||(url.searchParams.has('requestId')&&!url.searchParams.get('requestId')))throw new StateError('Choose one exact native Carousel scope and optional request.',400);
+        return nativeCarouselCall(url.searchParams.has('requestId')?'get':'list',Object.fromEntries(url.searchParams));
+      }},
+      ...Object.fromEntries(['preview','run','register','cancel'].map(action=>['/api/study/carousel-make/'+action,{POST:input=>nativeCarouselCall(action,input)}])),
       '/api/concept/capabilities': {GET:()=>conceptCall(()=>conceptWork.capabilities())},
       '/api/concepts': {GET:()=>conceptCall(()=>conceptWork.list()),POST:input=>conceptCall(()=>conceptWork.create(input))},
       '/api/concept': {GET:()=>conceptCall(()=>conceptWork.read({parentStudyId:url.searchParams.get('parentStudyId')}))},
@@ -380,6 +397,7 @@ export function createRouteMap(services) {
       '/api/study-ai/prepare': {POST:input=>studyAICall('prepare',input)},
       '/api/study-ai/context': {GET:()=>studyAICall('context')},
       '/api/study-ai/propose': {POST:input=>studyAICall('propose',input)},
+      '/api/study-ai/cancel': {POST:input=>studyAICall('cancel',input)},
       '/api/study-ai/review': {GET:()=>studyAICall('review')},
       '/api/study-ai/requests': {GET:()=>studyAICall('list')},
       '/api/study-ai/accept': {POST:input=>studyAICall('accept',input)},

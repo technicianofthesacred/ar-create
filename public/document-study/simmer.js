@@ -30,6 +30,17 @@
  function status(text,bad){const n=$('.sm-save');if(n){n.textContent=text?'· '+text:'';n.classList.toggle('bad',!!bad);}}
  function note(text,action){const n=$('.sm-note');if(!n)return;if(!text){n.hidden=true;n.innerHTML='';return;}n.hidden=false;n.classList.toggle('bad',action!=='talk');n.innerHTML='<span>'+esc(text)+'</span>'+(action==='reload'?'<button type="button" data-sm="reload">Reload</button>':'')+'<button type="button" class="sm-quiet" data-sm="note-close" aria-label="Dismiss">Dismiss</button>';}
 
+ function intakeStatus(){
+  const host=$('.sm-intake'),pending=(board.intakeOperations||[]).filter(r=>r.status!=='complete');
+  host.hidden=!pending.length;
+  host.innerHTML=pending.map(r=>{
+   const steps=Object.entries(r.steps||{}),saved=steps.filter(([,s])=>s.status==='saved'),sources=saved.filter(([,s])=>s.sourceId),waiting=steps.filter(([,s])=>s.status==='pending'),changed=steps.filter(([,s])=>s.status==='changed'),uncertain=steps.filter(([,s])=>['running','unconfirmed'].includes(s.status));
+   const label=k=>k.startsWith('photo-')?'photo':({project:'subject',note:'your words',membership:'Collection',board:'board',direction:'Direction'}[k]||'material');
+   const kept=[sources.length?sources.length+' source'+(sources.length===1?'':'s')+' kept':'',...saved.filter(([k])=>['membership','board','direction'].includes(k)).map(([k])=>label(k)+' saved')].filter(Boolean).join(' · ');
+   return '<div><strong>Chat material needs recovery</strong><p>'+esc(kept||'Saved steps need checking.')+(waiting.length?' · '+esc([...new Set(waiting.map(([k])=>label(k)))].join(', '))+' unfinished':'')+(uncertain.length?' · '+esc([...new Set(uncertain.map(([k])=>label(k)))].join(', '))+' awaiting confirmation':'')+(changed.length?' · '+esc([...new Set(changed.map(([k])=>label(k)))].join(', '))+' changed; restore the retained material first':'')+'</p><p>Continue the original request in your chat to finish safely. Your retained material stays here.</p><nav aria-label="Retained chat material">'+sources.map(([k,v],i)=>'<a href="'+esc(blobUrl(v.sourceId))+'" target="_blank" rel="noopener">Open '+esc(k==='note'?'your words':'photo '+(i+1))+'</a>').join('')+'</nav></div>';
+  }).join('')+(pending.length?'<button type="button" data-sm="intake-refresh">Check again</button>':'');
+ }
+
  /* ---------- view: pan and zoom ---------- */
  function apply(){if(mobile.matches)return;world().style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';$('.sm-zoom span').textContent=Math.round(s*100)+'%';world().classList.toggle('map',s<0.45);try{localStorage.setItem('simmer-view:'+ctx.subject,JSON.stringify({s,tx,ty}));}catch{}}
  const clampS=v=>Math.max(0.25,Math.min(1.6,v));
@@ -221,7 +232,7 @@
  function shell(){
   const d=document.createElement('dialog');d.className='simmer';d.setAttribute('aria-label','Simmer');
   d.innerHTML='<div class="sm-bar"><span class="sm-title"><b></b> · Simmer<span class="sm-save" role="status"></span></span><div class="sm-zoom" aria-label="Zoom"><button type="button" class="sm-tb" data-sm="zout" aria-label="Zoom out">−</button><span>80%</span><button type="button" class="sm-tb" data-sm="zin" aria-label="Zoom in">+</button></div><button type="button" class="sm-tb" data-sm="fit" title="Zoom out to see every group">Fit</button><span class="sm-sep" aria-hidden="true"></span><button type="button" class="sm-tb" data-sm="talk"><span class="dot"></span>Talk</button><button type="button" class="sm-tb" data-sm="forming" aria-pressed="true" aria-controls="sm-forming">Forming</button><span class="sm-sep" aria-hidden="true"></span><button type="button" class="sm-tb" data-sm="leave">Leave</button></div>'
-   +'<nav class="sm-groups" aria-label="Groups"><span class="lbl">Go to</span></nav><div class="sm-note" hidden role="status"></div>'
+   +'<section class="sm-intake" hidden aria-label="Chat recovery" role="status"></section><nav class="sm-groups" aria-label="Groups"><span class="lbl">Go to</span></nav><div class="sm-note" hidden role="status"></div>'
    +'<div class="sm-body"><div class="sm-vp"><div class="sm-world"><svg class="sm-links" aria-hidden="true"></svg></div><div class="sm-scrim" hidden></div><div class="sm-editor" hidden role="dialog" aria-modal="true" aria-label="Edit block"></div></div>'
    +'<aside class="sm-forming" id="sm-forming" aria-label="Forming"><div><h2>Forming</h2><p class="intro">What\'s holding, and the dish taking shape. Nothing here is decided until you send it.</p></div><div class="sm-fsec"><h3>Holding</h3><ul class="sm-held"></ul></div><div class="sm-fsec"><h3>It could become</h3><div class="sm-dishes"></div></div><div class="sm-fsec"><h3>When you can say it</h3><div class="sm-named" hidden></div><p class="sm-sentence">This is about <span contenteditable="true" data-sentence="about" data-ph="the situation"></span>. Really it\'s about <span contenteditable="true" data-sentence="really" data-ph="the story"></span>. It\'s <span contenteditable="true" data-sentence="dish" data-ph="the dish"></span> for <span contenteditable="true" data-sentence="reader" data-ph="which reader"></span>.</p><button type="button" class="sm-primary" data-sm="send">Send to Direction</button><p class="sm-msg" aria-live="polite"></p></div></aside></div>';
   d.addEventListener('pointerdown',e=>{if(e.target.closest('.sm-vp'))onDown(e);});
@@ -259,13 +270,14 @@
   if(sm==='zin')return zoomAt(s*1.2,r().width/2,r().height/2);if(sm==='zout')return zoomAt(s/1.2,r().width/2,r().height/2);if(sm==='fit')return fit();
   if(sm==='talk')return note('Talk is not connected yet. Type into any block or the sentence for now.','talk');
   if(sm==='note-close')return note('');
+  if(sm==='intake-refresh'){if(dirty||saving||stale)return note('Save or resolve your board edits before checking chat recovery.');return void reload();}
   if(sm==='reload')return void reload();
   if(sm==='forming'){const w0=r().width,on=a.getAttribute('aria-pressed')==='true';a.setAttribute('aria-pressed',String(!on));$('.sm-body').classList.toggle('noform',on);try{localStorage.setItem('simmer-forming',on?'off':'on');}catch{}if(!mobile.matches){tx+=(r().width-w0)/2;apply();}return;}
   if(sm==='send')return void send();
   if(sm==='leave')return void leave();
  }
  async function reload(){note('');stale=false;dirty=false;try{board=await readBoard(ctx.subject);normalize();render();status('Saved');}catch(error){note(error.message);}}
- function normalize(){board.groups||=[];board.links||=[];board.forming||={};board.forming.dishes||=[];board.forming.sentence={about:'',really:'',dish:'',reader:'',...board.forming.sentence};}
+ function normalize(){intakeStatus();board.groups||=[];board.links||=[];board.forming||={};board.forming.dishes||=[];board.forming.sentence={about:'',really:'',dish:'',reader:'',...board.forming.sentence};}
  async function leave(){if(current)closeEditor();await flush();close();}
  function close(){clearTimeout(timer);if(dlg?.open)dlg.close();dlg?.remove();dlg=null;board=null;current=null;mode=null;const o=opener;opener=null;o?.isConnected&&o.focus?.({preventScroll:true});}
 

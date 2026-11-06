@@ -600,3 +600,24 @@ Agents never save prose directly; they propose it, and Adrian's words, adopted d
 The truth and consent desk holds release while anyone on a piece is unanswered, and that hold now stops every route that publishes, marks published, exports for posting or sets ready-to-post, not only the desk's own "release" button. One check (the desk's) answers for all of them: Outputs exports and their downloads, Magazine send, mark-published, saving the posting slides and the working-HTML export, and the Instagram studio's Ready to post, frame PNGs and reel words. A held path refuses in plain English, names who is unanswered and links to the desk; agents see HTTP 423 and CLI exit 4 (`consent_hold`). Adrian's override, with its journaled reason, still lifts it for the people it covered, and the final yes stays his alone. Each screen with such a button turns it off and shows the reason beside it.
 
 A desk saved under either id of a piece holds it: the app's project id and the Magazine story id are tied together through the draft file the app opened. An Instagram plan with no named project finds the desk that links its own Library sources; if there is none, Ready to post is refused until it is linked to a piece, so consent is never skipped by default.
+
+
+### 6 November — recovered intent and coherent delivery
+
+Reconciled the preserved October working briefs against current main. The 22–23 October requirement to verify both actual visual use and working connections, and to retain the same selected piece, unsaved buffer, passage and valid caret/selection when switching writing/reading modes, remains in force. Combined's 30 October piece modes and typography supersede the older C Workbench styling and Edit / Preview naming. Source's approved conversation-first proposal hierarchy and exact sequential Save/Undo requirements are retained in its section brief. These are preserved requirements, not new completion claims.
+
+The owner authorized implementation, integration, source merge and guarded local software release of the coherent editorial journey on 6 November. TODO owns the bounded assignments and dependency gates. This does not approve provider-account expansion, private uploads, new public exposure, editorial decisions, sending or content publication. Real-client, native-screen, file, installed and human-accepted proof remain distinct.
+
+The shared current-work/capture contract carries exact selected human words, current owner revisions, protections, rejected choices and pending work between supported clients. It does not create an editable summary authority, infer complete upstream history or grant remote human approval. A recorded answer/default remains distinct from a completed domain operation. Detailed interfaces and the still-pending authenticated-review policy are in [current work](../contracts/current-work.md) and [conversation authority](../contracts/conversation-authority.md); measured candidate proof remains in CURRENT.
+
+The owner subsequently required proposed UI/UX improvements to be shown in a separate visual-review chat and explicitly approved by version/scope before implementation and release. Existing authorized functional repairs continue. An audit recommendation, screenshot, broad ship instruction, peer message or silence is not that visual approval. This adds a review gate; it adopts none of the pending visual alternatives.
+
+
+### 6 November — consistent Graphite controls
+
+C05 across S01–S12. The owner selected option2 Graphite and explicitly asked for consistent buttons, dropdowns and boxes. The control family and compact geometry are recorded in HUMAN-EXPERIENCE; this supersedes earlier button-shape choices where they differ. Apply it consistently in the shared shell and section controls while preserving semantic states. Individual layout/workflow proposals still need their own acceptance; a preview is not installed proof.
+
+
+## Eight focused screens — adopted 6 November 2026
+
+C01–C06; S02/S03/S05/S06/S07/S09–S12 as scoped. After viewing all eight comparisons, Adrian said “yes do all”. This approves Source VR01v2, Research VR02v2, Write VR03v1, Article Check VR04v1, Share VR05v3, Outputs VR06v3, Carousel Check VR07v3 and Recovery VR08v2, with the adopted Graphite family also applied to the earlier four screens. It supersedes their earlier pending layout approval boundaries. Preserve original words, selected owners, editions, saved Undo, separate retained recovery records and source facts. Verify focused behavior and actual synthetic native desktop/phone light/dark journeys. Approval is implementation intent, not proof of working screens, installation, provider activation, sending or publication. Delivery ownership and remaining native gates are in TODO/CURRENT.

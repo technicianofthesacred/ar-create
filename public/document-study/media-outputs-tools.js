@@ -4,7 +4,7 @@
  if(window.mediaOutputsTools)return;
  const rooms=new Map(),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let queued=false,stopped=false,serial=0;
- const active=()=>{const p=typeof current==='function'?current():null;return p?.view==='record'&&[8,12].includes(Number(p.viewedStage))?p:null;};
+ const active=()=>{const p=typeof current==='function'?current():null;return p?.view==='record'&&Number(p.viewedStage)===8?p:null;};
  const room=p=>{if(!rooms.has(p.id))rooms.set(p.id,{filter:'all',fields:{},output:null});return rooms.get(p.id);};
  const field=(r,key,label,placeholder='')=>`<label>${label}<textarea rows="2" data-mot-field="${esc(key)}" placeholder="${esc(placeholder)}">${esc(r.fields[key]||'')}</textarea></label>`;
  const button=(kind,label)=>`<button type="button" data-mot-action="${kind}">${label}</button>`;
