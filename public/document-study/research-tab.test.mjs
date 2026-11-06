@@ -108,3 +108,10 @@ test('changing native owner cancels the Research hold without restoring another 
 
 
 test('Research show and hide immediately refresh the ordinary navigation selection',async()=>{const f=fixture();try{const observed=[],closed=[];f.w.combinedNavigation={closePhone:value=>closed.push(value),decorate:()=>observed.push(f.w.c3Research.isOpen())};f.w.c3Research.show();await f.settle();f.w.c3Research.hide();assert.deepEqual(observed,[true,false]);assert.deepEqual(json(closed),[{restoreFocus:false}]);}finally{f.w.close();}});
+
+for(const refuse of [false,true])test('Research restores scroll after revealing writing, and keeps the view when release '+(refuse?'fails':'succeeds'),async()=>{
+ const f=fixture();try{const writer=f.d.getElementById('manuscript');let scroll=150;const restoredWhileOpen=[];Object.defineProperty(writer,'scrollTop',{get:()=>scroll,set:value=>{scroll=value;restoredWhileOpen.push(f.w.c3Research.isOpen());}});
+ f.w.studyDraft={holdForContext:()=>({bufferToken:'held'}),releaseContext:()=>{if(refuse)throw Error('Keep retained writing open');}};await f.w.c3Research.openLearning({parentStudyId:'hk'});await f.settle();scroll=38;
+ assert.equal(f.w.c3Research.hide(),!refuse);assert.equal(f.w.c3Research.isOpen(),refuse);assert.equal(scroll,refuse?38:150);assert.deepEqual(restoredWhileOpen,refuse?[]:[false]);assert.strictEqual(f.d.getElementById('manuscript'),writer);
+ }finally{f.w.close();}
+});

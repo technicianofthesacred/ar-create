@@ -113,15 +113,15 @@ ${p.text?`<div class="rt-fh">Passage</div><div class="rt-psg">${esc(p.text).spli
   const scroll=[];for(let node=editor;node;node=node.parentElement)scroll.push({node,top:node.scrollTop,left:node.scrollLeft});
   learningReturn={editor,parentStudyId:current().id,bindingId:owner.currentBinding?.()?.id||null,owner:JSON.stringify(owner.currentOwner?.()||null),hold,range,focus:document.activeElement,scroll};
  }
- function restoreLearningReturn(){
-  const saved=learningReturn;if(!saved)return true;const same=current().id===saved.parentStudyId&&document.getElementById('manuscript')===saved.editor&&(window.studyDraft?.currentBinding?.()?.id||null)===saved.bindingId&&JSON.stringify(window.studyDraft?.currentOwner?.()||null)===saved.owner;
+ function restoreLearningReturn(afterRelease){
+  const saved=learningReturn;if(!saved){afterRelease();return true;}const same=current().id===saved.parentStudyId&&document.getElementById('manuscript')===saved.editor&&(window.studyDraft?.currentBinding?.()?.id||null)===saved.bindingId&&JSON.stringify(window.studyDraft?.currentOwner?.()||null)===saved.owner;
   try{window.studyDraft.releaseContext({bufferToken:saved.hold.bufferToken,...same?{restoreSelection:true}:{cancelOnly:true,restoreSelection:false}});}catch(error){nativeRoom(ui.forId).error=error.message||'Return to the current writing before closing Research.';paint();return false;}
-  learningReturn=null;if(!same)return true;
+  learningReturn=null;afterRelease();if(!same)return true;
   if(saved.range&&saved.editor.contains(saved.range.commonAncestorContainer)){saved.editor.focus({preventScroll:true});const selection=window.getSelection();selection.removeAllRanges();selection.addRange(saved.range);}else if(saved.focus?.isConnected)saved.focus.focus?.({preventScroll:true});
   for(const row of saved.scroll)if(row.node.isConnected){row.node.scrollTop=row.top;row.node.scrollLeft=row.left;}return true;
  }
  function show(){window.combinedNavigation?.closePhone?.({restoreFocus:false});if(window.combinedSheets?.state?.()?.kind==='research')window.combinedSheets.close();open=true;ui.reader=null;paint();window.combinedNavigation?.decorate?.();void load();}
- function hide(){if(!restoreLearningReturn())return false;nativeEpoch++;open=false;ui.reader=null;ui.moreOpen=false;paint();window.combinedNavigation?.decorate?.();}
+ function hide(){return restoreLearningReturn(()=>{nativeEpoch++;open=false;ui.reader=null;ui.moreOpen=false;paint();window.combinedNavigation?.decorate?.();});}
  async function decide(id){
   hide();
   await window.switchProject(id);
