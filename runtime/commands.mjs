@@ -44,6 +44,8 @@ const UNDO = {
 };
 /** Body fields for the commands agents use most; the rest say 'object'. */
 const BODY = {
+  '/api/study/carousel-make/preview':['rootBindingId','parentStudyId','sourceBindingId','sourceOutputId','expectedNative','expectedOutput','operationId'],
+  ...Object.fromEntries(['run','register','cancel'].map(action=>['/api/study/carousel-make/'+action,['rootBindingId','parentStudyId','requestId']])),
   '/api/instagram/plan': ['id? (omit to create)', 'operationId', 'expectedRevision?', 'expectedHash?', 'subject?', 'title?', 'door?', 'material?:{transcripts:[{sourceId,sourceHash}],photos:[{sourceId,caption?}]}', 'stories?:[{id?,title,dish,readback,why,reader,format?,spine:[lineId],matches:[{photoId,lineId,why}]}]', 'gaps?:[{question,why,storyIds,status,finding?,sources?}]', 'heard?:{storyId,quote}', 'flags?:[{lineId,heard,kind,suggestion?,why?}]', 'coverage?:[{momentId,status:saved|skipped|null,why}]'],
   '/api/instagram/layout': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'format', 'frames? (omit for the default)', 'caption? (text, or {parts:[{kind:quote,lineId,text}|{kind:suggested,lineId,text}|{kind:draft,text}]})'],
   '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
@@ -205,6 +207,7 @@ const HUMAN_ONLY = new Set([...PROSE_SAVES, 'POST /api/instagram/choose', 'POST 
 function entry(method, route, { query, mode, mount }) {
   // Manuscript proposals take their identity from the query only; the body must not repeat it.
   if (route.startsWith('/api/study-ai/')&&route!=='/api/study-ai/run') { mode = 'scope'; query = ['bindingId', 'parentStudyId', 'requestId?']; }
+  if(route==='/api/study/carousel-make'&&method==='GET')query=['rootBindingId','parentStudyId','requestId?'];
   if(route==='/api/study-ai/run'&&method==='GET')query=['bindingId','parentStudyId','requestId?','operationId'];
   if(route.startsWith('/api/study/language/')&&method==='GET')query=['kind?','bindingId','parentStudyId','outputId','recipientId?',...(route.endsWith('/review')?['requestId']:[])];
   const key = method + ' ' + route, readOnly = method === 'GET' || READ_ONLY_POSTS.has(route) || CUSTOM_READ_ONLY.has(key);
@@ -241,7 +244,7 @@ export const publicEntry = ({ pattern, ...rest }) => {const schema=rest.route===
  */
 export function createRouteMap(services) {
   return function bind({ url, request, server, outputQuery, decorateOutputExports, describe }) {
-    const {voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
+    const {nativeCarouselMake,voiceCorrections,sourceLineChecks,studyLanguage,sourceLanguage,sourceTranscript,localTranscriptCandidates,studyFootage,studyDirectionOptions,studyDirectionTarget,structureTestRecords,localAtlas,structureTests,albums,articleMake,articleVisual,carousel,carouselMake,conceptWork,connectedFolders,createStudyCollection,draftCall,execution,exports,extraction,firstFlow,guardCarouselOutput,guidance,ingestion,library,magazine,magazineRead,materialAlbums,materialFolder,originalRead,passageRevisions,recordings,requests,researchAction,researchAnswers,researchEnabled,researchInput,researchMaterial,sharedArticles,sourceSessions,stampSourceSession,store,studyAI,studyBindings,studyDerivedFindings,studyDraftChecks,studyDrafts,studyHumanDirection,studyMediaUsage,studyOriginals,studyOutputExports,studyOutputs,studyOwnedPhotoBindings,studyPhotos,studyResearchChoices,studyShare,consentDesk,terminal,transcriptTools,writingTemplates,magazineWorking,sourcedParagraphs,magazineMechanicalChecks,magazineLibraryPhotos,magazineOutputExports} = services;
     // The one publish check (consent desk): refuses with the reason while anyone on the piece is unanswered.
     const holdPublish=(scopes,what)=>consentDesk.assertNotHeld(scopes,what);
     // The older single-project export routes belong to the workspace's own project.
@@ -263,7 +266,18 @@ export function createRouteMap(services) {
       return studyAI.call(action,{...scope,...input});
     });
     const conceptCall=fn=>draftCall(()=>{if(!conceptWork)throw new StateError('Concept work requires configured collections.',503);return fn();});
+    const nativeCarouselCall=(action,input)=>draftCall(()=>{
+      if(request.method==='POST'&&url.search)throw new StateError('Use the exact native Carousel route without a query.',400);
+      if(!nativeCarouselMake)throw new StateError('Native Carousel generation is unavailable.',503);
+      return nativeCarouselMake[action](input);
+    });
     const routes = {
+      '/api/study/carousel-make': {GET:()=>{
+        const keys=['rootBindingId','parentStudyId','requestId'];
+        if([...url.searchParams.keys()].some(key=>!keys.includes(key))||keys.some(key=>url.searchParams.getAll(key).length>1)||!url.searchParams.get('rootBindingId')||!url.searchParams.get('parentStudyId')||(url.searchParams.has('requestId')&&!url.searchParams.get('requestId')))throw new StateError('Choose one exact native Carousel scope and optional request.',400);
+        return nativeCarouselCall(url.searchParams.has('requestId')?'get':'list',Object.fromEntries(url.searchParams));
+      }},
+      ...Object.fromEntries(['preview','run','register','cancel'].map(action=>['/api/study/carousel-make/'+action,{POST:input=>nativeCarouselCall(action,input)}])),
       '/api/concept/capabilities': {GET:()=>conceptCall(()=>conceptWork.capabilities())},
       '/api/concepts': {GET:()=>conceptCall(()=>conceptWork.list()),POST:input=>conceptCall(()=>conceptWork.create(input))},
       '/api/concept': {GET:()=>conceptCall(()=>conceptWork.read({parentStudyId:url.searchParams.get('parentStudyId')}))},
