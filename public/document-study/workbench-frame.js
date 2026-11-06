@@ -332,7 +332,7 @@
   const outputs=window.workspaceNavigation?.outputs?.(current().id),menu=w.querySelector('#work-context .wn-new'),right=bar?.querySelector('.sb-right');
   let button=right?.querySelector('[data-wbf-make-output]');
   const magazine=window.studyDraft?.currentOwner?.()?.kind==='magazine';
-  const empty=[9,10,12].includes(stage())&&!magazine&&!window.workbenchPieces?.carouselEdition?.(current().id)&&Array.isArray(outputs)&&outputs.length===0&&menu&&right;
+  const empty=[9,10,12].includes(stage())&&!(stage()===12&&window.outputOverview?.openCreate)&&!magazine&&!window.workbenchPieces?.carouselEdition?.(current().id)&&Array.isArray(outputs)&&outputs.length===0&&menu&&right;
   if(!empty){button?.remove();for(const twin of bar?.querySelectorAll('[data-wbf-create-twin]')||[]){twin.hidden=false;delete twin.dataset.wbfCreateTwin;}return;}
   if(!button){button=document.createElement('button');button.type='button';button.className='btn';button.dataset.wbfMakeOutput='';button.dataset.c3RetainControl='empty-output-entry';button.textContent='Make an output';right.prepend(button);}
   const available=typeof window.surfaceBar?.openMore==='function'&&!!menu.querySelector('[data-wn-create]:not(:disabled)');
