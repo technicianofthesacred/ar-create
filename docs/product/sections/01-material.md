@@ -1,5 +1,11 @@
 # 1 — Material
 
+## 6 November — unavailable transcript recovery
+
+S01, C02/C04/C06. Each retained recording reports its own transcript availability, even when another job shares its original source. A missing or unsafe transcript location must not be labelled Ready. If the attached original is available, the title opens that exact recording; otherwise show recovery guidance and omit unavailable playback. Preserve path guards, recording identities and original bytes.
+
+Finish criterion: synthetic exact-job availability and Material fallback checks, followed by all installed Material targets opening their actual content. API/resource and native-screen evidence remain distinct.
+
 ## Independent original-backed structure subject — approved 31 October
 
 The whole-structure program starts with Hong Kong Day 1 · structure test, using the existing owned-copy authority and real captured source material. Its working files, project/output identities and history are independent. Stand-in choices are confined to the registered copy and carry the agent actor and stand-in label; original human decisions stay open. Preserve original/source hashes, exact guarded editing, recovery and Undo. No invented live samples or general human-only bypass. See [the program](../../plans/2026-10-31-structure-test-program.md).
