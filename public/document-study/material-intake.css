@@ -66,3 +66,12 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup p,h
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup ol{padding-left:18px}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup code{display:block;padding:8px 10px;border-radius:5px;background:var(--sel);font-family:var(--ar-mono,ui-monospace,monospace);font-size:var(--t-label);overflow-wrap:anywhere;user-select:all}
 @media (pointer:coarse){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button{min-height:44px}}
+
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title{
+ display:block!important;min-width:0;max-width:100%;padding:0!important;text-align:left!important;
+ color:var(--ink)!important;font-size:var(--t-body)!important;font-weight:600!important;
+ background:transparent!important;border:0!important;text-decoration:underline!important;text-decoration-color:var(--line)!important;text-underline-offset:4px;
+ white-space:normal;overflow-wrap:anywhere;cursor:pointer;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:hover{text-decoration-color:currentColor!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:focus-visible{outline:2px solid var(--warm)!important;outline-offset:3px}

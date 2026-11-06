@@ -71,10 +71,21 @@
   const tone=job=>job.state==='failed'?'bad':job.state==='saved'?'warm':job.state==='done'&&job.transcriptReady?'good':'dim';
   function subjectsFor(job){if(!view.projects)return null;const ids=[job.sourceId,...(view.byRecording.get(job.id)||[])].filter(Boolean);return view.projects.filter(p=>Array.isArray(p.sourceIds)&&p.sourceIds.some(id=>ids.includes(id)));}
   function items(){const jobs=(view.jobs||[]).map(job=>({job,at:Date.parse(job.started)||0})),more=(view.sources||[]).map(source=>({source,at:sourceAt(source)}));return [...jobs,...more].sort((a,b)=>b.at-a.at);}
+  async function openSource(sourceId){
+   if(!live()||view.busy||view.mic)return;
+   const reader=window.workbenchFolderBrowser?.openLibrarySource;
+   if(typeof reader!=='function'){view.message='The Library reader is unavailable. Return to Library and refresh to try again.';paint();return;}
+   close();const token=view.epoch;
+   try{await reader(sourceId);}
+   catch(error){if(container.isConnected&&view.current()&&token===view.epoch){view.open=true;view.message=error.message||'This source could not open. Refresh and try again.';paint();}}
+  }
   function rowFor(entry){
    const row=node('li'),job=entry.job,source=entry.source,kind=job?'audio':source.kind;row.dataset.miKind=kindClass(kind);if(job)row.dataset.miJob=job.id;else row.dataset.miSource=source.id;
    const lead=node('span');lead.className='mi-kind';lead.append(svg(kindClass(kind)));
-   const main=node('div');main.className='mi-main';const top=node('div');top.className='mi-top';const title=node('strong',job?shownTitle(job):shownTitle({story:source.title||source.name,file:source.name,started:source.modified_at||source.createdAt}));if(job&&job.file&&job.file!==job.story)title.title=job.file;top.append(title);
+   const main=node('div');main.className='mi-main';const top=node('div');top.className='mi-top';const titleText=job?shownTitle(job):shownTitle({story:source.title||source.name,file:source.name,started:source.modified_at||source.createdAt});let title;
+   if(job?.transcriptReady){title=node('a',titleText);title.href='/transcription/'+encodeURIComponent(job.id)+'/view';title.target='_blank';title.rel='noopener';title.dataset.miItemOpen='';}
+   else{title=button(titleText,'item-open',()=>{if(job&&!job.sourceId){view.message='This recording has no available audio or transcript yet. Refresh to check again.';paint();return;}void openSource(job?job.sourceId:source.id);});}
+   title.classList.add('mi-item-title');if(job&&job.file&&job.file!==job.story)title.title=job.file;top.append(title);
    const projects=job?subjectsFor(job):null,names=job?(projects||[]).map(p=>p.title).filter(Boolean):(view.sourceSubjects.get(source.id)||[]);
    if(names.length){const tag=node('span',names[0]+(names.length>1?' +'+(names.length-1):''));tag.className='mi-tag';tag.title=names.join(', ');top.append(tag);}
    const meta=node('div');meta.className='mi-meta';const parts=[KIND_LABEL[kind]||'File'],author=who(job?view.authors.get(job.sourceId):source.provenance?.actor||source.actor);if(author)parts.push(author);const date=when(job?job.started:sourceAt(source));if(date&&!(job&&title.textContent.includes(' · ')))parts.push(date);meta.append(node('span',parts.join(' · ')+' · '));
@@ -95,7 +106,7 @@
      }else actions.append(link);
      if(inCurrent){const here=node('span','In '+dest.name);here.className='mi-here';actions.prepend(here);}
     }
-   }else if(source.kind==='image'){const b=button('Open in Media','media',()=>{d.querySelector('[data-combined-nav="media"]')?.click();});b.classList.add('mi-quiet');actions.append(b);}
+   }
    row.append(lead,main,actions);return row;
   }
   function paint(){attach();root.replaceChildren();if(!view.open){root.append(button('Material intake','open',()=>{if(!view.current())return;view.open=true;void refresh();}));return;}
@@ -149,6 +160,6 @@
   const disconnect=new MutationObserver(()=>{if(view.mic&&(!container.isConnected||!view.current()))close();});disconnect.observe(d.body,{childList:true,subtree:true});window.addEventListener('pagehide',()=>{view.request++;stopMicrophone(false);stopAudio();});
   activeViews.add({container,close,refresh:()=>{if(live()&&!view.loading&&!view.busy)void refresh();}});paint();return api;
  }
- for(const name of ['ar-live-change','study-recording-change','focus'])window.addEventListener(name,()=>{for(const entry of activeViews){if(!entry.container.isConnected){entry.close();activeViews.delete(entry);continue;}entry.refresh();}});
+ for(const name of ['ar-live-change','study-recording-change'])window.addEventListener(name,()=>{for(const entry of activeViews){if(!entry.container.isConnected){entry.close();activeViews.delete(entry);continue;}entry.refresh();}});
  window.materialIntake=Object.freeze({mount});
 })();
