@@ -52,8 +52,12 @@ export function renderCarouselProcess(binary,args,file,{timeout=30_000,grace=250
   const fileCheck=setInterval(inspect,50);
   child.stdout.on('data',bytes=>{stdout+=bytes.toString();if(Buffer.byteLength(stdout)>3*1024*1024)finish(Error('Carousel renderer output exceeded its limit.'));else inspect();});
   child.stderr.on('data',bytes=>{stderr+=bytes.toString();if(Buffer.byteLength(stderr)>3*1024*1024)finish(Error('Carousel renderer diagnostics exceeded their limit.'));else inspect();});
+  // Chrome on macOS may encode our SIGTERM/SIGKILL as 128 + signal.
+  // Once completion initiated shutdown, those codes describe cleanup, not
+  // rendering. Other failures (including an exit before completion) still hold.
+  const recordExit=code=>{if(code!==null&&code!==0&&!(settling&&[143,137].includes(code)))failure=Error('Carousel renderer failed with exit '+code+'.');};
   child.on('error',finish);
-  child.on('exit',code=>{if(code!==null&&code!==0)failure=Error('Carousel renderer failed with exit '+code+'.');});
-  child.on('close',(code,reason)=>{if(done)return;if(settling){if(code!==null&&code!==0)failure=Error('Carousel renderer failed with exit '+code+'.');return;}inspect();if(!settling)finish(Error('Carousel renderer stopped before a complete ready PNG.'+(lastInvalid?' '+lastInvalid.message:'')));});
+  child.on('exit',recordExit);
+  child.on('close',(code,reason)=>{if(done)return;if(settling){recordExit(code);return;}inspect();if(!settling)finish(Error('Carousel renderer stopped before a complete ready PNG.'+(lastInvalid?' '+lastInvalid.message:'')));});
  });
 }

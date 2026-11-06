@@ -35,7 +35,7 @@ test('a human save under an agent lease succeeds and tells the holder once per l
  // Agent against agent: 423, the holder named, nothing written.
  const codex=await f.cli(['project','save'],conceptSave(pid,made.result,{aiInterpretation:'Codex words.'}),'agent:codex');
  assert.equal(codex.exitCode,4);assert.equal(codex.result.details.holder.actor,'agent:claude-code');assert.equal(codex.result.details.outcome,'not-applied');
- const cursor=(await (await fetch(f.url+'/api/events/since?since=0')).json()).cursor;
+ const {cursor,bootId}=await (await fetch(f.url+'/api/events/since?since=0')).json();
  // The human writes over the agent's lease: it lands.
  const first=await f.app('/api/concept/save',conceptSave(pid,made.result,{authorThoughts:'My own words.'}));
  assert.equal(first.status,200,JSON.stringify(first.body));
@@ -59,7 +59,7 @@ test('a human save under an agent lease succeeds and tells the holder once per l
  const lines=await f.journal({kind:'project',id:pid});
  assert.deepEqual(lines.filter(l=>l.actor==='human:adrian').slice(0,2).map(l=>[l.kind,l.status,l.actor]),[['lease.override','conflict','human:adrian'],['concept.save','committed','human:adrian']]);
  // The holder can see it as an event too, addressed to it.
- const since=(await (await fetch(f.url+'/api/events/since?since='+cursor+'&kind=project&id='+pid)).json()).events;
+ const since=(await (await fetch(f.url+'/api/events/since?since='+cursor+'&bootId='+bootId+'&kind=project&id='+pid)).json()).events;
  const override=since.find(e=>e.kind==='lease.override');assert.ok(override,'lease.override event');assert.equal(override.to,'agent:claude-code');assert.equal(override.lease.actor,'agent:claude-code');
  // The lease itself stays (advisory); a second human save in the same term does not repeat the notice.
  assert.equal((await f.cli(['lease','list'],{kind:'project',id:pid})).result.leases.length,1);
