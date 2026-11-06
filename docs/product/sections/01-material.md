@@ -1,5 +1,11 @@
 # 1 — Material
 
+## 6 November — unavailable transcript recovery
+
+S01, C02/C04/C06. Each retained recording reports its own transcript availability, even when another job shares its original source. A missing or unsafe transcript location must not be labelled Ready. If the attached original is available, the title opens that exact recording; otherwise show recovery guidance and omit unavailable playback. Preserve path guards, recording identities and original bytes.
+
+Finish criterion: synthetic exact-job availability and Material fallback checks, followed by all installed Material targets opening their actual content. API/resource and native-screen evidence remain distinct.
+
 ## Independent original-backed structure subject — approved 31 October
 
 The whole-structure program starts with Hong Kong Day 1 · structure test, using the existing owned-copy authority and real captured source material. Its working files, project/output identities and history are independent. Stand-in choices are confined to the registered copy and carry the agent actor and stand-in label; original human decisions stay open. Preserve original/source hashes, exact guarded editing, recovery and Undo. No invented live samples or general human-only bypass. See [the program](../../plans/2026-10-31-structure-test-program.md).
@@ -104,3 +110,8 @@ C02/C04/C06: managed transcription job working files and explicitly identified f
 ## 6 November — approved content-first repair
 
 S01, C02/C04/C05/C06. Material titles open their exact retained source, photo or recording through the maintained owner. Text is primary; file metadata uses a focused details screen. Focus refresh preserves an active click and late responses cannot reopen another item. The phone list keeps every item reachable. Native before/after qualification covers 1440/900/1000/1100/390 CSS pixels, light/dark, with actual sidebar state recorded. Release and installed proof are separate.
+
+
+## 6 November — Library and Material control refinement
+
+S01, C02/C04/C05/C06: distinguish Sources/Projects navigation, query/filter/sort controls, explicit file organization and Add sources. Ordinary browsing must reclaim the selection column; Done ends selection and its range anchor. Separate folder actions, Type and Collection groups with meaningful hierarchy. Material takes the workspace exclusively and restores the retained Library on return. Keep exact source opening and existing filing/import/recording owners. Candidate evidence is separate from acceptance and release.

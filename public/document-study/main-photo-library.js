@@ -1,0 +1,25 @@
+/* Normal-app read connection to the maintained photograph library. No assignments or writes. */
+(()=>{
+ 'use strict';
+ if(window.AR_CREATE_REVIEW_MODE?.actualWork||window.arCreateMainPhotoLibrary)return;
+ const scope='14a35f672bc21a5f808c0ec07fdbe0d0d145b3b49d41552205bda1c36e362dee';
+ const SHA=/^[a-f0-9]{64}$/,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+ let catalog=null,pending=null,epoch=0,attempted=false;
+ const active=()=>{try{return current()?.view==='record'&&Number(current().viewedStage)===8||window.combinedSheets?.state?.()?.kind==='media';}catch{return false;}};
+ const identity=item=>JSON.stringify([item.rootId,item.sourceId]);
+ function validate(value){
+  if(value?.schema!=='ar-create.magazine-library-photos.v1'||!SHA.test(value.revision||'')||!Array.isArray(value.items)||value.items.length>20000||typeof value.coverage?.complete!=='boolean'||typeof value.coverage.truncated!=='boolean'||!Number.isSafeInteger(value.coverage.skipped)||value.coverage.skipped<0||!Array.isArray(value.coverage.issues)||value.coverage.issues.length>50)throw Error('The photo library could not be confirmed.');
+  const seen=new Set();for(const item of value.items){const key=identity(item||{});if(!item||!SHA.test(item.rootId||'')||!SHA.test(item.revision||'')||!SHA.test(item.metadataRevision||'')||!(SHA.test(item.sourceId||'')||UUID.test(item.sourceId||''))||seen.has(key)||!(SHA.test(item.sourceHash||'')&&item.selectable===true||item.sourceHash===null&&item.selectable===false&&['pending','unavailable'].includes(item.byteVerification))||!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(item.contentType)||!Number.isSafeInteger(item.bytes)||item.byteVerification!=='unavailable'&&(item.bytes<1||item.bytes>20*1024*1024)||!['name','description','storyLabel','sourceLabel','relativePath'].every(key=>typeof item[key]==='string'&&item[key].isWellFormed())||item.name.length>240||item.description.length>4000||item.storyLabel.length>240||item.sourceLabel.length>240||item.relativePath.length>1024)throw Error('The photo library could not be confirmed.');seen.add(key);}
+  return value;
+ }
+ async function read(){const response=await fetch('/api/magazine/library-photos');if(!response.ok)throw Error('Photo library unavailable. Refresh Media to try again.');return validate(await response.json());}
+ function sources(value){return value.items.map((item,index)=>{const previewScope={rootId:item.rootId,sourceId:item.sourceId,revision:item.revision,sourceHash:item.sourceHash},sourceRef={rootId:item.rootId,sourceId:item.sourceId,relativePath:item.relativePath,hash:item.sourceHash};return {id:identity(item),title:item.description||'Photo '+(index+1)+(item.storyLabel?' · '+item.storyLabel:''),name:item.name,storyLabel:item.storyLabel,sourceLabel:item.sourceLabel,sourceRef,catalogSourceRef:{...sourceRef},originRef:item.originRef,catalogSourceId:item.sourceId,catalogRelativePath:item.relativePath,previewKind:'magazine-library',previewScope,ownerRef:null,placements:[],currentArticleUsage:{status:'unavailable'},available:item.available,selectable:item.selectable,byteVerification:item.byteVerification,verificationReason:item.verificationReason,url:'/api/magazine/library-photos/preview?'+new URLSearchParams(Object.fromEntries(Object.entries(previewScope).filter(([,v])=>v!==null)))};});}
+ function publish(value,error=''){
+  const entry=value;if(!error&&entry?.coverage.complete===false)error=entry.items.length?'Some photographs could not be read. Available records are shown.':'Photo library unavailable. Refresh Media to try again.';window.workbenchFolderBrowser.setMediaCatalog({scope,revision:entry?.revision||scope,sources:entry?sources(entry):[],mainLibrary:true,label:'Photographs',ready:true,error,arrangeReady:false,replaceReady:false,insertReady:false,
+   readState:async()=>{const before=window.workbenchFolderBrowser.captureNavigation(),projectId=current()?.id;if(!active()||catalog!==entry||!entry||!before?.ready||before.route.domain!=='media'||before.route.folder==='native')throw Error('The photo library changed. Refresh Media.');const fresh=await read(),after=window.workbenchFolderBrowser.captureNavigation();return {scope,revision:fresh.revision,ready:active()&&current()?.id===projectId&&catalog===entry&&after?.ready&&after.key===before.key&&after.scope===before.scope&&after.controls.query===before.controls.query};},
+   refresh});
+ }
+ async function refresh(){if(pending)return pending;attempted=true;const token=++epoch;pending=(async()=>{try{const value=await read();if(token!==epoch)return;window.arCreateExactMedia.project({scope,revision:value.revision,sources:sources(value)});catalog=value;publish(value);}catch(error){if(token!==epoch)return;catalog=null;publish(null,'Photo library unavailable. Refresh Media to try again.');}finally{if(token===epoch)pending=null;}})();return pending;}
+ function mount(){if(active()&&!attempted)void refresh();}
+ window.arCreateMainPhotoLibrary=Object.freeze({refresh});window.c3Shell?.register?.('main photo library',mount,{order:81,ignore:'#wb-panel,.wfb-browser'});mount();
+})();

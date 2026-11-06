@@ -6,6 +6,14 @@ S08, C03/C04/C05/C06. Preserve the adopted Graphite controls. Put actual photogr
 
 Finish criterion: focused Media/browser/navigation checks plus actual synthetic native screens at 390, 900, 1000, 1100 and 1440 pixels in both themes, enlarged text, a readable piece selector, exact thumbnail opening and unchanged manuscript bytes. These checks establish the bounded candidate; installation and human visual acceptance remain separate.
 
+## 6 November — Configured originals in the normal app
+
+S08 / C02 / C03 / C04 / C05 / C06. All media reads the configured maintained photo library even when the selected piece has no assigned photographs. Keep the native **This piece** collection and its existing details/placement guards separate. Browsing an original does not import, select for a piece, place, copy or edit it. Usage remains unavailable unless the maintained composition owner supplies evidence.
+
+Reuse the metadata catalog, exact source references, guarded preview routes and bounded first-use byte verification. Unavailable or partial provider coverage is visible; stale catalog/photo identity refuses opening rather than substituting another original. Browser Back/Forward preserves the exact photograph, query, sort, list/grid mode, selection and actual list scroll.
+
+Finish criterion: verify a normal package without review flags or review catalog endpoints using an invented configured provider, then qualify the released installed revision with its existing originals. Prove current-piece zero stays zero and no import/assignment/content writes occur. Isolated checks are not installed acceptance.
+
 ## Current Combined presentation — adopted 30 October
 
 S08, C03/C04/C05/C06. Media remains on the rail and opens as a contextual sheet over the selected piece. Keep albums, folders, upload, membership, usage and source identity reachable through existing owners. Sheet dismissal with Esc preserves the underlying writing line and unsaved text. Photo selection, placement and crop remain separate explicit actions; no photo is selected merely because it appears in a drawing or album.

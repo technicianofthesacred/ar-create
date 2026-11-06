@@ -1,0 +1,148 @@
+/* Semantic exceptions within the adopted Graphite family. Filled actions stay
+   filled; destinations, titles and modes carry their own interaction roles. */
+@layer graphite-controls {
+  :is(.ar-destination,.ar-title-link,.cp-subject,.cp-tabs .cp-tab,.cp-tabs .cp-new,
+    .wbf-top-actions .tbtn,.ht-theme,.cp-main-tool,.cp-more) {
+    --graphite-button: transparent !important;
+    --graphite-label: var(--ink) !important;
+    background: transparent !important;
+    color: var(--ink) !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    font-weight: 500 !important;
+  }
+  :is(.ar-destination,.ar-title-link,.cp-subject,.cp-tabs .cp-tab,.cp-tabs .cp-new,
+    .wbf-top-actions .tbtn,.ht-theme,.cp-main-tool,.cp-more):not(:disabled):hover {
+    background: var(--sel) !important;
+    color: var(--ink) !important;
+    filter: none;
+  }
+  :is(.ar-action,.cp-checks button) {
+    --graphite-button: var(--graphite-secondary);
+    --graphite-label: var(--graphite-ink);
+    background: var(--graphite-button) !important;
+    color: var(--graphite-label) !important;
+  }
+  :is(.ar-action.primary,.ar-action[aria-pressed="true"]) {
+    --graphite-button: var(--graphite-ink);
+    --graphite-label: var(--graphite-inverse);
+  }
+  :is(.ar-mode-group,.cp-modes,.combined-piece-switch,.wbf-mode-switch) {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    background: var(--rail) !important;
+    border: 1px solid var(--graphite-border) !important;
+    border-radius: var(--graphite-radius) !important;
+  }
+  :is(.ar-mode-group,.cp-modes,.combined-piece-switch,.wbf-mode-switch)>button {
+    background: transparent !important;
+    color: var(--dim) !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+  }
+  :is(.ar-mode-group,.cp-modes,.combined-piece-switch,.wbf-mode-switch)>button[aria-pressed="true"] {
+    background: var(--graphite-ink) !important;
+    color: var(--graphite-inverse) !important;
+    font-weight: 600 !important;
+  }
+  .cp-tabs .cp-tab {border-radius:0 !important;border-bottom:2px solid transparent !important;}
+  .cp-tabs .cp-current {border-bottom-color:var(--warm) !important;color:var(--ink) !important;font-weight:600 !important;}
+  .cp-tabs .cp-new {color:var(--warm) !important;}
+  .cp-saved {font-weight:500 !important;color:var(--dim) !important;}
+  button.cp-saved {background:var(--graphite-secondary) !important;color:var(--ink) !important;white-space:normal !important;}
+  :is(.ar-icon-button,.ht-theme) {display:inline-flex !important;align-items:center;justify-content:center;flex:none;}
+  :is(.ar-destination,.ar-title-link,.ar-action,.ar-icon-button,.cp-top button,.wbf-top-actions button,.ht-theme):disabled {opacity:.5 !important;cursor:default !important;}
+  :is(.ar-destination,.ar-title-link,.ar-action,.ar-icon-button,.cp-top button,.wbf-top-actions button,.ht-theme):focus-visible {outline:2px solid var(--warm) !important;outline-offset:2px !important;}
+
+  /* The global header always keeps its actual subject and distinct utilities.
+     Phone targets are physical 44px boxes, without transparent-border tricks. */
+  @media(max-width:900px) {
+    #c3-tabstrip.wbf-top .wbf-top-actions .tbtn,
+    #c3-tabstrip.wbf-top>.ht-theme,
+    #c3-tabstrip.wbf-top>.ht-switch>summary {
+      min-height:44px !important;height:44px !important;box-sizing:border-box !important;
+      border-width:1px !important;padding:0 10px !important;
+    }
+    #c3-tabstrip.wbf-top .wbf-top-actions .tbtn,
+    #c3-tabstrip.wbf-top>.ht-theme {width:44px !important;min-width:44px !important;justify-content:center;}
+    #c3-tabstrip.wbf-top .wbf-top-actions .sizer {height:44px !important;box-sizing:border-box;gap:0;}
+    #c3-tabstrip.wbf-top .wbf-top-actions .sizer .tbtn {width:42px !important;min-width:42px !important;padding:0 !important;}
+    #c3-tabstrip.wbf-top .wbf-top-actions .lbl-wide,
+    #c3-tabstrip.wbf-top .wbf-top-actions .pct {display:none !important;}
+    #c3-tabstrip.wbf-top .wbf-top-actions svg {display:block !important;width:18px;height:18px;}
+    #workspace>#combined-piece-frame :is(button,.cp-modes>button) {min-height:44px !important;height:auto !important;border-width:1px !important;padding:6px 10px !important;}
+    #workspace>#combined-piece-frame .cp-tabs .cp-tab {border-bottom-width:2px !important;}
+  }
+}
+
+@layer graphite-controls {
+ @media(max-width:800px){
+  #c3-tabstrip.wbf-top .wbf-top-actions>:is([data-wbf-thought],[data-wbf-tool]){width:100% !important;min-width:0 !important;gap:6px;padding-inline:4px !important;font-size:13px !important;}
+  #c3-tabstrip.wbf-top .wbf-top-actions .lbl-wide{display:inline !important;}
+  #c3-tabstrip.wbf-top .wbf-top-actions .sizer{justify-self:end;}
+ }
+}
+@layer graphite-controls {
+ @media(max-width:800px){
+  #workspace>#combined-piece-frame.cp-top{display:grid !important;grid-template-columns:auto minmax(0,1fr) auto auto !important;width:auto !important;height:auto !important;min-height:0 !important;align-content:normal !important;gap:4px 6px !important;}
+  #workspace>#combined-piece-frame.cp-top::before{content:none !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-subject{max-width:100% !important;font-size:13px !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-tabs{max-width:none !important;flex-wrap:nowrap !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-checks{display:flex !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-sep{display:none !important;}
+  #workspace>#combined-piece-frame.cp-top .cp-tabs .cp-tab:not(.cp-current){display:none !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-saved{font-size:12px !important;min-height:0 !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-modes{min-height:0 !important;justify-content:start !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-main-tool{display:none !important;}
+  #workspace>#combined-piece-frame.cp-top>.cp-menu{top:192px !important;max-height:calc(100dvh - 260px) !important;}
+  #workspace>#combined-piece-inherits>em{font-size:12px !important;}
+  #workspace>#combined-piece-inherits>button{min-height:44px !important;}
+ }
+}
+
+@layer graphite-controls {
+ @media(max-width:800px){
+  #workspace>#combined-piece-frame.cp-top>button.cp-saved{grid-column:1/-1 !important;grid-row:3 !important;justify-self:start;max-width:100%;text-align:left;}
+  #workspace>#combined-piece-frame.cp-top:has(>button.cp-saved)>.cp-status{grid-row:4;}
+ }
+}
+
+@layer graphite-controls {
+ /* A verified piece frame owns its modes; never resurrect the global fallback. */
+ body.combined-piece-on #c3-tabstrip.wbf-top>.combined-piece-switch{display:none !important;}
+}
+@layer graphite-controls {
+ /* Material is an exclusive workspace. Retained piece/library chrome stays
+    mounted for Back, but is absent from both paint and keyboard navigation. */
+ body:has(.wfb-browser.mi-open) #workspace>:is(#c3-surface-bar,#combined-piece-frame,#combined-piece-inherits,#work-context){display:none !important;}
+}
+
+@layer graphite-controls {
+ /* Global Library owns its own heading and tools. A retained writer must not
+    contribute piece tabs, direction or a second section toolbar above it. */
+ #workspace.wfb-showing:has(>.wfb-browser.k-library:not(.wfb-picker-browser))>:is(#c3-surface-bar,#combined-piece-frame,#combined-piece-inherits,#work-context){display:none !important;}
+}
+@layer graphite-controls {
+ /* Context destinations begin below the actual persistent global header.
+    Keep this offset separate from historical --ht-strip document sizing. */
+ body.wbf-on.combined-on{--ar-global-header-height:48px;}
+ body.wbf-on.combined-on #c3-research,
+ body.wbf-on.combined-on #wbf-drawer,
+ body.wbf-on.combined-on .carousel-proposal-panel{top:var(--ar-global-header-height) !important;}
+ body.wbf-on.combined-on #c3-tabstrip .ht-switch-menu{top:var(--ar-global-header-height) !important;}
+ @media(min-width:801px){
+  body.wbf-on.combined-on #combined-sheet{top:var(--ar-global-header-height) !important;}
+ }
+ @media(max-width:800px){
+  body.wbf-on.combined-on{--ar-global-header-height:var(--combined-phone-top,96px);}
+  body.wbf-on.combined-on #c3-research,
+  body.wbf-on.combined-on #wbf-drawer,
+  body.wbf-on.combined-on .carousel-proposal-panel{bottom:var(--combined-phone-bottom,58px) !important;}
+  body.wbf-on.combined-on .footage-ranges{top:calc(var(--ar-global-header-height) + 8px) !important;bottom:calc(var(--combined-phone-bottom,58px) + 8px) !important;}
+  body.wbf-on.combined-on #combined-navigation-status{top:var(--ar-global-header-height) !important;}
+ }
+}

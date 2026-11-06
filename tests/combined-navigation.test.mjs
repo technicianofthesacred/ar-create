@@ -51,3 +51,5 @@ test('Research to its already mounted Write editor does not refocus or scroll it
  assert.equal(await f.w.combinedNavigation.go('write'),true);assert.deepEqual(f.calls,['restore-research']);assert.strictEqual(f.d.getElementById('manuscript'),editor);assert.equal(editor.textContent,'Retained unsaved words.');
  }finally{f.close();}
 });
+
+test('global Library does not mark the Develop phone group current merely because its menu links to Library',()=>{const f=boot(1);try{f.w.combinedNavigation.decorate();assert.equal(f.d.querySelector('.combined-rail [data-combined-nav="library"]').getAttribute('aria-current'),'page');assert.equal(f.d.querySelector('.combined-phonebar [data-combined-group="develop"]').hasAttribute('aria-current'),false);assert.equal(f.d.querySelectorAll('.combined-phonebar [aria-current]').length,0);}finally{f.close();}});
