@@ -19,7 +19,7 @@ CLI="$HOME/Library/Application Support/i64os/ar-create/service/agents/cli/ar-cre
 node "$CLI" status
 ```
 
-`status` starts with `release`, the commit of the running app; then the command count, who is present, whether Adrian has unsaved words open, and recent changes. `project list` shows the projects; `history` shows who did what; `list-commands` lists every command. JSON goes in with `--input -` and comes out on stdout. MCP: `node "$HOME/Library/Application Support/i64os/ar-create/service/agents/mcp/server.mjs" --url ... --actor ...`.
+`status` starts with `release`, the commit of the running app; then the command count, who is present, whether Adrian has unsaved words open, and recent changes. `project list` shows the projects; `history` shows who did what (continue with returned `nextCursor` as `before`); `list-commands` lists every command. JSON goes in with `--input -` and comes out on stdout. MCP: `node "$HOME/Library/Application Support/i64os/ar-create/service/agents/mcp/server.mjs" --url ... --actor ...`.
 
 `tools/concept-cli.mjs` and `mcp/study` still exist as aliases for older callers. Do not start from them.
 
