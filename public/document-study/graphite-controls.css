@@ -1,0 +1,111 @@
+/* Graphite control family, adopted 6 November 2026 (option 2).
+   The important layer wins over legacy unlayered control overrides without
+   escalating selector specificity. It does not change page or editor layout. */
+@layer graphite-controls {
+  :root {
+    --graphite-ink: #292e28;
+    --graphite-inverse: #faf9f5;
+    --graphite-secondary: #e9e8e2;
+    --graphite-field: #faf9f5;
+    --graphite-border: #d8d7cf;
+    --graphite-radius: 6px;
+    --graphite-field-height: 28px;
+  }
+  :root[data-theme="dark"] {
+    --graphite-ink: #eeeee7;
+    --graphite-inverse: #20231f;
+    --graphite-secondary: #30352d;
+    --graphite-field: #20231f;
+    --graphite-border: #3c4139;
+  }
+
+  /* Keep navigation, photo tiles, drag handles and document text geometry.
+     Ordinary action controls share the compact treatment across sheets too. */
+  button:not(:where(.combined-rail *, .combined-phonebar *, .cp-tabs *,
+    .cp-subject, .pl-project, .workflowStep, #wbf-pull, .checkpoint-rail *,
+    .make-photo-grid *, .car-layout-option, .car-picker-grid *,
+    .cwb-album-thumbnails *, [role="tab"], [role="treeitem"],
+    [draggable="true"], #manuscript *, .slide *, .ig-slide *)) {
+    --graphite-button: var(--graphite-secondary);
+    --graphite-label: var(--graphite-ink);
+    box-sizing: border-box !important;
+    min-height: 28px !important;
+    height: auto !important;
+    padding: 3px 10px !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--graphite-radius) !important;
+    background: var(--graphite-button) !important;
+    color: var(--graphite-label) !important;
+    box-shadow: none !important;
+    font: 600 13px/20px var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+  }
+  button:is(.primary, .sb-primary, .ht-primary, .ew-primary, .mi-primary,
+    .sm-primary, .igs-primary, .study-ai-primary, .source-continuation-primary,
+    .ama-primary, .apr-primary, .cwb-primary, .ar-whole-draft-primary,
+    .ar-passage-primary, .ar-revise-action, .ar-terminal-start, .rw-ask-primary,
+    .pri, [data-current-check="run"], [aria-pressed="true"]) {
+    --graphite-button: var(--graphite-ink);
+    --graphite-label: var(--graphite-inverse);
+  }
+  button:disabled { cursor: default !important; opacity: .5 !important; }
+  button:is(.sb-btn, .sb-icon, .cp-new) { padding-inline: 5px !important; }
+  button:is(.danger, .destructive, [data-variant="danger"]) {
+    --graphite-label: var(--danger, #b64b3b);
+  }
+  :is(button, select, input, textarea):focus-visible {
+    outline: 2px solid var(--graphite-ink) !important;
+    outline-offset: 2px !important;
+  }
+  button:not(:disabled):hover { filter: brightness(.96); }
+
+  /* Fields retain native select affordances and their existing widths. File
+     overlays, range controls and the manuscript are not form-field surfaces. */
+  :is(select, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"])):not(#manuscript):not(#manuscript *) {
+    box-sizing: border-box !important;
+    min-height: var(--graphite-field-height) !important;
+    border: 1px solid var(--graphite-border) !important;
+    border-radius: var(--graphite-radius) !important;
+    background-color: var(--graphite-field) !important;
+    color: var(--graphite-ink) !important;
+    box-shadow: none !important;
+    font-weight: 400 !important;
+  }
+  :is(select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="color"])) {
+    padding-block: 3px !important;
+    font-size: 13px !important;
+    line-height: 20px !important;
+  }
+  :is(select, input, textarea):disabled { opacity: .6 !important; }
+  :is(select, input, textarea)[aria-invalid="true"] { border-color: var(--danger, #b64b3b) !important; }
+
+  /* Existing input groups and choice boxes share edges, not a new card layout.
+     Warning/release-hold boxes deliberately keep their semantic colors. */
+  :is(.cp-menu, .combined-piece-switch, .study-ai-source-choice,
+    .study-ai-change, .study-ai-guidance, .study-ai-protection-row,
+    .ama-field, .apr-field, .ar-context-handoff, .cwb-field,
+    .pl-edit-form, .mi-dropzone, .sm-dropzone) {
+    border-radius: var(--graphite-radius) !important;
+    border-color: var(--graphite-border) !important;
+    box-shadow: none !important;
+  }
+
+  @media (max-width: 650px), (pointer: coarse) {
+    :root { --graphite-field-height: 32px; }
+    button:not(:where(.combined-rail *, .combined-phonebar *, .cp-tabs *,
+      .cp-subject, .pl-project, .workflowStep, #wbf-pull, .checkpoint-rail *,
+      .make-photo-grid *, .car-layout-option, .car-picker-grid *,
+      .cwb-album-thumbnails *, [role="tab"], [role="treeitem"],
+      [draggable="true"], #manuscript *, .slide *, .ig-slide *)) {
+      /* 32px painted surface inside a 44px target. Transparent block borders
+         participate in hit testing; the inner corners remain 6px round. */
+      min-height: 44px !important;
+      padding-block: 6px !important;
+      border-width: 6px 0 !important;
+      border-radius: 6px / 12px !important;
+      background-clip: padding-box !important;
+    }
+  }
+}
