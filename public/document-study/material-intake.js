@@ -4,7 +4,7 @@
  const MAX_BYTES=8*1024*1024,MAX_MS=15*60*1000,MAX_FILE=64*1024*1024,RECENT=15;
  const instances=new WeakMap(),activeViews=new Set(),UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,states=new Set(['saved','queued','running','failed','done','unavailable']);
  const actor=()=>window.arCreateUiActor?.actor,human=()=>actor()==='human:adrian';
- const identity=job=>JSON.stringify([job.id,job.file??null,job.story??null,job.started??null,job.state,job.stage??null,job.transcriptReady,job.error??null,job.sourceId??null]);
+ const identity=job=>JSON.stringify([job.id,job.file??null,job.story??null,job.started??null,job.state,job.stage??null,job.transcriptReady,job.error??null,job.sourceId??null,job.originalAvailable??null,job.reason??null]);
  const label=job=>job.state==='unavailable'?(job.originalAvailable?'Transcript unavailable':'Unavailable'):job.state==='failed'?'Failed':['running','queued'].includes(job.state)?'Transcribing':job.state==='done'&&job.transcriptReady?'Ready':job.state==='saved'?'Waiting to start':'Needs attention';
  async function read(){const response=await fetch('/api/recordings',{cache:'no-store'});if(!response.ok)throw Error('Recording intake could not be read.');const value=await response.json();if(!Array.isArray(value.jobs)||value.jobs.some(job=>!job||!UUID.test(job.id||'')||!states.has(job.state)||typeof job.transcriptReady!=='boolean')||new Set(value.jobs.map(job=>job.id)).size!==value.jobs.length)throw Error('Recording intake could not be read.');return Object.assign(value.jobs.map(job=>({...job})),{capability:value.capability});}
  function mount({container,isCurrent}={}){
