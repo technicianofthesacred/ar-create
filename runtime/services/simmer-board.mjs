@@ -7,6 +7,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor} from './actor.mjs';
+import {simmerOperations} from './simmer-operations.mjs';
 
 const SCHEMA='ar-create.simmer-board.v1',PREFIX='/api/simmer/',MAX_BODY=2*1024*1024,UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/,ID=/^[A-Za-z0-9._:-]{1,160}$/;
 export const KINDS=Object.freeze(['photo','passage','mine','note','concept','question','choice','feeling','guidance','check','consent','voice','thread','letter']);
@@ -101,7 +102,7 @@ export function createSimmerBoards({dataDir,library}={}){
  const load=subject=>{try{const value=JSON.parse(fs.readFileSync(file(subject),'utf8'));if(value.schema!==SCHEMA||value.subject!==subject)fail('This board file is not readable.',409);return value;}catch(error){if(error.code==='ENOENT')return empty(subject);throw error;}};
  const view=board=>{const {operations,...rest}=withHash(board);return rest;};
  function subjectOf(v){if(typeof v!=='string'||!ID.test(v))fail('Name the subject by its project id.');return v;}
- async function read({subject}){subject=subjectOf(subject);return view(load(subject));}
+ async function read({subject}){subject=subjectOf(subject);return {...view(load(subject)),intakeOperations:simmerOperations(dataDir).list(subject)};}
  async function save(input){
   if(!input||typeof input!=='object')fail('Send a board save.');
   return commit(input,before=>cleanBoard(input.board,before.subject));
@@ -111,7 +112,7 @@ export function createSimmerBoards({dataDir,library}={}){
   * passes the agent guard unless the change is a dictation: the server itself appended Adrian's exact words or
   * photos, and dictation() proves nothing else moved. Revision and hash are required unless the change only appends.
   */
- async function commit(input,make,{appendOnly=false,dictation=null,extra=null}={}){
+ async function commit(input,make,{appendOnly=false,dictation=null,extra=null,beforePublish=null}={}){
   const subject=subjectOf(input.subject);
   if(!UUID.test(input.operationId||''))fail('A change needs a fresh operationId.');
   const pinned=input.expectedRevision!==undefined||input.expectedHash!==undefined;
@@ -123,6 +124,8 @@ export function createSimmerBoards({dataDir,library}={}){
    const next=await make(before),actor=currentActor()?.actor||'';
    if(dictation)dictation(before,next,actor);else if(!isHuman(actor))guardAgent(before,next,actor||'an unattributed caller');
    await guardPassages(before,next,library);
+   beforePublish?.();
+   const latest=withHash(load(subject));if(latest.revision!==current.revision||latest.hash!==current.hash)fail('This board changed during source verification. Reload it; nothing was overwritten.',409);
    const receipt=typeof extra==='function'?extra(next):extra;
    const board={schema:SCHEMA,subject,title:next.title||before.title,revision:before.revision+1,groups:next.groups,links:next.links,forming:next.forming,...(next.collectionId||before.collectionId?{collectionId:next.collectionId||before.collectionId}:{}),updatedAt:new Date().toISOString(),updatedBy:actor,operations:[{operationId:input.operationId,revision:before.revision+1,actor,...(receipt?{extra:receipt}:{})},...(before.operations||[])].slice(0,50)};
    fs.mkdirSync(dir,{recursive:true});const tmp=file(subject)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(board,null,1));fs.renameSync(tmp,file(subject));
@@ -142,7 +145,7 @@ export const SIMMER_ROUTES=Object.freeze({board:['GET','POST'],material:['GET'],
 /** One registration line in the server hands requests here; returns false for any other path. */
 export async function handleSimmer(request,response,{dataDir,library,concepts,leases}){
  const url=new URL(request.url||'/','http://local.invalid');if(!url.pathname.startsWith(PREFIX))return false;
- let entry=instances.get(dataDir);if(!entry){const boards=createSimmerBoards({dataDir,library});entry={boards,chat:null};instances.set(dataDir,entry);}
+ let entry=instances.get(dataDir);if(!entry||entry.library!==library){const boards=createSimmerBoards({dataDir,library});entry={boards,chat:null,library};instances.set(dataDir,entry);}
  const {boards}=entry;
  const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
@@ -158,6 +161,6 @@ export async function handleSimmer(request,response,{dataDir,library,concepts,le
   request.arInput=input&&typeof input==='object'&&!Array.isArray(input)?{operationId:input.operationId,expectedRevision:input.expectedRevision,expectedHash:input.expectedHash,...(typeof input.subject==='string'?{parentStudyId:input.subject}:{})}:null;
   if(leases&&typeof input?.subject==='string')leases.check({kind:'project',id:input.subject},request.arActor);
   send(200,action==='board'?await boards.save(input):await entry.chat[action](input));
- }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The board could not be saved. Nothing was changed.',...(error.holder?{holder:error.holder}:{})});}
+ }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The board could not be saved. Read the board and operation receipt before retrying.',...(error.holder?{holder:error.holder}:{}),...(error.receipt?{receipt:error.receipt}:{})});}
  return true;
 }

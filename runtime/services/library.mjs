@@ -302,6 +302,32 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     const source = { id, rootId: root.id, rel_path: rel, originalFile, hash: digest(bytes), fileStamp: fileStamp(stat), inode: `${stat.dev}:${stat.ino}`, provenance: { capturedAt: now(), ...provenance }, status: 'retained', missing: false };
     index.sources.push(source); return source;
   }
+  function chatSourceId(operationId,slot){const key=digest(operationId+':'+slot);return key.slice(0,8)+'-'+key.slice(8,12)+'-4'+key.slice(13,16)+'-8'+key.slice(17,20)+'-'+key.slice(20,32);}
+  // This reserved import path is already named by the durable intake intent before bytes appear.
+  // A Library scan in the file/index crash gap must expose the final identity immediately.
+  function chatPathId(rel){const parts=rel.split('/');return parts.length===4&&parts[0]==='Simmer imports'&&UUID.test(parts[1])&&/^[a-z0-9-]{1,80}$/.test(parts[2])?chatSourceId(parts[1],parts[2]):null;}
+  // Internal chat owner seam. Stable files survive a crash before index publication; a retry
+  // adopts those exact bytes instead of creating a collision-suffixed second original.
+  function retainedChatFile(input) {
+    if (!input.operationId) return savedFile('library',input.folder,input.name,input.bytes,input.provenance);
+    if (!UUID.test(input.operationId) || !/^[a-z0-9-]{1,80}$/.test(input.slot||'')) throw new StateError('Chat retention needs an operation UUID and stable slot.');
+    safeRel(input.name,false);if(input.name.includes('/'))throw new StateError('File name must not contain a folder.');
+    const id=chatSourceId(input.operationId,input.slot);
+    const folder=path.posix.join('Simmer imports',input.operationId,input.slot),rel=path.posix.join(folder,input.name),hash=digest(input.bytes);
+    const root=rootById('library',true);resolveInside(root.path,folder,{directory:true,createParents:true});
+    const file=resolveInside(root.path,rel,{missing:true});
+    const keep=(target)=>{if(fs.existsSync(target)){regular(target);if(digest(fs.readFileSync(target))!==hash)throw new StateError('This chat operation already retained different bytes. Original preserved.',409);}else atomicWrite(target,input.bytes,{exclusive:true});};
+    const payloadHash=fingerprint({folder:input.folder,name:input.name,hash,provenance:input.provenance});
+    const existing=index.sources.find(s=>s.id===id||s.rootId==='library'&&s.rel_path===rel);
+    if(existing?.provenance?.chatPayloadHash&&existing.provenance.chatPayloadHash!==payloadHash)throw new StateError('This chat source operation already belongs to different input.',409);
+    if(existing&&(existing.id!==id||existing.hash&&existing.hash!==hash||existing.rel_path!==rel))throw new StateError('Chat source identity conflicts with this operation.',409);
+    keep(file);
+    const originals=ensurePrivateDirectory(dataDir,'source-originals'),originalFile=path.join(originals,`${digest(id)}-${hash}${path.extname(input.name)}`);keep(originalFile);
+    const stat=regular(file),source={id,rootId:'library',rel_path:rel,originalFile,hash,fileStamp:fileStamp(stat),inode:`${stat.dev}:${stat.ino}`,provenance:{capturedAt:now(),...input.provenance,operationId:input.operationId,slot:input.slot,chatPayloadHash:payloadHash},status:'retained',missing:false};
+    // refresh may have discovered the committed file after a crash and before this receipt.
+    if(existing)Object.assign(existing,source);else index.sources.push(source);
+    return existing||source;
+  }
   function importLegacy() {
     for (const source of legacyState().project.sources) {
       if (index.legacyImported.includes(source.id)) continue;
@@ -373,7 +399,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
         const file = resolveInside(root.path, meta.rel_path), stat = scanStats.get(meta.rel_path);
         const inode = `${stat.dev}:${stat.ino}`;
         let source = matches.get(meta.rel_path);
-        if (!source) { source = { id: meta.providedUUID || randomUUID(), rootId: root.id, provenance: { kind: root.retainedCatalog ? 'retained-transcript-catalog' : root.originalCatalog ? 'catalogued-original-reference' : root.writable ? 'external-file' : 'connected-root', capturedAt: now(), originalPath: file } }; index.sources.push(source); }
+        if (!source) { const chatId=root.id==='library'?chatPathId(meta.rel_path):null;if(chatId&&index.sources.some(s=>s.id===chatId))throw new StateError('More than one file claims a retained chat identity. Preserve the files and resolve the extra file before retrying.',409);source = { id: meta.providedUUID || chatId || randomUUID(), rootId: root.id, provenance: { kind: root.retainedCatalog ? 'retained-transcript-catalog' : root.originalCatalog ? 'catalogued-original-reference' : root.writable ? 'external-file' : 'connected-root', capturedAt: now(), originalPath: file } }; index.sources.push(source); }
         const stamp = fileStamp(stat), changed = source.fileStamp !== stamp;
         const textFile = TEXT.has(path.extname(file).toLowerCase());
         let body = null, hash = changed ? null : source.hash ?? null;
@@ -716,7 +742,7 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
     folder: input => serial(() => { makeFolder(input.rootId, input.folder); return refresh(); }),
     retainAlbumPhoto: input => serial(() => { refresh(); const source=savedFile('library',input.folder,input.name,input.bytes,input.provenance); persist(); refresh(); return publicSource(source); }),
     // Simmer from a chat: one photo or one note of Adrian's words, kept in the Library folder with its provenance.
-    retainChatFile: input => serial(() => { refresh(); const source=savedFile('library',input.folder,input.name,input.bytes,input.provenance); persist(); refresh(); return publicSource(source); }),
+    retainChatFile: input => serial(() => { refresh(); const source=retainedChatFile(input); persist(); refresh(); return publicSource(source); }),
     import: input => serial(async () => {
       refresh(); rootById(input.rootId, true); safeRel(input.folder || '');
       if (!Array.isArray(input.files || []) || !Array.isArray(input.urls || []) || (input.files?.length || 0) + (input.urls?.length || 0) > 100) throw new StateError('Import up to 100 files or URLs.');
@@ -796,6 +822,33 @@ export function createLibrary({ dataDir, connections = [], legacyState = () => (
       if(relationship.status!=='detached')persistCollectionRelationship(()=>{relationship.status='detached';relationship.updatedAt=now();});
       return{revision:index.revision,relationship:structuredClone(relationship)};
     }),
+    // Internal append-only chat membership; normal collection editing keeps its existing contract.
+    ensureChatCollection: input => serial(() => {
+      refresh();if(!UUID.test(input.operationId||''))throw new StateError('Chat collection needs an operation UUID.');
+      string(input.name,'Collection name',200);if(!input.name.trim()||!Array.isArray(input.sourceIds))throw new StateError('Name the collection and sources.');
+      input.sourceIds.forEach(sourceById);
+      const key=digest(input.operationId+':collection'),createdId=key.slice(0,8)+'-'+key.slice(8,12)+'-4'+key.slice(13,16)+'-8'+key.slice(17,20)+'-'+key.slice(20,32);
+      const payloadHash=fingerprint({id:input.id||null,name:input.name,sourceIds:input.sourceIds});
+      const recorded=index.collections.find(c=>c.chatOperations?.[input.operationId]);
+      if(recorded){if(recorded.chatOperations[input.operationId]!==payloadHash)throw new StateError('This chat membership operation already belongs to different input.',409);return {collection:structuredClone(recorded),revision:index.revision};}
+      let collection=index.collections.find(c=>c.id===(input.id||createdId));
+      if(input.id&&!collection)throw new StateError('Collection was not found.',404);
+      if(!collection){collection={id:createdId,name:input.name.trim(),sourceIds:[],added_by:'chat',added_at:now(),chatOperationId:input.operationId};index.collections.push(collection);}
+      const sourceIds=[...new Set([...collection.sourceIds,...input.sourceIds])];if(sourceIds.length>1000)throw new StateError('A collection holds up to 1000 sources.');
+      Object.assign(collection,{sourceIds,updated_at:now(),chatOperations:{...collection.chatOperations,[input.operationId]:payloadHash}});persist();
+      return {collection:structuredClone(collection),revision:index.revision};
+    }),
+    // A synchronous final dependency check inside the board's publication turn.
+    // It checks only this operation's sources/membership, allowing unrelated Library work.
+    chatReadGuard: ({collectionId=null,sources}) => {
+      const validate=()=>{
+        const loaded=loadTyped().value;
+        if(collectionId){const c=loaded.collections.find(c=>c.id===collectionId);if(!c||!sources.every(s=>c.sourceIds.includes(s.id)))throw new StateError('Retained chat Collection membership changed. Restore its listed sources in Library, then retry the original request.',409);}
+        for(const expected of sources){const s=loaded.sources.find(s=>s.id===expected.id&&!s.missing);if(!s)throw new StateError('A retained chat source is unavailable. Restore it before retrying.',409);const file=checkedFile(s);regular(file);if(digest(fs.readFileSync(file))!==expected.hash)throw new StateError('A retained chat source changed. Restore its retained original bytes before retrying.',409);}
+      };
+      return Object.freeze({validate});
+    },
+    chatRetention: operationId => serial(() => {refresh();return {sources:index.sources.filter(s=>s.provenance?.operationId===operationId).map(publicSource),collections:index.collections.map(c=>structuredClone(c))};}),
     saveCollection: input => serial(() => {
       refresh(); if (input.expectedRevision !== index.revision) throw new StateError('Library changed. Refresh the collection before saving.', 409);
       string(input.name, 'Collection name', 200); if (!input.name.trim() || !Array.isArray(input.sourceIds) || input.sourceIds.length > 1000 || new Set(input.sourceIds).size !== input.sourceIds.length) throw new StateError('Use a name and unique source IDs.');
