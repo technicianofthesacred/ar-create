@@ -22,7 +22,7 @@ function changes(baseline,replacements){
   if(row.words!==words)ops.push({kind:'text',id:row.id,from,to,insert:words.slice(from,end),seenBlockHash:row.blockHash});out.push({id:row.id,words,before:row.words});
  }
  if(!ops.length)fail('Proposal contains no wording change.',400);
- const model=capture(baseline.raw,'study-validation');if(model.blocks.length!==baseline.projection.length)fail('Baseline topology changed.');for(const [i,block]of model.blocks.entries()){const row=baseline.projection[i];if(block.raw!==row.raw)fail('Baseline paragraph mapping changed.');block.id=row.id;}
+ const model=capturedModel(baseline);
  const candidateRaw=apply(model,baseline.raw,ops).raw;
  return {operations:ops,replacements:out,candidateRaw};
 }
@@ -32,7 +32,7 @@ function openingChanges(baseline,requestId,options){
  const candidates=options.map(option=>{fields(option,['id','words']);identifier(option.id);if(ids.has(option.id)||wordsSet.has(option.words))fail('Opening options need distinct identities and words.',400);ids.add(option.id);wordsSet.add(option.words);
   const words=option.words;if(typeof words!=='string'||!words.trim()||words.length>4000||!words.isWellFormed()||/[\r\n\x00-\x1f\[\]*_`<>=]/.test(words)||words.includes('%%'))fail('Use one short ordinary paragraph per opening option.',400);
   const mapped=inlineMap(words);if(!mapped.safe||mapped.blockKind!=='paragraph'||mapped.words!==words||mapped.notes||mapped.reworks.length)fail('Opening options must be exact ordinary prose paragraphs without structural markup.',400);
-  let payload;if(target.kind==='replace')payload=changes(baseline,[{id:target.id,words}]);else{const model=capture(baseline.raw,'opening-insertion');model.blocks.forEach((b,i)=>{if(b.raw!==baseline.projection[i].raw)fail('Opening baseline changed.');b.id=baseline.projection[i].id;});if(model.blocks.some(b=>b.id===blockId))fail('Opening block identity is already used.');const operations=[{kind:'insert',id:blockId,beforeId:target.beforeId,raw:words}],candidateRaw=apply(model,baseline.raw,operations).raw;payload={operations,replacements:[{id:blockId,words,before:'',openingInsertion:true}],candidateRaw};}
+  let payload;if(target.kind==='replace')payload=changes(baseline,[{id:target.id,words}]);else{const model=capturedModel(baseline);if(model.blocks.some(b=>b.id===blockId))fail('Opening block identity is already used.');const operations=[{kind:'insert',id:blockId,beforeId:target.beforeId,raw:words}],candidateRaw=apply(model,baseline.raw,operations).raw;payload={operations,replacements:[{id:blockId,words,before:'',openingInsertion:true}],candidateRaw};}
   return {id:option.id,words,...payload};});
  return {kind:'opening-options',target,options:candidates,replacements:candidates.flatMap(c=>c.replacements)};
 }
@@ -43,13 +43,20 @@ function continuationChanges(baseline,requestId,continuation,paragraphs,openingM
  const model=structuredClone(openingModel);model.blocks.forEach((b,i)=>{if(b.raw!==baseline.projection[i].raw)fail('Continuation baseline changed.');b.id=baseline.projection[i].id;});
  return {kind:'article-continuation',target,operations,replacements,candidateRaw:apply(model,baseline.raw,operations).raw};
 }
-function sourcedModel(baseline){
- const model=capture(baseline.raw,'native-sourced-ending');
+function capturedModel(baseline){
+ const model=capture(baseline.raw,'native-proposal-baseline');
  // A fresh parse may add a zero-byte terminal row after the native writer’s
  // trailing separator. It owns no bytes or words; retain the saved topology.
  while(model.blocks.length>baseline.projection.length&&model.blocks.at(-1).raw===''&&model.blocks.at(-1).separator==='')model.blocks.pop();
- if(model.blocks.length!==baseline.projection.length)fail('Sourced paragraph topology changed.');
- model.blocks.forEach((block,index)=>{if(block.raw!==baseline.projection[index].raw)fail('Sourced paragraph boundary changed.');block.id=baseline.projection[index].id;});
+ if(model.blocks.length!==baseline.projection.length)fail('Baseline topology changed.');
+ model.blocks.forEach((block,index)=>{const row=baseline.projection[index];
+  // A saved paragraph can own a newline that a fresh donor parse assigns
+  // to its trailing separator. Move only those exact newline bytes back; keep
+  // the saved paragraph boundary, hash and every rendered byte unchanged.
+  if(block.raw!==row.raw&&typeof row.raw==='string'&&row.raw.startsWith(block.raw)){const suffix=row.raw.slice(block.raw.length);if(/^(?:\r?\n)+$/.test(suffix)&&block.separator.startsWith(suffix)){block.raw=row.raw;block.separator=block.separator.slice(suffix.length);}}
+  if(block.raw!==row.raw||digest(block.raw)!==row.blockHash)fail('Baseline paragraph mapping changed.');block.id=row.id;
+ });
+ if(model.prefix+model.blocks.map(block=>block.raw+block.separator).join('')!==baseline.raw)fail('Baseline bytes changed.');
  return model;
 }
 const editorialPurpose=purpose=>['article-draft','scoped-revision'].includes(purpose);
@@ -60,7 +67,7 @@ function editorialIntent(baseline,purpose,instruction,targetParagraphIds){
 function articleDraftChanges(baseline,requestId,paragraphs,retainedIds){
  const target=articleDraftProposalTarget(baseline);
  if(!Array.isArray(paragraphs)||!paragraphs.length||paragraphs.length>30||paragraphs.reduce((n,p)=>n+(typeof p==='string'?p.length:64001),0)>64000)fail('Stage 1–30 ordinary article paragraphs under 64,000 characters.',400);
- const model=sourcedModel(baseline),operations=[],replacements=[];
+ const model=capturedModel(baseline),operations=[],replacements=[];
  for(const [index,words]of paragraphs.entries()){
   if(!READ_THROUGH_WORDS(words)||words.length>4000)fail('Use one short ordinary paragraph for each article entry.',400);
   const mapped=inlineMap(words);if(!mapped.safe||mapped.blockKind!=='paragraph'||mapped.words!==words||mapped.notes||mapped.reworks.length)fail('Article entries must be ordinary paragraphs without structural markup.',400);
@@ -80,14 +87,14 @@ function scopedRevisionChanges(baseline,replacements){
 }
 function sourcedChanges(baseline,requestId,sourcedParagraph,sourcedEvidence){
  revalidateNativeSourcedProposal({payload:{sourcedParagraph,sourcedEvidence},context:baseline});
- const model=sourcedModel(baseline);
+ const model=capturedModel(baseline);
  const id='sourced:'+requestId,operations=sourcedParagraph===null?[]:[{kind:'insert',id,beforeId:null,raw:sourcedParagraph}];
  return {kind:'sourced-paragraph',sourcedParagraph,sourcedEvidence:structuredClone(sourcedEvidence),operations,replacements:sourcedParagraph===null?[]:[{id,words:sourcedParagraph,before:'',sourcedInsertion:true}],candidateRaw:operations.length?apply(model,baseline.raw,operations).raw:baseline.raw};
 }
 /** Adrian's rewrite of a sourced paragraph lands where the proposal would have; the sourced claims remain the record of what was proposed. */
 function sourcedEditChanges(baseline,requestId,words){
  const mapped=inlineMap(words);if(!mapped.safe||mapped.blockKind!=='paragraph'||mapped.words!==words||mapped.notes||mapped.reworks.length)fail('Keep your rewrite to one ordinary paragraph without structural markup.',400);
- const model=sourcedModel(baseline),id='sourced:'+requestId,operations=[{kind:'insert',id,beforeId:null,raw:words}];
+ const model=capturedModel(baseline),id='sourced:'+requestId,operations=[{kind:'insert',id,beforeId:null,raw:words}];
  return {kind:'sourced-paragraph',operations,replacements:[{id,words,before:'',sourcedInsertion:true}],candidateRaw:apply(model,baseline.raw,operations).raw};
 }
 const READ_THROUGH_WORDS=w=>typeof w==='string'&&w.trim()&&w.length<=12000&&w.isWellFormed()&&!/[\r\n\x00-\x1f\[\]*_`<>=]/.test(w)&&!w.includes('%%');
@@ -234,7 +241,7 @@ export function createStudyBridge({dataDir,drafts,binding,humanDirection,editori
   identifier(openingRequestId);identifier(selectedOptionId);if(readJson(path.join(location(openingRequestId),'request.json'),null)?.purpose!=='opening-options')fail('Continue only an existing opening-options request.');const r=load(openingRequestId),chosen=r.proposal?.payload.options?.find(o=>o.id===selectedOptionId),decision=r.decision;
   if(r.record.purpose!=='opening-options'||r.proposal?.payload.kind!=='opening-options'||decision?.status!=='accepted'||decision.selectedOptionId!==selectedOptionId||!chosen)fail('Continue only this exact recorded human-chosen opening.');
   if(decision.candidateHash!==digest(chosen.candidateRaw)||!same(decision.operations,chosen.operations)||!same(decision.reviewedReplacements,chosen.replacements))fail('The accepted opening receipt differs from its exact chosen option.');
-  const before=capture(r.baseline.raw,'chosen-opening');before.blocks.forEach((b,i)=>{if(b.raw!==r.baseline.projection[i].raw)fail('Chosen opening baseline changed.');b.id=r.baseline.projection[i].id;});const model=apply(before,r.baseline.raw,chosen.operations).snapshot;return{r,chosen,decision,model};
+  const before=capturedModel(r.baseline);const model=apply(before,r.baseline.raw,chosen.operations).snapshot;return{r,chosen,decision,model};
  }
  async function continuationOrigin(openingRequestId,selectedOptionId,now){
   const {r,chosen,decision,model}=openingChoice(openingRequestId,selectedOptionId);if(now.binding.textOutputKind&&now.binding.textOutputKind!=='article')fail('Article continuation is unavailable for another text output kind.');
