@@ -51,13 +51,13 @@ test('agents read events since a cursor; an unknown cursor says reset',async t=>
  const f=await setup(t);
  const all=await (await fetch(f.url+'/api/events/since?since=0')).json();
  assert.equal(all.schema,'ar-create.events.v1');assert.ok(all.events.some(e=>e.kind==='concepts.post'&&e.scope.id===f.pid&&e.actor==='agent:codex'));
- const none=await (await fetch(f.url+'/api/events/since?since='+all.cursor)).json();assert.deepEqual(none.events,[]);assert.equal(none.reset,false);
+ const none=await (await fetch(f.url+'/api/events/since?since='+all.cursor+'&bootId='+all.bootId)).json();assert.deepEqual(none.events,[]);assert.equal(none.reset,false);
  const ahead=await (await fetch(f.url+'/api/events/since?since='+(all.cursor+50))).json();assert.equal(ahead.reset,true);
  const tools=createTools({url:f.url,actor:'agent:claude-code'}),viaMcp=await tools.callTool('ar_create_events',{since:0,scopeKind:'project',scopeId:f.pid});
  assert.ok(viaMcp.events.length>=1&&viaMcp.events.every(e=>e.scope.id===f.pid));
  // The ring buffer resets readers that fell behind it.
  const bus=createEventBus({limit:3});for(let i=0;i<6;i++)bus.emit({kind:'x',scope:{kind:'project',id:'p'}});
- assert.equal(bus.since(1).reset,true);assert.equal(bus.since(4).reset,false);assert.deepEqual(bus.since(4).events.map(e=>e.cursor),[5,6]);
+ assert.equal(bus.since(1).reset,true);assert.equal(bus.since(4,{},200,bus.bootId).reset,false);assert.deepEqual(bus.since(4,{},200,bus.bootId).events.map(e=>e.cursor),[5,6]);
 });
 
 test('presence: the app says it has unsaved words; agents see editor.dirty; late heartbeats never win',async t=>{

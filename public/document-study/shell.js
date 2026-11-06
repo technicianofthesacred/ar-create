@@ -38,7 +38,7 @@
   const listeners=new Set();let source=null,cursor=null,bootId=null,connected=false,retry=0,timer=null,stopped=false,pageAway=false,focused=typeof document.hasFocus!=='function'||document.hasFocus(),epoch=0,needsRefresh=document.hidden||!focused,pendingAPI=0;
   const matches=(filter,event)=>(!filter.kind||event.scope?.kind===filter.kind)&&(!filter.id||event.scope?.id===filter.id)&&(!filter.kinds||filter.kinds.some(k=>k.endsWith('*')?String(event.kind).startsWith(k.slice(0,-1)):event.kind===k));
   function dispatch(event){for(const l of [...listeners]){if(event.reset||matches(l.filter,event)){try{l.fn(event);}catch(error){console.error('AR Create live sync: a surface could not refresh.',error);}}}window.dispatchEvent(new CustomEvent('ar-live-change',{detail:event}));}
-  function reset(info){cursor=Number.isSafeInteger(info?.cursor)?info.cursor:cursor;if(info?.bootId)bootId=info.bootId;dispatch({reset:true,bootId,cursor});}
+  function reset(info){cursor=Number.isSafeInteger(info?.headCursor)?info.headCursor:Number.isSafeInteger(info?.cursor)?info.cursor:cursor;if(info?.bootId)bootId=info.bootId;dispatch({reset:true,bootId,cursor,reason:info?.resetReason||null});}
   const available=()=>!stopped&&!pageAway&&!document.hidden&&focused&&pendingAPI===0;
   function disconnect(){epoch++;clearTimeout(timer);timer=null;source?.close?.();source=null;const was=connected;connected=false;if(was)window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:false}}));}
   function suspend(){needsRefresh=true;disconnect();}
@@ -47,14 +47,27 @@
   async function connect(){
    if(!available()||source||typeof EventSource!=='function')return;
    const token=epoch;clearTimeout(timer);timer=null;
-   // Learn where the stream stands first, so a drop before the first change still resumes from the right place.
-   if(cursor==null&&typeof fetch==='function'){learning||=fetch('/api/events/since?limit=1').then(r=>r.ok?r.json():null).then(v=>{if(cursor==null&&Number.isSafeInteger(v?.cursor)){cursor=v.cursor;bootId=v.bootId||bootId;}}).catch(()=>{}).finally(()=>{learning=null;});await learning;if(token!==epoch||!available()||source)return;}
-   const es=new EventSource('/api/events'+(cursor!=null?'?since='+encodeURIComponent(cursor):''));source=es;
+   // Consume the initial page too: its cursor is delivered-through, not the stream's head.
+   // A reset deliberately replaces replay with each owner's canonical read.
+   if(cursor==null&&typeof fetch==='function'){learning||=fetch('/api/events/since?since=0&limit=1').then(r=>r.ok?r.json():null).then(v=>{
+    if(cursor!=null||!Number.isSafeInteger(v?.cursor))return;
+    bootId=v.bootId||bootId;cursor=v.cursor;
+    if(!available()){needsRefresh=true;return;}
+    if(v.reset)reset(v);else for(const event of v.events||[])dispatch(event);
+   }).catch(()=>{}).finally(()=>{learning=null;});await learning;if(token!==epoch||!available()||source)return;}
+   const query=new URLSearchParams();if(cursor!=null)query.set('since',String(cursor));if(bootId)query.set('bootId',bootId);
+   const es=new EventSource('/api/events'+(query.size?'?'+query:''));source=es;let lastReset=null;
+   const recover=info=>{const key=String(info?.bootId)+':'+String(info?.headCursor??info?.cursor);if(lastReset===key)return;lastReset=key;reset(info);};
+   // Always sent on connection, including an idle new boot with no subsequent write.
+   es.addEventListener('hello',message=>{if(source!==es||!available())return;let info;try{info=JSON.parse(message.data);}catch{return;}
+    if(info.reset||cursor==null||bootId&&info.bootId&&info.bootId!==bootId)recover(info);else bootId=info.bootId||bootId;
+   });
    es.onopen=()=>{if(source!==es||!available())return;connected=true;retry=0;window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:true}}));};
    es.addEventListener('change',message=>{if(source!==es||!available())return;let event;try{event=JSON.parse(message.data);}catch{return;}
-    if(bootId&&event.bootId&&event.bootId!==bootId){bootId=event.bootId;cursor=event.cursor;dispatch({reset:true,bootId,cursor});return;}
-    bootId=event.bootId||bootId;if(cursor!=null&&Number(event.cursor)<=cursor)return;cursor=Number(event.cursor);dispatch(event);});
-   es.addEventListener('reset',message=>{if(source!==es||!available())return;let info={};try{info=JSON.parse(message.data);}catch{}reset(info);});
+    if(!Number.isSafeInteger(event.cursor)||event.cursor<0)return;
+    if(bootId&&event.bootId&&event.bootId!==bootId){recover(event);return;}
+    bootId=event.bootId||bootId;if(cursor!=null&&event.cursor<=cursor)return;cursor=event.cursor;dispatch(event);});
+   es.addEventListener('reset',message=>{if(source!==es||!available())return;let info={};try{info=JSON.parse(message.data);}catch{}recover(info);});
    // The browser's own retry would replay the first URL's cursor; reopen with the newest one instead.
    es.onerror=()=>{if(source!==es||!available())return;const was=connected;connected=false;es.close();if(source===es)source=null;if(was)window.dispatchEvent(new CustomEvent('ar-live-status',{detail:{connected:false}}));if(!available())return;retry=Math.min(retry+1,6);timer=setTimeout(connect,Math.min(30000,1000*2**(retry-1)));};
   }

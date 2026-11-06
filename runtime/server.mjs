@@ -55,6 +55,7 @@ import {createEventBus,scopeOf,revisionOf} from './services/events.mjs';
 import {createPresence} from './services/presence.mjs';
 import {createLeases} from './services/leases.mjs';
 import {createJournal} from './services/journal.mjs';
+import {createActivityRecovery} from './services/activity-recovery.mjs';
 import {createRouteMap,describeRoutes,findCommand,publicEntry,SCHEMA as CAPABILITIES_SCHEMA,READ_ONLY_POSTS} from './commands.mjs';
 import {createMagazineRoutes} from './commands/magazine.mjs';
 import {createMagazineVault} from './services/magazine-vault/index.mjs';
@@ -130,8 +131,8 @@ function body(request, limit = MAX_BODY_BYTES, raw = false) {
     });
     request.on('end', () => {
       if (overflow) return;
-      try { const value = raw ? Buffer.concat(chunks) : JSON.parse(Buffer.concat(chunks).toString('utf8')); if (!raw) request.arInput = value; resolve(value); }
-      catch { reject(new StateError('Request body must be valid JSON.')); }
+      try { const value = raw ? Buffer.concat(chunks) : JSON.parse(Buffer.concat(chunks).toString('utf8')); if (!raw) { request.arInput = value; request.arBeforeMutation?.(value); } resolve(value); }
+      catch (error) { reject(error instanceof SyntaxError ? new StateError('Request body must be valid JSON.') : error); }
     });
     request.on('error', reject);
     request.on('aborted', () => reject(new StateError('Request was interrupted.')));
@@ -213,7 +214,7 @@ export async function loadTranscriptionRuntime(dataDir) {
 }
 
 /** Await createServer(), then server.listen(port, '127.0.0.1'). No external services. */
-export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, voiceHome, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [], phonePickup = null } = {}) {
+export async function createServer({ dataDir = path.join(root, 'data'), i64osDirections, voiceHome, publicDir = path.join(root, 'public'), connections, connectionsEditable = true, extraction = null, transcriptionRuntime, ingestionOptions = null, magazineRoots, execution = createWorkspaceExecution(), nativeAIExecution, sharedArticles = false, publicationFault, articleMakeSkillRoot, studyOriginalRoots=null, studyRelocation=null, researchEnabled=true, localAtlasExportDir=null, transcriptLibrary=null, materialHostActions=null, importedSourceFactory=null, packageView=null, magazineVault: magazineVaultOptions, magazineCheckReceipts=false, release=null, retainedCarouselState, browserCarouselOrigins = [], phonePickup = null, activityFault, journalBeforeAppend } = {}) {
   if(typeof magazineCheckReceipts!=='boolean')throw new TypeError('Magazine check receipt permission must be an explicit boolean.');
   // Host-selected read capability only. No request can choose a source path or
   // establish an association between an original and the current manuscript.
@@ -310,8 +311,13 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
     if(output)await store.readCarouselWords({documentId:document.id,outputId:output.id});
   }
   // Agent coordination routes (mounted below, before the route map).
-  const extraCommands=[['GET','/api/magazine/library-photos/preview',['rootId','sourceId','revision','sourceHash?','verify?']],['GET','/api/magazine/library-photos/asset',['file']],['GET','/api/events',['since?','kind?','id?']],['GET','/api/events/since',['since?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
-  const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir});
+  const extraCommands=[['GET','/api/magazine/library-photos/preview',['rootId','sourceId','revision','sourceHash?','verify?']],['GET','/api/magazine/library-photos/asset',['file']],['GET','/api/events',['since?','bootId?','kind?','id?']],['GET','/api/events/since',['since?','bootId?','kind?','id?','limit?']],['GET','/api/presence',['kind?','id?']],['POST','/api/presence'],['GET','/api/leases',['kind?','id?']],['POST','/api/leases/acquire'],['POST','/api/leases/release'],['GET','/api/journal',['kind?','id?','status?','actor?','since?','before?','limit?']],['POST','/api/journal/handoff'],['POST','/api/journal/ask']];
+  const events=createEventBus(),presence=createPresence({events}),sseClients=new Set(),leases=createLeases({dataDir,events}),journal=createJournal({dataDir,beforeAppend:journalBeforeAppend});
+  // W3's owner projection is optional while source workstreams are isolated.
+  // Once present, import failures are fatal rather than silently dropping history.
+  const simmerActivity=fs.existsSync(path.join(root,'services/simmer-operations.mjs'))?(await import('./services/simmer-operations.mjs')).simmerOperations(dataDir):null;
+  const activity=createActivityRecovery({dataDir,journal,events,readNativeReceipt:input=>studyDrafts.inspect(input),ownerReceipts:()=>simmerActivity?.activityReceipts()||[],fault:activityFault});
+  let activityHealth;
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
   // One consent desk for the whole server: the app, agents and every publish path read the same hold through it.
@@ -344,27 +350,36 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const NOT_JOURNALED=new Set(['presence.post','leases.acquire','leases.release','journal.handoff','journal.ask','first-flow.select','study.photos.select','study.human-direction.select','study-draft.open']);
   // Decisions whose reason belongs in the journal line itself (Adrian overriding the consent hold, taking a person off).
   const JOURNAL_REASONS=new Set(['consent.share.override','consent.people.remove']);
-  function afterRequest(request,response,context){
-   if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return;
-   let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return;}
+  function activityMeta(request,response,context){
+   if(['GET','HEAD','OPTIONS'].includes(request.method)||!context)return null;
+   let pathname;try{pathname=decodeURIComponent((request.url||'/').split('?')[0]);}catch{return null;}
    const command=findCommand(commandList(),request.method,pathname);
-   if(!command||command.readOnly||NOT_JOURNALED.has(command.name))return;
-   const input=request.arInput,result=response.arResult,status=response.statusCode,query=new URL(request.url||'/','http://local.invalid').searchParams;
+   if(!command||command.readOnly||NOT_JOURNALED.has(command.name))return null;
+   const input=request.arInput,result=response.arResult,query=new URL(request.url||'/','http://local.invalid').searchParams;
    const scope=scopeOf({input,result,query,section:command.section}),operationId=typeof input?.operationId==='string'?input.operationId:null;
-   if(status>=200&&status<300)events.emit({kind:command.name,scope,revision:revisionOf(result),actor:context.actor,client:context.client,operationId});
    const expected=input&&typeof input==='object'?(Number.isSafeInteger(input.expectedRevision)||typeof input.expectedHash==='string'?{revision:input.expectedRevision??null,hash:input.expectedHash??null}:input.expected&&typeof input.expected==='object'?{revision:input.expected.revision??null,hash:input.expected.hash??null}:null):null;
-   const ok=status>=200&&status<300,after=ok?{revision:revisionOf(result),hash:typeof result?.hash==='string'?result.hash:null}:null;
-   journal.append({operationId,actor:context.actor,client:context.client,scope,kind:command.name,status:ok?'committed':status===409||status===423?'conflict':'rejected',before:expected,after,reason:ok?(JOURNAL_REASONS.has(command.name)&&typeof input?.reason==='string'?input.reason.slice(0,500):null):String(result?.error||'HTTP '+status).slice(0,500),http:status}).catch(error=>console.error('Journal line was not written:',error.message));
+   return {operationId,actor:context.actor,client:context.client,scope,kind:command.name,before:expected};
+  }
+  async function afterRequest(request,response,context){
+   const meta=activityMeta(request,response,context);if(!meta)return;
+   if(simmerActivity&&['simmer.intake','simmer.dish'].includes(meta.kind)){activityHealth=await activity.reconcile();return;}
+   const input=request.arInput,result=response.arResult,status=response.statusCode,ok=status>=200&&status<300;
+   const after=ok?{revision:revisionOf(result),hash:typeof result?.hash==='string'?result.hash:null}:null;
+   activity.recordResponse({...meta,status:ok?'committed':result?.receipt?.status==='partial'?'partial':status===409||status===423?'conflict':'rejected',after,reason:ok?(JOURNAL_REASONS.has(meta.kind)&&typeof input?.reason==='string'?input.reason.slice(0,500):null):String(result?.error||'HTTP '+status).slice(0,500),http:status});
+   activityHealth=await activity.reconcile();
   }
   function eventFilter(url){const kind=url.searchParams.get('kind'),id=url.searchParams.get('id');return {...(kind?{kind}:{}),...(id?{id}:{})};}
   async function coordination(request,response,pathname,url){
-   if(pathname==='/api/events/since'&&request.method==='GET'){const since=Number(url.searchParams.get('since')||0),limit=Number(url.searchParams.get('limit')||200);json(response,200,events.since(since,eventFilter(url),Number.isSafeInteger(limit)?limit:200));return true;}
+   if(pathname==='/api/journal'||pathname.startsWith('/api/events'))activityHealth=await activity.reconcile();
+   if(pathname==='/api/events/since'&&request.method==='GET'){const since=Number(url.searchParams.get('since')||0),limit=Number(url.searchParams.get('limit')||200);json(response,200,events.since(since,eventFilter(url),Number.isSafeInteger(limit)?limit:200,url.searchParams.get('bootId')));return true;}
    if(pathname==='/api/events'&&request.method==='GET'){
     const since=Number(url.searchParams.get('since')??request.headers['last-event-id']??events.cursor),filter=eventFilter(url);
     response.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-store','Connection':'keep-alive','X-Accel-Buffering':'no'});
     const send=event=>response.write('id: '+event.cursor+'\nevent: change\ndata: '+JSON.stringify(event)+'\n\n');
-    const backlog=events.since(Number.isSafeInteger(since)?since:events.cursor,filter,1000);
-    response.write('retry: 3000\n'+(backlog.reset?'event: reset\ndata: '+JSON.stringify({bootId:events.bootId,cursor:events.cursor})+'\n':'')+'\n');
+    const backlog=events.since(Number.isSafeInteger(since)?since:events.cursor,filter,1000,url.searchParams.get('bootId'));
+    const hello={bootId:backlog.bootId,cursor:backlog.cursor,headCursor:backlog.headCursor,reset:backlog.reset,resetReason:backlog.resetReason};
+    response.write('retry: 3000\nevent: hello\ndata: '+JSON.stringify(hello)+'\n\n');
+    if(backlog.reset)response.write('event: reset\ndata: '+JSON.stringify(hello)+'\n\n');
     for(const event of backlog.reset?[]:backlog.events)send(event);
     const stop=events.subscribe(send,filter),beat=setInterval(()=>response.write(': ping\n\n'),20_000);beat.unref?.();
     const client={response,close(){clearInterval(beat);stop();sseClients.delete(client);}};sseClients.add(client);
@@ -372,7 +387,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
     return true;
    }
    if(pathname==='/api/leases'&&request.method==='GET'){json(response,200,leases.list(eventFilter(url)));return true;}
-   if(pathname==='/api/journal'&&request.method==='GET'){const q=Object.fromEntries(['kind','id','status','actor','since','limit'].filter(k=>url.searchParams.has(k)).map(k=>[k,url.searchParams.get(k)]));json(response,200,await journal.read(q));return true;}
+   if(pathname==='/api/journal'&&request.method==='GET'){const q=Object.fromEntries(['kind','id','status','actor','since','before','limit'].filter(k=>url.searchParams.has(k)).map(k=>[k,url.searchParams.get(k)]));json(response,200,{...await journal.read(q),recovery:activityHealth});return true;}
    const coordinationWrites={'/api/leases/acquire':input=>leases.acquire(input,request.arActor),'/api/leases/release':input=>leases.release(input,request.arActor),'/api/journal/handoff':async input=>{const line=await journal.handoff(input,request.arActor);events.emit({kind:'handoff',scope:line.scope,revision:null,actor:line.actor,client:line.client,operationId:line.operationId,to:line.to,summary:line.summary});return line;},'/api/journal/ask':async input=>{const line=await journal.ask(input,request.arActor);events.emit({kind:'needs-decision',scope:line.scope,revision:null,actor:line.actor,client:line.client,operationId:line.operationId,to:line.to,summary:line.summary,...(line.options?{options:line.options}:{})});return line;}};
    if(Object.hasOwn(coordinationWrites,pathname)){if(request.method!=='POST'){response.setHeader('Allow','POST');throw new StateError('Method is not supported.',405);}checkWrite(request,server);if(!(request.headers['content-type']||'').toLowerCase().startsWith('application/json'))throw new StateError('Use Content-Type: application/json.',415);json(response,200,await coordinationWrites[pathname](await body(request,64*1024)));return true;}
    if(pathname==='/api/presence'){
@@ -724,6 +739,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       response.writeHead(200, { 'Content-Type': file.type, 'Content-Length': file.contents.length, 'Cache-Control': 'no-cache' });
       response.end(request.method === 'HEAD' ? undefined : file.contents);
   }
+  activityHealth=await activity.reconcile();
   const server = http.createServer(async (request, response) => {
     if(packageView&&request.method==='GET'&&new URL(request.url,'http://localhost').pathname==='/document-study/package-config.js'){response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -735,16 +751,19 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       const actorContext = resolveRequestActor(request, { appOrigins: localAuthorities(server).map(host => `http://${host}`) });
       if (mutation) guardHumanOnly(request.method, (request.url || '/').split('?')[0], actorContext);
       request.arActor = actorContext;
-      return await (actorContext ? withActor(actorContext, () => routeRequest(request, response)) : routeRequest(request, response));
+      const getMeta=()=>activityMeta(request,response,actorContext);
+      request.arBeforeMutation=input=>{const meta=getMeta();if(meta&&/^study-draft\./.test(meta.kind))activity.beginNative(meta,input);};
+      const run=()=>studyPhotoFiles.observeAtomicWrites(change=>activity.observe(getMeta,change),()=>routeRequest(request,response));
+      return await (actorContext ? withActor(actorContext, run) : routeRequest(request, response));
     } catch (error) {
       if (response.headersSent || response.destroyed) return;
       if (['ENOENT', 'ENOTDIR', 'EISDIR'].includes(error.code)) return json(response, 404, { error: 'File was not found.' });
       const status = error instanceof StateError ? error.status : 500;
       if (status === 500) console.error('Local workspace request failed:', error.message);
-      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}),...(error.holder?{holder:error.holder}:{}),...(error.hold?{code:'consent-hold',hold:error.hold}:{}) });
+      json(response, status, { error: status === 500 ? 'Could not save or load the local workspace. Existing data was preserved.' : error.message,...(error.outcome?{outcome:error.outcome}:{}),...(error.receipt?{receipt:error.receipt}:{}),...(error.holder?{holder:error.holder}:{}),...(error.hold?{code:'consent-hold',hold:error.hold}:{}) });
     } finally {
       // After the answer: tell watchers what changed (and, from B8, journal it).
-      try { afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }
+      try { await afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }
     }
   });
   attachTerminalSockets(server, terminal, { checkHost: request => { if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.',403); }, checkOrigin: request => checkWriteOrigin(request,server) });
