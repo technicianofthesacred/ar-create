@@ -11,15 +11,41 @@ async function fixture(t,outputKind){
  const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'recording-availability-')));t.after(()=>fs.rmSync(dataDir,{recursive:true,force:true}));
  fs.mkdirSync(path.join(dataDir,'library'));fs.writeFileSync(path.join(dataDir,'library','Ready.md'),'Synthetic unrelated readable context.');fs.writeFileSync(path.join(dataDir,'library','.hidden.md'),'Hidden synthetic context.');fs.writeFileSync(path.join(dataDir,'library','Ready.sync-conflict-20261018.md'),'Conflict copy stays outside Library.');
  let recordings;const library=createLibrary({dataDir,recordingState:id=>recordings?.state(id),recordingSourceSnapshot:source=>recordings?.sourceSnapshot(source)}),dir=path.join(dataDir,'recordings');fs.writeFileSync(path.join(dir,'recording.wav'),'Synthetic audio placeholder.');
- const source=(await library.tree()).sources.find(s=>s.rel_path==='recording.wav'),id=randomUUID(),output=outputKind==='outside'?path.join(dataDir,'..','prior-home','recordings','Transcription',id):path.join(dir,'.hidden-output',id);
+ const source=(await library.tree()).sources.find(s=>s.rel_path==='recording.wav'),id=randomUUID(),output=outputKind==='outside'?path.join(dataDir,'..','prior-home','recordings','Transcription',id):outputKind==='missing'?path.join(dir,'Missing recording','Transcription',id):path.join(dir,'.hidden-output',id);
  const currentOutput=path.join(dir,'Current recording','Transcription',id);fs.mkdirSync(currentOutput,{recursive:true});fs.writeFileSync(path.join(currentOutput,'transcript.md'),'---\nkind: transcript\nreview_status: reviewed\n---\n\nSynthetic transcript still needs its recording identity recovered.');
- fs.mkdirSync(path.join(dir,'.transcription-jobs'));fs.writeFileSync(path.join(dir,'.transcription-jobs',id+'.json'),JSON.stringify({id,state:'done',transcriptReady:true,output}));fs.writeFileSync(path.join(dir,'source-links.json'),JSON.stringify({[source.id]:id}));
- recordings=createRecordings({dataDir,library});return {dataDir,dir,library,recordings,source,currentOutput};
+ fs.mkdirSync(path.join(dir,'.transcription-jobs'));fs.writeFileSync(path.join(dir,'.transcription-jobs',id+'.json'),JSON.stringify({id,story:'Invented recording',file:'recording.wav',source:path.join(dir,'recording.wav'),state:'done',transcriptReady:true,output}));fs.writeFileSync(path.join(dir,'source-links.json'),JSON.stringify({[source.id]:id}));
+ recordings=createRecordings({dataDir,library});return {dataDir,dir,library,recordings,source,currentOutput,id};
 }
 for(const outputKind of ['outside','hidden'])test(`invalid ${outputKind} recording location does not block unrelated Library sources`,async t=>{
  const f=await fixture(t,outputKind),state=f.recordings.state(f.source.id);assert.equal(state.state,'unavailable');assert.equal(state.transcriptReady,false);assert.match(state.reason,/location is unavailable/);
  const tree=await f.library.tree(),ready=tree.sources.find(s=>s.rel_path==='Ready.md'),audio=tree.sources.find(s=>s.id===f.source.id);assert.equal(ready.cardEligibility.eligible,true);const transcriptPath=path.join(f.currentOutput,'transcript.md');assert.equal(tree.sources.some(s=>s.path===transcriptPath),false,'Internal job transcripts stay out of the Library list');const managed=f.recordings.sourceSnapshot({rootId:'recordings',rel_path:path.relative(f.dir,transcriptPath),path:transcriptPath});assert.equal(managed.managed,true);assert.equal(managed.coherent,false);assert.equal(audio.cardEligibility.eligible,false);assert.match(audio.cardEligibility.reason,/recover/);assert.equal(audio.pipelineStates.transcription.state,'unavailable');assert.equal(tree.sources.some(s=>s.rel_path.includes('.hidden')||s.rel_path.includes('.sync-conflict-')),false);
  for(const rel of ['../prior-home/transcript.json','.hidden-output/transcript.json','folder/a.sync-conflict-copy.md']){assert.throws(()=>safeRel(rel),/Hidden files, conflicts and traversal/);assert.throws(()=>resolveInside(f.dir,rel),/Hidden files, conflicts and traversal/);}
+});
+
+for(const outputKind of ['outside','hidden','missing'])test(`recordings list keeps invalid ${outputKind} transcript unavailable while original audio stays linked`,async t=>{
+ const f=await fixture(t,outputKind),before=fs.readFileSync(path.join(f.dir,'.transcription-jobs',f.id+'.json'));
+ const {jobs}=await f.recordings.list(),job=jobs.find(row=>row.id===f.id);
+ assert.ok(job);assert.equal(job.state,'unavailable');assert.equal(job.transcriptReady,false);assert.equal(job.originalAvailable,true);assert.equal(job.sourceId,f.source.id);assert.match(job.reason,/location is unavailable/);
+ assert.deepEqual(fs.readFileSync(path.join(f.dir,'.transcription-jobs',f.id+'.json')),before);
+ const original=await f.library.blob(f.source.id);assert.equal(fs.readFileSync(original.file,'utf8'),'Synthetic audio placeholder.');
+ for(const rel of ['../prior-home/transcript.json','.hidden-output/transcript.json'])assert.throws(()=>resolveInside(f.dir,rel),/Hidden files, conflicts and traversal/);
+});
+
+test('list checks each exact job instead of borrowing the newest job availability for a shared original',async t=>{
+ const f=await fixture(t,'outside'),newId=randomUUID(),output=path.join(f.dir,'Ready recording','Transcription',newId);fs.mkdirSync(output,{recursive:true});
+ fs.writeFileSync(path.join(output,'transcript.json'),JSON.stringify({language:'en',speakers:[],segments:[],metadata:{review:{status:'unreviewed'}}}));
+ fs.writeFileSync(path.join(f.dir,'.transcription-jobs',newId+'.json'),JSON.stringify({id:newId,story:'Invented ready recording',file:'recording.wav',source:path.join(f.dir,'recording.wav'),state:'done',transcriptReady:true,output}));
+ fs.writeFileSync(path.join(f.dir,'source-links.json'),JSON.stringify({[f.source.id]:newId}));
+ const recordings=createRecordings({dataDir:f.dataDir,library:f.library});assert.equal(recordings.state(f.source.id).state,'done');
+ const {jobs}=await recordings.list(),old=jobs.find(j=>j.id===f.id),ready=jobs.find(j=>j.id===newId);
+ assert.equal(old.state,'unavailable');assert.equal(old.transcriptReady,false);assert.equal(old.sourceId,undefined);
+ assert.equal(ready.state,'done');assert.equal(ready.transcriptReady,true);assert.equal(ready.sourceId,f.source.id);assert.equal(ready.originalAvailable,true);assert.equal(fs.existsSync(path.join(output,'.corrections')),false,'Listing never initializes or generates transcript correction files');
+});
+
+test('missing original stays linked but cannot be advertised as an available fallback',async t=>{
+ const f=await fixture(t,'outside');fs.unlinkSync(path.join(f.dir,'recording.wav'));const {jobs}=await f.recordings.list(),job=jobs.find(j=>j.id===f.id);
+ assert.equal(job.state,'unavailable');assert.equal(job.transcriptReady,false);assert.equal(job.sourceId,f.source.id);assert.equal(job.originalAvailable,false);
+ await assert.rejects(f.library.blob(f.source.id),error=>error.status===404);
 });
 
 // These executable probes report invented dependency metadata only. No Python

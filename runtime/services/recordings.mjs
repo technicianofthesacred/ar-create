@@ -68,6 +68,29 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
   const corrections=createTranscriptCorrections({dir,config});
   const send=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
   async function input(req){let bytes='';for await(const chunk of req){bytes+=chunk;if(Buffer.byteLength(bytes)>2*1024*1024)throw new StateError('Request exceeds 2 MB.',413);}return bytes.trim()?JSON.parse(bytes):{};}
+  function availabilityForJob(id,job){
+    try {
+      if (typeof id !== 'string' || !/^[a-f0-9-]{36}$/.test(id)) throw new StateError('Unknown recording.',404);
+      if(job===undefined)job=readJson(path.join(dir,'.transcription-jobs',id+'.json'),null);
+      if(!job)return null;
+      if(job.id!==id)throw new StateError('Unknown recording.',404);
+      let reviewStatus = 'unreviewed';
+      if (job.transcriptReady) {
+        if (typeof job.output !== 'string' || !path.isAbsolute(job.output)) throw new StateError('Invalid recording location.');
+        const resultFile = resolveInside(dir, path.relative(dir, path.join(job.output, 'transcript.json')));
+        const result = readJson(resultFile, null);
+        if (result?.metadata?.review?.status === 'reviewed') {
+          const snapshot = corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(job.output,'transcript.md')),path:path.join(job.output,'transcript.md')});
+          if (snapshot.coherent) reviewStatus = 'reviewed';
+        }
+      }
+      return {state:job.state,transcriptReady:Boolean(job.transcriptReady),reviewStatus};
+    } catch {
+      // One unavailable job must not disable the rest of the Library. Keep
+      // the existing path guard; never infer a replacement recording root.
+      return {state:'unavailable',transcriptReady:false,reviewStatus:'unreviewed',reason:'Saved transcript location is unavailable. Reconnect the recording or recover its saved files before use.'};
+    }
+  }
   return {
     // Magazine intake (magazine-vault/intake.mjs): transcribe one filed recording in this isolated
     // runner. Its RAW stays here until magazine-vault files it into the real Inbox under the lock.
@@ -99,38 +122,25 @@ export function createRecordings({ dataDir, library, transcriptionRuntime = null
       const id = withIsolatedConfig(config, () => startLocalIntake((source.title || source.name || 'Recording').replace(/[\/\\\r\n]/g, '-').slice(0, 120), file, { defer: true }));
       links[source.id] = id; atomicWrite(linksFile, JSON.stringify(links));
     },
-    state(sourceId) {
-      const id = links[sourceId]; if (!id) return null;
-      try {
-        if (typeof id !== 'string' || !/^[a-f0-9-]{36}$/.test(id)) throw new StateError('Unknown recording.',404);
-        const job = readJson(path.join(dir, '.transcription-jobs', `${id}.json`), null); if (!job) return null;
-        let reviewStatus = 'unreviewed';
-        if (job.transcriptReady) {
-          if (typeof job.output !== 'string' || !path.isAbsolute(job.output)) throw new StateError('Invalid recording location.');
-          const resultFile = resolveInside(dir, path.relative(dir, path.join(job.output, 'transcript.json')));
-          const result = readJson(resultFile, null);
-          if (result?.metadata?.review?.status === 'reviewed') {
-            const snapshot = corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(job.output,'transcript.md')),path:path.join(job.output,'transcript.md')});
-            if (snapshot.coherent) reviewStatus = 'reviewed';
-          }
-        }
-        return {state:job.state,transcriptReady:Boolean(job.transcriptReady),reviewStatus};
-      } catch {
-        // One unavailable job must not disable the rest of the Library. Keep
-        // the existing path guard; never infer a replacement recording root.
-        return {state:'unavailable',transcriptReady:false,reviewStatus:'unreviewed',reason:'Saved transcript location is unavailable. Reconnect the recording or recover its saved files before use.'};
-      }
-    },
+    state(sourceId) {const id=links[sourceId];return id?availabilityForJob(id):null;},
     async list() {
       // Reconcile physical renames without changing the original recording job ID.
+      const originals=new Map();
       for (const [sourceId, id] of Object.entries(links)) {
         try {
-          const { file } = await library.blob(sourceId); const jobFile = path.join(dir, '.transcription-jobs', `${id}.json`);
+          const { file } = await library.blob(sourceId); originals.set(sourceId,true);const jobFile = path.join(dir, '.transcription-jobs', `${id}.json`);
           const job = readJson(jobFile, null); if (job.state === 'saved' && job.source !== file) { job.source = file; atomicWrite(jobFile, JSON.stringify(job)); }
-        } catch (error) { if (error.status !== 404) throw error; }
+        } catch (error) { originals.set(sourceId,false);if (error.status !== 404) throw error; }
       }
       const jobs = withIsolatedConfig(config, () => localJobs().map(publicJob));
-      return { capability, jobs: jobs.map(job => {const privateJob=readJson(path.join(dir,'.transcription-jobs',job.id+'.json'),null);const snapshot=privateJob?.output?corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(privateJob.output,'transcript.md')),path:path.join(privateJob.output,'transcript.md')}):null;return ({ ...job, ...(snapshot?.managed?{reviewStatus:snapshot.reviewStatus,transcriptNeedsInspection:!snapshot.coherent}:{}), sourceId: Object.keys(links).find(key => links[key] === job.id), url: `/transcription/${job.id}/view` });}) };
+      return {capability,jobs:jobs.map(job=>{
+        const privateJob=readJson(path.join(dir,'.transcription-jobs',job.id+'.json'),null),sourceId=Object.keys(links).find(key=>links[key]===job.id);
+        const snapshot=privateJob?.output?corrections.sourceSnapshot({rootId:'recordings',rel_path:path.relative(dir,path.join(privateJob.output,'transcript.md')),path:path.join(privateJob.output,'transcript.md')}):null;
+        // Availability belongs to this exact retained job, not a newer job that
+        // happens to share its original source. Keep the path boundary intact.
+        const availability=availabilityForJob(job.id,privateJob);
+        return {...job,...(snapshot?.managed?{reviewStatus:snapshot.reviewStatus,transcriptNeedsInspection:!snapshot.coherent}:{}),...availability,sourceId,originalAvailable:!!sourceId&&originals.get(sourceId)===true,url:`/transcription/${job.id}/view`};
+      })};
     },
     async route(req, res, url) {
       if (!url.pathname.startsWith('/transcription/')) return false;
