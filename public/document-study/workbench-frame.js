@@ -263,6 +263,7 @@
   }catch(error){toolError(error);}
  }
  async function openTool(k){
+  if(k==='recovery'){closeTool();return window.studyDraft?.openRecovery?.();}
   returnFocus=document.activeElement;
   if(k==='check'){
    if(typeof window.workspaceNavigation?.whenNavigationReady==='function')await window.workspaceNavigation.whenNavigationReady();

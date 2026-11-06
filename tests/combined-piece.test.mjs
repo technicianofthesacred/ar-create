@@ -52,9 +52,9 @@ test('Carousel Video uses its selected registered root and exact current-piece m
 
 
 test('retained tab variants stay reachable from the Combined status and More without saving',async t=>{
- const f=await fixture(t);let recovery={count:2,unavailable:false,needsReview:false};f.w.studyDraft.recoveryState=()=>recovery;f.api.decorate();
- byText(f,'Recover writing (2)').click();await tick();assert.deepEqual(f.calls.at(-1),['tool','recovery']);assert.equal(f.calls.some(c=>c[0]==='flush'),false);
- byText(f,'More').click();byText(f,'Recover writing').click();await tick();assert.deepEqual(f.calls.at(-1),['tool','recovery']);
+ const f=await fixture(t);let recovery={count:2,unavailable:false,needsReview:false};f.w.studyDraft.recoveryState=()=>recovery;f.w.studyDraft.openRecovery=()=>f.calls.push(['recovery']);f.api.decorate();
+ byText(f,'Recover writing (2)').click();await tick();assert.deepEqual(f.calls.at(-1),['recovery']);assert.equal(f.calls.some(c=>c[0]==='flush'),false);
+ byText(f,'More').click();byText(f,'Recover writing').click();await tick();assert.deepEqual(f.calls.at(-1),['recovery']);
  recovery={count:0,unavailable:true,needsReview:true};f.api.decorate();assert.ok(byText(f,'Recovery unavailable'));
  recovery={count:0,unavailable:false,needsReview:false};f.api.decorate();assert.equal(byText(f,'Recover writing (2)'),undefined);assert.equal(f.w.document.querySelector('.cp-saved').textContent,'Saved');
 });
