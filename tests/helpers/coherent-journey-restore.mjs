@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {randomUUID} from 'node:crypto';
 import {digest} from '../../runtime/services/files.mjs';
 
 const OWNERS=new Set(['journal','activity-outbox','icloud-albums','ingestion','recordings','state.json','simmer-boards','consent-desk','study-owned-photo-bindings','study-mcp-human-saves','source-line-checks','guidance','article-visual','shared-article-requests','word-library','library-index.json','articles','request-materials','research-material','terminal','local-transcript-candidates','pieces','library','research-answers','workspaces','first-flow','study-ai-execution','requests','exports','source-originals','article-make','shared-carousel-requests','passage-revisions','magazine','source-translation-proposals','provenance','study-draft-copies','carousel-exports','state.backup.json','study-footage','carousel-make','state.pieces-migration.backup.json','voice-corrections','shared-article-launches','native-carousel-make','study-mcp-requests','study-project-bindings','native-language-acceptance','native-outputs','language-proposals','simmer-operations','study-photos','conversation-captures','needs-you']);
@@ -29,36 +28,29 @@ export function syntheticSnapshot(f,{sourceRevision}){
  for(const row of rows)allowed(row.path);
  return {schema:'ar-create.w8-synthetic-snapshot.v1',inventedOnly:true,closedOwners:true,sourceRevision,legacyHome:root,legacyDataRoot:config.dataDir,catalog:structuredClone(config.studyOriginalRoots.catalog),rows,inventoryHash:digest(JSON.stringify(rows.map(({bytes,...r})=>r))),originalAvailability:{sources:'included-invented',files:'included-invented',recordingOriginals:'not-created'},limits:['Synthetic fixture only','No installed-home claim','No provider or OAuth state','No external Magazine owner relocation']};
 }
-export function restoreSynthetic(snapshot,destination,{beforePublish,afterReserve}={}){
+// The caller creates an empty private mkdtemp directory and exclusively owns
+// it throughout this operation. No atomic publication or protection against
+// concurrent external filesystem mutation is promised. Failures leave partial
+// synthetic files for the caller to inspect and clean up; this helper never
+// removes or replaces a destination.
+export function restoreSynthetic(snapshot,destination){
  snapshot=structuredClone(snapshot);
  assert.equal(snapshot.schema,'ar-create.w8-synthetic-snapshot.v1');assert.equal(snapshot.inventedOnly,true);assert.equal(snapshot.closedOwners,true);assert.ok(Array.isArray(snapshot.rows));
- assert.equal(path.dirname(canonical(path.dirname(destination))),fs.realpathSync(os.tmpdir()),'Destination must be inside a fresh test temp directory');
- assert.equal(fs.existsSync(destination),false,'Nonempty/existing destination refused');
+ canonical(destination);
+ assert.equal(path.dirname(destination),fs.realpathSync(os.tmpdir()),'Destination must be a caller-owned private test temp directory');
+ assert.ok(path.basename(destination).startsWith('w8-restored-'),'Caller-created restore fixture required');
+ assert.ok(fs.lstatSync(destination).isDirectory(),'Destination must be a directory');
+ assert.deepEqual(fs.readdirSync(destination),[],'Nonempty destination refused');
  const seen=new Set();let total=0;
  for(const row of snapshot.rows){allowed(row.path);assert.ok(!seen.has(row.path),'Duplicate path');seen.add(row.path);assert.ok(['directory','file'].includes(row.kind));if(row.kind==='file'){assert.ok(SHA.test(row.hash));const bytes=Buffer.from(row.bytes,'base64');assert.equal(bytes.length,row.size);assert.equal(digest(bytes),row.hash);total+=bytes.length;assert.ok(total<=64*1024*1024,'Bounded fixture only');}}
  assert.equal(snapshot.inventoryHash,digest(JSON.stringify(snapshot.rows.map(({bytes,...r})=>r))),'Inventory changed');
- const stage=path.join(path.dirname(destination),'.w8-stage-'+randomUUID());fs.mkdirSync(stage,{mode:0o700});let published=null;
- try{
-  for(const row of snapshot.rows){const file=path.join(stage,row.path);if(row.kind==='directory')fs.mkdirSync(file,{mode:0o700});else fs.writeFileSync(file,Buffer.from(row.bytes,'base64'),{flag:'wx',mode:0o600});}
-  for(const row of snapshot.rows.filter(r=>r.kind==='file'))assert.equal(digest(fs.readFileSync(path.join(stage,row.path))),row.hash);
-  beforePublish?.();
-  // Never replace the reserved root with rename: another directory may have
-  // taken that path since mkdir. Writes are exclusive and every step checks
-  // the reservation identity. A changed root is preserved, never cleaned up.
-  fs.mkdirSync(destination,{mode:0o700});published=fs.lstatSync(destination);
-  afterReserve?.();
-  const checkReservation=()=>{const visible=fs.lstatSync(destination);assert.ok(visible.isDirectory()&&!visible.isSymbolicLink()&&visible.dev===published.dev&&visible.ino===published.ino,'Destination reservation changed');};
-  checkReservation();
-  for(const row of snapshot.rows){checkReservation();const file=path.join(destination,row.path);if(row.kind==='directory')fs.mkdirSync(file,{mode:0o700});else fs.writeFileSync(file,Buffer.from(row.bytes,'base64'),{flag:'wx',mode:0o600});checkReservation();}
-  for(const row of snapshot.rows.filter(r=>r.kind==='file')){checkReservation();assert.equal(digest(fs.readFileSync(path.join(destination,row.path))),row.hash);}
-  checkReservation();
+  for(const row of snapshot.rows){const file=path.join(destination,row.path);if(row.kind==='directory')fs.mkdirSync(file,{mode:0o700});else fs.writeFileSync(file,Buffer.from(row.bytes,'base64'),{flag:'wx',mode:0o600});}
+  for(const row of snapshot.rows.filter(r=>r.kind==='file'))assert.equal(digest(fs.readFileSync(path.join(destination,row.path))),row.hash);
   const dataDir=path.join(destination,'owned'),copyRoot=path.join(dataDir,'study-draft-copies/copies'),bindings=[];
   for(const bindingId of fs.readdirSync(copyRoot)){
    const room=path.join(copyRoot,bindingId),file=path.join(room,'metadata/ar-project-folder-bindings',bindingId+'.json'),raw=fs.readFileSync(file),binding=JSON.parse(raw),capture=JSON.parse(fs.readFileSync(path.join(room,'capture-manifest.json'))),roots={};
    for(const [key,suffix] of Object.entries({'roots.media':'media','roots.workflow':'workflow',media:'media/Project',derived:'workflow/Derived'})){const p=path.join(room,suffix),s=fs.lstatSync(p);roots[key]={before:key.startsWith('roots.')?binding.roots[key.slice(6)]:binding[key],after:{path:p,dev:s.dev,ino:s.ino}};}
    bindings.push({bindingId,bindingHash:digest(raw),roots,captures:capture.records.filter(r=>!r.missing).map(r=>({copiedPath:r.copiedPath,copiedHash:r.copiedHash,relocatedPath:path.join(room,'capture',path.basename(r.copiedPath))}))});
   }
-  checkReservation();fs.rmSync(stage,{recursive:true,force:true});
   return {schema:'ar-create.w8-synthetic-restored.v1',state:'verified-files-owner-qualification-pending',dataDir,studyOriginalRoots:{vaultRoot:path.join(destination,'sources'),filesRoot:path.join(destination,'files'),catalog:snapshot.catalog},studyRelocation:{schema:'ar-create.study-owned-relocation.v1',legacyDataRoot:snapshot.legacyDataRoot,dataRoot:dataDir,bindings},sourceRevision:snapshot.sourceRevision,inventoryHash:snapshot.inventoryHash};
- }catch(error){fs.rmSync(stage,{recursive:true,force:true});const visible=fs.lstatSync(destination,{throwIfNoEntry:false});if(published&&visible?.dev===published.dev&&visible?.ino===published.ino)fs.rmSync(destination,{recursive:true,force:true});throw error;}
 }
