@@ -28,7 +28,8 @@
       "command": "After an explicit copy action, POST /api/study/outputs/copy-retained-carousel with exactly {rootBindingId,parentStudyId,destinationProjectId:<photoScope.projectId>,destinationDocumentId:<photoScope.documentId>,expectedOutput,expectedNative,operationId:<fresh UUID>,source:{projectId,documentId,outputId,sourceHash,outputHash}}. Keep an exact pending request for safe replay; never change its payload under the same operationId.",
       "result": "Validate returned scope and new output ID, then use its existing read/edit/own-word-review/export owners. A copy never inherits approval or publication. Original photo slots and unsupported appearance metadata can refuse; do not promise every original can copy. No live reader/writer or UI activation is implied by this example."
     },
-    "browserCarouselOrigins": "Optional exact HTTP loopback source origins behind the existing local proxy. The current request origin remains mandatory. No remote origins or arbitrary forwarded headers."
+    "browserCarouselOrigins": "Optional exact HTTP loopback source origins behind the existing local proxy. The current request origin remains mandatory. No remote origins or arbitrary forwarded headers.",
+    "execution": "Optional host-only provider, model and reasoningEffort. Only codex is supported. Omit model/effort to inherit CLI defaults. tools.codex must name a tested executable; PATH and a desktop-bundled CLI may differ. Presence is not a successful model request. No browser/request override or automatic fallback."
   },
   "home": null,
   "dataDir": "/srv/ar-create-example/data",
@@ -65,5 +66,8 @@
   "transcriptLibrary": null,
   "importedTranscriptOwner": null,
   "retainedCarouselState": null,
-  "browserCarouselOrigins": []
+  "browserCarouselOrigins": [],
+  "execution": {
+    "provider": "codex"
+  }
 }
