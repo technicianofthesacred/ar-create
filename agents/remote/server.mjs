@@ -31,25 +31,44 @@ function fields(params){const value=Object.create(null);for(const [k,v]of params
 async function body(req){let length=0;const chunks=[];for await(const c of req){length+=c.length;if(length>MAX_BODY)fail('Request exceeds the connection size limit.',413,'request_too_large');chunks.push(c);}return Buffer.concat(chunks).toString('utf8');}
 function json(text){let value;try{value=JSON.parse(text);}catch{fail('Send one valid JSON object.');}let count=0;function check(v,depth){if(++count>10000||depth>24)fail('JSON structure exceeds the connection limit.',413,'request_too_large');if(v&&typeof v==='object')for(const [k,item]of Object.entries(v)){if(['__proto__','prototype','constructor'].includes(k))fail('Unsupported JSON field.');check(item,depth+1);}}check(value,0);if(!value||Array.isArray(value)||typeof value!=='object')fail('Send one JSON object; batches are unsupported.');return value;}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/** Fixed per-endpoint admission budgets, independent of spoofable client/IP
+ * headers. Gate before body parsing, config reads or auth-store transactions.
+ * Process restart resets rate budgets, never the persisted enrollment deadline. */
+export function createOAuthAdmission({now=()=>Date.now()}={}){
+ const buckets=new Map();
+ return route=>{
+  const key=route.startsWith('/.well-known/oauth-')?'metadata':route.startsWith('/oauth/')?(['register','authorize','token','revoke'].includes(route.slice(7))?route.slice(7):'other'):null;
+  if(!key)return ()=>{};
+  const capacity=key==='register'?8:20,interval=key==='register'?3000:1000,at=now();
+  if(!Number.isFinite(at))fail('Admission clock is unavailable.',503,'temporarily_unavailable');
+  const bucket=buckets.get(key)||{tokens:capacity,at,active:0};buckets.set(key,bucket);
+  bucket.tokens=Math.min(capacity,bucket.tokens+Math.max(0,at-bucket.at)/interval);bucket.at=Math.max(at,bucket.at);
+  if(bucket.active>=2||bucket.tokens<1){const retryAfter=bucket.active>=2?1:Math.max(1,Math.ceil((1-bucket.tokens)*interval/1000));throw Object.assign(Error('OAuth requests are temporarily limited. Retry after the indicated delay.'),{status:429,code:'temporarily_unavailable',retryAfter});}
+  bucket.tokens--;bucket.active++;let released=false;return ()=>{if(!released){released=true;bucket.active--;}};
+ };
+}
 /** Separate, loopback-only listener. Public routing is an explicit deployment
  * gate. Each HTTP request creates a fresh SDK server/transport/principal. */
 export function createRemoteServer(input,{unchanged=()=>true,now}={}){
- const config=validateConfig(input),resource=new URL(config.resourceUrl),auth=createAuthorization({...config,now}),metadata=resource.origin+'/.well-known/oauth-protected-resource/mcp';let active=0;
+ const config=validateConfig(input),resource=new URL(config.resourceUrl),auth=createAuthorization({...config,now}),metadata=resource.origin+'/.well-known/oauth-protected-resource/mcp',admitOAuth=createOAuthAdmission({now});let active=0;
  const server=http.createServer(async(req,res)=>{
   res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
   const send=(status,value,headers={})=>{res.writeHead(status,{'Content-Type':'application/json',...headers});res.end(JSON.stringify(value));};
+  let releaseOAuth;
   try{
-   if(!unchanged())fail('Configuration changed. Restart the adapter before continuing.',503,'configuration_changed');
    // The approved reverse proxy must preserve the exact external Host. Forwarded
    // actor, host and authentication claims never establish an identity here.
    if(req.headers.host!==resource.host)fail('Unexpected request host.',403,'host_forbidden');
    if(req.headers.origin&&req.headers.origin!==resource.origin)fail('Unexpected request origin.',403,'origin_forbidden');
    if(Object.keys(req.headers).some(k=>k.startsWith('x-ar-')))fail('Actor headers are not remote credentials.',403,'actor_forbidden');
    const url=new URL(req.url,resource.origin),route=url.pathname;
+   releaseOAuth=admitOAuth(route);
+   if(!unchanged())fail('Configuration changed. Restart the adapter before continuing.',503,'configuration_changed');
    if(req.method==='GET'&&(route==='/.well-known/oauth-protected-resource/mcp'||route==='/.well-known/oauth-protected-resource'))return send(200,auth.protectedMetadata());
    if(req.method==='GET'&&route==='/.well-known/oauth-authorization-server')return send(200,auth.metadata());
    if(req.method==='GET'&&route==='/health')return send(200,{status:'ready',cloudProof:false});
    if(req.method==='POST'&&route==='/oauth/register'){
+    if(!auth.enrollment().open)fail('Local enrollment is closed. Ask the operator to open a short setup window.',403,'enrollment_closed');
     if(req.headers['content-type']?.split(';')[0]!=='application/json')fail('Use application/json.',415,'unsupported_media_type');
     return send(201,auth.register(json(await body(req))));
    }
@@ -83,7 +102,8 @@ export function createRemoteServer(input,{unchanged=()=>true,now}={}){
     const response=await transport.handleRequest(new Request(config.resourceUrl,{method:'POST',headers,body:JSON.stringify(parsed)}),{parsedBody:parsed});
     const bytes=Buffer.from(await response.arrayBuffer());res.writeHead(response.status,Object.fromEntries(response.headers));res.end(bytes);
    }finally{active--;await mcp?.close();}
-  }catch(e){if(!res.headersSent)send(Number.isInteger(e.status)?e.status:503,safeError(e));else res.end();}
+  }catch(e){if(!res.headersSent)send(Number.isInteger(e.status)?e.status:503,safeError(e),e.retryAfter?{'Retry-After':String(e.retryAfter),'Connection':'close'}:{});else res.end();}
+  finally{releaseOAuth?.();}
  });
  server.requestTimeout=20000;server.headersTimeout=10000;
  return {server,authorization:auth,async listen(){await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(config.port,'127.0.0.1',resolve);});return server.address();},async close(){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}};

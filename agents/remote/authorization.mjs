@@ -14,7 +14,7 @@ const hash=text=>createHash('sha256').update(text).digest('hex');
 const own=(object,key)=>Object.hasOwn(object,key)?object[key]:undefined;
 const canonical=value=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item);
 function fail(code='invalid_request',message='The authorization request is invalid.',status=400){throw Object.assign(new Error(message),{code,status});}
-const ERRORS=new Set(['invalid_request','invalid_client','invalid_redirect_uri','invalid_client_metadata','invalid_target','invalid_grant','invalid_scope','invalid_token','unsupported_grant_type','temporarily_unavailable','server_error']);
+const ERRORS=new Set(['enrollment_closed','invalid_request','invalid_client','invalid_redirect_uri','invalid_client_metadata','invalid_target','invalid_grant','invalid_scope','invalid_token','unsupported_grant_type','temporarily_unavailable','server_error']);
 function guarded(run){try{return run();}catch(error){if(ERRORS.has(error?.code)&&Number.isInteger(error.status))throw error;fail('server_error','Authorization is unavailable; preserve the local state for recovery.',503);}}
 function object(input,allowed,required=[]){if(!input||typeof input!=='object'||Array.isArray(input)||Object.getPrototypeOf(input)!==Object.prototype&&Object.getPrototypeOf(input)!==null||Object.keys(input).some(k=>!allowed.includes(k))||required.some(k=>!Object.hasOwn(input,k)))fail();return input;}
 function text(value,max=256){if(typeof value!=='string'||!value.length||value.length>max||/[\x00-\x1f\x7f]/.test(value))fail();return value;}
@@ -70,17 +70,21 @@ function configureAuthorization({stateDir,resourceUrl,issuerUrl,principals,redir
   let data;try{data=JSON.parse(fs.readFileSync(file,'utf8'));}catch{fail('server_error','Authorization state is unavailable; preserve it for recovery.',503);}
   if(!data||data.schema!=='ar-create.remote-authorization.v1'||TABLES.some(k=>!data[k]||typeof data[k]!=='object'||Array.isArray(data[k])))fail('server_error','Authorization state is unavailable; preserve it for recovery.',503);
   for(const key of TABLES)data[key]=Object.assign(Object.create(null),data[key]);
+  // Existing v1 stores predate enrollment. Preserve every client with evidence
+  // of local approval, including a code or approved response not yet redeemed.
+  const approvedIds=new Set([...Object.values(data.grants),...Object.values(data.codes),...Object.values(data.requests).filter(r=>r.status==='approved'||r.status==='delivered')].map(record=>record.clientId));
+  for(const id of approvedIds){const c=own(data.clients,id);if(c&&c.approvedAt===undefined)c.approvedAt=Number.isFinite(c.client_id_issued_at)?c.client_id_issued_at*1000:0;}
   return data;
  }
  function prune(data,at){
   for(const key of ['requests','codes','tokens','grants'])for(const [id,value]of Object.entries(data[key]))if(value.expiresAt<=at)delete data[key][id];
   for(const [id,c]of Object.entries(data.clients))if(c.expiresAt<=at&&!Object.values(data.grants).some(g=>g.clientId===id))delete data.clients[id];
  }
- function transaction(fn){
+ function transaction(fn,{pruneExpired=true}={}){
   let fd;try{fd=fs.openSync(lock,'wx',0o600);}catch(error){if(error.code==='EEXIST')fail('temporarily_unavailable','Authorization store is busy or needs local lock recovery; retry later.',503);throw error;}
   try{
    fs.writeFileSync(fd,JSON.stringify({pid:process.pid,nonce:randomUUID(),at:clock()})+'\n');fs.fsyncSync(fd);
-   const data=load();prune(data,clock());let result,error;
+   const data=load();if(pruneExpired)prune(data,clock());let result,error;
    try{result=fn(data);}catch(e){error=e;}
    // Persist even refusal-side revocation (a reused refresh/code revokes its grant).
    atomicWrite(file,JSON.stringify(data)+'\n');
@@ -117,7 +121,19 @@ function configureAuthorization({stateDir,resourceUrl,issuerUrl,principals,redir
   return {access_token:access,token_type:'Bearer',expires_in:Math.max(1,Math.floor((accessExpiry-at)/1000)),refresh_token:refresh,scope:SCOPE};
  }
  function revokeGrant(data,id){if(data.grants[id])data.grants[id].revokedAt=clock();}
+ function enrollmentStatus(data){const expiry=data.enrollment?.expiresAt;return {open:Number.isFinite(expiry)&&expiry>clock(),expiresAt:Number.isFinite(expiry)?expiry:null};}
+ function requireEnrollment(data){const status=enrollmentStatus(data);if(!status.open)fail('enrollment_closed','Enrollment is closed; ask the local operator to open a short connection window.',403);return status.expiresAt;}
+ function cleanupUnapproved(data){
+  let removedClients=0,removedRequests=0;
+  for(const [id,c]of Object.entries(data.clients))if(c.approvedAt===undefined){delete data.clients[id];removedClients++;}
+  for(const [id,r]of Object.entries(data.requests))if(r.status==='pending'){delete data.requests[id];removedRequests++;}
+  return {removedClients,removedRequests};
+ }
  const api={
+  enrollment:()=>enrollmentStatus(load()),
+  openEnrollment(seconds=300){if(!Number.isInteger(seconds)||seconds<30||seconds>600)fail('invalid_request','Enrollment must last between 30 and 600 whole seconds.');return transaction(data=>{const cleaned=cleanupUnapproved(data);data.enrollment={expiresAt:clock()+seconds*1000};return {...enrollmentStatus(data),...cleaned};},{pruneExpired:false});},
+  closeEnrollment(){return transaction(data=>{data.enrollment={expiresAt:null};return {...enrollmentStatus(data),...cleanupUnapproved(data)};},{pruneExpired:false});},
+  cleanupEnrollment(){return transaction(data=>({...enrollmentStatus(data),...cleanupUnapproved(data)}),{pruneExpired:false});},
   protectedMetadata:()=>({resource:resourceId,authorization_servers:[issuerId],bearer_methods_supported:['header'],scopes_supported:[SCOPE]}),
   metadata:()=>({issuer:issuerId,authorization_endpoint:issuerId+'/oauth/authorize',token_endpoint:issuerId+'/oauth/token',registration_endpoint:issuerId+'/oauth/register',revocation_endpoint:issuerId+'/oauth/revoke',response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],token_endpoint_auth_methods_supported:['none'],revocation_endpoint_auth_methods_supported:['none'],code_challenge_methods_supported:['S256'],scopes_supported:[SCOPE],authorization_response_iss_parameter_supported:true}),
   register(input){
@@ -126,16 +142,16 @@ function configureAuthorization({stateDir,resourceUrl,issuerUrl,principals,redir
    const inert=inertMetadata(input); // Display metadata only; never fetch these URLs or treat them as identity.
    if(!Array.isArray(input.redirect_uris)||!input.redirect_uris.length||input.redirect_uris.length>4||new Set(input.redirect_uris).size!==input.redirect_uris.length||input.redirect_uris.some(r=>typeof r!=='string'||!redirects.includes(r)))fail('invalid_redirect_uri','Client redirects must exactly match the configured allowlist.');
    if(input.token_endpoint_auth_method!==undefined&&input.token_endpoint_auth_method!=='none'||input.grant_types!==undefined&&(!Array.isArray(input.grant_types)||!input.grant_types.includes('authorization_code')||input.grant_types.some(g=>!['authorization_code','refresh_token'].includes(g)))||input.response_types!==undefined&&canonical(input.response_types)!=='["code"]')fail('invalid_client_metadata','Only public authorization-code clients with PKCE are supported.');
-   return transaction(data=>{capacity(data,'clients');const id='client_'+secret(),at=clock(),c={...inert,client_id:id,client_name:input.client_name||'Unverified remote MCP client',redirect_uris:[...input.redirect_uris],token_endpoint_auth_method:'none',grant_types:['authorization_code','refresh_token'],response_types:['code'],client_id_issued_at:Math.floor(at/1000),expiresAt:at+TTL.client};data.clients[id]=c;const {expiresAt,...response}=c;return response;});
+   return transaction(data=>{const deadline=requireEnrollment(data);capacity(data,'clients');const id='client_'+secret(),at=clock(),c={...inert,client_id:id,client_name:input.client_name||'Unverified remote MCP client',redirect_uris:[...input.redirect_uris],token_endpoint_auth_method:'none',grant_types:['authorization_code','refresh_token'],response_types:['code'],client_id_issued_at:Math.floor(at/1000),expiresAt:deadline};data.clients[id]=c;const {expiresAt,...response}=c;return response;});
   },
   requestAuthorization(input){
    object(input,['client_id','redirect_uri','response_type','code_challenge','code_challenge_method','resource','state','scope'],['client_id','redirect_uri','response_type','code_challenge','code_challenge_method','resource','state','scope']);
    text(input.state,1024);text(input.redirect_uri,2048);if(input.response_type!=='code'||input.code_challenge_method!=='S256'||typeof input.code_challenge!=='string'||!/^[-_a-zA-Z0-9]{43}$/.test(input.code_challenge)||input.scope!==SCOPE)fail();
    if(input.resource!==resourceId)fail('invalid_target','The requested resource is not this MCP endpoint.');
-   return transaction(data=>{const c=client(data,input.client_id,input.redirect_uri);capacity(data,'requests');const ticket=secret(),expiresAt=clock()+TTL.request;data.requests[ticket]={ticket,clientId:c.client_id,clientName:c.client_name,redirectUri:input.redirect_uri,resource:resourceId,scopes:[SCOPE],state:input.state,challenge:input.code_challenge,expiresAt,status:'pending'};return {ticket,expiresAt,status:'pending'};});
+   return transaction(data=>{const c=client(data,input.client_id,input.redirect_uri);capacity(data,'requests');const ticket=secret(),expiresAt=c.approvedAt===undefined?Math.min(clock()+TTL.request,c.expiresAt,requireEnrollment(data)):clock()+TTL.request;data.requests[ticket]={ticket,clientId:c.client_id,clientName:c.client_name,redirectUri:input.redirect_uri,resource:resourceId,scopes:[SCOPE],state:input.state,challenge:input.code_challenge,expiresAt,status:'pending'};return {ticket,expiresAt,status:'pending'};});
   },
   requests(){const data=load();return Object.values(data.requests).filter(r=>r.expiresAt>clock()&&r.status!=='delivered').map(({ticket,clientId,clientName,redirectUri,resource,scopes,expiresAt,status,principalId})=>({ticket,clientId,clientName,redirectUri,resource,scopes,expiresAt,status,...(principalId?{principalId}:{})}));},
-  approve(ticket,principalId){text(ticket,128);text(principalId,64);return transaction(data=>{const r=data.requests[ticket];if(!r||r.expiresAt<=clock()||r.status!=='pending')fail('invalid_request','This connection request is unavailable or already decided.');const p=principal(principalId,data);bindRedirect(r.redirectUri,p);r.status='approved';r.principalId=p.id;r.principalPin=pin(p);return {ticket,status:'approved',principalId:p.id,projectIds:p.projectIds,tools:p.tools,expiresAt:r.expiresAt};});},
+  approve(ticket,principalId){text(ticket,128);text(principalId,64);return transaction(data=>{const r=data.requests[ticket];if(!r||r.expiresAt<=clock()||r.status!=='pending')fail('invalid_request','This connection request is unavailable or already decided.');const c=client(data,r.clientId,r.redirectUri);if(c.approvedAt===undefined)requireEnrollment(data);const p=principal(principalId,data);bindRedirect(r.redirectUri,p);const at=clock();c.approvedAt??=at;c.expiresAt=at+TTL.client;r.expiresAt=Math.min(at+TTL.request,Date.parse(p.expiresAt));r.status='approved';r.principalId=p.id;r.principalPin=pin(p);return {ticket,status:'approved',principalId:p.id,projectIds:p.projectIds,tools:p.tools,expiresAt:r.expiresAt};});},
   authorization(ticket){text(ticket,128);return transaction(data=>{const r=data.requests[ticket];if(!r||r.expiresAt<=clock())fail('invalid_request','This connection request expired; reconnect.');if(r.status==='pending')return {ticket,status:'pending',expiresAt:r.expiresAt};if(r.status!=='approved')fail('invalid_request','This connection response was already delivered; reconnect if it was lost.');const p=principal(r.principalId,data);bindRedirect(r.redirectUri,p);if(pin(p)!==r.principalPin)fail('invalid_grant','The configured delegation changed; reconnect.');client(data,r.clientId,r.redirectUri);capacity(data,'codes');const code=secret(),at=clock();data.codes[hash(code)]={principalId:p.id,principalPin:pin(p),clientId:r.clientId,redirectUri:r.redirectUri,resource:resourceId,challenge:r.challenge,expiresAt:Math.min(at+TTL.code,Date.parse(p.expiresAt))};r.status='delivered';const redirect=new URL(r.redirectUri);redirect.searchParams.set('code',code);redirect.searchParams.set('state',r.state);redirect.searchParams.set('iss',issuerId);return {status:'approved',redirectUri:redirect.href};});},
   token(input){
    if(!input||typeof input!=='object')fail();

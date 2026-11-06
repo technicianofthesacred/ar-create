@@ -43,14 +43,24 @@ For ChatGPT, add a separate principal with actor `agent:chatgpt`, provider `open
 
 Run `node agents/remote/server.mjs --config ABS_EXTERNAL_CONFIG`. It binds only loopback. An independently approved HTTPS proxy must route `/mcp`, `/oauth/*`, and the two OAuth metadata routes to it, preserve the external Host and Authorization header, enforce suitable network/request limits, and avoid logging credentials, authorization codes, ticket URLs or bodies. Do not route the local owner's API or change its host restrictions. No common server mount is required.
 
-In the actual connector/plugin setup, enter the approved `/mcp` endpoint and choose OAuth. The browser displays a pending request. On the Mac, run:
+Enrollment starts closed. Immediately before the observed connector setup, open a five-minute window locally:
+
+```sh
+node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG enrollment
+node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG open-enrollment 300
+```
+
+The allowed window is 30–600 seconds. It persists across process restart and never extends itself. In the actual connector/plugin setup, enter the approved `/mcp` endpoint and choose OAuth. The browser displays a pending request. On the Mac, run:
 
 ```sh
 node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG requests
 node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG approve EXACT_TICKET EXACT_PRINCIPAL_ID
+node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG close-enrollment
 ```
 
-Review the exact callback, initiated connection, intended principal and configured scope before approval; client names are unverified. Return to the browser and select **Check approval**. There is no public approve endpoint. Do not paste bearer credentials into chat or configuration examples. If redirect delivery was lost, start a new connection request.
+Review the exact callback, initiated connection, intended principal and configured scope before approval; client names are unverified. Close enrollment immediately after the exact approval; approved requests still complete their code/token exchange, and approved client refresh continues. Return to the browser and select **Check approval**. There is no public approve endpoint. Do not paste bearer credentials into chat or configuration examples. If redirect delivery was lost, start a new connection request.
+
+If unapproved attempts fill capacity, close enrollment and run `node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG cleanup-enrollment`. This removes only never-approved registrations and pending requests, preserving approved clients, codes/tokens/grants, revocations and operation receipts. A local cleanup remains available when HTTP rate limits are exhausted. Reopen briefly for the observed setup and use a fresh request; do not erase authorization state. HTTP 429 includes Retry-After; registration flooding has a separate budget from token refresh. These bounded controls protect temporary synthetic qualification, not production availability against sustained attacks.
 
 Revoke a principal locally with `node agents/remote/admin.mjs --config ABS_EXTERNAL_CONFIG revoke-principal EXACT_PRINCIPAL_ID`. Revocation survives restart. A later new grant uses a deliberately configured new principal ID; never erase revocation or delivery history to reconnect. Stop the listener and remove approved proxy routing to disable the endpoint. Preserve private auth/delivery state for reconciliation; it contains no manuscript copy.
 

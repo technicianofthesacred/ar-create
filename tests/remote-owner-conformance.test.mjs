@@ -109,11 +109,12 @@ test('authenticated HTTP MCP SDK clients prepare, stage and resume the same real
  await adapter.listen();const clients=[];
  try{
   for(const principal of principals){
+   adapter.authorization.openEnrollment(300);
    // OAuth HTTP behavior has its own suite; use the actual authorization owner
    // here to issue independent PKCE-bound credentials, never bypass token checks.
    const auth=adapter.authorization,registered=auth.register({client_name:'Synthetic native journey',redirect_uris:[redirect],token_endpoint_auth_method:'none'}),verifier=randomBytes(32).toString('base64url');
    const pending=auth.requestAuthorization({client_id:registered.client_id,redirect_uri:redirect,response_type:'code',code_challenge_method:'S256',code_challenge:createHash('sha256').update(verifier).digest('base64url'),resource,state:'synthetic-'+principal.id,scope:'ar-create'});
-   assert.equal(auth.authorization(pending.ticket).status,'pending');auth.approve(pending.ticket,principal.id);const callback=new URL(auth.authorization(pending.ticket).redirectUri);
+   assert.equal(auth.authorization(pending.ticket).status,'pending');auth.approve(pending.ticket,principal.id);auth.closeEnrollment();const callback=new URL(auth.authorization(pending.ticket).redirectUri);
    const token=auth.token({grant_type:'authorization_code',client_id:registered.client_id,redirect_uri:redirect,code:callback.searchParams.get('code'),code_verifier:verifier,resource});
    // A client-supplied display name cannot turn this agent delegation into human authority.
    const client=new Client({name:'human:adrian',version:'synthetic'});
