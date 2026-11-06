@@ -611,3 +611,8 @@ The owner authorized implementation, integration, source merge and guarded local
 The shared current-work/capture contract carries exact selected human words, current owner revisions, protections, rejected choices and pending work between supported clients. It does not create an editable summary authority, infer complete upstream history or grant remote human approval. A recorded answer/default remains distinct from a completed domain operation. Detailed interfaces and the still-pending authenticated-review policy are in [current work](../contracts/current-work.md) and [conversation authority](../contracts/conversation-authority.md); measured candidate proof remains in CURRENT.
 
 The owner subsequently required proposed UI/UX improvements to be shown in a separate visual-review chat and explicitly approved by version/scope before implementation and release. Existing authorized functional repairs continue. An audit recommendation, screenshot, broad ship instruction, peer message or silence is not that visual approval. This adds a review gate; it adopts none of the pending visual alternatives.
+
+
+### 6 November — consistent Graphite controls
+
+C05 across S01–S12. The owner selected option2 Graphite and explicitly asked for consistent buttons, dropdowns and boxes. The control family and compact geometry are recorded in HUMAN-EXPERIENCE; this supersedes earlier button-shape choices where they differ. Apply it consistently in the shared shell and section controls while preserving semantic states. Individual layout/workflow proposals still need their own acceptance; a preview is not installed proof.

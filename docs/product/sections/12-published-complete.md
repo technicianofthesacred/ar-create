@@ -70,3 +70,8 @@ C01/C02/C04/C06: every entrance retains its actual actor. Navigation and selecti
 ## 29 October — Decisions, not generic draft tasks
 
 Next moves comes from current saved questions and explicit review/correction states. A draft’s mere presence does not create a waiting decision. Keep ordinary available work in the existing inventory and report unavailable decision coverage honestly. Re-read a question or output’s current identity before opening it; stale questions must not become a new decision or approval.
+
+
+## 6 November — adopted control family
+
+Use the Graphite button/field/dropdown/box family recorded in [HUMAN-EXPERIENCE](../HUMAN-EXPERIENCE.md#graphite-controls--adopted-6-november-2026). C05: this settles control styling only; section layout/workflow acceptance and native preservation proof remain separate.

@@ -95,3 +95,8 @@ Drafts wait as one read-through (3 November 2026), read in the main reading colu
 ## Reconciled Source approval — 6 November 2026
 
 The preserved 25 October decision approved conversation-first Source review, with each selected translation proposal beside its passage on desktop and immediately after it on narrow screens. Keep Save/Next compact, Undo/History stable and primary work free of accordions. Use current Combined typography and navigation. Functional Save/Undo proof does not establish readable visual acceptance; inspect the actual connected screen. This recovers the bounded approved hierarchy without reviving superseded C Workbench/Atlas styling or authorizing real proposal acceptance.
+
+
+## Graphite controls — adopted 6 November 2026
+
+C05 across S01–S12. Adrian selected option 2, Graphite, and asked to apply it consistently with matching dropdowns and boxes. Use compact 6px rounded rectangles, 13px/600 button text, flat neutral secondary actions and solid graphite primary actions. Selects, fields, textareas and existing boxes share the neutral border/palette and 6px corners; keep semantic hold/warning colors. Preview geometry uses 28px desktop/32px phone visible controls with usable 44px phone targets. These are adopted web design choices informed by Apple guidance, not claimed Apple-mandated dimensions. This adopts the control family; it does not accept unrelated layouts, workflows or installation. Actual native screen proof remains required.
