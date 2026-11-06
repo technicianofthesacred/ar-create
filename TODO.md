@@ -8,6 +8,7 @@ W0 owns integration and release. PR216 is installed as `9bb522b` (`v2026.11.06-p
 
 | Work / requirements | Owner and reserved files | Dependency / state | Observable finish |
 |---|---|---|---|
+| Sidebar readability · C02/C05 | codex/sidebar-readable: combined-navigation.js/css and focused tests | Candidate verified; not installed | Readable 112px compact rail; clear top Expand/Collapse; 196px expanded; persisted choice; aligned Home and desktop/tablet light/dark plus phone screen proof |
 | W0 baseline/integration · C02/C03/C04/C05/C06 S01/S08/S10 | W0: shared mounts, integration and release | PR216 installed; follow-up integrates configured original-photo browsing, adopted complete interface and exact-job recording availability | Exact CI/official release/live bytes; installed 26-photo Back/Forward and all Material targets verified, then open Main |
 | W1 unsaved recovery · C01/C04 S05/S06 | W1: draft-flow.js, combined-piece.js recovery-menu seam and focused helpers/tests | INTEGRATED_VERIFIED at 818d4ba; bounded reliability/native proof in CURRENT | Both tabs and pieces survive offline close/reload, deliberate conflict resolution and exact Undo |
 | W2 change feed/history · C02/C04/C06 | W2: events/journal, browser event consumer, files.mjs scoped receipt observer; exclusive event-only server/MCP seams | INTEGRATED_VERIFIED at 818d4ba; bounded reliability/native proof in CURRENT | Ordered catch-up/reset plus recoverable exactly-once committed activity under injected failure |

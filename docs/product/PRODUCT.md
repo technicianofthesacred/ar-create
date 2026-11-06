@@ -35,6 +35,10 @@ Projects can begin with a recording, supplied transcript, typed idea, photo, lin
 
 The current approved direction is **Combined**, adopted 30 October 2026 from the separately supplied thirteen-screen reference and its HTML sources. It supersedes the C Workbench presentation where they differ, while preserving existing content, owners, editing/recovery, all 35 functions and historical requirements. Home, Subjects and Library; Source, Research and Direction; Check, Media and Arrange; Audience, Share and Outputs form the unnumbered twelve-item rail. The historical S01–S12 IDs remain stable requirements and deep-link identities, not a compulsory visible sequence. Approval of this direction is not proof of installation or acceptance.
 
+### Sidebar readability — 6 November 2026
+
+C02/C05: the compact sidebar retains complete readable destination names and group labels with a slightly wider rail. Its visible arrow control clearly says Expand or Collapse, stays near the top and preserves the chosen width. Finish: verify both widths, reload persistence, keyboard focus, aligned Home content and unclipped labels on desktop/tablet in light/dark; phone keeps its existing navigation.
+
 ### Typography
 
 Use Plus Jakarta Sans for interface and authored working text, retaining the shared A− / A+ control and matching Write/Read document geometry. Lora is reserved for spoken transcript words. Render the paragraph sign in a serif so “¶6” remains distinguishable from “16”. Existing output-template typography remains its own authority. This Combined rule supersedes the earlier broad Atlas assignments and Source-only Atlas appearance where they conflict; source identities, speech attribution and correction behavior do not change.
