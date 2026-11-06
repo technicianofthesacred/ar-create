@@ -3,7 +3,7 @@
  if(window.studySourcePresentation)return;
  const doc=document,rooms=new WeakMap();let queued=false;
  const make=(tag,cls,text)=>{const n=doc.createElement(tag);if(cls)n.className=cls;if(text)n.textContent=text;return n;};
- const button=(text,fn)=>{const n=make('button','',text);n.type='button';n.onclick=fn;return n;};
+ const button=(text,fn)=>{const n=make('button','ar-destination',text);n.type='button';n.onclick=fn;return n;};
  function decorate(){
   const p=typeof current==='function'?current():null;if(p?.view!=='record'||Number(p.viewedStage)!==2)return;
   const lane=doc.getElementById('stage-working-lane');if(!lane)return;

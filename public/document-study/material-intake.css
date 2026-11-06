@@ -1,91 +1,73 @@
+/* Material occupies the preserved browser container as one exclusive workspace.
+   The closed entrance is rendered in Library's header, never floating over it. */
 .wfb-browser.mi-open>:not([data-mi-root]){display:none!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app{
- .mi-root{padding:8px 0 24px!important;font-family:var(--ar-ui)!important;font-size:var(--t-body)!important;color:var(--ink)!important;position:relative}
- .mi-root.mi-drag{background:var(--sel)!important;outline:1px dashed var(--warm)!important;outline-offset:-1px;border-radius:5px!important}
- .mi-root button,.mi-root a,.mi-root input{font:inherit!important;font-size:var(--t-label)!important;min-height:32px;border-radius:5px!important;box-shadow:none!important}
- .mi-heading{display:flex!important;align-items:center!important;gap:12px!important;padding:0 0 10px!important;border:0!important}
- .mi-heading h2{flex:1!important;margin:0!important;font-size:var(--t-body)!important;font-weight:600!important;font-family:var(--ar-ui)!important;color:var(--ink)!important}
- .mi-heading button,.mi-microphone button:not(.mi-primary),.mi-actions .mi-quiet,.mi-actions .mi-play{background:transparent!important;border:0!important;color:var(--dim)!important;padding:4px 8px!important;cursor:pointer}
- .mi-heading button:hover,.mi-microphone button:hover:not(:disabled),.mi-actions .mi-quiet:hover:not(:disabled),.mi-actions .mi-play:hover{color:var(--ink)!important;background:var(--sel)!important}
- .mi-microphone{display:flex!important;align-items:center!important;gap:4px!important;flex-wrap:wrap!important;padding:6px 0!important;margin:0!important;border:0!important;border-top:1px solid var(--line)!important;border-bottom:1px solid var(--line)!important}
- .mi-microphone button{padding:4px 10px!important;color:var(--ink)!important}
- .mi-microphone span{font-size:var(--t-label)!important;color:var(--dim)!important}
- .mi-microphone input[type=url]{flex:1 1 160px;min-width:0;max-width:280px;background:transparent!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;padding:4px 6px!important;color:var(--ink)!important}
- .mi-microphone input[type=url]::placeholder{color:var(--dim)}
- .mi-microphone input[type=url]:focus{outline:none!important;border-bottom-color:var(--warm)!important}
- .mi-microphone .mi-drop{margin-left:auto!important;font-size:var(--t-label)!important}
- .mi-heading button:disabled,.mi-microphone button:disabled,.mi-actions button:disabled{opacity:.45!important;cursor:default}
- .mi-root [data-mi-message],.mi-note{margin:10px 0 0!important;font-size:var(--t-label)!important;color:var(--dim)!important;max-width:none!important}
- .mi-root [data-mi-message]{color:var(--warm)!important}
- .mi-jobs{list-style:none!important;margin:6px 0 0!important;padding:0!important}
- .mi-jobs>li{display:grid!important;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0!important;margin:0!important;border:0!important;border-bottom:1px solid var(--line)!important;background:transparent!important;box-shadow:none!important}
- .mi-kind{color:var(--dim);padding-top:1px;display:flex}
- .mi-main{min-width:0}
- .mi-top{display:flex;align-items:baseline;gap:10px;min-width:0}
- .mi-top strong{display:block!important;font-weight:500!important;color:var(--ink)!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
- .mi-tag{flex:none;font-size:var(--t-label);color:var(--dim);border-bottom:1px dotted var(--line);white-space:nowrap}
- .mi-meta{margin:2px 0 0!important;font-size:var(--t-label)!important;color:var(--dim)!important}
- .mi-meta .mi-state{margin:0!important;display:inline!important;font-size:inherit!important}
- .mi-state.mi-warm{color:var(--warm)!important}.mi-state.mi-good{color:var(--good)!important}.mi-state.mi-bad{color:var(--bad)!important}.mi-state.mi-dim{color:var(--dim)!important}
- .mi-error{margin:4px 0 0!important;font-size:var(--t-label)!important;color:var(--bad)!important;max-width:none!important}
- .mi-progress{margin-top:8px;max-width:320px;font-size:var(--t-label);color:var(--dim)}
- .mi-progress i{display:block;height:2px;margin-top:4px;background:var(--line);position:relative;overflow:hidden}
- .mi-progress i::after{content:"";position:absolute;inset:0 auto 0 0;width:35%;background:var(--warm);animation:mi-run 1.6s ease-in-out infinite}
- @media(prefers-reduced-motion:reduce){.mi-progress i::after{animation:none;width:100%;opacity:.5}}
- .mi-actions{display:flex!important;align-items:center!important;gap:6px!important;justify-content:flex-end;flex-wrap:nowrap!important}
- .mi-actions .mi-primary{display:inline-flex;align-items:center;background:var(--warm)!important;color:var(--paper)!important;border:0!important;padding:4px 12px!important;text-decoration:none!important;white-space:nowrap;cursor:pointer;font-weight:500}
- .mi-actions .mi-primary:hover:not(:disabled){filter:brightness(1.08)}
- .mi-actions .mi-quiet{display:inline-flex;align-items:center;text-decoration:none!important;white-space:nowrap}
- .mi-actions a.mi-quiet{color:var(--dim)!important;padding:4px 8px!important}
- .mi-actions .mi-play{display:inline-flex;align-items:center;justify-content:center;width:32px;padding:0!important}
- .mi-here{font-size:var(--t-label);color:var(--good);white-space:nowrap}
- @media(max-width:600px){
-  .mi-jobs>li{grid-template-columns:20px minmax(0,1fr)}
-  .mi-actions{grid-column:2;justify-content:flex-start;flex-wrap:wrap!important}
-  .mi-microphone .mi-drop{display:none}
-  .mi-microphone input[type=url]{flex:1 1 calc(100% - 80px);max-width:none}
- }
-}
+.wfb-browser:not(.mi-open)>[data-mi-root]{display:none!important}
+.wfb-browser.mi-open{display:flex!important;flex-direction:column!important;min-width:0;min-height:0}
+.wfb-browser.mi-open>[data-mi-root]{position:relative!important;inset:auto!important;flex:1!important;width:100%!important;min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;scrollbar-color:var(--line) transparent}
+.shell:has(.wfb-browser.mi-open)>aside.wb-panel{display:none!important}
+.shell:has(.wfb-browser.mi-open)>main{grid-column:2/-1!important}
+.mi-root{padding:0 0 24px;font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif);color:var(--ink)}
+.mi-root.mi-drag{background:var(--sel);outline:1px dashed var(--warm);outline-offset:-1px;border-radius:6px}
+.mi-heading{display:flex;align-items:center;gap:16px;margin:0 0 12px;padding:0;min-height:40px}
+.mi-heading h2{flex:1;margin:0;font:650 20px/1.35 var(--ar-ui,sans-serif);color:var(--ink)}
+.mi-import,.mi-microphone,.mi-pickup{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0;padding:12px 0;border:0;border-bottom:1px solid var(--line);font-size:13px}
+.mi-import{padding-top:0}
+.mi-import input[type=url]{flex:1 1 200px;min-width:0;max-width:30rem}
+.mi-import .mi-drop{font-size:12px;color:var(--dim);margin-left:auto}
+.mi-microphone>span,.mi-pickup-tally{font-size:12px;color:var(--dim)}
+.mi-microphone audio{max-width:min(100%,300px)}
+.mi-pickup>strong{font-size:13px;font-weight:600;color:var(--ink)}
+.mi-pickup-setup{flex-basis:100%;display:grid;gap:8px;padding:12px 0;color:var(--ink)}
+.mi-pickup-setup p,.mi-pickup-setup ol{margin:0}
+.mi-pickup-setup ol{padding-left:20px}
+.mi-pickup-setup code{display:block;padding:8px 10px;background:var(--sel);font-size:12px;overflow-wrap:anywhere;user-select:all;border-radius:6px}
+.mi-root [data-mi-message],.mi-note{margin:10px 0 0;font-size:13px;color:var(--dim);max-width:none;overflow-wrap:anywhere}
+.mi-root [data-mi-message]{color:var(--warm)}
+.mi-jobs{list-style:none;margin:4px 0 0;padding:0}
+.mi-jobs>li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;margin:0;border:0;border-bottom:1px solid var(--line);background:transparent;box-shadow:none;min-width:0}
+.mi-kind{display:flex;padding-top:7px;color:var(--dim)}
+.mi-main{min-width:0}
+.mi-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;min-width:0}
+.mi-top strong{font-weight:500;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.mi-tag{font-size:12px;color:var(--dim);overflow-wrap:anywhere}
+.mi-meta{margin:2px 0 0;font-size:12px;color:var(--dim)}
+.mi-meta .mi-state{display:inline;margin:0;font-size:inherit}
+.mi-state.mi-warm{color:var(--warm)}.mi-state.mi-good{color:var(--good)}.mi-state.mi-bad{color:var(--bad)}.mi-state.mi-dim{color:var(--dim)}
+.mi-error{margin:4px 0 0;font-size:13px;color:var(--bad);max-width:none;overflow-wrap:anywhere}
+.mi-progress{margin-top:8px;max-width:320px;font-size:12px;color:var(--dim)}
+.mi-progress i{display:block;height:2px;margin-top:4px;background:var(--line);position:relative;overflow:hidden}
+.mi-progress i::after{content:"";position:absolute;inset:0 auto 0 0;width:35%;background:var(--warm);animation:mi-run 1.6s ease-in-out infinite}
+.mi-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;max-width:24rem}
+.mi-actions a{text-decoration:none}
+.mi-here{font-size:12px;color:var(--good)}
+.mi-actions [data-mi-source-none]{display:none!important}
 @keyframes mi-run{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
-/* Material is its own page: the Library folder panel steps aside while it is open. */
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body .shell:has(> main .wfb-browser.mi-open) > aside.wb-panel{display:none!important}
-/* Quieter rows: the one action per row is outlined in gold, not filled; "+ Add to a subject" waits until a subject is open. */
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions .mi-primary{background:transparent!important;color:var(--warm)!important;border:1px solid color-mix(in srgb,var(--warm) 60%,var(--line))!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions .mi-primary:hover:not(:disabled){background:color-mix(in srgb,var(--warm) 12%,transparent)!important;filter:none}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-actions [data-mi-source-none]{display:none!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body .shell:has(> main .wfb-browser.mi-open) > main{grid-column:2 / -1!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:8px 12px!important;padding:8px 0!important;margin:0!important;border:0!important;border-top:1px solid var(--line)!important;font-family:var(--ar-ui)!important;font-size:var(--t-label)!important;color:var(--dim)!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup>strong{font-weight:600!important;color:var(--ink)!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button{padding:4px 12px!important;cursor:pointer;background:transparent!important;color:var(--ink)!important;border:1px solid var(--line)!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button.mi-primary{background:var(--warm)!important;color:var(--paper)!important;border:0!important;font-weight:500}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button[data-mi-pickup-setup]{color:var(--warm)!important;border-color:color-mix(in srgb,var(--warm) 60%,var(--line))!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button:disabled{opacity:.55;cursor:default}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-tally{color:var(--dim)!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup{flex-basis:100%;display:grid;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:5px;color:var(--ink)}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup p,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup ol{margin:0;padding-left:0}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup ol{padding-left:18px}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup code{display:block;padding:8px 10px;border-radius:5px;background:var(--sel);font-family:var(--ar-mono,ui-monospace,monospace);font-size:var(--t-label);overflow-wrap:anywhere;user-select:all}
-@media (pointer:coarse){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button{min-height:44px}}
-
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title{
- display:block!important;min-width:0;max-width:100%;padding:0!important;text-align:left!important;
- color:var(--ink)!important;font-size:var(--t-body)!important;font-weight:600!important;
- background:transparent!important;border:0!important;text-decoration:underline!important;text-decoration-color:var(--line)!important;text-underline-offset:4px;
- white-space:normal;overflow-wrap:anywhere;cursor:pointer;
+@media(prefers-reduced-motion:reduce){.mi-progress i::after{animation:none;width:100%;opacity:.5}}
+@media(max-width:1000px){.mi-jobs>li{grid-template-columns:20px minmax(0,1fr)}.mi-actions{grid-column:2;justify-content:flex-start;max-width:none}}
+@media(max-width:760px){
+ .mi-heading{gap:8px;margin-bottom:12px}.mi-heading h2{font-size:20px}
+ .mi-import,.mi-microphone,.mi-pickup{gap:6px 10px;padding:10px 0}
+ .mi-import input[type=url]{flex:1 1 140px;max-width:none}.mi-import .mi-drop{display:none}
+ .mi-jobs>li{gap:4px 8px;padding:10px 0}.mi-kind{padding-top:12px}
+ .mi-top{display:block}.mi-tag{display:block;margin-top:2px}
+ .mi-pickup>strong{flex:1 1 auto}
 }
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:hover{text-decoration-color:currentColor!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:focus-visible{outline:2px solid var(--warm)!important;outline-offset:3px}
-/* The phone intake list scrolls inside the existing bounded Library workspace. */
-.wfb-browser.mi-open>[data-mi-root]{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-color:var(--line) transparent}
-/* Material names are opening targets, not Graphite action buttons. Keep this
-   scoped exception in the control layer so its important rules resolve there. */
-@layer graphite-controls {
- .mi-root .mi-top .mi-item-title{
-  background:transparent!important;border:0!important;border-radius:0!important;
-  padding:0!important;min-height:32px!important;box-shadow:none!important;
-  font:500 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)!important;
-  white-space:normal!important;text-decoration:none!important;filter:none!important;
- }
+/* The important Graphite layer scopes exceptions to semantic roles only. */
+@layer graphite-controls{
+ .mi-root :is(button,a,input){font:500 13px/1.4 var(--ar-ui,sans-serif)!important;min-height:32px;border-radius:6px!important;box-shadow:none!important}
+ .mi-root .mi-top .mi-item-title{display:block!important;min-width:0!important;max-width:100%!important;min-height:28px!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;text-align:left!important;color:var(--ink)!important;font:500 14px/1.5 var(--ar-ui,sans-serif)!important;white-space:normal!important;overflow-wrap:anywhere;text-decoration:none!important;cursor:pointer}
  .mi-root .mi-top .mi-item-title:hover{text-decoration:underline!important;text-underline-offset:4px}
- @media(max-width:650px),(pointer:coarse){.mi-root .mi-top .mi-item-title{min-height:44px!important}}
+ .mi-root .mi-top .mi-item-title:focus-visible{outline:2px solid var(--warm)!important;outline-offset:3px}
+ .mi-root .mi-heading>button,.mi-root .mi-actions .mi-quiet,.mi-root .mi-actions .mi-play{background:transparent!important;border-color:transparent!important;color:var(--dim)!important;padding:4px 8px!important}
+ .mi-root .mi-heading>[data-mi-refresh]{width:32px;min-width:32px;display:grid;place-items:center;padding:0!important}
+ .mi-root .mi-actions .mi-play{display:grid;place-items:center;width:32px;min-width:32px;padding:0!important}
+ .mi-root .mi-import>[data-mi-choose]{background:var(--warm)!important;color:var(--bg)!important;border-color:var(--warm)!important;font-weight:600!important}
+ .mi-root .mi-actions .mi-primary{background:transparent!important;color:var(--warm)!important;border:1px solid color-mix(in srgb,var(--warm) 60%,var(--line))!important;padding:4px 10px!important;display:inline-flex;align-items:center;white-space:nowrap}
+ .mi-root :is(button,a):hover:not(:disabled){filter:none!important;background:var(--sel)!important;color:var(--ink)!important}
+ .mi-root :is(button,input):disabled{opacity:.5!important;cursor:default}
+ @media(max-width:760px),(pointer:coarse){
+  .mi-root :is(button,a,input){min-height:44px!important}
+  .mi-root .mi-top .mi-item-title{min-height:44px!important}
+  .mi-root .mi-heading>[data-mi-refresh],.mi-root .mi-actions .mi-play{width:44px;min-width:44px}
+ }
 }
