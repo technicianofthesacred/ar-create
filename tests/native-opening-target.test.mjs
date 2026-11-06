@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {capture,projection,apply} from '../runtime/services/draft-correspondence.mjs';
-import {openingProposalTarget,proposalEditable,continuationProposalTarget} from '../runtime/services/native-proposal-capability.mjs';
+import {capture,projection,apply,render} from '../runtime/services/draft-correspondence.mjs';
+import {openingProposalTarget,proposalEditable,continuationProposalTarget,scopedRevisionProposalTargets} from '../runtime/services/native-proposal-capability.mjs';
 const baseline=raw=>{const model=capture(raw,'invented-opening');return{raw,projection:projection(model).map((row,i)=>({...row,raw:model.blocks[i].raw})),model};};
 test('opening replacement preserves donor-proven edge separators without admitting interior newlines or formatting',()=>{
  for(const edges of [['\n','\n'],['\r\n','\r\n'],[' ',' ']]){
@@ -26,4 +26,14 @@ test('altered projection bytes and ambiguous native separators refuse before a t
 
 test('continuation uses the accepted donor snapshot and holds extra scaffolds or altered stable identities',()=>{
  const b=baseline('---\nkind: draft\n---\n\nTitle: Invented\n\n---\n\n\n---\n\nRetained footer.'),openingTarget=openingProposalTarget(b),inserted=apply(b.model,b.raw,[{kind:'insert',id:'chosen-opening',beforeId:openingTarget.beforeId,raw:'I begin with the cup.'}]),current={raw:inserted.raw,projection:projection(inserted.snapshot).map((r,i)=>({...r,raw:inserted.snapshot.blocks[i].raw}))},row=current.projection.find(r=>r.id==='chosen-opening'),opening={id:row.id,words:row.words,blockHash:row.blockHash},target=continuationProposalTarget(current,opening,inserted.snapshot),continued=apply(inserted.snapshot,inserted.raw,[{kind:'insert',id:'new-1',beforeId:target.beforeId,raw:'I notice the quiet room.'},{kind:'insert',id:'new-2',beforeId:target.beforeId,raw:'I leave the reason uncertain.'}]);assert.ok(continued.raw.indexOf('quiet room')<continued.raw.indexOf('reason uncertain'));assert.equal(continued.raw.replace('I notice the quiet room.\n\n','').replace('I leave the reason uncertain.\n\n',''),inserted.raw);assert.throws(()=>continuationProposalTarget(current,{...opening,words:'Other opening.'},inserted.snapshot),/opening words changed/);const changed=structuredClone(inserted.snapshot);changed.blocks[0].id='foreign';assert.throws(()=>continuationProposalTarget(current,opening,changed),/stable block/);const expanded={raw:continued.raw,projection:projection(continued.snapshot).map((r,i)=>({...r,raw:continued.snapshot.blocks[i].raw}))};assert.throws(()=>continuationProposalTarget(expanded,opening,continued.snapshot),/additional|ambiguous/);
+});
+
+for(const newline of ['\n','\r\n'])test('direct paragraph line breaks remain donor-safe while AI targets preserve them '+JSON.stringify(newline),()=>{
+ const b=baseline('---\nkind: draft\n---\nFirst line.'+newline+'Second line.'+newline+newline+'Unchanged sibling.');
+ const row=b.projection[0],before=structuredClone(b);
+ assert.equal(row.safe,true);assert.equal(row.words,'First line.\nSecond line.');
+ assert.equal(proposalEditable(row),false);
+ assert.throws(()=>openingProposalTarget(b),/protected|unsupported/);
+ assert.throws(()=>scopedRevisionProposalTargets(b,[row.id]),/supported plain paragraphs/);
+ assert.deepEqual(b,before);assert.equal(render(b.model),b.raw);
 });

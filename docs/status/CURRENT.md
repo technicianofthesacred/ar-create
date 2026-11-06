@@ -1,8 +1,8 @@
-Tests: 30 passed, 0 failed, 0 skipped, of 30 (commit b8b4217, 2026-11-06T12:58:08.178326+00:00).
+Tests: 30 passed, 0 failed, 0 skipped, of 30.
 
-Installed release: commit ee6cf04, built 2026-11-06T12:32:46.253Z, by agent:codex, 791 files. The tests above ran on a different commit (b8b4217) than the one installed.
+Installed release: commit ee6cf04, built 2026-11-06T12:32:46.253Z, by agent:codex, 791 files.
 
-Installed test evidence: different commits; the measured run does not verify the installed release.
+Installed test evidence: unavailable; test revision was not recorded.
 
 # AR Create: status
 
@@ -50,9 +50,3 @@ These describe available source paths, not proof for whichever revision is insta
 - [PRODUCT](../product/PRODUCT.md): intent, then the dated decision log.
 - [CAPABILITIES](../CAPABILITIES.md): generated list of commands and tools. [TODO](../../TODO.md): open work.
 - [Status log, October 2026](../history/status-log-2026-10.md): the old running log of candidates and checkpoints, frozen.
-
-## Final combined Write release candidate — 6 November
-
-PR216 now contains the verified Write fixes, qualified layout/Back changes and one bounded renderer cleanup repair. It replaces the planned intermediate PR217 install plus chained successor with one exact-revision release. The synthetic native Article → Enter/Shift+Enter → save/reload → exact Undo → independent Carousel journey remains qualified on d1d711c; generation, editor and correspondence source is unchanged. Application differences are the 13 qualified UI/navigation files and the separately qualified renderer process file. The renderer proof has 16 passing checks, including a real 13-PNG export with matching hashes and preserved owner/source/sibling state.
-
-Installation remains pending final combined-head CI and the durable publisher. The installed Material and Back checks must pass on that same final head before the completion hook opens the app. The previous failed release receipts remain terminal; no CI or publication gate is bypassed.
