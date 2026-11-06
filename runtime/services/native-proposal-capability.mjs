@@ -5,6 +5,9 @@ import {inlineMap,capture,render,openingBoundary,continuationBoundary} from './d
 // Interior comments stay unsupported because a replacement could cross them.
 export function proposalEditable(row) {
   if (!row || row.safe !== true || row.blockKind !== 'paragraph' || typeof row.raw !== 'string' || typeof row.words !== 'string' || !row.words) return false;
+  // Direct writing may contain hard line breaks; ordinary AI text proposals
+  // retain their existing single-line span contract and cannot replace them.
+  if (/[\r\n]/.test(row.words)) return false;
   const mapped = inlineMap(row.raw);
   if (!mapped.safe || mapped.blockKind !== 'paragraph' || mapped.words !== row.words || mapped.reworks.length) return false;
   // The donor may retain edge whitespace in raw while mapping only visible

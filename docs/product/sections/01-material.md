@@ -99,3 +99,8 @@ S01/C02/C04/C05/C06: the source title/row is the normal accessible opening targe
 ## 29 October — Keep processing records out of live discovery
 
 C02/C04/C06: managed transcription job working files and explicitly identified fixtures stay out of Library and project/Pieces lists. Do not delete their files, identities or membership, mislabel hidden files as missing, or hide genuine kept transcripts and ordinary recordings. Verify source counts and the actual list; a similarly named real project remains available.
+
+
+## 6 November — approved content-first repair
+
+S01, C02/C04/C05/C06. Material titles open their exact retained source, photo or recording through the maintained owner. Text is primary; file metadata uses a focused details screen. Focus refresh preserves an active click and late responses cannot reopen another item. The phone list keeps every item reachable. Native before/after qualification covers 1440/900/1000/1100/390 CSS pixels, light/dark, with actual sidebar state recorded. Release and installed proof are separate.

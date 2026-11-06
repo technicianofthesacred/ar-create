@@ -25,6 +25,9 @@ export function validateTranslationReviewConfig(value){
  inspect(value.file);return structuredClone(value);
 }
 const sameStat=(a,b)=>['dev','ino','size','mtimeMs','ctimeMs','mode'].every(k=>a[k]===b[k]);
+// Directory listings may change during unrelated work. Bind their exact identity
+// and mode; the receipt itself keeps every full-stat, descriptor and hash check.
+const sameDirectory=(a,b)=>a.isDirectory()&&b.isDirectory()&&['dev','ino','mode'].every(k=>a[k]===b[k]);
 function receiptBytes(descriptor){
  const before=inspect(descriptor.file);let fd;
  try{
@@ -33,7 +36,7 @@ function receiptBytes(descriptor){
   const bytes=Buffer.alloc(initial.size);let offset=0;
   while(offset<bytes.length){const count=fs.readSync(fd,bytes,offset,bytes.length-offset,offset);if(!count)fail();offset+=count;}
   if(!sameStat(initial,fs.fstatSync(fd))||hash(bytes)!==descriptor.expectedSha256.toLowerCase())fail();
-  const after=inspect(descriptor.file);if(after.length!==before.length||before.some(([file,stat],i)=>file!==after[i][0]||!sameStat(stat,after[i][1])))fail();
+  const after=inspect(descriptor.file);if(after.length!==before.length||before.some(([file,stat],i)=>file!==after[i][0]||!(i===0?sameStat:sameDirectory)(stat,after[i][1])))fail();
   return JSON.parse(bytes.toString('utf8'));
  }finally{if(fd!==undefined)fs.closeSync(fd);}
 }

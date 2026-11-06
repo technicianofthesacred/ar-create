@@ -66,3 +66,26 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup p,h
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup ol{padding-left:18px}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup-setup code{display:block;padding:8px 10px;border-radius:5px;background:var(--sel);font-family:var(--ar-mono,ui-monospace,monospace);font-size:var(--t-label);overflow-wrap:anywhere;user-select:all}
 @media (pointer:coarse){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-pickup button{min-height:44px}}
+
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title{
+ display:block!important;min-width:0;max-width:100%;padding:0!important;text-align:left!important;
+ color:var(--ink)!important;font-size:var(--t-body)!important;font-weight:600!important;
+ background:transparent!important;border:0!important;text-decoration:underline!important;text-decoration-color:var(--line)!important;text-underline-offset:4px;
+ white-space:normal;overflow-wrap:anywhere;cursor:pointer;
+}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:hover{text-decoration-color:currentColor!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .mi-top .mi-item-title:focus-visible{outline:2px solid var(--warm)!important;outline-offset:3px}
+/* The phone intake list scrolls inside the existing bounded Library workspace. */
+.wfb-browser.mi-open>[data-mi-root]{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-color:var(--line) transparent}
+/* Material names are opening targets, not Graphite action buttons. Keep this
+   scoped exception in the control layer so its important rules resolve there. */
+@layer graphite-controls {
+ .mi-root .mi-top .mi-item-title{
+  background:transparent!important;border:0!important;border-radius:0!important;
+  padding:0!important;min-height:32px!important;box-shadow:none!important;
+  font:500 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)!important;
+  white-space:normal!important;text-decoration:none!important;filter:none!important;
+ }
+ .mi-root .mi-top .mi-item-title:hover{text-decoration:underline!important;text-underline-offset:4px}
+ @media(max-width:650px),(pointer:coarse){.mi-root .mi-top .mi-item-title{min-height:44px!important}}
+}

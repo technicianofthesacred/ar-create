@@ -83,3 +83,15 @@ test('focused failed-save recovery reads latest saved comparison and renders ins
  assert.match(f.w.document.querySelector('#draft-recovery-task .rp-saved').textContent,/New outside saved words/);assert.ok(f.w.document.querySelector('#draft-recovery-task [data-draft-action="use-saved"]'));assert.deepEqual(JSON.parse(f.saved()).documents[o.bindingId].pending.request,before);
  f.w.document.querySelector('#draft-recovery-task [data-draft-action="inspect"]').click();await tick();assert.match(f.w.document.querySelector('#draft-recovery-task .draft-error').textContent,/Save receipt|unavailable|not found|Unknown|expected/i);
 });
+
+test('document Enter can pause on a new empty paragraph without sending an unsupported split',async t=>{
+ const o=await owner(t),f=await fixture(o);f.type('First paragraph.');await f.w.studyDraft.flush();await tick();const before=await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId});
+ const editor=f.w.document.getElementById('manuscript'),empty=f.w.document.createElement('p');empty.innerHTML='<br>';editor.append(empty);f.w.onTyping(editor);await f.w.studyDraft.flush();await tick();
+ assert.equal((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,before.raw);assert.equal(f.w.studyDraft.currentProof().dirty,false);assert.equal(editor.lastElementChild,empty);
+ empty.textContent='Second paragraph.';f.w.onTyping(editor);await f.w.studyDraft.flush();await tick();const saved=await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId});assert.deepEqual(saved.projection.filter(p=>p.safe).map(p=>p.words),['First paragraph.','Second paragraph.']);assert.equal(f.w.studyDraft.currentProof().dirty,false);
+});
+test('document Shift+Enter uses an explicit line-break save and reloads the same paragraph structure',async t=>{
+ const o=await owner(t),f=await fixture(o);f.type('First line.');await f.w.studyDraft.flush();await tick();const editor=f.w.document.getElementById('manuscript'),first=editor.firstElementChild;first.innerHTML='First line.<br>Second line.';f.w.onTyping(editor);await f.w.studyDraft.flush();await tick();
+ const saves=f.calls.filter(c=>c.url.endsWith('/save'));assert.equal(saves.at(-1).input.operations[0].kind,'lineBreakText');const saved=await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId});assert.equal(saved.projection.find(p=>p.safe).words,'First line.\nSecond line.');assert.equal(f.w.studyDraft.currentProof().dirty,false);assert.equal(editor.firstElementChild,first);
+ const reopened=await fixture(o);assert.equal(reopened.w.document.getElementById('manuscript').firstElementChild.innerHTML,'First line.<br>Second line.');
+});

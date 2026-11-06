@@ -454,3 +454,46 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wf
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-peek-box>header,html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use>header{display:flex!important;justify-content:space-between;align-items:baseline;gap:8px;text-transform:none!important;letter-spacing:0!important;font:var(--t-label) var(--ar-ui)!important;color:var(--dim)!important;margin-top:4px}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>button[data-wfb-use]:disabled{color:var(--dim)!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app .wfb-peek .wfb-use li>.small{white-space:nowrap;font-size:var(--t-label);color:var(--dim)}
+
+/* Library source: read the material, then use its saved connections. */
+.k-library .wfb-source-detail{width:100%;max-width:1180px;margin-inline:auto;min-width:0}
+.wfb-source-heading h1{font-size:25px;line-height:1.25;margin:0 0 8px;font-weight:650;overflow-wrap:anywhere}
+.wfb-source-heading p{margin:0;color:var(--dim);font-size:13px;overflow-wrap:anywhere}
+.wfb-source-nav{display:flex;gap:8px;margin:20px 0 24px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.wfb-source-nav [aria-current=page]{font-weight:700;text-decoration:underline;text-underline-offset:8px}
+.wfb-source-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:40px}
+.wfb-source-content,.wfb-source-context{min-width:0}
+.wfb-source-detail h2{font-size:17px;font-weight:650;margin:0 0 14px}
+.wfb-source-detail h3{font-size:13px;font-weight:650;margin:20px 0 8px}
+.wfb-source-content .wfb-reading{white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;font-size:16px;line-height:1.75;max-width:72ch;margin:0}
+.wfb-source-context{border-left:1px solid var(--line);padding-left:24px;font-size:13px}
+.wfb-source-context>section+section{margin-top:28px}
+.wfb-source-context p{line-height:1.6;margin:8px 0 14px}
+.wfb-source-context .wfb-bulk{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;border:0;background:none}
+.wfb-source-context .wfb-bulk>span,.wfb-source-context .wfb-bulk [data-wfb-action=selectionclear]{display:none}
+.wfb-source-context .wfb-use{margin-top:20px}
+.wfb-source-file{max-width:75ch}
+.wfb-source-file dl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px 20px;font-size:14px}
+.wfb-source-file dt{color:var(--dim)}
+.wfb-source-file dd{margin:0;overflow-wrap:anywhere}
+.wfb-source-read{margin-top:20px}
+@media(max-width:760px){
+ .wfb-source-layout{grid-template-columns:minmax(0,1fr);gap:28px}
+ .wfb-source-context{border-left:0;border-top:1px solid var(--line);padding:24px 0 0}
+ .wfb-source-heading h1{font-size:22px}
+ .wfb-source-nav{margin:16px 0 20px}
+ .wfb-source-file dl{grid-template-columns:minmax(0,1fr);gap:4px}
+ .wfb-source-file dd{margin-bottom:12px}
+}
+/* Keep source navigation to one compact line on a phone. */
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .k-library:has(.wfb-source-detail)>.wfb-thead{display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;gap:8px!important;min-height:44px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .k-library:has(.wfb-source-detail)>.wfb-thead .wfb-crumbs{flex:1!important;flex-basis:auto!important;font-size:13px!important;gap:4px!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .k-library:has(.wfb-source-detail)>.wfb-thead button{width:auto!important;flex:none!important;margin:0!important}
+ .k-library .wfb-source-detail{width:100%;margin:0}
+}
+/* Sidebars can leave a narrow reading pane even on a desktop viewport. */
+@container (max-width:740px){
+ .wfb-source-layout{grid-template-columns:minmax(0,1fr);gap:28px}
+ .wfb-source-context{border-left:0;border-top:1px solid var(--line);padding:24px 0 0}
+}

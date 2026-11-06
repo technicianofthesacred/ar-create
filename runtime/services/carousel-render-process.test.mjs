@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {deflateSync} from 'node:zlib';
+import childProcess from 'node:child_process';
+import {syncBuiltinESMExports} from 'node:module';
 import * as renderer from './carousel-render-process.mjs';
 const crc=bytes=>{let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=c&1?0xedb88320^(c>>>1):c>>>1;}return(c^0xffffffff)>>>0;};
 function image(width=1080,height=1350){const chunk=(type,data)=>{const kind=Buffer.from(type),out=Buffer.alloc(data.length+12);out.writeUInt32BE(data.length);kind.copy(out,4);data.copy(out,8);out.writeUInt32BE(crc(Buffer.concat([kind,data])),out.length-4);return out;};const h=Buffer.alloc(13);h.writeUInt32BE(width);h.writeUInt32BE(height,4);h[8]=8;h[9]=6;return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',h),chunk('IDAT',deflateSync(Buffer.alloc((width*4+1)*height))),chunk('IEND',Buffer.alloc(0))]);}
@@ -70,4 +72,44 @@ test('owned shutdown exit 143 cannot replace validated ready PNG completion',asy
  const script='const fs=require("fs");process.on("SIGTERM",()=>process.exit(143));fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
  const result=await renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:100});
  assert.match(result.stdout,/data-export-status="ready"/);renderer.validateCarouselPng(fs.readFileSync(file));
+});
+
+test('a confirmed child exit preserves its ready PNG when retired-group cleanup reports EPERM',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-retired-group-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));const file=path.join(dir,'slide.png'),kill=process.kill.bind(process);let denied=0,group;
+ t.mock.method(process,'kill',(pid,signal)=>{if(pid<0)group=-pid;if(pid<0&&signal==='SIGKILL'){denied++;throw Object.assign(Error('retired group'),{code:'EPERM'});}return kill(pid,signal);});
+ processTable(t,()=>`${group} ${group} ${process.getuid()} Z\n`);
+ const script='const fs=require("fs");process.on("SIGTERM",()=>process.exit(0));fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ const result=await renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:150});
+ assert.equal(denied,1);assert.match(result.stdout,/data-export-status="ready"/);renderer.validateCarouselPng(fs.readFileSync(file));
+});
+
+function processTable(t,table){
+ const original=childProcess.execFileSync;
+ const patched=t.mock.method(childProcess,'execFileSync',(file,args,options)=>file==='/bin/ps'?table():original(file,args,options));
+ syncBuiltinESMExports();t.after(()=>{patched.mock.restore();syncBuiltinESMExports();});
+}
+
+test('EPERM against a still-live owned renderer remains a failure',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-live-group-')),file=path.join(dir,'slide.png'),kill=process.kill.bind(process);let group;
+ t.after(()=>{if(group)try{kill(-group,'SIGKILL');}catch{}fs.rmSync(dir,{recursive:true,force:true});});
+ t.mock.method(process,'kill',(pid,signal)=>{if(pid<0){group=-pid;throw Object.assign(Error('live group denied'),{code:'EPERM'});}return kill(pid,signal);});
+ const script='const fs=require("fs");fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:100}),error=>error.code==='EPERM');
+});
+
+test('a foreign-owned retired group cannot turn denied cleanup into success',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-foreign-group-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));const file=path.join(dir,'slide.png'),kill=process.kill.bind(process);let group;
+ t.mock.method(process,'kill',(pid,signal)=>{if(pid<0){group=-pid;if(signal==='SIGKILL')throw Object.assign(Error('foreign group denied'),{code:'EPERM'});}return kill(pid,signal);});
+ processTable(t,()=>`${group} ${group} ${process.getuid()+1} Z\n`);
+ const script='const fs=require("fs");process.on("SIGTERM",()=>process.exit(0));fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:150}),error=>error.code==='EPERM');
+});
+
+test('an empty group observation still requires the exact child exit to be confirmed',async t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'carousel-unconfirmed-exit-')),file=path.join(dir,'slide.png'),kill=process.kill.bind(process);let group;
+ t.after(()=>{if(group)try{kill(-group,'SIGKILL');}catch{}fs.rmSync(dir,{recursive:true,force:true});});
+ t.mock.method(process,'kill',(pid,signal)=>{if(pid<0){group=-pid;throw Object.assign(Error('exit not confirmed'),{code:'EPERM'});}return kill(pid,signal);});
+ processTable(t,()=>'');
+ const script='const fs=require("fs");fs.writeFileSync(process.argv[1],Buffer.from(process.argv[2],"base64"));process.stdout.write("<html data-export-status=\\"ready\\"></html>");setInterval(()=>{},1000);';
+ await assert.rejects(renderer.renderCarouselProcess(process.execPath,['-e',script,file,png],file,{timeout:1500,grace:100}),error=>error.code==='EPERM');
 });

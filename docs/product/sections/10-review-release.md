@@ -52,3 +52,8 @@ Under C03/C04/C05/C06, S09/S10 acceptance includes opening the actual downloaded
 C03/C04/C07, V1: Audience and its downloaded working HTML show pending passages as semantic highlights while retaining every word and their unapproved state. Editorial notes appear once as readable formatted end notes without their storage delimiters. Use the maintained curly punctuation formatter in the reading projection; preserve code, links, source references, original Markdown, hashes and revision/receipt guards. Omit only the exact placeholder publication line; retain actual saved publication metadata.
 
 Keep the existing Article layout and all pull quotes, nested words, photos/crops and credits. This permits the scoped Audience presentation, not a whole-app restyle or approval of marked wording. Finish with actual downloaded-file and Audience screenshots at 1440 and 390 CSS pixels, matched to the same edition and view. Native export/file proof remains distinct from synthetic markup checks and publication.
+
+
+## 6 November — approved content-first repair
+
+S10, C02/C04/C05/C06. Audience uses the available pane for the selected preview, with readable readiness rows and adjacent actions. Keep independent Article/Carousel editions, consent and held export unchanged. Native before/after qualification covers 1440/900/1000/1100/390 CSS pixels, light/dark, with actual sidebar state recorded. Release and installed proof are separate.
