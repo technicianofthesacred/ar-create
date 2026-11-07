@@ -171,3 +171,14 @@ test('agent Notebook appends a labelled stand-in note through copy-only route an
 test('agent Notebook refuses an ordinary author page before sending any append or overwrite',async t=>{const f=await fixture(t),w=f.w;w.arCreateUiActor={actor:'agent:codex'};let posts=0;w.fetch=async(_url,options)=>{if(options?.body)posts++;return{ok:true,json:async()=>({bound:true,scope:{kind:'project',parentStudyId:'ref-an-cha'},body:'Original words.',hash:'a'.repeat(64),revision:0})};};await assert.rejects(w.studyHumanDirection.appendNotebook({parentStudyId:'ref-an-cha',bindingId:'part',kind:'note',text:'An unauthorized stand-in',origin:null},()=>{}),/registered structure-test copy/);assert.equal(posts,0);});
 
 test('Direction Still open lists actual pending angle/title choices without an explainer paragraph or changing author words',async t=>{const f=await fixture(t,null,{parts:false,initialStage:4});let choices={available:true,selectedAngle:null,selectedTitle:null};f.w.directionChoiceCodec={readDirectionChoices:()=>choices};f.w.studyHumanDirection.mount();await tick();assert.deepEqual([...f.w.document.querySelectorAll('[data-direction-pending] li')].map(n=>n.textContent),['Angle','Title']);const input=f.w.document.querySelector('[data-human-direction]');input.value='My exact unsaved direction';input.dispatchEvent(new f.w.Event('input'));choices={...choices,selectedAngle:{text:'Saved angle'}};f.w.studyHumanDirection.mount();assert.deepEqual([...f.w.document.querySelectorAll('[data-direction-pending] li')].map(n=>n.textContent),['Title']);assert.equal(f.w.document.querySelector('[data-human-direction]').value,'My exact unsaved direction');assert.doesNotMatch(f.w.document.querySelector('.direction-own-page').textContent,/Manuscript wording and photo decisions stay|remain pending until you choose/);assert.equal(f.calls.some(c=>c.body),false);});
+
+
+test('cached pagehide keeps direction edits and observer alive until ordinary departure',async t=>{
+ const f=await fixture(t),w=f.w,d=w.document,hide=persisted=>w.dispatchEvent(new w.PageTransitionEvent('pagehide',{persisted}));
+ const field=d.querySelector('[data-human-direction]');field.value='My retained direction';field.dispatchEvent(new w.Event('input'));
+ hide(true);d.getElementById('app').innerHTML='<div id="stage-working-lane"></div>';await tick();
+ assert.equal(d.querySelector('[data-human-direction]').value,'My retained direction');
+ assert.match(w.localStorage.getItem('ar-study-human-direction-recovery-v1'),/My retained direction/);
+ hide(false);d.getElementById('app').innerHTML='<div id="stage-working-lane"></div>';w.studyHumanDirection.mount();await tick();
+ assert.equal(d.querySelector('[data-human-direction]'),null);
+});

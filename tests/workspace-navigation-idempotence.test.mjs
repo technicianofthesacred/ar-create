@@ -8,6 +8,19 @@ function fixture(){const dom=new JSDOM('<div id="app"><main class="workspace" id
  w.eval(read('workspace-navigation.js'));
  return {w,p,NativeObserver,hiddenRecords,callbacks:()=>callbacks,exceeded:()=>exceeded,close(){for(const observer of observers)observer.disconnect();w.close();}};
 }
+test('cached departure retains navigation decoration while later ordinary departure disconnects',async()=>{
+ const f=fixture();try{
+  const w=f.w,d=w.document,editor=d.getElementById('manuscript'),words=editor.innerHTML;
+  await new Promise(resolve=>setTimeout(resolve,0));
+  w.dispatchEvent(new w.PageTransitionEvent('pagehide',{persisted:true}));
+  const cached=d.createElement('button');cached.dataset.outputCreate='';d.querySelector('.topbar').append(cached);
+  await new Promise(resolve=>setTimeout(resolve,0));assert.equal(cached.hidden,true,'Back keeps the observer decorating newly mounted owner controls');
+  w.dispatchEvent(new w.PageTransitionEvent('pagehide',{persisted:false}));
+  const departed=d.createElement('button');departed.dataset.outputCreate='';d.querySelector('.topbar').append(departed);
+  await new Promise(resolve=>setTimeout(resolve,0));assert.equal(departed.hidden,false,'real departure still stops observation');
+  assert.strictEqual(d.getElementById('manuscript'),editor);assert.equal(editor.innerHTML,words);
+ }finally{f.close();}
+});
 test('repeated navigation paints leave consolidated attributes and explicit legacy planning untouched',()=>{
  const f=fixture();try{const d=f.w.document,editor=d.querySelector('#manuscript'),before=JSON.stringify(f.p),observer=new f.NativeObserver(()=>{});observer.observe(d.querySelector('#app'),{subtree:true,attributes:true});f.w.workspaceNavigation.refresh();f.w.workspaceNavigation.refresh();assert.deepEqual(observer.takeRecords().map(r=>r.attributeName),[],'already consolidated hidden/data markers must not change');assert.equal(d.querySelector('[data-output-create]').hidden,true);assert.equal(d.querySelector('#legacy-plan').hidden,true);assert.equal(d.querySelector('#open-plan').hidden,false);assert.strictEqual(d.querySelector('#manuscript'),editor);assert.equal(JSON.stringify(f.p),before);observer.disconnect();}finally{f.close();}
 });

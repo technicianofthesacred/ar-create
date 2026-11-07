@@ -76,5 +76,5 @@
  const observer=new MutationObserver(()=>navigation.schedule());observer.observe(d.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
  for(const event of ['study-output-owner-confirmed','study-output-selection','c3-header-painted','study-write-view','study-carousel-view','study-draft-change'])w.addEventListener(event,()=>navigation.schedule());
  w.addEventListener('workbench-folder-navigation-start',()=>navigation.begin());w.addEventListener('workbench-folder-navigation-end',()=>navigation.end());
- navigation.schedule();w.addEventListener('pagehide',()=>{observer.disconnect();navigation.dispose();},{once:true});
+ navigation.schedule();w.addEventListener('pagehide',event=>{if(event.persisted)return;observer.disconnect();navigation.dispose();});
 })(typeof window!=='undefined'?window:globalThis);

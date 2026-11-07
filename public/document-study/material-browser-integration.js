@@ -41,5 +41,5 @@
   active={projectId:p.id,host:target,refs:projection.refs,stamp,api};
  }
  const observer=new MutationObserver(()=>{if(stopped||queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate()});});observer.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
- window.addEventListener('pagehide',()=>{stopped=true;observer.disconnect();destroy();},{once:true});window.studyMaterialBrowserIntegration={refresh:decorate};decorate();
+ window.addEventListener('pagehide',event=>{if(event.persisted)return;stopped=true;observer.disconnect();destroy();});window.studyMaterialBrowserIntegration={refresh:decorate};decorate();
 })();

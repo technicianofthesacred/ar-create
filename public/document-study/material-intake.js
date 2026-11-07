@@ -4,7 +4,7 @@
  const MAX_BYTES=8*1024*1024,MAX_MS=15*60*1000,MAX_FILE=64*1024*1024,RECENT=15;
  const instances=new WeakMap(),activeViews=new Set(),UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,states=new Set(['saved','queued','running','failed','done','unavailable']);
  const actor=()=>window.arCreateUiActor?.actor,human=()=>actor()==='human:adrian';
- const identity=job=>JSON.stringify([job.id,job.file??null,job.story??null,job.started??null,job.state,job.stage??null,job.transcriptReady,job.error??null,job.sourceId??null]);
+ const identity=job=>JSON.stringify([job.id,job.file??null,job.story??null,job.started??null,job.state,job.stage??null,job.transcriptReady,job.error??null,job.sourceId??null,job.originalAvailable??null,job.reason??null]);
  const label=job=>job.state==='unavailable'?(job.originalAvailable?'Transcript unavailable':'Unavailable'):job.state==='failed'?'Failed':['running','queued'].includes(job.state)?'Transcribing':job.state==='done'&&job.transcriptReady?'Ready':job.state==='saved'?'Waiting to start':'Needs attention';
  async function read(){const response=await fetch('/api/recordings',{cache:'no-store'});if(!response.ok)throw Error('Recording intake could not be read.');const value=await response.json();if(!Array.isArray(value.jobs)||value.jobs.some(job=>!job||!UUID.test(job.id||'')||!states.has(job.state)||typeof job.transcriptReady!=='boolean')||new Set(value.jobs.map(job=>job.id)).size!==value.jobs.length)throw Error('Recording intake could not be read.');return Object.assign(value.jobs.map(job=>({...job})),{capability:value.capability});}
  function mount({container,isCurrent}={}){
@@ -88,6 +88,7 @@
    const lead=node('span');lead.className='mi-kind';lead.append(svg(kindClass(kind)));
    const main=node('div');main.className='mi-main';const top=node('div');top.className='mi-top';const titleText=job?shownTitle(job):shownTitle({story:source.title||source.name,file:source.name,started:source.modified_at||source.createdAt});let title;
    if(job?.transcriptReady){title=node('a',titleText);title.href='/transcription/'+encodeURIComponent(job.id)+'/view';title.target='_blank';title.rel='noopener';title.dataset.miItemOpen='';}
+   else if(job?.originalAvailable===true&&job.sourceId){title=node('a',titleText);title.href='/api/sources/blob?id='+encodeURIComponent(job.sourceId);title.target='_self';title.rel='noopener';title.dataset.miItemOpen='';title.onclick=event=>{if(!live()||view.busy||view.mic||view.draft&&!view.draft.sourceId)event.preventDefault();};}
    else{title=button(titleText,'item-open',()=>{if(job&&(!job.sourceId||job.originalAvailable===false)){view.message=job.reason||(job.originalAvailable===false?'The original recording is unavailable. Reconnect it and refresh Material.':'This recording has no available audio or transcript yet. Refresh to check again.');paint();return;}void openSource(job?job.sourceId:source.id);});}
    title.classList.add('mi-item-title');if(job&&job.file&&job.file!==job.story)title.title=job.file;top.append(title);
    const projects=job?subjectsFor(job):null,names=job?(projects||[]).map(p=>p.title).filter(Boolean):(view.sourceSubjects.get(source.id)||[]);
