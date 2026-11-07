@@ -67,9 +67,11 @@ test('missing proof, unsafe request fields, bad operations and approval operatio
  for(const op of [null,{}, {...save.operations[0],kind:['text']}, {kind:'approveMark',id:'line',rawFrom:0,rawTo:4,seenBlockHash:hash,seenMarkupHash:hash,humanDecision:true},{...save.operations[0],path:'/private'},{...save.operations[0],seenBlockHash:undefined},{...save.operations[0],from:-1},{...save.operations[0],insert:'\ud800'},{kind:'insert',id:'new',beforeId:null,raw:'bad\0text'},{kind:'blockKind',id:'line',blockKind:'heading',level:4,seenBlockHash:hash},{kind:'delete',id:'bad\nidentity'}])assert.equal((await send(savePath,{...save,operations:[op]})).status,400);
  for(const input of [{...undo,undoOperationId:'bad'},{...undo,operations:save.operations},{...undo,expected:undefined}])assert.equal((await send(undoPath,input)).status,400);assert.equal(calls.length,0);
 });
+// Chunked oversized input exercises the streaming limit; a declared oversized length is checked separately.
+// Avoid flushing a megabyte after a header-only refusal, which can reset the test client's socket before its 413 arrives.
 test('UTF-8 JSON and 1 MB body/media boundaries apply before any manuscript request reaches owner',async t=>{
  const {port,origin,calls}=await setup(t);
- for(const [headers,body,status] of [[{'content-type':'text/plain'},'{}',415],[{'content-type':'application/json'},'{broken',400],[{'content-type':'application/json'},Buffer.from([0x7b,0x22,0x61,0x22,0x3a,0x22,0xff,0x22,0x7d]),400],[{'content-type':'application/json','content-length':String(1024*1024+1)},'{}',413],[{'content-type':'application/json'},JSON.stringify({...save,operations:[{...save.operations[0],insert:'x'.repeat(1024*1024)}]}),413]]){const result=await request(port,savePath,{headers:{origin,...headers},body});assert.equal(result.status,status);}
+ for(const [headers,body,status] of [[{'content-type':'text/plain'},'{}',415],[{'content-type':'application/json'},'{broken',400],[{'content-type':'application/json'},Buffer.from([0x7b,0x22,0x61,0x22,0x3a,0x22,0xff,0x22,0x7d]),400],[{'content-type':'application/json','content-length':String(1024*1024+1)},'{}',413],[{'content-type':'application/json','transfer-encoding':'chunked'},JSON.stringify({...save,operations:[{...save.operations[0],insert:'x'.repeat(1024*1024)}]}),413]]){const result=await request(port,savePath,{headers:{origin,...headers},body});assert.equal(result.status,status);}
  assert.equal(calls.length,0);
 });
 test('default remains read-only; existing-work entrance advertises explicit manuscript permission only',async t=>{
