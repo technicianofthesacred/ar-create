@@ -644,3 +644,6 @@ C02/C04/C05/C06, S01–S12: direct feedback requires visibly different destinati
 ## 7 November — Slim shared navigation
 
 C02; shared S01–S12 navigation. Adrian requests no vertical Gather/Develop/Make/Deliver strip in the contracted sidebar, reduced horizontal padding around destinations, and a narrower expanded sidebar. Keep readable destination names and icons, direct guarded entrances, active destination, waiting badges and keyboard focus. Expanded navigation retains the group strips. Finish criterion: verify both widths, toggle persistence, label fit and aligned content in desktop light/dark, plus the existing phone navigation without horizontal overflow. This records adopted intent; candidate verification and installation remain separate.
+
+
+7 November follow-up: follow Adrian’s marked side boundaries more closely: contracted width 64px with an icon-only Expand control (retain its accessible name and tooltip); expanded width 144px with vertical strips preserved. Tighten expanded row padding/gaps without shrinking destination typography. Verify actual label/badge fit and both themes before handoff.
