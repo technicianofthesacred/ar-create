@@ -14,6 +14,7 @@ window.addEventListener('load',async()=>{
    if(!pick||pick.disabled)throw Error('That format has not been made.');
    pick.click();
   }
+  if(!body.querySelector('section'))throw Error('The studio did not finish loading.');
   const keep=LABEL[part]||[];let shown=0;
   for(const s of body.children){const on=keep.includes(s.getAttribute('aria-label'));s.classList.toggle('igs-mirror-hide',!on);shown+=on;}
   if(part==='story'){const cards=[...body.querySelectorAll('.igs-story')];for(const c of cards)c.classList.toggle('igs-mirror-hide',!!story&&c.dataset.story!==story);if(story&&!cards.some(c=>c.dataset.story===story))shown=0;}
