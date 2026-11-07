@@ -29,6 +29,10 @@ Projects can begin with a recording, supplied transcript, typed idea, photo, lin
 - **Reward useful effort through clarity:** the project browser shows one concise project title and its current step, supports new projects and filing, and follows the selected light/dark theme. Resume the author's own work; don't substitute a generic file tree. Show how a contribution changed the current work and what meaningful action is next, without invented progress or gamification.
 - **Prove the direction visually:** before implementing a consequential unresolved major-section direction, show focused alternatives for that choice. Alternatives are not a compulsory exercise for every section or each delivery. Existing chosen aspects remain respected; do not repeatedly reopen them. The current document-first foundation is an evolving direction, not blanket acceptance of every surface. Use targeted Impeccable critique when useful; verify actual screen interactions as well as file behavior.
 
+## Editorial discussion refinement — 6 November 2026
+
+C01/C04/C05/C06; S05/S06. The author requests a quieter, simpler editorial discussion: faint rounded passage emphasis, no decorative framing lines, shared sans-serif type and Graphite buttons, and fuller use of desktop width. Preserve all editorial decisions, exact wording and recovery. The S05/S06 briefs define acceptance. Audit the remaining site for the same issues and record follow-up fixes; broader redesign is not authorized by that inventory.
+
 ## Design baseline and typography
 
 ### The design baseline
@@ -647,3 +651,6 @@ C02; shared S01–S12 navigation. Adrian requests no vertical Gather/Develop/Mak
 
 
 7 November follow-up: follow Adrian’s marked side boundaries more closely: contracted width 64px with an icon-only Expand control (retain its accessible name and tooltip); expanded width 144px with vertical strips preserved. Tighten expanded row padding/gaps without shrinking destination typography. Verify actual label/badge fit and both themes before handoff.
+### 6 November — Only decision-ready real work reaches Home
+
+The author requests test-recording exclusion, evidence-based transcript suggestions, one combined request per recording, and enough source context and audio to decide. S02 / C01 / C02 / C04 / C06: Home shows the actual passage, proposed wording, reason and relevant audio with links to the existing review owners. Unreviewed recording suggestions do not become accepted by a timer or a generic Done click. Preserve human answers, original recordings and transcript correction history; unrelated agent steer defaults are unchanged. See the Source brief for the bounded finish criterion. This adopted direction is not installation proof.

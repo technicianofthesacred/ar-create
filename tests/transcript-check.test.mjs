@@ -195,7 +195,7 @@ test('a checked recording puts one item on Needs you with a link to the check, a
  let mine=await asks();
  assert.equal(mine.length,1);assert.equal(mine[0].status,'open');assert.equal(mine[0].band,'only-adrian');
  assert.equal(mine[0].link.href,'/transcript-check/index.html?job='+f.id);
- assert.match(mine[0].question,/^2 lines in "[^"]+" may need your ear, and 3 easy ones apply in one tap/);assert.doesNotMatch(mine[0].question,/A recording/);
+ assert.match(mine[0].question,/^Review 5 passages in this recording/);assert.doesNotMatch(mine[0].question,/A recording/);
  // A second read of the same check does not raise a second item.
  await check.suggest(f.id);assert.equal((await asks()).length,1);
  let r=await f.page('GET',base);

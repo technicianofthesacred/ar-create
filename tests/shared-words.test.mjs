@@ -143,7 +143,7 @@ test('recognise finds library hits, known mishearings and the four kinds of doub
 });
 
 test('known library words and sentence starts are not doubtful; words Adrian keeps twice stop being asked about',async t=>{
- const e=await engine(t,{segments:[seg(0,'Lu Yu wrote it. Yixing clay is good. Then we met Jonas and Jonas again.')]});
+ const e=await engine(t,{segments:[seg(0,'Lu Yu wrote it. Yixing clay is good. Then we met Jonas and Jonas again.',{Jonas:.2})]});
  const entries=await e.library.entries();
  const first=findDoubtful(e.transcript(),entries,{});
  const words=first.items.map(i=>i.word);
@@ -153,9 +153,9 @@ test('known library words and sentence starts are not doubtful; words Adrian kee
 });
 
 test('a long talk is capped so it cannot flood the list',async t=>{
- const names=Array.from({length:70},(_,i)=>'Zq'+String.fromCharCode(97+(i%26))+String.fromCharCode(97+((i*7)%26))+'ona'+i);
+ const names=Array.from({length:70},(_,i)=>'Zq'+String.fromCharCode(97+(i%26))+String.fromCharCode(97+((i*7)%26))+'ona'+String.fromCharCode(97+Math.floor(i/26))+String.fromCharCode(97+i%26));
  const text='We met '+names.join(', ')+' today.';
- const e=await engine(t,{segments:[seg(0,text)]});
+ const e=await engine(t,{segments:[seg(0,text,Object.fromEntries(names.flatMap(n=>[[n,.1]])),{avg_logprob:-1.5})]});
  const doubt=findDoubtful(e.transcript(),await e.library.entries(),{});
  assert.equal(doubt.items.length,MAX_DOUBTFUL);assert.ok(doubt.dropped>0);
 });
@@ -194,18 +194,18 @@ test('a transcript Adrian already reviewed is never changed on its own; the fixe
 });
 
 // ---------- 5. one ask per recording ----------
-test('doubtful words from one recording are ONE steer ask, default keep as heard, scoped to the recording',async t=>{
+test('doubtful words from one recording are ONE review ask, with no automatic editorial answer',async t=>{
  const e=await engine(t);
  const done=await e.shared.recognise({jobId:e.rec.id},agent);
  assert.ok(done.items.length>=4);
  const asks=(await e.needs.list({status:'all'})).asks;
  assert.equal(asks.length,1,'many words, one ask');
  const ask=asks[0];
- assert.equal(ask.band,'steer');assert.equal(ask.default,'Keep all as heard');assert.ok(ask.choices.includes('Keep all as heard'));
+ assert.equal(ask.band,'only-adrian');assert.equal(ask.default,null);assert.ok(ask.choices.includes('Keep all as heard'));
  assert.deepEqual(ask.scope,{kind:'recording-words',id:e.rec.id});assert.equal(ask.about,'Yixing visit');
  assert.match(ask.question,/words to check in "Yixing visit"/);assert.match(ask.question,/at \d+:\d\d/);
  assert.equal(done.askId,ask.id);
- assert.ok(Date.parse(ask.applyAt)>e.clock.at,'the default applies later, not at once');
+ assert.equal(ask.applyAt,null,'the recording waits for an explicit decision');
  // running it again does not raise a second ask
  await e.shared.recognise({jobId:e.rec.id,force:true},agent);
  assert.equal((await e.needs.list({status:'all'})).asks.length,1);
@@ -213,16 +213,16 @@ test('doubtful words from one recording are ONE steer ask, default keep as heard
  for(const item of done.items){assert.match(item.time,/^\d+:\d\d$/);assert.ok(item.sentence.length>0);assert.equal(item.status,'open');}
 });
 
-test('when the default applies, every word stays as heard and the transcript is unchanged by it',async t=>{
+test('elapsed time does not turn an unreviewed recording into a human decision',async t=>{
  const e=await engine(t);
  const done=await e.shared.recognise({jobId:e.rec.id},agent);
  const textBefore=JSON.stringify(e.transcript().segments.map(s=>s.text));
  e.clock.at+=8*DAY;
  const later=await e.shared.check({jobId:e.rec.id});
- assert.equal(later.state,'done');assert.ok(later.items.every(i=>i.status==='kept'&&i.answer.by==='default'));
+ assert.equal(later.state,'open');assert.ok(later.items.every(i=>i.status==='open'&&i.answer===null));
  assert.equal(JSON.stringify(e.transcript().segments.map(s=>s.text)),textBefore);
  assert.equal((await e.library.entries()).some(x=>x.spelling==='Mariya'),false,'keeping as heard remembers nothing');
- assert.equal((await e.shared.checks()).recordings.length,0,'nothing left to check');
+ assert.equal((await e.shared.checks()).recordings.length,1,'the real review remains available');
  assert.ok(done.items.length>0);
 });
 
@@ -261,7 +261,7 @@ test('a confirmed spelling is remembered: it fixes this talk now and the next re
 });
 
 test('answering every word settles the ask; "keep" and "it is right" are honest answers too',async t=>{
- const e=await engine(t,{segments:[seg(0,'We met Maria and Jonas near 1998 in Yixing.')]});
+ const e=await engine(t,{segments:[seg(0,'We met Maria and Jonas near 1998 in Yixing.',{Maria:.2,Jonas:.2,'1998':.2})]});
  const done=await e.shared.recognise({jobId:e.rec.id},agent);
  const by=w=>done.items.find(i=>i.word===w);
  await e.shared.answer({operationId:op(),jobId:e.rec.id,key:by('Maria').key,choice:'right',category:'person'},adrian);
@@ -373,18 +373,17 @@ test('the recording runner config carries the library path and the isolated read
 test('running recognise again after the ask was settled raises a new ask only for words that are still open',async t=>{
  const e=await engine(t);
  const first=await e.shared.recognise({jobId:e.rec.id},agent);
- e.clock.at+=8*DAY;await e.shared.check({jobId:e.rec.id});                  // the default applied: everything kept as heard
+ await e.needs.answer({operationId:op(),id:first.askId,choice:'Keep all as heard'},adrian);
+ await e.shared.check({jobId:e.rec.id}); // an explicit human answer, never elapsed time
  assert.equal((await e.needs.list({status:'open'})).asks.length,0);
  const again=await e.shared.recognise({jobId:e.rec.id,force:true},agent);
  assert.ok(again.items.every(i=>i.status==='kept'),'what he already settled stays settled');
  assert.equal(again.state,'done');assert.equal((await e.needs.list({status:'open'})).asks.length,0,'nothing new, so nothing asked');
- // a word that is new to the library since then does get asked about, in a fresh ask
+ // A newly added similar spelling alone cannot resurrect an already reviewed word.
  await e.library.add({operationId:op(),spelling:'Marian',category:'person'},adrianCli);
  const third=await e.shared.recognise({jobId:e.rec.id,force:true},agent);
- assert.equal(third.state,'open');assert.equal(third.items.filter(i=>i.status==='open').length,1);
- assert.equal(third.items.find(i=>i.status==='open').suggestion,'Marian');
- const asks=(await e.needs.list({status:'open'})).asks;
- assert.equal(asks.length,1);assert.notEqual(asks[0].id,first.askId);assert.match(asks[0].question,/^1 word to check/);
+ assert.equal(third.items.filter(i=>i.status==='open').length,0);
+ assert.equal((await e.needs.list({status:'open'})).asks.length,0);
  assert.ok(first.items.length>0);
 });
 
@@ -409,4 +408,14 @@ test('the Instagram studio flags words from the shared library and the correctio
  assert.equal(found.entries[0].spelling,'Shou Puerh');
  // an agent's confirmation is refused and remembers nothing
  await assert.rejects(as('agent:codex',()=>studio.confirm({id:plan.id,operationId:op(),expectedRevision:done.revision,expectedHash:done.hash,flagId:flag.id,verdict:'as-heard'})),e=>e.status===403);
+});
+
+
+test('excluding a previously reviewed test clip preserves saved answers and correction receipts',async t=>{
+ const e=await engine(t);const review=await e.shared.recognise({jobId:e.rec.id},agent);
+ await e.shared.answer({operationId:op(),jobId:e.rec.id,key:review.items[0].key,choice:'keep'},adrian);
+ const file=path.join(e.dir,'word-library/recordings',e.rec.id+'.json'),before=fs.readFileSync(file);
+ const job=path.join(e.dir,'recordings/.transcription-jobs',e.rec.id+'.json');fs.writeFileSync(job,JSON.stringify({...JSON.parse(fs.readFileSync(job)),purpose:'test'}));
+ const excluded=await e.shared.recognise({jobId:e.rec.id,force:true},agent);
+ assert.equal(excluded.state,'excluded');assert.deepEqual(fs.readFileSync(file),before);
 });

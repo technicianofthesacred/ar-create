@@ -51,7 +51,30 @@
   const field='ny-free-'+a.id,value=drafts.get(a.id)||'';
   return `<form class="ny-free" data-ny-free="${esc(a.id)}"><label class="ny-sr" for="${esc(field)}">Your answer</label><textarea id="${esc(field)}" rows="2" maxlength="500" placeholder="Your own words"${off()}>${esc(value)}</textarea><button type="submit" class="ny-choice"${busy.has(a.id)?' disabled':off()}>Send</button></form>`;
  }
+ const audioRange=item=>{
+  const match=/#t=([\d.]+),([\d.]+)/.exec(item.audioUrl||'');
+  return match?{start:Number(match[1]),end:Number(match[2])}:{start:Math.max(0,Number(item.start||0)-1),end:Number(item.end||0)+1};
+ };
+ function recordingRow(a){
+  const r=a.recording,wordCount=Number(r.wordCount)||0,passageCount=Number(r.passageCount)||0;
+  const count=(n,one)=>n+' '+one+(n===1?'':'s');
+  const parts=[wordCount?count(wordCount,'word'):'',passageCount?count(passageCount,'passage'):''].filter(Boolean);
+  const date=r.recordedAt?new Date(r.recordedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+  const items=(r.items||[]).slice(0,2).map((item,i)=>{
+   const range=audioRange(item),stamp=clockTime(item.at??item.start);
+   const context=String(item.context||item.text),at=context.indexOf(item.text);
+   const passage=at>=0?esc(context.slice(0,at))+'<mark>'+esc(item.text)+'</mark>'+esc(context.slice(at+item.text.length)):esc(item.text);
+   const audio=item.audioUrl?`<audio controls preload="none" data-ny-audio="${esc(r.jobId+':'+i)}" data-audio-start="${range.start}" data-audio-end="${range.end}" aria-label="Hear the passage at ${esc(stamp)}" src="${esc(item.audioUrl)}"></audio><span class="ny-audio-status" role="status"></span>`:'<span class="ny-audio-status">Audio unavailable for this passage.</span>';
+   return `<div class="ny-context"><p class="ny-passage"><span class="ny-time">${esc(stamp)}</span> ${passage}</p>${item.proposed?`<p class="ny-proposed">Suggested: <b>${esc(item.proposed)}</b></p>`:''}<p class="ny-reason">${esc(item.reason||'Listen and decide whether the transcript needs a correction.')}</p><div class="ny-listen">${audio}</div></div>`;
+  }).join('');
+  const wordsHref=r.wordsHref||a.wordsHref,transcriptHref=r.transcriptHref||a.transcriptHref;
+  const words=wordCount&&wordsHref?`<a class="ny-open" href="${esc(wordsHref)}">Review ${count(wordCount,'word')}</a>`:'';
+  const passages=passageCount&&transcriptHref?`<a class="ny-open" href="${esc(transcriptHref)}">Review ${count(passageCount,'passage')}</a>`:'';
+  return `<article class="ny-ask ny-recording" data-ny-ask="${esc(a.id)}" data-band="only-adrian"><div class="ny-meta"><span class="ny-about">${esc(r.title||a.about||'Recording')}</span>${date?`<span>${esc(date)}</span>`:''}<span>Transcript review</span></div><p class="ny-q">${esc(parts.join(' and '))} to review</p>${items}<div class="ny-acts">${words}${passages}</div><p class="ny-foot">Review each suggestion with its source. No correction is applied here.</p></article>`;
+ }
+ const clockTime=t=>Math.floor(Math.max(0,Number(t)||0)/60)+':'+String(Math.floor(Math.max(0,Number(t)||0)%60)).padStart(2,'0');
  function openRow(a){
+  if(a.recording)return recordingRow(a);
   let acts='',foot='';
   if(a.choices.length){
    const linked=!!a.link;
@@ -102,6 +125,8 @@
   const d=document.getElementById('project-library'),main=d?.querySelector('.ht-home-main');if(!d?.open||!main)return;
   let band=main.querySelector(':scope>.ny-band');
   if(!band){band=document.createElement('section');band.className='ny-band';band.setAttribute('aria-label','Needs you');main.prepend(band);}
+  // Polling may update data while he listens; refresh the card after playback pauses.
+  if([...band.querySelectorAll('audio[data-ny-audio]')].some(a=>!a.paused&&!a.ended))return;
   const next=html();if(band.dataset.render===next)return;
   // A re-render must not eat what he is typing: keep the draft and the cursor.
   const active=band.querySelector('textarea:focus'),keep=active?{id:active.closest('[data-ny-free]')?.dataset.nyFree,start:active.selectionStart,end:active.selectionEnd}:null;
@@ -111,6 +136,22 @@
  }
 
  /* ---------- events ---------- */
+ document.addEventListener('play',event=>{
+  const a=event.target;if(!a?.matches?.('#project-library audio[data-ny-audio]'))return;
+  const from=Number(a.dataset.audioStart),to=Number(a.dataset.audioEnd);
+  if(a.currentTime<from||a.currentTime>=to)a.currentTime=from;
+ },true);
+ document.addEventListener('timeupdate',event=>{
+  const a=event.target;if(!a?.matches?.('#project-library audio[data-ny-audio]'))return;
+  if(a.currentTime>=Number(a.dataset.audioEnd)&&!a.paused)a.pause();
+ },true);
+ document.addEventListener('error',event=>{
+  const a=event.target;if(!a?.matches?.('#project-library audio[data-ny-audio]'))return;
+  const status=a.parentElement.querySelector('.ny-audio-status');if(status)status.textContent='Audio could not be played. Open the recording to check its availability.';
+ },true);
+ for(const name of ['pause','ended'])document.addEventListener(name,event=>{
+  if(event.target?.matches?.('#project-library audio[data-ny-audio]'))setTimeout(paint,0);
+ },true);
  document.addEventListener('click',event=>{
   const root=event.target.closest?.('#project-library .ny-band');if(!root)return;
   const choice=event.target.closest('[data-ny-choice]');
@@ -132,7 +173,7 @@
  // Read whenever Home opens; keep fresh while it stays open and visible. Nothing polls when Home is closed.
  let watched=null;
  const tick=()=>{clearInterval(timer);timer=0;const d=document.getElementById('project-library');if(!d?.open)return;timer=setInterval(()=>{if(document.visibilityState==='hidden')return;if(!document.getElementById('project-library')?.open){clearInterval(timer);timer=0;return;}void load();},POLL);};
- new MutationObserver(()=>{const d=document.getElementById('project-library');if(d&&d!==watched){watched=d;const onOpen=()=>{if(d.open){notice='';paint();void load();tick();}else tick();};new MutationObserver(onOpen).observe(d,{attributes:true,attributeFilter:['open']});onOpen();}}).observe(document.body,{childList:true});
+ new MutationObserver(()=>{if(!window.document)return;const d=document.getElementById('project-library');if(d&&d!==watched){watched=d;const onOpen=()=>{if(d.open){notice='';paint();void load();tick();}else tick();};new MutationObserver(onOpen).observe(d,{attributes:true,attributeFilter:['open']});onOpen();}}).observe(document.body,{childList:true});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&document.getElementById('project-library')?.open)void load();});
  window.needsYou={load,paint,asks:()=>asks.slice(),html};
 })();

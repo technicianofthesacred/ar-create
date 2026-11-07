@@ -1,3 +1,4 @@
+import {recordingPurpose,recordingTitle} from './recording-attention.mjs';
 // Transcript check: a model reads a finished recording's transcript once and sorts what needs a human look, so Adrian
 // listens only where it matters. Three kinds: sure fixes (a clear mishearing, applied in one tap), lines that are
 // probably not the speaker (left out of the talk, never deleted from the transcript), and lines that need his ear (a
@@ -211,10 +212,9 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
  async function raiseAsk(id,record,title){
   if(!needsYou)return record;
   const open=record.problems.filter(p=>!record.decisions?.[p.id]);if(!open.length)return record;
-  const ear=open.filter(p=>p.tier==='ear').length,easy=open.length-ear;
-  const lead=(ear?ear+(ear===1?' line':' lines')+' in "'+clip(title,60)+'" may need your ear':'"'+clip(title,60)+'" is checked')+(easy?', and '+easy+' easy '+(easy===1?'one applies':'ones apply')+' in one tap.':'.');
+  const lead=open.length+' proposed passage'+(open.length===1?'':'s')+' to review in "'+clip(title,60)+'". Listen and compare the wording before deciding.';
   try{
-   const ask=await needsYou.raise({operationId:uuidFrom(id+':check:'+record.startedAt),band:'only-adrian',question:clip(lead+' The rest of the talk needs nothing.',280),about:clip(title,120),
+   const ask=await needsYou.raise({operationId:uuidFrom(id+':check:'+record.startedAt),band:'only-adrian',question:clip(lead,280),about:clip(title,120),
     choices:['Done'],scope:{kind:'recording-check',id},link:{label:'Check it',href:'/transcript-check/index.html?job='+id}},SYSTEM);
    return {...record,askId:ask?.id||ask?.ask?.id||null};
   }catch{return record;}
@@ -264,7 +264,13 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
     if(existing?.state==='running'&&running.has(id))return view(id);
     if(existing?.state==='ready'&&!again)return view(id);
     if(!available())fail('The claude command is not set up on this Mac, so no suggestions can be made. The transcript is still here to read and correct.',503);
-    const snap=corrections.read(id),record={schema:'ar-create.transcript-check.v1',jobId:id,state:'running',startedAt:new Date().toISOString(),startedBy:who(),basis:snap.expected.revision,problems:[],decisions:{}};
+    const snap=corrections.read(id);
+    const job=readJson(path.join(dataDir,'recordings/.transcription-jobs',id+'.json'),null);
+    if(recordingPurpose(job,snap.result.segments)==='test'){
+     if(existing)return view(id);
+     save(id,{schema:'ar-create.transcript-check.v1',jobId:id,state:'excluded',startedAt:new Date().toISOString(),problems:[],decisions:{},exclusion:'Test recording'});return view(id);
+    }
+    const record={schema:'ar-create.transcript-check.v1',jobId:id,state:'running',startedAt:new Date().toISOString(),startedBy:who(),basis:snap.expected.revision,problems:[],decisions:{}};
     save(id,record);
     const work=(async()=>{
      const cwd=fs.mkdtempSync(path.join(dir(),'.run-'));
@@ -273,7 +279,7 @@ export function createTranscriptCheck({dataDir,corrections,vocabulary=async()=>'
       const result=await execute({cwd,prompt,timeoutMs});
       let parsed;try{parsed=JSON.parse(result.text);}catch{fail('The suggestions came back unreadable. Try again.');}
       const problems=validateSuggestions(parsed,snap.result.segments);
-      const title=titleOf(snap);
+      const title=recordingTitle(job,snap.result.segments);
       save(id,await raiseAsk(id,{...record,state:'ready',finishedAt:new Date().toISOString(),model:result.model||null,problems:[...problems],dropped:problems.dropped},title));
      }catch(error){save(id,{...record,state:'failed',finishedAt:new Date().toISOString(),error:error.status?error.message:'The transcript could not be read for problems. Try again.'});}
      finally{fs.rmSync(cwd,{recursive:true,force:true});running.delete(id);}
