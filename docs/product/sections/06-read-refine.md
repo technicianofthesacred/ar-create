@@ -1,5 +1,12 @@
 # 6 — Read & refine
 
+## 6 November — Quieter editorial discussion
+
+C01/C04/C05/C06, S05/S06. Direct author feedback adopts a much subtler active passage background with a small corner radius, no framing lines beside the editorial discussion, the existing shared sans-serif interface font and Graphite controls, and better use of available desktop width. Keep the exact original/proposed comparison, explicit sample provenance, editable proposal, Accept/Dismiss, Context and refinement. Consolidate secondary protection explanation into the existing Context view rather than an accordion. This is a presentation change; preserve the editor, identities, native save/recovery, stale guards and exact Undo.
+
+Finish: inspect populated discussion and passage in desktop/phone light and dark, tablet side-sheet and Focus; verify original/proposed readability, consistent controls, no horizontal overflow, Context/refinement and unchanged source/independent saved-copy Undo. Full-site inspection should record similar styling problems for later bounded fixes, without implementing the rest of the site as a side effect. Candidate proof does not establish installation or human visual acceptance.
+
+
 ## Current Combined presentation — adopted 30 October
 
 S06, C01/C03/C04/C05. Read leaves the rail and becomes the current piece’s Read switch beside Write / Check. Reuse the same selected output and document geometry, preserving passage position, independent wording, meaningful read-only states and exact saved Undo. Context sheets return to that same line on Esc. Existing deep-link and requirement identities remain available; moving Read must not make retained earlier/original writing unreachable.

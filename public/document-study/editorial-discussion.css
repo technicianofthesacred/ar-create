@@ -1,0 +1,139 @@
+/* Write / Read discussion refinement. Keep the existing note and editor owners.
+   Important layer beats legacy specificity; Graphite still owns every button. */
+@layer editorial-discussion {
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) {
+    --editorial-passage: color-mix(in srgb, var(--ink) 4%, transparent);
+    --editorial-phrase: color-mix(in srgb, var(--warm) 10%, transparent);
+    --editorial-selection: color-mix(in srgb, var(--warm) 20%, transparent);
+  }
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #workspace {
+    --measure: 700px !important;
+  }
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #workspace :is(#manuscript, .draft-read-words) [data-anchor-open] {
+    background: var(--editorial-passage) !important;
+    border-radius: 6px !important;
+  }
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #workspace .discussionTarget {
+    background: var(--editorial-phrase) !important;
+    border-radius: 3px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #workspace ::selection {
+    background: var(--editorial-selection) !important;
+    color: var(--ink) !important;
+  }
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #margin {
+    border: 0 !important;
+    background: transparent !important;
+  }
+  body.wbf-on #margin .discussion {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font: 400 13px/1.6 var(--ar-ui) !important;
+    color: var(--ink) !important;
+    overflow-wrap: anywhere;
+  }
+  body.wbf-on #margin .discussion .head { margin-bottom: 8px !important; }
+  body.wbf-on #margin .discussion .head strong {
+    font: 600 14px/1.5 var(--ar-ui) !important;
+    color: var(--ink) !important;
+  }
+  body.wbf-on #margin .discussion :is(.target, .why, .thread, label, .sourceGuard) {
+    font: 400 13px/1.6 var(--ar-ui) !important;
+    color: var(--dim) !important;
+    border: 0 !important;
+    padding: 0 !important;
+  }
+  body.wbf-on #margin .discussion .tag {
+    font: 400 12px/1.5 var(--ar-ui) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    color: var(--dim) !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin-bottom: 12px;
+  }
+  body.wbf-on #margin .discussion .target {
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 0 12px !important;
+  }
+  body.wbf-on #margin .discussion .reply {
+    font: 400 15px/1.6 var(--ar-ui) !important;
+    color: var(--ink) !important;
+    margin: 16px 0 !important;
+    caret-color: var(--ink);
+  }
+  body.wbf-on #margin .discussion .reply:focus-visible {
+    outline: 2px solid var(--warm) !important;
+    outline-offset: 4px !important;
+    border-radius: 3px;
+  }
+  body.wbf-on #margin .discussion .buttons {
+    display: flex !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    margin: 12px 0 20px !important;
+  }
+  body.wbf-on #margin .discussion label { margin: 16px 0 6px !important; }
+  body.wbf-on #margin .discussion textarea {
+    font: 400 13px/1.6 var(--ar-ui) !important;
+    min-height: 84px !important;
+    padding: 8px 10px !important;
+    width: 100%;
+  }
+  body.wbf-on #margin .discussion .discussion-refine { margin-top: 8px; }
+  body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #margin .study-ai-proposals {
+    border: 0 !important;
+    padding-left: 0 !important;
+  }
+  @media (max-width: 900px) {
+    body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #workspace>.desk:has(>#margin)>.document {
+      padding-bottom: 24px !important;
+    }
+  }
+  @media (min-width: 901px) and (max-width: 1279px) {
+    body.wbf-on.combined-piece-on #workspace>#combined-piece-frame {
+      grid-template-columns: auto minmax(0,1fr) auto auto auto auto auto !important;
+    }
+    body.wbf-on.combined-piece-on #combined-piece-frame>[data-ar-fold="toggle"] {
+      grid-column: 5 !important;
+      grid-row: 2 !important;
+    }
+    body.wbf-on.combined-piece-on #combined-piece-frame>.cp-main-tool:not(.ar-fold-btn) {
+      grid-column: 6 !important;
+      grid-row: 2 !important;
+    }
+    body.wbf-on.combined-piece-on #combined-piece-frame>.cp-more {
+      grid-column: 7 !important;
+      grid-row: 2 !important;
+    }
+    body.wbf-on[data-ar-fold="open"] #workspace>.desk>#margin {
+      background: var(--bg) !important;
+    }
+  }
+  /* Use spare desktop width for both the text and its discussion. Keep the
+     existing tablet side sheet, Focus and phone navigation intact. */
+  @media (min-width: 1280px) {
+    body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]):not(.wbf-drawer-open):not([data-draft-focus="true"]) #workspace:has(>.desk>#margin) {
+      --ar-pane: clamp(320px, 28vw, 420px);
+    }
+    body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]):not(.wbf-drawer-open):not([data-draft-focus="true"]) #workspace:has(>.desk>#margin)>:is(#c3-surface-bar, #wbf-tools, #combined-piece-frame) {
+      margin-left: max(24px, calc((100% - var(--ar-pane) - var(--measure)) / 2)) !important;
+    }
+    body.wbf-on:is([data-c3-stage="5"], [data-c3-stage="6"]) #workspace>.desk>#margin {
+      padding: 8px 24px 32px !important;
+    }
+  }
+}

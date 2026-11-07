@@ -407,7 +407,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   }
   const simmer=await sharedSimmerServices({dataDir,library,concepts:conceptWork});
   const conversationCaptures=createConversationCapture({dataDir,concepts:conceptWork,...simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk})});
-  const currentWork=conceptWork?createCurrentWork({concepts:conceptWork,direction:studyHumanDirection,...simmer,understanding:currentUnderstanding,studyAI,presence,continuity:workContinuity,captures:conversationCaptures,needs:sharedNeedsYou({dataDir,events})}):null;
+  const currentWork=conceptWork?createCurrentWork({concepts:conceptWork,direction:studyHumanDirection,...simmer,understanding:currentUnderstanding,studyAI,presence,continuity:workContinuity,captures:conversationCaptures,needs:sharedNeedsYou({dataDir,events,recordings})}):null;
   const studyLanguage=studyOutputs&&studyDrafts?createStudyLanguageConnection({dataDir,outputs:studyOutputs,drafts:studyDrafts,share:studyShare,structureTests,execution:nativeAIExecution??execution}):null;
   const sourceLanguage=createSourceTranslationProposals({dataDir,readSelection:createSourceTranslationSelectionReader({sourceSessions,drafts:studyDrafts,validateCopyTarget:input=>structureTests?.validateTarget(input)}),validateCopyTarget:input=>structureTests?.validateTarget(input),execution:nativeAIExecution??execution});
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
@@ -463,7 +463,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       // i64 OS health (B3): which release this program is. The sha comes from <home>/RELEASE.json, which serve.mjs reads and passes in.
       if(pathname==='/api/i64os/health'&&['GET','HEAD'].includes(request.method)){if(!studyDrafts)throw new StateError('Document study is not configured.',503);const sha=typeof release?.sha==='string'&&/^[a-f0-9]{7,40}$/.test(release.sha)?release.sha:null;return json(response,200,{service:'ar-create-document-study',ready:true,release:{sha}});}
       if(await continuityInterface.handle(request,response))return;
-      if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,checkWrite:()=>checkWrite(request,server)}))return;
+      if(await (await import('./services/needs-you.mjs')).handleNeedsYou(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/words-http.mjs')).handleWords(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/transcript-check-http.mjs')).handleTranscriptCheck(request,response,{dataDir,recordings,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/phone-pickup-http.mjs')).handlePhonePickup(request,response,{dataDir,events,recordings,library,origin:()=>server.listening?'http://127.0.0.1:'+server.address().port:null,checkWrite:()=>checkWrite(request,server)}))return;
