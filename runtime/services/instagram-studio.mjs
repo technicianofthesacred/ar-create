@@ -444,7 +444,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
 export function playwrightRoots(env=process.env,home=os.homedir()){
  return [env.PLAYWRIGHT_BROWSERS_PATH,path.join(home,'Library/Caches/ms-playwright'),path.join(home,'.cache/ms-playwright')].filter(Boolean);
 }
-function chrome(){
+export function chrome(){
  for(const root of playwrightRoots()){
   let dirs=[];try{dirs=fs.readdirSync(root).filter(d=>d.startsWith('chromium_headless_shell-')).sort((a,b)=>+b.split('-')[1]-+a.split('-')[1]);}catch{}
   // Linux builds of the headless shell have shipped as chrome-linux/headless_shell and as chrome-headless-shell-linux64.
