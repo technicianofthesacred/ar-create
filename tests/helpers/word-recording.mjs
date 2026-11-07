@@ -22,7 +22,7 @@ export const w=(text,probability)=>text.split(' ').map((word,i)=>({word:' '+word
 export const seg=(start,text,probability,extra={})=>({start,end:start+text.split(' ').length*.4,text,words:w(text,probability),avg_logprob:-.3,...extra});
 export const TALK=[
  seg(0,'Lu Yo wrote the Classic of Tea long ago.'),
- seg(5,'We drank shaw puerh from 1998 with Maria at the farm.'),
+ seg(5,'We drank shaw puerh from 1998 with Maria at the farm.',{'1998':.2},{avg_logprob:-1.5}),
  seg(12,'Then the gaiwan was warmed.',{gaiwan:.2}),
 ];
 

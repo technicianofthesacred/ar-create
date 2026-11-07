@@ -3,7 +3,7 @@
 //
 //   recognise  After a transcript exists: fix known mishearings of confirmed library words (one correction receipt, the
 //              original transcript untouched), then find the words worth a second look.
-//   check      Every doubtful word from one recording is ONE steer ask on the Needs you list, default "keep as heard".
+//   check      Supported doubtful words from one real recording form one explicit review request on Needs you.
 //              Adrian answers each word on the Words screen. That answer is remembered: his spelling becomes a library
 //              entry or a new known mishearing, so the next recording, in any project, gets it right.
 //   answer     Human-only, from the app. An agent can raise and read; it can never confirm a spelling.
@@ -12,6 +12,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {recordingPurpose,recordingTitle,qualifiedWords,recordingContext,wordReason} from './recording-attention.mjs';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman} from './actor.mjs';
 import {CATEGORIES} from './word-prompt.mjs';
@@ -19,7 +20,6 @@ import {findHits,findFixes,findDoubtful,findReplacements,mmss} from './word-reco
 
 const RECORD_SCHEMA='ar-create.word-check.v1';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
-const DAY=24*60*60*1000;
 const ASK_KEEP='Keep all as heard',ASK_GO='Go through them';
 const ANSWERS=['keep','right','suggestion','spelling'];
 const SYSTEM={actor:'cron:shared-words',client:null};
@@ -62,8 +62,8 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
  function askFor(rec){
   const n=open(rec),first=rec.items.find(i=>i.status==='open');
   const lead=n+(n===1?' word':' words')+' to check in "'+clip(rec.story,60)+'". First: "'+clip(first.word,40)+'" at '+mmss(first.start)+'.';
-  return {operationId:uuidFrom(rec.jobId+':ask:'+rec.recognisedAt),band:'steer',question:clip(lead+' Nothing changes unless you say so.',280),about:clip(rec.story,120),
-   choices:[ASK_KEEP,ASK_GO],default:ASK_KEEP,applyAt:iso(now()+7*DAY),scope:{kind:'recording-words',id:rec.jobId}};
+  return {operationId:uuidFrom(rec.jobId+':ask:'+rec.recognisedAt),band:'only-adrian',question:clip(lead+' Listen to the passage before deciding.',280),about:clip(rec.story,120),
+   choices:[ASK_KEEP,ASK_GO],scope:{kind:'recording-words',id:rec.jobId}};
  }
 
  // ---- recognise ----
@@ -77,13 +77,18 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
    const job=readJob(input.jobId);
    if(!job||job.state!=='done'||job.transcriptReady!==true)fail('That recording has no finished transcript yet.',404);
    let snap;try{snap=corrections.read(input.jobId);}catch(error){fail('The transcript could not be opened for checking: '+error.message,error.status===404?404:409);}
+   if(recordingPurpose(job,snap.result.segments)==='test'){
+    if(existing)return view(existing);
+    const rec={schema:RECORD_SCHEMA,jobId:input.jobId,story:recordingTitle(job,snap.result.segments),recognisedAt:iso(now()),state:'excluded',exclusion:'Test recording',items:[],fixes:{applied:[],suggested:[]},askId:null};writeRecord(rec);return view(rec);
+   }
    const lib=await library.snapshot(),entries=lib.entries;
    const reviewed=snap.reviewStatus==='reviewed';
    // 1. fix known mishearings of confirmed words, one receipt. A transcript Adrian already reviewed is never touched
    //    on its own: the fixes become suggestions to check instead.
+   const beforeDoubt=findDoubtful(snap.result,entries,{kept:lib.kept});
    const found=findFixes(snap.result,entries);
    const rec={schema:RECORD_SCHEMA,jobId:input.jobId,story:job.story||'Recording',language:snap.result.language||job.language||null,recognisedAt:iso(now()),recognisedBy:context?.actor||SYSTEM.actor,
-    libraryRevision:lib.revision,reviewedAtStart:reviewed,fixes:{receiptId:null,applied:[],suggested:[]},hits:[],items:[],dropped:0,askId:existing?.askId||null,state:'open'};
+    attentionVersion:2,basis:null,libraryRevision:lib.revision,reviewedAtStart:reviewed,fixes:{receiptId:null,applied:[],suggested:[]},hits:[],items:[],dropped:0,askId:existing?.askId||null,state:'open'};
    if(found.corrections.length&&!reviewed){
     rec.fixes.receiptId=applyCorrections(input.jobId,found.corrections,reasonFor('shared words · known mishearings of confirmed words · fixed automatically',found.changes),'library-variant');
     rec.fixes.applied=found.changes;snap=corrections.read(input.jobId);
@@ -91,12 +96,18 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
    rec.hits=findHits(snap.result,entries).slice(0,40);
    // 2. doubtful words on the text as it now reads
    const doubt=findDoubtful(snap.result,entries,{kept:lib.kept});
+   if(rec.fixes.applied.length)for(const old of beforeDoubt.items){
+    const current=snap.result.segments[old.segmentIndex];
+    if(current?.text.includes(old.word)&&!doubt.items.some(i=>i.key===old.key))doubt.items.push({...old,sentence:current.text});
+   }
+   rec.basis=snap.expected.revision;
    rec.dropped=doubt.dropped;
    const fromFixes=rec.fixes.suggested.map(c=>({key:'near-match:'+c.heard.toLowerCase(),kind:'near-match',word:c.heard,segmentIndex:c.segmentIndex,start:c.start,end:c.start,sentence:c.sentence,occurrences:1,times:[c.start],score:95,suggestion:c.spelling,entryId:c.entryId}));
    const merged=new Map();for(const item of [...fromFixes,...doubt.items])if(!merged.has(item.key))merged.set(item.key,item);
    const prior=new Map((existing?.items||[]).map(i=>[i.key,i]));
    rec.items=[...merged.values()].sort((a,b)=>a.start-b.start).map(i=>prior.get(i.key)&&prior.get(i.key).status!=='open'?prior.get(i.key):{...i,status:'open',answer:null});
    for(const old of prior.values())if(old.status!=='open'&&!merged.has(old.key))rec.items.push(old);
+   rec.qualifiedKeys=rec.items.filter(i=>i.status==='open').map(i=>i.key);
    rec.state=open(rec)?'open':'done';
    // A run again keeps the ask while it is still open; once it was settled, new words get a fresh ask.
    if(rec.askId){let ask=null;try{ask=(await needsYou.list({id:rec.askId,status:'all'})).asks[0]||null;}catch{ask=null;}if(!ask||ask.status!=='open')rec.askId=null;}
@@ -115,22 +126,28 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
   }
   return await reconcile(rec);
  }
- /** If the ask was settled with "Keep all as heard" (by him, or by its default), every word still open stays as heard. */
+ /** Only an explicit human Keep-all answer settles the words; absence or elapsed time grants no approval. */
  async function reconcile(rec){
   if(rec.state==='done'||!rec.askId)return view(rec);
   let ask=null;
   try{ask=(await needsYou.list({id:rec.askId,status:'all'})).asks[0]||null;}catch{ask=null;}
-  const keepAll=ask&&['defaulted','answered'].includes(ask.status)&&ask.resolution?.choice===ASK_KEEP;
-  const expired=!ask&&now()-Date.parse(rec.recognisedAt)>30*DAY;
-  if(keepAll||expired){
-   const by=keepAll?ask.resolution.by:'default',at=iso(now());
+  const keepAll=ask?.status==='answered'&&ask.resolution?.via==='human'&&ask.resolution?.choice===ASK_KEEP;
+  if(keepAll){
+   const by=ask.resolution.by,at=iso(now());
    for(const item of rec.items)if(item.status==='open'){item.status='kept';item.answer={choice:'keep',by,at,via:'ask'};}
    rec.state='done';writeRecord(rec);
   }
   return view(rec);
  }
- const view=rec=>({schema:RECORD_SCHEMA,...rec,open:open(rec),total:rec.items.length,
-  items:rec.items.map(i=>({...i,time:mmss(i.start),kindLabel:KIND_LABEL[i.kind]||i.kind}))});
+ const view=async rec=>{
+  if(rec.state==='excluded')return {...rec,open:0,total:0};
+  const job=readJob(rec.jobId);let snap;try{snap=corrections.read(rec.jobId);}catch{return {...rec,items:[],open:0,total:0,unavailable:true};}
+  if(recordingPurpose(job,snap.result.segments)==='test')return {...rec,state:'excluded',items:[],open:0,total:0};
+  const items=qualifiedWords(rec,snap,await library.snapshot());
+  const count=items.filter(i=>i.status==='open').length;
+  return {schema:RECORD_SCHEMA,...rec,story:recordingTitle(job,snap.result.segments),recordedAt:job?.recordedAt||null,open:count,total:items.length,
+   items:items.map(i=>({...i,time:mmss(i.start),kindLabel:KIND_LABEL[i.kind]||i.kind,reason:wordReason(i),...recordingContext(job,snap,i)}))};
+ };
 
  async function check({jobId}={}){
   if(!UUID.test(jobId||''))fail('Name one recording by its id.');
@@ -170,11 +187,14 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
   }else if(input.spelling!==undefined)fail('Only "spelling" takes a written spelling.');
   return serial(async()=>{
    const rec=readRecord(input.jobId);if(!rec)fail('That recording has not been checked for words yet.',404);
-   const item=rec.items.find(i=>i.key===input.key);if(!item)fail('That word is not on this recording\'s list.',404);
+   const item=rec.items.find(i=>i.key===input.key),qualified=await view(rec);
+   if(item?.status==='open'&&!qualified.items.some(i=>i.key===item.key))fail('This word no longer has a supported suggestion in the current recording. Reopen the review.',409);
+   if(!item)fail('That word is not on this recording\'s list.',404);
    if(item.status!=='open'){
     if(item.answer?.operationId===input.operationId)return await reconcile(rec);
     fail('That word is already settled ('+item.status+').',409);
    }
+   rec.qualifiedKeys=qualified.items.filter(i=>i.status==='open').map(i=>i.key);
    const at=iso(now()),by=context.actor;
    const from={jobId:rec.jobId,story:rec.story,at:item.start,sentence:item.sentence};
    let receiptId=null,learned=null,spelling=null;
@@ -192,6 +212,7 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
     // 1. fix what he confirmed, everywhere it was heard in this talk, as a correction receipt
     const swap=findReplacements(corrections.read(rec.jobId).result,item.word,spelling);
     if(swap.corrections.length)receiptId=applyCorrections(rec.jobId,swap.corrections,reasonFor('shared words · spelling confirmed by '+by,swap.changes),'library-answer');
+    if(receiptId){const current=corrections.read(rec.jobId);rec.attentionVersion=2;rec.qualifiedKeys=qualified.items.filter(i=>i.status==='open').map(i=>i.key);for(const pending of rec.items)if(pending.status==='open'&&swap.corrections.some(c=>c.index===pending.segmentIndex)&&current.result.segments[pending.segmentIndex].text.includes(pending.word))pending.sentence=current.result.segments[pending.segmentIndex].text;rec.basis=current.expected.revision;}
     // 2. remember it. A number or date is corrected for this talk only; a word becomes part of the library.
     if(item.kind!=='number'){
      const category=input.category||item.category||'other';
@@ -199,6 +220,7 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
     }
     item.status='corrected';
    }
+   rec.libraryRevision=(await library.snapshot()).revision;
    item.answer={choice:input.choice,spelling,by,at,operationId:input.operationId,receiptId,remembered:learned?{entryId:learned.entry.id,created:learned.created,variant:learned.variant?.text||null}:null};
    if(!open(rec)){
     rec.state='done';
@@ -207,7 +229,7 @@ export function createSharedWords({dataDir,library,corrections,needsYou,now=()=>
    }
    writeRecord(rec);
    onChange('answered',{jobId:rec.jobId,key:item.key});
-   return {...view(rec),learned:learned?{entry:learned.entry,created:learned.created,variant:learned.variant||null}:null};
+   return {...await view(rec),learned:learned?{entry:learned.entry,created:learned.created,variant:learned.variant||null}:null};
   });
  }
 

@@ -4,7 +4,7 @@ Adrian had four separate transcription setups (the phone oracle in mandalacodes,
 
 ```
 transcribe  ->  recognise words  ->  check they are right  ->  place each piece
-   primed by      library hits,        one ask per recording,     (Source, Simmer,
+   primed by      library hits,        one contextual ask,       (Source, Simmer,
    the library    known mishearings    his answers remembered      Direction, ...)
                   fixed with a receipt,
                   doubtful words found
@@ -42,8 +42,8 @@ The transcription job (`runtime/services/magazine/intake.mjs`, `vocabularyPrompt
 After a transcript exists (a recording that finishes while the server is running, or `words recognise <jobId>` for any finished recording):
 
 1. **Known mishearings** of confirmed words are replaced through the recording owner's own correction receipts (`.corrections/<id>.proposal.json`, `kind: library-variant`, exact before and after, status `applied`). The first transcript, RAW and the audio are untouched. A transcript Adrian already **reviewed** is never changed on its own: its fixes become words to check.
-2. **Doubtful words** are found on the text as it now reads: low-confidence words (word probability under 0.5), unknown proper nouns (capitalised mid-sentence, not in the library), numbers and dates, and near-misses of a library word ("Lu Yo" for Lu Yu). One item per word, with its audio time and sentence, at most 40 per recording (the rest are counted, not listed).
-3. **One ask.** All doubtful words from one recording become **one** Needs you ask, band `steer`, scope `{kind:"recording-words", id:<jobId>}`, default "Keep all as heard" applying in seven days. "Go through them" opens the Words screen at that recording. If the default applies, every word stays as heard and nothing is remembered.
+2. **Doubtful words** require independent speech uncertainty. Ordinary capitalization, a confident number, or resemblance to a specialist vocabulary entry is insufficient. Fuzzy suggestions are conservative person/place candidates; confirmed explicit mishearings remain supported. Previously saved open items are requalified before presentation and stale replacements are withheld. Original evidence can continue across the owner's exact guarded corrections; an unrelated source change cannot refresh every pending item's authority.
+3. **One contextual request per real recording.** Home combines pending word and passage checks with a readable title, actual speech context, clearly proposed wording, reasons and surrounding audio where available. Exact overlapping excerpts share a player without discarding distinct proposals or separate moments. Whole microphone/system checks and explicitly marked tests are excluded; titles about testing and unnamed real work are retained. Historical records and human decisions remain intact. Recording reviews wait for explicit human decisions: no timed Keep-all approval or manual Home Done shortcut. Review links lead to the existing Words or transcript-check owners; unrelated steer asks keep their defaults.
 4. **Answers are Adrian's, from the app.** Per word: keep as heard, use the library's suggestion, spell it another way, or "that is right, remember it". A confirmed spelling is saved: a new entry, or a new `heard` variant on the entry that already has the spelling, with the recording, time and sentence as provenance; and the recording is corrected everywhere that word was heard, through a correction receipt. The next recording in any project gets it right. A number or date is corrected for that recording only and never becomes vocabulary. A word kept as heard twice stops being asked about.
 
 Agents: `words recognise`, `words check`, `words checks`, `words list`, `words export`, `words add` (suggest). Human-only (exit 5 for anyone else, and the service also requires the app's own page for answers): `words answer`, `words decide`.

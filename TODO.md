@@ -79,3 +79,7 @@ Write proposal limit, 6 November (C04/C06, S05/S06): direct human Enter/Shift+En
 ### 6 November isolated interface refinement candidate
 
 C02/C04/C05/C06, S01–S12: candidate `codex/interface-complete-20261106` starts from main `9a514d8`. Library/Material, shared shell and section toolbar hierarchy are implemented in isolation; [verification and limits](docs/verification/interface-refinement-2026-11-06.md). Finish criterion: populated responsive light/dark screens, correct selection and exclusive Material transitions, preserved stage/identity/edit guards, then human review. Existing integrator retains activation ownership. This candidate has no installation authorization or installed-success claim.
+
+### 6 November — Decision-ready recording requests
+
+- [ ] S02 / C01 / C02 / C04 / C06: qualify real recordings and supported suggestions, combine word/passage requests, show source context and playable audio. Candidate `codex/needs-context` starts from PR218 main; preserve all editorial records and existing correction owners. Finish: focused current/historical/filter/HTTP/UI checks, native synthetic desktop/phone light/dark playback and review journey, package check, then existing integrator review and separately authorized release. Source qualification includes 77 focused checks after the legacy-default repair and the preceding b508c51 broader local preservation suite (3,558 passing, four skipped, zero failures), native contextual audio/screens and clean package proof. Installation remains open.

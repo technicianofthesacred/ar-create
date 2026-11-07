@@ -83,9 +83,9 @@ test('recognise, check and answer over the real server: one ask, the answer only
  const rec=await f.cli(['words','recognise',a.id]);
  assert.equal(rec.exitCode,0,JSON.stringify(rec.result));
  assert.ok(rec.result.items.length>=3);assert.ok(rec.result.askId);
- // the Needs you list has exactly one ask for it, with its default
+ // the Needs you list has exactly one ask for it, with no timed editorial default
  const asks=(await f.page('GET','/api/needs-you?status=all')).body.asks;
- assert.equal(asks.length,1);assert.equal(asks[0].default,'Keep all as heard');assert.equal(asks[0].scope.id,a.id);
+ assert.equal(asks.length,1);assert.equal(asks[0].default,null);assert.equal(asks[0].scope.id,a.id);
  // an agent reads it all
  const read=await f.cli(['words','check',a.id]);
  assert.equal(read.exitCode,0);assert.equal(read.result.open,rec.result.items.length);
