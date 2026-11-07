@@ -62,3 +62,11 @@ Use Material's permanent project folder and album-link entry as the same media i
 ## 31 October — structure-test footage scope
 
 S08, C03/C04/C05/C06. The approved whole-structure journey adds ranges and playback using existing attached Library originals. Ranges reference exact source ID/hash and original timebase ticks; the original is never trimmed or copied. Preserve earlier proposed/reviewed range events, actual actors and explicit stand-in labels on a registered test copy. A missing video remains an honest empty state, with the Library entrance; no substitute footage or Premiere edits. Finish criterion: synthetic attached-original range save/reopen, exact bounded 206 playback, source/timebase stale refusal and unchanged original bytes. Real-copy coverage is a separate read result.
+
+## 7 November — Select photos without moving the contact sheet
+
+S08, C02/C04/C05/C06. Adrian adopted click-to-select and double-click-to-expand in Media. Remove contact-sheet checkboxes; show selection with a fine outline and quiet caption background. Command/Control-click adds or removes an asset; Shift-click selects the visible sorted range. Keep a separate expand target for touch, hover and keyboard focus; Enter opens the focused photo. Selection is temporary browsing state, never saved placement or editorial approval. Library and the explicit placement picker retain their existing contracts.
+
+The selection count, Select all and Clear occupy permanent toolbar space. Changing selection must neither insert a banner nor rebuild the contact sheet or reset its scroll. Sorting retains the list's scroll offset. Existing exact-photo validation, saved details, usage/placement links, original identities, filing guards and native owner remain authoritative.
+
+Finish criterion: select, add, range, select all and clear with unchanged toolbar/grid bounds and card nodes; expand and return to the same selection and scroll; verify desktop, intermediate and phone widths in both themes, keyboard/touch expansion, guarded stale-photo refusal and unchanged dirty manuscript controls. A verified source candidate is separate from installed release and human visual acceptance.
