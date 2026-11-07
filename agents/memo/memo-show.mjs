@@ -32,11 +32,22 @@ async function shoot(name, query) {
   if (state === 'empty') return;
   if (state !== 'ready') { out.push({part: name, error: attr('error') || 'The studio did not finish drawing.'}); return; }
   const file = path.join(dir, `${String(out.length + 1).padStart(2, '0')}-${name}.png`);
-  await run(bin, [...base, '--force-device-scale-factor=2', `--window-size=${width},${Math.min(16000, Number(attr('height')) || 900)}`, `--screenshot=${file}`, url], {timeout: 40000});
+  const height=Number(attr('height'))||900;
+  if(height>16000){out.push({part:name,error:'This part is too tall for one complete picture. Open it in AR Create.'});return;}
+  const {stdout:captured}=await run(bin, [...base, '--force-device-scale-factor=2', `--window-size=${width},${height}`, `--screenshot=${file}`, '--dump-dom', url], {timeout: 40000,maxBuffer:64<<20});
+  const capturedBody=/<body([^>]*)>/.exec(captured)?.[1]||'', capturedAttr=k=>new RegExp(`data-${k}="([^"]*)"`).exec(capturedBody)?.[1];
+  if(capturedAttr('mirror')!=='ready'||capturedAttr('revision')!==attr('revision')||Number(capturedAttr('height'))>height){
+   fs.rmSync(file,{force:true});out.push({part:name,error:capturedAttr('error')||'The studio changed or did not finish drawing. Run the picture again.'});return;
+  }
+  const png=fs.readFileSync(file);
+  if(png.length<24||!png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))||png.readUInt32BE(16)!==width*2||png.readUInt32BE(20)!==height*2){
+   fs.rmSync(file,{force:true});out.push({part:name,error:'The picture is incomplete. Open this part in AR Create.'});return;
+  }
   out.push({part: name, file});
 }
 for (const part of parts) {
   if (part === 'story') for (const s of plan.stories) await shoot(`story-${s.id}`, {part, story: s.id});
+  else if(part==='made')for(const format of Object.keys(plan.layouts||{}))await shoot('made-'+format,{part,format});
   else await shoot(part, {part});
 }
 console.log(JSON.stringify({plan: planId, title: plan.title, pictures: out}, null, 1));
