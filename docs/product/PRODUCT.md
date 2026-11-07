@@ -639,3 +639,8 @@ Browser Back means the browser's real Back/Forward history. Internal navigation 
 ## 6 November — clear control hierarchy and responsive refinement
 
 C02/C04/C05/C06, S01–S12: direct feedback requires visibly different destinations, modes, actions and status; scoped compact toolbars; clear parent/child Library hierarchy; no reserved selection gutter in ordinary browsing; an exclusive normal-flow Material view; and full-height gold active-group labels with readable inverse text. Preserve Combined/Graphite, stage owners and all editorial guards. This records adopted intent; the isolated candidate and its verification do not establish human visual acceptance or installation. See [candidate evidence](../verification/interface-refinement-2026-11-06.md).
+
+
+## 7 November — Slim shared navigation
+
+C02; shared S01–S12 navigation. Adrian requests no vertical Gather/Develop/Make/Deliver strip in the contracted sidebar, reduced horizontal padding around destinations, and a narrower expanded sidebar. Keep readable destination names and icons, direct guarded entrances, active destination, waiting badges and keyboard focus. Expanded navigation retains the group strips. Finish criterion: verify both widths, toggle persistence, label fit and aligned content in desktop light/dark, plus the existing phone navigation without horizontal overflow. This records adopted intent; candidate verification and installation remain separate.

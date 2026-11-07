@@ -103,3 +103,8 @@ The bounded sequence is: step 1, review the current UI candidate; then nested Li
 ## 30 October — Combined adopted; all functions retained
 
 [PRODUCT's Combined direction](../PRODUCT.md#combined-workspace--adopted-30-october-2026) is current visual intent and lifts the 29 October restyling hold. Preserve S01–S12 identities and all 35 functions while moving entrances into Home/Subjects, subject boards, piece tabs/modes and contextual sheets. Build journey-first on Hong Kong Day 1; each bounded step requires actual-screen/function proof before capability-based installation. The prior reference remains history, not competing current authority. Direction A/B, Carousel wording/photos and the ten passages remain human decisions; the drawings' sample content is never application data. No implementation or acceptance is asserted here.
+
+
+## 7 November — Slim shared navigation
+
+C02; shared S01–S12 navigation. Adrian requests no vertical Gather/Develop/Make/Deliver strip in the contracted sidebar, reduced horizontal padding around destinations, and a narrower expanded sidebar. Keep readable destination names and icons, direct guarded entrances, active destination, waiting badges and keyboard focus. Expanded navigation retains the group strips. Finish criterion: verify both widths, toggle persistence, label fit and aligned content in desktop light/dark, plus the existing phone navigation without horizontal overflow. This records adopted intent; candidate verification and installation remain separate.
