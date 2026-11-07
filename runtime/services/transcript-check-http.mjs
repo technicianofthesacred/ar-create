@@ -14,7 +14,7 @@ export function transcriptCheckFor({dataDir,recordings,events=null,options={}}){
  let found=instances.get(dataDir);if(found)return found;
  const library=sharedWordLibrary({dataDir});
  const vocabulary=async()=>{const snapshot=await library.exportSnapshot();return snapshot?.prompts?.en?String(snapshot.prompts.en).replace(/^[^:]*:\s*/,''):'';};
- found=createTranscriptCheck({dataDir,corrections:recordings.transcriptCorrections,vocabulary,needsYou:sharedNeedsYou({dataDir,events}),library,...options});
+ found=createTranscriptCheck({dataDir,corrections:recordings.transcriptCorrections,vocabulary,needsYou:sharedNeedsYou({dataDir,events,recordings}),library,...options});
  instances.set(dataDir,found);return found;
 }
 export function stopTranscriptCheck(dataDir){instances.delete(dataDir);}

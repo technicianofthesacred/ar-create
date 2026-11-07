@@ -3,7 +3,7 @@ html body.wbf-on.combined-piece-on #c3-tabstrip.wbf-top>.combined-piece-switch{d
 html body.wbf-on.combined-piece-on #c3-surface-bar{display:none!important}
 html body.wbf-on.combined-piece-on #app{margin-top:48px!important;height:calc(100dvh - 48px)!important}
 html body.wbf-on.combined-piece-on #workspace{--measure:620px;--t-reading:calc(16.5px * var(--z,1));--lh-read:1.72;min-width:0!important}
-html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{position:sticky;top:0;z-index:16;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto auto;align-items:center;gap:8px;order:-11;flex:none;box-sizing:border-box;width:auto;max-width:1120px;margin:20px 24px 8px;padding:0 0 8px;background:var(--bg);font:400 13px/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);color:var(--ink)}
+html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{position:sticky;top:0;z-index:16;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto auto;align-items:center;gap:8px;order:-11;flex:none;box-sizing:border-box;width:auto;max-width:1120px;margin:16px 24px 8px;padding:0 0 8px;background:var(--bg);font:400 13px/1.5 var(--ar-ui,'Plus Jakarta Sans',sans-serif);color:var(--ink)}
 .cp-top button,.cp-strip button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:6px;padding:3px 10px;min-height:28px;white-space:nowrap;cursor:pointer}
 .cp-top .cp-tool{grid-column:1;grid-row:1;font:650 20px/1.4 var(--ar-ui)}
 .cp-top .cp-subject{grid-column:2;grid-row:1;justify-self:start;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:left;font-weight:500;color:var(--dim);border:0}
@@ -30,12 +30,12 @@ html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{posit
 .cp-menu select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:6px;max-width:100%;padding:4px}
 .cp-status{grid-column:1/-1;grid-row:3;margin:0;padding:8px 0;color:var(--bad);font-size:13px;white-space:normal}
 /* Retain the same manuscript geometry and typography in Edit and Read. */
-html body.wbf-on.combined-piece-on #app #workspace .desk{display:grid!important;grid-template-columns:minmax(0,620px) minmax(0,200px)!important;gap:26px!important;max-width:none!important;width:100%!important;box-sizing:border-box!important;padding:32px 24px 0 max(24px,calc((100% - 620px)/2))!important;margin:0!important}
+html body.wbf-on.combined-piece-on #app #workspace .desk{display:grid!important;grid-template-columns:minmax(0,620px) minmax(0,200px)!important;gap:26px!important;max-width:none!important;width:100%!important;box-sizing:border-box!important;padding:24px 24px 0 max(24px,calc((100% - 620px)/2))!important;margin:0!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc :is(#manuscript,.draft-read-words,.manuscript-prose) :is(p,div),html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc .draft-read-words>section>p{font:400 calc(16.5px * var(--z,1))/1.72 var(--ar-ui)!important;margin:0 0 24px!important;padding:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace .doc>h1{font:600 calc(17px * var(--z,1))/1.5 var(--ar-ui)!important;margin:0 0 14px!important}
 html body.wbf-on.combined-piece-on #app #workspace .doc>.wbf-doc-by{display:none!important}
-html body.wbf-on.combined-piece-on #app #workspace .desk>#margin{padding:32px 0 0!important;min-width:0!important}
-html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace#workspace>.phaseReader.c3-read,html body.wbf-on.combined-piece-on[data-c3-stage="7"] #app #workspace .wn-check-layout{padding:32px 24px 0 max(24px,calc((100% - 620px)/2))!important;box-sizing:border-box!important}
+html body.wbf-on.combined-piece-on #app #workspace .desk>#margin{padding:24px 0 0!important;min-width:0!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace#workspace>.phaseReader.c3-read,html body.wbf-on.combined-piece-on[data-c3-stage="7"] #app #workspace .wn-check-layout{padding:24px 24px 0 max(24px,calc((100% - 620px)/2))!important;box-sizing:border-box!important}
 html body.wbf-on.combined-piece-on[data-draft-focus=true] #app #workspace .desk{grid-template-columns:minmax(0,620px)!important}
 html body.wbf-on.combined-piece-on[data-draft-focus=true] #app #workspace .desk>#margin{display:none!important}
 @media(max-width:1100px){html body.wbf-on.combined-piece-on #app #workspace .desk{padding-left:24px!important}}
@@ -62,7 +62,18 @@ html body.wbf-on.combined-piece-on[data-draft-focus=true] #app #workspace .desk>
  .cp-strip>span:first-child{display:none}
  .cp-strip>button{min-height:44px}
  .cp-menu{top:192px;max-height:calc(100dvh - 260px)}
- html body.wbf-on.combined-piece-on #app #workspace .desk{grid-template-columns:minmax(0,1fr)!important;padding:24px 12px 0!important;gap:20px!important}
+ html body.wbf-on.combined-piece-on #app #workspace .desk{grid-template-columns:minmax(0,1fr)!important;padding:16px 12px 0!important;gap:20px!important}
  html body.wbf-on.combined-piece-on #app #workspace .desk>#margin{grid-column:1!important;grid-row:2!important;padding:0!important}
- html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace#workspace>.phaseReader.c3-read,html body.wbf-on.combined-piece-on[data-c3-stage="7"] #app #workspace .wn-check-layout{padding:24px 12px 0!important}
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-piece-on #app #workspace#workspace>.phaseReader.c3-read,html body.wbf-on.combined-piece-on[data-c3-stage="7"] #app #workspace .wn-check-layout{padding:16px 12px 0!important}
 }
+/* Ordinary groups retain distinct owner actions without a flat command wall. */
+.cp-menu{width:min(34rem,calc(100vw - 24px));gap:16px}
+.cp-menu-group{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding-top:10px;border-top:1px solid var(--line)}
+.cp-menu-group:first-child{padding-top:0;border-top:0}
+.cp-menu-group h3{flex:1 0 100%;font:600 13px/1.5 var(--ar-ui);margin:0 0 2px}
+.cp-menu-group button{flex:1 1 140px;min-width:0}
+.cp-menu-group label{flex:1 1 100%;min-width:0}
+.cp-menu-group select{width:100%;min-width:0}
+.cp-menu :is(button,select):focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+@media(max-width:800px){.cp-menu{width:calc(100vw - 24px);max-height:calc(100dvh - 260px)}}
+@media(min-width:801px){.cp-menu-group[data-cp-menu-group="Other pieces"]{display:none}}

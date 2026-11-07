@@ -5,18 +5,19 @@
 //
 //   findHits      which library words are in the talk, and how it was said
 //   findFixes     known mishearings of confirmed words (variant kind `heard`), with the exact place of each
-//   findDoubtful  words worth a second look: low-confidence words, names the library does not know, numbers and
-//                 dates, and near-misses of a library word ("Lu Yo" for Lu Yu)
+//   findDoubtful  evidence-backed uncertainty: unclear names, uncommon words or numbers, and conservative
+//                 person/place near-matches. Capitalisation and spelling resemblance alone are not errors.
 import {isCJK,norm,squash} from './word-prompt.mjs';
 
 const TOKEN=/[\p{L}\p{N}](?:[\p{L}\p{N}'’\-]*[\p{L}\p{N}])?/gu;
-const LOW_WORD=0.5;           // a word the model gave under half its confidence
+const LOW_WORD=0.5;           // supporting evidence for a name/number or an already shaky passage
+const VERY_LOW_WORD=0.25;     // isolated ordinary speech needs stronger evidence
 const LOW_SEGMENT=-1;         // avg_logprob below this: the whole stretch was shaky
 export const MAX_DOUBTFUL=40; // one 20-minute talk must not flood the list
 
 // Words that are capitalised mid-sentence for ordinary reasons. Not a dictionary: only what would otherwise be noise.
 const COMMON=new Set(('i i\'m i\'ll i\'ve i\'d monday tuesday wednesday thursday friday saturday sunday january february march april may june july august september october november december '
- +'english chinese japanese taiwanese indonesian balinese korean french german american european asian christmas god mr mrs ms dr okay ok yeah yes tea').split(' '));
+ +'english chinese japanese taiwanese indonesian balinese korean french german american european asian christmas god mr mrs ms dr okay ok yeah yes tea nice alright hello test again').split(' '));
 const STOP=new Set(('the and but for you not with this that have from they what when your were been will would there their about which could other than then them these some into more also just like very much only over such even most make made many well know take people because really think going').split(' '));
 
 const sentenceOf=(text,at)=>{
@@ -119,6 +120,7 @@ export function findDoubtful(result,entries,{kept={},max=MAX_DOUBTFUL}={}){
  const exact=new Set(forms.map(f=>squash(f.text)));
  const found=new Map();
  const add=(kind,text,segment,segmentIndex,at,score,extra={})=>{
+  if((kept[norm(text)]||0)>=2)return;
   const key=kind+':'+squash(text),item=found.get(key);
   const sentence=sentenceOf(segment.text,at.char);
   if(item){item.occurrences++;if(item.times.length<5)item.times.push(at.time);item.score=Math.max(item.score,score);return;}
@@ -139,10 +141,14 @@ export function findDoubtful(result,entries,{kept={},max=MAX_DOUBTFUL}={}){
     if(win.some((t,k)=>k&&!/^[\s'’\-,]*$/.test(text.slice(win[k-1].index+win[k-1].text.length,t.index))))continue;
     const joined=squash(win.map(t=>t.text).join(' '));
     if(joined.length<(size===1?5:4)||exact.has(joined)||win.every(t=>STOP.has(t.n)||known.has(t.n)))continue;
+    // A specialist word list is not a dictionary of what the speaker meant. Fuzzy matches are limited to
+    // names, with a recognisable name phrase or independent speech uncertainty for a single token.
+    if(!win.every(t=>/^\p{Lu}/u.test(t.text)&&!COMMON.has(t.n)&&!STOP.has(t.n)))continue;
+    if(size===1&&!weak.has(win[0].n))continue;
     const limit=bound(joined.length);let best=null;
     for(let len=joined.length-limit;len<=joined.length+limit;len++){
      for(const c of index.get(len)||[]){
-      if(c.s===joined||c.words!==size)continue;
+      if(c.s===joined||c.words!==size||!['person','place'].includes(c.form.entry.category)||c.s[0]!==joined[0])continue;
       const d=distance(joined,c.s,limit);
       if(d<=limit&&(!best||d<best.d))best={d,form:c.form};
      }
@@ -160,14 +166,14 @@ export function findDoubtful(result,entries,{kept={},max=MAX_DOUBTFUL}={}){
    const letters=/^[\p{L}'’\-]+$/u.test(t.text);
    if(/\d/.test(t.text)){
     const digits=(t.text.match(/\d/g)||[]).length;
-    if(digits>=2||/[,.:\/]/.test(t.text))add('number',t.text,segment,segmentIndex,{time:timeOf(t),char:t.index},40);
+    if(weak.has(t.n)&&(digits>=2||/[,.:\/]/.test(t.text)))add('number',t.text,segment,segmentIndex,{time:timeOf(t),char:t.index},40);
     continue;
    }
    if(!letters||t.n.length<3||known.has(t.n)||STOP.has(t.n))continue;
    const name=/^\p{Lu}/u.test(t.text)&&t.text!==t.text.toUpperCase()&&!startsSentence(text,t.index)&&!COMMON.has(t.n)&&(kept[t.n]||0)<2;
-   const low=weak.has(t.n);
+   const low=weak.has(t.n)&&(name||shaky||weak.get(t.n).prob<VERY_LOW_WORD&&t.n.length>=5);
    if(low&&!COMMON.has(t.n))add('low-confidence',t.text,segment,segmentIndex,{time:timeOf(t),char:t.index},name?80:shaky?65:55);
-   else if(name)add('unknown-name',t.text,segment,segmentIndex,{time:timeOf(t),char:t.index},shaky?60:50);
+   else if(name&&shaky)add('unknown-name',t.text,segment,segmentIndex,{time:timeOf(t),char:t.index},shaky?60:50);
   }
  }
  const ranked=[...found.values()].sort((a,b)=>b.score-a.score||b.occurrences-a.occurrences||a.start-b.start);

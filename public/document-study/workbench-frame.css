@@ -399,3 +399,27 @@ html body.wbf-on #c3-tabstrip.wbf-top .wbf-top-actions svg{display:block;width:1
  html body.wbf-on.combined-on #c3-tabstrip.wbf-top>.wbf-top-actions{grid-column:1/-1;grid-row:2;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;width:100%;margin:0!important;gap:4px!important}
  html body.wbf-on.combined-on #app{margin-top:var(--combined-phone-top)!important;height:calc(100dvh - var(--combined-phone-top) - var(--combined-phone-bottom,58px))!important}
 }
+/* Outputs is a register across pieces; its own title and filters supply scope. */
+html body.wbf-on #workspace #c3-surface-bar.wbf-register-tools{min-height:0!important;height:auto!important;margin:12px 32px 0!important;padding-bottom:0!important}
+html body.wbf-on #workspace #c3-surface-bar.wbf-register-tools>:is(.sb-left,.sb-in,.direction-choice-context){display:none!important}
+html body.wbf-on #workspace #c3-surface-bar.wbf-register-tools>.sb-right{margin-left:auto;min-height:28px}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview{padding-top:12px!important}
+html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace.wb-outputs #output-overview .oo-heading{margin-bottom:12px!important}
+/* Phone pickup, decisions and active work precede optional reference panels. */
+@media(max-width:760px){
+ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #workspace#workspace #c3-surface-bar.wbf-register-tools{margin:0!important;padding:8px 16px 0!important;min-height:44px!important}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home:not([data-workbench-pieces="true"]) .ht-home-main{display:grid!important;grid-template-columns:minmax(0,1fr);gap:12px;padding:0 16px 24px!important;box-sizing:border-box}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home:not([data-workbench-pieces="true"]) :is(.wbf-bench.wrap,.wbf-bench-story,.combined-home-lists){display:contents!important}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home .thead{grid-column:1;grid-row:1}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home .pickup{grid-column:1;grid-row:2}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home .ny-band{grid-column:1;grid-row:3;margin:0!important}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home:not([data-workbench-pieces="true"]) .wbf-active{grid-column:1;grid-row:4;margin:0!important}
+ /* A confirmed empty list has no decision to prioritize. Keep failures and pending asks intact. */
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home:has(.ny-band>.ny-empty):not(:has(.ny-list,[data-ny-retry],.ny-loading)) .wbf-active{grid-row:3}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home .ny-band:has(>.ny-empty):not(:has(.ny-list,[data-ny-retry],.ny-loading)){grid-row:4;padding:12px 14px}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home .ny-band:has(>.ny-empty):not(:has(.ny-list,[data-ny-retry],.ny-loading)) .ny-empty-s{display:none}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home .ny-band:has(>.ny-empty):not(:has(.ny-list,[data-ny-retry],.ny-loading)) :is(.ny-empty,.ny-empty-t){padding:0;margin:8px 0 0}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home [data-home-optional]{grid-column:1;grid-row:5}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home [data-home-handled]{grid-column:1;grid-row:6}
+ html body.wbf-on.combined-on #project-library#project-library.wbf-home [data-home-words]{grid-column:1;grid-row:7}
+}

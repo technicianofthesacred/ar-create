@@ -1,5 +1,12 @@
 # 5 — Draft
 
+## 6 November — Quieter editorial discussion
+
+C01/C04/C05/C06, S05/S06. Direct author feedback adopts a much subtler active passage background with a small corner radius, no framing lines beside the editorial discussion, the existing shared sans-serif interface font and Graphite controls, and better use of available desktop width. Keep the exact original/proposed comparison, explicit sample provenance, editable proposal, Accept/Dismiss, Context and refinement. Consolidate secondary protection explanation into the existing Context view rather than an accordion. This is a presentation change; preserve the editor, identities, native save/recovery, stale guards and exact Undo.
+
+Finish: inspect populated discussion and passage in desktop/phone light and dark, tablet side-sheet and Focus; verify original/proposed readability, consistent controls, no horizontal overflow, Context/refinement and unchanged source/independent saved-copy Undo. Full-site inspection should record similar styling problems for later bounded fixes, without implementing the rest of the site as a side effect. Candidate proof does not establish installation or human visual acceptance.
+
+
 ## Document keyboard rules — adopted 6 November
 
 S05/S06, C01/C04/C05/C06. Writing follows document rules: Enter starts a paragraph and Shift+Enter starts a line inside the same paragraph. Neither key submits a writing request or finishes a review. Help requests and editable review wording remain multiline fields with explicit action buttons. Preserve the writer’s exact words, passage identity and caret; guarded saves, reopen and saved Undo retain the paragraph/line distinction. An empty paragraph while the author pauses must not create a failed save or a misleading newer-version conflict.

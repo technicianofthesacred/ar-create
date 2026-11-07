@@ -49,6 +49,7 @@
     const bits=[];if(added.length)bits.push('Added '+added.length+(added.length===1?' item':' items')+' to Library.');if(started)bits.push('Transcribing '+started+'.');if(waiting)bits.push('Transcription is not connected, so '+waiting+(waiting===1?' recording is':' recordings are')+' waiting.');view.message=[...bits,...problems].join(' ');
    }catch(error){view.message=error.message||'Nothing could be added. Try again.';}
    finally{view.busy=false;if(live()){paint();if(added.length)void reloadExtras();}}
+   return {added:added.length};
   }
   function dropFiles(event){const transfer=event.dataTransfer,files=[...transfer?.files||[]],text=transfer?.getData?.('text/uri-list')||'',urls=text.split(/\r?\n/).map(t=>t.trim()).filter(t=>t&&!t.startsWith('#')&&/^https?:\/\//i.test(t));return{files,urls};}
   const hasFiles=event=>[...event.dataTransfer?.types||[]].some(t=>t==='Files'||t==='text/uri-list');
@@ -57,7 +58,7 @@
   root.addEventListener('dragover',event=>{if(!view.open||!hasFiles(event))return;event.preventDefault();});
   root.addEventListener('dragleave',event=>{if(!view.open)return;dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)root.classList.remove('mi-drag');});
   root.addEventListener('drop',event=>{if(!view.open||!hasFiles(event))return;event.preventDefault();dragDepth=0;root.classList.remove('mi-drag');if(!human())return;const{files,urls}=dropFiles(event);void bringIn(files,urls);});
-  function addLink(){const text=String(view.link||'').trim();let url;try{url=new URL(text);}catch{}if(!url||!['http:','https:'].includes(url.protocol)){view.message='Paste a full web link starting with http.';paint();return;}view.link='';void bringIn([],[url.href]);}
+  async function addLink(){const submitted=view.link,text=String(submitted||'').trim();let url;try{url=new URL(text);}catch{}if(!url||!['http:','https:'].includes(url.protocol)){view.message='Paste a full web link starting with http.';paint();return;}const result=await bringIn([],[url.href]);if(result?.added&&view.link===submitted){view.link='';if(live())paint();}}
   function paintBringIn(bar){
    const input=d.createElement('input');input.type='file';input.multiple=true;input.hidden=true;input.setAttribute('data-mi-file','');input.onchange=()=>{const files=[...input.files];input.value='';void bringIn(files,[]);};
    const choose=button('Choose files','choose',()=>input.click());choose.disabled=view.busy||view.loading;
@@ -87,9 +88,10 @@
    const row=node('li'),job=entry.job,source=entry.source,kind=job?'audio':source.kind;row.dataset.miKind=kindClass(kind);if(job)row.dataset.miJob=job.id;else row.dataset.miSource=source.id;
    const lead=node('span');lead.className='mi-kind';lead.append(svg(kindClass(kind)));
    const main=node('div');main.className='mi-main';const top=node('div');top.className='mi-top';const titleText=job?shownTitle(job):shownTitle({story:source.title||source.name,file:source.name,started:source.modified_at||source.createdAt});let title;
-   if(job?.transcriptReady){title=node('a',titleText);title.href='/transcription/'+encodeURIComponent(job.id)+'/view';title.target='_blank';title.rel='noopener';title.dataset.miItemOpen='';}
-   else if(job?.originalAvailable===true&&job.sourceId){title=node('a',titleText);title.href='/api/sources/blob?id='+encodeURIComponent(job.sourceId);title.target='_self';title.rel='noopener';title.dataset.miItemOpen='';title.onclick=event=>{if(!live()||view.busy||view.mic||view.draft&&!view.draft.sourceId)event.preventDefault();};}
+   if(job?.transcriptReady){title=node('a',titleText);title.href='/transcription/'+encodeURIComponent(job.id)+'/view';title.target='_self';title.rel='noopener';title.dataset.miItemOpen='';}
+   else if(job?.originalAvailable===true&&job.sourceId){title=node('a',titleText);title.href='/api/sources/blob?id='+encodeURIComponent(job.sourceId);title.target='_self';title.rel='noopener';title.dataset.miItemOpen='';}
    else{title=button(titleText,'item-open',()=>{if(job&&(!job.sourceId||job.originalAvailable===false)){view.message=job.reason||(job.originalAvailable===false?'The original recording is unavailable. Reconnect it and refresh Material.':'This recording has no available audio or transcript yet. Refresh to check again.');paint();return;}void openSource(job?job.sourceId:source.id);});}
+   if(title.tagName==='A'&&title.target==='_self')title.onclick=event=>{if(!live()||view.busy||view.mic||view.draft&&!view.draft.sourceId)event.preventDefault();};
    title.classList.add('mi-item-title');if(job&&job.file&&job.file!==job.story)title.title=job.file;top.append(title);
    const projects=job?subjectsFor(job):null,names=job?(projects||[]).map(p=>p.title).filter(Boolean):(view.sourceSubjects.get(source.id)||[]);
    if(names.length){const tag=node('span',names[0]+(names.length>1?' +'+(names.length-1):''));tag.className='mi-tag';tag.title=names.join(', ');top.append(tag);}

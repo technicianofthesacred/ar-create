@@ -11,6 +11,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {createRecordingAttention,recordingAsk} from './recording-attention.mjs';
+import {sharedWordLibrary} from './word-library.mjs';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor} from './actor.mjs';
 
@@ -34,7 +36,7 @@ const text=(v,what,max,{required=false}={})=>{
 };
 
 /** One list in one JSON file. `now` is injectable so the schedule can be tested without waiting. */
-export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
+export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{},recordingAttention=null}={}){
  if(!dataDir)throw Error('The needs-you list needs the data folder.');
  const dir=path.join(dataDir,'needs-you'),file=path.join(dir,'asks.json');
  let queue=Promise.resolve();
@@ -55,14 +57,15 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
  function sweep(state){
   const at=now(),changed=[];
   for(const ask of state.asks){
-   if(ask.status!=='open'||ask.band!=='steer'||!ask.default||!ask.applyAt)continue;
+   if(recordingAsk(ask)||ask.status!=='open'||ask.band!=='steer'||!ask.default||!ask.applyAt)continue;
    if(Date.parse(ask.applyAt)>at)continue;
    ask.status='defaulted';
    ask.resolution={choice:ask.default,text:'',by:'default',client:null,via:'default',at:iso(at),operationId:null};
    changed.push(ask);
   }
   const cutoff=at-LIMITS.keepDays*DAY,before=state.asks.length;
-  state.asks=state.asks.filter(a=>a.status==='open'||Date.parse(a.resolution?.at||a.raisedAt)>cutoff);
+  // An old recording default is not proof its underlying review finished; keep that queue receipt/history.
+  state.asks=state.asks.filter(a=>a.status==='open'||(recordingAsk(a)&&a.status==='defaulted')||Date.parse(a.resolution?.at||a.raisedAt)>cutoff);
   return {changed,pruned:state.asks.length!==before};
  }
  // Run a read or write against a fresh, swept state; persist only when something moved.
@@ -83,13 +86,15 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
 
  async function list({status='pending',id}={}){
   if(!['pending','open','defaulted','answered','all'].includes(status))fail('status is pending, open, defaulted, answered or all.');
-  return withState(state=>{
+  return withState(async state=>{
    let asks=state.asks;
    if(id!==undefined){if(!UUID.test(id))fail('id is an ask id.');asks=asks.filter(a=>a.id===id);}
    const keep={pending:a=>a.status==='open'||a.status==='defaulted',open:a=>a.status==='open',defaulted:a=>a.status==='defaulted',answered:a=>a.status==='answered',all:()=>true}[status];
-   const shown=[...asks].filter(keep).sort(order).map(view);
-   const count=s=>state.asks.filter(a=>a.status===s).length;
-   return {value:{schema:SCHEMA,now:iso(now()),status,asks:shown,counts:{open:count('open'),onlyAdrian:state.asks.filter(a=>a.status==='open'&&a.band==='only-adrian').length,steer:state.asks.filter(a=>a.status==='open'&&a.band==='steer').length,defaulted:count('defaulted'),answered:count('answered')}}};
+   const visible=recordingAttention&&id===undefined?await recordingAttention(asks.map(view)):asks.map(view);
+   const shown=visible.filter(keep).sort(order);
+   const counted=id===undefined?visible:state.asks;
+   const count=s=>counted.filter(a=>a.status===s).length;
+   return {value:{schema:SCHEMA,now:iso(now()),status,asks:shown,counts:{open:count('open'),onlyAdrian:counted.filter(a=>a.status==='open'&&a.band==='only-adrian').length,steer:counted.filter(a=>a.status==='open'&&a.band==='steer').length,defaulted:count('defaulted'),answered:count('answered')}}};
   });
  }
 
@@ -174,13 +179,13 @@ export function createNeedsYou({dataDir,now=()=>Date.now(),onChange=()=>{}}={}){
   });
  }
 
- return {list,raise,answer,peek:()=>({asks:load().asks.map(view)}),sweep:()=>withState(()=>({value:null}))};
+ return {list,raise,answer,setRecordingAttention:project=>{recordingAttention=project;},peek:()=>({asks:load().asks.map(view)}),sweep:()=>withState(()=>({value:null}))};
 }
 
 const instances=new Map();
 /** The one list for a data folder. The HTTP handler and other services (the shared word check raises its asks here
  *  in-process) must use the same instance, so the file is never written from two queues. */
-export function sharedNeedsYou({dataDir,events}){
+export function sharedNeedsYou({dataDir,events,recordings}){
  let list=instances.get(dataDir);
  if(!list){
   list=createNeedsYou({dataDir,onChange:(kind,ask)=>events?.emit({kind:'needs-you.'+kind,scope:{kind:'needs-you',id:ask.id},revision:null,actor:ask.resolution?.by||ask.raisedBy,client:ask.resolution?.client||ask.raisedClient,operationId:null})});
@@ -188,13 +193,14 @@ export function sharedNeedsYou({dataDir,events}){
   const timer=setInterval(()=>{list.sweep().catch(()=>{});},30_000);timer.unref?.();
   instances.set(dataDir,list);
  }
+ if(recordings)list.setRecordingAttention(createRecordingAttention({dataDir,corrections:recordings.transcriptCorrections,library:sharedWordLibrary({dataDir})}));
  return list;
 }
 /** One registration line in the server hands requests here; returns false for any other path. */
-export async function handleNeedsYou(request,response,{dataDir,events,checkWrite}){
+export async function handleNeedsYou(request,response,{dataDir,events,recordings,checkWrite}){
  const url=new URL(request.url||'/','http://local.invalid');
  if(url.pathname!==PREFIX&&!url.pathname.startsWith(PREFIX+'/'))return false;
- const list=sharedNeedsYou({dataDir,events});
+ const list=sharedNeedsYou({dataDir,events,recordings});
  const send=(status,body)=>{response.arResult=body;response.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});response.end(JSON.stringify(body));};
  try{
   const route=url.pathname.slice(PREFIX.length);
@@ -211,6 +217,10 @@ export async function handleNeedsYou(request,response,{dataDir,events,checkWrite
   const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>MAX_BODY)fail('That is too large for one ask.',413);chunks.push(chunk);}
   let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{fail('Send the ask as JSON.');}
   request.arInput=input;
+  // Home is navigation for recording reviews, including stale pages that still carry old bulk buttons.
+  // Domain owners settle their own asks in-process after actual review; this HTTP shortcut cannot do that.
+  const who=currentActor();
+  if(route==='/answer'&&isHuman(who?.actor)&&who?.client==='ui'&&recordingAsk(list.peek().asks.find(a=>a.id===input?.id)||{}))fail('Open the recording review to decide about its words or passages. Home cannot approve a recording.',409);
   send(200,route==='/raise'?await list.raise(input):await list.answer(input));
  }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The list could not be read or saved. Nothing was changed.'});}
  return true;
