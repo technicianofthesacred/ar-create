@@ -72,3 +72,5 @@ test('sidebar toggle names its action, reports its state and persists without na
   assert.equal(f.w.localStorage.getItem('combined-rail-wide'),'true');
  }finally{f.close();}
 });
+
+test('cached pagehide retains sheet observation and ordinary hide disconnects it',async()=>{const f=boot();try{f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide',{persisted:true}));f.w.dispatchEvent(new f.w.PageTransitionEvent('pageshow',{persisted:true}));f.d.querySelector('[data-combined-group="develop"]').click();const sheet=f.d.createElement('div');sheet.id='combined-sheet';f.d.body.append(sheet);await new Promise(r=>setTimeout(r,0));assert.equal(f.d.getElementById('combined-phone-sheet'),null);sheet.remove();f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide'));f.d.querySelector('[data-combined-group="develop"]').click();f.d.body.append(sheet);await new Promise(r=>setTimeout(r,0));assert.ok(f.d.getElementById('combined-phone-sheet'));}finally{f.close();}});

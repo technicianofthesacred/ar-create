@@ -135,6 +135,6 @@
  document.addEventListener('selectionchange',()=>{try{const c=context(),s=window.getSelection();if(s?.rangeCount&&c.editor.contains(s.getRangeAt(0).commonAncestorContainer))lastSelection={editor:c.editor,range:s.getRangeAt(0).cloneRange()};}catch{}});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&active){event.preventDefault();event.stopImmediatePropagation();void close();}},true);
  document.addEventListener('click',event=>{const b=event.target.closest?.('[data-combined-nav]'),kind=b?.dataset.combinedNav;if(!names[kind]||kind==='media'||kind==='arrange'||b.disabled)return;try{context();}catch{return;}event.preventDefault();event.stopImmediatePropagation();void open(kind);},true);
- window.addEventListener('pagehide',()=>{if(active)cancelChanged(active);observer.disconnect();});
+ window.addEventListener('pagehide',event=>{if(active)cancelChanged(active);if(!event.persisted)observer.disconnect();});
  window.combinedSheets={open,close,registerOwner,state:()=>active?{kind:active.kind,projectId:active.context.project.id}:null,lastReturn:()=>lastReturn};
 })();

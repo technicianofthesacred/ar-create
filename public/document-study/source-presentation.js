@@ -43,5 +43,5 @@
  }
  doc.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const root=doc.querySelector('.source-presentation[data-source-page]:not([data-source-page="reader"])');if(root){e.preventDefault();rooms.get(root)?.go('reader');}});
  const observer=new MutationObserver(()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;decorate();});});observer.observe(doc.getElementById('app'),{childList:true,subtree:true});
- window.studySourcePresentation={decorate};decorate();window.addEventListener('pagehide',()=>observer.disconnect(),{once:true});
+ window.studySourcePresentation={decorate};decorate();window.addEventListener('pagehide',event=>{if(!event.persisted)observer.disconnect();});
 })();

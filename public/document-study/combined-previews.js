@@ -77,6 +77,6 @@
   ownerPanel.querySelector('.oo-columns')?.setAttribute('hidden','');refreshVisibility();
  }
  function dispose(){disposed=true;queued=[];for(const host of entries.keys())clear(host);}
- window.addEventListener('pagehide',dispose);window.combinedPreviews={mountPreview,decorateBoard,decorateOutputs,dispose};
+ window.addEventListener('pagehide',event=>{if(!event.persisted)dispose();});window.combinedPreviews={mountPreview,decorateBoard,decorateOutputs,dispose};
  window.c3Shell?.register('saved piece previews',()=>{prune();const board=document.querySelector('.combined-subjects');if(board)decorateBoard(board);const host=document.getElementById('output-overview'),snapshot=window.outputOverview?.snapshot?.(),p=active();if(snapshot?.projectId===p?.id)decorateOutputs(host,{project:p,data:snapshot.data});},{order:125,ignore:'.cp-preview-stage,.cp-outputs'});
 })();
