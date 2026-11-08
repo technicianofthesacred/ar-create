@@ -82,6 +82,12 @@
  };
  // A prior slot is reusable only after this protocol recorded a successful
  // locked write. Legacy copied session pointers alone never grant ownership.
+ function sameRecoveryApartFromTimestamp(a,b){
+  const left=parseDisk(a),right=parseDisk(b);if(!left||!right)return false;
+  delete left.recoveryAt;delete right.recoveryAt;
+  const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
+  return canonical(left)===canonical(right);
+ }
  function beginWriter(candidate=null){
   if(!pageActive||leaseHeld)return;
   const generation=++writerGeneration;writerReady=false;
@@ -91,8 +97,9 @@
    let request;
    try{request=locks.request(RECOVERY+id,{mode:'exclusive',ifAvailable:true},async lock=>{
     if(generation!==writerGeneration)return;
-    if(!lock||localStorage.getItem(RECOVERY+id)!==expected){if(reusing){acquire(crypto.randomUUID(),null,false);return;}independent();return;}
-    sessionId=id;sessionKey=RECOVERY+id;lastWrittenRaw=expected;
+    const actual=localStorage.getItem(RECOVERY+id);
+    if(!lock||actual!==expected&&(!reusing||!sameRecoveryApartFromTimestamp(actual,expected))){if(reusing){acquire(crypto.randomUUID(),null,false);return;}independent();return;}
+    sessionId=id;sessionKey=RECOVERY+id;lastWrittenRaw=actual;
     try{sessionStorage.setItem(SESSION,id);if(!reusing)sessionStorage.removeItem(DURABLE);}catch{storageProblem();return;}
     leaseHeld=true;writerReady=true;
     let end;const lifetime=new Promise(resolve=>{end=resolve;releaseLease=resolve;});
