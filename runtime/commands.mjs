@@ -95,7 +95,7 @@ const BODY = {
   '/api/study/research/keep':['bindingId','parentStudyId','id'],
   '/api/study/structure-tests/review-mark':['bindingId','parentStudyId','expected','operationId','id','rawFrom','rawTo','seenBlockHash','seenMarkupHash'],
   '/api/study/structure-tests': ['sourceBindingId','sourceParentStudyId','expected','title','operationId'],
-  '/api/study-draft/create-collection': ['parentStudyId', 'title', 'operationId'],
+  '/api/study-draft/create-collection': ['parentStudyId', 'title', 'operationId', 'sourceBindingId', 'sourceParentStudyId', 'expected'],
   '/api/study-draft/open': ['parentStudyId', 'originalId', 'originalHash', 'operationId'],
   '/api/study-draft/save': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'operations'],
   '/api/study-draft/undo': ['bindingId', 'parentStudyId', 'operationId', 'expected', 'undoOperationId'],

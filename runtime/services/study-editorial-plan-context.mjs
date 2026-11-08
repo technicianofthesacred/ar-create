@@ -4,6 +4,7 @@ const stable=v=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x
 const same=(a,b)=>stable(a)===stable(b);
 const fail=message=>{throw Object.assign(Error(message),{status:409});};
 const uuidPin=value=>typeof value==='string'&&/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value),hashPin=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+function authoredForkProof(b){const from=b.derivedFrom,expected=from?.expected;return !(!uuidPin(b.id)||!uuidPin(b.outputId)||b.canonicalOutputId!==b.outputId||!uuidPin(b.sourceBindingId)||new Set([b.id,b.outputId,b.sourceBindingId]).size!==3||from?.bindingId!==b.sourceBindingId||from.relationship!=='archival-starting-edition-not-continuous-wording-or-freshness-authority'||!hashPin(from.rawHash)||!hashPin(from.captureHash)||!hashPin(expected?.bindingHash)||!hashPin(expected?.correspondenceHash)||!expected.workflow||Array.isArray(expected.workflow)||expected.workflow.draft!==from.rawHash||Object.values(expected.workflow).some(value=>value!==null&&!hashPin(value))||b.seedWorkingHash!==from.rawHash||b.textOutputKind!==undefined);}
 const PARENTS={hk:'hk','ref-an-cha':'ancha','ref-collector':'collector'};
 export const EDITORIAL_PLAN_ROLE='saved-editorial-plan-not-evidence-source-quotation-or-approved-prose';
 /** Internal capability only: the bridge supplies the accepted opening preimage.
@@ -34,17 +35,29 @@ export function createStudyEditorialPlanContext({drafts,originals,choices,valida
    const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:b.kind==='output-fork'?'exact-registered-structure-test-output':'exact-registered-structure-test-copy',expected:structuredClone(draft.expected),originalPlan:{status:'captured-support-only',source:structuredClone(verified.view.source),decisions:'Original human decisions remain pending on the original subject.'},choiceSourceExpected:null,originalSourceRecords,records,selections:[]};return {...payload,hash:digest(stable(payload))};
   }
   if(b.kind==='collection-root'||b.origin==='authored-collection'){
-   if(!['collection-root','output-fork'].includes(b.kind)||b.origin!=='authored-collection'||b.originalId!=='collection:'+binding.parentStudyId||b.partKey!=='collection'||PARENTS[b.parentStudyId]||draft.context.records.some(record=>record.role!=='draft'))fail('Authored root has contradictory original-plan identity or retained original support; preserve existing context for review.');
+   const retained=draft.context.records.filter(record=>record.role!=='draft');let source=b.collectionSource;
+   if(retained.length&&b.kind==='output-fork'){
+    const pins=records=>records.filter(r=>r.role!=='draft').map(r=>({id:r.id,role:r.role,path:r.sourcePath,hash:r.copiedHash})).sort((a,b)=>a.id.localeCompare(b.id)),seen=new Set();let cursor=b;
+    for(let depth=0;depth<16;depth++){
+     if(cursor.kind!=='output-fork'||!authoredForkProof(cursor)||seen.has(cursor.id))fail('Sourced Article has contradictory archival ancestry.');seen.add(cursor.id);
+     const ancestor=await drafts.read({bindingId:cursor.sourceBindingId,parentStudyId:binding.parentStudyId}),owner=ancestor?.binding;
+     if(owner?.id!==cursor.sourceBindingId||owner.parentStudyId!==binding.parentStudyId||owner.origin!=='authored-collection'||owner.originalId!==b.originalId||owner.partKey!=='collection'||owner.status!=='ready'||ancestor.readiness?.ready!==true||!Array.isArray(ancestor.context?.records)||!same(pins(ancestor.context.records),pins(retained)))fail('Sourced Article captures differ from its exact authored root.');
+     if(owner.kind==='collection-root'){source=owner.collectionSource;break;}cursor=owner;
+    }
+   }
+   const sourcedRoot=['collection-root','output-fork'].includes(b.kind)&&source&&uuidPin(source.bindingId)&&source.bindingId!==b.id&&typeof source.parentStudyId==='string'&&source.parentStudyId!==b.parentStudyId&&source.relationship==='archival-source-captures-only-not-wording-or-live-authority'&&hashPin(source.draftHash)&&source.draftHash===source.expected?.workflow?.draft&&hashPin(source.expected?.bindingHash)&&hashPin(source.expected?.correspondenceHash)&&hashPin(source.originalHash)&&hashPin(source.captureHash);
+   if(!['collection-root','output-fork'].includes(b.kind)||b.origin!=='authored-collection'||b.originalId!=='collection:'+binding.parentStudyId||b.partKey!=='collection'||PARENTS[b.parentStudyId]||retained.length&&!sourcedRoot)fail('Authored root has contradictory original-plan identity or retained original support; preserve existing context for review.');
+   const originalSourceRecords=retained.map(record=>{if(record.missing||typeof record.raw!=='string'||record.copiedHash!==digest(record.raw))fail('Copied collection source capture is unavailable or changed.');return {id:record.id,role:record.role,sourcePath:record.sourcePath,hash:record.copiedHash};}).sort((a,b)=>a.id.localeCompare(b.id));
    let outputLineage;
    if(b.kind==='output-fork'){
     const from=b.derivedFrom,expected=from?.expected;
-    if(!uuidPin(b.id)||!uuidPin(b.outputId)||b.canonicalOutputId!==b.outputId||!uuidPin(b.sourceBindingId)||new Set([b.id,b.outputId,b.sourceBindingId]).size!==3||from?.bindingId!==b.sourceBindingId||from.relationship!=='archival-starting-edition-not-continuous-wording-or-freshness-authority'||!hashPin(from.rawHash)||!hashPin(from.captureHash)||!hashPin(expected?.bindingHash)||!hashPin(expected?.correspondenceHash)||!expected.workflow||Array.isArray(expected.workflow)||expected.workflow.draft!==from.rawHash||Object.values(expected.workflow).some(value=>value!==null&&!hashPin(value))||b.seedWorkingHash!==from.rawHash||b.textOutputKind!==undefined)fail('Authored independent Article has incomplete or contradictory canonical archival fork proof.');
+    if(!authoredForkProof(b))fail('Authored independent Article has incomplete or contradictory canonical archival fork proof.');
     outputLineage={outputId:b.outputId,canonicalOutputId:b.canonicalOutputId,sourceBindingId:b.sourceBindingId,seedWorkingHash:b.seedWorkingHash,derivedFrom:structuredClone(from)};
    }
    // Authored roots and their exact archived Article forks have no original-part plan or legacy
    // research-choice history. Parent Research and Direction retain their own
    // captured authorities in the existing composition; they are not empty evidence.
-   const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:outputLineage?'exact-authored-independent-output':'exact-authored-collection-root',...(outputLineage?{outputLineage}:{}),expected:structuredClone(draft.expected),originalPlan:{status:'not-applicable',reason:'Authored working root has no legacy original-part plan or original-backed Research choices. Parent Research, selected material and scoped Direction remain separate maintained context.'},choiceSourceExpected:null,originalSourceRecords:[],records:[],selections:[]};
+   const payload={schema:'ar-create.study-editorial-plan-context.v1',role:EDITORIAL_PLAN_ROLE,binding:structuredClone(binding),originalId:b.originalId,partKey:b.partKey,contextScope:outputLineage?'exact-authored-independent-output':sourcedRoot?'exact-authored-sourced-collection-root':'exact-authored-collection-root',...(sourcedRoot?{collectionSource:structuredClone(source)}:{}),...(outputLineage?{outputLineage}:{}),expected:structuredClone(draft.expected),originalPlan:{status:'not-applicable',reason:'Authored working root has no legacy original-part plan or original-backed Research choices. Parent Research, selected material and scoped Direction remain separate maintained context.'},choiceSourceExpected:null,originalSourceRecords,records:[],selections:[]};
    return {...payload,hash:digest(stable(payload))};
   }
   const original=await originals.readDraft(b.originalId);
