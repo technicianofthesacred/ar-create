@@ -37,7 +37,7 @@ test('quota failure leaves current DOM and prior durable words, warns, and can r
 });
 test('legacy migration preserves exact pending request and malformed bytes without replacing them',async t=>{
  const o=await owner(t),seed=await fixture(o);seed.setOffline(true);seed.type('Legacy exact pending words.');await seed.w.studyDraft.flush();const legacy=JSON.parse(seed.saved());delete legacy.recoverySession;seed.w.close();const shared=sharedStore();shared.setItem(LEGACY,JSON.stringify(legacy));const f=await fixture(o,{shared});assert.match(f.saved(),/Legacy exact pending words/);assert.ok([...shared.m.entries()].some(([k,v])=>k.startsWith(PREFIX+'legacy:')&&v===JSON.stringify(legacy)));
- f.w.close();const broken=sharedStore();broken.setItem(LEGACY,'{bad JSON exact bytes');const g=await fixture(o,{shared:broken});assert.equal(broken.getItem(LEGACY),'{bad JSON exact bytes');assert.ok([...broken.m.entries()].some(([k,v])=>k.startsWith(PREFIX+'legacy:')&&v==='{bad JSON exact bytes'));assert.match(g.w.document.body.textContent,/older recovery record could not be read/);
+ f.w.close();const broken=sharedStore();broken.setItem(LEGACY,'{bad JSON exact bytes');const g=await fixture(o,{shared:broken});assert.equal(broken.getItem(LEGACY),'{bad JSON exact bytes');assert.equal([...broken.m.keys()].some(k=>k.startsWith(PREFIX+'legacy:')),false,'Malformed mirror stays unchanged rather than allocating a redundant startup archive');assert.match(g.w.document.body.textContent,/older recovery record could not be read/);
 });
 
 
@@ -107,7 +107,7 @@ test('reopening retained writing near quota preserves exact recovery and remains
  assert.match(reopened.w.document.getElementById('manuscript').textContent,/Synthetic retained words/);
  for(const [key,value] of before)if(key.startsWith(PREFIX))assert.equal(shared.getItem(key),value,'Prior recovery bytes remain exact');
  assert.equal(reopened.w.studyDraft.recoveryState().unavailable,false,'Recovery must remain usable without clearing older copies');
- const decode=f=>f.w.arRecoveryStorage.parse(f.saved()),pending=JSON.parse(before.get(PREFIX+session)).documents[o.bindingId].pending.request;
+ const decode=f=>f.w.arRecoveryStorage.parse(f.saved()),pending=JSON.parse(JSON.stringify(reopened.w.arRecoveryStorage.parse(before.get(PREFIX+session)).documents[o.bindingId].pending.request));
  assert.deepEqual(JSON.parse(JSON.stringify(decode(reopened).documents[o.bindingId].pending.request)),pending);
  await reopened.w.studyDraft.flush();assert.match((await o.service.read({bindingId:o.bindingId,parentStudyId:o.parentStudyId})).raw,/Synthetic retained words/);
  reopened.type('New exact words after quota repair.');await reopened.w.studyDraft.flush();
@@ -122,4 +122,13 @@ test('reopening retained writing near quota preserves exact recovery and remains
  const archives=[...shared.m].filter(([key])=>key.startsWith(PREFIX+'before-recovery:'));assert.ok(archives.length,'Explicit recovery durably archives the replaced current buffer');
  assert.ok(archives.some(([,raw])=>JSON.stringify(fresh.w.arRecoveryStorage.parse(raw)).includes('Local words kept before explicit recovery.')));
  for(const [key,value] of before)if(key.startsWith(PREFIX))assert.equal(shared.getItem(key),value,'Original recovery bytes survive edit, save, reload and Undo');
+});
+
+test('packed startup retains an unchanged legacy mirror instead of allocating a redundant archive',async t=>{
+ const o=await owner(t),shared=sharedStore(),seed=await fixture(o,{shared});seed.setOffline(true);seed.type('Invented exact retained words.');seed.p.history=Array.from({length:400},()=>({blocks:structuredClone(seed.p.blocks),note:{text:'An invented retained note '.repeat(10)}}));seed.type('Invented exact retained words. Tail.');await seed.w.studyDraft.flush();
+ const session=seed.w.sessionStorage.getItem(SESSION),project=structuredClone(seed.p),legacy=seed.w.arRecoveryStorage.parse(seed.saved());delete legacy.recoverySession;const legacyRaw=JSON.stringify(legacy);shared.setItem(LEGACY,legacyRaw);seed.w.close();
+ const before=new Map(shared.m),limit=[...shared.m.values()].reduce((n,v)=>n+v.length,0)+35000,put=shared.setItem.bind(shared);shared.setItem=(key,value)=>{if([...shared.m].reduce((n,[k,v])=>n+(k===key?0:v.length),0)+value.length>limit)throw Error('quota');put(key,value);};
+ const reopened=await fixture(o,{shared,session,project});assert.equal(reopened.w.studyDraft.recoveryState().unavailable,false);assert.match(reopened.w.document.getElementById('manuscript').textContent,/Invented exact retained words. Tail./);
+ assert.equal(shared.getItem(LEGACY),legacyRaw);for(const [key,value]of before)assert.equal(shared.getItem(key),value);
+ assert.equal([...shared.m.keys()].filter(key=>!before.has(key)&&key.startsWith(PREFIX)).length,1,'Only the new tab writer is allocated; no unchanged-mirror archive');
 });
