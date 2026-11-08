@@ -271,7 +271,41 @@ const navigationTick=()=>new Promise(r=>setTimeout(r,20));
 test('real browser traversal restores Library content, file details and exact list controls without writes',async()=>{const x=await setup();try{enterSelection(x);const traverse=await historyBrowser(x),api=x.w.workbenchFolderBrowser,q=x.d.querySelector('[data-wfb-search]');q.value='Alpha';q.dispatchEvent(new x.w.Event('input',{bubbles:true}));x.d.querySelector('[data-wfb-select="s1"]').click();const initial=x.w.history.length;openBrowserControl(x.d.querySelector('[data-wfb-preview="s1"]'));await navigationTick();assert.equal(x.w.history.length,initial+1);x.d.querySelector('[data-wfb-source-page="details"]').click();await navigationTick();assert.equal(api.captureNavigation().route.page,'details');await traverse('back');assert.equal(api.captureNavigation().route.preview,'s1');assert.equal(api.captureNavigation().route.page,'content');await traverse('back');assert.equal(api.captureNavigation().route.preview,null);assert.equal(x.d.querySelector('[data-wfb-search]').value,'Alpha');assert.equal(x.d.querySelector('[data-wfb-select="s1"]').checked,true);await traverse('forward');await traverse('forward');assert.equal(api.captureNavigation().route.page,'details');assert.ok(x.calls.every(c=>c.opts.method!=='POST'));assert.doesNotMatch(JSON.stringify(x.w.history.state),/s1|Alpha|details|Unsaved/);}finally{x.close();}});
 test('Media photo and File actions Back restores list query, selection, sort and view with no filter entries',async()=>{const x=await setup();try{enterSelection(x);x.w.current=()=>({id:'synthetic-project',view:'record',viewedStage:8});x.w.fetch=async()=>({ok:true,json:async()=>({...view([{id:'photo',title:'Invented image',kind:'image'}]),domain:'media'})});await x.w.workbenchFolderBrowser.refresh();x.w.workbenchFolderBrowser.panelSpec('media').press('all');const traverse=await historyBrowser(x,8),api=x.w.workbenchFolderBrowser,initial=x.w.history.length;const q=x.d.querySelector('[data-wfb-search]');q.value='Invented';q.dispatchEvent(new x.w.Event('input',{bubbles:true}));x.d.querySelector('[data-wfb-id="photo"] .wfb-title').click();x.d.querySelector('[data-wfb-action="grid"]').click();await navigationTick();assert.equal(x.w.history.length,initial);openBrowserControl(x.d.querySelector('[data-wfb-preview="photo"]'));await navigationTick();await traverse('back');assert.equal(x.d.querySelector('[data-wfb-search]').value,'Invented');assert.equal(x.d.querySelector('[data-wfb-id="photo"]').classList.contains('sel'),true);assert.equal(api.captureNavigation().controls.mode,'grid');await traverse('forward');assert.equal(api.captureNavigation().route.preview,'photo');await traverse('back');x.d.querySelector('[data-wfb-action="media-actions"]').click();await navigationTick();assert.equal(api.captureNavigation().route.mediaActions,true);await traverse('back');assert.equal(api.captureNavigation().route.mediaActions,false);assert.equal(api.captureNavigation().controls.query,'Invented');assert.deepEqual([...api.captureNavigation().selection],['photo']);assert.equal(x.d.querySelector('#original textarea').value,'Unsaved words');}finally{x.close();}});
 test('browser owner refuses changed sources and unfinished file actions before changing current page',async()=>{const x=await setup();try{const api=x.w.workbenchFolderBrowser;const list=api.captureNavigation();openBrowserControl(x.d.querySelector('[data-wfb-preview="s1"]'));await navigationTick();const source=api.captureNavigation();x.d.querySelector('[data-wfb-action="back"]').click();api.panelSpec('library').rows().data.sources[0].hash='changed';await assert.rejects(api.restoreNavigation(source),/changed/);assert.equal(api.captureNavigation().route.preview,null);mountFolderPanel(x).querySelector('[data-wfb-new]').click();await assert.rejects(api.restoreNavigation(list),/Finish or cancel/);assert.ok(x.d.querySelector('[data-wfb-name]'));assert.ok(x.calls.every(c=>c.opts.method!=='POST'));}finally{x.close();}});
-test('an unfinished source read creates no partial browser destination',async()=>{const x=await setup();try{await historyBrowser(x);let release;x.w.fetch=async url=>String(url).includes('/api/sources/file')?await new Promise(r=>release=()=>r({ok:true,json:async()=>({body:'Invented exact source.'})})):{ok:true,json:async()=>view()};const count=x.w.history.length;openBrowserControl(x.d.querySelector('[data-wfb-preview="s1"]'));await navigationTick();assert.equal(x.w.history.length,count);release();await navigationTick();assert.equal(x.w.history.length,count+1);assert.equal(x.w.workbenchFolderBrowser.captureNavigation().route.preview,'s1');}finally{x.close();}});
+test('an unfinished source read creates no partial browser destination',async t=>{
+ const x=await setup();try{
+  await historyBrowser(x);
+  let release,sourceRequested;
+  const reading=new Promise(resolve=>sourceRequested=resolve);
+  x.w.fetch=async url=>String(url).includes('/api/sources/file')?await new Promise(resolve=>{
+   release=()=>resolve({ok:true,json:async()=>({body:'Invented exact source.'})});
+   sourceRequested();
+  }):{ok:true,json:async()=>view()};
+  const count=x.w.history.length;
+  openBrowserControl(x.d.querySelector('[data-wfb-preview="s1"]'));
+  await reading;
+  await navigationTick();
+  assert.equal(x.w.history.length,count,'pending source reads must not create a destination');
+  // History records on a later scheduled turn after the async source owner ends.
+  // Exercise a delayed scheduler so source completion cannot stand in for commit.
+  const schedule=x.w.setTimeout;
+  t.mock.method(x.w,'setTimeout',function(callback,delay,...args){
+   return Reflect.apply(schedule,this,[callback,Math.max(delay||0,75),...args]);
+  });
+  // Observe the actual commit instead of assuming it completes within 20ms.
+  let timer;
+  const committed=new Promise((resolve,reject)=>{
+   timer=setTimeout(()=>reject(Error('Completed source read did not commit browser history')),5000);
+   const push=x.w.history.pushState;
+   t.mock.method(x.w.history,'pushState',function(...args){
+    const result=Reflect.apply(push,this,args);resolve();return result;
+   });
+  });
+  release();
+  try{await committed;}finally{clearTimeout(timer);}
+  assert.equal(x.w.history.length,count+1);
+  assert.equal(x.w.workbenchFolderBrowser.captureNavigation().route.preview,'s1');
+ }finally{x.close();}
+});
 
 test('a loaded All media list with a persisted binding records history before any folder pick',async()=>{const x=await setup();try{x.w.current=()=>({id:'synthetic-project',view:'record',viewedStage:8});x.w.studyDraft={currentBinding:()=>({id:'persisted-binding',parentStudyId:'synthetic-project'}),currentProof:()=>null};x.w.fetch=async()=>({ok:true,json:async()=>({...view([{id:'photo',title:'Invented image',kind:'image'}]),domain:'media'})});await x.w.workbenchFolderBrowser.refresh();const api=x.w.workbenchFolderBrowser;assert.equal(api.panelSpec('media').rows().navigationLoaded,undefined,'no earlier folder pick');assert.equal(api.captureNavigation().ready,true,'loaded global list does not need a native photo owner');const traverse=await historyBrowser(x,8),initial=x.w.history.length;openBrowserControl(x.d.querySelector('[data-wfb-preview="photo"]'));await navigationTick();assert.equal(x.w.history.length,initial+1);await traverse('back');assert.equal(api.captureNavigation().route.preview,null);await traverse('forward');assert.equal(api.captureNavigation().route.preview,'photo');await traverse('back');x.d.querySelector('[data-wfb-action="media-actions"]').click();await navigationTick();assert.equal(api.captureNavigation().route.mediaActions,true);await traverse('back');assert.equal(api.captureNavigation().route.mediaActions,false);api.panelSpec('media').press('native');assert.equal(api.captureNavigation().ready,false,'an explicitly native view still waits for its exact photo owner');}finally{x.close();}});
 

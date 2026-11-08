@@ -86,6 +86,38 @@ test('last timing reflects fatal failure and optional refusal without exposing e
  assert.deepEqual(reader.lastTiming(),snapshot);assert.equal(calls,1);
 });
 
-test('one stalled required portfolio cannot pin return: recover once from fresh bytes within the same budget',async()=>{const rows=[];let calls=0,release,aborted=false;const first=new Promise(resolve=>{release=resolve;});const reader=createExistingWorkReader({readTimeoutMs:60,onTiming:row=>rows.push(row),portfolio:{list:async({signal}={})=>{calls++;if(calls===1){signal?.addEventListener('abort',()=>{aborted=true;});return first;}return structuredClone(original);}},readAuthority:async()=>({})});let watchdog;try{const result=await Promise.race([reader.catalog(),new Promise((_,reject)=>{watchdog=setTimeout(()=>reject(Error('Required reader stayed pinned')),300);})]);assert.equal(calls,2);assert.equal(aborted,true);assert.deepEqual(result.stories,[]);const before=reader.lastTiming();assert.equal(before.completed,true);assert.equal(before.rows.find(r=>r.reader==='portfolio')?.outcome,'timed-out');assert.equal(before.rows.find(r=>r.reader==='portfolio-recovery')?.outcome,'fulfilled');for(const row of rows)validateTiming(row);release({...structuredClone(original),stories:[{id:'late-story',name:'Late abandoned work',artifacts:[],parts:[],questions:[]}]});await turn();assert.deepEqual(result.stories,[]);assert.deepEqual(reader.lastTiming(),before);}finally{clearTimeout(watchdog);}});
+test('one stalled required portfolio cannot pin return: recover once from fresh bytes within the same budget',async t=>{
+ let now=0;t.mock.method(performance,'now',()=>now);t.mock.timers.enable({apis:['setTimeout']});
+ const rows=[];let calls=0,release,aborted=false;const first=new Promise(resolve=>{release=resolve;});
+ const reader=createExistingWorkReader({readTimeoutMs:60,onTiming:row=>rows.push(row),portfolio:{list:async({signal}={})=>{calls++;if(calls===1){signal?.addEventListener('abort',()=>{aborted=true;});return first;}return structuredClone(original);}},readAuthority:async()=>({})});
+ const pending=reader.catalog();await turn();assert.equal(calls,1);assert.equal(aborted,false);
+ now=30;t.mock.timers.tick(30);await turn();assert.equal(calls,2);
+ const result=await pending;assert.equal(aborted,true);assert.deepEqual(result.stories,[]);
+ const before=reader.lastTiming();assert.equal(before.completed,true);assert.equal(before.rows.find(r=>r.reader==='portfolio')?.outcome,'timed-out');assert.equal(before.rows.find(r=>r.reader==='portfolio-recovery')?.outcome,'fulfilled');for(const row of rows)validateTiming(row);
+ release({...structuredClone(original),stories:[{id:'late-story',name:'Late abandoned work',artifacts:[],parts:[],questions:[]}]});await turn();assert.deepEqual(result.stories,[]);assert.deepEqual(reader.lastTiming(),before);
+});
 
-test('two stalled required scans release the shared promise so a later opening starts a real new run',async()=>{let calls=0;const reader=createExistingWorkReader({readTimeoutMs:40,portfolio:{list:async()=>{calls++;if(calls<=2)return new Promise(()=>{});return structuredClone(original);}},readAuthority:async()=>({})});let watchdog;try{await assert.rejects(Promise.race([reader.catalog(),new Promise((_,reject)=>{watchdog=setTimeout(()=>reject(Error('Required reader stayed pinned')),300);})]),/timed out/);assert.equal(calls,2);assert.equal(reader.lastTiming().failed,true);const next=await reader.catalog();assert.deepEqual(next.stories,[]);assert.equal(calls,3);assert.equal(reader.lastTiming().run,2);assert.equal(reader.lastTiming().completed,true);}finally{clearTimeout(watchdog);}});
+test('two stalled required scans release the shared promise so a later opening starts a real new run',async t=>{
+ // Advance each deadline only after the preceding asynchronous read has started.
+ // Wall-clock scheduling may otherwise spend the entire budget before recovery.
+ let now=0,calls=0;t.mock.method(performance,'now',()=>now);t.mock.timers.enable({apis:['setTimeout']});
+ const reader=createExistingWorkReader({readTimeoutMs:40,portfolio:{list:async()=>{calls++;if(calls<=2)return new Promise(()=>{});return structuredClone(original);}},readAuthority:async()=>({})});
+ const first=reader.catalog(),refused=assert.rejects(first,/timed out/);assert.equal(reader.catalog(),first);
+ await turn();assert.equal(calls,1);
+ now=20;t.mock.timers.tick(20);await turn();assert.equal(calls,2);
+ assert.equal(reader.lastTiming().rows.find(row=>row.reader==='portfolio')?.outcome,'timed-out');
+ now=40;t.mock.timers.tick(20);await refused;
+ assert.equal(reader.lastTiming().failed,true);
+ assert.equal(reader.lastTiming().rows.find(row=>row.reader==='portfolio-recovery')?.outcome,'timed-out');
+ const next=await reader.catalog();assert.deepEqual(next.stories,[]);assert.equal(calls,3);assert.equal(reader.lastTiming().run,2);assert.equal(reader.lastTiming().completed,true);
+});
+
+test('a required scan whose timer resumes after the shared deadline does not start recovery',async t=>{
+ let now=0,calls=0;t.mock.method(performance,'now',()=>now);t.mock.timers.enable({apis:['setTimeout']});
+ const reader=createExistingWorkReader({readTimeoutMs:40,portfolio:{list:async()=>{calls++;if(calls===1)return new Promise(()=>{});return structuredClone(original);}},readAuthority:async()=>({})});
+ const first=reader.catalog(),refused=assert.rejects(first,/timed out/);await turn();assert.equal(calls,1);
+ // Reproduce the loaded CI event loop: the first 20ms timer runs after 40ms.
+ now=45;t.mock.timers.tick(45);await refused;assert.equal(calls,1);
+ assert.equal(reader.lastTiming().failed,true);assert.ok(!reader.lastTiming().rows.some(row=>row.reader==='portfolio-recovery'));
+ const next=await reader.catalog();assert.deepEqual(next.stories,[]);assert.equal(calls,2);assert.equal(reader.lastTiming().run,2);assert.equal(reader.lastTiming().completed,true);
+});
