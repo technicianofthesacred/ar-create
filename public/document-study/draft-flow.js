@@ -31,7 +31,7 @@
  }
  try{
   const prior=sessionStorage.getItem(SESSION),raw=localStorage.getItem(STORAGE);
-  preserveLegacy(raw);
+  if(raw&&!parseDisk(raw))storageError='An older recovery record could not be read. It has been kept unchanged; keep this tab open and copy any unsaved words.';
   const resumed=prior&&parseDisk(localStorage.getItem(RECOVERY+prior)),legacy=parseDisk(raw);
   if(resumed){disk=resumed;resumedSession=true;}else if(legacy&&(!legacy.recoverySession||!localStorage.getItem(RECOVERY+legacy.recoverySession)))disk=legacy;
   sessionStorage.setItem(SESSION,sessionId);
@@ -65,12 +65,11 @@
    const mirror=localStorage.getItem(STORAGE),previous=localStorage.getItem(sessionKey);
    disk.recoverySession=sessionId;disk.recoveryAt=new Date().toISOString();
    const raw=JSON.stringify(disk);if(window.arRecoveryStorage)window.arRecoveryStorage.write(localStorage,sessionKey,raw);else localStorage.setItem(sessionKey,raw);
-   if(mirror!==previous&&(!previous||JSON.stringify(parseDisk(previous))!==mirror))preserveLegacy(mirror);
    // Older clients/tests can still read the mirror. No v2 writer relies on it.
    // The plain v1 compatibility mirror is optional after this tab's exact
    // durable record succeeded. Never replace it with a packed v2 record.
    // A packed own record must not immediately refill the quota with a full mirror.
-   if(localStorage.getItem(sessionKey)===raw)try{if(!localStorage.getItem(STORAGE)||parseDisk(localStorage.getItem(STORAGE)))localStorage.setItem(STORAGE,raw);}catch{}
+   if(localStorage.getItem(sessionKey)===raw)try{if(!mirror||parseDisk(mirror)){if(mirror!==previous&&(!previous||JSON.stringify(parseDisk(previous))!==mirror))preserveLegacy(mirror);localStorage.setItem(STORAGE,raw);}}catch{}
    if(storageError.startsWith('Device recovery'))storageError='';
    return true;
   }catch{storageProblem();return false;}
