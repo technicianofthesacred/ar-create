@@ -39,3 +39,36 @@ The source scan covered Home/Subjects, Library/Material, Source, Research, Direc
 ## Completion boundary
 
 This inventory is a follow-up record, not implementation, deployment or human acceptance. The next bounded styling delivery should take one populated surface at a time, prove its actual computed problem, simplify it through shared tokens/components, and capture desktop/phone light/dark states once with focused affected interaction checks. Do not add accordions or expandable cards to hide remaining complexity.
+
+
+## 8 November — authorized simplification candidate
+
+Adrian authorized implementing this inventory and shipping it with recovery. C05;
+preserve C01/C04/C06 and S02/S03/S08/S12 owners. The candidate mounts three bounded
+refinement stylesheets after the shared controls; no new editor or data owner.
+
+- Media: 56px thumbnails, 96px virtual row slots, regular-weight two-line titles,
+  flexible title width and a visible Photo type. Remove empty date/folder/usage
+  columns from the contact list; exact metadata remains in the existing photo
+  detail and File actions. Compact the phone search/sort/filter/view tools.
+- Research: shared interface type, ordinary sans conversation with code still
+  monospace, subtle current rows, fewer nested quote rules and redundant source
+  headings, full tool width with readable prose measure.
+- Context, photo/caption tools and Footage: shared type and theme tokens. Explicitly
+  typed authored source text uses the working font; transcript and unknown captures
+  preserve their existing reading face. Source tool width is available to actions.
+- Other navigation selection: one quiet neutral fill without inset stripes/shadows.
+- Outputs: retain one visible section title; the saved-piece shelf suppresses the
+  disconnected-output empty notice only once actual piece cards exist. Errors and
+  genuinely empty shelves keep their existing messages and actions.
+- Already satisfied, preserved: Subjects/Home markup gives the serif exception only
+  to the paragraph glyph; Share already uses the full board with bounded prose.
+  Do not restyle these merely because an old base declaration remains.
+
+Verification is bounded to affected tests and invented sources. Initial populated
+Media checks at 1440/1000/390 in both themes measured no horizontal overflow and
+56px thumbnails with titles entirely inside their own rows. Final composed-revision
+screen/build/package evidence is recorded by Delivery, separately from installation
+and human acceptance. Private originals and all manuscript/selection/placement
+owners remain unchanged. Historical source declarations below are audit evidence,
+not a request to replace preserved transcript or artwork typography.

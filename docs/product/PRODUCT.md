@@ -658,3 +658,15 @@ C02; shared S01–S12 navigation. Adrian requests no vertical Gather/Develop/Mak
 ### 6 November — Only decision-ready real work reaches Home
 
 The author requests test-recording exclusion, evidence-based transcript suggestions, one combined request per recording, and enough source context and audio to decide. S02 / C01 / C02 / C04 / C06: Home shows the actual passage, proposed wording, reason and relevant audio with links to the existing review owners. Unreviewed recording suggestions do not become accepted by a timer or a generic Done click. Preserve human answers, original recordings and transcript correction history; unrelated agent steer defaults are unchanged. See the Source brief for the bounded finish criterion. This adopted direction is not installation proof.
+
+
+### 8 November — simplify the remaining styling inventory
+
+C05 with C01/C04/C06 preserved. Apply shared Combined typography, Graphite controls,
+quiet selection and usable tool width across the dated styling follow-up. Media
+list titles receive the remaining width and regular weight; 56px thumbnails and
+bounded virtual rows prevent overlap. Remove redundant Research/Outputs framing
+and headings while preserving source attribution, exact original references,
+saved decisions, writing and Undo. Transcript speech, paragraph glyphs and output
+artwork retain their specific typographic roles. Requirements are not release proof;
+see Delivery's candidate and installed evidence.

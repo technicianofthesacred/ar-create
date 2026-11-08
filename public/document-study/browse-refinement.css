@@ -1,0 +1,73 @@
+/* Shared browsing rhythm. The virtual Media row and its 96px slot agree;
+   long labels are bounded within their own row, never over the next item. */
+@layer graphite-controls {
+ #workspace .k-media.wfb-contact-mode:not(.wfb-gridmode) :is(.wfb-vrow,.wfb-vhead) {
+  grid-template-columns:56px minmax(0,1fr) 64px 32px!important;
+  grid-template-areas:"icon title kind expand"!important;
+  column-gap:16px!important;align-items:center!important;box-sizing:border-box;
+ }
+ #workspace .k-media.wfb-contact-mode .wfb-vrow {padding:12px 0!important;overflow:hidden;}
+ #workspace .k-media.wfb-contact-mode :is(.wfb-vrow,.wfb-vhead)>:is(.wfb-folder-column,.wfb-used-column,.wfb-date,.wfb-c2) {display:none!important;}
+ #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-type-icon,
+ #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-type-icon img {
+  width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important;
+  padding:0!important;border:0!important;border-radius:6px!important;object-fit:cover;
+ }
+ #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-type-icon svg {width:32px;height:32px;}
+ #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-title {
+  display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  font:400 var(--t-body,15px)/1.5 var(--ar-ui,sans-serif)!important;
+  white-space:normal!important;overflow:hidden!important;overflow-wrap:anywhere;
+  min-height:0!important;max-height:3em!important;padding:0!important;
+  align-self:center!important;text-align:left!important;
+ }
+ #workspace .k-media.wfb-contact-mode .wfb-filename {display:none;}
+ #workspace .k-media.wfb-contact-mode .wfb-vrow>:is(.wfb-kind,.wfb-date) {font-size:var(--t-label,13px);color:var(--dim);}
+ #workspace .k-media.wfb-contact-mode :is(.wfb-vrow,.wfb-vhead)>.wfb-kind {display:block!important;}
+ #workspace .k-media.wfb-contact-mode .wfb-vhead {min-height:36px;font-weight:400;color:var(--dim);}
+ #workspace :is(.wbp-row,.wfb-tn).on,
+ #workspace .wbp-panel nav>button.on {
+  background:color-mix(in srgb,var(--ink) 5%,transparent)!important;
+  color:var(--ink)!important;box-shadow:none!important;border-radius:6px;
+ }
+ #workspace .wbp-panel nav>button.on {border-color:transparent!important;}
+ #workspace .wbp-panel nav>button.on::before {display:none!important;}
+ #workspace.wb-outputs .oo-panel:not(.oo-focused)>.oo-heading h2 {font-size:var(--t-title,20px);font-weight:500;}
+ #workspace.wb-outputs .oo-panel:not(.oo-focused)>.oo-heading {padding:0 0 16px;border-bottom:0;}
+ #workspace.wb-outputs .oo-stage {padding-top:8px!important;}
+ #workspace.wb-outputs .oo-panel {border:0;background:transparent;}
+ @container(max-width:720px) {
+  #workspace .k-media.wfb-contact-mode:not(.wfb-gridmode) :is(.wfb-vrow,.wfb-vhead) {
+   grid-template-columns:56px minmax(0,1fr) 64px 32px!important;
+   grid-template-areas:"icon title kind expand"!important;column-gap:12px!important;
+  }
+  #workspace .k-media.wfb-contact-mode :is(.wfb-vrow,.wfb-vhead)>.wfb-date {display:none!important;}
+ }
+ @media(max-width:760px) {
+  #workspace .k-media.wfb-contact-mode:not(.wfb-gridmode) .wfb-vrow {
+   grid-template-columns:56px minmax(0,1fr) 44px!important;
+   grid-template-rows:auto!important;grid-template-areas:"icon title expand"!important;
+   column-gap:12px!important;
+  }
+  #workspace .k-media.wfb-contact-mode .wfb-vrow>.wfb-kind {display:none!important;}
+ }
+}
+@layer graphite-controls {
+ /* The persistent section bar already names Outputs. Keep history/create titles. */
+ #workspace .oo-panel:not(.oo-focused):not([data-cp-edition-view="earlier"])>.oo-heading h2 {display:none;}
+ #workspace [data-output-empty][hidden] {display:none!important;}
+}
+@layer graphite-controls {
+ @media(max-width:760px) {
+  #workspace .k-media .wfb-media-toolbar {
+   display:grid!important;grid-template-columns:96px 82px minmax(0,1fr)!important;
+   gap:8px!important;align-items:center;
+  }
+  #workspace .k-media .wfb-media-toolbar>.wfb-fsearch,
+  #workspace .k-media .wfb-media-toolbar>.wfb-contact-selection {grid-column:1/-1;}
+  #workspace .k-media .wfb-media-sort {font-size:0;display:block!important;}
+  #workspace .k-media .wfb-media-sort select {width:100%;font-size:var(--t-label,13px)!important;}
+  #workspace .k-media .wfb-mtog {min-width:0;justify-content:center;}
+  #workspace .k-media .wfb-mtog>button {padding-inline:6px!important;gap:4px!important;}
+ }
+}

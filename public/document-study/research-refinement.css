@@ -1,0 +1,98 @@
+/* Research uses the shared working typography. Source words keep their voice;
+   discussion, explanations and actions keep the same owner and saved records. */
+@layer graphite-controls {
+  :is(.rpb,.research-work-tools,.research-work-panel,.research-work-brief) {
+    font-family:var(--ar-ui)!important;
+    color:var(--ink);
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  .rpb {font-size:var(--t-body,14px)!important;line-height:1.65!important;max-width:none;}
+  .rpb :is(button,textarea,select,summary,label,.rpb-meta,.rpb-status) {font-family:var(--ar-ui)!important;}
+  .rpb :is(h2,h3,h4) {font-family:var(--ar-ui)!important;font-weight:600!important;letter-spacing:normal!important;overflow-wrap:anywhere;}
+  .rpb h2 {font-size:20px!important;line-height:1.4!important;margin:0 0 12px!important;}
+  .rpb h3 {font-size:16px!important;line-height:1.5!important;margin:24px 0 8px!important;}
+  .rpb h4 {font-size:14px!important;line-height:1.5!important;margin:16px 0 6px!important;}
+  .rpb :is(.rpb-prose,.rpb-prose p,.rpb-evidence p),
+  .research-work-panel .rpb-detail p {
+    font:400 16px/1.7 var(--ar-ui)!important;
+    letter-spacing:normal!important;
+  }
+  .rpb :is(.rpb-meta,.rpb-status),.research-work-panel .rpb-detail :is(.rpb-meta,.rpb-status) {
+    font:400 var(--t-label,13px)/1.6 var(--ar-ui)!important;
+    color:var(--dim);
+  }
+  .rpb .rpb-evidence strong {font:600 14px/1.5 var(--ar-ui)!important;}
+  .rpb :is(.rpb-detail article,.rpb-brief article),.research-work-panel {max-width:none!important;}
+  .rpb :is(.rpb-prose>p,.rpb-prose>ul,.rpb-evidence p,article>blockquote),
+  .research-work-brief-prose {max-width:72ch;}
+  .research-work-panel {padding-block:12px;}
+  .rpb .rpb-actions {gap:8px;}
+  .rpb .rpb-actions button {white-space:normal!important;text-align:left;}
+  .rpb .rpb-heading {align-items:start;border:0;padding-bottom:0;}
+
+  /* Attribution remains beside each excerpt; nested quote rules and evidence
+     boxes are unnecessary when the source and its status already have labels. */
+  .rpb blockquote,.research-work-panel blockquote,
+  #c3-research :is(.rt-dq,.rt-learning-answer blockquote),
+  .wb-console .wrl-result blockquote,
+  :is([data-rt-atlas-host],[data-research-local-atlas]) blockquote {
+    border:0!important;
+    padding:0!important;
+    margin:8px 0 12px!important;
+    overflow-wrap:anywhere;
+  }
+  .rpb blockquote {font:400 16px/1.75 var(--shared-prose-font,'AR Atlas Lora',Georgia,serif)!important;letter-spacing:normal!important;}
+  .rpb .rpb-evidence {border:0!important;padding:0!important;margin:20px 0!important;}
+
+  /* The index and source rows are navigation rather than primary actions. */
+  .rpb .rpb-index button,#c3-research .rt-panel .rt-src {
+    background:transparent!important;
+    color:var(--ink)!important;
+    border-color:transparent!important;
+    box-shadow:none!important;
+    white-space:normal!important;
+    font-weight:400!important;
+    text-align:left;
+  }
+  .rpb .rpb-index [aria-current="true"],#c3-research .rt-panel .rt-src.on,
+  #c3-research .rt-card.on {
+    background:var(--selection-subtle,color-mix(in srgb,var(--ink) 5%,transparent))!important;
+    color:var(--ink)!important;
+    border-color:var(--line)!important;
+    box-shadow:none!important;
+  }
+  .rpb .rpb-index [aria-current="true"],#c3-research .rt-panel .rt-src.on {font-weight:500!important;}
+  .rpb .rpb-index button:hover,#c3-research .rt-panel .rt-src:hover {background:var(--sel)!important;}
+
+  /* Ordinary learning questions and answers are not a terminal. */
+  #workspace.wb-research .cons {
+    background:var(--paper)!important;
+    font:400 var(--t-body,14px)/1.65 var(--ar-ui)!important;
+  }
+  #workspace.wb-research :is(.cons .ch,.clog,.cin,.cin input) {font-family:var(--ar-ui)!important;}
+  #workspace.wb-research .clog :is(.in,.out,.hon) {color:var(--ink)!important;}
+  #workspace.wb-research .clog :is(code,pre) {font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace!important;}
+  #workspace.wb-research .cin {flex-wrap:wrap;padding-block:8px!important;}
+  #workspace.wb-research .cin>label {color:var(--dim)!important;}
+  #workspace.wb-research .cin>input {flex:1 1 160px!important;width:auto!important;}
+  #workspace.wb-research .rsplit {border:0!important;box-shadow:none!important;border-radius:0!important;}
+  #workspace.wb-research .rpts {background:transparent!important;}
+  #workspace.wb-research .cons .ch {border-bottom:0!important;}
+
+  /* Keep the useful source-selection title once, inside its existing control.
+     Retain the outer title when another tool is shown without that selector. */
+  #workspace.wb-research .wb-research-tools:has(.source-continuation-setup)>h3,
+  #workspace.wb-research .wb-research-tools .source-continuation-header>h2 {display:none!important;}
+  #workspace.wb-research .wb-research-tools {margin:12px!important;min-width:0;}
+  #workspace.wb-research .wb-research-tools .source-continuation-header {align-items:end;}
+
+  @media(max-width:760px) {
+    .rpb .rpb-layout {gap:16px;}
+    .rpb .rpb-index {gap:4px;padding-bottom:12px;}
+    .rpb .rpb-index button {min-height:44px!important;}
+    .rpb .rpb-actions {align-items:stretch;}
+    .rpb .rpb-actions>button {min-height:44px!important;}
+    #workspace.wb-research .cin {gap:8px;}
+  }
+}
