@@ -53,8 +53,9 @@
  }
 }
 @layer graphite-controls {
- /* The persistent section bar already names Outputs. Keep history/create titles. */
- #workspace .oo-panel:not(.oo-focused):not([data-cp-edition-view="earlier"])>.oo-heading h2 {display:none;}
+ /* Keep a single compact title when the shared section bar omits its label. */
+ #workspace .oo-panel:not(.oo-focused)>.oo-heading h2 {display:block;font-size:var(--t-title,20px);font-weight:500;}
+ #output-overview .oo-panel:has(>[data-output-empty]:not([hidden])) .cp-empty-group {display:none;}
  #workspace [data-output-empty][hidden] {display:none!important;}
 }
 @layer graphite-controls {
