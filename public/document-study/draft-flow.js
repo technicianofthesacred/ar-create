@@ -12,8 +12,10 @@
  }
  // Each page writes only its own recovery key. The v1 value is a compatibility
  // mirror, never the authority for v2 tabs. A duplicated tab gets a new writer ID.
- const STORAGE='ar-document-study-owned-drafts-v1',RECOVERY=STORAGE+':session:',SESSION=STORAGE+':current',rooms=new Map(),IDLE=1500;
- const sessionId=crypto.randomUUID(),sessionKey=RECOVERY+sessionId;
+ const STORAGE='ar-document-study-owned-drafts-v1',RECOVERY=STORAGE+':session:',SESSION=STORAGE+':current',DURABLE=STORAGE+':last-durable',rooms=new Map(),IDLE=1500;
+ let sessionId=crypto.randomUUID(),sessionKey=RECOVERY+sessionId;
+ const locks=typeof navigator!=='undefined'&&typeof navigator.locks?.request==='function'?navigator.locks:null;
+ let pageActive=true,writerReady=!locks,leaseHeld=false,releaseLease=null,writerGeneration=0,lastWrittenRaw=null,priorSession=null,priorRaw=null,lastDurable=null;
  let disk={projects:{},documents:{}},storageError='',legacySeen=null,resumedSession=false;
  const recordObject=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
  function validDisk(v){return recordObject(v)&&recordObject(v.projects)&&recordObject(v.documents)&&Object.values(v.projects).every(p=>recordObject(p)&&(!p.browser||Array.isArray(p.browser.blocks)))&&Object.entries(v.documents).every(([id,d])=>recordObject(d)&&Array.isArray(d.base)&&Array.isArray(d.blocks)&&d.blocks.every(b=>recordObject(b)&&typeof b.id==='string'&&typeof b.html==='string')&&d.base.every(recordObject)&&recordObject(d.expected)&&(d.binding?.id===id&&typeof d.binding.parentStudyId==='string'||d.owner?.kind==='magazine'&&d.owner.pieceId===id&&typeof d.parentStudyId==='string'));}
@@ -31,10 +33,11 @@
  }
  try{
   const prior=sessionStorage.getItem(SESSION),raw=localStorage.getItem(STORAGE);
+  priorSession=prior;priorRaw=prior&&localStorage.getItem(RECOVERY+prior);lastDurable=sessionStorage.getItem(DURABLE);
   if(raw&&!parseDisk(raw))storageError='An older recovery record could not be read. It has been kept unchanged; keep this tab open and copy any unsaved words.';
-  const resumed=prior&&parseDisk(localStorage.getItem(RECOVERY+prior)),legacy=parseDisk(raw);
+  const resumed=prior&&parseDisk(priorRaw),legacy=parseDisk(raw);
   if(resumed){disk=resumed;resumedSession=true;}else if(legacy&&(!legacy.recoverySession||!localStorage.getItem(RECOVERY+legacy.recoverySession)))disk=legacy;
-  sessionStorage.setItem(SESSION,sessionId);
+  if(!locks){sessionStorage.setItem(SESSION,sessionId);sessionStorage.removeItem(DURABLE);}
  }catch{storageProblem();}
  let applying=false,resuming=false,renderEpoch=0,openEpoch=0,lastProject=current().id;
  const original={article,render,save,onTyping,viewPhase,setView,blockHTML,undo,workflowBar,refreshDiscussion,phaseReader,historicalNotice,wireDocument,openInstruction};
@@ -60,11 +63,14 @@
  document.addEventListener('keydown',event=>{if(document.body.dataset.writeView==='preview'&&((event.altKey&&['ArrowUp','ArrowDown'].includes(event.key))||event.target.closest?.('#manuscript')&&((event.metaKey||event.ctrlKey)&&['z','y','b','i','u'].includes(event.key.toLowerCase())||['Backspace','Delete','Enter'].includes(event.key)))){event.preventDefault();event.stopImmediatePropagation();}},true);
  const own=p=>{disk.projects[p.id]||={active:null,browser:null};if(!rooms.has(p.id))rooms.set(p.id,{catalog:null,loading:false,error:''});return {p,local:disk.projects[p.id],live:rooms.get(p.id)}};
  const persist=()=>{
+  if(!writerReady){storageProblem();return false;}
   try{
    // Write the current words first: migration failure must not prevent this copy.
    const mirror=localStorage.getItem(STORAGE),previous=localStorage.getItem(sessionKey);
    disk.recoverySession=sessionId;disk.recoveryAt=new Date().toISOString();
-   const raw=JSON.stringify(disk);if(window.arRecoveryStorage)window.arRecoveryStorage.write(localStorage,sessionKey,raw);else localStorage.setItem(sessionKey,raw);
+   const raw=JSON.stringify(disk);if(window.arRecoveryStorage)window.arRecoveryStorage.write(localStorage,sessionKey,raw,{expectedRaw:lastWrittenRaw});else{if(localStorage.getItem(sessionKey)!==lastWrittenRaw)throw Error('The recovery writer changed.');localStorage.setItem(sessionKey,raw);}
+   lastWrittenRaw=localStorage.getItem(sessionKey);
+   if(leaseHeld)sessionStorage.setItem(DURABLE,sessionId);
    // Older clients/tests can still read the mirror. No v2 writer relies on it.
    // The plain v1 compatibility mirror is optional after this tab's exact
    // durable record succeeded. Never replace it with a packed v2 record.
@@ -74,6 +80,37 @@
    return true;
   }catch{storageProblem();return false;}
  };
+ // A prior slot is reusable only after this protocol recorded a successful
+ // locked write. Legacy copied session pointers alone never grant ownership.
+ function sameRecoveryApartFromTimestamp(a,b){
+  const left=parseDisk(a),right=parseDisk(b);if(!left||!right)return false;
+  delete left.recoveryAt;delete right.recoveryAt;
+  const canonical=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
+  return canonical(left)===canonical(right);
+ }
+ function beginWriter(candidate=null){
+  if(!pageActive||leaseHeld)return;
+  const generation=++writerGeneration;writerReady=false;
+  const independent=()=>{if(generation!==writerGeneration)return;leaseHeld=false;sessionId=crypto.randomUUID();sessionKey=RECOVERY+sessionId;lastWrittenRaw=null;try{sessionStorage.setItem(SESSION,sessionId);sessionStorage.removeItem(DURABLE);writerReady=true;persist();cue();}catch{storageProblem();}};
+  if(!locks){independent();return;}
+  const acquire=(id,expected,reusing)=>{
+   let request;
+   try{request=locks.request(RECOVERY+id,{mode:'exclusive',ifAvailable:true},async lock=>{
+    if(generation!==writerGeneration)return;
+    const actual=localStorage.getItem(RECOVERY+id);
+    if(!lock||actual!==expected&&(!reusing||!sameRecoveryApartFromTimestamp(actual,expected))){if(reusing){acquire(crypto.randomUUID(),null,false);return;}independent();return;}
+    sessionId=id;sessionKey=RECOVERY+id;lastWrittenRaw=actual;
+    try{sessionStorage.setItem(SESSION,id);if(!reusing)sessionStorage.removeItem(DURABLE);}catch{storageProblem();return;}
+    leaseHeld=true;writerReady=true;
+    let end;const lifetime=new Promise(resolve=>{end=resolve;releaseLease=resolve;});
+    try{persist();cue();await lifetime;}finally{if(releaseLease===end){releaseLease=null;leaseHeld=false;writerReady=false;}}
+   });}catch{independent();return;}
+   Promise.resolve(request).catch(()=>{if(generation===writerGeneration&&!writerReady)independent();});
+  };
+  if(candidate&&parseDisk(candidate.raw))acquire(candidate.id,candidate.raw,true);else acquire(crypto.randomUUID(),null,false);
+ }
+ function suspendWriter(){pageActive=false;writerReady=false;leaseHeld=false;writerGeneration++;const release=releaseLease;releaseLease=null;if(release)release();}
+ window.addEventListener('pageshow',event=>{if(event.persisted){pageActive=true;beginWriter(lastWrittenRaw===null?null:{id:sessionId,raw:lastWrittenRaw});}});
  const activeDoc=p=>{const id=own(p).local.active;return id?disk.documents[id]:null};
  const safeURL=url=>{try{const u=new URL(url,location.origin);return ['http:','https:'].includes(u.protocol)?u.href:null}catch{return null}};
  // Operations this window sent: their change events are this window's own echo and need no re-read.
@@ -539,7 +576,7 @@
  };
  render=function(){if(current().id!==lastProject){lastProject=current().id;openEpoch++;}renderEpoch++;original.render();applyWriteView();if(recoveryTask)paintRecovery();if(isDraft(current())){wireControls();if(!resuming)void ensureWorking(current());cue(current())}presenceSoon()};
  // Synchronous device drafts precede best-effort idle/leave saves.
- window.addEventListener('pagehide',()=>{for(const d of Object.values(disk.documents))if(d.status==='Unsaved changes'||d.pending)flush(d);persist()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(isDraft(current()))capture(current());for(const d of Object.values(disk.documents))if(d.status==='Unsaved changes'||d.pending)flush(d);persist()}});
+ window.addEventListener('pagehide',()=>{for(const d of Object.values(disk.documents))if(d.status==='Unsaved changes'||d.pending)flush(d);persist();suspendWriter()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){if(isDraft(current()))capture(current());for(const d of Object.values(disk.documents))if(d.status==='Unsaved changes'||d.pending)flush(d);persist()}});
  // Read only the active owner's already-loaded receipt metadata. No fetch,
  // prose/history copy, writer activation or Undo admission is exposed.
  function currentSavedHistory(){
@@ -637,9 +674,10 @@
   if(edit){editor?.focus();const range=document.createRange();range.selectNodeContents(target);range.collapse(true);const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);}
   return true;
  }
- window.studyDraft={openRecovery,closeRecovery,recoveryState:()=>{const d=supported(current())?activeDoc(current()):null;return {count:recoveryChoices(current(),d).length,unavailable:!!storageError,needsReview:!!storageError||!!d?.error};},compare:async()=>{const p=current();if(!isDraft(p)||!activeDoc(p))return false;await handle('read');window.c3Shell?.reveal?.(document.getElementById('draft-recovery'));return true},showHistory:()=>{const p=current();if(!supported(p)||!activeDoc(p))return false;if(!isDraft(p))viewPhase(5);own(p).live.showHistory=true;render();return true},supports:id=>supported(state.projects.find(p=>p.id===id)),history:()=>handle('history'),previewVersion:async operationId=>{const p=current();if(!supported(p)||!activeDoc(p)||magazineDoc(activeDoc(p))||typeof operationId!=='string')return false;if(!isDraft(p))viewPhase(5);own(p).live.showHistory=true;delete own(p).live.version;await handle('preview:'+operationId);return !!own(p).live.version;},holdForContext,releaseContext,openBinding,openPart,resumeCurrent,reconcileNoopRecovery,readView:()=>supported(current())&&activeDoc(current())?manuscriptReader(current()):null,reviewState:()=>{const p=current(),d=supported(p)?activeDoc(p):null;return d&&!magazineDoc(d)?{bindingId:editorIdentity(d).id,parentStudyId:editorIdentity(d).parentStudyId,dirty:!approvalClean(p,d),blocks:(d.approvalReview?.blocks||[]).map(row=>({id:row.id,count:row.spans?.length||0}))}:null},currentBinding:()=>{const d=supported(current())?activeDoc(current()):null;return d&&!magazineDoc(d)?clone(d.binding):null},currentOwner:()=>{const d=activeDoc(current());return magazineDoc(d)?clone(d.owner):null},openMagazine,currentProof,currentSavedHistory,magazineArrangeState,getMagazineWordingDraft,retainMagazineWordingDraft,clearMagazineWordingDraft,annotateMagazinePlacement,saveMagazineCredits,describeMagazinePlacement,moveMagazinePlacement,focusMagazinePlacement,aspectMagazinePlacement,replaceMagazinePlacement,replaceMagazineAsset,insertMagazineAsset,retryMagazinePlacement,undoMagazinePlacement,refreshSaved,edit:()=>writePhase(5),read:()=>writePhase(6),setViewMode:setWriteView,viewMode:()=>current().view==='article'&&current().viewedStage===5?writeRoom().mode:'edit',flush:async()=>{const p=current();if(isDraft(p)){commitTyping();capture(p)}const d=supported(p)?activeDoc(p):null;if(d)await flush(d,true);return currentProof()},focusPassage};
+ window.studyDraft={recoveryOwnership:()=>({state:!pageActive?'suspended':writerReady?leaseHeld?'exclusive':'independent':'pending',sessionId}),openRecovery,closeRecovery,recoveryState:()=>{const d=supported(current())?activeDoc(current()):null;return {count:recoveryChoices(current(),d).length,unavailable:!!storageError,needsReview:!!storageError||!!d?.error};},compare:async()=>{const p=current();if(!isDraft(p)||!activeDoc(p))return false;await handle('read');window.c3Shell?.reveal?.(document.getElementById('draft-recovery'));return true},showHistory:()=>{const p=current();if(!supported(p)||!activeDoc(p))return false;if(!isDraft(p))viewPhase(5);own(p).live.showHistory=true;render();return true},supports:id=>supported(state.projects.find(p=>p.id===id)),history:()=>handle('history'),previewVersion:async operationId=>{const p=current();if(!supported(p)||!activeDoc(p)||magazineDoc(activeDoc(p))||typeof operationId!=='string')return false;if(!isDraft(p))viewPhase(5);own(p).live.showHistory=true;delete own(p).live.version;await handle('preview:'+operationId);return !!own(p).live.version;},holdForContext,releaseContext,openBinding,openPart,resumeCurrent,reconcileNoopRecovery,readView:()=>supported(current())&&activeDoc(current())?manuscriptReader(current()):null,reviewState:()=>{const p=current(),d=supported(p)?activeDoc(p):null;return d&&!magazineDoc(d)?{bindingId:editorIdentity(d).id,parentStudyId:editorIdentity(d).parentStudyId,dirty:!approvalClean(p,d),blocks:(d.approvalReview?.blocks||[]).map(row=>({id:row.id,count:row.spans?.length||0}))}:null},currentBinding:()=>{const d=supported(current())?activeDoc(current()):null;return d&&!magazineDoc(d)?clone(d.binding):null},currentOwner:()=>{const d=activeDoc(current());return magazineDoc(d)?clone(d.owner):null},openMagazine,currentProof,currentSavedHistory,magazineArrangeState,getMagazineWordingDraft,retainMagazineWordingDraft,clearMagazineWordingDraft,annotateMagazinePlacement,saveMagazineCredits,describeMagazinePlacement,moveMagazinePlacement,focusMagazinePlacement,aspectMagazinePlacement,replaceMagazinePlacement,replaceMagazineAsset,insertMagazineAsset,retryMagazinePlacement,undoMagazinePlacement,refreshSaved,edit:()=>writePhase(5),read:()=>writePhase(6),setViewMode:setWriteView,viewMode:()=>current().view==='article'&&current().viewedStage===5?writeRoom().mode:'edit',flush:async()=>{const p=current();if(isDraft(p)){commitTyping();capture(p)}const d=supported(p)?activeDoc(p):null;if(d)await flush(d,true);return currentProof()},focusPassage};
  window.studyDraft.beginMagazineContext=beginMagazineContext;
  for(const d of Object.values(disk.documents)){const renderMap=new Map(projectBlocks(d.base||[]).map(b=>[b.id,b]));d.blocks=(d.blocks||[]).map(b=>{const raw=d.base.find(r=>r.id===b.id);return raw&&legacyOpaqueMatches(b,raw)?renderMap.get(b.id):b});d.signature=JSON.stringify(d.blocks)}for(const p of state.projects){if(!supported(p))continue;const d=activeDoc(p);if(!d)continue;if(magazineDoc(d)){if(p.magazineDraft?.pieceId!==d.owner.pieceId){own(p).local.active=null;continue;}p.blocks=clone(d.blocks);continue;}if(!p.ownedDraft&&p.blocks.some(b=>d.base.some(row=>row.id===b.id))){p.ownedDraft={bindingId:editorIdentity(d).id,sequence:d.sequence||0}}if(p.ownedDraft?.bindingId!==editorIdentity(d).id){own(p).local.active=null;continue}p.blocks=p.blocks.map(b=>{const raw=d.base.find(r=>r.id===b.id);return raw&&legacyOpaqueMatches(b,raw)?projectBlocks([raw])[0]:b});if(resumedSession||(p.ownedDraft.sequence||0)<(d.sequence||0)){p.blocks=clone(d.blocks);p.history=clone(d.history||[]);p.note=clone(d.note||null);p.ownedDraft.sequence=d.sequence;p.originalNotes=draftNotes(d);saveBrowser()}else if(isDraft(p)&&JSON.stringify(p.blocks)!==d.signature)capture(p)}for(const p of state.projects)if(supported(p))own(p).live.legacyAtOpen=!!own(p).local.browser;persist();
+ if(locks)queueMicrotask(()=>beginWriter(priorSession&&lastDurable===priorSession&&parseDisk(priorRaw)?{id:priorSession,raw:priorRaw}:null));
  window.addEventListener('online',()=>{for(const d of Object.values(disk.documents))if(d.retryable)void flush(d,true);if(isDraft(current()))void ensureWorking(current());});
  const magazineLink=new URL(location.href).searchParams;if(magazineLink.has('magazineStory')&&magazineLink.has('magazinePiece'))queueMicrotask(()=>openMagazine({storyId:magazineLink.get('magazineStory'),pieceId:magazineLink.get('magazinePiece'),parentStudyId:current().id}).catch(error=>{own(current()).live.error=error.message;cue();}));
  render();if(background())void learnSupported();for(const d of Object.values(disk.documents)){if(d.status==='Unsaved changes')schedule(d);else if(d.pending&&d.retryable)timers.set(editorIdentity(d).id,setTimeout(()=>flush(d,true),1500));}

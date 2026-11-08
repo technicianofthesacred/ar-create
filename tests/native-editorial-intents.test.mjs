@@ -115,3 +115,9 @@ test('optional instructions are validated, and changed or removed captured instr
   fs.writeFileSync(file,original);f.reload();assert.equal((await f.bridge.context({requestId:r.id})).request.instruction,'  Preserve these exact words.  ');
  }
 });
+
+for(const nl of ['\n','\r\n'])for(const mutation of ['source','draft'])test('multiline scoped target retains '+mutation+' freshness guard '+JSON.stringify(nl),async t=>{
+ const f=await fixture(t,empty+'First invented line.'+nl+'Second invented line.'+nl+nl+'Neighbor exact.'),target=f.opened.projection.find(p=>p.words==='First invented line.\nSecond invented line.'),r=await f.prepare('scoped-revision',{targetParagraphIds:[target.id]});await f.bridge.propose({requestId:r.id,replacements:[{id:target.id,words:'Revised invented paragraph.'}]});let expected=f.raw;
+ if(mutation==='source'){const source=f.opened.context.records.find(row=>row.id==='source');fs.chmodSync(source.copiedPath,0o600);fs.appendFileSync(source.copiedPath,' Changed source.');}else{const saved=await human(()=>f.drafts.save({...f.binding,expected:f.opened.expected,operationId:randomUUID(),operations:[{kind:'text',id:target.id,from:0,to:5,insert:'Later',seenBlockHash:target.blockHash}]}));expected=saved.raw;}
+ f.reload();assert.equal((await f.bridge.review({requestId:r.id})).stale,true);await assert.rejects(human(()=>f.bridge.finish({requestId:r.id,operationId:randomUUID()})),/changed|stale/);assert.equal(fs.readFileSync(f.opened.paths.draft,'utf8'),expected);
+});

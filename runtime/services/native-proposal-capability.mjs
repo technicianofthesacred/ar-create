@@ -5,17 +5,16 @@ import {inlineMap,capture,render,openingBoundary,continuationBoundary} from './d
 // Interior comments stay unsupported because a replacement could cross them.
 export function proposalEditable(row) {
   if (!row || row.safe !== true || row.blockKind !== 'paragraph' || typeof row.raw !== 'string' || typeof row.words !== 'string' || !row.words) return false;
-  // Direct writing may contain hard line breaks; ordinary AI text proposals
-  // retain their existing single-line span contract and cannot replace them.
-  if (/[\r\n]/.test(row.words)) return false;
+  // LF display words may map to LF or CRLF raw bytes in one paragraph.
+  // Prove those exact spans below; proposal wording stays ordinary prose.
   const mapped = inlineMap(row.raw);
   if (!mapped.safe || mapped.blockKind !== 'paragraph' || mapped.words !== row.words || mapped.reworks.length) return false;
   // The donor may retain edge whitespace in raw while mapping only visible
   // prose. Use the same contiguous byte-run proof for noted and plain prose.
   const prose = row.raw.replace(/%%[\s\S]*?%%|<!--[\s\S]*?-->/g, '');
-  if (prose.trim() !== row.words) return false;
+  if (prose.trim().replace(/\r\n/g, '\n') !== row.words) return false;
   const visible = mapped.runs.filter(run => run.to > run.from && run.to > 0 && run.from < row.words.length);
-  if (!visible.length || visible.some(run => run.locked || run.rawTo - run.rawFrom !== run.to - run.from)) return false;
+  if (!visible.length || visible.some(run => run.locked || row.raw.slice(run.rawFrom,run.rawTo).replace(/\r\n/g,'\n') !== row.words.slice(run.from,run.to))) return false;
   if (visible[0].from !== 0 || visible.at(-1).to !== row.words.length) return false;
   for (let i = 1; i < visible.length; i++) if (visible[i-1].rawTo !== visible[i].rawFrom || visible[i-1].to !== visible[i].from) return false;
   return !mapped.runs.some(run => run.locked && run.from > 0 && run.from < row.words.length);
