@@ -56,3 +56,14 @@ test('Enter and the separate expand button open previews without changing select
   x.d.querySelector('[data-wfb-action=back]').click();assert.deepEqual(selected(x),['a']);
  }finally{x.close();}}
 });
+test('Media list virtualization reserves room for larger thumbnails and long titles',async()=>{
+ const x=await setup();try{
+  const rows=[...x.d.querySelectorAll('.wfb-vrow')];
+  assert.equal(rows[0].style.height,'96px');
+  assert.equal(rows[1].style.top,'96px');
+  assert.equal(rows[0].querySelector('.wfb-kind').textContent,'Photo');
+  card(x,'a').click();assert.deepEqual(selected(x),['a']);
+  assert.equal(x.d.querySelector('.wfb-vrow').style.height,'96px');
+  assert.equal(x.calls.filter(c=>c.options.method==='POST').length,0);
+ }finally{x.close();}
+});

@@ -1,0 +1,98 @@
+/* Secondary tools share the Combined type and Graphite surfaces. Artwork,
+   spoken transcripts, saved content and each tool's controls keep their owner. */
+@layer tool-refinement {
+  body.wbf-on :is(.popover, .catalogDrawer, .footage-ranges) {
+    font: 400 var(--t-body, 15px)/var(--lh-ui, 1.45) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    color: var(--ink) !important;
+    background: var(--paper) !important;
+    border-color: var(--line) !important;
+    box-shadow: none !important;
+    overflow-wrap: anywhere;
+  }
+  body.wbf-on :is(.popover h2, .catalogDrawer h2, .footage-ranges h2) {
+    font: 600 var(--t-title, 17px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    color: var(--ink) !important;
+    margin: 0 0 12px !important;
+    padding: 0 !important;
+  }
+  body.wbf-on :is(.popover p, .popover label, .catalogDrawer .small, .cropInputs label, .footage-context) {
+    font: 400 var(--t-label, 13px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    color: var(--dim) !important;
+  }
+  body.wbf-on .popover .context {
+    font: 400 var(--t-reading, 16px)/var(--lh-read, 1.65) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    color: var(--ink) !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    max-width: 70ch;
+  }
+  /* Caption editing is authored working text, outside the slide artwork. */
+  body.wbf-on .caption > .words {
+    font: 400 var(--t-reading, 16px)/var(--lh-read, 1.65) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    color: var(--ink) !important;
+    caret-color: var(--ink);
+  }
+  body.wbf-on .catalogDrawer h3 {
+    font: 600 var(--t-head, 15px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    color: var(--ink) !important;
+  }
+  body.wbf-on .footage-ranges {
+    border-radius: var(--graphite-radius, 6px) !important;
+  }
+  body.wbf-on .footage-ranges header {
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  body.wbf-on .footage-range {
+    border-color: var(--line) !important;
+    min-width: 0;
+  }
+  body.wbf-on .footage-range strong {
+    font-weight: 500 !important;
+  }
+  body.wbf-on .footage-range small {
+    font-size: var(--t-label, 13px) !important;
+    color: var(--dim) !important;
+  }
+  body.wbf-on .footage-form label {
+    min-width: 0;
+  }
+  body.wbf-on .footage-form input[type='number'] {
+    font-variant-numeric: tabular-nums;
+  }
+  body.wbf-on .source-continuation {
+    font: 400 var(--t-body, 15px)/var(--lh-ui, 1.45) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+  }
+  body.wbf-on .source-continuation-reader {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+  }
+  body.wbf-on .source-continuation-reader-heading {
+    font: 400 var(--t-label, 13px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+  }
+  body.wbf-on .source-continuation-reader-heading strong {
+    font-weight: 500 !important;
+  }
+  /* Only explicitly typed authored text changes face. Unknown retained captures
+     and actual transcript speech keep their original reading typography. */
+  body.wbf-on .source-continuation-reader[data-source-kind='text'] :is(.source-continuation-prose, .source-continuation-prose :is(p, li, blockquote, pre, del, ins)),
+  body.wbf-on .source-continuation-reader[data-source-kind='text'] > pre {
+    font: 400 var(--t-reading, 16px)/var(--lh-read, 1.65) var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    letter-spacing: normal !important;
+    max-width: 70ch !important;
+  }
+  body.wbf-on .source-continuation-reader[data-source-kind='text'] .source-continuation-prose :is(h1, h2, h3, h4, h5, h6) {
+    font: 600 var(--t-title, 17px)/1.5 var(--ar-ui, 'Plus Jakarta Sans', sans-serif) !important;
+    letter-spacing: normal !important;
+  }
+  body.wbf-on .source-continuation-prose {
+    margin-inline: 0 !important;
+  }
+  body.wbf-on :is(.popover, .catalogDrawer, .footage-ranges) ::selection {
+    background: color-mix(in srgb, var(--warm) 20%, transparent);
+    color: var(--ink);
+  }
+}

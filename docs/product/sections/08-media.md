@@ -70,3 +70,16 @@ S08, C02/C04/C05/C06. Adrian adopted click-to-select and double-click-to-expand 
 The selection count, Select all and Clear occupy permanent toolbar space. Changing selection must neither insert a banner nor rebuild the contact sheet or reset its scroll. Sorting retains the list's scroll offset. Existing exact-photo validation, saved details, usage/placement links, original identities, filing guards and native owner remain authoritative.
 
 Finish criterion: select, add, range, select all and clear with unchanged toolbar/grid bounds and card nodes; expand and return to the same selection and scroll; verify desktop, intermediate and phone widths in both themes, keyboard/touch expansion, guarded stale-photo refusal and unchanged dirty manuscript controls. A verified source candidate is separate from installed release and human visual acceptance.
+
+
+## 8 November — readable list rows
+
+S08, C03/C04/C05/C06. Give the photograph title the available list width, with
+regular-weight text bounded to two readable lines. Reserve a matching virtual row
+slot so text never crosses a following item. List thumbnails are 56px (roughly twice
+the previous size). Show the known Photo type; omit empty secondary columns from
+this compact view and retain full exact metadata in the existing detail owner.
+Keep click/range selection, separate expansion, Back, scrolling and original guards.
+Finish criterion: populated long-title list at desktop/tablet/phone in both themes,
+no overlaps or horizontal overflow, keyboard/touch expansion and unchanged dirty
+writing; focused affected tests and exact installed asset/mount proof.

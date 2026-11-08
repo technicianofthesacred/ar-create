@@ -17,7 +17,7 @@
  let disk={projects:{},documents:{}},storageError='',legacySeen=null,resumedSession=false;
  const recordObject=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
  function validDisk(v){return recordObject(v)&&recordObject(v.projects)&&recordObject(v.documents)&&Object.values(v.projects).every(p=>recordObject(p)&&(!p.browser||Array.isArray(p.browser.blocks)))&&Object.entries(v.documents).every(([id,d])=>recordObject(d)&&Array.isArray(d.base)&&Array.isArray(d.blocks)&&d.blocks.every(b=>recordObject(b)&&typeof b.id==='string'&&typeof b.html==='string')&&d.base.every(recordObject)&&recordObject(d.expected)&&(d.binding?.id===id&&typeof d.binding.parentStudyId==='string'||d.owner?.kind==='magazine'&&d.owner.pieceId===id&&typeof d.parentStudyId==='string'));}
- function parseDisk(raw){try{const v=JSON.parse(raw);return validDisk(v)?v:null}catch{return null}}
+ function parseDisk(raw){try{const v=(window.arRecoveryStorage?.parse||JSON.parse)(raw);return validDisk(v)?v:null}catch{return null}}
  function storageProblem(){storageError='Device recovery is unavailable. Keep this tab open and copy your words elsewhere until they are saved.';}
  // Preserve an old client's complete snapshot before replacing its mirror. Old
  // storage events carry each incoming snapshot, so even a stale v1 writer
@@ -25,8 +25,8 @@
  function preserveLegacy(raw){
   if(!raw||raw===legacySeen)return;
   const value=parseDisk(raw);
-  if(value?.recoverySession&&localStorage.getItem(RECOVERY+value.recoverySession)===raw){legacySeen=raw;return;}
-  localStorage.setItem(RECOVERY+'legacy:'+crypto.randomUUID(),raw);legacySeen=raw;
+  if(value?.recoverySession){const stored=localStorage.getItem(RECOVERY+value.recoverySession);if(stored===raw||stored&&JSON.stringify(parseDisk(stored))===raw){legacySeen=raw;return;}}
+  const archiveKey=RECOVERY+'legacy:'+crypto.randomUUID();if(value&&window.arRecoveryStorage)window.arRecoveryStorage.write(localStorage,archiveKey,raw);else localStorage.setItem(archiveKey,raw);legacySeen=raw;
   if(!value)storageError='An older recovery record could not be read. It has been kept unchanged; keep this tab open and copy any unsaved words.';
  }
  try{
@@ -64,10 +64,13 @@
    // Write the current words first: migration failure must not prevent this copy.
    const mirror=localStorage.getItem(STORAGE),previous=localStorage.getItem(sessionKey);
    disk.recoverySession=sessionId;disk.recoveryAt=new Date().toISOString();
-   localStorage.setItem(sessionKey,JSON.stringify(disk));
-   if(mirror!==previous)preserveLegacy(mirror);
+   const raw=JSON.stringify(disk);if(window.arRecoveryStorage)window.arRecoveryStorage.write(localStorage,sessionKey,raw);else localStorage.setItem(sessionKey,raw);
+   if(mirror!==previous&&(!previous||JSON.stringify(parseDisk(previous))!==mirror))preserveLegacy(mirror);
    // Older clients/tests can still read the mirror. No v2 writer relies on it.
-   if(!localStorage.getItem(STORAGE)||parseDisk(localStorage.getItem(STORAGE)))localStorage.setItem(STORAGE,JSON.stringify(disk));
+   // The plain v1 compatibility mirror is optional after this tab's exact
+   // durable record succeeded. Never replace it with a packed v2 record.
+   // A packed own record must not immediately refill the quota with a full mirror.
+   if(localStorage.getItem(sessionKey)===raw)try{if(!localStorage.getItem(STORAGE)||parseDisk(localStorage.getItem(STORAGE)))localStorage.setItem(STORAGE,raw);}catch{}
    if(storageError.startsWith('Device recovery'))storageError='';
    return true;
   }catch{storageProblem();return false;}
@@ -417,7 +420,7 @@
   // Archive this page before replacing its active buffer; never mutate the
   // foreign session record, nor discard either pending operation/base revision.
   if(!persist())throw Error(storageError);
-  try{localStorage.setItem(RECOVERY+'before-recovery:'+uuid(),JSON.stringify(disk));}catch{storageProblem();throw Error(storageError);}
+  try{const key=RECOVERY+'before-recovery:'+uuid(),raw=JSON.stringify(disk);if(window.arRecoveryStorage)window.arRecoveryStorage.write(localStorage,key,raw);else localStorage.setItem(key,raw);}catch{storageProblem();throw Error(storageError);}
   const next=clone(selected.document);next.retryable=false;next.status='Recover save';next.error='Recovered words are not saved. Compare the saved copy or retry the retained save when ready.';
   clearTimeout(timers.get(editorIdentity(d).id));disk.documents[editorIdentity(d).id]=next;
   delete r.live.tabPreview;delete r.live.inspect;persist();activate(p,next,false);
