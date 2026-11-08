@@ -68,3 +68,17 @@ test('malformed plain or packed main cache is never replaced by startup or ordin
   vm.runInNewContext(source,context);vm.runInNewContext(study.slice(0,study.indexOf('function toast('))+';window.testSave=save;',context);assert.equal(storage.getItem(key),raw);assert.throws(()=>context.window.testSave(),/exact bytes are retained/);assert.equal(storage.getItem(key),raw);
  }
 });
+
+test('startup compaction refuses a cache changed by another tab during encoding',()=>{
+ const study=fs.readFileSync(new URL('../public/document-study/study.js',import.meta.url),'utf8'),key='ar-create-packaged-document-study-v1',older=JSON.stringify({project:'invented',projects:[{id:'invented',blocks:[{html:'Earlier cache '.repeat(10000)}]}]}),newer=JSON.stringify({project:'invented',projects:[{id:'invented',blocks:[{html:'Newer exact words must survive'}]}]}),storage=store(1000000,[[key,older]]);let changed=false;
+ class ConcurrentMap extends Map{set(k,v){if(!changed){storage.setItem(key,newer);changed=true;}return super.set(k,v);}}
+ const context={window:{},Map:ConcurrentMap,localStorage:storage,document:{getElementById:()=>({})},AR_CREATE_SYNTHETIC_PROJECTS:[]};vm.runInNewContext(source,context);vm.runInNewContext(study.slice(0,study.indexOf('function toast('))+';window.testSave=save;',context);assert.equal(changed,true);assert.equal(storage.getItem(key),newer);assert.equal(context.window.arRecoveryCacheStatus().state,'stale');assert.throws(()=>context.window.testSave(),/newer bytes are retained/);assert.equal(storage.getItem(key),newer);
+});
+test('startup compaction reports unavailable storage without replacing retained cache bytes',()=>{
+ const study=fs.readFileSync(new URL('../public/document-study/study.js',import.meta.url),'utf8'),key='ar-create-packaged-document-study-v1',raw=JSON.stringify({project:'invented',projects:[{id:'invented',blocks:[{html:'Retained exact cache '.repeat(5000)}]}]}),storage={getItem:()=>raw,setItem(){throw Error('controlled unavailable storage');}},context={window:{},localStorage:storage,document:{getElementById:()=>({})},AR_CREATE_SYNTHETIC_PROJECTS:[]};
+ vm.runInNewContext(source,context);vm.runInNewContext(study.slice(0,study.indexOf('function toast(')),context);assert.equal(storage.getItem(key),raw);assert.equal(context.window.arRecoveryCacheStatus().state,'unavailable');
+});
+test('startup compaction retains exact whitespace from the value that was read',()=>{
+ const study=fs.readFileSync(new URL('../public/document-study/study.js',import.meta.url),'utf8'),key='ar-create-packaged-document-study-v1',raw=' \n'+JSON.stringify({project:'invented',projects:[{id:'invented',blocks:[{html:'Exact cache words '.repeat(5000)}]}]})+' \n',storage=store(1000000,[[key,raw]]),context={window:{},localStorage:storage,document:{getElementById:()=>({})},AR_CREATE_SYNTHETIC_PROJECTS:[]};
+ vm.runInNewContext(source,context);vm.runInNewContext(study.slice(0,study.indexOf('function toast(')),context);assert.equal(context.window.arRecoveryCacheStatus().state,'compacted');assert.equal(JSON.parse(storage.getItem(key)).length,raw.length,'The original whitespace must remain in decoded bytes');
+});

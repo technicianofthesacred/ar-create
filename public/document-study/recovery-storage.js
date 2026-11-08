@@ -43,16 +43,21 @@
   if(decode(packed)!==raw)throw Error('Recovery compaction did not retain exact data.');
   return packed;
  }
- function write(storage,key,raw){
+ function write(storage,key,raw,options={}){
   // Callers supply JSON.stringify output. Never replace a failed write with a
   // truncated value or delete another record to make room.
-  const compact=raw.length>=65536?pack(raw):null,preferred=compact&&compact.length<raw.length?compact:raw;
-  try{storage.setItem(key,preferred);}catch(error){
+  const compact=options.compactOnly||raw.length>=65536?pack(raw):null,preferred=compact&&compact.length<raw.length?compact:raw;
+  const guard=()=>{if(Object.hasOwn(options,'expectedRaw')&&storage.getItem(key)!==options.expectedRaw)throw Object.assign(Error('Browser cache changed during compaction.'),{code:'RECOVERY_STORAGE_CHANGED'});};
+  guard();if(options.compactOnly&&preferred.length>=options.expectedRaw.length)return 'unchanged';
+  try{guard();storage.setItem(key,preferred);}catch(error){
+   if(error.code==='RECOVERY_STORAGE_CHANGED')throw error;
    if(preferred!==raw)throw error;
    const fallback=compact||pack(raw);if(fallback.length>=raw.length)throw error;
-   storage.setItem(key,fallback);
+   guard();storage.setItem(key,fallback);
   }
   if(decode(storage.getItem(key))!==raw)throw Error('Browser did not retain exact recovery data.');
+  return 'written';
  }
- window.arRecoveryStorage=Object.freeze({parse,write});
+ function compact(storage,key,expectedRaw){return write(storage,key,decode(expectedRaw),{expectedRaw,compactOnly:true});}
+ window.arRecoveryStorage=Object.freeze({parse,write,compact});
 })();
