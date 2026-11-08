@@ -42,7 +42,7 @@
     margin:8px 0 12px!important;
     overflow-wrap:anywhere;
   }
-  .rpb blockquote {font:400 16px/1.75 var(--shared-prose-font,'AR Atlas Lora',Georgia,serif)!important;letter-spacing:normal!important;}
+  .rpb blockquote {font:400 16px/1.75 var(--ar-ui)!important;letter-spacing:normal!important;}
   .rpb .rpb-evidence {border:0!important;padding:0!important;margin:20px 0!important;}
 
   /* The index and source rows are navigation rather than primary actions. */
