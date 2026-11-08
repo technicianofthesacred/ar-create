@@ -188,10 +188,21 @@ export function buildMagazineFixture({foreignLock = null, extra = {}} = {}) {
   return {dir, vault, files, drop, phoneDrop, drops: [drop, phoneDrop], data, cleanup: () => fs.rmSync(dir, {recursive: true, force: true})};
 }
 
-/** sha256 of every file under a root, keyed by relative path (for "nothing changed" proofs). */
+/** sha256 of committed files under a root, keyed by relative path (for "nothing changed" proofs). */
 export function treeHashes(root) {
   const out = {};
-  const walk = rel => { for (const entry of fs.readdirSync(path.join(root, rel), {withFileTypes: true})) { const r = rel ? rel + '/' + entry.name : entry.name; if (entry.isDirectory()) walk(r); else if (entry.isFile()) out[r] = createHash('sha256').update(fs.readFileSync(path.join(root, r))).digest('hex'); } };
+  // The journal writer stages atomicWrite's <month>.jsonl.<randomUUID>.tmp
+  // before renaming it. Those uncommitted bytes can vanish during this walk;
+  // they are not canonical journal records. Do not ignore other .tmp files or
+  // catch ENOENT: a disappeared committed/protected file must still fail proof.
+  const journalStaging = /^journal\/\d{4}-(?:0[1-9]|1[0-2])\.jsonl\.[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.tmp$/i;
+  const walk = rel => {
+    for (const entry of fs.readdirSync(path.join(root, rel), {withFileTypes: true})) {
+      const r = rel ? rel + '/' + entry.name : entry.name;
+      if (entry.isDirectory()) walk(r);
+      else if (entry.isFile() && !journalStaging.test(r)) out[r] = createHash('sha256').update(fs.readFileSync(path.join(root, r))).digest('hex');
+    }
+  };
   walk('');
   return out;
 }

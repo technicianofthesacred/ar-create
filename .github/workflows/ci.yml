@@ -69,11 +69,13 @@ jobs:
       - name: Test
         id: test
         shell: bash
+        env:
+          TEST_CONCURRENCY: ${{ runner.os == 'macOS' && '2' || '4' }}
         run: |
           set -o pipefail
-          # The private-repo runner has 2 vCPUs, where node:test defaults to running one file at a
-          # time (~30 min serial). Most files wait on local servers, so 4 at once fits the timeout.
-          npm test -- --test-concurrency=4 2>&1 | tee "$RUNNER_TEMP/test-output.log"
+          # The daily-driver Mac also runs real Chromium and JSDOM fixtures. Two files
+          # bound CPU/memory contention there; hosted Linux keeps its four-file lane.
+          npm test -- --test-concurrency="$TEST_CONCURRENCY" 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
       - name: Verify package
         if: ${{ !cancelled() && steps.test.outcome != 'skipped' }}

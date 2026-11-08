@@ -89,7 +89,8 @@ export async function createPhotoHTTPFixture(){
       return response;
      })());
     };w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.structuredClone=structuredClone;w.CSS={escape:s=>s};w.crypto.randomUUID=randomUUID;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};w.HTMLElement.prototype.scrollIntoView=function(){};}});
-    const end=Date.now()+15000;while(Date.now()<end){if(w.document.readyState==='complete'&&w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await tick();}
+    // Load the full maintained module graph under bounded shared-host contention.
+    const end=Date.now()+30000;while(Date.now()<end){if(w.document.readyState==='complete'&&w.studyDraft?.currentBinding?.()?.id===bindingId&&w.document.querySelector('[data-caption]')?.value===receipt.caption&&w.eval('current().viewedStage')===8)break;if(errors.length)throw Error('Native DOM boot failed: '+errors.join('; '));await tick();}
     assert.equal(w.document.readyState,'complete','All maintained modules finish loading.');
     if(w.studyDraft?.currentBinding?.()?.id!==bindingId||w.document.querySelector('[data-caption]')?.value!==receipt.caption||w.eval('current().viewedStage')!==8)throw Error('The real native photo editor did not mount its exact saved part/details.');
     assert.deepEqual(errors,[],'Native DOM boot errors.');

@@ -5,7 +5,46 @@ test('microphone requires explicit start; stop retains bytes then starts exact s
 test('cancel and closing stop device and keep captured draft without importing or deleting',async()=>{for(const action of ['cancel','back']){const x=boot();try{await open(x);x.d.querySelector('[data-mi-record]').click();await tick();x.d.querySelector('[data-mi-'+action+']').click();await tick();assert.equal(x.stopped,1);assert.equal(x.calls.some(c=>c.opts.method==='POST'),false);if(action==='back')await open(x);assert.ok(x.d.querySelector('[data-mi-save]'));}finally{x.close();}}});
 test('permission failure is visible and does not import or start transcription',async()=>{const x=boot();try{await open(x);x.w.navigator.mediaDevices.getUserMedia=async()=>{throw Object.assign(Error('denied'),{name:'NotAllowedError'});};x.d.querySelector('[data-mi-record]').click();await tick();assert.match(x.d.querySelector('[data-mi-message]').textContent,/Microphone permission/);assert.equal(x.calls.some(c=>c.opts.method==='POST'),false);}finally{x.close();}});
 test('late microphone permission after leaving stops tracks without recording',async()=>{const x=boot();try{await open(x);let resolve;x.w.navigator.mediaDevices.getUserMedia=()=>new Promise(r=>resolve=r);let stopped=0;x.d.querySelector('[data-mi-record]').click();x.d.querySelector('[data-mi-back]').click();resolve({getTracks:()=>[{stop:()=>stopped++}]});await tick();assert.equal(stopped,1);assert.equal(x.recorder,undefined);assert.equal(x.calls.some(c=>c.opts.method==='POST'),false);}finally{x.close();}});
-test('failed save keeps audio for retry and closing during save never starts transcription',async()=>{const x=boot();try{await open(x);const original=x.w.fetch;let fail=true;x.w.fetch=(url,opts)=>url==='/api/sources/import'&&fail?Promise.reject(Error('Controlled connection failure')):original(url,opts);x.d.querySelector('[data-mi-record]').click();await tick();x.d.querySelector('[data-mi-stop]').click();await tick();assert.ok(x.d.querySelector('[data-mi-save]'));assert.match(x.d.querySelector('[data-mi-message]').textContent,/Controlled connection failure/);fail=false;let finish;x.w.fetch=(url,opts)=>url==='/api/sources/import'?new Promise(resolve=>finish=()=>resolve(original(url,opts))):original(url,opts);x.d.querySelector('[data-mi-save]').click();await tick();x.d.querySelector('[data-mi-back]').click();finish();await tick();await tick();assert.equal(x.calls.some(c=>c.url.endsWith('/start')),false);await open(x);assert.ok(x.d.querySelector('[data-mi-start]'));}finally{x.close();}});
+test('failed save keeps audio for retry and closing during save never starts transcription',async()=>{
+ const x=boot();try{
+  const bounded=async(promise,message)=>{let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(message)),5000);})]);}finally{clearTimeout(timer);}};
+  const waitFor=(predicate,message)=>new Promise((resolve,reject)=>{
+   const observer=new x.w.MutationObserver(check),timer=setTimeout(()=>{observer.disconnect();reject(Error(message));},5000);
+   function check(){if(predicate()){observer.disconnect();clearTimeout(timer);resolve();}}
+   observer.observe(x.d.body,{subtree:true,childList:true,characterData:true,attributes:true});check();
+  });
+  await open(x);
+  const original=x.w.fetch,submitted=[];
+  x.w.fetch=(url,opts)=>{
+   if(url!=='/api/sources/import')return original(url,opts);
+   submitted.push(JSON.parse(opts.body).files[0].base64);
+   // FileReader and the failed network request can both outlive a fixed tick.
+   return new Promise((_,reject)=>setTimeout(()=>reject(Error('Controlled connection failure')),75));
+  };
+  x.d.querySelector('[data-mi-record]').click();await tick();
+  x.d.querySelector('[data-mi-stop]').click();
+  await waitFor(()=>/Controlled connection failure/.test(x.d.querySelector('[data-mi-message]')?.textContent||''),'Failed save did not finish visibly');
+  assert.ok(x.d.querySelector('[data-mi-save]'));
+  assert.equal(x.d.querySelector('[data-mi-save]').disabled,false);
+  assert.match(x.d.querySelector('[data-mi-message]').textContent,/Controlled connection failure/);
+  let finish,requested;
+  const retryRequested=new Promise(resolve=>requested=resolve);
+  x.w.fetch=(url,opts)=>{
+   if(url!=='/api/sources/import')return original(url,opts);
+   submitted.push(JSON.parse(opts.body).files[0].base64);
+   return new Promise(resolve=>{finish=()=>resolve(original(url,opts));requested();});
+  };
+  const saved=new Promise(resolve=>x.w.addEventListener('study-recording-change',resolve,{once:true}));
+  x.d.querySelector('[data-mi-save]').click();await bounded(retryRequested,'Retry import did not start');
+  x.d.querySelector('[data-mi-back]').click();finish();await bounded(saved,'Retried audio save did not settle');
+  assert.equal(x.calls.some(c=>c.url.endsWith('/start')),false);
+  assert.deepEqual(submitted,[Buffer.from('synthetic').toString('base64'),Buffer.from('synthetic').toString('base64')]);
+  await open(x);
+  await waitFor(()=>!!x.d.querySelector('[data-mi-start]'),'Saved recording did not offer its retained transcription action');
+  assert.ok(x.d.querySelector('[data-mi-start]'));
+  assert.equal(x.d.querySelector('textarea').value,'Unsaved words');
+ }finally{x.close();}
+});
 test('synthetic audio uses retained Library bytes and exact existing recording identity across restart',async t=>{const {default:path}=await import('node:path'),{default:os}=await import('node:os'),{createLibrary}=await import('../runtime/services/library.mjs'),{createRecordings}=await import('../runtime/services/recordings.mjs');const dataDir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'microphone-retain-')));t.after(()=>fs.rmSync(dataDir,{recursive:true,force:true}));const library=createLibrary({dataDir}),bytes=Buffer.alloc(46);bytes.write('RIFF');bytes.writeUInt32LE(38,4);bytes.write('WAVEfmt ',8);bytes.writeUInt32LE(16,16);bytes.writeUInt16LE(1,20);bytes.writeUInt16LE(1,22);bytes.writeUInt32LE(8000,24);bytes.writeUInt32LE(16000,28);bytes.writeUInt16LE(2,32);bytes.writeUInt16LE(16,34);bytes.write('data',36);bytes.writeUInt32LE(2,40);const result=await library.import({rootId:'library',folder:'',files:[{name:'Synthetic-microphone.wav',base64:bytes.toString('base64')}],urls:[]}),source=result.receipts[0].source;assert.equal(source.kind,'audio');const recordings=createRecordings({dataDir,library});await recordings.retain(source);const job=(await recordings.list()).jobs.find(j=>j.sourceId===source.id);assert.ok(job);assert.equal(job.state,'saved');assert.equal(job.transcriptReady,false);assert.deepEqual(fs.readFileSync((await library.blob(source.id)).file),bytes);const restarted=createRecordings({dataDir,library});await restarted.retain(source);assert.equal((await restarted.list()).jobs.filter(j=>j.sourceId===source.id).length,1);assert.equal((await restarted.list()).jobs.find(j=>j.sourceId===source.id).id,job.id);});
 test('without an open subject the transcript offers only a disabled Add to a subject tag and sends nothing',async()=>{const x=boot();try{const calls=[];x.w.fetch=async(url,opts={})=>{calls.push({url,opts});return{ok:true,json:async()=>url==='/api/recordings'?{jobs:[{id,state:'done',transcriptReady:true}],capability:{ready:true}}:{}};};await open(x);assert.equal(x.d.querySelector('[data-mi-source]'),null);const none=x.d.querySelector('[data-mi-source-none]');assert.ok(none.disabled);assert.match(none.title,/Open a subject/);none.click();await tick();assert.equal(calls.some(c=>c.opts.method==='POST'),false);}finally{x.close();}});
 for(const changed of [false,true])test('Source attaches only to the explicitly named native subject; changed subject blocks attach '+changed,async()=>{const x=boot();try{const root='33333333-3333-4333-8333-333333333333',sourceId='22222222-2222-4222-8222-222222222222',project={id:'invented-subject',name:'Invented subject'},expected={jobId:id,markdownHash:'a'.repeat(64)},calls=[];let current=project,finish;x.w.current=()=>current;x.w.studyDraft={currentBinding:()=>({id:root,parentStudyId:project.id,kind:'collection-root'})};x.w.fetch=async(url,opts={})=>{calls.push({url,opts});const value=url==='/api/recordings'?{jobs:[{id,state:'done',transcriptReady:true}]}:url.includes('/snapshot')?{jobId:id,expected,external:{changed:false}}:url==='/api/recordings/source'?{jobId:id,source:{id:sourceId,hash:expected.markdownHash},reviewStatus:'unreviewed',canonicalSourceChanged:false}:{sourceIds:[sourceId]};if(url==='/api/recordings/source'&&changed)return new Promise(resolve=>finish=()=>resolve({ok:true,json:async()=>value}));return{ok:true,json:async()=>value};};await open(x);assert.equal(x.d.querySelector('[data-mi-source]').textContent,'Use in Invented subject');x.d.querySelector('[data-mi-source]').click();await tick();if(changed){current={id:'another-subject',name:'Other subject'};finish();await tick();assert.equal(calls.some(c=>c.url==='/api/study/material/attach'),false);}else{const attach=calls.find(c=>c.url==='/api/study/material/attach');assert.ok(attach);const body=JSON.parse(attach.opts.body);assert.equal(body.bindingId,root);assert.equal(body.parentStudyId,project.id);assert.deepEqual(body.sourceIds,[sourceId]);assert.match(x.d.querySelector('[data-mi-message]').textContent,/Transcript added to Invented subject/);assert.match(x.d.querySelector('[data-mi-message]').textContent,/Review the transcript before Research/);}}finally{x.close();}});
