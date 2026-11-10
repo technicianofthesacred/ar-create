@@ -1012,3 +1012,4 @@ button.d-askbox i{line-height:30px;padding:0 14px}
 }
 
 @media (max-width:850px){.d-tsec li{flex-wrap:wrap}.d-sug{flex-basis:100%;padding:0 0 8px}.d-in{display:none}}
+@media (max-width:850px){button.d-askbox.big{flex-wrap:nowrap}button.d-askbox.big span{flex-basis:auto;font-size:14px}.d-tsec li .d-sug{order:3}.d-tsec li .d-x{order:2}}
