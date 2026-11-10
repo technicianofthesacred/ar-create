@@ -1,6 +1,6 @@
 # Plans from the 10 November review
 
-Seven plans, each written so a builder can start without the chat they came from. They come from the [use and interface review](../reviews/2026-11-10-use-and-interface-review.md); finding numbers (U1, V3, M2, A1) point into it. **None is approved or started.** Each needs Adrian's yes on its own plan and, for anything he would see, before and after screenshots of the demo before it counts as done.
+Eight plans, each written so a builder can start without the chat they came from. They come from the [use and interface review](../reviews/2026-11-10-use-and-interface-review.md); finding numbers (U1, V3, M2, A1) point into it. **None is approved or started.** Each needs Adrian's yes on its own plan and, for anything he would see, before and after screenshots of the demo before it counts as done.
 
 | # | Plan | What it gives Adrian | Size | Needs first |
 |---|---|---|---|---|
@@ -11,6 +11,7 @@ Seven plans, each written so a builder can start without the chat they came from
 | 5 | [Screens](2026-11-10-05-screens.md) | The broken layouts fixed; one header; a calmer phone | Medium | Decisions 5, 6, 8 |
 | 6 | [Without the Mac](2026-11-10-06-without-the-mac.md) | The app, his phone and agents work with the Mac off | Large, in stages | Decision 9 |
 | 7 | [A demo that walks the whole chain](2026-11-10-07-walkable-demo.md) | Anyone, anywhere, can test recording to finished piece on invented data | Small to medium | Nothing |
+| 8 | [A noticeably better interface](2026-11-10-08-a-noticeably-better-interface.md) | Home as his desk, one page per subject, a path instead of thirteen doors, a calm writing page | A design round, then large | His choice from mock-ups |
 
 Decision numbers are those in the review's "Decisions that belong to Adrian".
 
@@ -20,6 +21,7 @@ Decision numbers are those in the review's "Decisions that belong to Adrian".
 - **Then 1 and 2**, which are independent of each other and make every later journey testable.
 - **Then 3**, the largest change to how the parts connect.
 - **4 and 5** can run beside 1 to 3, since they touch wording and layout. Plan 5's broken-layout fixes should not wait.
+- **Plan 8 changes what plan 5 is for.** Adrian found plan 5's changes too small to notice. Plan 5's Stage A (broken things) still goes ahead; its restyling stages wait for the direction chosen in plan 8's design round, which can start at once because it makes mock-ups and does not touch the app.
 - **Plan 6 is its own stream.** It starts with Adrian's decision on where the work lives and should not wait for the screens. Its first stage (inventory and a trial on the server with invented data) can begin at once.
 
 ## Rules every plan keeps
