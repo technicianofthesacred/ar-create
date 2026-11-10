@@ -84,6 +84,7 @@ svg{display:block}
 .sheet .to{font-size:13px;color:var(--dim)}
 .sheet .to b{color:var(--ink);font-weight:600}
 .cap3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cap3.four{grid-template-columns:repeat(2,1fr)}
 .cap3 button{display:grid;justify-items:center;gap:8px;padding:18px 6px 14px;border-radius:10px;background:var(--g-sec);font:600 13px/1.2 var(--ui);color:var(--g-ink)}
 .cap3 button .ic{width:24px;height:24px}
 .cap3 button.rec{background:var(--g-ink);color:var(--g-inv)}

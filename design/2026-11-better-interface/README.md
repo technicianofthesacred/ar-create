@@ -3,6 +3,30 @@
 Mock-ups for Adrian to choose from by eye. **Nothing in the app has changed.** The brief is
 `docs/plans/2026-11-10-08-a-noticeably-better-interface.md`.
 
+## Second round: direction D (10 November, later the same day)
+
+After seeing A, B and C, Adrian asked for the B and C mix with Research treated as learning in its own right, and for the
+design to be checked against his i64os research work (the Research Machine, Scout, the Study room, WordForge) and against
+everything AR Create is meant to do. He confirmed three things: the four stations are **Gather, Research, Create, Share**;
+a research topic is separate from a subject, so one topic can feed many subjects; and Simmer sits on the subject page
+between Research and Create.
+
+`d-four-stations/` is that one direction. Seven screens: Home, the subject page, a brand new subject, a research topic,
+the Research home, Write, and Write in focus. What it adds to A, B and C:
+
+- **Research has its own home.** Topics outlive pieces and only speak when they are ripe, contested or stalled. "Ask across everything" answers from what he has kept and says plainly what his sources cannot answer.
+- **A research topic reads like Write.** Sources and Scout on the left, a briefing that teaches and claims in four bands (settled, contested, what goes wrong, fringe) in the middle, and his own side on the right: "you first", learning notes Claude never writes in, his position, what is still open, and an honest receipt of the visit.
+- **Claims, not summaries.** Each claim shows who backs it, who disputes it and who says nothing, and a contested claim says why they disagree. One person's telling is kept whole and apart.
+- **Simmer** between Research and Create: the board, the possible dishes, and the dish named in his words.
+- **Needs you in two kinds:** what only he can decide, and what Claude carries on with unless he changes it.
+- **Before you release:** the consent hold, shown where it blocks.
+- **One read-through in Write.** Claude's draft stays dim until he rewrites it or marks it Not me, then he finishes. A change to one passage still has Accept and Dismiss. A question thrown to Research comes back beside its paragraph.
+- **Four origins kept distinct** with a word and a mark, never colour alone: their words, his reflection, outside evidence, Claude's proposal.
+- **Formats that do not exist yet are choices under New piece**, not empty rows.
+
+Corrections to A, B and C that D carries: the mode is Write (not Edit); no accept button on each drafted paragraph; no
+"Video, not started" row.
+
 ## What is here
 
 | Folder | Direction | In one line |
@@ -10,6 +34,7 @@ Mock-ups for Adrian to choose from by eye. **Nothing in the app has changed.** T
 | `a-the-board/` | A. The board | Today's frame finished: the sidebar becomes a path, Home a desk of subject cards, the Subject board the centre of each subject |
 | `b-the-path/` | B. The path | No sidebar. Each subject is a line with four stations (Gather, Develop, Make, Deliver); Home shows the lines side by side, a subject page is its line upright |
 | `c-the-work/` | C. The work itself | No bars. Subjects are covers, pieces are shown large, a floating dock carries the controls, proposals arrive as changes marked in the writing |
+| `d-four-stations/` | D. Gather, Research, Create, Share | The second round: one direction, with Research and Simmer drawn in full |
 | `kit/` | Shared | The invented story, the palette and Graphite controls copied from the app, generated pictures, and the small behaviours (answer, accept, Undo, capture) |
 
 Each direction has five screens, reached by clicking or from the dashed strip at the top (the strip is not part of any design):

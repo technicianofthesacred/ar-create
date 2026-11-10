@@ -124,10 +124,10 @@ const acts={
 K.on=(name,fn)=>{acts[name]=fn;};
 K.paint=keep=>paint(keep);
 function paint(keep){const y=scrollY;const app=K.app;if(!app)return;
- document.getElementById('app').innerHTML=app.render(S)+K.captureSheet();
- document.getElementById('mock').innerHTML=`<b>Mock-up · ${esc(app.title)}</b>${[['home','Home'],['subject','Subject'],['new-subject','New subject'],['write','Write'],['focus','Write, in focus']].map(([v,l])=>`<a href="#${v}"${S.view===v?' aria-current="page"':''}>${l}</a>`).join('')}<span class="sp"></span><button data-act="theme">Light / dark</button>`;
+ document.getElementById('app').innerHTML=app.render(S)+(app.captureSheet||K.captureSheet)();
+ document.getElementById('mock').innerHTML=`<b>Mock-up · ${esc(app.title)}</b>${(app.screens||[['home','Home'],['subject','Subject'],['new-subject','New subject'],['write','Write'],['focus','Write, in focus']]).map(([v,l])=>`<a href="#${v}"${S.view===v?' aria-current="page"':''}>${l}</a>`).join('')}<span class="sp"></span><button data-act="theme">Light / dark</button>`;
  document.body.dataset.view=S.view;scrollTo(0,keep?y:0);}
-function route(){const v=location.hash.slice(1);S.view=VIEWS.includes(v)?v:'home';S.capture=null;paint();}
+function route(){const v=location.hash.slice(1);S.view=((K.app&&K.app.screens)?K.app.screens.map(x=>x[0]):VIEWS).includes(v)?v:'home';S.capture=null;paint();}
 addEventListener('hashchange',route);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-stop]');if(!t||t.hasAttribute('data-stop')&&!t.dataset.act)return;e.preventDefault();const [n,...a]=t.dataset.act.split(':');(acts[n]||acts.noop)(...a);});
 document.addEventListener('submit',e=>{e.preventDefault();acts.create();});
