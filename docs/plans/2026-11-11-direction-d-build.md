@@ -86,4 +86,4 @@ A second track, in its own folder, with no change to any screen:
 | 5 Build by codes | | | |
 | 6 The studio shows it | | | |
 | 7 Where a subject lives | Opus | Sonnet | Done on branch `claude/direction-d-subjects`. Folder, tags, pin, archived and order are saved with the subject; a browser's old filing is carried over once per field; a newer saved value always wins over an offline edit. Four sentences on screen changed and wait for Adrian's eyes |
-| 8 Nothing scrolls sideways | | | |
+| 8 Nothing scrolls sideways | Sonnet, then Opus | Sonnet | Done. `scripts/review-sideways.mjs` measures every destination at four widths in both themes, plain and under stress (long titles, many items). Nine kinds of fault found under stress were fixed with styling only. With ordinary data no screen looks different (144 views compared). Left under extreme stress only: the Check heading can sit over the first piece tab at 1440, and the Home heading can be cut at 390. The Audience preview keeps Instagram's own sideways swipe |

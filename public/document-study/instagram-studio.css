@@ -47,7 +47,7 @@ dialog.igs::backdrop{background:var(--bg)}
 .igs :is(input,textarea){background:var(--igs-card);border:1px solid var(--igs-line2);border-radius:5px;padding:.5rem .65rem;min-height:2.5rem;width:100%}
 .igs-tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.5rem 0}
 .igs-tabs [aria-selected="true"]{border-color:var(--warm);background:color-mix(in srgb,var(--warm) 14%,transparent)}
-.igs-strip{display:flex;gap:14px;overflow-x:auto;padding:.75rem 0 .5rem;scrollbar-width:thin}
+.igs-strip{display:flex;flex-wrap:wrap;gap:14px;padding:.75rem 0 .5rem}
 .igs-frame{margin:0;flex:none}
 .igs-clip{overflow:hidden;border-radius:6px;background:var(--bg)}
 .igs-clip iframe{border:0;transform-origin:0 0;display:block;pointer-events:none}
