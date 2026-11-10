@@ -4,6 +4,8 @@
 // warm dark ground, one bronze accent, no borders, no gradients). Every size is the real Instagram pixel size.
 import IG from '../src/donors/mag/carousel/ig-templates.js';
 import {ENTRIES, entryForCode, resolvers} from '../src/donors/mag/carousel/ig-codes.mjs';
+import {drawInLook, refusal, TEAJIA_SOURCE, OWN_ROWS, OWNER} from '../src/donors/mag/carousel/ig-look-render.mjs';
+import {StateError} from '../store.mjs';
 
 // Facts, not formula. Checked 3 November 2026 against press coverage of Instagram's own announcements; the safe zones
 // are what layout guides report, since Instagram does not publish one number. Kept here so the app, the agents and the
@@ -68,7 +70,8 @@ const photo = (s, i, box) => {
 };
 const label = (t, px = 26, color = C.bronze, extra = '') => t ? '<div data-edit="label" style="font:600 ' + px + 'px ' + F.label + ';letter-spacing:.2em;text-transform:uppercase;color:' + color + ';' + extra + '">' + esc(t) + '</div>' : '';
 const credit = (t, px = 26) => t ? '<div data-edit="credit" style="font:400 ' + px + 'px ' + F.label + ';letter-spacing:.04em;color:' + C.dim + '">' + esc(t) + '</div>' : '';
-const frame = (w, h, body) => '<div data-ig-frame style="width:' + w + 'px;height:' + h + 'px;position:relative;overflow:hidden;background:' + C.ground + ';color:' + C.ink + ';font-family:' + F.speech + '">' + body + '</div>';
+const frameOn = ground => (w, h, body) => '<div data-ig-frame style="width:' + w + 'px;height:' + h + 'px;position:relative;overflow:hidden;background:' + ground + ';color:' + C.ink + ';font-family:' + F.speech + '">' + body + '</div>';
+const frame = frameOn(C.ground);
 const pad = n => String(n).padStart(2, '0');
 const clock = sec => Math.floor(sec / 60) + ':' + pad(Math.floor(sec % 60));
 
@@ -117,7 +120,7 @@ export const NEW_TEMPLATES = Object.freeze({
 const STORY_CARD_TOP = 285;
 // Above and below the card, the same photo, blurred and darkened, so the story is full-bleed rather than a card on a band.
 const storyBackdrop = src => src ? '<img src="' + esc(src) + '" alt="" aria-hidden="true" style="position:absolute;left:-80px;top:-80px;width:1240px;height:2080px;object-fit:cover;filter:blur(40px) brightness(.36) saturate(.9)">' : '';
-const onStoryGround = (card, src) => frame(1080, 1920, storyBackdrop(src) + '<div data-story-card style="position:absolute;left:0;top:' + STORY_CARD_TOP + 'px;width:1080px;height:1350px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)">' + card + '</div>');
+const onStoryGround = (card, src, ground) => (ground ? frameOn(ground) : frame)(1080, 1920, storyBackdrop(src) + '<div data-story-card style="position:absolute;left:0;top:' + STORY_CARD_TOP + 'px;width:1080px;height:1350px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)">' + card + '</div>');
 
 // Every layout id the studio knows (the Carousel catalogue and the AR layouts), with the code table over it.
 const KNOWN = {...IG.T, ...Object.fromEntries(Object.keys(NEW_TEMPLATES).map(id => [id, {}]))};
@@ -127,11 +130,12 @@ const ORDER = new Map(ENTRIES.map((e, i) => [e.code, i]));
 export function catalog() {
  const fresh = Object.entries(NEW_TEMPLATES).map(([id, t]) => ({id, name: t.name, formats: t.formats, photos: t.photos, roles: t.roles, textParts: t.textParts, maxChars: t.maxChars, look: t.look, group: 'New: his look', purpose: t.purpose, box: t.box, isNew: true}));
  const existing = Object.entries(IG.T).map(([id, t]) => ({id, name: t.name, formats: ['post', 'carousel', 'story'], photos: t.photos, roles: t.roles, textParts: t.textParts || 1, maxChars: 400, look: 'teajia', group: t.group || 'Teajia: first set', isNew: false}));
- // `name` is the plain name from the code table; the catalogue's own name stays as `catalogName`. Old hand-written
+ // `name` is the plain name from the code table; the catalogue's own name stays as `catalogName`. `onlyIn` names the
+ // look a layout belongs to when it is that brand's own (Teajia's three jiā and earlier rows). Old hand-written
  // duplicates carry their canvas twin's code and sit just after it.
  const out = [...fresh, ...existing].map((t, n) => {
   const code = layoutIdToCode(t.id), e = code && entryForCode(code);
-  return {...t, catalogName: t.name, name: e ? e.name : t.name, code, row: e ? e.row : null, rowLetter: e ? e.rowLetter : null, kind: e ? e.kind : null, _at: [code ? ORDER.get(code) : ENTRIES.length, code && codeToLayoutId(code) !== t.id ? 1 : 0, n]};
+  return {...t, catalogName: t.name, name: e ? e.name : t.name, code, row: e ? e.row : null, rowLetter: e ? e.rowLetter : null, kind: e ? e.kind : null, onlyIn: e && Object.hasOwn(OWN_ROWS, e.rowLetter) ? OWNER : null, _at: [code ? ORDER.get(code) : ENTRIES.length, code && codeToLayoutId(code) !== t.id ? 1 : 0, n]};
  });
  out.sort((a, b) => a._at[0] - b._at[0] || a._at[1] - b._at[1] || a._at[2] - b._at[2]);
  for (const t of out) delete t._at;
@@ -140,14 +144,25 @@ export function catalog() {
 /** A layout by its id, an old id, or its code in any case ("c1"). */
 export const templateById = id => { const real = resolveLayoutId(id); return catalog().find(t => t.id === real) || null; };
 
-/** One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}]}; ctx: {index, total, start, format}. */
-export function renderFrame(id, slide = {}, ctx = {}) {
+/** Why a layout cannot be drawn in a look (one of Teajia's own rows in another brand's look), or null. */
+export function lookRefusal(id, look) { const real = resolveLayoutId(id), code = layoutIdToCode(real), e = code && entryForCode(code); return look ? refusal(look, code, e?.name) : null; }
+
+/**
+ * One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}]}; ctx: {index, total, start, format};
+ * look: a resolved look (runtime/services/looks.mjs roles) or nothing for the layouts as they are. Every Carousel layout
+ * is drawn in the look through ig-look-render.mjs; the Story and reel layouts (row R) keep their own art colours.
+ */
+export function renderFrame(id, slide = {}, ctx = {}, look = null) {
  id = resolveLayoutId(id);
  if (NEW_TEMPLATES[id]) return NEW_TEMPLATES[id].render(slide, ctx);
  if (!IG.T[id]) throw new Error('Unknown Instagram template ' + id);
+ const why = lookRefusal(id, look);
+ if (why) throw Object.assign(new StateError(why, 422), {refused: true});
  const photos = (slide.photos || []).map(p => ({...p, src: localImage(p?.src)}));
- const card = IG.render(id, {...slide, photos}, ctx);
- return ctx.format === 'story' ? onStoryGround(card, photos[0]?.src) : card;
+ const link = look && look.link && look.link !== TEAJIA_SOURCE.link ? {link: look.link} : {};
+ const card = drawInLook(IG.render(id, {...slide, photos}, {...ctx, ...link}), look);
+ const ground = look && look.dark.ground !== TEAJIA_SOURCE.dark.ground ? look.dark.ground : null;
+ return ctx.format === 'story' ? onStoryGround(card, photos[0]?.src, ground) : card;
 }
 const fontCss = () => FONT_FILES.map(([family, weight, style, file, format]) => '@font-face{font-family:"' + family + '";font-style:' + style + ';font-weight:' + weight + ';src:url(' + file + ') format("' + format + '")}').join('');
 /** A whole HTML page holding one frame at its real size, for the app preview and for PNG export. */

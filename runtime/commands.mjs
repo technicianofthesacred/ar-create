@@ -5,6 +5,7 @@ import {isICloudAlbum} from './services/icloud-albums.mjs';
 import {INQUIRY_METHODS} from './services/inquiry-interface-routes.mjs';
 import {NEEDS_YOU_COMMANDS, NEEDS_YOU_HUMAN_ONLY, NEEDS_YOU_BODY} from './commands/needs-you.mjs';
 import {WORDS_COMMANDS, WORDS_HUMAN_ONLY, WORDS_BODY} from './commands/words.mjs';
+import {LOOKS_COMMANDS, LOOKS_READ_ONLY, LOOKS_BODY} from './commands/looks.mjs';
 import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK_BODY} from './commands/transcript-check.mjs';
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
 
@@ -136,7 +137,7 @@ function section(route) {
   const r = route.replace(/^\/api\//, '');
   if (/^(words|phone-pickup)(\/|$)/.test(r)) return 'transcript';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
-    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
+    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram|looks?(\/|$))/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance|voice-corrections)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
@@ -172,6 +173,7 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
   ...WORDS_COMMANDS,
+  ...LOOKS_COMMANDS,
   ...TRANSCRIPT_CHECK_COMMANDS,
   ...PHONE_PICKUP_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
@@ -185,7 +187,7 @@ export const CUSTOM_COMMANDS = [
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];
 /** POST routes in the custom families that only read. */
-const CUSTOM_READ_ONLY = new Set(['POST /api/current-work/read','POST /api/current-work/validate','POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
+const CUSTOM_READ_ONLY = new Set([...LOOKS_READ_ONLY, 'POST /api/current-work/read','POST /api/current-work/validate','POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /**
  * study-ai.finish (3 Nov 2026) closes Adrian's read-through of a machine draft: it saves his edits and the
  * paragraphs he left alone, so it is his alone like every save below.
@@ -573,6 +575,7 @@ Object.assign(BODY, NEEDS_YOU_BODY);
 // The shared word library (runtime/commands/words.mjs): agents read and suggest; only Adrian confirms or answers.
 for (const key of WORDS_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, WORDS_BODY);
+Object.assign(BODY, LOOKS_BODY);
 for (const key of TRANSCRIPT_CHECK_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, TRANSCRIPT_CHECK_BODY);
 // The phone pickup (runtime/commands/phone-pickup.mjs): on demand only, never a timer.

@@ -16,7 +16,8 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
-import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument} from './instagram-templates.mjs';
+import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument,lookRefusal} from './instagram-templates.mjs';
+import {sharedLooks,DOOR_LOOKS,DEFAULT_LOOK} from './looks.mjs';
 import {hearCodes} from '../src/donors/mag/carousel/ig-codes.mjs';
 import {deriveLines,deriveMoments,wholeness,detectFlags,correctedText,quotedSegments,coverage,loadTeaTerms,clock} from './instagram-transcript.mjs';
 import {readLibraryFile} from './word-prompt.mjs';
@@ -43,20 +44,28 @@ export const secondsFor=words=>Math.min(30,Math.max(2,Math.round((String(words).
 const srtTime=sec=>{const ms=Math.round(sec*1000),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+','+String(ms%1000).padStart(3,'0');};
 
 const empty=()=>({schema:SCHEMA,id:'',subject:'',title:'',door:'',revision:0,material:{transcripts:[],photos:[]},lines:[],moments:[],flags:[],confirmations:{},marks:{},meaningLog:[],stories:[],gaps:[],heard:null,chosen:null,layouts:{},ready:{},operations:[]});
-const content=p=>JSON.stringify({subject:p.subject,title:p.title,door:p.door,material:p.material,lines:p.lines,moments:p.moments,flags:p.flags,confirmations:p.confirmations,marks:p.marks,meaningLog:p.meaningLog,stories:p.stories,gaps:p.gaps,heard:p.heard,chosen:p.chosen,layouts:p.layouts,ready:p.ready});
+// `look` is undefined on every plan saved before looks existed, and JSON leaves it out, so their hashes are unchanged.
+const content=p=>JSON.stringify({subject:p.subject,title:p.title,door:p.door,look:p.look,material:p.material,lines:p.lines,moments:p.moments,flags:p.flags,confirmations:p.confirmations,marks:p.marks,meaningLog:p.meaningLog,stories:p.stories,gaps:p.gaps,heard:p.heard,chosen:p.chosen,layouts:p.layouts,ready:p.ready});
 const withHash=p=>({...p,hash:digest(content(p))});
 // Lines a piece leans on: on a frame, quoted in a caption, or in a story's spine.
 const usedLines=(p,format)=>{const out=new Set();for(const [f,l] of Object.entries(p.layouts||{})){if(format&&f!==format)continue;for(const fr of l.frames)for(const w of fr.words)out.add(w.lineId);for(const part of l.caption?.parts||[])if(part.lineId)out.add(part.lineId);}if(!format)for(const s of p.stories||[])for(const id of s.spine)out.add(id);return out;};
 const openFlags=(p,lineIds)=>(p.flags||[]).filter(f=>lineIds.has(f.lineId)&&!p.confirmations?.[f.id]);
 const layoutHash=l=>digest(JSON.stringify({storyId:l.storyId,format:l.format,frames:l.frames,caption:l.caption}));
 
-export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null}={}){
+export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null,looks=null}={}){
  // The words to flag come from the shared word library (confirmed words and the mishearings Adrian taught it); with
  // nothing confirmed there yet, the Teajia tea-terms file is the fallback, as before.
  const libraryTerms=()=>{const lib=readLibraryFile(path.join(dataDir,'word-library','library.json')),words=(lib?.entries||[]).filter(e=>e.status==='confirmed');return words.length?libraryAsTerms(words):null;};
  const terms=()=>teaTerms??libraryTerms()??loadTeaTerms();
  if(!dataDir)throw Error('The Instagram studio needs the data folder.');
- const dir=path.join(dataDir,'instagram-plans'),queues=new Map();
+ const dir=path.join(dataDir,'instagram-plans'),queues=new Map(),lookStore=()=>looks||sharedLooks({dataDir});
+ /**
+  * The look a plan draws in: its own `look` when it names one, else its door's (teajia, art, mandala-codes, personal),
+  * else Teajia's, which draws every layout exactly as it was drawn before looks existed.
+  */
+ const lookOf=p=>p.look?{id:p.look,from:'look'}:DOOR_LOOKS[p.door]?{id:DOOR_LOOKS[p.door],from:'door'}:{id:DEFAULT_LOOK,from:'default'};
+ // A layout the plan's own look cannot draw is refused; a look that only comes from the door keeps drawing such a slide as before.
+ const refusedFor=(p,templateId)=>{const l=lookOf(p);if(l.from!=='look')return null;return lookRefusal(templateId,lookStore().roles(l.id));};
  const file=id=>path.join(dir,id+'.json');
  const serial=(id,fn)=>{const run=(queues.get(id)||Promise.resolve()).then(fn,fn);queues.set(id,run.catch(()=>{}));return run;};
  const load=id=>{if(!UUID.test(id||''))fail('Name the plan by its id.');try{const p=JSON.parse(fs.readFileSync(file(id),'utf8'));if(p.schema!==SCHEMA||p.id!==id)fail('This plan file is not readable.',409);return p;}catch(error){if(error.code==='ENOENT')fail('No Instagram plan has that id.',404);throw error;}};
@@ -85,7 +94,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   consentDesk.assertNotHeld(scopes,what);
  };
  const view=p=>{const {operations,...rest}=withHash({...empty(),...p});const used=usedLines(rest);
-  return {...rest,publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
+  return {...rest,drawnIn:lookOf(rest),publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
  const write=p=>{fs.mkdirSync(dir,{recursive:true});const tmp=file(p.id)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(p,null,1));fs.renameSync(tmp,file(p.id));};
  function begin(input,{create=false}={}){
   if(!input||typeof input!=='object'||Array.isArray(input))fail('Send a JSON object.');
@@ -255,7 +264,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  async function plans({subject}={}){
   let names=[];try{names=fs.readdirSync(dir).filter(n=>/^[a-f0-9-]{36}\.json$/i.test(n));}catch{}
   const out=[];for(const n of names){try{const p=JSON.parse(fs.readFileSync(path.join(dir,n),'utf8'));if(p.schema!==SCHEMA)continue;if(subject&&p.subject!==subject)continue;
-   out.push({id:p.id,subject:p.subject,title:p.title,door:p.door,revision:p.revision,updatedAt:p.updatedAt||null,stories:p.stories.length,chosen:p.chosen?.storyId||(p.chosen?.named?'named':null),layouts:Object.keys(p.layouts),ready:Object.keys(p.ready||{})});}catch{}}
+   out.push({id:p.id,subject:p.subject,title:p.title,door:p.door,look:p.look||null,drawnIn:lookOf(p),revision:p.revision,updatedAt:p.updatedAt||null,stories:p.stories.length,chosen:p.chosen?.storyId||(p.chosen?.named?'named':null),layouts:Object.keys(p.layouts),ready:Object.keys(p.ready||{})});}catch{}}
   return {plans:out.sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))};
  }
  async function read({id}){return view(load(id));}
@@ -329,6 +338,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
    const {story,format}=layoutTarget(before,input);
    const frames=readFrames(before,format,input.frames===undefined?defaultFrames(before,story,format):input.frames);
+   for(const [i,f] of frames.entries()){const why=refusedFor(before,f.templateId);if(why)fail('Frame '+(i+1)+': '+why,422);}
    return setLayout(before,input,story,format,frames,'layout '+format);
   });
  }
@@ -362,6 +372,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
     if(slot>=frames.length){unused.push({code,why:'This story has only '+frames.length+' slides, and no slide is added without his words.'});continue;}
     const t=templateById(codeToLayoutId(code));
     if(!t||!t.formats.includes(f)){unused.push({code,why:t?t.name+' ('+code+') is made for '+t.formats.join(' or ')+', not a '+f+'. Slide '+(slot+1)+' keeps its layout.':'No layout has that code.'});continue;}
+    const refused=refusedFor(before,t.id);if(refused){unused.push({code,why:refused+' Slide '+(slot+1)+' keeps its layout.'});continue;}
     const fr=frames[slot],words=fr.words.map(w=>{const line=lineOf(before,w.lineId);return line&&w.text.length>t.maxChars?{lineId:w.lineId,text:fitLine(line,t.maxChars)}:w;});
     frames[slot]={...fr,templateId:t.id,words,photos:fr.photos.slice(0,t.photos)};
     used.push({code,layout:t.id,name:t.name,slide:slot+1});
@@ -370,6 +381,25 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    const checked=readFrames(before,f,frames);
    const out=setLayout(before,input,story,f,checked,'codes '+f+' '+used.map(u=>u.code).join(' '));
    return {...out,codes:{heard:heard.codes,used,unused,slides:frames.length,format:f,storyId:story.id}};
+  });
+ }
+ /**
+  * Set the look a plan draws in (look: an id such as art), or null to draw in its door's look again. Like a layout,
+  * it is a proposal anyone may make, with the same revision check, actor stamp and journal line; a look changes how
+  * every format draws, so it needs his yes again, and an assistant cannot change a plan he has said yes to.
+  */
+ async function setLook(input){
+  requireWriteActor();begin(input);
+  return serial(input.id,async()=>{
+   const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
+   if(!Object.hasOwn(input,'look'))fail('Name the look (look: an id such as art), or send look: null to draw in the door\'s look.');
+   const look=input.look;if(look!==null&&(typeof look!=='string'||!/^[a-z0-9][a-z0-9-]{0,40}$/.test(look)))fail('A look is named by its id, like art or mandala-codes.');
+   const said=Object.keys(before.ready||{});
+   if(said.length&&!human())fail('Adrian said the '+said.join(' and ')+' '+(said.length>1?'are':'is')+' ready. Ask him before changing the look.',409);
+   if(look!==null){const roles=lookStore().roles(look);
+    for(const [format,l] of Object.entries(before.layouts||{}))for(const [i,f] of l.frames.entries()){const why=lookRefusal(f.templateId,roles);if(why)fail('The '+format+'\'s slide '+(i+1)+': '+why,422);}}
+   const next={...before,ready:{}};if(look===null)delete next.look;else next.look=look;
+   return commit(before,next,input,look===null?'look: the door\'s again':'look '+look);
   });
  }
  /** Adrian picks a proposed story, or names his own dish in his own words, and may say who it is for. */
@@ -479,15 +509,22 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   return l.frames.map((fr,i)=>{const ctx={index:i,total:l.frames.length,start,format};if(fr.seconds)start+=fr.seconds;
    return {templateId:fr.templateId,ctx,slide:{role:fr.role,text:fr.words.map(w=>w.text).join('\n\n'),label:fr.label,credit:fr.credit,photos:fr.photos.map(ph=>({src:'/api/sources/blob?id='+encodeURIComponent(p.material.photos.find(x=>x.id===ph.photoId)?.sourceId||''),x:ph.x,y:ph.y}))}};});
  }
- async function render({id,format,frame}){const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);return frameDocument(format,renderFrame(s[n].templateId,s[n].slide,s[n].ctx),(p.title||'Instagram')+' · '+(n+1));}
- async function sheet({id,format}){const p=load(id);return sheetDocument(format,slides(p,format).map(s=>renderFrame(s.templateId,s.slide,s.ctx)),p.title||'Instagram piece');}
+ /** One slide drawn in the plan's look: the one path for the page preview, the PNG and the sheet. */
+ function draw(p,s){
+  const l=lookOf(p),roles=lookStore().roles(l.id);
+  // A look that only comes from the door draws one of Teajia's own layouts as it always was, so no older plan stops drawing.
+  if(l.from!=='look'&&lookRefusal(s.templateId,roles))return renderFrame(s.templateId,s.slide,s.ctx);
+  return renderFrame(s.templateId,s.slide,s.ctx,roles);
+ }
+ async function render({id,format,frame}){const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);return frameDocument(format,draw(p,s[n]),(p.title||'Instagram')+' · '+(n+1));}
+ async function sheet({id,format}){const p=load(id);return sheetDocument(format,slides(p,format).map(s=>draw(p,s)),p.title||'Instagram piece');}
  /** The reel's on-screen words as subtitles (SRT), each one exactly as it was said. */
  async function captions({id}){
   const p=load(id),l=p.layouts.reel;if(!l)fail('Nothing is laid out as a reel yet.',404);
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,assertPostable,propose,layout,codes,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,codes,setLook,lookOf,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
@@ -560,7 +597,7 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
  try{
   const action=url.pathname.slice(PREFIX.length);
   const GET={templates:()=>studio.templates(),plans:()=>studio.plans({subject:q('subject')}),plan:()=>studio.read({id:q('id')})};
-  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
+  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),look:i=>studio.setLook(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
   if(request.method==='GET'||request.method==='HEAD'){
    if(GET[action])return send(200,await GET[action]()),true;
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
