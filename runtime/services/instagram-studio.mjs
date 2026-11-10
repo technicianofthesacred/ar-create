@@ -17,7 +17,7 @@ import {promisify} from 'node:util';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
 import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument,lookRefusal,ownRefusal,frameHeight,isLayoutId} from './instagram-templates.mjs';
-import {sharedTemplates} from './templates.mjs';
+import {sharedTemplates,OWN_ID} from './templates.mjs';
 import {checkPlaced,resolvePlaced} from '../src/donors/mag/carousel/ig-look-render.mjs';
 import {sharedLooks,DOOR_LOOKS,DEFAULT_LOOK} from './looks.mjs';
 import {sharedAccounts,checkAccountId} from './accounts.mjs';
@@ -657,6 +657,25 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   return out;
  }
  async function render({id,format,frame}){const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);return frameDocument(format,draw(p,s[n]),(p.title||'Instagram')+' · '+(n+1));}
+ /**
+  * One slide drawn with another layout, saving nothing: what the slide would look like as C1, or as a template an
+  * assistant proposed (layout: a code, a layout id, or the id of one of his templates, a proposal too). Words longer
+  * than the layout holds are cut at a pause, as building by codes would cut them; photos past what it holds are left out.
+  * plain: true leaves out the things placed on the slide, so small pictures of many layouts show the layouts themselves.
+  */
+ async function preview({id,format,frame,layout,plain=false}){
+  const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);
+  if(typeof layout!=='string'||!layout.trim())fail('Name the layout to preview (a code such as C1, or a template id).');
+  const rec=OWN_ID.test(layout)?templateStore().load(layout):null;
+  if(rec&&rec.status==='turned-down')fail(rec.name+' was turned down, so it is not drawn.',404);
+  const t=rec?templateStore().entry(rec):findLayout(layout);if(!t)fail('No layout has that code or id.',404);
+  if(!t.formats.includes(format))fail(t.name+' is made for '+t.formats.join(' or ')+', not a '+format+'.',422);
+  const own=rec||ownOf(t.id),fr=p.layouts[format].frames[n],slide={...s[n].slide,photos:s[n].slide.photos.slice(0,t.photos)};if(plain)delete slide.placed;
+  slide.text=fr.words.map(w=>{const line=lineOf(p,w.lineId);return line&&w.text.length>t.maxChars?fitLine(line,t.maxChars):w.text;}).join('\n\n');
+  const l=lookOf(p),roles=lookStore().roles(l.id),why=own?ownRefusal(own,roles):lookRefusal(t.id,roles);
+  if(why&&l.from==='look')fail(why,422);
+  return frameDocument(format,renderFrame(own?own.id:t.id,slide,s[n].ctx,why?null:roles,{own,placedLook:roles}),(p.title||'Instagram')+' · '+(n+1)+' as '+(t.code||t.name));
+ }
  async function sheet({id,format}){const p=load(id);return sheetDocument(format,slides(p,format).map(s=>draw(p,s)),p.title||'Instagram piece');}
  /** The reel's on-screen words as subtitles (SRT), each one exactly as it was said. */
  async function captions({id}){
@@ -664,7 +683,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,assertPostable,propose,layout,codes,setLook,setAccount,setPlaced,saveTemplate,lookOf,accountOf,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,codes,setLook,setAccount,setPlaced,saveTemplate,lookOf,accountOf,choose,confirm,meaning,ready,render,preview,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
@@ -743,7 +762,7 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
    // Exports and sheets say which account the piece is for, in headers, so the pictures and pages themselves do not change.
    const forAccount=async()=>{try{const a=(await studio.read({id:args.id})).account;if(!a)return {};checkAccountId(a.id);const h={'X-AR-Account':a.id};if(typeof a.name==='string'&&a.name)h['X-AR-Account-Name']=encodeURIComponent(a.name);return h;}catch{return {};}};
-   if(action==='render'||action==='sheet'){const html=await (action==='render'?studio.render(args):studio.sheet(args));response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'text/html; charset=utf-8',"Content-Security-Policy":"default-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'unsafe-inline'"});response.end(html);return true;}
+   if(action==='render'||action==='sheet'||action==='preview'){const html=await (action==='render'?studio.render(args):action==='preview'?studio.preview({...args,layout:q('layout'),plain:q('plain')==='1'}):studio.sheet(args));response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'text/html; charset=utf-8',"Content-Security-Policy":"default-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'unsafe-inline'"});response.end(html);return true;}
    if(action==='captions'||action==='png')await studio.assertPostable({id:q('id')},action==='png'?'Saving this frame for posting':'Saving the on-screen words for posting');
    if(action==='captions'){const srt=await studio.captions(args);response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="reel-captions.srt"'});response.end(srt);return true;}
    if(action==='png'){const port=request.socket?.localPort;if(!port)fail('PNG export needs the running app.',503);const bytes=await png('http://127.0.0.1:'+port,args,studio);response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'image/png','Content-Disposition':'inline; filename="'+args.format+'-'+(args.frame+1)+'.png"'});response.end(bytes);return true;}

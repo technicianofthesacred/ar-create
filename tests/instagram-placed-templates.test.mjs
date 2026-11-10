@@ -529,3 +529,41 @@ test('every fixed word of a proposed template is shown plainly on its record', a
  assert.throws(() => checkMarkup(GOOD.replace('THE FULL STORY', 'A'.repeat(33))), e => e.refused && /up to 32/.test(e.message));
  assert.deepEqual(checkMarkup(GOOD).fixedWords, ['THE FULL STORY']);
 });
+
+/* ---------- what the studio page reads (piece 6) ---------- */
+test('preview draws one slide in another layout, or in an assistant\'s proposal, and saves nothing', async () => {
+ const {s, p, dataDir} = await plan('teajia');
+ const before = JSON.stringify(await s.read({id: p.id}));
+ const html = await s.preview({id: p.id, format: 'carousel', frame: 0, layout: 'C2'});
+ assert.match(html, /^<!doctype html>/);assert.ok(html.includes('every crack'), 'his words, on the slide');
+ assert.equal(html, await s.preview({id: p.id, format: 'carousel', frame: 0, layout: 'canvas-N13-cover-box'}), 'a code and its layout id draw the same');
+ await assert.rejects(s.preview({id: p.id, format: 'carousel', frame: 0, layout: 'R3'}), e => e.status === 422 && /reel/.test(e.message));
+ await assert.rejects(s.preview({id: p.id, format: 'carousel', frame: 0, layout: 'Q9'}), e => e.status === 404);
+ await assert.rejects(s.preview({id: p.id, format: 'carousel', frame: 9, layout: 'C2'}), e => e.status === 404);
+ await assert.rejects(s.preview({id: p.id, format: 'carousel', frame: 0}), e => e.status === 400);
+ const t = createTemplates({dataDir});
+ const proposal = await as(AGENT, () => t.propose({operationId: op(), name: 'Invented markup cover', row: 'C', markup: GOOD}));
+ assert.ok((await s.preview({id: p.id, format: 'carousel', frame: 0, layout: proposal.id})).includes('every crack'), 'a proposal is seen on his own slide before he decides');
+ await as(ADRIAN, () => t.decide({id: proposal.id, operationId: op(), decision: 'turn-down', expectedRevision: proposal.revision, expectedHash: proposal.hash}));
+ await assert.rejects(s.preview({id: p.id, format: 'carousel', frame: 0, layout: proposal.id}), e => e.status === 404);
+ assert.equal(JSON.stringify(await s.read({id: p.id})), before, 'nothing about the plan changed');
+ // With plain, the things placed on the slide are left out, so many small previews show the layouts themselves.
+ const labelled = await as(AGENT, () => s.setPlaced({...base(p), format: 'carousel', slide: 1, placed: [{kind: 'label', text: 'INVENTED PLACED LABEL', x: 90, y: 90, width: 600}]}));
+ assert.ok((await s.preview({id: labelled.id, format: 'carousel', frame: 0, layout: 'C2'})).includes('INVENTED PLACED LABEL'));
+ assert.ok(!(await s.preview({id: labelled.id, format: 'carousel', frame: 0, layout: 'C2', plain: true})).includes('INVENTED PLACED LABEL'));
+ // A plan drawn in a look of its own is not previewed in a layout that belongs to another brand.
+ const art = await as(AGENT, () => s.setLook({...base(labelled), look: 'art'}));
+ await assert.rejects(s.preview({id: art.id, format: 'carousel', frame: 0, layout: 'J1'}), e => e.status === 422);
+ assert.ok(describeRoutes({}).some(c => c.route === '/api/instagram/preview' && c.method === 'GET'), 'in the one registry');
+});
+
+test('the template list says the code a template kept now would take in each row', async () => {
+ const dataDir = tmp('next-codes-'), t = createTemplates({dataDir});
+ const first = await t.list();
+ assert.equal(first.next.C, 'C5');assert.equal(first.next.B, 'B4');
+ for (const r of ROWS) assert.match(first.next[r.letter], new RegExp('^' + r.letter + '\\d+$'));
+ const proposal = await as(AGENT, () => t.propose({operationId: op(), name: 'Invented markup cover', row: 'C', markup: GOOD}));
+ assert.equal((await t.list()).next.C, 'C5', 'a proposal holds no code');
+ await as(ADRIAN, () => t.decide({id: proposal.id, operationId: op(), decision: 'accept', expectedRevision: proposal.revision, expectedHash: proposal.hash}));
+ assert.equal((await t.list()).next.C, 'C6');
+});

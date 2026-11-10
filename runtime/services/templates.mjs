@@ -118,7 +118,9 @@ export function createTemplates({dataDir,looks=null}={}){
   if(look!==undefined&&look!==null&&look!=='')checkLookId(look);
   const rows=all().filter(r=>status==='all'||r.status===status).filter(r=>!look||r.looks===null||r.looks.includes(look));
   rows.sort((a,b)=>String(a.code||'~').localeCompare(String(b.code||'~'),'en',{numeric:true})||String(a.createdAt).localeCompare(String(b.createdAt)));
-  return {templates:rows.map(r=>({...entry(r),hash:hashOf(r),revision:r.revision,proposedBy:r.proposedBy||null,decidedBy:r.decidedBy||null,createdAt:r.createdAt})),ledger:ledger().given.map(({code,templateId,shippedCode,at})=>({code,...(shippedCode?{shippedCode}:{templateId}),at}))};
+  // The code a template kept now would take in each row, so a page can say it before he saves (none while the ledger is unreadable).
+  const l=ledger(),next=l.state==='unreadable'?{}:Object.fromEntries(ROWS.map(r=>[r.letter,freeCode(r.letter,l.given).code]));
+  return {templates:rows.map(r=>({...entry(r),hash:hashOf(r),revision:r.revision,proposedBy:r.proposedBy||null,decidedBy:r.decidedBy||null,createdAt:r.createdAt})),ledger:l.given.map(({code,templateId,shippedCode,at})=>({code,...(shippedCode?{shippedCode}:{templateId}),at})),next};
  }
  async function read({id}={}){const r=load(id);if(!r)fail('No template has that id.',404);return {...view(r),entry:entry(r)};}
 
