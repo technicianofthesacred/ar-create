@@ -50,6 +50,16 @@ Open-source work his own i64os survey already looked at for this pattern: Open N
 - **Sections are separate panels** with a header that stays in view while reading, and the line on the left jumps to any section and marks the one on screen.
 - **Home:** folders themselves can be dragged into a new order, and dragging works in the covers view too. Tags plus folders are enough; no folders inside folders.
 
+**Fifth pass on D.** Adrian said the sections showed him things without telling him what to do, and that working out the
+interface took the energy the work should get. The subject page was rebuilt around that.
+
+- **Forms are plug-ins.** Article for the magazine, Carousel for Instagram and so on. Each brings its own steps and his template for it. They sit in a row he can drag into order; the page walks him through the first, then the next. "Add a form" lists the others with what each needs.
+- **The steps are the page.** One list of steps to the finish line on the left, grouped under Gather, Research, Simmer, Create and Share. On the right, only the open step, with its tool. Done steps are one line; a step that waits says what it waits for. Steps shared by several forms are done once.
+- **Simmer has a proper place:** the step "Name the dish". It shows what Claude noticed keeps coming back, the feeling checks (true for him, or borrowed), the dishes it could become (choosing one adds that form), and the dish in his own words, with the full board one press away.
+- **Templates are chosen where they are used.** In the Carousel's "The slides" step, each slide has its template (Night bleed, Words only, Photo above, Field note) and its photograph.
+- **A single ring** in a fixed spot replaces the four dots on Home and on every form.
+- The sentence "It stands in Create. Next: read Claude's draft" is gone; the current step is simply the one that is open, named in plain words.
+
 Corrections to A, B and C that D carries: the mode is Write (not Edit); no accept button on each drafted paragraph; no
 "Video, not started" row.
 
