@@ -133,3 +133,17 @@ export async function placePhoto(api,subject,carouselId,{slide=0,sourceId,templa
  const slides=structuredClone(view.output.slides);slides[slide]={...slides[slide],template,photos:[{src:'/api/sources/blob?id='+sourceId,x:50,y:50}]};
  return api.author('POST','/api/study/outputs/save',{...group(subject),selectedOutputId:carouselId,operationId:uuid(),expectedOutput:view.expectedOutput,changes:{slides}});
 }
+
+const deskScope=subject=>({parentStudyId:subject.parentStudyId});
+export const readDesk=(api,subject)=>api.author('GET','/api/consent/desk?'+new URLSearchParams(deskScope(subject)));
+async function deskWrite(who,api,subject,name,body){const desk=await readDesk(api,subject);return api[who]('POST','/api/'+name.replace('consent.','consent/').replace(/\./g,'/'),{...deskScope(subject),operationId:uuid(),expectedRevision:desk.revision,expectedHash:desk.hash,...body});}
+/** An agent lists someone who appears in the piece. Until they answer, every way out of the app is held. */
+export const addPerson=(api,subject,name,appears=['named'])=>deskWrite('agent',api,subject,'consent.people.record',{person:{name,appears}});
+export async function answerPerson(api,subject,personName,state='yes'){const desk=await readDesk(api,subject),person=desk.people.find(p=>p.name===personName);return deskWrite('author',api,subject,'consent.people.answer',{personId:person.id,state});}
+export const answerShare=(api,subject,question,answer='yes')=>deskWrite('author',api,subject,'consent.share.answer',{question,answer});
+export const releaseShare=(api,subject)=>deskWrite('author',api,subject,'consent.share.release',{});
+/** Export the Carousel the way Outputs does. Answers 423 while the desk holds it. */
+export async function exportCarousel(api,subject,carouselId,opts={}){
+ const view=await api.author('GET','/api/study/outputs?'+groupQuery(subject,{selectedOutputId:carouselId}));
+ return api.author('POST','/api/study/outputs/export',{...group(subject),selectedOutputId:carouselId,kind:'carousel',expectedOutput:view.expectedOutput,outputRevision:view.output.outputRevision},opts);
+}
