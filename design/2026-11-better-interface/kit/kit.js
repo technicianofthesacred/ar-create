@@ -92,6 +92,7 @@ const scenes={
  flush:u=>{const r=mul(5);let l='';for(let i=0;i<40;i++){const x=r()*400,y=r()*300;l+=`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${(22+r()*22).toFixed(0)}" ry="${(8+r()*6).toFixed(0)}" transform="rotate(${(r()*180).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})" fill="${['#4f7d33','#6a9a3f','#8dbb52','#3a6328','#a7cf68'][i%5]}"/>`;}
   return `<rect width="400" height="300" fill="#2c4a22"/>${l}`;}};
 K.photo=(key,label)=>`<svg class="ph" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(label||'Drawn stand-in for a photograph')}">${(scenes[key]||scenes.shade)(++uid)}</svg>`;
+const uris={};K.photoURI=key=>uris[key]||(uris[key]='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">${(scenes[key]||scenes.shade)('u'+key)}</svg>`));
 K.pic=(key,label,cls='')=>`<span class="pic ${cls}">${K.photo(key,label)}</span>`;
 K.slide=i=>{const d=K.slidesData[i];return `<div class="sl ${d.k}">${d.photo?K.photo(d.photo,'Slide photograph'):''}<span>${d.eye?`<i>${esc(d.eye)}</i>`:''}<b>${esc(d.text)}</b></span></div>`;};
 K.slides=()=>K.slidesData.map((_,i)=>K.slide(i)).join('');
@@ -127,7 +128,7 @@ K.paint=keep=>paint(keep);
 function paint(keep){const y=scrollY;const app=K.app;if(!app)return;
  document.getElementById('app').innerHTML=app.render(S)+(app.captureSheet||K.captureSheet)();
  document.getElementById('mock').innerHTML=`<b>Mock-up · ${esc(app.title)}</b>${(app.screens||[['home','Home'],['subject','Subject'],['new-subject','New subject'],['write','Write'],['focus','Write, in focus']]).map(([v,l])=>`<a href="#${v}"${S.view===v?' aria-current="page"':''}>${l}</a>`).join('')}<span class="sp"></span><button data-act="theme">Light / dark</button>`;
- document.body.dataset.view=S.view;scrollTo(0,keep?y:0);}
+ document.body.dataset.view=S.view;scrollTo(0,keep?y:0);if(app.after)app.after(S);}
 function route(){const v=location.hash.slice(1);S.view=((K.app&&K.app.screens)?K.app.screens.map(x=>x[0]):VIEWS).includes(v)?v:'home';S.capture=null;paint();}
 addEventListener('hashchange',route);
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act],[data-stop]');if(!t||t.hasAttribute('data-stop')&&!t.dataset.act)return;e.preventDefault();const [n,...a]=t.dataset.act.split(':');(acts[n]||acts.noop)(...a);});

@@ -76,11 +76,25 @@ Corrections to A, B and C that D carries: the mode is Write (not Edit); no accep
 Each direction has five screens, reached by clicking or from the dashed strip at the top (the strip is not part of any design):
 Home, the subject page, a brand new subject, Write with a source beside the words and proposals waiting, and Write in plain focus.
 
+**Sixth pass on D.** Adrian asked for his real Carousel templates, far more choice and interaction on a slide, a way to
+keep making templates, a look per brand, and less chrome so the work has the room.
+
+- **His own 59 layouts.** The slide step and the new slide studio draw from the Carousel layouts AR Create already keeps (the Instagram system canvas), in the canvas's own twelve rows: Covers, Photo beside words, Plates and bands, Full photo with a box, Several photographs, Chapters and numbers, Full picture, Single posts, The three jiā, Closes, and the two earlier rows. `make-slides-data.mjs` builds `d-four-stations/slides-data.js` from that catalogue; nothing was redrawn.
+- **The slide studio** (`#slides`). Filmstrip on the left, the slide large in the middle, and one panel with four tabs: Layout (the ones that suit this slide first, then all of them), Photographs (each place on the slide), Add (logo, marks and graphics that can be placed and dragged) and Words. "Mix the layouts" gives a different varied set so a Carousel never repeats itself.
+- **Templates keep growing.** "Save as a template" keeps a slide's layout and whatever was placed on it. "Make a layout" asks Claude (or any assistant) for three new layouts drawn inside the current look; each can be used or saved. Saved ones show under Yours.
+- **Looks, one per brand** (`#look`). Colours, type, logo, marks and graphics, rules, templates and the account it posts to, shown as the real folder it would be on disk (`Brands / <brand> / Look`). The same layout is drawn in any look. Each look brings its own assets: the seals and Chinese characters belong to Teajiā alone, and Art and Mandala show their own marks instead. A brand with no look yet says so and offers three ways to start one.
+- **A tint per brand.** Inside a brand's subjects the top bar, the ring and the current step take that brand's colour, and folders on Home carry the same dot.
+- **More room for the work.** The subject's top is one line, forms are small pills, and the steps list is narrower. The Research rail is slimmer and folds to one control on narrow screens. No page scrolls sideways at any width.
+
+Teajiā's colours, type and rules are from his Instagram guide. The Art look uses the values AR Create already holds for
+his art site. Mandala's colours and every drawing other than the wordmark and seals are stand-ins.
+
 ## How to look
 
 Open `index.html` in a browser, or any direction's `index.html`. They are static pages; no server and no build is needed.
 The fonts load from `runtime/public/assets/fonts`, so open them from inside the repository.
 `build-shareable.mjs` packs one direction into a single file with everything inlined, for sending.
+`kit/fonts/` holds small cuts of the four slide typefaces (Caudex, EB Garamond, Shippori Mincho, Noto Serif TC; all under the Open Font License), with only the letters and characters the mock-ups use.
 
 ## The story (all invented)
 
