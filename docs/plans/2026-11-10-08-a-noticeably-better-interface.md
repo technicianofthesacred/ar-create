@@ -2,7 +2,7 @@
 
 **Why this plan exists.** On 10 November Adrian looked at the screens work and said the changes were "very minor", about consistency, and that "unless you're really looking for it you can't see or find any change. I was looking for more noticeable significant improvements." He is right. Plan 5 repairs and aligns the approved Combined layout; by design it cannot make the app feel different. This plan is the brief for a design round that can.
 
-**Status.** A brief for a design round. Nothing is designed, approved or built. It proposes changes to the approved Combined direction, so the result needs Adrian's choice by eye before any of it is built (`docs/product/PRODUCT.md`: "Prove the direction visually").
+**Status.** Adrian said yes to the design round on 10 November. It was started the same day in its own thread, on the strongest model at high effort; its mock-ups go to the branch `claude/ar-create-design-round` under `design/2026-11-better-interface/`. Nothing is chosen, approved or built. It proposes changes to the approved Combined direction, so the result needs Adrian's choice by eye before any of it is built (`docs/product/PRODUCT.md`: "Prove the direction visually").
 
 ## What makes the app feel flat today
 
