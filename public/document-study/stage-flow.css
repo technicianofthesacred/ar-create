@@ -4,7 +4,7 @@ body,.shell,.document,.document h1,.document h2,.document h3,.manuscript,.record
 @media(max-width:650px){.flow-stage{padding:18px 12px 65px}.flow-paper{padding:20px 18px}.flow-lane-head{align-items:flex-start}.flow-source-words{font-size:15px}.flow-action{min-height:34px}.flow-segment-meta{gap:4px}}
 
 .project,.project strong{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif!important}
-.flow-source-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid var(--line);margin:6px 0 16px}
+.flow-source-tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:6px 0 16px}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .flow-source-tabs button.flow-source-tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;background:none!important;padding:6px 14px 7px!important;margin:0 0 -1px!important;min-height:0!important;max-width:240px;flex:none;color:var(--dim)!important;text-align:left;cursor:pointer;box-shadow:none!important}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #app .flow-source-tabs button.flow-source-tab[aria-pressed="true"]{border-bottom-color:var(--warm)!important}
 .flow-source-tab span{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}

@@ -72,6 +72,9 @@ A second track, in its own folder, with no change to any screen:
    the server, with commands, so every door sees the same Home. What the browser already holds is carried over the
    first time it is seen, never lost.
 
+8. **Nothing scrolls sideways.** Measure every destination of the app as it is today at four widths and both themes,
+   fix each place that scrolls sideways with the smallest styling change, and keep the measuring script as a check.
+
 ## Record
 
 | Piece | Built by | Reviewed by | State |
@@ -81,5 +84,6 @@ A second track, in its own folder, with no change to any screen:
 | 3 Accounts | Sonnet | Opus | Done. Accounts are records apart from looks; a plan carries its account; an account that does not carry the plan's look is refused; saying ready writes the account into the plan so it cannot move later |
 | 4 Placed things and templates | Opus | Sonnet | Done. A slide carries up to twelve placed things, drawn in one place for preview, image and sheet. A slide can be saved as a template; an assistant can propose one from markup, checked by allowlist, and only Adrian accepts, turns down or retires. A code names one layout always and is never given twice |
 | 5 Build by codes | Sonnet | Opus | Done. `instagram.plan.codes` and `instagram codes --say`; canvas numbers said by mistake are explained, not guessed |
-| 6 The studio shows it | Opus | | Built, waiting for review and Adrian's eye. In the Instagram studio's Made: the look and Posts to; the say line (instagram.plan.codes); every slide and layout with its code, grouped by row, with a find field and a picture of the slide in each layout (new read instagram.preview); placed things dragged and resized by mouse, touch or keys; save as a template with the code it will get (templates list now says the next code in each row); proposals with Accept and Turn down for Adrian only. The made frames wrap instead of scrolling sideways |
-| 7 Where a subject lives | | | |
+| 6 The studio shows it | Opus | Sonnet | Built and reviewed; waits for Adrian's eyes. In the Instagram studio's Made section: codes on every layout with a find field, the line for saying codes, look and account, placing and dragging marks by mouse and touch, save as a template, proposals with Accept and Turn down. The studio's first screen is unchanged |
+| 7 Where a subject lives | Opus | Sonnet | Done on branch `claude/direction-d-subjects`. Folder, tags, pin, archived and order are saved with the subject; a browser's old filing is carried over once per field; a newer saved value always wins over an offline edit. Four sentences on screen changed and wait for Adrian's eyes |
+| 8 Nothing scrolls sideways | Sonnet, then Opus | Sonnet | Done. `scripts/review-sideways.mjs` measures every destination at four widths in both themes, plain and under stress (long titles, many items). Nine kinds of fault found under stress were fixed with styling only. With ordinary data no screen looks different (144 views compared). Left under extreme stress only: the Check heading can sit over the first piece tab at 1440, and the Home heading can be cut at 390. The Audience preview keeps Instagram's own sideways swipe |

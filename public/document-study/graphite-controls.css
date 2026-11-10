@@ -50,6 +50,12 @@
     --graphite-button: var(--graphite-ink);
     --graphite-label: var(--graphite-inverse);
   }
+  /* Buttons that carry a title from his records (a subject, a piece) wrap and break a long word instead of running
+     past the window: no screen scrolls sideways, and a library holds long titles. */
+  button:is(.cs-title, .direction-piece-grid th button) {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
   button:disabled { cursor: default !important; opacity: .5 !important; }
   button:is(.sb-btn, .sb-icon, .cp-new) { padding-inline: 5px !important; }
   button:is(.danger, .destructive, [data-variant="danger"]) {

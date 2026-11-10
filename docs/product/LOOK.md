@@ -30,7 +30,7 @@ The look is a set of add-on modules loaded last in `public/document-study/index.
 5. **Keep stable hooks.** The look finds things by `id`, `data-*` and the `.workflowStep` buttons. Renaming those, or the exact text that wrapper scripts replace, silently drops the look on that surface.
 6. **Pages run to the bottom.** Write, Read and Check use one paper colour and the sheet fills the desk; do not add a fixed height or a coloured strip under it.
 7. **Messages go beside the page, not above it.** A new status line on Write/Read goes in the owner's row as usual; the look mirrors it into the notes column. Do not put it above the manuscript title.
-8. **Phone (≤850px):** the notes column hides and the owner rows show again in place; Home is one column; bars scroll sideways instead of wrapping.
+8. **Phone (≤850px):** the notes column hides and the owner rows show again in place; Home is one column; bars wrap onto a second line or fold into a menu, and long titles break, so nothing scrolls sideways at any width (`scripts/review-sideways.mjs`, with `--stress` for a full library).
 9. **Tools in Material and Source are rows** (`canvas-c3.js` `TOOLS`): icon, name, one-line purpose, chevron, two lines max. A new disclosure tool there gets an entry in `TOOLS`, and in `GO` if it has a "what works now" step.
 10. **Not connected says so where you hit it.** A tool whose own text says "not connected", "not saved" or "preparation only" gets a red or amber dot on its icon, and a one-line strip at the top of its opened panel with the one real step that works now. Never a floating pop-up.
 11. **Status lives in the bottom bar.** Save state, "Only in this browser · Save to the project" and text size sit there; panels don't repeat them.

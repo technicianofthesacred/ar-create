@@ -322,11 +322,11 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  body.c3-tabs #app #workspace [data-c3-mirrored]{display:revert!important}
  /* Top bar: the picker above already names the checkpoint; actions keep their size and never overlap. */
  #c3-surface-bar .sb-left{display:none}
- #c3-surface-bar .sb-right{flex:1 1 auto;justify-content:flex-end;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+ #c3-surface-bar .sb-right{flex:1 1 auto;justify-content:flex-end;flex-wrap:wrap}
  #c3-surface-bar .sb-right>*{flex:none}
- /* Home: one column, filters as a scrolling row above the pieces. */
+ /* Home: one column, filters as a wrapping row above the pieces (nothing scrolls sideways). */
  #project-library.c3-home .ht-home-body{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)}
- #project-library.c3-home .ht-facets{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:14px}
+ #project-library.c3-home .ht-facets{flex-direction:row;flex-wrap:wrap;overflow:visible;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:14px}
  #project-library.c3-home .ht-home-main{padding:16px}
  /* Research tab: the search takes its own full row. */
  #c3-research .rt-bar,#c3-research .rt-bl{flex-wrap:wrap}

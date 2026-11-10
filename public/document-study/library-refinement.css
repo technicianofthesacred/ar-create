@@ -9,7 +9,7 @@
 .k-library .wfb-library-toolbar>button{flex:none;white-space:nowrap}
 .k-library .wfb-active-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding-bottom:8px}
 .k-library .wfb-refresh{width:32px;justify-content:center;padding-inline:0!important}
-.k-library .wfb-shelves{gap:24px;flex:none;margin:0 0 12px}
+.k-library .wfb-shelves{column-gap:24px;flex:none;margin:0 0 12px}
 .k-library .wfb-shelves button{display:inline-flex;align-items:center;gap:10px;font-size:14px;font-weight:500;line-height:1.4;min-height:40px}
 .k-library .wfb-shelves b{font-size:12px;font-weight:500;color:var(--dim);margin:0;font-variant-numeric:tabular-nums}
 .k-library .wfb-shelves [aria-selected=true] b{color:var(--ink)}

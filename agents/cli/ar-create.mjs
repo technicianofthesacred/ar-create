@@ -34,6 +34,7 @@ export const SUGAR = Object.freeze({
   magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
   consent: { desk: 'consent.desk', open: 'consent.open', claim: 'consent.claims.record', link: 'consent.claims.link', flag: 'consent.claims.flag', person: 'consent.people.record', draft: 'consent.people.draft-request' },
   simmer: { board: 'simmer.board.get', material: 'simmer.material', intake: 'simmer.intake', propose: 'simmer.propose', name: 'simmer.dish' },
+  subject: { places: 'subject-places', place: 'subject-places.save', reorder: 'subject-places.reorder', folders: 'subject-places.folders.get', folder: 'subject-places.folders.post' },
   draft: { catalog: 'study-draft.catalog', read: 'study-draft.read', open: 'study-draft.open', create: 'study-draft.create-collection', save: 'study-draft.save', undo: 'study-draft.undo', check: 'study-draft.check.get', inspect: 'study-draft.inspect.get', proposals: 'study-ai.requests' },
 });
 // Sugar verbs that take one positional value (put into the input under that key) or need a fresh id for a single attempt.
@@ -61,11 +62,15 @@ export const SUGAR = Object.freeze({
 // `words export` prints the versioned library snapshot (redirect it to a file); `words add|import|decide|answer --input` get a fresh
 // operationId; `words check <jobId>` and `words recognise <jobId>` name the recording. Agents suggest words (marked as theirs);
 // `words decide` and `words answer` are Adrian's alone (exit 5 for an agent).
+// `subject places` reads every saved place and the folders ({parentStudyId} for one subject); `subject place` saves one
+// subject's folder, tags, pin, archived or order with its expectedRevision; `subject reorder` sets a hand order for several;
+// `subject folders` reads the folder list; `subject folder --input {action: create|rename|reorder|remove|undo, ...}` changes it.
+// The writes get a fresh operationId unless the input names one.
 // `simmer board <subject>`, `simmer material <subject>`; `simmer intake|propose|name --input` get a fresh operationId
 // unless the input names one (name one yourself when you may retry: a retry with the same id adds nothing twice).
 export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId', 'instagram plan': 'id', 'look read': 'id', 'account read': 'id', 'asset list': 'id', 'template read': 'id' });
 const freshOperation = () => ({ operationId: randomUUID() });
-export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation, 'look save': freshOperation, 'account save': freshOperation, 'asset add': freshOperation, 'instagram template': freshOperation, 'template propose': freshOperation });
+export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation, 'look save': freshOperation, 'account save': freshOperation, 'asset add': freshOperation, 'instagram template': freshOperation, 'template propose': freshOperation, 'subject place': freshOperation, 'subject reorder': freshOperation, 'subject folder': freshOperation });
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config', '--plan', '--say', '--look', '--account'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
