@@ -118,3 +118,18 @@ export async function makeCarousel(api,subject){
  const saved=await api.author('POST','/api/study/carousel-make/register',selector);
  return {articleId,carouselId:saved.outputId,view:saved.view};
 }
+
+/** Give the subject's photo collection some of the Library's photographs, as Media's "From library" does. */
+export async function addPhotos(api,subject,sourceIds){
+ const bound=await api.author('POST','/api/study/photos/select',{bindingId:subject.bindingId,parentStudyId:subject.parentStudyId,operationId:uuid()});
+ const out=[];
+ for(const sourceId of sourceIds){const now=await api.author('GET','/api/study/photos?'+new URLSearchParams({projectId:bound.projectId,documentId:bound.documentId}));
+  out.push(await api.author('POST','/api/study/photos/add',{projectId:bound.projectId,documentId:bound.documentId,expectedRevision:now.revision,sourceId}));}
+ return {bound,added:out};
+}
+/** Put a photograph on a slide of the Carousel, as Arrange does, and save it as the author. */
+export async function placePhoto(api,subject,carouselId,{slide=0,sourceId,template='F1'}){
+ const view=await api.author('GET','/api/study/outputs?'+groupQuery(subject,{selectedOutputId:carouselId}));
+ const slides=structuredClone(view.output.slides);slides[slide]={...slides[slide],template,photos:[{src:'/api/sources/blob?id='+sourceId,x:50,y:50}]};
+ return api.author('POST','/api/study/outputs/save',{...group(subject),selectedOutputId:carouselId,operationId:uuid(),expectedOutput:view.expectedOutput,changes:{slides}});
+}
