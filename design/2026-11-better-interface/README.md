@@ -86,6 +86,16 @@ keep making templates, a look per brand, and less chrome so the work has the roo
 - **A tint per brand.** Inside a brand's subjects the top bar, the ring and the current step take that brand's colour, and folders on Home carry the same dot.
 - **More room for the work.** The subject's top is one line, forms are small pills, and the steps list is narrower. The Research rail is slimmer and folds to one control on narrow screens. No page scrolls sideways at any width.
 
+**Seventh pass on D.** Adrian wants to drive most of this by speaking, with a code on every design, accounts apart
+from looks, and room to keep growing.
+
+- **A code on every layout.** The row's letter and its place: C1 to C4 covers, S side by side, P plates, B box, M several photographs, N chapters and numbers, F full picture, A single posts, J the three jiā, E closes, Y and Z the two earlier rows. A saved or made layout takes the next free number in its row. The canvas's own number stays as the key underneath.
+- **Say it.** One line in the slide step and in the studio: "use C1, 2 and 5", or "C one, M two and five, then E two". It builds the Carousel from the codes. Anything else is answered with a note, because nothing is generated in the mock-up.
+- **Accounts are separate from looks.** A look can post to several accounts (Mandala to Mandala Codes or Technician of the Sacred) and the account is chosen per post.
+- **What Claude knows you like.** Favourites (a star on any layout) and a short list of habits on each look's page. Favourites come first when it suggests layouts.
+
+`BUILD-PLAN.md` lists what is still not drawn, what the app cannot do yet, and how a build would run.
+
 Teajiā's colours, type and rules are from his Instagram guide. The Art look uses the values AR Create already holds for
 his art site. Mandala's colours and every drawing other than the wordmark and seals are stand-ins.
 
