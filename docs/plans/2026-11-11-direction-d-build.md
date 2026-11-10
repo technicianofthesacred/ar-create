@@ -76,10 +76,10 @@ A second track, in its own folder, with no change to any screen:
 
 | Piece | Built by | Reviewed by | State |
 |---|---|---|---|
-| 1 Codes | | | |
+| 1 Codes | Sonnet | Opus | Done. Every layout has a code; old numbers still work; a code never picks an older layout of the same name |
 | 2 Looks | | | |
 | 3 Accounts | | | |
 | 4 Placed things and templates | | | |
-| 5 Build by codes | | | |
+| 5 Build by codes | Sonnet | Opus | Done. `instagram.plan.codes` and `instagram codes --say`; canvas numbers said by mistake are explained, not guessed |
 | 6 The studio shows it | | | |
 | 7 Where a subject lives | | | |

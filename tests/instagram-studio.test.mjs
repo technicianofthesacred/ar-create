@@ -122,7 +122,7 @@ test('the default layout is one strong choice per format, within Instagram\'s li
 
 test('the four new templates keep their words inside each format\'s safe zone, in his look', () => {
  assert.deepEqual(Object.keys(NEW_TEMPLATES),['AR-S1','AR-R1','AR-R2','AR-P1']);
- const names=new Set(catalog().map(t=>t.name));assert.equal(names.size,catalog().length,'names are distinct from the existing catalog');
+ const names=new Set(catalog().map(t=>t.catalogName));assert.equal(names.size,catalog().length,'the catalogue own names are distinct (the plain names in the code table repeat for an old layout and its canvas twin)');
  for(const [id,t] of Object.entries(NEW_TEMPLATES))for(const format of t.formats){
   const f=FORMATS[format],b=t.box;
   assert.ok(b.left>=f.safe.left&&f.width-b.right>=f.safe.right&&b.top>=f.safe.top&&f.height-b.bottom>=f.safe.bottom,id+' in '+format);

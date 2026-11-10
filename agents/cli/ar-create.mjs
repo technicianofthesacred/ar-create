@@ -24,6 +24,7 @@ export const SUGAR = Object.freeze({
   project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
   needs: { list: 'needs-you', raise: 'needs-you.raise' },
   words: { list: 'words', export: 'words.export', add: 'words.add', import: 'words.import', decide: 'words.decide', recognise: 'words.recognise', checks: 'words.checks', check: 'words.check', answer: 'words.answer' },
+  instagram: { templates: 'instagram.templates', plans: 'instagram.plans', plan: 'instagram.plan.get', layout: 'instagram.layout', codes: 'instagram.plan.codes' },
   phone: { status: 'phone-pickup', setup: 'phone-pickup.setup', check: 'phone-pickup.check' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
   magazine: { board: 'magazine.board', story: 'magazine.story', propose: 'magazine.write', status: 'magazine.status.table' },
@@ -34,15 +35,18 @@ export const SUGAR = Object.freeze({
 // Sugar verbs that take one positional value (put into the input under that key) or need a fresh id for a single attempt.
 // `magazine story <id>`; `magazine propose --input {path, content, expectedHash}` (agents' prose becomes a proposal for Adrian;
 // the operationId is generated unless the input names one).
+// `instagram templates|plans`; `instagram plan <id>` reads one plan; `instagram layout --input` sets a story's frames (a frame's templateId may be a layout code).
+// `instagram codes --plan <id> --say "use C1, 2 and 5"` reads the plan, then sets its carousel layouts from the codes through
+// instagram.plan.codes (add --input '{"storyId":"S1","format":"carousel"}' to pick a story or format). It proposes a layout order only.
 // `words export` prints the versioned library snapshot (redirect it to a file); `words add|import|decide|answer --input` get a fresh
 // operationId; `words check <jobId>` and `words recognise <jobId>` name the recording. Agents suggest words (marked as theirs);
 // `words decide` and `words answer` are Adrian's alone (exit 5 for an agent).
 // `simmer board <subject>`, `simmer material <subject>`; `simmer intake|propose|name --input` get a fresh operationId
 // unless the input names one (name one yourself when you may retry: a retry with the same id adds nothing twice).
-export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId' });
+export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId', 'instagram plan': 'id' });
 const freshOperation = () => ({ operationId: randomUUID() });
 export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation });
-const FLAGS = ['--url', '--actor', '--input', '--section', '--config'];
+const FLAGS = ['--url', '--actor', '--input', '--section', '--config', '--plan', '--say'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
   commands: ['status', 'events', 'history', 'lease acquire|renew|release|list', 'handoff', 'ask', 'list-commands [--section S]', 'call NAME', ...Object.entries(SUGAR).map(([domain, verbs]) => `${domain} ${Object.keys(verbs).join('|')}`)],
@@ -127,6 +131,12 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
     const caps = await client.listCommands(), filter = { ...(input.kind ? { kind: input.kind } : {}), ...(input.id ? { id: input.id } : {}) };
     const presence = await client.call('presence.get', filter), changes = await client.call('events.since', { since: input.since ?? 0, limit: 20, ...filter });
     return { exitCode: EXIT.ok, result: { release: caps.git?.sha ?? null, url: client.base, actor: client.actor, git: caps.git, commands: caps.commands.length, sections: [...new Set(caps.commands.map(item => item.section))].sort(), presence: presence.ok ? presence.body.presence : [], editor: editorOf(presence.ok ? presence.body.presence : []), events: changes.ok ? changes.body : null } };
+  }
+  if (command === 'instagram' && rest[0] === 'codes') {
+    if (rest.length !== 1 || !options.plan || typeof options.say !== 'string') return { exitCode: EXIT.usage, result: { ok: false, error: 'Use: instagram codes --plan <plan id> --say "use C1, 2 and 5" [--input {storyId?, format?}]' } };
+    const read = await client.call('instagram.plan.get', { id: options.plan });
+    if (!read.ok) return answer(read);
+    return answer(await client.call('instagram.plan.codes', { operationId: randomUUID(), ...input, id: options.plan, expectedRevision: read.body.revision, expectedHash: read.body.hash, say: options.say }));
   }
   if (Object.hasOwn(SUGAR, command)) {
     const verb = rest[0], name = SUGAR[command][verb], key = `${command} ${verb}`, positional = SUGAR_POSITIONAL[key];

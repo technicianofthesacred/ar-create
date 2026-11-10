@@ -3,6 +3,7 @@
 // Instagram format and four templates in Adrian's own look (his art site: Cormorant Garamond for titles, Lora for speech,
 // warm dark ground, one bronze accent, no borders, no gradients). Every size is the real Instagram pixel size.
 import IG from '../src/donors/mag/carousel/ig-templates.js';
+import {ENTRIES, entryForCode, resolvers} from '../src/donors/mag/carousel/ig-codes.mjs';
 
 // Facts, not formula. Checked 3 November 2026 against press coverage of Instagram's own announcements; the safe zones
 // are what layout guides report, since Instagram does not publish one number. Kept here so the app, the agents and the
@@ -118,16 +119,30 @@ const STORY_CARD_TOP = 285;
 const storyBackdrop = src => src ? '<img src="' + esc(src) + '" alt="" aria-hidden="true" style="position:absolute;left:-80px;top:-80px;width:1240px;height:2080px;object-fit:cover;filter:blur(40px) brightness(.36) saturate(.9)">' : '';
 const onStoryGround = (card, src) => frame(1080, 1920, storyBackdrop(src) + '<div data-story-card style="position:absolute;left:0;top:' + STORY_CARD_TOP + 'px;width:1080px;height:1350px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)">' + card + '</div>');
 
-/** Every template the studio can use: the four new ones first, then the existing 4:5 catalog, tagged by format. */
+// Every layout id the studio knows (the Carousel catalogue and the AR layouts), with the code table over it.
+const KNOWN = {...IG.T, ...Object.fromEntries(Object.keys(NEW_TEMPLATES).map(id => [id, {}]))};
+export const {codeToLayoutId, layoutIdToCode, resolveLayoutId} = resolvers(KNOWN);
+const ORDER = new Map(ENTRIES.map((e, i) => [e.code, i]));
+/** Every layout the studio can use, in the canvas's row order, each with its code, row and plain name. */
 export function catalog() {
  const fresh = Object.entries(NEW_TEMPLATES).map(([id, t]) => ({id, name: t.name, formats: t.formats, photos: t.photos, roles: t.roles, textParts: t.textParts, maxChars: t.maxChars, look: t.look, group: 'New: his look', purpose: t.purpose, box: t.box, isNew: true}));
  const existing = Object.entries(IG.T).map(([id, t]) => ({id, name: t.name, formats: ['post', 'carousel', 'story'], photos: t.photos, roles: t.roles, textParts: t.textParts || 1, maxChars: 400, look: 'teajia', group: t.group || 'Teajia: first set', isNew: false}));
- return [...fresh, ...existing];
+ // `name` is the plain name from the code table; the catalogue's own name stays as `catalogName`. Old hand-written
+ // duplicates carry their canvas twin's code and sit just after it.
+ const out = [...fresh, ...existing].map((t, n) => {
+  const code = layoutIdToCode(t.id), e = code && entryForCode(code);
+  return {...t, catalogName: t.name, name: e ? e.name : t.name, code, row: e ? e.row : null, rowLetter: e ? e.rowLetter : null, kind: e ? e.kind : null, _at: [code ? ORDER.get(code) : ENTRIES.length, code && codeToLayoutId(code) !== t.id ? 1 : 0, n]};
+ });
+ out.sort((a, b) => a._at[0] - b._at[0] || a._at[1] - b._at[1] || a._at[2] - b._at[2]);
+ for (const t of out) delete t._at;
+ return out;
 }
-export const templateById = id => catalog().find(t => t.id === id) || null;
+/** A layout by its id, an old id, or its code in any case ("c1"). */
+export const templateById = id => { const real = resolveLayoutId(id); return catalog().find(t => t.id === real) || null; };
 
 /** One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}]}; ctx: {index, total, start, format}. */
 export function renderFrame(id, slide = {}, ctx = {}) {
+ id = resolveLayoutId(id);
  if (NEW_TEMPLATES[id]) return NEW_TEMPLATES[id].render(slide, ctx);
  if (!IG.T[id]) throw new Error('Unknown Instagram template ' + id);
  const photos = (slide.photos || []).map(p => ({...p, src: localImage(p?.src)}));

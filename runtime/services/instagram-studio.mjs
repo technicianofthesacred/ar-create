@@ -16,7 +16,8 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
-import {FORMATS,CAPTION,FACTS,catalog,templateById,renderFrame,frameDocument,sheetDocument} from './instagram-templates.mjs';
+import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument} from './instagram-templates.mjs';
+import {hearCodes} from '../src/donors/mag/carousel/ig-codes.mjs';
 import {deriveLines,deriveMoments,wholeness,detectFlags,correctedText,quotedSegments,coverage,loadTeaTerms,clock} from './instagram-transcript.mjs';
 import {readLibraryFile} from './word-prompt.mjs';
 import {sharedWordLibrary,libraryAsTerms} from './word-library.mjs';
@@ -305,20 +306,70 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   });
  }
  /** Lay out one story in one format: the server's default (frames omitted) or the caller's frames, checked. */
+ /** The story and format a layout change names, checked against the plan's rules. */
+ function layoutTarget(before,input){
+  const format=input.format;if(!FORMAT_NAMES.includes(format))fail('Choose story, reel, post or carousel.');
+  const story=before.stories.find(s=>s.id===input.storyId);if(!story)fail('That story is not in this plan.');
+  if(before.ready?.[format]&&!human())fail('Adrian said this '+format+' is ready. Ask him before changing it.',409);
+  if(story.meaning?.verdict==='not-meant')fail('Adrian said this story is not what he meant: “'+story.meaning.words+'”. Propose it again from his words before laying it out.',409);
+  return {story,format};
+ }
+ /** Save checked frames as the plan's layout for one format: one path for layout and for codes (revision, actor stamp, journal). */
+ function setLayout(before,input,story,format,frames,what){
+  const old=before.layouts[format],caption=input.caption===undefined?(old?.storyId===story.id?old.caption:{parts:[],text:'',by:''}):readCaptionParts(before,input.caption);
+  const next={storyId:story.id,format,frames,caption,captionFinal:old?.storyId===story.id&&old.captionFinal?old.captionFinal:null,builtBy:actorNow(),at:new Date().toISOString()};
+  next.hash=layoutHash(next);
+  const ready={...(before.ready||{})};delete ready[format];
+  return commit(before,{...before,layouts:{...before.layouts,[format]:next},ready},input,what);
+ }
+ /** Lay out one story in one format: the server's default (frames omitted) or the caller's frames, checked. A frame's templateId may be a layout code. */
  async function layout(input){
   requireWriteActor();begin(input);
   return serial(input.id,async()=>{
    const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
-   const format=input.format;if(!FORMAT_NAMES.includes(format))fail('Choose story, reel, post or carousel.');
-   const story=before.stories.find(s=>s.id===input.storyId);if(!story)fail('That story is not in this plan.');
-   if(before.ready?.[format]&&!human())fail('Adrian said this '+format+' is ready. Ask him before changing it.',409);
-   if(story.meaning?.verdict==='not-meant')fail('Adrian said this story is not what he meant: “'+story.meaning.words+'”. Propose it again from his words before laying it out.',409);
+   const {story,format}=layoutTarget(before,input);
    const frames=readFrames(before,format,input.frames===undefined?defaultFrames(before,story,format):input.frames);
-   const old=before.layouts[format],caption=input.caption===undefined?(old?.storyId===story.id?old.caption:{parts:[],text:'',by:''}):readCaptionParts(before,input.caption);
-   const next={storyId:story.id,format,frames,caption,captionFinal:old?.storyId===story.id&&old.captionFinal?old.captionFinal:null,builtBy:actorNow(),at:new Date().toISOString()};
-   next.hash=layoutHash(next);
-   const ready={...(before.ready||{})};delete ready[format];
-   return commit(before,{...before,layouts:{...before.layouts,[format]:next},ready},input,'layout '+format);
+   return setLayout(before,input,story,format,frames,'layout '+format);
+  });
+ }
+ /**
+  * Set a story's layouts from codes, in order: "use C1, 2 and 5" (say) or codes:["C1","C2","C5"]. Slide n takes code n.
+  * The slides and their words are the plan's own (what is already laid out for the story, else the default); a code
+  * only changes a slide's layout, so no slide is invented and no words are made up. More codes than slides: the extra
+  * codes are not used. Fewer codes than slides: the later slides keep the layout they have. A code that names no layout,
+  * or a layout made for another format, is reported and its slide keeps its layout. Goes through setLayout, so it has
+  * the same revision check, actor stamp and journal line as layout; it only proposes an order (the yes stays his).
+  */
+ async function codes(input){
+  requireWriteActor();begin(input);
+  return serial(input.id,async()=>{
+   const before=load(input.id);
+   if(replay(before,input))return {...view(before),codes:{used:[],unused:[],replayed:true}};
+   check(before,input);
+   const format=input.format===undefined?'carousel':input.format;
+   const story=before.stories.find(s=>s.id===(input.storyId??before.chosen?.storyId??(before.stories.length===1?before.stories[0].id:null)));
+   if(!story)fail('Say which story (storyId): this plan has '+before.stories.length+' and none is chosen.');
+   const {format:f}=layoutTarget(before,{...input,format,storyId:story.id});
+   let heard;
+   if(input.codes!==undefined){if(!Array.isArray(input.codes)||input.codes.some(c=>typeof c!=='string'))fail('codes is a list of codes like ["C1","M2"].');heard=hearCodes(input.codes.join(', '));}
+   else if(typeof input.say==='string')heard=hearCodes(input.say);
+   else fail('Send the line he said (say) or a list of codes (codes).');
+   if(!heard.codes.length)fail('No layout codes in that line. A code is a row letter and a number, like C1 or M2.');
+   const base=before.layouts[f]?.storyId===story.id?before.layouts[f].frames:defaultFrames(before,story,f);
+   const frames=base.map(fr=>({...fr})),used=[],unused=[],why=new Map(heard.unknown.map(u=>[u.code,u.reason]));
+   for(const [slot,code] of heard.codes.entries()){
+    if(why.has(code)){unused.push({code,why:why.get(code)});continue;}
+    if(slot>=frames.length){unused.push({code,why:'This story has only '+frames.length+' slides, and no slide is added without his words.'});continue;}
+    const t=templateById(codeToLayoutId(code));
+    if(!t||!t.formats.includes(f)){unused.push({code,why:t?t.name+' ('+code+') is made for '+t.formats.join(' or ')+', not a '+f+'. Slide '+(slot+1)+' keeps its layout.':'No layout has that code.'});continue;}
+    const fr=frames[slot],words=fr.words.map(w=>{const line=lineOf(before,w.lineId);return line&&w.text.length>t.maxChars?{lineId:w.lineId,text:fitLine(line,t.maxChars)}:w;});
+    frames[slot]={...fr,templateId:t.id,words,photos:fr.photos.slice(0,t.photos)};
+    used.push({code,layout:t.id,name:t.name,slide:slot+1});
+   }
+   if(!used.length)fail('None of those codes could be used: '+unused.map(u=>u.code+' ('+u.why+')').join('; '));
+   const checked=readFrames(before,f,frames);
+   const out=setLayout(before,input,story,f,checked,'codes '+f+' '+used.map(u=>u.code).join(' '));
+   return {...out,codes:{heard:heard.codes,used,unused,slides:frames.length,format:f,storyId:story.id}};
   });
  }
  /** Adrian picks a proposed story, or names his own dish in his own words, and may say who it is for. */
@@ -436,7 +487,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,assertPostable,propose,layout,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,codes,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
@@ -509,7 +560,7 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
  try{
   const action=url.pathname.slice(PREFIX.length);
   const GET={templates:()=>studio.templates(),plans:()=>studio.plans({subject:q('subject')}),plan:()=>studio.read({id:q('id')})};
-  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
+  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
   if(request.method==='GET'||request.method==='HEAD'){
    if(GET[action])return send(200,await GET[action]()),true;
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
@@ -527,7 +578,7 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
   const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>MAX_BODY)fail('That request is too large.',413);chunks.push(chunk);}
   let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{fail('Send JSON.');}
   const result=await POST[action](input);
-  if((action==='plan'||action==='layout')&&!isHuman(actorNow()))result.asks=await raiseNeeds(request,studio,result).catch(()=>result.asks);
+  if((action==='plan'||action==='layout'||action==='plan/codes')&&!isHuman(actorNow()))result.asks=await raiseNeeds(request,studio,result).catch(()=>result.asks);
   send(200,result);
  }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The Instagram studio could not do that. Nothing was changed.',...(error.hold?{code:'consent-hold',hold:error.hold}:{})});}
  return true;
