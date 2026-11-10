@@ -145,11 +145,11 @@ const NOTE=(title,body)=>Buffer.from('# '+title+'\n\n'+body+'\n');
 const OWN_WORDS='What I notice first is sound: halyards ticking against the masts, gulls arguing over the fish stalls, and the slow slap of water on the stone steps.';
 const baseOf=async(api,subject)=>({sources:await sourcesOf(api,subject)});
 async function withRecording(api,title,file,log){const subject=await createSubject(api,title);const recording=await recordingToSource(api,subject,{file,names:TRANSCRIPT_NAMES});log(title+': recording, transcript and Source');return {subject,recording,...(await baseOf(api,subject))};}
-async function withPhotos(api,subject,photoIds){const bound=await api.author('POST','/api/study/photos/select',{bindingId:subject.bindingId,parentStudyId:subject.parentStudyId,operationId:uuid()});const {photos}=await api.author('GET','/api/study/photos/available?'+new URLSearchParams({projectId:bound.projectId,documentId:bound.documentId}));await addPhotos(api,subject,photos.map(p=>p.sourceId));return photos;}
+async function withPhotos(api,subject){const bound=await api.author('POST','/api/study/photos/select',{bindingId:subject.bindingId,parentStudyId:subject.parentStudyId,operationId:uuid()});const {photos}=await api.author('GET','/api/study/photos/available?'+new URLSearchParams({projectId:bound.projectId,documentId:bound.documentId}));await addPhotos(api,subject,photos.map(p=>p.sourceId));return photos;}
 async function finishedPiece(api,subject,sources,photoIds,log){
  await writeArticle(api,subject,sources.map(x=>x.id),{ownWords:OWN_WORDS});log(subject.title+': Article written');
  const made=await makeCarousel(api,subject);log(subject.title+': Carousel made');
- const photos=await withPhotos(api,subject,photoIds);await placePhoto(api,subject,made.carouselId,{slide:1,sourceId:photos[0].sourceId});await placePhoto(api,subject,made.carouselId,{slide:3,sourceId:photos[1].sourceId,template:'F1'});log(subject.title+': photographs on slides');
+ const photos=await withPhotos(api,subject);await placePhoto(api,subject,made.carouselId,{slide:1,sourceId:photos[0].sourceId});await placePhoto(api,subject,made.carouselId,{slide:3,sourceId:photos[1].sourceId,template:'F1'});log(subject.title+': photographs on slides');
  return made;
 }
 const needsAsk=(api,body)=>api.agent('POST','/api/needs-you/raise',{operationId:uuid(),...body});
@@ -161,7 +161,7 @@ export async function seedDemo(base,{large=false,log=message=>console.log('  see
  // 2. Just material: a note and a photograph.
  const tea=await createSubject(api,'Tea Stall Notes');
  const noteId=await importFile(api,'tea-stall-note.md',NOTE('Tea stall, first visit','An invented note: the stall opens at six, the kettle is copper, and the owner pours from a height. Nothing here is real.'));
- await api.author('POST','/api/study/material/attach',{bindingId:tea.bindingId,parentStudyId:tea.parentStudyId,sourceIds:[noteId],operationId:uuid()});await withPhotos(api,tea,photoIds);log('Tea Stall Notes: just material');
+ await api.author('POST','/api/study/material/attach',{bindingId:tea.bindingId,parentStudyId:tea.parentStudyId,sourceIds:[noteId],operationId:uuid()});await withPhotos(api,tea);log('Tea Stall Notes: just material');
  // 3. Writing in progress: an Article written, one revision asked for and rejected, one waiting for a decision.
  const market=await withRecording(api,'Market Day','Market day interview.wav',log);
  const marketAnswer=await askResearch(api,market.subject,'What does the market teach the walker about being given things?',market.sources.map(x=>x.id));await api.author('POST','/api/study/research/keep',{...scope(market.subject),id:marketAnswer.id});
@@ -192,4 +192,38 @@ export async function seedDemo(base,{large=false,log=message=>console.log('  see
   for(let i=1;i<=200;i++)await importFile(api,'extra-note-'+String(i).padStart(3,'0')+'.md',NOTE('Extra note '+i,'Invented filler note number '+i+' for finding, filing and speed. '.repeat(3)));log('two hundred extra Library notes');
  }
  return {api,photoIds,harbour,market,lantern,salt};
+}
+
+/** The author's walk through the rest of the chain, from the seeded Harbour Morning Walk to an exported Carousel.
+ * `at(name, facts)` runs after each step so a caller can look at the screen (screenshots) or check the result (a test). */
+export async function walkHarbour(api,subject,{at=async()=>{}}={}){
+ const sources=await sourcesOf(api,subject),ids=sources.map(s=>s.id);
+ await at('start',{});
+ // Write: ask for a draft, read it as it waits, then finish it, rewriting one paragraph in the author's own words.
+ const draft=await askProposal(api,subject,{purpose:'article-draft',instruction:'Write a short article about the walk, from the transcript only.',sourceIds:ids});
+ const review=await reviewProposal(api,subject,draft.requestId);
+ await at('proposal-waiting',{review});
+ const finished=await finishProposal(api,subject,draft.requestId,{edits:[{id:review.replacements[1].id,words:OWN_WORDS}]});
+ await at('article-written',{finished});
+ // A second proposal, asked for and rejected with the author's reason.
+ const state=await draftState(api,subject),target=state.projection.filter(r=>r.words).map(r=>r.id);
+ const second=await askProposal(api,subject,{purpose:'scoped-revision',instruction:'Make the third paragraph tighter.',sourceIds:ids,extra:{targetParagraphIds:[target[2]]}});
+ await at('revision-waiting',{second});
+ const rejected=await rejectProposal(api,subject,second.requestId,'Too clipped for my voice. Invented demo reason.');
+ await at('revision-rejected',{rejected});
+ // Make the Carousel and give it photographs.
+ const made=await makeCarousel(api,subject);
+ const photos=await withPhotos(api,subject);
+ await placePhoto(api,subject,made.carouselId,{slide:1,sourceId:photos[0].sourceId});
+ await at('carousel-ready',{made,photos});
+ // Share: someone in the piece has not answered, so every way out is held. Then they answer and the author releases it.
+ await addPerson(api,subject,'The baker');
+ const held=await exportCarousel(api,subject,made.carouselId,{allow:[423]});
+ await at('share-held',{held});
+ await answerPerson(api,subject,'The baker','yes');await answerShare(api,subject,'comfort','yes');await answerShare(api,subject,'accuracy','yes');
+ const released=await releaseShare(api,subject);
+ await at('share-released',{released});
+ const exported=await exportCarousel(api,subject,made.carouselId);
+ await at('exported',{exported});
+ return {made,exported};
 }
