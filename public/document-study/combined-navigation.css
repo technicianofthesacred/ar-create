@@ -42,9 +42,9 @@ html body.combined-on :is(.wbf-top-actions .tbtn,.wbf-top-actions .sizer,#c3-sur
 .combined-rail-band{display:grid;grid-template-columns:16px minmax(0,1fr);column-gap:4px;align-items:stretch;width:100%;padding:4px 0;box-sizing:border-box;border-top:1px solid var(--line)}
 .combined-rail-band:not([data-band]){display:block;border-top:0}
 .combined-band-tools{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
-.combined-band-label{grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:600 9px/1 var(--ar-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--sel);border-radius:3px}
+.combined-band-label{grid-column:1;grid-row:1;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:600 10px/1 var(--ar-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);background:var(--sel);border-radius:3px}
 .combined-rail-band.is-active .combined-band-label{color:var(--ar-on-warm,#20231f);background:var(--warm);opacity:1}
-.combined-band-count{grid-column:1;grid-row:1;align-self:end;z-index:1;padding:3px 0;text-align:center;font:600 9px/1 var(--ar-ui,sans-serif);color:var(--dim);font-variant-numeric:tabular-nums}
+.combined-band-count{grid-column:1;grid-row:1;align-self:end;z-index:1;padding:3px 0;text-align:center;font:600 10px/1 var(--ar-ui,sans-serif);color:var(--dim);font-variant-numeric:tabular-nums}
 .combined-band-count:empty{display:none}
 .combined-rail-band:has(.combined-band-count:not(:empty)) .combined-band-label{padding-top:18px}
 .combined-rail-band.is-active .combined-band-count{color:var(--ar-on-warm,#20231f)}
@@ -104,3 +104,7 @@ html body.combined-on .combined-rail button:focus-visible{outline:2px solid var(
 
 html body.combined-on{--ar-on-warm:#20231f}
 html[data-theme="light"] body.combined-on{--ar-on-warm:var(--bg,#efede6)}
+
+/* "Skip to the page": the first Tab stop, visible only while focused. */
+.combined-skip{position:fixed;left:8px;top:-48px;z-index:1000;padding:8px 14px;border-radius:var(--c3-r,8px);background:var(--paper);color:var(--ink);border:1px solid var(--warm);font:600 var(--c3-t1,13px)/1.4 var(--ar-ui,sans-serif);text-decoration:none}
+.combined-skip:focus{top:8px;outline:2px solid var(--warm);outline-offset:2px}
