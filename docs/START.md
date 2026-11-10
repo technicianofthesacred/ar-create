@@ -1,6 +1,6 @@
 # AR Create: start here
 
-Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. This page is enough to act. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); capabilities and revision evidence are in [status/CURRENT.md](status/CURRENT.md).
+Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. Before resuming a task, read [CURRENT](status/CURRENT.md) and [TODO](../TODO.md); [November releases](status/RELEASES-2026-11.md) explains superseded blockers and proof boundaries. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); capabilities and revision evidence are in [status/CURRENT.md](status/CURRENT.md).
 
 ## The product in one view
 

@@ -1,5 +1,7 @@
 # Styling follow-up — 6 November 2026
 
+Reconciled 10 November: this is the original scoped findings/qualification inventory. The combined styling work is now installed through PR227–230; its earlier candidate/installation labels are historical. Use [CURRENT](../status/CURRENT.md) and the [release reconciliation](../status/RELEASES-2026-11.md) for exact proof and remaining broad visual acceptance.
+
 Adrian requested a whole-site check for the same problems found in the editorial discussion: excess font variation, mismatched buttons, wasted width, heavy selection and unnecessary framing lines. Record the remaining fixes; do not expand the current editorial implementation into a site-wide redesign.
 
 Scope: C05; preserve C01/C04/C06, each surface's owner and the approved Combined/Graphite direction. Plus Jakarta Sans is the interface and working-text family. Lora remains valid for spoken transcript words; paragraph signs and output-template artwork have their documented exceptions.

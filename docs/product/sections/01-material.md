@@ -1,5 +1,9 @@
 # 1 — Material
 
+## Installed checkpoint — 10 November 2026
+
+The installed Material/audio/Back blockers are resolved. Final PR229 proof covers 32 fresh item-opening/return checks, real audio and exact browser Back, with original words and sources preserved. PR230 retains those interface bytes; it has separate installed and generation proof. See [CURRENT](../../status/CURRENT.md) and [November releases](../../status/RELEASES-2026-11.md) for exact revision correspondence and remaining acceptance work.
+
 ## 6 November — unavailable transcript recovery
 
 S01, C02/C04/C06. Each retained recording reports its own transcript availability, even when another job shares its original source. A missing or unsafe transcript location must not be labelled Ready. If the attached original is available, the title opens that exact recording; otherwise show recovery guidance and omit unavailable playback. Preserve path guards, recording identities and original bytes.

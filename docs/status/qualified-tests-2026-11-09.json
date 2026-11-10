@@ -1,0 +1,10 @@
+{
+  "tests": 21,
+  "pass": 21,
+  "fail": 0,
+  "skipped": 0,
+  "sha": "af5350a974d5612ac1b3e373daea9979e8ad42cf",
+  "at": "2026-11-09",
+  "scope": "Focused separate-Article owner, HTTP, restart, archival-fork and preservation qualification; not the entire suite.",
+  "tapSha256": "5ed5a8e91520f5da8f72354f78bdf4925401df2c3bf70b8c0028ac23512fcd4b"
+}
