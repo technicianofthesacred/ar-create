@@ -42,6 +42,8 @@ Every write names its author with `--actor` or `AR_CREATE_ACTOR` (`agent:claude-
 
 ## Where intent and status live
 
+Before resuming work, read [CURRENT](docs/status/CURRENT.md) and [TODO](TODO.md). They separate installed behavior, measured proof, pending human review and remaining work. Recent release correspondence and private-proof locators are in [November releases](docs/status/RELEASES-2026-11.md). Re-read live owners before acting on a dated snapshot.
+
 1. [docs/START.md](docs/START.md): names, data map, conventions. Enough to act; read it next.
 2. [docs/product/PRODUCT.md](docs/product/PRODUCT.md): intent first, then the dated decision log.
 3. [docs/status/CURRENT.md](docs/status/CURRENT.md): measured test result, installed release and what works today. The only status authority. The old running log is in [docs/history](docs/history/status-log-2026-10.md).

@@ -1,5 +1,9 @@
 # 5 — Draft
 
+## Installed checkpoint — 10 November 2026
+
+PR230 has an installed, real existing-account initial-Article generation result awaiting human read-through. Separate blank creation retains exact non-draft source captures without copying or clearing the original manuscript. PR229 also repaired exact plain multiline AI targets. Acceptance, real-content follow-through and remaining work are recorded in [CURRENT](../../status/CURRENT.md) and [TODO](../../../TODO.md); the detailed boundaries are in [November releases](../../status/RELEASES-2026-11.md). This is a result update, not new product intent or editorial approval.
+
 ## 6 November — Quieter editorial discussion
 
 C01/C04/C05/C06, S05/S06. Direct author feedback adopts a much subtler active passage background with a small corner radius, no framing lines beside the editorial discussion, the existing shared sans-serif interface font and Graphite controls, and better use of available desktop width. Keep the exact original/proposed comparison, explicit sample provenance, editable proposal, Accept/Dismiss, Context and refinement. Consolidate secondary protection explanation into the existing Context view rather than an accordion. This is a presentation change; preserve the editor, identities, native save/recovery, stale guards and exact Undo.
