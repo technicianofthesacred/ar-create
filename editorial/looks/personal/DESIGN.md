@@ -114,6 +114,13 @@ slides:
     light: ""
     wordmark: Adrian Rasmussen
   link: "adrianrasmussen.com/writings"
+# assets: what can be placed on a slide in this look (logo, mark or graphic), each with a file in this
+# look's folder or an app path, or (a mark) characters drawn as a seal. A logo with no file is the brand's name set in
+# its headline type. Read by AR Create; not part of the DESIGN.md spec.
+assets:
+  wordmark:
+    name: "Adrian Rasmussen wordmark"
+    kind: logo
 ---
 
 ## Overview

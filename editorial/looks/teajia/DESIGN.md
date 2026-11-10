@@ -88,6 +88,26 @@ slides:
     light: "/ig-assets/teajia-wordmark.png"
     wordmark: teajiā
   link: "teajia.com/read"
+# assets: what can be placed on a slide in this look (logo, mark or graphic), each with a file in this
+# look's folder or an app path, or (a mark) characters drawn as a seal. A logo with no file is the brand's name set in
+# its headline type. Read by AR Create; not part of the DESIGN.md spec.
+assets:
+  wordmark:
+    name: "Teajia wordmark"
+    kind: logo
+    file: "/ig-assets/teajia-wordmark.png"
+  seal-excellence:
+    name: "Seal 佳, excellence"
+    kind: mark
+    text: "佳"
+  seal-home:
+    name: "Seal 家, home"
+    kind: mark
+    text: "家"
+  seal-celebration:
+    name: "Seal 嘉, celebration"
+    kind: mark
+    text: "嘉"
 ---
 
 ## Overview

@@ -7,7 +7,7 @@
 // `slides:` block for a DESIGN.md that has none, with every guess reported so a person can correct it. Nothing here
 // reads the network or any file.
 import {StateError} from '../store.mjs';
-import {TONES, COLOR_ROLES, FONT_ROLES} from '../src/donors/mag/carousel/ig-look-render.mjs';
+import {TONES, COLOR_ROLES, FONT_ROLES, ASSET_KINDS, ASSET_ID} from '../src/donors/mag/carousel/ig-look-render.mjs';
 import {FONT_FILES} from './instagram-templates.mjs';
 
 const fail = (message, status = 400) => { throw new StateError(message, status); };
@@ -19,7 +19,7 @@ export const MAX_DESIGN_BYTES = 256 * 1024;
 export function splitDesign(text) {
  const t = String(text ?? '');
  if (Buffer.byteLength(t) > MAX_DESIGN_BYTES) fail('A DESIGN.md is at most ' + MAX_DESIGN_BYTES / 1024 + ' KB.', 413);
- const m = /^(?:﻿)?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(t);
+ const m = /^(?:\ufeff)?---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(t);
  if (!m) fail('A DESIGN.md starts with front matter between two --- lines.');
  return {yaml: m[1].replace(/\r\n/g, '\n'), body: t.slice(m[0].length)};
 }
@@ -281,4 +281,84 @@ export function slidesYaml(slides, note = []) {
 export function withSlides(text, slides, note) {
  const t = String(text).replace(/\r\n/g, '\n'), {yaml} = splitDesign(t), close = t.indexOf(yaml) + yaml.length;
  return t.slice(0, close).replace(/\s*$/, '') + '\n' + slidesYaml(slides, note) + t.slice(close);
+}
+
+/* ---------- the assets block ---------- */
+// A look may list the things that can be placed on a slide in its own `assets:` block, keyed by id:
+//   assets:
+//     wordmark:
+//       name: Teajia wordmark
+//       kind: logo                       # logo, mark or graphic
+//       file: /ig-assets/teajia-wordmark.png   # a png or svg in the look's folder, or an app image path
+//     seal-home:
+//       name: Seal 家, home
+//       kind: mark
+//       text: 家                          # a mark drawn from characters, as the pillar seal is
+// A logo with no file is the brand's name set in its headline type. A mark or graphic has a file or (a mark only) text.
+export const MAX_LOOK_ASSETS = 24;
+export const ASSET_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(?:png|svg|jpe?g|webp)$/;
+const APP_ASSET = /^\/(?:ig-assets|assets)\/[A-Za-z0-9._/-]{1,160}\.(?:png|svg|jpe?g|webp)$/;
+const MARK_TEXT = /^[^\s<>&"'`\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]{1,4}$/u;
+const plainName = v => typeof v === 'string' && v.trim() && v.length <= 80 && !/[<>\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]/.test(v);
+
+/**
+ * The resolved `assets:` block of a look: {assets: [{id, name, kind, file?, src?, text?}], problems}. `hasFile(name)`
+ * says whether the look's folder holds a file; `assetUrl(file)` gives the address it is served at. Nothing is read.
+ */
+export function readAssets(doc, {id, hasFile = () => false, assetUrl = f => f} = {}) {
+ const block = doc.assets, assets = [], problems = [];
+ if (block === undefined || block === null) return {assets, problems};
+ if (typeof block !== 'object' || Array.isArray(block)) return {assets, problems: ['assets: is a set of named assets (wordmark:, seal-home:, ...).']};
+ const entries = Object.entries(block);
+ if (entries.length > MAX_LOOK_ASSETS) problems.push('A look lists up to ' + MAX_LOOK_ASSETS + ' assets.');
+ for (const [key, a] of entries.slice(0, MAX_LOOK_ASSETS)) {
+  const at = 'assets.' + key + ': ';
+  if (!ASSET_ID.test(key)) { problems.push(at + 'an asset id is lower-case letters, digits and dashes.'); continue; }
+  if (!a || typeof a !== 'object' || Array.isArray(a)) { problems.push(at + 'give it a name, a kind and a file or text.'); continue; }
+  const extra = Object.keys(a).filter(k => !['name', 'kind', 'file', 'text'].includes(k));
+  if (extra.length) { problems.push(at + 'unknown field ' + extra.join(', ') + '.'); continue; }
+  if (!plainName(a.name)) { problems.push(at + 'name is plain text of up to 80 characters.'); continue; }
+  if (!ASSET_KINDS.includes(a.kind)) { problems.push(at + 'kind is ' + ASSET_KINDS.join(', ') + '.'); continue; }
+  const file = a.file ?? null, text = a.text === undefined || a.text === null ? null : String(a.text);
+  if (file !== null && text !== null) { problems.push(at + 'a file or text, not both.'); continue; }
+  const out = {id: key, name: a.name.trim(), kind: a.kind};
+  if (file !== null) {
+   if (typeof file !== 'string' || !(ASSET_FILE.test(file) || (APP_ASSET.test(file) && !file.includes('..')))) { problems.push(at + 'file is a png or svg in this look\'s folder, or an app path such as /ig-assets/name.png.'); continue; }
+   if (!file.startsWith('/') && !hasFile(file)) { problems.push(at + file + ' is not in this look\'s folder.'); continue; }
+   if (id !== 'teajia' && /teajia-wordmark/i.test(file)) { problems.push(at + 'the teajiā wordmark belongs to Teajia.'); continue; }
+   Object.assign(out, {file, src: file.startsWith('/') ? file : assetUrl(file)});
+  } else if (text !== null) {
+   if (a.kind !== 'mark' || !MARK_TEXT.test(text)) { problems.push(at + 'only a mark is drawn from text, of one to four characters.'); continue; }
+   out.text = text;
+  } else if (a.kind !== 'logo') { problems.push(at + 'a ' + a.kind + ' needs a file' + (a.kind === 'mark' ? ' or text' : '') + '.'); continue; }
+  assets.push(out);
+ }
+ return {assets, problems};
+}
+
+/** The assets block as YAML, for the end of a DESIGN.md's front matter. */
+export function assetsYaml(assets) {
+ const out = ['# assets: what can be placed on a slide in this look (logo, mark or graphic), each with a file in this', '# look\'s folder or an app path, or (a mark) characters drawn as a seal. Read by AR Create; not part of the DESIGN.md spec.', 'assets:'];
+ for (const a of assets) {
+  out.push('  ' + a.id + ':', '    name: ' + JSON.stringify(a.name), '    kind: ' + a.kind);
+  if (a.file) out.push('    file: ' + JSON.stringify(a.file));
+  if (a.text) out.push('    text: ' + JSON.stringify(a.text));
+ }
+ return out.join('\n');
+}
+
+/** The DESIGN.md whole, with its `assets:` block (and the comment lines just above it) replaced by this one, at the end of its front matter. */
+export function withAssets(text, assets) {
+ const t = String(text).replace(/\r\n/g, '\n'), {yaml} = splitDesign(t), start = t.indexOf(yaml), lines = yaml.split('\n');
+ const at = lines.findIndex(l => /^assets:\s*(?:#.*)?$/.test(l));
+ let kept = lines;
+ if (at >= 0) {
+  let end = at + 1;
+  while (end < lines.length && (lines[end].trim() === '' || /^\s/.test(lines[end]))) end++;
+  let from = at;
+  while (from > 0 && /^#/.test(lines[from - 1])) from--;
+  kept = [...lines.slice(0, from), ...lines.slice(end)];
+ }
+ const body = kept.join('\n').replace(/\s*$/, '');
+ return t.slice(0, start) + body + '\n' + assetsYaml(assets) + t.slice(start + yaml.length);
 }

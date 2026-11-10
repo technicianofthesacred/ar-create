@@ -7,6 +7,7 @@ import {NEEDS_YOU_COMMANDS, NEEDS_YOU_HUMAN_ONLY, NEEDS_YOU_BODY} from './comman
 import {WORDS_COMMANDS, WORDS_HUMAN_ONLY, WORDS_BODY} from './commands/words.mjs';
 import {LOOKS_COMMANDS, LOOKS_READ_ONLY, LOOKS_BODY} from './commands/looks.mjs';
 import {ACCOUNTS_COMMANDS, ACCOUNTS_BODY} from './commands/accounts.mjs';
+import {TEMPLATES_COMMANDS, TEMPLATES_HUMAN_ONLY, TEMPLATES_BODY} from './commands/templates.mjs';
 import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK_BODY} from './commands/transcript-check.mjs';
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
 
@@ -138,7 +139,7 @@ function section(route) {
   const r = route.replace(/^\/api\//, '');
   if (/^(words|phone-pickup)(\/|$)/.test(r)) return 'transcript';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
-    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram|looks?(\/|$)|accounts?(\/|$))/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
+    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram|looks?(\/|$)|accounts?(\/|$)|templates?(\/|$))/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance|voice-corrections)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
@@ -176,6 +177,7 @@ export const CUSTOM_COMMANDS = [
   ...WORDS_COMMANDS,
   ...LOOKS_COMMANDS,
   ...ACCOUNTS_COMMANDS,
+  ...TEMPLATES_COMMANDS,
   ...TRANSCRIPT_CHECK_COMMANDS,
   ...PHONE_PICKUP_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
@@ -579,6 +581,8 @@ for (const key of WORDS_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, WORDS_BODY);
 Object.assign(BODY, LOOKS_BODY);
 Object.assign(BODY, ACCOUNTS_BODY);
+for (const key of TEMPLATES_HUMAN_ONLY) HUMAN_ONLY.add(key);
+Object.assign(BODY, TEMPLATES_BODY);
 for (const key of TRANSCRIPT_CHECK_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, TRANSCRIPT_CHECK_BODY);
 // The phone pickup (runtime/commands/phone-pickup.mjs): on demand only, never a timer.

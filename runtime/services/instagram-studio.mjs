@@ -16,7 +16,9 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
-import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument,lookRefusal} from './instagram-templates.mjs';
+import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument,lookRefusal,ownRefusal,frameHeight,isLayoutId} from './instagram-templates.mjs';
+import {sharedTemplates} from './templates.mjs';
+import {checkPlaced,resolvePlaced} from '../src/donors/mag/carousel/ig-look-render.mjs';
 import {sharedLooks,DOOR_LOOKS,DEFAULT_LOOK} from './looks.mjs';
 import {sharedAccounts,checkAccountId} from './accounts.mjs';
 import {hearCodes} from '../src/donors/mag/carousel/ig-codes.mjs';
@@ -53,20 +55,45 @@ const usedLines=(p,format)=>{const out=new Set();for(const [f,l] of Object.entri
 const openFlags=(p,lineIds)=>(p.flags||[]).filter(f=>lineIds.has(f.lineId)&&!p.confirmations?.[f.id]);
 const layoutHash=l=>digest(JSON.stringify({storyId:l.storyId,format:l.format,frames:l.frames,caption:l.caption}));
 
-export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null,looks=null,accounts=null}={}){
+export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null,looks=null,accounts=null,templates:ownTemplates=null}={}){
  // The words to flag come from the shared word library (confirmed words and the mishearings Adrian taught it); with
  // nothing confirmed there yet, the Teajia tea-terms file is the fallback, as before.
  const libraryTerms=()=>{const lib=readLibraryFile(path.join(dataDir,'word-library','library.json')),words=(lib?.entries||[]).filter(e=>e.status==='confirmed');return words.length?libraryAsTerms(words):null;};
  const terms=()=>teaTerms??libraryTerms()??loadTeaTerms();
  if(!dataDir)throw Error('The Instagram studio needs the data folder.');
- const dir=path.join(dataDir,'instagram-plans'),queues=new Map(),lookStore=()=>looks||sharedLooks({dataDir}),accountStore=()=>accounts||sharedAccounts({dataDir});
+ const dir=path.join(dataDir,'instagram-plans'),queues=new Map(),lookStore=()=>looks||sharedLooks({dataDir}),accountStore=()=>accounts||sharedAccounts({dataDir}),templateStore=()=>ownTemplates||sharedTemplates({dataDir});
+ /**
+  * A layout by its id, an old id or its code: one of his own templates (kept, or retired: a retired one still draws where
+  * it is used) first, then the shipped catalogue. Proposals and turned-down templates are not layouts.
+  */
+ const ownOf=v=>{if(isLayoutId(v))return null;const r=templateStore().find(v);return r&&(r.status==='kept'||r.status==='retired')?r:null;};
+ /**
+  * What a code names in this home: one of his templates, a shipped layout given another code here because his template
+  * holds its own (runtime/services/templates.mjs), or the shipped table's layout. A code names one layout, never two.
+  */
+ const layoutByCode=code=>{
+  const rc=templateStore().resolveCode(code);
+  if(rc?.own)return rc.own.status==='kept'||rc.own.status==='retired'?templateStore().entry(rc.own):null;
+  if(rc?.shipped){const t=templateById(codeToLayoutId(rc.shipped));return t?{...t,code:String(code).trim().toUpperCase(),shippedCode:rc.shipped}:null;}
+  if(rc?.held)return null;
+  return templateById(codeToLayoutId(code));
+ };
+ const findLayout=v=>{
+  if(isLayoutId(v))return templateById(v);
+  const own=ownOf(v);if(own)return templateStore().entry(own);
+  if(typeof v==='string'&&/^[A-Za-z]\d{1,3}$/.test(v.trim()))return layoutByCode(v);
+  return templateById(v);
+ };
  /**
   * The look a plan draws in: its own `look` when it names one, else its door's (teajia, art, mandala-codes, personal),
   * else Teajia's, which draws every layout exactly as it was drawn before looks existed.
   */
  const lookOf=p=>p.look?{id:p.look,from:'look'}:DOOR_LOOKS[p.door]?{id:DOOR_LOOKS[p.door],from:'door'}:{id:DEFAULT_LOOK,from:'default'};
  // A layout the plan's own look cannot draw is refused; a look that only comes from the door keeps drawing such a slide as before.
- const refusedFor=(p,templateId)=>{const l=lookOf(p);if(l.from!=='look')return null;return lookRefusal(templateId,lookStore().roles(l.id));};
+ const refusedFor=(p,templateId)=>{const l=lookOf(p),own=ownOf(templateId);
+  // One of his own templates saved for some looks only is offered in those looks.
+  if(own&&Array.isArray(own.looks)&&!own.looks.includes(l.id))return own.name+' ('+(own.code||own.id)+') is a template for the '+own.looks.join(' and ')+' look'+(own.looks.length>1?'s':'')+', not '+l.id+'.';
+  if(l.from!=='look')return null;return own?ownRefusal(own,lookStore().roles(l.id)):lookRefusal(templateId,lookStore().roles(l.id));};
  /**
   * The account a plan posts to: its own `account` when it names one, else the first account that lists the look the plan
   * draws in (so every plan saved before accounts existed resolves), else none. `postsLook` says whether the account still
@@ -103,7 +130,8 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   consentDesk.assertNotHeld(scopes,what);
  };
  const view=p=>{const {operations,...rest}=withHash({...empty(),...p});const used=usedLines(rest);
-  return {...rest,drawnIn:lookOf(rest),account:accountOf(rest),publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
+  const left=placedLeftOut(rest);
+  return {...rest,drawnIn:lookOf(rest),account:accountOf(rest),publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks,...(left.length?{placedLeftOut:left}:{})};};
  const write=p=>{fs.mkdirSync(dir,{recursive:true});const tmp=file(p.id)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(p,null,1));fs.renameSync(tmp,file(p.id));};
  function begin(input,{create=false}={}){
   if(!input||typeof input!=='object'||Array.isArray(input))fail('Send a JSON object.');
@@ -228,7 +256,9 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   const photoIds=new Set(p.material.photos.map(x=>x.id));let seconds=0;
   const out=frames.map((fr,i)=>{
    if(!fr||typeof fr!=='object')fail('Each frame is an object.');
-   const t=templateById(fr.templateId);if(!t)fail('Frame '+(i+1)+': there is no template '+fr.templateId+'.');
+   const t=findLayout(fr.templateId);if(!t)fail('Frame '+(i+1)+': there is no template '+fr.templateId+'.');
+   // A retired template of his is no longer offered; a slide that already uses it keeps it.
+   if(t.owner&&t.status==='retired'&&!(p.layouts?.[format]?.frames||[]).some(f=>f.templateId===t.id))fail('Frame '+(i+1)+': '+t.name+' ('+t.code+') is retired. Choose another layout.',422);
    if(!t.formats.includes(format))fail('Frame '+(i+1)+': '+t.name+' is made for '+t.formats.join(' or ')+', not a '+format+'.');
    const role=fr.role??(i===0?'cover':'inner');if(!ROLES.includes(role))fail('A frame is a cover, inner or close.');
    // His words, exactly: every piece of text on a frame is a slice of a transcript line.
@@ -237,12 +267,17 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    if(fr.text!==undefined&&fr.text!==joined)fail('Frame '+(i+1)+': a frame\'s text is its quoted words only.',403);
    const photos=list(fr.photos,'Photos on a frame',t.photos).map(ph=>{if(!photoIds.has(ph?.photoId))fail('Frame '+(i+1)+': that photo is not in this plan.');const n=v=>Number.isFinite(Number(v))?Math.max(0,Math.min(100,Number(v))):50;return {photoId:ph.photoId,x:n(ph.x),y:n(ph.y)};});
    const out={templateId:t.id,role,words,label:text(fr.label,'A label',60),credit:text(fr.credit,'A credit',60),photos};
+   // Things placed on the slide, in its own pixels. Kept only when there are some, so older layouts keep their hash.
+   let placed;try{placed=checkPlaced(fr.placed,{width:1080,height:frameHeight(t),pictures:pictureOf(p)});}catch(error){fail('Frame '+(i+1)+': '+error.message);}
+   if(placed.length)out.placed=placed;
    if(format==='reel'&&t.id!=='AR-R2'){const s=fr.seconds===undefined?secondsFor(joined||' '):Number(fr.seconds);if(!Number.isFinite(s)||s<1||s>30)fail('Frame '+(i+1)+': a beat lasts 1 to 30 seconds.');out.seconds=Math.round(s*10)/10;seconds+=out.seconds;}
    return out;
   });
   if(format==='reel'&&seconds>f.maxSeconds)fail('This reel runs '+Math.round(seconds)+' seconds; a reel holds '+f.maxSeconds+'.');
   return out;
  }
+ /** A picture placed on a slide names a photo of the plan, by its id (P1) or its Library id; it is kept as the plan's photo id. */
+ const pictureOf=p=>v=>{const ph=(p.material?.photos||[]).find(x=>x.id===v||x.sourceId===v);return ph?ph.id:null;};
  function readCaption(c){
   const t=text(c,'The caption',CAPTION.maxChars);
   if(hashtags(t)>CAPTION.maxHashtags)fail('Instagram takes at most '+CAPTION.maxHashtags+' hashtags in a caption.');
@@ -269,7 +304,14 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  }
 
  /* ---------- commands ---------- */
- async function templates(){return {formats:FORMATS,caption:CAPTION,facts:FACTS,doors:DOORS,templates:catalog()};}
+ /** Every layout that is offered: the shipped catalogue, then his own kept templates (marked owner: true) in code order. */
+ async function templates(){
+  const own=(await templateStore().list({status:'kept'})).templates.map(({hash,revision,proposedBy,decidedBy,createdAt,...t})=>t);
+  // A shipped layout whose code his template holds is listed under the code it has in this home, so no code names two layouts.
+  const {moves,held}=templateStore().shippedMoves();
+  const shipped=catalog().map(t=>!t.code?t:moves.has(t.code)?{...t,code:moves.get(t.code),shippedCode:t.code}:held.has(t.code)?{...t,code:null,shippedCode:t.code}:t);
+  return {formats:FORMATS,caption:CAPTION,facts:FACTS,doors:DOORS,templates:[...shipped,...own]};
+ }
  async function plans({subject}={}){
   let names=[];try{names=fs.readdirSync(dir).filter(n=>/^[a-f0-9-]{36}\.json$/i.test(n));}catch{}
   const out=[];for(const n of names){try{const p=JSON.parse(fs.readFileSync(path.join(dir,n),'utf8'));if(p.schema!==SCHEMA)continue;if(subject&&p.subject!==subject)continue;
@@ -370,8 +412,8 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    if(!story)fail('Say which story (storyId): this plan has '+before.stories.length+' and none is chosen.');
    const {format:f}=layoutTarget(before,{...input,format,storyId:story.id});
    let heard;
-   if(input.codes!==undefined){if(!Array.isArray(input.codes)||input.codes.some(c=>typeof c!=='string'))fail('codes is a list of codes like ["C1","M2"].');heard=hearCodes(input.codes.join(', '));}
-   else if(typeof input.say==='string')heard=hearCodes(input.say);
+   if(input.codes!==undefined){if(!Array.isArray(input.codes)||input.codes.some(c=>typeof c!=='string'))fail('codes is a list of codes like ["C1","M2"].');heard=hearCodes(input.codes.join(', '),{known:templateStore().codes()});}
+   else if(typeof input.say==='string')heard=hearCodes(input.say,{known:templateStore().codes()});
    else fail('Send the line he said (say) or a list of codes (codes).');
    if(!heard.codes.length)fail('No layout codes in that line. A code is a row letter and a number, like C1 or M2.');
    const base=before.layouts[f]?.storyId===story.id?before.layouts[f].frames:defaultFrames(before,story,f);
@@ -379,8 +421,11 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    for(const [slot,code] of heard.codes.entries()){
     if(why.has(code)){unused.push({code,why:why.get(code)});continue;}
     if(slot>=frames.length){unused.push({code,why:'This story has only '+frames.length+' slides, and no slide is added without his words.'});continue;}
-    const t=templateById(codeToLayoutId(code));
+    // A shipped code names its canvas layout even where an old id is spelled the same (F1); his own codes come from the ledger.
+    const t=layoutByCode(code);
     if(!t||!t.formats.includes(f)){unused.push({code,why:t?t.name+' ('+code+') is made for '+t.formats.join(' or ')+', not a '+f+'. Slide '+(slot+1)+' keeps its layout.':'No layout has that code.'});continue;}
+    // A retired template of his is no longer offered: said into a slot, it is reported, and the other codes still apply.
+    if(t.owner&&t.status==='retired'&&!(before.layouts?.[f]?.frames||[]).some(x=>x.templateId===t.id)){unused.push({code,why:t.name+' ('+code+') is retired, so it is no longer offered. Slide '+(slot+1)+' keeps its layout.'});continue;}
     const refused=refusedFor(before,t.id);if(refused){unused.push({code,why:refused+' Slide '+(slot+1)+' keeps its layout.'});continue;}
     const fr=frames[slot],words=fr.words.map(w=>{const line=lineOf(before,w.lineId);return line&&w.text.length>t.maxChars?{lineId:w.lineId,text:fitLine(line,t.maxChars)}:w;});
     frames[slot]={...fr,templateId:t.id,words,photos:fr.photos.slice(0,t.photos)};
@@ -406,7 +451,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    const said=Object.keys(before.ready||{});
    if(said.length&&!human())fail('Adrian said the '+said.join(' and ')+' '+(said.length>1?'are':'is')+' ready. Ask him before changing the look.',409);
    if(look!==null){const roles=lookStore().roles(look);
-    for(const [format,l] of Object.entries(before.layouts||{}))for(const [i,f] of l.frames.entries()){const why=lookRefusal(f.templateId,roles);if(why)fail('The '+format+'\'s slide '+(i+1)+': '+why,422);}}
+    for(const [format,l] of Object.entries(before.layouts||{}))for(const [i,f] of l.frames.entries()){const own=ownOf(f.templateId),why=own?ownRefusal(own,roles):lookRefusal(f.templateId,roles);if(why)fail('The '+format+'\'s slide '+(i+1)+': '+why,422);}}
    // The plan's own account must still list the look it will draw in; it is never switched quietly.
    const newLook=look===null?(DOOR_LOOKS[before.door]||DEFAULT_LOOK):look,next={...before,ready:{}};
    let accountNote='';
@@ -441,6 +486,45 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    const next={...before,ready:{}};if(id===null)delete next.account;else next.account=id;
    return commit(before,next,input,id===null?'account: the first that lists the look':'account '+id);
   });
+ }
+ /**
+  * Set the things placed on one slide: {id, operationId, expectedRevision, expectedHash, format, slide (1 for the first),
+  * placed:[...]} (an empty list takes them all off). A proposal like a layout, through the same path (setLayout): the
+  * same revision check, actor stamp and journal line; a change needs his yes again, and an assistant cannot change a
+  * piece he has said yes to.
+  */
+ async function setPlaced(input){
+  requireWriteActor();begin(input);
+  return serial(input.id,async()=>{
+   const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
+   const format=input.format,l=before.layouts?.[format];if(!FORMAT_NAMES.includes(format))fail('Choose story, reel, post or carousel.');if(!l)fail('Nothing is laid out as a '+format+' yet.',404);
+   const n=input.slide;if(!Number.isInteger(n)||n<1||n>l.frames.length)fail('slide is 1 to '+l.frames.length+'.');
+   if(!Array.isArray(input.placed))fail('placed is the list of things on the slide (an empty list takes them all off).');
+   const story=before.stories.find(s=>s.id===l.storyId);if(!story)fail('That layout\'s story is no longer in this plan.',409);
+   layoutTarget(before,{format,storyId:story.id});
+   const frames=l.frames.map((fr,i)=>{const {placed,...rest}=fr;return i===n-1?{...rest,placed:input.placed}:fr;});
+   return setLayout(before,{...input,caption:undefined},story,format,readFrames(before,format,frames),'placed things on '+format+' slide '+n+' ('+input.placed.length+')');
+  });
+ }
+ /**
+  * Save one slide as a template of his own: {id (the plan), operationId, format, slide (1 for the first), name, looks?
+  * ("all", or look ids; default the plan's look)}. The template is the slide's layout and the things placed on it (a
+  * picture from the plan stays with the plan and is left out, and said so). It takes the next free code in the row of
+  * the layout it came from when it is kept: at once for Adrian, on his yes for an assistant's (a proposal). The plan
+  * itself is not changed.
+  */
+ async function saveTemplate(input){
+  requireWriteActor();
+  if(!input||typeof input!=='object'||Array.isArray(input))fail('Send a JSON object.');
+  const p=load(input.id),format=input.format,l=p.layouts?.[format];
+  if(!FORMAT_NAMES.includes(format))fail('Choose story, reel, post or carousel.');if(!l)fail('Nothing is laid out as a '+format+' yet.',404);
+  const n=input.slide;if(!Number.isInteger(n)||n<1||n>l.frames.length)fail('slide is 1 to '+l.frames.length+'.');
+  const fr=l.frames[n-1],own=ownOf(fr.templateId),t=findLayout(fr.templateId);if(!t)fail('This slide\'s layout is no longer known.',409);
+  const all=[...(own?.placed||[]),...(fr.placed||[])],placed=all.filter(x=>x.kind!=='picture'),leftOut=all.length-placed.length;
+  const base=own?(own.base?{base:own.base}:{markup:own.markup,fixedWords:own.fixedWords||[]}):{base:t.id};
+  const saved=await templateStore().fromSlide({operationId:input.operationId,name:input.name,looks:input.looks===undefined?[lookOf(p).id]:input.looks,...base,row:t.rowLetter,kind:t.kind,placed,
+   photos:t.photos,textParts:t.textParts,maxChars:t.maxChars,formats:t.formats,roles:t.roles,frameHeight:frameHeight(t),source:{planId:p.id,format,slide:n}});
+  return {...saved,...(leftOut?{leftOut:leftOut+' picture'+(leftOut>1?'s':'')+' from the plan stay'+(leftOut>1?'':'s')+' with the plan and '+(leftOut>1?'are':'is')+' not part of the template.'}:{})};
  }
  /** Adrian picks a proposed story, or names his own dish in his own words, and may say who it is for. */
  async function choose(input){
@@ -549,14 +633,28 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   const l=p.layouts[format];if(!l)fail('Nothing is laid out as a '+format+' yet.',404);
   let start=0;
   return l.frames.map((fr,i)=>{const ctx={index:i,total:l.frames.length,start,format};if(fr.seconds)start+=fr.seconds;
-   return {templateId:fr.templateId,ctx,slide:{role:fr.role,text:fr.words.map(w=>w.text).join('\n\n'),label:fr.label,credit:fr.credit,photos:fr.photos.map(ph=>({src:'/api/sources/blob?id='+encodeURIComponent(p.material.photos.find(x=>x.id===ph.photoId)?.sourceId||''),x:ph.x,y:ph.y}))}};});
+   const blob=photoId=>'/api/sources/blob?id='+encodeURIComponent(p.material.photos.find(x=>x.id===photoId)?.sourceId||'');
+   const slide={role:fr.role,text:fr.words.map(w=>w.text).join('\n\n'),label:fr.label,credit:fr.credit,photos:fr.photos.map(ph=>({src:blob(ph.photoId),x:ph.x,y:ph.y}))};
+   if(fr.placed?.length)slide.placed=fr.placed.map(t=>t.kind==='picture'?{...t,src:blob(t.asset)}:t);
+   return {templateId:fr.templateId,ctx,slide};});
  }
  /** One slide drawn in the plan's look: the one path for the page preview, the PNG and the sheet. */
  function draw(p,s){
-  const l=lookOf(p),roles=lookStore().roles(l.id);
+  const l=lookOf(p),roles=lookStore().roles(l.id),own=ownOf(s.templateId),opts={own,placedLook:roles};
   // A look that only comes from the door draws one of Teajia's own layouts as it always was, so no older plan stops drawing.
-  if(l.from!=='look'&&lookRefusal(s.templateId,roles))return renderFrame(s.templateId,s.slide,s.ctx);
-  return renderFrame(s.templateId,s.slide,s.ctx,roles);
+  // Things placed on the slide are still the plan's look's own.
+  if(l.from!=='look'&&(own?ownRefusal(own,roles):lookRefusal(s.templateId,roles)))return renderFrame(s.templateId,s.slide,s.ctx,null,opts);
+  return renderFrame(s.templateId,s.slide,s.ctx,roles,opts);
+ }
+ /** Placed things the plan's look cannot draw, with the reason, so the page and the assistants can say so. */
+ function placedLeftOut(p){
+  const out=[];let roles=null;
+  for(const [format,l] of Object.entries(p.layouts||{}))for(const [i,fr] of l.frames.entries()){
+   const own=ownOf(fr.templateId),list=[...(own?.placed||[]),...(fr.placed||[])];if(!list.length)continue;
+   if(!roles){try{roles=lookStore().roles(lookOf(p).id);}catch{return out;}}
+   for(const left of resolvePlaced(list,roles).leftOut)out.push({format,slide:i+1,...left,fromTemplate:own&&left.index<(own.placed||[]).length?own.id:null});
+  }
+  return out;
  }
  async function render({id,format,frame}){const p=load(id),s=slides(p,format),n=Number(frame??0);if(!Number.isInteger(n)||n<0||n>=s.length)fail('No such frame.',404);return frameDocument(format,draw(p,s[n]),(p.title||'Instagram')+' · '+(n+1));}
  async function sheet({id,format}){const p=load(id);return sheetDocument(format,slides(p,format).map(s=>draw(p,s)),p.title||'Instagram piece');}
@@ -566,7 +664,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,assertPostable,propose,layout,codes,setLook,setAccount,lookOf,accountOf,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,codes,setLook,setAccount,setPlaced,saveTemplate,lookOf,accountOf,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
@@ -639,7 +737,7 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
  try{
   const action=url.pathname.slice(PREFIX.length);
   const GET={templates:()=>studio.templates(),plans:()=>studio.plans({subject:q('subject')}),plan:()=>studio.read({id:q('id')})};
-  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),look:i=>studio.setLook(i),account:i=>studio.setAccount(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
+  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),look:i=>studio.setLook(i),account:i=>studio.setAccount(i),placed:i=>studio.setPlaced(i),template:i=>studio.saveTemplate(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
   if(request.method==='GET'||request.method==='HEAD'){
    if(GET[action])return send(200,await GET[action]()),true;
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
@@ -659,6 +757,8 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
   const chunks=[];let size=0;for await(const chunk of request){size+=chunk.length;if(size>MAX_BODY)fail('That request is too large.',413);chunks.push(chunk);}
   let input;try{input=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{fail('Send JSON.');}
   const result=await POST[action](input);
+  // A template saved from a slide is journaled as the template it made, not as the plan.
+  if(action==='template')request.arInput={operationId:input?.operationId,scope:{kind:'template',id:typeof result?.id==='string'?result.id:null}};
   if((action==='plan'||action==='layout'||action==='plan/codes')&&!isHuman(actorNow()))result.asks=await raiseNeeds(request,studio,result).catch(()=>result.asks);
   send(200,result);
  }catch(error){send(Number.isInteger(error.status)&&error.status>=400&&error.status<600?error.status:500,{error:error.status?error.message:'The Instagram studio could not do that. Nothing was changed.',...(error.hold?{code:'consent-hold',hold:error.hold}:{})});}

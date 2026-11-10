@@ -24,8 +24,10 @@ export const SUGAR = Object.freeze({
   project: { list: 'concepts.get', create: 'concepts.post', read: 'concept', save: 'concept.save', direction: 'study.human-direction', capabilities: 'concept.capabilities' },
   needs: { list: 'needs-you', raise: 'needs-you.raise' },
   words: { list: 'words', export: 'words.export', add: 'words.add', import: 'words.import', decide: 'words.decide', recognise: 'words.recognise', checks: 'words.checks', check: 'words.check', answer: 'words.answer' },
-  instagram: { templates: 'instagram.templates', plans: 'instagram.plans', plan: 'instagram.plan.get', layout: 'instagram.layout', codes: 'instagram.plan.codes', look: 'instagram.look', account: 'instagram.account' },
+  instagram: { templates: 'instagram.templates', plans: 'instagram.plans', plan: 'instagram.plan.get', layout: 'instagram.layout', codes: 'instagram.plan.codes', look: 'instagram.look', account: 'instagram.account', placed: 'instagram.placed', template: 'instagram.template' },
   look: { list: 'looks', read: 'look', save: 'look.save', import: 'look.import' },
+  asset: { list: 'look.assets', add: 'look.asset.add' },
+  template: { list: 'templates', read: 'template', propose: 'template.propose', accept: 'template.decide', 'turn-down': 'template.decide', retire: 'template.retire' },
   account: { list: 'accounts', read: 'account', save: 'account.save' },
   phone: { status: 'phone-pickup', setup: 'phone-pickup.setup', check: 'phone-pickup.check' },
   piece: { list: 'pieces.get', create: 'pieces.post', switch: 'pieces.switch' },
@@ -49,14 +51,21 @@ export const SUGAR = Object.freeze({
 // {id?, name, service?, handle?, link?, looks:[...], expectedRevision, expectedHash}` files one in the home (a fresh operationId unless the
 // input names one). An account is a label and a destination: nothing is posted. `instagram account --plan <id> --account <account id>`
 // reads the plan, then sets where it posts (`--account auto` uses the first account that lists its look). It proposes, like a layout.
+// `asset list <look id>` lists what can be placed on a slide in that look (its logo, marks and graphics); `asset add --input
+// {id, asset:{id, name, kind, file, base64} or {id, name, kind: mark, text}, expectedRevision, expectedHash}` adds one (a png, or an
+// svg made safe). `instagram placed --plan <id> --input {format, slide, placed:[...]}` reads the plan, then sets the things placed
+// on that slide (a proposal, like a layout). `instagram template --input {id, format, slide, name, looks?}` saves a slide as a
+// template: kept with its code for Adrian, a proposal for an assistant. `template list [--input {status}]`, `template read <id>`;
+// `template propose --input {name, row, kind?, markup, looks?}` proposes a template from markup (checked by allowlist);
+// `template accept|turn-down|retire <id>` read the template, then send his decision (Adrian's alone: exit 5 for an assistant).
 // `words export` prints the versioned library snapshot (redirect it to a file); `words add|import|decide|answer --input` get a fresh
 // operationId; `words check <jobId>` and `words recognise <jobId>` name the recording. Agents suggest words (marked as theirs);
 // `words decide` and `words answer` are Adrian's alone (exit 5 for an agent).
 // `simmer board <subject>`, `simmer material <subject>`; `simmer intake|propose|name --input` get a fresh operationId
 // unless the input names one (name one yourself when you may retry: a retry with the same id adds nothing twice).
-export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId', 'instagram plan': 'id', 'look read': 'id', 'account read': 'id' });
+export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId', 'instagram plan': 'id', 'look read': 'id', 'account read': 'id', 'asset list': 'id', 'template read': 'id' });
 const freshOperation = () => ({ operationId: randomUUID() });
-export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation, 'look save': freshOperation, 'account save': freshOperation });
+export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation, 'look save': freshOperation, 'account save': freshOperation, 'asset add': freshOperation, 'instagram template': freshOperation, 'template propose': freshOperation });
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config', '--plan', '--say', '--look', '--account'];
 export const USAGE = {
   usage: 'node agents/cli/ar-create.mjs --url http://127.0.0.1:PORT --actor ACTOR COMMAND [ARGS] [--input FILE|-]',
@@ -162,6 +171,19 @@ export async function run(args, { fetchImpl = fetch, stdin = defaultStdin, env =
     return answer(await client.call('instagram.account', { operationId: randomUUID(), ...input, id: options.plan, expectedRevision: read.body.revision, expectedHash: read.body.hash, account: options.account === 'auto' ? null : options.account }));
   }
   if (command === 'account' && rest[0] === 'list' && rest.length === 1 && options.look) return answer(await client.call('accounts', { ...input, look: options.look }));
+  if (command === 'instagram' && rest[0] === 'placed') {
+    if (rest.length !== 1 || !options.plan) return { exitCode: EXIT.usage, result: { ok: false, error: 'Use: instagram placed --plan <plan id> --input {format, slide, placed:[...]}' } };
+    const read = await client.call('instagram.plan.get', { id: options.plan });
+    if (!read.ok) return answer(read);
+    return answer(await client.call('instagram.placed', { operationId: randomUUID(), ...input, id: options.plan, expectedRevision: read.body.revision, expectedHash: read.body.hash }));
+  }
+  if (command === 'template' && ['accept', 'turn-down', 'retire'].includes(rest[0])) {
+    if (rest.length !== 2) return { exitCode: EXIT.usage, result: { ok: false, error: `Use: template ${rest[0]} <template id>` } };
+    const read = await client.call('template', { id: rest[1] });
+    if (!read.ok) return answer(read);
+    const body = { operationId: randomUUID(), ...input, id: rest[1], expectedRevision: read.body.revision, expectedHash: read.body.hash };
+    return answer(rest[0] === 'retire' ? await client.call('template.retire', body) : await client.call('template.decide', { ...body, decision: rest[0] }));
+  }
   if (Object.hasOwn(SUGAR, command)) {
     const verb = rest[0], name = SUGAR[command][verb], key = `${command} ${verb}`, positional = SUGAR_POSITIONAL[key];
     if (!name || rest.length !== (positional ? 2 : 1)) return { exitCode: EXIT.usage, result: { ok: false, error: `Use: ${command} ${Object.keys(SUGAR[command]).map(v => SUGAR_POSITIONAL[`${command} ${v}`] ? `${v} <${SUGAR_POSITIONAL[`${command} ${v}`]}>` : v).join('|')}` } };

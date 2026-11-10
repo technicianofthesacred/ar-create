@@ -4,7 +4,8 @@
 // warm dark ground, one bronze accent, no borders, no gradients). Every size is the real Instagram pixel size.
 import IG from '../src/donors/mag/carousel/ig-templates.js';
 import {ENTRIES, entryForCode, resolvers} from '../src/donors/mag/carousel/ig-codes.mjs';
-import {drawInLook, refusal, TEAJIA_SOURCE, OWN_ROWS, OWNER} from '../src/donors/mag/carousel/ig-look-render.mjs';
+import {drawInLook, refusal, withPlaced, TEAJIA_SOURCE, OWN_ROWS, OWNER} from '../src/donors/mag/carousel/ig-look-render.mjs';
+import {renderMarkup} from '../src/donors/mag/carousel/ig-template-markup.mjs';
 import {StateError} from '../store.mjs';
 
 // Facts, not formula. Checked 3 November 2026 against press coverage of Instagram's own announcements; the safe zones
@@ -125,6 +126,8 @@ const onStoryGround = (card, src, ground) => (ground ? frameOn(ground) : frame)(
 // Every layout id the studio knows (the Carousel catalogue and the AR layouts), with the code table over it.
 const KNOWN = {...IG.T, ...Object.fromEntries(Object.keys(NEW_TEMPLATES).map(id => [id, {}]))};
 export const {codeToLayoutId, layoutIdToCode, resolveLayoutId} = resolvers(KNOWN);
+/** True when a layout id (not a code) is the shipped catalogue's own. Such an id always means that layout. */
+export const isLayoutId = id => typeof id === 'string' && Object.hasOwn(KNOWN, id);
 const ORDER = new Map(ENTRIES.map((e, i) => [e.code, i]));
 /** Every layout the studio can use, in the canvas's row order, each with its code, row and plain name. */
 export function catalog() {
@@ -146,21 +149,31 @@ export const templateById = id => { const real = resolveLayoutId(id); return cat
 
 /** Why a layout cannot be drawn in a look (one of Teajia's own rows in another brand's look), or null. */
 export function lookRefusal(id, look) { const real = resolveLayoutId(id), code = layoutIdToCode(real), e = code && entryForCode(code); return look ? refusal(look, code, e?.name) : null; }
+/** The same for one of his own templates: a saved slide follows the layout it came from; a markup template its row. */
+export function ownRefusal(own, look) { if (!look || !own) return null; if (own.base) return lookRefusal(own.base, look); return Object.hasOwn(OWN_ROWS, own.row) ? refusal(look, own.code || own.row + '0', own.name) : null; }
+/** The height in pixels of the frame a layout draws in: the Story and reel layouts are 1920 high, every other card 1350. */
+export const frameHeight = t => t && !t.owner && t.formats && !t.formats.some(f => f === 'post' || f === 'carousel') ? 1920 : (t?.frameHeight || 1350);
 
 /**
- * One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}]}; ctx: {index, total, start, format};
- * look: a resolved look (runtime/services/looks.mjs roles) or nothing for the layouts as they are. Every Carousel layout
- * is drawn in the look through ig-look-render.mjs; the Story and reel layouts (row R) keep their own art colours.
+ * One frame's markup. slide: {role, text, label, credit, photos:[{src,x,y}], placed?:[...]}; ctx: {index, total, start,
+ * format}; look: a resolved look (runtime/services/looks.mjs roles) or nothing for the layouts as they are. Every Carousel
+ * layout is drawn in the look through ig-look-render.mjs; the Story and reel layouts (row R) keep their own art colours.
+ * The things placed on a slide are laid on top, in `placedLook` (the plan's look, which is `look` unless an older plan
+ * draws a Teajia layout as it always was), after the layout is drawn: this is the one place they are drawn.
+ * `own` is one of his own templates (runtime/services/templates.mjs): a saved slide draws its layout with its placed
+ * things under the slide's own; a markup template draws its checked markup as the catalogue's layouts are drawn.
  */
-export function renderFrame(id, slide = {}, ctx = {}, look = null) {
- id = resolveLayoutId(id);
- if (NEW_TEMPLATES[id]) return NEW_TEMPLATES[id].render(slide, ctx);
- if (!IG.T[id]) throw new Error('Unknown Instagram template ' + id);
- const why = lookRefusal(id, look);
+export function renderFrame(id, slide = {}, ctx = {}, look = null, {own = null, placedLook = look} = {}) {
+ if (own?.base) return renderFrame(own.base, {...slide, placed: [...(own.placed || []), ...(slide.placed || [])]}, ctx, look, {placedLook});
+ if (!own) id = resolveLayoutId(id);
+ if (!own && NEW_TEMPLATES[id]) return withPlaced(NEW_TEMPLATES[id].render(slide, ctx), slide.placed, placedLook);
+ if (!own && !IG.T[id]) throw new Error('Unknown Instagram template ' + id);
+ const why = own ? ownRefusal(own, look) : lookRefusal(id, look);
  if (why) throw Object.assign(new StateError(why, 422), {refused: true});
  const photos = (slide.photos || []).map(p => ({...p, src: localImage(p?.src)}));
  const link = look && look.link && look.link !== TEAJIA_SOURCE.link ? {link: look.link} : {};
- const card = drawInLook(IG.render(id, {...slide, photos}, {...ctx, ...link}), look);
+ const drawn = own ? renderMarkup(own, {...slide, photos}, ctx) : IG.render(id, {...slide, photos}, {...ctx, ...link});
+ const card = withPlaced(drawInLook(drawn, look), own ? [...(own.placed || []), ...(slide.placed || [])] : slide.placed, placedLook);
  const ground = look && look.dark.ground !== TEAJIA_SOURCE.dark.ground ? look.dark.ground : null;
  return ctx.format === 'story' ? onStoryGround(card, photos[0]?.src, ground) : card;
 }

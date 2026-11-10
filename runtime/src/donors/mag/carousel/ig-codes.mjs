@@ -157,8 +157,10 @@ export function resolvers(catalog) {
  * C5); numbers may be written as words, one to twenty ("M two and five"); a lone number before any letter is ignored,
  * and so is a line with no codes. A code that names no layout is reported, never guessed.
  * Returns {codes: every code heard, in order, upper case; unknown: [{code, reason}] for those naming no layout; usable: the codes that do}.
+ * `known` lists further codes that name a layout: the codes the home's own templates were given (C5 after the shipped C4).
  */
-export function hearCodes(line) {
+export function hearCodes(line, {known = []} = {}) {
+ const more = new Set((Array.isArray(known) ? known : []).map(c => String(c).toUpperCase()));
  const text = String(line ?? '').toLowerCase().replace(/[\u2018\u2019]/g, "'");
  const tokens = [], re = /[a-z]+(?:'[a-z]+)*|\d+|[.;:!?\n,]/g;
  let m;
@@ -196,7 +198,7 @@ export function hearCodes(line) {
   }
   said.push(code);
   if (!row) unknown.push({code, reason: 'There is no row ' + l + '.'});
-  else if (n < 1 || n > row.items.length) unknown.push({code, reason: 'Row ' + l + ' (' + row.row + ') has ' + row.items.length + ' layouts, so ' + code + ' names none.'});
+  else if ((n < 1 || n > row.items.length) && !more.has(code)) unknown.push({code, reason: 'Row ' + l + ' (' + row.row + ') has ' + row.items.length + ' layouts, so ' + code + ' names none.'});
   else usable.push(code);
  }
  return {codes: said, unknown, usable};

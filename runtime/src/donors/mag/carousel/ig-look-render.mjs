@@ -130,3 +130,117 @@ export function drawInLook(html, look) {
  });
  return out;
 }
+
+/* ---------- placed things ---------- */
+// A slide may carry things placed on it on top of its layout: the look's logo, a mark or a graphic of the look, a picture
+// from the plan, a short label or a rule. Each is {kind, asset?, text?, x, y, width, height?, z, tone?, color?, size?} in
+// the slide's own pixels (1080 wide). They are drawn here and nowhere else, after the layout is drawn in its look, so the
+// one path (renderFrame) puts them on the page preview, the PNG, the sheet and every export alike. A logo, mark or graphic
+// is always the look's own: a thing whose asset the look lacks is left out and reported, never drawn from another brand.
+
+export const PLACED_KINDS = Object.freeze(['logo', 'mark', 'graphic', 'picture', 'label', 'rule']);
+/** The kinds a look's assets: block may hold. */
+export const ASSET_KINDS = Object.freeze(['logo', 'mark', 'graphic']);
+export const MAX_PLACED = 12;
+export const ASSET_ID = /^[a-z0-9][a-z0-9-]{0,40}$/;
+const PICTURE_ID = /^(?:P[0-9]{1,3}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i;
+const FIELDS = Object.freeze({
+ logo: ['asset', 'height', 'tone'], mark: ['asset', 'height', 'tone'], graphic: ['asset', 'height', 'tone'],
+ picture: ['asset', 'height'], label: ['text', 'size', 'tone', 'color'], rule: ['height', 'tone', 'color'],
+});
+const COMMON = ['kind', 'x', 'y', 'width', 'z'];
+const placedFail = message => { throw Object.assign(new Error(message), {status: 400}); };
+const SOURCE_FONTS = Object.freeze({headline: {family: 'Caudex', serif: true}, body: {family: 'EB Garamond', serif: true}, label: {family: 'Caudex', serif: true}});
+const SEAL_STACK = "'Shippori Mincho', 'Noto Serif TC', serif";
+const plainText = v => typeof v === 'string' && !/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff<>]/.test(v);
+// Same-origin paths only: a look's served file (/api/look/asset?...), an app image (/ig-assets/...), a Library blob.
+const localPath = v => { const s = String(v ?? ''); return /^\/(?!\/)[^\s<>"'`\\()]+$/.test(s) && !/^\/(?:_blob|appifact)\//.test(s) ? s : ''; };
+const int = (v, what, min, max) => { if (!Number.isInteger(v) || v < min || v > max) placedFail(what + ' is a whole number from ' + min + ' to ' + max + '.'); return v; };
+/** The height a placed thing takes when it names none. */
+export const placedHeight = t => t.height ?? (t.kind === 'picture' ? Math.round(t.width * 1.25) : t.kind === 'label' ? Math.ceil((t.size ?? 30) * 1.4) : t.kind === 'rule' ? 2 : t.width);
+
+/**
+ * Check a slide's placed things and return them tidied, with fixed keys in a fixed order. Values are bounded: every
+ * thing sits inside the slide (width by height pixels), and only the fields its kind uses are accepted. `pictures`, when
+ * given, maps a picture's asset (a photo id of the plan or its Library id) to the plan's photo id; others are refused.
+ */
+export function checkPlaced(list, {width = 1080, height = 1350, pictures = null} = {}) {
+ if (list === undefined || list === null) return [];
+ if (!Array.isArray(list) || list.length > MAX_PLACED) placedFail('Placed things are a list of up to ' + MAX_PLACED + '.');
+ return list.map((t, i) => {
+  const at = 'Placed thing ' + (i + 1) + ': ';
+  if (!t || typeof t !== 'object' || Array.isArray(t)) placedFail(at + 'each is an object.');
+  if (!PLACED_KINDS.includes(t.kind)) placedFail(at + 'kind is ' + PLACED_KINDS.join(', ') + '.');
+  const allowed = new Set([...COMMON, ...FIELDS[t.kind]]), extra = Object.keys(t).filter(k => !allowed.has(k));
+  if (extra.length) placedFail(at + 'a ' + t.kind + ' does not take ' + extra.join(', ') + '.');
+  const out = {kind: t.kind};
+  if (['logo', 'mark', 'graphic'].includes(t.kind)) { if (typeof t.asset !== 'string' || !ASSET_ID.test(t.asset)) placedFail(at + 'name the look\'s asset by its id, like wordmark.'); out.asset = t.asset; }
+  if (t.kind === 'picture') {
+   if (typeof t.asset !== 'string' || !PICTURE_ID.test(t.asset)) placedFail(at + 'a picture names a photo of the plan (P1) or its Library id.');
+   const photo = pictures ? pictures(t.asset) : t.asset;
+   if (!photo) placedFail(at + 'that photo is not in this plan.');
+   out.asset = photo;
+  }
+  if (t.kind === 'label') {
+   if (!plainText(t.text) || !t.text.trim() || t.text.length > 60) placedFail(at + 'a label is plain text of up to 60 characters.');
+   out.text = t.text;
+   out.size = t.size === undefined ? 30 : int(t.size, at + 'size', 16, 160);
+  }
+  out.x = int(t.x, at + 'x', 0, width - 1);
+  out.y = int(t.y, at + 'y', 0, height - 1);
+  out.width = int(t.width, at + 'width', 1, width);
+  if (t.height !== undefined) out.height = int(t.height, at + 'height', 1, height);
+  if (out.x + out.width > width) placedFail(at + 'it runs past the right edge (x ' + out.x + ' + width ' + out.width + ' is more than ' + width + ').');
+  if (out.y + placedHeight(out) > height) placedFail(at + 'it runs past the bottom edge (y ' + out.y + ' + height ' + placedHeight(out) + ' is more than ' + height + ').');
+  out.z = t.z === undefined ? i : int(t.z, at + 'z', 0, 50);
+  if (FIELDS[t.kind].includes('tone')) { const tone = t.tone ?? 'dark'; if (!TONES.includes(tone)) placedFail(at + 'tone is dark or light (the ground it sits on).'); out.tone = tone; }
+  if (FIELDS[t.kind].includes('color')) { const c = t.color ?? (t.kind === 'rule' ? 'line' : 'supporting'); if (!COLOR_ROLES.includes(c)) placedFail(at + 'color is one of the look\'s roles: ' + COLOR_ROLES.join(', ') + '.'); out.color = c; }
+  return out;
+ });
+}
+
+/**
+ * Which placed things a look can draw. A logo, mark or graphic must be an asset of that very look, of the same kind;
+ * anything else is left out with the reason, so it can be reported. Returns {draw, leftOut:[{index, kind, asset, why}]}.
+ */
+export function resolvePlaced(list, look) {
+ const draw = [], leftOut = [], assets = look?.assets || {}, name = look?.name || look?.id || 'this';
+ for (const [index, t] of (Array.isArray(list) ? list : []).entries()) {
+  if (!ASSET_KINDS.includes(t?.kind)) { draw.push({...t, index}); continue; }
+  const a = Object.hasOwn(assets, t.asset) ? assets[t.asset] : null;
+  if (!a) leftOut.push({index, kind: t.kind, asset: t.asset, why: 'The ' + name + ' look has no asset ' + t.asset + ', so it is left out.'});
+  else if (a.kind !== t.kind) leftOut.push({index, kind: t.kind, asset: t.asset, why: t.asset + ' is a ' + a.kind + ' of the ' + name + ' look, not a ' + t.kind + ', so it is left out.'});
+  else draw.push({...t, index, use: a});
+ }
+ return {draw, leftOut};
+}
+
+const px = n => Math.round(Number(n) || 0);
+/** The markup of a slide's placed things in a look, stacked by z then by order; empty when there are none to draw. */
+export function placedMarkup(list, look) {
+ const roles = look || {...TEAJIA_SOURCE, fonts: SOURCE_FONTS}, fonts = roles.fonts?.headline?.family ? roles.fonts : SOURCE_FONTS;
+ const {draw} = resolvePlaced(list, look);
+ draw.sort((a, b) => (a.z ?? 0) - (b.z ?? 0) || a.index - b.index);
+ return draw.map(t => {
+  const tone = TONES.includes(t.tone) ? t.tone : 'dark', set = roles[tone] || TEAJIA_SOURCE[tone], h = px(placedHeight(t));
+  const box = 'position:absolute;left:' + px(t.x) + 'px;top:' + px(t.y) + 'px;width:' + px(t.width) + 'px;height:' + h + 'px;z-index:' + (px(t.z) + 1);
+  const open = style => '<div data-placed="' + t.kind + '" data-placed-index="' + t.index + '" style="' + box + ';' + style + '">';
+  if (t.kind === 'rule') return open('background:' + set[COLOR_ROLES.includes(t.color) ? t.color : 'line']) + '</div>';
+  if (t.kind === 'label') return open('font-family:' + stackOf(fonts.label) + ';font-size:' + px(t.size || 30) + 'px;line-height:1.4;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;color:' + set[COLOR_ROLES.includes(t.color) ? t.color : 'supporting']) + esc(t.text) + '</div>';
+  if (t.kind === 'picture') { const src = localPath(t.src); return open('overflow:hidden') + (src ? '<img src="' + esc(src) + '" alt="" draggable="false" style="width:100%;height:100%;object-fit:cover;display:block">' : '') + '</div>'; }
+  const a = t.use, src = localPath(a.src);
+  if (src) return open('overflow:hidden') + '<img src="' + esc(src) + '" alt="' + esc(a.name) + '" draggable="false" style="width:100%;height:100%;object-fit:contain;display:block' + (t.kind === 'logo' && tone === 'light' && !a.light ? ';filter:brightness(0)' : '') + '"></div>';
+  // A mark drawn from characters, as the pillar seal is: the look's accent box, its ground for the characters.
+  if (t.kind === 'mark' && a.text) return open('background:' + set.accent + ';color:' + set.ground + ';font-family:' + SEAL_STACK + ';font-weight:800;font-size:' + Math.round(Math.min(px(t.width), h) * 0.68) + 'px;line-height:1;display:flex;align-items:center;justify-content:center') + esc(a.text) + '</div>';
+  // A logo with no file: the brand's name in its headline type, as the layouts draw it.
+  if (t.kind === 'logo') return open('display:flex;align-items:center;white-space:nowrap;overflow:hidden;font-family:' + stackOf(fonts.headline) + ';font-size:' + Math.round(h * 0.62) + 'px;letter-spacing:0.04em;color:' + set.headline) + esc(roles.logo?.wordmark || look?.name || '') + '</div>';
+  return '';
+ }).join('');
+}
+
+/** A drawn card with its placed things laid on top, inside its own frame. With none, the card comes back unchanged. */
+export function withPlaced(card, list, look) {
+ if (!Array.isArray(list) || !list.length || !card.endsWith('</div>')) return card;
+ const marks = placedMarkup(list, look);
+ return marks ? card.slice(0, -6) + marks + '</div>' : card;
+}
