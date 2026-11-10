@@ -32,6 +32,16 @@ article. D now follows two rules:
 - **Research is quiet by default.** On the subject page it is three things he now understands, a place to ask, and one line about the facts Claude checked. A topic opens as one calm page to read. Anything that wants a decision waits under "Decide", one at a time, and every one can be left. Sources and how Claude looked are a third view. The claim bands, Scout, positions and the receipt from the first pass are no longer on screen.
 - **Write shows two notes beside the page, not four,** and the read-through ends with one button.
 
+**Third pass on D.** Adrian liked the Home and asked for more control over it, and said Research was still too large on
+the page and not organised.
+
+- **Slim type.** Six sizes only across D (12, 13, 14, 15, 18, 22), one interface face, Lora only for spoken words. Write keeps its accepted page geometry.
+- **Home: drag, tags, real folders.** Desk cards and rows reorder by dragging. Dragging a row onto a folder moves the subject, with Undo. Subjects carry tags, and Everything can be grouped by folder, tag, station or recent. Each folder shows its path, because folders on screen are the real folders on disk.
+- **Research organises itself.** Groups down the side (a group is a real folder too). "Made for you this week" lists topics Claude opened from his work, each saying where it came from: a conversation, a fact check, things he saved, his note. He can let one go or accept a suggested group; nothing is required. "New topic" lets him start one and add sources himself.
+- **A research group is a notebook tied to the work.** Sources on the left (tick the ones it answers from, add anything), ask in the middle with cited answers and a plain statement of what the sources cannot answer, and on the right the topics inside, what was made from it, the subjects that use it, and how the group works (how often it looks, voices it trusts, viewpoints), which he can change.
+
+Open-source work his own i64os survey already looked at for this pattern: Open Notebook and SurfSense (self-hosted notebook tools), STORM and GPT Researcher (viewpoints and wide reading, already mirrored by the i64os Hunt). Nothing has been evaluated or chosen in this round.
+
 Corrections to A, B and C that D carries: the mode is Write (not Edit); no accept button on each drafted paragraph; no
 "Video, not started" row.
 
