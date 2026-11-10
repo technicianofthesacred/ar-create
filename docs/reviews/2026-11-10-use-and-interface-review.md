@@ -14,7 +14,9 @@ Contents: [how it was checked](#how-it-was-checked) · [the three root problems]
 - **Agent entrance**: the same demo read through `agents/cli/ar-create.mjs` (`status`, `project list`, `project read`, `library search`, `history`).
 - The full test suite passed on the starting commit before anything was added (3,650 passed, 0 failed, 14 skipped).
 
-**Not checked.** The demo has no AI connected, no recordings and no working photo roots. So transcripts, transcript correction, research answers, AI proposals and their review, photo placement, downloads and exports, sending, and the final "Yes, release this" were not exercised. The installed app and real subjects were not opened. Rename, archive, delete and Undo were not tried. Items marked **demo only?** may come from the demo fixture and must be confirmed on a real subject before any fix.
+**Second round, same day.** Mistakes and Undo (archive, rename, remove, Undo typing, cutting a slide, detaching a source), a count of the names the screens use, the largest text size on every screen at desktop and phone width, the Write screen by keyboard only, and a first start on an empty data folder.
+
+**Not checked.** The demo has no AI connected, no recordings and no working photo roots. So transcripts, transcript correction, research answers, AI proposals and their review, photo placement, downloads and exports, sending, and the final "Yes, release this" were not exercised. The installed app and real subjects were not opened. Two devices on one piece, a real screen reader and 200% browser zoom were not tried. Items marked **demo only?** may come from the demo fixture and must be confirmed on a real subject before any fix.
 
 **To repeat it.** Start the demo, then:
 
@@ -156,6 +158,47 @@ Each item: what happens, how to see it, where the code is, what is suggested, an
 - Where: likely the demo's packaged browser copy (`synthetic-study-data.js`).
 - Suggest: confirm it is the demo's seeded copy. If a real new subject can show another subject's recovery, that is a serious mix-up.
 
+### Mistakes and Undo (second round)
+
+**U19. An archived subject cannot be found again on a computer. (A)**
+- Seen: Home, the subject's "..." menu, Organize, tick Archived, "Save organization". The subject leaves the Home list. The finder answers "No project or tool matches". Home has no way to show archived subjects (the Archived filter is in the page but hidden). At phone width, Subjects then Archive does list it, but pressing Organize there jumps to Home with no form in view, so it cannot be restored from the phone either. "Pick up here" on Home still shows the archived subject as current work.
+- Where: `project-library.js` (the Organize form and the hidden filters), `combined-subjects.js` (the phone Subjects screen and its Archive folder), `home-tabs.js` (the finder).
+- Suggest: a Subjects screen on desktop as well as phone, with Archive in it; the finder searches archived subjects and labels them; "Restore" sits on the archived row; archiving offers Undo on the spot.
+- Done when: archive a subject, find it again in two presses on desktop and phone, and restore it in one.
+
+**U20. Pin, folder and archive are saved in one browser only. (A, and a blocker for Part 4)**
+- Seen: after "Save organization" the message reads "Organization saved in this browser." A second browser, the phone, an agent and a server copy would all see the subject unpinned, unfiled and not archived.
+- Where: `project-library.js`.
+- Suggest: save organization with the subject's own record, like everything else, with the usual revision check and history line.
+- Done when: archive on one device and see it archived on another; the history shows who did it.
+
+**U21. A subject cannot be renamed or removed. (B)**
+- Seen: the only choices are Pin and Organize (folder label, Archived). There is no rename and no delete or bin. The same was true of a Carousel: Piece tools and Outputs offer no way to remove or put away a piece made by mistake.
+- Suggest: rename on the subject and on each piece. A bin (put away, bring back) instead of delete, to keep the rule that nothing of Adrian's is destroyed.
+- Done when: a mistyped subject name can be corrected; an accidental Carousel can be put away and brought back.
+
+**U22. "Undo typing" cleared the whole page once. (A if it repeats; needs a careful retest)**
+- Seen: in a new subject, two paragraphs were typed and saved by themselves. Piece tools, "Undo typing" emptied the page. A save was then refused (the server answered 409), "Recover writing (1)" appeared, and after a reload both paragraphs were back with "Recover writing (2)". A second attempt did not reproduce cleanly. The typing was automated and fast, which may matter.
+- Where: `draft-flow.js` (typing Undo, save, recovery).
+- Suggest: retest by hand. "Undo typing" should take back one step and say what it took back. A refused save should say so in plain words at the moment it happens, not only through the Recover button.
+- Done when: type three sentences with pauses, press Undo typing once, and exactly the last step is gone, with no recovery notice.
+
+**U23. Cutting a slide is immediate and offers no Undo where it happens. (B)**
+- Seen: Arrange, "Cut slide 3": the slide goes, the page says "Saved". "Undo arrangement" exists, but inside Piece tools.
+- Suggest: "Slide cut. Undo" beside the slides for a few seconds, as well as the tool.
+
+**U24. An attached source cannot be detached. (B)**
+- Seen: after attaching a note to a subject, the item shows "Added" and "Open in Source". No "Remove from this subject" was found on the item, in Source or in Research.
+- Suggest: remove on the same row that shows it attached, with Undo.
+
+### A first, empty start
+
+**U25. An empty app opens on an older-looking Write screen with no first step. (B, matters for any new device or server)**
+- Seen: started with an empty data folder, the app opens on Write of an "Untitled project" in a folder called "Ideas". That screen has a different toolbar from the rest of the app (Check, History, Focus, "0 words", Edit and Preview, More), a second Edit and Read switch in the top bar, and a panel "Alongside the words" offering "Start a sample discussion. Sample interaction only. No model or harness runs." Home lists the one "Untitled project". Requests for the catalogue and current work answer 503.
+- Where: `study.js`, `draft-surface.js` (the browser-only notes project and its toolbar).
+- Suggest: an empty app opens on Home with one sentence about what AR Create is for and one button, "New subject". The browser-only "Untitled project" either becomes a proper subject or is not shown.
+- Done when: a first start on a clean folder shows Home, one clear first step, and no sample-only panel.
+
 ## Part 2: the agent entrance
 
 The product promise is that the app and agents are equal entrances to the same records. Three gaps were seen through the CLI on the demo.
@@ -205,6 +248,10 @@ Second in order. Each of these was seen in the survey screenshots.
 - Dark theme: contrast is fine apart from the "Piece direction" line (4.15:1).
 - Light theme: sidebar group labels (9px, 4.24:1), the "Piece direction" line (3.82:1) and small counts (3.89:1) are under 4.5:1.
 - Keyboard focus is visible (2px sand outline). No screen scrolls sideways at any of the three widths. Fonts are consistent apart from a few system-font lines (Media hint, Check panel, Share when opened).
+- **Names (second round).** Counting words on all thirteen screens plus Piece tools and Understanding: "project" about 260 times (inflated by the finder's twelve "current project" rows on every screen), "output" 62, "source" 49, "direction" 49, "material" 35, "subject" 25, "draft" 21, "understanding" 20, "review" 18, "thought" 17, "piece" 13, "angle" 10, "edition" 7, "manuscript" 3, "working manuscript" 2. The thing Adrian makes is called output five times as often as piece, and the thing he works on is called project far more often than subject.
+- **Dates** appear in two forms: "10 Nov 2026" in Library and "11/10/2026, 1:52:00 PM" on Home's recent activity.
+- **Largest text size (138%).** No screen scrolls sideways or overlaps at desktop or phone width. Text grows unevenly (see V6): on the phone Home, headings and some lines grow while buttons and other lines do not. On the phone, the second Carousel slide in Arrange runs off the right edge.
+- **Keyboard only.** Tab order on Write is sensible: top bar, sidebar, page tools, content. Every stop shows the focus outline. It takes 20 presses to pass the top bar and sidebar because there is no "skip to the page" link. One stop ("Audience preview") lands on a control hidden behind something else. Cmd+K and Ctrl+K open the finder and Esc closes it.
 
 ## Part 4: working without the Mac
 
@@ -296,6 +343,8 @@ Keep these as they are when fixing the rest.
 
 ## Suggested order of work
 
+Each stream below has its own plan in [docs/plans](../plans/), dated 2026-11-10: keep the subject, pieces and Write, one source list, plain words, screens, without the Mac, and a demo that can walk the whole chain.
+
 1. **R1, the subject stays selected** (U1, U2, U17). Small, and everything after is easier to test.
 2. **R3, pieces and Write** (U3, U4). Needs Adrian's answer on what Write means inside a Carousel.
 3. **R2, one source list** (U6, U7, U8, U9, U10, A2). The largest piece. Start by writing down which of the five lists is the truth and how the others should read from it. It touches runtime services, so it needs its own plan and tests.
@@ -327,14 +376,14 @@ In rough order of how much each could change the plan.
 2. **The "demo only?" items** (U11, U12, U18, A1): are they real?
 3. **Coming back after a week.** With twenty or more real subjects, does Home say where each stands and what the next step is? Can he find a subject he half remembers?
 4. **Working alongside an agent.** An agent asks a question ("Needs you"), he answers, the agent carries on. An agent proposes paragraphs while he is typing. What does he see while it works, when it fails, when it is done?
-5. **Mistakes and Undo.** Attached the wrong source, made a Carousel by accident, renamed or archived a subject, deleted a slide. Can each be undone, and does the screen say so?
+5. **Mistakes and Undo.** Done in the second round on the demo: see U19 to U24. Still to do by hand: U22.
 6. **The phone in the hand.** A real phone, one hand: capture a thought, a voice note or a photo and see it arrive under the right subject.
-7. **Words for things.** List every noun the screens use (see V14) and choose one per thing. Cheap, and it removes confusion on every screen.
+7. **Words for things.** Counted in the second round (see Measured). What remains is Adrian choosing one word per thing; the plain-words plan carries the proposed list.
 8. **Finding.** Search is literal today. Try ten real "where was that..." questions and see how many it answers.
 9. **Size and speed.** Library and Media with thousands of items.
 10. **Export matches preview.** The downloaded Article and Carousel against what Audience showed.
-11. **A first empty start.** What a brand new home with no subjects shows.
-12. **Without a mouse or with enlarged text.** Keyboard only, a screen reader, 200% zoom, and A+ on every screen.
+11. **A first empty start.** Done: see U25.
+12. **Without a mouse or with enlarged text.** Keyboard order and A+ on every screen are done (see Measured). A real screen reader and 200% browser zoom remain.
 
 ## Function ideas
 
