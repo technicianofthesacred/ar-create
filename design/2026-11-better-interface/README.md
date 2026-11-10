@@ -24,6 +24,14 @@ the Research home, Write, and Write in focus. What it adds to A, B and C:
 - **Four origins kept distinct** with a word and a mark, never colour alone: their words, his reflection, outside evidence, Claude's proposal.
 - **Formats that do not exist yet are choices under New piece**, not empty rows.
 
+**Second pass on D, after Adrian looked.** He said two things were wrong: there was no clean way to organise and order
+a hundred or two hundred subjects with five on the go, and Research was too heavy with text and decisions for a simple
+article. D now follows two rules:
+
+- **Home holds many.** A short "Needs you", then "On your desk" (the five in hand, as cards he can reorder), then "Everything" (all 143 in compact rows, grouped by folder, by station or by recent, filtered by station, with a pin that puts a subject on the desk). The five desk subjects also sit in the top bar on every screen, so switching between them is one press.
+- **Research is quiet by default.** On the subject page it is three things he now understands, a place to ask, and one line about the facts Claude checked. A topic opens as one calm page to read. Anything that wants a decision waits under "Decide", one at a time, and every one can be left. Sources and how Claude looked are a third view. The claim bands, Scout, positions and the receipt from the first pass are no longer on screen.
+- **Write shows two notes beside the page, not four,** and the read-through ends with one button.
+
 Corrections to A, B and C that D carries: the mode is Write (not Edit); no accept button on each drafted paragraph; no
 "Video, not started" row.
 

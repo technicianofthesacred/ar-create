@@ -119,6 +119,7 @@ const acts={
  'new-form':v=>{S.newForm=v!=='close';paint(true);const f=document.getElementById('new-subject-name');if(f&&S.newForm)f.focus();},
  create:()=>{const f=document.getElementById('new-subject-name');S.newName=(f&&f.value.trim())||S.newName;S.newForm=false;K.subjects[4].name=S.newName;acts.go('new-subject');},
  ui:(k,v)=>{S.ui[k]=S.ui[k]===v?null:v;paint(true);},
+ set:(k,v)=>{S.ui[k]=v;paint(true);},
  src:()=>{const cur=S.ui.src||'auto',open=cur==='open'||(cur==='auto'&&innerWidth>850);S.ui.src=open?'closed':'open';paint(true);},
  noop:()=>{}};
 K.on=(name,fn)=>{acts[name]=fn;};
