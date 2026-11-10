@@ -16,12 +16,21 @@ These steps touch only invented data or your own branch, so they need no approva
 - Cut a fresh worktree from `origin/main` on a `claude/<name>` branch and run `npm run setup`.
 - Run `npm run demo` on port 8854 with its invented data, open it in a browser, click through it, resize it, switch themes.
 - Take screenshots of the demo and share them with Adrian or attach them to your report.
-- Change interface source: pages, styles, layout, wording, components and their tests.
+- Change code in your branch: interface, runtime, scripts, build and tests, as the approved plan needs (see Plan and visual approval below).
 - Run `npm test`, focused tests, `npm run build` and `node scripts/gen-status.mjs`.
 - Commit to your `claude/<name>` branch and push it with `git push -u origin claude/<name>`.
 - Read the live app through the installed CLI's read commands (`status`, `project list`, `project read`, `history`, `library search`).
 
-What still needs Adrian: the 403 decisions above, anything inside the home or the vault, a release to the home, opening a pull request unless he asked for one, and working in his live tabs at 8841.
+What still needs Adrian: the plan and visual approvals below, the 403 decisions above, anything inside the home or the vault, a release to the home, opening a pull request unless he asked for one, and working in his live tabs at 8841.
+
+## Plan and visual approval
+
+You own the code in your branch and may change interface, experience and infrastructure as the work needs. Adrian keeps two checkpoints, because he judges the app by how it looks and works, not by its code:
+
+1. **The plan, before you build.** After reviewing (reading code, clicking through the demo, taking screenshots), send Adrian a short plan: what you will change, why, which screens it affects, and which changes will look different. Wait for his yes before building. If the work later needs something outside that plan, send the change to the plan and wait again.
+2. **Anything he would see, before it counts as done.** A visual change is anything that alters how a screen looks or behaves for him: layout, spacing, colour, type, wording, controls added, moved or removed, or the order of steps. Show it as before and after screenshots of the demo at the widths and themes it affects, and wait for his approval. Gather several visual changes into one review rather than asking one at a time.
+
+Changes with no visible effect (refactors, tests, speed, build and infrastructure that leave every screen the same) need no extra approval once the plan is approved. If one turns out to change what he sees, treat it as a visual change. While you wait for an answer, keep working on parts that are already approved.
 
 # Finishing work
 
