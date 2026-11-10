@@ -248,6 +248,32 @@ The agreed direction in DEVELOPMENT is "private text and revision metadata avail
 5. **Photos and footage**: previews everywhere, originals where they are, and an honest "original is on the Mac" state.
 6. **Backups and restore** proved before the home moves.
 
+### pCloud or iCloud as the place for the work (asked 10 November)
+
+Adrian asked whether the work could live in iCloud or pCloud, since pCloud already syncs his phone and computer, and whether that rules out the VPS.
+
+**What is already true.** pCloud is in use today. The Files folder syncs both ways with pCloud, and the magazine intake reads a Drop folder that the pCloud phone app uploads into (`editorial/stages/mag/intake.md`). iCloud is used for shared albums and a second drop folder. The vault reaches the VPS through Syncthing, which does not include the phone (i64os `docs/SYNC.md`).
+
+**pCloud does not rule out the VPS.** pCloud's desktop app needs a screen, so it will not run on a server. But pCloud has its own web interface for programs and is a supported storage in `rclone`, a standard server tool that can list, copy and sync a pCloud folder. The one wrinkle is that the first sign-in has to be done on a machine with a browser and copied to the server. Not tested in this review (no account was available). iCloud is the weaker choice for a server: it has no official server access, and the unofficial route through the same tool needs a setting on the iPhone and a fresh sign-in about every 30 days.
+
+**The risk: a sync service must not hold a running app's working folder.** Sync tools know nothing about the app's one-writer rule. They replace a file with whichever copy they believe is newer and make "conflicted copy" files when two devices change the same thing. This has already happened once: on 2 October 2026 pCloud put a June copy over the i64os store on the laptop, and captures from June to mid September were missing until a backup was restored (i64os `todo/archive.md`). AR Create's rule is "never last-write-wins; keep both versions", which a sync tool cannot honour inside the app's own records.
+
+**Suggested shape.** Use pCloud as the carrier for files a person would recognise, and keep one running app as the only writer of its working records.
+
+- In: recordings, photos and notes dropped from the phone or computer into pCloud folders. The app collects them (it already does this for the magazine Drop folder).
+- Out: finished articles and carousels, readable copies of each piece, and backups, written by the app into pCloud so they appear on the phone and computer.
+- Not in pCloud: the app's live data folder (journal, revisions, leases, proposals).
+- With the app running on the always-on server and reading pCloud through `rclone`, the loop phone, pCloud, server, pCloud, phone works with the Mac switched off. Editing from the phone is then done in the app's own phone screens on the server, behind a sign-in, not by editing files in pCloud.
+
+**Also worth knowing.** With Adrian's permission, a read-only pCloud key would let a cloud agent see real material without the Mac. That is the access this review lacked.
+
+**Scouting for this.**
+- On the VPS: sign `rclone` in to pCloud, list the Drop folder, and time how long a phone upload takes to arrive.
+- Sort AR Create's data into "files a person would recognise" and "working records", to draw the line above exactly.
+- Check whether any needed folder is a pCloud Crypto (locked) folder; server tools may not be able to read those.
+- Check pCloud's file history length on Adrian's plan; it is the safety net if a sync goes wrong again.
+- Check that pCloud is reachable from every place Adrian works, including China.
+
 ### Scouting for this part
 
 - **Inventory what the installed app actually reads from the Mac**: every folder and tool named in its private configuration, and how big each is (text, recordings, photos). Names and sizes only, no content. This sizes the move.
