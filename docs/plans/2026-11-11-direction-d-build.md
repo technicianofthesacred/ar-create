@@ -82,4 +82,4 @@ A second track, in its own folder, with no change to any screen:
 | 4 Placed things and templates | | | |
 | 5 Build by codes | | | |
 | 6 The studio shows it | | | |
-| 7 Where a subject lives | | | |
+| 7 Where a subject lives | Opus | Sonnet | Done on branch `claude/direction-d-subjects`. Folder, tags, pin, archived and order are saved with the subject; a browser's old filing is carried over once per field; a newer saved value always wins over an offline edit. Four sentences on screen changed and wait for Adrian's eyes |
