@@ -340,7 +340,9 @@ test('instagram.look sets the look a plan draws in, as a proposal with the layou
  const chosen = await as(ADRIAN, () => s.choose({...base(coded), storyId: 'S1'}));
  const ready = await as(ADRIAN, () => s.ready({...base(chosen), format: 'carousel'}));
  await assert.rejects(as(AGENT, () => s.setLook({...base(ready), look: 'art'})), e => e.status === 409 && /Ask him/.test(e.message));
- const his = await as(ADRIAN, () => s.setLook({...base(ready), look: 'art'}));
+ // His yes pinned the plan's account; moving the look says what to do with it, never quietly.
+ await assert.rejects(as(ADRIAN, () => s.setLook({...base(ready), look: 'art'})), e => e.status === 422 && /Change the account first/.test(e.message));
+ const his = await as(ADRIAN, () => s.setLook({...base(ready), look: 'art', account: 'auto'}));
  assert.deepEqual(his.ready, {}, 'a changed look needs his yes again');
  // Back to the door's look.
  const door = await as(AGENT, () => s.setLook({...base(his), look: null}));

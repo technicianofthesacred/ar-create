@@ -18,6 +18,7 @@ import {StateError} from '../store.mjs';
 import {currentActor,isHuman,requireWriteActor,chatDecider} from './actor.mjs';
 import {FORMATS,CAPTION,FACTS,catalog,templateById,codeToLayoutId,renderFrame,frameDocument,sheetDocument,lookRefusal} from './instagram-templates.mjs';
 import {sharedLooks,DOOR_LOOKS,DEFAULT_LOOK} from './looks.mjs';
+import {sharedAccounts,checkAccountId} from './accounts.mjs';
 import {hearCodes} from '../src/donors/mag/carousel/ig-codes.mjs';
 import {deriveLines,deriveMoments,wholeness,detectFlags,correctedText,quotedSegments,coverage,loadTeaTerms,clock} from './instagram-transcript.mjs';
 import {readLibraryFile} from './word-prompt.mjs';
@@ -45,20 +46,20 @@ const srtTime=sec=>{const ms=Math.round(sec*1000),h=Math.floor(ms/3600000),m=Mat
 
 const empty=()=>({schema:SCHEMA,id:'',subject:'',title:'',door:'',revision:0,material:{transcripts:[],photos:[]},lines:[],moments:[],flags:[],confirmations:{},marks:{},meaningLog:[],stories:[],gaps:[],heard:null,chosen:null,layouts:{},ready:{},operations:[]});
 // `look` is undefined on every plan saved before looks existed, and JSON leaves it out, so their hashes are unchanged.
-const content=p=>JSON.stringify({subject:p.subject,title:p.title,door:p.door,look:p.look,material:p.material,lines:p.lines,moments:p.moments,flags:p.flags,confirmations:p.confirmations,marks:p.marks,meaningLog:p.meaningLog,stories:p.stories,gaps:p.gaps,heard:p.heard,chosen:p.chosen,layouts:p.layouts,ready:p.ready});
+const content=p=>JSON.stringify({subject:p.subject,title:p.title,door:p.door,look:p.look,account:p.account,material:p.material,lines:p.lines,moments:p.moments,flags:p.flags,confirmations:p.confirmations,marks:p.marks,meaningLog:p.meaningLog,stories:p.stories,gaps:p.gaps,heard:p.heard,chosen:p.chosen,layouts:p.layouts,ready:p.ready});
 const withHash=p=>({...p,hash:digest(content(p))});
 // Lines a piece leans on: on a frame, quoted in a caption, or in a story's spine.
 const usedLines=(p,format)=>{const out=new Set();for(const [f,l] of Object.entries(p.layouts||{})){if(format&&f!==format)continue;for(const fr of l.frames)for(const w of fr.words)out.add(w.lineId);for(const part of l.caption?.parts||[])if(part.lineId)out.add(part.lineId);}if(!format)for(const s of p.stories||[])for(const id of s.spine)out.add(id);return out;};
 const openFlags=(p,lineIds)=>(p.flags||[]).filter(f=>lineIds.has(f.lineId)&&!p.confirmations?.[f.id]);
 const layoutHash=l=>digest(JSON.stringify({storyId:l.storyId,format:l.format,frames:l.frames,caption:l.caption}));
 
-export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null,looks=null}={}){
+export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null,looks=null,accounts=null}={}){
  // The words to flag come from the shared word library (confirmed words and the mishearings Adrian taught it); with
  // nothing confirmed there yet, the Teajia tea-terms file is the fallback, as before.
  const libraryTerms=()=>{const lib=readLibraryFile(path.join(dataDir,'word-library','library.json')),words=(lib?.entries||[]).filter(e=>e.status==='confirmed');return words.length?libraryAsTerms(words):null;};
  const terms=()=>teaTerms??libraryTerms()??loadTeaTerms();
  if(!dataDir)throw Error('The Instagram studio needs the data folder.');
- const dir=path.join(dataDir,'instagram-plans'),queues=new Map(),lookStore=()=>looks||sharedLooks({dataDir});
+ const dir=path.join(dataDir,'instagram-plans'),queues=new Map(),lookStore=()=>looks||sharedLooks({dataDir}),accountStore=()=>accounts||sharedAccounts({dataDir});
  /**
   * The look a plan draws in: its own `look` when it names one, else its door's (teajia, art, mandala-codes, personal),
   * else Teajia's, which draws every layout exactly as it was drawn before looks existed.
@@ -66,6 +67,14 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  const lookOf=p=>p.look?{id:p.look,from:'look'}:DOOR_LOOKS[p.door]?{id:DOOR_LOOKS[p.door],from:'door'}:{id:DEFAULT_LOOK,from:'default'};
  // A layout the plan's own look cannot draw is refused; a look that only comes from the door keeps drawing such a slide as before.
  const refusedFor=(p,templateId)=>{const l=lookOf(p);if(l.from!=='look')return null;return lookRefusal(templateId,lookStore().roles(l.id));};
+ /**
+  * The account a plan posts to: its own `account` when it names one, else the first account that lists the look the plan
+  * draws in (so every plan saved before accounts existed resolves), else none. `postsLook` says whether the account still
+  * lists the plan's look.
+  */
+ const accountOf=p=>{const a=accountStore(),lookId=lookOf(p).id;
+  if(p.account){const mine=a.load(p.account);return mine?{...a.brief(mine),from:'plan',postsLook:mine.looks.includes(lookId)}:{id:p.account,name:null,service:null,handle:'',link:'',from:'plan',postsLook:false,missing:true};}
+  const first=a.defaultFor(lookId);return first?{...a.brief(first),from:'look',postsLook:true}:null;};
  const file=id=>path.join(dir,id+'.json');
  const serial=(id,fn)=>{const run=(queues.get(id)||Promise.resolve()).then(fn,fn);queues.set(id,run.catch(()=>{}));return run;};
  const load=id=>{if(!UUID.test(id||''))fail('Name the plan by its id.');try{const p=JSON.parse(fs.readFileSync(file(id),'utf8'));if(p.schema!==SCHEMA||p.id!==id)fail('This plan file is not readable.',409);return p;}catch(error){if(error.code==='ENOENT')fail('No Instagram plan has that id.',404);throw error;}};
@@ -94,7 +103,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   consentDesk.assertNotHeld(scopes,what);
  };
  const view=p=>{const {operations,...rest}=withHash({...empty(),...p});const used=usedLines(rest);
-  return {...rest,drawnIn:lookOf(rest),publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
+  return {...rest,drawnIn:lookOf(rest),account:accountOf(rest),publishHold:holdOf(rest),coverage:coverage(rest),flagStatus:rest.flags.map(f=>({id:f.id,status:rest.confirmations[f.id]?.verdict||'open',inUse:used.has(f.lineId)})),asks:readAsks(p.id).asks};};
  const write=p=>{fs.mkdirSync(dir,{recursive:true});const tmp=file(p.id)+'.'+process.pid+'.tmp';fs.writeFileSync(tmp,JSON.stringify(p,null,1));fs.renameSync(tmp,file(p.id));};
  function begin(input,{create=false}={}){
   if(!input||typeof input!=='object'||Array.isArray(input))fail('Send a JSON object.');
@@ -264,7 +273,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
  async function plans({subject}={}){
   let names=[];try{names=fs.readdirSync(dir).filter(n=>/^[a-f0-9-]{36}\.json$/i.test(n));}catch{}
   const out=[];for(const n of names){try{const p=JSON.parse(fs.readFileSync(path.join(dir,n),'utf8'));if(p.schema!==SCHEMA)continue;if(subject&&p.subject!==subject)continue;
-   out.push({id:p.id,subject:p.subject,title:p.title,door:p.door,look:p.look||null,drawnIn:lookOf(p),revision:p.revision,updatedAt:p.updatedAt||null,stories:p.stories.length,chosen:p.chosen?.storyId||(p.chosen?.named?'named':null),layouts:Object.keys(p.layouts),ready:Object.keys(p.ready||{})});}catch{}}
+   out.push({id:p.id,subject:p.subject,title:p.title,door:p.door,look:p.look||null,drawnIn:lookOf(p),account:accountOf(p),revision:p.revision,updatedAt:p.updatedAt||null,stories:p.stories.length,chosen:p.chosen?.storyId||(p.chosen?.named?'named':null),layouts:Object.keys(p.layouts),ready:Object.keys(p.ready||{})});}catch{}}
   return {plans:out.sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))};
  }
  async function read({id}){return view(load(id));}
@@ -398,8 +407,39 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    if(said.length&&!human())fail('Adrian said the '+said.join(' and ')+' '+(said.length>1?'are':'is')+' ready. Ask him before changing the look.',409);
    if(look!==null){const roles=lookStore().roles(look);
     for(const [format,l] of Object.entries(before.layouts||{}))for(const [i,f] of l.frames.entries()){const why=lookRefusal(f.templateId,roles);if(why)fail('The '+format+'\'s slide '+(i+1)+': '+why,422);}}
-   const next={...before,ready:{}};if(look===null)delete next.look;else next.look=look;
-   return commit(before,next,input,look===null?'look: the door\'s again':'look '+look);
+   // The plan's own account must still list the look it will draw in; it is never switched quietly.
+   const newLook=look===null?(DOOR_LOOKS[before.door]||DEFAULT_LOOK):look,next={...before,ready:{}};
+   let accountNote='';
+   if(Object.hasOwn(input,'account')){
+    const a=input.account;
+    if(a===null||a==='auto'){delete next.account;accountNote=', account: the first that lists the look';}
+    else{checkAccountId(a);const acct=accountStore().load(a);if(!acct)fail('No account has the id '+a+'.',404);if(!acct.looks.includes(newLook))fail(acct.name+' does not post the '+newLook+' look.',422);next.account=a;accountNote=', account '+a;}
+   }else if(before.account){
+    const acct=accountStore().load(before.account);
+    if(!acct||!acct.looks.includes(newLook))fail('This plan posts to '+(acct?acct.name:before.account)+', which does not post the '+newLook+' look. Change the account first, or clear it (send account: null, or "auto", with the look to use the new look\'s usual account).',422);
+   }
+   if(look===null)delete next.look;else next.look=look;
+   return commit(before,next,input,(look===null?'look: the door\'s again':'look '+look)+accountNote);
+  });
+ }
+ /**
+  * Set the account a plan posts to (account: an id such as mandala-codes), or null to use the first account that lists
+  * its look. The account must list the look the plan draws in. A proposal like a layout, with the same revision check,
+  * actor stamp and journal line; where a post goes is his to hear again, so an assistant cannot change a plan he has said
+  * yes to, and a change clears his yes. Nothing is posted: an account is only a label and a destination.
+  */
+ async function setAccount(input){
+  requireWriteActor();begin(input);
+  return serial(input.id,async()=>{
+   const before=load(input.id);if(replay(before,input))return view(before);check(before,input);
+   if(!Object.hasOwn(input,'account'))fail('Name the account (account: an id such as mandala-codes), or send account: null to use the first account that lists the look.');
+   const id=input.account;if(id!==null)checkAccountId(id);
+   const said=Object.keys(before.ready||{});
+   if(said.length&&!human())fail('Adrian said the '+said.join(' and ')+' '+(said.length>1?'are':'is')+' ready. Ask him before changing the account.',409);
+   if(id!==null){const acct=accountStore().load(id);if(!acct)fail('No account has the id '+id+'.',404);
+    const lookId=lookOf(before).id;if(!acct.looks.includes(lookId))fail(acct.name+' does not post the '+lookId+' look this plan is drawn in. Choose an account that does ('+(accountStore().all().filter(a=>a.looks.includes(lookId)).map(a=>a.id).join(', ')||'none yet')+'), or add the look to '+acct.name+' first.',422);}
+   const next={...before,ready:{}};if(id===null)delete next.account;else next.account=id;
+   return commit(before,next,input,id===null?'account: the first that lists the look':'account '+id);
   });
  }
  /** Adrian picks a proposed story, or names his own dish in his own words, and may say who it is for. */
@@ -455,7 +495,9 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
    if(unsure.length)fail(unsure.length+' word'+(unsure.length>1?'s':'')+' in this '+format+' still need your confirmation ('+unsure.slice(0,3).map(x=>'“'+x.heard+'”').join(', ')+'). Confirm them first; nothing is corrected without you.',409);
    const caption=input.caption===undefined?(l.captionFinal??l.caption.text):readCaption(input.caption);
    const layouts={...before.layouts,[format]:{...l,captionFinal:caption}};
-   return commit(before,{...before,layouts,ready:{...(before.ready||{}),[format]:{layoutHash:l.hash,caption,...decider,at:new Date().toISOString(),posted:false}}},input,'ready '+format+(decider.carriedBy?' (said in chat)':''));
+   // Pin the resolved account when his yes is written, so an account added later cannot move where a ready post goes.
+   const pinned=before.account?{}:(a=>a?{account:a.id}:{})(accountOf(before));
+   return commit(before,{...before,...pinned,layouts,ready:{...(before.ready||{}),[format]:{layoutHash:l.hash,caption,...decider,at:new Date().toISOString(),posted:false}}},input,'ready '+format+(decider.carriedBy?' (said in chat)':''));
   });
  }
  /* ---------- one way from the VPS feeder to the Mac ---------- */
@@ -524,7 +566,7 @@ export function createInstagramStudio({dataDir,library,teaTerms,consentDesk=null
   let t=0,n=1;const out=[];for(const fr of l.frames){if(!fr.seconds)continue;out.push(n+++'\n'+srtTime(t)+' --> '+srtTime(t+fr.seconds)+'\n'+fr.words.map(w=>w.text).join(' ')+'\n');t+=fr.seconds;}
   return out.join('\n');
  }
- return {templates,plans,read,assertPostable,propose,layout,codes,setLook,lookOf,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
+ return {templates,plans,read,assertPostable,propose,layout,codes,setLook,setAccount,lookOf,accountOf,choose,confirm,meaning,ready,render,sheet,captions,handoffBundle,adopt,asksFile,readAsks,openFlags:p=>openFlags(p,usedLines(p)),defaultFrames:(p,storyId,format)=>defaultFrames(p,p.stories.find(s=>s.id===storyId),format)};
 }
 
 /* ---------- PNG export through the local headless Chrome the carousel export already uses ---------- */
@@ -597,14 +639,16 @@ export async function handleInstagram(request,response,{dataDir,library,consentD
  try{
   const action=url.pathname.slice(PREFIX.length);
   const GET={templates:()=>studio.templates(),plans:()=>studio.plans({subject:q('subject')}),plan:()=>studio.read({id:q('id')})};
-  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),look:i=>studio.setLook(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
+  const POST={plan:i=>studio.propose(i),layout:i=>studio.layout(i),'plan/codes':i=>studio.codes(i),look:i=>studio.setLook(i),account:i=>studio.setAccount(i),choose:i=>studio.choose(i),confirm:i=>studio.confirm(i),meaning:i=>studio.meaning(i),ready:i=>studio.ready(i),handoff:i=>handOn(studio,i)};
   if(request.method==='GET'||request.method==='HEAD'){
    if(GET[action])return send(200,await GET[action]()),true;
    const args={id:q('id'),format:q('format'),frame:q('frame')===undefined?0:Number(q('frame'))};
-   if(action==='render'||action==='sheet'){const html=await (action==='render'?studio.render(args):studio.sheet(args));response.writeHead(200,{...headers,'Content-Type':'text/html; charset=utf-8',"Content-Security-Policy":"default-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'unsafe-inline'"});response.end(html);return true;}
+   // Exports and sheets say which account the piece is for, in headers, so the pictures and pages themselves do not change.
+   const forAccount=async()=>{try{const a=(await studio.read({id:args.id})).account;if(!a)return {};checkAccountId(a.id);const h={'X-AR-Account':a.id};if(typeof a.name==='string'&&a.name)h['X-AR-Account-Name']=encodeURIComponent(a.name);return h;}catch{return {};}};
+   if(action==='render'||action==='sheet'){const html=await (action==='render'?studio.render(args):studio.sheet(args));response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'text/html; charset=utf-8',"Content-Security-Policy":"default-src 'none'; img-src 'self' data:; font-src 'self'; style-src 'unsafe-inline'"});response.end(html);return true;}
    if(action==='captions'||action==='png')await studio.assertPostable({id:q('id')},action==='png'?'Saving this frame for posting':'Saving the on-screen words for posting');
-   if(action==='captions'){const srt=await studio.captions(args);response.writeHead(200,{...headers,'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="reel-captions.srt"'});response.end(srt);return true;}
-   if(action==='png'){const port=request.socket?.localPort;if(!port)fail('PNG export needs the running app.',503);const bytes=await png('http://127.0.0.1:'+port,args,studio);response.writeHead(200,{...headers,'Content-Type':'image/png','Content-Disposition':'inline; filename="'+args.format+'-'+(args.frame+1)+'.png"'});response.end(bytes);return true;}
+   if(action==='captions'){const srt=await studio.captions(args);response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="reel-captions.srt"'});response.end(srt);return true;}
+   if(action==='png'){const port=request.socket?.localPort;if(!port)fail('PNG export needs the running app.',503);const bytes=await png('http://127.0.0.1:'+port,args,studio);response.writeHead(200,{...headers,...await forAccount(),'Content-Type':'image/png','Content-Disposition':'inline; filename="'+args.format+'-'+(args.frame+1)+'.png"'});response.end(bytes);return true;}
    fail('Unknown Instagram action.',404);
   }
   if(request.method!=='POST')fail('Read with GET, change with POST.',405);

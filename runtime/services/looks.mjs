@@ -28,7 +28,7 @@ const typeOf=name=>TYPES[name.split('.').pop().toLowerCase()];
 // The first bytes each image type starts with; a file that says png must be one.
 const looksLike=(name,bytes)=>({'image/png':b=>b.subarray(0,8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])),'image/jpeg':b=>b[0]===0xff&&b[1]===0xd8&&b[2]===0xff,'image/webp':b=>b.subarray(0,4).toString('latin1')==='RIFF'&&b.subarray(8,12).toString('latin1')==='WEBP'})[typeOf(name)](bytes);
 export const assetUrl=(id,file)=>'/api/look/asset?'+new URLSearchParams({id,file});
-const checkId=id=>{if(typeof id!=='string'||!ID.test(id))fail('A look id is lower-case letters, digits and dashes, like art or mandala-codes.');return id;};
+export const checkLookId=id=>{if(typeof id!=='string'||!ID.test(id))fail('A look id is lower-case letters, digits and dashes, like art or mandala-codes.');return id;};
 export const slug=name=>String(name||'').normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'look';
 
 export function createLooks({dataDir,shippedDir=SHIPPED_LOOKS}={}){
@@ -41,7 +41,7 @@ export function createLooks({dataDir,shippedDir=SHIPPED_LOOKS}={}){
  const hashOf=(text,assets)=>digest(JSON.stringify({text,assets:assets.map(a=>[a.name,a.sha256])}));
  /** One look as it stands: the home copy if there is one, else the shipped copy. Null when neither exists. */
  function load(id){
-  checkId(id);
+  checkLookId(id);
   const homeText=readText(path.join(homeDir(id),'DESIGN.md')),shipText=readText(path.join(shipDir(id),'DESIGN.md'));
   if(homeText===null&&shipText===null)return null;
   const home=homeText!==null,text=home?homeText:shipText,m=home?meta(id):null;
@@ -63,11 +63,11 @@ export function createLooks({dataDir,shippedDir=SHIPPED_LOOKS}={}){
    revision:l.revision,hash:l.hash,updatedBy:l.updatedBy,updatedAt:l.updatedAt,drawable:!!roles,problems,wanted,roles,assets:l.assets.map(({name,url,type,bytes,from})=>({name,url,type,bytes,from})),body};
  }
  async function list(){return {looks:ids().map(id=>{const {roles,body,...rest}=describe(load(id));return rest;}),doors:DOOR_LOOKS};}
- async function read({id}={}){const l=load(checkId(id));if(!l)fail('No look has that id.',404);const {body,...rest}=describe(l);return {...rest,text:l.text,operations:l.operations.slice(0,20)};}
+ async function read({id}={}){const l=load(checkLookId(id));if(!l)fail('No look has that id.',404);const {body,...rest}=describe(l);return {...rest,text:l.text,operations:l.operations.slice(0,20)};}
  /** The resolved roles a renderer draws with; refuses a look that cannot be drawn. */
- function roles(id){const l=load(checkId(id));if(!l)fail('No look has the id '+id+'.',404);const d=describe(l);if(!d.roles)fail('The '+d.name+' look cannot be drawn yet: '+d.problems.join(' '),422);return d.roles;}
+ function roles(id){const l=load(checkLookId(id));if(!l)fail('No look has the id '+id+'.',404);const d=describe(l);if(!d.roles)fail('The '+d.name+' look cannot be drawn yet: '+d.problems.join(' '),422);return d.roles;}
  /** A file of a look, for the page and the renderer: {bytes, type}. */
- function asset({id,file}={}){const l=load(checkId(id));if(!l||typeof file!=='string'||!l.files.has(file))fail('That look has no such file.',404);const at=l.files.get(file);regular(at);return {bytes:fs.readFileSync(at),type:typeOf(file)};}
+ function asset({id,file}={}){const l=load(checkLookId(id));if(!l||typeof file!=='string'||!l.files.has(file))fail('That look has no such file.',404);const at=l.files.get(file);regular(at);return {bytes:fs.readFileSync(at),type:typeOf(file)};}
 
  /**
   * Save a look to the home. {id, operationId, text (the whole DESIGN.md), assets?:[{name, base64}], expectedRevision,
@@ -77,7 +77,7 @@ export function createLooks({dataDir,shippedDir=SHIPPED_LOOKS}={}){
  async function save(input){
   requireWriteActor();
   if(!input||typeof input!=='object'||Array.isArray(input))fail('Send a JSON object.');
-  const id=checkId(input.id);
+  const id=checkLookId(input.id);
   if(!UUID.test(input.operationId||''))fail('Every write needs a fresh operationId (a UUID).');
   if(typeof input.text!=='string'||!input.text.trim())fail('Send the whole DESIGN.md as text.');
   if(Buffer.byteLength(input.text)>MAX_DESIGN_BYTES)fail('A DESIGN.md is at most '+MAX_DESIGN_BYTES/1024+' KB.',413);
@@ -132,7 +132,7 @@ export function createLooks({dataDir,shippedDir=SHIPPED_LOOKS}={}){
   }
   if(typeof text!=='string'||!text.trim())fail('The DESIGN.md is empty.');
   const {doc}=readDesign(text);
-  const id=input.id===undefined?slug(doc.name):checkId(input.id);
+  const id=input.id===undefined?slug(doc.name):checkLookId(input.id);
   let guesses=[],kept=false,out=text;
   if(doc.slides&&typeof doc.slides==='object'){kept=true;}
   else{const p=proposeSlides(doc);guesses=p.guesses;out=withSlides(text,p.slides,['Proposed by AR Create\'s look import. Check each guess below, then save.',...guesses.map(g=>'- '+g.role+': '+g.why.replace(/\s+/g,' '))]);}

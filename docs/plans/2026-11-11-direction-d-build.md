@@ -78,7 +78,7 @@ A second track, in its own folder, with no change to any screen:
 |---|---|---|---|
 | 1 Codes | Sonnet | Opus | Done. Every layout has a code; old numbers still work; a code never picks an older layout of the same name |
 | 2 Looks | Opus | Sonnet | Done. Four shipped looks as `DESIGN.md` files (Teajia from the guide; Art and Mandala Codes from their own project files; Personal starts as a copy of Art). One renderer draws any shared layout in any look. Teajia draws byte for byte as before. To show Adrian: an old Art, Mandala Codes or Personal plan that used a shared layout now draws in its own look's colours; small labels in the light Art and Mandala looks have low contrast (about 3 to 1) |
-| 3 Accounts | | | |
+| 3 Accounts | Sonnet | Opus | Done. Accounts are records apart from looks; a plan carries its account; an account that does not carry the plan's look is refused; saying ready writes the account into the plan so it cannot move later |
 | 4 Placed things and templates | | | |
 | 5 Build by codes | Sonnet | Opus | Done. `instagram.plan.codes` and `instagram codes --say`; canvas numbers said by mistake are explained, not guessed |
 | 6 The studio shows it | | | |
