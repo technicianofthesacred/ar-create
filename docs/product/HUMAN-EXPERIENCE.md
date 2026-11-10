@@ -10,7 +10,7 @@ Adrian often opens a chat or screen without the preceding context. Make its purp
 
 Name things by what the person can do or understand. Prefer “Use my existing folders,” “Find my stories and latest edits,” “Edit articles and carousels,” and “Use my magazine workflow.” Explain files as files, edits as edits and decisions as decisions. Keep implementation vocabulary, IDs, hashes, commands and proof-file lists in developer details unless they help resolve the user's actual question.
 
-Use **AR Create** for the whole workspace in user-facing explanations. “Document Study” is a historical prototype/directory name and may remain in code and existing URLs. A story/document opens within the workspace; do not describe the whole application as only a document viewer. Preserve routes and technical identifiers unless their change is separately authorized.
+Use **AR Create** for the whole workspace in user-facing explanations. “Document Study” is a historical prototype/directory name and may remain in code and existing URLs. A story/document opens within the workspace; do not describe the whole application as only a document viewer. Keep routes and technical identifiers as they are; renaming one is its own task, not part of a wording change.
 
 ## Give the person a useful entry point
 
@@ -30,7 +30,7 @@ Before changing a chat to Review, its owner opens the result, confirms that it d
 
 Start Here is an optional dependable entry point. Deep Review and Build can receive direct human decisions. Record adopted intent once in the relevant brief; send Delivery only the actionable change and reference needed for coordination. Keep recommendations visibly separate from chosen direction. The person does not repeat the discussion in Start Here or Delivery.
 
-Delivery manages implementation ownership, dependencies, finishing conditions and verified results, including AI connections and repository/release preparation. Use background helpers for concrete independent engineering jobs rather than exposing routine Internal chats to Adrian. Delivery receives their evidence once and keeps the existing work list current; the designated integrator alone controls shared wiring and live activation. Before parking a prior Internal owner, transfer artifacts, unfinished responsibilities and all continuing topics to Delivery. Keep its history intact; archival requires separate explicit human approval. Organizational transfer grants no additional provider, private-data or publication permissions. Review means a result needs human judgment; reuse its existing working conversation unless a sustained new conversation is justified. Saved work means earlier development is retained; it is not an instruction to the person or evidence that the feature is installed.
+Delivery manages implementation ownership, dependencies, finishing conditions and verified results, including AI connections and repository/release preparation. Use background helpers for concrete independent engineering jobs rather than exposing routine Internal chats to Adrian. Delivery receives their evidence once and keeps the existing work list current; the designated integrator alone controls shared wiring and live activation. Before parking a prior Internal owner, transfer artifacts, unfinished responsibilities and all continuing topics to Delivery. Keep its history intact, and ask Adrian before archiving it. Moving work between chats leaves provider access, private data and publication exactly as they were. Review means a result needs human judgment; reuse its existing working conversation unless a sustained new conversation is justified. Saved work means earlier development is retained; it is not an instruction to the person or evidence that the feature is installed.
 
 Keep task completion, human acceptance, chat unread state and chat archival separate. Preserve all continuing topics and artifacts, then ask Adrian before archiving a chat. Keep one existing delivery record and a compact current-state pointer; avoid repeated status copies, recursive acknowledgments and new agents simply to keep chats busy. Use the maintained project-collaboration playbook for the detailed operating process.
 
@@ -64,7 +64,7 @@ Evaluate a refinement by whether it makes the author’s actual journey clearer,
 
 Before a changed screen is called usable, open the actual view and ask: Can a returning person tell what this is, what they are looking at, what they can do, and what is still unfinished? Verify the affected action, not just labels, along with required save/switch/recovery behavior. For visual changes inspect the rendered applicable themes and widths; do not ask the person to mentally render code.
 
-When feedback reveals a reusable problem, update these rules or the shared collaboration playbook and relevant brief; preserve their distinct responsibilities rather than duplicating all rules everywhere. Read newer direct human instructions before implementing. This request records rules; it does not authorize an unbounded redesign or claim existing screens have been repaired.
+When feedback reveals a reusable problem, update these rules or the shared collaboration playbook and relevant brief; preserve their distinct responsibilities rather than duplicating all rules everywhere. Read newer direct human instructions before implementing. Apply these rules screen by screen as each one is worked on; adopting them does not mean existing screens already meet them.
 
 ## Interface present is different from connected — 15 October clarification
 
@@ -94,7 +94,7 @@ Drafts wait as one read-through (3 November 2026), read in the main reading colu
 
 ## Reconciled Source approval — 6 November 2026
 
-The preserved 25 October decision approved conversation-first Source review, with each selected translation proposal beside its passage on desktop and immediately after it on narrow screens. Keep Save/Next compact, Undo/History stable and primary work free of accordions. Use current Combined typography and navigation. Functional Save/Undo proof does not establish readable visual acceptance; inspect the actual connected screen. This recovers the bounded approved hierarchy without reviving superseded C Workbench/Atlas styling or authorizing real proposal acceptance.
+The preserved 25 October decision approved conversation-first Source review, with each selected translation proposal beside its passage on desktop and immediately after it on narrow screens. Keep Save/Next compact, Undo/History stable and primary work free of accordions. Use current Combined typography and navigation. Functional Save/Undo proof does not establish readable visual acceptance; inspect the actual connected screen. This restores the approved layout without bringing back the superseded C Workbench/Atlas styling. Accepting a real proposal stays Adrian's decision.
 
 
 ## Graphite controls — adopted 6 November 2026
@@ -104,7 +104,7 @@ C05 across S01–S12. Adrian selected option 2, Graphite, and asked to apply it 
 
 ## Eight focused screens — adopted 6 November 2026
 
-C01–C06; S02/S03/S05/S06/S07/S09–S12 as scoped. After viewing all eight comparisons, Adrian said “yes do all”. This approves Source VR01v2, Research VR02v2, Write VR03v1, Article Check VR04v1, Share VR05v3, Outputs VR06v3, Carousel Check VR07v3 and Recovery VR08v2, with the adopted Graphite family also applied to the earlier four screens. It supersedes their earlier pending layout approval boundaries. Preserve original words, selected owners, editions, saved Undo, separate retained recovery records and source facts. Verify focused behavior and actual synthetic native desktop/phone light/dark journeys. Approval is implementation intent, not proof of working screens, installation, provider activation, sending or publication. Delivery ownership and remaining native gates are in TODO/CURRENT.
+C01–C06; S02/S03/S05/S06/S07/S09–S12 as scoped. After viewing all eight comparisons, Adrian said “yes do all”. This approves Source VR01v2, Research VR02v2, Write VR03v1, Article Check VR04v1, Share VR05v3, Outputs VR06v3, Carousel Check VR07v3 and Recovery VR08v2, with the adopted Graphite family also applied to the earlier four screens. It supersedes their earlier pending layout approval boundaries. Preserve original words, selected owners, editions, saved Undo, separate retained recovery records and source facts. Verify focused behavior and actual synthetic native desktop/phone light/dark journeys. Adrian approved these designs to be built; whether each screen works and is installed is tracked in CURRENT and TODO. Sending and publication stay his decision.
 
 
 ## Reach actual content at the current width — 6 November 2026
