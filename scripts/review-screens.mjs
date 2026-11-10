@@ -2,6 +2,7 @@
 // Start the demo first (npm run demo), then:
 //   AR_CREATE_PLAYWRIGHT=/path/to/playwright/index.mjs node scripts/review-screens.mjs [outDir] [sizes] [themes]
 // Example: node scripts/review-screens.mjs /tmp/ar-screens desk,phone dark
+// Set AR_CREATE_SUBJECT to one of the seeded subjects (Harbour Morning Walk, Tea Stall Notes, Market Day, Lantern Festival, Salt Pans at Dusk) to visit it.
 // It only reads and clicks the demo (port 8854 by default). It never targets 8841.
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
 const {chromium}=await import(process.env.AR_CREATE_PLAYWRIGHT||'playwright');
@@ -31,6 +32,8 @@ for(const size of sizes)for(const theme of themes){
     await page.locator(`.combined-phonebar [data-combined-group="${PHONE[name]}"]`).click();await page.waitForTimeout(300);
     return page.locator('#combined-phone-sheet button',{hasText:new RegExp('^\\s*'+name)}).first().click();
   };
+  // AR_CREATE_SUBJECT names a seeded subject (for example "Lantern Festival" or "Market Day") to visit instead of the first one.
+  if(process.env.AR_CREATE_SUBJECT){try{await open('Home');await page.waitForTimeout(700);await page.locator('button:visible',{hasText:process.env.AR_CREATE_SUBJECT}).last().click();await page.waitForTimeout(1800);}catch(error){report[key]['(subject)']={unreachable:String(error.message).split('\n')[0]};}}
   for(const name of DEST){
     try{await open(name);}catch(error){report[key][name]={unreachable:String(error.message).split('\n')[0]};continue;}
     await page.waitForTimeout(1400);

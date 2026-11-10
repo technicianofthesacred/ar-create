@@ -72,6 +72,28 @@ All paths are under the home's `data/`. Read them through the CLI, never directl
 | `journal/<yyyy-mm>.jsonl`, `leases/<kind>/<id>.json` | Who did what; who holds what |
 | `provenance/`, `*-requests/` | Actor stamps, proposals awaiting a human |
 
+## The demo: what it holds and how to walk it
+
+`npm run demo` starts a disposable home in a temporary folder outside Git, on port 8854 (never 8841), and fills it with invented material **through the app's own requests** (`scripts/demo-seed.mjs`), about a minute after the server starts. It prints `Demo seeded` when it is done. Nothing in it is real: the photographs are gradients and shapes generated at start, and the recordings are generated tones.
+
+| Subject | Stage it is left at |
+|---|---|
+| Harbour Morning Walk | Made the way the app makes a subject. A recording, its transcript with two speakers and times, the read-through confirmed, a kept Research answer and a saved Direction. Writing is left for the walker |
+| Tea Stall Notes | Just material: a note and a photograph |
+| Market Day | A transcript, a Research answer, a Direction, an Article written, one proposal rejected with a reason and one waiting for a decision |
+| Lantern Festival | An Article and a five-slide Carousel with photographs, ready for Audience. One person has not answered, so Share and export are held |
+| Salt Pans at Dusk | Finished: Share released and the Carousel exported |
+
+Home's Needs you list holds one question waiting, one already answered, and one that applies its default about ninety seconds after the seed. `npm run demo -- --large` adds twenty extra subjects and two hundred Library notes.
+
+**The stand-ins.** A demo has no Mac, no speech models and no AI account, so the demo folder carries two stand-ins, copied there when it starts (`scripts/demo-standin/`). The stand-in transcriber gives every recording the same invented two-speaker conversation. The stand-in AI answers a Research question, a draft, a continuation and a revision from fixed invented words, and a Carousel from a fixed invented script. Each one refuses to run unless it sits in a generated `ar-create-synthetic-*` folder in the temporary directory next to a config marked `syntheticFixtures`, so a real home cannot be pointed at it. Their answers say "Stand-in answers for the demo" in their own words, and the proposal panel shows the provider as `Stand-in-answers-for-the-demo`. A request the stand-in AI has no script for is saved under `standin/unscripted/` in the demo folder and fails plainly; write a script for it in `scripts/demo-standin/codex.mjs`.
+
+**Chrome for Carousel export.** The runtime looks for a headless Chrome only in a Mac cache folder. Where that folder is missing, the demo gives its own folder a small wrapper around whatever Chrome the machine has (`AR_CREATE_DEMO_CHROME`, a Playwright install under `/opt/pw-browsers` or `~/.cache/ms-playwright`, or `chromium` and `google-chrome` on the path) and starts the server with `HOME` pointing there. The runtime is not changed. With no Chrome at all, export says so.
+
+**Walking it.** `node scripts/demo-walk.mjs <outDir>` performs the author's steps from the recording to an exported Carousel and photographs each screen at desktop and phone width; `tests/demo-journey.test.mjs` runs the same walk and checks each step. `node scripts/review-screens.mjs` retakes every screen, and `AR_CREATE_SUBJECT="Lantern Festival"` points it at a seeded subject.
+
+**What the seed cannot do.** Source's session list reads imported conversations from a separate owner that the demo does not hold, so a recording made in Material shows its transcript on the recording's own page, not as a Source session. Material has no phone entry on the bottom bar.
+
 ## Actors, leases, journal
 
 Actor values: `human:adrian`, `agent:claude-code|codex|claude-design|hermes|grok|chatgpt`, `cron:<name>`, `import:<source>`, `release:<sha>`. They are honest labels on this Mac, not authentication. Clients: `ui`, `cli`, `mcp`, `http`, `file`.

@@ -18,6 +18,8 @@ Contents: [how it was checked](#how-it-was-checked) · [the three root problems]
 
 **Not checked.** The demo has no AI connected, no recordings and no working photo roots. So transcripts, transcript correction, research answers, AI proposals and their review, photo placement, downloads and exports, sending, and the final "Yes, release this" were not exercised. The installed app and real subjects were not opened. Two devices on one piece, a real screen reader and 200% browser zoom were not tried. Items marked **demo only?** may come from the demo fixture and must be confirmed on a real subject before any fix.
 
+**Third round, with the seeded demo (plan 7).** `npm run demo` now holds a recording with a transcript, a stand-in AI, three generated photographs and subjects at five stages (see "The demo" in `docs/START.md`). It was walked from the recording to an exported Carousel at desktop and phone width: transcript page with speakers and times, a Research answer, Direction, a draft finished and a revision rejected in Write, Check, a photograph on a slide in Arrange, Audience, Share held and then released, and the export. U11, U12 and U18 are settled above. Still not checked: the real recognition, speaker and AI models; the photo picker's error; a real photograph; the installed app.
+
 **To repeat it.** Start the demo, then:
 
 - `node scripts/review-screens.mjs <outDir>` retakes every screen at the three widths and both themes and writes `report.json` (sideways scroll, clipped text, failed requests).
@@ -112,17 +114,20 @@ Each item: what happens, how to see it, where the code is, what is suggested, an
 - Suggest: keep reading a source beside the writing, since that is useful, and make the panel show the same list as the full page. Replace "Unsupported original project" with what is true for the author ("No sources attached yet", with "Add material").
 - Done when: the panel and the page list the same sources, and neither shows an internal reason.
 
-**U11. Research cannot be asked anything, and does not say why. (B, demo only?)**
+**U11. Research cannot be asked anything, and does not say why. (B, settled on the seeded demo: partly the old demo's emptiness, partly real)**
 - Seen: "Explore question" stays off after typing a question. No reason is shown. On the demo's built-in subject the page shows "Shared notes belong to another subject or need reconciliation." The research read answers 409 in the demo, and for the app-made subject the request carried the other subject's ids (`parentStudyId=hk`), which should be checked for a real cross-subject mix-up.
 - Where: `research-tab.js` lines 26 to 37; the banner text is in `human-direction.js` line 98.
 - Suggest: a button that is off always says why, beside it. Confirm on a real subject whether Research can be asked, and whether a new subject's Research ever reads another subject's record.
 - Done when: either the question can be asked, or the screen says in plain words what is missing and links to it.
+- **Checked on the seeded demo (plan 7, 10 November).** Research can be asked on a subject made in the app. On Harbour Morning Walk, with its transcript read through, "Change sources" lists the transcript, ticking it turns "Explore question" on, and the answer comes back as "AI learning · unreviewed" (a stand-in answer, labelled as one). So "cannot be asked at all" was the old demo's emptiness. What is real: the button is off, with no reason beside it, until a source is ticked, even when there is only one source and a kept answer already exists; "Included: No sources selected" is the only hint. A subject whose only material is an unreviewed note offers no source at all. No cross-subject mix-up showed: the research request carries the subject's own binding, and the `parentStudyId=hk` 409s are the built-in subject's own start-up reads.
 
-**U12. A subject made in the app cannot be given a photo. (A, demo only?)**
+
+**U12. A subject made in the app cannot be given a photo. (A, settled on the seeded demo: real for Media, picker not checked)**
 - Seen: for the app-made subject, Media shows "All subjects", no "Upload photos" and "No photographs are available in this Media catalog." (the built-in subject shows "Upload photos" and "From library"). A photo added through Material appears in Material. In the Carousel, Arrange, "Choose photo" opens a picker that counts it under "All media" and then fails with "The manuscript photo reader returned invalid source identities. Try again".
 - Where: `study-photos.js` line 45, `folder-browser.js` lines 330 and 380.
 - Suggest: confirm on a real subject first. If it holds, a new subject needs the same photo collection the older ones have, and the picker error needs plain words.
 - Done when: in a new subject a photo can be uploaded from Media or from the picker and placed on a slide.
+- **Checked on the seeded demo (plan 7, 10 November).** Real for Media. On Lantern Festival, a subject made in the app, Media lists the three photographs under "All media" but offers no "Upload photos" and no "From library"; the built-in subject (Synthetic Project One) offers both. The photograph itself is not the problem: through the app's own requests the subject's photo collection can be selected, photographs added from Library and one placed on a slide, and Arrange then shows it with a "Choose photo" button. The picker's "invalid source identities" error was not reproduced, because my scripted clicks did not reach the picker; it is still unchecked.
 
 ### Buttons and messages that mislead
 
@@ -153,10 +158,11 @@ Each item: what happens, how to see it, where the code is, what is suggested, an
 - Where: `project-library.js` line 50.
 - Suggest: open it under the button, in the subject wording.
 
-**U18. The app's first screen in a new browser shows "Recover writing (1)". (C, demo only?)**
+**U18. The app's first screen in a new browser shows "Recover writing (1)". (C, settled on the seeded demo: real)**
 - Seen: a fresh browser opens on Write of the first demo subject with "Recover writing (1)" already showing, and a new subject at phone width showed it too.
 - Where: likely the demo's packaged browser copy (`synthetic-study-data.js`).
 - Suggest: confirm it is the demo's seeded copy. If a real new subject can show another subject's recovery, that is a serious mix-up.
+- **Checked on the seeded demo (plan 7, 10 November).** Real, not the demo's data. In a brand-new browser profile, on Tea Stall Notes made seconds earlier with no writing, Write shows "Recover writing (1)". It opens "Earlier browser copy" beside an empty "Saved manuscript", with "Bring it in" and "Discard earlier writing". In the code, `draft-flow.js` lines 137, 353 and 479 store a browser copy of the page whenever a draft opens before its working copy is connected, and Recover writing then counts it. It never offered another subject's words in this check, so the serious mix-up is not shown; the empty copy is.
 
 ### Mistakes and Undo (second round)
 
