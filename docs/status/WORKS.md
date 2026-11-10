@@ -1,32 +1,32 @@
 <!-- Hand-maintained current summary; gen-status.mjs supplies measured/release headers. Keep within 40 lines. -->
-## Current checkpoint — reconciled 10 November 2026
+## Current checkpoint, 10 November 2026
 
-Runtime health and installed release metadata were freshly checked on 10 November: PR230, `af5350a974d5612ac1b3e373daea9979e8ad42cf`, tag `v2026.11.09-pr230`. The measured header is the 21 focused source/HTTP checks qualified for that exact software revision on 9 November; it is neither a new full-suite run today nor human acceptance. Source `main` also contains its merge commit; a documentation commit does not change the installed software.
+The installed app is PR230: commit `af5350a974d5612ac1b3e373daea9979e8ad42cf`, tag `v2026.11.09-pr230`, checked running on 10 November. The test line above is the 21 focused source and HTTP checks run on that commit on 9 November, not a full-suite run and not Adrian's acceptance. Later documentation commits on `main` do not change the installed app.
 
 ## Completed and verified
 
-- **Combined interface and releases:** the approved Graphite controls, eight focused layouts, sidebar readability, Material/Media/Audience refinements, editorial discussion styling and subsequent recovery repairs are integrated and installed. Earlier PR216/221/222/225/227 candidate/CI blockers are superseded; [release reconciliation](RELEASES-2026-11.md) records where their work landed.
-- **Material and browser Back:** PR229 has 32/32 fresh installed item-opening/return checks, zero inherited items, unchanged source/manuscript hashes, real recording playback and exact literal browser Back. Contextual audio and canonical main-app opening also passed. PR230 serves the same verified interface files; these 32 behaviors were executed on PR229, not rerun on PR230.
-- **Recovery:** PR229 repaired near-capacity storage and exclusive per-tab recovery ownership, including reload and Back restoration. Both authorized replacement tabs and retained writing/history survived installed verification. PR230's separate generation journey again preserved the original writing, source captures and recovery. The old physical window was not restored; the authorized replacement was used.
-- **Live initial Article:** PR230 creates a separate empty Article from exact retained non-draft source captures, preserving the existing manuscript and its pending decisions. Its live configured Codex execution completed and staged 18 paragraphs / 1,328 words for editable human review. The proposal is still pending, fresh and undecided on the 10 November read-only check. Nothing was accepted, published or inserted into the original writing.
-- **Proposal boundaries:** exact plain LF/CRLF paragraphs can be existing AI targets after the PR229 multiline repair. Generated paragraph entries remain ordinary single-line prose. Enter/Shift+Enter editing, native owner/revision guards, saved Undo and human-only Finish remain intact.
-- **Other maintained paths:** source/transcript review, Research and Direction, independent outputs, media placement, Check, export correspondence and shared context have bounded source/native evidence. The release chain installs that source; installation alone does not close every end-to-end or visual acceptance criterion.
-- **Cloud qualification:** a synthetic-only Claude/ChatGPT OAuth roundtrip passed, then grants/connections were revoked and the temporary tunnel closed. This is historical qualification, not a current private cloud connection or permission to reopen one.
+- **Combined interface:** the approved Graphite controls, the eight focused layouts, sidebar readability, the Material, Media and Audience refinements, editorial discussion styling and the recovery repairs are merged and installed. The earlier PR216, 221, 222, 225 and 227 blockers are resolved; [release reconciliation](RELEASES-2026-11.md) records where that work landed.
+- **Material and browser Back:** on PR229, all 32 checks of opening an item and returning passed on the installed app, with source and manuscript files unchanged, real recording playback and exact browser Back. PR230 serves the same interface files; those 32 checks were not rerun on PR230.
+- **Recovery:** PR229 fixed recovery when storage is nearly full and gave each tab its own recovery record, including after reload and Back. Writing and history survived the installed check, and PR230's generation journey again kept the original writing, source captures and recovery.
+- **First live Article:** PR230 creates a separate, empty Article from the saved source captures, leaving the existing manuscript and its pending decisions untouched. A live Codex run wrote 18 paragraphs (1,328 words) and staged them for Adrian's review. On 10 November that proposal was still waiting for him. Nothing has been accepted, published or added to his original writing.
+- **Proposal editing:** plain paragraphs with LF or CRLF line endings can now be AI targets. Generated paragraphs stay ordinary single-line prose. Enter and Shift+Enter editing, owner and revision checks, saved Undo and Adrian-only Finish all still work.
+- **Other paths:** source and transcript review, Research and Direction, independent outputs, media placement, Check, export and shared context each have tests on the source. Installing them does not mean each one has been walked end to end or accepted by eye.
+- **Cloud test:** a Claude and ChatGPT sign-in roundtrip passed on invented data, then access was revoked and the tunnel closed. There is no open cloud connection to Adrian's data.
 
 ## What happens next
 
-1. Adrian reviews the generated Article and makes the existing Finish decision. Agents leave that review and both tabs alone unless directly asked to continue. A previous handoff is not fresh browser-control permission.
-2. After that decision and an authorized next task, qualify the same real Article through edits, guarded save/reopen/exact Undo and a separately owned Carousel. Synthetic live-model creation/edit/Carousel evidence already exists; it does not establish this real-content follow-through.
-3. Delivery selects a bounded remaining task from [TODO](../../TODO.md), reads its section brief/current owner, and records the exact finish criterion before implementation. This documentation reconciliation starts no new build, browser task, deployment or provider setup.
+1. Adrian reviews the generated Article and chooses Finish or another action. Leave that review and his two live tabs at 8841 alone until he asks you to continue it.
+2. Once he has decided and asks for the next step, check the same real Article through edits, save, reopen, Undo and a separate Carousel. This has already worked on invented data.
+3. Pick the next task from [TODO](../../TODO.md), read its section brief and current records, and write down what finished looks like before starting.
 
-## Remaining limits
+## Still open
 
-- Human visual/editorial acceptance of the whole recording-to-Outputs journey is incomplete. Broad desktop/intermediate/phone, light/dark and accessibility coverage is not implied by fixture screenshots or one successful Article.
-- Existing angle/title, marked wording, Carousel/photo and translation decisions remain under their human owners; re-read those records before treating old counts as current asks.
-- Real accepted-Article-to-Carousel, final composed media/layout, exact chosen-edition downloads and complete publication/delivery acceptance remain distinct follow-ups. Sending/publication is not authorized by a software release.
-- Private phone/VPS access, offline synchronization, broader account/connector activation and remote human-approval parity remain separately scoped. Large-library performance and semantic retrieval are unmeasured/incomplete; literal lookup is not semantic research.
-- Historical dependency findings require a fresh audit before remediation. The bounded MCP SDK repair is already integrated; old 2.0.0 warnings are not the installed SDK state.
+- Adrian has not yet accepted, by eye, the whole journey from recording to Outputs, at desktop and phone widths, in light and dark, or for accessibility. Fixture screenshots and one Article do not cover that.
+- Decisions on angle and title, marked wording, Carousel words and photos, and translations belong to Adrian. Re-read those records before asking him; old counts may be stale.
+- Accepted Article to Carousel, final media layout, downloads of the chosen edition, and publication are separate follow-ups. Sending and publishing stay Adrian's decision.
+- Phone or VPS access, offline sync, more account connections and remote approval each need their own design and Adrian's agreement. Large-library speed and meaning-based search are not measured; today's search matches words literally.
+- Old dependency warnings need a fresh audit before any fix. The MCP SDK is already on 2.4.0.
 
 ## Agent handoff
 
-Start with [AGENTS](../../AGENTS.md), [START](../START.md), this page and [TODO](../../TODO.md). Current main is the source authority; the old Documents checkout is stale and dirty. Preserve its uncommitted work. Use a fresh worktree. For installed questions, verify runtime health and the installed `RELEASE.json`; for browser work, inspect current ownership/tabs and use an honest agent actor. Detailed private operation IDs, manuscripts, screenshots and request artifacts stay outside Git. Local release proof locators and superseded failures are indexed in [RELEASES-2026-11](RELEASES-2026-11.md).
+Start with [AGENTS](../../AGENTS.md), [START](../START.md), this page and [TODO](../../TODO.md). Source work starts from a fresh worktree of `origin/main`; the old Documents checkout is stale and holds uncommitted work, so leave it as it is. To know what is installed, read the home's `RELEASE.json`. Private operation IDs, manuscripts, real-app screenshots and request files stay outside Git. Release proof locations and resolved failures are in [RELEASES-2026-11](RELEASES-2026-11.md).

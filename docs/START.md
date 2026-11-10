@@ -1,6 +1,6 @@
 # AR Create: start here
 
-Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. Before resuming a task, read [CURRENT](status/CURRENT.md) and [TODO](../TODO.md); [November releases](status/RELEASES-2026-11.md) explains superseded blockers and proof boundaries. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); capabilities and revision evidence are in [status/CURRENT.md](status/CURRENT.md).
+Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may be edited, and how to drive the browser as an agent. Before resuming a task, read [CURRENT](status/CURRENT.md) and [TODO](../TODO.md); [November releases](status/RELEASES-2026-11.md) records what each recent release contained and where its proof lives. Intent lives in [product/PRODUCT.md](product/PRODUCT.md); capabilities and revision evidence are in [status/CURRENT.md](status/CURRENT.md).
 
 ## The product in one view
 
@@ -45,9 +45,9 @@ Read [AGENTS.md](../AGENTS.md) first: it says which CLI to run, where code may b
 
 The current design authority is the Combined workspace approved 30 October, recorded in [PRODUCT](product/PRODUCT.md#the-design-baseline) and its dated decision log. Home, Subjects, subject boards, piece tabs, Write/Read/Check modes, contextual sheets and visible Outputs are the approved direction. Earlier [C workbench previews](../design/three-directions/c-workbench/index.html) are historical references, not the current acceptance target.
 
-Full desktop and phone, light and dark, functional and visual acceptance remains open. [CURRENT](status/CURRENT.md) separates source capabilities, recorded installed revision, measured test revision and acceptance limits. Regenerate it with fresh release and test inputs before using its snapshot to assess the running app; a source candidate or test run on another revision does not establish installed behavior.
+Adrian has not yet accepted the whole app at desktop and phone widths, in light and dark. [CURRENT](status/CURRENT.md) says what the source can do, which commit is installed, which commit the tests ran on, and what is still unaccepted. A test run tells you about the commit it ran on; to know what the running app does, compare it with the installed `RELEASE.json`.
 
-To inspect current evidence without replacing the committed snapshot, run `node scripts/gen-status.mjs --tests <summary.json> --release "<home>/RELEASE.json" --out /tmp/ar-create-current.md`. The summary records the actual run’s `tests`, `pass`, `fail`, `skipped`, full `sha` and optional `at`. Plain TAP remains a measured run but cannot establish its revision; a matching full revision still does not imply all tests passed or human acceptance. Typography and product conventions remain in [PRODUCT](product/PRODUCT.md#design-baseline-and-typography).
+To see a fresh status page without replacing the committed one, run `node scripts/gen-status.mjs --tests <summary.json> --release "<home>/RELEASE.json" --out /tmp/ar-create-current.md`. The summary holds the run's `tests`, `pass`, `fail`, `skipped`, full `sha` and optional `at`. Plain TAP output works too but carries no commit. Passing tests on the installed commit still leave Adrian's own acceptance open. Typography and product conventions remain in [PRODUCT](product/PRODUCT.md#design-baseline-and-typography).
 
 ## Where data lives
 
