@@ -223,7 +223,7 @@ export async function walkHarbour(api,subject,{at=async()=>{}}={}){
  await answerPerson(api,subject,'The baker','yes');await answerShare(api,subject,'comfort','yes');await answerShare(api,subject,'accuracy','yes');
  const released=await releaseShare(api,subject);
  await at('share-released',{released});
- const exported=await exportCarousel(api,subject,made.carouselId);
+ const exported=await exportCarousel(api,subject,made.carouselId,{allow:[503]});
  await at('exported',{exported});
  return {made,exported};
 }
