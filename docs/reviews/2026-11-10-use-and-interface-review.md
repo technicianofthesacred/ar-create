@@ -4,7 +4,7 @@ A full record of what a review of AR Create found, written so that any person or
 
 Adrian's steer on the day: fix how the app is used and how its parts connect first (Part 1), then how it looks (Part 3).
 
-Contents: [how it was checked](#how-it-was-checked) · [the three root problems](#the-three-root-problems) · [Part 1 use and connection](#part-1-use-and-connection) · [Part 2 the agent entrance](#part-2-the-agent-entrance) · [Part 3 how the screens look](#part-3-how-the-screens-look) · [what works](#what-already-works) · [suggested order](#suggested-order-of-work) · [decisions for Adrian](#decisions-that-belong-to-adrian) · [scouting still to do](#scouting-still-worth-doing) · [function ideas](#function-ideas)
+Contents: [how it was checked](#how-it-was-checked) · [the three root problems](#the-three-root-problems) · [Part 1 use and connection](#part-1-use-and-connection) · [Part 2 the agent entrance](#part-2-the-agent-entrance) · [Part 3 how the screens look](#part-3-how-the-screens-look) · [Part 4 working without the Mac](#part-4-working-without-the-mac) · [what works](#what-already-works) · [suggested order](#suggested-order-of-work) · [decisions for Adrian](#decisions-that-belong-to-adrian) · [scouting still to do](#scouting-still-worth-doing) · [function ideas](#function-ideas)
 
 ## How it was checked
 
@@ -206,6 +206,56 @@ Second in order. Each of these was seen in the survey screenshots.
 - Light theme: sidebar group labels (9px, 4.24:1), the "Piece direction" line (3.82:1) and small counts (3.89:1) are under 4.5:1.
 - Keyboard focus is visible (2px sand outline). No screen scrolls sideways at any of the three widths. Fonts are consistent apart from a few system-font lines (Media hint, Check panel, Share when opened).
 
+## Part 4: working without the Mac
+
+Adrian's goal is for all of this to work without the Mac. Today it does not, and this review ran into that directly: the two most useful pieces of scouting (a real piece from start to finish, and confirming the "demo only?" items) could not be done from a cloud session, because the only copy of his real work is on the Mac. That is a finding, not a scheduling detail. An agent working from the cloud, as this one did, can see the software and nothing of the work.
+
+The product documents already say this is intended and not yet built: "Off-Mac reach waits for the VPS replica" (PRODUCT), and "Private storage and offline direction: planned, not installed" (DEVELOPMENT). What follows is what the review saw of the gap.
+
+### What is not tied to the Mac
+
+The software. In this review the whole app was installed, built and run on a Linux cloud machine: the demo served every screen, and all 3,650 tests passed there. The phone-width layout exists. A scoped remote connection for Claude and ChatGPT (`agents/remote/server.mjs`) exists and passed a sign-in round trip on invented data before it was closed.
+
+### What is tied to the Mac
+
+| # | What | Why it needs the Mac today | Where |
+|---|---|---|---|
+| M1 | The only copy of the work | Words, journal, recordings and photos live in one folder under the Mac's Application Support; the originals live in the Obsidian vault and Files folders on the Mac | `docs/PERMANENT-HOME.md`, `config.mjs` |
+| M2 | Reaching the app | The server answers only on `127.0.0.1`; no other device can open it | `runtime/server.mjs` line 825 |
+| M3 | Knowing who is asking | There is no sign-in. The page says it is Adrian, and agent names are "honest labels, not authentication". That is safe only while nothing but the Mac can connect | `docs/START.md`, actors |
+| M4 | Unsaved words | Words not yet saved to the project are kept in that one browser on the Mac ("Only in this browser"). Recovery records are per browser tab | `draft-flow.js`, `docs/PERMANENT-HOME.md` |
+| M5 | Transcription | Uses `mlx-whisper`, which runs only on Apple chips, plus a local speaker model | `runtime/services/runtime/transcription/adapters.py` |
+| M6 | AI help | Runs by starting the Codex command-line tool that is signed in on the Mac. "Only codex is supported" | `config.example.json` (`execution`), `artifact-execution.mjs` |
+| M7 | Phone recordings | The Mac goes and fetches them from the phone site. With the Mac off they wait | `docs/PHONE-PICKUP.md` |
+| M8 | Agents | The CLI and MCP are "from this Mac only for now" | `docs/product/PRODUCT.md` (Agents table) |
+| M9 | Photos and footage originals | In Files folders and iCloud on the Mac; "still downloading from iCloud" is handled as a Finder step | `magazine-vault/intake.mjs` |
+| M10 | Releasing and restarting | The release script and start, stop and restart scripts write and run on the Mac | `scripts/release.mjs`, `scripts/permanent-home/` |
+
+Small Mac-only conveniences (open a folder in Finder) already answer politely on other systems and are not blockers.
+
+### What this means for the concept
+
+The promise "the app and agents are equal entrances to the same records" holds only on the Mac. Away from it there is no entrance at all: not for Adrian on a phone, not for a cloud agent, not for another computer. The phone layout and the remote connection are built and waiting behind M1 to M3.
+
+### Suggested shape (for a builder to plan, not decided)
+
+The agreed direction in DEVELOPMENT is "private text and revision metadata available on the VPS and computer replicas, with offline computer editing; large originals primarily on explicitly selected computers". i64os already runs an always-on VPS, a private network between the machines, and folder sync that copies the vault to the VPS. Reusing those is cheaper than inventing new ones.
+
+1. **Decide where the one true copy lives when the Mac is off.** The app has a firm one-writer rule. Two workable shapes: the always-on server becomes the home and the Mac becomes one of its clients; or the Mac stays the home and the server holds a read-and-propose copy. The first gives "works without the Mac" completely; the second is smaller and still leaves writing tied to the Mac. This is Adrian's decision and everything else follows from it.
+2. **Put a real sign-in in front of it** before anything but the Mac can connect (M2, M3). The remote connection's sign-in already exists for agents; the author's own browser needs one.
+3. **Save in-progress words to the home, not the browser** (M4), so a piece started on one device can be continued on another.
+4. **Give transcription and AI help an engine that runs anywhere** (M5, M6): a hosted speech service for the first pass (the phone and i64os already use one) with the Mac's better pass as an optional improvement, and an AI provider called directly instead of through a signed-in command-line tool.
+5. **Photos and footage**: previews everywhere, originals where they are, and an honest "original is on the Mac" state.
+6. **Backups and restore** proved before the home moves.
+
+### Scouting for this part
+
+- **Inventory what the installed app actually reads from the Mac**: every folder and tool named in its private configuration, and how big each is (text, recordings, photos). Names and sizes only, no content. This sizes the move.
+- **Run the app on the VPS with invented data** behind the private network and open it from a phone. This review already did the equivalent on a cloud machine; doing it on the real server shows what breaks in sign-in, speed and phone use.
+- **Try the one-writer rule with two devices**: the same piece open on a laptop and a phone, both typing. What does each see?
+- **Away from a connection**: what should work on a train with no signal, and what may wait?
+- **What agents need off the Mac**: which of the 473 commands a cloud agent should have, and which must stay with Adrian's own sign-in.
+
 ## What already works
 
 Keep these as they are when fixing the rest.
@@ -227,6 +277,8 @@ Keep these as they are when fixing the rest.
 5. **Confirm the "demo only?" items on a real subject** (U11, U12, U18, A1) before spending effort on them.
 6. **Part 3**, broken first (V1 to V7), then phone, then the shared header and menus.
 
+Part 4 runs beside all of this as its own stream. It starts with Adrian's decision on where the work lives, and it should not wait for the screens to be finished: until it is done, no agent outside the Mac can check any of the above against real work.
+
 Each fix should end with a check of the journey in Part 1 from start to finish, since these problems only show when the steps are joined up.
 
 ## Decisions that belong to Adrian
@@ -239,12 +291,13 @@ Each fix should end with a check of the journey in Part 1 from start to finish, 
 6. The phone bottom bar: add Gather (Library, Material, Source) as a sixth item to match desktop (suggested), or keep five.
 7. "Subject" in everything shown on screen (suggested), or "project".
 8. Text size: enlarge the writing and the side panel together and leave the top bar and sidebar fixed (suggested).
+9. Where the one true copy of the work lives when the Mac is off (Part 4): the always-on server as the home with the Mac as a client, or the Mac as the home with a read-and-propose copy on the server.
 
 ## Scouting still worth doing
 
 In rough order of how much each could change the plan.
 
-1. **One real piece, start to finish, on the installed app.** Recording, transcript, correction, Source, Research with answers, Direction, Write with AI proposals, Check, photos, Carousel, export. The demo could not show the chain that matters most: spoken words becoming checked writing. Best done by Adrian with someone watching, or by an agent reading through the installed CLI.
+1. **One real piece, start to finish.** Recording, transcript, correction, Source, Research with answers, Direction, Write with AI proposals, Check, photos, Carousel, export. The demo could not show the chain that matters most: spoken words becoming checked writing. Today this can only be done on the Mac, which is itself the finding in Part 4. Two ways round it: give the demo an invented recording, an invented transcript and a stand-in AI so the whole chain can be walked anywhere; or do it once on the Mac with someone watching.
 2. **The "demo only?" items** (U11, U12, U18, A1): are they real?
 3. **Coming back after a week.** With twenty or more real subjects, does Home say where each stands and what the next step is? Can he find a subject he half remembers?
 4. **Working alongside an agent.** An agent asks a question ("Needs you"), he answers, the agent carries on. An agent proposes paragraphs while he is typing. What does he see while it works, when it fails, when it is done?
