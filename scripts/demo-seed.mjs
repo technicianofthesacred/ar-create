@@ -70,3 +70,51 @@ export const sourcesOf=async(api,subject)=>(await api.author('GET','/api/study/r
 /** The author's read-through: paragraphs left alone count as read, rewrites go in as the author's words, marked ones stay out. */
 export const finishProposal=(api,subject,requestId,{edits=[],marks=[]}={})=>api.author('POST','/api/study-ai/finish?'+query(subject),{requestId,operationId:uuid(),edits,marks});
 export const draftState=(api,subject)=>api.author('GET','/api/study-draft/read?'+query(subject));
+/** The author's saved direction for a subject (his sentence about what the piece is for). */
+export async function saveDirection(api,subject,body){
+ const current=await api.author('GET','/api/study/human-direction?'+new URLSearchParams({parentStudyId:subject.parentStudyId,scope:'project'}));
+ return api.author('POST','/api/study/human-direction/write',{parentStudyId:subject.parentStudyId,scope:'project',operationId:uuid(),expectedRevision:current.revision,expectedHash:current.hash,body});
+}
+
+const TRANSCRIPT_NAMES={s1:'Interviewer',s2:'Guest'};
+/** The subject the walk starts from, made the way the app makes one: a recording, its reviewed transcript, a Research answer, a Direction and a written Article. */
+export async function seedHarbourWalk(api,{log=()=>{}}={}){
+ const subject=await createSubject(api,'Harbour Morning Walk');log('subject');
+ const recording=await recordingToSource(api,subject,{file:'Harbour walk interview.wav',names:TRANSCRIPT_NAMES});log('recording, transcript and Source');
+ const sources=await sourcesOf(api,subject);
+ const answer=await askResearch(api,subject,'What is the walker really looking for on the harbour walk?',sources.map(s=>s.id));
+ await api.author('POST','/api/study/research/keep',{...scope(subject),id:answer.id});log('research answer kept');
+ await saveDirection(api,subject,'This piece is about being given something small and then left alone. Keep it quiet and concrete.');log('direction');
+ return {subject,recording,sources,answer};
+}
+export async function seedPhotos(api){const ids=[];for(const photo of PHOTOS)ids.push(await importFile(api,photo.name,photo.png()));return ids;}
+export async function seedDemo(base,{large=false,log=message=>console.log('  seeded: '+message)}={}){
+ const api=client(base);
+ const photos=await seedPhotos(api);log('three invented photographs in Library');
+ const harbour=await seedHarbourWalk(api,{log});
+ return {api,photos,harbour};
+}
+
+const group=subject=>({rootBindingId:subject.bindingId,parentStudyId:subject.parentStudyId});
+const groupQuery=(subject,extra={})=>new URLSearchParams({...group(subject),...extra}).toString();
+/** Write the Article the way a person does: ask for a draft, read it through (rewriting one paragraph as their own words), finish. */
+export async function writeArticle(api,subject,sourceIds,{ownWords}={}){
+ const proposal=await askProposal(api,subject,{purpose:'article-draft',instruction:'Write a short article about the walk, from the transcript only.',sourceIds});
+ const review=await reviewProposal(api,subject,proposal.requestId);
+ const edits=ownWords?[{id:review.replacements[1].id,words:ownWords}]:[];
+ return {proposal,finished:await finishProposal(api,subject,proposal.requestId,{edits})};
+}
+/** Register the Article as an output and ask for a Carousel made from it. */
+export async function makeCarousel(api,subject){
+ const native=await draftState(api,subject);
+ const outputs=await api.author('GET','/api/study/outputs?'+groupQuery(subject));
+ const created=await api.author('POST','/api/study/outputs/create',{...group(subject),kind:'article',sourceBindingId:subject.bindingId,expectedNative:native.expected,expectedOutput:outputs.expectedOutput,operationId:uuid()});
+ const articleId=created.view.output.id;
+ const refreshed=await api.author('GET','/api/study/outputs?'+groupQuery(subject,{selectedOutputId:articleId}));
+ const input={...group(subject),sourceBindingId:subject.bindingId,sourceOutputId:articleId,expectedNative:(await draftState(api,subject)).expected,expectedOutput:refreshed.expectedOutput,operationId:uuid()},selector={...group(subject),requestId:input.operationId};
+ await api.author('POST','/api/study/carousel-make/preview',input);
+ await api.author('POST','/api/study/carousel-make/run',selector);
+ for(let i=0;;i++){await sleep(300);const made=await api.author('GET','/api/study/carousel-make?'+new URLSearchParams(selector));if(made.status==='result-ready')break;if(['failed','needs-attention'].includes(made.status))throw Error('The Carousel was not made: '+JSON.stringify(made.execution||made.error));if(i>100)throw Error('The Carousel did not finish.');}
+ const saved=await api.author('POST','/api/study/carousel-make/register',selector);
+ return {articleId,carouselId:saved.outputId,view:saved.view};
+}

@@ -44,6 +44,12 @@ const scripts=[
   return {'result.json':JSON.stringify({body,excerpts})};
  },
 
+ // A Carousel made from the finished Article: slides in the app's own words-stage format.
+ ({names,prompt})=>{
+  if(names.join()!=='result.md'||!/carousel/i.test(prompt))return null;
+  return {'result.md':['---','kind: CAROUSEL','stage: words','status: for-your-yes','story: Harbour Morning Walk','---','','## Slides','1. [hook] What does a morning walk give you?','2. [teach] Before the shops open, the harbour belongs to rope menders and a baker.','3. [teach] First comes the sound: ticking halyards, gulls, water on the steps.','4. [teach] On the breakwater the Guest counts boats and finds what to write.','5. [close] Small things, freely given, and enough quiet to notice them.','','## Caption','Stand-in answers for the demo: a fixed, invented Carousel about a morning harbour walk. Small things, freely given.',''].join('\n')};
+ },
+
  // Proposals for the Write screen: opening options, a full draft, a continuation, a scoped revision.
  ({names})=>{
   if(names.join()!=='proposal.json'||!context?.purpose)return null;
