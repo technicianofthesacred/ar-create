@@ -72,6 +72,9 @@ A second track, in its own folder, with no change to any screen:
    the server, with commands, so every door sees the same Home. What the browser already holds is carried over the
    first time it is seen, never lost.
 
+8. **Nothing scrolls sideways.** Measure every destination of the app as it is today at four widths and both themes,
+   fix each place that scrolls sideways with the smallest styling change, and keep the measuring script as a check.
+
 ## Record
 
 | Piece | Built by | Reviewed by | State |
@@ -83,3 +86,4 @@ A second track, in its own folder, with no change to any screen:
 | 5 Build by codes | | | |
 | 6 The studio shows it | | | |
 | 7 Where a subject lives | Opus | Sonnet | Done on branch `claude/direction-d-subjects`. Folder, tags, pin, archived and order are saved with the subject; a browser's old filing is carried over once per field; a newer saved value always wins over an offline edit. Four sentences on screen changed and wait for Adrian's eyes |
+| 8 Nothing scrolls sideways | | | |
