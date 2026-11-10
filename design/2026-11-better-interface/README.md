@@ -42,6 +42,14 @@ the page and not organised.
 
 Open-source work his own i64os survey already looked at for this pattern: Open Notebook and SurfSense (self-hosted notebook tools), STORM and GPT Researcher (viewpoints and wide reading, already mirrored by the i64os Hunt). Nothing has been evaluated or chosen in this round.
 
+**Fourth pass on D.** Adrian asked whether Simmer is needed as built, and for sections he can tell apart and jump between.
+
+- **Simmer is not a section.** The strip is gone. The board is now a second view of Gather ("List" or "Board") where material can be dragged between groups, and naming the dish moved into the plan.
+- **Plan** sits at the top of every subject: the form, where it goes, who it is for, when, and the dish in his own words, with "Talk about it". On a new subject it says nothing is decided yet.
+- **To the finish line** shows, per piece, what is done, what can be done now and what is waiting on what (captions wait for photographs; the Carousel waits for words and pictures; publishing waits for consent and the check). Work in any order; the line only says what must exist first.
+- **Sections are separate panels** with a header that stays in view while reading, and the line on the left jumps to any section and marks the one on screen.
+- **Home:** folders themselves can be dragged into a new order, and dragging works in the covers view too. Tags plus folders are enough; no folders inside folders.
+
 Corrections to A, B and C that D carries: the mode is Write (not Edit); no accept button on each drafted paragraph; no
 "Video, not started" row.
 
