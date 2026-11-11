@@ -184,6 +184,20 @@ Because the second layer is only ever a reading of the first, it can be read aga
 
 Re-reading a large bank costs something, so it is done in stages, the most resonant concepts first, with the likely cost shown before a full pass.
 
+### It must cost you almost no time
+
+You said: "Beyond being dynamic, they need to be not majorly time consuming, otherwise you'll not get my dynamic interactions with it. If it takes a significant amount of time to sort and go through everything, it's impossible for me to do it."
+
+So this is a rule for every screen, equal to the others:
+
+- **The bank never waits for you.** The AI files, folds and explains with its best judgement. Your guidance makes it better and is never needed for it to keep working.
+- **Nothing piles up.** There is no inbox and no count of things awaiting you. At most three questions are offered at a time. One you ignore fades and is replaced. It is never owed.
+- **Every act is one tap or one spoken sentence.** Turning resonance up, correcting a join, adding a meaning, changing your lens: each is done in the place where you noticed it, in seconds, with no separate screen for upkeep.
+- **Changes are shown as a summary.** After you change your lens you see the three biggest effects and a total, with the full list there only if you want it.
+- **You steer while you use.** Guidance is collected during reading, wandering and making pieces. You are never asked to sit down and go through everything.
+
+The test for the mock-ups and the build: a visit of a few minutes should be nearly all reading, thinking and making, with well under a minute of upkeep.
+
 A note for the builders: AR Create's rule is that agents propose and you decide. This changes it for filing only, at your word: sure joins go through, are listed under "recently joined", and can always be corrected. Your words, your responses, the top layer and anything written in your voice stay yours alone.
 
 ## Leaving
