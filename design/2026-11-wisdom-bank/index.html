@@ -189,6 +189,30 @@ dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
 .outline li{display:grid;gap:4px;padding-top:12px;border-top:1px solid var(--line)}
 .outline .who{font-size:var(--t12)}
 
+/* reading rhythm: tight inside a group, open between groups; their words sit on their own surface */
+:is(.nug,.glance,.card,.pick,.work){gap:0}
+:is(.nug,.glance,.card,.pick,.work)>*+*{margin-top:12px}
+:is(.nug,.glance,.card,.pick,.work)>.lab{margin-top:22px}
+:is(.nug,.glance,.card,.pick,.work)>.lab:first-child{margin-top:0}
+:is(.nug,.glance,.card,.pick,.work)>header+.lab{margin-top:16px}
+:is(.nug,.glance,.card,.pick,.work)>.lab+*{margin-top:8px}
+:is(.nug,.glance,.card,.pick,.work)>blockquote+.who{margin-top:4px}
+:is(.nug,.glance,.card,.pick,.work)>:is(.join,.first,.acts){margin-top:18px}
+.card>.work+.work{margin-top:22px;padding-top:22px}
+blockquote.say{padding:14px 16px;border-radius:10px;background:var(--bg);line-height:1.6}
+.sheet blockquote.say,.stop .say{padding:0;background:none}
+.nug .dist{color:var(--ink);font-size:var(--t15)}
+.lab{font-weight:500;letter-spacing:.08em}
+.lines{gap:0}
+.lines>*+*{margin-top:12px}
+.linerow{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding-top:14px;border-top:1px solid var(--line);align-items:baseline}
+.lines>.linerow{margin-top:14px}
+.linerow>:is(b,button){grid-column:1;grid-row:1;font-size:var(--t15)}
+.linerow .k{grid-column:2;grid-row:1;color:var(--dim);font-weight:500}
+.linerow>:is(p,form){grid-column:1/-1}
+.linerow>form{margin-top:6px}
+.card>.linerow:first-of-type{border-top:0;padding-top:0}
+#drules>li+li,#djoined>li+li{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 @media (min-width:851px){
  :root{--top:56px}
  .top{padding-left:28px;padding-right:28px}
