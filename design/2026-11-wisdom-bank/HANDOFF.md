@@ -121,3 +121,9 @@ Nothing was changed on the page after this. What it means (my reading, not his w
 
 - **The sample wording failed.** Names such as "The false version" and "Warmth as the test", and reasons such as "Sets the limit: perfect cannot mean unfelt", are compressed labels that only make sense once you already know the talk. A concept's name and distillation must be understood on first reading by someone who has not seen the source, in the words a person would say aloud. This is a requirement on the distilling itself, not only on the mock-up: if the real agent writes like this, the bank fails. It should be tested on him with real distillations before anything is built on it.
 - **The whole is a graph of maps.** Each book and each article has its own map of all its concepts; those maps connect to each other; moving through all of them is the main interaction. This confirms what plan 12 is for.
+
+**11 November, on the length of a concept, in his words:**
+
+"Ideally these concepts are not just this one sentence, they're however long they need to be. I feel like you're consolidating them for space rather than the amount of words for a human to really understand it."
+
+What it means (my reading, not his words): the length of a distillation is set by what a person needs in order to understand it, never by the space on a card. The layout must make room for the words, not the words for the layout. The one-line "Glance" is only a way in; the real distillation is as long as it needs to be, and the concept page's "one line saying what it means" is wrong on this point. Nothing was changed on the page after this.
