@@ -2,13 +2,34 @@
 
 Research thread, 11 November 2026. Written for Adrian to read on a phone.
 
-**How this was done, and the limit on it.** I ran about twenty web searches across the eight problems. I could not open the pages themselves: the sandbox blocks every outside site except the search tool, and two attempts to read pages directly (one myself, one through a page reading helper) both failed. So every claim below comes from what a search result said about a page, not from reading the page, and I mark that wherever it matters. Nothing here is from memory. Where a search turned up nothing, I say so. The surest way to deepen this report is to allow the sites named in "What I could not verify" at the end and re-read the key pages.
+**How this was done, and the limit on it.** I ran about twenty-six web searches across the eight problems. I could not open the pages themselves: the sandbox blocks every outside site except the search tool, and two attempts to read pages directly (one myself, one through a page reading helper) both failed. So every claim below comes from what a search result said about a page, not from reading the page, and I mark that wherever it matters. Nothing here is from memory. Where a search turned up nothing, I say so. The surest way to deepen this report is to allow the sites named in "What I could not verify" at the end and re-read the key pages.
+
+---
+
+**Added later the same day.** Adrian, as passed on by the home thread, 11 November 2026: "Yeah, not just all of this, but also the way that people connect these hive minds or knowledge graphs together. Especially with AI, a lot of people are trying to do this sort of thing. I have not been sold on your UI design yet. So I'm more looking at copying something out there and iterating it or making it better." That added a ninth question (how people connect knowledge graphs and "hive minds", and AI built on top of them) and moved the most useful part of this report to the interface shortlist at the top of the phone page. I could not get screenshots or videos, because the sandbox blocks outside sites. Each candidate below has an address you can open and try on your phone.
 
 ---
 
 ## One page for your phone
 
+### Real interfaces you could copy and improve, strongest first
+
+None of these matches your words on its own. Together they cover the parts, and the first is where I would start.
+
+1. **WorkFlowy (copy this first).** Tap any item and it becomes the whole page, with a trail of where you are at the top. Open and close items in place, at any depth, with no new pages. The text is plain and reads well on a phone. It is the nearest thing to your "expand and contract in place" and "mind map" words. *Falls short:* it is a strict tree, one parent per item, which is exactly the "categories and subcategories" shape you rejected. Its own blog says expanding everything can lock it up, and a user in the comments reported slow loading at about 30,000 items. No figure found for hundreds of thousands. Closed source, so you would copy the behaviour, not the code. Alive. Try it: [workflowy.com](https://workflowy.com/learn/bullets). [How zoom works](https://workflowy.com/help/bullets.md), [the lock-up warning](https://blog.workflowy.com/why-we-disabled-expand-all-by-double-clicking-on-the-page-title-and-logo/).
+
+2. **Apple's Embedding Atlas (copy this for the far view and the filters).** A whole collection as one map you zoom and pan in the browser, smooth up to millions of points. Names for regions appear by themselves as you zoom, and you can search and filter by any field, which is your "subjects as filters over one whole". *Falls short:* it shows points, not readable text, so there is nothing to read at three depths, and the connections are only closeness. Open source under the MIT licence, which means you can build on it. Alive (released 2025). Try it: [demo and docs](https://apple.github.io/embedding-atlas/). [Paper](https://arxiv.org/html/2505.06386v1), [news write-up](https://www.infoq.com/news/2025/11/embedding-atlas).
+
+3. **TheBrain (copy this for connections that are plain and many-to-many).** One thing sits in the middle, its more general things above, its more specific things below, and its related things at the side. An item can have several parents, so nothing is trapped in one category. *Falls short:* it shows one neighbourhood at a time, not an infinite surface, and it is closed software. One reviewer notes the layout has barely changed in five years. Two open source projects copy the layout: K-Plex and Synapses for Obsidian. Alive. Try it: [TheBrain 12](https://thebrain.com/thebrain12), [the web version works without installing](https://thebrain.com/blog/enabling-ubiquitous-non-linear-visual-knowledge), [how relationships work](https://help.thebrain.com/androidphone/thoughtrelationships.html), [K-Plex](https://github.com/zsviczian/kplex/wiki).
+
+4. **Sefaria (copy this for reading at depth and plain connections).** You read one text and open a side panel listing what connects to this passage, as plain rows: commentaries, parallels, topics. Topic pages list their sources in ranked order, and people build their own sheets from the passages. *Falls short:* it has no zoomable surface and no depths of one idea written for a newcomer. Open data and a public interface for builders. Alive. Try it: [sefaria.org](https://designing-knowledge.siggraph.org/wp/?p=126). [Developer pages](https://developers.sefaria.org/docs/powered-by-sefaria).
+
+5. **Watch list, small and unproven: Nodus and the Obsidian Semantic Map Canvas plugin.** Both show title-only cards when zoomed out and full notes when zoomed in, which is the shape of what you describe. Each is one person's project, and I found no evidence of use at scale. [Nodus](https://sorenwacker.github.io/nodus/features), [Semantic Map Canvas](https://www.obsidianstats.com/plugins/semantic-map-canvas).
+
+**My recommendation.** Copy WorkFlowy's way of moving first: tap to zoom into anything, a trail at the top, open and close in place. It is simple, proven on phones and readable. Then fix its one flaw by letting an item live in several places, as TheBrain does, and show connections as plain labelled rows beside the text, as Sefaria does. Put Embedding Atlas's kind of map at the far end of the zoom, with names appearing as you move in, and subjects as filters on it. That is a combination, not one product, and I have not seen anyone join the near-text view and the far map into one continuous zoom. That join is the thing worth testing first.
+
 ### The eight things most worth learning
+
 
 1. **The idea is more than a century old, and it was built by hand at huge cost.** Mortimer Adler's Syntopicon gathered 102 "great ideas" and about 3,000 sub-topics across the Great Books, with a staff of up to 72 people. It was budgeted at two years and took eight, and one account puts the labour at over 400,000 hours. Even Adler called the list of 102 "arbitrary", and the work faded. Nave's Topical Bible did the same for scripture: over 20,000 topics and more than 100,000 references, compiled over about fourteen years, and organised by subject rather than by word, so one verse sits under many headings. What you can take: the shape is proven and loved. What was missing was cheap labour and a way to grow without a fixed list. [Syntopicon](https://en.wikipedia.org/wiki/A_Syntopicon), [Nave's](https://en.wikipedia.org/wiki/Nave%27s_Topical_Bible).
 
@@ -120,6 +141,28 @@ In plain terms, every system that works keeps five things apart: the **work**, t
 
 ---
 
+## 9. How people connect knowledge graphs and "hive minds", and AI on top of them
+
+All from search results, mostly blogs and early write-ups. I found no widely adopted standard and no independent test of any of these.
+
+**Joining separate people's banks.**
+- **Shared Brain model (May 2026, COTRUGLI Business School).** Each person keeps a private base and contributes one subject to a group wiki. A step run by an administrator merges the contributions, flags claims that conflict, and records who contributed what. The authors describe what broke and what they fixed, and say the core claim is still unproven. [Article](https://talirezun.substack.com/p/the-shared-brain-when-second-brains), [follow-up](https://talirezun.substack.com/p/second-brain-to-shared-brain-building).
+- **A permissioned team layer (MindStudio).** People's agents stay separate and reach a shared base through a small server offering search, fetching a document, and an "expert finder" to locate who knows a topic. It relies on access rules, not a merged graph. [Article](https://www.mindstudio.ai/blog/ai-second-brain-team-knowledge-base/).
+- **Federated memory (a preprint) and networking second brains over the Fediverse (a forum proposal).** Both are design ideas, not working systems. Their stated aim is to keep each person's authorship and control, which the preprint contrasts with one central graph. [Forum post](https://socialhub.activitypub.rocks/t/creating-social-knowledge-graphs-by-networking-second-brains-via-the-fediverse/2489).
+- **The Agora** (above) is the one that runs today: each person keeps their own notes and shares them, and one concept name gathers everyone's contribution beneath it. [Agora](https://github.com/flancian/agora).
+- One article mentions a Google "Open Knowledge Format" for sharing structured notes between agents. I saw only that one article, so I cannot confirm it exists as described. [Article](https://www.stork.ai/blog/your-ai-brain-is-a-mess-heres-the-fix).
+
+**What this says.** Every approach that holds up keeps each person's words apart and attributed, and joins them by a shared concept name or by a reviewed merge, never by blending text. That matches your rule that words are never mixed, and it bears on your open question about friends' ideas and consent. Nothing here handles two people meaning the same thing by different words, which is problem 2 again.
+
+**AI on top of a graph.**
+- **What the evidence supports:** graph-based retrieval helps on questions that need several steps, such as linking facts across documents. One post reports 71.2 percent against 65.8 percent for ordinary retrieval on one benchmark, with the gap growing as more steps are needed. Graphs also suit an assistant's memory where facts get corrected, because each fact can carry a date and a newer fact can replace an older one (this is what Graphiti is described as doing). [Production write-up](https://tianpan.co/blog/2026-04-09-graphrag-production-when-vector-search-hits-ceiling), [agent memory](https://tianpan.co/blog/2026-04-10-graph-memory-llm-agents-relational-reasoning).
+- **What looks like hype:** building the graph is slow and costly (one summary says 40 to 57 times slower to index and about three and a half times the text sent per question), a graph nobody maintains becomes a liability, and several practitioners say a simple file-based memory is enough for personal use. One writer describes uninstalling a graph database from a personal assistant for this reason. Three 2026 benchmark papers are said to show mixed results, but I could not check them. I found nothing I could rely on about Zep, Mem0 or cognee specifically. [Buyer's guide](https://medium.com/@tongbing00/graphrag-in-2026-what-to-use-when-to-use-it-and-what-to-watch-out-for-a1fa1c283023), [The GraphRAG trap](https://gading-d6fkgjxcn-gading-nasutions-projects.vercel.app/blog/the-graphrag-trap).
+- **AI that builds the graph itself:** this is what the 2026 "LLM wiki" projects and sift-kg do, and the careful ones keep a person approving merges. The failures reported are the same ones as before: invented quotes, over-merging, and an index that drifts.
+
+**For the bank:** AI helping you find and connect is worth having. Letting it quietly rewrite the structure is the part to avoid. Joining other people's banks can wait, and should be by named concept with each contribution attributed.
+
+---
+
 # Whole systems close to the idea
 
 | System | What it is | Alive? | Lesson |
@@ -140,6 +183,7 @@ I did not find a shut down system closely matching the bank. The failures I did 
 # What I could not verify
 
 - **No page was opened.** All claims come from search summaries. The sandbox allows only the search tool. To go deeper, the sites to allow are: arxiv.org, github.com, gist.github.com, en.wikipedia.org, forum.obsidian.md, every.to, mediawiki.org, mintlify.com and developers.sefaria.org. The first pages I would read: Karpathy's gist, the TreeReader and Rambler papers, sift-kg's workflow page, SuttaCentral's methodology, "The Fall of Roam".
+- **No screenshots or videos** of the interface candidates could be retrieved. The sandbox blocks outside sites, so the shortlist rests on written descriptions, and the addresses are for you to try.
 - **Licences** of sift-kg, Deepscatter, Cosmograph, WikiNow and Sefaria's code were not confirmed.
 - **Why the original zoomable interfaces faded**, how embedding maps behave as points are added, Mem's finances, how Syntopicon references were laid out, Adler's syntopical reading steps, and Readwise's resurfacing quality were all searched or touched and not answered.
 - **Quality of language model distilling on humanities text** is known only from one dissertation's comparison. Nobody has measured it for your kind of material.
