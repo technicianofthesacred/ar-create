@@ -55,12 +55,28 @@
     const n=Number.isInteger(Number(saved))&&Number(saved)>=2&&Number(saved)<=12?Number(saved):5;
     await window.combinedSubjects.openStage(n);
    }
-   if(key&&key!=='subjects'){
-    const ok=await window.combinedNavigation.go(key==='read'?'write':key);
-    // Read is a view of Write: wait for the writer to settle, then switch the view, as its Read switch does.
-    if(ok!==false&&key==='read')for(let i=0;i<30;i++){await wait(200);if(!document.getElementById('manuscript')||Number(current()?.viewedStage)!==5)continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}if(window.studyDraft?.viewMode?.()!=='edit')break;}
+   // A piece is chosen before the section, never after: choosing a piece is itself a navigation (the output overview
+   // opens that piece's own writer), so the piece is chosen through its writer and the section named in the address is
+   // set last, where it lands. (Choosing it straight into Arrange leaves an Article piece with no Arrange view.)
+   if(piece&&subject&&key!=='home'&&key!=='subjects'&&window.realOutputOverview?.onAction){
+    if(current()?.id!==subject)await window.combinedSubjects.openStage(5);
+    if(current()?.id===subject){await window.realOutputOverview.onAction({projectId:subject,outputId:piece,kind:'native'});await wait(300);}
    }
-   if(piece&&subject&&current()?.id===subject&&window.realOutputOverview?.onAction)await window.realOutputOverview.onAction({projectId:subject,outputId:piece,kind:key==='arrange'?'arrange':key==='read'?'read':'native'});
+   if(key&&key!=='subjects'){
+    const target=key==='read'?'write':key;let ok=await window.combinedNavigation.go(target);
+    // From a subject's board the rail opens a section by its number only (Material then shows as Library); once the
+    // board has closed the same rail button does the whole step, so it is pressed once more when the rail is elsewhere.
+    // Check of a chosen piece opens beside its writing, where the rail stays on Write: that is where it belongs.
+    await wait(300);
+    const railNow=()=>document.querySelector('.combined-rail [data-combined-nav][aria-current]')?.dataset.combinedNav;
+    if(ok!==false&&target!=='check'&&target!=='home'&&railNow()&&railNow()!==target)ok=await window.combinedNavigation.go(target);
+    // Read is a view of Write: wait for the writer to settle, then switch the view, as its Read switch does.
+    // A chosen Carousel is read at its own writer (step 9, where the rail keeps marking Arrange): its Read switch is the
+    // workspace's own mode change, and the writer's view says when it has taken.
+    const carouselRead=()=>document.querySelector('#study-output-canvas .car-writing-page')?.dataset.writingView==='read';
+    if(ok!==false&&key==='read'&&window.studyOutputConnection?.selection?.()?.output?.kind==='carousel')for(let i=0;i<30&&!carouselRead();i++){await wait(200);if(!document.querySelector('#study-output-canvas .car-writing-page'))continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}await wait(300);}
+    else if(ok!==false&&key==='read')for(let i=0;i<30;i++){await wait(200);if(!document.getElementById('manuscript')||Number(current()?.viewedStage)!==5)continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}if(window.studyDraft?.viewMode?.()!=='edit')break;}
+   }
   }catch(error){console.warn('Version two: the address could not open that place here.',error?.message||error);}
   finally{forget();}
  }
