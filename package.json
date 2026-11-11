@@ -12,6 +12,7 @@
     "test": "node --test tests/*.test.mjs",
     "verify:package": "node scripts/check-package.mjs",
     "demo": "node scripts/demo.mjs",
+    "demo:instagram": "node scripts/demo-instagram.mjs",
     "capabilities": "node scripts/gen-capabilities.mjs",
     "status": "node scripts/gen-status.mjs"
   }
