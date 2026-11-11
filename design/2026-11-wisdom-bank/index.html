@@ -1,0 +1,400 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Wisdom bank mock-ups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mock-up only. Three screens of the wisdom bank inside the Research station of version two.
+   Layout: one quiet column on a phone; map beside cards on a computer. Colours are the app's own (c3-theme.css). */
+:root{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--ink2:#51564b;--line2:#cfcdc3;--sel:#e9e4d7;--good:#3f6146;--warn:#94600f;--shadow:0 18px 50px rgba(40,35,25,.18);
+ --ui:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;--speech:Lora,Georgia,serif;
+ --t12:12px;--t13:13px;--t14:14px;--t15:15px;--t18:18px;--t22:22px;--top:52px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--ink2:#c3bdad;--line2:#423e34;--sel:#2c2a22;--good:#8fb08a;--warn:#d9a95a;--shadow:0 18px 50px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--ink2:#c3bdad;--line2:#423e34;--sel:#2c2a22;--good:#8fb08a;--warn:#d9a95a;--shadow:0 18px 50px rgba(0,0,0,.55);color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--t15)/1.5 var(--ui);-webkit-text-size-adjust:100%;overflow-wrap:break-word}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+h1,h2,h3,p,ul,ol,blockquote,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+:focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:6px;height:var(--top);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.logo{width:18px;height:18px;border-radius:5px;background:var(--warm);flex:none;margin-right:6px}
+.place{display:inline-flex;align-items:center;height:32px;padding:0 10px;border-radius:6px;font:500 var(--t14)/1 var(--ui);color:var(--ink2);white-space:nowrap}
+.place[aria-current]{background:var(--sel);color:var(--ink);font-weight:600}
+.grow{flex:1 1 0;min-width:0}
+.walk{display:flex;gap:2px;flex:none}
+.walk a{display:inline-flex;align-items:center;height:44px;padding:0 9px;font:500 var(--t13)/1 var(--ui);color:var(--dim);border-radius:6px}
+.walk a[aria-current]{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--warm)}
+@media (max-width:850px){.place:not([aria-current]){display:none}}
+
+/* page */
+.page{max-width:1320px;margin:0 auto;padding-block:24px 130px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+h1{font:600 var(--t22)/1.15 var(--ui);letter-spacing:-.02em;text-wrap:balance}
+h2{font:600 var(--t18)/1.2 var(--ui);letter-spacing:-.01em}
+h3{font:600 var(--t15)/1.3 var(--ui)}
+.meta{font-size:var(--t13);color:var(--dim);display:flex;flex-wrap:wrap;gap:2px 10px;align-items:center;margin-top:6px}
+.meta a,.out{color:var(--warm);font-weight:600}
+.sample{display:inline-flex;align-items:center;height:20px;padding:0 7px;border:1px dashed var(--line2);border-radius:10px;font:500 var(--t12)/1 var(--ui);color:var(--dim);letter-spacing:.02em}
+.lab{font:600 var(--t12)/1.3 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.say{font:400 var(--t15)/1.55 var(--speech);color:var(--ink)}
+.who{font-size:var(--t13);color:var(--dim);display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}
+.hear{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 8px;margin-left:-8px;border-radius:6px;font:500 var(--t13)/1 var(--ui);color:var(--warm);font-variant-numeric:tabular-nums}
+.hear::before{content:"";border-left:7px solid currentColor;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent}
+.hear[aria-pressed="true"]::before{border:0;width:7px;height:9px;border-left:2.5px solid currentColor;border-right:2.5px solid currentColor}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:22px;background:var(--ink);color:var(--bg);font:600 var(--t14)/1 var(--ui);white-space:nowrap}
+.btn.quiet{background:transparent;color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line2)}
+.btn:disabled{opacity:.35;cursor:default}
+.ghost{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-radius:6px;font:500 var(--t14)/1 var(--ui);color:var(--ink2)}
+@media (hover:hover){.ghost:hover,.walk a:hover{background:var(--sel);color:var(--ink)}}
+
+/* brightness: --r from 1 to 5 */
+.dot{display:block;border-radius:50%;flex:none;width:calc(8px + var(--r)*3px);height:calc(8px + var(--r)*3px);background:color-mix(in srgb,var(--ink) calc(12% + var(--r)*17.6%),var(--bg))}
+[data-r="5"]>.dot,.dot[data-r="5"]{background:var(--warm);box-shadow:0 0 0 5px color-mix(in srgb,var(--warm) 20%,transparent)}
+.bright{color:color-mix(in srgb,var(--ink) calc(40% + var(--r)*12%),var(--bg))}
+
+/* a map: lines in an svg, concepts as buttons on top */
+.map{position:relative;width:100%;height:460px;max-width:560px;margin:0 auto}
+.map svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.map line{stroke:var(--line2);stroke-width:1.4;vector-effect:non-scaling-stroke;fill:none;transition:opacity .2s}
+.map line[data-k="prepares"]{stroke:var(--warm);stroke-width:1.8}
+.map line[data-k="explains"]{stroke:var(--ink2)}
+.map line[data-k="contrasts"]{stroke:var(--ink2);stroke-dasharray:7 5}
+.map line[data-k="echoes"]{stroke:var(--ink2);stroke-dasharray:1.5 5;stroke-linecap:round;stroke-width:2}
+.map.picked line:not(.on){opacity:.18}
+.node{position:absolute;transform:translate(-50%,-10px);display:flex;flex-direction:column;align-items:center;gap:5px;width:30%;max-width:130px;min-height:44px;text-align:center;font:500 var(--t13)/1.25 var(--ui)}
+.node span:last-child{background:var(--bg);padding:0 4px;border-radius:4px}
+.node.on span:last-child{text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--warm)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;font-size:var(--t12);color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:block;width:22px;border-top:2px solid var(--ink2)}
+.legend i.p{border-color:var(--warm)}.legend i.c{border-top-style:dashed}.legend i.e{border-top-style:dotted}
+
+/* the lines of the picked concept */
+.lines{display:grid;gap:10px;padding:14px 16px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.lines>header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.linerow{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;font-size:var(--t14)}
+.linerow b{font-weight:600}
+.linerow .k{font:600 var(--t12)/1.4 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--warm)}
+.linerow p{color:var(--ink2)}
+
+/* concept cards */
+.cards{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.nug{display:grid;align-content:start;gap:8px;padding:16px;border-radius:12px;background:var(--paper);border:1px solid var(--line);min-width:0}
+.nug>header{display:flex;align-items:center;gap:10px;min-width:0}
+.nug>header h3{flex:1 1 auto;min-width:0}
+.nug>header h3 a{display:inline-flex;align-items:center;min-height:32px}
+.res{display:inline-flex;align-items:center;flex:none}
+.res button{width:22px;height:44px;display:grid;place-items:center}
+.res button::before{content:"";width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line2)}
+.res button.f::before{background:var(--ink2);box-shadow:none}
+.nug .dist{color:var(--ink2);font-size:var(--t14)}
+.join{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding-top:8px;border-top:1px solid var(--line);font-size:var(--t13);color:var(--ink2)}
+.join span{flex:1 1 120px;min-width:0}
+.join.yes{color:var(--good)}
+
+/* nugget screen */
+.trail{display:flex;flex-wrap:wrap;align-items:center;gap:0 2px;font-size:var(--t13);color:var(--dim);margin-left:-8px}
+.trail button,.trail a{min-height:44px;padding:0 8px;display:inline-flex;align-items:center;border-radius:6px}
+.trail b{color:var(--ink);font-weight:600;padding:0 8px}
+.ring{height:330px}
+.ring .me span:last-child{background:var(--bg);padding:0 4px;border-radius:4px}
+.ring .me{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:8px;width:36%;text-align:center;font:600 var(--t15)/1.25 var(--ui)}
+.ring .nb{position:absolute;transform:translate(-50%,-50%);width:31%;max-width:150px;min-height:48px;padding:6px 4px;border-radius:10px;background:var(--bg);text-align:center;font:500 var(--t13)/1.25 var(--ui);display:flex;flex-direction:column;align-items:center;gap:2px}
+.ring .nb small{font:600 var(--t12)/1.3 var(--ui);letter-spacing:.05em;text-transform:uppercase;color:var(--dim)}
+.ring .nb[data-k="prepares"] small{color:var(--warm)}
+.stage{animation:arrive .42s cubic-bezier(.2,.7,.2,1)}
+@keyframes arrive{from{opacity:0;transform:translate(var(--dx,0),var(--dy,0)) scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.stage{animation:none}.map line{transition:none}}
+.glance{display:grid;gap:10px;padding:18px 16px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.glance .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.tabs{display:flex;flex-wrap:wrap;gap:2px}
+.tabs button{min-height:44px;padding:0 10px;border-radius:6px;font:500 var(--t13)/1 var(--ui);color:var(--dim)}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;background:var(--sel)}
+.deck{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;border-radius:12px}
+.deck::-webkit-scrollbar{display:none}
+.card{flex:0 0 100%;min-width:0;scroll-snap-align:center;display:grid;align-content:start;gap:10px;padding:18px 16px;min-height:300px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.card .work{display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.card .work:first-of-type{border-top:0;padding-top:0}
+.card .note{font-size:var(--t13);color:var(--ink2)}
+.card textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--line2);border-radius:10px;background:var(--bg);color:var(--ink);font:400 var(--t15)/1.5 var(--speech);resize:vertical}
+.q{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:8px 0;border-top:1px solid var(--line);font-size:var(--t14)}
+.q:first-of-type{border-top:0}
+.q span{flex:1 1 200px;min-width:0}
+
+/* express */
+.ask{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;border-radius:26px;background:var(--paper);border:1px solid var(--line2)}
+.ask input{flex:1 1 auto;min-width:0;height:44px;border:0;background:transparent;color:var(--ink);font:400 var(--t18)/1.3 var(--speech);outline:0}
+.mic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg);flex:none}
+.mic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.groups{display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.group{display:grid;gap:10px;align-content:start;min-width:0}
+.group>header{display:grid;gap:1px}
+.group>header p{font-size:var(--t13);color:var(--dim)}
+.pick{display:grid;gap:8px;padding:14px 16px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.pick[data-in]{box-shadow:inset 0 0 0 1px var(--ink2);border-color:var(--ink2)}
+.pick>header{display:flex;align-items:center;gap:10px}
+.pick>header h3{flex:1 1 auto;min-width:0}
+.add{width:44px;height:44px;margin:-8px -10px -8px 0;border-radius:50%;display:grid;place-items:center;flex:none;font:600 var(--t14)/1 var(--ui)}
+.add i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line2);font-style:normal;color:var(--ink2)}
+.pick[data-in] .add i{background:var(--ink);color:var(--bg);box-shadow:none}
+.first{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding-top:8px;border-top:1px solid var(--line);font-size:var(--t13);color:var(--ink2)}
+.first .k{font:600 var(--t12)/1.4 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--warm)}
+.first a,.first button{color:var(--ink);font-weight:600;min-height:32px;display:inline-flex;align-items:center}
+.first button{color:var(--warm)}
+.private{color:var(--warn)}
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--paper);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.tray>div{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.slots{display:flex;align-items:center;gap:0;flex:1 1 auto;min-width:0;flex-wrap:wrap}
+.slots i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line2);font:600 var(--t13)/1 var(--ui);font-style:normal;color:var(--dim);border-style:none}
+.slots i.f{background:var(--ink);color:var(--bg);box-shadow:none}
+.slots u{width:14px;border-top:1.5px solid var(--line2);text-decoration:none}
+.slots span{margin-left:10px;font-size:var(--t13);color:var(--dim)}
+dialog.sheet{width:min(520px,100%);max-width:100%;max-height:86dvh;margin:auto auto 0;padding:0;border:1px solid var(--line2);border-bottom:0;border-radius:16px 16px 0 0;background:var(--paper);color:var(--ink);box-shadow:var(--shadow);overflow:auto}
+dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
+.sheet-in{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:12px 20px calc(22px + env(safe-area-inset-bottom,0px))}
+.sheet-in>header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.path{display:grid;gap:0}
+.stop{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 12px;align-items:start}
+.stop>i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);font:600 var(--t13)/1 var(--ui);font-style:normal}
+.stop .say{font-size:var(--t14)}
+.stop .mv{display:flex}
+.stop .mv button{width:36px;height:44px;display:grid;place-items:center;color:var(--ink2);margin-top:-8px}
+.between{margin:2px 0 2px 13px;padding:6px 0 6px 26px;border-left:1.5px solid var(--line2)}
+.between button{min-height:36px;font:italic 400 var(--t14)/1.4 var(--speech);color:var(--dim)}
+.between input{width:100%;height:36px;border:0;border-bottom:1px solid var(--line2);background:transparent;color:var(--ink);font:400 var(--t14)/1.4 var(--speech);outline:0}
+.gap{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 12px;border:1px dashed var(--line2);border-radius:10px;font-size:var(--t13);color:var(--ink2)}
+.gap span{flex:1 1 200px;min-width:0}
+.forms{display:flex;flex-wrap:wrap;gap:8px}
+.outline{display:grid;gap:12px}
+.outline li{display:grid;gap:4px;padding-top:12px;border-top:1px solid var(--line)}
+.outline .who{font-size:var(--t12)}
+
+@media (min-width:851px){
+ :root{--top:56px}
+ .top{padding-left:28px;padding-right:28px}
+ .walk a,.ghost,.tabs button{min-height:32px;height:32px}
+ .page{padding-block:44px 140px;padding-left:40px;padding-right:40px;gap:32px}
+ dialog.sheet{margin:auto;border-bottom:1px solid var(--line2);border-radius:14px}
+}
+@media (min-width:1000px){
+ .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:40px;align-items:start}
+ .split>.left{position:sticky;top:calc(var(--top) + 24px);display:grid;gap:18px}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .groups{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 32px}
+ #express .narrow{max-width:760px}
+}
+.left{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+.right{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0;align-content:start}
+</style>
+
+<header class="top">
+ <span class="logo"></span>
+ <span class="place">Gather</span><span class="place" aria-current="page">Research</span><span class="place">Create</span><span class="place">Share</span>
+ <span class="grow"></span>
+ <nav class="walk" aria-label="Mock-up screens"><a href="#source">Source</a><a href="#nugget">Nugget</a><a href="#express">Express</a></nav>
+</header>
+
+<main>
+<!-- 1. a source just after distilling -->
+<section class="page" id="source">
+ <header>
+  <h1>The ground is already whole</h1>
+  <p class="meta"><span>Ilse Varnholt</span><span>Talk, 48 min</span><span>Distilled 4 minutes ago</span><a href="#source" class="out">Open the talk</a><span class="sample">Sample</span></p>
+ </header>
+ <div class="split">
+  <div class="left">
+   <div class="map" id="smap"></div>
+   <p class="legend"><span><i class="p"></i>prepares</span><span><i></i>explains</span><span><i class="c"></i>contrasts</span><span><i class="e"></i>echoes</span></p>
+   <div class="lines" id="slines"></div>
+  </div>
+  <div class="right">
+   <h2>9 concepts</h2>
+   <div class="cards" id="scards"></div>
+  </div>
+ </div>
+</section>
+
+<!-- 2. one nugget with its neighbours -->
+<section class="page" id="nugget" hidden>
+ <nav class="trail" id="trail" aria-label="Where you walked"></nav>
+ <div class="split">
+  <div class="left"><div class="map ring" id="ring"></div></div>
+  <div class="right" id="nbody"></div>
+ </div>
+</section>
+
+<!-- 3. I have something to express -->
+<section class="page" id="express" hidden>
+ <header class="narrow">
+  <h1>What do you want to express?</h1>
+  <p class="meta"><span class="sample">Sample</span><span>5 voices from 5 traditions</span></p>
+ </header>
+ <form class="ask narrow" id="ask"><input id="feeling" aria-label="What you want to express" value="everything is perfect" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
+ <div class="groups" id="groups"></div>
+</section>
+</main>
+
+<div class="tray" id="tray" hidden><div><div class="slots" id="slots"></div><button class="btn" id="joinbtn" disabled>Join into a pathway</button></div></div>
+
+<dialog class="sheet" id="sheet"><div class="sheet-in" id="sheetin"></div></dialog>
+
+<script>
+/* Everything here is invented sample content. No real person said any of it. */
+const TALK={who:'Ilse Varnholt',work:'The ground is already whole'};
+const LENS='Sample lens: body, breath, everyday';
+const C={
+ eth:{n:'Care first',d:'Kindness in conduct comes before the view, or the view becomes an excuse.',r:3,x:22,y:6,p:[['03:15','Before any of this, you stop harming. I mean it in the dullest way: how you speak to the person who makes your coffee.']],lens:'Notice the body tighten just before a sharp word, and let that be the bell.',q:['What do other traditions ask of conduct before they teach a view?']},
+ stab:{n:'Settling attention',d:'The mind has to settle before it can see what is here.',r:3,x:76,y:5,p:[['06:48','If the water is stirred up you cannot see the bottom, and no amount of wanting to see will help. You stop stirring. That is all the first practice is.']],lens:'Feel the breath low in the belly for ten rounds before trying to look at anything.',q:['Which practices do other traditions use to settle the mind first?']},
+ shown:{n:'Being shown',d:'The view is pointed out by someone who knows you, not worked out alone.',r:2,x:50,y:20,p:[['14:30','I did not figure this out. Someone who had watched me for years waited until I was tired enough to listen, and then said one sentence.']],lens:'Some things land only when another person says them to your face at the right moment.',q:['Who else describes being shown, and by whom?']},
+ feel:{n:'Feeling everything',d:'Let each feeling arrive fully, without fixing it.',r:4,x:19,y:37,p:[['26:44','Grief comes, and for once you do not manage it. You let it be exactly as large as it is. That is not giving up. That is the first time you have actually met it.']],lens:'Find where the feeling sits in the body and breathe beside it, not at it.',q:['How do other traditions hold a feeling that is too large?']},
+ ordinary:{n:'Ordinary mind',d:'What is looked for is the plain awareness already present.',r:4,x:79,y:36,join:'2 other voices',p:[['19:02','People expect light and music. What you find is the same awareness that heard the kettle this morning. It is so ordinary you have been stepping over it.']],lens:'The awareness reading this line is the one meant. Nothing more special.',q:['Where do teachers say this is missed because it is too plain?']},
+ whole:{n:'Already whole',d:'Nothing has to be added before this moment is complete.',r:5,x:49,y:54,p:[['31:12','You keep waiting for the moment that will finally be good enough to rest in. I am telling you there is no such moment coming, because this is it. It was never missing anything.'],['33:40','Whole does not mean pleasant. A cracked cup is a whole cracked cup.']],
+  note:'Says it as a view, recognised after preparation.',
+  other:{who:'Tomas Reuel',work:'Just this bowl',kind:'Talk, 22 min',p:[['12:05','When you wash the bowl, the bowl is not on its way to being a cleaner bowl somewhere else. It is this bowl, wet, in your hands, and nothing is left out.']],note:'Says it as something done with the hands, not held as a view.'},
+  lens:'In the body this is the moment the shoulders drop because nothing is being reached for. Try it on an out-breath while doing something plain, like washing a cup.',q:['How does each tradition get someone ready to hear this?','Where do teachers warn against saying this too early?']},
+ bypass:{n:'The false version',d:'Calling pain perfect so as not to feel it is not this view.',r:2,x:83,y:66,p:[['36:20','If you say everything is perfect and your jaw is tight, you are using the words as a lid. Take the lid off. The view has room for the pain; the lid does not.']],lens:'Check the jaw, the belly, the hands. If they are clenched, the words are ahead of the body.',q:['What other names is this false version given?']},
+ comp:{n:'Warmth as the test',d:'If the view is real, it shows as warmth toward others.',r:3,x:17,y:70,p:[['41:05','You will know it is real because you become easier to live with. Ask the people at home, not yourself.']],lens:'Watch how you close a door or answer the phone on a day you think you are doing well.',q:['What tests do other traditions give for a real insight?']},
+ ret:{n:'Again and again',d:'It is recognised many times, not achieved once.',r:2,x:50,y:86,p:[['44:50','Short moments, many times. Nobody stays. You come back, and coming back is the whole of it.']],lens:'One breath noticed while the kettle boils counts.',q:['How do other traditions speak of losing it and returning?']}
+};
+const ORDER=['eth','stab','shown','ordinary','feel','whole','bypass','comp','ret'];
+const L=[
+ ['eth','whole','prepares','She says the view is only safe to hear once conduct is steady.'],
+ ['stab','ordinary','prepares','A settled mind is what notices plain awareness.'],
+ ['shown','ordinary','prepares','Ordinary mind is pointed out, not reasoned toward.'],
+ ['stab','feel','prepares','Without steadiness, a full feeling sweeps you off.'],
+ ['ordinary','whole','explains','Plain awareness is what turns out to lack nothing.'],
+ ['feel','whole','explains','Wholeness includes every feeling, the hard ones too.'],
+ ['bypass','whole','contrasts','Sets the limit: perfect cannot mean unfelt.'],
+ ['comp','whole','explains','Gives the way to check that the view is real.'],
+ ['eth','comp','echoes','Care at the start and warmth at the end are close, but not one concept.'],
+ ['ret','whole','explains','Wholeness is recognised in short moments, many times.']
+];
+const KIN={prepares:['prepares','comes after'],explains:['explains','explained by'],contrasts:['contrasts','contrasts'],echoes:['echoes','echoes']};
+const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* neighbours of a concept: [other id, kind, label seen from here, reason] */
+function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:(l[2]==='prepares'?'comes first':KIN[l[2]][1]),why:l[3],out}})}
+const hear=t=>`<button class="hear" aria-pressed="false" data-hear>${t}</button>`;
+
+/* ---------- screen 1 ---------- */
+let picked='whole';
+function drawSource(){
+ const nb=near(picked).map(n=>n.id);
+ $('#smap').className='map picked';
+ $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+L.map(l=>`<line x1="${C[l[0]].x}" y1="${C[l[0]].y+1}" x2="${C[l[1]].x}" y2="${C[l[1]].y+1}" data-k="${l[2]}" class="${l[0]===picked||l[1]===picked?'on':''}"/>`).join('')+'</svg>'+
+  ORDER.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.n}</span></button>`}).join('');
+ const c=C[picked];
+ $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+near(picked).map(n=>`<div class="linerow"><span class="k">${n.lab}</span><b>${C[n.id].n}</b><p>${n.why}</p></div>`).join('');
+ $('#scards').innerHTML=ORDER.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#nugget" data-open="${id}">${c.n}</a></h3><span class="res" role="group" aria-label="Resonance">${[1,2,3,4,5].map(i=>`<button class="${i<=c.r?'f':''}" data-res="${id}:${i}" aria-label="Resonance ${i} of 5"></button>`).join('')}</span></header>
+  <p class="lab">Distillation</p><p class="dist">${c.d}</p>
+  <p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span></p>
+  ${c.join?(c.joined?`<p class="join yes"><span>Joined to Ordinary mind, now 3 voices</span></p>`:`<p class="join"><span>Joins a concept you have: <b>Ordinary mind</b>, ${c.join}</span><button class="ghost" data-join="${id}">Yes</button><button class="ghost" data-join="">Not now</button></p>`):''}</article>`}).join('');
+}
+
+/* ---------- screen 2 ---------- */
+let here='whole', walked=['whole'], opened=false;
+const SLOT={1:[[50,9]],2:[[24,10],[76,10]],3:[[24,10],[76,10],[50,91]],4:[[24,10],[76,10],[24,90],[76,90]],5:[[24,9],[76,9],[17,62],[83,62],[50,92]],6:[[24,8],[76,8],[16,40],[84,40],[26,90],[74,90]]};
+function drawNugget(from){
+ const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='comes first'?0:1)-(b.lab==='comes first'?0:1)), s=SLOT[nb.length];
+ const ring=$('#ring');
+ ring.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+nb.map((n,i)=>`<line x1="50" y1="50" x2="${s[i][0]}" y2="${s[i][1]}" data-k="${n.k}"/>`).join('')+'</svg>'+
+  `<div class="me" data-r="${c.r}" style="--r:${c.r}"><span class="dot"></span><span>${c.n}</span></div>`+
+  nb.map((n,i)=>`<button class="nb bright" style="left:${s[i][0]}%;top:${s[i][1]}%;--r:${C[n.id].r}" data-k="${n.k}" data-walk="${n.id}" data-x="${s[i][0]}" data-y="${s[i][1]}"><small>${n.lab}</small><span>${C[n.id].n}</span></button>`).join('');
+ $('#trail').innerHTML=`<a href="#source">${TALK.work}</a>`+walked.slice(-4).map((id,i,a)=>i===a.length-1?`<span>›</span><b>${C[id].n}</b>`:`<span>›</span><button data-walk="${id}">${C[id].n}</button>`).join('');
+ const works=[{who:TALK.who,work:TALK.work,kind:'Talk, 48 min',p:c.p,note:c.note}].concat(c.other?[c.other]:[]);
+ const tabs=['Gist','Their words','Your lens','Lines','Your response','Go deeper'];
+ $('#nbody').innerHTML=`<div class="glance"><p class="lab">Distillation</p><p>${c.d}</p><p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
+   <p class="acts"><button class="btn" id="openbtn" aria-expanded="${opened}">${opened?'Close':'Open'}</button><a class="btn quiet" href="#express">Express with this</a></p></div>
+  <div id="stack" ${opened?'':'hidden'}><div class="tabs" role="tablist">${tabs.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-tab="${i}">${t}</button>`).join('')}</div>
+  <div class="deck" id="deck" tabindex="0">
+   <article class="card"><p class="lab">Distillation</p><h2>${c.n}</h2><p>${c.d}</p><p class="note">${works.length} ${works.length>1?'works speak':'work speaks'} of this. ${nb.length} lines.</p></article>
+   <article class="card">${works.map(w=>`<div class="work"><p class="lab">Their words</p>${w.p.map(p=>`<blockquote class="say">${esc(p[1])}</blockquote><p class="who">${hear(p[0])}<span>${w.who}</span></p>`).join('')}<p class="who"><span>${w.work}</span><span>${w.kind}</span></p>${w.note?`<p class="lab">Distillation</p><p class="note">${w.note}</p>`:''}</div>`).join('')}</article>
+   <article class="card"><p class="lab">Through your lens</p><p>${c.lens}</p><p class="who"><span class="sample">${LENS}</span><button class="ghost">Change lens</button></p></article>
+   <article class="card"><p class="lab">Lines</p>${nb.map(n=>`<div class="linerow"><span class="k">${n.lab}</span><button data-walk="${n.id}"><b>${C[n.id].n}</b></button><p>${n.why}</p></div>`).join('')}<p><button class="ghost" style="margin-left:-10px">Draw a line of your own</button></p></article>
+   <article class="card"><label class="lab" for="resp">Your response</label><textarea id="resp" placeholder="Speak or write"></textarea><p class="who"><span>11 November 2026</span></p></article>
+   <article class="card"><p class="lab">Go deeper</p>${c.q.map(q=>`<div class="q"><span>${q}</span><button class="ghost" data-sent>Send to Research</button></div>`).join('')}</article>
+  </div></div>`;
+ const st=[ring,$('#nbody')];
+ st.forEach(e=>{e.classList.remove('stage');e.style.setProperty('--dx',from?(from.x-50)*1.6+'px':'0');e.style.setProperty('--dy',from?(from.y-50)*1.6+'px':'0');void e.offsetWidth;e.classList.add('stage')});
+ const deck=$('#deck');
+ deck.addEventListener('scroll',()=>{const i=Math.round(deck.scrollLeft/(deck.clientWidth+12));document.querySelectorAll('[data-tab]').forEach((b,j)=>b.setAttribute('aria-selected',i===j))},{passive:true});
+}
+function walk(id,from){here=id;if(walked[walked.length-1]!==id){const k=walked.indexOf(id);if(k>-1)walked=walked.slice(0,k+1);else walked.push(id)}opened=false;drawNugget(from)}
+
+/* ---------- screen 3 ---------- */
+const G=[
+ {t:'Tibetan Buddhist study group',who:'Ilse Varnholt',src:'The ground is already whole',items:[
+  {id:'a',c:'whole',n:'Already whole',at:'31:12',say:C.whole.p[0][1],first:['eth','stab']},
+  {id:'b',c:'feel',n:'Feeling everything',at:'26:44',say:C.feel.p[0][1],first:['stab']}]},
+ {t:'Zen sitting group',who:'Tomas Reuel',src:'Just this bowl',items:[
+  {id:'c',c:'whole',n:'Already whole',at:'12:05',say:C.whole.other.p[0][1],firstText:['Sitting every day']}]},
+ {t:'Stoic reading circle',who:'Hanne Brückl',src:'Notes on assent',items:[
+  {id:'d',n:'Wanting what happens',at:'Paragraph 9',say:'I used to read this as putting up with things. It is stronger than that. It is looking at the day you were actually given and saying yes, this one, I will take this one.',firstText:['Sorting what is mine to change']}]},
+ {t:'Christian contemplative retreat',who:'Anselm Dray',src:'Third evening talk',items:[
+  {id:'e',n:'Held anyway',at:'08:30',say:'You do not have to believe it is all right. You only have to stop arguing for a moment, and notice you are still being held.',firstText:['Consenting to not know']}]},
+ {t:'A friend',who:'Oisín Farrell',src:'Voice note, 2 November',priv:true,items:[
+  {id:'f',n:'Nothing to fix',at:'00:41',say:'I was on the roof fixing the gutter and I thought, there is nothing wrong with any of this, including the broken gutter.'}]}
+];
+const ITEMS={};G.forEach(g=>g.items.forEach(i=>ITEMS[i.id]=Object.assign(i,{g})));
+let path=[], words={}, asked={};
+function drawExpress(){
+ $('#groups').innerHTML=G.map(g=>`<section class="group"><header><h2>${g.t}</h2><p>${g.who}, ${g.src}${g.priv?' · <span class="private">Private until he agrees</span>':''}</p></header>`+g.items.map(i=>{const k=path.indexOf(i.id);return `<article class="pick" ${k>-1?'data-in':''}><header><h3>${i.c?`<a href="#nugget" data-open="${i.c}">${i.n}</a>`:i.n}</h3><button class="add" data-add="${i.id}" aria-pressed="${k>-1}" aria-label="${k>-1?'Take out of':'Add to'} the pathway"><i>${k>-1?k+1:'+'}</i></button></header>
+  <p class="lab">Their words</p><blockquote class="say">${esc(i.say)}</blockquote><p class="who">${/^\d/.test(i.at)?hear(i.at):`<span>${i.at}</span>`}<span>${g.who}</span></p>
+  <p class="first"><span class="k">Comes first</span>${i.first?i.first.map(f=>`<a href="#nugget" data-open="${f}">${C[f].n}</a>`).join('<span>·</span>'):i.firstText?`<span><b>${i.firstText[0]}</b></span>`:asked[i.id]?'<span>Asked Research</span>':`<span>Nothing kept yet</span><button data-askr="${i.id}">Ask Research</button>`}</p></article>`}).join('')+'</section>').join('');
+ const n=Math.max(3,path.length);
+ $('#slots').innerHTML=Array.from({length:n},(_,i)=>(i?'<u></u>':'')+`<i class="${i<path.length?'f':''}">${i+1}</i>`).join('')+(path.length?`<span>${path.map(id=>ITEMS[id].n).join(', ')}</span>`:'');
+ $('#joinbtn').disabled=path.length<3;
+}
+function drawPath(){
+ const topic=$('#feeling').value.trim()||'Untitled';
+ const have=new Set(path.map(id=>ITEMS[id].c).filter(Boolean));
+ const miss=[];path.forEach(id=>(ITEMS[id].first||[]).forEach(f=>{if(!have.has(f)&&!miss.includes(f))miss.push(f)}));
+ $('#sheetin').innerHTML=`<header><div><p class="lab">Research topic</p><h2 class="say" style="font-size:var(--t18)">${esc(topic.charAt(0).toUpperCase()+topic.slice(1))}</h2></div><button class="ghost" data-close>Close</button></header>
+  <ol class="path">${path.map((id,k)=>{const i=ITEMS[id];return `<li>${k?`<div class="between">${words[k]!=null?`<input data-w="${k}" value="${esc(words[k])}" aria-label="Your words between" placeholder="Your words">`:`<button data-wadd="${k}">Your words here</button>`}</div>`:''}<div class="stop"><i>${k+1}</i><div><h3>${i.n}</h3><p class="say">${esc(i.say)}</p><p class="who"><span>${i.g.who}</span><span>${i.g.src}</span>${i.g.priv?'<span class="private">Private until he agrees</span>':''}</p></div><span class="mv"><button data-mv="${k}:-1" aria-label="Move up" ${k?'':'disabled style="opacity:.25"'}>↑</button><button data-mv="${k}:1" aria-label="Move down" ${k<path.length-1?'':'disabled style="opacity:.25"'}>↓</button></span></div></li>`}).join('')}</ol>
+  ${miss.map(f=>`<p class="gap"><span><b>${C[f].n}</b> comes first and is not on this pathway.</span><button class="ghost" data-gap="${f}">Acknowledge</button></p>`).join('')}
+  <div class="forms"><p class="lab" style="flex:1 1 100%">Make a piece</p><button class="btn" data-piece="Article">Article</button><button class="btn quiet" data-piece="Reel">Reel</button><button class="btn quiet" data-piece="Words for an artwork">Words for an artwork</button></div>`;
+}
+function drawPiece(kind){
+ const topic=$('#feeling').value.trim();
+ $('#sheetin').innerHTML=`<header><div><p class="lab">${kind}, outline</p><h2 class="say" style="font-size:var(--t18)">${esc(topic.charAt(0).toUpperCase()+topic.slice(1))}</h2></div><button class="ghost" data-back>Back</button></header>
+  <ol class="outline">${path.map((id,k)=>{const i=ITEMS[id];return `<li><h3>${k+1}. ${i.n}</h3>${words[k]?`<p class="lab">Your words</p><p class="say">${esc(words[k])}</p>`:''}<p class="lab">Their words</p><p class="say">${esc(i.say)}</p><p class="who">${i.g.who}, ${i.g.src}, ${i.at}</p></li>`}).join('')}</ol>
+  <p class="gap"><span>Create is outside this mock-up.</span></p>`;
+}
+
+/* ---------- moving about ---------- */
+function show(){
+ const h=(location.hash||'#source').slice(1), id=['source','nugget','express'].includes(h)?h:'source';
+ document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!==id);
+ document.querySelectorAll('.walk a').forEach(a=>a.getAttribute('href')==='#'+id?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+ $('#tray').hidden=id!=='express';
+ if(id==='nugget')drawNugget();
+ window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button,a');if(!t)return;const d=t.dataset;
+ if(d.pick){picked=d.pick;drawSource()}
+ else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource()}
+ else if('join' in d){if(d.join){C[d.join].joined=true}else{delete C.ordinary.join}drawSource()}
+ else if(d.open){here=d.open;walked=[d.open];opened=false}
+ else if(d.walk){walk(d.walk,d.x?{x:+d.x,y:+d.y}:null);if(window.innerWidth<1000)$('#trail').scrollIntoView({block:'start'})}
+ else if(t.id==='openbtn'){opened=!opened;$('#stack').hidden=!opened;t.textContent=opened?'Close':'Open';t.setAttribute('aria-expanded',opened);if(opened)$('#stack').scrollIntoView({behavior:'smooth',block:'nearest'})}
+ else if(d.tab){const deck=$('#deck');deck.scrollTo({left:d.tab*(deck.clientWidth+12),behavior:'smooth'})}
+ else if('hear' in d){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true')}
+ else if('sent' in d){t.textContent='Sent';t.disabled=true}
+ else if(d.add){const k=path.indexOf(d.add);k>-1?path.splice(k,1):path.push(d.add);words={};drawExpress()}
+ else if(d.askr){asked[d.askr]=true;drawExpress()}
+ else if(t.id==='joinbtn'){drawPath();$('#sheet').showModal()}
+ else if('close' in d){$('#sheet').close()}
+ else if(d.wadd){words[d.wadd]='';drawPath();$(`[data-w="${d.wadd}"]`).focus()}
+ else if(d.mv){const[k,s]=d.mv.split(':').map(Number);const x=path.splice(k,1)[0];path.splice(k+s,0,x);words={};drawPath();drawExpress()}
+ else if(d.gap){t.closest('.gap').innerHTML=`<span><b>${C[d.gap].n}</b> acknowledged. It will be named in the piece.</span>`}
+ else if(d.piece){drawPiece(d.piece)}
+ else if('back' in d){drawPath()}
+});
+document.addEventListener('input',e=>{if(e.target.dataset.w)words[e.target.dataset.w]=e.target.value});
+$('#ask').addEventListener('submit',e=>{e.preventDefault();$('#feeling').blur()});
+$('#sheet').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+window.addEventListener('hashchange',show);
+drawSource();drawExpress();show();
+</script>
