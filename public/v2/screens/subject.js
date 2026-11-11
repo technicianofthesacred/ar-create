@@ -319,6 +319,12 @@
   const handoffHref=(section,form)=>esc(v2.advanced({subject:id,section,piece:pieceOf(form)}));
   /** Write opens version two's own Write screen for an Article; every other piece still opens Advanced. */
   const writeHref=form=>form&&form.kind==='article'?esc(v2.href('write/:id',{id},{piece:pieceOf(form)})):handoffHref('write',form);
+  /** An Article's Read and Check open version two's own screens too (a Carousel's stay on Advanced). The labels that said
+      Advanced say what they do instead. */
+  const SCREEN_OF=Object.freeze({read:'read',checkRun:'check',checkOpen:'check'}),SCREEN_LABEL=Object.freeze({checkRun:'Open Check',checkOpen:'Open Check'});
+  const ownScreen=(key,form)=>form&&form.kind==='article'&&SCREEN_OF[key]?SCREEN_OF[key]:null;
+  const screenHref=(key,form)=>{const s=ownScreen(key,form);return s?esc(v2.href(s+'/:id',{id},{piece:pieceOf(form)})):null;};
+  const screenOfSection=(section,form)=>form&&form.kind==='article'&&(section==='read'||section==='check')?esc(v2.href(section+'/:id',{id},{piece:pieceOf(form)})):null;
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
    const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:`<a class="subj-look none" href="${esc(v2.href('looks'))}" title="Open Looks to see the looks you can choose from"><i aria-hidden="true"></i>Choose a look</a>`;
@@ -377,10 +383,10 @@
    return nx&&nx.id!==s.id?`<footer class="subj-next"><span>${mark('done')}This step is done.</span><button type="button" class="pri" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('right')}</button></footer>`:'';
   }
   /** A hand-off link, named in HANDOFFS so its label and its section cannot drift apart. */
-  const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${key==='write'?writeHref(form):handoffHref(HANDOFFS[key].section,form)}" title="${key==='write'&&form?.kind==='article'?'Opens Write':'Opens in Advanced'}">${esc(HANDOFFS[key].label)}${cls==='subj-link'?icon('chev'):''}</a>`;
+  const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${key==='write'?writeHref(form):screenHref(key,form)||handoffHref(HANDOFFS[key].section,form)}" title="${key==='write'&&form?.kind==='article'?'Opens Write':ownScreen(key,form)?'Opens '+SCREEN_OF[key][0].toUpperCase()+SCREEN_OF[key].slice(1):'Opens in Advanced'}">${esc(ownScreen(key,form)&&SCREEN_LABEL[key]||HANDOFFS[key].label)}${cls==='subj-link'?icon('chev'):''}</a>`;
   const btn=(key,form,pri=false)=>out(key,form,'subj-btn'+(pri?' pri':''));
   /** The step's own hand-off, from the section the command names for it. */
-  const own=(s,form)=>{const h=ownHandoff(s);if(!h)return '';return h.key?out(h.key,form):`<a class="subj-link" data-subj-handoff="own" href="${handoffHref(h.section,form)}" title="Opens in Advanced">${esc(h.label)}${icon('chev')}</a>`;};
+  const own=(s,form)=>{const h=ownHandoff(s);if(!h)return '';return h.key?out(h.key,form):`<a class="subj-link" data-subj-handoff="own" href="${screenOfSection(h.section,form)||handoffHref(h.section,form)}" title="${screenOfSection(h.section,form)?'Opens '+SECTION_LABEL[h.section]:'Opens in Advanced'}">${esc(screenOfSection(h.section,form)?'Open '+SECTION_LABEL[h.section]:h.label)}${icon('chev')}</a>`;};
   const links=(...items)=>{const l=items.filter(Boolean).join('');return l?`<div class="subj-links">${l}</div>`:'';};
   /** What a step waits for: one button to the step in question, as the sample's Go to the words. */
   const waitsFor=(s,steps)=>{
@@ -476,7 +482,7 @@
    const write=writeHref(form);
    const sheet=blocks.length?`<a class="subj-sheet" href="${write}" aria-label="Open the writing in Advanced" tabindex="-1"><b>${esc(form?.title||st.standing.title)}</b>${blocks.slice(0,5).map(x=>x.blockKind==='heading'?`<i>${esc(String(x.words).slice(0,80))}</i>`:`<span>${esc(String(x.words).slice(0,220))}</span>`).join('')}</a>`:'';
    const list=parts.length?`<ol class="subj-parts">${parts.map(p=>`<li title="${esc(plural(p.paragraphs,'paragraph'))}"><i aria-hidden="true"></i><span>${esc(p.name)}</span></li>`).join('')}</ol>`:'';
-   return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length?`<a class="subj-btn" data-subj-handoff="read" href="${handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
+   return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length?`<a class="subj-btn" data-subj-handoff="read" href="${screenHref('read',form)||handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
   }
   function toolCheck(s,steps,form){
    const c=ok(rec('check'))?rec('check'):null,list=(c?.issues||[]).slice(0,3).map(i=>i.message).filter(Boolean);

@@ -148,8 +148,8 @@ async function page(base,hash){
  return {w,doc:w.document,sources,calls};
 }
 const until=async(check,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=check();if(v)return v;if(Date.now()>end)throw new Error('timed out');await new Promise(r=>setTimeout(r,25));}};
-// An Article's Write opens version two's own Write screen; every other hand-off opens a section of Advanced.
-const sectionOf=href=>/^#\/write\//.test(href)?'write':new URL(href,'http://x').searchParams.get('section');
+// An Article's Write, Read and Check open version two's own screens; every other hand-off opens a section of Advanced.
+const sectionOf=href=>/^#\/(write|read|check)\//.test(href)?href.match(/^#\/(\w+)\//)[1]:new URL(href,'http://x').searchParams.get('section');
 
 
 const get=async(base,p)=>(await fetch(base+p)).json();
@@ -223,7 +223,9 @@ test('the page: opens a step on demand, every hand-off lands on its section with
    for(const a of doc.querySelectorAll('[data-subj-panel] [data-subj-handoff],.subj-head [data-subj-handoff]')){
     const key=a.dataset.subjHandoff,href=a.getAttribute('href'),q=new URL(href,'http://x').searchParams;
     if(key!=='own')handoffs.add(key);
-    if(/^#\/write\//.test(href)){assert.ok(['write','own'].includes(key),key+' opens Write only for the words step');assert.equal(href,`#/write/${id}?piece=${pill.dataset.subjForm.slice(4)}`,'Write opens for this subject and piece');continue;}
+    const screen=/^#\/(write|read|check)\//.exec(href)?.[1];
+    if(screen){const allowed={write:['write','own'],read:['read','own'],check:['checkRun','checkOpen','own']}[screen];assert.ok(allowed.includes(key),key+' opens '+screen+' only from its own step');assert.equal(href,`#/${screen}/${id}?piece=${pill.dataset.subjForm.slice(4)}`,screen+' opens for this subject and piece');
+     if(screen==='check'&&key!=='own'){assert.ok(!/in Advanced/.test(a.textContent),'a link to version two\'s Check does not say Advanced: '+a.textContent);assert.equal(a.textContent.trim(),'Open Check','the link only opens Check, so it says so (it does not run the check)');}continue;}
     assert.equal(q.get('section'),key==='own'?q.get('section'):S.HANDOFFS[key].section,key+': '+href);
     assert.equal(q.get('subject'),id);
     if(key!=='directionChange'&&key!=='directionWrite'&&key!=='addMaterial'&&doc.querySelector('.subj-form.on').dataset.subjForm.startsWith('out:'))assert.equal(q.get('piece'),pill.dataset.subjForm.slice(4),key+' keeps the piece');

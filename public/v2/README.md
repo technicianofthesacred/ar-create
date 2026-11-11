@@ -15,7 +15,7 @@ v2.screen({id:'subject', route:'subject/:id', title:'Subject',
 ```
 
 Routes: `''` Home, `subject/:id`, `slides/:id` (an Instagram plan), `looks`, `research`, `research/group/:id`,
-`research/topic/:id`, `write/:id` (the words of one piece: `?piece=<output id>`). Unknown addresses go Home; Back and Forward work. Links are ordinary `<a href>`:
+`research/topic/:id`, `write/:id` (the words of one piece: `?piece=<output id>`), `read/:id` (the same piece, saved words only, same `?piece=`), `check/:id` (the same piece checked against its sources). Unknown addresses go Home; Back and Forward work. Links are ordinary `<a href>`:
 `v2.href('subject/:id',{id})` gives `#/subject/<id>`; `v2.go(...)` moves. `ctx` holds `params`, `query`, `el`,
 `signal` (aborted when the screen closes), `setTitle(text)` (the name in the thin phone header and the window
 title), `setAdvanced({subject,piece,section})` (where the top bar's Advanced leads), and `on(filter, fn)`.

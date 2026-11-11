@@ -17,7 +17,7 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Research (list, group, topic) | In, reviewed, corrections made; re-check of the four that mattered was running at the time of writing |
 | Advanced lands on the right section | In, reviewed |
 | Write inside version two (stage 1) | In, reviewed three times, corrections made |
-| Read and Check inside version two (stage 2) | Not started. They open in Advanced |
+| Read and Check inside version two (stage 2) | In, reviewed twice, corrections made |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -34,7 +34,7 @@ differs:
 
 Left on purpose, because the truth or the contract requires it:
 
-- **Write.** Built (stage 1). Read and Check still open in Advanced (stage 2). See "Write" below.
+- **Write, Read and Check.** Built (stages 1 and 2). See "Write" and "Read and Check" below.
 - **"Advanced" in the bar.** Not in the sample, which was drawn before there were two fronts. It is the quietest
   item, at the far right.
 - **No invented content.** The sample's dashed "new" card, prefilled subject name, "Listen · 6 min", likes and
@@ -133,9 +133,34 @@ Adrian was sent three pictures of it beside the sample. He has not yet said yes 
   the real server, not a stub: both faults were hidden by stubbed tests.
 - The sideways check for one version two screen needs the demo running on 8854.
 
+### 7b. Read and Check (stage 2, merged 11 November)
+
+Adrian was sent a picture of each beside the existing screen. He has not yet said yes to them.
+
+- **Say "not built yet", with Open in Advanced**: View source on a finding, Open source on a decision, Comparing
+  versions. "Earlier original draft" is left out of Read. Answers and release of consent stay in Share (Advanced).
+- **A Carousel's Read and Check** still open Advanced. So does a piece whose words are owned elsewhere (a Magazine story).
+- **For his eyes**: on a computer the words sit further left on Read and Check than on Write, because Write has the
+  Sources panel on the left and Check has its findings on the right; the column is 700 wide on all three. On a phone
+  Check shows the findings first and the words below. The Write, Read, Check segment shows on a phone though the
+  sample hides it, as the only way between the three there.
+- **Small, found by the last review and not done**:
+  - Write's bar at 320 and 340 wide drops the full-screen icon alone onto a second row (`write.css`, the 380 block).
+    One row from 360 up.
+  - When `consent.desk` is refused, Check shows the human-only message, which is wrong for a plain read (`check.js`
+    near 352).
+  - Check adds "They are Adrian's to give." under People; the existing Check has no such sentence (`check.js` near 371).
+  - Read says "Newer words exist" after any failed re-read, even when the words did not change (`read.js` near 91).
+  - On a phone a short piece leaves a grey band under Read's page above the phone bar.
+- **Not compared**: hover and focus colours; the theme was set by the browser's colour scheme, not the theme button.
+- The checker's measure of Write's body as 15px was wrong: `write.css` sets 18, the same as Read and Check.
+- A fresh demo has no saved check until "Check saved draft" is pressed on The green gate; The first cup is Held
+  because it has no captured source.
+- The whole suite on this branch: only the known failures (the photo inspect test, and the three page tests named
+  below).
+
 ### 8. Not started
 
-- Stage 2: Read and Check inside version two.
 - Capture has no version two screen; it opens Advanced.
 - Library and "Ask or find" in the top bar do nothing yet.
 - Speaking: there is no speech button, on purpose. The browser's speech service would send his voice to a remote

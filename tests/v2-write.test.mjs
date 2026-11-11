@@ -112,7 +112,8 @@ test('Write opens the real draft of the piece, with the forms of the subject as 
  const advanced=doc.querySelector('[data-v2-advanced]').getAttribute('href');
  assert.match(advanced,/\/document-study\/index\.html\?/);assert.match(advanced,/subject=s1/);assert.match(advanced,/piece=o1/);assert.match(advanced,/section=write/);
  assert.match(doc.querySelector('[data-wr-advanced]').getAttribute('href'),/section=write/);
- assert.match(doc.querySelector('.wr-seg').innerHTML,/section=read/);assert.match(doc.querySelector('.wr-seg').innerHTML,/section=check/);
+ assert.match(doc.querySelector('.wr-seg').innerHTML,/href="#\/read\/s1\?piece=o1"/,'Read is a screen of its own now');assert.match(doc.querySelector('.wr-seg').innerHTML,/href="#\/check\/s1\?piece=o1"/);
+ assert.equal(doc.querySelector('.wr-seg [aria-current]').textContent,'Write');
  assert.match(doc.querySelector('[data-wr-src]').textContent,/My <i>notes<\/i>/);assert.doesNotMatch(doc.querySelector('[data-wr-src]').innerHTML,/<i>notes/);
  assert.ok(doc.querySelectorAll('[data-v2-notbuilt]').length>=2,'the player, the transcript and the list still to write say they are not built yet');
  assert.ok(!doc.querySelector('[data-wr-src] button[aria-label*="peak"],[data-wr] [class*="mic"]'),'no speech button');
@@ -699,4 +700,9 @@ test('real server: after splitting the last paragraph the empty box is after it,
  const boxes=await until(()=>{const b=[...doc.querySelectorAll('textarea.wr-ed')];return b.length>=2&&b.filter(t=>t.value.trim()).length===before.length+1?b:null;},20000);
  assert.equal(boxes.at(-1).value,'','the empty Write here box is last');
  assert.ok(boxes.slice(0,-1).every(t=>t.value.trim()),'no empty box between the halves');
+});
+
+test('the Add a piece plus is never hidden at any width',()=>{
+ const css=read('public/v2/screens/write.css');
+ assert.doesNotMatch(css,/Add a piece[^}]*\{[^}]*display:none/,'the plus stays at every width');
 });
