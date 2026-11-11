@@ -32,7 +32,8 @@ All AR Create threads were started from the review branch. Use these ids with th
 | Wisdom bank B: products and experience | `session_017kitFhcbpLL4v8im7zk9QD` | Lighter | `claude/wisdom-bank-products` | **Done.** Report merged. Phone page: claude.ai/artifact/NvGBsP5fr2j8NQijnJXs7Y | Nothing |
 | Wisdom bank C: open source and the last thirty days | `session_017kitFhBGKJVhitAkQu3cjj` | Lighter | `claude/wisdom-bank-open-source` | **Done.** Report merged. Phone page: claude.ai/artifact/1qrxKj3R4k3H6rDM1aPidV. Last-thirty-days part is thin | Nothing |
 | Wisdom bank A2: what i64os already has | `session_017kitFeXyfhfELhrqMLjAcW` | Lighter | i64os branch `claude/wisdom-bank-i64os-inventory` | **Done.** Report copied here as `docs/research/wisdom-bank/00b-i64os-inventory.md`; the synthesis is corrected | Nothing |
-| Wisdom bank D1: the concept, with Adrian | `session_017kitFg72niPKF1xeotzZpx` | Strongest, medium | `claude/wisdom-bank-concept` | Started 11 November. Opens by interviewing him. Still small. It was started before the i64os inventory arrived, so tell it to read `00b-i64os-inventory.md` | His answers, in that thread |
+| Wisdom bank D1: the concept, with Adrian | `session_017kitFg72niPKF1xeotzZpx` | Strongest, medium | `claude/wisdom-bank-concept` | **Concept written** and merged here as `docs/research/wisdom-bank/04-concept.md`. Phone page: claude.ai/artifact/Y7S5fSmw9tdy8mdaxYD56S. Adrian was interviewed and corrected it (a nugget is a concept, not a best line; nothing is pruned; the bank lives inside the Research station; a pathway is the same thing as a research topic; he wants one map of the whole bank). If it pushes later edits, merge again | Adrian's answers to its seven open questions, above all his lens |
+| Wisdom bank E: maps other people have built | (see below) | Lighter | `claude/wisdom-bank-map-precedents` | Started 11 November, because the concept records that Adrian asked the whole-map study to begin by looking at people who have already built such maps | Its report, `docs/research/wisdom-bank/05-map-precedents.md` |
 
 The review thread that started them all, and is the coordinator, is `session_017kitFgZ5x2SMHzVzcAbotm`.
 
@@ -44,13 +45,16 @@ Adrian called this "one of the most important things". The plan is [plan 9](2026
 
 **Where it stands.** Discovery is done, i64os included. The answer to "is this already built?" is no: combine borrowed parts and build the middle (the nugget, links across sources, a map that is a way to move, and the way out to a cited piece). His stated fear, and the main design requirement, is being able to see, navigate and return to what he keeps.
 
+The D2 brief is written and waits for Adrian's word: [plan 11](2026-11-11-11-wisdom-bank-mockups-brief.md).
+
 **The steps, each a fresh short thread:**
 
 | Step | What | Model | Starts when | Ends with |
 |---|---|---|---|---|
 | A2 | Read i64os (**done**) | Lighter | Started | The i64os inventory file, now `00b-i64os-inventory.md` |
-| D1 | Interview Adrian, write the concept (running) | Strongest, medium | Started | `docs/research/wisdom-bank/04-concept.md` and a phone page |
+| D1 | Interview Adrian, write the concept (**done**) | Strongest, medium | Started | `docs/research/wisdom-bank/04-concept.md` and a phone page |
 | D2 | Mock-ups of three screens, one direction first, phone first: a source just after distilling, one nugget with its neighbours, the daily return | Strongest, high, strictly bounded (see the rules below) | D1's concept is written and Adrian has read it. He has picked Direction D, so the mock-ups use its look and sit inside its Research station: the D2 brief names the `d-four-stations` files and the design handoff as its only design reading | Clickable pages and his reaction |
+| Map | The whole-map design study ("the big brain"): first the survey of maps others have built (thread E, lighter model), then a short design study | Lighter, then strongest | The survey: started. The study: after D2 | `05-map-precedents.md`, then a study |
 | D3 | Foundations: one short design note on what a nugget is on disk, how links are recorded, how the exact words stay tied to the source, how it is found by meaning, how agents read and propose | Strong, medium, short | D2's direction is chosen | `05-foundations.md` |
 | Build | One plan per thread: capture and distil; the nugget and its check against the transcript; returning; links and the map; the way out | Lighter | D3 is accepted | Each with before and after pictures |
 
@@ -73,7 +77,7 @@ Adrian chose Direction D on 11 November and told the design round to build it as
 | When | Next step | Model |
 |---|---|---|
 | Version two's four screens are linked (the design round says so in its closing line) | A small fresh thread walks the review's journey (Part 1) on the version two demo with `scripts/review-journey.mjs` and `scripts/review-screens.mjs`, and reports which root problems (R1 to R3) and findings (U1 to U25) are closed, open, or moved to Advanced. Pictures stay in that thread; it publishes one page for Adrian | Lighter |
-| The wisdom bank concept is written | Send it to the design round, so Research leaves a place for the nugget and does not invent one | Coordinator |
+| The wisdom bank concept is written | **Done 11 November:** sent to the version two director, as information | Coordinator |
 | Adrian answers the demo builder | If he wants it: check it against version two's own fuller demo (`npm run demo:fill`) first, so the chain from a recording to a checked piece is not built twice | Lighter |
 | Adrian decides where the work lives when the Mac is off | Plan 6, stage 0 (measuring) | Lighter |
 

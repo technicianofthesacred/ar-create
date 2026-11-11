@@ -13,7 +13,8 @@ Nine plans, each written so a builder can start without the chat they came from.
 | 7 | [A demo that walks the whole chain](2026-11-10-07-walkable-demo.md) | Anyone, anywhere, can test recording to finished piece on invented data | Small to medium | Nothing |
 | 8 | [A noticeably better interface](2026-11-10-08-a-noticeably-better-interface.md) | Home as his desk, one page per subject, a path instead of thirteen doors, a calm writing page | A design round, then large | His choice from mock-ups |
 | 9 | [The wisdom bank, an inquiry](2026-11-11-09-wisdom-bank-inquiry.md) | Paste a talk or book in; it is distilled into nuggets that link, map and feed his pieces | An inquiry in four parts, then large | His yes to start |
-| 10 | [A fresh director thread for the version two build](2026-11-11-10-version-two-director-brief.md) | The same build of the interface he chose, at a fraction of the cost per step, leaving room for the research | A brief, ready to start | His word to start |
+| 10 | [A fresh director thread for the version two build](2026-11-11-10-version-two-director-brief.md) | The same build of the interface he chose, at a fraction of the cost per step, leaving room for the research | Started 11 November | Nothing |
+| 11 | [Wisdom bank mock-ups, the brief](2026-11-11-11-wisdom-bank-mockups-brief.md) | Three screens of the bank he can open on his phone and click through | A brief, ready to start | His word to start |
 
 Decision numbers are those in the review's "Decisions that belong to Adrian".
 
