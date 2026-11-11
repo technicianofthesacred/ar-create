@@ -82,7 +82,11 @@ The rules in `docs/plans/2026-11-11-direction-d-build.md` ("Rules for every work
 | 5 Slides and Looks | Sonnet | Opus | In. The studio and the Looks page work end to end on the commands, by mouse, touch and keys; sized to the mock-up after review; waits for Adrian's eyes. Words on a slide are read-only here |
 | 6 Research | Opus, finished by Sonnet | Sonnet, then Opus | In. Topics, groups and where each topic came from; eight corrections after review made, the four that mattered being re-checked. Sentence answers and looking for new material say they are not built yet |
 | 7 Write and the rest | | | Split into the stages below |
-| Stage 1: Write inside version two | Sonnet | | Begun 11 November. Brief: `version-two-briefs/v2-7-write.md` |
+| Stage 1: Write inside version two | Sonnet, four passes | Opus, three times; Haiku against the sample | In. `#/write/<subject>?piece=<piece>` reads and saves the real draft; split, join and delete in place with Undo; an assistant's suggestions are accepted, rejected or rewritten as his by him alone; no word lost through slow saves, reloads or a closed tab; an assistant's page is read only. Brief and corrections: `version-two-briefs/v2-7-write.md` |
+| Stage 2: Read and Check inside version two | | | Not started |
+| Stage 3: Capture inside version two | | | Not started |
+| Stage 4: What stands between him and starting | | | Not started |
+| Stage 5: The whole journey walked, one full check, one page of pictures | | | Not started |
 | 8 Where a subject stands | Opus | Sonnet | In. `subject.standing` and `subjects.standing`, one shared rule; 150 subjects in under two seconds cold and milliseconds warm |
 | Advanced lands on the right section | Opus, finished by Sonnet | Opus | In. All 61 addresses land for an Article and a Carousel, with and without a piece |
 

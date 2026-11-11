@@ -16,7 +16,8 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Subject | In, reviewed, corrections made |
 | Research (list, group, topic) | In, reviewed, corrections made; re-check of the four that mattered was running at the time of writing |
 | Advanced lands on the right section | In, reviewed |
-| Write, Read and Check inside version two (piece 7) | Not started. They open in Advanced |
+| Write inside version two (stage 1) | In, reviewed three times, corrections made |
+| Read and Check inside version two (stage 2) | Not started. They open in Advanced |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -33,7 +34,7 @@ differs:
 
 Left on purpose, because the truth or the contract requires it:
 
-- **Write.** The sample has its own Write screen; version two opens Write, Read and Check in Advanced (piece 7).
+- **Write.** Built (stage 1). Read and Check still open in Advanced (stage 2). See "Write" below.
 - **"Advanced" in the bar.** Not in the sample, which was drawn before there were two fronts. It is the quietest
   item, at the far right.
 - **No invented content.** The sample's dashed "new" card, prefilled subject name, "Listen · 6 min", likes and
@@ -110,9 +111,31 @@ Small and not yet done:
 - Words on a slide are read-only; changing them opens Advanced.
 - On a phone the strip sits under the slide's caption and buttons, not directly under the slide.
 
+### 7a. Write (stage 1, merged 11 November)
+
+Adrian was sent three pictures of it beside the sample. He has not yet said yes to it.
+
+- **The page's type is a fallback.** The approved Write page in the existing workspace uses a 16.5px body and a 17px
+  semibold title. `tests/v2-shell.test.mjs` forbids sizes outside the six, so version two uses 18 for both (title at
+  weight 600, line height 1.58). The sample's 40px title was not taken: the approved page wins on the page itself.
+  For Adrian's eyes: either accept 18, or allow the page its two own sizes and change the test on purpose.
+- **Say "not built yet"**: playing a recording and reading its transcript beside the page; the "Still to write" list;
+  Ask about this piece. No speech button, on purpose.
+- **Still open in Advanced**: a suggestion that is a set of opening options, and a stand-in review. The optional note
+  on "Not me" per paragraph is not built.
+- **Left on purpose**: a quiet "Saved" line under the bar on a phone (the sample has none); the Carousel tab shows
+  only when the subject has a Carousel; "Advanced" in the bar.
+- **Not compared with the sample after the corrections**: the checker measured the first build only. The measured
+  differences were corrected and seen on one contact sheet; hover and focus colours were not compared. A closed
+  Sources button on a phone is plain where the sample shows a pill.
+- **The shell's command client** leaves `presence.post` and `study-ai.reject` out of the automatic operation id,
+  because those commands refuse the field. A screen that calls a command for the first time should try it against
+  the real server, not a stub: both faults were hidden by stubbed tests.
+- The sideways check for one version two screen needs the demo running on 8854.
+
 ### 8. Not started
 
-- Piece 7: Write, Read and Check inside version two.
+- Stage 2: Read and Check inside version two.
 - Capture has no version two screen; it opens Advanced.
 - Library and "Ask or find" in the top bar do nothing yet.
 - Speaking: there is no speech button, on purpose. The browser's speech service would send his voice to a remote
