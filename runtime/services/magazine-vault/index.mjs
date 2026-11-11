@@ -42,6 +42,9 @@ const scopeFor = rel => { const s = rel && storyFromName(rel); return s ? {kind:
 const MAKE_DIRS = rel => /^Workflow\/4-Review\/_blind$/.test(rel) || /^Workflow\/5-Social\/[A-Z][A-Z ]{1,30} - [^/]+$/.test(rel) || /^_archive\/Superseded drafts(\/[^/]+)?$/.test(rel) || /^Issues\/[^/]+$/.test(rel);
 const FILES_DIRS = rel => /^[^/]+$/.test(rel) && rel !== 'Drop' || /^[^/]+\/Photos$/.test(rel);
 
+/** The one rule for a live published link: the live teajia.com page (mark-published and the standing reads use it). */
+export const isLiveLink = link => /^https:\/\/(www\.)?teajia\.com\/[\w/.-]+$/.test(String(link));
+
 export function createMagazineVault({vaultRoot = null, filesRoot = null, drops = [], writable = false, exportStaging = null, dataDir, machine, bootId, now = () => Date.now(), events = null, journal = null, leases = null, editorialRoot = null, magSendRepo = null, previewPort = 8766, intakeEngine = null, consentDesk = null} = {}) {
   const configured = typeof vaultRoot === 'string' && vaultRoot.length > 0;
   const home = ensurePrivateDirectory(dataDir, 'magazine');
@@ -559,7 +562,7 @@ export function createMagazineVault({vaultRoot = null, filesRoot = null, drops =
     requireHuman('Marking a draft published');
     fields(input, ['path', 'link', 'expectedHash', 'operationId'], ['path', 'link', 'expectedHash', 'operationId']);
     const rel = devFile(input.path);
-    if (!/^https:\/\/(www\.)?teajia\.com\/[\w/.-]+$/.test(String(input.link))) throw new StateError('link is the live teajia.com page.', 400);
+    if (!isLiveLink(input.link)) throw new StateError('link is the live teajia.com page.', 400);
     holdStory(rel, 'Marking this published');
     const approval = sendApproval({path: rel}).approval;
     if (!approval || approval.hash !== input.expectedHash) throw new StateError('Adrian has not said publish for this exact draft (magazine.send).', 403);

@@ -11,14 +11,14 @@ import {planRegistration, INDEX_SCHEMA} from '../runtime/services/magazine-vault
 const AGENT = {'X-AR-Actor': 'agent:claude-code', 'X-AR-Client': 'http'};
 const DRAFT = 'Workflow/3-Develop/DEV - Clay Teacher (story).md', SOURCE = 'Workflow/1-Source/SRC - Clay Teacher (Kiln Day).md';
 
-async function home(t, {original = false, archive = ['UI-flow-part-01'], extra = {}} = {}) {
+async function home(t, {original = false, originalPath = DRAFT, originalsRoot = null, archive = ['UI-flow-part-01'], extra = {}} = {}) {
  const f = buildMagazineFixture({extra}); t.after(f.cleanup);
  const plan = planRegistration({vault: f.vault, files: f.files, archived: archive});
  fs.mkdirSync(path.join(f.data, 'magazine/projects'), {recursive: true});
  fs.writeFileSync(path.join(f.data, 'magazine/index.json'), JSON.stringify({schema: INDEX_SCHEMA, vaultRoot: f.vault, filesRoot: f.files, stories: plan.stories.map(p => ({storyId: p.storyId, name: p.name, number: p.number, archived: p.archived}))}));
  for (const p of plan.stories) fs.writeFileSync(path.join(f.data, 'magazine/projects', p.storyId + '.json'), JSON.stringify(p));
- const drafts = original ? {clay: {parentStudyKey: 'clay-subject', partKey: 'article', title: 'Clay original', path: DRAFT, support: [[SOURCE, 'source']]}} : {};
- const server = await createServer({dataDir: f.data, publicDir: path.resolve('public'), researchEnabled: false, studyOriginalRoots: {vaultRoot: f.vault, filesRoot: f.files, catalog: {projects: {}, drafts}}, magazineVault: {vaultRoot: f.vault, filesRoot: f.files, writable: true}});
+ const drafts = original ? {clay: {parentStudyKey: 'clay-subject', partKey: 'article', title: 'Clay original', path: originalPath, support: [[SOURCE, 'source']]}} : {};
+ const server = await createServer({dataDir: f.data, publicDir: path.resolve('public'), researchEnabled: false, studyOriginalRoots: {vaultRoot: originalsRoot ? originalsRoot(f) : f.vault, filesRoot: f.files, catalog: {projects: {}, drafts}}, magazineVault: {vaultRoot: f.vault, filesRoot: f.files, writable: true}});
  await new Promise(r => server.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => {server.closeAllConnections?.(); server.close(r);}));
  const base = 'http://127.0.0.1:' + server.address().port;
  const get = async p => {const r = await fetch(base + p, {headers: AGENT}); return {status: r.status, value: await r.json()};};
@@ -46,7 +46,7 @@ test('registered Magazine stories are subjects beside the others, with the story
  assert.equal(steps.have.note, '2 notes · 1 photograph'); assert.equal(steps.photos.note, 'None placed yet');
  assert.equal(steps.check.state, 'unknown', 'a CHECK file holds free notes the rule cannot read');
  assert.equal(steps.facts.state, 'todo', 'no research file: known not to be looked into');
- assert.equal(steps.dish.state, 'done'); assert.match(steps.dish.note, /Named on the board/);
+ assert.equal(steps.dish.state, 'todo'); assert.match(steps.dish.note, /direction is written; the dish is not named yet/); assert.equal(one.facts.dish.text, '', 'the picked option is not passed on as his words');
  assert.equal(steps.publish.state, 'unknown', 'the Check is not known, so neither is whether it can go out');
  assert.equal(one.next, null, 'no next step is claimed past a step that is not known');
  assert.equal(one.published, false, 'the draft carries no published link');
@@ -57,7 +57,7 @@ test('registered Magazine stories are subjects beside the others, with the story
  assert.equal(river.title, 'River Potter');
  assert.equal(rs.words.state, 'todo'); assert.equal(rs.words.note, 'Not started'); assert.equal(rs.dish.note, 'Not named yet');
  assert.equal(rs.check.state, 'wait'); assert.equal(rs.photos.state, 'wait');
- assert.equal(rs.dish.state === 'done', false, 'no direction was picked');
+ assert.equal(rs.dish.state === 'done', false, 'no direction was picked'); assert.equal(river.facts.dish.direction, false);
  assert.equal((await h.get('/api/subject/standing?parentStudyId=mag-nobody')).status, 404);
 });
 
@@ -87,7 +87,7 @@ test('a Magazine story with a published link and a photograph marker says so', {
  const h = await home(t);
  fs.rmSync(path.join(h.f.vault, 'Workflow/4-Review/CHECK - Clay Teacher (story, round 1).md'));
  const text = fs.readFileSync(path.join(h.f.vault, DRAFT), 'utf8');
- fs.writeFileSync(path.join(h.f.vault, DRAFT), text.replace('updated: 2026-10-10', 'updated: 2026-10-10\npublished: https://example.invalid/fire').replace('==She waits', '%%photo: kiln.jpg%%\n\n==She waits'));
+ fs.writeFileSync(path.join(h.f.vault, DRAFT), text.replace('updated: 2026-10-10', 'updated: 2026-10-10\npublished: https://teajia.com/fire').replace('==She waits', '%%photo: kiln.jpg%%\n\n==She waits'));
  const one = (await h.get('/api/subject/standing?parentStudyId=mag-clay-teacher')).value, steps = Object.fromEntries(one.forms[0].steps.map(s => [s.id, s]));
  assert.equal(one.published, true); assert.equal(one.station, 'published');
  assert.equal(steps.publish.state, 'done');
@@ -119,4 +119,41 @@ test('the invented demo Magazine gives a filled demo three stories, two with wor
  const stories = all.subjects.filter(s => s.origin?.kind === 'magazine');
  assert.deepEqual(stories.map(s => s.title).sort(), ['Bamboo Carver', 'The Loom Beside the Water', 'Where the Ash Settles']);
  assert.equal(all.subjects.length, 2 + 3, 'the two ordinary subjects stand beside them');
+});
+
+test('an original in a differently configured root, or an older round of the story, is still that story\'s subject', {timeout: 120000}, async t => {
+ // The originals root is the folder above the Magazine, so the original's path starts with "Magazine/".
+ const whole = await home(t, {original: true, originalsRoot: f => path.dirname(f.vault), originalPath: 'Magazine/' + DRAFT});
+ const w = await whole.get('/api/subjects/standing'); assert.equal(w.status, 200, JSON.stringify(w.value)); let ids = w.value.subjects.map(s => s.id);
+ assert.ok(ids.includes('clay-subject') && !ids.includes('mag-clay-teacher'), 'shown once, as the subject: ' + ids);
+ // The original names another round of the story, not the one the Magazine now registers.
+ const round = 'Workflow/3-Develop/DEV - Clay Teacher (updated).md';
+ const older = await home(t, {original: true, originalPath: round, extra: {[round]: '---\ntype: DEV\nstory: Clay Teacher\ntitle: "Older"\n---\n\nAn invented older round.\n'}});
+ const o = await older.get('/api/subjects/standing'); assert.equal(o.status, 200, JSON.stringify(o.value)); ids = o.value.subjects.map(s => s.id);
+ assert.ok(!ids.includes('mag-clay-teacher') && ids.includes('mag-river-potter'), 'any round of the story is that story: ' + ids);
+});
+
+test('the newest decision counts, only a live teajia.com link is published, and a board sentence is his own', {timeout: 120000}, async t => {
+ const h = await home(t), map = 'Workflow/2-Guidance/MAP - River Potter.md', file = p => path.join(h.f.vault, p);
+ const dish = async id => (await h.get('/api/subject/standing?parentStudyId=' + id)).value;
+ fs.appendFileSync(file(map), '- 2026-10-13: Direction: First idea (picked on the magazine page)\n- 2026-10-15: Direction: Changed my mind (picked on the magazine page)\n');
+ let r = await dish('mag-river-potter');
+ assert.equal(r.facts.dish.direction, true); assert.equal(r.facts.dish.named, false); assert.equal(r.facts.dish.text, '');
+ assert.ok(!JSON.stringify(r).includes('Changed my mind') && !JSON.stringify(r).includes('First idea'), 'the option text is never passed on');
+ fs.rmSync(file('Workflow/4-Review/CHECK - Clay Teacher (story, round 1).md'));
+ const text = fs.readFileSync(file(DRAFT), 'utf8');
+ for (const [value, out] of [['false', false], ['https://example.com/x', false], ['https://teajia.com/fire-was-kind', true]]) {
+  fs.writeFileSync(file(DRAFT), text.replace('updated: 2026-10-10', 'updated: 2026-10-10\npublished: ' + value));
+  assert.equal((await dish('mag-clay-teacher')).published, out, 'published: ' + value);
+ }
+});
+
+test('the quick word count equals the working draft\'s own count', {timeout: 120000}, async t => {
+ const h = await home(t), native = await import('../runtime/services/draft-correspondence.mjs');
+ const text = fs.readFileSync(path.join(h.f.vault, DRAFT), 'utf8') + '\nA plain line, with "quotes" and an apostrophe\'s.\n\n## A heading\n\nShe waits ==before== she shapes %%note%% anything.\n\n> A quote line.\n\nSee [[term:clay|the clay]] here.\n';
+ fs.writeFileSync(path.join(h.f.vault, DRAFT), text);
+ const rows = native.projection(native.capture(text, 'mag-clay-teacher:article')).filter(r => String(r.words || '').trim());
+ const want = rows.reduce((n, r) => n + r.words.trim().split(/\s+/).length, 0);
+ const got = (await h.get('/api/subject/standing?parentStudyId=mag-clay-teacher')).value.facts.words;
+ assert.equal(got.count, want); assert.equal(got.paragraphs, rows.filter(r => r.blockKind !== 'heading').length);
 });
