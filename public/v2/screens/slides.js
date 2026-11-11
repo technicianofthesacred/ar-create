@@ -231,7 +231,8 @@
     const pills=looks.map(x=>pill(x,false)).join(''),chips=looks.map(x=>pill(x,true)).join('');
     const acctBtn=x=>'<button type="button" data-sl="account" data-id="'+esc(x.id)+'" aria-pressed="'+(a?.id===x.id)+'">'+esc(x.name)+'</button>';
     const posts=accts.length?accts.map(acctBtn).join(''):a?.name?'<button type="button" aria-pressed="true">'+esc(a.name)+'</button>':'<span class="sl-one">No account posts this look yet</span>';
-    const back=plan.subject?v2.href('subject/:id',{id:plan.subject}):'#/';
+    // Back and Done return to the form and step he left: the Carousel form at The slides step (the studio is opened from there).
+        const formKey='ig:'+plan.id,back=plan.subject?v2.href('subject/:id',{id:plan.subject},{form:formKey,step:'slides'}):'#/';
     return '<div class="sl-bar"><a class="sl-back" href="'+esc(back)+'" aria-label="Back to the subject">'+ic('back')+'<span>The subject</span></a><h1 class="sl-t">Carousel</h1><span class="sl-n">'+fl+' slide'+(fl>1?'s':'')+(need>=0?' · slide '+(need+1)+' needs a photograph':'')+'</span><span class="sl-sp"></span>'
      +'<div class="sl-seg sl-looks" role="group" aria-label="Look">'+pills+'</div><div class="sl-seg sl-acct" role="group" aria-label="Posts to"><em>Posts to</em>'+posts+'</div>'
      +'<button type="button" data-sl="mix" title="Give each slide a different layout that suits it">Mix the layouts</button><a class="sl-done" href="'+esc(back)+'">Done</a></div>'
