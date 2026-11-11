@@ -2,6 +2,21 @@
 
 11 November 2026. Written after a short interview with Adrian, from [the synthesis](03-synthesis.md) and [the inquiry plan](../../plans/2026-11-11-09-wisdom-bank-inquiry.md). Nothing here is designed or built. The next thread makes three mock-ups from this page.
 
+## The whole idea in one minute
+
+The wisdom bank is the Research station of AR Create. It keeps the best lines from the talks and books you love, in their exact words, and helps you use them. Follow one example from start to finish:
+
+1. **You paste a talk** on Vajrayana. You are asked nothing else.
+2. **A few minutes later you are handed its best lines.** Each one is a **nugget**: the exact words, who said them, and the moment they said it. Under it sits one line saying what it means, and a plain explanation through your own filter. You keep the ones you love.
+3. **The bank proposes connections.** "This line echoes one from your friend." "This practice comes before that idea." You say yes or no.
+4. **One day you feel something you want to express**, such as "everything is perfect". You say it to the bank. It gathers what the different traditions said about it, in their own words, and what each says must come first.
+5. **You pick a few and put them in order.** That line of nuggets is a research topic.
+6. **You press "make a piece".** The topic becomes the outline of an article, a reel or the words for an artwork, with every quote credited.
+
+Three promises hold throughout: their words are never changed or mixed with yours, nothing is linked or written without your yes, and you never have a pile to sort.
+
+Everything below is the detail behind those six steps. Open a heading only when you want it.
+
 ## My answers, verbatim
 
 Spoken by voice and kept as transcribed, including slips.
