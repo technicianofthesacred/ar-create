@@ -76,7 +76,7 @@ Five kinds, kept few on purpose:
 - **Explains**: unpacks it or gives an example.
 - **Mine**: your own link, with your own words on it.
 
-A **pathway** is a named line of nuggets in an order you chose, with your words between them. The map is for four things: seeing what one idea goes into, walking from idea to idea, finding the missing step (a gap in a pathway becomes a research question, such as how Vajrayana arrives at "everything is perfect"), and feeling the whole thing join up over time.
+A **pathway** is a named line of nuggets in an order you chose, with your words between them. In version two it is the same thing as a research topic. The map is for four things: seeing what one idea goes into, walking from idea to idea, finding the missing step (a gap in a pathway becomes a research question, such as how Vajrayana arrives at "everything is perfect"), and feeling the whole thing join up over time.
 
 ## Leaving
 
@@ -105,7 +105,9 @@ One home: the Research station of version two of AR Create. No third system.
 - **Create**: "make a piece" from a pathway, with sources shown.
 - **Share**: the credit lines and the checks before publishing.
 
-The coordinating thread reports that version two's Research has topics and groups of sources so far, and no unit for one idea. If that is right, the nugget is what it lacks, and a pathway may be the same thing as a research topic. I read the top of the version two plan and did not read its Research screens.
+Asked whether a pathway and a research topic are two things, you answered: "A pathway is the same thing as a research topic." So there is one idea to learn. A research topic in version two holds its groups of sources, as it does today, and gains the nuggets drawn from them, placed in an order you choose with your words between. Wherever this page says "pathway", the screen can say the topic's name.
+
+The coordinating thread reports that version two's Research has topics and groups of sources so far, and no unit for one idea. If that is right, the nugget is what it lacks. I read the top of the version two plan and did not read its Research screens.
 
 **What the i64os read found.** The separate thread reported on 11 November, after this concept was first written. It worked from i64os's documents and code and did not open the real data. Its page is `00b-i64os-inventory.md` on the review branch.
 
@@ -149,4 +151,3 @@ Phone first. Filled with lifelike nuggets, never empty.
 5. **The whole map.** Do you want one view of everything at once, knowing it is for feeling the bank grow more than for finding things?
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
-8. **Pathways and research topics.** You have confirmed the bank lives inside the Research station. Is a pathway the same thing as a research topic there, or something separate?
