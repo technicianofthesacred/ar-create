@@ -10,7 +10,7 @@ const require=createRequire(new URL('../runtime/package.json',import.meta.url)),
 const repo=path.resolve(import.meta.dirname,'..'),v2dir=path.join(repo,'public/v2');
 const COMMANDS=[['research-topics','GET','/api/research-topics',true],['research-topics.read','GET','/api/research-topics/read',true],['research-topics.groups','GET','/api/research-topics/groups',true],['research-topics.group','GET','/api/research-topics/group',true],
  ['research-topics.ask','POST','/api/research-topics/ask',true],['research-topics.save','POST','/api/research-topics/save',false],['research-topics.take','POST','/api/research-topics/take',false],['research-topics.let-go','POST','/api/research-topics/let-go',false],['research-topics.undo','POST','/api/research-topics/undo',false],['research-topics.keep','POST','/api/research-topics/keep',false],['research-topics.group.sources','POST','/api/research-topics/group/sources',false],
- ['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true]].map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
+ ['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['subjects.standing','GET','/api/subjects/standing',true],['research-topics.link','POST','/api/research-topics/link',false],['inquiries.projects','GET','/api/inquiries/projects',true]].map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
 const origin={kind:'conversation',label:'Invented recording, 2:10',say:'From a conversation · Invented recording, 2:10',ref:null,at:new Date().toISOString()};
 const topic=(over={})=>({id:'p-1111',kind:'proposal',name:'Reed screens and who still makes them',saved:true,revision:1,origin,status:'kept',state:'new',stateSay:'',note:'',groupId:'g-tea',suggestedGroupId:null,sourceCount:2,usedIn:[],hasSomethingToSay:false,waiting:0,madeThisWeek:true,madeForYou:false,...over});
 const LIST={schema:'ar-create.research-topics.v1',topics:[topic(),topic({id:'p-2222',name:'Soil under straw',status:'proposed',madeForYou:true,groupId:null,suggestedGroupId:'g-tea',stateSay:'Waiting for you',hasSomethingToSay:true,waiting:1}),topic({id:'p-3333',name:'A topic with a very long name that keeps going and going so that it must wrap on a phone',groupId:null})],
@@ -28,7 +28,7 @@ async function page(hash,{actor=null,answers={}}={}){
  const w=dom.window,calls=[];windows.push(w);
  w.EventSource=class{constructor(){}addEventListener(){}close(){}};
  if(!w.HTMLDialogElement.prototype.showModal)w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};
- const table={'/api/research-topics':LIST,'/api/research-topics/read':READ,'/api/research-topics/groups':{groups:LIST.groups},'/api/research-topics/group':GROUP,'/api/research-topics/ask':{query:'reed',scope:{kind:'everything'},found:[{sourceId:'s1',title:'Invented recording',quote:'reed screens over poles'}],atlas:[],ability:{answers:false},said:'These are the places your sources use these exact words.'},...answers};
+ const table={'/api/subjects/standing':{subjects:[{id:'invented-garden',title:'An invented garden',archived:false},{id:'invented-old',title:'An old one',archived:true}]},'/api/research-topics':LIST,'/api/research-topics/read':READ,'/api/research-topics/groups':{groups:LIST.groups},'/api/research-topics/group':GROUP,'/api/research-topics/ask':{query:'reed',scope:{kind:'everything'},found:[{sourceId:'s1',title:'Invented recording',quote:'reed screens over poles'}],atlas:[],ability:{answers:false},said:'These are the places your sources use these exact words.'},...answers};
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push({path:u.pathname+u.search,method:options.method||'GET',body:options.body?JSON.parse(options.body):null});
   const answer=u.pathname==='/api/capabilities'?{commands:COMMANDS}:table[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
   return {ok:status>=200&&status<300,status,text:async()=>JSON.stringify(body)};};
@@ -98,4 +98,20 @@ test('a topic reads first (spoken words in Lora, his line his alone), decides on
  r=await page('#/research/topic/p-1111?tab=sources');
  assert.match(r.doc.querySelector('.rs-srcs').textContent,/Invented recording/);
  assert.ok(r.doc.querySelector('.rs-srcs [data-v2-notbuilt]'),'looking for more says it is not built');
+});
+
+test('linking a topic to a subject lists subjects from the one fast read, never inquiries.projects, and links just that subject',async()=>{
+ const r=await page('#/research/topic/p-1111');
+ r.doc.querySelector('[data-rs-link]').click();await settle(200);
+ const names=[...r.doc.querySelectorAll('.rs-pickone')].map(b=>b.textContent);assert.deepEqual(names,['An invented garden'],'archived subjects are left out');
+ r.doc.querySelector('.rs-pickone').click();await settle(200);
+ const link=r.calls.find(c=>c.path==='/api/research-topics/link');assert.equal(link.body.parentStudyId,'invented-garden');
+ assert.ok(r.calls.some(c=>c.path==='/api/subjects/standing'));
+ assert.ok(!r.calls.some(c=>/inquiries\/projects/.test(c.path)),'no call that reads every subject authority');
+});
+
+test('Not now is his alone: an assistant who presses it is refused and the plain message is shown',async()=>{
+ const r=await page('#/research/topic/p-1111?tab=decide',{actor:'agent:codex',answers:{'/api/research-topics/save':[403,{error:'Only Adrian leaves a waiting thing for later or brings it back. An assistant may not hide what waits for him.'}]}});
+ r.doc.querySelector('[data-rs-choice="not-now"]').click();await settle(200);
+ assert.match(r.doc.body.textContent,/Only Adrian can decide this. Codex can propose it, not do it/);
 });

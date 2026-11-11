@@ -239,11 +239,14 @@ export function createResearchTopics({dataDir,owners={}}={}){
    groupId:t.groupId,suggestedGroupId:t.suggestedGroupId&&t.suggestedGroupId!==t.groupId?t.suggestedGroupId:null,sourceCount:sourceIdsOf(w,t).length,usedIn:uses.filter(u=>u.status==='used').map(u=>({parentStudyId:u.parentStudyId,title:u.title})),
    hasSomethingToSay:t.status!=='let-go'&&ready,waiting:wait.now.length,madeThisWeek:!!madeAt&&Date.now()-Date.parse(madeAt)<WEEK,madeForYou:t.status!=='let-go'&&(t.status==='proposed'||!!t.proposedBy)&&!!madeAt&&Date.now()-Date.parse(madeAt)<WEEK,proposedBy:t.proposedBy||null};
  }
- async function allTopics(w){
+ /** scan: wait a moment for the background look at each subject's own research, so the list can include the ones that have
+     some. Reads that only need topics with a record (a group's, a subject's) never wait for it. */
+ async function allTopics(w,scan=true){
   const out=[];const seen=new Set();
   for(const t of w.stored.values()){out.push(t);seen.add(t.id);if(t.collectionId)seen.add(t.collectionId);}
   for(const c of w.collections.values())if(!seen.has(c.id))out.push(virtualInquiry(w,c));
   // A subject's own research made on the fly: only for a subject no inquiry is used in, and only when it has research.
+  if(!scan){out.push(...await savedSuggestions(w));return out;}
   const linked=new Set([...w.associations.filter(a=>a.status==='accepted').map(a=>a.parentStudyId),...[...w.stored.values()].flatMap(t=>[t.subject,...t.subjects]).filter(Boolean)]);
   const open=w.subjects.filter(s=>!linked.has(s.parentStudyId)&&!seen.has('subject.'+s.parentStudyId)),has=await knownResearch(open,300,[...open,...w.subjects.filter(s=>!open.includes(s))]);
   for(const s of open)if(has.has(s.parentStudyId))out.push(virtualSubject(w,s.parentStudyId));
@@ -320,7 +323,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
   object(input);only(input,['parentStudyId']);const sid=subjectId(input.parentStudyId);
   return serial(async()=>{
    const w=await world(),out=[];
-   for(const t of await allTopics(w)){if(t.status==='let-go')continue;const s=summary(w,t);if(usedIn(w,t).some(u=>u.parentStudyId===sid))out.push({...s,use:usedIn(w,t).find(u=>u.parentStudyId===sid).status});}
+   for(const t of await allTopics(w,false)){if(t.status==='let-go')continue;const s=summary(w,t);if(usedIn(w,t).some(u=>u.parentStudyId===sid))out.push({...s,use:usedIn(w,t).find(u=>u.parentStudyId===sid).status});}
    if(!out.length&&w.subjectsById.has(sid)){const r=await quietly('subjectResearch',null,w.subjectsById.get(sid));if(r&&(r.answers?.length||r.findings?.length))out.push({...summary(w,virtualSubject(w,sid)),use:'used'});}
    return {schema:LIST,parentStudyId:sid,topics:out};
   });
@@ -471,7 +474,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
  }
 
  /* ---------- groups ---------- */
- const groupTopics=async(w,id)=>(await allTopics(w)).filter(t=>t.groupId===id&&t.status!=='let-go');
+ const groupTopics=async(w,id)=>(await allTopics(w,false)).filter(t=>t.groupId===id&&t.status!=='let-go');
  async function groupView(w,g){
   const topics=await groupTopics(w,g.id),fromTopics=new Map();
   for(const t of topics)for(const sid of sourceIdsOf(w,t)){if(!fromTopics.has(sid))fromTopics.set(sid,[]);fromTopics.get(sid).push(t.id);}
@@ -485,7 +488,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
    ask:askAbility(),lastChange:g.operations?.[0]?{what:g.operations[0].what,actor:g.operations[0].actor,at:g.operations[0].at}:null};
  }
  const askAbility=()=>({find:typeof owners.readSource==='function',atlas:typeof owners.atlas==='function',answers:false,needs:'Answers written in sentences from these sources need an AI provider, which this app does not have set up for asking yet.'});
- function groups(input={}){object(input);only(input,[]);return serial(async()=>{const w=await world(),live=(await allTopics(w)).filter(t=>t.status!=='let-go');return {schema:GROUPS,groups:w.groups.map(g=>({id:g.id,name:g.name,folder:g.folder,revision:g.revision,hash:groupHash(g),count:live.filter(t=>t.groupId===g.id).length,sourceCount:g.sources.length})).sort((a,b)=>a.name.localeCompare(b.name))};});}
+ function groups(input={}){object(input);only(input,[]);return serial(async()=>{const w=await world(),live=(await allTopics(w,false)).filter(t=>t.status!=='let-go');return {schema:GROUPS,groups:w.groups.map(g=>({id:g.id,name:g.name,folder:g.folder,revision:g.revision,hash:groupHash(g),count:live.filter(t=>t.groupId===g.id).length,sourceCount:g.sources.length})).sort((a,b)=>a.name.localeCompare(b.name))};});}
  function readGroup(input={}){object(input);only(input,['id']);return serial(async()=>{const w=await world(),g=w.groups.find(x=>x.id===input.id);if(!g)fail('There is no group '+input.id+'.',404);return groupView(w,g);});}
  /** Make a group or change its name, folder or settings. */
  function saveGroup(input){

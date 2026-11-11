@@ -121,6 +121,10 @@ test('an assistant proposes a topic; he keeps it (it becomes an inquiry) or lets
  assert.equal((await cat()).length,before,'no inquiry until he keeps it');
  // Not now: the waiting thing is left for later and can be shown again.
  assert.equal((await f.cli(['research','save'],{id:p.id,...expect(read),leave:'keep'})).exitCode,5,'an assistant may not hide what waits for him');
+ // Putting it in a group stays open to an assistant.
+ const grp=(await f.cli(['research','group-save'],{name:'Glaze',expectedRevision:0})).result;
+ const filed=await f.cli(['research','save'],{id:p.id,...expect(read),groupId:grp.id});assert.equal(filed.exitCode,0,JSON.stringify(filed.result));assert.equal(filed.result.groupId,grp.id);
+ const read2=await f.read(p.id);Object.assign(read,{revision:read2.revision,hash:read2.hash});
  const left=await f.page('POST','/api/research-topics/save',{id:p.id,operationId:randomUUID(),...expect(read),leave:'keep'});
  assert.equal(left.status,200);const l=await f.read(p.id);assert.deepEqual([l.waitingNow.length,l.waitingLeft.length],[0,1]);
  const kept=await f.page('POST','/api/research-topics/keep',{id:p.id,operationId:randomUUID(),...expect(l)});

@@ -90,14 +90,16 @@
    add.addEventListener('click',()=>{done=true;resolve([...chosen]);s.close();});
   });
  }
+ /** Choose one subject. The list comes from subjects.standing (one fast read of every subject's name); nothing here asks
+     each subject anything, so it is ready at once however many subjects there are. */
  async function chooseSubject(){
-  let cat;try{cat=await v2.call('study-draft.catalog');}catch(error){fail(error);return null;}
-  const all=(cat.collections||[]).filter(c=>c.bindingStatus==='ready').sort((a,b)=>String(a.title).localeCompare(String(b.title)));
+  let cat;try{cat=await v2.call('subjects.standing');}catch(error){fail(error);return null;}
+  const all=(cat.subjects||[]).filter(c=>!c.archived&&c.id).sort((a,b)=>String(a.title).localeCompare(String(b.title)));
   return new Promise(resolve=>{
    let done=false;
    const s=sheet({title:'Use for a subject',body:`<div class="rs-pick"><label class="rs-field"><span>Find</span><input type="search" data-rs-find autocomplete="off" placeholder="A word in its name"></label><ul class="rs-picklist" data-rs-list></ul></div>`,onClose:()=>{if(!done)resolve(null);}});
    const list=s.body.querySelector('[data-rs-list]'),find=s.body.querySelector('[data-rs-find]');
-   const paint=()=>{const q=find.value.trim().toLocaleLowerCase();list.innerHTML=all.filter(c=>!q||String(c.title).toLocaleLowerCase().includes(q)).slice(0,40).map(c=>`<li><button type="button" class="v2-ghost rs-pickone" data-id="${esc(c.parentStudyId)}">${esc(c.title||c.parentStudyId)}</button></li>`).join('')||'<li class="rs-meta">No subject matches.</li>';};
+   const paint=()=>{const q=find.value.trim().toLocaleLowerCase();list.innerHTML=all.filter(c=>!q||String(c.title).toLocaleLowerCase().includes(q)).slice(0,40).map(c=>`<li><button type="button" class="v2-ghost rs-pickone" data-id="${esc(c.id)}">${esc(c.title||c.id)}</button></li>`).join('')||'<li class="rs-meta">No subject matches.</li>';};
    list.addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(!b)return;done=true;resolve(b.dataset.id);s.close();});
    find.addEventListener('input',paint);paint();
   });
@@ -147,10 +149,10 @@
      body+=askBox(null);
      const made=topics.filter(t=>t.madeForYou);
      if(made.length)body+=`<section class="rs-sec" data-rs-made><div class="rs-sec-h"><h2>Made for you this week</h2><span>${made.length}</span></div><ul class="rs-list">${made.map(t=>row(t,{groups,made:true})).join('')}</ul></section>`;
-     for(const g of groups){const inside=topics.filter(t=>t.groupId===g.id&&!t.madeForYou);body+=`<section class="rs-sec"><div class="rs-sec-h"><h2><a href="${esc(groupHref(g.id))}">${esc(g.name)}</a></h2><span>${plural(g.count,'topic')}</span><a class="rs-open" href="${esc(groupHref(g.id))}">Open the group${icon('chev')}</a></div>${inside.length?`<ul class="rs-list">${inside.map(t=>row(t,{groups})).join('')}</ul>`:'<p class="rs-meta">No topics in it yet. Open a topic and put it here.</p>'}</section>`;}
+     for(const g of groups){const inside=topics.filter(t=>t.groupId===g.id&&!t.madeForYou);body+=`<section class="rs-sec"><div class="rs-sec-h"><h2><a href="${esc(groupHref(g.id))}">${esc(g.name)}</a></h2><span>${plural(g.count,'topic')}</span><a class="rs-open" href="${esc(groupHref(g.id))}">Open the group${icon('chev')}</a></div>${inside.length?`<ul class="rs-list">${inside.map(t=>row(t,{groups})).join('')}</ul>`:'<p class="rs-meta">No topics yet.</p>'}</section>`;}
      const loose=topics.filter(t=>!t.groupId&&!t.madeForYou);
      if(loose.length)body+=`<section class="rs-sec"><div class="rs-sec-h"><h2>${VIEWS.none}</h2><span>${plural(loose.length,'topic')}</span></div><ul class="rs-list">${loose.map(t=>row(t,{groups})).join('')}</ul></section>`;
-     if(!topics.length)body+=`<section class="rs-sec rs-empty"><h2>No topics yet</h2><p class="rs-meta">Topics come from conversations, fact checks, things you saved and your notes. Assistants propose them here for you to keep or let go, and you can start one.</p></section>`;
+     if(!topics.length)body+=`<section class="rs-sec rs-empty"><h2>No topics yet</h2></section>`;
     }else body+=`<section class="rs-sec">${rows.length?`<ul class="rs-list">${rows.map(t=>row(t,{groups,made:show==='week'})).join('')}</ul>`:`<p class="rs-meta">${show==='week'?'Nothing new this week.':show==='saying'?'Nothing is waiting for you.':show==='gone'?'Nothing was let go.':'Every topic is in a group.'}</p>`}</section>`;
     main.innerHTML=body;
     wireAsk(main,null);
@@ -183,14 +185,13 @@
  ${askBox(id)}${g.sources.length&&!ticked?'<p class="rs-meta">Tick at least one source to look in.</p>':''}
 </section>
 <section class="rs-g-src" data-rs-sources><div class="rs-sec-h"><h2>Sources</h2><span>${g.sources.length}</span><button type="button" class="v2-ghost rs-push" data-rs-addsrc>${icon('plus')}Add</button></div>
- <p class="rs-meta">Ticked sources are the ones it is asked from.</p>
- ${g.sources.length?`<ul class="rs-src">${g.sources.map(s=>`<li><button type="button" aria-pressed="${s.ticked}" data-rs-tick="${esc(s.id)}"><i class="rs-tick" aria-hidden="true"></i><span><b>${esc(s.title)}</b><small>${esc(s.missing?'No longer in the Library':s.from==='topic'?'From a topic inside':s.kind||'Source')}</small></span></button></li>`).join('')}</ul>`:'<p class="rs-meta">No sources yet. Add them from the Library, or put topics in this group and their sources come with them.</p>'}
+ ${g.sources.length?`<ul class="rs-src">${g.sources.map(s=>`<li><button type="button" aria-pressed="${s.ticked}" data-rs-tick="${esc(s.id)}"><i class="rs-tick" aria-hidden="true"></i><span><b>${esc(s.title)}</b><small>${esc(s.missing?'No longer in the Library':s.from==='topic'?'From a topic inside':s.kind||'Source')}</small></span></button></li>`).join('')}</ul>`:'<p class="rs-meta">No sources yet.</p>'}
 </section>
 <section class="rs-g-side">
  <div class="rs-sec-h"><h2>Topics inside</h2><span>${g.topics.length}</span></div>
- ${g.topics.length?`<ul class="rs-g-t">${g.topics.map(t=>`<li><a href="${esc(topicHref(t.id))}"><b>${esc(t.name)}</b>${origin(t.origin)}${stateMark(t)}</a></li>`).join('')}</ul>`:'<p class="rs-meta">None yet. Open a topic and put it in this group.</p>'}
+ ${g.topics.length?`<ul class="rs-g-t">${g.topics.map(t=>`<li><a href="${esc(topicHref(t.id))}"><b>${esc(t.name)}</b>${origin(t.origin)}${stateMark(t)}</a></li>`).join('')}</ul>`:'<p class="rs-meta">None yet.</p>'}
  <div class="rs-sec-h"><h2>Used in</h2></div>
- ${g.usedIn.length?`<ul class="rs-g-t">${g.usedIn.map(u=>`<li><a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}"><b>${esc(u.title)}</b><small>Subject</small></a></li>`).join('')}</ul>`:'<p class="rs-meta">No subject uses its topics yet.</p>'}
+ ${g.usedIn.length?`<ul class="rs-g-t">${g.usedIn.map(u=>`<li><a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}"><b>${esc(u.title)}</b><small>Subject</small></a></li>`).join('')}</ul>`:'<p class="rs-meta">None yet.</p>'}
  <div class="rs-sec-h"><h2>How this group works</h2><button type="button" class="v2-ghost rs-push" data-rs-change>Change</button></div>
  <dl class="rs-how"><dt>Filed in</dt><dd>${esc(g.folder.join(' / '))}</dd><dt>New topics</dt><dd>${g.settings.opensTopics==='off'?'Only when you start one':'Assistants propose them for you to keep'}</dd><dt>Looks for new material</dt><dd>Not built yet. It needs a research provider.</dd></dl>
 </section>`;
@@ -238,7 +239,7 @@
   ${t.take?.text?`<p class="rs-mine">${esc(t.take.text)}</p>`:`<p class="rs-quietp">${human?'Not written yet.':'Adrian has not written it yet.'}</p>`}
   ${human?`<button type="button" class="v2-ghost rs-write" data-rs-write>${t.take?.text?'Change it':'Write it'}</button>
   <form class="rs-takeform" data-rs-take hidden><label class="rs-vh" for="rs-take-text">Your line</label><textarea id="rs-take-text" name="take" rows="2" maxlength="400">${esc(t.take?.text||'')}</textarea>
-   <div class="rs-row"><button type="submit" class="pri">Keep my line</button><button type="button" class="v2-ghost" data-rs-cancel>Cancel</button><span class="rs-meta">Only you write here.</span></div></form>`:'<p class="rs-meta">Only Adrian writes here.</p>'}
+   <div class="rs-row"><button type="submit" class="pri">Keep my line</button><button type="button" class="v2-ghost" data-rs-cancel>Cancel</button></div></form>`:'<p class="rs-meta">Only Adrian writes here.</p>'}
  </section>
  ${t.status==='let-go'?'':`<div class="rs-file"><label class="rs-field inline"><span>Group</span><select data-rs-groupset><option value="">No group</option>${groups.map(g=>`<option value="${esc(g.id)}"${g.id===t.groupId?' selected':''}>${esc(g.name)}</option>`).join('')}</select></label><button type="button" data-rs-link>${icon('plus')}Use for a subject</button>${t.kind!=='subject'?'<button type="button" class="v2-ghost" data-rs-letgo-topic>Let it go</button>':''}</div>`}
 </article>`;
@@ -249,11 +250,11 @@
   const label={keep:'Keep','let-go':'Let it go',yes:'Yes','not-now':'Not now'};
   return `<div class="rs-decwrap"><article class="rs-dec" data-rs-waiting="${esc(w.key)}"><p class="rs-label">1 of ${t.waitingNow.length}</p><h2>${esc(w.title)}</h2>${w.detail?`<p class="rs-dec-s">${esc(w.detail)}</p>`:''}
   <div class="rs-row">${w.choices.map((c,i)=>`<button type="button"${i===0?' class="pri"':c==='not-now'?' class="v2-ghost"':''} data-rs-choice="${esc(c)}">${esc(label[c]||c)}</button>`).join('')}</div>
-  <p class="rs-meta">You never have to. Not now keeps it here for later.</p></article></div>`;
+  </article></div>`;
  }
  function sourcesTab(t){
   return `<article class="rs-read rs-srcs"><div class="rs-row"><h1 class="small">Where this comes from</h1><span class="rs-grow"></span>${t.status!=='let-go'?`<button type="button" data-rs-addsrc>${icon('plus')}Add a source</button>`:''}</div>
- <p class="rs-meta">${plural(t.sources.length,'source')}. Each counts once, however long it is.</p>
+ <p class="rs-meta">${plural(t.sources.length,'source')}</p>
  ${t.sources.length?`<ul class="rs-src wide">${t.sources.map(s=>`<li><span><b>${esc(s.title)}</b><small>${esc(s.missing?'No longer in the Library':s.kind||'Source')}</small></span></li>`).join('')}</ul>`:'<p class="rs-meta">No sources yet.</p>'}
  ${t.answers.length?`<h2>Questions asked</h2><ul class="rs-src wide">${t.answers.map(a=>`<li><span><b>${esc(a.question)}</b><small>${esc(a.keptAt?'Kept':a.status||'')}</small></span></li>`).join('')}</ul>`:''}
  ${t.usedIn.length?`<h2>Used in</h2><ul class="rs-src wide">${t.usedIn.map(u=>`<li><a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}"><b>${esc(u.title)}</b><small>${u.status==='used'?'Subject':'Waiting for your yes'}</small></a></li>`).join('')}</ul>`:''}
