@@ -95,8 +95,16 @@ One home, inside AR Create. No third system.
 - **The evidence card** AR Create already has (exact quote, position, source) grows into the nugget by gaining a speaker, a distillation, concepts, a lens reading, a response and links.
 - **Collections** are questions with evidence and growing understanding. A pathway with a question is the same thing, so Collections become pathways and you learn one idea, not two.
 - **Research** is "go deeper": a question from a nugget or a gap in a pathway. What it finds comes back as sources and proposed nuggets, still marked Supported or Uncertain.
-- **The i64os shelf** has not been verified; a separate small thread is reading it. The proposal, to confirm when that thread reports: the shelf stops being a second reading place, its notes come into Library as sources over time, and its three depths (summary, analysis, transcript) become the glance, the opened nugget and the source.
+- **The i64os shelf** stops being a second reading place. Its notes become sources in the bank, and nuggets are cut from them. Details below.
 - **Your many entrances** (a pasted link, the phone's share button, an agent, the shelf, a note from the vault) all arrive at the same door as sources. The vault stays read-only.
+
+**What the i64os read found.** The separate thread reported on 11 November, after this concept was first written. It worked from i64os's documents and code and did not open the real data. Its page is `00b-i64os-inventory.md` on the review branch.
+
+- **The shelf is real, and a note is a whole talk.** The documents say 189 notes, each at three depths, with no links between notes. So a shelf note is a source here, never a nugget.
+- **Its summaries are retellings on purpose.** They can serve as the outline on a source page, labelled as a summary. They can never supply a nugget's words, so the bank needs its own distilling step that copies words exactly.
+- **The exact words are already stored.** Every transcript is kept as timed lines, so a nugget's quote and moment can be cut from what you already have.
+- **The Research Hunt has the right shape for "echoes" and "contrasts"**: one claim, and for each source an exact quote, its place and whether it agrees. It holds no real contents yet. Book search is built and, as far as the documents say, empty.
+- **Collecting without returning is already happening.** 337 captured items have sat unsorted since 1 August. They should come in as sources that wait quietly and are distilled only when you open one or a question finds one, never as a queue to clear.
 
 ## What to borrow and what to build
 
