@@ -89,4 +89,14 @@ The reading page is not redrawn here, as the last message asked: "Open the full 
 
 ## Adrian's reaction
 
-Not yet given. To be recorded here in his words.
+**11 November, after opening the zoom map, in his words:**
+
+"The way the concepts connect should probably be more straight lines. This looks like a subway map. These blue lines or green lines. It's hard for me to understand how to navigate through these and what they really are. How would you improve the interconnections majorly?"
+
+What it means (my reading, not his words): the wandering coloured lines do not say what they are, which way they run, or how to travel on them. The colours carry no meaning he can read. The transit picture he confirmed earlier does not work as drawn here. Nothing was changed on the page; a new way of drawing the connections was proposed to him in the conversation and waits for his yes:
+
+- Every line drawn straight, read in one direction, named at its start, with its first and last concept in words.
+- The middle depth as parallel straight rows, brightest at the top, with a short tie wherever two rows share a concept.
+- At a concept, the lines through it as straight directions out of it, each labelled with where the next step leads.
+- One colour for the line he is on; every other line quiet.
+- A work drawn the same way: its parts in reading order as one straight row, tied to other works where they share a concept.
