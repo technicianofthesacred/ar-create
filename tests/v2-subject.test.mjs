@@ -28,7 +28,7 @@ test('every hand-off names the section its label says, pinned',()=>{
   directionChange:['Change','direction'],directionWrite:['Write it','direction'],
   addMaterial:['Add it in Advanced','material'],readSources:['Read them in Advanced','source'],readTranscript:['Read the transcript in Advanced','source'],
   research:['Open Research in Advanced','research'],researchLook:['Look at them in Advanced','research'],
-  board:['Open the board in Advanced','subjects'],dishChange:['Change it in Advanced','direction'],dishWrite:['Write it in Advanced','direction'],
+  board:['Open the Simmer board in Advanced','direction'],dishChange:['Change it in Advanced','direction'],dishWrite:['Write it in Advanced','direction'],
   write:['Write','write'],read:['Read it through','read'],
   media:['Choose photographs in Advanced','media'],arrange:['Place them in Advanced','arrange'],addPhotos:['Add photographs in Advanced','material'],
   checkRun:['Run the check in Advanced','check'],checkOpen:['Open the check in Advanced','check'],
@@ -123,6 +123,7 @@ test('no em dash, only the six sizes, no hard-coded colour, every rule under the
  for(const r of rules)assert.match(r,/^(?:html\[data-brand\] )?(?:\.subj\b|\.subj-sheetdlg\b|dialog\.subj-sheetdlg\b)/,'every rule starts with the screen\'s own class: '+r.slice(0,60));
  const js=fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8');
  for(const banned of ['subject-places','study-draft.catalog','inquiries.projects','subjects.standing','stepsFor','factsFrom'])assert.ok(!js.includes("'"+banned),banned+' is not read or decided here');
+assert.match(js,/named\?\.text/,'the dish he named is the board\'s text');
  assert.match(js,/gather=subject=>v2\.call\('subject\.standing'/);
 });
 
@@ -188,9 +189,22 @@ test('six invented subjects at different stages each show exactly what subject.s
   assert.match(doc.querySelector('.subj-form.none').textContent,/Not decided yet/);
   assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),[['have','next'],['dish','wait'],['form','wait']]);}
  // A suggestion waiting: the words need him, Check and Publish wait.
- {const {doc}=await page(base,'#/subject/demo-shade-and-patience');await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
-  const st=Object.fromEntries(rowsOf(doc).map(r=>[r[0],r[1]]));assert.deepEqual([st.words,st.check,st.publish],['flag','wait','wait']);
-  assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'The words');}
+ {const {w,doc}=await page(base,'#/subject/demo-shade-and-patience');await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+  const st=Object.fromEntries(rowsOf(doc).map(r=>[r[0],r[1]])),said=Object.fromEntries(S.stepsOfForm(await standingOf(base,'demo-shade-and-patience'),S.chooseForm(await standingOf(base,'demo-shade-and-patience'))).map(x=>[x.id,x.state]));
+  assert.deepEqual([st.words,st.check],['flag','wait']);assert.equal(st.publish,said.publish,'Publish is whatever the command says');
+  assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'The words');
+  // A step that is not known is never opened by the page, but he can always open it, and it offers its ways into Advanced.
+  const unknown=rowsOf(doc).filter(r=>r[1]==='unknown');assert.ok(unknown.length,'this subject has a step the command does not know');
+  for(const [sid] of unknown){assert.notEqual(doc.querySelector('.subj-row[data-open]').dataset.step,sid,'not chosen to open');
+   const btn=doc.querySelector(`.subj-row[data-step="${sid}"]>[data-subj-step]`);assert.ok(!btn.disabled&&btn.getAttribute('aria-disabled')!=='true','it can be opened');btn.click();
+   assert.match(doc.querySelector('[data-subj-panel] .subj-note').textContent,/Not known/);
+   const secs=[...doc.querySelectorAll('[data-subj-panel] [data-subj-handoff]')].map(a=>sectionOf(a.getAttribute('href')));
+   assert.deepEqual(secs,S.STEP_OUT[sid].map(k=>S.HANDOFFS[k].section),sid+' offers all its hand-offs');
+   if(sid==='publish')assert.ok(secs.includes('outputs')&&secs.includes('audience'));}
+  // Pressing a step keeps focus on it, and the form and step are kept in the address.
+  doc.querySelector('.subj-row[data-step="have"]>[data-subj-step]').focus();doc.querySelector('.subj-row[data-step="have"]>[data-subj-step]').click();
+  await new Promise(r=>setTimeout(r,200));assert.equal(doc.activeElement?.dataset?.subjStep,'have','focus stays on the step');
+  assert.match(decodeURIComponent(w.location.hash),/step=have/);assert.match(decodeURIComponent(w.location.hash),/form=out:/);}
 });
 
 test('the page: opens a step on demand, every hand-off lands on its section with the subject and piece, a Carousel step opens the slide studio, changes re-ask only what they touch',{timeout:300000},async t=>{

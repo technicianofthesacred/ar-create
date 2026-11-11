@@ -22,7 +22,7 @@
   addMaterial:{label:'Add it in Advanced',section:'material'},readSources:{label:'Read them in Advanced',section:'source'},
   readTranscript:{label:'Read the transcript in Advanced',section:'source'},
   research:{label:'Open Research in Advanced',section:'research'},researchLook:{label:'Look at them in Advanced',section:'research'},
-  board:{label:'Open the board in Advanced',section:'subjects'},dishChange:{label:'Change it in Advanced',section:'direction'},dishWrite:{label:'Write it in Advanced',section:'direction'},
+  board:{label:'Open the Simmer board in Advanced',section:'direction'},dishChange:{label:'Change it in Advanced',section:'direction'},dishWrite:{label:'Write it in Advanced',section:'direction'},
   write:{label:'Write',section:'write'},read:{label:'Read it through',section:'read'},
   media:{label:'Choose photographs in Advanced',section:'media'},arrange:{label:'Place them in Advanced',section:'arrange'},addPhotos:{label:'Add photographs in Advanced',section:'material'},
   checkRun:{label:'Run the check in Advanced',section:'check'},checkOpen:{label:'Open the check in Advanced',section:'check'},
@@ -222,10 +222,18 @@
  function mount(el,ctx){
   const id=ctx.params.id,page=el.querySelector('.subj');
   // rec[k]: undefined = not asked yet (the tool says Reading); null = nothing to read; {__error} = could not be read.
-  const st={standing:null,form:null,open:null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map()};
+  let back={};try{back=JSON.parse(root.sessionStorage.getItem('ar-v2-subject:'+id)||'{}')||{};}catch{}
+  const st={standing:null,form:ctx.query?.form||back.form||null,open:ctx.query?.step||back.step||null,rec:{},pend:{},drafts:{},sayLine:'',busy:false,frames:new Map(),last:{},look:new Map()};
   const phone=root.matchMedia?root.matchMedia('(max-width:850px)'):{matches:false};
   let timer=null,paintTimer=null;
   const $=sel=>page.querySelector(sel);
+  /** Keep the form and the open step in the address (and for this tab), so Back from the slide studio returns to them. */
+  const KEEP='ar-v2-subject:'+id;
+  function remember(){
+   const form=st.form,step=st.open;
+   try{root.history.replaceState(root.history.state,'',v2.href('subject/:id',{id},{form,step}));}catch{}
+   try{root.sessionStorage.setItem(KEEP,JSON.stringify({form,step}));}catch{}
+  }
   const ids=()=>({id,bindingId:st.standing?.facts?.bindingId||null,projectId:st.standing?.facts?.projectId||null});
 
   // ---- asking: one command for the standing, then only the reads the open step's tool needs ----
@@ -321,7 +329,7 @@
     return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=stepView(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
   }
   const rowInner=v=>{const on=v.id===st.open;
-   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}${v.unknown?' aria-disabled="true"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small>${esc(v.note)}</small>`:''}<span class="subj-sr">${esc(v.say)}</span></button>`;};
+   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small>${esc(v.note)}</small>`:''}<span class="subj-sr">${esc(v.say)}</span></button>`;};
 
   function paintMissing(error){
    page.innerHTML=`<header class="subj-head"><h1>This subject could not be found</h1></header><p class="subj-quiet">${esc(error?.message||'Nothing in the records has this name.')}</p><p><a class="v2-out" href="#/">Home${icon('right')}</a></p>`;
@@ -356,14 +364,14 @@
   const own=(s,form)=>{const h=ownHandoff(s);if(!h)return '';return h.key?out(h.key,form):`<a class="v2-out" data-subj-handoff="own" href="${handoffHref(h.section,form)}">${esc(h.label)}${icon('out')}</a>`;};
   const links=(...items)=>{const l=items.filter(Boolean).join('');return l?`<div class="subj-links">${l}</div>`:'';};
   const waitsFor=(s,steps)=>{
-   const rows=(s.waits||[]).map(w=>{const t=steps.find(x=>x.id===w);if(!t)return '';const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):''}<span><b>${esc(t.name)}</b>${tv.note?`<small>${esc(tv.note)}</small>`:''}</span><button type="button" class="v2-ghost" data-subj-step="${esc(t.id)}"${tv.openable?'':' disabled'}>Open${icon('chev')}</button></li>`;}).join('');
+   const rows=(s.waits||[]).map(w=>{const t=steps.find(x=>x.id===w);if(!t)return '';const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):''}<span><b>${esc(t.name)}</b>${tv.note?`<small>${esc(tv.note)}</small>`:''}</span><button type="button" class="v2-ghost" data-subj-step="${esc(t.id)}">Open${icon('chev')}</button></li>`;}).join('');
    return rows?`<ul class="subj-list subj-waits">${rows}</ul>`:'';
   };
   const reading=()=>`<p class="subj-quiet" role="status">Reading</p>`;
   const rec=k=>st.rec[k];
 
   function tool(s,form,steps){
-   if(s.state==='unknown')return links(own(s,form));
+   if(s.state==='unknown')return notKnown(s,form);
    switch(s.id){
     case 'have':return toolHave(s,form);
     case 'transcript':return toolTranscript(s,form);
@@ -380,6 +388,11 @@
     case 'publish':return toolPublish(s,steps,form);
    }
    return links(own(s,form));
+  }
+  /** A step he opened that is not known: it says so plainly, and every way into Advanced for it is offered. */
+  function notKnown(s,form){
+   const keys=STEP_OUT[s.id]||[];
+   return `<p class="subj-quiet">Not known yet. What this step rests on has not been read, so nothing is claimed.</p>`+links(...(keys.length?keys.map(k=>out(k,form)):[own(s,form)]));
   }
   function toolHave(s,form){
    const known=['tree','brief','planRecords'].every(k=>rec(k)!==undefined);
@@ -416,7 +429,7 @@
    return (rec('brief')===undefined?reading():'')+body+links(out(b?.step==='review'?'researchLook':'research',form));
   }
   function toolDish(s,steps,form){
-   const f=ok(rec('board'))?rec('board').forming||{}:{},sentence=typeof f.named==='string'?f.named:f.named?.sentence||'',d=rec('direction'),dir=ok(d)?String(d.body||'').trim():'';
+   const f=ok(rec('board'))?rec('board').forming||{}:{},sentence=typeof f.named==='string'?f.named:f.named?.text||f.named?.sentence||'',d=rec('direction'),dir=ok(d)?String(d.body||'').trim():'';
    let body=waitsFor(s,steps);
    if(f.dishes?.length)body+=`<ul class="subj-list subj-dishes">${f.dishes.slice(0,4).map(x=>`<li><span><b>${esc(x.title||x.dish||x.text||'')}</b>${x.why||x.reader?`<small>${esc(x.why||x.reader)}</small>`:''}</span>${x.by?`<em class="subj-by">${esc(v2.actorName(x.by))}’s proposal</em>`:''}</li>`).join('')}</ul>`;
    const said=sentence||dir;
@@ -484,21 +497,21 @@
   // ---------- doing things ----------
   page.addEventListener('click',e=>{
    const b=e.target.closest('[data-subj-step]');
-   if(b){e.preventDefault();if(!b.disabled&&b.getAttribute('aria-disabled')!=='true')openStep(b.dataset.subjStep);return;}
+   if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
    if(e.target.closest('[data-subj-add]'))addForm();
   });
   function openStep(sid){
-   st.open=sid;need(sid);paintNow();
-   const panel=$('[data-subj-panel]');
-   if(phone.matches)panel?.scrollIntoView?.({block:'nearest'});
-   panel?.querySelector('h2')?.focus({preventScroll:!phone.matches});
+   st.open=sid;need(sid);remember();paintNow();
+   // Focus stays on the step he pressed; the open tool is the next thing in the tab order.
+   $(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
+   if(phone.matches)$('[data-subj-panel]')?.scrollIntoView?.({block:'nearest'});
   }
   /** He chose another form: its own next step opens (his act, so it may move the open step). */
   function chooseFormByKey(key){
    const f=(st.standing?.forms||[]).find(x=>x.key===key);if(!f)return;
-   st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
+   st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);remember();paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
   }
   page.addEventListener('input',e=>{const t=e.target;if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;});
   page.addEventListener('submit',async e=>{
@@ -521,7 +534,14 @@
    const body=`<div class="subj-kinds">${kinds.map(k=>`<button type="button" data-subj-make="${k.kind}"${k.ready?'':` disabled aria-describedby="subj-why-${k.kind}"`}><b>${esc(k.name)}</b>${k.to?`<small>for ${esc(k.to)}</small>`:''}<span>${esc(k.what)}</span><em>Needs: ${esc(k.needs)}</em>${k.ready?'':`<em class="why" id="subj-why-${k.kind}">${esc(k.why)}</em>`}</button>`).join('')}</div>`;
    const sheet=v2.ui.sheet({title:'What else will this be?',body});sheet.el.classList.add('subj-sheetdlg');
    sheet.body.addEventListener('click',async e=>{const b=e.target.closest('[data-subj-make]');if(!b||b.disabled)return;b.disabled=true;
-    try{const key=await make(b.dataset.subjMake);sheet.close();st.form=key;st.open=null;await refresh();v2.ui.say(KINDS[b.dataset.subjMake].name+' added.',{tone:'good'});}
+    try{
+     const key=await make(b.dataset.subjMake);sheet.close();
+     // Say "added" only when the command, asked again, shows it. A refusal threw above and says its own words.
+     let shown=false;
+     for(let i=0;i<3&&!shown;i++){if(i)await new Promise(r=>setTimeout(r,500));await refresh();shown=!!st.standing?.forms?.some(f=>f.key===key);}
+     if(shown){st.form=key;st.open=null;remember();paintNow();v2.ui.say(KINDS[b.dataset.subjMake].name+' added.',{tone:'good'});}
+     else v2.ui.say('It was made, but the records do not show it here yet. Reload to see it.',{tone:'warn'});
+    }
     catch(error){b.disabled=false;v2.ui.say(error?.message||'It could not be added. Nothing was changed.',{tone:'bad'});}});
   }
   async function make(kind){

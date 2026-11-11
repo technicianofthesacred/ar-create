@@ -182,7 +182,8 @@ dialog.subj-sheetdlg{width:min(640px,100%)}
 @media (max-width:850px){
  .subj{padding-top:16px;gap:22px}
  .subj .subj-head{flex-wrap:wrap}
- .subj .subj-head h1{white-space:normal;overflow-wrap:anywhere;flex-basis:100%}
+ /* The thin phone header already carries the name: the page heading stays for screen readers only. */
+ .subj .subj-head h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
  .subj .subj-path{white-space:normal;overflow-wrap:anywhere}
  .subj .subj-dir{max-width:100%;flex:1 1 100%}
  .subj .subj-sp{display:none}
