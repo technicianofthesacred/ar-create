@@ -129,8 +129,15 @@ Small and not yet done:
   well. Three of them fail on untouched `main`: "public/document-study/collection-app-journey.test.mjs", "shared
   discovery never replaces the fresh exact Carousel registry check at opening", and "advertised Outputs creation, each
   title/next action, own words, scope return and persistent reload use real owners".
-- One test fails only on a cloud machine: "installed home mode: config must name the real home…". "real native HTTP
-  photo inspect…" fails now and then on unchanged code.
+- One test fails only on a cloud machine: "installed home mode: config must name the real home…".
+- **The automatic check (`ci`) is red, and not because of version two.** "real native HTTP photo inspect and exact
+  persisted lookup do not write, and restart preserves identities" gives the workspace's page 30 seconds to boot in
+  jsdom. Measured 11 November: the boot takes about 38 seconds on a cloud machine on main and on this branch alike
+  (about 20 of them matching roughly 1 MB of stylesheets), and the same test failed on the Mac runner on a branch
+  that does not carry version two. The honest fix is a faster boot of the existing workspace, not a longer wait.
+  The package check then stops on `.scratch/magazine-fixtures/19f486e4-…/data/word-library/state.json`, a stale
+  scratch file sitting in the Mac runner's checkout; it has tripped every recent run on every branch. Delete that
+  folder on the runner. `scripts/release.mjs` reads the `ci` check of the commit it installs.
 - Several tests fail only when many suites run at once and pass alone ("failed exact Direction load keeps a discovered
   Collection root held", "working HTML prepares exactly once…"). Run a failure alone before counting it.
 - `npm run demo:fill` and `npm run demo:instagram` ignore `AR_CREATE_PORT`. They fill port 8854 unless

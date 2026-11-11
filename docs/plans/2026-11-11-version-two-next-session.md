@@ -17,6 +17,14 @@ that opened it before still opens it.
 
 Everything was built and checked on invented demo data. **Nothing has yet been seen with his real records.**
 
+## Before the release: the automatic check is red on main
+
+Not from version two; see "Things to know before trusting a green run" in the open corrections file. Two things,
+both on the Mac: delete the stale `.scratch/magazine-fixtures/` folder in the runner's checkout
+(`~/actions-runner/ar-create/_work/ar-create/ar-create/.scratch`), and settle the photo inspect test, whose
+30 second wait the existing workspace's boot no longer fits inside. Tell Adrian which you did. The release script has
+a journaled `--no-ci-check "<reason>"` for a red check; that is his call, not an assistant's.
+
 ## What only the Mac can do
 
 1. **The release.** He authorised shipping on 11 November ("you can ship it on your own"). The installed app becomes
