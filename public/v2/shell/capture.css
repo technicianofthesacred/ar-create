@@ -1,0 +1,52 @@
+/* Version two: the Capture sheet. The sample's sheet (a line saying where it goes, four tiles, the done line), with each
+   tile opening in place. Colours and sizes come from the app's tokens; six type sizes only. A plain button gets the
+   Graphite look, so the tiles and the quiet controls name the layer that comes before it (see shell.css). */
+dialog.v2-capture{width:min(460px,100%)}
+.v2-capture .v2-cap-to{font-size:var(--v2-t13);color:var(--dim);margin-bottom:14px}
+.v2-capture .v2-cap-to b{color:var(--ink);font-weight:600}
+.v2-capture .v2-cap-view{display:grid;gap:12px;min-width:0}
+.v2-capture .v2-cap-view>*{min-width:0}
+.v2-cap4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v2-capture h3{font:600 var(--v2-t15)/1.3 var(--ar-ui)}
+.v2-capture h3:focus{outline:0}
+.v2-cap-head{display:flex;align-items:center;gap:6px;min-width:0}
+.v2-cap-head h3{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+@layer v2-controls{
+ button.v2-tile{display:grid!important;justify-items:center!important;align-content:center!important;gap:8px!important;width:100%!important;min-height:92px!important;padding:16px 6px 12px!important;border:0!important;border-radius:10px!important;background:var(--v2-sec)!important;color:var(--graphite-ink)!important;font:600 var(--v2-t13)/1.2 var(--ar-ui)!important;text-align:center!important;box-shadow:none!important;background-clip:border-box!important}
+ button.v2-tile .v2-ic{width:24px!important;height:24px!important}
+ button.v2-tile.rec{background:var(--graphite-ink)!important;color:var(--graphite-inverse)!important}
+ button.v2-tile small{display:block;font:400 var(--v2-t12)/1.2 var(--ar-ui);color:var(--warm);overflow-wrap:anywhere}
+ .v2-cap-head button.v2-ghost{color:var(--ink)!important}
+ button.v2-tile.rec small{color:inherit;opacity:.8}
+ @media (max-width:850px),(pointer:coarse){button.v2-tile{min-height:96px!important}}
+}
+.v2-cap-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.v2-cap-actions .v2-grow{flex:1 1 0;min-width:0}
+.v2-cap-hint{font-size:var(--v2-t12);color:var(--dim)}
+.v2-cap-time{font:600 var(--v2-t22)/1.2 var(--ar-ui);font-variant-numeric:tabular-nums}
+.v2-cap-rec{display:flex;align-items:center;gap:10px;padding:14px 14px;border-radius:10px;background:var(--v2-sec)}
+.v2-cap-rec i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c3-bad);animation:v2-cap-pulse 1.2s ease-in-out infinite}
+@keyframes v2-cap-pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.v2-cap-rec i{animation:none}}
+.v2-capture audio{width:100%;max-width:100%}
+.v2-capture textarea,.v2-capture input[type="text"]{display:block;width:100%;max-width:100%;border:1px solid var(--graphite-border,var(--c3-line2));border-radius:8px;background:var(--graphite-field,var(--paper));color:var(--ink);font:400 var(--v2-t15)/1.5 var(--ar-ui);padding:9px 11px}
+.v2-capture textarea{min-height:140px;resize:vertical}
+.v2-capture label.v2-cap-field{display:grid;gap:6px;font:600 var(--v2-t13)/1.3 var(--ar-ui)}
+.v2-cap-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
+.v2-cap-photos{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.v2-cap-photos li{display:flex;align-items:center;gap:10px;min-width:0;padding:6px;border-radius:10px;background:var(--v2-sec)}
+.v2-cap-photos img{flex:none;width:48px;height:48px;object-fit:cover;border-radius:6px;background:var(--paper)}
+.v2-cap-photos span{flex:1 1 auto;min-width:0;font-size:var(--v2-t13);overflow-wrap:anywhere}
+.v2-cap-photos small{display:block;font-size:var(--v2-t12);color:var(--dim)}
+.v2-cap-photos li[data-state="failed"] small{color:var(--c3-bad)}
+.v2-cap-photos li[data-state="saved"] small{color:var(--c3-good)}
+.v2-cap-msg{min-height:0;font-size:var(--v2-t13);line-height:1.4;overflow-wrap:anywhere}
+.v2-cap-msg:empty{display:none}
+.v2-cap-msg[data-tone="bad"]{color:var(--c3-bad)}
+.v2-cap-msg[data-tone="good"]{color:var(--c3-good)}
+/* The done state, as the sample's. */
+.v2-cap-done{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:10px;background:var(--c3-okbg);font-size:var(--v2-t14)}
+.v2-cap-done .v2-ic{color:var(--c3-good)}
+.v2-cap-done>span{flex:1;min-width:150px;overflow-wrap:anywhere}
+.v2-cap-done-more{display:grid;gap:6px;font-size:var(--v2-t13);color:var(--dim)}
+.v2-cap-link{color:var(--warm)!important;font-weight:600;text-decoration:underline!important;text-underline-offset:3px;overflow-wrap:anywhere}
