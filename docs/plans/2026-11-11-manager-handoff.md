@@ -51,9 +51,11 @@ The review thread that started them all, and is the coordinator, is `session_017
 
 Adrian called this "one of the most important things". The plan is [plan 9](2026-11-11-09-wisdom-bank-inquiry.md); the findings so far are on [one page](../research/wisdom-bank/03-synthesis.md).
 
+**How it is organised, in his words (11 November):** "It's not a list. Everything is always connected and interconnected ... I don't want categories and subcategories like this so much as my starting maybe as organizing or filtering, but the main thing should be all together."
+
 **How he moves in it, in his words (11 November):** "a infinite zoom but with a strong structure everywhere"; not "so many pages"; no "multiple nests for me to click through"; things "expand and contract" in place; and of the drawn transit map, "This looks like a subway map".
 
-**What the bank is, in Adrian's latest words (11 November):** "my learning process and growth", "almost like a hybridized reading guide", "my educational system", "the future of school". The short view "only exists to pull me into a much deeper understanding that I will also read through". All fifteen of his corrections are at the top of `04-concept.md`; read them before writing any brief.
+**What the bank is, in Adrian's latest words (11 November):** "my learning process and growth", "almost like a hybridized reading guide", "my educational system", "the future of school". The short view "only exists to pull me into a much deeper understanding that I will also read through". All sixteen of his corrections are at the top of `04-concept.md`; read them before writing any brief.
 
 **Where it stands.** Discovery is done, i64os included. The answer to "is this already built?" is no: combine borrowed parts and build the middle (the nugget, links across sources, a map that is a way to move, and the way out to a cited piece). His stated fear, and the main design requirement, is being able to see, navigate and return to what he keeps.
 
