@@ -164,7 +164,7 @@
   /** Unsaved words in Write on this device are his alone and are not part of what is checked. Only the human is told. */
   function deviceWords(){
    if(!human)return false;
-   if(st.story){try{return v2.shared.read?.storyUnsaved?.(root.localStorage.getItem('ar-v2-write-story:'+st.story.storyId+':'+st.story.pieceId))||false;}catch{return false;}}
+   if(st.story){try{return v2.shared.read?.storyUnsaved?.(st.story)||false;}catch{return false;}}
    if(!st.loc?.bindingId)return false;
    try{
     const kept=JSON.parse(root.localStorage.getItem('ar-v2-write:'+st.loc.bindingId)||'null');

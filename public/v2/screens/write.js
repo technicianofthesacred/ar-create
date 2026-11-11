@@ -769,37 +769,83 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   }
   return {ready:ready(),leave,state:st};
  }
- // =====================================================================================================================
+ // ====================================================================================================================
  // A Magazine story's words. They are the Magazine's own, kept in its working draft, and are reached only with
- // magazine.working-draft.read, .edit (one paragraph at a time, the hash he saw goes with it) and, for an assistant's
- // proposal, magazine.proposals with magazine.proposal.accept and .reject. Only he writes and only he decides. What he
- // types is kept on this device and sent one paragraph at a time with an operation id that is kept with it, so a slow
- // save, a reload or a closed tab loses nothing: the same operation sent again is answered with the first answer. A
- // paragraph that changed in the Magazine meanwhile is never merged: he sees both and chooses. Adding or removing a
+ // magazine.working-draft.read, .edit (one paragraph at a time, the hash he saw goes with it), .operation and, for an
+ // assistant's proposal, magazine.proposals with magazine.proposal.accept and .reject. Only he writes and only he decides.
+ // What he types is kept on this device, one entry for each paragraph, and sent one paragraph at a time with an operation
+ // id that is kept with it, so a slow save, a reload or a closed tab loses nothing: the same operation sent again is
+ // answered with the first answer, and it is not sent again while the Magazine may still be running the first. A
+ // paragraph that changed in the Magazine meanwhile is never merged and never overwritten: he sees both, and his words
+ // are put on a saved paragraph only when it is the same place with the same neighbours. A mark that has a meaning in the
+ // Magazine (a heading, a review mark, a note, a rework order) is never sent through this command. Adding or removing a
  // paragraph has no command here, so it says it is not built yet and opens in Advanced.
- // =====================================================================================================================
- /** How much of the words of `a` are in `b` (0 to 1), by whole words, to find the saved paragraph a lost one most resembles. */
- function likeness(a,b){
-  const w=t=>String(t||'').toLowerCase().match(/[\p{L}\p{N}']+/gu)||[],x=w(a),y=new Set(w(b));
-  return x.length?x.filter(t=>y.has(t)).length/x.length:0;
+ // ====================================================================================================================
+ /** The one switch. When false a story's words show read only in Write, with a line saying they are changed in the Magazine
+     and one link to the existing workspace. When true they are edited here as this part builds. */
+ const STORY_EDITING=true;
+ const MAX_PARAGRAPH=200000;// the Magazine's own limit for one paragraph
+ const RESEND_GRACE_MS=8000;// an operation is not sent again sooner than this after it was sent, even if no answer came
+ const STORY_KEY=story=>'ar-v2-write-story:'+story.storyId+':'+story.pieceId+':';
+ /** The marks that mean something to the Magazine when they are typed into a paragraph through .edit. It would turn them into
+     structure (a heading, a review mark, a hidden note, a rework order), so they are not sent from here. Returns what was
+     found, in words, or '' when there is nothing. A mark the saved paragraph already has is not new, and is let through. */
+ function markupIn(text,orig){
+  const t=String(text??''),o=String(orig??''),has=re=>re.test(t)&&!re.test(o);
+  if(has(/\n[ \t]*\n/))return 'a blank line (it would start a new paragraph)';
+  if(has(/^\s*#{1,6}(\s|$)/))return '"#" at the start (a heading)';
+  if(has(/==/))return '"==" (a review mark)';
+  if(has(/%%/))return '"%%" (a note)';
+  const slashes=/(^|[\s"'(])\/([^\/\n]+?)\/(?=$|[\s.,;:!?"')])/g,had=[...o.matchAll(slashes)].map(m=>m[2]);
+  if([...t.matchAll(slashes)].some(m=>!had.includes(m[2])))return 'words between slashes (a rework order)';
+  if(has(/^\s*>/m))return '">" at the start of a line (a large line)';
+  if(has(/^\s*([-*+]|\d+[.)])\s/m))return 'a list mark at the start of a line';
+  if(has(/^\s*\|/m))return '"|" at the start (a table)';
+  if(has(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/m))return 'a line of dashes (a rule)';
+  if(has(/<!--/))return '"<!--" (a comment)';
+  if(has(/\[\[/))return '"[[" (a link)';
+  if(has(/```|~~~/))return 'a code fence';
+  if(has(/\*\*/))return '"**" (bold)';
+  return '';
  }
  /** The saved paragraph his unsaved paragraph belongs to: the one with the hash he saw (the same block when it is there), or null. */
  function placeEdit(edit,rows){
   const hits=rows.filter(r=>r.edit&&r.edit.seen===edit.seen);
   return hits.find(r=>r.edit.block===edit.block)||(hits.length===1?hits[0]:null);
  }
- /** The saved paragraph that most resembles words which are no longer where he left them, or null when none does. */
+ /** The saved paragraph that stands where his lost paragraph stood: the same place with the same words on each side of it.
+     Anything less is not a pairing, and nothing is ever written over a paragraph on a guess. */
  function counterpartOf(edit,rows){
-  let best=null,score=0;
-  for(const r of rows){if(!r.edit)continue;const l=Math.max(likeness(edit.orig,r.words),likeness(r.words,edit.orig));if(l>score){score=l;best=r;}}
-  return score>=0.35?best:null;
+  if(edit.prev===undefined||edit.next===undefined)return null;
+  for(let i=0;i<rows.length;i++){
+   const r=rows[i];
+   if(r.edit&&r.edit.block===edit.block&&(rows[i-1]?.words??null)===edit.prev&&(rows[i+1]?.words??null)===edit.next)return r;
+  }
+  return null;
  }
- /** What a proposal would change, in the file's own words: the paragraphs it brings in and the ones it takes out. */
+ /** What a proposal would change, in the file's own words: the paragraphs it brings in and the ones it takes out, counted
+     one for one (a paragraph twice in one and once in the other differs), and whether it only puts the same ones in another order. */
  function proposalChanges(current,proposed){
   const body=text=>String(text||'').replace(/^---\n[\s\S]*?\n---\n/,'').split(/\n\s*\n/).map(t=>t.replace(/==/g,'').trim()).filter(t=>t&&t!=='---');
-  const a=body(current),b=body(proposed),inA=new Set(a),inB=new Set(b);
-  return {out:a.filter(t=>!inB.has(t)),in:b.filter(t=>!inA.has(t))};
+  const a=body(current),b=body(proposed);
+  const count=l=>{const m=new Map();for(const t of l)m.set(t,(m.get(t)||0)+1);return m;};
+  const minus=(x,other)=>{const left=count(other),out=[];for(const t of x){const n=left.get(t)||0;if(n>0)left.set(t,n-1);else out.push(t);}return out;};
+  const out=minus(a,b),inn=minus(b,a);
+  return {out,in:inn,reordered:!out.length&&!inn.length&&a.join('\n')!==b.join('\n')};
  }
+ /** The unsent words this device keeps for a story's piece, one entry for each paragraph. */
+ function keptEntries(story){
+  const out=[],pre=STORY_KEY(story);
+  try{
+   const ls=root.localStorage;
+   for(let i=0;i<ls.length;i++){
+    const k=ls.key(i);if(!k||!k.startsWith(pre))continue;
+    try{const e=JSON.parse(ls.getItem(k));if(e&&typeof e.seen==='string'&&typeof e.text==='string')out.push({...e,key:k});}catch{/* an unreadable entry is left alone */}
+   }
+  }catch{/* blocked storage */}
+  return out;
+ }
+ const keptUnsaved=e=>!!e&&(!!e.sending||(String(e.text||'').trim()!==''&&e.text!==e.orig));
  /** Whether the Magazine has no working draft for this story and piece (the catalog lists the story without the piece). */
  async function storyHasNoDraft(story){
   try{
@@ -811,49 +857,60 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  /** The Magazine's own words for a refusal (the app's general line for a 409 says the page is out of date, which is not the case). */
  const storyWords=error=>String(error?.body?.error||error?.message||'');
  const NO_DRAFT='This story has no draft yet, so there are no words here. A draft is started in the Magazine; it is not started from here.';
- v2.shared.writeStory=Object.freeze({likeness,placeEdit,counterpartOf,proposalChanges,storyHasNoDraft,storyWords,NO_DRAFT});
+ v2.shared.writeStory=Object.freeze({placeEdit,counterpartOf,proposalChanges,markupIn,keptEntries,keptUnsaved,storyHasNoDraft,storyWords,NO_DRAFT,STORY_KEY});
 
  function openStory(page,ctx,found){
-  const id=ctx.params.id,human=v2.isHuman(),story=found.story,W=v2.shared.write;
+  const id=ctx.params.id,human=v2.isHuman(),story=found.story;
   const sel={storyId:story.storyId,pieceId:story.pieceId,edition:'working'};
-  const st={standing:found.standing,forms:found.forms,form:found.form,piece:found.piece,read:null,rows:[],edits:new Map(),props:[],dropped:0,
+  const st={standing:found.standing,forms:found.forms,form:found.form,piece:found.piece,read:null,rows:[],edits:new Map(),props:[],dropped:0,written:new Map(),
    savedAt:null,problem:'',saving:false,running:null,again:false,refreshWanted:false,saveSeq:0,stopped:false,ops:new Set(),human,focus:false,none:false};
   let timer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
-  const session=uuid().slice(0,8),KEY='ar-v2-write-story:'+story.storyId+':'+story.pieceId;
+  const session=uuid().slice(0,8),PRE=STORY_KEY(story);
   const $=sel2=>page.querySelector(sel2);
   const say=(text,tone='info')=>v2.ui.say(text,{tone});
   const adv=section=>v2.advanced({subject:id,piece:story.pieceId,section});
   const readStory=()=>v2.call('magazine.working-draft.read',sel);
   const all=()=>[...st.edits.values()];
   const live=e=>!e.gone;
+  /** Whether this page may write at all: it is his, editing is switched on, and the Magazine says the draft can be edited. */
+  const canWrite=()=>STORY_EDITING&&st.human&&st.read?.editable!==false;
   /** Words not yet in the Magazine: sent and not answered, unsent, or held back by a newer saved version. */
   const unsaved=e=>!!e.sending||e.gone||(!!e.text.trim()&&e.text!==e.orig);
   const dirty=()=>all().some(unsaved);
   const editFor=row=>row.edit?all().find(e=>live(e)&&e.seen===row.edit.seen&&e.block===row.edit.block):null;
+  const around=row=>{const i=st.rows.indexOf(row);return {prev:st.rows[i-1]?.words??null,next:st.rows[i+1]?.words??null};};
 
-  // ---------- his unsaved words, kept on this device: his only ----------
+  // ---------- his unsaved words, kept on this device, one entry for each paragraph: his only ----------
+  // Each entry is written and removed on its own, so a save in another tab never erases the unsent words of this one.
   function stash(){
-   if(!st.human)return;
+   if(!st.human||!STORY_EDITING)return;
    try{
-    const keep=all().filter(e=>unsaved(e)&&(e.text.trim()||e.sending));
-    if(!keep.length){root.localStorage.removeItem(KEY);return;}
-    root.localStorage.setItem(KEY,JSON.stringify({v:1,at:Date.now(),edits:keep.map(e=>({seen:e.seen,block:e.block,orig:e.orig,text:e.text,sending:e.sending}))}));
+    const ls=root.localStorage,want=new Map();
+    for(const e of all()){
+     if(!unsaved(e)||!(e.text.trim()||e.sending))continue;
+     want.set(e.k,PRE+(e.sending?e.sending.seen:e.seen)+'.'+(e.sending?e.sending.block:e.block));
+    }
+    for(const [k,key] of st.written)if(want.get(k)!==key)ls.removeItem(key);
+    for(const e of all()){
+     const key=want.get(e.k);if(!key)continue;
+     ls.setItem(key,JSON.stringify({v:1,at:Date.now(),seen:e.seen,block:e.block,orig:e.orig,text:e.text,prev:e.prev,next:e.next,sending:e.sending}));
+    }
+    st.written=want;
    }catch{/* private window or blocked storage: the words are still on the page */}
   }
   function unstash(){
-   if(!st.human)return [];
-   try{
-    const s=JSON.parse(root.localStorage.getItem(KEY)||'null');
-    if(!s||s.v!==1||!Array.isArray(s.edits))return [];
-    return s.edits.filter(e=>e&&typeof e.seen==='string'&&Number.isSafeInteger(e.block)&&typeof e.text==='string').map(e=>({
-     k:uuid(),seen:e.seen,block:e.block,orig:String(e.orig??''),text:e.text,refused:'',gone:false,tries:0,
-     sending:e.sending&&typeof e.sending.op==='string'&&typeof e.sending.text==='string'&&typeof e.sending.seen==='string'&&Number.isSafeInteger(e.sending.block)?{op:e.sending.op,text:e.sending.text,seen:e.sending.seen,block:e.sending.block}:null}));
-   }catch{return [];}
+   if(!st.human||!STORY_EDITING)return [];
+   return keptEntries(story).filter(e=>Number.isSafeInteger(e.block)).map(e=>{
+    const s=e.sending,ok=s&&typeof s.op==='string'&&typeof s.text==='string'&&typeof s.seen==='string'&&Number.isSafeInteger(s.block);
+    const edit={k:uuid(),seen:e.seen,block:e.block,orig:String(e.orig??''),text:e.text,prev:e.prev,next:e.next,refused:'',kind:'',gone:false,tries:0,lastSent:'',
+     sending:ok?{op:s.op,text:s.text,seen:s.seen,block:s.block,at:Number(s.at)||0,tried:s.tried!==false}:null};
+    st.written.set(edit.k,e.key);return edit;
+   });
   }
 
   // ---------- who is where: tells an assistant he has unsaved words open ----------
   function presence(force=false){
-   if(!presenceOk||gone||!st.human)return;
+   if(!presenceOk||gone||!canWrite())return;
    const d=dirty(),sig=String(d);if(!d&&!presenceSent)return;if(!force&&sig===presenceSent)return;presenceSent=sig;
    v2.call('presence.post',{stage:'Write',scope:{kind:'draft',id:story.storyId},dirty:d,sequence:++presenceSeq,session}).catch(()=>{presenceOk=false;});
   }
@@ -872,22 +929,32 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      <p class="wr-saved wr-saved-m" data-wr-saved role="status"></p>
      <h1 class="wr-title">${esc(st.read?.authority?.title||st.form?.title||st.standing?.title||'')}</h1>
      ${st.human?'':`<p class="wr-ro" role="status">${esc('Opened as '+v2.actorName(v2.actor())+'. Only Adrian writes here. '+v2.actorName(v2.actor())+' can propose words, and Adrian decides.')}</p>`}
+     <p class="wr-ro" data-wr-locked role="status" hidden></p>
      <div class="wr-loose wr-props" data-wr-props></div>
      <div class="wr-text" data-wr-text></div>
-     <section class="wr-todo" aria-label="Still to write"><p class="wr-label">New and removed paragraphs</p>${v2.ui.notBuilt('Adding, splitting, joining and removing paragraphs of a Magazine story. Each paragraph can be changed here; the shape of the story is changed in the Magazine.',{advanced:{subject:id,piece:story.pieceId,section:'write'}})}</section>
+     ${STORY_EDITING?`<section class="wr-todo" aria-label="Still to write"><p class="wr-label">New and removed paragraphs</p>${v2.ui.notBuilt('Adding, splitting, joining and removing paragraphs of a Magazine story. Each paragraph can be changed here; the shape of the story is changed in the Magazine.',{advanced:{subject:id,piece:story.pieceId,section:'write'}})}</section>`:''}
     </div></article>
    </div>`;
    const out=$('.wr-todo .v2-out');if(out)out.setAttribute('data-wr-advanced','');
    paintText();paintSaved();paintConflict();paintProps();
   }
+  /** Why the whole page is read only, when it is for a reason other than being an assistant's: the switch, or the Magazine. */
+  function paintLocked(){
+   const n=$('[data-wr-locked]');if(!n)return;
+   let html='';
+   if(!STORY_EDITING)html=`${esc('A Magazine story’s words are changed in the Magazine, not here.')} <a class="wr-btn" href="${esc(adv('write'))}">Open in Advanced${icon('out')}</a>`;
+   else if(st.human&&st.read?.editable===false)html=esc((st.read.unavailableReason||'The Magazine is not open for editing right now.')+' These words are read only until it is.');
+   n.hidden=!html;n.innerHTML=html;
+  }
   function rowHTML(r,n){
    const label=r.kind==='heading'?'Heading':'Paragraph '+n;
    if(!r.safe||!r.edit)return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><p class="wr-lock"${r.lock==='pending'?' title="This line is waiting for a review decision in the Magazine. Decide it there."':' title="This passage is kept as it is. Change it in the Magazine."'}>${esc(r.words)}</p>${r.lock==='pending'?'<p class="wr-dim wr-lock-why">Waiting for a review decision in the Magazine.</p>':''}</div><aside class="wr-margin"></aside></div>`;
    const e=editFor(r),cls=r.kind==='heading'?' wr-h':r.kind==='blockquote'?' wr-q':'';
-   return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${st.human?'':' readonly'}>${esc(e?e.text:r.words)}</textarea></div><aside class="wr-margin"></aside></div>`;
+   return `<div class="wr-row" data-row="${esc(r.id)}"><div class="wr-main"><textarea class="wr-ed${cls}" rows="1" data-ed="${esc(r.id)}" aria-label="${esc(label)}" spellcheck="true"${canWrite()?'':' readonly'}>${esc(e?e.text:r.words)}</textarea></div><aside class="wr-margin"></aside></div>`;
   }
   function paintText(){
    const box=$('[data-wr-text]');if(!box)return;
+   paintLocked();
    const a=doc.activeElement,keep=a?.dataset?.ed?{id:a.dataset.ed,a:a.selectionStart,b:a.selectionEnd}:null;
    let n=0;
    box.innerHTML=st.rows.length?st.rows.map(r=>rowHTML(r,r.kind==='heading'?0:++n)).join(''):'<p class="wr-dim" role="status">This story has no words yet.</p>';
@@ -896,25 +963,29 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   }
   function fit(t){t.style.height='auto';t.style.height=(t.scrollHeight+1)+'px';}
   function paintSaved(){
-   const text=st.none?'':!st.human?'Read only':st.problem?st.problem:st.saving?'Saving':dirty()?(all().some(e=>e.gone)?'Not saved: a newer version exists':'Not saved yet'):st.savedAt?savedLabel(st.savedAt):'Saved';
-   page.querySelectorAll('[data-wr-saved]').forEach(el=>{el.textContent=text;el.dataset.tone=st.problem||all().some(e=>e.gone)?'bad':'';});
+   const text=st.none||!STORY_EDITING?'':!st.human||st.read?.editable===false?'Read only':st.problem?st.problem:st.saving?'Saving':dirty()?(all().some(e=>e.gone)?'Not saved: a newer version exists':all().some(e=>e.refused)?'Not saved':'Not saved yet'):st.savedAt?savedLabel(st.savedAt):'Saved';
+   page.querySelectorAll('[data-wr-saved]').forEach(el=>{el.textContent=text;el.dataset.tone=st.problem||all().some(e=>e.gone||e.refused)?'bad':'';});
   }
-  /** His words that are held back, each beside what is saved in the Magazine: a newer version, or a refusal in the Magazine's words. */
+  /** His words that are held back, each beside what is saved in the Magazine: a newer version, or a refusal in the Magazine's
+      words. Nothing here only throws his words away: they can be copied, or placed in the Magazine, first. */
   function paintConflict(){
    const box=$('[data-wr-conflict]');if(!box)return;
    const lost=all().filter(e=>e.gone),refused=all().filter(e=>!e.gone&&e.refused);
-   box.hidden=!lost.length&&!refused.length;if(box.hidden){box.innerHTML='';return;}
+   box.hidden=!lost.length&&!refused.length;if(box.hidden){box.innerHTML=''; return;}
    const note=text=>`<i>${esc(text)}</i>`,says=(label,body)=>`<p><b>${label}</b> ${body}</p>`;
+   const copy=e=>`<button type="button" data-act="copy" data-k="${esc(e.k)}">Copy my words</button><a class="wr-btn" href="${esc(adv('write'))}">Open in Advanced${icon('out')}</a>`;
    const items=lost.map(e=>{
     const c=counterpartOf(e,st.rows);
-    return `<li>${says('Yours',esc(e.text))}${says('Saved',c?esc(c.words):note('This paragraph is no longer in the saved story.'))}<div class="wr-row-btns">${c?`<button type="button" class="pri" data-act="mine" data-k="${esc(e.k)}">Keep my words</button>`:''}<button type="button" data-act="theirs" data-k="${esc(e.k)}">${c?'Use the saved version':'Let these words go'}</button></div></li>`;
-   }).concat(refused.map(e=>`<li>${says('Yours',esc(e.text))}${says('Not saved',note(e.refused))}<div class="wr-row-btns"><button type="button" data-act="again" data-k="${esc(e.k)}">Try again</button><button type="button" data-act="theirs" data-k="${esc(e.k)}">Go back to the saved words</button></div></li>`));
+    return c?`<li>${says('Yours',esc(e.text))}${says('Saved',esc(c.words))}<div class="wr-row-btns"><button type="button" class="pri" data-act="mine" data-k="${esc(e.k)}">Keep my words</button><button type="button" data-act="theirs" data-k="${esc(e.k)}">Use the saved version</button></div></li>`
+     :`<li>${says('Yours',esc(e.text))}${says('Saved',note('This paragraph is not where you left it, so your words are not put on any other paragraph. They stay here and on this device until you place them.'))}<div class="wr-row-btns">${copy(e)}<button type="button" data-act="theirs" data-k="${esc(e.k)}">I have placed these words</button></div></li>`;
+   }).concat(refused.map(e=>`<li>${says('Yours',esc(e.text.length>600?e.text.slice(0,600)+'…':e.text))}${says('Not saved',note(e.refused))}<div class="wr-row-btns">${copy(e)}</div></li>`));
    box.innerHTML=`<h2>${lost.length?'A newer version of this story is saved in the Magazine':'Some words were not saved'}</h2>
-    <p class="wr-dim">${lost.length?'Your words are still here and are not saved. Choose which to keep for each paragraph. Nothing is mixed for you.':'Your words are still here. The Magazine said why.'}</p><ul class="wr-pairs">${items.join('')}</ul>`;
+    <p class="wr-dim">${lost.length?'Your words are still here and are not saved. Nothing is mixed for you and nothing is written over another paragraph.':'Your words are still here and on this device. Change them and they are tried again.'}</p><ul class="wr-pairs">${items.join('')}</ul>`;
   }
 
   // ---------- an assistant's proposals: his to take or turn down ----------
   async function loadProps(){
+   if(!STORY_EDITING){st.props=[];paintProps();return;}
    try{
     const list=await v2.call('magazine.proposals',{status:'open',story:story.storyId});if(ctx.signal.aborted||gone)return;
     const path=st.read?.authority?.path,hash=st.read?.document?.hash;
@@ -931,12 +1002,13 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const part=(label,list)=>list.length?`<p class="wr-dim"><b>${label}</b></p>${list.slice(0,6).map(t=>`<p class="wr-dt-x">${esc(t)}</p>`).join('')}${list.length>6?`<p class="wr-dim">${esc('And '+(list.length-6)+' more paragraphs.')}</p>`:''}`:'';
    box.innerHTML=st.props.map((p,k)=>{
     const by=v2.actorName(p.by||'agent:'),n=k+1,c=p.changes;
-    const body=(c.in.length||c.out.length)?part('Would come in',c.in)+part('Would go',c.out):'<p class="wr-dim">The words are the same; only the file around them changes.</p>';
-    return `<div class="wr-note" data-prop="${esc(p.id)}"><p class="wr-note-h"><sup>${n}</sup>${esc(by+' suggests new words for this story')}</p><p class="wr-dim">As written in the file. If you accept, they replace the saved words as they stand. They are not yours until you do.</p>${body}${st.human?`<div class="wr-row-btns"><button type="button" class="pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`:'<p class="wr-dim">Only Adrian decides.</p>'}</div>`;
+    const body=(c.in.length||c.out.length)?part('Would come in',c.in)+part('Would go',c.out):c.reordered?'<p class="wr-dim">It puts the same paragraphs in another order.</p>':'<p class="wr-dim">The paragraphs are the same. Only marks in them, or the file around them, change.</p>';
+    return `<div class="wr-note" data-prop="${esc(p.id)}"><p class="wr-note-h"><sup>${n}</sup>${esc(by+' suggests new words for this story')}</p><p class="wr-dim">As written in the file. If you accept, they replace the saved words as they stand. They are not yours until you do.</p>${body}${canWrite()?`<div class="wr-row-btns"><button type="button" class="pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`:'<p class="wr-dim">Only Adrian decides.</p>'}</div>`;
    }).join('')+(st.dropped?`<p class="wr-dim wr-stale">${esc(st.dropped===1?'A suggestion was set aside because the words changed after it was made.':st.dropped+' suggestions were set aside because the words changed after they were made.')}</p>`:'');
   }
   async function decide(kind,pid){
-   if(st.human&&dirty()){say('Your words are not saved yet. They save by themselves in a moment; then you can decide.','warn');return;}
+   if(!canWrite())return;
+   if(dirty()){say('Your words are not saved yet. They save by themselves in a moment; then you can decide.','warn');return;}
    const prop=st.props.find(p=>p.id===pid);if(!prop)return;
    const operationId=uuid();st.ops.add(operationId);
    try{
@@ -946,14 +1018,14 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      v2.ui.undo(`Changed to ${v2.actorName(prop.by||'agent:')}’s words.`,()=>undo(operationId));
     }else{await v2.call('magazine.proposal.reject',{proposalId:pid});say('Left as you wrote it.','good');}
     await loadProps();
-   }catch(error){say(error.message,'bad');if(error.kind!=='owner-only')await loadProps();}
+   }catch(error){say(storyWords(error)||error.message,'bad');if(error.kind!=='owner-only')await loadProps();}
   }
   /** Takes back one accepted proposal, found by its own operation. */
   async function undo(operationId){
    try{
     await v2.call('magazine.working-draft.undo',{...sel,undoOperationId:operationId});
     adopt(await readStory());loadProps();
-   }catch(error){say(error.message,'bad');}
+   }catch(error){say(storyWords(error)||error.message,'bad');}
   }
 
   // ---------- taking in the saved version ----------
@@ -966,21 +1038,20 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    for(const [k,e] of [...st.edits]){
     if(e.sending)continue;// its answer is still to come; it is settled when it does
     const row=placeEdit(e,st.rows);
-    if(row){e.gone=false;e.block=row.edit.block;e.orig=row.words;if(e.text===row.words)st.edits.delete(k);}
+    if(row){e.gone=false;e.block=row.edit.block;e.orig=row.words;Object.assign(e,around(row));if(e.text===row.words)st.edits.delete(k);}
     else if(e.text.trim())e.gone=true;
     else st.edits.delete(k);
    }
-   paintText();paintConflict();paintSaved();
+   paintText();paintConflict();paintSaved();paintProps();
   }
 
   // ---------- saving ----------
-  const settled=async()=>{while(st.saving){try{await st.running;}catch{/* its own caller shows it */}}};
   function save(){
-   if(!st.human)return Promise.resolve(false);
+   if(!canWrite())return Promise.resolve(false);
    if(st.saving){st.again=true;return st.running;}
    st.running=run();return st.running;
   }
-  const nextEdit=()=>all().find(e=>live(e)&&!e.refused&&(e.sending||(e.text.trim()&&e.text!==e.orig)));
+  const nextEdit=()=>all().find(e=>live(e)&&!e.refused&&(e.sending||(e.text.trim()&&e.text!==e.orig&&e.text!==e.lastSent)));
   async function run(){
    st.saving=true;st.problem='';paintSaved();let ok=false;
    try{
@@ -996,57 +1067,80 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    }
    return ok;
   }
+  /** What the Magazine says of an operation: committed (with its result), unknown to it, or not to be told yet (it may still
+      be running). An operation that may still be running is never sent again. */
+  async function probe(op){
+   try{
+    const r=await v2.call('magazine.working-draft.operation',{...sel,operationId:op});
+    return r&&r.state==='committed'&&r.result?{state:'committed',result:r.result}:{state:'busy'};
+   }catch(error){return error.status===404?{state:'none'}:{state:'busy'};}
+  }
+  /** The answer to a save is in (or was found committed): what it carried is settled. What he typed after it was sent stays,
+      as a change to the paragraph the save made. */
+  async function settle(e,s,out){
+   e.sending=null;e.tries=0;e.seen=out.h||e.seen;e.orig=String(out.plain??s.text);
+   if(e.text===s.text||e.text===e.orig)st.edits.delete(e.k);
+   st.savedAt=new Date().toISOString();st.problem='';st.stopped=false;
+   try{adopt(await readStory());}catch{st.refreshWanted=true;}
+   stash();presence();void loadProps();
+   return 'ok';
+  }
   /** One paragraph. The operation id is made before the words go and kept with them on this device until the answer is in. */
   async function send(e){
-   if(!e.sending)e.sending={op:uuid(),text:e.text,seen:e.seen,block:e.block};
-   const s=e.sending;st.ops.add(s.op);stash();
+   if(!e.sending)e.sending={op:uuid(),text:e.text,seen:e.seen,block:e.block,at:0,tried:false};
+   const s=e.sending;st.ops.add(s.op);
+   if(s.tried){
+    // It was sent before and no answer is known (a timeout, a reload, a closed tab). The Magazine is asked first: if it has
+    // the operation, that is the answer; if it may still be running it, nothing is sent again.
+    const p=await probe(s.op);
+    if(p.state==='committed')return settle(e,s,p.result);
+    const age=Date.now()-s.at;
+    if((p.state==='busy'&&age<300000)||age<RESEND_GRACE_MS){st.problem='Waiting for the Magazine to answer. Your words are kept.';schedule(Math.max(2000,RESEND_GRACE_MS-age));return 'stop';}
+   }
+   s.at=Date.now();s.tried=true;e.lastSent=s.text;stash();
    try{
     const out=await v2.call('magazine.working-draft.edit',{...sel,block:s.block,seen:s.seen,text:s.text,operationId:s.op});
-    e.sending=null;e.tries=0;
-    // What he typed while it was on its way stays: it is now a change to the saved paragraph, with the hash the save made.
-    e.seen=out.h||e.seen;e.orig=String(out.plain??s.text);
-    if(e.text===s.text||e.text===e.orig)st.edits.delete(e.k);
-    st.savedAt=new Date().toISOString();st.problem='';st.stopped=false;
-    try{adopt(await readStory());}catch{st.refreshWanted=true;}
-    stash();presence();void loadProps();
-    return 'ok';
+    return settle(e,s,out);
    }catch(error){
     if(error.kind==='stale'){
+     // A 409 means nothing was written. Whatever its words, the paragraph is looked for again by its hash: it may only have
+     // moved (paragraphs above were removed), in which case it is sent again from where it is now.
      e.sending=null;
-     const said=String(error.body?.error||'');
-     if(!/changed since you opened/i.test(said)){e.refused=said||error.message;st.problem='';return 'skip';}// the Magazine's own refusal, shown as it is
      let fresh=null;try{fresh=await readStory();}catch{/* the words stay on this device */}
      if(!fresh){st.problem='Could not save. Your words are kept on this device.';schedule(5000);return 'stop';}
      const before=e.block;adopt(fresh);
-     // The paragraph is still there under the hash he saw, only at another place: it is sent again from there.
-     if(!e.gone&&e.block!==before&&++e.tries<4)return 'again';
-     if(!e.gone){e.refused=said;return 'skip';}
-     return 'skip';
+     if(e.gone)return 'skip';
+     if(e.block!==before&&++e.tries<4){e.lastSent='';return 'again';}
+     e.refused=storyWords(error)||'The Magazine did not take these words.';e.kind='server';return 'skip';
     }
     if(error.kind==='owner-only'){e.sending=null;st.problem=error.message;st.stopped=true;say(error.message,'bad');return 'stop';}
-    if(error.kind==='held'||error.kind==='consent'){st.problem=error.message+' Your words are kept and save when it is free.';schedule(5000);return 'stop';}
-    if(error.kind==='refused'){e.sending=null;e.refused=error.message;return 'skip';}
-    st.problem='Could not save. Your words are kept on this device.';schedule(5000);return 'stop';
+    if(error.kind==='held'||error.kind==='consent'){s.tried=false;st.problem=error.message+' Your words are kept and save when it is free.';schedule(5000);return 'stop';}
+    if(error.kind==='refused'){e.sending=null;e.refused=storyWords(error)||error.message;e.kind='server';return 'skip';}
+    st.problem='Could not save. Your words are kept on this device.';schedule(Math.max(5000,RESEND_GRACE_MS));return 'stop';
    }
   }
-  function schedule(ms=AUTOSAVE_MS){clearTimeout(timer);if(gone||st.stopped||!st.human)return;timer=setTimeout(()=>{void save();},ms);}
+  function schedule(ms=AUTOSAVE_MS){clearTimeout(timer);if(gone||st.stopped||!canWrite())return;timer=setTimeout(()=>{void save();},ms);}
 
   // ---------- typing ----------
   function onInput(t){
-   if(!st.human)return;
+   if(!canWrite())return;
    const row=st.rows.find(r=>r.id===t.dataset.ed);if(!row||!row.edit)return;
-   const value=flat(t.value);
-   if(value!==t.value){const at=t.selectionStart;t.value=value;try{t.setSelectionRange(at,at);}catch{}}
+   // His line breaks are his: nothing is joined or changed in what he typed.
+   const value=t.value.replace(/\r/g,'');
    fit(t);
    let e=editFor(row);
-   if(!e){e={k:uuid(),seen:row.edit.seen,block:row.edit.block,orig:row.words,text:value,sending:null,refused:'',gone:false,tries:0};st.edits.set(e.k,e);}
-   else{e.text=value;e.refused='';}
+   if(!e){e={k:uuid(),seen:row.edit.seen,block:row.edit.block,orig:row.words,text:value,sending:null,refused:'',kind:'',gone:false,tries:0,lastSent:'',...around(row)};st.edits.set(e.k,e);}
+   else{e.text=value;}
+   e.refused='';e.kind='';
+   const mark=markupIn(value,e.orig);
+   if(mark){e.refused=`The mark ${mark} has a meaning in the Magazine, so it is not saved from here. Take it out, or type this mark in the Magazine. Your words are kept here and on this device.`;e.kind='markup';}
+   else if(value.length>MAX_PARAGRAPH){e.refused=`A paragraph can hold at most ${MAX_PARAGRAPH.toLocaleString('en-GB')} characters, and this one has ${value.length.toLocaleString('en-GB')}. It is not saved. Your words are kept here and on this device.`;e.kind='limit';}
    if(value===e.orig&&!e.sending)st.edits.delete(e.k);
    st.problem='';st.stopped=false;paintSaved();paintConflict();stash();presence();schedule();
   }
   /** Leaving a paragraph saves it. One he emptied goes back to its saved words: removing a paragraph is not done here. */
   function onFocusOut(ev){
-   const t=ev.target;if(!t.matches?.('textarea[data-ed]')||!st.human)return;
+   const t=ev.target;if(!t.matches?.('textarea[data-ed]')||!canWrite())return;
    const row=st.rows.find(r=>r.id===t.dataset.ed),e=row&&editFor(row);
    if(e&&!e.text.trim()&&!e.sending){st.edits.delete(e.k);paintText();stash();paintSaved();presence();return;}
    if(dirty()){clearTimeout(timer);void save();}
@@ -1061,7 +1155,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    // A save began or ended while this was being read: the answer may be older than what he has saved. Read again after it.
    if(st.saving){st.refreshWanted=true;return;}
    if(st.saveSeq!==seq){void refresh();return;}
-   if(fresh.document?.hash!==st.read?.document?.hash)adopt(fresh);
+   if(fresh.document?.hash!==st.read?.document?.hash||fresh.editable!==st.read?.editable)adopt(fresh);
    await loadProps();
   }
   function onChange(e){
@@ -1078,15 +1172,19 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    if(wr==='ask'){v2.ui.sheet({title:'Ask',body:v2.ui.notBuilt('Asking about this piece from here.',{advanced:{subject:id,piece:story.pieceId,section:'write'}})});return;}
    if(act==='accept'||act==='reject')return void decide(act,b.dataset.id);
    const edit=b.dataset.k?st.edits.get(b.dataset.k):null;
+   if(act==='copy'&&edit){
+    const done=()=>say('Copied. Your words are still kept here.','good'),fail=()=>say('Select the words in the box and copy them. They are still kept here.','warn');
+    try{const p=root.navigator?.clipboard?.writeText(edit.text);if(p&&p.then)p.then(done,fail);else fail();}catch{fail();}
+    return;
+   }
    if(act==='mine'&&edit){
-    // His words go on top of the saved paragraph they most resemble, with the hash he now sees. Nothing is mixed.
+    // His words go on top of the saved paragraph standing in the same place with the same neighbours. Nothing is mixed.
     const c=counterpartOf(edit,st.rows);if(!c)return;
-    edit.seen=c.edit.seen;edit.block=c.edit.block;edit.orig=c.words;edit.gone=false;edit.refused='';edit.sending=null;
+    edit.seen=c.edit.seen;edit.block=c.edit.block;edit.orig=c.words;Object.assign(edit,around(c));edit.gone=false;edit.refused='';edit.sending=null;edit.lastSent='';
     if(edit.text===c.words)st.edits.delete(edit.k);
     paintText();paintConflict();paintSaved();stash();schedule(300);return;
    }
    if(act==='theirs'&&edit){st.edits.delete(edit.k);paintText();paintConflict();paintSaved();stash();presence();return;}
-   if(act==='again'&&edit){edit.refused='';st.stopped=false;paintConflict();schedule(100);}
   }
   function setFocus(on){
    st.focus=on;page.classList.toggle('wr-focus',on);
@@ -1123,7 +1221,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     try{read=await readStory();}
     catch(error){
      if(ctx.signal.aborted)return;
-     if(await storyHasNoDraft(story)){st.none=true;shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc('This story has no draft yet, so there are no words to write on here. A draft is started in the Magazine; it is not started from here.')}</p>`;$('.wr-todo')?.remove();return;}
+     if(await storyHasNoDraft(story)){await none();return;}
      plainText(storyWords(error)||'This story’s words could not be opened.');return;
     }
     if(ctx.signal.aborted)return;
@@ -1140,7 +1238,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   function leave(){
    gone=true;clearTimeout(timer);clearTimeout(propTimer);clearInterval(presenceTimer);
    doc.removeEventListener('visibilitychange',onHide);root.removeEventListener('pagehide',onUnload);root.removeEventListener('resize',onResize);
-   if(st.human&&dirty()&&!st.stopped){try{void save();}catch{/* kept on this device */}}
+   if(canWrite()&&dirty()&&!st.stopped){try{void save();}catch{/* kept on this device */}}
    if(presenceOk&&presenceSent==='true'){presenceSent='';v2.call('presence.post',{stage:'Write',scope:{kind:'draft',id:story.storyId},dirty:false,sequence:++presenceSeq,session,leaving:true}).catch(()=>{});}
   }
   return {ready:ready(),leave,state:st};

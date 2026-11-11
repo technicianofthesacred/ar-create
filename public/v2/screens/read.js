@@ -21,10 +21,10 @@
   if(s.added.some(a=>a&&typeof a.text==='string'&&a.text.trim()))return true;
   return s.edits.some(([rid,text])=>{const r=saved.get(rid);return r&&r.safe&&String(text)!==r.words;});
  }
- /** Whether the words Write keeps on this device for a Magazine story are not in the Magazine yet. */
- function storyUnsaved(raw){
-  let s=null;try{s=JSON.parse(raw||'null');}catch{return false;}
-  return !!s&&s.v===1&&Array.isArray(s.edits)&&s.edits.some(e=>e&&(e.sending||(typeof e.text==='string'&&e.text.trim()&&e.text!==e.orig)));
+ /** Whether the words Write keeps on this device for a Magazine story (one entry for each paragraph) are not in the Magazine yet. */
+ function storyUnsaved(story){
+  const S=v2.shared.writeStory;
+  return !!S&&S.keptEntries(story).some(S.keptUnsaved);
  }
  function rowHTML(r){
   if(r.kind==='heading')return `<h2 class="rd-h" data-row="${esc(r.id)}">${esc(r.words)}</h2>`;
@@ -78,7 +78,7 @@
    const text=$('[data-rd-text]');if(!text||st.none)return;
    const words=wordCount(st.rows);
    page.querySelectorAll('[data-rd-count]').forEach(n=>{n.textContent=st.rows.length?countLabel(words):'';});
-   st.unsaved=!!watching()&&(st.story?storyUnsaved(stored()):unsavedIn(stored(),st.rows));
+   st.unsaved=!!watching()&&(st.story?v2.isHuman()&&storyUnsaved(st.story):unsavedIn(stored(),st.rows));
    const un=$('[data-rd-unsaved]');
    if(un){un.hidden=!st.unsaved;un.innerHTML=st.unsaved?`You have unsaved words in Write on this device, so what you see here is older than what you typed. <a href="${esc(to('write'))}">Open Write</a> to carry on, and they save by themselves.`:'';}
    if(!st.rows.length){
@@ -115,7 +115,7 @@
    clearTimeout(timer);timer=setTimeout(refresh,250);};
   const onRetry=e=>{if(e.target.closest?.('[data-rd-retry]')){clearTimeout(timer);void refresh();}};
   page.addEventListener('click',onRetry);
-  const onStorage=e=>{if(!e||!e.key||e.key===KEY())paint();};
+  const onStorage=e=>{if(!e||!e.key||(st.story?String(e.key).startsWith(v2.shared.writeStory?.STORY_KEY(st.story)||'\0'):e.key===KEY()))paint();};
 
   ctx.on({kinds:['study-draft*','magazine*']},onChange);
   ctx.on({},e=>{if(e.reset)onChange();});
