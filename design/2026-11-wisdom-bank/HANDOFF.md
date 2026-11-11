@@ -42,6 +42,26 @@ Everything. No real person said any of it.
 - **"Change lens", "Draw a line of your own", "Open the talk" and the play marks** look alive but do nothing.
 - The whole-bank map is not in this work, as agreed.
 
+## Second pass, 11 November
+
+Made after the coordinating thread passed on the grown concept (read from `claude/ar-create-ui-ux-review-71qso6`) and Adrian's words there: "we need to make sure we wire in appropriate places that I can give insight that will actually help this be a tool, not just a wall of data" and "make the interface fun to interact with built for a human, not built for AI". Same link, same file.
+
+- **Fourth screen, "How I distil"** (shown as "Distil" in the mock-up switch): his lens in words with a microphone, several lenses, "Re-read the bank" with a three-line summary before anything moves, three questions the bank is asking (answer or let it pass; a passed one is replaced, never owed), the rules his corrections taught, and "Recently joined" with Correct on each.
+- **Where he speaks in, on Source**: "What were you looking for in this?" brightens matching concepts. The sure join has gone through and shows Correct, with an optional one-sentence why that becomes a rule on "How I distil". One unsure join is brought with its doubt stated. "Draw a line" then a tap on another concept makes his own line, with a why.
+- **Touching the map**: tap a concept to pick it, hold it to turn its resonance up and watch it glow, drag it to move it and the lines follow.
+- **On Nugget**: resonance dots, "What this means to you", "Keep" on his response (resonance rises), "Not this concept" on any passage, and an "Unexpected" invitation from another tradition.
+- **On Express**: the pathway reads as a line with stops, and asks "Why these, in this order?".
+
+This answers the earlier doubt about lines shown as already there: the concept now says sure filing goes through and can be corrected.
+
+Checked: 390 wide dark and light on all four screens, 1440 light measured for sideways scrolling only (none), not looked at as a picture. The microphone buttons only focus the field; a published page cannot use the microphone. Lens words, rules, questions, counts and dates on "How I distil" are invented and marked Sample.
+
+Still unsure: holding and dragging on the map are not announced anywhere, so he may not find them without being told. Dragging a concept blocks page scrolling when the finger starts on a concept.
+
 ## Adrian's reaction
 
-Waiting. To be recorded here in his words.
+**11 November, after the first pass, in his words:**
+
+"Yes, this is in the direction, but think of this having hundreds of thousands of units of data. Not just a few. Maybe it will take a while to get there, but it needs to be scalable. And we need to design it with this in mind. That means the zooming and the navigation and the zooming out and zooming in and honing in on things are the first and foremost primary most important things."
+
+What this means for the mock-ups (my reading, not his words): the direction stands, but these screens show one talk and one concept at a human scale and say nothing about moving through a very large bank. Zooming out, zooming in and honing in must become the first thing designed, and the four screens become what you find at the closest zoom. That work is not done here. It was held out of this thread on purpose as "the whole map" and needs his yes on a plan first.

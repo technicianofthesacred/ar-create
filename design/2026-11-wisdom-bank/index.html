@@ -25,7 +25,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .place[aria-current]{background:var(--sel);color:var(--ink);font-weight:600}
 .grow{flex:1 1 0;min-width:0}
 .walk{display:flex;gap:2px;flex:none}
-.walk a{display:inline-flex;align-items:center;height:44px;padding:0 9px;font:500 var(--t13)/1 var(--ui);color:var(--dim);border-radius:6px}
+.walk a{display:inline-flex;align-items:center;height:44px;padding:0 7px;font:500 var(--t13)/1 var(--ui);color:var(--dim);border-radius:6px}
 .walk a[aria-current]{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--warm)}
 @media (max-width:850px){.place:not([aria-current]){display:none}}
 
@@ -94,6 +94,20 @@ h3{font:600 var(--t15)/1.3 var(--ui)}
 .join span{flex:1 1 120px;min-width:0}
 .join.yes{color:var(--good)}
 
+.node,.ring .me{touch-action:none;user-select:none;-webkit-user-select:none}
+.pulse>.dot{animation:pulse .7s ease-out}
+@keyframes pulse{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--warm) 70%,transparent)}to{box-shadow:0 0 0 20px transparent}}
+.map line[data-k="mine"]{stroke:var(--warm);stroke-dasharray:4 4;stroke-width:1.8}
+.speak{display:flex;align-items:center;gap:8px;padding:3px 3px 3px 14px;border-radius:24px;background:var(--paper);border:1px solid var(--line2);min-width:0}
+.speak input{flex:1 1 auto;min-width:0;height:38px;border:0;background:transparent;color:var(--ink);font:400 var(--t15)/1.3 var(--speech);outline:0}
+.speak .mic{width:38px;height:38px}
+.lines .speak,.glance .speak,.nug .speak{background:var(--bg)}
+.join .speak{flex:1 1 100%}
+.heard{font-size:var(--t13);color:var(--good)}
+.tiny{display:inline-flex;align-items:center;min-height:32px;padding:0 8px;border-radius:6px;font:500 var(--t13)/1 var(--ui);color:var(--dim)}
+.gh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cards.one{grid-template-columns:minmax(0,1fr)}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 /* nugget screen */
 .trail{display:flex;flex-wrap:wrap;align-items:center;gap:0 2px;font-size:var(--t13);color:var(--dim);margin-left:-8px}
 .trail button,.trail a{min-height:44px;padding:0 8px;display:inline-flex;align-items:center;border-radius:6px}
@@ -118,7 +132,7 @@ h3{font:600 var(--t15)/1.3 var(--ui)}
 .card .work{display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
 .card .work:first-of-type{border-top:0;padding-top:0}
 .card .note{font-size:var(--t13);color:var(--ink2)}
-.card textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--line2);border-radius:10px;background:var(--bg);color:var(--ink);font:400 var(--t15)/1.5 var(--speech);resize:vertical}
+textarea{width:100%;min-height:110px;padding:12px;border:1px solid var(--line2);border-radius:10px;background:var(--bg);color:var(--ink);font:400 var(--t15)/1.5 var(--speech);resize:vertical}
 .q{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:8px 0;border-top:1px solid var(--line);font-size:var(--t14)}
 .q:first-of-type{border-top:0}
 .q span{flex:1 1 200px;min-width:0}
@@ -155,13 +169,14 @@ dialog.sheet{width:min(520px,100%);max-width:100%;max-height:86dvh;margin:auto a
 dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
 .sheet-in{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:12px 20px calc(22px + env(safe-area-inset-bottom,0px))}
 .sheet-in>header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.path{display:grid;gap:0}
+.path{display:grid;gap:0;position:relative}
+.path::before{content:"";position:absolute;left:13px;top:14px;bottom:44px;border-left:2px solid var(--warm)}
 .stop{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 12px;align-items:start}
-.stop>i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);font:600 var(--t13)/1 var(--ui);font-style:normal}
+.stop>i{position:relative;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--paper);box-shadow:inset 0 0 0 2px var(--warm);color:var(--ink);font:600 var(--t13)/1 var(--ui);font-style:normal}
 .stop .say{font-size:var(--t14)}
 .stop .mv{display:flex}
 .stop .mv button{width:36px;height:44px;display:grid;place-items:center;color:var(--ink2);margin-top:-8px}
-.between{margin:2px 0 2px 13px;padding:6px 0 6px 26px;border-left:1.5px solid var(--line2)}
+.between{margin:2px 0;padding:6px 0 6px 40px}
 .between button{min-height:36px;font:italic 400 var(--t14)/1.4 var(--speech);color:var(--dim)}
 .between input{width:100%;height:36px;border:0;border-bottom:1px solid var(--line2);background:transparent;color:var(--ink);font:400 var(--t14)/1.4 var(--speech);outline:0}
 .gap{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:10px 12px;border:1px dashed var(--line2);border-radius:10px;font-size:var(--t13);color:var(--ink2)}
@@ -193,7 +208,7 @@ dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
  <span class="logo"></span>
  <span class="place">Gather</span><span class="place" aria-current="page">Research</span><span class="place">Create</span><span class="place">Share</span>
  <span class="grow"></span>
- <nav class="walk" aria-label="Mock-up screens"><a href="#source">Source</a><a href="#nugget">Nugget</a><a href="#express">Express</a></nav>
+ <nav class="walk" aria-label="Mock-up screens"><a href="#source">Source</a><a href="#nugget">Nugget</a><a href="#express">Express</a><a href="#distil">Distil</a></nav>
 </header>
 
 <main>
@@ -201,7 +216,9 @@ dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
 <section class="page" id="source">
  <header>
   <h1>The ground is already whole</h1>
-  <p class="meta"><span>Ilse Varnholt</span><span>Talk, 48 min</span><span>Distilled 4 minutes ago</span><a href="#source" class="out">Open the talk</a><span class="sample">Sample</span></p>
+  <p class="meta"><span>Ilse Varnholt</span><span>Talk, 48 min</span><span>Distilled 4 minutes ago</span><span>1 joined, 1 unsure, 7 new</span><a href="#source" class="out">Open the talk</a><span class="sample">Sample</span></p>
+  <form class="speak" data-form="looking" style="margin-top:14px;max-width:560px"><input aria-label="What you were looking for in this" placeholder="What were you looking for in this?" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
+  <p class="heard" id="lookheard" hidden style="margin-top:8px">Brightened: Care first, Settling attention</p>
  </header>
  <div class="split">
   <div class="left">
@@ -233,6 +250,14 @@ dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
  </header>
  <form class="ask narrow" id="ask"><input id="feeling" aria-label="What you want to express" value="everything is perfect" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
  <div class="groups" id="groups"></div>
+</section>
+<!-- 4. how I distil -->
+<section class="page" id="distil" hidden>
+ <header><h1>How I distil</h1><p class="meta"><span class="sample">Sample</span><span>7 core understandings</span><span>84 concepts</span><span>1,310 passages</span></p></header>
+ <div class="split">
+  <div class="left"><div class="lines" id="dlens"></div></div>
+  <div class="right"><h2>The bank is asking</h2><div class="cards one" id="dqs"></div><h2>What your corrections taught</h2><ul class="lines" id="drules"></ul><h2>Recently joined</h2><ul class="lines" id="djoined"></ul></div>
+ </div>
 </section>
 </main>
 
@@ -271,32 +296,55 @@ const L=[
  ['eth','comp','echoes','Care at the start and warmth at the end are close, but not one concept.'],
  ['ret','whole','explains','Wholeness is recognised in short moments, many times.']
 ];
-const KIN={prepares:['prepares','comes after'],explains:['explains','explained by'],contrasts:['contrasts','contrasts'],echoes:['echoes','echoes']};
+const KIN={mine:['your line','your line'],prepares:['prepares','comes after'],explains:['explains','explained by'],contrasts:['contrasts','contrasts'],echoes:['echoes','echoes']};
 const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* neighbours of a concept: [other id, kind, label seen from here, reason] */
-function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:(l[2]==='prepares'?'comes first':KIN[l[2]][1]),why:l[3],out}})}
+function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:(l[2]==='prepares'?'comes first':KIN[l[2]][1]),why:l[3],out,i:L.indexOf(l)}})}
 const hear=t=>`<button class="hear" aria-pressed="false" data-hear>${t}</button>`;
 
 /* ---------- screen 1 ---------- */
-let picked='whole';
+let picked='whole', drawing=false, lastPtr=0;
+const MIC='<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const RULES=['Emptiness and presence are not the same.','A practice is not a view. Keep them apart.'];
+C.ordinary.j='joined';C.comp.j='unsure';
+const speak=(form,ph,extra='')=>`<form class="speak" data-form="${form}" ${extra}><input aria-label="${ph}" placeholder="${ph}" autocomplete="off"><button class="mic" type="submit" aria-label="Speak">${MIC}</button></form>`;
+const resDots=id=>`<span class="res" role="group" aria-label="Resonance">${[1,2,3,4,5].map(i=>`<button class="${i<=C[id].r?'f':''}" data-res="${id}:${i}" aria-label="Resonance ${i} of 5"></button>`).join('')}</span>`;
+const lineSVG=()=>L.map(l=>`<line x1="${C[l[0]].x}" y1="${C[l[0]].y+1}" x2="${C[l[1]].x}" y2="${C[l[1]].y+1}" data-k="${l[2]}" class="${l[0]===picked||l[1]===picked?'on':''}"/>`).join('');
+function joinRow(id){switch(C[id].j){
+ case 'joined':return `<p class="join yes"><span>Joined to Ordinary mind, now 3 voices</span><button class="ghost" data-j="${id}:fixing">Correct</button></p>`;
+ case 'fixing':return `<div class="join"><span>Lifted back out.</span>${speak('rule','Why? One sentence, or leave it',`data-id="${id}"`)}</div>`;
+ case 'lifted':return `<p class="join yes"><span>Kept as its own concept</span></p>`;
+ case 'unsure':return `<p class="join"><span>Unsure: is this the Compassion you already hold? She means a test, not a practice.</span><button class="ghost" data-j="${id}:same">Same</button><button class="ghost" data-j="${id}:apart">Separate</button></p>`;
+ case 'same':return `<p class="join yes"><span>Joined to Compassion</span><button class="ghost" data-j="${id}:unsure">Undo</button></p>`;
+ case 'apart':return `<p class="join yes"><span>Kept as its own concept</span><button class="ghost" data-j="${id}:unsure">Undo</button></p>`;
+ default:return ''}}
 function drawSource(){
  const nb=near(picked).map(n=>n.id);
  $('#smap').className='map picked';
- $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+L.map(l=>`<line x1="${C[l[0]].x}" y1="${C[l[0]].y+1}" x2="${C[l[1]].x}" y2="${C[l[1]].y+1}" data-k="${l[2]}" class="${l[0]===picked||l[1]===picked?'on':''}"/>`).join('')+'</svg>'+
+ $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+lineSVG()+'</svg>'+
   ORDER.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.n}</span></button>`}).join('');
  const c=C[picked];
- $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+near(picked).map(n=>`<div class="linerow"><span class="k">${n.lab}</span><b>${C[n.id].n}</b><p>${n.why}</p></div>`).join('');
- $('#scards').innerHTML=ORDER.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#nugget" data-open="${id}">${c.n}</a></h3><span class="res" role="group" aria-label="Resonance">${[1,2,3,4,5].map(i=>`<button class="${i<=c.r?'f':''}" data-res="${id}:${i}" aria-label="Resonance ${i} of 5"></button>`).join('')}</span></header>
+ $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+near(picked).map(n=>`<div class="linerow"><span class="k">${n.lab}</span><b>${C[n.id].n}</b>${n.k==='mine'&&!n.why?speak('whyline','Why this line?',`data-i="${n.i}"`):`<p class="${n.k==='mine'?'say':''}">${esc(n.why)}</p>`}</div>`).join('')+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
+ $('#scards').innerHTML=ORDER.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#nugget" data-open="${id}">${c.n}</a></h3>${resDots(id)}</header>
   <p class="lab">Distillation</p><p class="dist">${c.d}</p>
   <p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span></p>
-  ${c.join?(c.joined?`<p class="join yes"><span>Joined to Ordinary mind, now 3 voices</span></p>`:`<p class="join"><span>Joins a concept you have: <b>Ordinary mind</b>, ${c.join}</span><button class="ghost" data-join="${id}">Yes</button><button class="ghost" data-join="">Not now</button></p>`):''}</article>`}).join('');
+  ${joinRow(id)}</article>`}).join('');
 }
+function tapNode(id){if(drawing&&id!==picked){L.push([picked,id,'mine','']);drawing=false}else picked=id;drawSource()}
+/* touch the map itself: tap to pick, hold to brighten, drag to move */
+let pd=null;const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+$('#smap').addEventListener('pointerdown',e=>{const n=e.target.closest('.node');if(!n)return;const id=n.dataset.pick;pd={id,n,x:e.clientX,y:e.clientY};n.setPointerCapture(e.pointerId);
+ pd.t=setInterval(()=>{if(!pd||pd.drag)return;pd.held=true;if(C[id].r<5)C[id].r++;n.style.setProperty('--r',C[id].r);n.dataset.r=C[id].r;n.classList.remove('pulse');void n.offsetWidth;n.classList.add('pulse')},480)});
+$('#smap').addEventListener('pointermove',e=>{if(!pd)return;if(!pd.drag&&!pd.held&&Math.hypot(e.clientX-pd.x,e.clientY-pd.y)>8)pd.drag=true;if(!pd.drag)return;
+ const r=$('#smap').getBoundingClientRect(),c=C[pd.id];c.x=clamp((e.clientX-r.left)/r.width*100,10,90);c.y=clamp((e.clientY-r.top)/r.height*100-2,1,90);pd.n.style.left=c.x+'%';pd.n.style.top=c.y+'%';$('#smap svg').innerHTML=lineSVG()});
+const pend=e=>{if(!pd)return;clearInterval(pd.t);const q=pd;pd=null;lastPtr=Date.now();if(e.type==='pointercancel'){drawSource();return}if(q.drag||q.held)drawSource();else tapNode(q.id)};
+$('#smap').addEventListener('pointerup',pend);$('#smap').addEventListener('pointercancel',pend);
 
 /* ---------- screen 2 ---------- */
 let here='whole', walked=['whole'], opened=false;
-const SLOT={1:[[50,9]],2:[[24,10],[76,10]],3:[[24,10],[76,10],[50,91]],4:[[24,10],[76,10],[24,90],[76,90]],5:[[24,9],[76,9],[17,62],[83,62],[50,92]],6:[[24,8],[76,8],[16,40],[84,40],[26,90],[74,90]]};
+const SLOT={1:[[50,9]],2:[[24,10],[76,10]],3:[[24,10],[76,10],[50,91]],4:[[24,10],[76,10],[24,90],[76,90]],5:[[24,9],[76,9],[17,62],[83,62],[50,92]],6:[[24,8],[76,8],[16,40],[84,40],[26,90],[74,90]],7:[[24,7],[76,7],[16,34],[84,34],[18,68],[82,68],[50,93]]};
 function drawNugget(from){
- const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='comes first'?0:1)-(b.lab==='comes first'?0:1)), s=SLOT[nb.length];
+ const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='comes first'?0:1)-(b.lab==='comes first'?0:1)).slice(0,7), s=SLOT[nb.length];
  const ring=$('#ring');
  ring.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+nb.map((n,i)=>`<line x1="50" y1="50" x2="${s[i][0]}" y2="${s[i][1]}" data-k="${n.k}"/>`).join('')+'</svg>'+
   `<div class="me" data-r="${c.r}" style="--r:${c.r}"><span class="dot"></span><span>${c.n}</span></div>`+
@@ -304,15 +352,16 @@ function drawNugget(from){
  $('#trail').innerHTML=`<a href="#source">${TALK.work}</a>`+walked.slice(-4).map((id,i,a)=>i===a.length-1?`<span>›</span><b>${C[id].n}</b>`:`<span>›</span><button data-walk="${id}">${C[id].n}</button>`).join('');
  const works=[{who:TALK.who,work:TALK.work,kind:'Talk, 48 min',p:c.p,note:c.note}].concat(c.other?[c.other]:[]);
  const tabs=['Gist','Their words','Your lens','Lines','Your response','Go deeper'];
- $('#nbody').innerHTML=`<div class="glance"><p class="lab">Distillation</p><p>${c.d}</p><p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
+ $('#nbody').innerHTML=`<div class="glance"><header class="gh"><h2>${c.n}</h2>${resDots(here)}</header><p class="lab">Distillation</p><p>${c.d}</p>${c.mean?`<p class="lab">Your meaning</p><p class="say">${esc(c.mean)}</p>`:speak('mean','What this means to you')}<p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
    <p class="acts"><button class="btn" id="openbtn" aria-expanded="${opened}">${opened?'Close':'Open'}</button><a class="btn quiet" href="#express">Express with this</a></p></div>
+  ${here==='whole'||here==='feel'?`<div class="lines"><p class="lab">Unexpected</p><h3>Wanting what happens</h3><p class="say">${esc(ITEMS.d.say)}</p><p class="who"><span>Hanne Brückl</span><span>Notes on assent</span></p><p><button class="btn quiet" data-surprise>Draw the line</button></p></div>`:''}
   <div id="stack" ${opened?'':'hidden'}><div class="tabs" role="tablist">${tabs.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-tab="${i}">${t}</button>`).join('')}</div>
   <div class="deck" id="deck" tabindex="0">
    <article class="card"><p class="lab">Distillation</p><h2>${c.n}</h2><p>${c.d}</p><p class="note">${works.length} ${works.length>1?'works speak':'work speaks'} of this. ${nb.length} lines.</p></article>
-   <article class="card">${works.map(w=>`<div class="work"><p class="lab">Their words</p>${w.p.map(p=>`<blockquote class="say">${esc(p[1])}</blockquote><p class="who">${hear(p[0])}<span>${w.who}</span></p>`).join('')}<p class="who"><span>${w.work}</span><span>${w.kind}</span></p>${w.note?`<p class="lab">Distillation</p><p class="note">${w.note}</p>`:''}</div>`).join('')}</article>
-   <article class="card"><p class="lab">Through your lens</p><p>${c.lens}</p><p class="who"><span class="sample">${LENS}</span><button class="ghost">Change lens</button></p></article>
+   <article class="card">${works.map(w=>`<div class="work"><p class="lab">Their words</p>${w.p.map(p=>`<blockquote class="say">${esc(p[1])}</blockquote><p class="who">${hear(p[0])}<span>${w.who}</span><button class="tiny" data-lift>Not this concept</button></p>`).join('')}<p class="who"><span>${w.work}</span><span>${w.kind}</span></p>${w.note?`<p class="lab">Distillation</p><p class="note">${w.note}</p>`:''}</div>`).join('')}</article>
+   <article class="card"><p class="lab">Through your lens</p><p>${c.lens}</p><p class="who"><span class="sample">${LENS}</span><a class="ghost" href="#distil">Change lens</a></p></article>
    <article class="card"><p class="lab">Lines</p>${nb.map(n=>`<div class="linerow"><span class="k">${n.lab}</span><button data-walk="${n.id}"><b>${C[n.id].n}</b></button><p>${n.why}</p></div>`).join('')}<p><button class="ghost" style="margin-left:-10px">Draw a line of your own</button></p></article>
-   <article class="card"><label class="lab" for="resp">Your response</label><textarea id="resp" placeholder="Speak or write"></textarea><p class="who"><span>11 November 2026</span></p></article>
+   <article class="card">${c.resp?`<p class="lab">Your response</p><p class="say">${esc(c.resp)}</p><p class="who"><span>11 November 2026</span></p>`:`<label class="lab" for="resp">Your response</label><textarea id="resp" placeholder="Speak or write"></textarea><p class="acts"><button class="btn" data-keep>Keep</button><span class="who">11 November 2026</span></p>`}</article>
    <article class="card"><p class="lab">Go deeper</p>${c.q.map(q=>`<div class="q"><span>${q}</span><button class="ghost" data-sent>Send to Research</button></div>`).join('')}</article>
   </div></div>`;
  const st=[ring,$('#nbody')];
@@ -337,7 +386,7 @@ const G=[
   {id:'f',n:'Nothing to fix',at:'00:41',say:'I was on the roof fixing the gutter and I thought, there is nothing wrong with any of this, including the broken gutter.'}]}
 ];
 const ITEMS={};G.forEach(g=>g.items.forEach(i=>ITEMS[i.id]=Object.assign(i,{g})));
-let path=[], words={}, asked={};
+let path=[], words={}, asked={}, pathWhy='';
 function drawExpress(){
  $('#groups').innerHTML=G.map(g=>`<section class="group"><header><h2>${g.t}</h2><p>${g.who}, ${g.src}${g.priv?' · <span class="private">Private until he agrees</span>':''}</p></header>`+g.items.map(i=>{const k=path.indexOf(i.id);return `<article class="pick" ${k>-1?'data-in':''}><header><h3>${i.c?`<a href="#nugget" data-open="${i.c}">${i.n}</a>`:i.n}</h3><button class="add" data-add="${i.id}" aria-pressed="${k>-1}" aria-label="${k>-1?'Take out of':'Add to'} the pathway"><i>${k>-1?k+1:'+'}</i></button></header>
   <p class="lab">Their words</p><blockquote class="say">${esc(i.say)}</blockquote><p class="who">${/^\d/.test(i.at)?hear(i.at):`<span>${i.at}</span>`}<span>${g.who}</span></p>
@@ -352,6 +401,7 @@ function drawPath(){
  const miss=[];path.forEach(id=>(ITEMS[id].first||[]).forEach(f=>{if(!have.has(f)&&!miss.includes(f))miss.push(f)}));
  $('#sheetin').innerHTML=`<header><div><p class="lab">Research topic</p><h2 class="say" style="font-size:var(--t18)">${esc(topic.charAt(0).toUpperCase()+topic.slice(1))}</h2></div><button class="ghost" data-close>Close</button></header>
   <ol class="path">${path.map((id,k)=>{const i=ITEMS[id];return `<li>${k?`<div class="between">${words[k]!=null?`<input data-w="${k}" value="${esc(words[k])}" aria-label="Your words between" placeholder="Your words">`:`<button data-wadd="${k}">Your words here</button>`}</div>`:''}<div class="stop"><i>${k+1}</i><div><h3>${i.n}</h3><p class="say">${esc(i.say)}</p><p class="who"><span>${i.g.who}</span><span>${i.g.src}</span>${i.g.priv?'<span class="private">Private until he agrees</span>':''}</p></div><span class="mv"><button data-mv="${k}:-1" aria-label="Move up" ${k?'':'disabled style="opacity:.25"'}>↑</button><button data-mv="${k}:1" aria-label="Move down" ${k<path.length-1?'':'disabled style="opacity:.25"'}>↓</button></span></div></li>`}).join('')}</ol>
+  ${pathWhy?`<p class="lab">Why these, in this order</p><p class="say">${esc(pathWhy)}</p>`:speak('whyorder','Why these, in this order?')}
   ${miss.map(f=>`<p class="gap"><span><b>${C[f].n}</b> comes first and is not on this pathway.</span><button class="ghost" data-gap="${f}">Acknowledge</button></p>`).join('')}
   <div class="forms"><p class="lab" style="flex:1 1 100%">Make a piece</p><button class="btn" data-piece="Article">Article</button><button class="btn quiet" data-piece="Reel">Reel</button><button class="btn quiet" data-piece="Words for an artwork">Words for an artwork</button></div>`;
 }
@@ -362,20 +412,62 @@ function drawPiece(kind){
   <p class="gap"><span>Create is outside this mock-up.</span></p>`;
 }
 
+/* ---------- screen 4 ---------- */
+const LENSES=[{n:'Presence',t:'I am looking for what can be felt in the body, practised with the breath, and used on an ordinary day. I care most about what has to come first.'},{n:'Making art',t:'I am looking for images, objects and gestures that carry an idea without explaining it.'}];
+let lensI=0, reread=0;
+const QS=[
+ {q:'Two voices seem to disagree. One says wholeness is a view, the other says it is done with the hands. What do you make of it?',to:'Kept as your response on Already whole.'},
+ {q:'Three works you kept all rest on Settling attention, and you have never responded to it.',to:'Kept as your response on Settling attention.'},
+ {q:'You keep turning up concepts about what comes first. Should that be part of what you look for?',to:'Kept beside your lens.'},
+ {q:'Your line "Everything is perfect" has a friend\'s voice with nothing before it. What came first for him?',to:'Kept on the line.'},
+ {q:'The false version is dim, yet four lines run through it. Does it matter more than it rings?',to:'Kept as your response on The false version.'}];
+let qShown=[0,1,2], qNext=3;
+const JOINED=[['Ordinary mind','The ground is already whole','1 passage'],['Already whole','Just this bowl','1 passage'],['Wanting what happens','Notes on assent','3 passages']];
+const rrHTML=()=>reread===1?`<div class="gap" style="display:grid;gap:6px"><p><b>14</b> renamed · <b>6</b> fold together · <b>2</b> new</p><p>Already whole would be explained through the hands.</p><p>Care first and Warmth as the test would fold into one.</p><p>A new concept appears: Making by doing.</p><p class="acts"><button class="btn" data-rr="2">Go ahead</button><button class="btn quiet" data-rr="0">Not now</button></p></div>`:reread===2?`<p class="heard">Re-read on 11 November. Your earlier view is kept.</p>`:'';
+function drawDistil(){
+ $('#dlens').innerHTML=`<div class="tabs">${LENSES.map((l,i)=>`<button aria-selected="${i===lensI}" data-lens="${i}">${l.n}</button>`).join('')}<button data-lens="new">New lens</button></div>
+  <p class="who"><label class="lab" for="lens">What you are looking for</label><span class="sample">Sample words</span></p>
+  <textarea id="lens" placeholder="Speak or write">${esc(LENSES[lensI].t)}</textarea>
+  <p class="acts"><button class="mic" aria-label="Speak" data-focus>${MIC}</button><button class="btn" data-reread>Re-read the bank</button></p>
+  ${rrHTML()}<p class="who"><span>Earlier views</span><button class="tiny">2 October</button><button class="tiny">14 August</button></p>`;
+ $('#dqs').innerHTML=qShown.map(i=>{const q=QS[i];return `<article class="nug"><p>${q.q}</p>${q.a?`<p class="lab">Your answer</p><p class="say">${esc(q.a)}</p><p class="heard">${q.to}</p>`:speak('answer','Answer',`data-i="${i}"`)+`<p><button class="tiny" data-pass="${i}" style="margin-left:-8px">Let it pass</button></p>`}</article>`}).join('');
+ $('#drules').innerHTML=RULES.map(r=>`<li class="say">${esc(r)}</li>`).join('');
+ $('#djoined').innerHTML=JOINED.map((j,i)=>`<li class="join" ${i?'':'style="border-top:0;padding-top:0"'}><span><b>${j[0]}</b> from ${j[1]}, ${j[2]}</span>${j[3]==='fix'?speak('rule','Why? One sentence, or leave it',`data-jn="${i}"`):j[3]?`<span class="heard">Lifted back out</span>`:`<button class="ghost" data-fixj="${i}">Correct</button>`}</li>`).join('');
+}
+document.addEventListener('submit',e=>{const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const v=f.querySelector('input').value.trim(),k=f.dataset.form;
+ if(k==='looking'){if(!v)return;['eth','stab'].forEach(id=>C[id].r=Math.min(5,C[id].r+1));drawSource();$('#lookheard').hidden=false;['eth','stab'].forEach(id=>document.querySelector(`.node[data-pick="${id}"]`).classList.add('pulse'));f.querySelector('input').blur()}
+ else if(k==='rule'){if(v)RULES.unshift(v);if(f.dataset.id)C[f.dataset.id].j='lifted';if(f.dataset.jn)JOINED[f.dataset.jn][3]='done';
+  if(!$('#distil').hidden)drawDistil();else f.outerHTML=`<span class="heard">${v?'Kept as a rule in <a href="#distil"><b>How I distil</b></a>.':'Done.'}</span>`}
+ else if(k==='mean'){if(v){C[here].mean=v;const o=opened;drawNugget();opened=o}}
+ else if(k==='whyline'){if(v){L[f.dataset.i][3]=v;drawSource()}}
+ else if(k==='whyorder'){if(v){pathWhy=v;drawPath()}}
+ else if(k==='answer'){if(v){QS[f.dataset.i].a=v;drawDistil()}}
+});
+
 /* ---------- moving about ---------- */
 function show(){
- const h=(location.hash||'#source').slice(1), id=['source','nugget','express'].includes(h)?h:'source';
+ const h=(location.hash||'#source').slice(1), id=['source','nugget','express','distil'].includes(h)?h:'source';
  document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!==id);
  document.querySelectorAll('.walk a').forEach(a=>a.getAttribute('href')==='#'+id?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
  $('#tray').hidden=id!=='express';
- if(id==='nugget')drawNugget();
+ if(id==='nugget')drawNugget();if(id==='distil')drawDistil();
  window.scrollTo(0,0);
 }
 document.addEventListener('click',e=>{
  const t=e.target.closest('button,a');if(!t)return;const d=t.dataset;
- if(d.pick){picked=d.pick;drawSource()}
- else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource()}
- else if('join' in d){if(d.join){C[d.join].joined=true}else{delete C.ordinary.join}drawSource()}
+ if(d.pick){if(Date.now()-lastPtr>500)tapNode(d.pick)}
+ else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource();if(!$('#nugget').hidden){const m=$('#ring .me');m.style.setProperty('--r',v);m.dataset.r=v;m.classList.remove('pulse');void m.offsetWidth;m.classList.add('pulse');t.parentNode.outerHTML=resDots(id)}}
+ else if(d.j){const[id,st]=d.j.split(':');C[id].j=st;drawSource()}
+ else if('draw' in d){drawing=!drawing;drawSource()}
+ else if('lift' in d){const w=t.closest('.who');w.previousElementSibling.style.opacity=.45;w.insertAdjacentHTML('afterend',speak('rule','Why? One sentence, or leave it'));t.remove()}
+ else if('surprise' in d){t.outerHTML='<span class="heard">Line drawn.</span>'}
+ else if('keep' in d){const v=$('#resp').value.trim();if(v){const c=C[here];c.resp=v;c.r=Math.min(5,c.r+1);t.closest('.card').innerHTML=`<p class="lab">Your response</p><p class="say">${esc(v)}</p><p class="who"><span>11 November 2026</span></p><p class="heard">Resonance rose.</p>`;const m=$('#ring .me');m.style.setProperty('--r',c.r);m.dataset.r=c.r;m.classList.add('pulse');document.querySelector('.gh .res').outerHTML=resDots(here);drawSource()}}
+ else if(d.lens){LENSES[lensI].t=$('#lens').value;if(d.lens==='new'){LENSES.push({n:'New lens',t:''});lensI=LENSES.length-1}else lensI=+d.lens;reread=0;drawDistil();if(d.lens==='new')$('#lens').focus()}
+ else if('reread' in d){LENSES[lensI].t=$('#lens').value;reread=1;drawDistil()}
+ else if(d.rr){LENSES[lensI].t=$('#lens').value;reread=+d.rr;drawDistil()}
+ else if('focus' in d){$('#lens').focus()}
+ else if(d.pass){const k=qShown.indexOf(+d.pass);if(qNext<QS.length)qShown[k]=qNext++;else qShown.splice(k,1);drawDistil()}
+ else if(d.fixj){JOINED[d.fixj][3]='fix';drawDistil()}
  else if(d.open){here=d.open;walked=[d.open];opened=false}
  else if(d.walk){walk(d.walk,d.x?{x:+d.x,y:+d.y}:null);if(window.innerWidth<1000)$('#trail').scrollIntoView({block:'start'})}
  else if(t.id==='openbtn'){opened=!opened;$('#stack').hidden=!opened;t.textContent=opened?'Close':'Open';t.setAttribute('aria-expanded',opened);if(opened)$('#stack').scrollIntoView({behavior:'smooth',block:'nearest'})}
