@@ -222,7 +222,9 @@ test('the station is never the group of a step the lead refused: it is where the
  assert.equal(s.next, null);
  assert.equal(s.station, 'research', 'the facts are done; nothing later is known');
  const plain = standingOf(facts({material: notes, research: null, words: {paragraphs: 3, count: 40}, pieces: [article()]}), {now: NOW});
- assert.equal(plain.next, null); assert.equal(plain.station, 'create', 'The words are the last step done');
+ assert.equal(plain.next, null); assert.equal(plain.station, 'research', 'an ordinary subject keeps the first step not done');
+ const noMaterial = standingOf(facts({material: null, words: {paragraphs: 3, count: 40}, pieces: [article()]}), {now: NOW});
+ assert.equal(noMaterial.next, null); assert.equal(noMaterial.station, 'gather', 'an ordinary subject whose material is not known stays at Gather');
 });
 
 test('a Magazine research file says only that it is on record; the direction and the dish are worded for the Magazine', () => {

@@ -372,16 +372,19 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const value = {paragraphs: rows.filter(r => r.blockKind !== 'heading').length, count: rows.reduce((n, r) => n + String(r.words).trim().split(/\s+/).length, 0)};
   counted.set(storyId, {hash: file.hash, value}); return value;
  }
- /** The Magazine's own check on a draft, counted: {status: 'checked', issues}, or null when it cannot be read. Kept in memory
-     by the draft's hash and its sources' file times, so a long draft is checked once until something changes. */
+ /** The Magazine's own check on a draft, counted: {status: 'checked', issues}, or null when it cannot be read. It is asked as
+     the Magazine's own check asks by itself (the draft alone: the story's one transcript and its context note are found by
+     the Magazine), and kept in memory by the hashes of the draft and of the files it reads, so it is not run again on
+     every read. */
  const checkedBefore = new Map();
  function magazineCheck(m, project, file, recs) {
-  const run = magazine?.extra?.checks?.run; if (typeof run !== 'function' || !m.rel || !file?.hash) return null;
-  const srcs = recs('src'), ctxs = recs('context'), key = JSON.stringify([file.hash, srcs.map(r => r + ':' + (vaultStat(r)?.key || '')), ctxs.map(r => r + ':' + (vaultStat(r)?.key || ''))]);
+  const checks = magazine?.extra?.checks; if (typeof checks?.run !== 'function' || !m.rel || !file?.hash) return null;
+  const hashOf = rel => {try {return magazine.read({path: rel}).hash || '';} catch {return '';}};
+  const key = JSON.stringify([file.hash, [...recs('src'), ...recs('context')].sort().map(r => r + ':' + hashOf(r))]);
   const kept = checkedBefore.get(m.storyId); if (kept?.key === key) return kept.value;
   let value = null;
   try {
-   const r = run.call(magazine.extra.checks, {draft: m.rel, ...(srcs.length === 1 ? {source: srcs[0]} : {}), ...(ctxs.length ? {context: ctxs} : {})});
+   const r = checks.run({draft: m.rel});
    value = {status: 'checked', issues: (r.quotes?.notFound?.length || 0) + (r.splits?.splits?.length || 0)};
   } catch {value = null;}
   checkedBefore.set(m.storyId, {key, value}); return value;

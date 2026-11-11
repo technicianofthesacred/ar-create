@@ -201,7 +201,8 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
    /** File one capture with a subject, as the Capture sheet does: study.material.attach, else first-flow.attach. */
    function fileSheet(id){
     const item=unfiled.find(f=>f.id===id);if(!item)return;
-    const subjects=live().slice().sort(byName);
+    // A Magazine story keeps its material in the Magazine, so nothing is filed in it from here.
+    const subjects=live().filter(s=>s.origin?.kind!=='magazine').sort(byName);
     const f=form(`<label for="home-file-to">Subject</label><select id="home-file-to" name="subject">${subjects.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('')}</select><p class="home-quiet">${esc(item.rel_path||item.name||'')}</p>${formActs('File it')}`);
     const sheet=v2.ui.sheet({title:'File in a subject',body:f});f.elements.subject.focus();
     f.addEventListener('submit',async e=>{

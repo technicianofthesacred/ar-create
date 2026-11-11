@@ -636,16 +636,13 @@ test('private or machine text never reaches the header, whatever suffix a headin
 });
 
 // ---------- a Magazine story as a subject ----------
-test('a Magazine story\'s address in the workspace names its story and piece; the page never builds ?subject= for it', () => {
+test('a Magazine story leads to the workspace itself, never to an address it does not know', () => {
  const piece = 'mag-x:article';
- assert.equal(S.magazineHref('mag-x', {section: 'check', piece}), '/document-study/index.html?reviewStory=mag-x&reviewStage=7&reviewMagazineStory=mag-x&reviewMagazinePiece=mag-x%3Aarticle&reviewMagazineParent=mag-x');
- assert.equal(S.magazineHref('mag-x', {section: 'direction', piece}), '/document-study/index.html?reviewStory=mag-x&reviewStage=4', 'before Write there is no piece');
- assert.equal(S.magazineHref('mag-x', {section: 'write'}), '/document-study/index.html?reviewStory=mag-x&reviewStage=5', 'no piece, no piece in the address');
- assert.equal(S.magazineHref('mag-x', {section: 'home'}), '/document-study/index.html', 'a section with no number gives the plain workspace');
- assert.match(S.magazineHref('mag-x', {section: 'write', actor: 'agent:claude-code'}), /reviewActor=agent%3Aclaude-code$/);
+ assert.equal(S.magazineHref('mag-x', {}), '/document-study/index.html', 'no ?subject= and no story address: either would open another project');
+ assert.equal(S.magazineHref('mag-x', {actor: 'agent:claude-code'}), '/document-study/index.html?reviewActor=agent%3Aclaude-code');
  assert.equal(S.isMagazine({origin: {kind: 'magazine', storyId: 'mag-x'}}), true); assert.equal(S.isMagazine({}), false);
  assert.equal(S.pieceFor({key: 'mag:' + piece, id: piece, owner: {kind: 'magazine'}}), piece); assert.equal(S.pieceFor({key: 'out:a1', id: 'a1'}), 'a1');
- assert.equal(S.inMagazine('Choose photographs in Advanced'), 'Choose photographs in the Magazine'); assert.equal(S.inMagazine('Open the Simmer board in Advanced'), 'Open Direction in the Magazine');
+ assert.equal(S.inMagazine('Choose photographs in Advanced'), 'Open the Magazine in Advanced'); assert.equal(S.inMagazine('Write'), 'Write');
  // The rule may name a step not known as the one to open; only then is it opened by the page.
  const steps = [step('words', 'done'), step('check', 'unknown')];
  assert.equal(S.firstOpen(steps, {next: {step: 'check', state: 'unknown'}}), 'check'); assert.equal(S.firstOpen(steps, {next: {step: 'check', state: 'next'}}), 'words');
@@ -677,9 +674,9 @@ test('a Magazine story\'s page: a direction is chosen in the Magazine and not sh
   }
   for (const href of hrefs) {
    if (/^#\//.test(href)) assert.match(href, new RegExp('^#/(write|read|check|research)/' + id + '(\\?piece=' + encodeURIComponent(id + ':article') + ')?$'));
-   else {assert.ok(href.startsWith('/document-study/index.html?reviewStory=' + id + '&reviewStage='), href); assert.ok(!/[?&]subject=/.test(href), href);}
+   else assert.match(href, /^\/document-study\/index\.html(\?reviewActor=[^&]*)?$/, href);
   }
   assert.ok([...hrefs].some(h => h.startsWith('#/write/' + id + '?piece=')), 'Write is version two\'s own screen');
-  assert.match(doc.querySelector('[data-v2-advanced]').getAttribute('href'), new RegExp('^/document-study/index.html\\?reviewStory=' + id));
+  assert.doesNotMatch(doc.querySelector('[data-v2-advanced]').getAttribute('href'), /subject=/, 'the bar never names a story it cannot open');
  }
 });

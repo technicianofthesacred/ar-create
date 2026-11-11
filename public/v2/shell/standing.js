@@ -252,9 +252,9 @@ export function standingOf(facts = {}, {now = Date.now()} = {}) {
  if (facts.published === true) station = 'published';
  else if (resting) station = 'resting';
  else if (!leadSteps.length || leadSteps.every(s => s.state === 'done')) station = 'share';
- // With no step that may lead (one not known comes first), the station is where the last step done stands, never the
- // group of a step that was refused as the lead.
- else station = STATION_OF_GROUP[(leadStep || [...leadSteps].reverse().find(s => s.state === 'done') || leadSteps[0]).group];
+ // A Magazine story with no step that may lead (one not known comes first) stands where its last step done is, never at the
+ // group of a step refused as the lead. Every other subject keeps the first step not done.
+ else station = STATION_OF_GROUP[(leadStep || (facts.magazine ? [...leadSteps].reverse().find(s => s.state === 'done') : null) || leadSteps.find(s => s.state !== 'done') || leadSteps[0]).group];
  const all = [...(own || []), ...forms.flatMap(f => f.steps)];
  return {schema: 'ar-create.subject-standing.v1', rule: VERSION, id: facts.id, title: facts.title || facts.id, station, stationName: STATION_NAME[station],
   ring: Math.round(ring * 1000) / 1000, next, known: !!next, resting: station === 'resting' ? resting : null,
