@@ -1,6 +1,6 @@
 # Plan 14: Write, Read and Check inside version two (the brief)
 
-**Status.** Prepared 11 November 2026 at Adrian's word: "fix the small ones, then start Write, Read and Check". It starts as soon as the small fixes are pushed, on top of their branch, so the two do not change the same files at once.
+**Status.** Prepared 11 November 2026 at Adrian's word: "fix the small ones, then start Write, Read and Check". **Started the same day**, once the small fixes were pushed: thread `session_017kitFe2b6MQFZwy3MNMGpN`, on top of their branch, so the two do not change the same files at once.
 
 ## Why
 
