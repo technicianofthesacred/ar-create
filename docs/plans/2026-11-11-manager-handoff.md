@@ -85,7 +85,7 @@ Adrian chose Direction D on 11 November and told the design round to build it in
 - The nine decisions in the review's "Decisions that belong to Adrian", including where the work lives when the Mac is off.
 - Whether the wisdom bank lives inside version two's Research station (suggested yes; the concept thread will ask him).
 - Merging pull request 233.
-- Whether the build should move out of the very large design round thread into a fresh director thread that starts from its handoff file (suggested yes at the next natural pause, for cost; his call, since he told that thread to build there).
+- **His word to start the fresh director thread.** On 11 November he said "Yes prepare the brief for a fresh director thread"; the brief is [plan 10](2026-11-11-10-version-two-director-brief.md). When he says start: send the design round the closing note in that plan, wait for its push, check the four conditions in the plan from the pushed branches, then start the new thread on `claude/direction-d-build` with the brief's text. He also agrees the effort level (medium recommended).
 
 ## How to run this cheaply and well
 
