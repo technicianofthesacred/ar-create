@@ -296,7 +296,7 @@ async function theWorld(){
  const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,sharedArticles:true,researchEnabled:false,packageView:{syntheticFixtures:true}});
  await new Promise(r=>s.listen(0,'127.0.0.1',r));
  const base='http://127.0.0.1:'+s.address().port;
- await fillDemo(base,{only:['straw-over-the-rows','the-first-cup','studio-after-rain','circle-of-twelve','ink-on-warm-paper','shade-and-patience']});
+ await fillDemo(base,{only:['straw-over-the-rows','the-first-cup','studio-after-rain','circle-of-twelve','ink-on-warm-paper','shade-and-patience','small-paintings-of-doors']});
  world={base,close:async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});}};
  return world;
 }
@@ -308,18 +308,23 @@ const draftOf=(base,sub)=>getJSON(base,`/api/study-draft/read?bindingId=${sub.bi
 const wordsOf=d=>d.projection.filter(r=>r.safe!==false||r.words).map(r=>r.words);
 
 /** The real page on the real server. slowSave holds the save's answer back so he can keep typing while it is in flight. */
-async function livePage(base,sub,{search='',slowSave=0}={}){
+async function livePage(base,sub,{search='',slowSave=0,lateSave=0,delay=null,seed=null}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+search+'#/write/'+sub.id+'?piece='+sub.piece,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[],sources=[];windows.push(w);
+ if(seed)for(const [k,v] of Object.entries(seed))w.localStorage.setItem(k,v);
  w.EventSource=class{constructor(u){this.l={};sources.push(this);}addEventListener(t,f){(this.l[t]||=[]).push(f);}close(){}emit(t,data){for(const f of this.l[t]||[])f({data:JSON.stringify(data)});}};
  w.CSS={escape:v=>String(v).replace(/["\\]/g,'\\$&')};
  w.HTMLDialogElement.prototype.showModal||=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close||=function(){this.removeAttribute('open');};
  w.fetch=async(input,options={})=>{
-  const u=new URL(String(input),w.location.href),method=options.method||'GET';calls.push({path:u.pathname,method,body:options.body?JSON.parse(options.body):null});
+  const u=new URL(String(input),w.location.href),method=options.method||'GET',entry={path:u.pathname,method,body:options.body?JSON.parse(options.body):null,status:0};calls.push(entry);
+  const isSave=u.pathname==='/api/study-draft/save';
+  if(lateSave&&isSave)await settle(lateSave);// held back before it reaches the server
   const r=await fetch(base+u.pathname+u.search,{method,headers:{...options.headers,...(method!=='GET'?{Origin:base}:{})},body:options.body});
-  const text=await r.text();
-  if(slowSave&&u.pathname==='/api/study-draft/save')await settle(slowSave);
+  const text=await r.text();entry.status=r.status;
+  if(slowSave&&isSave)await settle(slowSave);// the server has it; the answer is held back
+  const extra=delay?delay(u.pathname,method):0;if(extra)await settle(extra);
+  entry.answered=Date.now();
   return {ok:r.ok,status:r.status,text:async()=>text};
  };
  for(const src of [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]))w.eval(fs.readFileSync(src.startsWith('/')?path.join(repo,'public',src):path.join(v2dir,src),'utf8'));
@@ -331,6 +336,27 @@ const type=(w,el,value)=>{el.focus();el.value=value;el.setSelectionRange(value.l
 const blur=(w,el)=>el.dispatchEvent(new w.Event('focusout',{bubbles:true}));
 const savedSaying=doc=>doc.querySelector('.wr-bar [data-wr-saved]').textContent;
 const quiet=doc=>until(()=>/^Saved/.test(savedSaying(doc)));
+/** What a reload does to a page: only what is kept on the device stays. The old page's save is still on its way. */
+async function reload(old,base,sub,opts={}){
+ const seed={};for(let i=0;i<old.w.localStorage.length;i++){const k=old.w.localStorage.key(i);seed[k]=old.w.localStorage.getItem(k);}
+ old.w.close();return livePage(base,sub,{...opts,seed});
+}
+const edsOf=doc=>[...doc.querySelectorAll('textarea.wr-ed')].map(t=>t.value).filter(Boolean);
+/** After a reload: wait out the five-second retry, then the page, the server and the device must agree, with no complaint. */
+async function agree(pg,base,sub,wait=6500){
+ await settle(500);
+ assert.equal(pg.doc.querySelector('[data-wr-conflict]').hidden,true,'his own save is not a newer version');
+ await until(()=>/^Saved/.test(savedSaying(pg.doc)),30000);await settle(wait);
+ await until(()=>/^Saved/.test(savedSaying(pg.doc)),30000);
+ assert.equal(pg.doc.querySelector('[data-wr-conflict]').hidden,true);
+ assert.deepEqual(pg.calls.filter(c=>c.method==='POST'&&c.status>=400).map(c=>c.status),[],'no refused save');
+ assert.doesNotMatch(savedSaying(pg.doc),/Could not|Not saved/);
+ const server=wordsOf(await draftOf(base,sub));
+ assert.deepEqual(edsOf(pg.doc),server,'the page is what the server holds');
+ assert.equal(pg.w.localStorage.getItem('ar-v2-write:'+sub.binding),null,'nothing is left waiting on the device');
+ return server;
+}
+const key=(w,binding)=>JSON.parse(w.localStorage.getItem('ar-v2-write:'+binding)||'null');
 
 test('real server: words typed into a new paragraph, and into a saved one, while a save is in flight are never lost',{timeout:120000},async()=>{
  const {base}=await theWorld(),sub=await subjectOf(base,'straw-over-the-rows');
@@ -383,16 +409,24 @@ test('real server: presence tells an assistant he has unsaved words, and only wh
 test('real server: an assistant\'s page never types, saves, keeps or restores words as his',{timeout:60000},async()=>{
  const {base}=await theWorld(),sub=await subjectOf(base,'circle-of-twelve');
  const before=wordsOf(await draftOf(base,sub));
- // the old way left words under his key; an assistant's page must neither restore nor save them
- const seed=await livePage(base,sub);
- seed.w.localStorage.setItem('ar-v2-write:'+sub.binding,JSON.stringify({v:1,at:Date.now(),draft:'x',edits:[],added:[{id:'55555555-5555-4555-8555-555555555555',afterId:null,text:'Typed by an assistant.'}]}));
- const agent=await livePage(base,sub,{search:'?reviewActor=agent:codex'});
+ // his kept words, on this device, under his key: an assistant opening the page must not restore, show or save them
+ const kept=JSON.stringify({v:1,at:Date.now(),draft:'x',edits:[],added:[{id:'55555555-5555-4555-8555-555555555555',afterId:null,text:'Kept for Adrian only.'}]});
+ const agent=await livePage(base,sub,{search:'?reviewActor=agent:codex',seed:{['ar-v2-write:'+sub.binding]:kept}});
  for(const t of agent.doc.querySelectorAll('textarea.wr-ed'))assert.ok(t.readOnly);
- assert.equal([...agent.doc.querySelectorAll('textarea.wr-ed')].some(t=>/Typed by an assistant/.test(t.value)),false);
- const t=agent.doc.querySelector('textarea.wr-ed');type(agent.w,t,'Typed anyway.');blur(agent.w,t);await settle(2000);
- assert.equal(agent.calls.filter(c=>c.method==='POST'&&/study-draft\/save|presence/.test(c.path)).length,0);
- assert.equal(agent.w.localStorage.getItem('ar-v2-write:'+sub.binding),null);
+ assert.equal([...agent.doc.querySelectorAll('textarea.wr-ed')].some(t=>/Kept for Adrian only/.test(t.value)),false,'not shown');
+ assert.doesNotMatch(agent.doc.body.textContent,/unsaved words from earlier|Kept for Adrian only/);
+ const t=agent.doc.querySelector('textarea.wr-ed');type(agent.w,t,'Typed anyway.');blur(agent.w,t);await settle(2500);
+ assert.equal(agent.calls.filter(c=>c.method==='POST'&&/study-draft\/save|presence/.test(c.path)).length,0,'not saved, not reported');
+ assert.equal(agent.w.localStorage.getItem('ar-v2-write:'+sub.binding),kept,'his kept words are untouched, not removed and not rewritten');
  assert.deepEqual(wordsOf(await draftOf(base,sub)),before,'the draft is as it was');
+ // and an assistant\'s own typing leaves nothing on the device
+ const bare=await livePage(base,sub,{search:'?reviewActor=agent:codex'});
+ const u=bare.doc.querySelector('textarea.wr-ed');type(bare.w,u,'Typed anyway.');blur(bare.w,u);await settle(500);
+ assert.equal(bare.w.localStorage.getItem('ar-v2-write:'+sub.binding),null);assert.equal(bare.w.localStorage.length,0);
+ // then he opens it: his words come back, as his
+ const he=await livePage(base,sub,{seed:{['ar-v2-write:'+sub.binding]:kept}});
+ assert.ok(edsOf(he.doc).includes('Kept for Adrian only.'),'for him they are restored');
+ he.w.localStorage.removeItem('ar-v2-write:'+sub.binding);
 });
 
 test('real server: Backspace joins two paragraphs and an emptied paragraph is deleted, each with an Undo that takes back that change',{timeout:90000},async()=>{
@@ -437,4 +471,171 @@ test('real server: a whole-draft suggestion is settled with study-ai.finish; Und
  undo.click();
  await until(async()=>wordsOf(await draftOf(base,sub))[0]===before[0],20000);
  assert.equal(doc.querySelectorAll('[data-act="finish"]').length,0,'a decided suggestion is not offered again');
+});
+
+// ---- second corrections: a reload or more typing while a save is on its way ----
+const press=(w,el,k)=>el.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,bubbles:true,cancelable:true}));
+const savedOnServer=(pg,n=1)=>until(()=>pg.calls.filter(c=>c.path==='/api/study-draft/save'&&c.status===200).length>=n,20000);
+const longRows=doc=>[...doc.querySelectorAll('textarea.wr-ed')].filter(t=>t.value.length>30);
+
+test('real server: reload while a new paragraph is being saved keeps every word, once, with no refused save',{timeout:120000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'shade-and-patience');
+ const a=await livePage(base,sub,{slowSave:3000});
+ const tail=[...a.doc.querySelectorAll('textarea.wr-ed')].at(-1),first='A closing paragraph written for the reload test';
+ type(a.w,tail,first);blur(a.w,tail);await savedOnServer(a);// the server has it; the answer is on its way
+ type(a.w,tail,first+', and these words were typed during that save');
+ assert.ok(key(a.w,sub.binding)?.sent?.length,'what is in flight is kept with his words');
+ const b=await reload(a,base,sub);
+ const server=await agree(b,base,sub);
+ assert.equal(server.filter(x=>x.startsWith(first)).length,1,'once, not twice');
+ assert.equal(server.at(-1),first+', and these words were typed during that save');
+});
+
+test('real server: reload while a save has not yet reached the server also loses and doubles nothing',{timeout:120000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'straw-over-the-rows');
+ const before=wordsOf(await draftOf(base,sub));
+ const a=await livePage(base,sub,{lateSave:2500});
+ const tail=[...a.doc.querySelectorAll('textarea.wr-ed')].at(-1),first='Another closing paragraph, for the held-back save';
+ type(a.w,tail,first);blur(a.w,tail);await settle(300);
+ const b=await reload(a,base,sub);
+ const server=await agree(b,base,sub);
+ assert.equal(server.filter(x=>x===first).length,1);assert.equal(server.length,before.length+1);
+});
+
+test('real server: reload during a split, a join and a delete shows his own save as his own',{timeout:180000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'small-paintings-of-doors');
+ // split
+ let a=await livePage(base,sub,{slowSave:3000});
+ let rows=longRows(a.doc),target=rows[0],text=target.value,at=Math.floor(text.indexOf(' ',text.length/2));
+ target.focus();target.setSelectionRange(at,at);press(a.w,target,'Enter');await savedOnServer(a);
+ let b=await reload(a,base,sub);
+ let server=await agree(b,base,sub,2500);
+ assert.ok(server.includes(text.slice(0,at))&&server.includes(text.slice(at).trim()),'the split is there, once: '+JSON.stringify(server.slice(0,3)));
+ // join: Backspace at the start of the second half
+ a=await livePage(base,sub,{slowSave:3000});
+ const right=[...a.doc.querySelectorAll('textarea.wr-ed')].find(x=>x.value===text.slice(at).trim());
+ right.focus();right.setSelectionRange(0,0);press(a.w,right,'Backspace');await savedOnServer(a);
+ b=await reload(a,base,sub);
+ server=await agree(b,base,sub,2500);
+ assert.equal(server.filter(x=>x.startsWith(text.slice(0,at))&&x.endsWith(text.slice(at).trim())).length,1,'the join is there, once: '+JSON.stringify(server.slice(0,3)));
+ assert.equal(server.includes(text.slice(at).trim()),false);
+ // delete
+ a=await livePage(base,sub,{slowSave:3000});
+ const gone=[...a.doc.querySelectorAll('textarea.wr-ed')].filter(x=>x.value).at(-1),goneText=gone.value;
+ type(a.w,gone,'');blur(a.w,gone);await savedOnServer(a);
+ b=await reload(a,base,sub);
+ server=await agree(b,base,sub,2500);
+ assert.equal(server.includes(goneText),false,'the deleted paragraph stays deleted and is not brought back');
+});
+
+test('real server: typing while a split or a join is being saved carries onto the new paragraphs, nothing lost or doubled',{timeout:180000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'studio-after-rain');
+ const a=await livePage(base,sub,{slowSave:1500});
+ const target=longRows(a.doc)[0],text=target.value,at=text.indexOf(' ',Math.floor(text.length/2));
+ const L=text.slice(0,at),R=text.slice(at).trim();
+ target.focus();target.setSelectionRange(at,at);press(a.w,target,'Enter');await savedOnServer(a);
+ // he keeps typing at the caret while the split is saved
+ type(a.w,target,L+' TYPED '+R);target.setSelectionRange(at+7,at+7);
+ await until(()=>edsOf(a.doc).includes(L)||edsOf(a.doc).some(x=>x.includes('TYPED')),20000);
+ await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
+ let server=wordsOf(await draftOf(base,sub));
+ assert.equal(server.filter(x=>x.includes('TYPED')).length,1,'typed once');
+ assert.ok(server.includes(L),'the left half is as it was');assert.ok(server.includes('TYPED '+R),'what he typed at the caret goes with the new paragraph');
+ assert.deepEqual(edsOf(a.doc),server);assert.equal(a.w.localStorage.getItem('ar-v2-write:'+sub.binding),null);
+ // typing at the start of the left half while the next split is saved
+ const t2=longRows(a.doc).find(x=>x.value!==L&&x.value!=='TYPED '+R&&x.value.length>30);
+ if(t2){
+  const T=t2.value,cut=T.indexOf(' ',Math.floor(T.length/2));
+  t2.focus();t2.setSelectionRange(cut,cut);press(a.w,t2,'Enter');await savedOnServer(a,2);
+  type(a.w,t2,'AA '+T);
+  await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
+  server=wordsOf(await draftOf(base,sub));
+  assert.ok(server.includes('AA '+T.slice(0,cut)),'typed before the split point stays in the left half');assert.ok(server.includes(T.slice(cut).trim()));
+  assert.equal(server.filter(x=>x.includes('AA ')).length,1);assert.deepEqual(edsOf(a.doc),server);
+ }
+ // a join while he types in both halves
+ const rows=longRows(a.doc),left=rows[0],right=rows[1];
+ const lw=left.value,rw=right.value;
+ right.focus();right.setSelectionRange(0,0);press(a.w,right,'Backspace');await savedOnServer(a,3);
+ type(a.w,left,lw+' LEFTMORE');type(a.w,right,rw+' RIGHTMORE');
+ await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
+ server=wordsOf(await draftOf(base,sub));
+ assert.equal(server.filter(x=>x.includes('LEFTMORE')).length,1);assert.equal(server.filter(x=>x.includes('RIGHTMORE')).length,1);
+ assert.equal(server.filter(x=>x.includes(lw)).length,1,'the left words are not doubled');assert.equal(server.filter(x=>x.includes(rw)).length,1,'nor the right');
+ assert.deepEqual(edsOf(a.doc),server);
+});
+
+test('real server: a read that was started before a save is never taken for a newer version, and one that lands during a save is shown after it',{timeout:90000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'circle-of-twelve');
+ let readHold=0;
+ const a=await livePage(base,sub,{delay:(p,m)=>p==='/api/study-draft/read'&&m==='GET'?readHold:0});
+ // a read of the old draft is on its way (slow) when his save is made and finished
+ readHold=1800;
+ for(const s of a.sources)s.emit('change',{kind:'study-draft.save',cursor:6000,bootId:'b',scope:{kind:'draft',id:sub.binding},operationId:'elsewhere-2'});
+ await settle(500);readHold=0;
+ const first=a.doc.querySelector('textarea.wr-ed'),words=first.value+' (changed after the read began)';
+ type(a.w,first,words);blur(a.w,first);await quiet(a.doc);
+ await settle(2600);// the old read lands
+ assert.equal(a.doc.querySelector('[data-wr-conflict]').hidden,true,'it is not a newer version');
+ assert.equal(a.doc.querySelector('textarea.wr-ed').value,words,'his saved words are not put back to the old ones');
+ assert.equal(wordsOf(await draftOf(base,sub))[0],words);
+ // a change from the stream that arrives while a save is running is read once the save is over
+ const b=await livePage(base,sub,{slowSave:900,delay:(p,m)=>p==='/api/study-draft/read'&&m==='GET'?readHold:0});
+ const reads=()=>b.calls.filter(c=>c.path==='/api/study-draft/read').length,n0=reads();
+ readHold=500;
+ for(const s of b.sources)s.emit('change',{kind:'study-draft.save',cursor:6100,bootId:'b',scope:{kind:'draft',id:sub.binding},operationId:'elsewhere-3'});
+ await settle(300);readHold=0;
+ const f2=b.doc.querySelector('textarea.wr-ed');type(b.w,f2,f2.value+' more');blur(b.w,f2);// the save starts while that read is running
+ await savedOnServer(b);const answered=Date.now();
+ await until(()=>b.calls.some(c=>c.path==='/api/study-draft/read'&&c.method==='GET'&&c.answered>answered-50&&c.answered>b.calls.find(x=>x.path==='/api/study-draft/save').answered-1),20000);
+ await quiet(b.doc);assert.ok(reads()>n0+1,'it was read again after the save');
+});
+
+test('real server: the newer-version box shows the saved version\'s changed paragraphs beside his',{timeout:60000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'shade-and-patience');
+ const {w,doc}=await livePage(base,sub);
+ const rows=longRows(doc),mine=rows[0],other=rows[1];
+ type(w,mine,mine.value+' (his change)');
+ const adrian=clientModule().createClient({base,storage:null,fetchImpl:(u,o)=>fetch(u,{...o,headers:{...o.headers,...(o.method!=='GET'?{Origin:base}:{})}})});
+ const cur=await adrian.call('study-draft.read',{bindingId:sub.binding,parentStudyId:sub.id});
+ const target=cur.projection.find(r=>r.id===other.dataset.ed);
+ await adrian.call('study-draft.save',{bindingId:sub.binding,parentStudyId:sub.id,expected:cur.expected,operations:[{kind:'text',id:target.id,from:0,to:0,insert:'Elsewhere: ',seenBlockHash:target.blockHash}]});
+ blur(w,mine);
+ const panel=await until(()=>{const p=doc.querySelector('[data-wr-conflict]');return p&&!p.hidden?p:null;},20000);
+ assert.match(panel.textContent,/\(his change\)/,'his paragraph');
+ assert.match(panel.textContent,/Elsewhere: /,'the paragraph the saved version changed, which he did not touch');
+ assert.match(panel.textContent,/You have not changed this paragraph/);
+ assert.equal(doc.querySelector('textarea[data-ed="'+mine.dataset.ed+'"]').value,mine.value);
+});
+
+test('real server: a split has an Undo that takes back that split',{timeout:60000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'straw-over-the-rows');
+ const before=wordsOf(await draftOf(base,sub));
+ const {w,doc}=await livePage(base,sub);
+ const target=longRows(doc)[0],at=target.value.indexOf(' ',Math.floor(target.value.length/2));
+ target.focus();target.setSelectionRange(at,at);press(w,target,'Enter');
+ await until(async()=>wordsOf(await draftOf(base,sub)).length===before.length+1,20000);
+ assert.match(await until(()=>doc.querySelector('#v2-messages')?.textContent.match(/Split a paragraph/)?.[0]),/Split a paragraph/);
+ doc.querySelector('#v2-messages button:not([aria-label])').click();
+ await until(async()=>wordsOf(await draftOf(base,sub)).length===before.length,20000);
+ assert.deepEqual(wordsOf(await draftOf(base,sub)),before,'the split is taken back');
+});
+
+test('a read-through can be rewritten before it becomes his; a plain suggestion says it goes in as it stands',async()=>{
+ const base={'/api/subject/standing':standing,'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'native',bindingId:'b1'}}]},'/api/study-draft/read':draft(['One.','Two.']),
+  '/api/study-ai/requests':{items:[{id:'q1',status:'pending',stale:false,purpose:'article-draft',proposedBy:{actor:'agent:claude-code'}}]},
+  '/api/study-ai/review':{id:'q1',status:'pending',stale:false,purpose:'article-draft',replacements:[{id:'r0',words:'One, better.',before:'One.'},{id:'r1',words:'Two, better.',before:'Two.'}]},
+  '/api/study-ai/read':{sourceCatalog:[]},'/api/study-ai/finish':{readThrough:{}}};
+ const {w,doc,calls}=await page({hash:'#/write/s1?piece=o1',answers:base});await settle(200);
+ const box=doc.querySelector('textarea[data-rt="q1"][data-rid="r0"]');assert.ok(box,'the suggested words are a box he can change');
+ assert.equal(box.value,'One, better.');
+ box.value='One, mine.';box.dispatchEvent(new w.Event('input',{bubbles:true}));
+ assert.match(w.localStorage.getItem('ar-create:read-through:q1'),/One, mine\./,'kept on the device under the existing workspace\'s own key');
+ doc.querySelector('[data-act="finish"]').click();await settle(200);
+ const done=calls.find(c=>c.path==='/api/study-ai/finish');
+ assert.deepEqual(plain(done.body.edits),[{id:'r0',words:'One, mine.'}],'only what he changed goes as his words');
+ assert.equal(w.localStorage.getItem('ar-create:read-through:q1'),null);
+ const plainOne=await page({hash:'#/write/s1?piece=o1',answers:{...base,'/api/study-ai/requests':{items:[{id:'q1',status:'pending',stale:false,proposedBy:{actor:'agent:claude-code'}}]},'/api/study-ai/review':{id:'q1',status:'pending',stale:false,replacements:[{id:'r0',words:'One, better.'}]}}});await settle(200);
+ assert.match(plainOne.doc.querySelector('[data-act="accept"]').textContent,/Accept/);assert.match(plainOne.doc.querySelector('.wr-note').textContent,/exactly as they stand/);
+ assert.equal(plainOne.doc.querySelectorAll('textarea[data-rt]').length,0);
 });

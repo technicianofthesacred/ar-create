@@ -82,7 +82,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   saving:false,again:false,running:null,refreshWanted:false,savedAt:null,problem:'',stopped:false,conflict:null,props:[],marks:new Map(),dropped:0,sources:null,
+   saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
   let timer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
@@ -120,19 +120,23 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
 
   // ---------- the unsaved words, kept on this device: his only ----------
   const KEY=()=>'ar-v2-write:'+st.bindingId;
+  /** Everything unsaved goes to the device under his key, with the saves whose answer has not come back (the operation
+      and what it carried), so a reload in the middle of a save can tell his own committed save from a newer version. */
   function stash(){
    if(!st.human)return;// an assistant's page never keeps or restores words as if they were his
    try{
     if(!dirty()){root.localStorage.removeItem(KEY());return;}
-    root.localStorage.setItem(KEY(),JSON.stringify({v:1,at:Date.now(),draft:st.base?.expected?.workflow?.draft||'',
-     edits:[...st.edits].map(([k,v])=>[k,v.text,v.orig]),added:st.added.filter(a=>String(a.text).trim()).map(a=>({id:a.id,afterId:a.afterId,text:a.text}))}));
+    root.localStorage.setItem(KEY(),JSON.stringify({v:2,at:Date.now(),draft:st.base?.expected?.workflow?.draft||'',
+     edits:[...st.edits].map(([k,v])=>[k,v.text,v.orig]),added:st.added.filter(a=>String(a.text).trim()).map(a=>({id:a.id,afterId:a.afterId,text:a.text})),
+     sent:st.sent,base:[...st.baseWords]}));
    }catch{/* private window or blocked storage: the words are still on the page */}
   }
   function unstash(){
    if(!st.human)return null;
    try{
     const s=JSON.parse(root.localStorage.getItem(KEY())||'null');
-    if(!s||s.v!==1||!Array.isArray(s.edits)||!Array.isArray(s.added))return null;return s;
+    if(!s||(s.v!==1&&s.v!==2)||!Array.isArray(s.edits)||!Array.isArray(s.added))return null;
+    if(!Array.isArray(s.sent))s.sent=[];return s;
    }catch{return null;}
   }
 
@@ -260,22 +264,40 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    }catch{st.props=[];}
    paintNotes();
   }
-  const markedOf=p=>st.marks.get(p.id)||new Set();
+  // A read-through he has begun (the words he changed, the paragraphs he marked Not me) is kept on this device, only his,
+  // under the same key the existing workspace uses, so it carries over between the two.
+  const readKey=id=>'ar-create:read-through:'+id;
+  function reading(p){
+   if(!st.reading.has(p.id)){
+    let v=null;if(st.human)try{v=JSON.parse(root.localStorage.getItem(readKey(p.id))||'null');}catch{/* blocked storage */}
+    st.reading.set(p.id,v&&typeof v==='object'&&v.words&&v.marks&&v.notes?v:{words:{},marks:{},notes:{}});
+   }
+   return st.reading.get(p.id);
+  }
+  const keepReading=p=>{if(!st.human)return;try{root.localStorage.setItem(readKey(p.id),JSON.stringify(reading(p)));}catch{/* the words are still on the page */}};
+  function forgetReading(id){st.reading.delete(id);try{root.localStorage.removeItem(readKey(id));}catch{/* nothing to forget */}}
+  const markedOf=p=>new Set(Object.keys(reading(p).marks).filter(k=>reading(p).marks[k]));
   function paintNotes(){
    const box=$('[data-wr-text]');if(!box)return;
+   const live=doc.activeElement?.dataset?.rt?{p:doc.activeElement.dataset.rt,r:doc.activeElement.dataset.rid,a:doc.activeElement.selectionStart,b:doc.activeElement.selectionEnd}:null;
    box.querySelectorAll('.wr-drafts').forEach(n=>{n.innerHTML='';});box.querySelectorAll('.wr-margin').forEach(n=>{n.innerHTML='';});
    const loose=$('[data-wr-loose]');let looseHTML='';
    st.props.forEach((p,k)=>{
-    const n=k+1,by=v2.actorName(p.by||'agent:'),shown=p.replacements.filter(r=>box.querySelector(`[data-row="${CSS.escape(r.id)}"]`)),off=markedOf(p);
+    const n=k+1,by=v2.actorName(p.by||'agent:'),shown=p.replacements.filter(r=>box.querySelector(`[data-row="${CSS.escape(r.id)}"]`)),off=markedOf(p),rd=p.reads?reading(p):null;
     for(const r of shown){
      const row=box.querySelector(`[data-row="${CSS.escape(r.id)}"]`),left=off.has(r.id);
      const mark=p.reads&&st.human&&p.replacements.length>1?`<button type="button" class="wr-mark" data-act="mark" data-id="${esc(p.id)}" data-rid="${esc(r.id)}" aria-pressed="${left}">Not me</button>`:'';
-     row.querySelector('.wr-drafts').insertAdjacentHTML('beforeend',`<p class="wr-draft${left?' wr-left':''}"><sup>${n}</sup>${esc(r.words)}${mark}</p>`);
+     // A read-through is his to rewrite before it becomes his: the words are a box he can change, as in the existing workspace.
+     const words=rd?String(rd.words[r.id]??r.words):r.words;
+     const body=rd&&st.human?`<textarea class="wr-dt" rows="1" data-rt="${esc(p.id)}" data-rid="${esc(r.id)}" aria-label="${esc(by+'’s words for this paragraph. Change them to rewrite them.')}" spellcheck="true"${left?' readonly':''}>${esc(words)}</textarea>`:`<span class="wr-dtx">${esc(words)}</span>`;
+     row.querySelector('.wr-drafts').insertAdjacentHTML('beforeend',`<div class="wr-draft${left?' wr-left':''}"><sup>${n}</sup>${body}${mark}</div>`);
     }
     const note=noteHTML(p,n,by);
     if(shown.length)box.querySelector(`[data-row="${CSS.escape(shown[0].id)}"] .wr-margin`).insertAdjacentHTML('beforeend',note);
     else looseHTML+=`<div class="wr-loosenote">${note}</div>`;
    });
+   box.querySelectorAll('textarea.wr-dt').forEach(fit);
+   if(live){const t=box.querySelector(`[data-rt="${CSS.escape(live.p)}"][data-rid="${CSS.escape(live.r)}"]`);if(t){t.focus({preventScroll:true});try{t.setSelectionRange(live.a,live.b);}catch{}}}
    if(loose)loose.innerHTML=looseHTML+(st.dropped?`<p class="wr-dim wr-stale">${esc(st.dropped===1?'A suggestion was set aside because the words changed after it was made.':st.dropped+' suggestions were set aside because the words changed after they were made.')}</p>`:'');
   }
   function noteHTML(p,n,by){
@@ -284,20 +306,34 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    if(!ok)return `<div class="wr-note" data-prop="${esc(p.id)}">${head}<p class="wr-dim">This kind of suggestion is read through in Advanced, where you choose what becomes yours.</p><div class="wr-row-btns"><a class="wr-btn" href="${esc(adv('write'))}">Read it in Advanced${icon('out')}</a></div></div>`;
    const many=p.replacements.length>1?` for ${p.replacements.length} paragraphs`:'';
    const asked=p.reads&&p.instruction?`<p class="wr-dim">${esc('Asked: '+p.instruction)}</p>`:'';
-   const mark=p.reads&&p.replacements.length>1?' Use Not me under a paragraph to leave only that one out.':'';
-   const buttons=`<div class="wr-row-btns"><button type="button" class="pri" data-act="${p.reads?'finish':'accept'}" data-id="${esc(p.id)}">Rewrite it as mine</button><button type="button" class="v2-ghost" data-act="${p.reads?'leave':'reject'}" data-id="${esc(p.id)}">Not me</button></div>`;
-   return `<div class="wr-note" data-prop="${esc(p.id)}">${head}${asked}<p class="wr-dim">${esc('Shown dim'+many+'. They stay dim until you make them yours.'+mark)}</p>${buttons}</div>`;
+   // A read-through is read as a whole: he changes any words that are not his, or marks a paragraph Not me, and what he leaves
+   // alone counts as read (the existing workspace's own account). A plain suggestion goes in exactly as it stands, so its
+   // button says that, in the existing workspace's own words: Accept and Reject.
+   const buttons=p.reads?`<div class="wr-row-btns"><button type="button" class="pri" data-act="finish" data-id="${esc(p.id)}">Rewrite it as mine</button><button type="button" class="v2-ghost" data-act="leave" data-id="${esc(p.id)}">Not me</button></div>`
+    :`<div class="wr-row-btns"><button type="button" class="pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button type="button" class="v2-ghost" data-act="reject" data-id="${esc(p.id)}">Reject</button></div>`;
+   const how=p.reads?'Shown dim'+many+'. Change any words that are not yours, or use Not me'+(p.replacements.length>1?' under a paragraph':'')+' to leave it out. What you leave alone counts as read, and becomes yours when you press Rewrite it as mine.'
+    :'Shown dim'+many+'. If you accept, they go in exactly as they stand. They stay dim until you do.';
+   return `<div class="wr-note" data-prop="${esc(p.id)}">${head}${asked}<p class="wr-dim">${esc(how)}</p>${buttons}</div>`;
   }
 
   // ---------- the conflict: his words and the newer saved ones, side by side ----------
   function paintConflict(){
    const box=$('[data-wr-conflict]');if(!box)return;
    const c=st.conflict;box.hidden=!c;if(!c){box.innerHTML='';return;}
-   const fresh=new Map(rowsOf(c.fresh).map(r=>[r.id,r])),mine=[];
-   for(const [rid,e] of st.edits){const f=fresh.get(rid);mine.push({yours:e.text,saved:f?f.words:null,same:f&&f.words===e.orig});}
-   const added=st.added.filter(a=>String(a.text).trim());
-   const lines=mine.map(m=>`<li><p><b>Yours</b> ${m.yours.trim()?esc(m.yours):'<i>You emptied this paragraph.</i>'}</p><p><b>Saved</b> ${m.saved===null?'<i>This paragraph is not in the saved version.</i>':m.same?'<i>Not changed in the saved version.</i>':esc(m.saved)}</p></li>`)
-    .concat(added.map(a=>`<li><p><b>Yours</b> ${esc(a.text)}</p><p><b>Saved</b> <i>A new paragraph. It is not in the saved version.</i></p></li>`)).join('');
+   // Both sides, paragraph by paragraph: what he has changed, and what the saved version changed that he has not seen.
+   const rows=rowsOf(c.fresh),fresh=new Map(rows.map(r=>[r.id,r])),base=st.baseWords,items=[];
+   const says=(label,body)=>`<p><b>${label}</b> ${body}</p>`,note=text=>`<i>${esc(text)}</i>`;
+   for(const r of rows){
+    const e=st.edits.get(r.id),was=base.has(r.id)?base.get(r.id):e?.orig;
+    if(was===undefined){items.push(says('Yours',note('Nothing here yet.'))+says('Saved',note('A new paragraph in the saved version: ')+esc(r.words)));continue;}
+    const changed=was!==r.words;
+    if(e)items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',changed?esc(r.words):note('Not changed in the saved version.')));
+    else if(changed)items.push(says('Yours',note('You have not changed this paragraph.'))+says('Saved',esc(r.words)));
+   }
+   for(const [rid,e] of st.edits){if(!fresh.has(rid))items.push(says('Yours',e.text.trim()?esc(e.text):note('You emptied this paragraph.'))+says('Saved',note('This paragraph is not in the saved version.')));}
+   for(const [rid,was] of base){if(!fresh.has(rid)&&!st.edits.has(rid))items.push(says('Yours',esc(was))+says('Saved',note('This paragraph was removed in the saved version.')));}
+   for(const a of st.added.filter(a=>String(a.text).trim()))items.push(says('Yours',esc(a.text))+says('Saved',note('A new paragraph. It is not in the saved version.')));
+   const shown=items.slice(0,24),lines=shown.map(x=>`<li>${x}</li>`).join('')+(items.length>shown.length?`<li><p class="wr-dim">${esc('And '+(items.length-shown.length)+' more paragraphs differ.')}</p></li>`:'');
    const h=(c.fresh.history||[]).filter(x=>x.state==='committed').slice(-1)[0];
    const by=h&&h.actor&&!/unknown/.test(h.actor)?v2.actorName(h.actor)+(h.modifiedAt?' at '+clock(h.modifiedAt):''):'';
    box.innerHTML=`<h2>A newer version of this piece is saved${by?' by '+esc(by.replace(/^You/,'you')):''}</h2>
@@ -321,16 +357,26 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(!f||!f.safe){st.edits.delete(rid);if(String(e.text).trim())st.added.push({id:uuid(),afterId:after,text:e.text});}
     else if(f.words===e.text)st.edits.delete(rid);else st.edits.set(rid,{text:e.text,orig:f.words});
    }
-   st.base=c.fresh;st.rows=rowsOf(c.fresh);st.conflict=null;st.problem='';st.stopped=false;paintConflict();paintText();stash();await save({hold:null});
+   st.base=c.fresh;st.rows=rowsOf(c.fresh);st.baseWords=wordsMap(st.rows);foldAdded();st.conflict=null;st.problem='';st.stopped=false;paintConflict();paintText();stash();await save({hold:null});
   }
 
   // ---------- taking in a server version ----------
+  const wordsMap=rows=>new Map(rows.map(r=>[r.id,r.words]));
+  /** A new paragraph the server now holds is an edit of that saved paragraph, never a second insert with the same id. */
+  function foldAdded(){
+   const now=new Map(st.rows.map(r=>[r.id,r]));
+   for(const a of [...st.added]){
+    const r=now.get(a.id);if(!r)continue;
+    st.added=st.added.filter(x=>x!==a);
+    if(a.text!==r.words&&r.safe)st.edits.set(r.id,{text:a.text,orig:r.words});
+   }
+  }
   /** Puts the server's version on the page. Nothing he typed is dropped: a paragraph he is still editing keeps his words
       against the new text, one that has just been saved as new becomes an edit of the saved paragraph, and words typed into
       a paragraph that is gone come back as a new paragraph after the one before it. */
   function adopt(read){
    const old=st.rows;
-   st.base=read;st.rows=rowsOf(read);
+   st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);
    const h=(read.history||[]).filter(x=>x.state==='committed'&&x.modifiedAt).slice(-1)[0];
    if(h&&!st.savedAt)st.savedAt=h.modifiedAt;
    const now=new Map(st.rows.map(r=>[r.id,r]));
@@ -339,20 +385,55 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(!r){
      st.edits.delete(rid);
      if(String(e.text).trim()){
-      let after=null;const at=old.findIndex(x=>x.id===rid);
-      for(let i=at-1;i>=0;i--)if(now.has(old[i].id)){after=old[i].id;break;}
+      let after=st.rows.length?st.rows[st.rows.length-1].id:null;const at=old.findIndex(x=>x.id===rid);
+      if(at>=0){after=null;for(let i=at-1;i>=0;i--)if(now.has(old[i].id)){after=old[i].id;break;}}
       st.added.push({id:uuid(),afterId:after,text:e.text});
      }
     }else if(r.words===e.text)st.edits.delete(rid);
     else e.orig=r.words;
    }
-   for(const a of [...st.added]){
-    const r=now.get(a.id);if(!r)continue;
-    // A new paragraph the server now holds: what was typed after it was sent is an edit of the saved paragraph.
-    st.added=st.added.filter(x=>x!==a);
-    if(a.text!==r.words&&r.safe)st.edits.set(r.id,{text:a.text,orig:r.words});
-   }
+   foldAdded();
    paintText();
+  }
+  /** Where a position in the old text lands in the new one, through the one change between them. */
+  function carryAt(d,at){return at<=d.from?at:at>=d.to?at+d.insert.length-(d.to-d.from):d.from+d.insert.length;}
+  /** A save of his own has been answered, or is found committed after a reload. What it carried is settled; what he typed
+      after it was sent is carried onto the paragraphs it made (the difference between the text sent and his text now), so
+      nothing typed meanwhile is lost and nothing is saved twice. Returns where his caret belongs in a new paragraph. */
+  function settleSent(read,info){
+   const now=new Map(rowsOf(read).map(r=>[r.id,r])),later=[],caret={};
+   const cur=id=>st.edits.has(id)?st.edits.get(id).text:null;
+   for(const sp of info.splits||[]){
+    const typed=cur(sp.id),c=typed===null?sp.text:typed;st.edits.delete(sp.id);
+    if(c===sp.text)continue;
+    const d=minimalDiff(sp.text,c),m=carryAt(d,sp.at);
+    later.push([sp.id,c.slice(0,m).trimEnd()],[sp.newId,c.slice(m).trimStart()]);
+    caret[sp.newId]=Math.max(0,d.from+d.insert.length-m);
+   }
+   for(const j of info.joins||[]){
+    const l=cur(j.leftId),r=cur(j.rightId),cl=l===null?j.leftText:l,cr=r===null?j.rightText:r;st.edits.delete(j.leftId);st.edits.delete(j.rightId);
+    if(cl===j.leftText&&cr===j.rightText)continue;
+    const joined=now.get(j.leftId)?.words||'',sep=joined.startsWith(j.leftText)&&joined.endsWith(j.rightText)&&joined.length>=j.leftText.length+j.rightText.length?joined.slice(j.leftText.length,joined.length-j.rightText.length):' ';
+    later.push([j.leftId,cl+sep+cr]);
+   }
+   for(const [rid,text] of info.edits||[]){if(st.edits.get(rid)?.text===text)st.edits.delete(rid);}
+   const sentAdd=new Map(info.added||[]);
+   st.added=st.added.filter(a=>!(sentAdd.has(a.id)&&sentAdd.get(a.id)===a.text));
+   adopt(read);
+   for(const [rid,text] of later){const r=now.get(rid);if(r&&r.safe&&text!==r.words)st.edits.set(rid,{text,orig:r.words});}
+   if(later.length)paintText();
+   return caret;
+  }
+  /** After a refusal or a read, are the new committed saves all his own, saves whose answers never reached this page? If
+      so they are settled and the server's version taken in, and it is not a newer version. */
+  function takeOwn(fresh){
+   const known=new Set((st.base?.history||[]).map(h=>h.operationId));
+   const fresh_=(fresh.history||[]).filter(h=>h.state==='committed'&&!known.has(h.operationId));
+   if(!fresh_.length||fresh_.some(h=>!st.ops.has(h.operationId)))return false;
+   const done=new Set(fresh_.map(h=>h.operationId));
+   const infos=st.sent.filter(i=>done.has(i.operationId));st.sent=st.sent.filter(i=>!done.has(i.operationId));
+   if(infos.length)for(const info of infos)settleSent(fresh,info);else adopt(fresh);
+   stash();return true;
   }
 
   // ---------- saving ----------
@@ -370,31 +451,40 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const holdId=hold===undefined?(doc.activeElement?.dataset?.ed||null):hold;
    const ops=buildOps({rows:st.rows,edits:st.edits,added:st.added,hold:holdId}).concat(extra);
    if(!ops.length){st.problem='';paintSaved();stash();return false;}
-   // Only what goes in this save is settled by it.
-   const sentIds=new Set(ops.filter(o=>o.kind==='text'||o.kind==='delete').map(o=>o.id)),sentAdd=new Set(ops.filter(o=>o.kind==='insert').map(o=>o.id));
-   const sent={edits:new Map([...st.edits].filter(([k])=>sentIds.has(k)).map(([k,v])=>[k,v.text])),added:new Map(st.added.filter(a=>sentAdd.has(a.id)).map(a=>[a.id,a.text]))};
-   const operationId=mine(uuid());st.saving=true;st.problem='';paintSaved();
-   let ok=false;
+   // What goes in this save, in a plain record kept with his words until the answer is in (a reload cannot lose it).
+   const textOf=id=>st.edits.has(id)?st.edits.get(id).text:(st.rows.find(r=>r.id===id)?.words??''),addedById=new Map(st.added.map(a=>[a.id,a]));
+   const info={operationId:mine(uuid()),
+    edits:ops.filter(o=>o.kind==='text'||o.kind==='delete').map(o=>[o.id,o.kind==='delete'?'':st.edits.get(o.id)?.text??'']),
+    added:ops.filter(o=>o.kind==='insert').map(o=>[o.id,addedById.get(o.id)?.text??o.raw]),
+    splits:ops.filter(o=>o.kind==='split').map(o=>({id:o.id,at:o.at,newId:o.newId,text:textOf(o.id)})),
+    joins:ops.filter(o=>o.kind==='join').map(o=>({leftId:o.leftId,rightId:o.rightId,leftText:textOf(o.leftId),rightText:textOf(o.rightId)}))};
+   const operationId=info.operationId;
+   st.sent=[...st.sent,info].slice(-6);st.saving=true;st.problem='';stash();paintSaved();
+   let ok=false,retry=false;
    try{
     const result=await v2.call('study-draft.save',{...scope(),operationId,expected:st.base.expected,operations:ops});
-    for(const [rid,text] of sent.edits){if(st.edits.get(rid)?.text===text)st.edits.delete(rid);}
-    st.added=st.added.filter(a=>!(sent.added.has(a.id)&&sent.added.get(a.id)===a.text));
-    adopt(result);st.savedAt=new Date().toISOString();st.stopped=false;ok=true;
+    st.sent=st.sent.filter(x=>x!==info);
+    const caret=settleSent(result,info);st.savedAt=new Date().toISOString();st.stopped=false;ok=true;
     stash();presence();loadProps();
     const text=undoText||(ops.some(o=>o.kind==='delete')?'Paragraph deleted.':'');
     if(text&&(result.history||[]).some(h=>h.operationId===operationId&&h.canUndo))v2.ui.undo(text,()=>undoOp(operationId));
-    if(focus)focusEditor(focus.id,focus.at);
+    if(focus)focusEditor(focus.id,caret[focus.id]??focus.at);
    }catch(error){
+    if(error.kind==='stale'||error.kind==='refused'||error.kind==='owner-only')st.sent=st.sent.filter(x=>x!==info);// not committed
     if(error.kind==='stale'){
-     // Only a newer revision on the server is a newer version. Any other refusal is the server's own words.
+     // Only a newer revision on the server is a newer version, and a save of his own that this page never heard back from
+     // is not newer. Any other refusal is the server's own words.
      let fresh=null;try{fresh=await readDraft();}catch{/* the words stay on this device */}
-     if(fresh&&!sameRevision(fresh,st.base))noticeNewer(fresh);
+     if(fresh&&!sameRevision(fresh,st.base)){
+      if(takeOwn(fresh))retry=true;else noticeNewer(fresh);
+     }
      else{st.problem=error.body?.error||'The app could not save these words.';st.stopped=true;if(!quiet)say(st.problem,'bad');}
     }
     else if(error.kind==='owner-only'){say403(error);}
     else{st.problem=error.kind==='held'||error.kind==='refused'?error.message:'Could not save. Your words are kept on this device.';st.stopped=error.kind==='refused'||error.kind==='held';if(!quiet)say(error.message,'bad');if(!st.stopped)schedule(5000);}
    }finally{
-    st.saving=false;paintSaved();
+    st.saving=false;st.saveSeq++;stash();paintSaved();
+    if(retry&&dirty())schedule(300);
     if(st.again){st.again=false;if(dirty())schedule(300);}
     if(st.refreshWanted){st.refreshWanted=false;void refresh();}
    }
@@ -432,7 +522,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    clearTimeout(timer);await settled();
    const row=st.rows.find(r=>r.id===rid);if(!row||!row.safe)return;
    const text=st.edits.get(rid)?.text??row.words,newId=uuid();
-   await save({hold:null,extra:[{kind:'split',id:rid,at:Math.min(at,text.length),newId}],focus:{id:newId,at:0}});
+   await save({hold:null,extra:[{kind:'split',id:rid,at:Math.min(at,text.length),newId}],undoText:'Split a paragraph.',focus:{id:newId,at:0}});
   }
   /** Backspace at the start of a paragraph joins it to the one before. A paragraph that was never saved is joined on the
       page; a saved one is saved first and joined in the same save. A paragraph he emptied is deleted. */
@@ -469,12 +559,16 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      let result;
      if(kind==='accept')result=await v2.call('study-ai.accept',{...scope(),requestId:rid,operationId});
      else{
-      const off=markedOf(prop),all=prop.replacements.every(r=>off.has(r.id));
+      const off=markedOf(prop),all=prop.replacements.every(r=>off.has(r.id)),rd=reading(prop),edits=[];
       if(all){await leaveOut(prop,operationId);return;}
-      result=await v2.call('study-ai.finish',{...scope(),requestId:rid,operationId,...(off.size?{marks:[...off].map(x=>({id:x}))}:{})});
+      for(const r of prop.replacements){
+       if(off.has(r.id))continue;
+       const words=flat(rd.words[r.id]??r.words).trim();if(words&&words!==r.words)edits.push({id:r.id,words});
+      }
+      result=await v2.call('study-ai.finish',{...scope(),requestId:rid,operationId,...(edits.length?{edits}:{}),...(off.size?{marks:[...off].map(x=>({id:x}))}:{})});
      }
      if(Array.isArray(result?.projection)&&!dirty())adopt(result);else adopt(await readDraft());
-     st.marks.delete(rid);
+     forgetReading(rid);
      const entry=(st.base.history||[]).find(h=>h.operationId===operationId&&h.canUndo);
      if(entry)v2.ui.undo(`Changed to ${who}’s words.`,()=>undoOp(operationId));else say(`Changed to ${who}’s words.`,'good');
     }else if(kind==='leave'){await leaveOut(prop,operationId);return;}
@@ -491,7 +585,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   async function leaveOut(prop,operationId){
    try{
     await v2.call('study-ai.finish',{...scope(),requestId:prop.id,operationId,marks:prop.replacements.map(r=>({id:r.id}))});
-    st.marks.delete(prop.id);say('Left as you wrote it.','good');await loadProps();
+    forgetReading(prop.id);say('Left as you wrote it.','good');await loadProps();
    }catch(error){say(error.message,'bad');if(error.kind!=='owner-only')await loadProps();}
   }
   /** Takes back one saved change, found by its own operation, never merely the latest one. */
@@ -508,10 +602,15 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   async function refresh(){
    if(gone||!st.bindingId)return;
    if(st.saving){st.refreshWanted=true;return;}// shown as soon as the save is over
-   let fresh;try{fresh=await readDraft();}catch{return;}
-   if(ctx.signal.aborted||st.saving)return;
+   const seq=st.saveSeq;let fresh;try{fresh=await readDraft();}catch{return;}
+   if(ctx.signal.aborted||gone)return;
+   // A save began or ended while this was being read: the answer may be older than what he has saved, and is not to be
+   // taken for a newer version or put on the page. Read again once the save is over.
+   if(st.saving){st.refreshWanted=true;return;}
+   if(st.saveSeq!==seq){void refresh();return;}
    if(!sameRevision(fresh,st.base)){
-    if(dirty())noticeNewer(fresh);else{adopt(fresh);}
+    if(takeOwn(fresh)){if(dirty())schedule(300);}
+    else if(dirty()||st.conflict)noticeNewer(fresh);else{adopt(fresh);}
    }
    await loadProps();
   }
@@ -529,7 +628,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    if(wr==='focus'||wr==='unfocus'){setFocus(wr==='focus');return;}
    if(wr==='ask'){v2.ui.sheet({title:'Ask',body:v2.ui.notBuilt('Asking about this piece from here.',{advanced:{subject:id,piece:st.piece||undefined,section:'write'}})});return;}
    if(act==='accept'||act==='reject'||act==='finish'||act==='leave')return void decide(act,b.dataset.id);
-   if(act==='mark'){const set=st.marks.get(b.dataset.id)||new Set();if(set.has(b.dataset.rid))set.delete(b.dataset.rid);else set.add(b.dataset.rid);st.marks.set(b.dataset.id,set);paintNotes();page.querySelector(`[data-act="mark"][data-rid="${CSS.escape(b.dataset.rid)}"]`)?.focus({preventScroll:true});return;}
+   if(act==='mark'){const p=st.props.find(x=>x.id===b.dataset.id);if(!p)return;const rd=reading(p);rd.marks[b.dataset.rid]=!rd.marks[b.dataset.rid];keepReading(p);paintNotes();page.querySelector(`[data-act="mark"][data-rid="${CSS.escape(b.dataset.rid)}"]`)?.focus({preventScroll:true});return;}
    if(act==='mine')return void keepMine();
    if(act==='theirs')return void useSaved();
   }
@@ -551,7 +650,10 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   const onResize=()=>page.querySelectorAll('textarea.wr-ed').forEach(fit);
 
   page.addEventListener('click',onClick);page.addEventListener('keydown',onKey);page.addEventListener('focusout',onFocusOut);
-  page.addEventListener('input',e=>{if(e.target.matches?.('textarea[data-ed]'))onInput(e.target);});
+  page.addEventListener('input',e=>{
+   if(e.target.matches?.('textarea[data-ed]'))onInput(e.target);
+   else if(e.target.matches?.('textarea[data-rt]')&&st.human){const p=st.props.find(x=>x.id===e.target.dataset.rt);if(p){reading(p).words[e.target.dataset.rid]=e.target.value;keepReading(p);fit(e.target);}}
+  });
   doc.addEventListener('visibilitychange',onHide);root.addEventListener('pagehide',onUnload);root.addEventListener('resize',onResize);
   ctx.on({kinds:['study-draft*','study-ai*']},onChange);
   ctx.on({},e=>{if(e.reset)onChange(e);});
@@ -568,16 +670,35 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(!st.form){shell0('This subject has no Article yet, so there is nothing to write here.');return;}
     if(!st.bindingId){shell0('The words of this piece are not kept where Write can open them. They open in Advanced.');return;}
     const read=await readDraft();if(ctx.signal.aborted)return;
-    st.base=read;st.rows=rowsOf(read);
-    const saved=unstash(),h=(read.history||[]).filter(x=>x.state==='committed'&&x.modifiedAt).slice(-1)[0];
+    st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);
+    const saved=unstash(),committed=(read.history||[]).filter(x=>x.state==='committed'),h=committed.filter(x=>x.modifiedAt).slice(-1)[0];
     if(h)st.savedAt=h.modifiedAt;
+    let newer=false,restored=false;
     if(saved){
-     for(const [rid,text,orig] of saved.edits){const r=st.rows.find(x=>x.id===rid);if(r&&r.safe&&text!==r.words)st.edits.set(rid,{text:String(text),orig:String(orig??r.words)});}
+     for(const [rid,text,orig] of saved.edits)st.edits.set(rid,{text:String(text),orig:String(orig??'')});
      for(const a of saved.added){if(a&&typeof a.id==='string'&&typeof a.text==='string'&&a.text.trim())st.added.push({id:a.id,afterId:a.afterId??null,text:flat(a.text)});}
+     for(const i of saved.sent)if(i&&typeof i.operationId==='string')st.ops.add(i.operationId);
+     // A save that was on its way when the page closed. If the server holds it, it is his own save and not a newer version:
+     // what it carried is settled, and what he typed after it was sent is carried on.
+     const done=new Set(committed.map(x=>x.operationId)),ours=saved.sent.filter(i=>done.has(i.operationId)),last=committed.at(-1);
+     if(ours.length){
+      st.sent=saved.sent.filter(i=>!done.has(i.operationId));
+      for(const info of ours)settleSent(read,info);
+      if(last&&!st.ops.has(last.operationId))newer=true;// someone else saved after it
+      restored=true;
+     }else{
+      st.sent=saved.sent;// a late commit of these is still his own
+      for(const rid of [...st.edits.keys()]){const r=st.rows.find(x=>x.id===rid);if(!r||!r.safe||st.edits.get(rid).text===r.words)st.edits.delete(rid);}
+      foldAdded();
+      newer=!!saved.draft&&saved.draft!==read.expected?.workflow?.draft;
+      if(newer&&Array.isArray(saved.base))st.baseWords=new Map(saved.base);
+      restored=true;
+     }
+     for(const [rid,e] of st.edits){if(!e.orig)e.orig=st.rows.find(x=>x.id===rid)?.words??'';}
     }
-    shell();
-    if(saved&&dirty()&&saved.draft&&saved.draft!==read.expected?.workflow?.draft)noticeNewer(read);
-    else if(saved&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
+    shell();stash();
+    if(restored&&dirty()&&newer)noticeNewer(read);
+    else if(restored&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
     presence(true);loadProps();if(st.src)loadSources();
    }catch(error){if(ctx.signal.aborted)return;plain(error.message||'This piece could not be opened.');}
   }
