@@ -132,6 +132,39 @@ h3{font:600 var(--t15)/1.3 var(--ui)}
 .down a:first-child{border-top:0;padding-top:0}
 .down span{color:var(--ink2);font-size:var(--t14)}
 @media (max-width:480px){.top .logo{display:none}.walk a{padding:0 6px}}
+/* one concept, opened in place */
+dialog.sheet.big{width:min(760px,100%);height:94dvh;max-height:94dvh}
+#cin{gap:18px;padding-top:0}
+.chead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:4px;margin:0 -20px;padding:6px 12px 6px 10px;background:var(--paper);border-bottom:1px solid var(--line)}
+.chead .mic{width:40px;height:40px}
+#cin .small{font:400 var(--t18)/1.45 var(--ui);margin-top:10px}
+#cin blockquote.say{margin-inline:-20px;padding:14px 20px;background:var(--bg)}
+#cin>p{line-height:1.7}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipn{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border-radius:18px;box-shadow:inset 0 0 0 1px var(--line2);font:500 var(--t13)/1.2 var(--ui);color:var(--ink2);text-align:left}
+.chipn[aria-pressed="true"]{background:var(--sel);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink2)}
+.chipn i{display:block;flex:none;width:14px;border-top:2px solid var(--ink2)}
+.chipn i[data-k="prepares"],.chipn i[data-k="mine"]{border-color:var(--warm)}
+.chipn i[data-k="contrasts"],.chipn i[data-k="mine"]{border-top-style:dashed}
+.chipn i[data-k="echoes"]{border-top-style:dotted}
+.kindw{font:500 var(--t12)/1 var(--ui);color:var(--dim);flex:none}
+.lbar{height:3px;border-radius:2px;background:var(--line2);overflow:hidden}
+.lbar i{display:block;height:100%;width:8%;background:var(--warm);animation:lis 40s linear forwards}
+@keyframes lis{to{width:100%}}
+.differ{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.differ>div{display:grid;gap:6px;align-content:start;padding:14px 16px;border-radius:10px;background:var(--bg)}
+.pathlog{display:grid;gap:4px}
+#gmic{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:36;width:52px;height:52px;box-shadow:var(--shadow)}
+body.tray #gmic{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+#gbar{position:fixed;left:0;right:0;bottom:0;z-index:37;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--paper);border-top:1px solid var(--line)}
+#gbar>*{max-width:760px;margin:0 auto}
+.note{display:grid;gap:4px;padding-top:14px;border-top:1px solid var(--line)}
+.note:first-child{border-top:0;padding-top:0}
+details>summary{display:flex;align-items:center;min-height:44px;font:600 var(--t18)/1.2 var(--ui);letter-spacing:-.01em;cursor:pointer;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"+";margin-left:auto;color:var(--dim);font-weight:400}
+details[open]>summary::after{content:"\2212"}
+details[open]>summary{margin-bottom:10px}
 /* nugget screen */
 .trail{display:flex;flex-wrap:wrap;align-items:center;gap:0 2px;font-size:var(--t13);color:var(--dim);margin-left:-8px}
 .trail button,.trail a{min-height:44px;padding:0 8px;display:inline-flex;align-items:center;border-radius:6px}
@@ -267,18 +300,13 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
  <span class="logo"></span>
  <span class="place">Gather</span><span class="place" aria-current="page">Research</span><span class="place">Create</span><span class="place">Share</span>
  <span class="grow"></span>
- <nav class="walk" aria-label="Mock-up screens"><a href="#source">Source</a><a href="#nugget">Nugget</a><a href="#read">Read</a><a href="#express">Express</a><a href="#distil">Distil</a></nav>
+ <nav class="walk" aria-label="Mock-up screens"><a href="#map">Map</a><a href="#express">Express</a><a href="#yours">Yours</a></nav>
 </header>
 
 <main>
 <!-- 1. a source just after distilling -->
-<section class="page" id="source">
- <header>
-  <h1>The ground is already whole</h1>
-  <p class="meta"><span>Ilse Varnholt</span><span>Talk, 48 min</span><span>Distilled 4 minutes ago</span><span>1 joined, 1 unsure, 7 new</span><a href="#source" class="out">Open the talk</a><span class="sample">Sample</span></p>
-  <form class="speak" data-form="looking" style="margin-top:14px;max-width:560px"><input aria-label="What you were looking for in this" placeholder="What were you looking for in this?" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
-  <p class="heard" id="lookheard" hidden style="margin-top:8px">Brightened: Kindness comes first, Letting the mind settle</p>
- </header>
+<section class="page" id="map">
+ <header id="shead"></header>
  <div class="split">
   <div class="left">
    <div class="map" id="smap"></div>
@@ -286,18 +314,9 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
    <div class="lines" id="slines"></div>
   </div>
   <div class="right">
-   <h2>9 concepts</h2>
+   <h2 id="scount"></h2>
    <div class="cards" id="scards"></div>
   </div>
- </div>
-</section>
-
-<!-- 2. one nugget with its neighbours -->
-<section class="page" id="nugget" hidden>
- <nav class="trail" id="trail" aria-label="Where you walked"></nav>
- <div class="split">
-  <div class="left"><div class="map ring" id="ring"></div></div>
-  <div class="right" id="nbody"></div>
  </div>
 </section>
 
@@ -310,15 +329,15 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
  <form class="ask narrow" id="ask"><input id="feeling" aria-label="What you want to express" value="everything is perfect" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
  <div class="groups" id="groups"></div>
 </section>
-<!-- the deep reading of one concept -->
-<section class="page" id="read" hidden></section>
-
-<!-- 4. how I distil -->
-<section class="page" id="distil" hidden>
- <header><h1>How I distil</h1><p class="meta"><span class="sample">Sample</span><span>7 core understandings</span><span>84 concepts</span><span>1,310 passages</span></p></header>
+<!-- yours: notes, questions, how I distil -->
+<section class="page" id="yours" hidden>
+ <header><h1>Yours</h1><p class="meta"><span class="sample">Sample</span><span>7 core understandings</span><span>84 concepts</span><span>1,310 passages</span></p></header>
  <div class="split">
-  <div class="left"><div class="lines" id="dlens"></div></div>
-  <div class="right"><h2>The bank is asking</h2><div class="cards one" id="dqs"></div><h2>What your corrections taught</h2><ul class="lines" id="drules"></ul><h2>Recently joined</h2><ul class="lines" id="djoined"></ul></div>
+  <div class="left"><h2>Your notes</h2><div class="lines" id="ynotes"></div><div id="yai"></div></div>
+  <div class="right"><h2>The bank is asking</h2><div class="cards one" id="dqs"></div>
+   <details><summary>How I distil</summary><div class="lines" id="dlens"></div></details>
+   <details><summary>What your corrections taught</summary><ul class="lines" id="drules"></ul></details>
+   <details><summary>Recently joined</summary><ul class="lines" id="djoined"></ul></details></div>
  </div>
 </section>
 </main>
@@ -326,6 +345,9 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
 <div class="tray" id="tray" hidden><div><div class="slots" id="slots"></div><button class="btn" id="joinbtn" disabled>Join into a pathway</button></div></div>
 
 <dialog class="sheet" id="sheet"><div class="sheet-in" id="sheetin"></div></dialog>
+<dialog class="sheet big" id="csheet"><div class="sheet-in" id="cin"></div></dialog>
+<button class="mic" id="gmic" aria-label="Add a voice note"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+<div id="gbar" hidden></div>
 
 <script>
 /* Everything here is invented sample content. No real person said any of it. */
@@ -363,7 +385,7 @@ const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;
 /* neighbours of a concept: [other id, kind, label seen from here, reason] */
 function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:KIN[l[2]][1],why:l[3],out,i:L.indexOf(l)}})}
 function linesHTML(nb,walk){const g={};nb.forEach(n=>(g[n.lab]=g[n.lab]||[]).push(n));
- return Object.keys(g).map(lab=>`<section class="kin"><p class="kinh"><i data-k="${g[lab][0].k}"></i>${lab}</p>${g[lab].map(n=>`<div class="linerow"><button class="go" data-${walk?"walk":"pick"}="${n.id}"><b>${C[n.id].n}</b><span aria-hidden="true">›</span></button>${n.k==='mine'&&!n.why?speak('whyline','Why this line?',`data-i="${n.i}"`):`<p class="${n.k==='mine'?'say':''}">${esc(n.why)}</p>`}</div>`).join('')}</section>`).join('')}
+ return Object.keys(g).map(lab=>`<section class="kin"><p class="kinh"><i data-k="${g[lab][0].k}"></i>${lab}</p>${g[lab].map(n=>`<div class="linerow"><button class="go" data-${walk?"open":"pick"}="${n.id}"><b>${C[n.id].n}</b><span aria-hidden="true">›</span></button><p>${esc(n.why)}</p></div>`).join('')}</section>`).join('')}
 const hear=t=>`<button class="hear" aria-pressed="false" data-hear>${t}</button>`;
 
 /* ---------- screen 1 ---------- */
@@ -373,25 +395,41 @@ const RULES=['Emptiness and presence are not the same.','A practice is not a vie
 C.ordinary.j='joined';C.comp.j='unsure';
 const speak=(form,ph,extra='')=>`<form class="speak" data-form="${form}" ${extra}><input aria-label="${ph}" placeholder="${ph}" autocomplete="off"><button class="mic" type="submit" aria-label="Speak">${MIC}</button></form>`;
 const resDots=id=>`<span class="res" role="group" aria-label="Resonance">${[1,2,3,4,5].map(i=>`<button class="${i<=C[id].r?'f':''}" data-res="${id}:${i}" aria-label="Resonance ${i} of 5"></button>`).join('')}</span>`;
-const lineSVG=()=>L.map(l=>`<line x1="${C[l[0]].x}" y1="${C[l[0]].y+1}" x2="${C[l[1]].x}" y2="${C[l[1]].y+1}" data-k="${l[2]}" class="${l[0]===picked||l[1]===picked?'on':''}"/>`).join('');
+const lineSVG=()=>L.filter(l=>W().order.includes(l[0])).map(l=>`<line x1="${C[l[0]].x}" y1="${C[l[0]].y+1}" x2="${C[l[1]].x}" y2="${C[l[1]].y+1}" data-k="${l[2]}" class="${l[0]===picked||l[1]===picked?'on':''}"/>`).join('');
 function joinRow(id){switch(C[id].j){
- case 'joined':return `<p class="join yes"><span>Joined to The awareness you already have, now 3 voices</span><button class="ghost" data-j="${id}:fixing">Correct</button></p>`;
+ case 'joined':return `<p class="join yes"><span>Joined to The awareness you already have, now 3 voices</span><button class="ghost" data-j="${id}:lifted">Correct</button></p>`;
  case 'fixing':return `<div class="join"><span>Lifted back out.</span>${speak('rule','Why? One sentence, or leave it',`data-id="${id}"`)}</div>`;
  case 'lifted':return `<p class="join yes"><span>Kept as its own concept</span></p>`;
  case 'unsure':return `<p class="join"><span>Unsure: is this the same as Compassion, which you already hold? She means a way to check yourself, not a practice.</span><button class="ghost" data-j="${id}:same">Same</button><button class="ghost" data-j="${id}:apart">Separate</button></p>`;
  case 'same':return `<p class="join yes"><span>Joined to Compassion</span><button class="ghost" data-j="${id}:unsure">Undo</button></p>`;
  case 'apart':return `<p class="join yes"><span>Kept as its own concept</span><button class="ghost" data-j="${id}:unsure">Undo</button></p>`;
  default:return ''}}
+/* a second work that is not philosophy: steps, facts and a belief */
+Object.assign(C,{
+ t1:{s:'Raw leaf',n:'It starts as sun-dried leaf',d:'Ripe pu\'er begins as the same rough, sun-dried green leaf that raw pu\'er is made from.',r:2,x:22,y:8,ty:'Step',p:[['Paragraph 2','Everything begins as maocha, the rough sun-dried leaf. Nothing about it tells you yet which way it will go.']]},
+ t2:{s:'Wet piling',n:'The leaf is dampened and piled',d:'The leaf is wetted, heaped and covered, so that it heats up and ferments over several weeks.',r:5,x:50,y:34,ty:'Step',p:[['Paragraph 4','We wet the leaf, pile it waist high and cover it. Within days the heap is hot in the middle.']]},
+ t3:{s:'Turning',n:'The pile is turned by hand',d:'Workers turn the heap again and again, so that it ferments evenly and does not overheat.',r:3,x:80,y:56,ty:'Step',p:[['Paragraph 5','Leave it and the middle cooks while the edges do nothing. So we turn it, by shovel, every few days.']]},
+ t4:{s:'Resting',n:'The tea rests before it is drunk',d:'After fermenting, the tea is dried and left to rest until the heavy smell of the pile fades.',r:3,x:44,y:80,ty:'Step',p:[['Paragraph 7','Fresh off the pile it smells of wet earth and something like a pond. Give it a year.']]},
+ t5:{s:'"Ripe is a shortcut"',n:'Some drinkers call ripe pu\'er a shortcut',d:'Many drinkers believe slowly aged raw pu\'er is the finer tea, and see ripe pu\'er as a quick imitation of it.',r:2,x:16,y:52,ty:'Belief',p:[['Paragraph 9','Old hands will tell you ripe is a shortcut. I think it is simply a different tea.']]}
+});
+L.push(['t1','t2','prepares','There is nothing to pile until the leaf has been picked, fired and dried in the sun.'],['t3','t2','explains','Turning is what keeps the piling from going wrong.'],['t2','t4','prepares','The tea only needs resting because of what the pile does to it.'],['t5','t2','contrasts','This belief is about whether piling is a real way to make good tea at all.']);
+const TY={eth:'Practice',stab:'Practice',shown:'Idea',feel:'Practice',ordinary:'Idea',whole:'Idea',bypass:'Idea',comp:'Idea',ret:'Idea'};Object.keys(TY).forEach(k=>C[k].ty=TY[k]);
+const WORKS=[{t:'The ground is already whole',who:'Ilse Varnholt',kind:'Talk, 48 min',meta:'1 joined, 1 unsure, 7 new',order:ORDER,core:'whole'},
+ {t:'How ripe pu\'er is made',who:'Wen Dalby',kind:'Article, 9 min read',meta:'5 new',order:['t1','t2','t3','t4','t5'],core:'t2'}];
+let work=0;const W=()=>WORKS[work], workOf=id=>WORKS.find(w=>w.order.includes(id));
+const at=t=>/^\d/.test(t)?hear(t):`<span>${t}</span>`;
 function drawSource(){
- const nb=near(picked).map(n=>n.id);
+ const w=W(),nb=near(picked).map(n=>n.id);
+ $('#shead').innerHTML=`<div class="chips" style="margin-bottom:18px">${WORKS.map((x,i)=>`<button class="chipn" aria-pressed="${i===work}" data-work="${i}">${x.t}</button>`).join('')}</div><h1>${w.t}</h1><p class="meta"><span>${w.who}</span><span>${w.kind}</span><span>${w.meta}</span><span class="sample">Sample</span></p>`;
+ $('#scount').textContent=w.order.length+' concepts';
  $('#smap').className='map picked';
  $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+lineSVG()+'</svg>'+
-  ORDER.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.s}</span></button>`}).join('');
+  w.order.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.s}</span></button>`}).join('');
  const c=C[picked];
- $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+linesHTML(near(picked))+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
- $('#scards').innerHTML=ORDER.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#nugget" data-open="${id}">${c.n}</a></h3>${resDots(id)}</header>
+ $('#slines').innerHTML=`<header><h3>${c.n}</h3><button class="btn quiet" data-open="${picked}">Open</button></header>`+linesHTML(near(picked))+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
+ $('#scards').innerHTML=w.order.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#map" data-open="${id}">${c.n}</a></h3><span class="kindw">${c.ty}</span>${resDots(id)}</header>
   <p class="lab">Distillation</p><p class="dist">${c.d}</p>
-  <p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span></p>
+  <p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${at(c.p[0][0])}<span>${w.who}</span></p>
   ${joinRow(id)}</article>`}).join('');
 }
 function tapNode(id){if(drawing&&id!==picked){L.push([picked,id,'mine','']);drawing=false}else picked=id;drawSource()}
@@ -404,8 +442,7 @@ $('#smap').addEventListener('pointermove',e=>{if(!pd)return;if(!pd.drag&&!pd.hel
 const pend=e=>{if(!pd)return;clearInterval(pd.t);const q=pd;pd=null;lastPtr=Date.now();if(e.type==='pointercancel'){drawSource();return}if(q.drag||q.held)drawSource();else tapNode(q.id)};
 $('#smap').addEventListener('pointerup',pend);$('#smap').addEventListener('pointercancel',pend);
 
-/* ---------- screen 2 ---------- */
-let here='whole', walked=['whole'], opened=false, depth=0;
+/* ---------- depths of one distillation ---------- */
 const MED={
  eth:'She puts conduct first on purpose. A person who hears "nothing is wrong" before they have stopped causing harm will use it to excuse the harm. Kindness in small daily things is the ground the rest stands on.',
  stab:'Attention is trained before anything is looked at. She compares the mind to stirred water: the seeing is not an effort, it is what is left when the stirring stops. This is the first practice and it is never finished.',
@@ -422,38 +459,13 @@ const LONG={whole:[
  ['How it is recognised','Not by argument. Plain awareness is noticed, and it turns out to lack nothing. Feelings are let be at their full size, and they are found to be inside the wholeness, not against it.'],
  ['Where it goes wrong','Used as a lid on pain it becomes the false version. Her check is the body, and the proof is warmth toward others.'],
  ['How it lasts','It does not. It is recognised in short moments, again and again.']]};
+Object.assign(MED,{
+ t1:'The article starts before anything that makes ripe pu\'er different. The leaf is picked, heated briefly, rolled and dried in the sun. At this point it could become raw pu\'er or ripe pu\'er. The writer calls this leaf maocha.',
+ t2:'This is the step that makes ripe pu\'er what it is. The dried leaf is sprayed with water, heaped into a deep pile and covered. Damp and packed together, the pile warms up from the inside and the leaf ferments. Over several weeks the leaf turns dark and the taste turns from sharp and green to smooth and earthy.',
+ t3:'A pile left alone ferments unevenly: the centre gets too hot while the outside stays cool. So the workers break the heap open and rebuild it every few days. The writer says this is where the skill is, because it is done by feel and smell.',
+ t4:'When the piling is finished the tea is spread out, dried and stored. Straight away it carries a strong smell from the pile. Left to rest for months or longer, that smell fades and the tea becomes cleaner to drink.',
+ t5:'This is something people believe, not a step in the making. Raw pu\'er changes slowly over many years of storage. Ripe pu\'er reaches a dark, smooth character in weeks. Some drinkers therefore treat ripe as a copy of aged raw. The writer disagrees and calls it a different tea.'});
 const DEPTH=['Glance','Medium','Full'];
-function distHTML(){const c=C[here],n=LONG[here]?3:2;depth=Math.min(depth,n-1);
- return `<p class="gh"><span class="lab">Distillation</span><span class="tabs">${DEPTH.slice(0,n).map((t,i)=>`<button aria-selected="${i===depth}" data-depth="${i}">${t}</button>`).join('')}</span></p><p>${c.d}</p>`+
-  (depth===1?`<p class="more">${MED[here]}</p>`:depth===2?LONG[here].map(x=>`<h3 class="more">${x[0]}</h3><p class="more">${x[1]}</p>`).join(''):'');}
-const SLOT={1:[[50,9]],2:[[24,10],[76,10]],3:[[24,10],[76,10],[50,91]],4:[[24,10],[76,10],[24,90],[76,90]],5:[[24,9],[76,9],[17,62],[83,62],[50,92]],6:[[24,8],[76,8],[16,40],[84,40],[26,90],[74,90]],7:[[24,7],[76,7],[16,34],[84,34],[18,68],[82,68],[50,93]]};
-function drawNugget(from){
- const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='Comes first'?0:1)-(b.lab==='Comes first'?0:1)).slice(0,7), s=SLOT[nb.length];
- const ring=$('#ring');
- ring.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+nb.map((n,i)=>`<line x1="50" y1="50" x2="${s[i][0]}" y2="${s[i][1]}" data-k="${n.k}"/>`).join('')+'</svg>'+
-  `<div class="me" data-r="${c.r}" style="--r:${c.r}"><span class="dot"></span><span>${c.s}</span></div>`+
-  nb.map((n,i)=>`<button class="nb bright" style="left:${s[i][0]}%;top:${s[i][1]}%;--r:${C[n.id].r}" data-k="${n.k}" data-walk="${n.id}" data-x="${s[i][0]}" data-y="${s[i][1]}"><small>${n.lab}</small><span>${C[n.id].s}</span></button>`).join('');
- $('#trail').innerHTML=`<a href="#source">${TALK.work}</a>`+walked.slice(-4).map((id,i,a)=>i===a.length-1?`<span>›</span><b>${C[id].s}</b>`:`<span>›</span><button data-walk="${id}">${C[id].s}</button>`).join('');
- const works=[{who:TALK.who,work:TALK.work,kind:'Talk, 48 min',p:c.p,note:c.note}].concat(c.other?[c.other]:[]);
- const tabs=['Gist','Their words','Your lens','Lines','Your response','Go deeper'];
- $('#nbody').innerHTML=`<div class="glance"><header class="gh"><h2>${c.n}</h2>${resDots(here)}</header><div id="dist">${distHTML()}</div>${c.mean?`<p class="lab">Your meaning</p><p class="say">${esc(c.mean)}</p>`:speak('mean','What this means to you')}<p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
-   <p class="acts">${here==='whole'?'<a class="btn" href="#read">Read</a>':''}<button class="btn quiet" id="openbtn" aria-expanded="${opened}">${opened?'Close':'Open'}</button><a class="btn quiet" href="#express">Express with this</a></p></div>
-  ${here==='whole'||here==='feel'?`<div class="lines"><p class="lab">Unexpected</p><h3>Wanting what happens</h3><p class="say">${esc(ITEMS.d.say)}</p><p class="who"><span>Hanne Brückl</span><span>Notes on assent</span></p><p><button class="btn quiet" data-surprise>Draw the line</button></p></div>`:''}
-  <div id="stack" ${opened?'':'hidden'}><div class="tabs" role="tablist">${tabs.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-tab="${i}">${t}</button>`).join('')}</div>
-  <div class="deck" id="deck" tabindex="0">
-   <article class="card"><p class="lab">Distillation</p><h2>${c.n}</h2><p>${c.d}</p><p class="note">${works.length} ${works.length>1?'works speak':'work speaks'} of this. ${nb.length} lines.</p></article>
-   <article class="card">${works.map(w=>`<div class="work"><p class="lab">Their words</p>${w.p.map(p=>`<blockquote class="say">${esc(p[1])}</blockquote><p class="who">${hear(p[0])}<span>${w.who}</span><button class="tiny" data-lift>Not this concept</button></p>`).join('')}<p class="who"><span>${w.work}</span><span>${w.kind}</span></p>${w.note?`<p class="lab">Distillation</p><p class="note">${w.note}</p>`:''}</div>`).join('')}</article>
-   <article class="card"><p class="lab">Through your lens</p><p>${c.lens}</p><p class="who"><span class="sample">${LENS}</span><a class="ghost" href="#distil">Change lens</a></p></article>
-   <article class="card"><p class="lab">Lines</p>${linesHTML(nb,true)}<p><button class="ghost" style="margin-left:-10px">Draw a line of your own</button></p></article>
-   <article class="card">${c.resp?`<p class="lab">Your response</p><p class="say">${esc(c.resp)}</p><p class="who"><span>11 November 2026</span></p>`:`<label class="lab" for="resp">Your response</label><textarea id="resp" placeholder="Speak or write"></textarea><p class="acts"><button class="btn" data-keep>Keep</button><span class="who">11 November 2026</span></p>`}</article>
-   <article class="card"><p class="lab">Go deeper</p>${c.q.map(q=>`<div class="q"><span>${q}</span><button class="ghost" data-sent>Send to Research</button></div>`).join('')}</article>
-  </div></div>`;
- const st=[ring,$('#nbody')];
- st.forEach(e=>{e.classList.remove('stage');e.style.setProperty('--dx',from?(from.x-50)*1.6+'px':'0');e.style.setProperty('--dy',from?(from.y-50)*1.6+'px':'0');void e.offsetWidth;e.classList.add('stage')});
- const deck=$('#deck');
- deck.addEventListener('scroll',()=>{const i=Math.round(deck.scrollLeft/(deck.clientWidth+12));document.querySelectorAll('[data-tab]').forEach((b,j)=>b.setAttribute('aria-selected',i===j))},{passive:true});
-}
-function walk(id,from){here=id;if(walked[walked.length-1]!==id){const k=walked.indexOf(id);if(k>-1)walked=walked.slice(0,k+1);else walked.push(id)}opened=false;depth=0;drawNugget(from)}
 
 /* ---------- screen 3 ---------- */
 const G=[
@@ -472,9 +484,9 @@ const G=[
 const ITEMS={};G.forEach(g=>g.items.forEach(i=>ITEMS[i.id]=Object.assign(i,{g})));
 let path=[], words={}, asked={}, pathWhy='';
 function drawExpress(){
- $('#groups').innerHTML=G.map(g=>`<section class="group"><header><h2>${g.t}</h2><p>${g.who}, ${g.src}${g.priv?' · <span class="private">Private until he agrees</span>':''}</p></header>`+g.items.map(i=>{const k=path.indexOf(i.id);return `<article class="pick" ${k>-1?'data-in':''}><header><h3>${i.c?`<a href="#nugget" data-open="${i.c}">${i.n}</a>`:i.n}</h3><button class="add" data-add="${i.id}" aria-pressed="${k>-1}" aria-label="${k>-1?'Take out of':'Add to'} the pathway"><i>${k>-1?k+1:'+'}</i></button></header>
+ $('#groups').innerHTML=G.map(g=>`<section class="group"><header><h2>${g.t}</h2><p>${g.who}, ${g.src}${g.priv?' · <span class="private">Private until he agrees</span>':''}</p></header>`+g.items.map(i=>{const k=path.indexOf(i.id);return `<article class="pick" ${k>-1?'data-in':''}><header><h3>${i.c?`<a href="#map" data-open="${i.c}">${i.n}</a>`:i.n}</h3><button class="add" data-add="${i.id}" aria-pressed="${k>-1}" aria-label="${k>-1?'Take out of':'Add to'} the pathway"><i>${k>-1?k+1:'+'}</i></button></header>
   <p class="lab">Their words</p><blockquote class="say">${esc(i.say)}</blockquote><p class="who">${/^\d/.test(i.at)?hear(i.at):`<span>${i.at}</span>`}<span>${g.who}</span></p>
-  <p class="first"><span class="k">Comes first</span>${i.first?i.first.map(f=>`<a href="#nugget" data-open="${f}">${C[f].s}</a>`).join('<span>·</span>'):i.firstText?`<span><b>${i.firstText[0]}</b></span>`:asked[i.id]?'<span>Asked Research</span>':`<span>Nothing kept yet</span><button data-askr="${i.id}">Ask Research</button>`}</p></article>`}).join('')+'</section>').join('');
+  <p class="first"><span class="k">Comes first</span>${i.first?i.first.map(f=>`<a href="#map" data-open="${f}">${C[f].s}</a>`).join('<span>·</span>'):i.firstText?`<span><b>${i.firstText[0]}</b></span>`:asked[i.id]?'<span>Asked Research</span>':`<span>Nothing kept yet</span><button data-askr="${i.id}">Ask Research</button>`}</p></article>`}).join('')+'</section>').join('');
  const n=Math.max(3,path.length);
  $('#slots').innerHTML=Array.from({length:n},(_,i)=>(i?'<u></u>':'')+`<i class="${i<path.length?'f':''}">${i+1}</i>`).join('')+(path.length?`<span>${path.map(id=>ITEMS[id].n).join(', ')}</span>`:'');
  $('#joinbtn').disabled=path.length<3;
@@ -485,9 +497,9 @@ function drawPath(){
  const miss=[];path.forEach(id=>(ITEMS[id].first||[]).forEach(f=>{if(!have.has(f)&&!miss.includes(f))miss.push(f)}));
  $('#sheetin').innerHTML=`<header><div><p class="lab">Research topic</p><h2 class="say" style="font-size:var(--t18)">${esc(topic.charAt(0).toUpperCase()+topic.slice(1))}</h2></div><button class="ghost" data-close>Close</button></header>
   <ol class="path">${path.map((id,k)=>{const i=ITEMS[id];return `<li>${k?`<div class="between">${words[k]!=null?`<input data-w="${k}" value="${esc(words[k])}" aria-label="Your words between" placeholder="Your words">`:`<button data-wadd="${k}">Your words here</button>`}</div>`:''}<div class="stop"><i>${k+1}</i><div><h3>${i.n}</h3><p class="say">${esc(i.say)}</p><p class="who"><span>${i.g.who}</span><span>${i.g.src}</span>${i.g.priv?'<span class="private">Private until he agrees</span>':''}</p></div><span class="mv"><button data-mv="${k}:-1" aria-label="Move up" ${k?'':'disabled style="opacity:.25"'}>↑</button><button data-mv="${k}:1" aria-label="Move down" ${k<path.length-1?'':'disabled style="opacity:.25"'}>↓</button></span></div></li>`}).join('')}</ol>
-  ${pathWhy?`<p class="lab">Why these, in this order</p><p class="say">${esc(pathWhy)}</p>`:speak('whyorder','Why these, in this order?')}
+  ${pathWhy?`<p class="lab">Why these, in this order</p><p class="say">${esc(pathWhy)}</p>`:''}
   ${miss.map(f=>`<p class="gap"><span><b>${C[f].n}</b> comes first and is not on this pathway.</span><button class="ghost" data-gap="${f}">Acknowledge</button></p>`).join('')}
-  <div class="forms"><p class="lab" style="flex:1 1 100%">Make a piece</p><button class="btn" data-piece="Article">Article</button><button class="btn quiet" data-piece="Reel">Reel</button><button class="btn quiet" data-piece="Words for an artwork">Words for an artwork</button></div>`;
+  <div class="forms"><p class="lab" style="flex:1 1 100%">Make a piece</p><button class="btn" data-piece="Article">Article</button><button class="btn quiet" data-piece="Instagram post">Instagram post</button><button class="btn quiet" data-piece="Workshop">Workshop</button><button class="btn quiet" data-piece="Research paper">Research paper</button></div>`;
 }
 function drawPiece(kind){
  const topic=$('#feeling').value.trim();
@@ -497,7 +509,7 @@ function drawPiece(kind){
 }
 
 /* ---------- the deep reading ---------- */
-const T=(id,t)=>`<a class="term" href="#nugget" data-open="${id}">${t}</a>`, V='Ilse Varnholt';
+const T=(id,t)=>`<a class="term" href="#map" data-open="${id}">${t}</a>`, V='Ilse Varnholt';
 const READ=[
  {h:'What it is',b:[
   'This talk rests on one claim. What you are, underneath every mood and every problem, is already complete. She calls this your Buddha nature. You do not earn it by practising and you cannot lose it by failing.',
@@ -526,20 +538,41 @@ const READ=[
   q:[['36:20',C.bypass.p[0][1],V]]}
 ];
 const STEPS=['Met it','Understand it','Practising it','Can teach it'];
-let step=1, VOICE={}, saidBack='', tried=false;
-function drawRead(){
- $('#read').innerHTML=`<header><p class="meta" style="margin:0 0 10px"><a href="#nugget" data-open="whole">‹ On the map</a><span>${V}, The ground is already whole</span><span class="sample">Sample</span></p>
-  <h1>${C.whole.n}</h1><p class="small">${C.whole.d}</p>
-  <div class="steps" role="group" aria-label="Where you are with this">${STEPS.map((t,i)=>`<button aria-pressed="${i===step}" data-step="${i}">${t}</button>`).join('')}</div>
-  <nav class="toc" aria-label="In this concept">${READ.map((r,i)=>`<a href="#read" data-jump="${i}">${r.h}</a>`).join('')}</nav></header>`+
- READ.map((r,i)=>`<section class="rsec" id="rs${i}"><h2>${r.h}</h2>${r.b.map(x=>`<p>${x}</p>`).join('')}${(r.q||[]).map(q=>`<blockquote class="say">${esc(q[1])}</blockquote><p class="who">${hear(q[0])}<span>${q[2]}</span></p>`).join('')}
-  ${r.extra==='try'?`<div class="try"><p class="lab">Try it</p><p>For one out-breath, while doing something plain like washing a cup, stop reaching for the next thing.</p><p>${tried?'<span class="heard">Kept in your practice, 11 November.</span>':'<button class="btn quiet" data-tried>I tried this</button>'}</p></div>`:''}
-  ${r.extra==='ask'?`<div class="try"><p class="lab">A question this opens</p><p>How does each tradition get someone ready to hear this?</p><p><button class="btn quiet" data-sent>Send to Research</button></p></div>`:''}
-  ${(VOICE[i]||[]).map(v=>`<div class="mine"><p class="lab">You, 11 November 2026</p><p class="say">${esc(v)}</p></div>`).join('')}
-  ${speak('voice','Add your voice here',`data-i="${i}"`)}</section>`).join('')+
- `<section class="rsec"><h2>Say it back</h2>${saidBack?`<div class="mine"><p class="lab">You, in your own words</p><p class="say">${esc(saidBack)}</p></div><p class="heard">You covered what it is. Not yet in your words: what comes first, and how it gets misused.</p>`:speak('sayback','Say this concept in your own words')}</section>
- <section class="rsec"><h2>Further down</h2><div class="down">${['feel','ordinary','bypass','eth'].map(id=>`<a href="#nugget" data-open="${id}"><b>${C[id].n}</b><span>${C[id].d}</span></a>`).join('')}</div></section>
- <section class="rsec"><h2>Pass it on</h2><p class="acts"><button class="btn" data-teach>Make a lesson from this</button><a class="btn quiet" href="#express">Use it in a piece</a></p></section>`;
+let cur=null, depth=1, step={}, believe={}, listening=false, saidBack={}, tried=false, EV={}, aiRead=false, screen='map';
+const NOTES=[{t:'It felt like calm, like everything finally went quiet.',id:'whole',sample:1},{t:'Ripe pu\'er tastes like a forest floor after rain.',id:'t2',sample:1}];
+const ev=(id,x)=>(EV[id]=EV[id]||[]).push(x);
+const quote=(q,who)=>`<blockquote class="say">${esc(q[1])}</blockquote><p class="who">${at(q[0])}<span>${who}</span></p>`;
+function openConcept(id){cur=id;depth=1;listening=false;drawConcept();const d=$('#csheet');if(!d.open)d.showModal();d.scrollTop=0}
+function drawConcept(){
+ const id=cur,c=C[id],w=workOf(id),nb=near(id),full=id==='whole',n=full?3:2;depth=Math.min(depth,n-1);
+ const notes=NOTES.filter(x=>x.id===id);
+ $('#cin').innerHTML=`<div class="chead"><button class="ghost" data-cclose>Close</button><span class="grow"></span><button class="ghost" data-listen aria-pressed="${listening}">${listening?'Pause':'Listen'}</button><button class="mic" data-gmic aria-label="Add a voice note">${MIC}</button></div>
+ ${listening?`<div><div class="lbar"><i></i></div><p class="who" style="margin-top:8px"><span>Read aloud, with ${w.who}'s own voice for the quotes</span></p></div>`:''}
+ <div id="cbar" hidden></div>
+ <div><p class="meta" style="margin:0 0 8px"><span>${c.ty}</span><span>${w.who}, ${w.t}</span><span class="sample">Sample</span></p><h1>${c.n}</h1><p class="small">${c.d}</p></div>
+ <div class="chips">${nb.map(x=>`<button class="chipn" data-open="${x.id}"><i data-k="${x.k}"></i>${C[x.id].s}</button>`).join('')}</div>
+ <div class="gh" style="padding-top:14px;border-top:1px solid var(--line)"><span class="lab">How deep</span><span class="tabs">${DEPTH.slice(0,n).map((t,i)=>`<button aria-selected="${i===depth}" data-depth="${i}">${t}</button>`).join('')}</span></div>
+ ${depth===0?'':depth===1?`<p>${MED[id]}</p>${c.p.map(q=>quote(q,w.who)).join('')}`:
+  READ.map(r=>`<section class="rsec"><h2>${r.h}</h2>${r.b.map(x=>`<p>${x}</p>`).join('')}${(r.q||[]).map(q=>quote(q,q[2])).join('')}
+  ${r.extra==='try'?`<div class="try"><p class="lab">Try it</p><p>For one out-breath, while doing something plain like washing a cup, stop reaching for the next thing.</p><p>${tried?'<span class="heard">Kept in your path, 11 November.</span>':'<button class="btn quiet" data-tried>I tried this</button>'}</p></div>`:''}
+  ${r.extra==='ask'?`<div class="try"><p class="lab">A question this opens</p><p>How does each tradition get someone ready to hear this?</p><p><button class="btn quiet" data-sent>Send to Research</button></p></div>`:''}</section>`).join('')}
+ ${full&&depth?`<section class="rsec"><h2>Where they differ</h2><div class="differ"><div><p class="lab">Ilse Varnholt</p><p>It is a view. You recognise it, after preparation.</p></div><div><p class="lab">Tomas Reuel</p><p>It is not a view at all. It is something done with the hands.</p></div><div><p class="lab">You</p><p style="color:var(--dim)">Not said yet</p></div></div></section>`:''}
+ ${id==='t5'&&depth?`<section class="rsec"><h2>Where they differ</h2><div class="differ"><div><p class="lab">Many drinkers</p><p>Ripe pu'er is a shortcut to what aged raw becomes.</p></div><div><p class="lab">Wen Dalby</p><p>It is a different tea, not a copy.</p></div><div><p class="lab">You</p><p style="color:var(--dim)">Not said yet</p></div></div></section>`:''}
+ <section class="rsec"><h2>Your path with this</h2>
+  <div class="gh">${resDots(id)}<span class="steps" style="margin:0"><button aria-pressed="${!!believe[id]}" data-believe>I hold this as true</button></span></div>
+  <div class="steps" style="margin:0" role="group" aria-label="Where you are with this">${STEPS.map((t,i)=>`<button aria-pressed="${i===(step[id]||0)}" data-step="${i}">${t}</button>`).join('')}</div>
+  <div class="pathlog">${['Met it in '+w.t].concat(EV[id]||[]).map(x=>`<p class="who"><span>11 November</span><span>${x}</span></p>`).join('')}</div>
+  ${notes.map(x=>`<div class="mine"><p class="lab">You, 11 November 2026${x.sample?', sample':''}</p><p class="say">${esc(x.t)}</p></div>`).join('')}
+  ${saidBack[id]?`<div class="mine"><p class="lab">You, in your own words</p><p class="say">${esc(saidBack[id])}</p></div><p class="heard">You covered what it is. Not yet in your words: what comes first, and how it gets misused.</p>`:speak('sayback','Say this in your own words')}</section>
+ <section class="rsec"><h2>From here</h2>${linesHTML(nb,true)}</section>
+ <section class="rsec"><h2>Pass it on</h2><p class="acts"><a class="btn" href="#express" data-cclose>Use it in a piece</a></p></section>`;
+}
+function micOpen(inSheet){const el=inSheet?$('#cbar'):$('#gbar');el.hidden=!el.hidden;if(!el.hidden){el.innerHTML=speak('note','Say it');el.querySelector('input').focus()}}
+function drawYours(){
+ $('#ynotes').innerHTML=NOTES.map(x=>`<div class="note"><p class="say">${esc(x.t)}</p><p class="who"><span>11 November 2026</span>${x.id?`<button class="tiny" data-open="${x.id}" style="color:var(--warm)">${C[x.id].n}</button>`:`<span>${x.where}</span>`}${x.sample?'<span class="sample">Sample note</span>':''}</p></div>`).join('');
+ const O=[['You describe being whole as calm and quiet. The talk says whole does not mean pleasant, and that it includes grief.','whole'],['You have noted the idea, and nothing yet on what comes first. The speaker says the order matters.','eth'],['Your tea note is about taste. Nothing in your notes says yet why piling changes the taste.','t2']];
+ $('#yai').innerHTML=aiRead?`<div class="try"><p class="lab">A reading of your notes</p><p class="who"><span class="sample">Sample</span><span>${NOTES.length} notes read against 14 concepts</span></p>${O.map(o=>`<div class="note"><p>${o[0]}</p><p><button class="tiny" data-open="${o[1]}" style="margin-left:-8px;color:var(--warm)">${C[o[1]].n}</button></p></div>`).join('')}</div>`:`<button class="btn" data-ai>Read my notes with me</button>`;
+ drawDistil();
 }
 
 /* ---------- screen 4 ---------- */
@@ -564,53 +597,40 @@ function drawDistil(){
  $('#drules').innerHTML=RULES.map(r=>`<li class="say">${esc(r)}</li>`).join('');
  $('#djoined').innerHTML=JOINED.map((j,i)=>`<li class="join" ${i?'':'style="border-top:0;padding-top:0"'}><span><b>${j[0]}</b> from ${j[1]}, ${j[2]}</span>${j[3]==='fix'?speak('rule','Why? One sentence, or leave it',`data-jn="${i}"`):j[3]?`<span class="heard">Lifted back out</span>`:`<button class="ghost" data-fixj="${i}">Correct</button>`}</li>`).join('');
 }
-document.addEventListener('submit',e=>{const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const v=f.querySelector('input').value.trim(),k=f.dataset.form;
- if(k==='looking'){if(!v)return;['eth','stab'].forEach(id=>C[id].r=Math.min(5,C[id].r+1));drawSource();$('#lookheard').hidden=false;['eth','stab'].forEach(id=>document.querySelector(`.node[data-pick="${id}"]`).classList.add('pulse'));f.querySelector('input').blur()}
- else if(k==='rule'){if(v)RULES.unshift(v);if(f.dataset.id)C[f.dataset.id].j='lifted';if(f.dataset.jn)JOINED[f.dataset.jn][3]='done';
-  if(!$('#distil').hidden)drawDistil();else f.outerHTML=`<span class="heard">${v?'Kept as a rule in <a href="#distil"><b>How I distil</b></a>.':'Done.'}</span>`}
- else if(k==='mean'){if(v){C[here].mean=v;const o=opened;drawNugget();opened=o}}
- else if(k==='whyline'){if(v){L[f.dataset.i][3]=v;drawSource()}}
- else if(k==='whyorder'){if(v){pathWhy=v;drawPath()}}
- else if(k==='voice'){if(v){(VOICE[f.dataset.i]=VOICE[f.dataset.i]||[]).push(v);drawRead()}}
- else if(k==='sayback'){if(v){saidBack=v;drawRead()}}
- else if(k==='answer'){if(v){QS[f.dataset.i].a=v;drawDistil()}}
+document.addEventListener('submit',e=>{const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const v=f.querySelector('input').value.trim(),k=f.dataset.form;if(!v)return;
+ if(k==='note'){const inS=$('#csheet').open,lab=inS?C[cur].n:{map:W().t,express:'Express',yours:'Yours'}[screen];NOTES.unshift({t:v,id:inS?cur:null,where:lab});
+  if(inS)drawConcept();else{$('#gbar').innerHTML=`<p class="heard">Kept on ${lab}. It is in Yours.</p>`;setTimeout(()=>$('#gbar').hidden=true,1600)}drawYours()}
+ else if(k==='sayback'){saidBack[cur]=v;ev(cur,'Said it back');drawConcept()}
+ else if(k==='answer'){QS[f.dataset.i].a=v;drawDistil()}
 });
 
 /* ---------- moving about ---------- */
 function show(){
- const h=(location.hash||'#source').slice(1), id=['source','nugget','read','express','distil'].includes(h)?h:'source';
+ const h=(location.hash||'#map').slice(1), id={express:'express',yours:'yours',distil:'yours'}[h]||'map';screen=id;
  document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!==id);
  document.querySelectorAll('.walk a').forEach(a=>a.getAttribute('href')==='#'+id?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
- $('#tray').hidden=id!=='express';
- if(id==='nugget')drawNugget();if(id==='distil')drawDistil();if(id==='read')drawRead();
+ $('#tray').hidden=id!=='express';document.body.classList.toggle('tray',id==='express');
+ if(id==='yours')drawYours();
  window.scrollTo(0,0);
 }
 document.addEventListener('click',e=>{
  const t=e.target.closest('button,a');if(!t)return;const d=t.dataset;
  if(d.pick){if(Date.now()-lastPtr>500)tapNode(d.pick)}
- else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource();if(!$('#nugget').hidden){const m=$('#ring .me');m.style.setProperty('--r',v);m.dataset.r=v;m.classList.remove('pulse');void m.offsetWidth;m.classList.add('pulse');t.parentNode.outerHTML=resDots(id)}}
+ else if(d.open){e.preventDefault();if($('#sheet').open)$('#sheet').close();openConcept(d.open)}
+ else if(d.work){work=+d.work;picked=W().core;drawing=false;drawSource()}
+ else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource();if($('#csheet').open)drawConcept()}
  else if(d.j){const[id,st]=d.j.split(':');C[id].j=st;drawSource()}
- else if(d.depth){depth=+d.depth;$('#dist').innerHTML=distHTML()}
- else if(d.step){step=+d.step;drawRead()}
- else if(d.jump){e.preventDefault();$('#rs'+d.jump).scrollIntoView({behavior:'smooth',block:'start'})}
- else if('tried' in d){tried=true;drawRead()}
- else if('teach' in d){t.outerHTML='<span class="heard">A lesson outline opens in Create, with your own insights in it. Create is outside this mock-up.</span>'}
  else if('draw' in d){drawing=!drawing;drawSource()}
- else if('lift' in d){const w=t.closest('.who');w.previousElementSibling.style.opacity=.45;w.insertAdjacentHTML('afterend',speak('rule','Why? One sentence, or leave it'));t.remove()}
- else if('surprise' in d){t.outerHTML='<span class="heard">Line drawn.</span>'}
- else if('keep' in d){const v=$('#resp').value.trim();if(v){const c=C[here];c.resp=v;c.r=Math.min(5,c.r+1);t.closest('.card').innerHTML=`<p class="lab">Your response</p><p class="say">${esc(v)}</p><p class="who"><span>11 November 2026</span></p><p class="heard">Resonance rose.</p>`;const m=$('#ring .me');m.style.setProperty('--r',c.r);m.dataset.r=c.r;m.classList.add('pulse');document.querySelector('.gh .res').outerHTML=resDots(here);drawSource()}}
- else if(d.lens){LENSES[lensI].t=$('#lens').value;if(d.lens==='new'){LENSES.push({n:'New lens',t:''});lensI=LENSES.length-1}else lensI=+d.lens;reread=0;drawDistil();if(d.lens==='new')$('#lens').focus()}
- else if('reread' in d){LENSES[lensI].t=$('#lens').value;reread=1;drawDistil()}
- else if(d.rr){LENSES[lensI].t=$('#lens').value;reread=+d.rr;drawDistil()}
- else if('focus' in d){$('#lens').focus()}
- else if(d.pass){const k=qShown.indexOf(+d.pass);if(qNext<QS.length)qShown[k]=qNext++;else qShown.splice(k,1);drawDistil()}
- else if(d.fixj){JOINED[d.fixj][3]='fix';drawDistil()}
- else if(d.open){here=d.open;walked=[d.open];opened=false}
- else if(d.walk){walk(d.walk,d.x?{x:+d.x,y:+d.y}:null);if(window.innerWidth<1000)$('#trail').scrollIntoView({block:'start'})}
- else if(t.id==='openbtn'){opened=!opened;$('#stack').hidden=!opened;t.textContent=opened?'Close':'Open';t.setAttribute('aria-expanded',opened);if(opened)$('#stack').scrollIntoView({behavior:'smooth',block:'nearest'})}
- else if(d.tab){const deck=$('#deck');deck.scrollTo({left:d.tab*(deck.clientWidth+12),behavior:'smooth'})}
  else if('hear' in d){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true')}
  else if('sent' in d){t.textContent='Sent';t.disabled=true}
+ else if('cclose' in d){$('#csheet').close()}
+ else if('listen' in d){listening=!listening;drawConcept()}
+ else if('gmic' in d||t.id==='gmic'){micOpen($('#csheet').open)}
+ else if(d.depth){depth=+d.depth;drawConcept()}
+ else if(d.step){step[cur]=+d.step;ev(cur,STEPS[d.step]);drawConcept()}
+ else if('believe' in d){believe[cur]=!believe[cur];if(believe[cur])ev(cur,'Held as true');drawConcept()}
+ else if('tried' in d){tried=true;ev(cur,'Tried the practice');drawConcept()}
+ else if('ai' in d){aiRead=true;drawYours()}
  else if(d.add){const k=path.indexOf(d.add);k>-1?path.splice(k,1):path.push(d.add);words={};drawExpress()}
  else if(d.askr){asked[d.askr]=true;drawExpress()}
  else if(t.id==='joinbtn'){drawPath();$('#sheet').showModal()}
@@ -620,10 +640,16 @@ document.addEventListener('click',e=>{
  else if(d.gap){t.closest('.gap').innerHTML=`<span><b>${C[d.gap].n}</b> acknowledged. It will be named in the piece.</span>`}
  else if(d.piece){drawPiece(d.piece)}
  else if('back' in d){drawPath()}
+ else if(d.lens){LENSES[lensI].t=$('#lens').value;if(d.lens==='new'){LENSES.push({n:'New lens',t:''});lensI=LENSES.length-1}else lensI=+d.lens;reread=0;drawDistil();if(d.lens==='new')$('#lens').focus()}
+ else if('reread' in d){LENSES[lensI].t=$('#lens').value;reread=1;drawDistil()}
+ else if(d.rr){LENSES[lensI].t=$('#lens').value;reread=+d.rr;drawDistil()}
+ else if('focus' in d){$('#lens').focus()}
+ else if(d.pass){const k=qShown.indexOf(+d.pass);if(qNext<QS.length)qShown[k]=qNext++;else qShown.splice(k,1);drawDistil()}
+ else if(d.fixj){JOINED[d.fixj][3]='done';drawDistil()}
 });
 document.addEventListener('input',e=>{if(e.target.dataset.w)words[e.target.dataset.w]=e.target.value});
 $('#ask').addEventListener('submit',e=>{e.preventDefault();$('#feeling').blur()});
-$('#sheet').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});
+['#sheet','#csheet'].forEach(q=>$(q).addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()}));
 window.addEventListener('hashchange',show);
 drawSource();drawExpress();show();
 </script>
