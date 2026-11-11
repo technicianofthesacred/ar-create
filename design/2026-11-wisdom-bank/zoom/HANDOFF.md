@@ -77,6 +77,16 @@ Taken in a headless browser on this machine, at phone size (390 by 844, two pixe
 - Not checked: a real phone, a screen reader, widths between 390 and 1440. The map itself is one picture and is not readable by a screen reader; the trail, search and cards are.
 - Pictures looked at: 390 wide dark at every depth on both sides, 390 light for the reading depths, 1440 dark for far, tradition and concept. 1440 light was looked at once, on a line.
 
+## Asked by the coordinating thread and not done here
+
+Six messages from the coordinating thread were read only after the page was published. Most of what they carry (plain wording, length set by understanding, the small view as a plain statement of the idea, the five-part reading order, his voice at each depth, the link to the Read screen) was already taken in from the earlier thread's handoff. Three things they ask for are not done, and this thread has passed the size at which it should stop:
+
+1. **A hand-written landing area.** A few works written in full with real care, including one book of about a hundred concepts and the topics that cross them, so that what he lands in and reads is not generated. Only twelve concept names are hand-written here; every distillation, passage and reason is generated from sentence patterns.
+2. **The first mock-ups' nine rewritten concepts, with a short map name beside a full plain name.** Not carried in. Names on this map are the full statements, which is why some are cut short at the edge.
+3. **The interaction between works' maps made large and central, and his learning marks (met, understand, practising, can teach) shown on the map.** The joins between works are there (rings on shared concepts, rays to the seven works that share most, "Also in" on a concept) but they are a detail of the Works side, not the centre of the page. Learning marks are not drawn.
+
+The reading page is not redrawn here, as the last message asked: "Open the full reading" at the Full depth links to the first mock-ups, where the Read screen lives.
+
 ## Adrian's reaction
 
 Not yet given. To be recorded here in his words.
