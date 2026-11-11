@@ -127,3 +127,13 @@ Nothing was changed on the page after this. What it means (my reading, not his w
 "Ideally these concepts are not just this one sentence, they're however long they need to be. I feel like you're consolidating them for space rather than the amount of words for a human to really understand it."
 
 What it means (my reading, not his words): the length of a distillation is set by what a person needs in order to understand it, never by the space on a card. The layout must make room for the words, not the words for the layout. The one-line "Glance" is only a way in; the real distillation is as long as it needs to be, and the concept page's "one line saying what it means" is wrong on this point. Nothing was changed on the page after this.
+
+**11 November, after seeing one concept written at full length in the conversation, in his words:**
+
+"That would be a great expansion, uh the details of what it is. That's the medium view, but we still need the small view. I like the idea of the expansion with something of that level as well though. But the one sentence small view is not not landing yet."
+
+What it means (my reading, not his words): the three-paragraph version is right for the medium view. The small view is still needed and is still unsolved: the one-line versions shown so far do not land. Three styles of small view were offered to him in the conversation for the same concept (a plain statement, a concrete picture, the question it answers); his choice is awaited. Nothing was changed on the page.
+
+The full-length sample he approved as the medium view, for the concept first named "The false version":
+
+> Using "it's all perfect" to avoid pain. The teaching that everything is already whole can be misused. Someone in pain can say "everything is perfect" as a way of not feeling the pain. It sounds like the teaching, but it is doing the opposite job: it shuts the feeling out instead of letting it in. The speaker gives a simple way to tell the two apart. Check your body. If you are saying "it's all perfect" while your jaw is tight and your belly is clenched, you are using the words as a lid. The real version has room for the pain. You can feel all of it and still find that nothing is missing. This matters because the idea "everything is perfect" is the one most likely to be picked up and repeated without the rest. On its own it can become an excuse not to feel, or not to care.
