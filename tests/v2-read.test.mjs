@@ -47,7 +47,7 @@ test('the shared helpers Write leaves for Read and Check: locate and bar',async(
  const {locate,bar}=w.v2.shared.write;
  assert.equal(typeof locate,'function');assert.equal(typeof bar,'function');
  const found=plain(await locate('s1','o1'));
- assert.deepEqual(Object.keys(found).sort(),['bindingId','form','forms','native','piece','standing']);
+ assert.deepEqual(Object.keys(found).sort(),['bindingId','form','forms','native','piece','standing','story']);
  assert.equal(found.bindingId,'b1');assert.equal(found.native,true);assert.equal(found.piece,'o1');assert.equal(found.form.key,'out:o1');
  assert.equal(plain(await locate('s1',undefined)).form.id,'o1','no piece named opens the first Article');
  assert.equal(plain(await locate('s1','nope')).form,null,'a piece that is not an Article of the subject is not opened');
