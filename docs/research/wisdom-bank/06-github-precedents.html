@@ -1,0 +1,64 @@
+<title>Open Source Map Projects</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one narrow reading column, example cards first, findings after. */
+:root{--bg:#f6f7f5;--fg:#1d2421;--muted:#5a645f;--card:#ffffff;--line:#d9dfdb;--accent:#0b6b5c;--warn-bg:#fff3d6;--warn-fg:#5c4300;--head:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--fg:#e6ebe8;--muted:#a1ada7;--card:#1a211e;--line:#2c3733;--accent:#5fd0bb;--warn-bg:#3a2f12;--warn-fg:#f2dca0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121715;--fg:#e6ebe8;--muted:#a1ada7;--card:#1a211e;--line:#2c3733;--accent:#5fd0bb;--warn-bg:#3a2f12;--warn-fg:#f2dca0;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:46rem;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--head);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:1.9rem}h2{font-size:1.3rem;margin-top:12px}h3{font-size:1.05rem}
+p,ul{margin:0}ul{padding-left:1.2rem;display:flex;flex-direction:column;gap:6px}
+.lead{color:var(--muted)}
+.warn{background:var(--warn-bg);color:var(--warn-fg);padding:12px 14px;border-radius:8px;font-size:.95rem}
+.ex{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.ex dl{margin:0;display:grid;grid-template-columns:5.5rem 1fr;gap:4px 10px;font-size:.93rem}
+.ex dt{color:var(--muted)}.ex dd{margin:0;min-width:0}
+.open{display:inline-block;align-self:flex-start;color:var(--accent);font-weight:600;text-decoration:none;border:1px solid var(--accent);border-radius:6px;padding:6px 12px}
+.open+.open{margin-left:8px}
+a{color:var(--accent)}a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.links{display:flex;flex-wrap:wrap;gap:8px}.links .open+.open{margin-left:0}
+.tag{font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@600&display=swap">
+<main>
+<header><p class="tag">Wisdom bank, research, 11 November 2026</p><h1>Open source projects that map ideas</h1><p class="lead">Ten GitHub projects, with a link to each. Open the live ones first: the Philosophy Web and the nf-metro playground.</p></header>
+<p class="warn">I read each project's README from a read only copy and ran nothing. I could not open any live site, so how a map looks or feels is not checked. Star counts are from GitHub on 11 November 2026.</p>
+<h2>The projects</h2>
+<section class="ex"><h3>1. The Philosophy Web (25 stars)</h3><p>234 philosophers and 478 lines of influence in one picture. It says nobody is placed by hand. Hover lights a thinker's neighbours and fades the rest, and click opens a side panel with every connection in and out. Lines are solid for influenced, dashed for critiqued, dotted for responded to.</p><dl><dt>Borrow</dt><dd>Hover fade, a side panel listing every connection, three line styles. The source is plain text, one block per thinker.</dd><dt>Avoid</dt><dd>One field of 234 is its size. It does not say how it copes with thousands.</dd></dl><div class="links"><a class="open" href="https://thephilosophyweb.com/" target="_blank" rel="noopener">Open the live map</a><a class="open" href="https://github.com/MichaelMillerman/philosophyweb" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>2. nf-metro (74 stars)</h3><p>Draws transit style maps from a short text file. Each route is a coloured line with stations. Made for software pipelines, not ideas. Tap a line in the legend to isolate it and zoom to it. It says its playground runs in the browser with no install.</p><dl><dt>Borrow</dt><dd>Isolate one line from the legend. Lines declared in plain text. A quick way to draw an invented pathway for a mock-up.</dd><dt>Avoid</dt><dd>Built for one flow left to right. Many lines through one stop is not its case, as far as the README shows.</dd></dl><div class="links"><a class="open" href="https://seqeralabs.github.io/nf-metro/latest/playground/" target="_blank" rel="noopener">Open the playground</a><a class="open" href="https://seqeralabs.github.io/nf-metro/latest/gallery/" target="_blank" rel="noopener">Gallery</a><a class="open" href="https://github.com/seqeralabs/nf-metro" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>3. map4sci (4 stars)</h3><p>Research code for large graphs with semantic zoom. Every connection carries a level from 1 to 7, where lower means more important, so zooming out draws only the strongest.</p><dl><dt>Borrow</dt><dd>Give every connection a level. It matches your far, closer, closest idea.</dd><dt>Avoid</dt><dd>Research code. I found no live demo.</dd></dl><div class="links"><a class="open" href="https://github.com/cns-iu/map4sci" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>4. Hyper-Knowledge (92 stars)</h3><p>Builds graphs where one relation can join many things at once, with the source of each. One offline page with a whole structure view where each relation is a capsule around its members, and a reader that shows one relation at a time.</p><dl><dt>Borrow</dt><dd>Drawing a relation as a capsule around what it joins. Reading one relation at a time.</dd><dt>Avoid</dt><dd>It joins many things. It does not join a relation to another relation.</dd></dl><div class="links"><a class="open" href="https://hanxiangmin.github.io/Hyper-Knowledge/latest/" target="_blank" rel="noopener">Open the docs</a><a class="open" href="https://github.com/hanxiangmin/Hyper-Knowledge" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>5. Eusebius (1 star)</h3><p>A research environment with four ways in: time, place, relation, evidence. Its rule is no bare claims. Every claim carries a confidence, a basis, a status and a source it read. AI suggestions stay apart from verified facts until a human acts.</p><dl><dt>Borrow</dt><dd>Keeping proposals apart until a person decides. Its status file says a relation can target a claim.</dd><dt>Avoid</dt><dd>Young, and its 15 September status says nothing is marked verified yet. I did not read its schema.</dd></dl><div class="links"><a class="open" href="https://github.com/iamgabrielcunha/eusebius" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>6. WEFT (0 stars)</h3><p>A small set of typed links between notes in a Markdown vault, so an agent can walk them. A draft. Its docs page shows the schema as a curated diagram with click to focus.</p><dl><dt>Borrow</dt><dd>Reuse standard link kinds and add your own only where it means more than related. A curated layout stays readable.</dd><dt>Avoid</dt><dd>A draft with the relation layer still pending.</dd></dl><div class="links"><a class="open" href="https://dhcraft.org/weft/" target="_blank" rel="noopener">Open the docs</a><a class="open" href="https://github.com/DigitalHumanitiesCraft/weft" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>7. Argdown (1,058 stars)</h3><p>A short text syntax for arguments. The map is drawn while you type, works inside Markdown, and exports to an image or web page.</p><dl><dt>Borrow</dt><dd>Writing connections as plain text that becomes the map, so you and an agent share one entrance.</dd><dt>Avoid</dt><dd>Built for pro and con arguments. I could not check whether a relation can target a relation.</dd></dl><div class="links"><a class="open" href="https://argdown.org/sandbox/html" target="_blank" rel="noopener">Open the sandbox</a><a class="open" href="https://github.com/argdown/argdown" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>8. ConceptLoom (203 stars)</h3><p>An agent workflow that finds what you know, proposes a short path, and teaches one connection at a time.</p><dl><dt>Borrow</dt><dd>Walking one connection at a time with a check. It fits your pathways.</dd><dt>Avoid</dt><dd>It is not a map you look at.</dd></dl><div class="links"><a class="open" href="https://github.com/Zproger/ConceptLoom" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>9. LLMapper (103 stars)</h3><p>A script that asks a model to draw a concept map of a Wikipedia page. Its own README says the map is different each time.</p><dl><dt>Borrow</dt><dd>A warning about maps made by a model instead of by you.</dd><dt>Avoid</dt><dd>It calls itself a toy.</dd></dl><div class="links"><a class="open" href="https://github.com/jorgearango/llmapper" target="_blank" rel="noopener">Code</a></div></section>
+<section class="ex"><h3>10. HyperNetX (722 stars)</h3><p>A Python library from a US national lab for analysing and drawing hypergraphs.</p><dl><dt>Borrow</dt><dd>A reference for set shaped links.</dd><dt>Avoid</dt><dd>Nothing to adopt. It serves researchers.</dd></dl><div class="links"><a class="open" href="https://github.com/pnnl/HyperNetX" target="_blank" rel="noopener">Code</a></div></section>
+<p>Also seen, from search descriptions only: <a href="https://github.com/VisualDataWeb/WebVOWL" target="_blank" rel="noopener">WebVOWL</a> draws ontologies, and its README warns that its old web address now belongs to someone else. An Obsidian plugin, <a href="https://github.com/Sanqui/obsidian-persistent-graph" target="_blank" rel="noopener">persistent graph</a>, exists only to save node positions, so people dislike a graph that rearranges itself.</p>
+<h2>What these add</h2>
+<ul>
+<li><strong>Levels on connections make a far view possible.</strong> map4sci puts it in the data, so the far view draws only the strongest connections.</li>
+<li><strong>Isolating one line is a real feature.</strong> nf-metro does it from the legend, and it is the transit picture's most useful move.</li>
+<li><strong>Hover fade and a side panel</strong> keep a big picture readable without hiding it.</li>
+<li><strong>The source is a short text file</strong> in four of these. That suits equal entrances for you and agents.</li>
+<li><strong>Provenance on every claim</strong> matches your exact words rule.</li>
+<li><strong>None draws a connection between connections.</strong> The closest are Hyper-Knowledge's capsules and Eusebius's relation that targets a claim.</li>
+</ul>
+<h2>What to test next</h2>
+<ul>
+<li>Put one invented pathway through the nf-metro playground and open the result on your phone.</li>
+<li>In a mock-up, give every connection a level and check the far view stays readable with a few hundred invented concepts.</li>
+<li>Try the capsule idea for a pattern that joins several connections.</li>
+</ul>
+<h2>What I could not verify</h2>
+<ul>
+<li>Any live site, how it looks, or how it feels on a phone.</li>
+<li>Whether nf-metro copes with many lines through one stop, and whether its playground works as described.</li>
+<li>How the Philosophy Web behaves at thousands of nodes.</li>
+<li>How Eusebius and Argdown handle a relation that points at a relation.</li>
+<li>A live demo for map4sci.</li>
+<li>The search was about nine queries. Obsidian and Logseq plugins, Kumu style tools and other maps may exist that I did not find.</li>
+</ul>
+</main>
