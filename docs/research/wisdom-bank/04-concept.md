@@ -2,6 +2,13 @@
 
 11 November 2026. Written after a short interview with Adrian, from [the synthesis](03-synthesis.md) and [the inquiry plan](../../plans/2026-11-11-09-wisdom-bank-inquiry.md). Nothing here is designed or built. The next thread makes three mock-ups from this page.
 
+## Corrections since this page was written
+
+Added by the coordinating thread on 11 November 2026, from what Adrian said to the mock-ups thread after seeing the first screens. Where the page below disagrees with these, these stand.
+
+1. **Scale and zoom come first.** "Yes, this is in the direction, but think of this having hundreds of thousands of units of data. Not just a few. Maybe it will take a while to get there, but it needs to be scalable. And we need to design it with this in mind. That means the zooming and the navigation and the zooming out and zooming in and honing in on things are the first and foremost primary most important things." So the whole map and its depths are the main design work, not a later study. See [plan 12](../../plans/2026-11-11-12-wisdom-bank-zoom-brief.md).
+2. **A distillation has depths; it is not one line.** "The distillation is generally gonna be more than one sentence. These are gonna be multi-chapter concepts or larger concepts that should be not just one thing. There's a short summary that can be glanced at, but then that summary goes to something a bit more medium and then that goes to something even a bit bigger. So just as we can zoom on the massive concept map, we can zoom in and out of the level of the distillation." So wherever this page says a nugget has "one line" of distillation, read: a glance, then a medium reading, then a full one, and zooming applies to the distillation as it does to the map. Each depth is still labelled as a distillation, and the exact words stay beneath all of them.
+
 ## The whole idea in one minute
 
 The wisdom bank is the Research station of AR Create. It distils each talk or book you love into its concepts, keeps the exact words inside each one, shows how the concepts connect, and helps you use them. Follow one example from start to finish:
