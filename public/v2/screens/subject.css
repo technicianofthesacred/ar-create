@@ -237,7 +237,7 @@ dialog.subj-sheetdlg{width:min(560px,100%)}
  .subj .subj-head h1{white-space:normal}
  .subj .subj-sp{display:none}
  .subj .subj-dir{max-width:100%;flex:1 1 100%}
- .subj .subj-dir span{white-space:normal}
+ .subj .subj-dir span{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}
  .subj .subj-work{grid-template-columns:minmax(0,1fr)}
  .subj .subj-steps{position:static}
  .subj .subj-step{min-height:0}

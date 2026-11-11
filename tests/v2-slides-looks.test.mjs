@@ -40,7 +40,7 @@ async function mountScreen(file, answers, params={}, query={}) {
  w.fetch=()=>Promise.reject(new Error('no fetch'));
  w.v2={screen:d=>{def=d;},href:(r,p={},q)=>'#/'+r.replace(/:(\w+)/g,(_,k)=>p[k])+(q?'?'+new URLSearchParams(q):''),
   call:async(name,input={})=>{calls.push({name,input});const a=answers[name];if(a===undefined)throw Object.assign(new Error('Unknown '+name),{kind:'refused'});return typeof a==='function'?a(input):JSON.parse(JSON.stringify(a));},
-  expect:r=>({expectedRevision:r?.revision??0,...(r?.hash?{expectedHash:r.hash}:{})}),isHuman:()=>true,actorName:a=>a,brand:()=>{},
+  expect:r=>({expectedRevision:r?.revision??0,...(r?.hash?{expectedHash:r.hash}:{})}),isHuman:()=>true,actor:()=>'human:adrian',actorName:a=>a,brand:()=>{},
   ui:{esc,icon:()=>'',ring:()=>'',notBuilt:t=>'<p data-not-built>'+esc(t)+'</p>',say:t=>{messages.push(t);return ()=>{};},undo:t=>{messages.push(t);},reorder:()=>()=>{},sheet:()=>({})}};
  w.eval(read(file));
  const el=w.document.getElementById('main');el.innerHTML=def.render({});
@@ -105,7 +105,10 @@ test('a photograph for a slide is one of the plan\'s own, set through instagram.
 test('a plan with no Carousel says so and points to Advanced', async () => {
  const plan=planOf();delete plan.layouts.carousel;
  const {doc}=await mountScreen('slides.js',commonAnswers(plan),{id:plan.id});
- assert.ok(doc.querySelector('[data-not-built]'));assert.ok(doc.querySelector('a[href*="instagram="]'));
+ const empty=doc.querySelector('[data-sl-empty]');assert.ok(empty,'an empty plan gets its own page');
+ assert.match(empty.textContent,/No slides have been laid out for this Carousel yet\. An assistant lays them out once a story is chosen\./);
+ assert.ok(empty.querySelector('a[href*="instagram="]'),'the way forward that exists');assert.doesNotMatch(empty.textContent,/Not built yet/);
+ const css=fs.readFileSync(path.join(repo,'public/v2/screens/slides.css'),'utf8');assert.match(css,/\.sl \.sl-empty\{[^}]*padding:[^}]*var\(--v2-gutter\)/,'it sits inside the page gutters, not against the edge');
 });
 
 test('Looks shows a tab per look, its colours with role names, its rules and its assets', async () => {

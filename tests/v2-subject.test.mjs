@@ -418,3 +418,128 @@ test('topic wording: a question stays his own words, others keep the prefix; kep
  assert.equal(S.topicNote('1 research topic on this material',undefined),'1 research topic on this material');
  assert.equal(S.topicNote('1 research topic on this material',{error:true,list:[]}),'1 research topic on this material');
 });
+
+// ---------- the small fixes of 11 November: the header sentence, and a Carousel that is not yet laid out ----------
+const CONCEPT=(adopted,thoughts='')=>'# Concept\n\n## Author thoughts \u2014 supplied verbatim\n\n'+thoughts+(adopted?'\n\n## Adopted human direction \u2014 explicit\n\n'+adopted:'')+'\n\n## AI interpretation \u2014 provisional\n\nA provisional reading.\n\n## Suggestions \u2014 unadopted\n\nTry another angle.\n\n## Selected Library passages \u2014 references, not approval\n\n';
+
+test('the sentence beside a subject\'s name is only his: the dish he named, else the words he adopted, whatever shape the record has',()=>{
+ // The whole concept record: only the adopted words come out, never the headings or the provisional parts.
+ assert.equal(S.adoptedWords(CONCEPT('One line, drawn slowly.','My own thoughts.')),'One line, drawn slowly.');
+ assert.equal(S.adoptedWords(CONCEPT('One line.\n\nAnd then another, kept.')),'One line. And then another, kept.','whitespace is laid flat for the line, nothing is cut');
+ // No adopted words yet: nothing, and never his thoughts or an assistant's reading.
+ assert.equal(S.adoptedWords(CONCEPT('','Only my thoughts.')),'');
+ assert.equal(S.adoptedWords(CONCEPT('')),'');
+ // An empty record and a missing one.
+ for(const none of ['',null,undefined,'   \n '])assert.equal(S.adoptedWords(none),'');
+ // An old or hand-written record that is one plain paragraph is his sentence as it stands.
+ assert.equal(S.adoptedWords('A short piece about tea.\nCalm and exact.'),'A short piece about tea. Calm and exact.');
+ // Markers the app keeps in a record are not words.
+ assert.equal(S.adoptedWords('<!-- ar-create:direction-choices:v1 {"a":1} -->\nA plain direction.'),'A plain direction.');
+ assert.equal(S.adoptedWords(CONCEPT('Kept.')+'\n\n<!-- ar-create:direction-plan:v1 -->\n## Planning intent\n```json\n{"title":"x"}\n```\n<!-- /ar-create:direction-plan:v1 -->'),'Kept.');
+ // The real blocks the app appends (choices, planning intent) are data, wrapped in markers: none of it is words.
+ const BLOCK='\n\n<!-- ar-create:direction-choices:v1 -->\n```json\n{"schema":1,"events":[]}\n```\n<!-- /ar-create:direction-choices:v1 -->';
+ assert.equal(S.adoptedWords('Tea at dawn, slowly.'+BLOCK),'Tea at dawn, slowly.');
+ assert.equal(S.adoptedWords(CONCEPT('Kept.')+BLOCK),'Kept.');
+ assert.equal(S.adoptedWords('Tea.\n\n<!-- ar-create:direction-plan:v1 -->\n## Planning intent\n```json\n{"title":"x"}\n```\n<!-- /ar-create:direction-plan:v1 -->'),'Tea.');
+ // His own headings are his words, in a plain paragraph and inside the adopted section.
+ assert.equal(S.adoptedWords('Suggestions about tea\n\n## Suggestions about tea, mine\n\nShade first.'),'Suggestions about tea ## Suggestions about tea, mine Shade first.');
+ assert.equal(S.adoptedWords(CONCEPT('# My line\n\nSlowly.')),'# My line Slowly.');
+ // Edit starts from his paragraphs as they were.
+ assert.equal(S.adoptedRaw(CONCEPT('One.\n\nTwo.')),'One.\n\nTwo.');
+ // A hand-written record with the headings in another order still gives only the adopted section.
+ assert.equal(S.adoptedWords('# Concept\n\n## Author thoughts \u2014 supplied verbatim\n\nNot this.\n\n## Adopted human direction \u2014 explicit\n\nFirst.\n\n## AI interpretation \u2014 provisional\n\nNor this.'),'First.');
+ // The dish he named wins; it is his exact sentence.
+ assert.equal(S.sentenceOf({forming:{named:{text:'  The dish, as said.  '}}},{body:CONCEPT('Other words.')}),'The dish, as said.');
+ assert.equal(S.sentenceOf({forming:{named:'A string dish.'}},{body:''}),'A string dish.');
+ assert.equal(S.sentenceOf({forming:{named:null}},{body:CONCEPT('From the direction.')}),'From the direction.');
+ assert.equal(S.sentenceOf(null,{body:CONCEPT('')}),'');
+ assert.equal(S.sentenceOf(null,null),'');
+ // The line never says a heading word of the record.
+ assert.doesNotMatch(S.sentenceOf(null,{body:CONCEPT('Words.','Thought.')}),/Concept|Author thoughts|AI interpretation|Suggestions/);
+});
+
+test('a subject whose dish is named shows his sentence in the header, never the stored record; a new Carousel says what each waiting step waits for and offers Advanced',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['a-single-line','the-first-cup']});
+ const id='demo-a-single-line',actor={'Content-Type':'application/json','X-AR-Actor':'agent:claude-code','X-AR-Client':'http'},uuid=()=>crypto.randomUUID();
+ const post=async(p,b)=>{const r=await fetch(base+p,{method:'POST',headers:actor,body:JSON.stringify({operationId:uuid(),...b})});const v=await r.json();assert.ok(r.ok,p+' '+JSON.stringify(v));return v;};
+ const board=await get(base,'/api/simmer/board?subject='+id);
+ await post('/api/simmer/dish',{subject:id,sentence:'One line, drawn slowly, and what it asks of the hand.',said:'typed',expectedRevision:board.revision,expectedHash:board.hash});
+ const stored=(await get(base,'/api/study/human-direction?parentStudyId='+id)).body;
+ assert.match(stored,/^# Concept/,'the stored record is the whole concept record');
+ const plan=await post('/api/instagram/plan',{subject:id,title:'A single line',material:{transcripts:[],photos:[]}});
+ {const {doc}=await page(base,'#/subject/'+id);
+  await until(()=>doc.querySelector('.subj-dir span')&&doc.querySelector('.subj-row'));
+  assert.equal(doc.querySelector('.subj-dir span').textContent,'One line, drawn slowly, and what it asks of the hand.');
+  assert.doesNotMatch(doc.querySelector('.subj-head').textContent,/# Concept|Author thoughts|Adopted human direction/);
+  // The record itself is untouched by showing it.
+  assert.equal((await get(base,'/api/study/human-direction?parentStudyId='+id)).body,stored);
+  // The step he is asked to open shows the same words in the dish step, and Edit starts from them.
+  doc.querySelector('.subj-row[data-step="dish"]>[data-subj-step]').click();
+  await until(()=>doc.querySelector('.subj-quote.big'));
+  assert.equal(doc.querySelector('.subj-quote.big').textContent,'One line, drawn slowly, and what it asks of the hand.');
+  doc.querySelector('[data-subj-dishedit]').click();
+  assert.equal(doc.querySelector('[data-subj-dishtext]').value,'One line, drawn slowly, and what it asks of the hand.');}
+ // The Carousel: nothing waits without saying what for, and no step opens the bare studio.
+ {const {doc}=await page(base,'#/subject/'+id+'?form=ig:'+plan.id+'&step=story');
+  await until(()=>doc.querySelector('[data-subj-panel] [data-subj-waiting]'));
+  const panel=doc.querySelector('[data-subj-panel]');
+  assert.match(panel.querySelector('[data-subj-waiting]').textContent,/^An assistant proposes the stories from your words and photographs\. You choose one\.$/);
+  assert.equal(sectionOf(panel.querySelector('a[data-subj-handoff="story"]').getAttribute('href')),'arrange','the way forward that exists');
+  assert.equal(panel.querySelector('a[href*="slides/"]'),null,'no slide studio before there are slides');
+  doc.querySelector('.subj-row[data-step="slides"]>[data-subj-step]').click();
+  await until(()=>doc.querySelector('[data-subj-panel] [data-subj-waiting]')?.textContent.startsWith('The slides wait'));
+  assert.ok(doc.querySelector('[data-subj-panel] [data-subj-step="story"]'),'it still offers Go to the story');
+  assert.equal(sectionOf(doc.querySelector('[data-subj-panel] a[data-subj-handoff="slides"]').getAttribute('href')),'arrange');
+  assert.equal(doc.querySelector('[data-subj-panel] a[href*="slides/"]'),null);
+  doc.querySelector('.subj-row[data-step="posttext"]>[data-subj-step]').click();
+  await until(()=>doc.querySelector('[data-subj-panel] h2')?.textContent==='The post text');
+  assert.equal(doc.querySelector('[data-subj-panel] a[href*="slides/"]'),null,'the post text step does not open the studio either');
+  assert.ok(doc.querySelector('[data-subj-panel] [data-subj-step="slides"]'),'it says what it waits for with a way there');}
+});
+
+test('a stored direction that is only the app\'s direction-choices block, however it is written, gives no header sentence and no raw text',()=>{
+ const JSON_BLOCK='{"schema":1,"events":[{"action":"select","angle":"Slow tea"}]}';
+ const shapes=[
+  '<!-- ar-create:direction-choices:v1 -->\n```json\n'+JSON_BLOCK+'\n```\n<!-- /ar-create:direction-choices:v1 -->',
+  '<!-- ar-create:direction-choices:v1 -->\n'+JSON_BLOCK,
+  '<!-- ar-create:direction-choices:v1 -->\n```json\n'+JSON_BLOCK+'\n```\n',
+  '\n\n<!-- ar-create:direction-choices:v1 -->'+JSON_BLOCK+'\n<!-- /ar-create:direction-choices:v1 -->\n',
+ ];
+ for(const body of shapes){
+  assert.equal(S.adoptedWords(body),'',body);
+  assert.equal(S.sentenceOf(null,{body}),'');
+  assert.equal(S.sentenceOf({forming:{named:{text:'The dish he named.'}}},{body}),'The dish he named.','his named dish still wins');
+ }
+ // His own sentence next to the block is kept, and only it.
+ const mixed='Tea at dawn.\n\n'+shapes[0];
+ assert.equal(S.sentenceOf(null,{body:mixed}),'Tea at dawn.');
+ assert.doesNotMatch(S.sentenceOf(null,{body:mixed}),/<!--|\{|json/);
+});
+
+test('a stored concept record with headings and thoughts but no adopted words gives no header sentence and no heading marks',()=>{
+ const full='# Concept\n\n## Author thoughts — supplied verbatim\n\nI keep thinking about the steam.\n\n## AI interpretation — provisional\n\nA reading.\n\n## Suggestions — unadopted\n\nAn idea.\n\n## Selected Library passages — references, not approval\n\n';
+ const bare='# Concept\n\n## Author thoughts\n\nI keep thinking about the steam.\n\n## AI interpretation\n\nA reading.\n';
+ const choices='\n\n<!-- ar-create:direction-choices:v1 -->\n```json\n{"schema":1,"events":[]}\n```\n<!-- /ar-create:direction-choices:v1 -->';
+ for(const body of [full,bare,full+choices,'# Concept\n\n## Author thoughts - supplied verbatim\n\nSteam.\n']){
+  const line=S.sentenceOf(null,{body});
+  assert.equal(line,'',JSON.stringify(body));
+  assert.doesNotMatch(line,/^#|<!--|\{/);
+ }
+ // With his adopted words the line is those words alone, in either heading style.
+ assert.equal(S.sentenceOf(null,{body:'# Concept\n\n## Author thoughts\n\nSteam.\n\n## Adopted human direction\n\nSlow tea, said plainly.\n\n## AI interpretation\n\nA reading.'}),'Slow tea, said plainly.');
+ assert.equal(S.sentenceOf(null,{body:full.replace('## AI interpretation','## Adopted human direction — explicit\n\nSlow tea.\n\n## AI interpretation')+choices}),'Slow tea.');
+});
+
+test('every header reads his sentence through the one reader and shows no stored record text',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['a-single-line']});
+ const id='demo-a-single-line';
+ // Stand in for the two stored shapes: the screen reads the direction record through the same command it always used.
+ const src=fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8');
+ assert.match(src,/sentenceOf\(ok\(st\.rec\.board\)\?st\.rec\.board:null,d\)/,'the header goes through the one sentence reader');
+ assert.doesNotMatch(src,/String\(d\.body\|\|''\)/,'no place shows a stored body as it is');
+ const {doc}=await page(base,'#/subject/'+id);
+ await until(()=>doc.querySelector('.subj-head'));
+ assert.doesNotMatch(doc.querySelector('.subj-head').textContent,/<!--|"schema"|^#|# Concept|Author thoughts/);
+});

@@ -36,7 +36,8 @@
  const msgArea=()=>area||=doc.getElementById('v2-messages');
  /** A plain message. tone: info | good | warn | bad. Returns a function that clears it. */
  function say(message,{tone='info',timeout=tone==='bad'||tone==='warn'?0:6000,action=null}={}){
-  const box=msgArea();if(!box)return ()=>{};clearTimeout(timer);
+  // A modal sheet covers the page, so a message for something done inside it shows inside it.
+  const open=[...doc.querySelectorAll('dialog.v2-sheet[open]')].pop(),box=open?.querySelector('[data-v2-sheet-msgs]')||msgArea();if(!box)return ()=>{};clearTimeout(timer);
   const row=doc.createElement('p');row.className='v2-msg';row.dataset.tone=tone;
   const text=doc.createElement('span');text.textContent=String(message||'');row.append(text);
   if(action){const b=doc.createElement('button');b.type='button';b.className='v2-ghost';b.innerHTML=(action.icon?icon(action.icon):'')+esc(action.label);b.addEventListener('click',()=>{try{action.run();}finally{clear();}});row.append(b);}
@@ -52,7 +53,7 @@
      node. Returns {el, body, close}. Escape and the backdrop close it; focus returns to where it was. */
  function sheet({title,body='',label,onClose,close:closeButton=true}={}){
   const opener=doc.activeElement,d=doc.createElement('dialog');d.className='v2-sheet';d.setAttribute('aria-label',label||title||'Sheet');
-  d.innerHTML=`<div class="v2-sheet-in"><header><h2 tabindex="-1">${esc(title||'')}</h2>${closeButton?`<button type="button" class="v2-ghost v2-icon-btn" data-v2-close aria-label="Close">${icon('close')}</button>`:''}</header><div class="v2-sheet-body"></div></div>`;
+  d.innerHTML=`<div class="v2-sheet-in"><header><h2 tabindex="-1">${esc(title||'')}</h2>${closeButton?`<button type="button" class="v2-ghost v2-icon-btn" data-v2-close aria-label="Close">${icon('close')}</button>`:''}</header><div class="v2-sheet-msgs" data-v2-sheet-msgs role="status" aria-live="polite"></div><div class="v2-sheet-body"></div></div>`;
   const content=d.querySelector('.v2-sheet-body');if(typeof body==='string')content.innerHTML=body;else if(body)content.append(body);
   let done=false;const close=()=>{if(done)return;done=true;try{d.close();}catch{}d.remove();try{onClose?.();}finally{opener?.focus?.({preventScroll:true});}};
   d.addEventListener('click',e=>{if(e.target===d||e.target.closest('[data-v2-close]'))close();});
