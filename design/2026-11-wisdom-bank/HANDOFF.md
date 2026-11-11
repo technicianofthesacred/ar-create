@@ -85,3 +85,9 @@ One new clickable mock-up where zooming is the whole screen, and the four screen
 - **Never lost:** it opens where he last was, a small trail shows the way back out, and brightness tells him where to look at every depth.
 - **Filled to feel large:** invented sample data, a few thousand concepts, so pinch, drag and fly can be judged honestly.
 - **Added after his words on distillation:** at every depth of the map, the words read at the matching depth of distillation. Far out a glance, closer the medium reading, closest the full one with the exact words under it.
+
+**11 November, with two screenshots (the lines panel of "Already whole" and the card of "The false version"), in his words:**
+
+"Also on your UI UX You're not using proper Separation or formatting so all the words blend in together even though you've changed fonts and all that, they're not working in a way that I can Really feel the separation and feel calm. I feel like I'm having to sort your words with my head rather than enjoy reading."
+
+What was done about it, on all four screens: every card now reads in groups, tight inside a group and open between groups. Their words sit on their own inset surface, so a quote is seen as a different thing before it is read. Each line to a neighbour is one row with a hairline above it, the neighbour's name on the left and the kind of line small on the right, with the reason beneath. The distillation is in full ink, no longer dimmed. Waiting for his eye on whether it now feels calm. A rule for the next thread: separation must come from space and surface, not from changing the typeface or the colour of the label.
