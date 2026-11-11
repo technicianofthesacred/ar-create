@@ -79,6 +79,6 @@ The rules in `docs/plans/2026-11-11-direction-d-build.md` ("Rules for every work
 | 2 A fuller demo | Sonnet | director | In. `npm run demo:fill` makes 24 invented subjects at every stage; `-- --large` makes 150 |
 | 3 Home | | | |
 | 4 Subject | | | |
-| 5 Slides and Looks | | | |
+| 5 Slides and Looks | Sonnet | Opus | In. The studio and the Looks page work end to end on the commands, by mouse, touch and keys; sized to the mock-up after review; waits for Adrian's eyes. Words on a slide are read-only here |
 | 6 Research | | | |
 | 7 Write and the rest | | | |
