@@ -119,3 +119,18 @@ Build:
    from the sheet shows too if the screen lists topics).
 4. The demo cannot make a transcript. Say in your report exactly which of these states you saw against the real demo
    server and which only against a stub, so it can be checked on Adrian's Mac.
+
+## After the first review (11 November)
+
+Both parts were built by Sonnet and reviewed by Opus; a Haiku checker measured the sheet against the sample. Sent
+back once, to fresh builders:
+
+- **Sheet**: Done and the done link dropped unsaved work; a second Escape hid the sheet with the microphone live; a
+  lost answer said "Nothing was changed" and a retry saved a second copy; an assistant's question could save its
+  note twice; "added to" the subject was said when every attach was refused. Against the sample: tiles 92 to 96 high
+  where the sample has 79.6, the destination's name not bold, the done row's height and icon, the phone's Done button.
+- **Subject**: a test that assumed `v2.capture` was missing; "Use the transcript" was left out though
+  `transcript-check.id` gives the `expected` that `recordings.source` needs; a kept topic still read "Suggested:";
+  a question was reworded as "Learn more about why does ..."; the Facts count; a stale tooltip.
+- Known and kept: `study.material.attach` is tried before `first-flow.attach`, which answers 409 in the demo unless
+  the subject is the server's selected project. No command removes a source, so only a question has Undo.
