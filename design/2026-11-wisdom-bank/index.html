@@ -105,7 +105,10 @@ h3{font:600 var(--t15)/1.3 var(--ui)}
 .join .speak{flex:1 1 100%}
 .heard{font-size:var(--t13);color:var(--good)}
 .tiny{display:inline-flex;align-items:center;min-height:32px;padding:0 8px;border-radius:6px;font:500 var(--t13)/1 var(--ui);color:var(--dim)}
-.gh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#dist{display:grid;gap:10px}
+#dist .more{color:var(--ink2);font-size:var(--t14);animation:arrive .35s ease-out}
+#dist h3{font-size:var(--t14)}
+.gh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .cards.one{grid-template-columns:minmax(0,1fr)}
 .acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 /* nugget screen */
@@ -341,7 +344,27 @@ const pend=e=>{if(!pd)return;clearInterval(pd.t);const q=pd;pd=null;lastPtr=Date
 $('#smap').addEventListener('pointerup',pend);$('#smap').addEventListener('pointercancel',pend);
 
 /* ---------- screen 2 ---------- */
-let here='whole', walked=['whole'], opened=false;
+let here='whole', walked=['whole'], opened=false, depth=0;
+const MED={
+ eth:'She puts conduct first on purpose. A person who hears "nothing is wrong" before they have stopped causing harm will use it to excuse the harm. Kindness in small daily things is the ground the rest stands on.',
+ stab:'Attention is trained before anything is looked at. She compares the mind to stirred water: the seeing is not an effort, it is what is left when the stirring stops. This is the first practice and it is never finished.',
+ shown:'In her telling the view is not reached by reasoning. Someone who knows the student well waits for the right moment and points. The relationship and the timing are part of the teaching.',
+ feel:'Feelings are allowed to be their full size. Nothing is managed, improved or explained away. She separates this sharply from giving up: it is the first real meeting with the feeling.',
+ ordinary:'What is pointed out is not a special state. It is the same awareness that hears a kettle. Because it is plain, people pass over it while looking for something grander.',
+ whole:'She is not saying life is pleasant or that nothing should change. She is saying the moment itself lacks nothing, cracked parts included, and that resting begins here and not after some improvement. She treats this as something recognised, not believed, and only after care and steadiness are in place.',
+ bypass:'She names the counterfeit. Saying "everything is perfect" with a tight jaw uses the words as a lid on pain. The real view has room for the pain, so the body is the check.',
+ comp:'Her test for whether the view is real is outside the person: do they become easier to live with. She trusts the people at home over the person\'s own report.',
+ ret:'Nobody stays in the recognition. It comes in short moments, many times, and the returning is the practice itself, not a failure of it.'};
+const LONG={whole:[
+ ['What it claims','This moment is complete as it is. Completeness is not a quality added by practice; practice only removes what hides it. "Whole" is about nothing being left out, so a cracked cup is a whole cracked cup.'],
+ ['What it rests on','Three things come first in her talk: kindness in conduct, a mind settled enough to look, and being shown by someone who knows you. Without them she says the sentence is only an idea, and a risky one.'],
+ ['How it is recognised','Not by argument. Plain awareness is noticed, and it turns out to lack nothing. Feelings are let be at their full size, and they are found to be inside the wholeness, not against it.'],
+ ['Where it goes wrong','Used as a lid on pain it becomes the false version. Her check is the body, and the proof is warmth toward others.'],
+ ['How it lasts','It does not. It is recognised in short moments, again and again.']]};
+const DEPTH=['Glance','Medium','Full'];
+function distHTML(){const c=C[here],n=LONG[here]?3:2;depth=Math.min(depth,n-1);
+ return `<p class="gh"><span class="lab">Distillation</span><span class="tabs">${DEPTH.slice(0,n).map((t,i)=>`<button aria-selected="${i===depth}" data-depth="${i}">${t}</button>`).join('')}</span></p><p>${c.d}</p>`+
+  (depth===1?`<p class="more">${MED[here]}</p>`:depth===2?LONG[here].map(x=>`<h3 class="more">${x[0]}</h3><p class="more">${x[1]}</p>`).join(''):'');}
 const SLOT={1:[[50,9]],2:[[24,10],[76,10]],3:[[24,10],[76,10],[50,91]],4:[[24,10],[76,10],[24,90],[76,90]],5:[[24,9],[76,9],[17,62],[83,62],[50,92]],6:[[24,8],[76,8],[16,40],[84,40],[26,90],[74,90]],7:[[24,7],[76,7],[16,34],[84,34],[18,68],[82,68],[50,93]]};
 function drawNugget(from){
  const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='comes first'?0:1)-(b.lab==='comes first'?0:1)).slice(0,7), s=SLOT[nb.length];
@@ -352,7 +375,7 @@ function drawNugget(from){
  $('#trail').innerHTML=`<a href="#source">${TALK.work}</a>`+walked.slice(-4).map((id,i,a)=>i===a.length-1?`<span>›</span><b>${C[id].n}</b>`:`<span>›</span><button data-walk="${id}">${C[id].n}</button>`).join('');
  const works=[{who:TALK.who,work:TALK.work,kind:'Talk, 48 min',p:c.p,note:c.note}].concat(c.other?[c.other]:[]);
  const tabs=['Gist','Their words','Your lens','Lines','Your response','Go deeper'];
- $('#nbody').innerHTML=`<div class="glance"><header class="gh"><h2>${c.n}</h2>${resDots(here)}</header><p class="lab">Distillation</p><p>${c.d}</p>${c.mean?`<p class="lab">Your meaning</p><p class="say">${esc(c.mean)}</p>`:speak('mean','What this means to you')}<p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
+ $('#nbody').innerHTML=`<div class="glance"><header class="gh"><h2>${c.n}</h2>${resDots(here)}</header><div id="dist">${distHTML()}</div>${c.mean?`<p class="lab">Your meaning</p><p class="say">${esc(c.mean)}</p>`:speak('mean','What this means to you')}<p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
    <p class="acts"><button class="btn" id="openbtn" aria-expanded="${opened}">${opened?'Close':'Open'}</button><a class="btn quiet" href="#express">Express with this</a></p></div>
   ${here==='whole'||here==='feel'?`<div class="lines"><p class="lab">Unexpected</p><h3>Wanting what happens</h3><p class="say">${esc(ITEMS.d.say)}</p><p class="who"><span>Hanne Brückl</span><span>Notes on assent</span></p><p><button class="btn quiet" data-surprise>Draw the line</button></p></div>`:''}
   <div id="stack" ${opened?'':'hidden'}><div class="tabs" role="tablist">${tabs.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-tab="${i}">${t}</button>`).join('')}</div>
@@ -369,7 +392,7 @@ function drawNugget(from){
  const deck=$('#deck');
  deck.addEventListener('scroll',()=>{const i=Math.round(deck.scrollLeft/(deck.clientWidth+12));document.querySelectorAll('[data-tab]').forEach((b,j)=>b.setAttribute('aria-selected',i===j))},{passive:true});
 }
-function walk(id,from){here=id;if(walked[walked.length-1]!==id){const k=walked.indexOf(id);if(k>-1)walked=walked.slice(0,k+1);else walked.push(id)}opened=false;drawNugget(from)}
+function walk(id,from){here=id;if(walked[walked.length-1]!==id){const k=walked.indexOf(id);if(k>-1)walked=walked.slice(0,k+1);else walked.push(id)}opened=false;depth=0;drawNugget(from)}
 
 /* ---------- screen 3 ---------- */
 const G=[
@@ -458,6 +481,7 @@ document.addEventListener('click',e=>{
  if(d.pick){if(Date.now()-lastPtr>500)tapNode(d.pick)}
  else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource();if(!$('#nugget').hidden){const m=$('#ring .me');m.style.setProperty('--r',v);m.dataset.r=v;m.classList.remove('pulse');void m.offsetWidth;m.classList.add('pulse');t.parentNode.outerHTML=resDots(id)}}
  else if(d.j){const[id,st]=d.j.split(':');C[id].j=st;drawSource()}
+ else if(d.depth){depth=+d.depth;$('#dist').innerHTML=distHTML()}
  else if('draw' in d){drawing=!drawing;drawSource()}
  else if('lift' in d){const w=t.closest('.who');w.previousElementSibling.style.opacity=.45;w.insertAdjacentHTML('afterend',speak('rule','Why? One sentence, or leave it'));t.remove()}
  else if('surprise' in d){t.outerHTML='<span class="heard">Line drawn.</span>'}
