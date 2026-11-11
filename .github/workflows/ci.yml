@@ -75,7 +75,8 @@ jobs:
           set -o pipefail
           # The daily-driver Mac also runs real Chromium and JSDOM fixtures. Two files
           # bound CPU/memory contention there; hosted Linux keeps its four-file lane.
-          npm test -- --test-concurrency="$TEST_CONCURRENCY" 2>&1 | tee "$RUNNER_TEMP/test-output.log"
+          # Node options must precede file arguments; npm appends them after the glob.
+          node --test --test-concurrency="$TEST_CONCURRENCY" tests/*.test.mjs 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
       - name: Verify package
         if: ${{ !cancelled() && steps.test.outcome != 'skipped' }}
