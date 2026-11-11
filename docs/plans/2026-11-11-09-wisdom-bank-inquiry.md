@@ -1,6 +1,6 @@
 # Plan 9: the wisdom bank, an inquiry before any building
 
-**Status.** An inquiry. Three discovery threads were started on 11 November (see the fan-out below). Nothing is designed or built. Written 11 November 2026 from Adrian's words, with a first quick look at what already exists.
+**Status.** An inquiry. The three discovery threads reported on 11 November; their reports and a one-page synthesis are in `docs/research/wisdom-bank/`. A small thread is reading i64os, and the concept conversation with Adrian has started. Nothing is designed or built. The running state is kept in the [manager handoff](2026-11-11-manager-handoff.md). Written 11 November 2026 from Adrian's words, with a first quick look at what already exists.
 
 ## What Adrian asked for, in his words
 
