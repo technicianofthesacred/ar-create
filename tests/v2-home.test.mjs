@@ -307,8 +307,9 @@ test('Home: an answered question stays where it was; archive from the row menu w
  // An empty folder is one quiet line.
  const art=doc.querySelector('.home-group[data-key="f:Art"]');
  assert.equal(art.querySelector('ul,p'),null);assert.match(art.querySelector('header').textContent,/Empty/);
- // Arrange: the row's quiet menu archives, with Undo.
- click(w,doc.querySelector('[data-arrange]'));
+ // The row's quiet menu archives, with Undo; there is no Arrange button, rows drag and have Move up and Move down.
+ assert.equal(doc.querySelector('[data-arrange]'),null);
+ assert.ok(doc.querySelector('.home-row .home-grip'),'rows carry a drag grip');
  click(w,doc.querySelector('[data-row-menu="inv-cups"]'));
  click(w,doc.querySelector('dialog.v2-sheet [data-archive-now]'));
  const placeOf=async id=>(await f.agent('/api/subject-places?parentStudyId='+id)).places[0];

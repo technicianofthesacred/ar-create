@@ -61,7 +61,7 @@
   return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',...(d.getFullYear()!==today.getFullYear()?{year:'numeric'}:{})});
  }
  function dueAt(iso){const t=Date.parse(iso||'');if(!Number.isFinite(t))return 'soon';const d=new Date(t),clock=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});return when(iso)==='Today'?'at '+clock:'on '+when(iso)+' at '+clock;}
- const today=()=>new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'});
+ const today=()=>{const d=new Date(),part=o=>d.toLocaleDateString('en-GB',o);return part({weekday:'long'})+' '+part({day:'numeric',month:'short',year:'numeric'});};
  const subjectHref=id=>v2.href('subject/:id',{id});
  const folderPath=path=>['Subjects',...path].join(' / ');
  const expectPlace=p=>({expectedRevision:p?.revision||0,...(p?.saved&&p.hash?{expectedHash:p.hash}:{})});
@@ -73,7 +73,7 @@
  /* ======================= the screen ======================= */
  v2.screen({id:'home',title:'Home',route:'',
   render:()=>`<div class="v2-page home" data-home>
- <header><div><h1>Home</h1><p>${esc(today())}</p></div><button type="button" class="pri home-new" data-home-new>${icon('plus')}New subject</button></header>
+ <header><div><h1>Home</h1><p>${esc(today())}</p></div><button type="button" class="home-new" data-home-new>${icon('plus')}New subject</button></header>
  <div class="home-needs-slot" data-home-needs></div>
  <section class="home-desk" data-home-desk aria-labelledby="home-desk-h" hidden></section>
  <section class="home-all" data-home-all aria-labelledby="home-all-h"><div class="home-sec-h"><h2 id="home-all-h">Everything</h2></div><p class="home-quiet" data-home-loading>Reading your subjects…</p></section>
@@ -137,9 +137,9 @@
    }
    /** Put each known cover where its subject is shown, in place; nothing else on the page is touched. */
    function applyCovers(){
-    for(const node of root.querySelectorAll('.home-card[data-id],.home-cover[data-id]')){
+    for(const node of root.querySelectorAll('.home-card[data-id],.home-cover[data-id],.home-row[data-id]')){
      const url=covers.get(node.dataset.id);if(!url)continue;
-     const pic=node.querySelector('.home-card-pic,.home-cover-pic');
+     const pic=node.querySelector('.home-card-pic,.home-cover-pic,.home-row-pic');
      if(pic&&!pic.querySelector('img')){pic.innerHTML=`<img src="${esc(url)}" alt="" loading="lazy">`;pic.hidden=false;pic.classList.add('has-img');}
     }
    }
@@ -153,10 +153,10 @@
    function paintDots(){
     for(const h of root.querySelectorAll('.home-group>header[data-drop-folder]')){
      let path=[];try{path=JSON.parse(h.parentElement.dataset.path||'[]');}catch{}
-     h.querySelector('.home-dot')?.remove();const dot=folderDot(path);if(dot)h.insertAdjacentHTML('afterbegin',dot);
+     h.querySelector('.home-dot')?.remove();const dot=folderDot(path),grip=h.querySelector('.home-grip');if(dot){if(grip)grip.insertAdjacentHTML('afterend',dot);else h.insertAdjacentHTML('afterbegin',dot);}
     }
    }
-   function folderDot(path){if(!path?.length)return '';const id=folderLook(path),a=id&&accentOf(id);return a?`<i class="home-dot" style="--home-dot:${esc(a)}" title="${esc(lookNames.get(id)?'Drawn in the '+lookNames.get(id)+' look':'Drawn in one look')}" aria-hidden="true"></i>`:'';}
+   function folderDot(path){if(!path?.length)return '';const id=folderLook(path),a=id&&accentOf(id);return !a?'<i class="home-dot" aria-hidden="true"></i>':`<i class="home-dot" style="--home-dot:${esc(a)}" title="${esc(lookNames.get(id)?'Drawn in the '+lookNames.get(id)+' look':'Drawn in one look')}" aria-hidden="true"></i>`;}
    function accentOf(id){const roles=lookRoles.get(id),a=roles?.[v2.theme()==='dark'?'dark':'light']?.accent||roles?.dark?.accent;return typeof a==='string'&&/^#[0-9a-f]{3,8}$/i.test(a)?a:null;}
 
    /* ---------- the model ---------- */
@@ -240,7 +240,7 @@
     const cut=ui.allAsks?shown.length:3,more=shown.length-cut;
     const rows=shown.slice(0,cut).map(a=>{
      const done=answeredHere.get(a.id)||(a.status==='defaulted'?{choice:a.resolution?.choice||a.default,auto:true}:null);
-     const about=a.about?`<span class="home-about">${esc(a.about)}</span>`:'';
+     const about=a.about?`<small class="home-about">${esc(a.about)}</small>`:'';
      if(done&&!changing.has(a.id))return `<li class="ok" data-ask="${esc(a.id)}">${icon('check')}<p><span class="home-state">${done.auto?'Applied by default':'Answered'}</span><b>${esc(a.question)}</b>${about}<span class="home-said">${esc(done.choice||done.text||'')}</span></p><span class="home-acts"><button type="button" data-ask-change="${esc(a.id)}"${off}>Change it</button></span></li>`;
      const recording=['recording-words','recording-check'].includes(a.scope?.kind);
      let href=recording?(a.recording?.wordsHref||a.wordsHref||a.link?.href):a.link?.href;
@@ -248,16 +248,16 @@
      const link=typeof href==='string'&&/^\/(?!\/)/.test(href)?`<a class="home-act" href="${esc(href)}">${esc(recording?'Go through them':a.link?.label||'Open')}${icon('right')}</a>`:'';
      const current=done?.choice;
      const choices=recording?'':(a.choices||[]).map(c=>`<button type="button" data-ask-id="${esc(a.id)}" data-ask-choice="${esc(c)}"${current===c?' aria-pressed="true"':''}${off}>${esc(c)}${a.default===c&&!current?'<small>default</small>':''}</button>`).join('');
-     const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="home-about">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
+     const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="home-due">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
      return `<li data-ask="${esc(a.id)}"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="home-acts">${choices}${link}</span>`:''}</li>`;
     }).join('');
-    slot.innerHTML=`<section class="home-needs" aria-labelledby="home-needs-h"><h2 class="home-label" id="home-needs-h">Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="v2-ghost home-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="home-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="home-quiet home-reason">Only Adrian answers these.</p>'}</section>`;
+    slot.innerHTML=`<section class="home-needs" aria-labelledby="home-needs-h"><h2 class="home-label" id="home-needs-h">${icon('ask')}Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="v2-ghost home-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="home-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="home-quiet home-reason">Only Adrian answers these.</p>'}</section>`;
    }
 
    function card(s){
     const who=holder(s.id),url=covers.get(s.id),next=nextOf(s);
-    return `<article class="home-card" data-id="${esc(s.id)}">
- <a class="home-card-open" href="${esc(subjectHref(s.id))}"><span class="home-card-pic${url?' has-img':''}" aria-hidden="true"${url?'':' hidden'}>${url?`<img src="${esc(url)}" alt="">`:''}</span><b>${esc(s.title)}</b><span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span>${who?`<small class="home-held">${esc(who)} is working on it</small>`:''}</a>
+    return `<article class="home-card" data-id="${esc(s.id)}"><i class="home-grip" aria-hidden="true"></i>
+ <a class="home-card-open" href="${esc(subjectHref(s.id))}"><span class="home-card-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:''}</span><b>${esc(s.title)}</b><span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span>${who?`<small class="home-held">${esc(who)} is working on it</small>`:''}</a>
  <a class="home-card-next" href="${esc(subjectHref(s.id))}"${s.next?.note&&next?` title="${esc(s.next.note)}"`:''}><span>${esc(next||'Open')}</span>${icon('right')}</a>
 </article>`;
    }
@@ -267,7 +267,7 @@
     if(!live().length){sec.hidden=true;sec.innerHTML='';return;}
     sec.hidden=false;
     if(!items.length){sec.innerHTML=`<div class="home-sec-h"><h2 id="home-desk-h">On your desk</h2></div><p class="home-quiet">Nothing on your desk yet.</p>`;return;}
-    sec.innerHTML=`<div class="home-sec-h"><h2 id="home-desk-h">On your desk</h2><span>${items.length} of ${DESK_MAX}</span></div><div class="home-cards" data-home-cards>${items.map(card).join('')}</div>`;
+    sec.innerHTML=`<div class="home-sec-h"><h2 id="home-desk-h">On your desk</h2><span>${items.length} · what you are working on now. Drag to reorder.</span></div><div class="home-cards" data-home-cards>${items.map(card).join('')}</div>`;
     const box=sec.querySelector('[data-home-cards]');
     deskStops.push(v2.ui.reorder(box,{item:'.home-card',label:el=>el.querySelector('b')?.textContent||'Subject',
      // The order is read from the screen at the press, not from what was painted earlier.
@@ -277,10 +277,11 @@
    const tagsOf=s=>{const tags=s.place.tags||[],extra=tags.length-TAGS_SHOWN;return `<span class="home-tags">${tags.slice(0,TAGS_SHOWN).map(t=>`<i>${esc(t)}</i>`).join('')}${extra>0?`<i class="home-tag-more" title="${esc(tags.slice(TAGS_SHOWN).join(', '))}">+${extra}</i>`:''}</span>`;};
    const pinBtn=s=>{const on=!!s.place.pinnedAt;return `<button type="button" class="v2-ghost v2-icon-btn home-pin" data-pin="${esc(s.id)}" aria-pressed="${on}" aria-label="${on?'Take off your desk':'Put on your desk'}: ${esc(s.title)}" title="${on?'On your desk':'Put on your desk'}">${PIN}</button>`;};
    const menuBtn=s=>`<button type="button" class="v2-ghost v2-icon-btn home-rowmenu" data-row-menu="${esc(s.id)}" aria-label="Move or archive: ${esc(s.title)}" title="Move or archive">${MORE}</button>`;
+   const rowPic=s=>{const url=covers.get(s.id);return `<span class="home-row-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:''}</span>`;};
    function row(s){
     const who=holder(s.id);
-    return `<li class="home-row" data-id="${esc(s.id)}">
- <a class="home-row-open" href="${esc(subjectHref(s.id))}"><b>${esc(s.title)}</b>${tagsOf(s)}<span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="home-next">${who?`<em class="home-held">${esc(who)} is working on it</em>`:esc(nextOf(s))}</span><small>${esc(when(s.changedAt))}</small></a>
+    return `<li class="home-row" data-id="${esc(s.id)}"><i class="home-grip" aria-hidden="true"></i>
+ <a class="home-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="home-next">${who?`<em class="home-held">${esc(who)} is working on it</em>`:esc(nextOf(s))}</span><small>${esc(when(s.changedAt))}</small></a>
  ${menuBtn(s)}${pinBtn(s)}
 </li>`;
    }
@@ -290,27 +291,26 @@
    function paintAll(){
     const sec=root.querySelector('[data-home-all]'),all=live(),archived=(data.subjects||[]).filter(s=>s.archived);
     allStops.forEach(f=>f());allStops=[];
-    const counts=stationCounts(),gs=all.length?groups():[],arrange=canArrange()&&ui.arrange;
+    const counts=stationCounts(),gs=all.length?groups():[],arrange=canArrange();
     const list=gs.map(g=>{
      const cut=ui.find||ui.open.has(g.key)?Infinity:ui.view==='covers'?12:CUT[ui.group],items=g.items.slice(0,cut),more=g.items.length-items.length,folder=ui.group==='folder'&&!g.loose;
      const count=!g.items.length?'Empty':ui.find||ui.station?`${g.items.length} of ${g.total}`:g.total;
-     const head=`<header${ui.group==='folder'?` data-drop-folder`:''}>${folder?folderDot(g.path):''}<h3>${esc(g.name)}</h3><span>${esc(count)}</span>${folder?`<small class="home-path" title="A real folder">${esc(folderPath(g.path))}</small>`:''}</header>`;
+     const head=`<header${ui.group==='folder'?` data-drop-folder`:''}>${folder&&g.saved?'<i class="home-grip" aria-hidden="true"></i>':''}${folder?folderDot(g.path):''}<h3>${esc(g.name)}</h3><span>${esc(count)}</span>${folder?`<small class="home-path" title="A real folder">${esc(folderPath(g.path))}</small>`:''}</header>`;
      const body=!items.length?'':ui.view==='covers'?`<ul class="home-covers" data-group="${esc(g.key)}">${items.map(cover).join('')}</ul>`:`<ul class="home-rows" data-group="${esc(g.key)}">${items.map(row).join('')}</ul>`;
      return `<section class="home-group${items.length?'':' home-empty-folder'}" data-key="${esc(g.key)}"${folder&&g.saved?' data-saved':''}${g.path?` data-path="${esc(JSON.stringify(g.path))}"`:''}>${head}${body}${more>0?`<button type="button" class="v2-ghost home-more" data-show-all="${esc(g.key)}">Show all ${g.items.length}${icon('chev')}</button>`:''}</section>`;
     }).join('');
     const empty=!all.length?`<div class="home-empty"><p>${archived.length?'Every subject is archived.':'No subjects yet.'}</p><button type="button" class="pri" data-home-new>${icon('plus')}New subject</button></div>`
      :!gs.length?`<p class="home-quiet">No subject matches${ui.find?` "${esc(ui.find)}"`:''}${ui.station?' in '+esc(NAME[ui.station]):''}.</p>`:'';
-    const archive=archived.length?`<div class="home-archived"><button type="button" class="v2-ghost" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="home-rows">${archived.sort(byName).map(s=>`<li class="home-row" data-id="${esc(s.id)}"><a class="home-row-open" href="${esc(subjectHref(s.id))}"><b>${esc(s.title)}</b>${tagsOf(s)}<span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="home-next"></span><small>${esc(when(s.changedAt))}</small></a><button type="button" class="v2-ghost home-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
+    const archive=archived.length?`<div class="home-archived"><button type="button" class="v2-ghost" data-archived aria-expanded="${ui.archived}">${ui.archived?'Hide archived':'Archived'} · ${archived.length}</button>${ui.archived?`<ul class="home-rows">${archived.sort(byName).map(s=>`<li class="home-row" data-id="${esc(s.id)}"><a class="home-row-open" href="${esc(subjectHref(s.id))}">${rowPic(s)}<b>${esc(s.title)}</b>${tagsOf(s)}<span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span><span class="home-next"></span><small>${esc(when(s.changedAt))}</small></a><button type="button" class="v2-ghost home-unarchive" data-unarchive="${esc(s.id)}">Put back</button></li>`).join('')}</ul>`:''}</div>`:'';
     sec.innerHTML=`<div class="home-sec-h"><h2 id="home-all-h">Everything</h2><span>${plural(all.length,'subject')}</span>${all.length?`<label class="home-find"><span class="home-sr">Find a subject</span>${icon('search')}<input type="search" data-home-find placeholder="Find a subject" value="${esc(ui.find)}" autocomplete="off"></label>`:''}</div>
 ${all.length?`<div class="home-tools">
  <div class="home-seg" role="group" aria-label="Group">${GROUPS.map(([k,l])=>`<button type="button" data-group-by="${k}" aria-pressed="${ui.group===k}">${l}</button>`).join('')}</div>
  <div class="home-chips" role="group" aria-label="Show one station">${STATIONS.map(st=>`<button type="button" data-station="${st.id}" aria-pressed="${ui.station===st.id}">${st.name}<small>${counts[st.id]||0}</small></button>`).join('')}</div>
  <span class="home-grow"></span>
- ${ui.group==='folder'?`<button type="button" class="home-arrange" data-arrange aria-pressed="${ui.arrange}">${ui.arrange?'Done':'Arrange'}</button>`:''}
- <div class="home-seg" role="group" aria-label="View">${[['rows','Rows'],['covers','Covers']].map(([k,l])=>`<button type="button" data-view="${k}" aria-pressed="${ui.view===k}">${l}</button>`).join('')}</div>
+  <div class="home-seg" role="group" aria-label="View">${[['rows','Rows'],['covers','Covers']].map(([k,l])=>`<button type="button" data-view="${k}" aria-pressed="${ui.view===k}">${l}</button>`).join('')}</div>
 </div>`:''}
-${empty}<div class="home-groups" data-home-groups${ui.arrange?' data-arranging':''}>${list}</div>
-${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" data-new-folder>${icon('plus')}New folder</button></div>`:''}${archive}`;
+${empty}<div class="home-groups" data-home-groups>${list}</div>
+${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" data-new-folder>${icon('plus')}New folder</button><span class="home-quiet">Folders here are the real folders on disk. Drag a folder to change the order, or a subject onto a folder to move it. Tags cut across folders.</span></div>`:''}${archive}`;
     if(!arrange)return;
     // Drag, and Move up and Move down: subjects inside a folder (rows or covers), and the folders themselves. The new
     // order is read from the screen at the moment of the press.
@@ -405,9 +405,9 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
     catch(error){v2.ui.say(error.message,{tone:'bad'});paintNeeds();}
    }
    function form(markup){const f=document.createElement('form');f.className='home-form';f.innerHTML=markup;return f;}
-   const formActs=label=>`<div class="home-form-acts"><button type="button" class="v2-ghost" data-v2-close>Cancel</button><button type="submit" class="pri">${esc(label)}</button></div>`;
+   const formActs=label=>`<div class="home-form-acts"><button type="button" class="v2-ghost" data-v2-close>Cancel</button><button type="submit" class="pri home-primary">${esc(label)}</button></div>`;
    function newSubject(){
-    const f=form(`<label for="home-new-name">Name</label><input id="home-new-name" name="name" maxlength="160" required autocomplete="off" placeholder="What is it about?">${formActs('Make it')}`);
+    const f=form(`<label for="home-new-name">Subject name</label><input id="home-new-name" name="name" maxlength="160" required autocomplete="off" placeholder="What is it about?">${formActs('Create subject')}`);
     const sheet=v2.ui.sheet({title:'New subject',body:f});f.elements.name.focus();
     let intent=null;
     f.addEventListener('submit',async e=>{e.preventDefault();const title=f.elements.name.value.trim();if(!title)return;
@@ -415,7 +415,7 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
      intent||={parentStudyId:uuid(),title,operationId:uuid()};
      f.elements.name.readOnly=true;f.querySelector('[type=submit]').disabled=true;
      try{await v2.call('study-draft.create-collection',intent);sheet.close();v2.go('subject/:id',{id:intent.parentStudyId});}
-     catch(error){f.querySelector('[type=submit]').disabled=false;v2.ui.say(error.message+' Press Make it to try again.',{tone:'bad'});}
+     catch(error){f.querySelector('[type=submit]').disabled=false;v2.ui.say(error.message+' Press Create subject to try again.',{tone:'bad'});}
     });
    }
    const folderOptions=selected=>[`<option value="[]">Subjects (no folder)</option>`,...folderList().map(x=>`<option value="${esc(JSON.stringify(x.path))}"${fkey(x.path)===fkey(selected)?' selected':''}>${esc(x.path.join(' / '))}</option>`)].join('');
