@@ -97,3 +97,5 @@ export function createLibraryFolders({serial,load,visibleSource=()=>true,publish
  const receipt=({before,after,...op})=>structuredClone(op);
  return {read,change:input=>change(input),changePhoto:(input,options={})=>change(input,{...options,photoOperation:true})};
 }
+/** Shared with the subject folders (services/subject-places.mjs): one rule for a folder name, one stable comparison. */
+export {name as folderName,stable as stableJson};

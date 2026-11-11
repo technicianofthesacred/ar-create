@@ -1,0 +1,9 @@
+{
+ "schema": "ar-create.account.v1",
+ "id": "technician-of-the-sacred",
+ "name": "Technician of the Sacred",
+ "service": "instagram",
+ "handle": "",
+ "link": "",
+ "looks": ["art", "mandala-codes", "personal"]
+}

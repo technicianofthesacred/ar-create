@@ -1,0 +1,11 @@
+/* The one quiet link to version two, on the top line just before the theme switch. Loaded last. */
+html body #c3-tabstrip>a.v2-front{order:3;display:inline-flex;align-items:center;flex:none;align-self:center;height:32px;padding:0 8px;border-radius:6px;font:500 13px/1 var(--ar-ui);color:var(--dim);text-decoration:none;white-space:nowrap}
+html body #c3-tabstrip>a.v2-front:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent)}
+html body #c3-tabstrip>a.v2-front:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+/* Phone: the top line is a grid of the subject and the theme switch; the link takes a column between them. */
+@media(max-width:800px){
+ html body.wbf-on.combined-on #c3-tabstrip.wbf-top:has(>a.v2-front){grid-template-columns:minmax(0,1fr) auto 44px}
+ html body.wbf-on.combined-on #c3-tabstrip.wbf-top>a.v2-front{grid-column:2;grid-row:1;height:44px;padding:0 6px}
+ html body.wbf-on.combined-on #c3-tabstrip.wbf-top:has(>a.v2-front)>.ht-theme{grid-column:3}
+}
+@media(max-width:900px){html body #c3-tabstrip>a.v2-front{min-height:44px}}

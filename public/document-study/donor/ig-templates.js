@@ -24,7 +24,8 @@ const IG = (() => {
     return '<div data-slot="' + i + '" style="position:absolute;overflow:hidden;' + box + '">' + inner + '</div>'; };
   const fade = h => '<div style="position:absolute;left:0;bottom:0;width:1080px;height:' + h + 'px;background:linear-gradient(rgba(26,23,20,0),rgba(26,23,20,.9) 62%)"></div>';
   const frame = body => '<div style="width:1080px;height:1350px;position:relative;overflow:hidden;background:' + C.ground + ';color:' + C.head + ";font-family:'EB Garamond',Georgia,serif\">" + body + '</div>';
-  // H10 displays only the title before a spaced middle dot. The editor must retain the raw full text.
+  // H10 displays only the title before a spaced middle dot. The editor must retain the raw full text. A look may name
+  // its own link (ctx.link); Teajia's is teajia.com/read.
   const closeParts = t => { const p = String(t || '').split(/\s+·\s+/); return { title: p[0] || '', link: 'teajia.com/read' }; };
 
   const T = {
@@ -60,7 +61,7 @@ const IG = (() => {
         '<div data-text-zone style="position:absolute;left:72px;right:72px;bottom:72px;background:' + C.box + ';padding:56px 60px 52px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px">' +
         '<div style="font-family:Caudex,Georgia,serif;font-size:30px;letter-spacing:.16em;color:' + C.gold + '">THE FULL STORY</div>' + head(c.title, 68, s) +
         '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid ' + C.line + ';padding-top:26px">' +
-        '<div style="font-family:Caudex,Georgia,serif;font-size:31px">' + e(c.link) + ' <span style="color:' + C.sup + '">· link in bio</span></div>' + logo(106, 42, ctx) + '</div></div>'); } },
+        '<div style="font-family:Caudex,Georgia,serif;font-size:31px">' + e(ctx.link || c.link) + ' <span style="color:' + C.sup + '">· link in bio</span></div>' + logo(106, 42, ctx) + '</div></div>'); } },
   };
   Object.assign(T, originalCatalog);
   // Which kind of slide a role is, for picking sensible layouts.

@@ -27,3 +27,5 @@ html body #app #workspace.wb-source #stage-working-lane.source-presentation{max-
 @layer source-presentation {body:has(#workspace.wb-source .source-presentation) #c3-surface-bar{display:none!important}}
 .source-presentation .sp-task .sws-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.source-presentation .sp-task .sws-field{width:100%}.source-presentation .sp-task .sws-field>input{display:block;width:100%}
 @media(max-width:850px){.source-presentation .sp-task .sws-fields{grid-template-columns:minmax(0,1fr)}}
+/* The way back keeps its words; a long subject title wraps beside it instead of pushing it out sideways. */
+html body #app #workspace .source-presentation .sp-heading>.ar-destination{flex:none}

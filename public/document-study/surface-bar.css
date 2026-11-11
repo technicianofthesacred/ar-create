@@ -68,10 +68,10 @@ body.c3-bar-on.c3-crumb-on{--cb-h:0px}
 #c3-surface-bar .sb-where{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap}
 #c3-surface-bar .sb-sep2{color:var(--dim);opacity:.55}
 #c3-surface-bar .sb-on{color:var(--dim);overflow:hidden;text-overflow:ellipsis}
-#c3-surface-bar .sb-cp{display:inline-flex;align-items:baseline;gap:6px;flex:none}
+#c3-surface-bar .sb-cp{display:inline-flex;align-items:baseline;gap:6px;flex:0 1 auto;min-width:0}#c3-surface-bar .sb-cp-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
 #c3-surface-bar .sb-oselect{min-height:30px;max-width:200px}
 .sb-out.sb-out-tabs{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.sb-in{display:flex;align-items:center;gap:2px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.sb-in{display:flex;flex-wrap:wrap;align-items:center;gap:2px;min-width:0}
 .sb-in-l{color:var(--dim);font-size:12.5px;margin-right:6px;flex:none}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #c3-surface-bar button.sb-in-t{border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;background:none!important;box-shadow:none!important;padding:4px 8px!important;min-height:30px;color:var(--dim)!important;font-size:13px;white-space:nowrap;flex:none;max-width:180px;overflow:hidden;text-overflow:ellipsis}
 html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body #c3-surface-bar button.sb-in-t:hover{color:var(--ink)!important}

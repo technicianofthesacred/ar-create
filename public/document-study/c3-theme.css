@@ -9,9 +9,9 @@
 @font-face{font-family:'AR Plus Jakarta Sans';font-style:normal;font-weight:600 700;font-display:swap;src:url('/assets/fonts/plus-jakarta-sans-600-normal-latin-ext.woff2') format('woff2');unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 
 /* ---------- palette (the board's .t-light / .t-dark) mapped onto the app's tokens ---------- */
-:root,:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--green:#3f6146;
+:root,:root[data-theme="light"]{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#5e6257;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--green:#3f6146;
  --c3-ink2:#51564b;--c3-line2:#cfcdc3;--c3-lift:#f7f5ef;--c3-sel:#e9e4d7;--c3-good:#3f6146;--c3-warn:#94600f;--c3-bad:#a23b2a;--c3-pend:#f4e6c6;--c3-okbg:#e2ead9;--c3-sbt:rgba(122,90,48,.42);--c3-sbh:rgba(122,90,48,.7);--c3-shadow:0 18px 50px rgba(40,35,25,.18);
- --ar-ui:'AR Plus Jakarta Sans','Plus Jakarta Sans',system-ui,-apple-system,sans-serif;--ar-ui-muted:#686c61;--ar-ui-focus:#7a5a30;--draft-active:#e9e4d7;--mrb-accent:#7a5a30;--rpb-accent:#7a5a30;--c3-t1:13px;--c3-t2:15px;--c3-r:8px}
+ --ar-ui:'AR Plus Jakarta Sans','Plus Jakarta Sans',system-ui,-apple-system,sans-serif;--ar-ui-muted:#5e6257;--ar-ui-focus:#7a5a30;--draft-active:#e9e4d7;--mrb-accent:#7a5a30;--rpb-accent:#7a5a30;--c3-t1:13px;--c3-t2:15px;--c3-r:8px}
 :root[data-theme="dark"]{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--green:#8fb08a;
  --c3-ink2:#c3bdad;--c3-line2:#423e34;--c3-lift:#191813;--c3-sel:#2c2a22;--c3-good:#8fb08a;--c3-warn:#d9a95a;--c3-bad:#e08a74;--c3-pend:#423a23;--c3-okbg:#2b3326;--c3-sbt:rgba(191,169,140,.4);--c3-sbh:rgba(211,192,166,.7);--c3-shadow:0 18px 50px rgba(0,0,0,.55);
  --ar-ui-muted:#a39e8e;--ar-ui-focus:#c9a874;--draft-active:#2c2a22;--mrb-accent:#c9a874;--rpb-accent:#c9a874}
@@ -214,7 +214,7 @@ body.c3-tabs #app #workspace button[data-current-check="run"]:not(:disabled){bac
 /* ================= Write = Read = Check: same paper, starts with the page (20 Oct) ================= */
 /* The writing surface had its own greenish paper and desk; it now uses the shared palette. */
 body.c3-tabs.draft-surface-active{--bg:#141310;--rail:#191813;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--green:#8fb08a;--warm:#c9a874;--draft-active:#2c2a22;--draft-mark:color-mix(in srgb,#c9a874 22%,transparent);--draft-note:#191813}
-:root[data-theme="light"] body.c3-tabs.draft-surface-active{--bg:#efede6;--rail:#f7f5ef;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--green:#3f6146;--warm:#7a5a30;--draft-active:#e9e4d7;--draft-mark:color-mix(in srgb,#7a5a30 18%,transparent);--draft-note:#f7f5ef}
+:root[data-theme="light"] body.c3-tabs.draft-surface-active{--bg:#efede6;--rail:#f7f5ef;--paper:#fffefb;--ink:#2d302a;--dim:#5e6257;--line:#e2e0d8;--green:#3f6146;--warm:#7a5a30;--draft-active:#e9e4d7;--draft-mark:color-mix(in srgb,#7a5a30 18%,transparent);--draft-note:#f7f5ef}
 body.c3-tabs #app .workspace>.draft-bar.c3-quiet{display:none!important}
 /* The same desk and the same first line of the page on Write, Read and Check. */
 @media(min-width:851px){
@@ -322,11 +322,11 @@ body.c3-tabs #app .workspace details.c3-mirror-open:is(.draft-details,.flow-reta
  body.c3-tabs #app #workspace [data-c3-mirrored]{display:revert!important}
  /* Top bar: the picker above already names the checkpoint; actions keep their size and never overlap. */
  #c3-surface-bar .sb-left{display:none}
- #c3-surface-bar .sb-right{flex:1 1 auto;justify-content:flex-end;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+ #c3-surface-bar .sb-right{flex:1 1 auto;justify-content:flex-end;flex-wrap:wrap}
  #c3-surface-bar .sb-right>*{flex:none}
- /* Home: one column, filters as a scrolling row above the pieces. */
+ /* Home: one column, filters as a wrapping row above the pieces (nothing scrolls sideways). */
  #project-library.c3-home .ht-home-body{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)}
- #project-library.c3-home .ht-facets{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:14px}
+ #project-library.c3-home .ht-facets{flex-direction:row;flex-wrap:wrap;overflow:visible;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;gap:14px}
  #project-library.c3-home .ht-home-main{padding:16px}
  /* Research tab: the search takes its own full row. */
  #c3-research .rt-bar,#c3-research .rt-bl{flex-wrap:wrap}
