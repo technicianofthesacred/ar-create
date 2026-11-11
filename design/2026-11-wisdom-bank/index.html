@@ -111,6 +111,27 @@ h3{font:600 var(--t15)/1.3 var(--ui)}
 .gh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
 .cards.one{grid-template-columns:minmax(0,1fr)}
 .acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+/* the deep reading */
+#read{max-width:712px}
+#read blockquote.say{background:var(--paper)}
+#read .small{font:400 var(--t18)/1.45 var(--ui);margin-top:12px}
+.steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.steps button{min-height:36px;padding:0 13px;border-radius:18px;box-shadow:inset 0 0 0 1px var(--line2);font:500 var(--t13)/1 var(--ui);color:var(--dim)}
+.steps button[aria-pressed="true"]{background:var(--sel);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink2)}
+.toc{display:flex;flex-wrap:wrap;gap:0 16px;margin-top:14px;font:600 var(--t13)/1.3 var(--ui);color:var(--warm)}
+.toc a{min-height:36px;display:inline-flex;align-items:center}
+.rsec{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-top:28px;border-top:1px solid var(--line)}
+.rsec>p{line-height:1.7}
+.rsec>blockquote+.who{margin-top:-10px}
+.term{text-decoration:underline;text-decoration-color:var(--warm);text-underline-offset:3px;text-decoration-thickness:1.5px}
+.mine{display:grid;gap:6px;padding:14px 16px;border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--warm);animation:arrive .4s ease-out}
+.mine .lab{color:var(--warm)}
+.try{display:grid;gap:8px;padding:14px 16px;border-radius:10px;background:var(--paper);border:1px solid var(--line)}
+.down{display:grid;gap:0}
+.down a{display:grid;gap:2px;padding:14px 0;border-top:1px solid var(--line)}
+.down a:first-child{border-top:0;padding-top:0}
+.down span{color:var(--ink2);font-size:var(--t14)}
+@media (max-width:480px){.top .logo{display:none}.walk a{padding:0 6px}}
 /* nugget screen */
 .trail{display:flex;flex-wrap:wrap;align-items:center;gap:0 2px;font-size:var(--t13);color:var(--dim);margin-left:-8px}
 .trail button,.trail a{min-height:44px;padding:0 8px;display:inline-flex;align-items:center;border-radius:6px}
@@ -246,7 +267,7 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
  <span class="logo"></span>
  <span class="place">Gather</span><span class="place" aria-current="page">Research</span><span class="place">Create</span><span class="place">Share</span>
  <span class="grow"></span>
- <nav class="walk" aria-label="Mock-up screens"><a href="#source">Source</a><a href="#nugget">Nugget</a><a href="#express">Express</a><a href="#distil">Distil</a></nav>
+ <nav class="walk" aria-label="Mock-up screens"><a href="#source">Source</a><a href="#nugget">Nugget</a><a href="#read">Read</a><a href="#express">Express</a><a href="#distil">Distil</a></nav>
 </header>
 
 <main>
@@ -256,7 +277,7 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
   <h1>The ground is already whole</h1>
   <p class="meta"><span>Ilse Varnholt</span><span>Talk, 48 min</span><span>Distilled 4 minutes ago</span><span>1 joined, 1 unsure, 7 new</span><a href="#source" class="out">Open the talk</a><span class="sample">Sample</span></p>
   <form class="speak" data-form="looking" style="margin-top:14px;max-width:560px"><input aria-label="What you were looking for in this" placeholder="What were you looking for in this?" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
-  <p class="heard" id="lookheard" hidden style="margin-top:8px">Brightened: Care first, Settling attention</p>
+  <p class="heard" id="lookheard" hidden style="margin-top:8px">Brightened: Kindness comes first, Letting the mind settle</p>
  </header>
  <div class="split">
   <div class="left">
@@ -289,6 +310,9 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
  <form class="ask narrow" id="ask"><input id="feeling" aria-label="What you want to express" value="everything is perfect" autocomplete="off"><button class="mic" type="submit" aria-label="Speak"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
  <div class="groups" id="groups"></div>
 </section>
+<!-- the deep reading of one concept -->
+<section class="page" id="read" hidden></section>
+
 <!-- 4. how I distil -->
 <section class="page" id="distil" hidden>
  <header><h1>How I distil</h1><p class="meta"><span class="sample">Sample</span><span>7 core understandings</span><span>84 concepts</span><span>1,310 passages</span></p></header>
@@ -308,31 +332,31 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
 const TALK={who:'Ilse Varnholt',work:'The ground is already whole'};
 const LENS='Sample lens: body, breath, everyday';
 const C={
- eth:{n:'Care first',d:'Kindness in conduct comes before the view, or the view becomes an excuse.',r:3,x:22,y:6,p:[['03:15','Before any of this, you stop harming. I mean it in the dullest way: how you speak to the person who makes your coffee.']],lens:'Notice the body tighten just before a sharp word, and let that be the bell.',q:['What do other traditions ask of conduct before they teach a view?']},
- stab:{n:'Settling attention',d:'The mind has to settle before it can see what is here.',r:3,x:76,y:5,p:[['06:48','If the water is stirred up you cannot see the bottom, and no amount of wanting to see will help. You stop stirring. That is all the first practice is.']],lens:'Feel the breath low in the belly for ten rounds before trying to look at anything.',q:['Which practices do other traditions use to settle the mind first?']},
- shown:{n:'Being shown',d:'The view is pointed out by someone who knows you, not worked out alone.',r:2,x:50,y:20,p:[['14:30','I did not figure this out. Someone who had watched me for years waited until I was tired enough to listen, and then said one sentence.']],lens:'Some things land only when another person says them to your face at the right moment.',q:['Who else describes being shown, and by whom?']},
- feel:{n:'Feeling everything',d:'Let each feeling arrive fully, without fixing it.',r:4,x:19,y:37,p:[['26:44','Grief comes, and for once you do not manage it. You let it be exactly as large as it is. That is not giving up. That is the first time you have actually met it.']],lens:'Find where the feeling sits in the body and breathe beside it, not at it.',q:['How do other traditions hold a feeling that is too large?']},
- ordinary:{n:'Ordinary mind',d:'What is looked for is the plain awareness already present.',r:4,x:79,y:36,join:'2 other voices',p:[['19:02','People expect light and music. What you find is the same awareness that heard the kettle this morning. It is so ordinary you have been stepping over it.']],lens:'The awareness reading this line is the one meant. Nothing more special.',q:['Where do teachers say this is missed because it is too plain?']},
- whole:{n:'Already whole',d:'Nothing has to be added before this moment is complete.',r:5,x:49,y:54,p:[['31:12','You keep waiting for the moment that will finally be good enough to rest in. I am telling you there is no such moment coming, because this is it. It was never missing anything.'],['33:40','Whole does not mean pleasant. A cracked cup is a whole cracked cup.']],
+ eth:{s:'Kindness first',n:'Kindness comes first',d:'Before you take up this teaching, you treat people well. Without that, "nothing is wrong" becomes an excuse for doing harm.',r:3,x:22,y:6,p:[['03:15','Before any of this, you stop harming. I mean it in the dullest way: how you speak to the person who makes your coffee.']],lens:'Notice the body tighten just before a sharp word, and let that be the bell.',q:['What do other traditions ask of conduct before they teach a view?']},
+ stab:{s:'Settling the mind',n:'Letting the mind settle',d:'You cannot see clearly while your mind is stirred up, so the first practice is simply to let it go still.',r:3,x:76,y:5,p:[['06:48','If the water is stirred up you cannot see the bottom, and no amount of wanting to see will help. You stop stirring. That is all the first practice is.']],lens:'Feel the breath low in the belly for ten rounds before trying to look at anything.',q:['Which practices do other traditions use to settle the mind first?']},
+ shown:{s:'Being shown',n:'Someone shows you',d:'You do not work this out by thinking. Someone who knows you well points it out when you are ready to hear it.',r:2,x:50,y:20,p:[['14:30','I did not figure this out. Someone who had watched me for years waited until I was tired enough to listen, and then said one sentence.']],lens:'Some things land only when another person says them to your face at the right moment.',q:['Who else describes being shown, and by whom?']},
+ feel:{s:'Feeling it fully',n:'Feeling everything fully',d:'When a feeling comes, you let it be as big as it is. You do not manage it, fix it or explain it away.',r:4,x:19,y:37,p:[['26:44','Grief comes, and for once you do not manage it. You let it be exactly as large as it is. That is not giving up. That is the first time you have actually met it.']],lens:'Find where the feeling sits in the body and breathe beside it, not at it.',q:['How do other traditions hold a feeling that is too large?']},
+ ordinary:{s:'Plain awareness',n:'The awareness you already have',d:'What you are looking for is not a special state. It is the plain awareness that is already here, hearing and seeing.',r:4,x:79,y:36,join:'2 other voices',p:[['19:02','People expect light and music. What you find is the same awareness that heard the kettle this morning. It is so ordinary you have been stepping over it.']],lens:'The awareness reading this line is the one meant. Nothing more special.',q:['Where do teachers say this is missed because it is too plain?']},
+ whole:{s:'Already whole',n:'You are already whole',d:'Nothing has to be added to you, or to this moment, before it is complete.',r:5,x:49,y:54,p:[['31:12','You keep waiting for the moment that will finally be good enough to rest in. I am telling you there is no such moment coming, because this is it. It was never missing anything.'],['33:40','Whole does not mean pleasant. A cracked cup is a whole cracked cup.']],
   note:'Says it as a view, recognised after preparation.',
   other:{who:'Tomas Reuel',work:'Just this bowl',kind:'Talk, 22 min',p:[['12:05','When you wash the bowl, the bowl is not on its way to being a cleaner bowl somewhere else. It is this bowl, wet, in your hands, and nothing is left out.']],note:'Says it as something done with the hands, not held as a view.'},
   lens:'In the body this is the moment the shoulders drop because nothing is being reached for. Try it on an out-breath while doing something plain, like washing a cup.',q:['How does each tradition get someone ready to hear this?','Where do teachers warn against saying this too early?']},
- bypass:{n:'The false version',d:'Calling pain perfect so as not to feel it is not this view.',r:2,x:83,y:66,p:[['36:20','If you say everything is perfect and your jaw is tight, you are using the words as a lid. Take the lid off. The view has room for the pain; the lid does not.']],lens:'Check the jaw, the belly, the hands. If they are clenched, the words are ahead of the body.',q:['What other names is this false version given?']},
- comp:{n:'Warmth as the test',d:'If the view is real, it shows as warmth toward others.',r:3,x:17,y:70,p:[['41:05','You will know it is real because you become easier to live with. Ask the people at home, not yourself.']],lens:'Watch how you close a door or answer the phone on a day you think you are doing well.',q:['What tests do other traditions give for a real insight?']},
- ret:{n:'Again and again',d:'It is recognised many times, not achieved once.',r:2,x:50,y:86,p:[['44:50','Short moments, many times. Nobody stays. You come back, and coming back is the whole of it.']],lens:'One breath noticed while the kettle boils counts.',q:['How do other traditions speak of losing it and returning?']}
+ bypass:{s:'Hiding behind "perfect"',n:'Using "it is all perfect" to avoid pain',d:'Saying "everything is perfect" can be a way of hiding from pain, and that is the opposite of what the teaching means.',r:2,x:83,y:66,p:[['36:20','If you say everything is perfect and your jaw is tight, you are using the words as a lid. Take the lid off. The view has room for the pain; the lid does not.']],lens:'Check the jaw, the belly, the hands. If they are clenched, the words are ahead of the body.',q:['What other names is this false version given?']},
+ comp:{s:'Becoming kinder',n:'You become kinder',d:'If you have really understood this, the people around you can tell, because you are easier to live with.',r:3,x:17,y:70,p:[['41:05','You will know it is real because you become easier to live with. Ask the people at home, not yourself.']],lens:'Watch how you close a door or answer the phone on a day you think you are doing well.',q:['What tests do other traditions give for a real insight?']},
+ ret:{s:'Coming back',n:'You lose it and come back',d:'Nobody stays in this understanding. You notice it for a moment, lose it, and notice it again, and that returning is the practice.',r:2,x:50,y:86,p:[['44:50','Short moments, many times. Nobody stays. You come back, and coming back is the whole of it.']],lens:'One breath noticed while the kettle boils counts.',q:['How do other traditions speak of losing it and returning?']}
 };
 const ORDER=['eth','stab','shown','ordinary','feel','whole','bypass','comp','ret'];
 const L=[
- ['eth','whole','prepares','She says the view is only safe to hear once conduct is steady.'],
- ['stab','ordinary','prepares','A settled mind is what notices plain awareness.'],
- ['shown','ordinary','prepares','Ordinary mind is pointed out, not reasoned toward.'],
- ['stab','feel','prepares','Without steadiness, a full feeling sweeps you off.'],
- ['ordinary','whole','explains','Plain awareness is what turns out to lack nothing.'],
- ['feel','whole','explains','Wholeness includes every feeling, the hard ones too.'],
- ['bypass','whole','contrasts','Sets the limit: perfect cannot mean unfelt.'],
- ['comp','whole','explains','Gives the way to check that the view is real.'],
- ['eth','comp','echoes','Care at the start and warmth at the end are close, but not one concept.'],
- ['ret','whole','explains','Wholeness is recognised in short moments, many times.']
+ ['eth','whole','prepares','She says this teaching is only safe to hear once you are treating people well.'],
+ ['stab','ordinary','prepares','You need a settled mind to notice the awareness that is already here.'],
+ ['shown','ordinary','prepares','This awareness is pointed out to you by someone. You do not reason your way to it.'],
+ ['stab','feel','prepares','Without a steady mind, a strong feeling carries you away.'],
+ ['ordinary','whole','explains','The plain awareness you already have turns out to be missing nothing.'],
+ ['feel','whole','explains','Being whole includes every feeling, the painful ones too.'],
+ ['bypass','whole','contrasts','This is how the teaching gets misused: as a way to not feel.'],
+ ['comp','whole','explains','This is how you check whether you have really understood it.'],
+ ['eth','comp','echoes','Kindness is where you start and where you end up. They are close, but she treats them as two things.'],
+ ['ret','whole','explains','You do not understand this once and keep it. You come back to it many times.']
 ];
 const KIN={mine:['Your line','Your line'],prepares:['Leads to','Comes first'],explains:['It explains','Explains it'],contrasts:['Contrasts with','Contrasts with'],echoes:['Echoes','Echoes']};
 const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -351,10 +375,10 @@ const speak=(form,ph,extra='')=>`<form class="speak" data-form="${form}" ${extra
 const resDots=id=>`<span class="res" role="group" aria-label="Resonance">${[1,2,3,4,5].map(i=>`<button class="${i<=C[id].r?'f':''}" data-res="${id}:${i}" aria-label="Resonance ${i} of 5"></button>`).join('')}</span>`;
 const lineSVG=()=>L.map(l=>`<line x1="${C[l[0]].x}" y1="${C[l[0]].y+1}" x2="${C[l[1]].x}" y2="${C[l[1]].y+1}" data-k="${l[2]}" class="${l[0]===picked||l[1]===picked?'on':''}"/>`).join('');
 function joinRow(id){switch(C[id].j){
- case 'joined':return `<p class="join yes"><span>Joined to Ordinary mind, now 3 voices</span><button class="ghost" data-j="${id}:fixing">Correct</button></p>`;
+ case 'joined':return `<p class="join yes"><span>Joined to The awareness you already have, now 3 voices</span><button class="ghost" data-j="${id}:fixing">Correct</button></p>`;
  case 'fixing':return `<div class="join"><span>Lifted back out.</span>${speak('rule','Why? One sentence, or leave it',`data-id="${id}"`)}</div>`;
  case 'lifted':return `<p class="join yes"><span>Kept as its own concept</span></p>`;
- case 'unsure':return `<p class="join"><span>Unsure: is this the Compassion you already hold? She means a test, not a practice.</span><button class="ghost" data-j="${id}:same">Same</button><button class="ghost" data-j="${id}:apart">Separate</button></p>`;
+ case 'unsure':return `<p class="join"><span>Unsure: is this the same as Compassion, which you already hold? She means a way to check yourself, not a practice.</span><button class="ghost" data-j="${id}:same">Same</button><button class="ghost" data-j="${id}:apart">Separate</button></p>`;
  case 'same':return `<p class="join yes"><span>Joined to Compassion</span><button class="ghost" data-j="${id}:unsure">Undo</button></p>`;
  case 'apart':return `<p class="join yes"><span>Kept as its own concept</span><button class="ghost" data-j="${id}:unsure">Undo</button></p>`;
  default:return ''}}
@@ -362,7 +386,7 @@ function drawSource(){
  const nb=near(picked).map(n=>n.id);
  $('#smap').className='map picked';
  $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+lineSVG()+'</svg>'+
-  ORDER.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.n}</span></button>`}).join('');
+  ORDER.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.s}</span></button>`}).join('');
  const c=C[picked];
  $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+linesHTML(near(picked))+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
  $('#scards').innerHTML=ORDER.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#nugget" data-open="${id}">${c.n}</a></h3>${resDots(id)}</header>
@@ -407,13 +431,13 @@ function drawNugget(from){
  const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='Comes first'?0:1)-(b.lab==='Comes first'?0:1)).slice(0,7), s=SLOT[nb.length];
  const ring=$('#ring');
  ring.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+nb.map((n,i)=>`<line x1="50" y1="50" x2="${s[i][0]}" y2="${s[i][1]}" data-k="${n.k}"/>`).join('')+'</svg>'+
-  `<div class="me" data-r="${c.r}" style="--r:${c.r}"><span class="dot"></span><span>${c.n}</span></div>`+
-  nb.map((n,i)=>`<button class="nb bright" style="left:${s[i][0]}%;top:${s[i][1]}%;--r:${C[n.id].r}" data-k="${n.k}" data-walk="${n.id}" data-x="${s[i][0]}" data-y="${s[i][1]}"><small>${n.lab}</small><span>${C[n.id].n}</span></button>`).join('');
- $('#trail').innerHTML=`<a href="#source">${TALK.work}</a>`+walked.slice(-4).map((id,i,a)=>i===a.length-1?`<span>›</span><b>${C[id].n}</b>`:`<span>›</span><button data-walk="${id}">${C[id].n}</button>`).join('');
+  `<div class="me" data-r="${c.r}" style="--r:${c.r}"><span class="dot"></span><span>${c.s}</span></div>`+
+  nb.map((n,i)=>`<button class="nb bright" style="left:${s[i][0]}%;top:${s[i][1]}%;--r:${C[n.id].r}" data-k="${n.k}" data-walk="${n.id}" data-x="${s[i][0]}" data-y="${s[i][1]}"><small>${n.lab}</small><span>${C[n.id].s}</span></button>`).join('');
+ $('#trail').innerHTML=`<a href="#source">${TALK.work}</a>`+walked.slice(-4).map((id,i,a)=>i===a.length-1?`<span>›</span><b>${C[id].s}</b>`:`<span>›</span><button data-walk="${id}">${C[id].s}</button>`).join('');
  const works=[{who:TALK.who,work:TALK.work,kind:'Talk, 48 min',p:c.p,note:c.note}].concat(c.other?[c.other]:[]);
  const tabs=['Gist','Their words','Your lens','Lines','Your response','Go deeper'];
  $('#nbody').innerHTML=`<div class="glance"><header class="gh"><h2>${c.n}</h2>${resDots(here)}</header><div id="dist">${distHTML()}</div>${c.mean?`<p class="lab">Your meaning</p><p class="say">${esc(c.mean)}</p>`:speak('mean','What this means to you')}<p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span><span>${TALK.work}</span></p>
-   <p class="acts"><button class="btn" id="openbtn" aria-expanded="${opened}">${opened?'Close':'Open'}</button><a class="btn quiet" href="#express">Express with this</a></p></div>
+   <p class="acts">${here==='whole'?'<a class="btn" href="#read">Read</a>':''}<button class="btn quiet" id="openbtn" aria-expanded="${opened}">${opened?'Close':'Open'}</button><a class="btn quiet" href="#express">Express with this</a></p></div>
   ${here==='whole'||here==='feel'?`<div class="lines"><p class="lab">Unexpected</p><h3>Wanting what happens</h3><p class="say">${esc(ITEMS.d.say)}</p><p class="who"><span>Hanne Brückl</span><span>Notes on assent</span></p><p><button class="btn quiet" data-surprise>Draw the line</button></p></div>`:''}
   <div id="stack" ${opened?'':'hidden'}><div class="tabs" role="tablist">${tabs.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-tab="${i}">${t}</button>`).join('')}</div>
   <div class="deck" id="deck" tabindex="0">
@@ -434,10 +458,10 @@ function walk(id,from){here=id;if(walked[walked.length-1]!==id){const k=walked.i
 /* ---------- screen 3 ---------- */
 const G=[
  {t:'Tibetan Buddhist study group',who:'Ilse Varnholt',src:'The ground is already whole',items:[
-  {id:'a',c:'whole',n:'Already whole',at:'31:12',say:C.whole.p[0][1],first:['eth','stab']},
-  {id:'b',c:'feel',n:'Feeling everything',at:'26:44',say:C.feel.p[0][1],first:['stab']}]},
+  {id:'a',c:'whole',n:'You are already whole',at:'31:12',say:C.whole.p[0][1],first:['eth','stab']},
+  {id:'b',c:'feel',n:'Feeling everything fully',at:'26:44',say:C.feel.p[0][1],first:['stab']}]},
  {t:'Zen sitting group',who:'Tomas Reuel',src:'Just this bowl',items:[
-  {id:'c',c:'whole',n:'Already whole',at:'12:05',say:C.whole.other.p[0][1],firstText:['Sitting every day']}]},
+  {id:'c',c:'whole',n:'You are already whole',at:'12:05',say:C.whole.other.p[0][1],firstText:['Sitting every day']}]},
  {t:'Stoic reading circle',who:'Hanne Brückl',src:'Notes on assent',items:[
   {id:'d',n:'Wanting what happens',at:'Paragraph 9',say:'I used to read this as putting up with things. It is stronger than that. It is looking at the day you were actually given and saying yes, this one, I will take this one.',firstText:['Sorting what is mine to change']}]},
  {t:'Christian contemplative retreat',who:'Anselm Dray',src:'Third evening talk',items:[
@@ -450,7 +474,7 @@ let path=[], words={}, asked={}, pathWhy='';
 function drawExpress(){
  $('#groups').innerHTML=G.map(g=>`<section class="group"><header><h2>${g.t}</h2><p>${g.who}, ${g.src}${g.priv?' · <span class="private">Private until he agrees</span>':''}</p></header>`+g.items.map(i=>{const k=path.indexOf(i.id);return `<article class="pick" ${k>-1?'data-in':''}><header><h3>${i.c?`<a href="#nugget" data-open="${i.c}">${i.n}</a>`:i.n}</h3><button class="add" data-add="${i.id}" aria-pressed="${k>-1}" aria-label="${k>-1?'Take out of':'Add to'} the pathway"><i>${k>-1?k+1:'+'}</i></button></header>
   <p class="lab">Their words</p><blockquote class="say">${esc(i.say)}</blockquote><p class="who">${/^\d/.test(i.at)?hear(i.at):`<span>${i.at}</span>`}<span>${g.who}</span></p>
-  <p class="first"><span class="k">Comes first</span>${i.first?i.first.map(f=>`<a href="#nugget" data-open="${f}">${C[f].n}</a>`).join('<span>·</span>'):i.firstText?`<span><b>${i.firstText[0]}</b></span>`:asked[i.id]?'<span>Asked Research</span>':`<span>Nothing kept yet</span><button data-askr="${i.id}">Ask Research</button>`}</p></article>`}).join('')+'</section>').join('');
+  <p class="first"><span class="k">Comes first</span>${i.first?i.first.map(f=>`<a href="#nugget" data-open="${f}">${C[f].s}</a>`).join('<span>·</span>'):i.firstText?`<span><b>${i.firstText[0]}</b></span>`:asked[i.id]?'<span>Asked Research</span>':`<span>Nothing kept yet</span><button data-askr="${i.id}">Ask Research</button>`}</p></article>`}).join('')+'</section>').join('');
  const n=Math.max(3,path.length);
  $('#slots').innerHTML=Array.from({length:n},(_,i)=>(i?'<u></u>':'')+`<i class="${i<path.length?'f':''}">${i+1}</i>`).join('')+(path.length?`<span>${path.map(id=>ITEMS[id].n).join(', ')}</span>`:'');
  $('#joinbtn').disabled=path.length<3;
@@ -472,18 +496,64 @@ function drawPiece(kind){
   <p class="gap"><span>Create is outside this mock-up.</span></p>`;
 }
 
+/* ---------- the deep reading ---------- */
+const T=(id,t)=>`<a class="term" href="#nugget" data-open="${id}">${t}</a>`, V='Ilse Varnholt';
+const READ=[
+ {h:'What it is',b:[
+  'This talk rests on one claim. What you are, underneath every mood and every problem, is already complete. She calls this your Buddha nature. You do not earn it by practising and you cannot lose it by failing.',
+  'From that comes the sentence the talk is named after: the ground is already whole. If what you are is complete, then the moment you are in is not a rough draft of some better moment. It includes the mess, the grief and the unfinished work, and it is still not missing anything.',
+  'She is careful about one word. Whole does not mean pleasant. It means nothing is left out.'],
+  q:[['33:40',C.whole.p[1][1],V]]},
+ {h:'What you do with it',b:[
+  'You stop waiting. Most of us live as if we will be allowed to rest once things improve. She asks you to notice that waiting, and to rest now, in the middle of things exactly as they are.',
+  'This does not mean you stop acting. You still mend what is broken, make the apology, do the work. What changes is where you act from. You act because something needs doing, not because you are incomplete until it is done.'],
+  q:[['31:12',C.whole.p[0][1],V]]},
+ {h:'How you embody it',b:[
+  'She gives three things to practise, and says the order matters.',
+  'First, '+T('eth','kindness in how you treat people')+'. Start with the smallest and dullest things, such as how you speak to someone who is serving you. Without this, "nothing is wrong" turns into an excuse.',
+  'Second, '+T('stab','a mind steady enough to look')+'. A few minutes each day of letting your attention settle, the way stirred water goes clear when you stop stirring.',
+  'Third, '+T('feel','letting feelings be their full size')+'. When grief or anger comes, you do not manage it. You feel all of it, and you find you are still here.'],
+  extra:'try'},
+ {h:'Understanding it more deeply',b:[
+  'It is recognised, not believed. She says nobody argues themselves into this. '+T('shown','Someone points')+', or a moment opens, and you see that '+T('ordinary','the awareness you already have')+' is not lacking anything.',
+  'It comes and goes. Nobody stays in it. You notice it for a moment, lose it, and notice it again. She says '+T('ret','the coming back')+' is the practice, not a failure of it.',
+  'Another voice in your bank says the same thing in a different way. Tomas Reuel does not treat it as a view at all. For him it is in the hands: washing one bowl completely.'],
+  q:[['12:05',C.whole.other.p[0][1],'Tomas Reuel, Just this bowl']],extra:'ask'},
+ {h:'How it can be misunderstood',b:[
+  'This teaching can be misused. Someone in pain can say "everything is perfect" as a way of not feeling the pain. It sounds like the teaching, but it does the opposite job: it shuts the feeling out instead of letting it in. '+T('bypass','She names this directly')+'.',
+  'She gives a simple way to tell the two apart. Check your body. If you are saying "it is all perfect" while your jaw is tight and your belly is clenched, you are using the words as a lid. The real thing has room for the pain. You can feel all of it and still find that nothing is missing.',
+  'And she gives a check that does not depend on your own opinion of yourself: '+T('comp','are you easier to live with')+'? Ask the people at home.'],
+  q:[['36:20',C.bypass.p[0][1],V]]}
+];
+const STEPS=['Met it','Understand it','Practising it','Can teach it'];
+let step=1, VOICE={}, saidBack='', tried=false;
+function drawRead(){
+ $('#read').innerHTML=`<header><p class="meta" style="margin:0 0 10px"><a href="#nugget" data-open="whole">‹ On the map</a><span>${V}, The ground is already whole</span><span class="sample">Sample</span></p>
+  <h1>${C.whole.n}</h1><p class="small">${C.whole.d}</p>
+  <div class="steps" role="group" aria-label="Where you are with this">${STEPS.map((t,i)=>`<button aria-pressed="${i===step}" data-step="${i}">${t}</button>`).join('')}</div>
+  <nav class="toc" aria-label="In this concept">${READ.map((r,i)=>`<a href="#read" data-jump="${i}">${r.h}</a>`).join('')}</nav></header>`+
+ READ.map((r,i)=>`<section class="rsec" id="rs${i}"><h2>${r.h}</h2>${r.b.map(x=>`<p>${x}</p>`).join('')}${(r.q||[]).map(q=>`<blockquote class="say">${esc(q[1])}</blockquote><p class="who">${hear(q[0])}<span>${q[2]}</span></p>`).join('')}
+  ${r.extra==='try'?`<div class="try"><p class="lab">Try it</p><p>For one out-breath, while doing something plain like washing a cup, stop reaching for the next thing.</p><p>${tried?'<span class="heard">Kept in your practice, 11 November.</span>':'<button class="btn quiet" data-tried>I tried this</button>'}</p></div>`:''}
+  ${r.extra==='ask'?`<div class="try"><p class="lab">A question this opens</p><p>How does each tradition get someone ready to hear this?</p><p><button class="btn quiet" data-sent>Send to Research</button></p></div>`:''}
+  ${(VOICE[i]||[]).map(v=>`<div class="mine"><p class="lab">You, 11 November 2026</p><p class="say">${esc(v)}</p></div>`).join('')}
+  ${speak('voice','Add your voice here',`data-i="${i}"`)}</section>`).join('')+
+ `<section class="rsec"><h2>Say it back</h2>${saidBack?`<div class="mine"><p class="lab">You, in your own words</p><p class="say">${esc(saidBack)}</p></div><p class="heard">You covered what it is. Not yet in your words: what comes first, and how it gets misused.</p>`:speak('sayback','Say this concept in your own words')}</section>
+ <section class="rsec"><h2>Further down</h2><div class="down">${['feel','ordinary','bypass','eth'].map(id=>`<a href="#nugget" data-open="${id}"><b>${C[id].n}</b><span>${C[id].d}</span></a>`).join('')}</div></section>
+ <section class="rsec"><h2>Pass it on</h2><p class="acts"><button class="btn" data-teach>Make a lesson from this</button><a class="btn quiet" href="#express">Use it in a piece</a></p></section>`;
+}
+
 /* ---------- screen 4 ---------- */
 const LENSES=[{n:'Presence',t:'I am looking for what can be felt in the body, practised with the breath, and used on an ordinary day. I care most about what has to come first.'},{n:'Making art',t:'I am looking for images, objects and gestures that carry an idea without explaining it.'}];
 let lensI=0, reread=0;
 const QS=[
- {q:'Two voices seem to disagree. One says wholeness is a view, the other says it is done with the hands. What do you make of it?',to:'Kept as your response on Already whole.'},
- {q:'Three works you kept all rest on Settling attention, and you have never responded to it.',to:'Kept as your response on Settling attention.'},
+ {q:'Two voices seem to disagree. One says wholeness is a view, the other says it is done with the hands. What do you make of it?',to:'Kept as your response on You are already whole.'},
+ {q:'Three works you kept all rest on Letting the mind settle, and you have never responded to it.',to:'Kept as your response on Letting the mind settle.'},
  {q:'You keep turning up concepts about what comes first. Should that be part of what you look for?',to:'Kept beside your lens.'},
  {q:'Your line "Everything is perfect" has a friend\'s voice with nothing before it. What came first for him?',to:'Kept on the line.'},
- {q:'The false version is dim, yet four lines run through it. Does it matter more than it rings?',to:'Kept as your response on The false version.'}];
+ {q:'Using "it is all perfect" to avoid pain is dim, yet several lines run through it. Does it matter more than it rings?',to:'Kept as your response.'}];
 let qShown=[0,1,2], qNext=3;
-const JOINED=[['Ordinary mind','The ground is already whole','1 passage'],['Already whole','Just this bowl','1 passage'],['Wanting what happens','Notes on assent','3 passages']];
-const rrHTML=()=>reread===1?`<div class="gap" style="display:grid;gap:6px"><p><b>14</b> renamed · <b>6</b> fold together · <b>2</b> new</p><p>Already whole would be explained through the hands.</p><p>Care first and Warmth as the test would fold into one.</p><p>A new concept appears: Making by doing.</p><p class="acts"><button class="btn" data-rr="2">Go ahead</button><button class="btn quiet" data-rr="0">Not now</button></p></div>`:reread===2?`<p class="heard">Re-read on 11 November. Your earlier view is kept.</p>`:'';
+const JOINED=[['The awareness you already have','The ground is already whole','1 passage'],['You are already whole','Just this bowl','1 passage'],['Wanting what happens','Notes on assent','3 passages']];
+const rrHTML=()=>reread===1?`<div class="gap" style="display:grid;gap:6px"><p><b>14</b> renamed · <b>6</b> fold together · <b>2</b> new</p><p>You are already whole would be explained through the hands.</p><p>Kindness comes first and You become kinder would fold into one.</p><p>A new concept appears: Making by doing.</p><p class="acts"><button class="btn" data-rr="2">Go ahead</button><button class="btn quiet" data-rr="0">Not now</button></p></div>`:reread===2?`<p class="heard">Re-read on 11 November. Your earlier view is kept.</p>`:'';
 function drawDistil(){
  $('#dlens').innerHTML=`<div class="tabs">${LENSES.map((l,i)=>`<button aria-selected="${i===lensI}" data-lens="${i}">${l.n}</button>`).join('')}<button data-lens="new">New lens</button></div>
   <p class="who"><label class="lab" for="lens">What you are looking for</label><span class="sample">Sample words</span></p>
@@ -501,16 +571,18 @@ document.addEventListener('submit',e=>{const f=e.target.closest('form[data-form]
  else if(k==='mean'){if(v){C[here].mean=v;const o=opened;drawNugget();opened=o}}
  else if(k==='whyline'){if(v){L[f.dataset.i][3]=v;drawSource()}}
  else if(k==='whyorder'){if(v){pathWhy=v;drawPath()}}
+ else if(k==='voice'){if(v){(VOICE[f.dataset.i]=VOICE[f.dataset.i]||[]).push(v);drawRead()}}
+ else if(k==='sayback'){if(v){saidBack=v;drawRead()}}
  else if(k==='answer'){if(v){QS[f.dataset.i].a=v;drawDistil()}}
 });
 
 /* ---------- moving about ---------- */
 function show(){
- const h=(location.hash||'#source').slice(1), id=['source','nugget','express','distil'].includes(h)?h:'source';
+ const h=(location.hash||'#source').slice(1), id=['source','nugget','read','express','distil'].includes(h)?h:'source';
  document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!==id);
  document.querySelectorAll('.walk a').forEach(a=>a.getAttribute('href')==='#'+id?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
  $('#tray').hidden=id!=='express';
- if(id==='nugget')drawNugget();if(id==='distil')drawDistil();
+ if(id==='nugget')drawNugget();if(id==='distil')drawDistil();if(id==='read')drawRead();
  window.scrollTo(0,0);
 }
 document.addEventListener('click',e=>{
@@ -519,6 +591,10 @@ document.addEventListener('click',e=>{
  else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource();if(!$('#nugget').hidden){const m=$('#ring .me');m.style.setProperty('--r',v);m.dataset.r=v;m.classList.remove('pulse');void m.offsetWidth;m.classList.add('pulse');t.parentNode.outerHTML=resDots(id)}}
  else if(d.j){const[id,st]=d.j.split(':');C[id].j=st;drawSource()}
  else if(d.depth){depth=+d.depth;$('#dist').innerHTML=distHTML()}
+ else if(d.step){step=+d.step;drawRead()}
+ else if(d.jump){e.preventDefault();$('#rs'+d.jump).scrollIntoView({behavior:'smooth',block:'start'})}
+ else if('tried' in d){tried=true;drawRead()}
+ else if('teach' in d){t.outerHTML='<span class="heard">A lesson outline opens in Create, with your own insights in it. Create is outside this mock-up.</span>'}
  else if('draw' in d){drawing=!drawing;drawSource()}
  else if('lift' in d){const w=t.closest('.who');w.previousElementSibling.style.opacity=.45;w.insertAdjacentHTML('afterend',speak('rule','Why? One sentence, or leave it'));t.remove()}
  else if('surprise' in d){t.outerHTML='<span class="heard">Line drawn.</span>'}
