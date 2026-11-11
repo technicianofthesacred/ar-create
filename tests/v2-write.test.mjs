@@ -241,7 +241,10 @@ test('Write follows the house rules: six sizes, no em dash, no fetch, escaped re
 
 test('the bar stays on one row from 320 wide: the 380 block keeps the tabs and the buttons from wrapping',()=>{
  const css=read('public/v2/screens/write.css'),block=css.slice(css.indexOf('@media (max-width:380px)'));
- assert.match(block,/\.wr \.wr-bar\{[^}]*flex-wrap:nowrap/);assert.match(block,/\.wr \.wr-tabs\{[^}]*flex-wrap:nowrap/);
+ assert.match(block,/\.wr \.wr-bar\{[^}]*flex-wrap:nowrap/);assert.match(block,/\.wr \.wr-tabs\{[^}]*flex-wrap:nowrap[^}]*overflow-x:auto/);
+ assert.match(block,/\.wr \.wr-tabs a\{[^}]*flex:none/,'a tab keeps its readable width');
+ assert.doesNotMatch(block,/\.wr \.wr-tabs\{[^}]*overflow:hidden/);
+ assert.match(block,/\.wr \.wr-tabs a:focus-visible\{outline-offset:-2px/,'the focus ring stays inside the tab');
 });
 
 // ---- corrections after review: stub pages for what only the screen decides ----

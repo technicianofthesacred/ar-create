@@ -26,7 +26,9 @@
   if(r.kind==='blockquote')return `<blockquote class="rd-q" data-row="${esc(r.id)}">${esc(r.words)}</blockquote>`;
   return `<p class="rd-p" data-row="${esc(r.id)}">${esc(r.words)}</p>`;
  }
- v2.shared.read=Object.freeze({wordCount,countLabel,unsavedIn,rowHTML});
+ /** Whether a change of this kind alters the saved words (a save, undo, restore, recover); a check, inspect or read does not. */
+ const changesWords=kind=>/^study-draft[.-]/.test(String(kind||''))&&!/^study-draft[.-](check|inspect|read|catalog|history-preview|root-recovery\.get)/.test(String(kind));
+ v2.shared.read=Object.freeze({wordCount,countLabel,unsavedIn,rowHTML,changesWords});
 
  v2.screen({id:'read',route:'read/:id',title:'Read',
   render:()=>'<div class="v2-page wr rd" data-rd><p class="wr-wait" role="status">Opening the reading.</p></div>',
@@ -101,7 +103,7 @@
       to another piece's draft is not. A change that names no draft is read again to be safe. */
   const onChange=e=>{
    if(e&&!e.reset&&e.scope&&e.scope.id&&e.scope.id!==st.bindingId)return;
-   if(e&&e.scope&&e.scope.id===st.bindingId&&/save/.test(String(e.kind||'')))newerKnown=true;
+   if(e&&e.scope&&e.scope.id===st.bindingId&&changesWords(e.kind))newerKnown=true;
    clearTimeout(timer);timer=setTimeout(refresh,250);};
   const onRetry=e=>{if(e.target.closest?.('[data-rd-retry]')){clearTimeout(timer);void refresh();}};
   page.addEventListener('click',onRetry);
