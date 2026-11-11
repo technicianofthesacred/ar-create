@@ -13,7 +13,7 @@ The wisdom bank is the Research station of AR Create. It distils each talk or bo
 5. **You pick a few and put them in order.** That line of nuggets is a research topic.
 6. **You press "make a piece".** The topic becomes the outline of an article, a reel or the words for an artwork, with every quote credited.
 
-Three promises hold throughout: their words are never changed or mixed with yours, nothing is linked or written without your yes, and you never have a pile to sort.
+Three promises hold throughout: their words are never changed or mixed with yours; the AI does the filing and you can correct any of it; and the meaning stays yours: what you are looking for, what rings true, the lines you draw and the pieces you make.
 
 Everything below is the detail behind those six steps. Open a heading only when you want it.
 
@@ -81,7 +81,7 @@ Five doors, in the order your answers put them.
 2. **Wander.** Open any nugget and step to a neighbour, then the next. The most resonant come first. This is for browsing until something rings true.
 3. **Study a source.** Continue where you were. The source reads as a comfortable page with its outline, its nuggets in place and the lens readings beside them.
 4. **Ask the bank.** A conversation that answers only from what you have kept. Every sentence shows its nugget. When the bank has nothing, it says so and offers to send the question to Research.
-5. **A few today.** A small strip on the home screen: one bright nugget, one you have not seen for a while, one proposed link waiting for your yes.
+5. **A few today.** A small strip on the home screen: one bright nugget, one you have not seen for a while, one question worth your thought.
 
 The three traps, answered directly:
 
@@ -109,10 +109,10 @@ You said: "The joins are proposed, but at a certain point one concept may join t
 
 1. **You join a concept, never its sources.** A concept is held once, however many works speak of it. New passages joining a concept that already holds ten works is one decision, and the ten works come with it.
 2. **Bigger concepts.** When several concepts clearly belong together, they form a bigger concept with its own name and one-line distillation, labelled as one. The smaller concepts stay whole inside it. A new concept joins the bigger one with a single yes and is then related to everything in it, with no line drawn to each. On the transit map a bigger concept is a district. You can still draw a line to one particular member when that is what you mean.
-3. **One yes for a whole work.** After distilling, the agent sorts its proposals. The ones it is sure of are gathered into one button, such as "Accept 9 joins", which you can open to look inside. Only the ones it is unsure of are shown one at a time, with its doubt stated. A typical work should ask for one tap and two or three real decisions.
-4. **Every join can be undone.** Because each passage keeps its own source, a concept can be lifted back out at any time and nothing is lost. So a quick yes is safe, and a "recently joined" list lets you look back whenever you like.
+3. **Sure joins go through on their own.** You decided this on 11 November. They appear in a "recently joined" list where you can look and correct. Only the ones the agent is unsure of are brought to you, with its doubt stated. A typical work should ask for two or three real decisions and no routine ones.
+4. **Every join can be corrected.** Because each passage keeps its own source, a concept can be lifted back out at any time and nothing is lost. So a quick yes is safe, and a "recently joined" list lets you look back whenever you like.
 
-This keeps the rule that agents propose and you decide. You decide once for a work, not once for a line.
+How you guide the agent without approving everything is under "Where you are in it".
 
 ### Keeping it simple as it grows
 
@@ -145,6 +145,25 @@ So the whole map is part of the concept, and it is the hardest part to do well. 
 This deserves its own short design study, after the three screens below and before anything is built. You asked that it begin by looking at people who have already built maps like this, and you named what works in the best ones: "the lines and the entry connections and intersections." That search was not done in this thread.
 
 The picture to test in that study is a transit map. You confirmed it: "Yes, the transit map is what I meant." Each research topic is a **line** you can ride from end to end. Each concept is a stop. A concept that several lines pass through is an **intersection**, and those are the places where traditions meet. Each work is an **entrance** onto the map.
+
+## Where you are in it
+
+You said: "Yes, sure joins can go through on their own but they should also be able to be corrected. There needs to be some level of guidance, and if it's not approval on everything, what is it? Where is the human, my thoughts, interactive with this as it starts to become more and more automated? What is the best use of it for me?"
+
+The recommendation: **the AI does the filing, and you do the meaning.** Filing is deciding where a concept sits. Meaning is deciding what matters and what it is for. Approval on everything spends you on filing. These six things are yours instead:
+
+1. **What you are looking for.** Your lens, written in your words on one page called "How I distil". The AI reads every work through it. Changing that page is how you steer the whole bank at once.
+2. **Corrections that teach.** When you correct a join, you may say why in one sentence, such as "in my bank, emptiness and presence are not the same". That sentence is added to "How I distil" and the AI follows it from then on. You guide by rule, a few times, and never by approving each case.
+3. **What rings true.** Resonance, and your response in your own words. Only you can do this, and it is what makes the bank yours and not a copy of the sources.
+4. **The lines.** The AI lays out the stops on the map. You draw the lines through them. A research topic is a line you chose for a reason, and those reasons are the bigger, purposeful interconnection.
+5. **The top layer.** The few core understandings the whole bank rests on. The AI may suggest one, but each is named and accepted by you, by hand.
+6. **The pieces.** What you make from it, in your voice.
+
+**The bank brings you questions, not approvals.** In place of "approve these ten", the AI brings a few things worth your thought: "These two traditions seem to disagree here. What do you make of it?" "Three works you love all rest on this concept, and you have never responded to it." "This line you drew has a missing step." Answering one is thinking, and each answer becomes a response, a line or a rule.
+
+**The best use of it for you** is the time you spend reading a work as its concepts, arriving with something you feel and leaving with a line and a piece, and answering the few questions it brings. If you find yourself tidying, the bank is failing.
+
+A note for the builders: AR Create's rule is that agents propose and you decide. This changes it for filing only, at your word: sure joins go through, are listed under "recently joined", and can always be corrected. Your words, your responses, the top layer and anything written in your voice stay yours alone.
 
 ## Leaving
 
@@ -215,8 +234,7 @@ Phone first. Filled with lifelike nuggets, never empty.
 1. **Your lens.** Which three to five variables make up your filter? The whole "assimilate" idea rests on these.
 2. **Books.** How do they reach the bank: an ebook file, your Kindle highlights, photographs of pages, an audiobook?
 3. **Friends.** Will their ideas arrive as recordings or from your memory, and do you want to ask each friend once or each time before quoting them in public?
-4. **A few today.** Do you want it at all, or only the doors you open on purpose?
+4. **A few today.** The proposal is now that it brings a few questions worth your thought, described under "Where you are in it". Do you want that, or only the doors you open on purpose?
 5. **The whole map.** Answered: yes, you want it. How to do it properly is the open design work, described under Connecting.
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
-8. **Joins the agent is sure of.** They start as one button for you to press. Later, once you trust it, do you want sure joins to go through on their own and simply appear in the "recently joined" list?
