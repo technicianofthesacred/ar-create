@@ -163,6 +163,27 @@ The recommendation: **the AI does the filing, and you do the meaning.** Filing i
 
 **The best use of it for you** is the time you spend reading a work as its concepts, arriving with something you feel and leaving with a line and a piece, and answering the few questions it brings. If you find yourself tidying, the bank is failing.
 
+### It changes as you change
+
+You said: "Yes, the bank brings me questions, not approvals. Will there be places where I can type different meanings into it, or different filters of what I'm looking for, that can change the things internally? This needs to be reciprocal, so as I start learning my awareness will grow, and the things that I'm looking for, or the ways that I organize things, will improve. Kind of like how AI works with new model training. So these things need to be dynamic, not static."
+
+Yes. The bank is built in two layers so that this is possible.
+
+- **What never changes**: the sources, and the exact words with their speaker and moment.
+- **What is always open to change**: everything read from them. Concept names, distillations, lens readings, which concepts sit together, the layers and the suggested lines.
+
+Because the second layer is only ever a reading of the first, it can be read again whenever you see more clearly. Five ways you change it:
+
+1. **Rewrite "How I distil" at any time.** Type or speak what you are looking for now. The AI then re-reads the bank through it and shows what would change before anything moves: "14 concepts would be renamed, 6 would fold together, 2 new ones appear."
+2. **Keep several lenses.** One for presence, one for making art, one for a particular piece. Switch between them and the same concept is explained differently, with the words unchanged.
+3. **Type a meaning straight onto a concept.** Your own definition, in your words, kept in your place. The AI uses it from then on when it files and explains.
+4. **Reorganise by hand.** Move a concept, rename a bigger concept, redraw a line. The AI treats what you did as guidance for similar cases.
+5. **The bank proposes changes to your lens too.** This is the reciprocal part. It notices what you turn up, respond to and build lines from, and asks: "You keep returning to concepts about preparation. Should that be part of what you look for?" Your lens stays written in your words, so it only ever asks.
+
+**Your earlier views are kept.** Each version of "How I distil" is dated, so you can look back at how you read a concept a year ago and see how your understanding has grown. That record is part of the bank.
+
+Re-reading a large bank costs something, so it is done in stages, the most resonant concepts first, with the likely cost shown before a full pass.
+
 A note for the builders: AR Create's rule is that agents propose and you decide. This changes it for filing only, at your word: sure joins go through, are listed under "recently joined", and can always be corrected. Your words, your responses, the top layer and anything written in your voice stay yours alone.
 
 ## Leaving
@@ -231,10 +252,10 @@ Phone first. Filled with lifelike nuggets, never empty.
 
 ## Open questions only you can answer
 
-1. **Your lens.** Which three to five variables make up your filter? The whole "assimilate" idea rests on these.
+1. **Your lens.** What are you looking for today when you distil a work? A few spoken sentences are enough for a first "How I distil". It is meant to change as you do, so it does not need to be right.
 2. **Books.** How do they reach the bank: an ebook file, your Kindle highlights, photographs of pages, an audiobook?
 3. **Friends.** Will their ideas arrive as recordings or from your memory, and do you want to ask each friend once or each time before quoting them in public?
-4. **A few today.** The proposal is now that it brings a few questions worth your thought, described under "Where you are in it". Do you want that, or only the doors you open on purpose?
+4. **A few today.** Answered: yes, the bank brings you questions, not approvals.
 5. **The whole map.** Answered: yes, you want it. How to do it properly is the open design work, described under Connecting.
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
