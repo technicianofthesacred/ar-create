@@ -1,4 +1,6 @@
-// Where a subject lives: its folder, tags, pin, archived flag and hand-set order. One record per subject under
+// Where a subject lives: its folder, tags, pin, archived flag, its hand-set order in its folder and, apart from that,
+// its hand-set place on the desk (deskOrder; a place saved before the desk had its own order has none, and the desk
+// then goes by pin time). One record per subject under
 // data/subject-places/subjects/, and one list of folders (data/subject-places/folders.json) so an empty folder can
 // exist and keep its place. The app, the CLI and MCP all read and change the same files through the commands in
 // runtime/commands/subject-places.mjs. A subject with no saved place has none of these and behaves as it always did.
@@ -14,9 +16,9 @@ import {folderName,stableJson} from './library-folders.mjs';
 const PLACE='ar-create.subject-place.v1',FOLDERS='ar-create.subject-folders.v1',VIEW='ar-create.subject-places.v1',FOLDER_VIEW='ar-create.subject-folders-view.v1';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,HASH=/^[a-f0-9]{64}$/,ID=/^[A-Za-z0-9._:-]{1,160}$/,PLAIN_FILE=/^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/;
 const MAX_DEPTH=8,MAX_TAGS=30,MAX_TAG=40,MAX_FOLDERS=500,MAX_REORDER=500,KEEP_OPS=50,KEEP_FOLDER_OPS=200,MAX_BODY=256*1024;
-const PLACE_FIELDS=['folder','tags','pinned','pinnedAt','archived','order'];
+const PLACE_FIELDS=['folder','tags','pinned','pinnedAt','archived','order','deskOrder'];
 // The fields a place can hold. `held` records which ones were ever set, so a carry-over fills only what is not saved yet.
-const HELD=Object.freeze(['folder','tags','pinnedAt','archived','order']);
+const HELD=Object.freeze(['folder','tags','pinnedAt','archived','order','deskOrder']);
 const FOLDER_ACTIONS={create:['path'],rename:['path','name'],reorder:['order'],remove:['path'],undo:['undoOperationId']};
 /** The stamp on a place carried over from one browser's own storage the first time the app saw it. */
 export const IMPORT_ACTOR='import:browser';
@@ -25,7 +27,7 @@ const actorNow=()=>currentActor()?.actor||'unknown(in-process)';
 const clientNow=()=>currentActor()?.client||null;
 const object=(input,what)=>{if(!input||typeof input!=='object'||Array.isArray(input))fail(what+' must be a JSON object.');return input;};
 const only=(input,allowed)=>{const extra=Object.keys(input).filter(k=>!allowed.includes(k));if(extra.length)fail('Unsupported field '+extra[0]+'. Use only '+allowed.join(', ')+'.');};
-const content=p=>({folder:p.folder,tags:p.tags,pinnedAt:p.pinnedAt,archived:p.archived,order:p.order});
+const content=p=>({folder:p.folder,tags:p.tags,pinnedAt:p.pinnedAt,archived:p.archived,order:p.order,...(p.deskOrder!==undefined&&p.deskOrder!==null?{deskOrder:p.deskOrder}:{})});
 const placeHash=p=>digest(stableJson(content(p)));
 const foldersHash=list=>digest(stableJson(list));
 const key=folder=>stableJson(folder);
@@ -51,17 +53,18 @@ function cleanPinnedAt(value){
  return new Date(Date.parse(value)).toISOString();
 }
 function cleanOrder(value){if(value===null)return null;if(typeof value!=='number'||!Number.isFinite(value)||Math.abs(value)>1e9)fail('order is a number (its hand-set position in the folder), or null.');return value;}
+function cleanDeskOrder(value){if(value===null)return null;if(typeof value!=='number'||!Number.isFinite(value)||Math.abs(value)>1e9)fail('deskOrder is a number (its hand-set place on the desk), or null.');return value;}
 function cleanArchived(value){if(typeof value!=='boolean')fail('archived is true or false.');return value;}
 const empty=parentStudyId=>({schema:PLACE,parentStudyId,folder:[],tags:[],pinnedAt:null,archived:false,order:null,held:[],revision:0,operations:[]});
 function validatePlace(value,id){
  if(!value||value.schema!==PLACE||value.parentStudyId!==id||!Number.isSafeInteger(value.revision)||value.revision<1||!Array.isArray(value.operations))fail('This subject\'s place file is not readable; its bytes were kept.',409);
- cleanFolder(value.folder);cleanTags(value.tags);if(value.pinnedAt!==null)cleanPinnedAt(value.pinnedAt);cleanOrder(value.order);cleanArchived(value.archived);
+ cleanFolder(value.folder);cleanTags(value.tags);if(value.pinnedAt!==null)cleanPinnedAt(value.pinnedAt);cleanOrder(value.order);cleanArchived(value.archived);if(value.deskOrder!==undefined)cleanDeskOrder(value.deskOrder);
  // A place saved before `held` was kept holds every field.
  if(value.held===undefined)value.held=[...HELD];else if(!Array.isArray(value.held)||value.held.some(k=>!HELD.includes(k)))fail('This subject\'s place file is not readable; its bytes were kept.',409);
  return value;
 }
 function view(place,saved=place.revision>0){
- return {parentStudyId:place.parentStudyId,folder:[...place.folder],tags:[...place.tags],pinnedAt:place.pinnedAt,archived:place.archived,order:place.order,held:HELD.filter(k=>place.held.includes(k)),revision:place.revision,hash:placeHash(place),saved,
+ return {parentStudyId:place.parentStudyId,folder:[...place.folder],tags:[...place.tags],pinnedAt:place.pinnedAt,archived:place.archived,order:place.order,deskOrder:place.deskOrder??null,held:HELD.filter(k=>place.held.includes(k)),revision:place.revision,hash:placeHash(place),saved,
   ...(place.updatedAt?{updatedAt:place.updatedAt,updatedBy:place.updatedBy}:{}),...(place.importedFrom?{importedFrom:place.importedFrom,carriedBy:place.carriedBy}:{})};
 }
 const fingerprint=input=>digest(stableJson(input));
@@ -91,7 +94,7 @@ export function createSubjectPlaces({dataDir}={}){
  function commitPlace(before,next,input,what,{actor=actorNow(),extra={},held=[]}={}){
   const revision=before.revision+1,at=new Date().toISOString();
   const op={operationId:input.operationId,revision,actor,client:clientNow(),at,what,fingerprint:fingerprint(input)};
-  return store({schema:PLACE,parentStudyId:before.parentStudyId,folder:next.folder,tags:next.tags,pinnedAt:next.pinnedAt,archived:next.archived,order:next.order,held:HELD.filter(k=>before.held.includes(k)||held.includes(k)),revision,updatedAt:at,updatedBy:actor,
+  return store({schema:PLACE,parentStudyId:before.parentStudyId,folder:next.folder,tags:next.tags,pinnedAt:next.pinnedAt,archived:next.archived,order:next.order,...(next.deskOrder!==undefined&&next.deskOrder!==null?{deskOrder:next.deskOrder}:{}),held:HELD.filter(k=>before.held.includes(k)||held.includes(k)),revision,updatedAt:at,updatedBy:actor,
    ...(before.importedFrom?{importedFrom:before.importedFrom,carriedBy:before.carriedBy}:{}),...extra,operations:[op,...before.operations].slice(0,KEEP_OPS)});
  }
  /** The earlier answer to a retried operation, or null; a different request under the same id is refused. */
@@ -124,11 +127,12 @@ export function createSubjectPlaces({dataDir}={}){
  function save(input){
   begin(input,['parentStudyId','operationId','expectedRevision','expectedHash',...PLACE_FIELDS]);
   const id=subjectId(input.parentStudyId);
-  if(!PLACE_FIELDS.some(k=>Object.hasOwn(input,k)))fail('Name at least one of folder, tags, pinned, archived or order.');
+  if(!PLACE_FIELDS.some(k=>Object.hasOwn(input,k)))fail('Name at least one of folder, tags, pinned, archived, order or deskOrder.');
   if(Object.hasOwn(input,'pinned')&&Object.hasOwn(input,'pinnedAt'))fail('Send pinned or pinnedAt, not both.');
   if(Object.hasOwn(input,'pinned')&&typeof input.pinned!=='boolean')fail('pinned is true or false.');
   const change={...(Object.hasOwn(input,'folder')?{folder:cleanFolder(input.folder)}:{}),...(Object.hasOwn(input,'tags')?{tags:cleanTags(input.tags)}:{}),...(Object.hasOwn(input,'pinnedAt')?{pinnedAt:cleanPinnedAt(input.pinnedAt)}:{}),
-   ...(Object.hasOwn(input,'archived')?{archived:cleanArchived(input.archived)}:{}),...(Object.hasOwn(input,'order')?{order:cleanOrder(input.order)}:{})};
+   ...(Object.hasOwn(input,'archived')?{archived:cleanArchived(input.archived)}:{}),...(Object.hasOwn(input,'order')?{order:cleanOrder(input.order)}:{}),
+   ...(Object.hasOwn(input,'deskOrder')?{deskOrder:cleanDeskOrder(input.deskOrder)}:{})};
   return serial(()=>{
    const before=load(id),again=replayed(before,input);if(again)return again;
    expect(before,input);
@@ -157,7 +161,11 @@ export function createSubjectPlaces({dataDir}={}){
  }
  /** Put several subjects in a hand-set order (0, 1, 2, ...) in one call; every expected revision is checked before anything is written. */
  function reorder(input){
-  begin(input,['operationId','items']);
+  begin(input,['operationId','items','which']);
+  // Which hand-set order this sets: 'folder' (the default, `order`, a subject's place in its folder) or 'desk'
+  // (`deskOrder`, its place on the desk). Setting one never changes the other.
+  if(input.which!==undefined&&!['folder','desk'].includes(input.which))fail('which is folder (the default) or desk.');
+  const field=input.which==='desk'?'deskOrder':'order';
   if(!Array.isArray(input.items)||!input.items.length||input.items.length>MAX_REORDER)fail('items lists 1 to '+MAX_REORDER+' subjects in their new order.');
   const items=input.items.map(item=>{object(item,'Each item');only(item,['parentStudyId','expectedRevision','expectedHash']);return {...item,parentStudyId:subjectId(item.parentStudyId)};});
   if(new Set(items.map(i=>i.parentStudyId)).size!==items.length)fail('Each subject appears once in items.');
@@ -169,7 +177,7 @@ export function createSubjectPlaces({dataDir}={}){
     try{expect(before,item);}catch(error){if(error.status!==409)throw error;stale.push(item.parentStudyId);}
    }
    if(stale.length)fail('These subjects changed since you read them: '+stale.join(', ')+'. Read again; nothing was moved.',409);
-   const places=loaded.map(({before},index)=>before.operations.some(op=>op.operationId===input.operationId)?before:commitPlace(before,{...content(before),order:index},input,'reordered',{held:['order']}));
+   const places=loaded.map(({before},index)=>before.operations.some(op=>op.operationId===input.operationId)?before:commitPlace(before,{...content(before),[field]:index},input,field==='deskOrder'?'reordered on the desk':'reordered',{held:[field]}));
    return {schema:VIEW,places:places.map(p=>view(p)),...(loaded.every(({before})=>before.operations.some(op=>op.operationId===input.operationId))?{replayed:true}:{})};
   });
  }
