@@ -98,6 +98,15 @@ One home, inside AR Create. No third system.
 - **The i64os shelf** stops being a second reading place. Its notes become sources in the bank, and nuggets are cut from them. Details below.
 - **Your many entrances** (a pasted link, the phone's share button, an agent, the shelf, a note from the vault) all arrive at the same door as sources. The vault stays read-only.
 
+**Version two, and a question for you.** Also on 11 November you approved version two of the app, with four stations: Gather, Research, Create, Share. The existing workspace stays as Advanced. This concept was written against the existing names (Library, Collections, Research), and nothing in it depends on them. The likely fit, which is yours to confirm:
+
+- **Gather**: a talk, article or book comes in.
+- **Research**: the bank itself. Nuggets, links, pathways, the map and the five doors.
+- **Create**: "make a piece" from a pathway, with sources shown.
+- **Share**: the credit lines and the checks before publishing.
+
+The coordinating thread reports that version two's Research has topics and groups of sources so far, and no unit for one idea. If that is right, the nugget is what it lacks, and a pathway may be the same thing as a research topic. I read the top of the version two plan and did not read its Research screens.
+
 **What the i64os read found.** The separate thread reported on 11 November, after this concept was first written. It worked from i64os's documents and code and did not open the real data. Its page is `00b-i64os-inventory.md` on the review branch.
 
 - **The shelf is real, and a note is a whole talk.** The documents say 189 notes, each at three depths, with no links between notes. So a shelf note is a source here, never a nugget.
@@ -140,3 +149,4 @@ Phone first. Filled with lifelike nuggets, never empty.
 5. **The whole map.** Do you want one view of everything at once, knowing it is for feeling the bank grow more than for finding things?
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
+8. **Version two.** Does the wisdom bank live inside the Research station of version two, as its heart? And is a pathway the same thing as a research topic there, or something separate?
