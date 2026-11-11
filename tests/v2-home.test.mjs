@@ -336,3 +336,39 @@ test('Home as an assistant says why the answers are greyed, in a visible line; c
  }
  assert.doesNotMatch(read('public/v2/screens/home.js'),/Drawn in the \$\{esc\(id\)\}/,'the dot says the look\'s name, not its id');
 });
+
+/* ---------------- what is waiting to be filed ---------------- */
+test('Home lists what a capture left in the Library with no subject, and files it with the subject through the attach command',async t=>{
+ const f=await server(t);await world(f);
+ // Two captures left in the Library root (the sheet's "to file later") and one already filed by the sheet's own attach.
+ const put=async name=>(await f.agent('/api/sources/import',{rootId:'library',folder:'',files:[{name,content:'Invented words for '+name}]})).receipts[0].source;
+ const first=await put('Invented lantern thought 2026-11-11 09.00.00.md'),second=await put('Invented kiln thought 2026-11-11 09.05.00.md'),filed=await put('Invented already filed 2026-11-11 08.00.00.md');
+ const standing=await f.agent('/api/subject/standing?parentStudyId=inv-cups');
+ await f.agent('/api/study/material/attach',{bindingId:standing.facts.bindingId,parentStudyId:'inv-cups',sourceIds:[filed.id]});
+ const calls=[];
+ const {w,doc}=await page({base:f.url,fetchImpl:logged(f.url,calls)});
+ await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ const block=await until(()=>doc.querySelector('[data-home-file]:not([hidden])'),'the block of captures to file');
+ const names=[...block.querySelectorAll('[data-source]')].map(li=>li.querySelector('.home-file-name').textContent);
+ assert.deepEqual(names.sort(),['Invented kiln thought 2026-11-11 09.05.00.md','Invented lantern thought 2026-11-11 09.00.00.md'],'only what no subject has, never the one already attached');
+ assert.ok(block.querySelector('a[href*="section=library"]'),'a link to it in Advanced');
+ assert.doesNotMatch(block.textContent,/inbox|—/);
+ assert.ok(calls.includes('/api/sources/tree')&&calls.includes('/api/library/source-projects'),'read with the Library tree and the sources each project uses');
+ // File one: choose a subject; the sheet attaches it and the line goes.
+ click(w,block.querySelector(`[data-file-in="${first.id}"]`));
+ const sheet=await until(()=>doc.querySelector('dialog.v2-sheet [name=subject]'),'the choice of subject');
+ const options=[...sheet.options].map(o=>o.textContent);
+ assert.ok(options.some(o=>/Invented river/.test(o))&&!options.some(o=>/Invented old plan/.test(o)),'live subjects only, no archived one');
+ sheet.value='inv-river';sheet.form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+ await until(()=>!doc.querySelector(`[data-file-in="${first.id}"]`),'the capture to leave the list');
+ const usedBy=(await f.agent('/api/library/source-projects')).projects.filter(p=>p.sourceIds.includes(first.id));
+ assert.equal(usedBy.length,1,'it is now with exactly one subject');
+ assert.ok(doc.querySelector(`[data-file-in="${second.id}"]`),'the other is still waiting');
+});
+test('Home shows nothing to file when nothing is waiting, and the block keeps to the look',async t=>{
+ const f=await server(t);await world(f);
+ const {doc}=await page({base:f.url,fetchImpl:pageFetch(f.url)});
+ await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ await new Promise(r=>setTimeout(r,300));
+ assert.equal(doc.querySelector('[data-home-file]:not([hidden])'),null,'a quiet page: the block is only there when there is something to file');
+});

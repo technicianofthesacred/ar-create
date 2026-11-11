@@ -145,7 +145,7 @@ test('with no subject a thought goes to the Library root and says so; with a sub
  await home.open();home.tile('thought');home.typeInto('Only for later.');home.press('save');
  await until(()=>home.named('sources.import').length>0&&/saved in the Library/.test(home.text()),'the done line');
  assert.equal(home.named('sources.import')[0].body.folder,'');
- assert.deepEqual(home.calls.map(c=>c.name).filter(n=>/sources|attach/.test(n)),['sources.import'],'no folder and no attach at the root');
+ assert.deepEqual(home.calls.map(c=>c.name).filter(n=>/sources\.(import|folders)|attach/.test(n)),['sources.import'],'no folder and no attach at the root');
  assert.match(home.text(),/Thought saved in the Library, to file later\./);
  assert.match(home.doc.querySelector('dialog.v2-capture [data-cap-link]').getAttribute('href'),/^\/document-study\/index\.html\?.*section=library/,'the Library is opened in Advanced');
  const noProject=await capPage({respond:(n,b)=>n==='subject.standing'?{title:'T',facts:{bindingId:'bind-9',projectId:null}}:goodSave()(n,b)});
@@ -569,4 +569,46 @@ test('a question whose answer was lost: Try again sends the same operationId, ma
   q.typeInto('Other words');q.press('save');await until(()=>q.named(command).length===2,'second');
   assert.notEqual(q.named(command)[1].body.operationId,q.named(command)[0].body.operationId,'changed words get a new operationId');
  }
+});
+
+/* ---------------- the small corrections ---------------- */
+test('with no subject open the line says where it goes in the sample\'s bold words',async()=>{
+ const p=await capPage({respond:goodSave(),hash:'#/'});
+ await p.open();
+ assert.equal(p.doc.querySelector('[data-cap-to] b')?.textContent,'the Library, to file later');
+ assert.match(p.text(),/Goes to the Library, to file later\. A question goes to Research\./);
+});
+test('Escape while a save is running says it is saving, not that it is unsaved',async()=>{
+ let release;const hold=new Promise(r=>{release=r;});
+ const p=await capPage({respond:async(n,b)=>{if(n==='sources.import')await hold;return goodSave()(n,b);}});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words being saved.');p.press('save');
+ await until(()=>p.named('sources.import').length===1,'the save to start');
+ p.sheet().dispatchEvent(new p.w.Event('cancel',{cancelable:true}));
+ assert.ok(p.sheet(),'it stays open');
+ assert.match(p.text(),/saving/i);assert.doesNotMatch(p.text(),/Save it, or discard it/);
+ release();await until(()=>/Thought added/.test(p.text()),'the save to finish');
+});
+test('moving to another screen with work unsaved keeps the sheet and says so',async()=>{
+ const p=await capPage({respond:goodSave()});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words not saved yet.');
+ p.w.location.hash='#/research';await settle(60);
+ assert.ok(p.sheet(),'the sheet stays open');
+ assert.match(p.text(),/another screen/i);assert.match(p.text(),/not saved/i);
+ // With nothing waiting it still closes quietly.
+ const q=await capPage({respond:goodSave()});
+ await q.open({id:'p1'});await settle();q.w.location.hash='#/research';await settle(60);
+ assert.equal(q.sheet(),null);
+});
+test('a phone clock that runs ahead does not make a real save look old: the retry finds it and saves nothing twice',async()=>{
+ const srv=lossyServer();
+ // The server stamped the file 30 seconds before the phone thought the attempt began.
+ const real=srv.respond;
+ const respond=(n,b)=>{const out=real(n,b);if(n==='sources.import')srv.files.forEach(x=>{x.at=Date.now()-30000;});return out;};
+ const p=await capPage({respond});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words saved while the phone clock ran fast.');p.press('save');
+ await until(()=>/may already be saved/.test(p.text()),'the lost answer');
+ p.press('save');await until(()=>/Thought added/.test(p.text()),'the retry');
+ assert.equal(p.named('sources.import').length,1,'found, not sent again');
+ // A file saved long before the attempt is still not taken for this one.
+ assert.equal(p.w.V2Capture.CLOCK_MARGIN_MS>0&&p.w.V2Capture.CLOCK_MARGIN_MS<=120000,true,'a small margin, a minute or two at most');
 });

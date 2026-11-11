@@ -29,7 +29,7 @@ async function page({url='http://local.test/v2/index.html',answers={},storage={}
  // A stand-in for the browser's EventSource, to send the page changes as the server's stream would.
  w.EventSource=class{constructor(u){this.url=u;this.l={};sources.push(this);}addEventListener(t,f){(this.l[t]||=[]).push(f);}close(){this.closed=true;}emit(t,data){for(const f of this.l[t]||[])f({data:JSON.stringify(data)});}};
  for(const [k,v] of Object.entries(storage))w.localStorage.setItem(k,v);
- const commands=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],['subject-places.save','POST','/api/subject-places/save',false],['needs-you.answer','POST','/api/needs-you/answer',false]]
+ const commands=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],['subject-places.save','POST','/api/subject-places/save',false],['needs-you.answer','POST','/api/needs-you/answer',false],['subjects.standing','GET','/api/subjects/standing',true],['concept.sources.search','POST','/api/concept/sources/search',true]]
   .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
  w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push({path:u.pathname+u.search,options});
   const answer=u.pathname==='/api/capabilities'?{commands}:answers[u.pathname]??{};const [status,body]=Array.isArray(answer)?answer:[200,answer];
@@ -147,8 +147,61 @@ test('Capture is the sample sheet with four tiles, each opening in place; search
  assert.equal(doc.activeElement,doc.querySelector('[data-v2-capture]'),'focus returns to the Capture button');
  w.location.hash='#/';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  doc.querySelector('[data-v2-ask]').click();
- assert.equal(w.location.hash,'#/research');
- assert.equal(doc.querySelector('dialog.v2-sheet'),null,'search opens no dialog');
+ assert.equal(w.location.hash,'#/','Find does not leave the page');
+ assert.ok(doc.querySelector('dialog.v2-sheet [name=q]'),'Find opens its own box');
+});
+
+test('Find in the top bar finds subjects by name and Library items by their words, and opens them',async()=>{
+ const {w,doc,calls}=await page({answers:{
+  '/api/subjects/standing':{subjects:[{id:'p1',title:'Invented garden of patience',archived:false},{id:'p2',title:'Invented cups',archived:false},{id:'p9',title:'Invented old garden plan',archived:true}]},
+  '/api/concept/sources/search':{query:'garden',results:[{sourceId:'src-1',title:'Invented voice note from a garden',quote:'The garden is quiet at dawn.',start:3}],scanned:4,skipped:[],truncated:false},
+ }});
+ doc.querySelector('[data-v2-ask]').click();
+ const sheet=doc.querySelector('dialog.v2-sheet'),form=sheet.querySelector('form');
+ assert.equal(sheet.querySelector('h2').textContent,'Find');assert.match(sheet.textContent,/cannot answer questions/i);
+ const q=sheet.querySelector('[name=q]');q.value='garden';form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle(60);
+ const subjects=[...sheet.querySelectorAll('[data-v2-find-subject] a')].map(a=>[a.getAttribute('href'),a.textContent]);
+ assert.deepEqual(subjects,[['#/subject/p1','Invented garden of patience']],'by name, never an archived subject, never one that does not match');
+ const items=[...sheet.querySelectorAll('[data-v2-find-item] a')];
+ assert.equal(items.length,1);assert.match(items[0].textContent,/Invented voice note from a garden/);
+ assert.match(items[0].getAttribute('href'),/^\/document-study\/index\.html\?section=library/,'a Library item opens the Library in Advanced');
+ assert.match(sheet.textContent,/The garden is quiet at dawn\./);
+ const search=calls.find(c=>c.path==='/api/concept/sources/search');assert.deepEqual(JSON.parse(search.options.body),{query:'garden'},'the existing search command, the same as the CLI\'s library search');
+ // Choosing a subject closes the box and goes there.
+ sheet.querySelector('[data-v2-find-subject] a').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null);
+ // The key shown in the bar opens it.
+ doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true}));assert.ok(doc.querySelector('dialog.v2-sheet [name=q]'),'Ctrl or Cmd with K opens Find');
+});
+
+test('Find says plainly when nothing matches, and when the search is refused',async()=>{
+ const {w,doc}=await page({answers:{'/api/subjects/standing':{subjects:[]},'/api/concept/sources/search':[400,{error:'Supply an explicit nonempty literal query.'}]}});
+ doc.querySelector('[data-v2-ask]').click();const sheet=doc.querySelector('dialog.v2-sheet');
+ sheet.querySelector('[name=q]').value='zzz';sheet.querySelector('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle(60);
+ assert.match(sheet.textContent,/Nothing found for "zzz"|could not search the Library/i);
+});
+
+test('the shell reads its desk and Needs you once on load, and a reset that is the first read is not a second one',async()=>{
+ const {doc,calls,sources}=await page({url:'http://local.test/v2/index.html#/looks',answers:{'/api/needs-you':{counts:{open:1},asks:[]},'/api/subject-places':{places:[{parentStudyId:'p1',pinnedAt:'2026-11-01T00:00:00Z',archived:false,order:0}]},'/api/study-draft/catalog':{collections:[{parentStudyId:'p1',title:'Invented garden'}]}}});
+ const es=sources.at(-1);es.emit('hello',{reset:true,bootId:'b1',cursor:1});es.emit('reset',{bootId:'b1',cursor:1});await settle(80);
+ const count=route=>calls.filter(c=>c.path.split('?')[0]===route).length;
+ assert.equal(count('/api/needs-you'),1);assert.equal(count('/api/subject-places'),1);assert.equal(count('/api/study-draft/catalog'),1);
+ assert.equal(doc.querySelector('[data-v2-needs-count]').textContent,'1');
+});
+
+test('a desk chip with no photograph is a plain chip, with no empty box; with one it shows the picture',async()=>{
+ const {w,doc}=await page();
+ await w.v2.desk.use(async()=>[{id:'a',title:'Invented plain'},{id:'b',title:'Invented pictured',cover:'/api/study/photos/preview?x=1'}]);
+ const [plain,pictured]=[...doc.querySelectorAll('.v2-desk-chip')];
+ assert.equal(plain.querySelector('i,img'),null,'no empty box');assert.ok(plain.classList.contains('nopic'));
+ assert.ok(pictured.querySelector('img'));assert.ok(!pictured.classList.contains('nopic'));
+});
+
+test('light-theme grey is the sample\'s one shell token, and still reads at 4.5 to 1 on the paper and the page',()=>{
+ const css=read('public/v2/shell/shell.css');
+ const m=css.match(/:root(?:\[data-theme="light"\])?[^{]*\{[^}]*--dim:\s*(#[0-9a-f]{6})/i);assert.ok(m,'--dim is set once, in the shell');assert.equal(m[1].toLowerCase(),'#686c61');
+ const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+ const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+ for(const paper of ['#fffefb','#efede6'])assert.ok(ratio('#686c61',paper)>=4.5,paper);
 });
 
 test('screens hear changes from the live stream: by record, by command name, and a reset',async()=>{

@@ -68,7 +68,7 @@
  const V2Client=W.V2Client;
  const uuid=()=>{try{return crypto.randomUUID();}catch{return V2Client?.uuid?.()||String(Date.now());}};
  // The controls a repaint must hand focus back to, by what they are and which subject they belong to.
- const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-ask-change','data-ask-choice','data-unarchive'];
+ const FOCUS_KEYS=['data-pin','data-v2-up','data-v2-down','data-row-menu','data-group-by','data-view','data-station','data-arrange','data-archived','data-show-all','data-home-find','data-file-in','data-file-more','data-ask-change','data-ask-choice','data-unarchive'];
 
  /* ======================= the screen ======================= */
  v2.screen({id:'home',title:'Home',route:'',
@@ -76,11 +76,12 @@
  <header><div><h1>Home</h1><p>${esc(today())}</p></div><button type="button" class="home-new" data-home-new>${icon('plus')}New subject</button></header>
  <div class="home-needs-slot" data-home-needs></div>
  <section class="home-desk" data-home-desk aria-labelledby="home-desk-h" hidden></section>
+ <section class="home-file" data-home-file aria-labelledby="home-file-h" hidden></section>
  <section class="home-all" data-home-all aria-labelledby="home-all-h"><div class="home-sec-h"><h2 id="home-all-h">Everything</h2></div><p class="home-quiet" data-home-loading>Reading your subjects…</p></section>
 </div>`,
   async mount(el,ctx){
    const root=el.querySelector('[data-home]');if(!root)return;
-   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false};
+   const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false,allFile:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
    // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
    const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
@@ -101,7 +102,7 @@
      if(data)void v2.desk.use(async()=>desk().map(s=>({id:s.id,title:s.title,...(covers.get(s.id)?{cover:covers.get(s.id)}:{})})));
      loadedAt=Date.now();
      if(busy()&&data)repaint();else paint();
-     void readCovers();void readLooks();
+     void readCovers();void readLooks();void readUnfiled();
      if(again){again=false;void load();}
     })();
     return loading;
@@ -158,6 +159,53 @@
    }
    function folderDot(path){if(!path?.length)return '';const id=folderLook(path),a=id&&accentOf(id);return !a?'<i class="home-dot" aria-hidden="true"></i>':`<i class="home-dot" style="--home-dot:${esc(a)}" title="${esc(lookNames.get(id)?'Drawn in the '+lookNames.get(id)+' look':'Drawn in one look')}" aria-hidden="true"></i>`;}
    function accentOf(id){const roles=lookRoles.get(id),a=roles?.[v2.theme()==='dark'?'dark':'light']?.accent||roles?.dark?.accent;return typeof a==='string'&&/^#[0-9a-f]{3,8}$/i.test(a)?a:null;}
+
+   /* ---------- to file: captures the sheet left in the Library with no subject ---------- */
+   // The capture sheet with no subject open saves into the Library's own top folder ("to file later"). Those are the files
+   // sitting there that no subject lists as its material: sources.tree for the files, library.source-projects for who uses
+   // which. Quiet when both cannot be read or nothing is waiting; the block is only there when there is something to file.
+   const FILE_CUT=5;
+   let unfiled=[],filing=new Set();
+   async function readUnfiled(){
+    const [tree,used]=await Promise.all([quiet(v2.call('sources.tree',{})),quiet(v2.call('library.source-projects',{}))]);
+    if(ctx.signal.aborted)return;
+    const library=(tree?.roots||[]).find(r=>r?.id==='library'),top=library?.tree?.files;
+    if(!Array.isArray(top)||!used||!Array.isArray(used.projects)){unfiled=[];return paintFile();}
+    const taken=new Set(used.projects.flatMap(p=>p.sourceIds||[]));
+    unfiled=top.filter(f=>f&&typeof f.id==='string'&&f.id&&!f.missing&&!taken.has(f.id)).sort((a,b)=>String(b.provenance?.capturedAt||b.modified_at||'').localeCompare(String(a.provenance?.capturedAt||a.modified_at||'')));
+    paintFile();
+   }
+   function paintFile(){
+    const sec=root.querySelector('[data-home-file]');if(!sec||ctx.signal.aborted)return;
+    if(!unfiled.length||!live().length){sec.hidden=true;sec.innerHTML='';return;}
+    const show=ui.allFile?unfiled:unfiled.slice(0,FILE_CUT),more=unfiled.length-show.length,lib=v2.advanced({section:'library'});
+    sec.hidden=false;
+    sec.innerHTML=`<div class="home-sec-h"><h2 id="home-file-h">To file</h2><span>${plural(unfiled.length,'capture')} in the Library, not with a subject yet</span></div>
+<ul class="home-file-list">${show.map(f=>`<li data-source="${esc(f.id)}"><span class="home-file-name">${esc(f.rel_path||f.name||'Untitled')}</span><small>${esc(when(f.provenance?.capturedAt||f.modified_at))}</small><span class="home-file-acts"><button type="button" class="v2-ghost" data-file-in="${esc(f.id)}">File in a subject</button><a class="home-act" href="${esc(lib)}">See it in Advanced</a></span></li>`).join('')}</ul>
+${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show ${more} more</button>`:''}`;
+   }
+   /** File one capture with a subject, as the Capture sheet does: study.material.attach, else first-flow.attach. */
+   function fileSheet(id){
+    const item=unfiled.find(f=>f.id===id);if(!item)return;
+    const subjects=live().slice().sort(byName);
+    const f=form(`<label for="home-file-to">Subject</label><select id="home-file-to" name="subject">${subjects.map(s=>`<option value="${esc(s.id)}">${esc(s.title)}</option>`).join('')}</select><p class="home-quiet">${esc(item.rel_path||item.name||'')}</p>${formActs('File it')}`);
+    const sheet=v2.ui.sheet({title:'File in a subject',body:f});f.elements.subject.focus();
+    f.addEventListener('submit',async e=>{
+     e.preventDefault();const subject=subjects.find(s=>s.id===f.elements.subject.value);if(!subject||filing.has(id))return;
+     filing.add(id);f.querySelector('[type=submit]').disabled=true;
+     try{
+      const st=await v2.call('subject.standing',{parentStudyId:subject.id}),facts=st?.facts||{};
+      const tries=[];
+      if(facts.bindingId)tries.push(()=>v2.call('study.material.attach',{bindingId:facts.bindingId,parentStudyId:subject.id,sourceIds:[id]}));
+      if(facts.projectId)tries.push(()=>v2.call('first-flow.attach',{projectId:facts.projectId,sourceIds:[id]}));
+      if(!tries.length)throw new Error('This subject has no place of its own yet, so nothing can be filed in it.');
+      let why='',done=false;for(const attempt of tries){try{await attempt();done=true;break;}catch(error){why=error?.message||why;}}
+      if(!done)throw new Error(why||'The app refused it.');
+      sheet.close();unfiled=unfiled.filter(x=>x.id!==id);paintFile();v2.ui.say(`Filed in "${subject.title}".`,{tone:'good'});void readUnfiled();
+     }catch(error){f.querySelector('[type=submit]').disabled=false;v2.ui.say((error?.message||'It could not be filed.')+' Press File it to try again.',{tone:'bad'});}
+     finally{filing.delete(id);}
+    });
+   }
 
    /* ---------- the model ---------- */
    const find=id=>data?.subjects.find(s=>s.id===id);
@@ -219,7 +267,7 @@
     }
     if(!data)return;
     if(failed)v2.ui.say('Home could not be read again just now. What is shown is from '+new Date(data.readAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'.',{tone:'warn',timeout:8000});
-    keepFocus(()=>{paintNeeds();paintDesk();paintAll();applyCovers();});
+    keepFocus(()=>{paintNeeds();paintDesk();paintFile();paintAll();applyCovers();});
    }
 
    /** The questions waiting, in the order they first appeared. One answered here keeps its place; one that is gone from
@@ -441,6 +489,8 @@ ${all.length&&ui.group==='folder'?`<div class="home-foot"><button type="button" 
    root.addEventListener('click',e=>{
     const t=e.target.closest?.('button');if(!t||!root.contains(t)||t.closest('.v2-move'))return;
     if(t.matches('[data-home-new]'))return newSubject();
+    if(t.dataset.fileIn)return fileSheet(t.dataset.fileIn);
+    if(t.hasAttribute('data-file-more')){ui.allFile=true;return keepFocus(paintFile);}
     if(t.matches('[data-home-retry]')){t.disabled=true;t.textContent='Reading again…';return void load();}
     if(t.dataset.groupBy){ui.group=t.dataset.groupBy;ui.open.clear();if(ui.group!=='folder')ui.arrange=false;keepPrefs(ui);return keepFocus(paintAll);}
     if(t.dataset.view){ui.view=t.dataset.view;keepPrefs(ui);return keepFocus(()=>{paintAll();applyCovers();});}
