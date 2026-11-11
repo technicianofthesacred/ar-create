@@ -97,3 +97,16 @@ What was done about it, on all four screens: every card now reads in groups, tig
 "Now your UI significantly reduces the amount of text because of the multiple buffers and barriers is there a way to do this so we don't have to lose so much width. Also here the comes first and explains by in contrasts maybe could be something a little more refined. This feels still a bit added on."
 
 What was done about it: their words now run as a band from edge to edge of the card, so a quote is as wide as the distillation above it and still sits on its own surface. The lines to neighbours are grouped by kind: one quiet heading per kind with the same line mark the map uses ("Comes first", "Explains it", "Contrasts with", "Leads to", "It explains", "Echoes", "Your line"), and the neighbours listed beneath it. The repeated capital tags at the right are gone. Rules for the next thread: never stack a padded box inside a padded card, and show a relationship as structure (a group, a line mark), not as a tag on each row.
+
+**11 November, on the Source screen, in his words:**
+
+"On the left side of this I'm not fully understanding what I actually do with all of these already whole concepts or things like that. I think it could use a bit more refinement around how these things interconnect and interact. Also, I see this map being significantly bigger, a huge map, connecting to other huge maps. Also one book may have a hundred concepts. It's important to be able to keep the book together in some sort of map as well so that we can refer to either. We're not just trying to create everything as just concepts, we're also trying to collect the concepts out of books and be able to browse in either direction."
+
+What was done here: only one small thing. Each neighbour in the lines panel is now a control with an arrow; tapping it moves the map to that concept, so the panel is a way to travel and not only a list. The rest is for plan 12 and is not built here.
+
+What it asks of plan 12 (my reading, not his words):
+
+- **Two ways in, always both.** By work: a book or talk keeps its own map of all its concepts, a hundred or more, and stays together as that work. By concept: one concept across every work that speaks of it. From any concept you can step to "this concept in this book" or "this concept across the bank", and from any book to any of its concepts. Neither view replaces the other.
+- **Maps that join maps.** A work's map is one region of the huge map. Where two works share a concept, their maps touch there, and that is where you cross from one book into another.
+- **What you do with a concept must be plain on the spot.** The lines panel listed relationships without saying what they are for. At every concept the next moves should be visible: go to a neighbour, read its words, respond, add it to a line.
+- **Scale.** The nine-concept map drawn by hand here does not answer a hundred concepts in one book. The work map itself needs depths: chapters or districts first, concepts inside them.

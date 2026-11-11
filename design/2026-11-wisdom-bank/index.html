@@ -209,6 +209,8 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
 .kinh i[data-k="prepares"],.kinh i[data-k="mine"]{border-color:var(--warm)}
 .kinh i[data-k="contrasts"],.kinh i[data-k="mine"]{border-top-style:dashed}
 .kinh i[data-k="echoes"]{border-top-style:dotted}
+.go{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px;width:100%;font-size:var(--t15)}
+.go span{color:var(--dim)}
 .kin .linerow{grid-template-columns:minmax(0,1fr);gap:2px;padding:0;border:0;margin:0}
 .nug .dist{color:var(--ink);font-size:var(--t15)}
 .lab{font-weight:500;letter-spacing:.08em}
@@ -337,7 +339,7 @@ const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;
 /* neighbours of a concept: [other id, kind, label seen from here, reason] */
 function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:KIN[l[2]][1],why:l[3],out,i:L.indexOf(l)}})}
 function linesHTML(nb,walk){const g={};nb.forEach(n=>(g[n.lab]=g[n.lab]||[]).push(n));
- return Object.keys(g).map(lab=>`<section class="kin"><p class="kinh"><i data-k="${g[lab][0].k}"></i>${lab}</p>${g[lab].map(n=>`<div class="linerow">${walk?`<button data-walk="${n.id}"><b>${C[n.id].n}</b></button>`:`<b>${C[n.id].n}</b>`}${n.k==='mine'&&!n.why?speak('whyline','Why this line?',`data-i="${n.i}"`):`<p class="${n.k==='mine'?'say':''}">${esc(n.why)}</p>`}</div>`).join('')}</section>`).join('')}
+ return Object.keys(g).map(lab=>`<section class="kin"><p class="kinh"><i data-k="${g[lab][0].k}"></i>${lab}</p>${g[lab].map(n=>`<div class="linerow"><button class="go" data-${walk?"walk":"pick"}="${n.id}"><b>${C[n.id].n}</b><span aria-hidden="true">›</span></button>${n.k==='mine'&&!n.why?speak('whyline','Why this line?',`data-i="${n.i}"`):`<p class="${n.k==='mine'?'say':''}">${esc(n.why)}</p>`}</div>`).join('')}</section>`).join('')}
 const hear=t=>`<button class="hear" aria-pressed="false" data-hear>${t}</button>`;
 
 /* ---------- screen 1 ---------- */
