@@ -71,7 +71,8 @@ html[data-brand] .rs-lay .rs-rl.on{box-shadow:inset 0 0 0 1px var(--v2-br)}
 .rs-lay .rs-found{list-style:none;padding:0;display:grid;gap:10px;min-width:0}
 .rs-lay .rs-found li{display:grid;gap:6px;padding:14px 16px;border-radius:12px;background:var(--v2-sec);min-width:0}
 .rs-lay .rs-found .rs-n{display:none}
-.rs-lay .rs-found p{white-space:pre-line;overflow-wrap:anywhere;font-family:var(--v2-speech);font-size:var(--v2-t15);line-height:1.6}
+.rs-lay .rs-found p{white-space:pre-line;overflow-wrap:anywhere;font:400 var(--v2-t14)/1.55 var(--ar-ui)}
+.rs-lay .rs-found p.v2-speech{font-family:var(--v2-speech);font-size:var(--v2-t15);line-height:1.6}
 .rs-lay .rs-found small{font-size:var(--v2-t12);color:var(--dim);overflow-wrap:anywhere}
 
 /* ---------- a group ---------- */

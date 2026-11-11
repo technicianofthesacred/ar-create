@@ -76,7 +76,7 @@ export function researchOwners({dataDir,library,inquiries,drafts,bindings,member
    /** Every Library source that holds text, in Library's order, for "across everything". */
    async allSourceIds(){const tree=await library.tree();return (tree.sources||[]).filter(s=>!s.missing&&!s.sourceUnavailable&&s.hasReadableBody!==false).map(s=>s.id);},
    /** One source's text, from its saved identity (no Library rescan). null text when it is not text. */
-   async readSource(id){const s=await library.snapshot(id,{includeBody:true});return {id:s.id,title:s.title||s.name||'Source',text:typeof s.text==='string'?s.text:null};},
+   async readSource(id){const s=await library.snapshot(id,{includeBody:true});return {id:s.id,title:s.title||s.name||'Source',kind:s.kind||null,text:typeof s.text==='string'?s.text:null};},
    libraryTopics:async()=>(await library.readTopics()).sources,
   }:{}),
   ...(drafts?{subjects:async()=>(await drafts.catalog()).collections.filter(c=>c.bindingStatus==='ready'&&c.parentStudyId&&c.bindingId).map(c=>({parentStudyId:c.parentStudyId,title:c.title||c.parentStudyId,bindingId:c.bindingId}))}:{}),

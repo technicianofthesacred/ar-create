@@ -69,8 +69,8 @@
    out.innerHTML='<p class="rs-meta">Looking…</p>';
    try{
     const a=await v2.call('research-topics.ask',{query:q,...(groupId?{groupId}:{})});
-    const items=[...a.found.map(f=>({title:f.title,quote:f.quote})),...(a.atlas||[]).map(f=>({title:f.title+' · Atlas',quote:f.quote}))];
-    out.innerHTML=`<div class="rs-turn"><p class="rs-you">${esc(q)}</p><p>${esc(a.said)}</p>${items.length?`<ol class="rs-found">${items.map((f,i)=>`<li><span class="rs-n">${i+1}</span><p>${esc(f.quote)}</p><small>${esc(f.title)}</small></li>`).join('')}</ol>`:''}</div>`;
+    const items=[...a.found.map(f=>({title:f.title,quote:f.quote,spoken:!!f.spoken})),...(a.atlas||[]).map(f=>({title:f.title+' · Atlas',quote:f.quote,spoken:false}))];
+    out.innerHTML=`<div class="rs-turn"><p class="rs-you">${esc(q)}</p><p>${esc(a.said)}</p>${items.length?`<ol class="rs-found">${items.map((f,i)=>`<li><span class="rs-n">${i+1}</span><p${f.spoken?' class="v2-speech"':''}>${esc(f.quote)}</p><small>${esc(f.title)}</small></li>`).join('')}</ol>`:''}</div>`;
    }catch(error){out.innerHTML='';fail(error);}
   });
  }
@@ -149,8 +149,8 @@
      body+=askBox(null);
      const made=topics.filter(t=>t.madeForYou);
      if(made.length)body+=`<section class="rs-sec" data-rs-made><div class="rs-sec-h"><h2>Made for you this week</h2><span>${made.length}</span></div><ul class="rs-list">${made.map(t=>row(t,{groups,made:true})).join('')}</ul></section>`;
-     for(const g of groups){const inside=topics.filter(t=>t.groupId===g.id&&!t.madeForYou);body+=`<section class="rs-sec"><div class="rs-sec-h"><h2><a href="${esc(groupHref(g.id))}">${esc(g.name)}</a></h2><span>${plural(g.count,'topic')}</span><a class="rs-open" href="${esc(groupHref(g.id))}">Open the group${icon('chev')}</a></div>${inside.length?`<ul class="rs-list">${inside.map(t=>row(t,{groups})).join('')}</ul>`:'<p class="rs-meta">No topics yet.</p>'}</section>`;}
-     const loose=topics.filter(t=>!t.groupId&&!t.madeForYou);
+     for(const g of groups){const inside=topics.filter(t=>t.groupId===g.id);body+=`<section class="rs-sec"><div class="rs-sec-h"><h2><a href="${esc(groupHref(g.id))}">${esc(g.name)}</a></h2><span>${plural(inside.length,'topic')}</span><a class="rs-open" href="${esc(groupHref(g.id))}">Open the group${icon('chev')}</a></div>${inside.length?`<ul class="rs-list">${inside.map(t=>row(t,{groups})).join('')}</ul>`:'<p class="rs-meta">No topics yet.</p>'}</section>`;}
+     const loose=topics.filter(t=>!t.groupId);
      if(loose.length)body+=`<section class="rs-sec"><div class="rs-sec-h"><h2>${VIEWS.none}</h2><span>${plural(loose.length,'topic')}</span></div><ul class="rs-list">${loose.map(t=>row(t,{groups})).join('')}</ul></section>`;
      if(!topics.length)body+=`<section class="rs-sec rs-empty"><h2>No topics yet</h2></section>`;
     }else body+=`<section class="rs-sec">${rows.length?`<ul class="rs-list">${rows.map(t=>row(t,{groups,made:show==='week'})).join('')}</ul>`:`<p class="rs-meta">${show==='week'?'Nothing new this week.':show==='saying'?'Nothing is waiting for you.':show==='gone'?'Nothing was let go.':'Every topic is in a group.'}</p>`}</section>`;
@@ -223,17 +223,15 @@
    const lead=first;first=false;return `<p${lead?' class="rs-lead"':''}>${clean(b.replace(/\n/g,' '))}</p>`;
   }).join('');
  }
- const meter=(f,a)=>`<span class="rs-meter" aria-hidden="true">${'<i class="f"></i>'.repeat(Math.min(f,8))}${'<i class="a"></i>'.repeat(Math.min(a,8))}</span>`;
  function readTab(t,groups){
   const used=t.usedIn.filter(u=>u.status==='used'),human=v2.isHuman();
   const crumbs=[t.group?`<a href="${esc(groupHref(t.group.id))}">${esc(t.group.name)}</a>`:'',origin(t.origin),used.length?`<span>used in ${used.map(u=>`<a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}">${esc(u.title)}</a>`).join(', ')}</span>`:''].filter(Boolean).join('<span class="rs-dot" aria-hidden="true">·</span>');
-  const verdict=s=>s.dispute.length&&s.agree.length?'They disagree':s.dispute.length?'Disputed':s.agree.length>1?'Agreed':'One voice';
   return `<article class="rs-read">
  <p class="rs-crumbs">${crumbs}</p>
  <h1>${esc(t.name)}</h1>
  ${t.learning?.body?.trim()?prose(t.learning.body):'<p class="rs-lead rs-quietp">Nothing is written down about it yet.</p>'}
  ${t.note?`<p class="rs-meta">${esc(t.note)}</p>`:''}
- ${t.said.length?`<h2>What people say</h2><ul class="rs-say">${t.said.map(s=>`<li class="${s.dispute.length?'split':''}"><p>${esc(s.text)}</p><span>${meter(s.agree.length,s.dispute.length)}${esc(verdict(s))}</span>${s.agree.length||s.dispute.length?`<small>${s.agree.length?'Agree: '+esc(s.agree.join(', ')):''}${s.agree.length&&s.dispute.length?' · ':''}${s.dispute.length?'Dispute: '+esc(s.dispute.join(', ')):''}</small>`:''}</li>`).join('')}</ul>`:''}
+ ${t.said.length?`<h2>What people say</h2><ul class="rs-say">${t.said.map(s=>`<li><p>${esc(s.text)}</p>${s.from==='relationships'&&(s.agree.length||s.dispute.length)?`<small>${s.agree.length?'Supported by: '+esc(s.agree.join(', ')):''}${s.agree.length&&s.dispute.length?' · ':''}${s.dispute.length?'Challenged by: '+esc(s.dispute.join(', ')):''}</small>`:''}${s.supported?`<small>Supported: ${esc(s.supported)}</small>`:''}${s.uncertain?`<small>Uncertain: ${esc(s.uncertain)}</small>`:''}</li>`).join('')}</ul>`:''}
  ${t.spoken.length?`<h2>In their words</h2><ol class="rs-talk">${t.spoken.map(s=>`<li><p class="v2-speech">“${esc(s.quote)}”</p><small>${esc([s.speaker,s.location].filter(Boolean).join(' · '))}</small></li>`).join('')}</ol>`:''}
  <section class="rs-take" data-rs-takebox><h2>In one line, what do you take from this?</h2>
   ${t.take?.text?`<p class="rs-mine">${esc(t.take.text)}</p>`:`<p class="rs-quietp">${human?'Not written yet.':'Adrian has not written it yet.'}</p>`}

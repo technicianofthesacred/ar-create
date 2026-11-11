@@ -17,7 +17,7 @@ const LIST={schema:'ar-create.research-topics.v1',topics:[topic(),topic({id:'p-2
  groups:[{id:'g-tea',name:'Tea: growing',folder:['Research','Tea: growing'],count:1}],counts:{all:3,week:1,saying:1,none:2,gone:0}};
 const READ={...topic({status:'proposed',hash:'a'.repeat(64)}),group:{id:'g-tea',name:'Tea: growing',folder:['Research','Tea: growing']},usedIn:[{parentStudyId:'invented-garden',title:'An invented garden',status:'used'}],
  learning:{body:'# Heading the page leaves out\n\nScreens of reed were laid over poles.\n\n## Where it went\n\n- One maker left\n- Two stopped',revision:1,hash:'b'.repeat(64)},
- sources:[{id:'s1',title:'Invented recording',kind:'transcript',missing:false}],said:[{text:'Straw gives a sweeter leaf',agree:['Invented grower'],dispute:['Invented notes'],from:'relationships'}],
+ sources:[{id:'s1',title:'Invented recording',kind:'transcript',missing:false}],said:[{text:'Straw gives a sweeter leaf',agree:['Invented grower'],dispute:['Invented notes'],from:'relationships'},{text:'Shade for three weeks',agree:[],dispute:[],supported:'Two growers say so',uncertain:'Nobody measured it',from:'finding'}],
  spoken:[{quote:'The net only takes the light away.',speaker:'An invented grower',location:'14:48'}],answers:[],findings:[],take:null,waitingNow:[{key:'keep',kind:'keep',title:'Keep this topic?',detail:'From a conversation',choices:['keep','let-go','not-now']}],waitingLeft:[]};
 const GROUP={schema:'ar-create.research-group-view.v1',id:'g-tea',name:'Tea: growing',folder:['Research','Tea: growing'],settings:{opensTopics:'propose'},revision:1,hash:'c'.repeat(64),saved:true,
  sources:[{id:'s1',title:'Invented recording',kind:'transcript',missing:false,ticked:true,from:'group',topics:[]},{id:'s2',title:'Invented notes',kind:'note',missing:false,ticked:false,from:'topic',topics:['p-1111']}],topics:[topic()],usedIn:[],ask:{find:true,answers:false}};
@@ -83,7 +83,7 @@ test('a topic reads first (spoken words in Lora, his line his alone), decides on
  const tabs=[...r.doc.querySelectorAll('[data-rs-tab]')].map(a=>a.textContent);assert.deepEqual(tabs,['Read','Decide · 1','Sources · 1']);
  const read=r.doc.querySelector('.rs-read');
  assert.doesNotMatch(read.textContent,/Heading the page leaves out|#/,'no markup shown');
- assert.match(read.textContent,/One maker left/);assert.match(read.textContent,/They disagree/);
+ assert.match(read.textContent,/One maker left/);assert.match(read.textContent,/Challenged by: Invented notes/);assert.match(read.textContent,/Supported: Two growers say so/);assert.match(read.textContent,/Uncertain: Nobody measured it/);assert.doesNotMatch(read.textContent,/disagree|Dispute|Agree/i,'a finding is never turned into a quarrel');
  assert.ok(read.querySelector('.rs-talk .v2-speech'),'spoken words take the speech face');
  assert.equal(r.doc.querySelector('[data-rs-take]').hidden,true,'his line reads as prose first');assert.equal(r.doc.querySelector('.rs-take.rs-dec'),null);
  r.doc.querySelector('[data-rs-write]').click();assert.equal(r.doc.querySelector('[data-rs-take]').hidden,false,'a quiet way to write it');

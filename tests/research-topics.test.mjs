@@ -221,3 +221,45 @@ test('asking reads the ticked sources themselves, ignores capitals, and says exa
  const missed=await s.ask({query:'number 1100'});assert.equal(missed.found.length,0);assert.match(missed.said,/None of the sources searched uses these words/,'never says none when it did not look');
  assert.ok(off.revision>more.revision);
 });
+
+test('on the real server: where a topic came from and how a group works are changed only by Adrian',async t=>{
+ const f=await setup(t);
+ const topic=(await f.list()).topics.find(x=>x.name==='Colour from clay: research'),read=await f.read(topic.id);
+ const voice=read.sources.find(x=>/Voice note/.test(x.title));
+ const origin={kind:'conversation',label:'Invented talk',ref:{kind:'recording',id:voice.id}};
+ assert.equal((await f.cli(['research','save'],{id:topic.id,...expect(read),origin})).exitCode,5,'an assistant cannot rewrite where a topic came from');
+ assert.equal((await f.read(topic.id)).origin.kind,'subject','the origin is as it was');
+ // A group set to "only when I start one" takes no assistant's proposals, and only he sets it.
+ const g=(await f.page('POST','/api/research-topics/group/save',{name:'Quiet group',expectedRevision:0,operationId:randomUUID()})).body;
+ assert.equal((await f.cli(['research','group-save'],{id:g.id,...expect(g),settings:{opensTopics:'off'}})).exitCode,5,'an assistant cannot switch it');
+ const off=await f.page('POST','/api/research-topics/group/save',{id:g.id,operationId:randomUUID(),...expect(g),settings:{opensTopics:'off'}});assert.equal(off.status,200);
+ const propose=input=>f.cli(['research','propose'],{name:'Glaze from ash',origin:{kind:'conversation',label:'Voice note',ref:{kind:'recording',id:voice.id}},...input});
+ assert.equal((await propose({groupId:g.id})).exitCode,5,'refused by the command, not only the screen');
+ assert.equal((await propose({suggestedGroupId:g.id})).exitCode,5);
+ assert.equal((await propose({})).exitCode,0,'a proposal that names no such group is still welcome');
+ // A search says what it skipped, by name.
+ const add=await f.page('POST','/api/research-topics/group/sources',{id:g.id,operationId:randomUUID(),...expect((await f.page('GET','/api/research-topics/group?id='+g.id)).body),action:'add',sourceIds:[voice.id]});assert.equal(add.status,200);
+ const off2=await f.page('POST','/api/research-topics/group/sources',{id:g.id,operationId:randomUUID(),...expect(add.body),action:'untick',sourceIds:[voice.id]});assert.equal(off2.status,200);
+ const asked=(await f.page('POST','/api/research-topics/ask',{query:'anything',groupId:g.id})).body;
+ assert.equal(asked.skipped.unticked.length,1);assert.match(asked.said,/not ticked: 1 \(Voice note/);
+});
+
+test('on the real server: reads never wait behind a link, and an assistant\'s link is a proposal that waits for his yes',async t=>{
+ const f=await setup(t);
+ const voice=(await f.read((await f.list()).topics.find(x=>x.name==='Colour from clay: research').id)).sources.find(x=>/Voice note/.test(x.title));
+ const p=(await f.cli(['research','propose'],{name:'Glaze from wood ash',origin:{kind:'conversation',label:'Voice note',ref:{kind:'recording',id:voice.id}}})).result;
+ const linked=await f.cli(['research','link'],{id:p.id,...expect(await f.read(p.id)),parentStudyId:'demo-water-and-leaf'});assert.equal(linked.exitCode,0,JSON.stringify(linked.result));
+ let r=await f.read(p.id);
+ assert.deepEqual(r.usedIn.map(u=>[u.parentStudyId,u.status]),[['demo-water-and-leaf','proposed']],'not used there yet');
+ assert.deepEqual(r.waitingNow.map(w=>w.kind),['keep','use'],'it waits for his yes');
+ assert.ok(!(await f.page('GET','/api/research-topics/subject?parentStudyId=demo-water-and-leaf')).body.topics.some(x=>x.id===p.id&&x.use==='used'));
+ // His yes uses it.
+ const yes=await f.page('POST','/api/research-topics/link',{id:p.id,operationId:randomUUID(),...expect(r),parentStudyId:'demo-water-and-leaf'});assert.equal(yes.status,200);
+ r=await f.read(p.id);assert.equal(r.usedIn[0].status,'used');
+ // While a link goes through Library, reads are answered at once.
+ const inquiry=(await f.list()).topics.find(x=>x.name==='Colour from clay: research'),ir=await f.read(inquiry.id);
+ let done=false;const slow=f.page('POST','/api/research-topics/link',{id:inquiry.id,operationId:randomUUID(),...expect(ir),parentStudyId:'demo-water-and-leaf'}).then(x=>{done=true;return x;});
+ const reads=await Promise.all([f.list(),f.read(p.id),f.page('GET','/api/research-topics/groups'),f.page('GET','/api/research-topics/subject?parentStudyId=demo-water-and-leaf')]);
+ assert.ok(reads.every(Boolean));assert.equal(done,false,'the reads came back before the link finished');
+ assert.equal((await slow).status,200);
+});

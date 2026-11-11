@@ -78,7 +78,7 @@ function cleanSettings(value,before={}){
  return out;
 }
 
-const topicContent=t=>({kind:t.kind,collectionId:t.collectionId,subject:t.subject,tag:t.tag,name:t.name,origin:t.origin,status:t.status,state:t.state,note:t.note,groupId:t.groupId,suggestedGroupId:t.suggestedGroupId,subjects:t.subjects,sourceIds:t.sourceIds,answers:t.answers,findings:t.findings,take:t.take,left:t.left});
+const topicContent=t=>({kind:t.kind,collectionId:t.collectionId,subject:t.subject,tag:t.tag,name:t.name,origin:t.origin,status:t.status,state:t.state,note:t.note,groupId:t.groupId,suggestedGroupId:t.suggestedGroupId,subjects:t.subjects,proposedSubjects:t.proposedSubjects||[],sourceIds:t.sourceIds,answers:t.answers,findings:t.findings,take:t.take,left:t.left});
 const groupContent=g=>({name:g.name,folder:g.folder,sources:g.sources,unticked:g.unticked,settings:g.settings});
 const topicHash=t=>digest(stableJson(topicContent(t)));
 const groupHash=g=>digest(stableJson(groupContent(g)));
@@ -104,6 +104,8 @@ export function createResearchTopics({dataDir,owners={}}={}){
  const groupsDir=()=>ensurePrivateDirectory(dataDir,path.join('research-topics','groups'));
  const fileName=id=>(PLAIN_FILE.test(id)&&!/[A-Z]/.test(id)&&!id.endsWith('.tmp')?id:'_'+digest(id).slice(0,40))+'.json';
  let queue=Promise.resolve();
+ /** Reads never wait behind a write: files are replaced whole, so a read sees the record before or after a change. Only writes queue. */
+ const direct=fn=>fn();
  const serial=fn=>{const run=queue.then(fn,fn);queue=run.catch(()=>{});return run;};
  const ask=async(name,...args)=>{const fn=owners[name];if(typeof fn!=='function')return null;return fn(...args);};
  // A read from another owner that is refused or unavailable (a missing record, a subject with no research) shows nothing
@@ -218,6 +220,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
   const out=new Map();
   if(t.collectionId)for(const a of usesOf(w,t.collectionId))out.set(a.parentStudyId,{parentStudyId:a.parentStudyId,title:w.subjectsById.get(a.parentStudyId)?.title||a.parentStudyId,status:a.status==='accepted'?'used':'proposed',associationId:a.id});
   for(const sid of [...(t.subject?[t.subject]:[]),...t.subjects])if(!out.has(sid))out.set(sid,{parentStudyId:sid,title:w.subjectsById.get(sid)?.title||sid,status:'used'});
+  for(const sid of t.proposedSubjects||[])if(!out.has(sid))out.set(sid,{parentStudyId:sid,title:w.subjectsById.get(sid)?.title||sid,status:'proposed'});
   return [...out.values()];
  }
  /** The things waiting for him on this topic, one at a time. Each can be left for later. */
@@ -259,7 +262,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
  function list(input={}){
   object(input);only(input,['group','saying','week','subject','gone']);
   const flag=v=>v===true||v==='true'||v==='1';
-  return serial(async()=>{
+  return direct(async()=>{
    const w=await world(),rows=(await allTopics(w)).map(t=>summary(w,t));
    const live=rows.filter(r=>r.status!=='let-go');
    let picked=flag(input.gone)?rows.filter(r=>r.status==='let-go'):live;
@@ -276,7 +279,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
  /** One topic with what it points to resolved through the existing research owners. */
  function read(input={}){
   object(input);only(input,['id']);
-  return serial(async()=>{
+  return direct(async()=>{
    const w=await world(),t=await resolve(w,input.id),uses=usedIn(w,t),ids=sourceIdsOf(w,t);
    let learning=null,collectionSources=null;
    if(t.collectionId){const inq=await quietly('inquiry',null,t.collectionId);if(inq){learning=inq.record?{body:typeof inq.record.body==='string'?inq.record.body:'',revision:inq.record.revision,hash:inq.record.hash,metadataHash:inq.record.metadataHash??null,updatedAt:inq.record.updatedAt||null}:null;collectionSources=inq.sources||null;}}
@@ -306,7 +309,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
     for(const p of r.findings||[]){
      if(t.findings.length&&!wanted.has(u.parentStudyId+'\u0000'+p.id))continue;
      findings.push({parentStudyId:u.parentStudyId,pointId:p.id,title:p.title});
-     said.push({text:p.title,agree:p.supported?[p.supported]:[],dispute:p.uncertain?[p.uncertain]:[],from:'finding',parentStudyId:u.parentStudyId,pointId:p.id});
+     said.push({text:p.title,agree:[],dispute:[],supported:p.supported||'',uncertain:p.uncertain||'',from:'finding',parentStudyId:u.parentStudyId,pointId:p.id});
      for(const sp of p.spoken||[])spoken.push({quote:sp.quote,speaker:sp.speaker||'',location:sp.location||'',from:'finding',parentStudyId:u.parentStudyId,pointId:p.id});
     }
    }
@@ -321,7 +324,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
  /** For a subject: the topics it uses (and the one made on the fly from its own research, when it has some). */
  function forSubject(input={}){
   object(input);only(input,['parentStudyId']);const sid=subjectId(input.parentStudyId);
-  return serial(async()=>{
+  return direct(async()=>{
    const w=await world(),out=[];
    for(const t of await allTopics(w,false)){if(t.status==='let-go')continue;const s=summary(w,t);if(usedIn(w,t).some(u=>u.parentStudyId===sid))out.push({...s,use:usedIn(w,t).find(u=>u.parentStudyId===sid).status});}
    if(!out.length&&w.subjectsById.has(sid)){const r=await quietly('subjectResearch',null,w.subjectsById.get(sid));if(r&&(r.answers?.length||r.findings?.length))out.push({...summary(w,virtualSubject(w,sid)),use:'used'});}
@@ -368,7 +371,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
    if(Object.hasOwn(input,'note'))next.note=line(input.note,'note',MAX_NOTE);
    if(Object.hasOwn(input,'answers')){if(!Array.isArray(input.answers)||input.answers.length>MAX_POINTERS||input.answers.some(a=>!UUID.test(a||'')))fail('answers is a list of research answer ids.');next.answers=[...new Set(input.answers)];}
    if(Object.hasOwn(input,'findings'))next.findings=cleanFindings(input.findings);
-   if(Object.hasOwn(input,'origin')){if(t.revision>0&&t.origin&&!['subject','library'].includes(t.origin.kind))fail('Where a topic came from is kept as it was first said.',409);next.origin={...await checkOrigin(cleanOrigin(input.origin)),at:t.origin?.at||new Date().toISOString()};}
+   if(Object.hasOwn(input,'origin')){if(!humanNow())fail('Where a topic came from is changed only by Adrian. An assistant says it once, when it proposes the topic.',403);if(t.revision>0&&t.origin&&!['subject','library'].includes(t.origin.kind))fail('Where a topic came from is kept as it was first said.',409);next.origin={...await checkOrigin(cleanOrigin(input.origin)),at:t.origin?.at||new Date().toISOString()};}
    if(Object.hasOwn(input,'leave')){const key=line(input.leave,'leave',120);if(!next.left.includes(key))next.left=[...next.left,key].slice(-MAX_LEFT);}
    if(Object.hasOwn(input,'unleave')){if(t.status==='let-go')fail('This topic was let go. Take that back first.',409);const key=line(input.unleave,'unleave',120);next.left=next.left.filter(k=>k!==key);}
    return next;
@@ -433,7 +436,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
   return serial(async()=>{
    const w=await world(),id='p-'+input.operationId.toLowerCase(),origin=await checkOrigin(cleaned);
    const existing=loadTopic(id);if(existing){if(replayed(existing,input))return {...summary(w,existing),hash:topicHash(existing),replayed:true};fail('This operationId already made a topic.',409);}
-   for(const k of ['groupId','suggestedGroupId'])if(input[k]!=null&&!w.groups.some(g=>g.id===input[k]))fail('There is no group '+input[k]+'.',404);
+   for(const k of ['groupId','suggestedGroupId'])if(input[k]!=null){const g=w.groups.find(x=>x.id===input[k]);if(!g)fail('There is no group '+input[k]+'.',404);if(!humanNow()&&g.settings?.opensTopics==='off')fail('Adrian set '+g.name+' to take new topics only when he starts one. An assistant may not propose into it.',403);}
    if(input.findings!==undefined)cleanFindings(input.findings);
    const human=humanNow();
    const record={id,kind:'proposal',collectionId:null,subject:null,tag:null,name,origin:{...origin,at:new Date().toISOString()},status:human?'kept':'proposed',state:'new',note:input.note===undefined?'':line(input.note,'note',MAX_NOTE),
@@ -466,9 +469,10 @@ export function createResearchTopics({dataDir,owners={}}={}){
   return changeTopic(input,['parentStudyId','remove'],input.remove?'unlinked':'linked',async(next,w,t)=>{
    const sid=subjectId(input.parentStudyId);if(!w.subjectsById.has(sid))fail('There is no subject '+sid+'.',404);
    if(input.remove!==undefined&&typeof input.remove!=='boolean')fail('remove is true or false.');
-   if(input.remove){if(t.collectionId&&usesOf(w,t.collectionId).some(a=>a.parentStudyId===sid))fail('This topic is used there through Library. Detach it in Advanced, where the connection is kept.',409);next.subjects=next.subjects.filter(s=>s!==sid);return next;}
+   if(input.remove){if(t.collectionId&&usesOf(w,t.collectionId).some(a=>a.parentStudyId===sid))fail('This topic is used there through Library. Detach it in Advanced, where the connection is kept.',409);next.subjects=next.subjects.filter(s=>s!==sid);next.proposedSubjects=(next.proposedSubjects||[]).filter(s=>s!==sid);return next;}
    if(t.collectionId){const r=await ask('link',{collectionId:t.collectionId,parentStudyId:sid,accept:humanNow()});if(!r)fail('Subjects cannot be linked in this home.',503);next.left=next.left.filter(k=>k!=='use:'+sid);}
-   else if(!next.subjects.includes(sid)&&t.subject!==sid)next.subjects=[...next.subjects,sid];
+   else if(humanNow()){if(!next.subjects.includes(sid)&&t.subject!==sid)next.subjects=[...next.subjects,sid];next.proposedSubjects=(next.proposedSubjects||[]).filter(s=>s!==sid);next.left=next.left.filter(k=>k!=='use:'+sid);}
+   else if(!next.subjects.includes(sid)&&t.subject!==sid&&!(next.proposedSubjects||[]).includes(sid))next.proposedSubjects=[...(next.proposedSubjects||[]),sid];
    return next;
   });
  }
@@ -488,11 +492,12 @@ export function createResearchTopics({dataDir,owners={}}={}){
    ask:askAbility(),lastChange:g.operations?.[0]?{what:g.operations[0].what,actor:g.operations[0].actor,at:g.operations[0].at}:null};
  }
  const askAbility=()=>({find:typeof owners.readSource==='function',atlas:typeof owners.atlas==='function',answers:false,needs:'Answers written in sentences from these sources need an AI provider, which this app does not have set up for asking yet.'});
- function groups(input={}){object(input);only(input,[]);return serial(async()=>{const w=await world(),live=(await allTopics(w,false)).filter(t=>t.status!=='let-go');return {schema:GROUPS,groups:w.groups.map(g=>({id:g.id,name:g.name,folder:g.folder,revision:g.revision,hash:groupHash(g),count:live.filter(t=>t.groupId===g.id).length,sourceCount:g.sources.length})).sort((a,b)=>a.name.localeCompare(b.name))};});}
- function readGroup(input={}){object(input);only(input,['id']);return serial(async()=>{const w=await world(),g=w.groups.find(x=>x.id===input.id);if(!g)fail('There is no group '+input.id+'.',404);return groupView(w,g);});}
+ function groups(input={}){object(input);only(input,[]);return direct(async()=>{const w=await world(),live=(await allTopics(w,false)).filter(t=>t.status!=='let-go');return {schema:GROUPS,groups:w.groups.map(g=>({id:g.id,name:g.name,folder:g.folder,revision:g.revision,hash:groupHash(g),count:live.filter(t=>t.groupId===g.id).length,sourceCount:g.sources.length})).sort((a,b)=>a.name.localeCompare(b.name))};});}
+ function readGroup(input={}){object(input);only(input,['id']);return direct(async()=>{const w=await world(),g=w.groups.find(x=>x.id===input.id);if(!g)fail('There is no group '+input.id+'.',404);return groupView(w,g);});}
  /** Make a group or change its name, folder or settings. */
  function saveGroup(input){
   begin(input,['id','operationId','expectedRevision','expectedHash','name','folder','settings']);
+  if(input.settings!==undefined&&!humanNow())fail('How a group works is Adrian\'s to change. An assistant may not.',403);
   return serial(async()=>{
    const w=await world();let id=input.id,before=null;
    if(id!==undefined){if(typeof id!=='string'||!/^g-[a-z0-9-]{1,80}$/.test(id))fail('A group id looks like g-mandala.');before=loadGroup(id);if(!before)fail('There is no group '+id+'.',404);}
@@ -538,7 +543,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
    try{s=await owners.readSource(id);}catch(error){if(!Number.isInteger(error?.status))throw error;}
    if(!s||typeof s.text!=='string'){unreadable++;await breathe();continue;}
    bytes+=s.text.length;const at=s.text.toLowerCase().indexOf(needle);
-   if(at>=0){matched++;if(found.length<limit){const from=Math.max(0,at-QUOTE),to=Math.min(s.text.length,at+needle.length+QUOTE);found.push({sourceId:id,title:s.title,quote:(from?'…':'')+s.text.slice(from,to).trim()+(to<s.text.length?'…':''),start:at});}}
+   if(at>=0){matched++;if(found.length<limit){const from=Math.max(0,at-QUOTE),to=Math.min(s.text.length,at+needle.length+QUOTE);found.push({sourceId:id,title:s.title,kind:s.kind||null,spoken:/transcript|recording|voice|audio|speech/i.test(String(s.kind||'')),quote:(from?'…':'')+s.text.slice(from,to).trim()+(to<s.text.length?'…':''),start:at});}}
    await breathe();
   }
   return {found,searched,matched,unreadable,total:ids.length,notSearched:ids.length-searched};
@@ -547,11 +552,13 @@ export function createResearchTopics({dataDir,owners={}}={}){
   object(input);only(input,['query','groupId','limit']);
   const query=words(input.query,'What you are looking for',256),limit=input.limit===undefined?10:input.limit;
   if(!Number.isSafeInteger(limit)||limit<1||limit>20)fail('limit is a whole number from 1 to 20.');
-  let ids,scope;
-  if(input.groupId!==undefined){const w=await world(),g=w.groups.find(x=>x.id===input.groupId);if(!g)fail('There is no group '+input.groupId+'.',404);ids=(await groupView(w,g)).sources.filter(s=>s.ticked&&!s.missing).map(s=>s.id);scope={kind:'group',id:input.groupId,sources:ids.length};}
+  let ids,scope,skipped={unticked:[],missing:[]};
+  if(input.groupId!==undefined){const w=await world(),g=w.groups.find(x=>x.id===input.groupId);if(!g)fail('There is no group '+input.groupId+'.',404);const gv=await groupView(w,g);ids=gv.sources.filter(s=>s.ticked&&!s.missing).map(s=>s.id);skipped={unticked:gv.sources.filter(s=>!s.ticked&&!s.missing).map(s=>({id:s.id,title:s.title})),missing:gv.sources.filter(s=>s.missing).map(s=>({id:s.id,title:s.title}))};scope={kind:'group',id:input.groupId,sources:ids.length};}
   else{ids=typeof owners.allSourceIds==='function'?await owners.allSourceIds():[];scope={kind:'everything',sources:ids.length};}
   const ability=askAbility();
-  if(scope.kind==='group'&&!ids.length)return {schema:ASK,query,scope,found:[],atlas:[],ability,searched:{sources:0,of:0,notSearched:0,unreadable:0},said:'Tick at least one source to look in.'};
+  const names=l=>{const t=l.slice(0,5).map(x=>x.title).join(', ');return t+(l.length>5?' and '+(l.length-5)+' more':'');};
+  const skipSay=[skipped.unticked.length?'Not searched, because they are not ticked: '+skipped.unticked.length+' ('+names(skipped.unticked)+').':'',skipped.missing.length?'Not searched, because they are no longer in the Library: '+skipped.missing.length+' ('+names(skipped.missing)+').':''].filter(Boolean).join(' ');
+  if(scope.kind==='group'&&!ids.length)return {schema:ASK,query,scope,found:[],atlas:[],ability,searched:{sources:0,of:0,notSearched:0,unreadable:0},skipped,said:['Tick at least one source to look in.',skipSay].filter(Boolean).join(' ')};
   if(!ability.find)return {schema:ASK,query,scope,found:[],atlas:[],ability,searched:{sources:0,of:ids.length,notSearched:ids.length,unreadable:0},said:'Sources cannot be searched in this home.'};
   const r=await scan(ids,query,limit);
   let atlas=[];if(scope.kind==='everything'&&ability.atlas){const a=await quietly('atlas',null,{query,limit:5});atlas=(a?.items||[]).map(i=>({title:i.title||'Atlas article',quote:i.locator?.quote||'',articleId:i.articleId||null}));}
@@ -559,7 +566,8 @@ export function createResearchTopics({dataDir,owners={}}={}){
   const parts=[r.found.length||atlas.length?(r.matched>r.found.length?`${plural(r.matched,'source')} use${r.matched===1?'s':''} these words; here are the first ${r.found.length}.`:'These are the places '+where+' use these words.'):r.notSearched?'None of the sources searched uses these words.':'None of '+where+' uses these words.'];
   parts.push(r.notSearched?`Searched ${r.searched} of ${r.total} sources; ${r.notSearched} were not searched, because one search reads at most ${MAX_SCAN_SOURCES} sources or ${MAX_SCAN_BYTES/1024/1024} MB.`:`Searched all ${plural(r.total,'source')}.`);
   if(r.unreadable)parts.push(plural(r.unreadable,'source')+' could not be read as text (pictures, or files that are gone).');
-  return {schema:ASK,query,scope,found:r.found,atlas,ability,searched:{sources:r.searched,of:r.total,notSearched:r.notSearched,unreadable:r.unreadable,matched:r.matched},said:parts.join(' ')};
+  if(skipSay)parts.push(skipSay);
+  return {schema:ASK,query,scope,found:r.found,atlas,ability,skipped,searched:{sources:r.searched,of:r.total,notSearched:r.notSearched,unreadable:r.unreadable,matched:r.matched},said:parts.join(' ')};
  }
 
  // Every door answers with a promise, a refusal included.
