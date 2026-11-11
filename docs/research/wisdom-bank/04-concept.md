@@ -13,7 +13,7 @@ The wisdom bank is the Research station of AR Create. It distils each talk or bo
 5. **You pick a few and put them in order.** That line of nuggets is a research topic.
 6. **You press "make a piece".** The topic becomes the outline of an article, a reel or the words for an artwork, with every quote credited.
 
-Three promises hold throughout: their words are never changed or mixed with yours, nothing is linked or written without your yes, and you never have a pile to sort.
+Three promises hold throughout: their words are never changed or mixed with yours; the AI does the filing and you can correct any of it; and the meaning stays yours: what you are looking for, what rings true, the lines you draw and the pieces you make.
 
 Everything below is the detail behind those six steps. Open a heading only when you want it.
 
@@ -81,7 +81,7 @@ Five doors, in the order your answers put them.
 2. **Wander.** Open any nugget and step to a neighbour, then the next. The most resonant come first. This is for browsing until something rings true.
 3. **Study a source.** Continue where you were. The source reads as a comfortable page with its outline, its nuggets in place and the lens readings beside them.
 4. **Ask the bank.** A conversation that answers only from what you have kept. Every sentence shows its nugget. When the bank has nothing, it says so and offers to send the question to Research.
-5. **A few today.** A small strip on the home screen: one bright nugget, one you have not seen for a while, one proposed link waiting for your yes.
+5. **A few today.** A small strip on the home screen: one bright nugget, one you have not seen for a while, one question worth your thought.
 
 The three traps, answered directly:
 
@@ -103,6 +103,33 @@ Five kinds, kept few on purpose:
 
 A **pathway** is a named line of nuggets in an order you chose, with your words between them. In version two it is the same thing as a research topic. The map is for four things: seeing what one idea goes into, walking from idea to idea, finding the missing step (a gap in a pathway becomes a research question, such as how Vajrayana arrives at "everything is perfect"), and feeling the whole thing join up over time.
 
+### Joining without ten approvals
+
+You said: "The joins are proposed, but at a certain point one concept may join to ten joined concepts, so I don't want to click approve on ten. Maybe there's these coherent connected concepts that come from the joining. So you're joining to a bigger concept, multiple things, not to all the different articles." You asked for a recommendation. It has four parts.
+
+1. **You join a concept, never its sources.** A concept is held once, however many works speak of it. New passages joining a concept that already holds ten works is one decision, and the ten works come with it.
+2. **Bigger concepts.** When several concepts clearly belong together, they form a bigger concept with its own name and one-line distillation, labelled as one. The smaller concepts stay whole inside it. A new concept joins the bigger one with a single yes and is then related to everything in it, with no line drawn to each. On the transit map a bigger concept is a district. You can still draw a line to one particular member when that is what you mean.
+3. **Sure joins go through on their own.** You decided this on 11 November. They appear in a "recently joined" list where you can look and correct. Only the ones the agent is unsure of are brought to you, with its doubt stated. A typical work should ask for two or three real decisions and no routine ones.
+4. **Every join can be corrected.** Because each passage keeps its own source, a concept can be lifted back out at any time and nothing is lost. So a quick yes is safe, and a "recently joined" list lets you look back whenever you like.
+
+How you guide the agent without approving everything is under "Where you are in it".
+
+### Keeping it simple as it grows
+
+You said: "One of the hard things is to distill things down to simple concepts and not end up having thousands of concepts, but distilling concepts down as well. This is the challenge and I need AI to help me with this."
+
+The answer is to distil upward as well as inward, by folding and never by deleting. Five habits for the agent:
+
+1. **Join before making new.** When a work arrives, the agent first tries to place each of its concepts into one the bank already holds. It makes a new concept only when the idea is truly new, and it tells you the count: "12 joined, 3 new".
+2. **Layers.** Passages sit inside concepts, concepts sit inside bigger concepts, and at the top are the few core understandings the whole bank rests on. From far away the map shows only the top layer, so it stays simple to look at however large it becomes. You go down a layer only when you want to.
+3. **A regular tidy, proposed.** Every so often the agent reads across the whole bank and proposes: concepts that are one idea said several ways, to fold together; thin concepts with a single passage and no lines, to fold into a parent; and a concept grown too broad, to split. These come as one batch you can accept with one yes or open and adjust.
+4. **Plain names.** Each concept is named in simple words and explained in one sentence a newcomer could follow. When a name is clever or vague, the agent proposes a plainer one.
+5. **A visible shape.** The bank always shows its own size by layer, for example how many core understandings, concepts and passages it holds, so you can see whether it is getting simpler or only bigger.
+
+Folding keeps everything. A work's own map still shows each concept the way that work said it. In the bank, those concepts sit inside the shared ones, and any fold can be undone.
+
+How well an agent can judge "one idea said several ways" across traditions is not known yet. It should be tried on a few real works before the tidy is trusted.
+
 ### The whole map: the big brain
 
 Asked whether you want one map of everything, you answered on 11 November: "Yes, I like the conceptual mind map if there's multiple concepts of how they all interconnect to each other. And those interconnections interconnect to other interconnections. This is like a big brain, this needs a bit of thought of how to do this properly."
@@ -117,7 +144,61 @@ So the whole map is part of the concept, and it is the hardest part to do well. 
 
 This deserves its own short design study, after the three screens below and before anything is built. You asked that it begin by looking at people who have already built maps like this, and you named what works in the best ones: "the lines and the entry connections and intersections." That search was not done in this thread.
 
-One picture to test in that study, offered as my reading of your words: a transit map. Each research topic is a **line** you can ride from end to end. Each concept is a stop. A concept that several lines pass through is an **intersection**, and those are the places where traditions meet. Each work is an **entrance** onto the map.
+The picture to test in that study is a transit map. You confirmed it: "Yes, the transit map is what I meant." Each research topic is a **line** you can ride from end to end. Each concept is a stop. A concept that several lines pass through is an **intersection**, and those are the places where traditions meet. Each work is an **entrance** onto the map.
+
+## Where you are in it
+
+You said: "Yes, sure joins can go through on their own but they should also be able to be corrected. There needs to be some level of guidance, and if it's not approval on everything, what is it? Where is the human, my thoughts, interactive with this as it starts to become more and more automated? What is the best use of it for me?"
+
+The recommendation: **the AI does the filing, and you do the meaning.** Filing is deciding where a concept sits. Meaning is deciding what matters and what it is for. Approval on everything spends you on filing. These six things are yours instead:
+
+1. **What you are looking for.** Your lens, written in your words on one page called "How I distil". The AI reads every work through it. Changing that page is how you steer the whole bank at once.
+2. **Corrections that teach.** When you correct a join, you may say why in one sentence, such as "in my bank, emptiness and presence are not the same". That sentence is added to "How I distil" and the AI follows it from then on. You guide by rule, a few times, and never by approving each case.
+3. **What rings true.** Resonance, and your response in your own words. Only you can do this, and it is what makes the bank yours and not a copy of the sources.
+4. **The lines.** The AI lays out the stops on the map. You draw the lines through them. A research topic is a line you chose for a reason, and those reasons are the bigger, purposeful interconnection.
+5. **The top layer.** The few core understandings the whole bank rests on. The AI may suggest one, but each is named and accepted by you, by hand.
+6. **The pieces.** What you make from it, in your voice.
+
+**The bank brings you questions, not approvals.** In place of "approve these ten", the AI brings a few things worth your thought: "These two traditions seem to disagree here. What do you make of it?" "Three works you love all rest on this concept, and you have never responded to it." "This line you drew has a missing step." Answering one is thinking, and each answer becomes a response, a line or a rule.
+
+**The best use of it for you** is the time you spend reading a work as its concepts, arriving with something you feel and leaving with a line and a piece, and answering the few questions it brings. If you find yourself tidying, the bank is failing.
+
+### It changes as you change
+
+You said: "Yes, the bank brings me questions, not approvals. Will there be places where I can type different meanings into it, or different filters of what I'm looking for, that can change the things internally? This needs to be reciprocal, so as I start learning my awareness will grow, and the things that I'm looking for, or the ways that I organize things, will improve. Kind of like how AI works with new model training. So these things need to be dynamic, not static."
+
+Yes. The bank is built in two layers so that this is possible.
+
+- **What never changes**: the sources, and the exact words with their speaker and moment.
+- **What is always open to change**: everything read from them. Concept names, distillations, lens readings, which concepts sit together, the layers and the suggested lines.
+
+Because the second layer is only ever a reading of the first, it can be read again whenever you see more clearly. Five ways you change it:
+
+1. **Rewrite "How I distil" at any time.** Type or speak what you are looking for now. The AI then re-reads the bank through it and shows what would change before anything moves: "14 concepts would be renamed, 6 would fold together, 2 new ones appear."
+2. **Keep several lenses.** One for presence, one for making art, one for a particular piece. Switch between them and the same concept is explained differently, with the words unchanged.
+3. **Type a meaning straight onto a concept.** Your own definition, in your words, kept in your place. The AI uses it from then on when it files and explains.
+4. **Reorganise by hand.** Move a concept, rename a bigger concept, redraw a line. The AI treats what you did as guidance for similar cases.
+5. **The bank proposes changes to your lens too.** This is the reciprocal part. It notices what you turn up, respond to and build lines from, and asks: "You keep returning to concepts about preparation. Should that be part of what you look for?" Your lens stays written in your words, so it only ever asks.
+
+**Your earlier views are kept.** Each version of "How I distil" is dated, so you can look back at how you read a concept a year ago and see how your understanding has grown. That record is part of the bank.
+
+Re-reading a large bank costs something, so it is done in stages, the most resonant concepts first, with the likely cost shown before a full pass.
+
+### It must cost you almost no time
+
+You said: "Beyond being dynamic, they need to be not majorly time consuming, otherwise you'll not get my dynamic interactions with it. If it takes a significant amount of time to sort and go through everything, it's impossible for me to do it."
+
+So this is a rule for every screen, equal to the others:
+
+- **The bank never waits for you.** The AI files, folds and explains with its best judgement. Your guidance makes it better and is never needed for it to keep working.
+- **Nothing piles up.** There is no inbox and no count of things awaiting you. At most three questions are offered at a time. One you ignore fades and is replaced. It is never owed.
+- **Every act is one tap or one spoken sentence.** Turning resonance up, correcting a join, adding a meaning, changing your lens: each is done in the place where you noticed it, in seconds, with no separate screen for upkeep.
+- **Changes are shown as a summary.** After you change your lens you see the three biggest effects and a total, with the full list there only if you want it.
+- **You steer while you use.** Guidance is collected during reading, wandering and making pieces. You are never asked to sit down and go through everything.
+
+The test for the mock-ups and the build: a visit of a few minutes should be nearly all reading, thinking and making, with well under a minute of upkeep.
+
+A note for the builders: AR Create's rule is that agents propose and you decide. This changes it for filing only, at your word: sure joins go through, are listed under "recently joined", and can always be corrected. Your words, your responses, the top layer and anything written in your voice stay yours alone.
 
 ## Leaving
 
@@ -183,12 +264,41 @@ Phone first. Filled with lifelike nuggets, never empty.
 2. **One nugget with its neighbours.** First at a glance: the name, the one line, the strongest passage with its speaker, and two lines running to named neighbours with their kinds. Then opened: the stack of index cards, including the reading through your lens and your response in its own place. Swiping to a neighbour should feel like walking.
 3. **I have something to express.** This replaces the daily return suggested earlier, because your answers say you come back to use. You speak a feeling. Nuggets from several traditions gather beneath it, with what prepares each. You pick three and they join into a pathway with a "make a piece" button. The "few today" strip can appear on the way in.
 
+4. **How I distil.** Added at your request. The one page where you steer: your lens in your own words with a microphone beside it, the short rules your corrections have taught, the three questions the bank is bringing you now, and "recently joined" with a correct button on each.
+
+### Where your insight goes in
+
+On 11 November you approved starting the mock-ups and added: "We need to make sure we wire in appropriate places that I can give insight that will actually help this be a tool, not just a wall of data." So every screen must show, plainly, where you speak into it. Each is one tap or one spoken sentence, in the place where you noticed something:
+
+- **On a source page**: "what I was looking for in this", said once; and a correction on any concept that was read wrongly.
+- **On a concept**: resonance up or down; "what this means to me"; your response; "this does not belong here" on a join or a passage, with an optional why.
+- **On the map**: draw a line and say why; name a district; move a stop.
+- **In "I have something to express"**: the feeling itself, and why you chose these stops in this order.
+- **On a question the bank brings**: answer by voice, or let it pass.
+- **On "How I distil"**: rewrite the lens.
+
+The mock-ups should make these controls visible and show what changes after each is used, so it is clear that your insight moves the bank. A screen with nowhere for you to speak is a wall of data and fails the brief.
+
+### Built for a person, made to be played with
+
+You also said: "We need to make the interface fun to interact with, built for a human, not built for AI, so that when I am in here I want to react with it, I want to play with it. It is designed for human interaction."
+
+What that asks of the mock-ups:
+
+- **Hands first.** You touch the thing itself. Drag a stop, pinch the map closer, pull a line from one concept to another with your finger, press and hold a concept to turn its resonance up and watch it glow.
+- **It answers you.** Every touch gets a visible response at once: a neighbour lights, a line settles into place, a district gathers. Movement is how the bank shows that it heard you.
+- **Voice in, voices out.** You speak to it wherever you can type. Where a source is a talk, you can hear the passage in the speaker's own voice.
+- **Few words on screen.** The source's words and yours are what you read. No forms, tables, settings pages or status reports.
+- **Room for surprise.** Wandering should turn up a connection you did not expect, shown as an invitation and never as a task.
+
+The test: you would pick it up with nothing to do, the way you would turn over an object you like. The mock-ups should be clickable, not flat pictures, so this can be felt.
+
 ## Open questions only you can answer
 
-1. **Your lens.** Which three to five variables make up your filter? The whole "assimilate" idea rests on these.
+1. **Your lens.** What are you looking for today when you distil a work? A few spoken sentences are enough for a first "How I distil". It is meant to change as you do, so it does not need to be right.
 2. **Books.** How do they reach the bank: an ebook file, your Kindle highlights, photographs of pages, an audiobook?
 3. **Friends.** Will their ideas arrive as recordings or from your memory, and do you want to ask each friend once or each time before quoting them in public?
-4. **A few today.** Do you want it at all, or only the doors you open on purpose?
+4. **A few today.** Answered: yes, the bank brings you questions, not approvals.
 5. **The whole map.** Answered: yes, you want it. How to do it properly is the open design work, described under Connecting.
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
