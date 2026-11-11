@@ -52,7 +52,8 @@ async function editElsewhere(base,s,index,text,agent=false){
 
 /** The real page on the real server. slowEdit holds an edit's answer back (the server has it); lateEdit holds it back
     before it reaches the server. seed is what the device already keeps (what a reload leaves). */
-async function livePage(base,route,{search='',slowEdit=0,lateEdit=0,seed=null,patch=[],storage=null,ready='textarea.wr-ed,.wr-none,.ck-work,.ck-none,.rd-text,.rd-empty'}={}){
+async function livePage(base,route,{search='',slowEdit=0,lateEdit=0,seed=null,patch=[],on=false,storage=null,ready='textarea.wr-ed,.wr-none,.ck-work,.ck-none,.rd-text,.rd-empty'}={}){
+ if(on)patch=[...patch,['const STORY_EDITING=false;','const STORY_EDITING=true;']];
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+search+'#'+route,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[],sources=[];windows.push(w);
@@ -88,7 +89,7 @@ const edits=calls=>calls.filter(c=>c.path==='/api/magazine/working-draft/edit'&&
 /** A reload keeps only what is on the device. */
 async function reload(old,base,route,opts={}){
  const seed={};for(let i=0;i<old.w.localStorage.length;i++){const k=old.w.localStorage.key(i);seed[k]=old.w.localStorage.getItem(k);}
- old.w.close();return livePage(base,route,{...opts,seed});
+ old.w.close();return livePage(base,route,{on:true,...opts,seed});
 }
 
 // ---------- Read ----------
@@ -149,7 +150,7 @@ test('Write: a story with no draft says so plainly',async()=>{
  assert.ok(pg.calls.every(c=>c.status<400&&!/=null|\/null/.test(c.url)));
 });
 test('Write: a paragraph he changes is saved with the hash he saw, and is there after a reload',async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id);
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true});
  const before=await wordsOf(base,WEAVER),box=boxes(pg.doc)[1];
  assert.equal(box.value,before[1]);
  type(pg.w,box,before[1]+' (typed)');blur(pg.w,box);
@@ -162,7 +163,7 @@ test('Write: a paragraph he changes is saved with the hash he saw, and is there 
  assert.equal(boxes(again.doc)[1].value,before[1]+' (typed)');
 });
 test('Write: words typed while a save is in flight are never lost',{timeout:60000},async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{slowEdit:600});
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{on:true,slowEdit:600});
  const box=boxes(pg.doc)[2],start=(await wordsOf(base,WEAVER))[2];
  let typed=start+' and then';type(pg.w,box,typed);blur(pg.w,box);// in flight now
  await settle(120);
@@ -176,7 +177,7 @@ test('Write: words typed while a save is in flight are never lost',{timeout:6000
  assert.ok(edits(pg.calls).every(c=>c.status===200),'no refused save');
 });
 test('Write: a reload while a save is on its way (the Magazine has it, the answer is lost) shows no newer version and loses nothing',{timeout:90000},async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{slowEdit:1500});
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{on:true,slowEdit:1500});
  const box=boxes(pg.doc)[3],start=(await wordsOf(base,WEAVER))[3];
  type(pg.w,box,start+' [one]');blur(pg.w,box);
  await until(()=>edits(pg.calls)[0]?.status===200);// the Magazine has it; the page has not heard
@@ -193,7 +194,7 @@ test('Write: a reload while a save is on its way (the Magazine has it, the answe
  assert.equal(kept(again.w,WEAVER),null);
 });
 test('Write: a tab closed before the save reached the Magazine keeps his words, and the next page saves them',{timeout:60000},async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{lateEdit:4000});
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{on:true,lateEdit:4000});
  const box=boxes(pg.doc)[1],start=(await wordsOf(base,KILN))[1];
  type(pg.w,box,start+' Kept on the device.');blur(pg.w,box);
  await settle(200);
@@ -204,7 +205,7 @@ test('Write: a tab closed before the save reached the Magazine keeps his words, 
  assert.equal((await wordsOf(base,KILN))[1],start+' Kept on the device.');
 });
 test('Write: a paragraph changed in the Magazine meanwhile shows both versions and merges nothing; he chooses',{timeout:60000},async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id);
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true});
  const mine='My own wording for the shoreline.',theirs='Their wording for the shoreline.';
  // another window changes the paragraph first
  assert.equal((await editElsewhere(base,WEAVER,1,theirs)).status,200);
@@ -224,7 +225,7 @@ test('Write: a paragraph changed in the Magazine meanwhile shows both versions a
  assert.equal((await wordsOf(base,WEAVER))[1],mine,'his words, by his choice');
  // and the other choice
  assert.equal((await editElsewhere(base,WEAVER,1,theirs)).status,200);
- const third=await livePage(base,'/write/'+WEAVER.id),b3=boxes(third.doc)[1];
+ const third=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true}),b3=boxes(third.doc)[1];
  assert.equal((await editElsewhere(base,WEAVER,1,'A later hand.')).status,200);
  type(third.w,b3,'Words he will let go.');blur(third.w,b3);
  await until(()=>!third.doc.querySelector('[data-wr-conflict]').hidden);
@@ -234,7 +235,7 @@ test('Write: a paragraph changed in the Magazine meanwhile shows both versions a
  assert.equal(kept(third.w,WEAVER),null);
 });
 test('Write: a Magazine that is held by someone else keeps his words and saves them when it is free',{timeout:60000},async()=>{
- const {base,vault}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id);
+ const {base,vault}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{on:true,on:true});
  const lock=path.join(vault,'Workflow/_mag-running.md');
  fs.writeFileSync(lock,`machine: another-mac\nsince: ${new Date().toISOString()}\ndoing: a run\nholder: mag-session\nmode: session\n`);
  try{
@@ -250,7 +251,7 @@ test('Write: a Magazine that is held by someone else keeps his words and saves t
  assert.match((await wordsOf(base,KILN))[2],/Held words\.$/);
 });
 test('Write: a line with a pending review mark is not editable here, and says why',async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id);
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{on:true,on:true});
  const locked=[...pg.doc.querySelectorAll('.wr-lock')].find(n=>/She never looked at the clock/.test(n.textContent));
  assert.ok(locked,'shown');assert.match(pg.doc.querySelector('.wr-lock-why').textContent,/review decision in the Magazine/);
  assert.ok(!boxes(pg.doc).some(b=>/never looked at the clock/.test(b.value)));
@@ -258,12 +259,12 @@ test('Write: a line with a pending review mark is not editable here, and says wh
  assert.ok(pg.doc.querySelector('.wr-todo [data-wr-advanced]'));
 });
 test('Write: an assistant\'s page is read only: it types nothing, keeps nothing, restores nothing and cannot save',{timeout:60000},async()=>{
- const {base}=await theWorld(),human=await livePage(base,'/write/'+WEAVER.id,{lateEdit:6000});
+ const {base}=await theWorld(),human=await livePage(base,'/write/'+WEAVER.id,{on:true,lateEdit:6000});
  const hb=boxes(human.doc)[1],words=(await wordsOf(base,WEAVER))[1];
  type(human.w,hb,words+' HIS UNSAVED');
  const seed={};for(const k of keptKeys(human.w,WEAVER))seed[k]=human.w.localStorage.getItem(k);assert.ok(Object.keys(seed).length,'his words are on the device');
  human.w.close();
- const ai=await livePage(base,'/write/'+WEAVER.id,{search:'?reviewActor=agent:claude-code',seed});
+ const ai=await livePage(base,'/write/'+WEAVER.id,{on:true,search:'?reviewActor=agent:claude-code',seed});
  assert.ok(boxes(ai.doc).length>0&&boxes(ai.doc).every(b=>b.readOnly),'every paragraph is read only');
  assert.ok(!boxes(ai.doc).some(b=>/HIS UNSAVED/.test(b.value)),'his kept words are not restored as an assistant\'s page');
  assert.equal(ai.doc.querySelector('[data-wr-saved]').textContent,'Read only');
@@ -279,7 +280,7 @@ test('Write: an assistant\'s page is read only: it types nothing, keeps nothing,
  assert.equal(refused.status,403);
 });
 test('Write: presence tells an assistant he has unsaved words, only while he has them',{timeout:60000},async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{lateEdit:1500});
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{on:true,lateEdit:1500});
  const box=boxes(pg.doc)[1],start=(await wordsOf(base,KILN))[1];
  type(pg.w,box,start+' Presence.');
  await until(()=>pg.calls.some(c=>c.path==='/api/presence'&&c.status===200));
@@ -299,7 +300,7 @@ test('Write: an assistant\'s suggestion is shown to him, and only he accepts or 
  const {base}=await theWorld(),start=await wordsOf(base,WEAVER);
  const made=await propose(base,WEAVER,['what the lake wants','what the lake needs']);
  assert.equal(made.status,200);assert.equal(made.value.proposed,true,'an assistant\'s save is a proposal');
- const ai=await livePage(base,'/write/'+WEAVER.id,{search:'?reviewActor=agent:claude-code'});
+ const ai=await livePage(base,'/write/'+WEAVER.id,{on:true,search:'?reviewActor=agent:claude-code'});
  await until(()=>ai.doc.querySelector('[data-prop]'));
  assert.match(ai.doc.querySelector('[data-prop]').textContent,/lake needs/);
  assert.equal(ai.doc.querySelectorAll('[data-prop] button').length,0,'an assistant\'s page has no decision to press');
@@ -307,7 +308,7 @@ test('Write: an assistant\'s suggestion is shown to him, and only he accepts or 
  const refused=await api(base,'POST','/api/magazine/proposal/accept',{agent:true,input:{proposalId:made.value.proposalId,operationId:uuid()}});
  assert.equal(refused.status,403);assert.ok(!(await wordsOf(base,WEAVER)).some(t=>/lake needs/.test(t)),'nothing was written');
  // as him, with unsaved words open, a decision waits
- const pg=await livePage(base,'/write/'+WEAVER.id,{lateEdit:5000});
+ const pg=await livePage(base,'/write/'+WEAVER.id,{on:true,lateEdit:5000});
  await until(()=>pg.doc.querySelector('[data-prop]'));
  const box=boxes(pg.doc)[1];type(pg.w,box,start[1]+' x');
  pg.doc.querySelector('[data-act="accept"]').click();await settle(200);
@@ -320,7 +321,7 @@ test('Write: an assistant\'s suggestion is shown to him, and only he accepts or 
  // a second suggestion, turned down
  const second=await propose(base,WEAVER,['what the lake needs','what the water needs']);
  assert.equal(second.status,200);
- const p2=await livePage(base,'/write/'+WEAVER.id);
+ const p2=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true});
  await until(()=>p2.doc.querySelector('[data-prop]'));
  p2.doc.querySelector('[data-act="reject"]').click();
  await until(()=>!p2.doc.querySelector('[data-prop]'));
@@ -328,7 +329,7 @@ test('Write: an assistant\'s suggestion is shown to him, and only he accepts or 
  // a suggestion made on older words is not offered
  const third=await propose(base,WEAVER,['what the lake needs','what the shore needs']);assert.equal(third.status,200);
  assert.equal((await editElsewhere(base,WEAVER,0,'A changed metadata line.')).status,200);
- const p3=await livePage(base,'/write/'+WEAVER.id);await settle(600);
+ const p3=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true});await settle(600);
  assert.equal(p3.doc.querySelector('[data-prop]'),null);assert.match(p3.doc.querySelector('.wr-stale').textContent,/set aside/);
 });
 
@@ -340,7 +341,7 @@ const entriesIn=text=>(text.match(/^## /gm)||[]).length;
 
 test('the switch STORY_EDITING: off, a story shows read only with one plain line and one link to the existing workspace; on, it edits',async()=>{
  const {base}=await theWorld(),before=fs.readFileSync(vaultFile((await theWorld()).vault,'Kiln Keeper'),'utf8');
- const off=await livePage(base,'/write/'+KILN.id,{patch:[['const STORY_EDITING=true;','const STORY_EDITING=false;']]});
+ const off=await livePage(base,'/write/'+KILN.id);
  assert.ok(boxes(off.doc).length>0&&boxes(off.doc).every(b=>b.readOnly),'read only');
  assert.match(off.doc.querySelector('[data-wr-locked]').textContent,/changed in the Magazine, not here/);
  assert.equal(off.doc.querySelectorAll('[data-wr-locked] a[href*="/document-study/"]').length,1,'one link to the existing workspace');
@@ -348,7 +349,7 @@ test('the switch STORY_EDITING: off, a story shows read only with one plain line
  type(off.w,boxes(off.doc)[1],'typed anyway');blur(off.w,boxes(off.doc)[1]);await settle(1800);
  assert.equal(edits(off.calls).length,0);assert.equal(kept(off.w,KILN),null);
  assert.equal(fs.readFileSync(vaultFile((await theWorld()).vault,'Kiln Keeper'),'utf8'),before,'the file is untouched');
- const on=await livePage(base,'/write/'+KILN.id);
+ const on=await livePage(base,'/write/'+KILN.id,{on:true});
  assert.ok(boxes(on.doc).some(b=>!b.readOnly),'on: he can edit');assert.equal(on.doc.querySelector('[data-wr-locked]').hidden,true);
 });
 
@@ -357,7 +358,7 @@ test('Write honours editable and unavailableReason: a draft the Magazine will no
  fs.writeFileSync(conflict,'---\ntype: DEV\n---\n\nA conflicting copy.\n');
  try{
   assert.equal((await draftOf(base,KILN)).editable,false,'the Magazine says it is not editable');
-  const pg=await livePage(base,'/write/'+KILN.id);
+  const pg=await livePage(base,'/write/'+KILN.id,{on:true,on:true});
   assert.ok(boxes(pg.doc).every(b=>b.readOnly));
   assert.match(pg.doc.querySelector('[data-wr-locked]').textContent,/Conflicting files need a human choice/);
   assert.equal(pg.doc.querySelector('[data-wr-saved]').textContent,'Read only');
@@ -367,7 +368,7 @@ test('Write honours editable and unavailableReason: a draft the Magazine will no
 
 test('"Keep my words" never overwrites a paragraph on a guess: common words do not pair, and without a sure place his words are only kept',{timeout:60000},async()=>{
  const {base,vault}=await theWorld(),file=vaultFile(vault,'Salt Lake Weaver');
- const pg=await livePage(base,'/write/'+WEAVER.id);
+ const pg=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true});
  const words=await wordsOf(base,WEAVER);
  // elsewhere the paragraph he is editing AND the paragraph beside it are rewritten, so no place is certain
  assert.equal((await editElsewhere(base,WEAVER,2,'The cloth and the water and the night, as it is.')).status,200);
@@ -390,7 +391,7 @@ test('Write: the first keystroke keeps a paragraph\'s own line breaks, and every
  const {base,vault}=await theWorld(),file=vaultFile(vault,'Salt Lake Weaver');
  const soft='Soft line one\nsoft line two, with an  odd  spacing.';
  fs.writeFileSync(file,fs.readFileSync(file,'utf8').replace(/\n---\n$/,'\n\n'+soft+'\n\n---\n'));
- const pg=await livePage(base,'/write/'+WEAVER.id),before=fs.readFileSync(file,'utf8');
+ const pg=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true}),before=fs.readFileSync(file,'utf8');
  const at=boxes(pg.doc).findIndex(b=>b.value===soft);assert.ok(at>=0,'shown with its line break: '+JSON.stringify(boxes(pg.doc).map(b=>b.value)));
  const box=boxes(pg.doc)[at];type(pg.w,box,soft+' More.');blur(pg.w,box);await quiet(pg.doc,20000);
  assert.equal(fs.readFileSync(file,'utf8'),before.replace(soft,soft+' More.'),'only that paragraph changed, line break and spacing as typed');
@@ -399,7 +400,7 @@ test('Write: the first keystroke keeps a paragraph\'s own line breaks, and every
 });
 
 test('Write: marks that mean something in the Magazine are not sent through the paragraph edit; his words are kept and the file is not touched',{timeout:90000},async()=>{
- const {base,vault}=await theWorld(),file=vaultFile(vault,'Kiln Keeper'),pg=await livePage(base,'/write/'+KILN.id),start=(await wordsOf(base,KILN))[2];
+ const {base,vault}=await theWorld(),file=vaultFile(vault,'Kiln Keeper'),pg=await livePage(base,'/write/'+KILN.id,{on:true,on:true}),start=(await wordsOf(base,KILN))[2];
  const bytes=fs.readFileSync(file,'utf8'),sent=edits(pg.calls).length;
  for(const bad of ['# A heading now','Some ==marked== words','A %%hidden note%% here','Make a /rework word/ of this.','> a large line','- a list item','1. a numbered item','| a | table |','a [[link]] here','**bold** words','one\n\ntwo']){
   const box=boxes(pg.doc)[2];type(pg.w,box,bad);blur(pg.w,box);await settle(300);
@@ -418,7 +419,7 @@ test('Write: marks that mean something in the Magazine are not sent through the 
 });
 
 test('Write: paragraphs removed above his are no reason to lose his place: his words are sent again from where the paragraph now is',{timeout:60000},async()=>{
- const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id);
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id,{on:true,on:true});
  const words=await wordsOf(base,WEAVER),last=words.at(-1),mine=last+' Mine.';
  for(let i=0;i<3;i++)assert.equal((await editElsewhere(base,WEAVER,1,'')).status,200,'a paragraph above is removed in the Magazine');
  const box=boxes(pg.doc).at(-1);type(pg.w,box,mine);blur(pg.w,box);
@@ -430,7 +431,7 @@ test('Write: paragraphs removed above his are no reason to lose his place: his w
 
 test('Write: unsent words are kept one paragraph at a time, so a save in one tab never erases the unsent words of another',{timeout:60000},async()=>{
  const {base}=await theWorld(),shared=new JSDOM('',{url:base+'/'}).window;windows.push(shared);
- const A=await livePage(base,'/write/'+KILN.id,{lateEdit:6000,storage:shared.localStorage}),B=await livePage(base,'/write/'+KILN.id,{storage:shared.localStorage});
+ const A=await livePage(base,'/write/'+KILN.id,{on:true,lateEdit:6000,storage:shared.localStorage}),B=await livePage(base,'/write/'+KILN.id,{on:true,storage:shared.localStorage});
  const words=await wordsOf(base,KILN);
  type(A.w,boxes(A.doc)[1],words[1]+' (tab A, unsent)');// A's save is held back: unsent
  await settle(100);assert.equal(keptKeys(shared,KILN).length,1);
@@ -441,7 +442,7 @@ test('Write: unsent words are kept one paragraph at a time, so a save in one tab
 });
 
 test('Write: a paragraph over the limit says the true limit and keeps the words; a saved paragraph is logged once, not at every pause',{timeout:90000},async()=>{
- const {base,vault}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id),file=vaultFile(vault,'Kiln Keeper');
+ const {base,vault}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{on:true,on:true}),file=vaultFile(vault,'Kiln Keeper');
  const bytes=fs.readFileSync(file,'utf8'),sent=edits(pg.calls).length;
  const box=boxes(pg.doc)[1];type(pg.w,box,'a'.repeat(200001));await settle(1900);
  const c=pg.doc.querySelector('[data-wr-conflict]');assert.equal(c.hidden,false);assert.match(c.textContent,/at most 200,000 characters/);assert.match(c.textContent,/200,001/);
@@ -455,7 +456,7 @@ test('Write: a paragraph over the limit says the true limit and keeps the words;
 });
 
 test('a suggestion that reorders, or drops a duplicate, is described truthfully; a refused Accept shows the Magazine\'s own wording',{timeout:90000},async()=>{
- const {base,vault}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id),{proposalChanges}=pg.w.v2.shared.writeStory;
+ const {base,vault}=await theWorld(),pg=await livePage(base,'/write/'+KILN.id,{on:true,on:true}),{proposalChanges}=pg.w.v2.shared.writeStory;
  const a='---\ntype: DEV\n---\n\nOne.\n\nTwo.\n\nTwo.\n\nThree.\n';
  const same=r=>JSON.parse(JSON.stringify(r));
  assert.deepEqual(same(proposalChanges(a,'---\ntype: DEV\n---\n\nThree.\n\nOne.\n\nTwo.\n\nTwo.\n')),{out:[],in:[],reordered:true});
@@ -463,7 +464,7 @@ test('a suggestion that reorders, or drops a duplicate, is described truthfully;
  assert.deepEqual(same(proposalChanges(a,a)),{out:[],in:[],reordered:false});
  // a stale Accept: the card is open, the words change, he presses Accept
  const made=await propose(base,KILN,['She lifted the first bowl','She raised the first bowl']);assert.equal(made.status,200);
- const ui=await livePage(base,'/write/'+KILN.id);await until(()=>ui.doc.querySelector('[data-prop]'));
+ const ui=await livePage(base,'/write/'+KILN.id,{on:true,on:true});await until(()=>ui.doc.querySelector('[data-prop]'));
  fs.appendFileSync(vaultFile(vault,'Kiln Keeper'),'\nA line added outside, so the suggestion is stale.\n');
  ui.doc.querySelector('[data-act="accept"]').click();
  await until(()=>/changed after these words were proposed/.test(ui.doc.body.textContent));
@@ -475,4 +476,12 @@ test('the story editor is only for a story: Write finds an ordinary subject\'s d
  assert.match(src,/found&&found\.story\?openStory\(page,ctx,found\):open\(page,ctx,found\)/);
  assert.doesNotMatch(src,/[\u2014]/,'no em dash');assert.doesNotMatch(src,/\bfetch\(/);
  for(const f of ['read','check']){const t=read(`public/v2/screens/${f}.js`);assert.doesNotMatch(t,/[\u2014]/);assert.doesNotMatch(t,/\bfetch\(/);}
+});
+
+test('as shipped, no request to magazine.working-draft.edit is made from the page as human:adrian, even after typing',{timeout:60000},async()=>{
+ const {base}=await theWorld(),pg=await livePage(base,'/write/'+WEAVER.id);
+ const box=boxes(pg.doc)[1];
+ type(pg.w,box,'typed anyway');blur(pg.w,box);await settle(1800);
+ assert.equal(edits(pg.calls).length,0);assert.equal(pg.calls.filter(c=>/working-draft\/edit/.test(c.path)).length,0);
+ assert.equal(kept(pg.w,WEAVER),null);
 });

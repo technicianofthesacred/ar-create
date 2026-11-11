@@ -783,7 +783,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  // ====================================================================================================================
  /** The one switch. When false a story's words show read only in Write, with a line saying they are changed in the Magazine
      and one link to the existing workspace. When true they are edited here as this part builds. */
- const STORY_EDITING=true;
+ // Stays false until the faults listed in docs/plans/2026-11-11-version-two-open-corrections.md under "Write for a Magazine story" are corrected and reviewed.
+ const STORY_EDITING=false;
  const MAX_PARAGRAPH=200000;// the Magazine's own limit for one paragraph
  const RESEND_GRACE_MS=8000;// an operation is not sent again sooner than this after it was sent, even if no answer came
  const STORY_KEY=story=>'ar-v2-write-story:'+story.storyId+':'+story.pieceId+':';
