@@ -279,6 +279,20 @@ On 11 November you approved starting the mock-ups and added: "We need to make su
 
 The mock-ups should make these controls visible and show what changes after each is used, so it is clear that your insight moves the bank. A screen with nowhere for you to speak is a wall of data and fails the brief.
 
+### Built for a person, made to be played with
+
+You also said: "We need to make the interface fun to interact with, built for a human, not built for AI, so that when I am in here I want to react with it, I want to play with it. It is designed for human interaction."
+
+What that asks of the mock-ups:
+
+- **Hands first.** You touch the thing itself. Drag a stop, pinch the map closer, pull a line from one concept to another with your finger, press and hold a concept to turn its resonance up and watch it glow.
+- **It answers you.** Every touch gets a visible response at once: a neighbour lights, a line settles into place, a district gathers. Movement is how the bank shows that it heard you.
+- **Voice in, voices out.** You speak to it wherever you can type. Where a source is a talk, you can hear the passage in the speaker's own voice.
+- **Few words on screen.** The source's words and yours are what you read. No forms, tables, settings pages or status reports.
+- **Room for surprise.** Wandering should turn up a connection you did not expect, shown as an invitation and never as a task.
+
+The test: you would pick it up with nothing to do, the way you would turn over an object you like. The mock-ups should be clickable, not flat pictures, so this can be felt.
+
 ## Open questions only you can answer
 
 1. **Your lens.** What are you looking for today when you distil a work? A few spoken sentences are enough for a first "How I distil". It is meant to change as you do, so it does not need to be right.
