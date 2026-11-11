@@ -199,8 +199,19 @@ dialog.sheet::backdrop{background:rgba(10,9,7,.45)}
 :is(.nug,.glance,.card,.pick,.work)>blockquote+.who{margin-top:4px}
 :is(.nug,.glance,.card,.pick,.work)>:is(.join,.first,.acts){margin-top:18px}
 .card>.work+.work{margin-top:22px;padding-top:22px}
-blockquote.say{padding:14px 16px;border-radius:10px;background:var(--bg);line-height:1.6}
-.sheet blockquote.say,.stop .say{padding:0;background:none}
+blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-height:1.6}
+.sheet blockquote.say,.stop .say{padding:0;margin-inline:0;background:none}
+.kin{display:grid;gap:12px;padding-top:14px;border-top:1px solid var(--line)}
+.lines>.kin{margin-top:16px}
+.card>.kin:first-of-type{border-top:0;padding-top:0}
+.kinh{display:flex;align-items:center;gap:10px;font:500 var(--t13)/1.3 var(--ui);color:var(--dim)}
+.kinh i{display:block;width:24px;border-top:2px solid var(--ink2)}
+.kinh i[data-k="prepares"],.kinh i[data-k="mine"]{border-color:var(--warm)}
+.kinh i[data-k="contrasts"],.kinh i[data-k="mine"]{border-top-style:dashed}
+.kinh i[data-k="echoes"]{border-top-style:dotted}
+.go{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px;width:100%;font-size:var(--t15)}
+.go span{color:var(--dim)}
+.kin .linerow{grid-template-columns:minmax(0,1fr);gap:2px;padding:0;border:0;margin:0}
 .nug .dist{color:var(--ink);font-size:var(--t15)}
 .lab{font-weight:500;letter-spacing:.08em}
 .lines{gap:0}
@@ -323,10 +334,12 @@ const L=[
  ['eth','comp','echoes','Care at the start and warmth at the end are close, but not one concept.'],
  ['ret','whole','explains','Wholeness is recognised in short moments, many times.']
 ];
-const KIN={mine:['your line','your line'],prepares:['prepares','comes after'],explains:['explains','explained by'],contrasts:['contrasts','contrasts'],echoes:['echoes','echoes']};
+const KIN={mine:['Your line','Your line'],prepares:['Leads to','Comes first'],explains:['It explains','Explains it'],contrasts:['Contrasts with','Contrasts with'],echoes:['Echoes','Echoes']};
 const $=s=>document.querySelector(s), esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* neighbours of a concept: [other id, kind, label seen from here, reason] */
-function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:(l[2]==='prepares'?'comes first':KIN[l[2]][1]),why:l[3],out,i:L.indexOf(l)}})}
+function near(id){return L.filter(l=>l[0]===id||l[1]===id).map(l=>{const out=l[0]===id;return{id:out?l[1]:l[0],k:l[2],lab:out?KIN[l[2]][0]:KIN[l[2]][1],why:l[3],out,i:L.indexOf(l)}})}
+function linesHTML(nb,walk){const g={};nb.forEach(n=>(g[n.lab]=g[n.lab]||[]).push(n));
+ return Object.keys(g).map(lab=>`<section class="kin"><p class="kinh"><i data-k="${g[lab][0].k}"></i>${lab}</p>${g[lab].map(n=>`<div class="linerow"><button class="go" data-${walk?"walk":"pick"}="${n.id}"><b>${C[n.id].n}</b><span aria-hidden="true">›</span></button>${n.k==='mine'&&!n.why?speak('whyline','Why this line?',`data-i="${n.i}"`):`<p class="${n.k==='mine'?'say':''}">${esc(n.why)}</p>`}</div>`).join('')}</section>`).join('')}
 const hear=t=>`<button class="hear" aria-pressed="false" data-hear>${t}</button>`;
 
 /* ---------- screen 1 ---------- */
@@ -351,7 +364,7 @@ function drawSource(){
  $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+lineSVG()+'</svg>'+
   ORDER.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.n}</span></button>`}).join('');
  const c=C[picked];
- $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+near(picked).map(n=>`<div class="linerow"><span class="k">${n.lab}</span><b>${C[n.id].n}</b>${n.k==='mine'&&!n.why?speak('whyline','Why this line?',`data-i="${n.i}"`):`<p class="${n.k==='mine'?'say':''}">${esc(n.why)}</p>`}</div>`).join('')+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
+ $('#slines').innerHTML=`<header><h3>${c.n}</h3><a class="btn quiet" href="#nugget" data-open="${picked}">Open</a></header>`+linesHTML(near(picked))+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
  $('#scards').innerHTML=ORDER.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#nugget" data-open="${id}">${c.n}</a></h3>${resDots(id)}</header>
   <p class="lab">Distillation</p><p class="dist">${c.d}</p>
   <p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${hear(c.p[0][0])}<span>${TALK.who}</span></p>
@@ -391,7 +404,7 @@ function distHTML(){const c=C[here],n=LONG[here]?3:2;depth=Math.min(depth,n-1);
   (depth===1?`<p class="more">${MED[here]}</p>`:depth===2?LONG[here].map(x=>`<h3 class="more">${x[0]}</h3><p class="more">${x[1]}</p>`).join(''):'');}
 const SLOT={1:[[50,9]],2:[[24,10],[76,10]],3:[[24,10],[76,10],[50,91]],4:[[24,10],[76,10],[24,90],[76,90]],5:[[24,9],[76,9],[17,62],[83,62],[50,92]],6:[[24,8],[76,8],[16,40],[84,40],[26,90],[74,90]],7:[[24,7],[76,7],[16,34],[84,34],[18,68],[82,68],[50,93]]};
 function drawNugget(from){
- const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='comes first'?0:1)-(b.lab==='comes first'?0:1)).slice(0,7), s=SLOT[nb.length];
+ const c=C[here], nb=near(here).sort((a,b)=>(a.lab==='Comes first'?0:1)-(b.lab==='Comes first'?0:1)).slice(0,7), s=SLOT[nb.length];
  const ring=$('#ring');
  ring.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+nb.map((n,i)=>`<line x1="50" y1="50" x2="${s[i][0]}" y2="${s[i][1]}" data-k="${n.k}"/>`).join('')+'</svg>'+
   `<div class="me" data-r="${c.r}" style="--r:${c.r}"><span class="dot"></span><span>${c.n}</span></div>`+
@@ -407,7 +420,7 @@ function drawNugget(from){
    <article class="card"><p class="lab">Distillation</p><h2>${c.n}</h2><p>${c.d}</p><p class="note">${works.length} ${works.length>1?'works speak':'work speaks'} of this. ${nb.length} lines.</p></article>
    <article class="card">${works.map(w=>`<div class="work"><p class="lab">Their words</p>${w.p.map(p=>`<blockquote class="say">${esc(p[1])}</blockquote><p class="who">${hear(p[0])}<span>${w.who}</span><button class="tiny" data-lift>Not this concept</button></p>`).join('')}<p class="who"><span>${w.work}</span><span>${w.kind}</span></p>${w.note?`<p class="lab">Distillation</p><p class="note">${w.note}</p>`:''}</div>`).join('')}</article>
    <article class="card"><p class="lab">Through your lens</p><p>${c.lens}</p><p class="who"><span class="sample">${LENS}</span><a class="ghost" href="#distil">Change lens</a></p></article>
-   <article class="card"><p class="lab">Lines</p>${nb.map(n=>`<div class="linerow"><span class="k">${n.lab}</span><button data-walk="${n.id}"><b>${C[n.id].n}</b></button><p>${n.why}</p></div>`).join('')}<p><button class="ghost" style="margin-left:-10px">Draw a line of your own</button></p></article>
+   <article class="card"><p class="lab">Lines</p>${linesHTML(nb,true)}<p><button class="ghost" style="margin-left:-10px">Draw a line of your own</button></p></article>
    <article class="card">${c.resp?`<p class="lab">Your response</p><p class="say">${esc(c.resp)}</p><p class="who"><span>11 November 2026</span></p>`:`<label class="lab" for="resp">Your response</label><textarea id="resp" placeholder="Speak or write"></textarea><p class="acts"><button class="btn" data-keep>Keep</button><span class="who">11 November 2026</span></p>`}</article>
    <article class="card"><p class="lab">Go deeper</p>${c.q.map(q=>`<div class="q"><span>${q}</span><button class="ghost" data-sent>Send to Research</button></div>`).join('')}</article>
   </div></div>`;
