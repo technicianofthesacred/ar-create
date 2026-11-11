@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
 
 // Version two's Capture sheet: the four ways in, how each saves, and what is kept when a save fails. The page runs in
 // a DOM with the app's own scripts; commands are answered by a table, and every call is recorded so each test can say
@@ -35,6 +36,7 @@ async function capPage({respond,hash='#/subject/p1',actor='',media}={}){
  w.EventSource=class{addEventListener(){}close(){}};
  w.URL.createObjectURL=()=>'blob:invented/'+Math.random().toString(16).slice(2);w.URL.revokeObjectURL=()=>{};
  w.scrollTo=()=>{};
+ Object.defineProperty(w,'crypto',{value:globalThis.crypto,configurable:true});
  if(media){w.MediaRecorder=media.Recorder;Object.defineProperty(w.navigator,'mediaDevices',{value:media.devices,configurable:true});}
  w.fetch=async(input,options={})=>{
   const u=new URL(String(input),w.location.href);
@@ -402,11 +404,11 @@ test('a native close (a second Escape) keeps a live recording and the microphone
 /** A server that keeps what it is sent in a table and can lose its answer, as a network drop would. */
 function lossyServer({dropFirst=true}={}){
  const files=[];let dropped=false;
- const tree=()=>({roots:[{id:'library',tree:{rel_path:'',files:[],folders:[{rel_path:'Projects',files:[],folders:[{rel_path:'Projects/proj-1',folders:[],files:files.map(f=>({rel_path:'Projects/proj-1/'+f.name,name:f.name,size_bytes:f.size,id:f.id}))}]}]}}]});
+ const tree=()=>({roots:[{id:'library',tree:{rel_path:'',files:[],folders:[{rel_path:'Projects',files:[],folders:[{rel_path:'Projects/proj-1',folders:[],files:files.map(f=>({rel_path:'Projects/proj-1/'+f.name,name:f.name,size_bytes:f.size,id:f.id,hash:f.hash,provenance:{capturedAt:new Date(f.at).toISOString()}}))}]}]}}]});
  const respond=(name,body)=>{
   if(name==='sources.import'){
    const f=body.files[0],id='src-'+(files.length+1);
-   if(!files.some(x=>x.name===f.name))files.push({name:f.name,size:f.content!=null?Buffer.byteLength(f.content):Buffer.from(f.base64,'base64').length,id});
+   if(!files.some(x=>x.name===f.name)){const b=f.content!=null?Buffer.from(f.content):Buffer.from(f.base64,'base64');files.push({name:f.name,size:b.length,id,hash:createHash('sha256').update(b).digest('hex'),at:Date.now()});}
    if(dropFirst&&!dropped){dropped=true;throw new Error('connection dropped');}
    return receipt(f.name,id);
   }
@@ -468,4 +470,103 @@ test('the tiles and the done line keep the sample\'s measures, and the destinati
  assert.match(css,/padding:18px 6px 14px/);
  assert.match(css,/\.v2-cap-to b\{[^}]*color:var\(--ink\)[^}]*font-weight:(600|700)/);
  assert.match(css,/\.v2-cap-done \.v2-ic\{[^}]*width:16px/);
+});
+
+/** A Library that names a second file of the same name name-2, name-3, keeps each file's SHA-256 and the time it was saved,
+    and can lose the answer after the file landed (dropAfter) or before it arrived (dropBefore), and replays a repeated operationId. */
+function libraryServer({older=[],dropAfter=0,dropBefore=0}={}){
+ const files=older.map((f,i)=>({name:f.name,bytes:Buffer.from(f.bytes),id:'old-'+i,at:Date.now()-3600e3}));let after=dropAfter,before=dropBefore,imports=0;
+ const bytesOf=f=>f.content!=null?Buffer.from(f.content):Buffer.from(f.base64,'base64');
+ const tree=()=>({roots:[{id:'library',tree:{rel_path:'',files:[],folders:[{rel_path:'Projects',files:[],folders:[{rel_path:'Projects/proj-1',folders:[],files:files.map(f=>({rel_path:'Projects/proj-1/'+f.name,name:f.name,size_bytes:f.bytes.length,id:f.id,hash:createHash('sha256').update(f.bytes).digest('hex'),modified_at:new Date(f.at).toISOString(),provenance:{capturedAt:new Date(f.at).toISOString()}}))}]}]}}]});
+ const respond=(name,body)=>{
+  if(name==='sources.import'){
+   imports++;if(before>0){before--;throw new Error('connection dropped');}
+   const f=body.files[0],dot=f.name.lastIndexOf('.'),stem=dot>0?f.name.slice(0,dot):f.name,ext=dot>0?f.name.slice(dot):'';
+   let n=f.name,k=2;while(files.some(x=>x.name===n))n=stem+'-'+(k++)+ext;
+   const id='src-'+(files.length+1);files.push({name:n,bytes:bytesOf(f),id,at:Date.now()});
+   if(after>0){after--;throw new Error('connection dropped');}
+   return receipt(n,id);
+  }
+  if(name==='sources.folders'||name==='sources.tree')return tree();
+  return goodSave()(name,body);
+ };
+ return {respond,files,imports:()=>imports};
+}
+const jpeg=bytes=>Uint8Array.from(bytes);
+
+test('a lost answer for a photograph named like an earlier one: Try again finds this save by its content under name-2, and saves nothing twice',async()=>{
+ const srv=libraryServer({older:[{name:'image.jpg',bytes:[9,9,9]}],dropAfter:1});
+ const p=await capPage({respond:srv.respond});
+ await p.open({id:'p1'});await settle();p.tile('photo');
+ p.pick('choose',[new p.w.File([jpeg([1,2,3,4,5])],'image.jpg',{type:'image/jpeg'})]);
+ await until(()=>/may already be saved/.test(p.text()),'the lost answer');
+ p.doc.querySelector('[data-cap="photo-retry"]').click();
+ await until(()=>/1 photograph/.test(p.text())&&/added to/.test(p.text()),'the retry to finish');
+ assert.equal(srv.imports(),1,'no second copy was sent');
+ assert.deepEqual(srv.files.map(f=>f.name),['image.jpg','image-2.jpg'],'no image-3');
+ assert.deepEqual(p.named('study.material.attach')[0].body.sourceIds,['src-2'],'the file the app saved, not the older one');
+});
+
+test('a photograph whose request never arrived is not taken for an older file of the same name and size: it is sent again',async()=>{
+ const srv=libraryServer({older:[{name:'image.jpg',bytes:[1,2,3,4,5]}],dropBefore:1});
+ const p=await capPage({respond:srv.respond});
+ await p.open({id:'p1'});await settle();p.tile('photo');
+ p.pick('choose',[new p.w.File([jpeg([1,2,3,4,5])],'image.jpg',{type:'image/jpeg'})]);
+ await until(()=>/may already be saved/.test(p.text()),'the lost answer');
+ p.doc.querySelector('[data-cap="photo-retry"]').click();
+ await until(()=>/added to/.test(p.text()),'the retry to finish');
+ assert.equal(srv.imports(),2,'it was sent again');
+ assert.deepEqual(srv.files.map(f=>f.name),['image.jpg','image-2.jpg'],'his photograph is really saved');
+ assert.deepEqual(p.named('study.material.attach')[0].body.sourceIds,['src-2'],'the new file is attached, not the older one');
+});
+
+test('a thought and a recording get the same care: found by content under a numbered name, never twice',async()=>{
+ const t=libraryServer({dropAfter:1});
+ const p=await capPage({respond:t.respond});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Same words.');p.press('save');
+ await until(()=>/may already be saved/.test(p.text()),'the lost answer');
+ // an earlier file of that very name appears meanwhile, as if saved before: the content still tells them apart
+ p.press('save');await until(()=>/Thought added to/.test(p.text()),'the retry');
+ assert.equal(t.imports(),1);
+ const r=libraryServer({older:[{name:'clip.webm',bytes:[7]}],dropAfter:1});
+ const q=await capPage({respond:r.respond});
+ await q.open({id:'p1'});await settle();q.tile('speak');
+ q.pick('audio',[new q.w.File([jpeg([1,2,3])],'clip.webm',{type:'audio/webm'})]);
+ await settle();q.press('save');await until(()=>/may already be saved/.test(q.text()),'the lost answer');
+ q.press('save');await until(()=>/Recording added to/.test(q.text()),'the retry');
+ assert.equal(r.imports(),1);assert.deepEqual(r.files.map(f=>f.name),['clip.webm','clip-2.webm']);
+});
+
+/** A research service that replays a repeated operationId and can lose its answer once. */
+function topicServer(command,{dropFirst=true}={}){
+ const made=new Map();let dropped=false;
+ const respond=(name,body)=>{
+  if(name===command){
+   if(!made.has(body.operationId))made.set(body.operationId,{id:'topic-'+(made.size+1),revision:1,hash:'h1'});
+   if(dropFirst&&!dropped){dropped=true;throw new Error('connection dropped');}
+   return made.get(body.operationId);
+  }
+  return goodSave()(name,body);
+ };
+ return {respond,made};
+}
+
+test('a question whose answer was lost: Try again sends the same operationId, makes one topic, and the sheet does not claim nothing was changed',async()=>{
+ for(const [actor,command,done] of [['','research-topics.start',/Question added to Research/],['agent:claude-code','research-topics.propose',/Question proposed to Research/]]){
+  const srv=topicServer(command);
+  const p=await capPage({respond:srv.respond,actor});
+  await p.open({id:'p1'});await settle();p.tile('question');p.typeInto('Does straw help?');p.press('save');
+  await until(()=>/may (already|not)/.test(p.text())&&p.named(command).length===1,'the lost answer');
+  assert.doesNotMatch(p.text(),/was not sent|Nothing was changed/,'it cannot say that: the question may have arrived');
+  assert.match(p.text(),/may already have been sent/);
+  p.press('save');await until(()=>done.test(p.text()),'the retry');
+  const sent=p.named(command);assert.equal(sent.length,2);assert.equal(sent[1].body.operationId,sent[0].body.operationId,'one operationId for these words');
+  assert.equal(srv.made.size,1,'one topic');
+  // new words are a new question
+  const q=await capPage({respond:topicServer(command,{dropFirst:true}).respond,actor});
+  await q.open({id:'p1'});await settle();q.tile('question');q.typeInto('First words');q.press('save');
+  await until(()=>/may already have been sent/.test(q.text()),'lost');
+  q.typeInto('Other words');q.press('save');await until(()=>q.named(command).length===2,'second');
+  assert.notEqual(q.named(command)[1].body.operationId,q.named(command)[0].body.operationId,'changed words get a new operationId');
+ }
 });

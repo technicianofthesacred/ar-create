@@ -68,42 +68,76 @@
    // An answer that never arrived (the wait ran out, or the connection dropped) is not a refusal: the Library may have saved it.
    const lostAnswer=error=>error?.kind==='failed'&&!error.status;
    const lostError=()=>{const e=new Error('The app did not answer, so the sheet cannot be sure. It looks for the file before it saves it again.');e.lost=true;return e;};
-   const sizeOfText=text=>{try{return new root.Blob([text]).size;}catch{return null;}};
-   /** The file named so in the Library folder (and of the size sent), read through the commands the sheet already uses. */
-   async function findSaved(folder,name,size){
+   /** The bytes the Library receives for one file: its base64, or its words as UTF-8. */
+   function bytesOf(file){
+    if(file.content!=null){const E=root.TextEncoder;if(E)return new E().encode(file.content);const bin=unescape(encodeURIComponent(file.content)),out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out;}
+    const bin=root.atob(file.base64||''),out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out;
+   }
+   /** The SHA-256 of those bytes as lower-case hex, the form the Library tree gives each file's hash; null when this browser cannot make it. */
+   async function hashOf(file){
+    try{
+     const subtle=root.crypto?.subtle;if(!subtle)return null;
+     return [...new Uint8Array(await subtle.digest('SHA-256',bytesOf(file)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+    }catch{return null;}
+   }
+   const stripN=(rel,want)=>{
+    // want is folder/name.ext; the Library also saves name-2.ext, name-3.ext when the name is taken.
+    const dot=want.lastIndexOf('.'),slash=want.lastIndexOf('/'),stem=dot>slash?want.slice(0,dot):want,ext=dot>slash?want.slice(dot):'';
+    return rel===want||(rel.startsWith(stem+'-')&&rel.endsWith(ext)&&/^\d+$/.test(rel.slice(stem.length+1,rel.length-ext.length)));
+   };
+   /** When the Library says it saved this file, in milliseconds (its capture time, else the file's own); null when it gives none. */
+   const savedAt=f=>{const t=Date.parse(f?.provenance?.capturedAt||f?.modified_at||'');return Number.isFinite(t)?t:null;};
+   /** The file this capture saved, known by its content: the same name or a numbered form of it, with these exact bytes
+       (SHA-256), saved after this attempt began. An identical file saved earlier is told apart by that time, because the
+       Library records when each file was saved. Null when none is found, or when the content or time cannot be checked
+       (then the file is not taken for this one, and it is saved again). */
+   async function findSaved(folder,name,since,hash){
+    if(!hash)return null;
     const answer=await call(folder?'sources.folders':'sources.tree',folder?{rootId:'library',folder}:{});
     const want=(folder?folder+'/':'')+name;let hit=null;
-    const walk=node=>{if(!node||hit)return;for(const f of node.files||[])if(f.rel_path===want&&f.id&&(size==null||typeof f.size_bytes!=='number'||f.size_bytes===size)){hit=f;return;}for(const c of node.folders||[])walk(c);};
+    const walk=node=>{if(!node)return;for(const f of node.files||[]){
+     if(!f.id||!stripN(f.rel_path||'',want)||f.hash!==hash)continue;
+     const at=savedAt(f);if(at==null||at<since)continue;
+     if(!hit||at>savedAt(hit))hit=f;}
+     for(const c of node.folders||[])walk(c);};
     for(const r of answer?.roots||[])if(!r.id||r.id==='library')walk(r.tree);
     return hit;
    }
-   const unsure=new Set();
-   /** One file into the Library folder. A name whose answer was lost is looked for first, and a found file counts as saved. */
-   async function importOne(file,{folder='',size=null,refusal='The Library did not take it.'}={}){
-    const key=folder+'/'+file.name;
-    if(unsure.has(key)){
-     let hit;try{hit=await findSaved(folder,file.name,size);}catch{throw lostError();}
+   // Each file whose answer was lost, by its folder, name and content: when this capture began, so only a later save counts.
+   // One operationId for each thing written, kept for a retry of the same thing (the server answers a repeated one with the
+   // first result instead of writing again). A new thing, such as changed words, takes a new one.
+   const ops=new Map();
+   const opId=key=>{if(!ops.has(key))ops.set(key,deps.uuid?deps.uuid():(root.crypto?.randomUUID?root.crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g,()=>Math.floor(Math.random()*16).toString(16))));return ops.get(key);};
+   const unsure=new Map();
+   /** One file into the Library folder. A file whose answer was lost is looked for by its content first, and a found file counts as saved. */
+   async function importOne(file,{folder='',refusal='The Library did not take it.'}={}){
+    const hash=await hashOf(file);const key=folder+'/'+file.name+'/'+(hash||'');
+    const lostBefore=unsure.get(key);
+    if(lostBefore){
+     let hit;try{hit=await findSaved(folder,file.name,lostBefore.since,hash);}catch{throw lostError();}
      if(hit){unsure.delete(key);return {id:hit.id,name:hit.name,rel_path:hit.rel_path};}
     }
+    // The time this capture began stays the first attempt's, so a save from a lost first try is still recognised.
+    const since=lostBefore?lostBefore.since:Date.now();
     let answer;
     try{answer=await call('sources.import',{rootId:'library',folder,files:[file]},{timeoutMs:LONG});}
-    catch(error){if(lostAnswer(error)){unsure.add(key);throw lostError();}throw error;}
+    catch(error){if(lostAnswer(error)){if(!lostBefore)unsure.set(key,{since});throw lostError();}throw error;}
     unsure.delete(key);
     const receipt=answer?.receipts?.[0];
     if(!receipt?.ok||!receipt.source?.id)throw new Error(receipt?.error||refusal);
     return receipt.source;
    }
    /** One file into the Library, filed with the subject as the workspace does: its folder, import, attach. */
-   async function fileIn(file,size){
+   async function fileIn(file){
     const d=await destination(),named=!!d.subject;
     let folder=d.projectId?'Projects/'+d.projectId:'';
     if(folder){try{await call('sources.folders',{rootId:'library',folder});}catch{folder='';}}
-    const source=await importOne(file,{folder,size:size??(file.content!=null?sizeOfText(file.content):null)});
+    const source=await importOne(file,{folder});
     let attached=false,why='';
     if(named){
      const tries=[];
-     if(d.bindingId)tries.push(()=>call('study.material.attach',{bindingId:d.bindingId,parentStudyId:S.subject.id,sourceIds:[source.id]}));
-     if(d.projectId)tries.push(()=>call('first-flow.attach',{projectId:d.projectId,sourceIds:[source.id]}));
+     if(d.bindingId)tries.push(()=>call('study.material.attach',{bindingId:d.bindingId,parentStudyId:S.subject.id,sourceIds:[source.id],operationId:opId('attach:'+S.subject.id+':'+source.id)}));
+     if(d.projectId)tries.push(()=>call('first-flow.attach',{projectId:d.projectId,sourceIds:[source.id],operationId:opId('first-flow:'+d.projectId+':'+source.id)}));
      for(const attempt of tries){try{await attempt();attached=true;break;}catch(error){why=error?.message||why;}}
     }
     // Saved inside the subject's own folder counts as with the subject even when the attach step was refused, but it is said as that.
@@ -283,7 +317,7 @@
     S.busy=true;dr.failed=false;paint();say('Saving the recording.');
     try{
      const file={name:dr.name,base64:await base64Of(dr.blob)};
-     const r=await fileIn(file,dr.blob.size);
+     const r=await fileIn(file);
      const note=await transcriptNote(r.source.id);
      unurl(dr.url);S.draft=null;S.busy=false;
      finish({text:`<b>Recording</b> ${whereWords([r.home])}.`,r,notes:[note,...(r.why?[attachNote(r.why)]:[])]});
@@ -305,7 +339,7 @@
      p.state='saving';repaintPhotos();
      try{
       if(p.file.size>MAX_FILE)throw new Error('This photograph is over 64 MB, which is more than the app takes in one go.');
-      const r=await fileIn({name:p.name,base64:await base64Of(p.file)},p.file.size);p.state='saved';p.result=r;p.msg='';p.lost=false;
+      const r=await fileIn({name:p.name,base64:await base64Of(p.file)});p.state='saved';p.result=r;p.msg='';p.lost=false;
      }catch(error){p.state='failed';p.lost=!!error?.lost;p.msg=(p.lost?'May already be saved. ':'')+(error?.message||'The app did not answer.')+' It is still here.';}
      repaintPhotos();
     }
@@ -337,13 +371,15 @@
    }
 
    // ---------- a question ----------
+   // The words decide the operation: the same words on a retry send the same one, changed words send a new one.
+   const questionOp=(text,kind)=>opId('question:'+kind+':'+S.subject?.id+':'+text);
    async function saveQuestion(){
     const name=S.question;if(!name.trim()||S.busy)return;
     S.busy=true;paint();say('Sending it to Research.');
     const subjects=S.subject?{subjects:[S.subject.id]}:{};
     try{
      if(human()){
-      const t=await call('research-topics.start',{name,...subjects});
+      const t=await call('research-topics.start',{name,...subjects,operationId:questionOp(name,'start')});
       S.question='';S.busy=false;
       finish({text:'<b>Question</b> added to Research.',link:{href:deps.href('research/topic/:id',{id:t.id}),label:'Open it in Research'},
        notes:S.subject&&!S.fellBack?[`Linked to ${S.subject.name||'this subject'}.`]:[],
@@ -352,12 +388,12 @@
       // The note is saved once for these words; a retry after a failed proposal points at the note already saved.
       if(!S.note||S.note.text!==name)S.note={text:name,file:{name:thoughtName(name,new Date(),'Question'),content:name},id:null};
       const note=S.note;
-      if(!note.id)note.id=(await importOne(note.file,{folder:'',size:sizeOfText(name),refusal:'The Library did not take the note the proposal points at.'})).id;
-      const t=await call('research-topics.propose',{name,...subjects,origin:{kind:'note',label:'Asked from the Capture sheet',ref:{kind:'source',id:note.id}}});
+      if(!note.id)note.id=(await importOne(note.file,{folder:'',refusal:'The Library did not take the note the proposal points at.'})).id;
+      const t=await call('research-topics.propose',{name,...subjects,operationId:questionOp(name,'propose'),origin:{kind:'note',label:'Asked from the Capture sheet',ref:{kind:'source',id:note.id}}});
       S.question='';S.note=null;S.busy=false;
       finish({text:'<b>Question</b> proposed to Research. Adrian keeps it or lets it go.',link:{href:deps.href('research/topic/:id',{id:t.id}),label:'Open it in Research'},notes:['The question is also saved as a note in the Library.']});
      }
-    }catch(error){S.busy=false;paint('text');say(error?.lost?`The question may not have been sent. ${error.message} Your words are still here: try again.`:`The question was not sent. ${error?.message||'The app did not answer.'} Your words are still here: try again.`,'bad');}
+    }catch(error){S.busy=false;paint('text');say(error?.lost||lostAnswer(error)?'The question may already have been sent: the app did not answer, so the sheet cannot be sure. Your words are still here. Try again: it will not be added twice.':`The question was not sent. ${error?.message||'The app did not answer.'} Your words are still here: try again.`,'bad');}
    }
 
    // ---------- done ----------
