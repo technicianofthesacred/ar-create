@@ -100,9 +100,9 @@ test('which tool reads a change touches',()=>{
 
 test('Add a form offers only what the app can make, from the command\'s own facts, each saying what it needs and why not yet',()=>{
  const none=S.addable({bindingId:'b',material:{total:0,recordings:0,notes:0},words:{paragraphs:0}});
- assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['article',false,'Write a few words first.'],['carousel',false,'Add a recording or a note first.'],['post',true,''],['product-listing',true,'']]);
- assert.ok(S.addable({bindingId:'b',material:{notes:1,recordings:0},words:{paragraphs:2}}).every(k=>k.ready&&k.needs));
- assert.ok(S.addable({bindingId:null,material:{notes:1},words:{paragraphs:1}}).filter(k=>k.kind!=='carousel').every(k=>!k.ready));
+ assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['post',true,''],['story',false,'Not built yet.'],['video',false,'Not built yet.'],['product-listing',true,''],['newsletter',false,'Not built yet.'],['shared-notes',false,'Not built yet.'],['article',false,'Write a few words first.'],['carousel',false,'Add a recording or a note first.']]);
+ assert.ok(S.addable({bindingId:'b',material:{notes:1,recordings:0},words:{paragraphs:2}}).filter(k=>!k.unbuilt).every(k=>k.ready&&k.needs));
+ assert.ok(S.addable({bindingId:null,material:{notes:1},words:{paragraphs:1}}).filter(k=>k.kind!=='carousel'&&!k.unbuilt).every(k=>!k.ready));
  assert.equal(S.addable({bindingId:'b'}).find(k=>k.kind==='article').why,'Not known yet.');
 });
 
@@ -120,7 +120,7 @@ test('no em dash, only the six sizes, no hard-coded colour, every rule under the
  assert.deepEqual([...new Set([...css.matchAll(/font(?:-size)?:[^;}]*?(\d+(?:\.\d+)?)px/g)].map(m=>m[1]))],[],'sizes come from the six size tokens only');
  assert.doesNotMatch(css,/#[0-9a-f]{3,8}\b/i,'no hard-coded colour');
  const rules=css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/@keyframes subj-[\w-]+\{[^{}]*\{[^{}]*\}\}/g,'').split('}').map(r=>r.replace(/^(\s*@[^{]*\{)+/,'').trim()).filter(r=>r.includes('{'));
- for(const r of rules)assert.match(r,/^(?:html\[data-brand\] )?(?:\.subj\b|\.subj-sheetdlg\b|dialog\.subj-sheetdlg\b)/,'every rule starts with the screen\'s own class: '+r.slice(0,60));
+ for(const r of rules)assert.match(r,/^(?:html\[data-(?:brand|theme)(?:="dark")?\] )?(?:\.subj\b|\.subj-sheetdlg\b|dialog\.subj-sheetdlg\b)/,'every rule starts with the screen\'s own class: '+r.slice(0,60));
  const js=fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8');
  for(const banned of ['subject-places','study-draft.catalog','inquiries.projects','subjects.standing','stepsFor','factsFrom'])assert.ok(!js.includes("'"+banned),banned+' is not read or decided here');
 assert.match(js,/named\?\.text/,'the dish he named is the board\'s text');
@@ -172,7 +172,7 @@ test('six invented subjects at different stages each show exactly what subject.s
   // The forms, in the command's order, each with its own n/m.
   assert.deepEqual([...doc.querySelectorAll('button.subj-form[data-subj-form]')].map(b=>[b.dataset.subjForm,b.querySelector('em').textContent]),standing.forms.map(f=>[f.key,f.done+'/'+f.total]));
   // The steps of the form shown, every one with the state the command gave (never a state of its own).
-  const form=S.chooseForm(standing),steps=form?form.steps:standing.steps;
+  const form=S.chooseForm(standing),steps=form?form.steps:standing.steps.filter(x=>['Gather','Research','Simmer'].includes(x.group)),all=form?form.steps:standing.steps;
   assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),steps.map(s=>[s.id,s.state]),id);
   for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.note,id+' '+s.id+' note');
   // Opened on the step the command calls next, or the first that needs him; never a step not known.
@@ -187,7 +187,7 @@ test('six invented subjects at different stages each show exactly what subject.s
  // Nothing yet: one first step, the dish waits, a form is not decided.
  {const {doc}=await page(base,'#/subject/demo-leaving-and-returning');await until(()=>doc.querySelector('.subj-row'));
   assert.match(doc.querySelector('.subj-form.none').textContent,/Not decided yet/);
-  assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),[['have','next'],['dish','wait'],['form','wait']]);}
+  assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),[['have','next'],['dish','wait']]);}
  // A suggestion waiting: the words need him, Check and Publish wait.
  {const {w,doc}=await page(base,'#/subject/demo-shade-and-patience');await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
   const st=Object.fromEntries(rowsOf(doc).map(r=>[r[0],r[1]])),said=Object.fromEntries(S.stepsOfForm(await standingOf(base,'demo-shade-and-patience'),S.chooseForm(await standingOf(base,'demo-shade-and-patience'))).map(x=>[x.id,x.state]));
@@ -234,7 +234,8 @@ test('the page: opens a step on demand, every hand-off lands on its section with
   const own=[...doc.querySelectorAll('[data-subj-panel] [data-subj-handoff]')].map(a=>sectionOf(a.getAttribute('href')));
   if(s.state!=='unknown'&&!['yes','photos','posttext','slides','story','form'].includes(s.id)||s.id==='yes'||s.id==='photos')assert.ok(own.includes(s.section),s.id+' hands off to '+s.section+' among '+own);}
  assert.ok(['write','checkRun','outputs','audience','addMaterial','board','research','desk','media'].every(k=>handoffs.has(k)),[...handoffs].join());
- await until(()=>doc.querySelector('.subj-head [data-subj-handoff^="direction"]'));
+ await until(()=>doc.querySelector('.subj-head [data-subj-step="dish"]'));
+ assert.equal(doc.querySelector('.subj-head .subj-look')?.getAttribute('href'),'#/looks?look=teajia','the look chip opens Looks');
  // The Carousel: its pill opens its own steps; the slide studio opens from the slides step.
  carousel.click();
  assert.equal(doc.querySelector('.subj-form.on').dataset.subjForm,carousel.dataset.subjForm);
@@ -261,7 +262,7 @@ test('the page: opens a step on demand, every hand-off lands on its section with
  await new Promise(r=>setTimeout(r,500));assert.deepEqual(mine(calls.slice(mark)),[],'another subject, and presence, ask nothing');
  // Add a form: what the app can make, nothing it cannot.
  doc.querySelector('[data-subj-add]').click();
- assert.deepEqual([...doc.querySelectorAll('.subj-kinds b')].map(b=>b.textContent),['Article','Carousel','Post','Product listing']);
+ assert.deepEqual([...doc.querySelectorAll('.subj-kinds b')].map(b=>b.textContent),['Post','Story','Video','Product listing','Newsletter','Shared notes','Article','Carousel']);
  assert.ok(plan);
 });
 
