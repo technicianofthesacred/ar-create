@@ -81,29 +81,63 @@
   await window.arCreateReviewStartup?.whenReady?.();
   return until(()=>window.combinedNavigation?.go&&window.combinedSubjects?.open&&document.querySelector('.combined-rail,.combined-phonebar')&&nowId(),15000);
  }
- // Which subject holds a piece: {known:false} when the workspace cannot say, else {found, other}.
- async function findPiece(subjectId,pieceId){
+ // Which subject holds a piece: {known:false} when the workspace cannot say, else {found, other}. The subject's own pieces
+ // are read first; only when it lacks the piece are the other subjects read, a few at a time, under one time limit for the
+ // whole search. Running out of time answers "not found" for this subject (never a guess about another one).
+ const SEARCH_MS=3000,SEARCH_AT_ONCE=8;
+ async function findPiece(subjectId,pieceId,limit=SEARCH_MS){
   const read=window.realOutputOverview?.read;if(typeof read!=='function')return {known:false};
   const has=d=>(d?.outputs||[]).some(o=>o.id===pieceId);
-  try{if(has(await read({projectId:subjectId})))return {known:true,found:true,other:null};}catch{return {known:false};}
-  for(const p of projectList()){if(p.id===subjectId)continue;try{if(has(await read({projectId:p.id})))return {known:true,found:false,other:p.id};}catch{}}
-  return {known:true,found:false,other:null};
+  const end=Date.now()+(Number.isFinite(limit)&&limit>0?limit:SEARCH_MS);let timer=null;
+  const clock=new Promise(resolve=>{timer=setTimeout(()=>resolve('late'),Math.max(0,end-Date.now()));});
+  const bounded=p=>Promise.race([Promise.resolve(p),clock]);
+  try{
+   // The subject's own pieces not read in time means the workspace cannot say, never "no such piece".
+   try{const own=await bounded(read({projectId:subjectId}));if(own==='late')return {known:false};if(has(own))return {known:true,found:true,other:null};}catch{return {known:false};}
+   if(Date.now()>=end)return {known:true,found:false,other:null};
+   const rest=projectList().filter(p=>p.id!==subjectId);let next=0,other=null,stop=false;
+   const worker=async()=>{while(!stop&&other===null&&next<rest.length){const p=rest[next++];try{const d=await bounded(read({projectId:p.id}));if(d==='late'){stop=true;return;}if(has(d)){other=p.id;return;}}catch{}}};
+   await Promise.race([Promise.all(Array.from({length:Math.min(SEARCH_AT_ONCE,rest.length)},worker)),clock.then(()=>{stop=true;})]);
+   return {known:true,found:false,other};
+  }finally{clearTimeout(timer);}
  }
- async function openPlace({subject:sid=null,piece:pid=null,view=null}={}){
+ // The way back from a chosen piece to the subject's own writing place is the piece bar's Article tab (the output
+ // switch's empty choice): open the subject's primary working manuscript, check the writer holds it, then clear the
+ // selection. Returns the binding id the writer must hold, or null when the workspace names none.
+ async function ownWriting(sid){
+  const read=window.realOutputOverview?.read,draft=window.studyDraft,conn=window.studyOutputConnection;
+  if(typeof read!=='function'||typeof draft?.openBinding!=='function'||typeof conn?.clearSelection!=='function')throw Error('The subject\'s own writing place is not connected.');
+  // The Article tab and the output switch save the open piece's words first and stop while any stay unsaved. The landing
+  // never saves: it only looks, and leaves the open piece as it is while it holds unsaved words or its writer is loading.
+  const unsaved=()=>{try{const proof=draft.currentProof?.(),canvas=conn.canvasProof?.();return !!proof?.dirty||!!canvas?.pending||!!canvas?.browserDraftToken||draft.recoveryOwnership?.()?.state==='pending';}catch{return true;}};
+  const chosen=()=>{const s=conn.selection?.();return JSON.stringify([s?.projectId,s?.rootBindingId,s?.output?.id]);};
+  if(unsaved())throw Error('The open piece has unsaved words, so it stays open. Save or resolve them, then open this place again.');
+  const before=chosen(),own=(await read({projectId:sid}))?.existingDraft;if(!own?.bindingId)throw Error('This subject has no working manuscript to return to.');
+  if(unsaved()||chosen()!==before)throw Error('The open piece changed, so it stays open.');
+  await draft.openBinding({bindingId:own.bindingId,parentStudyId:sid});
+  const b=draft.currentBinding?.();if(nowId()!==sid||b?.id!==own.bindingId||b.parentStudyId!==sid)throw Error('The subject\'s own manuscript did not open.');
+  if(chosen()!==before)throw Error('Another piece was chosen while the manuscript opened, so it stays chosen.');
+  await conn.clearSelection({projectId:sid,rootBindingId:own.bindingId});
+  return own.bindingId;
+ }
+ async function openPlace({subject:sid=null,piece:pid=null,view=null,searchTimeout=SEARCH_MS}={}){
   const key=SECTIONS.includes(view)?view:null;
   const result={ok:false,reason:null,message:'',subject:sid||null,piece:pid||null,view:key,opened:null};
   const finish=()=>{result.opened={subject:nowId(),piece:picked()?.id||null,section:boardOpen()?'subjects':document.getElementById('project-library')?.open&&!document.querySelector('#project-library[data-combined-subjects]')?'home':railNow()||null,view:carouselPage()?.dataset.writingView||window.studyDraft?.viewMode?.()||null};return result;};
   let started=false;try{started=await ready();}catch{}
   if(!started){result.reason='not-ready';result.message='The workspace did not finish loading.';return finish();}
   await until(()=>!railBusy(),5000);
+  // A page that has a rail marks every section it shows; only a page with none cannot contradict the landing.
+  const hadRail=!!document.querySelector('.combined-rail [data-combined-nav]');
   // The subject list may still be arriving; a list that has loaded and lacks the subject means it does not exist.
   // (A workspace that keeps no list is not asked.)
   if(sid&&key!=='home'&&projectList().length&&!await until(()=>projectList().some(p=>p.id===sid),5000)){result.reason='subject-not-found';result.message='No subject with that id.';return finish();}
   let pieceId=pid&&sid&&key!=='home'&&key!=='subjects'?pid:null;
   if(pieceId){
-   const where=await findPiece(sid,pieceId);
+   const where=await findPiece(sid,pieceId,searchTimeout);
    if(where.known&&!where.found){pieceId=null;result.reason=where.other?'piece-other-subject':'piece-not-found';result.message=where.other?'That piece belongs to another subject, so only this subject was opened.':'This subject has no piece with that id, so only the subject was opened.';}
   }
+  let ownBinding=null,pressed=true;
   try{
    if(sid&&key!=='home'){await window.combinedSubjects.open({projectId:sid});await until(()=>nowId()===sid||window.combinedSubjects?.currentSubject?.()?.id===sid);}
    // A subject with no section opens on the section it was last on, or Write, through its own board. Library (1) is
@@ -120,6 +154,13 @@
     if(nowId()!==sid)await window.combinedSubjects.openStage(5);
     if(nowId()===sid){await window.realOutputOverview.onAction({projectId:sid,outputId:pieceId,kind:'native'});if(typeof window.studyOutputConnection?.selection==='function')await until(()=>picked()?.id===pieceId&&!railBusy());}
    }
+   // No piece chosen: the place is the subject's own writing, never an earlier-chosen piece (picked in this tab, or kept by
+   // the workspace). It goes back the way the piece bar's Article tab does, before any section is set.
+   if(sid&&!pieceId&&key!=='home'&&key!=='subjects'&&nowId()===sid&&picked()){
+    ownBinding=await ownWriting(sid);
+    if(!key&&typeof window.viewPhase==='function')await window.viewPhase(5);
+    await until(()=>!picked()&&!railBusy(),4000);
+   }
    if(key&&key!=='subjects'){
     const target=railKey(key);
     let ok=await window.combinedNavigation.go(target);
@@ -134,7 +175,11 @@
      if(picked()?.kind==='carousel'){for(let i=0;i<4&&carouselPage()?.dataset.writingView!=='read';i++){if(!await until(carouselPage,4000))continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}await until(()=>carouselPage()?.dataset.writingView==='read',3000);}}
      else for(let i=0;i<4;i++){await until(()=>document.getElementById('manuscript')&&Number(current()?.viewedStage)===5&&writerSettled(),4000);if(!document.getElementById('manuscript')||Number(current()?.viewedStage)!==5)continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}if(await until(()=>window.studyDraft?.viewMode?.()!=='edit',3000))break;}
     }
+    pressed=ok!==false;
    }
+   // The rail refused or could not open the section (Research declines while the writer holds no words, for one): the
+   // landing says so and does not wait for a place that will not come.
+   if(!pressed){if(!result.reason){result.reason='not-shown';result.message='The workspace did not open that section.';}return finish();}
    // Resolve only when the workspace itself shows it.
    const shows=()=>{
     if(key==='home')return !!document.getElementById('project-library')?.open;
@@ -144,15 +189,22 @@
     // A chosen piece whose words live in a native binding shows only once the writer holds that exact binding (the
     // selection is recorded before the writer opens it, and the writer can decline or be superseded).
     if(pieceId&&typeof window.studyDraft?.currentBinding==='function'){const owner=window.studyOutputConnection?.selection?.()?.owner;if(owner?.kind==='native'){const b=window.studyDraft.currentBinding();if(b?.id!==owner.bindingId||b.parentStudyId!==sid)return false;}}
+    if(!pieceId&&sid&&key!=='home'&&key!=='subjects'){
+     if(picked())return false;
+     if(ownBinding){const b=window.studyDraft?.currentBinding?.();if(b?.id!==ownBinding||b.parentStudyId!==sid)return false;}
+    }
     if(!key)return !boardOpen();
     const carousel=pieceId&&picked()?.kind==='carousel';
     if(carousel){const w=carouselPage()?.dataset.writingView;return key==='read'?w==='read':key==='write'?w==='write':key==='check'?document.getElementById('wbf-drawer')?.dataset.tool==='check':true;}
     if(key==='check'&&pieceId)return true;
     if(key==='read')return window.studyDraft?.viewMode?.()!=='edit';
-    // (A rail that marks nothing, as in a page with no rail, cannot contradict the landing.)
-    return (!railNow()||railNow()===railKey(key))&&!boardOpen();
+    // A rail caught mid-repaint marks nothing; that is not a yes. Only a page with no rail at all is taken at its word.
+    return (hadRail?railNow()===railKey(key):!railNow()||railNow()===railKey(key))&&!boardOpen();
    };
-   if(!await until(shows,6000)){if(!result.reason){result.reason='not-shown';result.message='The workspace did not show that place.';}return finish();}
+   // A piece's words (or the subject's own) are shown once that writer has settled too: a writer still opening can still
+   // repaint the page after a first yes, so the place is looked at again then.
+   const held=async()=>await until(shows,6000)&&(!(pieceId||ownBinding)||(await until(writerSettled,4000),shows()));
+   if(!await held()){if(!result.reason){result.reason='not-shown';result.message='The workspace did not show that place.';}return finish();}
    if(!result.reason)result.ok=true;
    return finish();
   }catch(error){if(!result.reason){result.reason='not-shown';result.message=error?.message||'The address could not open that place here.';}console.warn('Version two: the address could not open that place here.',result.message);return finish();}

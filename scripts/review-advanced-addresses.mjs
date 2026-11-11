@@ -118,6 +118,21 @@ if(!only.length&&cases.length&&elsewhere){
   const bad=[];if(said.missing!=='subject-not-found')bad.push('subject-not-found');if(said.other!=='piece-other-subject')bad.push('piece-other-subject');if(said.unknown!=='piece-not-found')bad.push('piece-not-found');if(!said.good.ok||said.good.opened?.view!=='preview')bad.push('a good landing says ok and shows Read');
   checked++;const line=`${bad.length?'WRONG':'ok   '} the landing says why it could not open: ${JSON.stringify(said)}${bad.length?' (wanted '+bad.join(', ')+')':''}`;console.log(line);if(bad.length)problems.push(line);}
 }
+// A piece chosen first, then a landing with no piece: the subject's own writing place, never the earlier piece. The piece is
+// chosen through the workspace (kept as that subject's selection), then the landing is asked for the subject alone.
+if(!only.length&&cases.length){
+ const c=cases.find(x=>x.label==='Article 2')||cases[0];
+ for(const view of ['write',null]){
+  const page=await browser.newPage({viewport:{width:1440,height:900}});
+  await page.goto(`${base}/document-study/index.html?reviewActor=${actor}`,{waitUntil:'load'});
+  await page.waitForFunction(()=>window.arVersionTwo?.openPlace,null,{timeout:30000});
+  const first=await page.evaluate(([s,p])=>window.arVersionTwo.openPlace({subject:s,piece:p,view:'write'}).then(r=>({ok:r.ok,piece:r.opened?.piece})),[c.subject,c.piece]);
+  const then=await page.evaluate(async([s,v])=>{const r=await window.arVersionTwo.openPlace({subject:s,view:v});const b=window.studyDraft?.currentBinding?.(),o=window.studyOutputConnection?.selection?.();return {ok:r.ok,reason:r.reason,piece:r.opened?.piece,selected:o?.output?.id||null,binding:b?.id||null,subject:current().id,rail:document.querySelector('.combined-rail [data-combined-nav][aria-current]')?.dataset.combinedNav||null,mode:window.studyDraft?.viewMode?.()||null};},[c.subject,view]);
+  await page.close();
+  const want=[];if(!first.ok||first.piece!==c.piece)want.push('the first piece to be chosen');if(!then.ok)want.push('ok ('+then.reason+')');if(then.selected||then.piece)want.push('no piece chosen');if(then.subject!==c.subject)want.push('subject '+c.subject);if(view==='write'&&(then.rail!==railKey('write')||then.mode!=='edit'))want.push('Write (edit)');
+  checked++;const line=`${want.length?'WRONG':'ok   '} piece chosen first, then no piece (${view||'no section'}): ${JSON.stringify(then)}${want.length?' (wanted '+want.join(', ')+')':''}`;console.log(line);if(want.length)problems.push(line);
+ }
+}
 // An address without the parameters is left alone: nothing is opened, chosen or removed from it.
 {const at=await land('reviewActor='+actor);const line=`${/[?&](subject|section|piece)=/.test(at.search)||!at.subject?'WRONG':'ok   '} old address (no parameters): subject ${at.subject} rail ${at.rail} stage ${at.stage} search ${at.search}`;checked++;console.log(line);if(line.startsWith('WRONG'))problems.push(line);}
 await browser.close();
