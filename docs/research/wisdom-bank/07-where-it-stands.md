@@ -1,8 +1,12 @@
-# Wisdom bank: where it stands, parked on 11 November 2026
+# Wisdom bank: where it stands
 
-**Parked at Adrian's word.** "Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building. The wisdom bank is a whole another concept that's gonna take a lot to get it really working right."
+**Set apart, not stopped.** On 11 November 2026 Adrian said: "Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building." And then: "I do wanna work on that, but it should be all on a separate thread. All in a separate place ... I was still working on that. I just want the focus to be getting AR create up and going."
 
-Nothing here is built into the app. Every thread that worked on it is closed. This page is where anyone picks it up again, in a fresh thread, when he says so.
+So the bank continues in one home thread of its own (branch `claude/wisdom-bank-home`), apart from the building of AR Create. Nothing here is built into the app.
+
+## What he has asked for since
+
+- **11 November 2026, research before building.** "I need you to send out an agent that goes on to the internet to really research this sort of thing that I'm creating before I reinvent the wheel. I really need to understand how people are doing it. This is not a new concept concept. And I need to learn from what's out there before we start building. You can have a whole new thread for that using the proper model." A separate research thread, "Wisdom bank: how others have built this", was started the same day. It writes its report to `08-how-others-do-it.md` on branch `claude/wisdom-bank-prior-art` and publishes it as a page for his phone. Nothing further is designed or built until he has read it.
 
 ## What it is, in his words
 
