@@ -110,3 +110,14 @@ What it asks of plan 12 (my reading, not his words):
 - **Maps that join maps.** A work's map is one region of the huge map. Where two works share a concept, their maps touch there, and that is where you cross from one book into another.
 - **What you do with a concept must be plain on the spot.** The lines panel listed relationships without saying what they are for. At every concept the next moves should be visible: go to a neighbour, read its words, respond, add it to a line.
 - **Scale.** The nine-concept map drawn by hand here does not answer a hundred concepts in one book. The work map itself needs depths: chapters or districts first, concepts inside them.
+
+**11 November, on the wording of the concepts and on the size of the whole, in his words:**
+
+"Also these concepts that you are giving me are not r really understandable or assimilatable. They feel like they are written for AI. The number one thing is that they are valuable to me. That I don't have to process to understand what you're talking about. You have failed at this as well.
+
+The thing is this is a massive repository of many different things. So it's almost like a knowledge graph. You know, you have one book, you have all the concepts inside of the book. You can connect all those concepts together. Have one article, all the concepts, connect them. The ways to navigate and go through everything. Feels like it needs to be much larger of a interaction of all these conceptual maps as well."
+
+Nothing was changed on the page after this. What it means (my reading, not his words):
+
+- **The sample wording failed.** Names such as "The false version" and "Warmth as the test", and reasons such as "Sets the limit: perfect cannot mean unfelt", are compressed labels that only make sense once you already know the talk. A concept's name and distillation must be understood on first reading by someone who has not seen the source, in the words a person would say aloud. This is a requirement on the distilling itself, not only on the mock-up: if the real agent writes like this, the bank fails. It should be tested on him with real distillations before anything is built on it.
+- **The whole is a graph of maps.** Each book and each article has its own map of all its concepts; those maps connect to each other; moving through all of them is the main interaction. This confirms what plan 12 is for.
