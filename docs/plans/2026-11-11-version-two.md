@@ -77,12 +77,12 @@ The rules in `docs/plans/2026-11-11-direction-d-build.md` ("Rules for every work
 |---|---|---|---|
 | 1 Shell | Opus | Sonnet | In. The app's address opens version two; top bar, phone bar, theme, tint, command client, change stream, a stub for every screen, Advanced both ways. A screen written from the README alone worked first time |
 | 2 A fuller demo | Sonnet | director | In. `npm run demo:fill` makes 24 invented subjects at every stage; `-- --large` makes 150 |
-| 3 Home | Opus | Sonnet | Built, reviewed once, corrections part written. On branch `claude/v2-wip-home`, not merged, not working as it stands. Adrian has seen two pictures and has not commented |
-| 4 Subject | Opus | Sonnet | Built, reviewed once, corrections part written. On branch `claude/v2-wip-subject`, not merged. Adrian has seen two pictures and has not commented |
+| 3 Home | Opus, finished by Sonnet | Sonnet, then Opus | In. Reads where every subject stands from the one fast read; all seven corrections made and reviewed; Adrian was sent four pictures on 11 November |
+| 4 Subject | Opus, finished by Sonnet | Sonnet, then Opus | In. Every step and state comes from the one fast read; corrections after review made. Forms cannot be reordered yet (no record keeps a hand-set order) |
 | 5 Slides and Looks | Sonnet | Opus | In. The studio and the Looks page work end to end on the commands, by mouse, touch and keys; sized to the mock-up after review; waits for Adrian's eyes. Words on a slide are read-only here |
-| 6 Research | Opus | Sonnet | Built, reviewed once, all corrections written but never built or tested after. On branch `claude/v2-wip-research`, not merged. Adrian has seen one picture and has not commented |
+| 6 Research | Opus, finished by Sonnet | Sonnet, then Opus | In. Topics, groups and where each topic came from; eight corrections after review made, the four that mattered being re-checked. Sentence answers and looking for new material say they are not built yet |
 | 7 Write and the rest | | | Not started |
-| 8 Where a subject stands | | | Not started. Brief in `version-two-briefs/v2-8-standing.md`. One fast, shared read for Home and Subject, needed because the app's own reads are slow above about a hundred subjects |
-| Advanced lands on the right section | Opus | | Part written on branch `claude/v2-wip-advanced-link` |
+| 8 Where a subject stands | Opus | Sonnet | In. `subject.standing` and `subjects.standing`, one shared rule; 150 subjects in under two seconds cold and milliseconds warm |
+| Advanced lands on the right section | Opus, finished by Sonnet | Opus | In. All 61 addresses land for an Article and a Carousel, with and without a piece |
 
 What is open, piece by piece and most important first: `2026-11-11-version-two-open-corrections.md`.

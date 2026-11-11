@@ -1,133 +1,114 @@
-# Version two: what is open at the handover
+# Version two: what is open
 
-Written 11 November 2026, about 06:40 UTC, when the build moved from the design-round thread to a fresh director
-thread. All Opus builders were stopped by the account's usage limit part way through their corrections. Nothing below
-has been seen by Adrian on a real screen yet; he has only been sent pictures.
-
-The contract is `2026-11-11-version-two.md`. The briefs each builder worked from are in `version-two-briefs/` (they
-name scratch folders of the old thread; read them for what was asked, not for paths).
+Brought up to date 11 November 2026 by the director thread that took the build over from the design-round thread.
+The contract and the record are `2026-11-11-version-two.md`. The builders' briefs are in `version-two-briefs/`.
 
 ## Where each piece is
 
-| Piece | Branch | State |
-|---|---|---|
-| Shell, fuller demo, slide studio, Looks | `claude/direction-d-build` | In, reviewed, green |
-| Home | `claude/v2-wip-home` | Built and reviewed once. Corrections part written. **Does not count as working.** |
-| Subject | `claude/v2-wip-subject` | Built and reviewed once. Corrections part written; its test file was mid rewrite |
-| Research | `claude/v2-wip-research` | Built and reviewed once. All eight corrections written; never built or tested after |
-| Advanced lands on the right section | `claude/v2-wip-advanced-link` | Part written, with a walking script `scripts/review-advanced-addresses.mjs` |
-| Where a subject stands (one fast read) | none | Brief written (`version-two-briefs/v2-8-standing.md`); nothing built |
+Everything below is merged into `claude/direction-d-build`. The four work-in-progress branches
+(`claude/v2-wip-home`, `-subject`, `-research`, `-advanced-link`) are spent; nothing more is to be taken from them.
 
-The three screen branches were cut from `85a134b`, before the shell's fixes, the page-test repair and the slide studio
-went in. Bring each up to the build branch before judging it. Expect small conflicts in `runtime/commands.mjs`,
-`runtime/server.mjs`, `agents/cli/ar-create.mjs`, `docs/START.md` and `docs/CAPABILITIES.md` (regenerate the last
-with `npm run build`).
+| Piece | State |
+|---|---|
+| Shell, fuller demo, slide studio, Looks | In, reviewed |
+| Where a subject stands (`subject.standing`, `subjects.standing`) | In, reviewed twice |
+| Home | In, reviewed, corrections made |
+| Subject | In, reviewed, corrections made |
+| Research (list, group, topic) | In, reviewed, corrections made; re-check of the four that mattered was running at the time of writing |
+| Advanced lands on the right section | In, reviewed |
+| Write, Read and Check inside version two (piece 7) | Not started. They open in Advanced |
+
+Adrian has seen four pictures of Home and has been given a demo to click through. He has not yet said yes to any
+screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
+works, that it be shipped without asking again (a pull request merged into main). The release to his installed app is
+run on his Mac.
 
 ## Open corrections, most important first
 
-### 1. The app's own reads are slow above about a hundred subjects
+### 1. The match against the sample
 
-Measured by reviewers on the demo. Adrian has one to two hundred subjects.
+A checker compares every screen with the mock-up (`design/2026-11-better-interface/d-four-stations/` on
+`claude/ar-create-design-round`) at 1440 and 390 wide, dark and light. Its list is the work list before shipping. The
+largest known difference: the sample shows a Write screen; version two opens Write in Advanced.
 
-- `inquiries.projects` does two authority reads per subject: 4 to 6 seconds at 24 subjects, 84 to 108 seconds at 150,
-  and other calls wait behind it. The old limit of 100 subjects on linking a research topic guarded this.
-- `study.research.brief`: 1.4 to 3.2 seconds at 158 subjects.
-- Home made about 185 calls at 150 subjects (143 separate direction reads) and settled after 28 seconds.
-- The Subject page showed its steps after 2 to 3.4 seconds at 158 subjects.
+### 2. Where a subject stands
 
-The answer planned: piece 8, one pure rule for where a subject stands, shared by server and browser, with one read
-for a subject and one cached summary for all subjects. Home and Subject then read only that.
+- The first read after a restart of a subject with a current suggestion waits about 2.4 seconds for the suggestions
+  owner. Nothing else waits behind it.
+- Nothing tells a listener when a "Not known" suggestion count resolves; a screen must ask again. A failed owner
+  answer is retried on every read.
+- "Published" is never stated, because no record says a piece is out. It needs a per-piece record, for example a
+  Magazine story marked published. Until then Publish reads "Not known" and he can still open it.
+- A subject whose state is not known still states a station.
+- It now reads each subject's list of pieces. Re-measure the cold read at 150 and at 2000 subjects.
 
-### 2. Home (`claude/v2-wip-home`)
+### 3. Home
 
-1. The desk's order and the order inside a folder shared one saved number, so reordering one moved the other. A
-   `deskOrder` field was being added to `runtime/services/subject-places.mjs`; a subject filed into another folder
-   goes last there.
-2. Reordering used a list captured when the page was painted; three quick presses scrambled other cards. Build the
-   order from what is on screen at the press, and queue presses.
-3. Untrue rows: subjects holding a voice note and notes showed "Add material"; finished Articles showed "Continue
-   writing"; a subject with an Article and a chosen Carousel showed only the Article's step. Never show a next step
-   that is not known.
-4. Do not read every subject's direction on load. Read deeply only for desk cards and rows in view. A station count
-   must not change after first paint unless a real change arrives.
-5. An answered "Needs you" row should stay where it was, marked answered with "Change it". No command takes an answer
-   back, so never say Undo.
-6. Archive from Home, with Undo. One quiet line for an empty folder. "+8" when tags do not fit. Arrange as a Graphite
-   control.
-7. Covers for the five desk cards from the subject's first chosen photograph (`study.photos`, then
-   `study.photos.preview`), after first paint.
+- Any small change re-reads all five lists (cheap today: the summary answers in milliseconds).
+- The shell repeats its desk and needs-you reads on load (about 25 of 34 calls).
+- The top bar's desk chips show an empty box where a photograph would go.
+- Drag by touch was not tried in a browser. The demo has no photographs, so a real cover was never seen.
 
-### 3. Subject (`claude/v2-wip-subject`)
+### 4. Subject
 
-1. Every hand-off must name the right section id for its label; pin the table with a test. Keep passing subject,
-   piece and section (the landing fault is in the workspace's link reader, see 5).
-2. Never show a state that is not yet known, and never move the open step by itself. Paint in stages; a step still
-   being read says "Reading" and is not chosen to open.
-3. Speed: nothing slow before first paint, calls in parallel, re-ask only what a change touches, no read that lists
-   every subject. All reading behind one `gather(subject)` so piece 8 can replace it.
-4. Step states that were untrue: a finished Article (The words done, Check next); a suggestion waiting (The words
-   needs him; Check and Publish wait); "photographs in the article" waiting on the wrong thing; "Name the dish" done
-   without a named dish; a Carousel-only subject must still reach Write, Read and Check from a real step.
-5. Look: the header stays one line with a long name; pills share rows on a phone; several Carousel plans told apart
-   by name; the Post pill shows where it goes; done steps carry no note.
-6. Forms cannot be reordered: no record keeps a hand-set order of pieces. Needs a small back-end addition.
+- Forms cannot be reordered: no record keeps a hand-set order of pieces. Needs a small back-end addition.
+- "What you have" lists come from the Library tree, the brief and the plans, not from the standing read.
+- The Facts tool takes about 1.4 seconds at 136 subjects; it says Reading meanwhile.
+- Forms carry no 1 and 2, unlike the sample.
 
-### 4. Research (`claude/v2-wip-research`)
+### 5. Research
 
-Written but unverified. Check each before accepting:
+- Linking a topic takes 1.3 to 2.2 seconds at 150 subjects, inside the Library's own association calls. Reads no
+  longer wait behind it.
+- An assistant can rename a topic or empty its sources, as the existing inquiries commands already allow.
+- A topic can sit in only one group.
+- Parts that say "not built yet": sentence answers (need a provider), a group looking for new material, a topic
+  looking for more.
+- Leave room: the wisdom bank will live inside Research; a pathway there is the same thing as a research topic, and a
+  topic will later hold an ordered list of units of one idea. Nothing here invents such a unit.
 
-1. Linking a topic looks up one subject, never lists them all; nothing the owner waits on takes more than a second at
-   150 subjects; no call holds the server.
-2. An assistant cannot file a topic as "started by you", and any origin must point at a real record.
-3. "Not now" is Adrian's alone. "Put in a group" stays open to assistants.
-4. Asking a group searches the ticked sources, ignores capitals, and says exactly what was not searched.
-5. The fold control for the rail is hidden on a computer. Thirty groups show as eight and a way to the rest. The group
-   page has no column that wraps to single words. His one line on a topic is prose, not a boxed form.
+### 6. Advanced landing
 
-How it is built, which held up in review: a topic is the inquiry the app already links to subjects, plus a small
-record for where it came from, its state and its group. A group is a new record. Nothing is copied.
+- Fixed 300 ms waits and a second press of the rail when it shows the wrong section. Sturdier: the workspace's own
+  call for opening one exact piece in a chosen view.
+- If the piece belongs to another subject, the error stops before the section opens.
+- The walking script cannot tell two Articles of one subject apart.
 
-Leave room: a "wisdom bank" (nuggets of exact words, linked across sources) is being specified in another thread and
-will most likely live inside Research. Do not invent a unit for one idea here.
-
-### 5. Advanced must land in the right place (`claude/v2-wip-advanced-link`)
-
-With a piece given, `public/document-study/version-two.js` re-opened Write after any section, and Read landed on
-Arrange. Subject plus piece plus section must land on that section with that piece, for all fourteen section ids.
-
-### 6. Slide studio and Looks (in)
+### 7. Slide studio and Looks
 
 - Words on a slide are read-only; changing them opens Advanced.
 - On a phone the strip sits under the slide's caption and buttons, not directly under the slide.
 
-### 7. Not started
+### 8. Not started
 
-- Piece 7: Write, Read and Check inside version two. They open in Advanced today.
-- Capture (adding a recording, note, link or photographs) has no version two screen; it opens Advanced.
+- Piece 7: Write, Read and Check inside version two.
+- Capture has no version two screen; it opens Advanced.
 - Library and "Ask or find" in the top bar do nothing yet.
 - Speaking: there is no speech button, on purpose. The browser's speech service would send his voice to a remote
-  service. His phone keyboard's dictation types into the codes line.
+  service.
 
 ## Things to know before trusting a green run
 
 - `npm test` does not include the workspace's own page tests. Run `node --test public/document-study/*.test.mjs` as
-  well. Three of them fail on untouched `main`: "public/document-study/collection-app-journey.test.mjs" (also shown
-  as "full collection application creates a project…"), "shared discovery never replaces the fresh exact Carousel
-  registry check at opening", and "advertised Outputs creation, each title/next action, own words, scope return and
-  persistent reload use real owners".
-- One test fails only on this cloud machine: "installed home mode: config must name the real home…". "real native
-  HTTP photo inspect…" fails here now and then.
-- Several tests fail only when many suites run at once and pass alone. Run a failure alone before counting it.
-- `scripts/review-sideways.mjs --only=v2:home` (or `Home`, `v2`, and so on) checks one screen in about thirty
-  seconds; a full run takes over twenty minutes.
-- `npm run demo`, then `npm run demo:fill` (24 invented subjects at every stage; `-- --large` for 150) and
-  `npm run demo:instagram` (one invented Carousel). Both refuse anything that is not the invented demo.
+  well. Three of them fail on untouched `main`: "public/document-study/collection-app-journey.test.mjs", "shared
+  discovery never replaces the fresh exact Carousel registry check at opening", and "advertised Outputs creation, each
+  title/next action, own words, scope return and persistent reload use real owners".
+- One test fails only on a cloud machine: "installed home mode: config must name the real home…". "real native HTTP
+  photo inspect…" fails now and then on unchanged code.
+- Several tests fail only when many suites run at once and pass alone ("failed exact Direction load keeps a discovered
+  Collection root held", "working HTML prepares exactly once…"). Run a failure alone before counting it.
+- `npm run demo:fill` and `npm run demo:instagram` ignore `AR_CREATE_PORT`. They fill port 8854 unless
+  `AR_CREATE_URL` names another server. `-- --large` is slow and can time out near 135 subjects.
+- `scripts/review-sideways.mjs --only=v2:home` (or `v2:subject`, `v2:research`, `v2`) checks one screen in about
+  thirty seconds; a full run takes over twenty minutes.
+- Main has moved since this branch was cut: fixes to broken layouts in the existing workspace were merged there on
+  11 November. "The existing workspace looks exactly as before" means as it is on main with those fixes.
 
 ## The review's three root problems, as they stand in version two
 
 - **The app did not hold the current subject.** In version two the subject is in the address and in the header of
-  every subject screen. Not yet checked across a whole journey.
-- **One subject had five source lists that disagreed.** Not addressed. Version two's "What you have" reads one list;
-  the back end still has the five.
-- **Write meant whichever piece was opened last.** Version two passes subject, piece and section to Advanced, and
-  that landing is the fault in item 5.
+  every subject screen; the open form and step are in the address too. Not yet walked across a whole journey.
+- **One subject had five source lists that disagreed.** Not addressed. The standing read counts material from one
+  place and "What you have" reads the Library tree; the back end still has the five.
+- **Write meant whichever piece was opened last.** Version two passes subject, piece and section to Advanced, and that
+  landing now holds for all 61 addresses checked.
