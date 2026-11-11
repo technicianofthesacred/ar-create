@@ -23,11 +23,18 @@
 
 ## Focus, set by Adrian on 11 November
 
-"Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building." So the build of version two is the work. **The wisdom bank is parked**: every one of its threads is closed, nothing of it is built, and its state is on one page, [where it stands](../research/wisdom-bank/07-where-it-stands.md). Do not start wisdom bank threads, and do not bring it up with him, until he says so.
+"Let's stay focused on the AR Create ... AR Create is the main thing I want to be building." And: "The version 2 build is what I'm trying to fully have applied." So this coordinating thread is about the build of version two.
+
+**The wisdom bank is set apart, not stopped.** The coordinator first closed all its threads; Adrian corrected that the same hour: "that didn't mean to archive everything. I do wanna work on that, but it should be all on a separate thread. All in a separate place ... I was still working on that." So:
+- Its five recent threads were reopened (concept, mock-ups, huge map, one surface, map survey). All nine wisdom bank threads carry the tag `wisdom-bank` and a title beginning "Wisdom bank".
+- It has one home: thread `session_017kitFePj5hBN6pmnfrkpxW`, "Wisdom bank: home (start here)", on branch `claude/wisdom-bank-home`. It holds his reactions and keeps [where it stands](../research/wisdom-bank/07-where-it-stands.md) true. It waits for him.
+- This thread does not run the bank, relay for it, or bring it up, unless he asks. Do not close its threads without his explicit word.
+
+**Lesson, twice in one day:** do not close a thread Adrian has been talking in unless he names it. "Close what I no longer need" and "stay focused on X" are not that.
 
 ## Threads
 
-Open threads on 11 November after the parking: the version two director, and the demo builder (one decision left). Every row below that names the wisdom bank is closed, whatever its state cell says.
+For this thread's purposes the open threads are the version two director and the demo builder. The demo builder works on the OLD workspace (now Advanced); Adrian opened its link and took it for version two, so always name it as the old workspace. The wisdom bank rows below are history; the bank now lives in its home thread.
 
 All AR Create threads were started from the review branch. Use these ids with the session tools.
 
@@ -53,9 +60,9 @@ The review thread that started them all, and is the coordinator, is `session_017
 
 **Every open thread has been told who coordinates** (11 November: the design round, the demo builder, the screens thread and the concept thread). Each was asked to push at a junction and to begin its closing message with one plain line saying what is done and what it is waiting for; that line is what a status call shows. The four finished research threads were not woken. **Tell every new thread the same in its brief**: the coordinator's id, where the handoff file is, the closing-line habit, and that it keeps to its own brief and branch. A thread can message the coordinator (the design round did on 11 November), and such a message wakes this thread; the coordinator still checks in, since not every thread will.
 
-## The research stream (the wisdom bank): PARKED on 11 November
+## The research stream (the wisdom bank): SET APART on 11 November
 
-**Parked at Adrian's word. Start from [where it stands](../research/wisdom-bank/07-where-it-stands.md) when he reopens it. What follows is the record of how it ran, kept for that day; none of its "next steps" are live.**
+**It now runs in its own home thread (see Focus, above). What follows is the record of how it ran from this thread; none of its "next steps" are this thread's to take.**
 
 Adrian called this "one of the most important things". The plan is [plan 9](2026-11-11-09-wisdom-bank-inquiry.md); the findings so far are on [one page](../research/wisdom-bank/03-synthesis.md).
 

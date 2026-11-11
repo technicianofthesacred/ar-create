@@ -1,6 +1,6 @@
 # Plan 11: wisdom bank mock-ups (step D2), the brief
 
-**Status.** The wisdom bank was parked on 11 November 2026; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). The thread this brief started is closed. Earlier status: Prepared 11 November 2026, when [the concept](../research/wisdom-bank/04-concept.md) was written. **Started the same day** at his word, "Start the mock-ups, medium effort": thread `session_017kitFi8g4WwzxMRTZUwnmk`, pushing to `claude/wisdom-bank-mockups`.
+**Status.** The wisdom bank was set apart into its own home thread on 11 November 2026; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). Earlier status: Prepared 11 November 2026, when [the concept](../research/wisdom-bank/04-concept.md) was written. **Started the same day** at his word, "Start the mock-ups, medium effort": thread `session_017kitFi8g4WwzxMRTZUwnmk`, pushing to `claude/wisdom-bank-mockups`.
 
 ## What it is for
 

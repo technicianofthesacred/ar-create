@@ -1,6 +1,6 @@
 # Plan 12: the wisdom bank at full size, zoom first (the brief)
 
-**Status.** The wisdom bank was parked on 11 November 2026; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). The thread this brief started is closed. Earlier status: Prepared 11 November 2026, after Adrian's reactions to the first mock-ups; it now carries five of them. It runs in a fresh thread, because the mock-ups thread passed the size at which it should stop.
+**Status.** The wisdom bank was set apart into its own home thread on 11 November 2026; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). Earlier status: Prepared 11 November 2026, after Adrian's reactions to the first mock-ups; it now carries five of them. It runs in a fresh thread, because the mock-ups thread passed the size at which it should stop.
 
 ## Why
 

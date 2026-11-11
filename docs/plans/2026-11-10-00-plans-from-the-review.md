@@ -20,7 +20,7 @@ Nine plans, each written so a builder can start without the chat they came from.
 
 Decision numbers are those in the review's "Decisions that belong to Adrian".
 
-**Plans 9, 11, 12 and 13 (the wisdom bank) are parked** since 11 November, at Adrian's word; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). The work now is the build of version two (plans 8 and 10).
+**Plans 9, 11, 12 and 13 (the wisdom bank) now run in their own home thread**, set apart on 11 November at Adrian's word; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). The work now is the build of version two (plans 8 and 10).
 
 ## Order
 

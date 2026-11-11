@@ -1,8 +1,8 @@
-# Wisdom bank: where it stands, parked on 11 November 2026
+# Wisdom bank: where it stands, 11 November 2026
 
-**Parked at Adrian's word.** "Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building. The wisdom bank is a whole another concept that's gonna take a lot to get it really working right."
+**Set apart from the building of AR Create, not stopped.** Adrian, 11 November: "Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building." And, when its threads were closed by mistake: "I do wanna work on that, but it should be all on a separate thread. All in a separate place ... I was still working on that."
 
-Nothing here is built into the app. Every thread that worked on it is closed. This page is where anyone picks it up again, in a fresh thread, when he says so.
+So the bank has one home: the thread "Wisdom bank: home (start here)", branch `claude/wisdom-bank-home`. That thread keeps this page true. The earlier threads are reopened and all begin with "Wisdom bank". Nothing here is built into the app.
 
 ## What it is, in his words
 
@@ -46,9 +46,9 @@ The files are under `design/2026-11-wisdom-bank/` (`index.html`, `zoom/`, `one/`
 5. **Finding by meaning.** Every page matches words only.
 6. **How it is stored.** No foundations note has been written.
 
-## How to pick it up again
+## What comes next, in the home thread
 
-1. He says so. One fresh thread at a time.
+1. Whatever he asks for first. One piece of work at a time.
 2. First his reaction to [the one surface](https://claude.ai/artifact/GJE3u1woCZZtm7AfzL2fFg), in his words.
 3. Then the distilling trial on a real work he names, on the lighter model, before more screens.
 4. Then the next pass of the surface from `design/2026-11-wisdom-bank/one/`, with a brief like [plan 13](../../plans/2026-11-11-13-wisdom-bank-one-page-brief.md) rewritten around his reaction.
