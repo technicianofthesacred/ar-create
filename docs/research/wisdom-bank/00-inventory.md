@@ -2,7 +2,7 @@
 
 11 November 2026. Read-only fact-finding. Nothing was built or changed apart from this document and four demo screenshots (invented data) in `screens/`.
 
-**Limit of this inventory.** The i64os repository could not be added to this session (the request was denied), so nothing about i64os was read from i64os itself. Its rows below repeat what AR Create's own documents and the 11 November plan say about it, and are marked **unverified**. Everything about AR Create was read from its documents and code.
+**Limit of this inventory.** The i64os repository could not be added to this session (the request was denied), so nothing about i64os was read from i64os itself. Its rows below repeat what AR Create's own documents and the 11 November plan say about it, and are marked **unverified**. Everything about AR Create was read from its documents and code. **Since corrected:** a later thread read i64os itself; its findings are in [the i64os inventory](00b-i64os-inventory.md), which replaces the unverified rows below.
 
 ## What exists
 

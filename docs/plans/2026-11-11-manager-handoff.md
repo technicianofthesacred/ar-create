@@ -24,14 +24,14 @@ All AR Create threads were started from the review branch. Use these ids with th
 
 | Thread | Id | Model | Pushes to | State, 11 November | Waiting for |
 |---|---|---|---|---|---|
-| Design round (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high | `claude/ar-create-design-round` | Four directions published as pages: A Board, B Path, C Work, D "Gather, Research, Create, Share". Still active with Adrian. Very large and by far the most expensive thread | Adrian's choice of direction. Asked on 11 November to write a handoff file at its next pause |
+| Design round (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high | `claude/ar-create-design-round` | Four directions published as pages: A Board, B Path, C Work, D "Gather, Research, Create, Share". Still active with Adrian; its own status on 11 November reads "slide studio and Looks accepted; Home, subject in review". Very large (near the point where it compacts itself) and by far the most expensive thread, about 328 dollars | Adrian's review of Home and the subject page. Asked on 11 November to write a handoff file at its next pause |
 | Demo that walks the whole chain (plan 7) | `session_017kitFeYtEjJcjysfvHwLhn` | Lighter | `claude/ar-create-walkable-demo` | Stopped with a question for Adrian | His answer, in that thread |
 | Screens (plan 5, Stage A only) | `session_017kitFe4zT8nwXTejaJ2Px9` | Lighter | `claude/ar-create-screens` | Stage A built and pushed. Told to stop after Stage A | His approval, in that thread |
 | Wisdom bank A: inventory | `session_017kitFdz6mRmrViNFV4MVnE` | Lighter | `claude/wisdom-bank-inventory` | **Done.** Report merged into the review branch. Could not read i64os | Nothing |
 | Wisdom bank B: products and experience | `session_017kitFhcbpLL4v8im7zk9QD` | Lighter | `claude/wisdom-bank-products` | **Done.** Report merged. Phone page: claude.ai/artifact/NvGBsP5fr2j8NQijnJXs7Y | Nothing |
 | Wisdom bank C: open source and the last thirty days | `session_017kitFhBGKJVhitAkQu3cjj` | Lighter | `claude/wisdom-bank-open-source` | **Done.** Report merged. Phone page: claude.ai/artifact/1qrxKj3R4k3H6rDM1aPidV. Last-thirty-days part is thin | Nothing |
-| Wisdom bank A2: what i64os already has | `session_017kitFeXyfhfELhrqMLjAcW` | Lighter | i64os branch `claude/wisdom-bank-i64os-inventory` | Started 11 November | Its report, a file in the i64os repository: `docs/research/wisdom-bank-i64os-inventory.md` |
-| Wisdom bank D1: the concept, with Adrian | `session_017kitFg72niPKF1xeotzZpx` | Strongest, medium | `claude/wisdom-bank-concept` | Started 11 November. Opens by interviewing him | His answers, in that thread |
+| Wisdom bank A2: what i64os already has | `session_017kitFeXyfhfELhrqMLjAcW` | Lighter | i64os branch `claude/wisdom-bank-i64os-inventory` | **Done.** Report copied here as `docs/research/wisdom-bank/00b-i64os-inventory.md`; the synthesis is corrected | Nothing |
+| Wisdom bank D1: the concept, with Adrian | `session_017kitFg72niPKF1xeotzZpx` | Strongest, medium | `claude/wisdom-bank-concept` | Started 11 November. Opens by interviewing him. Still small. It was started before the i64os inventory arrived, so tell it to read `00b-i64os-inventory.md` | His answers, in that thread |
 
 The review thread that started them all, and is the coordinator, is `session_017kitFgZ5x2SMHzVzcAbotm`.
 
@@ -39,13 +39,13 @@ The review thread that started them all, and is the coordinator, is `session_017
 
 Adrian called this "one of the most important things". The plan is [plan 9](2026-11-11-09-wisdom-bank-inquiry.md); the findings so far are on [one page](../research/wisdom-bank/03-synthesis.md).
 
-**Where it stands.** Discovery is done except for i64os. The answer to "is this already built?" is no: combine borrowed parts and build the middle (the nugget, links across sources, a map that is a way to move, and the way out to a cited piece). His stated fear, and the main design requirement, is being able to see, navigate and return to what he keeps.
+**Where it stands.** Discovery is done, i64os included. The answer to "is this already built?" is no: combine borrowed parts and build the middle (the nugget, links across sources, a map that is a way to move, and the way out to a cited piece). His stated fear, and the main design requirement, is being able to see, navigate and return to what he keeps.
 
 **The steps, each a fresh short thread:**
 
 | Step | What | Model | Starts when | Ends with |
 |---|---|---|---|---|
-| A2 | Read i64os (running) | Lighter | Started | The i64os inventory file |
+| A2 | Read i64os (**done**) | Lighter | Started | The i64os inventory file, now `00b-i64os-inventory.md` |
 | D1 | Interview Adrian, write the concept (running) | Strongest, medium | Started | `docs/research/wisdom-bank/04-concept.md` and a phone page |
 | D2 | Mock-ups of three screens, one direction first, phone first: a source just after distilling, one nugget with its neighbours, the daily return | Strongest, high, strictly bounded (see the rules below) | D1's concept is written and Adrian has read it. Better still, after he has picked a design direction in plan 8, so the bank looks like the same app | Clickable pages and his reaction |
 | D3 | Foundations: one short design note on what a nugget is on disk, how links are recorded, how the exact words stay tied to the source, how it is found by meaning, how agents read and propose | Strong, medium, short | D2's direction is chosen | `05-foundations.md` |

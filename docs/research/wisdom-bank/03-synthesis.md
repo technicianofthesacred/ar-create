@@ -46,9 +46,24 @@ Leave alone for now: tools that need their own database or service (Open Noteboo
 
 From the inventory: every screen is organised around work stages and file operations, not around ideas. "Words you kept never appear on the screen unless you open the source itself." Library "reads like a file manager"; an opened item "explains the filing system, not the idea".
 
+## What i64os already holds (read on 11 November)
+
+From [the i64os inventory](00b-i64os-inventory.md). It confirms the verdict above and adds what can be reused.
+
+- **The shelf is real and is the nearest thing to a bank today.** The documents say 189 notes, each opening at three depths (summary, analysis, full transcript) with six verdicts and named stacks. But a note is a whole talk, not one idea, and notes are not linked to each other.
+- **Its distilling paraphrases on purpose.** The summariser's own instructions tell it to retell in its own words. That is the opposite of keeping the words pure, so the bank needs a different distilling step, not this one.
+- **The pure words are there underneath.** Every transcript is kept as timed lines, so a nugget's exact quote and moment can be cut from what is already stored.
+- **The Research Hunt has the right shape and no real contents.** It keeps a claim with one vote per source, each vote carrying an exact quote, its place and a stance. That is a quote in a place, linked across sources. It holds no real rows yet.
+- **Book search is built but empty**, as far as the documents say.
+
+**Reuse:** the capture path from a link to a note, the timed transcript, the rule that gives one video one identity, verdicts written into the note itself, stacks, and the Hunt's quote-with-place-and-stance. **Still missing everywhere:** a unit for one idea with its exact words, speaker and moment; links between ideas outside the Hunt; distilling that keeps words exact.
+
+One caution for the concept: 337 captured items have sat unsorted since 1 August. That is "collecting without returning" already happening.
+
 ## What is still not known
 
-- **i64os was not read.** The inventory thread could not attach it, so everything about the shelf, the book search and the Research Hunt is unverified. A small follow-up thread was started on 11 November to read it.
+- **The real shelf was not seen.** i64os has now been read from its documents and code (see below), but nobody has looked at the shelf with its real notes, and no saved picture of it exists.
+- **Whether the Research Hunt works on real material.** Its tables were empty on 1 September, and a live run on 3 November returned nothing because the model calls failed.
 - **The products were described from reviews, not used.** The surest check is Adrian trying two or three himself for twenty minutes each: Recall, Readwise Reader and NotebookLM, each with one talk he loves.
 - **The last thirty days are thin.** His own last-thirty-days skill was not run. It is the better tool for a proper sweep of Reddit, X and Hacker News.
 - **How full screens look.** The demo is nearly empty.
