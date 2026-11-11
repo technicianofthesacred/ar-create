@@ -1,6 +1,6 @@
 # Plan 9: the wisdom bank, an inquiry before any building
 
-**Status.** A plan for how to investigate. Nothing is designed or built. Written 11 November 2026 from Adrian's words, with a first quick look at what already exists.
+**Status.** An inquiry. Three discovery threads were started on 11 November (see the fan-out below). Nothing is designed or built. Written 11 November 2026 from Adrian's words, with a first quick look at what already exists.
 
 ## What Adrian asked for, in his words
 
@@ -12,6 +12,30 @@ His two questions:
 2. "How do we take all these bits of wisdom and knowledge and nuggets and contain them in the purity of what that is, make it fun to understand it and to receive the wisdom from it, interconnect them to each other, and then be able to create these readable articles that source the right places, or are shared in videos, or shared through the art that I am creating."
 
 And the aim: "something structurally durable and integratable into everything I'm doing", without spending tokens carelessly.
+
+## Adrian's correction, same day: the experience comes first
+
+> "My biggest risk is actually going back over the things: being able to access and understand the concepts that are exciting for me that I am working on. The interconnection and all this, if it's not something that I can see, visualize, navigate, understand, there's not anything that I can do with it."
+
+> "It's about capturing these nuggets, interconnecting them into my creation platform. Collecting them but being able to browse through them, to use them as my reading platform, to learn them, to use them as the inspiration for the art, to assimilate them, to interconnect them. All of this is not done in a way that is exciting, that is engaging, or that is usable currently. The interface and the end result for all of these are a far way off from what it should be. So this is the other aspect that is kind of first and foremost."
+
+> "If there is some conversation, some last thirty days, or GitHub repositories that have already built some of this out, I don't have to build it all a hundred percent."
+
+What this changes:
+
+- **The experience leads; storage follows.** The question that decides success is whether he can see, wander, read, learn from and use what he has kept. Part 2 becomes an experience design with clickable mock-ups, and part 3 (foundations) serves it.
+- **The landscape is split in two and widened**: products and what using them feels like; and open-source projects plus what people building these tools have been saying in the last thirty days, including where such tools fail (collecting without ever returning; a graph that is pretty and useless).
+- **The inventory also looks at how his existing screens feel**, with pictures, not only at what they store.
+
+**The fan-out as started on 11 November** (three threads on the lighter model, side by side):
+
+| Thread | Answers | Output |
+|---|---|---|
+| A. Inventory | What he already has in i64os and AR Create, what it stores, and why it is not engaging to return to | `docs/research/wisdom-bank/00-inventory.md` |
+| B. Products and experience | Which existing products come closest, and what seeing, browsing, reading, learning and assimilating feels like in the best of them | `docs/research/wisdom-bank/01-products-and-experience.md` |
+| C. Open source and the last thirty days | Which GitHub projects have already built parts he could adopt or borrow, and what builders and users are saying now | `docs/research/wisdom-bank/02-open-source-and-recent.md` |
+
+Then, when all three are in: **D. the experience design**, on the strongest model at high effort, with Adrian in the conversation, as clickable mock-ups filled with lifelike nuggets. Then the foundations note. The four-part table below still describes the questions; this fan-out is how they are being run.
 
 ## What already exists (a first quick look, 11 November)
 
