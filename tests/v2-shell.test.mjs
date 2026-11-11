@@ -15,8 +15,8 @@ const repo=path.resolve(import.meta.dirname,'..'),v2dir=path.join(repo,'public/v
 const read=file=>fs.readFileSync(path.join(repo,file),'utf8');
 
 // The screen files, in order. index.html lists every one now, so a screen piece never edits it.
-const SCREENS=['home','subject','slides','looks','research'];
-const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id'};
+const SCREENS=['home','subject','slides','looks','research','write'];
+const ROUTES={home:'','subject':'subject/:id',slides:'slides/:id',looks:'looks',research:'research','research-group':'research/group/:id','research-topic':'research/topic/:id',write:'write/:id'};
 
 function scriptsOf(html){return [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]);}
 function stylesOf(html){return [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(m=>m[1]);}
