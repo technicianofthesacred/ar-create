@@ -224,3 +224,17 @@ Checked at 390 and 1440 in light: Everything by work and by concept, a collectio
 Unsure, and asked of him: whether "Expression should always be done on the place wherever I am" also means "I have something to express" should stop being its own place.
 
 Counts on Everything (65 works, 1,821 concepts, 23,400 passages) are invented to suggest size. This is browsing by lists and levels; it is not the zooming map, which remains with the other thread. His judgement "your suggestions for UI is majorly flawed" stands on record and was not answered by this pass.
+
+**11 November, answering the question about Express and going further, in his words:**
+
+"Express should be reachable from wherever I am, not its own place instead of having to click on kindness comes first or you are already whole or the awareness that you already have to open it up, don't you think? Instead of the having a open button we can make the things expand and contract inside of here. Also, we don't need two rows on the side for the nine concepts. How about just one wide? I also don't wanna have to have multiple nests for me to click through, everything should be on one and the expansion and contraction it should work more like mirror or a mind map generator but it or freeform it's like a infinite zoom than so many pages. However, I like the structure of how things are laid out, so think of like a infinite zoom but with a strong structure everywhere."
+
+What was done here: one small fix only. The concept cards on a wide screen are now one wide column, not two. Nothing else was changed; the rest is for the fresh thread ("Wisdom bank: how I move through it").
+
+What it asks (my reading, not his words; "mirror" was dictated and most likely means Miro, the infinite canvas tool):
+
+- **Express is not a place.** It is reachable from wherever he is.
+- **No Open button and no sheet.** A concept expands and contracts where it sits.
+- **No nests of pages to click through.** Everything lives on one surface. Going from everything to a collection to a book to a concept to its depths is zooming and expanding on that one surface, like an infinite canvas or a mind map.
+- **Keep the strong structure.** He likes how things are laid out (the parts of a work, the order of a concept's reading, the grouped lines). So it is an infinite zoom with firm structure at every level, not a loose freeform board.
+- One wide column for a list of concepts, not two.
