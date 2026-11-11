@@ -4,11 +4,11 @@
 
 ## The whole idea in one minute
 
-The wisdom bank is the Research station of AR Create. It keeps the best lines from the talks and books you love, in their exact words, and helps you use them. Follow one example from start to finish:
+The wisdom bank is the Research station of AR Create. It distils each talk or book you love into its concepts, keeps the exact words inside each one, shows how the concepts connect, and helps you use them. Follow one example from start to finish:
 
 1. **You paste a talk** on Vajrayana. You are asked nothing else.
-2. **A few minutes later you are handed its best lines.** Each one is a **nugget**: the exact words, who said them, and the moment they said it. Under it sits one line saying what it means, and a plain explanation through your own filter. You keep the ones you love.
-3. **The bank proposes connections.** "This line echoes one from your friend." "This practice comes before that idea." You say yes or no.
+2. **A few minutes later the whole talk is laid out as its concepts.** All of them, none removed. Each concept is a **nugget**: a name, one line saying what it means, and gathered inside it every passage of the talk that carries it, in the exact words, with who said them and when. Beside it sits a plain explanation through your own filter.
+3. **You see how the concepts connect**, first to each other inside the talk, then to concepts from other works. "This one echoes your friend's idea." "This practice comes before that idea." Connections are proposed and you say yes or no.
 4. **One day you feel something you want to express**, such as "everything is perfect". You say it to the bank. It gathers what the different traditions said about it, in their own words, and what each says must come first.
 5. **You pick a few and put them in order.** That line of nuggets is a research topic.
 6. **You press "make a piece".** The topic becomes the outline of an article, a reel or the words for an artwork, with every quote credited.
@@ -32,24 +32,25 @@ Spoken by voice and kept as transcribed, including slips.
 
 ## What the answers change
 
+**Your correction, 11 November.** The first version of this page treated a nugget as one of the best lines of a talk, kept or discarded. You said: "It's not about the best lines. These are concepts. It's about not only picking the best, but actually clumping all of the concepts together into nuggets and then finding out how they interconnect together. It's not about pruning down only into what I love, but it's about distilling a body of work into their concepts, not removing their concepts." The page now follows that: a nugget is a concept, a work is distilled into all of its concepts, and nothing is pruned.
+
 - **You return in order to use**: to express something, to study, or to browse until something rings. So the main door is "I have something to express", and a daily habit is only a small extra.
 - **Assimilating means a lens.** The words stay untouched. Beside them sits an explanation written through your own set of variables, which you can change. This page calls that set your **lens**.
 - **The pathway is the map.** A connects with B connects with C. A saved line of nuggets is what you walk, and it is also the outline of the piece you make.
 
 ## The nugget
 
-One idea from one source. It holds:
+One concept from one body of work. A talk or a book is distilled into all of its concepts, and each concept is a nugget. It holds:
 
-- **The exact words**, checked letter for letter against the stored source. They can never be edited.
-- **Who said them and where**: the speaker, the source, and the moment (minute and second in a talk, chapter and page in a book, date of a conversation).
-- **A distillation**: one line, labelled "Distillation", written by an agent. You may reword it.
-- **Its prime concepts**: the two or three ideas inside it, such as presence or preparation. Links attach through these.
+- **A name and a distillation**: a few words and one line, labelled "Distillation", written by an agent. You may reword them.
+- **The exact words that carry it**: every passage in the source where this concept is spoken, gathered together. Each is checked letter for letter against the stored source and can never be edited.
+- **Who said them and where**: the speaker, the source, and the moment of each passage (minute and second in a talk, chapter and page in a book, date of a conversation).
 - **A reading through your lens**: a short explanation labelled with the lens it used. Change the lens and the reading is written again. The words do not move.
 - **Your response**: your own words, dated, in their own place.
-- **Its links** to other nuggets, each with a kind and a reason.
-- **Its brightness**: a nugget grows brighter as you keep it, respond to it, link it and use it. Dim ones stay. Nothing is killed.
+- **Its links**: to the other concepts in the same work, which shows how the work holds together, and to concepts in other works. Each link has a kind and a reason.
+- **Its brightness**: a concept grows brighter as you respond to it, link it and use it, and the core concepts of a work start brighter. Dim ones stay. Nothing is removed.
 
-**At a glance** you see the words, the speaker, the one line, and one or two lines running out to named neighbours: this goes into that. **Opened**, it unpacks as a short stack of index cards you swipe through: the words in their place in the source (with a tap to hear or read the moment); the gist and prime concepts; the reading through your lens; its connections; your response; and "go deeper", where questions wait for research.
+**At a glance** you see the name, the one line, the strongest passage, and one or two lines running out to named neighbours: this goes into that. **Opened**, it unpacks as a short stack of index cards you swipe through: the gist; the passages in their place in the source (with a tap to hear or read each moment); the reading through your lens; its connections; your response; and "go deeper", where questions wait for research.
 
 ## Arriving
 
@@ -57,11 +58,13 @@ You paste a link or drop a file, from the phone's share button or from anywhere 
 
 The source is stored once. Then the work depends on its weight:
 
-- **A video or an article** is distilled in a few minutes into a short set of proposed nuggets.
+- **A video or an article** is distilled in a few minutes into its concepts.
 - **A book** is heavy. You choose: the whole book, one chapter at a time, or only the passages you marked. You see the likely cost before a heavy run starts.
 - **A friend's idea** arrives as a recording or a note. The friend is the speaker. It stays marked private until they agree to be quoted. If it is your memory of what they said, it is labelled "as Adrian remembers it" and is never shown as a quote.
 
-What comes back is a **source page**: the shape of the whole argument as an outline, with the proposed nuggets sitting in order inside it. The agent marks the ones it thinks are core. For each you **keep**, **reword the distillation**, or **set aside**. Set-aside nuggets are filed, and you can bring them back. Names, numbers and dates are flagged for a second look. Sorting and linking come later. A source you have not reviewed waits quietly.
+What comes back is a **source page**: the whole work laid out as its concepts, every one of them, with the lines between them showing how the work holds together. Core concepts are brighter. This is the distilled body of work, complete, and it is useful before you do anything to it.
+
+You can then, whenever you like: **reword** a name or distillation, **join** two nuggets that are one concept, **split** one that is really two, or **file** one as less useful so it dims. A filed concept stays part of the work's picture. Names, numbers and dates are flagged for a second look. A source you have not reviewed waits quietly.
 
 ## Returning
 
@@ -77,7 +80,7 @@ The three traps, answered directly:
 
 - **Collecting without returning.** Every door ends in something made: a pathway, a response, an accepted link or the start of a piece. Capture also gives something back at once, the source page, so putting things in is already a first return.
 - **Maps nobody uses.** The home is never a picture of everything. The map is always centred on one nugget or one pathway, every line can be tapped, and every line says why it exists. A view of the whole bank may come later, for feeling it grow, and it stays only if you use it.
-- **Summaries that flatten.** The exact words always come first and largest. A distillation says it is one. A lens reading names its lens. Your response is yours. The outline keeps each nugget attached to its argument, and the "prepares" link below keeps a concept attached to what must come before it.
+- **Summaries that flatten.** Every concept opens onto the exact words that carry it, and a work keeps all of its concepts, so nothing is lost to a short summary. A distillation says it is one. A lens reading names its lens. Your response is yours. The source page keeps each concept attached to the rest of its work, and the "prepares" link below keeps a concept attached to what must come before it.
 
 ## Connecting
 
@@ -126,15 +129,15 @@ The coordinating thread reports that version two's Research has topics and group
 
 **What the i64os read found.** The separate thread reported on 11 November, after this concept was first written. It worked from i64os's documents and code and did not open the real data. Its page is `00b-i64os-inventory.md` on the review branch.
 
-- **The shelf is real, and a note is a whole talk.** The documents say 189 notes, each at three depths, with no links between notes. So a shelf note is a source here, never a nugget.
+- **The shelf is real, and a note is a whole talk.** The documents say 189 notes, each at three depths, with no links between notes. So a shelf note is a source here, and its concepts become the nuggets.
 - **Its summaries are retellings on purpose.** They can serve as the outline on a source page, labelled as a summary. They can never supply a nugget's words, so the bank needs its own distilling step that copies words exactly.
-- **The exact words are already stored.** Every transcript is kept as timed lines, so a nugget's quote and moment can be cut from what you already have.
+- **The exact words are already stored.** Every transcript is kept as timed lines, so a nugget's passages and their moments can be cut from what you already have.
 - **The Research Hunt has the right shape for "echoes" and "contrasts"**: one claim, and for each source an exact quote, its place and whether it agrees. It holds no real contents yet. Book search is built and, as far as the documents say, empty.
 - **Collecting without returning is already happening.** 337 captured items have sat unsorted since 1 August. They should come in as sources that wait quietly and are distilled only when you open one or a question finds one, never as a queue to clear.
 
 ## What to borrow and what to build
 
-**Build**, because nobody offers it: the nugget with checked words; lens readings; links with kinds that you accept; the pathway; the way out to a piece with sources shown.
+**Build**, because nobody offers it: the nugget as a concept with its checked words gathered inside; lens readings; links with kinds that you accept; the pathway; the way out to a piece with sources shown.
 
 **Borrow:**
 
@@ -153,8 +156,8 @@ Worth twenty minutes of your own time: Recall, with one talk you love, since you
 
 Phone first. Filled with lifelike nuggets, never empty.
 
-1. **A source just after distilling.** A talk you pasted a few minutes ago. At the top the title, speaker and a link back. Below it the outline of the argument, with proposed nuggets in order. Each shows its exact words large, its one-line distillation labelled, and three choices: keep, reword, set aside. Core ones are marked.
-2. **One nugget with its neighbours.** First at a glance: the words, the speaker, the one line and two lines running to named neighbours with their kinds. Then opened: the stack of index cards, including the reading through your lens and your response in its own place. Swiping to a neighbour should feel like walking.
+1. **A source just after distilling.** A talk you pasted a few minutes ago. At the top the title, speaker and a link back. Below it the whole talk as its concepts, all of them, with the core ones brighter and lines showing how they connect. Each concept shows its name, its one-line distillation labelled as one, and its strongest passage in the exact words. Nothing is offered for discarding.
+2. **One nugget with its neighbours.** First at a glance: the name, the one line, the strongest passage with its speaker, and two lines running to named neighbours with their kinds. Then opened: the stack of index cards, including the reading through your lens and your response in its own place. Swiping to a neighbour should feel like walking.
 3. **I have something to express.** This replaces the daily return suggested earlier, because your answers say you come back to use. You speak a feeling. Nuggets from several traditions gather beneath it, with what prepares each. You pick three and they join into a pathway with a "make a piece" button. The "few today" strip can appear on the way in.
 
 ## Open questions only you can answer
