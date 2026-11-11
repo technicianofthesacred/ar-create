@@ -137,3 +137,16 @@ What it means (my reading, not his words): the three-paragraph version is right 
 The full-length sample he approved as the medium view, for the concept first named "The false version":
 
 > Using "it's all perfect" to avoid pain. The teaching that everything is already whole can be misused. Someone in pain can say "everything is perfect" as a way of not feeling the pain. It sounds like the teaching, but it is doing the opposite job: it shuts the feeling out instead of letting it in. The speaker gives a simple way to tell the two apart. Check your body. If you are saying "it's all perfect" while your jaw is tight and your belly is clenched, you are using the words as a lid. The real version has room for the pain. You can feel all of it and still find that nothing is missing. This matters because the idea "everything is perfect" is the one most likely to be picked up and repeated without the rest. On its own it can become an excuse not to feel, or not to care.
+
+**11 November, choosing the small view, in his words:**
+
+"A is more what I'm looking for. However, the teaching of everything is perfect is very different of that it's saying that y you are the Buddha nature and everything is perfect. The using the statement as a lid is actually oh it can be misunderstood that would be a deeper explanation but the explanation of everything is perfect would be very different, if that makes sense."
+
+Style A was: a plain statement of the idea, one full sentence a person would say (the others offered were B, one concrete picture from the talk, and C, the question it answers).
+
+What it means (my reading, not his words):
+
+- **The small view is a plain statement of the idea itself**, in a full sentence.
+- **The small view must say what the teaching is, not a warning about it.** For "everything is perfect", the small view states the teaching (in his words: you are the Buddha nature and everything is perfect). How it can be misunderstood is a deeper layer of the same concept, or a connected concept, and never stands in for the explanation.
+- **A fault in the samples to avoid:** my sample set let a caveat ("The false version") and several supports stand as peers of the main idea, and wrote the main idea thinly. Depth order matters: what it is first, then what it rests on, then how it goes wrong.
+- The wording of any real teaching must come from the sources and from him, not from the agent's general knowledge.
