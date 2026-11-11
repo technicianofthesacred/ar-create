@@ -112,7 +112,8 @@ test('Write opens the real draft of the piece, with the forms of the subject as 
  const advanced=doc.querySelector('[data-v2-advanced]').getAttribute('href');
  assert.match(advanced,/\/document-study\/index\.html\?/);assert.match(advanced,/subject=s1/);assert.match(advanced,/piece=o1/);assert.match(advanced,/section=write/);
  assert.match(doc.querySelector('[data-wr-advanced]').getAttribute('href'),/section=write/);
- assert.match(doc.querySelector('.wr-seg').innerHTML,/section=read/);assert.match(doc.querySelector('.wr-seg').innerHTML,/section=check/);
+ assert.match(doc.querySelector('.wr-seg').innerHTML,/href="#\/read\/s1\?piece=o1"/,'Read is a screen of its own now');assert.match(doc.querySelector('.wr-seg').innerHTML,/href="#\/check\/s1\?piece=o1"/);
+ assert.equal(doc.querySelector('.wr-seg [aria-current]').textContent,'Write');
  assert.match(doc.querySelector('[data-wr-src]').textContent,/My <i>notes<\/i>/);assert.doesNotMatch(doc.querySelector('[data-wr-src]').innerHTML,/<i>notes/);
  assert.ok(doc.querySelectorAll('[data-v2-notbuilt]').length>=2,'the player, the transcript and the list still to write say they are not built yet');
  assert.ok(!doc.querySelector('[data-wr-src] button[aria-label*="peak"],[data-wr] [class*="mic"]'),'no speech button');

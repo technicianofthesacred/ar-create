@@ -1,0 +1,16 @@
+/* Version two: Read. Every rule starts with .rd. The page is Write's page (the same face, measure, line and gap between
+   paragraphs, the same place on the screen) with nothing to edit. Sizes are the shell's six only. */
+.rd .rd-text{grid-column:1;min-width:0}
+.rd .rd-p,.rd .rd-q,.rd .rd-h{margin:0 0 22px;color:var(--ink);font:400 var(--v2-t18)/1.58 var(--ar-ui);overflow-wrap:anywhere;white-space:pre-wrap}
+.rd .rd-h{font-weight:700;margin-top:10px}
+.rd .rd-q{color:var(--c3-ink2);font-style:italic}
+.rd .rd-empty{color:var(--dim);font-size:var(--v2-t14);overflow-wrap:anywhere}
+.rd .rd-unsaved{margin:-6px 0 22px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--line));border-radius:10px;background:var(--c3-lift);font-size:var(--v2-t14);line-height:1.5;overflow-wrap:anywhere}
+.rd .rd-unsaved[hidden]{display:none}
+.rd .rd-unsaved a{text-decoration:underline}
+.rd .rd-foot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rd .rd-foot:empty{display:none}
+.rd .rd-edit{flex:none;white-space:nowrap}
+@media (max-width:850px){
+ .rd .rd-edit{display:none}
+}

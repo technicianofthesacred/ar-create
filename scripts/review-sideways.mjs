@@ -27,7 +27,7 @@
 // It prints one line per view as it goes (ok, or found with what was found), then every finding again at the end.
 // Version two: every screen version two has registered (v2.screens()), opened by its address, and its Capture and Ask
 // sheets, with the same widths, themes and checks. A route's :id is a real record of the demo where one exists (the
-// first subject, the first Instagram plan); SIDEWAYS_V2_IDS='{"subject":"..."}' names others by screen id.
+// first subject, the first Instagram plan); SIDEWAYS_V2_IDS='{"subject":"..."}' names others by screen id. Write, Read and Check open the first subject, and the piece named by SIDEWAYS_V2_IDS='{"subject":"...","piece":"<output id>"}'.
 // It only reads and clicks the demo (port 8854 by default). It never targets 8841, and nothing it changes in the page is saved.
 import fs from 'node:fs';import path from 'node:path';
 const {chromium}=await import(process.env.AR_CREATE_PLAYWRIGHT||'playwright');
@@ -205,7 +205,9 @@ for(const width of widths)for(const theme of themes){
   if(!routes.length)findings.push({view:'v2',width,theme,unreachable:'version two did not start (no screens registered)'});
   for(const r of routes){
    if(!v2Wanted(r.id))continue;
-   const hash='#/'+r.route.split('/').map(p=>p.startsWith(':')?encodeURIComponent(v2ids[r.id]||'none'):p).join('/');
+   // Write, Read and Check open the words of one piece: the subject (the first one, or SIDEWAYS_V2_IDS's write, read or check) and, when named, its piece (SIDEWAYS_V2_IDS's piece, an output id).
+   const words=['write','read','check'].includes(r.id);
+   const hash='#/'+r.route.split('/').map(p=>p.startsWith(':')?encodeURIComponent(v2ids[r.id]||(words&&v2ids.subject)||'none'):p).join('/')+(words&&v2ids.piece?'?piece='+encodeURIComponent(v2ids.piece):'');
    await open(hash);
    if(await page.evaluate(()=>window.v2?.route?.()?.id)!==r.id){findings.push({view:'v2:'+r.id,width,theme,unreachable:'its address did not open it'});continue;}
    await check('v2-'+r.id);v2views++;

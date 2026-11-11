@@ -69,7 +69,58 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   const reads=!!purpose&&purpose!=='opening-options'&&review.canStandInReview!==true&&replacements.length>0;
   return {id:item.id,by:item.proposedBy?.actor||'',purpose,instruction:String(review.instruction||''),replacements,simple:!purpose,reads};
  };
- v2.shared.write=Object.freeze({rowsOf,minimalDiff,buildOps,flat,proposalView,savedLabel});
+ /** Finds the piece's words: the subject's standing, its forms, the Article asked for (the first when none is named), and
+     the draft that owns its words. {standing, forms, form, piece, bindingId, native}. native is false when the words are
+     owned elsewhere (a Magazine story), and bindingId is then null. Write, Read and Check all find a piece this way. */
+ async function locate(id,pieceId){
+  const standing=await v2.call('subject.standing',{parentStudyId:id});
+  const forms=standing.forms||[],articles=forms.filter(f=>f.kind==='article');
+  // A piece named in the address must be one of this subject's Articles; only an address with no piece opens the first.
+  const form=pieceId?articles.find(f=>f.id===pieceId)||null:articles[0]||null;
+  let bindingId=standing.facts?.bindingId||null,native=true;
+  const piece=form&&/^out:/.test(form.key||'')?form.id:null;
+  if(piece&&bindingId){
+   try{
+    const outs=await v2.call('study.outputs',{rootBindingId:bindingId,parentStudyId:id,selectedOutputId:piece});
+    const owner=(outs?.outputBindings||[]).find(b=>b.outputId===piece)?.wordOwner;
+    if(owner&&owner.kind==='native'&&owner.bindingId)bindingId=owner.bindingId;
+    else if(owner&&owner.kind!=='native'){bindingId=null;native=false;}
+   }catch{/* the subject's own words stay the owner */}
+  }
+  return {standing,forms,form,piece,bindingId,native};
+ }
+ /** The tab's name: "Article" when it is the only one, the piece's own title when a subject has more than one. */
+ function tabNames(forms){
+  const articles=forms.filter(f=>f.kind==='article'),seen=new Map(),names=new Map();
+  for(const f of forms){
+   let name=f.name||'Piece';
+   if(f.kind==='article'&&articles.length>1){
+    name=String(f.title||'').trim()||name;const n=(seen.get(name)||0)+1;seen.set(name,n);if(n>1)name+=' ('+n+')';
+   }
+   names.set(f.key,name);
+  }
+  return names;
+ }
+ const MODES=[['write','Write'],['read','Read'],['check','Check']];
+ /** The sub bar the three screens share: the way back, the piece tabs (which keep him in the same mode), the
+     Write | Read | Check segment, then `right` (markup for the bar's right side). */
+ function bar({id,forms=[],form=null,piece=null,mode='write',right=''}){
+  const names=tabNames(forms),at=MODES.some(m=>m[0]===mode)?mode:'write';
+  const formTab=f=>{
+   const here=form&&f.key===form.key;
+   const href=f.kind==='article'?v2.href(at+'/:id',{id},{piece:/^out:/.test(f.key)?f.id:undefined}):v2.href('subject/:id',{id},{form:f.key});
+   return `<a href="${esc(href)}"${here?' aria-current="page"':''} title="${esc(names.get(f.key))}">${esc(names.get(f.key))}</a>`;
+  };
+  const seg=MODES.map(([m,label])=>m===at?`<span aria-current="true">${label}</span>`:`<a href="${esc(v2.href(m+'/:id',{id},{piece:piece||undefined}))}">${label}</a>`).join('');
+  return `<div class="wr-bar" data-wr-bar>
+    <a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject">${icon('back')}<span>The subject</span></a>
+    <nav class="wr-tabs" aria-label="Pieces of this subject">${forms.map(formTab).join('')}<a href="${esc(v2.href('subject/:id',{id}))}" aria-label="Add a piece on the subject page" title="Add a form on the subject page">${icon('plus')}</a></nav>
+    <div class="wr-seg" role="group" aria-label="Write, Read or Check">${seg}</div>
+    <span class="wr-sp"></span>
+    ${right}
+   </div>`;
+ }
+ v2.shared.write=Object.freeze({rowsOf,minimalDiff,buildOps,flat,proposalView,savedLabel,locate,bar});
 
 
  let live=null;// the open screen, so leaving it can save and clean up
@@ -94,22 +145,10 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
 
   // ---------- reading ----------
   async function locate(){
-   const s=await v2.call('subject.standing',{parentStudyId:id});if(ctx.signal.aborted)return false;
-   st.standing=s;const forms=s.forms||[];st.forms=forms;
-   const articles=forms.filter(f=>f.kind==='article'),want=ctx.query.piece;
-   // A piece named in the address must be one of this subject's Articles; only an address with no piece opens the first.
-   st.form=want?articles.find(f=>f.id===want)||null:articles[0]||null;
-   st.missing=!!want&&!st.form;
-   st.bindingId=s.facts?.bindingId||null;
-   st.piece=st.form&&/^out:/.test(st.form.key||'')?st.form.id:null;
-   if(st.piece&&st.bindingId){
-    try{
-     const outs=await v2.call('study.outputs',{rootBindingId:st.bindingId,parentStudyId:id,selectedOutputId:st.piece});
-     const owner=(outs?.outputBindings||[]).find(b=>b.outputId===st.piece)?.wordOwner;
-     if(owner&&owner.kind==='native'&&owner.bindingId)st.bindingId=owner.bindingId;
-     else if(owner&&owner.kind!=='native')st.bindingId=null;
-    }catch{/* the subject's own words stay the owner */}
-   }
+   const found=await v2.shared.write.locate(id,ctx.query.piece);if(ctx.signal.aborted)return false;
+   const s=found.standing;st.standing=s;st.forms=found.forms;st.form=found.form;
+   st.missing=!!ctx.query.piece&&!found.form;
+   st.bindingId=found.bindingId;st.piece=found.piece;
    ctx.setTitle(s.title||'Write');if(s.look)v2.brand(s.look);
    ctx.setAdvanced({subject:id,piece:st.piece||undefined,section:'write'});
    return true;
@@ -168,37 +207,13 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   function removeAdded(a){st.added=st.added.filter(x=>x!==a);for(const k of st.added)if(k.afterId===a.id)k.afterId=a.afterId;}
 
   // ---------- drawing ----------
-  const BAR_ICON={back:icon('back')};
-  /** The tab's name: "Article" when it is the only one, the piece's own title when a subject has more than one. */
-  function tabNames(){
-   const articles=st.forms.filter(f=>f.kind==='article'),seen=new Map(),names=new Map();
-   for(const f of st.forms){
-    let name=f.name||'Piece';
-    if(f.kind==='article'&&articles.length>1){
-     name=String(f.title||'').trim()||name;const n=(seen.get(name)||0)+1;seen.set(name,n);if(n>1)name+=' ('+n+')';
-    }
-    names.set(f.key,name);
-   }
-   return names;
-  }
   function shell(){
-   const names=tabNames();
-   const formTab=f=>{
-    const here=st.form&&f.key===st.form.key;
-    const href=f.kind==='article'?v2.href('write/:id',{id},{piece:/^out:/.test(f.key)?f.id:undefined}):v2.href('subject/:id',{id},{form:f.key});
-    return `<a href="${esc(href)}"${here?' aria-current="page"':''} title="${esc(names.get(f.key))}">${esc(names.get(f.key))}</a>`;
-   };
-   const read=`<a href="${esc(adv('read'))}" title="Opens Read in Advanced">Read</a>`,check=`<a href="${esc(adv('check'))}" title="Opens Check in Advanced">Check</a>`;
-   page.innerHTML=`<div class="wr-bar" data-wr-bar>
-    <a class="wr-back" href="${esc(v2.href('subject/:id',{id}))}" aria-label="Back to the subject">${BAR_ICON.back}<span>The subject</span></a>
-    <nav class="wr-tabs" aria-label="Pieces of this subject">${st.forms.map(formTab).join('')}<a href="${esc(v2.href('subject/:id',{id}))}" aria-label="Add a piece on the subject page" title="Add a form on the subject page">${icon('plus')}</a></nav>
-    <div class="wr-seg" role="group" aria-label="Write, Read or Check"><span aria-current="true">Write</span>${read}${check}</div>
-    <span class="wr-sp"></span>
-    <span class="wr-saved" data-wr-saved></span>
+   const names=tabNames(st.forms);
+   const right=`<span class="wr-saved" data-wr-saved></span>
     <button type="button" data-wr="src" aria-pressed="${st.src}" aria-label="Sources">${own('side')}<span>Sources</span></button>
     <button type="button" class="v2-ghost" data-wr="ask" aria-label="Ask">${icon('ask')}<span>Ask</span></button>
-    <button type="button" class="v2-ghost" data-wr="focus" aria-label="Focus">${own('focus')}<span>Focus</span></button>
-   </div>
+    <button type="button" class="v2-ghost" data-wr="focus" aria-label="Focus">${own('focus')}<span>Focus</span></button>`;
+   page.innerHTML=bar({id,forms:st.forms,form:st.form,piece:st.piece,mode:'write',right})+`
    <div class="wr-focusbar" hidden><span>${esc(st.standing?.title||'')} / ${esc(names.get(st.form?.key)||'Article')}</span><button type="button" class="v2-ghost" data-wr="unfocus">Leave focus</button></div>
    <div class="wr-work" data-src="${st.src?'open':'closed'}">
     <aside class="wr-src" data-wr-src aria-label="Sources"></aside>
