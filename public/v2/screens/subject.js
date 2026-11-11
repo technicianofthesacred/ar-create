@@ -164,17 +164,37 @@
   ['study-draft.check',['check']],['study-draft',['read','check']],['study-ai',['read']],['study.outputs',['read']],
   ['study.human-direction',['direction','board']],['concept',['direction']],['simmer',['board','direction']],['instagram',['planRecords']],
   ['consent',['desk']],['words',['wordChecks']],['transcript-check',['wordChecks']],
-  ['sources',['tree','brief']],['recordings',['tree','brief']],['first-flow',['brief','tree']],['study.material',['brief','tree']],['study.research',['brief']],['study.photos',['tree']],['inquiries',['topics']],
+  ['sources',['tree','brief','recordings']],['recordings',['tree','brief','recordings']],['transcription',['recordings']],['research-topics',['topics']],['first-flow',['brief','tree']],['study.material',['brief','tree']],['study.research',['brief']],['study.photos',['tree']],['inquiries',['topics']],
  ]);
- const READS=Object.freeze(['tree','brief','planRecords','wordChecks','board','direction','read','check','desk','topics']);
+ const READS=Object.freeze(['tree','brief','planRecords','wordChecks','board','direction','read','check','desk','topics','recordings']);
  function touched(kind){const k=String(kind||'');let best=null;for(const [start,keys] of TOUCHES)if(k.startsWith(start)&&(!best||start.length>best[0].length))best=[start,keys];return best?[...best[1]]:[];}
  /** The reads each step's tool needs, in the order they are asked. */
  const STEP_READS=Object.freeze({
-  have:['tree','brief','planRecords'],transcript:['tree','planRecords','wordChecks'],facts:['brief','topics'],dish:['board','direction'],
+  have:['tree','brief','planRecords','recordings'],transcript:['tree','planRecords','wordChecks'],facts:['brief','topics'],dish:['board','direction'],
   words:['read'],check:['check'],story:['planRecords'],slides:['planRecords'],yes:['desk'],
  });
 
- const pure=Object.freeze({TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
+ /** Where one recording is, said plainly, from the job `recordings` holds for it. `registered`: the transcript is already a
+     source. `act`: the one thing he can do about it here (start or retry the transcript, or use the finished one). */
+ function recordingView(job,capability,registered=false){
+  if(!job||typeof job!=='object')return null;
+  const ready=!!capability?.ready;
+  switch(job.state){
+   case 'saved':return ready?{say:'Saved. The transcript has not been started.',act:'start'}:{say:'Saved. Transcription is not set up on this machine.',act:null};
+   case 'queued':case 'running':return {say:'Making the transcript.',act:null};
+   case 'failed':return {say:'The transcript could not be made. The recording is kept.',act:ready?'retry':null};
+   case 'done':return job.transcriptReady?(registered?{say:'Transcript ready, and kept as a source.',act:null}:{say:'Transcript ready.',act:'use'}):{say:'The transcript is not ready.',act:null};
+   case 'unavailable':return {say:'The saved recording cannot be reached.',act:null};
+   default:return null;
+  }
+ }
+ /** The recordings that already have their transcript as a source, by job id, from the Library tree. */
+ function registeredJobs(tree){
+  const out=new Set();if(!ok(tree))return [];
+  for(const x of tree.sources||[])if(x?.kind==='transcript'){const j=x.recordingId||x.transcriptState?.jobId;if(j)out.add(j);}
+  return [...out];
+ }
+ const pure=Object.freeze({recordingView,registeredJobs,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
  if(typeof module==='object'&&module.exports)module.exports=pure;
  const v2=root.v2;if(!v2||typeof v2.screen!=='function')return;
 
@@ -198,6 +218,7 @@
   brief:ids=>ids.bindingId?call('study.research.brief',{bindingId:ids.bindingId,parentStudyId:ids.id}):null,
   planRecords:async ids=>{const list=await call('instagram.plans',{subject:ids.id});if(!ok(list))return list;return Promise.all((list.plans||[]).filter(p=>p.subject===ids.id).map(p=>call('instagram.plan.get',{id:p.id})));},
   wordChecks:()=>call('words.checks',{}),
+  recordings:()=>call('recordings',{}),
   board:ids=>call('simmer.board.get',{subject:ids.id}),
   direction:ids=>call('study.human-direction',{parentStudyId:ids.id}),
   read:ids=>ids.bindingId?call('study-draft.read',{bindingId:ids.bindingId,parentStudyId:ids.id}):null,
@@ -206,6 +227,14 @@
  };
  /** Research topics tied to this subject (read only for its Facts step): only those that share a source with it. */
  async function topicsOf(ids,brief){
+  // A question asked from the Capture sheet is a research topic linked to this subject: it shows here too.
+  const linked=await call('research-topics',{subject:ids.id});
+  const extra=ok(linked)?(linked.topics||[]).filter(t=>t?.id&&t.name).map(t=>({id:t.id,name:t.name,status:t.proposedBy?'proposed':'accepted'})):[];
+  const base=await topicsFromInquiries(ids,brief);
+  const seen=new Set(base.list.map(t=>t.id));
+  return {...base,list:[...base.list,...extra.filter(t=>!seen.has(t.id))].sort((a,b)=>a.name.localeCompare(b.name))};
+ }
+ async function topicsFromInquiries(ids,brief){
   if(!ids.bindingId||!ids.projectId||!ok(brief))return {list:[]};
   const cat=await call('inquiries.catalog',{});if(!ok(cat))return {error:true,list:[]};
   const mine=new Set(brief.sourceIds||[]),selector={workspaceId:ids.projectId,parentStudyId:ids.id,rootBindingId:ids.bindingId};
@@ -424,18 +453,25 @@
   /** The three ways in and the drop strip. Adding material is done in the existing workspace, so each opens Material there. */
   function ways(){
    const to=handoffHref('material',null);
-   return `<div class="subj-ways">${WAYS.map(([ic,n,w])=>`<a data-subj-handoff="addMaterial" href="${to}" title="Opens Material in Advanced">${ownIcon(ic)}<b>${n}</b><span>${w}</span></a>`).join('')}</div><a class="subj-drop" data-subj-handoff="addMaterial" href="${to}" title="Opens Material in Advanced">${icon('plus')}Or drop anything here</a>`;
+   return `<div class="subj-ways">${WAYS.map(([ic,n,w])=>`<a data-subj-handoff="addMaterial" data-subj-capture href="${to}" title="Opens Material in Advanced">${ownIcon(ic)}<b>${n}</b><span>${w}</span></a>`).join('')}</div><a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${to}" title="Opens Material in Advanced">${icon('plus')}Or drop anything here</a>`;
   }
   function toolHave(s,form){
    const known=['tree','brief','planRecords'].every(k=>rec(k)!==undefined);
    const m=known?materialFrom({tree:rec('tree'),brief:rec('brief'),planRecords:Array.isArray(rec('planRecords'))?rec('planRecords'):[]},ids().projectId):null;
    const photos=m?m.items.filter(x=>x.kind==='photos'):[],rest=m?m.items.filter(x=>x.kind!=='photos'):[];
    const KIND={recordings:'Recording',notes:'Your note',links:'Link'},IC={recordings:'mic',notes:'note',links:'note'};
-   const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${KIND[x.kind]}</small></li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
+   const jobs=ok(rec('recordings'))?rec('recordings'):null,byJob=new Map((jobs?.jobs||[]).map(j=>[j.sourceId,j])),done=new Set(registeredJobs(rec('tree')));
+   const where=x=>{
+    if(x.kind!=='recordings'||x.recordingId)return '';
+    const job=byJob.get(x.id),v=jobs&&job?recordingView(job,jobs.capability,done.has(job.id)):null;if(!v)return '';
+    const act=v.act==='use'?`<a class="subj-link" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Using the transcript as a source is not built here yet: it opens in Advanced">Use the transcript in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
+    return `<span class="subj-where" data-subj-where>${esc(v.say)}</span>${act}`;
+   };
+   const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
    const tray=photos.length?`<div class="subj-tray">${photos.slice(0,12).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>12?`<span>+${photos.length-12}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
    if(!any)return (!known?reading():'')+ways();
-   return (!known?reading():'')+list+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" href="${handoffHref('material',null)}" title="Opens Material in Advanced">${icon('plus')}Add a recording, note, link or photographs</a>`;
+   return (!known?reading():'')+list+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="Opens Material in Advanced">${icon('plus')}Add a recording, note, link or photographs</a>`;
   }
   function toolTranscript(s,form){
    const plans=rec('planRecords'),flags=[];
@@ -540,6 +576,12 @@
 
   // ---------- doing things ----------
   page.addEventListener('click',e=>{
+   // The ways in open the Capture sheet for this subject when the app has one; without it they open Material in Advanced.
+   const cap=e.target.closest('[data-subj-capture]');
+   if(cap&&typeof v2.capture==='function'){e.preventDefault();const f=st.standing?.facts||{};v2.capture({subject:{id,name:st.standing?.title||'',title:st.standing?.title||'',bindingId:f.bindingId||null,projectId:f.projectId||null}});return;}
+   const rb=e.target.closest('[data-subj-rec]');
+   if(rb){e.preventDefault();if(st.busy)return;const job=rb.dataset.job,action=rb.dataset.subjRec;
+    act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    const b=e.target.closest('[data-subj-step]');
    if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}
    const f=e.target.closest('[data-subj-form]');
