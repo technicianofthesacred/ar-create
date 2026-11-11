@@ -54,6 +54,7 @@ Small and not yet done:
 
 - Home: chip widths 78 against 86; a header's rounding; the Needs you panel's height at 390; a click on Needs you in
   the bar scrolls to the panel where the sample does nothing; the Capture line's wording with no subject open.
+- Research on a phone: a section's "0" count wraps under its heading.
 - Subject: the parts list's width; the content width 996 against 972.
 - Every screen: grey text in the light theme is #5e6257 where the sample has #686c61 (one shell token).
 - Removed to match the sample, and so lost: the studio's "Find a layout" search.
