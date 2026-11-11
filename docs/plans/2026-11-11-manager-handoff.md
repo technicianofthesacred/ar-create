@@ -24,7 +24,7 @@ All AR Create threads were started from the review branch. Use these ids with th
 
 | Thread | Id | Model | Pushes to | State, 11 November | Waiting for |
 |---|---|---|---|---|---|
-| Design round (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high | `claude/ar-create-design-round` | Four directions published as pages: A Board, B Path, C Work, D "Gather, Research, Create, Share". Still active with Adrian; its own status on 11 November reads "slide studio and Looks accepted; Home, subject in review". Very large (near the point where it compacts itself) and by far the most expensive thread, about 328 dollars | Adrian's review of Home and the subject page. Asked on 11 November to write a handoff file at its next pause |
+| Design round, now also the build of version two (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high, directing; Opus and Sonnet workers build and review | Mock-ups: `claude/ar-create-design-round`. Build: `claude/direction-d-build`, cut from `main` | **Direction D chosen** ("Gather, Research, Create, Share"). On 11 November Adrian told that thread: version two is the main app and opens by default, the existing workspace stays as Advanced, build all of it there. Shell, a fuller demo, slide studio and Looks are in; Home, Subject and Research are built and being corrected. Its handoff is `design/2026-11-better-interface/HANDOFF.md`; its contracts are `docs/plans/2026-11-11-direction-d-build.md` and `docs/plans/2026-11-11-version-two.md` on the build branch. Very large and the most expensive thread, about 328 dollars before the build began | Adrian's review of every version two screen. **Do not start another build thread for Direction D** |
 | Demo that walks the whole chain (plan 7) | `session_017kitFeYtEjJcjysfvHwLhn` | Lighter | `claude/ar-create-walkable-demo` | Stopped with a question for Adrian | His answer, in that thread |
 | Screens (plan 5, Stage A only) | `session_017kitFe4zT8nwXTejaJ2Px9` | Lighter | `claude/ar-create-screens` | Stage A built and pushed. Told to stop after Stage A | His approval, in that thread |
 | Wisdom bank A: inventory | `session_017kitFdz6mRmrViNFV4MVnE` | Lighter | `claude/wisdom-bank-inventory` | **Done.** Report merged into the review branch. Could not read i64os | Nothing |
@@ -35,7 +35,7 @@ All AR Create threads were started from the review branch. Use these ids with th
 
 The review thread that started them all, and is the coordinator, is `session_017kitFgZ5x2SMHzVzcAbotm`.
 
-**Every open thread has been told who coordinates** (11 November: the design round, the demo builder, the screens thread and the concept thread). Each was asked to push at a junction and to begin its closing message with one plain line saying what is done and what it is waiting for; that line is what a status call shows. The four finished research threads were not woken. **Tell every new thread the same in its brief**: the coordinator's id, where the handoff file is, the closing-line habit, and that it keeps to its own brief and branch. The threads cannot message the coordinator, so the coordinator checks in.
+**Every open thread has been told who coordinates** (11 November: the design round, the demo builder, the screens thread and the concept thread). Each was asked to push at a junction and to begin its closing message with one plain line saying what is done and what it is waiting for; that line is what a status call shows. The four finished research threads were not woken. **Tell every new thread the same in its brief**: the coordinator's id, where the handoff file is, the closing-line habit, and that it keeps to its own brief and branch. A thread can message the coordinator (the design round did on 11 November), and such a message wakes this thread; the coordinator still checks in, since not every thread will.
 
 ## The research stream (the wisdom bank): how to keep it going
 
@@ -49,7 +49,7 @@ Adrian called this "one of the most important things". The plan is [plan 9](2026
 |---|---|---|---|---|
 | A2 | Read i64os (**done**) | Lighter | Started | The i64os inventory file, now `00b-i64os-inventory.md` |
 | D1 | Interview Adrian, write the concept (running) | Strongest, medium | Started | `docs/research/wisdom-bank/04-concept.md` and a phone page |
-| D2 | Mock-ups of three screens, one direction first, phone first: a source just after distilling, one nugget with its neighbours, the daily return | Strongest, high, strictly bounded (see the rules below) | D1's concept is written and Adrian has read it. Better still, after he has picked a design direction in plan 8, so the bank looks like the same app | Clickable pages and his reaction |
+| D2 | Mock-ups of three screens, one direction first, phone first: a source just after distilling, one nugget with its neighbours, the daily return | Strongest, high, strictly bounded (see the rules below) | D1's concept is written and Adrian has read it. He has picked Direction D, so the mock-ups use its look and sit inside its Research station: the D2 brief names the `d-four-stations` files and the design handoff as its only design reading | Clickable pages and his reaction |
 | D3 | Foundations: one short design note on what a nugget is on disk, how links are recorded, how the exact words stay tied to the source, how it is found by meaning, how agents read and propose | Strong, medium, short | D2's direction is chosen | `05-foundations.md` |
 | Build | One plan per thread: capture and distil; the nugget and its check against the transcript; returning; links and the map; the way out | Lighter | D3 is accepted | Each with before and after pictures |
 
@@ -67,21 +67,25 @@ Adrian called this "one of the most important things". The plan is [plan 9](2026
 
 ## The app stream: what happens next
 
+Adrian chose Direction D on 11 November and told the design round to build it in its own thread as "version two", under `public/v2/`, with the existing workspace kept as Advanced. So the earlier plan (a build sheet, then separate builders) is withdrawn. The coordinator's work here is to keep the other threads from colliding with that build and to check its result against the review.
+
 | When | Next step | Model |
 |---|---|---|
-| Adrian picks a design direction | A fresh thread writes the build sheet for the chosen direction (each screen with sizes, states and target pictures), reading only the chosen mock-up files and plan 8. The design round thread is then closed | Strongest, one short thread |
-| The build sheet exists and the demo (plan 7) is done | Builders, one plan per fresh thread, one after another where files overlap: the subject page with plan 1, then Home, then Write with plan 2 | Lighter |
-| Then | Plan 3 (one source list): a short design note first, then a builder | Strong for the note, lighter to build |
+| Version two's four screens are linked (the design round says so in its closing line) | A small fresh thread walks the review's journey (Part 1) on the version two demo with `scripts/review-journey.mjs` and `scripts/review-screens.mjs`, and reports which root problems (R1 to R3) and findings (U1 to U25) are closed, open, or moved to Advanced. Pictures stay in that thread; it publishes one page for Adrian | Lighter |
+| The wisdom bank concept is written | Send it to the design round, so Research leaves a place for the nugget and does not invent one | Coordinator |
+| Adrian answers the demo builder | If he wants it: check it against version two's own fuller demo (`npm run demo:fill`) first, so the chain from a recording to a checked piece is not built twice | Lighter |
 | Adrian decides where the work lives when the Mac is off | Plan 6, stage 0 (measuring) | Lighter |
+
+**Overlaps to watch.** Plans 1, 2 and 3 were written for the existing workspace; version two may close them by design or leave them in Advanced, which the journey walk will tell. Plan 5 (screens) now concerns Advanced only; its Stage A is built and awaiting approval, and its later stages are withdrawn. Plan 7 (the walkable demo) overlaps in part with version two's fuller demo. Version two's Research station (topics, groups of sources) and the wisdom bank are the same territory: one home.
 
 ## Decisions still with Adrian
 
-- His choice of design direction (plan 8), and one or two references he finds classy.
+- His review of the version two screens, in the design round thread. (His choice of direction is made: Direction D.)
 - His answer to the demo thread's question, and his approval of the screens thread's Stage A.
 - The nine decisions in the review's "Decisions that belong to Adrian", including where the work lives when the Mac is off.
-- Whether AR Create is the home of the wisdom bank (suggested yes).
+- Whether the wisdom bank lives inside version two's Research station (suggested yes; the concept thread will ask him).
 - Merging pull request 233.
-- Whether to wind down the design round thread once he has chosen.
+- Whether the build should move out of the very large design round thread into a fresh director thread that starts from its handoff file (suggested yes at the next natural pause, for cost; his call, since he told that thread to build there).
 
 ## How to run this cheaply and well
 
