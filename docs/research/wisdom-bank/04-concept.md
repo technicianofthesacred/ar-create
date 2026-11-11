@@ -83,7 +83,7 @@ Five doors, in the order your answers put them.
 The three traps, answered directly:
 
 - **Collecting without returning.** Every door ends in something made: a pathway, a response, an accepted link or the start of a piece. Capture also gives something back at once, the source page, so putting things in is already a first return.
-- **Maps nobody uses.** Every work has its own map of all its concepts, and every concept shows its neighbours, so a map is always about something you are looking at. Every line can be tapped and says why it exists, and the map is how you move from one concept to the next. A single map of the whole bank is the one still to decide.
+- **Maps nobody uses.** Every work has its own map of all its concepts, and every concept shows its neighbours, so a map is always about something you are looking at. Every line can be tapped and says why it exists, and the map is how you move from one concept to the next. The map of the whole bank is described under Connecting.
 - **Summaries that flatten.** Every concept opens onto the exact words that carry it, and a work keeps all of its concepts, so nothing is lost to a short summary. A distillation says it is one. A lens reading names its lens. Your response is yours. The source page keeps each concept attached to the rest of its work, and the "prepares" link below keeps a concept attached to what must come before it.
 
 ## Connecting
@@ -99,6 +99,19 @@ Five kinds, kept few on purpose:
 - **Mine**: your own link, with your own words on it.
 
 A **pathway** is a named line of nuggets in an order you chose, with your words between them. In version two it is the same thing as a research topic. The map is for four things: seeing what one idea goes into, walking from idea to idea, finding the missing step (a gap in a pathway becomes a research question, such as how Vajrayana arrives at "everything is perfect"), and feeling the whole thing join up over time.
+
+### The whole map: the big brain
+
+Asked whether you want one map of everything, you answered on 11 November: "Yes, I like the conceptual mind map if there's multiple concepts of how they all interconnect to each other. And those interconnections interconnect to other interconnections. This is like a big brain, this needs a bit of thought of how to do this properly."
+
+So the whole map is part of the concept, and it is the hardest part to do well. What is settled, and what still needs thought:
+
+- **Settled: one map of the whole bank exists**, alongside the map of each work.
+- **Settled: a connection is a thing in its own right.** It has a kind, a reason, your words and its own resonance, and it can be connected to another connection. Example: the way a practice prepares an idea in one tradition can echo the way a practice prepares an idea in another. That is a pattern between two connections, and the bank can hold it.
+- **Needs thought: how it stays usable as it grows.** A first proposal for the mock-up thread to test: the map has depths, like looking closer. From far away you see traditions and works as regions. Closer, the concepts and the lines between them. Closer still, one concept with its passages. It always opens centred on where you were, the most resonant concepts and connections are brightest, and you can narrow it to one topic, one work or one kind of line.
+- **Needs thought: how a connection between connections is drawn** so it can be seen and followed without becoming a tangle.
+
+This deserves its own short design study, after the three screens below and before anything is built.
 
 ## Leaving
 
@@ -141,7 +154,7 @@ The coordinating thread reports that version two's Research has topics and group
 
 ## What to borrow and what to build
 
-**Build**, because nobody offers it: the nugget as a concept with its checked words gathered inside; lens readings; links with kinds that you accept; the pathway; the way out to a piece with sources shown.
+**Build**, because nobody offers it: the nugget as a concept with its checked words gathered inside; connections that are things in their own right; the whole map; lens readings; links with kinds that you accept; the pathway; the way out to a piece with sources shown.
 
 **Borrow:**
 
@@ -170,7 +183,7 @@ Phone first. Filled with lifelike nuggets, never empty.
 2. **Books.** How do they reach the bank: an ebook file, your Kindle highlights, photographs of pages, an audiobook?
 3. **Friends.** Will their ideas arrive as recordings or from your memory, and do you want to ask each friend once or each time before quoting them in public?
 4. **A few today.** Do you want it at all, or only the doors you open on purpose?
-5. **The whole map.** Do you want one view of everything at once, knowing it is for feeling the bank grow more than for finding things?
+5. **The whole map.** Answered: yes, you want it. How to do it properly is the open design work, described under Connecting.
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
 8. **The same concept in two works.** When two works carry the same concept, do they stay two nuggets joined by an "echoes" link, each true to its own source, or become one concept holding passages from both?
