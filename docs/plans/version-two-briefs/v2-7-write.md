@@ -82,3 +82,65 @@ with `AR_CREATE_URL=http://127.0.0.1:<your port> npm run demo:fill`. Stop it whe
 What now works on screen and through which commands; the address you chose; files changed; every part shown as not
 built yet and why; anything in the sample you could not match and why; test results with the names of any failures;
 where the contact sheet is; anything you were unsure of. Plain sentences, no pasted code.
+
+---
+
+# Piece 7b: corrections to Write after review (11 November)
+
+For a fresh builder. The first build is one commit in the builder's worktree. Read the brief above first; everything in
+it still holds. Work in the same worktree, add one commit on top, do not push.
+
+You may also touch, beyond the files listed above: `public/v2/shell/client.js` for correction 3 only, with a test for
+it in `tests/v2-shell.test.mjs`; and `tests/v2-subject.test.mjs` where the Write hand-off is asserted.
+
+## Must be right before it merges
+
+1. **Words typed during a save are lost.** Typing into a new paragraph while its first save is in flight loses the
+   extra words from the page, the server and the device (`adopt()` drops the new paragraph when the server returns
+   it). A sent paragraph whose text changed meanwhile must become an edit of the now-saved paragraph. No keystroke may
+   ever be dropped, whatever the timing. Also: a change that arrives from the stream while a save is running is
+   dropped today; it must be shown after the save.
+2. **An assistant's typing can come back as his.** Opened as `?reviewActor=agent:...`, typed words are kept on the
+   device under the same key and are restored and saved as his when he opens the page. Keep and restore unsaved words
+   only for the human, and make the paragraphs read-only for an assistant (proposals are how an assistant writes).
+3. **"Adrian has unsaved words open" is never reported.** `presence.post` answers 400 because `v2.call` adds an
+   `operationId`. In `public/v2/shell/client.js`, leave `presence.post` out of the automatic `operationId` (the
+   smallest change that does it), and prove it against the real server in a test.
+
+## Should
+
+4. Emptying a paragraph gets a 409 that the screen shows as "A newer version is saved", and "Keep my words" repeats
+   it. Treat a 409 as a newer version only when the fresh read's revision differs; otherwise show the server's words.
+5. Join and delete in place. `study-draft.save` already takes a join (left and right paragraph) and a delete; the
+   existing workspace builds both. Backspace at the start of a paragraph: save, then join. An emptied paragraph:
+   delete. With Undo where the existing workspace offers it.
+6. Whole-draft suggestions in place. Read-through suggestions are decided with `study-ai.finish` (his edits and "Not
+   me" marks), opening options with `study-ai.accept` plus an `optionId`. The demo's own suggestions are read-through
+   ones, so today they never get a decision in version two. Show them where the sample shows suggestions ("Rewrite it
+   as mine", "Not me"). If one kind truly cannot be done well in this pass, leave its Open in Advanced and say so.
+7. Undo after Accept must undo that accept (find it by its own operation), not the last undoable entry.
+8. A piece that belongs to another subject, or an unknown piece id, must say so plainly, not quietly open this
+   subject's first Article. Two Articles of one subject must be told apart in the tabs by their titles.
+9. Tests against the real server, not stubs, for: presence, typing during a save, an assistant's words never kept.
+
+## The look, measured against the sample
+
+10. **The page itself keeps the approved Write page's look**, and here it is exempt from the six sizes: use exactly
+    what the existing workspace's Write page uses for its title and body at 1440 and 390 (measured: body 16.5px with a
+    line of about 28px, title 17px semibold, column 700 wide), taken from the same theme variables the existing page
+    uses if `c3-theme.css` offers them. If a test forbids a size outside the six, do not weaken it: say so in your
+    report and use 18 for the title at weight 600 and 18 for the body with line height 1.58.
+11. Everything around the page follows the sample: the sub bar is 40px tall (not 47); its tabs are 13px; Ask and Focus
+    are 28px tall; the Sources button's colours are the wrong way round in both themes (sample, dark theme: a dark
+    pill, rgb 48 53 45, with light text).
+12. The editing boxes must sit exactly on the text column: today they start 14px left of it and are 24px wider at
+    1440, and start at x4 against a column at x18 on a phone.
+13. "Saved" reads as the sample's does, with the day when it was not today ("Saved 10 Nov, 13:52").
+14. Sources rows follow the sample's rows (50px tall, icon, text at the sample's inset). No photo tile where there is
+    no photograph.
+15. "Still to write" says "Not built yet" once, with one "Open in Advanced".
+16. On a phone the sample has no "Saved" line under the bar. Keep it, as small and quiet as it can be: he needs to
+    know his words are saved. It is recorded as a difference left on purpose.
+
+Finish as the brief above says, with a fresh contact sheet at
+`<scratchpad>/write-build/contact-write-2.png`, and stop every server you start (if a stop is refused, say so).
