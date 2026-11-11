@@ -244,24 +244,35 @@ test('Home keeps to the look: its own class on every rule, the six sizes, tokens
  assert.doesNotMatch(js,/\bfetch\(/,'commands only, through the shell');
 });
 
-test('Home keeps the desk and the folders apart, takes quick presses in turn, and files a moved subject last',async t=>{
+test('Home keeps the desk and the folders apart, takes three quick presses by click and by keys in turn, and files a moved subject last',async t=>{
  const f=await server(t);await world(f);
  const placeOf=async id=>(await f.agent('/api/subject-places?parentStudyId='+id)).places[0];
  // Three on the desk, and Tea holding three in a known order.
  const p=await placeOf('inv-cups');await f.agent('/api/subject-places/save',{parentStudyId:'inv-cups',expectedRevision:p.revision,expectedHash:p.hash,pinned:true});
  const tea=['inv-river','inv-cups'];const rows=[];for(const id of tea)rows.push(await placeOf(id));
  await f.agent('/api/subject-places/reorder',{items:rows.map(r=>({parentStudyId:r.parentStudyId,expectedRevision:r.revision,expectedHash:r.hash}))});
+ await f.agent('/api/study-draft/create-collection',{parentStudyId:'inv-lake',title:'Invented lake'});
+ {const q=await placeOf('inv-lake');await f.agent('/api/subject-places/save',{parentStudyId:'inv-lake',expectedRevision:q.revision,...(q.saved?{expectedHash:q.hash}:{}),pinned:true});}
  const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url)});
- await until(()=>doc.querySelectorAll('.home-card').length===3,'the desk');
+ await until(()=>doc.querySelectorAll('.home-card').length===4,'the desk');
  const deskIds=()=>[...doc.querySelectorAll('.home-card')].map(c=>c.dataset.id);
- const start=deskIds(),last=start[2];
- // Three quick Move up presses on the last card: it ends first, and the other two keep their order.
- const up=()=>[...doc.querySelectorAll('.home-card')].find(c=>c.dataset.id===last).querySelector('[data-v2-up]');
- click(w,up());click(w,up());
+ const start=deskIds(),last=start[3];
+ const cardOf=id=>[...doc.querySelectorAll('.home-card')].find(c=>c.dataset.id===id);
+ // Three quick Move up presses by click on the last card: it ends first, and the others keep their order.
+ for(let i=0;i<3;i++)click(w,cardOf(last).querySelector('[data-v2-up]'));
+ assert.deepEqual(deskIds(),[last,start[0],start[1],start[2]],'every press counted on screen');
  await until(async()=>(await placeOf(last)).deskOrder===0,'the presses to be saved');
- assert.deepEqual(deskIds(),[last,start[0],start[1]]);
- const saved=await Promise.all(start.map(placeOf));
- assert.deepEqual(Object.fromEntries(saved.map(x=>[x.parentStudyId,x.deskOrder])),{[last]:0,[start[0]]:1,[start[1]]:2});
+ await until(async()=>(await placeOf(start[2])).deskOrder===3,'the last press to be saved');
+ let saved=await Promise.all(start.map(placeOf));
+ assert.deepEqual(Object.fromEntries(saved.map(x=>[x.parentStudyId,x.deskOrder])),{[last]:0,[start[0]]:1,[start[1]]:2,[start[2]]:3});
+ // Three quick presses by keys (Alt with an arrow key on the card's Move button) take it back down, and focus stays there.
+ const btn=cardOf(last).querySelector('[data-v2-down]');btn.focus();
+ for(let i=0;i<3;i++)btn.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowDown',altKey:true,bubbles:true,cancelable:true}));
+ assert.deepEqual(deskIds(),start,'three presses by keys counted on screen');
+ assert.ok(cardOf(last).contains(doc.activeElement),'focus stays on the same card');
+ await until(async()=>(await placeOf(last)).deskOrder===3,'the key presses to be saved');
+ saved=await Promise.all(start.map(placeOf));
+ assert.deepEqual(Object.fromEntries(saved.map(x=>[x.parentStudyId,x.deskOrder])),{[start[0]]:0,[start[1]]:1,[start[2]]:2,[last]:3});
  // The folder order is untouched by the desk.
  assert.deepEqual([(await placeOf('inv-river')).order,(await placeOf('inv-cups')).order],[0,1]);
  // Filing a subject into another folder puts it last there.
@@ -305,4 +316,22 @@ test('Home: an answered question stays where it was; archive from the row menu w
  const note=await until(()=>[...doc.querySelectorAll('#v2-messages .v2-msg')].find(m=>/archived/.test(m.textContent)),'the Undo note');
  click(w,[...note.querySelectorAll('button')].find(b=>/Undo/.test(b.textContent)));
  await until(async()=>!(await placeOf('inv-cups')).archived,'Undo');
+});
+
+test('Home as an assistant says why the answers are greyed, in a visible line; covers view with no photograph is a plain card; the look dot names its look',async t=>{
+ const f=await server(t);await world(f);
+ const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url),hash:'?reviewActor=agent:codex#/'});
+ await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ const buttons=[...doc.querySelectorAll('.home-needs [data-ask-choice]')];
+ assert.ok(buttons.length&&buttons.every(b=>b.disabled),'the choices are greyed for an assistant');
+ const reason=doc.querySelector('.home-needs .home-reason');
+ assert.ok(reason&&/Only Adrian answers these/.test(reason.textContent),'the reason is a line on the page, not only a tooltip');
+ click(w,doc.querySelector('[data-view="covers"]'));
+ const covers=[...doc.querySelectorAll('.home-cover')];assert.ok(covers.length);
+ for(const c of covers){
+  const pic=c.querySelector('.home-cover-pic');assert.ok(!pic||pic.hidden,'no empty picture box when there is no photograph');
+  assert.equal(c.querySelector('.home-cover-pic .v2-ring'),null,'no ring in a picture box');
+  assert.ok(c.querySelector('[data-row-menu]')&&c.querySelector('[data-pin]'),'the menu sits beside the pin, as in rows');
+ }
+ assert.doesNotMatch(read('public/v2/screens/home.js'),/Drawn in the \$\{esc\(id\)\}/,'the dot says the look\'s name, not its id');
 });
