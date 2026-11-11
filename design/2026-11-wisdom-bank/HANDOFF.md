@@ -162,3 +162,28 @@ What it means (my reading, not his words):
 - **His voice goes in at every depth.** One button, anywhere in the reading, to speak an insight or an experience. His words stay visibly his, dated, and sit inside the concept at the place he spoke them, so the concept becomes a mix of the source's teaching and his own learning: in his phrase, "a hybridized reading guide".
 - **It is his education, not a collection.** The bank records his learning and growth, not only other people's words. Nothing is dumbed down, and the larger material is always reachable.
 - **For plan 12:** besides the huge map, it needs one concept drawn all the way down as a long, comfortable reading page with those sections, real length, and the voice button in place.
+
+**11 November, asking for another pass, in his words:**
+
+"This is a education as well as a collection. In the process of educating myself, I'm using it to educate other people. This is a beautiful interactive education of building knowledge systems that are relevant to myself, consuming the content and downloading this into my brain and should be built as a new style of actually learning and education state of the art where instead of AI curating everything it's being curated by what I find relevant and holding it into this massive infinitely growing textbook of beliefs, connections, resonances, and truth, if that makes sense. Maybe you could do a another pass now that you're starting to understand this more, not just about how to organize it, but how to design for this level of things and what c other useful features would be included into the interface of something that would be this potent and powerful."
+
+## Third pass, 11 November, at his direct request
+
+Same link, same file. The coordinating thread had asked for no further passes here; this one was made because Adrian asked for it directly.
+
+- **A new screen, "Read"**: one concept all the way down, as a long reading page. Reached from the Nugget screen's "Read" button and from the mock-up switch. Only "You are already whole" has it.
+  - The small view at the top as a plain statement (style A, his choice).
+  - Five sections at the length they need, in the order he gave: What it is, What you do with it, How you embody it, Understanding it more deeply, How it can be misunderstood. Their exact words sit inside each section on their own surface.
+  - **"Add your voice here" under every section.** What he says appears in place, dated, in a warm outline that marks it as his.
+  - **Where you are with this**: Met it, Understand it, Practising it, Can teach it. His own mark of his learning, separate from resonance.
+  - **Try it**: one practice with "I tried this", kept as an experience.
+  - **Say it back**: he says the concept in his own words and is shown what he covered and what he has not yet said. The result in the mock-up is fixed text, not a real reading of what he typed.
+  - **Underlined ideas inside the prose** lead to their own concepts, and "Further down" lists the next ones with their small views.
+  - **Pass it on**: "Make a lesson from this" and "Use it in a piece", for teaching others.
+- **All nine sample concepts rewritten plainly.** Each has a short name for the map ("Kindness first") and a full plain name and sentence everywhere else ("Kindness comes first. Before you take up this teaching, you treat people well..."). The reasons on the lines are rewritten as sentences a person would say.
+
+Checked: all five screens at 390 dark for sideways scrolling (none), the Read screen pictured at 390 dark. 390 light and 1440 were captured but only measured, not looked at.
+
+Features proposed to him in the conversation and not drawn: a "what I believe" mark beside resonance; a timeline of his own understanding of one concept; lessons and courses built from a line of concepts; listening to a concept read aloud with the original voices; a notebook of every voice note across the bank; disagreement kept visible between sources and between him and a source.
+
+Still invented: everything, including the long reading of "You are already whole", which is written as the distillation of an invented talk. It uses the term "Buddha nature" because he did; the wording of any real teaching must come from real sources and from him.
