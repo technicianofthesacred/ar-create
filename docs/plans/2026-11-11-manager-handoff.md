@@ -21,7 +21,13 @@
 - Shell commands for him, if ever needed: one command per block, no comment lines, nothing to hand-edit.
 - He often dictates by voice, so his messages can be loosely worded. Quote his words exactly when recording a decision.
 
+## Focus, set by Adrian on 11 November
+
+"Let's stay focused on the AR Create. The wisdom bank is a whole nother beast. It is a part of AR Create, but AR Create is the main thing I want to be building." So the build of version two is the work. **The wisdom bank is parked**: every one of its threads is closed, nothing of it is built, and its state is on one page, [where it stands](../research/wisdom-bank/07-where-it-stands.md). Do not start wisdom bank threads, and do not bring it up with him, until he says so.
+
 ## Threads
+
+Open threads on 11 November after the parking: the version two director, and the demo builder (one decision left). Every row below that names the wisdom bank is closed, whatever its state cell says.
 
 All AR Create threads were started from the review branch. Use these ids with the session tools.
 
@@ -43,11 +49,13 @@ All AR Create threads were started from the review branch. Use these ids with th
 
 The review thread that started them all, and is the coordinator, is `session_017kitFgZ5x2SMHzVzcAbotm`.
 
-**Closed (archived) on 11 November, at Adrian's word to close what he no longer needs:** wisdom bank A, B, C and A2, the screens thread, and the design round ("close the design round"; its final cost was about 370 dollars). Their documents are merged or copied here, their pages stay online, and a closed thread can be reopened. The screens thread's last status held a question to Adrian ("Do you want to take either of those?"); he was told, and it can be reopened if he wants to answer. Still open: the version two director, the concept thread (until he has answered its questions), thread E, the mock-ups thread, and the demo builder (one decision; close at his word).
+**Closed (archived) on 11 November, at Adrian's word to close what he no longer needs:** wisdom bank A, B, C and A2, the screens thread, and the design round ("close the design round"; its final cost was about 370 dollars). Their documents are merged or copied here, their pages stay online, and a closed thread can be reopened. The screens thread's last status held a question to Adrian ("Do you want to take either of those?"); he was told, and it can be reopened if he wants to answer. Later the same day the wisdom bank was parked and its five remaining threads were closed too (concept, mock-ups, huge map, one surface, map survey). Still open: the version two director and the demo builder.
 
 **Every open thread has been told who coordinates** (11 November: the design round, the demo builder, the screens thread and the concept thread). Each was asked to push at a junction and to begin its closing message with one plain line saying what is done and what it is waiting for; that line is what a status call shows. The four finished research threads were not woken. **Tell every new thread the same in its brief**: the coordinator's id, where the handoff file is, the closing-line habit, and that it keeps to its own brief and branch. A thread can message the coordinator (the design round did on 11 November), and such a message wakes this thread; the coordinator still checks in, since not every thread will.
 
-## The research stream (the wisdom bank): how to keep it going
+## The research stream (the wisdom bank): PARKED on 11 November
+
+**Parked at Adrian's word. Start from [where it stands](../research/wisdom-bank/07-where-it-stands.md) when he reopens it. What follows is the record of how it ran, kept for that day; none of its "next steps" are live.**
 
 Adrian called this "one of the most important things". The plan is [plan 9](2026-11-11-09-wisdom-bank-inquiry.md); the findings so far are on [one page](../research/wisdom-bank/03-synthesis.md).
 

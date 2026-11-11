@@ -20,6 +20,8 @@ Nine plans, each written so a builder can start without the chat they came from.
 
 Decision numbers are those in the review's "Decisions that belong to Adrian".
 
+**Plans 9, 11, 12 and 13 (the wisdom bank) are parked** since 11 November, at Adrian's word; see [where it stands](../research/wisdom-bank/07-where-it-stands.md). The work now is the build of version two (plans 8 and 10).
+
 ## Order
 
 - **Plan 7 first.** It is small, changes nothing Adrian sees in his own app, and removes the blind spot every later plan would otherwise share: nobody off the Mac can test the chain from a recording to a checked piece.

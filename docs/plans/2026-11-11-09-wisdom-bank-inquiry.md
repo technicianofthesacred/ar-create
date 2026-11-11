@@ -1,6 +1,6 @@
 # Plan 9: the wisdom bank, an inquiry before any building
 
-**Status.** An inquiry. The three discovery threads reported on 11 November; their reports and a one-page synthesis are in `docs/research/wisdom-bank/`. i64os has since been read too (`00b-i64os-inventory.md`), and the concept is written from an interview with Adrian: `docs/research/wisdom-bank/04-concept.md`. The brief for the mock-ups is [plan 11](2026-11-11-11-wisdom-bank-mockups-brief.md). Nothing is designed or built. The running state is kept in the [manager handoff](2026-11-11-manager-handoff.md). Written 11 November 2026 from Adrian's words, with a first quick look at what already exists.
+**Status.** **Parked on 11 November 2026 at Adrian's word, to keep the focus on building AR Create.** Its state is on one page: [where it stands](../research/wisdom-bank/07-where-it-stands.md). Before that: an inquiry. The three discovery threads reported on 11 November; their reports and a one-page synthesis are in `docs/research/wisdom-bank/`. i64os has since been read too (`00b-i64os-inventory.md`), and the concept is written from an interview with Adrian: `docs/research/wisdom-bank/04-concept.md`. The brief for the mock-ups is [plan 11](2026-11-11-11-wisdom-bank-mockups-brief.md). Nothing is designed or built. The running state is kept in the [manager handoff](2026-11-11-manager-handoff.md). Written 11 November 2026 from Adrian's words, with a first quick look at what already exists.
 
 ## What Adrian asked for, in his words
 
