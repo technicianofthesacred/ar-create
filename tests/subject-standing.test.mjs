@@ -12,7 +12,7 @@ import {createSubjectStanding} from '../runtime/services/subject-standing.mjs';
 import {syntheticHome} from '../scripts/demo.mjs';
 import {fillDemo} from '../scripts/demo-fill.mjs';
 
-const ONLY = ['an-old-idea-set-aside', 'questions-for-the-grower', 'water-and-leaf', 'a-teapot-for-guests', 'picking-before-dawn', 'shade-and-patience', 'the-first-cup', 'straw-over-the-rows'];
+const ONLY = ['market-morning', 'an-old-idea-set-aside', 'questions-for-the-grower', 'water-and-leaf', 'a-teapot-for-guests', 'picking-before-dawn', 'shade-and-patience', 'the-first-cup', 'straw-over-the-rows'];
 const AGENT = {'X-AR-Actor': 'agent:claude-code', 'X-AR-Client': 'http'};
 
 test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fresh after a write', {timeout: 300000}, async t => {
@@ -95,6 +95,18 @@ test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fr
  assert.ok((await get('/api/subjects/standing')).subjects.every(s => s.published === null && s.station !== 'published'));
  assert.equal(cup.forms[0].steps.find(s => s.id === 'publish').state, 'unknown');
 
+ // A piece made the way the Subject screen's Add a form makes it (study.outputs.create, kind post, from the subject's
+ // own writing place) is counted at once, in the one subject and in the list.
+ const mm = (await get('/api/study-draft/catalog')).collections.find(c => c.parentStudyId === 'demo-market-morning');
+ const mmScope = {rootBindingId: mm.bindingId, parentStudyId: 'demo-market-morning'};
+ assert.deepEqual((await get('/api/subject/standing?parentStudyId=demo-market-morning')).forms, []);
+ const [mmNative, mmOuts] = await Promise.all([get('/api/study-draft/read?' + new URLSearchParams({bindingId: mm.bindingId, parentStudyId: 'demo-market-morning'})), get('/api/study/outputs?' + new URLSearchParams(mmScope))]);
+ const made = await post('/api/study/outputs/create', {...mmScope, kind: 'post', sourceBindingId: mm.bindingId, expectedNative: mmNative.expected, expectedOutput: mmOuts.expectedOutput, operationId: crypto.randomUUID()}, 'human:adrian');
+ const mmOne = await get('/api/subject/standing?parentStudyId=demo-market-morning');
+ assert.deepEqual(mmOne.forms.map(f => [f.name, f.id]), [['Post', made.view.output.id]]);
+ assert.ok(!mmOne.steps, 'no "Choose a form" once it has one');
+ assert.deepEqual((await get('/api/subjects/standing')).subjects.find(s => s.id === 'demo-market-morning').forms.map(f => f.name), ['Post']);
+
  // A Carousel-only subject: its plan is its one form, with real steps, reaching Write, Read and Check.
  const plan = await post('/api/instagram/plan', {operationId: crypto.randomUUID(), subject: 'demo-a-teapot-for-guests', title: 'An invented plan', door: 'teajia'});
  const teapot = await get('/api/subject/standing?parentStudyId=demo-a-teapot-for-guests');
@@ -134,6 +146,10 @@ test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fr
 // A read that fails, and a subject long untouched, with stand-in owners holding invented records.
 test('a failed read is Not known and never nothing; a subject untouched for months rests', async () => {
  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'standing-')), B = '0b5e3a3c-1f1e-4c7a-9f00-000000000001';
+ // Its writing place lists one piece in the output index, so the output owner is asked (and, in the first case, fails).
+ const P = '0b5e3a3c-1f1e-4c7a-9f00-000000000002', D = '0b5e3a3c-1f1e-4c7a-9f00-000000000003', sha = v => crypto.createHash('sha256').update(v).digest('hex');
+ fs.mkdirSync(path.join(dir, 'study-owned-photo-bindings')); fs.writeFileSync(path.join(dir, 'study-owned-photo-bindings', B + '.json'), JSON.stringify({bindingId: B, parentStudyId: 'invented', projectId: P, documentId: D}));
+ fs.mkdirSync(path.join(dir, 'articles', sha(P), sha(D)), {recursive: true}); fs.writeFileSync(path.join(dir, 'articles', sha(P), sha(D), 'article.json'), JSON.stringify({project: {document: {nativeOutputIndex: {records: [{outputId: 'o1'}]}}}}));
  const owners = (outputs, modifiedAt) => createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
   drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [{parentStudyId: 'invented', bindingId: B}], drafts: []}), read: async () => ({projection: [{words: 'Invented words.'}], expected: {v: 1}, history: [{modifiedAt}]})},
   outputs: {read: outputs}, checks: {read: async () => null}, consentDesk: {read: async () => ({people: [], release: {}})},

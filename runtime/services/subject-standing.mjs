@@ -17,8 +17,8 @@
 //   the words, suggestions waiting            the saved writing; suggestion folders indexed once for all; the
 //                                             proposal owner only for a subject with one made on its current words
 //   check                                     the saved Check
-//   pieces                                    the saved outputs (read only for a writing place the catalogue
-//                                             lists an output binding for), and Instagram plans (listed once)
+//   pieces                                    the saved outputs (read only for a writing place whose output
+//                                             index lists one), and Instagram plans (listed once)
 //   consent                                   the consent desk
 //   word checks, open questions, places,      each listed once for all and kept until a change of its kind
 //   research topics
@@ -103,14 +103,32 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  /** Every subject: the saved collections, then working drafts that belong to none. */
  async function list() {
   const catalog = await sharedRead('catalog'), out = [], seen = new Set();
-  // A writing place holds pieces only once its first piece registered an output binding (the catalogue lists them).
-  const bound = new Set((catalog?.outputBindings || []).map(b => b?.parentStudyId + '\0' + b?.bindingId));
-  for (const c of catalog?.collections || []) {const id = c?.parentStudyId; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(c.title || '').trim() || 'Untitled subject', bindingId: c.bindingId || null, pieces: bound.has(id + '\0' + c.bindingId)});}
+  for (const c of catalog?.collections || []) {const id = c?.parentStudyId; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(c.title || '').trim() || 'Untitled subject', bindingId: c.bindingId || null});}
   for (const d of catalog?.drafts || []) {const id = d?.parentStudyKey; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(d.title || '').trim() || 'Untitled subject', bindingId: null, draft: {id: d.id, title: d.title, modifiedAt: d.modifiedAt || null}});}
   return out;
  }
 
  // ---------- one subject's facts ----------
+ /** Whether a writing place holds any piece, from the one index every piece is listed in, whatever made it (Outputs,
+     Add a form, a generated or copied Carousel): the output owner's own records, in the article document its
+     photo binding names (study-owned-photo-bindings/<binding>.json -> articles/<project>/<document>/article.json,
+     document.nativeOutputIndex). No photo binding or document means no piece can exist yet. When the index cannot be
+     read for another reason, the answer is yes, so the owner itself is asked and nothing is hidden. */
+ function outputIndexHolds(parentStudyId, bindingId) {
+  try {
+   const m = readJson(path.join(dataDir, 'study-owned-photo-bindings', bindingId + '.json'), null);
+   if (!m) return false;
+   if (m.bindingId !== bindingId || m.parentStudyId !== parentStudyId || !UUID.test(m.projectId || '') || !UUID.test(m.documentId || '')) return true;
+   const a = readJson(path.join(dataDir, 'articles', digest(m.projectId), digest(m.documentId), 'article.json'), null);
+   if (!a) return false;
+   const doc = a.project?.document, index = doc?.nativeOutputIndex;
+   if (!doc) return true;
+   // No index yet: the owner lists pieces only from it, so none; a document still holding outputs is asked anyway.
+   if (index === undefined) return Array.isArray(doc.outputs) ? doc.outputs.length > 0 : true;
+   return !Array.isArray(index?.records) || index.records.length > 0;
+  } catch {return true;}
+ }
+
  const kindOf = s => {
   const k = String(s?.kind || '').toLowerCase();
   if (['image', 'photo', 'photograph', 'picture', 'photos'].includes(k) || /\.(jpe?g|png|heic|webp|gif|tiff?)$/i.test(s?.rel_path || '')) return 'photos';
@@ -139,7 +157,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const planRecords = mine ? (await Promise.all(mine.map(p => quiet(timed('plan', () => instagram.read({id: p.id})))))) : null;
   // Pieces: the saved outputs of its writing place, then its plans.
   let pieces = [];
-  if (bindingId && subject.pieces) {
+  if (bindingId && outputIndexHolds(id, bindingId)) {
    const view = await quiet(timed('outputs', () => outputs.read({rootBindingId: bindingId, parentStudyId: id})));
    if (view) for (const o of view.outputs || []) {pieces.push({key: 'out:' + o.id, id: o.id, kind: o.kind, title: o.title || o.name || '', status: o.status || null, placements: (o.placements || []).length, slides: (o.slides || []).length}); times.push(o.createdAt, o.updatedAt);}
    else pieces = null;
@@ -271,7 +289,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const place = placeList?.find(p => p.parentStudyId === subject.id);
   const folder = deps.projectId ? (lib?.byFolder.get(deps.projectId) || []).map(s => s.id + ':' + s.hash) : [fs.existsSync(path.join(dataDir, 'study-project-bindings', digest(subject.id) + '.json'))];
   const keys = new Set(deps.sources || []);
-  return JSON.stringify([subject.bindingId, subject.pieces, subject.title, subject.draft?.modifiedAt || null,
+  return JSON.stringify([subject.bindingId, subject.title, subject.draft?.modifiedAt || null,
    planList ? planList.filter(p => p.subject === subject.id).map(p => p.id + ':' + p.revision) : null,
    reqs ? (reqs.get(subject.bindingId)?.pending || []).map(x => x.id) : null,
    place ? [place.folder, place.archived, place.updatedAt] : null,
