@@ -18,6 +18,7 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Advanced lands on the right section | In, reviewed |
 | Write inside version two (stage 1) | In, reviewed three times, corrections made |
 | Read and Check inside version two (stage 2) | In, reviewed twice, corrections made |
+| Capture inside version two (stage 3) | In, reviewed three times, corrections made |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -159,12 +160,45 @@ Adrian was sent a picture of each beside the existing screen. He has not yet sai
 - The whole suite on this branch: only the known failures (the photo inspect test, and the three page tests named
   below).
 
+### 7c. Capture (stage 3, merged 11 November)
+
+Adrian was sent pictures of the sheet beside the sample and of the subject page. He has not yet said yes to them.
+
+- **To check on his Mac, first**: the demo has no transcription tools, so three things were seen only against a
+  stand-in: a transcript starting after Speak, the states "transcript being made" and "ready" on the subject, and
+  "Use the transcript" (`transcript-check.id`, then `recordings.source`, human only). Record a few words in a real
+  subject and follow them to a source.
+- **No Undo for a recording, photograph or thought**: no command removes a source. A question a human asked has Undo.
+- **No inbox**: with no subject open a capture goes to the Library root, "to file later". Nothing in version two
+  files it afterwards yet; that is done in Advanced (Library).
+- **Filing order**: `study.material.attach` first, then `first-flow.attach` (which answers 409 in the demo unless the
+  subject is the server's selected project). The existing workspace uses only `first-flow.attach`.
+- **A lost answer**: a saved file is recognised by its content and a capture time no earlier than the attempt. If the
+  phone's clock runs ahead of the server's, a real save can look old and a retry saves a second copy (never a loss).
+- **Left on purpose**: the phone's Done button is 44 high (the shell's phone buttons) where the sample has 32; the
+  heading is 18 where the sample has 17; a link under the done row; "the Library" where the sample says "your inbox".
+- **Small, found by review and not done**:
+  - While a save is running, Escape says "Save it, or discard it".
+  - Moving to another screen with work unsaved keeps the sheet open but says nothing.
+  - An assistant is shown "Use the transcript" and then gets the refusal; a 409 from `recordings.source` reads
+    "This changed since it was opened".
+  - The subject's Facts count of research topics is right only once the Facts step has read its topics.
+  - `recordings` lists every recording and is read again on every `sources*` change; about 11 ms on the demo. Watch
+    it with his real records.
+  - The 8 MB and 15 minute caps on a recording were read in the code, not reached in a browser.
+  - The sheet in a Carousel's studio (`slides/:id`) has no subject, so a capture there goes to the Library.
+- **Not compared with the sample after the corrections**: the checker measured the first build only; hover and focus
+  colours were not compared.
+- A test that lists the shell's files by hand (`tests/v2-home.test.mjs`) must list `shell/capture.js` before
+  `shell/shell.js`, as `index.html` does.
+- Two throwaway servers a checker started on ports 8863 and 8871 were left running in the cloud container; they end
+  with it.
+
 ### 8. Not started
 
-- Capture has no version two screen; it opens Advanced.
 - Library and "Ask or find" in the top bar do nothing yet.
-- Speaking: there is no speech button, on purpose. The browser's speech service would send his voice to a remote
-  service.
+- Speaking as dictation: there is no speech-to-words button, on purpose. The browser's speech service would send his
+  voice to a remote service. Capture's Speak records on the device and sends the sound only to the app's own server.
 
 ## Things to know before trusting a green run
 
