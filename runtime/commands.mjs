@@ -11,6 +11,7 @@ import {TEMPLATES_COMMANDS, TEMPLATES_HUMAN_ONLY, TEMPLATES_BODY} from './comman
 import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK_BODY} from './commands/transcript-check.mjs';
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
 import {SUBJECT_PLACES_COMMANDS, SUBJECT_PLACES_HUMAN_ONLY, SUBJECT_PLACES_UNDO, SUBJECT_PLACES_BODY} from './commands/subject-places.mjs';
+import {RESEARCH_TOPICS_COMMANDS, RESEARCH_TOPICS_HUMAN_ONLY, RESEARCH_TOPICS_READ_ONLY, RESEARCH_TOPICS_UNDO, RESEARCH_TOPICS_BODY} from './commands/research-topics.mjs';
 
 /**
  * One command registry for every entrance: the app, the CLI (agents/cli/ar-create.mjs)
@@ -183,6 +184,7 @@ export const CUSTOM_COMMANDS = [
   ...TRANSCRIPT_CHECK_COMMANDS,
   ...PHONE_PICKUP_COMMANDS,
   ...SUBJECT_PLACES_COMMANDS,
+  ...RESEARCH_TOPICS_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
   ['GET', '/api/simmer/material', ['subject']],
@@ -595,3 +597,8 @@ Object.assign(BODY, PHONE_PICKUP_BODY);
 for (const key of SUBJECT_PLACES_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(UNDO, SUBJECT_PLACES_UNDO);
 Object.assign(BODY, SUBJECT_PLACES_BODY);
+// Research topics and groups (runtime/commands/research-topics.mjs): assistants read, file and propose; his line and his decisions are his.
+for (const key of RESEARCH_TOPICS_HUMAN_ONLY) HUMAN_ONLY.add(key);
+for (const key of RESEARCH_TOPICS_READ_ONLY) CUSTOM_READ_ONLY.add(key);
+Object.assign(UNDO, RESEARCH_TOPICS_UNDO);
+Object.assign(BODY, RESEARCH_TOPICS_BODY);
