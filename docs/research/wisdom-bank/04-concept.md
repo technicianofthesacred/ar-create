@@ -89,7 +89,7 @@ From a pathway you choose "make a piece": an article, a script for a reel or vid
 
 ## Where it lives
 
-One home, inside AR Create. No third system.
+One home: the Research station of version two of AR Create. No third system.
 
 - **Library** still stores every source once. The wisdom bank is the way Library is read: ideas first, files second.
 - **The evidence card** AR Create already has (exact quote, position, source) grows into the nugget by gaining a speaker, a distillation, concepts, a lens reading, a response and links.
@@ -98,7 +98,7 @@ One home, inside AR Create. No third system.
 - **The i64os shelf** stops being a second reading place. Its notes become sources in the bank, and nuggets are cut from them. Details below.
 - **Your many entrances** (a pasted link, the phone's share button, an agent, the shelf, a note from the vault) all arrive at the same door as sources. The vault stays read-only.
 
-**Version two, and a question for you.** Also on 11 November you approved version two of the app, with four stations: Gather, Research, Create, Share. The existing workspace stays as Advanced. This concept was written against the existing names (Library, Collections, Research), and nothing in it depends on them. The likely fit, which is yours to confirm:
+**Version two: the bank lives in Research.** Also on 11 November you approved version two of the app, with four stations: Gather, Research, Create, Share. The existing workspace stays as Advanced. This concept was written against the existing names (Library, Collections, Research), and nothing in it depends on them. Asked where the bank lives, you answered on 11 November: "Yes, the bank lives inside the Research station." So the fit is:
 
 - **Gather**: a talk, article or book comes in.
 - **Research**: the bank itself. Nuggets, links, pathways, the map and the five doors.
@@ -149,4 +149,4 @@ Phone first. Filled with lifelike nuggets, never empty.
 5. **The whole map.** Do you want one view of everything at once, knowing it is for feeling the bank grow more than for finding things?
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
-8. **Version two.** Does the wisdom bank live inside the Research station of version two, as its heart? And is a pathway the same thing as a research topic there, or something separate?
+8. **Pathways and research topics.** You have confirmed the bank lives inside the Research station. Is a pathway the same thing as a research topic there, or something separate?
