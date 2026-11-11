@@ -201,3 +201,36 @@ test('a finished research result is not called findings until findings are known
  assert.equal(none.state, 'wait'); assert.equal(none.note, 'The question is asked, waiting for findings'); assert.equal(none.waitsFor, 'Findings');
  assert.ok(!JSON.stringify(none).includes('Findings to read'));
 });
+
+// ---- a Magazine story's own words (facts.magazine) ----
+const mag = (over = {}) => facts({magazine: {storyId: 'mag-x', pieceId: 'mag-x:article'}, bindingId: null, projectId: null, material: notes, ...finishedWords, pieces: [article({key: 'mag:mag-x:article', id: 'mag-x:article'})], ...over});
+
+test('a Magazine story whose Check cannot be counted still has a true next step: open Check, still Not known', () => {
+ const s = standingOf(mag({check: null}), {now: NOW});
+ assert.equal(at(s.forms[0].steps, 'check').state, 'unknown');
+ assert.equal(s.next.step, 'check'); assert.equal(s.next.state, 'unknown'); assert.equal(s.known, true);
+ assert.equal(s.station, 'create', 'the station is where that step is');
+ assert.equal(say(s.next), 'Check: Not known, open it to see');
+ // Any other subject keeps the old caution: a step not known blocks every lead after it.
+ assert.equal(standingOf(mag({check: null, magazine: undefined}), {now: NOW}).next, null);
+ // Without words there is no Check to open, so no step is claimed.
+ assert.equal(standingOf(mag({check: null, words: null}), {now: NOW}).next, null);
+});
+
+test('the station is never the group of a step the lead refused: it is where the last step done stands', () => {
+ const s = standingOf(mag({research: {step: 'filed', unreviewed: 0}, words: null, suggestions: null, check: null}), {now: NOW});
+ assert.equal(s.next, null);
+ assert.equal(s.station, 'research', 'the facts are done; nothing later is known');
+ const plain = standingOf(facts({material: notes, research: null, words: {paragraphs: 3, count: 40}, pieces: [article()]}), {now: NOW});
+ assert.equal(plain.next, null); assert.equal(plain.station, 'create', 'The words are the last step done');
+});
+
+test('a Magazine research file says only that it is on record; the direction and the dish are worded for the Magazine', () => {
+ const s = standingOf(mag({research: {step: 'filed', unreviewed: 0}, dish: {named: false, text: '', at: null, dishes: 0, direction: true}}), {now: NOW}), steps = s.forms[0].steps;
+ assert.equal(at(steps, 'facts').state, 'done'); assert.equal(at(steps, 'facts').note, 'A research file is on record');
+ assert.equal(at(steps, 'dish').note, 'A direction is chosen in the Magazine; the dish is not named yet');
+ const named = standingOf(mag({dish: {named: true, text: 'x', at: '2026-11-01T00:00:00Z', dishes: 0, direction: true}}), {now: NOW}).forms[0].steps;
+ assert.equal(at(named, 'dish').note, 'Named in Simmer, 1 Nov');
+ const other = stepsFor(null, facts({material: notes, dish: {named: true, text: 'x', at: '2026-11-01T00:00:00Z', dishes: 0, direction: false}}));
+ assert.equal(at(other, 'dish').note, 'Named on the board, 1 Nov');
+});

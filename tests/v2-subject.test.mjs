@@ -16,7 +16,7 @@ import * as RULE from '../runtime/standing-rule.mjs';
 
 const repo=path.resolve(import.meta.dirname,'..');
 // The screen file, run as the browser runs it but with no shell: it hands back only its pure half.
-const S=(()=>{const ctx={module:{exports:{}},Date,JSON,Object,Array,Set,Map,String,Number,Math,isNaN,console};ctx.globalThis=ctx;vm.runInNewContext(fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8'),ctx);
+const S=(()=>{const ctx={module:{exports:{}},URLSearchParams,Date,JSON,Object,Array,Set,Map,String,Number,Math,isNaN,console};ctx.globalThis=ctx;vm.runInNewContext(fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8'),ctx);
  const own=v=>v===undefined?v:JSON.parse(JSON.stringify(v));return Object.fromEntries(Object.entries(ctx.module.exports).map(([k,v])=>[k,typeof v==='function'?(...a)=>own(v(...a)):own(v)]));})();
 const {JSDOM}=createRequire(new URL('../runtime/package.json',import.meta.url))('jsdom');
 
@@ -633,4 +633,53 @@ test('private or machine text never reaches the header, whatever suffix a headin
  // A record that is only data, and a shape that is not recognised, give nothing.
  assert.equal(S.adoptedWords(J),'');
  assert.equal(S.adoptedWords('## Notes\n\nSomething.'),'');
+});
+
+// ---------- a Magazine story as a subject ----------
+test('a Magazine story\'s address in the workspace names its story and piece; the page never builds ?subject= for it', () => {
+ const piece = 'mag-x:article';
+ assert.equal(S.magazineHref('mag-x', {section: 'check', piece}), '/document-study/index.html?reviewStory=mag-x&reviewStage=7&reviewMagazineStory=mag-x&reviewMagazinePiece=mag-x%3Aarticle&reviewMagazineParent=mag-x');
+ assert.equal(S.magazineHref('mag-x', {section: 'direction', piece}), '/document-study/index.html?reviewStory=mag-x&reviewStage=4', 'before Write there is no piece');
+ assert.equal(S.magazineHref('mag-x', {section: 'write'}), '/document-study/index.html?reviewStory=mag-x&reviewStage=5', 'no piece, no piece in the address');
+ assert.equal(S.magazineHref('mag-x', {section: 'home'}), '/document-study/index.html', 'a section with no number gives the plain workspace');
+ assert.match(S.magazineHref('mag-x', {section: 'write', actor: 'agent:claude-code'}), /reviewActor=agent%3Aclaude-code$/);
+ assert.equal(S.isMagazine({origin: {kind: 'magazine', storyId: 'mag-x'}}), true); assert.equal(S.isMagazine({}), false);
+ assert.equal(S.pieceFor({key: 'mag:' + piece, id: piece, owner: {kind: 'magazine'}}), piece); assert.equal(S.pieceFor({key: 'out:a1', id: 'a1'}), 'a1');
+ assert.equal(S.inMagazine('Choose photographs in Advanced'), 'Choose photographs in the Magazine'); assert.equal(S.inMagazine('Open the Simmer board in Advanced'), 'Open Direction in the Magazine');
+ // The rule may name a step not known as the one to open; only then is it opened by the page.
+ const steps = [step('words', 'done'), step('check', 'unknown')];
+ assert.equal(S.firstOpen(steps, {next: {step: 'check', state: 'unknown'}}), 'check'); assert.equal(S.firstOpen(steps, {next: {step: 'check', state: 'next'}}), 'words');
+});
+
+test('a Magazine story\'s page: a direction is chosen in the Magazine and not shown as his words, every link leads somewhere that exists, nothing it cannot do is offered', {timeout: 300000}, async t => {
+ const {addMagazineToSyntheticHome} = await import('../scripts/demo-magazine.mjs');
+ const fixture = syntheticHome(); t.after(() => fs.rmSync(fixture.dir, {recursive: true, force: true}));
+ await addMagazineToSyntheticHome(fixture);
+ const config = JSON.parse(fs.readFileSync(fixture.config, 'utf8'));
+ const s = await createServer({dataDir: config.dataDir, publicDir: path.join(repo, 'public'), studyOriginalRoots: config.studyOriginalRoots, researchEnabled: false, packageView: {syntheticFixtures: true}});
+ await new Promise(r => s.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => {s.closeAllConnections?.(); s.close(r);}));
+ const base = 'http://127.0.0.1:' + s.address().port;
+ for (const [id, said, next] of [['mag-kiln-keeper', /A direction is chosen in the Magazine, the dish is not named/, 'check'], ['mag-salt-lake-weaver', /No direction yet/, 'check'], ['mag-bamboo-carver', /No direction yet/, 'facts']]) {
+  const standing = await standingOf(base, id);
+  assert.equal(standing.next.step, next, id + ': a true next step');
+  const {doc} = await page(base, '#/subject/' + id);
+  await until(() => doc.querySelector('.subj-row') && doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+  const dir = doc.querySelector('.subj-dir');
+  assert.match(dir.textContent, said, id); assert.doesNotMatch(dir.textContent, /fire's handwriting|Waiting as craft/, 'the picked option is never shown as his words');
+  assert.equal(doc.querySelector('.subj-form.add'), null, 'a story cannot add a form here');
+  assert.deepEqual(rowsOf(doc).map(r => [r[0], r[1]]), (standing.forms[0].steps).map(x => [x.id, x.state]));
+  // Open every step; every link on the page is version two's own screen or the story's place in the Magazine.
+  const hrefs = new Set();
+  for (const row of [...doc.querySelectorAll('.subj-row')]) {
+   row.querySelector('[data-subj-step]').click(); await new Promise(r => setTimeout(r, 60));
+   for (const a of doc.querySelectorAll('[data-subj-panel] a, .subj-head a[data-subj-handoff]')) hrefs.add(a.getAttribute('href'));
+   assert.equal(doc.querySelector('[data-subj-panel] [data-subj-capture], [data-subj-panel] [data-subj-add]'), null, 'no way to attach material or add a form here');
+  }
+  for (const href of hrefs) {
+   if (/^#\//.test(href)) assert.match(href, new RegExp('^#/(write|read|check|research)/' + id + '(\\?piece=' + encodeURIComponent(id + ':article') + ')?$'));
+   else {assert.ok(href.startsWith('/document-study/index.html?reviewStory=' + id + '&reviewStage='), href); assert.ok(!/[?&]subject=/.test(href), href);}
+  }
+  assert.ok([...hrefs].some(h => h.startsWith('#/write/' + id + '?piece=')), 'Write is version two\'s own screen');
+  assert.match(doc.querySelector('[data-v2-advanced]').getAttribute('href'), new RegExp('^/document-study/index.html\\?reviewStory=' + id));
+ }
 });

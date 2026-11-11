@@ -402,3 +402,31 @@ test('Home leaves off what a plan uses, finds the next line again after filing, 
  es.emit('change',{cursor:3,bootId:'b1',kind:'sources.import',scope:{kind:'library',id:'x'}});
  await until(()=>trees()>before,'the Library read again');
 });
+
+/* ---------------- Magazine stories on Home ---------------- */
+test('Home lists the Magazine stories with a true station and next step; one can be put on the desk, and nothing is made in the Magazine',{timeout:300000},async t=>{
+ const {addMagazineToSyntheticHome}=await import('../scripts/demo-magazine.mjs'),{treeHashes}=await import('./helpers/magazine-fixture.mjs');
+ const fixture=syntheticHome();t.after(()=>fs.rmSync(fixture.dir,{recursive:true,force:true}));
+ const magazine=await addMagazineToSyntheticHome(fixture),config=JSON.parse(fs.readFileSync(fixture.config,'utf8'));
+ const s=await createServer({dataDir:config.dataDir,publicDir:path.join(repo,'public'),studyOriginalRoots:config.studyOriginalRoots,researchEnabled:false,packageView:{syntheticFixtures:true}});
+ await new Promise(r=>s.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>{s.closeAllConnections?.();s.close(r);}));
+ const url='http://127.0.0.1:'+s.address().port,before=JSON.stringify(treeHashes(magazine.vault));
+ const {w,doc}=await page({base:url,fetchImpl:pageFetch(url)});
+ await until(()=>doc.querySelectorAll('.home-groups .home-row').length>=3,'the stories');
+ const standing=(await (await fetch(url+'/api/subjects/standing',{headers:{'X-AR-Actor':'agent:codex','X-AR-Client':'http'}})).json()).subjects,stories=standing.filter(x=>x.origin?.kind==='magazine');
+ assert.equal(stories.length,3);
+ for(const story of stories){
+  const row=doc.querySelector(`.home-row[data-id="${story.id}"]`);assert.ok(row,'a row for '+story.title);
+  assert.ok(story.next&&story.known,story.title+' has a true next step');
+  assert.equal(row.querySelector('.home-next').textContent.trim(),nextText(story));assert.ok(nextText(story));
+  assert.equal(row.querySelector('.home-st').textContent.trim(),story.stationName);
+  assert.equal(row.querySelector('.home-row-open').getAttribute('href'),'#/subject/'+story.id);
+ }
+ // Put one on the desk: it is saved as its place, and the Magazine's files are untouched.
+ const kiln=stories.find(x=>x.title==='Where the Ash Settles');
+ click(w,doc.querySelector(`.home-row[data-id="${kiln.id}"] [data-pin]`));
+ await until(()=>doc.querySelector(`.home-card[data-id="${kiln.id}"]`),'the story on the desk');
+ const places=(await (await fetch(url+'/api/subject-places?parentStudyId='+kiln.id,{headers:{'X-AR-Actor':'agent:codex','X-AR-Client':'http'}})).json()).places;
+ assert.ok(places[0].pinnedAt);
+ assert.equal(JSON.stringify(treeHashes(magazine.vault)),before,'nothing was made or changed in the Magazine');
+});

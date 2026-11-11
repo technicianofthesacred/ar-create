@@ -14,11 +14,12 @@
 // is never "Nothing yet"; a Carousel-only subject reaches Write, Read and Check from its post text step.
 //
 // facts = {
-//   id, title, bindingId?, projectId?, archived?, folder?, look?, changedAt? (ISO), asks? (open questions),
+//   id, title, bindingId?, projectId?, magazine? ({storyId, pieceId}: the words are a Magazine story's own), archived?, folder?, look?, changedAt? (ISO), asks? (open questions),
 //   published? (true|false; left out when no record says, and then no step claims either),
 //   material:   {total, recordings, notes, links, photos}
 //   transcript: {open (words to confirm), checked (a word check or a plan exists)}
-//   research:   {step: attach|review|research|running|directions|picked|needs-attention|null, unreviewed, topics}
+//   research:   {step: attach|review|research|running|directions|picked|filed|needs-attention|null, unreviewed, topics}
+//               (filed: a Magazine story's research file is on record; nothing says it was read or used)
 //   dish:       {named, text, at, dishes (possible dishes on the board), direction (his direction is written)}
 //   words:      {paragraphs, count}          (no saved writing place: {paragraphs:0, count:0})
 //   suggestions: number of suggestions on the words waiting for his decision
@@ -119,15 +120,16 @@ export function stepsFor(form, facts = {}) {
   else if (r.step === 'directions') add('facts', 'Research', 'The facts', 'flag', r.findings > 0 ? 'Findings to read' : 'Research came back', {why: 'research-result'});
   else if (r.step === 'running') add('facts', 'Research', 'The facts', 'wait', 'Being looked into', {waitsFor: 'The research to finish'});
   else if (r.step === 'needs-attention') add('facts', 'Research', 'The facts', 'flag', 'Needs a look');
+  else if (r.step === 'filed') add('facts', 'Research', 'The facts', 'done', 'A research file is on record');
   else if (r.step === 'review') add('facts', 'Research', 'The facts', 'todo', (r.unreviewed ? plural(r.unreviewed, 'source') + ' not looked at yet' : 'Sources not looked at yet') + topics);
   else if (r.step === 'research') add('facts', 'Research', 'The facts', 'todo', 'Ready to look into' + topics);
   else add('facts', 'Research', 'The facts', 'todo', 'Not looked into yet' + topics);
  }
  // ---- Simmer: done only when the board holds the dish he named (the sentence he sent, or the dish he named in a chat).
  const d = facts.dish || {};
- if (d.named) add('dish', 'Simmer', 'Name the dish', 'done', d.at && day(d.at) ? 'Named on the board, ' + day(d.at) : 'Named on the board');
+ if (d.named) add('dish', 'Simmer', 'Name the dish', 'done', (facts.magazine ? 'Named in Simmer' : 'Named on the board') + (d.at && day(d.at) ? ', ' + day(d.at) : ''));
  else if (materialKnown && !m.total) add('dish', 'Simmer', 'Name the dish', 'wait', 'When there is something to look at', {waits: ['have'], waitsFor: 'Material to be added'});
- else add('dish', 'Simmer', 'Name the dish', 'todo', d.dishes ? plural(d.dishes, 'possible dish', 'possible dishes') : d.direction ? 'Your direction is written; the dish is not named yet' : 'Not named yet');
+ else add('dish', 'Simmer', 'Name the dish', 'todo', d.dishes ? plural(d.dishes, 'possible dish', 'possible dishes') : d.direction ? (facts.magazine ? 'A direction is chosen in the Magazine; the dish is not named yet' : 'Your direction is written; the dish is not named yet') : 'Not named yet');
  // ---- A subject with no form yet: choosing one is the next thing to make, once there is something to make it from.
  if (!form) {
   if (!known(facts.pieces)) add('form', 'Create', 'Choose a form', 'unknown', 'Not known');
@@ -219,17 +221,26 @@ export function leadOf(steps) {
  return flag && steps.indexOf(flag) < firstUnknown ? flag : null;
 }
 
-const nextOf = (step, form) => step ? {form: form?.key || null, formName: form ? form.name : null, step: step.id, name: step.name, group: step.group, state: step.state, note: step.note, section: step.section, ...(step.waitsFor ? {waitsFor: step.waitsFor} : {})} : null;
-const formView = (form, steps) => {const r = ringOf(steps), lead = leadOf(steps); return {key: form.key, kind: form.kind, name: form.name, to: form.to, title: form.title, alike: form.alike, id: form.piece?.id || null, slides: form.piece?.slides ?? null, words: form.piece?.words ?? null, createdAt: form.piece?.createdAt || null, updatedAt: form.piece?.updatedAt || null, ...r, finished: r.done === r.total, next: nextOf(lead, form), steps};};
+/** The lead of a list of steps. A Magazine story whose Check cannot be counted from its records still has a true next
+    step once its words are done: open Check (its state stays Not known). */
+function leadFor(steps, facts = {}) {
+ const lead = leadOf(steps);
+ if (lead || !facts.magazine) return lead;
+ const check = steps.find(s => s.id === 'check'), words = steps.find(s => s.id === 'words');
+ return check?.state === 'unknown' && words?.state === 'done' ? check : null;
+}
+
+const nextOf = (step, form) => step ? {form: form?.key || null, formName: form ? form.name : null, step: step.id, name: step.name, group: step.group, state: step.state, note: step.state === 'unknown' ? 'Not known, open it to see' : step.note, section: step.section, ...(step.waitsFor ? {waitsFor: step.waitsFor} : {})} : null;
+const formView = (form, steps, facts) => {const r = ringOf(steps), lead = leadFor(steps, facts); return {key: form.key, kind: form.kind, name: form.name, to: form.to, title: form.title, alike: form.alike, id: form.piece?.id || null, slides: form.piece?.slides ?? null, words: form.piece?.words ?? null, createdAt: form.piece?.createdAt || null, updatedAt: form.piece?.updatedAt || null, ...r, finished: r.done === r.total, next: nextOf(lead, form), steps};};
 
 /** Where one subject stands, from its facts: {id, title, station, stationName, ring, next, forms, steps, reached, ...}.
     `steps` are the subject's own steps when it has no form yet (each form's steps begin with the subject's own). */
 export function standingOf(facts = {}, {now = Date.now()} = {}) {
- const forms = formsOf(facts).map(f => formView(f, stepsFor(f, facts)));
+ const forms = formsOf(facts).map(f => formView(f, stepsFor(f, facts), facts));
  const own = forms.length ? null : stepsFor(null, facts);
  const lead = forms.find(f => !f.finished) || null;
  const leadSteps = lead ? lead.steps : own || [];
- const leadStep = forms.length ? (lead ? leadOf(lead.steps) : null) : leadOf(own);
+ const leadStep = forms.length ? (lead ? leadFor(lead.steps, facts) : null) : leadFor(own, facts);
  const next = forms.length ? (lead ? lead.next : null) : nextOf(leadStep, null);
  const ring = forms.length ? forms.reduce((n, f) => n + f.ring, 0) / forms.length : ringOf(own).ring;
  // The station: published when that is recorded; resting when archived, paused or long untouched (`resting` says
@@ -241,7 +252,9 @@ export function standingOf(facts = {}, {now = Date.now()} = {}) {
  if (facts.published === true) station = 'published';
  else if (resting) station = 'resting';
  else if (!leadSteps.length || leadSteps.every(s => s.state === 'done')) station = 'share';
- else station = STATION_OF_GROUP[(leadStep || leadSteps.find(s => s.state !== 'done')).group];
+ // With no step that may lead (one not known comes first), the station is where the last step done stands, never the
+ // group of a step that was refused as the lead.
+ else station = STATION_OF_GROUP[(leadStep || [...leadSteps].reverse().find(s => s.state === 'done') || leadSteps[0]).group];
  const all = [...(own || []), ...forms.flatMap(f => f.steps)];
  return {schema: 'ar-create.subject-standing.v1', rule: VERSION, id: facts.id, title: facts.title || facts.id, station, stationName: STATION_NAME[station],
   ring: Math.round(ring * 1000) / 1000, next, known: !!next, resting: station === 'resting' ? resting : null,

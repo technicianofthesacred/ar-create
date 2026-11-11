@@ -372,6 +372,20 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const value = {paragraphs: rows.filter(r => r.blockKind !== 'heading').length, count: rows.reduce((n, r) => n + String(r.words).trim().split(/\s+/).length, 0)};
   counted.set(storyId, {hash: file.hash, value}); return value;
  }
+ /** The Magazine's own check on a draft, counted: {status: 'checked', issues}, or null when it cannot be read. Kept in memory
+     by the draft's hash and its sources' file times, so a long draft is checked once until something changes. */
+ const checkedBefore = new Map();
+ function magazineCheck(m, project, file, recs) {
+  const run = magazine?.extra?.checks?.run; if (typeof run !== 'function' || !m.rel || !file?.hash) return null;
+  const srcs = recs('src'), ctxs = recs('context'), key = JSON.stringify([file.hash, srcs.map(r => r + ':' + (vaultStat(r)?.key || '')), ctxs.map(r => r + ':' + (vaultStat(r)?.key || ''))]);
+  const kept = checkedBefore.get(m.storyId); if (kept?.key === key) return kept.value;
+  let value = null;
+  try {
+   const r = run.call(magazine.extra.checks, {draft: m.rel, ...(srcs.length === 1 ? {source: srcs[0]} : {}), ...(ctxs.length ? {context: ctxs} : {})});
+   value = {status: 'checked', issues: (r.quotes?.notFound?.length || 0) + (r.splits?.splits?.length || 0)};
+  } catch {value = null;}
+  checkedBefore.set(m.storyId, {key, value}); return value;
+ }
  async function gatherMagazine(subject) {
   const {id, magazine: m} = subject, times = [];
   const facts = {id, title: subject.title, bindingId: null, projectId: null, folder: [], magazine: {storyId: m.storyId, pieceId: m.pieceId}};
@@ -403,9 +417,9 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (magazineFiles && project && !/[\\/]|^\.\.?$/.test(project.name)) {try {photos = fs.readdirSync(path.join(magazineFiles, project.name, 'Photos')).filter(f => IMAGE.test(f)).length;} catch (error) {photos = error.code === 'ENOENT' ? 0 : null;}}
   facts.material = project && photos !== null ? {total: sources.length + photos, recordings: 0, notes: sources.length, links: 0, photos} : null;
   facts.transcript = facts.material ? {open: 0, checked: false} : null;
-  // Research: a story with no research file was not looked into (known); one with a file is not known (nothing says
-  // whether its findings were read or used).
-  facts.research = !project ? null : recs('research').length ? null : {step: null, unreviewed: 0};
+  // Research: a story with no research file was not looked into (known); one with a file says only that the file is on
+  // record (nothing says whether its findings were read or used).
+  facts.research = !project ? null : recs('research').length ? {step: 'filed', unreviewed: 0} : {step: null, unreviewed: 0};
   // The dish he named: only a Simmer board of this id holds his own sentence. A direction picked on the Magazine page
   // (the MAP's dated decisions) says only that a direction is chosen, never its words.
   const board = simmer ? await quiet(timed('board', async () => (await simmer).boards.read({subject: id}))) : undefined;
@@ -414,8 +428,10 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
    const f = board.forming || {}, namedText = typeof f.named?.text === 'string' ? f.named.text.trim() : '', sentText = f.sentAt && typeof f.sentence?.dish === 'string' ? f.sentence.dish.trim() : '', chosen = directionChosen(maps);
    facts.dish = {named: !!(namedText || sentText), text: namedText || sentText || '', at: namedText ? f.named.dictated?.at || null : sentText ? f.sentAt : null, dishes: (f.dishes || []).length, direction: !!chosen};
   } else facts.dish = null;
-  // Check: no CHECK file means never checked (known); a CHECK file holds free notes no rule can read, so not known.
-  facts.check = project ? (checkFiles(project).length ? null : {status: null, issues: 0}) : null;
+  // Check: no CHECK file means never checked (known). With one, the Magazine's own check (magazine.check: real quotes and
+  // splits against the transcript) is read on the draft as it is now, so it is current by being read now; its findings are
+  // counted. A check that cannot be read (no draft, no single transcript) leaves the Check not known.
+  facts.check = project ? (checkFiles(project).length ? magazineCheck(m, project, file, recs) : {status: null, issues: 0}) : null;
   // The piece: one Article, its photograph markers counted in the draft.
   facts.pieces = [{key: 'mag:' + m.pieceId, id: m.pieceId, kind: 'article', title: facts.title, status: null, placements: draftText ? (draftText.match(/%%\s*photos?\s*:/gi) || []).length : 0, slides: 0}];
   // Published: the draft's own `published:` link, the Magazine's record of it. No draft file: nothing published.
