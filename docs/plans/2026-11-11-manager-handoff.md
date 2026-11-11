@@ -15,6 +15,7 @@
 - Plain full sentences, the names the app shows him, no commit hashes, no internal codes.
 - Never use the em dash character.
 - Anything written for him to read, including sample content and distilled concepts, must be understood on first reading, in words a person would say aloud. No compressed labels. His words: "They feel like they are written for AI."
+- A distilled idea is stated as what it is, positively, before anything about how it can go wrong. The three depths he approved on 11 November: one full plain sentence; about three plain paragraphs; then as long as understanding needs.
 - On screens and pages made for him, separation must be felt: by space and by surface, not by typeface or label colour. His words, 11 November: "I feel like I'm having to sort your words with my head rather than enjoy reading." Put this in every design brief.
 - Say what is finished, what is not, and what he must decide. Make a recommendation; do not list options without one.
 - Shell commands for him, if ever needed: one command per block, no comment lines, nothing to hand-edit.

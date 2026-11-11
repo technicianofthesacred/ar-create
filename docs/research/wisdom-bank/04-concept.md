@@ -20,6 +20,8 @@ Added by the coordinating thread on 11 November 2026, from what Adrian said to t
 
 8. **The medium view is found; the small view is not.** "That would be a great expansion, uh the details of what it is. That's the medium view, but we still need the small view. I like the idea of the expansion with something of that level as well though. But the one sentence small view is not not landing yet." So a plain distillation of about three paragraphs is the right medium view; the sample he approved is in `design/2026-11-wisdom-bank/HANDOFF.md`. The small view is still open: one compressed sentence does not land. He has been offered three styles for it.
 
+9. **The small view says what the teaching is.** Offered three styles for the small view, he chose the plain statement of the idea in one full sentence: "A is more what I'm looking for. However, the teaching of everything is perfect is very different of that it's saying that y you are the Buddha nature and everything is perfect. The using the statement as a lid is actually oh it can be misunderstood that would be a deeper explanation but the explanation of everything is perfect would be very different, if that makes sense." So the small view states the teaching itself, positively and plainly. It is never a warning about it. How it can be misunderstood is a deeper layer of the same concept or a connected concept. The order of depths: what it is, what it rests on, how it goes wrong.
+
 ## The whole idea in one minute
 
 The wisdom bank is the Research station of AR Create. It distils each talk or book you love into its concepts, keeps the exact words inside each one, shows how the concepts connect, and helps you use them. Follow one example from start to finish:
