@@ -21,20 +21,19 @@
   const s=String(q);return WORKSPACE+(s?'?'+s:'');
  }
 
- // ---------- theme: follows the existing workspace's own setting ----------
- // The existing workspace keeps its theme inside its browser recovery copy. Version two only reads that copy, never
- // writes it (the workspace would see another tab's change and stop saving its copy). A choice made here is kept in
- // its own key with the workspace setting it was made against, so whichever was changed last wins.
- const WORKSPACE_STATE='ar-create-packaged-document-study-v1',OWN_THEME='ar-create-v2-theme';
+ // ---------- theme: follows the system, unless he chose one with the theme button ----------
+ // A choice made with the theme button is kept in this page's own key and wins from then on. Until he makes one, the
+ // page follows the system setting, as the sample does. (The existing workspace keeps its own theme inside its browser
+ // recovery copy and stores "dark" there by default, so it is no sign of a choice and is not read.)
+ const OWN_THEME='ar-create-v2-theme';
  const media=root.matchMedia?root.matchMedia('(prefers-color-scheme: dark)'):null;
- function workspaceTheme(){try{const raw=root.localStorage.getItem(WORKSPACE_STATE);if(!raw)return null;const state=(root.arRecoveryStorage?.parse||JSON.parse)(raw);return ['dark','light','system'].includes(state?.theme)?state.theme:null;}catch{return null;}}
- function chosenTheme(){const base=workspaceTheme();let own=null;try{own=JSON.parse(root.localStorage.getItem(OWN_THEME)||'null');}catch{}
-  const pick=own&&['dark','light'].includes(own.theme)&&own.basedOn===base?own.theme:(base||'dark');
-  return pick==='system'?(media?.matches?'dark':'light'):pick;}
+ function chosenTheme(){let own=null;try{own=JSON.parse(root.localStorage.getItem(OWN_THEME)||'null');}catch{}
+  if(own&&['dark','light'].includes(own.theme))return own.theme;
+  return media?.matches?'dark':'light';}
  function applyTheme(){const theme=chosenTheme();doc.documentElement.dataset.theme=theme;paintTheme();applyBrand(brandId);return theme;}
- function toggleTheme(){const next=doc.documentElement.dataset.theme==='dark'?'light':'dark';try{root.localStorage.setItem(OWN_THEME,JSON.stringify({theme:next,basedOn:workspaceTheme()}));}catch{}doc.documentElement.dataset.theme=next;paintTheme();applyBrand(brandId);}
+ function toggleTheme(){const next=doc.documentElement.dataset.theme==='dark'?'light':'dark';try{root.localStorage.setItem(OWN_THEME,JSON.stringify({theme:next}));}catch{}doc.documentElement.dataset.theme=next;paintTheme();applyBrand(brandId);}
  media?.addEventListener?.('change',()=>applyTheme());
- root.addEventListener('storage',e=>{if(e.key===OWN_THEME||e.key===WORKSPACE_STATE)applyTheme();});
+ root.addEventListener('storage',e=>{if(e.key===OWN_THEME)applyTheme();});
 
  // ---------- brand tint: the look's accent on the top bar line, rings and current markers ----------
  const looks=new Map();let brandId=null,brandToken=0;
@@ -105,7 +104,7 @@
    on:(filter,fn)=>{const off=live.on(filter,fn);offs.push(off);return off;},
    /** The name in the thin header on a phone and in the window title. */
    setTitle:text=>{if(active?.ctx===ctx){ctx.title=String(text||'');paintPlace();}},
-   /** Where "Advanced" in the top bar leads from this screen: {subject, piece, section}. */
+   /** Where this screen's own "Open in Advanced" leads: {subject, piece, section}. The top bar's Advanced link opens it. */
    setAdvanced:target=>{if(active?.ctx===ctx){ctx.advancedTarget=target||null;paintPlace();}}};
   ctx.title=typeof s.title==='function'?safe(()=>s.title(ctx),''):(s.title||'');
   active={screen:s,ctx};
@@ -119,8 +118,7 @@
  const safe=(fn,fallback)=>{try{return fn();}catch{return fallback;}};
 
  // ---------- the frame ----------
- const TOP_PLACES={home:'',research:'research',looks:'looks'};
- function frameMarkup(){
+  function frameMarkup(){
   return `<a class="v2-skip" href="#v2-main" data-v2-skip>Skip to the work</a>
 <header class="v2-top" data-v2-top>
  <a class="v2-logo" href="#/" aria-label="Home"><i></i></a>
@@ -129,13 +127,12 @@
  </nav>
  <nav class="v2-desk" data-v2-desk aria-label="On your desk" hidden></nav>
  <span class="v2-grow"></span>
- <button type="button" class="v2-ghost v2-wide" data-v2-ask aria-label="Ask or find" title="Ask or find (Ctrl K)">${icon('search')}<kbd>⌘K</kbd></button>
+ <button type="button" class="v2-ghost v2-wide" data-v2-ask aria-label="Ask or find" title="Ask or find: opens Research">${icon('search')}<kbd>⌘K</kbd></button>
  <a class="v2-ghost v2-wide v2-needs" data-v2-needs href="#/" hidden><i aria-hidden="true"></i><span>Needs you · <b data-v2-needs-count>0</b></span></a>
  <button type="button" class="v2-ghost v2-wide" data-v2-capture>${icon('plus')}Capture</button>
  <button type="button" class="v2-ghost v2-icon-btn" data-v2-theme aria-label="Switch theme">${icon('sun')}</button>
  <a class="v2-advanced" data-v2-advanced href="${esc(advanced())}">Advanced</a>
 </header>
-<div class="v2-here" data-v2-here hidden><a href="#/" aria-label="Home">${icon('back')}</a><b data-v2-here-title></b></div>
 <div class="v2-messages" id="v2-messages" role="status" aria-live="polite"></div>
 <main class="v2-main" id="v2-main" tabindex="-1"></main>
 <nav class="v2-phone" data-v2-phone aria-label="Places">
@@ -150,11 +147,10 @@
  function paintPlace(){
   const place=placeOf();
   for(const a of doc.querySelectorAll('[data-v2-place]')){if(a.dataset.v2Place===place)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
-  const ctx=active?.ctx,top=active&&Object.values(TOP_PLACES).includes(active.screen.route);
-  const here=doc.querySelector('[data-v2-here]');if(here){const show=!!(ctx&&!top&&ctx.title);here.hidden=!show;here.querySelector('[data-v2-here-title]').textContent=show?ctx.title:'';}
-  doc.title=(ctx?.title?ctx.title+' · ':'')+'AR Create';
+  const ctx=active?.ctx;
   const target=ctx?.advancedTarget||(active?.screen.route.startsWith('subject/')&&ctx?.params.id?{subject:ctx.params.id}:{});
   const adv=doc.querySelector('[data-v2-advanced]');if(adv)adv.href=advanced(target);
+  doc.title=(ctx?.title?ctx.title+' · ':'')+'AR Create';
   paintDesk();
  }
 
@@ -209,10 +205,19 @@
   const badge=doc.querySelector('[data-v2-needs-badge]');if(badge){badge.hidden=!needs;badge.textContent=String(needs);}
   const phone=doc.querySelector('[data-v2-needs-phone]');phone?.setAttribute('aria-label',needs?`Needs you: ${needs}`:'Needs you');}
 
- // ---------- Capture and Ask or find: not built yet, said plainly ----------
- function captureSheet(){const subject=active?.screen.route.startsWith('subject/')?active.ctx.params.id:null;
-  P.sheet({title:'Capture',body:P.notBuilt('Speak, take a photograph, write a thought or ask a question, straight into a subject.',{advanced:{...(subject?{subject}:{}),section:'material'}})});}
- function askSheet(){P.sheet({title:'Ask or find',body:P.notBuilt('Ask a question across everything you have kept, or find a subject by its name.',{advanced:{section:'home'}})});}
+ // ---------- Capture: the sample's sheet with four tiles ----------
+ // Speak, Photograph and Write a thought have no capture back end in version two, so each opens the place where
+ // material is added in the existing workspace (Advanced). A question goes to Research. Nothing is saved here.
+ function captureSheet(){
+  const inSubject=!!active?.screen.route.startsWith('subject/')&&active.ctx.params.id,subject=inSubject?active.ctx.params.id:null;
+  const name=inSubject&&active.ctx.title?active.ctx.title:'';
+  const where=advanced({...(subject?{subject}:{}),section:'material'});
+  const to=name?`Goes to <b>${esc(name)}</b>. A question goes to Research.`:'Opens the place for new material, to file later. A question goes to Research.';
+  const tile=(cls,ic,label,href,attr='')=>`<a class="${cls}" href="${esc(href)}"${attr}>${icon(ic)}${label}</a>`;
+  const body=`<p class="v2-cap-to">${to}</p><div class="v2-cap4">${tile('rec','mic','Speak',where)}${tile('','photo','Photograph',where)}${tile('','pen','Write a thought',where)}${tile('','ask','Ask a question','#/research',' data-v2-cap-ask')}</div>`;
+  const sh=P.sheet({title:'Capture',body,close:false});
+  sh.el.addEventListener('click',e=>{if(e.target.closest('.v2-cap4 a'))sh.close();});
+ }
 
  // ---------- start ----------
  function start(){
@@ -222,11 +227,10 @@
   host.addEventListener('click',e=>{
    if(e.target.closest('[data-v2-theme]'))return toggleTheme();
    if(e.target.closest('[data-v2-capture]'))return captureSheet();
-   if(e.target.closest('[data-v2-ask]'))return askSheet();
+   if(e.target.closest('[data-v2-ask]'))return go('research');
    if(e.target.closest('[data-v2-desk-more]'))return deskSheet();
    if(e.target.closest('[data-v2-skip]')){e.preventDefault();main()?.focus();}
   });
-  doc.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key.toLowerCase()==='k'){e.preventDefault();askSheet();}});
   root.addEventListener('hashchange',()=>route());
   // Fit the desk again when the bar changes width (a window resized, fonts arrived).
   let fitting=0;const refit=()=>{root.cancelAnimationFrame?.(fitting);fitting=root.requestAnimationFrame?root.requestAnimationFrame(fitDesk):setTimeout(fitDesk,0);};

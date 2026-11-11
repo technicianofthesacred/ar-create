@@ -9,7 +9,7 @@
 @font-face{font-family:'AR Atlas Lora';font-style:italic;font-weight:400;font-display:swap;src:url('/assets/fonts/lora-400-italic-latin.woff2') format('woff2')}
 
 :root{--v2-t12:12px;--v2-t13:13px;--v2-t14:14px;--v2-t15:15px;--v2-t18:18px;--v2-t22:22px;
- --v2-speech:'AR Atlas Lora',Lora,Georgia,serif;--v2-top:56px;--v2-gutter:40px;--v2-width:1320px;
+ --v2-speech:'AR Atlas Lora',Lora,Georgia,serif;--v2-top:48px;--v2-gutter:40px;--v2-width:1320px;
  --v2-brand:transparent;--v2-br:var(--warm);--v2-sec:var(--graphite-secondary,var(--c3-sel))}
 html[data-brand]{--v2-br:color-mix(in oklab,var(--v2-brand) 76%,var(--ink))}
 html{background:var(--bg)}
@@ -32,24 +32,28 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--v2-t15)/1.5 v
  @media (max-width:850px),(pointer:coarse){button.v2-ghost{min-height:44px!important}button.v2-icon-btn{width:44px!important}}
  @media (max-width:850px){button.v2-ghost.v2-wide{display:none!important}}
  button.v2-ghost[hidden]{display:none!important}
+ .v2-top button.v2-ghost{min-height:28px!important;padding:3px 10px!important;border:1px solid transparent!important;font:600 var(--v2-t13)/20px var(--ar-ui)!important;position:relative!important}
+ .v2-top button.v2-icon-btn{width:auto!important}
+ .v2-top button.v2-ghost::after{content:"";position:absolute;inset:-6px -2px}
+ @media (max-width:850px),(pointer:coarse){.v2-top button.v2-ghost{min-height:32px!important}.v2-top button.v2-icon-btn{width:auto!important}}
  button.v2-desk-more{flex:none!important;min-height:32px!important;padding:0 8px!important;font:500 var(--v2-t13)/1 var(--ar-ui)!important;color:var(--dim)!important}
 }
 
 /* ---------- the top bar ---------- */
 .v2-skip{position:absolute;left:8px;top:-60px;z-index:80;padding:8px 12px;border-radius:6px;background:var(--paper);color:var(--ink);font:600 var(--v2-t14)/1 var(--ar-ui)}
 .v2-skip:focus{top:8px}
-.v2-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:6px;height:var(--v2-top);padding:0 28px;min-width:0;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.v2-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:6px;height:var(--v2-top);padding:0 28px;min-width:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 html[data-brand] .v2-top{box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--v2-brand) 62%,transparent)}
-.v2-logo{flex:none;padding:8px 6px 8px 0}
+.v2-logo{flex:none;padding:8px 4px 8px 0}
 .v2-logo i{display:block;width:18px;height:18px;border-radius:5px;background:var(--warm)}
 html[data-brand] .v2-logo i{background:var(--v2-br)}
 .v2-places{display:flex;align-items:center;gap:2px;flex:none}
-.v2-place{display:inline-flex;align-items:center;height:32px;padding:0 10px;border-radius:6px;font:500 var(--v2-t14)/1 var(--ar-ui);color:var(--c3-ink2);white-space:nowrap}
+.v2-place{display:inline-flex;align-items:center;padding:8px 10px;border-radius:6px;font:500 var(--v2-t14)/1 var(--ar-ui);color:var(--c3-ink2);white-space:nowrap}
 .v2-place:hover{background:var(--v2-sec);color:var(--ink)}
 .v2-place[aria-current]{background:var(--v2-sec);color:var(--ink);font-weight:600}
 /* The desk keeps to one row; shell.js takes out the chips that do not fit and shows "+n" for them. */
-.v2-desk{display:flex;flex-wrap:nowrap;align-items:center;gap:2px;height:32px;overflow:hidden;min-width:0;flex:0 1 auto;margin-left:10px;padding-left:12px;border-left:1px solid var(--line)}
-.v2-desk-chip{display:flex;align-items:center;gap:7px;height:32px;min-width:0;max-width:200px;flex:0 1 auto;padding:0 10px 0 6px;border-radius:7px;font:500 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2)}
+.v2-desk{display:flex;flex-wrap:nowrap;align-items:center;gap:2px;height:32px;overflow:hidden;min-width:0;flex:0 1 auto;margin-left:14px;padding-left:14px;border-left:1px solid var(--line)}
+.v2-desk-chip{display:flex;align-items:center;gap:7px;height:32px;min-width:0;max-width:200px;flex:0 1 auto;padding:0 10px 0 5px;border-radius:7px;font:500 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2)}
 .v2-desk-chip:hover{background:var(--v2-sec);color:var(--ink)}
 .v2-desk-chip[aria-current]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--c3-line2)}
 html[data-brand] .v2-desk-chip[aria-current]{box-shadow:inset 0 0 0 1px var(--v2-br)}
@@ -61,15 +65,14 @@ html[data-brand] .v2-desk-chip[aria-current]{box-shadow:inset 0 0 0 1px var(--v2
 .v2-desk-list a:hover{background:var(--v2-sec)}
 .v2-grow{flex:1 1 0;min-width:0}
 .v2-top kbd{font:500 var(--v2-t12)/16px var(--ar-ui);padding:0 5px;border:1px solid var(--c3-line2);border-radius:4px;color:var(--dim)}
-.v2-needs{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:6px;font:500 var(--v2-t14)/1 var(--ar-ui);color:var(--c3-ink2);white-space:nowrap;flex:none}
+.v2-needs{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:3px 10px;border:1px solid transparent;border-radius:6px;font:600 var(--v2-t13)/20px var(--ar-ui);color:var(--c3-ink2);white-space:nowrap;flex:none}
 .v2-needs:hover{background:var(--v2-sec);color:var(--ink)}
 .v2-needs>i{width:8px;height:8px;border-radius:50%;background:var(--c3-warn)}
-.v2-needs b{font-weight:600;color:var(--ink)}
-.v2-advanced{display:inline-flex;align-items:center;height:32px;padding:0 10px;margin-left:4px;border-radius:6px;font:500 var(--v2-t13)/1 var(--ar-ui);color:var(--dim);white-space:nowrap;flex:none}
+.v2-top .v2-ic{width:16px;height:16px}
+.v2-advanced{display:inline-flex;align-items:center;min-height:28px;padding:3px 6px;border-radius:6px;font:500 var(--v2-t12)/20px var(--ar-ui);color:var(--dim);white-space:nowrap;flex:none}
 .v2-advanced:hover{color:var(--ink);background:var(--v2-sec)}
 
-/* ---------- the thin header on a phone, the message area, the main area ---------- */
-.v2-here{display:none}
+/* ---------- the message area, the main area ---------- */
 .v2-messages{position:sticky;top:var(--v2-top);z-index:25;max-width:var(--v2-width);margin:0 auto;padding:0 var(--v2-gutter)}
 .v2-msg{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:10px;padding:8px 8px 8px 14px;border-radius:10px;background:var(--paper);border:1px solid var(--line);box-shadow:var(--c3-shadow);font:400 var(--v2-t14)/1.4 var(--ar-ui);color:var(--ink)}
 .v2-msg>span{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
@@ -114,14 +117,22 @@ html[data-brand] .v2-current{box-shadow:inset 0 0 0 1px var(--v2-br)}
 .v2-out .v2-ic{width:14px;height:14px}
 .v2-out:hover{text-decoration:underline;text-underline-offset:3px}
 /* A sheet: a bottom sheet on a phone, centred on a computer. */
-dialog.v2-sheet{width:min(480px,100%);max-width:100%;max-height:min(86dvh,720px);margin:auto auto 0;padding:0;border:1px solid var(--c3-line2);border-bottom:0;border-radius:16px 16px 0 0;background:var(--paper);color:var(--ink);box-shadow:var(--c3-shadow);overflow:auto}
+dialog.v2-sheet{width:min(460px,100%);max-width:100%;max-height:min(86dvh,720px);margin:auto auto 0;padding:0;border:1px solid var(--c3-line2);border-bottom:0;border-radius:16px 16px 0 0;background:var(--paper);color:var(--ink);box-shadow:var(--c3-shadow);overflow:auto}
 dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
 .v2-sheet-in{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:10px 20px calc(22px + env(safe-area-inset-bottom,0px))}
+.v2-sheet-in::before{content:"";width:36px;height:4px;border-radius:4px;background:var(--c3-line2);justify-self:center}
 .v2-sheet-in>header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .v2-sheet-in h2{flex:1 1 auto;font:600 var(--v2-t18)/1.3 var(--ar-ui);min-width:0}
 .v2-sheet-body{min-width:0;overflow-wrap:break-word}
 .v2-sheet-in h2:focus{outline:0}
-@media (min-width:851px){dialog.v2-sheet{margin:auto;border-bottom:1px solid var(--c3-line2);border-radius:14px}.v2-sheet-in{padding:14px 22px 22px}}
+@media (min-width:851px){dialog.v2-sheet{margin:auto;border-bottom:1px solid var(--c3-line2);border-radius:14px}.v2-sheet-in{padding:10px 20px 22px}.v2-sheet-in::before{display:none}}
+/* The Capture sheet: a line saying where it goes, then four tiles. */
+.v2-cap-to{font-size:var(--v2-t13);color:var(--dim);margin-bottom:14px}
+.v2-cap-to b{color:var(--ink);font-weight:600}
+.v2-cap4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.v2-cap4 a{display:grid;justify-items:center;gap:8px;padding:18px 6px 14px;border-radius:10px;background:var(--v2-sec);font:600 var(--v2-t13)/1.2 var(--ar-ui);color:var(--graphite-ink)}
+.v2-cap4 a .v2-ic{width:24px;height:24px}
+.v2-cap4 a.rec{background:var(--graphite-ink);color:var(--graphite-inverse)}
 /* Reorder: Move up and Move down beside each item; shown on hover and focus, always on touch. */
 [data-v2-reorder]{position:relative}
 [data-v2-reorder].v2-dragging{opacity:.45}
@@ -138,15 +149,10 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
  .v2-desk-chip{max-width:150px}
 }
 @media (max-width:850px){
- :root{--v2-gutter:16px;--v2-top:52px}
- .v2-top{padding:0 max(12px,env(safe-area-inset-left,0px));gap:4px}
- .v2-wide,.v2-desk,.v2-needs{display:none!important}/* buttons among them: see the control layer */
- .v2-place:not([aria-current]){display:none}
- .v2-here:not([hidden]){display:flex;align-items:center;gap:6px;max-width:var(--v2-width);padding:8px max(12px,env(safe-area-inset-left,0px)) 0;font:600 var(--v2-t14)/1.3 var(--ar-ui)}
- .v2-here a{display:grid;place-items:center;width:44px;height:44px;flex:none;color:var(--c3-ink2)}
- .v2-here b{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ :root{--v2-gutter:16px}
+ .v2-top{padding:0 max(12px,env(safe-area-inset-left,0px))}
+ .v2-wide,.v2-desk,.v2-needs,.v2-places{display:none!important}/* buttons among them: see the control layer */
  .v2-page{padding:24px var(--v2-gutter) 120px;gap:24px}
- .v2-advanced{min-height:44px}
  .v2-phone{position:fixed;left:0;right:0;bottom:0;z-index:35;display:grid;grid-template-columns:1fr 1fr 1.2fr 1fr;align-items:center;gap:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--line)}
  .v2-phone>a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;height:48px;border-radius:10px;font:500 var(--v2-t12)/14px var(--ar-ui);color:var(--dim)}
  .v2-phone>a[aria-current]{color:var(--ink);font-weight:600}
@@ -156,6 +162,6 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
  .v2-messages{top:var(--v2-top)}
 }
 @layer v2-controls{
- @media (max-width:850px){.v2-phone button.v2-cap{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;height:44px!important;min-height:44px!important;padding:0 12px!important;border:0!important;border-radius:22px!important;background:var(--graphite-ink)!important;color:var(--graphite-inverse)!important;font:600 var(--v2-t13)/1 var(--ar-ui)!important;background-clip:border-box!important}}
+ @media (max-width:850px){.v2-phone button.v2-cap{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;height:44px!important;min-height:44px!important;padding:0 18px!important;border:0!important;border-radius:22px!important;background:var(--graphite-ink)!important;color:var(--graphite-inverse)!important;font:600 var(--v2-t13)/1 var(--ar-ui)!important;background-clip:border-box!important}}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
