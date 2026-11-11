@@ -80,3 +80,6 @@ html body.wbf-on.combined-piece-on[data-draft-focus=true] #app #workspace .desk>
 .cp-menu :is(button,select):focus-visible{outline:2px solid var(--warm);outline-offset:2px}
 @media(max-width:800px){.cp-menu{width:calc(100vw - 24px);max-height:calc(100dvh - 260px)}}
 @media(min-width:801px){.cp-menu-group[data-cp-menu-group="Other pieces"]{display:none}}
+
+/* The margin button's icon and label sit on one line, centred (it rendered as a block with the icon riding high). */
+@media(min-width:901px){html body.wbf-on.combined-piece-on #combined-piece-frame.cp-top>.cp-main-tool.ar-fold-btn{display:inline-flex;align-items:center;gap:6px}}

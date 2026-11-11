@@ -1,6 +1,6 @@
 /* The approved Workbench frame and document geometry; owners keep their nodes and events. */
 body.wbf-on{--bg:#141310;--paper:#1d1b16;--ink:#e7e1d3;--dim:#a39e8e;--line:#2d2a23;--warm:#c9a874;--rail:#191813;--lift:#191813;--sel:#2c2a22;--good:#8fb08a;--warnc:#d9a95a;--bad:#e08a74;--hl:rgba(201,168,116,.28);--gut:32px;--top:24px;--c3-lift:var(--rail);--c3-sel:var(--sel);--wb-rail-bg:var(--rail);--wb-panel:var(--rail);--c3-doc-font:var(--ar-ui);font-family:var(--ar-ui);line-height:1.5}
-html[data-theme="light"] body.wbf-on{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#686c61;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;--hl:rgba(122,90,48,.2)}
+html[data-theme="light"] body.wbf-on{--bg:#efede6;--paper:#fffefb;--ink:#2d302a;--dim:#5e6257;--line:#e2e0d8;--warm:#7a5a30;--rail:#f7f5ef;--lift:#f7f5ef;--sel:#e9e4d7;--good:#3f6146;--warnc:#94600f;--bad:#a23b2a;--hl:rgba(122,90,48,.2)}
 body.wbf-on ::selection{background:var(--hl);color:var(--ink)}
 body.wbf-on :focus-visible{outline:2px solid var(--warm);outline-offset:2px;border-radius:4px}
 html body.wbf-on{--wb-doc-left:32px;--wb-doc-top:0px}
@@ -422,4 +422,14 @@ html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on #app #wor
  html body.wbf-on.combined-on #project-library#project-library.wbf-home [data-home-optional]{grid-column:1;grid-row:5}
  html body.wbf-on.combined-on #project-library#project-library.wbf-home [data-home-handled]{grid-column:1;grid-row:6}
  html body.wbf-on.combined-on #project-library#project-library.wbf-home [data-home-words]{grid-column:1;grid-row:7}
+}
+
+/* Tool drawer (Check, Understanding, Thought): with room it narrows the page; without room it overlays and the
+   Write toolbar stays within the uncovered part and wraps instead of clipping. */
+@media(min-width:1200px){
+ html body.wbf-on.wbf-drawer-open #app #workspace{box-sizing:border-box;padding-right:380px!important}
+}
+@media(min-width:761px) and (max-width:1199px){
+ html body.wbf-on.wbf-drawer-open #app #workspace>#combined-piece-frame.cp-top{display:flex;flex-wrap:wrap;max-width:calc(100% - 380px - 48px);margin-right:0}
+ html body.wbf-on.wbf-drawer-open #app #workspace>#combined-piece-frame.cp-top>.cp-modes{flex:1 1 100%;margin-left:0}
 }

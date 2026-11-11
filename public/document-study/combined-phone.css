@@ -100,3 +100,12 @@
 
 @media(max-width:800px){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-on #app #workspace.wb-outputs #c3-surface-bar .sb-cp{display:none!important}}
 @media(max-width:800px){html:not(#wb):not(#wb):not(#wb):not(#wb):not(#wb):not(#wb) body.wbf-on.combined-on.combined-piece-on #app #workspace #c3-surface-bar{display:none!important}}
+
+/* Source: the title gets room under the phone top bar. */
+@media(max-width:650px){html body.combined-on[data-c3-stage="2"] #workspace>header.topbar{padding-top:14px!important}}
+
+/* Carousel slides in the filmstrip: each card fits the screen and snaps into place, at every text size. */
+@media(max-width:650px){
+ html body.wbf-on #app #workspace .car-workspace .car-sequence.car-lineup.tseq{scroll-snap-type:x mandatory;gap:10px;padding-inline:0;scroll-padding-inline:0}
+ html body.wbf-on #app #workspace .car-workspace .tseq .slide2{flex:0 0 calc(100% - 28px);width:calc(100% - 28px);max-width:calc(100% - 28px);min-width:0;scroll-snap-align:start}
+}
