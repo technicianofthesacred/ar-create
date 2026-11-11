@@ -71,3 +71,17 @@ What this means for the mock-ups (my reading, not his words): the direction stan
 "The distillation is generally gonna be more than one sentence. These are gonna be multi-chapter concepts or larger concepts that should be not just one thing. There's a short summary that can be glanced at, but then that summary goes to something a bit more medium and then that goes to something even a bit bigger. So just as we can zoom on the massive concept map, we can zoom in and out of the level of the distillation."
 
 What was done about it: on the Nugget screen the distillation now has depths, Glance, Medium and Full. Every concept has Glance and Medium; only "Already whole" has Full, written as five short headed parts. All of it is invented and sits under the "Distillation" label. Not done: depths on the Source cards and on Express, and any link between how far the map is zoomed and how deep the distillation reads. That belongs with the zoom-first work, which still waits for his yes.
+
+## The zoom-first plan proposed to Adrian (not yet answered)
+
+Proposed on 11 November after his words on scale. He has not said yes or no. The coordinating thread will start this work in a fresh thread (plan 12); it is not to be built here.
+
+One new clickable mock-up where zooming is the whole screen, and the four screens in this folder become what you find at the closest zoom.
+
+- **Far out:** only the few core understandings and the traditions as regions. A bank of any size looks this simple from here.
+- **Closer:** the districts (bigger concepts) inside one region, then the concepts as stops on lines, as in the transit picture he confirmed.
+- **Closest:** one concept with its neighbours and its words, which is the Nugget screen.
+- **Honing in:** say or type what you are after, and the map narrows to it and flies you there. It can also narrow to one topic, one work or one kind of line.
+- **Never lost:** it opens where he last was, a small trail shows the way back out, and brightness tells him where to look at every depth.
+- **Filled to feel large:** invented sample data, a few thousand concepts, so pinch, drag and fly can be judged honestly.
+- **Added after his words on distillation:** at every depth of the map, the words read at the matching depth of distillation. Far out a glance, closer the medium reading, closest the full one with the exact words under it.
