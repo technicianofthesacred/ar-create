@@ -12,8 +12,6 @@
  --v2-speech:'AR Atlas Lora',Lora,Georgia,serif;--v2-top:48px;--v2-gutter:40px;--v2-width:1320px;
  --v2-brand:transparent;--v2-br:var(--warm);--v2-sec:var(--graphite-secondary,var(--c3-sel))}
 html[data-brand]{--v2-br:color-mix(in oklab,var(--v2-brand) 76%,var(--ink))}
-/* The sample's grey for quiet text on the light paper (the app's own is a shade darker). One token, set once. */
-:root[data-theme="light"]{--dim:#686c61}
 html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--v2-t15)/1.5 var(--ar-ui);-webkit-text-size-adjust:100%}
 *,*::before,*::after{box-sizing:border-box}

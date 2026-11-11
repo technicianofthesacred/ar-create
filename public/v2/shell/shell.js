@@ -226,7 +226,12 @@
  // Library items from concept.sources.search, the command behind the CLI's "library search" (exact words only).
  let findSheet=null;
  const plain=text=>String(text??'').normalize('NFKC').trim().toLocaleLowerCase();
- const snippet=(text,n=150)=>{const t=String(text||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1).trimEnd()+'\u2026':t;};
+ /** A snippet starting at a whole word, with no stray quote, dash or stop at either end. */
+ const snippet=(r,n=150)=>{
+  let t=String(r?.quote||'');const c=String(r?.context||''),i=c.indexOf(t);
+  if(i>0&&/[\p{L}\p{N}]/u.test(c[i-1]))t=t.replace(/^\S*\s*/,'');
+  t=t.replace(/\s+/g,' ').replace(/^[\s"'\u201c\u201d\u2018\u2019.,;:\-\u2013)\]]+/,'').replace(/[\s,;:\-\u2013(\[]+$/,'');
+  return t.length>n?t.slice(0,n-1).trimEnd()+'\u2026':t;};
  function openFind(){
   if(findSheet?.el?.isConnected){findSheet.el.querySelector('[name=q]')?.focus();return findSheet;}
   const body=doc.createElement('div');
@@ -245,7 +250,7 @@
    const seen=new Set(),items=wordsRead.status==='fulfilled'?(wordsRead.value?.results||[]).filter(r=>r&&r.sourceId&&!seen.has(r.sourceId)&&seen.add(r.sourceId)).slice(0,8):[];
    const parts=[];
    if(named.length)parts.push(`<section><h3>Subjects</h3><ul data-v2-find-subject>${named.map(x=>`<li><a href="${esc(href('subject/:id',{id:x.id}))}">${esc(String(x.title||'').trim()||'Untitled subject')}</a></li>`).join('')}</ul></section>`);
-   if(items.length)parts.push(`<section><h3>In the Library</h3><ul data-v2-find-item>${items.map(r=>`<li><a href="${esc(advanced({section:'library'}))}"><b>${esc(r.title||'Untitled')}</b>${r.quote?`<small>${esc(snippet(r.quote))}</small>`:''}</a></li>`).join('')}</ul><p class="v2-find-meta">Opens the Library in Advanced.${wordsRead.value?.truncated?' More of the Library was not looked through.':''}</p></section>`);
+   if(items.length)parts.push(`<section><h3>In the Library</h3><ul data-v2-find-item>${items.map(r=>`<li><a href="${esc(advanced({section:'library'}))}"><b>${esc(r.title||'Untitled')}</b>${snippet(r)?`<small>${esc(snippet(r))}</small>`:''}</a></li>`).join('')}</ul><p class="v2-find-meta">Opens the Library in Advanced.${wordsRead.value?.truncated?' More of the Library was not looked through.':''}</p></section>`);
    if(wordsRead.status==='rejected')parts.push(`<p class="v2-find-meta" data-tone="bad">The app could not search the Library. ${esc(wordsRead.reason?.message||'')}</p>`);
    if(subjectsRead.status==='rejected')parts.push(`<p class="v2-find-meta" data-tone="bad">The app could not read your subjects. ${esc(subjectsRead.reason?.message||'')}</p>`);
    if(!named.length&&!items.length&&wordsRead.status==='fulfilled'&&subjectsRead.status==='fulfilled')parts.push(`<p class="v2-find-meta">Nothing found for "${esc(query)}".</p>`);

@@ -196,12 +196,14 @@ test('a desk chip with no photograph is a plain chip, with no empty box; with on
  assert.ok(pictured.querySelector('img'));assert.ok(!pictured.classList.contains('nopic'));
 });
 
-test('light-theme grey is the sample\'s one shell token, and still reads at 4.5 to 1 on the paper and the page',()=>{
- const css=read('public/v2/shell/shell.css');
- const m=css.match(/:root(?:\[data-theme="light"\])?[^{]*\{[^}]*--dim:\s*(#[0-9a-f]{6})/i);assert.ok(m,'--dim is set once, in the shell');assert.equal(m[1].toLowerCase(),'#686c61');
+test('light-theme grey stays the app\'s own #5e6257: the sample\'s #686c61 reads below 4.5 to 1 on the tinted surfaces',()=>{
+ const shell=read('public/v2/shell/shell.css'),theme=read('public/document-study/c3-theme.css');
+ assert.doesNotMatch(shell,/--dim\s*:/,'the shell does not set its own grey: the surfaces that tint (Looks, hover rows) are in other files');
+ const m=theme.match(/:root,:root\[data-theme="light"\]\{[^}]*--dim:(#[0-9a-f]{6})/i);assert.ok(m);
  const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];};
  const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
- for(const paper of ['#fffefb','#efede6'])assert.ok(ratio('#686c61',paper)>=4.5,paper);
+ for(const surface of ['#fffefb','#efede6','#e9e8e2','#e9e4d7'])assert.ok(ratio(m[1],surface)>=4.5,'the app grey on '+surface);
+ assert.ok(ratio('#686c61','#e9e4d7')<4.5&&ratio('#686c61','#e9e8e2')<4.5,'the sample\'s grey fails on the tints, which is why it is not used');
 });
 
 test('screens hear changes from the live stream: by record, by command name, and a reset',async()=>{
@@ -436,4 +438,16 @@ test('the desk keeps to one row: what does not fit is taken out (nothing hidden 
  assert.deepEqual(shown(),['#/subject/s3'],'with room for one, it is the subject open now');assert.equal(nav.querySelector('[data-v2-desk-more]').textContent,'+4');
  room=2000;await w.v2.desk.refresh();
  assert.equal(shown().length,5);assert.equal(nav.querySelector('[data-v2-desk-more]').hidden,true,'no "+n" when all fit');
+});
+
+test('Find shows each Library snippet from a whole word, without a stray quote or dash at either end',async()=>{
+ const {w,doc}=await page({answers:{'/api/subjects/standing':{subjects:[]},'/api/concept/sources/search':{results:[
+  {sourceId:'a',title:'Invented one',quote:'rden is quiet at dawn. The leaf is ready.',context:'The garden is quiet at dawn. The leaf is ready.',start:6},
+  {sourceId:'b',title:'Invented two',quote:'"teapot for guests". Speaker: slowly -',context:'About "teapot for guests". Speaker: slowly - ',start:7},
+ ]}}});
+ doc.querySelector('[data-v2-ask]').click();const sheet=doc.querySelector('dialog.v2-sheet');
+ sheet.querySelector('[name=q]').value='ot';sheet.querySelector('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle(60);
+ const small=[...sheet.querySelectorAll('[data-v2-find-item] small')].map(s=>s.textContent);
+ assert.equal(small[0],'is quiet at dawn. The leaf is ready.','the cut word is dropped');
+ assert.equal(small[1],'teapot for guests". Speaker: slowly','a stray quote and dash are trimmed at the ends');
 });
