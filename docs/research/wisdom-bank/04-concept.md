@@ -103,6 +103,17 @@ Five kinds, kept few on purpose:
 
 A **pathway** is a named line of nuggets in an order you chose, with your words between them. In version two it is the same thing as a research topic. The map is for four things: seeing what one idea goes into, walking from idea to idea, finding the missing step (a gap in a pathway becomes a research question, such as how Vajrayana arrives at "everything is perfect"), and feeling the whole thing join up over time.
 
+### Joining without ten approvals
+
+You said: "The joins are proposed, but at a certain point one concept may join to ten joined concepts, so I don't want to click approve on ten. Maybe there's these coherent connected concepts that come from the joining. So you're joining to a bigger concept, multiple things, not to all the different articles." You asked for a recommendation. It has four parts.
+
+1. **You join a concept, never its sources.** A concept is held once, however many works speak of it. New passages joining a concept that already holds ten works is one decision, and the ten works come with it.
+2. **Bigger concepts.** When several concepts clearly belong together, they form a bigger concept with its own name and one-line distillation, labelled as one. The smaller concepts stay whole inside it. A new concept joins the bigger one with a single yes and is then related to everything in it, with no line drawn to each. On the transit map a bigger concept is a district. You can still draw a line to one particular member when that is what you mean.
+3. **One yes for a whole work.** After distilling, the agent sorts its proposals. The ones it is sure of are gathered into one button, such as "Accept 9 joins", which you can open to look inside. Only the ones it is unsure of are shown one at a time, with its doubt stated. A typical work should ask for one tap and two or three real decisions.
+4. **Every join can be undone.** Because each passage keeps its own source, a concept can be lifted back out at any time and nothing is lost. So a quick yes is safe, and a "recently joined" list lets you look back whenever you like.
+
+This keeps the rule that agents propose and you decide. You decide once for a work, not once for a line.
+
 ### The whole map: the big brain
 
 Asked whether you want one map of everything, you answered on 11 November: "Yes, I like the conceptual mind map if there's multiple concepts of how they all interconnect to each other. And those interconnections interconnect to other interconnections. This is like a big brain, this needs a bit of thought of how to do this properly."
@@ -117,7 +128,7 @@ So the whole map is part of the concept, and it is the hardest part to do well. 
 
 This deserves its own short design study, after the three screens below and before anything is built. You asked that it begin by looking at people who have already built maps like this, and you named what works in the best ones: "the lines and the entry connections and intersections." That search was not done in this thread.
 
-One picture to test in that study, offered as my reading of your words: a transit map. Each research topic is a **line** you can ride from end to end. Each concept is a stop. A concept that several lines pass through is an **intersection**, and those are the places where traditions meet. Each work is an **entrance** onto the map.
+The picture to test in that study is a transit map. You confirmed it: "Yes, the transit map is what I meant." Each research topic is a **line** you can ride from end to end. Each concept is a stop. A concept that several lines pass through is an **intersection**, and those are the places where traditions meet. Each work is an **entrance** onto the map.
 
 ## Leaving
 
@@ -192,3 +203,4 @@ Phone first. Filled with lifelike nuggets, never empty.
 5. **The whole map.** Answered: yes, you want it. How to do it properly is the open design work, described under Connecting.
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
+8. **Joins the agent is sure of.** They start as one button for you to press. Later, once you trust it, do you want sure joins to go through on their own and simply appear in the "recently joined" list?
