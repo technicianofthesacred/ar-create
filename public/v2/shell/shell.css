@@ -126,13 +126,6 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
 .v2-sheet-body{min-width:0;overflow-wrap:break-word}
 .v2-sheet-in h2:focus{outline:0}
 @media (min-width:851px){dialog.v2-sheet{margin:auto;border-bottom:1px solid var(--c3-line2);border-radius:14px}.v2-sheet-in{padding:10px 20px 22px}.v2-sheet-in::before{display:none}}
-/* The Capture sheet: a line saying where it goes, then four tiles. */
-.v2-cap-to{font-size:var(--v2-t13);color:var(--dim);margin-bottom:14px}
-.v2-cap-to b{color:var(--ink);font-weight:600}
-.v2-cap4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.v2-cap4 a{display:grid;justify-items:center;gap:8px;padding:18px 6px 14px;border-radius:10px;background:var(--v2-sec);font:600 var(--v2-t13)/1.2 var(--ar-ui);color:var(--graphite-ink)}
-.v2-cap4 a .v2-ic{width:24px;height:24px}
-.v2-cap4 a.rec{background:var(--graphite-ink);color:var(--graphite-inverse)}
 /* Reorder: Move up and Move down beside each item; shown on hover and focus, always on touch. */
 [data-v2-reorder]{position:relative}
 [data-v2-reorder].v2-dragging{opacity:.45}

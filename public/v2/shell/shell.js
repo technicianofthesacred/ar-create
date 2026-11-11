@@ -216,18 +216,17 @@
   const badge=doc.querySelector('[data-v2-needs-badge]');if(badge){badge.hidden=!needs;badge.textContent=String(needs);}
   const phone=doc.querySelector('[data-v2-needs-phone]');phone?.setAttribute('aria-label',needs?`Needs you: ${needs}`:'Needs you');}
 
- // ---------- Capture: the sample's sheet with four tiles ----------
- // Speak, Photograph and Write a thought have no capture back end in version two, so each opens the place where
- // material is added in the existing workspace (Advanced). A question goes to Research. Nothing is saved here.
- function captureSheet(){
-  const inSubject=!!active?.screen.route.startsWith('subject/')&&active.ctx.params.id,subject=inSubject?active.ctx.params.id:null;
-  const name=inSubject&&active.ctx.title?active.ctx.title:'';
-  const where=advanced({...(subject?{subject}:{}),section:'material'});
-  const to=name?`Goes to <b>${esc(name)}</b>. A question goes to Research.`:'Opens the place for new material, to file later. A question goes to Research.';
-  const tile=(cls,ic,label,href,attr='')=>`<a class="${cls}" href="${esc(href)}"${attr}>${icon(ic)}${label}</a>`;
-  const body=`<p class="v2-cap-to">${to}</p><div class="v2-cap4">${tile('rec','mic','Speak',where)}${tile('','photo','Photograph',where)}${tile('','pen','Write a thought',where)}${tile('','ask','Ask a question','#/research',' data-v2-cap-ask')}</div>`;
-  const sh=P.sheet({title:'Capture',body,close:false});
-  sh.el.addEventListener('click',e=>{if(e.target.closest('.v2-cap4 a'))sh.close();});
+ // ---------- Capture: the sheet with four ways in (public/v2/shell/capture.js) ----------
+ // The subject is the one open on subject, write, read and check; elsewhere there is none.
+ const capture=root.V2Capture.create({
+  call:(name,input,options)=>client.call(name,input,options),isHuman:()=>client.isHuman(),
+  advanced,href,expect:record=>({expectedRevision:record?.revision??0,...(typeof record?.hash==='string'?{expectedHash:record.hash}:{})}),
+ });
+ function openCapture(options={}){return capture.open(options);}
+ function captureHere(){
+  const route=active?.screen.route||'',id=active?.ctx.params.id;
+  const here=['subject/','write/','read/','check/'].some(start=>route.startsWith(start))&&typeof id==='string'&&id;
+  return openCapture({subject:here?{id,name:active.ctx.title||''}:null});
  }
 
  // ---------- start ----------
@@ -237,7 +236,7 @@
   applyTheme();
   host.addEventListener('click',e=>{
    if(e.target.closest('[data-v2-theme]'))return toggleTheme();
-   if(e.target.closest('[data-v2-capture]'))return captureSheet();
+   if(e.target.closest('[data-v2-capture]'))return captureHere();
    if(e.target.closest('[data-v2-ask]'))return go('research');
    if(e.target.closest('[data-v2-desk-more]'))return deskSheet();
    if(e.target.closest('[data-v2-skip]')){e.preventDefault();main()?.focus();}
@@ -266,7 +265,7 @@
   expect:record=>({expectedRevision:record?.revision??0,...(typeof record?.hash==='string'?{expectedHash:record.hash}:{})}),
   actor:()=>client.actor(),isHuman:()=>client.isHuman(),actorName:C.actorName,Error:C.V2Error,
   // the other front and the frame
-  advanced,brand:id=>applyBrand(id),theme:()=>doc.documentElement.dataset.theme,
+  capture:options=>openCapture(options),advanced,brand:id=>applyBrand(id),theme:()=>doc.documentElement.dataset.theme,
   desk:Object.freeze({refresh:refreshDesk,use:source=>{deskSource=typeof source==='function'?source:null;return refreshDesk();},list:()=>desk.map(d=>({...d}))}),
   needs:Object.freeze({refresh:refreshNeeds,count:()=>needs}),
   // Helpers a screen offers the others: v2.shared.<screen id> = {...}. The only part of v2 a screen may write to.

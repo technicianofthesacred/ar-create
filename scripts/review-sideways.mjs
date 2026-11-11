@@ -218,7 +218,22 @@ for(const width of widths)for(const theme of themes){
    if(id==='ask'&&phone){notes.push({view:'v2:ask',width,theme,note:'not in the phone bar'});continue;}
    await open('#/');
    try{await page.locator(selector+':visible').first().click({timeout:3000});}catch(error){findings.push({view:'v2:'+id,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
-   await check('v2-'+id);v2views++;await page.keyboard.press('Escape');
+   await check('v2-'+id);v2views++;
+   // The Capture sheet's four tiles, each in its open state: the microphone (or the plain line when there is none),
+   // photographs, a long thought and a long question typed in, as an unbroken word would be.
+   if(id==='capture'){
+    const back=()=>page.evaluate(()=>document.querySelector('dialog.v2-capture [data-cap="back"]:not([disabled])')?.click());
+    for(const tile of ['speak','photo','thought','question']){
+     try{
+      await page.locator(`dialog.v2-capture [data-view="${tile}"]`).click({timeout:3000});await page.waitForTimeout(700);
+      if(tile==='thought'||tile==='question')await page.locator('dialog.v2-capture [data-cap-text]').fill('Gardenkeeperswinterledgerofteapickingdaysnotebook '.repeat(tile==='thought'?8:3).trim());
+     }catch(error){findings.push({view:'v2:capture-'+tile,width,theme,unreachable:String(error.message).split('\n')[0].slice(0,100)});continue;}
+     await check('v2-capture-'+tile);v2views++;
+     if(tile==='thought'||tile==='question')await page.locator('dialog.v2-capture [data-cap="discard"]').click();else await back();
+     await page.waitForTimeout(200);
+    }
+   }
+   await page.keyboard.press('Escape');
   }
  }
  await context.close();

@@ -46,8 +46,8 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 
 test('index.html lists every screen file in order, after the shell, and every file it names exists',()=>{
  const html=read('public/v2/index.html'),scripts=scriptsOf(html),styles=stylesOf(html);
- assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
- assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
+ assert.deepEqual(scripts,['/document-study/recovery-storage.js','shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js',...SCREENS.map(s=>`screens/${s}.js`)]);
+ assert.deepEqual(styles,['/document-study/c3-theme.css','shell/shell.css','shell/capture.css','/document-study/graphite-controls.css',...SCREENS.map(s=>`screens/${s}.css`)]);
  for(const file of [...scripts,...styles])assert.ok(fs.existsSync(file.startsWith('/')?path.join(repo,'public',file):path.join(v2dir,file)),file+' exists');
  assert.doesNotMatch(html,/<script>(?!<)/,'no inline script: the page runs under the app\'s strict script policy');
  assert.ok(fs.existsSync(path.join(v2dir,'README.md')),'the one page later workers read');
@@ -126,17 +126,25 @@ test('the theme follows the system until he chooses, and a choice is kept',async
  assert.equal(JSON.parse(sys.localStorage.getItem('ar-create-v2-theme')).theme,'light','the choice is kept');
 });
 
-test('Capture is the sample sheet with four tiles; search goes to Research',async()=>{
+test('Capture is the sample sheet with four tiles, each opening in place; search goes to Research',async()=>{
  const {w,doc}=await page({url:'http://local.test/v2/index.html#/subject/p1'});
+ assert.equal(typeof w.v2.capture,'function','v2.capture(options) is how every screen opens the sheet');
  doc.querySelector('[data-v2-capture]').click();
- const sheet=doc.querySelector('dialog.v2-sheet');assert.ok(sheet);
+ const sheet=doc.querySelector('dialog.v2-capture');assert.ok(sheet);
  assert.equal(sheet.querySelector('h2').textContent,'Capture');
  assert.equal(sheet.querySelector('[data-v2-close]'),null,'the sample sheet has no close button');
- assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 a')].map(a=>a.textContent),['Speak','Photograph','Write a thought','Ask a question']);
- assert.match(sheet.querySelector('.v2-cap4 a').getAttribute('href'),/^\/document-study\/index\.html\?subject=p1&section=material$/);
- assert.equal(sheet.querySelector('[data-v2-cap-ask]').getAttribute('href'),'#/research');
- assert.doesNotMatch(sheet.textContent,/Not built yet/);
- sheet.querySelector('[data-v2-cap-ask]').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null,'choosing a tile closes the sheet');
+ assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 button')].map(a=>a.textContent),['Speak','Photograph','Write a thought','Ask a question']);
+ assert.equal(sheet.querySelector('.v2-cap4 a'),null,'the tiles do not navigate away');
+ assert.match(sheet.querySelector('.v2-cap-to').textContent,/A question goes to Research\.$/);
+ assert.doesNotMatch(sheet.textContent,/Not built yet|inbox|will wait for you here/);
+ sheet.querySelector('[data-view="question"]').click();
+ assert.ok(sheet.querySelector('input[data-cap-text]'),'Ask a question opens its line in the same sheet');
+ assert.equal(w.location.hash,'#/subject/p1','nothing navigated');
+ sheet.querySelector('[data-cap="back"]').click();assert.equal(sheet.querySelectorAll('.v2-cap4 button').length,4,'a way back to the four tiles');
+ sheet.querySelector('[data-view="thought"]').click();sheet.querySelector('[data-cap="back"]').click();sheet.querySelector('[data-view="thought"]').click();
+ sheet.querySelector('[data-cap="back"]').click();
+ sheet.dispatchEvent(new w.Event('cancel',{cancelable:true}));assert.equal(doc.querySelector('dialog.v2-capture'),null,'Escape closes a sheet with nothing unsaved');
+ assert.equal(doc.activeElement,doc.querySelector('[data-v2-capture]'),'focus returns to the Capture button');
  w.location.hash='#/';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  doc.querySelector('[data-v2-ask]').click();
  assert.equal(w.location.hash,'#/research');

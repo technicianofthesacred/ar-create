@@ -67,10 +67,10 @@
  function createClient({base='',fetchImpl=(...a)=>root.fetch(...a),search=root.location?.search||'',storage=(()=>{try{return root.sessionStorage;}catch{return null;}})(),timeoutMs=20000}={}){
   const who=resolveActor(search,storage);let capabilities=null,loading=null;
   const headers=()=>who.explicit?{'X-AR-Actor':who.actor,'X-AR-Client':'ui'}:{};
-  async function request(method,path,body){
+  async function request(method,path,body,wait=timeoutMs){
    if(!who.actor)throw new V2Error('This page was opened with an assistant name the app does not know. Open it again with a listed name.',{kind:'refused'});
    let response;
-   try{response=await fetchImpl(base+path,{method,credentials:'same-origin',...(typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(timeoutMs)}:{}),headers:{Accept:'application/json',...headers(),...(body!==undefined?{'Content-Type':'application/json'}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});}
+   try{response=await fetchImpl(base+path,{method,credentials:'same-origin',...(typeof AbortSignal!=='undefined'&&AbortSignal.timeout?{signal:AbortSignal.timeout(wait)}:{}),headers:{Accept:'application/json',...headers(),...(body!==undefined?{'Content-Type':'application/json'}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});}
    catch{throw new V2Error('The app could not be reached. Nothing was changed.',{kind:'failed'});}
    const text=await response.text();let value;try{value=text?JSON.parse(text):null;}catch{value={text};}
    return {ok:response.ok,status:response.status,body:value};
@@ -81,25 +81,25 @@
    return loading;
   }
   async function find(name){const command=(await commands()).find(c=>c.name===name);if(!command)throw new V2Error(`The app has no command called "${name}".`,{kind:'refused',command:name});return command;}
-  async function once(command,input){
-   const built=buildRequest(command,input),r=await request(built.method,built.path,built.body);
+  async function once(command,input,wait){
+   const built=buildRequest(command,input),r=await request(built.method,built.path,built.body,wait);
    if(r.ok)return r.body;
    throw explain(r.status,r.body,{name:command.name,actor:who.actor});
   }
   /** Call one command. A write gets a fresh operationId unless the input names one. On 409, with reread, the fresh
       record is read; with merge(fresh, error) returning a new input the write is tried once more, otherwise the error
-      carries .fresh for the screen to show. */
-  async function call(name,input={},{reread,merge}={}){
+      carries .fresh for the screen to show. timeoutMs (optional) is how long this one call may wait; the default is 20 seconds (a large upload asks for longer). */
+  async function call(name,input={},{reread,merge,timeoutMs:wait}={}){
    const command=await find(name),write=!command.readOnly&&!NO_OPERATION_ID.has(name);
    const first=write&&input&&typeof input==='object'&&!input.operationId?{...input,operationId:uuid()}:input;
-   try{return await once(command,first);}
+   try{return await once(command,first,wait);}
    catch(error){
     if(!(error instanceof V2Error)||error.kind!=='stale'||typeof reread!=='function')throw error;
     const fresh=await reread();error.fresh=fresh;error.message='This changed since it was opened here. It has been read again; look at it before saving.';
     const next=typeof merge==='function'?await merge(fresh,error):null;
     if(!next)throw error;
     // A merged write is a new attempt, so it gets its own operation id unless the screen chose one.
-    return once(command,write&&(!next.operationId||next.operationId===first.operationId)?{...next,operationId:uuid()}:next);
+    return once(command,write&&(!next.operationId||next.operationId===first.operationId)?{...next,operationId:uuid()}:next,wait);
    }
   }
   return Object.freeze({call,commands,find,request,actor:()=>who.actor,explicit:()=>who.explicit,isHuman:()=>String(who.actor||'').startsWith('human:'),actorName});

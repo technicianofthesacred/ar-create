@@ -35,7 +35,7 @@ async function until(check,what,ms=8000){const end=Date.now()+ms;for(;;){const v
 function unit(){
  const html=read('public/v2/index.html'),dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html',runScripts:'outside-only'});
  const w=dom.window;windows.push(w);w.fetch=async()=>({ok:true,status:200,text:async()=>'{}'});w.EventSource=class{addEventListener(){}close(){}};
- for(const f of ['shell/client.js','shell/parts.js','shell/shell.js','screens/home.js'])w.eval(fs.readFileSync(path.join(v2dir,f),'utf8'));
+ for(const f of ['shell/client.js','shell/parts.js','shell/capture.js','shell/shell.js','screens/home.js'])w.eval(fs.readFileSync(path.join(v2dir,f),'utf8'));
  return w;
 }
 test('nextOf: only a known next step is ever shown',()=>{
