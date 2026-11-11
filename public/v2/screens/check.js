@@ -352,7 +352,8 @@
     t.desk=desk;t.state='ready';
    }catch(error){
     if(aborted()||token!==t.token)return;
-    t.desk=null;t.state='error';t.note=error.message||'The claims and people for this piece could not be read.';
+    const plainRead='The claims and people for this piece could not be read.';
+    t.desk=null;t.state='error';t.note=error.kind==='owner-only'||!error.message?plainRead:error.message;
    }
    paintTruth();
   }
@@ -369,7 +370,7 @@
     const people=d.people.length?`<ul class="ck-decs">${d.people.map(p=>`<li class="ck-dec"><p><strong>${esc(p.name)}</strong> <span class="ck-dim">${esc((p.appears||[]).join(', '))}</span></p><p class="ck-dim">${personState(p,d)}</p></li>`).join('')}</ul>`
      :'<p class="ck-dim">No one is listed in this piece. If someone is named, pictured or quoted, list them so their consent is asked before release.</p>';
     box.innerHTML=head+`<section aria-label="Claims and quotes" class="ck-sub"><h3>Claims and quotes</h3>${counts?`<p class="ck-dim">${esc(counts)}</p>`:''}${claims}</section>
-     <section aria-label="People in this piece" class="ck-sub"><h3>People</h3>${people}${d.people.length?`<p class="ck-dim">Answers and the release hold are in Share. They are Adrian's to give.</p><div class="ck-btns"><a class="wr-btn" href="${esc(adv('share'))}">Open Share${icon('out')}</a></div>`:''}</section>`;
+     <section aria-label="People in this piece" class="ck-sub"><h3>People</h3>${people}${d.people.length?`<p class="ck-dim">Answers and the release hold are in Share.</p><div class="ck-btns"><a class="wr-btn" href="${esc(adv('share'))}">Open Share${icon('out')}</a></div>`:''}</section>`;
    });
   }
   /** Review passage: the packet is read again, the recorded paragraph is found exactly, and only then shown. */

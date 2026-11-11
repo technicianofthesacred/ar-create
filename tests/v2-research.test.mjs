@@ -166,3 +166,8 @@ test('New group answers where it was pressed: a refusal and a name already taken
  r.doc.querySelector('[data-rs-newgroup]').click();await settle();submit(r,'Tea: drying');await settle(200);
  assert.equal(r.w.location.hash,'#/research/group/g-new');
 });
+test('on a phone a section\'s short count stays beside its heading instead of taking a row of its own',()=>{
+ const css=fs.readFileSync(path.join(import.meta.dirname,'..','public/v2/screens/research.css'),'utf8'),phone=css.slice(css.indexOf('@media (max-width:850px)'));
+ assert.doesNotMatch(phone,/\.rs-sec-h>span\{[^}]*flex-basis:100%/);
+ assert.match(phone,/\.rs-sec-h>span\{flex:0 1 auto/);
+});
