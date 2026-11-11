@@ -35,6 +35,8 @@ All AR Create threads were started from the review branch. Use these ids with th
 
 The review thread that started them all, and is the coordinator, is `session_017kitFgZ5x2SMHzVzcAbotm`.
 
+**Every open thread has been told who coordinates** (11 November: the design round, the demo builder, the screens thread and the concept thread). Each was asked to push at a junction and to begin its closing message with one plain line saying what is done and what it is waiting for; that line is what a status call shows. The four finished research threads were not woken. **Tell every new thread the same in its brief**: the coordinator's id, where the handoff file is, the closing-line habit, and that it keeps to its own brief and branch. The threads cannot message the coordinator, so the coordinator checks in.
+
 ## The research stream (the wisdom bank): how to keep it going
 
 Adrian called this "one of the most important things". The plan is [plan 9](2026-11-11-09-wisdom-bank-inquiry.md); the findings so far are on [one page](../research/wisdom-bank/03-synthesis.md).
@@ -94,7 +96,7 @@ What the first two days showed: the cost of a thread follows how much it carries
 7. **Bound every strong-model thread in its brief:** name the files it may read; say "do not explore the rest of the repository"; one direction before three; phone first; look at its own pictures as small contact sheets and at most twice; no sub-agents; stop and write a handoff after the deliverable, or if its context passes about a third of capacity.
 8. **Split a long strong-model job into stages**, each in its own thread: concept, then mock-ups, then foundations.
 9. **Do not run two builders on the same files at once.**
-10. **No watching or polling.** The coordinator is opened at a junction, does its work, and stops.
+10. **No constant watching.** On 11 November Adrian said: "Please continue all of the coordinating. Make sure all of the sessions knows that you are doing this." So the coordinator now visits by itself as well as when he opens it: at the end of each visit it schedules one next visit (a single reminder to this thread, never a repeating timer). About three hours ahead while threads are moving; once or twice a day when everything is waiting on Adrian; none when nothing is open. A visit is five cheap steps (see the end of this file), not a transcript read.
 11. **A good brief is the best saving.** It holds Adrian's own words, what must not change, what to deliver and in what form, and when to stop.
 12. **Routine coordination runs at medium effort.** Use high only for writing a brief at a big junction.
 
@@ -114,3 +116,4 @@ What the first two days showed: the cost of a thread follows how much it carries
 3. Tell Adrian which threads are waiting for him, first.
 4. If a junction has been reached, write the next brief and start the next thread.
 5. Update the tables above and push.
+6. Schedule the next visit (rule 10), and say in the reply when it is.
