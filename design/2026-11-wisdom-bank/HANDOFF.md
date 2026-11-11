@@ -65,3 +65,9 @@ Still unsure: holding and dragging on the map are not announced anywhere, so he 
 "Yes, this is in the direction, but think of this having hundreds of thousands of units of data. Not just a few. Maybe it will take a while to get there, but it needs to be scalable. And we need to design it with this in mind. That means the zooming and the navigation and the zooming out and zooming in and honing in on things are the first and foremost primary most important things."
 
 What this means for the mock-ups (my reading, not his words): the direction stands, but these screens show one talk and one concept at a human scale and say nothing about moving through a very large bank. Zooming out, zooming in and honing in must become the first thing designed, and the four screens become what you find at the closest zoom. That work is not done here. It was held out of this thread on purpose as "the whole map" and needs his yes on a plan first.
+
+**11 November, after the second pass, in his words:**
+
+"The distillation is generally gonna be more than one sentence. These are gonna be multi-chapter concepts or larger concepts that should be not just one thing. There's a short summary that can be glanced at, but then that summary goes to something a bit more medium and then that goes to something even a bit bigger. So just as we can zoom on the massive concept map, we can zoom in and out of the level of the distillation."
+
+What was done about it: on the Nugget screen the distillation now has depths, Glance, Medium and Full. Every concept has Glance and Medium; only "Already whole" has Full, written as five short headed parts. All of it is invented and sits under the "Distillation" label. Not done: depths on the Source cards and on Express, and any link between how far the map is zoomed and how deep the distillation reads. That belongs with the zoom-first work, which still waits for his yes.
