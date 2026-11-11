@@ -44,9 +44,12 @@ Branch `claude/direction-d-build`, cut from `main`. Two contracts, each with a r
 
 - `docs/plans/2026-11-11-direction-d-build.md`: codes, looks, accounts, placed things and templates, the studio's
   Made section, subject filing on the server, the sideways check. All in.
-- `docs/plans/2026-11-11-version-two.md`: version two under `public/v2/`. The shell and a fuller demo are in. Home,
-  Subject, Slides and Looks, and Research are built and in review. Still to do: bring the four screens together,
-  link them, a full check, pictures for Adrian, and bringing Write, Read and Check inside version two.
+- `docs/plans/2026-11-11-version-two.md`: version two under `public/v2/`. In and reviewed: the shell, a fuller demo,
+  the slide studio and the Looks page. Built, reviewed once and stopped part way through their corrections: Home,
+  Subject and Research, each on its own branch and not merged. Not started: one fast read of where a subject stands,
+  and bringing Write, Read and Check inside version two.
+- `docs/plans/2026-11-11-version-two-open-corrections.md`: everything still open, most important first, and what to
+  know before trusting a green test run. The briefs each builder worked from are in `docs/plans/version-two-briefs/`.
 
 To see it: `npm run setup && npm run build && npm run demo`, then `npm run demo:fill`, and open the address the demo
 prints. Nothing is released; a release to the running app and its real data is Adrian's.
@@ -57,3 +60,37 @@ prints. Nothing is released; a release to the running app and its real data is A
 2. `d-four-stations/app.js`, `studio.js` and the later blocks of `app.css` for the look and behaviour.
 3. On the build branch: the two contracts above and `public/v2/README.md`.
 4. `CLAUDE.md`, `docs/START.md` and `docs/product/LOOK.md` for the rules of the app.
+
+## Adrian's review of version two
+
+He has not yet reviewed any version two screen. He has been sent first-look pictures of Home, Subject, the slide
+studio, Looks and Research, and has not commented on any of them. Nothing in version two is approved by eye.
+
+What he has said about version two as a whole, in his words:
+
+- After the first night he opened the demo and saw the existing workspace: "it's the old version". The first night
+  had built the back end and one section inside the existing Instagram studio, and a fresh demo had nothing to open.
+- "I do like the idea of keeping that sidebar. Maybe I could use it as an advanced mode or not completely scrapping
+  what I have."
+- "Perhaps the new version we can call version two."
+- "Two should be the main one, the one that you're building now, and the other one should be the advanced version.
+  Default to the one that you're building now. And yes, I want you to build all of them."
+- He wants it joined to "the real live data that I already have so I don't have to see this sample or template".
+  That needs a release to the running app, which is his to make.
+
+Corrections still open, most important first. These come from the second-model reviews, not from him. The full list
+is in `docs/plans/2026-11-11-version-two-open-corrections.md` on the build branch.
+
+1. The app's own reads are slow above about a hundred subjects, and he has one to two hundred. Home took 28 seconds
+   to settle at 150 subjects. One fast, shared read of where a subject stands is planned and not started.
+2. Home showed untrue next steps for some subjects, and reordering the desk also moved the order inside folders.
+3. Subject showed step states before it knew them, and some were wrong (a finished Article, a suggestion waiting).
+4. Research has all its corrections written and none checked.
+5. "Open in Advanced" with a piece lands on Write whatever section was asked for.
+6. Write, Read, Check and adding material still open in Advanced. Library and "Ask or find" do nothing yet.
+
+## Unpushed work
+
+Nothing is unpushed. Finished work is on `claude/direction-d-build`. Unfinished work is on four branches, not merged
+into it and not reviewed: `claude/v2-wip-home`, `claude/v2-wip-subject`, `claude/v2-wip-research` and
+`claude/v2-wip-advanced-link`. The design round is on `claude/ar-create-design-round`.
