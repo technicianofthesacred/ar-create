@@ -66,7 +66,7 @@ const SHARED = {
  proposals: [/^magazine\./],
 };
 
-export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, magazine = null, working = null, magazineFiles = null, originalsRoot = null, events, settle = async () => {}, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
+export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, magazine = null, working = null, magazineFiles = null, originalsRoot = null, events, settle = async () => {}, suggestionWaitMs = 5000, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
  if (!dataDir || !drafts) throw new TypeError('Subject standing needs the data folder and the study drafts.');
  const shared = new Map();  // name -> {value, at, dirty, pending}
  const subjects = new Map(); // id -> {facts, at, gen, dirty}
@@ -315,9 +315,6 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
         entry.count = listed ? (listed.items || []).filter(i => i.status === 'pending' && !i.stale).length : null;
         entry.pending = null; if (entry.count === null) verdicts.delete(id);
         const e = subjects.get(id); if (e) {e.dirty = true; e.late = true;}
-        // Tell whoever is watching this subject, once, so a page showing Not known asks again. The event kind is ignored
-        // by onChange (IGNORE), so it starts no read and no wait of its own; a count that could not be read says nothing.
-        if (entry.count !== null) try {events?.emit?.({kind: 'standing.suggestions', scope: {kind: 'subject', id}, status: 'committed', actor: 'system:standing'});} catch {}
        });
        verdicts.set(id, entry);
       }
@@ -501,15 +498,27 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  }
  const stop = events?.subscribe ? events.subscribe(onChange) : () => {};
 
+ /** The facts of a subject, waiting for the proposal owner's count of its suggestions when it is still being asked (right
+     after a start or a change), so a read never states a station that a fresh read would not. After suggestionWaitMs the
+     count is honestly Not known and the facts are marked for another read, never kept as final. */
+ async function settledFacts(subject) {
+  let facts = await factsOf(subject);
+  const v = verdicts.get(subject.id);
+  if (facts.suggestions !== null || !v?.pending) return facts;
+  let timer; const timedOut = Symbol();
+  const done = await Promise.race([v.pending.then(() => true, () => true), new Promise(r => {timer = setTimeout(() => r(timedOut), suggestionWaitMs);})]);
+  clearTimeout(timer);
+  if (done === timedOut) {const e = subjects.get(subject.id); if (e) e.dirty = true; return facts;}
+  return factsOf(subject);
+ }
+
  // ---------- the two reads ----------
  async function one({parentStudyId} = {}) {
   await quiet(settle);
   if (typeof parentStudyId !== 'string' || !parentStudyId.trim() || parentStudyId.length > 256 || /[\x00-\x1f\x7f]/.test(parentStudyId)) throw new StateError('Name the subject by its project id (parentStudyId).', 400);
   const subject = (await list()).find(s => s.id === parentStudyId);
   if (!subject) throw new StateError('No subject with that id.', 404);
-  // The proposal owner's answer about suggestions is slow, so it is not waited for: the count is Not known until it
-  // arrives, and the next read has it. Screens ask again.
-  const facts = await factsOf(subject);
+  const facts = await settledFacts(subject);
   return {...decorate(standingOf(facts, {now: now()}), facts), facts, readAt: new Date(now()).toISOString()};
  }
  let running = null;
@@ -523,7 +532,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
    let next = 0;
    const worker = async () => {
     while (next < subjectsNow.length) {
-     const i = next++, before = stats.subjectReads, facts = await factsOf(subjectsNow[i]);
+     const i = next++, before = stats.subjectReads, facts = await settledFacts(subjectsNow[i]);
      if (stats.subjectReads !== before) await yieldNow();
      out[i] = summaryOf(decorate(standingOf(facts, {now: now()}), facts));
     }

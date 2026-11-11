@@ -117,10 +117,13 @@
    try{
     try{return await once(command,first,wait);}
     catch(error){
-     // On a list kept from an earlier release, a refusal as unknown (404) is tried once more on the running release's list.
-     if(!(error instanceof V2Error)||error.status!==404||!usedKept||!confirmed)throw error;
+     // On a list kept from an earlier release, the router's "API route was not found." is tried once more, and only when the
+     // running release's list gives this command another route or method. Any other 404 is the app's answer and is never sent again.
+     if(!(error instanceof V2Error)||error.status!==404||error.body?.error!=='API route was not found.'||!usedKept||!confirmed)throw error;
      const swapped=await confirmed;if(!swapped)throw error;
-     const again=await find(name);return await once(again,first,wait);
+     const again=await find(name);
+     if(again.route===command.route&&again.method===command.method)throw error;
+     return await once(again,first,wait);
     }
    }
    catch(error){
