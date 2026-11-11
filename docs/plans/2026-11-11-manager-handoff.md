@@ -24,7 +24,8 @@ All AR Create threads were started from the review branch. Use these ids with th
 
 | Thread | Id | Model | Pushes to | State, 11 November | Waiting for |
 |---|---|---|---|---|---|
-| Design round, now also the build of version two (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high, directing; Opus and Sonnet workers build and review | Mock-ups: `claude/ar-create-design-round`. Build: `claude/direction-d-build`, cut from `main` | **Direction D chosen** ("Gather, Research, Create, Share"). On 11 November Adrian told that thread: version two is the main app and opens by default, the existing workspace stays as Advanced, build all of it there. Shell, a fuller demo, slide studio and Looks are in; Home, Subject and Research are built and being corrected. Its handoff is `design/2026-11-better-interface/HANDOFF.md`; its contracts are `docs/plans/2026-11-11-direction-d-build.md` and `docs/plans/2026-11-11-version-two.md` on the build branch. Very large and the most expensive thread, about 328 dollars before the build began | Adrian's review of every version two screen. **Do not start another build thread for Direction D** |
+| Design round (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high | `claude/ar-create-design-round` | **Handed over on 11 November; no longer building.** Direction D chosen. It pushed the record, an open corrections file and four work-in-progress branches, and was asked to cancel its scheduled resume of builders (set for 09:33 UTC) and to add "Adrian's review of version two" to its handoff file. Kept for reference only. About 365 dollars | Its one closing line confirming the resume is cancelled. **Check this at the next visit** |
+| Version two build, director (plan 10) | `session_017kitFhwXrMkHn5yWTr8eqp` | Strongest, medium, directing; Opus and Sonnet workers | `claude/direction-d-build` | Started 11 November from the build branch. Work list: `docs/plans/2026-11-11-version-two-open-corrections.md` on that branch. Stage: the fast read of where a subject stands, then Home, Subject, Research and the Advanced link merged and working, screens linked, one full check, one page of pictures for Adrian. Piece 7 (Write, Read and Check inside version two) is the next thread | Adrian's eyes on its pictures |
 | Demo that walks the whole chain (plan 7) | `session_017kitFeYtEjJcjysfvHwLhn` | Lighter | `claude/ar-create-walkable-demo` | Its status on 11 November reads: walkable demo built, verified and pushed. One thing left: exporting the Carousel in the demo needs a change to where the app looks for Chrome | Adrian's decision on that change, in that thread |
 | Screens (plan 5, Stage A only) | `session_017kitFe4zT8nwXTejaJ2Px9` | Lighter | `claude/ar-create-screens` | Stage A built and pushed. Told to stop after Stage A | His approval, in that thread |
 | Wisdom bank A: inventory | `session_017kitFdz6mRmrViNFV4MVnE` | Lighter | `claude/wisdom-bank-inventory` | **Done.** Report merged into the review branch. Could not read i64os | Nothing |
@@ -67,7 +68,7 @@ Adrian called this "one of the most important things". The plan is [plan 9](2026
 
 ## The app stream: what happens next
 
-Adrian chose Direction D on 11 November and told the design round to build it in its own thread as "version two", under `public/v2/`, with the existing workspace kept as Advanced. So the earlier plan (a build sheet, then separate builders) is withdrawn. The coordinator's work here is to keep the other threads from colliding with that build and to check its result against the review.
+Adrian chose Direction D on 11 November and told the design round to build it as "version two"; on the same day, at his word ("Start, medium effort"), the build moved to a fresh director thread (plan 10). It is built, under `public/v2/`, with the existing workspace kept as Advanced. So the earlier plan (a build sheet, then separate builders) is withdrawn. The coordinator's work here is to keep the other threads from colliding with that build and to check its result against the review.
 
 | When | Next step | Model |
 |---|---|---|
@@ -85,7 +86,7 @@ Adrian chose Direction D on 11 November and told the design round to build it in
 - The nine decisions in the review's "Decisions that belong to Adrian", including where the work lives when the Mac is off.
 - Whether the wisdom bank lives inside version two's Research station (suggested yes; the concept thread will ask him).
 - Merging pull request 233.
-- **His word to start the fresh director thread.** On 11 November he said "Yes prepare the brief for a fresh director thread"; the brief is [plan 10](2026-11-11-10-version-two-director-brief.md). When he says start: send the design round the closing note in that plan, wait for its push, check the four conditions in the plan from the pushed branches, then start the new thread on `claude/direction-d-build` with the brief's text. He also agrees the effort level (medium recommended).
+- His review of version two's screens now goes to the new director thread, not the design round.
 
 ## How to run this cheaply and well
 

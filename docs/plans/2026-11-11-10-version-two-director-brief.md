@@ -1,6 +1,6 @@
 # Plan 10: a fresh director thread for the version two build
 
-**Status.** Prepared on 11 November 2026 at Adrian's word: "Yes prepare the brief for a fresh director thread". **Not started.** Starting it means the design round thread stops building, which is Adrian's to say.
+**Status.** Prepared on 11 November 2026 at Adrian's word: "Yes prepare the brief for a fresh director thread". **Started the same day** at his word, "Start, medium effort": thread `session_017kitFhwXrMkHn5yWTr8eqp`, on `claude/direction-d-build`. The design round pushed its record, an open corrections file (`docs/plans/2026-11-11-version-two-open-corrections.md` on the build branch) and four work-in-progress branches (`claude/v2-wip-home`, `-subject`, `-research`, `-advanced-link`), so the text actually sent to the new thread names those as its work list; otherwise it is the brief below. Adrian had not yet commented on the built screens, so there were no review words to carry over.
 
 ## Why
 
