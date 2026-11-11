@@ -15,6 +15,7 @@ Nine plans, each written so a builder can start without the chat they came from.
 | 9 | [The wisdom bank, an inquiry](2026-11-11-09-wisdom-bank-inquiry.md) | Paste a talk or book in; it is distilled into nuggets that link, map and feed his pieces | An inquiry in four parts, then large | His yes to start |
 | 10 | [A fresh director thread for the version two build](2026-11-11-10-version-two-director-brief.md) | The same build of the interface he chose, at a fraction of the cost per step, leaving room for the research | Started 11 November | Nothing |
 | 11 | [Wisdom bank mock-ups, the brief](2026-11-11-11-wisdom-bank-mockups-brief.md) | Four screens of the bank he can open on his phone and click through | Done 11 November, two passes | Nothing |
+| 14 | [Write, Read and Check inside version two](2026-11-11-14-write-read-check-brief.md) | Writing happens inside the interface he chose, on the right piece, with every protection of his words kept | A brief, starting after the small fixes | Started at his word |
 | 12 | [The wisdom bank at full size, zoom first](2026-11-11-12-wisdom-bank-zoom-brief.md) | An invented bank of hundreds of thousands of units that he can zoom and move through, by work and by concept | Page published 11 November | His reaction to its page |
 | 13 | [The wisdom bank as one page](2026-11-11-13-wisdom-bank-one-page-brief.md) | How he moves through a massive bank, books and collections first: three ways shown small, then the chosen one as a single page | Started 11 November | His choice among the three ways |
 
