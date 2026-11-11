@@ -1,6 +1,6 @@
 # Plan 11: wisdom bank mock-ups (step D2), the brief
 
-**Status.** Prepared 11 November 2026, when [the concept](../research/wisdom-bank/04-concept.md) was written. **Not started.** It starts at Adrian's word, with the effort level he agrees (medium recommended).
+**Status.** Prepared 11 November 2026, when [the concept](../research/wisdom-bank/04-concept.md) was written. **Started the same day** at his word, "Start the mock-ups, medium effort": thread `session_017kitFi8g4WwzxMRTZUwnmk`, pushing to `claude/wisdom-bank-mockups`.
 
 ## What it is for
 
