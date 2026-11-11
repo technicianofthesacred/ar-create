@@ -1,7 +1,7 @@
 /* Version two: Write. Every rule starts with .wr so nothing leaks into another screen. Sizes are the shell's six only.
    The page he writes on keeps the approved page of the existing workspace: the interface face, a 700 pixel measure, a
    generous line and a clear gap between paragraphs. Everything around it follows the approved sample. */
-.v2-page.wr{max-width:none;padding:0;gap:0;align-content:start;--bar:46px}
+.v2-page.wr{max-width:none;padding:0;gap:0;align-content:start;--bar:40px}
 .wr .wr-wait,.wr .wr-dim{color:var(--dim);font-size:var(--v2-t14);overflow-wrap:anywhere}
 .wr .wr-wait{padding:44px var(--v2-gutter)}
 .wr .wr-none{padding:44px var(--v2-gutter);display:grid;gap:14px;max-width:560px}
@@ -13,21 +13,29 @@
 .wr .wr-back:hover{color:var(--ink)}
 .wr .wr-back .v2-ic{width:16px;height:16px}
 .wr .wr-tabs{display:flex;flex-wrap:wrap;align-self:stretch;align-items:stretch;gap:0 2px;padding-left:12px;border-left:1px solid var(--line);min-width:0}
-.wr .wr-tabs a{display:flex;align-items:center;padding:0 10px;min-height:var(--bar);font:500 var(--v2-t14)/1 var(--ar-ui);color:var(--c3-ink2);border-bottom:2px solid transparent;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wr .wr-tabs a{display:flex;align-items:center;padding:0 10px;min-height:calc(var(--bar) - 1px);font:500 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2);border-bottom:2px solid transparent;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wr .wr-tabs a:hover{color:var(--ink)}
 .wr .wr-tabs a[aria-current]{color:var(--ink);font-weight:600;border-bottom-color:var(--v2-br)}
 .wr .wr-tabs a .v2-ic{width:16px;height:16px}
 .wr .wr-seg{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:7px;background:var(--v2-sec);flex:none}
-.wr .wr-seg>*{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:5px;font:600 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2)}
+.wr .wr-seg>*{display:inline-flex;align-items:center;min-height:24px;padding:0 10px;border-radius:5px;font:600 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2)}
 .wr .wr-seg>a:hover{color:var(--ink)}
 .wr .wr-seg>[aria-current]{background:var(--paper);color:var(--ink);box-shadow:0 0 0 1px var(--c3-line2)}
 .wr .wr-sp{flex:1 1 0;min-width:0}
 .wr .wr-saved{font-size:var(--v2-t12);color:var(--dim);white-space:nowrap}
 .wr .wr-saved[data-tone="bad"]{color:var(--c3-bad);white-space:normal}
 .wr .wr-saved-m{display:none}
+.wr .wr-ro{font-size:var(--v2-t13);color:var(--dim);margin:-12px 0 20px;overflow-wrap:anywhere}
 .wr .wr-bar>button{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .wr .wr-bar>button .v2-ic{width:16px;height:16px}
-.wr .wr-bar>button[aria-pressed="false"]:not(.v2-ghost){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+/* The bar's buttons are the sample's: 28 tall, 13 type. Sources is a raised pill with light text (dark theme) while it is
+   open, and plain while it is closed. The Graphite look and the shell's touch size sit in this layer, so these win. */
+@layer v2-controls{
+ .wr .wr-bar>button{min-height:28px!important;height:28px!important;padding:3px 10px!important;border:1px solid transparent!important;border-radius:6px!important;font:600 var(--v2-t13)/20px var(--ar-ui)!important;box-shadow:none!important;background-clip:border-box!important}
+ .wr .wr-bar>button[data-wr="src"]{background:var(--v2-sec)!important;color:var(--graphite-ink,var(--ink))!important}
+ .wr .wr-bar>button[data-wr="src"][aria-pressed="false"]{background:transparent!important;color:var(--c3-ink2)!important}
+ .wr .wr-bar>button.v2-ghost:not(:disabled):hover,.wr .wr-bar>button[data-wr="src"][aria-pressed="false"]:hover{background:var(--v2-sec)!important;color:var(--ink)!important}
+}
 .wr .wr-focusbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 24px;font-size:var(--v2-t13);color:var(--dim)}
 
 /* sources and the page */
@@ -40,30 +48,38 @@
 .wr .wr-src-h span{font-size:var(--v2-t12);color:var(--dim);flex:1}
 .wr .wr-src-h button{align-self:center}
 .wr .wr-src-l{list-style:none;padding:0;display:grid;gap:1px}
-.wr .wr-src-l li{display:grid;padding:8px 8px;border-radius:8px;min-width:0}
+.wr .wr-src-l li{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;min-width:0}
+.wr .wr-src-l .v2-ic{width:16px;height:16px;color:var(--dim)}
+.wr .wr-src-l span{display:grid;min-width:0}
 .wr .wr-src-l b{font:500 var(--v2-t14)/1.3 var(--ar-ui);overflow-wrap:anywhere}
-.wr .wr-src-l small{font-size:var(--v2-t12);color:var(--dim)}
+.wr .wr-src-l small{font-size:var(--v2-t12);line-height:1.5;color:var(--dim)}
 .wr .wr-paper{min-width:0}
-.wr .wr-sheet{padding:56px 40px 120px;display:grid;grid-template-columns:minmax(0,700px) 300px;column-gap:48px;justify-content:center;align-content:start;min-width:0}
+.wr .wr-sheet{padding:56px 20px 120px;display:grid;grid-template-columns:minmax(0,700px) 300px;column-gap:28px;justify-content:center;align-content:start;min-width:0}
 .wr .wr-sheet>*{grid-column:1;min-width:0}
 .wr .wr-sheet>.wr-text{grid-column:1/-1}
-.wr .wr-title{font:700 var(--v2-t22)/1.2 var(--ar-ui);letter-spacing:-.02em;margin:0 0 24px;overflow-wrap:anywhere}
-.wr .wr-text{display:grid;grid-template-columns:subgrid;gap:0;min-width:0}
+.wr .wr-title{font:600 var(--v2-t18)/1.3 var(--ar-ui);margin:0 0 24px;overflow-wrap:anywhere}
+.wr .wr-text{display:grid;grid-template-columns:subgrid;row-gap:0;min-width:0}
 .wr .wr-row{display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:start;min-width:0}
-.wr .wr-main{min-width:0}
-.wr .wr-ed{display:block;box-sizing:border-box;width:calc(100% + 14px);margin:0 0 22px -14px;padding:0 0 0 12px;color:var(--ink);font:400 var(--v2-t18)/1.65 var(--ar-ui);resize:none;overflow:hidden;min-height:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.wr .wr-main{min-width:0;position:relative}
+/* his place in the page is a short bar in the margin, so the box itself sits exactly on the text column */
+.wr .wr-main:focus-within::before{content:'';position:absolute;left:-12px;top:0;bottom:22px;width:2px;background:var(--v2-br)}
+.wr .wr-main:has(.wr-ed[readonly])::before{display:none}
+.wr .wr-ed{display:block;box-sizing:border-box;width:100%;margin:0 0 22px;padding:0;color:var(--ink);font:400 var(--v2-t18)/1.58 var(--ar-ui);resize:none;overflow:hidden;min-height:0;overflow-wrap:anywhere;white-space:pre-wrap}
 /* The Graphite field look would put a box round every paragraph. This layer comes before it, so these win. */
 @layer v2-controls{
- .wr .wr-ed{border:0!important;border-left:2px solid transparent!important;border-radius:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;color:var(--ink)!important;min-height:0!important;font-weight:400!important;outline:0!important}
- .wr .wr-ed:focus,.wr .wr-ed:focus-visible{outline:0!important;border-left-color:var(--v2-br)!important}
+ .wr .wr-ed{border:0!important;border-radius:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;color:var(--ink)!important;min-height:0!important;font-weight:400!important;outline:0!important}
+ .wr .wr-ed:focus,.wr .wr-ed:focus-visible{outline:0!important}
  .wr .wr-ed.wr-h{font-weight:700!important}
 }
 .wr .wr-ed::placeholder{color:var(--dim)}
 .wr .wr-ed.wr-h{margin-top:10px}
 .wr .wr-ed.wr-q{color:var(--c3-ink2);font-style:italic}
-.wr .wr-lock{font:400 var(--v2-t18)/1.65 var(--ar-ui);color:var(--c3-ink2);margin:0 0 22px;overflow-wrap:anywhere}
+.wr .wr-lock{font:400 var(--v2-t18)/1.58 var(--ar-ui);color:var(--c3-ink2);margin:0 0 22px;overflow-wrap:anywhere}
 .wr .wr-drafts:empty{display:none}
-.wr .wr-draft{font:400 var(--v2-t18)/1.65 var(--ar-ui);color:var(--dim);padding-left:16px;border-left:2px solid var(--c3-line2);margin:-8px 0 22px;overflow-wrap:anywhere}
+.wr .wr-draft{font:400 var(--v2-t18)/1.58 var(--ar-ui);color:var(--dim);padding-left:16px;border-left:2px solid var(--c3-line2);margin:-8px 0 22px;overflow-wrap:anywhere}
+.wr .wr-draft.wr-left{text-decoration:line-through;opacity:.7}
+.wr .wr-mark{display:inline-flex;margin-left:10px;min-height:24px;padding:0 8px;border-radius:6px;background:transparent;border:1px solid var(--c3-line2);color:var(--c3-ink2);font:600 var(--v2-t12)/1 var(--ar-ui);vertical-align:2px}
+.wr .wr-mark[aria-pressed="true"]{background:var(--v2-sec);color:var(--ink)}
 .wr sup{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;margin:0 6px 0 0;border-radius:8px;background:var(--v2-br);color:var(--paper);font:600 var(--v2-t12)/16px var(--ar-ui);vertical-align:2px}
 .wr .wr-margin:empty{display:none}
 .wr .wr-note{display:grid;gap:8px;padding:0 0 4px 16px;border-left:1px solid var(--c3-line2);justify-items:start;min-width:0}
@@ -75,12 +91,8 @@
 .wr .wr-loose{display:grid;gap:18px}
 .wr .wr-loose:empty{display:none}
 .wr .wr-stale{margin:0}
-.wr .wr-todo{margin-top:28px;padding-top:18px;border-top:1px dashed var(--c3-line2);display:grid;gap:8px}
+.wr .wr-todo{margin-top:28px;padding-top:18px;border-top:1px dashed var(--c3-line2);display:grid;gap:8px;justify-items:start}
 .wr .wr-label{font-size:var(--v2-t12);color:var(--dim)}
-.wr .wr-out{margin-top:20px}
-.wr .wr-out a{display:inline-flex;align-items:center;gap:6px;font-size:var(--v2-t13);color:var(--c3-ink2)}
-.wr .wr-out a:hover{color:var(--ink)}
-.wr .wr-out .v2-ic{width:16px;height:16px}
 
 /* a newer saved version: his words and the saved ones, side by side */
 .wr .wr-conflict{display:grid;gap:12px;margin:0 0 28px;padding:16px 18px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--line));border-radius:12px;background:var(--c3-lift)}
@@ -93,7 +105,7 @@
 .wr .wr-pairs b{font-size:var(--v2-t12);font-weight:600;color:var(--dim);margin-right:6px}
 
 /* focus: the page alone */
-.wr.wr-focus .wr-bar,.wr.wr-focus .wr-src,.wr.wr-focus .wr-margin,.wr.wr-focus .wr-drafts,.wr.wr-focus .wr-todo,.wr.wr-focus .wr-out,.wr.wr-focus .wr-loose{display:none}
+.wr.wr-focus .wr-bar,.wr.wr-focus .wr-src,.wr.wr-focus .wr-margin,.wr.wr-focus .wr-drafts,.wr.wr-focus .wr-todo,.wr.wr-focus .wr-loose{display:none}
 .wr.wr-focus .wr-work{grid-template-columns:minmax(0,1fr)}
 .wr.wr-focus .wr-sheet{grid-template-columns:minmax(0,700px)}
 .wr.wr-focus .wr-sheet>.wr-text{grid-column:1}
@@ -112,12 +124,13 @@
 @media (max-width:850px){
  .wr .wr-bar{padding:0 max(10px,env(safe-area-inset-left,0px));gap:0 4px}
  .wr .wr-back span,.wr .wr-seg,.wr .wr-saved,.wr .wr-bar>button.v2-ghost span,.wr .wr-bar>button span{display:none}
- .wr .wr-bar>button{min-width:36px;justify-content:center}
- .wr .wr-saved-m{display:block;margin:0 0 10px}
+ .wr .wr-bar>button{min-width:38px;justify-content:center}
+ @layer v2-controls{.wr .wr-bar>button{min-height:32px!important;height:32px!important}}
+ .wr .wr-saved-m{display:block;margin:0 0 6px;font-size:var(--v2-t12);color:var(--dim)}
+ .wr .wr-ro{margin-top:-6px}
  .wr .wr-tabs{border:0;padding:0}
  .wr .wr-work{grid-template-columns:minmax(0,1fr);min-height:0}
  .wr .wr-work[data-src="closed"] .wr-src{display:none}
  .wr .wr-src{position:fixed;inset:auto 0 calc(64px + env(safe-area-inset-bottom,0px)) 0;top:auto;height:56dvh;z-index:34;border:1px solid var(--c3-line2);border-radius:16px 16px 0 0;box-shadow:var(--c3-shadow);padding:18px 20px 24px}
  .wr .wr-sheet{padding:24px max(18px,env(safe-area-inset-left,0px)) 130px}
- .wr .wr-title{font-size:var(--v2-t22)}
 }

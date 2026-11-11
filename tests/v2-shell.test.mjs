@@ -269,6 +269,21 @@ test('the client against the server: a read, a write with its revision, a 409 re
  await assert.rejects(adrian.call('no.such.command',{}),e=>e.kind==='refused'&&/no command/.test(e.message));
 });
 
+test('presence.post is sent as it is, with no operationId, so the server accepts it (and tells an assistant "Adrian has unsaved words")',async t=>{
+ const f=await server(t),adrian=pageClient(f.url);
+ const posted=await adrian.call('presence.post',{stage:'Write',scope:{kind:'draft',id:'invented-draft'},dirty:true,sequence:1,session:'abc12345'});
+ assert.equal(posted.presence.dirty,true,'the server took it');
+ const seen=await adrian.call('presence.get',{kind:'draft',id:'invented-draft'});
+ assert.deepEqual(seen.presence.map(p=>[p.actor,p.dirty,p.stage]),[['human:adrian',true,'Write']],'an assistant reading presence sees Adrian has unsaved words open');
+ const left=await adrian.call('presence.post',{stage:'Write',scope:{kind:'draft',id:'invented-draft'},dirty:false,sequence:2,session:'abc12345',leaving:true});
+ assert.equal(left.left,true);
+ // Every other write still gets its operation id.
+ const sent=[];const C=clientModule(),c=C.createClient({base:'http://x.test',storage:null,fetchImpl:async(u,o)=>{sent.push([u,o.body?JSON.parse(o.body):null]);return {ok:true,status:200,text:async()=>u.includes('capabilities')?JSON.stringify({commands:[{name:'a.write',method:'POST',route:'/api/a',readOnly:false,schema:{}},{name:'presence.post',method:'POST',route:'/api/presence',readOnly:false,schema:{}}]}):'{}'};}});
+ await c.call('a.write',{x:1});await c.call('presence.post',{dirty:false});
+ assert.match(sent.find(([u])=>u.endsWith('/api/a'))[1].operationId,/^[0-9a-f-]{36}$/);
+ assert.equal('operationId' in sent.find(([u])=>u.endsWith('/api/presence'))[1],false);
+});
+
 test('the client says who holds a record (423) and what a consent hold is, in plain words',async()=>{
  const C=clientModule(),answer=(status,body)=>C.createClient({search:'',storage:null,fetchImpl:async u=>({ok:u.endsWith('/api/capabilities'),status:u.endsWith('/api/capabilities')?200:status,text:async()=>JSON.stringify(u.endsWith('/api/capabilities')?{commands:[{name:'w',method:'POST',route:'/api/w',readOnly:false,schema:{}}]}:body)})});
  await assert.rejects(answer(423,{error:'locked',holder:{actor:'agent:claude-code',expiresAt:'2026-11-11T10:00:00Z'}}).call('w',{}),e=>e.kind==='held'&&/^Claude is working on this until .+\. Wait, or ask them to let it go\.$/.test(e.message)&&e.holder.actor==='agent:claude-code');
