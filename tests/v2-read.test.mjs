@@ -166,6 +166,22 @@ test('when the newer words cannot be read, Read says so and offers Try again; th
  assert.equal(doc.querySelector('[data-rd-stale]').hidden,true);
 });
 
+test('a failed re-read says newer words exist only when a save was announced; otherwise it says the re-read failed',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
+ const {doc,sources}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ answers['/api/study-draft/read']=[500,{error:'down'}];
+ for(const s of sources)s.emit('change',{kind:'study-draft.check',cursor:9300,bootId:'b',operationId:'y1'});
+ await until(()=>!doc.querySelector('[data-rd-stale]').hidden,3000);
+ const said=doc.querySelector('[data-rd-stale]').textContent;
+ assert.match(said,/could not be read again/);assert.doesNotMatch(said,/Newer words exist/);
+ assert.ok(doc.querySelector('[data-rd-retry]'));
+});
+
+test('the page leaves no grey band under a short piece on a phone',()=>{
+ const css=read('public/v2/screens/read.css');
+ assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd\.v2-page\{[^}]*background:var\(--paper\)[^}]*min-height:calc\(100dvh - var\(--v2-top\) - 61px/);
+});
+
 test('Edit words is in one place per width: the bar on a computer, under the text on a phone',()=>{
  const css=read('public/v2/screens/read.css');
  assert.match(css,/\.rd \.rd-foot \.rd-edit-foot\{display:none\}/);

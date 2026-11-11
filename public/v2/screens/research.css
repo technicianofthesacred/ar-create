@@ -261,7 +261,8 @@ html[data-brand] .rs-lay .rs-rl.on{box-shadow:inset 0 0 0 1px var(--v2-br)}
  .rs-topic .rs-decwrap{padding:24px var(--v2-gutter) 140px}
  .rs-topic .rs-dec{padding:20px 18px}
  .rs-topic .rs-dec .rs-row button{flex:1 1 auto}
- .rs-lay .rs-sec-h>span{flex-basis:100%;margin-top:-6px}
+ /* a short count ("0", "16 topics") stays beside its heading; only a span too long for the line wraps under it */
+ .rs-lay .rs-sec-h>span{flex:0 1 auto;margin-top:0}
  .rs-lay .rs-rl{line-height:1}
 }
 @media (prefers-reduced-motion:reduce){.rs-lay .rs-railtog .rs-chev{transition:none}}

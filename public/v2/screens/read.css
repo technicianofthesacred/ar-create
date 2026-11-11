@@ -16,6 +16,8 @@
 .rd .rd-stale[hidden]{display:none}
 .rd .rd-stale button{margin-left:6px}
 @media (max-width:850px){
+ /* a short piece: the page's own paper runs down to the phone bar (top bar above it, 61px bar below it), so no grey band shows */
+ .rd.v2-page{background:var(--paper);min-height:calc(100dvh - var(--v2-top) - 61px - env(safe-area-inset-bottom,0px))}
  .rd .rd-edit{display:none}
  .rd .rd-foot .rd-edit-foot{display:inline-flex}
 }

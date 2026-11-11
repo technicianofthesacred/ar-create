@@ -37,7 +37,7 @@
  function open(page,ctx){
   const id=ctx.params.id;
   const st={standing:null,forms:[],form:null,piece:null,bindingId:null,base:null,rows:[],unsaved:false};
-  let timer=null,gone=false;
+  let timer=null,gone=false,newerKnown=false;
   const $=sel=>page.querySelector(sel);
   const write=()=>v2.shared.write;
   const scope=()=>({bindingId:st.bindingId,parentStudyId:id});
@@ -88,11 +88,12 @@
    catch{
     if(gone||ctx.signal.aborted)return;
     const n=$('[data-rd-stale]');
-    if(n){n.hidden=false;n.innerHTML='Newer words exist, but they could not be read just now, so what you see here may be out of date. <button type="button" data-rd-retry>Try again</button>';}
+    if(n){n.hidden=false;n.innerHTML=(newerKnown?'Newer words exist, but they could not be read just now, so what you see here may be out of date.':'The saved words could not be read again just now, so what you see here may be out of date.')+' <button type="button" data-rd-retry>Try again</button>';}
     return;
    }
    if(gone||ctx.signal.aborted)return;
    const stale=$('[data-rd-stale]');if(stale){stale.hidden=true;stale.textContent='';}
+   newerKnown=false;
    if(!sameRevision(fresh,st.base)){st.base=fresh;st.rows=write().rowsOf(fresh);}
    paint();
   }
@@ -100,6 +101,7 @@
       to another piece's draft is not. A change that names no draft is read again to be safe. */
   const onChange=e=>{
    if(e&&!e.reset&&e.scope&&e.scope.id&&e.scope.id!==st.bindingId)return;
+   if(e&&e.scope&&e.scope.id===st.bindingId&&/save/.test(String(e.kind||'')))newerKnown=true;
    clearTimeout(timer);timer=setTimeout(refresh,250);};
   const onRetry=e=>{if(e.target.closest?.('[data-rd-retry]')){clearTimeout(timer);void refresh();}};
   page.addEventListener('click',onRetry);

@@ -137,3 +137,9 @@ test('the match pass: the sample\'s subtitle, an always-present week section, th
  assert.match(css,/\.rs-topic \.rs-lead\{font:500 var\(--v2-t15\)/,'the lead stands out at weight 500');
  assert.doesNotMatch(fs.readFileSync(path.join(v2dir,'screens/research.js'),'utf8')+css,/—/,'no em dash');
 });
+
+test('on a phone a section\'s short count stays beside its heading instead of taking a row of its own',()=>{
+ const css=fs.readFileSync(path.join(import.meta.dirname,'..','public/v2/screens/research.css'),'utf8'),phone=css.slice(css.indexOf('@media (max-width:850px)'));
+ assert.doesNotMatch(phone,/\.rs-sec-h>span\{[^}]*flex-basis:100%/);
+ assert.match(phone,/\.rs-sec-h>span\{flex:0 1 auto/);
+});
