@@ -11,6 +11,11 @@
 .rd .rd-foot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .rd .rd-foot:empty{display:none}
 .rd .rd-edit{flex:none;white-space:nowrap}
+.rd .rd-foot .rd-edit-foot{display:none}
+.rd .rd-stale{margin:-6px 0 22px;padding:10px 14px;border:1px solid color-mix(in srgb,var(--c3-warn) 55%,var(--line));border-radius:10px;background:var(--c3-lift);font-size:var(--v2-t14);line-height:1.5;overflow-wrap:anywhere}
+.rd .rd-stale[hidden]{display:none}
+.rd .rd-stale button{margin-left:6px}
 @media (max-width:850px){
  .rd .rd-edit{display:none}
+ .rd .rd-foot .rd-edit-foot{display:inline-flex}
 }

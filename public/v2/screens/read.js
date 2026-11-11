@@ -59,6 +59,7 @@
      <p class="wr-saved wr-saved-m rd-count" data-rd-count role="status"></p>
      <h1 class="wr-title">${esc(st.form?.title||st.standing?.title||'')}</h1>
      <p class="rd-unsaved" data-rd-unsaved role="status" hidden></p>
+     <p class="rd-stale" data-rd-stale role="status" hidden></p>
      <div class="rd-text" data-rd-text></div>
      <div class="rd-foot" data-rd-foot></div>
     </div></article></div>`;
@@ -72,22 +73,36 @@
    if(un){un.hidden=!st.unsaved;un.innerHTML=st.unsaved?`You have unsaved words in Write on this device, so what you see here is older than what you typed. <a href="${esc(to('write'))}">Open Write</a> to carry on, and they save by themselves.`:'';}
    if(!st.rows.length){
     text.innerHTML=`<p class="rd-empty" role="status">This piece has no saved words yet.</p>`;
-    $('[data-rd-foot]').innerHTML=`<a class="wr-btn" href="${esc(to('write'))}">Write the first words</a>`;
+    $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Write the first words</a>`;
    }else{
     text.innerHTML=st.rows.map(rowHTML).join('');
-    $('[data-rd-foot]').innerHTML=`<a class="wr-btn" href="${esc(to('write'))}">Edit words</a><a class="wr-btn" href="${esc(to('check'))}">Check this piece</a>`;
+    $('[data-rd-foot]').innerHTML=`<a class="wr-btn rd-edit-foot" href="${esc(to('write'))}">Edit words</a><a class="wr-btn" href="${esc(to('check'))}">Check this piece</a>`;
    }
   }
 
   // ---------- keeping up with the saved words ----------
   async function refresh(){
    if(gone||!st.bindingId||!$('[data-rd-text]'))return;
-   let fresh;try{fresh=await readDraft();}catch{return;}
+   let fresh;
+   try{fresh=await readDraft();}
+   catch{
+    if(gone||ctx.signal.aborted)return;
+    const n=$('[data-rd-stale]');
+    if(n){n.hidden=false;n.innerHTML='Newer words exist, but they could not be read just now, so what you see here may be out of date. <button type="button" data-rd-retry>Try again</button>';}
+    return;
+   }
    if(gone||ctx.signal.aborted)return;
+   const stale=$('[data-rd-stale]');if(stale){stale.hidden=true;stale.textContent='';}
    if(!sameRevision(fresh,st.base)){st.base=fresh;st.rows=write().rowsOf(fresh);}
    paint();
   }
-  const onChange=()=>{clearTimeout(timer);timer=setTimeout(refresh,250);};
+  /** Only a change to this piece's words (a draft change carries the draft's id as its scope) is worth reading again; a change
+      to another piece's draft is not. A change that names no draft is read again to be safe. */
+  const onChange=e=>{
+   if(e&&!e.reset&&e.scope&&e.scope.id&&e.scope.id!==st.bindingId)return;
+   clearTimeout(timer);timer=setTimeout(refresh,250);};
+  const onRetry=e=>{if(e.target.closest?.('[data-rd-retry]')){clearTimeout(timer);void refresh();}};
+  page.addEventListener('click',onRetry);
   const onStorage=e=>{if(!e||!e.key||e.key===KEY())paint();};
 
   ctx.on({kinds:['study-draft*']},onChange);

@@ -136,6 +136,42 @@ test('when the saved draft changes while Read is open, the new words are shown',
  assert.equal(doc.querySelector('.rd-count').textContent,'3 words');
 });
 
+test('a change to another piece\'s draft does not make Read read again; a change to this one does',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
+ const {doc,sources,calls}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ const reads=()=>calls.filter(c=>c.path==='/api/study-draft/read').length;
+ const before=reads();
+ answers['/api/study-draft/read']=draft([row('r0','After.')],'h2');
+ for(const s of sources)s.emit('change',{kind:'study-draft.save',cursor:9100,bootId:'b',scope:{kind:'draft',id:'other-binding'},operationId:'elsewhere'});
+ await settle(600);
+ assert.equal(reads(),before,'another draft\'s change is not read');
+ assert.equal(doc.querySelector('.rd-p').textContent,'Before.');
+ for(const s of sources)s.emit('change',{kind:'study-draft.save',cursor:9101,bootId:'b',scope:{kind:'draft',id:'b1'},operationId:'elsewhere2'});
+ await until(()=>doc.querySelector('.rd-p').textContent==='After.',3000);
+ assert.equal(reads(),before+1);
+});
+
+test('when the newer words cannot be read, Read says so and offers Try again; the old words stay until it works',async()=>{
+ const answers={'/api/subject/standing':standing,...owned,'/api/study-draft/read':draft([row('r0','Before.')])};
+ const {doc,sources}=await page({hash:'#/read/s1?piece=o1',answers});await settle(150);
+ assert.equal(doc.querySelector('[data-rd-stale]').hidden,true);
+ answers['/api/study-draft/read']=[500,{error:'down'}];
+ for(const s of sources)s.emit('change',{kind:'study-draft.save',cursor:9200,bootId:'b',scope:{kind:'draft',id:'b1'},operationId:'x1'});
+ await until(()=>!doc.querySelector('[data-rd-stale]').hidden,3000);
+ assert.match(doc.querySelector('[data-rd-stale]').textContent,/Newer words exist, but they could not be read/);
+ assert.equal(doc.querySelector('.rd-p').textContent,'Before.');
+ answers['/api/study-draft/read']=draft([row('r0','After.')],'h2');
+ doc.querySelector('[data-rd-retry]').click();
+ await until(()=>doc.querySelector('.rd-p').textContent==='After.',3000);
+ assert.equal(doc.querySelector('[data-rd-stale]').hidden,true);
+});
+
+test('Edit words is in one place per width: the bar on a computer, under the text on a phone',()=>{
+ const css=read('public/v2/screens/read.css');
+ assert.match(css,/\.rd \.rd-foot \.rd-edit-foot\{display:none\}/);
+ assert.match(css,/@media \(max-width:850px\)\{[^@]*\.rd \.rd-edit\{display:none\}[^@]*\.rd-edit-foot\{display:inline-flex\}/);
+});
+
 test('a piece whose words are owned elsewhere says so and offers Advanced; a missing piece is said plainly',async()=>{
  const elsewhere=await page({hash:'#/read/s1?piece=o1',answers:{'/api/subject/standing':standing,'/api/study/outputs':{outputBindings:[{outputId:'o1',wordOwner:{kind:'magazine'}}]}}});await settle(150);
  assert.match(elsewhere.doc.querySelector('.rd-empty').textContent,/not kept where Read can open them/);

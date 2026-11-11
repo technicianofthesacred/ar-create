@@ -701,3 +701,8 @@ test('real server: after splitting the last paragraph the empty box is after it,
  assert.equal(boxes.at(-1).value,'','the empty Write here box is last');
  assert.ok(boxes.slice(0,-1).every(t=>t.value.trim()),'no empty box between the halves');
 });
+
+test('the Add a piece plus is never hidden at any width',()=>{
+ const css=read('public/v2/screens/write.css');
+ assert.doesNotMatch(css,/Add a piece[^}]*\{[^}]*display:none/,'the plus stays at every width');
+});
