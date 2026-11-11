@@ -8,7 +8,7 @@ The wisdom bank is the Research station of AR Create. It distils each talk or bo
 
 1. **You paste a talk** on Vajrayana. You are asked nothing else.
 2. **A few minutes later the whole talk is laid out as its concepts.** All of them, none removed. Each concept is a **nugget**: a name, one line saying what it means, and gathered inside it every passage of the talk that carries it, in the exact words, with who said them and when. Beside it sits a plain explanation through your own filter.
-3. **You see how the concepts connect**, first to each other inside the talk, then to concepts from other works. "This one echoes your friend's idea." "This practice comes before that idea." Connections are proposed and you say yes or no.
+3. **You see how the concepts connect**, first to each other inside the talk, then to the rest of your bank. Where the talk carries a concept you already hold, its passages join that same nugget, so one concept gathers every voice that speaks of it. Joins and connections are proposed and you say yes or no.
 4. **One day you feel something you want to express**, such as "everything is perfect". You say it to the bank. It gathers what the different traditions said about it, in their own words, and what each says must come first.
 5. **You pick a few and put them in order.** That line of nuggets is a research topic.
 6. **You press "make a piece".** The topic becomes the outline of an article, a reel or the words for an artwork, with every quote credited.
@@ -36,20 +36,23 @@ Spoken by voice and kept as transcribed, including slips.
 
 You added: "Some of the concepts I will agree with more and I can make more resonant or stronger. Other ones I won't like as much, but I don't wanna delete any of them because they interconnect to each other. All of them can have some sort of map showing how they interconnect. Also because concepts, even though we're looking for nuggets, do not exist in isolation." So resonance is yours to set, nothing is deleted, every work has its map, and a concept is never shown alone.
 
+And on the same concept appearing in two works: "They become one concept holding passages from both. The whole point is to make this map huge and have a totality of understandings." So a nugget is one concept across the whole bank, and it grows as more works speak of it.
+
 - **You return in order to use**: to express something, to study, or to browse until something rings. So the main door is "I have something to express", and a daily habit is only a small extra.
 - **Assimilating means a lens.** The words stay untouched. Beside them sits an explanation written through your own set of variables, which you can change. This page calls that set your **lens**.
 - **The pathway is the map.** A connects with B connects with C. A saved line of nuggets is what you walk, and it is also the outline of the piece you make.
 
 ## The nugget
 
-One concept from one body of work. A talk or a book is distilled into all of its concepts, and each concept is a nugget. It holds:
+One concept, held once in the whole bank. A talk or a book is distilled into all of its concepts. A concept the bank has not met becomes a new nugget. A concept it already holds gains the new work's passages. It holds:
 
 - **A name and a distillation**: a few words and one line, labelled "Distillation", written by an agent. You may reword them.
-- **The exact words that carry it**: every passage in the source where this concept is spoken, gathered together. Each is checked letter for letter against the stored source and can never be edited.
-- **Who said them and where**: the speaker, the source, and the moment of each passage (minute and second in a talk, chapter and page in a book, date of a conversation).
+- **The exact words that carry it**: every passage where this concept is spoken, from every work, gathered together and grouped by work. Each is checked letter for letter against its stored source and can never be edited.
+- **Who said them and where**: each passage keeps its own speaker, its own source and its own moment (minute and second in a talk, chapter and page in a book, date of a conversation). Voices sit side by side and are never blended into one.
+- **How each work says it**: where two traditions mean the concept a little differently, a one-line note under each work's passages says so, labelled as a distillation.
 - **A reading through your lens**: a short explanation labelled with the lens it used. Change the lens and the reading is written again. The words do not move.
 - **Your response**: your own words, dated, in their own place.
-- **Its links**: to the other concepts in the same work, which shows how the work holds together, and to concepts in other works. Each link has a kind and a reason.
+- **Its links** to other concepts, each with a kind and a reason.
 - **Its resonance**: how strongly it rings for you. You turn it up or down yourself, and it also rises as you respond to a concept, link it and use it. Resonance shows as brightness. A concept you do not much like stays, dimmer, because the others connect through it. Nothing is deleted.
 
 A concept is never shown alone. Wherever you meet one, its neighbours are in view.
@@ -66,7 +69,7 @@ The source is stored once. Then the work depends on its weight:
 - **A book** is heavy. You choose: the whole book, one chapter at a time, or only the passages you marked. You see the likely cost before a heavy run starts.
 - **A friend's idea** arrives as a recording or a note. The friend is the speaker. It stays marked private until they agree to be quoted. If it is your memory of what they said, it is labelled "as Adrian remembers it" and is never shown as a quote.
 
-What comes back is a **source page**: the whole work laid out as a map of its concepts, every one of them, with the lines between them showing how the work holds together. Core concepts are brighter. This is the distilled body of work, complete, and it is useful before you do anything to it.
+What comes back is a **source page**: the whole work laid out as a map of its concepts, every one of them, with the lines between them showing how the work holds together. Core concepts are brighter. Concepts the bank already holds are marked "joins a concept you have", and each join is proposed for your yes. This is the distilled body of work, complete, and it is useful before you do anything to it.
 
 You can then, whenever you like: **reword** a name or distillation, **join** two nuggets that are one concept, **split** one that is really two, and turn a concept's **resonance** up or down. A concept you turn down stays on the map in its place. Names, numbers and dates are flagged for a second look. A source you have not reviewed waits quietly.
 
@@ -92,7 +95,7 @@ When a source arrives, and whenever you ask, an agent proposes links. Each propo
 
 Five kinds, kept few on purpose:
 
-- **Echoes**: another voice or tradition saying the same thing.
+- **Echoes**: close to this concept, but not the same one. (The same concept in another work is not a link. Its passages join the one nugget.)
 - **Prepares**: this must come before that. It is how the bank remembers that a concept without its preparation may be irresponsible.
 - **Contrasts**: disagrees with it or sets a limit on it.
 - **Explains**: unpacks it or gives an example.
@@ -106,12 +109,15 @@ Asked whether you want one map of everything, you answered on 11 November: "Yes,
 
 So the whole map is part of the concept, and it is the hardest part to do well. What is settled, and what still needs thought:
 
-- **Settled: one map of the whole bank exists**, alongside the map of each work.
+- **Settled: one map of the whole bank exists**, alongside the map of each work. It is meant to grow huge: a totality of understandings.
+- **Settled: each dot is one concept across all works.** A concept that many works speak of is where those works meet.
 - **Settled: a connection is a thing in its own right.** It has a kind, a reason, your words and its own resonance, and it can be connected to another connection. Example: the way a practice prepares an idea in one tradition can echo the way a practice prepares an idea in another. That is a pattern between two connections, and the bank can hold it.
 - **Needs thought: how it stays usable as it grows.** A first proposal for the mock-up thread to test: the map has depths, like looking closer. From far away you see traditions and works as regions. Closer, the concepts and the lines between them. Closer still, one concept with its passages. It always opens centred on where you were, the most resonant concepts and connections are brightest, and you can narrow it to one topic, one work or one kind of line.
 - **Needs thought: how a connection between connections is drawn** so it can be seen and followed without becoming a tangle.
 
-This deserves its own short design study, after the three screens below and before anything is built.
+This deserves its own short design study, after the three screens below and before anything is built. You asked that it begin by looking at people who have already built maps like this, and you named what works in the best ones: "the lines and the entry connections and intersections." That search was not done in this thread.
+
+One picture to test in that study, offered as my reading of your words: a transit map. Each research topic is a **line** you can ride from end to end. Each concept is a stop. A concept that several lines pass through is an **intersection**, and those are the places where traditions meet. Each work is an **entrance** onto the map.
 
 ## Leaving
 
@@ -186,4 +192,3 @@ Phone first. Filled with lifelike nuggets, never empty.
 5. **The whole map.** Answered: yes, you want it. How to do it properly is the open design work, described under Connecting.
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
-8. **The same concept in two works.** When two works carry the same concept, do they stay two nuggets joined by an "echoes" link, each true to its own source, or become one concept holding passages from both?
