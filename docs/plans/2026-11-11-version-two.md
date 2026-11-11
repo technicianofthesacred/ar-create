@@ -75,8 +75,8 @@ The rules in `docs/plans/2026-11-11-direction-d-build.md` ("Rules for every work
 
 | Piece | Built by | Reviewed by | State |
 |---|---|---|---|
-| 1 Shell | | | |
-| 2 A fuller demo | | | |
+| 1 Shell | Opus | Sonnet | In. The app's address opens version two; top bar, phone bar, theme, tint, command client, change stream, a stub for every screen, Advanced both ways. A screen written from the README alone worked first time |
+| 2 A fuller demo | Sonnet | director | In. `npm run demo:fill` makes 24 invented subjects at every stage; `-- --large` makes 150 |
 | 3 Home | | | |
 | 4 Subject | | | |
 | 5 Slides and Looks | | | |
