@@ -23,6 +23,45 @@ screen. He has not yet said yes to any screen. On 11 November he asked that ever
 works, that it be shipped without asking again (a pull request merged into main). The release to his installed app is
 run on his Mac.
 
+## First look with his real records, 12 November: the five that stand between Adrian and using it
+
+Version two was installed on his Mac on 12 November and walked as an assistant with his real records (8 subjects,
+one open question, the Teajia look). These come before everything below, in this order.
+
+1. **His magazine work is not on Home.** Home shows 8 subjects, three of them test stand-ins ("Hong Kong Day 1 ·
+   structure test", "Fresh Article", "Hong Kong Day 1 · New Article"). The nine active Magazine stories (Tea Teacher,
+   Yixing Masters, Wood-Fired Potter, Lu Zhaokai, An Cha Master, Taiwan Tea Philosopher, Hong Kong Day 1, Teaware
+   Collector, Shanyin Qiwu) are not subjects at all, so `standing all` and Home never list them. Until his real
+   stories are subjects, there is nothing for him to work on here.
+2. **Raw machine text where his direction should be.** A subject's header shows the stored direction record as
+   written: on "Hong Kong Day 1 · structure test" the direction-choices comment and its JSON, on "2019 Liubao ·
+   Golden Flower" the markdown headings of the concept ("# Concept ## Author thoughts..."). On a phone the JSON fills
+   the whole first screen and pushes the page 7 pixels sideways.
+3. **Nothing he would make can be made inside version two.** Every Create step opens Advanced. His three Carousels
+   on "Let the good tea find you" are older Outputs carousels, and there are no Instagram plans at all, so the slide
+   studio has nothing real to open. The three Carousels carry the same name and cannot be told apart. Piece 7 (Write,
+   Read, Check) and a way to open an existing Carousel in the studio are the work.
+4. **Research is empty and The facts says more than it shows.** Research has two topics, both "Study photographs",
+   0 sources each. On a subject, "The facts: Findings to read" shows only the question that was asked and no findings.
+   On a Carousel, "The words on the slides: 1428 words" is the whole article's count, the same on every form.
+5. **Slower with 8 real subjects than the demo was with 150.** The first `standing all` after a restart took 6.2
+   seconds (1.4 the second time). Every page waits about 1.2 seconds on `/api/capabilities` before anything shows;
+   the Hong Kong subject takes 5.7 seconds to settle at 1440.
+
+Not seen, because his records hold none: photographs on desk cards or rows (nothing is on the desk; no subject has
+a photograph), the tint under the bar on a subject (no subject has a look; the tint does show on Looks), a topic's
+Decide count, findings and "What people say". What held: Home's stations, counts and next steps match the CLI for
+all 8; the Hong Kong subject's eight steps match `standing subject`; Needs you shows his one real question with its
+link; Looks shows the real Teajia look; no other page scrolls sideways at 390.
+
+The automatic check, found the same night: the package check fails because three test servers orphaned by earlier
+runs (started 13:24, 14:40 and 15:12 on 11 November, synthetic magazine fixtures, random ports) keep rewriting
+`.scratch/magazine-fixtures` on the runner after checkout wipes it; deleting the folder does not last until they are
+stopped, and the fixture helper should not leave them. The photo inspect test is not slow: the workspace page
+mounts in 18.4, 19.1 and 19.7 seconds on the Mac; it fails because the photo details panel never opens (no caption
+box), first at the Screens stage A merge (PR 235). Likely its new keyboard aid, which walks computed styles of every
+focusable control, under jsdom. Version two was released with `--no-ci-check` naming this.
+
 ## Open corrections, most important first
 
 ### 1. The match against the sample
