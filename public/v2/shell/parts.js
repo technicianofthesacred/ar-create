@@ -10,6 +10,7 @@
   sun:'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   moon:'M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z',ask:'M5 5h14v10H10l-5 4z',back:'M15 5l-7 7 7 7',chev:'M9 6l6 6-6 6',right:'M5 12h14M13 6l6 6-6 6',
   up:'M12 19V5M6 11l6-6 6 6',down:'M12 5v14M6 13l6 6 6-6',check:'M5 12l4 4L19 6',undo:'M9 7L4 12l5 5M4 12h11a5 5 0 0 1 0 10h-2',
+  mic:'M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',photo:'M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zM8.500 9.500v.01M21 15l-5-5-8 9',pen:'M4 20h4L20 8l-4-4L4 16z',
   close:'M6 6l12 12M18 6L6 18',out:'M14 5h5v5M19 5l-8 8M18 14v5H5V6h5',grip:'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
  };
  const icon=(name,label)=>`<svg class="v2-ic" viewBox="0 0 24 24" ${label?`role="img" aria-label="${esc(label)}"`:'aria-hidden="true"'} focusable="false"><path d="${PATHS[name]||''}"/></svg>`;
@@ -49,9 +50,9 @@
 
  /** A sheet over the screen (a dialog): a bottom sheet on a phone, a centred one on a computer. body is markup or a
      node. Returns {el, body, close}. Escape and the backdrop close it; focus returns to where it was. */
- function sheet({title,body='',label,onClose}={}){
+ function sheet({title,body='',label,onClose,close:closeButton=true}={}){
   const opener=doc.activeElement,d=doc.createElement('dialog');d.className='v2-sheet';d.setAttribute('aria-label',label||title||'Sheet');
-  d.innerHTML=`<div class="v2-sheet-in"><header><h2 tabindex="-1">${esc(title||'')}</h2><button type="button" class="v2-ghost v2-icon-btn" data-v2-close aria-label="Close">${icon('close')}</button></header><div class="v2-sheet-body"></div></div>`;
+  d.innerHTML=`<div class="v2-sheet-in"><header><h2 tabindex="-1">${esc(title||'')}</h2>${closeButton?`<button type="button" class="v2-ghost v2-icon-btn" data-v2-close aria-label="Close">${icon('close')}</button>`:''}</header><div class="v2-sheet-body"></div></div>`;
   const content=d.querySelector('.v2-sheet-body');if(typeof body==='string')content.innerHTML=body;else if(body)content.append(body);
   let done=false;const close=()=>{if(done)return;done=true;try{d.close();}catch{}d.remove();try{onClose?.();}finally{opener?.focus?.({preventScroll:true});}};
   d.addEventListener('click',e=>{if(e.target===d||e.target.closest('[data-v2-close]'))close();});

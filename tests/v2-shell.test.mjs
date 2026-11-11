@@ -75,7 +75,7 @@ test('the shell exposes the names screens rely on, and every screen registers it
 test('the router: Home first, each route opens from its address, unknown addresses go Home, back and forward work',async()=>{
  const {w,doc}=await page({url:'http://local.test/v2/index.html#/subject/synthetic-one'});
  assert.equal(w.v2.route().id,'subject');assert.deepEqual(plain(w.v2.route().params),{id:'synthetic-one'});
- const here=doc.querySelector('[data-v2-here]');assert.equal(here.hidden,false,'a subject shows the thin header');
+ assert.equal(doc.querySelector('[data-v2-here]'),null,'the sample has no thin back bar under the top bar');
  w.location.hash='#/research/topic/t1';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  assert.equal(w.v2.route().id,'research-topic');
  assert.equal(doc.querySelector('[data-v2-place="research"]').getAttribute('aria-current'),'page');
@@ -83,12 +83,11 @@ test('the router: Home first, each route opens from its address, unknown address
  w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  assert.equal(w.location.hash,'#/');assert.equal(w.v2.route().id,'home');
  assert.equal(doc.querySelector('.v2-top [data-v2-place="home"]').getAttribute('aria-current'),'page');
- assert.equal(doc.querySelector('[data-v2-here]').hidden,true,'Home has no thin header');
  w.history.back();await new Promise(r=>setTimeout(r,60));
  assert.notEqual(w.v2.route().id,'home','Back leaves Home again');
 });
 
-test('the frame: top bar, phone bar, Needs you count, the desk from pinned subjects, Advanced, theme',async()=>{
+test('the frame: top bar, phone bar, Needs you count, the desk from pinned subjects, theme',async()=>{
  const {w,doc,calls}=await page({answers:{
   '/api/needs-you':{counts:{open:2},asks:[]},
   '/api/subject-places':{places:[{parentStudyId:'p2',pinnedAt:'2026-11-02T00:00:00Z',archived:false,order:1},{parentStudyId:'p1',pinnedAt:'2026-11-01T00:00:00Z',archived:false,order:0},{parentStudyId:'p3',pinnedAt:null},{parentStudyId:'p4',pinnedAt:'2026-11-03T00:00:00Z',archived:true}]},
@@ -104,17 +103,44 @@ test('the frame: top bar, phone bar, Needs you count, the desk from pinned subje
  assert.equal(doc.querySelector('[data-v2-needs-badge]').textContent,'2');
  assert.deepEqual([...doc.querySelectorAll('.v2-desk-chip')].map(a=>[a.getAttribute('href'),a.textContent]),[['#/subject/p1','Invented garden'],['#/subject/p2','Invented cups']],'pinned, not archived, in hand order, named from the records');
  assert.match(top.querySelector('[data-v2-place="library"]').getAttribute('href'),/^\/document-study\/index\.html\?section=library$/);
- // The theme follows the existing workspace's own setting, and a choice here is kept beside it.
- assert.equal(doc.documentElement.dataset.theme,'light');
+ // The theme follows the system until he chooses one with the theme button; the choice is kept.
+ assert.equal(doc.documentElement.dataset.theme,'light','no system preference in this page, so light, whatever the workspace stored');
  doc.querySelector('[data-v2-theme]').click();
  assert.equal(doc.documentElement.dataset.theme,'dark');
- assert.deepEqual(JSON.parse(w.localStorage.getItem('ar-create-v2-theme')),{theme:'dark',basedOn:'light'});
+ assert.deepEqual(JSON.parse(w.localStorage.getItem('ar-create-v2-theme')),{theme:'dark'});
  assert.equal(JSON.parse(w.localStorage.getItem('ar-create-packaged-document-study-v1')).theme,'light','the workspace\'s own copy is never written');
- // Advanced from a subject lands on that subject.
  w.location.hash='#/subject/p1';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  assert.equal(doc.querySelector('[data-v2-advanced]').getAttribute('href'),'/document-study/index.html?subject=p1');
  assert.equal(doc.querySelector('.v2-desk-chip[aria-current]').getAttribute('href'),'#/subject/p1');
  assert.ok(calls.every(c=>!c.options.headers['X-AR-Actor']),'as Adrian the page sends no actor header, like the existing page');
+});
+
+test('the theme follows the system until he chooses, and a choice is kept',async()=>{
+ const sys=await (async()=>{const html=read('public/v2/index.html');const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;windows.push(w);
+  w.matchMedia=()=>({matches:true,addEventListener(){}});w.fetch=async()=>({ok:true,status:200,text:async()=>'{}'});w.EventSource=class{addEventListener(){}close(){}};
+  for(const src of scriptsOf(html)){const file=src.startsWith('/')?path.join(repo,'public',src):path.join(v2dir,src);w.eval(fs.readFileSync(file,'utf8'));}
+  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));await settle();return w;})();
+ assert.equal(sys.document.documentElement.dataset.theme,'dark','a dark system opens dark');
+ sys.document.querySelector('[data-v2-theme]').click();
+ assert.equal(sys.document.documentElement.dataset.theme,'light');
+ assert.equal(JSON.parse(sys.localStorage.getItem('ar-create-v2-theme')).theme,'light','the choice is kept');
+});
+
+test('Capture is the sample sheet with four tiles; search goes to Research',async()=>{
+ const {w,doc}=await page({url:'http://local.test/v2/index.html#/subject/p1'});
+ doc.querySelector('[data-v2-capture]').click();
+ const sheet=doc.querySelector('dialog.v2-sheet');assert.ok(sheet);
+ assert.equal(sheet.querySelector('h2').textContent,'Capture');
+ assert.equal(sheet.querySelector('[data-v2-close]'),null,'the sample sheet has no close button');
+ assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 a')].map(a=>a.textContent),['Speak','Photograph','Write a thought','Ask a question']);
+ assert.match(sheet.querySelector('.v2-cap4 a').getAttribute('href'),/^\/document-study\/index\.html\?subject=p1&section=material$/);
+ assert.equal(sheet.querySelector('[data-v2-cap-ask]').getAttribute('href'),'#/research');
+ assert.doesNotMatch(sheet.textContent,/Not built yet/);
+ sheet.querySelector('[data-v2-cap-ask]').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null,'choosing a tile closes the sheet');
+ w.location.hash='#/';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
+ doc.querySelector('[data-v2-ask]').click();
+ assert.equal(w.location.hash,'#/research');
+ assert.equal(doc.querySelector('dialog.v2-sheet'),null,'search opens no dialog');
 });
 
 test('screens hear changes from the live stream: by record, by command name, and a reset',async()=>{
