@@ -65,3 +65,15 @@ test('Home and the subject board are opened by name; an address without the keys
  assert.deepEqual(plain.calls,[]);
  assert.equal(plain.w.location.search,'?reviewActor=agent:codex');
 });
+
+test('the Version two link returns to the address he left, and keeps doing so after the workspace drops its query string',async()=>{
+ const {w}=open('v2from=/research/topic/t1%3Fx%3D1');
+ const link=()=>w.document.querySelector('a.v2-front').getAttribute('href');
+ assert.equal(link(),'/v2/index.html#/research/topic/t1?x=1');
+ w.history.replaceState(null,'','/document-study/index.html');
+ w.arVersionTwo.ensure();
+ assert.equal(link(),'/v2/index.html#/research/topic/t1?x=1','kept for the tab');
+ const again=open('v2from=//evil.example');
+ assert.notEqual(again.w.document.querySelector('a.v2-front').getAttribute('href'),'/v2/index.html#//evil.example','an address that is not a plain version two path is ignored');
+ assert.match(again.w.document.querySelector('a.v2-front').getAttribute('href'),/^\/v2\/index\.html#\/subject\/s1$/,'falls back to today\'s behaviour');
+});

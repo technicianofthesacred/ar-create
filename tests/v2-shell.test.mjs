@@ -172,6 +172,20 @@ test('advanced() names the matching place in the existing workspace, and an assi
  assert.equal(w.sessionStorage.getItem('ar-create-ui-actor'),'agent:codex','kept for the tab under the same key as the existing page');
 });
 
+test('a hand-off to the existing workspace names the version two address he is leaving, as it is followed',async()=>{
+ const {w}=await page({url:'http://local.test/v2/index.html'});
+ for(const place of ['/research/topic/t1','/looks','/research/group/g1','/slides/i1','/subject/p1']){
+  w.location.hash='#'+place;w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
+  const a=w.document.querySelector('[data-v2-advanced]');a.addEventListener('click',e=>e.preventDefault());
+  a.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true}));
+  assert.equal(new URL(a.getAttribute('href'),'http://local.test/').searchParams.get('v2from'),place,place);
+  assert.equal(w.v2.advanced({}),'/document-study/index.html','advanced() itself stays plain');
+ }
+ w.location.hash='#/';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
+ const a=w.document.querySelector('[data-v2-advanced]');a.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true}));
+ assert.equal(new URL(a.getAttribute('href'),'http://local.test/').searchParams.get('v2from'),null,'Home needs none');
+});
+
 test('an unknown assistant name blocks every request, as in the existing page',async()=>{
  const {w,calls}=await page({url:'http://local.test/v2/index.html?reviewActor=agent:somebody'});
  assert.equal(w.v2.actor(),null);
