@@ -206,3 +206,21 @@ Same link, same file. This replaces the five-screen layout described above; the 
 Checked: Map, tea map, Express and Yours at 390 dark and light and 1440 dark for sideways scrolling (none); the open concept at 390 dark at Full depth, and at 390 light and 1440 dark at Medium.
 
 Known faults: on a phone the floating microphone overlaps the "Open" button of the lines panel when that panel is at the bottom of the screen. Zooming in and out of the map itself is still not here; that is the other thread. Only "You are already whole" has Full depth.
+
+**11 November, with a wide-screen screenshot of the Map showing the card headings broken, in his words:**
+
+"Expression should always be done on the place wherever I am. If there's a microphone it should not be as big there. I I'm smart enough to know where it is if it's floating. Your way to navigate through different things is not good, they should not be pills to navigate through different things. This is gonna be a massive database of so much And you still haven't integrated the book collections or anything like that. You haven't really addressed my concerns about how to see all the topics inside of the book or inside of the data. Also your suggestions for UI is majorly flawed."
+
+## Fifth pass, 11 November
+
+- **Map now opens on "Everything"**, not on one talk. A find field, then two ways in: **By work** (collections: Buddhist teachings, Tea, Neuroscience, Friends, with counts) and **By concept** (every concept, brightest first, saying which work it is in). The pills that switched between works are gone.
+- **A collection** lists its works. Two open; the others are shown as waiting.
+- **A work** shows its parts first, with every concept listed under its part ("Before the teaching", "The teaching", "Living with it"), then its map and its cards. A plain trail at the top (Everything, the collection, the work) is how he goes back out.
+- **The microphone** is smaller and quiet (an outline, not a solid button).
+- **Card headings fixed**: the name has the whole row; the kind and the resonance dots sit beneath it.
+
+Checked at 390 and 1440 in light: Everything by work and by concept, a collection, a work, and a concept opened from a part. No sideways scrolling. Dark not re-pictured after this change.
+
+Unsure, and asked of him: whether "Expression should always be done on the place wherever I am" also means "I have something to express" should stop being its own place.
+
+Counts on Everything (65 works, 1,821 concepts, 23,400 passages) are invented to suggest size. This is browsing by lists and levels; it is not the zooming map, which remains with the other thread. His judgement "your suggestions for UI is majorly flawed" stands on record and was not answered by this pass.

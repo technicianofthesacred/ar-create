@@ -136,7 +136,7 @@ h3{font:600 var(--t15)/1.3 var(--ui)}
 dialog.sheet.big{width:min(760px,100%);height:94dvh;max-height:94dvh}
 #cin{gap:18px;padding-top:0}
 .chead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:4px;margin:0 -20px;padding:6px 12px 6px 10px;background:var(--paper);border-bottom:1px solid var(--line)}
-.chead .mic{width:40px;height:40px}
+.chead .mic{width:36px;height:36px}
 #cin .small{font:400 var(--t18)/1.45 var(--ui);margin-top:10px}
 #cin blockquote.say{margin-inline:-20px;padding:14px 20px;background:var(--bg)}
 #cin>p{line-height:1.7}
@@ -154,8 +154,10 @@ dialog.sheet.big{width:min(760px,100%);height:94dvh;max-height:94dvh}
 .differ{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .differ>div{display:grid;gap:6px;align-content:start;padding:14px 16px;border-radius:10px;background:var(--bg)}
 .pathlog{display:grid;gap:4px}
-#gmic{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:36;width:52px;height:52px;box-shadow:var(--shadow)}
-body.tray #gmic{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+#gmic{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:36;width:40px;height:40px}
+#gmic,.chead .mic{background:var(--paper);color:var(--ink2);box-shadow:inset 0 0 0 1px var(--line2)}
+#gmic svg,.chead .mic svg{width:16px;height:16px}
+body.tray #gmic{bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 #gbar{position:fixed;left:0;right:0;bottom:0;z-index:37;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--paper);border-top:1px solid var(--line)}
 #gbar>*{max-width:760px;margin:0 auto}
 .note{display:grid;gap:4px;padding-top:14px;border-top:1px solid var(--line)}
@@ -165,6 +167,19 @@ details>summary::-webkit-details-marker{display:none}
 details>summary::after{content:"+";margin-left:auto;color:var(--dim);font-weight:400}
 details[open]>summary::after{content:"\2212"}
 details[open]>summary{margin-bottom:10px}
+/* browsing: everything, a collection, a work, its parts */
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;width:100%;padding:14px 0;border-top:1px solid var(--line);text-align:left}
+.row b{font:600 var(--t15)/1.3 var(--ui)}
+.row span{grid-column:1;font-size:var(--t13);color:var(--dim)}
+.row i{grid-column:2;grid-row:1/3;font-style:normal;color:var(--dim)}
+.row.wait b{color:var(--dim);font-weight:500}
+.rows{display:grid;max-width:760px}
+.find{width:100%;max-width:760px;height:44px;margin-top:16px;padding:0 14px;border:1px solid var(--line2);border-radius:10px;background:var(--paper);color:var(--ink);font:400 var(--t15)/1 var(--ui)}
+.parts{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:22px;max-width:980px}
+.parts button{display:block;width:100%;min-height:36px;padding:6px 0;text-align:left;font:500 var(--t14)/1.3 var(--ui)}
+.parts .lab{padding-bottom:6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+#shead .trail{margin-bottom:6px}
+#shead .tabs{margin-top:14px}
 /* nugget screen */
 .trail{display:flex;flex-wrap:wrap;align-items:center;gap:0 2px;font-size:var(--t13);color:var(--dim);margin-left:-8px}
 .trail button,.trail a{min-height:44px;padding:0 8px;display:inline-flex;align-items:center;border-radius:6px}
@@ -307,7 +322,7 @@ blockquote.say{margin-inline:-16px;padding:14px 16px;background:var(--bg);line-h
 <!-- 1. a source just after distilling -->
 <section class="page" id="map">
  <header id="shead"></header>
- <div class="split">
+ <div class="split" id="swork">
   <div class="left">
    <div class="map" id="smap"></div>
    <p class="legend"><span><i class="p"></i>prepares</span><span><i></i>explains</span><span><i class="c"></i>contrasts</span><span><i class="e"></i>echoes</span></p>
@@ -416,18 +431,36 @@ L.push(['t1','t2','prepares','There is nothing to pile until the leaf has been p
 const TY={eth:'Practice',stab:'Practice',shown:'Idea',feel:'Practice',ordinary:'Idea',whole:'Idea',bypass:'Idea',comp:'Idea',ret:'Idea'};Object.keys(TY).forEach(k=>C[k].ty=TY[k]);
 const WORKS=[{t:'The ground is already whole',who:'Ilse Varnholt',kind:'Talk, 48 min',meta:'1 joined, 1 unsure, 7 new',order:ORDER,core:'whole'},
  {t:'How ripe pu\'er is made',who:'Wen Dalby',kind:'Article, 9 min read',meta:'5 new',order:['t1','t2','t3','t4','t5'],core:'t2'}];
+WORKS[0].col=0;WORKS[0].parts=[['Before the teaching',['eth','stab','shown']],['The teaching',['ordinary','whole','feel']],['Living with it',['bypass','comp','ret']]];
+WORKS[1].col=1;WORKS[1].parts=[['How it is made',['t1','t2','t3','t4']],['What people believe',['t5']]];
+const COLS=[{n:'Buddhist teachings',w:38,c:1204,items:[0,['Just this bowl','Tomas Reuel','Talk, 22 min']]},{n:'Tea',w:12,c:310,items:[1,['Notes from a Menghai factory','Wen Dalby','Notebook']]},{n:'Neuroscience',w:9,c:266,items:[['Sleep and what we remember','Ada Lindqvist','Paper']]},{n:'Friends',w:6,c:41,items:[['Voice note, 2 November','Oisín Farrell','Private until he agrees']]}];
+let lvl=0, col=0, by='works';
 let work=0;const W=()=>WORKS[work], workOf=id=>WORKS.find(w=>w.order.includes(id));
 const at=t=>/^\d/.test(t)?hear(t):`<span>${t}</span>`;
 function drawSource(){
  const w=W(),nb=near(picked).map(n=>n.id);
- $('#shead').innerHTML=`<div class="chips" style="margin-bottom:18px">${WORKS.map((x,i)=>`<button class="chipn" aria-pressed="${i===work}" data-work="${i}">${x.t}</button>`).join('')}</div><h1>${w.t}</h1><p class="meta"><span>${w.who}</span><span>${w.kind}</span><span>${w.meta}</span><span class="sample">Sample</span></p>`;
+ const cr=[lvl?'<button data-lvl="0">Everything</button>':'<b>Everything</b>'];if(lvl>0)cr.push(lvl>1?`<button data-lvl="1">${COLS[col].n}</button>`:`<b>${COLS[col].n}</b>`);if(lvl>1)cr.push(`<b>${w.t}</b>`);
+ const trail=`<nav class="trail" aria-label="Where you are">${cr.join('<span>›</span>')}</nav>`;
+ $('#swork').hidden=lvl<2;
+ if(lvl===0){$('#shead').innerHTML=`<h1>Everything</h1><p class="meta"><span>65 works</span><span>1,821 concepts</span><span>23,400 passages</span><span class="sample">Sample</span></p>
+  <input class="find" id="find" placeholder="Find a book, a topic or an idea" aria-label="Find" autocomplete="off">
+  <div class="tabs"><button aria-selected="${by==='works'}" data-by="works">By work</button><button aria-selected="${by==='concepts'}" data-by="concepts">By concept</button></div>
+  <div class="rows">${by==='works'?COLS.map((x,i)=>`<button class="row" data-col="${i}"><b>${x.n}</b><span>${x.w} works, ${x.c.toLocaleString('en')} concepts</span><i>›</i></button>`).join(''):
+   Object.keys(C).sort((a,b)=>C[b].r-C[a].r).map(id=>`<button class="row" data-open="${id}"><b>${C[id].n}</b><span>${C[id].ty}, in ${workOf(id).t}${id==='whole'?' and 1 other work':''}</span><i>›</i></button>`).join('')}</div>`;return}
+ if(lvl===1){const x=COLS[col];$('#shead').innerHTML=trail+`<h1>${x.n}</h1><p class="meta"><span>${x.w} works</span><span>${x.c.toLocaleString('en')} concepts</span><span class="sample">Sample</span></p>
+  <input class="find" id="find" placeholder="Find in ${x.n}" aria-label="Find" autocomplete="off">
+  <div class="rows" style="margin-top:14px">${x.items.map(it=>typeof it==='number'?`<button class="row" data-work="${it}"><b>${WORKS[it].t}</b><span>${WORKS[it].who}, ${WORKS[it].kind}, ${WORKS[it].order.length} concepts</span><i>›</i></button>`:`<div class="row wait"><b>${it[0]}</b><span>${it[1]}, ${it[2]}. Waiting, not opened in this sample</span></div>`).join('')}</div>
+  <p class="who" style="margin-top:14px"><span>${x.w-x.items.length} more works in this collection</span></p>`;return}
+ $('#shead').innerHTML=trail+`<h1>${w.t}</h1><p class="meta"><span>${w.who}</span><span>${w.kind}</span><span>${w.meta}</span><span class="sample">Sample</span></p>
+  <div class="parts">${w.parts.map(pt=>`<div><p class="lab">${pt[0]}</p>${pt[1].map(id=>`<button data-open="${id}">${C[id].n}</button>`).join('')}</div>`).join('')}</div>`;
  $('#scount').textContent=w.order.length+' concepts';
  $('#smap').className='map picked';
  $('#smap').innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+lineSVG()+'</svg>'+
   w.order.map(id=>{const c=C[id];return `<button class="node bright ${id===picked?'on':nb.includes(id)?'near':''}" style="left:${c.x}%;top:${c.y}%;--r:${c.r}" data-r="${c.r}" data-pick="${id}"><span class="dot"></span><span>${c.s}</span></button>`}).join('');
  const c=C[picked];
  $('#slines').innerHTML=`<header><h3>${c.n}</h3><button class="btn quiet" data-open="${picked}">Open</button></header>`+linesHTML(near(picked))+`<p><button class="ghost" data-draw style="margin-left:-10px">${drawing?'Now tap another concept':'Draw a line'}</button></p>`;
- $('#scards').innerHTML=w.order.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#map" data-open="${id}">${c.n}</a></h3><span class="kindw">${c.ty}</span>${resDots(id)}</header>
+ $('#scards').innerHTML=w.order.map(id=>{const c=C[id];return `<article class="nug" style="--r:${c.r}"><header><span class="dot" data-r="${c.r}"></span><h3 class="bright"><a href="#map" data-open="${id}">${c.n}</a></h3></header>
+  <p class="gh" style="margin-top:2px"><span class="kindw">${c.ty}</span>${resDots(id)}</p>
   <p class="lab">Distillation</p><p class="dist">${c.d}</p>
   <p class="lab">Their words</p><blockquote class="say">${esc(c.p[0][1])}</blockquote><p class="who">${at(c.p[0][0])}<span>${w.who}</span></p>
   ${joinRow(id)}</article>`}).join('');
@@ -598,7 +631,7 @@ function drawDistil(){
  $('#djoined').innerHTML=JOINED.map((j,i)=>`<li class="join" ${i?'':'style="border-top:0;padding-top:0"'}><span><b>${j[0]}</b> from ${j[1]}, ${j[2]}</span>${j[3]==='fix'?speak('rule','Why? One sentence, or leave it',`data-jn="${i}"`):j[3]?`<span class="heard">Lifted back out</span>`:`<button class="ghost" data-fixj="${i}">Correct</button>`}</li>`).join('');
 }
 document.addEventListener('submit',e=>{const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const v=f.querySelector('input').value.trim(),k=f.dataset.form;if(!v)return;
- if(k==='note'){const inS=$('#csheet').open,lab=inS?C[cur].n:{map:W().t,express:'Express',yours:'Yours'}[screen];NOTES.unshift({t:v,id:inS?cur:null,where:lab});
+ if(k==='note'){const inS=$('#csheet').open,lab=inS?C[cur].n:{map:lvl>1?W().t:lvl?COLS[col].n:'Everything',express:'Express',yours:'Yours'}[screen];NOTES.unshift({t:v,id:inS?cur:null,where:lab});
   if(inS)drawConcept();else{$('#gbar').innerHTML=`<p class="heard">Kept on ${lab}. It is in Yours.</p>`;setTimeout(()=>$('#gbar').hidden=true,1600)}drawYours()}
  else if(k==='sayback'){saidBack[cur]=v;ev(cur,'Said it back');drawConcept()}
  else if(k==='answer'){QS[f.dataset.i].a=v;drawDistil()}
@@ -617,7 +650,10 @@ document.addEventListener('click',e=>{
  const t=e.target.closest('button,a');if(!t)return;const d=t.dataset;
  if(d.pick){if(Date.now()-lastPtr>500)tapNode(d.pick)}
  else if(d.open){e.preventDefault();if($('#sheet').open)$('#sheet').close();openConcept(d.open)}
- else if(d.work){work=+d.work;picked=W().core;drawing=false;drawSource()}
+ else if(d.work){work=+d.work;col=W().col;lvl=2;picked=W().core;drawing=false;drawSource();scrollTo(0,0)}
+ else if(d.lvl){lvl=+d.lvl;drawSource();scrollTo(0,0)}
+ else if(d.col){col=+d.col;lvl=1;drawSource();scrollTo(0,0)}
+ else if(d.by){by=d.by;drawSource()}
  else if(d.res){const[id,v]=d.res.split(':');C[id].r=+v;drawSource();if($('#csheet').open)drawConcept()}
  else if(d.j){const[id,st]=d.j.split(':');C[id].j=st;drawSource()}
  else if('draw' in d){drawing=!drawing;drawSource()}
@@ -647,7 +683,7 @@ document.addEventListener('click',e=>{
  else if(d.pass){const k=qShown.indexOf(+d.pass);if(qNext<QS.length)qShown[k]=qNext++;else qShown.splice(k,1);drawDistil()}
  else if(d.fixj){JOINED[d.fixj][3]='done';drawDistil()}
 });
-document.addEventListener('input',e=>{if(e.target.dataset.w)words[e.target.dataset.w]=e.target.value});
+document.addEventListener('input',e=>{if(e.target.id==='find'){const q=e.target.value.toLowerCase();document.querySelectorAll('#shead .row').forEach(r=>r.hidden=!r.textContent.toLowerCase().includes(q))}if(e.target.dataset.w)words[e.target.dataset.w]=e.target.value});
 $('#ask').addEventListener('submit',e=>{e.preventDefault();$('#feeling').blur()});
 ['#sheet','#csheet'].forEach(q=>$(q).addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()}));
 window.addEventListener('hashchange',show);
