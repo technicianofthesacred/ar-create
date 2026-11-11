@@ -22,6 +22,11 @@
 //   consent                                   the consent desk
 //   word checks, open questions, places,      each listed once for all and kept until a change of its kind
 //   research topics
+// Magazine stories: each registered, active story whose draft is not the original of a subject appears as a subject of
+// its own, id = the story's own id (mag-<slug>: letters, digits and hyphens, safe in an address, and the id the consent
+// desk already knows it by). Its facts come from the Magazine's records alone (registered story, working draft through
+// the working-draft bridge, open proposals, vault files); nothing is copied, made or written. Each fact the Magazine
+// holds no record of is left out, so the shared rule says "Not known" (see gatherMagazine).
 // Freshness: every write in the app becomes a change on the event bus (kind = command name, scope = the record).
 // A change about one subject (its id, writing place, project, piece or plan) marks only that subject to be read
 // again; a change to something every subject draws on (Library, plans, questions, places, word checks, topics)
@@ -34,6 +39,9 @@ import path from 'node:path';
 import {StateError} from '../store.mjs';
 import {digest, readJson} from './files.mjs';
 import {standingOf, summaryOf} from '../standing-rule.mjs';
+import {isLiveLink} from './magazine-vault/index.mjs';
+import {storyFromName, storyId as storyIdOf, frontmatter} from './magazine-vault/kinds.mjs';
+import * as native from './draft-correspondence.mjs';
 
 const READ_AT_ONCE = 4;
 const yieldNow = () => new Promise(resolve => setImmediate(resolve));
@@ -55,9 +63,10 @@ const SHARED = {
  places: [/^subject-places\.(save|reorder|carry)/],
  wordChecks: [/^words\./, /^transcript-check/],
  topics: [/^inquiries\./],
+ proposals: [/^magazine\./],
 };
 
-export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, events, settle = async () => {}, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
+export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, magazine = null, working = null, magazineFiles = null, originalsRoot = null, events, settle = async () => {}, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
  if (!dataDir || !drafts) throw new TypeError('Subject standing needs the data folder and the study drafts.');
  const shared = new Map();  // name -> {value, at, dirty, pending}
  const subjects = new Map(); // id -> {facts, at, gen, dirty}
@@ -76,6 +85,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   places: async () => places ? (await places.read({})).places || [] : null,
   wordChecks: async () => wordChecks ? (await wordChecks()).recordings || [] : null,
   topics: async () => topics ? (await topics()).collections || [] : null,
+  proposals: async () => magazine?.proposalList ? (await magazine.proposalList({status: 'open'})).proposals || [] : null,
  };
  async function sharedRead(name) {
   let s = shared.get(name);
@@ -108,6 +118,47 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const catalog = await sharedRead('catalog'), out = [], seen = new Set();
   for (const c of catalog?.collections || []) {const id = c?.parentStudyId; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(c.title || '').trim() || 'Untitled subject', bindingId: c.bindingId || null});}
   for (const d of catalog?.drafts || []) {const id = d?.parentStudyKey; if (typeof id !== 'string' || !id || seen.has(id)) continue; seen.add(id); out.push({id, title: String(d.title || '').trim() || 'Untitled subject', bindingId: null, draft: {id: d.id, title: d.title, modifiedAt: d.modifiedAt || null}});}
+  // Magazine stories that are nobody's original: one subject each, never a copy of a story already a subject.
+  const taken = originalStories(catalog?.drafts || []);
+  for (const story of magazineStories()) {
+   if (seen.has(story.storyId) || taken.ids.has(story.storyId) || story.draftRels.some(rel => taken.files.has(resolved(vaultRoot(), rel)))) continue;
+   seen.add(story.storyId); out.push({id: story.storyId, title: story.name, bindingId: null, magazine: story});
+  }
+  return out;
+ }
+
+ /** A path made absolute and real, even when its file is gone (an older round replaced): the folder is resolved, the name kept. */
+ function resolved(root, rel) {
+  if (!root || !rel) return null;
+  const abs = path.resolve(root, rel);
+  try {return fs.realpathSync(abs);} catch {try {return path.join(fs.realpathSync(path.dirname(abs)), path.basename(abs));} catch {return abs;}}
+ }
+ /** What the subjects' originals are, by full resolved path, and by story (any round of a story is that story). */
+ function originalStories(drafts) {
+  const files = new Set(), ids = new Set(), mag = vaultRoot(), magReal = mag ? resolved(mag, '.') : null;
+  for (const d of drafts) {
+   if (typeof d?.path !== 'string' || !originalsRoot) continue;
+   const abs = resolved(originalsRoot, d.path); if (!abs) continue;
+   files.add(abs);
+   if (magReal && abs.startsWith(magReal + path.sep)) {const name = storyFromName(abs.split(path.sep).pop()); if (name) try {ids.add(storyIdOf(name.replace(/\s*\(.*$/, '')));} catch {}}
+  }
+  return {files, ids};
+ }
+
+ /** The registered, active Magazine stories (the registered index and project files: small, read at each call, so a
+     newly registered or archived story shows at once). Never throws: an unreadable index means no stories. */
+ function magazineStories() {
+  if (!magazine?.projects?.list || magazine.configured === false) return [];
+  let rows; try {rows = magazine.projects.list();} catch {return [];}
+  if (!rows?.registered) return [];
+  const out = [];
+  for (const row of rows.stories || []) {
+   if (!row?.storyId || row.archived) continue;
+   const pieces = row.pieces || [], drafts = pieces.filter(p => ['article', 'article-part'].includes(p.kind) && p.rel);
+   // The whole Article when there is one, else the first part; a story with no draft yet still has its (empty) Article.
+   const piece = drafts.find(p => p.kind === 'article') || drafts.slice().sort((a, b) => String(a.pieceId).localeCompare(String(b.pieceId), 'en', {numeric: true}))[0] || pieces.find(p => p.kind === 'article') || null;
+   out.push({storyId: row.storyId, name: String(row.name || row.storyId), pieceId: piece?.pieceId || row.storyId + ':article', rel: piece?.rel || null, draftRels: drafts.map(p => p.rel)});
+  }
   return out;
  }
 
@@ -141,6 +192,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  };
  async function gather(subject) {
   stats.subjectReads++;
+  if (subject.magazine) return gatherMagazine(subject);
   const {id, bindingId} = subject, times = [subject.draft?.modifiedAt], facts = {id, title: subject.title, bindingId, projectId: null};
   const [lib, reqs, planList, placeList, askList, topicList] = await Promise.all(['library', 'requests', 'plans', 'places', 'asks', 'topics'].map(sharedQuiet));
   // Where it lives.
@@ -288,9 +340,119 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   return facts;
  }
 
+ // ---------- a Magazine story as a subject ----------
+ const IMAGE = /\.(jpe?g|png|heic|webp|tiff?)$/i;
+ const vaultRoot = () => {try {return magazine?.status?.().vaultRoot || null;} catch {return null;}};
+ const vaultStat = rel => {const root = vaultRoot(); if (!root || !rel) return null; try {const s = fs.statSync(path.join(root, rel)); return {mtime: s.mtime.toISOString(), key: s.mtimeMs + ':' + s.size};} catch {return null;}};
+ /** CHECK files of a story: the registered ones, and any in the review folder named for it since (registration is a snapshot). */
+ function checkFiles(project) {
+  const names = new Set([].concat(project.vaultRecords?.checks || []).map(r => r.rel)), root = vaultRoot();
+  if (root) try {for (const n of fs.readdirSync(path.join(root, 'Workflow', '4-Review'))) if (n.startsWith('CHECK - ' + project.name)) names.add('Workflow/4-Review/' + n);} catch {}
+  return [...names].filter(rel => vaultStat(rel)).sort();
+ }
+ /** Whether the story's MAP records a direction picked: a dated "Direction:" line in the "Adrian's decisions" section,
+     newest first. Only that it was chosen is taken; the line's text is an option offered on the Magazine page, not his words. */
+ function directionChosen(texts) {
+  let newest = null;
+  for (const text of texts) {
+   const sec = text.match(/^##\s*Adrian's decisions[^\n]*$([\s\S]*?)(?=^##\s|$(?![\s\S]))/im); if (!sec) continue;
+   for (const m of sec[1].matchAll(/^\s*-\s*(\d{4}-\d{2}-\d{2}):\s*Direction:\s*\S/gim)) if (!newest || m[1] >= newest) newest = m[1];
+  }
+  return newest;
+ }
+ /** Words of a draft, counted as the working draft counts them, kept in memory by the file's hash so a long draft is
+     counted once until it changes. */
+ const counted = new Map();
+ // A block with no markup at all counts as its own text (the common paragraph, which is most of a long draft); any
+ // other block goes through the same mapping Write uses. tests/subject-standing-magazine.test.mjs holds the two equal.
+ const PLAIN = /^[\p{L}"“‘'(][^\n%=\[\]*_\\<>`~|#]*$/u;
+ function countWords(storyId, file) {
+  const kept = counted.get(storyId); if (kept?.hash === file.hash) return kept.value;
+  const model = native.capture(file.text, storyId), rows = model.blocks.map(b => PLAIN.test(b.raw.trim()) ? {words: b.raw.trim(), blockKind: 'paragraph'} : native.inlineMap(b.raw)).filter(r => String(r.words || '').trim());
+  const value = {paragraphs: rows.filter(r => r.blockKind !== 'heading').length, count: rows.reduce((n, r) => n + String(r.words).trim().split(/\s+/).length, 0)};
+  counted.set(storyId, {hash: file.hash, value}); return value;
+ }
+ async function gatherMagazine(subject) {
+  const {id, magazine: m} = subject, times = [];
+  const facts = {id, title: subject.title, bindingId: null, projectId: null, folder: [], magazine: {storyId: m.storyId, pieceId: m.pieceId}};
+  const [placeList, askList, propList] = await Promise.all(['places', 'asks', 'proposals'].map(sharedQuiet));
+  const place = placeList?.find(p => p.parentStudyId === id);
+  if (place) {facts.folder = place.folder || []; facts.archived = !!place.archived; if (place.saved) times.push(place.updatedAt);}
+  if (askList) facts.asks = askList.filter(a => a.scope?.id === id).length;
+  let project = null; try {project = magazine.projects.project(m.storyId);} catch {}
+  const recs = key => [].concat(project?.vaultRecords?.[key] || []).map(r => r.rel).filter(Boolean);
+  // The working draft's file (registered, so the same piece the bridge edits), read once; the words are counted from it.
+  let file = null;
+  if (project && m.rel) file = await quiet(async () => {const f = magazine.read({path: m.rel}); return f.exists && typeof f.text === 'string' && !f.conflicts?.length ? f : null;}) || null;
+  const draftText = file?.text ?? null;
+  const fmTitle = draftText ? frontmatter(draftText).meta.title : null;
+  if (typeof fmTitle === 'string' && fmTitle.trim()) facts.title = fmTitle.trim();
+  if (file?.mtime) times.push(file.mtime);
+  // The words. A story with no draft file yet has none: known. A draft that could not be read: not known.
+  if (!m.rel) facts.words = {paragraphs: 0, count: 0};
+  else if (file) facts.words = (() => {try {return countWords(m.storyId, file);} catch {return null;}})();
+  else facts.words = null;
+  // Suggestions waiting: open Magazine proposals on this draft, made on its current words (an older one is stale).
+  if (!m.rel) facts.suggestions = 0;
+  else if (!propList || !file?.hash) facts.suggestions = null;
+  else facts.suggestions = propList.filter(p => p.scope?.id === m.storyId && p.path === m.rel && p.baseHash === file.hash).length;
+  // Material: the story's written sources (recording transcripts, raw intake, his context) and its photograph folder. The
+  // Magazine keeps no audio, so nothing is counted as a recording.
+  const sources = [...recs('raw'), ...recs('src'), ...recs('context')];
+  let photos = null;
+  if (magazineFiles && project && !/[\\/]|^\.\.?$/.test(project.name)) {try {photos = fs.readdirSync(path.join(magazineFiles, project.name, 'Photos')).filter(f => IMAGE.test(f)).length;} catch (error) {photos = error.code === 'ENOENT' ? 0 : null;}}
+  facts.material = project && photos !== null ? {total: sources.length + photos, recordings: 0, notes: sources.length, links: 0, photos} : null;
+  facts.transcript = facts.material ? {open: 0, checked: false} : null;
+  // Research: a story with no research file was not looked into (known); one with a file is not known (nothing says
+  // whether its findings were read or used).
+  facts.research = !project ? null : recs('research').length ? null : {step: null, unreviewed: 0};
+  // The dish he named: only a Simmer board of this id holds his own sentence. A direction picked on the Magazine page
+  // (the MAP's dated decisions) says only that a direction is chosen, never its words.
+  const board = simmer ? await quiet(timed('board', async () => (await simmer).boards.read({subject: id}))) : undefined;
+  const maps = project ? recs('map').map(rel => {try {const f = magazine.read({path: rel}); return f.exists && typeof f.text === 'string' ? f.text : '';} catch {return null;}}) : null;
+  if (board && maps && !maps.includes(null)) {
+   const f = board.forming || {}, namedText = typeof f.named?.text === 'string' ? f.named.text.trim() : '', sentText = f.sentAt && typeof f.sentence?.dish === 'string' ? f.sentence.dish.trim() : '', chosen = directionChosen(maps);
+   facts.dish = {named: !!(namedText || sentText), text: namedText || sentText || '', at: namedText ? f.named.dictated?.at || null : sentText ? f.sentAt : null, dishes: (f.dishes || []).length, direction: !!chosen};
+  } else facts.dish = null;
+  // Check: no CHECK file means never checked (known); a CHECK file holds free notes no rule can read, so not known.
+  facts.check = project ? (checkFiles(project).length ? null : {status: null, issues: 0}) : null;
+  // The piece: one Article, its photograph markers counted in the draft.
+  facts.pieces = [{key: 'mag:' + m.pieceId, id: m.pieceId, kind: 'article', title: facts.title, status: null, placements: draftText ? (draftText.match(/%%\s*photos?\s*:/gi) || []).length : 0, slides: 0}];
+  // Published: the draft's own `published:` link, the Magazine's record of it. No draft file: nothing published.
+  if (project) {
+   let out = false;
+   for (const rel of recs('draft')) {const f = await quiet(async () => magazine.read({path: rel})); if (f === undefined) {out = undefined; break;} if (f.exists && isLiveLink((String(f.text || '').split(/\n---\n/)[0].match(/^published:[ \t]*(\S+)[ \t]*$/m) || [])[1])) {out = true; break;}}
+   if (out !== undefined) facts.published = out;
+  }
+  const desk = consentDesk ? await quiet(timed('desk', () => consentDesk.read({parentStudyId: id}))) : undefined;
+  facts.consent = desk ? {people: (desk.people || []).map(p => ({name: p.name, state: p.consent?.state || 'not-asked', request: !!p.request})), released: !!desk.release?.released, overridden: !!desk.release?.overridden, ready: !!desk.release?.ready, held: !!desk.release?.held} : null;
+  for (const rel of [...recs('draft'), ...recs('map'), ...recs('src'), ...recs('raw'), ...recs('context'), ...(project ? checkFiles(project) : [])]) times.push(vaultStat(rel)?.mtime);
+  facts.changedAt = newest(times);
+  ids.set(m.pieceId, id);
+  return facts;
+ }
+ /** What a story's facts draw from, cheap to read: file times of its records and its open proposals. */
+ async function magazineSignature(subject) {
+  const m = subject.magazine, propList = await sharedQuiet('proposals'), place = (await sharedQuiet('places'))?.find(p => p.parentStudyId === subject.id), askList = await sharedQuiet('asks');
+  let project = null; try {project = magazine.projects.project(m.storyId);} catch {}
+  const rels = project ? [...new Set([...['draft', 'map', 'src', 'raw', 'context', 'research'].flatMap(k => [].concat(project.vaultRecords?.[k] || []).map(r => r.rel)), ...checkFiles(project)])].sort() : [];
+  let photos = null; if (magazineFiles && project) try {photos = fs.readdirSync(path.join(magazineFiles, project.name, 'Photos')).length;} catch {}
+  return JSON.stringify(['magazine', subject.title, m.pieceId, m.rel, rels.map(rel => rel + ':' + (vaultStat(rel)?.key || '')), photos,
+   propList ? propList.filter(p => p.scope?.id === m.storyId).map(p => p.proposalId) : null, place ? [place.folder, place.archived, place.updatedAt] : null, askList ? askList.filter(a => a.scope?.id === subject.id).length : null]);
+ }
+ /** Mark a Magazine story's standing so a screen can tell: the subject and its one Article are owned by the Magazine story. */
+ function decorate(standing, facts) {
+  if (!facts?.magazine) return standing;
+  const owner = {kind: 'magazine', storyId: facts.magazine.storyId, pieceId: facts.magazine.pieceId};
+  standing.origin = {kind: 'magazine', storyId: owner.storyId};
+  for (const f of standing.forms || []) if (f.key === 'mag:' + owner.pieceId) f.owner = owner;
+  return standing;
+ }
+
  /** A cheap fingerprint of what a subject's facts draw from the shared lists: when it differs from the one its facts
      were read with, the subject is read again, so a change to a shared list re-reads only the subjects it touches. */
  async function signature(subject, deps = {}) {
+  if (subject.magazine) return magazineSignature(subject);
   const [lib, reqs, planList, placeList, askList, topicList, checksList] = await Promise.all(['library', 'requests', 'plans', 'places', 'asks', 'topics', ...(deps.jobs?.length ? ['wordChecks'] : [])].map(sharedQuiet));
   const place = placeList?.find(p => p.parentStudyId === subject.id);
   const folder = deps.projectId ? (lib?.byFolder.get(deps.projectId) || []).map(s => s.id + ':' + s.hash) : [fs.existsSync(path.join(dataDir, 'study-project-bindings', digest(subject.id) + '.json'))];
@@ -348,7 +510,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   // The proposal owner's answer about suggestions is slow, so it is not waited for: the count is Not known until it
   // arrives, and the next read has it. Screens ask again.
   const facts = await factsOf(subject);
-  return {...standingOf(facts, {now: now()}), facts, readAt: new Date(now()).toISOString()};
+  return {...decorate(standingOf(facts, {now: now()}), facts), facts, readAt: new Date(now()).toISOString()};
  }
  let running = null;
  async function all() {
@@ -363,7 +525,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
     while (next < subjectsNow.length) {
      const i = next++, before = stats.subjectReads, facts = await factsOf(subjectsNow[i]);
      if (stats.subjectReads !== before) await yieldNow();
-     out[i] = summaryOf(standingOf(facts, {now: now()}));
+     out[i] = summaryOf(decorate(standingOf(facts, {now: now()}), facts));
     }
    };
    await Promise.all(Array.from({length: Math.min(READ_AT_ONCE, subjectsNow.length)}, worker));
