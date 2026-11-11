@@ -51,7 +51,10 @@ test('while a suggestion waits on the words, The words need him, and Check and P
  const steps = s.forms[0].steps;
  assert.equal(at(steps, 'words').state, 'flag'); assert.equal(at(steps, 'words').note, '1 suggestion waiting');
  assert.equal(at(steps, 'check').state, 'wait'); assert.deepEqual(at(steps, 'check').waits, ['words']); assert.equal(at(steps, 'check').waitsFor, 'The suggestion to be settled');
- assert.equal(at(steps, 'publish').state, 'wait'); assert.ok(at(steps, 'publish').waits.includes('words') && at(steps, 'publish').waits.includes('check'));
+ // Nothing says whether it is out, so Publish claims neither; once a record says it is not out, it waits.
+ assert.equal(at(steps, 'publish').state, 'unknown'); assert.equal(at(steps, 'publish').note, 'Not known whether it is out');
+ const out = standingOf(facts({material: notes, words: {paragraphs: 2, count: 30}, suggestions: 1, pieces: [article()], published: false}), {now: NOW}).forms[0].steps;
+ assert.equal(at(out, 'publish').state, 'wait'); assert.ok(at(out, 'publish').waits.includes('words') && at(out, 'publish').waits.includes('check'));
  assert.equal(s.next.step, 'words'); assert.equal(s.next.state, 'flag'); assert.equal(say(s.next), 'The words: 1 suggestion waiting');
  // An Article not yet started does not claim a suggestion.
  assert.equal(at(stepsFor(formsOf(facts({pieces: [article()]}))[0], facts({pieces: [article()]})), 'words').note, 'Not started');
@@ -149,4 +152,18 @@ test('the browser copy is the rule itself, built from it', async () => {
  const f = facts({material: notes, ...finishedWords, pieces: [article()]});
  assert.deepEqual(browser.standingOf(f, {now: NOW}), standingOf(f, {now: NOW}));
  assert.equal(typeof globalThis.v2Standing.standingOf, 'function');
+});
+
+test('archived rests whatever its steps say; published is null unless a record says; a step not known stops the lead', () => {
+ const a = standingOf(facts({material: notes, archived: true}), {now: NOW});
+ assert.equal(a.station, 'resting'); assert.equal(a.resting, 'archived'); assert.equal(a.archived, true);
+ assert.equal(standingOf(facts({material: notes}), {now: NOW}).resting, null);
+ assert.equal(standingOf(facts({material: notes, pieces: [article()]}), {now: NOW}).published, null);
+ assert.equal(standingOf(facts({material: notes, pieces: [article()], published: false}), {now: NOW}).published, false);
+ // The check was not read: photographs waiting earlier must not be put forward as the next step.
+ const s = standingOf(facts({material: notes, ...finishedWords, check: null, pieces: [article()]}), {now: NOW});
+ assert.equal(s.next, null);
+ // A step that needs him before the unknown one still leads.
+ const f = standingOf(facts({material: notes, words: {paragraphs: 2, count: 30}, suggestions: 1, check: null, pieces: [article()]}), {now: NOW});
+ assert.equal(f.next.step, 'words');
 });
