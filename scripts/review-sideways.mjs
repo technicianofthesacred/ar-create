@@ -15,10 +15,19 @@
 //   --explain    add, to each finding, the chain of boxes that holds it (width, wrapping, display), to find the rule to change.
 //   --v2         visit only version two (public/v2/). Without it, version two is visited after the existing workspace.
 //   --no-v2      visit only the existing workspace, as before version two.
+//   --only=NAMES check only these views (comma separated), e.g. --only=v2:home or --only=Home,Write or --only=v2.
+//                The names it accepts:
+//                existing workspace: Home, Subjects, Library, Material, Source, Research, Direction, Write, Read, Check,
+//                  Media, Arrange, Audience, Share, Outputs, Instagram, and the menus over Home: sheet-develop,
+//                  sheet-make, sheet-deliver (phone widths only), subject-switch;
+//                version two: v2 (every view), v2:<screen id> (v2:home, v2:subject, v2:slides, v2:looks, v2:research,
+//                  v2:research-group, v2:research-topic, and any screen registered later), v2:capture, v2:ask.
+//                SIDEWAYS_ONLY=NAMES in the environment does the same. One screen at four widths and two themes takes a
+//                minute or two; add widths and themes after shotDir to narrow it further, e.g. "" 390,1440 dark.
+// It prints one line per view as it goes (ok, or found with what was found), then every finding again at the end.
 // Version two: every screen version two has registered (v2.screens()), opened by its address, and its Capture and Ask
 // sheets, with the same widths, themes and checks. A route's :id is a real record of the demo where one exists (the
 // first subject, the first Instagram plan); SIDEWAYS_V2_IDS='{"subject":"..."}' names others by screen id.
-// SIDEWAYS_ONLY may name version two views too: v2 for all of them, or v2:<screen id> (v2:home, v2:subject, v2:capture).
 // It only reads and clicks the demo (port 8854 by default). It never targets 8841, and nothing it changes in the page is saved.
 import fs from 'node:fs';import path from 'node:path';
 const {chromium}=await import(process.env.AR_CREATE_PLAYWRIGHT||'playwright');
@@ -29,9 +38,19 @@ const flags=new Set(process.argv.slice(2).filter(a=>a.startsWith('--'))),args=pr
 const EXPLAIN=flags.has('--explain'),STRESS=flags.has('--stress'),PLANT=flags.has('--plant'),SHOOT_ALL=flags.has('--shoot-all');
 const shotDir=args[0]||'';if(shotDir)fs.mkdirSync(shotDir,{recursive:true});
 const widths=(args[1]||'390,700,1000,1440').split(',').map(Number),themes=(args[2]||'light,dark').split(',');
-const ONLY=process.env.SIDEWAYS_ONLY?process.env.SIDEWAYS_ONLY.split(','):null,V2_ONLY=flags.has('--v2');
-const DEST=V2_ONLY?[]:(ONLY?ONLY.filter(n=>!n.startsWith('v2')):'Home,Subjects,Library,Material,Source,Research,Direction,Write,Read,Check,Media,Arrange,Audience,Share,Outputs,Instagram'.split(','));
-const v2Wanted=id=>V2_ONLY&&!ONLY||!ONLY||ONLY.includes('v2')||ONLY.includes('v2:'+id);
+const onlyText=[...flags].filter(a=>a.startsWith('--only=')).map(a=>a.slice(7)).join(',')||process.env.SIDEWAYS_ONLY||'';
+for(const f of [...flags])if(f.startsWith('--only='))flags.delete(f);
+const ONLY=onlyText?onlyText.split(',').map(n=>n.trim()).filter(Boolean):null,V2_ONLY=flags.has('--v2');
+const DEST_ALL='Home,Subjects,Library,Material,Source,Research,Direction,Write,Read,Check,Media,Arrange,Audience,Share,Outputs,Instagram'.split(',');
+const OVER_NAMES=['sheet-develop','sheet-make','sheet-deliver','subject-switch'];
+const isV2=n=>n==='v2'||n.startsWith('v2:');
+const unknown=(ONLY||[]).filter(n=>!DEST_ALL.includes(n)&&!OVER_NAMES.includes(n)&&!isV2(n));
+if(unknown.length)throw Error(`--only does not know ${unknown.join(', ')}. It accepts ${[...DEST_ALL,...OVER_NAMES].join(', ')}, v2, v2:<screen id>, v2:capture and v2:ask.`);
+const DEST=V2_ONLY?[]:(ONLY?DEST_ALL.filter(n=>ONLY.includes(n)):DEST_ALL);
+const overWanted=name=>!V2_ONLY&&(!ONLY||ONLY.includes(name));
+const OLD_WANTED=!V2_ONLY&&(DEST.length>0||OVER_NAMES.some(overWanted));
+const V2_WANTED=!flags.has('--no-v2')&&(V2_ONLY||!ONLY||ONLY.some(isV2));
+const v2Wanted=id=>!ONLY||ONLY.includes('v2')||ONLY.includes('v2:'+id);
 const v2url=`${base}/v2/index.html?reviewActor=${encodeURIComponent(process.env.AR_CREATE_ACTOR||'agent:claude-code')}`;
 // Material has no entry in the phone bar today, so it cannot be measured at phone widths. That is noted, not counted.
 const PHONE={Library:'develop',Source:'develop',Research:'develop',Direction:'develop',Write:'make',Read:'make',Check:'make',Media:'make',Arrange:'make',Audience:'deliver',Share:'deliver',Outputs:'deliver'};
@@ -127,6 +146,9 @@ const measure=()=>{
  return {page:document.documentElement.scrollWidth>view?document.documentElement.scrollWidth-view:0,scrollers:out,cut,overlap};
 };
 const findings=[],notes=[];let views=0,v2views=0;
+// One line per view as it goes, so a long run shows that it is moving.
+const pushFinding=findings.push.bind(findings);findings.push=(...entries)=>{for(const f of entries)console.log('found '+JSON.stringify(f));return pushFinding(...entries);};
+console.log(`Checking${OLD_WANTED?` the existing workspace (${DEST.length?DEST.join(', '):'menus only'})`:''}${OLD_WANTED&&V2_WANTED?' and':''}${V2_WANTED?' version two':''} at ${widths.join(', ')} wide, ${themes.join(' and ')}${STRESS?', under stress':''}.`);
 // Real records of the demo to open version two's screens on, read through the app's own commands.
 const v2ids=await (async()=>{const ids={};const get=async route=>{try{const r=await fetch(base+route,{headers:{'X-AR-Actor':'agent:claude-code','X-AR-Client':'http'}});return r.ok?await r.json():null;}catch{return null;}};
  const catalog=await get('/api/study-draft/catalog'),first=[...(catalog?.collections||[]),...(catalog?.drafts||[])].map(r=>r.parentStudyId||r.parentStudyKey).find(Boolean);if(first)ids.subject=first;
@@ -136,8 +158,7 @@ const browser=await chromium.launch();
 for(const width of widths)for(const theme of themes){
  const phone=width<=850,height=phone?844:900;
  const context=await browser.newContext({viewport:{width,height},hasTouch:phone});let page=await context.newPage();
- const OLD=DEST.length||!ONLY&&!V2_ONLY;
- if(OLD){await page.goto(url,{waitUntil:'load'});await page.waitForTimeout(3000);
+ if(OLD_WANTED){await page.goto(url,{waitUntil:'load'});await page.waitForTimeout(3000);
  if(await page.evaluate(()=>document.documentElement.dataset.theme)!==theme){await page.getByRole('button',{name:/Switch to (light|dark) theme/}).first().click();await page.waitForTimeout(400);}}
  // Stressing changes the page; reload between views so every view starts from what the app itself drew. The theme is kept.
  const fresh=async()=>{if(!STRESS&&!PLANT)return;await page.goto(url,{waitUntil:'load'});await page.waitForTimeout(2200);};
@@ -153,14 +174,14 @@ for(const width of widths)for(const theme of themes){
   return page.locator('.combined-rail button',{hasText:new RegExp('^\\s*'+name+'\\s*\\d*$')}).first().click({timeout:4000});
  };
  // Things that open over a screen: the phone sheets and the subject switcher.
- const OVER=[];if(!ONLY&&!V2_ONLY){if(phone)for(const g of ['develop','make','deliver'])OVER.push(['sheet-'+g,()=>page.locator(`.combined-phonebar [data-combined-group="${g}"]`).click()]);
- OVER.push(['subject-switch',async()=>{await page.locator('.ht-switch-label').first().click({timeout:3000});}]);}
+ const OVER=[];if(OLD_WANTED){if(phone)for(const g of ['develop','make','deliver'])if(overWanted('sheet-'+g))OVER.push(['sheet-'+g,()=>page.locator(`.combined-phonebar [data-combined-group="${g}"]`).click()]);
+ if(overWanted('subject-switch'))OVER.push(['subject-switch',async()=>{await page.locator('.ht-switch-label').first().click({timeout:3000});}]);}
  const check=async label=>{
   await page.waitForTimeout(1300);views++;
   if(STRESS)await page.evaluate(stress);if(PLANT)await page.evaluate(plant);
   if(EXPLAIN)await page.evaluate(()=>{window.__sidewaysExplain=true;});
   const m=await page.evaluate(([s,p,me])=>{for(const f of [s,p])if(f)(0,eval)('('+f+')')();return (0,eval)('('+me+')')();},[STRESS?stress.toString():'',PLANT?plant.toString():'',measure.toString()]);const found=m.page||m.scrollers.length||m.cut.length||m.overlap.length;
-  if(found)findings.push({view:label,width,theme,...m});
+  if(found)findings.push({view:label,width,theme,...m});else console.log(`ok    ${label} ${width} ${theme}`);
   if(shotDir&&(found||SHOOT_ALL)){if(STRESS)await page.evaluate(stress);await page.screenshot({path:path.join(shotDir,`${label}-${width}-${theme}.png`)});}
  };
  for(const name of DEST){
@@ -175,7 +196,7 @@ for(const width of widths)for(const theme of themes){
   await check(label);await page.keyboard.press('Escape');
  }
  // Version two: each registered screen by its address, then the sheets over the frame.
- if(!flags.has('--no-v2')&&(DEST.length+OVER.length===0||v2Wanted('')||ONLY?.some(n=>n.startsWith('v2')))){
+ if(V2_WANTED){
   const v2page=await context.newPage();page=v2page;
   const open=async hash=>{await page.goto(v2url+hash,{waitUntil:'load'});await page.waitForTimeout(900);
    if(await page.evaluate(()=>document.documentElement.dataset.theme)!==theme){await page.locator('[data-v2-theme]').click();await page.waitForTimeout(300);}};

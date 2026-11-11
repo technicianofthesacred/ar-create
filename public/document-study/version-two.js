@@ -48,6 +48,13 @@
    if(!await ready())return;await wait(300);
    const key=SECTIONS.includes(section)?section:null;
    if(subject&&key!=='home')await window.combinedSubjects.open({projectId:subject});
+   // A subject with no section opens on the section it was last on, or Write, through its own board. Library (1) is
+   // where every subject starts and shows all subjects, so it counts as none.
+   if(subject&&!key){
+    let saved=null;try{saved=(typeof state!=='undefined'?state.projects:[]).find(p=>p?.id===subject)?.viewedStage;}catch{}
+    const n=Number.isInteger(Number(saved))&&Number(saved)>=2&&Number(saved)<=12?Number(saved):5;
+    await window.combinedSubjects.openStage(n);
+   }
    if(key&&key!=='subjects'){
     const ok=await window.combinedNavigation.go(key==='read'?'write':key);
     // Read is a view of Write: wait for the writer to settle, then switch the view, as its Read switch does.

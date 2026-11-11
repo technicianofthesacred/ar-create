@@ -52,7 +52,7 @@
  const clock=iso=>{try{return new Date(iso).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}catch{return '';}};
  function explain(status,body,{name,actor}){
   const said=typeof body?.error==='string'&&body.error?body.error:'';
-  if(status===409)return new V2Error('This changed since it was opened here. It has been read again; look at it before saving.',{status,kind:'stale',command:name,body});
+  if(status===409)return new V2Error('This changed since it was opened here. Read it again before saving.',{status,kind:'stale',command:name,body});
   if(status===423&&(body?.code==='consent-hold'||body?.hold))return new V2Error(said||'This is held until everyone in it has said yes.',{status,kind:'consent',command:name,body,hold:body?.hold||null});
   if(status===423){const h=body?.holder,who=h?actorName(h.actor):'Someone',until=h?.expiresAt?clock(h.expiresAt):'';return new V2Error(`${who} ${who==='You'?'are':'is'} working on this${until?' until '+until:''}. Wait, or ask ${who==='You'?'your other window':'them'} to let it go.`,{status,kind:'held',command:name,body,holder:h||null});}
   if(status===403){const agent=String(actor||'').startsWith('agent:');return new V2Error(agent?`Only Adrian can decide this. ${actorName(actor)} can propose it, not do it.`:(said||'Only Adrian can do this, from his own page.'),{status,kind:'owner-only',command:name,body});}
@@ -93,7 +93,7 @@
    try{return await once(command,first);}
    catch(error){
     if(!(error instanceof V2Error)||error.kind!=='stale'||typeof reread!=='function')throw error;
-    const fresh=await reread();error.fresh=fresh;
+    const fresh=await reread();error.fresh=fresh;error.message='This changed since it was opened here. It has been read again; look at it before saving.';
     const next=typeof merge==='function'?await merge(fresh,error):null;
     if(!next)throw error;
     // A merged write is a new attempt, so it gets its own operation id unless the screen chose one.

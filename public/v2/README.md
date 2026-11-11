@@ -27,8 +27,9 @@ title), `setAdvanced({subject,piece,section})` (where the top bar's Advanced lea
 `failed`. Its `.message` is plain words, ready to show with `v2.ui.say(error.message,{tone:'bad'})`. For a write
 that may meet a newer version: `v2.call(name, input, {reread: () => v2.call(readName, …), merge: (fresh, error) =>
 nextInput or null})`. The client re-reads on 409; your `merge` decides; `null` leaves `error.fresh` for the screen to
-show. Never merge his words for him. `v2.actor()` and `v2.isHuman()` say who is acting (`?reviewActor=` for
-an assistant, as in the existing workspace).
+show. Never merge his words for him. `v2.actor()` and `v2.isHuman()` say who is acting. The shell reads
+`?reviewActor=` from the page address (an assistant opens version two with it, as in the existing workspace) and
+sends it with every call; a screen never reads or passes it.
 
 **React to a change**: `ctx.on({kind:'needs-you', id}, fn)`, `ctx.on({kinds:['subject-places*']}, fn)`. `kind` and
 `id` match the change's record (`event.scope`), `kinds` match command names (a trailing `*` matches the start).
@@ -45,7 +46,12 @@ a dialog, returns `{el, body, close}`; `say(text,{tone})` the one message line; 
 Undo; `reorder(container,{item, onMove(from,to), label})` drag plus Move up and Move down (and Alt with an arrow key);
 `icon(name)`; `esc(text)` (escape every record's text you put in markup). The frame also offers `v2.brand(lookId)`,
 `v2.desk.refresh()` and `v2.desk.use(async () => [{id, title, short?, cover?}])` (the subjects on the desk, in the
-top bar), and `v2.needs.refresh()`.
+top bar on a computer; on a phone the desk lives on Home, one tap away in the phone bar), and `v2.needs.refresh()`.
+
+**Share helpers between screens** through `v2.shared`, the one part of `v2` a screen writes to: each screen may fill
+`v2.shared.<its id>` (for example `v2.shared.subject = {formsOf}`) for the others to read. Read another screen's
+helpers when you use them, not when your file loads (screens load in the order of `index.html`), and do without them
+when they are missing.
 
 **Styles**: the app's tokens only (`var(--ink)`, `--dim`, `--paper`, `--line`, `--warm`, `--c3-*`), sizes
 `var(--v2-t12|13|14|15|18|22)` and no others, `var(--ar-ui)`, and `var(--v2-speech)` only for spoken words. A plain
@@ -56,5 +62,6 @@ brand use `var(--v2-br)` and `.v2-current`.
 **A screen must never**: call `fetch` for a command, or read or write a file or `localStorage` for a record (only the
 commands); keep a private copy of a record past what it shows; show sample or invented words as if they were his;
 decide what is his to decide (a human-only command answers 403: show the message, do not hide the control's reason);
-scroll sideways at any width (check with `node scripts/review-sideways.mjs --v2`, plain and `--stress`); hard-code a
+scroll sideways at any width (check your screen alone with `node scripts/review-sideways.mjs --only=v2:<id>`, plain
+and with `--stress`, in a minute or two); hard-code a
 colour, a font or a size outside the six; use an em dash; change `index.html`, `shell/` or another screen's files.

@@ -32,6 +32,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 var(--v2-t15)/1.5 v
  @media (max-width:850px),(pointer:coarse){button.v2-ghost{min-height:44px!important}button.v2-icon-btn{width:44px!important}}
  @media (max-width:850px){button.v2-ghost.v2-wide{display:none!important}}
  button.v2-ghost[hidden]{display:none!important}
+ button.v2-desk-more{flex:none!important;min-height:32px!important;padding:0 8px!important;font:500 var(--v2-t13)/1 var(--ar-ui)!important;color:var(--dim)!important}
 }
 
 /* ---------- the top bar ---------- */
@@ -46,8 +47,8 @@ html[data-brand] .v2-logo i{background:var(--v2-br)}
 .v2-place{display:inline-flex;align-items:center;height:32px;padding:0 10px;border-radius:6px;font:500 var(--v2-t14)/1 var(--ar-ui);color:var(--c3-ink2);white-space:nowrap}
 .v2-place:hover{background:var(--v2-sec);color:var(--ink)}
 .v2-place[aria-current]{background:var(--v2-sec);color:var(--ink);font-weight:600}
-/* The desk wraps onto lines that are cut off rather than running sideways: a full desk never widens the bar. */
-.v2-desk{display:flex;flex-wrap:wrap;align-items:center;gap:2px;height:32px;overflow:hidden;min-width:0;flex:0 1 auto;margin-left:10px;padding-left:12px;border-left:1px solid var(--line)}
+/* The desk keeps to one row; shell.js takes out the chips that do not fit and shows "+n" for them. */
+.v2-desk{display:flex;flex-wrap:nowrap;align-items:center;gap:2px;height:32px;overflow:hidden;min-width:0;flex:0 1 auto;margin-left:10px;padding-left:12px;border-left:1px solid var(--line)}
 .v2-desk-chip{display:flex;align-items:center;gap:7px;height:32px;min-width:0;max-width:200px;flex:0 1 auto;padding:0 10px 0 6px;border-radius:7px;font:500 var(--v2-t13)/1 var(--ar-ui);color:var(--c3-ink2)}
 .v2-desk-chip:hover{background:var(--v2-sec);color:var(--ink)}
 .v2-desk-chip[aria-current]{background:var(--paper);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--c3-line2)}
@@ -55,6 +56,9 @@ html[data-brand] .v2-desk-chip[aria-current]{box-shadow:inset 0 0 0 1px var(--v2
 .v2-desk-chip img,.v2-desk-chip>i{width:22px;height:22px;border-radius:5px;flex:none;object-fit:cover}
 .v2-desk-chip>i{border:1px dashed var(--c3-line2)}
 .v2-desk-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-desk-list{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.v2-desk-list a{display:flex;align-items:center;min-height:44px;padding:8px 10px;border-radius:8px;font:500 var(--v2-t15)/1.35 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere}
+.v2-desk-list a:hover{background:var(--v2-sec)}
 .v2-grow{flex:1 1 0;min-width:0}
 .v2-top kbd{font:500 var(--v2-t12)/16px var(--ar-ui);padding:0 5px;border:1px solid var(--c3-line2);border-radius:4px;color:var(--dim)}
 .v2-needs{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:6px;font:500 var(--v2-t14)/1 var(--ar-ui);color:var(--c3-ink2);white-space:nowrap;flex:none}

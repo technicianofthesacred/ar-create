@@ -59,6 +59,8 @@ test('the shell exposes the names screens rely on, and every screen registers it
  for(const name of ['screen','href','go','route','screens','call','on','expect','actor','isHuman','actorName','Error','advanced','brand','theme'])assert.equal(typeof v2[name],'function',name);
  for(const name of ['refresh','use','list'])assert.equal(typeof v2.desk[name],'function','desk.'+name);
  for(const name of ['refresh','count'])assert.equal(typeof v2.needs[name],'function','needs.'+name);
+ assert.equal(typeof v2.shared,'object','v2.shared: where screens leave helpers for each other');
+ v2.shared.invented={answer:()=>42};assert.equal(v2.shared.invented.answer(),42);
  for(const name of ['ring','step','notBuilt','sheet','say','undo','reorder','icon','esc'])assert.equal(typeof v2.ui[name],'function','ui.'+name);
  assert.equal(v2.version,1);
  assert.deepEqual(plain(Object.fromEntries(v2.screens().map(s=>[s.id,s.route]))),ROUTES);
@@ -195,10 +197,10 @@ test('the client against the server: a read, a write with its revision, a 409 re
  const saved=await adrian.call('subject-places.save',{parentStudyId:'hk',expectedRevision:0,tags:['invented']});
  assert.equal(saved.revision,1);assert.deepEqual(saved.tags,['invented']);
  // A stale write: the client says so in plain words and, with reread and merge, tries once more on the fresh record.
- await assert.rejects(adrian.call('subject-places.save',{parentStudyId:'hk',expectedRevision:0,tags:['stale']}),e=>e.kind==='stale'&&e.status===409&&/changed since/.test(e.message));
+ await assert.rejects(adrian.call('subject-places.save',{parentStudyId:'hk',expectedRevision:0,tags:['stale']}),e=>e.kind==='stale'&&e.status===409&&e.message==='This changed since it was opened here. Read it again before saving.');
  const reread=async()=>(await adrian.call('subject-places',{parentStudyId:'hk'})).places[0];
  let seen=null;
- await assert.rejects(adrian.call('subject-places.save',{parentStudyId:'hk',expectedRevision:0,tags:['left']},{reread,merge:fresh=>{seen=fresh;return null;}}),e=>e.kind==='stale'&&e.fresh?.revision===1);
+ await assert.rejects(adrian.call('subject-places.save',{parentStudyId:'hk',expectedRevision:0,tags:['left']},{reread,merge:fresh=>{seen=fresh;return null;}}),e=>e.kind==='stale'&&e.fresh?.revision===1&&/It has been read again/.test(e.message));
  assert.equal(seen.revision,1,'merge was shown the fresh record');
  const merged=await adrian.call('subject-places.save',{parentStudyId:'hk',expectedRevision:0,tags:['merged']},{reread,merge:fresh=>({parentStudyId:'hk',expectedRevision:fresh.revision,expectedHash:fresh.hash,tags:[...fresh.tags,'merged']})});
  assert.equal(merged.revision,2);assert.deepEqual(merged.tags,['invented','merged']);
@@ -239,12 +241,13 @@ test('the app\'s own address opens version two, and every address of the existin
 });
 
 /** The existing workspace's top line, as its own modules leave it, with version-two.js loaded last. */
-function workspace({url='http://local.test/document-study/index.html',home=false}={}){
+function workspace({url='http://local.test/document-study/index.html',home=false,projects=[]}={}){
  const dom=new JSDOM(`<body><header id="c3-tabstrip" class="wbf-top"><details class="ht-switch"></details><button class="ht-place ht-theme" data-ht-theme>T</button><div class="wbf-top-actions"></div></header>${home?'<dialog id="project-library" open></dialog>':''}<div id="app"><nav class="combined-rail"></nav><div id="manuscript"></div></div></body>`,{url,runScripts:'outside-only'});
  const w=dom.window,calls=[],mounts=[];windows.push(w);
  w.c3Shell={register:(name,fn)=>{mounts.push(fn);fn();}};
  w.eval('var current=()=>({id:"hk",viewedStage:5});');
- w.combinedSubjects={open:async o=>{calls.push(['subject',o.projectId]);}};
+ w.eval('var state='+JSON.stringify({projects}));
+ w.combinedSubjects={open:async o=>{calls.push(['subject',o.projectId]);},openStage:async n=>{calls.push(['stage',n]);return true;}};
  w.combinedNavigation={go:async key=>{calls.push(['go',key]);return true;}};
  w.workspaceNavigation={changeMode:async mode=>{calls.push(['mode',mode]);}};
  w.realOutputOverview={onAction:async r=>{calls.push(['piece',r.outputId,r.kind]);}};
@@ -270,4 +273,35 @@ test('the existing workspace opens the subject, section and piece named in its a
  assert.deepEqual(calls,[['subject','hk'],['go','write'],['mode','read'],['piece','o1','read']]);
  assert.deepEqual([...new w.URLSearchParams(w.location.search)].map(e=>[...e]),[['reviewActor','agent:codex']],'only the three keys are taken out of the address');
  const plain=workspace();await new Promise(r=>setTimeout(r,450));assert.deepEqual(plain.calls,[],'with no keys nothing is opened');
+});
+test('a subject with no section opens on the section it was last on, or Write',async()=>{
+ const cases=[[[{id:'hk',viewedStage:9}],9],[[{id:'hk',viewedStage:1}],5],[[],5]];
+ for(const [projects,stage] of cases){
+  const {calls}=workspace({url:'http://local.test/document-study/index.html?subject=hk',projects});
+  for(let i=0;i<40&&calls.length<2;i++)await new Promise(r=>setTimeout(r,50));
+  assert.deepEqual(calls,[['subject','hk'],['stage',stage]],JSON.stringify(projects));
+ }
+});
+
+test('the desk keeps to one row: what does not fit is taken out (nothing hidden can take focus) and "+n" opens the rest',async()=>{
+ const {w,doc}=await page({answers:{'/api/needs-you':{counts:{open:0}}}});
+ const nav=doc.querySelector('[data-v2-desk]');let room=360;
+ // The page has no layout here, so the desk's widths are given: 104 a chip at its least, 32 for "+n", 2 between.
+ const used=()=>{const shown=[...nav.children].filter(c=>!c.hidden);return shown.reduce((sum,c)=>sum+(c.matches('[data-v2-desk-more]')?32:104),0)+Math.max(0,shown.length-1)*2;};
+ Object.defineProperty(nav,'clientWidth',{get:()=>room});Object.defineProperty(nav,'scrollWidth',{get:()=>Math.max(room,used())});
+ w.location.hash='#/subject/s3';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
+ const long=i=>(i+' The tea garden keepers of the far hills and their long winter ledger of picking days, notebook').slice(0,90);
+ await w.v2.desk.use(async()=>[1,2,3,4,5].map(i=>({id:'s'+i,title:long(i)})));
+ const shown=()=>[...nav.querySelectorAll('.v2-desk-chip:not([hidden])')].map(a=>a.getAttribute('href'));
+ const more=nav.querySelector('[data-v2-desk-more]');
+ assert.deepEqual(shown(),['#/subject/s1','#/subject/s2','#/subject/s3'],'the open subject stays; the last ones go first');
+ assert.equal(more.hidden,false);assert.equal(more.textContent,'+2');assert.equal(more.getAttribute('aria-label'),'2 more on your desk');
+ assert.ok([...nav.querySelectorAll('.v2-desk-chip[hidden]')].every(a=>a.hidden),'taken out, not merely clipped');
+ more.click();
+ assert.deepEqual([...doc.querySelectorAll('.v2-desk-list a')].map(a=>[a.getAttribute('href'),a.textContent]),[['#/subject/s4',long(4)],['#/subject/s5',long(5)]]);
+ doc.querySelector('.v2-desk-list a').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null,'choosing one closes the sheet');
+ room=140;await w.v2.desk.refresh();
+ assert.deepEqual(shown(),['#/subject/s3'],'with room for one, it is the subject open now');assert.equal(nav.querySelector('[data-v2-desk-more]').textContent,'+4');
+ room=2000;await w.v2.desk.refresh();
+ assert.equal(shown().length,5);assert.equal(nav.querySelector('[data-v2-desk-more]').hidden,true,'no "+n" when all fit');
 });

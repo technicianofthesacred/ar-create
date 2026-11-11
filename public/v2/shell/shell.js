@@ -172,7 +172,34 @@
  function paintDesk(){
   const nav=doc.querySelector('[data-v2-desk]');if(!nav)return;nav.hidden=!desk.length;
   const current=active?.screen.route.startsWith('subject/')?active.ctx.params.id:null;
-  nav.innerHTML=desk.map(d=>`<a class="v2-desk-chip" href="${esc(href('subject/:id',{id:d.id}))}" title="${esc(d.title)}"${d.id===current?' aria-current="page"':''}>${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<i aria-hidden="true"></i>'}<span>${esc(d.short||d.title)}</span></a>`).join('');
+  nav.innerHTML=desk.map(d=>`<a class="v2-desk-chip" href="${esc(href('subject/:id',{id:d.id}))}" title="${esc(d.title)}"${d.id===current?' aria-current="page"':''}>${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<i aria-hidden="true"></i>'}<span>${esc(d.short||d.title)}</span></a>`).join('')
+   +'<button type="button" class="v2-ghost v2-desk-more" data-v2-desk-more hidden></button>';
+  fitDesk();
+ }
+ // The desk keeps to one row. Chips shrink to a sensible width; those that still do not fit are taken out (hidden, so
+ // nothing invisible can take focus), the subject open now last of all, and a quiet "+n" opens the rest.
+ const DESK_MIN=104;
+ function fitDesk(){
+  const nav=doc.querySelector('[data-v2-desk]');if(!nav||nav.hidden)return;
+  const chips=[...nav.querySelectorAll('.v2-desk-chip')],more=nav.querySelector('[data-v2-desk-more]');if(!more)return;
+  chips.forEach(c=>{c.hidden=false;});more.hidden=true;
+  if(root.getComputedStyle(nav).display==='none')return;
+  // A chip may shrink to DESK_MIN, or to its whole name when that is shorter.
+  for(const c of chips){const name=c.querySelector('span');c.style.minWidth=Math.min(DESK_MIN,(name?.scrollWidth||0)+46)+'px';}
+  const over=()=>nav.scrollWidth>nav.clientWidth+1;
+  if(!over())return;
+  more.hidden=false;
+  const order=chips.slice().reverse().sort((a,b)=>(a.hasAttribute('aria-current')?1:0)-(b.hasAttribute('aria-current')?1:0));
+  for(const c of order){if(!over())break;c.hidden=true;}
+  const n=chips.filter(c=>c.hidden).length;
+  if(!n){more.hidden=true;return;}
+  more.textContent='+'+n;more.setAttribute('aria-label',`${n} more on your desk`);more.title=`${n} more on your desk`;
+ }
+ function deskSheet(){
+  const nav=doc.querySelector('[data-v2-desk]'),rest=[...(nav?.querySelectorAll('.v2-desk-chip[hidden]')||[])];
+  const list=doc.createElement('ul');list.className='v2-desk-list';
+  for(const c of rest){const li=doc.createElement('li'),a=doc.createElement('a');a.href=c.getAttribute('href');a.textContent=c.title;li.append(a);list.append(li);}
+  const s=P.sheet({title:'On your desk',body:list});list.addEventListener('click',e=>{if(e.target.closest('a'))s.close();});
  }
 
  // ---------- Needs you: the count ----------
@@ -196,10 +223,16 @@
    if(e.target.closest('[data-v2-theme]'))return toggleTheme();
    if(e.target.closest('[data-v2-capture]'))return captureSheet();
    if(e.target.closest('[data-v2-ask]'))return askSheet();
+   if(e.target.closest('[data-v2-desk-more]'))return deskSheet();
    if(e.target.closest('[data-v2-skip]')){e.preventDefault();main()?.focus();}
   });
   doc.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key.toLowerCase()==='k'){e.preventDefault();askSheet();}});
   root.addEventListener('hashchange',()=>route());
+  // Fit the desk again when the bar changes width (a window resized, fonts arrived).
+  let fitting=0;const refit=()=>{root.cancelAnimationFrame?.(fitting);fitting=root.requestAnimationFrame?root.requestAnimationFrame(fitDesk):setTimeout(fitDesk,0);};
+  // The spacer changes width whenever anything else in the bar does (the Needs you count appears, a font arrives).
+  if(typeof ResizeObserver==='function'){const ro=new ResizeObserver(refit);ro.observe(doc.querySelector('[data-v2-top]'));ro.observe(doc.querySelector('.v2-grow'));}else root.addEventListener('resize',refit);
+  doc.fonts?.ready?.then(refit);
   live.on({kinds:['needs-you*']},()=>refreshNeeds());
   live.on({kinds:['subject-places*','study-draft*','concept*']},()=>refreshDesk());
   live.on({},e=>{if(e.reset){refreshNeeds();refreshDesk();}});
@@ -221,6 +254,8 @@
   advanced,brand:id=>applyBrand(id),theme:()=>doc.documentElement.dataset.theme,
   desk:Object.freeze({refresh:refreshDesk,use:source=>{deskSource=typeof source==='function'?source:null;return refreshDesk();},list:()=>desk.map(d=>({...d}))}),
   needs:Object.freeze({refresh:refreshNeeds,count:()=>needs}),
+  // Helpers a screen offers the others: v2.shared.<screen id> = {...}. The only part of v2 a screen may write to.
+  shared:{},
   // the shared pieces
   ui:Object.freeze({ring:P.ring,step:P.step,notBuilt:P.notBuilt,sheet:P.sheet,say:P.say,undo:P.undo,reorder:P.reorder,icon:P.icon,esc:P.esc}),
  });
