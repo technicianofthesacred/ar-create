@@ -114,6 +114,22 @@ You said: "The joins are proposed, but at a certain point one concept may join t
 
 This keeps the rule that agents propose and you decide. You decide once for a work, not once for a line.
 
+### Keeping it simple as it grows
+
+You said: "One of the hard things is to distill things down to simple concepts and not end up having thousands of concepts, but distilling concepts down as well. This is the challenge and I need AI to help me with this."
+
+The answer is to distil upward as well as inward, by folding and never by deleting. Five habits for the agent:
+
+1. **Join before making new.** When a work arrives, the agent first tries to place each of its concepts into one the bank already holds. It makes a new concept only when the idea is truly new, and it tells you the count: "12 joined, 3 new".
+2. **Layers.** Passages sit inside concepts, concepts sit inside bigger concepts, and at the top are the few core understandings the whole bank rests on. From far away the map shows only the top layer, so it stays simple to look at however large it becomes. You go down a layer only when you want to.
+3. **A regular tidy, proposed.** Every so often the agent reads across the whole bank and proposes: concepts that are one idea said several ways, to fold together; thin concepts with a single passage and no lines, to fold into a parent; and a concept grown too broad, to split. These come as one batch you can accept with one yes or open and adjust.
+4. **Plain names.** Each concept is named in simple words and explained in one sentence a newcomer could follow. When a name is clever or vague, the agent proposes a plainer one.
+5. **A visible shape.** The bank always shows its own size by layer, for example how many core understandings, concepts and passages it holds, so you can see whether it is getting simpler or only bigger.
+
+Folding keeps everything. A work's own map still shows each concept the way that work said it. In the bank, those concepts sit inside the shared ones, and any fold can be undone.
+
+How well an agent can judge "one idea said several ways" across traditions is not known yet. It should be tried on a few real works before the tidy is trusted.
+
 ### The whole map: the big brain
 
 Asked whether you want one map of everything, you answered on 11 November: "Yes, I like the conceptual mind map if there's multiple concepts of how they all interconnect to each other. And those interconnections interconnect to other interconnections. This is like a big brain, this needs a bit of thought of how to do this properly."
