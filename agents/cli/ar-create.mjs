@@ -35,6 +35,7 @@ export const SUGAR = Object.freeze({
   consent: { desk: 'consent.desk', open: 'consent.open', claim: 'consent.claims.record', link: 'consent.claims.link', flag: 'consent.claims.flag', person: 'consent.people.record', draft: 'consent.people.draft-request' },
   simmer: { board: 'simmer.board.get', material: 'simmer.material', intake: 'simmer.intake', propose: 'simmer.propose', name: 'simmer.dish' },
   subject: { places: 'subject-places', place: 'subject-places.save', reorder: 'subject-places.reorder', folders: 'subject-places.folders.get', folder: 'subject-places.folders.post' },
+  standing: { subject: 'subject.standing', all: 'subjects.standing' },
   draft: { catalog: 'study-draft.catalog', read: 'study-draft.read', open: 'study-draft.open', create: 'study-draft.create-collection', save: 'study-draft.save', undo: 'study-draft.undo', check: 'study-draft.check.get', inspect: 'study-draft.inspect.get', proposals: 'study-ai.requests' },
 });
 // Sugar verbs that take one positional value (put into the input under that key) or need a fresh id for a single attempt.
@@ -66,9 +67,11 @@ export const SUGAR = Object.freeze({
 // subject's folder, tags, pin, archived or order with its expectedRevision; `subject reorder` sets a hand order for several;
 // `subject folders` reads the folder list; `subject folder --input {action: create|rename|reorder|remove|undo, ...}` changes it.
 // The writes get a fresh operationId unless the input names one.
+// `standing subject <id>` says where one subject stands: its forms in order, each step's state and the one next step;
+// `standing all` gives every subject's station, ring, next step and forms in one read (kept fresh as changes arrive).
 // `simmer board <subject>`, `simmer material <subject>`; `simmer intake|propose|name --input` get a fresh operationId
 // unless the input names one (name one yourself when you may retry: a retry with the same id adds nothing twice).
-export const SUGAR_POSITIONAL = Object.freeze({ 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId', 'instagram plan': 'id', 'look read': 'id', 'account read': 'id', 'asset list': 'id', 'template read': 'id' });
+export const SUGAR_POSITIONAL = Object.freeze({ 'standing subject': 'parentStudyId', 'magazine story': 'id', 'simmer board': 'subject', 'simmer material': 'subject', 'words check': 'jobId', 'words recognise': 'jobId', 'instagram plan': 'id', 'look read': 'id', 'account read': 'id', 'asset list': 'id', 'template read': 'id' });
 const freshOperation = () => ({ operationId: randomUUID() });
 export const SUGAR_DEFAULTS = Object.freeze({ 'magazine propose': freshOperation, 'simmer intake': freshOperation, 'simmer propose': freshOperation, 'simmer name': freshOperation, 'needs raise': freshOperation, 'words add': freshOperation, 'words import': freshOperation, 'words decide': freshOperation, 'words answer': freshOperation, 'look save': freshOperation, 'account save': freshOperation, 'asset add': freshOperation, 'instagram template': freshOperation, 'template propose': freshOperation, 'subject place': freshOperation, 'subject reorder': freshOperation, 'subject folder': freshOperation });
 const FLAGS = ['--url', '--actor', '--input', '--section', '--config', '--plan', '--say', '--look', '--account'];

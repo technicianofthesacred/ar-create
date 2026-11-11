@@ -1,6 +1,8 @@
 import {sharedSimmerServices} from './services/simmer-board.mjs';
 import {sharedInstagramStudio} from './services/instagram-studio.mjs';
 import {sharedNeedsYou} from './services/needs-you.mjs';
+import {createSubjectStanding,handleStanding} from './services/subject-standing.mjs';
+import {sharedSubjectPlaces} from './services/subject-places.mjs';
 import {createConversationCapture} from './services/conversation-capture.mjs';
 import {createCurrentWork} from './services/current-work.mjs';
 import {CURRENT_WORK_CONTRACT} from './contracts/current-work.mjs';
@@ -408,6 +410,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const simmer=await sharedSimmerServices({dataDir,library,concepts:conceptWork});
   const conversationCaptures=createConversationCapture({dataDir,concepts:conceptWork,...simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk})});
   const currentWork=conceptWork?createCurrentWork({concepts:conceptWork,direction:studyHumanDirection,...simmer,understanding:currentUnderstanding,studyAI,presence,continuity:workContinuity,captures:conversationCaptures,needs:sharedNeedsYou({dataDir,events,recordings})}):null;
+  // Where a subject stands (subject.standing, subjects.standing): one gathered read per subject, cached for all and kept fresh by the change stream.
+  const subjectStanding=studyDrafts?createSubjectStanding({dataDir,drafts:studyDrafts,outputs:studyOutputs,checks:studyDraftChecks,consentDesk,library,firstFlow,simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk}),needsYou:sharedNeedsYou({dataDir,events,recordings}),places:sharedSubjectPlaces({dataDir}),wordChecks:async()=>(await import('./services/words-http.mjs')).wordsFor({dataDir,events,recordings}).shared.checks({}),topics:inquiryInterface?async()=>(await inquiryInterface.handle({method:'GET',path:'/catalog',input:{}})).body:null,events,settle:async()=>{activityHealth=await activity.reconcile();}}):null;
   const studyLanguage=studyOutputs&&studyDrafts?createStudyLanguageConnection({dataDir,outputs:studyOutputs,drafts:studyDrafts,share:studyShare,structureTests,execution:nativeAIExecution??execution}):null;
   const sourceLanguage=createSourceTranslationProposals({dataDir,readSelection:createSourceTranslationSelectionReader({sourceSessions,drafts:studyDrafts,validateCopyTarget:input=>structureTests?.validateTarget(input)}),validateCopyTarget:input=>structureTests?.validateTarget(input),execution:nativeAIExecution??execution});
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
@@ -467,6 +471,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
       if(await (await import('./services/words-http.mjs')).handleWords(request,response,{dataDir,events,recordings,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/transcript-check-http.mjs')).handleTranscriptCheck(request,response,{dataDir,recordings,events,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/phone-pickup-http.mjs')).handlePhonePickup(request,response,{dataDir,events,recordings,library,origin:()=>server.listening?'http://127.0.0.1:'+server.address().port:null,checkWrite:()=>checkWrite(request,server)}))return;
+      if(await handleStanding(request,response,subjectStanding))return;
       if(await (await import('./services/subject-places.mjs')).handleSubjectPlaces(request,response,{dataDir,checkWrite:()=>checkWrite(request,server)}))return;
       if(await (await import('./services/simmer-board.mjs')).handleSimmer(request,response,{dataDir,library,concepts:conceptWork,leases}))return;
       if(await (await import('./services/looks.mjs')).handleLooks(request,response,{dataDir,checkWrite:()=>checkWrite(request,server)}))return;
