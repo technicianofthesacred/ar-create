@@ -132,10 +132,12 @@ test('Capture is the sample sheet with four tiles; search goes to Research',asyn
  const sheet=doc.querySelector('dialog.v2-sheet');assert.ok(sheet);
  assert.equal(sheet.querySelector('h2').textContent,'Capture');
  assert.equal(sheet.querySelector('[data-v2-close]'),null,'the sample sheet has no close button');
- assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 a')].map(a=>a.textContent),['Speak','Photograph','Write a thought','Ask a question']);
+ assert.deepEqual([...sheet.querySelectorAll('.v2-cap4 a')].map(a=>a.textContent),['A recording','Photographs','A note or a link','Ask a question']);
  assert.match(sheet.querySelector('.v2-cap4 a').getAttribute('href'),/^\/document-study\/index\.html\?subject=p1&section=material$/);
  assert.equal(sheet.querySelector('[data-v2-cap-ask]').getAttribute('href'),'#/research');
- assert.doesNotMatch(sheet.textContent,/Not built yet/);
+ assert.match(sheet.querySelector('.v2-cap-to').textContent,/^Adding material is not built in this version yet\. These open Material in Advanced\./,'it says plainly what it does and does not do');
+ assert.doesNotMatch(sheet.textContent,/Goes to /,'it does not claim a subject Advanced does not keep');
+ assert.ok(![...sheet.querySelectorAll('.v2-cap4 path')].some(x=>/^M12 3a3 3 0 0 0-3 3v5/.test(x.getAttribute('d')||'')),'no microphone where nothing listens');
  sheet.querySelector('[data-v2-cap-ask]').click();assert.equal(doc.querySelector('dialog.v2-sheet'),null,'choosing a tile closes the sheet');
  w.location.hash='#/';w.dispatchEvent(new w.HashChangeEvent('hashchange'));await settle();
  doc.querySelector('[data-v2-ask]').click();

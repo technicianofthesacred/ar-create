@@ -51,7 +51,6 @@
   const more=el.querySelector('[data-rs-allgroups]');
   more?.addEventListener('click',()=>{const box=el.querySelector('.rs-moregroups'),open=box.hidden;box.hidden=!open;more.setAttribute('aria-expanded',String(open));more.textContent=open?'Fewer groups':more.textContent;if(!open)more.textContent='All groups · '+box.children.length+' more';});
   tog?.addEventListener('click',()=>{const open=!r.classList.contains('open');r.classList.toggle('open',open);tog.setAttribute('aria-expanded',String(open));});
-  el.querySelector('[data-rs-newgroup]')?.addEventListener('click',()=>newGroup());
  }
  function row(t,{groups=[],made=false}={}){
   const g=groups.find(x=>x.id===t.groupId),sug=t.suggestedGroupId?groups.find(x=>x.id===t.suggestedGroupId):null;
@@ -110,8 +109,8 @@
  }
  function newGroup(){
   const s=sheet({title:'New group',body:`<form class="rs-pick"><label class="rs-field"><span>Name</span><input name="name" required maxlength="200" autocomplete="off" placeholder="For example, Tea: growing"></label><div class="rs-row end"><button type="button" class="v2-ghost" data-v2-close>Cancel</button><button class="pri" type="submit">Make the group</button></div></form>`});
-  s.body.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();const name=e.target.name.value.trim();if(!name)return;
-   try{const g=await v2.call('research-topics.group.save',{name,expectedRevision:0});s.close();v2.go('research/group/:id',{id:g.id});}catch(error){fail(error);}});
+  s.body.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();const name=e.target.querySelector('[name=name]').value.trim();if(!name)return;
+   try{const g=await v2.call('research-topics.group.save',{name,expectedRevision:0});s.close();v2.go('research/group/:id',{id:g.id});}catch(error){fail(error.status===409&&error.body?.error?{message:error.body.error}:error);}});
  }
  function newTopic(groups){
   const picked=new Set();
@@ -141,6 +140,7 @@
   async mount(el,ctx){
    const show=ctx.query.show in VIEWS?ctx.query.show:'all';
    ctx.setAdvanced({section:'research'});if(show!=='all')ctx.setTitle(VIEWS[show]);
+   el.addEventListener('click',e=>{if(e.target.closest('[data-rs-newgroup]'))newGroup();},{signal:ctx.signal});
    const paint=async()=>{
     let list,gone=null;
     try{list=await v2.call('research-topics');if(show==='gone')gone=await v2.call('research-topics',{gone:true});}catch(error){el.querySelector('[data-rs-main]').innerHTML=`<header><h1>Research</h1></header>${problem(error)}`;return;}
@@ -165,7 +165,7 @@
    el.addEventListener('click',e=>{
     const x=e.target.closest('[data-rs-letgo]');if(x){e.preventDefault();return letGo(x.dataset.rsLetgo,paint);}
     const g=e.target.closest('[data-rs-group]');if(g){e.preventDefault();return fileIn(g.dataset.rsGroup,g.dataset.rsTo,paint);}
-   });
+   },{signal:ctx.signal});
    ctx.on({kinds:['research-topics*','inquiries*']},()=>paint());
    ctx.on({},e=>{if(e.reset)paint();});
    await paint();
@@ -176,6 +176,7 @@
   render:ctx=>`<div class="rs-lay" data-rs-groupscreen><div class="rs-railhost" data-rs-railhost>${rail(null,ctx.params.id)}</div><div class="v2-page rs-main rs-grp" data-rs-main><p class="rs-meta">Reading the group…</p></div></div>`,
   async mount(el,ctx){
    const id=ctx.params.id;ctx.setAdvanced({section:'research'});
+   el.addEventListener('click',e=>{if(e.target.closest('[data-rs-newgroup]'))newGroup();},{signal:ctx.signal});
    let g=null;const showAll={src:false,top:false};
    const paint=async()=>{
     let list;
@@ -217,7 +218,7 @@
      const s=sheet({title:'How this group works',body:`<form class="rs-pick"><label class="rs-field"><span>Name</span><input name="name" required maxlength="200" value="${esc(g.name)}"></label><label class="rs-field"><span>Filed in</span><input name="folder" maxlength="400" value="${esc(g.folder.join(' / '))}"><small class="rs-meta">Folders, with a slash between them.</small></label><fieldset class="rs-field rs-chips"><legend>New topics</legend><label><input type="radio" name="opens" value="propose"${g.settings.opensTopics!=='off'?' checked':''}><span>Assistants propose them</span></label><label><input type="radio" name="opens" value="off"${g.settings.opensTopics==='off'?' checked':''}><span>Only when I start one</span></label></fieldset><div class="rs-row end"><button type="button" class="v2-ghost" data-v2-close>Cancel</button><button class="pri" type="submit">Save</button></div></form>`});
      s.body.querySelector('form').addEventListener('submit',async ev=>{ev.preventDefault();const f=ev.target,opens=f.querySelector('input[name=opens]:checked')?.value||'propose';try{await v2.call('research-topics.group.save',{id,...v2.expect(g),name:f.name.value.trim(),folder:f.folder.value.split('/').map(x=>x.trim()).filter(Boolean),settings:{opensTopics:opens}});s.close();await paint();}catch(error){fail(error);}});
     }
-   });
+   },{signal:ctx.signal});
    ctx.on({kinds:['research-topics*','inquiries*']},()=>paint());
    ctx.on({},e=>{if(e.reset)paint();});
    await paint();
@@ -292,8 +293,8 @@
     const text=f.querySelector('textarea').value.trim();
     try{await v2.call('research-topics.take',{id,...v2.expect(t),text});say('Your line is kept.',{tone:'good'});await paint();}
     catch(error){fail(error);if(error.kind==='stale'){const mine=f.querySelector('textarea').value;await paint();const form=el.querySelector('[data-rs-take]');if(form){form.hidden=false;form.querySelector('textarea').value=mine;say('This topic changed since you opened it. Your line was not kept; it is still in the box.',{tone:'warn'});}}}
-   });
-   el.addEventListener('change',e=>{const s=e.target.closest('[data-rs-groupset]');if(s)save({groupId:s.value||null});});
+   },{signal:ctx.signal});
+   el.addEventListener('change',e=>{const s=e.target.closest('[data-rs-groupset]');if(s)save({groupId:s.value||null});},{signal:ctx.signal});
    el.addEventListener('click',async e=>{
     if(!t)return;
     if(e.target.closest('[data-rs-listen]')){sheet({title:'Listen',body:notBuilt('Hearing a topic read aloud.')});return;}
@@ -313,7 +314,7 @@
      else if(w.kind==='use')await v2.call('research-topics.link',{id,...v2.expect(t),parentStudyId:w.parentStudyId});
     }catch(error){fail(error);}
     await paint();
-   });
+   },{signal:ctx.signal});
    ctx.on({kind:'research-topic',id},()=>paint());
    ctx.on({kinds:['inquiries*']},()=>paint());
    ctx.on({},e=>{if(e.reset)paint();});

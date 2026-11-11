@@ -433,8 +433,10 @@
    catch(e){root.innerHTML='<header><h1>Slides</h1></header><p class="v2-msg" data-tone="bad"><span>'+esc(e.message||'The slides could not be read.')+'</span></p>';return;}
    if(gone)return;
    if(!plan.layouts?.[FORMAT]){
-    root.innerHTML='<header><h1>Slides</h1><p>'+esc(plan.title||'This plan')+'</p></header>'+v2.ui.notBuilt('No Carousel has been laid out for this plan yet.')
-     +'<p><a class="v2-out" href="/document-study/index.html?instagram='+esc(plan.id)+'">Open in Advanced'+ic('out')+'</a></p>';
+    const adv='/document-study/index.html?instagram='+encodeURIComponent(plan.id)+(v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):'');
+    root.innerHTML='<div class="sl-empty" data-sl-empty><header><h1>Slides</h1><p>'+esc(plan.title||'This plan')+'</p></header>'
+     +'<p>No slides have been laid out for this Carousel yet. An assistant lays them out once a story is chosen.</p>'
+     +'<p class="sl-empty-go">'+(plan.subject?'<a class="v2-out" href="'+esc(v2.href('subject/:id',{id:plan.subject}))+'">Back to the subject</a>':'')+'<a class="v2-out" href="'+esc(adv)+'">Open in Advanced'+ic('out')+'</a></p></div>';
     ctx.setTitle('Slides');return;
    }
    if('IntersectionObserver' in window)io=new IntersectionObserver(es=>{for(const en of es)seen(en);},{rootMargin:'320px 0px'});

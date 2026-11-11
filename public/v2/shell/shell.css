@@ -165,3 +165,5 @@ dialog.v2-sheet::backdrop{background:rgba(10,9,7,.45)}
  @media (max-width:850px){.v2-phone button.v2-cap{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;height:44px!important;min-height:44px!important;padding:0 18px!important;border:0!important;border-radius:22px!important;background:var(--graphite-ink)!important;color:var(--graphite-inverse)!important;font:600 var(--v2-t13)/1 var(--ar-ui)!important;background-clip:border-box!important}}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.v2-sheet-msgs:empty{display:none}
+.v2-sheet-msgs .v2-msg{margin-top:0}

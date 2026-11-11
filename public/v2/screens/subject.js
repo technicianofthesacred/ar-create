@@ -174,7 +174,32 @@
   words:['read'],check:['check'],story:['planRecords'],slides:['planRecords'],yes:['desk'],
  });
 
- const pure=Object.freeze({TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
+
+ /** The one sentence of his that a subject shows beside its name, for display only (nothing stored is changed). The dish
+     he named comes first; otherwise the direction he adopted. A stored direction can be the whole concept record (its
+     headings, his thoughts, the assistants' provisional parts) or one plain paragraph written long ago or by hand: the
+     record is read only to find his adopted words, and nothing else of it is ever shown. Nothing found gives ''. */
+ const D='\u2014',ADOPTED='## Adopted human direction '+D+' explicit',AFTER='## AI interpretation '+D+' provisional';
+ const CONCEPT_PART=new RegExp('^(?:# Concept|## Author thoughts '+D+' supplied verbatim|'+ADOPTED+'|'+AFTER+'|## Suggestions '+D+' unadopted|## Selected Library passages '+D+' references, not approval)[ \\t]*$','m');
+ /** His adopted words, with their own line breaks (what Edit starts from); adoptedWords lays them flat for one line. */
+ function adoptedRaw(body){
+  let text=String(body??'').replace(/\r\n?/g,'\n');
+  // The app's own blocks (direction choices, planning intent) are data wrapped in markers: take them out whole.
+  text=text.replace(/<!-- ar-create:([a-z-]+):v1 -->[\s\S]*?<!-- \/ar-create:\1:v1 -->/g,'').replace(/<!--[\s\S]*?-->/g,'');
+  if(!text.trim())return '';
+  if(!CONCEPT_PART.test(text))return text.trim();
+  const at=text.indexOf('\n\n'+ADOPTED+'\n\n');if(at<0)return '';
+  const from=at+('\n\n'+ADOPTED+'\n\n').length,rest=text.slice(from),end=rest.indexOf('\n\n'+AFTER);
+  return (end<0?rest:rest.slice(0,end)).trim();
+ }
+ const adoptedWords=body=>adoptedRaw(body).replace(/\s+/g,' ');
+ function sentenceOf(board,direction){
+  const n=board?.forming?.named,named=typeof n==='string'?n:n?.text;
+  if(typeof named==='string'&&named.trim())return named.trim();
+  return adoptedWords(direction?.body);
+ }
+
+ const pure=Object.freeze({adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
  if(typeof module==='object'&&module.exports)module.exports=pure;
  const v2=root.v2;if(!v2||typeof v2.screen!=='function')return;
 
@@ -324,7 +349,7 @@
    const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
    // The station stays for assistive technology; the sample shows it nowhere on this page.
    const where=`<span class="subj-where subj-sr" title="${esc(s.stationName)}">${ring(s.ring)}<span>${esc(s.stationName)}</span></span>`;
-   const d=st.rec.direction,said=ok(d)?String(d.body||'').trim():null;
+   const d=st.rec.direction,said=d===undefined?null:ok(d)?sentenceOf(ok(st.rec.board)?st.rec.board:null,d):(sentenceOf(ok(st.rec.board)?st.rec.board:null,null)||null);
    const hasDish=(current().steps||[]).some(x=>x.id==='dish');
    // Change stays on the page: it opens the Name the dish step. Only a subject with no such step is sent to Advanced.
    const change=(label,key,aria)=>hasDish?`<button type="button" class="subj-link" data-subj-step="dish" aria-label="${aria}">${label}</button>`:`<a class="subj-link" data-subj-handoff="${key}" href="${handoffHref('direction',null)}" aria-label="${aria} (opens Advanced)">${label}</a>`;
@@ -400,8 +425,8 @@
     case 'photos':return waitsFor(s,steps)+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
     case 'check':return toolCheck(s,steps,form);
     case 'story':return toolStory(s,form);
-    case 'slides':return form?.kind==='instagram'?toolSlides(s,form):links(own(s,form));
-    case 'posttext':return waitsFor(s,steps)+(form?.kind==='instagram'?`<div class="subj-actions">${studio(form)}</div>`:'')+links(out('postWrite',form),out('postRead',form),out('postCheck',form));
+    case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):links(own(s,form));
+    case 'posttext':return waitsFor(s,steps)+(form?.kind==='instagram'&&laidOut(form)?`<div class="subj-actions">${studio(form)}</div>`:'')+links(out('postWrite',form),out('postRead',form),out('postCheck',form));
     case 'yes':return toolYes(s,form);
     case 'publish':return toolPublish(s,steps,form);
    }
@@ -456,7 +481,7 @@
       with Edit, and the board itself in Advanced. Only the sentence he types is written, by simmer.dish. */
   function toolDish(s,steps,form){
    const bd=ok(rec('board'))?rec('board'):null,f=bd?.forming||{},blocks=(bd?.groups||[]).flatMap(g=>g.blocks||[]);
-   const sentence=typeof f.named==='string'?f.named:f.named?.text||'',d=rec('direction'),dir=ok(d)?String(d.body||'').trim():'';
+   const sentence=typeof f.named==='string'?f.named:f.named?.text||'',d=rec('direction'),dir=ok(d)?adoptedWords(d.body):'';
    const letter=blocks.find(x=>x.kind==='letter'&&x.letter),feel=blocks.filter(x=>x.kind==='feeling'&&x.text).slice(0,4);
    const by=x=>x?.by?`<em class="subj-by">${esc(v2.actorName(x.by))}’s proposal</em>`:'';
    const L=letter?.letter||{},rows=[['What keeps coming back',L.recurs],['Where your voice changed',L.voice],['Still unresolved',L.unresolved]].filter(r=>r[1]);
@@ -466,7 +491,7 @@
    const right=dishes?`<section><p class="subj-label">It could be</p><ul class="subj-dishes">${dishes}</ul></section>`:'';
    const said=sentence||dir,editing=st.editDish!==undefined;
    const edit=editing?`<form class="subj-dishform" data-subj-dishform><label for="subj-dish">The dish, in your words</label><textarea id="subj-dish" rows="3" data-subj-dishtext>${esc(st.editDish)}</textarea><div class="subj-actions"><button type="submit" class="pri">Keep it</button><button type="button" class="v2-ghost" data-subj-dishcancel>Cancel</button></div></form>`
-    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions"><a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">${ownIcon('mic')}Say it again</a><button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
+    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions"><a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">Say it again</a><button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
    return (rec('board')===undefined?reading():'')+waitsFor(s,steps)+((left||right)?`<div class="subj-sim">${left?`<div>${left}</div>`:''}${right?`<div>${right}</div>`:''}</div>`:'')+`<div class="subj-named">${edit}</div>`;
   }
   function toolWords(s,form){
@@ -484,15 +509,21 @@
   const planOf=form=>{const p=rec('planRecords');return form?.kind==='instagram'&&Array.isArray(p)?p.filter(ok).find(x=>x.id===form.id)||null:null;};
   const studio=form=>form?.kind==='instagram'?`<a class="subj-btn pri" href="${esc(v2.href('slides/:id',{id:form.id}))}">Open the slide studio${icon('right')}</a>`:'';
   const igAdvanced=form=>`<a class="subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(form.id)}${v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):''}" title="Opens the slide studio in Advanced">Open the slide studio in Advanced</a>`;
+  const laidOut=form=>{const p=planOf(form);return !!p&&Object.values(p.layouts||{}).some(l=>(l?.frames||[]).length);};
+  // What a waiting Carousel step waits for, and the way forward that already exists: the same place in Advanced.
+  const STORY_WAIT='An assistant proposes the stories from your words and photographs. You choose one.';
+  const waitingCarousel=(form,say,key)=>`<p class="subj-quiet" data-subj-waiting>${esc(say)}</p><div class="subj-actions">${out(key,form,'subj-btn')}</div>`;
   function toolStory(s,form){
    const p=planOf(form);
    const list=(p?.stories||[]).map(x=>{const on=p.chosen?.storyId===x.id;return `<li>${mark(on?'done':'todo')}<span><b>${esc(x.title)}</b>${x.readback?`<small>${esc(x.readback)}</small>`:''}</span>${on?'<em class="subj-by">Chosen</em>':''}</li>`;}).join('');
-   return (rec('planRecords')===undefined?reading():'')+(list?`<ul class="subj-list">${list}</ul>`:'')+(form?.kind==='instagram'?`<div class="subj-actions">${studio(form)}${igAdvanced(form)}</div>`:links(own(s,form)));
+   if(form?.kind==='instagram'&&rec('planRecords')!==undefined&&!list)return waitingCarousel(form,STORY_WAIT,'story');
+   return (rec('planRecords')===undefined?reading():'')+(list?`<ul class="subj-list">${list}</ul>`:'')+(form?.kind==='instagram'?`<div class="subj-actions">${laidOut(form)?studio(form):''}${igAdvanced(form)}</div>`:links(own(s,form)));
   }
-  function toolSlides(s,form){
+  function toolSlides(s,form,steps=[]){
    const p=planOf(form),fmt=Object.keys(p?.layouts||{})[0]||'carousel',frames=p?.layouts?.[fmt]?.frames||[];
    const strip=frames.length?`<ol class="subj-strip" data-subj-strip="${esc(p.id)}" data-format="${esc(fmt)}">${frames.map((fr,i)=>`<li><div class="subj-frame" data-frame="${i}" data-tall="${fmt==='story'||fmt==='reel'?1:0}"></div><small>${i+1} · <b data-code="${esc(fr.templateId)}">${esc(codeMap?.get?.(fr.templateId)||fr.templateId)}</b></small></li>`).join('')}</ol>`:'';
    const say=p&&p.chosen?`<form class="subj-say" data-subj-sayform><label for="subj-say">Say the codes</label><div><input id="subj-say" data-subj-say value="${esc(st.sayLine)}" placeholder="use C1, 2 and 5" autocomplete="off" spellcheck="false"><button type="submit">Use them</button></div></form>`:'';
+   if(rec('planRecords')!==undefined&&!frames.length)return (p?.chosen?'':waitsFor(s,steps))+waitingCarousel(form,p?.chosen?'An assistant lays the slides out from the story you chose.':'The slides wait for a story to be chosen.','slides');
    return (rec('planRecords')===undefined?reading():'')+strip+say+`<div class="subj-actions">${studio(form)}${igAdvanced(form)}</div>`;
   }
   function toolYes(s,form){
@@ -537,7 +568,7 @@
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
    if(e.target.closest('[data-subj-add]'))addForm();
-   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?String(d.body||'').trim():'');st.last.panel='';paintNow();$('[data-subj-dishtext]')?.focus();}
+   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?adoptedRaw(d.body):'');st.last.panel='';paintNow();$('[data-subj-dishtext]')?.focus();}
    if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;st.last.panel='';paintNow();}
   });
   function openStep(sid){
@@ -605,7 +636,7 @@
 
   // First paint comes from the one command; the look's name and his direction sentence follow, each from one read.
   call('looks',{}).then(r=>{if(!ok(r)||ctx.signal.aborted)return;st.look=new Map((r.looks||[]).map(l=>[l.id,l.name]));paintNow();});
-  ask('direction');
+  ask('direction');ask('board');
   return refresh();
  }
 

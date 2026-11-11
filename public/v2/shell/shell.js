@@ -217,15 +217,15 @@
   const phone=doc.querySelector('[data-v2-needs-phone]');phone?.setAttribute('aria-label',needs?`Needs you: ${needs}`:'Needs you');}
 
  // ---------- Capture: the sample's sheet with four tiles ----------
- // Speak, Photograph and Write a thought have no capture back end in version two, so each opens the place where
+ // A recording, Photographs and A note or a link have no capture back end in version two, so each opens the place where
  // material is added in the existing workspace (Advanced). A question goes to Research. Nothing is saved here.
  function captureSheet(){
   const inSubject=!!active?.screen.route.startsWith('subject/')&&active.ctx.params.id,subject=inSubject?active.ctx.params.id:null;
-  const name=inSubject&&active.ctx.title?active.ctx.title:'';
   const where=advanced({...(subject?{subject}:{}),section:'material'});
-  const to=name?`Goes to <b>${esc(name)}</b>. A question goes to Research.`:'Opens the place for new material, to file later. A question goes to Research.';
+  // Capture is not built inside version two, so the sheet says so and opens the existing place for new material.
+  const to='Adding material is not built in this version yet. These open Material in Advanced. A question goes to Research.';
   const tile=(cls,ic,label,href,attr='')=>`<a class="${cls}" href="${esc(href)}"${attr}>${icon(ic)}${label}</a>`;
-  const body=`<p class="v2-cap-to">${to}</p><div class="v2-cap4">${tile('rec','mic','Speak',where)}${tile('','photo','Photograph',where)}${tile('','pen','Write a thought',where)}${tile('','ask','Ask a question','#/research',' data-v2-cap-ask')}</div>`;
+  const body=`<p class="v2-cap-to">${to}</p><div class="v2-cap4">${tile('rec','plus','A recording',where)}${tile('','photo','Photographs',where)}${tile('','pen','A note or a link',where)}${tile('','ask','Ask a question','#/research',' data-v2-cap-ask')}</div>`;
   const sh=P.sheet({title:'Capture',body,close:false});
   sh.el.addEventListener('click',e=>{if(e.target.closest('.v2-cap4 a'))sh.close();});
  }
