@@ -148,7 +148,8 @@ async function page(base,hash){
  return {w,doc:w.document,sources,calls};
 }
 const until=async(check,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=check();if(v)return v;if(Date.now()>end)throw new Error('timed out');await new Promise(r=>setTimeout(r,25));}};
-const sectionOf=href=>new URL(href,'http://x').searchParams.get('section');
+// An Article's Write opens version two's own Write screen; every other hand-off opens a section of Advanced.
+const sectionOf=href=>/^#\/write\//.test(href)?'write':new URL(href,'http://x').searchParams.get('section');
 
 
 const get=async(base,p)=>(await fetch(base+p)).json();
@@ -222,6 +223,7 @@ test('the page: opens a step on demand, every hand-off lands on its section with
    for(const a of doc.querySelectorAll('[data-subj-panel] [data-subj-handoff],.subj-head [data-subj-handoff]')){
     const key=a.dataset.subjHandoff,href=a.getAttribute('href'),q=new URL(href,'http://x').searchParams;
     if(key!=='own')handoffs.add(key);
+    if(/^#\/write\//.test(href)){assert.ok(['write','own'].includes(key),key+' opens Write only for the words step');assert.equal(href,`#/write/${id}?piece=${pill.dataset.subjForm.slice(4)}`,'Write opens for this subject and piece');continue;}
     assert.equal(q.get('section'),key==='own'?q.get('section'):S.HANDOFFS[key].section,key+': '+href);
     assert.equal(q.get('subject'),id);
     if(key!=='directionChange'&&key!=='directionWrite'&&key!=='addMaterial'&&doc.querySelector('.subj-form.on').dataset.subjForm.startsWith('out:'))assert.equal(q.get('piece'),pill.dataset.subjForm.slice(4),key+' keeps the piece');

@@ -317,6 +317,8 @@
   }
 
   const handoffHref=(section,form)=>esc(v2.advanced({subject:id,section,piece:pieceOf(form)}));
+  /** Write opens version two's own Write screen for an Article; every other piece still opens Advanced. */
+  const writeHref=form=>form&&form.kind==='article'?esc(v2.href('write/:id',{id},{piece:pieceOf(form)})):handoffHref('write',form);
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
    const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:`<a class="subj-look none" href="${esc(v2.href('looks'))}" title="Open Looks to see the looks you can choose from"><i aria-hidden="true"></i>Choose a look</a>`;
@@ -375,7 +377,7 @@
    return nx&&nx.id!==s.id?`<footer class="subj-next"><span>${mark('done')}This step is done.</span><button type="button" class="pri" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('right')}</button></footer>`:'';
   }
   /** A hand-off link, named in HANDOFFS so its label and its section cannot drift apart. */
-  const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${handoffHref(HANDOFFS[key].section,form)}" title="Opens in Advanced">${esc(HANDOFFS[key].label)}${cls==='subj-link'?icon('chev'):''}</a>`;
+  const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${key==='write'?writeHref(form):handoffHref(HANDOFFS[key].section,form)}" title="${key==='write'&&form?.kind==='article'?'Opens Write':'Opens in Advanced'}">${esc(HANDOFFS[key].label)}${cls==='subj-link'?icon('chev'):''}</a>`;
   const btn=(key,form,pri=false)=>out(key,form,'subj-btn'+(pri?' pri':''));
   /** The step's own hand-off, from the section the command names for it. */
   const own=(s,form)=>{const h=ownHandoff(s);if(!h)return '';return h.key?out(h.key,form):`<a class="subj-link" data-subj-handoff="own" href="${handoffHref(h.section,form)}" title="Opens in Advanced">${esc(h.label)}${icon('chev')}</a>`;};
@@ -471,7 +473,7 @@
   }
   function toolWords(s,form){
    const r=ok(rec('read'))?rec('read'):null,blocks=(r?.projection||[]).filter(x=>String(x.words||'').trim()),parts=partsOf(blocks);
-   const write=handoffHref('write',form);
+   const write=writeHref(form);
    const sheet=blocks.length?`<a class="subj-sheet" href="${write}" aria-label="Open the writing in Advanced" tabindex="-1"><b>${esc(form?.title||st.standing.title)}</b>${blocks.slice(0,5).map(x=>x.blockKind==='heading'?`<i>${esc(String(x.words).slice(0,80))}</i>`:`<span>${esc(String(x.words).slice(0,220))}</span>`).join('')}</a>`:'';
    const list=parts.length?`<ol class="subj-parts">${parts.map(p=>`<li title="${esc(plural(p.paragraphs,'paragraph'))}"><i aria-hidden="true"></i><span>${esc(p.name)}</span></li>`).join('')}</ol>`:'';
    return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length?`<a class="subj-btn" data-subj-handoff="read" href="${handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
