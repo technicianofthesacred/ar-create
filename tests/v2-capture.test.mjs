@@ -17,7 +17,7 @@ const scriptsOf=h=>[...h.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m
 const COMMANDS=[
  ['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],
  ['subject.standing','GET','/api/subject/standing',true],['subjects.standing','GET','/api/subjects/standing',true],['recordings','GET','/api/recordings',true],
- ['sources.folders','POST','/api/sources/folders',false],['sources.import','POST','/api/sources/import',false],
+ ['sources.folders','POST','/api/sources/folders',false],['sources.tree','GET','/api/sources/tree',true],['sources.import','POST','/api/sources/import',false],
  ['study.material.attach','POST','/api/study/material/attach',false],['first-flow.attach','POST','/api/first-flow/attach',false],
  ['.transcription.id.action','POST','/transcription/{id}/{action}',false],
  ['research-topics.start','POST','/api/research-topics/start',false],['research-topics.propose','POST','/api/research-topics/propose',false],
@@ -346,4 +346,126 @@ test('the sheet is keyboard-friendly and honest: a dialog with a title, focus in
  const fontSizes=[...css.matchAll(/font(?:-size)?:[^;}]*?(?:var\(--v2-t(\d+)\)|(\d+)px)/g)].map(m=>m[1]||m[2]);
  assert.ok(fontSizes.length>0);for(const s of fontSizes)assert.ok(['12','13','14','15','18','22'].includes(s),'type size '+s+' is one of the six');
  assert.doesNotMatch(css,/#[0-9a-fA-F]{3,8}\b/,'no hard-coded colour');
+});
+
+// ---------- corrections found in review ----------
+const nativeClose=p=>{p.sheet().removeAttribute('open');p.sheet().dispatchEvent(new p.w.Event('close'));};
+async function recordDraft(p,media){
+ p.tile('speak');await until(()=>media.made.length>0&&p.doc.querySelector('[data-cap="stop"]'),'the recording to begin');
+ media.made[media.made.length-1].feed(900);p.press('stop');await until(()=>p.doc.querySelector('[data-cap="save"]'),'the review');
+}
+
+test('Done and the link do not drop what is still waiting: the done state lists it with a way back to each',async()=>{
+ const media=fakeMedia();
+ const p=await capPage({respond:goodSave(),media});
+ await p.open({id:'p1'});await settle();
+ await recordDraft(p,media);p.press('back');
+ p.tile('question');p.typeInto('Does straw help?');p.press('back');
+ p.tile('thought');p.typeInto('A thought to keep.');p.press('save');
+ await until(()=>/Thought added to/.test(p.text()),'the done line');
+ assert.match(p.text(),/Still waiting, not saved/);
+ const back=[...p.sheet().querySelectorAll('[data-cap-wait] button')].map(b=>b.dataset.view);
+ assert.deepEqual(back,['speak','question'],'a way back to the recording and to the question');
+ p.press('done');assert.ok(p.sheet(),'Done does not close the sheet while work is waiting');
+ assert.match(p.text(),/Something is still waiting, not saved/);
+ const link=p.doc.querySelector('dialog.v2-capture [data-cap-link]');
+ const click=new p.w.MouseEvent('click',{bubbles:true,cancelable:true});link.dispatchEvent(click);
+ await settle(20);assert.ok(p.sheet(),'the link does not close the sheet either');assert.equal(click.defaultPrevented,true,'and does not leave the page');
+ p.doc.querySelector('[data-cap-wait] [data-view="question"]').click();
+ assert.equal(p.doc.querySelector('[data-cap-text]').value,'Does straw help?','the question is still there');
+ p.press('save');await until(()=>/Question added to Research/.test(p.text()),'the question');
+ assert.match(p.text(),/Still waiting/);assert.equal(p.sheet().querySelectorAll('[data-cap-wait] button').length,1,'only the recording is left');
+ p.doc.querySelector('[data-cap-wait] [data-view="speak"]').click();
+ assert.ok(p.doc.querySelector('audio'),'the recording is still there');p.press('save');
+ await until(()=>/Recording added to/.test(p.text()),'the recording');
+ assert.doesNotMatch(p.text(),/Still waiting/);p.press('done');assert.equal(p.sheet(),null,'nothing is waiting, so Done closes');
+});
+
+test('a native close (a second Escape) keeps a live recording and the microphone; with nothing waiting it tidies up fully',async()=>{
+ const media=fakeMedia();
+ const p=await capPage({respond:goodSave(),media});
+ await p.open({id:'p1'});await settle();p.tile('speak');
+ await until(()=>media.made.length>0&&p.doc.querySelector('[data-cap="stop"]'),'recording');
+ nativeClose(p);await settle(20);
+ assert.ok(p.sheet()&&p.sheet().hasAttribute('open'),'the dialog is open again');
+ assert.equal(media.tracks.some(t=>t.stopped),false,'the microphone is still live and still the sheet\'s');
+ assert.ok(p.doc.querySelector('[data-cap="stop"]'),'still recording');
+ await p.open({id:'p1'});assert.equal(p.doc.querySelectorAll('dialog.v2-capture').length,1,'Capture focuses the same open sheet');
+ media.made[0].feed(700);p.press('stop');await until(()=>p.doc.querySelector('[data-cap="save"]'),'the review');
+ assert.ok(media.tracks.every(t=>t.stopped),'the microphone is released when the recording ends');
+ nativeClose(p);await settle(20);assert.ok(p.sheet()&&p.sheet().hasAttribute('open'),'an unsaved recording is kept too');
+ p.press('discard');nativeClose(p);await settle(20);
+ assert.equal(p.sheet(),null,'with nothing waiting the sheet is tidied away');
+ await p.open({id:'p1'});assert.ok(p.sheet().hasAttribute('open'),'and Capture opens a new one');
+});
+
+/** A server that keeps what it is sent in a table and can lose its answer, as a network drop would. */
+function lossyServer({dropFirst=true}={}){
+ const files=[];let dropped=false;
+ const tree=()=>({roots:[{id:'library',tree:{rel_path:'',files:[],folders:[{rel_path:'Projects',files:[],folders:[{rel_path:'Projects/proj-1',folders:[],files:files.map(f=>({rel_path:'Projects/proj-1/'+f.name,name:f.name,size_bytes:f.size,id:f.id}))}]}]}}]});
+ const respond=(name,body)=>{
+  if(name==='sources.import'){
+   const f=body.files[0],id='src-'+(files.length+1);
+   if(!files.some(x=>x.name===f.name))files.push({name:f.name,size:f.content!=null?Buffer.byteLength(f.content):Buffer.from(f.base64,'base64').length,id});
+   if(dropFirst&&!dropped){dropped=true;throw new Error('connection dropped');}
+   return receipt(f.name,id);
+  }
+  if(name==='sources.folders'||name==='sources.tree')return tree();
+  return goodSave()(name,body);
+ };
+ return {respond,files};
+}
+
+test('an import whose answer is lost is not saved twice: the sheet says it may be saved, looks for the file by name, and goes on to the attach',async()=>{
+ const srv=lossyServer();
+ const p=await capPage({respond:srv.respond});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Words saved while the answer got lost.');p.press('save');
+ await until(()=>/may already be saved/.test(p.text()),'the plain line');
+ assert.doesNotMatch(p.text(),/Nothing was changed/);
+ assert.equal(p.doc.querySelector('[data-cap-text]').value,'Words saved while the answer got lost.','the words are kept');
+ p.press('save');
+ await until(()=>/Thought added to/.test(p.text()),'the retry to finish');
+ assert.equal(p.named('sources.import').length,1,'no second copy was sent');
+ assert.equal(srv.files.length,1);
+ assert.equal(p.named('study.material.attach').length,1);assert.deepEqual(p.named('study.material.attach')[0].body.sourceIds,['src-1'],'the found file is the one attached');
+});
+
+test('an import whose answer is lost and which never reached the server is sent again, under the same file name',async()=>{
+ let tries=0;const names=[];
+ const p=await capPage({respond:(n,b)=>{
+  if(n==='sources.import'){tries++;names.push(b.files[0].name);if(tries===1)throw new Error('connection dropped');}
+  return goodSave()(n,b);}});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Nothing reached the server.');p.press('save');
+ await until(()=>/may already be saved/.test(p.text()),'the plain line');
+ p.press('save');await until(()=>/Thought added to/.test(p.text()),'the retry');
+ assert.equal(tries,2);assert.equal(names[0],names[1],'one name per capture, reused on the retry');
+});
+
+test('a question an assistant asks saves its note once: a failed proposal is retried with the note already saved',async()=>{
+ let fail=true;
+ const p=await capPage({actor:'agent:claude-code',respond:(n,b)=>n==='research-topics.propose'&&fail?[500,{error:'x'}]:goodSave()(n,b)});
+ await p.open({id:'p1'});await settle();p.tile('question');p.typeInto('Is paper as good?');p.press('save');
+ await until(()=>/was not sent/.test(p.text()),'the failure');
+ fail=false;p.press('save');await until(()=>/proposed to Research/.test(p.text()),'the retry');
+ assert.equal(p.named('sources.import').length,1,'the note is not saved a second time');
+ assert.equal(p.named('research-topics.propose').length,2);
+ assert.equal(p.named('research-topics.propose')[1].body.origin.ref.id,p.named('research-topics.propose')[0].body.origin.ref.id);
+});
+
+test('when every attach step is refused the done line says it is saved in the subject\'s folder, with the reason, not that it was added',async()=>{
+ const p=await capPage({respond:(n,b)=>n==='study.material.attach'||n==='first-flow.attach'?[409,{error:'The subject is locked by someone else.'}]:goodSave()(n,b)});
+ await p.open({id:'p1'});await settle();p.tile('thought');p.typeInto('Kept anyway.');p.press('save');
+ await until(()=>/Thought saved/.test(p.text()),'the done line');
+ assert.match(p.text(),/Thought saved in the folder of The shaded garden\./);
+ assert.doesNotMatch(p.text(),/added to The shaded garden/);
+ assert.match(p.text(),/could not be attached/);
+ assert.match(p.text(),/This changed since it was opened here|locked/,'the reason');
+});
+
+test('the tiles and the done line keep the sample\'s measures, and the destination is set in the ink token',()=>{
+ const css=read('public/v2/shell/capture.css');
+ assert.doesNotMatch(css,/min-height:9[26]px/,'the tile has no taller floor than the sample');
+ assert.match(css,/padding:18px 6px 14px/);
+ assert.match(css,/\.v2-cap-to b\{[^}]*color:var\(--ink\)[^}]*font-weight:(600|700)/);
+ assert.match(css,/\.v2-cap-done \.v2-ic\{[^}]*width:16px/);
 });

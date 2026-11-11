@@ -194,7 +194,21 @@
   for(const x of tree.sources||[])if(x?.kind==='transcript'){const j=x.recordingId||x.transcriptState?.jobId;if(j)out.add(j);}
   return [...out];
  }
- const pure=Object.freeze({recordingView,registeredJobs,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
+ /** A topic is waiting to be kept only while its own status says `proposed`; once he keeps it, who first suggested it no longer matters. */
+ const topicStatus=t=>t?.status==='proposed'?'proposed':'accepted';
+ /** How a topic reads in the Facts step. A question is his own words, unchanged; any other name keeps the sentence. */
+ function topicLine(t){
+  const name=String(t?.name||''),asked=/\?\s*$/.test(name);
+  if(topicStatus(t)==='proposed')return 'Suggested: '+(asked?name:name.charAt(0).toLowerCase()+name.slice(1));
+  return asked?name:'Learn more about '+name.charAt(0).toLowerCase()+name.slice(1);
+ }
+ /** The summary's "n research topics" says the number the panel lists, when the panel's list is known. */
+ function topicNote(note,topics){
+  const text=String(note||'');if(!topics||topics.error||!Array.isArray(topics.list))return text;
+  const n=topics.list.length;
+  return text.replace(/(\s·\s)?\d+ research topics?( on this material)?/,(all,dot,tail)=>n?(dot||'')+plural(n,'research topic')+(tail||''):'').replace(/\s·\s*$/,'');
+ }
+ const pure=Object.freeze({topicStatus,topicLine,topicNote,recordingView,registeredJobs,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
  if(typeof module==='object'&&module.exports)module.exports=pure;
  const v2=root.v2;if(!v2||typeof v2.screen!=='function')return;
 
@@ -229,7 +243,7 @@
  async function topicsOf(ids,brief){
   // A question asked from the Capture sheet is a research topic linked to this subject: it shows here too.
   const linked=await call('research-topics',{subject:ids.id});
-  const extra=ok(linked)?(linked.topics||[]).filter(t=>t?.id&&t.name).map(t=>({id:t.id,name:t.name,status:t.proposedBy?'proposed':'accepted'})):[];
+  const extra=ok(linked)?(linked.topics||[]).filter(t=>t?.id&&t.name).map(t=>({id:t.id,name:t.name,status:topicStatus(t)})):[];
   const base=await topicsFromInquiries(ids,brief);
   const seen=new Set(base.list.map(t=>t.id));
   return {...base,list:[...base.list,...extra.filter(t=>!seen.has(t.id))].sort((a,b)=>a.name.localeCompare(b.name))};
@@ -328,6 +342,8 @@
    if(back)$(back)?.focus({preventScroll:true});
   }
   const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':null;
+  /** A step as shown; the Facts summary counts the research topics its panel lists. */
+  const viewOf=x=>stepView(x.id==='facts'?{...x,note:topicNote(x.note,st.rec.topics)}:x);
   function paintSteps(steps,form){
    const nav=$('[data-subj-steps]'),shape=JSON.stringify([form?.key||null,steps.map(x=>x.id),later(st.standing)]);
    if(nav.dataset.shape!==shape){
@@ -335,7 +351,7 @@
     nav.dataset.shape=shape;nav.innerHTML=stepList(steps)+(later(st.standing)?'<p class="subj-later">The rest appears when you say what it will be.</p>':'');return;
    }
    for(const x of steps){
-    const li=nav.querySelector(`.subj-row[data-step="${cssq(x.id)}"]`),v=stepView(x),html=rowInner(v);
+    const li=nav.querySelector(`.subj-row[data-step="${cssq(x.id)}"]`),v=viewOf(x),html=rowInner(v);
     if(li&&li.dataset.html!==html){
      const focused=li.contains(document.activeElement),panel=li.querySelector(':scope>[data-subj-panel]');
      li.dataset.state=v.state;li.dataset.html=html;li.querySelector(':scope>[data-subj-step]').outerHTML=html;
@@ -378,7 +394,7 @@
   }
   function stepList(steps){
    return GROUPS.map(g=>{const rows=steps.filter(x=>x.group===g);if(!rows.length)return '';
-    return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=stepView(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
+    return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=viewOf(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
   }
   const rowInner=v=>{const on=v.id===st.open;
    return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}</button>`;};
@@ -392,7 +408,7 @@
    const panel=$('[data-subj-panel]');if(!panel)return;
    const s=steps.find(x=>x.id===st.open);
    if(!s){panel.hidden=true;st.last.panel='';return;}
-   const v=stepView(s);
+   const v=viewOf(s);
    const quiet=s.id==='have'&&s.state==='next';
    const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${nextUp(s,form,steps)}`;
    panel.hidden=false;
@@ -451,9 +467,11 @@
   }
   const WAYS=[['mic','A recording','Record now, or add one.'],['note','A note or a link','A thought, a page, a video.'],['photo','Photographs','From this device or the Library.']];
   /** The three ways in and the drop strip. Adding material is done in the existing workspace, so each opens Material there. */
+  /** What a way in does: the Capture sheet when the app has one (read now, as the press does), else Material in Advanced. */
+  const wayTip=()=>typeof v2.capture==='function'?'Opens the Capture sheet':'Opens Material in Advanced';
   function ways(){
    const to=handoffHref('material',null);
-   return `<div class="subj-ways">${WAYS.map(([ic,n,w])=>`<a data-subj-handoff="addMaterial" data-subj-capture href="${to}" title="Opens Material in Advanced">${ownIcon(ic)}<b>${n}</b><span>${w}</span></a>`).join('')}</div><a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${to}" title="Opens Material in Advanced">${icon('plus')}Or drop anything here</a>`;
+   return `<div class="subj-ways">${WAYS.map(([ic,n,w])=>`<a data-subj-handoff="addMaterial" data-subj-capture href="${to}" title="${wayTip()}">${ownIcon(ic)}<b>${n}</b><span>${w}</span></a>`).join('')}</div><a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${to}" title="${wayTip()}">${icon('plus')}Or drop anything here</a>`;
   }
   function toolHave(s,form){
    const known=['tree','brief','planRecords'].every(k=>rec(k)!==undefined);
@@ -461,17 +479,20 @@
    const photos=m?m.items.filter(x=>x.kind==='photos'):[],rest=m?m.items.filter(x=>x.kind!=='photos'):[];
    const KIND={recordings:'Recording',notes:'Your note',links:'Link'},IC={recordings:'mic',notes:'note',links:'note'};
    const jobs=ok(rec('recordings'))?rec('recordings'):null,byJob=new Map((jobs?.jobs||[]).map(j=>[j.sourceId,j])),done=new Set(registeredJobs(rec('tree')));
+   // A transcript kept as a source (by the button, or in Advanced) is itself part of what he has.
+   {const have=new Set(rest.map(x=>x.id));for(const x of rest.slice()){const job=byJob.get(x.id);if(!job||!done.has(job.id))continue;
+    for(const t of ok(rec('tree'))?rec('tree').sources||[]:[])if(t?.id&&t.kind==='transcript'&&t.recordingId===job.id&&!have.has(t.id)){have.add(t.id);rest.push({id:t.id,title:t.title||t.name||'Transcript',kind:'recordings',recordingId:t.recordingId});}}}
    const where=x=>{
     if(x.kind!=='recordings'||x.recordingId)return '';
     const job=byJob.get(x.id),v=jobs&&job?recordingView(job,jobs.capability,done.has(job.id)):null;if(!v)return '';
-    const act=v.act==='use'?`<a class="subj-link" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Using the transcript as a source is not built here yet: it opens in Advanced">Use the transcript in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
+    const act=v.act==='use'?`<button type="button" class="subj-btn" data-subj-rec="use" data-job="${esc(job.id)}" title="Keeps the finished transcript as a source of this subject">Use the transcript</button><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced, where its words are checked">Open in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
     return `<span class="subj-where" data-subj-where>${esc(v.say)}</span>${act}`;
    };
    const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
    const tray=photos.length?`<div class="subj-tray">${photos.slice(0,12).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>12?`<span>+${photos.length-12}</span>`:''}</div>`:'';
    const any=s.state==='done'||list||tray;
    if(!any)return (!known?reading():'')+ways();
-   return (!known?reading():'')+list+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="Opens Material in Advanced">${icon('plus')}Add a recording, note, link or photographs</a>`;
+   return (!known?reading():'')+list+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" data-subj-capture href="${handoffHref('material',null)}" title="${wayTip()}">${icon('plus')}Add a recording, note, link or photographs</a>`;
   }
   function toolTranscript(s,form){
    const plans=rec('planRecords'),flags=[];
@@ -493,7 +514,7 @@
    const toLook=(b?.materials||[]).filter(mm=>!mm.reviewed&&!['audio','image'].includes(mm.kind));
    const review=b?.step==='review'&&toLook.length;
    if(review)body+=`<div class="subj-one"><p>${plural(toLook.length,'source')} not looked at yet.</p><ul class="subj-have subj-plain">${toLook.slice(0,6).map(mm=>`<li><b title="${esc(mm.title)}">${esc(mm.title)}</b><small>Not looked at</small></li>`).join('')}</ul><div class="subj-actions">${btn('researchLook',form,true)}</div></div>`;
-   const learn=(tp?.list||[]).map(t=>`<a class="subj-link" href="${esc(v2.href('research/topic/:id',{id:t.id}))}">${t.status==='proposed'?'Suggested: ':'Learn more about '}${esc(t.name.charAt(0).toLowerCase()+t.name.slice(1))}${icon('chev')}</a>`).join('');
+   const learn=(tp?.list||[]).map(t=>`<a class="subj-link" href="${esc(v2.href('research/topic/:id',{id:t.id}))}">${esc(topicLine(t))}${icon('chev')}</a>`).join('');
    return (rec('brief')===undefined?reading():'')+body+links(learn,review?'':out('research',form));
   }
   /** Name the dish, in place: what the board holds (the letter, the possible dishes, the feelings), the dish in his words
@@ -581,6 +602,9 @@
    if(cap&&typeof v2.capture==='function'){e.preventDefault();const f=st.standing?.facts||{};v2.capture({subject:{id,name:st.standing?.title||'',title:st.standing?.title||'',bindingId:f.bindingId||null,projectId:f.projectId||null}});return;}
    const rb=e.target.closest('[data-subj-rec]');
    if(rb){e.preventDefault();if(st.busy)return;const job=rb.dataset.job,action=rb.dataset.subjRec;
+    if(action==='use'){
+     // Reading the proof (transcript-check.id) holds a writer lock only for the length of that one read and leaves the transcript's mapping in place; recordings.source (Adrian only) then keeps it as a source.
+     act(['recordings','tree'],async()=>{const check=await v2.call('transcript-check.id',{id:job});await v2.call('recordings.source',{jobId:job,expected:check.expected});v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    const b=e.target.closest('[data-subj-step]');
    if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}

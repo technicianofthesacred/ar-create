@@ -316,13 +316,14 @@ test('the subject shows where a recording is, from the real recordings; its ways
 
  // 1. The real demo server: transcription is not set up here, so the recording says it is saved only.
  {
-  const {w,doc,calls}=await page(base,'#/subject/'+id+'?step=have');
+  // The shell now has a Capture sheet of its own; this part takes it out to see the page without one.
+  const {w,doc,calls}=await page(base,'#/subject/'+id+'?step=have',{patch:(text,src)=>/shell\/shell\.js$/.test(src)?text.replace('capture:options=>openCapture(options),',''):text});
   await until(()=>doc.querySelector('.subj-have [data-subj-where]'));
   assert.deepEqual(rows(doc).filter(r=>r[1]==='Recording'),[['Microphone-2026-11-11 09.30','Recording','Saved. Transcription is not set up on this machine.','']]);
   assert.ok(calls.includes('/api/recordings'));
   // With no Capture sheet the ways in keep today's behaviour: they open Material in Advanced.
   const ways=[...doc.querySelectorAll('[data-subj-capture]')];assert.ok(ways.length>=1);
-  for(const a of ways)assert.equal(new URL(a.getAttribute('href'),'http://x').searchParams.get('section'),'material');
+  for(const a of ways){assert.equal(new URL(a.getAttribute('href'),'http://x').searchParams.get('section'),'material');assert.equal(a.getAttribute('title'),'Opens Material in Advanced','with no sheet the tooltip says where it goes');}
   assert.equal(typeof w.v2.capture,'undefined');
   let held=null;doc.addEventListener('click',e=>{held=e.defaultPrevented;e.preventDefault();},{once:true});
   ways[0].dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
@@ -334,6 +335,7 @@ test('the subject shows where a recording is, from the real recordings; its ways
   await until(()=>doc.querySelector('.subj-have [data-subj-where]'));
   const click=new w.MouseEvent('click',{bubbles:true,cancelable:true});doc.querySelector('.subj-drop[data-subj-capture]').dispatchEvent(click);
   assert.equal(click.defaultPrevented,true);
+  for(const a of doc.querySelectorAll('[data-subj-capture]'))assert.equal(a.getAttribute('title'),'Opens the Capture sheet','with the sheet the tooltip says so');
   assert.equal(w.__cap.subject.id,id);assert.equal(w.__cap.subject.name,'Shade and patience');assert.equal(w.__cap.subject.projectId,facts.projectId);
  }
  // 3. Stand-ins for the states the demo cannot make (it has no transcription tools). Only the answers are invented.
@@ -355,10 +357,29 @@ test('the subject shows where a recording is, from the real recordings; its ways
   await until(()=>calls.slice(before).includes('/transcription/'+job.id+'/start'));
   assert.deepEqual((await show('running',true)).slice(2),['Making the transcript.','']);
   assert.deepEqual((await show('failed',true)).slice(2),['The transcript could not be made. The recording is kept.','Try the transcript again']);
-  assert.deepEqual((await show('done',true)).slice(2),['Transcript ready.','']);
-  const use=doc.querySelector('[data-subj-handoff="readTranscript"]');assert.ok(use,'Using the transcript has no command to read its proof, so it opens in Advanced');
-  assert.equal(new URL(use.getAttribute('href'),'http://x').searchParams.get('section'),'source');
-  assert.equal(doc.querySelector('[data-subj-rec]'),null);
+  assert.deepEqual((await show('done',true)).slice(2),['Transcript ready.','Use the transcript']);
+  // A ready transcript that is not yet a source: one button, and Open in Advanced stays beside it as a quiet link.
+  const useBtn=doc.querySelector('[data-subj-rec="use"]');assert.ok(useBtn,'a ready transcript has its one button');
+  assert.equal(useBtn.textContent.trim(),'Use the transcript');
+  const quiet=doc.querySelector('.subj-have [data-subj-handoff="readTranscript"]');assert.ok(quiet,'checking its words still lives in Advanced');
+  assert.equal(quiet.textContent.trim(),'Open in Advanced');assert.equal(new URL(quiet.getAttribute('href'),'http://x').searchParams.get('section'),'source');
+  assert.ok(!quiet.classList.contains('subj-btn'),'the link is the quiet one');
+  // An assistant (or anyone) refused by recordings.source sees the plain message and the button stays.
+  w.stub['/api/transcript-check/'+job.id]={status:200,body:{expected:{jobId:job.id,markdownHash:'h1'}}};
+  w.stub['/api/recordings/source']={status:403,body:{error:'Using a recording transcript as Source requires the author.'}};
+  doc.querySelector('[data-subj-rec="use"]').click();
+  await until(()=>/requires the author/.test(doc.getElementById('v2-messages')?.textContent||''));
+  assert.ok(doc.querySelector('[data-subj-rec="use"]'),'nothing changed, the button stays');
+  // Adrian presses it: the proof is read once (a read that holds nothing afterwards), then sent with the job; the new source shows without a reload.
+  let sent=null;const tree=await (await fetch(base+'/api/sources/tree')).json();
+  w.stub['/api/recordings/source']=o=>{sent=JSON.parse(o.body);return {status:200,body:{source:{id:'11111111-aaaa-4aaa-8aaa-111111111111'},jobId:job.id}};};
+  w.stub['/api/sources/tree']=()=>({status:200,body:{...tree,sources:[...(tree.sources||[]),...(sent?[{id:'11111111-aaaa-4aaa-8aaa-111111111111',kind:'transcript',recordingId:job.id,title:'Transcript of the shade talk',hash:'h1',rel_path:'x/transcript.md'}]:[])]}});
+  const before2=calls.length;doc.querySelector('[data-subj-rec="use"]').click();
+  await until(()=>[...doc.querySelectorAll('.subj-have li')].some(l=>/Transcript of the shade talk/.test(l.textContent)));
+  assert.deepEqual([sent.jobId,sent.expected],[job.id,{jobId:job.id,markdownHash:'h1'}]);assert.match(sent.operationId,/^[0-9a-f-]{36}$/);
+  assert.equal(calls.slice(before2).indexOf('/api/transcript-check/'+job.id)<calls.slice(before2).indexOf('/api/recordings/source'),true,'read first, then use');
+  assert.equal(doc.querySelector('[data-subj-rec="use"]'),null,'once it is a source the button is gone');
+  delete w.stub['/api/sources/tree'];
   assert.deepEqual((await show('saved',false)).slice(2),['Saved. Transcription is not set up on this machine.','']);
   // A refusal reaches him in plain words and nothing is lost.
   await show('saved',true);
@@ -373,6 +394,27 @@ test('the subject shows where a recording is, from the real recordings; its ways
   const r=await fetch(base+'/api/research-topics/start',{method:'POST',headers:{'Content-Type':'application/json',Origin:base,'X-AR-Actor':'human:adrian','X-AR-Client':'ui'},body:JSON.stringify({operationId:'22222222-2222-4222-8222-222222222222',name:'Why does shade slow the leaf?',subjects:[id]})});
   assert.equal(r.status,200);const topic=await r.json();
   const {doc}=await page(base,'#/subject/'+id+'?step=facts');
-  await until(()=>[...doc.querySelectorAll('[data-subj-panel] a.subj-link')].find(a=>a.getAttribute('href')==='#/research/topic/'+topic.id),60000);
+  const link=await until(()=>[...doc.querySelectorAll('[data-subj-panel] a.subj-link')].find(a=>a.getAttribute('href')==='#/research/topic/'+topic.id),60000);
+  // 3. He started it himself (kept): never "Suggested". 4. A question is shown as his own words, unchanged.
+  assert.equal(link.textContent,'Why does shade slow the leaf?');
+  // 5. The summary counts what the panel lists.
+  const listed=doc.querySelectorAll('[data-subj-panel] a.subj-link[href^="#/research/topic/"]').length;
+  assert.ok(listed>=1);
+  const note=doc.querySelector('.subj-row[data-step="facts"] small')?.textContent||'';
+  if(/research topic/.test(note))assert.match(note,new RegExp('(^|\\D)'+listed+' research topics?\\b'));
  }
+});
+
+test('topic wording: a question stays his own words, others keep the prefix; kept is never Suggested; the summary count is the listed count',()=>{
+ assert.equal(S.topicLine({name:'Why does shade slow the leaf?',status:'kept'}),'Why does shade slow the leaf?');
+ assert.equal(S.topicLine({name:'Why does shade slow the leaf?',status:'proposed'}),'Suggested: Why does shade slow the leaf?');
+ assert.equal(S.topicLine({name:'Shade and tea',status:'kept'}),'Learn more about shade and tea');
+ assert.equal(S.topicLine({name:'Shade and tea',status:'proposed'}),'Suggested: shade and tea');
+ assert.deepEqual(S.topicStatus({id:'a',name:'x',status:'proposed'}),'proposed');
+ assert.deepEqual(S.topicStatus({id:'a',name:'x',status:'kept',proposedBy:'agent:claude-code'}),'accepted','an assistant started it and Adrian kept it');
+ assert.equal(S.topicNote('3 of 5 things looked at · 1 research topic on this material',{list:[1,2,3,4]}),'3 of 5 things looked at · 4 research topics on this material');
+ assert.equal(S.topicNote('1 research topic on this material',{list:[{}]}),'1 research topic on this material');
+ assert.equal(S.topicNote('2 sources · 1 research topic on this material',{list:[]}),'2 sources');
+ assert.equal(S.topicNote('1 research topic on this material',undefined),'1 research topic on this material');
+ assert.equal(S.topicNote('1 research topic on this material',{error:true,list:[]}),'1 research topic on this material');
 });

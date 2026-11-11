@@ -42,7 +42,7 @@
     live.close();
    }
    const opener=doc.activeElement;
-   const S={view:'tiles',subject,fellBack:false,thought:'',question:'',photos:[],photoId:0,rec:{state:'idle',problem:''},draft:null,busy:false,done:null,msg:'',tone:''};
+   const S={view:'tiles',subject,fellBack:false,thought:'',question:'',photos:[],photoId:0,rec:{state:'idle',problem:''},draft:null,busy:false,done:null,msg:'',tone:'',thoughtFile:null,note:null};
    let destPromise=null,nextView=null;
    const call=(name,input,o)=>deps.call(name,input,o);
    const human=()=>!!deps.isHuman();
@@ -65,30 +65,60 @@
     ?`Goes to <b>${esc(S.subject.name||'this subject')}</b>. A question goes to Research.`
     :'Goes to the Library, to file later. A question goes to Research.';
 
+   // An answer that never arrived (the wait ran out, or the connection dropped) is not a refusal: the Library may have saved it.
+   const lostAnswer=error=>error?.kind==='failed'&&!error.status;
+   const lostError=()=>{const e=new Error('The app did not answer, so the sheet cannot be sure. It looks for the file before it saves it again.');e.lost=true;return e;};
+   const sizeOfText=text=>{try{return new root.Blob([text]).size;}catch{return null;}};
+   /** The file named so in the Library folder (and of the size sent), read through the commands the sheet already uses. */
+   async function findSaved(folder,name,size){
+    const answer=await call(folder?'sources.folders':'sources.tree',folder?{rootId:'library',folder}:{});
+    const want=(folder?folder+'/':'')+name;let hit=null;
+    const walk=node=>{if(!node||hit)return;for(const f of node.files||[])if(f.rel_path===want&&f.id&&(size==null||typeof f.size_bytes!=='number'||f.size_bytes===size)){hit=f;return;}for(const c of node.folders||[])walk(c);};
+    for(const r of answer?.roots||[])if(!r.id||r.id==='library')walk(r.tree);
+    return hit;
+   }
+   const unsure=new Set();
+   /** One file into the Library folder. A name whose answer was lost is looked for first, and a found file counts as saved. */
+   async function importOne(file,{folder='',size=null,refusal='The Library did not take it.'}={}){
+    const key=folder+'/'+file.name;
+    if(unsure.has(key)){
+     let hit;try{hit=await findSaved(folder,file.name,size);}catch{throw lostError();}
+     if(hit){unsure.delete(key);return {id:hit.id,name:hit.name,rel_path:hit.rel_path};}
+    }
+    let answer;
+    try{answer=await call('sources.import',{rootId:'library',folder,files:[file]},{timeoutMs:LONG});}
+    catch(error){if(lostAnswer(error)){unsure.add(key);throw lostError();}throw error;}
+    unsure.delete(key);
+    const receipt=answer?.receipts?.[0];
+    if(!receipt?.ok||!receipt.source?.id)throw new Error(receipt?.error||refusal);
+    return receipt.source;
+   }
    /** One file into the Library, filed with the subject as the workspace does: its folder, import, attach. */
-   async function fileIn(file){
+   async function fileIn(file,size){
     const d=await destination(),named=!!d.subject;
     let folder=d.projectId?'Projects/'+d.projectId:'';
     if(folder){try{await call('sources.folders',{rootId:'library',folder});}catch{folder='';}}
-    const answer=await call('sources.import',{rootId:'library',folder,files:[file]},{timeoutMs:LONG});
-    const receipt=answer?.receipts?.[0];
-    if(!receipt?.ok||!receipt.source?.id)throw new Error(receipt?.error||'The Library did not take it.');
-    const source=receipt.source;let attached=false,why='';
+    const source=await importOne(file,{folder,size:size??(file.content!=null?sizeOfText(file.content):null)});
+    let attached=false,why='';
     if(named){
      const tries=[];
      if(d.bindingId)tries.push(()=>call('study.material.attach',{bindingId:d.bindingId,parentStudyId:S.subject.id,sourceIds:[source.id]}));
      if(d.projectId)tries.push(()=>call('first-flow.attach',{projectId:d.projectId,sourceIds:[source.id]}));
      for(const attempt of tries){try{await attempt();attached=true;break;}catch(error){why=error?.message||why;}}
     }
-    // Saved inside the subject's own folder counts as with the subject even when the attach step was refused.
-    const home=named&&(attached||folder)?'subject':'library';
-    return {source,home,why:named&&home==='library'?why:'',fell:!named&&!!S.subject};
+    // Saved inside the subject's own folder counts as with the subject even when the attach step was refused, but it is said as that.
+    const home=!named?'library':attached?'subject':folder?'folder':'library';
+    return {source,home,attached,why:named&&!attached?(why||'the app refused it'):'',fell:!named&&!!S.subject};
    }
+   const subjectName=()=>esc(S.subject?.name||'this subject');
    const whereWords=homes=>{
-    const all=homes.every(h=>h==='subject');
-    if(all&&S.subject&&!S.fellBack)return `added to <b>${esc(S.subject.name||'this subject')}</b>`;
+    if(S.subject&&!S.fellBack&&homes.every(h=>h==='subject'))return `added to <b>${subjectName()}</b>`;
+    if(S.subject&&!S.fellBack&&homes.every(h=>h==='subject'||h==='folder'))return `saved in the folder of <b>${subjectName()}</b>`;
     return 'saved in the Library, to file later';
    };
+   const attachNote=why=>`It could not be attached to the subject: ${why}`;
+   /** The plain line for a save that did not finish; a lost answer says it may already be saved. */
+   const notSaved=(thing,error,still)=>error?.lost?`${thing} may already be saved. ${error.message} ${still}`:`${thing} was not saved. ${error?.message||'The app did not answer.'} ${still}`;
 
    // ---------- the sheet ----------
    const d=doc.createElement('dialog');d.className='v2-sheet v2-capture';d.setAttribute('aria-label','Capture');
@@ -114,9 +144,23 @@
     const back=opener&&opener!==doc.body&&opener.isConnected?opener:doc.querySelector('[data-v2-capture]');
     back?.focus?.({preventScroll:true});
    }
+   const keepWords=()=>S.rec.state==='recording'?'Stop the recording first. Nothing is closed while it runs.':S.view==='done'?'Something is still waiting, not saved. Choose it in the list to go back to it, then save or discard it.':'Something here is not saved yet. Save it, or discard it, and then close.';
    function tryClose(){
-    if(unsafe()){say(S.rec.state==='recording'?'Stop the recording first. Nothing is closed while it runs.':'Something here is not saved yet. Save it, or discard it, and then close.','bad');return false;}
+    if(unsafe()){say(keepWords(),'bad');return false;}
     close();return true;
+   }
+   /** What is still unsaved, each with the view it lives in. */
+   function waiting(){
+    const w=[];
+    if(S.draft||S.rec.state==='recording'||S.rec.state==='asking')w.push({view:'speak',label:S.rec.state==='recording'?'A recording in progress':'A recording'});
+    const n=S.photos.filter(p=>p.state!=='saved').length;if(n)w.push({view:'photo',label:plural(n,'photograph','photographs')});
+    if(S.thought.trim())w.push({view:'thought',label:'A thought'});
+    if(S.question.trim())w.push({view:'question',label:'A question'});
+    return w;
+   }
+   /** The dialog is shown again after the browser closed it on its own (a second Escape). */
+   function reopen(){
+    try{if(typeof d.showModal==='function'){if(!d.open&&d.isConnected)d.showModal();}else if(!d.hasAttribute('open'))d.setAttribute('open','');}catch{}
    }
 
    // ---------- the views ----------
@@ -161,10 +205,14 @@
      <div class="v2-cap-actions"><button type="button" class="pri" data-cap="save"${S.busy||!S.question.trim()?' disabled':''}>${human()?'Add to Research':'Propose to Research'}</button><button type="button" class="v2-ghost" data-cap="discard"${S.busy?' disabled':''}>Discard</button></div>
      ${hint(human()?'It is added to Research'+(S.subject&&!S.fellBack?`, linked to ${esc(S.subject.name||'this subject')}`:'')+'.':'You are not Adrian, so this goes to Research as a proposal for him to keep or let go.')}`;
    }
+   function waitingHtml(){
+    const w=waiting();if(!w.length)return '';
+    return `<div class="v2-cap-wait" data-cap-wait><p>Still waiting, not saved:</p><div class="v2-cap-actions">${w.map(i=>`<button type="button" data-cap="tile" data-view="${i.view}" aria-label="Go back to: ${esc(i.label)}">${esc(i.label)}</button>`).join('')}</div></div>`;
+   }
    function doneView(){
     const x=S.done;
     return `<div class="v2-cap-done">${icon('check')}<span id="v2-cap-said">${x.text}</span>${x.undo?`<button type="button" data-cap="undo">Undo</button>`:''}<button type="button" class="pri" data-cap="done" aria-describedby="v2-cap-said">Done</button></div>
-     <div class="v2-cap-done-more">${x.link?`<a class="v2-cap-link" href="${esc(x.link.href)}" data-cap-link>${esc(x.link.label)}</a>`:''}${(x.notes||[]).map(n=>`<span>${esc(n)}</span>`).join('')}</div>`;
+     ${waitingHtml()}<div class="v2-cap-done-more">${x.link?`<a class="v2-cap-link" href="${esc(x.link.href)}" data-cap-link>${esc(x.link.label)}</a>`:''}${(x.notes||[]).map(n=>`<span>${esc(n)}</span>`).join('')}</div>`;
    }
    const VIEWS={tiles:tilesView,speak:speakView,photo:photoView,thought:thoughtView,question:questionView,done:doneView};
    function paint(focus){
@@ -194,10 +242,11 @@
     const type=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].find(t=>root.MediaRecorder.isTypeSupported?.(t));
     let recorder;try{recorder=new root.MediaRecorder(stream,type?{mimeType:type}:undefined);}catch{for(const t of stream.getTracks())t.stop();S.rec={state:'idle',problem:'The microphone could not start. You can add an audio file instead.'};paint('title');return;}
     const m={recorder,stream,chunks:[],bytes:0,t0:Date.now(),limit:''};mic=m;
-    const halt=limit=>{if(m.limit)return;m.limit=limit||'stopped';try{if(recorder.state!=='inactive')recorder.stop();}catch{}};
+    const halt=limit=>{if(m.limit)return;m.limit=limit||'stopped';const was=recorder.state;try{if(was!=='inactive')recorder.stop();}catch{}if(was==='inactive')recorder.onstop?.();};
     recorder.ondataavailable=e=>{if(e.data?.size){m.chunks.push(e.data);m.bytes+=e.data.size;if(m.bytes>=MAX_BYTES)halt('size');}};
     recorder.onerror=()=>halt('error');
     recorder.onstop=()=>{
+     if(m.ended)return;m.ended=true;
      clearInterval(tick);tick=null;clearTimeout(m.cap);for(const t of stream.getTracks())t.stop();if(mic===m)mic=null;
      const ms=Date.now()-m.t0;
      if(!m.bytes){S.rec={state:'idle',problem:'Nothing was recorded. Try again, or add an audio file.'};if(!closed)paint('title');return;}
@@ -208,7 +257,7 @@
     };
     m.cap=setTimeout(()=>halt('time'),MAX_MS);
     S.rec={state:'recording',problem:''};
-    try{recorder.start(1000);}catch{halt('error');return;}
+    try{recorder.start(1000);}catch{stopMic();S.rec={state:'idle',problem:'The microphone could not start. You can add an audio file instead.'};if(!closed&&S.view==='speak')paint('title');return;}
     tick=setInterval(()=>{const el=viewEl.querySelector('[data-cap-time]');if(el)el.textContent=clock(Date.now()-m.t0);},500);
     paint('title');viewEl.querySelector('[data-cap="stop"]')?.focus({preventScroll:true});
    }
@@ -234,11 +283,11 @@
     S.busy=true;dr.failed=false;paint();say('Saving the recording.');
     try{
      const file={name:dr.name,base64:await base64Of(dr.blob)};
-     const r=await fileIn(file);
+     const r=await fileIn(file,dr.blob.size);
      const note=await transcriptNote(r.source.id);
      unurl(dr.url);S.draft=null;S.busy=false;
-     finish({text:`<b>Recording</b> ${whereWords([r.home])}.`,r,notes:[note,...(r.why?[`It could not be added to the subject: ${r.why}`]:[])]});
-    }catch(error){S.busy=false;dr.failed=true;paint();say(`The recording was not saved. ${error?.message||'The app did not answer.'} It is still here: try again.`,'bad');}
+     finish({text:`<b>Recording</b> ${whereWords([r.home])}.`,r,notes:[note,...(r.why?[attachNote(r.why)]:[])]});
+    }catch(error){S.busy=false;dr.failed=true;paint();say(notSaved('The recording',error,'It is still here: try again.'),'bad');}
    }
 
    // ---------- Photograph ----------
@@ -256,8 +305,8 @@
      p.state='saving';repaintPhotos();
      try{
       if(p.file.size>MAX_FILE)throw new Error('This photograph is over 64 MB, which is more than the app takes in one go.');
-      const r=await fileIn({name:p.name,base64:await base64Of(p.file)});p.state='saved';p.result=r;p.msg='';
-     }catch(error){p.state='failed';p.msg=(error?.message||'The app did not answer.')+' It is still here.';}
+      const r=await fileIn({name:p.name,base64:await base64Of(p.file)},p.file.size);p.state='saved';p.result=r;p.msg='';p.lost=false;
+     }catch(error){p.state='failed';p.lost=!!error?.lost;p.msg=(p.lost?'May already be saved. ':'')+(error?.message||'The app did not answer.')+' It is still here.';}
      repaintPhotos();
     }
     S.busy=false;
@@ -265,13 +314,13 @@
     const left=S.photos.filter(p=>p.state!=='saved');
     if(!left.length)return photosDone();
     if(S.view==='photo')paint();
-    say(`${plural(left.length,'photograph was','photographs were')} not saved. Each is still here: try again, or remove it.`,'bad');
+    say(left.some(p=>p.lost)?`${plural(left.length,'photograph','photographs')} may already be saved: the app did not answer. Each is still here: try again and the sheet looks for it first, or remove it.`:`${plural(left.length,'photograph was','photographs were')} not saved. Each is still here: try again, or remove it.`,'bad');
    }
    function photosDone(){
     const saved=S.photos.filter(p=>p.state==='saved'),rs=saved.map(p=>p.result);
     if(!saved.length){S.photos=[];return show('tiles','tile');}
     for(const p of S.photos)unurl(p.url);S.photos=[];
-    finish({text:`<b>${esc(plural(rs.length,'photograph','photographs'))}</b> ${whereWords(rs.map(r=>r.home))}.`,r:rs[0],notes:[...new Set(rs.map(r=>r.why).filter(Boolean))].map(w=>`It could not be added to the subject: ${w}`)});
+    finish({text:`<b>${esc(plural(rs.length,'photograph','photographs'))}</b> ${whereWords(rs.map(r=>r.home))}.`,r:rs[0],notes:[...new Set(rs.map(r=>r.why).filter(Boolean))].map(attachNote)});
    }
 
    // ---------- a thought ----------
@@ -279,10 +328,12 @@
     const text=S.thought;if(!text.trim()||S.busy)return;
     S.busy=true;paint();say('Saving.');
     try{
-     const r=await fileIn({name:thoughtName(text,new Date()),content:text});
-     S.thought='';S.busy=false;
-     finish({text:`<b>Thought</b> ${whereWords([r.home])}.`,r,notes:r.why?[`It could not be added to the subject: ${r.why}`]:[]});
-    }catch(error){S.busy=false;paint('text');say(`The thought was not saved. ${error?.message||'The app did not answer.'} Your words are still here: try again.`,'bad');}
+     // One file name per capture, kept for a retry of the same words, so a save whose answer was lost can be found again.
+     if(!S.thoughtFile||S.thoughtFile.text!==text)S.thoughtFile={text,name:thoughtName(text,new Date())};
+     const r=await fileIn({name:S.thoughtFile.name,content:text});
+     S.thought='';S.thoughtFile=null;S.busy=false;
+     finish({text:`<b>Thought</b> ${whereWords([r.home])}.`,r,notes:r.why?[attachNote(r.why)]:[]});
+    }catch(error){S.busy=false;paint('text');say(notSaved('The thought',error,'Your words are still here: try again.'),'bad');}
    }
 
    // ---------- a question ----------
@@ -298,19 +349,21 @@
        notes:S.subject&&!S.fellBack?[`Linked to ${S.subject.name||'this subject'}.`]:[],
        undo:async()=>{const now=await call('research-topics.read',{id:t.id});await call('research-topics.let-go',{id:t.id,...deps.expect(now)});}});
      }else{
-      const note=await call('sources.import',{rootId:'library',folder:'',files:[{name:thoughtName(name,new Date(),'Question'),content:name}]},{timeoutMs:LONG});
-      const receipt=note?.receipts?.[0];if(!receipt?.ok||!receipt.source?.id)throw new Error(receipt?.error||'The Library did not take the note the proposal points at.');
-      const t=await call('research-topics.propose',{name,...subjects,origin:{kind:'note',label:'Asked from the Capture sheet',ref:{kind:'source',id:receipt.source.id}}});
-      S.question='';S.busy=false;
+      // The note is saved once for these words; a retry after a failed proposal points at the note already saved.
+      if(!S.note||S.note.text!==name)S.note={text:name,file:{name:thoughtName(name,new Date(),'Question'),content:name},id:null};
+      const note=S.note;
+      if(!note.id)note.id=(await importOne(note.file,{folder:'',size:sizeOfText(name),refusal:'The Library did not take the note the proposal points at.'})).id;
+      const t=await call('research-topics.propose',{name,...subjects,origin:{kind:'note',label:'Asked from the Capture sheet',ref:{kind:'source',id:note.id}}});
+      S.question='';S.note=null;S.busy=false;
       finish({text:'<b>Question</b> proposed to Research. Adrian keeps it or lets it go.',link:{href:deps.href('research/topic/:id',{id:t.id}),label:'Open it in Research'},notes:['The question is also saved as a note in the Library.']});
      }
-    }catch(error){S.busy=false;paint('text');say(`The question was not sent. ${error?.message||'The app did not answer.'} Your words are still here: try again.`,'bad');}
+    }catch(error){S.busy=false;paint('text');say(error?.lost?`The question may not have been sent. ${error.message} Your words are still here: try again.`:`The question was not sent. ${error?.message||'The app did not answer.'} Your words are still here: try again.`,'bad');}
    }
 
    // ---------- done ----------
    function finish({text,r,link,notes=[],undo}){
     let l=link;
-    if(!l&&r){l=r.home==='subject'&&S.subject?{href:deps.href('subject/:id',{id:S.subject.id}),label:'Open '+(S.subject.name||'the subject')}:{href:deps.advanced({section:'library'}),label:'See it in the Library (Advanced)'};}
+    if(!l&&r){l=r.home!=='library'&&S.subject?{href:deps.href('subject/:id',{id:S.subject.id}),label:'Open '+(S.subject.name||'the subject')}:{href:deps.advanced({section:'library'}),label:'See it in the Library (Advanced)'};}
     S.done={text,link:l,notes,undo};S.view='done';say('');paint('done');
    }
    async function runUndo(){
@@ -323,13 +376,13 @@
    // ---------- events ----------
    d.addEventListener('click',e=>{
     if(e.target===d)return void tryClose();
-    if(e.target.closest('[data-cap-link]')){closeAfter();return;}
+    if(e.target.closest('[data-cap-link]')){if(unsafe()){e.preventDefault();say(keepWords(),'bad');}else closeAfter();return;}
     const b=e.target.closest('[data-cap]');if(!b||b.disabled)return;
     const act=b.dataset.cap;
     if(act==='tile'){nextView=b.dataset.view;show(nextView,nextView==='thought'||nextView==='question'?'text':'title');if(nextView==='speak'&&!S.draft)void startRecording();}
     else if(act==='back'){if(S.busy||S.rec.state==='recording'||S.rec.state==='asking')return;show('tiles','tile');}
     else if(act==='record')void startRecording();
-    else if(act==='stop'){if(mic){const m=mic;if(!m.limit){m.limit='stopped';}try{m.recorder.stop();}catch{}}}
+    else if(act==='stop'){if(mic){const m=mic;if(!m.limit){m.limit='stopped';}try{m.recorder.stop();}catch{m.recorder.onstop?.();}}}
     else if(act==='audio-pick')viewEl.querySelector('[data-cap-input="audio"]')?.click();
     else if(act==='photo-camera')viewEl.querySelector('[data-cap-input="camera"]')?.click();
     else if(act==='photo-choose')viewEl.querySelector('[data-cap-input="choose"]')?.click();
@@ -338,11 +391,11 @@
     else if(act==='save'){if(S.view==='speak')void saveRecording();else if(S.view==='thought')void saveThought();else if(S.view==='question')void saveQuestion();}
     else if(act==='discard'){
      if(S.view==='speak'){unurl(S.draft?.url);S.draft=null;S.rec={state:'idle',problem:''};}
-     else if(S.view==='thought')S.thought='';else if(S.view==='question')S.question='';
+     else if(S.view==='thought'){S.thought='';S.thoughtFile=null;}else if(S.view==='question'){S.question='';S.note=null;}
      show('tiles','tile');
     }
     else if(act==='undo')void runUndo();
-    else if(act==='done')close();
+    else if(act==='done')tryClose();
    });
    const closeAfter=()=>setTimeout(close,0);
    d.addEventListener('input',e=>{
@@ -360,6 +413,12 @@
     if(input.dataset.capInput==='audio')pickAudio(files[0]);else void addPhotos(files);
    });
    d.addEventListener('cancel',e=>{e.preventDefault();tryClose();});
+   // A second Escape closes the dialog natively. Anything recording, unsaved or saving is kept: the dialog is shown again.
+   d.addEventListener('close',()=>{
+    if(closed)return;
+    if(unsafe()){reopen();say(keepWords(),'bad');$('h2')?.focus({preventScroll:true});return;}
+    close();
+   });
 
    doc.body.append(d);
    if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','');
@@ -368,7 +427,7 @@
    void destination();
    $('h2').focus({preventScroll:true});
    const api={el:d,close,get subject(){return S.subject;}};
-   live={api,close,subject:S.subject,unsafe,focus:()=>$('h2')?.focus({preventScroll:true})};
+   live={api,close,subject:S.subject,unsafe,focus:()=>{reopen();$('h2')?.focus({preventScroll:true});}};
    return api;
   }
   return Object.freeze({open,isOpen:()=>!!live});

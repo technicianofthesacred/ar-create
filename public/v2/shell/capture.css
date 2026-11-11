@@ -3,7 +3,7 @@
    Graphite look, so the tiles and the quiet controls name the layer that comes before it (see shell.css). */
 dialog.v2-capture{width:min(460px,100%)}
 .v2-capture .v2-cap-to{font-size:var(--v2-t13);color:var(--dim);margin-bottom:14px}
-.v2-capture .v2-cap-to b{color:var(--ink);font-weight:600}
+.v2-capture .v2-cap-to b{color:var(--ink)!important;font-weight:600!important}
 .v2-capture .v2-cap-view{display:grid;gap:12px;min-width:0}
 .v2-capture .v2-cap-view>*{min-width:0}
 .v2-cap4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -12,13 +12,12 @@ dialog.v2-capture{width:min(460px,100%)}
 .v2-cap-head{display:flex;align-items:center;gap:6px;min-width:0}
 .v2-cap-head h3{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 @layer v2-controls{
- button.v2-tile{display:grid!important;justify-items:center!important;align-content:center!important;gap:8px!important;width:100%!important;min-height:92px!important;padding:16px 6px 12px!important;border:0!important;border-radius:10px!important;background:var(--v2-sec)!important;color:var(--graphite-ink)!important;font:600 var(--v2-t13)/1.2 var(--ar-ui)!important;text-align:center!important;box-shadow:none!important;background-clip:border-box!important}
+ button.v2-tile{display:grid!important;justify-items:center!important;align-content:center!important;gap:8px!important;width:100%!important;padding:18px 6px 14px!important;border:0!important;border-radius:10px!important;background:var(--v2-sec)!important;color:var(--graphite-ink)!important;font:600 var(--v2-t13)/1.2 var(--ar-ui)!important;text-align:center!important;box-shadow:none!important;background-clip:border-box!important}
  button.v2-tile .v2-ic{width:24px!important;height:24px!important}
  button.v2-tile.rec{background:var(--graphite-ink)!important;color:var(--graphite-inverse)!important}
  button.v2-tile small{display:block;font:400 var(--v2-t12)/1.2 var(--ar-ui);color:var(--warm);overflow-wrap:anywhere}
  .v2-cap-head button.v2-ghost{color:var(--ink)!important}
  button.v2-tile.rec small{color:inherit;opacity:.8}
- @media (max-width:850px),(pointer:coarse){button.v2-tile{min-height:96px!important}}
 }
 .v2-cap-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .v2-cap-actions .v2-grow{flex:1 1 0;min-width:0}
@@ -45,8 +44,9 @@ dialog.v2-capture{width:min(460px,100%)}
 .v2-cap-msg[data-tone="bad"]{color:var(--c3-bad)}
 .v2-cap-msg[data-tone="good"]{color:var(--c3-good)}
 /* The done state, as the sample's. */
-.v2-cap-done{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:10px;background:var(--c3-okbg);font-size:var(--v2-t14)}
-.v2-cap-done .v2-ic{color:var(--c3-good)}
+.v2-cap-done{display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-sizing:border-box;min-height:66px;padding:11px 14px;border-radius:10px;background:var(--c3-okbg);font-size:var(--v2-t14)}
+.v2-cap-done .v2-ic{color:var(--c3-good);width:16px;height:16px}
+.v2-cap-wait{display:grid;gap:8px;font-size:var(--v2-t13)}
 .v2-cap-done>span{flex:1;min-width:150px;overflow-wrap:anywhere}
 .v2-cap-done-more{display:grid;gap:6px;font-size:var(--v2-t13);color:var(--dim)}
 .v2-cap-link{color:var(--warm)!important;font-weight:600;text-decoration:underline!important;text-underline-offset:3px;overflow-wrap:anywhere}
