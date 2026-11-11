@@ -124,7 +124,7 @@ test('resting: long untouched; and the short summary carries no steps', () => {
  assert.equal(s.station, 'resting');
  const short = summaryOf(standingOf(facts({material: notes, pieces: [article()]}), {now: NOW}));
  assert.ok(!('steps' in short) && !('reached' in short)); assert.ok(!('steps' in short.forms[0]));
- assert.deepEqual(Object.keys(short.forms[0]).sort(), ['alike', 'done', 'finished', 'id', 'key', 'kind', 'name', 'next', 'ring', 'title', 'to', 'total'].sort());
+ assert.deepEqual(Object.keys(short.forms[0]).sort(), ['alike', 'createdAt', 'done', 'finished', 'id', 'key', 'kind', 'name', 'next', 'ring', 'slides', 'title', 'to', 'total', 'updatedAt', 'words'].sort());
  assert.ok(STATIONS.some(x => x.id === short.station));
 });
 
@@ -166,4 +166,38 @@ test('archived rests whatever its steps say; published is null unless a record s
  // A step that needs him before the unknown one still leads.
  const f = standingOf(facts({material: notes, words: {paragraphs: 2, count: 30}, suggestions: 1, check: null, pieces: [article()]}), {now: NOW});
  assert.equal(f.next.step, 'words');
+});
+
+// ---------- real records on the subject page (First look, 12 November) ----------
+const slidesPiece = (extra = {}) => ({key: 'out:c1', id: 'c1', kind: 'carousel', title: '', status: null, placements: 0, slides: 5, words: 41, createdAt: '2026-10-03T08:15:00Z', updatedAt: '2026-10-05T09:00:00Z', ...extra});
+
+test('a form carries what tells two of the same name apart: its slide count and when it was made and last changed', () => {
+ const s = standingOf(facts({material: notes, ...finishedWords, pieces: [slidesPiece(), slidesPiece({key: 'out:c2', id: 'c2', slides: 7, words: 60, createdAt: '2026-10-09T10:00:00Z', updatedAt: null})]}), {now: NOW});
+ assert.deepEqual(s.forms.map(f => [f.name, f.alike, f.slides, f.createdAt, f.updatedAt]), [['Carousel', true, 5, '2026-10-03T08:15:00Z', '2026-10-05T09:00:00Z'], ['Carousel', true, 7, '2026-10-09T10:00:00Z', null]]);
+ const art = standingOf(facts({material: notes, ...finishedWords, pieces: [article()]}), {now: NOW}).forms[0];
+ assert.deepEqual([art.slides, art.createdAt, art.updatedAt, art.words], [0, null, null, null], 'nothing is invented for a piece with no such record');
+});
+
+test('the words on a Carousel are its own slides\' words, never the whole article\'s count', () => {
+ const f = (piece, words) => at(standingOf(facts({material: notes, words, suggestions: 0, pieces: [piece]}), {now: NOW}).forms[0].steps, 'words');
+ const article1428 = {paragraphs: 12, count: 1428};
+ assert.equal(f(slidesPiece(), article1428).note, '41 words');
+ assert.equal(f(slidesPiece({words: 1}), article1428).note, '1 word');
+ for (const [what, piece] of [['no text in its records', slidesPiece({words: null})], ['words not recorded', slidesPiece({words: undefined})], ['no words', slidesPiece({words: 0})], ['no slides', slidesPiece({slides: 0, words: null})]]) {
+  const step = f(piece, article1428);
+  assert.notEqual(step.state, 'done', what + ': the records do not support done');
+  assert.equal(step.note, 'Nothing written on the slides yet', what);
+ }
+ assert.equal(f({...article(), id: 'a'}, article1428).note, '1428 words', 'an Article still counts its own words');
+});
+
+test('a finished research result is not called findings until findings are known to be there', () => {
+ const f = research => at(stepsFor(null, facts({material: notes, research})), 'facts');
+ assert.equal(f({step: 'directions', unreviewed: 0}).note, 'Research came back');
+ assert.equal(f({step: 'directions', unreviewed: 0}).state, 'flag');
+ assert.equal(f({step: 'directions', unreviewed: 0}).why, 'research-result');
+ assert.equal(f({step: 'directions', unreviewed: 0, findings: 3}).note, 'Findings to read');
+ const none = f({step: 'directions', unreviewed: 0, findings: 0});
+ assert.equal(none.state, 'wait'); assert.equal(none.note, 'The question is asked, waiting for findings'); assert.equal(none.waitsFor, 'Findings');
+ assert.ok(!JSON.stringify(none).includes('Findings to read'));
 });

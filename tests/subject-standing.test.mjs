@@ -164,3 +164,35 @@ test('a failed read is Not known and never nothing; a subject untouched for mont
   assert.equal(idle.subjects[0].station, 'resting'); assert.equal(idle.subjects[0].resting, 'untouched');
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });
+
+// An Outputs carousel: its own slides' words, slide count and dates reach the piece; nothing is made up when the records hold none.
+test('a carousel piece carries its own slide words, slide count, and when it was made and changed',async () => {
+ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'standing-')), B = '0b5e3a3c-1f1e-4c7a-9f00-000000000001';
+ // Its writing place lists one piece in the output index, so the output owner is asked (and, in the first case, fails).
+ const P = '0b5e3a3c-1f1e-4c7a-9f00-000000000002', D = '0b5e3a3c-1f1e-4c7a-9f00-000000000003', sha = v => crypto.createHash('sha256').update(v).digest('hex');
+ fs.mkdirSync(path.join(dir, 'study-owned-photo-bindings')); fs.writeFileSync(path.join(dir, 'study-owned-photo-bindings', B + '.json'), JSON.stringify({bindingId: B, parentStudyId: 'invented', projectId: P, documentId: D}));
+ fs.mkdirSync(path.join(dir, 'articles', sha(P), sha(D)), {recursive: true}); fs.writeFileSync(path.join(dir, 'articles', sha(P), sha(D), 'article.json'), JSON.stringify({project: {document: {nativeOutputIndex: {records: [{outputId: 'o1'}]}}}}));
+ const owners = (outputs, modifiedAt) => createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+  drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [{parentStudyId: 'invented', bindingId: B}], drafts: []}), read: async () => ({projection: [{words: 'Invented words.'}], expected: {v: 1}, history: [{modifiedAt}]})},
+  outputs: {read: outputs}, checks: {read: async () => null}, consentDesk: {read: async () => ({people: [], release: {}})},
+  library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+  instagram: {plans: async () => ({plans: []}), read: async () => null}, places: {read: async () => ({places: []})}});
+ const text = (o) => owners(async () => ({outputs: [o]}), '2026-11-10T00:00:00Z').one({parentStudyId: 'invented'});
+ try {
+  const car = (await text({id: 'o1', kind: 'carousel', placements: [], slides: [{id: 's1', text: 'One two three'}, {id: 's2', text: '  Four five '}, {id: 's3', text: ''}], createdAt: '2026-10-03T08:15:00Z', updatedAt: '2026-10-05T09:00:00Z'})).forms[0];
+  assert.deepEqual([car.slides, car.words, car.createdAt, car.updatedAt], [3, 5, '2026-10-03T08:15:00Z', '2026-10-05T09:00:00Z']);
+  const bare = (await text({id: 'o1', kind: 'carousel', placements: [], slides: [{id: 's1'}]})).forms[0];
+  assert.deepEqual([bare.slides, bare.words, bare.createdAt, bare.updatedAt], [1, null, null, null], 'no text in the records: no count');
+  const art = (await text({id: 'o1', kind: 'article', placements: [], createdAt: '2026-10-03T08:15:00Z'})).forms[0];
+  assert.equal(art.words, null, 'an Article\'s words are counted from its writing, not from its output');
+  // Instagram plans carry their own frame count and the time they were last changed.
+  const plans = createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+   drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [], drafts: []}), read: async () => ({projection: [], expected: {}})},
+   outputs: {read: async () => ({outputs: []})}, checks: {read: async () => null}, consentDesk: {read: async () => ({people: [], release: {}})},
+   library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+   instagram: {plans: async () => ({plans: [{id: 'p1', subject: 'invented', updatedAt: '2026-11-02T09:00:00Z'}, {id: 'p2', subject: 'invented', updatedAt: '2026-11-04T09:00:00Z'}]}),
+    read: async ({id}) => ({id, title: 'Same title', layouts: {carousel: {frames: id === 'p1' ? [{}, {}, {}] : [{}, {}, {}, {}, {}]}}, stories: [], chosen: null})}, places: {read: async () => ({places: []})}});
+  const got = (await plans.one({parentStudyId: 'invented'})).forms.filter(f => f.kind === 'instagram');
+  assert.deepEqual(got.map(f => [f.slides, f.updatedAt]), [[3, '2026-11-02T09:00:00Z'], [5, '2026-11-04T09:00:00Z']]);
+ } finally {fs.rmSync(dir, {recursive: true, force: true});}
+});
