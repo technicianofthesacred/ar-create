@@ -18,12 +18,12 @@ const carousel=()=>({id:PIECE,kind:'carousel',title:'The lantern night',placemen
 const view=(outputs,owner={kind:'carousel-words',projectId:'p',documentId:'d',outputId:PIECE})=>({outputs,outputBindings:[{outputId:PIECE,wordOwner:owner}]});
 const standing={id:'demo-lantern',title:'The lantern night',look:'teajia',facts:{bindingId:'b1'},forms:[{key:'out:'+PIECE,kind:'carousel'}]};
 
-async function mount({answers,params={id:PIECE},query={kind:'output',subject:'demo-lantern'},width=1000}={}) {
+async function mount({answers,params={id:PIECE},query={kind:'output',subject:'demo-lantern'},width=1000,render=null}={}) {
  const dom=new JSDOM('<!doctype html><div id="main"></div>',{url:'http://local.test/v2/index.html',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window;windows.push(w);const calls=[];let def=null,adv=null,title=null;
  w.innerWidth=width;delete w.IntersectionObserver;delete w.ResizeObserver;
  w.fetch=()=>Promise.reject(new Error('no fetch'));
- w.IG={T:{H6:{},M12:{}},render:(t,s)=>'<p data-t="'+t+'">'+esc(s.text)+'</p>'};
+ w.IG={T:{H6:{name:'Night bleed'},M12:{name:'Words only'}},render:render||((t,s)=>'<p data-t="'+t+'">'+esc(s.text)+'</p>')};
  w.v2={screen:d=>{def=d;},href:(r,p={},q)=>'#/'+r.replace(/:(\w+)/g,(_,k)=>p[k])+(q&&Object.keys(q).length?'?'+new URLSearchParams(q):''),
   advanced:o=>'/document-study/index.html?subject='+o.subject+'&piece='+o.piece+'&section='+o.section,
   call:async(name,input={})=>{calls.push({name,input});const a=answers[name];if(a===undefined)throw Object.assign(new Error('Unknown '+name),{kind:'refused'});if(a instanceof Error)throw a;return typeof a==='function'?a(input):JSON.parse(JSON.stringify(a));},
@@ -49,7 +49,7 @@ test('an Outputs carousel opens read only: the slide large, the strip, its real 
  assert.deepEqual(calls.map(c=>c.name),['subject.standing','study.outputs']);
  assert.equal(JSON.stringify(calls[1].input),JSON.stringify({rootBindingId:'b1',parentStudyId:'demo-lantern',selectedOutputId:PIECE}));
  assert.equal(title(),'The lantern night');
- assert.equal(JSON.stringify(adv()),JSON.stringify({subject:'demo-lantern',piece:PIECE,section:'outputs'}));
+ assert.equal(JSON.stringify(adv()),JSON.stringify({subject:'demo-lantern',piece:PIECE,section:'arrange'}));
  assert.equal(doc.querySelectorAll('textarea,input,[contenteditable],[data-sl="mv"],[data-sl="mix"],[data-sl="save-open"]').length,0,'nothing that changes it');
  assert.ok(/read only/i.test(doc.querySelector('.sl-n').textContent));
 });
@@ -60,7 +60,7 @@ test('the header names the subject and links back; one Open in Advanced lands on
  assert.equal(back.textContent.trim(),'The lantern night');assert.ok(back.getAttribute('href').startsWith('#/subject/demo-lantern'));
  const adv=[...doc.querySelectorAll('a')].filter(a=>/Open in Advanced/.test(a.textContent));
  assert.equal(adv.length,1);
- assert.equal(adv[0].getAttribute('href'),'/document-study/index.html?subject=demo-lantern&piece='+PIECE+'&section=outputs');
+ assert.equal(adv[0].getAttribute('href'),'/document-study/index.html?subject=demo-lantern&piece='+PIECE+'&section=arrange');
  assert.ok(/done in Advanced/.test(doc.querySelector('.sl-ro').textContent));
 });
 
@@ -102,4 +102,24 @@ test('the new code keeps the screens\' rules', () => {
  assert.ok(!/—/.test(code));assert.ok(!/\bfetch\s*\(/.test(code));
  const css=fs.readFileSync(path.join(repo,'public/v2/screens/slides.css'),'utf8');
  assert.ok(!/—/.test(css));assert.ok(!/#[0-9a-f]{3,8}\b/i.test(css.replace(/\/\*[\s\S]*?\*\//g,'')));
+});
+
+test('every slide frame is sandboxed without scripts, and only library photographs get through', async () => {
+ const c=carousel();c.slides[1].photos=[{src:'/api/sources/blob?id=abc',x:10,y:20},{src:'https://evil.test/x.png',x:1,y:2}];
+ const got=[];
+ const {doc}=await mount({answers:{...ok,'study.outputs':()=>view([c])},render:(t,s)=>{got.push(s.photos);return '<p></p>';}});
+ const frames=[...doc.querySelectorAll('.sl iframe')];
+ assert.ok(frames.length>=5);
+ for(const f of frames){const sb=f.getAttribute('sandbox');assert.notEqual(sb,null,'a frame has no sandbox');assert.ok(!/allow-scripts/.test(sb));}
+ const two=got.find(p=>p.length===2);assert.ok(two);
+ assert.equal(two[0].src,'/api/sources/blob?id=abc');assert.equal(two[1].src,'','a photo address outside the library is dropped');
+});
+
+test('layouts show their names, and an unknown layout says the template is unavailable', async () => {
+ const c=carousel();c.slides[2].template='ZZ9';
+ const {doc,w}=await mount({answers:{...ok,'study.outputs':()=>view([c])}});
+ assert.ok(/layout Night bleed/.test(doc.querySelector('[data-cap]').textContent));
+ assert.ok(!/H6|M12/.test(doc.querySelector('[data-cap]').textContent+doc.querySelector('.sl-pbody').textContent));
+ assert.ok(doc.querySelector('.sl-thumb:nth-child(3) iframe').srcdoc.includes('This original template is unavailable.'));
+ assert.ok(doc.querySelector('.sl-rochip').textContent.includes('Read only'));void w;
 });

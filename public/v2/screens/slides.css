@@ -170,3 +170,6 @@
 @media (max-width:850px){
  .sl .sl-back span{max-width:52vw}
 }
+.sl .sl-rochip{display:none;font-size:var(--v2-t13);color:var(--c3-ink2);text-align:center;margin:0}
+.sl .sl-rochip b{color:var(--ink)}
+@media (max-width:850px){.sl .sl-rochip{display:block}}
