@@ -187,3 +187,13 @@
 }
 
 .home .home-tags i.home-tag-more{border-style:dashed;color:var(--dim)}
+
+/* ---------- To file: captures left in the Library with no subject (quiet, only when there are some) ---------- */
+.home .home-file{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.home .home-file-list{list-style:none;padding:0;display:grid;grid-template-columns:minmax(0,1fr)}
+.home .home-file-list li{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;padding:6px 0;font-size:var(--v2-t13);line-height:1.4;color:var(--c3-ink2);min-width:0}
+.home .home-file-list li+li{border-top:1px solid var(--line)}
+.home .home-file-name{flex:1 1 220px;min-width:0;overflow-wrap:anywhere;color:var(--ink)}
+.home .home-file-list small{font-size:var(--v2-t12);color:var(--dim)}
+.home .home-file-acts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-width:0}
+.home .home-file>.home-more{justify-self:start}

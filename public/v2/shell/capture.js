@@ -7,6 +7,8 @@
  'use strict';
  const doc=root.document,P=root.V2Parts||{},esc=P.esc||(v=>String(v??'')),icon=P.icon||(()=>'');
  const MAX_BYTES=8*1024*1024,MAX_MS=15*60*1000,MAX_FILE=64*1024*1024,LONG=180000;
+ // A phone clock may run ahead of the app's: a file saved this long before the attempt began still counts as this one's.
+ const CLOCK_MARGIN_MS=60000;
 
  // ---------- small pure helpers (also used by the tests) ----------
  const pad=n=>String(n).padStart(2,'0');
@@ -63,7 +65,7 @@
    }
    const toLine=()=>S.subject&&!S.fellBack
     ?`Goes to <b>${esc(S.subject.name||'this subject')}</b>. A question goes to Research.`
-    :'Goes to the Library, to file later. A question goes to Research.';
+    :'Goes to <b>the Library, to file later</b>. A question goes to Research.';
 
    // An answer that never arrived (the wait ran out, or the connection dropped) is not a refusal: the Library may have saved it.
    const lostAnswer=error=>error?.kind==='failed'&&!error.status;
@@ -97,7 +99,7 @@
     const want=(folder?folder+'/':'')+name;let hit=null;
     const walk=node=>{if(!node)return;for(const f of node.files||[]){
      if(!f.id||!stripN(f.rel_path||'',want)||f.hash!==hash)continue;
-     const at=savedAt(f);if(at==null||at<since)continue;
+     const at=savedAt(f);if(at==null||at<since-CLOCK_MARGIN_MS)continue;
      if(!hit||at>savedAt(hit))hit=f;}
      for(const c of node.folders||[])walk(c);};
     for(const r of answer?.roots||[])if(!r.id||r.id==='library')walk(r.tree);
@@ -164,7 +166,7 @@
    const unsafe=()=>S.busy||S.rec.state==='recording'||S.rec.state==='asking'||!!S.draft||!!S.thought.trim()||!!S.question.trim()||S.photos.some(p=>p.state!=='saved');
    const onUnload=e=>{if(unsafe()){e.preventDefault();e.returnValue='';}};
    root.addEventListener?.('beforeunload',onUnload);
-   const onHash=()=>{if(!unsafe())close();};
+   const onHash=()=>{if(!unsafe())return close();say(S.busy?'You moved to another screen while this is saving. The sheet stays open until it is saved.':'You moved to another screen, but something here is not saved yet. The sheet stays open: save it, or discard it, and then close.','bad');};
    root.addEventListener?.('hashchange',onHash);
 
    let closed=false,tick=null,urls=new Set(),mic=null;
@@ -178,7 +180,7 @@
     const back=opener&&opener!==doc.body&&opener.isConnected?opener:doc.querySelector('[data-v2-capture]');
     back?.focus?.({preventScroll:true});
    }
-   const keepWords=()=>S.rec.state==='recording'?'Stop the recording first. Nothing is closed while it runs.':S.view==='done'?'Something is still waiting, not saved. Choose it in the list to go back to it, then save or discard it.':'Something here is not saved yet. Save it, or discard it, and then close.';
+   const keepWords=()=>S.rec.state==='recording'?'Stop the recording first. Nothing is closed while it runs.':S.busy?'It is saving. The sheet closes once it is saved.':S.view==='done'?'Something is still waiting, not saved. Choose it in the list to go back to it, then save or discard it.':'Something here is not saved yet. Save it, or discard it, and then close.';
    function tryClose(){
     if(unsafe()){say(keepWords(),'bad');return false;}
     close();return true;
@@ -469,6 +471,6 @@
   return Object.freeze({open,isOpen:()=>!!live});
  }
 
- root.V2Capture=Object.freeze({create,stamp,clean,thoughtName,audioName,audioExt,clock,subjectOf});
+ root.V2Capture=Object.freeze({create,stamp,clean,thoughtName,audioName,audioExt,clock,subjectOf,CLOCK_MARGIN_MS});
  if(typeof module==='object'&&module.exports)module.exports=root.V2Capture;
 })(typeof window!=='undefined'?window:globalThis);
