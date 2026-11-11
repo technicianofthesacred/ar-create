@@ -41,7 +41,8 @@ All AR Create threads were started from the review branch. Use these ids with th
 | Thread | Id | Model | Pushes to | State, 11 November | Waiting for |
 |---|---|---|---|---|---|
 | Design round (plan 8) | `session_017kitFgr2vAJZqRoLJ8qibq` | Strongest, high | `claude/ar-create-design-round` | **Handed over on 11 November; no longer building.** Direction D chosen. It pushed the record, an open corrections file and four work-in-progress branches, and confirmed: "Handed over; everything is pushed", all builders stopped, both scheduled check-ins deleted. Kept for reference only. About 365 dollars | Nothing |
-| Version two build, director (plan 10) | `session_017kitFhwXrMkHn5yWTr8eqp` | Strongest, medium, directing; Opus and Sonnet workers | `claude/direction-d-build` | Started 11 November from the build branch. Work list: `docs/plans/2026-11-11-version-two-open-corrections.md` on that branch. Stage: the fast read of where a subject stands, then Home, Subject, Research and the Advanced link merged and working, screens linked, one full check, one page of pictures for Adrian. Piece 7 (Write, Read and Check inside version two) is the next thread | Adrian's eyes on its pictures |
+| Version two build, director (plan 10) | `session_017kitFhwXrMkHn5yWTr8eqp` | Strongest, medium, directing | `claude/direction-d-build` | **Done. Version two is merged to `main` as pull request 236**, at Adrian's word to that thread ("once it all looks the same and it's all working, you're responsible to ship it ... you can ship it on your own"). In: shell, the fast read of where a subject stands, Home, New subject, Capture, Subject, slide studio, Looks, Research with group and topic, Advanced both ways. Not in: Write, Read and Check inside version two (they open in Advanced), Library, "Ask or find". Built and checked on invented data only. Not released: that needs his Mac. Its records on `main`: `docs/plans/2026-11-11-version-two-open-corrections.md` and `docs/plans/2026-11-11-version-two-next-session.md`. About 96 dollars | Nothing. Start the next stage in a fresh thread |
+| Version two, walked as an author | `session_017kitFe19Gdrpw3rw2SbnYQ` | Lighter | `claude/v2-journey-walk` | Started 11 November from `main`. Walks version two on the demo as an author, re-tests the review's root problems and findings U1 to U25, and publishes one page of pictures. It finds problems and fixes nothing | Its report, `docs/reviews/2026-11-11-version-two-journey.md`, and its page |
 | Demo that walks the whole chain (plan 7) | `session_017kitFeYtEjJcjysfvHwLhn` | Lighter | `claude/ar-create-walkable-demo` | Its status on 11 November reads: walkable demo built, verified and pushed. One thing left: exporting the Carousel in the demo needs a change to where the app looks for Chrome | Adrian's decision on that change, in that thread |
 | Screens (plan 5, Stage A only) | `session_017kitFe4zT8nwXTejaJ2Px9` | Lighter | `claude/ar-create-screens` | **Done.** Adrian approved Stage A and it is merged to `main` as pull request 235. Not released to the installed app (a release is run on his Mac). The later stages are not started; the thread reports Adrian said the interface work "is part of an outdated inventory and may be picked up later, not now". It also notes `tests/photo-inspect-native-http.test.mjs` fails now and then on unchanged code | Nothing. A release to the installed app is Adrian's |
 | Wisdom bank A: inventory | `session_017kitFdz6mRmrViNFV4MVnE` | Lighter | `claude/wisdom-bank-inventory` | **Done.** Report merged into the review branch. Could not read i64os | Nothing |
@@ -104,16 +105,18 @@ D2 is started; its brief is [plan 11](2026-11-11-11-wisdom-bank-mockups-brief.md
 
 ## The app stream: what happens next
 
-Adrian chose Direction D on 11 November and told the design round to build it as "version two"; on the same day, at his word ("Start, medium effort"), the build moved to a fresh director thread (plan 10). It is built, under `public/v2/`, with the existing workspace kept as Advanced. So the earlier plan (a build sheet, then separate builders) is withdrawn. The coordinator's work here is to keep the other threads from colliding with that build and to check its result against the review.
+**Version two is on `main` (pull request 236, 11 November).** New threads start from `main`. What "fully applied" still needs, in order:
 
-| When | Next step | Model |
+| Step | What | Who |
 |---|---|---|
-| Version two's four screens are linked (the design round says so in its closing line) | A small fresh thread walks the review's journey (Part 1) on the version two demo with `scripts/review-journey.mjs` and `scripts/review-screens.mjs`, and reports which root problems (R1 to R3) and findings (U1 to U25) are closed, open, or moved to Advanced. Pictures stay in that thread; it publishes one page for Adrian | Lighter |
-| The wisdom bank concept is written | **Done 11 November:** sent to the version two director, as information | Coordinator |
-| Adrian answers the demo builder | If he wants it: check it against version two's own fuller demo (`npm run demo:fill`) first, so the chain from a recording to a checked piece is not built twice | Lighter |
-| Adrian decides where the work lives when the Mac is off | Plan 6, stage 0 (measuring) | Lighter |
+| 1 | **A session on Adrian's Mac**: clear the two causes of the red automatic check (a stale `.scratch/magazine-fixtures` folder in the Mac runner's checkout; the photo inspect test's 30 second wait), release to the installed app with `scripts/release.mjs`, and look at version two with his real records. It follows `docs/plans/2026-11-11-version-two-next-session.md` on `main`. Adrian's words: get it "to the place where we can ship it so that I can then run another session like this but run it from the computer" | Adrian starts it on the Mac. No cloud thread can |
+| 2 | **The author's walk** through version two on the demo (running, see the table above). Its findings feed step 3 and the open corrections | Lighter, cloud |
+| 3 | **Write, Read and Check inside version two** (piece 7), the largest remaining difference from the sample he approved. A fresh director thread, briefed like plan 10, from `main`. Needs his word, since it is a large piece of building | Strongest directing, at his word |
+| 4 | The open corrections in the order of that file; then Capture, Library and "Ask or find" inside version two | Lighter builders |
+| 5 | **One source list** (plan 3). The director's record says of the review's second root problem: "Not addressed ... the back end still has the five." A short design note first, then a builder | Strong for the note, lighter to build |
+| 6 | Where the work lives when the Mac is off (plan 6), at his decision | |
 
-**Overlaps to watch.** Plans 1, 2 and 3 were written for the existing workspace; version two may close them by design or leave them in Advanced, which the journey walk will tell. Plan 5 (screens) now concerns Advanced only; its Stage A is built and awaiting approval, and its later stages are withdrawn. Plan 7 (the walkable demo) overlaps in part with version two's fuller demo. Version two's Research station (topics, groups of sources) and the wisdom bank are the same territory: one home.
+The old "walkable demo" thread (`session_017kitFeYtEjJcjysfvHwLhn`) works on the old workspace and is not part of this road. Pull request 233 (this branch: the review, the plans, two review scripts, the wisdom bank papers and mock-ups) is open and merges cleanly with `main`; merging it is his decision.
 
 ## Decisions still with Adrian
 
@@ -145,7 +148,7 @@ What the first two days showed: the cost of a thread follows how much it carries
 
 ## Practical facts for starting threads
 
-- Start a thread with the session tool: the repository URL, the review branch as the starting revision (until pull request 233 is merged, then `main`), a branch of its own to push to, and the model. Model ids: `claude-fable-5-2` (strongest), `claude-opus-5-5`, `claude-sonnet-5-5` (lighter), `claude-haiku-5-5`.
+- Start a thread with the session tool: the repository URL, `main` as the starting revision for anything about the app (version two is there; fetch files from the review branch by name when a thread needs the review or its scripts), a branch of its own to push to, and the model. Model ids: `claude-fable-5-2` (strongest), `claude-opus-5-5`, `claude-sonnet-5-5` (lighter), `claude-haiku-5-5`.
 - Set an effort level only when Adrian has asked for or agreed to one.
 - A thread cannot always attach a second repository (thread A was refused i64os). Start a thread directly in the repository it must read.
 - A message sent to another thread arrives marked as from this thread, not from Adrian. Quote his exact words in it.
