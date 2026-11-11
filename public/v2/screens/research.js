@@ -11,7 +11,11 @@
  const plural=(n,one,many=one+'s')=>n+' '+(n===1?one:many);
  const fail=error=>say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});
  const origin=o=>o?.say?`<span class="rs-or"><i data-k="${esc(ORIGIN_KIND[o.kind]||'library')}" aria-hidden="true"></i><span>${esc(o.say)}</span></span>`:'';
- const stateMark=t=>t.stateSay?`<em class="rs-state${t.state==='quiet'?' quiet':''}">${esc(t.stateSay)}</em>`:'';
+ const stateMark=t=>t.stateSay?`<em class="rs-state${t.state==='quiet'?' quiet':t.state==='ready'?' ready':''}">${esc(t.stateSay)}</em>`:'';
+ /* Small kind icons for a source (the shell's set has none for these); drawn the same way as its own. */
+ const KIND_PATH={mic:'M9 3h6v11H9zM5 11a7 7 0 0 0 14 0M12 18v3',note:'M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5',film:'M3 5h18v14H3zM10 9l5 3-5 3z',book:'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z',photo:'M3 5h18v14H3zM8.5 10h.01M21 15l-5-5-8 9',layers:'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',play:'M7 5l12 7-12 7z'};
+ const kindIcon=k=>{const t=String(k||'').toLowerCase(),n=/record|transcript|audio|voice|speech/.test(t)?'mic':/video|film/.test(t)?'film':/book|pdf|document/.test(t)?'book':/photo|image|picture/.test(t)?'photo':/subject|atlas/.test(t)?'layers':'note';return `<svg class="rs-ki" viewBox="0 0 24 24" aria-hidden="true"><path d="${KIND_PATH[n]}"/></svg>`;};
+ const PLAY=`<svg class="rs-pl" viewBox="0 0 24 24" aria-hidden="true"><path d="${KIND_PATH.play}"/></svg>`;
  const ARROW='<svg class="v2-ic rs-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>';
 
  /* ---------- shared: the rail, a topic row, the ask, the pickers ---------- */
@@ -52,15 +56,15 @@
  function row(t,{groups=[],made=false}={}){
   const g=groups.find(x=>x.id===t.groupId),sug=t.suggestedGroupId?groups.find(x=>x.id===t.suggestedGroupId):null;
   const side=made?`<span class="rs-side">${sug?`<span class="rs-sug">Put in <b>${esc(sug.name)}</b>?<button type="button" class="v2-ghost" data-rs-group="${esc(t.id)}" data-rs-to="${esc(sug.id)}">Yes</button></span>`:`<span class="rs-in">${esc(g?.name||'No group yet')}</span>`}${t.status==='let-go'?'':`<button type="button" class="v2-ghost v2-icon-btn rs-x" data-rs-letgo="${esc(t.id)}" aria-label="Let ${esc(t.name)} go" title="Let it go">${icon('close')}</button>`}</span>`:'';
-  return `<li class="rs-li${made?' made':''}" data-rs-topicrow="${esc(t.id)}"><a class="rs-tr" href="${esc(topicHref(t.id))}"><b>${esc(t.name)}</b>${origin(t.origin)}<small>${plural(t.sourceCount,'source')}</small>${stateMark(t)}</a>${side}</li>`;
+  return `<li class="rs-li${made?' made':''}" data-rs-topicrow="${esc(t.id)}"><a class="rs-tr" href="${esc(topicHref(t.id))}"><b>${esc(t.name)}</b>${origin(t.origin)}<small>${plural(t.sourceCount,'source')}${made?' found':''}</small>${stateMark(t)}</a>${side}</li>`;
  }
+ /** The sample's ask box. The build can only find exact words, so the box says Find and the line beside it says why. */
  function askBox(groupId){
   const where=groupId?'the ticked sources':'everything you have gathered';
-  return `<form class="rs-ask" data-rs-ask role="search">
- <div class="rs-askbox">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find words in ${esc(where)}" placeholder="Find words in ${esc(where)}"><button class="pri" type="submit">Find</button></div>
- <div data-rs-answer aria-live="polite"></div>
- <p class="rs-meta rs-nb" data-rs-notbuilt>Answers in sentences are not built yet: they need an AI provider for asking. Until then this finds the exact words.</p>
-</form>`;
+  const note='<p class="rs-meta rs-nb" data-rs-notbuilt>Answers in sentences are not built yet: they need an AI provider for asking. Until then this finds the exact words.</p>';
+  const box=`<div class="rs-askbox">${icon('search')}<input name="q" type="search" autocomplete="off" maxlength="256" aria-label="Find words in ${esc(where)}" placeholder="Find words in ${esc(where)}"><button class="pri" type="submit">Find</button></div>`;
+  return groupId?`<form class="rs-ask" data-rs-ask role="search"><div data-rs-answer aria-live="polite"></div>${note}${box}</form>`
+   :`<form class="rs-ask" data-rs-ask role="search">${box}<div data-rs-answer aria-live="polite"></div>${note}</form>`;
  }
  function wireAsk(el,groupId){
   const form=el.querySelector('[data-rs-ask]');if(!form)return;
@@ -144,12 +148,12 @@
     el.querySelector('[data-rs-railhost]').innerHTML=rail(list,show);wireRail(el);
     const groups=list.groups,topics=list.topics,main=el.querySelector('[data-rs-main]');
     const rows=show==='gone'?gone.topics:show==='week'?topics.filter(t=>t.madeForYou):show==='saying'?topics.filter(t=>t.hasSomethingToSay):show==='none'?topics.filter(t=>!t.groupId):topics;
-    let body=`<header><div><h1>${esc(show==='all'?'Research':VIEWS[show])}</h1><p>${plural(show==='all'?list.counts.all:rows.length,'topic')}</p></div><button type="button" data-rs-new>${icon('plus')}New topic</button></header>`;
+    let body=`<header><div><h1>${esc(show==='all'?'Research':VIEWS[show])}</h1><p>${plural(show==='all'?list.counts.all:rows.length,'topic')}${show==='all'?'. Most make themselves from what you gather, record and check.':''}</p></div><button type="button" data-rs-new>${icon('plus')}New topic</button></header>`;
     if(show==='all'){
      body+=askBox(null);
      const made=topics.filter(t=>t.madeForYou);
-     if(made.length)body+=`<section class="rs-sec" data-rs-made><div class="rs-sec-h"><h2>Made for you this week</h2><span>${made.length}</span></div><ul class="rs-list">${made.map(t=>row(t,{groups,made:true})).join('')}</ul></section>`;
-     for(const g of groups){const inside=topics.filter(t=>t.groupId===g.id);body+=`<section class="rs-sec"><div class="rs-sec-h"><h2><a href="${esc(groupHref(g.id))}">${esc(g.name)}</a></h2><span>${plural(inside.length,'topic')}</span><a class="rs-open" href="${esc(groupHref(g.id))}">Open the group${icon('chev')}</a></div>${inside.length?`<ul class="rs-list">${inside.map(t=>row(t,{groups})).join('')}</ul>`:'<p class="rs-meta">No topics yet.</p>'}</section>`;}
+     body+=`<section class="rs-sec" data-rs-made><div class="rs-sec-h"><h2>Made for you this week</h2><span>${made.length}${made.length?' · opened by assistants from your work. Nothing to do unless you want to.':''}</span></div>${made.length?`<ul class="rs-list">${made.map(t=>row(t,{groups,made:true})).join('')}</ul>`:'<p class="rs-meta">Nothing new this week. Topics an assistant opens from your work appear here for you to keep or let go.</p>'}</section>`;
+     for(const g of groups){const inside=topics.filter(t=>t.groupId===g.id);body+=`<section class="rs-sec"><div class="rs-sec-h"><h2><a href="${esc(groupHref(g.id))}">${esc(g.name)}</a></h2><span>${plural(inside.length,'topic')}</span><a class="rs-open" href="${esc(groupHref(g.id))}">Open the group${icon('chev')}</a></div>${inside.length?`<ul class="rs-list">${inside.map(t=>row(t,{groups})).join('')}</ul>`:''}</section>`;}
      const loose=topics.filter(t=>!t.groupId);
      if(loose.length)body+=`<section class="rs-sec"><div class="rs-sec-h"><h2>${VIEWS.none}</h2><span>${plural(loose.length,'topic')}</span></div><ul class="rs-list">${loose.map(t=>row(t,{groups})).join('')}</ul></section>`;
      if(!topics.length)body+=`<section class="rs-sec rs-empty"><h2>No topics yet</h2></section>`;
@@ -172,34 +176,42 @@
   render:ctx=>`<div class="rs-lay" data-rs-groupscreen><div class="rs-railhost" data-rs-railhost>${rail(null,ctx.params.id)}</div><div class="v2-page rs-main rs-grp" data-rs-main><p class="rs-meta">Reading the group…</p></div></div>`,
   async mount(el,ctx){
    const id=ctx.params.id;ctx.setAdvanced({section:'research'});
-   let g=null;
+   let g=null;const showAll={src:false,top:false};
    const paint=async()=>{
     let list;
     try{[g,list]=await Promise.all([v2.call('research-topics.group',{id}),v2.call('research-topics')]);}catch(error){el.querySelector('[data-rs-main]').innerHTML=`<header><h1>Research group</h1></header>${problem(error)}`;return;}
     if(ctx.signal.aborted)return;
     ctx.setTitle(g.name);
     el.querySelector('[data-rs-railhost]').innerHTML=rail(list,id);wireRail(el);
-    const ticked=g.sources.filter(s=>s.ticked).length;
+    const ticked=g.sources.filter(s=>s.ticked).length,SRC=8,TOP=4,srcs=showAll.src?g.sources:g.sources.slice(0,SRC),tops=showAll.top?g.topics:g.topics.slice(0,TOP);
+    const how=g.settings.opensTopics==='off'?'Only when you start one':'Assistants propose them for you to keep',later='Not built yet. It needs a research provider.';
     el.querySelector('[data-rs-main]').innerHTML=`
-<section class="rs-g-ask"><div class="rs-g-h"><p class="rs-label">Research group</p><h1>${esc(g.name)}</h1><p class="rs-meta">${plural(g.topics.length,'topic')} · ${plural(g.sources.length,'source')} · used in ${plural(g.usedIn.length,'subject')}</p><p class="rs-path" title="Where this group is filed">${esc(g.folder.join(' / '))}</p></div>
- ${askBox(id)}${g.sources.length&&!ticked?'<p class="rs-meta">Tick at least one source to look in.</p>':''}
+<section class="rs-g-src" data-rs-sources><div class="rs-sec-h"><h2>Sources</h2><span>${g.sources.length}</span><button type="button" class="rs-push" data-rs-addsrc>${icon('plus')}Add</button></div>
+ <p class="rs-meta">Ticked sources are the ones it looks in.</p>
+ ${g.sources.length?`<ul class="rs-src">${srcs.map(s=>`<li><button type="button" aria-pressed="${s.ticked}" data-rs-tick="${esc(s.id)}"><i class="rs-tick" aria-hidden="true"></i>${kindIcon(s.kind)}<span><b>${esc(s.title)}</b><small>${esc(s.missing?'No longer in the Library':s.from==='topic'?'From a topic inside':s.kind||'Source')}</small></span></button></li>`).join('')}${g.sources.length>SRC?`<li><button type="button" class="rs-morebtn" data-rs-more="src">${showAll.src?'Fewer sources':plural(g.sources.length-SRC,'more source')}</button></li>`:''}</ul>`:'<p class="rs-meta">No sources yet.</p>'}
+ <button type="button" class="rs-dropz" data-rs-addsrc>${icon('plus')}Choose from the Library</button>
+ <p class="rs-meta">Dropping files and pasting links are not built yet.</p>
 </section>
-<section class="rs-g-src" data-rs-sources><div class="rs-sec-h"><h2>Sources</h2><span>${g.sources.length}</span><button type="button" class="v2-ghost rs-push" data-rs-addsrc>${icon('plus')}Add</button></div>
- ${g.sources.length?`<ul class="rs-src">${g.sources.map(s=>`<li><button type="button" aria-pressed="${s.ticked}" data-rs-tick="${esc(s.id)}"><i class="rs-tick" aria-hidden="true"></i><span><b>${esc(s.title)}</b><small>${esc(s.missing?'No longer in the Library':s.from==='topic'?'From a topic inside':s.kind||'Source')}</small></span></button></li>`).join('')}</ul>`:'<p class="rs-meta">No sources yet.</p>'}
+<section class="rs-g-ask"><div class="rs-g-h"><p class="rs-label">Research group</p><h1>${esc(g.name)}</h1><p class="rs-meta">${plural(g.topics.length,'topic')} · ${plural(g.sources.length,'source')} · used in ${plural(g.usedIn.length,'subject')}</p><p class="rs-path" title="Where this group is filed">${esc(g.folder.join(' / '))}</p></div>
+ ${g.sources.length&&!ticked?'<p class="rs-meta">Tick at least one source to look in.</p>':''}
+ ${askBox(id)}
 </section>
 <section class="rs-g-side">
  <div class="rs-sec-h"><h2>Topics inside</h2><span>${g.topics.length}</span></div>
- ${g.topics.length?`<ul class="rs-g-t">${g.topics.map(t=>`<li><a href="${esc(topicHref(t.id))}"><b>${esc(t.name)}</b>${origin(t.origin)}${stateMark(t)}</a></li>`).join('')}</ul>`:'<p class="rs-meta">None yet.</p>'}
+ ${g.topics.length?`<ul class="rs-g-t">${tops.map(t=>`<li><a href="${esc(topicHref(t.id))}"><b>${esc(t.name)}</b>${origin(t.origin)}${stateMark(t)}</a></li>`).join('')}${g.topics.length>TOP?`<li><button type="button" class="rs-morebtn" data-rs-more="top">${showAll.top?'Fewer topics':plural(g.topics.length-TOP,'more topic')}</button></li>`:''}</ul>`:'<p class="rs-meta">None yet.</p>'}
+ <div class="rs-sec-h"><h2>Made from this group</h2></div>
+ <p class="rs-meta">Not built yet: a briefing to listen to, and the notes you kept from questions.</p>
  <div class="rs-sec-h"><h2>Used in</h2></div>
- ${g.usedIn.length?`<ul class="rs-g-t">${g.usedIn.map(u=>`<li><a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}"><b>${esc(u.title)}</b><small>Subject</small></a></li>`).join('')}</ul>`:'<p class="rs-meta">None yet.</p>'}
- <div class="rs-sec-h"><h2>How this group works</h2><button type="button" class="v2-ghost rs-push" data-rs-change>Change</button></div>
- <dl class="rs-how"><dt>Filed in</dt><dd>${esc(g.folder.join(' / '))}</dd><dt>New topics</dt><dd>${g.settings.opensTopics==='off'?'Only when you start one':'Assistants propose them for you to keep'}</dd><dt>Looks for new material</dt><dd>Not built yet. It needs a research provider.</dd></dl>
+ ${g.usedIn.length?`<ul class="rs-g-m">${g.usedIn.map(u=>`<li><a class="rs-gm" href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}">${kindIcon('subject')}<span><b>${esc(u.title)}</b><small>Subject</small></span></a></li>`).join('')}</ul>`:'<p class="rs-meta">None yet.</p>'}
+ <div class="rs-sec-h"><h2>How this group works</h2><button type="button" class="rs-link rs-push" data-rs-change>Change</button></div>
+ <dl class="rs-how"><dt>Filed in</dt><dd>${esc(g.folder.join(' / '))}</dd><dt>Looks for new material</dt><dd>${later}</dd><dt>Voices it trusts</dt><dd>Not built yet.</dd><dt>Viewpoints</dt><dd>Not built yet.</dd><dt>Opens new topics</dt><dd>${how}</dd></dl>
 </section>`;
     wireAsk(el,id);
    };
    el.addEventListener('click',async e=>{
     const t=e.target.closest('[data-rs-tick]');
     if(t&&g){e.preventDefault();const on=t.getAttribute('aria-pressed')==='true';try{await v2.call('research-topics.group.sources',{id,...v2.expect(g),action:on?'untick':'tick',sourceIds:[t.dataset.rsTick]});}catch(error){fail(error);}await paint();return;}
+    const more=e.target.closest('[data-rs-more]');if(more){showAll[more.dataset.rsMore]=!showAll[more.dataset.rsMore];await paint();return;}
     if(e.target.closest('[data-rs-addsrc]')&&g){const ids=await pickSources({have:g.sources.map(s=>s.id)});if(!ids?.length)return;try{await v2.call('research-topics.group.sources',{id,...v2.expect(g),action:'add',sourceIds:ids});}catch(error){fail(error);}await paint();return;}
     if(e.target.closest('[data-rs-change]')&&g){
      const s=sheet({title:'How this group works',body:`<form class="rs-pick"><label class="rs-field"><span>Name</span><input name="name" required maxlength="200" value="${esc(g.name)}"></label><label class="rs-field"><span>Filed in</span><input name="folder" maxlength="400" value="${esc(g.folder.join(' / '))}"><small class="rs-meta">Folders, with a slash between them.</small></label><fieldset class="rs-field rs-chips"><legend>New topics</legend><label><input type="radio" name="opens" value="propose"${g.settings.opensTopics!=='off'?' checked':''}><span>Assistants propose them</span></label><label><input type="radio" name="opens" value="off"${g.settings.opensTopics==='off'?' checked':''}><span>Only when I start one</span></label></fieldset><div class="rs-row end"><button type="button" class="v2-ghost" data-v2-close>Cancel</button><button class="pri" type="submit">Save</button></div></form>`});
@@ -225,7 +237,8 @@
  }
  function readTab(t,groups){
   const used=t.usedIn.filter(u=>u.status==='used'),human=v2.isHuman();
-  const crumbs=[t.group?`<a href="${esc(groupHref(t.group.id))}">${esc(t.group.name)}</a>`:'',origin(t.origin),used.length?`<span>used in ${used.map(u=>`<a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}">${esc(u.title)}</a>`).join(', ')}</span>`:''].filter(Boolean).join('<span class="rs-dot" aria-hidden="true">·</span>');
+  const dot='<span class="rs-dot" aria-hidden="true">·</span>',usedIn=used.length?`<span>used in ${used.map(u=>`<a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}">${esc(u.title)}</a>`).join(', ')}</span>`:'';
+  const crumbs=[t.group?`<a class="rs-grp-link" href="${esc(groupHref(t.group.id))}">${esc(t.group.name)}</a>${origin(t.origin)||usedIn?'<span aria-hidden="true">/</span>':''}`:'',origin(t.origin)].filter(Boolean).join('')+(usedIn?((t.group||origin(t.origin))?dot:'')+usedIn:'');
   return `<article class="rs-read">
  <p class="rs-crumbs">${crumbs}</p>
  <h1>${esc(t.name)}</h1>
@@ -233,11 +246,12 @@
  ${t.note?`<p class="rs-meta">${esc(t.note)}</p>`:''}
  ${t.said.length?`<h2>What people say</h2><ul class="rs-say">${t.said.map(s=>`<li><p>${esc(s.text)}</p>${s.from==='relationships'&&(s.agree.length||s.dispute.length)?`<small>${s.agree.length?'Supported by: '+esc(s.agree.join(', ')):''}${s.agree.length&&s.dispute.length?' · ':''}${s.dispute.length?'Challenged by: '+esc(s.dispute.join(', ')):''}</small>`:''}${s.supported?`<small>Supported: ${esc(s.supported)}</small>`:''}${s.uncertain?`<small>Uncertain: ${esc(s.uncertain)}</small>`:''}</li>`).join('')}</ul>`:''}
  ${t.spoken.length?`<h2>In their words</h2><ol class="rs-talk">${t.spoken.map(s=>`<li><p class="v2-speech">“${esc(s.quote)}”</p><small>${esc([s.speaker,s.location].filter(Boolean).join(' · '))}</small></li>`).join('')}</ol>`:''}
- <section class="rs-take" data-rs-takebox><h2>In one line, what do you take from this?</h2>
-  ${t.take?.text?`<p class="rs-mine">${esc(t.take.text)}</p>`:`<p class="rs-quietp">${human?'Not written yet.':'Adrian has not written it yet.'}</p>`}
-  ${human?`<button type="button" class="v2-ghost rs-write" data-rs-write>${t.take?.text?'Change it':'Write it'}</button>
+ <section class="rs-take" data-rs-takebox>${human?'<p class="rs-label"><span class="rs-mark">Your reflection</span></p>':''}<h2>In one line, what do you take from this?</h2>
+  ${human?`<button type="button" class="rs-fieldbox${t.take?.text?'':' empty'}" data-rs-write aria-label="${t.take?.text?'Change your line':'Write your line'}">${esc(t.take?.text||'Not written yet. Press here to write it.')}</button>
   <form class="rs-takeform" data-rs-take hidden><label class="rs-vh" for="rs-take-text">Your line</label><textarea id="rs-take-text" name="take" rows="2" maxlength="400">${esc(t.take?.text||'')}</textarea>
-   <div class="rs-row"><button type="submit" class="pri">Keep my line</button><button type="button" class="v2-ghost" data-rs-cancel>Cancel</button></div></form>`:'<p class="rs-meta">Only Adrian writes here.</p>'}
+   <div class="rs-row"><button type="submit" class="pri">Keep my line</button><button type="button" class="v2-ghost" data-rs-cancel>Cancel</button></div></form>
+  <p class="rs-meta">Only you write here. That is all Research asks of you.</p>`
+  :`<p class="rs-fieldbox${t.take?.text?'':' empty'}">${esc(t.take?.text||'Adrian has not written it yet.')}</p><p class="rs-meta">Only Adrian writes here.</p>`}
  </section>
  ${t.status==='let-go'?'':`<div class="rs-file"><label class="rs-field inline"><span>Group</span><select data-rs-groupset><option value="">No group</option>${groups.map(g=>`<option value="${esc(g.id)}"${g.id===t.groupId?' selected':''}>${esc(g.name)}</option>`).join('')}</select></label><button type="button" data-rs-link>${icon('plus')}Use for a subject</button>${t.kind!=='subject'?'<button type="button" class="v2-ghost" data-rs-letgo-topic>Let it go</button>':''}</div>`}
 </article>`;
@@ -260,7 +274,7 @@
 </article>`;
  }
  v2.screen({id:'research-topic',route:'research/topic/:id',title:'Research topic',
-  render:()=>`<div class="rs-topic" data-rs-topic><div class="rs-bar"><a class="rs-back" href="${esc(v2.href('research'))}">${icon('back')}<span>Research</span></a><nav class="rs-tabs" aria-label="Topic" data-rs-tabs></nav></div><div class="rs-topic1" data-rs-body><p class="rs-meta rs-pad">Reading the topic…</p></div></div>`,
+  render:()=>`<div class="rs-topic" data-rs-topic><div class="rs-bar"><a class="rs-back" href="${esc(v2.href('research'))}">${icon('back')}<span>Research</span></a><nav class="rs-tabs" aria-label="Topic" data-rs-tabs></nav><span class="rs-sp"></span><button type="button" class="rs-listen" data-rs-listen aria-label="Listen">${PLAY}<span>Listen</span></button></div><div class="rs-topic1" data-rs-body><p class="rs-meta rs-pad">Reading the topic…</p></div></div>`,
   async mount(el,ctx){
    const id=ctx.params.id,tab=['read','decide','sources'].includes(ctx.query.tab)?ctx.query.tab:'read';let t=null,groups=[];
    const paint=async()=>{
@@ -282,6 +296,7 @@
    el.addEventListener('change',e=>{const s=e.target.closest('[data-rs-groupset]');if(s)save({groupId:s.value||null});});
    el.addEventListener('click',async e=>{
     if(!t)return;
+    if(e.target.closest('[data-rs-listen]')){sheet({title:'Listen',body:notBuilt('Hearing a topic read aloud.')});return;}
     if(e.target.closest('[data-rs-letgo-topic]')){e.preventDefault();return letGo(id,paint);}
     if(e.target.closest('[data-rs-write]')){const f=el.querySelector('[data-rs-take]');f.hidden=false;e.target.closest('[data-rs-write]').hidden=true;f.querySelector('textarea').focus();return;}
     if(e.target.closest('[data-rs-cancel]')){const f=el.querySelector('[data-rs-take]');f.hidden=true;el.querySelector('[data-rs-write]').hidden=false;return;}
