@@ -21,6 +21,17 @@
   const s=String(q);return WORKSPACE+(s?'?'+s:'');
  }
 
+ // Every hand-off to the existing workspace names the version two address he is leaving, so its "Version two" link can
+ // return there. It is added as the link is followed (the address changes after the link is drawn), never to advanced().
+ function markWay(e){
+  const a=e.target?.closest?.('a[href^="'+WORKSPACE+'"]');if(!a)return;
+  try{const url=new URL(a.getAttribute('href'),root.location.href);url.searchParams.delete('v2from');
+   const here=String(root.location.hash||'').replace(/^#/,'');if(here&&here!=='/')url.searchParams.set('v2from',here);
+   a.setAttribute('href',url.pathname+url.search+url.hash);}catch{}
+ }
+ for(const type of ['pointerdown','click','contextmenu','auxclick','focusin'])doc.addEventListener(type,markWay,true);
+ doc.addEventListener('keydown',e=>{if(e.key==='Enter')markWay(e);},true);
+
  // ---------- theme: follows the system, unless he chose one with the theme button ----------
  // A choice made with the theme button is kept in this page's own key and wins from then on. Until he makes one, the
  // page follows the system setting, as the sample does. (The existing workspace keeps its own theme inside its browser

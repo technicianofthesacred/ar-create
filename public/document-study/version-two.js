@@ -10,7 +10,19 @@
  const SECTIONS=['home','subjects','library','material','source','research','direction','write','read','check','media','arrange','audience','share','outputs'];
 
  // ---------- the link ----------
+ // Version two names the address he left in ?v2from=<hash>. The workspace drops its query string once loaded, so it is
+ // read now and kept for this tab. Only a plain version two path is accepted.
+ const KEEP='ar-create-v2-from';
+ const way=(()=>{
+  let from=null;try{from=new URLSearchParams(location.search).get('v2from');}catch{}
+  const ok=v=>typeof v==='string'&&/^\/[A-Za-z0-9._~%\-\/?=&:+,]*$/.test(v)&&!v.includes('//')&&v.length<400;
+  if(ok(from)){try{sessionStorage.setItem(KEEP,from);}catch{}return from;}
+  try{const kept=sessionStorage.getItem(KEEP);if(ok(kept))return kept;}catch{}
+  return null;
+ })();
  function href(){
+  const who0=window.arCreateUiActor;
+  if(way){const q0=who0?.explicit&&who0.actor?'?reviewActor='+encodeURIComponent(who0.actor):'';return '/v2/index.html'+q0+'#'+way;}
   let hash='';
   try{const home=document.getElementById('project-library')?.open,p=typeof current==='function'?current():null;if(!home&&p?.id)hash='#/subject/'+encodeURIComponent(p.id);}catch{}
   const who=window.arCreateUiActor;const q=who?.explicit&&who.actor?'?reviewActor='+encodeURIComponent(who.actor):'';
@@ -41,7 +53,7 @@
   return false;
  }
  function forget(){
-  try{const url=new URL(location.href);for(const k of ['subject','section','piece'])url.searchParams.delete(k);history.replaceState(history.state,'',url.pathname+url.search+url.hash);}catch{}
+  try{const url=new URL(location.href);for(const k of ['subject','section','piece','v2from'])url.searchParams.delete(k);history.replaceState(history.state,'',url.pathname+url.search+url.hash);}catch{}
  }
  async function open(){
   try{
