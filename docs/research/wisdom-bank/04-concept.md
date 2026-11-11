@@ -18,6 +18,8 @@ Added by the coordinating thread on 11 November 2026, from what Adrian said to t
 
 7. **As long as understanding needs.** "Ideally these concepts are not just this one sentence, they're however long they need to be. I feel like you're consolidating them for space rather than the amount of words for a human to really understand it." So a distillation's length is set by what a person needs to understand it, never by the space on a card. The layout makes room for the words. A one-line glance is only a way in.
 
+8. **The medium view is found; the small view is not.** "That would be a great expansion, uh the details of what it is. That's the medium view, but we still need the small view. I like the idea of the expansion with something of that level as well though. But the one sentence small view is not not landing yet." So a plain distillation of about three paragraphs is the right medium view; the sample he approved is in `design/2026-11-wisdom-bank/HANDOFF.md`. The small view is still open: one compressed sentence does not land. He has been offered three styles for it.
+
 ## The whole idea in one minute
 
 The wisdom bank is the Research station of AR Create. It distils each talk or book you love into its concepts, keeps the exact words inside each one, shows how the concepts connect, and helps you use them. Follow one example from start to finish:
