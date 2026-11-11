@@ -5,8 +5,14 @@ import {isICloudAlbum} from './services/icloud-albums.mjs';
 import {INQUIRY_METHODS} from './services/inquiry-interface-routes.mjs';
 import {NEEDS_YOU_COMMANDS, NEEDS_YOU_HUMAN_ONLY, NEEDS_YOU_BODY} from './commands/needs-you.mjs';
 import {WORDS_COMMANDS, WORDS_HUMAN_ONLY, WORDS_BODY} from './commands/words.mjs';
+import {LOOKS_COMMANDS, LOOKS_READ_ONLY, LOOKS_BODY} from './commands/looks.mjs';
+import {ACCOUNTS_COMMANDS, ACCOUNTS_BODY} from './commands/accounts.mjs';
+import {TEMPLATES_COMMANDS, TEMPLATES_HUMAN_ONLY, TEMPLATES_BODY} from './commands/templates.mjs';
 import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK_BODY} from './commands/transcript-check.mjs';
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
+import {SUBJECT_PLACES_COMMANDS, SUBJECT_PLACES_HUMAN_ONLY, SUBJECT_PLACES_UNDO, SUBJECT_PLACES_BODY} from './commands/subject-places.mjs';
+import {STANDING_COMMANDS} from './commands/standing.mjs';
+import {RESEARCH_TOPICS_COMMANDS, RESEARCH_TOPICS_HUMAN_ONLY, RESEARCH_TOPICS_READ_ONLY, RESEARCH_TOPICS_UNDO, RESEARCH_TOPICS_BODY} from './commands/research-topics.mjs';
 
 /**
  * One command registry for every entrance: the app, the CLI (agents/cli/ar-create.mjs)
@@ -47,7 +53,8 @@ const BODY = {
   '/api/study/carousel-make/preview':['rootBindingId','parentStudyId','sourceBindingId','sourceOutputId','expectedNative','expectedOutput','operationId'],
   ...Object.fromEntries(['run','register','cancel'].map(action=>['/api/study/carousel-make/'+action,['rootBindingId','parentStudyId','requestId']])),
   '/api/instagram/plan': ['id? (omit to create)', 'operationId', 'expectedRevision?', 'expectedHash?', 'subject?', 'title?', 'door?', 'material?:{transcripts:[{sourceId,sourceHash}],photos:[{sourceId,caption?}]}', 'stories?:[{id?,title,dish,readback,why,reader,format?,spine:[lineId],matches:[{photoId,lineId,why}]}]', 'gaps?:[{question,why,storyIds,status,finding?,sources?}]', 'heard?:{storyId,quote}', 'flags?:[{lineId,heard,kind,suggestion?,why?}]', 'coverage?:[{momentId,status:saved|skipped|null,why}]'],
-  '/api/instagram/layout': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'format', 'frames? (omit for the default)', 'caption? (text, or {parts:[{kind:quote,lineId,text}|{kind:suggested,lineId,text}|{kind:draft,text}]})'],
+  '/api/instagram/layout': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'format', 'frames? (omit for the default; a frame\'s templateId may be a layout code such as C1)', 'caption? (text, or {parts:[{kind:quote,lineId,text}|{kind:suggested,lineId,text}|{kind:draft,text}]})'],
+  '/api/instagram/plan/codes': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'say? (the line he said or typed, e.g. "use C1, 2 and 5") or codes? (list, e.g. ["C1","C2","C5"])', 'storyId? (default: the chosen story, or the only one)', 'format? (default carousel)'],
   '/api/instagram/choose': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId?', 'named?', 'forWhom?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
   '/api/instagram/confirm': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'flagId', 'verdict (as-heard|corrected)', 'correction?', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
   '/api/instagram/meaning': ['id', 'operationId', 'expectedRevision', 'expectedHash', 'storyId', 'verdict (right|not-meant)', 'words (his exact words; required for not-meant)', 'said? (an agent carrying his decision from chat: {quote, via:"chat", at})'],
@@ -134,8 +141,9 @@ const BODY = {
 function section(route) {
   const r = route.replace(/^\/api\//, '');
   if (/^(words|phone-pickup)(\/|$)/.test(r)) return 'transcript';
+  if (/^(subject-places|subjects?\/standing)(\/|$)/.test(r)) return 'subjects';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
-    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram)/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
+    [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram|looks?(\/|$)|accounts?(\/|$)|templates?(\/|$))/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
     [/^inquiries/, 'collection'], [/^work-continuity/, 'continuity'], [/^magazine/, 'magazine'], [/^(terminal|ai\/execution|requests|passage)/, 'agent-runtime'], [/^(writing-template|guidance|voice-corrections)/, 'writing'],
     [/^(i64os|capabilities|events|presence|leases|journal)/, 'system']];
@@ -171,20 +179,26 @@ export const CUSTOM_COMMANDS = [
   ['GET', '/transcription/{id}/view'], ['POST', '/transcription/{id}/{action}'],
   ...NEEDS_YOU_COMMANDS,
   ...WORDS_COMMANDS,
+  ...LOOKS_COMMANDS,
+  ...ACCOUNTS_COMMANDS,
+  ...TEMPLATES_COMMANDS,
   ...TRANSCRIPT_CHECK_COMMANDS,
   ...PHONE_PICKUP_COMMANDS,
+  ...SUBJECT_PLACES_COMMANDS,
+  ...STANDING_COMMANDS,
+  ...RESEARCH_TOPICS_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
   ['GET', '/api/simmer/material', ['subject']],
   ['POST', '/api/simmer/intake'], ['POST', '/api/simmer/propose'], ['POST', '/api/simmer/dish'],
   ['GET', '/api/instagram/templates'], ['GET', '/api/instagram/plans', ['subject?']], ['GET', '/api/instagram/plan', ['id']],
-  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'], ['POST', '/api/instagram/handoff'],
-  ['GET', '/api/instagram/render', ['id', 'format', 'frame']], ['GET', '/api/instagram/sheet', ['id', 'format']], ['GET', '/api/instagram/captions', ['id']], ['GET', '/api/instagram/png', ['id', 'format', 'frame']],
+  ['POST', '/api/instagram/plan'], ['POST', '/api/instagram/layout'], ['POST', '/api/instagram/plan/codes'], ['POST', '/api/instagram/choose'], ['POST', '/api/instagram/confirm'], ['POST', '/api/instagram/meaning'], ['POST', '/api/instagram/ready'], ['POST', '/api/instagram/handoff'],
+  ['GET', '/api/instagram/render', ['id', 'format', 'frame']], ['GET', '/api/instagram/preview', ['id', 'format', 'frame', 'layout (a code such as C1, a layout id, or a template id; a proposal too)', 'plain? (1: without the things placed on the slide)']], ['GET', '/api/instagram/sheet', ['id', 'format']], ['GET', '/api/instagram/captions', ['id']], ['GET', '/api/instagram/png', ['id', 'format', 'frame']],
   ...['read', 'seen', 'assign', 'result', 'complete', 'undo', 'recover', 'context', 'understanding', 'artifacts'].map(op => ['POST', '/api/work-continuity/' + op]),
   ...Object.values(INQUIRY_METHODS).map(([method, path]) => [method, '/api/inquiries' + path, method === 'GET' ? ['input (one JSON selector)'] : undefined, method === 'GET' ? 'input-json' : undefined]),
 ];
 /** POST routes in the custom families that only read. */
-const CUSTOM_READ_ONLY = new Set(['POST /api/current-work/read','POST /api/current-work/validate','POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
+const CUSTOM_READ_ONLY = new Set([...LOOKS_READ_ONLY, 'POST /api/current-work/read','POST /api/current-work/validate','POST /api/work-continuity/read', 'POST /api/work-continuity/context', 'POST /api/work-continuity/understanding', 'POST /api/work-continuity/artifacts', 'POST /api/shared-carousels/requests/{id}/review']);
 /**
  * study-ai.finish (3 Nov 2026) closes Adrian's read-through of a machine draft: it saves his edits and the
  * paragraphs he left alone, so it is his alone like every save below.
@@ -572,8 +586,21 @@ Object.assign(BODY, NEEDS_YOU_BODY);
 // The shared word library (runtime/commands/words.mjs): agents read and suggest; only Adrian confirms or answers.
 for (const key of WORDS_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, WORDS_BODY);
+Object.assign(BODY, LOOKS_BODY);
+Object.assign(BODY, ACCOUNTS_BODY);
+for (const key of TEMPLATES_HUMAN_ONLY) HUMAN_ONLY.add(key);
+Object.assign(BODY, TEMPLATES_BODY);
 for (const key of TRANSCRIPT_CHECK_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, TRANSCRIPT_CHECK_BODY);
 // The phone pickup (runtime/commands/phone-pickup.mjs): on demand only, never a timer.
 for (const key of PHONE_PICKUP_HUMAN_ONLY) HUMAN_ONLY.add(key);
 Object.assign(BODY, PHONE_PICKUP_BODY);
+// Where a subject lives (runtime/commands/subject-places.mjs): ordinary organising, open to assistants; folder changes have Undo.
+for (const key of SUBJECT_PLACES_HUMAN_ONLY) HUMAN_ONLY.add(key);
+Object.assign(UNDO, SUBJECT_PLACES_UNDO);
+Object.assign(BODY, SUBJECT_PLACES_BODY);
+// Research topics and groups (runtime/commands/research-topics.mjs): assistants read, file and propose; his line and his decisions are his.
+for (const key of RESEARCH_TOPICS_HUMAN_ONLY) HUMAN_ONLY.add(key);
+for (const key of RESEARCH_TOPICS_READ_ONLY) CUSTOM_READ_ONLY.add(key);
+Object.assign(UNDO, RESEARCH_TOPICS_UNDO);
+Object.assign(BODY, RESEARCH_TOPICS_BODY);

@@ -1,0 +1,146 @@
+---
+name: Mandala Codes
+description: A quiet editorial oracle for studying the 64 codes.
+colors:
+  paper: "#f5f4f0"
+  deep-wood: "#262321"
+  muted-wood: "#736046"
+  bronze: "#8a744e"
+  bronze-light: "#c4aa7c"
+typography:
+  display:
+    fontFamily: "Cormorant Garamond, serif"
+    fontSize: "36px"
+    fontWeight: 400
+    lineHeight: 1.1
+  body:
+    fontFamily: "Iowan Old Style, serif"
+    fontSize: "17px"
+    fontWeight: 400
+    lineHeight: 1.5
+  label:
+    fontFamily: "Iowan Old Style, serif"
+    fontSize: "10px"
+    fontWeight: 400
+    lineHeight: 1.2
+    letterSpacing: "0.18em"
+rounded:
+  subtle: "5px"
+  control: "999px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+components:
+  filter-control:
+    backgroundColor: "{colors.deep-wood}"
+    textColor: "{colors.paper}"
+    typography: "{typography.label}"
+    rounded: "{rounded.control}"
+    padding: "5px 7px"
+# slides: the roles a Carousel slide needs, for posts on a dark ground and on a light one. Each value is a token
+# of this file ({colors.name}, {typography.name}) or a plain value. Read by AR Create; not part of the DESIGN.md spec.
+# Proposed by AR Create's look import from mandalacodes/DESIGN.md on 10 November 2026. What it guessed:
+# - dark.ground: No token is named as a dark background, so the darkest colour, deep-wood, is the ground.
+# - dark.headline: No token for text on this ground reads well enough, so paper, the colour with the most
+# contrast, carries headlines.
+# - dark.accent: No primary or accent token reads well on this ground, so bronze-light, the most coloured that
+# still reads on it, is the accent.
+# - dark.box: No token is named for box, so it is mixed from deep-wood and paper (a little lifted from the
+# ground).
+# - dark.line: No token is named for line, so it is mixed from deep-wood and paper (a quiet line on the ground).
+# - dark.supporting: No token is named for supporting, so it is mixed from deep-wood and paper (between the
+# headline and the ground).
+# - dark.label: No token is named for label, so it is mixed from deep-wood and paper (quieter than the
+# supporting words).
+# - light.headline: No token for text on this ground reads well enough, so deep-wood, the colour with the most
+# contrast, carries headlines.
+# - light.accent: No primary or accent token reads well on this ground, so bronze, the most coloured that still
+# reads on it, is the accent.
+# - light.box: No token is named for box, so it is mixed from paper and deep-wood (a little lifted from the
+# ground).
+# - light.line: No token is named for line, so it is mixed from paper and deep-wood (a quiet line on the
+# ground).
+# - light.supporting: No token is named for supporting, so it is mixed from paper and deep-wood (between the
+# headline and the ground).
+# - light.label: No token is named for label, so it is mixed from paper and deep-wood (quieter than the
+# supporting words).
+# - fonts.body: Iowan Old Style has no font file in the app yet, so body is drawn in Lora until it is added.
+# - fonts.label: Iowan Old Style has no font file in the app yet, so label is drawn in Lora until it is added.
+# - logo: No logo file came with this DESIGN.md, so the logo is the brand's name set in its headline type until
+# a file is added.
+slides:
+  dark:
+    ground: "{colors.deep-wood}"
+    box: "#373432"
+    line: "#474442"
+    headline: "{colors.paper}"
+    supporting: "#c7c6c2"
+    label: "#989693"
+    accent: "{colors.bronze-light}"
+  light:
+    ground: "{colors.paper}"
+    box: "#e4e3df"
+    line: "#d4d3cf"
+    headline: "{colors.deep-wood}"
+    supporting: "#54514f"
+    label: "#83817e"
+    accent: "{colors.bronze}"
+  fonts:
+    headline: "{typography.display}"
+    body: "{typography.body}"
+    label: "{typography.label}"
+  logo:
+    dark: ""
+    light: ""
+    wordmark: Mandala Codes
+  link: "mandalacodes.com"
+# assets: what can be placed on a slide in this look (logo, mark or graphic), each with a file in this
+# look's folder or an app path, or (a mark) characters drawn as a seal. A logo with no file is the brand's name set in
+# its headline type. Read by AR Create; not part of the DESIGN.md spec.
+assets:
+  wordmark:
+    name: "Mandala Codes wordmark"
+    kind: logo
+---
+
+# Design System: Mandala Codes
+
+## Overview
+
+**Creative North Star: “The Quiet Oracle Table”**
+
+The interface feels like a carefully arranged study surface: dark, warm, spacious, and precise. The central oracle object carries the visual weight while supporting information sits at the margins in restrained editorial rails. It rejects generic dashboard chrome, floating card stacks, and decorative spiritual effects.
+
+## Colors
+
+The palette uses warm paper, wood, and bronze neutrals. Bronze is reserved for links, selection, and quiet orientation; sequence colors carry data meaning only.
+
+## Typography
+
+Cormorant Garamond carries large display titles. Iowan Old Style carries teaching text, controls, metadata, and the chart’s editorial voice. Cinzel is limited to rare brand and navigational labels.
+
+## Elevation
+
+The system is flat by default. Structure comes from whitespace, fine rules, tonal contrast, and hierarchy. Shadows are limited to interactive overlays or focused chart spheres.
+
+## Components
+
+Controls are compact, restrained, and consistent. Filter pills use small uppercase sans labels. Path rows are borderless editorial lines with a subtle tinted hover or selected state. Supporting rails remain visually open rather than becoming cards.
+
+## Do's and Don'ts
+
+### Do:
+
+- **Do** keep the profile graph on the true horizontal center axis.
+- **Do** use equal-width supporting rails when information flanks the chart.
+- **Do** preserve warm wood and bronze tokens and the existing type pairing.
+- **Do** provide visible keyboard focus and mobile reflow.
+
+### Don't:
+
+- **Don't** turn supporting information into floating dashboard cards.
+- **Don't** use hover as the only way to reveal meaning.
+- **Don't** let filters or utilities visually outrank the chart.
+- **Don't** introduce gradients, glassmorphism, or decorative motion.

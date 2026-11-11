@@ -1,7 +1,8 @@
 // Browser check for the Instagram studio: opens a plan from its link, as an agent (never as Adrian), and checks that
 // the coverage strip shows every moment of the recording, each story shows its read-back, words to confirm are listed,
 // the made frames render, and Adrian's buttons are not pressable by an agent. Not part of `npm test` (no browser is a
-// dependency of this repo). Run against a synthetic demo that holds a plan (`npm run demo`), never the installed app:
+// dependency of this repo). Run against a synthetic demo that holds a plan (`npm run demo`, then
+// `node tests/helpers/instagram-demo.mjs <demo url>` to fill one), never the installed app:
 //   AR_CREATE_PLAYWRIGHT=/path/to/node_modules/playwright/index.mjs AR_CREATE_GATE_URL=http://127.0.0.1:8854 node tests/instagram.browser.mjs
 // AR_CREATE_INSTAGRAM_SHOTS=<folder> also saves the panel at 1440 and 390 wide, dark and light.
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ assert.ok(plans.length,'the demo holds an Instagram plan (fill one first)');
 const plan=await (await fetch(base+'/api/instagram/plan?id='+plans[0].id)).json();
 const browser=await chromium.launch(),errors=[];
 try{
- for(const [w,h,label] of [[1440,900,'desktop'],[390,844,'phone']])for(const theme of ['dark','light']){
+ for(const [w,h,label] of [[1440,900,'desktop'],[1000,800,'1000'],[700,900,'700'],[390,844,'phone']])for(const theme of ['dark','light']){
   const page=await browser.newPage({viewport:{width:w,height:h},deviceScaleFactor:2});page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(base+'/document-study/index.html?reviewActor=agent:claude-code&instagram='+plan.id,{waitUntil:'load'});
   await page.waitForSelector('dialog.igs[open] .igs-strip-time',{timeout:15000});
@@ -25,9 +26,19 @@ try{
   assert.equal(await page.locator('.igs-readback').count(),plan.stories.length,'every story shows its read-back');
   assert.ok(await page.locator('[data-igs="choose"]').first().isDisabled(),'an agent cannot pick the story');
   if(Object.keys(plan.layouts).length)assert.ok(await page.locator('.igs-frame iframe').count()>0,'the made frames render');
+  if(Object.keys(plan.layouts).length){
+   // The slide studio: each made slide and each offered layout shows its code; an agent cannot accept a template.
+   assert.equal(await page.locator('.igs-frame .igs-code').count(),plan.layouts[Object.keys(plan.layouts).includes('carousel')?'carousel':Object.keys(plan.layouts)[0]].frames.length,'every made slide shows its code');
+   assert.ok(await page.locator('[data-igs="use"] .igs-code').count()>0,'every layout in the chooser shows its code');
+   assert.match(await page.locator('.igs-capline').innerText(),/Slide 1 .* [A-Z]\d+ /,'the slide caption shows its code');
+   assert.equal(await page.locator('[data-igs="accept"],[data-igs="turn-down"]').count(),0,'only Adrian accepts or turns down a template');
+  }
+  // Nothing scrolls sideways at any width: not the page, and no region inside the studio.
+  const sideways=await page.evaluate(()=>{const out=[];if(document.documentElement.scrollWidth>document.documentElement.clientWidth)out.push('the page');for(const el of document.querySelectorAll('dialog.igs, dialog.igs *')){const cs=getComputedStyle(el);if(/(auto|scroll)/.test(cs.overflowX)&&el.scrollWidth>el.clientWidth+1)out.push(String(el.className||el.tagName));}return out;});
+  assert.deepEqual(sideways,[],'nothing scrolls sideways at '+w+' wide');
   await page.locator('.igs-seg').nth(Math.floor(plan.moments.length/2)).click();
   assert.match(await page.locator('.igs-moment .igs-exact').innerText(),/\S/,'a moment opens with its exact words');
-  if(shots){
+  if(shots&&(label==='desktop'||label==='phone')){
    await page.locator('.igs-body').evaluate(el=>el.scrollTo(0,0));
    await page.screenshot({path:path.join(shots,'panel-'+label+'-'+theme+'.png')});
    const made=page.locator('section[aria-label="Made"]');await made.scrollIntoViewIfNeeded();await page.waitForTimeout(800);

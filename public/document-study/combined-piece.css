@@ -10,6 +10,9 @@ html body.wbf-on.combined-piece-on #workspace>#combined-piece-frame.cp-top{posit
 .cp-top .cp-subject::before{content:'· ';color:var(--dim)}
 .cp-top .cp-sep{display:none}
 .cp-tabs{grid-column:3/-1;grid-row:1;display:flex;align-items:center;min-width:0;gap:4px;justify-self:end}
+/* Many pieces: the tabs wrap onto more lines inside the space the tools below give them, right-aligned, instead of
+   spilling left over the title and pushing the tools onto each other. Their own width no longer sizes the columns. */
+@media(min-width:801px){.cp-tabs{flex-wrap:wrap;justify-content:flex-end;justify-self:stretch;contain:inline-size}}
 .cp-tabs .cp-in-l{display:none}
 .cp-tabs .cp-tab{padding:4px 8px;border:0;border-bottom:2px solid transparent;border-radius:0;color:var(--dim)}
 .cp-tabs .cp-current{border-bottom-color:var(--warm);color:var(--ink)}

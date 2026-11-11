@@ -23,7 +23,7 @@
      Ordinary action controls share the compact treatment across sheets too. */
   button:not(:where(.combined-rail *, .combined-phonebar *, .cp-tabs *,
     .cp-subject, .cp-reference-title, .oo-title, .pl-project, .workflowStep, #wbf-pull, .checkpoint-rail *,
-    .make-photo-grid *, .car-layout-option, .car-picker-grid *,
+    .make-photo-grid *, .car-layout-option, .car-picker-grid *, .igs-tile,
     .cwb-album-thumbnails *, [role="tab"], [role="treeitem"],
     [draggable="true"], #manuscript *, .slide *, .ig-slide *)) {
     --graphite-button: var(--graphite-secondary);
@@ -49,6 +49,12 @@
     .pri, [data-current-check="run"], [aria-pressed="true"]) {
     --graphite-button: var(--graphite-ink);
     --graphite-label: var(--graphite-inverse);
+  }
+  /* Buttons that carry a title from his records (a subject, a piece) wrap and break a long word instead of running
+     past the window: no screen scrolls sideways, and a library holds long titles. */
+  button:is(.cs-title, .direction-piece-grid th button) {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
   }
   button:disabled { cursor: default !important; opacity: .5 !important; }
   button:is(.sb-btn, .sb-icon, .cp-new) { padding-inline: 5px !important; }
@@ -96,7 +102,7 @@
     :root { --graphite-field-height: 32px; }
     button:not(:where(.combined-rail *, .combined-phonebar *, .cp-tabs *,
       .cp-subject, .cp-reference-title, .oo-title, .pl-project, .workflowStep, #wbf-pull, .checkpoint-rail *,
-      .make-photo-grid *, .car-layout-option, .car-picker-grid *,
+      .make-photo-grid *, .car-layout-option, .car-picker-grid *, .igs-tile,
       .cwb-album-thumbnails *, [role="tab"], [role="treeitem"],
       [draggable="true"], #manuscript *, .slide *, .ig-slide *)) {
       /* 32px painted surface inside a 44px target. Transparent block borders

@@ -1,0 +1,255 @@
+// Where a subject stands: one pure rule, shared by the server (runtime/services/subject-standing.mjs) and the browser
+// (the build copies this file to public/v2/shell/standing.mjs; version two loads it with import()).
+//
+// It reads nothing. It takes plain facts already gathered from the records (the `facts` shape below) and decides, for
+// one subject: its forms in order, each form's steps with a true state, how far each form is (its ring), the station
+// the subject stands at, and the one next step, or none when that is not known. A fact that was not read is left out
+// (undefined or null); every step resting on it says "Not known", and no next step is claimed past it.
+//
+// The step lists and their wording come from the Subject screen's rule (public/v2/screens/subject.js on the Subject
+// branch), with the corrections from review: a finished Article has The words done and Check next; while a
+// suggestion waits on the words, The words needs him and Check and Publish wait; photographs in the Article wait for
+// photographs to be added; Name the dish is done only when the board holds the dish he named; a subject holding notes
+// is never "Nothing yet"; a Carousel-only subject reaches Write, Read and Check from its post text step.
+//
+// facts = {
+//   id, title, bindingId?, projectId?, archived?, folder?, look?, changedAt? (ISO), asks? (open questions),
+//   published? (true|false; left out when no record says, and then no step claims either),
+//   material:   {total, recordings, notes, links, photos}
+//   transcript: {open (words to confirm), checked (a word check or a plan exists)}
+//   research:   {step: attach|review|research|running|directions|picked|needs-attention|null, unreviewed, topics}
+//   dish:       {named, text, at, dishes (possible dishes on the board), direction (his direction is written)}
+//   words:      {paragraphs, count}          (no saved writing place: {paragraphs:0, count:0})
+//   suggestions: number of suggestions on the words waiting for his decision
+//   check:      {status: null (never run)|running|checked|..., issues}
+//   consent:    {people:[{name,state,request}], released, overridden, ready, held}
+//   pieces:     [{key, id, kind: article|post|product-listing|carousel|instagram, title, status?, placements, slides,
+//                 plan?: {format, stories, chosen, chosenTitle, frames, caption, ready, look}}]
+// }
+
+export const VERSION = 1;
+/** The existing workspace's twelve sections, in its order. */
+export const TWELVE = Object.freeze(['material', 'source', 'research', 'direction', 'write', 'read', 'check', 'media', 'arrange', 'audience', 'share', 'outputs']);
+export const SECTION_LABEL = Object.freeze({material: 'Material', source: 'Source', research: 'Research', direction: 'Direction', write: 'Write', read: 'Read', check: 'Check', media: 'Media', arrange: 'Arrange', audience: 'Audience', share: 'Share', outputs: 'Outputs', subjects: 'Subject board', library: 'Library'});
+export const GROUPS = Object.freeze(['Gather', 'Research', 'Simmer', 'Create', 'Share']);
+/** A step's state. `unknown`: a record it rests on was not read, so nothing is claimed. */
+export const STATES = Object.freeze(['done', 'next', 'flag', 'todo', 'wait', 'unknown']);
+export const STATE_NAME = Object.freeze({done: 'Done', next: 'Next', flag: 'Needs a look', todo: 'To do', wait: 'Waiting', unknown: 'Not known'});
+export const STATIONS = Object.freeze([
+ {id: 'gather', name: 'Gather'}, {id: 'research', name: 'Research'}, {id: 'create', name: 'Create'},
+ {id: 'share', name: 'Share'}, {id: 'published', name: 'Published'}, {id: 'resting', name: 'Resting'}].map(Object.freeze));
+const STATION_NAME = Object.fromEntries(STATIONS.map(s => [s.id, s.name]));
+const STATION_OF_GROUP = Object.freeze({Gather: 'gather', Research: 'research', Simmer: 'research', Create: 'create', Share: 'share'});
+/** A subject rests when nothing in its records has changed for this many days, or its piece is marked paused. */
+export const RESTING_DAYS = 60;
+/** Where each step reaches in the existing workspace; the first is where its hand-off lands. */
+export const SECTIONS = Object.freeze({
+ have: ['material', 'source', 'library'], transcript: ['source'], facts: ['research'], dish: ['direction', 'subjects'], form: ['outputs'],
+ words: ['write', 'read'], photos: ['media', 'arrange', 'material'], check: ['check'],
+ slides: ['arrange', 'media'], story: ['arrange'], posttext: ['write', 'read', 'check'], yes: ['share'], publish: ['outputs', 'audience'],
+});
+/** The kinds of piece the app keeps, as forms. */
+export const KINDS = Object.freeze({
+ article: {name: 'Article', to: 'the magazine'},
+ post: {name: 'Post', to: 'Instagram'},
+ 'product-listing': {name: 'Product listing', to: 'the shop'},
+ slides: {name: 'Carousel', to: 'Instagram'},
+ instagram: {name: 'Carousel', to: 'Instagram'},
+});
+const TEXT = new Set(['article', 'post', 'product-listing']);
+/** Which facts each step rests on. While one is not known, the step says so. */
+export const NEEDS = Object.freeze({
+ have: ['material'], transcript: ['material', 'transcript'], facts: ['material', 'research'], dish: ['material', 'dish'], form: ['material', 'pieces'],
+ words: ['words', 'suggestions'], photos: ['material', 'pieces'], check: ['words', 'suggestions', 'check'],
+ story: ['pieces'], slides: ['pieces'], posttext: ['pieces'], yes: ['consent'], publish: ['consent', 'words', 'suggestions', 'check', 'pieces', 'transcript'],
+});
+
+const plural = (n, one, many = one + 's') => n + ' ' + (n === 1 ? one : many);
+const join = list => list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list.at(-1);
+const known = v => v !== undefined && v !== null;
+const day = iso => {const d = new Date(iso || ''); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', timeZone: 'UTC'});};
+
+/** The fact groups that are not known in these facts. */
+export function unknownOf(facts = {}) {
+ const out = new Set();
+ for (const k of ['material', 'transcript', 'research', 'dish', 'words', 'check', 'consent', 'pieces']) if (!known(facts[k])) out.add(k);
+ if (!Number.isFinite(facts.suggestions)) out.add('suggestions');
+ return out;
+}
+
+/** The forms of a subject, in the order the records give them: its saved pieces, then its Instagram plans. A name
+    that appears more than once is told apart (`alike`) so a screen can add the piece's own name. */
+export function formsOf(facts = {}) {
+ const out = [];
+ for (const p of facts.pieces || []) {
+  if (p.plan) {const f = p.plan.format || 'carousel'; out.push({key: p.key, kind: 'instagram', name: f === 'story' ? 'Story' : f === 'reel' ? 'Reel' : f === 'post' ? 'Post' : 'Carousel', to: 'Instagram', title: p.title || '', piece: p}); continue;}
+  const k = p.kind === 'carousel' ? 'slides' : p.kind, kind = KINDS[k]; if (!kind) continue;
+  out.push({key: p.key, kind: k, name: kind.name, to: kind.to, title: p.title || '', piece: p});
+ }
+ for (const f of out) f.alike = out.filter(x => x.name === f.name).length > 1;
+ return out;
+}
+
+/** The steps for one form (or for the subject alone, form null), each {id, group, name, state, note, section,
+    sections, waits?, waitsFor?}. `waits` names the steps a waiting step waits for; `waitsFor` says it in plain words. */
+export function stepsFor(form, facts = {}) {
+ const unknown = unknownOf(facts), steps = [];
+ const m = facts.material || {total: 0, recordings: 0, notes: 0, links: 0, photos: 0};
+ const add = (id, group, name, state, note, extra = {}) => steps.push({id, group, name, state, note: note || '', section: SECTIONS[id][0], sections: [...SECTIONS[id]], ...extra});
+ const find = id => steps.find(x => x.id === id);
+ const materialKnown = !unknown.has('material');
+ // ---- Gather
+ if (!m.total) add('have', 'Gather', 'What you have', 'todo', 'Nothing yet');
+ else add('have', 'Gather', 'What you have', 'done', [m.recordings && plural(m.recordings, 'recording'), m.notes && plural(m.notes, 'note'), m.links && plural(m.links, 'link'), m.photos && plural(m.photos, 'photograph')].filter(Boolean).join(' · '));
+ const t = facts.transcript || {};
+ if (materialKnown && (m.recordings || t.open || t.checked)) {
+  if (t.open) add('transcript', 'Gather', 'The transcript', 'flag', plural(t.open, 'word') + ' to confirm');
+  else if (t.checked) add('transcript', 'Gather', 'The transcript', 'done', 'Every word confirmed');
+  else add('transcript', 'Gather', 'The transcript', 'todo', 'Not checked yet');
+ }
+ // ---- Research: the subject's own research brief. Sources not yet looked at do not stop the work.
+ if (!materialKnown || m.total) {
+  const r = facts.research || {}, topics = r.topics ? ' · ' + plural(r.topics, 'research topic') + ' on this material' : '';
+  if (r.step === 'picked') add('facts', 'Research', 'The facts', 'done', 'Read and used');
+  else if (r.step === 'directions') add('facts', 'Research', 'The facts', 'flag', 'Findings to read');
+  else if (r.step === 'running') add('facts', 'Research', 'The facts', 'wait', 'Being looked into', {waitsFor: 'The research to finish'});
+  else if (r.step === 'needs-attention') add('facts', 'Research', 'The facts', 'flag', 'Needs a look');
+  else if (r.step === 'review') add('facts', 'Research', 'The facts', 'todo', (r.unreviewed ? plural(r.unreviewed, 'source') + ' not looked at yet' : 'Sources not looked at yet') + topics);
+  else if (r.step === 'research') add('facts', 'Research', 'The facts', 'todo', 'Ready to look into' + topics);
+  else add('facts', 'Research', 'The facts', 'todo', 'Not looked into yet' + topics);
+ }
+ // ---- Simmer: done only when the board holds the dish he named (the sentence he sent, or the dish he named in a chat).
+ const d = facts.dish || {};
+ if (d.named) add('dish', 'Simmer', 'Name the dish', 'done', d.at && day(d.at) ? 'Named on the board, ' + day(d.at) : 'Named on the board');
+ else if (materialKnown && !m.total) add('dish', 'Simmer', 'Name the dish', 'wait', 'When there is something to look at', {waits: ['have'], waitsFor: 'Material to be added'});
+ else add('dish', 'Simmer', 'Name the dish', 'todo', d.dishes ? plural(d.dishes, 'possible dish', 'possible dishes') : d.direction ? 'Your direction is written; the dish is not named yet' : 'Not named yet');
+ // ---- A subject with no form yet: choosing one is the next thing to make, once there is something to make it from.
+ if (!form) {
+  if (!known(facts.pieces)) add('form', 'Create', 'Choose a form', 'unknown', 'Not known');
+  else if (materialKnown && !m.total) add('form', 'Create', 'Choose a form', 'wait', 'When there is something to make it from', {waits: ['have'], waitsFor: 'Material to be added'});
+  else add('form', 'Create', 'Choose a form', 'todo', 'No Article or Carousel yet');
+ } else {
+  // ---- Create and Share, from the form
+  const kind = form.kind, p = form.piece || {}, w = facts.words || {paragraphs: 0, count: 0}, c = facts.check || {status: null, issues: 0}, waiting = facts.suggestions || 0;
+  if (TEXT.has(kind) || kind === 'slides') {
+   const wordsName = kind === 'post' ? 'The lines' : kind === 'slides' ? 'The words on the slides' : 'The words';
+   if (kind === 'slides') {const n = p.slides || 0; add('slides', 'Create', 'The slides', n ? 'done' : 'todo', n ? plural(n, 'slide') : 'Not laid out yet');}
+   if (waiting) add('words', 'Create', wordsName, 'flag', plural(waiting, 'suggestion') + ' waiting');
+   else if (!w.paragraphs) add('words', 'Create', wordsName, 'todo', 'Not started');
+   else add('words', 'Create', wordsName, 'done', plural(w.count, 'word'));
+   if (kind !== 'slides') {
+    const photosName = kind === 'article' ? 'Photographs in the article' : kind === 'post' ? 'The picture' : 'Photographs';
+    if (p.placements) add('photos', 'Create', photosName, 'done', plural(p.placements, 'placed', 'placed'));
+    else if (materialKnown && !m.photos) add('photos', 'Create', photosName, 'wait', 'No photographs added yet', {waitsFor: 'Photographs to be added', missing: 'photographs'});
+    else add('photos', 'Create', photosName, 'todo', 'None placed yet');
+   }
+   const wordsState = find('words').state;
+   if (wordsState !== 'done') add('check', 'Create', 'Check', 'wait', wordsState === 'flag' ? 'Waits for the suggestion to be settled' : 'Waits for the words', {waits: ['words'], waitsFor: wordsState === 'flag' ? 'The suggestion to be settled' : 'The words'});
+   else if (!c.status) add('check', 'Create', 'Check', 'todo', 'Not checked yet');
+   else if (c.status === 'running') add('check', 'Create', 'Check', 'wait', 'Checking', {waitsFor: 'The check to finish'});
+   else if (c.status === 'checked' && !c.issues) add('check', 'Create', 'Check', 'done', 'Checked');
+   else if (c.issues) add('check', 'Create', 'Check', 'flag', plural(c.issues, 'thing') + ' to look at');
+   else add('check', 'Create', 'Check', 'flag', 'Check again');
+  }
+  if (kind === 'instagram') {
+   const pl = p.plan || {};
+   if (pl.chosen) add('story', 'Create', 'The story', 'done', pl.chosenTitle || 'Chosen');
+   else if (pl.stories) add('story', 'Create', 'The story', 'flag', plural(pl.stories, 'story', 'stories') + ' to choose from');
+   else add('story', 'Create', 'The story', 'wait', 'Waits for stories to be proposed', {waitsFor: 'Stories to be proposed'});
+   if (pl.frames) add('slides', 'Create', 'The slides', 'done', plural(pl.frames, 'slide'));
+   else if (pl.chosen) add('slides', 'Create', 'The slides', 'todo', 'Not laid out yet');
+   else add('slides', 'Create', 'The slides', 'wait', 'Waits for the story', {waits: ['story'], waitsFor: 'The story to be chosen'});
+   if (pl.caption) add('posttext', 'Create', 'The post text', 'done', 'Written');
+   else if (pl.frames) add('posttext', 'Create', 'The post text', 'todo', 'Not written');
+   else add('posttext', 'Create', 'The post text', 'wait', 'Waits for the slides', {waits: ['slides'], waitsFor: 'The slides'});
+  }
+  // Share: the consent desk, then the way out.
+  const y = facts.consent, people = y?.people || [];
+  const yesName = people.length === 1 ? people[0].name + '’s yes' : people.length > 1 ? 'Their yes' : 'Your yes';
+  if (!y) add('yes', 'Share', yesName, 'unknown', 'Not known');
+  else if (y.released || y.overridden || y.ready && !y.held) add('yes', 'Share', yesName, 'done', y.overridden ? 'Overridden' : y.released ? 'Given' : 'Everyone said yes');
+  else {
+   const no = people.find(x => x.state === 'no'), ask = people.find(x => x.state === 'not-asked' && !x.request), drafted = people.find(x => x.state === 'not-asked' && x.request), asked = people.find(x => x.state === 'asked');
+   if (no) add('yes', 'Share', yesName, 'flag', no.name + ' said no');
+   else if (ask) add('yes', 'Share', yesName, 'todo', 'Not asked yet');
+   else if (drafted) add('yes', 'Share', yesName, 'todo', 'Request drafted, not sent');
+   else if (asked) add('yes', 'Share', yesName, 'wait', 'Asked, no answer yet', {waitsFor: 'An answer'});
+   else add('yes', 'Share', yesName, 'todo', people.length ? 'Your two answers' : 'Not answered yet');
+  }
+  const outName = kind === 'article' ? 'Publish' : kind === 'product-listing' ? 'List it' : 'Post';
+  const before = kind === 'instagram' ? ['transcript', 'slides', 'posttext', 'yes'] : ['words', 'check', 'yes'];
+  const waits = before.filter(x => find(x) && find(x).state !== 'done');
+  const said = x => x === 'check' ? 'the check' : x === 'slides' ? 'the slides' : x === 'transcript' ? 'the words to confirm' : x === 'words' ? 'the words' : x === 'posttext' ? 'the post text' : find(x).name === 'Your yes' ? 'your yes' : find(x).name;
+  if (facts.published === true) add('publish', 'Share', outName, 'done', 'Published');
+  else if (kind === 'instagram' && p.plan?.ready) add('publish', 'Share', outName, 'done', 'Ready to post');
+  // Whether a piece is out is known only from a record that says so. Without one, the step claims neither.
+  else if (facts.published !== false) add('publish', 'Share', outName, 'unknown', 'Not known whether it is out', {unknownWhy: 'published'});
+  else if (waits.length) add('publish', 'Share', outName, 'wait', 'Waits for ' + join(waits.map(said)), {waits, waitsFor: join(waits.map(said)).replace(/^./, c => c.toUpperCase())});
+  else add('publish', 'Share', outName, 'todo', 'Not yet');
+ }
+ // A step resting on a fact not read is not known; nor is a step waiting on one that is not known.
+ for (const s of steps) if (s.state !== 'unknown' && (NEEDS[s.id] || []).some(g => unknown.has(g))) {s.state = 'unknown'; s.note = 'Not known'; delete s.waits; delete s.waitsFor; delete s.missing;}
+ for (const s of steps) if (s.state === 'wait' && (s.waits || []).some(id => find(id)?.state === 'unknown')) {s.state = 'unknown'; s.note = 'Not known'; delete s.waits; delete s.waitsFor;}
+ // The next thing to make: the first to do after the furthest step already done, else the first to do.
+ let last = -1; steps.forEach((s, i) => {if (s.state === 'done') last = i;});
+ const next = steps.find((s, i) => i > last && s.state === 'todo') || steps.find(s => s.state === 'todo'); if (next) next.state = 'next';
+ return steps;
+}
+
+/** How far a list of steps is, 0 to 1. */
+export function ringOf(steps) {const done = steps.filter(s => s.state === 'done').length; return {done, total: steps.length, ring: steps.length ? done / steps.length : 0};}
+
+/** The one step that leads a list: the first that needs him, else the next thing to make, else the first that waits.
+    While a step is not known, only a step that needs him and comes before it can lead (a step not known could be
+    any of the others); null otherwise, or when none is left. The last step, whether the piece is out, does not
+    block: nothing comes after it. */
+export function leadOf(steps) {
+ const lead = steps.find(s => s.state === 'flag') || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
+ const firstUnknown = steps.findIndex(s => s.state === 'unknown' && s.unknownWhy !== 'published');
+ if (firstUnknown < 0) return lead;
+ const flag = steps.find(s => s.state === 'flag');
+ return flag && steps.indexOf(flag) < firstUnknown ? flag : null;
+}
+
+const nextOf = (step, form) => step ? {form: form?.key || null, formName: form ? form.name : null, step: step.id, name: step.name, group: step.group, state: step.state, note: step.note, section: step.section, ...(step.waitsFor ? {waitsFor: step.waitsFor} : {})} : null;
+const formView = (form, steps) => {const r = ringOf(steps), lead = leadOf(steps); return {key: form.key, kind: form.kind, name: form.name, to: form.to, title: form.title, alike: form.alike, id: form.piece?.id || null, ...r, finished: r.done === r.total, next: nextOf(lead, form), steps};};
+
+/** Where one subject stands, from its facts: {id, title, station, stationName, ring, next, forms, steps, reached, ...}.
+    `steps` are the subject's own steps when it has no form yet (each form's steps begin with the subject's own). */
+export function standingOf(facts = {}, {now = Date.now()} = {}) {
+ const forms = formsOf(facts).map(f => formView(f, stepsFor(f, facts)));
+ const own = forms.length ? null : stepsFor(null, facts);
+ const lead = forms.find(f => !f.finished) || null;
+ const leadSteps = lead ? lead.steps : own || [];
+ const leadStep = forms.length ? (lead ? leadOf(lead.steps) : null) : leadOf(own);
+ const next = forms.length ? (lead ? lead.next : null) : nextOf(leadStep, null);
+ const ring = forms.length ? forms.reduce((n, f) => n + f.ring, 0) / forms.length : ringOf(own).ring;
+ // The station: published when that is recorded; resting when archived, paused or long untouched (`resting` says
+ // which); else where the lead step is.
+ const changed = Date.parse(facts.changedAt || ''), idle = Number.isFinite(changed) ? (now - changed) / 864e5 : 0;
+ const paused = (facts.pieces || []).some(p => p.status === 'paused') && !(facts.pieces || []).some(p => p.status && p.status !== 'paused');
+ let station;
+ const resting = facts.archived ? 'archived' : paused ? 'paused' : idle >= RESTING_DAYS ? 'untouched' : null;
+ if (facts.published === true) station = 'published';
+ else if (resting) station = 'resting';
+ else if (!leadSteps.length || leadSteps.every(s => s.state === 'done')) station = 'share';
+ else station = STATION_OF_GROUP[(leadStep || leadSteps.find(s => s.state !== 'done')).group];
+ const all = [...(own || []), ...forms.flatMap(f => f.steps)];
+ return {schema: 'ar-create.subject-standing.v1', rule: VERSION, id: facts.id, title: facts.title || facts.id, station, stationName: STATION_NAME[station],
+  ring: Math.round(ring * 1000) / 1000, next, known: !!next, resting: station === 'resting' ? resting : null,
+  published: typeof facts.published === 'boolean' ? facts.published : null, forms, steps: own,
+  reached: TWELVE.filter(s => all.some(x => x.sections.includes(s))),
+  asks: facts.asks || 0, look: facts.look || null, changedAt: facts.changedAt || null, archived: !!facts.archived, folder: facts.folder || []};
+}
+
+/** The short form of a standing, for the list of every subject: no steps, each form with its ring and next step. */
+export function summaryOf(standing) {
+ const {forms, steps, reached, schema, ...rest} = standing;
+ return {...rest, forms: forms.map(({steps: s, ...f}) => f)};
+}
+
+/** The plain words for a next step, e.g. "Check" or "The words: 1 suggestion waiting". */
+export function say(next) {
+ if (!next) return '';
+ return next.state === 'next' ? next.name : next.name + ': ' + (next.state === 'wait' && next.waitsFor ? 'waits for ' + next.waitsFor.replace(/^./, c => c.toLowerCase()) : next.note);
+}
