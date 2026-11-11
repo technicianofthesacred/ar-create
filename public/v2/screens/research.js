@@ -253,7 +253,6 @@
   <p class="rs-meta">Only you write here. That is all Research asks of you.</p>`
   :`<p class="rs-fieldbox${t.take?.text?'':' empty'}">${esc(t.take?.text||'Adrian has not written it yet.')}</p><p class="rs-meta">Only Adrian writes here.</p>`}
  </section>
- ${t.status==='let-go'?'':`<div class="rs-file"><label class="rs-field inline"><span>Group</span><select data-rs-groupset><option value="">No group</option>${groups.map(g=>`<option value="${esc(g.id)}"${g.id===t.groupId?' selected':''}>${esc(g.name)}</option>`).join('')}</select></label><button type="button" data-rs-link>${icon('plus')}Use for a subject</button>${t.kind!=='subject'?'<button type="button" class="v2-ghost" data-rs-letgo-topic>Let it go</button>':''}</div>`}
 </article>`;
  }
  function decideTab(t){
@@ -264,12 +263,13 @@
   <div class="rs-row">${w.choices.map((c,i)=>`<button type="button"${i===0?' class="pri"':c==='not-now'?' class="v2-ghost"':''} data-rs-choice="${esc(c)}">${esc(label[c]||c)}</button>`).join('')}</div>
   </article></div>`;
  }
- function sourcesTab(t){
+ function sourcesTab(t,groups){
   return `<article class="rs-read rs-srcs"><div class="rs-row"><h1 class="small">Where this comes from</h1><span class="rs-grow"></span>${t.status!=='let-go'?`<button type="button" data-rs-addsrc>${icon('plus')}Add a source</button>`:''}</div>
  <p class="rs-meta">${plural(t.sources.length,'source')}</p>
  ${t.sources.length?`<ul class="rs-src wide">${t.sources.map(s=>`<li><span><b>${esc(s.title)}</b><small>${esc(s.missing?'No longer in the Library':s.kind||'Source')}</small></span></li>`).join('')}</ul>`:'<p class="rs-meta">No sources yet.</p>'}
  ${t.answers.length?`<h2>Questions asked</h2><ul class="rs-src wide">${t.answers.map(a=>`<li><span><b>${esc(a.question)}</b><small>${esc(a.keptAt?'Kept':a.status||'')}</small></span></li>`).join('')}</ul>`:''}
  ${t.usedIn.length?`<h2>Used in</h2><ul class="rs-src wide">${t.usedIn.map(u=>`<li><a href="${esc(v2.href('subject/:id',{id:u.parentStudyId}))}"><b>${esc(u.title)}</b><small>${u.status==='used'?'Subject':'Waiting for your yes'}</small></a></li>`).join('')}</ul>`:''}
+ ${t.status==='let-go'?'':`<h2>About this topic</h2><div class="rs-file"><label class="rs-field inline"><span>Group</span><select data-rs-groupset><option value="">No group</option>${groups.map(g=>`<option value="${esc(g.id)}"${g.id===t.groupId?' selected':''}>${esc(g.name)}</option>`).join('')}</select></label><button type="button" data-rs-link>${icon('plus')}Use for a subject</button>${t.kind!=='subject'?'<button type="button" class="v2-ghost" data-rs-letgo-topic>Let it go</button>':''}</div>`}
  <h2>Looking for more</h2>${notBuilt('Looking for new sources and viewpoints needs a research provider.',{advanced:{section:'research',...(t.usedIn[0]?{subject:t.usedIn[0].parentStudyId}:{})}})}
 </article>`;
  }
@@ -283,7 +283,7 @@
     ctx.setTitle(t.name);ctx.setAdvanced({section:'research',...(t.usedIn[0]?{subject:t.usedIn[0].parentStudyId}:{})});
     const tabs=[['read','Read'],['decide',t.waitingNow.length?'Decide · '+t.waitingNow.length:'Decide'],['sources','Sources · '+t.sources.length]];
     el.querySelector('[data-rs-tabs]').innerHTML=tabs.map(([k,l])=>`<a href="${esc(v2.href('research/topic/:id',{id},k==='read'?null:{tab:k}))}"${k===tab?' aria-current="page"':''} data-rs-tab="${k}">${esc(l)}</a>`).join('');
-    el.querySelector('[data-rs-body]').innerHTML=(t.status==='let-go'?'<p class="rs-gone">This topic was let go. It is not opened or suggested again.</p>':'')+(tab==='decide'?decideTab(t):tab==='sources'?sourcesTab(t):readTab(t,groups));
+    el.querySelector('[data-rs-body]').innerHTML=(t.status==='let-go'?'<p class="rs-gone">This topic was let go. It is not opened or suggested again.</p>':'')+(tab==='decide'?decideTab(t):tab==='sources'?sourcesTab(t,groups):readTab(t,groups));
    };
    const save=async input=>{try{await v2.call('research-topics.save',{id,...v2.expect(t),...input});}catch(error){fail(error);}await paint();};
    el.addEventListener('submit',async e=>{
