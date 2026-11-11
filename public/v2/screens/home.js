@@ -83,7 +83,7 @@
    const ui={...prefs(),station:null,find:'',open:new Set(),archived:false,arrange:false,allAsks:false};
    let data=null,failed=null,loading=null,again=false,loadedAt=0,timer=0,dragId=null,dragging=false,deskStops=[],allStops=[],repaintWaiting=false;
    // Needs you: a question answered here stays in its place, marked answered, until he leaves the page.
-   const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map();
+   const answeredHere=new Map(),changing=new Set(),askOrder=[],askBook=new Map(),lookRoles=new Map(),lookNames=new Map();
    // Covers of the desk's cards: subject id to an address, or '' when it has no chosen photograph. Read after first paint.
    const covers=new Map();let coverRun=0,bindings=null,coversStale=false;
    // Reordering: each press waits for the one before it, and was built from what was on screen at the press.
@@ -147,7 +147,7 @@
    /* ---------- looks for the folder dots ---------- */
    async function readLooks(){
     const ids=[...new Set((data?.subjects||[]).map(s=>s.look).filter(id=>id&&!lookRoles.has(id)))];if(!ids.length)return;
-    await Promise.all(ids.map(async id=>{const look=await quiet(v2.call('look',{id}));lookRoles.set(id,look?.roles||null);}));
+    await Promise.all(ids.map(async id=>{const look=await quiet(v2.call('look',{id}));lookRoles.set(id,look?.roles||null);lookNames.set(id,String(look?.name||'').trim());}));
     if(!ctx.signal.aborted&&data)paintDots();
    }
    function paintDots(){
@@ -156,7 +156,7 @@
      h.querySelector('.home-dot')?.remove();const dot=folderDot(path);if(dot)h.insertAdjacentHTML('afterbegin',dot);
     }
    }
-   function folderDot(path){if(!path?.length)return '';const id=folderLook(path),a=id&&accentOf(id);return a?`<i class="home-dot" style="--home-dot:${esc(a)}" title="Drawn in the ${esc(id)} look" aria-hidden="true"></i>`:'';}
+   function folderDot(path){if(!path?.length)return '';const id=folderLook(path),a=id&&accentOf(id);return a?`<i class="home-dot" style="--home-dot:${esc(a)}" title="${esc(lookNames.get(id)?'Drawn in the '+lookNames.get(id)+' look':'Drawn in one look')}" aria-hidden="true"></i>`:'';}
    function accentOf(id){const roles=lookRoles.get(id),a=roles?.[v2.theme()==='dark'?'dark':'light']?.accent||roles?.dark?.accent;return typeof a==='string'&&/^#[0-9a-f]{3,8}$/i.test(a)?a:null;}
 
    /* ---------- the model ---------- */
@@ -251,7 +251,7 @@
      const due=a.band==='steer'&&a.applyAt&&a.status==='open'?`<span class="home-about">Takes its default ${esc(dueAt(a.applyAt))} unless you choose.</span>`:'';
      return `<li data-ask="${esc(a.id)}"><p><b>${esc(a.question)}</b>${about}${due}</p>${choices||link?`<span class="home-acts">${choices}${link}</span>`:''}</li>`;
     }).join('');
-    slot.innerHTML=`<section class="home-needs" aria-labelledby="home-needs-h"><h2 class="home-label" id="home-needs-h">Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="v2-ghost home-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="home-quiet">${esc(carrying)}</p>`:''}</section>`;
+    slot.innerHTML=`<section class="home-needs" aria-labelledby="home-needs-h"><h2 class="home-label" id="home-needs-h">Needs you</h2><ul>${rows}</ul>${more>0?`<button type="button" class="v2-ghost home-more" data-all-asks>Show all ${shown.length}${icon('chev')}</button>`:''}${carrying?`<p class="home-quiet">${esc(carrying)}</p>`:''}${human?'':'<p class="home-quiet home-reason">Only Adrian answers these.</p>'}</section>`;
    }
 
    function card(s){
@@ -284,7 +284,7 @@
  ${menuBtn(s)}${pinBtn(s)}
 </li>`;
    }
-   const cover=s=>{const url=covers.get(s.id);return `<li class="home-cover" data-id="${esc(s.id)}"><a href="${esc(subjectHref(s.id))}"><span class="home-cover-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:ring(s.ring,{size:'lg'})}</span><b>${esc(s.title)}</b><span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span></a>${pinBtn(s)}${menuBtn(s)}</li>`;};
+   const cover=s=>{const url=covers.get(s.id);return `<li class="home-cover" data-id="${esc(s.id)}"><a href="${esc(subjectHref(s.id))}"><span class="home-cover-pic${url?' has-img':''}" aria-hidden="true"${url?'':' hidden'}>${url?`<img src="${esc(url)}" alt="">`:''}</span><b>${esc(s.title)}</b><span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span></a>${menuBtn(s)}${pinBtn(s)}</li>`;};
    function stationCounts(){const c={};for(const s of live())c[s.station]=(c[s.station]||0)+1;return c;}
 
    function paintAll(){

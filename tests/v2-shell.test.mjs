@@ -169,6 +169,22 @@ test('the shared pieces: ring, step, not built yet, sheet, message with Undo, re
  assert.deepEqual([...list.children].map(li=>li.firstChild.textContent),['B','A','C']);assert.deepEqual(moves,[[0,1]]);
 });
 
+test('reorder keeps focus on the same card\'s Move button while the save is slow, and counts every press',async()=>{
+ const {w,doc}=await page();const ui=w.v2.ui;
+ const list=doc.createElement('ol');list.innerHTML='<li>A</li><li>B</li><li>C</li><li>D</li><li>E</li>';doc.getElementById('v2-main').append(list);
+ const moves=[],release=[];ui.reorder(list,{item:'li',onMove:(from,to)=>{moves.push([from,to]);return new Promise(r=>release.push(r));},label:el=>el.firstChild.textContent});
+ const a=[...list.children].find(li=>li.firstChild.textContent==='A'),down=a.querySelector('[data-v2-down]');down.focus();
+ for(let i=0;i<3;i++){down.click();assert.equal(doc.activeElement,down,'press '+(i+1)+': focus is still on A\'s Move down, before the save returns');}
+ assert.deepEqual([...list.children].map(li=>li.firstChild.textContent),['B','C','D','A','E']);assert.equal(moves.length,3,'every press counted');
+ // The same by keys (Alt with an arrow key on the focused button).
+ for(let i=0;i<2;i++){down.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowUp',altKey:true,bubbles:true,cancelable:true}));}
+ assert.deepEqual([...list.children].map(li=>li.firstChild.textContent),['B','A','C','D','E']);assert.equal(doc.activeElement,down);
+ release.forEach(r=>r());await settle();assert.equal(doc.activeElement,down,'and after the saves');
+ // Moving to the end disables Move down: focus goes to the same card's Move up, never to the page.
+ down.click();down.click();down.click();
+ assert.equal(a.parentElement.lastElementChild,a);assert.equal(doc.activeElement,a.querySelector('[data-v2-up]'));
+});
+
 test('the client builds every registry request exactly as the agents\' client does',async t=>{
  const f=await server(t),{commands}=await (await fetch(f.url+'/api/capabilities')).json(),C=clientModule();
  for(const command of commands){
