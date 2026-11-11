@@ -40,3 +40,14 @@ html body.wbf-on #app #workspace.wb-share .wb-invitation[data-c3-empty-hidden]{d
 html body.wbf-on #app #workspace.wb-share .wb-invitation:has(>.share-board){max-width:none!important;margin:0 32px 32px!important}
 html body.wbf-on #app #workspace.wb-share .wb-invitation .share-message .mine{max-width:var(--measure,40rem)}
 }
+
+/* Share, once opened without a saved piece: the line and the Feedback record use the shared type and sit in the page flow. */
+html body.wbf-on #app #workspace.wb-share .wb-invitation{font-family:var(--ar-ui)}
+html body.wbf-on #app #workspace.wb-share .wb-invitation>p{font:400 var(--t-body)/1.5 var(--ar-ui);color:var(--dim)}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained{box-sizing:border-box;width:auto;max-width:var(--measure,40rem);margin:24px 32px 32px!important;padding:16px 0 0!important;border-top:1px solid var(--line);font:400 var(--t-body)/1.5 var(--ar-ui)}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained :is(h2,h3,p,section,article){font-family:var(--ar-ui);max-width:none;margin-left:0!important;margin-right:0!important;padding-left:0;padding-right:0}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained h3{font:600 var(--t-label)/1.5 var(--ar-ui);color:var(--dim);margin:0 0 8px}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained h2{font:600 var(--t-head)/1.5 var(--ar-ui);margin:0 0 6px}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained p{font:400 var(--t-body)/1.5 var(--ar-ui);margin:0 0 8px}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained :is(.phaseReader,.recordPage){padding-inline:0!important;margin-inline:0!important;max-width:none!important}
+html:not(#wb) body.wbf-on #app #workspace.wb-share>.oss-retained{margin-left:26px!important}

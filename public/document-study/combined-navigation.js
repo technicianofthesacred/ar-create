@@ -60,8 +60,16 @@
   catch(error){status(error.message||'The view could not change. Your words are retained.');}
   finally{busy=false;decorate();}
  }
+ // Keyboard: a "Skip to the page" link is the first Tab stop, and a control hidden by the look (clipped to 1px) is not a Tab stop.
+ function keyboardAids(){
+  if(!document.querySelector('.combined-skip')){const a=document.createElement('a');a.className='combined-skip';a.href='#workspace';a.textContent='Skip to the page';a.addEventListener('click',event=>{const page=document.getElementById('workspace');if(!page)return;event.preventDefault();page.setAttribute('tabindex','-1');page.focus({preventScroll:false});});document.body.prepend(a);}
+  const clipped=el=>{for(let x=el;x&&x!==document.body;x=x.parentElement){const c=getComputedStyle(x);if(c.clip!=='auto'&&c.position==='absolute'&&x.offsetWidth<=2&&x.offsetHeight<=2)return true;}return false;};
+  for(const el of document.querySelectorAll('#workspace :is(a[href],button,input,select,textarea,summary,[tabindex]):not([tabindex="-1"]):not([disabled])')){if(clipped(el)){el.dataset.combinedUntabbed=el.getAttribute('tabindex')??'';el.setAttribute('tabindex','-1');}}
+  for(const el of document.querySelectorAll('#workspace [data-combined-untabbed]')){if(!clipped(el)){const was=el.dataset.combinedUntabbed;if(was==='')el.removeAttribute('tabindex');else el.setAttribute('tabindex',was);delete el.dataset.combinedUntabbed;}}
+ }
  function decorate(){
   const owner=document.querySelector('.workflowNavigation.wb-rail'),bar=document.getElementById('c3-tabstrip');if(!owner||!bar)return;
+  keyboardAids();
   document.body.classList.add('combined-on');
   let rail=owner.querySelector(':scope>.combined-rail');
   if(!rail){rail=document.createElement('nav');rail.className='combined-rail';rail.setAttribute('aria-label','AR Create');
