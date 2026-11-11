@@ -150,3 +150,15 @@ What it means (my reading, not his words):
 - **The small view must say what the teaching is, not a warning about it.** For "everything is perfect", the small view states the teaching (in his words: you are the Buddha nature and everything is perfect). How it can be misunderstood is a deeper layer of the same concept, or a connected concept, and never stands in for the explanation.
 - **A fault in the samples to avoid:** my sample set let a caveat ("The false version") and several supports stand as peers of the main idea, and wrote the main idea thinly. Depth order matters: what it is first, then what it rests on, then how it goes wrong.
 - The wording of any real teaching must come from the sources and from him, not from the agent's general knowledge.
+
+**11 November, on what a concept holds going deeper, and on the bank as his own education, in his words:**
+
+"Yeah. For example, you are this Buddha nature, everything is perfect. But this is what you do with it. Here's how you are able to embody it. Here's the ways to deeper understand it. Here's how that statement could be misunderstood to avoid things. And also in addition, this idea, maybe I can hit a button and share voice insights and different things into this this way. My thoughts and experiences start to fuse into the depth of this. I think this is a big portion, not just collecting other people's things, but my learning process and growth through reflecting on these assimilating this is almost like a hybridized reading guide so I don't want to dumb things down so much and not have the larger information available either. This needs to be going deeper and deeper down the rabbit hole. This is also my educational system. It's like the future of school picking what information to download into my brain. So the highly consolidated thing only exists to pull me into a much deeper understanding that I will also read through this, which you have not represented yet."
+
+What it means (my reading, not his words):
+
+- **A concept reads downward in this order:** what it is; what you do with it; how you embody it; ways to understand it more deeply; how it can be misunderstood. Beneath all of that, the full passages and the source itself.
+- **The short view is only a door.** Its whole job is to pull him into the deep reading. The deep reading is the product, and none of the four screens here shows it. This is the largest gap in this work.
+- **His voice goes in at every depth.** One button, anywhere in the reading, to speak an insight or an experience. His words stay visibly his, dated, and sit inside the concept at the place he spoke them, so the concept becomes a mix of the source's teaching and his own learning: in his phrase, "a hybridized reading guide".
+- **It is his education, not a collection.** The bank records his learning and growth, not only other people's words. Nothing is dumbed down, and the larger material is always reachable.
+- **For plan 12:** besides the huge map, it needs one concept drawn all the way down as a long, comfortable reading page with those sections, real length, and the voice button in place.
