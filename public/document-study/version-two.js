@@ -71,7 +71,11 @@
     const railNow=()=>document.querySelector('.combined-rail [data-combined-nav][aria-current]')?.dataset.combinedNav;
     if(ok!==false&&target!=='check'&&target!=='home'&&railNow()&&railNow()!==target)ok=await window.combinedNavigation.go(target);
     // Read is a view of Write: wait for the writer to settle, then switch the view, as its Read switch does.
-    if(ok!==false&&key==='read')for(let i=0;i<30;i++){await wait(200);if(!document.getElementById('manuscript')||Number(current()?.viewedStage)!==5)continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}if(window.studyDraft?.viewMode?.()!=='edit')break;}
+    // A chosen Carousel is read at its own writer (step 9, where the rail keeps marking Arrange): its Read switch is the
+    // workspace's own mode change, and the writer's view says when it has taken.
+    const carouselRead=()=>document.querySelector('#study-output-canvas .car-writing-page')?.dataset.writingView==='read';
+    if(ok!==false&&key==='read'&&window.studyOutputConnection?.selection?.()?.output?.kind==='carousel')for(let i=0;i<30&&!carouselRead();i++){await wait(200);if(!document.querySelector('#study-output-canvas .car-writing-page'))continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}await wait(300);}
+    else if(ok!==false&&key==='read')for(let i=0;i<30;i++){await wait(200);if(!document.getElementById('manuscript')||Number(current()?.viewedStage)!==5)continue;try{await window.workspaceNavigation?.changeMode?.('read');}catch{}if(window.studyDraft?.viewMode?.()!=='edit')break;}
    }
   }catch(error){console.warn('Version two: the address could not open that place here.',error?.message||error);}
   finally{forget();}

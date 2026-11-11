@@ -270,7 +270,7 @@ test('the existing workspace: one quiet "Version two" link before the theme swit
 test('the existing workspace opens the subject, section and piece named in its address, then forgets them',async()=>{
  const {w,calls}=workspace({url:'http://local.test/document-study/index.html?subject=hk&piece=o1&section=read&reviewActor=agent:codex'});
  for(let i=0;i<40&&calls.length<4;i++)await new Promise(r=>setTimeout(r,50));
- assert.deepEqual(calls,[['subject','hk'],['go','write'],['mode','read'],['piece','o1','read']]);
+ assert.deepEqual(calls,[['subject','hk'],['piece','o1','native'],['go','write'],['mode','read']]);
  assert.deepEqual([...new w.URLSearchParams(w.location.search)].map(e=>[...e]),[['reviewActor','agent:codex']],'only the three keys are taken out of the address');
  const plain=workspace();await new Promise(r=>setTimeout(r,450));assert.deepEqual(plain.calls,[],'with no keys nothing is opened');
 });
