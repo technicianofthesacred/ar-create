@@ -72,7 +72,7 @@ test('a step is shown as the command says: done carries no note, not known says 
 test('the form shown first holds the next step; pills say where each goes and tell alike names apart',()=>{
  const standing={next:{form:'ig:2'},forms:[{key:'out:1',name:'Article',to:'the magazine',title:'T',alike:false,done:1,total:8,ring:.125,steps:[]},{key:'ig:2',name:'Carousel',to:'Instagram',title:'Spring',alike:true,done:3,total:9,ring:.33,steps:[]}]};
  assert.equal(S.chooseForm(standing).key,'ig:2');assert.equal(S.chooseForm(standing,'out:1').key,'out:1');assert.equal(S.chooseForm({forms:[],steps:[1]}),null);
- assert.deepEqual(S.pillView(standing.forms[0],0),{key:'out:1',name:'Article',line:'the magazine',ring:.125,count:'1/8',say:'First: Article for the magazine, 1 of 8 steps done'});
+ assert.deepEqual(S.pillView(standing.forms[0],0),{key:'out:1',name:'Article',line:'the magazine',lead:'',tell:'',ring:.125,count:'1/8',say:'First: Article for the magazine, 1 of 8 steps done'});
  assert.equal(S.pillView(standing.forms[1],1).line,'Instagram · Spring');
  assert.equal(S.pillView({...standing.forms[1],name:'Post',alike:false},1).line,'Instagram','a Post shows where it goes');
  assert.deepEqual([S.pieceOf({key:'out:1',id:'1'}),S.pieceOf({key:'ig:2',id:'2'}),S.pieceOf({key:'draft:x',id:'x'})],['1',undefined,undefined]);
@@ -197,7 +197,7 @@ test('six invented subjects at different stages each show exactly what subject.s
   // The steps of the form shown, every one with the state the command gave (never a state of its own).
   const form=S.chooseForm(standing),steps=form?form.steps:standing.steps.filter(x=>['Gather','Research','Simmer'].includes(x.group)),all=form?form.steps:standing.steps;
   assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),steps.map(s=>[s.id,s.state]),id);
-  for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.note,id+' '+s.id+' note');
+  for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.id==='facts'?S.topicNote(s.note,undefined):s.note,id+' '+s.id+' note (the topic count waits until the panel has read its topics)');
   // Opened on the step the command calls next, or the first that needs him; never a step not known.
   const open=doc.querySelector('.subj-row[data-open]')?.dataset.step;
   assert.equal(open,S.firstOpen(steps,form));
@@ -415,8 +415,9 @@ test('topic wording: a question stays his own words, others keep the prefix; kep
  assert.equal(S.topicNote('3 of 5 things looked at · 1 research topic on this material',{list:[1,2,3,4]}),'3 of 5 things looked at · 4 research topics on this material');
  assert.equal(S.topicNote('1 research topic on this material',{list:[{}]}),'1 research topic on this material');
  assert.equal(S.topicNote('2 sources · 1 research topic on this material',{list:[]}),'2 sources');
- assert.equal(S.topicNote('1 research topic on this material',undefined),'1 research topic on this material');
- assert.equal(S.topicNote('1 research topic on this material',{error:true,list:[]}),'1 research topic on this material');
+ assert.equal(S.topicNote('1 research topic on this material',undefined),'','the panel has not read its topics: no count from the first paint');
+ assert.equal(S.topicNote('2 sources not looked at yet · 1 research topic on this material',undefined),'2 sources not looked at yet');
+ assert.equal(S.topicNote('1 research topic on this material',{error:true,list:[]}),'','topics that could not be read: no count');
 });
 
 // ---------- the small fixes of 11 November: the header sentence, and a Carousel that is not yet laid out ----------
@@ -542,4 +543,65 @@ test('every header reads his sentence through the one reader and shows no stored
  const {doc}=await page(base,'#/subject/'+id);
  await until(()=>doc.querySelector('.subj-head'));
  assert.doesNotMatch(doc.querySelector('.subj-head').textContent,/<!--|"schema"|^#|# Concept|Author thoughts/);
+});
+
+// ---------- real records on the subject page (First look, 12 November) ----------
+const car=(key,over={})=>({key,kind:'slides',name:'Carousel',to:'Instagram',title:'',alike:true,done:1,total:5,ring:.2,id:key.slice(4),slides:5,words:41,createdAt:'2026-10-03T12:00:00Z',updatedAt:null,steps:[],...over});
+
+test('two forms of one name are told apart by real fields only: the slide count and the date made, never an invented name',()=>{
+ const forms=[car('out:c1'),car('out:c2',{slides:7,createdAt:'2026-10-09T12:00:00Z'}),{...car('out:a1'),kind:'article',name:'Article',to:'the magazine',alike:false,slides:0}];
+ const d=S.tellApart(forms);
+ assert.equal(d.length,3);
+ assert.equal(d[0],'5 slides · made 3 Oct');assert.equal(d[1],'7 slides · made 9 Oct');assert.equal(d[2],'','a form with a name of its own needs nothing added');
+ assert.equal(S.pillView(forms[0],0,d[0]).line,'Instagram · 5 slides · made 3 Oct');
+ assert.deepEqual([S.pillView(forms[0],0,d[0]).lead,S.pillView(forms[0],0,d[0]).tell],['Instagram · ','5 slides · made 3 Oct'],'a phone drops where it goes and keeps what tells them apart');
+ assert.match(S.pillView(forms[1],1,d[1]).say,/Carousel for Instagram, 7 slides · made 9 Oct, /);
+ // The piece's own title, when it has one, comes first.
+ assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2')])[0],'Spring · 5 slides · made 3 Oct');
+ // A title they all share tells nothing apart, so it is left out.
+ assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2',{title:'Spring',slides:7})])[1],'7 slides · made 3 Oct');
+ // No record of a slide count or a date: nothing is invented, and the old line is unchanged.
+ const bare=[car('out:c1',{slides:0,createdAt:null}),car('out:c2',{slides:0,createdAt:null,title:'Autumn'})];
+ assert.deepEqual(S.tellApart(bare),['','Autumn']);
+ assert.equal(S.pillView(bare[0],0,'').line,'Instagram');
+ // Same slides, same day: the time made tells them apart.
+ const same=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:00Z'}),car('out:c2',{createdAt:'2026-10-03T16:40:00Z'})]);
+ assert.notEqual(same[0],same[1]);assert.match(same[0],/^5 slides · made 3 Oct, \d\d:\d\d$/);
+ // The same minute: the second.
+ const close=S.tellApart([car('out:c1',{createdAt:'2026-10-03T08:15:10Z'}),car('out:c2',{createdAt:'2026-10-03T08:15:40Z'})]);
+ assert.notEqual(close[0],close[1]);assert.match(close[0],/, \d\d:\d\d:\d\d$/);
+});
+
+test('an Outputs carousel opens in version two\'s studio, read only; a plan keeps the studio it had',()=>{
+ assert.equal(S.outputStudio({key:'out:c1',id:'c1',kind:'slides'}),'c1');
+ assert.equal(S.outputStudio({key:'out:a1',id:'a1',kind:'article'}),null);
+ assert.equal(S.outputStudio({key:'ig:p1',id:'p1',kind:'instagram'}),null);
+ assert.equal(S.outputStudio(null),null);
+});
+
+test('the Facts step says findings only when they are there; a result with none says what is there',()=>{
+ const rule=(over={})=>({id:'facts',name:'The facts',group:'Research',state:'flag',note:'Research came back',why:'research-result',...over});
+ const full={step:'directions',research:{question:'Why?',body:'Some findings.'}};
+ assert.equal(S.findingsOf(full),1);
+ assert.equal(S.findingsOf({research:{question:'Why?',body:'  '},directions:[]}),0);
+ assert.equal(S.findingsOf({research:{body:'x',brief:'y'},directions:[{},{}]}),4);
+ assert.equal(S.findingsOf(null),null);assert.equal(S.findingsOf({__error:true}),null);assert.equal(S.findingsOf(undefined),null);
+ // Before the brief is read, the rule's own words stand (they do not claim findings).
+ assert.equal(S.factsView(rule(),undefined).note,'Research came back');
+ const some=S.factsView(rule(),full);assert.deepEqual([some.state,some.note],['flag','Findings to read']);
+ const none=S.factsView(rule(),{step:'directions',research:{question:'Why?'}});
+ assert.deepEqual([none.state,none.note],['wait','The question is asked, waiting for findings']);
+ assert.ok(!JSON.stringify(none).includes('Findings to read'));
+ // Another state of the step is left alone.
+ const other={id:'facts',state:'todo',note:'Ready to look into'};assert.deepEqual(S.factsView(other,full),other);
+});
+
+test('an assistant is not offered what only Adrian can do; a refusal says what happened',()=>{
+ assert.equal(S.transcriptAct('use',true),'use');assert.equal(S.transcriptAct('use',false),'owner');
+ assert.equal(S.transcriptAct('start',false),'start','making a transcript is the assistants\' to do as well');assert.equal(S.transcriptAct(null,false),null);
+ const stale=Object.assign(new Error('This changed since it was opened here. Read it again before saving.'),{status:409,command:'recordings.source',body:{error:'Recording transcript or audio changed. Open its current Source before using it.'}});
+ assert.equal(S.sourceRefusal(stale),'Recording transcript or audio changed. Open its current Source before using it.');
+ assert.match(S.sourceRefusal(Object.assign(new Error('x'),{status:409,command:'recordings.source',body:{}})),/transcript or the recording changed/);
+ assert.equal(S.sourceRefusal(Object.assign(new Error('Only Adrian can decide this.'),{status:403})),'Only Adrian can decide this.');
+ assert.equal(S.sourceRefusal(new Error('')),'That could not be done. Nothing was changed.');
 });

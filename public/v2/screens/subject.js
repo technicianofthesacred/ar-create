@@ -70,12 +70,53 @@
   if(named)return named.id;
   return (known.find(s=>s.state==='flag')||known.find(s=>s.state==='next')||known.find(s=>s.state==='todo')||known.find(s=>s.state==='wait')||known[0]||null)?.id||null;
  }
- /** How a form's pill reads: its ring, its n/m, and the line under its name (where it goes; with the piece's own name
-     when two forms share a name). */
- function pillView(form,index){
-  const own=String(form.title||'').trim(),line=form.alike&&own?(form.to?form.to+' · '+own:own):form.to||'';
-  return {key:form.key,name:form.name,line,ring:form.ring||0,count:form.done+'/'+form.total,
-   say:(index===0?'First: ':'Then: ')+form.name+(form.to?' for '+form.to:'')+(form.alike&&own?', '+own:'')+', '+form.done+' of '+form.total+' steps done'};
+ /** What tells forms of one name apart, from the records alone: the piece's own title when it has one, its slide count,
+     and the date it was made (the time too when those still match). Never a made-up name. '' for a form whose name is
+     its own. One entry per form, in order. */
+ function tellApart(forms){
+  const when=iso=>{const d=new Date(iso||'');return isNaN(d)?null:d;};
+  const day=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',...(d.getFullYear()===new Date().getFullYear()?{}:{year:'numeric'})});
+  const base=(forms||[]).map(f=>{
+   if(!f?.alike)return '';
+   // A title every one of them shares tells nothing apart, so it is left out.
+   const own=String(f.title||'').trim(),shared=forms.filter(x=>x.alike&&x.name===f.name).every(x=>String(x.title||'').trim()===own),d=when(f.createdAt);
+   return [shared&&forms.filter(x=>x.alike&&x.name===f.name).length>1?'':own,f.kind==='slides'&&f.slides>0?plural(f.slides,'slide'):'',d?'made '+day(d):''].filter(Boolean).join(' · ');
+  });
+  // Still alike: add the time it was made, then the second, until the real records part them.
+  const clock=[null,d=>d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),d=>d.toLocaleTimeString('en-GB')];
+  const at=level=>base.map((x,j)=>{const e=when(forms[j]?.createdAt);return x&&e&&clock[level]?x+', '+clock[level](e):x;});
+  const apart=lines=>lines.every((x,j)=>!x||lines.every((y,k)=>k===j||y!==x||forms[k].name!==forms[j].name));
+  for(let level=0;level<clock.length;level++){const lines=at(level);if(apart(lines)||level===clock.length-1)return lines;}
+  return base;
+ }
+ /** How a form's pill reads: its ring, its n/m, and the line under its name (where it goes; with what tells it apart
+     from another of its name, `detail` from tellApart, or else its own title). */
+ function pillView(form,index,detail){
+  const own=String(form.title||'').trim(),extra=form.alike?(detail===undefined?own:detail):'',line=extra?(form.to?form.to+' · '+extra:extra):form.to||'';
+  return {key:form.key,name:form.name,line,lead:extra&&form.to?form.to+' · ':'',tell:extra,ring:form.ring||0,count:form.done+'/'+form.total,
+   say:(index===0?'First: ':'Then: ')+form.name+(form.to?' for '+form.to:'')+(extra?', '+extra:'')+', '+form.done+' of '+form.total+' steps done'};
+ }
+ /** The output id of a saved Carousel (an older Outputs carousel, not an Instagram plan): version two's studio shows it read only. */
+ const outputStudio=form=>form&&form.kind==='slides'&&/^out:/.test(form.key||'')?form.id||null:null;
+ /** How many findings a research brief holds: its research words, its brief and each direction. null while it is not read. */
+ function findingsOf(brief){
+  if(!brief||brief.__error||typeof brief!=='object')return null;
+  const r=brief.research||{},has=v=>typeof v==='string'&&v.trim()?1:0;
+  return has(r.body)+has(r.brief)+(Array.isArray(brief.directions)?brief.directions.length:0);
+ }
+ /** The Facts step as shown once its brief is read: a result that came back says findings only when some are there. */
+ function factsView(step,brief){
+  if(step?.why!=='research-result')return step;
+  const n=findingsOf(brief);if(n===null)return step;
+  return n?{...step,state:'flag',note:'Findings to read'}:{...step,state:'wait',note:'The question is asked, waiting for findings',waitsFor:'Findings'};
+ }
+ /** What a transcript offers the one who is looking: "use" is Adrian's alone, so an assistant is shown it as his to do. */
+ const transcriptAct=(act,human)=>act==='use'&&!human?'owner':act||null;
+ /** The words for a refused or stale step on a recording, from the app's own answer when it gave one. */
+ function sourceRefusal(error){
+  const said=error?.body&&typeof error.body.error==='string'&&error.body.error?error.body.error:'';
+  if(error?.status===409&&error?.command==='recordings.source')return said||'The transcript or the recording changed since you looked. Open its current source, then use it.';
+  return error?.message||'That could not be done. Nothing was changed.';
  }
  /** The piece (an output id) a hand-off to Advanced keeps: only a saved output has one. */
  const pieceOf=form=>form&&/^out:/.test(form.key||'')?form.id:undefined;
@@ -202,10 +243,9 @@
   if(topicStatus(t)==='proposed')return 'Suggested: '+(asked?name:name.charAt(0).toLowerCase()+name.slice(1));
   return asked?name:'Learn more about '+name.charAt(0).toLowerCase()+name.slice(1);
  }
- /** The summary's "n research topics" says the number the panel lists, when the panel's list is known. */
+ /** The summary's "n research topics" says the number the panel lists; until the panel has read its topics it says no number. */
  function topicNote(note,topics){
-  const text=String(note||'');if(!topics||topics.error||!Array.isArray(topics.list))return text;
-  const n=topics.list.length;
+  const text=String(note||''),n=!topics||topics.error||!Array.isArray(topics.list)?0:topics.list.length;
   return text.replace(/(\s·\s)?\d+ research topics?( on this material)?/,(all,dot,tail)=>n?(dot||'')+plural(n,'research topic')+(tail||''):'').replace(/\s·\s*$/,'');
  }
  
@@ -236,7 +276,7 @@
   return adoptedWords(direction?.body);
  }
 
- const pure=Object.freeze({topicStatus,topicLine,topicNote,recordingView,registeredJobs,adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
+ const pure=Object.freeze({topicStatus,topicLine,topicNote,recordingView,registeredJobs,adoptedWords,adoptedRaw,sentenceOf,TWELVE,SECTION_LABEL,GROUPS,HANDOFFS,STEP_OUT,STATE_SAY,KINDS,READS,STEP_READS,ownHandoff,stepView,chooseForm,stepsOfForm,firstOpen,pillView,pieceOf,tellApart,outputStudio,findingsOf,factsView,transcriptAct,sourceRefusal,concerns,addable,materialFrom,partsOf,kindOf,touched,plural});
  if(typeof module==='object'&&module.exports)module.exports=pure;
  const v2=root.v2;if(!v2||typeof v2.screen!=='function')return;
 
@@ -371,7 +411,7 @@
   }
   const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':null;
   /** A step as shown; the Facts summary counts the research topics its panel lists. */
-  const viewOf=x=>stepView(x.id==='facts'?{...x,note:topicNote(x.note,st.rec.topics)}:x);
+  const viewOf=x=>{if(x.id!=='facts')return stepView(x);const f=factsView(x,st.rec.brief);return stepView({...f,note:topicNote(f.note,st.rec.topics)});};
   function paintSteps(steps,form){
    const nav=$('[data-subj-steps]'),shape=JSON.stringify([form?.key||null,steps.map(x=>x.id),later(st.standing)]);
    if(nav.dataset.shape!==shape){
@@ -415,8 +455,9 @@
   }
   function formRow(s,form){
    // Forms cannot be reordered yet (no record keeps their order), so there is no drag grip; the number is their place.
-   const pills=(s.forms||[]).map((f,i)=>{const v=pillView(f,i),own=String(f.title||'').trim();
-    return `<button type="button" class="subj-form${f.key===form?.key?' v2-current on':''}" data-subj-form="${esc(f.key)}" aria-pressed="${f.key===form?.key}" aria-label="${esc(v.say)}" title="${esc(own||v.say)}"><small>${i+1}</small>${ring(v.ring)}<b>${esc(v.name)}</b>${v.line?`<span>${esc(v.line)}</span>`:''}<em>${v.count}</em></button>`;}).join('');
+   const apart=tellApart(s.forms||[]);
+   const pills=(s.forms||[]).map((f,i)=>{const v=pillView(f,i,apart[i]),own=String(f.title||'').trim();
+    return `<button type="button" class="subj-form${f.key===form?.key?' v2-current on':''}" data-subj-form="${esc(f.key)}" aria-pressed="${f.key===form?.key}" aria-label="${esc(v.say)}" title="${esc(v.line&&f.alike?v.say:own||v.say)}"><small>${i+1}</small>${ring(v.ring)}<b>${esc(v.name)}</b>${v.line?`<span>${v.tell?`<span class="subj-pto">${esc(v.lead)}</span>${esc(v.tell)}`:esc(v.line)}</span>`:''}<em>${v.count}</em></button>`;}).join('');
    const none=(s.forms||[]).length?'':`<span class="subj-form none"><b>Not decided yet</b><span>Gather first</span></span>`;
    return `<nav class="subj-forms" data-subj-forms aria-label="Forms, in order">${pills}${none}<button type="button" class="subj-form add" data-subj-add>${icon('plus')}<b>Add a form</b></button></nav>`;
   }
@@ -481,7 +522,7 @@
     case 'photos':return waitsFor(s,steps)+links(...(s.missing?[out('addPhotos',form)]:[]),out('media',form),out('arrange',form));
     case 'check':return toolCheck(s,steps,form);
     case 'story':return toolStory(s,form);
-    case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):links(own(s,form));
+    case 'slides':return form?.kind==='instagram'?toolSlides(s,form,steps):outputStudio(form)?toolOutputSlides(s,form):links(own(s,form));
     case 'posttext':return waitsFor(s,steps)+(form?.kind==='instagram'&&laidOut(form)?`<div class="subj-actions">${studio(form)}</div>`:'')+links(out('postWrite',form),out('postRead',form),out('postCheck',form));
     case 'yes':return toolYes(s,form);
     case 'publish':return toolPublish(s,steps,form);
@@ -513,7 +554,7 @@
    const where=x=>{
     if(x.kind!=='recordings'||x.recordingId)return '';
     const job=byJob.get(x.id),v=jobs&&job?recordingView(job,jobs.capability,done.has(job.id)):null;if(!v)return '';
-    const act=v.act==='use'?`<button type="button" class="subj-btn" data-subj-rec="use" data-job="${esc(job.id)}" title="Keeps the finished transcript as a source of this subject">Use the transcript</button><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced, where its words are checked">Open in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
+    const mine=transcriptAct(v.act,v2.isHuman()),act=mine==='owner'?`<span class="subj-quiet" data-subj-owner>Keeping this transcript as a source is for Adrian to do.</span><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced">Open in Advanced</a>`:mine==='use'?`<button type="button" class="subj-btn" data-subj-rec="use" data-job="${esc(job.id)}" title="Keeps the finished transcript as a source of this subject">Use the transcript</button><a class="subj-link subj-quietlink" data-subj-handoff="readTranscript" href="${handoffHref('source',null)}" title="Opens the transcript in Advanced, where its words are checked">Open in Advanced</a>`:v.act?`<button type="button" class="subj-btn" data-subj-rec="${v.act}" data-job="${esc(job.id)}">${v.act==='start'?'Make the transcript':'Try the transcript again'}</button>`:'';
     return `<span class="subj-where" data-subj-where>${esc(v.say)}</span>${act}`;
    };
    const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${x.recordingId?'Transcript':KIND[x.kind]}</small>${where(x)}</li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
@@ -594,6 +635,11 @@
    if(rec('planRecords')!==undefined&&!frames.length)return (p?.chosen?'':waitsFor(s,steps))+waitingCarousel(form,p?.chosen?'An assistant lays the slides out from the story you chose.':'The slides wait for a story to be chosen.','slides');
    return (rec('planRecords')===undefined?reading():'')+strip+say+`<div class="subj-actions">${studio(form)}${igAdvanced(form)}</div>`;
   }
+  /** An older Outputs carousel: version two's studio shows it read only; changing it is still done in Advanced. */
+  function toolOutputSlides(s,form){
+   const studioHref=esc(v2.href('slides/:id',{id:outputStudio(form)},{kind:'output',subject:id}));
+   return `<div class="subj-actions"><a class="subj-btn pri" data-subj-outputstudio href="${studioHref}" title="Shows the slides as they are; nothing is changed here">Open the slides${icon('right')}</a><a class="subj-link" data-subj-handoff="slides" href="${handoffHref('arrange',form)}" title="Opens the slides in Advanced, where they are changed">Open in Advanced${icon('chev')}</a></div>`;
+  }
   function toolYes(s,form){
    const y=ok(rec('desk'))?rec('desk'):null;
    if(!y)return (rec('desk')===undefined?reading():'')+links(out('desk',form));
@@ -638,7 +684,7 @@
    if(rb){e.preventDefault();if(st.busy)return;const job=rb.dataset.job,action=rb.dataset.subjRec;
     if(action==='use'){
      // Reading the proof (transcript-check.id) holds a writer lock only for the length of that one read and leaves the transcript's mapping in place; recordings.source (Adrian only) then keeps it as a source.
-     act(['recordings','tree'],async()=>{const check=await v2.call('transcript-check.id',{id:job});await v2.call('recordings.source',{jobId:job,expected:check.expected});v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
+     act(['recordings','tree'],async()=>{try{const check=await v2.call('transcript-check.id',{id:job});await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    const b=e.target.closest('[data-subj-step]');
    if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}
