@@ -71,7 +71,7 @@ test('the studio draws the slides, the layouts and the panel from the plan, and 
  assert.ok(doc.querySelectorAll('.sl-tile').length>=2, 'layouts are offered');
  assert.equal([...doc.querySelectorAll('[data-sl="ptab"]')].map(b=>b.textContent).join(),'Layout,Photographs,Add,Words');
  doc.querySelector('[data-sl="ptab"][data-id="words"]').click();
- assert.ok(doc.querySelector('.sl-spoken').textContent==='Words one');
+ assert.ok(doc.querySelector('.sl-field').textContent==='Words one');
  assert.equal(doc.querySelectorAll('.sl-pbody textarea, .sl-pbody [contenteditable]').length,0,'words are read-only');
  assert.ok(!doc.querySelector('[data-region="head"] button[aria-label*="peak" i]'),'no speech button');
  assert.ok(calls.every(c=>!/save|write/.test(c.name)));
@@ -112,7 +112,7 @@ test('Looks shows a tab per look, its colours with role names, its rules and its
  const {doc}=await mountScreen('looks.js',commonAnswers(planOf()),{});
  assert.equal([...doc.querySelectorAll('.lk-pills button[data-id]')].map(b=>b.textContent).join(),'Teajia,Art');
  assert.ok(/Boxes and bands/.test(doc.querySelector('.lk-sws').textContent));
- assert.equal(doc.querySelectorAll('.lk-sws code').length,14);
+ assert.equal(doc.querySelectorAll('.lk-sws code').length,10);
  assert.equal([...doc.querySelectorAll('.lk-rules li')].map(l=>l.textContent).join('|'),'Do keep it calm.|Don\'t use italics.');
  assert.equal(doc.querySelectorAll('.lk-assets li').length,1);
  assert.ok(doc.querySelector('[data-lk="asset-open"]'));
@@ -181,7 +181,26 @@ test('the layout panel switches between layouts that suit the slide, all of them
  answers['instagram.templates']={templates:[tpl('T1','C1'),tpl('T2','C2'),tpl('T3','S1','S'),tpl('T9','S9','S',{owner:true,status:'kept',looks:null})]};
  const {doc}=await mountScreen('slides.js',answers,{id:plan.id});
  const labels=()=>[...doc.querySelectorAll('[aria-label="Which layouts"] button')].map(b=>b.textContent.trim().replace(/\s+/g,' ')).join('|');
- assert.ok(/^Suits slide 1 \d\|All \d\|Yours 1$/.test(labels()),labels());
+ assert.ok(/^Suits this slide\|All \d\|Yours \u00b7 1$/.test(labels()),labels());
  doc.querySelector('[data-sl="lset"][data-id="yours"]').click();
  assert.equal(doc.querySelectorAll('.sl-tile').length,1);
+});
+
+test('the studio bar, caption row and panel follow the sample: star, Make a layout, say line above the tabs, no account names as looks', async () => {
+ const plan=planOf(),{doc}=await mountScreen('slides.js',commonAnswers(plan),{id:plan.id});
+ assert.ok(doc.querySelector('.sl-bar .sl-seg[aria-label="Look"]'),'the look switch is in the bar');
+ assert.ok(doc.querySelector('[data-sl="fav"]')&&doc.querySelector('[data-sl="make"]'),'the star and Make a layout are there');
+ assert.ok(doc.querySelector('[data-sl="save-open"]'));
+ const panel=doc.querySelector('[data-region="panel"]');
+ assert.ok(panel.querySelector('.sl-say')&&panel.querySelector('.sl-say').compareDocumentPosition(panel.querySelector('.sl-ptabs'))&4,'the say line sits above the tabs');
+ assert.ok(!doc.querySelector('[data-sl="filter"]'),'the layout search is gone');
+});
+
+test('Looks has the sample blocks: New look, files, Posts to, Slide templates, What Claude knows you like, Used by', async () => {
+ const {doc}=await mountScreen('looks.js',commonAnswers(planOf()),{});
+ assert.ok(/New look/.test(doc.querySelector('.lk-add').textContent));
+ assert.ok(doc.querySelector('.lk-files')&&doc.querySelector('.lk-acct'));
+ const t=doc.querySelector('.lk-body').textContent;
+ for (const w of ['Slide templates','What Claude knows you like','Used by','Rules Claude follows','Change it by talking','Open the folder']) assert.ok(t.includes(w),w);
+ assert.ok(/not built yet/.test(t),'the unbuilt block says so');
 });
