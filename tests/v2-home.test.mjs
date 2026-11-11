@@ -31,45 +31,24 @@ async function page({base,fetchImpl,hash='#/'}){
 }
 async function until(check,what,ms=8000){const end=Date.now()+ms;for(;;){const v=await check();if(v)return v;if(Date.now()>end)throw new Error('Timed out waiting for '+what);await new Promise(r=>setTimeout(r,25));}}
 
-/* ---------------- the station of a subject ---------------- */
-function stations(){
+/* ---------------- the next step shown for a subject ---------------- */
+function unit(){
  const html=read('public/v2/index.html'),dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html',runScripts:'outside-only'});
  const w=dom.window;windows.push(w);w.fetch=async()=>({ok:true,status:200,text:async()=>'{}'});w.EventSource=class{addEventListener(){}close(){}};
  for(const f of ['shell/client.js','shell/parts.js','shell/shell.js','screens/home.js'])w.eval(fs.readFileSync(path.join(v2dir,f),'utf8'));
  return w;
 }
-
-test('station: where a subject stands and its next step, from the facts its records hold',()=>{
- const w=stations(),{station,STATIONS,RESTING_DAYS}=w.v2HomeStations;
- assert.equal(w.v2.shared?.home?.station??station,station,'shared on the shell namespace when it has one, and as a plain global');
+test('nextOf: only a known next step is ever shown',()=>{
+ const {nextOf,STATIONS}=unit().v2.shared.home;
+ const step=(name,formName=null)=>({name,formName,step:'x',state:'next'});
  assert.deepEqual(JSON.parse(JSON.stringify(STATIONS.map(s=>s.name))),['Gather','Research','Create','Share','Published','Resting']);
- const at=(facts,days=1)=>{const r=station({changedAt:new Date(NOW-days*DAY).toISOString(),...facts},NOW);return JSON.parse(JSON.stringify([r.station,r.name,r.next,r.section,r.ring]));};
- // Nothing known: a station, and no next step that cannot be vouched for.
- assert.deepEqual(at({}),['gather','Gather','','material',.05],'nothing known yet: no next step');
- assert.deepEqual(at({material:0}),['gather','Gather','Add material','material',.05],'known to have nothing');
- assert.deepEqual(at({material:2}),['gather','Gather','','research',.2],'material, research not known');
- assert.deepEqual(at({material:2,research:0}),['gather','Gather','Start the research','research',.2]);
- assert.deepEqual(at({material:2,research:1}),['research','Research','','direction',.4],'direction not read');
- assert.deepEqual(at({material:2,research:1,direction:false}),['research','Research','Write my direction','direction',.4]);
- assert.deepEqual(at({material:2,research:1,direction:true}),['create','Create','Write','write',.5]);
- assert.deepEqual(at({direction:true,article:true}),['create','Create','','write',.6],'an Article: whether it is finished is not recorded');
- assert.deepEqual(at({article:true,suggestions:1}),['create','Create','Look at 1 suggestion','write',.6]);
- assert.deepEqual(at({article:true,suggestions:3}).slice(2,3),['Look at 3 suggestions']);
- assert.deepEqual(at({article:true,articleStatus:'correction-needed'}).slice(2,3),['Correct the Article']);
- assert.deepEqual(at({article:true,carousel:{chosen:true,ready:false}}).slice(0,3),['create','Create',''],'an Article and a Carousel: no single next step is certain');
- assert.deepEqual(at({carousel:{chosen:false,ready:false}}),['create','Create','Choose a story','arrange',.6]);
- assert.deepEqual(at({carousel:{chosen:true,ready:false}}).slice(2,3),['Make the slides']);
- assert.deepEqual(at({article:true,articleStatus:'review-needed'}),['share','Share','Review it','audience',.8]);
- assert.deepEqual(at({article:true,articleStatus:'complete'}),['share','Share','See it as the audience','audience',.85]);
- assert.deepEqual(at({carousel:{chosen:true,ready:true},article:true}),['share','Share','Post the Carousel','share',.9]);
- assert.deepEqual(at({published:true,article:true,asks:2}),['published','Published','','outputs',1],'published has no next step, even with a question open');
- assert.deepEqual(at({article:true,articleStatus:'paused'}),['resting','Resting','','',0],'a paused Article rests');
- assert.deepEqual(at({direction:true},RESTING_DAYS+1).slice(0,3),['resting','Resting',''],'untouched for '+RESTING_DAYS+' days');
- assert.deepEqual(at({direction:true},RESTING_DAYS-1).slice(0,1),['create']);
- assert.deepEqual(at({material:1,asks:1}).slice(0,3),['gather','Gather','Answer 1 question'],'a question waiting on him comes first');
- assert.deepEqual(at({article:true,asks:2}).slice(2,3),['Answer 2 questions']);
- assert.equal(station(undefined,NOW).station,'gather','no facts at all');
- assert.equal(station({changedAt:'not a time',direction:true},NOW).station,'create','an unreadable time is not a reason to rest');
+ assert.equal(nextOf({known:true,station:'create',forms:[{}],next:step('Check','Article')}),'Check','one form: its name is left out');
+ assert.equal(nextOf({known:true,station:'create',forms:[{},{}],next:step('Check','Article')}),'Check · Article','two forms: the form is named');
+ assert.equal(nextOf({known:false,station:'create',forms:[],next:step('Check')}),'','not known: nothing');
+ assert.equal(nextOf({known:true,station:'create',forms:[],next:null}),'','no next step');
+ assert.equal(nextOf({known:true,station:'published',forms:[],next:step('Check')}),'','published has none');
+ assert.equal(nextOf({known:true,station:'resting',forms:[],next:step('Check')}),'','resting has none');
+ assert.equal(nextOf(undefined),'');
 });
 
 /* ---------------- the page, against the real server ---------------- */
@@ -104,35 +83,53 @@ async function world(f){
 const rowsOf=(doc,key)=>[...doc.querySelectorAll(`.home-group[data-key="${key}"] .home-row b`)].map(b=>b.textContent);
 const click=(w,el)=>el.dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
 
-test('Home on real records: Needs you, the desk, Everything by folder, tag, station and recent, find, archived',async t=>{
+const logged=(url,log)=>{const inner=pageFetch(url);return async(u,o)=>{log.push(new URL(String(u),url).pathname);return inner(u,o);};};
+const nextText=s=>!s.known||!s.next||['published','resting'].includes(s.station)?'':s.next.formName&&s.forms.length>1?s.next.name+' · '+s.next.formName:s.next.name;
+
+test('Home on real records: every row is true against subjects.standing, in a handful of calls',async t=>{
  const f=await server(t);await world(f);
- const {w,doc}=await page({base:f.url,fetchImpl:pageFetch(f.url)});
+ const calls=[];
+ const {w,doc}=await page({base:f.url,fetchImpl:logged(f.url,calls)});
  await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ const standing=(await f.agent('/api/subjects/standing')).subjects,by=new Map(standing.map(s=>[s.id,s]));
+ // The rule's own words, row by row: station, and a next step only when it is known.
+ for(const r of doc.querySelectorAll('.home-groups .home-row')){
+  const s=by.get(r.dataset.id);assert.ok(s,'a row for a subject the read knows: '+r.dataset.id);
+  assert.equal(r.querySelector('.home-st').textContent.trim(),s.stationName,'its station');
+  assert.equal(r.querySelector('.home-next').textContent.trim(),nextText(s),'its next step, or nothing: '+s.title);
+ }
+ for(const c of doc.querySelectorAll('.home-card')){const s=by.get(c.dataset.id);assert.equal(c.querySelector('.home-card-next span').textContent,nextText(s)||'Open');}
+ // Station counts are the read's counts for subjects not archived, and do not change after first paint.
+ const live=standing.filter(s=>!s.archived),count=id=>String(live.filter(s=>s.station===id).length);
+ const chip=id=>doc.querySelector(`[data-station="${id}"] small`).textContent;
+ const before=['gather','research','create','share','published','resting'].map(chip);
+ assert.deepEqual(before,['gather','research','create','share','published','resting'].map(count));
+ await new Promise(r=>setTimeout(r,1200));
+ assert.deepEqual(['gather','research','create','share','published','resting'].map(chip),before,'no count moves by itself');
+ // A handful of calls: one standing read, no per-subject reads, no list of projects.
+ const mine=calls.filter(p=>!/capabilities|events/.test(p));
+ assert.equal(mine.filter(p=>p==='/api/subjects/standing').length,1);
+ assert.equal(mine.filter(p=>/human-direction|inquiries|first-flow|study-ai/.test(p)).length,0,'nothing is read subject by subject: '+mine.join(' '));
+ assert.ok(mine.length<=24,'a handful of calls, not hundreds: '+mine.length);
  // Needs you: the question, where it is from, its choices in place.
  const ask=doc.querySelector('.home-needs li');
  assert.match(ask.textContent,/Is the invented garden named in the piece\?/);assert.match(ask.textContent,/Invented garden/);
  assert.deepEqual([...ask.querySelectorAll('[data-ask-choice]')].map(b=>b.dataset.askChoice),['Name it','Leave it out']);
- // On your desk: the two pinned subjects as cards, each with its station and the next step, opening the subject.
+ // On your desk: the two pinned subjects, opening the subject.
  const cards=[...doc.querySelectorAll('.home-card')];
  assert.deepEqual(cards.map(c=>c.querySelector('b').textContent.slice(0,15)),['Invented garden','Invented river']);
  assert.equal(cards[0].querySelector('.home-card-next').getAttribute('href'),'#/subject/inv-garden');
- assert.match(cards[0].querySelector('.home-card-next').textContent,/Answer 1 question/,'his question is its next step');
- assert.match(cards[1].textContent,/Gather/);
- // Its next step comes once it is read a little further: it has no material, so that is certain.
- await until(()=>/Add material/.test(doc.querySelectorAll('.home-card')[1].querySelector('.home-card-next').textContent),'the next step');
- // Everything, by folder: real folders in their saved order, with their path; an empty folder still shows. The
- // fixture's two invented working drafts are subjects with no folder yet.
+ // Everything, by folder: real folders in their saved order, with their path; an empty folder still shows.
  assert.deepEqual([...doc.querySelectorAll('.home-group h3')].map(h=>h.textContent),['Tea','Gardens','Art','Not in a folder']);
- assert.equal(rowsOf(doc,'f:').length,2);
  assert.equal(doc.querySelector('.home-group[data-key="f:Tea\u0001Gardens"] .home-path').textContent,'Subjects / Tea / Gardens');
  assert.deepEqual(rowsOf(doc,'f:Tea'),['Invented cups','Invented river']);
  assert.match(doc.querySelector('.home-group[data-key="f:Art"]').textContent,/Empty/,'Art holds only an archived subject');
- assert.match(doc.querySelector('.home-all .home-sec-h').textContent,/5 subjects/);
- // Station chips count; one filters.
- const chip=id=>doc.querySelector(`[data-station="${id}"]`);
- assert.equal(chip('gather').querySelector('small').textContent,'3');assert.equal(chip('create').querySelector('small').textContent,'2');assert.equal(chip('share').querySelector('small').textContent,'0');
- click(w,chip('create'));assert.deepEqual([...doc.querySelectorAll('.home-group h3')].map(h=>h.textContent),['Not in a folder'],'one station shown');
- click(w,doc.querySelector('[data-station="create"]'));assert.equal(doc.querySelectorAll('.home-row').length,5,'pressed again, all again');
+ const total=live.length;
+ assert.match(doc.querySelector('.home-all .home-sec-h').textContent,new RegExp(total+' subjects'));
+ // One station filters; pressed again, all again.
+ const some=standing.find(s=>!s.archived).station,others=live.filter(s=>s.station===some).length;
+ click(w,doc.querySelector(`[data-station="${some}"]`));assert.equal(doc.querySelectorAll('.home-row').length,others);
+ click(w,doc.querySelector(`[data-station="${some}"]`));assert.equal(doc.querySelectorAll('.home-row').length,total);
  // Find filters by name as he types.
  const find=doc.querySelector('[data-home-find]');find.focus();find.value='cups';find.dispatchEvent(new w.Event('input',{bubbles:true}));
  assert.deepEqual([...doc.querySelectorAll('.home-row b')].map(b=>b.textContent),['Invented cups']);
@@ -143,16 +140,30 @@ test('Home on real records: Needs you, the desk, Everything by folder, tag, stat
  assert.deepEqual([...doc.querySelectorAll('.home-group h3')].map(h=>h.textContent),['visit','craft','shade','No tag']);
  assert.equal(rowsOf(doc,'t:visit').length,2);
  click(w,doc.querySelector('[data-group-by="station"]'));
- assert.deepEqual([...doc.querySelectorAll('.home-group h3')].map(h=>h.textContent),['Gather','Create']);
+ assert.deepEqual([...doc.querySelectorAll('.home-group h3')].map(h=>h.textContent),[...new Set(live.map(s=>s.stationName))].sort((a,b)=>['Gather','Research','Create','Share','Published','Resting'].indexOf(a)-['Gather','Research','Create','Share','Published','Resting'].indexOf(b)));
  click(w,doc.querySelector('[data-group-by="recent"]'));
- assert.equal(doc.querySelectorAll('.home-row').length,5);
+ assert.equal(doc.querySelectorAll('.home-row').length,total);
  click(w,doc.querySelector('[data-view="covers"]'));
- assert.equal(doc.querySelectorAll('.home-cover').length,5);
+ assert.equal(doc.querySelectorAll('.home-cover').length,total);
  click(w,doc.querySelector('[data-view="rows"]'));click(w,doc.querySelector('[data-group-by="folder"]'));
  // Archived subjects are out of the way behind one control.
  const archived=doc.querySelector('[data-archived]');assert.match(archived.textContent,/Archived · 1/);
  assert.equal(doc.body.textContent.includes('Invented old plan'),false);
  click(w,archived);assert.match(doc.querySelector('.home-archived').textContent,/Invented old plan/);
+});
+
+test('Home reads covers for the desk only, after first paint, from the first chosen photograph',async t=>{
+ const f=await server(t);await world(f);
+ const calls=[],inner=logged(f.url,calls);
+ const photo='/api/study/photos/preview?projectId=p&documentId=d&sourceId=s&expectedHash='+'a'.repeat(64);
+ const fetchImpl=async(u,o)=>{const path=new URL(String(u),f.url).pathname;
+  if(path==='/api/study/photos/inspect'){calls.push(path);return {ok:true,status:200,text:async()=>JSON.stringify({photos:[{sourceId:'s',selected:false,url:photo+'x'},{sourceId:'t',selected:true,url:photo,previewUnavailable:false}]})};}
+  return inner(u,o);};
+ const {doc}=await page({base:f.url,fetchImpl});
+ await until(()=>doc.querySelector('.home-groups .home-row'),'the list');
+ const garden=await until(()=>doc.querySelector('.home-card[data-id="inv-garden"] img'),'the cover');
+ const src=garden.getAttribute('src');assert.ok(src.startsWith(photo)&&/parentStudyId=inv-garden/.test(src)&&/bindingId=/.test(src),'the chosen photograph, not the unchosen one: '+src);
+ assert.equal(calls.filter(p=>p==='/api/study/photos/inspect').length,2,'one for each card on the desk, and none for the rows');
 });
 
 test('Home writes through the commands: pin, answer, move to a folder with Undo, reorder the desk, New subject',async t=>{
@@ -168,7 +179,7 @@ test('Home writes through the commands: pin, answer, move to a folder with Undo,
  // His answer, from the app's own page.
  click(w,doc.querySelector('[data-ask-choice="Leave it out"]'));
  await until(()=>doc.querySelector('.home-needs li.ok'),'the answer');
- assert.match(doc.querySelector('.home-needs li.ok').textContent,/Answered: Leave it out\./);
+ assert.equal(doc.querySelector('.home-needs li.ok .home-said').textContent,'Leave it out');assert.match(doc.querySelector('.home-needs li.ok').textContent,/Answered/);
  const answered=(await f.agent('/api/needs-you?status=answered')).asks[0];
  assert.equal(answered.resolution.choice,'Leave it out');assert.equal(answered.resolution.by,'human:adrian');assert.equal(answered.resolution.client,'ui');
  // A subject dropped onto a folder moves there; Undo moves it back.
@@ -212,8 +223,8 @@ test('Home hears an assistant: a subject filed elsewhere moves on screen without
 
 test('Home with no subjects, and with the app out of reach',async()=>{
  // With no subject at all the page says how to start, and shows no desk and no Needs you.
- const {doc}=await page({base:'http://local.test',fetchImpl:async u=>{const p=new URL(String(u),'http://local.test').pathname;if(p==='/api/capabilities')return {ok:true,status:200,text:async()=>JSON.stringify({commands:[['study-draft.catalog','/api/study-draft/catalog'],['subject-places','/api/subject-places'],['subject-places.folders.get','/api/subject-places/folders']].map(([name,route])=>({name,route,method:'GET',readOnly:true,schema:{}}))})};
-  if(p==='/api/study-draft/catalog')return {ok:true,status:200,text:async()=>JSON.stringify({collections:[],drafts:[]})};return {ok:true,status:200,text:async()=>JSON.stringify({places:[],folders:[]})};}});
+ const {doc}=await page({base:'http://local.test',fetchImpl:async u=>{const p=new URL(String(u),'http://local.test').pathname;if(p==='/api/capabilities')return {ok:true,status:200,text:async()=>JSON.stringify({commands:[['study-draft.catalog','/api/study-draft/catalog'],['subject-places','/api/subject-places'],['subject-places.folders.get','/api/subject-places/folders'],['subjects.standing','/api/subjects/standing']].map(([name,route])=>({name,route,method:'GET',readOnly:true,schema:{}}))})};
+  if(p==='/api/subjects/standing')return {ok:true,status:200,text:async()=>JSON.stringify({subjects:[],count:0})};return {ok:true,status:200,text:async()=>JSON.stringify({places:[],folders:[]})};}});
  await until(()=>doc.querySelector('.home-empty'),'no subjects');
  assert.match(doc.querySelector('.home-empty').textContent,/No subjects yet/);assert.ok(doc.querySelector('.home-empty [data-home-new]'));
  assert.equal(doc.querySelector('[data-home-desk]').hidden,true);assert.equal(doc.querySelector('.home-needs'),null,'nothing waiting: no Needs you');
