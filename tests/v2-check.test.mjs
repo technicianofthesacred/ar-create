@@ -45,7 +45,7 @@ const COVERAGE_URL=pathToFileURL(path.join(repo,'public/lib/decision-coverage.js
 
 const COMMANDS=[['needs-you','GET','/api/needs-you',true],['subject-places','GET','/api/subject-places',true],['study-draft.catalog','GET','/api/study-draft/catalog',true],['look','GET','/api/look',true],
  ['subject.standing','GET','/api/subject/standing',true],['study.outputs','GET','/api/study/outputs',true],['study-draft.read','GET','/api/study-draft/read',true],['study-draft.save','POST','/api/study-draft/save',false],
- ['study-draft.check.get','GET','/api/study-draft/check',true],['study-draft.check.post','POST','/api/study-draft/check',false],['current-work.read','POST','/api/current-work/read',true],['study-ai.read','GET','/api/study-ai/read',true],['presence.post','POST','/api/presence',false]]
+ ['study-draft.check.get','GET','/api/study-draft/check',true],['study-draft.check.post','POST','/api/study-draft/check',false],['current-work.read','POST','/api/current-work/read',true],['study-ai.read','GET','/api/study-ai/read',true],['presence.post','POST','/api/presence',false],['consent.desk','GET','/api/consent/desk',true]]
  .map(([name,method,route,readOnly])=>({name,method,route,readOnly,schema:{},actors:['any']}));
 
 /** Loads the page's scripts, then Check (and the stand-in for Write's helpers when they are missing). */
@@ -61,7 +61,7 @@ function boot(w,{coverage=true}={}){
 }
 
 // ---- a page whose commands are answered from a table: route -> body, [status, body] or function(url, body) ----
-async function page({hash='',answers={},search=''}={}){
+async function page({hash='',answers={},search='',cover=null}={}){
  const html=read('public/v2/index.html');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:'http://local.test/v2/index.html'+search+hash,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,calls=[];windows.push(w);w.__sources=[];
@@ -70,6 +70,7 @@ async function page({hash='',answers={},search=''}={}){
   const [status,out]=Array.isArray(answer)?answer:[200,answer];
   return {ok:status>=200&&status<300,status,text:async()=>JSON.stringify(out)};};
  boot(w);
+ if(cover)w.__coverage=async()=>({projectDecisionCoverage:cover});
  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
  await settle(60);
  return {w,calls,doc:w.document,sources:w.__sources};
@@ -164,7 +165,8 @@ test('an outdated check, a held check with its reason, and a refusal are each sa
  let pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,old]})});await ready(pg.doc);
  assert.match(pg.doc.querySelector('.ck-state').textContent,/Outdated check/);
  assert.equal(pg.doc.querySelector('[data-ck="run"]').textContent,'Check saved draft again');
- assert.equal(pg.doc.querySelector('.ck-find'),null,'an old finding is never pointed at the new words');
+ assert.ok(pg.doc.querySelector('.ck-find[data-old="true"]'),'an old finding is still listed, marked as from the older check');
+ assert.equal(pg.doc.querySelector('[data-ck="go"]'),null,'but never pointed at the new words');
  assert.ok(pg.doc.querySelector('[data-ck="reload"]'),'Load current saved draft');
  const held=receipt({status:'held',issues:[],quote:{status:'held',reason:'No captured SRC available.'},split:{status:'held',reason:'No captured SRC available.'}});
  pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,held]})});await ready(pg.doc);
@@ -172,6 +174,29 @@ test('an outdated check, a held check with its reason, and a refusal are each sa
  pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':(u,body)=>body?[500,{error:'The check could not start.'}]:null})});await ready(pg.doc);
  pg.doc.querySelector('[data-ck="run"]').click();await until(()=>pg.doc.querySelector('[data-ck-run] .ck-bad'));
  assert.match(pg.doc.querySelector('[data-ck-run] .ck-bad').textContent,/The app could not answer\. Nothing was changed/);assert.equal(pg.doc.querySelector('[data-ck="run"]').disabled,false,'he can try again');
+});
+
+test('an outdated check still lists its findings as older, a held check with none says so, and a stand-in decision is called synthetic',async()=>{
+ const old=receipt({proof:{expected:{...EXPECTED,workflow:{draft:'older',edits:'e1'}},draftHash:'a'.repeat(64),sources:[{role:'src',id:'s-1',hash:'b'.repeat(64)}]},quote:{status:'failed',output:'NOT FOUND: "Altered words."\n1 paragraphs with no quotation marks left unchecked\n'}});
+ let pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,old]})});await ready(pg.doc);
+ const find=pg.doc.querySelector('.ck-find[data-old="true"]');
+ assert.match(find.textContent,/From the older check/);assert.match(find.textContent,/Quote needs review/);assert.match(find.textContent,/Altered words\./);
+ assert.match(find.textContent,/Recheck the current revision to locate this finding\./);
+ assert.equal(pg.doc.querySelector('[data-flag]'),null);
+ const proof=pg.doc.querySelector('.ck-proof');assert.equal(proof.open,false,'the fold stays closed');
+ assert.match(proof.textContent,new RegExp('Draft SHA-256: a{64}'));assert.match(proof.textContent,new RegExp('src s-1 · SHA-256 b{64}'));
+ assert.match(proof.textContent,/Quote output/);assert.match(proof.textContent,/1 paragraphs with no quotation marks left unchecked/);assert.match(proof.textContent,/Split output/);
+ const held=receipt({status:'held',issues:[],quote:{status:'held',reason:'No captured SRC available.'},split:{status:'held',reason:'No captured SRC available.'}});
+ pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/study-draft/check':[200,held]})});await ready(pg.doc);
+ assert.equal(pg.doc.querySelector('[data-ck-empty]').textContent,'No current findings to show. Run or recheck the saved revision before treating the manuscript as checked.');
+ const packet={fingerprint:'f1',piece:{wordOwner:{kind:'native',bindingId:'root1'},words:{hash:'d1'}}};
+ const report=role=>({status:'partial',findings:[{id:'f-1',code:'protected-paragraph-unassessed',assessment:'unassessed',message:'Protected wording was recorded.',evidence:{record:{text:'Invented words.',reason:'An invented reason.',...(role?{decisionRole:role}:{})}},navigation:{}}]});
+ pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/current-work/read':[200,packet]}),cover:()=>report('stand-in')});await ready(pg.doc);
+ await until(()=>pg.doc.querySelector('.ck-dec[data-finding]'));
+ assert.equal(pg.doc.querySelector('[data-ck-standin]').textContent,'Synthetic test decision','a stand-in is called what it is');
+ pg=await page({hash:'#/check/s1?piece=o1',answers:base({'/api/current-work/read':[200,packet]}),cover:()=>report(null)});await ready(pg.doc);
+ await until(()=>pg.doc.querySelector('.ck-dec[data-finding]'));
+ assert.equal(pg.doc.querySelector('[data-ck-standin]'),null,'a real decision is not marked');
 });
 
 test('a changed draft arriving from the stream is shown, and the saved check no longer covers it',async()=>{
@@ -192,6 +217,8 @@ test('a missing piece, another subject\'s piece and words kept elsewhere are sai
  assert.match(pg.doc.querySelector('.ck-none').textContent,/not kept where Check can open them/);assert.ok(pg.doc.querySelector('.ck-none a[href*="section=check"]'),'Open in Advanced');
  pg=await page({hash:'#/check/s1',answers:base({'/api/subject/standing':{...standing,forms:[]}})});await ready(pg.doc);
  assert.match(pg.doc.querySelector('.ck-none').textContent,/no Article yet/);
+ pg=await page({hash:'#/check/nobody?piece=o1',answers:base({'/api/subject/standing':[404,{error:'No such subject.'}]})});await ready(pg.doc);
+ assert.ok(pg.doc.querySelector('.ck-none a[href="#/"]'),'an unknown subject offers Home');assert.doesNotMatch(pg.doc.querySelector('.ck-none').textContent,/Back to the subject/);
 });
 
 test('without Write\'s shared helpers, Check says so plainly and does not fail',async()=>{
@@ -280,6 +307,9 @@ test('real server: Check shows the words, runs the check, points at the altered 
  assert.ok(calls.some(c=>c.path==='/api/current-work/read'&&c.status===200),'current-work.read');
  assert.match(doc.querySelector('[data-ck-dec]').textContent,/Literal comparison complete|Decision coverage/);
  assert.match(doc.querySelector('[data-ck-dec]').textContent,/Source support/);
+ await until(()=>/Truth and consent/.test(doc.querySelector('[data-ck-truth]').textContent)&&!/Reading the claims/.test(doc.querySelector('[data-ck-truth]').textContent));
+ assert.ok(calls.some(c=>c.path==='/api/consent/desk'&&c.status===200),'consent.desk is read');
+ assert.equal(doc.querySelector('[data-ck-truth] [data-cd-answer],[data-ck-truth] select,[data-ck-truth] input'),null,'read only: no answer is offered');
  assert.ok(calls.every(c=>!(c.method==='POST'&&/study-draft\/save|study-ai\/(accept|reject|finish)/.test(c.path))),'only the check is ever written');
  assert.equal(calls.filter(c=>c.status>=400).map(c=>c.path+' '+c.status).join(),'','nothing was refused');
 });
@@ -306,7 +336,8 @@ test('real server: a save made elsewhere arrives from the stream and the saved c
  for(const s of sources)s.emit('change',{kind:'study-draft.save',cursor:99999,bootId:'b',scope:{kind:'draft',id:sub.root},operationId:'elsewhere'});
  await until(()=>/Outdated check/.test(doc.querySelector('.ck-state').textContent));
  assert.match(doc.querySelector('.ck-text').textContent,/One more line\./,'the new words are shown');
- assert.equal(doc.querySelector('.ck-find'),null,'the old finding is not pointed at the new words');
+ assert.equal(doc.querySelector('[data-ck="go"]'),null,'the old finding is not pointed at the new words');
+ assert.equal(doc.querySelector('[data-flag]'),null,'and no paragraph is flagged for it');
 });
 
 test('Check follows the house rules: six sizes, no em dash, no fetch, escaped records, no speech, nothing written but the check',()=>{
@@ -319,8 +350,14 @@ test('Check follows the house rules: six sizes, no em dash, no fetch, escaped re
  assert.doesNotMatch(js,/SpeechRecognition|webkitSpeech|getUserMedia/,'no speech');
  assert.doesNotMatch(css,/#[0-9a-fA-F]{3,8}\b|rgba?\(/,'only the app\'s colour tokens');
  assert.doesNotMatch(js,/study-draft\.save|study-ai\.(accept|reject|finish)|localStorage\.(set|remove)Item|document-study/,'it writes no words and keeps no record');
- for(const rule of css.replace(/\/\*[\s\S]*?\*\//g,'').split('}').map(r=>r.split('{')[0].trim()).filter(Boolean)){
-  if(rule.startsWith('@'))continue;for(const sel of rule.split(','))assert.match(sel.trim(),/^\.ck[\s\[:.]|^\.ck$/,'every rule starts with .ck: '+sel);
- }
+ // every rule, including each one inside an @media block (the first rule after an @media's brace is a rule too)
+ const selectors=[];{const text=css.replace(/\/\*[\s\S]*?\*\//g,'');let depth=0,start=0;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+   if(ch==='{'){const prelude=text.slice(start,i).trim();if(prelude.startsWith('@'))start=i+1;else{for(const sel of prelude.split(','))selectors.push(sel.trim());depth++;start=-1;}}
+   else if(ch==='}'){if(start===-1){depth--;start=i+1;}else start=i+1;}}}
+ assert.ok(selectors.length>40,'the sheet was read: '+selectors.length);
+ for(const sel of selectors)assert.match(sel,/^\.ck[\s\[:.]|^\.ck$/,'every rule starts with .ck: '+sel);
+ assert.ok(selectors.includes('.ck .ck-sheet{padding:56px'.split('{')[0]),'rules outside @media are read');
+ assert.doesNotMatch(css,/white-space:\s*nowrap/,'long words and labels break instead of cutting the card off');
  assert.match(js,/import\('\/lib\/decision-coverage\.js'\)/,'decisions use the app\'s own coverage projection');
 });
