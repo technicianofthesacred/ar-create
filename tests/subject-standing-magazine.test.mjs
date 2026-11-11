@@ -44,13 +44,13 @@ test('registered Magazine stories are subjects beside the others, with the story
  assert.ok(one.facts.words.count > 20, 'the words are the draft\'s own');
  assert.equal(steps.have.state, 'done'); assert.match(steps.have.note, /notes?/);
  assert.equal(steps.have.note, '2 notes · 1 photograph'); assert.equal(steps.photos.note, 'None placed yet');
- assert.equal(steps.check.state, 'unknown', 'a CHECK file holds free notes the rule cannot read');
+ assert.equal(steps.check.state, 'flag', 'a CHECK file: the Magazine check is read on the draft as it is now, and its findings counted'); assert.match(steps.check.note, /^[0-9]+ things? to look at$/);
  assert.equal(steps.facts.state, 'todo', 'no research file: known not to be looked into');
- assert.equal(steps.dish.state, 'todo'); assert.match(steps.dish.note, /direction is written; the dish is not named yet/); assert.equal(one.facts.dish.text, '', 'the picked option is not passed on as his words');
- assert.equal(steps.publish.state, 'unknown', 'the Check is not known, so neither is whether it can go out');
- assert.equal(one.next, null, 'no next step is claimed past a step that is not known');
+ assert.equal(steps.dish.state, 'todo'); assert.equal(steps.dish.note, 'A direction is chosen in the Magazine; the dish is not named yet'); assert.equal(one.facts.dish.text, '', 'the picked option is not passed on as his words');
+ assert.equal(steps.publish.state, 'wait');
+ assert.equal(one.next.step, 'check', 'the next step is the one the records name'); assert.equal(one.station, 'create', 'the station is where that step is');
  assert.equal(one.published, false, 'the draft carries no published link');
- assert.equal(one.facts.check, null);
+ assert.equal(one.facts.check.status, 'checked'); assert.ok(one.facts.check.issues >= 1);
 
  // The second story: a source and a map, no draft yet. Its Article is empty and known to be.
  const river = (await h.get('/api/subject/standing?parentStudyId=mag-river-potter')).value, rs = Object.fromEntries(river.forms[0].steps.map(s => [s.id, s]));
@@ -156,4 +156,16 @@ test('the quick word count equals the working draft\'s own count', {timeout: 120
  const want = rows.reduce((n, r) => n + r.words.trim().split(/\s+/).length, 0);
  const got = (await h.get('/api/subject/standing?parentStudyId=mag-clay-teacher')).value.facts.words;
  assert.equal(got.count, want); assert.equal(got.paragraphs, rows.filter(r => r.blockKind !== 'heading').length);
+});
+
+test('a registered research file is on record, and a Check the app cannot count leaves it not known with open Check next', {timeout: 120000}, async t => {
+ const RESEARCH = 'Workflow/3-Develop/RESEARCH - Clay Teacher (facts).md', SECOND = 'Workflow/1-Source/SRC - Clay Teacher (Second Day).md';
+ const h = await home(t, {extra: {[RESEARCH]: '---\ntype: RESEARCH\nstory: Clay Teacher\n---\n\nInvented notes on kilns.\n', [SECOND]: '---\ntype: SRC\nstory: Clay Teacher\n---\n\n## Full Transcript\n\n**Mira:** An invented second day.\n'}});
+ const one = (await h.get('/api/subject/standing?parentStudyId=mag-clay-teacher')).value, steps = Object.fromEntries(one.forms[0].steps.map(s => [s.id, s]));
+ assert.equal(steps.facts.state, 'done'); assert.equal(steps.facts.note, 'A research file is on record');
+ // Two transcripts and none named: the Magazine check cannot say which to read, so the Check is not known.
+ assert.equal(steps.check.state, 'unknown');
+ assert.equal(one.next.step, 'check'); assert.equal(one.next.state, 'unknown'); assert.equal(one.station, 'create');
+ const row = (await h.get('/api/subjects/standing')).value.subjects.find(x => x.id === 'mag-clay-teacher');
+ assert.equal(row.next.step, 'check'); assert.equal(row.station, 'create');
 });

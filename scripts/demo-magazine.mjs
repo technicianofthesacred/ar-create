@@ -1,4 +1,5 @@
-// A disposable invented demo that also holds a small invented Magazine, so version two can show Magazine stories.
+// A disposable invented demo that also holds a small invented Magazine, so version two can show Magazine stories. It is
+// what `npm run demo` starts (`npm run demo:plain` starts the demo without the Magazine; no test starts either of them).
 //   node scripts/demo-magazine.mjs          (port 8854 by default; AR_CREATE_PORT picks another)
 // It makes the same synthetic home as `npm run demo`, then builds three invented stories in a Magazine folder inside that
 // home and registers them with the Magazine's own registration tool (tools/magazine/register.mjs, the same code the
