@@ -10,21 +10,25 @@ import { ensurePrivateDirectory, atomicWrite, readJson, resolveInside, regular, 
 import { outputOwnership } from "./output-ownership.mjs";
 import { fitCarouselTypography, validateCarouselTypography } from "../src/workspaces/carousel-typography.mjs";
 
+// The Mac cache comes first, so a Mac finds exactly the browser it always did. Other places are tried only after it:
+// PLAYWRIGHT_BROWSERS_PATH, then Playwright's Linux cache, including the layouts its Linux builds have shipped.
 function chrome() {
-  const root = path.join(os.homedir(), "Library/Caches/ms-playwright");
-  const dirs = (() => {
+  const home = os.homedir();
+  const roots = [path.join(home, "Library/Caches/ms-playwright"), process.env.PLAYWRIGHT_BROWSERS_PATH, path.join(home, ".cache/ms-playwright"), "/opt/pw-browsers"].filter(Boolean);
+  for (const root of roots) {
+    let dirs = [];
     try {
-      return fs.readdirSync(root).filter((d) => d.startsWith("chromium_headless_shell-")).sort((a, b) => +b.split("-")[1] - +a.split("-")[1]);
-    } catch {
-      return [];
+      dirs = fs.readdirSync(root).filter((d) => d.startsWith("chromium_headless_shell-")).sort((a, b) => +b.split("-")[1] - +a.split("-")[1]);
+    } catch {}
+    for (const d of dirs) for (const [sub, name] of [["chrome-headless-shell-mac-arm64", "chrome-headless-shell"], ["chrome-headless-shell-mac-x64", "chrome-headless-shell"], ["chrome-headless-shell-linux64", "chrome-headless-shell"], ["chrome-linux", "headless_shell"]]) {
+      const bin = path.join(root, d, sub, name);
+      if (fs.existsSync(bin)) return bin;
     }
-  })();
-  for (const d of dirs) {
-    const bin = path.join(root, d, "chrome-headless-shell-mac-arm64", "chrome-headless-shell");
-    if (fs.existsSync(bin)) return bin;
   }
   throw new StateError("PNG export is unavailable: no existing local headless Chrome was found.", 503);
 }
+// Chrome refuses to start as root unless its own sandbox is switched off.
+const chromeFlags = () => (process.getuid?.() === 0 ? ["--no-sandbox"] : []);
 const ownImage = /^\/api\/sources\/blob\?id=([^&]+)$/;
 const exportFontCss = [
   ["Caudex", 400, "/assets/fonts/Caudex-Regular.ttf", "truetype"],
@@ -200,7 +204,7 @@ function createCarouselExports({ dataDir, store, library }) {
         for (let i = 0; i < output.slides.length; i++) {
           if (IG.T[output.slides[i].template].photos > output.slides[i].photos.slice(0, IG.T[output.slides[i].template].photos).filter((p) => p.src).length) throw new StateError(`Slide ${i + 1} needs a photograph. Choose one or use Words only.`, 422);
           const name = "slide-" + String(i + 1).padStart(2, "0") + ".png", file = path.join(work, name);
-          const { stdout } = await renderCarouselProcess(bin, ["--headless", "--user-data-dir=" + profile, "--disable-background-networking", "--disable-component-update", "--disable-extensions", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=1080,1350", "--virtual-time-budget=6000", "--dump-dom", "--screenshot=" + file, trusted?.renderUrl ? trusted.renderUrl(id, i) : origin + `/api/carousel/exports/${id}/render/${i}`], file);
+          const { stdout } = await renderCarouselProcess(bin, [...chromeFlags(), "--headless", "--user-data-dir=" + profile, "--disable-background-networking", "--disable-component-update", "--disable-extensions", "--hide-scrollbars", "--force-device-scale-factor=1", "--window-size=1080,1350", "--virtual-time-budget=6000", "--dump-dom", "--screenshot=" + file, trusted?.renderUrl ? trusted.renderUrl(id, i) : origin + `/api/carousel/exports/${id}/render/${i}`], file);
           if (!stdout.includes('data-export-status="ready"')) throw new StateError(`Slide ${i + 1} ${stdout.includes('data-export-status="overflow"') ? "overflows its layout. Choose a roomier layout while keeping the reviewed words." : "could not load all its photographs or fonts."}`, 422);
           const bytes = fs.readFileSync(file);
           if (!bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) || bytes.readUInt32BE(16) !== 1080 || bytes.readUInt32BE(20) !== 1350) throw new Error("Chrome did not produce a 1080 \xD7 1350 PNG.");
