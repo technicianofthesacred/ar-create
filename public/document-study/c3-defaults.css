@@ -10,5 +10,5 @@
 :where(body.c3-tabs #app .workspace) label{font:var(--c3-t1,13px)/1.4 var(--ar-ui);color:var(--c3-ink2,var(--dim))}
 :where(body.c3-tabs #app .workspace) h2{font:600 var(--c3-t2,15px)/1.3 var(--ar-ui);color:var(--ink)}
 :where(body.c3-tabs #app .workspace) h3,:where(body.c3-tabs #app .workspace) h4{font:600 var(--c3-t1,13px)/1.3 var(--ar-ui);color:var(--ink)}
-:where(h1,h2,h3,h4){overflow-wrap:anywhere}
+:where(body) h1,:where(body) h2,:where(body) h3,:where(body) h4{overflow-wrap:anywhere}
 :where(body.c3-tabs #app .workspace) small{font-size:12px;color:var(--dim)}
