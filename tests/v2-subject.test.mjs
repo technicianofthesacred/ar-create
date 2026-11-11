@@ -95,6 +95,7 @@ test('which tool reads a change touches',()=>{
  assert.deepEqual(S.touched('study-draft.save'),['read','check']);
  assert.deepEqual(S.touched('instagram.plan.post'),['planRecords']);
  assert.deepEqual(S.touched('needs-you.raise'),[]);
+ assert.ok(S.READS.includes('recordings')&&S.STEP_READS.have.includes('recordings'));
  for(const keys of Object.values(S.STEP_READS))for(const k of keys)assert.ok(S.READS.includes(k)||k==='topics');
 });
 
@@ -112,6 +113,26 @@ test('material is sorted from what the records hold: folder, research sources, p
  assert.deepEqual([m.total,m.recordings,m.notes,m.photos,m.items.map(x=>x.kind)],[3,1,1,1,['recordings','notes','photos']]);
  assert.deepEqual(S.materialFrom({tree:{__error:{}}}).total,0);
  assert.deepEqual(S.partsOf([{blockKind:'paragraph',words:'x'},{blockKind:'heading',words:'Part'},{blockKind:'paragraph',words:'y'},{blockKind:'paragraph',words:'z'}]),[{name:'Opening',paragraphs:1},{name:'Part',paragraphs:2}]);
+});
+
+test('a recording says where it is: saved, transcript being made, ready, or not set up on this machine',()=>{
+ const job=state=>({id:'j1',sourceId:'a',state,transcriptReady:state==='done'});
+ const v=(state,ready,registered)=>S.recordingView(job(state),{ready},registered);
+ assert.deepEqual(v('saved',false),{say:'Saved. Transcription is not set up on this machine.',act:null});
+ assert.deepEqual(v('saved',true),{say:'Saved. The transcript has not been started.',act:'start'},'where transcription is ready but not started, one button starts it');
+ assert.deepEqual([v('queued',true).act,v('running',true).say],[null,'Making the transcript.']);
+ assert.deepEqual(v('failed',true),{say:'The transcript could not be made. The recording is kept.',act:'retry'});
+ assert.equal(v('failed',false).act,null,'no retry where transcription is not set up');
+ assert.deepEqual(v('done',true,false),{say:'Transcript ready.',act:'use'});
+ assert.deepEqual(v('done',true,true),{say:'Transcript ready, and kept as a source.',act:null});
+ assert.equal(S.recordingView({id:'j',state:'done',transcriptReady:false},{ready:true}).act,null);
+ assert.equal(S.recordingView(null,{ready:true}),null,'a recording with no job claims nothing');
+ assert.equal(S.recordingView({id:'j',state:'whatever'},{ready:true}),null);
+ assert.deepEqual([...S.registeredJobs({sources:[{id:'t',kind:'transcript',recordingId:'j1'},{id:'x',kind:'transcript',transcriptState:{jobId:'j2'}},{id:'a',kind:'audio'}]})].sort(),['j1','j2']);
+ assert.deepEqual(S.registeredJobs({__error:{}}),[]);
+ assert.deepEqual(S.touched('sources.import'),['tree','brief','recordings'],'a capture re-reads the recordings');
+ assert.deepEqual(S.touched('transcription.id.action'),['recordings']);
+ assert.deepEqual(S.touched('research-topics.start'),['topics'],'a question started from the sheet shows without a reload');
 });
 
 test('no em dash, only the six sizes, no hard-coded colour, every rule under the screen\'s own class, no own rules for step states, no every-subject read',()=>{
@@ -136,14 +157,15 @@ async function server(t){
  t.after(async()=>{await new Promise(r=>s.close(r));fs.rmSync(fixture.dir,{recursive:true,force:true});});
  return 'http://127.0.0.1:'+s.address().port;
 }
-async function page(base,hash){
+async function page(base,hash,{patch=t=>t}={}){
  const html=fs.readFileSync(path.join(repo,'public/v2/index.html'),'utf8');
  const dom=new JSDOM(html.replace(/<script[^>]*><\/script>/g,''),{url:base+'/v2/index.html'+hash,runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window,sources=[],calls=[];windows.push(w);
  w.EventSource=class{constructor(u){this.url=u;this.l={};sources.push(this);}addEventListener(t,f){(this.l[t]||=[]).push(f);}close(){}emit(t,data){for(const f of this.l[t]||[])f({data:JSON.stringify(data)});}};
- w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push(u.pathname);const r=await fetch(base+u.pathname+u.search,{method:options.method||'GET',headers:{...options.headers,...(options.method&&options.method!=='GET'?{Origin:base}:{})},body:options.body});return {ok:r.ok,status:r.status,text:()=>r.text()};};
+ w.stub={};
+ w.fetch=async(input,options={})=>{const u=new URL(String(input),w.location.href);calls.push(u.pathname);if(w.stub[u.pathname]){const v=w.stub[u.pathname];const r=typeof v==='function'?v(options):v;return {ok:r.status<400,status:r.status,text:async()=>JSON.stringify(r.body)};}const r=await fetch(base+u.pathname+u.search,{method:options.method||'GET',headers:{...options.headers,...(options.method&&options.method!=='GET'?{Origin:base}:{})},body:options.body});return {ok:r.ok,status:r.status,text:()=>r.text()};};
  w.HTMLDialogElement.prototype.showModal||=function(){this.setAttribute('open','');};w.HTMLDialogElement.prototype.close||=function(){this.removeAttribute('open');};
- for(const src of [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]))w.eval(fs.readFileSync(src.startsWith('/')?path.join(repo,'public',src):path.join(repo,'public/v2',src),'utf8'));
+ for(const src of [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]))w.eval(patch(fs.readFileSync(src.startsWith('/')?path.join(repo,'public',src):path.join(repo,'public/v2',src),'utf8'),src));
  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
  return {w,doc:w.document,sources,calls};
 }
@@ -275,4 +297,82 @@ test('an unknown subject says so and offers Home; a missing step state is never 
  const {doc}=await page(base,'#/subject/not-a-subject');
  await until(()=>/could not be found/.test(doc.querySelector('.subj h1')?.textContent||''));
  assert.ok(doc.querySelector('.subj a[href="#/"]'));
+});
+
+test('the subject shows where a recording is, from the real recordings; its ways in open the Capture sheet when there is one and Material in Advanced when there is not',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['shade-and-patience']});
+ const id='demo-shade-and-patience',facts=(await standingOf(base,id)).facts;
+ // A real recording, brought in as the workspace does: into the subject's Library folder, then attached to it.
+ const wav=Buffer.alloc(44+800,128);wav.write('RIFF',0);wav.writeUInt32LE(36+800,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(8000,24);wav.writeUInt32LE(8000,28);wav.writeUInt16LE(1,32);wav.writeUInt16LE(8,34);wav.write('data',36);wav.writeUInt32LE(800,40);
+ const post=async(p,body)=>{const r=await fetch(base+p,{method:'POST',headers:{'Content-Type':'application/json',Origin:base,'X-AR-Actor':'human:adrian','X-AR-Client':'ui'},body:JSON.stringify(body)});return {status:r.status,body:await r.json()};};
+ const folder='Projects/'+facts.projectId;
+ assert.equal((await post('/api/sources/folders',{rootId:'library',folder})).status,200);
+ const imp=await post('/api/sources/import',{rootId:'library',folder,files:[{name:'Microphone-2026-11-11 09.30.wav',base64:wav.toString('base64')}]});
+ assert.equal(imp.status,200,JSON.stringify(imp.body));
+ const sourceId=imp.body.receipts[0].source.id;
+ assert.equal((await post('/api/study/material/attach',{bindingId:facts.bindingId,parentStudyId:id,sourceIds:[sourceId],operationId:'11111111-1111-4111-8111-111111111111'})).status,200);
+ const rows=doc=>[...doc.querySelectorAll('.subj-have li')].map(l=>[l.querySelector('b').textContent,l.querySelector('small').textContent,l.querySelector('[data-subj-where]')?.textContent||'',l.querySelector('[data-subj-rec]')?.textContent||'']);
+
+ // 1. The real demo server: transcription is not set up here, so the recording says it is saved only.
+ {
+  const {w,doc,calls}=await page(base,'#/subject/'+id+'?step=have');
+  await until(()=>doc.querySelector('.subj-have [data-subj-where]'));
+  assert.deepEqual(rows(doc).filter(r=>r[1]==='Recording'),[['Microphone-2026-11-11 09.30','Recording','Saved. Transcription is not set up on this machine.','']]);
+  assert.ok(calls.includes('/api/recordings'));
+  // With no Capture sheet the ways in keep today's behaviour: they open Material in Advanced.
+  const ways=[...doc.querySelectorAll('[data-subj-capture]')];assert.ok(ways.length>=1);
+  for(const a of ways)assert.equal(new URL(a.getAttribute('href'),'http://x').searchParams.get('section'),'material');
+  assert.equal(typeof w.v2.capture,'undefined');
+  let held=null;doc.addEventListener('click',e=>{held=e.defaultPrevented;e.preventDefault();},{once:true});
+  ways[0].dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
+  assert.equal(held,false,'nothing is held back from the link when there is no sheet');
+ }
+ // 2. A stand-in for Capture (its real one is built elsewhere): the ways in open it for this subject and keep the page.
+ {
+  const {w,doc}=await page(base,'#/subject/'+id+'?step=have',{patch:(text,src)=>/shell\/shell\.js$/.test(src)?text.replace('ui:Object.freeze({','capture:o=>{window.__cap=o;},ui:Object.freeze({'):text});
+  await until(()=>doc.querySelector('.subj-have [data-subj-where]'));
+  const click=new w.MouseEvent('click',{bubbles:true,cancelable:true});doc.querySelector('.subj-drop[data-subj-capture]').dispatchEvent(click);
+  assert.equal(click.defaultPrevented,true);
+  assert.equal(w.__cap.subject.id,id);assert.equal(w.__cap.subject.name,'Shade and patience');assert.equal(w.__cap.subject.projectId,facts.projectId);
+ }
+ // 3. Stand-ins for the states the demo cannot make (it has no transcription tools). Only the answers are invented.
+ {
+  const {w,doc,calls,sources}=await page(base,'#/subject/'+id+'?step=have');
+  await until(()=>doc.querySelector('.subj-have [data-subj-where]'));
+  const job=(await (await fetch(base+'/api/recordings')).json()).jobs[0];
+  let n=0;
+  const show=async(state,ready,extra={})=>{
+   w.stub['/api/recordings']={status:200,body:{capability:{ready},jobs:[{...job,state,transcriptReady:state==='done',...extra}]}};
+   const es=sources[0];es.emit('hello',{bootId:'b',cursor:1});es.emit('change',{cursor:++n+1,bootId:'b',kind:'transcription.id.action',scope:{kind:'project',id}});
+   await new Promise(r=>setTimeout(r,600));
+   return rows(doc).find(r=>r[1]==='Recording');
+  };
+  assert.deepEqual(await show('saved',true),['Microphone-2026-11-11 09.30','Recording','Saved. The transcript has not been started.','Make the transcript']);
+  // The one button starts it, through the command, and the answer is read again.
+  w.stub['/transcription/'+job.id+'/start']={status:200,body:{job:{id:job.id,state:'running'}}};
+  const before=calls.length;doc.querySelector('[data-subj-rec="start"]').click();
+  await until(()=>calls.slice(before).includes('/transcription/'+job.id+'/start'));
+  assert.deepEqual((await show('running',true)).slice(2),['Making the transcript.','']);
+  assert.deepEqual((await show('failed',true)).slice(2),['The transcript could not be made. The recording is kept.','Try the transcript again']);
+  assert.deepEqual((await show('done',true)).slice(2),['Transcript ready.','']);
+  const use=doc.querySelector('[data-subj-handoff="readTranscript"]');assert.ok(use,'Using the transcript has no command to read its proof, so it opens in Advanced');
+  assert.equal(new URL(use.getAttribute('href'),'http://x').searchParams.get('section'),'source');
+  assert.equal(doc.querySelector('[data-subj-rec]'),null);
+  assert.deepEqual((await show('saved',false)).slice(2),['Saved. Transcription is not set up on this machine.','']);
+  // A refusal reaches him in plain words and nothing is lost.
+  await show('saved',true);
+  await until(()=>doc.querySelector('[data-subj-rec="start"]'));
+  w.stub['/transcription/'+job.id+'/start']={status:503,body:{error:'An isolated transcription interpreter is not configured.'}};
+  doc.querySelector('[data-subj-rec="start"]').click();
+  await until(()=>/interpreter is not configured/.test(doc.getElementById('v2-messages')?.textContent||''));
+  assert.ok(doc.querySelector('[data-subj-rec="start"]'),'the recording and its button stay');
+ }
+ // 4. A question started from the sheet is a research topic linked to the subject, and the Facts step lists it.
+ {
+  const r=await fetch(base+'/api/research-topics/start',{method:'POST',headers:{'Content-Type':'application/json',Origin:base,'X-AR-Actor':'human:adrian','X-AR-Client':'ui'},body:JSON.stringify({operationId:'22222222-2222-4222-8222-222222222222',name:'Why does shade slow the leaf?',subjects:[id]})});
+  assert.equal(r.status,200);const topic=await r.json();
+  const {doc}=await page(base,'#/subject/'+id+'?step=facts');
+  await until(()=>[...doc.querySelectorAll('[data-subj-panel] a.subj-link')].find(a=>a.getAttribute('href')==='#/research/topic/'+topic.id),60000);
+ }
 });
