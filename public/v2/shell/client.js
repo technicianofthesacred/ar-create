@@ -79,21 +79,30 @@
   // commit), and kept for this browser session under that commit. A page shows from the kept list at once; one read in
   // the background confirms the commit and swaps the list in if the app was released again meanwhile.
   const KEPT='v2.commands';
-  const kept=()=>{try{const v=JSON.parse(storage?.getItem(KEPT)||'null');return v&&typeof v.sha==='string'&&v.sha&&Array.isArray(v.commands)?v:null;}catch{return null;}};
-  const keep=(sha,list)=>{try{if(sha)storage?.setItem(KEPT,JSON.stringify({sha,commands:list}));}catch{}};
-  const readCommands=()=>request('GET','/api/capabilities?only=commands').then(r=>{if(!r.ok||!Array.isArray(r.body?.commands))throw new V2Error('The list of commands could not be read.',{status:r.status});return {sha:typeof r.body.git?.sha==='string'?r.body.git.sha:null,commands:r.body.commands};});
+  const isCommand=c=>!!c&&typeof c==='object'&&typeof c.name==='string'&&c.name&&typeof c.method==='string'&&typeof c.route==='string';
+  const sound=list=>Array.isArray(list)&&list.length>0&&list.every(isCommand);
+  const kept=()=>{try{const v=JSON.parse(storage?.getItem(KEPT)||'null');if(v&&typeof v.sha==='string'&&v.sha&&sound(v.commands))return v;if(v)storage?.removeItem?.(KEPT);}catch{try{storage?.removeItem?.(KEPT);}catch{}}return null;};
+  const keep=(sha,list)=>{try{if(sha&&sound(list))storage?.setItem(KEPT,JSON.stringify({sha,commands:list}));}catch{}};
+  const readCommands=()=>request('GET','/api/capabilities?only=commands').then(r=>{if(!r.ok||!sound(r.body?.commands))throw new V2Error('The list of commands could not be read.',{status:r.status});return {sha:typeof r.body.git?.sha==='string'?r.body.git.sha:null,commands:r.body.commands};});
+  let confirming=null,confirmed=null,usedKept=false; // the one background read that checks a kept list against the running release
   async function commands(){
    if(capabilities)return capabilities;
    const have=kept();
    if(have){
-    capabilities=have.commands;
-    readCommands().then(fresh=>{if(fresh.sha!==have.sha){capabilities=fresh.commands;}keep(fresh.sha,fresh.commands);}).catch(()=>{});
+    capabilities=have.commands;usedKept=true;
+    confirming=confirmed=readCommands().then(fresh=>{if(fresh.sha!==have.sha)capabilities=fresh.commands;keep(fresh.sha,fresh.commands);return fresh.sha!==have.sha;}).catch(()=>false).finally(()=>{confirming=null;});
     return capabilities;
    }
    loading||=readCommands().then(fresh=>{capabilities=fresh.commands;keep(fresh.sha,fresh.commands);return capabilities;}).finally(()=>{loading=null;});
    return loading;
   }
-  async function find(name){const command=(await commands()).find(c=>c.name===name);if(!command)throw new V2Error(`The app has no command called "${name}".`,{kind:'refused',command:name});return command;}
+  async function find(name){
+   let command=(await commands()).find(c=>c.name===name);
+   // A list kept from an earlier release may not know a command: wait for the running release's list before refusing.
+   if(!command&&confirming){await confirming;command=(capabilities||[]).find(c=>c.name===name);}
+   if(!command)throw new V2Error(`The app has no command called "${name}".`,{kind:'refused',command:name});
+   return command;
+  }
   async function once(command,input,wait){
    const built=buildRequest(command,input),r=await request(built.method,built.path,built.body,wait);
    if(r.ok)return r.body;
@@ -105,7 +114,15 @@
   async function call(name,input={},{reread,merge,timeoutMs:wait}={}){
    const command=await find(name),write=!command.readOnly&&!NO_OPERATION_ID.has(name);
    const first=write&&input&&typeof input==='object'&&!input.operationId?{...input,operationId:uuid()}:input;
-   try{return await once(command,first,wait);}
+   try{
+    try{return await once(command,first,wait);}
+    catch(error){
+     // On a list kept from an earlier release, a refusal as unknown (404) is tried once more on the running release's list.
+     if(!(error instanceof V2Error)||error.status!==404||!usedKept||!confirmed)throw error;
+     const swapped=await confirmed;if(!swapped)throw error;
+     const again=await find(name);return await once(again,first,wait);
+    }
+   }
    catch(error){
     if(!(error instanceof V2Error)||error.kind!=='stale'||typeof reread!=='function')throw error;
     const fresh=await reread();error.fresh=fresh;error.message='This changed since it was opened here. It has been read again; look at it before saving.';

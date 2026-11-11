@@ -329,7 +329,12 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const activity=createActivityRecovery({dataDir,journal,events,readNativeReceipt:input=>studyDrafts.inspect(input),ownerReceipts:()=>[...(simmerActivity?.activityReceipts()||[]),...conversationCaptures.activityReceipts()],fault:activityFault});
   let activityHealth;
   // Standing reads settle announced changes only when some request that could write has arrived since the last settle.
-  let writesSeen=0,settledAt=-1;
+  // A write counts when it has finished (after its change notice), and while any write is running every read settles.
+  // Anything that emits a change (including background owners with no request) also asks for the next settle, and a
+  // settle older than five seconds is repeated, so a quiet writer with no request or event is bounded to that long.
+  // Writes that have answered but are still announcing their change are waited for, so a read made right after a write
+  // answers cannot beat that write's announcement.
+  let writesInFlight=0,writesDone=0,settledAt=-1,settledTime=0;const announcing=new Set();
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
   // One consent desk for the whole server: the app, agents and every publish path read the same hold through it.
@@ -413,7 +418,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const conversationCaptures=createConversationCapture({dataDir,concepts:conceptWork,...simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk})});
   const currentWork=conceptWork?createCurrentWork({concepts:conceptWork,direction:studyHumanDirection,...simmer,understanding:currentUnderstanding,studyAI,presence,continuity:workContinuity,captures:conversationCaptures,needs:sharedNeedsYou({dataDir,events,recordings})}):null;
   // Where a subject stands (subject.standing, subjects.standing): one gathered read per subject, cached for all and kept fresh by the change stream.
-  const subjectStanding=studyDrafts?createSubjectStanding({dataDir,drafts:studyDrafts,outputs:studyOutputs,checks:studyDraftChecks,consentDesk,suggestions:studyAI?input=>studyAI.call('list',input):null,library,firstFlow,simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk}),needsYou:sharedNeedsYou({dataDir,events,recordings}),places:sharedSubjectPlaces({dataDir}),wordChecks:async()=>(await import('./services/words-http.mjs')).wordsFor({dataDir,events,recordings}).shared.checks({}),topics:inquiryInterface?async()=>(await inquiryInterface.handle({method:'GET',path:'/catalog',input:{}})).body:null,events,settle:async()=>{const seen=writesSeen;if(seen===settledAt)return;activityHealth=await activity.reconcile();settledAt=seen;}}):null;
+  events.subscribe(()=>{writesDone++;});
+  const subjectStanding=studyDrafts?createSubjectStanding({dataDir,drafts:studyDrafts,outputs:studyOutputs,checks:studyDraftChecks,consentDesk,suggestions:studyAI?input=>studyAI.call('list',input):null,library,firstFlow,simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk}),needsYou:sharedNeedsYou({dataDir,events,recordings}),places:sharedSubjectPlaces({dataDir}),wordChecks:async()=>(await import('./services/words-http.mjs')).wordsFor({dataDir,events,recordings}).shared.checks({}),topics:inquiryInterface?async()=>(await inquiryInterface.handle({method:'GET',path:'/catalog',input:{}})).body:null,events,settle:async()=>{if(announcing.size)await Promise.all([...announcing]);const seen=writesDone;if(!writesInFlight&&seen===settledAt&&Date.now()-settledTime<5000)return;activityHealth=await activity.reconcile();if(!writesInFlight){settledAt=seen;settledTime=Date.now();}}}):null;
   const studyLanguage=studyOutputs&&studyDrafts?createStudyLanguageConnection({dataDir,outputs:studyOutputs,drafts:studyDrafts,share:studyShare,structureTests,execution:nativeAIExecution??execution}):null;
   const sourceLanguage=createSourceTranslationProposals({dataDir,readSelection:createSourceTranslationSelectionReader({sourceSessions,drafts:studyDrafts,validateCopyTarget:input=>structureTests?.validateTarget(input)}),validateCopyTarget:input=>structureTests?.validateTarget(input),execution:nativeAIExecution??execution});
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
@@ -778,7 +784,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   activityHealth=await activity.reconcile();
   const server = http.createServer(async (request, response) => {
     if(packageView&&request.method==='GET'&&new URL(request.url,'http://localhost').pathname==='/document-study/package-config.js'){response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
-    if(request.method!=='GET'&&request.method!=='HEAD'&&request.method!=='OPTIONS')writesSeen++;
+    const isWrite=request.method!=='GET'&&request.method!=='HEAD'&&request.method!=='OPTIONS';
+    let announced=()=>{};
+    if(isWrite){writesInFlight++;let over=false;const done=new Promise(resolve=>{announced=()=>{over=true;announcing.delete(done);resolve();};});const mark=()=>{if(!over)announcing.add(done);};response.once('finish',mark);response.once('close',mark);}
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'"+(new URL(request.url,'http://localhost').pathname==='/document-study/index.html'?" 'unsafe-inline'":"")+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
@@ -801,6 +809,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
     } finally {
       // After the answer: tell watchers what changed (and, from B8, journal it).
       try { await afterRequest(request, response, request.arActor); } catch (failure) { console.error('Change notice failed; the write itself stands:', failure.message); }
+      if(isWrite){writesInFlight--;writesDone++;announced();}
     }
   });
   attachTerminalSockets(server, terminal, { checkHost: request => { if (!localAuthorities(server).includes(request.headers.host)) throw new StateError('Only local workspace requests are accepted.',403); }, checkOrigin: request => checkWriteOrigin(request,server) });
