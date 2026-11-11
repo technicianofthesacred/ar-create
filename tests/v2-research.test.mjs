@@ -101,7 +101,8 @@ test('a topic reads first (spoken words in Lora, his line his alone), decides on
 });
 
 test('linking a topic to a subject lists subjects from the one fast read, never inquiries.projects, and links just that subject',async()=>{
- const r=await page('#/research/topic/p-1111');
+ const r=await page('#/research/topic/p-1111?tab=sources');
+ assert.ok(!(await page('#/research/topic/p-1111')).doc.querySelector('[data-rs-link]'),'the Read tab is the sample\'s: nothing after the reflection');
  r.doc.querySelector('[data-rs-link]').click();await settle(200);
  const names=[...r.doc.querySelectorAll('.rs-pickone')].map(b=>b.textContent);assert.deepEqual(names,['An invented garden'],'archived subjects are left out');
  r.doc.querySelector('.rs-pickone').click();await settle(200);
