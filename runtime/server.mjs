@@ -328,6 +328,8 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const simmerActivity=fs.existsSync(path.join(root,'services/simmer-operations.mjs'))?(await import('./services/simmer-operations.mjs')).simmerOperations(dataDir):null;
   const activity=createActivityRecovery({dataDir,journal,events,readNativeReceipt:input=>studyDrafts.inspect(input),ownerReceipts:()=>[...(simmerActivity?.activityReceipts()||[]),...conversationCaptures.activityReceipts()],fault:activityFault});
   let activityHealth;
+  // Standing reads settle announced changes only when some request that could write has arrived since the last settle.
+  let writesSeen=0,settledAt=-1;
   // The magazine's one writer (runtime/services/magazine-vault): configured by the host, read-only unless writable:true.
   const magazineConfig=await loadMagazineVaultConfig({dataDir,options:magazineVaultOptions});
   // One consent desk for the whole server: the app, agents and every publish path read the same hold through it.
@@ -411,7 +413,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const conversationCaptures=createConversationCapture({dataDir,concepts:conceptWork,...simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk})});
   const currentWork=conceptWork?createCurrentWork({concepts:conceptWork,direction:studyHumanDirection,...simmer,understanding:currentUnderstanding,studyAI,presence,continuity:workContinuity,captures:conversationCaptures,needs:sharedNeedsYou({dataDir,events,recordings})}):null;
   // Where a subject stands (subject.standing, subjects.standing): one gathered read per subject, cached for all and kept fresh by the change stream.
-  const subjectStanding=studyDrafts?createSubjectStanding({dataDir,drafts:studyDrafts,outputs:studyOutputs,checks:studyDraftChecks,consentDesk,suggestions:studyAI?input=>studyAI.call('list',input):null,library,firstFlow,simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk}),needsYou:sharedNeedsYou({dataDir,events,recordings}),places:sharedSubjectPlaces({dataDir}),wordChecks:async()=>(await import('./services/words-http.mjs')).wordsFor({dataDir,events,recordings}).shared.checks({}),topics:inquiryInterface?async()=>(await inquiryInterface.handle({method:'GET',path:'/catalog',input:{}})).body:null,events,settle:async()=>{activityHealth=await activity.reconcile();}}):null;
+  const subjectStanding=studyDrafts?createSubjectStanding({dataDir,drafts:studyDrafts,outputs:studyOutputs,checks:studyDraftChecks,consentDesk,suggestions:studyAI?input=>studyAI.call('list',input):null,library,firstFlow,simmer,instagram:sharedInstagramStudio({dataDir,library,consentDesk}),needsYou:sharedNeedsYou({dataDir,events,recordings}),places:sharedSubjectPlaces({dataDir}),wordChecks:async()=>(await import('./services/words-http.mjs')).wordsFor({dataDir,events,recordings}).shared.checks({}),topics:inquiryInterface?async()=>(await inquiryInterface.handle({method:'GET',path:'/catalog',input:{}})).body:null,events,settle:async()=>{const seen=writesSeen;if(seen===settledAt)return;activityHealth=await activity.reconcile();settledAt=seen;}}):null;
   const studyLanguage=studyOutputs&&studyDrafts?createStudyLanguageConnection({dataDir,outputs:studyOutputs,drafts:studyDrafts,share:studyShare,structureTests,execution:nativeAIExecution??execution}):null;
   const sourceLanguage=createSourceTranslationProposals({dataDir,readSelection:createSourceTranslationSelectionReader({sourceSessions,drafts:studyDrafts,validateCopyTarget:input=>structureTests?.validateTarget(input)}),validateCopyTarget:input=>structureTests?.validateTarget(input),execution:nativeAIExecution??execution});
   const localTranscriptCandidates=createLocalTranscriptCandidates({dataDir,recordings,library});
@@ -445,7 +447,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   // Metadata only: no destination is selected/created here. The caller must
   // explicitly choose a ready existing root, then read /api/study/outputs for
   // photoScope + expectedOutput and /api/study-draft/read for expectedNative.
-  const describeCapabilities=async()=>({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))??releaseSha(path.dirname(root),release)},commands:commandList().map(publicEntry),retainedCarouselCopy:await retainedCopyAvailability(),browserCarouselCopy:{available:!!studyOutputs,requiresExplicitDestination:true,requiresBrowserSnapshot:true}});
+  const describeCapabilities=async({only}={})=>only==='commands'?{schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))??releaseSha(path.dirname(root),release)},commands:commandList().map(publicEntry)}:({schema:CAPABILITIES_SCHEMA,git:{sha:gitSha(path.dirname(root))??releaseSha(path.dirname(root),release)},commands:commandList().map(publicEntry),retainedCarouselCopy:await retainedCopyAvailability(),browserCarouselCopy:{available:!!studyOutputs,requiresExplicitDestination:true,requiresBrowserSnapshot:true}});
   const guardHumanOnly=(method,pathname,context)=>{const command=findCommand(commandList(),method,pathname);if(!command||!command.actors.includes('human'))return;if(command.relay==='chat'&&CHAT_CARRIERS.includes(context?.actor))return;if(!context||!isHuman(context.actor))throw new StateError(`This decision is human-only; ${context?.actor||'an unattributed caller'} may propose but not decide.`,403);};
   // Every request runs inside its actor context so services can stamp writes.
   async function routeRequest(request, response) {
@@ -570,7 +572,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
         if (await recordings.route(request, response, url)) return;
         throw new StateError('Recording route is unavailable.', 404);
       }
-      const routes = commandRoutes({ url, request, server, outputQuery, decorateOutputExports, describe: () => describeCapabilities() });
+      const routes = commandRoutes({ url, request, server, outputQuery, decorateOutputExports, describe: options => describeCapabilities(options) });
       const passageMatch=pathname.match(/^\/api\/passage\/revisions\/([a-f0-9-]{36})(?:\/(send|run))?$/);
       if(passageMatch){
         const [,id,action]=passageMatch;
@@ -776,6 +778,7 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   activityHealth=await activity.reconcile();
   const server = http.createServer(async (request, response) => {
     if(packageView&&request.method==='GET'&&new URL(request.url,'http://localhost').pathname==='/document-study/package-config.js'){response.writeHead(200,{'Content-Type':'text/javascript; charset=utf-8','Cache-Control':'no-store'});return response.end('window.AR_CREATE_PACKAGE_CONFIG='+JSON.stringify(packageView)+';');}
+    if(request.method!=='GET'&&request.method!=='HEAD'&&request.method!=='OPTIONS')writesSeen++;
     response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'"+(new URL(request.url,'http://localhost').pathname==='/document-study/index.html'?" 'unsafe-inline'":"")+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
@@ -821,6 +824,9 @@ export async function createServer({ dataDir = path.join(root, 'data'), i64osDir
   const close=server.close;
   server.close=function(callback){for(const client of [...sseClients]){client.close();client.response.end();}return close.call(this,error=>{store.close().then(()=>callback?.(error),failure=>{if(callback)callback(failure);else console.error('Workspace close failed:',failure.message);});});};
   server.closeWorkspace=()=>store.close();
+  // Read where every subject stands once, so the first Home after a start is not the one that pays for it.
+  // A home that has never listed its subjects (no subject-places folder yet) has nothing to warm, and the read would make that folder.
+  server.once('listening',()=>{if(!subjectStanding||!fs.existsSync(path.join(dataDir,'subject-places')))return;const timer=setTimeout(()=>{if(server.listening)subjectStanding.all().catch(()=>{});},50);timer.unref();});
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;
   return server;

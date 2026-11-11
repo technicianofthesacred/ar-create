@@ -293,7 +293,7 @@ test('presence.post is sent as it is, with no operationId, so the server accepts
 });
 
 test('the client says who holds a record (423) and what a consent hold is, in plain words',async()=>{
- const C=clientModule(),answer=(status,body)=>C.createClient({search:'',storage:null,fetchImpl:async u=>({ok:u.endsWith('/api/capabilities'),status:u.endsWith('/api/capabilities')?200:status,text:async()=>JSON.stringify(u.endsWith('/api/capabilities')?{commands:[{name:'w',method:'POST',route:'/api/w',readOnly:false,schema:{}}]}:body)})});
+ const C=clientModule(),answer=(status,body)=>C.createClient({search:'',storage:null,fetchImpl:async u=>({ok:u.includes('/api/capabilities'),status:u.includes('/api/capabilities')?200:status,text:async()=>JSON.stringify(u.includes('/api/capabilities')?{commands:[{name:'w',method:'POST',route:'/api/w',readOnly:false,schema:{}}]}:body)})});
  await assert.rejects(answer(423,{error:'locked',holder:{actor:'agent:claude-code',expiresAt:'2026-11-11T10:00:00Z'}}).call('w',{}),e=>e.kind==='held'&&/^Claude is working on this until .+\. Wait, or ask them to let it go\.$/.test(e.message)&&e.holder.actor==='agent:claude-code');
  await assert.rejects(answer(423,{error:'Held until the people in it have said yes.',code:'consent-hold',hold:{unanswered:['x']}}).call('w',{}),e=>e.kind==='consent'&&e.message==='Held until the people in it have said yes.'&&!!e.hold);
  await assert.rejects(answer(500,{error:'internal detail'}).call('w',{}),e=>e.kind==='failed'&&e.message==='The app could not answer. Nothing was changed.');

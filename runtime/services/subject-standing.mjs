@@ -35,6 +35,7 @@ import {StateError} from '../store.mjs';
 import {digest, readJson} from './files.mjs';
 import {standingOf, summaryOf} from '../standing-rule.mjs';
 
+const READ_AT_ONCE = 4;
 const yieldNow = () => new Promise(resolve => setImmediate(resolve));
 const quiet = async fn => {try {return await fn();} catch {return undefined;}};
 const TIMING = new Map();
@@ -266,7 +267,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
      }
     }
    }
-   const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id})})));
+   const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id}, {draft: read})})));
    facts.check = c ? {status: c.value?.status || null, issues: (c.value?.issues || []).length} : null;
    times.push(c?.value?.checkedAt, c?.value?.createdAt);
   } else if (subject.draft) {facts.words = null; facts.suggestions = null; facts.check = null;}
@@ -335,10 +336,9 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (typeof parentStudyId !== 'string' || !parentStudyId.trim() || parentStudyId.length > 256 || /[\x00-\x1f\x7f]/.test(parentStudyId)) throw new StateError('Name the subject by its project id (parentStudyId).', 400);
   const subject = (await list()).find(s => s.id === parentStudyId);
   if (!subject) throw new StateError('No subject with that id.', 404);
-  let facts = await factsOf(subject);
-  // One subject's page waits for the proposal owner's answer about its suggestions, rather than say Not known.
-  const v = verdicts.get(subject.id);
-  if (facts.suggestions === null && v?.pending) {await v.pending; facts = await factsOf(subject);}
+  // The proposal owner's answer about suggestions is slow, so it is not waited for: the count is Not known until it
+  // arrives, and the next read has it. Screens ask again.
+  const facts = await factsOf(subject);
   return {...standingOf(facts, {now: now()}), facts, readAt: new Date(now()).toISOString()};
  }
  let running = null;
@@ -347,13 +347,18 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   await quiet(settle);
   while (running) await running.catch(() => {});
   const work = (async () => {
-   const started = now(), subjectsNow = await list(), out = [];
-   let read = 0;
-   for (const subject of subjectsNow) {
-    const before = stats.subjectReads, facts = await factsOf(subject);
-    if (stats.subjectReads !== before) {read++; await yieldNow();}
-    out.push(summaryOf(standingOf(facts, {now: now()})));
-   }
+   const started = now(), subjectsNow = await list(), out = new Array(subjectsNow.length), startReads = stats.subjectReads;
+   // A few subjects at a time; each read still gives the server back (yieldNow) so other calls never wait behind it.
+   let next = 0;
+   const worker = async () => {
+    while (next < subjectsNow.length) {
+     const i = next++, before = stats.subjectReads, facts = await factsOf(subjectsNow[i]);
+     if (stats.subjectReads !== before) await yieldNow();
+     out[i] = summaryOf(standingOf(facts, {now: now()}));
+    }
+   };
+   await Promise.all(Array.from({length: Math.min(READ_AT_ONCE, subjectsNow.length)}, worker));
+   const read = stats.subjectReads - startReads;
    for (const id of subjects.keys()) if (!subjectsNow.some(s => s.id === id)) subjects.delete(id);
    return {schema: 'ar-create.subjects-standing.v1', readAt: new Date(now()).toISOString(), count: out.length, readAgain: read, ms: now() - started, subjects: out};
   })();

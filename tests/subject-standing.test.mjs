@@ -34,7 +34,12 @@ test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fr
  const first = (await get('/api/subjects/standing')).subjects.find(s => s.id === 'demo-shade-and-patience');
  assert.ok(first.next === null || first.next.step === 'words');
  if (first.next === null) assert.equal(first.known, false);
- assert.equal((await get('/api/subject/standing?parentStudyId=demo-shade-and-patience')).facts.suggestions, 1, 'one subject waits for the answer');
+ // One subject does not wait for the proposal owner: its count is Not known at once (or already 1 if the first read of
+ // everything has heard), and the next reads have it.
+ let waiting = (await get('/api/subject/standing?parentStudyId=demo-shade-and-patience')).facts.suggestions;
+ assert.ok(waiting === null || waiting === 1, 'Not known, never a wrong number');
+ for (let i = 0; waiting !== 1 && i < 100; i++) {await new Promise(r => setTimeout(r, 100)); waiting = (await get('/api/subject/standing?parentStudyId=demo-shade-and-patience')).facts.suggestions;}
+ assert.equal(waiting, 1, 'the answer arrives for the next read');
  const all = await get('/api/subjects/standing'), by = Object.fromEntries(all.subjects.map(s => [s.id, s]));
  assert.equal(all.schema, 'ar-create.subjects-standing.v1');
  const expect = {

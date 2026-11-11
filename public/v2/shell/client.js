@@ -75,9 +75,22 @@
    const text=await response.text();let value;try{value=text?JSON.parse(text):null;}catch{value={text};}
    return {ok:response.ok,status:response.status,body:value};
   }
+  // The command list is read with ?only=commands (no recordings, no retained copies, only the commands and the release's
+  // commit), and kept for this browser session under that commit. A page shows from the kept list at once; one read in
+  // the background confirms the commit and swaps the list in if the app was released again meanwhile.
+  const KEPT='v2.commands';
+  const kept=()=>{try{const v=JSON.parse(storage?.getItem(KEPT)||'null');return v&&typeof v.sha==='string'&&v.sha&&Array.isArray(v.commands)?v:null;}catch{return null;}};
+  const keep=(sha,list)=>{try{if(sha)storage?.setItem(KEPT,JSON.stringify({sha,commands:list}));}catch{}};
+  const readCommands=()=>request('GET','/api/capabilities?only=commands').then(r=>{if(!r.ok||!Array.isArray(r.body?.commands))throw new V2Error('The list of commands could not be read.',{status:r.status});return {sha:typeof r.body.git?.sha==='string'?r.body.git.sha:null,commands:r.body.commands};});
   async function commands(){
    if(capabilities)return capabilities;
-   loading||=request('GET','/api/capabilities').then(r=>{if(!r.ok||!Array.isArray(r.body?.commands))throw new V2Error('The list of commands could not be read.',{status:r.status});capabilities=r.body.commands;return capabilities;}).finally(()=>{loading=null;});
+   const have=kept();
+   if(have){
+    capabilities=have.commands;
+    readCommands().then(fresh=>{if(fresh.sha!==have.sha){capabilities=fresh.commands;}keep(fresh.sha,fresh.commands);}).catch(()=>{});
+    return capabilities;
+   }
+   loading||=readCommands().then(fresh=>{capabilities=fresh.commands;keep(fresh.sha,fresh.commands);return capabilities;}).finally(()=>{loading=null;});
    return loading;
   }
   async function find(name){const command=(await commands()).find(c=>c.name===name);if(!command)throw new V2Error(`The app has no command called "${name}".`,{kind:'refused',command:name});return command;}
