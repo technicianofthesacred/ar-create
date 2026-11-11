@@ -238,3 +238,9 @@ What it asks (my reading, not his words; "mirror" was dictated and most likely m
 - **No nests of pages to click through.** Everything lives on one surface. Going from everything to a collection to a book to a concept to its depths is zooming and expanding on that one surface, like an infinite canvas or a mind map.
 - **Keep the strong structure.** He likes how things are laid out (the parts of a work, the order of a concept's reading, the grouped lines). So it is an infinite zoom with firm structure at every level, not a loose freeform board.
 - One wide column for a list of concepts, not two.
+
+**11 November, confirming the reading above, in his words:**
+
+"Yes, this is exactly what I'm talking about. Everything you interpreted is correct."
+
+So the five points under "What it asks" above are confirmed by him, including that "mirror" meant Miro: Express is not a place; a concept expands and contracts where it sits, with no Open button and nothing opening over the top; no nested pages, one surface that is zoomed and expanded; like an infinite canvas or a mind map; and strong structure at every level.
