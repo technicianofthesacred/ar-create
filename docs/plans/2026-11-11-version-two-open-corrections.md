@@ -18,8 +18,8 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Advanced lands on the right section | In, reviewed |
 | Write, Read and Check inside version two (piece 7) | Not started. They open in Advanced |
 
-Adrian has seen four pictures of Home and has been given a demo to click through. He has not yet said yes to any
-screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
+Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
+screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
 works, that it be shipped without asking again (a pull request merged into main). The release to his installed app is
 run on his Mac.
 
@@ -27,9 +27,39 @@ run on his Mac.
 
 ### 1. The match against the sample
 
-A checker compares every screen with the mock-up (`design/2026-11-better-interface/d-four-stations/` on
-`claude/ar-create-design-round`) at 1440 and 390 wide, dark and light. Its list is the work list before shipping. The
-largest known difference: the sample shows a Write screen; version two opens Write in Advanced.
+Checked twice by a separate model against the mock-up (`design/2026-11-better-interface/d-four-stations/` on
+`claude/ar-create-design-round`) at 1440 and 390 wide, dark and light, with two rounds of corrections. What still
+differs:
+
+Left on purpose, because the truth or the contract requires it:
+
+- **Write.** The sample has its own Write screen; version two opens Write, Read and Check in Advanced (piece 7).
+- **"Advanced" in the bar.** Not in the sample, which was drawn before there were two fronts. It is the quietest
+  item, at the far right.
+- **No invented content.** The sample's dashed "new" card, prefilled subject name, "Listen · 6 min", likes and
+  journey look are not shown. Blocks with no back end sit in the sample's place and say "not built yet": the
+  Favourite star, Add a slide and Speak in the studio; "Change it by talking", "Open the folder" and "Tell it more"
+  in Looks; answers, chips and "Keep as a note" on a group; "Listen", "Voices it trusts" and "Viewpoints".
+- **Find, not Ask.** The Research box has the sample's shape and says "Find": it finds words and cannot answer.
+- **No agreement meter** on a topic's claims: a finding is never drawn as a quarrel no record states.
+- **Forms carry no drag grip.** No record keeps their order. They are numbered.
+- **Words on a slide are read-only** with a way into Write.
+- **Kept though the sample lacks them**, as the only way to do the job by keys or touch: New folder, "Archived",
+  the row menu on Home, "Not in a group" and a topic's Group, Use for a subject and Let it go row (now on the
+  Sources tab).
+- **Six type sizes.** The phone bar's labels are 12 where the sample has 11; a topic heading on a phone is 22 where
+  the sample has 20.
+
+Small and not yet done:
+
+- Home: chip widths 78 against 86; a header's rounding; the Needs you panel's height at 390; a click on Needs you in
+  the bar scrolls to the panel where the sample does nothing; the Capture line's wording with no subject open.
+- Subject: the parts list's width; the content width 996 against 972.
+- Every screen: grey text in the light theme is #5e6257 where the sample has #686c61 (one shell token).
+- Removed to match the sample, and so lost: the studio's "Find a layout" search.
+- Not compared at all: hover and focus colours, mouse drag, the studio's filmstrip, the Carousel's step names.
+- Seen only on the demo's lack of records, to be checked with real ones: the tint under the bar (needs a look
+  recorded on the subject), the "Claude is carrying on" line, covers, the Decide tab's count, claim bars and quotes.
 
 ### 2. Where a subject stands
 
@@ -88,6 +118,11 @@ largest known difference: the sample shows a Write screen; version two opens Wri
   service.
 
 ## Things to know before trusting a green run
+
+- Under `--stress` the existing workspace's Home cuts its "Needs you" heading by 9 pixels at 390 wide. The files
+  behind it are identical to main; it is for the screens thread, not this build.
+- In the demo the existing workspace logs errors on load for the synthetic subject "hk" (three 409s, a 404, one
+  script error) and its event stream reconnects. Not looked into; not seen on a version two page.
 
 - `npm test` does not include the workspace's own page tests. Run `node --test public/document-study/*.test.mjs` as
   well. Three of them fail on untouched `main`: "public/document-study/collection-app-journey.test.mjs", "shared
