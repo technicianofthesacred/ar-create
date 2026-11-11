@@ -14,7 +14,8 @@
 //                                             research was asked for is read through the research owner itself
 //   the dish he named, possible dishes        the Simmer board
 //   his direction written                     human direction's words file for the project
-//   the words, suggestions waiting            the saved writing; suggestion folders indexed once for all
+//   the words, suggestions waiting            the saved writing; suggestion folders indexed once for all; the
+//                                             proposal owner only for a subject with one made on its current words
 //   check                                     the saved Check
 //   pieces                                    the saved outputs (read only for a writing place the catalogue
 //                                             lists an output binding for), and Instagram plans (listed once)
@@ -55,10 +56,11 @@ const SHARED = {
  topics: [/^inquiries\./],
 };
 
-export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, needsYou, places, wordChecks, topics, events, settle = async () => {}, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
+export function createSubjectStanding({dataDir, drafts, outputs, checks, consentDesk, library, firstFlow, simmer, instagram, suggestions, needsYou, places, wordChecks, topics, events, settle = async () => {}, maxAgeMs = 5 * 60_000, now = () => Date.now()} = {}) {
  if (!dataDir || !drafts) throw new TypeError('Subject standing needs the data folder and the study drafts.');
  const shared = new Map();  // name -> {value, at, dirty, pending}
  const subjects = new Map(); // id -> {facts, at, gen, dirty}
+ const verdicts = new Map(); // id -> {key, count?, pending?}: how many of its suggestions the proposal owner still offers
  const ids = new Map();      // any record id (binding, project, output, plan) -> subject id
  let everythingGen = 0;
  const stats = {sharedReads: 0, subjectReads: 0};
@@ -93,7 +95,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   for (const n of names) {
    const r = readJson(path.join(root, n, 'request.json'), null); const b = r?.binding?.bindingId; if (!b) continue;
    const pending = fs.existsSync(path.join(root, n, 'proposal.json')) && !fs.existsSync(path.join(root, n, 'decision.json'));
-   const row = byBinding.get(b) || {pending: 0, at: null}; if (pending) row.pending++; row.at = newest([row.at, r.createdAt]); byBinding.set(b, row);
+   const row = byBinding.get(b) || {pending: [], at: null}; if (pending) row.pending.push({id: n, expected: r.expected}); row.at = newest([row.at, r.createdAt]); byBinding.set(b, row);
   }
   return byBinding;
  }
@@ -150,7 +152,11 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   } else if (!planRecords) pieces = null;
   facts.pieces = pieces;
   facts.look = pieces?.find(p => p.plan?.look)?.plan.look || null;
-  // Material: the subject's own Library folder, the sources its research holds, what its plans were made from.
+  // The Simmer board: the dish he named, and the words and photographs brought to it (a chat intake files his words
+  // as a Library note "Adrian, in chat" and his photographs as Library sources, and places both on the board).
+  const board = simmer ? await quiet(timed('board', async () => (await simmer).boards.read({subject: id}))) : undefined;
+  // Material: the subject's own Library folder, the sources its research holds, what its plans were made from, and
+  // what is on its board. A list that could not be read makes the material not known, never "nothing".
   const flow = facts.projectId ? readJson(path.join(dataDir, 'first-flow', digest(facts.projectId), 'flow.json'), null) : null;
   const sourceIds = new Set(), setAside = new Set(Object.entries(flow?.materialDecisions || {}).filter(([, v]) => v?.decision === 'set-aside').map(([k]) => k));
   const items = new Map(), add = (sid, s) => {if (!sid || items.has(sid) || setAside.has(sid)) return; items.set(sid, s || {});};
@@ -158,8 +164,13 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
    for (const sid of flow?.sourceIds || []) {add(sid, lib.byId.get(sid)); sourceIds.add(sid);}
    if (facts.projectId) for (const s of lib.byFolder.get(facts.projectId) || []) {add(s.id, s); times.push(s.modified_at); sourceIds.add(s.id);}
    for (const pr of planRecords || []) {if (!pr) continue; for (const x of pr.material?.transcripts || []) add(x.sourceId, {...lib.byId.get(x.sourceId), kind: 'transcript'}); for (const x of pr.material?.photos || []) add(x.sourceId, {...lib.byId.get(x.sourceId), kind: 'image'});}
+   for (const g of board?.groups || []) for (const b of g?.blocks || []) {
+    const sid = b?.photo?.sourceId || b?.source?.sourceId;
+    if (sid) {add(sid, b.photo ? {...lib.byId.get(sid), kind: 'image'} : lib.byId.get(sid) || {kind: 'note'}); sourceIds.add(sid);}
+    else if (b?.origin === 'human' && ['mine', 'note', 'voice', 'letter'].includes(b.kind) && String(b.text || '').trim()) add('block:' + b.id, {kind: 'note'});
+   }
    const m = {total: 0, recordings: 0, notes: 0, links: 0, photos: 0}; for (const s of items.values()) {m[kindOf(s)]++; m.total++;}
-   facts.material = planRecords || !mine ? m : null;
+   facts.material = (planRecords || !mine) && board !== undefined ? m : null;
   } else facts.material = null;
   // The transcript: words a word check left open for its recordings, and a plan's words still to confirm.
   if (facts.material) {
@@ -192,7 +203,6 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   }
   if (facts.research && topicList) facts.research.topics = topicList.filter(t => (t.sourceIds || []).some(s => sourceIds.has(s))).length;
   // The dish he named on the Simmer board, and whether his direction is written.
-  const board = simmer ? await quiet(timed('board', async () => (await simmer).boards.read({subject: id}))) : undefined;
   // His direction: the words file human direction keeps for the project (workspaces/<project>/HUMAN-DIRECTION.md).
   let dir = null;
   if (facts.projectId) dir = await quiet(timed('direction', async () => {
@@ -210,7 +220,34 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
    const read = await quiet(timed('read', () => drafts.read({bindingId, parentStudyId: id})));
    if (read) {const blocks = (read.projection || []).filter(x => String(x.words || '').trim()); facts.words = {paragraphs: blocks.filter(x => x.blockKind !== 'heading').length, count: blocks.reduce((n, x) => n + String(x.words).trim().split(/\s+/).length, 0)}; times.push(...(read.history || []).map(h => h.modifiedAt));}
    else facts.words = null;
-   const row = reqs?.get(bindingId); facts.suggestions = reqs ? row?.pending || 0 : null; times.push(row?.at);
+   // Suggestions waiting on the words. One made before the words last changed is stale and the app no longer offers
+   // it, so it is not counted. One made against the current words may still be stale for another reason (his
+   // direction or guidance changed), which only the proposal owner can say: then it is asked, for this subject only.
+   const row = reqs?.get(bindingId); times.push(row?.at);
+   if (!reqs || !read) facts.suggestions = null;
+   else {
+    const current = (row?.pending || []).filter(x => JSON.stringify(x.expected) === JSON.stringify(read.expected));
+    if (!current.length) facts.suggestions = 0;
+    else if (!suggestions) facts.suggestions = null;
+    else {
+     // The owner's answer is slow (seconds at a hundred subjects), so it is kept per subject, per suggestion and per
+     // version of the words, and asked in the background: until it answers, the count is not known.
+     const key = JSON.stringify([current.map(x => x.id), read.expected, subjects.get(id)?.gen || 0]), v = verdicts.get(id);
+     if (v?.key === key && 'count' in v) facts.suggestions = v.count;
+     else {
+      facts.suggestions = null;
+      if (v?.key !== key || !v.pending) {
+       const entry = {key};
+       entry.pending = quiet(timed('suggestions', () => suggestions({bindingId, parentStudyId: id}))).then(listed => {
+        entry.count = listed ? (listed.items || []).filter(i => i.status === 'pending' && !i.stale).length : null;
+        entry.pending = null; if (entry.count === null) verdicts.delete(id);
+        const e = subjects.get(id); if (e) e.dirty = true;
+       });
+       verdicts.set(id, entry);
+      }
+     }
+    }
+   }
    const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id})})));
    facts.check = c ? {status: c.value?.status || null, issues: (c.value?.issues || []).length} : null;
    times.push(c?.value?.checkedAt, c?.value?.createdAt);
@@ -236,7 +273,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   const keys = new Set(deps.sources || []);
   return JSON.stringify([subject.bindingId, subject.pieces, subject.title, subject.draft?.modifiedAt || null,
    planList ? planList.filter(p => p.subject === subject.id).map(p => p.id + ':' + p.revision) : null,
-   reqs ? reqs.get(subject.bindingId)?.pending || 0 : null,
+   reqs ? (reqs.get(subject.bindingId)?.pending || []).map(x => x.id) : null,
    place ? [place.folder, place.archived, place.updatedAt] : null,
    askList ? askList.filter(a => a.scope?.id === subject.id).length : null,
    folder, [...keys].map(k => lib?.byId.get(k)?.hash || null),
@@ -280,7 +317,10 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (typeof parentStudyId !== 'string' || !parentStudyId.trim() || parentStudyId.length > 256 || /[\x00-\x1f\x7f]/.test(parentStudyId)) throw new StateError('Name the subject by its project id (parentStudyId).', 400);
   const subject = (await list()).find(s => s.id === parentStudyId);
   if (!subject) throw new StateError('No subject with that id.', 404);
-  const facts = await factsOf(subject);
+  let facts = await factsOf(subject);
+  // One subject's page waits for the proposal owner's answer about its suggestions, rather than say Not known.
+  const v = verdicts.get(subject.id);
+  if (facts.suggestions === null && v?.pending) {await v.pending; facts = await factsOf(subject);}
   return {...standingOf(facts, {now: now()}), facts, readAt: new Date(now()).toISOString()};
  }
  let running = null;
