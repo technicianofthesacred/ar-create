@@ -1,6 +1,6 @@
 # Plans from the 10 November review
 
-Eight plans, each written so a builder can start without the chat they came from. They come from the [use and interface review](../reviews/2026-11-10-use-and-interface-review.md); finding numbers (U1, V3, M2, A1) point into it. **None is approved or started.** Each needs Adrian's yes on its own plan and, for anything he would see, before and after screenshots of the demo before it counts as done.
+Nine plans, each written so a builder can start without the chat they came from. They come from the [use and interface review](../reviews/2026-11-10-use-and-interface-review.md); finding numbers (U1, V3, M2, A1) point into it. **None is approved or started.** Each needs Adrian's yes on its own plan and, for anything he would see, before and after screenshots of the demo before it counts as done.
 
 | # | Plan | What it gives Adrian | Size | Needs first |
 |---|---|---|---|---|
@@ -12,6 +12,7 @@ Eight plans, each written so a builder can start without the chat they came from
 | 6 | [Without the Mac](2026-11-10-06-without-the-mac.md) | The app, his phone and agents work with the Mac off | Large, in stages | Decision 9 |
 | 7 | [A demo that walks the whole chain](2026-11-10-07-walkable-demo.md) | Anyone, anywhere, can test recording to finished piece on invented data | Small to medium | Nothing |
 | 8 | [A noticeably better interface](2026-11-10-08-a-noticeably-better-interface.md) | Home as his desk, one page per subject, a path instead of thirteen doors, a calm writing page | A design round, then large | His choice from mock-ups |
+| 9 | [The wisdom bank, an inquiry](2026-11-11-09-wisdom-bank-inquiry.md) | Paste a talk or book in; it is distilled into nuggets that link, map and feed his pieces | An inquiry in four parts, then large | His yes to start |
 
 Decision numbers are those in the review's "Decisions that belong to Adrian".
 
