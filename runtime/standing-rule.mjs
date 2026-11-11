@@ -13,7 +13,8 @@
 // is never "Nothing yet"; a Carousel-only subject reaches Write, Read and Check from its post text step.
 //
 // facts = {
-//   id, title, bindingId?, projectId?, archived?, folder?, look?, changedAt? (ISO), asks? (open questions), published? (true|false),
+//   id, title, bindingId?, projectId?, archived?, folder?, look?, changedAt? (ISO), asks? (open questions),
+//   published? (true|false; left out when no record says, and then no step claims either),
 //   material:   {total, recordings, notes, links, photos}
 //   transcript: {open (words to confirm), checked (a word check or a plan exists)}
 //   research:   {step: attach|review|research|running|directions|picked|needs-attention|null, unreviewed, topics}
@@ -181,6 +182,8 @@ export function stepsFor(form, facts = {}) {
   const said = x => x === 'check' ? 'the check' : x === 'slides' ? 'the slides' : x === 'transcript' ? 'the words to confirm' : x === 'words' ? 'the words' : x === 'posttext' ? 'the post text' : find(x).name === 'Your yes' ? 'your yes' : find(x).name;
   if (facts.published === true) add('publish', 'Share', outName, 'done', 'Published');
   else if (kind === 'instagram' && p.plan?.ready) add('publish', 'Share', outName, 'done', 'Ready to post');
+  // Whether a piece is out is known only from a record that says so. Without one, the step claims neither.
+  else if (facts.published !== false) add('publish', 'Share', outName, 'unknown', 'Not known whether it is out', {unknownWhy: 'published'});
   else if (waits.length) add('publish', 'Share', outName, 'wait', 'Waits for ' + join(waits.map(said)), {waits, waitsFor: join(waits.map(said)).replace(/^./, c => c.toUpperCase())});
   else add('publish', 'Share', outName, 'todo', 'Not yet');
  }
@@ -197,10 +200,15 @@ export function stepsFor(form, facts = {}) {
 export function ringOf(steps) {const done = steps.filter(s => s.state === 'done').length; return {done, total: steps.length, ring: steps.length ? done / steps.length : 0};}
 
 /** The one step that leads a list: the first that needs him, else the next thing to make, else the first that waits.
-    Null when a step is not known, so nothing is claimed past what was read, or when every step is done. */
+    While a step is not known, only a step that needs him and comes before it can lead (a step not known could be
+    any of the others); null otherwise, or when none is left. The last step, whether the piece is out, does not
+    block: nothing comes after it. */
 export function leadOf(steps) {
- if (steps.some(s => s.state === 'unknown')) return null;
- return steps.find(s => s.state === 'flag') || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
+ const lead = steps.find(s => s.state === 'flag') || steps.find(s => s.state === 'next') || steps.find(s => s.state === 'wait') || null;
+ const firstUnknown = steps.findIndex(s => s.state === 'unknown' && s.unknownWhy !== 'published');
+ if (firstUnknown < 0) return lead;
+ const flag = steps.find(s => s.state === 'flag');
+ return flag && steps.indexOf(flag) < firstUnknown ? flag : null;
 }
 
 const nextOf = (step, form) => step ? {form: form?.key || null, formName: form ? form.name : null, step: step.id, name: step.name, group: step.group, state: step.state, note: step.note, section: step.section, ...(step.waitsFor ? {waitsFor: step.waitsFor} : {})} : null;
@@ -216,17 +224,20 @@ export function standingOf(facts = {}, {now = Date.now()} = {}) {
  const leadStep = forms.length ? (lead ? leadOf(lead.steps) : null) : leadOf(own);
  const next = forms.length ? (lead ? lead.next : null) : nextOf(leadStep, null);
  const ring = forms.length ? forms.reduce((n, f) => n + f.ring, 0) / forms.length : ringOf(own).ring;
- // The station: published when that is recorded; resting when paused or long untouched; else where the lead step is.
+ // The station: published when that is recorded; resting when archived, paused or long untouched (`resting` says
+ // which); else where the lead step is.
  const changed = Date.parse(facts.changedAt || ''), idle = Number.isFinite(changed) ? (now - changed) / 864e5 : 0;
  const paused = (facts.pieces || []).some(p => p.status === 'paused') && !(facts.pieces || []).some(p => p.status && p.status !== 'paused');
  let station;
+ const resting = facts.archived ? 'archived' : paused ? 'paused' : idle >= RESTING_DAYS ? 'untouched' : null;
  if (facts.published === true) station = 'published';
- else if (paused || idle >= RESTING_DAYS) station = 'resting';
+ else if (resting) station = 'resting';
  else if (!leadSteps.length || leadSteps.every(s => s.state === 'done')) station = 'share';
  else station = STATION_OF_GROUP[(leadStep || leadSteps.find(s => s.state !== 'done')).group];
  const all = [...(own || []), ...forms.flatMap(f => f.steps)];
  return {schema: 'ar-create.subject-standing.v1', rule: VERSION, id: facts.id, title: facts.title || facts.id, station, stationName: STATION_NAME[station],
-  ring: Math.round(ring * 1000) / 1000, next, known: !all.some(s => s.state === 'unknown'), forms, steps: own,
+  ring: Math.round(ring * 1000) / 1000, next, known: !!next, resting: station === 'resting' ? resting : null,
+  published: typeof facts.published === 'boolean' ? facts.published : null, forms, steps: own,
   reached: TWELVE.filter(s => all.some(x => x.sections.includes(s))),
   asks: facts.asks || 0, look: facts.look || null, changedAt: facts.changedAt || null, archived: !!facts.archived, folder: facts.folder || []};
 }
