@@ -6,11 +6,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {execFile} from 'node:child_process';
+import os from 'node:os';
 import {createServer} from '../runtime/server.mjs';
+import {createSubjectStanding} from '../runtime/services/subject-standing.mjs';
 import {syntheticHome} from '../scripts/demo.mjs';
 import {fillDemo} from '../scripts/demo-fill.mjs';
 
-const ONLY = ['questions-for-the-grower', 'water-and-leaf', 'a-teapot-for-guests', 'picking-before-dawn', 'shade-and-patience', 'the-first-cup', 'straw-over-the-rows'];
+const ONLY = ['an-old-idea-set-aside', 'questions-for-the-grower', 'water-and-leaf', 'a-teapot-for-guests', 'picking-before-dawn', 'shade-and-patience', 'the-first-cup', 'straw-over-the-rows'];
 const AGENT = {'X-AR-Actor': 'agent:claude-code', 'X-AR-Client': 'http'};
 
 test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fresh after a write', {timeout: 300000}, async t => {
@@ -28,6 +30,11 @@ test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fr
  const caps = await get('/api/capabilities');
  for (const name of ['subject.standing', 'subjects.standing']) {const c = caps.commands.find(x => x.name === name); assert.ok(c, name); assert.equal(c.readOnly, true); assert.deepEqual(c.actors, ['any']); assert.equal(c.method, 'GET');}
 
+ // A suggestion made on the current words waits for the proposal owner's own answer: until then the list says Not known.
+ const first = (await get('/api/subjects/standing')).subjects.find(s => s.id === 'demo-shade-and-patience');
+ assert.ok(first.next === null || first.next.step === 'words');
+ if (first.next === null) assert.equal(first.known, false);
+ assert.equal((await get('/api/subject/standing?parentStudyId=demo-shade-and-patience')).facts.suggestions, 1, 'one subject waits for the answer');
  const all = await get('/api/subjects/standing'), by = Object.fromEntries(all.subjects.map(s => [s.id, s]));
  assert.equal(all.schema, 'ar-create.subjects-standing.v1');
  const expect = {
@@ -78,11 +85,66 @@ test('where subjects stand: one subject, all subjects, from CLI and HTTP, and fr
  assert.equal(moved.subjects.find(s => s.id === 'demo-water-and-leaf').archived, !place.archived);
  assert.ok(moved.readAgain <= 1);
 
+ // Archived: resting, whatever its steps say, so Home never shows it at work.
+ const shelved = moved.subjects.find(s => s.id === 'demo-water-and-leaf');
+ if (shelved.archived) {assert.equal(shelved.station, 'resting'); assert.equal(shelved.resting, 'archived');}
+ const old = (await get('/api/subjects/standing')).subjects.find(s => s.id === 'demo-an-old-idea-set-aside');
+ if (old) {assert.equal(old.station, 'resting'); assert.equal(old.resting, 'archived');}
+
+ // Nothing records whether a piece is out: no subject is called published or not, and Publish says Not known.
+ assert.ok((await get('/api/subjects/standing')).subjects.every(s => s.published === null && s.station !== 'published'));
+ assert.equal(cup.forms[0].steps.find(s => s.id === 'publish').state, 'unknown');
+
+ // A Carousel-only subject: its plan is its one form, with real steps, reaching Write, Read and Check.
+ const plan = await post('/api/instagram/plan', {operationId: crypto.randomUUID(), subject: 'demo-a-teapot-for-guests', title: 'An invented plan', door: 'teajia'});
+ const teapot = await get('/api/subject/standing?parentStudyId=demo-a-teapot-for-guests');
+ assert.deepEqual(teapot.forms.map(f => f.id), [plan.id]); assert.equal(teapot.forms[0].name, 'Carousel');
+ assert.ok(teapot.forms[0].steps.some(x => x.id === 'story') && teapot.forms[0].steps.some(x => x.id === 'posttext'));
+ for (const sec of ['write', 'read', 'check']) assert.ok(teapot.reached.includes(sec), sec);
+ assert.equal((await get('/api/subjects/standing')).subjects.find(s => s.id === 'demo-a-teapot-for-guests').forms[0].name, 'Carousel');
+
+ // A subject made by a chat intake holds his words: they are material, never "Nothing yet".
+ const intake = await post('/api/simmer/intake', {title: 'An invented intake', words: [{text: 'Invented words said in a chat about a teapot.'}], operationId: crypto.randomUUID()});
+ const chat = (await get('/api/subjects/standing')).subjects.find(s => s.id === intake.subject);
+ assert.ok(chat, 'the intake subject is listed'); assert.notEqual(chat.next?.step, 'have');
+ const chatOne = await get('/api/subject/standing?parentStudyId=' + encodeURIComponent(intake.subject));
+ assert.equal(chatOne.steps.find(x => x.id === 'have').state, 'done'); assert.equal(chatOne.facts.material.notes, 1);
+ // More words for a filled demo subject count too.
+ await post('/api/simmer/intake', {subject: 'demo-the-first-cup', words: [{text: 'More invented words about the first cup.'}], operationId: crypto.randomUUID()});
+ assert.equal((await get('/api/subject/standing?parentStudyId=demo-the-first-cup')).facts.material.notes, 3);
+
+ // A suggestion made before the words changed is stale: the app no longer offers it, and nor does this.
+ const scope = {bindingId: by['demo-shade-and-patience'].forms[0] && (await get('/api/study-draft/catalog')).collections.find(c => c.parentStudyId === 'demo-shade-and-patience').bindingId, parentStudyId: 'demo-shade-and-patience'};
+ const root = await get('/api/study-draft/read?' + new URLSearchParams(scope));
+ await post('/api/study-draft/save', {...scope, operationId: crypto.randomUUID(), expected: root.expected, operations: [{kind: 'insert', id: crypto.randomUUID(), beforeId: root.projection.at(-1).id, raw: 'An invented paragraph added afterwards.'}]}, 'human:adrian');
+ const offered = ((await get('/api/study-ai/requests?' + new URLSearchParams(scope))).items || []).filter(i => i.status === 'pending' && !i.stale).length;
+ assert.equal(offered, 0, 'the app itself no longer offers it');
+ const shade = await get('/api/subject/standing?parentStudyId=demo-shade-and-patience');
+ assert.notEqual(shade.forms[0].steps.find(x => x.id === 'words').state, 'flag'); assert.equal(shade.facts.suggestions, 0);
+
  // The CLI reaches the same reads.
  // Asynchronously: the server answers from this same process.
  const cli = args => new Promise(resolve => execFile(process.execPath, ['agents/cli/ar-create.mjs', '--url', base, '--actor', 'agent:claude-code', ...args], {encoding: 'utf8', maxBuffer: 1 << 24}, (error, stdout, stderr) => resolve({status: error ? error.code : 0, stdout, stderr})));
  const one = await cli(['standing', 'subject', 'demo-the-first-cup']);
  assert.equal(one.status, 0, one.stderr); assert.equal(JSON.parse(one.stdout).next.step, 'check');
  const every = await cli(['standing', 'all']);
- assert.equal(every.status, 0, every.stderr); assert.equal(JSON.parse(every.stdout).count, all.count);
+ assert.equal(every.status, 0, every.stderr); assert.equal(JSON.parse(every.stdout).count, (await get('/api/subjects/standing')).count);
+});
+
+// A read that fails, and a subject long untouched, with stand-in owners holding invented records.
+test('a failed read is Not known and never nothing; a subject untouched for months rests', async () => {
+ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'standing-')), B = '0b5e3a3c-1f1e-4c7a-9f00-000000000001';
+ const owners = (outputs, modifiedAt) => createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+  drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [{parentStudyId: 'invented', bindingId: B}], drafts: []}), read: async () => ({projection: [{words: 'Invented words.'}], expected: {v: 1}, history: [{modifiedAt}]})},
+  outputs: {read: outputs}, checks: {read: async () => null}, consentDesk: {read: async () => ({people: [], release: {}})},
+  library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+  instagram: {plans: async () => ({plans: []}), read: async () => null}, places: {read: async () => ({places: []})}});
+ try {
+  const broken = await owners(async () => {throw new Error('invented failure');}, '2026-11-10T00:00:00Z').one({parentStudyId: 'invented'});
+  assert.equal(broken.facts.pieces, null); assert.equal(broken.steps.find(x => x.id === 'form').state, 'unknown');
+  assert.equal(broken.next, null); assert.equal(broken.known, false);
+  assert.ok(!JSON.stringify(broken).includes('No Article or Carousel yet'));
+  const idle = await owners(async () => ({outputs: [{id: 'o1', kind: 'article', placements: [], createdAt: '2026-01-01T00:00:00Z'}]}), '2026-01-02T00:00:00Z').all();
+  assert.equal(idle.subjects[0].station, 'resting'); assert.equal(idle.subjects[0].resting, 'untouched');
+ } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });
