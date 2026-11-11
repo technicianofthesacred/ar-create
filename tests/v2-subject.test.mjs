@@ -225,7 +225,7 @@ test('the page: opens a step on demand, every hand-off lands on its section with
     if(key!=='own')handoffs.add(key);
     const screen=/^#\/(write|read|check)\//.exec(href)?.[1];
     if(screen){const allowed={write:['write','own'],read:['read','own'],check:['checkRun','checkOpen','own']}[screen];assert.ok(allowed.includes(key),key+' opens '+screen+' only from its own step');assert.equal(href,`#/${screen}/${id}?piece=${pill.dataset.subjForm.slice(4)}`,screen+' opens for this subject and piece');
-     if(screen==='check'&&key!=='own')assert.ok(!/in Advanced/.test(a.textContent),'a link to version two\'s Check does not say Advanced: '+a.textContent);continue;}
+     if(screen==='check'&&key!=='own'){assert.ok(!/in Advanced/.test(a.textContent),'a link to version two\'s Check does not say Advanced: '+a.textContent);assert.equal(a.textContent.trim(),'Open Check','the link only opens Check, so it says so (it does not run the check)');}continue;}
     assert.equal(q.get('section'),key==='own'?q.get('section'):S.HANDOFFS[key].section,key+': '+href);
     assert.equal(q.get('subject'),id);
     if(key!=='directionChange'&&key!=='directionWrite'&&key!=='addMaterial'&&doc.querySelector('.subj-form.on').dataset.subjForm.startsWith('out:'))assert.equal(q.get('piece'),pill.dataset.subjForm.slice(4),key+' keeps the piece');

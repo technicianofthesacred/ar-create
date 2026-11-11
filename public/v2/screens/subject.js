@@ -321,7 +321,7 @@
   const writeHref=form=>form&&form.kind==='article'?esc(v2.href('write/:id',{id},{piece:pieceOf(form)})):handoffHref('write',form);
   /** An Article's Read and Check open version two's own screens too (a Carousel's stay on Advanced). The labels that said
       Advanced say what they do instead. */
-  const SCREEN_OF=Object.freeze({read:'read',checkRun:'check',checkOpen:'check'}),SCREEN_LABEL=Object.freeze({checkRun:'Run the check',checkOpen:'Open the check'});
+  const SCREEN_OF=Object.freeze({read:'read',checkRun:'check',checkOpen:'check'}),SCREEN_LABEL=Object.freeze({checkRun:'Open Check',checkOpen:'Open Check'});
   const ownScreen=(key,form)=>form&&form.kind==='article'&&SCREEN_OF[key]?SCREEN_OF[key]:null;
   const screenHref=(key,form)=>{const s=ownScreen(key,form);return s?esc(v2.href(s+'/:id',{id},{piece:pieceOf(form)})):null;};
   const screenOfSection=(section,form)=>form&&form.kind==='article'&&(section==='read'||section==='check')?esc(v2.href(section+'/:id',{id},{piece:pieceOf(form)})):null;
