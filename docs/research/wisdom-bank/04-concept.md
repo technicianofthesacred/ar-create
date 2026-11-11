@@ -34,6 +34,8 @@ Spoken by voice and kept as transcribed, including slips.
 
 **Your correction, 11 November.** The first version of this page treated a nugget as one of the best lines of a talk, kept or discarded. You said: "It's not about the best lines. These are concepts. It's about not only picking the best, but actually clumping all of the concepts together into nuggets and then finding out how they interconnect together. It's not about pruning down only into what I love, but it's about distilling a body of work into their concepts, not removing their concepts." The page now follows that: a nugget is a concept, a work is distilled into all of its concepts, and nothing is pruned.
 
+You added: "Some of the concepts I will agree with more and I can make more resonant or stronger. Other ones I won't like as much, but I don't wanna delete any of them because they interconnect to each other. All of them can have some sort of map showing how they interconnect. Also because concepts, even though we're looking for nuggets, do not exist in isolation." So resonance is yours to set, nothing is deleted, every work has its map, and a concept is never shown alone.
+
 - **You return in order to use**: to express something, to study, or to browse until something rings. So the main door is "I have something to express", and a daily habit is only a small extra.
 - **Assimilating means a lens.** The words stay untouched. Beside them sits an explanation written through your own set of variables, which you can change. This page calls that set your **lens**.
 - **The pathway is the map.** A connects with B connects with C. A saved line of nuggets is what you walk, and it is also the outline of the piece you make.
@@ -48,7 +50,9 @@ One concept from one body of work. A talk or a book is distilled into all of its
 - **A reading through your lens**: a short explanation labelled with the lens it used. Change the lens and the reading is written again. The words do not move.
 - **Your response**: your own words, dated, in their own place.
 - **Its links**: to the other concepts in the same work, which shows how the work holds together, and to concepts in other works. Each link has a kind and a reason.
-- **Its brightness**: a concept grows brighter as you respond to it, link it and use it, and the core concepts of a work start brighter. Dim ones stay. Nothing is removed.
+- **Its resonance**: how strongly it rings for you. You turn it up or down yourself, and it also rises as you respond to a concept, link it and use it. Resonance shows as brightness. A concept you do not much like stays, dimmer, because the others connect through it. Nothing is deleted.
+
+A concept is never shown alone. Wherever you meet one, its neighbours are in view.
 
 **At a glance** you see the name, the one line, the strongest passage, and one or two lines running out to named neighbours: this goes into that. **Opened**, it unpacks as a short stack of index cards you swipe through: the gist; the passages in their place in the source (with a tap to hear or read each moment); the reading through your lens; its connections; your response; and "go deeper", where questions wait for research.
 
@@ -62,16 +66,16 @@ The source is stored once. Then the work depends on its weight:
 - **A book** is heavy. You choose: the whole book, one chapter at a time, or only the passages you marked. You see the likely cost before a heavy run starts.
 - **A friend's idea** arrives as a recording or a note. The friend is the speaker. It stays marked private until they agree to be quoted. If it is your memory of what they said, it is labelled "as Adrian remembers it" and is never shown as a quote.
 
-What comes back is a **source page**: the whole work laid out as its concepts, every one of them, with the lines between them showing how the work holds together. Core concepts are brighter. This is the distilled body of work, complete, and it is useful before you do anything to it.
+What comes back is a **source page**: the whole work laid out as a map of its concepts, every one of them, with the lines between them showing how the work holds together. Core concepts are brighter. This is the distilled body of work, complete, and it is useful before you do anything to it.
 
-You can then, whenever you like: **reword** a name or distillation, **join** two nuggets that are one concept, **split** one that is really two, or **file** one as less useful so it dims. A filed concept stays part of the work's picture. Names, numbers and dates are flagged for a second look. A source you have not reviewed waits quietly.
+You can then, whenever you like: **reword** a name or distillation, **join** two nuggets that are one concept, **split** one that is really two, and turn a concept's **resonance** up or down. A concept you turn down stays on the map in its place. Names, numbers and dates are flagged for a second look. A source you have not reviewed waits quietly.
 
 ## Returning
 
 Five doors, in the order your answers put them.
 
 1. **I have something to express.** You say what you are feeling or want to explain, for example "everything is perfect". The bank answers with the nuggets that say it, grouped by tradition, in their exact words, and shows what each tradition places before it. You choose some and they become a pathway. This is the main door.
-2. **Wander.** Open any nugget and step to a neighbour, then the next. Brighter ones come first. This is for browsing until something rings true.
+2. **Wander.** Open any nugget and step to a neighbour, then the next. The most resonant come first. This is for browsing until something rings true.
 3. **Study a source.** Continue where you were. The source reads as a comfortable page with its outline, its nuggets in place and the lens readings beside them.
 4. **Ask the bank.** A conversation that answers only from what you have kept. Every sentence shows its nugget. When the bank has nothing, it says so and offers to send the question to Research.
 5. **A few today.** A small strip on the home screen: one bright nugget, one you have not seen for a while, one proposed link waiting for your yes.
@@ -79,7 +83,7 @@ Five doors, in the order your answers put them.
 The three traps, answered directly:
 
 - **Collecting without returning.** Every door ends in something made: a pathway, a response, an accepted link or the start of a piece. Capture also gives something back at once, the source page, so putting things in is already a first return.
-- **Maps nobody uses.** The home is never a picture of everything. The map is always centred on one nugget or one pathway, every line can be tapped, and every line says why it exists. A view of the whole bank may come later, for feeling it grow, and it stays only if you use it.
+- **Maps nobody uses.** Every work has its own map of all its concepts, and every concept shows its neighbours, so a map is always about something you are looking at. Every line can be tapped and says why it exists, and the map is how you move from one concept to the next. A single map of the whole bank is the one still to decide.
 - **Summaries that flatten.** Every concept opens onto the exact words that carry it, and a work keeps all of its concepts, so nothing is lost to a short summary. A distillation says it is one. A lens reading names its lens. Your response is yours. The source page keeps each concept attached to the rest of its work, and the "prepares" link below keeps a concept attached to what must come before it.
 
 ## Connecting
@@ -169,3 +173,4 @@ Phone first. Filled with lifelike nuggets, never empty.
 5. **The whole map.** Do you want one view of everything at once, knowing it is for feeling the bank grow more than for finding things?
 6. **One bank or several.** Is this only for understanding consciousness, or does tea and everything else live in the same bank?
 7. **Its name.** Is "wisdom bank" what the screen should say?
+8. **The same concept in two works.** When two works carry the same concept, do they stay two nuggets joined by an "echoes" link, each true to its own source, or become one concept holding passages from both?
