@@ -21,3 +21,4 @@ console.log('Document-study runtime and template wrappers built from reviewed so
 await import('./build-native-output-owner.mjs');
 await import('./build-media-article-spec.mjs');
 await import('./build-study-output-canvas.mjs');
+await (await import('./build-standing.mjs')).writeStandingBrowser();

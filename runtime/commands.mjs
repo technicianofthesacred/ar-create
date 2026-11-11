@@ -11,6 +11,7 @@ import {TEMPLATES_COMMANDS, TEMPLATES_HUMAN_ONLY, TEMPLATES_BODY} from './comman
 import {TRANSCRIPT_CHECK_COMMANDS, TRANSCRIPT_CHECK_HUMAN_ONLY, TRANSCRIPT_CHECK_BODY} from './commands/transcript-check.mjs';
 import {PHONE_PICKUP_COMMANDS, PHONE_PICKUP_HUMAN_ONLY, PHONE_PICKUP_BODY} from './commands/phone-pickup.mjs';
 import {SUBJECT_PLACES_COMMANDS, SUBJECT_PLACES_HUMAN_ONLY, SUBJECT_PLACES_UNDO, SUBJECT_PLACES_BODY} from './commands/subject-places.mjs';
+import {STANDING_COMMANDS} from './commands/standing.mjs';
 
 /**
  * One command registry for every entrance: the app, the CLI (agents/cli/ar-create.mjs)
@@ -139,7 +140,7 @@ const BODY = {
 function section(route) {
   const r = route.replace(/^\/api\//, '');
   if (/^(words|phone-pickup)(\/|$)/.test(r)) return 'transcript';
-  if (/^subject-places(\/|$)/.test(r)) return 'subjects';
+  if (/^(subject-places|subjects?\/standing)(\/|$)/.test(r)) return 'subjects';
   const rules = [[/^first-flow\/material-triage$/, 'material'], [/^(concept|study\/human-direction|study\/direction)/, 'direction'], [/^(library|sources|collections|collection-relationships|connections|icloud-albums|evidence|study-originals|study\/source-context)/, 'library'], [/^material/, 'material'],
     [/^(study-draft|study-ai)/, 'draft'], [/^(study\/(outputs|carousel-make)|carousel|article|exports|shared-articles|shared-carousels|instagram|looks?(\/|$)|accounts?(\/|$)|templates?(\/|$))/, 'outputs'], [/^study\/share/, 'share'], [/^consent/, 'consent'], [/^(study\/footage|study\/photos|study\/media-usage|media)/, 'media'],
     [/^(study\/research|study-research|research-material|research|first-flow)/, 'research'], [/^(pieces|state)/, 'piece'], [/^(source-sessions|recordings|ingestion|transcript-tools|transcription)/, 'transcript'],
@@ -183,6 +184,7 @@ export const CUSTOM_COMMANDS = [
   ...TRANSCRIPT_CHECK_COMMANDS,
   ...PHONE_PICKUP_COMMANDS,
   ...SUBJECT_PLACES_COMMANDS,
+  ...STANDING_COMMANDS,
   ['GET', '/api/simmer/board', ['subject']], ['POST', '/api/simmer/board', ['subject', 'operationId', 'expectedRevision', 'expectedHash', 'board']],
   // Simmer from a chat: an agent carries Adrian's photos and exact words in, proposes onto the board, and records the dish he names.
   ['GET', '/api/simmer/material', ['subject']],
