@@ -1,88 +1,77 @@
 /* The subject screen: one line of header, the forms as small pills, the steps on the left and the one open step
-   beside them (under its own row on a phone). The app's tokens and the six sizes only. Every rule starts with .subj
-   (or the Add a form sheet's own class). */
-.subj{gap:14px;padding-top:28px}
+   beside them (under its own row on a phone). Things are set apart by space and by surface, never by typeface or by
+   the colour of a label: forms have room between them, each step is one ruled row, and spoken or quoted words sit on
+   their own inset surface. The app's tokens and the six sizes only. Every rule starts with .subj (or the Add a form
+   sheet's own class). */
+.subj{gap:28px;padding-top:28px}
 .subj .subj-quiet{font-size:var(--v2-t13);color:var(--dim);line-height:1.45}
 .subj .subj-label{font:600 var(--v2-t12)/1.3 var(--ar-ui);color:var(--dim);letter-spacing:.01em}
 .subj .subj-sr,.subj-sheetdlg .subj-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .subj mark{background:var(--c3-pend);color:inherit;padding:0 3px;border-radius:3px}
 .subj .v2-out{white-space:normal;overflow-wrap:anywhere}
 
-/* ---------- the header: name, look, folder, direction with Change ---------- */
-.subj .subj-head{display:flex;align-items:center;flex-wrap:nowrap;gap:6px 10px;min-width:0;min-height:24px}
-/* One line on a computer: a long name shortens (the whole name is on hover and in the phone header). */
-.subj .subj-head h1{flex:0 1 auto;font:600 var(--v2-t18)/1.3 var(--ar-ui);letter-spacing:-.01em;min-width:6em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ---------- the header: name, look, folder, ring and station, direction with Change ---------- */
+.subj .subj-head{display:flex;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:6px 14px;min-width:0;min-height:30px}
+.subj .subj-head h1{flex:0 1 auto;min-width:6em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .subj .subj-look{flex:none;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border:1px solid var(--c3-line2);border-radius:12px;font:500 var(--v2-t12)/1 var(--ar-ui);color:var(--c3-ink2);white-space:nowrap}
 .subj .subj-look i{width:7px;height:7px;border-radius:50%;background:var(--v2-br)}
 .subj .subj-path{flex:0 3 auto;font-size:var(--v2-t13);color:var(--dim);min-width:3em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj .subj-where{flex:none;display:inline-flex;align-items:center;gap:7px;font-size:var(--v2-t13);color:var(--c3-ink2);white-space:nowrap}
 .subj .subj-sp{flex:1 1 0;min-width:0}
-.subj .subj-dir{display:flex;align-items:baseline;gap:10px;flex:0 1 auto;min-width:8em;max-width:min(52ch,46%);font-size:var(--v2-t14);color:var(--c3-ink2)}
-.subj .subj-dir span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.subj .subj-dir.none span{color:var(--dim)}
+.subj .subj-dir{display:flex;align-items:baseline;gap:10px;flex:0 1 auto;min-width:8em;max-width:min(52ch,40%);font-size:var(--v2-t14);color:var(--c3-ink2)}
+.subj .subj-dir span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--v2-speech)}
+.subj .subj-dir.none span{color:var(--dim);font-family:var(--ar-ui)}
 .subj .subj-dir .v2-out{flex:none;white-space:nowrap}
 
-/* ---------- the forms: small pills, in order ---------- */
-.subj .subj-forms{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+/* ---------- the forms: small pills, in the order the records give them ---------- */
+.subj .subj-forms{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
 .subj .subj-form.none{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 13px;border:1px dashed var(--c3-line2);border-radius:17px;font-size:var(--v2-t13);color:var(--c3-ink2);min-width:0}
 .subj .subj-form.none b{font-weight:600;color:var(--ink)}
-.subj .subj-form.none span{color:var(--dim);font-size:var(--v2-t12)}
 @layer v2-controls{
- .subj button.subj-form{display:inline-flex!important;align-items:center!important;gap:7px!important;min-height:34px!important;height:auto!important;max-width:100%!important;padding:4px 13px 4px 10px!important;border:1px solid var(--line)!important;border-radius:17px!important;background:var(--paper)!important;color:var(--ink)!important;font:400 var(--v2-t13)/1.25 var(--ar-ui)!important;white-space:normal!important;text-align:left!important;box-shadow:none!important;min-width:0!important}
+ .subj button.subj-form{display:inline-flex!important;align-items:center!important;gap:9px!important;min-height:40px!important;height:auto!important;max-width:100%!important;padding:5px 14px 5px 11px!important;border:1px solid var(--line)!important;border-radius:20px!important;background:var(--paper)!important;color:var(--ink)!important;font:400 var(--v2-t13)/1.25 var(--ar-ui)!important;white-space:normal!important;text-align:left!important;box-shadow:none!important;min-width:0!important}
  .subj button.subj-form:hover{border-color:var(--c3-line2)!important;background:var(--c3-lift)!important}
  .subj button.subj-form.on{border-color:var(--c3-ink2)!important;box-shadow:inset 0 0 0 1px var(--c3-ink2)!important}
  html[data-brand] .subj button.subj-form.on{border-color:var(--v2-br)!important;box-shadow:inset 0 0 0 1px var(--v2-br)!important}
- .subj button.subj-form.add{border-style:dashed!important;background:transparent!important;color:var(--c3-ink2)!important;padding:4px 13px!important}
+ .subj button.subj-form.add{border-style:dashed!important;background:transparent!important;color:var(--c3-ink2)!important;padding:5px 14px!important}
  @media (max-width:850px),(pointer:coarse){.subj button.subj-form{min-height:44px!important;border-radius:22px!important}}
 }
-.subj .subj-form small{font:600 var(--v2-t12)/1 var(--ar-ui);color:var(--dim)}
+.subj .subj-form .subj-fn{display:grid;gap:1px;min-width:0}
 .subj .subj-form b{font:600 var(--v2-t13)/1.25 var(--ar-ui);min-width:0;overflow-wrap:anywhere}
-.subj .subj-form span{font-size:var(--v2-t12);color:var(--dim);line-height:1.2}
-.subj .subj-form span.own{max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--c3-ink2)}
-.subj .subj-form em{font:500 var(--v2-t12)/1 var(--ar-ui);font-style:normal;color:var(--dim);margin-left:2px}
+.subj .subj-form i{font:400 var(--v2-t12)/1.25 var(--ar-ui);font-style:normal;color:var(--dim);max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj .subj-form em{font:500 var(--v2-t12)/1 var(--ar-ui);font-style:normal;color:var(--dim);margin-left:2px;flex:none}
 .subj .subj-form .v2-ic{width:14px;height:14px}
+.subj .subj-form .v2-ring{flex:none}
 
 /* ---------- the work: steps on the left, the open step beside ---------- */
-.subj .subj-work{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start;min-width:0}
-.subj .subj-steps{position:sticky;top:calc(var(--v2-top) + 12px);display:grid;gap:0;min-width:0}
-.subj .subj-group{padding:10px 10px 3px;font:600 var(--v2-t12)/1.3 var(--ar-ui);color:var(--dim)}
-.subj .subj-group:first-child{padding-top:0}
-.subj .subj-steps ol{list-style:none;margin:0;padding:0;display:grid;gap:1px;min-width:0}
-.subj .subj-row{min-width:0}
+.subj .subj-work{display:grid;grid-template-columns:290px minmax(0,1fr);gap:32px;align-items:start;min-width:0}
+.subj .subj-steps{position:sticky;top:calc(var(--v2-top) + 12px);display:grid;gap:22px;min-width:0}
+.subj .subj-grp{display:grid;gap:6px;min-width:0}
+.subj .subj-group{font:600 var(--v2-t12)/1.3 var(--ar-ui);color:var(--dim);padding:0 10px;letter-spacing:.01em}
+.subj .subj-steps ol{list-style:none;margin:0;padding:0;display:grid;min-width:0}
+.subj .subj-row{min-width:0;border-top:1px solid var(--line)}
+.subj .subj-row:last-child{border-bottom:1px solid var(--line)}
 @layer v2-controls{
- .subj .subj-row>button[data-subj-step]{display:grid!important;grid-template-columns:16px minmax(0,1fr)!important;align-items:center!important;column-gap:10px!important;row-gap:1px!important;width:100%!important;min-height:34px!important;height:auto!important;padding:5px 10px!important;border:0!important;border-radius:8px!important;background:transparent!important;color:var(--ink)!important;font:400 var(--v2-t13)/1.3 var(--ar-ui)!important;text-align:left!important;white-space:normal!important;box-shadow:none!important}
+ .subj .subj-row>button[data-subj-step]{display:grid!important;grid-template-columns:16px minmax(0,1fr)!important;align-items:center!important;column-gap:12px!important;row-gap:2px!important;width:100%!important;min-height:44px!important;height:auto!important;padding:9px 10px!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--ink)!important;font:400 var(--v2-t14)/1.3 var(--ar-ui)!important;text-align:left!important;white-space:normal!important;box-shadow:none!important}
  .subj .subj-row>button[data-subj-step]:hover{background:var(--v2-sec)!important}
- .subj .subj-row>button[data-subj-step].v2-current{background:var(--paper)!important;box-shadow:inset 0 0 0 1px var(--c3-ink2)!important}
- html[data-brand] .subj .subj-row>button[data-subj-step].v2-current{box-shadow:inset 0 0 0 1px var(--v2-br)!important}
- @media (max-width:850px),(pointer:coarse){.subj .subj-row>button[data-subj-step]{min-height:44px!important}}
+ .subj .subj-row>button[data-subj-step].v2-current{background:var(--v2-sec)!important;box-shadow:inset 3px 0 0 var(--c3-ink2)!important}
+ html[data-brand] .subj .subj-row>button[data-subj-step].v2-current{box-shadow:inset 3px 0 0 var(--v2-br)!important}
+ .subj .subj-row>button[data-subj-step][aria-disabled="true"]{cursor:default!important}
 }
 .subj .subj-row>button b{grid-column:2;font-weight:500;min-width:0;overflow-wrap:anywhere}
-.subj .subj-row>button small{grid-column:2;font-size:var(--v2-t12);line-height:1.3;color:var(--dim);min-width:0;overflow-wrap:anywhere}
-.subj .subj-row>button small.quiet{display:none}
-.subj .subj-row[data-state="flag"]>button small,.subj .subj-row[data-state="now"]>button small{color:var(--warm)}
-html[data-brand] .subj .subj-row[data-state="flag"]>button small,html[data-brand] .subj .subj-row[data-state="now"]>button small{color:var(--v2-br)}
-.subj .subj-row[data-state="done"]>button b{color:var(--c3-ink2)}
-.subj .subj-row[data-state="wait"]>button b{color:var(--dim)}
-.subj .subj-row>button .v2-step,.subj .subj-row>button .subj-reading{grid-row:1;margin-top:1px}
-/* Still being read: a quiet ring, never a state that is not known yet. */
+.subj .subj-row>button small{grid-column:2;font-size:var(--v2-t12);line-height:1.35;color:var(--dim);min-width:0;overflow-wrap:anywhere}
+.subj .subj-row>button .v2-step,.subj .subj-row>button .subj-reading{grid-row:1;grid-column:1}
+.subj .subj-row[data-state="done"]>button b,.subj .subj-row[data-state="wait"]>button b,.subj .subj-row[data-state="unknown"]>button b{color:var(--dim)}
+/* Not known: a quiet ring, never a state that is made up. */
 .subj .subj-reading{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--c3-line2);border-top-color:transparent;flex:none;animation:subj-turn 1.2s linear infinite}
 @keyframes subj-turn{to{transform:rotate(1turn)}}
 @media (prefers-reduced-motion:reduce){.subj .subj-reading{animation:none;border-top-color:var(--c3-line2);opacity:.6}}
-.subj .subj-row[data-state="reading"]>button b{color:var(--dim)}
-.subj .subj-later{padding:12px 10px 0;font-size:var(--v2-t12);color:var(--dim);line-height:1.4}
-.subj .subj-all{margin-top:16px;padding:0 10px}
-.subj .subj-all summary{cursor:pointer;font-size:var(--v2-t12);color:var(--dim);min-height:28px;display:flex;align-items:center}
-.subj .subj-all summary:hover{color:var(--ink)}
-.subj .subj-all ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px}
-.subj .subj-all a{display:inline-flex;align-items:center;gap:4px;min-height:28px;font-size:var(--v2-t13);color:var(--c3-ink2)}
-.subj .subj-all a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
-.subj .subj-all .v2-ic{width:12px;height:12px;opacity:.6}
 
 /* ---------- the open step ---------- */
-.subj .subj-step{display:grid;gap:16px;align-content:start;min-width:0;padding:18px 20px 22px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:0 1px 0 var(--line)}
-.subj .subj-step>header{display:grid;gap:3px;min-width:0}
+.subj .subj-step{display:grid;gap:22px;align-content:start;min-width:0;padding:24px 26px 28px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:0 1px 0 var(--line)}
+.subj .subj-step>header{display:grid;gap:4px;min-width:0}
 .subj .subj-step h2{font:600 var(--v2-t18)/1.25 var(--ar-ui);outline:0}
 .subj .subj-note{display:flex;align-items:center;gap:8px;font-size:var(--v2-t14);color:var(--c3-ink2);min-width:0;overflow-wrap:anywhere}
-.subj .subj-note .v2-step{width:10px;height:10px}
+.subj .subj-note .v2-step{width:10px;height:10px;flex:none}
 .subj .subj-step>*{min-width:0;max-width:100%}
 .subj .subj-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
 .subj .subj-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
@@ -92,9 +81,14 @@ html[data-brand] .subj .subj-row[data-state="flag"]>button small,html[data-brand
 .subj .subj-btn.pri:hover{opacity:.9}
 .subj .subj-btn .v2-ic{width:16px;height:16px}
 @media (max-width:850px),(pointer:coarse){.subj .subj-btn{min-height:44px}.subj .subj-links .v2-out{min-height:44px}}
-.subj .subj-next{display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--line)}
+.subj .subj-next{display:flex;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--line)}
 .subj .subj-next button{max-width:100%}
 .subj .subj-next button .v2-ic{width:14px;height:14px;margin-left:4px}
+
+/* spoken or quoted words: their own inset surface, in the spoken face */
+.subj .subj-inset{display:grid;gap:6px;padding:14px 16px;border-radius:10px;background:var(--c3-lift);border:1px solid var(--line);min-width:0}
+.subj .subj-quote{font-family:var(--v2-speech);font-size:var(--v2-t15);line-height:1.55;color:var(--ink);overflow-wrap:anywhere}
+.subj .subj-quote.big{font-size:var(--v2-t18);line-height:1.5}
 
 /* lists inside a step */
 .subj .subj-list{list-style:none;margin:0;padding:0;display:grid;min-width:0}
@@ -124,17 +118,10 @@ html[data-brand] .subj .subj-row[data-state="flag"]>button small,html[data-brand
 .subj .subj-ways b{justify-self:stretch}
 
 /* The transcript */
-.subj .subj-talk{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-.subj .subj-talk p{font-size:var(--v2-t15);line-height:1.5;overflow-wrap:anywhere}
+.subj .subj-talk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .subj .subj-talk small{font-size:var(--v2-t12);color:var(--dim)}
 
-/* Research */
-.subj .subj-one{display:grid;gap:4px;padding:12px 14px;border-radius:10px;background:var(--c3-lift);border:1px solid var(--line)}
-.subj .subj-one p:not(.subj-label){font-size:var(--v2-t14);line-height:1.5;overflow-wrap:anywhere}
 
-/* Name the dish */
-.subj .subj-named{display:grid;gap:6px;padding-top:12px;border-top:1px solid var(--line)}
-.subj .subj-named blockquote{font:500 var(--v2-t18)/1.45 var(--ar-ui);color:var(--ink);overflow-wrap:anywhere}
 
 /* The words */
 .subj .subj-words{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:20px;align-items:start}
@@ -191,19 +178,21 @@ dialog.subj-sheetdlg{width:min(640px,100%)}
 .subj-sheetdlg .subj-kinds em.why{color:var(--dim)}
 
 /* ---------- narrower ---------- */
-@media (max-width:1100px){.subj .subj-work{grid-template-columns:240px minmax(0,1fr)}.subj .subj-words{grid-template-columns:minmax(0,1fr)}.subj .subj-sheet{max-width:240px}}
+@media (max-width:1100px){.subj .subj-work{grid-template-columns:250px minmax(0,1fr);gap:24px}.subj .subj-words{grid-template-columns:minmax(0,1fr)}.subj .subj-sheet{max-width:240px}}
 @media (max-width:850px){
- .subj{padding-top:16px}
+ .subj{padding-top:16px;gap:22px}
  .subj .subj-head{flex-wrap:wrap}
  .subj .subj-head h1{white-space:normal;overflow-wrap:anywhere;flex-basis:100%}
  .subj .subj-path{white-space:normal;overflow-wrap:anywhere}
  .subj .subj-dir{max-width:100%;flex:1 1 100%}
- .subj .subj-form span:not(.own){display:none}
- .subj .subj-form span.own{max-width:10ch}
  .subj .subj-sp{display:none}
- .subj .subj-work{grid-template-columns:minmax(0,1fr)}
+ /* Pills share rows: two to a row. */
+ .subj .subj-forms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .subj .subj-form.none{grid-column:1/-1}
+ .subj .subj-form i{max-width:11ch}
+ .subj .subj-work{grid-template-columns:minmax(0,1fr);gap:20px}
  .subj .subj-steps{position:static}
- .subj .subj-step.inline{margin:6px 0 10px;padding:16px 16px 18px}
+ .subj .subj-step.inline{margin:0 0 12px;padding:18px 16px 20px;border-radius:12px}
  .subj .subj-ways{grid-template-columns:minmax(0,1fr)}
  .subj .subj-tray{grid-template-columns:repeat(4,minmax(0,1fr))}
  .subj .subj-strip{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}

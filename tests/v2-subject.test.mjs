@@ -1,6 +1,7 @@
-// Version two's subject page. First the pure part (records to facts, facts to forms and steps, every step and hand-off
-// mapped onto the existing workspace's twelve sections, which reads a change touches), then the page itself on a real
-// in-process server filled with invented subjects through the app's own commands. Invented subjects, people and words.
+// Version two's subject page. First the pure half (how an answer of `subject.standing` is shown, the hand-off table
+// pinned against the standing rule, which change concerns the subject, what Add a form can make), then the page itself
+// on a real in-process server filled with invented subjects through the app's own commands: each subject shows exactly
+// what the command says. Invented subjects, people and words only.
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,122 +11,17 @@ import {createRequire} from 'node:module';
 import {createServer} from '../runtime/server.mjs';
 import {syntheticHome} from '../scripts/demo.mjs';
 import {fillDemo} from '../scripts/demo-fill.mjs';
+import {seedInstagramDemo} from '../scripts/demo-instagram.mjs';
+import * as RULE from '../runtime/standing-rule.mjs';
 
 const repo=path.resolve(import.meta.dirname,'..');
 // The screen file, run as the browser runs it but with no shell: it hands back only its pure half.
 const S=(()=>{const ctx={module:{exports:{}},Date,JSON,Object,Array,Set,Map,String,Number,Math,isNaN,console};ctx.globalThis=ctx;vm.runInNewContext(fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8'),ctx);
- // Values made in another context have their own prototypes; hand them back as this context's plain values.
  const own=v=>v===undefined?v:JSON.parse(JSON.stringify(v));return Object.fromEntries(Object.entries(ctx.module.exports).map(([k,v])=>[k,typeof v==='function'?(...a)=>own(v(...a)):own(v)]));})();
 const {JSDOM}=createRequire(new URL('../runtime/package.json',import.meta.url))('jsdom');
-const plain=v=>JSON.parse(JSON.stringify(v));
-const STATES=new Set(['done','now','flag','todo','wait']);
 
-// ---------- invented facts ----------
-const material=(o={})=>S.sortMaterial([...Array(o.notes??2)].map((_,i)=>({id:'n'+i,title:'Invented note '+i,kind:'note'})).concat([...Array(o.photos??0)].map((_,i)=>({id:'p'+i,title:'Invented photo '+i,kind:'image'})),[...Array(o.recordings??0)].map((_,i)=>({id:'r'+i,title:'Invented recording '+i,kind:'transcript'}))));
-const facts=(o={})=>({id:'s1',title:'An invented subject',bindingId:'b1',material:material(o.material),transcript:{checks:[],flags:[],planned:false,...o.transcript},research:{step:'review',unreviewed:2,...o.research},dish:{named:false,dishes:0,...o.dish},words:{paragraphs:0,count:0,parts:[],...o.words},pending:o.pending??0,check:o.check??null,consent:o.consent===undefined?{people:[],released:false,overridden:false,ready:false,held:false,reasons:[]}:o.consent,pieces:o.pieces||[],reading:o.reading||[]});
-const article={key:'out:a1',id:'a1',kind:'article',title:'An invented subject',placements:0,slides:0};
-const plan=(p={},key='p1',title='Invented plan')=>({key:'ig:'+key,id:key,kind:'instagram',title,plan:{id:key,format:'carousel',stories:0,chosen:false,chosenTitle:'',frames:0,caption:false,ready:false,look:null,revision:1,...p}});
-const by=(steps,id)=>steps.find(s=>s.id===id);
-const rows=steps=>steps.map(s=>[s.id,s.state]);
-const named={named:true,from:'direction'};
-
-test('a brand new subject: not decided yet, one first step to gather, and naming the dish waits',()=>{
- const f=facts({material:{notes:0}});
- assert.deepEqual(S.formsOf(f),[]);
- const steps=S.stepsFor(null,f);
- assert.deepEqual(steps.map(s=>[s.id,s.state,s.note]),[['have','now','Nothing yet'],['dish','wait','When there is something to look at']]);
- assert.equal(S.firstOpen(steps),'have');
-});
-
-test('a finished Article: the words are done, Check is next, and the page opens on Check (not on research)',()=>{
- const f=facts({material:{notes:2},dish:named,words:{paragraphs:6,count:99,parts:[]},pieces:[article]});
- const steps=S.stepsFor(S.formsOf(f)[0],f);
- assert.deepEqual(rows(steps),[['have','done'],['facts','todo'],['dish','done'],['words','done'],['photos','wait'],['check','now'],['yes','todo'],['publish','wait']]);
- assert.equal(by(steps,'words').note,'99 words');
- assert.equal(by(steps,'facts').note,'2 sources not looked at yet','sources not looked at do not stop the work');
- assert.equal(S.firstOpen(steps),'check');
-});
-
-test('a half-written Article with a suggestion waiting: the words need him, Check and Publish wait for them',()=>{
- const f=facts({material:{notes:2,recordings:1},dish:{named:true,from:'board',at:'2026-11-08T10:00:00Z'},words:{paragraphs:2,count:40,parts:[]},pending:1,pieces:[article]});
- const [form]=S.formsOf(f);assert.deepEqual([form.name,form.to],['Article','the magazine']);
- const steps=S.stepsFor(form,f);
- assert.deepEqual(steps.map(s=>s.group),['Gather','Gather','Research','Simmer','Create','Create','Create','Share','Share']);
- assert.deepEqual(rows(steps),[['have','done'],['transcript','todo'],['facts','todo'],['dish','done'],['words','flag'],['photos','wait'],['check','wait'],['yes','now'],['publish','wait']]);
- assert.equal(by(steps,'dish').note,'Named on the board, 8 Nov');
- assert.equal(by(steps,'words').note,'1 suggestion waiting');
- assert.deepEqual(by(steps,'check').waits,['words']);
- assert.deepEqual(by(steps,'publish').waits,['words','check','yes']);
- assert.equal(by(steps,'publish').note,'Waits for the words, the check and your yes');
- assert.equal(S.firstOpen(steps),'words');
- assert.ok(steps.every(s=>STATES.has(s.state)));
- assert.equal(steps.filter(s=>s.state==='now').length,1,'one next thing to make');
- assert.deepEqual(plain(S.progress(steps)),{done:2,total:9,p:2/9,label:'2/9'});
-});
-
-test('photographs that are missing say so and lead to where they are added, not to a step that is done',()=>{
- const f=facts({material:{notes:1},dish:named,words:{paragraphs:1,count:5},pieces:[article]});
- const s=by(S.stepsFor(S.formsOf(f)[0],f),'photos');
- assert.deepEqual([s.state,s.note,s.missing,s.waits],['wait','No photographs added yet','addPhotos',undefined]);
- assert.equal(S.HANDOFFS[s.missing].section,'material');
- const placed=facts({material:{notes:1,photos:2},pieces:[{...article,placements:2}]});
- assert.deepEqual(plain(by(S.stepsFor(S.formsOf(placed)[0],placed),'photos')).note,'2 placed');
-});
-
-test('naming the dish says where it was named: on the Simmer board, from his direction, or not yet',()=>{
- const at=dish=>by(S.stepsFor(null,facts({material:{notes:1},dish})),'dish');
- assert.deepEqual([at({named:true,from:'board',at:'2026-11-08T10:00:00Z'}).note,at(named).note,at({named:false,dishes:0}).note,at({named:false,dishes:2}).note],['Named on the board, 8 Nov','From your direction','Not named yet','2 possible dishes']);
- // From the records: the board's named dish wins over the direction; with neither it is not named.
- const rec=(board,direction)=>S.factsFrom('s1',{board:{forming:board},direction:{body:direction,updatedAt:'2026-11-09T00:00:00Z'}}).dish;
- assert.deepEqual([rec({named:'An invented dish',sentAt:'2026-11-08T00:00:00Z'},'').from,rec({},'An invented direction.').from,rec({},'').named],['board','direction',false]);
-});
-
-test('every one of the twelve sections is reachable from a real step of every form, a Carousel alone included',()=>{
- const f=facts({material:{notes:1,recordings:1}});
- for(const form of [{kind:'article',piece:article},{kind:'post',piece:{...article,kind:'post'}},{kind:'product-listing',piece:{...article,kind:'product-listing'}},{kind:'instagram',piece:plan()}]){
-  assert.deepEqual(S.reached(S.stepsFor(form,f)),S.TWELVE,form.kind+' reaches all twelve');
- }
-});
-
-test('a Carousel (an Instagram plan): the story, the slides, the post text, words to confirm, and Post waiting',()=>{
- let f=facts({material:{notes:1,photos:4},transcript:{flags:[{id:'F1',heard:'twenty'}],planned:true},pieces:[plan()]});
- let [form]=S.formsOf(f);assert.deepEqual([form.kind,form.name,form.to],['instagram','Carousel','Instagram']);
- let steps=S.stepsFor(form,f);
- assert.deepEqual(plain(steps.filter(s=>s.group!=='Research').map(s=>[s.id,s.state,s.note])),[['have','done','1 note · 4 photographs'],['transcript','flag','1 word to confirm'],['dish','todo','Not named yet'],['story','wait','Waits for stories to be proposed'],['slides','wait','Waits for the story'],['posttext','wait','Waits for the slides'],['yes','todo','Not answered yet'],['publish','wait','Waits for the words to confirm, the slides, the post text and your yes']]);
- f=facts({material:{notes:1},transcript:{planned:true},consent:{people:[],released:true,reasons:[]},pieces:[plan({stories:1,chosen:true,chosenTitle:'Invented story',frames:6,caption:true,ready:true})]});
- steps=S.stepsFor(S.formsOf(f)[0],f);
- assert.deepEqual(plain(['transcript','story','slides','posttext','yes','publish'].map(id=>[by(steps,id).state,by(steps,id).note])),[['done','Every word confirmed'],['done','Invented story'],['done','6 slides'],['done','Written'],['done','Given'],['done','Ready to post']]);
-});
-
-test('forms of the same name are told apart by the piece\'s own name; a Post goes to Instagram',()=>{
- const forms=S.formsOf(facts({pieces:[plan({},'p1','Spring rows'),plan({},'p2','Autumn rows'),{...article,key:'out:x',id:'x',kind:'post'}]}));
- assert.deepEqual(forms.map(f=>[f.name,f.alike,f.piece.title]),[['Carousel',true,'Spring rows'],['Carousel',true,'Autumn rows'],['Post',false,'An invented subject']]);
- assert.equal(forms[2].to,'Instagram');
-});
-
-test('what is still being read says Reading, and the page opens no step until everything it rests on is known',()=>{
- const f=facts({material:{notes:2},dish:named,words:{paragraphs:3,count:60},pieces:[article],reading:['research','check']});
- const steps=S.stepsFor(S.formsOf(f)[0],f);
- assert.deepEqual([by(steps,'facts').state,by(steps,'facts').note,by(steps,'check').state,by(steps,'publish').state],['reading','Reading','reading','reading']);
- assert.equal(S.firstOpen(steps),null,'nothing is chosen while anything is being read');
- assert.equal(S.firstOpen(steps,{settle:false}),'yes','only when told to settle: the first known step that needs him');
- // From records: nothing arrived yet is all Reading; one record arriving fills only what rests on it.
- const none=S.factsFrom('s1',{});
- assert.deepEqual(none.reading.sort(),['check','consent','dish','material','pieces','research','transcript','words']);
- const some=S.factsFrom('s1',{catalog:{collections:[{parentStudyId:'s1',bindingId:'b1',title:'Invented'}]},desk:{people:[],release:{}}});
- assert.equal(some.title,'Invented');assert.ok(!some.reading.includes('consent'));assert.ok(some.reading.includes('words'));
-});
-
-test('a change re-asks only the reads its kind touches',()=>{
- assert.deepEqual(S.touched('consent.people.record'),['desk']);
- assert.deepEqual(S.touched('study-draft.check.post'),['check']);
- assert.deepEqual(S.touched('study-draft.save'),['read','check','requests']);
- assert.deepEqual(S.touched('instagram.plan.post'),['plans']);
- assert.deepEqual(S.touched('study.outputs.create'),['outputs']);
- assert.deepEqual(S.touched('needs-you.raise'),[],'a kind this page does not read touches nothing');
- assert.deepEqual(S.touched('study.human-direction.write'),['direction','board']);
- for(const [,keys] of [['x',S.touched('sources.import')]])for(const k of keys)assert.ok(S.READS.includes(k));
-});
+// ---------- the pure half ----------
+const step=(id,state,extra={})=>({id,group:'Create',name:id,state,note:'a note',section:'write',sections:['write'],...extra});
 
 test('every hand-off names the section its label says, pinned',()=>{
  assert.deepEqual(Object.fromEntries(Object.entries(S.HANDOFFS).map(([k,v])=>[k,[v.label,v.section]])),{
@@ -136,57 +32,98 @@ test('every hand-off names the section its label says, pinned',()=>{
   write:['Write','write'],read:['Read it through','read'],
   media:['Choose photographs in Advanced','media'],arrange:['Place them in Advanced','arrange'],addPhotos:['Add photographs in Advanced','material'],
   checkRun:['Run the check in Advanced','check'],checkOpen:['Open the check in Advanced','check'],
-  slides:['Open the slides in Advanced','arrange'],desk:['Open the desk in Advanced','share'],
+  story:['Open the story in Advanced','arrange'],slides:['Open the slides in Advanced','arrange'],desk:['Open the desk in Advanced','share'],
   outputs:['Open Outputs in Advanced','outputs'],audience:['See it as readers will, in Advanced','audience'],
   postWrite:['Write in Advanced','write'],postRead:['Read in Advanced','read'],postCheck:['Check in Advanced','check'],
  });
- // Where a label names a section of the workspace, that is the section it lands on.
- for(const {label,section} of Object.values(S.HANDOFFS)){const m=label.match(/^(Write|Read|Check) in Advanced$|^Open (Research|Outputs) in Advanced$/);if(m)assert.equal(section,(m[1]||m[2]).toLowerCase(),label);if(/the check/.test(label))assert.equal(section,'check',label);}
- // Each step reaches the sections of its own hand-offs.
- assert.deepEqual(plain(S.SECTIONS.words),['write','read']);assert.deepEqual(plain(S.SECTIONS.check),['check']);assert.deepEqual(plain(S.SECTIONS.posttext),['write','read','check']);
+ for(const {label,section} of Object.values(S.HANDOFFS)){
+  const m=label.match(/^(Write|Read|Check) in Advanced$|^Open (Research|Outputs) in Advanced$/);if(m)assert.equal(section,(m[1]||m[2]).toLowerCase(),label);
+ }
 });
 
-test('check and the words: never checked, checked clean, something to look at, a stale check',()=>{
- const at=c=>{const f=facts({material:{notes:1},dish:named,words:{paragraphs:3,count:60,parts:[]},check:c}),steps=S.stepsFor({kind:'article',piece:article},f);return [by(steps,'words').state,by(steps,'check').state,by(steps,'check').note];};
- assert.deepEqual(at(null),['done','now','Not checked yet']);
- assert.deepEqual(at({status:'checked',issues:0}),['done','done','Checked']);
- assert.deepEqual(at({status:'checked',issues:2}),['done','flag','2 things to look at']);
- assert.deepEqual(at({status:'stale',issues:0}),['done','flag','Check again']);
- assert.deepEqual(at({status:'running',issues:0}),['done','wait','Checking']);
+test('the hand-offs of each step agree with the sections the standing rule names for that step, and together reach all twelve',()=>{
+ for(const [id,list] of Object.entries(RULE.SECTIONS)){
+  const keys=S.STEP_OUT[id];assert.ok(keys,id+' has hand-offs');
+  assert.equal(S.HANDOFFS[keys[0]].section,list[0],id+': the first hand-off lands on the step\'s own section');
+  for(const k of keys)assert.ok(list.includes(S.HANDOFFS[k].section),id+' '+k+' stays within '+list.join());
+  assert.deepEqual(S.ownHandoff({id,section:list[0]}).section,list[0]);
+ }
+ assert.deepEqual(S.TWELVE,[...RULE.TWELVE]);
+ const reached=new Set(Object.values(S.STEP_OUT).flat().map(k=>S.HANDOFFS[k].section));
+ for(const s of S.TWELVE)assert.ok(reached.has(s),s+' is reachable from some step');
+ // A section the table has no label for still gets a plain one that lands where the command says.
+ assert.deepEqual(S.ownHandoff({id:'x',section:'audience'}),{key:null,label:'Open Audience in Advanced',section:'audience'});
 });
 
-test('her yes, from the consent desk: who is asked, who said no, and the wait',()=>{
- const person=(state,request=null)=>({id:'x',name:'Mrs. Invented',appears:['named'],state,request});
- const yes=consent=>by(S.stepsFor({kind:'article',piece:article},facts({material:{notes:1},consent})),'yes');
- const one=yes({people:[person('not-asked')],reasons:[]});
- assert.deepEqual([one.name,one.state,one.note],['Mrs. Invented’s yes','todo','Not asked yet']);
- assert.equal(yes({people:[person('not-asked',{text:'Invented'})],reasons:[]}).note,'Request drafted, not sent');
- assert.deepEqual([yes({people:[person('asked')],reasons:[]}).state,yes({people:[person('asked')],reasons:[]}).note],['wait','Asked, no answer yet']);
- assert.deepEqual([yes({people:[person('no')],reasons:[]}).state,yes({people:[person('no')],reasons:[]}).note],['flag','Mrs. Invented said no']);
- assert.equal(yes({people:[person('yes'),{...person('yes'),name:'Another'}],ready:true,held:false,reasons:[]}).name,'Their yes');
- assert.equal(yes({people:[],overridden:true,reasons:[]}).state,'done');
- assert.equal(yes(null).note,'Could not be read');
+test('a step is shown as the command says: done carries no note, not known says so and is never chosen',()=>{
+ assert.deepEqual([S.stepView(step('words','done')).note,S.stepView(step('words','todo')).note],['','a note']);
+ const u=S.stepView(step('check','unknown',{note:'whatever'}));
+ assert.deepEqual([u.state,u.note,u.openable,u.mark],['unknown','Not known',false,null]);
+ assert.equal(S.stepView(step('check','next')).mark,'now');
+ assert.equal(S.stepView(step('check','strange')).state,'unknown','a state nobody knows is not made up');
+ const steps=[step('have','done'),step('words','unknown'),step('check','unknown'),step('publish','wait')];
+ assert.equal(S.firstOpen(steps),'publish','only a step that is known can open');
+ assert.equal(S.firstOpen([step('a','unknown')]),null);
+ assert.equal(S.firstOpen([step('a','todo'),step('b','flag'),step('c','next')]),'b');
+ assert.equal(S.firstOpen([step('a','todo'),step('b','flag')],{next:{step:'a'}}),'a','the command\'s own next step wins when it can be opened');
+ assert.equal(S.firstOpen([step('a','unknown'),step('b','todo')],{next:{step:'a'}}),'b');
 });
 
-test('Add a form offers only what the app can make, each saying what it needs and why it cannot be made yet',()=>{
- const none=S.addable(facts({material:{notes:0}}));
- assert.deepEqual(plain(none.map(k=>[k.kind,k.ready,k.why])),[['article',false,'Write a few words first.'],['carousel',false,'Add a recording or a note first.'],['post',true,''],['product-listing',true,'']]);
- assert.ok(S.addable(facts({material:{notes:1},words:{paragraphs:1,count:5,parts:[]}})).every(k=>k.ready&&k.needs));
- assert.ok(S.addable({...facts({material:{notes:1},words:{paragraphs:1}}),bindingId:null}).filter(k=>k.kind!=='carousel').every(k=>!k.ready),'no saved writing place: nothing made from it');
+test('the form shown first holds the next step; pills say where each goes and tell alike names apart',()=>{
+ const standing={next:{form:'ig:2'},forms:[{key:'out:1',name:'Article',to:'the magazine',title:'T',alike:false,done:1,total:8,ring:.125,steps:[]},{key:'ig:2',name:'Carousel',to:'Instagram',title:'Spring',alike:true,done:3,total:9,ring:.33,steps:[]}]};
+ assert.equal(S.chooseForm(standing).key,'ig:2');assert.equal(S.chooseForm(standing,'out:1').key,'out:1');assert.equal(S.chooseForm({forms:[],steps:[1]}),null);
+ assert.deepEqual(S.pillView(standing.forms[0],0),{key:'out:1',name:'Article',line:'the magazine',ring:.125,count:'1/8',say:'First: Article for the magazine, 1 of 8 steps done'});
+ assert.equal(S.pillView(standing.forms[1],1).line,'Instagram · Spring');
+ assert.equal(S.pillView({...standing.forms[1],name:'Post',alike:false},1).line,'Instagram','a Post shows where it goes');
+ assert.deepEqual([S.pieceOf({key:'out:1',id:'1'}),S.pieceOf({key:'ig:2',id:'2'}),S.pieceOf({key:'draft:x',id:'x'})],['1',undefined,undefined]);
+ assert.deepEqual(S.stepsOfForm({steps:['top']},null),['top']);
 });
 
-test('material is sorted into recordings, notes, links and photographs',()=>{
- const m=S.sortMaterial([{id:'1',kind:'image'},{id:'2',kind:'audio'},{id:'3',kind:'note'},{id:'4',kind:'',url:'https://example.invalid/x'},{id:'5',kind:'note',transcriptState:{jobId:'j'}},{id:'6',rel_path:'Projects/x/a.JPG'}]);
- assert.deepEqual([m.total,m.recordings,m.notes,m.links,m.photos],[6,2,1,1,2]);
+test('a change concerns this subject when it names it, its records, or nothing; not another subject, not presence',()=>{
+ const standing={id:'s1',facts:{bindingId:'b1',projectId:'p1'},forms:[{id:'o1'}]};
+ const c=(kind,id,k='project')=>S.concerns({kind,scope:id?{kind:k,id}:undefined},standing);
+ assert.deepEqual([c('consent.people.record','s1'),c('study.outputs.create','o1','output'),c('study-draft.save','b1','binding'),c('first-flow.x','p1')],[true,true,true,true]);
+ assert.equal(c('consent.people.record','other'),false);
+ assert.equal(c('sources.import','source-9','source'),true,'a Library change might touch its material');
+ assert.equal(c('words.decide'),true);assert.equal(c('presence.update'),false);assert.equal(c('leases.acquire','s1'),false);
+ assert.equal(S.concerns({reset:true},standing),true);assert.equal(S.concerns(null,standing),false);
 });
 
-test('no em dash, only the six sizes, no hard-coded colour, every rule under the screen\'s own class',()=>{
+test('which tool reads a change touches',()=>{
+ assert.deepEqual(S.touched('consent.people.record'),['desk']);
+ assert.deepEqual(S.touched('study-draft.check.post'),['check']);
+ assert.deepEqual(S.touched('study-draft.save'),['read','check']);
+ assert.deepEqual(S.touched('instagram.plan.post'),['planRecords']);
+ assert.deepEqual(S.touched('needs-you.raise'),[]);
+ for(const keys of Object.values(S.STEP_READS))for(const k of keys)assert.ok(S.READS.includes(k)||k==='topics');
+});
+
+test('Add a form offers only what the app can make, from the command\'s own facts, each saying what it needs and why not yet',()=>{
+ const none=S.addable({bindingId:'b',material:{total:0,recordings:0,notes:0},words:{paragraphs:0}});
+ assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['article',false,'Write a few words first.'],['carousel',false,'Add a recording or a note first.'],['post',true,''],['product-listing',true,'']]);
+ assert.ok(S.addable({bindingId:'b',material:{notes:1,recordings:0},words:{paragraphs:2}}).every(k=>k.ready&&k.needs));
+ assert.ok(S.addable({bindingId:null,material:{notes:1},words:{paragraphs:1}}).filter(k=>k.kind!=='carousel').every(k=>!k.ready));
+ assert.equal(S.addable({bindingId:'b'}).find(k=>k.kind==='article').why,'Not known yet.');
+});
+
+test('material is sorted from what the records hold: folder, research sources, plans',()=>{
+ const tree={sources:[{id:'a',title:'A note',kind:'note'},{id:'b',title:'A recording',kind:'audio'},{id:'c',title:'Photo',kind:'image'}],roots:[{id:'library',tree:{rel_path:'',folders:[{rel_path:'Projects/p1',files:[{id:'a',name:'A note'}],folders:[]}],files:[]}}]};
+ const m=S.materialFrom({tree,brief:{materials:[{sourceId:'b',title:'A recording',kind:'audio',hash:'h'}],sourceIds:[]},planRecords:[{material:{photos:[{sourceId:'c',caption:'Photo'}]}},{__error:{}}]},'p1');
+ assert.deepEqual([m.total,m.recordings,m.notes,m.photos,m.items.map(x=>x.kind)],[3,1,1,1,['recordings','notes','photos']]);
+ assert.deepEqual(S.materialFrom({tree:{__error:{}}}).total,0);
+ assert.deepEqual(S.partsOf([{blockKind:'paragraph',words:'x'},{blockKind:'heading',words:'Part'},{blockKind:'paragraph',words:'y'},{blockKind:'paragraph',words:'z'}]),[{name:'Opening',paragraphs:1},{name:'Part',paragraphs:2}]);
+});
+
+test('no em dash, only the six sizes, no hard-coded colour, every rule under the screen\'s own class, no own rules for step states, no every-subject read',()=>{
  for(const file of ['public/v2/screens/subject.js','public/v2/screens/subject.css']){const text=fs.readFileSync(path.join(repo,file),'utf8');assert.doesNotMatch(text,/—/,file);}
  const css=fs.readFileSync(path.join(repo,'public/v2/screens/subject.css'),'utf8');
  assert.deepEqual([...new Set([...css.matchAll(/font(?:-size)?:[^;}]*?(\d+(?:\.\d+)?)px/g)].map(m=>m[1]))],[],'sizes come from the six size tokens only');
  assert.doesNotMatch(css,/#[0-9a-f]{3,8}\b/i,'no hard-coded colour');
  const rules=css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/@keyframes subj-[\w-]+\{[^{}]*\{[^{}]*\}\}/g,'').split('}').map(r=>r.replace(/^(\s*@[^{]*\{)+/,'').trim()).filter(r=>r.includes('{'));
  for(const r of rules)assert.match(r,/^(?:html\[data-brand\] )?(?:\.subj\b|\.subj-sheetdlg\b|dialog\.subj-sheetdlg\b)/,'every rule starts with the screen\'s own class: '+r.slice(0,60));
+ const js=fs.readFileSync(path.join(repo,'public/v2/screens/subject.js'),'utf8');
+ for(const banned of ['subject-places','study-draft.catalog','inquiries.projects','subjects.standing','stepsFor','factsFrom'])assert.ok(!js.includes("'"+banned),banned+' is not read or decided here');
+ assert.match(js,/gather=subject=>v2\.call\('subject\.standing'/);
 });
 
 // ---------- the page, on a real server with invented subjects ----------
@@ -212,68 +149,111 @@ async function page(base,hash){
 const until=async(check,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=check();if(v)return v;if(Date.now()>end)throw new Error('timed out');await new Promise(r=>setTimeout(r,25));}};
 const sectionOf=href=>new URL(href,'http://x').searchParams.get('section');
 
-test('the page on real records: Reading first, one step chosen once, hand-offs named right, live changes re-ask only what they touch',{timeout:300000},async t=>{
+
+const get=async(base,p)=>(await fetch(base+p)).json();
+const standingOf=(base,id)=>get(base,'/api/subject/standing?parentStudyId='+encodeURIComponent(id));
+const rowsOf=doc=>[...doc.querySelectorAll('.subj-row')].map(r=>[r.dataset.step,r.dataset.state,r.querySelector('small')?.textContent||'']);
+const mine=calls=>calls.filter(p=>p.startsWith('/api/')&&!['/api/needs-you','/api/subject-places','/api/study-draft/catalog','/api/capabilities','/api/events','/api/look'].includes(p));
+
+test('six invented subjects at different stages each show exactly what subject.standing says',{timeout:300000},async t=>{
  const base=await server(t);
- await fillDemo(base,{only:['questions-for-the-grower','shade-and-patience','the-first-cup']});
- // A brand new subject.
- {const {doc}=await page(base,'#/subject/demo-questions-for-the-grower');
-  await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
-  assert.equal(doc.querySelector('.subj-head h1').textContent,'Questions for the grower');
-  assert.equal(doc.querySelector('.subj-path').textContent,'Tea / Gardens');
-  assert.match(doc.querySelector('.subj-form.none').textContent,/Not decided yet/);
-  assert.deepEqual([...doc.querySelectorAll('.subj-row')].map(r=>[r.querySelector('b').textContent,r.dataset.state]),[['What you have','now'],['Name the dish','wait']]);
-  assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'What you have');
-  assert.equal(doc.querySelectorAll('.subj-ways a').length,3,'the ways to add material');
-  assert.equal(doc.querySelectorAll('.subj-ways a svg').length,6,'each with its icon');
-  assert.deepEqual([...doc.querySelectorAll('.subj-all a')].map(a=>[a.textContent,sectionOf(a.getAttribute('href'))]),S.TWELVE.map(s=>[S.SECTION_LABEL[s],s]),'all twelve sections, each to its own');}
- // A finished Article: never a state not yet known; the page opens on Check, once.
- {const {doc}=await page(base,'#/subject/demo-the-first-cup');
-  const seen=[];await until(()=>{const r=doc.querySelector('.subj-row[data-step="facts"]');if(r)seen.push(r.dataset.state+'|'+doc.querySelector('[data-subj-panel]').hidden);return doc.querySelector('[data-subj-panel]:not([hidden]) h2');});
-  assert.ok(seen.every(x=>!x.startsWith('flag')),'research is never shown as needing him before it is read');
-  assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'Check');
-  assert.equal(doc.querySelector('.subj-row[data-step="words"]').dataset.state,'done');}
- // An Article half written, with a suggestion waiting.
- const {w,doc,sources,calls}=await page(base,'#/subject/demo-shade-and-patience');
- await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
- assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'The words','while a suggestion waits, the words are the step: '+JSON.stringify([...doc.querySelectorAll('.subj-row')].map(r=>r.dataset.step+':'+r.dataset.state+':'+r.querySelector('small').textContent)));
- assert.equal(doc.querySelector('.subj-head h1').textContent,'Shade and patience');
- const pill=doc.querySelector('button.subj-form[data-subj-form]');assert.match(pill.getAttribute('aria-label'),/^First: Article for the magazine, \d of \d steps done$/);assert.ok(pill.querySelector('.v2-ring'));
- const state=()=>Object.fromEntries([...doc.querySelectorAll('.subj-row')].map(r=>[r.dataset.step,r.dataset.state]));
- assert.deepEqual(Object.keys(state()),['have','facts','dish','words','photos','check','yes','publish']);
- assert.deepEqual([state().words,state().check,state().publish],['flag','wait','wait']);
- // Every hand-off on every step lands on the section its label says (and, for a piece, on that piece).
- const piece=pill.dataset.subjForm.slice(4),handoffs=new Set();
- for(const id of Object.keys(state())){
-  doc.querySelector(`.subj-row[data-step="${id}"]>[data-subj-step]`).click();
-  for(const a of doc.querySelectorAll('[data-subj-panel] [data-subj-handoff],.subj-head [data-subj-handoff]')){
-   const key=a.dataset.subjHandoff,href=a.getAttribute('href');handoffs.add(key);
-   assert.equal(sectionOf(href),S.HANDOFFS[key].section,key+': '+href);
-   assert.equal(new URL(href,'http://x').searchParams.get('subject'),'demo-shade-and-patience');
-   if(['write','read','checkRun','checkOpen','outputs','audience','media','arrange'].includes(key))assert.equal(new URL(href,'http://x').searchParams.get('piece'),piece,key+' keeps the piece');
-  }
+ await fillDemo(base,{only:['leaving-and-returning','a-single-line','shade-and-patience','the-first-cup','straw-over-the-rows']});
+ await seedInstagramDemo(base);
+ const ids=['demo-leaving-and-returning','demo-a-single-line','demo-shade-and-patience','demo-the-first-cup','demo-straw-over-the-rows'];
+ const seen=[];
+ for(const id of ids){
+  const standing=await standingOf(base,id);
+  const {doc,calls}=await page(base,'#/subject/'+id);
+  await until(()=>doc.querySelector('.subj-row')&&doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+  assert.equal(doc.querySelector('.subj-head h1').textContent,standing.title);
+  assert.equal(doc.querySelector('.subj-where span').textContent,standing.stationName,'the station is the command\'s');
+  assert.equal(doc.querySelector('.subj-where .v2-ring').style.getPropertyValue('--p'),Math.max(0,Math.min(1,standing.ring)).toFixed(2),'the ring is the command\'s');
+  // The forms, in the command's order, each with its own n/m.
+  assert.deepEqual([...doc.querySelectorAll('button.subj-form[data-subj-form]')].map(b=>[b.dataset.subjForm,b.querySelector('em').textContent]),standing.forms.map(f=>[f.key,f.done+'/'+f.total]));
+  // The steps of the form shown, every one with the state the command gave (never a state of its own).
+  const form=S.chooseForm(standing),steps=form?form.steps:standing.steps;
+  assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),steps.map(s=>[s.id,s.state]),id);
+  for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.note,id+' '+s.id+' note');
+  // Opened on the step the command calls next, or the first that needs him; never a step not known.
+  const open=doc.querySelector('.subj-row[data-open]')?.dataset.step;
+  assert.equal(open,S.firstOpen(steps,form));
+  assert.notEqual(steps.find(s=>s.id===open)?.state,'unknown');
+  assert.equal(calls.filter(p=>p==='/api/subject/standing').length,1,'the standing is asked once');
+  assert.ok(!calls.includes('/api/inquiries/projects'),'no read of every subject');
+  seen.push([id,standing.forms.map(f=>f.name).join('+')||'no form',steps.find(s=>s.id===open).name]);
  }
- assert.ok(['write','read','checkRun','outputs','audience','addPhotos','board','dishChange','researchLook','desk','directionChange'].every(k=>handoffs.has(k)),[...handoffs].join());
- // Whatever he opens stays open while records arrive; a change re-asks only what it touches.
+ assert.deepEqual(seen.map(x=>x[1]),['no form','no form','Article','Article','Article+Carousel']);
+ // Nothing yet: one first step, the dish waits, a form is not decided.
+ {const {doc}=await page(base,'#/subject/demo-leaving-and-returning');await until(()=>doc.querySelector('.subj-row'));
+  assert.match(doc.querySelector('.subj-form.none').textContent,/Not decided yet/);
+  assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),[['have','next'],['dish','wait'],['form','wait']]);}
+ // A suggestion waiting: the words need him, Check and Publish wait.
+ {const {doc}=await page(base,'#/subject/demo-shade-and-patience');await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+  const st=Object.fromEntries(rowsOf(doc).map(r=>[r[0],r[1]]));assert.deepEqual([st.words,st.check,st.publish],['flag','wait','wait']);
+  assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'The words');}
+});
+
+test('the page: opens a step on demand, every hand-off lands on its section with the subject and piece, a Carousel step opens the slide studio, changes re-ask only what they touch',{timeout:300000},async t=>{
+ const base=await server(t);
+ await fillDemo(base,{only:['shade-and-patience','straw-over-the-rows']});
+ const plan=(await seedInstagramDemo(base));
+ const id='demo-straw-over-the-rows',standing=await standingOf(base,id);
+ const {w,doc,sources,calls}=await page(base,'#/subject/'+id);
+ await until(()=>doc.querySelector('[data-subj-panel]:not([hidden]) h2'));
+ const pill=doc.querySelector('button.subj-form[data-subj-form^="out:"]'),carousel=doc.querySelector('button.subj-form[data-subj-form^="ig:"]');
+ assert.match(pill.getAttribute('aria-label'),/^First: Article for the magazine, \d of \d steps done$/);
+ const handoffs=new Set(),visit=()=>{
+  for(const sid of rowsOf(doc).map(r=>r[0])){
+   doc.querySelector(`.subj-row[data-step="${sid}"]>[data-subj-step]`).click();
+   for(const a of doc.querySelectorAll('[data-subj-panel] [data-subj-handoff],.subj-head [data-subj-handoff]')){
+    const key=a.dataset.subjHandoff,href=a.getAttribute('href'),q=new URL(href,'http://x').searchParams;
+    if(key!=='own')handoffs.add(key);
+    assert.equal(q.get('section'),key==='own'?q.get('section'):S.HANDOFFS[key].section,key+': '+href);
+    assert.equal(q.get('subject'),id);
+    if(key!=='directionChange'&&key!=='directionWrite'&&key!=='addMaterial'&&doc.querySelector('.subj-form.on').dataset.subjForm.startsWith('out:'))assert.equal(q.get('piece'),pill.dataset.subjForm.slice(4),key+' keeps the piece');
+   }
+  }
+ };
+ visit();
+ // The step's own hand-off is the section the command named for it.
+ for(const s of standing.forms[0].steps){doc.querySelector(`.subj-row[data-step="${s.id}"]>[data-subj-step]`).click();
+  const own=[...doc.querySelectorAll('[data-subj-panel] [data-subj-handoff]')].map(a=>sectionOf(a.getAttribute('href')));
+  if(s.state!=='unknown'&&!['yes','photos','posttext','slides','story','form'].includes(s.id)||s.id==='yes'||s.id==='photos')assert.ok(own.includes(s.section),s.id+' hands off to '+s.section+' among '+own);}
+ assert.ok(['write','checkRun','outputs','audience','addMaterial','board','research','desk','media'].every(k=>handoffs.has(k)),[...handoffs].join());
+ await until(()=>doc.querySelector('.subj-head [data-subj-handoff^="direction"]'));
+ // The Carousel: its pill opens its own steps; the slide studio opens from the slides step.
+ carousel.click();
+ assert.equal(doc.querySelector('.subj-form.on').dataset.subjForm,carousel.dataset.subjForm);
+ doc.querySelector('.subj-row[data-step="slides"]>[data-subj-step]').click();
+ await until(()=>doc.querySelector('[data-subj-panel] .subj-strip li'));
+ assert.equal(doc.querySelectorAll('[data-subj-panel] .subj-strip li').length,standing.forms[1].steps.find(s=>s.id==='slides').note.match(/\d+/)[0]*1);
+ const studio=[...doc.querySelectorAll('[data-subj-panel] a')].find(a=>/Open the slide studio$/.test(a.textContent));
+ assert.equal(studio.getAttribute('href'),'#/slides/'+standing.forms[1].id);
+ doc.querySelector('.subj-row[data-step="posttext"]>[data-subj-step]').click();
+ const post=[...doc.querySelectorAll('[data-subj-panel] [data-subj-handoff]')].map(a=>[a.textContent,sectionOf(a.getAttribute('href'))]);
+ assert.deepEqual(post,[['Write in Advanced','write'],['Read in Advanced','read'],['Check in Advanced','check']],'a Carousel reaches Write, Read and Check from a real step');
+ // The open step never moves by itself: a change arrives, the standing is asked again, the open step stays.
  doc.querySelector('.subj-row[data-step="yes"]>[data-subj-step]').click();
  await new Promise(r=>setTimeout(r,300));
- const desk=await (await fetch(base+'/api/consent/desk?parentStudyId=demo-shade-and-patience')).json();
- const r=await fetch(base+'/api/consent/people/record',{method:'POST',headers:{'Content-Type':'application/json','X-AR-Actor':'agent:claude-code','X-AR-Client':'http',Origin:base},body:JSON.stringify({parentStudyId:'demo-shade-and-patience',expectedRevision:desk.revision,expectedHash:desk.hash,operationId:crypto.randomUUID(),person:{name:'Mrs. Invented',appears:['named','quoted']}})});
- assert.equal(r.status,200,await r.clone().text());
- const before=calls.length;
- const es=sources[0];es.emit('hello',{bootId:'b',cursor:1});es.emit('change',{cursor:2,bootId:'b',kind:'consent.people.record',scope:{kind:'project',id:'demo-shade-and-patience'}});
- await until(()=>doc.querySelector('.subj-row[data-step="yes"] b')?.textContent==='Mrs. Invented’s yes');
- assert.deepEqual(calls.slice(before).filter(p=>p.startsWith('/api/')&&p!=='/api/needs-you'),['/api/consent/desk'],'only the desk is asked again');
- assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'Mrs. Invented’s yes','the open step stays where he put it');
- // A change about another subject asks nothing.
- const mark=calls.length;es.emit('change',{cursor:3,bootId:'b',kind:'consent.people.record',scope:{kind:'project',id:'demo-the-first-cup'}});
- await new Promise(r=>setTimeout(r,500));assert.deepEqual(calls.slice(mark).filter(p=>p.startsWith('/api/')&&p!=='/api/needs-you'),[]);
- // Drafting her request is allowed here; recording that it was sent and her answer are his, at the desk.
- const area=doc.querySelector('[data-subj-draft]');area.value='An invented request.';area.dispatchEvent(new w.Event('input',{bubbles:true}));
- area.closest('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
- await until(()=>doc.querySelector('.subj-row[data-step="yes"] small')?.firstChild?.textContent==='Request drafted, not sent');
- const desk2=await (await fetch(base+'/api/consent/desk?parentStudyId=demo-shade-and-patience')).json();
- assert.equal(desk2.people[0].request.text,'An invented request.');assert.equal(desk2.people[0].consent.state,'not-asked','asking is still his');
+ const before=calls.length,es=sources[0];
+ es.emit('hello',{bootId:'b',cursor:1});
+ es.emit('change',{cursor:2,bootId:'b',kind:'consent.people.record',scope:{kind:'project',id}});
+ await until(()=>mine(calls.slice(before)).includes('/api/subject/standing'));
+ await new Promise(r=>setTimeout(r,400));
+ assert.deepEqual(mine(calls.slice(before)).sort(),['/api/consent/desk','/api/subject/standing'],'the standing and the desk only');
+ assert.equal(doc.querySelector('[data-subj-panel] h2').textContent,'Your yes','the open step stays where he put it');
+ const mark=calls.length;es.emit('change',{cursor:3,bootId:'b',kind:'consent.people.record',scope:{kind:'project',id:'demo-shade-and-patience'}});
+ es.emit('change',{cursor:4,bootId:'b',kind:'presence.update'});
+ await new Promise(r=>setTimeout(r,500));assert.deepEqual(mine(calls.slice(mark)),[],'another subject, and presence, ask nothing');
  // Add a form: what the app can make, nothing it cannot.
  doc.querySelector('[data-subj-add]').click();
- assert.deepEqual([...doc.querySelectorAll('.subj-kinds button')].map(b=>[b.querySelector('b').textContent,b.disabled]),[['Article',false],['Carousel',false],['Post',false],['Product listing',false]]);
+ assert.deepEqual([...doc.querySelectorAll('.subj-kinds b')].map(b=>b.textContent),['Article','Carousel','Post','Product listing']);
+ assert.ok(plan);
+});
+
+test('an unknown subject says so and offers Home; a missing step state is never guessed',{timeout:120000},async t=>{
+ const base=await server(t);
+ const {doc}=await page(base,'#/subject/not-a-subject');
+ await until(()=>/could not be found/.test(doc.querySelector('.subj h1')?.textContent||''));
+ assert.ok(doc.querySelector('.subj a[href="#/"]'));
 });
