@@ -14,6 +14,7 @@
 - He judges by eye: lead with a link or a picture, never code or diffs.
 - Plain full sentences, the names the app shows him, no commit hashes, no internal codes.
 - Never use the em dash character.
+- On screens and pages made for him, separation must be felt: by space and by surface, not by typeface or label colour. His words, 11 November: "I feel like I'm having to sort your words with my head rather than enjoy reading." Put this in every design brief.
 - Say what is finished, what is not, and what he must decide. Make a recommendation; do not list options without one.
 - Shell commands for him, if ever needed: one command per block, no comment lines, nothing to hand-edit.
 - He often dictates by voice, so his messages can be loosely worded. Quote his words exactly when recording a decision.
