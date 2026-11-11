@@ -79,12 +79,13 @@
   const base=(forms||[]).map(f=>{
    if(!f?.alike)return '';
    // A title every one of them shares tells nothing apart, so it is left out.
-   const own=String(f.title||'').trim(),shared=forms.filter(x=>x.alike&&x.name===f.name).every(x=>String(x.title||'').trim()===own),d=when(f.createdAt);
-   return [shared&&forms.filter(x=>x.alike&&x.name===f.name).length>1?'':own,f.kind==='slides'&&f.slides>0?plural(f.slides,'slide'):'',d?'made '+day(d):''].filter(Boolean).join(' · ');
+   const own=String(f.title||'').trim(),shared=forms.filter(x=>x.alike&&x.name===f.name).every(x=>String(x.title||'').trim()===own),made=when(f.createdAt),changed=made?null:when(f.updatedAt);
+   // A plan keeps no date it was made, only when it was last changed: it says that, and not more.
+   return [shared&&forms.filter(x=>x.alike&&x.name===f.name).length>1?'':own,['slides','instagram'].includes(f.kind)&&f.slides>0?plural(f.slides,'slide'):'',made?'made '+day(made):changed?'changed '+day(changed):''].filter(Boolean).join(' · ');
   });
   // Still alike: add the time it was made, then the second, until the real records part them.
   const clock=[null,d=>d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),d=>d.toLocaleTimeString('en-GB')];
-  const at=level=>base.map((x,j)=>{const e=when(forms[j]?.createdAt);return x&&e&&clock[level]?x+', '+clock[level](e):x;});
+  const at=level=>base.map((x,j)=>{const e=when(forms[j]?.createdAt||forms[j]?.updatedAt);return x&&e&&clock[level]?x+', '+clock[level](e):x;});
   const apart=lines=>lines.every((x,j)=>!x||lines.every((y,k)=>k===j||y!==x||forms[k].name!==forms[j].name));
   for(let level=0;level<clock.length;level++){const lines=at(level);if(apart(lines)||level===clock.length-1)return lines;}
   return base;
@@ -254,19 +255,28 @@
      headings, his thoughts, the assistants' provisional parts) or one plain paragraph written long ago or by hand: the
      record is read only to find his adopted words, and nothing else of it is ever shown. Nothing found gives ''. */
  // A heading of the stored concept record, with or without its dash suffix; the workspace tells the record by the same words.
- const PART='(?:Author thoughts|Adopted human direction|AI interpretation|Suggestions|Selected Library passages)';
- const TAIL='(?:[ \\t]+[\\u2014\\u2013-].*)?[ \\t]*$';
- const CONCEPT_PART=new RegExp('^(?:# Concept|## '+PART+')'+TAIL,'m'),ADOPTED_AT=new RegExp('^## Adopted human direction'+TAIL,'m'),OTHER_PART=new RegExp('^## (?:Author thoughts|AI interpretation|Suggestions|Selected Library passages)'+TAIL,'m');
- /** His adopted words, with their own line breaks (what Edit starts from); adoptedWords lays them flat for one line. */
+ const PART='(?:Concept|Author thoughts|Adopted human direction|AI interpretation|Suggestions|Selected Library passages)';
+ // The record is the concept's when a line starts like one of its headings, whatever follows the name (a dash, a colon, brackets).
+ const CONCEPT_PART=new RegExp('^#{1,2}[ \\t]*'+PART+'\\b','mi'),ADOPTED_AT=/^##[ \t]*Adopted human direction\b.*$/mi,NEXT_HEADING=/^#{1,6}[ \t]/m;
+ /** His adopted words, with their own line breaks (what Edit starts from); adoptedWords lays them flat for one line.
+     Only text the record's shape vouches for is returned: a plain paragraph, or the adopted section of the concept
+     record up to the next heading of any kind. A shape that is not recognised gives ''. */
  function adoptedRaw(body){
   let text=String(body??'').replace(/\r\n?/g,'\n');
-  // The app's own blocks (direction choices, planning intent) are data wrapped in markers: take them out whole. A block
-  // left open, or a stray marker, never shows: everything from an unclosed marker on is dropped, and so is any comment.
-  text=text.replace(/<!-- ar-create:([a-z-]+):v1 -->[\s\S]*?<!-- \/ar-create:\1:v1 -->/g,'').replace(/<!-- ar-create:[a-z-]+:v1 -->[\s\S]*$/,'').replace(/<!--[\s\S]*?-->/g,'');
+  // The app's own blocks (direction choices, planning intent) are data wrapped in markers: take them out whole.
+  text=text.replace(/<!-- ar-create:([a-z-]+):v1 -->[\s\S]*?<!-- \/ar-create:\1:v1 -->/g,'');
+  // An opening marker whose block never closes: it is data to the end.
+  text=text.replace(/<!-- ar-create:[a-z-]+:v1 -->[\s\S]*$/,'');
+  // A closing marker with no opening one: what came before it is the rest of a block, so it goes, with the marker.
+  const stray=/<!-- \/ar-create:[a-z-]+:v1 -->/g;let last=null,m;while((m=stray.exec(text)))last=m;
+  if(last)text=text.slice(last.index+last[0].length);
+  // Any comment goes; one left open takes everything after it, which cannot be told from data.
+  text=text.replace(/<!--[\s\S]*?-->/g,'');const open=text.indexOf('<!--');if(open>=0)text=text.slice(0,open);
   if(!text.trim())return '';
-  if(!CONCEPT_PART.test(text))return text.trim();
+  if(/^\s*[{[]/.test(text)){try{JSON.parse(text);return '';}catch{}}
+  if(!CONCEPT_PART.test(text))return /^#{1,6}[ \t]/m.test(text)?'':text.trim();
   const at=ADOPTED_AT.exec(text);if(!at)return '';
-  const rest=text.slice(at.index+at[0].length),end=OTHER_PART.exec(rest);
+  const rest=text.slice(at.index+at[0].length),end=NEXT_HEADING.exec(rest);
   return (end?rest.slice(0,end.index):rest).trim();
  }
  const adoptedWords=body=>adoptedRaw(body).replace(/\s+/g,' ');
@@ -445,11 +455,12 @@
    const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
    // The station stays for assistive technology; the sample shows it nowhere on this page.
    const where=`<span class="subj-where subj-sr" title="${esc(s.stationName)}">${ring(s.ring)}<span>${esc(s.stationName)}</span></span>`;
-   const d=st.rec.direction,said=d===undefined?null:ok(d)?sentenceOf(ok(st.rec.board)?st.rec.board:null,d):(sentenceOf(ok(st.rec.board)?st.rec.board:null,null)||null);
+   // His sentence waits for both reads (the direction and the board), so it is drawn once and never changes under him.
+   const d=st.rec.direction,both=d!==undefined&&st.rec.board!==undefined,said=!both?null:ok(d)?sentenceOf(ok(st.rec.board)?st.rec.board:null,d):(sentenceOf(ok(st.rec.board)?st.rec.board:null,null)||null);
    const hasDish=(current().steps||[]).some(x=>x.id==='dish');
    // Change stays on the page: it opens the Name the dish step. Only a subject with no such step is sent to Advanced.
    const change=(label,key,aria)=>hasDish?`<button type="button" class="subj-link" data-subj-step="dish" aria-label="${aria}">${label}</button>`:`<a class="subj-link" data-subj-handoff="${key}" href="${handoffHref('direction',null)}" aria-label="${aria} (opens Advanced)">${label}</a>`;
-   const dir=d===undefined?'':said?`<p class="subj-dir"><span title="${esc(said)}">${esc(said)}</span>${change(HANDOFFS.directionChange.label,'directionChange','Change the direction')}</p>`
+   const dir=!both?'':said?`<p class="subj-dir"><span title="${esc(said)}">${esc(said)}</span>${change(HANDOFFS.directionChange.label,'directionChange','Change the direction')}</p>`
     :said===''&&!later(s)?`<p class="subj-dir none"><span>No direction yet</span>${change(HANDOFFS.directionWrite.label,'directionWrite','Write the direction')}</p>`:'';
    return `<header class="subj-head" data-subj-head><h1 title="${esc(s.title)}">${esc(s.title)}</h1>${look}${path}${where}<span class="subj-sp"></span>${dir}</header>`;
   }

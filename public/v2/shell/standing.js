@@ -142,9 +142,9 @@ export function stepsFor(form, facts = {}) {
    // A Carousel counts the words on its own slides; the article's count is not its words. With no count in its records, none is shown.
    const ownCount = kind === 'slides' ? (Number.isFinite(p.words) ? p.words : null) : w.count;
    if (waiting) add('words', 'Create', wordsName, 'flag', plural(waiting, 'suggestion') + ' waiting');
-   else if (kind === 'slides' && ownCount === 0) add('words', 'Create', wordsName, 'todo', 'Not started');
+   else if (kind === 'slides' && !ownCount) add('words', 'Create', wordsName, 'todo', 'Nothing written on the slides yet');
    else if (!w.paragraphs && kind !== 'slides') add('words', 'Create', wordsName, 'todo', 'Not started');
-   else add('words', 'Create', wordsName, 'done', ownCount === null ? '' : plural(ownCount, 'word'));
+   else add('words', 'Create', wordsName, 'done', plural(ownCount, 'word'));
    if (kind !== 'slides') {
     const photosName = kind === 'article' ? 'Photographs in the article' : kind === 'post' ? 'The picture' : 'Photographs';
     if (p.placements) add('photos', 'Create', photosName, 'done', plural(p.placements, 'placed', 'placed'));

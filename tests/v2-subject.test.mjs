@@ -197,7 +197,8 @@ test('six invented subjects at different stages each show exactly what subject.s
   // The steps of the form shown, every one with the state the command gave (never a state of its own).
   const form=S.chooseForm(standing),steps=form?form.steps:standing.steps.filter(x=>['Gather','Research','Simmer'].includes(x.group)),all=form?form.steps:standing.steps;
   assert.deepEqual(rowsOf(doc).map(r=>[r[0],r[1]]),steps.map(s=>[s.id,s.state]),id);
-  for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.id==='facts'?S.topicNote(s.note,undefined):s.note,id+' '+s.id+' note (the topic count waits until the panel has read its topics)');
+  {const facts=rowsOf(doc).find(r=>r[0]==='facts');if(facts)assert.doesNotMatch(facts[2],/research topic/,id+': no topic count before the panel has read its topics');}
+ for(const [row,s] of steps.map((s,i)=>[rowsOf(doc)[i],s]))assert.equal(row[2],s.state==='done'?'':s.state==='unknown'?'Not known':s.id==='facts'?s.note.replace(/( · )?\d+ research topics? on this material/,''):s.note,id+' '+s.id+' note (the topic count waits until the panel has read its topics)');
   // Opened on the step the command calls next, or the first that needs him; never a step not known.
   const open=doc.querySelector('.subj-row[data-open]')?.dataset.step;
   assert.equal(open,S.firstOpen(steps,form));
@@ -443,8 +444,11 @@ test('the sentence beside a subject\'s name is only his: the dish he named, else
  assert.equal(S.adoptedWords(CONCEPT('Kept.')+BLOCK),'Kept.');
  assert.equal(S.adoptedWords('Tea.\n\n<!-- ar-create:direction-plan:v1 -->\n## Planning intent\n```json\n{"title":"x"}\n```\n<!-- /ar-create:direction-plan:v1 -->'),'Tea.');
  // His own headings are his words, in a plain paragraph and inside the adopted section.
- assert.equal(S.adoptedWords('Suggestions about tea\n\n## Suggestions about tea, mine\n\nShade first.'),'Suggestions about tea ## Suggestions about tea, mine Shade first.');
- assert.equal(S.adoptedWords(CONCEPT('# My line\n\nSlowly.')),'# My line Slowly.');
+ assert.equal(S.adoptedWords('Tea, #1 of the morning {slowly}, kept whole.'),'Tea, #1 of the morning {slowly}, kept whole.','a # or braces inside his sentence stay');
+ assert.equal(S.adoptedWords(CONCEPT('Slowly, #1 {kept}.')),'Slowly, #1 {kept}.');
+ // A heading of any kind ends the adopted section, and a plain record that holds headings is not a shape we read.
+ assert.equal(S.adoptedWords(CONCEPT('Slowly.\n\n# My line\n\nNot part of it.')),'Slowly.');
+ assert.equal(S.adoptedWords('Suggestions about tea\n\n## Notes, mine\n\nShade first.'),'');
  // Edit starts from his paragraphs as they were.
  assert.equal(S.adoptedRaw(CONCEPT('One.\n\nTwo.')),'One.\n\nTwo.');
  // A hand-written record with the headings in another order still gives only the adopted section.
@@ -560,6 +564,9 @@ test('two forms of one name are told apart by real fields only: the slide count 
  assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2')])[0],'Spring · 5 slides · made 3 Oct');
  // A title they all share tells nothing apart, so it is left out.
  assert.equal(S.tellApart([car('out:c1',{title:'Spring'}),car('out:c2',{title:'Spring',slides:7})])[1],'7 slides · made 3 Oct');
+ // Two Instagram plans with one title: the frame count and the day each was last changed (a plan keeps no date made).
+ const plans=[car('ig:p1',{kind:'instagram',createdAt:null,updatedAt:'2026-11-02T12:00:00Z',slides:3,title:'Same'}),car('ig:p2',{kind:'instagram',createdAt:null,updatedAt:'2026-11-04T12:00:00Z',slides:5,title:'Same'})];
+ assert.deepEqual(S.tellApart(plans),['3 slides · changed 2 Nov','5 slides · changed 4 Nov']);
  // No record of a slide count or a date: nothing is invented, and the old line is unchanged.
  const bare=[car('out:c1',{slides:0,createdAt:null}),car('out:c2',{slides:0,createdAt:null,title:'Autumn'})];
  assert.deepEqual(S.tellApart(bare),['','Autumn']);
@@ -604,4 +611,26 @@ test('an assistant is not offered what only Adrian can do; a refusal says what h
  assert.match(S.sourceRefusal(Object.assign(new Error('x'),{status:409,command:'recordings.source',body:{}})),/transcript or the recording changed/);
  assert.equal(S.sourceRefusal(Object.assign(new Error('Only Adrian can decide this.'),{status:403})),'Only Adrian can decide this.');
  assert.equal(S.sourceRefusal(new Error('')),'That could not be done. Nothing was changed.');
+});
+
+test('private or machine text never reaches the header, whatever suffix a heading has or however a marker is broken',()=>{
+ const J='{"schema":1,"events":[{"action":"select"}]}';
+ const ADOPT='## Adopted human direction \u2014 explicit\n\nHis line, kept.';
+ // A heading whose suffix is not a dash is still the concept record: his private thoughts stay out.
+ assert.equal(S.adoptedWords('# Concept: tea\n\n## Author thoughts (verbatim)\n\nPrivate thought.\n\n'+ADOPT),'His line, kept.');
+ assert.equal(S.adoptedWords('# Concept: tea\n\n## Author thoughts (verbatim)\n\nPrivate thought.'),'');
+ assert.equal(S.adoptedWords('## Author thoughts (verbatim)\n\nPrivate thought.'),'');
+ assert.equal(S.adoptedWords('# Concept\n\n## Adopted human direction: mine\n\nHis line.\n\n## AI interpretation (provisional)\n\nNot his.'),'His line.');
+ // An unknown section after his words is not his words.
+ assert.equal(S.adoptedWords('# Concept\n\n'+ADOPT+'\n\n## Something new\n\nAn assistant\'s text.'),'His line, kept.');
+ assert.equal(S.adoptedWords('# Concept\n\n'+ADOPT+'\n\n### Deeper\n\nMore.'),'His line, kept.','a heading of any level ends it');
+ // A closing marker with no opening one: what is before it is data.
+ assert.equal(S.adoptedWords(J+'\n<!-- /ar-create:direction-choices:v1 -->\nA plain direction.'),'A plain direction.');
+ assert.equal(S.adoptedWords('```json\n'+J+'\n```\n<!-- /ar-create:direction-choices:v1 -->'),'');
+ // A comment left open: what is after it is data.
+ assert.equal(S.adoptedWords('A plain direction.\n<!-- '+J),'A plain direction.');
+ assert.equal(S.adoptedWords('<!-- '+J),'');
+ // A record that is only data, and a shape that is not recognised, give nothing.
+ assert.equal(S.adoptedWords(J),'');
+ assert.equal(S.adoptedWords('## Notes\n\nSomething.'),'');
 });

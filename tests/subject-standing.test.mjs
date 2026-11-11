@@ -185,5 +185,14 @@ test('a carousel piece carries its own slide words, slide count, and when it was
   assert.deepEqual([bare.slides, bare.words, bare.createdAt, bare.updatedAt], [1, null, null, null], 'no text in the records: no count');
   const art = (await text({id: 'o1', kind: 'article', placements: [], createdAt: '2026-10-03T08:15:00Z'})).forms[0];
   assert.equal(art.words, null, 'an Article\'s words are counted from its writing, not from its output');
+  // Instagram plans carry their own frame count and the time they were last changed.
+  const plans = createSubjectStanding({dataDir: dir, now: () => Date.parse('2026-11-11T12:00:00Z'),
+   drafts: {catalog: async () => ({collections: [{parentStudyId: 'invented', title: 'Invented', bindingId: B}], outputBindings: [], drafts: []}), read: async () => ({projection: [], expected: {}})},
+   outputs: {read: async () => ({outputs: []})}, checks: {read: async () => null}, consentDesk: {read: async () => ({people: [], release: {}})},
+   library: {tree: async () => ({sources: []})}, simmer: {boards: {read: async () => ({groups: [], forming: {}})}},
+   instagram: {plans: async () => ({plans: [{id: 'p1', subject: 'invented', updatedAt: '2026-11-02T09:00:00Z'}, {id: 'p2', subject: 'invented', updatedAt: '2026-11-04T09:00:00Z'}]}),
+    read: async ({id}) => ({id, title: 'Same title', layouts: {carousel: {frames: id === 'p1' ? [{}, {}, {}] : [{}, {}, {}, {}, {}]}}, stories: [], chosen: null})}, places: {read: async () => ({places: []})}});
+  const got = (await plans.one({parentStudyId: 'invented'})).forms.filter(f => f.kind === 'instagram');
+  assert.deepEqual(got.map(f => [f.slides, f.updatedAt]), [[3, '2026-11-02T09:00:00Z'], [5, '2026-11-04T09:00:00Z']]);
  } finally {fs.rmSync(dir, {recursive: true, force: true});}
 });

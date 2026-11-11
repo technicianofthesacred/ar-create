@@ -165,7 +165,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (pieces && planRecords) for (const [i, pr] of planRecords.entries()) {
    if (!pr) {pieces = null; break;}
    const fmt = Object.keys(pr.layouts || {})[0] || pr.stories?.[0]?.format || 'carousel', lay = pr.layouts?.[fmt], chosen = pr.chosen?.storyId, story = (pr.stories || []).find(s => s.id === chosen), cap = lay?.caption;
-   pieces.push({key: 'ig:' + pr.id, id: pr.id, kind: 'instagram', title: pr.title || '', plan: {format: fmt, stories: (pr.stories || []).length, chosen: !!(chosen || pr.chosen?.named), chosenTitle: story?.title || '', frames: (lay?.frames || []).length, caption: !!(typeof cap === 'string' ? cap.trim() : cap?.parts?.length), ready: !!(pr.ready && Object.keys(pr.ready).length), look: pr.drawnIn && pr.drawnIn.from !== 'default' ? pr.drawnIn.id : null}});
+   pieces.push({key: 'ig:' + pr.id, id: pr.id, kind: 'instagram', title: pr.title || '', slides: (lay?.frames || []).length, updatedAt: mine[i].updatedAt || pr.updatedAt || null, plan: {format: fmt, stories: (pr.stories || []).length, chosen: !!(chosen || pr.chosen?.named), chosenTitle: story?.title || '', frames: (lay?.frames || []).length, caption: !!(typeof cap === 'string' ? cap.trim() : cap?.parts?.length), ready: !!(pr.ready && Object.keys(pr.ready).length), look: pr.drawnIn && pr.drawnIn.from !== 'default' ? pr.drawnIn.id : null}});
    times.push(mine[i].updatedAt);
   } else if (!planRecords) pieces = null;
   facts.pieces = pieces;

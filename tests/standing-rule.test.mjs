@@ -183,10 +183,11 @@ test('the words on a Carousel are its own slides\' words, never the whole articl
  const article1428 = {paragraphs: 12, count: 1428};
  assert.equal(f(slidesPiece(), article1428).note, '41 words');
  assert.equal(f(slidesPiece({words: 1}), article1428).note, '1 word');
- assert.equal(f(slidesPiece({words: null}), article1428).note, '', 'the records give no count: show none');
- assert.equal(f(slidesPiece({words: undefined}), article1428).note, '');
- assert.notEqual(f(slidesPiece({words: 0}), article1428).state, 'done');
- assert.equal(f(slidesPiece({words: 0}), article1428).note, 'Not started');
+ for (const [what, piece] of [['no text in its records', slidesPiece({words: null})], ['words not recorded', slidesPiece({words: undefined})], ['no words', slidesPiece({words: 0})], ['no slides', slidesPiece({slides: 0, words: null})]]) {
+  const step = f(piece, article1428);
+  assert.notEqual(step.state, 'done', what + ': the records do not support done');
+  assert.equal(step.note, 'Nothing written on the slides yet', what);
+ }
  assert.equal(f({...article(), id: 'a'}, article1428).note, '1428 words', 'an Article still counts its own words');
 });
 
