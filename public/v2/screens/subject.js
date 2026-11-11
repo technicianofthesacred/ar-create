@@ -255,7 +255,7 @@
   function ask(k,again=false){
    if(!again){if(st.rec[k]!==undefined)return Promise.resolve(st.rec[k]);if(st.pend[k])return st.pend[k];}
    const run=k==='topics'?ask('brief').then(()=>topicsOf(ids(),st.rec.brief)):Promise.resolve(READERS[k](ids()));
-   const p=st.pend[k]=run.then(v=>{if(st.pend[k]===p)delete st.pend[k];if(ctx.signal.aborted)return v;st.rec[k]=v===undefined?null:v;schedule();return v;});
+   const p=st.pend[k]=run.catch(error=>({__error:error})).then(v=>{if(st.pend[k]===p)delete st.pend[k];if(ctx.signal.aborted)return v;st.rec[k]=v===undefined?null:v;schedule();return v;});
    return p;
   }
   const need=(stepId,keys=null,again=false)=>{for(const k of keys||STEP_READS[stepId]||[])ask(k,again);};
@@ -283,7 +283,9 @@
    st.form=form?.key||null;
    ctx.setTitle(s.title);if(s.look)v2.brand(s.look);
    // The page chooses its open step once. After that only he moves it; it changes by itself only if it has gone.
-   if(!st.open||!steps.some(x=>x.id===st.open)){st.open=firstOpen(steps,form);if(st.open)need(st.open);}
+   if(!st.open||!steps.some(x=>x.id===st.open)){st.open=firstOpen(steps,form);}
+   // Every paint makes sure the open step's reads were asked (a step kept from the address or the tab was never asked before).
+   if(st.open)need(st.open);
    swap('[data-subj-head]',head(s),'outer');
    swap('[data-subj-forms]',formRow(s,form),'outer');
    paintSteps(steps,form);
@@ -317,7 +319,7 @@
   const handoffHref=(section,form)=>esc(v2.advanced({subject:id,section,piece:pieceOf(form)}));
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
-   const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:'';
+   const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:`<a class="subj-look none" href="${esc(v2.href('looks'))}" title="Open Looks to see the looks you can choose from"><i aria-hidden="true"></i>Choose a look</a>`;
    const trail=['Subjects',...(s.folder||[])].join(' / ');
    const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
    // The station stays for assistive technology; the sample shows it nowhere on this page.
@@ -342,7 +344,7 @@
     return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=stepView(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
   }
   const rowInner=v=>{const on=v.id===st.open;
-   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}${v.unknown?'':`<span class="subj-sr">${esc(v.say)}</span>`}</button>`;};
+   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}</button>`;};
 
   function paintMissing(error){
    page.innerHTML=`<header class="subj-head"><h1>This subject could not be found</h1></header><p class="subj-quiet">${esc(error?.message||'Nothing in the records has this name.')}</p><p><a class="v2-out" href="#/">Home${icon('right')}</a></p>`;

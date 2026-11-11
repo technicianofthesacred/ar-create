@@ -1,6 +1,8 @@
 /* The subject screen, drawn as the sample draws it: one line of header (name, look chip, folder, direction with Change),
    the forms as 34px pills, a slim list of steps on the left and the one open step beside it (under its own row on a
    phone). The app's tokens and the six sizes only. Every rule starts with .subj (or the Add a form sheet's own class). */
+.subj.v2-page{max-width:1280px}
+@media (min-width:851px){.subj.v2-page{padding-inline:32px}}
 .subj{--subj-soft:0 1px 2px rgba(40,35,25,.06),0 6px 18px rgba(40,35,25,.06);gap:12px;padding-top:14px}
 html[data-theme="dark"] .subj{--subj-soft:0 1px 2px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.25)}
 .subj .subj-quiet{font-size:var(--v2-t13);color:var(--dim);line-height:1.45}
@@ -21,6 +23,7 @@ html[data-theme="dark"] .subj{--subj-soft:0 1px 2px rgba(0,0,0,.3),0 8px 22px rg
 .subj .subj-head h1{flex:0 1 auto;min-width:0;font:600 var(--v2-t18)/1.3 var(--ar-ui);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .subj .subj-look{flex:none;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 8px;border-radius:12px;font:500 var(--v2-t12)/1 var(--ar-ui);color:var(--c3-ink2);box-shadow:inset 0 0 0 1px var(--c3-line2);white-space:nowrap}
 .subj .subj-look:hover{color:var(--ink);box-shadow:inset 0 0 0 1px var(--c3-ink2)}
+.subj .subj-look.none i{background:transparent;box-shadow:inset 0 0 0 1px var(--c3-ink2)}
 .subj .subj-look i{width:8px;height:8px;border-radius:50%;background:var(--v2-br);flex:none;display:inline-block}
 .subj .subj-path{flex:0 1 auto;font:400 var(--v2-t12)/1.34 var(--ar-ui);letter-spacing:.01em;color:var(--dim);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .subj .subj-dir{display:flex;align-items:center;gap:10px;flex:0 1 auto;min-width:0;max-width:min(48ch,38vw);font-size:var(--v2-t13);line-height:1.5;color:var(--c3-ink2)}
