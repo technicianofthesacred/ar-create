@@ -14,6 +14,7 @@
 - He judges by eye: lead with a link or a picture, never code or diffs.
 - Plain full sentences, the names the app shows him, no commit hashes, no internal codes.
 - Never use the em dash character.
+- Anything written for him to read, including sample content and distilled concepts, must be understood on first reading, in words a person would say aloud. No compressed labels. His words: "They feel like they are written for AI."
 - On screens and pages made for him, separation must be felt: by space and by surface, not by typeface or label colour. His words, 11 November: "I feel like I'm having to sort your words with my head rather than enjoy reading." Put this in every design brief.
 - Say what is finished, what is not, and what he must decide. Make a recommendation; do not list options without one.
 - Shell commands for him, if ever needed: one command per block, no comment lines, nothing to hand-edit.
@@ -72,6 +73,7 @@ D2 is started; its brief is [plan 11](2026-11-11-11-wisdom-bank-mockups-brief.md
 5. Keep [plan 9](2026-11-11-09-wisdom-bank-inquiry.md) and this table true.
 
 **Research still worth doing, cheaply:**
+- **A distilling trial on real works, now the most important open research.** Adrian said of the sample concepts on 11 November: "They feel like they are written for AI. The number one thing is that they are valuable to me. That I don't have to process to understand what you're talking about." A small thread should distil one or two real public-domain works into concepts at three depths in a plain spoken voice, with exact quotes, and show him the result to judge. Ask him which works. This can be the same thread as the next item.
 - An early trial, named by the concept thread: how well does an agent judge "the same concept" across traditions, on a few real works? The whole bank rests on that judgement. A small thread on public-domain texts, exact quotes only; propose it to Adrian with the works he would choose.
 - A proper last-thirty-days sweep with Adrian's own skill (`technicianofthesacred/last30days-skill`). Thread C did not run it. Try it in a small thread on the lighter model; if it needs keys, say so and let him decide.
 - Adrian trying Recall, Readwise Reader and NotebookLM himself for twenty minutes each with one talk he loves. His eye will tell more than any review. Ask him what he liked and record it in the concept.
