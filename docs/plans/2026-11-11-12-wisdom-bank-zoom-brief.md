@@ -1,6 +1,6 @@
 # Plan 12: the wisdom bank at full size, zoom first (the brief)
 
-**Status.** Prepared 11 November 2026, after Adrian's reaction to the first mock-ups. **Not started.** It starts at his word, in a fresh thread, because the mock-ups thread is near the size at which it should stop.
+**Status.** Prepared 11 November 2026, after Adrian's reactions to the first mock-ups; it now carries five of them. It runs in a fresh thread, because the mock-ups thread passed the size at which it should stop.
 
 ## Why
 
@@ -47,6 +47,10 @@ Repository `technicianofthesacred/ar-create`, starting from `claude/ar-create-ui
 > **It must hold at size, and you must say honestly whether it does.** Draw only what is in view. Choose the drawing method for the amount of data. Measure how smoothly it moves with the full generated set and write the numbers in your handoff, with what breaks first as the bank grows ten times larger. A beautiful page that only works with nine concepts fails the assignment.
 >
 > **Calm reading, by his third reaction to the first screens.** "You're not using proper Separation or formatting so all the words blend in together even though you've changed fonts and all that, they're not working in a way that I can Really feel the separation and feel calm. I feel like I'm having to sort your words with my head rather than enjoy reading." So separation comes from space and surface, not from typeface or label colour: groups set apart by space, a quote on its own inset surface, each line to a neighbour as one ruled row. He should enjoy reading, never have to sort the words in his head. The first mock-ups were corrected this way; follow their corrected form.
+>
+> **Width and the kinds of line.** "Now your UI significantly reduces the amount of text because of the multiple buffers and barriers is there a way to do this so we don't have to lose so much width. Also here the comes first and explains by in contrasts maybe could be something a little more refined. This feels still a bit added on." So separation must not cost reading width: no stacked frames and gutters around text; quotes run edge to edge of their card. The kinds of line are part of the map's own language (its line marks), grouped quietly, never labels added on.
+>
+> **Works and concepts, both ways; huge maps that join.** "On the left side of this I'm not fully understanding what I actually do with all of these already whole concepts or things like that. I think it could use a bit more refinement around how these things interconnect and interact. Also, I see this map being significantly bigger, a huge map, connecting to other huge maps. Also one book may have a hundred concepts. It's important to be able to keep the book together in some sort of map as well so that we can refer to either. We're not just trying to create everything as just concepts, we're also trying to collect the concepts out of books and be able to browse in either direction." So: he can browse by work and by concept, and switching between the two is always one touch away. A work keeps its own map, whole, as a region of the huge map, and maps join where works share a concept. A book of a hundred concepts needs depths inside its own map. Include at least a few such large works in the generated bank. And at every concept the next moves must be plain: what he can do with it, said by the controls themselves, not by a sentence.
 >
 > **Rules that still hold.** A nugget is a concept, not a best line; nothing is deleted; a concept is never shown alone. No sideways scrolling of the page. Few type sizes, one interface face, Lora only for spoken words. No sentences that describe the screen back to him. Never the em dash character.
 >
