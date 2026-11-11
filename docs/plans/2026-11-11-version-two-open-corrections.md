@@ -175,6 +175,7 @@ Adrian was sent pictures of the sheet beside the sample and of the subject page.
   subject is the server's selected project). The existing workspace uses only `first-flow.attach`.
 - **A lost answer**: a saved file is recognised by its content and a capture time no earlier than the attempt. If the
   phone's clock runs ahead of the server's, a real save can look old and a retry saves a second copy (never a loss).
+  Allow a small margin. The content hash is worked out on every save; it is needed only after a lost answer.
 - **Left on purpose**: the phone's Done button is 44 high (the shell's phone buttons) where the sample has 32; the
   heading is 18 where the sample has 17; a link under the done row; "the Library" where the sample says "your inbox".
 - **Small, found by review and not done**:
