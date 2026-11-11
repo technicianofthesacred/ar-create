@@ -144,3 +144,31 @@ it in `tests/v2-shell.test.mjs`; and `tests/v2-subject.test.mjs` where the Write
 
 Finish as the brief above says, with a fresh contact sheet at
 `<scratchpad>/write-build/contact-write-2.png`, and stop every server you start (if a stop is refused, say so).
+
+---
+
+# Piece 7c: second corrections to Write (11 November, after the second review)
+
+For a fresh builder, in the same worktree, one more commit on top. Files: `public/v2/screens/write.js`,
+`public/v2/screens/write.css`, `tests/v2-write.test.mjs` only. For each of 1 to 4 write the failing test first, against
+the real server, with the save held back several seconds.
+
+1. **Must. Reload while a new paragraph's save is on its way.** Today the page reopens with "A newer version is saved
+   by you" (his own save), shows the paragraph twice, and "Keep my words" sends an insert with an id the server
+   already has: a 500 every five seconds, stuck on "Could not save"; the other button throws away what he typed during
+   that save. On restore do what `adopt()` does: a kept new paragraph whose id the server already has becomes an edit
+   of that paragraph. Keep the in-flight operation id with the kept words, and never treat his own committed
+   operation as a newer version. The same for a reload during a split, a join and a delete.
+2. **Typing while a split or a join is being saved** saves half a paragraph twice. Carry what he typed after sending
+   onto the new paragraphs (the difference between the sent text and his current text). No word lost, none doubled.
+3. **The assistant test is hollow**: with the assistant check in `stash()` and `unstash()` removed, every test still
+   passes. Seed his kept words, open as an assistant, assert they are not restored, shown or saved; and that an
+   assistant's typing leaves nothing on the device.
+4. In `refresh()`, a change from the stream that arrives while a read is running and a save starts is dropped. It
+   must be shown after.
+5. "Rewrite it as mine" puts the assistant's words in as they stand. Do what the existing workspace does at this
+   point (if it lets him edit the words before they become his, so must this); if the existing workspace also puts
+   them in as they stand, keep the behaviour and make the label say what happens, using the existing workspace's own
+   word for it.
+6. The newer-version box shows only his paragraphs. Show the saved version's changed paragraphs beside his, so he can
+   choose knowing both. Give a split an Undo, as join and delete have.
