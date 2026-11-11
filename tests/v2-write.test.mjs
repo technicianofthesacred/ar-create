@@ -605,6 +605,8 @@ test('real server: the newer-version box shows the saved version\'s changed para
  assert.match(panel.textContent,/\(his change\)/,'his paragraph');
  assert.match(panel.textContent,/Elsewhere: /,'the paragraph the saved version changed, which he did not touch');
  assert.match(panel.textContent,/You have not changed this paragraph/);
+ assert.match(panel.querySelector('h2').textContent,/at \d\d:\d\d\b/,'the time reads as the bar does, in 24 hours');
+ assert.doesNotMatch(panel.querySelector('h2').textContent,/[AP]M/);
  assert.equal(doc.querySelector('textarea[data-ed="'+mine.dataset.ed+'"]').value,mine.value);
 });
 
@@ -635,7 +637,66 @@ test('a read-through can be rewritten before it becomes his; a plain suggestion 
  const done=calls.find(c=>c.path==='/api/study-ai/finish');
  assert.deepEqual(plain(done.body.edits),[{id:'r0',words:'One, mine.'}],'only what he changed goes as his words');
  assert.equal(w.localStorage.getItem('ar-create:read-through:q1'),null);
+ assert.match(doc.querySelector('#v2-messages').textContent,/Changed to your words\./,'his edits were sent, so the words are his');
  const plainOne=await page({hash:'#/write/s1?piece=o1',answers:{...base,'/api/study-ai/requests':{items:[{id:'q1',status:'pending',stale:false,proposedBy:{actor:'agent:claude-code'}}]},'/api/study-ai/review':{id:'q1',status:'pending',stale:false,replacements:[{id:'r0',words:'One, better.'}]}}});await settle(200);
  assert.match(plainOne.doc.querySelector('[data-act="accept"]').textContent,/Accept/);assert.match(plainOne.doc.querySelector('.wr-note').textContent,/exactly as they stand/);
  assert.equal(plainOne.doc.querySelectorAll('textarea[data-rt]').length,0);
+});
+
+// ---- every command Write calls is accepted by the real server as the client sends it ----
+const agentPost=async(base,route,query,body)=>{
+ const r=await fetch(base+route+'?'+new URLSearchParams(query),{method:'POST',headers:{'Content-Type':'application/json',Origin:base,'X-AR-Actor':'agent:codex','X-AR-Client':'ui'},body:JSON.stringify(body)});
+ const value=await r.json();assert.ok(r.ok,route+': '+JSON.stringify(value));return value;
+};
+/** A new piece with two plain paragraphs, and one suggestion an assistant has proposed for the first. */
+async function plainSuggestion(base,words,extra={}){
+ const adrian=pageClient(base),parentStudyId='invented-'+uuidv4().slice(0,8);
+ const created=await adrian.call('study-draft.create-collection',{parentStudyId,title:'Invented piece'});
+ const scope={bindingId:created.bindingId||created.binding?.id,parentStudyId};
+ const empty=await adrian.call('study-draft.read',scope),ids=[uuidv4(),uuidv4()];
+ const saved=await adrian.call('study-draft.save',{...scope,expected:empty.expected,operations:[{kind:'insert',id:ids[0],beforeId:null,raw:'The first paragraph.'},{kind:'insert',id:ids[1],beforeId:null,raw:'The second paragraph.'}]});
+ const target=ids[0];
+ const prep=await agentPost(base,'/api/study-ai/prepare',scope,{sourceIds:['author-page:'+scope.bindingId],...(extra.purpose?{...extra,targetParagraphIds:[target]}:{})});
+ await agentPost(base,'/api/study-ai/propose',{...scope,requestId:prep.id},{requestId:prep.id,replacements:[{id:target,words}]});
+ return {scope,requestId:prep.id,target,adrian,draft:saved};
+}
+const uuidv4=()=>globalThis.crypto.randomUUID();
+test('real server: a human rejects a plain suggestion and it is gone',{timeout:60000},async()=>{
+ const {base}=await theWorld();
+ const {scope,requestId,adrian}=await plainSuggestion(base,'A plain suggestion to turn down.');
+ assert.ok((await adrian.call('study-ai.requests',scope)).items.some(i=>i.id===requestId&&i.status==='pending'));
+ await adrian.call('study-ai.reject',{...scope,requestId});
+ assert.ok(!(await adrian.call('study-ai.requests',scope)).items.some(i=>i.id===requestId&&i.status==='pending'),'it is no longer pending');
+});
+test('real server: the other commands Write calls are not refused for an unsupported field',{timeout:60000},async()=>{
+ const {base}=await theWorld(),{scope,requestId,target,adrian}=await plainSuggestion(base,'Taken as it stands.');
+ const sub={id:scope.parentStudyId};
+ await adrian.call('subject.standing',{parentStudyId:sub.id});
+ await adrian.call('study.outputs',{rootBindingId:scope.bindingId,parentStudyId:sub.id});
+ await adrian.call('study-ai.read',scope);
+ await adrian.call('presence.post',{stage:'Write',scope:{kind:'draft',id:scope.bindingId},dirty:true,sequence:1,session:'v2-test'});
+ await adrian.call('study-ai.review',{...scope,requestId});
+ await adrian.call('study-ai.accept',{...scope,requestId});
+ let draft=await adrian.call('study-draft.read',scope);
+ assert.equal(draft.projection.find(r=>r.id===target).words,'Taken as it stands.');
+ const op=(draft.history||[]).find(h=>h.canUndo&&h.operationId);
+ assert.ok(op,'the accepted change can be taken back');
+ await adrian.call('study-draft.undo',{...scope,expected:draft.expected,undoOperationId:op.operationId});
+ draft=await adrian.call('study-draft.read',scope);
+ const second=draft.projection.find(r=>r.words==='The second paragraph.');
+ await adrian.call('study-draft.save',{...scope,expected:draft.expected,operations:[{kind:'text',id:second.id,from:0,to:0,insert:'X ',seenBlockHash:second.blockHash}]});
+ const rt=await plainSuggestion(base,'Read-through words.',{purpose:'scoped-revision',instruction:'Clearer.'});
+ await rt.adrian.call('study-ai.finish',{...rt.scope,requestId:rt.requestId,marks:[{id:rt.target}]});
+});
+
+test('real server: after splitting the last paragraph the empty box is after it, not between the halves',{timeout:60000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'circle-of-twelve');
+ const before=wordsOf(await draftOf(base,sub));
+ const {w,doc}=await livePage(base,sub);
+ const all=[...doc.querySelectorAll('textarea.wr-ed')],last=all.filter(t=>t.value.trim()).at(-1),at=last.value.indexOf(' ',Math.floor(last.value.length/2));
+ last.focus();last.setSelectionRange(at,at);press(w,last,'Enter');
+ await until(async()=>wordsOf(await draftOf(base,sub)).length===before.length+1,20000);
+ const boxes=await until(()=>{const b=[...doc.querySelectorAll('textarea.wr-ed')];return b.length>=2&&b.filter(t=>t.value.trim()).length===before.length+1?b:null;},20000);
+ assert.equal(boxes.at(-1).value,'','the empty Write here box is last');
+ assert.ok(boxes.slice(0,-1).every(t=>t.value.trim()),'no empty box between the halves');
 });

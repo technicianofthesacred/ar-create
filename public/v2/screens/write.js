@@ -12,7 +12,7 @@
  const OWN={side:'M4 5h16v14H4zM9 5v14',focus:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',note:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7',link:'M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1'};
  const own=name=>`<svg class="v2-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${OWN[name]}"/></svg>`;
  const uuid=()=>root.V2Client.uuid();
- const clock=iso=>{try{return new Date(iso).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});}catch{return '';}};
+ const clock=iso=>{try{return new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});}catch{return '';}};
  /** How "Saved" reads, as the sample's does: the time today, and the day and time on any other day ("10 Nov, 13:52"). */
  function savedLabel(iso,now=new Date()){
   try{
@@ -404,6 +404,8 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const now=new Map(rowsOf(read).map(r=>[r.id,r])),later=[],caret={};
    const cur=id=>st.edits.has(id)?st.edits.get(id).text:null;
    for(const sp of info.splits||[]){
+    // What was written after the whole paragraph now follows its second half, so the empty box stays after the last paragraph.
+    for(const a of st.added)if(a.afterId===sp.id)a.afterId=sp.newId;
     const typed=cur(sp.id),c=typed===null?sp.text:typed;st.edits.delete(sp.id);
     if(c===sp.text)continue;
     const d=minimalDiff(sp.text,c),m=carryAt(d,sp.at);
@@ -556,7 +558,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const operationId=mine(uuid()),who=v2.actorName(prop.by||'agent:');
    try{
     if(kind==='accept'||kind==='finish'){
-     let result;
+     let result,edited=false;
      if(kind==='accept')result=await v2.call('study-ai.accept',{...scope(),requestId:rid,operationId});
      else{
       const off=markedOf(prop),all=prop.replacements.every(r=>off.has(r.id)),rd=reading(prop),edits=[];
@@ -565,12 +567,14 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
        if(off.has(r.id))continue;
        const words=flat(rd.words[r.id]??r.words).trim();if(words&&words!==r.words)edits.push({id:r.id,words});
       }
+      edited=edits.length>0;
       result=await v2.call('study-ai.finish',{...scope(),requestId:rid,operationId,...(edits.length?{edits}:{}),...(off.size?{marks:[...off].map(x=>({id:x}))}:{})});
      }
      if(Array.isArray(result?.projection)&&!dirty())adopt(result);else adopt(await readDraft());
      forgetReading(rid);
      const entry=(st.base.history||[]).find(h=>h.operationId===operationId&&h.canUndo);
-     if(entry)v2.ui.undo(`Changed to ${who}’s words.`,()=>undoOp(operationId));else say(`Changed to ${who}’s words.`,'good');
+     const said=kind==='finish'&&edited?'Changed to your words.':`Changed to ${who}’s words.`;
+     if(entry)v2.ui.undo(said,()=>undoOp(operationId));else say(said,'good');
     }else if(kind==='leave'){await leaveOut(prop,operationId);return;}
     else{
      await v2.call('study-ai.reject',{...scope(),requestId:rid});say('Left as you wrote it.','good');
