@@ -115,3 +115,24 @@ test('Not now is his alone: an assistant who presses it is refused and the plain
  r.doc.querySelector('[data-rs-choice="not-now"]').click();await settle(200);
  assert.match(r.doc.body.textContent,/Only Adrian can decide this. Codex can propose it, not do it/);
 });
+
+test('the match pass: the sample\'s subtitle, an always-present week section, three group columns in the sample\'s order, a bold lead, a Listen place and a boxed one-line take',async()=>{
+ let r=await page('#/research');
+ assert.match(r.doc.querySelector('.rs-main>header p').textContent,/^3 topics\. Most make themselves from what you gather, record and check\.$/);
+ assert.ok(r.doc.querySelector('[data-rs-made]'),'the week section is where the sample has it');
+ assert.doesNotMatch(r.doc.querySelector('.rs-main').textContent,/No topics yet/,'no empty line under a group');
+ assert.match(r.doc.querySelector('.rs-ask .rs-askbox button').textContent,/Find/,'the build finds words, so the chip says Find');
+ r=await page('#/research/group/g-tea');
+ assert.deepEqual([...r.doc.querySelectorAll('.rs-grp>section')].map(x=>x.className),['rs-g-src','rs-g-ask','rs-g-side'],'sources, the conversation, then topics and settings');
+ assert.match(r.doc.querySelector('.rs-g-side').textContent,/Made from this group[\s\S]*Not built yet/);
+ r=await page('#/research/topic/p-1111');
+ assert.ok(r.doc.querySelector('.rs-lead'),'the opening paragraph is the lead');
+ assert.match(r.doc.querySelector('.rs-crumbs').textContent,/Tea: growing\s*\/\s*From a conversation/);
+ const listen=r.doc.querySelector('[data-rs-listen]');assert.ok(listen,'Listen sits at the right of the bar');
+ listen.click();await settle(100);assert.match(r.doc.querySelector('dialog')?.textContent||'',/Not built yet/,'it says so rather than pretending');
+ assert.ok(r.doc.querySelector('button.rs-fieldbox[data-rs-write]'),'his line sits in a box');
+ assert.match(r.doc.querySelector('.rs-take').textContent,/Only you write here\. That is all Research asks of you\./);
+ const css=fs.readFileSync(path.join(v2dir,'screens/research.css'),'utf8');
+ assert.match(css,/\.rs-topic \.rs-lead\{font:500 var\(--v2-t15\)/,'the lead stands out at weight 500');
+ assert.doesNotMatch(fs.readFileSync(path.join(v2dir,'screens/research.js'),'utf8')+css,/—/,'no em dash');
+});
