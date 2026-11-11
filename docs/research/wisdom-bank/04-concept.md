@@ -264,6 +264,21 @@ Phone first. Filled with lifelike nuggets, never empty.
 2. **One nugget with its neighbours.** First at a glance: the name, the one line, the strongest passage with its speaker, and two lines running to named neighbours with their kinds. Then opened: the stack of index cards, including the reading through your lens and your response in its own place. Swiping to a neighbour should feel like walking.
 3. **I have something to express.** This replaces the daily return suggested earlier, because your answers say you come back to use. You speak a feeling. Nuggets from several traditions gather beneath it, with what prepares each. You pick three and they join into a pathway with a "make a piece" button. The "few today" strip can appear on the way in.
 
+4. **How I distil.** Added at your request. The one page where you steer: your lens in your own words with a microphone beside it, the short rules your corrections have taught, the three questions the bank is bringing you now, and "recently joined" with a correct button on each.
+
+### Where your insight goes in
+
+On 11 November you approved starting the mock-ups and added: "We need to make sure we wire in appropriate places that I can give insight that will actually help this be a tool, not just a wall of data." So every screen must show, plainly, where you speak into it. Each is one tap or one spoken sentence, in the place where you noticed something:
+
+- **On a source page**: "what I was looking for in this", said once; and a correction on any concept that was read wrongly.
+- **On a concept**: resonance up or down; "what this means to me"; your response; "this does not belong here" on a join or a passage, with an optional why.
+- **On the map**: draw a line and say why; name a district; move a stop.
+- **In "I have something to express"**: the feeling itself, and why you chose these stops in this order.
+- **On a question the bank brings**: answer by voice, or let it pass.
+- **On "How I distil"**: rewrite the lens.
+
+The mock-ups should make these controls visible and show what changes after each is used, so it is clear that your insight moves the bank. A screen with nowhere for you to speak is a wall of data and fails the brief.
+
 ## Open questions only you can answer
 
 1. **Your lens.** What are you looking for today when you distil a work? A few spoken sentences are enough for a first "How I distil". It is meant to change as you do, so it does not need to be right.
