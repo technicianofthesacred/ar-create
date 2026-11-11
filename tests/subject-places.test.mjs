@@ -199,3 +199,36 @@ test('a carry fills only the fields the saved place does not hold yet',async t=>
  const again=await f.page('POST','/api/subject-places/carry',{parentStudyId:id,operationId:randomUUID(),folder:['Elsewhere']});
  assert.deepEqual([again.body.carried,again.body.folder,again.body.revision],[false,['Kitchen'],2]);
 });
+
+test('the desk keeps its own hand order (deskOrder), apart from the order in a folder; an older place has none',async t=>{
+ const f=await setup(t),ids=['invented-d1','invented-d2','invented-d3'];
+ const placed=[];for(const [i,id] of ids.entries())placed.push((await f.cli(['subject','place'],{parentStudyId:id,expectedRevision:0,folder:['Tea'],pinned:true,order:i})).result);
+ assert.deepEqual(placed.map(p=>p.deskOrder),[null,null,null],'no desk order until one is set: the desk goes by pin time');
+ // The desk order is set through reorder with which:desk, and the folder order is untouched.
+ const items=[2,0,1].map(i=>({parentStudyId:ids[i],expectedRevision:1,expectedHash:placed[i].hash}));
+ const desk=await f.cli(['subject','reorder'],{which:'desk',items});
+ assert.equal(desk.exitCode,0,JSON.stringify(desk.result));
+ assert.deepEqual(desk.result.places.map(p=>[p.parentStudyId,p.deskOrder,p.order]),[['invented-d3',0,2],['invented-d1',1,0],['invented-d2',2,1]]);
+ // Reordering the folder leaves the desk as it was.
+ const now=desk.result.places;
+ const folder=await f.cli(['subject','reorder'],{items:[1,2,0].map(i=>({parentStudyId:now[i].parentStudyId,expectedRevision:now[i].revision,expectedHash:now[i].hash}))});
+ assert.equal(folder.exitCode,0,JSON.stringify(folder.result));
+ assert.deepEqual(folder.result.places.map(p=>[p.parentStudyId,p.order,p.deskOrder]),[['invented-d1',0,1],['invented-d2',1,2],['invented-d3',2,0]]);
+ // deskOrder through save, and null clears it; a bad value or an unknown order name is refused.
+ const d1=folder.result.places[0];
+ const saved=await f.cli(['subject','place'],{parentStudyId:'invented-d1',expectedRevision:d1.revision,expectedHash:d1.hash,deskOrder:9});
+ assert.deepEqual([saved.result.deskOrder,saved.result.order,saved.result.folder],[9,0,['Tea']]);
+ const cleared=await f.cli(['subject','place'],{parentStudyId:'invented-d1',expectedRevision:saved.result.revision,expectedHash:saved.result.hash,deskOrder:null});
+ assert.equal(cleared.result.deskOrder,null);
+ assert.equal((await f.cli(['subject','place'],{parentStudyId:'invented-d1',expectedRevision:cleared.result.revision,expectedHash:cleared.result.hash,deskOrder:'first'})).exitCode,1);
+ assert.equal((await f.cli(['subject','reorder'],{which:'shelf',items:[{parentStudyId:'invented-d9',expectedRevision:0}]})).exitCode,1);
+ // A place saved before the desk had its own order: read, hashed and saved exactly as before.
+ const file=path.join(f.dataDir,'subject-places','subjects','invented-old.json');
+ fs.mkdirSync(path.dirname(file),{recursive:true});
+ fs.writeFileSync(file,JSON.stringify({schema:'ar-create.subject-place.v1',parentStudyId:'invented-old',folder:['Tea'],tags:[],pinnedAt:'2026-11-01T00:00:00.000Z',archived:false,order:4,held:['folder','pinnedAt','order'],revision:3,operations:[]},null,1)+'\n');
+ const old=await one(f,'invented-old');
+ assert.deepEqual([old.deskOrder,old.order,old.revision],[null,4,3]);
+ const tagged=await f.cli(['subject','place'],{parentStudyId:'invented-old',expectedRevision:3,expectedHash:old.hash,tags:['kept']});
+ assert.equal(tagged.exitCode,0,JSON.stringify(tagged.result));
+ assert.equal(JSON.parse(fs.readFileSync(file,'utf8')).deskOrder,undefined,'nothing is written for a desk order never set');
+});
