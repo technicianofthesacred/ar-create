@@ -35,6 +35,7 @@ import {StateError} from '../store.mjs';
 import {digest, readJson} from './files.mjs';
 import {standingOf, summaryOf} from '../standing-rule.mjs';
 
+const READ_AT_ONCE = 4;
 const yieldNow = () => new Promise(resolve => setImmediate(resolve));
 const quiet = async fn => {try {return await fn();} catch {return undefined;}};
 const TIMING = new Map();
@@ -43,7 +44,7 @@ export const standingTiming = () => Object.fromEntries([...TIMING].map(([k, v]) 
 const UUID = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 const newest = times => {let best = null, t = -Infinity; for (const x of times) {const v = Date.parse(x || ''); if (Number.isFinite(v) && v > t) {t = v; best = new Date(v).toISOString();}} return best;};
 /** Changes that never alter where a subject stands. */
-const IGNORE = [/^presence/, /^leases?\./, /^handoff$/, /^needs-decision$/, /^journal\./, /^looks?\b/, /^accounts?\b/, /^templates?\b/, /^template\./, /^instagram\.template/, /^subject-places\.folders/, /^terminal/, /^study-draft\.open$/];
+const IGNORE = [/^presence/, /^leases?\./, /^handoff$/, /^needs-decision$/, /^journal\./, /^looks?\b/, /^accounts?\b/, /^templates?\b/, /^template\./, /^instagram\.template/, /^subject-places\.folders/, /^terminal/, /^study-draft\.open$/, /^standing\./];
 /** Shared lists, and the change kinds that touch them. A matching change marks the list and every subject. */
 const SHARED = {
  catalog: [/^study-draft\.create-collection/, /^study\.outputs\./, /^study\.carousel-make/, /^study-draft\.(?!save|undo|history|check)/],
@@ -62,7 +63,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  const subjects = new Map(); // id -> {facts, at, gen, dirty}
  const verdicts = new Map(); // id -> {key, count?, pending?}: how many of its suggestions the proposal owner still offers
  const ids = new Map();      // any record id (binding, project, output, plan) -> subject id
- let everythingGen = 0;
+ let everythingGen = 0, changes = 0; // changes: every change heard that could matter, to catch one that lands during a read
  const stats = {sharedReads: 0, subjectReads: 0};
 
  // ---------- shared lists, read once and kept until a change of their kind ----------
@@ -78,8 +79,10 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
  };
  async function sharedRead(name) {
   let s = shared.get(name);
+  // A read under way (it started because the list was marked changed) answers before the older kept value does. One
+  // marked changed again while it ran may hold the state from before that change: let it finish, then read again.
+  if (s?.pending) {if (!s.dirty) return s.pending; await s.pending.catch(() => {}); return sharedRead(name);}
   if (s && !s.dirty && now() - s.at < maxAgeMs) return s.value;
-  if (s?.pending) return s.pending;
   s = s || {}; shared.set(name, s);
   const started = everythingGen;
   s.dirty = false;
@@ -259,14 +262,17 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
        entry.pending = quiet(timed('suggestions', () => suggestions({bindingId, parentStudyId: id}))).then(listed => {
         entry.count = listed ? (listed.items || []).filter(i => i.status === 'pending' && !i.stale).length : null;
         entry.pending = null; if (entry.count === null) verdicts.delete(id);
-        const e = subjects.get(id); if (e) e.dirty = true;
+        const e = subjects.get(id); if (e) {e.dirty = true; e.late = true;}
+        // Tell whoever is watching this subject, once, so a page showing Not known asks again. The event kind is ignored
+        // by onChange (IGNORE), so it starts no read and no wait of its own; a count that could not be read says nothing.
+        if (entry.count !== null) try {events?.emit?.({kind: 'standing.suggestions', scope: {kind: 'subject', id}, status: 'committed', actor: 'system:standing'});} catch {}
        });
        verdicts.set(id, entry);
       }
      }
     }
    }
-   const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id})})));
+   const c = await quiet(timed('check', async () => ({value: await checks.read({bindingId, parentStudyId: id}, {draft: read})})));
    facts.check = c ? {status: c.value?.status || null, issues: (c.value?.issues || []).length} : null;
    times.push(c?.value?.checkedAt, c?.value?.createdAt);
   } else if (subject.draft) {facts.words = null; facts.suggestions = null; facts.check = null;}
@@ -303,14 +309,18 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   let e = subjects.get(subject.id);
   const sig = await signature(subject, e?.deps);
   if (isFresh(e, sig)) return e.facts;
-  if (e?.pending) return e.pending;
+  if (e?.pending) {
+   if (e.pendingGen === e.gen && e.pendingEvery === everythingGen) return e.pending;
+   await e.pending.catch(() => {}); return factsOf(subject);
+  }
   e = e || {gen: 0}; subjects.set(subject.id, e);
-  const gen = e.gen, every = everythingGen;
+  const gen = e.gen, every = everythingGen, heard = changes;
+  e.pendingGen = gen; e.pendingEvery = every;
   e.pending = (async () => {try {
    const facts = await gather(subject);
    e.deps = {projectId: facts.projectId, sources: facts._sources || [], jobs: facts._jobs || []};
    delete facts._sources; delete facts._jobs;
-   e.sig = await signature(subject, e.deps); e.facts = facts; e.at = now(); e.everything = every; e.dirty = gen !== e.gen; return facts;
+   e.sig = await signature(subject, e.deps); e.facts = facts; e.at = now(); e.everything = every; e.dirty = gen !== e.gen || heard !== changes || !!e.late; e.late = false; return facts;
   } finally {e.pending = null;}})();
   return e.pending;
  }
@@ -320,7 +330,7 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (!event || event.status === 'rejected' || event.status === 'conflict') return;
   const kind = String(event.kind || ''), sid = event.scope?.id;
   if (IGNORE.some(r => r.test(kind))) return;
-  let touchedShared = false;
+  let touchedShared = false; changes++;
   for (const [name, patterns] of Object.entries(SHARED)) if (patterns.some(r => r.test(kind))) {touchedShared = true; const s = shared.get(name); if (s) s.dirty = true;}
   const subjectId = typeof sid === 'string' ? (subjects.has(sid) ? sid : ids.get(sid)) : null;
   if (subjectId) {const e = subjects.get(subjectId); if (e) {e.gen++; e.dirty = true;}}
@@ -335,10 +345,9 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   if (typeof parentStudyId !== 'string' || !parentStudyId.trim() || parentStudyId.length > 256 || /[\x00-\x1f\x7f]/.test(parentStudyId)) throw new StateError('Name the subject by its project id (parentStudyId).', 400);
   const subject = (await list()).find(s => s.id === parentStudyId);
   if (!subject) throw new StateError('No subject with that id.', 404);
-  let facts = await factsOf(subject);
-  // One subject's page waits for the proposal owner's answer about its suggestions, rather than say Not known.
-  const v = verdicts.get(subject.id);
-  if (facts.suggestions === null && v?.pending) {await v.pending; facts = await factsOf(subject);}
+  // The proposal owner's answer about suggestions is slow, so it is not waited for: the count is Not known until it
+  // arrives, and the next read has it. Screens ask again.
+  const facts = await factsOf(subject);
   return {...standingOf(facts, {now: now()}), facts, readAt: new Date(now()).toISOString()};
  }
  let running = null;
@@ -347,13 +356,18 @@ export function createSubjectStanding({dataDir, drafts, outputs, checks, consent
   await quiet(settle);
   while (running) await running.catch(() => {});
   const work = (async () => {
-   const started = now(), subjectsNow = await list(), out = [];
-   let read = 0;
-   for (const subject of subjectsNow) {
-    const before = stats.subjectReads, facts = await factsOf(subject);
-    if (stats.subjectReads !== before) {read++; await yieldNow();}
-    out.push(summaryOf(standingOf(facts, {now: now()})));
-   }
+   const started = now(), subjectsNow = await list(), out = new Array(subjectsNow.length), startReads = stats.subjectReads;
+   // A few subjects at a time; each read still gives the server back (yieldNow) so other calls never wait behind it.
+   let next = 0;
+   const worker = async () => {
+    while (next < subjectsNow.length) {
+     const i = next++, before = stats.subjectReads, facts = await factsOf(subjectsNow[i]);
+     if (stats.subjectReads !== before) await yieldNow();
+     out[i] = summaryOf(standingOf(facts, {now: now()}));
+    }
+   };
+   await Promise.all(Array.from({length: Math.min(READ_AT_ONCE, subjectsNow.length)}, worker));
+   const read = stats.subjectReads - startReads;
    for (const id of subjects.keys()) if (!subjectsNow.some(s => s.id === id)) subjects.delete(id);
    return {schema: 'ar-create.subjects-standing.v1', readAt: new Date(now()).toISOString(), count: out.length, readAgain: read, ms: now() - started, subjects: out};
   })();
