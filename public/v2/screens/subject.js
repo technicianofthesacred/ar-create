@@ -93,23 +93,28 @@
   if(mine.has(id))return true;
   return !['project','subject'].includes(event.scope?.kind);
  }
- /** The kinds of piece Add a form offers (all the app can make), and what each needs. */
+ /** The kinds of piece Add a form offers, in the sample's order: every one the app can make, then the ones it cannot yet. */
  const KINDS=Object.freeze({
+  post:{name:'Post',to:'Instagram',what:'A few lines and a picture',needs:'nothing to start'},
+  story:{name:'Story',to:'Instagram',what:'Three to five frames',needs:'',unbuilt:true},
+  video:{name:'Video',to:'Instagram',what:'A short reel',needs:'',unbuilt:true},
+  'product-listing':{name:'Product listing',to:'the shop',what:'A thing, with its story',needs:'nothing to start'},
+  newsletter:{name:'Newsletter',to:'email',what:'A letter to readers',needs:'',unbuilt:true},
+  'shared-notes':{name:'Shared notes',to:'people you choose',what:'What you learned, plainly',needs:'',unbuilt:true},
   article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'some words in Write'},
   carousel:{name:'Carousel',to:'Instagram',what:'Slides, one line each',needs:'a recording or a note; photographs help'},
-  post:{name:'Post',to:'Instagram',what:'A few lines and a picture',needs:'nothing to start'},
-  'product-listing':{name:'Product listing',to:'the shop',what:'A thing, with its story',needs:'nothing to start'},
  });
- /** The kinds Add a form can really make, each with whether it can be made now and, if not, why. The facts are the
-     command's own (`facts.words`, `facts.material`, `facts.bindingId`). */
+ /** The kinds Add a form shows, each with whether it can be made now and, if not, why. The facts are the command's own
+     (`facts.words`, `facts.material`, `facts.bindingId`). A kind the app cannot make yet is listed and says so. */
  function addable(facts={}){
   const m=facts.material,w=facts.words;
   return Object.entries(KINDS).map(([kind,k])=>{
    let ready=true,why='';
+   if(k.unbuilt){return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready:false,unbuilt:true,why:'Not built yet.'};}
    if(kind==='article'&&!(w?.paragraphs>0)){ready=false;why=w?'Write a few words first.':'Not known yet.';}
    if(kind==='carousel'&&!((m?.recordings||0)+(m?.notes||0))){ready=false;why=m?'Add a recording or a note first.':'Not known yet.';}
    if(kind!=='carousel'&&!facts.bindingId){ready=false;why='This subject has no saved writing yet.';}
-   return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready,why};
+   return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready,unbuilt:false,why};
   });
  }
 
@@ -214,7 +219,7 @@
  function render(){
   return `<div class="v2-page subj" data-subj>
    <header class="subj-head" data-subj-head><h1>&nbsp;</h1></header>
-   <nav class="subj-forms" data-subj-forms aria-label="Forms, in order"><span class="subj-form none"><span>Reading</span></span></nav>
+   <nav class="subj-forms" data-subj-forms aria-label="Forms, in order"><span class="subj-form none"><b>Reading</b></span></nav>
    <div class="subj-work"><div class="subj-steps" data-subj-steps><p class="subj-quiet" role="status">Reading</p></div><section class="subj-step" data-subj-panel hidden></section></div>
   </div>`;
  }
@@ -269,7 +274,9 @@
   phone.addEventListener?.('change',()=>placePanel());
 
   // ---------- drawing, in place ----------
-  const current=()=>{const s=st.standing;if(!s)return {form:null,steps:[]};const form=chooseForm(s,st.form);return {form,steps:stepsOfForm(s,form)};};
+  // With no form decided the list stops at Simmer: the rest appears when he says what it will be.
+  const later=s=>!(s?.forms||[]).length;
+  const current=()=>{const s=st.standing;if(!s)return {form:null,steps:[]};const form=chooseForm(s,st.form),all=stepsOfForm(s,form);return {form,steps:later(s)?all.filter(x=>['Gather','Research','Simmer'].includes(x.group)):all};};
   function paintNow(){
    if(ctx.signal.aborted||!st.standing)return;
    const s=st.standing,{form,steps}=current();
@@ -289,12 +296,12 @@
    if(how==='outer')node.outerHTML=html;else node.innerHTML=html;
    if(back)$(back)?.focus({preventScroll:true});
   }
-  const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-add]')?'[data-subj-add]':null;
+  const keyOf=n=>n.dataset?.subjStep&&n.closest('.subj-row')?`.subj-row[data-step="${n.dataset.subjStep}"]>[data-subj-step]`:n.dataset?.subjForm?`[data-subj-form="${cssq(n.dataset.subjForm)}"]`:n.dataset?.subjDraft?`[data-subj-draft="${cssq(n.dataset.subjDraft)}"]`:n.matches?.('[data-subj-say]')?'[data-subj-say]':n.matches?.('[data-subj-dishtext]')?'[data-subj-dishtext]':n.matches?.('[data-subj-add]')?'[data-subj-add]':null;
   function paintSteps(steps,form){
-   const nav=$('[data-subj-steps]'),shape=JSON.stringify([form?.key||null,steps.map(x=>x.id)]);
+   const nav=$('[data-subj-steps]'),shape=JSON.stringify([form?.key||null,steps.map(x=>x.id),later(st.standing)]);
    if(nav.dataset.shape!==shape){
     const panel=$('[data-subj-panel]');if(panel&&panel.parentElement!==$('.subj-work'))$('.subj-work').append(panel);
-    nav.dataset.shape=shape;nav.innerHTML=stepList(steps);return;
+    nav.dataset.shape=shape;nav.innerHTML=stepList(steps)+(later(st.standing)?'<p class="subj-later">The rest appears when you say what it will be.</p>':'');return;
    }
    for(const x of steps){
     const li=nav.querySelector(`.subj-row[data-step="${cssq(x.id)}"]`),v=stepView(x),html=rowInner(v);
@@ -310,26 +317,32 @@
   const handoffHref=(section,form)=>esc(v2.advanced({subject:id,section,piece:pieceOf(form)}));
   const lookName=lookId=>st.look.get(lookId)||String(lookId).replace(/^./,c=>c.toUpperCase());
   function head(s){
-   const look=s.look?`<span class="subj-look"><i aria-hidden="true"></i>${esc(lookName(s.look))}</span>`:'';
-   const path=s.folder?.length?`<span class="subj-path" title="${esc(s.folder.join(' / '))}">${esc(s.folder.join(' / '))}</span>`:'';
-   const where=`<span class="subj-where" title="${esc(s.stationName)}">${ring(s.ring)}<span>${esc(s.stationName)}</span></span>`;
+   const look=s.look?`<a class="subj-look" href="${esc(v2.href('looks',{},{look:s.look}))}" title="Open this look in Looks"><i aria-hidden="true"></i>${esc(lookName(s.look))} look</a>`:'';
+   const trail=['Subjects',...(s.folder||[])].join(' / ');
+   const path=`<p class="subj-path" title="${esc(s.folder?.length?'This is a real folder on disk':'Subjects')}">${esc(trail)}</p>`;
+   // The station stays for assistive technology; the sample shows it nowhere on this page.
+   const where=`<span class="subj-where subj-sr" title="${esc(s.stationName)}">${ring(s.ring)}<span>${esc(s.stationName)}</span></span>`;
    const d=st.rec.direction,said=ok(d)?String(d.body||'').trim():null;
-   const dir=d===undefined?'':said?`<p class="subj-dir"><span title="${esc(said)}">${esc(said)}</span><a class="v2-out" data-subj-handoff="directionChange" href="${handoffHref('direction',null)}" aria-label="Change the direction (opens Advanced)">${HANDOFFS.directionChange.label}</a></p>`
-    :said===''?`<p class="subj-dir none"><span>No direction yet</span><a class="v2-out" data-subj-handoff="directionWrite" href="${handoffHref('direction',null)}" aria-label="Write the direction (opens Advanced)">${HANDOFFS.directionWrite.label}</a></p>`:'';
+   const hasDish=(current().steps||[]).some(x=>x.id==='dish');
+   // Change stays on the page: it opens the Name the dish step. Only a subject with no such step is sent to Advanced.
+   const change=(label,key,aria)=>hasDish?`<button type="button" class="subj-link" data-subj-step="dish" aria-label="${aria}">${label}</button>`:`<a class="subj-link" data-subj-handoff="${key}" href="${handoffHref('direction',null)}" aria-label="${aria} (opens Advanced)">${label}</a>`;
+   const dir=d===undefined?'':said?`<p class="subj-dir"><span title="${esc(said)}">${esc(said)}</span>${change(HANDOFFS.directionChange.label,'directionChange','Change the direction')}</p>`
+    :said===''&&!later(s)?`<p class="subj-dir none"><span>No direction yet</span>${change(HANDOFFS.directionWrite.label,'directionWrite','Write the direction')}</p>`:'';
    return `<header class="subj-head" data-subj-head><h1 title="${esc(s.title)}">${esc(s.title)}</h1>${look}${path}${where}<span class="subj-sp"></span>${dir}</header>`;
   }
   function formRow(s,form){
+   // Forms cannot be reordered yet (no record keeps their order), so there is no drag grip; the number is their place.
    const pills=(s.forms||[]).map((f,i)=>{const v=pillView(f,i),own=String(f.title||'').trim();
-    return `<button type="button" class="subj-form${f.key===form?.key?' v2-current on':''}" data-subj-form="${esc(f.key)}" aria-pressed="${f.key===form?.key}" aria-label="${esc(v.say)}"${own?` title="${esc(own)}"`:''}>${ring(v.ring)}<span class="subj-fn"><b>${esc(v.name)}</b>${v.line?`<i>${esc(v.line)}</i>`:''}</span><em>${v.count}</em></button>`;}).join('');
-   const none=(s.forms||[]).length?'':`<span class="subj-form none"><b>Not decided yet</b></span>`;
-   return `<nav class="subj-forms" data-subj-forms aria-label="Forms, in order">${none}${pills}<button type="button" class="subj-form add" data-subj-add>${icon('plus')}<b>Add a form</b></button></nav>`;
+    return `<button type="button" class="subj-form${f.key===form?.key?' v2-current on':''}" data-subj-form="${esc(f.key)}" aria-pressed="${f.key===form?.key}" aria-label="${esc(v.say)}" title="${esc(own||v.say)}"><small>${i+1}</small>${ring(v.ring)}<b>${esc(v.name)}</b>${v.line?`<span>${esc(v.line)}</span>`:''}<em>${v.count}</em></button>`;}).join('');
+   const none=(s.forms||[]).length?'':`<span class="subj-form none"><b>Not decided yet</b><span>Gather first</span></span>`;
+   return `<nav class="subj-forms" data-subj-forms aria-label="Forms, in order">${pills}${none}<button type="button" class="subj-form add" data-subj-add>${icon('plus')}<b>Add a form</b></button></nav>`;
   }
   function stepList(steps){
    return GROUPS.map(g=>{const rows=steps.filter(x=>x.group===g);if(!rows.length)return '';
     return `<section class="subj-grp"><h3 class="subj-group">${g}</h3><ol>${rows.map(x=>{const v=stepView(x),html=rowInner(v);return `<li class="subj-row" data-step="${esc(x.id)}" data-state="${v.state}"${x.id===st.open?' data-open':''} data-html="${esc(html)}">${html}</li>`;}).join('')}</ol></section>`;}).join('');
   }
   const rowInner=v=>{const on=v.id===st.open;
-   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small>${esc(v.note)}</small>`:''}<span class="subj-sr">${esc(v.say)}</span></button>`;};
+   return `<button type="button" data-subj-step="${esc(v.id)}" aria-expanded="${on}"${on?' class="v2-current"':''}>${v.mark?mark(v.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<b>${esc(v.name)}</b>${v.note?`<small title="${esc(v.note)}">${esc(v.note)}</small>`:''}${v.unknown?'':`<span class="subj-sr">${esc(v.say)}</span>`}</button>`;};
 
   function paintMissing(error){
    page.innerHTML=`<header class="subj-head"><h1>This subject could not be found</h1></header><p class="subj-quiet">${esc(error?.message||'Nothing in the records has this name.')}</p><p><a class="v2-out" href="#/">Home${icon('right')}</a></p>`;
@@ -341,7 +354,8 @@
    const s=steps.find(x=>x.id===st.open);
    if(!s){panel.hidden=true;st.last.panel='';return;}
    const v=stepView(s);
-   const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note?`<p class="subj-note" data-state="${v.state}">${mark(v.mark)}<span>${esc(v.note)}</span></p>`:''}</header>${tool(s,form,steps)}${nextUp(s,form,steps)}`;
+   const quiet=s.id==='have'&&s.state==='next';
+   const html=`<header><p class="subj-label">${esc(s.group)}</p><h2 tabindex="-1">${esc(s.name)}</h2>${v.note&&!quiet?`<p class="subj-note" data-state="${v.state}">${esc(v.note)}</p>`:''}</header>${tool(s,form,steps)}${nextUp(s,form,steps)}`;
    panel.hidden=false;
    if(st.last.panel!==html){const back=panel.contains(document.activeElement)?keyOf(document.activeElement):null;st.last.panel=html;panel.innerHTML=html;paintFrames(panel);if(back)$(back)?.focus({preventScroll:true});}
    placePanel();
@@ -356,22 +370,24 @@
   function nextUp(s,form,steps){
    if(s.state!=='done')return '';
    const nx=(form?.next&&steps.find(x=>x.id===form.next.step&&x.state!=='unknown'))||steps.find(x=>x.state==='flag')||steps.find(x=>x.state==='next');
-   return nx&&nx.id!==s.id?`<footer class="subj-next"><button type="button" class="pri" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('right')}</button></footer>`:'';
+   return nx&&nx.id!==s.id?`<footer class="subj-next"><span>${mark('done')}This step is done.</span><button type="button" class="pri" data-subj-step="${esc(nx.id)}">Next: ${esc(nx.name)}${icon('right')}</button></footer>`:'';
   }
   /** A hand-off link, named in HANDOFFS so its label and its section cannot drift apart. */
-  const out=(key,form)=>`<a class="v2-out" data-subj-handoff="${key}" href="${handoffHref(HANDOFFS[key].section,form)}">${esc(HANDOFFS[key].label)}${icon('out')}</a>`;
+  const out=(key,form,cls='subj-link')=>`<a class="${cls}" data-subj-handoff="${key}" href="${handoffHref(HANDOFFS[key].section,form)}" title="Opens in Advanced">${esc(HANDOFFS[key].label)}${cls==='subj-link'?icon('chev'):''}</a>`;
+  const btn=(key,form,pri=false)=>out(key,form,'subj-btn'+(pri?' pri':''));
   /** The step's own hand-off, from the section the command names for it. */
-  const own=(s,form)=>{const h=ownHandoff(s);if(!h)return '';return h.key?out(h.key,form):`<a class="v2-out" data-subj-handoff="own" href="${handoffHref(h.section,form)}">${esc(h.label)}${icon('out')}</a>`;};
+  const own=(s,form)=>{const h=ownHandoff(s);if(!h)return '';return h.key?out(h.key,form):`<a class="subj-link" data-subj-handoff="own" href="${handoffHref(h.section,form)}" title="Opens in Advanced">${esc(h.label)}${icon('chev')}</a>`;};
   const links=(...items)=>{const l=items.filter(Boolean).join('');return l?`<div class="subj-links">${l}</div>`:'';};
+  /** What a step waits for: one button to the step in question, as the sample's Go to the words. */
   const waitsFor=(s,steps)=>{
-   const rows=(s.waits||[]).map(w=>{const t=steps.find(x=>x.id===w);if(!t)return '';const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):''}<span><b>${esc(t.name)}</b>${tv.note?`<small>${esc(tv.note)}</small>`:''}</span><button type="button" class="v2-ghost" data-subj-step="${esc(t.id)}">Open${icon('chev')}</button></li>`;}).join('');
-   return rows?`<ul class="subj-list subj-waits">${rows}</ul>`:'';
+   const rows=(s.waits||[]).map(w=>{const t=steps.find(x=>x.id===w);return t?`<button type="button" class="subj-btn" data-subj-step="${esc(t.id)}">Go to ${esc(/^(The|Your) /.test(t.name)?t.name.charAt(0).toLowerCase()+t.name.slice(1):t.name)}${icon('right')}</button>`:'';}).join('');
+   return rows?`<div class="subj-actions subj-waits">${rows}</div>`:'';
   };
   const reading=()=>`<p class="subj-quiet" role="status">Reading</p>`;
   const rec=k=>st.rec[k];
 
   function tool(s,form,steps){
-   if(s.state==='unknown')return notKnown(s,form);
+   if(s.state==='unknown'&&s.id!=='publish')return notKnown(s,form);
    switch(s.id){
     case 'have':return toolHave(s,form);
     case 'transcript':return toolTranscript(s,form);
@@ -394,17 +410,22 @@
    const keys=STEP_OUT[s.id]||[];
    return `<p class="subj-quiet">Not known yet. What this step rests on has not been read, so nothing is claimed.</p>`+links(...(keys.length?keys.map(k=>out(k,form)):[own(s,form)]));
   }
+  const WAYS=[['mic','A recording','Record now, or add one.'],['note','A note or a link','A thought, a page, a video.'],['photo','Photographs','From this device or the Library.']];
+  /** The three ways in and the drop strip. Adding material is done in the existing workspace, so each opens Material there. */
+  function ways(){
+   const to=handoffHref('material',null);
+   return `<div class="subj-ways">${WAYS.map(([ic,n,w])=>`<a data-subj-handoff="addMaterial" href="${to}" title="Opens Material in Advanced">${ownIcon(ic)}<b>${n}</b><span>${w}</span></a>`).join('')}</div><a class="subj-drop" data-subj-handoff="addMaterial" href="${to}" title="Opens Material in Advanced">${icon('plus')}Or drop anything here</a>`;
+  }
   function toolHave(s,form){
    const known=['tree','brief','planRecords'].every(k=>rec(k)!==undefined);
    const m=known?materialFrom({tree:rec('tree'),brief:rec('brief'),planRecords:Array.isArray(rec('planRecords'))?rec('planRecords'):[]},ids().projectId):null;
    const photos=m?m.items.filter(x=>x.kind==='photos'):[],rest=m?m.items.filter(x=>x.kind!=='photos'):[];
-   const KIND={recordings:'Recording',notes:'Note',links:'Link'};
-   const list=rest.length?`<ul class="subj-list subj-have">${rest.slice(0,10).map(x=>`<li><span><b title="${esc(x.title)}">${esc(x.title)}</b></span><small>${KIND[x.kind]}</small></li>`).join('')}${rest.length>10?`<li><small>and ${rest.length-10} more</small></li>`:''}</ul>`:'';
+   const KIND={recordings:'Recording',notes:'Your note',links:'Link'},IC={recordings:'mic',notes:'note',links:'note'};
+   const list=rest.length?`<ul class="subj-have">${rest.slice(0,11).map(x=>`<li>${ownIcon(IC[x.kind])}<b title="${esc(x.title)}">${esc(x.title)}</b><small>${KIND[x.kind]}</small></li>`).join('')}${rest.length>11?`<li><small>and ${rest.length-11} more</small></li>`:''}</ul>`:'';
    const tray=photos.length?`<div class="subj-tray">${photos.slice(0,12).map(x=>`<img src="/api/sources/blob?id=${encodeURIComponent(x.id)}" alt="${esc(x.title)}" loading="lazy">`).join('')}${photos.length>12?`<span>+${photos.length-12}</span>`:''}</div>`:'';
-   const to=handoffHref('material',null);
-   const ways=`<div class="subj-ways">${[['mic','A recording','Record, or add one'],['note','A note or a link','A thought, a page, a video'],['photo','Photographs','From this device or the Library']].map(([ic,n,w])=>`<a data-subj-handoff="addMaterial" href="${to}" aria-label="${n} (opens Material in Advanced)">${ownIcon(ic)}<b>${n}${icon('out')}</b><span>${w}</span></a>`).join('')}</div>`;
    const any=s.state==='done'||list||tray;
-   return (!known&&any?reading():'')+list+tray+ways+(any?links(out('readSources',form)):'');
+   if(!any)return (!known?reading():'')+ways();
+   return (!known?reading():'')+list+tray+`<a class="subj-drop" data-subj-handoff="addMaterial" href="${handoffHref('material',null)}" title="Opens Material in Advanced">${icon('plus')}Add a recording, note, link or photographs</a>`;
   }
   function toolTranscript(s,form){
    const plans=rec('planRecords'),flags=[];
@@ -412,35 +433,45 @@
    const m=materialFrom({tree:rec('tree'),planRecords:Array.isArray(plans)?plans:[]},ids().projectId);
    const jobs=new Set(m.items.filter(x=>x.kind==='recordings').map(x=>x.transcriptState?.jobId||x.recordingId).filter(Boolean));
    const checks=ok(rec('wordChecks'))?(rec('wordChecks').recordings||[]).filter(r=>jobs.has(r.jobId)&&r.open):[];
-   const words=flags.length?`<ol class="subj-talk">${flags.slice(0,6).map(x=>`<li class="subj-inset"><p class="subj-quote">${hl(x.line,x.heard)}</p><small>${esc(x.why||'To confirm')}</small></li>`).join('')}</ol>${flags.length>6?`<p class="subj-quiet">and ${flags.length-6} more</p>`:''}`:'';
+   const words=flags.length?`<ol class="subj-talk">${flags.slice(0,6).map(x=>`<li><small>${esc(x.why||'To confirm')}</small><p class="subj-quote">${hl(x.line,x.heard)}</p></li>`).join('')}</ol>${flags.length>6?`<p class="subj-quiet">and ${flags.length-6} more</p>`:''}`:'';
    const who=v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):'';
-   const hear=checks.map(c=>`<li><span><b>${esc(c.story||'Recording')}</b><small>${plural(c.open,'word')} to hear</small></span><a class="v2-out" href="/transcript-check/index.html?job=${encodeURIComponent(c.jobId)}${who}">Hear them${icon('out')}</a></li>`).join('');
+   const hear=checks.map(c=>`<a class="subj-btn" href="/transcript-check/index.html?job=${encodeURIComponent(c.jobId)}${who}" title="Opens the word check">Hear ${plural(c.open,'word')}${c.story?' in '+esc(c.story):''}</a>`).join('');
    const plan=flags[0]?.planId;
-   return (plans===undefined?reading():'')+words+(hear?`<ul class="subj-list">${hear}</ul>`:'')+links(plan?`<a class="v2-out" href="/document-study/index.html?instagram=${encodeURIComponent(plan)}${who}">Confirm them in the slide studio, in Advanced${icon('out')}</a>`:'',out('readTranscript',form));
+   return (plans===undefined?reading():'')+words+(hear||plan?`<div class="subj-actions">${hear}${plan?`<a class="subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(plan)}${who}" title="Opens the slide studio in Advanced">Confirm them in the slide studio</a>`:''}</div>`:'')+links(out('readTranscript',form));
   }
   const hl=(line,heard)=>{const i=heard?String(line).indexOf(heard):-1;return i<0?esc(line):esc(line.slice(0,i))+'<mark>'+esc(heard)+'</mark>'+esc(line.slice(i+heard.length));};
   function toolFacts(s,form){
    const b=ok(rec('brief'))?rec('brief'):null,tp=rec('topics');
    let body='';
-   if(tp?.list?.length)body+=`<ul class="subj-list subj-topics">${tp.list.map(t=>`<li data-status="${t.status}"><span><b>${esc(t.name)}</b><small>${t.status==='proposed'?'Suggested, waiting for you':'In use here'}</small></span><a class="v2-out" href="${esc(v2.href('research/topic/:id',{id:t.id}))}">Open${icon('chev')}</a></li>`).join('')}</ul>`;
-   if(b?.research?.question)body+=`<div class="subj-inset"><p class="subj-label">Asked</p><p class="subj-quote">${esc(b.research.question)}</p></div>`;
+   if(b?.research?.question)body+=`<div class="subj-one"><p class="subj-label">Asked</p><p class="subj-quote">${esc(b.research.question)}</p></div>`;
    const toLook=(b?.materials||[]).filter(mm=>!mm.reviewed&&!['audio','image'].includes(mm.kind));
-   if(b?.step==='review'&&toLook.length)body+=`<ul class="subj-list subj-have">${toLook.slice(0,6).map(mm=>`<li><span><b title="${esc(mm.title)}">${esc(mm.title)}</b></span><small>Not looked at</small></li>`).join('')}</ul>`;
-   return (rec('brief')===undefined?reading():'')+body+links(out(b?.step==='review'?'researchLook':'research',form));
+   const review=b?.step==='review'&&toLook.length;
+   if(review)body+=`<div class="subj-one"><p>${plural(toLook.length,'source')} not looked at yet.</p><ul class="subj-have subj-plain">${toLook.slice(0,6).map(mm=>`<li><b title="${esc(mm.title)}">${esc(mm.title)}</b><small>Not looked at</small></li>`).join('')}</ul><div class="subj-actions">${btn('researchLook',form,true)}</div></div>`;
+   const learn=(tp?.list||[]).map(t=>`<a class="subj-link" href="${esc(v2.href('research/topic/:id',{id:t.id}))}">${t.status==='proposed'?'Suggested: ':'Learn more about '}${esc(t.name.charAt(0).toLowerCase()+t.name.slice(1))}${icon('chev')}</a>`).join('');
+   return (rec('brief')===undefined?reading():'')+body+links(learn,review?'':out('research',form));
   }
+  /** Name the dish, in place: what the board holds (the letter, the possible dishes, the feelings), the dish in his words
+      with Edit, and the board itself in Advanced. Only the sentence he types is written, by simmer.dish. */
   function toolDish(s,steps,form){
-   const f=ok(rec('board'))?rec('board').forming||{}:{},sentence=typeof f.named==='string'?f.named:f.named?.text||f.named?.sentence||'',d=rec('direction'),dir=ok(d)?String(d.body||'').trim():'';
-   let body=waitsFor(s,steps);
-   if(f.dishes?.length)body+=`<ul class="subj-list subj-dishes">${f.dishes.slice(0,4).map(x=>`<li><span><b>${esc(x.title||x.dish||x.text||'')}</b>${x.why||x.reader?`<small>${esc(x.why||x.reader)}</small>`:''}</span>${x.by?`<em class="subj-by">${esc(v2.actorName(x.by))}’s proposal</em>`:''}</li>`).join('')}</ul>`;
-   const said=sentence||dir;
-   if(said)body+=`<div class="subj-inset"><p class="subj-label">${sentence?'The dish, in your words':'Your direction'}</p><blockquote class="subj-quote big">${esc(said)}</blockquote></div>`;
-   return (rec('board')===undefined?reading():'')+body+links(out('board',form),out(said?'dishChange':'dishWrite',form));
+   const bd=ok(rec('board'))?rec('board'):null,f=bd?.forming||{},blocks=(bd?.groups||[]).flatMap(g=>g.blocks||[]);
+   const sentence=typeof f.named==='string'?f.named:f.named?.text||'',d=rec('direction'),dir=ok(d)?String(d.body||'').trim():'';
+   const letter=blocks.find(x=>x.kind==='letter'&&x.letter),feel=blocks.filter(x=>x.kind==='feeling'&&x.text).slice(0,4);
+   const by=x=>x?.by?`<em class="subj-by">${esc(v2.actorName(x.by))}’s proposal</em>`:'';
+   const L=letter?.letter||{},rows=[['What keeps coming back',L.recurs],['Where your voice changed',L.voice],['Still unresolved',L.unresolved]].filter(r=>r[1]);
+   const left=(rows.length?`<section><p class="subj-label">What keeps coming back${by(letter)}</p><ul class="subj-rec">${rows.map(([n,t])=>`<li><b>${esc(n)}.</b> ${esc(t)}</li>`).join('')}</ul></section>`:'')
+    +(feel.length?`<section><p class="subj-label">True for you, or borrowed?</p><ul class="subj-feel">${feel.map(x=>`<li><span>${esc(x.text)}</span>${out('board',form)}</li>`).join('')}</ul></section>`:'');
+   const dishes=(f.dishes||[]).slice(0,4).map(x=>`<li${f.dish===x.id?' class="on"':''}><b>${esc(x.title||'')}</b>${x.why?`<span>${esc(x.why)}</span>`:''}${f.dish===x.id?'<em class="subj-by">Chosen</em>':by(x)}</li>`).join('');
+   const right=dishes?`<section><p class="subj-label">It could be</p><ul class="subj-dishes">${dishes}</ul></section>`:'';
+   const said=sentence||dir,editing=st.editDish!==undefined;
+   const edit=editing?`<form class="subj-dishform" data-subj-dishform><label for="subj-dish">The dish, in your words</label><textarea id="subj-dish" rows="3" data-subj-dishtext>${esc(st.editDish)}</textarea><div class="subj-actions"><button type="submit" class="pri">Keep it</button><button type="button" class="v2-ghost" data-subj-dishcancel>Cancel</button></div></form>`
+    :`<p class="subj-label">The dish, in your words</p>${said?`<blockquote class="subj-quote big">${esc(said)}</blockquote>`:`<p class="subj-quiet">Not said yet.</p>`}<div class="subj-actions"><a class="subj-btn" data-subj-handoff="dishChange" href="${handoffHref('direction',form)}" title="Opens Direction in Advanced">${ownIcon('mic')}Say it again</a><button type="button" class="subj-btn" data-subj-dishedit>${said?'Edit':'Write it'}</button><span class="subj-sp"></span>${out('board',form,'subj-btn').replace('</a>',icon('right')+'</a>')}</div>`;
+   return (rec('board')===undefined?reading():'')+waitsFor(s,steps)+((left||right)?`<div class="subj-sim">${left?`<div>${left}</div>`:''}${right?`<div>${right}</div>`:''}</div>`:'')+`<div class="subj-named">${edit}</div>`;
   }
   function toolWords(s,form){
    const r=ok(rec('read'))?rec('read'):null,blocks=(r?.projection||[]).filter(x=>String(x.words||'').trim()),parts=partsOf(blocks);
    const write=handoffHref('write',form);
    const sheet=blocks.length?`<a class="subj-sheet" href="${write}" aria-label="Open the writing in Advanced" tabindex="-1"><b>${esc(form?.title||st.standing.title)}</b>${blocks.slice(0,5).map(x=>x.blockKind==='heading'?`<i>${esc(String(x.words).slice(0,80))}</i>`:`<span>${esc(String(x.words).slice(0,220))}</span>`).join('')}</a>`:'';
-   const list=parts.length?`<ol class="subj-parts">${parts.map(p=>`<li><i aria-hidden="true"></i><span>${esc(p.name)}</span><small>${plural(p.paragraphs,'paragraph')}</small></li>`).join('')}</ol>`:'';
+   const list=parts.length?`<ol class="subj-parts">${parts.map(p=>`<li title="${esc(plural(p.paragraphs,'paragraph'))}"><i aria-hidden="true"></i><span>${esc(p.name)}</span></li>`).join('')}</ol>`:'';
    return (rec('read')===undefined?reading():'')+(sheet||list?`<div class="subj-words">${sheet}<div>${list}</div></div>`:'')+`<div class="subj-actions"><a class="subj-btn pri" data-subj-handoff="write" href="${write}">${HANDOFFS.write.label}${icon('right')}</a>${blocks.length?`<a class="subj-btn" data-subj-handoff="read" href="${handoffHref('read',form)}">${HANDOFFS.read.label}</a>`:''}</div>`;
   }
   function toolCheck(s,steps,form){
@@ -450,7 +481,7 @@
   }
   const planOf=form=>{const p=rec('planRecords');return form?.kind==='instagram'&&Array.isArray(p)?p.filter(ok).find(x=>x.id===form.id)||null:null;};
   const studio=form=>form?.kind==='instagram'?`<a class="subj-btn pri" href="${esc(v2.href('slides/:id',{id:form.id}))}">Open the slide studio${icon('right')}</a>`:'';
-  const igAdvanced=form=>`<a class="v2-out" href="/document-study/index.html?instagram=${encodeURIComponent(form.id)}${v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):''}">Open the slide studio in Advanced${icon('out')}</a>`;
+  const igAdvanced=form=>`<a class="subj-btn" href="/document-study/index.html?instagram=${encodeURIComponent(form.id)}${v2.actor()&&!v2.isHuman()?'&reviewActor='+encodeURIComponent(v2.actor()):''}" title="Opens the slide studio in Advanced">Open the slide studio in Advanced</a>`;
   function toolStory(s,form){
    const p=planOf(form);
    const list=(p?.stories||[]).map(x=>{const on=p.chosen?.storyId===x.id;return `<li>${mark(on?'done':'todo')}<span><b>${esc(x.title)}</b>${x.readback?`<small>${esc(x.readback)}</small>`:''}</span>${on?'<em class="subj-by">Chosen</em>':''}</li>`;}).join('');
@@ -471,9 +502,12 @@
    const reasons=(y.release?.reasons||[]).length&&!(y.people||[]).length?`<ul class="subj-list">${y.release.reasons.map(r=>`<li>${mark('todo')}<span>${esc(r)}</span></li>`).join('')}</ul>`:'';
    return (people?`<ul class="subj-people">${people}</ul>`:'')+reasons+links(out('desk',form));
   }
+  /** Publish: what it waits for, each with Open, as the sample's two lines (here the steps this form really has). */
   function toolPublish(s,steps,form){
+   const need=['yes','check','slides','posttext'].map(id=>steps.find(x=>x.id===id)).filter(Boolean);
+   const rows=need.map(t=>{const tv=stepView(t);return `<li>${tv.mark?mark(tv.mark):'<i class="subj-reading" aria-hidden="true"></i>'}<span>${esc(t.name)}</span><button type="button" class="subj-link" data-subj-step="${esc(t.id)}">Open${icon('chev')}</button></li>`;}).join('');
    const posting=['instagram','post'].includes(form?.kind)?`<p class="subj-quiet">Posting is not connected.</p>`:'';
-   return waitsFor(s,steps)+posting+links(out('outputs',form),out('audience',form));
+   return (rows?`<ul class="subj-waitl">${rows}</ul>`:'')+posting+links(out('outputs',form),out('audience',form));
   }
 
   // ---------- the slides, drawn by the app's own renderer ----------
@@ -501,8 +535,11 @@
    const f=e.target.closest('[data-subj-form]');
    if(f){chooseFormByKey(f.dataset.subjForm);return;}
    if(e.target.closest('[data-subj-add]'))addForm();
+   if(e.target.closest('[data-subj-dishedit]')){const b=ok(rec('board'))?rec('board'):null,n=b?.forming?.named,d=rec('direction');st.editDish=(typeof n==='string'?n:n?.text)||(ok(d)?String(d.body||'').trim():'');st.last.panel='';paintNow();$('[data-subj-dishtext]')?.focus();}
+   if(e.target.closest('[data-subj-dishcancel]')){delete st.editDish;st.last.panel='';paintNow();}
   });
   function openStep(sid){
+   if(sid!==st.open)delete st.editDish;
    st.open=sid;need(sid);remember();paintNow();
    // Focus stays on the step he pressed; the open tool is the next thing in the tab order.
    $(`.subj-row[data-step="${cssq(sid)}"]>[data-subj-step]`)?.focus({preventScroll:true});
@@ -513,13 +550,18 @@
    const f=(st.standing?.forms||[]).find(x=>x.key===key);if(!f)return;
    st.form=key;st.open=firstOpen(stepsOfForm(st.standing,f),f);if(st.open)need(st.open);remember();paintNow();$(`[data-subj-form="${cssq(key)}"]`)?.focus();
   }
-  page.addEventListener('input',e=>{const t=e.target;if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;});
+  page.addEventListener('input',e=>{const t=e.target;if(t.dataset.subjDraft)st.drafts[t.dataset.subjDraft]=t.value;if(t.matches('[data-subj-say]'))st.sayLine=t.value;if(t.matches('[data-subj-dishtext]'))st.editDish=t.value;});
   page.addEventListener('submit',async e=>{
    const form=e.target;e.preventDefault();if(st.busy)return;
    if(form.matches('[data-subj-draftform]')){
     const personId=form.dataset.subjDraftform,text=(st.drafts[personId]||'').trim();
     if(!text){v2.ui.say('Write the request first.',{tone:'warn'});return;}
     await act(['desk'],async()=>{const y=await v2.call('consent.desk',{parentStudyId:id});await v2.call('consent.people.draft-request',{parentStudyId:id,...v2.expect(y),personId,text});delete st.drafts[personId];v2.ui.say('The request is drafted. Sending it is yours, from the desk.',{tone:'good'});});
+   }
+   if(form.matches('[data-subj-dishform]')){
+    const text=(st.editDish||'').trim();
+    if(!text){v2.ui.say('Say the dish first.',{tone:'warn'});return;}
+    await act(['board','direction'],async()=>{const b=await v2.call('simmer.board.get',{subject:id});await v2.call('simmer.dish',{subject:id,sentence:text,said:'typed',...v2.expect(b)});delete st.editDish;st.last.panel='';v2.ui.say('The dish is kept in your words.',{tone:'good'});});
    }
    if(form.matches('[data-subj-sayform]')){
     const f=current().form,line=(st.sayLine||'').trim();if(f?.kind!=='instagram'||!line)return;
@@ -531,7 +573,7 @@
 
   function addForm(){
    const kinds=addable(st.standing.facts);
-   const body=`<div class="subj-kinds">${kinds.map(k=>`<button type="button" data-subj-make="${k.kind}"${k.ready?'':` disabled aria-describedby="subj-why-${k.kind}"`}><b>${esc(k.name)}</b>${k.to?`<small>for ${esc(k.to)}</small>`:''}<span>${esc(k.what)}</span><em>Needs: ${esc(k.needs)}</em>${k.ready?'':`<em class="why" id="subj-why-${k.kind}">${esc(k.why)}</em>`}</button>`).join('')}</div>`;
+   const body=`<p class="subj-quiet">Each form brings its own steps and your template for it.</p><div class="subj-kinds">${kinds.map(k=>`<button type="button" data-subj-make="${k.kind}"${k.ready?'':` disabled aria-describedby="subj-why-${k.kind}"`}><b>${esc(k.name)}</b>${k.to?`<small>for ${esc(k.to)}</small>`:''}<span>${esc(k.what)}</span>${k.unbuilt?'':`<em>Needs: ${esc(k.needs)}</em>`}${k.ready?'':`<em class="why" id="subj-why-${k.kind}">${esc(k.why)}</em>`}</button>`).join('')}</div>`;
    const sheet=v2.ui.sheet({title:'What else will this be?',body});sheet.el.classList.add('subj-sheetdlg');
    sheet.body.addEventListener('click',async e=>{const b=e.target.closest('[data-subj-make]');if(!b||b.disabled)return;b.disabled=true;
     try{
