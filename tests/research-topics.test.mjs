@@ -237,6 +237,15 @@ test('on the real server: where a topic came from and how a group works are chan
  assert.equal((await propose({groupId:g.id})).exitCode,5,'refused by the command, not only the screen');
  assert.equal((await propose({suggestedGroupId:g.id})).exitCode,5);
  assert.equal((await propose({})).exitCode,0,'a proposal that names no such group is still welcome');
+ // Every route that can place or suggest a topic goes through the one check.
+ const ok=(await propose({})).result,okRead=await f.read(ok.id);
+ for(const key of ['groupId','suggestedGroupId'])assert.equal((await f.cli(['research','save'],{id:ok.id,...expect(okRead),[key]:g.id})).exitCode,5,'save '+key);
+ assert.equal((await f.cli(['call','research-topics.save'],{id:ok.id,operationId:randomUUID(),...expect(okRead),groupId:g.id})).exitCode,5,'save by call');
+ const inq=(await f.list()).topics.find(x=>x.name==='Colour from clay: research'),inqRead=await f.read(inq.id);
+ assert.equal((await f.cli(['research','save'],{id:inq.id,...expect(inqRead),groupId:g.id})).exitCode,5,'an existing topic too');
+ assert.equal((await f.cli(['call','research-topics.start'],{name:'Mine',groupId:g.id,operationId:randomUUID()})).exitCode,5,'start is his alone');
+ assert.equal((await f.read(ok.id)).groupId,null);assert.equal((await f.read(inq.id)).groupId,null);
+ const mine=await f.page('POST','/api/research-topics/save',{id:ok.id,operationId:randomUUID(),...expect(okRead),groupId:g.id});assert.equal(mine.status,200,'Adrian may');
  // A search says what it skipped, by name.
  const add=await f.page('POST','/api/research-topics/group/sources',{id:g.id,operationId:randomUUID(),...expect((await f.page('GET','/api/research-topics/group?id='+g.id)).body),action:'add',sourceIds:[voice.id]});assert.equal(add.status,200);
  const off2=await f.page('POST','/api/research-topics/group/sources',{id:g.id,operationId:randomUUID(),...expect(add.body),action:'untick',sourceIds:[voice.id]});assert.equal(off2.status,200);

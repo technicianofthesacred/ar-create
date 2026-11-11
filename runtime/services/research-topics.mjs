@@ -130,6 +130,8 @@ export function createResearchTopics({dataDir,owners={}}={}){
  const loadTopic=id=>readRecord(topicsDir(),id,TOPIC);
  const loadGroup=id=>readRecord(groupsDir(),id,GROUP);
  function commit(dir,before,next,input,what,{schema}){
+  // The one place a topic is written: an assistant never places or suggests a topic in a group Adrian closed, by any route.
+  if(schema===TOPIC&&!humanNow())for(const k of ['groupId','suggestedGroupId'])if(next[k]&&next[k]!==before?.[k]){const g=loadGroup(next[k]);if(g?.settings?.opensTopics==='off')fail('Adrian set '+g.name+' to take new topics only when he starts one. An assistant may not put or suggest a topic there.',403);}
   const revision=(before?.revision||0)+1,at=new Date().toISOString(),actor=actorNow();
   const op={operationId:input.operationId,revision,actor,client:clientNow(),at,what,fingerprint:fingerprint(input),...(next.__undo?{undo:next.__undo}:{})};
   const {__undo,...clean}=next;
@@ -436,7 +438,7 @@ export function createResearchTopics({dataDir,owners={}}={}){
   return serial(async()=>{
    const w=await world(),id='p-'+input.operationId.toLowerCase(),origin=await checkOrigin(cleaned);
    const existing=loadTopic(id);if(existing){if(replayed(existing,input))return {...summary(w,existing),hash:topicHash(existing),replayed:true};fail('This operationId already made a topic.',409);}
-   for(const k of ['groupId','suggestedGroupId'])if(input[k]!=null){const g=w.groups.find(x=>x.id===input[k]);if(!g)fail('There is no group '+input[k]+'.',404);if(!humanNow()&&g.settings?.opensTopics==='off')fail('Adrian set '+g.name+' to take new topics only when he starts one. An assistant may not propose into it.',403);}
+   for(const k of ['groupId','suggestedGroupId'])if(input[k]!=null){const g=w.groups.find(x=>x.id===input[k]);if(!g)fail('There is no group '+input[k]+'.',404);}
    if(input.findings!==undefined)cleanFindings(input.findings);
    const human=humanNow();
    const record={id,kind:'proposal',collectionId:null,subject:null,tag:null,name,origin:{...origin,at:new Date().toISOString()},status:human?'kept':'proposed',state:'new',note:input.note===undefined?'':line(input.note,'note',MAX_NOTE),
