@@ -56,7 +56,7 @@ where `document` is `readOwned(b)` (so the screen gets the new `addedSources` in
 
 - 400: unknown or missing keys, bad UUIDs, empty or over-long `sources`, duplicate `sourceId`.
 - 400: a source not attached to this subject, set aside, unreadable or not reviewed (the material authority's own
-  refusal, `study-project-material-context.mjs` line 33, "Selected parent material is missing, unreadable or
+  refusal, `study-project-material-context.mjs` line 31, "Selected parent material is missing, unreadable or
   unreviewed.").
 - 403: any actor that is not in `HUMAN_ACTORS` (`runtime/services/actor.mjs` line 19). Twice: at the HTTP gate
   (`guardHumanOnly`, `runtime/server.mjs` line 457, from the registry's `HUMAN_ONLY` set) and again inside the
@@ -170,9 +170,9 @@ primary source; on a New subject the first captured transcript becomes the prima
 | `collectionSeed` line 60, `createCollection` `readSource` line 77 | no | a collection seeded later keeps today's seed shape |
 | `structureSeed` line 124, `cloneStructureTest` | no | stand-in copies stay seeded from the locked capture |
 | `forkSeed` line 144, `fork` | no | see Decision 5 |
-| `study-editorial-plan-context.mjs` lines 28, 33, 38, 48, 69 to 72 | no | it **fails closed** on any non-draft record an authored root without `collectionSource` holds (line 48), and on any record not in the vault original (line 70); a merge would stop assistance on every captured subject |
-| `study-mcp-bridge.mjs` lines 342, 351, 353 | no | the same material already appears there as attached parent material; seeing it twice trips "Source origin is ambiguous" (line 351) |
-| `study-research-sources.mjs` line 6 | no | the material is already allowed through `firstFlow.materialContext` (line 9) |
+| `study-editorial-plan-context.mjs` lines 28, 33, 38, 48, 69 to 72 | no | it **fails closed** on any non-draft record an authored root without `collectionSource` holds (line 49), and on any record not in the vault original (line 70); a merge would stop assistance on every captured subject |
+| `study-mcp-bridge.mjs` lines 342, 351, 353 | no | the same material already appears there as attached parent material; it would be listed twice, as a retained capture and as attached material (line 351 itself would not trip, because the added record's `id` starts with `added:`; corrected in review) |
+| `study-research-sources.mjs` line 6 | no | the material is already allowed through `firstFlow.materialContext` (line 8) |
 | `study-direction-options.mjs` line 16 | no | reads map and plan roles only |
 | `native-output-factory.mjs` line 92, `native-output-owner.mjs` line 593, `native-carousel-make.mjs` line 35 | no | Carousel and output snapshots keep their own captured sources; Carousel Check is outside this piece (question 5) |
 | `structure-test-records.mjs` lines 17 to 32 | no | structure tests only; capture is refused there |
@@ -240,7 +240,7 @@ captureHash` line 83, `derivedFrom.captureHash` line 164), which does not change
 
 Forks and structure tests made **after** a capture also seed from `context.records` only, so they do not inherit the
 added sources. That is deliberate: inheriting them would put non-draft records into an authored child that
-`study-editorial-plan-context.mjs` line 39 to 48 then refuses. It also keeps one edge safe: a fork or structure test whose
+`study-editorial-plan-context.mjs` line 38 to 49 then refuses. It also keeps one edge safe: a fork or structure test whose
 intent was written before a capture but whose seed file was not yet saved rebuilds exactly the seed its hash expects,
 because the seed builders never read `addedSources`.
 
@@ -380,7 +380,7 @@ one HTTP pass on a real test server):
 (session_017kitFe2b6MQFZwy3MNMGpN, branch `claude/v2-write-read-check`) and agreeing an order, because it holds
 `check.js` and `subject.js`):
 
-- `public/v2/screens/subject.js`: after `keepWithSubject` succeeds (line 779 to 789), the transcript row offers "Use
+- `public/v2/screens/subject.js`: after `keepWithSubject` succeeds (line 781 to 789), the transcript row offers "Use
   it for Check" when the subject has a root draft and the material is reviewed; it reads `first-flow.material-context`
   for the hash and `study-draft.read` for `addedSources.hash`, then calls `study-draft.capture-sources`. For an
   agent page it shows the same "is for Adrian to do" line the transcript row already uses (line 607).
@@ -415,3 +415,181 @@ one HTTP pass on a real test server):
    assistants today)? Recommendation: yes, as its own small change.
 7. Should the pinned quote guard match each quote inside one source, not across two joined files? Recommendation:
    yes, as a separate reviewed change to the guard and its pin.
+
+## Review, 12 November
+
+Independent review, by a reader who did not write the brief. Every cited file and line was opened. Nothing was run:
+this machine has no installed dependencies, so each finding is read from code and says so where a run is needed.
+Six plain citation errors were corrected in place above (the material authority's refusal is line 31, the editorial
+plan reader's refusal is line 49 and its range 38 to 49, the research sources line is 8, `keepWithSubject` starts at
+line 781, and the research bridge reason was reworded). All other citations were found correct.
+
+**Verdict: build with the corrections.** The storage design holds: a separate append-only file, the locked record
+untouched, Check as the one reader. The faults are at the edges: the material authority it leans on cannot serve
+the subject this is for, and the "reviewed" it trusts can be set by an assistant today.
+
+### Must fix
+
+1. **The material authority refuses the very subject this is built for.** Proof:
+   `runtime/services/study-project-material-context.mjs` lines 12 to 20 and 27. `context()` needs a saved part
+   connection under the key `owned-draft:<bindingId>`; without one, a draft that is not an output fork is refused
+   at line 20 ("The selected child has no exact persisted root material owner."). That connection is made only by
+   `first-flow.select` (`runtime/commands.mjs` line 529), which the existing workspace calls
+   (`public/document-study/output-connection.js` line 199). New subject makes only the parent connection
+   (`runtime/server.mjs` line 285, `createStudyCollection`), and nothing under `public/v2` calls `first-flow.select`.
+   So on a subject begun in version two, Decision 3's call ends 409 before anything is copied. The brief's service
+   tests use a fake material authority and would not see it. Correction: give the authority a parent-only method
+   that shares lines 28 to 31 (parent connection, `firstFlow.materialContext`, the same eligible and reviewed
+   test) and takes no part connection, and have capture call that. Do not create the part connection as a side
+   effect of capture. Piece A's HTTP test must make its subject exactly as `home.js` line 488 does, with no
+   `first-flow.select`, and attach through `study.material.attach`. Read from code, not run.
+
+2. **"Reviewed" can be set by an assistant, with no record of who set it, so his one press can turn
+   assistant-written text into a trusted source.** Proof: `first-flow.source-review` is open to any actor
+   (`runtime/services/first-flow.mjs` lines 236 to 244; `docs/CAPABILITIES.md` line 397, "any"); its
+   `humanDecision:true` is a field the caller types, not a check, and `operation()` (line 216) stores no actor.
+   `first-flow.prepare` (line 249, "any") also marks a source reviewed from a caller's `sourceReviews`. For
+   recordings, `POST /transcription/{id}/segment`, `/speakers` and `/review` are all open
+   (`runtime/services/recordings.mjs` lines 153 to 156; `transcript-corrections.mjs` lines 162 and 163;
+   CAPABILITIES line 472, "any"), and none records an author. Chain today, all assistant-callable:
+   `sources.import` (any) a file of invented words, or rewrite a real transcript's segments; attach it
+   (`study.material.attach` or `first-flow.attach`, any); mark it reviewed. The material then reads `eligible`,
+   `review.state:'reviewed'` and the capture button appears. A rewritten transcript is captured with role
+   `source`, the primary. Decision 8 calls this "noticed, not part of this piece" and question 6 defers it; it
+   cannot be deferred, because capture is the first thing that turns "reviewed" into what Check trusts.
+   Correction, in piece A: refuse a non-human actor inside `reviewSources`, inside the `sourceReviews` branch of
+   `prepare`, and for the `review` action of the recording route (in the service, the way `registerSource` does at
+   `recordings.mjs` line 108; the route pattern `/transcription/{id}/{action}` is one command, so the registry's
+   `HUMAN_ONLY` set cannot single out `review`). Stamp `provenance()` on each review. Reviews made before that have
+   no author: the capture entry must record `review.by` as unknown for them, and the screen must say so. An
+   assistant editing a transcript already resets it to unreviewed (`transcript-corrections.mjs` lines 46 and 162),
+   so once review is his alone the chain is closed.
+
+3. **The brief does not say what he sees before pressing, and Check's held-state button captures every eligible
+   source in one press.** Proof: Decision 11 piece B ("one button with the same call for the subject's eligible
+   attached sources"); nothing in `public/v2/screens/check.js` lists sources (its only source wording is line 43),
+   and the subject row shows a title and the word "Transcript" (`subject.js` line 610). The press is the only
+   human gate, so it must name what it trusts. Correction: the control lists each source it will copy by title,
+   kind, length, when it was reviewed and by whom (or "not recorded"), and who attached it; it captures only the
+   ones listed and ticked; nothing is captured that he was not shown. After capture, Check's "Check details and
+   saved proof" names the captured sources the result rests on (from `addedSources.records`, title and date).
+
+4. **Under "reviewed only" the stage's finish line cannot be reached, and the brief leaves that to a question.**
+   Proof: `scripts/review-journey.mjs` lines 84 to 87 (one speaker with `name: null`, review `unreviewed`);
+   `reviewed()` at `first-flow.mjs` line 47; `reviewEligibility` at `runtime/services/magazine/outputs.mjs`
+   line 10. Answer below ("The reviewed only rule"). Piece B is not done until the walk confirms the transcript
+   inside version two.
+
+### Should fix
+
+5. **Only a recording transcript unlocks Check.** `perform()` holds unless a record has role `source`
+   (`study-draft-checks.mjs` lines 180 and 181), and Decision 3 gives role `source` only to `kind==='transcript'`.
+   "In plain words" promises "a transcript or note". A subject whose only material is a typed or pasted
+   interview captures it as `context`, and Check stays "No source to check against yet" after he pressed "Use it
+   for Check". Correction: either let him mark one captured non-recording source as the source of the quotes
+   (recorded in the entry, his choice), or have the control say plainly that a note alone will not let Check run.
+
+6. **Decision 9 changes the standing sentence on subjects that have no capture, and can send him to a Check that
+   holds again.** `subject-standing.mjs` line 325. Today a held, no-source receipt goes stale as soon as he types
+   (the proof's `draftHash` changes) and reads "Check again". With the proposed lines it reads "Not checked yet"
+   and leads as Check, though there is still no source and the check will hold again. Correction: decide by what
+   the draft has now. If the stale receipt never compared a source and the draft read (`read.context.records` plus
+   `read.addedSources.records`) still has no role `source`, report held with `noSource:true` ("No source to check
+   against yet"); only when a source now exists report `status:null` ("Not checked yet"). This is a wording change
+   Adrian can see on Home and the subject page, so it needs a before and after picture even though it is in
+   piece A.
+
+7. **Pressing twice from a stale page is refused instead of settled.** Decision 1 lists both "already captured at
+   the same hash: listed in `alreadyCaptured`" and "`null` when a record exists: 409". A second press with a new
+   operation ID and the old `expectedSourcesHash` (double click, second tab) gets 409 for a request that would
+   change nothing. Correction: state the order. First the operation ID replay; then, if every requested source is
+   already captured at the same `copiedHash`, return 200 unchanged whatever `expectedSourcesHash` says; only then
+   compare the hash. All entries of one call are appended in one atomic write.
+
+8. **An operation ID can collide with the draft's own operations.** `inspect` (`study-draft-copies.mjs` line 249)
+   and the provenance ledger (line 241) are both keyed by binding and operation ID. The brief checks the ID only
+   against earlier capture entries. Correction: refuse (409) an operation ID that `owner(b).inspectOperation`
+   already knows, or that equals `b.operationId` or `b.prepareOperationId`.
+
+9. **A damaged added-sources file blocks Check for good, with no way back.** Decision 2 makes Check refuse and
+   capture refuse (the first write is `exclusive`, later ones need a valid file). Correction: say what the way
+   back is before building: a human-only, explicit "start the captured sources again" that moves the damaged file
+   aside under a dated name and never deletes it, or a named manual step in the brief. Test that Write still saves.
+
+10. **The cross-source quote match becomes the normal case.** Confirmed at
+    `runtime/services/guards/mag-check-quotes.mjs` lines 37 to 40: the primary and every other file are joined
+    into one word list, and up to four source words may be skipped between kept words (line 28), so a quote can
+    start at the end of one source and finish at the start of the next. Today few drafts have two files; after
+    capture, a transcript plus a note is ordinary. Also only the primary is cut to its "## Full Transcript" part
+    (line 38), so a second captured transcript's heading, front matter and speaker names are matchable words.
+    Correction: do question 7 (match each quote inside one source; cut every transcript to its transcript part)
+    as a reviewed change to the guard and its pin before piece B lets him press, not after.
+
+11. **Piece B is larger than it needs to be.** Two screens would each read `first-flow.material-context` (which
+    needs the parent's project id, `commands.mjs` line 530) and `study-draft.read`, join them, and build the call.
+    Correction: piece A adds one read, `GET /api/study-draft/capture-sources?bindingId&parentStudyId`, returning
+    what can be captured (title, kind, hash, length, review and its author, attached by, already captured or not)
+    and the current `sourcesHash`. Piece B puts the list and the press in one small shared file under
+    `public/v2/shell/` with its own test, and `subject.js` and `check.js` each gain one call to it. The thread
+    restyling those screens then has one line to carry in each.
+
+12. **Size.** `readOwned` returns `raw` for every record, so 20 sources of 2 MB each would ride on every
+    `study-draft.read`, including the read Write makes. `mcp/study/server.mjs` line 23 strips `context` from what
+    assistants are sent but would pass `addedSources` through whole. Correction: cap the total (for example 4 MB
+    across all current entries, 413 beyond), and strip `addedSources` to ids, titles and hashes in the assistant
+    listings in piece A.
+
+### Notes
+
+13. **Confirmed: the locked record stays byte-identical and old records validate as before.** `capture()`
+    (`study-draft-copies.mjs` line 32) and root recovery (`study-root-recovery.mjs` lines 95 to 108) read only
+    paths named in the manifest; neither lists the capture folder, and no validator under `runtime/` does. Root
+    recovery hashes the intent file (line 133), which the design does not touch. Fork, structure-test and
+    collection seeds are built from `context.records` only (lines 60, 124, 144) and pinned in their own files.
+    Check receipts compare `proof` only (line 195).
+14. **Confirmed: a blanket merge into `context.records` is unsafe.** `study-editorial-plan-context.mjs` lines 38
+    and 49 refuse an authored root that holds any non-draft record without a `collectionSource`, which would stop
+    assistance on every captured subject. The research bridge reason was wrong as written and is corrected in the
+    table: line 351 would not trip; the material would simply be listed twice.
+15. **Confirmed: a receipt made before capture reads stale, never passed.** `read()` (line 195) rebuilds the proof
+    through `evidence()`; a capture adds to `proof.sources`, so `same()` fails and the status is forced to
+    `stale`. `check.js` line 28 treats stale as not current. A capture landing during a check is caught at
+    line 188.
+16. **Other readers.** Truth and consent does not read sources (agreed with Decision 3). Read does not. Carousels
+    read role `source` from their own snapshot (`native-carousel-make.mjs` line 35), and a Post or a second
+    Article is an output fork (`native-output-owner.mjs` lines 368 and 369) seeded from the locked capture, so on
+    a New subject both stay "No source to check against yet" after capture. Question 5 covers Carousels only; add
+    forks to it.
+17. **A draft with no quotation marks reads "Checked" against any source.** The guard returns `not-applicable`
+    and `perform()` line 186 maps that to `checked`. True today; after capture it will be seen on New subjects.
+    Worth one honest line on the Check screen later ("No quoted words to compare").
+18. **His own draft attached as material.** Nothing stops him capturing a file that holds the draft's own words,
+    after which every quote matches. With finding 2 fixed only he can do it. A cheap guard: refuse a source whose
+    bytes equal the draft's saved text.
+19. **Human-only is a stated name, not a proof.** `runtime/services/actor.mjs` (comment above line 16) says the
+    gate cannot stop a local process that calls itself Adrian, and the page defaults to `human:adrian` unless
+    opened with `reviewActor`. This is true of every human-only command and is not made worse here.
+20. **Interrupted run retried under a new operation ID** leaves an unnamed copy in `capture/`. Harmless (nothing
+    lists the folder); say so in the brief so nobody later "cleans" it into a validator.
+21. **423.** An assistant holding the draft's lease blocks his press, although capture does not touch the draft.
+    Acceptable; the screen should say who holds it, as Write does.
+
+### The "reviewed only" rule
+
+Keep it; do not let a press capture an unreviewed transcript (option a would make the press mean "I have not
+read this"). The commands that mark material reviewed are: for a recording transcript,
+`POST /transcription/{id}/review` with `{expected, confirmed:true}` (`transcript-corrections.mjs` line 163), which
+refuses until every speaker is named (`/speakers`, line 162) and no segment is unattributed; for other material,
+`first-flow.source-review` (`first-flow.mjs` lines 236 to 244). Both are open to any actor today (finding 2).
+
+The smallest honest way for the whole journey to work inside version two needs no new server command for the
+review itself. Version two already reaches the recording route through the registry
+(`.transcription.id.action`, `subject.js` line 739) and already reads the transcript's proof
+(`transcript-check.id`, line 738). So, in piece B's shared file: the transcript row gains "Confirm this
+transcript", which shows the transcript's words and speakers in place, asks for a name for each unnamed speaker
+(one field for a Speak recording), and on his press calls `speakers` then `review` with `confirmed:true` and the
+`expected` he was shown. Confirming rewrites the transcript file's review line, so its hash changes: confirm
+first, then "Use the transcript", then "Use it for Check", or re-read the hash between presses; the walk must
+prove the order. With finding 2 in piece A, an assistant's page shows the "is for Adrian to do" line instead.
+The walk then types the speaker's name, confirms, and step 8 ends in a real result with no break and no visit
+to the existing workspace. This is option (b), and it is small enough to do now rather than later.
