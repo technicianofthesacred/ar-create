@@ -173,3 +173,22 @@ test('study-draft.capture-sources is a human-only draft write with no relay and 
  const refused=await f.cli(['call','study-draft.capture-sources'],{bindingId:randomUUID(),parentStudyId:'p',operationId:randomUUID(),expectedSourcesHash:null,sources:[{sourceId:randomUUID(),sourceHash:'0'.repeat(64)}]});
  assert.equal(refused.exitCode,5,JSON.stringify(refused.result));
 });
+
+test('study-draft.capture-sources.stop and the transcript review route are human-only, declared with their bodies, and reach the CLI and MCP through the registry',async t=>{
+ const f=await setup(t),list=f.capabilities.commands||f.capabilities,find=n=>list.find(x=>x.name===n);
+ const stop=find('study-draft.capture-sources.stop'),capture=find('study-draft.capture-sources'),review=find('.transcription.id.review'),action=find('.transcription.id.action'),source=find('first-flow.source-review'),prepare=find('first-flow.prepare');
+ assert.ok(stop&&capture&&review&&action&&source&&prepare);
+ assert.equal(stop.section,'draft');assert.deepEqual(stop.actors,['human']);assert.equal(stop.readOnly,false);assert.equal(stop.relay,undefined);assert.equal(stop.undo,undefined);assert.equal(stop.route,'/api/study-draft/capture-sources/stop');
+ assert.deepEqual(stop.schema.body,['bindingId','parentStudyId','operationId','expectedSourcesHash','sourceId','copiedHash']);
+ assert.ok(capture.schema.body.some(x=>/again\?/.test(x)),'again is declared on the capture body');
+ assert.deepEqual(review.actors,['human']);assert.equal(review.route,'/transcription/{id}/review');assert.deepEqual(action.actors,['any'],'the other transcript actions stay open');
+ assert.ok(list.indexOf(review)<list.indexOf(action),'the review entry is ahead of the generic action entry');
+ // Withdrawing a review is open, so source-review stays any; prepare stays open to assistants too.
+ assert.deepEqual(source.actors,['any']);assert.deepEqual(prepare.actors,['any']);assert.ok(source.schema.body.includes('reviewed'));assert.ok(prepare.schema.body.some(x=>/^sourceReviews/.test(x)));
+ const docs=fs.readFileSync(path.join(repo,'docs/CAPABILITIES.md'),'utf8');
+ assert.match(docs,/`study-draft\.capture-sources\.stop` \| `POST \/api\/study-draft\/capture-sources\/stop` \| human \| write/);assert.match(docs,/`\.transcription\.id\.review` \| `POST \/transcription\/\{id\}\/review` \| human \| write/);
+ // The CLI and the MCP build from the same registry: no hand-written list.
+ const refused=await f.cli(['call','study-draft.capture-sources.stop'],{bindingId:randomUUID(),parentStudyId:'p',operationId:randomUUID(),expectedSourcesHash:'0'.repeat(64),sourceId:randomUUID(),copiedHash:'0'.repeat(64)});
+ assert.equal(refused.exitCode,5,JSON.stringify(refused.result));
+ const shown=await f.cli(['list-commands']);assert.match(JSON.stringify(shown.result),/study-draft\.capture-sources\.stop/);
+});
