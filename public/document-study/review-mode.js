@@ -13,7 +13,7 @@
   const originalFetch=window.fetch.bind(window);
   window.fetch=(input,options)=>{
    const url=new URL(typeof input?.url==='string'?input.url:String(input),location.href);
-   if(url.origin!==location.origin||!url.pathname.startsWith('/api/'))return originalFetch(input,options);
+   if(url.origin!==location.origin||!(url.pathname.startsWith('/api/')||url.pathname.startsWith('/transcription/')))return originalFetch(input,options);
    if(!actor)return Promise.reject(Error('Choose a valid UI actor before using this workspace.'));
    const headers=new Headers(options?.headers??input?.headers);headers.set('X-AR-Actor',actor);headers.set('X-AR-Client','ui');
    return originalFetch(input,{...options,headers});
