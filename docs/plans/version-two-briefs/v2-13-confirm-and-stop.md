@@ -452,3 +452,110 @@ What was confirmed as the design says:
    Recommendation: yes.
 4. Leave the Library's "human review is recorded" label for a file that declares itself reviewed to a later stage?
    Recommendation: yes.
+
+## Code review of piece 1 (review is his alone, services)
+
+Reviewed 12 November 2026 against commit "Marking reviewed is his alone: services" in this worktree. Nothing in the
+code was changed. Checked by running: the touched test files as asked (84 of 84 pass), the twelve other test files
+that call a review path (`native-carousel-proposals`, `blank-source-article-http`, `collection-source-continuation`,
+`language-connection-http`, `review-native-carousel-proposals`, `study-ai-proposal-drawer`, `synthetic-restore`,
+`transcript-to-independent-outputs-journey`, `v2-subject`, `v2-write`, `v3-write`, `transcript-check`: 247 of 247
+pass), and throwaway probes on invented data outside the worktree, one of them run against both this commit and the
+commit before it.
+
+Verdict: the refusal is in the right places and holds. No non-human or unattributed caller could end with a review
+on file, or with Adrian's name on one, by any path tried. One change reaches Adrian's own calls, against Decision 1,
+and must be put back.
+
+What was proved by running:
+
+- Odd actors, in process, for `reviewSources`, `prepare` and transcript `review`: `"human:adrian "`, `" human:adrian"`,
+  `"human:adrian\n"`, `"Human:Adrian"`, `"HUMAN:ADRIAN"`, `["human:adrian"]`, `""`, `null`, no actor at all,
+  `unknown(in-process)`, `release:abcdef1`, `human:someone`: each 403, every file byte identical. Over HTTP the header
+  is trimmed by `parseActor` before the service sees it, so a padded header is Adrian by design (self-declared), not
+  a hole.
+- Replay: an assistant repeating Adrian's `source-review` operation is 403 before the replay. An assistant repeating
+  his `prepare` operation with the same input gets 200 and the current view (the same fields `first-flow.get` already
+  gives it), nothing written, his stamp unchanged. After the review is withdrawn, the replay does not bring it back:
+  `operation()` returns the view without running the step. Harmless; see Should fix 2.
+- Crafted `sourceReviews` as an assistant: a wrong hash then the right one for the same unreviewed note in one call,
+  an unreviewed entry placed after a reviewed one, an entry with an extra `by` key: 403, flow unchanged. Duplicates of
+  an entry already on file: prepared, stamp unchanged. An entry outside `sourceIds`: ignored (tested by the builder).
+  An unreviewed source with no entry listed before one with an entry answers 409 ("Review the exact current
+  source") instead of 403; nothing is written either way.
+- The stand-in stays confined: `validateTarget` (`structure-tests.mjs` 13) accepts only a `parentStudyId` that starts
+  `structure-test-`, the scope's project is that copy's own binding (`study-research-scope.mjs` 7), and an agent may
+  not send `sourceReviews` or `humanDecision` there (`first-flow.mjs` 198). The builder's test proves the real
+  subject's room is byte identical.
+- Transcript edit paths: the transcript check's `edit` (Adrian, from the app) after his confirmation resets the review
+  to unreviewed; an assistant is refused there already (`transcript-check.mjs` 236, `decider`). Every transcript-check
+  write goes through `corrections.edit`, which resets (`transcript-corrections.mjs` 47). `propose` then `decide`
+  apply as an assistant resets. `decide` reject of a hand edit to the Markdown keeps his review, correctly: it puts
+  back exactly the bytes he confirmed.
+- Order: `reviewSources` refuses before `operation`, so before the lock, the room and the replay. Transcript `review`
+  refuses before `lock`, `initialize` and `clean`, so before `writer.lock` and the mapping. `prepare` refuses inside
+  the step, after reads only; the one thing that can happen first is `state()` creating an empty room directory for
+  a project never attached (`first-flow.mjs` 34), which was so before and fails on "Attach these Library sources"
+  anyway.
+- An assistant's ordinary prepare with no `sourceReviews`, or with entries already on file, prepares as before and
+  moves no stamp. The one difference, intended by Decision 1: an old review on file with no stamp, or an assistant's,
+  is no longer restamped with the assistant's name.
+- "Reviewed by an assistant" stays tested by writing the old stamp in fixtures (`study-draft-capture-sources-review`
+  30 to 33 and 55 to 57, `-review-2` 80 and 105, `transcript-look` 51 to 54, `review-human-only` 57). No test that was
+  changed lost what it proved, with the one exception in Should fix 3. Refusal wording is plain and has no em dash.
+
+### Must fix
+
+1. **Adrian's prepare no longer restamps a review that is already on file.** `runtime/services/first-flow.mjs` 255:
+   the new condition `&&f.reviews[id]!==s.hash` was added for everyone, not only for non-humans. Before, when Adrian
+   pressed "Analyze" or "Prepare" with a ticked source whose review was on file but stamped by an assistant (or made
+   before stamps, with none), `stampReview` put his name on it; now it stays the assistant's or none. Proved by one
+   probe run on both commits: old stamp `agent:codex` or none, Adrian prepares with the entry; before: `human:adrian`
+   both times; now: `agent:codex` and none. Such material keeps reading "Not confirmed by you yet" and cannot be
+   used for Check, although he has just sent its exact hash. Decision 1 says "Adrian's calls take exactly today's
+   path." Correction: keep today's body for humans and gate only the others, for example
+   `if(!t?.managed&&reviews.some(r=>r.sourceId===id&&r.hash===s.hash)){if(!HUMAN_ACTORS.includes(currentActor()?.actor)){if(f.reviews[id]!==s.hash)requireHumanReview('Nothing was prepared.');}else{f.reviews[id]=s.hash;stampReview(f,id,s.hash);}}`.
+   Add a test in `tests/review-human-only.test.mjs`: a fixture with an assistant's old stamp and one with no stamp,
+   Adrian prepares with the entry, both read `human:adrian`.
+
+### Should fix
+
+1. **Test the transcript check's edit.** Decision 8 lists "a transcript check edit after his confirmation" among the
+   resets; `tests/review-human-only.test.mjs` 117 tests `speakers`, `edit` and `decide` apply but not it. It passes
+   when run (probe above), so add it: Adrian confirms, `createTranscriptCheck(...).edit` as `human:adrian` with client
+   `ui`, the review reads unreviewed.
+2. **Pin the `prepare` replay and say it in Decision 7.** The design's review asked for the replay row to be made
+   true or reworded. `reviewSources` now refuses first; `prepare` still answers 200 to an assistant repeating his
+   operation. It writes nothing and does not restore a withdrawn review, but neither is tested. Add to
+   `tests/review-human-only.test.mjs`: replay is 200, every file byte identical, and after a withdrawal the review is
+   still absent. Reword Decision 7's "Replay ... 403 at the gate before any replay" to name `prepare` as the exception.
+3. **Keep the unknown-key refusal on `source-review` pinned.** `tests/study-draft-capture-sources-review-2.test.mjs`
+   103 used to prove that `by` and `reviewedBy` in the body are refused 400. Now the assistant is refused 403 first,
+   and no test anywhere sends an extra key to `source-review` and expects 400. Add one line there sending `by` as
+   `human:adrian` (the actor) and expect 400, with the flow unchanged. Decision 7's row "Body fields ... 400 on
+   source-review" should read 403 for anyone not human and 400 for him.
+4. **`stampReview`'s keep rule is now reached only by the stand-in** (`first-flow.mjs` 52). The test that proved it
+   ("an assistant reviewing the same bytes after Adrian does not remove his confirmation", `-review-2` 111) now ends
+   at 403 and never reaches it. On a structure-test copy where Adrian reviewed first, an assistant's stand-in prepare
+   still relies on it. Either add a test there (Adrian reviews in the copy, the stand-in prepares, his stamp stays)
+   or note that the rule is kept on purpose for the stand-in.
+
+### Notes
+
+- The refusal names the actor by plain string concatenation (`first-flow.mjs` 14, `transcript-corrections.mjs`
+  165). An array actor, possible only in process, reads "human:adrian may not", and padding shows as typed. Over HTTP
+  neither can happen. `JSON.stringify(actor)` for anything not a plain known actor would make it exact; not needed now.
+- The `keep` rule inside transcript `review` (`transcript-corrections.mjs` 165) is dead now that only humans reach
+  it, as the design's review expected. Leave or remove; no effect.
+- A refusal's status depends on the order of `sourceIds` (403 or 409, see above). Both write nothing. If the attack
+  test is to assert 403 for "the right hash for an unreviewed note mixed with reviewed ones", it should list the
+  reviewed ones first or accept either.
+- The design listed `tests/study-first-flow.test.mjs` and `tests/study-draft-capture-sources.test.mjs` for change;
+  neither needed it: both already review as Adrian.
+
+### Can the registry piece build on this
+
+Yes, once Must fix 1 is made; it touches only `first-flow.mjs` and its own test. The service checks are first in
+both services, so piece 3's gate is a first look and the services stay the real check, as Must fix 1 of the design's
+review asked. `first-flow.source-review` must stay "any" in the registry because withdrawing is open; the service
+already separates the two.
