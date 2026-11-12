@@ -358,7 +358,7 @@ Outputs carousels; retiring Advanced or version two; type outside the six sizes 
 | V3-0 Advanced opens one exact piece | Sonnet | Opus | On main (#245) |
 | V3-a Version three's frame, default, borrowed screens, links each way | Opus | Sonnet | On main (#245) |
 | V3-b Version three's own Write in the approved look | Opus (built in place), Sonnet (moved into version three, Undo fix) | Opus, twice | On main (#246). Not tried in Safari, Firefox or on a real phone keyboard |
-| V3-1 Promises about his words and the three fixes in both fronts | | | Next. Until it lands, the newer-version choice in both fronts can discard or overwrite words |
+| V3-1 Promises about his words and the three fixes in both fronts | Opus | Opus | On main. The handoff is `2026-11-12-version-three-handoff.md` |
 | V3-2 onward | | | Not started |
 
 Things a later director should know:
