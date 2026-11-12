@@ -52,7 +52,7 @@ function diff(a,b){
 }
 const words=n=>n===1?'1 word':n+' words';
 function countLine(d,onlyAdds){
- if(onlyAdds)return `Adds ${words(d.add)}. Takes away none of yours.`;
+ if(onlyAdds||!d.cut)return `Adds ${words(d.add)}. Takes away none of yours.`;
  if(!d.add)return `Takes away ${words(d.cut)} of yours. Adds nothing.`;
  return `Takes away ${words(d.cut)} of yours, adds ${words(d.add)}.`;
 }
@@ -92,7 +92,7 @@ function para(id){
   if(s==='history'&&u.ver==='v3')return `<ins class="add">Netting is cheaper and one person can hang it in a morning. I asked why she still bothers with straw.</ins>`;
   return `Netting is cheaper and one person can hang it in a morning. I asked why she still bothers with straw${s==='recovered'&&u.rec!=='left'?', and whether her son will':''}.`;}
  if(id==='p5'){
-  const caret=s==='write'?`<span class="caret"></span><button class="atcaret" data-act="speak" title="Speak here: your words go in at the cursor">${icon('mic')}Speak</button>`:'';
+  const caret=s==='write'?`<span class="caret"></span><button class="ghost atcaret" data-act="speak" title="Speak here: your words go in at the cursor">${icon('mic')}Speak</button>`:'';
   return `She laughed. “Straw breathes,” she said. “The net only takes the light away.”${qm('14:32')}${caret}`;}
  if(id==='p6')return `<span class="${s==='write'?'':''}">She lets the old straw fall where it lies. By July it has gone back into the soil, and the rows are greener for it.</span>`;
  return '';
@@ -105,13 +105,13 @@ function top(){
  const chips=[[SUBJ,'#5d6b43'],['The first cup','#9b7a52'],['Circle of twelve','#6d7a7c'],['Small paintings of doors','#a0705a'],['The road north','#7b7f5a']];
  return `<header class="top"><button class="logo" data-act="note" data-note="Picture only: goes Home." aria-label="Home"><i></i></button>
  <nav class="places" aria-label="Places">${['Home','Research','Looks','Library'].map(p=>`<button class="place" data-act="note" data-note="Picture only: opens ${p}.">${p}</button>`).join('')}</nav>
- <div class="desk" aria-label="On your desk">${chips.map(([c,col],i)=>`<button class="chip" style="--c:${col}"${i===0?' aria-current="page"':''} data-act="note" data-note="${i===0?'You are in this subject.':'Picture only: opens '+esc(c)+' where you left it.'}" title="${esc(c)}"><i></i><span>${esc(c)}</span></button>`).join('')}<button class="more" data-act="note" data-note="Picture only: lists the subjects on your desk that do not fit here." hidden>+0</button></div>
+ <div class="desk" aria-label="On your desk">${chips.map(([c,col],i)=>`<button class="chip" style="--c:${col}"${i===0?' aria-current="page"':''} data-act="note" data-note="${i===0?'You are in this subject.':'Picture only: opens '+esc(c)+' where you left it.'}" title="${esc(c)}"><i></i><span>${esc(c)}</span></button>`).join('')}<button class="ghost more" data-act="note" data-note="Picture only: lists the subjects on your desk that do not fit here." hidden>+0</button></div>
  <span class="grow"></span>
  <button class="ghost wide" data-act="note" data-note="Picture only: find any subject, piece or source." aria-label="Find">${icon('search')}<kbd>⌘K</kbd></button>
  <button class="ghost wide needs" data-act="note" data-note="Picture only: the questions only you can answer."><i></i>Needs you · 4</button>
  <button class="ghost wide" data-act="note" data-note="Picture only: add a recording, photograph or thought to this subject.">${icon('plus')}Capture</button>
  <button class="iconb" data-act="theme" aria-label="Light or dark" title="Light or dark">${icon('sun')}</button>
- <button class="adv" data-act="note" data-note="Picture only: the existing workspace, at this piece and section.">Advanced</button></header>`;
+ <button class="ghost adv" data-act="note" data-note="Picture only: the existing workspace, at this piece and section.">Advanced</button></header>`;
 }
 /* the desk keeps whole chips: the ones that do not fit go into "+n" */
 function fitDesk(){
@@ -159,7 +159,7 @@ function phonebar(){
  if(['read','read-working','check','finish','states','focus'].includes(s))return '';
  if(s==='select'&&!u.kept)return `<nav class="pphone selbar" aria-label="Selected words">${selActs(true)}</nav>`;
  const live=s==='speak'&&u.speak!=='done';
- return `<nav class="pphone" aria-label="Writing"><button data-act="undo"${s==='start'?' disabled':''}>${icon('undo')}<span>Undo</span></button><button data-act="speak" aria-pressed="${live}">${live?'<span class="live-dot"></span><span>Stop</span>':icon('mic')+'<span>Speak</span>'}</button><button aria-pressed="${u.split}" data-act="split">${icon('book')}<span>Sources</span></button></nav>`;
+ return `<nav class="pphone" aria-label="Writing"><button class="ghost" data-act="undo"${s==='start'?' disabled':''}>${icon('undo')}<span>Undo</span></button><button class="ghost" data-act="speak" aria-pressed="${live}">${live?'<span class="live-dot"></span><span>Stop</span>':icon('mic')+'<span>Speak</span>'}</button><button class="ghost" aria-pressed="${u.split}" data-act="split">${icon('book')}<span>Sources</span></button></nav>`;
 }
 
 /* ---------- sources ---------- */
@@ -173,12 +173,12 @@ function sources(){
  const u=S.ui,open=u.src;
  const item=(id,ic,name,meta,body)=>`<div class="src${open===id?' open':''}"><button class="src-h" data-act="src" data-id="${id}" aria-expanded="${open===id}">${icon(ic)}<span><b>${name}</b><small>${meta}</small></span></button>${open===id?`<div class="src-body">${body}</div>`:''}</div>`;
  return `<aside class="col srccol" aria-label="Sources"><label class="field">${icon('search')}<input placeholder="Find in your sources" aria-label="Find in your sources"></label>
- ${item('walk','rec','Kirihara garden walk','Recording, 42 min · Mrs. Oda and you',`<div class="player"><button class="play" data-act="note" data-note="Picture only: plays the recording." aria-label="Play" title="Play">${icon('play')}</button>${wave(14)}<time>09:12</time></div>${transcript()}`)}
+ ${item('walk','rec','Kirihara garden walk','Recording, 42 min · Mrs. Oda and you',`<div class="player"><button class="iconb" data-act="note" data-note="Picture only: plays the recording." aria-label="Play" title="Play">${icon('play')}</button>${wave(14)}<time>09:12</time></div>${transcript()}`)}
  ${item('memo','mic','Walking back','Your voice memo, 6 min',`<p class="note-txt">The straw goes up by hand, pole by pole, until the rows sit in a green dusk. I came to help and she handed me a cup. Netting is cheaper, one person can hang it in a morning. She still does straw. I don’t know if the straw matters to the tea or only to her.</p>`)}
  ${item('train','note','On the train home','Your note',`<p class="note-txt">She never looked at the clock once. Early May, she said, is when the straw used to go up when she was a girl. Ask about the mill.</p>`)}
  ${item('taste','note','Tasting, second infusion','Your note',`<p class="note-txt">Second infusion, colour of wet moss. Broth, then morning.</p>`)}
  ${item('photos','photo','Photographs','6, from the garden walk',`<div class="photos">${PHOTOS.map(g=>`<span class="ph" style="--pg:${g}"></span>`).join('')}</div>`)}
- ${item('topic','topic','Shading tea','Research topic · 12 findings',`<p class="note-txt" style="font-family:var(--ui);font-size:var(--t14)">Shade before picking raises the savoury taste and lowers the bitter. Straw, reed and netting are all used; straw is the oldest.</p>`)}
+ ${item('topic','topic','Shading tea','Research topic · 12 findings',`<p class="says">Shade before picking raises the savoury taste and lowers the bitter. Straw, reed and netting are all used; straw is the oldest.</p>`)}
  </aside>`;
 }
 const PHOTOS=['linear-gradient(170deg,#62724a,#26301f)','linear-gradient(170deg,#9a8a6a,#3e3526)','linear-gradient(170deg,#455646,#1b241c)','linear-gradient(170deg,#7d6447,#2f2418)','linear-gradient(170deg,#a3b08a,#4b5a3a)','linear-gradient(170deg,#58533f,#1f1d16)'];
@@ -186,13 +186,13 @@ const PHOTOS=['linear-gradient(170deg,#62724a,#26301f)','linear-gradient(170deg,
 /* ---------- a proposal: what goes, what comes, in his words ---------- */
 function proposal(id){
  const p=PROPS[id],st=S.ui[id],d=diff(p.before,p.after),adds=!p.before;
- if(st==='taken')return `<div class="item"><h3>${p.title}</h3><p class="done">${icon('check')}Put in your text at 14:06. <button class="link" data-act="prop" data-id="${id}" data-v="wait">Undo</button></p></div>`;
- if(st==='left')return `<div class="item"><h3>${p.title}</h3><p class="done dim">You kept your words. Claude will not propose this again. <button class="link" data-act="prop" data-id="${id}" data-v="wait">Undo</button></p></div>`;
+ if(st==='taken')return `<div class="item"><h3>${p.title}</h3><p class="done">${icon('check')}<span>Put in your text at 14:06.</span><button class="ghost" data-act="prop" data-id="${id}" data-v="wait">${icon('undo')}Undo</button></p></div>`;
+ if(st==='left')return `<div class="item"><h3>${p.title}</h3><p class="done"><span>You kept your words. Claude will not propose this again.</span><button class="ghost" data-act="prop" data-id="${id}" data-v="wait">${icon('undo')}Undo</button></p></div>`;
  const heard=line(p.heard);
- return `<div class="item${id==='p1'?' on':''}"><h3>${p.title}</h3><p class="by">${p.by}</p><p class="count">${countLine(d,adds)}</p>
- <div class="ba">${adds?`<div><p class="label">After your paragraph</p><p class="ctx">…${p.ctx}</p></div>`:`<div><p class="label">Your words now</p><p>${d.before}</p></div>`}<div><p class="label">${adds?'The new paragraph':'With this change'}</p><p>${d.after}</p></div></div>
+ return `<div class="item${id==='p1'?' on':''}"><div class="hd"><h3>${p.title}</h3><p class="by">${p.by}.<br>${countLine(d,adds)}</p></div>
+ <div class="ba">${adds?`<div><p class="label">After your paragraph</p><p class="pr ctx">…${p.ctx}</p></div>`:`<div><p class="label">Your words now</p><p class="pr">${d.before}</p></div>`}<div><p class="label">${adds?'The new paragraph':'With this change'}</p><p class="pr">${d.after}</p></div></div>
  <p class="by">She said at ${heard[0]}: “${esc(heard[2])}”</p>
- <div class="row"><button class="btn pri" data-act="prop" data-id="${id}" data-v="taken">Put it in my text</button>${id==='p1'?`<button class="btn" data-go="proposal-edit">Edit it first</button>`:`<button class="btn" data-act="note" data-note="Picture only: opens the new paragraph in your text to edit before it goes in (see Edit a proposal first).">Edit it first</button>`}<button class="ghost" data-act="prop" data-id="${id}" data-v="left">Keep my words</button></div></div>`;
+ <div class="acts"><button class="btn pri" data-act="prop" data-id="${id}" data-v="taken">Put it in my text</button>${id==='p1'?`<button class="btn" data-go="proposal-edit">Edit it first</button>`:`<button class="btn" data-act="note" data-note="Picture only: opens the new paragraph in your text to edit before it goes in (see Edit a proposal first).">Edit it first</button>`}<button class="ghost" data-act="prop" data-id="${id}" data-v="left">Keep my words</button></div></div>`;
 }
 function proposals(){
  const n=['p1','p2'].filter(k=>S.ui[k]==='wait').length;
@@ -227,7 +227,7 @@ function article(){
  let mill='';
  if(s==='speak'||s==='speak-done'){
   const live=s==='speak'&&u.speak!=='done';
-  mill=`<h2>The mill</h2><p>The leaves go to the steamer the same afternoon, ${live?'<span class="hearing">still cool from the shade. Her son runs the mill now</span><span class="caret"></span><button class="atcaret live" data-act="speak" title="Stop listening (Esc)"><span class="live-dot"></span>Listening · Stop</button>':'still cool from the shade. Her son runs the mill now.<span class="caret"></span><button class="atcaret" data-act="speak" title="Speak here">'+icon('mic')+'Speak</button>'}</p>`;}
+  mill=`<h2>The mill</h2><p>The leaves go to the steamer the same afternoon, ${live?'<span class="hearing">still cool from the shade. Her son runs the mill now</span><span class="caret"></span><button class="ghost atcaret live" data-act="speak" title="Stop listening (Esc)"><span class="live-dot"></span>Listening · Stop</button>':'still cool from the shade. Her son runs the mill now.<span class="caret"></span><button class="ghost atcaret" data-act="speak" title="Speak here">'+icon('mic')+'Speak</button>'}</p>`;}
  const rest=done?`<h2>The mill</h2><p>The leaves go to the steamer the same afternoon, still cool from the shade. Her son runs the mill now. He talks about the straw as if it were weather.</p><h2>What I tasted</h2><p>On the bench she poured the second infusion. It was the colour of wet moss and it tasted of nothing I could name at first, then of broth, then of the morning.</p><h2>Leaving</h2><p>I still do not know whether the straw matters to the tea or only to her. She would say that is the wrong question.</p>`:'';
  const inl=inW?`<div class="inline">${proposal('p1')}</div>`:'';
  const inl2=inW?`<div class="inline">${proposal('p2')}</div>`:'';
@@ -244,8 +244,8 @@ function phoneMessage(){
 const VERS=[['Today'],['cur','Current version','14:06 · You','You'],['v1','Her exact words put in, in Opening','14:06 · You, from Claude’s proposal','Claude'],['v2','Two changes put back after the app closed','14:01 · You','You'],['v3','Two sentences typed in The straw','13:40 · You','You'],['v4','41 words spoken into Opening','13:12 · You, spoken','You'],['10 November'],['v5','“the rows sit in a green dusk” kept exactly','18:20 · You','You','Before Lin read it'],['v6','First draft, from 9 of your own sentences','17:55 · You','You']];
 function versions(){
  const u=S.ui,sel=VERS.find(v=>v[0]===u.ver);
- const head=sel&&sel[0]!=='cur'?`<div class="vhead"><div class="row" style="flex-wrap:nowrap;align-items:flex-start"><b class="grow">${sel[1]}</b><button class="iconb" data-act="ver" data-v="" aria-label="Back to the current version" title="Back to the current version">${icon('x')}</button></div><p class="quiet">${sel[2]}. What changed is marked in the page.</p><div class="row"><button class="btn pri" data-act="restore" data-v="${sel[0]}">${icon('restore')}Restore this version</button><button class="ghost" data-act="note" data-note="Picture only: give this version a name, like “Before Lin read it”. Named versions are kept for good.">${icon('tag')}Name it</button></div></div>`:'';
- return `${head}<p class="mg-h"><span>Earlier versions</span></p><div class="ver">${VERS.map(v=>v.length===1?`<p class="day">${v[0]}</p>`:`<button class="v" aria-pressed="${u.ver===v[0]||(!u.ver&&v[0]==='cur')}" data-act="ver" data-v="${v[0]==='cur'?'':v[0]}">${v[4]?`<span class="name">${icon('tag').replace('class="ic"','class="ic" style="width:12px;height:12px;vertical-align:-2px"')} ${v[4]}</span>`:''}<b>${v[1]}</b><small><i style="--who:${v[3]==='Claude'?'#7c8fb0':'var(--warm)'}"></i>${v[2]}</small></button>`).join('')}</div><p class="quiet" style="padding:12px 0 0">Restoring keeps the current words as a version too. Nothing is lost.</p>`;
+ const head=sel&&sel[0]!=='cur'?`<div class="vhead"><div class="row"><h3 class="grow">${sel[1]}</h3><button class="iconb" data-act="ver" data-v="" aria-label="Back to the current version" title="Back to the current version">${icon('x')}</button></div><p class="quiet">${sel[2]}. What changed is marked in the page.</p><div class="acts"><button class="btn pri" data-act="restore" data-v="${sel[0]}">${icon('restore')}Restore this version</button><button class="ghost" data-act="note" data-note="Picture only: give this version a name, like “Before Lin read it”. Named versions are kept for good.">${icon('tag')}Name it</button></div></div>`:'';
+ return `${head}<p class="mg-h"><span>Earlier versions</span></p><div class="ver">${VERS.map(v=>v.length===1?`<p class="day">${v[0]}</p>`:`<button class="v" aria-pressed="${u.ver===v[0]||(!u.ver&&v[0]==='cur')}" data-act="ver" data-v="${v[0]==='cur'?'':v[0]}">${v[4]?`<h3>${v[4]}</h3><span class="what">${v[1]}</span>`:`<h3>${v[1]}</h3>`}<small>${v[2]}</small></button>`).join('')}</div><p class="quiet" style="padding:4px 0 0 12px">Restoring keeps the current words as a version too. Nothing is lost.</p>`;
 }
 const FD=[
  {id:'f1',k:'warn',h:'Your note gives a different date',where:'Opening, first paragraph',
@@ -264,41 +264,41 @@ const FD=[
   ev:[['From your plan','The mill · What I tasted · Leaving',1]],acts:[['go','Start writing The mill']],res:{}}];
 function findings(){
  const u=S.ui,left=FD.filter(f=>!u.res[f.id]).length;
- return `<p class="mg-h"><span>${left?`${left} to look at`:'Nothing left to look at'} · checked 14:06</span><span class="grow"></span><button class="ghost" data-go="read-working" title="Check again against all six sources">${icon('refresh')}Check again</button></p>`+
+ return `<p class="mg-h"><span>${left?`${left} to look at`:'Nothing left to look at'}</span><span class="quiet">checked 14:06</span><span class="grow"></span><button class="ghost" data-go="read-working" title="Check again against all six sources">${icon('refresh')}Check again</button></p>`+
  FD.map(f=>{const r=u.res[f.id];
-  if(r)return `<div class="fd ok"><h3><i></i>${f.h}</h3><p class="done" style="color:var(--good);font:500 var(--t13)/1.4 var(--ui)">${f.res[r]} <button class="link" data-act="res" data-id="${f.id}" data-v="">Undo</button></p></div>`;
-  return `<div class="fd ${f.k}${u.fd===f.id?' on':''}" data-act="fd" data-v="${f.id}"><h3><i></i>${f.h}</h3><p class="where">${f.where}</p><div class="evs">${f.ev.map(([l,t,ui])=>`<div><p class="label">${l}</p><p${ui?' class="says" style="font:400 var(--t14)/1.5 var(--ui)"':''}>${t}</p></div>`).join('')}</div><div class="row">${f.acts.map(([a,l],i)=>a==='go'?`<button class="btn${i?'':' pri'}" data-go="speak">${l}</button>`:a==='rewrite'?`<button class="btn" data-act="rewrite" data-v="1">${l}</button>`:`<button class="btn${i?'':' pri'}" data-act="res" data-id="${f.id}" data-v="${a}">${l}</button>`).join('')}</div></div>`;}).join('')+
- `<div class="oks"><p class="label">Matches your sources</p><span>${icon('check')}“First you watch” is what she said at 03:40.</span><span>${icon('check')}“Twenty days…” is what she said at 09:12.</span><span>${icon('check')}“Straw breathes…” is what she said at 14:32.</span><span>${icon('check')}Your kept words “the rows sit in a green dusk” are unchanged.</span></div>`;
+  if(r)return `<div class="fd ok"><h3>${f.h}</h3><p class="done">${icon('check')}<span>${f.res[r]}</span><button class="ghost" data-act="res" data-id="${f.id}" data-v="">${icon('undo')}Undo</button></p></div>`;
+  return `<div class="fd ${f.k}${u.fd===f.id?' on':''}" data-act="fd" data-v="${f.id}"><div class="hd"><h3>${f.h}</h3><p class="where">${f.where}</p></div><div class="evs">${f.ev.map(([l,t,ui])=>`<div><p class="label">${l}</p><p class="${ui?'says':'pr'}">${t}</p></div>`).join('')}</div><div class="acts">${f.acts.map(([a,l],i)=>a==='go'?`<button class="btn${i?'':' pri'}" data-go="speak">${l}</button>`:a==='rewrite'?`<button class="btn" data-act="rewrite" data-v="1">${l}</button>`:`<button class="btn${i?'':' pri'}" data-act="res" data-id="${f.id}" data-v="${a}">${l}</button>`).join('')}</div></div>`;}).join('')+
+ `<div class="oks"><h3>Matches your sources</h3><span>${icon('check')}“First you watch” is what she said at 03:40.</span><span>${icon('check')}“Twenty days…” is what she said at 09:12.</span><span>${icon('check')}“Straw breathes…” is what she said at 14:32.</span><span>${icon('check')}Your kept words “the rows sit in a green dusk” are unchanged.</span></div>`;
 }
 function finishPanel(){
  const u=S.ui;
- if(u.fin)return `<div class="item fin"><h3>Finished, 14 November</h3><p class="says">Kept as the first edition. A change from here makes a second edition; the first stays as it is.</p><div class="steps-mini"><div><span class="stp done"></span>The words</div><div><span class="stp now"></span>Your yes</div><div><span class="stp"></span>Publish</div></div><div class="row"><button class="btn pri lg" data-act="note" data-note="Picture only: opens ${SUBJ} at Share, on the step Your yes.">Go to Share${icon('right')}</button><button class="ghost" data-act="fin" data-v="0">Undo</button></div></div>`;
- return `<div class="item fin"><h3>Nothing left to look at</h3><ul><li>${icon('check')}All five parts are written.</li><li>${icon('check')}Four quotes are what she said.</li><li>${icon('check')}Your kept words are unchanged.</li><li>${icon('check')}Every sentence is yours or one you chose.</li></ul><div class="row"><button class="btn pri lg" data-act="fin" data-v="1">Mark the Article finished</button></div></div>`;
+ if(u.fin)return `<div class="item fin"><h3>Finished, 14 November</h3><p class="says">Kept as the first edition. A change from here makes a second edition; the first stays as it is.</p><div class="steps-mini"><div><span class="stp done"></span>The words</div><div><span class="stp now"></span>Your yes</div><div><span class="stp"></span>Publish</div></div><div class="acts"><button class="btn pri" data-act="note" data-note="Picture only: opens ${SUBJ} at Share, on the step Your yes.">Go to Share${icon('right')}</button><button class="ghost" data-act="fin" data-v="0">Undo</button></div></div>`;
+ return `<div class="item fin"><h3>Nothing left to look at</h3><ul><li>${icon('check')}All five parts are written.</li><li>${icon('check')}Four quotes are what she said.</li><li>${icon('check')}Your kept words are unchanged.</li><li>${icon('check')}Every sentence is yours or one you chose.</li></ul><div class="acts"><button class="btn pri" data-act="fin" data-v="1">Mark the Article finished</button></div></div>`;
 }
 function saveItem(){
  const u=S.ui;
  if(u.save==='saved')return `<div class="item"><h3>Saved</h3><p class="done">${icon('check')}Everything since 14:06 is saved, at 14:10.</p></div>`;
  const trying=u.save==='trying';
- return `<div class="item on"><h3>${u.save==='failed2'?'Still not saved':'Your changes since 14:06 are not saved yet'}</h3>
+ return `<div class="item on"><div class="hd"><h3>${u.save==='failed2'?'Still not saved':'Your changes since 14:06 are not saved yet'}</h3>${u.save==='failed2'?'<p class="by">Tried at 14:06, 14:08 and 14:09. The app has not answered.</p>':''}</div>
  <p class="says"><b>Try again</b> sends them to the app now.</p>
  <p class="says"><b>Meanwhile</b> they are kept on this device, so you can keep writing.</p>
  <p class="says"><b>If it fails again</b>, copy all your words and paste them anywhere safe, such as a note.</p>
- <div class="row"><button class="btn pri" data-act="retry"${trying?' disabled':''}>${trying?'<span class="spin"></span>Trying':'Try again'}</button><button class="btn" data-act="copy">${icon('copy')}Copy all my words</button></div>
- ${u.save==='failed2'?'<p class="by">Tried at 14:06, 14:08 and 14:09. The app has not answered.</p>':''}</div>`;
+ <div class="acts"><button class="btn pri" data-act="retry"${trying?' disabled':''}>${trying?'<span class="spin"></span>Trying':'Try again'}</button><button class="btn" data-act="copy">${icon('copy')}Copy all my words</button></div>
+ </div>`;
 }
 function marginBody(){
  const s=S.screen,u=S.ui;
  if(s==='write'||s==='quote'||s==='speak'||s==='speak-done')return proposals();
- if(s==='select')return (u.kept?`<div class="item"><h3>Kept exactly</h3><p class="says">“the black netting came” cannot be changed by anyone, Claude included, until you unkeep it.</p><p><button class="link" data-act="keep" data-v="0">Undo</button></p></div>`:`<div class="selp"><p class="label">Selected</p><p class="ev">“the black netting came”</p><div class="acts">${selActs(false)}</div></div>`)+proposals();
+ if(s==='select')return (u.kept?`<div class="item"><h3>Kept exactly</h3><p class="says">“the black netting came” cannot be changed by anyone, Claude included, until you unkeep it.</p><p class="done"><button class="ghost" data-act="keep" data-v="0">${icon('undo')}Undo</button></p></div>`:`<div class="selp"><p class="label">Selected</p><p class="ev">“the black netting came”</p><div class="acts">${selActs(false)}</div></div>`)+proposals();
  if(s==='proposal-edit')return `<div class="item on"><h3>${PROPS.p1.title}</h3><p class="says">Open in your text. Change anything, then put it in. Her words in quote marks stay exactly as she said them.</p></div>`+proposal('p2');
  if(s==='history')return versions();
  if(s==='check')return findings();
  if(s==='finish')return finishPanel();
- if(s==='conflict')return u.conf?`<div class="item"><h3>Two versions</h3><p class="done">${icon('check')}You kept ${u.conf==='both'?'both':'the one written '+(u.conf==='phone'?'on your phone':'here')}. ${u.conf==='both'?'':'The other is in Earlier versions.'} <button class="link" data-act="conf" data-v="">Undo</button></p></div>`:`<div class="item on"><h3>One paragraph, written in two places</h3><p class="says">You changed the second paragraph on your phone at 14:10 and here at 14:12. Both are in the page with what differs marked. Keep one, or both. The one you do not keep stays in Earlier versions.</p></div>`;
+ if(s==='conflict')return u.conf?`<div class="item"><h3>Two versions</h3><p class="done">${icon('check')}You kept ${u.conf==='both'?'both':'the one written '+(u.conf==='phone'?'on your phone':'here')}. ${u.conf==='both'?'':'The other is in Earlier versions.'} <button class="ghost" data-act="conf" data-v="">${icon('undo')}Undo</button></p></div>`:`<div class="item on"><h3>One paragraph, written in two places</h3><p class="says">You changed the second paragraph on your phone at 14:10 and here at 14:12. Both are in the page with what differs marked. Keep one, or both. The one you do not keep stays in Earlier versions.</p></div>`;
  if(s==='recovered'){
-  if(u.rec)return `<div class="item"><h3>Words kept on this device</h3><p class="done">${icon('check')}${u.rec==='back'?'Put back and saved at 14:01.':'Left out. They stay in Earlier versions.'} <button class="link" data-act="rec" data-v="">Undo</button></p></div>`;
+  if(u.rec)return `<div class="item"><h3>Words kept on this device</h3><p class="done">${icon('check')}${u.rec==='back'?'Put back and saved at 14:01.':'Left out. They stay in Earlier versions.'} <button class="ghost" data-act="rec" data-v="">${icon('undo')}Undo</button></p></div>`;
   const d=diff('Netting is cheaper and one person can hang it in a morning. I asked why she still bothers with straw.','Netting is cheaper and one person can hang it in a morning. I asked why she still bothers with straw, and whether her son will.');
-  return `<div class="item on"><h3>Words kept on this device</h3><p class="says">The app closed at 13:58 before this change in The straw was saved.</p><p class="count">${countLine(d)}</p><div class="ba"><div><p class="label">Saved</p><p>${d.before}</p></div><div><p class="label">Kept on this device</p><p>${d.after}</p></div></div><div class="row"><button class="btn pri" data-act="rec" data-v="back">Put them back</button><button class="ghost" data-act="rec" data-v="left">Leave them out</button></div></div>`;}
+  return `<div class="item on"><div class="hd"><h3>Words kept on this device</h3><p class="by">The app closed at 13:58 before this change in The straw was saved.<br>${countLine(d)}</p></div><div class="ba"><div><p class="label">Saved</p><p class="pr">${d.before}</p></div><div><p class="label">Kept on this device</p><p class="pr">${d.after}</p></div></div><div class="acts"><button class="btn pri" data-act="rec" data-v="back">Put them back</button><button class="ghost" data-act="rec" data-v="left">Leave them out</button></div></div>`;}
  if(s==='save-failed')return saveItem()+proposals();
  return '';
 }
@@ -316,9 +316,9 @@ function writeScreen(){
 function startScreen(){
  const g=(part,lines)=>`<h2>${part}</h2>${lines?lines.map(([t,w])=>`<p>${t}<button class="qm" data-act="note" data-note="Picture only: shows where you said or wrote this: ${w}." aria-label="From ${w}" title="From ${w}"></button></p>`).join(''):''}`;
  return `<main class="desk3 nomg${S.ui.split?' split':''}">${sources()}<article class="page"><div class="text"><h1>Twenty days of shade</h1>
- <div class="row" style="margin:6px 0 10px"><button class="btn pri lg" data-go="write">Start from your own words</button><button class="btn lg" data-go="speak">${icon('mic')}Speak</button><button class="btn lg" data-act="note" data-note="Picture only: puts the cursor on the empty page under the title.">${icon('pen')}Type</button></div>
+ <div class="row" style="margin:6px 0 10px"><button class="btn pri" data-go="write">Start from your own words</button><button class="btn" data-go="speak">${icon('mic')}Speak</button><button class="btn" data-act="note" data-note="Picture only: puts the cursor on the empty page under the title.">${icon('pen')}Type</button></div>
  <p class="quiet" style="margin-bottom:30px">Below: 9 sentences you said or wrote, in the order of your plan. Mrs. Oda’s words stay in Sources, ready to quote.</p>
- <div style="color:var(--ink2)">
+ <div>
  ${g('Opening',[['The straw goes up by hand, pole by pole, until the rows sit in a green dusk.','Walking back, 00:40'],['I came to help and she handed me a cup.','Walking back, 01:15'],['She never looked at the clock once.','On the train home']])}
  ${g('The straw',[['Netting is cheaper, one person can hang it in a morning. She still does straw.','Walking back, 02:30'],['Why still the straw?','Kirihara garden walk, 14:20']])}
  ${g('The mill',[['Ask about the mill.','On the train home']])}
@@ -331,7 +331,7 @@ function readScreen(){
  const rp=id=>`<p class="read-para${u.para===id?' on':''}" data-act="para" data-v="${id}">${para(id)}</p>${PIDS[id]?excerpt(PIDS[id]):''}${u.para===id?`<div class="para-act"><button class="btn" data-go="write">${icon('pen')}Change this paragraph</button><button class="ghost" data-act="note" data-note="Picture only: a note to yourself beside this paragraph.">${icon('note')}Add a note for myself</button></div>`:''}`;
  return `<main class="desk3 one"><article class="page"><div class="text"><h1>Twenty days of shade</h1><figure><div class="lead-photo" role="img" aria-label="Straw screens over the rows at dawn (drawn)"></div><figcaption class="cap">Straw screens over the rows at dawn.</figcaption></figure>
  ${rp('p1')}${rp('p2')}${rp('p3')}<h2>The straw</h2>${rp('p4')}${rp('p5')}
- <div class="read-end"><p>Three parts are not written yet: The mill, What I tasted, Leaving.</p><div class="row"><button class="btn pri lg" data-go="check">Check it</button><button class="ghost" data-go="write">${icon('pen')}Back to writing</button></div></div></div></article></main>`;
+ <div class="read-end"><p class="quiet">Three parts are not written yet: The mill, What I tasted, Leaving.</p><div class="row"><button class="btn pri" data-go="check">Check it</button><button class="ghost" data-go="write">${icon('pen')}Back to writing</button></div></div></div></article></main>`;
 }
 
 /* ---------- the Carousel: the slides themselves ---------- */
@@ -358,7 +358,7 @@ function fitLine(s){
 }
 function carouselScreen(){
  const u=S.ui,post=S.screen==='carousel-post',SL=slides(),cur=SL[u.slide];
- const strip=`<nav class="strip" aria-label="Slides and post text">${SL.map((s,i)=>`<button${!post&&u.slide===i?' aria-current="true"':''} data-act="slide" data-v="${i}" title="${s.role}, ${s.code} ${LAYOUTS[s.code].name}">${slideHTML(s,{mini:1})}${fits(s)?'':'<span class="warnmark" aria-label="Words do not fit">!</span>'}<span class="lbl">${i+1} · ${s.code}</span></button>`).join('')}<button${post?' aria-current="true"':''} data-go="carousel-post" title="The post text"><span class="postthumb">${icon('note')}</span><span class="lbl">Post text</span></button></nav>`;
+ const strip=`<nav class="strip" aria-label="Slides and post text">${SL.map((s,i)=>`<button${!post&&u.slide===i?' aria-current="true"':''} data-act="slide" data-v="${i}" title="${s.role}, ${s.code} ${LAYOUTS[s.code].name}">${slideHTML(s,{mini:1})}${fits(s)?'':'<span class="warnmark" role="img" aria-label="Words do not fit"></span>'}<span class="lbl">${i+1} · ${s.code}</span></button>`).join('')}<button${post?' aria-current="true"':''} data-go="carousel-post" title="The post text"><span class="postthumb">${icon('note')}</span><span class="lbl">Post text</span></button></nav>`;
  let stage,panel;
  if(post){
   stage=`<div class="stage"><div class="post"><p class="acct"><i></i>teajia</p>${slideHTML(SL[0],{mini:1})}<p class="caption" contenteditable="true" spellcheck="false">Twenty days under straw. Mrs. Oda still shades her tea the old way, pole by pole and armful by armful, because <span class="kept">straw breathes</span> and netting only takes the light away. The whole story is in the magazine.</p><p class="quiet">214 of 2,200 characters. The first 125 show before “more”, ending at “pole by pole”.</p></div></div>`;
@@ -367,16 +367,16 @@ function carouselScreen(){
   const L=LAYOUTS[cur.code],over=!fits(cur);
   stage=`<div class="stage"><p class="cap2"><b>${cur.role}</b><span>${cur.code} · ${L.name}</span><span class="grow"></span><span>${u.slide+1} of ${SL.length}</span></p>${slideHTML(cur,{edit:1})}<div style="width:min(100%,460px)">${fitLine(cur)}</div></div>`;
   const alts=['S2','B2','E1'].filter(c=>c!==cur.code).concat(cur.code==='S2'?[]:[]).slice(0,3);
-  const layItem=`<div class="item"><h3>Layout: ${cur.code}, ${L.name}</h3><p class="says">Holds ${L.holds}.</p>${u.lay?`<p class="label">Layouts with room for these words</p><div class="lays">${['S2','B2','P1'].map(c=>{const s2={...cur,code:c};return `<button${c===cur.code?' aria-current="true"':''} data-act="lay" data-v="${c}">${slideHTML(s2,{mini:1})}<span>${c} ${LAYOUTS[c].name}</span><small>${fits(s2)?'Fits':'Too long'}</small></button>`;}).join('')}</div><div class="row"><button class="ghost" data-act="layopen" data-v="0">${icon('x')}Close</button><button class="link" data-act="note" data-note="Picture only: every layout in the Teajiā look, grouped by row, with a find field, as the slide studio has today.">All 59 layouts</button></div>`:`<div class="row"><button class="btn" data-act="layopen" data-v="1">${icon('layout')}Change the layout</button></div>`}</div>`;
+  const layItem=`<div class="item"><h3>Layout: ${cur.code}, ${L.name}</h3><p class="says">Holds ${L.holds}.</p>${u.lay?`<p class="label">Layouts with room for these words</p><div class="lays">${['S2','B2','P1'].map(c=>{const s2={...cur,code:c};return `<button${c===cur.code?' aria-current="true"':''} data-act="lay" data-v="${c}">${slideHTML(s2,{mini:1})}<span>${c} ${LAYOUTS[c].name}</span><small>${fits(s2)?'Fits':'Too long'}</small></button>`;}).join('')}</div><div class="acts"><button class="ghost" data-act="layopen" data-v="0">${icon('x')}Close</button><button class="ghost" data-act="note" data-note="Picture only: every layout in the Teajiā look, grouped by row, with a find field, as the slide studio has today.">All 59 layouts</button></div>`:`<div class="acts"><button class="btn" data-act="layopen" data-v="1">${icon('layout')}Change the layout</button></div>`}</div>`;
   let propItem='';
   if(u.slide===3&&cur.code==='B2'){
    const d=diff(LONG,SHORT);
-   if(u.c4==='wait')propItem=`<div class="item on"><h3>Shorter words for this slide</h3><p class="by">Claude, cut from your own sentence. Nothing new is added.</p><p class="count">${countLine(d)}</p><div class="ba2"><div><p class="label">Now</p>${slideHTML({...cur,w:LONG},{mini:1})}</div><div><p class="label">With this change</p>${slideHTML({...cur,w:SHORT},{mini:1})}</div></div><div class="ba"><div><p class="label">Your words now</p><p>${d.before}</p></div><div><p class="label">With this change</p><p>${d.after}</p></div></div><div class="row"><button class="btn pri" data-act="c4" data-v="taken">Put it on the slide</button><button class="btn" data-act="note" data-note="Picture only: puts the shorter words on the slide for you to change before they stay.">Edit it first</button><button class="ghost" data-act="c4" data-v="left">Keep my words</button></div></div>`;
-   else propItem=`<div class="item"><h3>Shorter words for this slide</h3><p class="done${u.c4==='left'?' dim':''}">${u.c4==='taken'?icon('check')+'On the slide at 14:12.':'You kept your words.'} <button class="link" data-act="c4" data-v="wait">Undo</button></p></div>`;
+   if(u.c4==='wait')propItem=`<div class="item on"><div class="hd"><h3>Shorter words for this slide</h3><p class="by">Claude, cut from your own sentence. Nothing new is added.<br>${countLine(d)}</p></div><div class="ba2"><div><p class="label">Now</p>${slideHTML({...cur,w:LONG},{mini:1})}</div><div><p class="label">With this change</p>${slideHTML({...cur,w:SHORT},{mini:1})}</div></div><div class="ba"><div><p class="label">Your words now</p><p class="pr">${d.before}</p></div><div><p class="label">With this change</p><p class="pr">${d.after}</p></div></div><div class="acts"><button class="btn pri" data-act="c4" data-v="taken">Put it on the slide</button><button class="btn" data-act="note" data-note="Picture only: puts the shorter words on the slide for you to change before they stay.">Edit it first</button><button class="ghost" data-act="c4" data-v="left">Keep my words</button></div></div>`;
+   else propItem=`<div class="item"><h3>Shorter words for this slide</h3><p class="done">${u.c4==='taken'?icon('check')+'<span>On the slide at 14:12.</span>':'<span>You kept your words.</span>'}<button class="ghost" data-act="c4" data-v="wait">${icon('undo')}Undo</button></p></div>`;
   }
-  const phItem=['C1','S2','B2','F1'].includes(cur.code)?`<div class="item"><h3>Photograph</h3><p class="says">Her hands, sorting the leaves.</p>${u.ph?`<div class="photos">${PHOTOS.map((g,i)=>`<button class="ph" style="--pg:${g};border:0;padding:0${i===3?';box-shadow:0 0 0 2px var(--br)':''}" data-act="ph" data-v="0" aria-label="Photograph ${i+1}"></button>`).join('')}</div>`:`<div class="row"><button class="btn" data-act="ph" data-v="1">${icon('photo')}Change the photograph</button></div>`}</div>`:'';
+  const phItem=['C1','S2','B2','F1'].includes(cur.code)?`<div class="item"><h3>Photograph</h3><p class="says">Her hands, sorting the leaves.</p>${u.ph?`<div class="photos">${PHOTOS.map((g,i)=>`<button class="ph" style="--pg:${g};border:0;padding:0${i===3?';outline:2px solid var(--ink);outline-offset:1px':''}" data-act="ph" data-v="0" aria-label="Photograph ${i+1}"></button>`).join('')}</div>`:`<div class="acts"><button class="btn" data-act="ph" data-v="1">${icon('photo')}Change the photograph</button></div>`}</div>`:'';
   const wordsItem=`<div class="item"><h3>Words</h3><p class="says">${cur.w?'Click the words on the slide to change them. The Article keeps its own words.':'None on this slide.'}</p>${cur.q?`<p class="by">Exactly what she said at ${cur.q}.</p>`:''}</div>`;
-  panel=`${over?`<p class="mg-h"><span style="color:var(--warn)">${icon('warn')} These words do not fit this layout</span></p>`:''}${propItem}${layItem}${wordsItem}${phItem}`;
+  panel=`${over?`<p class="mg-h need">${icon('warn')}<span>These words do not fit this layout</span></p>`:''}${propItem}${layItem}${wordsItem}${phItem}`;
  }
  return `<main class="car${u.srcOpen?' srcopen':''}">${strip}${stage}<aside class="col cpanel"><div class="mg">${panel}</div></aside>${u.srcOpen?sources():''}</main>`;
 }
@@ -386,10 +386,9 @@ function statesScreen(){
  const cols=['Rest','Hover','Focus','Pressed','Disabled','Working'],cls=['','is-hover','is-focus','is-pressed','',''];
  const row=(name,mk)=>`<section class="strow"><p class="label">${name}</p><div class="stcells">${cols.map((c,i)=>`<figure><figcaption>${c}</figcaption>${mk(cls[i],i===4,i===5)}</figure>`).join('')}</div></section>`;
  const b=(k,lab)=>(c,dis,work)=>`<button class="${k} ${c}"${dis||work?' disabled':''} data-act="note" data-note="A picture of the ${cols[0]}…${cols[5]} states.">${work?'<span class="spin"></span>':''}${lab}</button>`;
- return `<main class="states"><h1>Control states</h1><p class="quiet">Every control keeps its size and place in every state. Hover changes the background; focus adds an outline outside the control; working keeps the label and adds a turning mark in reserved space.</p><div class="stlist">
- ${row('Main button',b('btn pri','Put it in my text'))}${row('Button',b('btn','Edit it first'))}${row('Quiet button',(c,d,w)=>`<button class="ghost ${c}"${d||w?' disabled':''} data-act="note" data-note="States picture.">${w?'<span class="spin"></span>':icon('undo')}Undo</button>`)}
- ${row('Icon button',(c,d,w)=>`<button class="iconb ${c}"${d||w?' disabled':''} data-act="note" data-note="States picture." aria-label="Play">${w?'<span class="spin"></span>':icon('play')}</button>`)}
- ${row('Speak at the cursor',(c,d,w)=>`<button class="atcaret ${c}${w?' live':''}"${d?' disabled style="opacity:.42"':''} data-act="note" data-note="States picture.">${w?'<span class="live-dot"></span>Listening · Stop':icon('mic')+'Speak'}</button>`)}
+ return `<main class="states"><h3>Control states</h3><p class="quiet">Three button kinds and icon buttons, the same on every screen. Each keeps its size and place in every state. Hover changes the background; focus adds an outline outside the control; working keeps the label and adds a turning mark.</p><div class="stlist">
+ ${row('Main action: one per item, the result he came for',b('btn pri','Put it in my text'))}${row('Ordinary action',b('btn','Edit it first'))}${row('Quiet action: undo, cancel, keep as it is',(c,d,w)=>`<button class="ghost ${c}"${d||w?' disabled':''} data-act="note" data-note="States picture.">${w?'<span class="spin"></span>':icon('undo')}Undo</button>`)}
+ ${row('Icon button: play, close, stop, undo in the bar',(c,d,w)=>`<button class="iconb ${c}"${d||w?' disabled':''} data-act="note" data-note="States picture." aria-label="Play">${w?'<span class="spin"></span>':icon('play')}</button>`)}
  </div></main>`;
 }
 

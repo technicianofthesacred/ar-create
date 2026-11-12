@@ -1,4 +1,80 @@
-# Write, Read and Check in version two: notes for Adrian (second pass)
+# Write, Read and Check in version two: notes for Adrian (third pass)
+
+> "The only thing that I am not crazy about is how many different fonts and colors and shapes and sizes you put
+> here, how the header blurs in with the writing, and how you don't have clear delineations throughout all of the
+> areas."
+
+## The system (third pass)
+
+Every screen now uses only what is listed here. Anything else was removed.
+
+- **Two faces.** The interface face (Plus Jakarta Sans) for everything the app says. Lora only for words that are
+  his or someone's spoken words: his page, his notes, transcript lines, and the before and after of a proposal.
+- **Interface type: two sizes, two weights.** 14 for everything ordinary, 13 for quiet details (who, when, where,
+  labels such as "Your words now"). Weight 400 for reading, 600 for titles, buttons and navigation. That gives three
+  interface text styles in ordinary use: a title (14, 600, main), text (14, 400, main) and a detail (13, 400, quiet).
+- **Three text tones.** Main, quiet, and one accent kept for what needs him: a status he must act on ("Not saved
+  since 14:06", "Two versions"), the border of the item asking him now, the "Needs you" dot, words that do not fit.
+- **Words that go and words that come.** Red, struck through, only for words that would go. A green wash, only for
+  words that would come. Neither colour appears anywhere else (the old green "done" text, red status and red
+  listening dot are gone).
+- **Two corners.** 6 for controls, 8 for surfaces. Only dots and the quote ring are round.
+- **Three button kinds plus icon buttons**, the same height (32) and look on every screen:
+  1. the main action, filled dark (light in dark theme): one per item, the result he came for ("Put it in my text");
+  2. an ordinary action, a quiet grey fill ("Edit it first");
+  3. a quiet text action, no fill, quiet tone ("Keep my words", "Undo", "Cancel", "Speak" at the cursor).
+  Icon buttons are the quiet kind with only an icon. Navigation (places, subjects on the desk, Article and Carousel,
+  Write Read Check, the subject name) is plain text, with a line under where he is. Never a pill. On a phone the
+  bottom bar uses the quiet kind, made 44 tall for the thumb.
+- **Four surfaces.** The band (both bars), the desk (behind the columns), paper (the page, and every item in a
+  column), and a well (a part set into paper: two versions after a conflict, a proposal opened for editing, the
+  margin's items on a phone).
+- **Delineation.** Each source, proposal, finding and version is its own piece of paper with a hairline edge,
+  8 apart, on the desk. The page is a sheet with a hairline on each side. The band sits above everything with a
+  clear edge under it. Inside an item there are at most two groups and one hairline: what it is (title, then a quiet
+  line saying who from and the count), the words (label, then Lora), and the actions under a hairline.
+- **Width kept.** Items stand 6 from the column's edge and their text 12 inside the item; the columns grew by 12 so
+  the room for text is exactly what it was.
+
+## What the third pass changed
+
+- **The header.** Before, the top bar was the desk colour made 88% opaque with a blur, and the piece bar was the desk
+  colour too, so the writing showed through and the bars merged with the columns. Now both bars are one solid band
+  (darker than everything below in dark, a deeper stone in light) with a single clear edge under it. Scrolling, the
+  writing passes under the edge and never shows through. The gold line under the top bar is gone.
+- **The areas.** Before, columns were bare desk with items divided only by a faint line. Now each item is paper on
+  the desk, the page is a sheet with edges, and the waiting proposal or chosen finding has an accent border.
+- **Inside a proposal** (his close-up): seven text styles became three plus the Lora words. The title lost its dot;
+  "who from" and the count became one quiet two-line detail; "Your words now" and "With this change" are quiet
+  labels over his words; her line is a quiet detail; the buttons sit under a hairline.
+- **Check:** findings lost their coloured dots (warn, bad, ok); each is an item; the one he is on has the accent
+  border. "Matches your sources" is its own item.
+- **Earlier versions:** each version is an item; a named version shows its name as the title. The coloured author
+  dots and gold name are gone.
+- **Removed styles:** the pill "Speak" box at the cursor, the round play button, underlined gold "Undo" links, the
+  large button size, the 12-size type, weights 500 and 700 in the interface, the second grey (ink2), the blur, seven
+  corner sizes.
+
+## Counts, before and after
+
+Measured by a script over all 19 screens at 1440 and 390, dark and light. The mock-up strip and the slide drawings
+are left out.
+
+| What | Second pass | Third pass |
+|---|---|---|
+| Faces | 2 | 2 |
+| Interface sizes | 5 (12, 13, 14, 15, 22) | 2 (13, 14) |
+| Interface weights | 4 (400, 500, 600, 700) | 2 (400, 600) |
+| Text styles (face, size, weight, colour), per theme | 41 (30 interface, 11 Lora) | 15 (6 interface, 9 Lora) |
+| Corner sizes | 8 plus round | 2 plus round |
+| Button looks (height, corner, fill, type), outside the states sheet | 26 | 12, which are the three kinds, icon buttons, the phone bar and plain-text navigation at the heights of their bars |
+| Button kinds by name | 14 (main, ordinary, large, quiet at three heights, icon, link, pill, round play, Advanced, place, chip, back, phone bar) | 4 (main, ordinary, quiet, icon) plus plain-text navigation |
+| Surface colours, per theme | 5 dark, 6 light (one of them see-through) | 4 (band, desk, paper, well) |
+
+The six interface styles left are the three above, the quiet tone at 14 and 600 (quiet buttons, navigation not
+chosen), the main button's own text colour, and the accent at 13. The nine Lora styles are the title (32, or 28 on a
+phone), part headings (22, main and quiet for parts still to write), the page (18), spoken words arriving (18 italic,
+quiet), and column words (15: main, quiet for context, and the red of words that go).
 
 A static mock-up with invented content only: the demo's tea subject "Straw over the rows", with Mrs. Oda and her
 shaded garden from the approved sample. Open `index.html` from inside the repository, because the fonts come from
@@ -56,6 +132,17 @@ Every screen was rebuilt to keep these. Where a script can measure a rule, it wa
 - **Rule 2, bars keep their lines.** A script measures the top bar, the piece bar and the phone bar on every screen
   and after every button press, including Try again's working and failed states. It checks their heights and whether
   any text inside wraps or is cut off. Result: 4,064 bar states measured. Every bar kept one height: the top bar 48, the piece bar 46 on a computer and 86 on a phone, the phone bar 60. Nothing wrapped or was cut off in any of them. The first pass dropped Stop onto a second line at Adrian's width.
+- **Third pass, run again.** Hover and focus: 9,754 states over all 19 screens at 1440, 1000, 700 and 390, both
+  themes; none moved anything. Bars: 4,052 bar states measured, including after every button press; no bar changed height (48, 46, and 86 and 60 on a phone) and nothing wrapped or was cut off. Nothing scrolls sideways and no text is clipped at 390, 700, 1000
+  or 1440 in either theme (152 screen views), and only the sizes 13 and 14 are used in the interface. Buttons:
+  1,193 pressed on every screen at 1440 and 390; every one did something.
+- **Third pass, column text width at 1440.** The room for text in each column is unchanged; the columns grew by 12
+  because each item now stands 6 inside the column, with its text 12 inside the item.
+  - Margin: 340 wide with 316 for text, now 352 wide with 316 for text. The widest line: 308 before, 316 after.
+  - Sources: 320 wide with 296 for text, now 332 with 296. The widest line: 295 before and after.
+  - Carousel panel: 360 with 336, now 372 with 336. The widest line is 326 now against 335 before, only because its
+    lines wrap at different words; the room is the same.
+  - On a phone the margin's items sit in the page with 330 for text, as before.
 - **Rule 3, words get the width.** Side columns at 1440, measured.
   - Before: the margin was 300 wide, with text up to 246 wide, 34 from its left edge.
   - Before: the sources column was 320 wide, with text up to 252 wide, 34 from its left edge.
@@ -169,6 +256,13 @@ Each item is marked **exists today**, **small** or **large**, judged from `docs/
   renderer cuts would come from the renderer.
 
 ## What I am least sure of
+
+- **Third pass: the dark band.** In dark the band is darker than the desk, so it reads as a frame over the paper.
+  Against the desk columns the difference is small and the clear edge under the band does most of the work.
+- **Third pass: the accent.** It is now the only colour besides go and come. Findings no longer differ by colour
+  (a date that disagrees and a claim nothing supports look alike until he reads the title).
+- **Third pass: the Article title** (32, 28 on a phone) and part headings (22) stay outside the two interface sizes,
+  because they are his prose in Lora.
 
 - **Lora for his prose.** The app shows the manuscript in sans today. The article title, at 32 pixels (28 on a
   phone), is outside the six interface sizes.
