@@ -158,20 +158,22 @@
   'product-listing':{name:'Product listing',to:'the shop',what:'A thing, with its story',needs:'nothing to start'},
   newsletter:{name:'Newsletter',to:'email',what:'A letter to readers',needs:'',unbuilt:true},
   'shared-notes':{name:'Shared notes',to:'people you choose',what:'What you learned, plainly',needs:'',unbuilt:true},
-  article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'some words in Write'},
+  article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'your first words',hadNeeds:'some words in Write'},
   carousel:{name:'Carousel',to:'Instagram',what:'Slides, one line each',needs:'a recording or a note; photographs help'},
  });
  /** The kinds Add a form shows, each with whether it can be made now and, if not, why. The facts are the command's own
      (`facts.words`, `facts.material`, `facts.bindingId`). A kind the app cannot make yet is listed and says so. */
- function addable(facts={}){
-  const m=facts.material,w=facts.words;
+ function addable(facts={},forms=[]){
+  const m=facts.material;
   return Object.entries(KINDS).map(([kind,k])=>{
    let ready=true,why='';
    if(k.unbuilt){return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready:false,unbuilt:true,why:'Not built yet.'};}
-   if(kind==='article'&&!(w?.paragraphs>0)){ready=false;why=w?'Write a few words first.':'Not known yet.';}
+   // An Article starts in Write, for any subject with a draft: with words already saved it is made at once, and with none Write
+   // opens on an empty page and his first saved words start it. He can write before he has a source.
    if(kind==='carousel'&&!((m?.recordings||0)+(m?.notes||0))){ready=false;why=m?'Add a recording or a note first.':'Not known yet.';}
    if(kind!=='carousel'&&!facts.bindingId){ready=false;why='This subject has no saved writing yet.';}
-   return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready,unbuilt:false,why};
+   const needs=kind==='article'?((forms||[]).some(x=>x?.kind==='article')?k.hadNeeds:facts.words?.paragraphs>0?'Starts from your saved words':k.needs):k.needs;
+   return {kind,name:k.name,to:k.to,what:k.what,needs,ready,unbuilt:false,why};
   });
  }
 
@@ -183,6 +185,9 @@
   if(['link','url','web','webpage','youtube','links'].includes(k)||/^https?:/i.test(s?.url||''))return 'links';
   return 'notes';
  };
+ /** The recording a kept transcript belongs to: the Library tree leaves these files out, but a subject's own list names the file,
+     and a recording's transcript always sits under Transcription/<job id>. */
+ const jobOfPath=p=>(String(p||'').match(/(?:^|[\\/])Transcription[\\/]([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})[\\/]/i)||[])[1]||'';
  function sourcesById(tree){
   const map=new Map();if(!ok(tree))return map;
   for(const s of tree.sources||[])if(s?.id)map.set(s.id,s);
@@ -201,8 +206,8 @@
  function materialFrom(rec={},projectId=null){
   const byId=sourcesById(rec.tree),seen=new Map();
   const add=(sid,extra={})=>{if(!sid||seen.has(sid))return;const s=byId.get(sid)||{};
-   seen.set(sid,{id:sid,title:extra.title||s.title||s.name||'Untitled',kind:extra.kind||s.kind||'',hash:extra.hash||s.hash||'',recordingId:s.recordingId,transcriptState:s.transcriptState,transcriptProvenance:s.transcriptProvenance,rel_path:s.rel_path||'',url:s.url||''});};
-  if(ok(rec.brief)){for(const mm of rec.brief.materials||[])add(mm.sourceId,{title:mm.title,kind:mm.kind,hash:mm.hash});for(const sid of rec.brief.sourceIds||[])add(sid);}
+   seen.set(sid,{id:sid,title:extra.title||s.title||s.name||'Untitled',kind:extra.kind||s.kind||'',hash:extra.hash||s.hash||'',recordingId:s.recordingId||extra.recordingId,transcriptState:s.transcriptState,transcriptProvenance:s.transcriptProvenance,rel_path:s.rel_path||'',url:s.url||''});};
+  if(ok(rec.brief)){for(const mm of rec.brief.materials||[])add(mm.sourceId,{title:mm.title,kind:mm.kind,hash:mm.hash,...(mm.kind==='transcript'&&jobOfPath(mm.path)?{recordingId:jobOfPath(mm.path)}:{})});for(const sid of rec.brief.sourceIds||[])add(sid);}
   if(projectId)for(const x of folderFiles(rec.tree,'Projects/'+projectId))add(x.id||x.sourceId,{title:x.name});
   for(const pr of rec.planRecords||[]){if(!ok(pr))continue;for(const x of pr.material?.transcripts||[])add(x.sourceId,{title:x.title,kind:'transcript',hash:x.sourceHash});for(const x of pr.material?.photos||[])add(x.sourceId,{title:x.caption,kind:'image'});}
   const out={total:0,recordings:0,notes:0,links:0,photos:0,items:[]};
@@ -246,9 +251,10 @@
   }
  }
  /** The recordings that already have their transcript as a source, by job id, from the Library tree. */
- function registeredJobs(tree){
-  const out=new Set();if(!ok(tree))return [];
-  for(const x of tree.sources||[])if(x?.kind==='transcript'){const j=x.recordingId||x.transcriptState?.jobId;if(j)out.add(j);}
+ function registeredJobs(tree,brief){
+  const out=new Set();
+  if(ok(tree))for(const x of tree.sources||[])if(x?.kind==='transcript'){const j=x.recordingId||x.transcriptState?.jobId;if(j)out.add(j);}
+  if(ok(brief))for(const x of brief.materials||[])if(x?.kind==='transcript'){const j=jobOfPath(x.path);if(j)out.add(j);}
   return [...out];
  }
  /** A topic is waiting to be kept only while its own status says `proposed`; once he keeps it, who first suggested it no longer matters. */
@@ -591,7 +597,7 @@
    const m=known?materialFrom({tree:rec('tree'),brief:rec('brief'),planRecords:Array.isArray(rec('planRecords'))?rec('planRecords'):[]},ids().projectId):null;
    const photos=m?m.items.filter(x=>x.kind==='photos'):[],rest=m?m.items.filter(x=>x.kind!=='photos'):[];
    const KIND={recordings:'Recording',notes:'Your note',links:'Link'},IC={recordings:'mic',notes:'note',links:'note'};
-   const jobs=ok(rec('recordings'))?rec('recordings'):null,byJob=new Map((jobs?.jobs||[]).map(j=>[j.sourceId,j])),done=new Set(registeredJobs(rec('tree')));
+   const jobs=ok(rec('recordings'))?rec('recordings'):null,byJob=new Map((jobs?.jobs||[]).map(j=>[j.sourceId,j])),done=new Set(registeredJobs(rec('tree'),rec('brief')));
    // A transcript kept as a source (by the button, or in Advanced) is itself part of what he has.
    {const have=new Set(rest.map(x=>x.id));for(const x of rest.slice()){const job=byJob.get(x.id);if(!job||!done.has(job.id))continue;
     for(const t of ok(rec('tree'))?rec('tree').sources||[]:[])if(t?.id&&t.kind==='transcript'&&t.recordingId===job.id&&!have.has(t.id)){have.add(t.id);rest.push({id:t.id,title:t.title||t.name||'Transcript',kind:'recordings',recordingId:t.recordingId});}}}
@@ -729,7 +735,7 @@
    if(rb){e.preventDefault();if(st.busy)return;const job=rb.dataset.job,action=rb.dataset.subjRec;
     if(action==='use'){
      // Reading the proof (transcript-check.id) holds a writer lock only for the length of that one read and leaves the transcript's mapping in place; recordings.source (Adrian only) then keeps it as a source.
-     act(['recordings','tree'],async()=>{try{const check=await v2.call('transcript-check.id',{id:job});await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
+     act(['recordings','tree','brief'],async()=>{let kept;try{const check=await v2.call('transcript-check.id',{id:job});kept=await v2.call('recordings.source',{jobId:job,expected:check.expected});}catch(error){throw new Error(sourceRefusal(error));}await keepWithSubject(kept?.source?.id);v2.ui.say('The transcript is now one of your sources.',{tone:'good'});});return;}
     act(['recordings','tree'],async()=>{await v2.call('.transcription.id.action',{id:job,action});v2.ui.say(action==='start'?'The transcript is being made.':'Trying the transcript again.',{tone:'good'});});return;}
    const b=e.target.closest('[data-subj-step]');
    if(b){e.preventDefault();openStep(b.dataset.subjStep);return;}
@@ -770,14 +776,26 @@
    }
   });
   /** Do something, then ask again what it touched (the reads named, and the standing). */
+  /** A kept transcript becomes one of this subject's sources the way the workspace does it: attached to the subject. Asking again
+      for one already attached changes nothing, so pressing twice never makes two. */
+  async function keepWithSubject(sourceId){
+   const f=st.standing?.facts||{};if(!sourceId)return;
+   const tries=[];
+   if(f.bindingId)tries.push(()=>v2.call('study.material.attach',{bindingId:f.bindingId,parentStudyId:id,sourceIds:[sourceId]}));
+   if(!f.bindingId&&f.projectId)tries.push(()=>v2.call('first-flow.attach',{projectId:f.projectId,sourceIds:[sourceId]}));
+   if(!tries.length)throw new Error('The transcript is kept, but this subject has no place of its own yet to hold it.');
+   let failed=false;for(const attempt of tries){try{await attempt();return;}catch(error){failed=true;}}
+   if(failed)throw new Error('The transcript was kept as a source, but it could not be added to this subject. Press Use the transcript again to try again.');
+  }
   async function act(keys,run){st.busy=true;page.setAttribute('aria-busy','true');try{await run();for(const k of keys)if(st.rec[k]!==undefined)ask(k,true);await refresh();}catch(error){v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}finally{st.busy=false;page.removeAttribute('aria-busy');}}
 
   function addForm(){
-   const kinds=addable(st.standing.facts);
+   const kinds=addable(st.standing.facts,st.standing.forms);
    const body=`<p class="subj-quiet">Each form brings its own steps and your template for it.</p><div class="subj-kinds">${kinds.map(k=>`<button type="button" data-subj-make="${k.kind}"${k.ready?'':` disabled aria-describedby="subj-why-${k.kind}"`}><b>${esc(k.name)}</b>${k.to?`<small>for ${esc(k.to)}</small>`:''}<span>${esc(k.what)}</span>${k.unbuilt?'':`<em>Needs: ${esc(k.needs)}</em>`}${k.ready?'':`<em class="why" id="subj-why-${k.kind}">${esc(k.why)}</em>`}</button>`).join('')}</div>`;
    const sheet=v2.ui.sheet({title:'What else will this be?',body});sheet.el.classList.add('subj-sheetdlg');
    sheet.body.addEventListener('click',async e=>{const b=e.target.closest('[data-subj-make]');if(!b||b.disabled)return;b.disabled=true;
     try{
+     if(b.dataset.subjMake==='article'&&!(st.standing.facts?.words?.paragraphs>0)){sheet.close();v2.go('write/:id',{id},{start:'article'});return;}// no words yet: Write starts it
      const key=await make(b.dataset.subjMake);sheet.close();
      // Say "added" only when the command, asked again, shows it. A refusal threw above and says its own words.
      let shown=false;

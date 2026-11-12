@@ -24,7 +24,10 @@
  function nextOf(s){
   if(!s||!s.known||!s.next||typeof s.next.name!=='string'||!s.next.name)return '';
   if(s.station==='published'||s.station==='resting')return '';
-  return s.next.formName&&(s.forms||[]).length>1?s.next.name+' · '+s.next.formName:s.next.name;
+  // A check held for want of a source cannot be run: the standing's own words say what it waits for, not a bare "Check".
+  const held=s.next.step==='check'&&s.next.state==='wait'&&typeof s.next.note==='string'&&s.next.note.trim();
+  const say=held?s.next.note.trim():s.next.name;
+  return s.next.formName&&(s.forms||[]).length>1?say+' · '+s.next.formName:say;
  }
  const sharedApi=Object.freeze({nextOf,STATIONS});
  try{let shared=v2.shared;if(!shared){try{v2.shared={};}catch{}shared=v2.shared;}if(shared&&typeof shared==='object')shared.home=sharedApi;}catch{}
@@ -326,7 +329,7 @@ ${more>0?`<button type="button" class="v2-ghost home-more" data-file-more>Show $
     const who=holder(s.id),url=covers.get(s.id),next=nextOf(s);
     return `<article class="home-card" data-id="${esc(s.id)}"><i class="home-grip" aria-hidden="true"></i>
  <a class="home-card-open" href="${esc(subjectHref(s.id))}"><span class="home-card-pic${url?' has-img':''}" aria-hidden="true">${url?`<img src="${esc(url)}" alt="">`:''}</span><b>${esc(s.title)}</b><span class="home-st">${ring(s.ring)}${esc(s.stationName||NAME[s.station]||'')}</span>${who?`<small class="home-held">${esc(who)} is working on it</small>`:''}</a>
- <a class="home-card-next" href="${esc(subjectHref(s.id))}"${s.next?.note&&next?` title="${esc(s.next.note)}"`:''}><span>${esc(next||'Open')}</span>${icon('right')}</a>
+ <a class="home-card-next" href="${esc(subjectHref(s.id))}"${s.next?.note&&next&&!next.startsWith(s.next.note.trim())?` title="${esc(s.next.note)}"`:''}><span>${esc(next||'Open')}</span>${icon('right')}</a>
 </article>`;
    }
    function paintDesk(){

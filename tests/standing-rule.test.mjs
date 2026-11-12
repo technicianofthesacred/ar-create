@@ -236,3 +236,29 @@ test('a Magazine research file says only that it is on record; the direction and
  const other = stepsFor(null, facts({material: notes, dish: {named: true, text: 'x', at: '2026-11-01T00:00:00Z', dishes: 0, direction: false}}));
  assert.equal(at(other, 'dish').note, 'Named on the board, 1 Nov');
 });
+
+// ---------- a check held for want of a captured source ----------
+test('a check held for want of a source waits and is not the next thing; other holds and stale checks still say Check again', async () => {
+ const browser = await import('../public/v2/shell/standing.js');
+ const base = {material: notes, ...finishedWords, pieces: [article()]};
+ const held = facts({...base, check: {status: 'held', issues: 0, noSource: true}});
+ const s = standingOf(held, {now: NOW}), check = at(s.forms[0].steps, 'check');
+ assert.equal(check.state, 'wait'); assert.equal(check.note, 'No source to check against yet');
+ // Nothing arrives on its own: Check still leads, the station stays at Create, and Home's words are not a bare "Check".
+ assert.equal(s.station, 'create'); assert.equal(s.next.step, 'check'); assert.equal(s.next.state, 'wait');
+ assert.equal(say(s.next), 'Check: No source to check against yet'); assert.ok(!JSON.stringify(s).includes('Check again'));
+ // A piece simply not checked yet is as before.
+ const fresh = standingOf(facts({...base, check: {status: null, issues: 0}}), {now: NOW});
+ assert.equal(fresh.next.step, 'check'); assert.equal(fresh.next.state, 'next'); assert.equal(say(fresh.next), 'Check'); assert.equal(fresh.station, 'create');
+ // The same rule in the browser copy.
+ assert.deepEqual(browser.standingOf(held, {now: NOW}), s);
+ // Held for another reason, failed or stale: unchanged.
+ for (const c of [{status: 'held', issues: 0}, {status: 'held', issues: 0, noSource: false}, {status: 'stale', issues: 0}, {status: 'failed', issues: 0}]) {
+  const t = standingOf(facts({...base, check: c}), {now: NOW});
+  assert.equal(at(t.forms[0].steps, 'check').note, 'Check again', JSON.stringify(c)); assert.equal(at(t.forms[0].steps, 'check').state, 'flag');
+  assert.deepEqual(browser.standingOf(facts({...base, check: c}), {now: NOW}), t);
+ }
+ // A Magazine story's standing does not change: it never carries the flag.
+ const mag = facts({...base, magazine: {storyId: 's', pieceId: 'p'}, check: {status: 'checked', issues: 0}});
+ assert.equal(at(standingOf(mag, {now: NOW}).forms[0].steps, 'check').state, 'done');
+});

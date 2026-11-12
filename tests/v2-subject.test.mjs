@@ -101,10 +101,10 @@ test('which tool reads a change touches',()=>{
 
 test('Add a form offers only what the app can make, from the command\'s own facts, each saying what it needs and why not yet',()=>{
  const none=S.addable({bindingId:'b',material:{total:0,recordings:0,notes:0},words:{paragraphs:0}});
- assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['post',true,''],['story',false,'Not built yet.'],['video',false,'Not built yet.'],['product-listing',true,''],['newsletter',false,'Not built yet.'],['shared-notes',false,'Not built yet.'],['article',false,'Write a few words first.'],['carousel',false,'Add a recording or a note first.']]);
+ assert.deepEqual(none.map(k=>[k.kind,k.ready,k.why]),[['post',true,''],['story',false,'Not built yet.'],['video',false,'Not built yet.'],['product-listing',true,''],['newsletter',false,'Not built yet.'],['shared-notes',false,'Not built yet.'],['article',true,''],['carousel',false,'Add a recording or a note first.']]);
  assert.ok(S.addable({bindingId:'b',material:{notes:1,recordings:0},words:{paragraphs:2}}).filter(k=>!k.unbuilt).every(k=>k.ready&&k.needs));
  assert.ok(S.addable({bindingId:null,material:{notes:1},words:{paragraphs:1}}).filter(k=>k.kind!=='carousel'&&!k.unbuilt).every(k=>!k.ready));
- assert.equal(S.addable({bindingId:'b'}).find(k=>k.kind==='article').why,'Not known yet.');
+ assert.equal(S.addable({bindingId:'b'}).find(k=>k.kind==='article').ready,true,'an Article needs only a draft to write in');
 });
 
 test('material is sorted from what the records hold: folder, research sources, plans',()=>{
@@ -130,6 +130,12 @@ test('a recording says where it is: saved, transcript being made, ready, or not 
  assert.equal(S.recordingView({id:'j',state:'whatever'},{ready:true}),null);
  assert.deepEqual([...S.registeredJobs({sources:[{id:'t',kind:'transcript',recordingId:'j1'},{id:'x',kind:'transcript',transcriptState:{jobId:'j2'}},{id:'a',kind:'audio'}]})].sort(),['j1','j2']);
  assert.deepEqual(S.registeredJobs({__error:{}}),[]);
+ // The Library tree leaves a recording's transcript out; the subject's brief names it by its file, under Transcription/<job id>.
+ const J='2899b836-bee9-40a2-a2e1-7927688e8d0b';
+ assert.deepEqual([...S.registeredJobs({sources:[]},{materials:[{sourceId:'t',kind:'transcript',path:'/x/talk/Transcription/'+J+'/transcript.md'},{sourceId:'a',kind:'audio',path:'/x/talk.webm'}]})],[J]);
+ assert.deepEqual([...S.registeredJobs({sources:[]},{__error:{}})],[]);
+ const kept=S.materialFrom({tree:{sources:[]},brief:{materials:[{sourceId:'t',title:'Talk',kind:'transcript',hash:'h',path:'/x/talk/Transcription/'+J+'/transcript.md'}],sourceIds:['t']}});
+ assert.deepEqual([kept.items.length,kept.items[0].recordingId],[1,J],'a transcript the brief holds knows which recording it came from');
  assert.deepEqual(S.touched('sources.import'),['tree','brief','recordings'],'a capture re-reads the recordings');
  assert.deepEqual(S.touched('transcription.id.action'),['recordings']);
  assert.deepEqual(S.touched('research-topics.start'),['topics'],'a question started from the sheet shows without a reload');
@@ -372,15 +378,21 @@ test('the subject shows where a recording is, from the real recordings; its ways
   await until(()=>/requires the author/.test(doc.getElementById('v2-messages')?.textContent||''));
   assert.ok(doc.querySelector('[data-subj-rec="use"]'),'nothing changed, the button stays');
   // Adrian presses it: the proof is read once (a read that holds nothing afterwards), then sent with the job; the new source shows without a reload.
-  let sent=null;const tree=await (await fetch(base+'/api/sources/tree')).json();
-  w.stub['/api/recordings/source']=o=>{sent=JSON.parse(o.body);return {status:200,body:{source:{id:'11111111-aaaa-4aaa-8aaa-111111111111'},jobId:job.id}};};
-  w.stub['/api/sources/tree']=()=>({status:200,body:{...tree,sources:[...(tree.sources||[]),...(sent?[{id:'11111111-aaaa-4aaa-8aaa-111111111111',kind:'transcript',recordingId:job.id,title:'Transcript of the shade talk',hash:'h1',rel_path:'x/transcript.md'}]:[])]}});
+  // As the real app does it: the Library tree leaves a recording's transcript out (it sits under Transcription/<job id>), so
+  // the subject learns it was kept from what is attached to the subject (the brief), which names the file by its path.
+  let sent=null,attachedTo=null;const SID='11111111-aaaa-4aaa-8aaa-111111111111',brief0=await (await fetch(base+'/api/study/research/brief?bindingId='+facts.bindingId+'&parentStudyId='+id)).json();
+  w.stub['/api/recordings/source']=o=>{sent=JSON.parse(o.body);return {status:200,body:{source:{id:SID},jobId:job.id}};};
+  w.stub['/api/study/material/attach']=o=>{attachedTo=JSON.parse(o.body);return {status:200,body:{sourceIds:[...brief0.sourceIds,SID]}};};
+  w.stub['/api/study/research/brief']=()=>({status:200,body:{...brief0,sourceIds:[...brief0.sourceIds,...(attachedTo?[SID]:[])],materials:[...brief0.materials,...(attachedTo?[{sourceId:SID,title:'Transcript of the shade talk',kind:'transcript',hash:'h1',path:'/home/recordings/shade talk/Transcription/'+job.id+'/transcript.md',reviewed:false}]:[])]}});
   const before2=calls.length;doc.querySelector('[data-subj-rec="use"]').click();
   await until(()=>[...doc.querySelectorAll('.subj-have li')].some(l=>/Transcript of the shade talk/.test(l.textContent)));
   assert.deepEqual([sent.jobId,sent.expected],[job.id,{jobId:job.id,markdownHash:'h1'}]);assert.match(sent.operationId,/^[0-9a-f-]{36}$/);
+  assert.deepEqual([attachedTo.bindingId,attachedTo.parentStudyId,attachedTo.sourceIds],[facts.bindingId,id,[SID]],'kept as a source of this subject, as the workspace does');
   assert.equal(calls.slice(before2).indexOf('/api/transcript-check/'+job.id)<calls.slice(before2).indexOf('/api/recordings/source'),true,'read first, then use');
   assert.equal(doc.querySelector('[data-subj-rec="use"]'),null,'once it is a source the button is gone');
-  delete w.stub['/api/sources/tree'];
+  assert.match(doc.querySelector('.subj-have').textContent,/kept as a source/,'the recording says it is kept');
+  assert.equal([...doc.querySelectorAll('.subj-have li')].filter(l=>/Transcript of the shade talk/.test(l.textContent)).length,1,'one source, not two');
+  delete w.stub['/api/study/material/attach'];delete w.stub['/api/study/research/brief'];
   assert.deepEqual((await show('saved',false)).slice(2),['Saved. Transcription is not set up on this machine.','']);
   // A refusal reaches him in plain words and nothing is lost.
   await show('saved',true);
@@ -679,4 +691,32 @@ test('a Magazine story\'s page: a direction is chosen in the Magazine and not sh
   assert.ok([...hrefs].some(h => h.startsWith('#/write/' + id + '?piece=')), 'Write is version two\'s own screen');
   assert.doesNotMatch(doc.querySelector('[data-v2-advanced]').getAttribute('href'), /subject=/, 'the bar never names a story it cannot open');
  }
+});
+
+test('Add a form: Article is offered to any subject with a draft, with or without a source or words (Write starts it)',()=>{
+ const art=facts=>S.addable(facts).find(k=>k.kind==='article');
+ const fromSource=art({bindingId:'b',material:{total:1,recordings:0,notes:1,links:0,photos:0},words:{paragraphs:0}});
+ assert.equal(fromSource.ready,true);assert.equal(fromSource.why,'');
+ const bare=art({bindingId:'b',material:{total:0,recordings:0,notes:0,links:0,photos:0},words:{paragraphs:0}});
+ assert.equal(bare.ready,true);assert.equal(bare.why,'','he can write before he has a source');
+ assert.equal(art({bindingId:'b',material:{total:0},words:{paragraphs:3}}).ready,true,'words already saved: ready as before');
+ assert.equal(art({bindingId:null,material:{total:2},words:{paragraphs:0}}).ready,false,'no draft to write in');
+});
+
+test('Add a form: the Article card promises only what is true for this subject',()=>{
+ const need=(facts,forms)=>S.addable(facts,forms).find(k=>k.kind==='article').needs;
+ assert.equal(need({bindingId:'b',words:{paragraphs:0}},[]),'your first words');
+ assert.equal(need({bindingId:'b'},[]),'your first words');
+ assert.equal(need({bindingId:'b',words:{paragraphs:3}},[]),'Starts from your saved words');
+ assert.equal(need({bindingId:'b',words:{paragraphs:3}},[{kind:'article'}]),'some words in Write','an Article already exists: the card says what it did before');
+ assert.equal(need({bindingId:'b',words:{paragraphs:0}},[{kind:'article'}]),'some words in Write');
+});
+
+test('Use the transcript: a failed add says it was kept and that pressing again tries again, and first-flow is only for a subject with no binding',()=>{
+ const src=fs.readFileSync(new URL('../public/v2/screens/subject.js',import.meta.url),'utf8');
+ const fn=src.slice(src.indexOf('async function keepWithSubject'),src.indexOf('async function act('));
+ assert.match(fn,/if\(!f\.bindingId&&f\.projectId\)/,'first-flow.attach only without a bindingId');
+ assert.doesNotMatch(fn,/\(why\|\|/,'the general refusal is not shown in brackets');
+ assert.match(fn,/kept as a source, but it could not be added to this subject\. Press Use the transcript again to try again\./);
+ assert.ok(!fn.includes('\u2014'));
 });

@@ -20,6 +20,7 @@ Everything below is merged into `claude/direction-d-build`. The four work-in-pro
 | Read and Check inside version two (stage 2) | In, reviewed twice, corrections made |
 | Capture inside version two (stage 3) | In, reviewed three times, corrections made |
 | What stands between him and starting (stage 4) | In, each piece reviewed, the dangerous ones twice; see "Stage 4" below |
+| The whole journey walked (stage 5) | In; one break left for Adrian to decide; see "Stage 5" below |
 
 Adrian has seen four pictures of Home and has been given a demo to click through and one page of pictures of every
 screen. He has not yet said yes to any screen. On 11 November he asked that every screen be checked against the sample he approved and, once it matches and
@@ -64,6 +65,86 @@ stopped, and the fixture helper should not leave them. The photo inspect test is
 mounts in 18.4, 19.1 and 19.7 seconds on the Mac; it fails because the photo details panel never opens (no caption
 box), first at the Screens stage A merge (PR 235). Likely its new keyboard aid, which walks computed styles of every
 focusable control, under jsdom. Version two was released with `--no-ci-check` naming this.
+
+## Stage 5, 12 November: the whole journey walked
+
+The walk is `scripts/review-journey.mjs` (brief: `version-two-briefs/v2-11-journey.md`): New subject, Capture Speak,
+Use the transcript, Write, Read, Check, back to the subject and Home, at 1440 and 390, dark and light, with the old
+screen photographed beside each step. Run it with `AR_CREATE_URL=http://127.0.0.1:<port> node
+scripts/review-journey.mjs --out <folder>` on a fresh `npm run demo` after `npm run demo:fill`; it puts a finished
+transcription job into the demo's own temporary data, presses the real buttons, and prints every break. Adrian was
+sent one page of pictures, each step beside the old screen (https://claude.ai/artifact/N7gC9TnyAyeqJ99puWctHD). He
+has not yet said yes to any of it.
+
+**The one break left, for Adrian to decide: a subject begun from New subject can never be checked, in either
+front.** Check reads only the sources captured into the draft when the draft is made (`context.records`, written
+once and locked: `runtime/services/study-draft-copies.mjs` `finishCopy`; read by `study-draft-checks.mjs` near 26
+and 181). Only a draft opened from a vault original (`study-draft.open`), or made from another draft's sources
+(`study-draft.create-collection` with `sourceBindingId`), has any. Attaching material (`study.material.attach`,
+`first-flow.attach`, `recordings.source`) adds to the subject's material list and never reaches the draft, so Check
+ends "Checks held: Capture the source transcript before checking." Tried on the demo as Adrian: held with a real
+attached transcript; "checked" for the hk original and for a collection given `sourceBindingId`. Proposed, not
+built, because it changes what Check trusts: a human-only command (for example `study-draft.capture-sources`:
+bindingId, parentStudyId, operationId, expected, sourceIds) that copies attached, reviewed, not-set-aside materials
+into the draft's capture folder, records them in a separate append-only hash-pinned file (the locked record
+untouched, so old records still validate) and merges it into `context.records`; the subject page calls it after
+"Use the transcript" and Check's held state offers it. Risks: it must never touch his words; consent holds on other
+people's speech; earlier forks and structure tests keep their old seeds; old check receipts turn stale. He was asked
+on 12 November and had not answered when this was written. **If he says yes, this is the next piece of work.**
+
+**Found by the walk and corrected (do not redo)**
+
+- An Article can be started inside version two. Add a form offers Article for any subject with no Article, source or
+  not; Write's empty page makes the Article from his first saved words (`study-draft.save`, then
+  `study.outputs.create` kind article, the same two the existing workspace uses). The page is not rebuilt when the
+  Article is made, so letters typed across that moment are kept (a test types 245 through it). For that moment
+  (about a fifth of a second on the demo) Enter and Backspace at a paragraph's start do nothing and the saved line
+  reads "Starting the Article". Opening Write with words and no Article makes it at once. A 403 is said once and not
+  retried; other refusals retry quietly with growing waits. Two tabs agree silently. An assistant creates nothing.
+  A subject with another form and no Article gets one only by Add a form, Article (`start=article` in the address).
+  Built in six passes and reviewed five times.
+- After "Use the transcript" the subject now attaches the transcript through the subject's binding, as the existing
+  workspace does, and the row says "Transcript ready, and kept as a source". It reads "kept" from the research brief
+  by the job id in the path, because the Library tree leaves out `Transcription/<job id>` on purpose.
+- A check held for want of a source: the standing passes a plain fact (held, and none of the check's stored sources
+  has the source role); the Check step leads, waits and says "No source to check against yet"; the station stays at
+  Create; Home's row and desk card say the same. Other holds, stale and failed checks still say "Check again".
+- Write's "mic" and "photo" icons no longer log an error.
+
+**Tried and taken out: do not try it this way again.** One pass made Enter and Backspace act on the page at once
+and saved splits and joins as ordinary edits and deletes. It kept plain prose exactly but the server refuses to
+delete a paragraph that holds a link, a glossary term or a note (saving then stuck for ever), a join dropped bold,
+and Enter re-armed a stopped save. Splits and joins are back on the server's own commands, exactly as on main. A
+second small extra ("a paragraph typed back to its pre-save text during a save") doubled a paragraph's words after
+type-then-Enter and was also taken out.
+
+**Open in Write, older than this stage**
+
+- Enter in the middle of a saved paragraph while a save is running can reorder letters ("jjoinedoined") and lose the
+  break (`write.js`, the split path after a save). The reviewer's advice: keep the server's split and join for saved
+  paragraphs, and read the cursor position after the save has settled or hold the box until the split is saved.
+- A newline that arrives without an Enter key, as Android keyboards send it, becomes a space, not a split
+  (`beforeinput` insertParagraph is not handled). Not tried on a real iOS or Android keyboard.
+- The tests for Write type plain text only: nothing covers bold, links, glossary terms or notes through a split,
+  a join or Undo, except the one type-then-Enter test on a bold paragraph.
+
+**The walk's "not built yet" list** (each already named in the sections below): in Write, playing a recording and
+reading its transcript beside the page, and the list of parts still to write; in Check, comparing versions and
+viewing the source beside a finding.
+
+**Small, known, not done**
+
+- The walk's 390 pictures of long pages are cut at 2000 pixels (16 pictures); `journey.json` lists them.
+- Step 9's old picture is the subject on its last section in the existing workspace, not a subject overview.
+- Home's rows hide the next step at 390, so the hold sentence shows there only on the desk card.
+- Not checked: a subject whose only form is a real Carousel (a Post stood in for it in the test); Magazine story
+  subjects in the Add a form sheet; leaving the page while the Article is being made.
+
+**The one full check, 12 November, on the stage's branch**: `npm test` 4080 tests, 2 failures, both known (the photo
+inspect test; "installed home mode" on a cloud machine). The existing workspace's page tests: 610 tests, 3 failures,
+the three known on main. The sideways check on every version two screen at 390, 700, 1000 and 1440, plain and with `--stress`: nothing
+scrolls sideways. `npm run verify:package` passes. On a machine where the script cannot find its browser library,
+set `AR_CREATE_PLAYWRIGHT=/opt/node-tools/node_modules/playwright/index.mjs`.
 
 ## Stage 4, 12 November: what was done about the five, and what is still open
 

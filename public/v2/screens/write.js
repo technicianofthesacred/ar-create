@@ -10,7 +10,7 @@
  'use strict';
  const {esc,icon}=v2.ui,root=window,doc=document;
  const OWN={side:'M4 5h16v14H4zM9 5v14',focus:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',note:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7',link:'M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1'};
- const own=name=>`<svg class="v2-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${OWN[name]}"/></svg>`;
+ const own=name=>OWN[name]?`<svg class="v2-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${OWN[name]}"/></svg>`:icon(name);// a name this screen does not draw comes from the shell
  const uuid=()=>root.V2Client.uuid();
  const clock=iso=>{try{return new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false});}catch{return '';}};
  /** How "Saved" reads, as the sample's does: the time today, and the day and time on any other day ("10 Nov, 13:52"). */
@@ -172,9 +172,9 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
  function open(page,ctx,pre=null){
   const id=ctx.params.id,human=v2.isHuman();
   const st={standing:null,form:null,forms:[],bindingId:null,piece:null,missing:false,base:null,rows:[],edits:new Map(),added:[],
-   saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
+   starting:false,creating:false,making:false,startSaid:false,saving:false,again:false,running:null,refreshWanted:false,saveSeq:0,sent:[],retryMs:8000,baseWords:new Map(),reading:new Map(),savedAt:null,problem:'',stopped:false,conflict:null,props:[],dropped:0,sources:null,
    src:root.matchMedia&&root.matchMedia('(min-width:1101px)').matches,focus:false,ops:new Set(),human};
-  let timer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
+  let timer=null,startTimer=null,propTimer=null,presenceTimer=null,presenceSeq=0,presenceOk=true,presenceSent='',gone=false;
   const session=uuid().slice(0,8);
   const $=sel=>page.querySelector(sel);
   const scope=()=>({bindingId:st.bindingId,parentStudyId:id});
@@ -188,6 +188,9 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    const s=found.standing;st.standing=s;st.forms=found.forms;st.form=found.form;
    st.missing=!!ctx.query.piece&&!found.form;
    st.bindingId=found.bindingId;st.piece=found.piece;
+   // A subject with no Article yet: the page is empty and his first saved words start the Article (see startArticle).
+   // A subject that has other forms (a Carousel) gets an Article only when he came by Add a form, Article (start=article).
+   st.starting=!found.form&&!ctx.query.piece&&!!found.bindingId&&!found.story&&(!found.forms.length||ctx.query.start==='article');
    ctx.setTitle(s.title||'Write');if(s.look)v2.brand(s.look);
    ctx.setAdvanced({subject:id,piece:st.piece||undefined,section:'write'});
    return true;
@@ -261,6 +264,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
      <p class="wr-saved wr-saved-m" data-wr-saved role="status"></p>
      <h1 class="wr-title">${esc(st.form?.title||st.standing?.title||'')}</h1>
      ${st.human?'':`<p class="wr-ro" role="status">${esc('Opened as '+v2.actorName(v2.actor())+'. Only Adrian writes here. '+v2.actorName(v2.actor())+' can propose words, and Adrian decides.')}</p>`}
+     ${st.starting&&!st.human?'<p class="wr-dim" role="status">No Article has been started for this subject. Adrian starts it by writing the first words.</p>':''}
      <div class="wr-text" data-wr-text></div>
      <div class="wr-loose" data-wr-loose></div>
      <section class="wr-todo" aria-label="Still to write"><p class="wr-label">Still to write</p>${v2.ui.notBuilt('The list of parts still to write.',{advanced:{subject:id,piece:st.piece||undefined,section:'write'}})}</section>
@@ -286,7 +290,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   }
   function fit(t){t.style.height='auto';t.style.height=(t.scrollHeight+1)+'px';}
   function paintSaved(){
-   const text=st.none?'':!st.human?'Read only':st.problem?st.problem:st.saving?'Saving':dirty()||st.conflict?(st.conflict?'Not saved: a newer version exists':'Not saved yet'):st.savedAt?savedLabel(st.savedAt):'Saved';
+   const text=st.none?'':!st.human?'Read only':st.making?'Starting the Article':st.problem?st.problem:st.saving?'Saving':dirty()||st.conflict?(st.conflict?'Not saved: a newer version exists':'Not saved yet'):st.savedAt?savedLabel(st.savedAt):'Saved';
    page.querySelectorAll('[data-wr-saved]').forEach(el=>{el.textContent=text;el.dataset.tone=st.problem||st.conflict?'bad':'';});
   }
   function paintSources(){
@@ -499,6 +503,9 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
       revision he read. Resolves true when it was saved. */
   function save(opts={}){
    if(!st.human)return Promise.resolve(false);
+   // While the Article is being made nothing is saved (the create needs the draft as it was read); what he types waits in
+   // the boxes and is saved the moment the Article exists.
+   if(st.making)return Promise.resolve(false);
    if(st.saving){st.again=true;return st.running;}
    st.running=run(opts);return st.running;
   }
@@ -544,7 +551,63 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(st.again){st.again=false;if(dirty())schedule(300);}
     if(st.refreshWanted){st.refreshWanted=false;void refresh();}
    }
+   if(ok&&st.starting)void startArticle();
    return ok;
+  }
+  /** His first saved words start the Article, as Add a form does in the existing workspace: study-draft.save has put the
+      words in the subject's draft, and study.outputs.create (from that draft, with the revisions just read) makes the
+      Article. Anything he types while the first save runs is saved first. The boxes stay as they are, open for typing, while the
+      Article is made, and the page is not rebuilt afterwards. If it cannot be made, his words stay saved and it is tried again. */
+  async function startArticle(){
+   if(st.creating||gone||!st.starting||!st.human||st.startStopped)return;
+   st.creating=true;
+   try{
+    for(let i=0;i<8&&(dirty()||st.saving)&&!st.conflict&&!st.stopped;i++){clearTimeout(timer);if(st.saving)await settled();else await save({quiet:true,hold:null});}
+    if(dirty()||st.conflict||st.stopped||gone){st.creating=false;return;}
+    st.making=true;clearTimeout(timer);paintSaved();
+    try{
+     const standing=await v2.call('subject.standing',{parentStudyId:id});
+     const articleOf=s=>((s.forms||[]).find(f=>f.kind==='article'&&/^out:/.test(f.key||''))||{}).id||null;
+     let outId=articleOf(standing);
+     if(!outId){
+      const sc={rootBindingId:st.bindingId,parentStudyId:id};
+      const [native,outs]=await Promise.all([readDraft(),v2.call('study.outputs',sc)]);
+      try{
+       const r=await v2.call('study.outputs.create',{...sc,kind:'article',sourceBindingId:st.bindingId,expectedNative:native.expected,expectedOutput:outs.expectedOutput});
+       outId=r?.view?.output?.id||null;
+      }catch(error){
+       // Refused because the Article now exists (made by another tab): look again at once and open that one, with no message.
+       outId=articleOf(await v2.call('subject.standing',{parentStudyId:id}));
+       if(!outId)throw error;
+      }
+      if(!outId)outId=articleOf(await v2.call('subject.standing',{parentStudyId:id}));
+     }
+     if(!outId)throw new v2.Error('The Article was made, but its address could not be found. Go back to the subject to open it.');
+     if(gone)return;
+     // The page he is typing in is not rebuilt: the same boxes stay, with his cursor, and only the tabs, the address and the
+     // state change. The Article's words are this draft's own words.
+     const found=await v2.shared.write.locate(id,outId);
+     if(gone)return;
+     if(found.bindingId!==st.bindingId||!found.form){st.creating=false;st.making=false;v2.go('write/:id',{id},{piece:outId});return;}
+     st.standing=found.standing;st.forms=found.forms;st.form=found.form;st.piece=found.piece;st.starting=false;ctx.query.piece=outId;
+     const fresh=doc.createElement('div');fresh.innerHTML=bar({id,forms:st.forms,form:st.form,piece:st.piece,mode:'write'});
+     for(const sel of ['.wr-tabs','.wr-seg']){const from=fresh.querySelector(sel),to=$(sel);if(from&&to)to.innerHTML=from.innerHTML;}
+     const title=$('.wr-title');if(title)title.textContent=st.form?.title||st.standing?.title||'';
+     ctx.setAdvanced({subject:id,piece:st.piece||undefined,section:'write'});
+     try{root.history.replaceState(root.history.state,'',v2.href('write/:id',{id},{piece:outId}));}catch{/* the address stays as it was */}
+     st.creating=false;st.making=false;paintSaved();
+     if(dirty())schedule(300);
+    }catch(error){
+     st.creating=false;st.making=false;paintSaved();
+     if(gone)return;
+     if(dirty())schedule(300);
+     // Said once, plainly. A refusal for good (403: only Adrian decides this, and the page is his) is not tried again; a hold
+     // (423) or any other failure is tried again, quietly, a little less often each time.
+     if(!st.startSaid){st.startSaid=true;say('Your words are saved, but the Article could not be started.','bad');}
+     if(error?.kind==='owner-only'){st.startStopped=true;return;}
+     clearTimeout(startTimer);const wait=st.retryMs;st.retryMs=Math.min(60000,Math.round(st.retryMs*1.5));startTimer=setTimeout(()=>{void startArticle();},wait);
+    }finally{st.making=false;}
+   }catch(error){st.creating=false;st.making=false;}
   }
   function schedule(ms=AUTOSAVE_MS){clearTimeout(timer);if(gone||st.stopped||st.conflict||!st.human)return;timer=setTimeout(()=>{void save({quiet:true});},ms);}
 
@@ -564,6 +627,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    t.scrollIntoView?.({block:'nearest'});
   }
   async function enter(t){
+   if(st.making)return;// while the Article is being made Enter does nothing: not queued, not run later, the caret stays
    const rid=t.dataset.ed,at=t.selectionStart,atEnd=at>=t.value.length&&t.selectionEnd>=t.value.length;
    const a=st.added.find(x=>x.id===rid);
    if(atEnd){
@@ -583,6 +647,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
   /** Backspace at the start of a paragraph joins it to the one before. A paragraph that was never saved is joined on the
       page; a saved one is saved first and joined in the same save. A paragraph he emptied is deleted. */
   async function join(t){
+   if(st.making)return;// likewise Backspace at the start of a paragraph
    const rid=t.dataset.ed,list=order(),i=list.findIndex(x=>x.id===rid);if(i<1)return;
    const prev=list[i-1],cur=list[i];if(!prev.safe||!cur.safe)return;
    const curAdded=st.added.find(a=>a.id===rid),prevAdded=st.added.find(a=>a.id===prev.id);
@@ -725,7 +790,7 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
    try{
     if(!await locate())return;
     if(st.missing){plain('This piece is not one of this subject’s Articles, or it does not exist. Go back to the subject to choose one.',false);return;}
-    if(!st.form){shell0('This subject has no Article yet, so there is nothing to write here.');return;}
+    if(!st.form&&!st.starting){shell0('This subject has no Article yet, so there is nothing to write here.');return;}
     if(!st.bindingId){shell0('The words of this piece are not kept where Write can open them. They open in Advanced.');return;}
     const read=await readDraft();if(ctx.signal.aborted)return;
     st.base=read;st.rows=rowsOf(read);st.baseWords=wordsMap(st.rows);
@@ -758,11 +823,13 @@ const flat=text=>String(text??'').replace(/\s*[\r\n]+\s*/g,' ');
     if(restored&&dirty()&&newer)noticeNewer(read);
     else if(restored&&dirty()){say('Your unsaved words from earlier are back.','info');schedule(600);}
     presence(true);loadProps();if(st.src)loadSources();
+    // Words are saved but the Article was never made (a reload or a closed tab between the two): make it now.
+    if(st.starting&&st.human&&!dirty()&&!st.conflict&&st.rows.some(r=>r.words.trim()))void startArticle();
    }catch(error){if(ctx.signal.aborted)return;plain(error.message||'This piece could not be opened.');}
   }
   function shell0(text){shell();$('[data-wr-text]').innerHTML=`<p class="wr-dim" role="status">${esc(text)}</p>`;$('.wr-todo')?.remove();}
   function leave(){
-   gone=true;clearTimeout(timer);clearTimeout(propTimer);clearInterval(presenceTimer);
+   gone=true;clearTimeout(timer);clearTimeout(startTimer);clearTimeout(propTimer);clearInterval(presenceTimer);
    doc.removeEventListener('visibilitychange',onHide);root.removeEventListener('pagehide',onUnload);root.removeEventListener('resize',onResize);
    if(st.human&&dirty()&&!st.conflict&&st.bindingId&&!st.stopped){try{void save({quiet:true,hold:null});}catch{/* kept on this device */}}
    if(presenceOk&&presenceSent==='true'){presenceSent='';v2.call('presence.post',{stage:'Write',scope:{kind:'draft',id:st.bindingId},dirty:false,sequence:++presenceSeq,session,leaving:true}).catch(()=>{});}

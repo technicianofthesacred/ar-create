@@ -714,3 +714,27 @@ test('the Add a piece plus is never hidden at any width',()=>{
  const css=read('public/v2/screens/write.css');
  assert.doesNotMatch(css,/Add a piece[^}]*\{[^}]*display:none/,'the plus stays at every width');
 });
+
+test('real server: typing into a saved paragraph with a bold run and splitting it at once saves each word once, in order, bold kept',{timeout:120000},async()=>{
+ const {base}=await theWorld(),sub=await subjectOf(base,'studio-after-rain');
+ const adrian=pageClient(base),scope={bindingId:sub.binding,parentStudyId:sub.id};
+ const d0=await adrian.call('study-draft.read',scope),row=d0.projection.find(r=>r.safe!==false&&r.words.length>30);
+ const id=globalThis.crypto.randomUUID();
+ await adrian.call('study-draft.save',{...scope,expected:d0.expected,operations:[{kind:'insert',id,beforeId:row.id,raw:'Alpha **bold run** beta gamma, in a paragraph he saved earlier.'}]});
+ const a=await livePage(base,sub),target=a.doc.querySelector(`textarea[data-ed="${id}"]`);
+ assert.ok(target.value.startsWith('Alpha '),'the saved paragraph is on the page: '+target.value.slice(0,40));
+ const cut=target.value.indexOf('beta')-1,typed=target.value.slice(0,cut)+' XYZ'+target.value.slice(cut);
+ type(a.w,target,typed);const at=cut+4;target.setSelectionRange(at,at);press(a.w,target,'Enter');// before the autosave
+ await savedOnServer(a);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);await settle(2500);await until(()=>/^Saved/.test(savedSaying(a.doc)),30000);
+ const check=async d=>{
+  const rows=d.projection.filter(r=>r.safe!==false&&r.words),i=rows.findIndex(r=>r.id===id),both=rows[i].raw+' | '+rows[i+1].raw;
+  for(const w of ['Alpha','XYZ','beta','gamma'])assert.equal(both.split(w).length-1,1,w+' once: '+both);
+  assert.ok(both.indexOf('Alpha')<both.indexOf('XYZ')&&both.indexOf('XYZ')<both.indexOf('beta')&&both.indexOf('beta')<both.indexOf('gamma'),'in order: '+both);
+  assert.match(rows[i].raw,/\*\*bold run\*\*/,'the bold is kept: '+rows[i].raw);
+  return rows.map(r=>r.words);
+ };
+ const server=await check(await draftOf(base,sub));
+ assert.deepEqual(edsOf(a.doc),server,'the page shows what the server holds');
+ const b=await reload(a,base,sub);await agree(b,base,sub,2500);
+ assert.deepEqual(await check(await draftOf(base,sub)),server,'a reload shows the same');
+});
