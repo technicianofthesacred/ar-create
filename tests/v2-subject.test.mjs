@@ -702,3 +702,21 @@ test('Add a form: Article is offered to any subject with a draft, with or withou
  assert.equal(art({bindingId:'b',material:{total:0},words:{paragraphs:3}}).ready,true,'words already saved: ready as before');
  assert.equal(art({bindingId:null,material:{total:2},words:{paragraphs:0}}).ready,false,'no draft to write in');
 });
+
+test('Add a form: the Article card promises only what is true for this subject',()=>{
+ const need=(facts,forms)=>S.addable(facts,forms).find(k=>k.kind==='article').needs;
+ assert.equal(need({bindingId:'b',words:{paragraphs:0}},[]),'your first words');
+ assert.equal(need({bindingId:'b'},[]),'your first words');
+ assert.equal(need({bindingId:'b',words:{paragraphs:3}},[]),'Starts from your saved words');
+ assert.equal(need({bindingId:'b',words:{paragraphs:3}},[{kind:'article'}]),'some words in Write','an Article already exists: the card says what it did before');
+ assert.equal(need({bindingId:'b',words:{paragraphs:0}},[{kind:'article'}]),'some words in Write');
+});
+
+test('Use the transcript: a failed add says it was kept and that pressing again tries again, and first-flow is only for a subject with no binding',()=>{
+ const src=fs.readFileSync(new URL('../public/v2/screens/subject.js',import.meta.url),'utf8');
+ const fn=src.slice(src.indexOf('async function keepWithSubject'),src.indexOf('async function act('));
+ assert.match(fn,/if\(!f\.bindingId&&f\.projectId\)/,'first-flow.attach only without a bindingId');
+ assert.doesNotMatch(fn,/\(why\|\|/,'the general refusal is not shown in brackets');
+ assert.match(fn,/kept as a source, but it could not be added to this subject\. Press Use the transcript again to try again\./);
+ assert.ok(!fn.includes('\u2014'));
+});

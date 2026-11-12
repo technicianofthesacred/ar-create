@@ -158,12 +158,12 @@
   'product-listing':{name:'Product listing',to:'the shop',what:'A thing, with its story',needs:'nothing to start'},
   newsletter:{name:'Newsletter',to:'email',what:'A letter to readers',needs:'',unbuilt:true},
   'shared-notes':{name:'Shared notes',to:'people you choose',what:'What you learned, plainly',needs:'',unbuilt:true},
-  article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'your first words'},
+  article:{name:'Article',to:'the magazine',what:'A long read in your words',needs:'your first words',hadNeeds:'some words in Write'},
   carousel:{name:'Carousel',to:'Instagram',what:'Slides, one line each',needs:'a recording or a note; photographs help'},
  });
  /** The kinds Add a form shows, each with whether it can be made now and, if not, why. The facts are the command's own
      (`facts.words`, `facts.material`, `facts.bindingId`). A kind the app cannot make yet is listed and says so. */
- function addable(facts={}){
+ function addable(facts={},forms=[]){
   const m=facts.material;
   return Object.entries(KINDS).map(([kind,k])=>{
    let ready=true,why='';
@@ -172,7 +172,8 @@
    // opens on an empty page and his first saved words start it. He can write before he has a source.
    if(kind==='carousel'&&!((m?.recordings||0)+(m?.notes||0))){ready=false;why=m?'Add a recording or a note first.':'Not known yet.';}
    if(kind!=='carousel'&&!facts.bindingId){ready=false;why='This subject has no saved writing yet.';}
-   return {kind,name:k.name,to:k.to,what:k.what,needs:k.needs,ready,unbuilt:false,why};
+   const needs=kind==='article'?((forms||[]).some(x=>x?.kind==='article')?k.hadNeeds:facts.words?.paragraphs>0?'Starts from your saved words':k.needs):k.needs;
+   return {kind,name:k.name,to:k.to,what:k.what,needs,ready,unbuilt:false,why};
   });
  }
 
@@ -781,15 +782,15 @@
    const f=st.standing?.facts||{};if(!sourceId)return;
    const tries=[];
    if(f.bindingId)tries.push(()=>v2.call('study.material.attach',{bindingId:f.bindingId,parentStudyId:id,sourceIds:[sourceId]}));
-   if(f.projectId)tries.push(()=>v2.call('first-flow.attach',{projectId:f.projectId,sourceIds:[sourceId]}));
+   if(!f.bindingId&&f.projectId)tries.push(()=>v2.call('first-flow.attach',{projectId:f.projectId,sourceIds:[sourceId]}));
    if(!tries.length)throw new Error('The transcript is kept, but this subject has no place of its own yet to hold it.');
-   let why='';for(const attempt of tries){try{await attempt();return;}catch(error){why=error?.message||why;}}
-   throw new Error('The transcript is kept, but it could not be added to this subject ('+(why||'the app refused it')+'). Press Use the transcript to try again.');
+   let failed=false;for(const attempt of tries){try{await attempt();return;}catch(error){failed=true;}}
+   if(failed)throw new Error('The transcript was kept as a source, but it could not be added to this subject. Press Use the transcript again to try again.');
   }
   async function act(keys,run){st.busy=true;page.setAttribute('aria-busy','true');try{await run();for(const k of keys)if(st.rec[k]!==undefined)ask(k,true);await refresh();}catch(error){v2.ui.say(error?.message||'That could not be done. Nothing was changed.',{tone:'bad'});}finally{st.busy=false;page.removeAttribute('aria-busy');}}
 
   function addForm(){
-   const kinds=addable(st.standing.facts);
+   const kinds=addable(st.standing.facts,st.standing.forms);
    const body=`<p class="subj-quiet">Each form brings its own steps and your template for it.</p><div class="subj-kinds">${kinds.map(k=>`<button type="button" data-subj-make="${k.kind}"${k.ready?'':` disabled aria-describedby="subj-why-${k.kind}"`}><b>${esc(k.name)}</b>${k.to?`<small>for ${esc(k.to)}</small>`:''}<span>${esc(k.what)}</span>${k.unbuilt?'':`<em>Needs: ${esc(k.needs)}</em>`}${k.ready?'':`<em class="why" id="subj-why-${k.kind}">${esc(k.why)}</em>`}</button>`).join('')}</div>`;
    const sheet=v2.ui.sheet({title:'What else will this be?',body});sheet.el.classList.add('subj-sheetdlg');
    sheet.body.addEventListener('click',async e=>{const b=e.target.closest('[data-subj-make]');if(!b||b.disabled)return;b.disabled=true;
